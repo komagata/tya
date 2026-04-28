@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 struct TyaArray {
   int len;
@@ -67,7 +68,13 @@ TyaValue tya_len(TyaValue value) {
     return tya_number(value.array->len);
   }
   if (value.kind == TYA_OBJECT && value.object != NULL) {
-    return tya_number(value.object->len);
+    int count = 0;
+    for (int i = 0; i < value.object->len; i++) {
+      if (value.object->entries[i].key != NULL) {
+        count++;
+      }
+    }
+    return tya_number(count);
   }
   return tya_number(0);
 }
@@ -104,11 +111,62 @@ TyaValue tya_member(TyaValue object, const char *key) {
     return tya_nil();
   }
   for (int i = 0; i < object.object->len; i++) {
-    if (strcmp(object.object->entries[i].key, key) == 0) {
+    if (object.object->entries[i].key != NULL && strcmp(object.object->entries[i].key, key) == 0) {
       return object.object->entries[i].value;
     }
   }
   return tya_nil();
+}
+
+TyaValue tya_has(TyaValue object, TyaValue key) {
+  if (key.kind != TYA_STRING || key.string == NULL || object.kind != TYA_OBJECT || object.object == NULL) {
+    return tya_bool(false);
+  }
+  for (int i = 0; i < object.object->len; i++) {
+    if (object.object->entries[i].key != NULL && strcmp(object.object->entries[i].key, key.string) == 0) {
+      return tya_bool(true);
+    }
+  }
+  return tya_bool(false);
+}
+
+TyaValue tya_keys(TyaValue object) {
+  TyaValue out = tya_array(0, 0);
+  if (object.kind != TYA_OBJECT || object.object == NULL) {
+    return out;
+  }
+  for (int i = 0; i < object.object->len; i++) {
+    if (object.object->entries[i].key != NULL) {
+      tya_push(out, tya_string(object.object->entries[i].key));
+    }
+  }
+  return out;
+}
+
+TyaValue tya_values(TyaValue object) {
+  TyaValue out = tya_array(0, 0);
+  if (object.kind != TYA_OBJECT || object.object == NULL) {
+    return out;
+  }
+  for (int i = 0; i < object.object->len; i++) {
+    if (object.object->entries[i].key != NULL) {
+      tya_push(out, object.object->entries[i].value);
+    }
+  }
+  return out;
+}
+
+void tya_delete(TyaValue object, TyaValue key) {
+  if (key.kind != TYA_STRING || key.string == NULL || object.kind != TYA_OBJECT || object.object == NULL) {
+    return;
+  }
+  for (int i = 0; i < object.object->len; i++) {
+    if (object.object->entries[i].key != NULL && strcmp(object.object->entries[i].key, key.string) == 0) {
+      object.object->entries[i].key = NULL;
+      object.object->entries[i].value = tya_nil();
+      return;
+    }
+  }
 }
 
 TyaValue tya_contains(TyaValue text, TyaValue part) {
@@ -362,6 +420,27 @@ TyaValue tya_to_int(TyaValue value) {
     return tya_number(strtol(value.string, NULL, 10));
   }
   return tya_number(0);
+}
+
+TyaValue tya_to_float(TyaValue value) {
+  if (value.kind == TYA_NUMBER) {
+    return value;
+  }
+  if (value.kind == TYA_STRING && value.string != NULL) {
+    return tya_number(strtod(value.string, NULL));
+  }
+  return tya_number(0);
+}
+
+TyaValue tya_to_number(TyaValue value) {
+  return tya_to_float(value);
+}
+
+TyaValue tya_file_exists(TyaValue path) {
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    return tya_bool(false);
+  }
+  return tya_bool(access(path.string, F_OK) == 0);
 }
 
 void tya_push(TyaValue array, TyaValue value) {

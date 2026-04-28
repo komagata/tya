@@ -80,6 +80,8 @@ Implemented:
 - Runtime addition helper for numeric addition and string concatenation
 - Initial generated-C runtime support for `args`, `readFile`, `split`, `toString`, and `toInt`
 - Initial object runtime with literal construction, member reads, and `len`
+- Generated-C object runtime supports `has`, `keys`, `values`, and `delete`
+- Generated-C runtime supports `fileExists`, `toFloat`, and `toNumber`
 - Runtime printing and truthiness helpers
 - Generated C can compile and run against `runtime/tya_runtime.c`
 
@@ -192,6 +194,7 @@ Implemented:
 - Go C emitter can run `examples/function.tya`
 - Go C emitter can run `examples/arithmetic.tya`
 - Go C emitter can run `examples/string.tya`
+- Go C emitter can run object, conversion, and file examples
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 

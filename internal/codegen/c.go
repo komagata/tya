@@ -276,6 +276,18 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		g.line(fmt.Sprintf("tya_push(%s, %s);", array, value))
 		return nil
 	}
+	if id.Name == "delete" && len(call.Args) == 2 {
+		object, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		key, _, err := g.expr(call.Args[1])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_delete(%s, %s);", object, key))
+		return nil
+	}
 	if id.Name != "print" || len(call.Args) != 1 {
 		g.line(fmt.Sprintf("/* call %s */", id.Name))
 		return nil
@@ -504,6 +516,52 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_to_int(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "toFloat" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_to_float(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "toNumber" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_to_number(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "fileExists" && len(n.Args) == 1 {
+			path, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_file_exists(%s)", path), "TyaValue", nil
+		}
+		if ok && id.Name == "has" && len(n.Args) == 2 {
+			object, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			key, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_has(%s, %s)", object, key), "TyaValue", nil
+		}
+		if ok && id.Name == "keys" && len(n.Args) == 1 {
+			object, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_keys(%s)", object), "TyaValue", nil
+		}
+		if ok && id.Name == "values" && len(n.Args) == 1 {
+			object, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_values(%s)", object), "TyaValue", nil
 		}
 		if ok && id.Name == "pop" && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])

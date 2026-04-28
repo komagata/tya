@@ -54,7 +54,7 @@ func TestGoEmittedSelfhostPipelineRuns(t *testing.T) {
 
 func TestGoEmitterMatchesSelectedExamples(t *testing.T) {
 	out := run(t, "sh", "scripts/go_emit_examples_check.sh")
-	want := "examples/arithmetic.tya: matched\nexamples/function.tya: matched\nexamples/while.tya: matched\nexamples/if.tya: matched\nexamples/array.tya: matched\nexamples/string.tya: matched\n"
+	want := "examples/arithmetic.tya: matched\nexamples/function.tya: matched\nexamples/while.tya: matched\nexamples/if.tya: matched\nexamples/array.tya: matched\nexamples/string.tya: matched\nexamples/object.tya: matched\nexamples/object_inline.tya: matched\nexamples/object_builtin.tya: matched\nexamples/convert.tya: matched\nexamples/file.tya: matched\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
