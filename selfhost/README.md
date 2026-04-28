@@ -23,4 +23,5 @@ Current supported subset:
   operators, source lines, and indentation counts
 - Parser: simple assignment, `if`, indentation, and print nodes
 - Checker: duplicate assignment node detection and simple undefined print names
-- C codegen: string/int assignments, string/int print nodes, and simple `if true` blocks
+- C codegen: string/int assignments, simple integer addition assignments,
+  string/int print nodes, and simple `if true` blocks

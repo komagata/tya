@@ -20,6 +20,12 @@ extraOf = node ->
     return ""
   parts[4]
 
+extra2Of = node ->
+  parts = split node, ":"
+  if len(parts) < 6
+    return ""
+  parts[5]
+
 rememberType = names, types, name, typeName ->
   push names, name
   push types, typeName
@@ -59,7 +65,11 @@ emitC = nodes ->
           push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
           rememberType names, types, nameOf(node), "INT"
         else
-          push lines, "  /* assign " + nameOf(node) + " */"
+          if valueOf(node) == "INT_ADD"
+            push lines, "  long " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
+            rememberType names, types, nameOf(node), "INT"
+          else
+            push lines, "  /* assign " + nameOf(node) + " */"
 
     if kindOf(node) == "IF"
       if valueOf(node) == "true"

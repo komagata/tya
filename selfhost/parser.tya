@@ -50,10 +50,17 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
         value = tokens[i + 2]
-        node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":" + kindOf(value) + ":" + textOf(value)
-        push nodes, node
-        i = i + 3
-        continue
+        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "+"
+          right = tokens[i + 4]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":INT_ADD:" + textOf(value) + ":" + textOf(right)
+          push nodes, node
+          i = i + 5
+          continue
+        else
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":" + kindOf(value) + ":" + textOf(value)
+          push nodes, node
+          i = i + 3
+          continue
 
     i = i + 1
 
