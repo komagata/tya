@@ -21,6 +21,6 @@ Current supported subset:
 - Checker: simple undefined assignment / print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison assignments, variable-copy assignments, bool assignments,
-  unary `not`, reassignment, carried `push` commands, string/int/bool print
-  nodes, and simple literal or variable `if` / `while` blocks with `break` /
-  `continue`
+  unary `not`, empty array placeholders, reassignment, carried `push` commands,
+  string/int/bool print nodes, and simple literal or variable `if` / `while`
+  blocks with `break` / `continue`

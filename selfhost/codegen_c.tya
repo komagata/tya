@@ -91,57 +91,64 @@ emitC = nodes ->
             if not hasName(names, nameOf(node))
               rememberType names, types, nameOf(node), "BOOL"
           else
-            if valueOf(node) == "INT_ADD"
+            if valueOf(node) == "ARRAY_EMPTY"
               if hasName(names, nameOf(node))
-                push lines, "  " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
+                push lines, "  " + nameOf(node) + " = 0;"
               else
-                push lines, "  long " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
-                rememberType names, types, nameOf(node), "INT"
+                push lines, "  long " + nameOf(node) + " = 0; /* [] */"
+                rememberType names, types, nameOf(node), "ARRAY"
             else
-              if valueOf(node) == "COMPARE_LT"
+              if valueOf(node) == "INT_ADD"
                 if hasName(names, nameOf(node))
-                  push lines, "  " + nameOf(node) + " = " + extraOf(node) + " < " + extra2Of(node) + ";"
+                  push lines, "  " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
                 else
-                  push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " < " + extra2Of(node) + ";"
-                  rememberType names, types, nameOf(node), "BOOL"
+                  push lines, "  long " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
+                  rememberType names, types, nameOf(node), "INT"
               else
-                if valueOf(node) == "COMPARE_EQ"
+                if valueOf(node) == "COMPARE_LT"
                   if hasName(names, nameOf(node))
-                    push lines, "  " + nameOf(node) + " = " + extraOf(node) + " == " + extra2Of(node) + ";"
+                    push lines, "  " + nameOf(node) + " = " + extraOf(node) + " < " + extra2Of(node) + ";"
                   else
-                    push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " == " + extra2Of(node) + ";"
+                    push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " < " + extra2Of(node) + ";"
                     rememberType names, types, nameOf(node), "BOOL"
                 else
-                  if valueOf(node) == "BOOL_NOT"
+                  if valueOf(node) == "COMPARE_EQ"
                     if hasName(names, nameOf(node))
-                      push lines, "  " + nameOf(node) + " = !" + extraOf(node) + ";"
+                      push lines, "  " + nameOf(node) + " = " + extraOf(node) + " == " + extra2Of(node) + ";"
                     else
-                      push lines, "  int " + nameOf(node) + " = !" + extraOf(node) + ";"
+                      push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " == " + extra2Of(node) + ";"
                       rememberType names, types, nameOf(node), "BOOL"
                   else
-                    if valueOf(node) == "IDENT"
-                      typeName = typeOf(names, types, extraOf(node))
-                      if typeName == "INT"
-                        if hasName(names, nameOf(node))
-                          push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                        else
-                          push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
-                          rememberType names, types, nameOf(node), "INT"
+                    if valueOf(node) == "BOOL_NOT"
+                      if hasName(names, nameOf(node))
+                        push lines, "  " + nameOf(node) + " = !" + extraOf(node) + ";"
                       else
-                        if typeName == "BOOL"
-                          if hasName(names, nameOf(node))
-                            push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                          else
-                            push lines, "  int " + nameOf(node) + " = " + extraOf(node) + ";"
-                            rememberType names, types, nameOf(node), "BOOL"
-                        else
-                          if hasName(names, nameOf(node))
-                            push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                          else
-                            push lines, "  const char *" + nameOf(node) + " = " + extraOf(node) + ";"
-                            rememberType names, types, nameOf(node), "STRING"
+                        push lines, "  int " + nameOf(node) + " = !" + extraOf(node) + ";"
+                        rememberType names, types, nameOf(node), "BOOL"
                     else
-                      push lines, "  /* assign " + nameOf(node) + " */"
+                      if valueOf(node) == "IDENT"
+                        typeName = typeOf(names, types, extraOf(node))
+                        if typeName == "INT"
+                          if hasName(names, nameOf(node))
+                            push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                          else
+                            push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
+                            rememberType names, types, nameOf(node), "INT"
+                        else
+                          if typeName == "BOOL"
+                            if hasName(names, nameOf(node))
+                              push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                            else
+                              push lines, "  int " + nameOf(node) + " = " + extraOf(node) + ";"
+                              rememberType names, types, nameOf(node), "BOOL"
+                          else
+                            if hasName(names, nameOf(node))
+                              push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                            else
+                              push lines, "  const char *" + nameOf(node) + " = " + extraOf(node) + ";"
+                              rememberType names, types, nameOf(node), "STRING"
+                      else
+                        push lines, "  /* assign " + nameOf(node) + " */"
 
     if kindOf(node) == "IF"
       if valueOf(node) == "true"
