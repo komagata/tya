@@ -33,6 +33,9 @@ func (p *Parser) program() (*ast.Program, error) {
 }
 
 func (p *Parser) stmt() (ast.Stmt, error) {
+	if p.at(token.IDENT) && p.peek().Lexeme == "if" {
+		return p.ifStmt()
+	}
 	if p.isAssignStart() {
 		tok := p.peek()
 		target, err := p.assignTarget()
@@ -51,6 +54,48 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.ExprStmt{Expr: ex}, nil
+}
+
+func (p *Parser) ifStmt() (ast.Stmt, error) {
+	p.next()
+	cond, err := p.expr()
+	if err != nil {
+		return nil, err
+	}
+	thenBlock, err := p.block("if")
+	if err != nil {
+		return nil, err
+	}
+	var elseBlock []ast.Stmt
+	p.skipNewlines()
+	if p.at(token.IDENT) && p.peek().Lexeme == "else" {
+		p.next()
+		elseBlock, err = p.block("else")
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &ast.IfStmt{Cond: cond, Then: thenBlock, Else: elseBlock}, nil
+}
+
+func (p *Parser) block(owner string) ([]ast.Stmt, error) {
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after " + owner)
+	}
+	var stmts []ast.Stmt
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		s, err := p.stmt()
+		if err != nil {
+			return nil, err
+		}
+		stmts = append(stmts, s)
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after " + owner)
+	}
+	return stmts, nil
 }
 
 func (p *Parser) valueAfterAssign() (ast.Expr, error) {

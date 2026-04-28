@@ -1,0 +1,14 @@
+user =
+  name: "komagata"
+
+if user
+  print user.name
+else
+  print "no user"
+
+missing = nil
+
+if missing
+  print "unexpected"
+else
+  print "missing"

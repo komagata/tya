@@ -105,6 +105,15 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		return v, assign(n.Target, v, env)
 	case *ast.ExprStmt:
 		return evalExpr(n.Expr, env)
+	case *ast.IfStmt:
+		cond, err := evalExpr(n.Cond, env)
+		if err != nil {
+			return nil, err
+		}
+		if truthy(cond) {
+			return evalStmts(n.Then, env)
+		}
+		return evalStmts(n.Else, env)
 	}
 	return nil, fmt.Errorf("unknown statement")
 }
@@ -313,6 +322,16 @@ func asFloat(v Value) (float64, bool) {
 		return n, true
 	}
 	return 0, false
+}
+
+func truthy(v Value) bool {
+	if v == nil {
+		return false
+	}
+	if b, ok := v.(bool); ok {
+		return b
+	}
+	return true
 }
 
 var interp = regexp.MustCompile(`\{([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\}`)

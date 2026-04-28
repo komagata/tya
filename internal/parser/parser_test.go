@@ -38,3 +38,17 @@ func TestParseMultipleFunctionParams(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestParseIfElse(t *testing.T) {
+	toks, errs := lexer.Lex("if true\n  print \"yes\"\nelse\n  print \"no\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := prog.Stmts[0].(*ast.IfStmt); !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+}

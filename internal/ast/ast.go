@@ -23,6 +23,14 @@ type ExprStmt struct {
 
 func (*ExprStmt) stmt() {}
 
+type IfStmt struct {
+	Cond Expr
+	Then []Stmt
+	Else []Stmt
+}
+
+func (*IfStmt) stmt() {}
+
 type Ident struct {
 	Name string
 	Tok  token.Token
