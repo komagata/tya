@@ -121,6 +121,7 @@ Implemented:
 - Initial `selfhost/lexer.tya` that tokenizes a useful subset of Tya source
 - Initial `selfhost/parser.tya` that recognizes simple assignment and print nodes
 - Initial `selfhost/checker.tya` that detects duplicate assignment nodes
+- Initial `selfhost/codegen_c.tya` that emits C stubs from simple node lines
 
 ## Non-Goals For Now
 
