@@ -80,6 +80,14 @@ func TestEmitCCompilesFunctionProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesStringInterpolationProgram(t *testing.T) {
+	src := "name = \"Tya\"\nline = 3\nprint \"{line}:IDENT:{name}\"\n"
+	out := compileAndRun(t, src)
+	if string(out) != "3:IDENT:Tya\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)

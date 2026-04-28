@@ -26,6 +26,12 @@ Go-emitted self-host C compile checks:
 sh scripts/go_emit_selfhost_compile_check.sh
 ```
 
+Go-emitted self-host lexer run check:
+
+```sh
+sh scripts/go_emit_selfhost_run_check.sh
+```
+
 The current implementation is intentionally tiny. It proves that Tya can run
 Tya-written compiler components before those components understand the full
 language.

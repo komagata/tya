@@ -179,6 +179,8 @@ Implemented:
 - Go C emitter can run simple generated-C array `for` loops
 - Go C emitter can emit and run simple named Tya functions in generated C
 - Go C emitter predeclares generated C locals and mangles reserved identifiers used by self-host sources
+- Go C emitter expands simple string interpolation in generated C
+- Go-emitted self-host lexer can tokenize a simple `.tya` source file
 
 ## Non-Goals For Now
 

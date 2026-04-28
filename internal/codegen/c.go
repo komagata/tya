@@ -205,12 +205,31 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
 		}
 		child.line(fmt.Sprintf("return %s;", value))
 	} else {
-		for _, stmt := range fn.Body {
-			if err := child.stmt(stmt); err != nil {
-				return err
+		body := fn.Body
+		if len(body) > 0 {
+			if last, ok := body[len(body)-1].(*ast.ExprStmt); ok {
+				body = body[:len(body)-1]
+				for _, stmt := range body {
+					if err := child.stmt(stmt); err != nil {
+						return err
+					}
+				}
+				value, _, err := child.expr(last.Expr)
+				if err != nil {
+					return err
+				}
+				child.line(fmt.Sprintf("return %s;", value))
+			} else {
+				for _, stmt := range body {
+					if err := child.stmt(stmt); err != nil {
+						return err
+					}
+				}
+				child.line("return tya_nil();")
 			}
+		} else {
+			child.line("return tya_nil();")
 		}
-		child.line("return tya_nil();")
 	}
 	g.temp = child.temp
 	out.WriteString(child.out.String())
@@ -261,6 +280,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.FloatLit:
 		return "tya_number(" + strconv.FormatFloat(n.Value, 'f', -1, 64) + ")", "TyaValue", nil
 	case *ast.StringLit:
+		if strings.Contains(n.Value, "{") {
+			return interpolateString(n.Value), "TyaValue", nil
+		}
 		return "tya_string(" + strconv.Quote(n.Value) + ")", "TyaValue", nil
 	case *ast.BoolLit:
 		if n.Value {
@@ -436,6 +458,55 @@ func cName(name string) string {
 		return "tya_char"
 	}
 	return name
+}
+
+func interpolateString(value string) string {
+	parts := []string{}
+	for len(value) > 0 {
+		open := strings.IndexByte(value, '{')
+		if open < 0 {
+			if value != "" {
+				parts = append(parts, "tya_string("+strconv.Quote(value)+")")
+			}
+			break
+		}
+		if open > 0 {
+			parts = append(parts, "tya_string("+strconv.Quote(value[:open])+")")
+		}
+		close := strings.IndexByte(value[open+1:], '}')
+		if close < 0 {
+			parts = append(parts, "tya_string("+strconv.Quote(value[open:])+")")
+			break
+		}
+		name := value[open+1 : open+1+close]
+		if isIdentName(name) {
+			parts = append(parts, "tya_to_string("+cName(name)+")")
+		} else {
+			parts = append(parts, "tya_string("+strconv.Quote(value[open:open+close+2])+")")
+		}
+		value = value[open+close+2:]
+	}
+	if len(parts) == 0 {
+		return "tya_string(\"\")"
+	}
+	expr := parts[0]
+	for _, part := range parts[1:] {
+		expr = "tya_add(" + expr + ", " + part + ")"
+	}
+	return expr
+}
+
+func isIdentName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for i, r := range name {
+		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '_' || i > 0 && r >= '0' && r <= '9' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func assignedNames(stmts []ast.Stmt) []string {
