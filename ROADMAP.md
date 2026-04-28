@@ -240,6 +240,7 @@ Implemented:
 - `--emit-c` loads `stdlib/prelude.tya` like normal execution and can run `examples/prelude.tya`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
+- Self-hosted parser/codegen carries simple `else` blocks
 
 ## Non-Goals For Now
 

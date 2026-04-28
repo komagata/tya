@@ -41,7 +41,7 @@ Current supported subset:
 - Lexer: identifiers, ints, strings, comments, symbols, common two-character
   operators, source lines, and indentation counts
 - Parser: simple assignment, simple function headers and inline returns,
-  `push`, `return`, `if`, one-, two-, and three-argument function calls, `while`,
+  `push`, `return`, `if`, `else`, one-, two-, and three-argument function calls, `while`,
   `for`, `break`, `continue`, direct comparison and `or` conditions,
   one-argument call conditions, call comparison conditions, negated call conditions, call-based `while`
   conditions, call-with-call-index arguments, call indexing, return calls,
@@ -58,5 +58,5 @@ Current supported subset:
   conditions, negated call conditions, call-based
   `while` conditions, return calls, simple value-copy calls, one-argument print calls, placeholder
   call/index assignment declarations, self-host source compile smoke checks,
-  and simple literal or variable `if` / `while` / `for` blocks with `break` /
+  and simple literal or variable `if` / `else` / `while` / `for` blocks with `break` /
   `continue`

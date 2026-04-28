@@ -13,6 +13,18 @@ func TestSelfhostPrototypePipeline(t *testing.T) {
 	}
 }
 
+func TestSelfhostElseExample(t *testing.T) {
+	path := t.TempDir() + "/else.tya"
+	src := "flag = false\nif flag\n  print \"yes\"\nelse\n  print \"no\"\n"
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "sh", "scripts/selfhost.sh", path)
+	if string(out) != "ok\nno\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestSelfhostWhileExample(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost.sh", "examples/while.tya")
 	if string(out) != "ok\n10\n11\n" {

@@ -366,6 +366,11 @@ emitC = nodes ->
       blockOpen = true
       blockDepth = blockDepth + 1
 
+    if kindOf(node) == "ELSE"
+      push lines, "  else {"
+      blockOpen = true
+      blockDepth = blockDepth + 1
+
     if kindOf(node) == "WHILE"
       if valueOf(node) == "true"
         push lines, "  while (1) {"

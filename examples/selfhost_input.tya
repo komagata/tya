@@ -57,6 +57,8 @@ if true
 if less
   print "Compared"
   return message
+else
+  print "Not compared"
 
 while false
   print "Never"
