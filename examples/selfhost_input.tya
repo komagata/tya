@@ -3,6 +3,7 @@ alias = message
 identity = value ->
   return value
 result = identity message
+parts = split message, alias
 log = message
 push log, alias
 queue = []

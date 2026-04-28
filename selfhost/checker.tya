@@ -26,6 +26,12 @@ extra2Of = node ->
     return ""
   parts[5]
 
+extra3Of = node ->
+  parts = split node, ":"
+  if len(parts) < 7
+    return ""
+  parts[6]
+
 lineOf = node ->
   parts = split node, ":"
   parts[0]
@@ -39,6 +45,11 @@ hasName = names, name ->
 check = nodes ->
   names = []
   errors = []
+  push names, "split"
+  push names, "len"
+  push names, "readFile"
+  push names, "args"
+  push names, "toString"
 
   for node in nodes
     if kindOf(node) == "FUNC"
@@ -74,6 +85,16 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + funcName
         if not hasName(names, argName)
           push errors, lineOf(node) + ": undefined variable: " + argName
+      if valueOf(node) == "CALL2"
+        funcName = extraOf(node)
+        leftArg = extra2Of(node)
+        rightArg = extra3Of(node)
+        if not hasName(names, funcName)
+          push errors, lineOf(node) + ": undefined variable: " + funcName
+        if not hasName(names, leftArg)
+          push errors, lineOf(node) + ": undefined variable: " + leftArg
+        if not hasName(names, rightArg)
+          push errors, lineOf(node) + ": undefined variable: " + rightArg
       seen = hasName names, name
       if not seen
         push names, name
