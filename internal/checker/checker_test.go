@@ -27,6 +27,39 @@ func TestCheckAllowsVariableReassignment(t *testing.T) {
 	}
 }
 
+func TestCheckRejectsInvalidBindingName(t *testing.T) {
+	prog := parse(t, "user_name = \"komagata\"\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected invalid binding name error")
+	}
+	if !strings.Contains(err.Error(), "invalid binding name user_name") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsDuplicateFunctionParameter(t *testing.T) {
+	prog := parse(t, "add = a, a -> a\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected duplicate parameter error")
+	}
+	if !strings.Contains(err.Error(), "duplicate function parameter a") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsDuplicateObjectProperty(t *testing.T) {
+	prog := parse(t, "user =\n  name: \"a\"\n  name: \"b\"\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected duplicate property error")
+	}
+	if !strings.Contains(err.Error(), "duplicate object property name") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func parse(t *testing.T, src string) *ast.Program {
 	t.Helper()
 	toks, errs := lexer.Lex(src)
