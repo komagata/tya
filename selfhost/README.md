@@ -14,6 +14,12 @@ Self-host source checks:
 sh scripts/selfhost_check.sh
 ```
 
+Self-host generated-C compile checks:
+
+```sh
+sh scripts/selfhost_compile_check.sh
+```
+
 The current implementation is intentionally tiny. It proves that Tya can run
 Tya-written compiler components before those components understand the full
 language.
@@ -37,5 +43,6 @@ Current supported subset:
   call-with-call-index arguments, one-argument call conditions,
   call comparison conditions, direct comparison conditions, simple `or`
   conditions, negated call conditions, call-based
-  `while` conditions, and return calls, and simple literal or variable `if` /
-  `while` / `for` blocks with `break` / `continue`
+  `while` conditions, return calls, placeholder call/index assignment
+  declarations, self-host source compile smoke checks, and simple literal or
+  variable `if` / `while` / `for` blocks with `break` / `continue`

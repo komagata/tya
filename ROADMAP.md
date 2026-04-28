@@ -161,6 +161,9 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple `push` commands
 - Self-hosted parser/checker/codegen carries simple `return` commands
 - Self-hosted parser/codegen emits simple bool assignments and prints
+- Self-hosted C codegen emits placeholder declarations for call/index assignments
+- Self-hosted C codegen skips function bodies until real function emission lands
+- Self-hosted source files now parse, check, generate C, and compile as C smoke tests
 
 ## Non-Goals For Now
 
