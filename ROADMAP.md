@@ -241,7 +241,7 @@ Implemented:
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 - Self-hosted parser/codegen carries simple `else` blocks
-- Self-hosted parser/checker/codegen carries simple `!=` and `>=` conditions
+- Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` conditions
 
 ## Non-Goals For Now
 

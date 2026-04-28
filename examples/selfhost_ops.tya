@@ -4,5 +4,8 @@ name = "komagata"
 if age >= 20
   print "adult"
 
+if age <= 20
+  print "young"
+
 if name != ""
   print name

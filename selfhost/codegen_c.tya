@@ -370,6 +370,13 @@ emitC = nodes ->
       blockOpen = true
       blockDepth = blockDepth + 1
 
+    if kindOf(node) == "IF_COMPARE_LE"
+      left = cName(valueOf(node))
+      right = cName(extra2Of(node))
+      push lines, "  if (" + left + " <= " + right + ") {"
+      blockOpen = true
+      blockDepth = blockDepth + 1
+
     if kindOf(node) == "IF_COMPARE_OR"
       left = cName(valueOf(node))
       right = cName(extra2Of(node))
