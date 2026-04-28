@@ -79,6 +79,9 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if !ok {
 			return fmt.Errorf("C emitter only supports variable assignment")
 		}
+		if tryExpr, ok := n.Values[0].(*ast.TryExpr); ok {
+			return g.assignTry(id.Name, tryExpr)
+		}
 		if obj, ok := n.Values[0].(*ast.ObjectLit); ok {
 			if err := g.assignObjectLit(id.Name, obj); err != nil {
 				return err
@@ -226,6 +229,34 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.line(fmt.Sprintf("return %s;", value))
 	default:
 		return fmt.Errorf("C emitter does not support %T", stmt)
+	}
+	return nil
+}
+
+func (g *cgen) assignTry(name string, tryExpr *ast.TryExpr) error {
+	if !g.inFunc {
+		return fmt.Errorf("C emitter only supports try inside functions")
+	}
+	value, _, err := g.expr(tryExpr.Expr)
+	if err != nil {
+		return err
+	}
+	temp := fmt.Sprintf("__try%d", g.temp)
+	errValue := fmt.Sprintf("__tryErr%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = %s;", temp, value))
+	g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_number(1));", errValue, temp))
+	g.line(fmt.Sprintf("if (tya_truthy(%s)) {", errValue))
+	g.indent++
+	g.line(fmt.Sprintf("return tya_array((TyaValue[]){tya_nil(), %s}, 2);", errValue))
+	g.indent--
+	g.line("}")
+	item := fmt.Sprintf("tya_index(%s, tya_number(0))", temp)
+	if g.vars[name] {
+		g.line(fmt.Sprintf("%s = %s;", cName(name), item))
+	} else {
+		g.vars[name] = true
+		g.line(fmt.Sprintf("TyaValue %s = %s;", cName(name), item))
 	}
 	return nil
 }
