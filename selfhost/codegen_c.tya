@@ -147,6 +147,18 @@ emitC = nodes ->
               else
                 push lines, prefix + "puts(" + valueOf(node) + ");"
 
+    if kindOf(node) == "BREAK"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      push lines, prefix + "break;"
+
+    if kindOf(node) == "CONTINUE"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      push lines, prefix + "continue;"
+
   if blockOpen
     push lines, "  }"
   push lines, "  return 0;"

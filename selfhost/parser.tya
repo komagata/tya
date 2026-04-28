@@ -60,6 +60,18 @@ parse = tokens ->
         i = i + step
         continue
 
+    if kindOf(token) == "IDENT" and textOf(token) == "break"
+      node = lineOf(token) + ":BREAK"
+      push nodes, node
+      i = i + 1
+      continue
+
+    if kindOf(token) == "IDENT" and textOf(token) == "continue"
+      node = lineOf(token) + ":CONTINUE"
+      push nodes, node
+      i = i + 1
+      continue
+
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
         value = tokens[i + 2]

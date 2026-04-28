@@ -20,6 +20,8 @@ if less
 
 while false
   print "Never"
+  continue
 
 while disabled
   print "Also never"
+  break
