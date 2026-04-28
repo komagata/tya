@@ -80,6 +80,7 @@ Implemented:
 - Runtime logical helpers preserve Tya `and` / `or` value semantics in generated C
 - Runtime addition helper for numeric addition and string concatenation
 - Initial generated-C runtime support for `args`, `readFile`, `split`, `toString`, and `toInt`
+- Generated-C runtime supports `env`
 - Initial object runtime with literal construction, member reads, and `len`
 - Generated-C object runtime supports `has`, `keys`, `values`, and `delete`
 - Generated-C object runtime supports `for key, value of object`
@@ -203,6 +204,7 @@ Implemented:
 - Go C emitter can run `examples/for.tya`
 - Go C emitter can run `examples/for_object.tya`
 - Go C emitter can run `examples/logic.tya`
+- Go C emitter can run `examples/args.tya` with arguments and environment variables
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 

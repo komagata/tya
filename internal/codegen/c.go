@@ -503,6 +503,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		if ok && id.Name == "args" && len(n.Args) == 0 {
 			return "tya_args(argc, argv)", "TyaValue", nil
 		}
+		if ok && id.Name == "env" && len(n.Args) == 1 {
+			name, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_env(%s)", name), "TyaValue", nil
+		}
 		if ok && id.Name == "readFile" && len(n.Args) == 1 {
 			path, _, err := g.expr(n.Args[0])
 			if err != nil {

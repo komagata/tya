@@ -73,6 +73,15 @@ func TestEmitCCompilesWriteFileProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesArgsAndEnvProgram(t *testing.T) {
+	t.Setenv("TYA_EXAMPLE", "hello")
+	src := "items = args()\nprint len items\nprint env \"TYA_EXAMPLE\"\n"
+	out := compileAndRunArgs(t, src, "foo")
+	if string(out) != "1\nhello\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesForInProgram(t *testing.T) {
 	src := "items = [1, 2, 3]\ntotal = 0\nfor item in items\n  total = total + item\nprint total\n"
 	out := compileAndRun(t, src)

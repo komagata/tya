@@ -412,6 +412,17 @@ TyaValue tya_args(int argc, char **argv) {
   return out;
 }
 
+TyaValue tya_env(TyaValue name) {
+  if (name.kind != TYA_STRING || name.string == NULL) {
+    return tya_nil();
+  }
+  const char *value = getenv(name.string);
+  if (value == NULL) {
+    return tya_nil();
+  }
+  return tya_string(value);
+}
+
 TyaValue tya_read_file(TyaValue path) {
   if (path.kind != TYA_STRING || path.string == NULL) {
     return tya_string("");

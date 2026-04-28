@@ -60,6 +60,13 @@ func TestGoEmitterMatchesSelectedExamples(t *testing.T) {
 	}
 }
 
+func TestGoEmitterMatchesArgsExample(t *testing.T) {
+	out := run(t, "sh", "scripts/go_emit_args_check.sh")
+	if string(out) != "examples/args.tya: matched\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedConditionNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:IF:IDENT:missingIf\n2:WHILE:IDENT:missingWhile\n"), 0644); err != nil {
