@@ -34,6 +34,7 @@ TyaValue tya_add(TyaValue left, TyaValue right);
 TyaValue tya_args(int argc, char **argv);
 TyaValue tya_read_file(TyaValue path);
 TyaValue tya_split(TyaValue text, TyaValue sep);
+TyaValue tya_join(TyaValue array, TyaValue sep);
 TyaValue tya_to_string(TyaValue value);
 TyaValue tya_to_int(TyaValue value);
 void tya_push(TyaValue array, TyaValue value);

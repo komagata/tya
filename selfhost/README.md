@@ -26,7 +26,7 @@ Go-emitted self-host C compile checks:
 sh scripts/go_emit_selfhost_compile_check.sh
 ```
 
-Go-emitted self-host lexer run check:
+Go-emitted self-host pipeline run check:
 
 ```sh
 sh scripts/go_emit_selfhost_run_check.sh

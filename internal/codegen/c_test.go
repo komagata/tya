@@ -57,9 +57,9 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	if err := os.WriteFile(path, []byte("12\na\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	src := "path = args()[0]\ntext = readFile path\nparts = split text, \"\\n\"\nfirst = toInt parts[0]\nprint first + 8\nprint toString true\n"
+	src := "path = args()[0]\ntext = readFile path\nparts = split text, \"\\n\"\nfirst = toInt parts[0]\nprint first + 8\nprint toString true\nprint join parts, \":\"\n"
 	out := compileAndRunArgs(t, src, path)
-	if string(out) != "20\ntrue\n" {
+	if string(out) != "20\ntrue\n12:a:\n" {
 		t.Fatalf("got %q", out)
 	}
 }

@@ -184,6 +184,20 @@ TyaValue tya_split(TyaValue text, TyaValue sep) {
   return out;
 }
 
+TyaValue tya_join(TyaValue array, TyaValue sep) {
+  if (array.kind != TYA_ARRAY || array.array == NULL || sep.kind != TYA_STRING || sep.string == NULL) {
+    return tya_string("");
+  }
+  TyaValue out = tya_string("");
+  for (int i = 0; i < array.array->len; i++) {
+    if (i > 0) {
+      out = tya_add(out, sep);
+    }
+    out = tya_add(out, tya_to_string(array.array->items[i]));
+  }
+  return out;
+}
+
 TyaValue tya_to_string(TyaValue value) {
   if (value.kind == TYA_STRING) {
     return value;

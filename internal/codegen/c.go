@@ -395,6 +395,17 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_split(%s, %s)", text, sep), "TyaValue", nil
 		}
+		if ok && id.Name == "join" && len(n.Args) == 2 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			sep, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_join(%s, %s)", array, sep), "TyaValue", nil
+		}
 		if ok && id.Name == "toString" && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
 			if err != nil {

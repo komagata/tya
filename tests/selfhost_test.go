@@ -37,9 +37,9 @@ func TestGoEmitterCompilesSelfhostSourcesToC(t *testing.T) {
 	}
 }
 
-func TestGoEmittedSelfhostLexerRuns(t *testing.T) {
+func TestGoEmittedSelfhostPipelineRuns(t *testing.T) {
 	out := run(t, "sh", "scripts/go_emit_selfhost_run_check.sh")
-	want := "1:INDENT:0\n1:IDENT:print\n1:STRING:Hello, Tya\n"
+	want := "Hello, Tya\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
