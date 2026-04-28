@@ -198,6 +198,7 @@ Implemented:
 - Go C emitter can run `examples/string.tya`
 - Go C emitter can run object, conversion, and file examples
 - Go C emitter can run `examples/equal.tya`
+- Go C emitter can run `examples/for.tya`
 - Go C emitter can run `examples/for_object.tya`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`

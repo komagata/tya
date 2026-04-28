@@ -785,6 +785,13 @@ func assignedNames(stmts []ast.Stmt) []string {
 			case *ast.WhileStmt:
 				walk(n.Body)
 			case *ast.ForInStmt:
+				for _, name := range []string{n.ValueName, n.IndexName} {
+					if name == "" || seen[name] {
+						continue
+					}
+					seen[name] = true
+					names = append(names, name)
+				}
 				walk(n.Body)
 			}
 		}
