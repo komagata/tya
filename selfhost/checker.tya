@@ -68,6 +68,7 @@ check = nodes ->
   push names, "readFile"
   push names, "args"
   push names, "toString"
+  push names, "contains"
 
   for node in nodes
     if kindOf(node) == "FUNC"
@@ -213,6 +214,15 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + sourceName
         if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
           push errors, lineOf(node) + ": undefined variable: " + indexName
+
+    if kindOf(node) == "RETURN_CALL2"
+      funcName = nameOf(node)
+      arg2Kind = valueOf(node)
+      arg2Name = extraOf(node)
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if arg2Kind == "IDENT" and not hasName(names, arg2Name)
+        push errors, lineOf(node) + ": undefined variable: " + arg2Name
 
   errors
 

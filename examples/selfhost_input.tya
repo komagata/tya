@@ -3,6 +3,7 @@ alias = message
 identity = value ->
   return value
 echo = text -> text
+hasT = text -> contains "T", text
 result = identity message
 parts = split message, alias
 first = parts[0]

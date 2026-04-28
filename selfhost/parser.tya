@@ -134,6 +134,12 @@ parse = tokens ->
           push nodes, node
           if i + 4 < len(tokens) and lineOf(tokens[i + 4]) == lineOf(token)
             result = tokens[i + 4]
+            if i + 6 < len(tokens) and textOf(tokens[i + 5]) == ","
+              arg2 = tokens[i + 6]
+              node = lineOf(token) + ":RETURN_CALL2:" + textOf(result) + ":" + literalKindOf(arg2) + ":" + textOf(arg2)
+              push nodes, node
+              i = i + 7
+              continue
             node = lineOf(token) + ":RETURN:" + literalKindOf(result) + ":" + textOf(result)
             push nodes, node
             i = i + 5

@@ -298,6 +298,12 @@ emitC = nodes ->
       else
         push lines, prefix + "/* return " + valueOf(node) + " */"
 
+    if kindOf(node) == "RETURN_CALL2"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      push lines, prefix + "/* return " + nameOf(node) + "(..., " + extraOf(node) + ") */"
+
   if blockOpen
     push lines, "  }"
   push lines, "  return 0;"
