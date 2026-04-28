@@ -64,6 +64,15 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesWriteFileProgram(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "output.txt")
+	src := "path = args()[0]\nwriteFile path, \"Hello\"\nprint fileExists path\nprint readFile path\n"
+	out := compileAndRunArgs(t, src, path)
+	if string(out) != "true\nHello\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesForInProgram(t *testing.T) {
 	src := "items = [1, 2, 3]\ntotal = 0\nfor item in items\n  total = total + item\nprint total\n"
 	out := compileAndRun(t, src)

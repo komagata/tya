@@ -430,6 +430,18 @@ TyaValue tya_read_file(TyaValue path) {
   return tya_string(buffer);
 }
 
+void tya_write_file(TyaValue path, TyaValue text) {
+  if (path.kind != TYA_STRING || path.string == NULL || text.kind != TYA_STRING || text.string == NULL) {
+    return;
+  }
+  FILE *file = fopen(path.string, "wb");
+  if (file == NULL) {
+    return;
+  }
+  fwrite(text.string, 1, strlen(text.string), file);
+  fclose(file);
+}
+
 static char *tya_substr(const char *text, int start, int len) {
   char *out = malloc((size_t)len + 1);
   for (int i = 0; i < len; i++) {

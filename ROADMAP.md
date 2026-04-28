@@ -84,6 +84,7 @@ Implemented:
 - Generated-C object runtime supports `has`, `keys`, `values`, and `delete`
 - Generated-C object runtime supports `for key, value of object`
 - Generated-C runtime supports `fileExists`, `toFloat`, and `toNumber`
+- Generated-C runtime supports `writeFile`
 - Generated-C runtime supports deep `equal`
 - Runtime printing and truthiness helpers
 - Generated C can compile and run against `runtime/tya_runtime.c`
