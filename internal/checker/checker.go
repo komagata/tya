@@ -184,6 +184,8 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		return checkExpr(n.Right, scope)
 	case *ast.UnaryExpr:
 		return checkExpr(n.Expr, scope)
+	case *ast.TryExpr:
+		return checkExpr(n.Expr, scope)
 	case *ast.MemberExpr:
 		return checkExpr(n.Object, scope)
 	case *ast.IndexExpr:

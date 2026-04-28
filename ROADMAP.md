@@ -26,7 +26,6 @@ Implemented:
 
 Next:
 
-- Add `try` for `value, err` propagation
 - Improve optional-parentheses parsing for nested no-parentheses calls
 - Add unused variable / unused argument checks
 - Add variable shadowing checks

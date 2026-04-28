@@ -60,6 +60,7 @@ type Env struct {
 	parent *Env
 	vars   map[string]Value
 	this   Object
+	inFunc bool
 }
 
 func NewEnv() *Env {
@@ -67,7 +68,7 @@ func NewEnv() *Env {
 }
 
 func (e *Env) child(this Object) *Env {
-	return &Env{parent: e, vars: map[string]Value{}, this: this}
+	return &Env{parent: e, vars: map[string]Value{}, this: this, inFunc: e.inFunc}
 }
 
 func (e *Env) get(name string) (Value, bool) {
@@ -847,6 +848,22 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			}
 		}
 		return nil, fmt.Errorf("unknown unary operator %s", n.Op.Lexeme)
+	case *ast.TryExpr:
+		if !env.inFunc {
+			return nil, fmt.Errorf("%d:%d: try used outside function", n.Tok.Line, n.Tok.Col)
+		}
+		v, err := evalExpr(n.Expr, env)
+		if err != nil {
+			return nil, err
+		}
+		tuple, ok := v.(*Tuple)
+		if !ok || len(tuple.items) != 2 {
+			return nil, fmt.Errorf("%d:%d: try expects value, err tuple", n.Tok.Line, n.Tok.Col)
+		}
+		if tuple.items[1] != nil {
+			return nil, &returnSignal{value: &Tuple{items: []Value{nil, tuple.items[1]}}}
+		}
+		return tuple.items[0], nil
 	case *ast.MemberExpr:
 		obj, err := evalExpr(n.Object, env)
 		if err != nil {
@@ -919,6 +936,7 @@ func callValue(fn Value, recv Object, args []Value) (Value, error) {
 			return nil, fmt.Errorf("function expects %d arguments, got %d", len(f.Params), len(args))
 		}
 		callEnv := f.Env.child(recv)
+		callEnv.inFunc = true
 		for i, name := range f.Params {
 			callEnv.set(name, args[i])
 		}

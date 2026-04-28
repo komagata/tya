@@ -376,6 +376,14 @@ func (p *Parser) factor() (ast.Expr, error) {
 }
 
 func (p *Parser) unary() (ast.Expr, error) {
+	if p.at(token.IDENT) && p.peek().Lexeme == "try" {
+		tok := p.next()
+		ex, err := p.unary()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.TryExpr{Expr: ex, Tok: tok}, nil
+	}
 	if p.matchWord("not") || p.match(token.MINUS) {
 		op := p.prev()
 		ex, err := p.unary()

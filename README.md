@@ -34,6 +34,7 @@ go test ./...
 - functions and implicit last-expression return
 - explicit `return`
 - multiple assignment and returns: `value, err = readThing()`
+- `try` propagation for `value, err`
 - method calls with `@property`
 - arithmetic, comparison, equality, and logical operators
 - unary `not` and `-`

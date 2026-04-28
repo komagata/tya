@@ -1,0 +1,22 @@
+parseUser = text ->
+  if text == ""
+    return nil, error "empty user"
+  return { name: text }, nil
+
+readUser = text ->
+  user = try parseUser(text)
+  return user.name, nil
+
+name, err = readUser "komagata"
+
+if err
+  print err.message
+else
+  print name
+
+name, err = readUser ""
+
+if err
+  print err.message
+else
+  print name

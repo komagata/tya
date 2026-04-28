@@ -136,6 +136,13 @@ type UnaryExpr struct {
 
 func (*UnaryExpr) expr() {}
 
+type TryExpr struct {
+	Expr Expr
+	Tok  token.Token
+}
+
+func (*TryExpr) expr() {}
+
 type MemberExpr struct {
 	Object Expr
 	Name   string
