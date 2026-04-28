@@ -79,6 +79,14 @@ emitC = nodes ->
         push lines, "  if (0) {"
         blockOpen = true
 
+    if kindOf(node) == "WHILE"
+      if valueOf(node) == "true"
+        push lines, "  while (1) {"
+        blockOpen = true
+      else
+        push lines, "  while (0) {"
+        blockOpen = true
+
     if kindOf(node) == "PRINT"
       prefix = "  "
       if indent != "0"

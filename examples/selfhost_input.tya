@@ -5,3 +5,6 @@ print count
 
 if true
   print "Indented"
+
+while false
+  print "Never"

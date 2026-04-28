@@ -35,6 +35,14 @@ parse = tokens ->
         i = i + 2
         continue
 
+    if kindOf(token) == "IDENT" and textOf(token) == "while"
+      if i + 1 < len(tokens)
+        value = tokens[i + 1]
+        node = lineOf(token) + ":WHILE:" + kindOf(value) + ":" + textOf(value)
+        push nodes, node
+        i = i + 2
+        continue
+
     if kindOf(token) == "IDENT" and textOf(token) == "print"
       if i + 1 < len(tokens)
         value = tokens[i + 1]

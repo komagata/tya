@@ -129,6 +129,7 @@ Implemented:
 - Self-hosted checker detects simple undefined print names
 - Self-hosted C codegen emits simple string/int assignments and prints
 - Self-hosted parser/codegen handles simple integer addition assignments
+- Self-hosted parser/codegen carries simple `while false` blocks into generated C
 
 ## Non-Goals For Now
 
