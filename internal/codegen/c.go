@@ -505,8 +505,8 @@ func interpolateString(value string) string {
 			break
 		}
 		name := value[open+1 : open+1+close]
-		if isPathName(name) {
-			parts = append(parts, "tya_to_string("+pathExpr(name)+")")
+		if expr, ok := interpolationExpr(name); ok {
+			parts = append(parts, "tya_to_string("+expr+")")
 		} else {
 			parts = append(parts, "tya_string("+strconv.Quote(value[open:open+close+2])+")")
 		}
@@ -554,6 +554,41 @@ func pathExpr(name string) string {
 		expr = "tya_member(" + expr + ", " + strconv.Quote(part) + ")"
 	}
 	return expr
+}
+
+func interpolationExpr(expr string) (string, bool) {
+	expr = strings.TrimSpace(expr)
+	if isPathName(expr) {
+		return pathExpr(expr), true
+	}
+	for _, op := range []string{" + "} {
+		if strings.Contains(expr, op) {
+			parts := strings.Split(expr, op)
+			if len(parts) != 2 {
+				return "", false
+			}
+			left, ok := interpolationExpr(parts[0])
+			if !ok {
+				return "", false
+			}
+			right, ok := interpolationExpr(parts[1])
+			if !ok {
+				return "", false
+			}
+			return "tya_add(" + left + ", " + right + ")", true
+		}
+	}
+	if n, err := strconv.ParseInt(expr, 10, 64); err == nil {
+		return "tya_number(" + strconv.FormatInt(n, 10) + ")", true
+	}
+	if strings.HasPrefix(expr, "\"") && strings.HasSuffix(expr, "\"") {
+		unquoted, err := strconv.Unquote(expr)
+		if err != nil {
+			return "", false
+		}
+		return "tya_string(" + strconv.Quote(unquoted) + ")", true
+	}
+	return "", false
 }
 
 func assignedNames(stmts []ast.Stmt) []string {

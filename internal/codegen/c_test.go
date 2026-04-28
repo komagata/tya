@@ -81,9 +81,9 @@ func TestEmitCCompilesFunctionProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesStringInterpolationProgram(t *testing.T) {
-	src := "name = \"Tya\"\nline = 3\nprint \"{line}:IDENT:{name}\"\n"
+	src := "name = \"Tya\"\nline = 3\nprint \"{line}:IDENT:{name}\"\nprint \"next: {line + 1}\"\n"
 	out := compileAndRun(t, src)
-	if string(out) != "3:IDENT:Tya\n" {
+	if string(out) != "3:IDENT:Tya\nnext: 4\n" {
 		t.Fatalf("got %q", out)
 	}
 }
