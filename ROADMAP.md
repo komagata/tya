@@ -177,6 +177,8 @@ Implemented:
 - Go C emitter uses runtime addition for generated numeric addition and string concatenation
 - Go C emitter can run simple generated-C file/argument/split/conversion programs
 - Go C emitter can run simple generated-C array `for` loops
+- Go C emitter can emit and run simple named Tya functions in generated C
+- Go C emitter predeclares generated C locals and mangles reserved identifiers used by self-host sources
 
 ## Non-Goals For Now
 

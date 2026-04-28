@@ -9,27 +9,34 @@ import (
 )
 
 func EmitC(prog *ast.Program) (string, error) {
-	g := &cgen{vars: map[string]bool{}}
-	g.line("#include \"tya_runtime.h\"")
-	g.line("")
-	g.line("int main(int argc, char **argv) {")
-	g.indent++
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]bool{}}
+	for _, name := range assignedNames(prog.Stmts) {
+		g.vars[name] = true
+		g.line(fmt.Sprintf("TyaValue %s = tya_nil();", cName(name)))
+	}
 	for _, stmt := range prog.Stmts {
 		if err := g.stmt(stmt); err != nil {
 			return "", err
 		}
 	}
-	g.line("return 0;")
-	g.indent--
-	g.line("}")
-	return g.out.String(), nil
+	var out strings.Builder
+	out.WriteString("#include \"tya_runtime.h\"\n\n")
+	out.WriteString(g.funcOut.String())
+	out.WriteString("int main(int argc, char **argv) {\n")
+	out.WriteString(g.out.String())
+	out.WriteString("  return 0;\n")
+	out.WriteString("}\n")
+	return out.String(), nil
 }
 
 type cgen struct {
-	out    strings.Builder
-	indent int
-	vars   map[string]bool
-	temp   int
+	out     strings.Builder
+	funcOut strings.Builder
+	indent  int
+	vars    map[string]bool
+	funcs   map[string]bool
+	temp    int
+	inFunc  bool
 }
 
 func (g *cgen) line(s string) {
@@ -48,16 +55,19 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if !ok {
 			return fmt.Errorf("C emitter only supports variable assignment")
 		}
+		if fn, ok := n.Values[0].(*ast.FuncLit); ok {
+			return g.emitFunc(id.Name, fn)
+		}
 		ex, typ, err := g.expr(n.Values[0])
 		if err != nil {
 			return err
 		}
 		if g.vars[id.Name] {
-			g.line(fmt.Sprintf("%s = %s;", id.Name, ex))
+			g.line(fmt.Sprintf("%s = %s;", cName(id.Name), ex))
 		} else {
 			g.vars[id.Name] = true
 			_ = typ
-			g.line(fmt.Sprintf("TyaValue %s = %s;", id.Name, ex))
+			g.line(fmt.Sprintf("TyaValue %s = %s;", cName(id.Name), ex))
 		}
 	case *ast.ExprStmt:
 		return g.exprStmt(n.Expr)
@@ -118,17 +128,17 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.indent++
 		if n.IndexName != "" {
 			if g.vars[n.IndexName] {
-				g.line(fmt.Sprintf("%s = tya_number(%s);", n.IndexName, indexName))
+				g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
 			} else {
 				g.vars[n.IndexName] = true
-				g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", n.IndexName, indexName))
+				g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", cName(n.IndexName), indexName))
 			}
 		}
 		if g.vars[n.ValueName] {
-			g.line(fmt.Sprintf("%s = tya_index(%s, tya_number(%s));", n.ValueName, iterName, indexName))
+			g.line(fmt.Sprintf("%s = tya_index(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
 		} else {
 			g.vars[n.ValueName] = true
-			g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_number(%s));", n.ValueName, iterName, indexName))
+			g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
 		}
 		for _, stmt := range n.Body {
 			if err := g.stmt(stmt); err != nil {
@@ -138,10 +148,74 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.indent--
 		g.line("}")
 	case *ast.ReturnStmt:
-		g.line("/* return */")
+		if !g.inFunc {
+			g.line("/* return */")
+			return nil
+		}
+		if len(n.Values) == 0 {
+			g.line("return tya_nil();")
+			return nil
+		}
+		value, _, err := g.expr(n.Values[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("return %s;", value))
 	default:
 		return fmt.Errorf("C emitter does not support %T", stmt)
 	}
+	return nil
+}
+
+func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
+	g.funcs[name] = true
+	var out strings.Builder
+	out.WriteString("TyaValue ")
+	out.WriteString(cName(name))
+	out.WriteByte('(')
+	for i, param := range fn.Params {
+		if i > 0 {
+			out.WriteString(", ")
+		}
+		out.WriteString("TyaValue ")
+		out.WriteString(cName(param))
+	}
+	out.WriteString(") {\n")
+	child := &cgen{
+		vars:   map[string]bool{},
+		funcs:  g.funcs,
+		temp:   g.temp,
+		indent: 1,
+		inFunc: true,
+	}
+	for _, param := range fn.Params {
+		child.vars[param] = true
+	}
+	for _, local := range assignedNames(fn.Body) {
+		if child.vars[local] {
+			continue
+		}
+		child.vars[local] = true
+		child.line(fmt.Sprintf("TyaValue %s = tya_nil();", cName(local)))
+	}
+	if fn.Expr != nil {
+		value, _, err := child.expr(fn.Expr)
+		if err != nil {
+			return err
+		}
+		child.line(fmt.Sprintf("return %s;", value))
+	} else {
+		for _, stmt := range fn.Body {
+			if err := child.stmt(stmt); err != nil {
+				return err
+			}
+		}
+		child.line("return tya_nil();")
+	}
+	g.temp = child.temp
+	out.WriteString(child.out.String())
+	out.WriteString("}\n\n")
+	g.funcOut.WriteString(out.String())
 	return nil
 }
 
@@ -213,7 +287,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.FuncLit:
 		return "tya_nil() /* function */", "TyaValue", nil
 	case *ast.Ident:
-		return n.Name, "TyaValue", nil
+		return cName(n.Name), "TyaValue", nil
 	case *ast.BinaryExpr:
 		left, _, err := g.expr(n.Left)
 		if err != nil {
@@ -324,6 +398,17 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_number((long)%s.number / (long)%s.number)", left, right), "TyaValue", nil
 		}
+		if ok && g.funcs[id.Name] {
+			args := make([]string, 0, len(n.Args))
+			for _, arg := range n.Args {
+				ex, _, err := g.expr(arg)
+				if err != nil {
+					return "", "", err
+				}
+				args = append(args, ex)
+			}
+			return fmt.Sprintf("%s(%s)", cName(id.Name), strings.Join(args, ", ")), "TyaValue", nil
+		}
 		if ok {
 			return fmt.Sprintf("tya_nil() /* call %s */", id.Name), "TyaValue", nil
 		}
@@ -344,4 +429,46 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return g.expr(n.Expr)
 	}
 	return "", "", fmt.Errorf("C emitter does not support expression %T", expr)
+}
+
+func cName(name string) string {
+	if name == "char" {
+		return "tya_char"
+	}
+	return name
+}
+
+func assignedNames(stmts []ast.Stmt) []string {
+	seen := map[string]bool{}
+	var names []string
+	var walk func([]ast.Stmt)
+	walk = func(stmts []ast.Stmt) {
+		for _, stmt := range stmts {
+			switch n := stmt.(type) {
+			case *ast.AssignStmt:
+				if len(n.Values) == 1 {
+					if _, ok := n.Values[0].(*ast.FuncLit); ok {
+						continue
+					}
+				}
+				for _, target := range n.Targets {
+					id, ok := target.(*ast.Ident)
+					if !ok || seen[id.Name] {
+						continue
+					}
+					seen[id.Name] = true
+					names = append(names, id.Name)
+				}
+			case *ast.IfStmt:
+				walk(n.Then)
+				walk(n.Else)
+			case *ast.WhileStmt:
+				walk(n.Body)
+			case *ast.ForInStmt:
+				walk(n.Body)
+			}
+		}
+	}
+	walk(stmts)
+	return names
 }

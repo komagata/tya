@@ -72,6 +72,14 @@ func TestEmitCCompilesForInProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesFunctionProgram(t *testing.T) {
+	src := "add = a, b -> a + b\nprint add 2, 3\nfindFirstOver = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\nprint findFirstOver 3\n"
+	out := compileAndRun(t, src)
+	if string(out) != "5\n4\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)
