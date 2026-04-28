@@ -116,6 +116,15 @@ func TestSelfhostCheckerMatchesGoCheckerUndefinedSubset(t *testing.T) {
 	}
 }
 
+func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
+	selfhostOut := string(run(t, "sh", "scripts/selfhost.sh", "examples/selfhost_ops.tya"))
+	selfhostOut = strings.TrimPrefix(selfhostOut, "ok\n")
+	interpOut := string(run(t, "go", "run", "./cmd/tya", "examples/selfhost_ops.tya"))
+	if selfhostOut != interpOut {
+		t.Fatalf("selfhost output %q, interpreter output %q", selfhostOut, interpOut)
+	}
+}
+
 func TestSelfhostSourcesCompileToC(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost_compile_check.sh")
 	want := "selfhost/lexer.tya: compiled\nselfhost/parser.tya: compiled\nselfhost/checker.tya: compiled\nselfhost/codegen_c.tya: compiled\n"

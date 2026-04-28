@@ -275,6 +275,7 @@ Self-Host Completion TODO:
   - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
   - [ ] Emit loops, conditionals, `try`, multiple return assignment, function values, and standard builtins
   - [ ] Add generated-C parity tests comparing interpreter output and self-hosted codegen output
+    - [x] Add subset generated-C parity tests for `examples/selfhost_ops.tya`
 - [ ] Bootstrap pipeline
   - [ ] Make the Tya-written compiler compile the existing executable examples
   - [ ] Compile the Tya-written compiler with the Go compiler and run it as the stage-1 compiler
