@@ -40,6 +40,9 @@ type Object map[string]Value
 type Array struct {
 	items []Value
 }
+type Tuple struct {
+	items []Value
+}
 type ErrorValue struct {
 	Message string
 }
@@ -616,11 +619,22 @@ func evalStmts(stmts []ast.Stmt, env *Env) (Value, error) {
 func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 	switch n := s.(type) {
 	case *ast.AssignStmt:
-		v, err := evalExpr(n.Value, env)
+		values, err := evalValues(n.Values, env)
 		if err != nil {
 			return nil, err
 		}
-		return v, assign(n.Target, v, env)
+		if len(values) != len(n.Targets) {
+			return nil, fmt.Errorf("assignment expects %d values, got %d", len(n.Targets), len(values))
+		}
+		for i, target := range n.Targets {
+			if err := assign(target, values[i], env); err != nil {
+				return nil, err
+			}
+		}
+		if len(values) == 0 {
+			return nil, nil
+		}
+		return values[len(values)-1], nil
 	case *ast.ExprStmt:
 		return evalExpr(n.Expr, env)
 	case *ast.IfStmt:
@@ -688,16 +702,35 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 	case *ast.ContinueStmt:
 		return nil, errContinue
 	case *ast.ReturnStmt:
-		if n.Value == nil {
+		if len(n.Values) == 0 {
 			return nil, &returnSignal{}
 		}
-		v, err := evalExpr(n.Value, env)
+		values, err := evalValues(n.Values, env)
 		if err != nil {
 			return nil, err
 		}
-		return nil, &returnSignal{value: v}
+		if len(values) == 1 {
+			return nil, &returnSignal{value: values[0]}
+		}
+		return nil, &returnSignal{value: &Tuple{items: values}}
 	}
 	return nil, fmt.Errorf("unknown statement")
+}
+
+func evalValues(exprs []ast.Expr, env *Env) ([]Value, error) {
+	var values []Value
+	for _, expr := range exprs {
+		value, err := evalExpr(expr, env)
+		if err != nil {
+			return nil, err
+		}
+		if tuple, ok := value.(*Tuple); ok {
+			values = append(values, tuple.items...)
+		} else {
+			values = append(values, value)
+		}
+	}
+	return values, nil
 }
 
 func assign(target ast.Expr, v Value, env *Env) error {
@@ -1286,6 +1319,12 @@ func stringify(v Value) string {
 			parts = append(parts, stringify(item))
 		}
 		return "[" + strings.Join(parts, ", ") + "]"
+	case *Tuple:
+		parts := make([]string, 0, len(x.items))
+		for _, item := range x.items {
+			parts = append(parts, stringify(item))
+		}
+		return strings.Join(parts, ", ")
 	default:
 		return fmt.Sprintf("%v", x)
 	}

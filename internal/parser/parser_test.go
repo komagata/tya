@@ -20,9 +20,9 @@ func TestParseObjectAssignment(t *testing.T) {
 	if !ok {
 		t.Fatalf("got %T", prog.Stmts[0])
 	}
-	obj, ok := assign.Value.(*ast.ObjectLit)
+	obj, ok := assign.Values[0].(*ast.ObjectLit)
 	if !ok {
-		t.Fatalf("got %T", assign.Value)
+		t.Fatalf("got %T", assign.Values[0])
 	}
 	if len(obj.Props) != 2 {
 		t.Fatalf("got %d props", len(obj.Props))
@@ -39,9 +39,9 @@ func TestParseInlineObject(t *testing.T) {
 		t.Fatal(err)
 	}
 	assign := prog.Stmts[0].(*ast.AssignStmt)
-	obj, ok := assign.Value.(*ast.ObjectLit)
+	obj, ok := assign.Values[0].(*ast.ObjectLit)
 	if !ok {
-		t.Fatalf("got %T", assign.Value)
+		t.Fatalf("got %T", assign.Values[0])
 	}
 	if len(obj.Props) != 2 {
 		t.Fatalf("got %d props", len(obj.Props))

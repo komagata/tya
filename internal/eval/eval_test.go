@@ -417,6 +417,26 @@ func TestRunErrorBuiltin(t *testing.T) {
 	}
 }
 
+func TestRunMultipleReturnAndAssignment(t *testing.T) {
+	src := "parseUser = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nuser, err = parseUser \"komagata\"\nif err\n  print err.message\nelse\n  print user.name\nmissing, err = parseUser \"\"\nif err\n  print err.message\nelse\n  print missing.name\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "komagata\nempty user\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {

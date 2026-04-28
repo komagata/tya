@@ -54,26 +54,30 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 	for _, stmt := range stmts {
 		switch n := stmt.(type) {
 		case *ast.AssignStmt:
-			if err := checkExpr(n.Value, scope); err != nil {
-				return err
-			}
-			name, ok := n.Target.(*ast.Ident)
-			if !ok {
-				if err := checkAssignmentTarget(n.Target, scope); err != nil {
+			for _, value := range n.Values {
+				if err := checkExpr(value, scope); err != nil {
 					return err
 				}
-				continue
 			}
-			if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
-				return err
+			for _, target := range n.Targets {
+				name, ok := target.(*ast.Ident)
+				if !ok {
+					if err := checkAssignmentTarget(target, scope); err != nil {
+						return err
+					}
+					continue
+				}
+				if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
+					return err
+				}
+				if constants[name.Name] {
+					return fmt.Errorf("%d:%d: cannot reassign constant %s", n.Tok.Line, n.Tok.Col, name.Name)
+				}
+				if constNameRE.MatchString(name.Name) {
+					constants[name.Name] = true
+				}
+				scope.define(name.Name)
 			}
-			if constants[name.Name] {
-				return fmt.Errorf("%d:%d: cannot reassign constant %s", n.Tok.Line, n.Tok.Col, name.Name)
-			}
-			if constNameRE.MatchString(name.Name) {
-				constants[name.Name] = true
-			}
-			scope.define(name.Name)
 		case *ast.IfStmt:
 			if err := checkExpr(n.Cond, scope); err != nil {
 				return err
@@ -116,8 +120,8 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				return err
 			}
 		case *ast.ReturnStmt:
-			if n.Value != nil {
-				if err := checkExpr(n.Value, scope); err != nil {
+			for _, value := range n.Values {
+				if err := checkExpr(value, scope); err != nil {
 					return err
 				}
 			}

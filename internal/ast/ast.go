@@ -10,9 +10,9 @@ type Stmt interface{ stmt() }
 type Expr interface{ expr() }
 
 type AssignStmt struct {
-	Target Expr
-	Value  Expr
-	Tok    token.Token
+	Targets []Expr
+	Values  []Expr
+	Tok     token.Token
 }
 
 func (*AssignStmt) stmt() {}
@@ -57,7 +57,7 @@ type ContinueStmt struct{}
 func (*ContinueStmt) stmt() {}
 
 type ReturnStmt struct {
-	Value Expr
+	Values []Expr
 }
 
 func (*ReturnStmt) stmt() {}

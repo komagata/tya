@@ -33,6 +33,7 @@ go test ./...
 - inline object literals: `{ name: "komagata" }`
 - functions and implicit last-expression return
 - explicit `return`
+- multiple assignment and returns: `value, err = readThing()`
 - method calls with `@property`
 - arithmetic, comparison, equality, and logical operators
 - unary `not` and `-`

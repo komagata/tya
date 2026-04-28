@@ -55,16 +55,16 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	}
 	if p.isAssignStart() {
 		tok := p.peek()
-		target, err := p.assignTarget()
+		targets, err := p.assignTargets()
 		if err != nil {
 			return nil, err
 		}
 		p.next()
-		value, err := p.valueAfterAssign()
+		values, err := p.valuesAfterAssign()
 		if err != nil {
 			return nil, err
 		}
-		return &ast.AssignStmt{Target: target, Value: value, Tok: tok}, nil
+		return &ast.AssignStmt{Targets: targets, Values: values, Tok: tok}, nil
 	}
 	ex, err := p.exprLine()
 	if err != nil {
@@ -146,11 +146,11 @@ func (p *Parser) returnStmt() (ast.Stmt, error) {
 	if p.at(token.NEWLINE) || p.at(token.DEDENT) || p.at(token.EOF) {
 		return &ast.ReturnStmt{}, nil
 	}
-	value, err := p.exprLine()
+	values, err := p.exprListLine()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.ReturnStmt{Value: value}, nil
+	return &ast.ReturnStmt{Values: values}, nil
 }
 
 func (p *Parser) block(owner string) ([]ast.Stmt, error) {
@@ -173,7 +173,7 @@ func (p *Parser) block(owner string) ([]ast.Stmt, error) {
 	return stmts, nil
 }
 
-func (p *Parser) valueAfterAssign() (ast.Expr, error) {
+func (p *Parser) valuesAfterAssign() ([]ast.Expr, error) {
 	if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
 		p.next()
 		p.next()
@@ -181,9 +181,25 @@ func (p *Parser) valueAfterAssign() (ast.Expr, error) {
 		if err != nil {
 			return nil, err
 		}
-		return obj, nil
+		return []ast.Expr{obj}, nil
 	}
-	return p.exprLine()
+	return p.exprListLine()
+}
+
+func (p *Parser) exprListLine() ([]ast.Expr, error) {
+	first, err := p.exprLine()
+	if err != nil {
+		return nil, err
+	}
+	values := []ast.Expr{first}
+	for p.match(token.COMMA) {
+		next, err := p.exprLine()
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, next)
+	}
+	return values, nil
 }
 
 func (p *Parser) objectBody() (*ast.ObjectLit, error) {
@@ -551,6 +567,22 @@ func (p *Parser) finishFunc(params []string) (*ast.FuncLit, error) {
 	return &ast.FuncLit{Params: params, Expr: ex}, nil
 }
 
+func (p *Parser) assignTargets() ([]ast.Expr, error) {
+	first, err := p.assignTarget()
+	if err != nil {
+		return nil, err
+	}
+	targets := []ast.Expr{first}
+	for p.match(token.COMMA) {
+		next, err := p.assignTarget()
+		if err != nil {
+			return nil, err
+		}
+		targets = append(targets, next)
+	}
+	return targets, nil
+}
+
 func (p *Parser) assignTarget() (ast.Expr, error) {
 	if p.match(token.AT) {
 		name := p.expect(token.IDENT)
@@ -582,35 +614,49 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 
 func (p *Parser) isAssignStart() bool {
 	i := p.pos
-	if p.toks[i].Type == token.AT {
-		i += 2
-	} else if p.toks[i].Type == token.IDENT {
-		i++
-		for {
-			if p.toks[i].Type == token.DOT {
-				i += 2
-				continue
-			}
-			if p.toks[i].Type == token.LBRACKET {
-				depth := 1
-				i++
-				for i < len(p.toks) && depth > 0 {
-					if p.toks[i].Type == token.LBRACKET {
-						depth++
-					}
-					if p.toks[i].Type == token.RBRACKET {
-						depth--
-					}
-					i++
-				}
-				continue
-			}
-			break
-		}
-	} else {
+	if !p.scanAssignTarget(&i) {
 		return false
 	}
+	for p.toks[i].Type == token.COMMA {
+		i++
+		if !p.scanAssignTarget(&i) {
+			return false
+		}
+	}
 	return p.toks[i].Type == token.ASSIGN
+}
+
+func (p *Parser) scanAssignTarget(i *int) bool {
+	if p.toks[*i].Type == token.AT {
+		*i += 2
+		return true
+	}
+	if p.toks[*i].Type != token.IDENT {
+		return false
+	}
+	*i++
+	for {
+		if p.toks[*i].Type == token.DOT {
+			*i += 2
+			continue
+		}
+		if p.toks[*i].Type == token.LBRACKET {
+			depth := 1
+			*i++
+			for *i < len(p.toks) && depth > 0 {
+				if p.toks[*i].Type == token.LBRACKET {
+					depth++
+				}
+				if p.toks[*i].Type == token.RBRACKET {
+					depth--
+				}
+				*i++
+			}
+			continue
+		}
+		break
+	}
+	return true
 }
 
 func (p *Parser) skipNewlines() {
