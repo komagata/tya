@@ -29,6 +29,25 @@ func TestParseObjectAssignment(t *testing.T) {
 	}
 }
 
+func TestParseInlineObject(t *testing.T) {
+	toks, errs := lexer.Lex("user = { name: \"komagata\", age: 20 }\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign := prog.Stmts[0].(*ast.AssignStmt)
+	obj, ok := assign.Value.(*ast.ObjectLit)
+	if !ok {
+		t.Fatalf("got %T", assign.Value)
+	}
+	if len(obj.Props) != 2 {
+		t.Fatalf("got %d props", len(obj.Props))
+	}
+}
+
 func TestParseMultipleFunctionParams(t *testing.T) {
 	toks, errs := lexer.Lex("add = a, b -> a + b\nprint add 2, 3\n")
 	if len(errs) != 0 {

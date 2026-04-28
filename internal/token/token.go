@@ -36,6 +36,8 @@ const (
 	RPAREN   Type = ")"
 	LBRACKET Type = "["
 	RBRACKET Type = "]"
+	LBRACE   Type = "{"
+	RBRACE   Type = "}"
 )
 
 type Token struct {

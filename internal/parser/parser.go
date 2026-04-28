@@ -481,6 +481,31 @@ func (p *Parser) primary() (ast.Expr, error) {
 			return nil, p.err("expected ']'")
 		}
 		return &ast.ArrayLit{Elems: elems}, nil
+	case token.LBRACE:
+		obj := &ast.ObjectLit{}
+		if !p.at(token.RBRACE) {
+			for {
+				name := p.expect(token.IDENT)
+				if name.Type != token.IDENT {
+					return nil, p.err("expected object property name")
+				}
+				if !p.match(token.COLON) {
+					return nil, p.err("expected ':' after object property")
+				}
+				value, err := p.expr()
+				if err != nil {
+					return nil, err
+				}
+				obj.Props = append(obj.Props, ast.ObjectProp{Name: name.Lexeme, Value: value})
+				if !p.match(token.COMMA) {
+					break
+				}
+			}
+		}
+		if !p.match(token.RBRACE) {
+			return nil, p.err("expected '}'")
+		}
+		return obj, nil
 	case token.AT:
 		name := p.expect(token.IDENT)
 		if name.Type != token.IDENT {
@@ -551,7 +576,7 @@ func (p *Parser) skipNewlines() {
 	}
 }
 func (p *Parser) startsExpr() bool {
-	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT) || p.at(token.LBRACKET)
+	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT) || p.at(token.LBRACKET) || p.at(token.LBRACE)
 }
 func (p *Parser) at(t token.Type) bool { return p.peek().Type == t }
 func (p *Parser) match(t token.Type) bool {

@@ -27,6 +27,7 @@ go test ./...
 - `nil`, booleans, ints, floats, strings
 - string interpolation with expressions: `"next year: {age + 1}"`
 - arrays and objects
+- inline object literals: `{ name: "komagata" }`
 - functions and implicit last-expression return
 - explicit `return`
 - method calls with `@property`
