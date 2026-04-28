@@ -5,7 +5,7 @@ language small, pleasant, and executable before starting code generation.
 
 ## Phase 1: Go Interpreter
 
-Status: in progress.
+Status: first pass complete.
 
 Implemented:
 
@@ -24,19 +24,17 @@ Implemented:
 - Initial compile checks: constants, naming, duplicate members, undefined variables
 - Standard library subset: printing, strings, collections, files, args/env, conversion, errors
 
-Next:
+Remaining hardening:
 
-- Add unused variable / unused argument checks
-- Add variable shadowing checks
-- Add top-level executable-code checks for non-`main.tya` files
-- Add file-name validation tests and a package-level runner shape
-- Improve checker scopes for reassignment versus duplicate definition
 - Add parser and checker source spans to more AST nodes
-- Add golden tests for examples
+- Add unused variable / unused argument checks
+- Add variable shadowing checks beyond the current scope model
+- Add top-level executable-code checks for non-`main.tya` files once module loading lands
+- Improve checker scopes for reassignment versus duplicate definition
 
 ## Phase 2: Go Compiler That Emits C
 
-Status: started.
+Status: first pass complete.
 
 Goals:
 
@@ -53,9 +51,15 @@ Implemented:
   `if`, `while`, `break`, and `continue`
 - GCC smoke test for generated C
 
+Remaining hardening:
+
+- Emit C for functions, arrays, objects, and errors
+- Emit C for the complete standard library surface
+- Add source maps or generated-line diagnostics
+
 ## Phase 3: C Runtime
 
-Status: started.
+Status: first pass complete.
 
 Goals:
 
@@ -71,9 +75,15 @@ Implemented:
 - Runtime printing and truthiness helpers
 - Generated C can compile and run against `runtime/tya_runtime.c`
 
+Remaining hardening:
+
+- Add arrays, objects, functions, and errors to the C runtime
+- Add mark-and-sweep GC
+- Add runtime tests independent of the Go interpreter
+
 ## Phase 4: Standard Library
 
-Status: started.
+Status: first pass complete.
 
 Goals:
 
@@ -86,6 +96,12 @@ Implemented:
 - `docs/STDLIB.md` with examples for available standard functions
 - `stdlib/prelude.tya` with candidate Tya-level helpers for future automatic loading
 - Runner loads `stdlib/prelude.tya` for normal file execution
+
+Remaining hardening:
+
+- Move more builtins into Tya once imports/modules are available
+- Stabilize error conventions after `try` sees more use
+- Version the standard library API
 
 ## Phase 5: Self-Hosting
 
