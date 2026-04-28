@@ -164,6 +164,15 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
         value = tokens[i + 2]
+        if i + 9 < len(tokens) and textOf(tokens[i + 3]) == ","
+          if textOf(tokens[i + 5]) == "," and textOf(tokens[i + 7]) == "," and kindOf(tokens[i + 9]) == "ARROW"
+            arg2 = tokens[i + 4]
+            arg3 = tokens[i + 6]
+            arg4 = tokens[i + 8]
+            node = lineOf(token) + ":FUNC4:" + textOf(token) + ":" + textOf(value) + ":" + textOf(arg2) + ":" + textOf(arg3) + ":" + textOf(arg4)
+            push nodes, node
+            i = i + 10
+            continue
         if i + 5 < len(tokens) and textOf(tokens[i + 3]) == ","
           if kindOf(tokens[i + 5]) == "ARROW"
             arg2 = tokens[i + 4]

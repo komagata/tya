@@ -25,6 +25,10 @@ func TestSelfhostCheckerSourceChecks(t *testing.T) {
 	checkSelfhostSource(t, "selfhost/checker.tya")
 }
 
+func TestSelfhostCodegenSourceChecks(t *testing.T) {
+	checkSelfhostSource(t, "selfhost/codegen_c.tya")
+}
+
 func checkSelfhostSource(t *testing.T, source string) {
 	t.Helper()
 	dir := t.TempDir()

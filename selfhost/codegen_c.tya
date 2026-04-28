@@ -101,6 +101,11 @@ emitC = nodes ->
         rememberType names, types, nameOf(node), "FUNC"
       push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ", " + extra2Of(node) + ") */"
 
+    if kindOf(node) == "FUNC4"
+      if not hasName(names, nameOf(node))
+        rememberType names, types, nameOf(node), "FUNC"
+      push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ", " + extra2Of(node) + ", " + extra3Of(node) + ") */"
+
     if kindOf(node) == "ASSIGN"
       if valueOf(node) == "STRING"
         if hasName(names, nameOf(node))

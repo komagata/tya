@@ -108,6 +108,23 @@ check = nodes ->
       if arg3 != "" and not hasName(names, arg3)
         push names, arg3
 
+    if kindOf(node) == "FUNC4"
+      name = nameOf(node)
+      if not hasName(names, name)
+        push names, name
+      arg = valueOf(node)
+      arg2 = extraOf(node)
+      arg3 = extra2Of(node)
+      arg4 = extra3Of(node)
+      if arg != "" and not hasName(names, arg)
+        push names, arg
+      if arg2 != "" and not hasName(names, arg2)
+        push names, arg2
+      if arg3 != "" and not hasName(names, arg3)
+        push names, arg3
+      if arg4 != "" and not hasName(names, arg4)
+        push names, arg4
+
     if kindOf(node) == "FOR"
       item = nameOf(node)
       collection = valueOf(node)
