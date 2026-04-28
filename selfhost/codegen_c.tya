@@ -19,16 +19,39 @@ emitC = nodes ->
   push lines, "#include <stdio.h>"
   push lines, ""
   push lines, "int main(void) {"
+  blockOpen = false
+  indent = "0"
 
   for node in nodes
+    if kindOf(node) == "INDENT"
+      nextIndent = nameOf(node)
+      if blockOpen and nextIndent == "0"
+        push lines, "  }"
+        blockOpen = false
+      indent = nextIndent
+
     if kindOf(node) == "ASSIGN"
       push lines, "  /* assign " + nameOf(node) + " */"
-    if kindOf(node) == "PRINT"
-      if nameOf(node) == "STRING"
-        push lines, "  puts(\"" + valueOf(node) + "\");"
-      else
-        push lines, "  puts(\"" + valueOf(node) + "\");"
 
+    if kindOf(node) == "IF"
+      if valueOf(node) == "true"
+        push lines, "  if (1) {"
+        blockOpen = true
+      else
+        push lines, "  if (0) {"
+        blockOpen = true
+
+    if kindOf(node) == "PRINT"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      if nameOf(node) == "STRING"
+        push lines, prefix + "puts(\"" + valueOf(node) + "\");"
+      else
+        push lines, prefix + "puts(\"" + valueOf(node) + "\");"
+
+  if blockOpen
+    push lines, "  }"
   push lines, "  return 0;"
   push lines, "}"
   join lines, "\n"

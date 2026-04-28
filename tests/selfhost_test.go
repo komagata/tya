@@ -21,7 +21,7 @@ func TestSelfhostPrototypePipeline(t *testing.T) {
 	runToFile(t, cfile, "go", "run", "./cmd/tya", "selfhost/codegen_c.tya", nodes)
 	run(t, "gcc", cfile, "-o", bin)
 	out := run(t, bin)
-	if string(out) != "Tya\n" {
+	if string(out) != "Tya\nIndented\n" {
 		t.Fatalf("got %q", out)
 	}
 	_ = root

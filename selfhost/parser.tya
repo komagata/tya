@@ -15,13 +15,25 @@ lineOf = token ->
 parse = tokens ->
   nodes = []
   i = 0
+  currentIndent = "0"
 
   while i < len(tokens)
     token = tokens[i]
 
     if kindOf(token) == "INDENT"
+      currentIndent = textOf(token)
+      node = lineOf(token) + ":INDENT:" + currentIndent
+      push nodes, node
       i = i + 1
       continue
+
+    if kindOf(token) == "IDENT" and textOf(token) == "if"
+      if i + 1 < len(tokens)
+        value = tokens[i + 1]
+        node = lineOf(token) + ":IF:" + kindOf(value) + ":" + textOf(value)
+        push nodes, node
+        i = i + 2
+        continue
 
     if kindOf(token) == "IDENT" and textOf(token) == "print"
       if i + 1 < len(tokens)

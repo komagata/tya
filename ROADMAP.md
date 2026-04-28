@@ -125,6 +125,7 @@ Implemented:
 - Go test coverage for the lexer -> parser -> checker -> C codegen prototype pipeline
 - Self-hosted lexer recognizes common two-character operators
 - Self-hosted lexer emits source line and indentation-count tokens
+- Self-hosted parser/codegen carries simple `if true` blocks into generated C
 
 ## Non-Goals For Now
 
