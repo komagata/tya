@@ -110,6 +110,25 @@ func TestRunArrayFunctionBuiltins(t *testing.T) {
 	}
 }
 
+func TestRunNoParenCallWithFunctionLiteralArgument(t *testing.T) {
+	src := "items = [1, 2, 3]\ndoubled = map items, item -> item * 2\nprint doubled[2]\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "6\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
 func TestRunWhile(t *testing.T) {
 	src := "i = 0\nsum = 0\nwhile i < 5\n  i = i + 1\n  if i == 3\n    continue\n  sum = sum + i\n  if sum > 7\n    break\nprint sum\n"
 	toks, errs := lexer.Lex(src)

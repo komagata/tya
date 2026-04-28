@@ -83,6 +83,14 @@ func TestEmitCCompilesFunctionLiteralsAsValues(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesNoParenCallWithFunctionLiteralArgument(t *testing.T) {
+	src := "items = [1, 2, 3]\ndoubled = map items, item -> item * 2\nprint doubled[2]\n"
+	out := compileAndRun(t, src)
+	if string(out) != "6\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "input.txt")

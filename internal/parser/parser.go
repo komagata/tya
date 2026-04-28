@@ -9,8 +9,9 @@ import (
 )
 
 type Parser struct {
-	toks []token.Token
-	pos  int
+	toks              []token.Token
+	pos               int
+	suppressCommaFunc bool
 }
 
 func Parse(toks []token.Token) (*ast.Program, error) {
@@ -242,7 +243,9 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 	}
 	var args []ast.Expr
 	for p.startsExpr() {
+		p.suppressCommaFunc = true
 		arg, err := p.expr()
+		p.suppressCommaFunc = false
 		if err != nil {
 			return nil, err
 		}
@@ -444,7 +447,9 @@ func (p *Parser) call() (ast.Expr, error) {
 			var args []ast.Expr
 			if !p.at(token.RPAREN) {
 				for {
+					p.suppressCommaFunc = true
 					arg, err := p.expr()
+					p.suppressCommaFunc = false
 					if err != nil {
 						return nil, err
 					}
@@ -491,7 +496,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 		case "nil":
 			return &ast.NilLit{}, nil
 		}
-		if p.at(token.COMMA) && p.hasArrowBeforeLine() {
+		if !p.suppressCommaFunc && p.at(token.COMMA) && p.hasArrowBeforeLine() {
 			p.next()
 			params := []string{tok.Lexeme}
 			for {
