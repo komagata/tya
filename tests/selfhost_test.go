@@ -73,6 +73,18 @@ func TestSelfhostCheckerRejectsUndefinedReturnNames(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerRejectsUndefinedCallNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	if err := os.WriteFile(path, []byte("1:ASSIGN:result:CALL1:missingFunc:missingArg\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: undefined variable: missingFunc\n1: undefined variable: missingArg\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func runToFile(t *testing.T, path string, name string, args ...string) {
 	t.Helper()
 	out := run(t, name, args...)

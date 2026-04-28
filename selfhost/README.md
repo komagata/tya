@@ -17,10 +17,12 @@ Current supported subset:
 - Lexer: identifiers, ints, strings, comments, symbols, common two-character
   operators, source lines, and indentation counts
 - Parser: simple assignment, simple function headers, `push`, `return`, `if`,
-  `while`, `break`, `continue`, indentation, and print nodes
+  one-argument function calls, `while`, `break`, `continue`, indentation, and
+  print nodes
 - Checker: simple undefined assignment / print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison assignments, variable-copy assignments, bool assignments,
   unary `not`, empty array placeholders, reassignment, carried function headers,
-  `push` and `return` commands, string/int/bool print nodes, and simple literal
-  or variable `if` / `while` blocks with `break` / `continue`
+  one-argument calls, `push` and `return` commands, string/int/bool print nodes,
+  and simple literal or variable `if` / `while` blocks with `break` /
+  `continue`

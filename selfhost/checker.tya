@@ -20,6 +20,12 @@ extraOf = node ->
     return ""
   parts[4]
 
+extra2Of = node ->
+  parts = split node, ":"
+  if len(parts) < 6
+    return ""
+  parts[5]
+
 lineOf = node ->
   parts = split node, ":"
   parts[0]
@@ -53,6 +59,13 @@ check = nodes ->
         valueName = extraOf(node)
         if not hasName(names, valueName)
           push errors, lineOf(node) + ": undefined variable: " + valueName
+      if valueOf(node) == "CALL1"
+        funcName = extraOf(node)
+        argName = extra2Of(node)
+        if not hasName(names, funcName)
+          push errors, lineOf(node) + ": undefined variable: " + funcName
+        if not hasName(names, argName)
+          push errors, lineOf(node) + ": undefined variable: " + argName
       seen = hasName names, name
       if not seen
         push names, name
