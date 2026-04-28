@@ -205,6 +205,7 @@ Implemented:
 - Go C emitter can run `examples/for_object.tya`
 - Go C emitter can run `examples/logic.tya`
 - Go C emitter can run `examples/args.tya` with arguments and environment variables
+- Go C emitter can run `examples/hello.tya`, `examples/return.tya`, and `examples/exit.tya`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 
