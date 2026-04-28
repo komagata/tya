@@ -176,6 +176,7 @@ Implemented:
 - Go C emitter uses runtime equality and truthiness for generated logical comparisons
 - Go C emitter uses runtime addition for generated numeric addition and string concatenation
 - Go C emitter can run simple generated-C file/argument/split/conversion programs
+- Go C emitter can run simple generated-C array `for` loops
 
 ## Non-Goals For Now
 

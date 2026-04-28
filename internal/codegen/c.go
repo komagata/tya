@@ -29,6 +29,7 @@ type cgen struct {
 	out    strings.Builder
 	indent int
 	vars   map[string]bool
+	temp   int
 }
 
 func (g *cgen) line(s string) {
@@ -109,15 +110,25 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		g.line(fmt.Sprintf("if (false) { /* for %s in %s */", n.ValueName, iterable))
+		iterName := fmt.Sprintf("__iter%d", g.temp)
+		indexName := fmt.Sprintf("__i%d", g.temp)
+		g.temp++
+		g.line(fmt.Sprintf("TyaValue %s = %s;", iterName, iterable))
+		g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
 		g.indent++
-		if n.IndexName != "" && !g.vars[n.IndexName] {
-			g.vars[n.IndexName] = true
-			g.line(fmt.Sprintf("TyaValue %s = tya_nil();", n.IndexName))
+		if n.IndexName != "" {
+			if g.vars[n.IndexName] {
+				g.line(fmt.Sprintf("%s = tya_number(%s);", n.IndexName, indexName))
+			} else {
+				g.vars[n.IndexName] = true
+				g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", n.IndexName, indexName))
+			}
 		}
-		if !g.vars[n.ValueName] {
+		if g.vars[n.ValueName] {
+			g.line(fmt.Sprintf("%s = tya_index(%s, tya_number(%s));", n.ValueName, iterName, indexName))
+		} else {
 			g.vars[n.ValueName] = true
-			g.line(fmt.Sprintf("TyaValue %s = tya_nil();", n.ValueName))
+			g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_number(%s));", n.ValueName, iterName, indexName))
 		}
 		for _, stmt := range n.Body {
 			if err := g.stmt(stmt); err != nil {

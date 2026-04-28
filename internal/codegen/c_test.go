@@ -64,6 +64,14 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesForInProgram(t *testing.T) {
+	src := "items = [1, 2, 3]\ntotal = 0\nfor item in items\n  total = total + item\nprint total\n"
+	out := compileAndRun(t, src)
+	if string(out) != "6\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)
