@@ -124,6 +124,7 @@ Implemented:
 - Initial `selfhost/codegen_c.tya` that emits C stubs from simple node lines
 - Go test coverage for the lexer -> parser -> checker -> C codegen prototype pipeline
 - Self-hosted lexer recognizes common two-character operators
+- Self-hosted lexer emits source line and indentation-count tokens
 
 ## Non-Goals For Now
 
