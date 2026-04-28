@@ -292,6 +292,30 @@ parse = tokens ->
             push nodes, node
             i = i + 7
             continue
+        if textOf(value) == "(" and i + 6 < len(tokens) and textOf(tokens[i + 6]) == ")"
+          left = tokens[i + 3]
+          op = tokens[i + 4]
+          right = tokens[i + 5]
+          if textOf(op) == "=="
+            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_EQ:" + textOf(left) + ":" + textOf(right)
+            push nodes, node
+            i = i + 7
+            continue
+          if textOf(op) == "!="
+            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_NE:" + textOf(left) + ":" + textOf(right)
+            push nodes, node
+            i = i + 7
+            continue
+          if textOf(op) == ">="
+            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_GE:" + textOf(left) + ":" + textOf(right)
+            push nodes, node
+            i = i + 7
+            continue
+          if textOf(op) == "<="
+            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_LE:" + textOf(left) + ":" + textOf(right)
+            push nodes, node
+            i = i + 7
+            continue
         if i + 6 < len(tokens) and textOf(tokens[i + 3]) == "("
           if textOf(tokens[i + 4]) == ")" and textOf(tokens[i + 5]) == "["
             index = tokens[i + 6]
