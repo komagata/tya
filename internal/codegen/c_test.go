@@ -75,6 +75,14 @@ func TestEmitCCompilesFunctionValueCalls(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesFunctionLiteralsAsValues(t *testing.T) {
+	src := "callbacks = [item -> item * 2]\nprint callbacks[0](5)\n"
+	out := compileAndRun(t, src)
+	if string(out) != "10\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "input.txt")

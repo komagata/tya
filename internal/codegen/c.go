@@ -531,7 +531,12 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return fmt.Sprintf("tya_object((TyaObjectEntry[]){%s}, %d)", strings.Join(entries, ", "), len(entries)), "TyaValue", nil
 	case *ast.FuncLit:
-		return "tya_nil() /* function */", "TyaValue", nil
+		name := fmt.Sprintf("__anon%d", g.temp)
+		sym, err := g.emitFunc(name, n)
+		if err != nil {
+			return "", "", err
+		}
+		return fmt.Sprintf("tya_function(%s)", sym), "TyaValue", nil
 	case *ast.Ident:
 		return cName(n.Name), "TyaValue", nil
 	case *ast.BinaryExpr:

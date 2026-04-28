@@ -226,6 +226,7 @@ Implemented:
 - Go C emitter avoids C keyword name collisions and supports integer `%`
 - Go C emitter supports function values for array builtins and can run `examples/array_function.tya`
 - Go C emitter supports calling function values through aliases and indexed expressions
+- Go C emitter supports function literals as runtime function values
 - Go C emitter supports `error(message)` values and can run `examples/error.tya`
 - Go C emitter supports object-literal methods with `@field` access and can run `examples/method.tya`
 - Go C emitter supports tuple-style multiple return assignment and can run `examples/multiple_return.tya`
