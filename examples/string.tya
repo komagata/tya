@@ -1,0 +1,11 @@
+text = "  hello,tya  "
+trimmed = trim text
+parts = split trimmed, ","
+
+print join parts, "-"
+print replace trimmed, "tya", "Tya"
+print contains trimmed, "hello"
+print startsWith trimmed, "hello"
+print endsWith trimmed, "tya"
+print byteLen "ちゃ"
+print charLen "ちゃ"

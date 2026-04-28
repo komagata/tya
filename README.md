@@ -33,7 +33,9 @@ go test ./...
 - arithmetic, comparison, equality, and logical operators
 - `if` / `else`
 - `while`, `break`, and `continue`
-- builtins: `print`, `len`, `push`, `pop`, `toString`, `toInt`, `toFloat`, `toNumber`
+- builtins: `print`, `len`, `push`, `pop`, `split`, `join`, `trim`,
+  `replace`, `contains`, `startsWith`, `endsWith`, `byteLen`, `charLen`,
+  `toString`, `toInt`, `toFloat`, `toNumber`
 
 ## Examples
 

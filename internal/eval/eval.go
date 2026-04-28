@@ -89,6 +89,22 @@ func (e *Env) assign(name string, v Value) bool {
 
 func Run(prog *ast.Program, out io.Writer) error {
 	env := NewEnv()
+	installBuiltins(env, out)
+	_, err := evalStmts(prog.Stmts, env)
+	if errors.Is(err, errBreak) {
+		return fmt.Errorf("break used outside loop")
+	}
+	if errors.Is(err, errContinue) {
+		return fmt.Errorf("continue used outside loop")
+	}
+	var ret *returnSignal
+	if errors.As(err, &ret) {
+		return fmt.Errorf("return used outside function")
+	}
+	return err
+}
+
+func installBuiltins(env *Env, out io.Writer) {
 	env.set("print", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("print expects 1 argument")
@@ -143,6 +159,103 @@ func Run(prog *ast.Program, out io.Writer) error {
 		}
 		return stringify(args[0]), nil
 	}))
+	env.set("split", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("split expects 2 arguments")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("split expects string text")
+		}
+		sep, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("split expects string separator")
+		}
+		parts := strings.Split(text, sep)
+		arr := &Array{items: make([]Value, 0, len(parts))}
+		for _, part := range parts {
+			arr.items = append(arr.items, part)
+		}
+		return arr, nil
+	}))
+	env.set("join", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("join expects 2 arguments")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, fmt.Errorf("join expects array")
+		}
+		sep, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("join expects string separator")
+		}
+		parts := make([]string, 0, len(arr.items))
+		for _, item := range arr.items {
+			parts = append(parts, stringify(item))
+		}
+		return strings.Join(parts, sep), nil
+	}))
+	env.set("trim", Builtin(func(args []Value) (Value, error) {
+		text, err := oneString("trim", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.TrimSpace(text), nil
+	}))
+	env.set("replace", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 3 {
+			return nil, fmt.Errorf("replace expects 3 arguments")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("replace expects string text")
+		}
+		old, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("replace expects string old value")
+		}
+		newValue, ok := args[2].(string)
+		if !ok {
+			return nil, fmt.Errorf("replace expects string new value")
+		}
+		return strings.ReplaceAll(text, old, newValue), nil
+	}))
+	env.set("contains", Builtin(func(args []Value) (Value, error) {
+		text, part, err := twoStrings("contains", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.Contains(text, part), nil
+	}))
+	env.set("startsWith", Builtin(func(args []Value) (Value, error) {
+		text, prefix, err := twoStrings("startsWith", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.HasPrefix(text, prefix), nil
+	}))
+	env.set("endsWith", Builtin(func(args []Value) (Value, error) {
+		text, suffix, err := twoStrings("endsWith", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.HasSuffix(text, suffix), nil
+	}))
+	env.set("byteLen", Builtin(func(args []Value) (Value, error) {
+		text, err := oneString("byteLen", args)
+		if err != nil {
+			return nil, err
+		}
+		return int64(len(text)), nil
+	}))
+	env.set("charLen", Builtin(func(args []Value) (Value, error) {
+		text, err := oneString("charLen", args)
+		if err != nil {
+			return nil, err
+		}
+		return int64(len([]rune(text))), nil
+	}))
 	env.set("toInt", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("toInt expects 1 argument")
@@ -164,18 +277,6 @@ func Run(prog *ast.Program, out io.Writer) error {
 		}
 		return toFloat(args[0])
 	}))
-	_, err := evalStmts(prog.Stmts, env)
-	if errors.Is(err, errBreak) {
-		return fmt.Errorf("break used outside loop")
-	}
-	if errors.Is(err, errContinue) {
-		return fmt.Errorf("continue used outside loop")
-	}
-	var ret *returnSignal
-	if errors.As(err, &ret) {
-		return fmt.Errorf("return used outside function")
-	}
-	return err
 }
 
 func evalStmts(stmts []ast.Stmt, env *Env) (Value, error) {
@@ -604,6 +705,32 @@ func toFloat(v Value) (Value, error) {
 	default:
 		return nil, fmt.Errorf("cannot convert %s to float", stringify(v))
 	}
+}
+
+func oneString(name string, args []Value) (string, error) {
+	if len(args) != 1 {
+		return "", fmt.Errorf("%s expects 1 argument", name)
+	}
+	text, ok := args[0].(string)
+	if !ok {
+		return "", fmt.Errorf("%s expects string", name)
+	}
+	return text, nil
+}
+
+func twoStrings(name string, args []Value) (string, string, error) {
+	if len(args) != 2 {
+		return "", "", fmt.Errorf("%s expects 2 arguments", name)
+	}
+	first, ok := args[0].(string)
+	if !ok {
+		return "", "", fmt.Errorf("%s expects string first argument", name)
+	}
+	second, ok := args[1].(string)
+	if !ok {
+		return "", "", fmt.Errorf("%s expects string second argument", name)
+	}
+	return first, second, nil
 }
 
 func truthy(v Value) bool {
