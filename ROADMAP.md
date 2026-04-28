@@ -208,6 +208,7 @@ Implemented:
 - Go C emitter can run `examples/hello.tya`, `examples/return.tya`, and `examples/exit.tya`
 - Go C emitter supports `readLine()` and can run `examples/read_line.tya`
 - Go C emitter supports `exit(code)` statement calls with process exit status
+- Go C emitter avoids C keyword name collisions and supports integer `%`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 

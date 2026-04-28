@@ -51,6 +51,14 @@ func TestEmitCCompilesAdditionProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesModuloAndCKeywordNames(t *testing.T) {
+	src := "double = item -> item % 2\nprint double 5\n"
+	out := compileAndRun(t, src)
+	if string(out) != "1\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "input.txt")

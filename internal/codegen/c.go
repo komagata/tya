@@ -415,6 +415,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			expr = fmt.Sprintf("tya_and(%s, %s)", left, right)
 		case "||":
 			expr = fmt.Sprintf("tya_or(%s, %s)", left, right)
+		case "%":
+			expr = fmt.Sprintf("tya_number((long)%s.number %% (long)%s.number)", left, right)
 		case "<", "<=", ">", ">=":
 			expr = fmt.Sprintf("tya_bool(%s.number %s %s.number)", left, op, right)
 		default:
@@ -677,8 +679,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 }
 
 func cName(name string) string {
-	if name == "char" {
-		return "tya_char"
+	switch name {
+	case "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
+		"else", "enum", "extern", "float", "for", "goto", "if", "inline", "int",
+		"long", "register", "restrict", "return", "short", "signed", "sizeof",
+		"static", "struct", "switch", "typedef", "union", "unsigned", "void",
+		"volatile", "while":
+		return "tya_" + name
 	}
 	return name
 }
