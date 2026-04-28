@@ -122,6 +122,7 @@ Implemented:
 - Initial `selfhost/parser.tya` that recognizes simple assignment and print nodes
 - Initial `selfhost/checker.tya` that detects duplicate assignment nodes
 - Initial `selfhost/codegen_c.tya` that emits C stubs from simple node lines
+- Go test coverage for the lexer -> parser -> checker -> C codegen prototype pipeline
 
 ## Non-Goals For Now
 
