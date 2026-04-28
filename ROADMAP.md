@@ -182,6 +182,7 @@ Implemented:
 - Self-hosted parser/codegen carries simple `break` / `continue` statements
 - Self-hosted parser/checker/codegen carries simple `push` commands
 - Self-hosted parser/checker/codegen carries simple `return` commands
+- Self-hosted C codegen emits simple `identity x` / `echo x` value-copy calls
 - Self-hosted parser/codegen emits simple bool assignments and prints
 - Self-hosted parser/checker/codegen carries simple one-argument print calls
 - Self-hosted C codegen emits placeholder declarations for call/index assignments
