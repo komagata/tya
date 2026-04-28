@@ -32,6 +32,7 @@ go test ./...
 - explicit `return`
 - method calls with `@property`
 - arithmetic, comparison, equality, and logical operators
+- unary `not` and `-`
 - grouped expressions with parentheses
 - `if` / `else`
 - `while`, `break`, and `continue`

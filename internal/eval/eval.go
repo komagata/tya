@@ -629,6 +629,16 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		if n.Op.Lexeme == "not" {
 			return !truthy(v), nil
 		}
+		if n.Op.Lexeme == "-" {
+			switch x := v.(type) {
+			case int64:
+				return -x, nil
+			case float64:
+				return -x, nil
+			default:
+				return nil, fmt.Errorf("- expects number")
+			}
+		}
 		return nil, fmt.Errorf("unknown unary operator %s", n.Op.Lexeme)
 	case *ast.MemberExpr:
 		obj, err := evalExpr(n.Object, env)

@@ -360,7 +360,7 @@ func (p *Parser) factor() (ast.Expr, error) {
 }
 
 func (p *Parser) unary() (ast.Expr, error) {
-	if p.matchWord("not") {
+	if p.matchWord("not") || p.match(token.MINUS) {
 		op := p.prev()
 		ex, err := p.unary()
 		if err != nil {
