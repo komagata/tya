@@ -222,7 +222,15 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		typ := "TyaValue"
 		expr := fmt.Sprintf("(%s.number %s %s.number)", left, op, right)
 		switch op {
-		case "==", "!=", "<", "<=", ">", ">=", "&&", "||":
+		case "==":
+			expr = fmt.Sprintf("tya_bool(tya_equal(%s, %s))", left, right)
+		case "!=":
+			expr = fmt.Sprintf("tya_bool(!tya_equal(%s, %s))", left, right)
+		case "&&":
+			expr = fmt.Sprintf("tya_bool(tya_truthy(%s) && tya_truthy(%s))", left, right)
+		case "||":
+			expr = fmt.Sprintf("tya_bool(tya_truthy(%s) || tya_truthy(%s))", left, right)
+		case "<", "<=", ">", ">=":
 			expr = fmt.Sprintf("tya_bool(%s.number %s %s.number)", left, op, right)
 		default:
 			expr = fmt.Sprintf("tya_number(%s)", expr)

@@ -35,6 +35,14 @@ func TestEmitCCompilesStringProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesEqualityProgram(t *testing.T) {
+	src := "print \"tya\" == \"tya\"\nprint \"tya\" == \"Tya\"\nprint 2 != 3\nprint true == true\nprint true and not false\n"
+	out := compileAndRun(t, src)
+	if string(out) != "true\nfalse\ntrue\ntrue\ntrue\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	toks, errs := lexer.Lex(src)

@@ -74,6 +74,7 @@ Implemented:
 - Initial `TyaValue` runtime for nil, bool, number, and string
 - Initial array runtime with length, indexing, and push support
 - Initial string runtime support for length, indexing, and `contains`
+- Runtime equality helper for nil, bool, number, string, and array identity
 - Runtime printing and truthiness helpers
 - Generated C can compile and run against `runtime/tya_runtime.c`
 
@@ -170,6 +171,7 @@ Implemented:
 - Go C emitter can emit compile-smoke C for self-host lexer/parser/checker/codegen sources
 - Go C emitter can run simple generated-C array programs with `len`, indexing, and `push`
 - Go C emitter can run simple generated-C string programs with `len`, indexing, and `contains`
+- Go C emitter uses runtime equality and truthiness for generated logical comparisons
 
 ## Non-Goals For Now
 

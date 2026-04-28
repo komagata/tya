@@ -79,6 +79,28 @@ TyaValue tya_contains(TyaValue text, TyaValue part) {
   return tya_bool(strstr(text.string, part.string) != NULL);
 }
 
+bool tya_equal(TyaValue left, TyaValue right) {
+  if (left.kind != right.kind) {
+    return false;
+  }
+  switch (left.kind) {
+  case TYA_NIL:
+    return true;
+  case TYA_BOOL:
+    return left.boolean == right.boolean;
+  case TYA_NUMBER:
+    return left.number == right.number;
+  case TYA_STRING:
+    if (left.string == NULL || right.string == NULL) {
+      return left.string == right.string;
+    }
+    return strcmp(left.string, right.string) == 0;
+  case TYA_ARRAY:
+    return left.array == right.array;
+  }
+  return false;
+}
+
 void tya_push(TyaValue array, TyaValue value) {
   if (array.kind != TYA_ARRAY || array.array == NULL) {
     return;
