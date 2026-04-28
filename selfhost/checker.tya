@@ -41,6 +41,10 @@ check = nodes ->
         valueName = extraOf(node)
         if not hasName(names, valueName)
           push errors, lineOf(node) + ": undefined variable: " + valueName
+      if valueOf(node) == "BOOL_NOT"
+        valueName = extraOf(node)
+        if not hasName(names, valueName)
+          push errors, lineOf(node) + ": undefined variable: " + valueName
       seen = hasName names, name
       if seen
         push errors, lineOf(node) + ": duplicate definition: " + name

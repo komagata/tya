@@ -8,7 +8,7 @@ import (
 
 func TestSelfhostPrototypePipeline(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost.sh")
-	if string(out) != "ok\nTya\nTya\n2\ntrue\ntrue\ntrue\nIndented\nCompared\n" {
+	if string(out) != "ok\nTya\nTya\n2\ntrue\nfalse\ntrue\ntrue\nIndented\nCompared\n" {
 		t.Fatalf("got %q", out)
 	}
 }
@@ -28,6 +28,18 @@ func TestSelfhostCheckerRejectsUndefinedConditionNames(t *testing.T) {
 func TestSelfhostCheckerRejectsUndefinedAssignmentNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:ASSIGN:alias:IDENT:missing\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: undefined variable: missing\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestSelfhostCheckerRejectsUndefinedNotNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	if err := os.WriteFile(path, []byte("1:ASSIGN:negated:BOOL_NOT:missing\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)

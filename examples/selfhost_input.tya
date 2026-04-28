@@ -3,12 +3,14 @@ alias = message
 count = 1 + 1
 enabled = true
 disabled = false
+negated = not enabled
 less = 1 < 2
 same = 2 == 2
 print message
 print alias
 print count
 print enabled
+print negated
 print less
 print same
 
