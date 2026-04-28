@@ -441,6 +441,14 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		g.line(fmt.Sprintf("tya_exit(%s);", code))
 		return nil
 	}
+	if id.Name == "panic" && len(call.Args) == 1 {
+		message, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_panic(%s);", message))
+		return nil
+	}
 	if id.Name != "print" || len(call.Args) != 1 {
 		g.line(fmt.Sprintf("/* call %s */", id.Name))
 		return nil
@@ -652,6 +660,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_error(%s)", message), "TyaValue", nil
+		}
+		if ok && id.Name == "panic" && len(n.Args) == 1 {
+			message, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("(tya_panic(%s), tya_nil())", message), "TyaValue", nil
 		}
 		if ok && id.Name == "split" && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])

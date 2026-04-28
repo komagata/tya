@@ -775,6 +775,12 @@ void tya_exit(TyaValue code) {
   exit(0);
 }
 
+void tya_panic(TyaValue message) {
+  TyaValue text = tya_to_string(message);
+  fprintf(stderr, "panic: %s\n", text.string == NULL ? "" : text.string);
+  exit(1);
+}
+
 void tya_print(TyaValue value) {
   tya_write_value(stdout, value);
   putchar('\n');

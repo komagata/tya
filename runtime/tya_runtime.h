@@ -94,6 +94,7 @@ TyaValue tya_reduce(TyaValue array, TyaValue initial, TyaValue fn);
 void tya_push(TyaValue array, TyaValue value);
 TyaValue tya_pop(TyaValue array);
 void tya_exit(TyaValue code);
+void tya_panic(TyaValue message);
 void tya_print(TyaValue value);
 bool tya_truthy(TyaValue value);
 

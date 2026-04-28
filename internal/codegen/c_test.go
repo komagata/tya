@@ -122,6 +122,13 @@ func TestEmitCCompilesExitProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesPanicProgram(t *testing.T) {
+	out, code := compileAndRunArgsAllowExit(t, "panic \"bad state\"\n")
+	if string(out) != "panic: bad state\n" || code != 1 {
+		t.Fatalf("got output %q and code %d", out, code)
+	}
+}
+
 func TestEmitCCompilesForInProgram(t *testing.T) {
 	src := "items = [1, 2, 3]\ntotal = 0\nfor item in items\n  total = total + item\nprint total\n"
 	out := compileAndRun(t, src)
