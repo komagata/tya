@@ -27,6 +27,14 @@ func TestEmitCCompilesArrayProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesStringProgram(t *testing.T) {
+	src := "text = \"hello\"\nprint len text\nprint contains text, \"ell\"\nprint text[1]\n"
+	out := compileAndRun(t, src)
+	if string(out) != "5\ntrue\ne\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	toks, errs := lexer.Lex(src)

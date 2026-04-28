@@ -246,6 +246,17 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_len(%s)", arg), "TyaValue", nil
 		}
+		if ok && id.Name == "contains" && len(n.Args) == 2 {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			part, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_contains(%s, %s)", text, part), "TyaValue", nil
+		}
 		if ok && id.Name == "div" && len(n.Args) == 2 {
 			left, _, err := g.expr(n.Args[0])
 			if err != nil {

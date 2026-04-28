@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct TyaArray {
   int len;
@@ -56,7 +57,26 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
   if (value.kind == TYA_ARRAY && value.array != NULL && i >= 0 && i < value.array->len) {
     return value.array->items[i];
   }
+  if (value.kind == TYA_STRING && value.string != NULL && i >= 0) {
+    int n = 0;
+    while (value.string[n] != '\0') {
+      n++;
+    }
+    if (i < n) {
+      char *out = malloc(2);
+      out[0] = value.string[i];
+      out[1] = '\0';
+      return tya_string(out);
+    }
+  }
   return tya_nil();
+}
+
+TyaValue tya_contains(TyaValue text, TyaValue part) {
+  if (text.kind != TYA_STRING || part.kind != TYA_STRING || text.string == NULL || part.string == NULL) {
+    return tya_bool(false);
+  }
+  return tya_bool(strstr(text.string, part.string) != NULL);
 }
 
 void tya_push(TyaValue array, TyaValue value) {

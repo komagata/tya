@@ -28,6 +28,7 @@ TyaValue tya_string(const char *value);
 TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
+TyaValue tya_contains(TyaValue text, TyaValue part);
 void tya_push(TyaValue array, TyaValue value);
 void tya_print(TyaValue value);
 bool tya_truthy(TyaValue value);
