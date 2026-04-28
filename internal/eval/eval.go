@@ -570,6 +570,28 @@ func assign(target ast.Expr, v Value, env *Env) error {
 		}
 		o[t.Name] = v
 		return nil
+	case *ast.IndexExpr:
+		obj, err := evalExpr(t.Object, env)
+		if err != nil {
+			return err
+		}
+		idx, err := evalExpr(t.Index, env)
+		if err != nil {
+			return err
+		}
+		arr, ok := obj.(*Array)
+		if !ok {
+			return fmt.Errorf("index assignment target is not array")
+		}
+		i, ok := idx.(int64)
+		if !ok {
+			return fmt.Errorf("array index must be int")
+		}
+		if i < 0 || i >= int64(len(arr.items)) {
+			return fmt.Errorf("array assignment index out of range")
+		}
+		arr.items[i] = v
+		return nil
 	}
 	return fmt.Errorf("invalid assignment target")
 }

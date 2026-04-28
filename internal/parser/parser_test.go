@@ -82,6 +82,16 @@ func TestParseArrayLiteralAndIndex(t *testing.T) {
 	}
 }
 
+func TestParseIndexAssignment(t *testing.T) {
+	toks, errs := lexer.Lex("items[1] = 20\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, err := Parse(toks); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestParseGroupedExpression(t *testing.T) {
 	toks, errs := lexer.Lex("print (2 + 3) * 4\n")
 	if len(errs) != 0 {

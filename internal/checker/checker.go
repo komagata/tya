@@ -204,7 +204,10 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 	case *ast.MemberExpr:
 		return checkExpr(n.Object, scope)
 	case *ast.IndexExpr:
-		return checkExpr(n.Object, scope)
+		if err := checkExpr(n.Object, scope); err != nil {
+			return err
+		}
+		return checkExpr(n.Index, scope)
 	case *ast.ThisProp:
 		return nil
 	}

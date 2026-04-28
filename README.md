@@ -28,6 +28,7 @@ go test ./...
 - string interpolation with expressions: `"next year: {age + 1}"`
 - string escapes: `\"`, `\\`, `\n`, `\t`
 - arrays and objects
+- mutable array elements: `items[1] = 20`
 - inline object literals: `{ name: "komagata" }`
 - functions and implicit last-expression return
 - explicit `return`

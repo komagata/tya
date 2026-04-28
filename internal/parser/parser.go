@@ -558,9 +558,24 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 	}
 	tok := p.expect(token.IDENT)
 	ex := ast.Expr(&ast.Ident{Name: tok.Lexeme, Tok: tok})
-	for p.match(token.DOT) {
-		name := p.expect(token.IDENT)
-		ex = &ast.MemberExpr{Object: ex, Name: name.Lexeme}
+	for {
+		if p.match(token.DOT) {
+			name := p.expect(token.IDENT)
+			ex = &ast.MemberExpr{Object: ex, Name: name.Lexeme}
+			continue
+		}
+		if p.match(token.LBRACKET) {
+			index, err := p.expr()
+			if err != nil {
+				return nil, err
+			}
+			if !p.match(token.RBRACKET) {
+				return nil, p.err("expected ']'")
+			}
+			ex = &ast.IndexExpr{Object: ex, Index: index}
+			continue
+		}
+		break
 	}
 	return ex, nil
 }
@@ -571,8 +586,26 @@ func (p *Parser) isAssignStart() bool {
 		i += 2
 	} else if p.toks[i].Type == token.IDENT {
 		i++
-		for p.toks[i].Type == token.DOT {
-			i += 2
+		for {
+			if p.toks[i].Type == token.DOT {
+				i += 2
+				continue
+			}
+			if p.toks[i].Type == token.LBRACKET {
+				depth := 1
+				i++
+				for i < len(p.toks) && depth > 0 {
+					if p.toks[i].Type == token.LBRACKET {
+						depth++
+					}
+					if p.toks[i].Type == token.RBRACKET {
+						depth--
+					}
+					i++
+				}
+				continue
+			}
+			break
 		}
 	} else {
 		return false
