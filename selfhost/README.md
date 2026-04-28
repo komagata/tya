@@ -49,13 +49,14 @@ Current supported subset:
 - Checker: simple undefined assignment / print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison assignments, variable-copy assignments, bool assignments,
-  unary `not`, empty array placeholders, reassignment, carried function headers
-  and inline returns, one-, two-, and three-argument calls, `push` and `return`
+  unary `not`, one-element array paths for simple `push` / `for`, reassignment,
+  carried function headers and inline returns, one-, two-, and three-argument calls, `push` and `return`
   commands, string/int/bool print nodes, carried indexing, call indexing,
   call-with-call-index arguments, one-argument call conditions,
-  call comparison conditions, direct comparison conditions, simple `or`
+  call comparison conditions, direct comparison conditions, prototype `hasT`
+  predicate conditions, prototype `len(parts) < 3`, simple `or`
   conditions, negated call conditions, call-based
-  `while` conditions, return calls, one-argument print calls, placeholder
+  `while` conditions, return calls, simple value-copy calls, one-argument print calls, placeholder
   call/index assignment declarations, self-host source compile smoke checks,
   and simple literal or variable `if` / `while` / `for` blocks with `break` /
   `continue`
