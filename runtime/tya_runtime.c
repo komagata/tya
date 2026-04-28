@@ -813,7 +813,22 @@ static void tya_write_value(FILE *out, TyaValue value) {
     fprintf(out, "]");
     break;
   case TYA_OBJECT:
-    fprintf(out, "[object len=%d]", value.object == NULL ? 0 : value.object->len);
+    fprintf(out, "{");
+    if (value.object != NULL) {
+      int written = 0;
+      for (int i = 0; i < value.object->len; i++) {
+        if (value.object->entries[i].key == NULL) {
+          continue;
+        }
+        if (written > 0) {
+          fprintf(out, ", ");
+        }
+        fprintf(out, "%s: ", value.object->entries[i].key);
+        tya_write_value(out, value.object->entries[i].value);
+        written++;
+      }
+    }
+    fprintf(out, "}");
     break;
   case TYA_FUNCTION:
     fprintf(out, "[function]");

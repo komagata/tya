@@ -22,6 +22,7 @@ int main(void) {
 
   TyaValue object = tya_object((TyaObjectEntry[]){{"name", tya_string("Tya")}}, 1);
   tya_set_member(object, "version", tya_number(1));
+  tya_print(object);
   tya_print(tya_member(object, "name"));
   tya_print(tya_member(object, "version"));
 
@@ -35,7 +36,7 @@ int main(void) {
 }
 `
 	out := compileAndRunRuntime(t, src)
-	want := "3\n3\nTya\n1\n6\nerror: bad\nbad\n"
+	want := "3\n3\n{name: Tya, version: 1}\nTya\n1\n6\nerror: bad\nbad\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
