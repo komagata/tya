@@ -272,6 +272,7 @@ Self-Host Completion TODO:
     - [x] Add subset parser golden tests for assignments, comparisons, blocks, `else`, `while`, `push`, and `for`
 - [ ] Checker parity
   - [ ] Implement lexical scopes for top-level, functions, loops, and blocks
+    - [x] Keep simple `if`, `while`, and `for` block-local names out of outer self-host checker scopes
   - [ ] Check undefined names, duplicate constants, duplicate params, duplicate object members, and invalid assignment targets
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
   - [ ] Port optional unused binding checks or decide they stay Go-only

@@ -39,7 +39,7 @@ endpoint.
   - [x] Parse two-or-more element array literals
   - [x] Parse simple inline object literals
 - [ ] Expand checker subset
-  - [ ] Track block-local names for `if`, `while`, and `for`
+  - [x] Track block-local names for `if`, `while`, and `for`
   - [ ] Reject duplicate simple function params in self-host checker
   - [ ] Add parity coverage for duplicate and invalid names
 - [ ] Expand self-host C codegen subset

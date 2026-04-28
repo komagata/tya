@@ -60,71 +60,89 @@ hasName = names, name ->
       return true
   false
 
+rememberName = names, indents, name, indent ->
+  push names, name
+  push indents, indent
+
 isLiteralArg = name ->
   name == "" or name == "0" or name == "1" or name == "2" or name == "3" or name == "4" or name == "5" or name == "6" or name == "7" or name == "8" or name == "9" or name == "10" or name == "\\n" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
 
 check = nodes ->
   names = []
+  nameIndents = []
   errors = []
-  push names, "split"
-  push names, "len"
-  push names, "readFile"
-  push names, "args"
-  push names, "toString"
-  push names, "toInt"
-  push names, "contains"
-  push names, "hasName"
+  currentIndent = "0"
+  rememberName names, nameIndents, "split", "0"
+  rememberName names, nameIndents, "len", "0"
+  rememberName names, nameIndents, "readFile", "0"
+  rememberName names, nameIndents, "args", "0"
+  rememberName names, nameIndents, "toString", "0"
+  rememberName names, nameIndents, "toInt", "0"
+  rememberName names, nameIndents, "contains", "0"
+  rememberName names, nameIndents, "hasName", "0"
 
   for node in nodes
+    if kindOf(node) == "INDENT"
+      currentIndent = nameOf(node)
+      keptNames = []
+      keptIndents = []
+      i = 0
+      while i < len(names)
+        if toInt(nameIndents[i]) <= toInt(currentIndent)
+          rememberName keptNames, keptIndents, names[i], nameIndents[i]
+        i = i + 1
+      names = keptNames
+      nameIndents = keptIndents
+
     if kindOf(node) == "FUNC"
       name = nameOf(node)
       if not hasName(names, name)
-        push names, name
+        rememberName names, nameIndents, name, currentIndent
       arg = valueOf(node)
       if arg != "" and not hasName(names, arg)
-        push names, arg
+        rememberName names, nameIndents, arg, currentIndent
 
     if kindOf(node) == "FUNC2"
       name = nameOf(node)
       if not hasName(names, name)
-        push names, name
+        rememberName names, nameIndents, name, currentIndent
       arg = valueOf(node)
       arg2 = extraOf(node)
       if arg != "" and not hasName(names, arg)
-        push names, arg
+        rememberName names, nameIndents, arg, currentIndent
       if arg2 != "" and not hasName(names, arg2)
-        push names, arg2
+        rememberName names, nameIndents, arg2, currentIndent
 
     if kindOf(node) == "FUNC3"
       name = nameOf(node)
       if not hasName(names, name)
-        push names, name
+        rememberName names, nameIndents, name, currentIndent
       arg = valueOf(node)
       arg2 = extraOf(node)
       arg3 = extra2Of(node)
       if arg != "" and not hasName(names, arg)
-        push names, arg
+        rememberName names, nameIndents, arg, currentIndent
       if arg2 != "" and not hasName(names, arg2)
-        push names, arg2
+        rememberName names, nameIndents, arg2, currentIndent
       if arg3 != "" and not hasName(names, arg3)
-        push names, arg3
+        rememberName names, nameIndents, arg3, currentIndent
 
     if kindOf(node) == "FUNC4"
       name = nameOf(node)
       if not hasName(names, name)
-        push names, name
+        rememberName names, nameIndents, name, currentIndent
       arg = valueOf(node)
       arg2 = extraOf(node)
       arg3 = extra2Of(node)
       arg4 = extra3Of(node)
       if arg != "" and not hasName(names, arg)
-        push names, arg
+        rememberName names, nameIndents, arg, currentIndent
       if arg2 != "" and not hasName(names, arg2)
-        push names, arg2
+        rememberName names, nameIndents, arg2, currentIndent
       if arg3 != "" and not hasName(names, arg3)
-        push names, arg3
+        rememberName names, nameIndents, arg3, currentIndent
       if arg4 != "" and not hasName(names, arg4)
-        push names, arg4
+        rememberName names, nameIndents, arg4, currentIndent
 
     if kindOf(node) == "FOR"
       item = nameOf(node)
@@ -132,7 +150,7 @@ check = nodes ->
       if not hasName(names, collection)
         push errors, lineOf(node) + ": undefined variable: " + collection
       if not hasName(names, item)
-        push names, item
+        rememberName names, nameIndents, item, toString(toInt(currentIndent) + 2)
 
     if kindOf(node) == "ASSIGN"
       name = nameOf(node)
@@ -219,7 +237,7 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + indexName
       seen = hasName names, name
       if not seen
-        push names, name
+        rememberName names, nameIndents, name, currentIndent
 
     if kindOf(node) == "PRINT"
       if nameOf(node) == "IDENT"

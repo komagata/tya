@@ -435,6 +435,19 @@ func TestSelfhostCheckerRejectsUndefinedForCollections(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerKeepsBlockLocalNamesScoped(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:INDENT:0\n1:IF:BOOL:true\n2:INDENT:2\n2:ASSIGN:localIf:INT:1\n3:INDENT:0\n3:PRINT:IDENT:localIf\n4:WHILE:BOOL:true\n5:INDENT:2\n5:ASSIGN:localWhile:INT:1\n6:INDENT:0\n6:PRINT:IDENT:localWhile\n7:ASSIGN:items:ARRAY_EMPTY:\n8:FOR:item:items\n9:INDENT:2\n9:PRINT:IDENT:item\n10:INDENT:0\n10:PRINT:IDENT:item\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "3: undefined variable: localIf\n6: undefined variable: localWhile\n10: undefined variable: item\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func runToFile(t *testing.T, path string, name string, args ...string) {
 	t.Helper()
 	out := run(t, name, args...)
