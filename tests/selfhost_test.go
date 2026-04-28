@@ -461,6 +461,19 @@ func TestSelfhostCheckerRejectsDuplicateFunctionParams(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerRejectsInvalidBindingNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:FUNC:show:User\n2:FUNC2:show2:user_name:ok\n3:ASSIGN:items:ARRAY_EMPTY:\n4:FOR:Item:items\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: invalid binding name: User\n2: invalid binding name: user_name\n4: invalid binding name: Item\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func runToFile(t *testing.T, path string, name string, args ...string) {
 	t.Helper()
 	out := run(t, name, args...)

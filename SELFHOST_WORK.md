@@ -41,7 +41,7 @@ endpoint.
 - [ ] Expand checker subset
   - [x] Track block-local names for `if`, `while`, and `for`
   - [x] Reject duplicate simple function params in self-host checker
-  - [ ] Add parity coverage for duplicate and invalid names
+  - [x] Add parity coverage for duplicate and invalid names
 - [ ] Expand self-host C codegen subset
   - [ ] Emit simple function bodies instead of comments for one-expression returns
   - [ ] Emit simple function calls to generated functions

@@ -275,10 +275,12 @@ Self-Host Completion TODO:
     - [x] Keep simple `if`, `while`, and `for` block-local names out of outer self-host checker scopes
   - [ ] Check undefined names, duplicate constants, duplicate params, duplicate object members, and invalid assignment targets
     - [x] Reject duplicate simple function params in the self-host checker subset
+    - [x] Reject invalid simple function and loop binding names in the self-host checker subset
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
   - [ ] Port optional unused binding checks or decide they stay Go-only
   - [ ] Add checker parity tests against Go checker diagnostics
     - [x] Add subset checker parity tests for undefined variable diagnostics
+    - [x] Add subset checker coverage for duplicate params and invalid binding names
 - [ ] Self-hosted C codegen parity
   - [ ] Emit real C functions instead of comments / skipped function bodies
   - [ ] Emit full expression lowering through the existing C runtime ABI

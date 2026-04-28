@@ -60,6 +60,42 @@ hasName = names, name ->
       return true
   false
 
+isLower = char ->
+  contains "abcdefghijklmnopqrstuvwxyz", char
+
+isUpper = char ->
+  contains "ABCDEFGHIJKLMNOPQRSTUVWXYZ", char
+
+isDigit = char ->
+  contains "0123456789", char
+
+isValidBindingName = name ->
+  if name == "_"
+    return true
+  if len(name) == 0
+    return false
+  if isUpper(name[0])
+    i = 0
+    while i < len(name)
+      if not isUpper(name[i]) and not isDigit(name[i]) and name[i] != "_"
+        return false
+      i = i + 1
+    return true
+  if name[0] == "_"
+    if len(name) < 2
+      return false
+    if not isLower(name[1])
+      return false
+  else
+    if not isLower(name[0])
+      return false
+  i = 1
+  while i < len(name)
+    if name[i] == "_"
+      return false
+    i = i + 1
+  true
+
 rememberName = names, indents, name, indent ->
   push names, name
   push indents, indent
@@ -99,6 +135,8 @@ check = nodes ->
       if not hasName(names, name)
         rememberName names, nameIndents, name, currentIndent
       arg = valueOf(node)
+      if arg != "" and not isValidBindingName(arg)
+        push errors, lineOf(node) + ": invalid binding name: " + arg
       if arg != "" and not hasName(names, arg)
         rememberName names, nameIndents, arg, currentIndent
 
@@ -108,6 +146,10 @@ check = nodes ->
         rememberName names, nameIndents, name, currentIndent
       arg = valueOf(node)
       arg2 = extraOf(node)
+      if arg != "" and not isValidBindingName(arg)
+        push errors, lineOf(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not isValidBindingName(arg2)
+        push errors, lineOf(node) + ": invalid binding name: " + arg2
       if arg != "" and arg == arg2
         push errors, lineOf(node) + ": duplicate function parameter: " + arg
       if arg != "" and not hasName(names, arg)
@@ -122,6 +164,12 @@ check = nodes ->
       arg = valueOf(node)
       arg2 = extraOf(node)
       arg3 = extra2Of(node)
+      if arg != "" and not isValidBindingName(arg)
+        push errors, lineOf(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not isValidBindingName(arg2)
+        push errors, lineOf(node) + ": invalid binding name: " + arg2
+      if arg3 != "" and not isValidBindingName(arg3)
+        push errors, lineOf(node) + ": invalid binding name: " + arg3
       if arg != "" and (arg == arg2 or arg == arg3)
         push errors, lineOf(node) + ": duplicate function parameter: " + arg
       if arg2 != "" and arg2 == arg3
@@ -141,6 +189,14 @@ check = nodes ->
       arg2 = extraOf(node)
       arg3 = extra2Of(node)
       arg4 = extra3Of(node)
+      if arg != "" and not isValidBindingName(arg)
+        push errors, lineOf(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not isValidBindingName(arg2)
+        push errors, lineOf(node) + ": invalid binding name: " + arg2
+      if arg3 != "" and not isValidBindingName(arg3)
+        push errors, lineOf(node) + ": invalid binding name: " + arg3
+      if arg4 != "" and not isValidBindingName(arg4)
+        push errors, lineOf(node) + ": invalid binding name: " + arg4
       if arg != "" and (arg == arg2 or arg == arg3 or arg == arg4)
         push errors, lineOf(node) + ": duplicate function parameter: " + arg
       if arg2 != "" and (arg2 == arg3 or arg2 == arg4)
@@ -159,6 +215,8 @@ check = nodes ->
     if kindOf(node) == "FOR"
       item = nameOf(node)
       collection = valueOf(node)
+      if not isValidBindingName(item)
+        push errors, lineOf(node) + ": invalid binding name: " + item
       if not hasName(names, collection)
         push errors, lineOf(node) + ": undefined variable: " + collection
       if not hasName(names, item)
