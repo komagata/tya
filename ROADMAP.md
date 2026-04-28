@@ -76,6 +76,7 @@ Implemented:
 - Initial string runtime support for length, indexing, and `contains`
 - Runtime equality helper for nil, bool, number, string, and array identity
 - Runtime addition helper for numeric addition and string concatenation
+- Initial generated-C runtime support for `args`, `readFile`, `split`, `toString`, and `toInt`
 - Runtime printing and truthiness helpers
 - Generated C can compile and run against `runtime/tya_runtime.c`
 
@@ -174,6 +175,7 @@ Implemented:
 - Go C emitter can run simple generated-C string programs with `len`, indexing, and `contains`
 - Go C emitter uses runtime equality and truthiness for generated logical comparisons
 - Go C emitter uses runtime addition for generated numeric addition and string concatenation
+- Go C emitter can run simple generated-C file/argument/split/conversion programs
 
 ## Non-Goals For Now
 

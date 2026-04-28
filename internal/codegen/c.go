@@ -12,7 +12,7 @@ func EmitC(prog *ast.Program) (string, error) {
 	g := &cgen{vars: map[string]bool{}}
 	g.line("#include \"tya_runtime.h\"")
 	g.line("")
-	g.line("int main(void) {")
+	g.line("int main(int argc, char **argv) {")
 	g.indent++
 	for _, stmt := range prog.Stmts {
 		if err := g.stmt(stmt); err != nil {
@@ -266,6 +266,41 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_contains(%s, %s)", text, part), "TyaValue", nil
+		}
+		if ok && id.Name == "args" && len(n.Args) == 0 {
+			return "tya_args(argc, argv)", "TyaValue", nil
+		}
+		if ok && id.Name == "readFile" && len(n.Args) == 1 {
+			path, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_read_file(%s)", path), "TyaValue", nil
+		}
+		if ok && id.Name == "split" && len(n.Args) == 2 {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			sep, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_split(%s, %s)", text, sep), "TyaValue", nil
+		}
+		if ok && id.Name == "toString" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_to_string(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "toInt" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_to_int(%s)", arg), "TyaValue", nil
 		}
 		if ok && id.Name == "div" && len(n.Args) == 2 {
 			left, _, err := g.expr(n.Args[0])

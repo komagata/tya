@@ -124,6 +124,100 @@ TyaValue tya_add(TyaValue left, TyaValue right) {
   return tya_number(left.number + right.number);
 }
 
+TyaValue tya_args(int argc, char **argv) {
+  TyaValue out = tya_array(0, 0);
+  for (int i = 1; i < argc; i++) {
+    tya_push(out, tya_string(argv[i]));
+  }
+  return out;
+}
+
+TyaValue tya_read_file(TyaValue path) {
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    return tya_string("");
+  }
+  FILE *file = fopen(path.string, "rb");
+  if (file == NULL) {
+    return tya_string("");
+  }
+  fseek(file, 0, SEEK_END);
+  long size = ftell(file);
+  fseek(file, 0, SEEK_SET);
+  char *buffer = malloc((size_t)size + 1);
+  size_t read = fread(buffer, 1, (size_t)size, file);
+  buffer[read] = '\0';
+  fclose(file);
+  return tya_string(buffer);
+}
+
+static char *tya_substr(const char *text, int start, int len) {
+  char *out = malloc((size_t)len + 1);
+  for (int i = 0; i < len; i++) {
+    out[i] = text[start + i];
+  }
+  out[len] = '\0';
+  return out;
+}
+
+TyaValue tya_split(TyaValue text, TyaValue sep) {
+  if (text.kind != TYA_STRING || sep.kind != TYA_STRING || text.string == NULL || sep.string == NULL) {
+    return tya_array(0, 0);
+  }
+  TyaValue out = tya_array(0, 0);
+  int sep_len = (int)strlen(sep.string);
+  if (sep_len == 0) {
+    tya_push(out, text);
+    return out;
+  }
+  int start = 0;
+  int i = 0;
+  while (text.string[i] != '\0') {
+    if (strncmp(text.string + i, sep.string, (size_t)sep_len) == 0) {
+      tya_push(out, tya_string(tya_substr(text.string, start, i - start)));
+      i += sep_len;
+      start = i;
+      continue;
+    }
+    i++;
+  }
+  tya_push(out, tya_string(tya_substr(text.string, start, i - start)));
+  return out;
+}
+
+TyaValue tya_to_string(TyaValue value) {
+  if (value.kind == TYA_STRING) {
+    return value;
+  }
+  char *out = malloc(64);
+  switch (value.kind) {
+  case TYA_NIL:
+    snprintf(out, 64, "nil");
+    break;
+  case TYA_BOOL:
+    snprintf(out, 64, "%s", value.boolean ? "true" : "false");
+    break;
+  case TYA_NUMBER:
+    snprintf(out, 64, "%g", value.number);
+    break;
+  case TYA_ARRAY:
+    snprintf(out, 64, "[array len=%d]", value.array == NULL ? 0 : value.array->len);
+    break;
+  case TYA_STRING:
+    break;
+  }
+  return tya_string(out);
+}
+
+TyaValue tya_to_int(TyaValue value) {
+  if (value.kind == TYA_NUMBER) {
+    return value;
+  }
+  if (value.kind == TYA_STRING && value.string != NULL) {
+    return tya_number(strtol(value.string, NULL, 10));
+  }
+  return tya_number(0);
+}
+
 void tya_push(TyaValue array, TyaValue value) {
   if (array.kind != TYA_ARRAY || array.array == NULL) {
     return;

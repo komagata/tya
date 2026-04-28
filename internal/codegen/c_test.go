@@ -51,7 +51,25 @@ func TestEmitCCompilesAdditionProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "input.txt")
+	if err := os.WriteFile(path, []byte("12\na\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	src := "path = args()[0]\ntext = readFile path\nparts = split text, \"\\n\"\nfirst = toInt parts[0]\nprint first + 8\nprint toString true\n"
+	out := compileAndRunArgs(t, src, path)
+	if string(out) != "20\ntrue\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
+	t.Helper()
+	return compileAndRunArgs(t, src)
+}
+
+func compileAndRunArgs(t *testing.T, src string, args ...string) []byte {
 	t.Helper()
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
@@ -79,7 +97,8 @@ func compileAndRun(t *testing.T, src string) []byte {
 	if out, err := exec.Command("gcc", cfile, runtime, "-I", include, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("gcc: %v\n%s\n%s", err, out, csrc)
 	}
-	out, err := exec.Command(bin).CombinedOutput()
+	cmd := exec.Command(bin, args...)
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatal(err)
 	}
