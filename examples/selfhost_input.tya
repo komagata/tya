@@ -1,5 +1,5 @@
-greet = name -> "Hello, {name}"
-print greet "Tya"
+message = "Tya"
+print message
 
 if true
   print "Indented"

@@ -14,6 +14,12 @@ valueOf = node ->
     return ""
   parts[3]
 
+extraOf = node ->
+  parts = split node, ":"
+  if len(parts) < 5
+    return ""
+  parts[4]
+
 emitC = nodes ->
   lines = []
   push lines, "#include <stdio.h>"
@@ -31,7 +37,10 @@ emitC = nodes ->
       indent = nextIndent
 
     if kindOf(node) == "ASSIGN"
-      push lines, "  /* assign " + nameOf(node) + " */"
+      if valueOf(node) == "STRING"
+        push lines, "  const char *" + nameOf(node) + " = \"" + extraOf(node) + "\";"
+      else
+        push lines, "  /* assign " + nameOf(node) + " */"
 
     if kindOf(node) == "IF"
       if valueOf(node) == "true"
@@ -48,7 +57,7 @@ emitC = nodes ->
       if nameOf(node) == "STRING"
         push lines, prefix + "puts(\"" + valueOf(node) + "\");"
       else
-        push lines, prefix + "puts(\"" + valueOf(node) + "\");"
+        push lines, prefix + "puts(" + valueOf(node) + ");"
 
   if blockOpen
     push lines, "  }"

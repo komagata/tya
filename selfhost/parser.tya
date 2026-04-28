@@ -39,7 +39,7 @@ parse = tokens ->
       if i + 1 < len(tokens)
         value = tokens[i + 1]
         step = 2
-        if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT"
+        if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 2]) == lineOf(token)
           value = tokens[i + 2]
           step = 3
         node = lineOf(token) + ":PRINT:" + kindOf(value) + ":" + textOf(value)
@@ -49,7 +49,8 @@ parse = tokens ->
 
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
-        node = lineOf(token) + ":ASSIGN:" + textOf(token)
+        value = tokens[i + 2]
+        node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":" + kindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + 3
         continue
