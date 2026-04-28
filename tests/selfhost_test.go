@@ -3,7 +3,12 @@ package tests
 import (
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"testing"
+
+	"tya/internal/lexer"
+	"tya/internal/token"
 )
 
 func TestSelfhostPrototypePipeline(t *testing.T) {
@@ -56,6 +61,20 @@ func TestSelfhostLexerSourceChecks(t *testing.T) {
 	want := "selfhost/lexer.tya: ok\nselfhost/parser.tya: ok\nselfhost/checker.tya: ok\nselfhost/codegen_c.tya: ok\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestSelfhostLexerMatchesGoLexerSubset(t *testing.T) {
+	path := t.TempDir() + "/tokens.tya"
+	src := "name = \"Ty\\\"a\"\nratio = 12.5\nitems = [1, 2]\nuser = { name: name }\n@count = @count + 1\nif ratio >= 10 and name != \"\"\n  print name\n"
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/lexer.tya", path)
+	got := strings.TrimSpace(string(out))
+	want := strings.Join(goLexerSelfhostTokens(t, src), "\n")
+	if got != want {
+		t.Fatalf("got:\n%s\nwant:\n%s", got, want)
 	}
 }
 
@@ -379,4 +398,52 @@ func run(t *testing.T, name string, args ...string) []byte {
 		t.Fatalf("%s %v: %v\n%s", name, args, err, out)
 	}
 	return out
+}
+
+func goLexerSelfhostTokens(t *testing.T, src string) []string {
+	t.Helper()
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	lines := strings.Split(src, "\n")
+	out := []string{}
+	seenLine := map[int]bool{}
+	for _, tok := range toks {
+		if tok.Type != token.NEWLINE && tok.Type != token.DEDENT && tok.Type != token.EOF && !seenLine[tok.Line] {
+			out = append(out, selfhostToken(tok.Line, "INDENT", strconv.Itoa(leadingSpaces(lines[tok.Line-1]))))
+			seenLine[tok.Line] = true
+		}
+		switch tok.Type {
+		case token.NEWLINE, token.DEDENT, token.EOF:
+			continue
+		case token.INDENT:
+			continue
+		case token.ARROW:
+			out = append(out, selfhostToken(tok.Line, "ARROW", tok.Lexeme))
+		case token.IDENT, token.INT, token.FLOAT, token.STRING:
+			out = append(out, selfhostToken(tok.Line, string(tok.Type), escapeSelfhostLexeme(tok.Lexeme)))
+		default:
+			out = append(out, selfhostToken(tok.Line, "SYMBOL", tok.Lexeme))
+		}
+	}
+	return out
+}
+
+func selfhostToken(line int, kind string, text string) string {
+	return strconv.Itoa(line) + ":" + kind + ":" + text
+}
+
+func leadingSpaces(s string) int {
+	n := 0
+	for n < len(s) && s[n] == ' ' {
+		n++
+	}
+	return n
+}
+
+func escapeSelfhostLexeme(s string) string {
+	s = strings.ReplaceAll(s, "\n", "\\n")
+	s = strings.ReplaceAll(s, "\t", "\\t")
+	return s
 }

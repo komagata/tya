@@ -249,9 +249,11 @@ Self-Host Completion TODO:
 
 - [ ] Lexer parity
   - [ ] Tokenize all literals supported by the Go lexer: nil, bool, int, float, string escapes
+    - [x] Tokenize ints, floats, identifiers, bool/nil words, and basic string escapes in the self-host lexer
   - [ ] Tokenize all operators and delimiters used by the language
+    - [x] Tokenize current Go lexer operators and delimiters in the self-host lexer output format
   - [ ] Preserve enough source span data for useful self-host diagnostics
-  - [ ] Add lexer golden tests comparing Go lexer output and Tya lexer output
+  - [x] Add lexer golden tests comparing Go lexer output and Tya lexer output
 - [ ] Parser parity
   - [ ] Replace line-oriented node stubs with a structured AST format
   - [ ] Parse grouped expressions and normal precedence for arithmetic, comparison, equality, and logical operators
