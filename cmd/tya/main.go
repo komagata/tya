@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"tya/internal/checker"
+	"tya/internal/codegen"
 	"tya/internal/eval"
 	"tya/internal/lexer"
 	"tya/internal/parser"
@@ -23,12 +24,21 @@ func main() {
 		return
 	}
 	dumpTokens := false
+	emitC := false
 	if os.Args[1] == "--tokens" {
 		if len(os.Args) < 3 {
 			usage()
 			os.Exit(2)
 		}
 		dumpTokens = true
+		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
+	}
+	if os.Args[1] == "--emit-c" {
+		if len(os.Args) < 3 {
+			usage()
+			os.Exit(2)
+		}
+		emitC = true
 		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
 	}
 	path := os.Args[1]
@@ -63,6 +73,15 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	if emitC {
+		csrc, err := codegen.EmitC(prog)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		fmt.Fprint(os.Stdout, csrc)
+		return
+	}
 	if err := eval.RunWithIO(prog, os.Stdin, os.Stdout, os.Args[2:]); err != nil {
 		if exitErr, ok := err.(*eval.ExitError); ok {
 			os.Exit(exitErr.Code)
@@ -73,5 +92,5 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: tya [--version] [--tokens] <file.tya> [args...]")
+	fmt.Fprintln(os.Stderr, "usage: tya [--version] [--tokens] [--emit-c] <file.tya> [args...]")
 }

@@ -36,7 +36,7 @@ Next:
 
 ## Phase 2: Go Compiler That Emits C
 
-Do not start until the interpreter is stable.
+Status: started.
 
 Goals:
 
@@ -45,6 +45,13 @@ Goals:
 - Reuse checker output before codegen
 - Compile simple programs equivalent to current examples
 - Keep the generated C readable for debugging
+
+Implemented:
+
+- Initial `--emit-c` CLI path
+- C emission for simple numeric/string/bool expressions, assignments, `print`,
+  `if`, `while`, `break`, and `continue`
+- GCC smoke test for generated C
 
 ## Phase 3: C Runtime
 

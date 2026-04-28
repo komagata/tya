@@ -10,6 +10,7 @@ interpreter.
 ```sh
 go run ./cmd/tya examples/hello.tya
 go run ./cmd/tya --tokens examples/hello.tya
+go run ./cmd/tya --emit-c examples/arithmetic.tya
 ```
 
 ## Test
