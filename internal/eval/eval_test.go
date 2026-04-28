@@ -2,6 +2,7 @@ package eval
 
 import (
 	"bytes"
+	"path/filepath"
 	"testing"
 
 	"tya/internal/lexer"
@@ -236,6 +237,27 @@ func TestRunForOfObject(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := "komagata\n2\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunFileBuiltins(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "memo.txt")
+	src := "writeFile \"" + path + "\", \"hello\"\nprint fileExists \"" + path + "\"\nprint readFile \"" + path + "\"\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "true\nhello\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}

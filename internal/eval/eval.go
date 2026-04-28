@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -307,6 +308,48 @@ func installBuiltins(env *Env, out io.Writer) {
 			return nil, err
 		}
 		return int64(len([]rune(text))), nil
+	}))
+	env.set("readFile", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("readFile", args)
+		if err != nil {
+			return nil, err
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		return string(data), nil
+	}))
+	env.set("writeFile", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("writeFile expects 2 arguments")
+		}
+		path, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("writeFile expects string path")
+		}
+		text, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("writeFile expects string text")
+		}
+		if err := os.WriteFile(path, []byte(text), 0644); err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}))
+	env.set("fileExists", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("fileExists", args)
+		if err != nil {
+			return nil, err
+		}
+		_, statErr := os.Stat(path)
+		if statErr == nil {
+			return true, nil
+		}
+		if errors.Is(statErr, os.ErrNotExist) {
+			return false, nil
+		}
+		return nil, statErr
 	}))
 	env.set("toInt", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {

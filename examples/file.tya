@@ -1,0 +1,5 @@
+path = "/tmp/tya_example.txt"
+
+writeFile path, "Hello from Tya"
+print fileExists path
+print readFile path

@@ -37,7 +37,8 @@ go test ./...
 - builtins: `print`, `len`, `push`, `pop`, `keys`, `values`, `has`, `delete`,
   `split`, `join`, `trim`,
   `replace`, `contains`, `startsWith`, `endsWith`, `byteLen`, `charLen`,
-  `toString`, `toInt`, `toFloat`, `toNumber`
+  `readFile`, `writeFile`, `fileExists`, `toString`, `toInt`, `toFloat`,
+  `toNumber`
 
 ## Examples
 
