@@ -160,20 +160,31 @@ emitC = nodes ->
             if not hasName(names, nameOf(node))
               rememberType names, types, nameOf(node), "BOOL"
           else
-            if valueOf(node) == "ARRAY_EMPTY" or valueOf(node) == "ARRAY_ONE"
+            if valueOf(node) == "ARRAY_EMPTY" or valueOf(node) == "ARRAY_ONE" or valueOf(node) == "ARRAY_TWO"
               arrayLen = "0"
               item = "\"\""
+              item2 = "\"\""
               if valueOf(node) == "ARRAY_ONE"
                 arrayLen = "1"
                 item = cName(extra2Of(node))
                 if extraOf(node) == "STRING"
                   item = cString(extra2Of(node))
+              if valueOf(node) == "ARRAY_TWO"
+                arrayLen = "2"
+                item = cName(extra2Of(node))
+                item2 = cName(extra4Of(node))
+                if extraOf(node) == "STRING"
+                  item = cString(extra2Of(node))
+                if extra3Of(node) == "STRING"
+                  item2 = cString(extra4Of(node))
               if hasName(names, nameOf(node))
                 push lines, "  " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
                 push lines, "  " + cName(nameOf(node)) + "_0 = " + item + ";"
+                push lines, "  " + cName(nameOf(node)) + "_1 = " + item2 + ";"
               else
                 push lines, "  long " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
                 push lines, "  const char *" + cName(nameOf(node)) + "_0 = " + item + ";"
+                push lines, "  const char *" + cName(nameOf(node)) + "_1 = " + item2 + ";"
                 rememberType names, types, nameOf(node), "ARRAY"
             else
               if valueOf(node) == "INT_ADD"

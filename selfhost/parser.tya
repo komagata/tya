@@ -278,6 +278,13 @@ parse = tokens ->
           push nodes, node
           i = i + 4
           continue
+        if textOf(value) == "[" and i + 6 < len(tokens) and textOf(tokens[i + 4]) == "," and textOf(tokens[i + 6]) == "]"
+          item = tokens[i + 3]
+          item2 = tokens[i + 5]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":ARRAY_TWO:" + literalKindOf(item) + ":" + textOf(item) + ":" + literalKindOf(item2) + ":" + textOf(item2)
+          push nodes, node
+          i = i + 7
+          continue
         if textOf(value) == "[" and i + 4 < len(tokens) and textOf(tokens[i + 4]) == "]"
           item = tokens[i + 3]
           node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":ARRAY_ONE:" + literalKindOf(item) + ":" + textOf(item)

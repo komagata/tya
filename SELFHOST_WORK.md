@@ -36,7 +36,7 @@ endpoint.
 - [ ] Expand parser subset toward full expression parsing
   - [x] Parse grouped comparison assignments
   - [x] Parse simple `and` / `or` assignments
-  - [ ] Parse two-or-more element array literals
+  - [x] Parse two-or-more element array literals
   - [ ] Parse simple inline object literals
 - [ ] Expand checker subset
   - [ ] Track block-local names for `if`, `while`, and `for`
