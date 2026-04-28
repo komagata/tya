@@ -190,6 +190,7 @@ Implemented:
 - Go C emitter can run simple generated-C object literal and member access programs
 - Go C emitter can run `examples/function.tya`
 - Go C emitter can run `examples/arithmetic.tya`
+- Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 
 ## Non-Goals For Now

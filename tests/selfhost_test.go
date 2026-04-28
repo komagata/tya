@@ -52,6 +52,14 @@ func TestGoEmittedSelfhostPipelineRuns(t *testing.T) {
 	}
 }
 
+func TestGoEmitterMatchesSelectedExamples(t *testing.T) {
+	out := run(t, "sh", "scripts/go_emit_examples_check.sh")
+	want := "examples/arithmetic.tya: matched\nexamples/function.tya: matched\nexamples/while.tya: matched\nexamples/if.tya: matched\nexamples/array.tya: matched\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedConditionNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:IF:IDENT:missingIf\n2:WHILE:IDENT:missingWhile\n"), 0644); err != nil {
