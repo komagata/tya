@@ -65,11 +65,18 @@ emitC = nodes ->
           push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
           rememberType names, types, nameOf(node), "INT"
         else
-          if valueOf(node) == "INT_ADD"
-            push lines, "  long " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
-            rememberType names, types, nameOf(node), "INT"
+          if valueOf(node) == "BOOL"
+            if extraOf(node) == "true"
+              push lines, "  int " + nameOf(node) + " = 1;"
+            else
+              push lines, "  int " + nameOf(node) + " = 0;"
+            rememberType names, types, nameOf(node), "BOOL"
           else
-            push lines, "  /* assign " + nameOf(node) + " */"
+            if valueOf(node) == "INT_ADD"
+              push lines, "  long " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
+              rememberType names, types, nameOf(node), "INT"
+            else
+              push lines, "  /* assign " + nameOf(node) + " */"
 
     if kindOf(node) == "IF"
       if valueOf(node) == "true"
@@ -97,10 +104,19 @@ emitC = nodes ->
         if nameOf(node) == "INT"
           push lines, prefix + "printf(\"%ld\\n\", (long)" + valueOf(node) + ");"
         else
-          if typeOf(names, types, valueOf(node)) == "INT"
-            push lines, prefix + "printf(\"%ld\\n\", (long)" + valueOf(node) + ");"
+          if nameOf(node) == "BOOL"
+            if valueOf(node) == "true"
+              push lines, prefix + "puts(\"true\");"
+            else
+              push lines, prefix + "puts(\"false\");"
           else
-            push lines, prefix + "puts(" + valueOf(node) + ");"
+            if typeOf(names, types, valueOf(node)) == "INT"
+              push lines, prefix + "printf(\"%ld\\n\", (long)" + valueOf(node) + ");"
+            else
+              if typeOf(names, types, valueOf(node)) == "BOOL"
+                push lines, prefix + "puts(" + valueOf(node) + " ? \"true\" : \"false\");"
+              else
+                push lines, prefix + "puts(" + valueOf(node) + ");"
 
   if blockOpen
     push lines, "  }"

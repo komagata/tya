@@ -12,6 +12,11 @@ lineOf = token ->
   parts = split token, ":"
   parts[0]
 
+literalKindOf = token ->
+  if kindOf(token) == "IDENT" and (textOf(token) == "true" or textOf(token) == "false")
+    return "BOOL"
+  kindOf(token)
+
 parse = tokens ->
   nodes = []
   i = 0
@@ -30,7 +35,7 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and textOf(token) == "if"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
-        node = lineOf(token) + ":IF:" + kindOf(value) + ":" + textOf(value)
+        node = lineOf(token) + ":IF:" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + 2
         continue
@@ -38,7 +43,7 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and textOf(token) == "while"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
-        node = lineOf(token) + ":WHILE:" + kindOf(value) + ":" + textOf(value)
+        node = lineOf(token) + ":WHILE:" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + 2
         continue
@@ -50,7 +55,7 @@ parse = tokens ->
         if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 2]) == lineOf(token)
           value = tokens[i + 2]
           step = 3
-        node = lineOf(token) + ":PRINT:" + kindOf(value) + ":" + textOf(value)
+        node = lineOf(token) + ":PRINT:" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + step
         continue
@@ -65,7 +70,7 @@ parse = tokens ->
           i = i + 5
           continue
         else
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":" + kindOf(value) + ":" + textOf(value)
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":" + literalKindOf(value) + ":" + textOf(value)
           push nodes, node
           i = i + 3
           continue

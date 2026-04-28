@@ -19,4 +19,5 @@ Current supported subset:
 - Parser: simple assignment, `if`, `while`, indentation, and print nodes
 - Checker: duplicate assignment node detection and simple undefined print names
 - C codegen: string/int assignments, simple integer addition assignments,
-  string/int print nodes, and simple `if true` / `while false` blocks
+  bool assignments, string/int/bool print nodes, and simple `if true` /
+  `while false` blocks
