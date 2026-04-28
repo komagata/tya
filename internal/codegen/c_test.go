@@ -89,6 +89,14 @@ func TestEmitCCompilesWriteFileProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesErrorProgram(t *testing.T) {
+	src := "err = error \"file not found\"\nprint err\nprint err.message\n"
+	out := compileAndRun(t, src)
+	if string(out) != "error: file not found\nfile not found\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesArgsAndEnvProgram(t *testing.T) {
 	t.Setenv("TYA_EXAMPLE", "hello")
 	src := "items = args()\nprint len items\nprint env \"TYA_EXAMPLE\"\n"

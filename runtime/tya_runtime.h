@@ -11,6 +11,7 @@ typedef enum {
   TYA_ARRAY,
   TYA_OBJECT,
   TYA_FUNCTION,
+  TYA_ERROR,
 } TyaKind;
 
 typedef struct TyaArray TyaArray;
@@ -26,6 +27,7 @@ typedef struct {
   TyaArray *array;
   TyaObject *object;
   TyaFunction *function;
+  const char *error;
 } TyaValue;
 
 typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue);
@@ -42,6 +44,7 @@ TyaValue tya_string(const char *value);
 TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_object(const TyaObjectEntry *entries, int count);
 TyaValue tya_function(TyaFunctionPtr fn);
+TyaValue tya_error(TyaValue message);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third);

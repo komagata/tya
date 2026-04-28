@@ -5,7 +5,7 @@ out_dir="${TMPDIR:-/tmp}/tya-go-emit-examples"
 
 mkdir -p "$out_dir"
 
-for src in examples/hello.tya examples/arithmetic.tya examples/function.tya examples/return.tya examples/while.tya examples/if.tya examples/logic.tya examples/array.tya examples/array_function.tya examples/string.tya examples/object.tya examples/object_inline.tya examples/object_builtin.tya examples/convert.tya examples/file.tya examples/equal.tya examples/for.tya examples/for_object.tya examples/read_line.tya examples/exit.tya; do
+for src in examples/hello.tya examples/arithmetic.tya examples/function.tya examples/return.tya examples/while.tya examples/if.tya examples/logic.tya examples/array.tya examples/array_function.tya examples/string.tya examples/object.tya examples/object_inline.tya examples/object_builtin.tya examples/convert.tya examples/error.tya examples/file.tya examples/equal.tya examples/for.tya examples/for_object.tya examples/read_line.tya examples/exit.tya; do
   base="$(basename "$src" .tya)"
   go run ./cmd/tya "$src" > "$out_dir/$base.want"
   go run ./cmd/tya --emit-c "$src" > "$out_dir/$base.c"

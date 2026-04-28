@@ -66,6 +66,13 @@ TyaValue tya_function(TyaFunctionPtr fn) {
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
+TyaValue tya_error(TyaValue message) {
+  if (message.kind != TYA_STRING) {
+    return (TyaValue){.kind = TYA_ERROR, .error = ""};
+  }
+  return (TyaValue){.kind = TYA_ERROR, .error = message.string};
+}
+
 TyaValue tya_call1(TyaValue fn, TyaValue arg) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
@@ -138,6 +145,9 @@ void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
 }
 
 TyaValue tya_member(TyaValue object, const char *key) {
+  if (object.kind == TYA_ERROR && strcmp(key, "message") == 0) {
+    return tya_string(object.error == NULL ? "" : object.error);
+  }
   if (object.kind != TYA_OBJECT || object.object == NULL) {
     return tya_nil();
   }
@@ -353,6 +363,11 @@ bool tya_equal(TyaValue left, TyaValue right) {
     return left.object == right.object;
   case TYA_FUNCTION:
     return left.function == right.function;
+  case TYA_ERROR:
+    if (left.error == NULL || right.error == NULL) {
+      return left.error == right.error;
+    }
+    return strcmp(left.error, right.error) == 0;
   }
   return false;
 }
@@ -585,6 +600,9 @@ TyaValue tya_to_string(TyaValue value) {
   case TYA_FUNCTION:
     snprintf(out, 64, "[function]");
     break;
+  case TYA_ERROR:
+    snprintf(out, 64, "error: %s", value.error == NULL ? "" : value.error);
+    break;
   case TYA_STRING:
     break;
   }
@@ -754,6 +772,9 @@ void tya_print(TyaValue value) {
     break;
   case TYA_FUNCTION:
     puts("[function]");
+    break;
+  case TYA_ERROR:
+    printf("error: %s\n", value.error == NULL ? "" : value.error);
     break;
   }
 }
