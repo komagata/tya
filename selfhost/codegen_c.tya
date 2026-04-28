@@ -89,6 +89,7 @@ emitC = nodes ->
   blockOpen = false
   blockDepth = 0
   indent = "0"
+  skipFunctionBody = false
 
   for node in nodes
     if kindOf(node) == "INDENT"
@@ -100,26 +101,35 @@ emitC = nodes ->
       if blockDepth == 0
         blockOpen = false
       indent = nextIndent
+      if nextIndent == "0"
+        skipFunctionBody = false
+
+    if skipFunctionBody and kindOf(node) != "INDENT"
+      continue
 
     if kindOf(node) == "FUNC"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "FUNC"
       push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ") */"
+      skipFunctionBody = true
 
     if kindOf(node) == "FUNC2"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "FUNC"
       push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ") */"
+      skipFunctionBody = true
 
     if kindOf(node) == "FUNC3"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "FUNC"
       push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ", " + extra2Of(node) + ") */"
+      skipFunctionBody = true
 
     if kindOf(node) == "FUNC4"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "FUNC"
       push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ", " + extra2Of(node) + ", " + extra3Of(node) + ") */"
+      skipFunctionBody = true
 
     if kindOf(node) == "ASSIGN"
       if valueOf(node) == "STRING"
@@ -417,11 +427,12 @@ emitC = nodes ->
   join lines, "\n"
 
 nodes = []
-source = readFile(args()[0])
+source = readFile args()[0]
 lines = split source, "\n"
 
 for line in lines
   if line != ""
     push nodes, line
 
-print emitC nodes
+output = emitC nodes
+print output

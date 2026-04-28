@@ -306,7 +306,7 @@ parse = tokens ->
   nodes
 
 tokens = []
-source = readFile(args()[0])
+source = readFile args()[0]
 lines = split source, "\n"
 
 for line in lines
