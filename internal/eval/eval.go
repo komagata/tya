@@ -160,6 +160,21 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			return evalStmts(n.Then, env)
 		}
 		return evalStmts(n.Else, env)
+	case *ast.WhileStmt:
+		var last Value
+		for {
+			cond, err := evalExpr(n.Cond, env)
+			if err != nil {
+				return nil, err
+			}
+			if !truthy(cond) {
+				return last, nil
+			}
+			last, err = evalStmts(n.Body, env)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	return nil, fmt.Errorf("unknown statement")
 }

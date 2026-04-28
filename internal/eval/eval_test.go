@@ -87,3 +87,22 @@ func TestRunArrays(t *testing.T) {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
 }
+
+func TestRunWhile(t *testing.T) {
+	src := "i = 0\nsum = 0\nwhile i < 5\n  sum = sum + i\n  i = i + 1\nprint sum\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "10\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}

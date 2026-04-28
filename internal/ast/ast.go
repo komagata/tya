@@ -31,6 +31,13 @@ type IfStmt struct {
 
 func (*IfStmt) stmt() {}
 
+type WhileStmt struct {
+	Cond Expr
+	Body []Stmt
+}
+
+func (*WhileStmt) stmt() {}
+
 type Ident struct {
 	Name string
 	Tok  token.Token

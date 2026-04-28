@@ -36,6 +36,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "if" {
 		return p.ifStmt()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "while" {
+		return p.whileStmt()
+	}
 	if p.isAssignStart() {
 		tok := p.peek()
 		target, err := p.assignTarget()
@@ -76,6 +79,19 @@ func (p *Parser) ifStmt() (ast.Stmt, error) {
 		}
 	}
 	return &ast.IfStmt{Cond: cond, Then: thenBlock, Else: elseBlock}, nil
+}
+
+func (p *Parser) whileStmt() (ast.Stmt, error) {
+	p.next()
+	cond, err := p.expr()
+	if err != nil {
+		return nil, err
+	}
+	body, err := p.block("while")
+	if err != nil {
+		return nil, err
+	}
+	return &ast.WhileStmt{Cond: cond, Body: body}, nil
 }
 
 func (p *Parser) block(owner string) ([]ast.Stmt, error) {

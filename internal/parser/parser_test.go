@@ -62,3 +62,17 @@ func TestParseArrayLiteralAndIndex(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestParseWhile(t *testing.T) {
+	toks, errs := lexer.Lex("while i < 5\n  i = i + 1\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := prog.Stmts[0].(*ast.WhileStmt); !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+}
