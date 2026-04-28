@@ -216,6 +216,12 @@ emitC = nodes ->
         prefix = "    "
       push lines, prefix + "/* push " + nameOf(node) + ", " + extraOf(node) + " */"
 
+    if kindOf(node) == "RETURN"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      push lines, prefix + "/* return " + valueOf(node) + " */"
+
   if blockOpen
     push lines, "  }"
   push lines, "  return 0;"

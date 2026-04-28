@@ -81,6 +81,14 @@ parse = tokens ->
         i = i + 4
         continue
 
+    if kindOf(token) == "IDENT" and textOf(token) == "return"
+      if i + 1 < len(tokens)
+        value = tokens[i + 1]
+        node = lineOf(token) + ":RETURN:" + literalKindOf(value) + ":" + textOf(value)
+        push nodes, node
+        i = i + 2
+        continue
+
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
         value = tokens[i + 2]

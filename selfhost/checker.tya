@@ -70,6 +70,12 @@ check = nodes ->
         if not hasName(names, valueName)
           push errors, lineOf(node) + ": undefined variable: " + valueName
 
+    if kindOf(node) == "RETURN"
+      if nameOf(node) == "IDENT"
+        name = valueOf(node)
+        if not hasName(names, name)
+          push errors, lineOf(node) + ": undefined variable: " + name
+
   errors
 
 nodes = []

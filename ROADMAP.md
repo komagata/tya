@@ -140,6 +140,7 @@ Implemented:
 - Self-hosted codegen emits simple variable conditions for `if` / `while`
 - Self-hosted parser/codegen carries simple `break` / `continue` statements
 - Self-hosted parser/checker/codegen carries simple `push` commands
+- Self-hosted parser/checker/codegen carries simple `return` commands
 - Self-hosted parser/codegen emits simple bool assignments and prints
 
 ## Non-Goals For Now
