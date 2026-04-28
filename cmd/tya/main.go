@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"tya/internal/checker"
 	"tya/internal/eval"
 	"tya/internal/lexer"
 	"tya/internal/parser"
@@ -37,6 +38,10 @@ func main() {
 	}
 	prog, err := parser.Parse(toks)
 	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	if err := checker.Check(prog); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

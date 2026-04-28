@@ -1,0 +1,41 @@
+package checker
+
+import (
+	"strings"
+	"testing"
+
+	"tya/internal/ast"
+	"tya/internal/lexer"
+	"tya/internal/parser"
+)
+
+func TestCheckRejectsConstantReassignment(t *testing.T) {
+	prog := parse(t, "MAX_RETRY = 3\nMAX_RETRY = 5\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected constant reassignment error")
+	}
+	if !strings.Contains(err.Error(), "cannot reassign constant MAX_RETRY") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckAllowsVariableReassignment(t *testing.T) {
+	prog := parse(t, "retryCount = 3\nretryCount = 5\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func parse(t *testing.T, src string) *ast.Program {
+	t.Helper()
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return prog
+}
