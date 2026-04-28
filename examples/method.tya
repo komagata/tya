@@ -1,0 +1,9 @@
+counter =
+  count: 0
+
+  inc: ->
+    @count = @count + 1
+    @count
+
+print counter.inc()
+print counter.inc()
