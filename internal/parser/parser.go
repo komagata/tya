@@ -122,8 +122,13 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 		}
 		indexName = idx.Lexeme
 	}
-	if !p.matchWord("in") {
-		return nil, p.err("expected 'in' in for loop")
+	kind := ""
+	if p.matchWord("in") {
+		kind = "in"
+	} else if p.matchWord("of") {
+		kind = "of"
+	} else {
+		return nil, p.err("expected 'in' or 'of' in for loop")
 	}
 	iterable, err := p.expr()
 	if err != nil {
@@ -133,7 +138,7 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ast.ForInStmt{ValueName: valueName.Lexeme, IndexName: indexName, Iterable: iterable, Body: body}, nil
+	return &ast.ForInStmt{ValueName: valueName.Lexeme, IndexName: indexName, Kind: kind, Iterable: iterable, Body: body}, nil
 }
 
 func (p *Parser) returnStmt() (ast.Stmt, error) {

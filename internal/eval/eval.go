@@ -388,6 +388,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
+		if n.Kind == "of" {
+			return evalObjectFor(n, iterable, env)
+		}
 		arr, ok := iterable.(*Array)
 		if !ok {
 			return nil, fmt.Errorf("for in expects array")
@@ -581,6 +584,32 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 		return v, err
 	}
 	return nil, fmt.Errorf("value is not callable")
+}
+
+func evalObjectFor(n *ast.ForInStmt, iterable Value, env *Env) (Value, error) {
+	obj, ok := iterable.(Object)
+	if !ok {
+		return nil, fmt.Errorf("for of expects object")
+	}
+	var last Value
+	for key, value := range obj {
+		env.set(n.ValueName, key)
+		if n.IndexName != "" {
+			env.set(n.IndexName, value)
+		}
+		var err error
+		last, err = evalStmts(n.Body, env)
+		if errors.Is(err, errBreak) {
+			return last, nil
+		}
+		if errors.Is(err, errContinue) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	return last, nil
 }
 
 func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
