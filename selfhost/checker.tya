@@ -35,6 +35,14 @@ check = nodes ->
   errors = []
 
   for node in nodes
+    if kindOf(node) == "FUNC"
+      name = nameOf(node)
+      if not hasName(names, name)
+        push names, name
+      arg = valueOf(node)
+      if arg != "" and not hasName(names, arg)
+        push names, arg
+
     if kindOf(node) == "ASSIGN"
       name = nameOf(node)
       if valueOf(node) == "IDENT"

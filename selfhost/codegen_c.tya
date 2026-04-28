@@ -62,6 +62,11 @@ emitC = nodes ->
         blockOpen = false
       indent = nextIndent
 
+    if kindOf(node) == "FUNC"
+      if not hasName(names, nameOf(node))
+        rememberType names, types, nameOf(node), "FUNC"
+      push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ") */"
+
     if kindOf(node) == "ASSIGN"
       if valueOf(node) == "STRING"
         if hasName(names, nameOf(node))

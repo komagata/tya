@@ -1,5 +1,7 @@
 message = "Tya"
 alias = message
+identity = value ->
+  return value
 log = message
 push log, alias
 queue = []

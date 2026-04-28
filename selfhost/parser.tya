@@ -92,6 +92,11 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
         value = tokens[i + 2]
+        if i + 3 < len(tokens) and kindOf(tokens[i + 3]) == "ARROW"
+          node = lineOf(token) + ":FUNC:" + textOf(token) + ":" + textOf(value)
+          push nodes, node
+          i = i + 4
+          continue
         if textOf(value) == "[" and i + 3 < len(tokens) and textOf(tokens[i + 3]) == "]"
           node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":ARRAY_EMPTY:"
           push nodes, node
