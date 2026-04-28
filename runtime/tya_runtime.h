@@ -72,6 +72,7 @@ TyaValue tya_to_number(TyaValue value);
 TyaValue tya_file_exists(TyaValue path);
 void tya_push(TyaValue array, TyaValue value);
 TyaValue tya_pop(TyaValue array);
+void tya_exit(TyaValue code);
 void tya_print(TyaValue value);
 bool tya_truthy(TyaValue value);
 

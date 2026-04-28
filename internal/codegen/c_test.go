@@ -90,6 +90,14 @@ func TestEmitCCompilesReadLineProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesExitProgram(t *testing.T) {
+	src := "items = args()\nif len(items) > 0\n  exit toInt items[0]\nprint \"no exit\"\n"
+	out, code := compileAndRunArgsAllowExit(t, src, "7")
+	if string(out) != "" || code != 7 {
+		t.Fatalf("got output %q and code %d", out, code)
+	}
+}
+
 func TestEmitCCompilesForInProgram(t *testing.T) {
 	src := "items = [1, 2, 3]\ntotal = 0\nfor item in items\n  total = total + item\nprint total\n"
 	out := compileAndRun(t, src)
@@ -147,6 +155,20 @@ func compileAndRunWithInput(t *testing.T, src string, input string, args ...stri
 
 func compileAndRunArgsWithInput(t *testing.T, src string, input string, args ...string) []byte {
 	t.Helper()
+	out, code := compileAndRunArgsWithInputAllowExit(t, src, input, args...)
+	if code != 0 {
+		t.Fatalf("exit code %d\n%s", code, out)
+	}
+	return out
+}
+
+func compileAndRunArgsAllowExit(t *testing.T, src string, args ...string) ([]byte, int) {
+	t.Helper()
+	return compileAndRunArgsWithInputAllowExit(t, src, "", args...)
+}
+
+func compileAndRunArgsWithInputAllowExit(t *testing.T, src string, input string, args ...string) ([]byte, int) {
+	t.Helper()
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -186,7 +208,10 @@ func compileAndRunArgsWithInput(t *testing.T, src string, input string, args ...
 	}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return out, exitErr.ExitCode()
+		}
 		t.Fatal(err)
 	}
-	return out
+	return out, 0
 }

@@ -606,6 +606,13 @@ TyaValue tya_pop(TyaValue array) {
   return array.array->items[array.array->len];
 }
 
+void tya_exit(TyaValue code) {
+  if (code.kind == TYA_NUMBER) {
+    exit((int)code.number);
+  }
+  exit(0);
+}
+
 void tya_print(TyaValue value) {
   switch (value.kind) {
   case TYA_NIL:

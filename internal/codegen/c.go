@@ -317,6 +317,14 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		g.line(fmt.Sprintf("tya_write_file(%s, %s);", path, text))
 		return nil
 	}
+	if id.Name == "exit" && len(call.Args) == 1 {
+		code, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_exit(%s);", code))
+		return nil
+	}
 	if id.Name != "print" || len(call.Args) != 1 {
 		g.line(fmt.Sprintf("/* call %s */", id.Name))
 		return nil
