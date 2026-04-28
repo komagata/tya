@@ -110,9 +110,31 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			continue
 		}
 		if ch == '"' {
-			start := i
+			var b strings.Builder
 			i++
 			for i < len(s) && s[i] != '"' {
+				if s[i] == '\\' {
+					if i+1 >= len(s) {
+						l.errs = append(l.errs, fmt.Errorf("%d:%d: unterminated escape", line, baseCol+i))
+						return
+					}
+					switch s[i+1] {
+					case 'n':
+						b.WriteByte('\n')
+					case 't':
+						b.WriteByte('\t')
+					case '"':
+						b.WriteByte('"')
+					case '\\':
+						b.WriteByte('\\')
+					default:
+						l.errs = append(l.errs, fmt.Errorf("%d:%d: unknown escape \\%c", line, baseCol+i, s[i+1]))
+						return
+					}
+					i += 2
+					continue
+				}
+				b.WriteByte(s[i])
 				i++
 			}
 			if i >= len(s) {
@@ -120,7 +142,7 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 				return
 			}
 			i++
-			l.add(token.STRING, s[start+1:i-1], line, col)
+			l.add(token.STRING, b.String(), line, col)
 			continue
 		}
 		if ch == '-' && i+1 < len(s) && s[i+1] == '>' {

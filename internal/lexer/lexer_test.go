@@ -30,3 +30,13 @@ func TestLexRejectsTabs(t *testing.T) {
 		t.Fatal("expected tab error")
 	}
 }
+
+func TestLexStringEscapes(t *testing.T) {
+	toks, errs := Lex("print \"a\\n\\\"b\\\"\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	if toks[1].Lexeme != "a\n\"b\"" {
+		t.Fatalf("got %q", toks[1].Lexeme)
+	}
+}

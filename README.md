@@ -26,6 +26,7 @@ go test ./...
 - constants with `SCREAMING_SNAKE_CASE` and reassignment checks
 - `nil`, booleans, ints, floats, strings
 - string interpolation with expressions: `"next year: {age + 1}"`
+- string escapes: `\"`, `\\`, `\n`, `\t`
 - arrays and objects
 - inline object literals: `{ name: "komagata" }`
 - functions and implicit last-expression return

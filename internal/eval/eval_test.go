@@ -163,7 +163,7 @@ func TestRunConversions(t *testing.T) {
 }
 
 func TestRunStringBuiltins(t *testing.T) {
-	src := "text = \"  hello,tya  \"\ntrimmed = trim text\nparts = split trimmed, \",\"\nprint join parts, \"-\"\nprint replace trimmed, \"tya\", \"Tya\"\nprint contains trimmed, \"hello\"\nprint startsWith trimmed, \"hello\"\nprint endsWith trimmed, \"tya\"\nprint byteLen \"ちゃ\"\nprint charLen \"ちゃ\"\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = trim text\nparts = split trimmed, \",\"\nprint join parts, \"-\"\nprint replace trimmed, \"tya\", \"Tya\"\nprint contains trimmed, \"hello\"\nprint startsWith trimmed, \"hello\"\nprint endsWith trimmed, \"tya\"\nprint byteLen \"ちゃ\"\nprint charLen \"ちゃ\"\nprint \"quote: \\\"tya\\\"\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -176,7 +176,7 @@ func TestRunStringBuiltins(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n6\n2\n"
+	want := "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n6\n2\nquote: \"tya\"\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
