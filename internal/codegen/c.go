@@ -67,9 +67,23 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			g.line(fmt.Sprintf("tya_set_index(%s, %s, %s);", object, index, value))
 			return nil
 		}
+		if target, ok := n.Targets[0].(*ast.ThisProp); ok {
+			value, _, err := g.expr(n.Values[0])
+			if err != nil {
+				return err
+			}
+			g.line(fmt.Sprintf("tya_set_member(__this, %s, %s);", strconv.Quote(target.Name), value))
+			return nil
+		}
 		id, ok := n.Targets[0].(*ast.Ident)
 		if !ok {
 			return fmt.Errorf("C emitter only supports variable assignment")
+		}
+		if obj, ok := n.Values[0].(*ast.ObjectLit); ok {
+			if err := g.assignObjectLit(id.Name, obj); err != nil {
+				return err
+			}
+			return nil
 		}
 		if fn, ok := n.Values[0].(*ast.FuncLit); ok {
 			if err := g.emitFunc(id.Name, fn); err != nil {
@@ -209,7 +223,7 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
 	var out strings.Builder
 	out.WriteString("TyaValue ")
 	out.WriteString(cFuncName(name))
-	out.WriteString("(TyaValue __arg0, TyaValue __arg1, TyaValue __arg2) {\n")
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2) {\n")
 	child := &cgen{
 		vars:   map[string]bool{},
 		funcs:  g.funcs,
@@ -270,6 +284,33 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
 	return nil
 }
 
+func (g *cgen) assignObjectLit(name string, obj *ast.ObjectLit) error {
+	entries := []string{}
+	methods := []ast.ObjectProp{}
+	for _, prop := range obj.Props {
+		if _, ok := prop.Value.(*ast.FuncLit); ok {
+			methods = append(methods, prop)
+			continue
+		}
+		value, _, err := g.expr(prop.Value)
+		if err != nil {
+			return err
+		}
+		entries = append(entries, fmt.Sprintf("{%s, %s}", strconv.Quote(prop.Name), value))
+	}
+	target := cName(name)
+	g.line(fmt.Sprintf("%s = tya_object((TyaObjectEntry[]){%s}, %d);", target, strings.Join(entries, ", "), len(entries)))
+	for _, method := range methods {
+		fn := method.Value.(*ast.FuncLit)
+		funcName := name + "_" + method.Name
+		if err := g.emitFunc(funcName, fn); err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_method(%s, %s));", target, strconv.Quote(method.Name), cFuncName(funcName), target))
+	}
+	return nil
+}
+
 func (g *cgen) exprStmt(expr ast.Expr) error {
 	call, ok := expr.(*ast.CallExpr)
 	if !ok {
@@ -278,7 +319,8 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 	}
 	id, ok := call.Callee.(*ast.Ident)
 	if !ok {
-		return fmt.Errorf("C emitter only supports simple call expression statements")
+		_, _, err := g.expr(expr)
+		return err
 	}
 	if id.Name == "push" && len(call.Args) == 2 {
 		array, _, err := g.expr(call.Args[0])
@@ -685,7 +727,31 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			for len(args) < 3 {
 				args = append(args, "tya_nil()")
 			}
-			return fmt.Sprintf("%s(%s)", cFuncName(id.Name), strings.Join(args[:3], ", ")), "TyaValue", nil
+			return fmt.Sprintf("%s(tya_nil(), %s)", cFuncName(id.Name), strings.Join(args[:3], ", ")), "TyaValue", nil
+		}
+		if member, ok := n.Callee.(*ast.MemberExpr); ok {
+			receiver, _, err := g.expr(member.Object)
+			if err != nil {
+				return "", "", err
+			}
+			args := make([]string, 0, len(n.Args))
+			for _, arg := range n.Args {
+				ex, _, err := g.expr(arg)
+				if err != nil {
+					return "", "", err
+				}
+				args = append(args, ex)
+			}
+			switch len(args) {
+			case 0:
+				return fmt.Sprintf("tya_call1(tya_member(%s, %s), tya_nil())", receiver, strconv.Quote(member.Name)), "TyaValue", nil
+			case 1:
+				return fmt.Sprintf("tya_call1(tya_member(%s, %s), %s)", receiver, strconv.Quote(member.Name), args[0]), "TyaValue", nil
+			case 2:
+				return fmt.Sprintf("tya_call2(tya_member(%s, %s), %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1]), "TyaValue", nil
+			case 3:
+				return fmt.Sprintf("tya_call3(tya_member(%s, %s), %s, %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1], args[2]), "TyaValue", nil
+			}
 		}
 		if ok {
 			return fmt.Sprintf("tya_nil() /* call %s */", id.Name), "TyaValue", nil
@@ -707,6 +773,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			return "", "", err
 		}
 		return fmt.Sprintf("tya_member(%s, %s)", object, strconv.Quote(n.Name)), "TyaValue", nil
+	case *ast.ThisProp:
+		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.TryExpr:
 		return g.expr(n.Expr)
 	}

@@ -18,6 +18,7 @@ struct TyaObject {
 
 struct TyaFunction {
   TyaFunctionPtr fn;
+  TyaValue receiver;
 };
 
 static char *tya_substr(const char *text, int start, int len);
@@ -63,6 +64,14 @@ TyaValue tya_object(const TyaObjectEntry *entries, int count) {
 TyaValue tya_function(TyaFunctionPtr fn) {
   TyaFunction *function = malloc(sizeof(TyaFunction));
   function->fn = fn;
+  function->receiver = tya_nil();
+  return (TyaValue){.kind = TYA_FUNCTION, .function = function};
+}
+
+TyaValue tya_method(TyaFunctionPtr fn, TyaValue receiver) {
+  TyaFunction *function = malloc(sizeof(TyaFunction));
+  function->fn = fn;
+  function->receiver = receiver;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
@@ -77,21 +86,21 @@ TyaValue tya_call1(TyaValue fn, TyaValue arg) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(arg, tya_nil(), tya_nil());
+  return fn.function->fn(fn.function->receiver, arg, tya_nil(), tya_nil());
 }
 
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(first, second, tya_nil());
+  return fn.function->fn(fn.function->receiver, first, second, tya_nil());
 }
 
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(first, second, third);
+  return fn.function->fn(fn.function->receiver, first, second, third);
 }
 
 TyaValue tya_len(TyaValue value) {
@@ -157,6 +166,21 @@ TyaValue tya_member(TyaValue object, const char *key) {
     }
   }
   return tya_nil();
+}
+
+void tya_set_member(TyaValue object, const char *key, TyaValue value) {
+  if (object.kind != TYA_OBJECT || object.object == NULL) {
+    return;
+  }
+  for (int i = 0; i < object.object->len; i++) {
+    if (object.object->entries[i].key != NULL && strcmp(object.object->entries[i].key, key) == 0) {
+      object.object->entries[i].value = value;
+      return;
+    }
+  }
+  object.object->entries = realloc(object.object->entries, sizeof(TyaObjectEntry) * (object.object->len + 1));
+  object.object->entries[object.object->len] = (TyaObjectEntry){key, value};
+  object.object->len++;
 }
 
 TyaValue tya_object_key_at(TyaValue object, TyaValue index) {

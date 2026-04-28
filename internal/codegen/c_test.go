@@ -162,6 +162,14 @@ func TestEmitCCompilesMemberInterpolationProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesMethodProgram(t *testing.T) {
+	src := "counter =\n  count: 0\n\n  inc: ->\n    @count = @count + 1\n    @count\n\nprint counter.inc()\nprint counter.inc()\n"
+	out := compileAndRun(t, src)
+	if string(out) != "1\n2\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)
