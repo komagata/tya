@@ -42,7 +42,7 @@ Current supported subset:
   operators, source lines, and indentation counts
 - Parser: simple assignment, simple function headers and inline returns,
   `push`, `return`, `if`, `else`, one-, two-, and three-argument function calls, `while`,
-  `for`, `break`, `continue`, direct comparison and `or` conditions,
+  `for`, `break`, `continue`, direct comparison, `!=`, `>=`, and `or` conditions,
   one-argument call conditions, call comparison conditions, negated call conditions, call-based `while`
   conditions, call-with-call-index arguments, call indexing, return calls,
   indexing, indentation, print nodes, and one-argument print calls
@@ -53,7 +53,7 @@ Current supported subset:
   carried function headers and inline returns, one-, two-, and three-argument calls, `push` and `return`
   commands, string/int/bool print nodes, carried indexing, call indexing,
   call-with-call-index arguments, one-argument call conditions,
-  call comparison conditions, direct comparison conditions, prototype `hasT`
+  call comparison conditions, direct comparison / `!=` / `>=` conditions, prototype `hasT`
   predicate conditions, prototype `len(parts) < 3`, simple `or`
   conditions, negated call conditions, call-based
   `while` conditions, return calls, simple value-copy calls, one-argument print calls, placeholder

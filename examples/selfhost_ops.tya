@@ -1,3 +1,6 @@
+age = 20
+name = "komagata"
+
 if age >= 20
   print "adult"
 

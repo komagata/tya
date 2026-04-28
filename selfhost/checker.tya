@@ -321,6 +321,26 @@ check = nodes ->
       if rightKind == "IDENT" and not hasName(names, rightName)
         push errors, lineOf(node) + ": undefined variable: " + rightName
 
+    if kindOf(node) == "IF_COMPARE_NE"
+      leftKind = nameOf(node)
+      leftName = valueOf(node)
+      rightKind = extraOf(node)
+      rightName = extra2Of(node)
+      if leftKind == "IDENT" and not hasName(names, leftName)
+        push errors, lineOf(node) + ": undefined variable: " + leftName
+      if rightKind == "IDENT" and not hasName(names, rightName)
+        push errors, lineOf(node) + ": undefined variable: " + rightName
+
+    if kindOf(node) == "IF_COMPARE_GE"
+      leftKind = nameOf(node)
+      leftName = valueOf(node)
+      rightKind = extraOf(node)
+      rightName = extra2Of(node)
+      if leftKind == "IDENT" and not hasName(names, leftName)
+        push errors, lineOf(node) + ": undefined variable: " + leftName
+      if rightKind == "IDENT" and not hasName(names, rightName)
+        push errors, lineOf(node) + ": undefined variable: " + rightName
+
     if kindOf(node) == "IF_COMPARE_OR"
       leftKind = nameOf(node)
       leftName = valueOf(node)
