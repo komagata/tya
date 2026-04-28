@@ -184,6 +184,13 @@ emitC = nodes ->
           push lines, "  while (0) {"
           blockOpen = true
 
+    if kindOf(node) == "FOR"
+      if not hasName(names, nameOf(node))
+        rememberType names, types, nameOf(node), "STRING"
+      push lines, "  if (0) { /* for " + nameOf(node) + " in " + valueOf(node) + " */"
+      push lines, "    const char *" + nameOf(node) + " = \"\";"
+      blockOpen = true
+
     if kindOf(node) == "PRINT"
       prefix = "  "
       if indent != "0"

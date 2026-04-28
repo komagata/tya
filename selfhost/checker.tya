@@ -49,6 +49,14 @@ check = nodes ->
       if arg != "" and not hasName(names, arg)
         push names, arg
 
+    if kindOf(node) == "FOR"
+      item = nameOf(node)
+      collection = valueOf(node)
+      if not hasName(names, collection)
+        push errors, lineOf(node) + ": undefined variable: " + collection
+      if not hasName(names, item)
+        push names, item
+
     if kindOf(node) == "ASSIGN"
       name = nameOf(node)
       if valueOf(node) == "IDENT"

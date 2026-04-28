@@ -7,6 +7,8 @@ log = message
 push log, alias
 queue = []
 push queue, message
+for entry in queue
+  print entry
 count = 1 + 1
 count = count + 1
 enabled = true

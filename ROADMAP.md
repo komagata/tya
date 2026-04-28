@@ -140,6 +140,7 @@ Implemented:
 - Self-hosted parser/codegen handles empty array placeholders
 - Self-hosted parser/codegen carries simple `while false` blocks into generated C
 - Self-hosted codegen emits simple variable conditions for `if` / `while`
+- Self-hosted parser/checker/codegen carries simple `for x in xs` blocks
 - Self-hosted parser/codegen carries simple `break` / `continue` statements
 - Self-hosted parser/checker/codegen carries simple `push` commands
 - Self-hosted parser/checker/codegen carries simple `return` commands
