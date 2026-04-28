@@ -82,6 +82,14 @@ func TestEmitCCompilesArgsAndEnvProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesReadLineProgram(t *testing.T) {
+	src := "name = readLine()\nprint \"Hello, {name}\"\n"
+	out := compileAndRunWithInput(t, src, "komagata\n")
+	if string(out) != "Hello, komagata\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesForInProgram(t *testing.T) {
 	src := "items = [1, 2, 3]\ntotal = 0\nfor item in items\n  total = total + item\nprint total\n"
 	out := compileAndRun(t, src)
@@ -129,6 +137,16 @@ func compileAndRun(t *testing.T, src string) []byte {
 
 func compileAndRunArgs(t *testing.T, src string, args ...string) []byte {
 	t.Helper()
+	return compileAndRunArgsWithInput(t, src, "", args...)
+}
+
+func compileAndRunWithInput(t *testing.T, src string, input string, args ...string) []byte {
+	t.Helper()
+	return compileAndRunArgsWithInput(t, src, input, args...)
+}
+
+func compileAndRunArgsWithInput(t *testing.T, src string, input string, args ...string) []byte {
+	t.Helper()
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -156,6 +174,16 @@ func compileAndRunArgs(t *testing.T, src string, args ...string) []byte {
 		t.Fatalf("gcc: %v\n%s\n%s", err, out, csrc)
 	}
 	cmd := exec.Command(bin, args...)
+	if input != "" {
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+		go func() {
+			defer stdin.Close()
+			_, _ = stdin.Write([]byte(input))
+		}()
+	}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatal(err)

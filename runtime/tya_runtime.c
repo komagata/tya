@@ -423,6 +423,33 @@ TyaValue tya_env(TyaValue name) {
   return tya_string(value);
 }
 
+TyaValue tya_read_line(void) {
+  size_t cap = 128;
+  size_t len = 0;
+  char *line = malloc(cap);
+  int ch;
+  while ((ch = getchar()) != EOF) {
+    if (ch == '\n') {
+      break;
+    }
+    if (len + 1 >= cap) {
+      cap *= 2;
+      line = realloc(line, cap);
+    }
+    line[len] = (char)ch;
+    len++;
+  }
+  if (ch == EOF && len == 0) {
+    free(line);
+    return tya_nil();
+  }
+  if (len > 0 && line[len - 1] == '\r') {
+    len--;
+  }
+  line[len] = '\0';
+  return tya_string(line);
+}
+
 TyaValue tya_read_file(TyaValue path) {
   if (path.kind != TYA_STRING || path.string == NULL) {
     return tya_string("");

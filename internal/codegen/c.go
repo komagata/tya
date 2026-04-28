@@ -510,6 +510,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_env(%s)", name), "TyaValue", nil
 		}
+		if ok && id.Name == "readLine" && len(n.Args) == 0 {
+			return "tya_read_line()", "TyaValue", nil
+		}
 		if ok && id.Name == "readFile" && len(n.Args) == 1 {
 			path, _, err := g.expr(n.Args[0])
 			if err != nil {

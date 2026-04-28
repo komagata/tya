@@ -60,6 +60,7 @@ TyaValue tya_and(TyaValue left, TyaValue right);
 TyaValue tya_or(TyaValue left, TyaValue right);
 TyaValue tya_args(int argc, char **argv);
 TyaValue tya_env(TyaValue name);
+TyaValue tya_read_line(void);
 TyaValue tya_read_file(TyaValue path);
 void tya_write_file(TyaValue path, TyaValue text);
 TyaValue tya_split(TyaValue text, TyaValue sep);
