@@ -20,8 +20,22 @@ extraOf = node ->
     return ""
   parts[4]
 
+rememberType = names, types, name, typeName ->
+  push names, name
+  push types, typeName
+
+typeOf = names, types, name ->
+  i = 0
+  while i < len(names)
+    if names[i] == name
+      return types[i]
+    i = i + 1
+  "STRING"
+
 emitC = nodes ->
   lines = []
+  names = []
+  types = []
   push lines, "#include <stdio.h>"
   push lines, ""
   push lines, "int main(void) {"
@@ -39,8 +53,13 @@ emitC = nodes ->
     if kindOf(node) == "ASSIGN"
       if valueOf(node) == "STRING"
         push lines, "  const char *" + nameOf(node) + " = \"" + extraOf(node) + "\";"
+        rememberType names, types, nameOf(node), "STRING"
       else
-        push lines, "  /* assign " + nameOf(node) + " */"
+        if valueOf(node) == "INT"
+          push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
+          rememberType names, types, nameOf(node), "INT"
+        else
+          push lines, "  /* assign " + nameOf(node) + " */"
 
     if kindOf(node) == "IF"
       if valueOf(node) == "true"
@@ -57,7 +76,13 @@ emitC = nodes ->
       if nameOf(node) == "STRING"
         push lines, prefix + "puts(\"" + valueOf(node) + "\");"
       else
-        push lines, prefix + "puts(" + valueOf(node) + ");"
+        if nameOf(node) == "INT"
+          push lines, prefix + "printf(\"%ld\\n\", (long)" + valueOf(node) + ");"
+        else
+          if typeOf(names, types, valueOf(node)) == "INT"
+            push lines, prefix + "printf(\"%ld\\n\", (long)" + valueOf(node) + ");"
+          else
+            push lines, prefix + "puts(" + valueOf(node) + ");"
 
   if blockOpen
     push lines, "  }"

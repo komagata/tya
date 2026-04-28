@@ -1,5 +1,7 @@
 message = "Tya"
+count = 2
 print message
+print count
 
 if true
   print "Indented"

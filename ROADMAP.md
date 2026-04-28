@@ -127,6 +127,7 @@ Implemented:
 - Self-hosted lexer emits source line and indentation-count tokens
 - Self-hosted parser/codegen carries simple `if true` blocks into generated C
 - Self-hosted checker detects simple undefined print names
+- Self-hosted C codegen emits simple string/int assignments and prints
 
 ## Non-Goals For Now
 
