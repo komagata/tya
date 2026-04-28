@@ -125,6 +125,13 @@ parse = tokens ->
           push nodes, node
           i = i + 4
           continue
+        if i + 6 < len(tokens) and textOf(tokens[i + 3]) == "("
+          if textOf(tokens[i + 4]) == ")" and textOf(tokens[i + 5]) == "["
+            index = tokens[i + 6]
+            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL0_INDEX:" + textOf(value) + ":" + textOf(index)
+            push nodes, node
+            i = i + 8
+            continue
         if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "["
           index = tokens[i + 4]
           node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":INDEX:" + textOf(value) + ":" + textOf(index)

@@ -102,6 +102,13 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + sourceName
         if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
           push errors, lineOf(node) + ": undefined variable: " + indexName
+      if valueOf(node) == "CALL0_INDEX"
+        funcName = extraOf(node)
+        indexName = extra2Of(node)
+        if not hasName(names, funcName)
+          push errors, lineOf(node) + ": undefined variable: " + funcName
+        if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
+          push errors, lineOf(node) + ": undefined variable: " + indexName
       seen = hasName names, name
       if not seen
         push names, name

@@ -5,6 +5,7 @@ identity = value ->
 result = identity message
 parts = split message, alias
 first = parts[0]
+input = args()[0]
 if len(parts) < 3
   print "short"
 log = message
