@@ -108,6 +108,8 @@ check = nodes ->
         rememberName names, nameIndents, name, currentIndent
       arg = valueOf(node)
       arg2 = extraOf(node)
+      if arg != "" and arg == arg2
+        push errors, lineOf(node) + ": duplicate function parameter: " + arg
       if arg != "" and not hasName(names, arg)
         rememberName names, nameIndents, arg, currentIndent
       if arg2 != "" and not hasName(names, arg2)
@@ -120,6 +122,10 @@ check = nodes ->
       arg = valueOf(node)
       arg2 = extraOf(node)
       arg3 = extra2Of(node)
+      if arg != "" and (arg == arg2 or arg == arg3)
+        push errors, lineOf(node) + ": duplicate function parameter: " + arg
+      if arg2 != "" and arg2 == arg3
+        push errors, lineOf(node) + ": duplicate function parameter: " + arg2
       if arg != "" and not hasName(names, arg)
         rememberName names, nameIndents, arg, currentIndent
       if arg2 != "" and not hasName(names, arg2)
@@ -135,6 +141,12 @@ check = nodes ->
       arg2 = extraOf(node)
       arg3 = extra2Of(node)
       arg4 = extra3Of(node)
+      if arg != "" and (arg == arg2 or arg == arg3 or arg == arg4)
+        push errors, lineOf(node) + ": duplicate function parameter: " + arg
+      if arg2 != "" and (arg2 == arg3 or arg2 == arg4)
+        push errors, lineOf(node) + ": duplicate function parameter: " + arg2
+      if arg3 != "" and arg3 == arg4
+        push errors, lineOf(node) + ": duplicate function parameter: " + arg3
       if arg != "" and not hasName(names, arg)
         rememberName names, nameIndents, arg, currentIndent
       if arg2 != "" and not hasName(names, arg2)

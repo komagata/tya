@@ -448,6 +448,19 @@ func TestSelfhostCheckerKeepsBlockLocalNamesScoped(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerRejectsDuplicateFunctionParams(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:FUNC2:same:a:a\n2:FUNC3:same3:a:b:a\n3:FUNC4:same4:a:b:c:b\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: duplicate function parameter: a\n2: duplicate function parameter: a\n3: duplicate function parameter: b\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func runToFile(t *testing.T, path string, name string, args ...string) {
 	t.Helper()
 	out := run(t, name, args...)

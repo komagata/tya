@@ -40,7 +40,7 @@ endpoint.
   - [x] Parse simple inline object literals
 - [ ] Expand checker subset
   - [x] Track block-local names for `if`, `while`, and `for`
-  - [ ] Reject duplicate simple function params in self-host checker
+  - [x] Reject duplicate simple function params in self-host checker
   - [ ] Add parity coverage for duplicate and invalid names
 - [ ] Expand self-host C codegen subset
   - [ ] Emit simple function bodies instead of comments for one-expression returns

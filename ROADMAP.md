@@ -274,6 +274,7 @@ Self-Host Completion TODO:
   - [ ] Implement lexical scopes for top-level, functions, loops, and blocks
     - [x] Keep simple `if`, `while`, and `for` block-local names out of outer self-host checker scopes
   - [ ] Check undefined names, duplicate constants, duplicate params, duplicate object members, and invalid assignment targets
+    - [x] Reject duplicate simple function params in the self-host checker subset
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
   - [ ] Port optional unused binding checks or decide they stay Go-only
   - [ ] Add checker parity tests against Go checker diagnostics
