@@ -1,13 +1,12 @@
 items = [1, 2, 3, 4]
 
-double = item -> item * 2
 isEven = item -> item % 2 == 0
 add = total, item -> total + item
 remember = item ->
   last = item
   nil
 
-doubled = map items, double
+doubled = map items, item -> item * 2
 evens = filter items, isEven
 firstEven = find items, isEven
 hasEven = any items, isEven
