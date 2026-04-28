@@ -1,0 +1,12 @@
+user =
+  name: "komagata"
+  age: 20
+
+print has user, "name"
+userKeys = keys user
+userValues = values user
+print len userKeys
+print len userValues
+delete user, "age"
+print has user, "age"
+print user.age

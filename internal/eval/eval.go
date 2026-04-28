@@ -153,6 +153,58 @@ func installBuiltins(env *Env, out io.Writer) {
 		arr.items = arr.items[:len(arr.items)-1]
 		return last, nil
 	}))
+	env.set("keys", Builtin(func(args []Value) (Value, error) {
+		obj, err := oneObject("keys", args)
+		if err != nil {
+			return nil, err
+		}
+		arr := &Array{}
+		for key := range obj {
+			arr.items = append(arr.items, key)
+		}
+		return arr, nil
+	}))
+	env.set("values", Builtin(func(args []Value) (Value, error) {
+		obj, err := oneObject("values", args)
+		if err != nil {
+			return nil, err
+		}
+		arr := &Array{}
+		for _, value := range obj {
+			arr.items = append(arr.items, value)
+		}
+		return arr, nil
+	}))
+	env.set("has", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("has expects 2 arguments")
+		}
+		obj, ok := args[0].(Object)
+		if !ok {
+			return nil, fmt.Errorf("has expects object")
+		}
+		key, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("has expects string key")
+		}
+		_, exists := obj[key]
+		return exists, nil
+	}))
+	env.set("delete", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("delete expects 2 arguments")
+		}
+		obj, ok := args[0].(Object)
+		if !ok {
+			return nil, fmt.Errorf("delete expects object")
+		}
+		key, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("delete expects string key")
+		}
+		delete(obj, key)
+		return nil, nil
+	}))
 	env.set("toString", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("toString expects 1 argument")
@@ -731,6 +783,17 @@ func twoStrings(name string, args []Value) (string, string, error) {
 		return "", "", fmt.Errorf("%s expects string second argument", name)
 	}
 	return first, second, nil
+}
+
+func oneObject(name string, args []Value) (Object, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("%s expects 1 argument", name)
+	}
+	obj, ok := args[0].(Object)
+	if !ok {
+		return nil, fmt.Errorf("%s expects object", name)
+	}
+	return obj, nil
 }
 
 func truthy(v Value) bool {
