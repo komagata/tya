@@ -1,18 +1,18 @@
 kindOf = node ->
   parts = split node, ":"
-  parts[0]
-
-nameOf = node ->
-  parts = split node, ":"
-  if len(parts) < 2
-    return ""
   parts[1]
 
-valueOf = node ->
+nameOf = node ->
   parts = split node, ":"
   if len(parts) < 3
     return ""
   parts[2]
+
+valueOf = node ->
+  parts = split node, ":"
+  if len(parts) < 4
+    return ""
+  parts[3]
 
 emitC = nodes ->
   lines = []

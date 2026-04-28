@@ -1,12 +1,16 @@
 kindOf = node ->
   parts = split node, ":"
-  parts[0]
+  parts[1]
 
 nameOf = node ->
   parts = split node, ":"
-  if len(parts) < 2
+  if len(parts) < 3
     return ""
-  parts[1]
+  parts[2]
+
+lineOf = node ->
+  parts = split node, ":"
+  parts[0]
 
 hasName = names, name ->
   for existing in names
@@ -23,7 +27,7 @@ check = nodes ->
       name = nameOf(node)
       seen = hasName names, name
       if seen
-        push errors, "duplicate definition: " + name
+        push errors, lineOf(node) + ": duplicate definition: " + name
       else
         push names, name
 

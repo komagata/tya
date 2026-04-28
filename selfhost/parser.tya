@@ -1,12 +1,16 @@
 kindOf = token ->
   parts = split token, ":"
-  parts[0]
+  parts[1]
 
 textOf = token ->
   parts = split token, ":"
-  if len(parts) < 2
+  if len(parts) < 3
     return ""
-  parts[1]
+  parts[2]
+
+lineOf = token ->
+  parts = split token, ":"
+  parts[0]
 
 parse = tokens ->
   nodes = []
@@ -22,14 +26,14 @@ parse = tokens ->
         if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT"
           value = tokens[i + 2]
           step = 3
-        node = "PRINT:" + kindOf(value) + ":" + textOf(value)
+        node = lineOf(token) + ":PRINT:" + kindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + step
         continue
 
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
-        node = "ASSIGN:" + textOf(token)
+        node = lineOf(token) + ":ASSIGN:" + textOf(token)
         push nodes, node
         i = i + 3
         continue
