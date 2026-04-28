@@ -28,11 +28,11 @@ endpoint.
 
 ## Current Queue
 
-- [ ] Make the Go-emitted stage-1 self-host compiler run `examples/selfhost_ops.tya`
-  - [ ] Reproduce and capture the current C type mismatch from stage-1 codegen
-  - [ ] Preserve `INT` and `BOOL` assignment type information through Go-emitted `selfhost/codegen_c.tya`
-  - [ ] Ensure stage-1 generated C prints bool/int values with the correct format
-  - [ ] Add `examples/selfhost_ops.tya` to `scripts/selfhost_bootstrap_check.sh`
+- [x] Make the Go-emitted stage-1 self-host compiler run `examples/selfhost_ops.tya`
+  - [x] Reproduce and capture the current C type mismatch from stage-1 codegen
+  - [x] Preserve `INT` and `BOOL` assignment type information through Go-emitted `selfhost/codegen_c.tya`
+  - [x] Ensure stage-1 generated C prints bool/int values with the correct format
+  - [x] Add `examples/selfhost_ops.tya` to `scripts/selfhost_bootstrap_check.sh`
 - [ ] Expand parser subset toward full expression parsing
   - [ ] Parse grouped comparison assignments
   - [ ] Parse simple `and` / `or` assignments
@@ -51,14 +51,10 @@ endpoint.
   - [ ] Compile stage-1 emitted selfhost C into stage-2 binaries
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
 
-## Last Known Blocker
+## Last Resolved Blocker
 
-The normal interpreter-driven self-host pipeline can run `examples/selfhost_ops.tya`.
-The Go-emitted stage-1 self-host pipeline currently fails when compiling the C
-generated for `examples/selfhost_ops.tya`: bool/int variables such as `adult`,
-`young`, `nonzero`, and `grouped` are emitted as values passed to `puts(...)`
-instead of bool/int print paths.
-
-That means the next work should focus on type preservation in the generated C
-for `selfhost/codegen_c.tya` when that codegen itself is emitted by the Go C
-emitter.
+The Go C emitter used to drop user-defined function call statements such as
+`rememberType names, types, name, "INT"`. That made the Go-emitted stage-1
+self-host codegen lose type metadata and emit `puts(adult)` for bool/int
+values. Generic user function call statements are now emitted and
+`scripts/go_emit_selfhost_ops_check.sh` covers the stage-1 path.

@@ -88,6 +88,14 @@ func TestEmitCCompilesFunctionValueCalls(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesUserFunctionCallStatements(t *testing.T) {
+	src := "append = items, item ->\n  push items, item\nitems = []\nappend items, \"Tya\"\nprint len items\n"
+	out := compileAndRun(t, src)
+	if string(out) != "1\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesFunctionLiteralsAsValues(t *testing.T) {
 	src := "callbacks = [item -> item * 2]\nprint callbacks[0](5)\n"
 	out := compileAndRun(t, src)

@@ -4,6 +4,7 @@ set -eu
 sh scripts/selfhost_check.sh >/dev/null
 sh scripts/selfhost_compile_check.sh >/dev/null
 sh scripts/go_emit_selfhost_compile_check.sh >/dev/null
+sh scripts/go_emit_selfhost_ops_check.sh >/dev/null
 
 out="$(sh scripts/go_emit_selfhost_run_check.sh)"
 if [ "$out" != "Hello, Tya" ]; then

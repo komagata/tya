@@ -481,7 +481,11 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		return nil
 	}
 	if id.Name != "print" || len(call.Args) != 1 {
-		g.line(fmt.Sprintf("/* call %s */", id.Name))
+		ex, _, err := g.expr(call)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("(void)%s;", ex))
 		return nil
 	}
 	arg, typ, err := g.expr(call.Args[0])

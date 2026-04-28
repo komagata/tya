@@ -282,6 +282,7 @@ Self-Host Completion TODO:
     - [x] Add subset generated-C parity tests for `examples/selfhost_ops.tya`
 - [ ] Bootstrap pipeline
   - [ ] Make the Tya-written compiler compile the existing executable examples
+    - [x] Make the Go-emitted stage-1 self-host compiler compile and run `examples/selfhost_ops.tya`
   - [ ] Compile the Tya-written compiler with the Go compiler and run it as the stage-1 compiler
     - [x] Compile self-host compiler components with the Go C emitter and run the stage-1 pipeline on `examples/hello.tya`
   - [ ] Use the stage-1 compiler to compile the Tya-written compiler again
