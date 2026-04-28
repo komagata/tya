@@ -1,0 +1,47 @@
+kindOf = token ->
+  parts = split token, ":"
+  parts[0]
+
+textOf = token ->
+  parts = split token, ":"
+  if len(parts) < 2
+    return ""
+  parts[1]
+
+parse = tokens ->
+  nodes = []
+  i = 0
+
+  while i < len(tokens)
+    token = tokens[i]
+
+    if kindOf(token) == "IDENT" and textOf(token) == "print"
+      if i + 1 < len(tokens)
+        node = "PRINT:" + textOf(tokens[i + 1])
+        push nodes, node
+        i = i + 2
+        continue
+
+    if kindOf(token) == "IDENT" and i + 2 < len(tokens)
+      if textOf(tokens[i + 1]) == "="
+        node = "ASSIGN:" + textOf(token)
+        push nodes, node
+        i = i + 3
+        continue
+
+    i = i + 1
+
+  nodes
+
+tokens = []
+source = readFile(args()[0])
+lines = split source, "\n"
+
+for line in lines
+  if line != ""
+    push tokens, line
+
+nodes = parse tokens
+
+for node in nodes
+  print node

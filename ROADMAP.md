@@ -119,6 +119,7 @@ Sequence:
 Implemented:
 
 - Initial `selfhost/lexer.tya` that tokenizes a useful subset of Tya source
+- Initial `selfhost/parser.tya` that recognizes simple assignment and print nodes
 
 ## Non-Goals For Now
 
