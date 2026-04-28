@@ -151,6 +151,10 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + leftName
         if not hasName(names, rightName)
           push errors, lineOf(node) + ": undefined variable: " + rightName
+      if valueOf(node) == "OBJECT_ONE"
+        valueName = extra3Of(node)
+        if extra2Of(node) == "IDENT" and not hasName(names, valueName)
+          push errors, lineOf(node) + ": undefined variable: " + valueName
       if valueOf(node) == "COMPARE_LT" or valueOf(node) == "COMPARE_EQ" or valueOf(node) == "COMPARE_NE" or valueOf(node) == "COMPARE_GE" or valueOf(node) == "COMPARE_LE"
         leftName = extraOf(node)
         rightName = extra2Of(node)

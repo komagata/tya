@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \"Tya\"\ncount = 1 + 1\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\npush queue, message\nfor entry in queue\n  print entry\n"
+	src := "message = \"Tya\"\ncount = 1 + 1\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -622,6 +622,10 @@ func summarizeGoExpr(expr ast.Expr) string {
 		}
 		if len(n.Elems) == 2 {
 			return "ARRAY_TWO:" + summarizeGoExpr(n.Elems[0]) + ":" + summarizeGoExpr(n.Elems[1])
+		}
+	case *ast.ObjectLit:
+		if len(n.Props) == 1 {
+			return "OBJECT_ONE:" + n.Props[0].Name + ":" + summarizeGoExpr(n.Props[0].Value)
 		}
 	case *ast.BinaryExpr:
 		left := summarizeGoScalar(n.Left)

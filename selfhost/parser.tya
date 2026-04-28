@@ -285,6 +285,13 @@ parse = tokens ->
           push nodes, node
           i = i + 7
           continue
+        if textOf(value) == "{" and i + 6 < len(tokens) and kindOf(tokens[i + 4]) == "SYMBOL" and textOf(tokens[i + 6]) == "}"
+          key = tokens[i + 3]
+          item = tokens[i + 5]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":OBJECT_ONE:" + textOf(key) + ":" + literalKindOf(item) + ":" + textOf(item)
+          push nodes, node
+          i = i + 7
+          continue
         if textOf(value) == "[" and i + 4 < len(tokens) and textOf(tokens[i + 4]) == "]"
           item = tokens[i + 3]
           node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":ARRAY_ONE:" + literalKindOf(item) + ":" + textOf(item)

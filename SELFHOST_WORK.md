@@ -37,7 +37,7 @@ endpoint.
   - [x] Parse grouped comparison assignments
   - [x] Parse simple `and` / `or` assignments
   - [x] Parse two-or-more element array literals
-  - [ ] Parse simple inline object literals
+  - [x] Parse simple inline object literals
 - [ ] Expand checker subset
   - [ ] Track block-local names for `if`, `while`, and `for`
   - [ ] Reject duplicate simple function params in self-host checker

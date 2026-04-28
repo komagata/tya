@@ -265,6 +265,7 @@ Self-Host Completion TODO:
   - [ ] Parse arrays, inline objects, indented objects, member access, indexing, and assignment targets
     - [x] Parse one-element array literals in the self-host parser subset
     - [x] Parse two-element array literals in the self-host parser subset
+    - [x] Parse one-property inline object literals in the self-host parser subset
   - [ ] Parse function literals, method literals, calls with and without parentheses, and function-value calls
   - [ ] Parse multiple assignment, multiple return, `try`, `for in`, `for of`, `break`, `continue`, and `else`
   - [ ] Add parser golden tests comparing Go parser AST shape and Tya parser AST shape
