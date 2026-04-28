@@ -18,15 +18,15 @@ Current supported subset:
   operators, source lines, and indentation counts
 - Parser: simple assignment, simple function headers and inline returns,
   `push`, `return`, `if`, one- and two-argument function calls, `while`,
-  `for`, `break`, `continue`, direct comparison conditions, call comparison conditions,
-  call-with-call-index arguments, call indexing, indexing, indentation, and
-  print nodes
+  `for`, `break`, `continue`, direct comparison and `or` conditions,
+  call comparison conditions, call-with-call-index arguments, call indexing,
+  indexing, indentation, and print nodes
 - Checker: simple undefined assignment / print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison assignments, variable-copy assignments, bool assignments,
   unary `not`, empty array placeholders, reassignment, carried function headers
   and inline returns, one- and two-argument calls, `push` and `return` commands,
   string/int/bool print nodes, carried indexing, call indexing,
-  call-with-call-index arguments, call comparison conditions, and direct
-  comparison conditions, and simple literal or variable `if` / `while` / `for`
-  blocks with `break` / `continue`
+  call-with-call-index arguments, call comparison conditions, direct comparison
+  conditions, and simple `or` conditions, and simple literal or variable `if` /
+  `while` / `for` blocks with `break` / `continue`

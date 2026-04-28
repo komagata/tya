@@ -45,6 +45,14 @@ parse = tokens ->
             continue
         if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "=="
           right = tokens[i + 3]
+          if i + 7 < len(tokens) and textOf(tokens[i + 4]) == "or"
+            if textOf(tokens[i + 6]) == "=="
+              left2 = tokens[i + 5]
+              right2 = tokens[i + 7]
+              node = lineOf(token) + ":IF_COMPARE_OR:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right) + ":" + literalKindOf(left2) + ":" + textOf(left2) + ":" + literalKindOf(right2) + ":" + textOf(right2)
+              push nodes, node
+              i = i + 8
+              continue
           node = lineOf(token) + ":IF_COMPARE_EQ:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
           push nodes, node
           i = i + 4

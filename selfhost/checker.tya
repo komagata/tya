@@ -32,6 +32,24 @@ extra3Of = node ->
     return ""
   parts[6]
 
+extra4Of = node ->
+  parts = split node, ":"
+  if len(parts) < 8
+    return ""
+  parts[7]
+
+extra5Of = node ->
+  parts = split node, ":"
+  if len(parts) < 9
+    return ""
+  parts[8]
+
+extra6Of = node ->
+  parts = split node, ":"
+  if len(parts) < 10
+    return ""
+  parts[9]
+
 lineOf = node ->
   parts = split node, ":"
   parts[0]
@@ -155,6 +173,24 @@ check = nodes ->
         push errors, lineOf(node) + ": undefined variable: " + leftName
       if rightKind == "IDENT" and not hasName(names, rightName)
         push errors, lineOf(node) + ": undefined variable: " + rightName
+
+    if kindOf(node) == "IF_COMPARE_OR"
+      leftKind = nameOf(node)
+      leftName = valueOf(node)
+      rightKind = extraOf(node)
+      rightName = extra2Of(node)
+      left2Kind = extra3Of(node)
+      left2Name = extra4Of(node)
+      right2Kind = extra5Of(node)
+      right2Name = extra6Of(node)
+      if leftKind == "IDENT" and not hasName(names, leftName)
+        push errors, lineOf(node) + ": undefined variable: " + leftName
+      if rightKind == "IDENT" and not hasName(names, rightName)
+        push errors, lineOf(node) + ": undefined variable: " + rightName
+      if left2Kind == "IDENT" and not hasName(names, left2Name)
+        push errors, lineOf(node) + ": undefined variable: " + left2Name
+      if right2Kind == "IDENT" and not hasName(names, right2Name)
+        push errors, lineOf(node) + ": undefined variable: " + right2Name
 
     if kindOf(node) == "PUSH"
       target = nameOf(node)

@@ -12,6 +12,8 @@ if len(parts) < 3
   print "short"
 if message == alias
   print "same text"
+if message == alias or alias == message
+  print "either"
 log = message
 push log, alias
 queue = []

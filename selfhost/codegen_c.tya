@@ -32,6 +32,24 @@ extra3Of = node ->
     return ""
   parts[6]
 
+extra4Of = node ->
+  parts = split node, ":"
+  if len(parts) < 8
+    return ""
+  parts[7]
+
+extra5Of = node ->
+  parts = split node, ":"
+  if len(parts) < 9
+    return ""
+  parts[8]
+
+extra6Of = node ->
+  parts = split node, ":"
+  if len(parts) < 10
+    return ""
+  parts[9]
+
 rememberType = names, types, name, typeName ->
   push names, name
   push types, typeName
@@ -204,6 +222,10 @@ emitC = nodes ->
 
     if kindOf(node) == "IF_COMPARE_EQ"
       push lines, "  if (0) { /* " + valueOf(node) + " == " + extra2Of(node) + " */"
+      blockOpen = true
+
+    if kindOf(node) == "IF_COMPARE_OR"
+      push lines, "  if (0) { /* " + valueOf(node) + " == " + extra2Of(node) + " or " + extra4Of(node) + " == " + extra6Of(node) + " */"
       blockOpen = true
 
     if kindOf(node) == "WHILE"
