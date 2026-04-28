@@ -240,6 +240,20 @@ check = nodes ->
       if not hasName(names, argName)
         push errors, lineOf(node) + ": undefined variable: " + argName
 
+    if kindOf(node) == "IF_CALL_EQ_AND_CALL_EQ"
+      funcName = nameOf(node)
+      argName = valueOf(node)
+      func2Name = extra3Of(node)
+      arg2Name = extra4Of(node)
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, argName)
+        push errors, lineOf(node) + ": undefined variable: " + argName
+      if not hasName(names, func2Name)
+        push errors, lineOf(node) + ": undefined variable: " + func2Name
+      if not hasName(names, arg2Name)
+        push errors, lineOf(node) + ": undefined variable: " + arg2Name
+
     if kindOf(node) == "IF_NOT_CALL2"
       funcName = nameOf(node)
       leftArg = valueOf(node)

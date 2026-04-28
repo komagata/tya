@@ -258,6 +258,11 @@ emitC = nodes ->
       blockOpen = true
       blockDepth = blockDepth + 1
 
+    if kindOf(node) == "IF_CALL_EQ_AND_CALL_EQ"
+      push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") == " + extra2Of(node) + " and " + extra3Of(node) + "(" + extra4Of(node) + ") == " + extra6Of(node) + " */"
+      blockOpen = true
+      blockDepth = blockDepth + 1
+
     if kindOf(node) == "IF_NOT_CALL2"
       push lines, "  if (0) { /* not " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ") */"
       blockOpen = true

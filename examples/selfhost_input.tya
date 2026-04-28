@@ -30,6 +30,8 @@ if not hasName(queue, message)
   print "missing"
 if hasT(message)
   print "has t"
+if hasT(message) == true and hasT(alias) == true
+  print "both"
 for entry in queue
   print entry
 count = 1 + 1

@@ -62,6 +62,18 @@ parse = tokens ->
           push nodes, node
           i = i + 3
           continue
+        if i + 13 < len(tokens) and textOf(tokens[i + 2]) == "("
+          if textOf(tokens[i + 4]) == ")" and textOf(tokens[i + 5]) == "==" and textOf(tokens[i + 7]) == "and"
+            func2 = tokens[i + 8]
+            if textOf(tokens[i + 9]) == "(" and textOf(tokens[i + 11]) == ")" and textOf(tokens[i + 12]) == "=="
+              arg = tokens[i + 3]
+              right = tokens[i + 6]
+              arg2 = tokens[i + 10]
+              right2 = tokens[i + 13]
+              node = lineOf(token) + ":IF_CALL_EQ_AND_CALL_EQ:" + textOf(value) + ":" + textOf(arg) + ":" + literalKindOf(right) + ":" + textOf(right) + ":" + textOf(func2) + ":" + textOf(arg2) + ":" + literalKindOf(right2) + ":" + textOf(right2)
+              push nodes, node
+              i = i + 14
+              continue
         if i + 4 < len(tokens) and textOf(tokens[i + 2]) == "(" and textOf(tokens[i + 4]) == ")"
           arg = tokens[i + 3]
           node = lineOf(token) + ":IF_CALL1:" + textOf(value) + ":" + textOf(arg)
