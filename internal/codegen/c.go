@@ -505,8 +505,8 @@ func interpolateString(value string) string {
 			break
 		}
 		name := value[open+1 : open+1+close]
-		if isIdentName(name) {
-			parts = append(parts, "tya_to_string("+cName(name)+")")
+		if isPathName(name) {
+			parts = append(parts, "tya_to_string("+pathExpr(name)+")")
 		} else {
 			parts = append(parts, "tya_string("+strconv.Quote(value[open:open+close+2])+")")
 		}
@@ -533,6 +533,27 @@ func isIdentName(name string) bool {
 		return false
 	}
 	return true
+}
+
+func isPathName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for _, part := range strings.Split(name, ".") {
+		if !isIdentName(part) {
+			return false
+		}
+	}
+	return true
+}
+
+func pathExpr(name string) string {
+	parts := strings.Split(name, ".")
+	expr := cName(parts[0])
+	for _, part := range parts[1:] {
+		expr = "tya_member(" + expr + ", " + strconv.Quote(part) + ")"
+	}
+	return expr
 }
 
 func assignedNames(stmts []ast.Stmt) []string {

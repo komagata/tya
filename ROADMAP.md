@@ -181,8 +181,10 @@ Implemented:
 - Go C emitter can emit and run simple named Tya functions in generated C
 - Go C emitter predeclares generated C locals and mangles reserved identifiers used by self-host sources
 - Go C emitter expands simple string interpolation in generated C
+- Go C emitter expands member paths in generated-C string interpolation
 - Go-emitted self-host lexer/parser/checker/codegen can compile and run a simple `.tya` source file through generated C
 - Go C emitter can run simple generated-C object literal and member access programs
+- Go C emitter can run `examples/function.tya`
 
 ## Non-Goals For Now
 

@@ -96,6 +96,14 @@ func TestEmitCCompilesObjectProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesMemberInterpolationProgram(t *testing.T) {
+	src := "greet = user -> \"Hello, {user.name}\"\nuser =\n  name: \"komagata\"\nprint greet user\n"
+	out := compileAndRun(t, src)
+	if string(out) != "Hello, komagata\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)
