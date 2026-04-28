@@ -138,6 +138,14 @@ func TestEmitCCompilesFunctionProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesMultipleReturnProgram(t *testing.T) {
+	src := "parseUser = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nuser, err = parseUser \"komagata\"\nif err\n  print err.message\nelse\n  print user.name\n\nmissing, err = parseUser \"\"\nif err\n  print err.message\nelse\n  print missing.name\n"
+	out := compileAndRun(t, src)
+	if string(out) != "komagata\nempty user\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesStringInterpolationProgram(t *testing.T) {
 	src := "name = \"Tya\"\nline = 3\nprint \"{line}:IDENT:{name}\"\nprint \"next: {line + 1}\"\n"
 	out := compileAndRun(t, src)

@@ -49,7 +49,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	switch n := stmt.(type) {
 	case *ast.AssignStmt:
 		if len(n.Targets) != 1 || len(n.Values) != 1 {
-			return fmt.Errorf("C emitter does not support multiple assignment yet")
+			return g.multiAssign(n)
 		}
 		if target, ok := n.Targets[0].(*ast.IndexExpr); ok {
 			object, _, err := g.expr(target.Object)
@@ -207,6 +207,18 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			g.line("return tya_nil();")
 			return nil
 		}
+		if len(n.Values) > 1 {
+			values := make([]string, 0, len(n.Values))
+			for _, expr := range n.Values {
+				value, _, err := g.expr(expr)
+				if err != nil {
+					return err
+				}
+				values = append(values, value)
+			}
+			g.line(fmt.Sprintf("return tya_array((TyaValue[]){%s}, %d);", strings.Join(values, ", "), len(values)))
+			return nil
+		}
 		value, _, err := g.expr(n.Values[0])
 		if err != nil {
 			return err
@@ -214,6 +226,33 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.line(fmt.Sprintf("return %s;", value))
 	default:
 		return fmt.Errorf("C emitter does not support %T", stmt)
+	}
+	return nil
+}
+
+func (g *cgen) multiAssign(n *ast.AssignStmt) error {
+	if len(n.Values) != 1 {
+		return fmt.Errorf("C emitter only supports tuple-style multiple assignment")
+	}
+	value, _, err := g.expr(n.Values[0])
+	if err != nil {
+		return err
+	}
+	temp := fmt.Sprintf("__tuple%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = %s;", temp, value))
+	for i, target := range n.Targets {
+		id, ok := target.(*ast.Ident)
+		if !ok {
+			return fmt.Errorf("C emitter only supports identifier multiple assignment targets")
+		}
+		item := fmt.Sprintf("tya_index(%s, tya_number(%d))", temp, i)
+		if g.vars[id.Name] {
+			g.line(fmt.Sprintf("%s = %s;", cName(id.Name), item))
+		} else {
+			g.vars[id.Name] = true
+			g.line(fmt.Sprintf("TyaValue %s = %s;", cName(id.Name), item))
+		}
 	}
 	return nil
 }

@@ -212,6 +212,7 @@ Implemented:
 - Go C emitter supports function values for array builtins and can run `examples/array_function.tya`
 - Go C emitter supports `error(message)` values and can run `examples/error.tya`
 - Go C emitter supports object-literal methods with `@field` access and can run `examples/method.tya`
+- Go C emitter supports tuple-style multiple return assignment and can run `examples/multiple_return.tya`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 
