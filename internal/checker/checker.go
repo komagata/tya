@@ -140,10 +140,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		seen := map[string]bool{}
 		for _, prop := range n.Props {
 			if !valueNameRE.MatchString(prop.Name) {
-				return fmt.Errorf("invalid object property name %s", prop.Name)
+				return fmt.Errorf("%d:%d: invalid object property name %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
 			}
 			if seen[prop.Name] {
-				return fmt.Errorf("duplicate object property %s", prop.Name)
+				return fmt.Errorf("%d:%d: duplicate object property %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
 			}
 			seen[prop.Name] = true
 			if err := checkExpr(prop.Value, scope); err != nil {

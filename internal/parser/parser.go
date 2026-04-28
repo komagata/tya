@@ -227,7 +227,7 @@ func (p *Parser) objectBody() (*ast.ObjectLit, error) {
 		if err != nil {
 			return nil, err
 		}
-		obj.Props = append(obj.Props, ast.ObjectProp{Name: name.Lexeme, Value: val})
+		obj.Props = append(obj.Props, ast.ObjectProp{Name: name.Lexeme, Tok: name, Value: val})
 		p.skipNewlines()
 	}
 	if !p.match(token.DEDENT) {
@@ -572,7 +572,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 				if err != nil {
 					return nil, err
 				}
-				obj.Props = append(obj.Props, ast.ObjectProp{Name: name.Lexeme, Value: value})
+				obj.Props = append(obj.Props, ast.ObjectProp{Name: name.Lexeme, Tok: name, Value: value})
 				if !p.match(token.COMMA) {
 					break
 				}

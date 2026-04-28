@@ -77,7 +77,18 @@ func TestCheckRejectsDuplicateObjectProperty(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected duplicate property error")
 	}
-	if !strings.Contains(err.Error(), "duplicate object property name") {
+	if !strings.Contains(err.Error(), "3:3: duplicate object property name") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsInvalidObjectPropertyWithLocation(t *testing.T) {
+	prog := parse(t, "user = { Name: \"a\" }\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected invalid object property error")
+	}
+	if !strings.Contains(err.Error(), "1:10: invalid object property name Name") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

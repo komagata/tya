@@ -112,6 +112,7 @@ func (*ArrayLit) expr() {}
 
 type ObjectProp struct {
 	Name  string
+	Tok   token.Token
 	Value Expr
 }
 

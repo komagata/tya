@@ -38,6 +38,7 @@ Implemented hardening:
 - CLI exposes `--check-unused` for strict unused binding checks
 - Checker reports source locations for invalid `for` loop binding names
 - Checker reports source locations for invalid and duplicate function parameter names
+- Checker reports source locations for invalid and duplicate object property names
 
 ## Phase 2: Go Compiler That Emits C
 
