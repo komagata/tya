@@ -27,7 +27,7 @@ func TestSelfhostElseExample(t *testing.T) {
 
 func TestSelfhostOpsExample(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost.sh", "examples/selfhost_ops.tya")
-	if string(out) != "ok\nadult\nyoung\nkomagata\ntrue\ntrue\ntrue\n" {
+	if string(out) != "ok\nadult\nyoung\nkomagata\ntrue\ntrue\ntrue\nloop\n" {
 		t.Fatalf("got %q", out)
 	}
 }
@@ -292,11 +292,11 @@ func TestSelfhostCheckerRejectsUndefinedWhileCallConditionNames(t *testing.T) {
 
 func TestSelfhostCheckerRejectsUndefinedWhileCompareNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	if err := os.WriteFile(path, []byte("1:WHILE_COMPARE_LT:IDENT:left:IDENT:right\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("1:WHILE_COMPARE_LT:IDENT:left:IDENT:right\n2:WHILE_COMPARE_NE:IDENT:left:IDENT:right\n3:WHILE_COMPARE_GE:IDENT:left:IDENT:right\n4:WHILE_COMPARE_LE:IDENT:left:IDENT:right\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
-	want := "1: undefined variable: left\n1: undefined variable: right\n"
+	want := "1: undefined variable: left\n1: undefined variable: right\n2: undefined variable: left\n2: undefined variable: right\n3: undefined variable: left\n3: undefined variable: right\n4: undefined variable: left\n4: undefined variable: right\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

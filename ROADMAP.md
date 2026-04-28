@@ -243,6 +243,7 @@ Implemented:
 - Self-hosted parser/codegen carries simple `else` blocks
 - Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` conditions
 - Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` comparison assignments
+- Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` `while` conditions
 
 ## Non-Goals For Now
 

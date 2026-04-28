@@ -451,6 +451,27 @@ emitC = nodes ->
       blockOpen = true
       blockDepth = blockDepth + 1
 
+    if kindOf(node) == "WHILE_COMPARE_NE"
+      left = valueOf(node)
+      right = extra2Of(node)
+      push lines, "  while (" + left + " != " + right + ") {"
+      blockOpen = true
+      blockDepth = blockDepth + 1
+
+    if kindOf(node) == "WHILE_COMPARE_GE"
+      left = valueOf(node)
+      right = extra2Of(node)
+      push lines, "  while (" + left + " >= " + right + ") {"
+      blockOpen = true
+      blockDepth = blockDepth + 1
+
+    if kindOf(node) == "WHILE_COMPARE_LE"
+      left = valueOf(node)
+      right = extra2Of(node)
+      push lines, "  while (" + left + " <= " + right + ") {"
+      blockOpen = true
+      blockDepth = blockDepth + 1
+
     if kindOf(node) == "FOR"
       if typeOf(names, types, valueOf(node)) == "ARRAY"
         if not hasName(names, nameOf(node))

@@ -16,3 +16,7 @@ if name != ""
 print adult
 print young
 print nonzero
+
+while age >= 2
+  print "loop"
+  break
