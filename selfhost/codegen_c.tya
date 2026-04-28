@@ -313,6 +313,20 @@ emitC = nodes ->
                                         else
                                           push lines, "  /* assign " + nameOf(node) + " */"
 
+    if kindOf(node) == "ASSIGN" and valueOf(node) == "BOOL_AND"
+      if hasName(names, nameOf(node))
+        push lines, "  " + nameOf(node) + " = " + extraOf(node) + " && " + extra2Of(node) + ";"
+      else
+        push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " && " + extra2Of(node) + ";"
+        rememberType names, types, nameOf(node), "BOOL"
+
+    if kindOf(node) == "ASSIGN" and valueOf(node) == "BOOL_OR"
+      if hasName(names, nameOf(node))
+        push lines, "  " + nameOf(node) + " = " + extraOf(node) + " || " + extra2Of(node) + ";"
+      else
+        push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " || " + extra2Of(node) + ";"
+        rememberType names, types, nameOf(node), "BOOL"
+
     if kindOf(node) == "IF"
       if valueOf(node) == "true"
         push lines, "  if (1) {"

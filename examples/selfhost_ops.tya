@@ -6,6 +6,8 @@ adult = age >= 2
 young = age <= 2
 nonzero = age != 0
 groupedCompare = (age >= 2)
+both = adult and young
+either = adult or young
 
 if age >= 2
   print "adult"
@@ -21,6 +23,8 @@ print young
 print nonzero
 print grouped
 print groupedCompare
+print both
+print either
 
 while age >= 2
   print "loop"

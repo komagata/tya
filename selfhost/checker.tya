@@ -144,6 +144,13 @@ check = nodes ->
         valueName = extraOf(node)
         if not hasName(names, valueName)
           push errors, lineOf(node) + ": undefined variable: " + valueName
+      if valueOf(node) == "BOOL_AND" or valueOf(node) == "BOOL_OR"
+        leftName = extraOf(node)
+        rightName = extra2Of(node)
+        if not hasName(names, leftName)
+          push errors, lineOf(node) + ": undefined variable: " + leftName
+        if not hasName(names, rightName)
+          push errors, lineOf(node) + ": undefined variable: " + rightName
       if valueOf(node) == "COMPARE_LT" or valueOf(node) == "COMPARE_EQ" or valueOf(node) == "COMPARE_NE" or valueOf(node) == "COMPARE_GE" or valueOf(node) == "COMPARE_LE"
         leftName = extraOf(node)
         rightName = extra2Of(node)

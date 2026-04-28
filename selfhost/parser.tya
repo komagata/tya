@@ -335,6 +335,18 @@ parse = tokens ->
           push nodes, node
           i = i + 4
           continue
+        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "and"
+          right = tokens[i + 4]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":BOOL_AND:" + textOf(value) + ":" + textOf(right)
+          push nodes, node
+          i = i + 5
+          continue
+        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "or"
+          right = tokens[i + 4]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":BOOL_OR:" + textOf(value) + ":" + textOf(right)
+          push nodes, node
+          i = i + 5
+          continue
         if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "+"
           right = tokens[i + 4]
           node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":INT_ADD:" + textOf(value) + ":" + textOf(right)

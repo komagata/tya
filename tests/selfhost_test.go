@@ -35,7 +35,7 @@ func TestSelfhostElseExample(t *testing.T) {
 
 func TestSelfhostOpsExample(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost.sh", "examples/selfhost_ops.tya")
-	if string(out) != "ok\nadult\nyoung\nkomagata\ntrue\ntrue\ntrue\n2\ntrue\nloop\nTya\n" {
+	if string(out) != "ok\nadult\nyoung\nkomagata\ntrue\ntrue\ntrue\n2\ntrue\ntrue\ntrue\nloop\nTya\n" {
 		t.Fatalf("got %q", out)
 	}
 }

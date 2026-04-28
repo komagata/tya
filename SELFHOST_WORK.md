@@ -35,7 +35,7 @@ endpoint.
   - [x] Add `examples/selfhost_ops.tya` to `scripts/selfhost_bootstrap_check.sh`
 - [ ] Expand parser subset toward full expression parsing
   - [x] Parse grouped comparison assignments
-  - [ ] Parse simple `and` / `or` assignments
+  - [x] Parse simple `and` / `or` assignments
   - [ ] Parse two-or-more element array literals
   - [ ] Parse simple inline object literals
 - [ ] Expand checker subset
