@@ -121,3 +121,37 @@ func TestRunRejectsBreakOutsideLoop(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestRunReturn(t *testing.T) {
+	src := "findFirstOver = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\nprint findFirstOver 3\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "4\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunRejectsReturnOutsideFunction(t *testing.T) {
+	toks, errs := lexer.Lex("return 1\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err == nil {
+		t.Fatal("expected error")
+	}
+}

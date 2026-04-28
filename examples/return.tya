@@ -1,0 +1,8 @@
+findFirstOver = limit ->
+  i = 0
+  while true
+    if i > limit
+      return i
+    i = i + 1
+
+print findFirstOver 3

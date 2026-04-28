@@ -47,6 +47,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		p.next()
 		return &ast.ContinueStmt{}, nil
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "return" {
+		return p.returnStmt()
+	}
 	if p.isAssignStart() {
 		tok := p.peek()
 		target, err := p.assignTarget()
@@ -100,6 +103,18 @@ func (p *Parser) whileStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.WhileStmt{Cond: cond, Body: body}, nil
+}
+
+func (p *Parser) returnStmt() (ast.Stmt, error) {
+	p.next()
+	if p.at(token.NEWLINE) || p.at(token.DEDENT) || p.at(token.EOF) {
+		return &ast.ReturnStmt{}, nil
+	}
+	value, err := p.exprLine()
+	if err != nil {
+		return nil, err
+	}
+	return &ast.ReturnStmt{Value: value}, nil
 }
 
 func (p *Parser) block(owner string) ([]ast.Stmt, error) {
@@ -169,6 +184,9 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 	ex, err := p.expr()
 	if err != nil {
 		return nil, err
+	}
+	if _, ok := ex.(*ast.FuncLit); ok {
+		return ex, nil
 	}
 	var args []ast.Expr
 	for p.startsExpr() {

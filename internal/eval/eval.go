@@ -18,6 +18,12 @@ var (
 	errContinue = errors.New("continue")
 )
 
+type returnSignal struct {
+	value Value
+}
+
+func (r *returnSignal) Error() string { return "return" }
+
 type Value any
 
 type Object map[string]Value
@@ -138,6 +144,10 @@ func Run(prog *ast.Program, out io.Writer) error {
 	if errors.Is(err, errContinue) {
 		return fmt.Errorf("continue used outside loop")
 	}
+	var ret *returnSignal
+	if errors.As(err, &ret) {
+		return fmt.Errorf("return used outside function")
+	}
 	return err
 }
 
@@ -197,6 +207,15 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		return nil, errBreak
 	case *ast.ContinueStmt:
 		return nil, errContinue
+	case *ast.ReturnStmt:
+		if n.Value == nil {
+			return nil, &returnSignal{}
+		}
+		v, err := evalExpr(n.Value, env)
+		if err != nil {
+			return nil, err
+		}
+		return nil, &returnSignal{value: v}
 	}
 	return nil, fmt.Errorf("unknown statement")
 }
@@ -347,7 +366,12 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 		if fn.Expr != nil {
 			return evalExpr(fn.Expr, callEnv)
 		}
-		return evalStmts(fn.Body, callEnv)
+		v, err := evalStmts(fn.Body, callEnv)
+		var ret *returnSignal
+		if errors.As(err, &ret) {
+			return ret.value, nil
+		}
+		return v, err
 	}
 	return nil, fmt.Errorf("value is not callable")
 }

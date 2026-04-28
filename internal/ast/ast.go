@@ -46,6 +46,12 @@ type ContinueStmt struct{}
 
 func (*ContinueStmt) stmt() {}
 
+type ReturnStmt struct {
+	Value Expr
+}
+
+func (*ReturnStmt) stmt() {}
+
 type Ident struct {
 	Name string
 	Tok  token.Token

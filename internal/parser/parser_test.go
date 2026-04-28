@@ -76,3 +76,24 @@ func TestParseWhile(t *testing.T) {
 		t.Fatalf("got %T", prog.Stmts[0])
 	}
 }
+
+func TestParseReturnFunctionThenTopLevelPrint(t *testing.T) {
+	src := "findFirstOver = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\n\nprint findFirstOver 3\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(prog.Stmts) != 2 {
+		t.Fatalf("got %d top-level statements", len(prog.Stmts))
+	}
+	if _, ok := prog.Stmts[0].(*ast.AssignStmt); !ok {
+		t.Fatalf("first stmt got %T", prog.Stmts[0])
+	}
+	if _, ok := prog.Stmts[1].(*ast.ExprStmt); !ok {
+		t.Fatalf("second stmt got %T", prog.Stmts[1])
+	}
+}
