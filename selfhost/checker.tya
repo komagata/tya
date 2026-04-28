@@ -118,6 +118,17 @@ check = nodes ->
         if not hasName(names, name)
           push errors, lineOf(node) + ": undefined variable: " + name
 
+    if kindOf(node) == "IF_CALL_LT"
+      funcName = nameOf(node)
+      argName = valueOf(node)
+      rightName = extraOf(node)
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, argName)
+        push errors, lineOf(node) + ": undefined variable: " + argName
+      if rightName != "0" and rightName != "1" and rightName != "2" and rightName != "3" and not hasName(names, rightName)
+        push errors, lineOf(node) + ": undefined variable: " + rightName
+
     if kindOf(node) == "PUSH"
       target = nameOf(node)
       if not hasName(names, target)

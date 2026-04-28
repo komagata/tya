@@ -35,6 +35,14 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and textOf(token) == "if"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
+        if i + 6 < len(tokens) and textOf(tokens[i + 2]) == "("
+          if textOf(tokens[i + 4]) == ")" and textOf(tokens[i + 5]) == "<"
+            arg = tokens[i + 3]
+            right = tokens[i + 6]
+            node = lineOf(token) + ":IF_CALL_LT:" + textOf(value) + ":" + textOf(arg) + ":" + textOf(right)
+            push nodes, node
+            i = i + 7
+            continue
         node = lineOf(token) + ":IF:" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + 2
