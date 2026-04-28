@@ -71,6 +71,7 @@ check = nodes ->
   push names, "readFile"
   push names, "args"
   push names, "toString"
+  push names, "toInt"
   push names, "contains"
   push names, "hasName"
 
