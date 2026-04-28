@@ -463,6 +463,15 @@ func (p *Parser) primary() (ast.Expr, error) {
 		return &ast.FloatLit{Value: v}, nil
 	case token.STRING:
 		return &ast.StringLit{Value: tok.Lexeme}, nil
+	case token.LPAREN:
+		ex, err := p.expr()
+		if err != nil {
+			return nil, err
+		}
+		if !p.match(token.RPAREN) {
+			return nil, p.err("expected ')'")
+		}
+		return ex, nil
 	case token.LBRACKET:
 		var elems []ast.Expr
 		if !p.at(token.RBRACKET) {
@@ -576,7 +585,7 @@ func (p *Parser) skipNewlines() {
 	}
 }
 func (p *Parser) startsExpr() bool {
-	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT) || p.at(token.LBRACKET) || p.at(token.LBRACE)
+	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT) || p.at(token.LPAREN) || p.at(token.LBRACKET) || p.at(token.LBRACE)
 }
 func (p *Parser) at(t token.Type) bool { return p.peek().Type == t }
 func (p *Parser) match(t token.Type) bool {
