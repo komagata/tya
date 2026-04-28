@@ -12,12 +12,27 @@ import (
 	"tya/internal/parser"
 )
 
+const version = "0.1.0"
+
 var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "usage: tya <file.tya> [args...]")
+		usage()
 		os.Exit(2)
+	}
+	if os.Args[1] == "--version" {
+		fmt.Fprintln(os.Stdout, version)
+		return
+	}
+	dumpTokens := false
+	if os.Args[1] == "--tokens" {
+		if len(os.Args) < 3 {
+			usage()
+			os.Exit(2)
+		}
+		dumpTokens = true
+		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
 	}
 	path := os.Args[1]
 	if filepath.Ext(path) != ".tya" || !fileNameRE.MatchString(filepath.Base(path)) {
@@ -36,6 +51,12 @@ func main() {
 		}
 		os.Exit(1)
 	}
+	if dumpTokens {
+		for _, tok := range toks {
+			fmt.Fprintf(os.Stdout, "%d:%d\t%s\t%q\n", tok.Line, tok.Col, tok.Type, tok.Lexeme)
+		}
+		return
+	}
 	prog, err := parser.Parse(toks)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -52,4 +73,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func usage() {
+	fmt.Fprintln(os.Stderr, "usage: tya [--version] [--tokens] <file.tya> [args...]")
 }
