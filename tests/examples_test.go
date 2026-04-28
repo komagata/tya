@@ -33,7 +33,7 @@ func TestExamplesGolden(t *testing.T) {
 		"object_inline.tya":   "Hello, komagata\n20\n",
 		"prelude.tya":         "1\nnil\n[1, 2]\n6\n",
 		"return.tya":          "4\n",
-		"string.tya":          "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n6\n2\nquote: \"tya\"\n",
+		"string.tya":          "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n6\n2\nquote: \"tya\"\ny\n",
 		"try.tya":             "komagata\nempty user\n",
 		"while.tya":           "10\n11\n",
 	}

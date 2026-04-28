@@ -891,7 +891,19 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		}
 		arr, ok := obj.(*Array)
 		if !ok {
-			return nil, fmt.Errorf("index target is not array")
+			text, ok := obj.(string)
+			if !ok {
+				return nil, fmt.Errorf("index target is not array or string")
+			}
+			i, ok := idx.(int64)
+			if !ok {
+				return nil, fmt.Errorf("string index must be int")
+			}
+			runes := []rune(text)
+			if i < 0 || i >= int64(len(runes)) {
+				return nil, nil
+			}
+			return string(runes[i]), nil
 		}
 		i, ok := idx.(int64)
 		if !ok {

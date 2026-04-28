@@ -10,3 +10,4 @@ print endsWith trimmed, "tya"
 print byteLen "ちゃ"
 print charLen "ちゃ"
 print "quote: \"tya\""
+print "tya"[1]
