@@ -270,27 +270,27 @@ emitC = nodes ->
                               rememberType names, types, nameOf(node), "BOOL"
                           else
                             if valueOf(node) == "CALL1"
-                              if extraOf(node) == "identity" or extraOf(node) == "echo"
+                              if hasName(funcNames, extraOf(node))
                                 typeName = typeOf(names, types, extra2Of(node))
                                 if typeName == "INT"
                                   if hasName(names, nameOf(node))
-                                    push lines, "  " + cName(nameOf(node)) + " = " + cName(extra2Of(node)) + ";"
+                                    push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
                                   else
                                     rememberType names, types, nameOf(node), "INT"
-                                    push lines, "  long " + cName(nameOf(node)) + " = " + cName(extra2Of(node)) + ";"
+                                    push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
                                 else
                                   if typeName == "BOOL"
                                     if hasName(names, nameOf(node))
-                                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extra2Of(node)) + ";"
+                                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
                                     else
                                       rememberType names, types, nameOf(node), "BOOL"
-                                      push lines, "  int " + cName(nameOf(node)) + " = " + cName(extra2Of(node)) + ";"
+                                      push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
                                   else
                                     if hasName(names, nameOf(node))
-                                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extra2Of(node)) + ";"
+                                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
                                     else
                                       rememberType names, types, nameOf(node), "STRING"
-                                      push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extra2Of(node)) + ";"
+                                      push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
                               else
                                 if hasName(names, nameOf(node))
                                   push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
@@ -580,14 +580,14 @@ emitC = nodes ->
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      if nameOf(node) == "identity" or nameOf(node) == "echo"
+      if hasName(funcNames, nameOf(node))
         if typeOf(names, types, valueOf(node)) == "INT"
-          push lines, prefix + "printf(\"%ld\\n\", (long)" + cName(valueOf(node)) + ");"
+          push lines, prefix + "printf(\"%ld\\n\", (long)" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
         else
           if typeOf(names, types, valueOf(node)) == "BOOL"
-            push lines, prefix + "puts(" + cName(valueOf(node)) + " ? \"true\" : \"false\");"
+            push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + ") ? \"true\" : \"false\");"
           else
-            push lines, prefix + "puts(" + cName(valueOf(node)) + ");"
+            push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
       else
         push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ") */"
 

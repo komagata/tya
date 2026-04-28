@@ -285,6 +285,7 @@ Self-Host Completion TODO:
   - [ ] Emit real C functions instead of comments / skipped function bodies
     - [x] Emit simple one-argument identity return function bodies in the self-host C codegen subset
   - [ ] Emit full expression lowering through the existing C runtime ABI
+    - [x] Emit simple calls to generated one-argument self-host C functions
   - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
   - [ ] Emit loops, conditionals, `try`, multiple return assignment, function values, and standard builtins
   - [ ] Add generated-C parity tests comparing interpreter output and self-hosted codegen output
