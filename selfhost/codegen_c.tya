@@ -73,6 +73,7 @@ emitC = nodes ->
   names = []
   types = []
   push lines, "#include <stdio.h>"
+  push lines, "#include <string.h>"
   push lines, ""
   push lines, "int main(void) {"
   blockOpen = false
@@ -274,12 +275,30 @@ emitC = nodes ->
       blockDepth = blockDepth + 1
 
     if kindOf(node) == "IF_COMPARE_EQ"
-      push lines, "  if (0) { /* " + valueOf(node) + " == " + extra2Of(node) + " */"
+      left = valueOf(node)
+      right = extra2Of(node)
+      if nameOf(node) == "STRING"
+        left = "\"" + valueOf(node) + "\""
+      if extraOf(node) == "STRING"
+        right = "\"" + extra2Of(node) + "\""
+      push lines, "  if (strcmp(" + left + ", " + right + ") == 0) {"
       blockOpen = true
       blockDepth = blockDepth + 1
 
     if kindOf(node) == "IF_COMPARE_OR"
-      push lines, "  if (0) { /* " + valueOf(node) + " == " + extra2Of(node) + " or " + extra4Of(node) + " == " + extra6Of(node) + " */"
+      left = valueOf(node)
+      right = extra2Of(node)
+      left2 = extra4Of(node)
+      right2 = extra6Of(node)
+      if nameOf(node) == "STRING"
+        left = "\"" + valueOf(node) + "\""
+      if extraOf(node) == "STRING"
+        right = "\"" + extra2Of(node) + "\""
+      if extra3Of(node) == "STRING"
+        left2 = "\"" + extra4Of(node) + "\""
+      if extra5Of(node) == "STRING"
+        right2 = "\"" + extra6Of(node) + "\""
+      push lines, "  if (strcmp(" + left + ", " + right + ") == 0 || strcmp(" + left2 + ", " + right2 + ") == 0) {"
       blockOpen = true
       blockDepth = blockDepth + 1
 
