@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"tya/internal/ast"
+	"tya/internal/checker"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 	"tya/internal/token"
@@ -94,6 +95,24 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	want := summarizeGoProgram(t, src)
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("got:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+}
+
+func TestSelfhostCheckerMatchesGoCheckerUndefinedSubset(t *testing.T) {
+	dir := t.TempDir()
+	srcPath := dir + "/checker_subset.tya"
+	tokensPath := dir + "/tokens.txt"
+	nodesPath := dir + "/nodes.txt"
+	src := "message = missing\nprint message\n"
+	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	runToFile(t, tokensPath, "go", "run", "./cmd/tya", "selfhost/lexer.tya", srcPath)
+	runToFile(t, nodesPath, "go", "run", "./cmd/tya", "selfhost/parser.tya", tokensPath)
+	got := strings.TrimSpace(string(run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", nodesPath)))
+	want := normalizeGoCheckerError(t, src)
+	if got != want {
+		t.Fatalf("got %q, want %q", got, want)
 	}
 }
 
@@ -494,6 +513,28 @@ func summarizeGoProgram(t *testing.T, src string) []string {
 		summarizeGoStmt(&out, stmt)
 	}
 	return out
+}
+
+func normalizeGoCheckerError(t *testing.T, src string) string {
+	t.Helper()
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = checker.Check(prog)
+	if err == nil {
+		t.Fatal("expected checker error")
+	}
+	parts := strings.Split(err.Error(), ": ")
+	if len(parts) != 2 {
+		t.Fatalf("unexpected checker error: %v", err)
+	}
+	lineCol := strings.Split(parts[0], ":")
+	return strings.Replace(lineCol[0]+": "+parts[1], "undefined variable ", "undefined variable: ", 1)
 }
 
 func summarizeGoStmt(out *[]string, stmt ast.Stmt) {

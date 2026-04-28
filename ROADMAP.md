@@ -268,6 +268,7 @@ Self-Host Completion TODO:
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
   - [ ] Port optional unused binding checks or decide they stay Go-only
   - [ ] Add checker parity tests against Go checker diagnostics
+    - [x] Add subset checker parity tests for undefined variable diagnostics
 - [ ] Self-hosted C codegen parity
   - [ ] Emit real C functions instead of comments / skipped function bodies
   - [ ] Emit full expression lowering through the existing C runtime ABI
