@@ -222,6 +222,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		typ := "TyaValue"
 		expr := fmt.Sprintf("(%s.number %s %s.number)", left, op, right)
 		switch op {
+		case "+":
+			expr = fmt.Sprintf("tya_add(%s, %s)", left, right)
 		case "==":
 			expr = fmt.Sprintf("tya_bool(tya_equal(%s, %s))", left, right)
 		case "!=":

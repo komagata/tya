@@ -101,6 +101,29 @@ bool tya_equal(TyaValue left, TyaValue right) {
   return false;
 }
 
+TyaValue tya_add(TyaValue left, TyaValue right) {
+  if (left.kind == TYA_STRING && right.kind == TYA_STRING && left.string != NULL && right.string != NULL) {
+    int left_len = 0;
+    int right_len = 0;
+    while (left.string[left_len] != '\0') {
+      left_len++;
+    }
+    while (right.string[right_len] != '\0') {
+      right_len++;
+    }
+    char *out = malloc(left_len + right_len + 1);
+    for (int i = 0; i < left_len; i++) {
+      out[i] = left.string[i];
+    }
+    for (int i = 0; i < right_len; i++) {
+      out[left_len + i] = right.string[i];
+    }
+    out[left_len + right_len] = '\0';
+    return tya_string(out);
+  }
+  return tya_number(left.number + right.number);
+}
+
 void tya_push(TyaValue array, TyaValue value) {
   if (array.kind != TYA_ARRAY || array.array == NULL) {
     return;

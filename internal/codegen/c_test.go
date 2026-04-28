@@ -43,6 +43,14 @@ func TestEmitCCompilesEqualityProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesAdditionProgram(t *testing.T) {
+	src := "print 2 + 3\nprint \"Ty\" + \"a\"\n"
+	out := compileAndRun(t, src)
+	if string(out) != "5\nTya\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	toks, errs := lexer.Lex(src)

@@ -30,6 +30,7 @@ TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
 TyaValue tya_contains(TyaValue text, TyaValue part);
 bool tya_equal(TyaValue left, TyaValue right);
+TyaValue tya_add(TyaValue left, TyaValue right);
 void tya_push(TyaValue array, TyaValue value);
 void tya_print(TyaValue value);
 bool tya_truthy(TyaValue value);
