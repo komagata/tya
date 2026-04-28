@@ -14,31 +14,10 @@ func TestSelfhostPrototypePipeline(t *testing.T) {
 }
 
 func TestSelfhostLexerSourceChecks(t *testing.T) {
-	checkSelfhostSource(t, "selfhost/lexer.tya")
-}
-
-func TestSelfhostParserSourceChecks(t *testing.T) {
-	checkSelfhostSource(t, "selfhost/parser.tya")
-}
-
-func TestSelfhostCheckerSourceChecks(t *testing.T) {
-	checkSelfhostSource(t, "selfhost/checker.tya")
-}
-
-func TestSelfhostCodegenSourceChecks(t *testing.T) {
-	checkSelfhostSource(t, "selfhost/codegen_c.tya")
-}
-
-func checkSelfhostSource(t *testing.T, source string) {
-	t.Helper()
-	dir := t.TempDir()
-	tokens := dir + "/tokens.txt"
-	nodes := dir + "/nodes.txt"
-	runToFile(t, tokens, "go", "run", "./cmd/tya", "selfhost/lexer.tya", source)
-	runToFile(t, nodes, "go", "run", "./cmd/tya", "selfhost/parser.tya", tokens)
-	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", nodes)
-	if string(out) != "ok\n" {
-		t.Fatalf("got %q", out)
+	out := run(t, "sh", "scripts/selfhost_check.sh")
+	want := "selfhost/lexer.tya: ok\nselfhost/parser.tya: ok\nselfhost/checker.tya: ok\nselfhost/codegen_c.tya: ok\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
 	}
 }
 
