@@ -48,7 +48,7 @@ endpoint.
   - [x] Emit object placeholders beyond comments
 - [ ] Bootstrap stage 2
   - [x] Use stage-1 compiler binaries to compile selfhost sources to C
-  - [ ] Compile stage-1 emitted selfhost C into stage-2 binaries
+  - [x] Compile stage-1 emitted selfhost C into stage-2 binaries
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
 
 ## Last Resolved Blocker

@@ -19,5 +19,6 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
   grep -qx "ok" "$out_dir/$base.check"
   "$out_dir/codegen_c.stage1" "$out_dir/$base.nodes" > "$out_dir/$base.stage2.c"
   test -s "$out_dir/$base.stage2.c"
-  echo "$src: stage-1 emitted C"
+  cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/$base.stage2" "$out_dir/$base.stage2.c" >/dev/null 2>&1
+  echo "$src: stage-1 emitted and compiled C"
 done
