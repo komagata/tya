@@ -1,0 +1,23 @@
+items = [1, 2, 3, 4]
+
+double = item -> item * 2
+isEven = item -> item % 2 == 0
+add = total, item -> total + item
+remember = item ->
+  last = item
+  nil
+
+doubled = map items, double
+evens = filter items, isEven
+firstEven = find items, isEven
+hasEven = any items, isEven
+allEven = all items, isEven
+sum = reduce items, 0, add
+each items, remember
+
+print doubled[2]
+print len evens
+print firstEven
+print hasEven
+print allEven
+print sum

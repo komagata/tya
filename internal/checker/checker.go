@@ -21,9 +21,10 @@ func Check(prog *ast.Program) error {
 
 var builtinNames = []string{
 	"args", "byteLen", "charLen", "contains", "delete", "div", "endsWith",
-	"env", "equal", "exit", "fileExists", "has", "join", "keys", "len", "panic",
-	"pop", "print", "push", "readFile", "replace", "split", "startsWith",
-	"toFloat", "toInt", "toNumber", "toString", "trim", "values", "writeFile",
+	"env", "equal", "exit", "fileExists", "filter", "find", "all", "any", "each",
+	"has", "join", "keys", "len", "map", "panic", "pop", "print", "push",
+	"readFile", "reduce", "replace", "split", "startsWith", "toFloat", "toInt",
+	"toNumber", "toString", "trim", "values", "writeFile",
 }
 
 type scope struct {

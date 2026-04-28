@@ -166,6 +166,120 @@ func installBuiltins(env *Env, out io.Writer, processArgs []string) {
 		arr.items = arr.items[:len(arr.items)-1]
 		return last, nil
 	}))
+	env.set("map", Builtin(func(args []Value) (Value, error) {
+		arr, fn, err := arrayAndFunction("map", args)
+		if err != nil {
+			return nil, err
+		}
+		out := &Array{items: make([]Value, 0, len(arr.items))}
+		for _, item := range arr.items {
+			mapped, err := callValue(fn, nil, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			out.items = append(out.items, mapped)
+		}
+		return out, nil
+	}))
+	env.set("filter", Builtin(func(args []Value) (Value, error) {
+		arr, fn, err := arrayAndFunction("filter", args)
+		if err != nil {
+			return nil, err
+		}
+		out := &Array{}
+		for _, item := range arr.items {
+			keep, err := callValue(fn, nil, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if truthy(keep) {
+				out.items = append(out.items, item)
+			}
+		}
+		return out, nil
+	}))
+	env.set("find", Builtin(func(args []Value) (Value, error) {
+		arr, fn, err := arrayAndFunction("find", args)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range arr.items {
+			found, err := callValue(fn, nil, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if truthy(found) {
+				return item, nil
+			}
+		}
+		return nil, nil
+	}))
+	env.set("any", Builtin(func(args []Value) (Value, error) {
+		arr, fn, err := arrayAndFunction("any", args)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range arr.items {
+			ok, err := callValue(fn, nil, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if truthy(ok) {
+				return true, nil
+			}
+		}
+		return false, nil
+	}))
+	env.set("all", Builtin(func(args []Value) (Value, error) {
+		arr, fn, err := arrayAndFunction("all", args)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range arr.items {
+			ok, err := callValue(fn, nil, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if !truthy(ok) {
+				return false, nil
+			}
+		}
+		return true, nil
+	}))
+	env.set("each", Builtin(func(args []Value) (Value, error) {
+		arr, fn, err := arrayAndFunction("each", args)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range arr.items {
+			if _, err := callValue(fn, nil, []Value{item}); err != nil {
+				return nil, err
+			}
+		}
+		return nil, nil
+	}))
+	env.set("reduce", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 3 {
+			return nil, fmt.Errorf("reduce expects 3 arguments")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, fmt.Errorf("reduce expects array")
+		}
+		fn, ok := args[2].(*Function)
+		if !ok {
+			return nil, fmt.Errorf("reduce expects function")
+		}
+		acc := args[1]
+		for _, item := range arr.items {
+			next, err := callValue(fn, nil, []Value{acc, item})
+			if err != nil {
+				return nil, err
+			}
+			acc = next
+		}
+		return acc, nil
+	}))
 	env.set("keys", Builtin(func(args []Value) (Value, error) {
 		obj, err := oneObject("keys", args)
 		if err != nil {
@@ -713,20 +827,28 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 		args = append(args, v)
 	}
 	switch fn := fnVal.(type) {
+	case Builtin, *Function:
+		return callValue(fn, recv, args)
+	}
+	return nil, fmt.Errorf("value is not callable")
+}
+
+func callValue(fn Value, recv Object, args []Value) (Value, error) {
+	switch f := fn.(type) {
 	case Builtin:
-		return fn(args)
+		return f(args)
 	case *Function:
-		if len(args) != len(fn.Params) {
-			return nil, fmt.Errorf("function expects %d arguments, got %d", len(fn.Params), len(args))
+		if len(args) != len(f.Params) {
+			return nil, fmt.Errorf("function expects %d arguments, got %d", len(f.Params), len(args))
 		}
-		callEnv := fn.Env.child(recv)
-		for i, name := range fn.Params {
+		callEnv := f.Env.child(recv)
+		for i, name := range f.Params {
 			callEnv.set(name, args[i])
 		}
-		if fn.Expr != nil {
-			return evalExpr(fn.Expr, callEnv)
+		if f.Expr != nil {
+			return evalExpr(f.Expr, callEnv)
 		}
-		v, err := evalStmts(fn.Body, callEnv)
+		v, err := evalStmts(f.Body, callEnv)
 		var ret *returnSignal
 		if errors.As(err, &ret) {
 			return ret.value, nil
@@ -1030,6 +1152,21 @@ func oneObject(name string, args []Value) (Object, error) {
 		return nil, fmt.Errorf("%s expects object", name)
 	}
 	return obj, nil
+}
+
+func arrayAndFunction(name string, args []Value) (*Array, *Function, error) {
+	if len(args) != 2 {
+		return nil, nil, fmt.Errorf("%s expects 2 arguments", name)
+	}
+	arr, ok := args[0].(*Array)
+	if !ok {
+		return nil, nil, fmt.Errorf("%s expects array", name)
+	}
+	fn, ok := args[1].(*Function)
+	if !ok {
+		return nil, nil, fmt.Errorf("%s expects function", name)
+	}
+	return arr, fn, nil
 }
 
 func truthy(v Value) bool {

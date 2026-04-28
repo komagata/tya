@@ -89,6 +89,26 @@ func TestRunArrays(t *testing.T) {
 	}
 }
 
+func TestRunArrayFunctionBuiltins(t *testing.T) {
+	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\nisEven = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, isEven\nfirstEven = find items, isEven\nhasEven = any items, isEven\nallEven = all items, isEven\nsum = reduce items, 0, add\nprint doubled[2]\nprint len evens\nprint firstEven\nprint hasEven\nprint allEven\nprint sum\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "6\n2\n2\ntrue\nfalse\n10\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunWhile(t *testing.T) {
 	src := "i = 0\nsum = 0\nwhile i < 5\n  i = i + 1\n  if i == 3\n    continue\n  sum = sum + i\n  if sum > 7\n    break\nprint sum\n"
 	toks, errs := lexer.Lex(src)
