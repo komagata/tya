@@ -14,6 +14,12 @@ valueOf = node ->
     return ""
   parts[3]
 
+extraOf = node ->
+  parts = split node, ":"
+  if len(parts) < 5
+    return ""
+  parts[4]
+
 lineOf = node ->
   parts = split node, ":"
   parts[0]
@@ -31,6 +37,10 @@ check = nodes ->
   for node in nodes
     if kindOf(node) == "ASSIGN"
       name = nameOf(node)
+      if valueOf(node) == "IDENT"
+        valueName = extraOf(node)
+        if not hasName(names, valueName)
+          push errors, lineOf(node) + ": undefined variable: " + valueName
       seen = hasName names, name
       if seen
         push errors, lineOf(node) + ": duplicate definition: " + name

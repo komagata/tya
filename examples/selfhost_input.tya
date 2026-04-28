@@ -1,7 +1,9 @@
 message = "Tya"
+alias = message
 count = 1 + 1
 enabled = true
 print message
+print alias
 print count
 print enabled
 
