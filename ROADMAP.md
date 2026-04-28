@@ -55,6 +55,8 @@ Implemented:
 
 ## Phase 3: C Runtime
 
+Status: started.
+
 Goals:
 
 - Implement dynamic `Value`
@@ -62,6 +64,12 @@ Goals:
 - Implement standard library functions currently available in the interpreter
 - Add mark-and-sweep GC
 - Add runtime tests independent of the Go interpreter
+
+Implemented:
+
+- Initial `TyaValue` runtime for nil, bool, number, and string
+- Runtime printing and truthiness helpers
+- Generated C can compile and run against `runtime/tya_runtime.c`
 
 ## Phase 4: Standard Library
 

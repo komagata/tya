@@ -34,7 +34,9 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	if err := os.WriteFile(cfile, []byte(csrc), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if out, err := exec.Command("gcc", cfile, "-o", bin).CombinedOutput(); err != nil {
+	runtime := filepath.Join("..", "..", "runtime", "tya_runtime.c")
+	include := filepath.Join("..", "..", "runtime")
+	if out, err := exec.Command("gcc", cfile, runtime, "-I", include, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("gcc: %v\n%s\n%s", err, out, csrc)
 	}
 	out, err := exec.Command(bin).CombinedOutput()

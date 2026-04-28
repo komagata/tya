@@ -10,8 +10,7 @@ import (
 
 func EmitC(prog *ast.Program) (string, error) {
 	g := &cgen{vars: map[string]bool{}}
-	g.line("#include <stdbool.h>")
-	g.line("#include <stdio.h>")
+	g.line("#include \"tya_runtime.h\"")
 	g.line("")
 	g.line("int main(void) {")
 	g.indent++
@@ -56,7 +55,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			g.line(fmt.Sprintf("%s = %s;", id.Name, ex))
 		} else {
 			g.vars[id.Name] = true
-			g.line(fmt.Sprintf("%s %s = %s;", typ, id.Name, ex))
+			_ = typ
+			g.line(fmt.Sprintf("TyaValue %s = %s;", id.Name, ex))
 		}
 	case *ast.ExprStmt:
 		return g.exprStmt(n.Expr)
@@ -65,7 +65,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		g.line(fmt.Sprintf("if (%s) {", cond))
+		g.line(fmt.Sprintf("if (tya_truthy(%s)) {", cond))
 		g.indent++
 		for _, stmt := range n.Then {
 			if err := g.stmt(stmt); err != nil {
@@ -91,7 +91,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		g.line(fmt.Sprintf("while (%s) {", cond))
+		g.line(fmt.Sprintf("while (tya_truthy(%s)) {", cond))
 		g.indent++
 		for _, stmt := range n.Body {
 			if err := g.stmt(stmt); err != nil {
@@ -124,32 +124,26 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 	if err != nil {
 		return err
 	}
-	switch typ {
-	case "const char*":
-		g.line(fmt.Sprintf("printf(\"%%s\\n\", %s);", arg))
-	case "bool":
-		g.line(fmt.Sprintf("printf(\"%%s\\n\", %s ? \"true\" : \"false\");", arg))
-	default:
-		g.line(fmt.Sprintf("printf(\"%%g\\n\", (double)(%s));", arg))
-	}
+	_ = typ
+	g.line(fmt.Sprintf("tya_print(%s);", arg))
 	return nil
 }
 
 func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	switch n := expr.(type) {
 	case *ast.IntLit:
-		return strconv.FormatInt(n.Value, 10), "long", nil
+		return "tya_number(" + strconv.FormatInt(n.Value, 10) + ")", "TyaValue", nil
 	case *ast.FloatLit:
-		return strconv.FormatFloat(n.Value, 'f', -1, 64), "double", nil
+		return "tya_number(" + strconv.FormatFloat(n.Value, 'f', -1, 64) + ")", "TyaValue", nil
 	case *ast.StringLit:
-		return strconv.Quote(n.Value), "const char*", nil
+		return "tya_string(" + strconv.Quote(n.Value) + ")", "TyaValue", nil
 	case *ast.BoolLit:
 		if n.Value {
-			return "true", "bool", nil
+			return "tya_bool(true)", "TyaValue", nil
 		}
-		return "false", "bool", nil
+		return "tya_bool(false)", "TyaValue", nil
 	case *ast.Ident:
-		return n.Name, "double", nil
+		return n.Name, "TyaValue", nil
 	case *ast.BinaryExpr:
 		left, _, err := g.expr(n.Left)
 		if err != nil {
@@ -166,21 +160,24 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		if op == "or" {
 			op = "||"
 		}
-		typ := "double"
+		typ := "TyaValue"
+		expr := fmt.Sprintf("(%s.number %s %s.number)", left, op, right)
 		switch op {
 		case "==", "!=", "<", "<=", ">", ">=", "&&", "||":
-			typ = "bool"
+			expr = fmt.Sprintf("tya_bool(%s.number %s %s.number)", left, op, right)
+		default:
+			expr = fmt.Sprintf("tya_number(%s)", expr)
 		}
-		return fmt.Sprintf("(%s %s %s)", left, op, right), typ, nil
+		return expr, typ, nil
 	case *ast.UnaryExpr:
 		ex, typ, err := g.expr(n.Expr)
 		if err != nil {
 			return "", "", err
 		}
 		if n.Op.Lexeme == "not" {
-			return "(!" + ex + ")", "bool", nil
+			return "tya_bool(!tya_truthy(" + ex + "))", "TyaValue", nil
 		}
-		return "(-" + ex + ")", typ, nil
+		return "tya_number(-" + ex + ".number)", typ, nil
 	case *ast.CallExpr:
 		id, ok := n.Callee.(*ast.Ident)
 		if ok && id.Name == "div" && len(n.Args) == 2 {
@@ -192,7 +189,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			if err != nil {
 				return "", "", err
 			}
-			return fmt.Sprintf("(%s / %s)", left, right), "long", nil
+			return fmt.Sprintf("tya_number((long)%s.number / (long)%s.number)", left, right), "TyaValue", nil
 		}
 	}
 	return "", "", fmt.Errorf("C emitter does not support expression %T", expr)
