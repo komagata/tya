@@ -169,17 +169,9 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 }
 
 func (p *Parser) expr() (ast.Expr, error) {
-	left, err := p.factor()
+	left, err := p.logicOr()
 	if err != nil {
 		return nil, err
-	}
-	for p.match(token.PLUS) || p.match(token.MINUS) {
-		op := p.prev()
-		right, err := p.factor()
-		if err != nil {
-			return nil, err
-		}
-		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
 	}
 	if p.match(token.ARROW) {
 		var params []string
@@ -193,20 +185,112 @@ func (p *Parser) expr() (ast.Expr, error) {
 	return left, nil
 }
 
-func (p *Parser) factor() (ast.Expr, error) {
-	left, err := p.call()
+func (p *Parser) logicOr() (ast.Expr, error) {
+	left, err := p.logicAnd()
 	if err != nil {
 		return nil, err
 	}
-	for p.match(token.STAR) || p.match(token.SLASH) || p.match(token.PERCENT) {
+	for p.matchWord("or") {
 		op := p.prev()
-		right, err := p.call()
+		right, err := p.logicAnd()
 		if err != nil {
 			return nil, err
 		}
 		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
 	}
 	return left, nil
+}
+
+func (p *Parser) logicAnd() (ast.Expr, error) {
+	left, err := p.equality()
+	if err != nil {
+		return nil, err
+	}
+	for p.matchWord("and") {
+		op := p.prev()
+		right, err := p.equality()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
+}
+
+func (p *Parser) equality() (ast.Expr, error) {
+	left, err := p.comparison()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.EQ) || p.match(token.NEQ) {
+		op := p.prev()
+		right, err := p.comparison()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
+}
+
+func (p *Parser) comparison() (ast.Expr, error) {
+	left, err := p.term()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.LT) || p.match(token.LTE) || p.match(token.GT) || p.match(token.GTE) {
+		op := p.prev()
+		right, err := p.term()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
+}
+
+func (p *Parser) term() (ast.Expr, error) {
+	left, err := p.factor()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.PLUS) || p.match(token.MINUS) {
+		op := p.prev()
+		right, err := p.factor()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
+}
+
+func (p *Parser) factor() (ast.Expr, error) {
+	left, err := p.unary()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.STAR) || p.match(token.SLASH) || p.match(token.PERCENT) {
+		op := p.prev()
+		right, err := p.unary()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
+}
+
+func (p *Parser) unary() (ast.Expr, error) {
+	if p.matchWord("not") {
+		op := p.prev()
+		ex, err := p.unary()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.UnaryExpr{Op: op, Expr: ex}, nil
+	}
+	return p.call()
 }
 
 func (p *Parser) call() (ast.Expr, error) {
@@ -364,6 +448,13 @@ func (p *Parser) startsExpr() bool {
 func (p *Parser) at(t token.Type) bool { return p.peek().Type == t }
 func (p *Parser) match(t token.Type) bool {
 	if p.at(t) {
+		p.next()
+		return true
+	}
+	return false
+}
+func (p *Parser) matchWord(word string) bool {
+	if p.at(token.IDENT) && p.peek().Lexeme == word {
 		p.next()
 		return true
 	}

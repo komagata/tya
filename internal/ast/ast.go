@@ -92,6 +92,13 @@ type BinaryExpr struct {
 
 func (*BinaryExpr) expr() {}
 
+type UnaryExpr struct {
+	Op   token.Token
+	Expr Expr
+}
+
+func (*UnaryExpr) expr() {}
+
 type MemberExpr struct {
 	Object Expr
 	Name   string

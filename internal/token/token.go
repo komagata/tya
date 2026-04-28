@@ -16,6 +16,12 @@ const (
 	DEDENT  Type = "DEDENT"
 
 	ASSIGN  Type = "="
+	EQ      Type = "=="
+	NEQ     Type = "!="
+	LT      Type = "<"
+	LTE     Type = "<="
+	GT      Type = ">"
+	GTE     Type = ">="
 	COLON   Type = ":"
 	COMMA   Type = ","
 	DOT     Type = "."

@@ -181,6 +181,15 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		return &Function{Params: n.Params, Body: n.Body, Expr: n.Expr, Env: env}, nil
 	case *ast.BinaryExpr:
 		return evalBinary(n, env)
+	case *ast.UnaryExpr:
+		v, err := evalExpr(n.Expr, env)
+		if err != nil {
+			return nil, err
+		}
+		if n.Op.Lexeme == "not" {
+			return !truthy(v), nil
+		}
+		return nil, fmt.Errorf("unknown unary operator %s", n.Op.Lexeme)
 	case *ast.MemberExpr:
 		obj, err := evalExpr(n.Object, env)
 		if err != nil {
@@ -250,11 +259,31 @@ func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 	if err != nil {
 		return nil, err
 	}
+	if b.Op.Lexeme == "and" {
+		if !truthy(l) {
+			return l, nil
+		}
+		return evalExpr(b.Right, env)
+	}
+	if b.Op.Lexeme == "or" {
+		if truthy(l) {
+			return l, nil
+		}
+		return evalExpr(b.Right, env)
+	}
 	r, err := evalExpr(b.Right, env)
 	if err != nil {
 		return nil, err
 	}
-	if b.Op.Type != "+" {
+	switch b.Op.Lexeme {
+	case "==":
+		return equal(l, r), nil
+	case "!=":
+		return !equal(l, r), nil
+	case "<", "<=", ">", ">=":
+		return compare(b.Op.Lexeme, l, r)
+	}
+	if b.Op.Lexeme != "+" {
 		return evalNumeric(b.Op.Lexeme, l, r)
 	}
 	if _, ok := l.(string); ok {
@@ -274,6 +303,58 @@ func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 		}
 	}
 	return lf + rf, nil
+}
+
+func equal(l, r Value) bool {
+	switch lv := l.(type) {
+	case nil:
+		return r == nil
+	case bool:
+		rv, ok := r.(bool)
+		return ok && lv == rv
+	case int64:
+		switch rv := r.(type) {
+		case int64:
+			return lv == rv
+		case float64:
+			return float64(lv) == rv
+		}
+	case float64:
+		switch rv := r.(type) {
+		case int64:
+			return lv == float64(rv)
+		case float64:
+			return lv == rv
+		}
+	case string:
+		rv, ok := r.(string)
+		return ok && lv == rv
+	case Object:
+		rv, ok := r.(Object)
+		return ok && fmt.Sprintf("%p", lv) == fmt.Sprintf("%p", rv)
+	case *Function:
+		return lv == r
+	}
+	return false
+}
+
+func compare(op string, l, r Value) (Value, error) {
+	lf, lok := asFloat(l)
+	rf, rok := asFloat(r)
+	if !lok || !rok {
+		return nil, fmt.Errorf("%s expects numbers", op)
+	}
+	switch op {
+	case "<":
+		return lf < rf, nil
+	case "<=":
+		return lf <= rf, nil
+	case ">":
+		return lf > rf, nil
+	case ">=":
+		return lf >= rf, nil
+	}
+	return nil, fmt.Errorf("unknown operator %s", op)
 }
 
 func evalNumeric(op string, l, r Value) (Value, error) {

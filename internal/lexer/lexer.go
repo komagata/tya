@@ -128,9 +128,34 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			i += 2
 			continue
 		}
+		if i+1 < len(s) {
+			two := s[i : i+2]
+			switch two {
+			case "==":
+				l.add(token.EQ, two, line, col)
+				i += 2
+				continue
+			case "!=":
+				l.add(token.NEQ, two, line, col)
+				i += 2
+				continue
+			case "<=":
+				l.add(token.LTE, two, line, col)
+				i += 2
+				continue
+			case ">=":
+				l.add(token.GTE, two, line, col)
+				i += 2
+				continue
+			}
+		}
 		switch ch {
 		case '=':
 			l.add(token.ASSIGN, "=", line, col)
+		case '<':
+			l.add(token.LT, "<", line, col)
+		case '>':
+			l.add(token.GT, ">", line, col)
 		case ':':
 			l.add(token.COLON, ":", line, col)
 		case ',':

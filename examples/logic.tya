@@ -1,0 +1,10 @@
+age = 20
+name = "komagata"
+
+if age >= 20 and name == "komagata"
+  print "match"
+else
+  print "no"
+
+print nil or "anonymous"
+print not false
