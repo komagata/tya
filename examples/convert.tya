@@ -1,0 +1,5 @@
+print toString 20
+print toInt "42"
+print toFloat "2.5"
+print toNumber "12"
+print toNumber "12.5"

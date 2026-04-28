@@ -141,6 +141,26 @@ func TestRunReturn(t *testing.T) {
 	}
 }
 
+func TestRunConversions(t *testing.T) {
+	src := "print toString 20\nprint toInt \"42\"\nprint toFloat \"2.5\"\nprint toNumber \"12\"\nprint toNumber \"12.5\"\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "20\n42\n2.5\n12\n12.5\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {

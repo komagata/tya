@@ -137,6 +137,33 @@ func Run(prog *ast.Program, out io.Writer) error {
 		arr.items = arr.items[:len(arr.items)-1]
 		return last, nil
 	}))
+	env.set("toString", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("toString expects 1 argument")
+		}
+		return stringify(args[0]), nil
+	}))
+	env.set("toInt", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("toInt expects 1 argument")
+		}
+		return toInt(args[0])
+	}))
+	env.set("toFloat", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("toFloat expects 1 argument")
+		}
+		return toFloat(args[0])
+	}))
+	env.set("toNumber", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("toNumber expects 1 argument")
+		}
+		if i, err := toInt(args[0]); err == nil {
+			return i, nil
+		}
+		return toFloat(args[0])
+	}))
 	_, err := evalStmts(prog.Stmts, env)
 	if errors.Is(err, errBreak) {
 		return fmt.Errorf("break used outside loop")
@@ -543,6 +570,40 @@ func asFloat(v Value) (float64, bool) {
 		return n, true
 	}
 	return 0, false
+}
+
+func toInt(v Value) (Value, error) {
+	switch x := v.(type) {
+	case int64:
+		return x, nil
+	case float64:
+		return int64(x), nil
+	case string:
+		i, err := strconv.ParseInt(strings.TrimSpace(x), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert %q to int", x)
+		}
+		return i, nil
+	default:
+		return nil, fmt.Errorf("cannot convert %s to int", stringify(v))
+	}
+}
+
+func toFloat(v Value) (Value, error) {
+	switch x := v.(type) {
+	case int64:
+		return float64(x), nil
+	case float64:
+		return x, nil
+	case string:
+		f, err := strconv.ParseFloat(strings.TrimSpace(x), 64)
+		if err != nil {
+			return nil, fmt.Errorf("cannot convert %q to float", x)
+		}
+		return f, nil
+	default:
+		return nil, fmt.Errorf("cannot convert %s to float", stringify(v))
+	}
 }
 
 func truthy(v Value) bool {
