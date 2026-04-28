@@ -105,6 +105,8 @@ Remaining hardening:
 
 ## Phase 5: Self-Hosting
 
+Status: started.
+
 Sequence:
 
 1. Write lexer in Tya
@@ -113,6 +115,10 @@ Sequence:
 4. Write C code generator in Tya
 5. Compile the Tya compiler with the Go compiler
 6. Compile the Tya compiler with itself
+
+Implemented:
+
+- Initial `selfhost/lexer.tya` that tokenizes a useful subset of Tya source
 
 ## Non-Goals For Now
 

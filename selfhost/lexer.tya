@@ -1,0 +1,84 @@
+isSpace = char ->
+  char == " " or char == "\n" or char == "\t"
+
+isDigit = char ->
+  contains "0123456789", char
+
+isLower = char ->
+  contains "abcdefghijklmnopqrstuvwxyz", char
+
+isUpper = char ->
+  contains "ABCDEFGHIJKLMNOPQRSTUVWXYZ", char
+
+isAlpha = char ->
+  isLower(char) or isUpper(char) or char == "_"
+
+isAlphaNum = char ->
+  isAlpha(char) or isDigit(char)
+
+emit = kind, text ->
+  "{kind}:{text}"
+
+lex = source ->
+  tokens = []
+  i = 0
+
+  while i < len(source)
+    char = source[i]
+
+    if isSpace(char)
+      i = i + 1
+      continue
+
+    if char == "#"
+      while i < len(source) and source[i] != "\n"
+        i = i + 1
+      continue
+
+    if isAlpha(char)
+      start = i
+      text = ""
+      while i < len(source) and isAlphaNum(source[i])
+        text = text + source[i]
+        i = i + 1
+      token = emit "IDENT", text
+      push tokens, token
+      continue
+
+    if isDigit(char)
+      text = ""
+      while i < len(source) and isDigit(source[i])
+        text = text + source[i]
+        i = i + 1
+      token = emit "INT", text
+      push tokens, token
+      continue
+
+    if char == "\""
+      i = i + 1
+      text = ""
+      while i < len(source) and source[i] != "\""
+        text = text + source[i]
+        i = i + 1
+      i = i + 1
+      token = emit "STRING", text
+      push tokens, token
+      continue
+
+    if char == "-" and i + 1 < len(source) and source[i + 1] == ">"
+      token = emit "ARROW", "->"
+      push tokens, token
+      i = i + 2
+      continue
+
+    token = emit "SYMBOL", char
+    push tokens, token
+    i = i + 1
+
+  tokens
+
+source = readFile args()[0]
+tokens = lex source
+
+for token in tokens
+  print token
