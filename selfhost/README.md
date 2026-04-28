@@ -48,7 +48,7 @@ Current supported subset:
   indexing, indentation, print nodes, and one-argument print calls
 - Checker: simple undefined assignment / print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
-  simple comparison assignments, variable-copy assignments, bool assignments,
+  simple comparison / `!=` / `>=` / `<=` assignments, variable-copy assignments, bool assignments,
   unary `not`, one-element array paths for simple `push` / `for`, reassignment,
   carried function headers and inline returns, one-, two-, and three-argument calls, `push` and `return`
   commands, string/int/bool print nodes, carried indexing, call indexing,

@@ -1,11 +1,18 @@
-age = 20
+age = 2
 name = "komagata"
+adult = age >= 2
+young = age <= 2
+nonzero = age != 0
 
-if age >= 20
+if age >= 2
   print "adult"
 
-if age <= 20
+if age <= 2
   print "young"
 
 if name != ""
   print name
+
+print adult
+print young
+print nonzero

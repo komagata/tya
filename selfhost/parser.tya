@@ -297,6 +297,24 @@ parse = tokens ->
           push nodes, node
           i = i + 5
           continue
+        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "!="
+          right = tokens[i + 4]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_NE:" + textOf(value) + ":" + textOf(right)
+          push nodes, node
+          i = i + 5
+          continue
+        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == ">="
+          right = tokens[i + 4]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_GE:" + textOf(value) + ":" + textOf(right)
+          push nodes, node
+          i = i + 5
+          continue
+        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "<="
+          right = tokens[i + 4]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_LE:" + textOf(value) + ":" + textOf(right)
+          push nodes, node
+          i = i + 5
+          continue
         if i + 5 < len(tokens) and kindOf(value) == "IDENT" and lineOf(tokens[i + 5]) == lineOf(token)
           if textOf(tokens[i + 4]) == ","
             leftArg = tokens[i + 3]

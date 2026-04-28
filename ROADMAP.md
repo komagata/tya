@@ -242,6 +242,7 @@ Implemented:
 - Self-hosted pipeline can compile and run `examples/while.tya`
 - Self-hosted parser/codegen carries simple `else` blocks
 - Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` conditions
+- Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` comparison assignments
 
 ## Non-Goals For Now
 
