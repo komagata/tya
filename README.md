@@ -38,7 +38,7 @@ go test ./...
   `split`, `join`, `trim`,
   `replace`, `contains`, `startsWith`, `endsWith`, `byteLen`, `charLen`,
   `readFile`, `writeFile`, `fileExists`, `args`, `env`, `exit`, `panic`,
-  `toString`, `toInt`, `toFloat`, `toNumber`
+  `div`, `toString`, `toInt`, `toFloat`, `toNumber`
 
 ## Examples
 

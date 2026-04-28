@@ -10,7 +10,7 @@ import (
 )
 
 func TestRunArithmeticAndLiterals(t *testing.T) {
-	src := "add = a, b -> a + b\nprint add 2, 3\nprint 2 + 3 * 4\nprint 5 / 2\nprint true\nprint nil\nage = 20\nprint \"next year: {age + 1}\"\n"
+	src := "add = a, b -> a + b\nprint add 2, 3\nprint 2 + 3 * 4\nprint 5 / 2\nprint div 5, 2\nprint true\nprint nil\nage = 20\nprint \"next year: {age + 1}\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -23,7 +23,7 @@ func TestRunArithmeticAndLiterals(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "5\n14\n2.5\ntrue\nnil\nnext year: 21\n"
+	want := "5\n14\n2.5\n2\ntrue\nnil\nnext year: 21\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}

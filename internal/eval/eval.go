@@ -403,6 +403,23 @@ func installBuiltins(env *Env, out io.Writer, processArgs []string) {
 		}
 		return nil, fmt.Errorf("panic: %s", stringify(args[0]))
 	}))
+	env.set("div", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("div expects 2 arguments")
+		}
+		left, ok := args[0].(int64)
+		if !ok {
+			return nil, fmt.Errorf("div expects int left operand")
+		}
+		right, ok := args[1].(int64)
+		if !ok {
+			return nil, fmt.Errorf("div expects int right operand")
+		}
+		if right == 0 {
+			return nil, fmt.Errorf("division by zero")
+		}
+		return left / right, nil
+	}))
 	env.set("toInt", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("toInt expects 1 argument")
