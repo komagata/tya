@@ -104,16 +104,24 @@ emitC = nodes ->
         push lines, "  if (1) {"
         blockOpen = true
       else
-        push lines, "  if (0) {"
-        blockOpen = true
+        if nameOf(node) == "IDENT"
+          push lines, "  if (" + valueOf(node) + ") {"
+          blockOpen = true
+        else
+          push lines, "  if (0) {"
+          blockOpen = true
 
     if kindOf(node) == "WHILE"
       if valueOf(node) == "true"
         push lines, "  while (1) {"
         blockOpen = true
       else
-        push lines, "  while (0) {"
-        blockOpen = true
+        if nameOf(node) == "IDENT"
+          push lines, "  while (" + valueOf(node) + ") {"
+          blockOpen = true
+        else
+          push lines, "  while (0) {"
+          blockOpen = true
 
     if kindOf(node) == "PRINT"
       prefix = "  "

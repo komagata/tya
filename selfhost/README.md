@@ -21,4 +21,5 @@ Current supported subset:
   print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison assignments, variable-copy assignments, bool assignments,
-  string/int/bool print nodes, and simple `if true` / `while false` blocks
+  string/int/bool print nodes, and simple literal or variable `if` / `while`
+  blocks
