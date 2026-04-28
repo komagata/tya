@@ -247,6 +247,8 @@ Implemented:
 
 Self-Host Completion TODO:
 
+- [x] Autonomous work protocol
+  - [x] Keep `SELFHOST_WORK.md` as the restart point and task queue for continuing without confirmation
 - [ ] Lexer parity
   - [ ] Tokenize all literals supported by the Go lexer: nil, bool, int, float, string escapes
     - [x] Tokenize ints, floats, identifiers, bool/nil words, and basic string escapes in the self-host lexer
