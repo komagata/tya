@@ -69,6 +69,7 @@ check = nodes ->
   push names, "args"
   push names, "toString"
   push names, "contains"
+  push names, "hasName"
 
   for node in nodes
     if kindOf(node) == "FUNC"
@@ -164,6 +165,17 @@ check = nodes ->
         push errors, lineOf(node) + ": undefined variable: " + argName
       if rightName != "0" and rightName != "1" and rightName != "2" and rightName != "3" and not hasName(names, rightName)
         push errors, lineOf(node) + ": undefined variable: " + rightName
+
+    if kindOf(node) == "IF_NOT_CALL2"
+      funcName = nameOf(node)
+      leftArg = valueOf(node)
+      rightArg = extraOf(node)
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, leftArg)
+        push errors, lineOf(node) + ": undefined variable: " + leftArg
+      if not hasName(names, rightArg)
+        push errors, lineOf(node) + ": undefined variable: " + rightArg
 
     if kindOf(node) == "IF_COMPARE_EQ"
       leftKind = nameOf(node)

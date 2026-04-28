@@ -141,6 +141,7 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple direct comparison conditions
 - Self-hosted parser/checker/codegen carries simple `or` comparison conditions
 - Self-hosted parser/checker/codegen carries simple call comparison conditions
+- Self-hosted parser/checker/codegen carries simple negated call conditions
 - Self-hosted parser/checker/codegen carries simple zero-argument call indexing
 - Self-hosted parser/checker/codegen carries simple call-with-call-index arguments
 - Self-hosted parser/codegen handles simple integer addition assignments
