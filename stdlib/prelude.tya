@@ -1,0 +1,30 @@
+# Candidate Tya-level standard library functions.
+# These are not automatically loaded yet; import/module loading comes later.
+
+isNil = value -> value == nil
+
+notNil = value -> value != nil
+
+first = items -> items[0]
+
+second = items -> items[1]
+
+isEmpty = value -> len value == 0
+
+notEmpty = value -> len value != 0
+
+sum = items ->
+  add = total, item -> total + item
+  reduce items, 0, add
+
+count = items, predicate ->
+  selected = filter items, predicate
+  len selected
+
+compact = items ->
+  keep = item -> item != nil
+  filter items, keep
+
+tap = value, handler ->
+  handler value
+  value

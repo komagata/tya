@@ -73,11 +73,18 @@ Implemented:
 
 ## Phase 4: Standard Library
 
+Status: started.
+
 Goals:
 
 - Move more behavior from builtins into Tya code where practical
 - Stabilize names and error conventions
 - Add documentation examples for each standard function
+
+Implemented:
+
+- `docs/STDLIB.md` with examples for available standard functions
+- `stdlib/prelude.tya` with candidate Tya-level helpers for future automatic loading
 
 ## Phase 5: Self-Hosting
 
