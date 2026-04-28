@@ -38,6 +38,14 @@ type WhileStmt struct {
 
 func (*WhileStmt) stmt() {}
 
+type BreakStmt struct{}
+
+func (*BreakStmt) stmt() {}
+
+type ContinueStmt struct{}
+
+func (*ContinueStmt) stmt() {}
+
 type Ident struct {
 	Name string
 	Tok  token.Token

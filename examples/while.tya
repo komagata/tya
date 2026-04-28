@@ -6,3 +6,9 @@ while i < 5
   i = i + 1
 
 print sum
+
+while true
+  sum = sum + 1
+  break
+
+print sum

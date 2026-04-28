@@ -39,6 +39,14 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "while" {
 		return p.whileStmt()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "break" {
+		p.next()
+		return &ast.BreakStmt{}, nil
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "continue" {
+		p.next()
+		return &ast.ContinueStmt{}, nil
+	}
 	if p.isAssignStart() {
 		tok := p.peek()
 		target, err := p.assignTarget()

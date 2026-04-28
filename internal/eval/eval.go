@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -10,6 +11,11 @@ import (
 	"tya/internal/ast"
 	"tya/internal/lexer"
 	"tya/internal/parser"
+)
+
+var (
+	errBreak    = errors.New("break")
+	errContinue = errors.New("continue")
 )
 
 type Value any
@@ -126,6 +132,12 @@ func Run(prog *ast.Program, out io.Writer) error {
 		return last, nil
 	}))
 	_, err := evalStmts(prog.Stmts, env)
+	if errors.Is(err, errBreak) {
+		return fmt.Errorf("break used outside loop")
+	}
+	if errors.Is(err, errContinue) {
+		return fmt.Errorf("continue used outside loop")
+	}
 	return err
 }
 
@@ -171,10 +183,20 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 				return last, nil
 			}
 			last, err = evalStmts(n.Body, env)
+			if errors.Is(err, errBreak) {
+				return last, nil
+			}
+			if errors.Is(err, errContinue) {
+				continue
+			}
 			if err != nil {
 				return nil, err
 			}
 		}
+	case *ast.BreakStmt:
+		return nil, errBreak
+	case *ast.ContinueStmt:
+		return nil, errContinue
 	}
 	return nil, fmt.Errorf("unknown statement")
 }
