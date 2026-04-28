@@ -17,9 +17,14 @@ parse = tokens ->
 
     if kindOf(token) == "IDENT" and textOf(token) == "print"
       if i + 1 < len(tokens)
-        node = "PRINT:" + textOf(tokens[i + 1])
+        value = tokens[i + 1]
+        step = 2
+        if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT"
+          value = tokens[i + 2]
+          step = 3
+        node = "PRINT:" + kindOf(value) + ":" + textOf(value)
         push nodes, node
-        i = i + 2
+        i = i + step
         continue
 
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)

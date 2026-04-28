@@ -8,6 +8,12 @@ nameOf = node ->
     return ""
   parts[1]
 
+valueOf = node ->
+  parts = split node, ":"
+  if len(parts) < 3
+    return ""
+  parts[2]
+
 emitC = nodes ->
   lines = []
   push lines, "#include <stdio.h>"
@@ -18,7 +24,10 @@ emitC = nodes ->
     if kindOf(node) == "ASSIGN"
       push lines, "  /* assign " + nameOf(node) + " */"
     if kindOf(node) == "PRINT"
-      push lines, "  puts(\"" + nameOf(node) + "\");"
+      if nameOf(node) == "STRING"
+        push lines, "  puts(\"" + valueOf(node) + "\");"
+      else
+        push lines, "  puts(\"" + valueOf(node) + "\");"
 
   push lines, "  return 0;"
   push lines, "}"
