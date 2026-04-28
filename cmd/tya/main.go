@@ -15,8 +15,8 @@ import (
 var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Fprintln(os.Stderr, "usage: tya <file.tya>")
+	if len(os.Args) < 2 {
+		fmt.Fprintln(os.Stderr, "usage: tya <file.tya> [args...]")
 		os.Exit(2)
 	}
 	path := os.Args[1]
@@ -45,7 +45,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if err := eval.Run(prog, os.Stdout); err != nil {
+	if err := eval.RunWithArgs(prog, os.Stdout, os.Args[2:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

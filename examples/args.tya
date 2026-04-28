@@ -1,0 +1,3 @@
+items = args()
+print len items
+print env "TYA_EXAMPLE"

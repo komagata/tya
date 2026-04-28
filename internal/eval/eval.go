@@ -89,8 +89,12 @@ func (e *Env) assign(name string, v Value) bool {
 }
 
 func Run(prog *ast.Program, out io.Writer) error {
+	return RunWithArgs(prog, out, nil)
+}
+
+func RunWithArgs(prog *ast.Program, out io.Writer, args []string) error {
 	env := NewEnv()
-	installBuiltins(env, out)
+	installBuiltins(env, out, args)
 	_, err := evalStmts(prog.Stmts, env)
 	if errors.Is(err, errBreak) {
 		return fmt.Errorf("break used outside loop")
@@ -105,7 +109,7 @@ func Run(prog *ast.Program, out io.Writer) error {
 	return err
 }
 
-func installBuiltins(env *Env, out io.Writer) {
+func installBuiltins(env *Env, out io.Writer, processArgs []string) {
 	env.set("print", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("print expects 1 argument")
@@ -350,6 +354,30 @@ func installBuiltins(env *Env, out io.Writer) {
 			return false, nil
 		}
 		return nil, statErr
+	}))
+	env.set("args", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("args expects 0 arguments")
+		}
+		arr := &Array{items: make([]Value, 0, len(processArgs))}
+		for _, arg := range processArgs {
+			arr.items = append(arr.items, arg)
+		}
+		return arr, nil
+	}))
+	env.set("env", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("env expects 1 argument")
+		}
+		name, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("env expects string name")
+		}
+		value, ok := os.LookupEnv(name)
+		if !ok {
+			return nil, nil
+		}
+		return value, nil
 	}))
 	env.set("toInt", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {

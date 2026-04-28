@@ -263,6 +263,27 @@ func TestRunFileBuiltins(t *testing.T) {
 	}
 }
 
+func TestRunArgsAndEnvBuiltins(t *testing.T) {
+	t.Setenv("TYA_TEST_ENV", "ok")
+	src := "items = args()\nprint len items\nprint items[0]\nprint env \"TYA_TEST_ENV\"\nprint env \"TYA_MISSING_ENV\"\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := RunWithArgs(prog, &out, []string{"one", "two"}); err != nil {
+		t.Fatal(err)
+	}
+	want := "2\none\nok\nnil\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {
