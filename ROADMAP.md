@@ -257,6 +257,7 @@ Self-Host Completion TODO:
 - [ ] Parser parity
   - [ ] Replace line-oriented node stubs with a structured AST format
   - [ ] Parse grouped expressions and normal precedence for arithmetic, comparison, equality, and logical operators
+    - [x] Parse grouped integer addition assignments in the self-host parser subset
   - [ ] Parse arrays, inline objects, indented objects, member access, indexing, and assignment targets
   - [ ] Parse function literals, method literals, calls with and without parentheses, and function-value calls
   - [ ] Parse multiple assignment, multiple return, `try`, `for in`, `for of`, `break`, `continue`, and `else`

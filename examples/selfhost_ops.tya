@@ -1,5 +1,6 @@
 age = 2
 name = "komagata"
+grouped = (1 + 1)
 adult = age >= 2
 young = age <= 2
 nonzero = age != 0
@@ -16,6 +17,7 @@ if name != ""
 print adult
 print young
 print nonzero
+print grouped
 
 while age >= 2
   print "loop"
