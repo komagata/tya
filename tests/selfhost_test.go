@@ -22,12 +22,12 @@ func TestSelfhostWhileExample(t *testing.T) {
 
 func TestSelfhostIdentityCallExample(t *testing.T) {
 	path := t.TempDir() + "/identity.tya"
-	src := "message = \"Tya\"\nidentity = value ->\n  return value\nresult = identity message\nprint result\n"
+	src := "message = \"Tya\"\nidentity = value ->\n  return value\necho = value -> value\nresult = identity message\nprint result\nprint echo message\n"
 	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "sh", "scripts/selfhost.sh", path)
-	if string(out) != "ok\nTya\n" {
+	if string(out) != "ok\nTya\nTya\n" {
 		t.Fatalf("got %q", out)
 	}
 }
