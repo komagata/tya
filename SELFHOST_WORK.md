@@ -43,7 +43,7 @@ endpoint.
   - [x] Reject duplicate simple function params in self-host checker
   - [x] Add parity coverage for duplicate and invalid names
 - [ ] Expand self-host C codegen subset
-  - [ ] Emit simple function bodies instead of comments for one-expression returns
+  - [x] Emit simple function bodies instead of comments for one-expression returns
   - [ ] Emit simple function calls to generated functions
   - [ ] Emit object placeholders beyond comments
 - [ ] Bootstrap stage 2

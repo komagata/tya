@@ -283,6 +283,7 @@ Self-Host Completion TODO:
     - [x] Add subset checker coverage for duplicate params and invalid binding names
 - [ ] Self-hosted C codegen parity
   - [ ] Emit real C functions instead of comments / skipped function bodies
+    - [x] Emit simple one-argument identity return function bodies in the self-host C codegen subset
   - [ ] Emit full expression lowering through the existing C runtime ABI
   - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
   - [ ] Emit loops, conditionals, `try`, multiple return assignment, function values, and standard builtins

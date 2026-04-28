@@ -82,9 +82,41 @@ emitC = nodes ->
   lines = []
   names = []
   types = []
+  funcNames = []
+  funcArgs = []
+  funcRetKinds = []
+  funcRetValues = []
+  pendingFuncName = ""
+  pendingFuncArg = ""
+  for node in nodes
+    if kindOf(node) == "FUNC"
+      pendingFuncName = nameOf(node)
+      pendingFuncArg = valueOf(node)
+    if pendingFuncName != "" and kindOf(node) == "RETURN"
+      if nameOf(node) == "IDENT" and valueOf(node) == pendingFuncArg
+        push funcNames, pendingFuncName
+        push funcArgs, pendingFuncArg
+        push funcRetKinds, nameOf(node)
+        push funcRetValues, valueOf(node)
+        pendingFuncName = ""
+        pendingFuncArg = ""
+    if kindOf(node) == "INDENT" and nameOf(node) == "0"
+      pendingFuncName = ""
+      pendingFuncArg = ""
+
   push lines, "#include <stdio.h>"
   push lines, "#include <string.h>"
   push lines, ""
+  i = 0
+  while i < len(funcNames)
+    ret = cName(funcRetValues[i])
+    if funcRetKinds[i] == "STRING"
+      ret = cString(funcRetValues[i])
+    push lines, "const char *" + cName(funcNames[i]) + "(const char *" + cName(funcArgs[i]) + ") {"
+    push lines, "  return " + ret + ";"
+    push lines, "}"
+    push lines, ""
+    i = i + 1
   push lines, "int main(void) {"
   blockOpen = false
   blockDepth = 0
@@ -110,7 +142,8 @@ emitC = nodes ->
     if kindOf(node) == "FUNC"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "FUNC"
-      push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ") */"
+      if not hasName(funcNames, nameOf(node))
+        push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ") */"
       skipFunctionBody = true
 
     if kindOf(node) == "FUNC2"
