@@ -38,12 +38,14 @@ go test ./...
 - grouped expressions with parentheses
 - `if` / `else`
 - `while`, `break`, and `continue`
+- error values via `error "message"`
 - array `for item in items` and object `for key, value of object` loops
 - builtins: `print`, `len`, `push`, `pop`, `map`, `filter`, `find`, `any`,
   `all`, `each`, `reduce`, `keys`, `values`, `has`, `delete`,
   `equal`, `split`, `join`, `trim`,
   `replace`, `contains`, `startsWith`, `endsWith`, `byteLen`, `charLen`,
-  `readLine`, `readFile`, `writeFile`, `fileExists`, `args`, `env`, `exit`, `panic`,
+  `readLine`, `readFile`, `writeFile`, `fileExists`, `args`, `env`, `error`,
+  `exit`, `panic`,
   `div`, `toString`, `toInt`, `toFloat`, `toNumber`
 
 ## Examples

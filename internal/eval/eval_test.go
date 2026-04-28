@@ -398,6 +398,25 @@ func TestRunPanicBuiltin(t *testing.T) {
 	}
 }
 
+func TestRunErrorBuiltin(t *testing.T) {
+	toks, errs := lexer.Lex("err = error \"file not found\"\nprint err\nprint err.message\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "error: file not found\nfile not found\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {

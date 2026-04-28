@@ -40,6 +40,9 @@ type Object map[string]Value
 type Array struct {
 	items []Value
 }
+type ErrorValue struct {
+	Message string
+}
 
 type Function struct {
 	Params []string
@@ -548,6 +551,16 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return nil, fmt.Errorf("panic: %s", stringify(args[0]))
 	}))
+	env.set("error", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("error expects 1 argument")
+		}
+		message, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("error expects string message")
+		}
+		return &ErrorValue{Message: message}, nil
+	}))
 	env.set("div", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
 			return nil, fmt.Errorf("div expects 2 arguments")
@@ -806,6 +819,12 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
+		if errValue, ok := obj.(*ErrorValue); ok {
+			if n.Name == "message" {
+				return errValue.Message, nil
+			}
+			return nil, nil
+		}
 		o, ok := obj.(Object)
 		if !ok {
 			return nil, fmt.Errorf("cannot read property %s on non-object", n.Name)
@@ -1006,6 +1025,8 @@ func equal(l, r Value) bool {
 	case *Array:
 		return lv == r
 	case *Function:
+		return lv == r
+	case *ErrorValue:
 		return lv == r
 	}
 	return false
@@ -1257,6 +1278,8 @@ func stringify(v Value) string {
 			return "true"
 		}
 		return "false"
+	case *ErrorValue:
+		return "error: " + x.Message
 	case *Array:
 		parts := make([]string, 0, len(x.items))
 		for _, item := range x.items {
