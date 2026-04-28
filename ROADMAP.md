@@ -132,6 +132,7 @@ Implemented:
 - Self-hosted C codegen emits simple string/int assignments and prints
 - Self-hosted C codegen emits simple variable-copy assignments
 - Self-hosted parser/codegen handles simple integer addition assignments
+- Self-hosted parser/codegen handles simple comparison assignments
 - Self-hosted parser/codegen carries simple `while false` blocks into generated C
 - Self-hosted parser/codegen emits simple bool assignments and prints
 

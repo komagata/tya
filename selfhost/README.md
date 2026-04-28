@@ -20,5 +20,5 @@ Current supported subset:
 - Checker: duplicate assignment node detection and simple undefined assignment /
   print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
-  variable-copy assignments, bool assignments, string/int/bool print nodes, and
-  simple `if true` / `while false` blocks
+  simple comparison assignments, variable-copy assignments, bool assignments,
+  string/int/bool print nodes, and simple `if true` / `while false` blocks
