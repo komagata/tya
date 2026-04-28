@@ -147,29 +147,34 @@ emitC = nodes ->
                             rememberType names, types, nameOf(node), "STRING"
                           push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
                         else
-                          if valueOf(node) == "IDENT"
-                            typeName = typeOf(names, types, extraOf(node))
-                            if typeName == "INT"
-                              if hasName(names, nameOf(node))
-                                push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                              else
-                                push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
-                                rememberType names, types, nameOf(node), "INT"
-                            else
-                              if typeName == "BOOL"
-                                if hasName(names, nameOf(node))
-                                  push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                                else
-                                  push lines, "  int " + nameOf(node) + " = " + extraOf(node) + ";"
-                                  rememberType names, types, nameOf(node), "BOOL"
-                              else
-                                if hasName(names, nameOf(node))
-                                  push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                                else
-                                  push lines, "  const char *" + nameOf(node) + " = " + extraOf(node) + ";"
-                                  rememberType names, types, nameOf(node), "STRING"
+                          if valueOf(node) == "INDEX"
+                            if not hasName(names, nameOf(node))
+                              rememberType names, types, nameOf(node), "STRING"
+                            push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "[" + extra2Of(node) + "] */"
                           else
-                            push lines, "  /* assign " + nameOf(node) + " */"
+                            if valueOf(node) == "IDENT"
+                              typeName = typeOf(names, types, extraOf(node))
+                              if typeName == "INT"
+                                if hasName(names, nameOf(node))
+                                  push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                else
+                                  push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
+                                  rememberType names, types, nameOf(node), "INT"
+                              else
+                                if typeName == "BOOL"
+                                  if hasName(names, nameOf(node))
+                                    push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                  else
+                                    push lines, "  int " + nameOf(node) + " = " + extraOf(node) + ";"
+                                    rememberType names, types, nameOf(node), "BOOL"
+                                else
+                                  if hasName(names, nameOf(node))
+                                    push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                  else
+                                    push lines, "  const char *" + nameOf(node) + " = " + extraOf(node) + ";"
+                                    rememberType names, types, nameOf(node), "STRING"
+                            else
+                              push lines, "  /* assign " + nameOf(node) + " */"
 
     if kindOf(node) == "IF"
       if valueOf(node) == "true"
@@ -248,7 +253,10 @@ emitC = nodes ->
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      push lines, prefix + "/* return " + valueOf(node) + " */"
+      if nameOf(node) == "INDEX"
+        push lines, prefix + "/* return " + valueOf(node) + "[" + extraOf(node) + "] */"
+      else
+        push lines, prefix + "/* return " + valueOf(node) + " */"
 
   if blockOpen
     push lines, "  }"

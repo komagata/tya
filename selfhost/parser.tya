@@ -93,6 +93,12 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and textOf(token) == "return"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
+        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "["
+          index = tokens[i + 3]
+          node = lineOf(token) + ":RETURN:INDEX:" + textOf(value) + ":" + textOf(index)
+          push nodes, node
+          i = i + 5
+          continue
         node = lineOf(token) + ":RETURN:" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + 2
@@ -110,6 +116,12 @@ parse = tokens ->
           node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":ARRAY_EMPTY:"
           push nodes, node
           i = i + 4
+          continue
+        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "["
+          index = tokens[i + 4]
+          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":INDEX:" + textOf(value) + ":" + textOf(index)
+          push nodes, node
+          i = i + 6
           continue
         if textOf(value) == "not" and i + 3 < len(tokens)
           right = tokens[i + 3]

@@ -95,6 +95,13 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + leftArg
         if not hasName(names, rightArg)
           push errors, lineOf(node) + ": undefined variable: " + rightArg
+      if valueOf(node) == "INDEX"
+        sourceName = extraOf(node)
+        indexName = extra2Of(node)
+        if not hasName(names, sourceName)
+          push errors, lineOf(node) + ": undefined variable: " + sourceName
+        if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
+          push errors, lineOf(node) + ": undefined variable: " + indexName
       seen = hasName names, name
       if not seen
         push names, name
@@ -125,6 +132,13 @@ check = nodes ->
         name = valueOf(node)
         if not hasName(names, name)
           push errors, lineOf(node) + ": undefined variable: " + name
+      if nameOf(node) == "INDEX"
+        sourceName = valueOf(node)
+        indexName = extraOf(node)
+        if not hasName(names, sourceName)
+          push errors, lineOf(node) + ": undefined variable: " + sourceName
+        if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
+          push errors, lineOf(node) + ": undefined variable: " + indexName
 
   errors
 
