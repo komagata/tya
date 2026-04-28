@@ -259,6 +259,7 @@ Self-Host Completion TODO:
   - [ ] Parse grouped expressions and normal precedence for arithmetic, comparison, equality, and logical operators
     - [x] Parse grouped integer addition assignments in the self-host parser subset
   - [ ] Parse arrays, inline objects, indented objects, member access, indexing, and assignment targets
+    - [x] Parse one-element array literals in the self-host parser subset
   - [ ] Parse function literals, method literals, calls with and without parentheses, and function-value calls
   - [ ] Parse multiple assignment, multiple return, `try`, `for in`, `for of`, `break`, `continue`, and `else`
   - [ ] Add parser golden tests comparing Go parser AST shape and Tya parser AST shape

@@ -160,12 +160,20 @@ emitC = nodes ->
             if not hasName(names, nameOf(node))
               rememberType names, types, nameOf(node), "BOOL"
           else
-            if valueOf(node) == "ARRAY_EMPTY"
+            if valueOf(node) == "ARRAY_EMPTY" or valueOf(node) == "ARRAY_ONE"
+              arrayLen = "0"
+              item = "\"\""
+              if valueOf(node) == "ARRAY_ONE"
+                arrayLen = "1"
+                item = cName(extra2Of(node))
+                if extraOf(node) == "STRING"
+                  item = cString(extra2Of(node))
               if hasName(names, nameOf(node))
-                push lines, "  " + cName(nameOf(node)) + "_len = 0;"
+                push lines, "  " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
+                push lines, "  " + cName(nameOf(node)) + "_0 = " + item + ";"
               else
-                push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
-                push lines, "  const char *" + cName(nameOf(node)) + "_0 = \"\"; /* [] */"
+                push lines, "  long " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
+                push lines, "  const char *" + cName(nameOf(node)) + "_0 = " + item + ";"
                 rememberType names, types, nameOf(node), "ARRAY"
             else
               if valueOf(node) == "INT_ADD"
