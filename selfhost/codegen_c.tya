@@ -73,6 +73,11 @@ cName = name ->
     return "tya_char"
   name
 
+cString = text ->
+  if text == "\\"
+    return "\"\\x22\""
+  "\"" + text + "\""
+
 emitC = nodes ->
   lines = []
   names = []
@@ -292,29 +297,29 @@ emitC = nodes ->
       blockDepth = blockDepth + 1
 
     if kindOf(node) == "IF_COMPARE_EQ"
-      left = valueOf(node)
-      right = extra2Of(node)
+      left = cName(valueOf(node))
+      right = cName(extra2Of(node))
       if nameOf(node) == "STRING"
-        left = "\"" + valueOf(node) + "\""
+        left = cString(valueOf(node))
       if extraOf(node) == "STRING"
-        right = "\"" + extra2Of(node) + "\""
+        right = cString(extra2Of(node))
       push lines, "  if (strcmp(" + left + ", " + right + ") == 0) {"
       blockOpen = true
       blockDepth = blockDepth + 1
 
     if kindOf(node) == "IF_COMPARE_OR"
-      left = valueOf(node)
-      right = extra2Of(node)
-      left2 = extra4Of(node)
-      right2 = extra6Of(node)
+      left = cName(valueOf(node))
+      right = cName(extra2Of(node))
+      left2 = cName(extra4Of(node))
+      right2 = cName(extra6Of(node))
       if nameOf(node) == "STRING"
-        left = "\"" + valueOf(node) + "\""
+        left = cString(valueOf(node))
       if extraOf(node) == "STRING"
-        right = "\"" + extra2Of(node) + "\""
+        right = cString(extra2Of(node))
       if extra3Of(node) == "STRING"
-        left2 = "\"" + extra4Of(node) + "\""
+        left2 = cString(extra4Of(node))
       if extra5Of(node) == "STRING"
-        right2 = "\"" + extra6Of(node) + "\""
+        right2 = cString(extra6Of(node))
       push lines, "  if (strcmp(" + left + ", " + right + ") == 0 || strcmp(" + left2 + ", " + right2 + ") == 0) {"
       blockOpen = true
       blockDepth = blockDepth + 1
