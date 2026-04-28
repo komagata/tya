@@ -91,6 +91,11 @@ emitC = nodes ->
         rememberType names, types, nameOf(node), "FUNC"
       push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ") */"
 
+    if kindOf(node) == "FUNC3"
+      if not hasName(names, nameOf(node))
+        rememberType names, types, nameOf(node), "FUNC"
+      push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ", " + extra2Of(node) + ") */"
+
     if kindOf(node) == "ASSIGN"
       if valueOf(node) == "STRING"
         if hasName(names, nameOf(node))
@@ -165,44 +170,49 @@ emitC = nodes ->
                             rememberType names, types, nameOf(node), "STRING"
                           push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
                         else
-                          if valueOf(node) == "CALL1_CALL0_INDEX"
+                          if valueOf(node) == "CALL3"
                             if not hasName(names, nameOf(node))
                               rememberType names, types, nameOf(node), "STRING"
-                            push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
+                            push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
                           else
-                            if valueOf(node) == "CALL0_INDEX"
+                            if valueOf(node) == "CALL1_CALL0_INDEX"
                               if not hasName(names, nameOf(node))
                                 rememberType names, types, nameOf(node), "STRING"
-                              push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "()[" + extra2Of(node) + "] */"
+                              push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
                             else
-                              if valueOf(node) == "INDEX"
+                              if valueOf(node) == "CALL0_INDEX"
                                 if not hasName(names, nameOf(node))
                                   rememberType names, types, nameOf(node), "STRING"
-                                push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "[" + extra2Of(node) + "] */"
+                                push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "()[" + extra2Of(node) + "] */"
                               else
-                                if valueOf(node) == "IDENT"
-                                  typeName = typeOf(names, types, extraOf(node))
-                                  if typeName == "INT"
-                                    if hasName(names, nameOf(node))
-                                      push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                                    else
-                                      push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
-                                      rememberType names, types, nameOf(node), "INT"
-                                  else
-                                    if typeName == "BOOL"
-                                      if hasName(names, nameOf(node))
-                                        push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                                      else
-                                        push lines, "  int " + nameOf(node) + " = " + extraOf(node) + ";"
-                                        rememberType names, types, nameOf(node), "BOOL"
-                                    else
-                                      if hasName(names, nameOf(node))
-                                        push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
-                                      else
-                                        push lines, "  const char *" + nameOf(node) + " = " + extraOf(node) + ";"
-                                        rememberType names, types, nameOf(node), "STRING"
+                                if valueOf(node) == "INDEX"
+                                  if not hasName(names, nameOf(node))
+                                    rememberType names, types, nameOf(node), "STRING"
+                                  push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "[" + extra2Of(node) + "] */"
                                 else
-                                  push lines, "  /* assign " + nameOf(node) + " */"
+                                  if valueOf(node) == "IDENT"
+                                    typeName = typeOf(names, types, extraOf(node))
+                                    if typeName == "INT"
+                                      if hasName(names, nameOf(node))
+                                        push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                      else
+                                        push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
+                                        rememberType names, types, nameOf(node), "INT"
+                                    else
+                                      if typeName == "BOOL"
+                                        if hasName(names, nameOf(node))
+                                          push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                        else
+                                          push lines, "  int " + nameOf(node) + " = " + extraOf(node) + ";"
+                                          rememberType names, types, nameOf(node), "BOOL"
+                                      else
+                                        if hasName(names, nameOf(node))
+                                          push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                        else
+                                          push lines, "  const char *" + nameOf(node) + " = " + extraOf(node) + ";"
+                                          rememberType names, types, nameOf(node), "STRING"
+                                  else
+                                    push lines, "  /* assign " + nameOf(node) + " */"
 
     if kindOf(node) == "IF"
       if valueOf(node) == "true"

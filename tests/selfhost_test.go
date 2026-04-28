@@ -13,6 +13,18 @@ func TestSelfhostPrototypePipeline(t *testing.T) {
 	}
 }
 
+func TestSelfhostLexerSourceChecks(t *testing.T) {
+	dir := t.TempDir()
+	tokens := dir + "/tokens.txt"
+	nodes := dir + "/nodes.txt"
+	runToFile(t, tokens, "go", "run", "./cmd/tya", "selfhost/lexer.tya", "selfhost/lexer.tya")
+	runToFile(t, nodes, "go", "run", "./cmd/tya", "selfhost/parser.tya", tokens)
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", nodes)
+	if string(out) != "ok\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedConditionNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:IF:IDENT:missingIf\n2:WHILE:IDENT:missingWhile\n"), 0644); err != nil {
@@ -100,6 +112,18 @@ func TestSelfhostCheckerRejectsUndefinedCallNames(t *testing.T) {
 func TestSelfhostCheckerRejectsUndefinedTwoArgCallNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:ASSIGN:result:CALL2:missingFunc:left:right\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: undefined variable: missingFunc\n1: undefined variable: left\n1: undefined variable: right\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestSelfhostCheckerRejectsUndefinedThreeArgCallNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	if err := os.WriteFile(path, []byte("1:ASSIGN:result:CALL3:missingFunc:left:STRING:literal:right\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)

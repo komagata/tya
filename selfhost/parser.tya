@@ -146,6 +146,14 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
         value = tokens[i + 2]
+        if i + 7 < len(tokens) and textOf(tokens[i + 3]) == ","
+          if textOf(tokens[i + 5]) == "," and kindOf(tokens[i + 7]) == "ARROW"
+            arg2 = tokens[i + 4]
+            arg3 = tokens[i + 6]
+            node = lineOf(token) + ":FUNC3:" + textOf(token) + ":" + textOf(value) + ":" + textOf(arg2) + ":" + textOf(arg3)
+            push nodes, node
+            i = i + 8
+            continue
         if i + 3 < len(tokens) and kindOf(tokens[i + 3]) == "ARROW"
           node = lineOf(token) + ":FUNC:" + textOf(token) + ":" + textOf(value)
           push nodes, node
@@ -209,6 +217,15 @@ parse = tokens ->
           if textOf(tokens[i + 4]) == ","
             leftArg = tokens[i + 3]
             rightArg = tokens[i + 5]
+            if i + 7 < len(tokens) and textOf(tokens[i + 6]) == "," and lineOf(tokens[i + 7]) == lineOf(token)
+              thirdArg = tokens[i + 7]
+              node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL3:" + textOf(value) + ":" + textOf(leftArg) + ":" + literalKindOf(rightArg) + ":" + textOf(rightArg) + ":" + textOf(thirdArg)
+              push nodes, node
+              if i + 10 < len(tokens) and textOf(tokens[i + 8]) == "(" and lineOf(tokens[i + 10]) == lineOf(token)
+                i = i + 11
+                continue
+              i = i + 8
+              continue
             node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL2:" + textOf(value) + ":" + textOf(leftArg) + ":" + textOf(rightArg)
             push nodes, node
             i = i + 6

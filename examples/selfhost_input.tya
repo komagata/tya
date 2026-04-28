@@ -4,6 +4,10 @@ identity = value ->
   return value
 echo = text -> text
 hasT = text -> contains "T", text
+triple = a, b, c ->
+  return a
+emit = line, kind, text ->
+  return line
 result = identity message
 parts = split message, alias
 first = parts[0]
@@ -11,6 +15,7 @@ input = args()[0]
 source = readFile args()[0]
 index = 0
 char = source[index]
+token = emit index, "IDENT", message
 if len(parts) < 3
   print "short"
 if message == alias

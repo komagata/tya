@@ -60,6 +60,9 @@ hasName = names, name ->
       return true
   false
 
+isLiteralArg = name ->
+  name == "" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
+
 check = nodes ->
   names = []
   errors = []
@@ -79,6 +82,20 @@ check = nodes ->
       arg = valueOf(node)
       if arg != "" and not hasName(names, arg)
         push names, arg
+
+    if kindOf(node) == "FUNC3"
+      name = nameOf(node)
+      if not hasName(names, name)
+        push names, name
+      arg = valueOf(node)
+      arg2 = extraOf(node)
+      arg3 = extra2Of(node)
+      if arg != "" and not hasName(names, arg)
+        push names, arg
+      if arg2 != "" and not hasName(names, arg2)
+        push names, arg2
+      if arg3 != "" and not hasName(names, arg3)
+        push names, arg3
 
     if kindOf(node) == "FOR"
       item = nameOf(node)
@@ -114,6 +131,20 @@ check = nodes ->
         if not hasName(names, leftArg)
           push errors, lineOf(node) + ": undefined variable: " + leftArg
         if not hasName(names, rightArg)
+          push errors, lineOf(node) + ": undefined variable: " + rightArg
+      if valueOf(node) == "CALL3"
+        funcName = extraOf(node)
+        leftArg = extra2Of(node)
+        middleKind = extra3Of(node)
+        middleArg = extra4Of(node)
+        rightArg = extra5Of(node)
+        if not hasName(names, funcName)
+          push errors, lineOf(node) + ": undefined variable: " + funcName
+        if not hasName(names, leftArg)
+          push errors, lineOf(node) + ": undefined variable: " + leftArg
+        if middleKind == "IDENT" and not hasName(names, middleArg)
+          push errors, lineOf(node) + ": undefined variable: " + middleArg
+        if not isLiteralArg(rightArg) and not hasName(names, rightArg)
           push errors, lineOf(node) + ": undefined variable: " + rightArg
       if valueOf(node) == "INDEX"
         sourceName = extraOf(node)

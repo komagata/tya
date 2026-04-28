@@ -17,7 +17,7 @@ Current supported subset:
 - Lexer: identifiers, ints, strings, comments, symbols, common two-character
   operators, source lines, and indentation counts
 - Parser: simple assignment, simple function headers and inline returns,
-  `push`, `return`, `if`, one- and two-argument function calls, `while`,
+  `push`, `return`, `if`, one-, two-, and three-argument function calls, `while`,
   `for`, `break`, `continue`, direct comparison and `or` conditions,
   call comparison conditions, negated call conditions, call-based `while`
   conditions, call-with-call-index arguments, call indexing, return calls,
@@ -26,8 +26,8 @@ Current supported subset:
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison assignments, variable-copy assignments, bool assignments,
   unary `not`, empty array placeholders, reassignment, carried function headers
-  and inline returns, one- and two-argument calls, `push` and `return` commands,
-  string/int/bool print nodes, carried indexing, call indexing,
+  and inline returns, one-, two-, and three-argument calls, `push` and `return`
+  commands, string/int/bool print nodes, carried indexing, call indexing,
   call-with-call-index arguments, call comparison conditions, direct comparison
   conditions, simple `or` conditions, negated call conditions, call-based
   `while` conditions, and return calls, and simple literal or variable `if` /
