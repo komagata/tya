@@ -72,7 +72,11 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			return fmt.Errorf("C emitter only supports variable assignment")
 		}
 		if fn, ok := n.Values[0].(*ast.FuncLit); ok {
-			return g.emitFunc(id.Name, fn)
+			if err := g.emitFunc(id.Name, fn); err != nil {
+				return err
+			}
+			g.line(fmt.Sprintf("%s = tya_function(%s);", cName(id.Name), cFuncName(id.Name)))
+			return nil
 		}
 		ex, typ, err := g.expr(n.Values[0])
 		if err != nil {
@@ -204,16 +208,8 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
 	g.funcs[name] = true
 	var out strings.Builder
 	out.WriteString("TyaValue ")
-	out.WriteString(cName(name))
-	out.WriteByte('(')
-	for i, param := range fn.Params {
-		if i > 0 {
-			out.WriteString(", ")
-		}
-		out.WriteString("TyaValue ")
-		out.WriteString(cName(param))
-	}
-	out.WriteString(") {\n")
+	out.WriteString(cFuncName(name))
+	out.WriteString("(TyaValue __arg0, TyaValue __arg1, TyaValue __arg2) {\n")
 	child := &cgen{
 		vars:   map[string]bool{},
 		funcs:  g.funcs,
@@ -221,8 +217,11 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
 		indent: 1,
 		inFunc: true,
 	}
-	for _, param := range fn.Params {
+	for i, param := range fn.Params {
 		child.vars[param] = true
+		if i < 3 {
+			child.line(fmt.Sprintf("TyaValue %s = __arg%d;", cName(param), i))
+		}
 	}
 	for _, local := range assignedNames(fn.Body) {
 		if child.vars[local] {
@@ -630,6 +629,32 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_pop(%s)", arg), "TyaValue", nil
 		}
+		if ok && (id.Name == "map" || id.Name == "filter" || id.Name == "find" || id.Name == "any" || id.Name == "all" || id.Name == "each") && len(n.Args) == 2 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			fn, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_%s(%s, %s)", id.Name, array, fn), "TyaValue", nil
+		}
+		if ok && id.Name == "reduce" && len(n.Args) == 3 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			initial, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			fn, _, err := g.expr(n.Args[2])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_reduce(%s, %s, %s)", array, initial, fn), "TyaValue", nil
+		}
 		if ok && id.Name == "div" && len(n.Args) == 2 {
 			left, _, err := g.expr(n.Args[0])
 			if err != nil {
@@ -650,7 +675,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				}
 				args = append(args, ex)
 			}
-			return fmt.Sprintf("%s(%s)", cName(id.Name), strings.Join(args, ", ")), "TyaValue", nil
+			for len(args) < 3 {
+				args = append(args, "tya_nil()")
+			}
+			return fmt.Sprintf("%s(%s)", cFuncName(id.Name), strings.Join(args[:3], ", ")), "TyaValue", nil
 		}
 		if ok {
 			return fmt.Sprintf("tya_nil() /* call %s */", id.Name), "TyaValue", nil
@@ -688,6 +716,10 @@ func cName(name string) string {
 		return "tya_" + name
 	}
 	return name
+}
+
+func cFuncName(name string) string {
+	return "tya_fn_" + cName(name)
 }
 
 func interpolateString(value string) string {
@@ -803,11 +835,6 @@ func assignedNames(stmts []ast.Stmt) []string {
 		for _, stmt := range stmts {
 			switch n := stmt.(type) {
 			case *ast.AssignStmt:
-				if len(n.Values) == 1 {
-					if _, ok := n.Values[0].(*ast.FuncLit); ok {
-						continue
-					}
-				}
 				for _, target := range n.Targets {
 					id, ok := target.(*ast.Ident)
 					if !ok || seen[id.Name] {

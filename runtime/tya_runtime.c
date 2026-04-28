@@ -16,6 +16,10 @@ struct TyaObject {
   TyaObjectEntry *entries;
 };
 
+struct TyaFunction {
+  TyaFunctionPtr fn;
+};
+
 static char *tya_substr(const char *text, int start, int len);
 
 TyaValue tya_nil(void) {
@@ -54,6 +58,33 @@ TyaValue tya_object(const TyaObjectEntry *entries, int count) {
     object->entries[i] = entries[i];
   }
   return (TyaValue){.kind = TYA_OBJECT, .object = object};
+}
+
+TyaValue tya_function(TyaFunctionPtr fn) {
+  TyaFunction *function = malloc(sizeof(TyaFunction));
+  function->fn = fn;
+  return (TyaValue){.kind = TYA_FUNCTION, .function = function};
+}
+
+TyaValue tya_call1(TyaValue fn, TyaValue arg) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+    return tya_nil();
+  }
+  return fn.function->fn(arg, tya_nil(), tya_nil());
+}
+
+TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+    return tya_nil();
+  }
+  return fn.function->fn(first, second, tya_nil());
+}
+
+TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+    return tya_nil();
+  }
+  return fn.function->fn(first, second, third);
 }
 
 TyaValue tya_len(TyaValue value) {
@@ -320,6 +351,8 @@ bool tya_equal(TyaValue left, TyaValue right) {
     return left.array == right.array;
   case TYA_OBJECT:
     return left.object == right.object;
+  case TYA_FUNCTION:
+    return left.function == right.function;
   }
   return false;
 }
@@ -549,6 +582,9 @@ TyaValue tya_to_string(TyaValue value) {
   case TYA_OBJECT:
     snprintf(out, 64, "[object len=%d]", value.object == NULL ? 0 : value.object->len);
     break;
+  case TYA_FUNCTION:
+    snprintf(out, 64, "[function]");
+    break;
   case TYA_STRING:
     break;
   }
@@ -584,6 +620,89 @@ TyaValue tya_file_exists(TyaValue path) {
     return tya_bool(false);
   }
   return tya_bool(access(path.string, F_OK) == 0);
+}
+
+TyaValue tya_map(TyaValue array, TyaValue fn) {
+  TyaValue out = tya_array(0, 0);
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
+    return out;
+  }
+  for (int i = 0; i < array.array->len; i++) {
+    tya_push(out, tya_call1(fn, array.array->items[i]));
+  }
+  return out;
+}
+
+TyaValue tya_filter(TyaValue array, TyaValue fn) {
+  TyaValue out = tya_array(0, 0);
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
+    return out;
+  }
+  for (int i = 0; i < array.array->len; i++) {
+    TyaValue item = array.array->items[i];
+    if (tya_truthy(tya_call1(fn, item))) {
+      tya_push(out, item);
+    }
+  }
+  return out;
+}
+
+TyaValue tya_find(TyaValue array, TyaValue fn) {
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
+    return tya_nil();
+  }
+  for (int i = 0; i < array.array->len; i++) {
+    TyaValue item = array.array->items[i];
+    if (tya_truthy(tya_call1(fn, item))) {
+      return item;
+    }
+  }
+  return tya_nil();
+}
+
+TyaValue tya_any(TyaValue array, TyaValue fn) {
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
+    return tya_bool(false);
+  }
+  for (int i = 0; i < array.array->len; i++) {
+    if (tya_truthy(tya_call1(fn, array.array->items[i]))) {
+      return tya_bool(true);
+    }
+  }
+  return tya_bool(false);
+}
+
+TyaValue tya_all(TyaValue array, TyaValue fn) {
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
+    return tya_bool(false);
+  }
+  for (int i = 0; i < array.array->len; i++) {
+    if (!tya_truthy(tya_call1(fn, array.array->items[i]))) {
+      return tya_bool(false);
+    }
+  }
+  return tya_bool(true);
+}
+
+TyaValue tya_each(TyaValue array, TyaValue fn) {
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
+    return tya_nil();
+  }
+  for (int i = 0; i < array.array->len; i++) {
+    tya_call1(fn, array.array->items[i]);
+  }
+  return tya_nil();
+}
+
+TyaValue tya_reduce(TyaValue array, TyaValue initial, TyaValue fn) {
+  TyaValue total = initial;
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
+    return total;
+  }
+  for (int i = 0; i < array.array->len; i++) {
+    total = tya_call2(fn, total, array.array->items[i]);
+  }
+  return total;
 }
 
 void tya_push(TyaValue array, TyaValue value) {
@@ -632,6 +751,9 @@ void tya_print(TyaValue value) {
     break;
   case TYA_OBJECT:
     printf("[object len=%d]\n", value.object == NULL ? 0 : value.object->len);
+    break;
+  case TYA_FUNCTION:
+    puts("[function]");
     break;
   }
 }

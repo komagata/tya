@@ -10,11 +10,13 @@ typedef enum {
   TYA_STRING,
   TYA_ARRAY,
   TYA_OBJECT,
+  TYA_FUNCTION,
 } TyaKind;
 
 typedef struct TyaArray TyaArray;
 typedef struct TyaObject TyaObject;
 typedef struct TyaObjectEntry TyaObjectEntry;
+typedef struct TyaFunction TyaFunction;
 
 typedef struct {
   TyaKind kind;
@@ -23,7 +25,10 @@ typedef struct {
   const char *string;
   TyaArray *array;
   TyaObject *object;
+  TyaFunction *function;
 } TyaValue;
+
+typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue);
 
 struct TyaObjectEntry {
   const char *key;
@@ -36,6 +41,10 @@ TyaValue tya_number(double value);
 TyaValue tya_string(const char *value);
 TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_object(const TyaObjectEntry *entries, int count);
+TyaValue tya_function(TyaFunctionPtr fn);
+TyaValue tya_call1(TyaValue fn, TyaValue arg);
+TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);
+TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third);
 TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item);
@@ -70,6 +79,13 @@ TyaValue tya_to_int(TyaValue value);
 TyaValue tya_to_float(TyaValue value);
 TyaValue tya_to_number(TyaValue value);
 TyaValue tya_file_exists(TyaValue path);
+TyaValue tya_map(TyaValue array, TyaValue fn);
+TyaValue tya_filter(TyaValue array, TyaValue fn);
+TyaValue tya_find(TyaValue array, TyaValue fn);
+TyaValue tya_any(TyaValue array, TyaValue fn);
+TyaValue tya_all(TyaValue array, TyaValue fn);
+TyaValue tya_each(TyaValue array, TyaValue fn);
+TyaValue tya_reduce(TyaValue array, TyaValue initial, TyaValue fn);
 void tya_push(TyaValue array, TyaValue value);
 TyaValue tya_pop(TyaValue array);
 void tya_exit(TyaValue code);

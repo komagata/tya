@@ -59,6 +59,14 @@ func TestEmitCCompilesModuloAndCKeywordNames(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesArrayFunctionBuiltins(t *testing.T) {
+	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\nisEven = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, isEven\nfirstEven = find items, isEven\nhasEven = any items, isEven\nallEven = all items, isEven\nsum = reduce items, 0, add\neach items, double\nprint doubled[2]\nprint len evens\nprint firstEven\nprint hasEven\nprint allEven\nprint sum\n"
+	out := compileAndRun(t, src)
+	if string(out) != "6\n2\n2\ntrue\nfalse\n10\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "input.txt")

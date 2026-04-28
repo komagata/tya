@@ -209,6 +209,7 @@ Implemented:
 - Go C emitter supports `readLine()` and can run `examples/read_line.tya`
 - Go C emitter supports `exit(code)` statement calls with process exit status
 - Go C emitter avoids C keyword name collisions and supports integer `%`
+- Go C emitter supports function values for array builtins and can run `examples/array_function.tya`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 
