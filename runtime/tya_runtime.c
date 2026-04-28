@@ -390,6 +390,20 @@ TyaValue tya_add(TyaValue left, TyaValue right) {
   return tya_number(left.number + right.number);
 }
 
+TyaValue tya_and(TyaValue left, TyaValue right) {
+  if (!tya_truthy(left)) {
+    return left;
+  }
+  return right;
+}
+
+TyaValue tya_or(TyaValue left, TyaValue right) {
+  if (tya_truthy(left)) {
+    return left;
+  }
+  return right;
+}
+
 TyaValue tya_args(int argc, char **argv) {
   TyaValue out = tya_array(0, 0);
   for (int i = 1; i < argc; i++) {

@@ -77,6 +77,7 @@ Implemented:
 - Initial string runtime support for length, indexing, and `contains`
 - Generated-C string runtime supports `trim`, `replace`, `startsWith`, `endsWith`, `byteLen`, and `charLen`
 - Runtime equality helper for nil, bool, number, string, and array identity
+- Runtime logical helpers preserve Tya `and` / `or` value semantics in generated C
 - Runtime addition helper for numeric addition and string concatenation
 - Initial generated-C runtime support for `args`, `readFile`, `split`, `toString`, and `toInt`
 - Initial object runtime with literal construction, member reads, and `len`
@@ -200,6 +201,7 @@ Implemented:
 - Go C emitter can run `examples/equal.tya`
 - Go C emitter can run `examples/for.tya`
 - Go C emitter can run `examples/for_object.tya`
+- Go C emitter can run `examples/logic.tya`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 

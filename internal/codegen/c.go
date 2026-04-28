@@ -392,9 +392,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		case "!=":
 			expr = fmt.Sprintf("tya_bool(!tya_equal(%s, %s))", left, right)
 		case "&&":
-			expr = fmt.Sprintf("tya_bool(tya_truthy(%s) && tya_truthy(%s))", left, right)
+			expr = fmt.Sprintf("tya_and(%s, %s)", left, right)
 		case "||":
-			expr = fmt.Sprintf("tya_bool(tya_truthy(%s) || tya_truthy(%s))", left, right)
+			expr = fmt.Sprintf("tya_or(%s, %s)", left, right)
 		case "<", "<=", ">", ">=":
 			expr = fmt.Sprintf("tya_bool(%s.number %s %s.number)", left, op, right)
 		default:

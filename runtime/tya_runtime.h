@@ -56,6 +56,8 @@ TyaValue tya_char_len(TyaValue text);
 bool tya_equal(TyaValue left, TyaValue right);
 TyaValue tya_deep_equal(TyaValue left, TyaValue right);
 TyaValue tya_add(TyaValue left, TyaValue right);
+TyaValue tya_and(TyaValue left, TyaValue right);
+TyaValue tya_or(TyaValue left, TyaValue right);
 TyaValue tya_args(int argc, char **argv);
 TyaValue tya_read_file(TyaValue path);
 TyaValue tya_split(TyaValue text, TyaValue sep);
