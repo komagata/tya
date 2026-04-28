@@ -68,6 +68,11 @@ typeOf = names, types, name ->
     i = i + 1
   "STRING"
 
+cName = name ->
+  if name == "char"
+    return "tya_char"
+  name
+
 emitC = nodes ->
   lines = []
   names = []
@@ -176,34 +181,46 @@ emitC = nodes ->
                         rememberType names, types, nameOf(node), "BOOL"
                     else
                       if valueOf(node) == "CALL1"
-                        if not hasName(names, nameOf(node))
+                        if hasName(names, nameOf(node))
+                          push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                        else
                           rememberType names, types, nameOf(node), "STRING"
-                        push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                          push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
                       else
                         if valueOf(node) == "CALL2"
-                          if not hasName(names, nameOf(node))
+                          if hasName(names, nameOf(node))
+                            push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
+                          else
                             rememberType names, types, nameOf(node), "STRING"
-                          push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
+                            push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
                         else
                           if valueOf(node) == "CALL3"
-                            if not hasName(names, nameOf(node))
+                            if hasName(names, nameOf(node))
+                              push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
+                            else
                               rememberType names, types, nameOf(node), "STRING"
-                            push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
+                              push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
                           else
                             if valueOf(node) == "CALL1_CALL0_INDEX"
-                              if not hasName(names, nameOf(node))
+                              if hasName(names, nameOf(node))
+                                push lines, "  " + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
+                              else
                                 rememberType names, types, nameOf(node), "STRING"
-                              push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
+                                push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
                             else
                               if valueOf(node) == "CALL0_INDEX"
-                                if not hasName(names, nameOf(node))
+                                if hasName(names, nameOf(node))
+                                  push lines, "  " + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "()[" + extra2Of(node) + "] */"
+                                else
                                   rememberType names, types, nameOf(node), "STRING"
-                                push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "()[" + extra2Of(node) + "] */"
+                                  push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "()[" + extra2Of(node) + "] */"
                               else
                                 if valueOf(node) == "INDEX"
-                                  if not hasName(names, nameOf(node))
+                                  if hasName(names, nameOf(node))
+                                    push lines, "  " + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "[" + extra2Of(node) + "] */"
+                                  else
                                     rememberType names, types, nameOf(node), "STRING"
-                                  push lines, "  /* " + nameOf(node) + " = " + extraOf(node) + "[" + extra2Of(node) + "] */"
+                                    push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "[" + extra2Of(node) + "] */"
                                 else
                                   if valueOf(node) == "IDENT"
                                     typeName = typeOf(names, types, extraOf(node))
