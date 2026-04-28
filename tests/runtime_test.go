@@ -41,7 +41,36 @@ int main(void) {
 	}
 }
 
-func compileAndRunRuntime(t *testing.T, src string) []byte {
+func TestCRuntimeStringsFilesAndConversions(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "runtime.txt")
+	src := `#include "tya_runtime.h"
+
+int main(int argc, char **argv) {
+  TyaValue text = tya_trim(tya_string("  hello,tya  "));
+  TyaValue parts = tya_split(text, tya_string(","));
+  tya_print(tya_join(parts, tya_string("-")));
+  tya_print(tya_replace(text, tya_string("tya"), tya_string("Tya")));
+  tya_print(tya_contains(text, tya_string("hello")));
+  tya_print(tya_starts_with(text, tya_string("hello")));
+  tya_print(tya_ends_with(text, tya_string("tya")));
+  tya_print(tya_to_int(tya_string("42")));
+
+  TyaValue path = tya_string(argv[1]);
+  tya_write_file(path, tya_string("file text"));
+  tya_print(tya_file_exists(path));
+  tya_print(tya_read_file(path));
+  return 0;
+}
+`
+	out := compileAndRunRuntime(t, src, path)
+	want := "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n42\ntrue\nfile text\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func compileAndRunRuntime(t *testing.T, src string, args ...string) []byte {
 	t.Helper()
 	dir := t.TempDir()
 	cfile := filepath.Join(dir, "main.c")
@@ -54,7 +83,7 @@ func compileAndRunRuntime(t *testing.T, src string) []byte {
 	if out, err := exec.Command("gcc", cfile, runtime, "-I", include, "-o", bin).CombinedOutput(); err != nil {
 		t.Fatalf("gcc: %v\n%s", err, out)
 	}
-	out, err := exec.Command(bin).CombinedOutput()
+	out, err := exec.Command(bin, args...).CombinedOutput()
 	if err != nil {
 		t.Fatal(err)
 	}
