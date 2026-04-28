@@ -9,6 +9,8 @@ input = args()[0]
 source = readFile args()[0]
 if len(parts) < 3
   print "short"
+if message == alias
+  print "same text"
 log = message
 push log, alias
 queue = []

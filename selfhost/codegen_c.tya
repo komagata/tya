@@ -202,6 +202,10 @@ emitC = nodes ->
       push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") < " + extraOf(node) + " */"
       blockOpen = true
 
+    if kindOf(node) == "IF_COMPARE_EQ"
+      push lines, "  if (0) { /* " + valueOf(node) + " == " + extra2Of(node) + " */"
+      blockOpen = true
+
     if kindOf(node) == "WHILE"
       if valueOf(node) == "true"
         push lines, "  while (1) {"

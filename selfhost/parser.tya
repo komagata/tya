@@ -43,6 +43,12 @@ parse = tokens ->
             push nodes, node
             i = i + 7
             continue
+        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "=="
+          right = tokens[i + 3]
+          node = lineOf(token) + ":IF_COMPARE_EQ:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          push nodes, node
+          i = i + 4
+          continue
         node = lineOf(token) + ":IF:" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + 2
