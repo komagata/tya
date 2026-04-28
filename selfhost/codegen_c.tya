@@ -354,6 +354,17 @@ emitC = nodes ->
       blockOpen = true
       blockDepth = blockDepth + 1
 
+    if kindOf(node) == "WHILE_COMPARE_LT"
+      left = valueOf(node)
+      right = extra2Of(node)
+      if nameOf(node) == "STRING"
+        left = cString(valueOf(node))
+      if extraOf(node) == "STRING"
+        right = cString(extra2Of(node))
+      push lines, "  while (" + left + " < " + right + ") {"
+      blockOpen = true
+      blockDepth = blockDepth + 1
+
     if kindOf(node) == "FOR"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "STRING"

@@ -13,6 +13,13 @@ func TestSelfhostPrototypePipeline(t *testing.T) {
 	}
 }
 
+func TestSelfhostWhileExample(t *testing.T) {
+	out := run(t, "sh", "scripts/selfhost.sh", "examples/while.tya")
+	if string(out) != "ok\n10\n11\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestSelfhostLexerSourceChecks(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost_check.sh")
 	want := "selfhost/lexer.tya: ok\nselfhost/parser.tya: ok\nselfhost/checker.tya: ok\nselfhost/codegen_c.tya: ok\n"
@@ -232,6 +239,18 @@ func TestSelfhostCheckerRejectsUndefinedWhileCallConditionNames(t *testing.T) {
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
 	want := "1: undefined variable: left\n1: undefined variable: missingFunc\n1: undefined variable: missingArg\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestSelfhostCheckerRejectsUndefinedWhileCompareNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	if err := os.WriteFile(path, []byte("1:WHILE_COMPARE_LT:IDENT:left:IDENT:right\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: undefined variable: left\n1: undefined variable: right\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

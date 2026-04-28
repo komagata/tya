@@ -154,6 +154,7 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple call comparison conditions
 - Self-hosted parser/checker/codegen carries simple negated call conditions
 - Self-hosted parser/checker/codegen carries simple call-based `while` conditions
+- Self-hosted parser/checker/codegen emits simple direct comparison `while` conditions
 - Self-hosted parser/checker/codegen carries simple zero-argument call indexing
 - Self-hosted parser/checker/codegen carries simple call-with-call-index arguments
 - Self-hosted parser/codegen handles simple integer addition assignments
@@ -185,6 +186,7 @@ Implemented:
 - Go-emitted self-host lexer/parser/checker/codegen can compile and run a simple `.tya` source file through generated C
 - Go C emitter can run simple generated-C object literal and member access programs
 - Go C emitter can run `examples/function.tya`
+- Self-hosted pipeline can compile and run `examples/while.tya`
 
 ## Non-Goals For Now
 
