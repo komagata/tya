@@ -61,6 +61,7 @@ Implemented:
 - GCC smoke test for generated C
 - C emission for arrays, objects, named functions, method calls, function values,
   multiple return assignment, `try`, errors, and key standard builtins
+- Generated C includes source-line comments for Tya assignment statements
 - Generated C parity checks cover executable examples and `args` / `env`
 - `--emit-c` loads `stdlib/prelude.tya` like normal execution
 

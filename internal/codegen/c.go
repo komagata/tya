@@ -48,6 +48,7 @@ func (g *cgen) line(s string) {
 func (g *cgen) stmt(stmt ast.Stmt) error {
 	switch n := stmt.(type) {
 	case *ast.AssignStmt:
+		g.sourceLine(n.Tok.Line)
 		if len(n.Targets) != 1 || len(n.Values) != 1 {
 			return g.multiAssign(n)
 		}
@@ -233,6 +234,12 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		return fmt.Errorf("C emitter does not support %T", stmt)
 	}
 	return nil
+}
+
+func (g *cgen) sourceLine(line int) {
+	if line > 0 {
+		g.line(fmt.Sprintf("/* tya:%d */", line))
+	}
 }
 
 func (g *cgen) assignTry(name string, tryExpr *ast.TryExpr) error {

@@ -4,8 +4,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"tya/internal/ast"
 	"tya/internal/checker"
 	"tya/internal/lexer"
 	"tya/internal/parser"
@@ -16,6 +18,17 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	out := compileAndRun(t, src)
 	if string(out) != "14\n" {
 		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCIncludesSourceLineComments(t *testing.T) {
+	prog := checkedProgram(t, "x = 1\nprint x\n")
+	csrc, err := EmitC(prog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(csrc, "/* tya:1 */") {
+		t.Fatalf("missing source line comment:\n%s", csrc)
 	}
 }
 
@@ -248,6 +261,16 @@ func compileAndRunArgsAllowExit(t *testing.T, src string, args ...string) ([]byt
 
 func compileAndRunArgsWithInputAllowExit(t *testing.T, src string, input string, args ...string) ([]byte, int) {
 	t.Helper()
+	prog := checkedProgram(t, src)
+	csrc, err := EmitC(prog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return compileAndRunC(t, csrc, input, args...)
+}
+
+func checkedProgram(t *testing.T, src string) *ast.Program {
+	t.Helper()
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -259,10 +282,11 @@ func compileAndRunArgsWithInputAllowExit(t *testing.T, src string, input string,
 	if err := checker.Check(prog); err != nil {
 		t.Fatal(err)
 	}
-	csrc, err := EmitC(prog)
-	if err != nil {
-		t.Fatal(err)
-	}
+	return prog
+}
+
+func compileAndRunC(t *testing.T, csrc string, input string, args ...string) ([]byte, int) {
+	t.Helper()
 	dir := t.TempDir()
 	cfile := filepath.Join(dir, "main.c")
 	bin := filepath.Join(dir, "main")
