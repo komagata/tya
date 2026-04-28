@@ -89,12 +89,12 @@ Implemented:
 - Generated-C runtime supports deep `equal`
 - Runtime printing and truthiness helpers
 - Generated C can compile and run against `runtime/tya_runtime.c`
+- C runtime has direct GCC-backed Go tests independent of the Go emitter
 
 Remaining hardening:
 
-- Add arrays, objects, functions, and errors to the C runtime
 - Add mark-and-sweep GC
-- Add runtime tests independent of the Go interpreter
+- Broaden runtime tests for more string, file, and error paths
 
 ## Phase 4: Standard Library
 
