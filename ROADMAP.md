@@ -35,6 +35,7 @@ Remaining hardening:
 Implemented hardening:
 
 - Checker exposes optional `CheckUnused` analysis for unused bindings and function arguments
+- CLI exposes `--check-unused` for strict unused binding checks
 
 ## Phase 2: Go Compiler That Emits C
 

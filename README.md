@@ -11,6 +11,7 @@ interpreter, C emitter, and C runtime.
 go run ./cmd/tya examples/hello.tya
 go run ./cmd/tya --tokens examples/hello.tya
 go run ./cmd/tya --emit-c examples/arithmetic.tya
+go run ./cmd/tya --check-unused examples/hello.tya
 ```
 
 ## Test

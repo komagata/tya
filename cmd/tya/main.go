@@ -25,6 +25,7 @@ func main() {
 	}
 	dumpTokens := false
 	emitC := false
+	checkUnused := false
 	if os.Args[1] == "--tokens" {
 		if len(os.Args) < 3 {
 			usage()
@@ -41,12 +42,20 @@ func main() {
 		emitC = true
 		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
 	}
+	if os.Args[1] == "--check-unused" {
+		if len(os.Args) < 3 {
+			usage()
+			os.Exit(2)
+		}
+		checkUnused = true
+		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
+	}
 	path := os.Args[1]
 	if err := runner.ValidateFileName(path); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if !dumpTokens && !emitC {
+	if !dumpTokens && !emitC && !checkUnused {
 		if err := runner.RunFile(path, os.Stdin, os.Stdout, os.Args[2:]); err != nil {
 			if exitErr, ok := err.(*eval.ExitError); ok {
 				os.Exit(exitErr.Code)
@@ -87,6 +96,13 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	if checkUnused {
+		if err := checker.CheckUnused(prog); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	if emitC {
 		csrc, err := codegen.EmitC(prog)
 		if err != nil {
@@ -99,5 +115,5 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: tya [--version] [--tokens] [--emit-c] <file.tya> [args...]")
+	fmt.Fprintln(os.Stderr, "usage: tya [--version] [--tokens] [--emit-c] [--check-unused] <file.tya> [args...]")
 }
