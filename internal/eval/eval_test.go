@@ -284,6 +284,41 @@ func TestRunArgsAndEnvBuiltins(t *testing.T) {
 	}
 }
 
+func TestRunExitBuiltin(t *testing.T) {
+	toks, errs := lexer.Lex("exit 7\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	exitErr, ok := err.(*ExitError)
+	if !ok {
+		t.Fatalf("got %T %v", err, err)
+	}
+	if exitErr.Code != 7 {
+		t.Fatalf("got exit code %d", exitErr.Code)
+	}
+}
+
+func TestRunPanicBuiltin(t *testing.T) {
+	toks, errs := lexer.Lex("panic \"bad\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err == nil {
+		t.Fatal("expected panic error")
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {

@@ -25,6 +25,14 @@ type returnSignal struct {
 
 func (r *returnSignal) Error() string { return "return" }
 
+type ExitError struct {
+	Code int
+}
+
+func (e *ExitError) Error() string {
+	return fmt.Sprintf("exit %d", e.Code)
+}
+
 type Value any
 
 type Object map[string]Value
@@ -378,6 +386,22 @@ func installBuiltins(env *Env, out io.Writer, processArgs []string) {
 			return nil, nil
 		}
 		return value, nil
+	}))
+	env.set("exit", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("exit expects 1 argument")
+		}
+		code, ok := args[0].(int64)
+		if !ok {
+			return nil, fmt.Errorf("exit expects int code")
+		}
+		return nil, &ExitError{Code: int(code)}
+	}))
+	env.set("panic", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("panic expects 1 argument")
+		}
+		return nil, fmt.Errorf("panic: %s", stringify(args[0]))
 	}))
 	env.set("toInt", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {

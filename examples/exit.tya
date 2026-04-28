@@ -1,0 +1,7 @@
+items = args()
+
+if len(items) > 0
+  code = toInt items[0]
+  exit code
+
+print "no exit"

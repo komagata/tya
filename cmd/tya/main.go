@@ -46,6 +46,9 @@ func main() {
 		os.Exit(1)
 	}
 	if err := eval.RunWithArgs(prog, os.Stdout, os.Args[2:]); err != nil {
+		if exitErr, ok := err.(*eval.ExitError); ok {
+			os.Exit(exitErr.Code)
+		}
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
