@@ -232,6 +232,14 @@ check = nodes ->
       if not isLiteralArg(rightName) and not hasName(names, rightName)
         push errors, lineOf(node) + ": undefined variable: " + rightName
 
+    if kindOf(node) == "IF_CALL1"
+      funcName = nameOf(node)
+      argName = valueOf(node)
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, argName)
+        push errors, lineOf(node) + ": undefined variable: " + argName
+
     if kindOf(node) == "IF_NOT_CALL2"
       funcName = nameOf(node)
       leftArg = valueOf(node)

@@ -28,6 +28,8 @@ queue = []
 push queue, message
 if not hasName(queue, message)
   print "missing"
+if hasT(message)
+  print "has t"
 for entry in queue
   print entry
 count = 1 + 1

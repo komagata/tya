@@ -19,7 +19,7 @@ Current supported subset:
 - Parser: simple assignment, simple function headers and inline returns,
   `push`, `return`, `if`, one-, two-, and three-argument function calls, `while`,
   `for`, `break`, `continue`, direct comparison and `or` conditions,
-  call comparison conditions, negated call conditions, call-based `while`
+  one-argument call conditions, call comparison conditions, negated call conditions, call-based `while`
   conditions, call-with-call-index arguments, call indexing, return calls,
   indexing, indentation, and print nodes
 - Checker: simple undefined assignment / print / condition names
@@ -28,7 +28,8 @@ Current supported subset:
   unary `not`, empty array placeholders, reassignment, carried function headers
   and inline returns, one-, two-, and three-argument calls, `push` and `return`
   commands, string/int/bool print nodes, carried indexing, call indexing,
-  call-with-call-index arguments, call comparison conditions, direct comparison
-  conditions, simple `or` conditions, negated call conditions, call-based
+  call-with-call-index arguments, one-argument call conditions,
+  call comparison conditions, direct comparison conditions, simple `or`
+  conditions, negated call conditions, call-based
   `while` conditions, and return calls, and simple literal or variable `if` /
   `while` / `for` blocks with `break` / `continue`
