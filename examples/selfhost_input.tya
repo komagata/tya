@@ -30,6 +30,8 @@ disabled = false
 negated = not enabled
 less = 1 < 2
 same = 2 == 2
+while count < len(parts)
+  break
 print message
 print alias
 print count

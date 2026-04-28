@@ -74,6 +74,14 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and textOf(token) == "while"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
+        if i + 6 < len(tokens) and textOf(tokens[i + 2]) == "<"
+          if textOf(tokens[i + 4]) == "(" and textOf(tokens[i + 6]) == ")"
+            func = tokens[i + 3]
+            arg = tokens[i + 5]
+            node = lineOf(token) + ":WHILE_LT_CALL:" + textOf(value) + ":" + textOf(func) + ":" + textOf(arg)
+            push nodes, node
+            i = i + 7
+            continue
         node = lineOf(token) + ":WHILE:" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + 2

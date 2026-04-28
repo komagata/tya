@@ -244,6 +244,10 @@ emitC = nodes ->
           push lines, "  while (0) {"
           blockOpen = true
 
+    if kindOf(node) == "WHILE_LT_CALL"
+      push lines, "  while (0) { /* " + nameOf(node) + " < " + valueOf(node) + "(" + extraOf(node) + ") */"
+      blockOpen = true
+
     if kindOf(node) == "FOR"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "STRING"

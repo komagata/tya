@@ -177,6 +177,17 @@ check = nodes ->
       if not hasName(names, rightArg)
         push errors, lineOf(node) + ": undefined variable: " + rightArg
 
+    if kindOf(node) == "WHILE_LT_CALL"
+      leftName = nameOf(node)
+      funcName = valueOf(node)
+      argName = extraOf(node)
+      if not hasName(names, leftName)
+        push errors, lineOf(node) + ": undefined variable: " + leftName
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, argName)
+        push errors, lineOf(node) + ": undefined variable: " + argName
+
     if kindOf(node) == "IF_COMPARE_EQ"
       leftKind = nameOf(node)
       leftName = valueOf(node)
