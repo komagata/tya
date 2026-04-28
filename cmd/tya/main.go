@@ -3,18 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"regexp"
 
 	"tya/internal/checker"
 	"tya/internal/eval"
 	"tya/internal/lexer"
 	"tya/internal/parser"
+	"tya/internal/runner"
 )
 
 const version = "0.1.0"
-
-var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
 
 func main() {
 	if len(os.Args) < 2 {
@@ -35,8 +32,8 @@ func main() {
 		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
 	}
 	path := os.Args[1]
-	if filepath.Ext(path) != ".tya" || !fileNameRE.MatchString(filepath.Base(path)) {
-		fmt.Fprintf(os.Stderr, "invalid Tya file name: %s\n", filepath.Base(path))
+	if err := runner.ValidateFileName(path); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	src, err := os.ReadFile(path)
