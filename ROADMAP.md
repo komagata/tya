@@ -245,6 +245,43 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` comparison assignments
 - Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` `while` conditions
 
+Self-Host Completion TODO:
+
+- [ ] Lexer parity
+  - [ ] Tokenize all literals supported by the Go lexer: nil, bool, int, float, string escapes
+  - [ ] Tokenize all operators and delimiters used by the language
+  - [ ] Preserve enough source span data for useful self-host diagnostics
+  - [ ] Add lexer golden tests comparing Go lexer output and Tya lexer output
+- [ ] Parser parity
+  - [ ] Replace line-oriented node stubs with a structured AST format
+  - [ ] Parse grouped expressions and normal precedence for arithmetic, comparison, equality, and logical operators
+  - [ ] Parse arrays, inline objects, indented objects, member access, indexing, and assignment targets
+  - [ ] Parse function literals, method literals, calls with and without parentheses, and function-value calls
+  - [ ] Parse multiple assignment, multiple return, `try`, `for in`, `for of`, `break`, `continue`, and `else`
+  - [ ] Add parser golden tests comparing Go parser AST shape and Tya parser AST shape
+- [ ] Checker parity
+  - [ ] Implement lexical scopes for top-level, functions, loops, and blocks
+  - [ ] Check undefined names, duplicate constants, duplicate params, duplicate object members, and invalid assignment targets
+  - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
+  - [ ] Port optional unused binding checks or decide they stay Go-only
+  - [ ] Add checker parity tests against Go checker diagnostics
+- [ ] Self-hosted C codegen parity
+  - [ ] Emit real C functions instead of comments / skipped function bodies
+  - [ ] Emit full expression lowering through the existing C runtime ABI
+  - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
+  - [ ] Emit loops, conditionals, `try`, multiple return assignment, function values, and standard builtins
+  - [ ] Add generated-C parity tests comparing interpreter output and self-hosted codegen output
+- [ ] Bootstrap pipeline
+  - [ ] Make the Tya-written compiler compile the existing executable examples
+  - [ ] Compile the Tya-written compiler with the Go compiler and run it as the stage-1 compiler
+  - [ ] Use the stage-1 compiler to compile the Tya-written compiler again
+  - [ ] Compare stage-1 and stage-2 generated C for deterministic output
+  - [ ] Add a single `scripts/selfhost_bootstrap_check.sh` that runs the full bootstrap gate
+- [ ] Documentation and release readiness
+  - [ ] Document supported self-host subset versus full language
+  - [ ] Document bootstrap commands and expected artifacts
+  - [ ] Mark Phase 5 complete only after `go test ./...` and bootstrap checks pass from a clean checkout
+
 ## Non-Goals For Now
 
 - LLVM
