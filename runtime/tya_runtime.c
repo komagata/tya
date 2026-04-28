@@ -90,6 +90,13 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
   return tya_nil();
 }
 
+void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
+  int i = (int)index.number;
+  if (value.kind == TYA_ARRAY && value.array != NULL && i >= 0 && i < value.array->len) {
+    value.array->items[i] = item;
+  }
+}
+
 TyaValue tya_member(TyaValue object, const char *key) {
   if (object.kind != TYA_OBJECT || object.object == NULL) {
     return tya_nil();
@@ -277,6 +284,14 @@ void tya_push(TyaValue array, TyaValue value) {
   }
   array.array->items[array.array->len] = value;
   array.array->len++;
+}
+
+TyaValue tya_pop(TyaValue array) {
+  if (array.kind != TYA_ARRAY || array.array == NULL || array.array->len == 0) {
+    return tya_nil();
+  }
+  array.array->len--;
+  return array.array->items[array.array->len];
 }
 
 void tya_print(TyaValue value) {

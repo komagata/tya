@@ -73,6 +73,7 @@ Implemented:
 
 - Initial `TyaValue` runtime for nil, bool, number, and string
 - Initial array runtime with length, indexing, and push support
+- Generated-C array runtime supports `pop` and index assignment
 - Initial string runtime support for length, indexing, and `contains`
 - Runtime equality helper for nil, bool, number, string, and array identity
 - Runtime addition helper for numeric addition and string concatenation
@@ -174,6 +175,7 @@ Implemented:
 - Self-hosted source files now parse, check, generate C, and compile as C smoke tests
 - Go C emitter can emit compile-smoke C for self-host lexer/parser/checker/codegen sources
 - Go C emitter can run simple generated-C array programs with `len`, indexing, and `push`
+- Go C emitter can run `examples/array.tya`
 - Go C emitter can run simple generated-C string programs with `len`, indexing, and `contains`
 - Go C emitter uses runtime equality and truthiness for generated logical comparisons
 - Go C emitter uses runtime addition for generated numeric addition and string concatenation

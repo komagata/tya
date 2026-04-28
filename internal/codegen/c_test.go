@@ -20,9 +20,9 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesArrayProgram(t *testing.T) {
-	src := "items = [1, 2]\npush items, 3\nprint len items\nprint items[2]\n"
+	src := "items = [1, 2]\npush items, 3\nprint len items\nprint items[2]\nitems[1] = 20\nprint items[1]\nprint pop items\nprint len items\n"
 	out := compileAndRun(t, src)
-	if string(out) != "3\n3\n" {
+	if string(out) != "3\n3\n20\n3\n2\n" {
 		t.Fatalf("got %q", out)
 	}
 }

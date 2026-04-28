@@ -51,6 +51,22 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if len(n.Targets) != 1 || len(n.Values) != 1 {
 			return fmt.Errorf("C emitter does not support multiple assignment yet")
 		}
+		if target, ok := n.Targets[0].(*ast.IndexExpr); ok {
+			object, _, err := g.expr(target.Object)
+			if err != nil {
+				return err
+			}
+			index, _, err := g.expr(target.Index)
+			if err != nil {
+				return err
+			}
+			value, _, err := g.expr(n.Values[0])
+			if err != nil {
+				return err
+			}
+			g.line(fmt.Sprintf("tya_set_index(%s, %s, %s);", object, index, value))
+			return nil
+		}
 		id, ok := n.Targets[0].(*ast.Ident)
 		if !ok {
 			return fmt.Errorf("C emitter only supports variable assignment")
@@ -430,6 +446,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_to_int(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "pop" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_pop(%s)", arg), "TyaValue", nil
 		}
 		if ok && id.Name == "div" && len(n.Args) == 2 {
 			left, _, err := g.expr(n.Args[0])

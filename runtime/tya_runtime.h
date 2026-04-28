@@ -38,6 +38,7 @@ TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_object(const TyaObjectEntry *entries, int count);
 TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
+void tya_set_index(TyaValue value, TyaValue index, TyaValue item);
 TyaValue tya_member(TyaValue object, const char *key);
 TyaValue tya_contains(TyaValue text, TyaValue part);
 bool tya_equal(TyaValue left, TyaValue right);
@@ -49,6 +50,7 @@ TyaValue tya_join(TyaValue array, TyaValue sep);
 TyaValue tya_to_string(TyaValue value);
 TyaValue tya_to_int(TyaValue value);
 void tya_push(TyaValue array, TyaValue value);
+TyaValue tya_pop(TyaValue array);
 void tya_print(TyaValue value);
 bool tya_truthy(TyaValue value);
 
