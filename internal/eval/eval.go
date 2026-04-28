@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/lexer"
+	"tya/internal/parser"
 )
 
 type Value any
@@ -415,7 +417,7 @@ func truthy(v Value) bool {
 	return true
 }
 
-var interp = regexp.MustCompile(`\{([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\}`)
+var interp = regexp.MustCompile(`\{([^{}]+)\}`)
 
 func interpolate(s string, env *Env) (string, error) {
 	var first error
@@ -423,19 +425,30 @@ func interpolate(s string, env *Env) (string, error) {
 		if first != nil {
 			return ""
 		}
-		path := strings.Split(m[1:len(m)-1], ".")
-		v, ok := env.get(path[0])
-		if !ok {
-			first = fmt.Errorf("undefined variable %s", path[0])
+		expr := strings.TrimSpace(m[1 : len(m)-1])
+		toks, errs := lexer.Lex(expr)
+		if len(errs) > 0 {
+			first = errs[0]
 			return ""
 		}
-		for _, part := range path[1:] {
-			o, ok := v.(Object)
-			if !ok {
-				first = fmt.Errorf("cannot read property %s on non-object", part)
-				return ""
-			}
-			v = o[part]
+		prog, err := parser.Parse(toks)
+		if err != nil {
+			first = err
+			return ""
+		}
+		if len(prog.Stmts) != 1 {
+			first = fmt.Errorf("interpolation must contain one expression")
+			return ""
+		}
+		stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
+		if !ok {
+			first = fmt.Errorf("interpolation must contain an expression")
+			return ""
+		}
+		v, err := evalExpr(stmt.Expr, env)
+		if err != nil {
+			first = err
+			return ""
 		}
 		return stringify(v)
 	})
