@@ -102,6 +102,16 @@ func TestParseGroupedExpression(t *testing.T) {
 	}
 }
 
+func TestParseNestedUnaryNoParenCall(t *testing.T) {
+	toks, errs := lexer.Lex("print len keys user\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, err := Parse(toks); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestParseWhile(t *testing.T) {
 	toks, errs := lexer.Lex("while i < 5\n  i = i + 1\n")
 	if len(errs) != 0 {

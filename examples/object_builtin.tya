@@ -5,8 +5,8 @@ user =
 print has user, "name"
 userKeys = keys user
 userValues = values user
-print len userKeys
-print len userValues
+print len keys user
+print len values user
 delete user, "age"
 print has user, "age"
 print user.age

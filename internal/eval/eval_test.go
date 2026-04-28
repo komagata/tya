@@ -204,7 +204,7 @@ func TestRunStringBuiltins(t *testing.T) {
 }
 
 func TestRunObjectBuiltins(t *testing.T) {
-	src := "user =\n  name: \"komagata\"\n  age: 20\n\nprint has user, \"name\"\nuserKeys = keys user\nuserValues = values user\nprint len userKeys\nprint len userValues\ndelete user, \"age\"\nprint has user, \"age\"\nprint user.age\n"
+	src := "user =\n  name: \"komagata\"\n  age: 20\n\nprint has user, \"name\"\nprint len keys user\nprint len values user\ndelete user, \"age\"\nprint has user, \"age\"\nprint user.age\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)

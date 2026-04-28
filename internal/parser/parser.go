@@ -252,7 +252,19 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 	if len(args) == 0 {
 		return ex, nil
 	}
+	if id, ok := ex.(*ast.Ident); ok && isUnaryNoParenCall(id.Name) && len(args) > 1 {
+		return &ast.CallExpr{
+			Callee: ex,
+			Args:   []ast.Expr{nestUnaryNoParen(args)},
+		}, nil
+	}
 	if id, ok := ex.(*ast.Ident); ok && id.Name == "print" && len(args) > 1 {
+		if first, ok := args[0].(*ast.Ident); ok && isUnaryNoParenCall(first.Name) {
+			return &ast.CallExpr{
+				Callee: ex,
+				Args:   []ast.Expr{nestUnaryNoParen(args)},
+			}, nil
+		}
 		return &ast.CallExpr{
 			Callee: ex,
 			Args:   []ast.Expr{&ast.CallExpr{Callee: args[0], Args: args[1:]}},
@@ -260,6 +272,25 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 	}
 	ex = &ast.CallExpr{Callee: ex, Args: args}
 	return ex, nil
+}
+
+func isUnaryNoParenCall(name string) bool {
+	switch name {
+	case "len", "keys", "values", "trim", "toString", "toInt", "toFloat", "toNumber", "byteLen", "charLen", "readFile", "fileExists", "env", "error", "panic", "exit":
+		return true
+	default:
+		return false
+	}
+}
+
+func nestUnaryNoParen(exprs []ast.Expr) ast.Expr {
+	if len(exprs) == 1 {
+		return exprs[0]
+	}
+	return &ast.CallExpr{
+		Callee: exprs[0],
+		Args:   []ast.Expr{nestUnaryNoParen(exprs[1:])},
+	}
 }
 
 func (p *Parser) expr() (ast.Expr, error) {

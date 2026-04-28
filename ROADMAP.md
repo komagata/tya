@@ -26,7 +26,6 @@ Implemented:
 
 Next:
 
-- Improve optional-parentheses parsing for nested no-parentheses calls
 - Add unused variable / unused argument checks
 - Add variable shadowing checks
 - Add top-level executable-code checks for non-`main.tya` files
