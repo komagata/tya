@@ -8,6 +8,12 @@ Current pipeline:
 sh scripts/selfhost.sh
 ```
 
+Self-host source checks:
+
+```sh
+sh scripts/selfhost_check.sh
+```
+
 The current implementation is intentionally tiny. It proves that Tya can run
 Tya-written compiler components before those components understand the full
 language.
