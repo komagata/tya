@@ -3,3 +3,5 @@ print toInt "42"
 print toFloat "2.5"
 print toNumber "12"
 print toNumber "12.5"
+items = [1, 2]
+print toString items

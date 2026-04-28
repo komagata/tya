@@ -17,7 +17,7 @@ func TestExamplesGolden(t *testing.T) {
 		"arithmetic.tya":      "5\n14\n20\n2.5\n2\n-3\ntrue\nnil\nnext year: 21\n",
 		"array.tya":           "3\n1\nnil\n4\n4\n3\n20\n",
 		"array_function.tya":  "6\n2\n2\ntrue\nfalse\n10\n",
-		"convert.tya":         "20\n42\n2.5\n12\n12.5\n",
+		"convert.tya":         "20\n42\n2.5\n12\n12.5\n[1, 2]\n",
 		"equal.tya":           "false\ntrue\nfalse\n",
 		"error.tya":           "error: file not found\nfile not found\n",
 		"for.tya":             "12\n0:2\n1:4\n2:6\n",
