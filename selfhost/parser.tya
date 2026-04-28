@@ -35,6 +35,18 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and textOf(token) == "if"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
+        if textOf(value) == "not" and i + 13 < len(tokens)
+          func = tokens[i + 2]
+          if textOf(tokens[i + 3]) == "(" and textOf(tokens[i + 5]) == ")" and textOf(tokens[i + 6]) == "and" and textOf(tokens[i + 7]) == "not"
+            func2 = tokens[i + 8]
+            if textOf(tokens[i + 9]) == "(" and textOf(tokens[i + 11]) == "," and textOf(tokens[i + 13]) == ")"
+              arg = tokens[i + 4]
+              arg2 = tokens[i + 10]
+              arg3 = tokens[i + 12]
+              node = lineOf(token) + ":IF_NOT_CALL_AND_NOT_CALL:" + textOf(func) + ":" + textOf(arg) + ":" + textOf(func2) + ":" + textOf(arg2) + ":" + textOf(arg3)
+              push nodes, node
+              i = i + 14
+              continue
         if textOf(value) == "not" and i + 7 < len(tokens)
           func = tokens[i + 2]
           if textOf(tokens[i + 3]) == "(" and textOf(tokens[i + 5]) == "," and textOf(tokens[i + 7]) == ")"
@@ -44,6 +56,12 @@ parse = tokens ->
             push nodes, node
             i = i + 8
             continue
+        if textOf(value) == "not" and i + 2 < len(tokens)
+          target = tokens[i + 2]
+          node = lineOf(token) + ":IF_NOT:" + literalKindOf(target) + ":" + textOf(target)
+          push nodes, node
+          i = i + 3
+          continue
         if i + 6 < len(tokens) and textOf(tokens[i + 2]) == "("
           if textOf(tokens[i + 4]) == ")" and textOf(tokens[i + 5]) == "<"
             arg = tokens[i + 3]
@@ -146,6 +164,13 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
         value = tokens[i + 2]
+        if i + 5 < len(tokens) and textOf(tokens[i + 3]) == ","
+          if kindOf(tokens[i + 5]) == "ARROW"
+            arg2 = tokens[i + 4]
+            node = lineOf(token) + ":FUNC2:" + textOf(token) + ":" + textOf(value) + ":" + textOf(arg2)
+            push nodes, node
+            i = i + 6
+            continue
         if i + 7 < len(tokens) and textOf(tokens[i + 3]) == ","
           if textOf(tokens[i + 5]) == "," and kindOf(tokens[i + 7]) == "ARROW"
             arg2 = tokens[i + 4]

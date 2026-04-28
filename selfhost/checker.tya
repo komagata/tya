@@ -61,7 +61,7 @@ hasName = names, name ->
   false
 
 isLiteralArg = name ->
-  name == "" or name == "\\n" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
+  name == "" or name == "0" or name == "1" or name == "2" or name == "3" or name == "4" or name == "5" or name == "6" or name == "7" or name == "8" or name == "9" or name == "10" or name == "\\n" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
 
 check = nodes ->
   names = []
@@ -82,6 +82,17 @@ check = nodes ->
       arg = valueOf(node)
       if arg != "" and not hasName(names, arg)
         push names, arg
+
+    if kindOf(node) == "FUNC2"
+      name = nameOf(node)
+      if not hasName(names, name)
+        push names, name
+      arg = valueOf(node)
+      arg2 = extraOf(node)
+      if arg != "" and not hasName(names, arg)
+        push names, arg
+      if arg2 != "" and not hasName(names, arg2)
+        push names, arg2
 
     if kindOf(node) == "FUNC3"
       name = nameOf(node)
@@ -186,6 +197,12 @@ check = nodes ->
         if not hasName(names, name)
           push errors, lineOf(node) + ": undefined variable: " + name
 
+    if kindOf(node) == "IF_NOT"
+      if nameOf(node) == "IDENT"
+        name = valueOf(node)
+        if not hasName(names, name)
+          push errors, lineOf(node) + ": undefined variable: " + name
+
     if kindOf(node) == "IF_CALL_LT"
       funcName = nameOf(node)
       argName = valueOf(node)
@@ -194,7 +211,7 @@ check = nodes ->
         push errors, lineOf(node) + ": undefined variable: " + funcName
       if not hasName(names, argName)
         push errors, lineOf(node) + ": undefined variable: " + argName
-      if rightName != "0" and rightName != "1" and rightName != "2" and rightName != "3" and not hasName(names, rightName)
+      if not isLiteralArg(rightName) and not hasName(names, rightName)
         push errors, lineOf(node) + ": undefined variable: " + rightName
 
     if kindOf(node) == "IF_NOT_CALL2"
@@ -207,6 +224,23 @@ check = nodes ->
         push errors, lineOf(node) + ": undefined variable: " + leftArg
       if not hasName(names, rightArg)
         push errors, lineOf(node) + ": undefined variable: " + rightArg
+
+    if kindOf(node) == "IF_NOT_CALL_AND_NOT_CALL"
+      funcName = nameOf(node)
+      argName = valueOf(node)
+      func2Name = extraOf(node)
+      arg2Name = extra2Of(node)
+      arg3Name = extra3Of(node)
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, argName)
+        push errors, lineOf(node) + ": undefined variable: " + argName
+      if not hasName(names, func2Name)
+        push errors, lineOf(node) + ": undefined variable: " + func2Name
+      if not hasName(names, arg2Name)
+        push errors, lineOf(node) + ": undefined variable: " + arg2Name
+      if not hasName(names, arg3Name)
+        push errors, lineOf(node) + ": undefined variable: " + arg3Name
 
     if kindOf(node) == "WHILE_LT_CALL"
       leftName = nameOf(node)

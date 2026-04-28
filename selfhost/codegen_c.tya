@@ -91,6 +91,11 @@ emitC = nodes ->
         rememberType names, types, nameOf(node), "FUNC"
       push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ") */"
 
+    if kindOf(node) == "FUNC2"
+      if not hasName(names, nameOf(node))
+        rememberType names, types, nameOf(node), "FUNC"
+      push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ") */"
+
     if kindOf(node) == "FUNC3"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "FUNC"
@@ -226,12 +231,20 @@ emitC = nodes ->
           push lines, "  if (0) {"
           blockOpen = true
 
+    if kindOf(node) == "IF_NOT"
+      push lines, "  if (0) { /* not " + valueOf(node) + " */"
+      blockOpen = true
+
     if kindOf(node) == "IF_CALL_LT"
       push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") < " + extraOf(node) + " */"
       blockOpen = true
 
     if kindOf(node) == "IF_NOT_CALL2"
       push lines, "  if (0) { /* not " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ") */"
+      blockOpen = true
+
+    if kindOf(node) == "IF_NOT_CALL_AND_NOT_CALL"
+      push lines, "  if (0) { /* not " + nameOf(node) + "(" + valueOf(node) + ") and not " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
       blockOpen = true
 
     if kindOf(node) == "IF_COMPARE_EQ"

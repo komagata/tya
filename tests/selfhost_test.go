@@ -21,6 +21,10 @@ func TestSelfhostParserSourceChecks(t *testing.T) {
 	checkSelfhostSource(t, "selfhost/parser.tya")
 }
 
+func TestSelfhostCheckerSourceChecks(t *testing.T) {
+	checkSelfhostSource(t, "selfhost/checker.tya")
+}
+
 func checkSelfhostSource(t *testing.T, source string) {
 	t.Helper()
 	dir := t.TempDir()
