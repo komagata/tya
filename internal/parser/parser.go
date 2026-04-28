@@ -327,6 +327,17 @@ func (p *Parser) call() (ast.Expr, error) {
 			ex = &ast.CallExpr{Callee: ex, Args: args}
 			continue
 		}
+		if p.match(token.LBRACKET) {
+			index, err := p.expr()
+			if err != nil {
+				return nil, err
+			}
+			if !p.match(token.RBRACKET) {
+				return nil, p.err("expected ']'")
+			}
+			ex = &ast.IndexExpr{Object: ex, Index: index}
+			continue
+		}
 		break
 	}
 	return ex, nil
@@ -347,7 +358,8 @@ func (p *Parser) primary() (ast.Expr, error) {
 		case "nil":
 			return &ast.NilLit{}, nil
 		}
-		if p.match(token.COMMA) {
+		if p.at(token.COMMA) && p.hasArrowBeforeLine() {
+			p.next()
 			params := []string{tok.Lexeme}
 			for {
 				next := p.expect(token.IDENT)
@@ -373,6 +385,24 @@ func (p *Parser) primary() (ast.Expr, error) {
 		return &ast.FloatLit{Value: v}, nil
 	case token.STRING:
 		return &ast.StringLit{Value: tok.Lexeme}, nil
+	case token.LBRACKET:
+		var elems []ast.Expr
+		if !p.at(token.RBRACKET) {
+			for {
+				elem, err := p.expr()
+				if err != nil {
+					return nil, err
+				}
+				elems = append(elems, elem)
+				if !p.match(token.COMMA) {
+					break
+				}
+			}
+		}
+		if !p.match(token.RBRACKET) {
+			return nil, p.err("expected ']'")
+		}
+		return &ast.ArrayLit{Elems: elems}, nil
 	case token.AT:
 		name := p.expect(token.IDENT)
 		if name.Type != token.IDENT {
@@ -443,7 +473,7 @@ func (p *Parser) skipNewlines() {
 	}
 }
 func (p *Parser) startsExpr() bool {
-	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT)
+	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT) || p.at(token.LBRACKET)
 }
 func (p *Parser) at(t token.Type) bool { return p.peek().Type == t }
 func (p *Parser) match(t token.Type) bool {
@@ -474,6 +504,17 @@ func (p *Parser) peekN(n int) token.Token {
 		return p.toks[len(p.toks)-1]
 	}
 	return p.toks[p.pos+n]
+}
+func (p *Parser) hasArrowBeforeLine() bool {
+	for i := p.pos; i < len(p.toks); i++ {
+		switch p.toks[i].Type {
+		case token.ARROW:
+			return true
+		case token.NEWLINE, token.EOF, token.RPAREN, token.RBRACKET:
+			return false
+		}
+	}
+	return false
 }
 func (p *Parser) expect(t token.Type) token.Token {
 	if p.at(t) {

@@ -15,6 +15,9 @@ import (
 type Value any
 
 type Object map[string]Value
+type Array struct {
+	items []Value
+}
 
 type Function struct {
 	Params []string
@@ -80,6 +83,47 @@ func Run(prog *ast.Program, out io.Writer) error {
 		}
 		fmt.Fprintln(out, stringify(args[0]))
 		return nil, nil
+	}))
+	env.set("len", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("len expects 1 argument")
+		}
+		switch v := args[0].(type) {
+		case string:
+			return int64(len([]rune(v))), nil
+		case *Array:
+			return int64(len(v.items)), nil
+		case Object:
+			return int64(len(v)), nil
+		default:
+			return nil, fmt.Errorf("len expects string, array, or object")
+		}
+	}))
+	env.set("push", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("push expects 2 arguments")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, fmt.Errorf("push expects array")
+		}
+		arr.items = append(arr.items, args[1])
+		return arr, nil
+	}))
+	env.set("pop", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("pop expects 1 argument")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, fmt.Errorf("pop expects array")
+		}
+		if len(arr.items) == 0 {
+			return nil, nil
+		}
+		last := arr.items[len(arr.items)-1]
+		arr.items = arr.items[:len(arr.items)-1]
+		return last, nil
 	}))
 	_, err := evalStmts(prog.Stmts, env)
 	return err
@@ -179,6 +223,16 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			o[p.Name] = v
 		}
 		return o, nil
+	case *ast.ArrayLit:
+		arr := &Array{}
+		for _, elem := range n.Elems {
+			v, err := evalExpr(elem, env)
+			if err != nil {
+				return nil, err
+			}
+			arr.items = append(arr.items, v)
+		}
+		return arr, nil
 	case *ast.FuncLit:
 		return &Function{Params: n.Params, Body: n.Body, Expr: n.Expr, Env: env}, nil
 	case *ast.BinaryExpr:
@@ -202,6 +256,27 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			return nil, fmt.Errorf("cannot read property %s on non-object", n.Name)
 		}
 		return o[n.Name], nil
+	case *ast.IndexExpr:
+		obj, err := evalExpr(n.Object, env)
+		if err != nil {
+			return nil, err
+		}
+		idx, err := evalExpr(n.Index, env)
+		if err != nil {
+			return nil, err
+		}
+		arr, ok := obj.(*Array)
+		if !ok {
+			return nil, fmt.Errorf("index target is not array")
+		}
+		i, ok := idx.(int64)
+		if !ok {
+			return nil, fmt.Errorf("array index must be int")
+		}
+		if i < 0 || i >= int64(len(arr.items)) {
+			return nil, nil
+		}
+		return arr.items[i], nil
 	case *ast.CallExpr:
 		return evalCall(n, env)
 	}
@@ -334,6 +409,8 @@ func equal(l, r Value) bool {
 	case Object:
 		rv, ok := r.(Object)
 		return ok && fmt.Sprintf("%p", lv) == fmt.Sprintf("%p", rv)
+	case *Array:
+		return lv == r
 	case *Function:
 		return lv == r
 	}
@@ -470,6 +547,12 @@ func stringify(v Value) string {
 			return "true"
 		}
 		return "false"
+	case *Array:
+		parts := make([]string, 0, len(x.items))
+		for _, item := range x.items {
+			parts = append(parts, stringify(item))
+		}
+		return "[" + strings.Join(parts, ", ") + "]"
 	default:
 		return fmt.Sprintf("%v", x)
 	}

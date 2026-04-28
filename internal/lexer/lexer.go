@@ -178,6 +178,10 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			l.add(token.LPAREN, "(", line, col)
 		case ')':
 			l.add(token.RPAREN, ")", line, col)
+		case '[':
+			l.add(token.LBRACKET, "[", line, col)
+		case ']':
+			l.add(token.RBRACKET, "]", line, col)
 		default:
 			l.errs = append(l.errs, fmt.Errorf("%d:%d: unexpected character %q", line, col, ch))
 		}

@@ -67,3 +67,23 @@ func TestRunComparisonAndLogic(t *testing.T) {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
 }
+
+func TestRunArrays(t *testing.T) {
+	src := "items = [1, 2, 3]\nprint len items\nprint items[0]\nprint items[9]\npush items, 4\nprint len items\nprint pop items\nprint len items\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "3\n1\nnil\n4\n4\n3\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}

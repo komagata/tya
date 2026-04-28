@@ -71,6 +71,12 @@ type ObjectLit struct {
 
 func (*ObjectLit) expr() {}
 
+type ArrayLit struct {
+	Elems []Expr
+}
+
+func (*ArrayLit) expr() {}
+
 type ObjectProp struct {
 	Name  string
 	Value Expr
@@ -105,6 +111,13 @@ type MemberExpr struct {
 }
 
 func (*MemberExpr) expr() {}
+
+type IndexExpr struct {
+	Object Expr
+	Index  Expr
+}
+
+func (*IndexExpr) expr() {}
 
 type CallExpr struct {
 	Callee Expr

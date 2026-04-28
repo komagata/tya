@@ -52,3 +52,13 @@ func TestParseIfElse(t *testing.T) {
 		t.Fatalf("got %T", prog.Stmts[0])
 	}
 }
+
+func TestParseArrayLiteralAndIndex(t *testing.T) {
+	toks, errs := lexer.Lex("items = [1, 2, 3]\nprint items[0]\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, err := Parse(toks); err != nil {
+		t.Fatal(err)
+	}
+}
