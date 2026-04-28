@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-out_dir="${TMPDIR:-/tmp}/tya-go-emit-args"
+out_dir="$(mktemp -d "${TMPDIR:-/tmp}/tya-go-emit-args.XXXXXX")"
 
 mkdir -p "$out_dir"
 

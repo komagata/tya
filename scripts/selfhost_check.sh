@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-out_dir="${TMPDIR:-/tmp}/tya-selfhost-check"
+out_dir="$(mktemp -d "${TMPDIR:-/tmp}/tya-selfhost-check.XXXXXX")"
 mkdir -p "$out_dir"
 
 for source in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do

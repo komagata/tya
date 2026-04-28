@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-out_dir="${TMPDIR:-/tmp}/tya-selfhost-compile"
+out_dir="$(mktemp -d "${TMPDIR:-/tmp}/tya-selfhost-compile.XXXXXX")"
 
 mkdir -p "$out_dir"
 

@@ -2,7 +2,7 @@
 set -eu
 
 input="${1:-examples/selfhost_input.tya}"
-out_dir="${TMPDIR:-/tmp}/tya-selfhost"
+out_dir="$(mktemp -d "${TMPDIR:-/tmp}/tya-selfhost.XXXXXX")"
 
 mkdir -p "$out_dir"
 
