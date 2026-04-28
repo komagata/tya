@@ -46,9 +46,7 @@ check = nodes ->
         if not hasName(names, valueName)
           push errors, lineOf(node) + ": undefined variable: " + valueName
       seen = hasName names, name
-      if seen
-        push errors, lineOf(node) + ": duplicate definition: " + name
-      else
+      if not seen
         push names, name
 
     if kindOf(node) == "PRINT"

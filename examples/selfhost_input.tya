@@ -1,6 +1,7 @@
 message = "Tya"
 alias = message
 count = 1 + 1
+count = count + 1
 enabled = true
 disabled = false
 negated = not enabled
