@@ -70,7 +70,40 @@ int main(int argc, char **argv) {
 	}
 }
 
+func TestCRuntimeProcessExitAndPanic(t *testing.T) {
+	out, code := compileAndRunRuntimeAllowExit(t, `#include "tya_runtime.h"
+
+int main(void) {
+  tya_exit(tya_number(7));
+  return 0;
+}
+`)
+	if string(out) != "" || code != 7 {
+		t.Fatalf("exit got output %q and code %d", out, code)
+	}
+
+	out, code = compileAndRunRuntimeAllowExit(t, `#include "tya_runtime.h"
+
+int main(void) {
+  tya_panic(tya_string("bad state"));
+  return 0;
+}
+`)
+	if string(out) != "panic: bad state\n" || code != 1 {
+		t.Fatalf("panic got output %q and code %d", out, code)
+	}
+}
+
 func compileAndRunRuntime(t *testing.T, src string, args ...string) []byte {
+	t.Helper()
+	out, code := compileAndRunRuntimeAllowExit(t, src, args...)
+	if code != 0 {
+		t.Fatalf("exit code %d\n%s", code, out)
+	}
+	return out
+}
+
+func compileAndRunRuntimeAllowExit(t *testing.T, src string, args ...string) ([]byte, int) {
 	t.Helper()
 	dir := t.TempDir()
 	cfile := filepath.Join(dir, "main.c")
@@ -85,7 +118,10 @@ func compileAndRunRuntime(t *testing.T, src string, args ...string) []byte {
 	}
 	out, err := exec.Command(bin, args...).CombinedOutput()
 	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return out, exitErr.ExitCode()
+		}
 		t.Fatal(err)
 	}
-	return out
+	return out, 0
 }
