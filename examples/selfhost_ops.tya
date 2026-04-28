@@ -1,0 +1,5 @@
+if age >= 20
+  print "adult"
+
+if name != ""
+  print name

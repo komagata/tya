@@ -71,6 +71,14 @@ lex = source ->
       i = i + 2
       continue
 
+    if i + 1 < len(source)
+      two = char + source[i + 1]
+      if two == "==" or two == "!=" or two == "<=" or two == ">="
+        token = emit "SYMBOL", two
+        push tokens, token
+        i = i + 2
+        continue
+
     token = emit "SYMBOL", char
     push tokens, token
     i = i + 1
