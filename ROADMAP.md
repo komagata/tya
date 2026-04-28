@@ -27,10 +27,14 @@ Implemented:
 Remaining hardening:
 
 - Add parser and checker source spans to more AST nodes
-- Add unused variable / unused argument checks
+- Wire optional unused variable / unused argument checks into a stricter CLI mode if desired
 - Add variable shadowing checks beyond the current scope model
 - Add top-level executable-code checks for non-`main.tya` files once module loading lands
 - Improve checker scopes for reassignment versus duplicate definition
+
+Implemented hardening:
+
+- Checker exposes optional `CheckUnused` analysis for unused bindings and function arguments
 
 ## Phase 2: Go Compiler That Emits C
 

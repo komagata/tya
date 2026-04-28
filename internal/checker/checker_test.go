@@ -78,6 +78,35 @@ func TestCheckAllowsFunctionParameterAndLoopVariable(t *testing.T) {
 	}
 }
 
+func TestCheckUnusedRejectsUnusedVariable(t *testing.T) {
+	prog := parse(t, "name = \"Tya\"\n")
+	err := CheckUnused(prog)
+	if err == nil {
+		t.Fatal("expected unused variable error")
+	}
+	if !strings.Contains(err.Error(), "unused variable name") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckUnusedRejectsUnusedFunctionParameter(t *testing.T) {
+	prog := parse(t, "first = value, unused -> value\nprint first 1, 2\n")
+	err := CheckUnused(prog)
+	if err == nil {
+		t.Fatal("expected unused parameter error")
+	}
+	if !strings.Contains(err.Error(), "unused variable unused") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckUnusedAllowsUsedBindings(t *testing.T) {
+	prog := parse(t, "items = [1]\nfor item in items\n  print item\nshow = value -> value\nprint show 1\n")
+	if err := CheckUnused(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func parse(t *testing.T, src string) *ast.Program {
 	t.Helper()
 	toks, errs := lexer.Lex(src)
