@@ -142,19 +142,36 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.line(fmt.Sprintf("TyaValue %s = %s;", iterName, iterable))
 		g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
 		g.indent++
-		if n.IndexName != "" {
-			if g.vars[n.IndexName] {
-				g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
+		if n.Kind == "of" {
+			if g.vars[n.ValueName] {
+				g.line(fmt.Sprintf("%s = tya_object_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
 			} else {
-				g.vars[n.IndexName] = true
-				g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", cName(n.IndexName), indexName))
+				g.vars[n.ValueName] = true
+				g.line(fmt.Sprintf("TyaValue %s = tya_object_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
 			}
-		}
-		if g.vars[n.ValueName] {
-			g.line(fmt.Sprintf("%s = tya_index(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
+			if n.IndexName != "" {
+				if g.vars[n.IndexName] {
+					g.line(fmt.Sprintf("%s = tya_object_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
+				} else {
+					g.vars[n.IndexName] = true
+					g.line(fmt.Sprintf("TyaValue %s = tya_object_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
+				}
+			}
 		} else {
-			g.vars[n.ValueName] = true
-			g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
+			if n.IndexName != "" {
+				if g.vars[n.IndexName] {
+					g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
+				} else {
+					g.vars[n.IndexName] = true
+					g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", cName(n.IndexName), indexName))
+				}
+			}
+			if g.vars[n.ValueName] {
+				g.line(fmt.Sprintf("%s = tya_index(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
+			} else {
+				g.vars[n.ValueName] = true
+				g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
+			}
 		}
 		for _, stmt := range n.Body {
 			if err := g.stmt(stmt); err != nil {

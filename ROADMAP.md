@@ -81,6 +81,7 @@ Implemented:
 - Initial generated-C runtime support for `args`, `readFile`, `split`, `toString`, and `toInt`
 - Initial object runtime with literal construction, member reads, and `len`
 - Generated-C object runtime supports `has`, `keys`, `values`, and `delete`
+- Generated-C object runtime supports `for key, value of object`
 - Generated-C runtime supports `fileExists`, `toFloat`, and `toNumber`
 - Generated-C runtime supports deep `equal`
 - Runtime printing and truthiness helpers
@@ -197,6 +198,7 @@ Implemented:
 - Go C emitter can run `examples/string.tya`
 - Go C emitter can run object, conversion, and file examples
 - Go C emitter can run `examples/equal.tya`
+- Go C emitter can run `examples/for_object.tya`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 

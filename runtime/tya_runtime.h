@@ -40,6 +40,8 @@ TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item);
 TyaValue tya_member(TyaValue object, const char *key);
+TyaValue tya_object_key_at(TyaValue object, TyaValue index);
+TyaValue tya_object_value_at(TyaValue object, TyaValue index);
 TyaValue tya_has(TyaValue object, TyaValue key);
 TyaValue tya_keys(TyaValue object);
 TyaValue tya_values(TyaValue object);

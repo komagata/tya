@@ -118,6 +118,42 @@ TyaValue tya_member(TyaValue object, const char *key) {
   return tya_nil();
 }
 
+TyaValue tya_object_key_at(TyaValue object, TyaValue index) {
+  if (object.kind != TYA_OBJECT || object.object == NULL) {
+    return tya_nil();
+  }
+  int target = (int)index.number;
+  int seen = 0;
+  for (int i = 0; i < object.object->len; i++) {
+    if (object.object->entries[i].key == NULL) {
+      continue;
+    }
+    if (seen == target) {
+      return tya_string(object.object->entries[i].key);
+    }
+    seen++;
+  }
+  return tya_nil();
+}
+
+TyaValue tya_object_value_at(TyaValue object, TyaValue index) {
+  if (object.kind != TYA_OBJECT || object.object == NULL) {
+    return tya_nil();
+  }
+  int target = (int)index.number;
+  int seen = 0;
+  for (int i = 0; i < object.object->len; i++) {
+    if (object.object->entries[i].key == NULL) {
+      continue;
+    }
+    if (seen == target) {
+      return object.object->entries[i].value;
+    }
+    seen++;
+  }
+  return tya_nil();
+}
+
 TyaValue tya_has(TyaValue object, TyaValue key) {
   if (key.kind != TYA_STRING || key.string == NULL || object.kind != TYA_OBJECT || object.object == NULL) {
     return tya_bool(false);
