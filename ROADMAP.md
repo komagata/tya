@@ -138,6 +138,7 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple one-argument calls
 - Self-hosted parser/checker/codegen carries simple two-argument calls
 - Self-hosted parser/checker/codegen carries simple indexing
+- Self-hosted self-host example covers variable index reads
 - Self-hosted parser/checker/codegen carries simple direct comparison conditions
 - Self-hosted parser/checker/codegen carries simple `or` comparison conditions
 - Self-hosted parser/checker/codegen carries simple call comparison conditions

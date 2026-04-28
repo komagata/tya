@@ -9,6 +9,8 @@ parts = split message, alias
 first = parts[0]
 input = args()[0]
 source = readFile args()[0]
+index = 0
+char = source[index]
 if len(parts) < 3
   print "short"
 if message == alias
