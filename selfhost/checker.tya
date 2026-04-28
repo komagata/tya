@@ -209,6 +209,14 @@ check = nodes ->
         if not hasName(names, name)
           push errors, lineOf(node) + ": undefined variable: " + name
 
+    if kindOf(node) == "PRINT_CALL1"
+      funcName = nameOf(node)
+      argName = valueOf(node)
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, argName)
+        push errors, lineOf(node) + ": undefined variable: " + argName
+
     if kindOf(node) == "IF" or kindOf(node) == "WHILE"
       if nameOf(node) == "IDENT"
         name = valueOf(node)

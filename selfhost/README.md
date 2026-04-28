@@ -33,7 +33,7 @@ Current supported subset:
   `for`, `break`, `continue`, direct comparison and `or` conditions,
   one-argument call conditions, call comparison conditions, negated call conditions, call-based `while`
   conditions, call-with-call-index arguments, call indexing, return calls,
-  indexing, indentation, and print nodes
+  indexing, indentation, print nodes, and one-argument print calls
 - Checker: simple undefined assignment / print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison assignments, variable-copy assignments, bool assignments,
@@ -43,6 +43,7 @@ Current supported subset:
   call-with-call-index arguments, one-argument call conditions,
   call comparison conditions, direct comparison conditions, simple `or`
   conditions, negated call conditions, call-based
-  `while` conditions, return calls, placeholder call/index assignment
-  declarations, self-host source compile smoke checks, and simple literal or
-  variable `if` / `while` / `for` blocks with `break` / `continue`
+  `while` conditions, return calls, one-argument print calls, placeholder
+  call/index assignment declarations, self-host source compile smoke checks,
+  and simple literal or variable `if` / `while` / `for` blocks with `break` /
+  `continue`

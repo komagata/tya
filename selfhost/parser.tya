@@ -137,8 +137,10 @@ parse = tokens ->
         value = tokens[i + 1]
         step = 2
         if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 2]) == lineOf(token)
-          value = tokens[i + 2]
-          step = 3
+          node = lineOf(token) + ":PRINT_CALL1:" + textOf(value) + ":" + textOf(tokens[i + 2])
+          push nodes, node
+          i = i + 3
+          continue
         node = lineOf(token) + ":PRINT:" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + step

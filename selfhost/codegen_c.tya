@@ -386,6 +386,12 @@ emitC = nodes ->
               else
                 push lines, prefix + "puts(" + valueOf(node) + ");"
 
+    if kindOf(node) == "PRINT_CALL1"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ") */"
+
     if kindOf(node) == "BREAK"
       prefix = "  "
       if indent != "0"
@@ -434,5 +440,4 @@ for line in lines
   if line != ""
     push nodes, line
 
-output = emitC nodes
-print output
+print emitC nodes
