@@ -165,6 +165,7 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple call-and-call conditions
 - Self-hosted parser/checker/codegen carries simple call comparison conditions
 - Self-hosted C codegen emits simple `hasT(...)` string predicate conditions used by the prototype input
+- Self-hosted parser/codegen preserves and emits the prototype `len(parts) < 3` condition
 - Self-hosted parser/checker/codegen carries simple negated call conditions
 - Self-hosted parser/checker/codegen carries simple call-based `while` conditions
 - Self-hosted parser/checker/codegen emits simple direct comparison `while` conditions

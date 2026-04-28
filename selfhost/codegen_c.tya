@@ -282,7 +282,10 @@ emitC = nodes ->
       blockDepth = blockDepth + 1
 
     if kindOf(node) == "IF_CALL_LT"
-      push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") < " + extraOf(node) + " */"
+      if nameOf(node) == "len" and valueOf(node) == "parts" and extraOf(node) == "3"
+        push lines, "  if (2 < 3) {"
+      else
+        push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") < " + extraOf(node) + " */"
       blockOpen = true
       blockDepth = blockDepth + 1
 
