@@ -45,7 +45,7 @@ endpoint.
 - [ ] Expand self-host C codegen subset
   - [x] Emit simple function bodies instead of comments for one-expression returns
   - [x] Emit simple function calls to generated functions
-  - [ ] Emit object placeholders beyond comments
+  - [x] Emit object placeholders beyond comments
 - [ ] Bootstrap stage 2
   - [ ] Use stage-1 compiler binaries to compile selfhost sources to C
   - [ ] Compile stage-1 emitted selfhost C into stage-2 binaries

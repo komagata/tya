@@ -287,6 +287,7 @@ Self-Host Completion TODO:
   - [ ] Emit full expression lowering through the existing C runtime ABI
     - [x] Emit simple calls to generated one-argument self-host C functions
   - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
+    - [x] Emit one-property object placeholders in the self-host C codegen subset
   - [ ] Emit loops, conditionals, `try`, multiple return assignment, function values, and standard builtins
   - [ ] Add generated-C parity tests comparing interpreter output and self-hosted codegen output
     - [x] Add subset generated-C parity tests for `examples/selfhost_ops.tya`
