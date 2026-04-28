@@ -288,6 +288,49 @@ bool tya_equal(TyaValue left, TyaValue right) {
   return false;
 }
 
+TyaValue tya_deep_equal(TyaValue left, TyaValue right) {
+  if (left.kind != right.kind) {
+    return tya_bool(false);
+  }
+  if (left.kind == TYA_ARRAY) {
+    if (left.array == NULL || right.array == NULL) {
+      return tya_bool(left.array == right.array);
+    }
+    if (left.array->len != right.array->len) {
+      return tya_bool(false);
+    }
+    for (int i = 0; i < left.array->len; i++) {
+      if (!tya_deep_equal(left.array->items[i], right.array->items[i]).boolean) {
+        return tya_bool(false);
+      }
+    }
+    return tya_bool(true);
+  }
+  if (left.kind == TYA_OBJECT) {
+    if (left.object == NULL || right.object == NULL) {
+      return tya_bool(left.object == right.object);
+    }
+    if ((int)tya_len(left).number != (int)tya_len(right).number) {
+      return tya_bool(false);
+    }
+    for (int i = 0; i < left.object->len; i++) {
+      const char *key = left.object->entries[i].key;
+      if (key == NULL) {
+        continue;
+      }
+      TyaValue right_value = tya_member(right, key);
+      if (right_value.kind == TYA_NIL && left.object->entries[i].value.kind != TYA_NIL) {
+        return tya_bool(false);
+      }
+      if (!tya_deep_equal(left.object->entries[i].value, right_value).boolean) {
+        return tya_bool(false);
+      }
+    }
+    return tya_bool(true);
+  }
+  return tya_bool(tya_equal(left, right));
+}
+
 TyaValue tya_add(TyaValue left, TyaValue right) {
   if (left.kind == TYA_STRING && right.kind == TYA_STRING && left.string != NULL && right.string != NULL) {
     int left_len = 0;

@@ -52,6 +52,7 @@ TyaValue tya_replace(TyaValue text, TyaValue old, TyaValue replacement);
 TyaValue tya_byte_len(TyaValue text);
 TyaValue tya_char_len(TyaValue text);
 bool tya_equal(TyaValue left, TyaValue right);
+TyaValue tya_deep_equal(TyaValue left, TyaValue right);
 TyaValue tya_add(TyaValue left, TyaValue right);
 TyaValue tya_args(int argc, char **argv);
 TyaValue tya_read_file(TyaValue path);

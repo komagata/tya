@@ -538,6 +538,17 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_file_exists(%s)", path), "TyaValue", nil
 		}
+		if ok && id.Name == "equal" && len(n.Args) == 2 {
+			left, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			right, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_deep_equal(%s, %s)", left, right), "TyaValue", nil
+		}
 		if ok && id.Name == "has" && len(n.Args) == 2 {
 			object, _, err := g.expr(n.Args[0])
 			if err != nil {
