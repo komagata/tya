@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -101,8 +102,12 @@ func Run(prog *ast.Program, out io.Writer) error {
 }
 
 func RunWithArgs(prog *ast.Program, out io.Writer, args []string) error {
+	return RunWithIO(prog, nil, out, args)
+}
+
+func RunWithIO(prog *ast.Program, in io.Reader, out io.Writer, args []string) error {
 	env := NewEnv()
-	installBuiltins(env, out, args)
+	installBuiltins(env, in, out, args)
 	_, err := evalStmts(prog.Stmts, env)
 	if errors.Is(err, errBreak) {
 		return fmt.Errorf("break used outside loop")
@@ -117,13 +122,33 @@ func RunWithArgs(prog *ast.Program, out io.Writer, args []string) error {
 	return err
 }
 
-func installBuiltins(env *Env, out io.Writer, processArgs []string) {
+func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string) {
+	var lineReader *bufio.Reader
+	if in != nil {
+		lineReader = bufio.NewReader(in)
+	}
 	env.set("print", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("print expects 1 argument")
 		}
 		fmt.Fprintln(out, stringify(args[0]))
 		return nil, nil
+	}))
+	env.set("readLine", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("readLine expects 0 arguments")
+		}
+		if lineReader == nil {
+			return nil, nil
+		}
+		line, err := lineReader.ReadString('\n')
+		if errors.Is(err, io.EOF) && line == "" {
+			return nil, nil
+		}
+		if err != nil && !errors.Is(err, io.EOF) {
+			return nil, err
+		}
+		return strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r"), nil
 	}))
 	env.set("len", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {

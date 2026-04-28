@@ -3,6 +3,7 @@ package eval
 import (
 	"bytes"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"tya/internal/lexer"
@@ -341,6 +342,24 @@ func TestRunArgsAndEnvBuiltins(t *testing.T) {
 	want := "2\none\nok\nnil\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunReadLineBuiltin(t *testing.T) {
+	toks, errs := lexer.Lex("name = readLine()\nprint \"Hello, {name}\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := RunWithIO(prog, strings.NewReader("komagata\n"), &out, nil); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "Hello, komagata\n" {
+		t.Fatalf("got %q", out.String())
 	}
 }
 

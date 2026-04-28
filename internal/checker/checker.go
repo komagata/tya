@@ -23,7 +23,7 @@ var builtinNames = []string{
 	"args", "byteLen", "charLen", "contains", "delete", "div", "endsWith",
 	"env", "equal", "exit", "fileExists", "filter", "find", "all", "any", "each",
 	"has", "join", "keys", "len", "map", "panic", "pop", "print", "push",
-	"readFile", "reduce", "replace", "split", "startsWith", "toFloat", "toInt",
+	"readFile", "readLine", "reduce", "replace", "split", "startsWith", "toFloat", "toInt",
 	"toNumber", "toString", "trim", "values", "writeFile",
 }
 

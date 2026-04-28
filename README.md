@@ -43,7 +43,7 @@ go test ./...
   `all`, `each`, `reduce`, `keys`, `values`, `has`, `delete`,
   `equal`, `split`, `join`, `trim`,
   `replace`, `contains`, `startsWith`, `endsWith`, `byteLen`, `charLen`,
-  `readFile`, `writeFile`, `fileExists`, `args`, `env`, `exit`, `panic`,
+  `readLine`, `readFile`, `writeFile`, `fileExists`, `args`, `env`, `exit`, `panic`,
   `div`, `toString`, `toInt`, `toFloat`, `toNumber`
 
 ## Examples
