@@ -111,17 +111,20 @@ func (p *Parser) whileStmt() (ast.Stmt, error) {
 
 func (p *Parser) forStmt() (ast.Stmt, error) {
 	p.next()
-	valueName := p.expect(token.IDENT)
-	if valueName.Type != token.IDENT {
+	valueTok := p.expect(token.IDENT)
+	if valueTok.Type != token.IDENT {
 		return nil, p.err("expected loop variable")
 	}
+	valueName := valueTok.Lexeme
 	var indexName string
+	var indexTok token.Token
 	if p.match(token.COMMA) {
 		idx := p.expect(token.IDENT)
 		if idx.Type != token.IDENT {
 			return nil, p.err("expected loop index variable")
 		}
 		indexName = idx.Lexeme
+		indexTok = idx
 	}
 	kind := ""
 	if p.matchWord("in") {
@@ -139,7 +142,7 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ast.ForInStmt{ValueName: valueName.Lexeme, IndexName: indexName, Kind: kind, Iterable: iterable, Body: body}, nil
+	return &ast.ForInStmt{ValueName: valueName, IndexName: indexName, ValueTok: valueTok, IndexTok: indexTok, Kind: kind, Iterable: iterable, Body: body}, nil
 }
 
 func (p *Parser) returnStmt() (ast.Stmt, error) {

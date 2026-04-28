@@ -41,6 +41,8 @@ func (*WhileStmt) stmt() {}
 type ForInStmt struct {
 	ValueName string
 	IndexName string
+	ValueTok  token.Token
+	IndexTok  token.Token
 	Kind      string
 	Iterable  Expr
 	Body      []Stmt

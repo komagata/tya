@@ -96,11 +96,11 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				return err
 			}
 		case *ast.ForInStmt:
-			if err := checkBindingName(n.ValueName, 0, 0); err != nil {
+			if err := checkBindingName(n.ValueName, n.ValueTok.Line, n.ValueTok.Col); err != nil {
 				return err
 			}
 			if n.IndexName != "" {
-				if err := checkBindingName(n.IndexName, 0, 0); err != nil {
+				if err := checkBindingName(n.IndexName, n.IndexTok.Line, n.IndexTok.Col); err != nil {
 					return err
 				}
 			}

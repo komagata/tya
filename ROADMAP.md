@@ -36,6 +36,7 @@ Implemented hardening:
 
 - Checker exposes optional `CheckUnused` analysis for unused bindings and function arguments
 - CLI exposes `--check-unused` for strict unused binding checks
+- Checker reports source locations for invalid `for` loop binding names
 
 ## Phase 2: Go Compiler That Emits C
 

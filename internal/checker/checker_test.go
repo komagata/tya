@@ -38,6 +38,17 @@ func TestCheckRejectsInvalidBindingName(t *testing.T) {
 	}
 }
 
+func TestCheckRejectsInvalidLoopBindingNameWithLocation(t *testing.T) {
+	prog := parse(t, "items = [1]\nfor User in items\n  print User\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected invalid loop binding name error")
+	}
+	if !strings.Contains(err.Error(), "2:5: invalid binding name User") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckRejectsDuplicateFunctionParameter(t *testing.T) {
 	prog := parse(t, "add = a, a -> a\n")
 	err := Check(prog)
