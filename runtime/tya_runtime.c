@@ -21,8 +21,16 @@ struct TyaFunction {
   TyaValue receiver;
 };
 
+typedef struct {
+  char *text;
+  size_t len;
+  size_t cap;
+} TyaStringBuilder;
+
 static char *tya_substr(const char *text, int start, int len);
 static void tya_write_value(FILE *out, TyaValue value);
+static void tya_build_value(TyaStringBuilder *builder, TyaValue value);
+static void tya_builder_append(TyaStringBuilder *builder, const char *text);
 
 TyaValue tya_nil(void) {
   return (TyaValue){.kind = TYA_NIL};
@@ -605,33 +613,78 @@ TyaValue tya_to_string(TyaValue value) {
   if (value.kind == TYA_STRING) {
     return value;
   }
-  char *out = malloc(64);
+  TyaStringBuilder builder = {.text = malloc(64), .len = 0, .cap = 64};
+  builder.text[0] = '\0';
+  tya_build_value(&builder, value);
+  return tya_string(builder.text);
+}
+
+static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
+  char scratch[64];
   switch (value.kind) {
   case TYA_NIL:
-    snprintf(out, 64, "nil");
+    tya_builder_append(builder, "nil");
     break;
   case TYA_BOOL:
-    snprintf(out, 64, "%s", value.boolean ? "true" : "false");
+    tya_builder_append(builder, value.boolean ? "true" : "false");
     break;
   case TYA_NUMBER:
-    snprintf(out, 64, "%g", value.number);
+    snprintf(scratch, sizeof(scratch), "%g", value.number);
+    tya_builder_append(builder, scratch);
     break;
   case TYA_ARRAY:
-    snprintf(out, 64, "[array len=%d]", value.array == NULL ? 0 : value.array->len);
+    tya_builder_append(builder, "[");
+    if (value.array != NULL) {
+      for (int i = 0; i < value.array->len; i++) {
+        if (i > 0) {
+          tya_builder_append(builder, ", ");
+        }
+        tya_build_value(builder, value.array->items[i]);
+      }
+    }
+    tya_builder_append(builder, "]");
     break;
   case TYA_OBJECT:
-    snprintf(out, 64, "[object len=%d]", value.object == NULL ? 0 : value.object->len);
+    tya_builder_append(builder, "{");
+    if (value.object != NULL) {
+      int written = 0;
+      for (int i = 0; i < value.object->len; i++) {
+        if (value.object->entries[i].key == NULL) {
+          continue;
+        }
+        if (written > 0) {
+          tya_builder_append(builder, ", ");
+        }
+        tya_builder_append(builder, value.object->entries[i].key);
+        tya_builder_append(builder, ": ");
+        tya_build_value(builder, value.object->entries[i].value);
+        written++;
+      }
+    }
+    tya_builder_append(builder, "}");
     break;
   case TYA_FUNCTION:
-    snprintf(out, 64, "[function]");
+    tya_builder_append(builder, "[function]");
     break;
   case TYA_ERROR:
-    snprintf(out, 64, "error: %s", value.error == NULL ? "" : value.error);
+    tya_builder_append(builder, "error: ");
+    tya_builder_append(builder, value.error == NULL ? "" : value.error);
     break;
   case TYA_STRING:
+    tya_builder_append(builder, value.string == NULL ? "" : value.string);
     break;
   }
-  return tya_string(out);
+}
+
+static void tya_builder_append(TyaStringBuilder *builder, const char *text) {
+  size_t text_len = strlen(text);
+  while (builder->len + text_len + 1 > builder->cap) {
+    builder->cap *= 2;
+    builder->text = realloc(builder->text, builder->cap);
+  }
+  memcpy(builder->text + builder->len, text, text_len);
+  builder->len += text_len;
+  builder->text[builder->len] = '\0';
 }
 
 TyaValue tya_to_int(TyaValue value) {

@@ -91,6 +91,7 @@ Implemented:
 - Generated-C runtime supports `writeFile`
 - Generated-C runtime supports deep `equal`
 - Runtime printing and truthiness helpers
+- Runtime `toString` renders arrays and objects structurally
 - Generated C can compile and run against `runtime/tya_runtime.c`
 - C runtime has direct GCC-backed Go tests for values, collections, objects, function calls, strings, files, conversions, and process exits
 

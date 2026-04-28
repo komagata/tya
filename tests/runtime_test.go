@@ -28,6 +28,7 @@ int main(void) {
 
   TyaValue doubled = tya_map(items, tya_function(double_value));
   tya_print(tya_index(doubled, tya_number(2)));
+  tya_print(tya_to_string(doubled));
 
   TyaValue err = tya_error(tya_string("bad"));
   tya_print(err);
@@ -36,7 +37,7 @@ int main(void) {
 }
 `
 	out := compileAndRunRuntime(t, src)
-	want := "3\n3\n{name: Tya, version: 1}\nTya\n1\n6\nerror: bad\nbad\n"
+	want := "3\n3\n{name: Tya, version: 1}\nTya\n1\n6\n[2, 4, 6]\nerror: bad\nbad\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
