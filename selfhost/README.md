@@ -17,7 +17,8 @@ Current supported subset:
 - Lexer: identifiers, ints, strings, comments, symbols, common two-character
   operators, source lines, and indentation counts
 - Parser: simple assignment, `if`, `while`, indentation, and print nodes
-- Checker: duplicate assignment node detection and simple undefined print names
+- Checker: duplicate assignment node detection and simple undefined print /
+  condition names
 - C codegen: string/int assignments, simple integer addition assignments,
   bool assignments, string/int/bool print nodes, and simple `if true` /
   `while false` blocks
