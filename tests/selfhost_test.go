@@ -49,6 +49,18 @@ func TestSelfhostCheckerRejectsUndefinedNotNames(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerRejectsUndefinedPushNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	if err := os.WriteFile(path, []byte("1:PUSH:missingTarget:IDENT:missingValue\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: undefined variable: missingTarget\n1: undefined variable: missingValue\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func runToFile(t *testing.T, path string, name string, args ...string) {
 	t.Helper()
 	out := run(t, name, args...)

@@ -1,5 +1,7 @@
 message = "Tya"
 alias = message
+log = message
+push log, alias
 count = 1 + 1
 count = count + 1
 enabled = true
