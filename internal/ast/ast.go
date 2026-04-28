@@ -49,6 +49,14 @@ type StringLit struct{ Value string }
 
 func (*StringLit) expr() {}
 
+type BoolLit struct{ Value bool }
+
+func (*BoolLit) expr() {}
+
+type NilLit struct{}
+
+func (*NilLit) expr() {}
+
 type ObjectLit struct {
 	Props []ObjectProp
 }

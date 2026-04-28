@@ -28,3 +28,13 @@ func TestParseObjectAssignment(t *testing.T) {
 		t.Fatalf("got %d props", len(obj.Props))
 	}
 }
+
+func TestParseMultipleFunctionParams(t *testing.T) {
+	toks, errs := lexer.Lex("add = a, b -> a + b\nprint add 2, 3\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, err := Parse(toks); err != nil {
+		t.Fatal(err)
+	}
+}

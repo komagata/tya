@@ -154,6 +154,10 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		return n.Value, nil
 	case *ast.StringLit:
 		return interpolate(n.Value, env)
+	case *ast.BoolLit:
+		return n.Value, nil
+	case *ast.NilLit:
+		return nil, nil
 	case *ast.ObjectLit:
 		o := Object{}
 		for _, p := range n.Props {
@@ -167,7 +171,7 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 	case *ast.FuncLit:
 		return &Function{Params: n.Params, Body: n.Body, Expr: n.Expr, Env: env}, nil
 	case *ast.BinaryExpr:
-		return evalPlus(n, env)
+		return evalBinary(n, env)
 	case *ast.MemberExpr:
 		obj, err := evalExpr(n.Object, env)
 		if err != nil {
@@ -232,7 +236,7 @@ func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
 	return v, nil, err
 }
 
-func evalPlus(b *ast.BinaryExpr, env *Env) (Value, error) {
+func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 	l, err := evalExpr(b.Left, env)
 	if err != nil {
 		return nil, err
@@ -240,6 +244,9 @@ func evalPlus(b *ast.BinaryExpr, env *Env) (Value, error) {
 	r, err := evalExpr(b.Right, env)
 	if err != nil {
 		return nil, err
+	}
+	if b.Op.Type != "+" {
+		return evalNumeric(b.Op.Lexeme, l, r)
 	}
 	if _, ok := l.(string); ok {
 		return stringify(l) + stringify(r), nil
@@ -258,6 +265,44 @@ func evalPlus(b *ast.BinaryExpr, env *Env) (Value, error) {
 		}
 	}
 	return lf + rf, nil
+}
+
+func evalNumeric(op string, l, r Value) (Value, error) {
+	lf, lok := asFloat(l)
+	rf, rok := asFloat(r)
+	if !lok || !rok {
+		return nil, fmt.Errorf("%s expects numbers", op)
+	}
+	if op == "/" {
+		if rf == 0 {
+			return nil, fmt.Errorf("division by zero")
+		}
+		return lf / rf, nil
+	}
+	li, lint := l.(int64)
+	ri, rint := r.(int64)
+	if lint && rint {
+		switch op {
+		case "-":
+			return li - ri, nil
+		case "*":
+			return li * ri, nil
+		case "%":
+			if ri == 0 {
+				return nil, fmt.Errorf("modulo by zero")
+			}
+			return li % ri, nil
+		}
+	}
+	switch op {
+	case "-":
+		return lf - rf, nil
+	case "*":
+		return lf * rf, nil
+	case "%":
+		return nil, fmt.Errorf("%% expects integers")
+	}
+	return nil, fmt.Errorf("unknown operator %s", op)
 }
 
 func asFloat(v Value) (float64, bool) {

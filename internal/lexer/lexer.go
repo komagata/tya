@@ -141,6 +141,14 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			l.add(token.AT, "@", line, col)
 		case '+':
 			l.add(token.PLUS, "+", line, col)
+		case '-':
+			l.add(token.MINUS, "-", line, col)
+		case '*':
+			l.add(token.STAR, "*", line, col)
+		case '/':
+			l.add(token.SLASH, "/", line, col)
+		case '%':
+			l.add(token.PERCENT, "%", line, col)
 		case '(':
 			l.add(token.LPAREN, "(", line, col)
 		case ')':

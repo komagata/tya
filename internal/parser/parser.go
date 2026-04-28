@@ -108,6 +108,7 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 			return nil, err
 		}
 		args = append(args, arg)
+		p.match(token.COMMA)
 	}
 	if len(args) == 0 {
 		return ex, nil
@@ -123,13 +124,13 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 }
 
 func (p *Parser) expr() (ast.Expr, error) {
-	left, err := p.call()
+	left, err := p.factor()
 	if err != nil {
 		return nil, err
 	}
-	for p.match(token.PLUS) {
+	for p.match(token.PLUS) || p.match(token.MINUS) {
 		op := p.prev()
-		right, err := p.call()
+		right, err := p.factor()
 		if err != nil {
 			return nil, err
 		}
@@ -143,6 +144,22 @@ func (p *Parser) expr() (ast.Expr, error) {
 			return nil, p.err("function parameters must be identifiers")
 		}
 		return p.finishFunc(params)
+	}
+	return left, nil
+}
+
+func (p *Parser) factor() (ast.Expr, error) {
+	left, err := p.call()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.STAR) || p.match(token.SLASH) || p.match(token.PERCENT) {
+		op := p.prev()
+		right, err := p.call()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
 	}
 	return left, nil
 }
@@ -164,11 +181,16 @@ func (p *Parser) call() (ast.Expr, error) {
 		if p.match(token.LPAREN) {
 			var args []ast.Expr
 			if !p.at(token.RPAREN) {
-				arg, err := p.expr()
-				if err != nil {
-					return nil, err
+				for {
+					arg, err := p.expr()
+					if err != nil {
+						return nil, err
+					}
+					args = append(args, arg)
+					if !p.match(token.COMMA) {
+						break
+					}
 				}
-				args = append(args, arg)
 			}
 			if !p.match(token.RPAREN) {
 				return nil, p.err("expected ')'")
@@ -187,6 +209,31 @@ func (p *Parser) primary() (ast.Expr, error) {
 	case token.IDENT:
 		if p.match(token.ARROW) {
 			return p.finishFunc([]string{tok.Lexeme})
+		}
+		switch tok.Lexeme {
+		case "true":
+			return &ast.BoolLit{Value: true}, nil
+		case "false":
+			return &ast.BoolLit{Value: false}, nil
+		case "nil":
+			return &ast.NilLit{}, nil
+		}
+		if p.match(token.COMMA) {
+			params := []string{tok.Lexeme}
+			for {
+				next := p.expect(token.IDENT)
+				if next.Type != token.IDENT {
+					return nil, p.err("expected function parameter")
+				}
+				params = append(params, next.Lexeme)
+				if !p.match(token.COMMA) {
+					break
+				}
+			}
+			if !p.match(token.ARROW) {
+				return nil, p.err("expected '->' after function parameters")
+			}
+			return p.finishFunc(params)
 		}
 		return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
 	case token.INT:
