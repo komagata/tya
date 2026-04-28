@@ -2,8 +2,8 @@
 
 Tya is a small indentation-based dynamic language inspired by CoffeeScript.
 
-This repository currently contains a Go lexer, parser, AST, checker, and
-interpreter.
+This repository currently contains a Go lexer, parser, AST, checker,
+interpreter, C emitter, and C runtime.
 
 ## Run
 
@@ -52,7 +52,7 @@ go test ./...
   `readLine`, `readFile`, `writeFile`, `fileExists`, `args`, `env`, `error`,
   `exit`, `panic`,
   `div`, `toString`, `toInt`, `toFloat`, `toNumber`
-- `stdlib/prelude.tya` is loaded by the runner for normal file execution
+- `stdlib/prelude.tya` is loaded by the runner and `--emit-c`
 
 ## Examples
 

@@ -50,11 +50,14 @@ Implemented:
 - C emission for simple numeric/string/bool expressions, assignments, `print`,
   `if`, `while`, `break`, and `continue`
 - GCC smoke test for generated C
+- C emission for arrays, objects, named functions, method calls, function values,
+  multiple return assignment, `try`, errors, and key standard builtins
+- Generated C parity checks cover executable examples and `args` / `env`
+- `--emit-c` loads `stdlib/prelude.tya` like normal execution
 
 Remaining hardening:
 
-- Emit C for functions, arrays, objects, and errors
-- Emit C for the complete standard library surface
+- Emit C for the remaining edge cases in the complete standard library surface
 - Add source maps or generated-line diagnostics
 
 ## Phase 3: C Runtime
