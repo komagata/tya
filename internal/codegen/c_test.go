@@ -13,6 +13,22 @@ import (
 
 func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	src := "x = 2 + 3 * 4\nprint x\n"
+	out := compileAndRun(t, src)
+	if string(out) != "14\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCCompilesArrayProgram(t *testing.T) {
+	src := "items = [1, 2]\npush items, 3\nprint len items\nprint items[2]\n"
+	out := compileAndRun(t, src)
+	if string(out) != "3\n3\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func compileAndRun(t *testing.T, src string) []byte {
+	t.Helper()
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -43,7 +59,5 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(out) != "14\n" {
-		t.Fatalf("got %q", out)
-	}
+	return out
 }

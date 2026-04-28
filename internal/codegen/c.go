@@ -144,6 +144,18 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 	if !ok {
 		return fmt.Errorf("C emitter only supports simple call expression statements")
 	}
+	if id.Name == "push" && len(call.Args) == 2 {
+		array, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		value, _, err := g.expr(call.Args[1])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_push(%s, %s);", array, value))
+		return nil
+	}
 	if id.Name != "print" || len(call.Args) != 1 {
 		g.line(fmt.Sprintf("/* call %s */", id.Name))
 		return nil
@@ -173,7 +185,18 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.NilLit:
 		return "tya_nil()", "TyaValue", nil
 	case *ast.ArrayLit:
-		return "tya_nil() /* array */", "TyaValue", nil
+		if len(n.Elems) == 0 {
+			return "tya_array(0, 0)", "TyaValue", nil
+		}
+		elems := make([]string, 0, len(n.Elems))
+		for _, elem := range n.Elems {
+			ex, _, err := g.expr(elem)
+			if err != nil {
+				return "", "", err
+			}
+			elems = append(elems, ex)
+		}
+		return fmt.Sprintf("tya_array((TyaValue[]){%s}, %d)", strings.Join(elems, ", "), len(elems)), "TyaValue", nil
 	case *ast.ObjectLit:
 		return "tya_nil() /* object */", "TyaValue", nil
 	case *ast.FuncLit:
@@ -216,6 +239,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return "tya_number(-" + ex + ".number)", typ, nil
 	case *ast.CallExpr:
 		id, ok := n.Callee.(*ast.Ident)
+		if ok && id.Name == "len" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_len(%s)", arg), "TyaValue", nil
+		}
 		if ok && id.Name == "div" && len(n.Args) == 2 {
 			left, _, err := g.expr(n.Args[0])
 			if err != nil {
@@ -232,7 +262,15 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return "tya_nil() /* call */", "TyaValue", nil
 	case *ast.IndexExpr:
-		return "tya_nil() /* index */", "TyaValue", nil
+		object, _, err := g.expr(n.Object)
+		if err != nil {
+			return "", "", err
+		}
+		index, _, err := g.expr(n.Index)
+		if err != nil {
+			return "", "", err
+		}
+		return fmt.Sprintf("tya_index(%s, %s)", object, index), "TyaValue", nil
 	case *ast.MemberExpr:
 		return "tya_nil() /* member */", "TyaValue", nil
 	case *ast.TryExpr:
