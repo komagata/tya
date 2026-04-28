@@ -1,0 +1,46 @@
+kindOf = node ->
+  parts = split node, ":"
+  parts[0]
+
+nameOf = node ->
+  parts = split node, ":"
+  if len(parts) < 2
+    return ""
+  parts[1]
+
+hasName = names, name ->
+  for existing in names
+    if existing == name
+      return true
+  false
+
+check = nodes ->
+  names = []
+  errors = []
+
+  for node in nodes
+    if kindOf(node) == "ASSIGN"
+      name = nameOf(node)
+      seen = hasName names, name
+      if seen
+        push errors, "duplicate definition: " + name
+      else
+        push names, name
+
+  errors
+
+nodes = []
+source = readFile(args()[0])
+lines = split source, "\n"
+
+for line in lines
+  if line != ""
+    push nodes, line
+
+errors = check nodes
+
+if len(errors) == 0
+  print "ok"
+else
+  for err in errors
+    print err
