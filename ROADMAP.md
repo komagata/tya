@@ -77,6 +77,7 @@ Implemented:
 - Runtime equality helper for nil, bool, number, string, and array identity
 - Runtime addition helper for numeric addition and string concatenation
 - Initial generated-C runtime support for `args`, `readFile`, `split`, `toString`, and `toInt`
+- Initial object runtime with literal construction, member reads, and `len`
 - Runtime printing and truthiness helpers
 - Generated C can compile and run against `runtime/tya_runtime.c`
 
@@ -181,6 +182,7 @@ Implemented:
 - Go C emitter predeclares generated C locals and mangles reserved identifiers used by self-host sources
 - Go C emitter expands simple string interpolation in generated C
 - Go-emitted self-host lexer/parser/checker/codegen can compile and run a simple `.tya` source file through generated C
+- Go C emitter can run simple generated-C object literal and member access programs
 
 ## Non-Goals For Now
 

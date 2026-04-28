@@ -10,6 +10,11 @@ struct TyaArray {
   TyaValue *items;
 };
 
+struct TyaObject {
+  int len;
+  TyaObjectEntry *entries;
+};
+
 TyaValue tya_nil(void) {
   return (TyaValue){.kind = TYA_NIL};
 }
@@ -38,6 +43,16 @@ TyaValue tya_array(const TyaValue *items, int count) {
   return (TyaValue){.kind = TYA_ARRAY, .array = array};
 }
 
+TyaValue tya_object(const TyaObjectEntry *entries, int count) {
+  TyaObject *object = malloc(sizeof(TyaObject));
+  object->len = count;
+  object->entries = malloc(sizeof(TyaObjectEntry) * count);
+  for (int i = 0; i < count; i++) {
+    object->entries[i] = entries[i];
+  }
+  return (TyaValue){.kind = TYA_OBJECT, .object = object};
+}
+
 TyaValue tya_len(TyaValue value) {
   if (value.kind == TYA_STRING && value.string != NULL) {
     int n = 0;
@@ -48,6 +63,9 @@ TyaValue tya_len(TyaValue value) {
   }
   if (value.kind == TYA_ARRAY && value.array != NULL) {
     return tya_number(value.array->len);
+  }
+  if (value.kind == TYA_OBJECT && value.object != NULL) {
+    return tya_number(value.object->len);
   }
   return tya_number(0);
 }
@@ -67,6 +85,18 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
       out[0] = value.string[i];
       out[1] = '\0';
       return tya_string(out);
+    }
+  }
+  return tya_nil();
+}
+
+TyaValue tya_member(TyaValue object, const char *key) {
+  if (object.kind != TYA_OBJECT || object.object == NULL) {
+    return tya_nil();
+  }
+  for (int i = 0; i < object.object->len; i++) {
+    if (strcmp(object.object->entries[i].key, key) == 0) {
+      return object.object->entries[i].value;
     }
   }
   return tya_nil();
@@ -97,6 +127,8 @@ bool tya_equal(TyaValue left, TyaValue right) {
     return strcmp(left.string, right.string) == 0;
   case TYA_ARRAY:
     return left.array == right.array;
+  case TYA_OBJECT:
+    return left.object == right.object;
   }
   return false;
 }
@@ -216,6 +248,9 @@ TyaValue tya_to_string(TyaValue value) {
   case TYA_ARRAY:
     snprintf(out, 64, "[array len=%d]", value.array == NULL ? 0 : value.array->len);
     break;
+  case TYA_OBJECT:
+    snprintf(out, 64, "[object len=%d]", value.object == NULL ? 0 : value.object->len);
+    break;
   case TYA_STRING:
     break;
   }
@@ -260,6 +295,9 @@ void tya_print(TyaValue value) {
     break;
   case TYA_ARRAY:
     printf("[array len=%d]\n", value.array == NULL ? 0 : value.array->len);
+    break;
+  case TYA_OBJECT:
+    printf("[object len=%d]\n", value.object == NULL ? 0 : value.object->len);
     break;
   }
 }

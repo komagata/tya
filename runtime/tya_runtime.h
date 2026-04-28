@@ -9,9 +9,12 @@ typedef enum {
   TYA_NUMBER,
   TYA_STRING,
   TYA_ARRAY,
+  TYA_OBJECT,
 } TyaKind;
 
 typedef struct TyaArray TyaArray;
+typedef struct TyaObject TyaObject;
+typedef struct TyaObjectEntry TyaObjectEntry;
 
 typedef struct {
   TyaKind kind;
@@ -19,15 +22,23 @@ typedef struct {
   double number;
   const char *string;
   TyaArray *array;
+  TyaObject *object;
 } TyaValue;
+
+struct TyaObjectEntry {
+  const char *key;
+  TyaValue value;
+};
 
 TyaValue tya_nil(void);
 TyaValue tya_bool(bool value);
 TyaValue tya_number(double value);
 TyaValue tya_string(const char *value);
 TyaValue tya_array(const TyaValue *items, int count);
+TyaValue tya_object(const TyaObjectEntry *entries, int count);
 TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
+TyaValue tya_member(TyaValue object, const char *key);
 TyaValue tya_contains(TyaValue text, TyaValue part);
 bool tya_equal(TyaValue left, TyaValue right);
 TyaValue tya_add(TyaValue left, TyaValue right);

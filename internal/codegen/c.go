@@ -305,7 +305,18 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return fmt.Sprintf("tya_array((TyaValue[]){%s}, %d)", strings.Join(elems, ", "), len(elems)), "TyaValue", nil
 	case *ast.ObjectLit:
-		return "tya_nil() /* object */", "TyaValue", nil
+		if len(n.Props) == 0 {
+			return "tya_object(0, 0)", "TyaValue", nil
+		}
+		entries := make([]string, 0, len(n.Props))
+		for _, prop := range n.Props {
+			value, _, err := g.expr(prop.Value)
+			if err != nil {
+				return "", "", err
+			}
+			entries = append(entries, fmt.Sprintf("{%s, %s}", strconv.Quote(prop.Name), value))
+		}
+		return fmt.Sprintf("tya_object((TyaObjectEntry[]){%s}, %d)", strings.Join(entries, ", "), len(entries)), "TyaValue", nil
 	case *ast.FuncLit:
 		return "tya_nil() /* function */", "TyaValue", nil
 	case *ast.Ident:
@@ -457,7 +468,11 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return fmt.Sprintf("tya_index(%s, %s)", object, index), "TyaValue", nil
 	case *ast.MemberExpr:
-		return "tya_nil() /* member */", "TyaValue", nil
+		object, _, err := g.expr(n.Object)
+		if err != nil {
+			return "", "", err
+		}
+		return fmt.Sprintf("tya_member(%s, %s)", object, strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.TryExpr:
 		return g.expr(n.Expr)
 	}
