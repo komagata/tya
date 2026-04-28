@@ -218,6 +218,12 @@ func installBuiltins(env *Env, out io.Writer, processArgs []string) {
 		delete(obj, key)
 		return nil, nil
 	}))
+	env.set("equal", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("equal expects 2 arguments")
+		}
+		return deepEqual(args[0], args[1]), nil
+	}))
 	env.set("toString", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("toString expects 1 argument")
@@ -824,6 +830,36 @@ func equal(l, r Value) bool {
 		return lv == r
 	}
 	return false
+}
+
+func deepEqual(l, r Value) bool {
+	switch lv := l.(type) {
+	case *Array:
+		rv, ok := r.(*Array)
+		if !ok || len(lv.items) != len(rv.items) {
+			return false
+		}
+		for i := range lv.items {
+			if !deepEqual(lv.items[i], rv.items[i]) {
+				return false
+			}
+		}
+		return true
+	case Object:
+		rv, ok := r.(Object)
+		if !ok || len(lv) != len(rv) {
+			return false
+		}
+		for key, leftValue := range lv {
+			rightValue, ok := rv[key]
+			if !ok || !deepEqual(leftValue, rightValue) {
+				return false
+			}
+		}
+		return true
+	default:
+		return equal(l, r)
+	}
 }
 
 func compare(op string, l, r Value) (Value, error) {

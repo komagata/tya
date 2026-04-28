@@ -1,0 +1,15 @@
+left =
+  name: "komagata"
+  nums: [1, 2]
+
+right =
+  name: "komagata"
+  nums: [1, 2]
+
+print left == right
+same = equal left, right
+numsA = [1, 2]
+numsB = [1, 3]
+different = equal numsA, numsB
+print same
+print different

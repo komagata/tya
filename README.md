@@ -35,7 +35,7 @@ go test ./...
 - `while`, `break`, and `continue`
 - array `for item in items` and object `for key, value of object` loops
 - builtins: `print`, `len`, `push`, `pop`, `keys`, `values`, `has`, `delete`,
-  `split`, `join`, `trim`,
+  `equal`, `split`, `join`, `trim`,
   `replace`, `contains`, `startsWith`, `endsWith`, `byteLen`, `charLen`,
   `readFile`, `writeFile`, `fileExists`, `args`, `env`, `exit`, `panic`,
   `div`, `toString`, `toInt`, `toFloat`, `toNumber`
