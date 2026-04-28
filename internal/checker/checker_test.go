@@ -60,6 +60,24 @@ func TestCheckRejectsDuplicateObjectProperty(t *testing.T) {
 	}
 }
 
+func TestCheckRejectsUndefinedVariable(t *testing.T) {
+	prog := parse(t, "print userNmae\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected undefined variable error")
+	}
+	if !strings.Contains(err.Error(), "undefined variable userNmae") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckAllowsFunctionParameterAndLoopVariable(t *testing.T) {
+	prog := parse(t, "show = user -> user.name\nitems = [1]\nfor item in items\n  print item\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func parse(t *testing.T, src string) *ast.Program {
 	t.Helper()
 	toks, errs := lexer.Lex(src)

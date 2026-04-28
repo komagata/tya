@@ -12,15 +12,55 @@ var valueNameRE = regexp.MustCompile(`^_?[a-z][A-Za-z0-9]*$|^_$`)
 
 func Check(prog *ast.Program) error {
 	constants := map[string]bool{}
-	return checkStmts(prog.Stmts, constants)
+	scope := newScope(nil)
+	for _, name := range builtinNames {
+		scope.define(name)
+	}
+	return checkStmts(prog.Stmts, constants, scope)
 }
 
-func checkStmts(stmts []ast.Stmt, constants map[string]bool) error {
+var builtinNames = []string{
+	"args", "byteLen", "charLen", "contains", "delete", "div", "endsWith",
+	"env", "equal", "exit", "fileExists", "has", "join", "keys", "len", "panic",
+	"pop", "print", "push", "readFile", "replace", "split", "startsWith",
+	"toFloat", "toInt", "toNumber", "toString", "trim", "values", "writeFile",
+}
+
+type scope struct {
+	parent *scope
+	names  map[string]bool
+}
+
+func newScope(parent *scope) *scope {
+	return &scope{parent: parent, names: map[string]bool{}}
+}
+
+func (s *scope) define(name string) {
+	s.names[name] = true
+}
+
+func (s *scope) defined(name string) bool {
+	if s.names[name] {
+		return true
+	}
+	if s.parent != nil {
+		return s.parent.defined(name)
+	}
+	return false
+}
+
+func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error {
 	for _, stmt := range stmts {
 		switch n := stmt.(type) {
 		case *ast.AssignStmt:
+			if err := checkExpr(n.Value, scope); err != nil {
+				return err
+			}
 			name, ok := n.Target.(*ast.Ident)
 			if !ok {
+				if err := checkAssignmentTarget(n.Target, scope); err != nil {
+					return err
+				}
 				continue
 			}
 			if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
@@ -32,24 +72,22 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool) error {
 			if constNameRE.MatchString(name.Name) {
 				constants[name.Name] = true
 			}
-			if err := checkExpr(n.Value); err != nil {
-				return err
-			}
+			scope.define(name.Name)
 		case *ast.IfStmt:
-			if err := checkExpr(n.Cond); err != nil {
+			if err := checkExpr(n.Cond, scope); err != nil {
 				return err
 			}
-			if err := checkStmts(n.Then, constants); err != nil {
+			if err := checkStmts(n.Then, constants, newScope(scope)); err != nil {
 				return err
 			}
-			if err := checkStmts(n.Else, constants); err != nil {
+			if err := checkStmts(n.Else, constants, newScope(scope)); err != nil {
 				return err
 			}
 		case *ast.WhileStmt:
-			if err := checkExpr(n.Cond); err != nil {
+			if err := checkExpr(n.Cond, scope); err != nil {
 				return err
 			}
-			if err := checkStmts(n.Body, constants); err != nil {
+			if err := checkStmts(n.Body, constants, newScope(scope)); err != nil {
 				return err
 			}
 		case *ast.ForInStmt:
@@ -61,19 +99,24 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool) error {
 					return err
 				}
 			}
-			if err := checkExpr(n.Iterable); err != nil {
+			if err := checkExpr(n.Iterable, scope); err != nil {
 				return err
 			}
-			if err := checkStmts(n.Body, constants); err != nil {
+			child := newScope(scope)
+			child.define(n.ValueName)
+			if n.IndexName != "" {
+				child.define(n.IndexName)
+			}
+			if err := checkStmts(n.Body, constants, child); err != nil {
 				return err
 			}
 		case *ast.ExprStmt:
-			if err := checkExpr(n.Expr); err != nil {
+			if err := checkExpr(n.Expr, scope); err != nil {
 				return err
 			}
 		case *ast.ReturnStmt:
 			if n.Value != nil {
-				if err := checkExpr(n.Value); err != nil {
+				if err := checkExpr(n.Value, scope); err != nil {
 					return err
 				}
 			}
@@ -82,8 +125,12 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool) error {
 	return nil
 }
 
-func checkExpr(expr ast.Expr) error {
+func checkExpr(expr ast.Expr, scope *scope) error {
 	switch n := expr.(type) {
+	case *ast.Ident:
+		if !scope.defined(n.Name) {
+			return fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
+		}
 	case *ast.ObjectLit:
 		seen := map[string]bool{}
 		for _, prop := range n.Props {
@@ -94,12 +141,13 @@ func checkExpr(expr ast.Expr) error {
 				return fmt.Errorf("duplicate object property %s", prop.Name)
 			}
 			seen[prop.Name] = true
-			if err := checkExpr(prop.Value); err != nil {
+			if err := checkExpr(prop.Value, scope); err != nil {
 				return err
 			}
 		}
 	case *ast.FuncLit:
 		seen := map[string]bool{}
+		child := newScope(scope)
 		for _, param := range n.Params {
 			if err := checkBindingName(param, 0, 0); err != nil {
 				return err
@@ -108,44 +156,57 @@ func checkExpr(expr ast.Expr) error {
 				return fmt.Errorf("duplicate function parameter %s", param)
 			}
 			seen[param] = true
+			child.define(param)
 		}
 		if n.Expr != nil {
-			if err := checkExpr(n.Expr); err != nil {
+			if err := checkExpr(n.Expr, child); err != nil {
 				return err
 			}
 		}
-		if err := checkStmts(n.Body, map[string]bool{}); err != nil {
+		if err := checkStmts(n.Body, map[string]bool{}, child); err != nil {
 			return err
 		}
 	case *ast.ArrayLit:
 		for _, elem := range n.Elems {
-			if err := checkExpr(elem); err != nil {
+			if err := checkExpr(elem, scope); err != nil {
 				return err
 			}
 		}
 	case *ast.BinaryExpr:
-		if err := checkExpr(n.Left); err != nil {
+		if err := checkExpr(n.Left, scope); err != nil {
 			return err
 		}
-		return checkExpr(n.Right)
+		return checkExpr(n.Right, scope)
 	case *ast.UnaryExpr:
-		return checkExpr(n.Expr)
+		return checkExpr(n.Expr, scope)
 	case *ast.MemberExpr:
-		return checkExpr(n.Object)
+		return checkExpr(n.Object, scope)
 	case *ast.IndexExpr:
-		if err := checkExpr(n.Object); err != nil {
+		if err := checkExpr(n.Object, scope); err != nil {
 			return err
 		}
-		return checkExpr(n.Index)
+		return checkExpr(n.Index, scope)
 	case *ast.CallExpr:
-		if err := checkExpr(n.Callee); err != nil {
+		if err := checkExpr(n.Callee, scope); err != nil {
 			return err
 		}
 		for _, arg := range n.Args {
-			if err := checkExpr(arg); err != nil {
+			if err := checkExpr(arg, scope); err != nil {
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+func checkAssignmentTarget(target ast.Expr, scope *scope) error {
+	switch n := target.(type) {
+	case *ast.MemberExpr:
+		return checkExpr(n.Object, scope)
+	case *ast.IndexExpr:
+		return checkExpr(n.Object, scope)
+	case *ast.ThisProp:
+		return nil
 	}
 	return nil
 }
