@@ -39,6 +39,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "while" {
 		return p.whileStmt()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "for" {
+		return p.forStmt()
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "break" {
 		p.next()
 		return &ast.BreakStmt{}, nil
@@ -103,6 +106,34 @@ func (p *Parser) whileStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.WhileStmt{Cond: cond, Body: body}, nil
+}
+
+func (p *Parser) forStmt() (ast.Stmt, error) {
+	p.next()
+	valueName := p.expect(token.IDENT)
+	if valueName.Type != token.IDENT {
+		return nil, p.err("expected loop variable")
+	}
+	var indexName string
+	if p.match(token.COMMA) {
+		idx := p.expect(token.IDENT)
+		if idx.Type != token.IDENT {
+			return nil, p.err("expected loop index variable")
+		}
+		indexName = idx.Lexeme
+	}
+	if !p.matchWord("in") {
+		return nil, p.err("expected 'in' in for loop")
+	}
+	iterable, err := p.expr()
+	if err != nil {
+		return nil, err
+	}
+	body, err := p.block("for")
+	if err != nil {
+		return nil, err
+	}
+	return &ast.ForInStmt{ValueName: valueName.Lexeme, IndexName: indexName, Iterable: iterable, Body: body}, nil
 }
 
 func (p *Parser) returnStmt() (ast.Stmt, error) {

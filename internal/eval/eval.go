@@ -383,6 +383,33 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 				return nil, err
 			}
 		}
+	case *ast.ForInStmt:
+		iterable, err := evalExpr(n.Iterable, env)
+		if err != nil {
+			return nil, err
+		}
+		arr, ok := iterable.(*Array)
+		if !ok {
+			return nil, fmt.Errorf("for in expects array")
+		}
+		var last Value
+		for i, item := range arr.items {
+			env.set(n.ValueName, item)
+			if n.IndexName != "" {
+				env.set(n.IndexName, int64(i))
+			}
+			last, err = evalStmts(n.Body, env)
+			if errors.Is(err, errBreak) {
+				return last, nil
+			}
+			if errors.Is(err, errContinue) {
+				continue
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+		return last, nil
 	case *ast.BreakStmt:
 		return nil, errBreak
 	case *ast.ContinueStmt:

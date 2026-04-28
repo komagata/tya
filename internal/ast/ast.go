@@ -38,6 +38,15 @@ type WhileStmt struct {
 
 func (*WhileStmt) stmt() {}
 
+type ForInStmt struct {
+	ValueName string
+	IndexName string
+	Iterable  Expr
+	Body      []Stmt
+}
+
+func (*ForInStmt) stmt() {}
+
 type BreakStmt struct{}
 
 func (*BreakStmt) stmt() {}

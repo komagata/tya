@@ -201,6 +201,26 @@ func TestRunObjectBuiltins(t *testing.T) {
 	}
 }
 
+func TestRunForIn(t *testing.T) {
+	src := "items = [2, 4, 6]\nsum = 0\nfor item in items\n  sum = sum + item\nprint sum\nfor item, index in items\n  print \"{index}:{item}\"\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "12\n0:2\n1:4\n2:6\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {

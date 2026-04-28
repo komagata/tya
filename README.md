@@ -33,6 +33,7 @@ go test ./...
 - arithmetic, comparison, equality, and logical operators
 - `if` / `else`
 - `while`, `break`, and `continue`
+- array `for item in items` loops
 - builtins: `print`, `len`, `push`, `pop`, `keys`, `values`, `has`, `delete`,
   `split`, `join`, `trim`,
   `replace`, `contains`, `startsWith`, `endsWith`, `byteLen`, `charLen`,

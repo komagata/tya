@@ -97,3 +97,17 @@ func TestParseReturnFunctionThenTopLevelPrint(t *testing.T) {
 		t.Fatalf("second stmt got %T", prog.Stmts[1])
 	}
 }
+
+func TestParseForIn(t *testing.T) {
+	toks, errs := lexer.Lex("for item, index in items\n  print item\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := prog.Stmts[0].(*ast.ForInStmt); !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+}

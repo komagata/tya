@@ -39,6 +39,10 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool) error {
 			if err := checkStmts(n.Body, constants); err != nil {
 				return err
 			}
+		case *ast.ForInStmt:
+			if err := checkStmts(n.Body, constants); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
