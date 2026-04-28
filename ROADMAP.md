@@ -261,6 +261,7 @@ Self-Host Completion TODO:
   - [ ] Parse function literals, method literals, calls with and without parentheses, and function-value calls
   - [ ] Parse multiple assignment, multiple return, `try`, `for in`, `for of`, `break`, `continue`, and `else`
   - [ ] Add parser golden tests comparing Go parser AST shape and Tya parser AST shape
+    - [x] Add subset parser golden tests for assignments, comparisons, blocks, `else`, `while`, `push`, and `for`
 - [ ] Checker parity
   - [ ] Implement lexical scopes for top-level, functions, loops, and blocks
   - [ ] Check undefined names, duplicate constants, duplicate params, duplicate object members, and invalid assignment targets

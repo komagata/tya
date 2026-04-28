@@ -7,7 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"tya/internal/ast"
 	"tya/internal/lexer"
+	"tya/internal/parser"
 	"tya/internal/token"
 )
 
@@ -75,6 +77,23 @@ func TestSelfhostLexerMatchesGoLexerSubset(t *testing.T) {
 	want := strings.Join(goLexerSelfhostTokens(t, src), "\n")
 	if got != want {
 		t.Fatalf("got:\n%s\nwant:\n%s", got, want)
+	}
+}
+
+func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
+	dir := t.TempDir()
+	srcPath := dir + "/parser_subset.tya"
+	tokensPath := dir + "/tokens.txt"
+	src := "message = \"Tya\"\ncount = 1 + 1\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = []\npush queue, message\nfor entry in queue\n  print entry\n"
+	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	runToFile(t, tokensPath, "go", "run", "./cmd/tya", "selfhost/lexer.tya", srcPath)
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/parser.tya", tokensPath)
+	got := summarizeSelfhostNodes(string(out))
+	want := summarizeGoProgram(t, src)
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("got:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 	}
 }
 
@@ -446,4 +465,159 @@ func escapeSelfhostLexeme(s string) string {
 	s = strings.ReplaceAll(s, "\n", "\\n")
 	s = strings.ReplaceAll(s, "\t", "\\t")
 	return s
+}
+
+func summarizeSelfhostNodes(nodes string) []string {
+	out := []string{}
+	for _, line := range strings.Split(strings.TrimSpace(nodes), "\n") {
+		parts := strings.Split(line, ":")
+		if len(parts) < 2 || parts[1] == "INDENT" {
+			continue
+		}
+		out = append(out, strings.Join(parts[1:], ":"))
+	}
+	return out
+}
+
+func summarizeGoProgram(t *testing.T, src string) []string {
+	t.Helper()
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := []string{}
+	for _, stmt := range prog.Stmts {
+		summarizeGoStmt(&out, stmt)
+	}
+	return out
+}
+
+func summarizeGoStmt(out *[]string, stmt ast.Stmt) {
+	switch n := stmt.(type) {
+	case *ast.AssignStmt:
+		if len(n.Targets) == 1 && len(n.Values) == 1 {
+			if id, ok := n.Targets[0].(*ast.Ident); ok {
+				*out = append(*out, "ASSIGN:"+id.Name+":"+summarizeGoExpr(n.Values[0]))
+			}
+		}
+	case *ast.ExprStmt:
+		if call, ok := n.Expr.(*ast.CallExpr); ok {
+			if id, ok := call.Callee.(*ast.Ident); ok && id.Name == "print" && len(call.Args) == 1 {
+				*out = append(*out, "PRINT:"+summarizeGoExpr(call.Args[0]))
+			}
+			if id, ok := call.Callee.(*ast.Ident); ok && id.Name == "push" && len(call.Args) == 2 {
+				if target, ok := call.Args[0].(*ast.Ident); ok {
+					*out = append(*out, "PUSH:"+target.Name+":"+summarizeGoExpr(call.Args[1]))
+				}
+			}
+		}
+	case *ast.IfStmt:
+		*out = append(*out, "IF_"+summarizeGoConditionExpr(n.Cond))
+		for _, child := range n.Then {
+			summarizeGoStmt(out, child)
+		}
+		if len(n.Else) > 0 {
+			*out = append(*out, "ELSE")
+			for _, child := range n.Else {
+				summarizeGoStmt(out, child)
+			}
+		}
+	case *ast.WhileStmt:
+		*out = append(*out, "WHILE_"+summarizeGoConditionExpr(n.Cond))
+		for _, child := range n.Body {
+			summarizeGoStmt(out, child)
+		}
+	case *ast.ForInStmt:
+		*out = append(*out, "FOR:"+n.ValueName+":"+summarizeGoScalar(n.Iterable))
+		for _, child := range n.Body {
+			summarizeGoStmt(out, child)
+		}
+	case *ast.BreakStmt:
+		*out = append(*out, "BREAK")
+	case *ast.ContinueStmt:
+		*out = append(*out, "CONTINUE")
+	}
+}
+
+func summarizeGoExpr(expr ast.Expr) string {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		return "IDENT:" + n.Name
+	case *ast.IntLit:
+		return "INT:" + strconv.FormatInt(n.Value, 10)
+	case *ast.StringLit:
+		return "STRING:" + n.Value
+	case *ast.BoolLit:
+		if n.Value {
+			return "BOOL:true"
+		}
+		return "BOOL:false"
+	case *ast.ArrayLit:
+		if len(n.Elems) == 0 {
+			return "ARRAY_EMPTY:"
+		}
+	case *ast.BinaryExpr:
+		left := summarizeGoScalar(n.Left)
+		right := summarizeGoScalar(n.Right)
+		switch n.Op.Lexeme {
+		case "+":
+			return "INT_ADD:" + left + ":" + right
+		case ">=":
+			return "COMPARE_GE:" + left + ":" + right
+		case "<=":
+			return "COMPARE_LE:" + left + ":" + right
+		}
+	}
+	return "UNKNOWN"
+}
+
+func summarizeGoConditionExpr(expr ast.Expr) string {
+	if bin, ok := expr.(*ast.BinaryExpr); ok {
+		switch bin.Op.Lexeme {
+		case ">=":
+			return "COMPARE_GE:" + summarizeGoKindedScalar(bin.Left) + ":" + summarizeGoKindedScalar(bin.Right)
+		case "<=":
+			return "COMPARE_LE:" + summarizeGoKindedScalar(bin.Left) + ":" + summarizeGoKindedScalar(bin.Right)
+		case "!=":
+			return "COMPARE_NE:" + summarizeGoKindedScalar(bin.Left) + ":" + summarizeGoKindedScalar(bin.Right)
+		case "<":
+			return "COMPARE_LT:" + summarizeGoKindedScalar(bin.Left) + ":" + summarizeGoKindedScalar(bin.Right)
+		case "==":
+			return "COMPARE_EQ:" + summarizeGoKindedScalar(bin.Left) + ":" + summarizeGoKindedScalar(bin.Right)
+		}
+	}
+	return summarizeGoExpr(expr)
+}
+
+func summarizeGoKindedScalar(expr ast.Expr) string {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		return "IDENT:" + n.Name
+	case *ast.IntLit:
+		return "INT:" + strconv.FormatInt(n.Value, 10)
+	case *ast.StringLit:
+		return "STRING:" + n.Value
+	case *ast.BoolLit:
+		if n.Value {
+			return "BOOL:true"
+		}
+		return "BOOL:false"
+	}
+	return summarizeGoExpr(expr)
+}
+
+func summarizeGoScalar(expr ast.Expr) string {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		return n.Name
+	case *ast.IntLit:
+		return strconv.FormatInt(n.Value, 10)
+	case *ast.StringLit:
+		return n.Value
+	}
+	return summarizeGoExpr(expr)
 }
