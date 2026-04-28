@@ -296,7 +296,7 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 	var out strings.Builder
 	out.WriteString("TyaValue ")
 	out.WriteString(sym)
-	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2) {\n")
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
 	child := &cgen{
 		vars:   map[string]bool{},
 		funcs:  g.funcs,
@@ -306,7 +306,7 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 	}
 	for i, param := range fn.Params {
 		child.vars[param] = true
-		if i < 3 {
+		if i < 4 {
 			child.line(fmt.Sprintf("TyaValue %s = __arg%d;", cName(param), i))
 		}
 	}
@@ -333,11 +333,18 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 						return "", err
 					}
 				}
-				value, _, err := child.expr(last.Expr)
-				if err != nil {
-					return "", err
+				if isSideEffectCall(last.Expr) {
+					if err := child.stmt(last); err != nil {
+						return "", err
+					}
+					child.line("return tya_nil();")
+				} else {
+					value, _, err := child.expr(last.Expr)
+					if err != nil {
+						return "", err
+					}
+					child.line(fmt.Sprintf("return %s;", value))
 				}
-				child.line(fmt.Sprintf("return %s;", value))
 			} else {
 				for _, stmt := range body {
 					if err := child.stmt(stmt); err != nil {
@@ -356,6 +363,23 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 	out.WriteString("}\n\n")
 	g.funcOut.WriteString(out.String())
 	return sym, nil
+}
+
+func isSideEffectCall(expr ast.Expr) bool {
+	call, ok := expr.(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+	id, ok := call.Callee.(*ast.Ident)
+	if !ok {
+		return false
+	}
+	switch id.Name {
+	case "push", "delete", "writeFile", "exit", "panic", "print":
+		return true
+	default:
+		return false
+	}
 }
 
 func (g *cgen) assignObjectLit(name string, obj *ast.ObjectLit) error {
@@ -815,10 +839,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 					}
 					args = append(args, ex)
 				}
-				for len(args) < 3 {
+				for len(args) < 4 {
 					args = append(args, "tya_nil()")
 				}
-				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:3], ", ")), "TyaValue", nil
+				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
 			}
 		}
 		if member, ok := n.Callee.(*ast.MemberExpr); ok {
@@ -843,12 +867,35 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return fmt.Sprintf("tya_call2(tya_member(%s, %s), %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1]), "TyaValue", nil
 			case 3:
 				return fmt.Sprintf("tya_call3(tya_member(%s, %s), %s, %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1], args[2]), "TyaValue", nil
+			case 4:
+				return fmt.Sprintf("tya_call4(tya_member(%s, %s), %s, %s, %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1], args[2], args[3]), "TyaValue", nil
 			}
 		}
-		if ok {
-			return fmt.Sprintf("tya_nil() /* call %s */", id.Name), "TyaValue", nil
+		callee, _, err := g.expr(n.Callee)
+		if err != nil {
+			return "", "", err
 		}
-		return "tya_nil() /* call */", "TyaValue", nil
+		args := make([]string, 0, len(n.Args))
+		for _, arg := range n.Args {
+			ex, _, err := g.expr(arg)
+			if err != nil {
+				return "", "", err
+			}
+			args = append(args, ex)
+		}
+		switch len(args) {
+		case 0:
+			return fmt.Sprintf("tya_call1(%s, tya_nil())", callee), "TyaValue", nil
+		case 1:
+			return fmt.Sprintf("tya_call1(%s, %s)", callee, args[0]), "TyaValue", nil
+		case 2:
+			return fmt.Sprintf("tya_call2(%s, %s, %s)", callee, args[0], args[1]), "TyaValue", nil
+		case 3:
+			return fmt.Sprintf("tya_call3(%s, %s, %s, %s)", callee, args[0], args[1], args[2]), "TyaValue", nil
+		case 4:
+			return fmt.Sprintf("tya_call4(%s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3]), "TyaValue", nil
+		}
+		return "tya_nil()", "TyaValue", nil
 	case *ast.IndexExpr:
 		object, _, err := g.expr(n.Object)
 		if err != nil {

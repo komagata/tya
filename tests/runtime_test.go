@@ -10,7 +10,7 @@ import (
 func TestCRuntimeValuesCollectionsAndFunctions(t *testing.T) {
 	src := `#include "tya_runtime.h"
 
-TyaValue double_value(TyaValue self, TyaValue item, TyaValue unused1, TyaValue unused2) {
+TyaValue double_value(TyaValue self, TyaValue item, TyaValue unused1, TyaValue unused2, TyaValue unused3) {
   return tya_number(item.number * 2);
 }
 

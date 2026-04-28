@@ -67,6 +67,14 @@ func TestEmitCCompilesArrayFunctionBuiltins(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesFunctionValueCalls(t *testing.T) {
+	src := "double = item -> item * 2\nalias = double\ncallbacks = [double]\nprint alias 3\nprint callbacks[0](4)\n"
+	out := compileAndRun(t, src)
+	if string(out) != "6\n8\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "input.txt")

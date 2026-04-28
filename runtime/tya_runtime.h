@@ -30,7 +30,7 @@ typedef struct {
   const char *error;
 } TyaValue;
 
-typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue);
+typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
 
 struct TyaObjectEntry {
   const char *key;
@@ -49,6 +49,7 @@ TyaValue tya_error(TyaValue message);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third);
+TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth);
 TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item);

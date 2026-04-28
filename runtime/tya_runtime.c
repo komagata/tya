@@ -95,21 +95,28 @@ TyaValue tya_call1(TyaValue fn, TyaValue arg) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(fn.function->receiver, arg, tya_nil(), tya_nil());
+  return fn.function->fn(fn.function->receiver, arg, tya_nil(), tya_nil(), tya_nil());
 }
 
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(fn.function->receiver, first, second, tya_nil());
+  return fn.function->fn(fn.function->receiver, first, second, tya_nil(), tya_nil());
 }
 
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(fn.function->receiver, first, second, third);
+  return fn.function->fn(fn.function->receiver, first, second, third, tya_nil());
+}
+
+TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+    return tya_nil();
+  }
+  return fn.function->fn(fn.function->receiver, first, second, third, fourth);
 }
 
 TyaValue tya_len(TyaValue value) {
