@@ -9,7 +9,7 @@ import (
 )
 
 func EmitC(prog *ast.Program) (string, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]bool{}}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}}
 	for _, name := range assignedNames(prog.Stmts) {
 		g.vars[name] = true
 		g.line(fmt.Sprintf("TyaValue %s = tya_nil();", cName(name)))
@@ -34,7 +34,7 @@ type cgen struct {
 	funcOut strings.Builder
 	indent  int
 	vars    map[string]bool
-	funcs   map[string]bool
+	funcs   map[string]string
 	temp    int
 	inFunc  bool
 }
@@ -89,10 +89,12 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			return nil
 		}
 		if fn, ok := n.Values[0].(*ast.FuncLit); ok {
-			if err := g.emitFunc(id.Name, fn); err != nil {
+			sym, err := g.emitFunc(id.Name, fn)
+			if err != nil {
 				return err
 			}
-			g.line(fmt.Sprintf("%s = tya_function(%s);", cName(id.Name), cFuncName(id.Name)))
+			g.funcs[id.Name] = sym
+			g.line(fmt.Sprintf("%s = tya_function(%s);", cName(id.Name), sym))
 			return nil
 		}
 		ex, typ, err := g.expr(n.Values[0])
@@ -288,11 +290,12 @@ func (g *cgen) multiAssign(n *ast.AssignStmt) error {
 	return nil
 }
 
-func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
-	g.funcs[name] = true
+func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
+	sym := cFuncName(name, g.temp)
+	g.temp++
 	var out strings.Builder
 	out.WriteString("TyaValue ")
-	out.WriteString(cFuncName(name))
+	out.WriteString(sym)
 	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2) {\n")
 	child := &cgen{
 		vars:   map[string]bool{},
@@ -317,7 +320,7 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
 	if fn.Expr != nil {
 		value, _, err := child.expr(fn.Expr)
 		if err != nil {
-			return err
+			return "", err
 		}
 		child.line(fmt.Sprintf("return %s;", value))
 	} else {
@@ -327,18 +330,18 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
 				body = body[:len(body)-1]
 				for _, stmt := range body {
 					if err := child.stmt(stmt); err != nil {
-						return err
+						return "", err
 					}
 				}
 				value, _, err := child.expr(last.Expr)
 				if err != nil {
-					return err
+					return "", err
 				}
 				child.line(fmt.Sprintf("return %s;", value))
 			} else {
 				for _, stmt := range body {
 					if err := child.stmt(stmt); err != nil {
-						return err
+						return "", err
 					}
 				}
 				child.line("return tya_nil();")
@@ -348,10 +351,11 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) error {
 		}
 	}
 	g.temp = child.temp
+	g.funcOut.WriteString(child.funcOut.String())
 	out.WriteString(child.out.String())
 	out.WriteString("}\n\n")
 	g.funcOut.WriteString(out.String())
-	return nil
+	return sym, nil
 }
 
 func (g *cgen) assignObjectLit(name string, obj *ast.ObjectLit) error {
@@ -373,10 +377,11 @@ func (g *cgen) assignObjectLit(name string, obj *ast.ObjectLit) error {
 	for _, method := range methods {
 		fn := method.Value.(*ast.FuncLit)
 		funcName := name + "_" + method.Name
-		if err := g.emitFunc(funcName, fn); err != nil {
+		sym, err := g.emitFunc(funcName, fn)
+		if err != nil {
 			return err
 		}
-		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_method(%s, %s));", target, strconv.Quote(method.Name), cFuncName(funcName), target))
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_method(%s, %s));", target, strconv.Quote(method.Name), sym, target))
 	}
 	return nil
 }
@@ -785,19 +790,21 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_number((long)%s.number / (long)%s.number)", left, right), "TyaValue", nil
 		}
-		if ok && g.funcs[id.Name] {
-			args := make([]string, 0, len(n.Args))
-			for _, arg := range n.Args {
-				ex, _, err := g.expr(arg)
-				if err != nil {
-					return "", "", err
+		if ok {
+			if sym, found := g.funcs[id.Name]; found {
+				args := make([]string, 0, len(n.Args))
+				for _, arg := range n.Args {
+					ex, _, err := g.expr(arg)
+					if err != nil {
+						return "", "", err
+					}
+					args = append(args, ex)
 				}
-				args = append(args, ex)
+				for len(args) < 3 {
+					args = append(args, "tya_nil()")
+				}
+				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:3], ", ")), "TyaValue", nil
 			}
-			for len(args) < 3 {
-				args = append(args, "tya_nil()")
-			}
-			return fmt.Sprintf("%s(tya_nil(), %s)", cFuncName(id.Name), strings.Join(args[:3], ", ")), "TyaValue", nil
 		}
 		if member, ok := n.Callee.(*ast.MemberExpr); ok {
 			receiver, _, err := g.expr(member.Object)
@@ -863,8 +870,8 @@ func cName(name string) string {
 	return name
 }
 
-func cFuncName(name string) string {
-	return "tya_fn_" + cName(name)
+func cFuncName(name string, serial int) string {
+	return fmt.Sprintf("tya_fn_%s_%d", cName(name), serial)
 }
 
 func interpolateString(value string) string {

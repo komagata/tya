@@ -22,6 +22,7 @@ struct TyaFunction {
 };
 
 static char *tya_substr(const char *text, int start, int len);
+static void tya_write_value(FILE *out, TyaValue value);
 
 TyaValue tya_nil(void) {
   return (TyaValue){.kind = TYA_NIL};
@@ -775,30 +776,44 @@ void tya_exit(TyaValue code) {
 }
 
 void tya_print(TyaValue value) {
+  tya_write_value(stdout, value);
+  putchar('\n');
+}
+
+static void tya_write_value(FILE *out, TyaValue value) {
   switch (value.kind) {
   case TYA_NIL:
-    puts("nil");
+    fprintf(out, "nil");
     break;
   case TYA_BOOL:
-    puts(value.boolean ? "true" : "false");
+    fprintf(out, "%s", value.boolean ? "true" : "false");
     break;
   case TYA_NUMBER:
-    printf("%g\n", value.number);
+    fprintf(out, "%g", value.number);
     break;
   case TYA_STRING:
-    puts(value.string);
+    fprintf(out, "%s", value.string);
     break;
   case TYA_ARRAY:
-    printf("[array len=%d]\n", value.array == NULL ? 0 : value.array->len);
+    fprintf(out, "[");
+    if (value.array != NULL) {
+      for (int i = 0; i < value.array->len; i++) {
+        if (i > 0) {
+          fprintf(out, ", ");
+        }
+        tya_write_value(out, value.array->items[i]);
+      }
+    }
+    fprintf(out, "]");
     break;
   case TYA_OBJECT:
-    printf("[object len=%d]\n", value.object == NULL ? 0 : value.object->len);
+    fprintf(out, "[object len=%d]", value.object == NULL ? 0 : value.object->len);
     break;
   case TYA_FUNCTION:
-    puts("[function]");
+    fprintf(out, "[function]");
     break;
   case TYA_ERROR:
-    printf("error: %s\n", value.error == NULL ? "" : value.error);
+    fprintf(out, "error: %s", value.error == NULL ? "" : value.error);
     break;
   }
 }

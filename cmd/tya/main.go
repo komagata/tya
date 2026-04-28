@@ -61,7 +61,11 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	toks, errs := lexer.Lex(string(src))
+	source := string(src)
+	if emitC {
+		source = runner.WithPrelude(path, source)
+	}
+	toks, errs := lexer.Lex(source)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			fmt.Fprintln(os.Stderr, err)

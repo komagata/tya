@@ -31,7 +31,7 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	toks, errs := lexer.Lex(withPrelude(path, string(src)))
+	toks, errs := lexer.Lex(WithPrelude(path, string(src)))
 	if len(errs) > 0 {
 		return errs[0]
 	}
@@ -45,7 +45,7 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 	return eval.RunWithIO(prog, in, out, args)
 }
 
-func withPrelude(path, src string) string {
+func WithPrelude(path, src string) string {
 	candidates := []string{
 		filepath.Join(filepath.Dir(path), "..", "stdlib", "prelude.tya"),
 		filepath.Join("stdlib", "prelude.tya"),
