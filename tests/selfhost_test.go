@@ -29,6 +29,14 @@ func TestSelfhostSourcesCompileToC(t *testing.T) {
 	}
 }
 
+func TestGoEmitterCompilesSelfhostSourcesToC(t *testing.T) {
+	out := run(t, "sh", "scripts/go_emit_selfhost_compile_check.sh")
+	want := "selfhost/lexer.tya: go-emit compiled\nselfhost/parser.tya: go-emit compiled\nselfhost/checker.tya: go-emit compiled\nselfhost/codegen_c.tya: go-emit compiled\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedConditionNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:IF:IDENT:missingIf\n2:WHILE:IDENT:missingWhile\n"), 0644); err != nil {

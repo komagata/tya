@@ -165,6 +165,7 @@ Implemented:
 - Self-hosted C codegen emits placeholder declarations for call/index assignments
 - Self-hosted C codegen skips function bodies until real function emission lands
 - Self-hosted source files now parse, check, generate C, and compile as C smoke tests
+- Go C emitter can emit compile-smoke C for self-host lexer/parser/checker/codegen sources
 
 ## Non-Goals For Now
 

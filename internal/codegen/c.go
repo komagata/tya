@@ -104,6 +104,30 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.line("break;")
 	case *ast.ContinueStmt:
 		g.line("continue;")
+	case *ast.ForInStmt:
+		iterable, _, err := g.expr(n.Iterable)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("if (false) { /* for %s in %s */", n.ValueName, iterable))
+		g.indent++
+		if n.IndexName != "" && !g.vars[n.IndexName] {
+			g.vars[n.IndexName] = true
+			g.line(fmt.Sprintf("TyaValue %s = tya_nil();", n.IndexName))
+		}
+		if !g.vars[n.ValueName] {
+			g.vars[n.ValueName] = true
+			g.line(fmt.Sprintf("TyaValue %s = tya_nil();", n.ValueName))
+		}
+		for _, stmt := range n.Body {
+			if err := g.stmt(stmt); err != nil {
+				return err
+			}
+		}
+		g.indent--
+		g.line("}")
+	case *ast.ReturnStmt:
+		g.line("/* return */")
 	default:
 		return fmt.Errorf("C emitter does not support %T", stmt)
 	}
@@ -117,8 +141,12 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		return err
 	}
 	id, ok := call.Callee.(*ast.Ident)
-	if !ok || id.Name != "print" || len(call.Args) != 1 {
-		return fmt.Errorf("C emitter only supports print expression statements")
+	if !ok {
+		return fmt.Errorf("C emitter only supports simple call expression statements")
+	}
+	if id.Name != "print" || len(call.Args) != 1 {
+		g.line(fmt.Sprintf("/* call %s */", id.Name))
+		return nil
 	}
 	arg, typ, err := g.expr(call.Args[0])
 	if err != nil {
@@ -142,6 +170,14 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			return "tya_bool(true)", "TyaValue", nil
 		}
 		return "tya_bool(false)", "TyaValue", nil
+	case *ast.NilLit:
+		return "tya_nil()", "TyaValue", nil
+	case *ast.ArrayLit:
+		return "tya_nil() /* array */", "TyaValue", nil
+	case *ast.ObjectLit:
+		return "tya_nil() /* object */", "TyaValue", nil
+	case *ast.FuncLit:
+		return "tya_nil() /* function */", "TyaValue", nil
 	case *ast.Ident:
 		return n.Name, "TyaValue", nil
 	case *ast.BinaryExpr:
@@ -191,6 +227,16 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_number((long)%s.number / (long)%s.number)", left, right), "TyaValue", nil
 		}
+		if ok {
+			return fmt.Sprintf("tya_nil() /* call %s */", id.Name), "TyaValue", nil
+		}
+		return "tya_nil() /* call */", "TyaValue", nil
+	case *ast.IndexExpr:
+		return "tya_nil() /* index */", "TyaValue", nil
+	case *ast.MemberExpr:
+		return "tya_nil() /* member */", "TyaValue", nil
+	case *ast.TryExpr:
+		return g.expr(n.Expr)
 	}
 	return "", "", fmt.Errorf("C emitter does not support expression %T", expr)
 }
