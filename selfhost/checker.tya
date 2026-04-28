@@ -61,7 +61,7 @@ hasName = names, name ->
   false
 
 isLiteralArg = name ->
-  name == "" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
+  name == "" or name == "\\n" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
 
 check = nodes ->
   names = []
@@ -130,7 +130,7 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + funcName
         if not hasName(names, leftArg)
           push errors, lineOf(node) + ": undefined variable: " + leftArg
-        if not hasName(names, rightArg)
+        if not isLiteralArg(rightArg) and not hasName(names, rightArg)
           push errors, lineOf(node) + ": undefined variable: " + rightArg
       if valueOf(node) == "CALL3"
         funcName = extraOf(node)
