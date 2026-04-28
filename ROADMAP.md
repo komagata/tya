@@ -284,8 +284,8 @@ Self-Host Completion TODO:
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
   - [x] Add a single `scripts/selfhost_bootstrap_check.sh` that runs the current bootstrap gate
 - [ ] Documentation and release readiness
-  - [ ] Document supported self-host subset versus full language
-  - [ ] Document bootstrap commands and expected artifacts
+  - [x] Document supported self-host subset versus full language
+  - [x] Document bootstrap commands and expected artifacts
   - [ ] Mark Phase 5 complete only after `go test ./...` and bootstrap checks pass from a clean checkout
 
 ## Non-Goals For Now
