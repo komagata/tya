@@ -46,6 +46,16 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	if !dumpTokens && !emitC {
+		if err := runner.RunFile(path, os.Stdin, os.Stdout, os.Args[2:]); err != nil {
+			if exitErr, ok := err.(*eval.ExitError); ok {
+				os.Exit(exitErr.Code)
+			}
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	src, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -81,13 +91,6 @@ func main() {
 		}
 		fmt.Fprint(os.Stdout, csrc)
 		return
-	}
-	if err := eval.RunWithIO(prog, os.Stdin, os.Stdout, os.Args[2:]); err != nil {
-		if exitErr, ok := err.(*eval.ExitError); ok {
-			os.Exit(exitErr.Code)
-		}
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
 	}
 }
 

@@ -85,6 +85,7 @@ Implemented:
 
 - `docs/STDLIB.md` with examples for available standard functions
 - `stdlib/prelude.tya` with candidate Tya-level helpers for future automatic loading
+- Runner loads `stdlib/prelude.tya` for normal file execution
 
 ## Phase 5: Self-Hosting
 

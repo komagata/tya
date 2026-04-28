@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"tya/internal/checker"
 	"tya/internal/eval"
@@ -30,7 +31,7 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	toks, errs := lexer.Lex(string(src))
+	toks, errs := lexer.Lex(withPrelude(path, string(src)))
 	if len(errs) > 0 {
 		return errs[0]
 	}
@@ -42,4 +43,22 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 		return err
 	}
 	return eval.RunWithIO(prog, in, out, args)
+}
+
+func withPrelude(path, src string) string {
+	candidates := []string{
+		filepath.Join(filepath.Dir(path), "..", "stdlib", "prelude.tya"),
+		filepath.Join("stdlib", "prelude.tya"),
+	}
+	for _, preludePath := range candidates {
+		prelude, err := os.ReadFile(preludePath)
+		if err != nil {
+			continue
+		}
+		if strings.HasSuffix(string(prelude), "\n") {
+			return string(prelude) + src
+		}
+		return string(prelude) + "\n" + src
+	}
+	return src
 }

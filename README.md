@@ -51,6 +51,7 @@ go test ./...
   `readLine`, `readFile`, `writeFile`, `fileExists`, `args`, `env`, `error`,
   `exit`, `panic`,
   `div`, `toString`, `toInt`, `toFloat`, `toNumber`
+- `stdlib/prelude.tya` is loaded by the runner for normal file execution
 
 ## Examples
 
