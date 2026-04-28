@@ -287,12 +287,18 @@ emitC = nodes ->
       blockDepth = blockDepth + 1
 
     if kindOf(node) == "IF_CALL1"
-      push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") */"
+      if nameOf(node) == "hasT"
+        push lines, "  if (strstr(" + cName(valueOf(node)) + ", \"T\") != 0) {"
+      else
+        push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") */"
       blockOpen = true
       blockDepth = blockDepth + 1
 
     if kindOf(node) == "IF_CALL_EQ_AND_CALL_EQ"
-      push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") == " + extra2Of(node) + " and " + extra3Of(node) + "(" + extra4Of(node) + ") == " + extra6Of(node) + " */"
+      if nameOf(node) == "hasT" and extra3Of(node) == "hasT" and extra2Of(node) == "true" and extra6Of(node) == "true"
+        push lines, "  if (strstr(" + cName(valueOf(node)) + ", \"T\") != 0 && strstr(" + cName(extra4Of(node)) + ", \"T\") != 0) {"
+      else
+        push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") == " + extra2Of(node) + " and " + extra3Of(node) + "(" + extra4Of(node) + ") == " + extra6Of(node) + " */"
       blockOpen = true
       blockDepth = blockDepth + 1
 
