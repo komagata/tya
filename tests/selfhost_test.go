@@ -173,6 +173,14 @@ func TestGoEmittedSelfhostPipelineRuns(t *testing.T) {
 	}
 }
 
+func TestStage1SelfhostSourcesEmitC(t *testing.T) {
+	out := run(t, "sh", "scripts/stage1_selfhost_sources_check.sh")
+	want := "selfhost/lexer.tya: stage-1 emitted C\nselfhost/parser.tya: stage-1 emitted C\nselfhost/checker.tya: stage-1 emitted C\nselfhost/codegen_c.tya: stage-1 emitted C\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestSelfhostBootstrapCheck(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost_bootstrap_check.sh")
 	if string(out) != "selfhost bootstrap: ok\n" {

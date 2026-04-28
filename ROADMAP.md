@@ -297,6 +297,7 @@ Self-Host Completion TODO:
   - [ ] Compile the Tya-written compiler with the Go compiler and run it as the stage-1 compiler
     - [x] Compile self-host compiler components with the Go C emitter and run the stage-1 pipeline on `examples/hello.tya`
   - [ ] Use the stage-1 compiler to compile the Tya-written compiler again
+    - [x] Use stage-1 compiler binaries to emit C for the self-host compiler sources
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
   - [x] Add a single `scripts/selfhost_bootstrap_check.sh` that runs the current bootstrap gate
 - [ ] Documentation and release readiness
