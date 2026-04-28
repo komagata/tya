@@ -153,11 +153,20 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.FuncLit:
 		seen := map[string]bool{}
 		child := newScope(scope)
-		for _, param := range n.Params {
-			if err := checkBindingName(param, 0, 0); err != nil {
+		for i, param := range n.Params {
+			line := 0
+			col := 0
+			if i < len(n.ParamToks) {
+				line = n.ParamToks[i].Line
+				col = n.ParamToks[i].Col
+			}
+			if err := checkBindingName(param, line, col); err != nil {
 				return err
 			}
 			if seen[param] && param != "_" {
+				if line > 0 {
+					return fmt.Errorf("%d:%d: duplicate function parameter %s", line, col, param)
+				}
 				return fmt.Errorf("duplicate function parameter %s", param)
 			}
 			seen[param] = true

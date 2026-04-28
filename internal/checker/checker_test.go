@@ -55,7 +55,18 @@ func TestCheckRejectsDuplicateFunctionParameter(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected duplicate parameter error")
 	}
-	if !strings.Contains(err.Error(), "duplicate function parameter a") {
+	if !strings.Contains(err.Error(), "1:10: duplicate function parameter a") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsInvalidFunctionParameterWithLocation(t *testing.T) {
+	prog := parse(t, "show = User -> User\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected invalid parameter error")
+	}
+	if !strings.Contains(err.Error(), "1:8: invalid binding name User") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

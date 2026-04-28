@@ -220,7 +220,7 @@ func (p *Parser) objectBody() (*ast.ObjectLit, error) {
 		var val ast.Expr
 		var err error
 		if p.match(token.ARROW) {
-			val, err = p.finishFunc(nil)
+			val, err = p.finishFunc(nil, nil)
 		} else {
 			val, err = p.exprLine()
 		}
@@ -306,12 +306,14 @@ func (p *Parser) expr() (ast.Expr, error) {
 	}
 	if p.match(token.ARROW) {
 		var params []string
+		var paramToks []token.Token
 		if id, ok := left.(*ast.Ident); ok {
 			params = []string{id.Name}
+			paramToks = []token.Token{id.Tok}
 		} else {
 			return nil, p.err("function parameters must be identifiers")
 		}
-		return p.finishFunc(params)
+		return p.finishFunc(params, paramToks)
 	}
 	return left, nil
 }
@@ -489,7 +491,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 	switch tok.Type {
 	case token.IDENT:
 		if p.match(token.ARROW) {
-			return p.finishFunc([]string{tok.Lexeme})
+			return p.finishFunc([]string{tok.Lexeme}, []token.Token{tok})
 		}
 		switch tok.Lexeme {
 		case "true":
@@ -502,12 +504,14 @@ func (p *Parser) primary() (ast.Expr, error) {
 		if !p.suppressCommaFunc && p.at(token.COMMA) && p.hasArrowBeforeLine() {
 			p.next()
 			params := []string{tok.Lexeme}
+			paramToks := []token.Token{tok}
 			for {
 				next := p.expect(token.IDENT)
 				if next.Type != token.IDENT {
 					return nil, p.err("expected function parameter")
 				}
 				params = append(params, next.Lexeme)
+				paramToks = append(paramToks, next)
 				if !p.match(token.COMMA) {
 					break
 				}
@@ -515,7 +519,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 			if !p.match(token.ARROW) {
 				return nil, p.err("expected '->' after function parameters")
 			}
-			return p.finishFunc(params)
+			return p.finishFunc(params, paramToks)
 		}
 		return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
 	case token.INT:
@@ -588,7 +592,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 	return nil, p.err("expected expression")
 }
 
-func (p *Parser) finishFunc(params []string) (*ast.FuncLit, error) {
+func (p *Parser) finishFunc(params []string, paramToks []token.Token) (*ast.FuncLit, error) {
 	if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
 		p.next()
 		p.next()
@@ -605,13 +609,13 @@ func (p *Parser) finishFunc(params []string) (*ast.FuncLit, error) {
 		if !p.match(token.DEDENT) {
 			return nil, p.err("expected dedent after function")
 		}
-		return &ast.FuncLit{Params: params, Body: body}, nil
+		return &ast.FuncLit{Params: params, ParamToks: paramToks, Body: body}, nil
 	}
 	ex, err := p.exprLine()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.FuncLit{Params: params, Expr: ex}, nil
+	return &ast.FuncLit{Params: params, ParamToks: paramToks, Expr: ex}, nil
 }
 
 func (p *Parser) assignTargets() ([]ast.Expr, error) {

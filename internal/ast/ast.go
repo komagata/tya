@@ -116,9 +116,10 @@ type ObjectProp struct {
 }
 
 type FuncLit struct {
-	Params []string
-	Body   []Stmt
-	Expr   Expr
+	Params    []string
+	ParamToks []token.Token
+	Body      []Stmt
+	Expr      Expr
 }
 
 func (*FuncLit) expr() {}
