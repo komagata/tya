@@ -1,2 +1,5 @@
 greet = name -> "Hello, {name}"
 print greet "Tya"
+
+if true
+  print "Indented"

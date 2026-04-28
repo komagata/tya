@@ -23,14 +23,27 @@ lex = source ->
   tokens = []
   i = 0
   line = 1
+  atLineStart = true
+  lineSpaces = 0
 
   while i < len(source)
     char = source[i]
 
     if char == "\n"
       line = line + 1
+      atLineStart = true
+      lineSpaces = 0
       i = i + 1
       continue
+
+    if atLineStart
+      if char == " "
+        lineSpaces = lineSpaces + 1
+        i = i + 1
+        continue
+      token = emit line, "INDENT", toString(lineSpaces)
+      push tokens, token
+      atLineStart = false
 
     if isSpace(char)
       i = i + 1

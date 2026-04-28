@@ -19,6 +19,10 @@ parse = tokens ->
   while i < len(tokens)
     token = tokens[i]
 
+    if kindOf(token) == "INDENT"
+      i = i + 1
+      continue
+
     if kindOf(token) == "IDENT" and textOf(token) == "print"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
