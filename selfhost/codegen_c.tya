@@ -162,9 +162,10 @@ emitC = nodes ->
           else
             if valueOf(node) == "ARRAY_EMPTY"
               if hasName(names, nameOf(node))
-                push lines, "  " + nameOf(node) + " = 0;"
+                push lines, "  " + cName(nameOf(node)) + "_len = 0;"
               else
-                push lines, "  long " + nameOf(node) + " = 0; /* [] */"
+                push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
+                push lines, "  const char *" + cName(nameOf(node)) + "_0 = \"\"; /* [] */"
                 rememberType names, types, nameOf(node), "ARRAY"
             else
               if valueOf(node) == "INT_ADD"
@@ -375,10 +376,16 @@ emitC = nodes ->
       blockDepth = blockDepth + 1
 
     if kindOf(node) == "FOR"
-      if not hasName(names, nameOf(node))
-        rememberType names, types, nameOf(node), "STRING"
-      push lines, "  if (0) { /* for " + nameOf(node) + " in " + valueOf(node) + " */"
-      push lines, "    const char *" + nameOf(node) + " = \"\";"
+      if typeOf(names, types, valueOf(node)) == "ARRAY"
+        if not hasName(names, nameOf(node))
+          rememberType names, types, nameOf(node), "STRING"
+        push lines, "  if (" + cName(valueOf(node)) + "_len > 0) {"
+        push lines, "    const char *" + cName(nameOf(node)) + " = " + cName(valueOf(node)) + "_0;"
+      else
+        if not hasName(names, nameOf(node))
+          rememberType names, types, nameOf(node), "STRING"
+        push lines, "  if (0) { /* for " + nameOf(node) + " in " + valueOf(node) + " */"
+        push lines, "    const char *" + cName(nameOf(node)) + " = \"\";"
       blockOpen = true
       blockDepth = blockDepth + 1
 
@@ -428,7 +435,14 @@ emitC = nodes ->
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      push lines, prefix + "/* push " + nameOf(node) + ", " + extraOf(node) + " */"
+      if typeOf(names, types, nameOf(node)) == "ARRAY"
+        pushed = cName(extraOf(node))
+        if valueOf(node) == "STRING"
+          pushed = cString(extraOf(node))
+        push lines, prefix + cName(nameOf(node)) + "_0 = " + pushed + ";"
+        push lines, prefix + cName(nameOf(node)) + "_len = 1;"
+      else
+        push lines, prefix + "/* push " + nameOf(node) + ", " + extraOf(node) + " */"
 
     if kindOf(node) == "RETURN"
       prefix = "  "

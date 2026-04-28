@@ -8,7 +8,7 @@ import (
 
 func TestSelfhostPrototypePipeline(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost.sh")
-	if string(out) != "ok\nshort\nsame text\neither\nhas t\nboth\nTya\nTya\n3\ntrue\nfalse\ntrue\ntrue\nIndented\nCompared\n" {
+	if string(out) != "ok\nshort\nsame text\neither\nhas t\nboth\nTya\nTya\nTya\n3\ntrue\nfalse\ntrue\ntrue\nIndented\nCompared\n" {
 		t.Fatalf("got %q", out)
 	}
 }
