@@ -75,6 +75,7 @@ Implemented:
 - Initial array runtime with length, indexing, and push support
 - Generated-C array runtime supports `pop` and index assignment
 - Initial string runtime support for length, indexing, and `contains`
+- Generated-C string runtime supports `trim`, `replace`, `startsWith`, `endsWith`, `byteLen`, and `charLen`
 - Runtime equality helper for nil, bool, number, string, and array identity
 - Runtime addition helper for numeric addition and string concatenation
 - Initial generated-C runtime support for `args`, `readFile`, `split`, `toString`, and `toInt`
@@ -190,6 +191,7 @@ Implemented:
 - Go C emitter can run simple generated-C object literal and member access programs
 - Go C emitter can run `examples/function.tya`
 - Go C emitter can run `examples/arithmetic.tya`
+- Go C emitter can run `examples/string.tya`
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 

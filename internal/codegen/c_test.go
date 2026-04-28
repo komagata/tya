@@ -28,9 +28,9 @@ func TestEmitCCompilesArrayProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesStringProgram(t *testing.T) {
-	src := "text = \"hello\"\nprint len text\nprint contains text, \"ell\"\nprint text[1]\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = trim text\nparts = split trimmed, \",\"\nprint join parts, \"-\"\nprint replace trimmed, \"tya\", \"Tya\"\nprint contains trimmed, \"hello\"\nprint startsWith trimmed, \"hello\"\nprint endsWith trimmed, \"tya\"\nprint byteLen \"ちゃ\"\nprint charLen \"ちゃ\"\nprint \"quote: \\\"tya\\\"\"\nprint \"tya\"[1]\n"
 	out := compileAndRun(t, src)
-	if string(out) != "5\ntrue\ne\n" {
+	if string(out) != "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n6\n2\nquote: \"tya\"\ny\n" {
 		t.Fatalf("got %q", out)
 	}
 }

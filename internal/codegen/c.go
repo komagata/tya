@@ -401,6 +401,64 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_contains(%s, %s)", text, part), "TyaValue", nil
 		}
+		if ok && id.Name == "startsWith" && len(n.Args) == 2 {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			prefix, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_starts_with(%s, %s)", text, prefix), "TyaValue", nil
+		}
+		if ok && id.Name == "endsWith" && len(n.Args) == 2 {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			suffix, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_ends_with(%s, %s)", text, suffix), "TyaValue", nil
+		}
+		if ok && id.Name == "trim" && len(n.Args) == 1 {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_trim(%s)", text), "TyaValue", nil
+		}
+		if ok && id.Name == "replace" && len(n.Args) == 3 {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			old, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			replacement, _, err := g.expr(n.Args[2])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_replace(%s, %s, %s)", text, old, replacement), "TyaValue", nil
+		}
+		if ok && id.Name == "byteLen" && len(n.Args) == 1 {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_byte_len(%s)", text), "TyaValue", nil
+		}
+		if ok && id.Name == "charLen" && len(n.Args) == 1 {
+			text, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_char_len(%s)", text), "TyaValue", nil
+		}
 		if ok && id.Name == "args" && len(n.Args) == 0 {
 			return "tya_args(argc, argv)", "TyaValue", nil
 		}

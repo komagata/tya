@@ -15,6 +15,8 @@ struct TyaObject {
   TyaObjectEntry *entries;
 };
 
+static char *tya_substr(const char *text, int start, int len);
+
 TyaValue tya_nil(void) {
   return (TyaValue){.kind = TYA_NIL};
 }
@@ -114,6 +116,94 @@ TyaValue tya_contains(TyaValue text, TyaValue part) {
     return tya_bool(false);
   }
   return tya_bool(strstr(text.string, part.string) != NULL);
+}
+
+TyaValue tya_starts_with(TyaValue text, TyaValue prefix) {
+  if (text.kind != TYA_STRING || prefix.kind != TYA_STRING || text.string == NULL || prefix.string == NULL) {
+    return tya_bool(false);
+  }
+  return tya_bool(strncmp(text.string, prefix.string, strlen(prefix.string)) == 0);
+}
+
+TyaValue tya_ends_with(TyaValue text, TyaValue suffix) {
+  if (text.kind != TYA_STRING || suffix.kind != TYA_STRING || text.string == NULL || suffix.string == NULL) {
+    return tya_bool(false);
+  }
+  size_t text_len = strlen(text.string);
+  size_t suffix_len = strlen(suffix.string);
+  if (suffix_len > text_len) {
+    return tya_bool(false);
+  }
+  return tya_bool(strcmp(text.string + text_len - suffix_len, suffix.string) == 0);
+}
+
+TyaValue tya_trim(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    return tya_string("");
+  }
+  int start = 0;
+  int end = (int)strlen(text.string);
+  while (start < end && (text.string[start] == ' ' || text.string[start] == '\n' || text.string[start] == '\t')) {
+    start++;
+  }
+  while (end > start && (text.string[end - 1] == ' ' || text.string[end - 1] == '\n' || text.string[end - 1] == '\t')) {
+    end--;
+  }
+  return tya_string(tya_substr(text.string, start, end - start));
+}
+
+TyaValue tya_replace(TyaValue text, TyaValue old, TyaValue replacement) {
+  if (text.kind != TYA_STRING || old.kind != TYA_STRING || replacement.kind != TYA_STRING || text.string == NULL || old.string == NULL || replacement.string == NULL) {
+    return tya_string("");
+  }
+  size_t old_len = strlen(old.string);
+  if (old_len == 0) {
+    return text;
+  }
+  size_t replacement_len = strlen(replacement.string);
+  size_t count = 0;
+  const char *cursor = text.string;
+  while ((cursor = strstr(cursor, old.string)) != NULL) {
+    count++;
+    cursor += old_len;
+  }
+  size_t text_len = strlen(text.string);
+  size_t out_len = text_len + count * (replacement_len - old_len);
+  char *out = malloc(out_len + 1);
+  char *dst = out;
+  cursor = text.string;
+  const char *next;
+  while ((next = strstr(cursor, old.string)) != NULL) {
+    size_t prefix_len = (size_t)(next - cursor);
+    memcpy(dst, cursor, prefix_len);
+    dst += prefix_len;
+    memcpy(dst, replacement.string, replacement_len);
+    dst += replacement_len;
+    cursor = next + old_len;
+  }
+  strcpy(dst, cursor);
+  return tya_string(out);
+}
+
+TyaValue tya_byte_len(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    return tya_number(0);
+  }
+  return tya_number(strlen(text.string));
+}
+
+TyaValue tya_char_len(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    return tya_number(0);
+  }
+  int count = 0;
+  for (int i = 0; text.string[i] != '\0'; i++) {
+    unsigned char c = (unsigned char)text.string[i];
+    if ((c & 0xC0) != 0x80) {
+      count++;
+    }
+  }
+  return tya_number(count);
 }
 
 bool tya_equal(TyaValue left, TyaValue right) {
