@@ -465,7 +465,7 @@ func goLexerSelfhostTokens(t *testing.T, src string) []string {
 	seenLine := map[int]bool{}
 	for _, tok := range toks {
 		if tok.Type != token.NEWLINE && tok.Type != token.DEDENT && tok.Type != token.EOF && !seenLine[tok.Line] {
-			out = append(out, selfhostToken(tok.Line, "INDENT", strconv.Itoa(leadingSpaces(lines[tok.Line-1]))))
+			out = append(out, selfhostToken(tok.Line, "INDENT", strconv.Itoa(leadingSpaces(lines[tok.Line-1])), 1))
 			seenLine[tok.Line] = true
 		}
 		switch tok.Type {
@@ -474,18 +474,18 @@ func goLexerSelfhostTokens(t *testing.T, src string) []string {
 		case token.INDENT:
 			continue
 		case token.ARROW:
-			out = append(out, selfhostToken(tok.Line, "ARROW", tok.Lexeme))
+			out = append(out, selfhostToken(tok.Line, "ARROW", tok.Lexeme, tok.Col))
 		case token.IDENT, token.INT, token.FLOAT, token.STRING:
-			out = append(out, selfhostToken(tok.Line, string(tok.Type), escapeSelfhostLexeme(tok.Lexeme)))
+			out = append(out, selfhostToken(tok.Line, string(tok.Type), escapeSelfhostLexeme(tok.Lexeme), tok.Col))
 		default:
-			out = append(out, selfhostToken(tok.Line, "SYMBOL", tok.Lexeme))
+			out = append(out, selfhostToken(tok.Line, "SYMBOL", tok.Lexeme, tok.Col))
 		}
 	}
 	return out
 }
 
-func selfhostToken(line int, kind string, text string) string {
-	return strconv.Itoa(line) + ":" + kind + ":" + text
+func selfhostToken(line int, kind string, text string, col int) string {
+	return strconv.Itoa(line) + ":" + kind + ":" + text + ":" + strconv.Itoa(col)
 }
 
 func leadingSpaces(s string) int {

@@ -16,8 +16,8 @@ isAlpha = char ->
 isAlphaNum = char ->
   isAlpha(char) or isDigit(char)
 
-emit = line, kind, text ->
-  "{line}:{kind}:{text}"
+emit = line, kind, text, col ->
+  "{line}:{kind}:{text}:{col}"
 
 escapeChar = char ->
   if char == "n"
@@ -34,6 +34,7 @@ lex = source ->
   tokens = []
   i = 0
   line = 1
+  col = 1
   atLineStart = true
   lineSpaces = 0
 
@@ -42,6 +43,7 @@ lex = source ->
 
     if char == "\n"
       line = line + 1
+      col = 1
       atLineStart = true
       lineSpaces = 0
       i = i + 1
@@ -51,79 +53,96 @@ lex = source ->
       if char == " "
         lineSpaces = lineSpaces + 1
         i = i + 1
+        col = col + 1
         continue
-      token = emit line, "INDENT", toString(lineSpaces)
+      token = emit line, "INDENT", toString(lineSpaces), 1
       push tokens, token
       atLineStart = false
 
     if isSpace(char)
       i = i + 1
+      col = col + 1
       continue
 
     if char == "#"
       while i < len(source) and source[i] != "\n"
         i = i + 1
+        col = col + 1
       continue
 
     if isAlpha(char)
       start = i
+      startCol = col
       text = ""
       while i < len(source) and isAlphaNum(source[i])
         text = text + source[i]
         i = i + 1
-      token = emit line, "IDENT", text
+        col = col + 1
+      token = emit line, "IDENT", text, startCol
       push tokens, token
       continue
 
     if isDigit(char)
+      startCol = col
       text = ""
       while i < len(source) and isDigit(source[i])
         text = text + source[i]
         i = i + 1
+        col = col + 1
       kind = "INT"
       if i < len(source) and source[i] == "."
         kind = "FLOAT"
         text = text + source[i]
         i = i + 1
+        col = col + 1
         while i < len(source) and isDigit(source[i])
           text = text + source[i]
           i = i + 1
-      token = emit line, kind, text
+          col = col + 1
+      token = emit line, kind, text, startCol
       push tokens, token
       continue
 
     if char == "\""
+      startCol = col
       i = i + 1
+      col = col + 1
       text = ""
       while i < len(source) and source[i] != "\""
         if source[i] == "\\" and i + 1 < len(source)
           text = text + escapeChar(source[i + 1])
           i = i + 2
+          col = col + 2
         else
           text = text + source[i]
           i = i + 1
+          col = col + 1
       i = i + 1
-      token = emit line, "STRING", text
+      col = col + 1
+      token = emit line, "STRING", text, startCol
       push tokens, token
       continue
 
     if char == "-" and i + 1 < len(source) and source[i + 1] == ">"
-      token = emit line, "ARROW", "->"
+      token = emit line, "ARROW", "->", col
       push tokens, token
       i = i + 2
+      col = col + 2
       continue
 
     if i + 1 < len(source)
       two = char + source[i + 1]
       if two == "==" or two == "!=" or two == "<=" or two == ">="
-        token = emit line, "SYMBOL", two
+        token = emit line, "SYMBOL", two, col
         push tokens, token
         i = i + 2
+        col = col + 2
         continue
 
-    token = emit line, "SYMBOL", char
+    token = emit line, "SYMBOL", char, col
     push tokens, token
     i = i + 1
+    col = col + 1
 
   tokens
 
