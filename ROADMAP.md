@@ -126,6 +126,7 @@ Implemented:
 - Self-hosted lexer recognizes common two-character operators
 - Self-hosted lexer emits source line and indentation-count tokens
 - Self-hosted parser/codegen carries simple `if true` blocks into generated C
+- Self-hosted checker detects simple undefined print names
 
 ## Non-Goals For Now
 

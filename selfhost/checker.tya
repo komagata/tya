@@ -8,6 +8,12 @@ nameOf = node ->
     return ""
   parts[2]
 
+valueOf = node ->
+  parts = split node, ":"
+  if len(parts) < 4
+    return ""
+  parts[3]
+
 lineOf = node ->
   parts = split node, ":"
   parts[0]
@@ -30,6 +36,12 @@ check = nodes ->
         push errors, lineOf(node) + ": duplicate definition: " + name
       else
         push names, name
+
+    if kindOf(node) == "PRINT"
+      if nameOf(node) == "IDENT"
+        name = valueOf(node)
+        if not hasName(names, name)
+          push errors, lineOf(node) + ": undefined variable: " + name
 
   errors
 
