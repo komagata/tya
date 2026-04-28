@@ -26,37 +26,35 @@ func main() {
 	dumpTokens := false
 	emitC := false
 	checkUnused := false
-	if os.Args[1] == "--tokens" {
-		if len(os.Args) < 3 {
-			usage()
-			os.Exit(2)
+	args := os.Args[1:]
+	for len(args) > 0 {
+		switch args[0] {
+		case "--tokens":
+			dumpTokens = true
+			args = args[1:]
+		case "--emit-c":
+			emitC = true
+			args = args[1:]
+		case "--check-unused":
+			checkUnused = true
+			args = args[1:]
+		default:
+			goto doneOptions
 		}
-		dumpTokens = true
-		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
 	}
-	if os.Args[1] == "--emit-c" {
-		if len(os.Args) < 3 {
-			usage()
-			os.Exit(2)
-		}
-		emitC = true
-		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
+doneOptions:
+	if len(args) == 0 {
+		usage()
+		os.Exit(2)
 	}
-	if os.Args[1] == "--check-unused" {
-		if len(os.Args) < 3 {
-			usage()
-			os.Exit(2)
-		}
-		checkUnused = true
-		os.Args = append([]string{os.Args[0]}, os.Args[2:]...)
-	}
-	path := os.Args[1]
+	path := args[0]
+	processArgs := args[1:]
 	if err := runner.ValidateFileName(path); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	if !dumpTokens && !emitC && !checkUnused {
-		if err := runner.RunFile(path, os.Stdin, os.Stdout, os.Args[2:]); err != nil {
+		if err := runner.RunFile(path, os.Stdin, os.Stdout, processArgs); err != nil {
 			if exitErr, ok := err.(*eval.ExitError); ok {
 				os.Exit(exitErr.Code)
 			}
@@ -71,7 +69,7 @@ func main() {
 		os.Exit(1)
 	}
 	source := string(src)
-	if emitC {
+	if emitC && !checkUnused {
 		source = runner.WithPrelude(path, source)
 	}
 	toks, errs := lexer.Lex(source)
@@ -101,9 +99,27 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		return
+		if !emitC {
+			return
+		}
 	}
 	if emitC {
+		toks, errs = lexer.Lex(runner.WithPrelude(path, source))
+		if len(errs) > 0 {
+			for _, err := range errs {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			os.Exit(1)
+		}
+		prog, err = parser.Parse(toks)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		if err := checker.Check(prog); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 		csrc, err := codegen.EmitC(prog)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)

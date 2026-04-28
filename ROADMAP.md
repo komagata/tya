@@ -36,6 +36,7 @@ Implemented hardening:
 
 - Checker exposes optional `CheckUnused` analysis for unused bindings and function arguments
 - CLI exposes `--check-unused` for strict unused binding checks
+- CLI parses combinable mode flags such as `--check-unused --emit-c`
 - Checker reports source locations for invalid `for` loop binding names
 - Checker reports source locations for invalid and duplicate function parameter names
 - Checker reports source locations for invalid and duplicate object property names
