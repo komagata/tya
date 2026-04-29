@@ -176,3 +176,34 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/print_int.stage2" "$out_dir/pri
 print_int_out="$("$out_dir/print_int.stage2")"
 test "$print_int_out" = "20"
 echo "print int assignment: stage-2 pipeline matched"
+
+printf 'text = "hello"\nprint text\nratio = 12.5\nprint ratio\n' > "$out_dir/print_literals.tya"
+"$out_dir/lexer.stage2" "$out_dir/print_literals.tya" > "$out_dir/print_literals.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/print_literals.stage2.tokens" > "$out_dir/print_literals.stage2.nodes"
+cat > "$out_dir/print_literals.want.nodes" <<'NODES'
+1:ASSIGN:text:STRING:hello
+2:PRINT:IDENT:text
+3:ASSIGN:ratio:FLOAT:12.5
+4:PRINT:IDENT:ratio
+NODES
+diff -u "$out_dir/print_literals.want.nodes" "$out_dir/print_literals.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/print_literals.stage2.nodes" > "$out_dir/print_literals.stage2.check"
+grep -qx "ok" "$out_dir/print_literals.stage2.check"
+"$out_dir/codegen_c.stage2" "$out_dir/print_literals.stage2.nodes" > "$out_dir/print_literals.stage2.c"
+cat > "$out_dir/print_literals.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  const char *text = "hello";
+  puts(text);
+  double ratio = 12.5;
+  printf("%g\n", ratio);
+  return 0;
+}
+C
+diff -u "$out_dir/print_literals.want.c" "$out_dir/print_literals.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/print_literals.stage2" "$out_dir/print_literals.stage2.c" >/dev/null 2>&1
+print_literals_out="$("$out_dir/print_literals.stage2")"
+test "$print_literals_out" = "hello
+12.5"
+echo "print literal assignments: stage-2 pipeline matched"
