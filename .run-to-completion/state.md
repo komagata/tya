@@ -1,43 +1,45 @@
 # Run To Completion State
 
-Updated: 2026-04-29 18:51:00 JST
+Updated: 2026-04-29 19:00:20 JST
 
 ## Goal
 
-Continue the self-hosting queue in `SELFHOST_WORK.md` until the current milestone
-is complete or a real blocker is reached.
+Iterate development until Tya can self-host: the Tya-written compiler should
+compile itself and produce a compiler that can compile supported Tya programs
+without depending on the Go implementation.
 
 ## Assumptions
 
-- The active task is the first unchecked item in `SELFHOST_WORK.md`: compare
-  generated C for deterministic output.
+- The old `SELFHOST_WORK.md` queue was complete, but `ROADMAP.md` still has a
+  larger Self-Host Completion TODO.
+- Continue by turning that TODO into concrete queue slices and implementing the
+  first actionable slice.
 - The standard loop is `inspect -> act -> verify -> record`.
 - Stop only when the goal is complete, impossible, unsafe, or blocked by missing
   external input.
 
 ## Success Criteria
 
-- `scripts/stage1_selfhost_sources_check.sh` compares repeated stage-2
-  generated C for supported subset fixtures.
-- The focused script check passes.
+- Each iteration picks the smallest unchecked self-host completion slice.
+- Focused verification for the slice passes.
 - `go test ./... -count=1` passes.
-- `scripts/selfhost_bootstrap_check.sh` passes.
-- `SELFHOST_WORK.md` and `ROADMAP.md` reflect the completed slice.
-- Changes are committed with `Masaki Komagata <komagata@gmail.com>`.
+- `sh scripts/selfhost_bootstrap_check.sh` passes.
+- `SELFHOST_WORK.md` and `ROADMAP.md` reflect each completed slice.
+- Each slice is committed with `Masaki Komagata <komagata@gmail.com>`.
 
 ## Phases
 
-- done: inspect repository state and queue.
-- done: implement deterministic stage-2 generated-C comparison.
-- done: run focused and full verification.
-- done: commit deterministic stage-2 codegen checkpoint.
-- done: mark completed parent queue items.
-- done: confirm no unchecked self-host queue items remain.
+- done: inspect old queue and roadmap.
+- done: seed a new self-host completion queue from `ROADMAP.md`.
+- active: promote completed lexer parity TODOs.
+- pending: implement next parser/checker/codegen slice.
+- pending: verify and commit.
 
 ## Next Action
 
-No queued self-hosting task remains. Stop unless a new goal is provided.
+Verify the documentation-only queue cleanup, then commit it.
 
 ## Remaining Work Estimate
 
-0 iterations.
+Many iterations overall, low confidence. The immediate docs checkpoint is less
+than 1 iteration.

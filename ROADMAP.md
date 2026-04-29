@@ -250,10 +250,10 @@ Self-Host Completion TODO:
 
 - [x] Autonomous work protocol
   - [x] Keep `SELFHOST_WORK.md` as the restart point and task queue for continuing without confirmation
-- [ ] Lexer parity
-  - [ ] Tokenize all literals supported by the Go lexer: nil, bool, int, float, string escapes
+- [x] Lexer parity
+  - [x] Tokenize all literals supported by the Go lexer: nil, bool, int, float, string escapes
     - [x] Tokenize ints, floats, identifiers, bool/nil words, and basic string escapes in the self-host lexer
-  - [ ] Tokenize all operators and delimiters used by the language
+  - [x] Tokenize all operators and delimiters used by the language
     - [x] Tokenize current Go lexer operators and delimiters in the self-host lexer output format
   - [x] Preserve enough source span data for useful self-host diagnostics
   - [x] Add lexer golden tests comparing Go lexer output and Tya lexer output

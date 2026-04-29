@@ -30,3 +30,16 @@
 - Resumed after `go`.
 - Confirmed worktree was clean and `SELFHOST_WORK.md` had no unchecked items.
 - Stop condition reached: no queued self-hosting work remains.
+
+## 2026-04-29 18:59:38 JST
+
+- User gave new goal in Japanese: keep iterating development until self-hosting
+  works.
+- Reopened run-to-completion state for the broader self-host completion goal.
+- Seeded `SELFHOST_WORK.md` with a new high-level completion queue based on
+  `ROADMAP.md`.
+
+## 2026-04-29 19:00:20 JST
+
+- Promoted completed lexer parity TODOs in `ROADMAP.md`.
+- Marked the matching `SELFHOST_WORK.md` queue item done.

@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 18:51:00 JST
+Updated: 2026-04-29 19:00:20 JST
 
-Active phase: complete.
+Active phase: promote completed lexer parity TODOs.
 
 Completed:
 
@@ -15,9 +15,14 @@ Completed:
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Committed parent queue cleanup as `d4ff7f3`.
 - Confirmed `SELFHOST_WORK.md` has no unchecked queue items.
+- Received new goal: continue development until full self-hosting works.
+- Found remaining Self-Host Completion TODOs in `ROADMAP.md`.
+- Seeded `SELFHOST_WORK.md` with a new high-level completion queue.
+- Marked completed lexer parity TODOs in `ROADMAP.md`.
 
 Remaining:
 
-- No queued self-hosting work remains.
+- Continue with parser, checker, codegen, and bootstrap parity slices.
+- Commit this documentation checkpoint.
 
-Estimate: 0 iterations.
+Estimate: many iterations overall; immediate docs checkpoint less than 1 iteration.

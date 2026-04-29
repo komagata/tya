@@ -71,6 +71,12 @@ endpoint.
   - [x] Run a stage-2 pipeline for equality comparison
   - [x] Run a stage-2 pipeline for inequality comparison
   - [x] Compare repeated stage-2 generated C for deterministic output
+- [ ] Continue toward full self-host completion
+  - [x] Promote completed lexer parity TODOs in `ROADMAP.md`
+  - [ ] Expand self-host parser beyond line-oriented subset stubs
+  - [ ] Expand self-host checker toward Go checker parity
+  - [ ] Expand self-host C codegen toward executable example parity
+  - [ ] Advance bootstrap from subset programs toward compiling existing examples
 
 ## Last Resolved Blocker
 
