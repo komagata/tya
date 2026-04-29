@@ -219,6 +219,34 @@ emitC = nodes ->
   push lines, "  return lines;"
   push lines, "}"
   push lines, ""
+  push lines, "static char **parse_tokens(char **tokens, long tokens_len, long *out_len) {"
+  push lines, "  char **nodes = NULL;"
+  push lines, "  long len = 0;"
+  push lines, "  for (long i = 0; i + 1 < tokens_len; i++) {"
+  push lines, "    if (strstr(tokens[i], \":IDENT:print:\") && strstr(tokens[i + 1], \":STRING:\")) {"
+  push lines, "      char line[32];"
+  push lines, "      int p = 0;"
+  push lines, "      while (tokens[i][p] != 0 && tokens[i][p] != ':') {"
+  push lines, "        line[p] = tokens[i][p]; p++;"
+  push lines, "      }"
+  push lines, "      line[p] = 0;"
+  push lines, "      char *start = strstr(tokens[i + 1], \":STRING:\");"
+  push lines, "      start = start + 8;"
+  push lines, "      char *end = strrchr(start, ':');"
+  push lines, "      int n = end ? (int)(end - start) : (int)strlen(start);"
+  push lines, "      char text[512];"
+  push lines, "      memcpy(text, start, (size_t)n);"
+  push lines, "      text[n] = 0;"
+  push lines, "      char node[768];"
+  push lines, "      snprintf(node, sizeof(node), \"%s:PRINT:STRING:%s\", line, text);"
+  push lines, "      nodes = realloc(nodes, sizeof(char *) * (size_t)(len + 1));"
+  push lines, "      nodes[len++] = dup_text(node);"
+  push lines, "    }"
+  push lines, "  }"
+  push lines, "  *out_len = len;"
+  push lines, "  return nodes;"
+  push lines, "}"
+  push lines, ""
   i = 0
   while i < len(funcNames)
     ret = cName(funcRetValues[i])
@@ -285,33 +313,41 @@ emitC = nodes ->
           push lines, "  char **" + cName(nameOf(node)) + " = lex_source(" + cName(extra2Of(node)) + ", &" + cName(nameOf(node)) + "_len);"
           rememberType names, types, nameOf(node), "DYNARRAY"
       else
-        if hasName(funcNames, extraOf(node))
-          typeName = typeOf(names, types, extra2Of(node))
-          if typeName == "INT"
-            if hasName(names, nameOf(node))
-              push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-            else
-              rememberType names, types, nameOf(node), "INT"
-              push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-          else
-            if typeName == "BOOL"
-              if hasName(names, nameOf(node))
-                push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-              else
-                rememberType names, types, nameOf(node), "BOOL"
-                push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-            else
-              if hasName(names, nameOf(node))
-                push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-              else
-                rememberType names, types, nameOf(node), "STRING"
-                push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-        else
+        if extraOf(node) == "parse"
           if hasName(names, nameOf(node))
-            push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+            push lines, "  " + cName(nameOf(node)) + " = parse_tokens(" + cName(extra2Of(node)) + ", " + cName(extra2Of(node)) + "_len, &" + cName(nameOf(node)) + "_len);"
           else
-            rememberType names, types, nameOf(node), "STRING"
-            push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+            push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
+            push lines, "  char **" + cName(nameOf(node)) + " = parse_tokens(" + cName(extra2Of(node)) + ", " + cName(extra2Of(node)) + "_len, &" + cName(nameOf(node)) + "_len);"
+            rememberType names, types, nameOf(node), "DYNARRAY"
+        else
+          if hasName(funcNames, extraOf(node))
+            typeName = typeOf(names, types, extra2Of(node))
+            if typeName == "INT"
+              if hasName(names, nameOf(node))
+                push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+              else
+                rememberType names, types, nameOf(node), "INT"
+                push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+            else
+              if typeName == "BOOL"
+                if hasName(names, nameOf(node))
+                  push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                else
+                  rememberType names, types, nameOf(node), "BOOL"
+                  push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+              else
+                if hasName(names, nameOf(node))
+                  push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                else
+                  rememberType names, types, nameOf(node), "STRING"
+                  push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+          else
+            if hasName(names, nameOf(node))
+              push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+            else
+              rememberType names, types, nameOf(node), "STRING"
+              push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
 
     if kindOf(node) == "ASSIGN" and valueOf(node) != "CALL1"
       if valueOf(node) == "STRING"

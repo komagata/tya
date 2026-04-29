@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n7:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n8:ASSIGN:tokens:CALL1:lex:source\n9:ASSIGN:lines:CALL2:split:source:\\n\n10:ASSIGN:items:ARRAY_EMPTY:\n11:PUSH:items:IDENT:message\n12:FOR:token:tokens\n13:INDENT:2\n13:PRINT:IDENT:token\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n7:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n8:ASSIGN:tokens:CALL1:lex:source\n9:ASSIGN:lines:CALL2:split:source:\\n\n10:ASSIGN:nodes:CALL1:parse:tokens\n11:ASSIGN:items:ARRAY_EMPTY:\n12:PUSH:items:IDENT:message\n13:FOR:token:tokens\n14:INDENT:2\n14:PRINT:IDENT:token\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -161,6 +161,9 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	}
 	if !strings.Contains(out, "char **lines = split_lines(source, &lines_len);") {
 		t.Fatalf("generated C missing split(source, newline) lowering:\n%s", out)
+	}
+	if !strings.Contains(out, "char **nodes = parse_tokens(tokens, tokens_len, &nodes_len);") {
+		t.Fatalf("generated C missing parse(tokens) lowering:\n%s", out)
 	}
 	if !strings.Contains(out, "char **items = NULL;") || !strings.Contains(out, "items[items_len] = dup_text(message);") {
 		t.Fatalf("generated C missing dynamic array push lowering:\n%s", out)
@@ -196,7 +199,7 @@ func TestGoEmittedSelfhostPipelineRuns(t *testing.T) {
 
 func TestStage1SelfhostSourcesEmitC(t *testing.T) {
 	out := run(t, "sh", "scripts/stage1_selfhost_sources_check.sh")
-	want := "selfhost/lexer.tya: stage-1 emitted and compiled C\nselfhost/parser.tya: stage-1 emitted and compiled C\nselfhost/checker.tya: stage-1 emitted and compiled C\nselfhost/codegen_c.tya: stage-1 emitted and compiled C\nexamples/hello.tya: stage-2 lexer matched\n"
+	want := "selfhost/lexer.tya: stage-1 emitted and compiled C\nselfhost/parser.tya: stage-1 emitted and compiled C\nselfhost/checker.tya: stage-1 emitted and compiled C\nselfhost/codegen_c.tya: stage-1 emitted and compiled C\nexamples/hello.tya: stage-2 lexer matched\nexamples/hello.tya: stage-2 parser matched\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

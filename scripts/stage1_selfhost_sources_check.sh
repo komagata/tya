@@ -31,3 +31,10 @@ cat > "$out_dir/hello.want.tokens" <<'TOKENS'
 TOKENS
 diff -u "$out_dir/hello.want.tokens" "$out_dir/hello.stage2.tokens" >/dev/null
 echo "examples/hello.tya: stage-2 lexer matched"
+
+"$out_dir/parser.stage2" "$out_dir/hello.stage2.tokens" > "$out_dir/hello.stage2.nodes"
+cat > "$out_dir/hello.want.nodes" <<'NODES'
+1:PRINT:STRING:Hello, Tya
+NODES
+diff -u "$out_dir/hello.want.nodes" "$out_dir/hello.stage2.nodes" >/dev/null
+echo "examples/hello.tya: stage-2 parser matched"
