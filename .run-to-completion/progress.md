@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 21:35:34 JST
+Updated: 2026-04-29 21:41:28 JST
 
-Active phase: commit `print contains` slice.
+Active phase: commit starts/ends slice.
 
 Completed:
 
@@ -60,9 +60,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the `print contains` slice.
 - `go test ./... -count=1` passes for the `print contains` slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the `print contains` slice.
+- Committed `print contains` slice as `073ad7c`.
+- Added checker/codegen support for `print startsWith text, "prefix"` and `print endsWith text, "suffix"`.
+- Focused parser/checker/codegen tests pass.
+- `sh scripts/selfhost_check.sh` passes for starts/ends slice.
+- `go test ./... -count=1` passes for starts/ends slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for starts/ends slice.
 
 Remaining:
 
-- Commit the `print contains` slice.
+- Commit the starts/ends slice.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.

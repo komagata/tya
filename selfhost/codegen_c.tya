@@ -146,6 +146,18 @@ emitC = nodes ->
   push lines, "  return strstr(text, needle) != NULL;"
   push lines, "}"
   push lines, ""
+  push lines, "static int starts_with_text(const char *text, const char *prefix) {"
+  push lines, "  size_t n = strlen(prefix);"
+  push lines, "  return strncmp(text, prefix, n) == 0;"
+  push lines, "}"
+  push lines, ""
+  push lines, "static int ends_with_text(const char *text, const char *suffix) {"
+  push lines, "  size_t text_len = strlen(text);"
+  push lines, "  size_t suffix_len = strlen(suffix);"
+  push lines, "  if (suffix_len > text_len) return 0;"
+  push lines, "  return strcmp(text + text_len - suffix_len, suffix) == 0;"
+  push lines, "}"
+  push lines, ""
   push lines, "static void add_token(char ***tokens, long *len, int line, const char *kind, const char *text, int col) {"
   push lines, "  char buffer[1024];"
   push lines, "  snprintf(buffer, sizeof(buffer), \"%d:%s:%s:%d\", line, kind, text, col);"
@@ -1183,7 +1195,13 @@ emitC = nodes ->
       if nameOf(node) == "contains" and extraOf(node) == "STRING"
         push lines, prefix + "puts(contains_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ") ? \"true\" : \"false\");"
       else
-        push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ", " + extra2Of(node) + ") */"
+        if nameOf(node) == "startsWith" and extraOf(node) == "STRING"
+          push lines, prefix + "puts(starts_with_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ") ? \"true\" : \"false\");"
+        else
+          if nameOf(node) == "endsWith" and extraOf(node) == "STRING"
+            push lines, prefix + "puts(ends_with_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ") ? \"true\" : \"false\");"
+          else
+            push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ", " + extra2Of(node) + ") */"
 
     if kindOf(node) == "PRINT_CALL3"
       prefix = "  "

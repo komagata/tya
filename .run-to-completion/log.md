@@ -146,3 +146,18 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 21:36:53 JST
+
+- Committed `print contains` slice as `073ad7c`.
+- Added self-host checker/codegen support for `print startsWith text, "prefix"`
+  and `print endsWith text, "suffix"`.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhost(ParserMatchesGoParserSubset|CheckerAllowsPrintContainsBuiltin|CodegenEmitsSimpleReturnFunctions)'
+  -count=1`.
+
+## 2026-04-29 21:41:28 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

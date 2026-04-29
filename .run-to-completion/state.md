@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 21:35:34 JST
+Updated: 2026-04-29 21:41:28 JST
 
 ## Goal
 
@@ -52,11 +52,14 @@ without depending on the Go implementation.
 - done: commit `print replace` slice.
 - done: implement `print contains` parser/checker/codegen slice.
 - done: verify `print contains` slice.
-- active: commit `print contains` slice.
+- done: commit `print contains` slice.
+- done: implement `print startsWith` / `print endsWith` codegen slice.
+- done: verify `print startsWith` / `print endsWith` slice.
+- active: commit starts/ends slice.
 
 ## Next Action
 
-Review final diff and commit the `print contains` slice.
+Review final diff and commit the starts/ends slice.
 
 ## Remaining Work Estimate
 

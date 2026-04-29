@@ -296,6 +296,7 @@ Self-Host Completion TODO:
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print contains(text, needle)` calls in the self-host C codegen subset
+    - [x] Emit `print startsWith(text, prefix)` and `print endsWith(text, suffix)` calls in the self-host C codegen subset
   - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
     - [x] Emit one-property object placeholders in the self-host C codegen subset
     - [x] Emit empty arrays and `push` as dynamic string arrays in the self-host C codegen subset
