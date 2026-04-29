@@ -202,6 +202,14 @@ parse = tokens ->
             push nodes, node
             i = i + 7
             continue
+        if i + 4 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 4]) == lineOf(token)
+          if textOf(tokens[i + 3]) == ","
+            leftArg = tokens[i + 2]
+            rightArg = tokens[i + 4]
+            node = lineOf(token) + ":PRINT_CALL2:" + textOf(value) + ":" + textOf(leftArg) + ":" + literalKindOf(rightArg) + ":" + textOf(rightArg)
+            push nodes, node
+            i = i + 5
+            continue
         if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 2]) == lineOf(token)
           node = lineOf(token) + ":PRINT_CALL1:" + textOf(value) + ":" + textOf(tokens[i + 2])
           push nodes, node

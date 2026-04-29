@@ -142,6 +142,10 @@ emitC = nodes ->
   push lines, "  return out;"
   push lines, "}"
   push lines, ""
+  push lines, "static int contains_text(const char *text, const char *needle) {"
+  push lines, "  return strstr(text, needle) != NULL;"
+  push lines, "}"
+  push lines, ""
   push lines, "static void add_token(char ***tokens, long *len, int line, const char *kind, const char *text, int col) {"
   push lines, "  char buffer[1024];"
   push lines, "  snprintf(buffer, sizeof(buffer), \"%d:%s:%s:%d\", line, kind, text, col);"
@@ -1171,6 +1175,15 @@ emitC = nodes ->
               push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
         else
           push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ") */"
+
+    if kindOf(node) == "PRINT_CALL2"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      if nameOf(node) == "contains" and extraOf(node) == "STRING"
+        push lines, prefix + "puts(contains_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ") ? \"true\" : \"false\");"
+      else
+        push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ", " + extra2Of(node) + ") */"
 
     if kindOf(node) == "PRINT_CALL3"
       prefix = "  "

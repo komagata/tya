@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 21:29:07 JST
+Updated: 2026-04-29 21:35:34 JST
 
-Active phase: commit `print replace` slice.
+Active phase: commit `print contains` slice.
 
 Completed:
 
@@ -54,9 +54,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the `print replace` slice.
 - `go test ./... -count=1` passes for the `print replace` slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the `print replace` slice.
+- Committed `print replace` slice as `76eae81`.
+- Added parser/checker/codegen support for `print contains text, "needle"`.
+- Focused parser/checker/codegen tests pass.
+- `sh scripts/selfhost_check.sh` passes for the `print contains` slice.
+- `go test ./... -count=1` passes for the `print contains` slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the `print contains` slice.
 
 Remaining:
 
-- Commit the `print replace` slice.
+- Commit the `print contains` slice.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.

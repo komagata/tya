@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nparts = split(message, \"\\n\")\nreplaced = replace(message, \"T\", message)\nprint replace message, \"T\", message\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
+	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nparts = split(message, \"\\n\")\nreplaced = replace(message, \"T\", message)\nprint replace message, \"T\", message\nprint contains message, \"T\"\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:replaced:CALL3:replace:message:STRING:T:message\n7:PRINT_CALL3:replace:message:STRING:T:message\n8:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n9:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n10:ASSIGN:tokens:CALL1:lex:source\n11:ASSIGN:lines:CALL2:split:source:\\n\n12:ASSIGN:nodes:CALL1:parse:tokens\n13:ASSIGN:items:ARRAY_EMPTY:\n14:PUSH:items:IDENT:message\n15:FOR:token:tokens\n16:INDENT:2\n16:PRINT:IDENT:token\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:replaced:CALL3:replace:message:STRING:T:message\n7:PRINT_CALL3:replace:message:STRING:T:message\n8:PRINT_CALL2:contains:message:STRING:T\n9:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n10:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n11:ASSIGN:tokens:CALL1:lex:source\n12:ASSIGN:lines:CALL2:split:source:\\n\n13:ASSIGN:nodes:CALL1:parse:tokens\n14:ASSIGN:items:ARRAY_EMPTY:\n15:PUSH:items:IDENT:message\n16:FOR:token:tokens\n17:INDENT:2\n17:PRINT:IDENT:token\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -149,6 +149,12 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	}
 	if !strings.Contains(out, "puts(replace_text(message, \"T\", message));") {
 		t.Fatalf("generated C missing print replace lowering:\n%s", out)
+	}
+	if !strings.Contains(out, "static int contains_text(const char *text, const char *needle)") {
+		t.Fatalf("generated C missing contains helper:\n%s", out)
+	}
+	if !strings.Contains(out, "puts(contains_text(message, \"T\") ? \"true\" : \"false\");") {
+		t.Fatalf("generated C missing print contains lowering:\n%s", out)
 	}
 	if !strings.Contains(out, "const char *user = \"\"; /* object name */") {
 		t.Fatalf("generated C missing object placeholder:\n%s", out)
@@ -371,6 +377,18 @@ func TestSelfhostCheckerAllowsReplaceBuiltin(t *testing.T) {
 func TestSelfhostCheckerAllowsPrintReplaceBuiltin(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	nodes := "1:ASSIGN:message:STRING:Tya\n2:PRINT_CALL3:replace:message:STRING:T:message\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	if string(out) != "ok\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestSelfhostCheckerAllowsPrintContainsBuiltin(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:ASSIGN:message:STRING:Tya\n2:PRINT_CALL2:contains:message:STRING:T\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -693,6 +711,12 @@ func summarizeGoStmt(out *[]string, stmt ast.Stmt) {
 		if call, ok := n.Expr.(*ast.CallExpr); ok {
 			if id, ok := call.Callee.(*ast.Ident); ok && id.Name == "print" && len(call.Args) == 1 {
 				if inner, ok := call.Args[0].(*ast.CallExpr); ok {
+					if callee, ok := inner.Callee.(*ast.Ident); ok && len(inner.Args) == 2 {
+						if left, ok := inner.Args[0].(*ast.Ident); ok {
+							*out = append(*out, "PRINT_CALL2:"+callee.Name+":"+left.Name+":"+summarizeGoKindedScalar(inner.Args[1]))
+							return
+						}
+					}
 					if callee, ok := inner.Callee.(*ast.Ident); ok && len(inner.Args) == 3 {
 						if left, ok := inner.Args[0].(*ast.Ident); ok {
 							*out = append(*out, "PRINT_CALL3:"+callee.Name+":"+left.Name+":"+summarizeGoKindedScalar(inner.Args[1])+":"+summarizeGoScalar(inner.Args[2]))

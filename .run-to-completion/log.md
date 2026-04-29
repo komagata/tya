@@ -131,3 +131,18 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 21:30:58 JST
+
+- Committed `print replace` slice as `76eae81`.
+- Added `PRINT_CALL2` support for `print contains text, "needle"` across
+  parser, checker, and self-host C codegen.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhost(ParserMatchesGoParserSubset|CheckerAllowsPrintContainsBuiltin|CodegenEmitsSimpleReturnFunctions)'
+  -count=1`.
+
+## 2026-04-29 21:35:34 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

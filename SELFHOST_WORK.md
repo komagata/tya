@@ -78,11 +78,13 @@ endpoint.
     - [x] Parse two-argument parenthesized function calls in assignment expressions
     - [x] Parse three-argument parenthesized function calls in assignment expressions
     - [x] Parse `print` calls with three-argument builtin calls
+    - [x] Parse `print` calls with two-argument builtin calls
   - [ ] Expand self-host checker toward Go checker parity
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
   - [ ] Expand self-host C codegen toward executable example parity
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset
+    - [x] Emit `print contains(text, needle)` calls in the self-host C codegen subset
   - [ ] Advance bootstrap from subset programs toward compiling existing examples
 
 ## Last Resolved Blocker
