@@ -42,3 +42,14 @@ echo "examples/hello.tya: stage-2 parser matched"
 "$out_dir/checker.stage2" "$out_dir/hello.stage2.nodes" > "$out_dir/hello.stage2.check"
 grep -qx "ok" "$out_dir/hello.stage2.check"
 echo "examples/hello.tya: stage-2 checker matched"
+
+printf 'value = 20\n' > "$out_dir/int.tya"
+"$out_dir/lexer.stage2" "$out_dir/int.tya" > "$out_dir/int.stage2.tokens"
+cat > "$out_dir/int.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:value:1
+1:SYMBOL:=:7
+1:INT:20:9
+TOKENS
+diff -u "$out_dir/int.want.tokens" "$out_dir/int.stage2.tokens" >/dev/null
+echo "int literal: stage-2 lexer matched"

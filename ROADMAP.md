@@ -306,6 +306,7 @@ Self-Host Completion TODO:
     - [x] Lower stage-2 input file reads through `readFile args()[0]`
     - [x] Add generated-C lexer helper scaffold for stage-2 token emission
     - [x] Run the stage-2 lexer on `examples/hello.tya`
+    - [x] Tokenize integer literals in the stage-2 generated lexer
     - [x] Lower stage-2 newline splitting for parser input files
     - [x] Preserve stage-2 parser token lines with dynamic arrays and `push`
     - [x] Run the stage-2 parser on `examples/hello.tya`
