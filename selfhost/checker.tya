@@ -324,6 +324,21 @@ check = nodes ->
       if not hasName(names, argName)
         push errors, lineOf(node) + ": undefined variable: " + argName
 
+    if kindOf(node) == "PRINT_CALL3"
+      funcName = nameOf(node)
+      leftArg = valueOf(node)
+      middleKind = extraOf(node)
+      middleArg = extra2Of(node)
+      rightArg = extra3Of(node)
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, leftArg)
+        push errors, lineOf(node) + ": undefined variable: " + leftArg
+      if middleKind == "IDENT" and not hasName(names, middleArg)
+        push errors, lineOf(node) + ": undefined variable: " + middleArg
+      if not isLiteralArg(rightArg) and not hasName(names, rightArg)
+        push errors, lineOf(node) + ": undefined variable: " + rightArg
+
     if kindOf(node) == "IF" or kindOf(node) == "WHILE"
       if nameOf(node) == "IDENT"
         name = valueOf(node)

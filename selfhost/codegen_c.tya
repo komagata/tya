@@ -1172,6 +1172,15 @@ emitC = nodes ->
         else
           push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ") */"
 
+    if kindOf(node) == "PRINT_CALL3"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      if nameOf(node) == "replace" and extraOf(node) == "STRING"
+        push lines, prefix + "puts(replace_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ", " + cName(extra3Of(node)) + "));"
+      else
+        push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ", " + extra2Of(node) + ", " + extra3Of(node) + ") */"
+
     if kindOf(node) == "BREAK"
       prefix = "  "
       if indent != "0"

@@ -271,6 +271,7 @@ Self-Host Completion TODO:
     - [x] Parse one-argument parenthesized function calls in assignment expressions
     - [x] Parse two-argument parenthesized function calls in assignment expressions
     - [x] Parse three-argument parenthesized function calls in assignment expressions
+    - [x] Parse `print` calls with three-argument builtin calls in the self-host parser subset
   - [ ] Parse multiple assignment, multiple return, `try`, `for in`, `for of`, `break`, `continue`, and `else`
   - [ ] Add parser golden tests comparing Go parser AST shape and Tya parser AST shape
     - [x] Add subset parser golden tests for assignments, comparisons, blocks, `else`, `while`, `push`, and `for`
@@ -292,6 +293,7 @@ Self-Host Completion TODO:
   - [ ] Emit full expression lowering through the existing C runtime ABI
     - [x] Emit simple calls to generated one-argument self-host C functions
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
+    - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset
   - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
     - [x] Emit one-property object placeholders in the self-host C codegen subset
     - [x] Emit empty arrays and `push` as dynamic string arrays in the self-host C codegen subset

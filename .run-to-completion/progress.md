@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 19:29:08 JST
+Updated: 2026-04-29 21:29:07 JST
 
-Active phase: commit `replace` codegen slice.
+Active phase: commit `print replace` slice.
 
 Completed:
 
@@ -48,9 +48,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the `replace` codegen slice.
 - `go test ./... -count=1` passes for the `replace` codegen slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the `replace` codegen slice.
+- Committed `replace` codegen slice as `49a5c75`.
+- Added parser/checker/codegen support for `print replace text, "old", new`.
+- Focused parser/checker/codegen tests pass.
+- `sh scripts/selfhost_check.sh` passes for the `print replace` slice.
+- `go test ./... -count=1` passes for the `print replace` slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the `print replace` slice.
 
 Remaining:
 
-- Commit the `replace` codegen slice.
+- Commit the `print replace` slice.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.

@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nparts = split(message, \"\\n\")\nreplaced = replace(message, \"T\", message)\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
+	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nparts = split(message, \"\\n\")\nreplaced = replace(message, \"T\", message)\nprint replace message, \"T\", message\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:replaced:CALL3:replace:message:STRING:T:message\n7:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n8:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n9:ASSIGN:tokens:CALL1:lex:source\n10:ASSIGN:lines:CALL2:split:source:\\n\n11:ASSIGN:nodes:CALL1:parse:tokens\n12:ASSIGN:items:ARRAY_EMPTY:\n13:PUSH:items:IDENT:message\n14:FOR:token:tokens\n15:INDENT:2\n15:PRINT:IDENT:token\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:replaced:CALL3:replace:message:STRING:T:message\n7:PRINT_CALL3:replace:message:STRING:T:message\n8:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n9:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n10:ASSIGN:tokens:CALL1:lex:source\n11:ASSIGN:lines:CALL2:split:source:\\n\n12:ASSIGN:nodes:CALL1:parse:tokens\n13:ASSIGN:items:ARRAY_EMPTY:\n14:PUSH:items:IDENT:message\n15:FOR:token:tokens\n16:INDENT:2\n16:PRINT:IDENT:token\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -146,6 +146,9 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	}
 	if !strings.Contains(out, "const char *replaced = replace_text(message, \"T\", message);") {
 		t.Fatalf("generated C missing replace lowering:\n%s", out)
+	}
+	if !strings.Contains(out, "puts(replace_text(message, \"T\", message));") {
+		t.Fatalf("generated C missing print replace lowering:\n%s", out)
 	}
 	if !strings.Contains(out, "const char *user = \"\"; /* object name */") {
 		t.Fatalf("generated C missing object placeholder:\n%s", out)
@@ -356,6 +359,18 @@ func TestSelfhostCheckerRejectsUndefinedThreeArgCallNames(t *testing.T) {
 func TestSelfhostCheckerAllowsReplaceBuiltin(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	nodes := "1:ASSIGN:message:STRING:Tya\n2:ASSIGN:result:CALL3:replace:message:STRING:T:message\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	if string(out) != "ok\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestSelfhostCheckerAllowsPrintReplaceBuiltin(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:ASSIGN:message:STRING:Tya\n2:PRINT_CALL3:replace:message:STRING:T:message\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -677,6 +692,14 @@ func summarizeGoStmt(out *[]string, stmt ast.Stmt) {
 	case *ast.ExprStmt:
 		if call, ok := n.Expr.(*ast.CallExpr); ok {
 			if id, ok := call.Callee.(*ast.Ident); ok && id.Name == "print" && len(call.Args) == 1 {
+				if inner, ok := call.Args[0].(*ast.CallExpr); ok {
+					if callee, ok := inner.Callee.(*ast.Ident); ok && len(inner.Args) == 3 {
+						if left, ok := inner.Args[0].(*ast.Ident); ok {
+							*out = append(*out, "PRINT_CALL3:"+callee.Name+":"+left.Name+":"+summarizeGoKindedScalar(inner.Args[1])+":"+summarizeGoScalar(inner.Args[2]))
+							return
+						}
+					}
+				}
 				*out = append(*out, "PRINT:"+summarizeGoExpr(call.Args[0]))
 			}
 			if id, ok := call.Callee.(*ast.Ident); ok && id.Name == "push" && len(call.Args) == 2 {

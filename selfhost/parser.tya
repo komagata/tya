@@ -193,6 +193,15 @@ parse = tokens ->
       if i + 1 < len(tokens)
         value = tokens[i + 1]
         step = 2
+        if i + 6 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 6]) == lineOf(token)
+          if textOf(tokens[i + 3]) == "," and textOf(tokens[i + 5]) == ","
+            leftArg = tokens[i + 2]
+            middleArg = tokens[i + 4]
+            rightArg = tokens[i + 6]
+            node = lineOf(token) + ":PRINT_CALL3:" + textOf(value) + ":" + textOf(leftArg) + ":" + literalKindOf(middleArg) + ":" + textOf(middleArg) + ":" + textOf(rightArg)
+            push nodes, node
+            i = i + 7
+            continue
         if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 2]) == lineOf(token)
           node = lineOf(token) + ":PRINT_CALL1:" + textOf(value) + ":" + textOf(tokens[i + 2])
           push nodes, node

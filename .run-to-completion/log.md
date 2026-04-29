@@ -116,3 +116,18 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 21:24:37 JST
+
+- Committed `replace` codegen slice as `49a5c75`.
+- Added `PRINT_CALL3` support for `print replace text, "old", new` across
+  parser, checker, and self-host C codegen.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhost(ParserMatchesGoParserSubset|CheckerAllowsPrintReplaceBuiltin|CodegenEmitsSimpleReturnFunctions)'
+  -count=1`.
+
+## 2026-04-29 21:29:07 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
