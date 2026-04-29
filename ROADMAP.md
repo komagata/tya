@@ -308,6 +308,7 @@ Self-Host Completion TODO:
     - [x] Run the stage-2 lexer on `examples/hello.tya`
     - [x] Tokenize integer literals in the stage-2 generated lexer
     - [x] Tokenize arrows and two-character comparison operators in the stage-2 generated lexer
+    - [x] Tokenize float literals and basic string escapes in the stage-2 generated lexer
     - [x] Lower stage-2 newline splitting for parser input files
     - [x] Preserve stage-2 parser token lines with dynamic arrays and `push`
     - [x] Run the stage-2 parser on `examples/hello.tya`

@@ -87,3 +87,18 @@ cat > "$out_dir/operators.want.tokens" <<'TOKENS'
 TOKENS
 diff -u "$out_dir/operators.want.tokens" "$out_dir/operators.stage2.tokens" >/dev/null
 echo "operators: stage-2 lexer matched"
+
+printf 'ratio = 12.5\ntext = "a\\\"b"\n' > "$out_dir/literals.tya"
+"$out_dir/lexer.stage2" "$out_dir/literals.tya" > "$out_dir/literals.stage2.tokens"
+cat > "$out_dir/literals.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:ratio:1
+1:SYMBOL:=:7
+1:FLOAT:12.5:9
+2:INDENT:0:1
+2:IDENT:text:1
+2:SYMBOL:=:6
+2:STRING:a"b:8
+TOKENS
+diff -u "$out_dir/literals.want.tokens" "$out_dir/literals.stage2.tokens" >/dev/null
+echo "float and string escape: stage-2 lexer matched"
