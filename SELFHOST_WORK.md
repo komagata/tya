@@ -78,6 +78,7 @@ endpoint.
     - [x] Parse two-argument parenthesized function calls in assignment expressions
     - [x] Parse three-argument parenthesized function calls in assignment expressions
   - [ ] Expand self-host checker toward Go checker parity
+    - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
   - [ ] Expand self-host C codegen toward executable example parity
   - [ ] Advance bootstrap from subset programs toward compiling existing examples
 

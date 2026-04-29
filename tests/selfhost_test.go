@@ -347,6 +347,18 @@ func TestSelfhostCheckerRejectsUndefinedThreeArgCallNames(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerAllowsReplaceBuiltin(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:ASSIGN:message:STRING:Tya\n2:ASSIGN:result:CALL3:replace:message:STRING:T:message\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	if string(out) != "ok\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedIndexNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:ASSIGN:first:INDEX:missingItems:i\n2:RETURN:INDEX:missingItems:i\n"), 0644); err != nil {

@@ -87,3 +87,19 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 19:18:41 JST
+
+- Committed parenthesized three-argument call parser slice as `3eccd91`.
+- Added `replace` to the self-host checker builtin scope.
+- Added checker coverage allowing `CALL3:replace` while preserving undefined
+  `CALL3` diagnostics.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostChecker(AllowsReplaceBuiltin|RejectsUndefinedThreeArgCallNames)'
+  -count=1`.
+
+## 2026-04-29 19:23:35 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

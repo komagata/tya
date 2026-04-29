@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 19:17:11 JST
+Updated: 2026-04-29 19:23:35 JST
 
-Active phase: commit three-argument call parser slice.
+Active phase: commit `replace` checker builtin slice.
 
 Completed:
 
@@ -36,9 +36,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the three-argument call slice.
 - `go test ./... -count=1` passes for the three-argument call slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the three-argument call slice.
+- Committed three-argument call parser slice as `3eccd91`.
+- Added `replace` to the self-host checker builtin scope.
+- Focused checker tests for `replace` and undefined `CALL3` pass.
+- `sh scripts/selfhost_check.sh` passes for the checker builtin slice.
+- `go test ./... -count=1` passes for the checker builtin slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the checker builtin slice.
 
 Remaining:
 
-- Commit the three-argument call parser slice.
+- Commit the checker builtin slice.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.

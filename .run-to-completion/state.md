@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 19:17:11 JST
+Updated: 2026-04-29 19:23:35 JST
 
 ## Goal
 
@@ -40,11 +40,14 @@ without depending on the Go implementation.
 - done: commit two-argument call parser slice.
 - done: implement parser slice for parenthesized three-argument calls.
 - done: verify three-argument call parser slice.
-- active: commit three-argument call parser slice.
+- done: commit three-argument call parser slice.
+- done: implement checker slice for `replace` builtin.
+- done: verify checker builtin slice.
+- active: commit checker builtin slice.
 
 ## Next Action
 
-Review final diff and commit the three-argument call parser slice.
+Review final diff and commit the checker builtin slice.
 
 ## Remaining Work Estimate
 

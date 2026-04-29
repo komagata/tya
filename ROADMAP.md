@@ -280,6 +280,7 @@ Self-Host Completion TODO:
   - [ ] Check undefined names, duplicate constants, duplicate params, duplicate object members, and invalid assignment targets
     - [x] Reject duplicate simple function params in the self-host checker subset
     - [x] Reject invalid simple function and loop binding names in the self-host checker subset
+    - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
   - [ ] Port optional unused binding checks or decide they stay Go-only
   - [ ] Add checker parity tests against Go checker diagnostics
