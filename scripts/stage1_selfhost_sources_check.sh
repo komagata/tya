@@ -237,3 +237,29 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/int_add.stage2" "$out_dir/int_a
 int_add_out="$("$out_dir/int_add.stage2")"
 test "$int_add_out" = "5"
 echo "int addition: stage-2 pipeline matched"
+
+printf 'enabled = true\nprint enabled\n' > "$out_dir/bool.tya"
+"$out_dir/lexer.stage2" "$out_dir/bool.tya" > "$out_dir/bool.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/bool.stage2.tokens" > "$out_dir/bool.stage2.nodes"
+cat > "$out_dir/bool.want.nodes" <<'NODES'
+1:ASSIGN:enabled:BOOL:true
+2:PRINT:IDENT:enabled
+NODES
+diff -u "$out_dir/bool.want.nodes" "$out_dir/bool.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/bool.stage2.nodes" > "$out_dir/bool.stage2.check"
+grep -qx "ok" "$out_dir/bool.stage2.check"
+"$out_dir/codegen_c.stage2" "$out_dir/bool.stage2.nodes" > "$out_dir/bool.stage2.c"
+cat > "$out_dir/bool.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  int enabled = 1;
+  puts(enabled ? "true" : "false");
+  return 0;
+}
+C
+diff -u "$out_dir/bool.want.c" "$out_dir/bool.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/bool.stage2" "$out_dir/bool.stage2.c" >/dev/null 2>&1
+bool_out="$("$out_dir/bool.stage2")"
+test "$bool_out" = "true"
+echo "bool assignment: stage-2 pipeline matched"
