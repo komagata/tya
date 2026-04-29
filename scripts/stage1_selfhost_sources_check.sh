@@ -68,3 +68,22 @@ cat > "$out_dir/int.want.tokens" <<'TOKENS'
 TOKENS
 diff -u "$out_dir/int.want.tokens" "$out_dir/int.stage2.tokens" >/dev/null
 echo "int literal: stage-2 lexer matched"
+
+printf 'same = value == 20\nfn = x -> x\n' > "$out_dir/operators.tya"
+"$out_dir/lexer.stage2" "$out_dir/operators.tya" > "$out_dir/operators.stage2.tokens"
+cat > "$out_dir/operators.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:same:1
+1:SYMBOL:=:6
+1:IDENT:value:8
+1:SYMBOL:==:14
+1:INT:20:17
+2:INDENT:0:1
+2:IDENT:fn:1
+2:SYMBOL:=:4
+2:IDENT:x:6
+2:ARROW:->:8
+2:IDENT:x:11
+TOKENS
+diff -u "$out_dir/operators.want.tokens" "$out_dir/operators.stage2.tokens" >/dev/null
+echo "operators: stage-2 lexer matched"
