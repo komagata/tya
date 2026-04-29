@@ -431,6 +431,13 @@ parse = tokens ->
             push nodes, node
             i = i + 9
             continue
+        if i + 5 < len(tokens) and kindOf(value) == "IDENT" and textOf(tokens[i + 3]) == "("
+          if textOf(tokens[i + 5]) == ")"
+            arg = tokens[i + 4]
+            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL1:" + textOf(value) + ":" + textOf(arg)
+            push nodes, node
+            i = i + 6
+            continue
         if i + 3 < len(tokens) and kindOf(value) == "IDENT" and kindOf(tokens[i + 3]) == "IDENT" and lineOf(tokens[i + 3]) == lineOf(token)
           arg = tokens[i + 3]
           node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL1:" + textOf(value) + ":" + textOf(arg)

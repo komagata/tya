@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 19:00:20 JST
+Updated: 2026-04-29 19:05:24 JST
 
-Active phase: promote completed lexer parity TODOs.
+Active phase: commit parser slice.
 
 Completed:
 
@@ -19,10 +19,14 @@ Completed:
 - Found remaining Self-Host Completion TODOs in `ROADMAP.md`.
 - Seeded `SELFHOST_WORK.md` with a new high-level completion queue.
 - Marked completed lexer parity TODOs in `ROADMAP.md`.
+- Added self-host parser support for `name = call(arg)`.
+- Focused parser parity test passes.
+- `sh scripts/selfhost_check.sh` passes.
+- `go test ./... -count=1` passes.
+- `sh scripts/selfhost_bootstrap_check.sh` passes.
 
 Remaining:
 
-- Continue with parser, checker, codegen, and bootstrap parity slices.
-- Commit this documentation checkpoint.
+- Commit the parser slice.
 
-Estimate: many iterations overall; immediate docs checkpoint less than 1 iteration.
+Estimate: many iterations overall; current parser slice less than 1 iteration.

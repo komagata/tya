@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 19:00:20 JST
+Updated: 2026-04-29 19:05:24 JST
 
 ## Goal
 
@@ -31,13 +31,14 @@ without depending on the Go implementation.
 
 - done: inspect old queue and roadmap.
 - done: seed a new self-host completion queue from `ROADMAP.md`.
-- active: promote completed lexer parity TODOs.
-- pending: implement next parser/checker/codegen slice.
-- pending: verify and commit.
+- done: promote completed lexer parity TODOs.
+- done: implement parser slice for parenthesized one-argument calls.
+- done: verify parser slice.
+- active: commit parser slice.
 
 ## Next Action
 
-Verify the documentation-only queue cleanup, then commit it.
+Review final diff and commit the parser slice.
 
 ## Remaining Work Estimate
 

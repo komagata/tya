@@ -43,3 +43,17 @@
 
 - Promoted completed lexer parity TODOs in `ROADMAP.md`.
 - Marked the matching `SELFHOST_WORK.md` queue item done.
+
+## 2026-04-29 19:01:15 JST
+
+- Added self-host parser support for parenthesized one-argument assignment calls
+  by lowering `name = call(arg)` to existing `CALL1` nodes.
+- Updated `TestSelfhostParserMatchesGoParserSubset` and Go AST summarization.
+- Focused verification passed: `go test ./tests -run
+  TestSelfhostParserMatchesGoParserSubset -count=1`.
+
+## 2026-04-29 19:05:24 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
