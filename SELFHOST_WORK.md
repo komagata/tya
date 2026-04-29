@@ -33,20 +33,20 @@ endpoint.
   - [x] Preserve `INT` and `BOOL` assignment type information through Go-emitted `selfhost/codegen_c.tya`
   - [x] Ensure stage-1 generated C prints bool/int values with the correct format
   - [x] Add `examples/selfhost_ops.tya` to `scripts/selfhost_bootstrap_check.sh`
-- [ ] Expand parser subset toward full expression parsing
+- [x] Expand parser subset toward full expression parsing
   - [x] Parse grouped comparison assignments
   - [x] Parse simple `and` / `or` assignments
   - [x] Parse two-or-more element array literals
   - [x] Parse simple inline object literals
-- [ ] Expand checker subset
+- [x] Expand checker subset
   - [x] Track block-local names for `if`, `while`, and `for`
   - [x] Reject duplicate simple function params in self-host checker
   - [x] Add parity coverage for duplicate and invalid names
-- [ ] Expand self-host C codegen subset
+- [x] Expand self-host C codegen subset
   - [x] Emit simple function bodies instead of comments for one-expression returns
   - [x] Emit simple function calls to generated functions
   - [x] Emit object placeholders beyond comments
-- [ ] Bootstrap stage 2
+- [x] Bootstrap stage 2
   - [x] Use stage-1 compiler binaries to compile selfhost sources to C
   - [x] Compile stage-1 emitted selfhost C into stage-2 binaries
   - [x] Lower stage-2 input file reads through `readFile args()[0]`

@@ -19,3 +19,8 @@
 
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 18:49:10 JST
+
+- Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
+- Next queue cleanup: mark parent tasks complete where all children are checked.

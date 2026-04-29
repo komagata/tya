@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 18:48:28 JST
+Updated: 2026-04-29 18:49:10 JST
 
-Active phase: commit.
+Active phase: mark completed parent queue items.
 
 Completed:
 
@@ -12,9 +12,10 @@ Completed:
 - Focused `sh scripts/stage1_selfhost_sources_check.sh` passes.
 - `go test ./... -count=1` passes.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
+- Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 
 Remaining:
 
-- Commit with the configured repository identity.
+- Commit documentation-only queue cleanup.
 
 Estimate: less than 1 iteration, high confidence.

@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 18:48:28 JST
+Updated: 2026-04-29 18:49:10 JST
 
 ## Goal
 
@@ -30,11 +30,12 @@ is complete or a real blocker is reached.
 - done: inspect repository state and queue.
 - done: implement deterministic stage-2 generated-C comparison.
 - done: run focused and full verification.
-- active: commit.
+- done: commit deterministic stage-2 codegen checkpoint.
+- active: mark completed parent queue items.
 
 ## Next Action
 
-Review the final diff, confirm git identity, and commit.
+Verify the documentation-only queue cleanup and commit it.
 
 ## Remaining Work Estimate
 
