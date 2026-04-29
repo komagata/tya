@@ -49,6 +49,7 @@ endpoint.
 - [ ] Bootstrap stage 2
   - [x] Use stage-1 compiler binaries to compile selfhost sources to C
   - [x] Compile stage-1 emitted selfhost C into stage-2 binaries
+  - [x] Lower stage-2 input file reads through `readFile args()[0]`
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
 
 ## Last Resolved Blocker

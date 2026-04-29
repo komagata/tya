@@ -106,6 +106,20 @@ emitC = nodes ->
 
   push lines, "#include <stdio.h>"
   push lines, "#include <string.h>"
+  push lines, "#include <stdlib.h>"
+  push lines, ""
+  push lines, "static char *read_file(const char *path) {"
+  push lines, "  FILE *file = fopen(path, \"rb\");"
+  push lines, "  if (!file) return \"\";"
+  push lines, "  fseek(file, 0, SEEK_END);"
+  push lines, "  long size = ftell(file);"
+  push lines, "  fseek(file, 0, SEEK_SET);"
+  push lines, "  char *buffer = malloc((size_t)size + 1);"
+  push lines, "  size_t n = fread(buffer, 1, (size_t)size, file);"
+  push lines, "  buffer[n] = 0;"
+  push lines, "  fclose(file);"
+  push lines, "  return buffer;"
+  push lines, "}"
   push lines, ""
   i = 0
   while i < len(funcNames)
@@ -117,7 +131,7 @@ emitC = nodes ->
     push lines, "}"
     push lines, ""
     i = i + 1
-  push lines, "int main(void) {"
+  push lines, "int main(int argc, char **argv) {"
   blockOpen = false
   blockDepth = 0
   indent = "0"
@@ -313,11 +327,18 @@ emitC = nodes ->
                                     push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
                                 else
                                   if valueOf(node) == "CALL1_CALL0_INDEX"
-                                    if hasName(names, nameOf(node))
-                                      push lines, "  " + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
+                                    if extraOf(node) == "readFile" and extra2Of(node) == "args" and extra3Of(node) == "0"
+                                      if hasName(names, nameOf(node))
+                                        push lines, "  " + cName(nameOf(node)) + " = argc > 1 ? read_file(argv[1]) : \"\";"
+                                      else
+                                        rememberType names, types, nameOf(node), "STRING"
+                                        push lines, "  const char *" + cName(nameOf(node)) + " = argc > 1 ? read_file(argv[1]) : \"\";"
                                     else
-                                      rememberType names, types, nameOf(node), "STRING"
-                                      push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
+                                      if hasName(names, nameOf(node))
+                                        push lines, "  " + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
+                                      else
+                                        rememberType names, types, nameOf(node), "STRING"
+                                        push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
                                   else
                                     if valueOf(node) == "CALL0_INDEX"
                                       if hasName(names, nameOf(node))

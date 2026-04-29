@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n7:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -143,6 +143,12 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	}
 	if !strings.Contains(out, "const char *user = \"\"; /* object name */") {
 		t.Fatalf("generated C missing object placeholder:\n%s", out)
+	}
+	if !strings.Contains(out, "int main(int argc, char **argv)") {
+		t.Fatalf("generated C missing argv-capable main:\n%s", out)
+	}
+	if !strings.Contains(out, "const char *source = argc > 1 ? read_file(argv[1]) : \"\";") {
+		t.Fatalf("generated C missing readFile args()[0] lowering:\n%s", out)
 	}
 	if strings.Contains(out, "/* func identity") {
 		t.Fatalf("generated C kept function comment:\n%s", out)
