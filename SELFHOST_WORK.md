@@ -66,6 +66,7 @@ endpoint.
   - [x] Run the stage-2 codegen output for literal assignments
   - [x] Run a stage-2 pipeline for printing an assigned integer
   - [x] Run a stage-2 pipeline for printing assigned string and float values
+  - [x] Run a stage-2 pipeline for integer addition
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
 
 ## Last Resolved Blocker

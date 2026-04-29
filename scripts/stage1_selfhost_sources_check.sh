@@ -207,3 +207,33 @@ print_literals_out="$("$out_dir/print_literals.stage2")"
 test "$print_literals_out" = "hello
 12.5"
 echo "print literal assignments: stage-2 pipeline matched"
+
+printf 'left = 2\nright = 3\nsum = left + right\nprint sum\n' > "$out_dir/int_add.tya"
+"$out_dir/lexer.stage2" "$out_dir/int_add.tya" > "$out_dir/int_add.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/int_add.stage2.tokens" > "$out_dir/int_add.stage2.nodes"
+cat > "$out_dir/int_add.want.nodes" <<'NODES'
+1:ASSIGN:left:INT:2
+2:ASSIGN:right:INT:3
+3:ASSIGN:sum:INT_ADD:left:right
+4:PRINT:IDENT:sum
+NODES
+diff -u "$out_dir/int_add.want.nodes" "$out_dir/int_add.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/int_add.stage2.nodes" > "$out_dir/int_add.stage2.check"
+grep -qx "ok" "$out_dir/int_add.stage2.check"
+"$out_dir/codegen_c.stage2" "$out_dir/int_add.stage2.nodes" > "$out_dir/int_add.stage2.c"
+cat > "$out_dir/int_add.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  long left = 2;
+  long right = 3;
+  long sum = left + right;
+  printf("%ld\n", (long)sum);
+  return 0;
+}
+C
+diff -u "$out_dir/int_add.want.c" "$out_dir/int_add.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/int_add.stage2" "$out_dir/int_add.stage2.c" >/dev/null 2>&1
+int_add_out="$("$out_dir/int_add.stage2")"
+test "$int_add_out" = "5"
+echo "int addition: stage-2 pipeline matched"
