@@ -38,3 +38,7 @@ cat > "$out_dir/hello.want.nodes" <<'NODES'
 NODES
 diff -u "$out_dir/hello.want.nodes" "$out_dir/hello.stage2.nodes" >/dev/null
 echo "examples/hello.tya: stage-2 parser matched"
+
+"$out_dir/checker.stage2" "$out_dir/hello.stage2.nodes" > "$out_dir/hello.stage2.check"
+grep -qx "ok" "$out_dir/hello.stage2.check"
+echo "examples/hello.tya: stage-2 checker matched"
