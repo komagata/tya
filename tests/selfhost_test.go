@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nparts = split(message, \"\\n\")\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
+	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nparts = split(message, \"\\n\")\nreplaced = replace(message, \"T\", message)\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -732,6 +732,11 @@ func summarizeGoExpr(expr ast.Expr) string {
 			if len(n.Args) == 2 {
 				if left, ok := n.Args[0].(*ast.Ident); ok {
 					return "CALL2:" + id.Name + ":" + left.Name + ":" + summarizeGoScalar(n.Args[1])
+				}
+			}
+			if len(n.Args) == 3 {
+				if left, ok := n.Args[0].(*ast.Ident); ok {
+					return "CALL3:" + id.Name + ":" + left.Name + ":" + summarizeGoKindedScalar(n.Args[1]) + ":" + summarizeGoScalar(n.Args[2])
 				}
 			}
 		}

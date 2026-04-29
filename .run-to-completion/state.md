@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 19:11:11 JST
+Updated: 2026-04-29 19:17:11 JST
 
 ## Goal
 
@@ -37,11 +37,14 @@ without depending on the Go implementation.
 - done: commit parser slice for parenthesized one-argument calls.
 - done: implement parser slice for parenthesized two-argument calls.
 - done: verify two-argument call parser slice.
-- active: commit two-argument call parser slice.
+- done: commit two-argument call parser slice.
+- done: implement parser slice for parenthesized three-argument calls.
+- done: verify three-argument call parser slice.
+- active: commit three-argument call parser slice.
 
 ## Next Action
 
-Review final diff and commit the two-argument call parser slice.
+Review final diff and commit the three-argument call parser slice.
 
 ## Remaining Work Estimate
 

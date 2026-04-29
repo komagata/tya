@@ -270,6 +270,7 @@ Self-Host Completion TODO:
   - [ ] Parse function literals, method literals, calls with and without parentheses, and function-value calls
     - [x] Parse one-argument parenthesized function calls in assignment expressions
     - [x] Parse two-argument parenthesized function calls in assignment expressions
+    - [x] Parse three-argument parenthesized function calls in assignment expressions
   - [ ] Parse multiple assignment, multiple return, `try`, `for in`, `for of`, `break`, `continue`, and `else`
   - [ ] Add parser golden tests comparing Go parser AST shape and Tya parser AST shape
     - [x] Add subset parser golden tests for assignments, comparisons, blocks, `else`, `while`, `push`, and `for`

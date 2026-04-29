@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 19:11:11 JST
+Updated: 2026-04-29 19:17:11 JST
 
-Active phase: commit two-argument call parser slice.
+Active phase: commit three-argument call parser slice.
 
 Completed:
 
@@ -30,9 +30,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the two-argument call slice.
 - `go test ./... -count=1` passes for the two-argument call slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the two-argument call slice.
+- Committed two-argument call parser slice as `701ff4c`.
+- Added self-host parser support for `name = call(arg, arg2, arg3)`.
+- Focused parser parity test passes for `replace(message, "T", message)`.
+- `sh scripts/selfhost_check.sh` passes for the three-argument call slice.
+- `go test ./... -count=1` passes for the three-argument call slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the three-argument call slice.
 
 Remaining:
 
-- Commit the two-argument call parser slice.
+- Commit the three-argument call parser slice.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.

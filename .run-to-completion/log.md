@@ -72,3 +72,18 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 19:12:40 JST
+
+- Committed parenthesized two-argument call parser slice as `701ff4c`.
+- Added self-host parser support for parenthesized three-argument assignment
+  calls by lowering `name = call(arg, arg2, arg3)` to existing `CALL3` nodes.
+- Extended parser subset test with `replace(message, "T", message)`.
+- Focused verification passed: `go test ./tests -run
+  TestSelfhostParserMatchesGoParserSubset -count=1`.
+
+## 2026-04-29 19:17:11 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
