@@ -102,3 +102,10 @@ cat > "$out_dir/literals.want.tokens" <<'TOKENS'
 TOKENS
 diff -u "$out_dir/literals.want.tokens" "$out_dir/literals.stage2.tokens" >/dev/null
 echo "float and string escape: stage-2 lexer matched"
+
+"$out_dir/parser.stage2" "$out_dir/int.stage2.tokens" > "$out_dir/int.stage2.nodes"
+cat > "$out_dir/int.want.nodes" <<'NODES'
+1:ASSIGN:value:INT:20
+NODES
+diff -u "$out_dir/int.want.nodes" "$out_dir/int.stage2.nodes" >/dev/null
+echo "int assignment: stage-2 parser matched"
