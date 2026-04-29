@@ -22,3 +22,12 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
   cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/$base.stage2" "$out_dir/$base.stage2.c" >/dev/null 2>&1
   echo "$src: stage-1 emitted and compiled C"
 done
+
+"$out_dir/lexer.stage2" examples/hello.tya > "$out_dir/hello.stage2.tokens"
+cat > "$out_dir/hello.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:print:1
+1:STRING:Hello, Tya:7
+TOKENS
+diff -u "$out_dir/hello.want.tokens" "$out_dir/hello.stage2.tokens" >/dev/null
+echo "examples/hello.tya: stage-2 lexer matched"

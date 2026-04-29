@@ -303,6 +303,7 @@ Self-Host Completion TODO:
     - [x] Compile stage-1 emitted self-host C into stage-2 binaries
     - [x] Lower stage-2 input file reads through `readFile args()[0]`
     - [x] Add generated-C lexer helper scaffold for stage-2 token emission
+    - [x] Run the stage-2 lexer on `examples/hello.tya`
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
   - [x] Add a single `scripts/selfhost_bootstrap_check.sh` that runs the current bootstrap gate
 - [ ] Documentation and release readiness
