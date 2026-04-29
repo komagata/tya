@@ -57,3 +57,18 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 19:06:43 JST
+
+- Committed parenthesized one-argument call parser slice as `69e0052`.
+- Added self-host parser support for parenthesized two-argument assignment calls
+  by lowering `name = call(arg, arg2)` to existing `CALL2` nodes.
+- Extended parser subset test with `split(message, "\\n")`.
+- Focused verification passed: `go test ./tests -run
+  TestSelfhostParserMatchesGoParserSubset -count=1`.
+
+## 2026-04-29 19:11:11 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

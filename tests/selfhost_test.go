@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
+	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nparts = split(message, \"\\n\")\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -723,9 +723,16 @@ func summarizeGoExpr(expr ast.Expr) string {
 			return "OBJECT_ONE:" + n.Props[0].Name + ":" + summarizeGoExpr(n.Props[0].Value)
 		}
 	case *ast.CallExpr:
-		if id, ok := n.Callee.(*ast.Ident); ok && len(n.Args) == 1 {
-			if arg, ok := n.Args[0].(*ast.Ident); ok {
-				return "CALL1:" + id.Name + ":" + arg.Name
+		if id, ok := n.Callee.(*ast.Ident); ok {
+			if len(n.Args) == 1 {
+				if arg, ok := n.Args[0].(*ast.Ident); ok {
+					return "CALL1:" + id.Name + ":" + arg.Name
+				}
+			}
+			if len(n.Args) == 2 {
+				if left, ok := n.Args[0].(*ast.Ident); ok {
+					return "CALL2:" + id.Name + ":" + left.Name + ":" + summarizeGoScalar(n.Args[1])
+				}
 			}
 		}
 	case *ast.BinaryExpr:
@@ -785,7 +792,7 @@ func summarizeGoScalar(expr ast.Expr) string {
 	case *ast.IntLit:
 		return strconv.FormatInt(n.Value, 10)
 	case *ast.StringLit:
-		return n.Value
+		return strings.NewReplacer("\n", "\\n", "\t", "\\t").Replace(n.Value)
 	}
 	return summarizeGoExpr(expr)
 }

@@ -75,6 +75,7 @@ endpoint.
   - [x] Promote completed lexer parity TODOs in `ROADMAP.md`
   - [ ] Expand self-host parser beyond line-oriented subset stubs
     - [x] Parse one-argument parenthesized function calls in assignment expressions
+    - [x] Parse two-argument parenthesized function calls in assignment expressions
   - [ ] Expand self-host checker toward Go checker parity
   - [ ] Expand self-host C codegen toward executable example parity
   - [ ] Advance bootstrap from subset programs toward compiling existing examples

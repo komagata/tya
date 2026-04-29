@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 19:05:24 JST
+Updated: 2026-04-29 19:11:11 JST
 
 ## Goal
 
@@ -34,11 +34,14 @@ without depending on the Go implementation.
 - done: promote completed lexer parity TODOs.
 - done: implement parser slice for parenthesized one-argument calls.
 - done: verify parser slice.
-- active: commit parser slice.
+- done: commit parser slice for parenthesized one-argument calls.
+- done: implement parser slice for parenthesized two-argument calls.
+- done: verify two-argument call parser slice.
+- active: commit two-argument call parser slice.
 
 ## Next Action
 
-Review final diff and commit the parser slice.
+Review final diff and commit the two-argument call parser slice.
 
 ## Remaining Work Estimate
 
