@@ -359,15 +359,24 @@ emitC = nodes ->
                   item = cString(extra2Of(node))
                 if extra3Of(node) == "STRING"
                   item2 = cString(extra4Of(node))
-              if hasName(names, nameOf(node))
-                push lines, "  " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
-                push lines, "  " + cName(nameOf(node)) + "_0 = " + item + ";"
-                push lines, "  " + cName(nameOf(node)) + "_1 = " + item2 + ";"
+              if valueOf(node) == "ARRAY_EMPTY"
+                if hasName(names, nameOf(node))
+                  push lines, "  " + cName(nameOf(node)) + "_len = 0;"
+                  push lines, "  " + cName(nameOf(node)) + " = NULL;"
+                else
+                  push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
+                  push lines, "  char **" + cName(nameOf(node)) + " = NULL;"
+                  rememberType names, types, nameOf(node), "DYNARRAY"
               else
-                push lines, "  long " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
-                push lines, "  const char *" + cName(nameOf(node)) + "_0 = " + item + ";"
-                push lines, "  const char *" + cName(nameOf(node)) + "_1 = " + item2 + ";"
-                rememberType names, types, nameOf(node), "ARRAY"
+                if hasName(names, nameOf(node))
+                  push lines, "  " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
+                  push lines, "  " + cName(nameOf(node)) + "_0 = " + item + ";"
+                  push lines, "  " + cName(nameOf(node)) + "_1 = " + item2 + ";"
+                else
+                  push lines, "  long " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
+                  push lines, "  const char *" + cName(nameOf(node)) + "_0 = " + item + ";"
+                  push lines, "  const char *" + cName(nameOf(node)) + "_1 = " + item2 + ";"
+                  rememberType names, types, nameOf(node), "ARRAY"
             else
               if valueOf(node) == "INT_ADD"
                 if hasName(names, nameOf(node))
@@ -796,7 +805,15 @@ emitC = nodes ->
         push lines, prefix + cName(nameOf(node)) + "_0 = " + pushed + ";"
         push lines, prefix + cName(nameOf(node)) + "_len = 1;"
       else
-        push lines, prefix + "/* push " + nameOf(node) + ", " + extraOf(node) + " */"
+        if typeOf(names, types, nameOf(node)) == "DYNARRAY"
+          pushed = cName(extraOf(node))
+          if valueOf(node) == "STRING"
+            pushed = cString(extraOf(node))
+          push lines, prefix + cName(nameOf(node)) + " = realloc(" + cName(nameOf(node)) + ", sizeof(char *) * (size_t)(" + cName(nameOf(node)) + "_len + 1));"
+          push lines, prefix + cName(nameOf(node)) + "[" + cName(nameOf(node)) + "_len] = dup_text(" + pushed + ");"
+          push lines, prefix + cName(nameOf(node)) + "_len++;"
+        else
+          push lines, prefix + "/* push " + nameOf(node) + ", " + extraOf(node) + " */"
 
     if kindOf(node) == "RETURN"
       prefix = "  "

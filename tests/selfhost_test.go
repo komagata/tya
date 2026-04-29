@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n7:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n8:ASSIGN:tokens:CALL1:lex:source\n9:ASSIGN:lines:CALL2:split:source:\\n\n10:FOR:token:tokens\n11:INDENT:2\n11:PRINT:IDENT:token\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n7:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n8:ASSIGN:tokens:CALL1:lex:source\n9:ASSIGN:lines:CALL2:split:source:\\n\n10:ASSIGN:items:ARRAY_EMPTY:\n11:PUSH:items:IDENT:message\n12:FOR:token:tokens\n13:INDENT:2\n13:PRINT:IDENT:token\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -161,6 +161,9 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	}
 	if !strings.Contains(out, "char **lines = split_lines(source, &lines_len);") {
 		t.Fatalf("generated C missing split(source, newline) lowering:\n%s", out)
+	}
+	if !strings.Contains(out, "char **items = NULL;") || !strings.Contains(out, "items[items_len] = dup_text(message);") {
+		t.Fatalf("generated C missing dynamic array push lowering:\n%s", out)
 	}
 	if strings.Contains(out, "/* func identity") {
 		t.Fatalf("generated C kept function comment:\n%s", out)
