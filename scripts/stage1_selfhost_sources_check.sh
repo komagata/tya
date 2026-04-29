@@ -263,3 +263,33 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/bool.stage2" "$out_dir/bool.sta
 bool_out="$("$out_dir/bool.stage2")"
 test "$bool_out" = "true"
 echo "bool assignment: stage-2 pipeline matched"
+
+printf 'left = 2\nright = 2\nsame = left == right\nprint same\n' > "$out_dir/compare_eq.tya"
+"$out_dir/lexer.stage2" "$out_dir/compare_eq.tya" > "$out_dir/compare_eq.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/compare_eq.stage2.tokens" > "$out_dir/compare_eq.stage2.nodes"
+cat > "$out_dir/compare_eq.want.nodes" <<'NODES'
+1:ASSIGN:left:INT:2
+2:ASSIGN:right:INT:2
+3:ASSIGN:same:COMPARE_EQ:left:right
+4:PRINT:IDENT:same
+NODES
+diff -u "$out_dir/compare_eq.want.nodes" "$out_dir/compare_eq.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/compare_eq.stage2.nodes" > "$out_dir/compare_eq.stage2.check"
+grep -qx "ok" "$out_dir/compare_eq.stage2.check"
+"$out_dir/codegen_c.stage2" "$out_dir/compare_eq.stage2.nodes" > "$out_dir/compare_eq.stage2.c"
+cat > "$out_dir/compare_eq.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  long left = 2;
+  long right = 2;
+  int same = left == right;
+  puts(same ? "true" : "false");
+  return 0;
+}
+C
+diff -u "$out_dir/compare_eq.want.c" "$out_dir/compare_eq.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/compare_eq.stage2" "$out_dir/compare_eq.stage2.c" >/dev/null 2>&1
+compare_eq_out="$("$out_dir/compare_eq.stage2")"
+test "$compare_eq_out" = "true"
+echo "equality comparison: stage-2 pipeline matched"
