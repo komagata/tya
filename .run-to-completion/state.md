@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 19:23:35 JST
+Updated: 2026-04-29 19:29:08 JST
 
 ## Goal
 
@@ -43,11 +43,14 @@ without depending on the Go implementation.
 - done: commit three-argument call parser slice.
 - done: implement checker slice for `replace` builtin.
 - done: verify checker builtin slice.
-- active: commit checker builtin slice.
+- done: commit checker builtin slice.
+- done: implement codegen slice for `replace`.
+- done: verify `replace` codegen slice.
+- active: commit `replace` codegen slice.
 
 ## Next Action
 
-Review final diff and commit the checker builtin slice.
+Review final diff and commit the `replace` codegen slice.
 
 ## Remaining Work Estimate
 

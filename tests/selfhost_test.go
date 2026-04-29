@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n7:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n8:ASSIGN:tokens:CALL1:lex:source\n9:ASSIGN:lines:CALL2:split:source:\\n\n10:ASSIGN:nodes:CALL1:parse:tokens\n11:ASSIGN:items:ARRAY_EMPTY:\n12:PUSH:items:IDENT:message\n13:FOR:token:tokens\n14:INDENT:2\n14:PRINT:IDENT:token\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:replaced:CALL3:replace:message:STRING:T:message\n7:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n8:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n9:ASSIGN:tokens:CALL1:lex:source\n10:ASSIGN:lines:CALL2:split:source:\\n\n11:ASSIGN:nodes:CALL1:parse:tokens\n12:ASSIGN:items:ARRAY_EMPTY:\n13:PUSH:items:IDENT:message\n14:FOR:token:tokens\n15:INDENT:2\n15:PRINT:IDENT:token\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -140,6 +140,12 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	}
 	if !strings.Contains(out, "puts(identity(message));") {
 		t.Fatalf("generated C missing function call print:\n%s", out)
+	}
+	if !strings.Contains(out, "static char *replace_text(const char *text, const char *old_text, const char *new_text)") {
+		t.Fatalf("generated C missing replace helper:\n%s", out)
+	}
+	if !strings.Contains(out, "const char *replaced = replace_text(message, \"T\", message);") {
+		t.Fatalf("generated C missing replace lowering:\n%s", out)
 	}
 	if !strings.Contains(out, "const char *user = \"\"; /* object name */") {
 		t.Fatalf("generated C missing object placeholder:\n%s", out)

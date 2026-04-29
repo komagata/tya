@@ -128,6 +128,20 @@ emitC = nodes ->
   push lines, "  return out;"
   push lines, "}"
   push lines, ""
+  push lines, "static char *replace_text(const char *text, const char *old_text, const char *new_text) {"
+  push lines, "  const char *hit = strstr(text, old_text);"
+  push lines, "  if (!hit) return dup_text(text);"
+  push lines, "  size_t prefix = (size_t)(hit - text);"
+  push lines, "  size_t old_len = strlen(old_text);"
+  push lines, "  size_t new_len = strlen(new_text);"
+  push lines, "  size_t suffix_len = strlen(hit + old_len);"
+  push lines, "  char *out = malloc(prefix + new_len + suffix_len + 1);"
+  push lines, "  memcpy(out, text, prefix);"
+  push lines, "  memcpy(out + prefix, new_text, new_len);"
+  push lines, "  memcpy(out + prefix + new_len, hit + old_len, suffix_len + 1);"
+  push lines, "  return out;"
+  push lines, "}"
+  push lines, ""
   push lines, "static void add_token(char ***tokens, long *len, int line, const char *kind, const char *text, int col) {"
   push lines, "  char buffer[1024];"
   push lines, "  snprintf(buffer, sizeof(buffer), \"%d:%s:%s:%d\", line, kind, text, col);"
@@ -835,11 +849,18 @@ emitC = nodes ->
                                     push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
                               else
                                 if valueOf(node) == "CALL3"
-                                  if hasName(names, nameOf(node))
-                                    push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
+                                  if extraOf(node) == "replace" and extra3Of(node) == "STRING"
+                                    if hasName(names, nameOf(node))
+                                      push lines, "  " + cName(nameOf(node)) + " = replace_text(" + cName(extra2Of(node)) + ", " + cString(extra4Of(node)) + ", " + cName(extra5Of(node)) + ");"
+                                    else
+                                      rememberType names, types, nameOf(node), "STRING"
+                                      push lines, "  const char *" + cName(nameOf(node)) + " = replace_text(" + cName(extra2Of(node)) + ", " + cString(extra4Of(node)) + ", " + cName(extra5Of(node)) + ");"
                                   else
-                                    rememberType names, types, nameOf(node), "STRING"
-                                    push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
+                                    if hasName(names, nameOf(node))
+                                      push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
+                                    else
+                                      rememberType names, types, nameOf(node), "STRING"
+                                      push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
                                 else
                                   if valueOf(node) == "CALL1_CALL0_INDEX"
                                     if extraOf(node) == "readFile" and extra2Of(node) == "args" and extra3Of(node) == "0"

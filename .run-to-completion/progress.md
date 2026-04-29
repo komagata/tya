@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 19:23:35 JST
+Updated: 2026-04-29 19:29:08 JST
 
-Active phase: commit `replace` checker builtin slice.
+Active phase: commit `replace` codegen slice.
 
 Completed:
 
@@ -42,9 +42,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the checker builtin slice.
 - `go test ./... -count=1` passes for the checker builtin slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the checker builtin slice.
+- Committed checker builtin slice as `4dcc2e5`.
+- Added self-host C codegen lowering for `replace(text, old, new)`.
+- Focused codegen test passes.
+- `sh scripts/selfhost_check.sh` passes for the `replace` codegen slice.
+- `go test ./... -count=1` passes for the `replace` codegen slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the `replace` codegen slice.
 
 Remaining:
 
-- Commit the checker builtin slice.
+- Commit the `replace` codegen slice.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.

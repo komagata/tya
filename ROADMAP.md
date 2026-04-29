@@ -291,6 +291,7 @@ Self-Host Completion TODO:
     - [x] Emit simple one-argument identity return function bodies in the self-host C codegen subset
   - [ ] Emit full expression lowering through the existing C runtime ABI
     - [x] Emit simple calls to generated one-argument self-host C functions
+    - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
   - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
     - [x] Emit one-property object placeholders in the self-host C codegen subset
     - [x] Emit empty arrays and `push` as dynamic string arrays in the self-host C codegen subset

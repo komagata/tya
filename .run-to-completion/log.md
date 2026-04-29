@@ -103,3 +103,16 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 19:24:48 JST
+
+- Committed checker builtin slice as `4dcc2e5`.
+- Added generated-C `replace_text` helper and lowered `CALL3:replace` to it.
+- Focused verification passed: `go test ./tests -run
+  TestSelfhostCodegenEmitsSimpleReturnFunctions -count=1`.
+
+## 2026-04-29 19:29:08 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
