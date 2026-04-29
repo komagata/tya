@@ -109,3 +109,11 @@ cat > "$out_dir/int.want.nodes" <<'NODES'
 NODES
 diff -u "$out_dir/int.want.nodes" "$out_dir/int.stage2.nodes" >/dev/null
 echo "int assignment: stage-2 parser matched"
+
+"$out_dir/parser.stage2" "$out_dir/literals.stage2.tokens" > "$out_dir/literals.stage2.nodes"
+cat > "$out_dir/literals.want.nodes" <<'NODES'
+1:ASSIGN:ratio:FLOAT:12.5
+2:ASSIGN:text:STRING:a"b
+NODES
+diff -u "$out_dir/literals.want.nodes" "$out_dir/literals.stage2.nodes" >/dev/null
+echo "literal assignments: stage-2 parser matched"

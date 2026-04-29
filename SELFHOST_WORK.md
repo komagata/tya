@@ -59,6 +59,7 @@ endpoint.
   - [x] Preserve stage-2 parser token lines with dynamic arrays and `push`
   - [x] Run the stage-2 parser on `examples/hello.tya`
   - [x] Parse integer literal assignments in the stage-2 generated parser
+  - [x] Parse float and string literal assignments in the stage-2 generated parser
   - [x] Run the stage-2 checker on `examples/hello.tya`
   - [x] Run the stage-2 codegen output for `examples/hello.tya`
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
