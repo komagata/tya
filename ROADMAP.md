@@ -323,6 +323,7 @@ Self-Host Completion TODO:
     - [x] Run a stage-2 pipeline for integer addition
     - [x] Run a stage-2 pipeline for boolean assignment and print
     - [x] Run a stage-2 pipeline for equality comparison
+    - [x] Run a stage-2 pipeline for inequality comparison
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
   - [x] Add a single `scripts/selfhost_bootstrap_check.sh` that runs the current bootstrap gate
 - [ ] Documentation and release readiness
