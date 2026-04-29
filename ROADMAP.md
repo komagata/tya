@@ -291,6 +291,7 @@ Self-Host Completion TODO:
   - [ ] Emit loops, conditionals, `try`, multiple return assignment, function values, and standard builtins
     - [x] Lower `readFile args()[0]` and argv-capable `main` in the self-host C codegen subset
     - [x] Add a plain-C lexer helper scaffold for stage-2 token emission
+    - [x] Lower `split(source, "\\n")` to a generated-C line splitter for stage-2 parser input
   - [ ] Add generated-C parity tests comparing interpreter output and self-hosted codegen output
     - [x] Add subset generated-C parity tests for `examples/selfhost_ops.tya`
 - [ ] Bootstrap pipeline
@@ -304,6 +305,7 @@ Self-Host Completion TODO:
     - [x] Lower stage-2 input file reads through `readFile args()[0]`
     - [x] Add generated-C lexer helper scaffold for stage-2 token emission
     - [x] Run the stage-2 lexer on `examples/hello.tya`
+    - [x] Lower stage-2 newline splitting for parser input files
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
   - [x] Add a single `scripts/selfhost_bootstrap_check.sh` that runs the current bootstrap gate
 - [ ] Documentation and release readiness

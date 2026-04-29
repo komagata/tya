@@ -197,6 +197,28 @@ emitC = nodes ->
   push lines, "  return tokens;"
   push lines, "}"
   push lines, ""
+  push lines, "static char **split_lines(const char *source, long *out_len) {"
+  push lines, "  char **lines = NULL;"
+  push lines, "  long len = 0;"
+  push lines, "  int start = 0;"
+  push lines, "  int i = 0;"
+  push lines, "  while (1) {"
+  push lines, "    if (source[i] == 10 || source[i] == 0) {"
+  push lines, "      int n = i - start;"
+  push lines, "      char *line = malloc((size_t)n + 1);"
+  push lines, "      memcpy(line, source + start, (size_t)n);"
+  push lines, "      line[n] = 0;"
+  push lines, "      lines = realloc(lines, sizeof(char *) * (size_t)(len + 1));"
+  push lines, "      lines[len++] = line;"
+  push lines, "      if (source[i] == 0) break;"
+  push lines, "      start = i + 1;"
+  push lines, "    }"
+  push lines, "    i++;"
+  push lines, "  }"
+  push lines, "  *out_len = len;"
+  push lines, "  return lines;"
+  push lines, "}"
+  push lines, ""
   i = 0
   while i < len(funcNames)
     ret = cName(funcRetValues[i])
@@ -426,11 +448,19 @@ emitC = nodes ->
                                   push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
                             else
                               if valueOf(node) == "CALL2"
-                                if hasName(names, nameOf(node))
-                                  push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
+                                if extraOf(node) == "split" and extra3Of(node) == "\\n"
+                                  if hasName(names, nameOf(node))
+                                    push lines, "  " + cName(nameOf(node)) + " = split_lines(" + cName(extra2Of(node)) + ", &" + cName(nameOf(node)) + "_len);"
+                                  else
+                                    push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
+                                    push lines, "  char **" + cName(nameOf(node)) + " = split_lines(" + cName(extra2Of(node)) + ", &" + cName(nameOf(node)) + "_len);"
+                                    rememberType names, types, nameOf(node), "DYNARRAY"
                                 else
-                                  rememberType names, types, nameOf(node), "STRING"
-                                  push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
+                                  if hasName(names, nameOf(node))
+                                    push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
+                                  else
+                                    rememberType names, types, nameOf(node), "STRING"
+                                    push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
                               else
                                 if valueOf(node) == "CALL3"
                                   if hasName(names, nameOf(node))
