@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 21:55:28 JST
+Updated: 2026-04-29 21:56:13 JST
 
 ## Goal
 
@@ -61,11 +61,13 @@ without depending on the Go implementation.
 - done: commit `trim` slice.
 - done: implement `print len` codegen slice.
 - done: verify `print len` slice.
-- active: commit `print len` slice.
+- done: commit `print len` slice.
+- active: inspect next bootstrap expansion slice.
 
 ## Next Action
 
-Review final diff and commit the `print len` slice.
+Pick the next smallest unchecked slice, likely advancing bootstrap from subset
+programs toward a current executable example such as `examples/string.tya`.
 
 ## Remaining Work Estimate
 

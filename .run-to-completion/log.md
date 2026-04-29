@@ -189,3 +189,9 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 21:56:13 JST
+
+- Committed `print len` slice as `475f315`.
+- Next action: inspect the next smallest bootstrap expansion toward an existing
+  executable example, likely `examples/string.tya`.

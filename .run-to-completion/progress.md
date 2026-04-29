@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 21:55:28 JST
+Updated: 2026-04-29 21:56:13 JST
 
-Active phase: commit `print len` slice.
+Active phase: inspect next bootstrap expansion slice.
 
 Completed:
 
@@ -78,9 +78,10 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the `print len` slice.
 - `go test ./... -count=1` passes for the `print len` slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the `print len` slice.
+- Committed `print len` slice as `475f315`.
 
 Remaining:
 
-- Commit the `print len` slice.
+- Pick the next smallest bootstrap expansion toward an existing executable example.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.
