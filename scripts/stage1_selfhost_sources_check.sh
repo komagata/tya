@@ -117,3 +117,9 @@ cat > "$out_dir/literals.want.nodes" <<'NODES'
 NODES
 diff -u "$out_dir/literals.want.nodes" "$out_dir/literals.stage2.nodes" >/dev/null
 echo "literal assignments: stage-2 parser matched"
+
+"$out_dir/checker.stage2" "$out_dir/int.stage2.nodes" > "$out_dir/int.stage2.check"
+grep -qx "ok" "$out_dir/int.stage2.check"
+"$out_dir/checker.stage2" "$out_dir/literals.stage2.nodes" > "$out_dir/literals.stage2.check"
+grep -qx "ok" "$out_dir/literals.stage2.check"
+echo "literal assignments: stage-2 checker matched"
