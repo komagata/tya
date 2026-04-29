@@ -199,7 +199,7 @@ func TestGoEmittedSelfhostPipelineRuns(t *testing.T) {
 
 func TestStage1SelfhostSourcesEmitC(t *testing.T) {
 	out := run(t, "sh", "scripts/stage1_selfhost_sources_check.sh")
-	want := "selfhost/lexer.tya: stage-1 emitted and compiled C\nselfhost/parser.tya: stage-1 emitted and compiled C\nselfhost/checker.tya: stage-1 emitted and compiled C\nselfhost/codegen_c.tya: stage-1 emitted and compiled C\nexamples/hello.tya: stage-2 lexer matched\nexamples/hello.tya: stage-2 parser matched\nexamples/hello.tya: stage-2 checker matched\nint literal: stage-2 lexer matched\n"
+	want := "selfhost/lexer.tya: stage-1 emitted and compiled C\nselfhost/parser.tya: stage-1 emitted and compiled C\nselfhost/checker.tya: stage-1 emitted and compiled C\nselfhost/codegen_c.tya: stage-1 emitted and compiled C\nexamples/hello.tya: stage-2 lexer matched\nexamples/hello.tya: stage-2 parser matched\nexamples/hello.tya: stage-2 checker matched\nexamples/hello.tya: stage-2 codegen matched\nint literal: stage-2 lexer matched\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

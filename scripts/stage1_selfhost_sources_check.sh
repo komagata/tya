@@ -43,6 +43,21 @@ echo "examples/hello.tya: stage-2 parser matched"
 grep -qx "ok" "$out_dir/hello.stage2.check"
 echo "examples/hello.tya: stage-2 checker matched"
 
+"$out_dir/codegen_c.stage2" "$out_dir/hello.stage2.nodes" > "$out_dir/hello.stage2.c"
+cat > "$out_dir/hello.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  puts("Hello, Tya");
+  return 0;
+}
+C
+diff -u "$out_dir/hello.want.c" "$out_dir/hello.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/hello.stage2" "$out_dir/hello.stage2.c"
+hello_out="$("$out_dir/hello.stage2")"
+test "$hello_out" = "Hello, Tya"
+echo "examples/hello.tya: stage-2 codegen matched"
+
 printf 'value = 20\n' > "$out_dir/int.tya"
 "$out_dir/lexer.stage2" "$out_dir/int.tya" > "$out_dir/int.stage2.tokens"
 cat > "$out_dir/int.want.tokens" <<'TOKENS'
