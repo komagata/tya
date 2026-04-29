@@ -150,3 +150,29 @@ C
 diff -u "$out_dir/literals.want.c" "$out_dir/literals.stage2.c" >/dev/null
 cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/literals.stage2" "$out_dir/literals.stage2.c" >/dev/null 2>&1
 echo "literal assignments: stage-2 codegen matched"
+
+printf 'value = 20\nprint value\n' > "$out_dir/print_int.tya"
+"$out_dir/lexer.stage2" "$out_dir/print_int.tya" > "$out_dir/print_int.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/print_int.stage2.tokens" > "$out_dir/print_int.stage2.nodes"
+cat > "$out_dir/print_int.want.nodes" <<'NODES'
+1:ASSIGN:value:INT:20
+2:PRINT:IDENT:value
+NODES
+diff -u "$out_dir/print_int.want.nodes" "$out_dir/print_int.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/print_int.stage2.nodes" > "$out_dir/print_int.stage2.check"
+grep -qx "ok" "$out_dir/print_int.stage2.check"
+"$out_dir/codegen_c.stage2" "$out_dir/print_int.stage2.nodes" > "$out_dir/print_int.stage2.c"
+cat > "$out_dir/print_int.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  long value = 20;
+  printf("%ld\n", (long)value);
+  return 0;
+}
+C
+diff -u "$out_dir/print_int.want.c" "$out_dir/print_int.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/print_int.stage2" "$out_dir/print_int.stage2.c" >/dev/null 2>&1
+print_int_out="$("$out_dir/print_int.stage2")"
+test "$print_int_out" = "20"
+echo "print int assignment: stage-2 pipeline matched"

@@ -64,6 +64,7 @@ endpoint.
   - [x] Run the stage-2 checker on literal assignments
   - [x] Run the stage-2 codegen output for `examples/hello.tya`
   - [x] Run the stage-2 codegen output for literal assignments
+  - [x] Run a stage-2 pipeline for printing an assigned integer
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
 
 ## Last Resolved Blocker
