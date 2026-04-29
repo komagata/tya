@@ -175,3 +175,17 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 21:50:22 JST
+
+- Committed `trim` slice as `ab254d6`.
+- Added self-host C codegen support for `print len value`.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhost(ParserMatchesGoParserSubset|CodegenEmitsSimpleReturnFunctions)'
+  -count=1`.
+
+## 2026-04-29 21:55:28 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

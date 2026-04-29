@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\npush queue, trimmed\nfor entry in queue\n  print entry\n"
+	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nprint len trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\npush queue, trimmed\nfor entry in queue\n  print entry\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING: Tya \n4:ASSIGN:trimmed:CALL1:trim:message\n5:ASSIGN:result:CALL1:identity:trimmed\n6:PRINT_CALL1:identity:trimmed\n7:ASSIGN:replaced:CALL3:replace:trimmed:STRING:T:trimmed\n8:PRINT_CALL3:replace:trimmed:STRING:T:trimmed\n9:PRINT_CALL2:contains:trimmed:STRING:T\n10:PRINT_CALL2:startsWith:trimmed:STRING:T\n11:PRINT_CALL2:endsWith:trimmed:STRING:a\n12:ASSIGN:user:OBJECT_ONE:name:IDENT:trimmed\n13:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n14:ASSIGN:tokens:CALL1:lex:source\n15:ASSIGN:lines:CALL2:split:source:\\n\n16:ASSIGN:nodes:CALL1:parse:tokens\n17:ASSIGN:items:ARRAY_EMPTY:\n18:PUSH:items:IDENT:trimmed\n19:FOR:token:tokens\n20:INDENT:2\n20:PRINT:IDENT:token\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING: Tya \n4:ASSIGN:trimmed:CALL1:trim:message\n5:ASSIGN:result:CALL1:identity:trimmed\n6:PRINT_CALL1:identity:trimmed\n7:ASSIGN:replaced:CALL3:replace:trimmed:STRING:T:trimmed\n8:PRINT_CALL3:replace:trimmed:STRING:T:trimmed\n9:PRINT_CALL2:contains:trimmed:STRING:T\n10:PRINT_CALL2:startsWith:trimmed:STRING:T\n11:PRINT_CALL2:endsWith:trimmed:STRING:a\n12:PRINT_CALL1:len:trimmed\n13:ASSIGN:user:OBJECT_ONE:name:IDENT:trimmed\n14:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n15:ASSIGN:tokens:CALL1:lex:source\n16:ASSIGN:lines:CALL2:split:source:\\n\n17:ASSIGN:nodes:CALL1:parse:tokens\n18:ASSIGN:items:ARRAY_EMPTY:\n19:PUSH:items:IDENT:trimmed\n20:FOR:token:tokens\n21:INDENT:2\n21:PRINT:IDENT:token\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -164,6 +164,9 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	}
 	if !strings.Contains(out, "puts(ends_with_text(trimmed, \"a\") ? \"true\" : \"false\");") {
 		t.Fatalf("generated C missing print endsWith lowering:\n%s", out)
+	}
+	if !strings.Contains(out, "printf(\"%ld\\n\", (long)strlen(trimmed));") {
+		t.Fatalf("generated C missing print len lowering:\n%s", out)
 	}
 	if !strings.Contains(out, "const char *user = \"\"; /* object name */") {
 		t.Fatalf("generated C missing object placeholder:\n%s", out)
@@ -720,6 +723,12 @@ func summarizeGoStmt(out *[]string, stmt ast.Stmt) {
 		if call, ok := n.Expr.(*ast.CallExpr); ok {
 			if id, ok := call.Callee.(*ast.Ident); ok && id.Name == "print" && len(call.Args) == 1 {
 				if inner, ok := call.Args[0].(*ast.CallExpr); ok {
+					if callee, ok := inner.Callee.(*ast.Ident); ok && len(inner.Args) == 1 {
+						if arg, ok := inner.Args[0].(*ast.Ident); ok {
+							*out = append(*out, "PRINT_CALL1:"+callee.Name+":"+arg.Name)
+							return
+						}
+					}
 					if callee, ok := inner.Callee.(*ast.Ident); ok && len(inner.Args) == 2 {
 						if left, ok := inner.Args[0].(*ast.Ident); ok {
 							*out = append(*out, "PRINT_CALL2:"+callee.Name+":"+left.Name+":"+summarizeGoKindedScalar(inner.Args[1]))

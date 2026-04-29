@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 21:49:00 JST
+Updated: 2026-04-29 21:55:28 JST
 
-Active phase: commit `trim` slice.
+Active phase: commit `print len` slice.
 
 Completed:
 
@@ -72,9 +72,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the `trim` slice.
 - `go test ./... -count=1` passes for the `trim` slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the `trim` slice.
+- Committed `trim` slice as `ab254d6`.
+- Added self-host C codegen support for `print len value`.
+- Focused parser/codegen tests pass.
+- `sh scripts/selfhost_check.sh` passes for the `print len` slice.
+- `go test ./... -count=1` passes for the `print len` slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the `print len` slice.
 
 Remaining:
 
-- Commit the `trim` slice.
+- Commit the `print len` slice.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.

@@ -1203,16 +1203,22 @@ emitC = nodes ->
       if nameOf(node) == "emitC"
         push lines, prefix + "emit_program(" + cName(valueOf(node)) + ", " + cName(valueOf(node)) + "_len);"
       else
-        if hasName(funcNames, nameOf(node))
-          if typeOf(names, types, valueOf(node)) == "INT"
-            push lines, prefix + "printf(\"%ld\\n\", (long)" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
+        if nameOf(node) == "len"
+          if typeOf(names, types, valueOf(node)) == "DYNARRAY"
+            push lines, prefix + "printf(\"%ld\\n\", (long)" + cName(valueOf(node)) + "_len);"
           else
-            if typeOf(names, types, valueOf(node)) == "BOOL"
-              push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + ") ? \"true\" : \"false\");"
-            else
-              push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
+            push lines, prefix + "printf(\"%ld\\n\", (long)strlen(" + cName(valueOf(node)) + "));"
         else
-          push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ") */"
+          if hasName(funcNames, nameOf(node))
+            if typeOf(names, types, valueOf(node)) == "INT"
+              push lines, prefix + "printf(\"%ld\\n\", (long)" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
+            else
+              if typeOf(names, types, valueOf(node)) == "BOOL"
+                push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + ") ? \"true\" : \"false\");"
+              else
+                push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
+          else
+            push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ") */"
 
     if kindOf(node) == "PRINT_CALL2"
       prefix = "  "

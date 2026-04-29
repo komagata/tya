@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 21:49:00 JST
+Updated: 2026-04-29 21:55:28 JST
 
 ## Goal
 
@@ -58,11 +58,14 @@ without depending on the Go implementation.
 - done: commit starts/ends slice.
 - done: implement `trim` checker/codegen slice.
 - done: verify `trim` slice.
-- active: commit `trim` slice.
+- done: commit `trim` slice.
+- done: implement `print len` codegen slice.
+- done: verify `print len` slice.
+- active: commit `print len` slice.
 
 ## Next Action
 
-Review final diff and commit the `trim` slice.
+Review final diff and commit the `print len` slice.
 
 ## Remaining Work Estimate
 
