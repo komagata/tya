@@ -150,6 +150,9 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	if !strings.Contains(out, "const char *source = argc > 1 ? read_file(argv[1]) : \"\";") {
 		t.Fatalf("generated C missing readFile args()[0] lowering:\n%s", out)
 	}
+	if !strings.Contains(out, "static char **lex_source(const char *source, long *out_len)") {
+		t.Fatalf("generated C missing lexer helper:\n%s", out)
+	}
 	if strings.Contains(out, "/* func identity") {
 		t.Fatalf("generated C kept function comment:\n%s", out)
 	}

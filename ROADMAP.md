@@ -290,6 +290,7 @@ Self-Host Completion TODO:
     - [x] Emit one-property object placeholders in the self-host C codegen subset
   - [ ] Emit loops, conditionals, `try`, multiple return assignment, function values, and standard builtins
     - [x] Lower `readFile args()[0]` and argv-capable `main` in the self-host C codegen subset
+    - [x] Add a plain-C lexer helper scaffold for stage-2 token emission
   - [ ] Add generated-C parity tests comparing interpreter output and self-hosted codegen output
     - [x] Add subset generated-C parity tests for `examples/selfhost_ops.tya`
 - [ ] Bootstrap pipeline
@@ -300,6 +301,8 @@ Self-Host Completion TODO:
   - [ ] Use the stage-1 compiler to compile the Tya-written compiler again
     - [x] Use stage-1 compiler binaries to emit C for the self-host compiler sources
     - [x] Compile stage-1 emitted self-host C into stage-2 binaries
+    - [x] Lower stage-2 input file reads through `readFile args()[0]`
+    - [x] Add generated-C lexer helper scaffold for stage-2 token emission
   - [ ] Compare stage-1 and stage-2 generated C for deterministic output
   - [x] Add a single `scripts/selfhost_bootstrap_check.sh` that runs the current bootstrap gate
 - [ ] Documentation and release readiness
