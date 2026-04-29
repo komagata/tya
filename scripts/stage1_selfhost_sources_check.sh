@@ -123,3 +123,30 @@ grep -qx "ok" "$out_dir/int.stage2.check"
 "$out_dir/checker.stage2" "$out_dir/literals.stage2.nodes" > "$out_dir/literals.stage2.check"
 grep -qx "ok" "$out_dir/literals.stage2.check"
 echo "literal assignments: stage-2 checker matched"
+
+"$out_dir/codegen_c.stage2" "$out_dir/int.stage2.nodes" > "$out_dir/int.stage2.c"
+cat > "$out_dir/int.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  long value = 20;
+  return 0;
+}
+C
+diff -u "$out_dir/int.want.c" "$out_dir/int.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/int.stage2" "$out_dir/int.stage2.c" >/dev/null 2>&1
+echo "int assignment: stage-2 codegen matched"
+
+"$out_dir/codegen_c.stage2" "$out_dir/literals.stage2.nodes" > "$out_dir/literals.stage2.c"
+cat > "$out_dir/literals.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  double ratio = 12.5;
+  const char *text = "a\"b";
+  return 0;
+}
+C
+diff -u "$out_dir/literals.want.c" "$out_dir/literals.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/literals.stage2" "$out_dir/literals.stage2.c" >/dev/null 2>&1
+echo "literal assignments: stage-2 codegen matched"
