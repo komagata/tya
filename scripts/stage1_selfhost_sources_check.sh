@@ -5,6 +5,16 @@ out_dir="$(mktemp -d "${TMPDIR:-/tmp}/tya-stage1-selfhost-sources.XXXXXX")"
 
 mkdir -p "$out_dir"
 
+compare_stage2_codegen() {
+  label="$1"
+  nodes="$2"
+  file_label="$(printf '%s' "$label" | tr '/ ' '__')"
+  "$out_dir/codegen_c.stage2" "$nodes" > "$out_dir/$file_label.stage2.first.c"
+  "$out_dir/codegen_c.stage2" "$nodes" > "$out_dir/$file_label.stage2.second.c"
+  diff -u "$out_dir/$file_label.stage2.first.c" "$out_dir/$file_label.stage2.second.c" >/dev/null
+  echo "$label: stage-2 codegen deterministic"
+}
+
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
   base="$(basename "$src" .tya)"
   go run ./cmd/tya --emit-c "$src" > "$out_dir/$base.stage1.c"
@@ -42,6 +52,8 @@ echo "examples/hello.tya: stage-2 parser matched"
 "$out_dir/checker.stage2" "$out_dir/hello.stage2.nodes" > "$out_dir/hello.stage2.check"
 grep -qx "ok" "$out_dir/hello.stage2.check"
 echo "examples/hello.tya: stage-2 checker matched"
+
+compare_stage2_codegen "examples/hello.tya" "$out_dir/hello.stage2.nodes"
 
 "$out_dir/codegen_c.stage2" "$out_dir/hello.stage2.nodes" > "$out_dir/hello.stage2.c"
 cat > "$out_dir/hello.want.c" <<'C'
@@ -109,6 +121,7 @@ cat > "$out_dir/int.want.nodes" <<'NODES'
 NODES
 diff -u "$out_dir/int.want.nodes" "$out_dir/int.stage2.nodes" >/dev/null
 echo "int assignment: stage-2 parser matched"
+compare_stage2_codegen "int assignment" "$out_dir/int.stage2.nodes"
 
 "$out_dir/parser.stage2" "$out_dir/literals.stage2.tokens" > "$out_dir/literals.stage2.nodes"
 cat > "$out_dir/literals.want.nodes" <<'NODES'
@@ -117,6 +130,7 @@ cat > "$out_dir/literals.want.nodes" <<'NODES'
 NODES
 diff -u "$out_dir/literals.want.nodes" "$out_dir/literals.stage2.nodes" >/dev/null
 echo "literal assignments: stage-2 parser matched"
+compare_stage2_codegen "literal assignments" "$out_dir/literals.stage2.nodes"
 
 "$out_dir/checker.stage2" "$out_dir/int.stage2.nodes" > "$out_dir/int.stage2.check"
 grep -qx "ok" "$out_dir/int.stage2.check"
@@ -161,6 +175,7 @@ NODES
 diff -u "$out_dir/print_int.want.nodes" "$out_dir/print_int.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/print_int.stage2.nodes" > "$out_dir/print_int.stage2.check"
 grep -qx "ok" "$out_dir/print_int.stage2.check"
+compare_stage2_codegen "print int assignment" "$out_dir/print_int.stage2.nodes"
 "$out_dir/codegen_c.stage2" "$out_dir/print_int.stage2.nodes" > "$out_dir/print_int.stage2.c"
 cat > "$out_dir/print_int.want.c" <<'C'
 #include <stdio.h>
@@ -189,6 +204,7 @@ NODES
 diff -u "$out_dir/print_literals.want.nodes" "$out_dir/print_literals.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/print_literals.stage2.nodes" > "$out_dir/print_literals.stage2.check"
 grep -qx "ok" "$out_dir/print_literals.stage2.check"
+compare_stage2_codegen "print literal assignments" "$out_dir/print_literals.stage2.nodes"
 "$out_dir/codegen_c.stage2" "$out_dir/print_literals.stage2.nodes" > "$out_dir/print_literals.stage2.c"
 cat > "$out_dir/print_literals.want.c" <<'C'
 #include <stdio.h>
@@ -220,6 +236,7 @@ NODES
 diff -u "$out_dir/int_add.want.nodes" "$out_dir/int_add.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/int_add.stage2.nodes" > "$out_dir/int_add.stage2.check"
 grep -qx "ok" "$out_dir/int_add.stage2.check"
+compare_stage2_codegen "int addition" "$out_dir/int_add.stage2.nodes"
 "$out_dir/codegen_c.stage2" "$out_dir/int_add.stage2.nodes" > "$out_dir/int_add.stage2.c"
 cat > "$out_dir/int_add.want.c" <<'C'
 #include <stdio.h>
@@ -248,6 +265,7 @@ NODES
 diff -u "$out_dir/bool.want.nodes" "$out_dir/bool.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/bool.stage2.nodes" > "$out_dir/bool.stage2.check"
 grep -qx "ok" "$out_dir/bool.stage2.check"
+compare_stage2_codegen "bool assignment" "$out_dir/bool.stage2.nodes"
 "$out_dir/codegen_c.stage2" "$out_dir/bool.stage2.nodes" > "$out_dir/bool.stage2.c"
 cat > "$out_dir/bool.want.c" <<'C'
 #include <stdio.h>
@@ -276,6 +294,7 @@ NODES
 diff -u "$out_dir/compare_eq.want.nodes" "$out_dir/compare_eq.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/compare_eq.stage2.nodes" > "$out_dir/compare_eq.stage2.check"
 grep -qx "ok" "$out_dir/compare_eq.stage2.check"
+compare_stage2_codegen "equality comparison" "$out_dir/compare_eq.stage2.nodes"
 "$out_dir/codegen_c.stage2" "$out_dir/compare_eq.stage2.nodes" > "$out_dir/compare_eq.stage2.c"
 cat > "$out_dir/compare_eq.want.c" <<'C'
 #include <stdio.h>
@@ -306,6 +325,7 @@ NODES
 diff -u "$out_dir/compare_ne.want.nodes" "$out_dir/compare_ne.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/compare_ne.stage2.nodes" > "$out_dir/compare_ne.stage2.check"
 grep -qx "ok" "$out_dir/compare_ne.stage2.check"
+compare_stage2_codegen "inequality comparison" "$out_dir/compare_ne.stage2.nodes"
 "$out_dir/codegen_c.stage2" "$out_dir/compare_ne.stage2.nodes" > "$out_dir/compare_ne.stage2.c"
 cat > "$out_dir/compare_ne.want.c" <<'C'
 #include <stdio.h>

@@ -218,6 +218,7 @@ Implemented:
 - Go C emitter can run `examples/function.tya`
 - Go C emitter can run `examples/arithmetic.tya`
 - Go C emitter can run `examples/string.tya`
+- Stage-2 self-host codegen emits deterministic C for supported subset fixtures
 - Go C emitter can run object, conversion, and file examples
 - Go C emitter can run `examples/equal.tya`
 - Go C emitter can run `examples/for.tya`

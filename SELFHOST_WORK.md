@@ -70,7 +70,7 @@ endpoint.
   - [x] Run a stage-2 pipeline for boolean assignment and print
   - [x] Run a stage-2 pipeline for equality comparison
   - [x] Run a stage-2 pipeline for inequality comparison
-  - [ ] Compare stage-1 and stage-2 generated C for deterministic output
+  - [x] Compare repeated stage-2 generated C for deterministic output
 
 ## Last Resolved Blocker
 
