@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 18:49:10 JST
+Updated: 2026-04-29 18:51:00 JST
 
-Active phase: mark completed parent queue items.
+Active phase: complete.
 
 Completed:
 
@@ -13,9 +13,11 @@ Completed:
 - `go test ./... -count=1` passes.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
+- Committed parent queue cleanup as `d4ff7f3`.
+- Confirmed `SELFHOST_WORK.md` has no unchecked queue items.
 
 Remaining:
 
-- Commit documentation-only queue cleanup.
+- No queued self-hosting work remains.
 
-Estimate: less than 1 iteration, high confidence.
+Estimate: 0 iterations.

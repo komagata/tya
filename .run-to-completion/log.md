@@ -24,3 +24,9 @@
 
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Next queue cleanup: mark parent tasks complete where all children are checked.
+
+## 2026-04-29 18:51:00 JST
+
+- Resumed after `go`.
+- Confirmed worktree was clean and `SELFHOST_WORK.md` had no unchecked items.
+- Stop condition reached: no queued self-hosting work remains.

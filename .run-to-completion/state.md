@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 18:49:10 JST
+Updated: 2026-04-29 18:51:00 JST
 
 ## Goal
 
@@ -31,12 +31,13 @@ is complete or a real blocker is reached.
 - done: implement deterministic stage-2 generated-C comparison.
 - done: run focused and full verification.
 - done: commit deterministic stage-2 codegen checkpoint.
-- active: mark completed parent queue items.
+- done: mark completed parent queue items.
+- done: confirm no unchecked self-host queue items remain.
 
 ## Next Action
 
-Verify the documentation-only queue cleanup and commit it.
+No queued self-hosting task remains. Stop unless a new goal is provided.
 
 ## Remaining Work Estimate
 
-Less than 1 iteration, high confidence.
+0 iterations.
