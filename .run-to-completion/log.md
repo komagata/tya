@@ -161,3 +161,17 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-29 21:44:16 JST
+
+- Committed starts/ends slice as `1ad4ec5`.
+- Added self-host checker/codegen support for `trim text`.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhost(ParserMatchesGoParserSubset|CheckerAllowsReplaceBuiltin|CodegenEmitsSimpleReturnFunctions)'
+  -count=1`.
+
+## 2026-04-29 21:49:00 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

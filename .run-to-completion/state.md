@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 21:41:28 JST
+Updated: 2026-04-29 21:49:00 JST
 
 ## Goal
 
@@ -55,11 +55,14 @@ without depending on the Go implementation.
 - done: commit `print contains` slice.
 - done: implement `print startsWith` / `print endsWith` codegen slice.
 - done: verify `print startsWith` / `print endsWith` slice.
-- active: commit starts/ends slice.
+- done: commit starts/ends slice.
+- done: implement `trim` checker/codegen slice.
+- done: verify `trim` slice.
+- active: commit `trim` slice.
 
 ## Next Action
 
-Review final diff and commit the starts/ends slice.
+Review final diff and commit the `trim` slice.
 
 ## Remaining Work Estimate
 

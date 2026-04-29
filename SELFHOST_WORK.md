@@ -86,6 +86,7 @@ endpoint.
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print contains(text, needle)` calls in the self-host C codegen subset
     - [x] Emit `print startsWith(text, prefix)` and `print endsWith(text, suffix)` calls in the self-host C codegen subset
+    - [x] Emit `trim(text)` calls in the self-host C codegen subset
   - [ ] Advance bootstrap from subset programs toward compiling existing examples
 
 ## Last Resolved Blocker

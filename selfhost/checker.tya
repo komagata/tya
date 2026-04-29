@@ -114,6 +114,7 @@ check = nodes ->
   rememberName names, nameIndents, "args", "0"
   rememberName names, nameIndents, "toString", "0"
   rememberName names, nameIndents, "toInt", "0"
+  rememberName names, nameIndents, "trim", "0"
   rememberName names, nameIndents, "contains", "0"
   rememberName names, nameIndents, "startsWith", "0"
   rememberName names, nameIndents, "endsWith", "0"

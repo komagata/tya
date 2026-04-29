@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 21:41:28 JST
+Updated: 2026-04-29 21:49:00 JST
 
-Active phase: commit starts/ends slice.
+Active phase: commit `trim` slice.
 
 Completed:
 
@@ -66,9 +66,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for starts/ends slice.
 - `go test ./... -count=1` passes for starts/ends slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for starts/ends slice.
+- Committed starts/ends slice as `1ad4ec5`.
+- Added checker/codegen support for `trim text`.
+- Focused parser/checker/codegen tests pass.
+- `sh scripts/selfhost_check.sh` passes for the `trim` slice.
+- `go test ./... -count=1` passes for the `trim` slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the `trim` slice.
 
 Remaining:
 
-- Commit the starts/ends slice.
+- Commit the `trim` slice.
 
 Estimate: many iterations overall; current parser slice less than 1 iteration.

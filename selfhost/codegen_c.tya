@@ -142,6 +142,18 @@ emitC = nodes ->
   push lines, "  return out;"
   push lines, "}"
   push lines, ""
+  push lines, "static char *trim_text(const char *text) {"
+  push lines, "  const char *start = text;"
+  push lines, "  while (*start == ' ' || *start == 9 || *start == 10 || *start == 13) start++;"
+  push lines, "  const char *end = start + strlen(start);"
+  push lines, "  while (end > start && (end[-1] == ' ' || end[-1] == 9 || end[-1] == 10 || end[-1] == 13)) end--;"
+  push lines, "  size_t len = (size_t)(end - start);"
+  push lines, "  char *out = malloc(len + 1);"
+  push lines, "  memcpy(out, start, len);"
+  push lines, "  out[len] = 0;"
+  push lines, "  return out;"
+  push lines, "}"
+  push lines, ""
   push lines, "static int contains_text(const char *text, const char *needle) {"
   push lines, "  return strstr(text, needle) != NULL;"
   push lines, "}"
@@ -678,33 +690,40 @@ emitC = nodes ->
               push lines, "  char **" + cName(nameOf(node)) + " = NULL;"
               rememberType names, types, nameOf(node), "DYNARRAY"
           else
-            if hasName(funcNames, extraOf(node))
-              typeName = typeOf(names, types, extra2Of(node))
-              if typeName == "INT"
-                if hasName(names, nameOf(node))
-                  push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                else
-                  rememberType names, types, nameOf(node), "INT"
-                  push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-              else
-                if typeName == "BOOL"
-                  if hasName(names, nameOf(node))
-                    push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                  else
-                    rememberType names, types, nameOf(node), "BOOL"
-                    push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                else
-                  if hasName(names, nameOf(node))
-                    push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                  else
-                    rememberType names, types, nameOf(node), "STRING"
-                    push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-            else
+            if extraOf(node) == "trim"
               if hasName(names, nameOf(node))
-                push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                push lines, "  " + cName(nameOf(node)) + " = trim_text(" + cName(extra2Of(node)) + ");"
               else
                 rememberType names, types, nameOf(node), "STRING"
-                push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                push lines, "  const char *" + cName(nameOf(node)) + " = trim_text(" + cName(extra2Of(node)) + ");"
+            else
+              if hasName(funcNames, extraOf(node))
+                typeName = typeOf(names, types, extra2Of(node))
+                if typeName == "INT"
+                  if hasName(names, nameOf(node))
+                    push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                  else
+                    rememberType names, types, nameOf(node), "INT"
+                    push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                else
+                  if typeName == "BOOL"
+                    if hasName(names, nameOf(node))
+                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                    else
+                      rememberType names, types, nameOf(node), "BOOL"
+                      push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                  else
+                    if hasName(names, nameOf(node))
+                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                    else
+                      rememberType names, types, nameOf(node), "STRING"
+                      push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+              else
+                if hasName(names, nameOf(node))
+                  push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                else
+                  rememberType names, types, nameOf(node), "STRING"
+                  push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
 
     if kindOf(node) == "ASSIGN" and valueOf(node) != "CALL1"
       if valueOf(node) == "STRING"
@@ -821,33 +840,40 @@ emitC = nodes ->
                               rememberType names, types, nameOf(node), "BOOL"
                           else
                             if valueOf(node) == "CALL1"
-                              if hasName(funcNames, extraOf(node))
-                                typeName = typeOf(names, types, extra2Of(node))
-                                if typeName == "INT"
-                                  if hasName(names, nameOf(node))
-                                    push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                                  else
-                                    rememberType names, types, nameOf(node), "INT"
-                                    push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                                else
-                                  if typeName == "BOOL"
-                                    if hasName(names, nameOf(node))
-                                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                                    else
-                                      rememberType names, types, nameOf(node), "BOOL"
-                                      push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                                  else
-                                    if hasName(names, nameOf(node))
-                                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                                    else
-                                      rememberType names, types, nameOf(node), "STRING"
-                                      push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
-                              else
+                              if extraOf(node) == "trim"
                                 if hasName(names, nameOf(node))
-                                  push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                                  push lines, "  " + cName(nameOf(node)) + " = trim_text(" + cName(extra2Of(node)) + ");"
                                 else
                                   rememberType names, types, nameOf(node), "STRING"
-                                  push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                                  push lines, "  const char *" + cName(nameOf(node)) + " = trim_text(" + cName(extra2Of(node)) + ");"
+                              else
+                                if hasName(funcNames, extraOf(node))
+                                  typeName = typeOf(names, types, extra2Of(node))
+                                  if typeName == "INT"
+                                    if hasName(names, nameOf(node))
+                                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                    else
+                                      rememberType names, types, nameOf(node), "INT"
+                                      push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                  else
+                                    if typeName == "BOOL"
+                                      if hasName(names, nameOf(node))
+                                        push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                      else
+                                        rememberType names, types, nameOf(node), "BOOL"
+                                        push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                    else
+                                      if hasName(names, nameOf(node))
+                                        push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                      else
+                                        rememberType names, types, nameOf(node), "STRING"
+                                        push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                else
+                                  if hasName(names, nameOf(node))
+                                    push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                                  else
+                                    rememberType names, types, nameOf(node), "STRING"
+                                    push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
                             else
                               if valueOf(node) == "CALL2"
                                 if extraOf(node) == "split" and extra3Of(node) == "\\n"

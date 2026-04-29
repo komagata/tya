@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \"Tya\"\ncount = 1 + 1\nresult = identity(message)\nparts = split(message, \"\\n\")\nreplaced = replace(message, \"T\", message)\nprint replace message, \"T\", message\nprint contains message, \"T\"\nprint startsWith message, \"T\"\nprint endsWith message, \"a\"\nif count >= 2\n  print message\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [message, \"Other\"]\nuser = { name: message }\npush queue, message\nfor entry in queue\n  print entry\n"
+	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\npush queue, trimmed\nfor entry in queue\n  print entry\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING:Tya\n4:ASSIGN:result:CALL1:identity:message\n5:PRINT_CALL1:identity:message\n6:ASSIGN:replaced:CALL3:replace:message:STRING:T:message\n7:PRINT_CALL3:replace:message:STRING:T:message\n8:PRINT_CALL2:contains:message:STRING:T\n9:PRINT_CALL2:startsWith:message:STRING:T\n10:PRINT_CALL2:endsWith:message:STRING:a\n11:ASSIGN:user:OBJECT_ONE:name:IDENT:message\n12:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n13:ASSIGN:tokens:CALL1:lex:source\n14:ASSIGN:lines:CALL2:split:source:\\n\n15:ASSIGN:nodes:CALL1:parse:tokens\n16:ASSIGN:items:ARRAY_EMPTY:\n17:PUSH:items:IDENT:message\n18:FOR:token:tokens\n19:INDENT:2\n19:PRINT:IDENT:token\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING: Tya \n4:ASSIGN:trimmed:CALL1:trim:message\n5:ASSIGN:result:CALL1:identity:trimmed\n6:PRINT_CALL1:identity:trimmed\n7:ASSIGN:replaced:CALL3:replace:trimmed:STRING:T:trimmed\n8:PRINT_CALL3:replace:trimmed:STRING:T:trimmed\n9:PRINT_CALL2:contains:trimmed:STRING:T\n10:PRINT_CALL2:startsWith:trimmed:STRING:T\n11:PRINT_CALL2:endsWith:trimmed:STRING:a\n12:ASSIGN:user:OBJECT_ONE:name:IDENT:trimmed\n13:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n14:ASSIGN:tokens:CALL1:lex:source\n15:ASSIGN:lines:CALL2:split:source:\\n\n16:ASSIGN:nodes:CALL1:parse:tokens\n17:ASSIGN:items:ARRAY_EMPTY:\n18:PUSH:items:IDENT:trimmed\n19:FOR:token:tokens\n20:INDENT:2\n20:PRINT:IDENT:token\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -135,31 +135,34 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	if !strings.Contains(out, "const char *identity(const char *value)") {
 		t.Fatalf("generated C missing function body:\n%s", out)
 	}
-	if !strings.Contains(out, "const char *result = identity(message);") {
+	if !strings.Contains(out, "const char *trimmed = trim_text(message);") {
+		t.Fatalf("generated C missing trim lowering:\n%s", out)
+	}
+	if !strings.Contains(out, "const char *result = identity(trimmed);") {
 		t.Fatalf("generated C missing function call assignment:\n%s", out)
 	}
-	if !strings.Contains(out, "puts(identity(message));") {
+	if !strings.Contains(out, "puts(identity(trimmed));") {
 		t.Fatalf("generated C missing function call print:\n%s", out)
 	}
 	if !strings.Contains(out, "static char *replace_text(const char *text, const char *old_text, const char *new_text)") {
 		t.Fatalf("generated C missing replace helper:\n%s", out)
 	}
-	if !strings.Contains(out, "const char *replaced = replace_text(message, \"T\", message);") {
+	if !strings.Contains(out, "const char *replaced = replace_text(trimmed, \"T\", trimmed);") {
 		t.Fatalf("generated C missing replace lowering:\n%s", out)
 	}
-	if !strings.Contains(out, "puts(replace_text(message, \"T\", message));") {
+	if !strings.Contains(out, "puts(replace_text(trimmed, \"T\", trimmed));") {
 		t.Fatalf("generated C missing print replace lowering:\n%s", out)
 	}
 	if !strings.Contains(out, "static int contains_text(const char *text, const char *needle)") {
 		t.Fatalf("generated C missing contains helper:\n%s", out)
 	}
-	if !strings.Contains(out, "puts(contains_text(message, \"T\") ? \"true\" : \"false\");") {
+	if !strings.Contains(out, "puts(contains_text(trimmed, \"T\") ? \"true\" : \"false\");") {
 		t.Fatalf("generated C missing print contains lowering:\n%s", out)
 	}
-	if !strings.Contains(out, "puts(starts_with_text(message, \"T\") ? \"true\" : \"false\");") {
+	if !strings.Contains(out, "puts(starts_with_text(trimmed, \"T\") ? \"true\" : \"false\");") {
 		t.Fatalf("generated C missing print startsWith lowering:\n%s", out)
 	}
-	if !strings.Contains(out, "puts(ends_with_text(message, \"a\") ? \"true\" : \"false\");") {
+	if !strings.Contains(out, "puts(ends_with_text(trimmed, \"a\") ? \"true\" : \"false\");") {
 		t.Fatalf("generated C missing print endsWith lowering:\n%s", out)
 	}
 	if !strings.Contains(out, "const char *user = \"\"; /* object name */") {
@@ -186,7 +189,7 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	if !strings.Contains(out, "char **nodes = parse_tokens(tokens, tokens_len, &nodes_len);") {
 		t.Fatalf("generated C missing parse(tokens) lowering:\n%s", out)
 	}
-	if !strings.Contains(out, "char **items = NULL;") || !strings.Contains(out, "items[items_len] = dup_text(message);") {
+	if !strings.Contains(out, "char **items = NULL;") || !strings.Contains(out, "items[items_len] = dup_text(trimmed);") {
 		t.Fatalf("generated C missing dynamic array push lowering:\n%s", out)
 	}
 	if strings.Contains(out, "/* func identity") {
@@ -370,7 +373,7 @@ func TestSelfhostCheckerRejectsUndefinedThreeArgCallNames(t *testing.T) {
 
 func TestSelfhostCheckerAllowsReplaceBuiltin(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:ASSIGN:message:STRING:Tya\n2:ASSIGN:result:CALL3:replace:message:STRING:T:message\n"
+	nodes := "1:ASSIGN:message:STRING:Tya\n2:ASSIGN:trimmed:CALL1:trim:message\n3:ASSIGN:result:CALL3:replace:trimmed:STRING:T:trimmed\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
