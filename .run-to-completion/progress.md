@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 22:08:35 JST
+Updated: 2026-04-30 22:25:07 JST
 
-Active phase: commit stage-4 reassignment print fixture slice.
+Active phase: commit stage-4 integer addition fixture slice.
 
 Completed:
 
@@ -317,9 +317,14 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the reassignment print slice.
 - `go test ./... -count=1` passes for the reassignment print slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the reassignment print slice.
+- Added a stage4 generated-tools fixture for `sum = 1 + 1` followed by `print sum`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the integer addition fixture slice.
+- `sh scripts/selfhost_check.sh` passes for the integer addition fixture slice.
+- `go test ./... -count=1` passes for the integer addition fixture slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the integer addition fixture slice.
 
 Remaining:
 
-- Commit the verified stage4 reassignment print fixture slice, then expand stage4 generated tools to integer addition assignment fixtures.
+- Commit the verified stage4 integer addition fixture slice, then expand stage4 generated tools to less-than comparison fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.
