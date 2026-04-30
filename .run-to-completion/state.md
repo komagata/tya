@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 19:51:39 JST
+Updated: 2026-04-30 20:19:03 JST
 
 ## Goal
 
@@ -156,12 +156,14 @@ without depending on the Go implementation.
 - done: add a second stage-4 string print fixture.
 - done: commit stage-4 second fixture slice.
 - done: add a stage-4 integer print execution fixture.
-- active: commit stage-4 integer print fixture slice.
+- done: commit stage-4 integer print fixture slice.
+- done: preserve stage-4 INT token/node kinds for integer print fixtures.
+- active: commit stage-4 integer kind preservation slice.
 
 ## Next Action
 
-Commit the verified stage-4 integer print fixture slice, then preserve proper
-stage-4 token/node kinds for integer print fixtures.
+Commit the verified stage-4 integer kind preservation slice, then expand
+stage-4 generated tools to escaped string print fixtures.
 
 ## Remaining Work Estimate
 

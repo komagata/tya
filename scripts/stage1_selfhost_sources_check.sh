@@ -1081,7 +1081,17 @@ echo "stage4 print string: self-host pipeline matched"
 
 printf 'print 1\n' > "$stage4_dir/print_int.tya"
 "$stage4_dir/lexer.stage4" "$stage4_dir/print_int.tya" > "$stage4_dir/print_int.tokens"
+cat > "$stage4_dir/print_int.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:print:1
+1:INT:1:7
+TOKENS
+diff -u "$stage4_dir/print_int.want.tokens" "$stage4_dir/print_int.tokens" >/dev/null
 "$stage4_dir/parser.stage4" "$stage4_dir/print_int.tokens" > "$stage4_dir/print_int.nodes"
+cat > "$stage4_dir/print_int.want.nodes" <<'NODES'
+1:PRINT:INT:1
+NODES
+diff -u "$stage4_dir/print_int.want.nodes" "$stage4_dir/print_int.nodes" >/dev/null
 "$stage4_dir/checker.stage4" "$stage4_dir/print_int.nodes" > "$stage4_dir/print_int.check"
 grep -qx "ok" "$stage4_dir/print_int.check"
 "$stage4_dir/codegen_c.stage4" "$stage4_dir/print_int.nodes" > "$stage4_dir/print_int.c"

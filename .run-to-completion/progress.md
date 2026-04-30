@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 19:51:39 JST
+Updated: 2026-04-30 20:19:03 JST
 
-Active phase: commit stage-4 integer print fixture slice.
+Active phase: commit stage-4 integer kind preservation slice.
 
 Completed:
 
@@ -274,9 +274,16 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the integer fixture slice.
 - `go test ./... -count=1` passes for the integer fixture slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the integer fixture slice.
+- Updated the stage4 generated-tools fallback so `print 1` emits `INT` tokens and `PRINT:INT` nodes.
+- Added explicit stage4 token/node diffs for the integer print fixture.
+- Fixed a Tya string interpolation collision in a generated C fallback line by avoiding literal same-line braces inside the Tya string.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the integer kind preservation slice.
+- `sh scripts/selfhost_check.sh` passes for the integer kind preservation slice.
+- `go test ./... -count=1` passes for the integer kind preservation slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the integer kind preservation slice.
 
 Remaining:
 
-- Commit the verified stage4 integer print fixture slice, then preserve proper stage4 token/node kinds for integer print fixtures.
+- Commit the verified stage4 integer kind preservation slice, then expand stage4 generated tools to escaped string print fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

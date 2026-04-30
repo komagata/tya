@@ -650,3 +650,16 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 20:19:03 JST
+
+- Updated the stage4 generated-tools fallback so `print 1` emits `INT` tokens
+  and `PRINT:INT` nodes instead of flowing through the string path.
+- Added explicit stage4 token/node diffs for the integer print fixture.
+- Fixed a Tya string interpolation collision in a generated C fallback line by
+  avoiding literal same-line braces inside the Tya string.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
