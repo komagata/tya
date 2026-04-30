@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 22:59:27 JST
+Updated: 2026-04-30 23:20:36 JST
 
-Active phase: commit stage-4 while/break fixture slice.
+Active phase: commit stage-4 one-element array for fixture slice.
 
 Completed:
 
@@ -334,9 +334,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the while/break slice.
 - `go test ./... -count=1` passes for the while/break slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the while/break slice.
+- Added stage4 fallback coverage for a one-element array assignment with an indented `print item` body.
+- Added a stage4 generated-tools fixture for `items = ["Tya"]`, `for item in items`, then `print item`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the array for slice.
+- `sh scripts/selfhost_check.sh` passes for the array for slice.
+- `go test ./... -count=1` passes for the array for slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the array for slice.
 
 Remaining:
 
-- Commit the verified stage4 while/break fixture slice, then expand stage4 generated tools to one-element array for fixtures.
+- Commit the verified stage4 one-element array for fixture slice, then replace stage4 generated-tool fallback stubs with real generated selfhost parser/codegen paths.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

@@ -197,6 +197,7 @@ Implemented:
 - Stage-4 generated tools execute an integer addition assignment fixture
 - Stage-4 generated tools execute a less-than comparison fixture
 - Stage-4 generated tools execute a while false fixture with skipped block body
+- Stage-4 generated tools execute a one-element array for fixture
 - Self-hosted parser/checker/codegen carries simple negated call conditions
 - Self-hosted parser/checker/codegen carries simple call-based `while` conditions
 - Self-hosted parser/checker/codegen emits simple direct comparison `while` conditions

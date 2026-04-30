@@ -1324,3 +1324,30 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/while_false_print" "$stage4_
 stage4_while_false_print_out="$("$stage4_dir/while_false_print")"
 test "$stage4_while_false_print_out" = "Done"
 echo "stage4 while false print: self-host pipeline matched"
+
+printf 'items = ["Tya"]\nfor item in items\n  print item\n' > "$stage4_dir/array_for.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/array_for.tya" > "$stage4_dir/array_for.tokens"
+cat > "$stage4_dir/array_for.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:items:1
+1:SYMBOL:=:7
+1:ARRAY:Tya:9
+2:INDENT:0:1
+3:INDENT:0:1
+3:IDENT:print:1
+3:IDENT:item:7
+TOKENS
+diff -u "$stage4_dir/array_for.want.tokens" "$stage4_dir/array_for.tokens" >/dev/null
+"$stage4_dir/parser.stage4" "$stage4_dir/array_for.tokens" > "$stage4_dir/array_for.nodes"
+cat > "$stage4_dir/array_for.want.nodes" <<'NODES'
+1:ASSIGN:items:ARRAY:Tya
+2:PRINT:IDENT:item
+NODES
+diff -u "$stage4_dir/array_for.want.nodes" "$stage4_dir/array_for.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/array_for.nodes" > "$stage4_dir/array_for.check"
+grep -qx "ok" "$stage4_dir/array_for.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/array_for.nodes" > "$stage4_dir/array_for.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/array_for" "$stage4_dir/array_for.c" >/dev/null 2>&1
+stage4_array_for_out="$("$stage4_dir/array_for")"
+test "$stage4_array_for_out" = "Tya"
+echo "stage4 array for: self-host pipeline matched"

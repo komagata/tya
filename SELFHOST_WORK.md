@@ -135,7 +135,8 @@ endpoint.
       - [x] Expand stage-4 generated tools to integer addition assignment fixtures
       - [x] Expand stage-4 generated tools to less-than comparison fixtures
       - [x] Expand stage-4 generated tools to while/break fixtures
-      - [ ] Expand stage-4 generated tools to one-element array for fixtures
+      - [x] Expand stage-4 generated tools to one-element array for fixtures
+      - [ ] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
 
 ## Last Resolved Blocker
 

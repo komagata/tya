@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 22:59:27 JST
+Updated: 2026-04-30 23:20:36 JST
 
 ## Goal
 
@@ -176,12 +176,15 @@ without depending on the Go implementation.
 - done: expand stage-4 generated tools to less-than comparison fixtures.
 - done: commit stage-4 less-than comparison fixture slice.
 - done: expand stage-4 generated tools to while/break fixtures.
-- active: commit stage-4 while/break fixture slice.
+- done: commit stage-4 while/break fixture slice.
+- done: expand stage-4 generated tools to one-element array for fixtures.
+- active: commit stage-4 one-element array for fixture slice.
 
 ## Next Action
 
-Commit the verified stage-4 while/break fixture slice, then expand stage-4
-generated tools to one-element array for fixtures.
+Commit the verified stage-4 one-element array for fixture slice, then replace
+stage-4 generated-tool fallback stubs with real generated selfhost
+parser/codegen paths.
 
 ## Remaining Work Estimate
 
