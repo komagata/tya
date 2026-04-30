@@ -121,7 +121,8 @@ endpoint.
       - [x] Generate, compile, and run a stage-3 parser on stage-3 lexer output
       - [x] Generate and run the stage-3 checker on stage-3 parser output
       - [x] Generate and run the stage-3 codegen on stage-3 parser output
-      - [ ] Compile all stage-3 selfhost sources from stage-3 tools
+      - [x] Compile all stage-3 selfhost sources from stage-3 tools
+      - [ ] Make stage-4 generated tools execute `examples/hello.tya`
 
 ## Last Resolved Blocker
 

@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 18:04:05 JST
+Updated: 2026-04-30 18:06:13 JST
 
 ## Goal
 
@@ -148,12 +148,13 @@ without depending on the Go implementation.
 - done: commit stage-2 check lowering slice.
 - done: implement stage-2 `emitC nodes` lowering slice.
 - done: verify stage-3 codegen emits, compiles, and runs C for `examples/hello.tya`.
-- active: commit stage-2 emitC lowering slice.
+- done: verify stage-3 tools compile all selfhost sources into stage-4 binaries.
+- active: commit stage-2 emitC lowering and stage-4 compile probe slice.
 
 ## Next Action
 
-Commit the verified stage-2 emitC lowering slice, then use the stage-3 tools
-to compile the selfhost sources themselves.
+Commit the verified stage-2 emitC lowering and stage-4 compile probe slice,
+then make the stage-4 generated tools execute `examples/hello.tya`.
 
 ## Remaining Work Estimate
 

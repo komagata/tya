@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 18:04:05 JST
+Updated: 2026-04-30 18:06:13 JST
 
-Active phase: commit stage-2 emitC lowering slice.
+Active phase: commit stage-2 emitC lowering and stage-4 compile probe slice.
 
 Completed:
 
@@ -256,9 +256,11 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the emitC lowering slice.
 - `go test ./... -count=1` passes for the emitC lowering slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the emitC lowering slice.
+- Verified stage-3 generated tools compile all four selfhost sources into stage-4 binaries.
+- Probed stage-4 generated tools on `examples/hello.tya`; the next blocker is that stage-4 tool bodies are still mostly empty.
 
 Remaining:
 
-- Commit the verified stage-2 emitC lowering slice, then use the stage-3 tools to compile the selfhost sources themselves.
+- Commit the verified stage-2 emitC lowering and stage-4 compile probe slice, then make the stage-4 generated tools execute `examples/hello.tya`.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

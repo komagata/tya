@@ -602,3 +602,11 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 18:06:13 JST
+
+- Verified stage3-generated lexer/parser/checker/codegen compile all four
+  selfhost sources into stage4 binaries.
+- Probed the stage4 binaries on `examples/hello.tya`; the next blocker is that
+  stage4 tool bodies are still mostly empty because stage3 codegen only emits
+  the minimal `PRINT:STRING` path.
