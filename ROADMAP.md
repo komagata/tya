@@ -188,6 +188,7 @@ Implemented:
 - Stage-4 generated tools also execute a second single-line string print fixture
 - Stage-4 generated tools execute a single-line integer print fixture
 - Stage-4 generated tools preserve INT token/node kinds for integer print fixtures
+- Stage-4 generated tools execute an escaped-quote string print fixture
 - Self-hosted parser/checker/codegen carries simple negated call conditions
 - Self-hosted parser/checker/codegen carries simple call-based `while` conditions
 - Self-hosted parser/checker/codegen emits simple direct comparison `while` conditions

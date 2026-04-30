@@ -1099,3 +1099,24 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/print_int" "$stage4_dir/prin
 stage4_print_int_out="$("$stage4_dir/print_int")"
 test "$stage4_print_int_out" = "1"
 echo "stage4 print int: self-host pipeline matched"
+
+printf 'print "say \\"tya\\""\n' > "$stage4_dir/escaped_print.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/escaped_print.tya" > "$stage4_dir/escaped_print.tokens"
+cat > "$stage4_dir/escaped_print.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:print:1
+1:STRING:say \"tya\":7
+TOKENS
+diff -u "$stage4_dir/escaped_print.want.tokens" "$stage4_dir/escaped_print.tokens" >/dev/null
+"$stage4_dir/parser.stage4" "$stage4_dir/escaped_print.tokens" > "$stage4_dir/escaped_print.nodes"
+cat > "$stage4_dir/escaped_print.want.nodes" <<'NODES'
+1:PRINT:STRING:say \"tya\"
+NODES
+diff -u "$stage4_dir/escaped_print.want.nodes" "$stage4_dir/escaped_print.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/escaped_print.nodes" > "$stage4_dir/escaped_print.check"
+grep -qx "ok" "$stage4_dir/escaped_print.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/escaped_print.nodes" > "$stage4_dir/escaped_print.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/escaped_print" "$stage4_dir/escaped_print.c" >/dev/null 2>&1
+stage4_escaped_print_out="$("$stage4_dir/escaped_print")"
+test "$stage4_escaped_print_out" = 'say "tya"'
+echo "stage4 escaped string: self-host pipeline matched"

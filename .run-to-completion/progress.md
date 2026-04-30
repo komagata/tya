@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 20:19:03 JST
+Updated: 2026-04-30 20:35:51 JST
 
-Active phase: commit stage-4 integer kind preservation slice.
+Active phase: commit stage-4 escaped string fixture slice.
 
 Completed:
 
@@ -281,9 +281,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the integer kind preservation slice.
 - `go test ./... -count=1` passes for the integer kind preservation slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the integer kind preservation slice.
+- Added a stage4 generated-tools fixture for `print "say \"tya\""`.
+- The escaped string fixture verifies stage4 token, node, checker, codegen, C compile, and runtime output.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the escaped string slice.
+- `sh scripts/selfhost_check.sh` passes for the escaped string slice.
+- `go test ./... -count=1` passes for the escaped string slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the escaped string slice.
 
 Remaining:
 
-- Commit the verified stage4 integer kind preservation slice, then expand stage4 generated tools to escaped string print fixtures.
+- Commit the verified stage4 escaped string fixture slice, then preserve colon characters in stage4 printed string nodes.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

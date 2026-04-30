@@ -126,7 +126,8 @@ endpoint.
       - [x] Make stage-4 generated tools execute another bootstrap fixture beyond hello
       - [x] Expand stage-4 generated tools beyond single-line string print fixtures
       - [x] Preserve proper stage-4 token/node kinds for integer print fixtures
-      - [ ] Expand stage-4 generated tools to escaped string print fixtures
+      - [x] Expand stage-4 generated tools to escaped string print fixtures
+      - [ ] Preserve colon characters in stage-4 printed string nodes
 
 ## Last Resolved Blocker
 
