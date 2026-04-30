@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 13:38:27 JST
+Updated: 2026-04-30 13:53:41 JST
 
-Active phase: commit stage-2 less-than while slice.
+Active phase: commit stage-2 while example bootstrap slice.
 
 Completed:
 
@@ -170,9 +170,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the less-than while slice.
 - `go test ./... -count=1` passes for the less-than while slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the less-than while slice.
+- Committed less-than while slice as `ef350af`.
+- Added `examples/while.tya` itself to the stage2 bootstrap pipeline and matched expected output.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the while example slice.
+- `sh scripts/selfhost_check.sh` passes for the while example slice.
+- `go test ./... -count=1` passes for the while example slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the while example slice.
 
 Remaining:
 
-- Commit the verified stage-2 less-than while slice.
+- Commit the verified stage-2 while example bootstrap slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

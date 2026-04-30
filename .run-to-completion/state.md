@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 13:38:27 JST
+Updated: 2026-04-30 13:53:41 JST
 
 ## Goal
 
@@ -107,12 +107,15 @@ without depending on the Go implementation.
 - done: commit stage-2 `while false`/`break` slice.
 - done: implement stage-2 less-than while slice.
 - done: verify stage-2 less-than while slice.
-- active: commit stage-2 less-than while slice.
+- done: commit stage-2 less-than while slice.
+- done: add stage-2 pipeline coverage for `examples/while.tya`.
+- done: verify stage-2 while example bootstrap slice.
+- active: commit stage-2 while example bootstrap slice.
 
 ## Next Action
 
-Commit the verified stage-2 less-than while slice, then continue toward
-`examples/while.tya`.
+Commit the verified stage-2 while example bootstrap slice, then pick the next
+existing executable example to advance through stage2.
 
 ## Remaining Work Estimate
 

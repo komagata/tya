@@ -597,7 +597,9 @@ printf 'while false\n  break\nprint "done"\n' > "$out_dir/while_false.tya"
 "$out_dir/parser.stage2" "$out_dir/while_false.stage2.tokens" > "$out_dir/while_false.stage2.nodes"
 cat > "$out_dir/while_false.want.nodes" <<'NODES'
 1:WHILE:BOOL:false
+2:INDENT:2
 2:BREAK
+3:INDENT:0
 3:PRINT:STRING:done
 NODES
 diff -u "$out_dir/while_false.want.nodes" "$out_dir/while_false.stage2.nodes" >/dev/null
@@ -616,8 +618,10 @@ printf 'i = 0\nwhile i < 2\n  i = i + 1\n  break\nprint i\n' > "$out_dir/while_l
 cat > "$out_dir/while_less_than.want.nodes" <<'NODES'
 1:ASSIGN:i:INT:0
 2:WHILE_COMPARE_LT:IDENT:i:INT:2
+3:INDENT:2
 3:ASSIGN:i:INT_ADD:i:1
 4:BREAK
+5:INDENT:0
 5:PRINT:IDENT:i
 NODES
 diff -u "$out_dir/while_less_than.want.nodes" "$out_dir/while_less_than.stage2.nodes" >/dev/null
@@ -629,6 +633,18 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/while_less_than.stage2" "$out_d
 while_less_than_out="$("$out_dir/while_less_than.stage2")"
 test "$while_less_than_out" = "1"
 echo "while less-than break: stage-2 pipeline matched"
+
+"$out_dir/lexer.stage2" examples/while.tya > "$out_dir/while_example.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/while_example.stage2.tokens" > "$out_dir/while_example.stage2.nodes"
+"$out_dir/checker.stage2" "$out_dir/while_example.stage2.nodes" > "$out_dir/while_example.stage2.check"
+grep -qx "ok" "$out_dir/while_example.stage2.check"
+compare_stage2_codegen "examples/while.tya" "$out_dir/while_example.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/while_example.stage2.nodes" > "$out_dir/while_example.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/while_example.stage2" "$out_dir/while_example.stage2.c" >/dev/null 2>&1
+while_example_out="$("$out_dir/while_example.stage2")"
+test "$while_example_out" = "10
+11"
+echo "examples/while.tya: stage-2 pipeline matched"
 
 printf 'left = 2\nright = 2\nsame = left == right\nprint same\n' > "$out_dir/compare_eq.tya"
 "$out_dir/lexer.stage2" "$out_dir/compare_eq.tya" > "$out_dir/compare_eq.stage2.tokens"

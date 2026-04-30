@@ -58,6 +58,22 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 13:44:15 JST
+
+- Committed less-than while bootstrap slice as `ef350af`.
+- Adjusted stage2 parser helper to preserve only block-relevant `INDENT` nodes
+  and stage2 codegen helper to close blocks on `INDENT:0`.
+- Added `examples/while.tya` to the stage2 bootstrap pipeline and matched
+  expected output `10` and `11`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 13:53:41 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 13:29:10 JST
 
 - Committed while false bootstrap slice as `d1f3a51`.

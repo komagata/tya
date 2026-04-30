@@ -105,6 +105,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for integer addition reassignment
     - [x] Run a stage-2 pipeline for `while false` with `break`
     - [x] Run a stage-2 pipeline for less-than `while` with `break`
+    - [x] Run a stage-2 pipeline for `examples/while.tya`
 
 ## Last Resolved Blocker
 
