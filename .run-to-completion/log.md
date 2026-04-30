@@ -824,3 +824,15 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-05-01 01:41:39 JST
+
+- Taught the generated parser helper to preserve `print emitC nodes` as a
+  call-shaped print node for `selfhost/codegen_c.tya`.
+- Added an explicit diff for `selfhost/codegen_c.tya` stage4 nodes in the
+  stage1 selfhost source check.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

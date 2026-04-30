@@ -184,13 +184,14 @@ without depending on the Go implementation.
 - done: make stage-3 codegen emit executable lexer C from real lexer-driver nodes.
 - done: make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`.
 - done: make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`.
-- active: make stage-3 parser emit non-empty nodes for `selfhost/codegen_c.tya`.
+- done: make stage-3 parser emit non-empty nodes for `selfhost/codegen_c.tya`.
+- active: make stage-3 codegen emit executable parser C from real parser-driver nodes.
 
 ## Next Action
 
-Make stage-3 parser emit non-empty nodes for `selfhost/codegen_c.tya`, then
-continue replacing stage-4 generated-tool fallback stubs with real generated
-selfhost parser/codegen paths.
+Make stage-3 codegen emit executable parser C from real parser-driver nodes,
+then continue replacing stage-4 generated-tool fallback stubs with real
+generated selfhost parser/codegen paths.
 
 ## Remaining Work Estimate
 

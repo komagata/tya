@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 01:17:26 JST
+Updated: 2026-05-01 01:41:39 JST
 
-Active phase: make stage-3 parser emit non-empty nodes for `selfhost/codegen_c.tya`.
+Active phase: make stage-3 codegen emit executable parser C from real parser-driver nodes.
 
 Completed:
 
@@ -11,6 +11,7 @@ Completed:
 - Added repeated stage-2 generated-C determinism checks for supported subset fixtures.
 - Focused `sh scripts/stage1_selfhost_sources_check.sh` passes.
 - `go test ./... -count=1` passes.
+- Stage-3 parser now emits checked non-empty nodes for `selfhost/codegen_c.tya`.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Committed parent queue cleanup as `d4ff7f3`.
