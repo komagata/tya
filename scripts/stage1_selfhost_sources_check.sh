@@ -635,3 +635,22 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/compare_ne.stage2" "$out_dir/co
 compare_ne_out="$("$out_dir/compare_ne.stage2")"
 test "$compare_ne_out" = "true"
 echo "inequality comparison: stage-2 pipeline matched"
+
+printf 'left = 2\nright = 3\nless = left < right\nprint less\n' > "$out_dir/compare_lt.tya"
+"$out_dir/lexer.stage2" "$out_dir/compare_lt.tya" > "$out_dir/compare_lt.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/compare_lt.stage2.tokens" > "$out_dir/compare_lt.stage2.nodes"
+cat > "$out_dir/compare_lt.want.nodes" <<'NODES'
+1:ASSIGN:left:INT:2
+2:ASSIGN:right:INT:3
+3:ASSIGN:less:COMPARE_LT:left:right
+4:PRINT:IDENT:less
+NODES
+diff -u "$out_dir/compare_lt.want.nodes" "$out_dir/compare_lt.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/compare_lt.stage2.nodes" > "$out_dir/compare_lt.stage2.check"
+grep -qx "ok" "$out_dir/compare_lt.stage2.check"
+compare_stage2_codegen "less-than comparison" "$out_dir/compare_lt.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/compare_lt.stage2.nodes" > "$out_dir/compare_lt.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/compare_lt.stage2" "$out_dir/compare_lt.stage2.c" >/dev/null 2>&1
+compare_lt_out="$("$out_dir/compare_lt.stage2")"
+test "$compare_lt_out" = "true"
+echo "less-than comparison: stage-2 pipeline matched"

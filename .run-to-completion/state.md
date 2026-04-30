@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 11:48:13 JST
+Updated: 2026-04-30 12:00:09 JST
 
 ## Goal
 
@@ -95,12 +95,15 @@ without depending on the Go implementation.
 - done: implement stage-2 string literal indexing slice.
 - done: add stage-2 pipeline coverage for `examples/string.tya`.
 - done: verify stage-2 string example bootstrap slice.
-- active: commit stage-2 string example bootstrap slice.
+- done: commit stage-2 string example bootstrap slice.
+- done: implement stage-2 less-than comparison slice.
+- done: verify stage-2 less-than comparison slice.
+- active: commit stage-2 less-than comparison slice.
 
 ## Next Action
 
-Commit the verified stage-2 string example bootstrap slice, then pick the next
-existing executable example to advance through stage2.
+Commit the verified stage-2 less-than comparison slice, then pick the next
+smallest stage2 bootstrap expansion toward `examples/while.tya`.
 
 ## Remaining Work Estimate
 

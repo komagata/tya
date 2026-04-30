@@ -58,6 +58,21 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 11:51:05 JST
+
+- Committed string example bootstrap slice as `2b73ee5`.
+- Added a stage-2 pipeline fixture for `less = left < right` and `print less`.
+- Extended the generated-C parser/codegen helpers to emit and lower
+  `COMPARE_LT`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 12:00:09 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 11:39:35 JST
 
 - Committed replace string-literal bootstrap slice as `7de8924`.
