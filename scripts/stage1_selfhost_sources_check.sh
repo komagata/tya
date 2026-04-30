@@ -1058,6 +1058,16 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
   cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/$base.stage4" "$stage4_dir/$base.stage4.c" >/dev/null 2>&1
 done
 
+cat > "$stage4_dir/lexer.stage4.want.nodes" <<'NODES'
+149:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+150:ASSIGN:tokens:CALL1:lex:source
+152:FOR:token:tokens
+153:INDENT:2
+153:PRINT:IDENT:token
+NODES
+diff -u "$stage4_dir/lexer.stage4.want.nodes" "$stage4_dir/lexer.stage4.nodes" >/dev/null
+echo "selfhost/lexer.tya: stage-3 parser emitted real nodes"
+
 "$stage4_dir/lexer.stage4" examples/hello.tya > "$stage4_dir/hello.tokens"
 "$stage4_dir/parser.stage4" "$stage4_dir/hello.tokens" > "$stage4_dir/hello.nodes"
 "$stage4_dir/checker.stage4" "$stage4_dir/hello.nodes" > "$stage4_dir/hello.check"

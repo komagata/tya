@@ -778,3 +778,17 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-05-01 00:11:31 JST
+
+- Expanded the generated `parse_tokens` helper so stage3 parser emits real
+  lexer-driver nodes for `selfhost/lexer.tya`.
+- Added an explicit diff for `selfhost/lexer.tya` stage4 nodes in the stage1
+  selfhost source check.
+- Kept codegen self-source on fallback unless the input is already a `PRINT`
+  node program, preserving existing `emitC nodes` behavior.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
