@@ -549,3 +549,16 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 16:16:06 JST
+
+- Committed read-file arg slice as `341bdd1`.
+- Added stage2 parser support and coverage for skipping unsupported function
+  bodies so function-local statements no longer leak into top-level nodes.
+- Stage-3 lexer probe now reduces to top-level `source`, `tokens`, and `for`
+  nodes; the next blocker is lowering `tokens = lex source`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

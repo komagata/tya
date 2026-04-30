@@ -278,6 +278,7 @@ Self-Host Completion TODO:
     - [x] Parse one-argument parenthesized function calls in assignment expressions
     - [x] Parse two-argument parenthesized function calls in assignment expressions
     - [x] Parse three-argument parenthesized function calls in assignment expressions
+    - [x] Keep unsupported function bodies out of stage-2 top-level nodes
     - [x] Parse `print` calls with three-argument builtin calls in the self-host parser subset
     - [x] Parse `print` calls with two-argument builtin calls in the self-host parser subset
   - [ ] Parse multiple assignment, multiple return, `try`, `for in`, `for of`, `break`, `continue`, and `else`

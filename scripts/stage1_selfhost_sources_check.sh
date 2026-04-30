@@ -273,6 +273,16 @@ read_file_arg_out="$("$out_dir/read_file_arg.stage2" "$out_dir/read_file_arg.inp
 test "$read_file_arg_out" = "Tya"
 echo "read file arg: stage-2 pipeline matched"
 
+printf 'helper = value ->\n  temp = "skip"\n  print temp\nsource = readFile args()[0]\nprint source\n' > "$out_dir/function_body_skip.tya"
+"$out_dir/lexer.stage2" "$out_dir/function_body_skip.tya" > "$out_dir/function_body_skip.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/function_body_skip.stage2.tokens" > "$out_dir/function_body_skip.stage2.nodes"
+cat > "$out_dir/function_body_skip.want.nodes" <<'NODES'
+4:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+5:PRINT:IDENT:source
+NODES
+diff -u "$out_dir/function_body_skip.want.nodes" "$out_dir/function_body_skip.stage2.nodes" >/dev/null
+echo "function body skip: stage-2 parser matched"
+
 printf 'value = 20\nprint value\n' > "$out_dir/print_int.tya"
 "$out_dir/lexer.stage2" "$out_dir/print_int.tya" > "$out_dir/print_int.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/print_int.stage2.tokens" > "$out_dir/print_int.stage2.nodes"

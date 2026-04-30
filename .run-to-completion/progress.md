@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 15:57:44 JST
+Updated: 2026-04-30 16:16:06 JST
 
-Active phase: commit stage-2 `readFile args()[0]` slice.
+Active phase: commit stage-2 function-body skip slice.
 
 Completed:
 
@@ -226,6 +226,12 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the read-file arg slice.
 - `go test ./... -count=1` passes for the read-file arg slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the read-file arg slice.
+- Committed read-file arg slice as `341bdd1`.
+- Added stage-2 parser support for skipping unsupported function bodies instead of flattening them into top-level nodes.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the function-body skip slice.
+- `sh scripts/selfhost_check.sh` passes for the function-body skip slice.
+- `go test ./... -count=1` passes for the function-body skip slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the function-body skip slice.
 
 Remaining:
 

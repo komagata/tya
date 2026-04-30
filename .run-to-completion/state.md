@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 15:57:44 JST
+Updated: 2026-04-30 16:16:06 JST
 
 ## Goal
 
@@ -136,12 +136,15 @@ without depending on the Go implementation.
 - done: commit stage-2 literal reassignment slice.
 - done: implement stage-2 `readFile args()[0]` slice.
 - done: verify stage-2 `readFile args()[0]` slice.
-- active: commit stage-2 `readFile args()[0]` slice.
+- done: commit stage-2 `readFile args()[0]` slice.
+- done: implement stage-2 function-body skip slice.
+- done: verify stage-2 function-body skip slice.
+- active: commit stage-2 function-body skip slice.
 
 ## Next Action
 
-Commit the verified stage-2 `readFile args()[0]` slice, then continue reducing
-the next stage-3 `selfhost/lexer.tya` compile failure from function-body leakage.
+Commit the verified stage-2 function-body skip slice, then add stage-2
+codegen lowering for `tokens = lex source` in the stage-3 lexer probe.
 
 ## Remaining Work Estimate
 

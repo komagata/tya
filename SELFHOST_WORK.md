@@ -115,6 +115,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for `examples/selfhost_ops.tya`
     - [x] Run a stage-2 pipeline for literal reassignment
     - [x] Run a stage-2 pipeline for `readFile args()[0]`
+    - [x] Skip function bodies in the stage-2 parser subset
     - [ ] Advance stage-3 self-host compiler probe
 
 ## Last Resolved Blocker
