@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 19:24:57 JST
+Updated: 2026-04-30 19:51:39 JST
 
 ## Goal
 
@@ -154,12 +154,14 @@ without depending on the Go implementation.
 - done: verify stage-4 generated tools execute `examples/hello.tya`.
 - done: commit stage-4 hello execution slice.
 - done: add a second stage-4 string print fixture.
-- active: commit stage-4 second fixture slice.
+- done: commit stage-4 second fixture slice.
+- done: add a stage-4 integer print execution fixture.
+- active: commit stage-4 integer print fixture slice.
 
 ## Next Action
 
-Commit the verified stage-4 second fixture slice, then expand stage-4 generated
-tools beyond single-line string print fixtures.
+Commit the verified stage-4 integer print fixture slice, then preserve proper
+stage-4 token/node kinds for integer print fixtures.
 
 ## Remaining Work Estimate
 

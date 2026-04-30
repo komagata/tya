@@ -124,7 +124,8 @@ endpoint.
       - [x] Compile all stage-3 selfhost sources from stage-3 tools
       - [x] Make stage-4 generated tools execute `examples/hello.tya`
       - [x] Make stage-4 generated tools execute another bootstrap fixture beyond hello
-      - [ ] Expand stage-4 generated tools beyond single-line string print fixtures
+      - [x] Expand stage-4 generated tools beyond single-line string print fixtures
+      - [ ] Preserve proper stage-4 token/node kinds for integer print fixtures
 
 ## Last Resolved Blocker
 

@@ -1078,3 +1078,14 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/print_tya" "$stage4_dir/prin
 stage4_print_tya_out="$("$stage4_dir/print_tya")"
 test "$stage4_print_tya_out" = "Tya"
 echo "stage4 print string: self-host pipeline matched"
+
+printf 'print 1\n' > "$stage4_dir/print_int.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/print_int.tya" > "$stage4_dir/print_int.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/print_int.tokens" > "$stage4_dir/print_int.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/print_int.nodes" > "$stage4_dir/print_int.check"
+grep -qx "ok" "$stage4_dir/print_int.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/print_int.nodes" > "$stage4_dir/print_int.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/print_int" "$stage4_dir/print_int.c" >/dev/null 2>&1
+stage4_print_int_out="$("$stage4_dir/print_int")"
+test "$stage4_print_int_out" = "1"
+echo "stage4 print int: self-host pipeline matched"
