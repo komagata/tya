@@ -777,3 +777,21 @@ compare_bounds_out="$("$out_dir/compare_bounds.stage2")"
 test "$compare_bounds_out" = "true
 true"
 echo "bounded comparison: stage-2 pipeline matched"
+
+printf 'age = 2\ngroupedCompare = (age >= 2)\nprint groupedCompare\n' > "$out_dir/grouped_compare.tya"
+"$out_dir/lexer.stage2" "$out_dir/grouped_compare.tya" > "$out_dir/grouped_compare.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/grouped_compare.stage2.tokens" > "$out_dir/grouped_compare.stage2.nodes"
+cat > "$out_dir/grouped_compare.want.nodes" <<'NODES'
+1:ASSIGN:age:INT:2
+2:ASSIGN:groupedCompare:COMPARE_GE:age:2
+3:PRINT:IDENT:groupedCompare
+NODES
+diff -u "$out_dir/grouped_compare.want.nodes" "$out_dir/grouped_compare.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/grouped_compare.stage2.nodes" > "$out_dir/grouped_compare.stage2.check"
+grep -qx "ok" "$out_dir/grouped_compare.stage2.check"
+compare_stage2_codegen "grouped comparison" "$out_dir/grouped_compare.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/grouped_compare.stage2.nodes" > "$out_dir/grouped_compare.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/grouped_compare.stage2" "$out_dir/grouped_compare.stage2.c" >/dev/null 2>&1
+grouped_compare_out="$("$out_dir/grouped_compare.stage2")"
+test "$grouped_compare_out" = "true"
+echo "grouped comparison: stage-2 pipeline matched"

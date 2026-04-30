@@ -185,6 +185,7 @@ Implemented:
 - Self-hosted parser/codegen handles simple integer addition assignments
 - Self-hosted parser/codegen handles parenthesized integer addition assignments
 - Self-hosted parser/codegen handles simple equality, inequality, and bounds comparison assignments
+- Self-hosted parser/codegen handles parenthesized bounds comparison assignments
 - Self-hosted parser/codegen handles simple unary `not` assignments
 - Self-hosted parser/codegen handles empty array placeholders
 - Self-hosted C codegen emits a one-element array path for simple `push` and `for x in xs`

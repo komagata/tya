@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 14:21:14 JST
+Updated: 2026-04-30 14:33:45 JST
 
 ## Goal
 
@@ -116,12 +116,15 @@ without depending on the Go implementation.
 - done: commit stage-2 bounded comparison slice.
 - done: implement stage-2 grouped integer addition slice.
 - done: verify stage-2 grouped integer addition slice.
-- active: commit stage-2 grouped integer addition slice.
+- done: commit stage-2 grouped integer addition slice.
+- done: implement stage-2 grouped comparison slice.
+- done: verify stage-2 grouped comparison slice.
+- active: commit stage-2 grouped comparison slice.
 
 ## Next Action
 
-Commit the verified stage-2 grouped integer addition slice, then continue with
-the `groupedCompare = (age >= 2)` stage2 parser/codegen gap.
+Commit the verified stage-2 grouped comparison slice, then continue with
+`both = adult and young` and `either = adult or young` stage2 support.
 
 ## Remaining Work Estimate
 

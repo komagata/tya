@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 14:21:14 JST
+Updated: 2026-04-30 14:33:45 JST
 
-Active phase: commit stage-2 grouped integer addition slice.
+Active phase: commit stage-2 grouped comparison slice.
 
 Completed:
 
@@ -188,6 +188,12 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the grouped addition slice.
 - `go test ./... -count=1` passes for the grouped addition slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the grouped addition slice.
+- Committed grouped addition slice as `d4de24f`.
+- Added a stage-2 pipeline fixture for `groupedCompare = (age >= 2)`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the grouped comparison slice.
+- `sh scripts/selfhost_check.sh` passes for the grouped comparison slice.
+- `go test ./... -count=1` passes for the grouped comparison slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the grouped comparison slice.
 
 Remaining:
 
