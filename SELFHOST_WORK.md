@@ -89,6 +89,7 @@ endpoint.
     - [x] Emit `trim(text)` calls in the self-host C codegen subset
     - [x] Emit `print len(value)` calls in the self-host C codegen subset
   - [ ] Advance bootstrap from subset programs toward compiling existing examples
+    - [x] Run a stage-2 pipeline for printing string length
 
 ## Last Resolved Blocker
 

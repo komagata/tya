@@ -195,3 +195,17 @@
 - Committed `print len` slice as `475f315`.
 - Next action: inspect the next smallest bootstrap expansion toward an existing
   executable example, likely `examples/string.tya`.
+
+## 2026-04-30 09:56:36 JST
+
+- Added a stage-2 pipeline fixture for `text = "hello"; print len text`.
+- Extended the generated-C parser helper to emit `PRINT_CALL1:len:text` and the
+  generated-C codegen helper to emit `strlen`-based output with `<string.h>`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 10:01:56 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

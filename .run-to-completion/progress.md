@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-29 21:56:13 JST
+Updated: 2026-04-30 10:01:56 JST
 
-Active phase: inspect next bootstrap expansion slice.
+Active phase: commit stage-2 string length bootstrap slice.
 
 Completed:
 
@@ -79,9 +79,14 @@ Completed:
 - `go test ./... -count=1` passes for the `print len` slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the `print len` slice.
 - Committed `print len` slice as `475f315`.
+- Added a stage-2 pipeline fixture for `text = "hello"; print len text`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes.
+- `sh scripts/selfhost_check.sh` passes for the string length bootstrap slice.
+- `go test ./... -count=1` passes for the string length bootstrap slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the string length bootstrap slice.
 
 Remaining:
 
-- Pick the next smallest bootstrap expansion toward an existing executable example.
+- Commit the verified stage-2 string length bootstrap slice.
 
-Estimate: many iterations overall; current parser slice less than 1 iteration.
+Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

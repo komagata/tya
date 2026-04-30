@@ -224,6 +224,34 @@ test "$print_literals_out" = "hello
 12.5"
 echo "print literal assignments: stage-2 pipeline matched"
 
+printf 'text = "hello"\nprint len text\n' > "$out_dir/string_len.tya"
+"$out_dir/lexer.stage2" "$out_dir/string_len.tya" > "$out_dir/string_len.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/string_len.stage2.tokens" > "$out_dir/string_len.stage2.nodes"
+cat > "$out_dir/string_len.want.nodes" <<'NODES'
+1:ASSIGN:text:STRING:hello
+2:PRINT_CALL1:len:text
+NODES
+diff -u "$out_dir/string_len.want.nodes" "$out_dir/string_len.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/string_len.stage2.nodes" > "$out_dir/string_len.stage2.check"
+grep -qx "ok" "$out_dir/string_len.stage2.check"
+compare_stage2_codegen "string len print" "$out_dir/string_len.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/string_len.stage2.nodes" > "$out_dir/string_len.stage2.c"
+cat > "$out_dir/string_len.want.c" <<'C'
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+  const char *text = "hello";
+  printf("%ld\n", (long)strlen(text));
+  return 0;
+}
+C
+diff -u "$out_dir/string_len.want.c" "$out_dir/string_len.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/string_len.stage2" "$out_dir/string_len.stage2.c" >/dev/null 2>&1
+string_len_out="$("$out_dir/string_len.stage2")"
+test "$string_len_out" = "5"
+echo "string len print: stage-2 pipeline matched"
+
 printf 'left = 2\nright = 3\nsum = left + right\nprint sum\n' > "$out_dir/int_add.tya"
 "$out_dir/lexer.stage2" "$out_dir/int_add.tya" > "$out_dir/int_add.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/int_add.stage2.tokens" > "$out_dir/int_add.stage2.nodes"

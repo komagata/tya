@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-29 21:56:13 JST
+Updated: 2026-04-30 10:01:56 JST
 
 ## Goal
 
@@ -62,14 +62,16 @@ without depending on the Go implementation.
 - done: implement `print len` codegen slice.
 - done: verify `print len` slice.
 - done: commit `print len` slice.
-- active: inspect next bootstrap expansion slice.
+- done: implement stage-2 string length bootstrap slice.
+- done: verify stage-2 string length bootstrap slice.
+- active: commit stage-2 string length bootstrap slice.
 
 ## Next Action
 
-Pick the next smallest unchecked slice, likely advancing bootstrap from subset
-programs toward a current executable example such as `examples/string.tya`.
+Commit the verified stage-2 string length bootstrap slice, then pick the next
+smallest bootstrap expansion toward `examples/string.tya`.
 
 ## Remaining Work Estimate
 
-Many iterations overall, low confidence. The immediate docs checkpoint is less
+Many iterations overall, low confidence. The immediate bootstrap slice is less
 than 1 iteration.
