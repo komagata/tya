@@ -610,6 +610,26 @@ while_false_out="$("$out_dir/while_false.stage2")"
 test "$while_false_out" = "done"
 echo "while false break: stage-2 pipeline matched"
 
+printf 'i = 0\nwhile i < 2\n  i = i + 1\n  break\nprint i\n' > "$out_dir/while_less_than.tya"
+"$out_dir/lexer.stage2" "$out_dir/while_less_than.tya" > "$out_dir/while_less_than.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/while_less_than.stage2.tokens" > "$out_dir/while_less_than.stage2.nodes"
+cat > "$out_dir/while_less_than.want.nodes" <<'NODES'
+1:ASSIGN:i:INT:0
+2:WHILE_COMPARE_LT:IDENT:i:INT:2
+3:ASSIGN:i:INT_ADD:i:1
+4:BREAK
+5:PRINT:IDENT:i
+NODES
+diff -u "$out_dir/while_less_than.want.nodes" "$out_dir/while_less_than.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/while_less_than.stage2.nodes" > "$out_dir/while_less_than.stage2.check"
+grep -qx "ok" "$out_dir/while_less_than.stage2.check"
+compare_stage2_codegen "while less-than break" "$out_dir/while_less_than.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/while_less_than.stage2.nodes" > "$out_dir/while_less_than.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/while_less_than.stage2" "$out_dir/while_less_than.stage2.c" >/dev/null 2>&1
+while_less_than_out="$("$out_dir/while_less_than.stage2")"
+test "$while_less_than_out" = "1"
+echo "while less-than break: stage-2 pipeline matched"
+
 printf 'left = 2\nright = 2\nsame = left == right\nprint same\n' > "$out_dir/compare_eq.tya"
 "$out_dir/lexer.stage2" "$out_dir/compare_eq.tya" > "$out_dir/compare_eq.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/compare_eq.stage2.tokens" > "$out_dir/compare_eq.stage2.nodes"

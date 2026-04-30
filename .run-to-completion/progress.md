@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 13:27:12 JST
+Updated: 2026-04-30 13:38:27 JST
 
-Active phase: commit stage-2 `while false`/`break` slice.
+Active phase: commit stage-2 less-than while slice.
 
 Completed:
 
@@ -164,9 +164,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the while false slice.
 - `go test ./... -count=1` passes for the while false slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the while false slice.
+- Committed while false slice as `d1f3a51`.
+- Added a stage-2 pipeline fixture for `while i < 2` with `break`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the less-than while slice.
+- `sh scripts/selfhost_check.sh` passes for the less-than while slice.
+- `go test ./... -count=1` passes for the less-than while slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the less-than while slice.
 
 Remaining:
 
-- Commit the verified stage-2 `while false`/`break` slice.
+- Commit the verified stage-2 less-than while slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

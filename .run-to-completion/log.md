@@ -58,6 +58,22 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 13:29:10 JST
+
+- Committed while false bootstrap slice as `d1f3a51`.
+- Added a stage-2 pipeline fixture for `while i < 2`, integer reassignment, and
+  `break`.
+- Extended generated-C stage2 parser/codegen helpers to emit and lower
+  `WHILE_COMPARE_LT`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 13:38:27 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 13:18:10 JST
 
 - Committed integer addition reassignment slice as `22582e6`.
