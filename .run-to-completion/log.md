@@ -58,6 +58,22 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 11:25:03 JST
+
+- Committed byte/char length bootstrap slice as `50b96f1`.
+- Updated stage2 `PRINT_CALL3:replace` support to allow a typed string literal
+  replacement argument while preserving the existing identifier replacement
+  form.
+- Focused verification passed: `go test ./tests -run
+  'Test(SelfhostCheckerRejectsUndefinedPrintCallNames|Stage1SelfhostSourcesEmitC|SelfhostCodegenEmitsSimpleReturnFunctions)'
+  -count=1`.
+
+## 2026-04-30 11:33:31 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 11:11:35 JST
 
 - Committed string split/join bootstrap slice as `59166c1`.

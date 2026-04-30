@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 11:19:49 JST
+Updated: 2026-04-30 11:33:31 JST
 
-Active phase: commit stage-2 byte/char length bootstrap slice.
+Active phase: commit stage-2 replace string-literal replacement slice.
 
 Completed:
 
@@ -133,9 +133,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the byte/char length bootstrap slice.
 - `go test ./... -count=1` passes for the byte/char length bootstrap slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the byte/char length bootstrap slice.
+- Committed byte/char length bootstrap slice as `50b96f1`.
+- Updated `print replace` stage2 support to allow a string literal replacement argument.
+- Focused `go test ./tests -run 'Test(SelfhostCheckerRejectsUndefinedPrintCallNames|Stage1SelfhostSourcesEmitC|SelfhostCodegenEmitsSimpleReturnFunctions)' -count=1` passes.
+- `sh scripts/selfhost_check.sh` passes for the replace string-literal slice.
+- `go test ./... -count=1` passes for the replace string-literal slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the replace string-literal slice.
 
 Remaining:
 
-- Commit the verified stage-2 byte/char length bootstrap slice.
+- Commit the verified stage-2 replace string-literal replacement slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

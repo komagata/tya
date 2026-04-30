@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 11:19:49 JST
+Updated: 2026-04-30 11:33:31 JST
 
 ## Goal
 
@@ -88,12 +88,16 @@ without depending on the Go implementation.
 - done: commit stage-2 string split/join bootstrap slice.
 - done: implement stage-2 byte/char length bootstrap slice.
 - done: verify stage-2 byte/char length bootstrap slice.
-- active: commit stage-2 byte/char length bootstrap slice.
+- done: commit stage-2 byte/char length bootstrap slice.
+- done: implement stage-2 replace string-literal replacement slice.
+- done: verify stage-2 replace string-literal replacement slice.
+- active: commit stage-2 replace string-literal replacement slice.
 
 ## Next Action
 
-Commit the verified stage-2 byte/char length bootstrap slice, then re-run
-`examples/string.tya` through stage2 and pick the next unsupported construct.
+Commit the verified stage-2 replace string-literal replacement slice, then
+re-run `examples/string.tya` through stage2 and pick the next unsupported
+construct.
 
 ## Remaining Work Estimate
 

@@ -395,13 +395,12 @@ test "$string_prefix_suffix_out" = "true
 true"
 echo "string prefix suffix print: stage-2 pipeline matched"
 
-printf 'text = "hello"\nreplacement = "EL"\nprint replace text, "ell", replacement\n' > "$out_dir/string_replace.tya"
+printf 'text = "hello"\nprint replace text, "ell", "EL"\n' > "$out_dir/string_replace.tya"
 "$out_dir/lexer.stage2" "$out_dir/string_replace.tya" > "$out_dir/string_replace.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/string_replace.stage2.tokens" > "$out_dir/string_replace.stage2.nodes"
 cat > "$out_dir/string_replace.want.nodes" <<'NODES'
 1:ASSIGN:text:STRING:hello
-2:ASSIGN:replacement:STRING:EL
-3:PRINT_CALL3:replace:text:STRING:ell:replacement
+2:PRINT_CALL3:replace:text:STRING:ell:STRING:EL
 NODES
 diff -u "$out_dir/string_replace.want.nodes" "$out_dir/string_replace.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/string_replace.stage2.nodes" > "$out_dir/string_replace.stage2.check"
@@ -436,8 +435,7 @@ static char *replace_text(const char *text, const char *old_text, const char *ne
 
 int main(void) {
   const char *text = "hello";
-  const char *replacement = "EL";
-  puts(replace_text(text, "ell", replacement));
+  puts(replace_text(text, "ell", "EL"));
   return 0;
 }
 C

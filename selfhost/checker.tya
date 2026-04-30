@@ -348,13 +348,17 @@ check = nodes ->
       middleKind = extraOf(node)
       middleArg = extra2Of(node)
       rightArg = extra3Of(node)
+      rightKind = ""
+      if extra3Of(node) == "STRING"
+        rightKind = extra3Of(node)
+        rightArg = extra4Of(node)
       if not hasName(names, funcName)
         push errors, lineOf(node) + ": undefined variable: " + funcName
       if not hasName(names, leftArg)
         push errors, lineOf(node) + ": undefined variable: " + leftArg
       if middleKind == "IDENT" and not hasName(names, middleArg)
         push errors, lineOf(node) + ": undefined variable: " + middleArg
-      if not isLiteralArg(rightArg) and not hasName(names, rightArg)
+      if rightKind != "STRING" and not isLiteralArg(rightArg) and not hasName(names, rightArg)
         push errors, lineOf(node) + ": undefined variable: " + rightArg
 
     if kindOf(node) == "IF" or kindOf(node) == "WHILE"
