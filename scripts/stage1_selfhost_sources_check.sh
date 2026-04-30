@@ -609,6 +609,28 @@ bool_out="$("$out_dir/bool.stage2")"
 test "$bool_out" = "true"
 echo "bool assignment: stage-2 pipeline matched"
 
+printf 'adult = true\nyoung = true\nboth = adult and young\neither = adult or young\nprint both\nprint either\n' > "$out_dir/bool_logic.tya"
+"$out_dir/lexer.stage2" "$out_dir/bool_logic.tya" > "$out_dir/bool_logic.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/bool_logic.stage2.tokens" > "$out_dir/bool_logic.stage2.nodes"
+cat > "$out_dir/bool_logic.want.nodes" <<'NODES'
+1:ASSIGN:adult:BOOL:true
+2:ASSIGN:young:BOOL:true
+3:ASSIGN:both:BOOL_AND:adult:young
+4:ASSIGN:either:BOOL_OR:adult:young
+5:PRINT:IDENT:both
+6:PRINT:IDENT:either
+NODES
+diff -u "$out_dir/bool_logic.want.nodes" "$out_dir/bool_logic.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/bool_logic.stage2.nodes" > "$out_dir/bool_logic.stage2.check"
+grep -qx "ok" "$out_dir/bool_logic.stage2.check"
+compare_stage2_codegen "bool logic" "$out_dir/bool_logic.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/bool_logic.stage2.nodes" > "$out_dir/bool_logic.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/bool_logic.stage2" "$out_dir/bool_logic.stage2.c" >/dev/null 2>&1
+bool_logic_out="$("$out_dir/bool_logic.stage2")"
+test "$bool_logic_out" = "true
+true"
+echo "bool logic: stage-2 pipeline matched"
+
 printf 'while false\n  break\nprint "done"\n' > "$out_dir/while_false.tya"
 "$out_dir/lexer.stage2" "$out_dir/while_false.tya" > "$out_dir/while_false.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/while_false.stage2.tokens" > "$out_dir/while_false.stage2.nodes"

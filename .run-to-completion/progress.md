@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 14:33:45 JST
+Updated: 2026-04-30 14:48:06 JST
 
-Active phase: commit stage-2 grouped comparison slice.
+Active phase: commit stage-2 boolean logic assignment slice.
 
 Completed:
 
@@ -194,6 +194,12 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the grouped comparison slice.
 - `go test ./... -count=1` passes for the grouped comparison slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the grouped comparison slice.
+- Committed grouped comparison slice as `e12ac5d`.
+- Added a stage-2 pipeline fixture for `both = adult and young` and `either = adult or young`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the boolean logic slice.
+- `sh scripts/selfhost_check.sh` passes for the boolean logic slice.
+- `go test ./... -count=1` passes for the boolean logic slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the boolean logic slice.
 
 Remaining:
 
