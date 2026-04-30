@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 21:34:48 JST
+Updated: 2026-04-30 21:51:59 JST
 
 ## Goal
 
@@ -166,12 +166,14 @@ without depending on the Go implementation.
 - done: expand stage-4 generated tools to two-line print fixtures.
 - done: commit stage-4 two-line print fixture slice.
 - done: expand stage-4 generated tools to assignment plus print fixtures.
-- active: commit stage-4 assignment print fixture slice.
+- done: commit stage-4 assignment print fixture slice.
+- done: expand stage-4 generated tools to integer assignment plus print fixtures.
+- active: commit stage-4 integer assignment print fixture slice.
 
 ## Next Action
 
-Commit the verified stage-4 assignment print fixture slice, then expand
-stage-4 generated tools to integer assignment plus print fixtures.
+Commit the verified stage-4 integer assignment print fixture slice, then expand
+stage-4 generated tools to reassignment plus print fixtures.
 
 ## Remaining Work Estimate
 

@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 21:34:48 JST
+Updated: 2026-04-30 21:51:59 JST
 
-Active phase: commit stage-4 assignment print fixture slice.
+Active phase: commit stage-4 integer assignment print fixture slice.
 
 Completed:
 
@@ -305,9 +305,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the assignment print slice.
 - `go test ./... -count=1` passes for the assignment print slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the assignment print slice.
+- Added stage4 fallback codegen support for printing tracked integer identifiers with `printf("%ld")`.
+- Added a stage4 generated-tools fixture for `count = 2` followed by `print count`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the integer assignment print slice.
+- `sh scripts/selfhost_check.sh` passes for the integer assignment print slice.
+- `go test ./... -count=1` passes for the integer assignment print slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the integer assignment print slice.
 
 Remaining:
 
-- Commit the verified stage4 assignment print fixture slice, then expand stage4 generated tools to integer assignment plus print fixtures.
+- Commit the verified stage4 integer assignment print fixture slice, then expand stage4 generated tools to reassignment plus print fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

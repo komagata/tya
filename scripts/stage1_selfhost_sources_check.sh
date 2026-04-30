@@ -1193,3 +1193,29 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/assign_print" "$stage4_dir/a
 stage4_assign_print_out="$("$stage4_dir/assign_print")"
 test "$stage4_assign_print_out" = "Hi"
 echo "stage4 assign print: self-host pipeline matched"
+
+printf 'count = 2\nprint count\n' > "$stage4_dir/assign_int_print.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/assign_int_print.tya" > "$stage4_dir/assign_int_print.tokens"
+cat > "$stage4_dir/assign_int_print.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:count:1
+1:SYMBOL:=:7
+1:INT:2:9
+2:INDENT:0:1
+2:IDENT:print:1
+2:IDENT:count:7
+TOKENS
+diff -u "$stage4_dir/assign_int_print.want.tokens" "$stage4_dir/assign_int_print.tokens" >/dev/null
+"$stage4_dir/parser.stage4" "$stage4_dir/assign_int_print.tokens" > "$stage4_dir/assign_int_print.nodes"
+cat > "$stage4_dir/assign_int_print.want.nodes" <<'NODES'
+1:ASSIGN:count:INT:2
+2:PRINT:IDENT:count
+NODES
+diff -u "$stage4_dir/assign_int_print.want.nodes" "$stage4_dir/assign_int_print.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/assign_int_print.nodes" > "$stage4_dir/assign_int_print.check"
+grep -qx "ok" "$stage4_dir/assign_int_print.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/assign_int_print.nodes" > "$stage4_dir/assign_int_print.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/assign_int_print" "$stage4_dir/assign_int_print.c" >/dev/null 2>&1
+stage4_assign_int_print_out="$("$stage4_dir/assign_int_print")"
+test "$stage4_assign_int_print_out" = "2"
+echo "stage4 int assign print: self-host pipeline matched"
