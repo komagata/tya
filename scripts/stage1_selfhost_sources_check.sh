@@ -295,6 +295,38 @@ string_trim_out="$("$out_dir/string_trim.stage2")"
 test "$string_trim_out" = "hello"
 echo "string trim print: stage-2 pipeline matched"
 
+printf 'text = "hello"\nprint contains text, "ell"\n' > "$out_dir/string_contains.tya"
+"$out_dir/lexer.stage2" "$out_dir/string_contains.tya" > "$out_dir/string_contains.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/string_contains.stage2.tokens" > "$out_dir/string_contains.stage2.nodes"
+cat > "$out_dir/string_contains.want.nodes" <<'NODES'
+1:ASSIGN:text:STRING:hello
+2:PRINT_CALL2:contains:text:STRING:ell
+NODES
+diff -u "$out_dir/string_contains.want.nodes" "$out_dir/string_contains.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/string_contains.stage2.nodes" > "$out_dir/string_contains.stage2.check"
+grep -qx "ok" "$out_dir/string_contains.stage2.check"
+compare_stage2_codegen "string contains print" "$out_dir/string_contains.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/string_contains.stage2.nodes" > "$out_dir/string_contains.stage2.c"
+cat > "$out_dir/string_contains.want.c" <<'C'
+#include <stdio.h>
+#include <string.h>
+
+static int contains_text(const char *text, const char *needle) {
+  return strstr(text, needle) != NULL;
+}
+
+int main(void) {
+  const char *text = "hello";
+  puts(contains_text(text, "ell") ? "true" : "false");
+  return 0;
+}
+C
+diff -u "$out_dir/string_contains.want.c" "$out_dir/string_contains.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/string_contains.stage2" "$out_dir/string_contains.stage2.c" >/dev/null 2>&1
+string_contains_out="$("$out_dir/string_contains.stage2")"
+test "$string_contains_out" = "true"
+echo "string contains print: stage-2 pipeline matched"
+
 printf 'left = 2\nright = 3\nsum = left + right\nprint sum\n' > "$out_dir/int_add.tya"
 "$out_dir/lexer.stage2" "$out_dir/int_add.tya" > "$out_dir/int_add.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/int_add.stage2.tokens" > "$out_dir/int_add.stage2.nodes"

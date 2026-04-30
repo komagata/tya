@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 10:13:25 JST
+Updated: 2026-04-30 10:21:30 JST
 
-Active phase: commit stage-2 string trim bootstrap slice.
+Active phase: commit stage-2 string contains bootstrap slice.
 
 Completed:
 
@@ -91,9 +91,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the trim bootstrap slice.
 - `go test ./... -count=1` passes for the trim bootstrap slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the trim bootstrap slice.
+- Committed string trim bootstrap slice as `a6958b6`.
+- Added a stage-2 pipeline fixture for `text = "hello"; print contains text, "ell"`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the contains slice.
+- `sh scripts/selfhost_check.sh` passes for the contains bootstrap slice.
+- `go test ./... -count=1` passes for the contains bootstrap slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the contains bootstrap slice.
 
 Remaining:
 
-- Commit the verified stage-2 string trim bootstrap slice.
+- Commit the verified stage-2 string contains bootstrap slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

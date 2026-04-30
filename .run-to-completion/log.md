@@ -58,6 +58,22 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 10:15:25 JST
+
+- Committed string trim bootstrap slice as `a6958b6`.
+- Added a stage-2 pipeline fixture for `text = "hello"; print contains text,
+  "ell"`.
+- Extended the generated-C parser helper to emit `PRINT_CALL2:contains` and the
+  generated-C codegen helper to emit a target `contains_text` helper.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 10:21:30 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 10:04:12 JST
 
 - Committed string length bootstrap slice as `a722c1a`.

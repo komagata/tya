@@ -91,6 +91,7 @@ endpoint.
   - [ ] Advance bootstrap from subset programs toward compiling existing examples
     - [x] Run a stage-2 pipeline for printing string length
     - [x] Run a stage-2 pipeline for trimming and printing a string
+    - [x] Run a stage-2 pipeline for printing string containment
 
 ## Last Resolved Blocker
 
