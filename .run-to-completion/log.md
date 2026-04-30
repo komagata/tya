@@ -588,3 +588,17 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 18:04:05 JST
+
+- Committed check lowering slice as `1fdee52`.
+- Expanded stage2 generated lexer/codegen fixed buffers so
+  `selfhost/codegen_c.tya` can be lexed by the stage2 lexer.
+- Added stage2 codegen lowering and pipeline coverage for `print emitC nodes`.
+- Stage-3 codegen probe now emits C for `examples/hello.tya`; the emitted C
+  compiles and prints `Hello, Tya`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

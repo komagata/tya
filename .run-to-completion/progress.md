@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 17:36:57 JST
+Updated: 2026-04-30 18:04:05 JST
 
-Active phase: commit stage-2 check lowering slice.
+Active phase: commit stage-2 emitC lowering slice.
 
 Completed:
 
@@ -248,9 +248,17 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the check lowering slice.
 - `go test ./... -count=1` passes for the check lowering slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the check lowering slice.
+- Committed check lowering slice as `1fdee52`.
+- Expanded stage-2 generated lexer/codegen buffers enough to lex `selfhost/codegen_c.tya`.
+- Added stage-2 codegen lowering and pipeline coverage for `print emitC nodes`.
+- Verified stage-3 generated codegen emits, compiles, and runs C for `examples/hello.tya`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the emitC lowering slice.
+- `sh scripts/selfhost_check.sh` passes for the emitC lowering slice.
+- `go test ./... -count=1` passes for the emitC lowering slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the emitC lowering slice.
 
 Remaining:
 
-- Commit the verified stage-2 check lowering slice, then generate and run the stage-3 codegen on stage-3 parser output.
+- Commit the verified stage-2 emitC lowering slice, then use the stage-3 tools to compile the selfhost sources themselves.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

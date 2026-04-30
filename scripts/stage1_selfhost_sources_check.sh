@@ -296,6 +296,14 @@ test "$lex_source_out" = "1:INDENT:0:1
 1:STRING:Tya:7"
 echo "lex source: stage-2 pipeline matched"
 
+long_lex_text="$(printf '%0300d' 0 | tr 0 a)"
+printf 'print "%s"\n' "$long_lex_text" > "$out_dir/lex_source_long.input"
+lex_source_long_out="$("$out_dir/lex_source.stage2" "$out_dir/lex_source_long.input")"
+test "$lex_source_long_out" = "1:INDENT:0:1
+1:IDENT:print:1
+1:STRING:${long_lex_text}:7"
+echo "long lex source: stage-2 pipeline matched"
+
 printf 'source = readFile args()[0]\ntokens = lex source\nnodes = parse tokens\nfor node in nodes\n  print node\n' > "$out_dir/parse_tokens.tya"
 printf 'print "Tya"\n' > "$out_dir/parse_tokens.input"
 "$out_dir/lexer.stage2" "$out_dir/parse_tokens.tya" > "$out_dir/parse_tokens.stage2.tokens"
@@ -339,6 +347,27 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/check_nodes.stage2" "$out_dir/c
 check_nodes_out="$("$out_dir/check_nodes.stage2" "$out_dir/check_nodes.input")"
 test "$check_nodes_out" = ""
 echo "check nodes: stage-2 pipeline matched"
+
+printf 'source = readFile args()[0]\nlines = split source, "\n"\nprint emitC nodes\n' > "$out_dir/emit_c_nodes.tya"
+printf '1:PRINT:STRING:Tya\n' > "$out_dir/emit_c_nodes.input"
+"$out_dir/lexer.stage2" "$out_dir/emit_c_nodes.tya" > "$out_dir/emit_c_nodes.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/emit_c_nodes.stage2.tokens" > "$out_dir/emit_c_nodes.stage2.nodes"
+cat > "$out_dir/emit_c_nodes.want.nodes" <<'NODES'
+1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+2:ASSIGN:lines:CALL2:split:source:STRING:
+3:PRINT_CALL1:emitC:nodes
+NODES
+diff -u "$out_dir/emit_c_nodes.want.nodes" "$out_dir/emit_c_nodes.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/emit_c_nodes.stage2.nodes" > "$out_dir/emit_c_nodes.stage2.check"
+grep -qx "ok" "$out_dir/emit_c_nodes.stage2.check"
+compare_stage2_codegen "emitC nodes" "$out_dir/emit_c_nodes.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/emit_c_nodes.stage2.nodes" > "$out_dir/emit_c_nodes.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/emit_c_nodes.stage2" "$out_dir/emit_c_nodes.stage2.c" >/dev/null 2>&1
+"$out_dir/emit_c_nodes.stage2" "$out_dir/emit_c_nodes.input" > "$out_dir/emit_c_nodes.out.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/emit_c_nodes.out" "$out_dir/emit_c_nodes.out.c" >/dev/null 2>&1
+emit_c_nodes_out="$("$out_dir/emit_c_nodes.out")"
+test "$emit_c_nodes_out" = "Tya"
+echo "emitC nodes: stage-2 pipeline matched"
 
 printf 'helper = value ->\n  temp = "skip"\n  print temp\nsource = readFile args()[0]\nprint source\n' > "$out_dir/function_body_skip.tya"
 "$out_dir/lexer.stage2" "$out_dir/function_body_skip.tya" > "$out_dir/function_body_skip.stage2.tokens"
