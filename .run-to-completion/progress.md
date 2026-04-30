@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 10:46:50 JST
+Updated: 2026-04-30 10:54:29 JST
 
-Active phase: commit stage-2 escaped quote print bootstrap slice.
+Active phase: commit stage-2 printed string colon preservation slice.
 
 Completed:
 
@@ -115,9 +115,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the escaped quote bootstrap slice.
 - `go test ./... -count=1` passes for the escaped quote bootstrap slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the escaped quote bootstrap slice.
+- Committed escaped quote bootstrap slice as `2ad21b9`.
+- Added stage2 codegen tail-field extraction so `PRINT:STRING` can preserve colon characters.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for exact `quote: \"tya\"`.
+- `sh scripts/selfhost_check.sh` passes for the printed string colon preservation slice.
+- `go test ./... -count=1` passes for the printed string colon preservation slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the printed string colon preservation slice.
 
 Remaining:
 
-- Commit the verified stage-2 escaped quote print bootstrap slice.
+- Commit the verified stage-2 printed string colon preservation slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

@@ -58,6 +58,21 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 10:48:02 JST
+
+- Committed escaped quote bootstrap slice as `2ad21b9`.
+- Added stage2 generated-C codegen helper `node_tail_field` and used it for
+  `PRINT:STRING` values so colon characters are preserved.
+- Restored the exact `print "quote: \"tya\""` stage2 fixture.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 10:54:29 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 10:40:29 JST
 
 - Committed string replace bootstrap slice as `9b7cf10`.
