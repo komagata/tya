@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 22:25:07 JST
+Updated: 2026-04-30 22:42:13 JST
 
-Active phase: commit stage-4 integer addition fixture slice.
+Active phase: commit stage-4 less-than comparison fixture slice.
 
 Completed:
 
@@ -322,9 +322,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the integer addition fixture slice.
 - `go test ./... -count=1` passes for the integer addition fixture slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the integer addition fixture slice.
+- Added stage4 fallback support for BOOL comparison assignment values and bool identifier printing.
+- Added a stage4 generated-tools fixture for `less = 1 < 2` followed by `print less`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the less-than comparison slice.
+- `sh scripts/selfhost_check.sh` passes for the less-than comparison slice.
+- `go test ./... -count=1` passes for the less-than comparison slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the less-than comparison slice.
 
 Remaining:
 
-- Commit the verified stage4 integer addition fixture slice, then expand stage4 generated tools to less-than comparison fixtures.
+- Commit the verified stage4 less-than comparison fixture slice, then expand stage4 generated tools to while/break fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

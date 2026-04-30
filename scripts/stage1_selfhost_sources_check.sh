@@ -1276,3 +1276,29 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/add_assign_print" "$stage4_d
 stage4_add_assign_print_out="$("$stage4_dir/add_assign_print")"
 test "$stage4_add_assign_print_out" = "2"
 echo "stage4 int addition print: self-host pipeline matched"
+
+printf 'less = 1 < 2\nprint less\n' > "$stage4_dir/less_print.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/less_print.tya" > "$stage4_dir/less_print.tokens"
+cat > "$stage4_dir/less_print.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:less:1
+1:SYMBOL:=:6
+1:BOOL:1 < 2:8
+2:INDENT:0:1
+2:IDENT:print:1
+2:IDENT:less:7
+TOKENS
+diff -u "$stage4_dir/less_print.want.tokens" "$stage4_dir/less_print.tokens" >/dev/null
+"$stage4_dir/parser.stage4" "$stage4_dir/less_print.tokens" > "$stage4_dir/less_print.nodes"
+cat > "$stage4_dir/less_print.want.nodes" <<'NODES'
+1:ASSIGN:less:BOOL:1 < 2
+2:PRINT:IDENT:less
+NODES
+diff -u "$stage4_dir/less_print.want.nodes" "$stage4_dir/less_print.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/less_print.nodes" > "$stage4_dir/less_print.check"
+grep -qx "ok" "$stage4_dir/less_print.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/less_print.nodes" > "$stage4_dir/less_print.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/less_print" "$stage4_dir/less_print.c" >/dev/null 2>&1
+stage4_less_print_out="$("$stage4_dir/less_print")"
+test "$stage4_less_print_out" = "true"
+echo "stage4 less-than print: self-host pipeline matched"

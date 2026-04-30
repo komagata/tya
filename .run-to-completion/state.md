@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 22:25:07 JST
+Updated: 2026-04-30 22:42:13 JST
 
 ## Goal
 
@@ -172,12 +172,14 @@ without depending on the Go implementation.
 - done: expand stage-4 generated tools to reassignment plus print fixtures.
 - done: commit stage-4 reassignment print fixture slice.
 - done: expand stage-4 generated tools to integer addition assignment fixtures.
-- active: commit stage-4 integer addition fixture slice.
+- done: commit stage-4 integer addition fixture slice.
+- done: expand stage-4 generated tools to less-than comparison fixtures.
+- active: commit stage-4 less-than comparison fixture slice.
 
 ## Next Action
 
-Commit the verified stage-4 integer addition fixture slice, then expand
-stage-4 generated tools to less-than comparison fixtures.
+Commit the verified stage-4 less-than comparison fixture slice, then expand
+stage-4 generated tools to while/break fixtures.
 
 ## Remaining Work Estimate
 
