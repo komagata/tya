@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 11:05:22 JST
+Updated: 2026-04-30 11:19:49 JST
 
 ## Goal
 
@@ -85,11 +85,14 @@ without depending on the Go implementation.
 - done: commit stage-2 printed string colon preservation slice.
 - done: implement stage-2 string split/join bootstrap slice.
 - done: verify stage-2 string split/join bootstrap slice.
-- active: commit stage-2 string split/join bootstrap slice.
+- done: commit stage-2 string split/join bootstrap slice.
+- done: implement stage-2 byte/char length bootstrap slice.
+- done: verify stage-2 byte/char length bootstrap slice.
+- active: commit stage-2 byte/char length bootstrap slice.
 
 ## Next Action
 
-Commit the verified stage-2 string split/join bootstrap slice, then re-run
+Commit the verified stage-2 byte/char length bootstrap slice, then re-run
 `examples/string.tya` through stage2 and pick the next unsupported construct.
 
 ## Remaining Work Estimate

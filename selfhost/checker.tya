@@ -119,6 +119,8 @@ check = nodes ->
   rememberName names, nameIndents, "startsWith", "0"
   rememberName names, nameIndents, "endsWith", "0"
   rememberName names, nameIndents, "replace", "0"
+  rememberName names, nameIndents, "byteLen", "0"
+  rememberName names, nameIndents, "charLen", "0"
   rememberName names, nameIndents, "hasName", "0"
 
   for node in nodes
@@ -322,9 +324,10 @@ check = nodes ->
     if kindOf(node) == "PRINT_CALL1"
       funcName = nameOf(node)
       argName = valueOf(node)
+      argKind = valueOf(node)
       if not hasName(names, funcName)
         push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, argName)
+      if argKind != "STRING" and not hasName(names, argName)
         push errors, lineOf(node) + ": undefined variable: " + argName
 
     if kindOf(node) == "PRINT_CALL2"

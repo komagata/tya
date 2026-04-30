@@ -465,6 +465,24 @@ string_split_join_out="$("$out_dir/string_split_join.stage2")"
 test "$string_split_join_out" = "hello-tya"
 echo "string split join print: stage-2 pipeline matched"
 
+printf 'print byteLen "ちゃ"\nprint charLen "ちゃ"\n' > "$out_dir/string_lengths.tya"
+"$out_dir/lexer.stage2" "$out_dir/string_lengths.tya" > "$out_dir/string_lengths.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/string_lengths.stage2.tokens" > "$out_dir/string_lengths.stage2.nodes"
+cat > "$out_dir/string_lengths.want.nodes" <<'NODES'
+1:PRINT_CALL1:byteLen:STRING:ちゃ
+2:PRINT_CALL1:charLen:STRING:ちゃ
+NODES
+diff -u "$out_dir/string_lengths.want.nodes" "$out_dir/string_lengths.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/string_lengths.stage2.nodes" > "$out_dir/string_lengths.stage2.check"
+grep -qx "ok" "$out_dir/string_lengths.stage2.check"
+compare_stage2_codegen "string byte char length print" "$out_dir/string_lengths.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/string_lengths.stage2.nodes" > "$out_dir/string_lengths.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/string_lengths.stage2" "$out_dir/string_lengths.stage2.c" >/dev/null 2>&1
+string_lengths_out="$("$out_dir/string_lengths.stage2")"
+test "$string_lengths_out" = "6
+2"
+echo "string byte char length print: stage-2 pipeline matched"
+
 printf 'left = 2\nright = 3\nsum = left + right\nprint sum\n' > "$out_dir/int_add.tya"
 "$out_dir/lexer.stage2" "$out_dir/int_add.tya" > "$out_dir/int_add.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/int_add.stage2.tokens" > "$out_dir/int_add.stage2.nodes"

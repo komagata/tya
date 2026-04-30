@@ -58,6 +58,23 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 11:11:35 JST
+
+- Committed string split/join bootstrap slice as `59166c1`.
+- Added a stage-2 pipeline fixture for `print byteLen "ちゃ"` and
+  `print charLen "ちゃ"`.
+- Extended the self-host checker builtins with `byteLen` and `charLen`.
+- Extended generated-C parser/codegen helpers to handle one-argument print calls
+  with string literal arguments and UTF-8 character counting.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 11:19:49 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 10:57:52 JST
 
 - Committed printed string colon preservation slice as `d4c2ac8`.

@@ -97,6 +97,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for printing escaped quote strings
     - [x] Preserve colon characters in stage-2 printed string nodes
     - [x] Run a stage-2 pipeline for splitting and joining strings
+    - [x] Run a stage-2 pipeline for byte and character string lengths
 
 ## Last Resolved Blocker
 

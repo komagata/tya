@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 11:05:22 JST
+Updated: 2026-04-30 11:19:49 JST
 
-Active phase: commit stage-2 string split/join bootstrap slice.
+Active phase: commit stage-2 byte/char length bootstrap slice.
 
 Completed:
 
@@ -127,9 +127,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the split/join bootstrap slice.
 - `go test ./... -count=1` passes for the split/join bootstrap slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the split/join bootstrap slice.
+- Committed string split/join bootstrap slice as `59166c1`.
+- Added a stage-2 pipeline fixture for `print byteLen "ちゃ"` and `print charLen "ちゃ"`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the byte/char length slice.
+- `sh scripts/selfhost_check.sh` passes for the byte/char length bootstrap slice.
+- `go test ./... -count=1` passes for the byte/char length bootstrap slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the byte/char length bootstrap slice.
 
 Remaining:
 
-- Commit the verified stage-2 string split/join bootstrap slice.
+- Commit the verified stage-2 byte/char length bootstrap slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.
