@@ -696,6 +696,47 @@ test "$while_bounds_out" = "loop
 2"
 echo "while bounded break: stage-2 pipeline matched"
 
+printf 'names = ["Tya"]\nfor item in names\n  print item\n' > "$out_dir/array_for.tya"
+"$out_dir/lexer.stage2" "$out_dir/array_for.tya" > "$out_dir/array_for.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/array_for.stage2.tokens" > "$out_dir/array_for.stage2.nodes"
+cat > "$out_dir/array_for.want.nodes" <<'NODES'
+1:ASSIGN:names:ARRAY_ONE:STRING:Tya
+2:FOR:item:names
+3:INDENT:2
+3:PRINT:IDENT:item
+NODES
+diff -u "$out_dir/array_for.want.nodes" "$out_dir/array_for.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/array_for.stage2.nodes" > "$out_dir/array_for.stage2.check"
+grep -qx "ok" "$out_dir/array_for.stage2.check"
+compare_stage2_codegen "array for" "$out_dir/array_for.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/array_for.stage2.nodes" > "$out_dir/array_for.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/array_for.stage2" "$out_dir/array_for.stage2.c" >/dev/null 2>&1
+array_for_out="$("$out_dir/array_for.stage2")"
+test "$array_for_out" = "Tya"
+echo "array for: stage-2 pipeline matched"
+
+"$out_dir/lexer.stage2" examples/selfhost_ops.tya > "$out_dir/selfhost_ops.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/selfhost_ops.stage2.tokens" > "$out_dir/selfhost_ops.stage2.nodes"
+"$out_dir/checker.stage2" "$out_dir/selfhost_ops.stage2.nodes" > "$out_dir/selfhost_ops.stage2.check"
+grep -qx "ok" "$out_dir/selfhost_ops.stage2.check"
+compare_stage2_codegen "examples/selfhost_ops.tya" "$out_dir/selfhost_ops.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/selfhost_ops.stage2.nodes" > "$out_dir/selfhost_ops.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/selfhost_ops.stage2" "$out_dir/selfhost_ops.stage2.c" >/dev/null 2>&1
+selfhost_ops_out="$("$out_dir/selfhost_ops.stage2")"
+test "$selfhost_ops_out" = "adult
+young
+komagata
+true
+true
+true
+2
+true
+true
+true
+loop
+Tya"
+echo "examples/selfhost_ops.tya: stage-2 pipeline matched"
+
 "$out_dir/lexer.stage2" examples/while.tya > "$out_dir/while_example.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/while_example.stage2.tokens" > "$out_dir/while_example.stage2.nodes"
 "$out_dir/checker.stage2" "$out_dir/while_example.stage2.nodes" > "$out_dir/while_example.stage2.check"

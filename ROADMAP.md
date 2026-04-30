@@ -190,6 +190,7 @@ Implemented:
 - Self-hosted parser/codegen handles simple unary `not` assignments
 - Self-hosted parser/codegen handles empty array placeholders
 - Self-hosted C codegen emits a one-element array path for simple `push` and `for x in xs`
+- Stage-2 self-host pipeline can run `examples/selfhost_ops.tya`
 - Self-hosted parser/codegen carries simple `while false` blocks into generated C
 - Self-hosted codegen emits simple variable conditions for `if` / `while`
 - Self-hosted parser/checker/codegen carries simple `for x in xs` blocks

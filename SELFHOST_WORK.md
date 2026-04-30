@@ -111,6 +111,8 @@ endpoint.
     - [x] Run a stage-2 pipeline for grouped greater-or-equal comparison
     - [x] Run a stage-2 pipeline for boolean `and` / `or` assignments
     - [x] Run a stage-2 pipeline for greater-or-equal `while` with `break`
+    - [x] Run a stage-2 pipeline for one-element string arrays and `for`
+    - [x] Run a stage-2 pipeline for `examples/selfhost_ops.tya`
 
 ## Last Resolved Blocker
 

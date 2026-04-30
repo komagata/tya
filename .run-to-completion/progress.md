@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 15:02:15 JST
+Updated: 2026-04-30 15:18:49 JST
 
-Active phase: commit stage-2 bounded while slice.
+Active phase: commit stage-2 array/for and selfhost ops slice.
 
 Completed:
 
@@ -206,6 +206,13 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the bounded while slice.
 - `go test ./... -count=1` passes for the bounded while slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the bounded while slice.
+- Committed bounded while slice as `d750365`.
+- Added a stage-2 pipeline fixture for `names = ["Tya"]` and `for item in names`.
+- Added `examples/selfhost_ops.tya` itself to the stage-2 pipeline.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the array/for and selfhost ops slice.
+- `sh scripts/selfhost_check.sh` passes for the array/for and selfhost ops slice.
+- `go test ./... -count=1` passes for the array/for and selfhost ops slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the array/for and selfhost ops slice.
 
 Remaining:
 
