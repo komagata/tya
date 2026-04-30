@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 15:35:47 JST
+Updated: 2026-04-30 15:57:44 JST
 
 ## Goal
 
@@ -133,12 +133,15 @@ without depending on the Go implementation.
 - done: probe stage-3 selfhost source compilation and identify duplicate literal declarations.
 - done: implement stage-2 literal reassignment slice.
 - done: verify stage-2 literal reassignment slice.
-- active: commit stage-2 literal reassignment slice.
+- done: commit stage-2 literal reassignment slice.
+- done: implement stage-2 `readFile args()[0]` slice.
+- done: verify stage-2 `readFile args()[0]` slice.
+- active: commit stage-2 `readFile args()[0]` slice.
 
 ## Next Action
 
-Commit the verified stage-2 literal reassignment slice, then continue reducing
-the next stage-3 `selfhost/lexer.tya` compile failure.
+Commit the verified stage-2 `readFile args()[0]` slice, then continue reducing
+the next stage-3 `selfhost/lexer.tya` compile failure from function-body leakage.
 
 ## Remaining Work Estimate
 

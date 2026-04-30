@@ -536,3 +536,16 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 15:57:44 JST
+
+- Committed literal reassignment slice as `73e409e`.
+- Added stage2 parser/codegen support and pipeline coverage for `readFile
+  args()[0]`, including generated `read_file` and argv-capable `main`.
+- Stage-3 lexer probe now reaches the next blocker: function-body statements
+  are still flattened into top-level generated C.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

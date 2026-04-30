@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 15:35:47 JST
+Updated: 2026-04-30 15:57:44 JST
 
-Active phase: commit stage-2 literal reassignment slice.
+Active phase: commit stage-2 `readFile args()[0]` slice.
 
 Completed:
 
@@ -220,6 +220,12 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the literal reassignment slice.
 - `go test ./... -count=1` passes for the literal reassignment slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the literal reassignment slice.
+- Committed literal reassignment slice as `73e409e`.
+- Added stage-2 parser/codegen support for `readFile args()[0]` with generated `main(int argc, char **argv)`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the read-file arg slice.
+- `sh scripts/selfhost_check.sh` passes for the read-file arg slice.
+- `go test ./... -count=1` passes for the read-file arg slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the read-file arg slice.
 
 Remaining:
 

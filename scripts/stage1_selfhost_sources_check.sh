@@ -255,6 +255,24 @@ false
 b"
 echo "literal reassignment: stage-2 pipeline matched"
 
+printf 'source = readFile args()[0]\nprint source\n' > "$out_dir/read_file_arg.tya"
+printf 'Tya' > "$out_dir/read_file_arg.input"
+"$out_dir/lexer.stage2" "$out_dir/read_file_arg.tya" > "$out_dir/read_file_arg.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/read_file_arg.stage2.tokens" > "$out_dir/read_file_arg.stage2.nodes"
+cat > "$out_dir/read_file_arg.want.nodes" <<'NODES'
+1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+2:PRINT:IDENT:source
+NODES
+diff -u "$out_dir/read_file_arg.want.nodes" "$out_dir/read_file_arg.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/read_file_arg.stage2.nodes" > "$out_dir/read_file_arg.stage2.check"
+grep -qx "ok" "$out_dir/read_file_arg.stage2.check"
+compare_stage2_codegen "read file arg" "$out_dir/read_file_arg.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/read_file_arg.stage2.nodes" > "$out_dir/read_file_arg.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/read_file_arg.stage2" "$out_dir/read_file_arg.stage2.c" >/dev/null 2>&1
+read_file_arg_out="$("$out_dir/read_file_arg.stage2" "$out_dir/read_file_arg.input")"
+test "$read_file_arg_out" = "Tya"
+echo "read file arg: stage-2 pipeline matched"
+
 printf 'value = 20\nprint value\n' > "$out_dir/print_int.tya"
 "$out_dir/lexer.stage2" "$out_dir/print_int.tya" > "$out_dir/print_int.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/print_int.stage2.tokens" > "$out_dir/print_int.stage2.nodes"

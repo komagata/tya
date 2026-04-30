@@ -192,6 +192,7 @@ Implemented:
 - Self-hosted C codegen emits a one-element array path for simple `push` and `for x in xs`
 - Stage-2 self-host pipeline can run `examples/selfhost_ops.tya`
 - Stage-2 self-host codegen emits literal reassignment without duplicate C declarations
+- Stage-2 self-host codegen lowers `readFile args()[0]` with argv-capable generated C
 - Self-hosted parser/codegen carries simple `while false` blocks into generated C
 - Self-hosted codegen emits simple variable conditions for `if` / `while`
 - Self-hosted parser/checker/codegen carries simple `for x in xs` blocks
