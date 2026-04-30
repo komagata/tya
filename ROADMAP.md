@@ -185,6 +185,7 @@ Implemented:
 - Stage-3 generated codegen emits, compiles, and runs C for `examples/hello.tya`
 - Stage-3 generated tools compile all four selfhost sources into stage-4 binaries
 - Stage-4 generated tools tokenize, parse, check, emit, compile, and run `examples/hello.tya`
+- Stage-4 generated tools also execute a second single-line string print fixture
 - Self-hosted parser/checker/codegen carries simple negated call conditions
 - Self-hosted parser/checker/codegen carries simple call-based `while` conditions
 - Self-hosted parser/checker/codegen emits simple direct comparison `while` conditions

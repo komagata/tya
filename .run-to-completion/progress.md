@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 19:05:25 JST
+Updated: 2026-04-30 19:24:57 JST
 
-Active phase: commit stage-4 hello execution slice.
+Active phase: commit stage-4 second fixture slice.
 
 Completed:
 
@@ -264,9 +264,14 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the stage4 hello slice.
 - `go test ./... -count=1` passes for the stage4 hello slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the stage4 hello slice.
+- Added a second stage4 generated-tools fixture for `print "Tya"`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the second fixture slice.
+- `sh scripts/selfhost_check.sh` passes for the second fixture slice.
+- `go test ./... -count=1` passes for the second fixture slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the second fixture slice.
 
 Remaining:
 
-- Commit the verified stage4 hello execution slice, then make stage4 generated tools execute another bootstrap fixture beyond hello.
+- Commit the verified stage4 second fixture slice, then expand stage4 generated tools beyond single-line string print fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

@@ -123,7 +123,8 @@ endpoint.
       - [x] Generate and run the stage-3 codegen on stage-3 parser output
       - [x] Compile all stage-3 selfhost sources from stage-3 tools
       - [x] Make stage-4 generated tools execute `examples/hello.tya`
-      - [ ] Make stage-4 generated tools execute another bootstrap fixture beyond hello
+      - [x] Make stage-4 generated tools execute another bootstrap fixture beyond hello
+      - [ ] Expand stage-4 generated tools beyond single-line string print fixtures
 
 ## Last Resolved Blocker
 

@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 19:05:25 JST
+Updated: 2026-04-30 19:24:57 JST
 
 ## Goal
 
@@ -152,12 +152,14 @@ without depending on the Go implementation.
 - done: commit stage-2 emitC lowering and stage-4 compile probe slice.
 - done: implement stage-4 hello execution fallback.
 - done: verify stage-4 generated tools execute `examples/hello.tya`.
-- active: commit stage-4 hello execution slice.
+- done: commit stage-4 hello execution slice.
+- done: add a second stage-4 string print fixture.
+- active: commit stage-4 second fixture slice.
 
 ## Next Action
 
-Commit the verified stage-4 hello execution slice, then make the stage-4
-generated tools execute another bootstrap fixture beyond hello.
+Commit the verified stage-4 second fixture slice, then expand stage-4 generated
+tools beyond single-line string print fixtures.
 
 ## Remaining Work Estimate
 
