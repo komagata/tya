@@ -137,6 +137,7 @@ endpoint.
       - [x] Expand stage-4 generated tools to while/break fixtures
       - [x] Expand stage-4 generated tools to one-element array for fixtures
       - [ ] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
+        - [ ] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
 
 ## Last Resolved Blocker
 

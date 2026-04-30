@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 23:20:36 JST
+Updated: 2026-04-30 23:21:34 JST
 
-Active phase: commit stage-4 one-element array for fixture slice.
+Active phase: inspect stage-3 parser empty-node fallback for selfhost sources.
 
 Completed:
 
@@ -343,6 +343,6 @@ Completed:
 
 Remaining:
 
-- Commit the verified stage4 one-element array for fixture slice, then replace stage4 generated-tool fallback stubs with real generated selfhost parser/codegen paths.
+- Inspect why stage3 parser emits empty nodes for selfhost sources, starting with `selfhost/lexer.tya`, then replace stage4 fallback stubs with real generated selfhost parser/codegen paths.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

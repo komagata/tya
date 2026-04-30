@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 23:20:36 JST
+Updated: 2026-04-30 23:21:34 JST
 
 ## Goal
 
@@ -178,13 +178,14 @@ without depending on the Go implementation.
 - done: expand stage-4 generated tools to while/break fixtures.
 - done: commit stage-4 while/break fixture slice.
 - done: expand stage-4 generated tools to one-element array for fixtures.
-- active: commit stage-4 one-element array for fixture slice.
+- done: commit stage-4 one-element array for fixture slice.
+- active: inspect stage-3 parser empty-node fallback for selfhost sources.
 
 ## Next Action
 
-Commit the verified stage-4 one-element array for fixture slice, then replace
-stage-4 generated-tool fallback stubs with real generated selfhost
-parser/codegen paths.
+Inspect why stage-3 parser emits empty nodes for selfhost sources, starting
+with `selfhost/lexer.tya`, then replace fallback stubs with real generated
+selfhost parser/codegen paths.
 
 ## Remaining Work Estimate
 
