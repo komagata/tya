@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 10:21:30 JST
+Updated: 2026-04-30 10:29:11 JST
 
-Active phase: commit stage-2 string contains bootstrap slice.
+Active phase: commit stage-2 string prefix/suffix bootstrap slice.
 
 Completed:
 
@@ -97,9 +97,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the contains bootstrap slice.
 - `go test ./... -count=1` passes for the contains bootstrap slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the contains bootstrap slice.
+- Committed string contains bootstrap slice as `c9dc175`.
+- Added a stage-2 pipeline fixture for `startsWith` and `endsWith`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the prefix/suffix slice.
+- `sh scripts/selfhost_check.sh` passes for the prefix/suffix bootstrap slice.
+- `go test ./... -count=1` passes for the prefix/suffix bootstrap slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the prefix/suffix bootstrap slice.
 
 Remaining:
 
-- Commit the verified stage-2 string contains bootstrap slice.
+- Commit the verified stage-2 string prefix/suffix bootstrap slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

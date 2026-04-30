@@ -58,6 +58,22 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 10:23:21 JST
+
+- Committed string contains bootstrap slice as `c9dc175`.
+- Added a stage-2 pipeline fixture for `print startsWith text, "he"` and
+  `print endsWith text, "lo"`.
+- Extended the generated-C codegen helper to emit target `starts_with_text` and
+  `ends_with_text` helpers.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 10:29:11 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 10:15:25 JST
 
 - Committed string trim bootstrap slice as `a6958b6`.

@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 10:21:30 JST
+Updated: 2026-04-30 10:29:11 JST
 
 ## Goal
 
@@ -70,12 +70,15 @@ without depending on the Go implementation.
 - done: commit stage-2 string trim bootstrap slice.
 - done: implement stage-2 string contains bootstrap slice.
 - done: verify stage-2 string contains bootstrap slice.
-- active: commit stage-2 string contains bootstrap slice.
+- done: commit stage-2 string contains bootstrap slice.
+- done: implement stage-2 string prefix/suffix bootstrap slice.
+- done: verify stage-2 string prefix/suffix bootstrap slice.
+- active: commit stage-2 string prefix/suffix bootstrap slice.
 
 ## Next Action
 
-Commit the verified stage-2 string contains bootstrap slice, then pick the next
-smallest bootstrap expansion toward `examples/string.tya`.
+Commit the verified stage-2 string prefix/suffix bootstrap slice, then pick the
+next smallest bootstrap expansion toward `examples/string.tya`.
 
 ## Remaining Work Estimate
 

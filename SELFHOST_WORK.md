@@ -92,6 +92,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for printing string length
     - [x] Run a stage-2 pipeline for trimming and printing a string
     - [x] Run a stage-2 pipeline for printing string containment
+    - [x] Run a stage-2 pipeline for printing string prefix and suffix checks
 
 ## Last Resolved Blocker
 
