@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 13:14:38 JST
+Updated: 2026-04-30 13:27:12 JST
 
-Active phase: commit stage-2 integer addition reassignment slice.
+Active phase: commit stage-2 `while false`/`break` slice.
 
 Completed:
 
@@ -158,9 +158,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the reassignment slice.
 - `go test ./... -count=1` passes for the reassignment slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the reassignment slice.
+- Committed integer addition reassignment slice as `22582e6`.
+- Added a stage-2 pipeline fixture for `while false` with `break`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the while false slice.
+- `sh scripts/selfhost_check.sh` passes for the while false slice.
+- `go test ./... -count=1` passes for the while false slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the while false slice.
 
 Remaining:
 
-- Commit the verified stage-2 integer addition reassignment slice.
+- Commit the verified stage-2 `while false`/`break` slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

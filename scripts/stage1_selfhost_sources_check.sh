@@ -592,6 +592,24 @@ bool_out="$("$out_dir/bool.stage2")"
 test "$bool_out" = "true"
 echo "bool assignment: stage-2 pipeline matched"
 
+printf 'while false\n  break\nprint "done"\n' > "$out_dir/while_false.tya"
+"$out_dir/lexer.stage2" "$out_dir/while_false.tya" > "$out_dir/while_false.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/while_false.stage2.tokens" > "$out_dir/while_false.stage2.nodes"
+cat > "$out_dir/while_false.want.nodes" <<'NODES'
+1:WHILE:BOOL:false
+2:BREAK
+3:PRINT:STRING:done
+NODES
+diff -u "$out_dir/while_false.want.nodes" "$out_dir/while_false.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/while_false.stage2.nodes" > "$out_dir/while_false.stage2.check"
+grep -qx "ok" "$out_dir/while_false.stage2.check"
+compare_stage2_codegen "while false break" "$out_dir/while_false.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/while_false.stage2.nodes" > "$out_dir/while_false.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/while_false.stage2" "$out_dir/while_false.stage2.c" >/dev/null 2>&1
+while_false_out="$("$out_dir/while_false.stage2")"
+test "$while_false_out" = "done"
+echo "while false break: stage-2 pipeline matched"
+
 printf 'left = 2\nright = 2\nsame = left == right\nprint same\n' > "$out_dir/compare_eq.tya"
 "$out_dir/lexer.stage2" "$out_dir/compare_eq.tya" > "$out_dir/compare_eq.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/compare_eq.stage2.tokens" > "$out_dir/compare_eq.stage2.nodes"

@@ -103,6 +103,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for `examples/string.tya`
     - [x] Run a stage-2 pipeline for less-than comparison
     - [x] Run a stage-2 pipeline for integer addition reassignment
+    - [x] Run a stage-2 pipeline for `while false` with `break`
 
 ## Last Resolved Blocker
 

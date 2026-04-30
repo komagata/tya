@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 13:14:38 JST
+Updated: 2026-04-30 13:27:12 JST
 
 ## Goal
 
@@ -101,12 +101,15 @@ without depending on the Go implementation.
 - done: commit stage-2 less-than comparison slice.
 - done: implement stage-2 integer addition reassignment slice.
 - done: verify stage-2 integer addition reassignment slice.
-- active: commit stage-2 integer addition reassignment slice.
+- done: commit stage-2 integer addition reassignment slice.
+- done: implement stage-2 `while false`/`break` slice.
+- done: verify stage-2 `while false`/`break` slice.
+- active: commit stage-2 `while false`/`break` slice.
 
 ## Next Action
 
-Commit the verified stage-2 integer addition reassignment slice, then pick the
-next smallest stage2 bootstrap expansion toward `examples/while.tya`.
+Commit the verified stage-2 `while false`/`break` slice, then continue toward
+`examples/while.tya`.
 
 ## Remaining Work Estimate
 
