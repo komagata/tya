@@ -318,6 +318,28 @@ parse_tokens_out="$("$out_dir/parse_tokens.stage2" "$out_dir/parse_tokens.input"
 test "$parse_tokens_out" = "1:PRINT:STRING:Tya"
 echo "parse tokens: stage-2 pipeline matched"
 
+printf 'source = readFile args()[0]\nlines = split source, "\n"\nerrors = check nodes\nfor err in errors\n  print err\n' > "$out_dir/check_nodes.tya"
+printf '1:PRINT:STRING:Tya\n' > "$out_dir/check_nodes.input"
+"$out_dir/lexer.stage2" "$out_dir/check_nodes.tya" > "$out_dir/check_nodes.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/check_nodes.stage2.tokens" > "$out_dir/check_nodes.stage2.nodes"
+cat > "$out_dir/check_nodes.want.nodes" <<'NODES'
+1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+2:ASSIGN:lines:CALL2:split:source:STRING:
+3:ASSIGN:errors:CALL1:check:nodes
+4:FOR:err:errors
+5:INDENT:2
+5:PRINT:IDENT:err
+NODES
+diff -u "$out_dir/check_nodes.want.nodes" "$out_dir/check_nodes.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/check_nodes.stage2.nodes" > "$out_dir/check_nodes.stage2.check"
+grep -qx "ok" "$out_dir/check_nodes.stage2.check"
+compare_stage2_codegen "check nodes" "$out_dir/check_nodes.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/check_nodes.stage2.nodes" > "$out_dir/check_nodes.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/check_nodes.stage2" "$out_dir/check_nodes.stage2.c" >/dev/null 2>&1
+check_nodes_out="$("$out_dir/check_nodes.stage2" "$out_dir/check_nodes.input")"
+test "$check_nodes_out" = ""
+echo "check nodes: stage-2 pipeline matched"
+
 printf 'helper = value ->\n  temp = "skip"\n  print temp\nsource = readFile args()[0]\nprint source\n' > "$out_dir/function_body_skip.tya"
 "$out_dir/lexer.stage2" "$out_dir/function_body_skip.tya" > "$out_dir/function_body_skip.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/function_body_skip.stage2.tokens" > "$out_dir/function_body_skip.stage2.nodes"

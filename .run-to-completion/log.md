@@ -576,3 +576,15 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 17:36:57 JST
+
+- Committed lex/parse lowering slice as `1a8309b`.
+- Added stage2 codegen lowering and pipeline coverage for `check nodes`.
+- Stage-3 checker probe now compiles and accepts stage-3 parser output for
+  `examples/hello.tya`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 17:14:53 JST
+Updated: 2026-04-30 17:36:57 JST
 
 ## Goal
 
@@ -142,12 +142,15 @@ without depending on the Go implementation.
 - done: commit stage-2 function-body skip slice.
 - done: implement stage-2 `lex source` and `parse tokens` lowering slice.
 - done: verify stage-3 lexer and parser probes on `examples/hello.tya`.
-- active: commit stage-2 lex/parse lowering slice.
+- done: commit stage-2 lex/parse lowering slice.
+- done: implement stage-2 `check nodes` lowering slice.
+- done: verify stage-3 checker probe on stage-3 parser output for `examples/hello.tya`.
+- active: commit stage-2 check lowering slice.
 
 ## Next Action
 
-Commit the verified stage-2 lex/parse lowering slice, then generate and run
-the stage-3 checker on stage-3 parser output.
+Commit the verified stage-2 check lowering slice, then generate and run the
+stage-3 codegen on stage-3 parser output.
 
 ## Remaining Work Estimate
 

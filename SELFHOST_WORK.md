@@ -119,7 +119,8 @@ endpoint.
     - [ ] Advance stage-3 self-host compiler probe
       - [x] Generate, compile, and run a stage-3 lexer on `examples/hello.tya`
       - [x] Generate, compile, and run a stage-3 parser on stage-3 lexer output
-      - [ ] Generate and run the stage-3 checker on stage-3 parser output
+      - [x] Generate and run the stage-3 checker on stage-3 parser output
+      - [ ] Generate and run the stage-3 codegen on stage-3 parser output
 
 ## Last Resolved Blocker
 

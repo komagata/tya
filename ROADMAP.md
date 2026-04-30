@@ -181,6 +181,7 @@ Implemented:
 - Stage-2 generated codegen can lower `readFile args()[0]`, `lex source`, and `parse tokens`
 - Stage-3 generated lexer tokenizes `examples/hello.tya`
 - Stage-3 generated parser parses stage-3 lexer output for `examples/hello.tya`
+- Stage-3 generated checker accepts stage-3 parser output for `examples/hello.tya`
 - Self-hosted parser/checker/codegen carries simple negated call conditions
 - Self-hosted parser/checker/codegen carries simple call-based `while` conditions
 - Self-hosted parser/checker/codegen emits simple direct comparison `while` conditions
