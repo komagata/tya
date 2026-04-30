@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 02:23:17 JST
+Updated: 2026-05-01 02:42:45 JST
 
-Active phase: make stage-3 codegen emit executable codegen C from real codegen-driver nodes.
+Active phase: replace stage-4 generated-tool mode fallback with source-specific generated tools.
 
 Completed:
 
@@ -14,6 +14,7 @@ Completed:
 - Stage-3 parser now emits checked non-empty nodes for `selfhost/codegen_c.tya`.
 - Stage-3 codegen now has a checked executable parser C path from real parser-driver nodes.
 - Stage-3 codegen now has a checked executable checker C path from real checker-driver nodes.
+- Stage-3 codegen now has a checked executable codegen C path from real codegen-driver nodes.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Committed parent queue cleanup as `d4ff7f3`.
