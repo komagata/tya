@@ -129,7 +129,8 @@ endpoint.
       - [x] Expand stage-4 generated tools to escaped string print fixtures
       - [x] Preserve colon characters in stage-4 printed string nodes
       - [x] Expand stage-4 generated tools to two-line print fixtures
-      - [ ] Expand stage-4 generated tools to assignment plus print fixtures
+      - [x] Expand stage-4 generated tools to assignment plus print fixtures
+      - [ ] Expand stage-4 generated tools to integer assignment plus print fixtures
 
 ## Last Resolved Blocker
 

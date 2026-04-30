@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 21:11:56 JST
+Updated: 2026-04-30 21:34:48 JST
 
-Active phase: commit stage-4 two-line print fixture slice.
+Active phase: commit stage-4 assignment print fixture slice.
 
 Completed:
 
@@ -299,9 +299,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the two-line print slice.
 - `go test ./... -count=1` passes for the two-line print slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the two-line print slice.
+- Added stage4 fallback support for string assignment tokens, `ASSIGN` nodes, and `PRINT:IDENT` codegen.
+- Added a stage4 generated-tools fixture for `message = "Hi"` followed by `print message`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the assignment print slice.
+- `sh scripts/selfhost_check.sh` passes for the assignment print slice.
+- `go test ./... -count=1` passes for the assignment print slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the assignment print slice.
 
 Remaining:
 
-- Commit the verified stage4 two-line print fixture slice, then expand stage4 generated tools to assignment plus print fixtures.
+- Commit the verified stage4 assignment print fixture slice, then expand stage4 generated tools to integer assignment plus print fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

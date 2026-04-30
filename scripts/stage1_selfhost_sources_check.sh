@@ -1167,3 +1167,29 @@ stage4_two_prints_out="$("$stage4_dir/two_prints")"
 test "$stage4_two_prints_out" = "A
 B"
 echo "stage4 two prints: self-host pipeline matched"
+
+printf 'message = "Hi"\nprint message\n' > "$stage4_dir/assign_print.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/assign_print.tya" > "$stage4_dir/assign_print.tokens"
+cat > "$stage4_dir/assign_print.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:message:1
+1:SYMBOL:=:9
+1:STRING:Hi:11
+2:INDENT:0:1
+2:IDENT:print:1
+2:IDENT:message:7
+TOKENS
+diff -u "$stage4_dir/assign_print.want.tokens" "$stage4_dir/assign_print.tokens" >/dev/null
+"$stage4_dir/parser.stage4" "$stage4_dir/assign_print.tokens" > "$stage4_dir/assign_print.nodes"
+cat > "$stage4_dir/assign_print.want.nodes" <<'NODES'
+1:ASSIGN:message:STRING:Hi
+2:PRINT:IDENT:message
+NODES
+diff -u "$stage4_dir/assign_print.want.nodes" "$stage4_dir/assign_print.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/assign_print.nodes" > "$stage4_dir/assign_print.check"
+grep -qx "ok" "$stage4_dir/assign_print.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/assign_print.nodes" > "$stage4_dir/assign_print.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/assign_print" "$stage4_dir/assign_print.c" >/dev/null 2>&1
+stage4_assign_print_out="$("$stage4_dir/assign_print")"
+test "$stage4_assign_print_out" = "Hi"
+echo "stage4 assign print: self-host pipeline matched"

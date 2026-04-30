@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 21:11:56 JST
+Updated: 2026-04-30 21:34:48 JST
 
 ## Goal
 
@@ -164,12 +164,14 @@ without depending on the Go implementation.
 - done: preserve colon characters in stage-4 printed string nodes.
 - done: commit stage-4 colon string fixture slice.
 - done: expand stage-4 generated tools to two-line print fixtures.
-- active: commit stage-4 two-line print fixture slice.
+- done: commit stage-4 two-line print fixture slice.
+- done: expand stage-4 generated tools to assignment plus print fixtures.
+- active: commit stage-4 assignment print fixture slice.
 
 ## Next Action
 
-Commit the verified stage-4 two-line print fixture slice, then expand stage-4
-generated tools to assignment plus print fixtures.
+Commit the verified stage-4 assignment print fixture slice, then expand
+stage-4 generated tools to integer assignment plus print fixtures.
 
 ## Remaining Work Estimate
 
