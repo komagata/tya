@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 10:38:20 JST
+Updated: 2026-04-30 10:46:50 JST
 
 ## Goal
 
@@ -76,12 +76,15 @@ without depending on the Go implementation.
 - done: commit stage-2 string prefix/suffix bootstrap slice.
 - done: implement stage-2 string replace bootstrap slice.
 - done: verify stage-2 string replace bootstrap slice.
-- active: commit stage-2 string replace bootstrap slice.
+- done: commit stage-2 string replace bootstrap slice.
+- done: implement stage-2 escaped quote print bootstrap slice.
+- done: verify stage-2 escaped quote print bootstrap slice.
+- active: commit stage-2 escaped quote print bootstrap slice.
 
 ## Next Action
 
-Commit the verified stage-2 string replace bootstrap slice, then pick the next
-smallest bootstrap expansion toward `examples/string.tya`.
+Commit the verified stage-2 escaped quote print bootstrap slice, then pick the
+next smallest bootstrap expansion toward `examples/string.tya`.
 
 ## Remaining Work Estimate
 

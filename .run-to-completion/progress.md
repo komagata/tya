@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 10:38:20 JST
+Updated: 2026-04-30 10:46:50 JST
 
-Active phase: commit stage-2 string replace bootstrap slice.
+Active phase: commit stage-2 escaped quote print bootstrap slice.
 
 Completed:
 
@@ -109,9 +109,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the replace bootstrap slice.
 - `go test ./... -count=1` passes for the replace bootstrap slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the replace bootstrap slice.
+- Committed string replace bootstrap slice as `9b7cf10`.
+- Added a stage-2 pipeline fixture for printing an escaped quote string without colon field escaping.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the escaped quote slice.
+- `sh scripts/selfhost_check.sh` passes for the escaped quote bootstrap slice.
+- `go test ./... -count=1` passes for the escaped quote bootstrap slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the escaped quote bootstrap slice.
 
 Remaining:
 
-- Commit the verified stage-2 string replace bootstrap slice.
+- Commit the verified stage-2 escaped quote print bootstrap slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

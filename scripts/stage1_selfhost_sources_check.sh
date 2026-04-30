@@ -70,6 +70,31 @@ hello_out="$("$out_dir/hello.stage2")"
 test "$hello_out" = "Hello, Tya"
 echo "examples/hello.tya: stage-2 codegen matched"
 
+printf 'print "quote \\"tya\\""\n' > "$out_dir/escaped_print.tya"
+"$out_dir/lexer.stage2" "$out_dir/escaped_print.tya" > "$out_dir/escaped_print.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/escaped_print.stage2.tokens" > "$out_dir/escaped_print.stage2.nodes"
+cat > "$out_dir/escaped_print.want.nodes" <<'NODES'
+1:PRINT:STRING:quote "tya"
+NODES
+diff -u "$out_dir/escaped_print.want.nodes" "$out_dir/escaped_print.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/escaped_print.stage2.nodes" > "$out_dir/escaped_print.stage2.check"
+grep -qx "ok" "$out_dir/escaped_print.stage2.check"
+compare_stage2_codegen "escaped string print" "$out_dir/escaped_print.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/escaped_print.stage2.nodes" > "$out_dir/escaped_print.stage2.c"
+cat > "$out_dir/escaped_print.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  puts("quote \"tya\"");
+  return 0;
+}
+C
+diff -u "$out_dir/escaped_print.want.c" "$out_dir/escaped_print.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/escaped_print.stage2" "$out_dir/escaped_print.stage2.c" >/dev/null 2>&1
+escaped_print_out="$("$out_dir/escaped_print.stage2")"
+test "$escaped_print_out" = 'quote "tya"'
+echo "escaped string print: stage-2 pipeline matched"
+
 printf 'value = 20\n' > "$out_dir/int.tya"
 "$out_dir/lexer.stage2" "$out_dir/int.tya" > "$out_dir/int.stage2.tokens"
 cat > "$out_dir/int.want.tokens" <<'TOKENS'

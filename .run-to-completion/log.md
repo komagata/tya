@@ -58,6 +58,22 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 10:40:29 JST
+
+- Committed string replace bootstrap slice as `9b7cf10`.
+- Added a stage-2 pipeline fixture for `print "quote \"tya\""`.
+- Tried the exact `quote: \"tya\"` shape first; it exposed the existing colon
+  delimiter limitation in node fields, so this slice now isolates escaped quote
+  handling and leaves colon field escaping for a future slice.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 10:46:50 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 10:31:59 JST
 
 - Committed string prefix/suffix bootstrap slice as `69a2956`.
