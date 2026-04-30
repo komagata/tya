@@ -58,6 +58,22 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 10:31:59 JST
+
+- Committed string prefix/suffix bootstrap slice as `69a2956`.
+- Added a stage-2 pipeline fixture for `print replace text, "ell", replacement`.
+- Extended the generated-C parser helper to emit `PRINT_CALL3:replace` and the
+  generated-C codegen helper to emit target `dup_text` and `replace_text`
+  helpers.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 10:38:20 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 10:23:21 JST
 
 - Committed string contains bootstrap slice as `c9dc175`.

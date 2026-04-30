@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 10:29:11 JST
+Updated: 2026-04-30 10:38:20 JST
 
-Active phase: commit stage-2 string prefix/suffix bootstrap slice.
+Active phase: commit stage-2 string replace bootstrap slice.
 
 Completed:
 
@@ -103,9 +103,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the prefix/suffix bootstrap slice.
 - `go test ./... -count=1` passes for the prefix/suffix bootstrap slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the prefix/suffix bootstrap slice.
+- Committed string prefix/suffix bootstrap slice as `69a2956`.
+- Added a stage-2 pipeline fixture for `print replace text, "ell", replacement`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the replace slice.
+- `sh scripts/selfhost_check.sh` passes for the replace bootstrap slice.
+- `go test ./... -count=1` passes for the replace bootstrap slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the replace bootstrap slice.
 
 Remaining:
 
-- Commit the verified stage-2 string prefix/suffix bootstrap slice.
+- Commit the verified stage-2 string replace bootstrap slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

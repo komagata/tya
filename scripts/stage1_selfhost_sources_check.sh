@@ -370,6 +370,58 @@ test "$string_prefix_suffix_out" = "true
 true"
 echo "string prefix suffix print: stage-2 pipeline matched"
 
+printf 'text = "hello"\nreplacement = "EL"\nprint replace text, "ell", replacement\n' > "$out_dir/string_replace.tya"
+"$out_dir/lexer.stage2" "$out_dir/string_replace.tya" > "$out_dir/string_replace.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/string_replace.stage2.tokens" > "$out_dir/string_replace.stage2.nodes"
+cat > "$out_dir/string_replace.want.nodes" <<'NODES'
+1:ASSIGN:text:STRING:hello
+2:ASSIGN:replacement:STRING:EL
+3:PRINT_CALL3:replace:text:STRING:ell:replacement
+NODES
+diff -u "$out_dir/string_replace.want.nodes" "$out_dir/string_replace.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/string_replace.stage2.nodes" > "$out_dir/string_replace.stage2.check"
+grep -qx "ok" "$out_dir/string_replace.stage2.check"
+compare_stage2_codegen "string replace print" "$out_dir/string_replace.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/string_replace.stage2.nodes" > "$out_dir/string_replace.stage2.c"
+cat > "$out_dir/string_replace.want.c" <<'C'
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+static char *dup_text(const char *text) {
+  size_t len = strlen(text);
+  char *out = malloc(len + 1);
+  memcpy(out, text, len + 1);
+  return out;
+}
+
+static char *replace_text(const char *text, const char *old_text, const char *new_text) {
+  const char *hit = strstr(text, old_text);
+  if (!hit) return dup_text(text);
+  size_t prefix = (size_t)(hit - text);
+  size_t old_len = strlen(old_text);
+  size_t new_len = strlen(new_text);
+  size_t suffix_len = strlen(hit + old_len);
+  char *out = malloc(prefix + new_len + suffix_len + 1);
+  memcpy(out, text, prefix);
+  memcpy(out + prefix, new_text, new_len);
+  memcpy(out + prefix + new_len, hit + old_len, suffix_len + 1);
+  return out;
+}
+
+int main(void) {
+  const char *text = "hello";
+  const char *replacement = "EL";
+  puts(replace_text(text, "ell", replacement));
+  return 0;
+}
+C
+diff -u "$out_dir/string_replace.want.c" "$out_dir/string_replace.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/string_replace.stage2" "$out_dir/string_replace.stage2.c" >/dev/null 2>&1
+string_replace_out="$("$out_dir/string_replace.stage2")"
+test "$string_replace_out" = "hELo"
+echo "string replace print: stage-2 pipeline matched"
+
 printf 'left = 2\nright = 3\nsum = left + right\nprint sum\n' > "$out_dir/int_add.tya"
 "$out_dir/lexer.stage2" "$out_dir/int_add.tya" > "$out_dir/int_add.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/int_add.stage2.tokens" > "$out_dir/int_add.stage2.nodes"
