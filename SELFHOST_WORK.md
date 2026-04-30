@@ -127,7 +127,8 @@ endpoint.
       - [x] Expand stage-4 generated tools beyond single-line string print fixtures
       - [x] Preserve proper stage-4 token/node kinds for integer print fixtures
       - [x] Expand stage-4 generated tools to escaped string print fixtures
-      - [ ] Preserve colon characters in stage-4 printed string nodes
+      - [x] Preserve colon characters in stage-4 printed string nodes
+      - [ ] Expand stage-4 generated tools to two-line print fixtures
 
 ## Last Resolved Blocker
 

@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 20:35:51 JST
+Updated: 2026-04-30 20:52:50 JST
 
-Active phase: commit stage-4 escaped string fixture slice.
+Active phase: commit stage-4 colon string fixture slice.
 
 Completed:
 
@@ -287,9 +287,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the escaped string slice.
 - `go test ./... -count=1` passes for the escaped string slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the escaped string slice.
+- Updated the stage4 generated codegen fallback to read `PRINT:STRING` values by prefix length rather than the last colon.
+- Added a stage4 generated-tools fixture for `print "quote: \"tya\""`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the colon string slice.
+- `sh scripts/selfhost_check.sh` passes for the colon string slice.
+- `go test ./... -count=1` passes for the colon string slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the colon string slice.
 
 Remaining:
 
-- Commit the verified stage4 escaped string fixture slice, then preserve colon characters in stage4 printed string nodes.
+- Commit the verified stage4 colon string fixture slice, then expand stage4 generated tools to two-line print fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

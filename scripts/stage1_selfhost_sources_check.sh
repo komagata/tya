@@ -1120,3 +1120,24 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/escaped_print" "$stage4_dir/
 stage4_escaped_print_out="$("$stage4_dir/escaped_print")"
 test "$stage4_escaped_print_out" = 'say "tya"'
 echo "stage4 escaped string: self-host pipeline matched"
+
+printf 'print "quote: \\"tya\\""\n' > "$stage4_dir/colon_print.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/colon_print.tya" > "$stage4_dir/colon_print.tokens"
+cat > "$stage4_dir/colon_print.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:print:1
+1:STRING:quote: \"tya\":7
+TOKENS
+diff -u "$stage4_dir/colon_print.want.tokens" "$stage4_dir/colon_print.tokens" >/dev/null
+"$stage4_dir/parser.stage4" "$stage4_dir/colon_print.tokens" > "$stage4_dir/colon_print.nodes"
+cat > "$stage4_dir/colon_print.want.nodes" <<'NODES'
+1:PRINT:STRING:quote: \"tya\"
+NODES
+diff -u "$stage4_dir/colon_print.want.nodes" "$stage4_dir/colon_print.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/colon_print.nodes" > "$stage4_dir/colon_print.check"
+grep -qx "ok" "$stage4_dir/colon_print.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/colon_print.nodes" > "$stage4_dir/colon_print.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/colon_print" "$stage4_dir/colon_print.c" >/dev/null 2>&1
+stage4_colon_print_out="$("$stage4_dir/colon_print")"
+test "$stage4_colon_print_out" = 'quote: "tya"'
+echo "stage4 colon string: self-host pipeline matched"
