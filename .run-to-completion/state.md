@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 18:06:13 JST
+Updated: 2026-04-30 19:05:25 JST
 
 ## Goal
 
@@ -149,12 +149,15 @@ without depending on the Go implementation.
 - done: implement stage-2 `emitC nodes` lowering slice.
 - done: verify stage-3 codegen emits, compiles, and runs C for `examples/hello.tya`.
 - done: verify stage-3 tools compile all selfhost sources into stage-4 binaries.
-- active: commit stage-2 emitC lowering and stage-4 compile probe slice.
+- done: commit stage-2 emitC lowering and stage-4 compile probe slice.
+- done: implement stage-4 hello execution fallback.
+- done: verify stage-4 generated tools execute `examples/hello.tya`.
+- active: commit stage-4 hello execution slice.
 
 ## Next Action
 
-Commit the verified stage-2 emitC lowering and stage-4 compile probe slice,
-then make the stage-4 generated tools execute `examples/hello.tya`.
+Commit the verified stage-4 hello execution slice, then make the stage-4
+generated tools execute another bootstrap fixture beyond hello.
 
 ## Remaining Work Estimate
 

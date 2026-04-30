@@ -1035,3 +1035,35 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/grouped_compare.stage2" "$out_d
 grouped_compare_out="$("$out_dir/grouped_compare.stage2")"
 test "$grouped_compare_out" = "true"
 echo "grouped comparison: stage-2 pipeline matched"
+
+stage4_dir="$out_dir/stage4-hello"
+mkdir -p "$stage4_dir"
+for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
+  base="$(basename "$src" .tya)"
+  "$out_dir/lexer.stage2" "$src" > "$stage4_dir/$base.stage3.tokens"
+  "$out_dir/parser.stage2" "$stage4_dir/$base.stage3.tokens" > "$stage4_dir/$base.stage3.nodes"
+  "$out_dir/checker.stage2" "$stage4_dir/$base.stage3.nodes" > "$stage4_dir/$base.stage3.check"
+  grep -qx "ok" "$stage4_dir/$base.stage3.check"
+  "$out_dir/codegen_c.stage2" "$stage4_dir/$base.stage3.nodes" > "$stage4_dir/$base.stage3.c"
+  cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/$base.stage3" "$stage4_dir/$base.stage3.c" >/dev/null 2>&1
+done
+
+for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
+  base="$(basename "$src" .tya)"
+  "$stage4_dir/lexer.stage3" "$src" > "$stage4_dir/$base.stage4.tokens"
+  "$stage4_dir/parser.stage3" "$stage4_dir/$base.stage4.tokens" > "$stage4_dir/$base.stage4.nodes"
+  "$stage4_dir/checker.stage3" "$stage4_dir/$base.stage4.nodes" > "$stage4_dir/$base.stage4.check"
+  grep -qx "ok" "$stage4_dir/$base.stage4.check"
+  "$stage4_dir/codegen_c.stage3" "$stage4_dir/$base.stage4.nodes" > "$stage4_dir/$base.stage4.c"
+  cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/$base.stage4" "$stage4_dir/$base.stage4.c" >/dev/null 2>&1
+done
+
+"$stage4_dir/lexer.stage4" examples/hello.tya > "$stage4_dir/hello.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/hello.tokens" > "$stage4_dir/hello.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/hello.nodes" > "$stage4_dir/hello.check"
+grep -qx "ok" "$stage4_dir/hello.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/hello.nodes" > "$stage4_dir/hello.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/hello" "$stage4_dir/hello.c" >/dev/null 2>&1
+stage4_hello_out="$("$stage4_dir/hello")"
+test "$stage4_hello_out" = "Hello, Tya"
+echo "stage4 hello: self-host pipeline matched"

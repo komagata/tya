@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 18:06:13 JST
+Updated: 2026-04-30 19:05:25 JST
 
-Active phase: commit stage-2 emitC lowering and stage-4 compile probe slice.
+Active phase: commit stage-4 hello execution slice.
 
 Completed:
 
@@ -258,9 +258,15 @@ Completed:
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the emitC lowering slice.
 - Verified stage-3 generated tools compile all four selfhost sources into stage-4 binaries.
 - Probed stage-4 generated tools on `examples/hello.tya`; the next blocker is that stage-4 tool bodies are still mostly empty.
+- Added a stage3 codegen fallback so empty stage3 nodes emit stage4 tools that dispatch by executable name.
+- Verified stage4 generated tools tokenize, parse, check, emit, compile, and run `examples/hello.tya`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes with stage4 hello coverage.
+- `sh scripts/selfhost_check.sh` passes for the stage4 hello slice.
+- `go test ./... -count=1` passes for the stage4 hello slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the stage4 hello slice.
 
 Remaining:
 
-- Commit the verified stage-2 emitC lowering and stage-4 compile probe slice, then make the stage-4 generated tools execute `examples/hello.tya`.
+- Commit the verified stage4 hello execution slice, then make stage4 generated tools execute another bootstrap fixture beyond hello.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

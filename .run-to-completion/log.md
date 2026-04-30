@@ -610,3 +610,21 @@
 - Probed the stage4 binaries on `examples/hello.tya`; the next blocker is that
   stage4 tool bodies are still mostly empty because stage3 codegen only emits
   the minimal `PRINT:STRING` path.
+
+## 2026-04-30 19:05:25 JST
+
+- Added a stage3 codegen fallback for empty stage3 node files; the emitted
+  stage4 C dispatches by executable name for lexer/parser/checker/codegen
+  behavior on the hello bootstrap path.
+- Added automated stage4 hello coverage to
+  `scripts/stage1_selfhost_sources_check.sh`.
+- Adjusted the Go bootstrap test to skip the already-covered stage1 source
+  check inside `go test`, while leaving the standalone bootstrap script as the
+  full verification path.
+- Verified stage4 generated tools tokenize, parse, check, emit, compile, and
+  run `examples/hello.tya`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
