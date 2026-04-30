@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 16:16:06 JST
+Updated: 2026-04-30 17:14:53 JST
 
 ## Goal
 
@@ -139,12 +139,15 @@ without depending on the Go implementation.
 - done: commit stage-2 `readFile args()[0]` slice.
 - done: implement stage-2 function-body skip slice.
 - done: verify stage-2 function-body skip slice.
-- active: commit stage-2 function-body skip slice.
+- done: commit stage-2 function-body skip slice.
+- done: implement stage-2 `lex source` and `parse tokens` lowering slice.
+- done: verify stage-3 lexer and parser probes on `examples/hello.tya`.
+- active: commit stage-2 lex/parse lowering slice.
 
 ## Next Action
 
-Commit the verified stage-2 function-body skip slice, then add stage-2
-codegen lowering for `tokens = lex source` in the stage-3 lexer probe.
+Commit the verified stage-2 lex/parse lowering slice, then generate and run
+the stage-3 checker on stage-3 parser output.
 
 ## Remaining Work Estimate
 

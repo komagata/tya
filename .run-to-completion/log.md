@@ -562,3 +562,17 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 17:14:53 JST
+
+- Committed function-body skip slice as `5595ba2`.
+- Added stage2 codegen lowering and pipeline coverage for `lex source`.
+- Added stage2 codegen lowering and pipeline coverage for `parse tokens`.
+- Stage-3 lexer probe now compiles and tokenizes `examples/hello.tya`.
+- Stage-3 parser probe now compiles and parses the stage-3 lexer output for
+  `examples/hello.tya`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

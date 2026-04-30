@@ -273,6 +273,51 @@ read_file_arg_out="$("$out_dir/read_file_arg.stage2" "$out_dir/read_file_arg.inp
 test "$read_file_arg_out" = "Tya"
 echo "read file arg: stage-2 pipeline matched"
 
+printf 'source = readFile args()[0]\ntokens = lex source\nfor token in tokens\n  print token\n' > "$out_dir/lex_source.tya"
+printf 'print "Tya"\n' > "$out_dir/lex_source.input"
+"$out_dir/lexer.stage2" "$out_dir/lex_source.tya" > "$out_dir/lex_source.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/lex_source.stage2.tokens" > "$out_dir/lex_source.stage2.nodes"
+cat > "$out_dir/lex_source.want.nodes" <<'NODES'
+1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+2:ASSIGN:tokens:CALL1:lex:source
+3:FOR:token:tokens
+4:INDENT:2
+4:PRINT:IDENT:token
+NODES
+diff -u "$out_dir/lex_source.want.nodes" "$out_dir/lex_source.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/lex_source.stage2.nodes" > "$out_dir/lex_source.stage2.check"
+grep -qx "ok" "$out_dir/lex_source.stage2.check"
+compare_stage2_codegen "lex source" "$out_dir/lex_source.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/lex_source.stage2.nodes" > "$out_dir/lex_source.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/lex_source.stage2" "$out_dir/lex_source.stage2.c" >/dev/null 2>&1
+lex_source_out="$("$out_dir/lex_source.stage2" "$out_dir/lex_source.input")"
+test "$lex_source_out" = "1:INDENT:0:1
+1:IDENT:print:1
+1:STRING:Tya:7"
+echo "lex source: stage-2 pipeline matched"
+
+printf 'source = readFile args()[0]\ntokens = lex source\nnodes = parse tokens\nfor node in nodes\n  print node\n' > "$out_dir/parse_tokens.tya"
+printf 'print "Tya"\n' > "$out_dir/parse_tokens.input"
+"$out_dir/lexer.stage2" "$out_dir/parse_tokens.tya" > "$out_dir/parse_tokens.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/parse_tokens.stage2.tokens" > "$out_dir/parse_tokens.stage2.nodes"
+cat > "$out_dir/parse_tokens.want.nodes" <<'NODES'
+1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+2:ASSIGN:tokens:CALL1:lex:source
+3:ASSIGN:nodes:CALL1:parse:tokens
+4:FOR:node:nodes
+5:INDENT:2
+5:PRINT:IDENT:node
+NODES
+diff -u "$out_dir/parse_tokens.want.nodes" "$out_dir/parse_tokens.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/parse_tokens.stage2.nodes" > "$out_dir/parse_tokens.stage2.check"
+grep -qx "ok" "$out_dir/parse_tokens.stage2.check"
+compare_stage2_codegen "parse tokens" "$out_dir/parse_tokens.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/parse_tokens.stage2.nodes" > "$out_dir/parse_tokens.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/parse_tokens.stage2" "$out_dir/parse_tokens.stage2.c" >/dev/null 2>&1
+parse_tokens_out="$("$out_dir/parse_tokens.stage2" "$out_dir/parse_tokens.input")"
+test "$parse_tokens_out" = "1:PRINT:STRING:Tya"
+echo "parse tokens: stage-2 pipeline matched"
+
 printf 'helper = value ->\n  temp = "skip"\n  print temp\nsource = readFile args()[0]\nprint source\n' > "$out_dir/function_body_skip.tya"
 "$out_dir/lexer.stage2" "$out_dir/function_body_skip.tya" > "$out_dir/function_body_skip.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/function_body_skip.stage2.tokens" > "$out_dir/function_body_skip.stage2.nodes"

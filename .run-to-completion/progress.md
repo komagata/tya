@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 16:16:06 JST
+Updated: 2026-04-30 17:14:53 JST
 
-Active phase: commit stage-2 function-body skip slice.
+Active phase: commit stage-2 lex/parse lowering slice.
 
 Completed:
 
@@ -232,9 +232,18 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the function-body skip slice.
 - `go test ./... -count=1` passes for the function-body skip slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the function-body skip slice.
+- Committed function-body skip slice as `5595ba2`.
+- Added stage-2 codegen lowering and pipeline coverage for `lex source`.
+- Added stage-2 codegen lowering and pipeline coverage for `parse tokens`.
+- Verified a stage-3 generated lexer on `examples/hello.tya`.
+- Verified a stage-3 generated parser on the stage-3 lexer output for `examples/hello.tya`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the lex/parse lowering slice.
+- `sh scripts/selfhost_check.sh` passes for the lex/parse lowering slice.
+- `go test ./... -count=1` passes for the lex/parse lowering slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the lex/parse lowering slice.
 
 Remaining:
 
-- Commit the verified stage-2 while example bootstrap slice.
+- Commit the verified stage-2 lex/parse lowering slice, then generate and run the stage-3 checker on stage-3 parser output.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.
