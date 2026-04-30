@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 01:41:39 JST
+Updated: 2026-05-01 02:03:55 JST
 
-Active phase: make stage-3 codegen emit executable parser C from real parser-driver nodes.
+Active phase: make stage-3 codegen emit executable checker C from real checker-driver nodes.
 
 Completed:
 
@@ -12,6 +12,7 @@ Completed:
 - Focused `sh scripts/stage1_selfhost_sources_check.sh` passes.
 - `go test ./... -count=1` passes.
 - Stage-3 parser now emits checked non-empty nodes for `selfhost/codegen_c.tya`.
+- Stage-3 codegen now has a checked executable parser C path from real parser-driver nodes.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Committed parent queue cleanup as `d4ff7f3`.
