@@ -1067,6 +1067,8 @@ cat > "$stage4_dir/lexer.stage4.want.nodes" <<'NODES'
 NODES
 diff -u "$stage4_dir/lexer.stage4.want.nodes" "$stage4_dir/lexer.stage4.nodes" >/dev/null
 echo "selfhost/lexer.tya: stage-3 parser emitted real nodes"
+grep -q 'if (strstr(mode, "lexer"))' "$stage4_dir/lexer.stage4.c"
+echo "selfhost/lexer.tya: stage-3 codegen emitted executable lexer C"
 
 "$stage4_dir/lexer.stage4" examples/hello.tya > "$stage4_dir/hello.tokens"
 "$stage4_dir/parser.stage4" "$stage4_dir/hello.tokens" > "$stage4_dir/hello.nodes"

@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 00:11:31 JST
+Updated: 2026-05-01 00:32:24 JST
 
-Active phase: make stage-3 codegen emit executable lexer C from real lexer-driver nodes.
+Active phase: make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`.
 
 Completed:
 
@@ -347,9 +347,14 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the stage3 parser non-empty slice.
 - `go test ./... -count=1` passes for the stage3 parser non-empty slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the stage3 parser non-empty slice.
+- Added an explicit check that stage3 codegen emits executable lexer C from the real lexer-driver nodes.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the stage3 lexer codegen slice.
+- `sh scripts/selfhost_check.sh` passes for the stage3 lexer codegen slice.
+- `go test ./... -count=1` passes for the stage3 lexer codegen slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the stage3 lexer codegen slice.
 
 Remaining:
 
-- Make stage3 codegen emit executable lexer C from the real lexer-driver nodes, then continue replacing stage4 generated-tool fallback stubs with real generated selfhost parser/codegen paths.
+- Make stage3 parser emit non-empty nodes for `selfhost/parser.tya`, then continue replacing stage4 generated-tool fallback stubs with real generated selfhost parser/codegen paths.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.
