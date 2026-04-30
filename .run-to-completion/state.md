@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 20:52:50 JST
+Updated: 2026-04-30 21:11:56 JST
 
 ## Goal
 
@@ -162,12 +162,14 @@ without depending on the Go implementation.
 - done: expand stage-4 generated tools to escaped string print fixtures.
 - done: commit stage-4 escaped string fixture slice.
 - done: preserve colon characters in stage-4 printed string nodes.
-- active: commit stage-4 colon string fixture slice.
+- done: commit stage-4 colon string fixture slice.
+- done: expand stage-4 generated tools to two-line print fixtures.
+- active: commit stage-4 two-line print fixture slice.
 
 ## Next Action
 
-Commit the verified stage-4 colon string fixture slice, then expand stage-4
-generated tools to two-line print fixtures.
+Commit the verified stage-4 two-line print fixture slice, then expand stage-4
+generated tools to assignment plus print fixtures.
 
 ## Remaining Work Estimate
 

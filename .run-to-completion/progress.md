@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 20:52:50 JST
+Updated: 2026-04-30 21:11:56 JST
 
-Active phase: commit stage-4 colon string fixture slice.
+Active phase: commit stage-4 two-line print fixture slice.
 
 Completed:
 
@@ -293,9 +293,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the colon string slice.
 - `go test ./... -count=1` passes for the colon string slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the colon string slice.
+- Updated stage4 generated lexer/parser fallbacks to emit multiple print lines.
+- Added a stage4 generated-tools fixture for `print "A"` followed by `print "B"`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the two-line print slice.
+- `sh scripts/selfhost_check.sh` passes for the two-line print slice.
+- `go test ./... -count=1` passes for the two-line print slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the two-line print slice.
 
 Remaining:
 
-- Commit the verified stage4 colon string fixture slice, then expand stage4 generated tools to two-line print fixtures.
+- Commit the verified stage4 two-line print fixture slice, then expand stage4 generated tools to assignment plus print fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

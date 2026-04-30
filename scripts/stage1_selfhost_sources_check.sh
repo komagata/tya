@@ -1141,3 +1141,29 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/colon_print" "$stage4_dir/co
 stage4_colon_print_out="$("$stage4_dir/colon_print")"
 test "$stage4_colon_print_out" = 'quote: "tya"'
 echo "stage4 colon string: self-host pipeline matched"
+
+printf 'print "A"\nprint "B"\n' > "$stage4_dir/two_prints.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/two_prints.tya" > "$stage4_dir/two_prints.tokens"
+cat > "$stage4_dir/two_prints.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+1:IDENT:print:1
+1:STRING:A:7
+2:INDENT:0:1
+2:IDENT:print:1
+2:STRING:B:7
+TOKENS
+diff -u "$stage4_dir/two_prints.want.tokens" "$stage4_dir/two_prints.tokens" >/dev/null
+"$stage4_dir/parser.stage4" "$stage4_dir/two_prints.tokens" > "$stage4_dir/two_prints.nodes"
+cat > "$stage4_dir/two_prints.want.nodes" <<'NODES'
+1:PRINT:STRING:A
+2:PRINT:STRING:B
+NODES
+diff -u "$stage4_dir/two_prints.want.nodes" "$stage4_dir/two_prints.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/two_prints.nodes" > "$stage4_dir/two_prints.check"
+grep -qx "ok" "$stage4_dir/two_prints.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/two_prints.nodes" > "$stage4_dir/two_prints.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/two_prints" "$stage4_dir/two_prints.c" >/dev/null 2>&1
+stage4_two_prints_out="$("$stage4_dir/two_prints")"
+test "$stage4_two_prints_out" = "A
+B"
+echo "stage4 two prints: self-host pipeline matched"
