@@ -139,7 +139,8 @@ endpoint.
       - [ ] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
         - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes
-        - [ ] Make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`
+        - [x] Make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`
+        - [ ] Make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`
 
 ## Last Resolved Blocker
 

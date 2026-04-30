@@ -200,6 +200,7 @@ Implemented:
 - Stage-4 generated tools execute a one-element array for fixture
 - Stage-3 parser emits non-empty lexer-driver nodes for `selfhost/lexer.tya`
 - Stage-3 codegen emits executable lexer C from real lexer-driver nodes
+- Stage-3 parser emits non-empty parser-driver nodes for `selfhost/parser.tya`
 - Self-hosted parser/checker/codegen carries simple negated call conditions
 - Self-hosted parser/checker/codegen carries simple call-based `while` conditions
 - Self-hosted parser/checker/codegen emits simple direct comparison `while` conditions

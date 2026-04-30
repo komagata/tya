@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-05-01 00:32:24 JST
+Updated: 2026-05-01 00:57:21 JST
 
 ## Goal
 
@@ -182,11 +182,12 @@ without depending on the Go implementation.
 - done: inspect stage-3 parser empty-node fallback for selfhost sources.
 - done: make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`.
 - done: make stage-3 codegen emit executable lexer C from real lexer-driver nodes.
-- active: make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`.
+- done: make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`.
+- active: make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`.
 
 ## Next Action
 
-Make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`, then
+Make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`, then
 continue replacing stage-4 generated-tool fallback stubs with real generated
 selfhost parser/codegen paths.
 

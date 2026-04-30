@@ -1069,6 +1069,16 @@ diff -u "$stage4_dir/lexer.stage4.want.nodes" "$stage4_dir/lexer.stage4.nodes" >
 echo "selfhost/lexer.tya: stage-3 parser emitted real nodes"
 grep -q 'if (strstr(mode, "lexer"))' "$stage4_dir/lexer.stage4.c"
 echo "selfhost/lexer.tya: stage-3 codegen emitted executable lexer C"
+cat > "$stage4_dir/parser.stage4.want.nodes" <<'NODES'
+491:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+494:FOR:line:lines
+495:INDENT:2
+500:FOR:node:nodes
+501:INDENT:2
+501:PRINT:IDENT:node
+NODES
+diff -u "$stage4_dir/parser.stage4.want.nodes" "$stage4_dir/parser.stage4.nodes" >/dev/null
+echo "selfhost/parser.tya: stage-3 parser emitted real nodes"
 
 "$stage4_dir/lexer.stage4" examples/hello.tya > "$stage4_dir/hello.tokens"
 "$stage4_dir/parser.stage4" "$stage4_dir/hello.tokens" > "$stage4_dir/hello.nodes"
