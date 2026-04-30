@@ -866,3 +866,15 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-05-01 03:07:46 JST
+
+- Added the first checker-specific generation branch to the codegen self-source
+  while preserving the existing stage4 self-host pipeline.
+- Refreshed the `selfhost/codegen_c.tya` stage4 node fixture after the new
+  source lines shifted generated line numbers.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

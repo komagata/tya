@@ -1,6 +1,6 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 02:42:45 JST
+Updated: 2026-05-01 03:07:46 JST
 
 Active phase: replace stage-4 generated-tool mode fallback with source-specific generated tools.
 
@@ -15,6 +15,7 @@ Completed:
 - Stage-3 codegen now has a checked executable parser C path from real parser-driver nodes.
 - Stage-3 codegen now has a checked executable checker C path from real checker-driver nodes.
 - Stage-3 codegen now has a checked executable codegen C path from real codegen-driver nodes.
+- Added the first checker-specific generation branch in the codegen self-source and refreshed the affected stage4 node fixture.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Committed parent queue cleanup as `d4ff7f3`.
