@@ -58,6 +58,23 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 10:57:52 JST
+
+- Committed printed string colon preservation slice as `d4c2ac8`.
+- Added a stage-2 pipeline fixture for `parts = split text, ","` and
+  `print join parts, "-"`.
+- Extended the generated-C parser helper to emit `ASSIGN:...:CALL2:split` and
+  the generated-C codegen helper to emit target `split_text` and `join_text`
+  helpers.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 11:05:22 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 10:48:02 JST
 
 - Committed escaped quote bootstrap slice as `2ad21b9`.

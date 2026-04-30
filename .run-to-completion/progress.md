@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 10:54:29 JST
+Updated: 2026-04-30 11:05:22 JST
 
-Active phase: commit stage-2 printed string colon preservation slice.
+Active phase: commit stage-2 string split/join bootstrap slice.
 
 Completed:
 
@@ -121,9 +121,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the printed string colon preservation slice.
 - `go test ./... -count=1` passes for the printed string colon preservation slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the printed string colon preservation slice.
+- Committed printed string colon preservation slice as `d4c2ac8`.
+- Added a stage-2 pipeline fixture for `split` plus `join`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the split/join slice.
+- `sh scripts/selfhost_check.sh` passes for the split/join bootstrap slice.
+- `go test ./... -count=1` passes for the split/join bootstrap slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the split/join bootstrap slice.
 
 Remaining:
 
-- Commit the verified stage-2 printed string colon preservation slice.
+- Commit the verified stage-2 string split/join bootstrap slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

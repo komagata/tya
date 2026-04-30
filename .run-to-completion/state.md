@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 10:54:29 JST
+Updated: 2026-04-30 11:05:22 JST
 
 ## Goal
 
@@ -82,12 +82,15 @@ without depending on the Go implementation.
 - done: commit stage-2 escaped quote print bootstrap slice.
 - done: implement stage-2 printed string colon preservation slice.
 - done: verify stage-2 printed string colon preservation slice.
-- active: commit stage-2 printed string colon preservation slice.
+- done: commit stage-2 printed string colon preservation slice.
+- done: implement stage-2 string split/join bootstrap slice.
+- done: verify stage-2 string split/join bootstrap slice.
+- active: commit stage-2 string split/join bootstrap slice.
 
 ## Next Action
 
-Commit the verified stage-2 printed string colon preservation slice, then pick
-the next smallest bootstrap expansion toward `examples/string.tya`.
+Commit the verified stage-2 string split/join bootstrap slice, then re-run
+`examples/string.tya` through stage2 and pick the next unsupported construct.
 
 ## Remaining Work Estimate
 

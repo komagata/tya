@@ -447,6 +447,24 @@ string_replace_out="$("$out_dir/string_replace.stage2")"
 test "$string_replace_out" = "hELo"
 echo "string replace print: stage-2 pipeline matched"
 
+printf 'text = "hello,tya"\nparts = split text, ","\nprint join parts, "-"\n' > "$out_dir/string_split_join.tya"
+"$out_dir/lexer.stage2" "$out_dir/string_split_join.tya" > "$out_dir/string_split_join.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/string_split_join.stage2.tokens" > "$out_dir/string_split_join.stage2.nodes"
+cat > "$out_dir/string_split_join.want.nodes" <<'NODES'
+1:ASSIGN:text:STRING:hello,tya
+2:ASSIGN:parts:CALL2:split:text:STRING:,
+3:PRINT_CALL2:join:parts:STRING:-
+NODES
+diff -u "$out_dir/string_split_join.want.nodes" "$out_dir/string_split_join.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/string_split_join.stage2.nodes" > "$out_dir/string_split_join.stage2.check"
+grep -qx "ok" "$out_dir/string_split_join.stage2.check"
+compare_stage2_codegen "string split join print" "$out_dir/string_split_join.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/string_split_join.stage2.nodes" > "$out_dir/string_split_join.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/string_split_join.stage2" "$out_dir/string_split_join.stage2.c" >/dev/null 2>&1
+string_split_join_out="$("$out_dir/string_split_join.stage2")"
+test "$string_split_join_out" = "hello-tya"
+echo "string split join print: stage-2 pipeline matched"
+
 printf 'left = 2\nright = 3\nsum = left + right\nprint sum\n' > "$out_dir/int_add.tya"
 "$out_dir/lexer.stage2" "$out_dir/int_add.tya" > "$out_dir/int_add.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/int_add.stage2.tokens" > "$out_dir/int_add.stage2.nodes"
