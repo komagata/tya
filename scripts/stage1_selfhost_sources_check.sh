@@ -673,6 +673,29 @@ while_less_than_out="$("$out_dir/while_less_than.stage2")"
 test "$while_less_than_out" = "1"
 echo "while less-than break: stage-2 pipeline matched"
 
+printf 'age = 2\nwhile age >= 2\n  print "loop"\n  break\nprint age\n' > "$out_dir/while_bounds.tya"
+"$out_dir/lexer.stage2" "$out_dir/while_bounds.tya" > "$out_dir/while_bounds.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/while_bounds.stage2.tokens" > "$out_dir/while_bounds.stage2.nodes"
+cat > "$out_dir/while_bounds.want.nodes" <<'NODES'
+1:ASSIGN:age:INT:2
+2:WHILE_COMPARE_GE:IDENT:age:INT:2
+3:INDENT:2
+3:PRINT:STRING:loop
+4:BREAK
+5:INDENT:0
+5:PRINT:IDENT:age
+NODES
+diff -u "$out_dir/while_bounds.want.nodes" "$out_dir/while_bounds.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/while_bounds.stage2.nodes" > "$out_dir/while_bounds.stage2.check"
+grep -qx "ok" "$out_dir/while_bounds.stage2.check"
+compare_stage2_codegen "while bounded break" "$out_dir/while_bounds.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/while_bounds.stage2.nodes" > "$out_dir/while_bounds.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/while_bounds.stage2" "$out_dir/while_bounds.stage2.c" >/dev/null 2>&1
+while_bounds_out="$("$out_dir/while_bounds.stage2")"
+test "$while_bounds_out" = "loop
+2"
+echo "while bounded break: stage-2 pipeline matched"
+
 "$out_dir/lexer.stage2" examples/while.tya > "$out_dir/while_example.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/while_example.stage2.tokens" > "$out_dir/while_example.stage2.nodes"
 "$out_dir/checker.stage2" "$out_dir/while_example.stage2.nodes" > "$out_dir/while_example.stage2.check"

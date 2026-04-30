@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 14:48:06 JST
+Updated: 2026-04-30 15:02:15 JST
 
-Active phase: commit stage-2 boolean logic assignment slice.
+Active phase: commit stage-2 bounded while slice.
 
 Completed:
 
@@ -200,6 +200,12 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the boolean logic slice.
 - `go test ./... -count=1` passes for the boolean logic slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the boolean logic slice.
+- Committed boolean logic slice as `0e3b4d3`.
+- Added a stage-2 pipeline fixture for `while age >= 2`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the bounded while slice.
+- `sh scripts/selfhost_check.sh` passes for the bounded while slice.
+- `go test ./... -count=1` passes for the bounded while slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the bounded while slice.
 
 Remaining:
 

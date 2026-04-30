@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 14:48:06 JST
+Updated: 2026-04-30 15:02:15 JST
 
 ## Goal
 
@@ -122,12 +122,15 @@ without depending on the Go implementation.
 - done: commit stage-2 grouped comparison slice.
 - done: implement stage-2 boolean logic assignment slice.
 - done: verify stage-2 boolean logic assignment slice.
-- active: commit stage-2 boolean logic assignment slice.
+- done: commit stage-2 boolean logic assignment slice.
+- done: implement stage-2 bounded while slice.
+- done: verify stage-2 bounded while slice.
+- active: commit stage-2 bounded while slice.
 
 ## Next Action
 
-Commit the verified stage-2 boolean logic assignment slice, then continue with
-`while age >= 2` stage2 support.
+Commit the verified stage-2 bounded while slice, then continue with
+`names = ["Tya"]` and `for item in names` stage2 support.
 
 ## Remaining Work Estimate
 

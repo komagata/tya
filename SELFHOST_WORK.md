@@ -110,6 +110,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for grouped integer addition
     - [x] Run a stage-2 pipeline for grouped greater-or-equal comparison
     - [x] Run a stage-2 pipeline for boolean `and` / `or` assignments
+    - [x] Run a stage-2 pipeline for greater-or-equal `while` with `break`
 
 ## Last Resolved Blocker
 
