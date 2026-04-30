@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 11:33:31 JST
+Updated: 2026-04-30 11:48:13 JST
 
-Active phase: commit stage-2 replace string-literal replacement slice.
+Active phase: commit stage-2 string example bootstrap slice.
 
 Completed:
 
@@ -139,9 +139,16 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the replace string-literal slice.
 - `go test ./... -count=1` passes for the replace string-literal slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the replace string-literal slice.
+- Committed replace string-literal bootstrap slice as `7de8924`.
+- Added stage2 support for `print "tya"[1]`.
+- Added `examples/string.tya` itself to the stage2 bootstrap pipeline and matched its expected output.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the string example slice.
+- `sh scripts/selfhost_check.sh` passes for the string example bootstrap slice.
+- `go test ./... -count=1` passes for the string example bootstrap slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the string example bootstrap slice.
 
 Remaining:
 
-- Commit the verified stage-2 replace string-literal replacement slice.
+- Commit the verified stage-2 string example bootstrap slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

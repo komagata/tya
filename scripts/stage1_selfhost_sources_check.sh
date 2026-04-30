@@ -95,6 +95,41 @@ escaped_print_out="$("$out_dir/escaped_print.stage2")"
 test "$escaped_print_out" = 'quote: "tya"'
 echo "escaped string print: stage-2 pipeline matched"
 
+printf 'print "tya"[1]\n' > "$out_dir/string_index_print.tya"
+"$out_dir/lexer.stage2" "$out_dir/string_index_print.tya" > "$out_dir/string_index_print.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/string_index_print.stage2.tokens" > "$out_dir/string_index_print.stage2.nodes"
+cat > "$out_dir/string_index_print.want.nodes" <<'NODES'
+1:PRINT_INDEX:STRING:tya:1
+NODES
+diff -u "$out_dir/string_index_print.want.nodes" "$out_dir/string_index_print.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/string_index_print.stage2.nodes" > "$out_dir/string_index_print.stage2.check"
+grep -qx "ok" "$out_dir/string_index_print.stage2.check"
+compare_stage2_codegen "string index print" "$out_dir/string_index_print.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/string_index_print.stage2.nodes" > "$out_dir/string_index_print.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/string_index_print.stage2" "$out_dir/string_index_print.stage2.c" >/dev/null 2>&1
+string_index_print_out="$("$out_dir/string_index_print.stage2")"
+test "$string_index_print_out" = "y"
+echo "string index print: stage-2 pipeline matched"
+
+"$out_dir/lexer.stage2" examples/string.tya > "$out_dir/string_example.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/string_example.stage2.tokens" > "$out_dir/string_example.stage2.nodes"
+"$out_dir/checker.stage2" "$out_dir/string_example.stage2.nodes" > "$out_dir/string_example.stage2.check"
+grep -qx "ok" "$out_dir/string_example.stage2.check"
+compare_stage2_codegen "examples/string.tya" "$out_dir/string_example.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/string_example.stage2.nodes" > "$out_dir/string_example.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/string_example.stage2" "$out_dir/string_example.stage2.c" >/dev/null 2>&1
+string_example_out="$("$out_dir/string_example.stage2")"
+test "$string_example_out" = "hello-tya
+hello,Tya
+true
+true
+true
+6
+2
+quote: \"tya\"
+y"
+echo "examples/string.tya: stage-2 pipeline matched"
+
 printf 'value = 20\n' > "$out_dir/int.tya"
 "$out_dir/lexer.stage2" "$out_dir/int.tya" > "$out_dir/int.stage2.tokens"
 cat > "$out_dir/int.want.tokens" <<'TOKENS'

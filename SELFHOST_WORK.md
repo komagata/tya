@@ -99,6 +99,8 @@ endpoint.
     - [x] Run a stage-2 pipeline for splitting and joining strings
     - [x] Run a stage-2 pipeline for byte and character string lengths
     - [x] Run a stage-2 pipeline for replacement with a string literal replacement
+    - [x] Run a stage-2 pipeline for string literal indexing
+    - [x] Run a stage-2 pipeline for `examples/string.tya`
 
 ## Last Resolved Blocker
 

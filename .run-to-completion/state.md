@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 11:33:31 JST
+Updated: 2026-04-30 11:48:13 JST
 
 ## Goal
 
@@ -91,13 +91,16 @@ without depending on the Go implementation.
 - done: commit stage-2 byte/char length bootstrap slice.
 - done: implement stage-2 replace string-literal replacement slice.
 - done: verify stage-2 replace string-literal replacement slice.
-- active: commit stage-2 replace string-literal replacement slice.
+- done: commit stage-2 replace string-literal replacement slice.
+- done: implement stage-2 string literal indexing slice.
+- done: add stage-2 pipeline coverage for `examples/string.tya`.
+- done: verify stage-2 string example bootstrap slice.
+- active: commit stage-2 string example bootstrap slice.
 
 ## Next Action
 
-Commit the verified stage-2 replace string-literal replacement slice, then
-re-run `examples/string.tya` through stage2 and pick the next unsupported
-construct.
+Commit the verified stage-2 string example bootstrap slice, then pick the next
+existing executable example to advance through stage2.
 
 ## Remaining Work Estimate
 

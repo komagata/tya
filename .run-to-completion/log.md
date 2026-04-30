@@ -58,6 +58,24 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 11:39:35 JST
+
+- Committed replace string-literal bootstrap slice as `7de8924`.
+- Added stage2 parser/codegen support for `PRINT_INDEX:STRING` from
+  `print "tya"[1]`.
+- Added `examples/string.tya` to the stage2 bootstrap pipeline and matched the
+  interpreter output:
+  `hello-tya`, `hello,Tya`, three `true` lines, `6`, `2`,
+  `quote: "tya"`, and `y`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 11:48:13 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 11:25:03 JST
 
 - Committed byte/char length bootstrap slice as `50b96f1`.
