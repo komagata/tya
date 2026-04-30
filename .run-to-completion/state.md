@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 12:00:09 JST
+Updated: 2026-04-30 13:14:38 JST
 
 ## Goal
 
@@ -98,12 +98,15 @@ without depending on the Go implementation.
 - done: commit stage-2 string example bootstrap slice.
 - done: implement stage-2 less-than comparison slice.
 - done: verify stage-2 less-than comparison slice.
-- active: commit stage-2 less-than comparison slice.
+- done: commit stage-2 less-than comparison slice.
+- done: implement stage-2 integer addition reassignment slice.
+- done: verify stage-2 integer addition reassignment slice.
+- active: commit stage-2 integer addition reassignment slice.
 
 ## Next Action
 
-Commit the verified stage-2 less-than comparison slice, then pick the next
-smallest stage2 bootstrap expansion toward `examples/while.tya`.
+Commit the verified stage-2 integer addition reassignment slice, then pick the
+next smallest stage2 bootstrap expansion toward `examples/while.tya`.
 
 ## Remaining Work Estimate
 

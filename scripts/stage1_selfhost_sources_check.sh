@@ -547,6 +547,24 @@ int_add_out="$("$out_dir/int_add.stage2")"
 test "$int_add_out" = "5"
 echo "int addition: stage-2 pipeline matched"
 
+printf 'sum = 0\nsum = sum + 1\nprint sum\n' > "$out_dir/int_add_reassign.tya"
+"$out_dir/lexer.stage2" "$out_dir/int_add_reassign.tya" > "$out_dir/int_add_reassign.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/int_add_reassign.stage2.tokens" > "$out_dir/int_add_reassign.stage2.nodes"
+cat > "$out_dir/int_add_reassign.want.nodes" <<'NODES'
+1:ASSIGN:sum:INT:0
+2:ASSIGN:sum:INT_ADD:sum:1
+3:PRINT:IDENT:sum
+NODES
+diff -u "$out_dir/int_add_reassign.want.nodes" "$out_dir/int_add_reassign.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/int_add_reassign.stage2.nodes" > "$out_dir/int_add_reassign.stage2.check"
+grep -qx "ok" "$out_dir/int_add_reassign.stage2.check"
+compare_stage2_codegen "int addition reassignment" "$out_dir/int_add_reassign.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/int_add_reassign.stage2.nodes" > "$out_dir/int_add_reassign.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/int_add_reassign.stage2" "$out_dir/int_add_reassign.stage2.c" >/dev/null 2>&1
+int_add_reassign_out="$("$out_dir/int_add_reassign.stage2")"
+test "$int_add_reassign_out" = "1"
+echo "int addition reassignment: stage-2 pipeline matched"
+
 printf 'enabled = true\nprint enabled\n' > "$out_dir/bool.tya"
 "$out_dir/lexer.stage2" "$out_dir/bool.tya" > "$out_dir/bool.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/bool.stage2.tokens" > "$out_dir/bool.stage2.nodes"

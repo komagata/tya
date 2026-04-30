@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 12:00:09 JST
+Updated: 2026-04-30 13:14:38 JST
 
-Active phase: commit stage-2 less-than comparison slice.
+Active phase: commit stage-2 integer addition reassignment slice.
 
 Completed:
 
@@ -152,9 +152,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the less-than slice.
 - `go test ./... -count=1` passes for the less-than slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the less-than slice.
+- Committed less-than comparison slice as `0441899`.
+- Added a stage-2 pipeline fixture for `sum = sum + 1` reassignment.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the reassignment slice.
+- `sh scripts/selfhost_check.sh` passes for the reassignment slice.
+- `go test ./... -count=1` passes for the reassignment slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the reassignment slice.
 
 Remaining:
 
-- Commit the verified stage-2 less-than comparison slice.
+- Commit the verified stage-2 integer addition reassignment slice.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

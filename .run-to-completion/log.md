@@ -58,6 +58,21 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 13:05:52 JST
+
+- Committed less-than comparison slice as `0441899`.
+- Added a stage-2 pipeline fixture for `sum = 0; sum = sum + 1; print sum`.
+- Updated generated-C stage2 codegen helper to emit assignment for known
+  `INT_ADD` targets instead of redeclaring locals.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 13:14:38 JST
+
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-30 11:51:05 JST
 
 - Committed string example bootstrap slice as `2b73ee5`.

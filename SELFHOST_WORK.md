@@ -102,6 +102,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for string literal indexing
     - [x] Run a stage-2 pipeline for `examples/string.tya`
     - [x] Run a stage-2 pipeline for less-than comparison
+    - [x] Run a stage-2 pipeline for integer addition reassignment
 
 ## Last Resolved Blocker
 
