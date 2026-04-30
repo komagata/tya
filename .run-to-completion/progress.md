@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 22:42:13 JST
+Updated: 2026-04-30 22:59:27 JST
 
-Active phase: commit stage-4 less-than comparison fixture slice.
+Active phase: commit stage-4 while/break fixture slice.
 
 Completed:
 
@@ -328,9 +328,15 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the less-than comparison slice.
 - `go test ./... -count=1` passes for the less-than comparison slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the less-than comparison slice.
+- Added stage4 fallback coverage for a `while false` fixture with an indented body skipped by the generated lexer fallback.
+- Added a stage4 generated-tools fixture that skips `print "Never"` and `break`, then runs top-level `print "Done"`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the while/break slice.
+- `sh scripts/selfhost_check.sh` passes for the while/break slice.
+- `go test ./... -count=1` passes for the while/break slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the while/break slice.
 
 Remaining:
 
-- Commit the verified stage4 less-than comparison fixture slice, then expand stage4 generated tools to while/break fixtures.
+- Commit the verified stage4 while/break fixture slice, then expand stage4 generated tools to one-element array for fixtures.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.

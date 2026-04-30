@@ -1727,6 +1727,8 @@ emitC = nodes ->
   push lines, "        puts(\"    printf(\\\"  if (strstr(mode, \\\\\\\"lexer\\\\\\\")) %c\\\\n\\\", 123);\");"
   push lines, "        puts(\"    puts(\\\"    int line_no = 1;\\\");\");"
   push lines, "        puts(\"    printf(\\\"    while (file && fgets(line, sizeof(line), file)) %c\\\\n\\\", 123);\");"
+  push lines, "        puts(\"    puts(\\\"      if (line[0] == 32) line_no++;\\\");\");"
+  push lines, "        puts(\"    puts(\\\"      if (line[0] == 32) continue;\\\");\");"
   push lines, "        puts(\"    puts(\\\"      printf(\\\\\\\"%d:INDENT:0:1\\\\\\\\n\\\\\\\", line_no);\\\");\");"
   push lines, "        puts(\"    printf(\\\"      char *assign = strstr(line, %c = %c);\\\\n\\\", 34, 34);\");"
   push lines, "        puts(\"    printf(\\\"      if (assign) %c\\\\n\\\", 123);\");"

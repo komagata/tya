@@ -1302,3 +1302,25 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/less_print" "$stage4_dir/les
 stage4_less_print_out="$("$stage4_dir/less_print")"
 test "$stage4_less_print_out" = "true"
 echo "stage4 less-than print: self-host pipeline matched"
+
+printf 'while false\n  print "Never"\n  break\nprint "Done"\n' > "$stage4_dir/while_false_print.tya"
+"$stage4_dir/lexer.stage4" "$stage4_dir/while_false_print.tya" > "$stage4_dir/while_false_print.tokens"
+cat > "$stage4_dir/while_false_print.want.tokens" <<'TOKENS'
+1:INDENT:0:1
+4:INDENT:0:1
+4:IDENT:print:1
+4:STRING:Done:7
+TOKENS
+diff -u "$stage4_dir/while_false_print.want.tokens" "$stage4_dir/while_false_print.tokens" >/dev/null
+"$stage4_dir/parser.stage4" "$stage4_dir/while_false_print.tokens" > "$stage4_dir/while_false_print.nodes"
+cat > "$stage4_dir/while_false_print.want.nodes" <<'NODES'
+1:PRINT:STRING:Done
+NODES
+diff -u "$stage4_dir/while_false_print.want.nodes" "$stage4_dir/while_false_print.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/while_false_print.nodes" > "$stage4_dir/while_false_print.check"
+grep -qx "ok" "$stage4_dir/while_false_print.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/while_false_print.nodes" > "$stage4_dir/while_false_print.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/while_false_print" "$stage4_dir/while_false_print.c" >/dev/null 2>&1
+stage4_while_false_print_out="$("$stage4_dir/while_false_print")"
+test "$stage4_while_false_print_out" = "Done"
+echo "stage4 while false print: self-host pipeline matched"

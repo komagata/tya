@@ -754,3 +754,15 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 22:59:27 JST
+
+- Added stage4 fallback coverage for a `while false` fixture with an indented
+  body skipped by the generated lexer fallback.
+- Added a stage4 generated-tools fixture that skips `print "Never"` and
+  `break`, then runs top-level `print "Done"`.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

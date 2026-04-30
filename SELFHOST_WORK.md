@@ -134,7 +134,8 @@ endpoint.
       - [x] Expand stage-4 generated tools to reassignment plus print fixtures
       - [x] Expand stage-4 generated tools to integer addition assignment fixtures
       - [x] Expand stage-4 generated tools to less-than comparison fixtures
-      - [ ] Expand stage-4 generated tools to while/break fixtures
+      - [x] Expand stage-4 generated tools to while/break fixtures
+      - [ ] Expand stage-4 generated tools to one-element array for fixtures
 
 ## Last Resolved Blocker
 

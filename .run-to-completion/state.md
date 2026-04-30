@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 22:42:13 JST
+Updated: 2026-04-30 22:59:27 JST
 
 ## Goal
 
@@ -174,12 +174,14 @@ without depending on the Go implementation.
 - done: expand stage-4 generated tools to integer addition assignment fixtures.
 - done: commit stage-4 integer addition fixture slice.
 - done: expand stage-4 generated tools to less-than comparison fixtures.
-- active: commit stage-4 less-than comparison fixture slice.
+- done: commit stage-4 less-than comparison fixture slice.
+- done: expand stage-4 generated tools to while/break fixtures.
+- active: commit stage-4 while/break fixture slice.
 
 ## Next Action
 
-Commit the verified stage-4 less-than comparison fixture slice, then expand
-stage-4 generated tools to while/break fixtures.
+Commit the verified stage-4 while/break fixture slice, then expand stage-4
+generated tools to one-element array for fixtures.
 
 ## Remaining Work Estimate
 
