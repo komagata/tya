@@ -113,6 +113,8 @@ endpoint.
     - [x] Run a stage-2 pipeline for greater-or-equal `while` with `break`
     - [x] Run a stage-2 pipeline for one-element string arrays and `for`
     - [x] Run a stage-2 pipeline for `examples/selfhost_ops.tya`
+    - [x] Run a stage-2 pipeline for literal reassignment
+    - [ ] Advance stage-3 self-host compiler probe
 
 ## Last Resolved Blocker
 

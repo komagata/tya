@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 15:18:49 JST
+Updated: 2026-04-30 15:35:47 JST
 
 ## Goal
 
@@ -129,12 +129,16 @@ without depending on the Go implementation.
 - done: implement stage-2 array/for slice.
 - done: add stage-2 pipeline coverage for `examples/selfhost_ops.tya`.
 - done: verify stage-2 array/for and selfhost ops slice.
-- active: commit stage-2 array/for and selfhost ops slice.
+- done: commit stage-2 array/for and selfhost ops slice.
+- done: probe stage-3 selfhost source compilation and identify duplicate literal declarations.
+- done: implement stage-2 literal reassignment slice.
+- done: verify stage-2 literal reassignment slice.
+- active: commit stage-2 literal reassignment slice.
 
 ## Next Action
 
-Commit the verified stage-2 array/for and selfhost ops slice, then inspect the
-next existing executable example or self-host source gap to advance stage2.
+Commit the verified stage-2 literal reassignment slice, then continue reducing
+the next stage-3 `selfhost/lexer.tya` compile failure.
 
 ## Remaining Work Estimate
 

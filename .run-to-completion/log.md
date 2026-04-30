@@ -523,3 +523,16 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-04-30 15:35:47 JST
+
+- Committed array/for and selfhost ops slice as `5b74989`.
+- Probed stage-3 selfhost source compilation; the first blocker was duplicate
+  declarations for repeated literal assignments in stage2-generated C.
+- Added stage2 codegen support and pipeline coverage for literal reassignment
+  across ints, bools, floats, and strings.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

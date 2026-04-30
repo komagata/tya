@@ -225,6 +225,36 @@ diff -u "$out_dir/literals.want.c" "$out_dir/literals.stage2.c" >/dev/null
 cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/literals.stage2" "$out_dir/literals.stage2.c" >/dev/null 2>&1
 echo "literal assignments: stage-2 codegen matched"
 
+printf 'value = 1\nvalue = 2\nflag = true\nflag = false\nratio = 1.5\nratio = 2.5\ntext = "a"\ntext = "b"\nprint value\nprint flag\nprint ratio\nprint text\n' > "$out_dir/literal_reassign.tya"
+"$out_dir/lexer.stage2" "$out_dir/literal_reassign.tya" > "$out_dir/literal_reassign.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/literal_reassign.stage2.tokens" > "$out_dir/literal_reassign.stage2.nodes"
+cat > "$out_dir/literal_reassign.want.nodes" <<'NODES'
+1:ASSIGN:value:INT:1
+2:ASSIGN:value:INT:2
+3:ASSIGN:flag:BOOL:true
+4:ASSIGN:flag:BOOL:false
+5:ASSIGN:ratio:FLOAT:1.5
+6:ASSIGN:ratio:FLOAT:2.5
+7:ASSIGN:text:STRING:a
+8:ASSIGN:text:STRING:b
+9:PRINT:IDENT:value
+10:PRINT:IDENT:flag
+11:PRINT:IDENT:ratio
+12:PRINT:IDENT:text
+NODES
+diff -u "$out_dir/literal_reassign.want.nodes" "$out_dir/literal_reassign.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/literal_reassign.stage2.nodes" > "$out_dir/literal_reassign.stage2.check"
+grep -qx "ok" "$out_dir/literal_reassign.stage2.check"
+compare_stage2_codegen "literal reassignment" "$out_dir/literal_reassign.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/literal_reassign.stage2.nodes" > "$out_dir/literal_reassign.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/literal_reassign.stage2" "$out_dir/literal_reassign.stage2.c" >/dev/null 2>&1
+literal_reassign_out="$("$out_dir/literal_reassign.stage2")"
+test "$literal_reassign_out" = "2
+false
+2.5
+b"
+echo "literal reassignment: stage-2 pipeline matched"
+
 printf 'value = 20\nprint value\n' > "$out_dir/print_int.tya"
 "$out_dir/lexer.stage2" "$out_dir/print_int.tya" > "$out_dir/print_int.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/print_int.stage2.tokens" > "$out_dir/print_int.stage2.nodes"

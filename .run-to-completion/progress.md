@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 15:18:49 JST
+Updated: 2026-04-30 15:35:47 JST
 
-Active phase: commit stage-2 array/for and selfhost ops slice.
+Active phase: commit stage-2 literal reassignment slice.
 
 Completed:
 
@@ -213,6 +213,13 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the array/for and selfhost ops slice.
 - `go test ./... -count=1` passes for the array/for and selfhost ops slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the array/for and selfhost ops slice.
+- Committed array/for and selfhost ops slice as `5b74989`.
+- Probed stage-3 selfhost source compilation and found duplicate literal declarations in generated C.
+- Added a stage-2 pipeline fixture for literal reassignment.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the literal reassignment slice.
+- `sh scripts/selfhost_check.sh` passes for the literal reassignment slice.
+- `go test ./... -count=1` passes for the literal reassignment slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the literal reassignment slice.
 
 Remaining:
 
