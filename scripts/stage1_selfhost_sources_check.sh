@@ -252,6 +252,49 @@ string_len_out="$("$out_dir/string_len.stage2")"
 test "$string_len_out" = "5"
 echo "string len print: stage-2 pipeline matched"
 
+printf 'text = "  hello  "\ntrimmed = trim text\nprint trimmed\n' > "$out_dir/string_trim.tya"
+"$out_dir/lexer.stage2" "$out_dir/string_trim.tya" > "$out_dir/string_trim.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/string_trim.stage2.tokens" > "$out_dir/string_trim.stage2.nodes"
+cat > "$out_dir/string_trim.want.nodes" <<'NODES'
+1:ASSIGN:text:STRING:  hello  
+2:ASSIGN:trimmed:CALL1:trim:text
+3:PRINT:IDENT:trimmed
+NODES
+diff -u "$out_dir/string_trim.want.nodes" "$out_dir/string_trim.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/string_trim.stage2.nodes" > "$out_dir/string_trim.stage2.check"
+grep -qx "ok" "$out_dir/string_trim.stage2.check"
+compare_stage2_codegen "string trim print" "$out_dir/string_trim.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/string_trim.stage2.nodes" > "$out_dir/string_trim.stage2.c"
+cat > "$out_dir/string_trim.want.c" <<'C'
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+static char *trim_text(const char *text) {
+  const char *start = text;
+  while (*start == ' ' || *start == 9 || *start == 10 || *start == 13) start++;
+  const char *end = start + strlen(start);
+  while (end > start && (end[-1] == ' ' || end[-1] == 9 || end[-1] == 10 || end[-1] == 13)) end--;
+  size_t len = (size_t)(end - start);
+  char *out = malloc(len + 1);
+  memcpy(out, start, len);
+  out[len] = 0;
+  return out;
+}
+
+int main(void) {
+  const char *text = "  hello  ";
+  const char *trimmed = trim_text(text);
+  puts(trimmed);
+  return 0;
+}
+C
+diff -u "$out_dir/string_trim.want.c" "$out_dir/string_trim.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/string_trim.stage2" "$out_dir/string_trim.stage2.c" >/dev/null 2>&1
+string_trim_out="$("$out_dir/string_trim.stage2")"
+test "$string_trim_out" = "hello"
+echo "string trim print: stage-2 pipeline matched"
+
 printf 'left = 2\nright = 3\nsum = left + right\nprint sum\n' > "$out_dir/int_add.tya"
 "$out_dir/lexer.stage2" "$out_dir/int_add.tya" > "$out_dir/int_add.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/int_add.stage2.tokens" > "$out_dir/int_add.stage2.nodes"

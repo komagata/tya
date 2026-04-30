@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 10:01:56 JST
+Updated: 2026-04-30 10:13:25 JST
 
 ## Goal
 
@@ -64,11 +64,14 @@ without depending on the Go implementation.
 - done: commit `print len` slice.
 - done: implement stage-2 string length bootstrap slice.
 - done: verify stage-2 string length bootstrap slice.
-- active: commit stage-2 string length bootstrap slice.
+- done: commit stage-2 string length bootstrap slice.
+- done: implement stage-2 string trim bootstrap slice.
+- done: verify stage-2 string trim bootstrap slice.
+- active: commit stage-2 string trim bootstrap slice.
 
 ## Next Action
 
-Commit the verified stage-2 string length bootstrap slice, then pick the next
+Commit the verified stage-2 string trim bootstrap slice, then pick the next
 smallest bootstrap expansion toward `examples/string.tya`.
 
 ## Remaining Work Estimate

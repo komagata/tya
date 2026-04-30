@@ -58,6 +58,27 @@
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
 
+## 2026-04-30 10:04:12 JST
+
+- Committed string length bootstrap slice as `a722c1a`.
+- Added a stage-2 pipeline fixture for `text = "  hello  "; trimmed = trim text;
+  print trimmed`.
+- Extended the generated-C parser helper to emit `ASSIGN:name:CALL1:trim:arg`
+  and the generated-C codegen helper to emit a target `trim_text` helper.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+
+## 2026-04-30 10:13:25 JST
+
+- Fixed a Tya string interpolation issue caused by same-line generated C braces
+  in the trim helper pre-scan.
+- Focused verification passed: `go test ./tests -run
+  'Test(SelfhostCodegenEmitsSimpleReturnFunctions|Stage1SelfhostSourcesEmitC)'
+  -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-29 19:06:43 JST
 
 - Committed parenthesized one-argument call parser slice as `69e0052`.
