@@ -1096,6 +1096,8 @@ cat > "$stage4_dir/checker.stage4.want.nodes" <<'NODES'
 NODES
 diff -u "$stage4_dir/checker.stage4.want.nodes" "$stage4_dir/checker.stage4.nodes" >/dev/null
 echo "selfhost/checker.tya: stage-3 parser emitted real nodes"
+grep -q 'if (strstr(mode, "checker"))' "$stage4_dir/checker.stage4.c"
+echo "selfhost/checker.tya: stage-3 codegen emitted executable checker C"
 cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 58:FOR:existing:names
 59:INDENT:2

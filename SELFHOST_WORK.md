@@ -143,7 +143,8 @@ endpoint.
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/codegen_c.tya`
         - [x] Make stage-3 codegen emit executable parser C from real parser-driver nodes
-        - [ ] Make stage-3 codegen emit executable checker C from real checker-driver nodes
+        - [x] Make stage-3 codegen emit executable checker C from real checker-driver nodes
+        - [ ] Make stage-3 codegen emit executable codegen C from real codegen-driver nodes
 
 ## Last Resolved Blocker
 
