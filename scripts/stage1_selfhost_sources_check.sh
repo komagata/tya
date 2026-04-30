@@ -726,3 +726,37 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/compare_lt.stage2" "$out_dir/co
 compare_lt_out="$("$out_dir/compare_lt.stage2")"
 test "$compare_lt_out" = "true"
 echo "less-than comparison: stage-2 pipeline matched"
+
+printf 'age = 2\nadult = age >= 2\nyoung = age <= 2\nprint adult\nprint young\n' > "$out_dir/compare_bounds.tya"
+"$out_dir/lexer.stage2" "$out_dir/compare_bounds.tya" > "$out_dir/compare_bounds.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/compare_bounds.stage2.tokens" > "$out_dir/compare_bounds.stage2.nodes"
+cat > "$out_dir/compare_bounds.want.nodes" <<'NODES'
+1:ASSIGN:age:INT:2
+2:ASSIGN:adult:COMPARE_GE:age:2
+3:ASSIGN:young:COMPARE_LE:age:2
+4:PRINT:IDENT:adult
+5:PRINT:IDENT:young
+NODES
+diff -u "$out_dir/compare_bounds.want.nodes" "$out_dir/compare_bounds.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/compare_bounds.stage2.nodes" > "$out_dir/compare_bounds.stage2.check"
+grep -qx "ok" "$out_dir/compare_bounds.stage2.check"
+compare_stage2_codegen "bounded comparison" "$out_dir/compare_bounds.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/compare_bounds.stage2.nodes" > "$out_dir/compare_bounds.stage2.c"
+cat > "$out_dir/compare_bounds.want.c" <<'C'
+#include <stdio.h>
+
+int main(void) {
+  long age = 2;
+  int adult = age >= 2;
+  int young = age <= 2;
+  puts(adult ? "true" : "false");
+  puts(young ? "true" : "false");
+  return 0;
+}
+C
+diff -u "$out_dir/compare_bounds.want.c" "$out_dir/compare_bounds.stage2.c" >/dev/null
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/compare_bounds.stage2" "$out_dir/compare_bounds.stage2.c" >/dev/null 2>&1
+compare_bounds_out="$("$out_dir/compare_bounds.stage2")"
+test "$compare_bounds_out" = "true
+true"
+echo "bounded comparison: stage-2 pipeline matched"

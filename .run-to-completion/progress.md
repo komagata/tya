@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 13:53:41 JST
+Updated: 2026-04-30 14:07:58 JST
 
-Active phase: commit stage-2 while example bootstrap slice.
+Active phase: commit stage-2 bounded comparison slice.
 
 Completed:
 
@@ -176,6 +176,12 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the while example slice.
 - `go test ./... -count=1` passes for the while example slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the while example slice.
+- Committed while example bootstrap slice as `c64c68e`.
+- Added a stage-2 pipeline fixture for `adult = age >= 2` and `young = age <= 2`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the bounded comparison slice.
+- `sh scripts/selfhost_check.sh` passes for the bounded comparison slice.
+- `go test ./... -count=1` passes for the bounded comparison slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the bounded comparison slice.
 
 Remaining:
 

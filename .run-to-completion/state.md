@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 13:53:41 JST
+Updated: 2026-04-30 14:07:58 JST
 
 ## Goal
 
@@ -110,14 +110,17 @@ without depending on the Go implementation.
 - done: commit stage-2 less-than while slice.
 - done: add stage-2 pipeline coverage for `examples/while.tya`.
 - done: verify stage-2 while example bootstrap slice.
-- active: commit stage-2 while example bootstrap slice.
+- done: commit stage-2 while example bootstrap slice.
+- done: implement stage-2 bounded comparison slice.
+- done: verify stage-2 bounded comparison slice.
+- active: commit stage-2 bounded comparison slice.
 
 ## Next Action
 
-Commit the verified stage-2 while example bootstrap slice, then pick the next
-existing executable example to advance through stage2.
+Commit the verified stage-2 bounded comparison slice, then continue reducing
+the next `examples/selfhost_ops.tya` stage2 parser/codegen gap.
 
 ## Remaining Work Estimate
 
-Many iterations overall, low confidence. The immediate bootstrap slice is less
-than 1 iteration.
+Many iterations overall, low confidence. The immediate commit checkpoint is
+less than 1 iteration.
