@@ -107,6 +107,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for less-than `while` with `break`
     - [x] Run a stage-2 pipeline for `examples/while.tya`
     - [x] Run a stage-2 pipeline for greater-or-equal and less-or-equal comparisons
+    - [x] Run a stage-2 pipeline for grouped integer addition
 
 ## Last Resolved Blocker
 

@@ -183,6 +183,7 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple zero-argument call indexing
 - Self-hosted parser/checker/codegen carries simple call-with-call-index arguments
 - Self-hosted parser/codegen handles simple integer addition assignments
+- Self-hosted parser/codegen handles parenthesized integer addition assignments
 - Self-hosted parser/codegen handles simple equality, inequality, and bounds comparison assignments
 - Self-hosted parser/codegen handles simple unary `not` assignments
 - Self-hosted parser/codegen handles empty array placeholders

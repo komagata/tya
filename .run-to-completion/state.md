@@ -1,6 +1,6 @@
 # Run To Completion State
 
-Updated: 2026-04-30 14:07:58 JST
+Updated: 2026-04-30 14:21:14 JST
 
 ## Goal
 
@@ -113,12 +113,15 @@ without depending on the Go implementation.
 - done: commit stage-2 while example bootstrap slice.
 - done: implement stage-2 bounded comparison slice.
 - done: verify stage-2 bounded comparison slice.
-- active: commit stage-2 bounded comparison slice.
+- done: commit stage-2 bounded comparison slice.
+- done: implement stage-2 grouped integer addition slice.
+- done: verify stage-2 grouped integer addition slice.
+- active: commit stage-2 grouped integer addition slice.
 
 ## Next Action
 
-Commit the verified stage-2 bounded comparison slice, then continue reducing
-the next `examples/selfhost_ops.tya` stage2 parser/codegen gap.
+Commit the verified stage-2 grouped integer addition slice, then continue with
+the `groupedCompare = (age >= 2)` stage2 parser/codegen gap.
 
 ## Remaining Work Estimate
 

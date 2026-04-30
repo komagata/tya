@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-04-30 14:07:58 JST
+Updated: 2026-04-30 14:21:14 JST
 
-Active phase: commit stage-2 bounded comparison slice.
+Active phase: commit stage-2 grouped integer addition slice.
 
 Completed:
 
@@ -182,6 +182,12 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the bounded comparison slice.
 - `go test ./... -count=1` passes for the bounded comparison slice.
 - `sh scripts/selfhost_bootstrap_check.sh` passes for the bounded comparison slice.
+- Committed bounded comparison slice as `5e0e682`.
+- Added a stage-2 pipeline fixture for `grouped = (1 + 1)`.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the grouped addition slice.
+- `sh scripts/selfhost_check.sh` passes for the grouped addition slice.
+- `go test ./... -count=1` passes for the grouped addition slice.
+- `sh scripts/selfhost_bootstrap_check.sh` passes for the grouped addition slice.
 
 Remaining:
 

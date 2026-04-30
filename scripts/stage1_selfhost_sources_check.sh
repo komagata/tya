@@ -547,6 +547,23 @@ int_add_out="$("$out_dir/int_add.stage2")"
 test "$int_add_out" = "5"
 echo "int addition: stage-2 pipeline matched"
 
+printf 'grouped = (1 + 1)\nprint grouped\n' > "$out_dir/grouped_int_add.tya"
+"$out_dir/lexer.stage2" "$out_dir/grouped_int_add.tya" > "$out_dir/grouped_int_add.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/grouped_int_add.stage2.tokens" > "$out_dir/grouped_int_add.stage2.nodes"
+cat > "$out_dir/grouped_int_add.want.nodes" <<'NODES'
+1:ASSIGN:grouped:INT_ADD:1:1
+2:PRINT:IDENT:grouped
+NODES
+diff -u "$out_dir/grouped_int_add.want.nodes" "$out_dir/grouped_int_add.stage2.nodes" >/dev/null
+"$out_dir/checker.stage2" "$out_dir/grouped_int_add.stage2.nodes" > "$out_dir/grouped_int_add.stage2.check"
+grep -qx "ok" "$out_dir/grouped_int_add.stage2.check"
+compare_stage2_codegen "grouped int addition" "$out_dir/grouped_int_add.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/grouped_int_add.stage2.nodes" > "$out_dir/grouped_int_add.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/grouped_int_add.stage2" "$out_dir/grouped_int_add.stage2.c" >/dev/null 2>&1
+grouped_int_add_out="$("$out_dir/grouped_int_add.stage2")"
+test "$grouped_int_add_out" = "2"
+echo "grouped int addition: stage-2 pipeline matched"
+
 printf 'sum = 0\nsum = sum + 1\nprint sum\n' > "$out_dir/int_add_reassign.tya"
 "$out_dir/lexer.stage2" "$out_dir/int_add_reassign.tya" > "$out_dir/int_add_reassign.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/int_add_reassign.stage2.tokens" > "$out_dir/int_add_reassign.stage2.nodes"
