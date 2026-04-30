@@ -131,7 +131,8 @@ endpoint.
       - [x] Expand stage-4 generated tools to two-line print fixtures
       - [x] Expand stage-4 generated tools to assignment plus print fixtures
       - [x] Expand stage-4 generated tools to integer assignment plus print fixtures
-      - [ ] Expand stage-4 generated tools to reassignment plus print fixtures
+      - [x] Expand stage-4 generated tools to reassignment plus print fixtures
+      - [ ] Expand stage-4 generated tools to integer addition assignment fixtures
 
 ## Last Resolved Blocker
 
