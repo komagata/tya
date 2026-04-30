@@ -140,7 +140,8 @@ endpoint.
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
         - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`
-        - [ ] Make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`
+        - [x] Make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`
+        - [ ] Make stage-3 parser emit non-empty nodes for `selfhost/codegen_c.tya`
 
 ## Last Resolved Blocker
 

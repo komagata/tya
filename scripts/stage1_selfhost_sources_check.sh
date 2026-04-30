@@ -1079,6 +1079,21 @@ cat > "$stage4_dir/parser.stage4.want.nodes" <<'NODES'
 NODES
 diff -u "$stage4_dir/parser.stage4.want.nodes" "$stage4_dir/parser.stage4.nodes" >/dev/null
 echo "selfhost/parser.tya: stage-3 parser emitted real nodes"
+cat > "$stage4_dir/checker.stage4.want.nodes" <<'NODES'
+58:FOR:existing:names
+59:INDENT:2
+126:FOR:node:nodes
+127:INDENT:2
+574:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+577:FOR:line:lines
+578:INDENT:2
+584:PRINT:STRING:ok
+586:FOR:err:errors
+587:INDENT:2
+587:PRINT:IDENT:err
+NODES
+diff -u "$stage4_dir/checker.stage4.want.nodes" "$stage4_dir/checker.stage4.nodes" >/dev/null
+echo "selfhost/checker.tya: stage-3 parser emitted real nodes"
 
 "$stage4_dir/lexer.stage4" examples/hello.tya > "$stage4_dir/hello.tokens"
 "$stage4_dir/parser.stage4" "$stage4_dir/hello.tokens" > "$stage4_dir/hello.nodes"

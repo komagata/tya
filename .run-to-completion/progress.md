@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 00:57:21 JST
+Updated: 2026-05-01 01:17:26 JST
 
-Active phase: make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`.
+Active phase: make stage-3 parser emit non-empty nodes for `selfhost/codegen_c.tya`.
 
 Completed:
 
@@ -358,9 +358,14 @@ Completed:
 - `sh scripts/selfhost_check.sh` passes for the parser source non-empty slice.
 - `go test ./... -count=1` passes for the parser source non-empty slice.
 - Full `sh scripts/selfhost_bootstrap_check.sh` passes for the parser source non-empty slice.
+- Added an explicit diff for `selfhost/checker.tya` stage4 nodes in the stage1 selfhost source check.
+- Focused `go test ./tests -run TestStage1SelfhostSourcesEmitC -count=1` passes for the checker source non-empty slice.
+- `sh scripts/selfhost_check.sh` passes for the checker source non-empty slice.
+- `go test ./... -count=1` passes for the checker source non-empty slice.
+- Full `sh scripts/selfhost_bootstrap_check.sh` passes for the checker source non-empty slice.
 
 Remaining:
 
-- Make stage3 parser emit non-empty nodes for `selfhost/checker.tya`, then continue replacing stage4 generated-tool fallback stubs with real generated selfhost parser/codegen paths.
+- Make stage3 parser emit non-empty nodes for `selfhost/codegen_c.tya`, then continue replacing stage4 generated-tool fallback stubs with real generated selfhost parser/codegen paths.
 
 Estimate: many iterations overall; current bootstrap slice less than 1 iteration.
