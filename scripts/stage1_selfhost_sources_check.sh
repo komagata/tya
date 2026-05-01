@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2592:FOR:node:nodes
-2593:INDENT:2
-3324:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3327:FOR:line:lines
-3328:INDENT:2
-3331:PRINT_CALL1:emitC:nodes
+2599:FOR:node:nodes
+2600:INDENT:2
+3331:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3334:FOR:line:lines
+3335:INDENT:2
+3338:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1482,3 +1482,14 @@ stage4_multiple_return_out="$("$stage4_dir/multiple_return")"
 test "$stage4_multiple_return_out" = "komagata
 empty user"
 echo "stage4 multiple return: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/while.tya > "$stage4_dir/while_example.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/while_example.tokens" > "$stage4_dir/while_example.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/while_example.nodes" > "$stage4_dir/while_example.check"
+grep -qx "ok" "$stage4_dir/while_example.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/while_example.nodes" > "$stage4_dir/while_example.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/while_example" "$stage4_dir/while_example.c" >/dev/null 2>&1
+stage4_while_example_out="$("$stage4_dir/while_example")"
+test "$stage4_while_example_out" = "10
+11"
+echo "stage4 while example: self-host pipeline matched"

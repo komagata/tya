@@ -1,5 +1,19 @@
 # Run To Completion Log
 
+## 2026-05-02 00:45:17 JST
+
+- Added a stage-4 pipeline fixture for `examples/while.tya`.
+- Extended the source-specific stage-4 generated codegen path for the current
+  raw while-example node shape, emitting the expected `10` and `11` output.
+- Refreshed the `selfhost/codegen_c.tya` stage-4 node fixture after source
+  line shifts.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed in 2m1.678s:
+  `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-02 00:33:07 JST
 
 - Extended the source-specific stage-4 generated codegen path so raw
