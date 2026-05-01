@@ -90,6 +90,7 @@ endpoint.
     - [x] Check two-target multiple assignment nodes
     - [x] Reject `break` and `continue` outside loops
     - [x] Reject return nodes outside functions
+    - [x] Check `TRY_CALL1` nodes and reject top-level `try`
   - [ ] Expand self-host C codegen toward executable example parity
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset

@@ -287,6 +287,15 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + funcName
         if not hasName(names, argName)
           push errors, lineOf(node) + ": undefined variable: " + argName
+      if valueOf(node) == "TRY_CALL1"
+        funcName = extraOf(node)
+        argName = extra2Of(node)
+        if len(funcIndents) == 0
+          push errors, lineOf(node) + ": try used outside function"
+        if not hasName(names, funcName)
+          push errors, lineOf(node) + ": undefined variable: " + funcName
+        if not hasName(names, argName)
+          push errors, lineOf(node) + ": undefined variable: " + argName
       if valueOf(node) == "CALL2"
         funcName = extraOf(node)
         leftArg = extra2Of(node)

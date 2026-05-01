@@ -410,6 +410,19 @@ func TestSelfhostCheckerRejectsUndefinedCallNames(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerChecksTryCallNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:ASSIGN:top:TRY_CALL1:missingFunc:missingArg\n2:FUNC:read:arg\n3:INDENT:2\n3:ASSIGN:inside:TRY_CALL1:missingFunc:missingArg\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: try used outside function\n1: undefined variable: missingFunc\n1: undefined variable: missingArg\n3: undefined variable: missingFunc\n3: undefined variable: missingArg\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedTwoArgCallNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:ASSIGN:result:CALL2:missingFunc:left:right\n"), 0644); err != nil {

@@ -1,5 +1,19 @@
 # Run To Completion Log
 
+## 2026-05-01 18:16:35 JST
+
+- Added self-host checker support for `ASSIGN:target:TRY_CALL1:func:arg`.
+- The checker now validates the try callee and argument names and rejects
+  top-level `try` usage outside functions.
+- Updated the stage-4 checker node fixture after the checker source line
+  numbers shifted.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostCheckerChecksTryCallNames|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 17:51:43 JST
 
 - Added self-host parser support for `target = try call(arg)` as
