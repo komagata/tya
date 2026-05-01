@@ -51,8 +51,10 @@ selfhost bootstrap: ok
 
 The current bootstrap pipeline compiles the self-host compiler components with
 the Go C emitter, uses those stage-1 binaries to produce stage-2 tools, uses
-the generated tools again to produce stage-3 and stage-4 tools, and runs the
-stage-4 pipeline across the supported executable examples.
+the generated tools again to produce stage-3 and stage-4 tools, runs the
+stage-4 pipeline across the supported executable examples, then uses the
+stage-4 tools to compile all four self-host compiler sources into stage-5 C
+binaries.
 
 ## Completion Criteria
 
