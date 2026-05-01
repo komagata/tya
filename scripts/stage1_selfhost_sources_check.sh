@@ -1079,7 +1079,10 @@ cat > "$stage4_dir/parser.stage4.want.nodes" <<'NODES'
 NODES
 diff -u "$stage4_dir/parser.stage4.want.nodes" "$stage4_dir/parser.stage4.nodes" >/dev/null
 echo "selfhost/parser.tya: stage-3 parser emitted real nodes"
-grep -q 'if (strstr(mode, "parser"))' "$stage4_dir/parser.stage4.c"
+grep -q '^int main(int argc, char \*\*argv)' "$stage4_dir/parser.stage4.c"
+if grep -q 'strstr(mode, "parser")' "$stage4_dir/parser.stage4.c"; then
+  exit 1
+fi
 echo "selfhost/parser.tya: stage-3 codegen emitted executable parser C"
 cat > "$stage4_dir/checker.stage4.want.nodes" <<'NODES'
 58:FOR:existing:names
@@ -1106,12 +1109,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 91:FOR:node:nodes
 92:INDENT:2
-2280:FOR:node:nodes
-2281:INDENT:2
-2979:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-2982:FOR:line:lines
-2983:INDENT:2
-2986:PRINT_CALL1:emitC:nodes
+2338:FOR:node:nodes
+2339:INDENT:2
+3037:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3040:FOR:line:lines
+3041:INDENT:2
+3044:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
