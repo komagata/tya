@@ -335,6 +335,18 @@ func TestSelfhostCheckerRejectsUndefinedReturnNames(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerRejectsUndefinedReturn2Names(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	if err := os.WriteFile(path, []byte("1:RETURN2:IDENT:missingLeft:IDENT:missingRight\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: undefined variable: missingLeft\n1: undefined variable: missingRight\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedReturnCallNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:RETURN_CALL2:missingFunc:IDENT:missingArg\n"), 0644); err != nil {

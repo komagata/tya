@@ -1,5 +1,17 @@
 # Run To Completion Log
 
+## 2026-05-01 15:45:03 JST
+
+- Added self-host checker validation for identifiers in `RETURN2` nodes.
+- Updated the stage-4 checker node fixture after the new checker branch shifted
+  the driver line numbers.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostCheckerRejectsUndefinedReturn2Names|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-04-29 18:40:04 JST
 
 - Started from argument-free run-to-completion invocation.

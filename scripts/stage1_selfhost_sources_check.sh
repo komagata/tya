@@ -1092,13 +1092,13 @@ cat > "$stage4_dir/checker.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 126:FOR:node:nodes
 127:INDENT:2
-574:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-577:FOR:line:lines
-578:INDENT:2
-584:PRINT:STRING:ok
-586:FOR:err:errors
-587:INDENT:2
-587:PRINT:IDENT:err
+584:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+587:FOR:line:lines
+588:INDENT:2
+594:PRINT:STRING:ok
+596:FOR:err:errors
+597:INDENT:2
+597:PRINT:IDENT:err
 NODES
 diff -u "$stage4_dir/checker.stage4.want.nodes" "$stage4_dir/checker.stage4.nodes" >/dev/null
 echo "selfhost/checker.tya: stage-3 parser emitted real nodes"

@@ -559,6 +559,16 @@ check = nodes ->
         if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
           push errors, lineOf(node) + ": undefined variable: " + indexName
 
+    if kindOf(node) == "RETURN2"
+      leftKind = nameOf(node)
+      leftName = valueOf(node)
+      rightKind = extraOf(node)
+      rightName = extra2Of(node)
+      if leftKind == "IDENT" and not hasName(names, leftName)
+        push errors, lineOf(node) + ": undefined variable: " + leftName
+      if rightKind == "IDENT" and not hasName(names, rightName)
+        push errors, lineOf(node) + ": undefined variable: " + rightName
+
     if kindOf(node) == "RETURN_CALL2"
       funcName = nameOf(node)
       arg2Kind = valueOf(node)
