@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2613:FOR:node:nodes
-2614:INDENT:2
-3345:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3348:FOR:line:lines
-3349:INDENT:2
-3352:PRINT_CALL1:emitC:nodes
+2630:FOR:node:nodes
+2631:INDENT:2
+3362:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3365:FOR:line:lines
+3366:INDENT:2
+3369:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1511,3 +1511,24 @@ true
 quote: "tya"
 y'
 echo "stage4 string example: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/selfhost_ops.tya > "$stage4_dir/selfhost_ops.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/selfhost_ops.tokens" > "$stage4_dir/selfhost_ops.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/selfhost_ops.nodes" > "$stage4_dir/selfhost_ops.check"
+grep -qx "ok" "$stage4_dir/selfhost_ops.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/selfhost_ops.nodes" > "$stage4_dir/selfhost_ops.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/selfhost_ops" "$stage4_dir/selfhost_ops.c" >/dev/null 2>&1
+stage4_selfhost_ops_out="$("$stage4_dir/selfhost_ops")"
+test "$stage4_selfhost_ops_out" = "adult
+young
+komagata
+true
+true
+true
+2
+true
+true
+true
+loop
+Tya"
+echo "stage4 selfhost ops: self-host pipeline matched"

@@ -202,6 +202,7 @@ Implemented:
 - Stage-4 generated tools execute `examples/multiple_return.tya`
 - Stage-4 generated tools execute `examples/while.tya`
 - Stage-4 generated tools execute `examples/string.tya`
+- Stage-4 generated tools execute `examples/selfhost_ops.tya`
 - Stage-3 parser emits non-empty lexer-driver nodes for `selfhost/lexer.tya`
 - Stage-3 codegen emits executable lexer C from real lexer-driver nodes
 - Stage-3 parser emits non-empty parser-driver nodes for `selfhost/parser.tya`
