@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2599:FOR:node:nodes
-2600:INDENT:2
-3331:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3334:FOR:line:lines
-3335:INDENT:2
-3338:PRINT_CALL1:emitC:nodes
+2613:FOR:node:nodes
+2614:INDENT:2
+3345:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3348:FOR:line:lines
+3349:INDENT:2
+3352:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1493,3 +1493,21 @@ stage4_while_example_out="$("$stage4_dir/while_example")"
 test "$stage4_while_example_out" = "10
 11"
 echo "stage4 while example: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/string.tya > "$stage4_dir/string_example.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/string_example.tokens" > "$stage4_dir/string_example.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/string_example.nodes" > "$stage4_dir/string_example.check"
+grep -qx "ok" "$stage4_dir/string_example.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/string_example.nodes" > "$stage4_dir/string_example.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/string_example" "$stage4_dir/string_example.c" >/dev/null 2>&1
+stage4_string_example_out="$("$stage4_dir/string_example")"
+test "$stage4_string_example_out" = 'hello-tya
+hello,Tya
+true
+true
+true
+6
+2
+quote: "tya"
+y'
+echo "stage4 string example: self-host pipeline matched"

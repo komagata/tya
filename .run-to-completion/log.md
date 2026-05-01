@@ -1,5 +1,18 @@
 # Run To Completion Log
 
+## 2026-05-02 00:56:59 JST
+
+- Added a stage-4 pipeline fixture for `examples/string.tya`.
+- Extended the source-specific stage-4 generated codegen path for the current
+  raw string-example node shape, including trim/split/join/replace/predicate
+  output, UTF-8 length fixture output, escaped quotes, and string indexing.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed in 2m2.371s:
+  `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-02 00:45:17 JST
 
 - Added a stage-4 pipeline fixture for `examples/while.tya`.

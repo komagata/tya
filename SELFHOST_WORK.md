@@ -162,6 +162,7 @@ endpoint.
       - [x] Expand stage-4 generated tools to one-element array for fixtures
       - [x] Expand stage-4 generated tools to `examples/multiple_return.tya`
       - [x] Expand stage-4 generated tools to `examples/while.tya`
+      - [x] Expand stage-4 generated tools to `examples/string.tya`
       - [ ] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
         - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes
