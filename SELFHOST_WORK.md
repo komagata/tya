@@ -88,6 +88,7 @@ endpoint.
     - [x] Parse `left, right = call "literal"` in the self-host parser subset
     - [x] Parse `return nil, error "message"` in the self-host parser subset
     - [x] Parse `print object.member` in the self-host parser subset
+    - [x] Parse `return { name: value }, nil` in the self-host parser subset
   - [ ] Expand self-host checker toward Go checker parity
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
     - [x] Check undefined names in two-value return nodes
@@ -96,6 +97,7 @@ endpoint.
     - [x] Check literal arguments in two-target one-argument calls
     - [x] Check `return nil, error "message"` nodes
     - [x] Check `print object.member` base names
+    - [x] Check `return { name: value }, nil` nodes
     - [x] Reject `break` and `continue` outside loops
     - [x] Reject return nodes outside functions
     - [x] Check `TRY_CALL1` nodes and reject top-level `try`

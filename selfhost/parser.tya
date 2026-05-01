@@ -273,6 +273,14 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and textOf(token) == "return"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
+        if textOf(value) == "{" and i + 7 < len(tokens)
+          if kindOf(tokens[i + 3]) == "SYMBOL" and textOf(tokens[i + 5]) == "}" and textOf(tokens[i + 6]) == "," and textOf(tokens[i + 7]) == "nil"
+            key = tokens[i + 2]
+            item = tokens[i + 4]
+            node = lineOf(token) + ":RETURN2_OBJECT_NIL:" + textOf(key) + ":" + literalKindOf(item) + ":" + textOf(item)
+            push nodes, node
+            i = i + 8
+            continue
         if i + 3 < len(tokens) and textOf(tokens[i + 2]) == ","
           if i + 4 < len(tokens) and lineOf(tokens[i + 4]) == lineOf(token)
             value2 = tokens[i + 3]

@@ -670,6 +670,14 @@ check = nodes ->
       if argKind == "IDENT" and not hasName(names, argName)
         push errors, lineOf(node) + ": undefined variable: " + argName
 
+    if kindOf(node) == "RETURN2_OBJECT_NIL"
+      if len(funcIndents) == 0
+        push errors, lineOf(node) + ": return outside function"
+      valueKind = valueOf(node)
+      valueName = extraOf(node)
+      if valueKind == "IDENT" and not hasName(names, valueName)
+        push errors, lineOf(node) + ": undefined variable: " + valueName
+
     if kindOf(node) == "RETURN_CALL2"
       if len(funcIndents) == 0
         push errors, lineOf(node) + ": return outside function"

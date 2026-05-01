@@ -165,6 +165,7 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple function headers
 - Self-hosted parser/checker/codegen carries simple inline function returns
 - Self-hosted parser/checker/codegen carries simple return calls
+- Self-hosted parser/checker carries `return { name: value }, nil` nodes
 - Self-hosted parser/checker/codegen carries simple one-argument calls
 - Self-hosted parser/checker/codegen carries simple two-argument calls
 - Self-hosted parser/checker/codegen carries simple three-argument calls
