@@ -79,6 +79,7 @@ endpoint.
     - [x] Parse three-argument parenthesized function calls in assignment expressions
     - [x] Parse `print` calls with three-argument builtin calls
     - [x] Parse `print` calls with two-argument builtin calls
+    - [x] Parse indexed `for item, index in items` loops in the self-host parser subset
   - [ ] Expand self-host checker toward Go checker parity
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
   - [ ] Expand self-host C codegen toward executable example parity
