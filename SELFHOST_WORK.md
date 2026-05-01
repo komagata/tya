@@ -80,6 +80,7 @@ endpoint.
     - [x] Parse `print` calls with three-argument builtin calls
     - [x] Parse `print` calls with two-argument builtin calls
     - [x] Parse indexed `for item, index in items` loops in the self-host parser subset
+    - [x] Parse `for key, value of object` loops in the self-host parser subset
   - [ ] Expand self-host checker toward Go checker parity
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
   - [ ] Expand self-host C codegen toward executable example parity

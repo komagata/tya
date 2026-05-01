@@ -181,6 +181,13 @@ parse = tokens ->
       continue
 
     if kindOf(token) == "IDENT" and textOf(token) == "for"
+      if i + 5 < len(tokens) and textOf(tokens[i + 2]) == "," and textOf(tokens[i + 4]) == "of"
+        item = tokens[i + 1]
+        collection = tokens[i + 5]
+        node = lineOf(token) + ":FOR:" + textOf(item) + ":" + textOf(collection)
+        push nodes, node
+        i = i + 6
+        continue
       if i + 5 < len(tokens) and textOf(tokens[i + 2]) == "," and textOf(tokens[i + 4]) == "in"
         item = tokens[i + 1]
         collection = tokens[i + 5]
@@ -189,6 +196,13 @@ parse = tokens ->
         i = i + 6
         continue
       if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "in"
+        item = tokens[i + 1]
+        collection = tokens[i + 3]
+        node = lineOf(token) + ":FOR:" + textOf(item) + ":" + textOf(collection)
+        push nodes, node
+        i = i + 4
+        continue
+      if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "of"
         item = tokens[i + 1]
         collection = tokens[i + 3]
         node = lineOf(token) + ":FOR:" + textOf(item) + ":" + textOf(collection)

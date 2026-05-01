@@ -947,3 +947,17 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-05-01 13:04:11 JST
+
+- Added self-host parser support for `for key, value of object` loops,
+  lowering them to the existing `FOR:key:object` subset node shape.
+- Extended `TestSelfhostParserMatchesGoParserSubset` with a `for of` loop.
+- Refreshed the parser stage4 node fixture after the parser source line shift.
+- Focused parser parity verification passed: `go test ./tests -run
+  TestSelfhostParserMatchesGoParserSubset -count=1`.
+- Focused stage4 self-host source verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
