@@ -1,5 +1,20 @@
 # Run To Completion Log
 
+## 2026-05-01 17:51:43 JST
+
+- Added self-host parser support for `target = try call(arg)` as
+  `ASSIGN:target:TRY_CALL1:call:arg`.
+- Extended the parser parity summarizer and subset fixture to compare the new
+  `TRY_CALL1` shape against the Go parser's `TryExpr`.
+- Updated the stage-4 parser node fixture after the parser source line numbers
+  shifted.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostParserMatchesGoParserSubset|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 17:26:18 JST
 
 - Added self-host checker function-context tracking for `RETURN`,

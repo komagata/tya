@@ -1,6 +1,6 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 17:26:18 JST
+Updated: 2026-05-01 17:51:43 JST
 
 Active phase: advance remaining self-host completion queue.
 
@@ -24,6 +24,7 @@ Completed:
 - Self-host parser parity now covers `for key, value of object` loops.
 - Self-host parser parity now covers two-target multiple assignment.
 - Self-host parser parity now covers two-value return statements.
+- Self-host parser parity now covers `target = try call(arg)` nodes.
 - Self-host checker parity now validates identifiers in two-value return nodes.
 - Self-host checker parity now validates two-target multiple assignment nodes.
 - Self-host checker parity now rejects `break` and `continue` outside loops.

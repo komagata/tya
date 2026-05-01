@@ -411,6 +411,14 @@ parse = tokens ->
           push nodes, node
           i = i + 4
           continue
+        if textOf(value) == "try" and i + 6 < len(tokens) and textOf(tokens[i + 4]) == "("
+          if textOf(tokens[i + 6]) == ")"
+            funcName = tokens[i + 3]
+            arg = tokens[i + 5]
+            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":TRY_CALL1:" + textOf(funcName) + ":" + textOf(arg)
+            push nodes, node
+            i = i + 7
+            continue
         if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "and"
           right = tokens[i + 4]
           node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":BOOL_AND:" + textOf(value) + ":" + textOf(right)
