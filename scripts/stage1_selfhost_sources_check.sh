@@ -1121,7 +1121,10 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
-grep -q 'if (strstr(mode, "codegen"))' "$stage4_dir/codegen_c.stage4.c"
+grep -q '^int main(int argc, char \*\*argv)' "$stage4_dir/codegen_c.stage4.c"
+if grep -q 'strstr(mode, "codegen")' "$stage4_dir/codegen_c.stage4.c"; then
+  exit 1
+fi
 echo "selfhost/codegen_c.tya: stage-3 codegen emitted executable codegen C"
 
 "$stage4_dir/lexer.stage4" examples/hello.tya > "$stage4_dir/hello.tokens"

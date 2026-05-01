@@ -1,8 +1,8 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 11:50:13 JST
+Updated: 2026-05-01 12:11:45 JST
 
-Active phase: replace stage-4 generated-tool mode fallback with source-specific generated tools.
+Active phase: advance remaining self-host completion queue.
 
 Completed:
 
@@ -19,6 +19,7 @@ Completed:
 - Stage-4 checker generation now emits a source-specific checker C instead of relying on the generated-tool mode fallback.
 - Stage-4 parser generation now emits source-specific parser C instead of relying on the generated-tool mode fallback.
 - Stage-4 lexer generation now emits source-specific lexer C instead of relying on the generated-tool mode fallback.
+- Stage-4 codegen generation no longer relies on a `strstr(mode, "codegen")` dispatch.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Committed parent queue cleanup as `d4ff7f3`.

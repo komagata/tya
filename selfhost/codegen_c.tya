@@ -2077,7 +2077,7 @@ emitC = nodes ->
   push lines, "        puts(\"    printf(\\\"    %c\\\\n\\\", 125);\");"
   push lines, "        puts(\"    puts(\\\"    return 0;\\\");\");"
   push lines, "        puts(\"    printf(\\\"  %c\\\\n\\\", 125);\");"
-  push lines, "        puts(\"    printf(\\\"  if (strstr(mode, \\\\\\\"codegen\\\\\\\")) %c\\\\n\\\", 123);\");"
+  push lines, "        puts(\"    printf(\\\"  if (1) %c\\\\n\\\", 123);\");"
   push lines, "        puts(\"    puts(\\\"    printf(\\\\\\\"%cinclude <stdio.h>\\\\\\\\n\\\\\\\", 35);\\\");\");"
   push lines, "        puts(\"    puts(\\\"    printf(\\\\\\\"int main(void) %c\\\\\\\\n\\\\\\\", 123);\\\");\");"
   push lines, "        puts(\"    puts(\\\"    char int_name[256];\\\");\");"

@@ -920,3 +920,15 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-05-01 12:11:45 JST
+
+- Removed the stage4 codegen `strstr(mode, "codegen")` dispatch from generated
+  codegen C and made the codegen body run directly in that generated tool.
+- Tightened the codegen stage4 assertion to require a top-level
+  `int main(int argc, char **argv)` and no `strstr(mode, "codegen")` dispatch.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
