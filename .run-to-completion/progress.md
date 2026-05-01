@@ -1,6 +1,6 @@
 # Run To Completion Progress
 
-Updated: 2026-05-02 01:20:48 JST
+Updated: 2026-05-02 01:32:39 JST
 
 Active phase: advance remaining self-host completion queue.
 
@@ -49,6 +49,7 @@ Completed:
 - Stage-4 generated tools now compile and run `examples/string.tya`.
 - Stage-4 generated tools now compile and run `examples/selfhost_ops.tya`.
 - Stage-4 generated tools now compile and run `examples/arithmetic.tya`.
+- Stage-4 generated tools now compile and run `examples/function.tya`.
 - Go interpreter string indexing and length now cache rune slices during a run, reducing self-host lexer checks from minutes to seconds.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.

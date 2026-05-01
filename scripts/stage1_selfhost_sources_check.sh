@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2644:FOR:node:nodes
-2645:INDENT:2
-3376:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3379:FOR:line:lines
-3380:INDENT:2
-3383:PRINT_CALL1:emitC:nodes
+2650:FOR:node:nodes
+2651:INDENT:2
+3382:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3385:FOR:line:lines
+3386:INDENT:2
+3389:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1550,3 +1550,13 @@ true
 nil
 next year: 21"
 echo "stage4 arithmetic: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/function.tya > "$stage4_dir/function.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/function.tokens" > "$stage4_dir/function.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/function.nodes" > "$stage4_dir/function.check"
+grep -qx "ok" "$stage4_dir/function.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/function.nodes" > "$stage4_dir/function.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/function" "$stage4_dir/function.c" >/dev/null 2>&1
+stage4_function_out="$("$stage4_dir/function")"
+test "$stage4_function_out" = "Hello, komagata"
+echo "stage4 function: self-host pipeline matched"

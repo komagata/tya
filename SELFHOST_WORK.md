@@ -165,6 +165,7 @@ endpoint.
       - [x] Expand stage-4 generated tools to `examples/string.tya`
       - [x] Expand stage-4 generated tools to `examples/selfhost_ops.tya`
       - [x] Expand stage-4 generated tools to `examples/arithmetic.tya`
+      - [x] Expand stage-4 generated tools to `examples/function.tya`
       - [ ] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
         - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes
