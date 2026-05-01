@@ -878,3 +878,17 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-05-01 10:51:27 JST
+
+- Routed stage4 checker codegen through a source-specific checker C emission
+  branch instead of the generated-tool mode fallback.
+- Tightened the checker stage4 assertion to require a top-level `int main(void)`
+  and no `strstr(mode, "checker")` dispatch.
+- Refreshed the `selfhost/codegen_c.tya` stage4 node fixture after the new
+  source lines shifted generated line numbers.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
