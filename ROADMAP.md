@@ -320,6 +320,7 @@ Self-Host Completion TODO:
     - [x] Reject invalid simple function and loop binding names in the self-host checker subset
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
     - [x] Check undefined names in two-value return nodes
+    - [x] Check two-target multiple assignment nodes
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
   - [ ] Port optional unused binding checks or decide they stay Go-only
   - [ ] Add checker parity tests against Go checker diagnostics

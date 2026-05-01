@@ -86,6 +86,7 @@ endpoint.
   - [ ] Expand self-host checker toward Go checker parity
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
     - [x] Check undefined names in two-value return nodes
+    - [x] Check two-target multiple assignment nodes
   - [ ] Expand self-host C codegen toward executable example parity
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset

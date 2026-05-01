@@ -315,6 +315,22 @@ check = nodes ->
       if not seen
         rememberName names, nameIndents, name, currentIndent
 
+    if kindOf(node) == "MULTI_ASSIGN2"
+      leftName = nameOf(node)
+      rightName = valueOf(node)
+      valueKind = extraOf(node)
+      valueName = extra2Of(node)
+      if not isValidBindingName(leftName)
+        push errors, lineOf(node) + ": invalid binding name: " + leftName
+      if not isValidBindingName(rightName)
+        push errors, lineOf(node) + ": invalid binding name: " + rightName
+      if valueKind == "IDENT" and not hasName(names, valueName)
+        push errors, lineOf(node) + ": undefined variable: " + valueName
+      if not hasName(names, leftName)
+        rememberName names, nameIndents, leftName, currentIndent
+      if not hasName(names, rightName)
+        rememberName names, nameIndents, rightName, currentIndent
+
     if kindOf(node) == "PRINT"
       if nameOf(node) == "IDENT"
         name = valueOf(node)

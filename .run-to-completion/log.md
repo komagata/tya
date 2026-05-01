@@ -1,5 +1,19 @@
 # Run To Completion Log
 
+## 2026-05-01 16:12:39 JST
+
+- Added self-host checker support for `MULTI_ASSIGN2` nodes, including target
+  binding validation, undefined identifier diagnostics, and binding both
+  targets into the current scope.
+- Updated the stage-4 checker node fixture after the added branch shifted the
+  driver line numbers.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostCheckerChecksMultiAssign2Names|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 15:45:03 JST
 
 - Added self-host checker validation for identifiers in `RETURN2` nodes.
