@@ -390,6 +390,11 @@ check = nodes ->
         if not hasName(names, name)
           push errors, lineOf(node) + ": undefined variable: " + name
 
+    if kindOf(node) == "PRINT_MEMBER"
+      name = nameOf(node)
+      if not hasName(names, name)
+        push errors, lineOf(node) + ": undefined variable: " + name
+
     if kindOf(node) == "BREAK"
       if len(loopIndents) == 0
         push errors, lineOf(node) + ": break outside loop"

@@ -1,6 +1,6 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 20:07:59 JST
+Updated: 2026-05-01 20:33:08 JST
 
 Active phase: advance remaining self-host completion queue.
 
@@ -28,11 +28,13 @@ Completed:
 - Self-host parser parity now covers two-target assignment from one-argument calls.
 - Self-host parser parity now covers literal arguments in two-target one-argument calls.
 - Self-host parser parity now covers `return nil, error "message"` nodes.
+- Self-host parser parity now covers `print object.member` nodes.
 - Self-host checker parity now validates identifiers in two-value return nodes.
 - Self-host checker parity now validates two-target multiple assignment nodes.
 - Self-host checker parity now validates two-target assignment from one-argument calls.
 - Self-host checker parity now handles literal arguments in two-target one-argument calls.
 - Self-host checker parity now validates `return nil, error "message"` nodes.
+- Self-host checker parity now validates `print object.member` base names.
 - Self-host checker parity now rejects `break` and `continue` outside loops.
 - Self-host checker parity now rejects return nodes outside functions.
 - Self-host checker parity now validates `TRY_CALL1` nodes and rejects top-level `try`.

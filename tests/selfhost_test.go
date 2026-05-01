@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\ntried = try identity(trimmed)\nleft, right = result\ncallLeft, callRight = identity(trimmed)\nbareLeft, bareRight = identity \"value\"\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nprint len trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\npush queue, trimmed\nfor entry in queue\n  print entry\nfor entry, index in queue\n  print entry\nfor key, value of user\n  print key\nreturn trimmed, \"ok\"\nreturn nil, error \"bad\"\n"
+	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\ntried = try identity(trimmed)\nleft, right = result\ncallLeft, callRight = identity(trimmed)\nbareLeft, bareRight = identity \"value\"\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nprint len trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\nprint user.name\npush queue, trimmed\nfor entry in queue\n  print entry\nfor entry, index in queue\n  print entry\nfor key, value of user\n  print key\nreturn trimmed, \"ok\"\nreturn nil, error \"bad\"\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -333,6 +333,18 @@ func TestSelfhostCheckerRejectsUndefinedPrintCallNames(t *testing.T) {
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
 	want := "1: undefined variable: missingFunc\n1: undefined variable: missingArg\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestSelfhostCheckerRejectsUndefinedPrintMemberNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	if err := os.WriteFile(path, []byte("1:PRINT_MEMBER:missingObject:name\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: undefined variable: missingObject\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
@@ -852,6 +864,12 @@ func summarizeGoStmt(out *[]string, stmt ast.Stmt) {
 							*out = append(*out, "PRINT_CALL3:"+callee.Name+":"+left.Name+":"+summarizeGoKindedScalar(inner.Args[1])+":"+summarizeGoScalar(inner.Args[2]))
 							return
 						}
+					}
+				}
+				if member, ok := call.Args[0].(*ast.MemberExpr); ok {
+					if obj, ok := member.Object.(*ast.Ident); ok {
+						*out = append(*out, "PRINT_MEMBER:"+obj.Name+":"+member.Name)
+						return
 					}
 				}
 				*out = append(*out, "PRINT:"+summarizeGoExpr(call.Args[0]))

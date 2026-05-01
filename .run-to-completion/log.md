@@ -1,5 +1,20 @@
 # Run To Completion Log
 
+## 2026-05-01 20:33:08 JST
+
+- Added self-host parser support for `print object.member` as
+  `PRINT_MEMBER:object:member`.
+- Added self-host checker validation for the printed member base name.
+- Extended parser parity coverage with `print user.name`.
+- Updated the stage-4 parser and checker fixtures after source line numbers
+  shifted.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostParserMatchesGoParserSubset|TestSelfhostCheckerRejectsUndefinedPrintMemberNames|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 20:07:59 JST
 
 - Added `NIL` scalar recognition to the self-host parser subset.
