@@ -289,10 +289,16 @@ parse = tokens ->
         if i + 7 < len(tokens) and textOf(tokens[i + 5]) == "("
           if textOf(tokens[i + 7]) == ")"
             arg = tokens[i + 6]
-            node = lineOf(token) + ":MULTI_ASSIGN2_CALL1:" + textOf(token) + ":" + textOf(target2) + ":" + textOf(value) + ":" + textOf(arg)
+            node = lineOf(token) + ":MULTI_ASSIGN2_CALL1:" + textOf(token) + ":" + textOf(target2) + ":" + textOf(value) + ":" + literalKindOf(arg) + ":" + textOf(arg)
             push nodes, node
             i = i + 8
             continue
+        if i + 5 < len(tokens) and lineOf(tokens[i + 5]) == lineOf(token)
+          arg = tokens[i + 5]
+          node = lineOf(token) + ":MULTI_ASSIGN2_CALL1:" + textOf(token) + ":" + textOf(target2) + ":" + textOf(value) + ":" + literalKindOf(arg) + ":" + textOf(arg)
+          push nodes, node
+          i = i + 6
+          continue
         node = lineOf(token) + ":MULTI_ASSIGN2:" + textOf(token) + ":" + textOf(target2) + ":" + literalKindOf(value) + ":" + textOf(value)
         push nodes, node
         i = i + 5

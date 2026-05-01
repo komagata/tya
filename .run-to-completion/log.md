@@ -1,5 +1,21 @@
 # Run To Completion Log
 
+## 2026-05-01 19:39:39 JST
+
+- Extended `MULTI_ASSIGN2_CALL1` nodes with argument kind metadata.
+- Added self-host parser support for `left, right = call "literal"` and kept
+  parenthesized call parsing on the same node shape.
+- Updated the self-host checker to validate `MULTI_ASSIGN2_CALL1` identifier
+  arguments while allowing literal arguments.
+- Updated the stage-4 parser and checker fixtures after source line numbers
+  shifted.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostParserMatchesGoParserSubset|TestSelfhostCheckerChecksMultiAssign2CallNames|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 19:10:25 JST
 
 - Added self-host checker support for

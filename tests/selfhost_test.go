@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\ntried = try identity(trimmed)\nleft, right = result\ncallLeft, callRight = identity(trimmed)\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nprint len trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\npush queue, trimmed\nfor entry in queue\n  print entry\nfor entry, index in queue\n  print entry\nfor key, value of user\n  print key\nreturn trimmed, \"ok\"\n"
+	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\ntried = try identity(trimmed)\nleft, right = result\ncallLeft, callRight = identity(trimmed)\nbareLeft, bareRight = identity \"value\"\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nprint len trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\npush queue, trimmed\nfor entry in queue\n  print entry\nfor entry, index in queue\n  print entry\nfor key, value of user\n  print key\nreturn trimmed, \"ok\"\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -315,12 +315,12 @@ func TestSelfhostCheckerChecksMultiAssign2Names(t *testing.T) {
 
 func TestSelfhostCheckerChecksMultiAssign2CallNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:MULTI_ASSIGN2_CALL1:left:right:missingFunc:missingArg\n2:PRINT:IDENT:left\n3:MULTI_ASSIGN2_CALL1:valid:also_bad:missingFunc:missingArg\n"
+	nodes := "1:MULTI_ASSIGN2_CALL1:left:right:missingFunc:IDENT:missingArg\n2:PRINT:IDENT:left\n3:MULTI_ASSIGN2_CALL1:valid:also_bad:missingFunc:IDENT:missingArg\n4:MULTI_ASSIGN2_CALL1:ok:err:missingFunc:STRING:value\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
-	want := "1: undefined variable: missingFunc\n1: undefined variable: missingArg\n3: invalid binding name: also_bad\n3: undefined variable: missingFunc\n3: undefined variable: missingArg\n"
+	want := "1: undefined variable: missingFunc\n1: undefined variable: missingArg\n3: invalid binding name: also_bad\n3: undefined variable: missingFunc\n3: undefined variable: missingArg\n4: undefined variable: missingFunc\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
@@ -805,10 +805,8 @@ func summarizeGoStmt(out *[]string, stmt ast.Stmt) {
 				if right, ok := n.Targets[1].(*ast.Ident); ok {
 					if call, ok := n.Values[0].(*ast.CallExpr); ok {
 						if id, ok := call.Callee.(*ast.Ident); ok && len(call.Args) == 1 {
-							if arg, ok := call.Args[0].(*ast.Ident); ok {
-								*out = append(*out, "MULTI_ASSIGN2_CALL1:"+left.Name+":"+right.Name+":"+id.Name+":"+arg.Name)
-								return
-							}
+							*out = append(*out, "MULTI_ASSIGN2_CALL1:"+left.Name+":"+right.Name+":"+id.Name+":"+summarizeGoKindedScalar(call.Args[0]))
+							return
 						}
 					}
 					*out = append(*out, "MULTI_ASSIGN2:"+left.Name+":"+right.Name+":"+summarizeGoExpr(n.Values[0]))

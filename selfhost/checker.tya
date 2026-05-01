@@ -368,14 +368,15 @@ check = nodes ->
       leftName = nameOf(node)
       rightName = valueOf(node)
       funcName = extraOf(node)
-      argName = extra2Of(node)
+      argKind = extra2Of(node)
+      argName = extra3Of(node)
       if not isValidBindingName(leftName)
         push errors, lineOf(node) + ": invalid binding name: " + leftName
       if not isValidBindingName(rightName)
         push errors, lineOf(node) + ": invalid binding name: " + rightName
       if not hasName(names, funcName)
         push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, argName)
+      if argKind == "IDENT" and not hasName(names, argName)
         push errors, lineOf(node) + ": undefined variable: " + argName
       if not hasName(names, leftName)
         rememberName names, nameIndents, leftName, currentIndent
