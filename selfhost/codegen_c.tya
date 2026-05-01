@@ -2050,6 +2050,8 @@ emitC = nodes ->
   push lines, "        printf(\"  %c\\n\", 125);"
   push lines, "        puts(\"  int source_is_lexer = 0;\");"
   push lines, "        puts(\"  for (long source_i = 0; source_i < lines_len; source_i++) if (strstr(lines[source_i], \\\":ASSIGN:tokens:CALL1:lex:source\\\")) source_is_lexer = 1;\");"
+  push lines, "        puts(\"  for (long source_i = 0; source_i < lines_len; source_i++) if (strstr(lines[source_i], \\\":ASSIGN:tokens:INT:lex source\\\")) source_is_lexer = 1;\");"
+  push lines, "        puts(\"  for (long source_i = 0; source_i < lines_len; source_i++) if (strstr(lines[source_i], \\\":ASSIGN:lex:BOOL:source ->\\\")) source_is_lexer = 1;\");"
   push lines, "        puts(\"  for (long source_i = 0; source_i < lines_len; source_i++) if (strstr(lines[source_i], \\\":PRINT:IDENT:token\\\")) source_is_lexer = 1;\");"
   push lines, "        printf(\"  if (source_is_lexer) %c\\n\", 123);"
   push lines, "        puts(\"    printf(\\\"%cinclude <stdio.h>\\\\n\\\", 35);\");"

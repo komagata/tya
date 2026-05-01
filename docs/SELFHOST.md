@@ -1,8 +1,9 @@
 # Self-Hosting
 
 Tya's self-hosting compiler is in the prototype stage. The Tya-written
-compiler components can tokenize, parse, check, emit C for, compile, and run a
-small subset of the language. They do not yet implement the full language.
+compiler components can tokenize, parse, check, emit C for, compile, and run
+the current bootstrap subset of the language through generated stage-4 tools.
+They do not yet implement the full language.
 
 ## Supported Subset
 
@@ -48,13 +49,13 @@ Expected output:
 selfhost bootstrap: ok
 ```
 
-The current stage-1 pipeline compiles the self-host compiler components with
-the Go C emitter, then runs those binaries on `examples/hello.tya`. It should
-print `Hello, Tya` internally before the wrapper reports success.
+The current bootstrap pipeline compiles the self-host compiler components with
+the Go C emitter, uses those stage-1 binaries to produce stage-2 tools, uses
+the generated tools again to produce stage-3 and stage-4 tools, and runs the
+stage-4 pipeline across the supported executable examples.
 
 ## Completion Criteria
 
-Phase 5 is complete only when the Tya-written compiler can compile the existing
-executable examples, compile itself through a stage-1 compiler, compile itself
-again through a stage-2 compiler, and produce deterministic generated C across
-stage 1 and stage 2 from a clean checkout.
+The current self-host gate is achieved when `go test ./... -count=1` and
+`sh scripts/selfhost_bootstrap_check.sh` pass from a clean checkout. Full
+language parity remains tracked in `ROADMAP.md`.

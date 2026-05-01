@@ -167,7 +167,7 @@ endpoint.
       - [x] Expand stage-4 generated tools to `examples/arithmetic.tya`
       - [x] Expand stage-4 generated tools to `examples/function.tya`
       - [x] Expand stage-4 generated tools to `examples/return.tya`
-      - [ ] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
+      - [x] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
         - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`
@@ -184,8 +184,7 @@ endpoint.
 
 ## Last Resolved Blocker
 
-The Go C emitter used to drop user-defined function call statements such as
-`rememberType names, types, name, "INT"`. That made the Go-emitted stage-1
-self-host codegen lose type metadata and emit `puts(adult)` for bool/int
-values. Generic user function call statements are now emitted and
-`scripts/go_emit_selfhost_ops_check.sh` covers the stage-1 path.
+The stage-4 generated-tool fallback stubs have been replaced for the current
+bootstrap gate. Stage-3 generated tools now emit source-specific executable C
+for the self-host lexer, parser, checker, and C codegen; stage-4 generated
+tools run the supported executable examples through the self-host pipeline.
