@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2577:FOR:node:nodes
-2578:INDENT:2
-3309:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3312:FOR:line:lines
-3313:INDENT:2
-3316:PRINT_CALL1:emitC:nodes
+2592:FOR:node:nodes
+2593:INDENT:2
+3324:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3327:FOR:line:lines
+3328:INDENT:2
+3331:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1461,3 +1461,24 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/array_for" "$stage4_dir/arra
 stage4_array_for_out="$("$stage4_dir/array_for")"
 test "$stage4_array_for_out" = "Tya"
 echo "stage4 array for: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/multiple_return.tya > "$stage4_dir/multiple_return.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/multiple_return.tokens" > "$stage4_dir/multiple_return.nodes"
+cat > "$stage4_dir/multiple_return.want.nodes" <<'NODES'
+1:ASSIGN:parseUser:BOOL:text ->
+2:ASSIGN:user, err:INT:parseUser "komagata"
+3:PRINT:IDENT:err.message
+4:PRINT:IDENT:user.name
+5:ASSIGN:missing, err:INT:parseUser ""
+6:PRINT:IDENT:err.message
+7:PRINT:IDENT:missing.name
+NODES
+diff -u "$stage4_dir/multiple_return.want.nodes" "$stage4_dir/multiple_return.nodes" >/dev/null
+"$stage4_dir/checker.stage4" "$stage4_dir/multiple_return.nodes" > "$stage4_dir/multiple_return.check"
+grep -qx "ok" "$stage4_dir/multiple_return.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/multiple_return.nodes" > "$stage4_dir/multiple_return.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/multiple_return" "$stage4_dir/multiple_return.c" >/dev/null 2>&1
+stage4_multiple_return_out="$("$stage4_dir/multiple_return")"
+test "$stage4_multiple_return_out" = "komagata
+empty user"
+echo "stage4 multiple return: self-host pipeline matched"

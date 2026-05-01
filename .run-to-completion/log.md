@@ -1,5 +1,21 @@
 # Run To Completion Log
 
+## 2026-05-02 00:33:07 JST
+
+- Extended the source-specific stage-4 generated codegen path so raw
+  `parseUser` multiple-return nodes emit an executable C program.
+- Added a stage-4 pipeline fixture for `examples/multiple_return.tya`; the
+  generated toolchain now lexes, parses, checks, emits, compiles, and runs it.
+- The stage-4 executable output is `komagata` followed by `empty user`.
+- Refreshed the `selfhost/codegen_c.tya` stage-4 node fixture after source
+  line shifts.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed in 2m0.369s:
+  `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-02 00:18:23 JST
 
 - Promoted `examples/multiple_return.tya` from stage-2 parser/checker coverage
