@@ -276,6 +276,15 @@ parse = tokens ->
         i = i + 2
         continue
 
+    if kindOf(token) == "IDENT" and i + 4 < len(tokens)
+      if textOf(tokens[i + 1]) == "," and textOf(tokens[i + 3]) == "="
+        target2 = tokens[i + 2]
+        value = tokens[i + 4]
+        node = lineOf(token) + ":MULTI_ASSIGN2:" + textOf(token) + ":" + textOf(target2) + ":" + literalKindOf(value) + ":" + textOf(value)
+        push nodes, node
+        i = i + 5
+        continue
+
     if kindOf(token) == "IDENT" and i + 2 < len(tokens)
       if textOf(tokens[i + 1]) == "="
         value = tokens[i + 2]
