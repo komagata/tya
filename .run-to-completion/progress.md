@@ -1,6 +1,6 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 23:40:57 JST
+Updated: 2026-05-02 00:04:23 JST
 
 Active phase: advance remaining self-host completion queue.
 
@@ -42,6 +42,7 @@ Completed:
 - Self-host checker parity now validates `TRY_CALL1` nodes and rejects top-level `try`.
 - Self-host C codegen now emits `print object.member` for one-property object placeholders.
 - Self-host C codegen now runs the `examples/multiple_return.tya` front-end subset with string out-params for two-value returns.
+- Stage-2 generated parser/checker now covers `examples/multiple_return.tya` nodes.
 - Go interpreter string indexing and length now cache rune slices during a run, reducing self-host lexer checks from minutes to seconds.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.

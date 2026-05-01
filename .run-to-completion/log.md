@@ -1,5 +1,24 @@
 # Run To Completion Log
 
+## 2026-05-02 00:04:23 JST
+
+- Extended the generated parser path with token field extraction for
+  `examples/multiple_return.tya`.
+- Stage-2 parser output now covers `parseUser`, `return nil, error
+  "message"`, `return { name: text }, nil`, two-target call assignment,
+  `if`/`else`, and `print object.member` nodes.
+- Added a stage-2 parser/checker fixture for `examples/multiple_return.tya`.
+- The generated stage-2 codegen still emits an empty executable for those
+  nodes; that is the next target before promoting this to a full stage-2
+  executable pipeline.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostCodegenRunsMultipleReturnSubset|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed in 1m56.544s:
+  `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 23:40:57 JST
 
 - Added self-host C codegen support for the current multiple-return example

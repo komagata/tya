@@ -891,6 +891,40 @@ loop
 Tya"
 echo "examples/selfhost_ops.tya: stage-2 pipeline matched"
 
+"$out_dir/lexer.stage2" examples/multiple_return.tya > "$out_dir/multiple_return.stage2.tokens"
+"$out_dir/parser.stage2" "$out_dir/multiple_return.stage2.tokens" > "$out_dir/multiple_return.stage2.nodes"
+cat > "$out_dir/multiple_return.want.nodes" <<'NODES'
+1:FUNC:parseUser:text
+2:INDENT:2
+2:IF_COMPARE_EQ:IDENT:text:STRING:
+3:INDENT:4
+3:RETURN2_CALL1:NIL:nil:error:STRING:empty user
+4:RETURN2_OBJECT_NIL:name:IDENT:text
+6:INDENT:0
+6:MULTI_ASSIGN2_CALL1:user:err:parseUser:STRING:komagata
+8:IF:IDENT:err
+9:INDENT:2
+9:PRINT_MEMBER:err:message
+10:INDENT:0
+10:ELSE
+11:INDENT:2
+11:PRINT_MEMBER:user:name
+13:INDENT:0
+13:MULTI_ASSIGN2_CALL1:missing:err:parseUser:STRING:
+15:IF:IDENT:err
+16:INDENT:2
+16:PRINT_MEMBER:err:message
+17:INDENT:0
+17:ELSE
+18:INDENT:2
+18:PRINT_MEMBER:missing:name
+NODES
+diff -u "$out_dir/multiple_return.want.nodes" "$out_dir/multiple_return.stage2.nodes" >/dev/null
+echo "examples/multiple_return.tya: stage-2 parser matched"
+"$out_dir/checker.stage2" "$out_dir/multiple_return.stage2.nodes" > "$out_dir/multiple_return.stage2.check"
+grep -qx "ok" "$out_dir/multiple_return.stage2.check"
+echo "examples/multiple_return.tya: stage-2 checker matched"
+
 "$out_dir/lexer.stage2" examples/while.tya > "$out_dir/while_example.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/while_example.stage2.tokens" > "$out_dir/while_example.stage2.nodes"
 "$out_dir/checker.stage2" "$out_dir/while_example.stage2.nodes" > "$out_dir/while_example.stage2.check"
@@ -1112,12 +1146,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2421:FOR:node:nodes
-2422:INDENT:2
-3153:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3156:FOR:line:lines
-3157:INDENT:2
-3160:PRINT_CALL1:emitC:nodes
+2537:FOR:node:nodes
+2538:INDENT:2
+3269:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3272:FOR:line:lines
+3273:INDENT:2
+3276:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"

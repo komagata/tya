@@ -138,6 +138,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for literal reassignment
     - [x] Run a stage-2 pipeline for `readFile args()[0]`
     - [x] Skip function bodies in the stage-2 parser subset
+    - [x] Run a stage-2 parser/checker fixture for `examples/multiple_return.tya`
     - [ ] Advance stage-3 self-host compiler probe
       - [x] Generate, compile, and run a stage-3 lexer on `examples/hello.tya`
       - [x] Generate, compile, and run a stage-3 parser on stage-3 lexer output
