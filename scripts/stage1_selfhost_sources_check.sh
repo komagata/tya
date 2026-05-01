@@ -924,6 +924,13 @@ echo "examples/multiple_return.tya: stage-2 parser matched"
 "$out_dir/checker.stage2" "$out_dir/multiple_return.stage2.nodes" > "$out_dir/multiple_return.stage2.check"
 grep -qx "ok" "$out_dir/multiple_return.stage2.check"
 echo "examples/multiple_return.tya: stage-2 checker matched"
+compare_stage2_codegen "examples/multiple_return.tya" "$out_dir/multiple_return.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/multiple_return.stage2.nodes" > "$out_dir/multiple_return.stage2.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/multiple_return.stage2" "$out_dir/multiple_return.stage2.c" >/dev/null 2>&1
+multiple_return_out="$("$out_dir/multiple_return.stage2")"
+test "$multiple_return_out" = "komagata
+empty user"
+echo "examples/multiple_return.tya: stage-2 pipeline matched"
 
 "$out_dir/lexer.stage2" examples/while.tya > "$out_dir/while_example.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/while_example.stage2.tokens" > "$out_dir/while_example.stage2.nodes"
@@ -1146,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2537:FOR:node:nodes
-2538:INDENT:2
-3269:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3272:FOR:line:lines
-3273:INDENT:2
-3276:PRINT_CALL1:emitC:nodes
+2577:FOR:node:nodes
+2578:INDENT:2
+3309:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3312:FOR:line:lines
+3313:INDENT:2
+3316:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"

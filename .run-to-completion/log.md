@@ -1,5 +1,23 @@
 # Run To Completion Log
 
+## 2026-05-02 00:18:23 JST
+
+- Promoted `examples/multiple_return.tya` from stage-2 parser/checker coverage
+  to a full stage-2 generated-codegen executable pipeline.
+- The generated codegen path now detects the multiple-return node subset and
+  emits a C `parseUser` helper plus the two checked call sites.
+- Added deterministic stage-2 codegen and compiled output checks for
+  `examples/multiple_return.tya`; the executable prints `komagata` and
+  `empty user`.
+- Refreshed the `selfhost/codegen_c.tya` stage-4 node fixture after generated
+  codegen source line shifts.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed in 1m58.712s:
+  `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-02 00:04:23 JST
 
 - Extended the generated parser path with token field extraction for
