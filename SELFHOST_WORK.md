@@ -86,12 +86,14 @@ endpoint.
     - [x] Parse `target = try call(arg)` in the self-host parser subset
     - [x] Parse `left, right = call(arg)` in the self-host parser subset
     - [x] Parse `left, right = call "literal"` in the self-host parser subset
+    - [x] Parse `return nil, error "message"` in the self-host parser subset
   - [ ] Expand self-host checker toward Go checker parity
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
     - [x] Check undefined names in two-value return nodes
     - [x] Check two-target multiple assignment nodes
     - [x] Check two-target assignment from one-argument calls
     - [x] Check literal arguments in two-target one-argument calls
+    - [x] Check `return nil, error "message"` nodes
     - [x] Reject `break` and `continue` outside loops
     - [x] Reject return nodes outside functions
     - [x] Check `TRY_CALL1` nodes and reject top-level `try`

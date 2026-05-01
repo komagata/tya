@@ -1,5 +1,21 @@
 # Run To Completion Log
 
+## 2026-05-01 20:07:59 JST
+
+- Added `NIL` scalar recognition to the self-host parser subset.
+- Added `RETURN2_CALL1` parsing for forms like `return nil, error "message"`.
+- Added self-host checker support for `RETURN2_CALL1`, including undefined
+  left value, callee, and identifier argument checks.
+- Registered `error` as a self-host checker builtin.
+- Updated the stage-4 parser and checker fixtures after source line numbers
+  shifted.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostParserMatchesGoParserSubset|TestSelfhostCheckerChecksReturn2CallNames|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 19:39:39 JST
 
 - Extended `MULTI_ASSIGN2_CALL1` nodes with argument kind metadata.

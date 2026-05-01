@@ -13,6 +13,8 @@ lineOf = token ->
   parts[0]
 
 literalKindOf = token ->
+  if kindOf(token) == "IDENT" and textOf(token) == "nil"
+    return "NIL"
   if kindOf(token) == "IDENT" and (textOf(token) == "true" or textOf(token) == "false")
     return "BOOL"
   kindOf(token)
@@ -266,6 +268,13 @@ parse = tokens ->
       if i + 1 < len(tokens)
         value = tokens[i + 1]
         if i + 3 < len(tokens) and textOf(tokens[i + 2]) == ","
+          if i + 4 < len(tokens) and lineOf(tokens[i + 4]) == lineOf(token)
+            value2 = tokens[i + 3]
+            arg = tokens[i + 4]
+            node = lineOf(token) + ":RETURN2_CALL1:" + literalKindOf(value) + ":" + textOf(value) + ":" + textOf(value2) + ":" + literalKindOf(arg) + ":" + textOf(arg)
+            push nodes, node
+            i = i + 5
+            continue
           value2 = tokens[i + 3]
           node = lineOf(token) + ":RETURN2:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(value2) + ":" + textOf(value2)
           push nodes, node

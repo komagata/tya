@@ -124,6 +124,7 @@ check = nodes ->
   rememberName names, nameIndents, "byteLen", "0"
   rememberName names, nameIndents, "charLen", "0"
   rememberName names, nameIndents, "hasName", "0"
+  rememberName names, nameIndents, "error", "0"
 
   for node in nodes
     if kindOf(node) == "INDENT"
@@ -648,6 +649,21 @@ check = nodes ->
         push errors, lineOf(node) + ": undefined variable: " + leftName
       if rightKind == "IDENT" and not hasName(names, rightName)
         push errors, lineOf(node) + ": undefined variable: " + rightName
+
+    if kindOf(node) == "RETURN2_CALL1"
+      if len(funcIndents) == 0
+        push errors, lineOf(node) + ": return outside function"
+      leftKind = nameOf(node)
+      leftName = valueOf(node)
+      funcName = extraOf(node)
+      argKind = extra2Of(node)
+      argName = extra3Of(node)
+      if leftKind == "IDENT" and not hasName(names, leftName)
+        push errors, lineOf(node) + ": undefined variable: " + leftName
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if argKind == "IDENT" and not hasName(names, argName)
+        push errors, lineOf(node) + ": undefined variable: " + argName
 
     if kindOf(node) == "RETURN_CALL2"
       if len(funcIndents) == 0

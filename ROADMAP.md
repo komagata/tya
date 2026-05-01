@@ -313,6 +313,7 @@ Self-Host Completion TODO:
     - [x] Parse `target = try call(arg)` in the self-host parser subset
     - [x] Parse `left, right = call(arg)` in the self-host parser subset
     - [x] Parse `left, right = call "literal"` in the self-host parser subset
+    - [x] Parse `return nil, error "message"` in the self-host parser subset
   - [ ] Add parser golden tests comparing Go parser AST shape and Tya parser AST shape
     - [x] Add subset parser golden tests for assignments, comparisons, blocks, `else`, `while`, `push`, and `for`
 - [ ] Checker parity
@@ -326,6 +327,7 @@ Self-Host Completion TODO:
     - [x] Check two-target multiple assignment nodes
     - [x] Check two-target assignment from one-argument calls
     - [x] Check literal arguments in two-target one-argument calls
+    - [x] Check `return nil, error "message"` nodes
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
     - [x] Reject `break` and `continue` outside loops in the self-host checker subset
     - [x] Reject return nodes outside functions in the self-host checker subset
