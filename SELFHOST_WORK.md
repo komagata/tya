@@ -89,6 +89,7 @@ endpoint.
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
     - [x] Check undefined names in two-value return nodes
     - [x] Check two-target multiple assignment nodes
+    - [x] Check two-target assignment from one-argument calls
     - [x] Reject `break` and `continue` outside loops
     - [x] Reject return nodes outside functions
     - [x] Check `TRY_CALL1` nodes and reject top-level `try`

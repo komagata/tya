@@ -313,6 +313,19 @@ func TestSelfhostCheckerChecksMultiAssign2Names(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerChecksMultiAssign2CallNames(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:MULTI_ASSIGN2_CALL1:left:right:missingFunc:missingArg\n2:PRINT:IDENT:left\n3:MULTI_ASSIGN2_CALL1:valid:also_bad:missingFunc:missingArg\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: undefined variable: missingFunc\n1: undefined variable: missingArg\n3: invalid binding name: also_bad\n3: undefined variable: missingFunc\n3: undefined variable: missingArg\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedPrintCallNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:PRINT_CALL1:missingFunc:missingArg\n"), 0644); err != nil {

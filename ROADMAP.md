@@ -323,6 +323,7 @@ Self-Host Completion TODO:
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
     - [x] Check undefined names in two-value return nodes
     - [x] Check two-target multiple assignment nodes
+    - [x] Check two-target assignment from one-argument calls
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
     - [x] Reject `break` and `continue` outside loops in the self-host checker subset
     - [x] Reject return nodes outside functions in the self-host checker subset

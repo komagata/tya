@@ -1,5 +1,20 @@
 # Run To Completion Log
 
+## 2026-05-01 19:10:25 JST
+
+- Added self-host checker support for
+  `MULTI_ASSIGN2_CALL1:left:right:call:arg`.
+- The checker now validates both target names, the callee, the argument, and
+  binds both targets into the current scope.
+- Updated the stage-4 checker node fixture after checker source line numbers
+  shifted.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostCheckerChecksMultiAssign2CallNames|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 18:43:34 JST
 
 - Added self-host parser support for `left, right = call(arg)` as

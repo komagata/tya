@@ -364,6 +364,24 @@ check = nodes ->
       if not hasName(names, rightName)
         rememberName names, nameIndents, rightName, currentIndent
 
+    if kindOf(node) == "MULTI_ASSIGN2_CALL1"
+      leftName = nameOf(node)
+      rightName = valueOf(node)
+      funcName = extraOf(node)
+      argName = extra2Of(node)
+      if not isValidBindingName(leftName)
+        push errors, lineOf(node) + ": invalid binding name: " + leftName
+      if not isValidBindingName(rightName)
+        push errors, lineOf(node) + ": invalid binding name: " + rightName
+      if not hasName(names, funcName)
+        push errors, lineOf(node) + ": undefined variable: " + funcName
+      if not hasName(names, argName)
+        push errors, lineOf(node) + ": undefined variable: " + argName
+      if not hasName(names, leftName)
+        rememberName names, nameIndents, leftName, currentIndent
+      if not hasName(names, rightName)
+        rememberName names, nameIndents, rightName, currentIndent
+
     if kindOf(node) == "PRINT"
       if nameOf(node) == "IDENT"
         name = valueOf(node)
