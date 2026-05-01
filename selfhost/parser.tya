@@ -265,6 +265,12 @@ parse = tokens ->
     if kindOf(token) == "IDENT" and textOf(token) == "return"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
+        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == ","
+          value2 = tokens[i + 3]
+          node = lineOf(token) + ":RETURN2:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(value2) + ":" + textOf(value2)
+          push nodes, node
+          i = i + 4
+          continue
         if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "["
           index = tokens[i + 3]
           node = lineOf(token) + ":RETURN:INDEX:" + textOf(value) + ":" + textOf(index)

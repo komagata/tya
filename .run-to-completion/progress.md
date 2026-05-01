@@ -1,6 +1,6 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 13:26:55 JST
+Updated: 2026-05-01 14:31:43 JST
 
 Active phase: advance remaining self-host completion queue.
 
@@ -23,6 +23,7 @@ Completed:
 - Self-host parser parity now covers indexed `for item, index in items` loops.
 - Self-host parser parity now covers `for key, value of object` loops.
 - Self-host parser parity now covers two-target multiple assignment.
+- Self-host parser parity now covers two-value return statements.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Committed parent queue cleanup as `d4ff7f3`.
