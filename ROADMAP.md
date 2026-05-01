@@ -322,6 +322,7 @@ Self-Host Completion TODO:
     - [x] Check undefined names in two-value return nodes
     - [x] Check two-target multiple assignment nodes
   - [ ] Check control-flow placement for `break`, `continue`, `return`, and `try`
+    - [x] Reject `break` and `continue` outside loops in the self-host checker subset
   - [ ] Port optional unused binding checks or decide they stay Go-only
   - [ ] Add checker parity tests against Go checker diagnostics
     - [x] Add subset checker parity tests for undefined variable diagnostics

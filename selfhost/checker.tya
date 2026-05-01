@@ -106,6 +106,7 @@ isLiteralArg = name ->
 check = nodes ->
   names = []
   nameIndents = []
+  loopIndents = []
   errors = []
   currentIndent = "0"
   rememberName names, nameIndents, "split", "0"
@@ -135,6 +136,13 @@ check = nodes ->
         i = i + 1
       names = keptNames
       nameIndents = keptIndents
+      keptLoopIndents = []
+      i = 0
+      while i < len(loopIndents)
+        if toInt(loopIndents[i]) <= toInt(currentIndent)
+          push keptLoopIndents, loopIndents[i]
+        i = i + 1
+      loopIndents = keptLoopIndents
 
     if kindOf(node) == "FUNC"
       name = nameOf(node)
@@ -227,6 +235,10 @@ check = nodes ->
         push errors, lineOf(node) + ": undefined variable: " + collection
       if not hasName(names, item)
         rememberName names, nameIndents, item, toString(toInt(currentIndent) + 2)
+      push loopIndents, toString(toInt(currentIndent) + 2)
+
+    if kindOf(node) == "WHILE" or kindOf(node) == "WHILE_LT_CALL" or kindOf(node) == "WHILE_COMPARE_LT" or kindOf(node) == "WHILE_COMPARE_NE" or kindOf(node) == "WHILE_COMPARE_GE" or kindOf(node) == "WHILE_COMPARE_LE"
+      push loopIndents, toString(toInt(currentIndent) + 2)
 
     if kindOf(node) == "ASSIGN"
       name = nameOf(node)
@@ -336,6 +348,14 @@ check = nodes ->
         name = valueOf(node)
         if not hasName(names, name)
           push errors, lineOf(node) + ": undefined variable: " + name
+
+    if kindOf(node) == "BREAK"
+      if len(loopIndents) == 0
+        push errors, lineOf(node) + ": break outside loop"
+
+    if kindOf(node) == "CONTINUE"
+      if len(loopIndents) == 0
+        push errors, lineOf(node) + ": continue outside loop"
 
     if kindOf(node) == "PRINT_CALL1"
       funcName = nameOf(node)

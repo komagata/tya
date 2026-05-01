@@ -275,6 +275,19 @@ func TestSelfhostCheckerRejectsUndefinedConditionNames(t *testing.T) {
 	}
 }
 
+func TestSelfhostCheckerRejectsBreakContinueOutsideLoop(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:BREAK\n2:CONTINUE\n3:WHILE:BOOL:true\n4:INDENT:2\n4:BREAK\n5:CONTINUE\n6:INDENT:0\n6:BREAK\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: break outside loop\n2: continue outside loop\n6: break outside loop\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestSelfhostCheckerRejectsUndefinedAssignmentNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
 	if err := os.WriteFile(path, []byte("1:ASSIGN:alias:IDENT:missing\n2:ASSIGN:ok:COMPARE_GE:missing:1\n"), 0644); err != nil {
