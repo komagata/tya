@@ -203,6 +203,23 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	}
 }
 
+func TestSelfhostCodegenRunsMultipleReturnSubset(t *testing.T) {
+	dir := t.TempDir()
+	nodesPath := dir + "/nodes.txt"
+	cPath := dir + "/multiple_return.c"
+	binPath := dir + "/multiple_return"
+	nodes := "1:FUNC:parseUser:text\n2:INDENT:2\n2:IF_COMPARE_EQ:IDENT:text:STRING:\n3:INDENT:4\n3:RETURN2_CALL1:NIL:nil:error:STRING:empty user\n4:INDENT:2\n4:RETURN2_OBJECT_NIL:name:IDENT:text\n6:INDENT:0\n6:MULTI_ASSIGN2_CALL1:user:err:parseUser:STRING:komagata\n8:INDENT:0\n8:IF:IDENT:err\n9:INDENT:2\n9:PRINT_MEMBER:err:message\n10:INDENT:0\n10:ELSE\n11:INDENT:2\n11:PRINT_MEMBER:user:name\n13:INDENT:0\n13:MULTI_ASSIGN2_CALL1:missing:err:parseUser:STRING:\n15:INDENT:0\n15:IF:IDENT:err\n16:INDENT:2\n16:PRINT_MEMBER:err:message\n17:INDENT:0\n17:ELSE\n18:INDENT:2\n18:PRINT_MEMBER:missing:name\n"
+	if err := os.WriteFile(nodesPath, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	runToFile(t, cPath, "go", "run", "./cmd/tya", "selfhost/codegen_c.tya", nodesPath)
+	run(t, "cc", "-std=c99", "-Wall", "-Wextra", "-pedantic", "-o", binPath, cPath)
+	out := run(t, binPath)
+	if string(out) != "komagata\nempty user\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestSelfhostSourcesCompileToC(t *testing.T) {
 	out := run(t, "sh", "scripts/selfhost_compile_check.sh")
 	want := "selfhost/lexer.tya: compiled\nselfhost/parser.tya: compiled\nselfhost/checker.tya: compiled\nselfhost/codegen_c.tya: compiled\n"

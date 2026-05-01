@@ -1110,14 +1110,14 @@ echo "selfhost/checker.tya: stage-3 codegen emitted executable checker C"
 cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 58:FOR:existing:names
 59:INDENT:2
-91:FOR:node:nodes
-92:INDENT:2
-2390:FOR:node:nodes
-2391:INDENT:2
-3100:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3103:FOR:line:lines
-3104:INDENT:2
-3107:PRINT_CALL1:emitC:nodes
+95:FOR:node:nodes
+96:INDENT:2
+2421:FOR:node:nodes
+2422:INDENT:2
+3153:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3156:FOR:line:lines
+3157:INDENT:2
+3160:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"

@@ -1,5 +1,23 @@
 # Run To Completion Log
 
+## 2026-05-01 23:40:57 JST
+
+- Added self-host C codegen support for the current multiple-return example
+  subset: `return nil, error "message"`, `return { name: arg }, nil`, and
+  `left, err = call "literal"`.
+- Lowered that subset to generated C functions with string out-parameters.
+- Updated string `if err` lowering to test non-empty strings.
+- Added an executable codegen test for the multiple-return subset.
+- Verified the actual self-host lexer/parser/checker/codegen pipeline for
+  `examples/multiple_return.tya` prints `komagata` and `empty user`.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostCodegenRunsMultipleReturnSubset|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed in 1m49.860s:
+  `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 23:27:40 JST
 
 - Added self-host C codegen lowering for `PRINT_MEMBER` against one-property

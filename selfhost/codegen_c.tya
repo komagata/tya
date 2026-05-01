@@ -86,12 +86,17 @@ emitC = nodes ->
   funcArgs = []
   funcRetKinds = []
   funcRetValues = []
+  multiFuncNames = []
+  multiFuncArgs = []
+  multiFuncErrors = []
   pendingFuncName = ""
   pendingFuncArg = ""
+  pendingFuncError = ""
   for node in nodes
     if kindOf(node) == "FUNC"
       pendingFuncName = nameOf(node)
       pendingFuncArg = valueOf(node)
+      pendingFuncError = ""
     if pendingFuncName != "" and kindOf(node) == "RETURN"
       if nameOf(node) == "IDENT" and valueOf(node) == pendingFuncArg
         push funcNames, pendingFuncName
@@ -100,9 +105,22 @@ emitC = nodes ->
         push funcRetValues, valueOf(node)
         pendingFuncName = ""
         pendingFuncArg = ""
+        pendingFuncError = ""
+    if pendingFuncName != "" and kindOf(node) == "RETURN2_CALL1"
+      if nameOf(node) == "NIL" and extraOf(node) == "error" and extra2Of(node) == "STRING"
+        pendingFuncError = extra3Of(node)
+    if pendingFuncName != "" and kindOf(node) == "RETURN2_OBJECT_NIL"
+      if valueOf(node) == "IDENT" and extraOf(node) == pendingFuncArg
+        push multiFuncNames, pendingFuncName
+        push multiFuncArgs, pendingFuncArg
+        push multiFuncErrors, pendingFuncError
+        pendingFuncName = ""
+        pendingFuncArg = ""
+        pendingFuncError = ""
     if kindOf(node) == "INDENT" and nameOf(node) == "0"
       pendingFuncName = ""
       pendingFuncArg = ""
+      pendingFuncError = ""
 
   push lines, "#include <stdio.h>"
   push lines, "#include <string.h>"
@@ -2381,6 +2399,19 @@ emitC = nodes ->
     push lines, "}"
     push lines, ""
     i = i + 1
+  i = 0
+  while i < len(multiFuncNames)
+    push lines, "static void " + cName(multiFuncNames[i]) + "(const char *" + cName(multiFuncArgs[i]) + ", const char **out_value, const char **out_error) {"
+    push lines, "  if (strcmp(" + cName(multiFuncArgs[i]) + ", \"\") == 0) {"
+    push lines, "    *out_value = \"\";"
+    push lines, "    *out_error = " + cString(multiFuncErrors[i]) + ";"
+    push lines, "    return;"
+    push lines, "  }"
+    push lines, "  *out_value = " + cName(multiFuncArgs[i]) + ";"
+    push lines, "  *out_error = \"\";"
+    push lines, "}"
+    push lines, ""
+    i = i + 1
   push lines, "int main(int argc, char **argv) {"
   blockOpen = false
   blockDepth = 0
@@ -2406,9 +2437,28 @@ emitC = nodes ->
     if kindOf(node) == "FUNC"
       if not hasName(names, nameOf(node))
         rememberType names, types, nameOf(node), "FUNC"
-      if not hasName(funcNames, nameOf(node))
+      if not hasName(funcNames, nameOf(node)) and not hasName(multiFuncNames, nameOf(node))
         push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ") */"
       skipFunctionBody = true
+
+    if kindOf(node) == "MULTI_ASSIGN2_CALL1"
+      arg = cName(extra3Of(node))
+      if extra2Of(node) == "STRING"
+        arg = cString(extra3Of(node))
+      if hasName(names, nameOf(node))
+        push lines, "  " + cName(nameOf(node)) + " = \"\";"
+      else
+        push lines, "  const char *" + cName(nameOf(node)) + " = \"\";"
+        rememberType names, types, nameOf(node), "STRING"
+      if hasName(names, valueOf(node))
+        push lines, "  " + cName(valueOf(node)) + " = \"\";"
+      else
+        push lines, "  const char *" + cName(valueOf(node)) + " = \"\";"
+        rememberType names, types, valueOf(node), "STRING"
+      if hasName(multiFuncNames, extraOf(node))
+        push lines, "  " + cName(extraOf(node)) + "(" + arg + ", &" + cName(nameOf(node)) + ", &" + cName(valueOf(node)) + ");"
+      else
+        push lines, "  /* " + nameOf(node) + ", " + valueOf(node) + " = " + extraOf(node) + "(" + extra3Of(node) + ") */"
 
     if kindOf(node) == "FUNC2"
       if not hasName(names, nameOf(node))
@@ -2753,7 +2803,10 @@ emitC = nodes ->
         blockDepth = blockDepth + 1
       else
         if nameOf(node) == "IDENT"
-          push lines, "  if (" + valueOf(node) + ") {"
+          if typeOf(names, types, valueOf(node)) == "STRING"
+            push lines, "  if (" + cName(valueOf(node)) + " && " + cName(valueOf(node)) + "[0] != 0) {"
+          else
+            push lines, "  if (" + valueOf(node) + ") {"
           blockOpen = true
           blockDepth = blockDepth + 1
         else

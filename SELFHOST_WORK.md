@@ -109,6 +109,7 @@ endpoint.
     - [x] Emit `trim(text)` calls in the self-host C codegen subset
     - [x] Emit `print len(value)` calls in the self-host C codegen subset
     - [x] Emit `print object.member` for one-property object placeholders
+    - [x] Emit the current multiple-return example subset with string out-params
   - [ ] Advance bootstrap from subset programs toward compiling existing examples
     - [x] Run a stage-2 pipeline for printing string length
     - [x] Run a stage-2 pipeline for trimming and printing a string

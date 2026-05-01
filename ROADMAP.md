@@ -351,6 +351,7 @@ Self-Host Completion TODO:
     - [x] Emit `trim(text)` calls in the self-host C codegen subset
     - [x] Emit `print len(value)` calls in the self-host C codegen subset
     - [x] Emit `print object.member` for one-property object placeholders
+    - [x] Emit the current multiple-return example subset with string out-params
   - [ ] Emit arrays, objects, member access, index access, methods with `@`, and object property assignment
     - [x] Emit one-property object placeholders in the self-host C codegen subset
     - [x] Emit empty arrays and `push` as dynamic string arrays in the self-host C codegen subset
