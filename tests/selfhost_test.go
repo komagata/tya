@@ -351,11 +351,11 @@ func TestSelfhostCheckerRejectsUndefinedPushNames(t *testing.T) {
 
 func TestSelfhostCheckerRejectsUndefinedReturnNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	if err := os.WriteFile(path, []byte("1:RETURN:IDENT:missing\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("1:FUNC:f:\n2:INDENT:2\n2:RETURN:IDENT:missing\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
-	want := "1: undefined variable: missing\n"
+	want := "2: undefined variable: missing\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
@@ -363,11 +363,11 @@ func TestSelfhostCheckerRejectsUndefinedReturnNames(t *testing.T) {
 
 func TestSelfhostCheckerRejectsUndefinedReturn2Names(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	if err := os.WriteFile(path, []byte("1:RETURN2:IDENT:missingLeft:IDENT:missingRight\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("1:FUNC:f:\n2:INDENT:2\n2:RETURN2:IDENT:missingLeft:IDENT:missingRight\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
-	want := "1: undefined variable: missingLeft\n1: undefined variable: missingRight\n"
+	want := "2: undefined variable: missingLeft\n2: undefined variable: missingRight\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
@@ -375,11 +375,24 @@ func TestSelfhostCheckerRejectsUndefinedReturn2Names(t *testing.T) {
 
 func TestSelfhostCheckerRejectsUndefinedReturnCallNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	if err := os.WriteFile(path, []byte("1:RETURN_CALL2:missingFunc:IDENT:missingArg\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("1:FUNC:f:\n2:INDENT:2\n2:RETURN_CALL2:missingFunc:IDENT:missingArg\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
-	want := "1: undefined variable: missingFunc\n1: undefined variable: missingArg\n"
+	want := "2: undefined variable: missingFunc\n2: undefined variable: missingArg\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestSelfhostCheckerRejectsReturnOutsideFunction(t *testing.T) {
+	path := t.TempDir() + "/nodes.txt"
+	nodes := "1:RETURN:INT:1\n2:RETURN2:INT:1:INT:2\n3:FUNC2:known:left:right\n4:ASSIGN:arg:STRING:value\n5:INDENT:0\n5:RETURN_CALL2:known:IDENT:arg\n"
+	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
+	want := "1: return outside function\n2: return outside function\n5: return outside function\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
@@ -459,11 +472,11 @@ func TestSelfhostCheckerAllowsPrintContainsBuiltin(t *testing.T) {
 
 func TestSelfhostCheckerRejectsUndefinedIndexNames(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	if err := os.WriteFile(path, []byte("1:ASSIGN:first:INDEX:missingItems:i\n2:RETURN:INDEX:missingItems:i\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("1:ASSIGN:first:INDEX:missingItems:i\n2:FUNC:f:\n3:INDENT:2\n3:RETURN:INDEX:missingItems:i\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	out := run(t, "go", "run", "./cmd/tya", "selfhost/checker.tya", path)
-	want := "1: undefined variable: missingItems\n1: undefined variable: i\n2: undefined variable: missingItems\n2: undefined variable: i\n"
+	want := "1: undefined variable: missingItems\n1: undefined variable: i\n3: undefined variable: missingItems\n3: undefined variable: i\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

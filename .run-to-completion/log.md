@@ -1,5 +1,20 @@
 # Run To Completion Log
 
+## 2026-05-01 17:26:18 JST
+
+- Added self-host checker function-context tracking for `RETURN`,
+  `RETURN2`, and `RETURN_CALL2`.
+- Removed a top-level `return` from `examples/selfhost_input.tya` now that the
+  self-host checker rejects return nodes outside functions.
+- Updated the stage-4 checker node fixture after the added function-context
+  branch shifted checker source node line numbers.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostPrototypePipeline|TestSelfhostCheckerRejectsUndefined(NotNames|IndexNames)|TestSelfhostCheckerRejects(UndefinedReturnNames|UndefinedReturn2Names|UndefinedReturnCallNames|ReturnOutsideFunction)|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 16:38:04 JST
 
 - Added self-host checker loop-context tracking for `break` and `continue`.

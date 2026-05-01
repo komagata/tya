@@ -88,6 +88,7 @@ endpoint.
     - [x] Check undefined names in two-value return nodes
     - [x] Check two-target multiple assignment nodes
     - [x] Reject `break` and `continue` outside loops
+    - [x] Reject return nodes outside functions
   - [ ] Expand self-host C codegen toward executable example parity
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset

@@ -107,6 +107,7 @@ check = nodes ->
   names = []
   nameIndents = []
   loopIndents = []
+  funcIndents = []
   errors = []
   currentIndent = "0"
   rememberName names, nameIndents, "split", "0"
@@ -143,6 +144,13 @@ check = nodes ->
           push keptLoopIndents, loopIndents[i]
         i = i + 1
       loopIndents = keptLoopIndents
+      keptFuncIndents = []
+      i = 0
+      while i < len(funcIndents)
+        if toInt(funcIndents[i]) <= toInt(currentIndent)
+          push keptFuncIndents, funcIndents[i]
+        i = i + 1
+      funcIndents = keptFuncIndents
 
     if kindOf(node) == "FUNC"
       name = nameOf(node)
@@ -153,6 +161,7 @@ check = nodes ->
         push errors, lineOf(node) + ": invalid binding name: " + arg
       if arg != "" and not hasName(names, arg)
         rememberName names, nameIndents, arg, currentIndent
+      push funcIndents, toString(toInt(currentIndent) + 2)
 
     if kindOf(node) == "FUNC2"
       name = nameOf(node)
@@ -170,6 +179,7 @@ check = nodes ->
         rememberName names, nameIndents, arg, currentIndent
       if arg2 != "" and not hasName(names, arg2)
         rememberName names, nameIndents, arg2, currentIndent
+      push funcIndents, toString(toInt(currentIndent) + 2)
 
     if kindOf(node) == "FUNC3"
       name = nameOf(node)
@@ -194,6 +204,7 @@ check = nodes ->
         rememberName names, nameIndents, arg2, currentIndent
       if arg3 != "" and not hasName(names, arg3)
         rememberName names, nameIndents, arg3, currentIndent
+      push funcIndents, toString(toInt(currentIndent) + 2)
 
     if kindOf(node) == "FUNC4"
       name = nameOf(node)
@@ -225,6 +236,7 @@ check = nodes ->
         rememberName names, nameIndents, arg3, currentIndent
       if arg4 != "" and not hasName(names, arg4)
         rememberName names, nameIndents, arg4, currentIndent
+      push funcIndents, toString(toInt(currentIndent) + 2)
 
     if kindOf(node) == "FOR"
       item = nameOf(node)
@@ -583,6 +595,8 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + valueName
 
     if kindOf(node) == "RETURN"
+      if len(funcIndents) == 0
+        push errors, lineOf(node) + ": return outside function"
       if nameOf(node) == "IDENT"
         name = valueOf(node)
         if not hasName(names, name)
@@ -596,6 +610,8 @@ check = nodes ->
           push errors, lineOf(node) + ": undefined variable: " + indexName
 
     if kindOf(node) == "RETURN2"
+      if len(funcIndents) == 0
+        push errors, lineOf(node) + ": return outside function"
       leftKind = nameOf(node)
       leftName = valueOf(node)
       rightKind = extraOf(node)
@@ -606,6 +622,8 @@ check = nodes ->
         push errors, lineOf(node) + ": undefined variable: " + rightName
 
     if kindOf(node) == "RETURN_CALL2"
+      if len(funcIndents) == 0
+        push errors, lineOf(node) + ": return outside function"
       funcName = nameOf(node)
       arg2Kind = valueOf(node)
       arg2Name = extraOf(node)
