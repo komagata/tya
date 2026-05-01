@@ -85,7 +85,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\ntried = try identity(trimmed)\nparts = split(trimmed, \"\\n\")\nleft, right = result\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nprint len trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\npush queue, trimmed\nfor entry in queue\n  print entry\nfor entry, index in queue\n  print entry\nfor key, value of user\n  print key\nreturn trimmed, \"ok\"\n"
+	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nresult = identity(trimmed)\ntried = try identity(trimmed)\nleft, right = result\ncallLeft, callRight = identity(trimmed)\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint startsWith trimmed, \"T\"\nprint endsWith trimmed, \"a\"\nprint len trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\npush queue, trimmed\nfor entry in queue\n  print entry\nfor entry, index in queue\n  print entry\nfor key, value of user\n  print key\nreturn trimmed, \"ok\"\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -790,6 +790,14 @@ func summarizeGoStmt(out *[]string, stmt ast.Stmt) {
 		if len(n.Targets) == 2 && len(n.Values) == 1 {
 			if left, ok := n.Targets[0].(*ast.Ident); ok {
 				if right, ok := n.Targets[1].(*ast.Ident); ok {
+					if call, ok := n.Values[0].(*ast.CallExpr); ok {
+						if id, ok := call.Callee.(*ast.Ident); ok && len(call.Args) == 1 {
+							if arg, ok := call.Args[0].(*ast.Ident); ok {
+								*out = append(*out, "MULTI_ASSIGN2_CALL1:"+left.Name+":"+right.Name+":"+id.Name+":"+arg.Name)
+								return
+							}
+						}
+					}
 					*out = append(*out, "MULTI_ASSIGN2:"+left.Name+":"+right.Name+":"+summarizeGoExpr(n.Values[0]))
 				}
 			}

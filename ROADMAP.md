@@ -311,6 +311,7 @@ Self-Host Completion TODO:
     - [x] Parse two-target multiple assignment in the self-host parser subset
     - [x] Parse two-value return statements in the self-host parser subset
     - [x] Parse `target = try call(arg)` in the self-host parser subset
+    - [x] Parse `left, right = call(arg)` in the self-host parser subset
   - [ ] Add parser golden tests comparing Go parser AST shape and Tya parser AST shape
     - [x] Add subset parser golden tests for assignments, comparisons, blocks, `else`, `while`, `push`, and `for`
 - [ ] Checker parity

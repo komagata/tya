@@ -1,5 +1,20 @@
 # Run To Completion Log
 
+## 2026-05-01 18:43:34 JST
+
+- Added self-host parser support for `left, right = call(arg)` as
+  `MULTI_ASSIGN2_CALL1:left:right:call:arg`.
+- Extended the parser parity summarizer and subset fixture to compare the new
+  two-target call assignment shape against the Go parser.
+- Updated the stage-4 parser node fixture after parser source line numbers
+  shifted.
+- Focused verification passed: `go test ./tests -run
+  'TestSelfhostParserMatchesGoParserSubset|TestStage1SelfhostSourcesEmitC'
+  -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-01 18:16:35 JST
 
 - Added self-host checker support for `ASSIGN:target:TRY_CALL1:func:arg`.

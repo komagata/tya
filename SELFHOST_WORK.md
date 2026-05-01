@@ -84,6 +84,7 @@ endpoint.
     - [x] Parse two-target multiple assignment in the self-host parser subset
     - [x] Parse two-value return statements in the self-host parser subset
     - [x] Parse `target = try call(arg)` in the self-host parser subset
+    - [x] Parse `left, right = call(arg)` in the self-host parser subset
   - [ ] Expand self-host checker toward Go checker parity
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
     - [x] Check undefined names in two-value return nodes

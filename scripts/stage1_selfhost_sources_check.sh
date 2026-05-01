@@ -1073,12 +1073,12 @@ if grep -q 'strstr(mode, "lexer")' "$stage4_dir/lexer.stage4.c"; then
 fi
 echo "selfhost/lexer.tya: stage-3 codegen emitted executable lexer C"
 cat > "$stage4_dir/parser.stage4.want.nodes" <<'NODES'
-535:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-538:FOR:line:lines
-539:INDENT:2
-544:FOR:node:nodes
-545:INDENT:2
-545:PRINT:IDENT:node
+542:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+545:FOR:line:lines
+546:INDENT:2
+551:FOR:node:nodes
+552:INDENT:2
+552:PRINT:IDENT:node
 NODES
 diff -u "$stage4_dir/parser.stage4.want.nodes" "$stage4_dir/parser.stage4.nodes" >/dev/null
 echo "selfhost/parser.tya: stage-3 parser emitted real nodes"
