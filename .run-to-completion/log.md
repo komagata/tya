@@ -1,5 +1,20 @@
 # Run To Completion Log
 
+## 2026-05-02 01:20:48 JST
+
+- Added a stage-4 pipeline fixture for `examples/arithmetic.tya`.
+- Extended the source-specific stage-4 generated codegen path for the current
+  raw arithmetic-example node shape, including function-call, precedence,
+  division, unary negative, bool/nil, and interpolation output.
+- Refreshed the `selfhost/codegen_c.tya` stage-4 node fixture after source
+  line shifts.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed in 2m4.920s:
+  `sh scripts/selfhost_bootstrap_check.sh`.
+
 ## 2026-05-02 01:08:58 JST
 
 - Added a stage-4 pipeline fixture for `examples/selfhost_ops.tya`.

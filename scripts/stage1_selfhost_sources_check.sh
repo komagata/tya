@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2630:FOR:node:nodes
-2631:INDENT:2
-3362:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3365:FOR:line:lines
-3366:INDENT:2
-3369:PRINT_CALL1:emitC:nodes
+2644:FOR:node:nodes
+2645:INDENT:2
+3376:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3379:FOR:line:lines
+3380:INDENT:2
+3383:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1532,3 +1532,21 @@ true
 loop
 Tya"
 echo "stage4 selfhost ops: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/arithmetic.tya > "$stage4_dir/arithmetic.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/arithmetic.tokens" > "$stage4_dir/arithmetic.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/arithmetic.nodes" > "$stage4_dir/arithmetic.check"
+grep -qx "ok" "$stage4_dir/arithmetic.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/arithmetic.nodes" > "$stage4_dir/arithmetic.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/arithmetic" "$stage4_dir/arithmetic.c" >/dev/null 2>&1
+stage4_arithmetic_out="$("$stage4_dir/arithmetic")"
+test "$stage4_arithmetic_out" = "5
+14
+20
+2.5
+2
+-3
+true
+nil
+next year: 21"
+echo "stage4 arithmetic: self-host pipeline matched"
