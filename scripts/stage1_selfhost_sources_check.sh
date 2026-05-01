@@ -1114,10 +1114,10 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 92:INDENT:2
 2390:FOR:node:nodes
 2391:INDENT:2
-3089:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3092:FOR:line:lines
-3093:INDENT:2
-3096:PRINT_CALL1:emitC:nodes
+3100:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3103:FOR:line:lines
+3104:INDENT:2
+3107:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"

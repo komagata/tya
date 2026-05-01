@@ -57,18 +57,28 @@ type Function struct {
 type Builtin func([]Value) (Value, error)
 
 type Env struct {
-	parent *Env
-	vars   map[string]Value
-	this   Object
-	inFunc bool
+	parent    *Env
+	vars      map[string]Value
+	this      Object
+	inFunc    bool
+	runeCache map[string][]rune
 }
 
 func NewEnv() *Env {
-	return &Env{vars: map[string]Value{}}
+	return &Env{vars: map[string]Value{}, runeCache: map[string][]rune{}}
 }
 
 func (e *Env) child(this Object) *Env {
-	return &Env{parent: e, vars: map[string]Value{}, this: this, inFunc: e.inFunc}
+	return &Env{parent: e, vars: map[string]Value{}, this: this, inFunc: e.inFunc, runeCache: e.runeCache}
+}
+
+func (e *Env) runes(text string) []rune {
+	if runes, ok := e.runeCache[text]; ok {
+		return runes
+	}
+	runes := []rune(text)
+	e.runeCache[text] = runes
+	return runes
 }
 
 func (e *Env) get(name string) (Value, bool) {
@@ -163,7 +173,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		switch v := args[0].(type) {
 		case string:
-			return int64(len([]rune(v))), nil
+			return int64(len(env.runes(v))), nil
 		case *Array:
 			return int64(len(v.items)), nil
 		case Object:
@@ -899,7 +909,7 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			if !ok {
 				return nil, fmt.Errorf("string index must be int")
 			}
-			runes := []rune(text)
+			runes := env.runes(text)
 			if i < 0 || i >= int64(len(runes)) {
 				return nil, nil
 			}

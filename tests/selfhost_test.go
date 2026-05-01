@@ -127,7 +127,7 @@ func TestSelfhostCodegenMatchesInterpreterSubset(t *testing.T) {
 
 func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	path := t.TempDir() + "/nodes.txt"
-	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING: Tya \n4:ASSIGN:trimmed:CALL1:trim:message\n5:ASSIGN:result:CALL1:identity:trimmed\n6:PRINT_CALL1:identity:trimmed\n7:ASSIGN:replaced:CALL3:replace:trimmed:STRING:T:trimmed\n8:PRINT_CALL3:replace:trimmed:STRING:T:trimmed\n9:PRINT_CALL2:contains:trimmed:STRING:T\n10:PRINT_CALL2:startsWith:trimmed:STRING:T\n11:PRINT_CALL2:endsWith:trimmed:STRING:a\n12:PRINT_CALL1:len:trimmed\n13:ASSIGN:user:OBJECT_ONE:name:IDENT:trimmed\n14:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n15:ASSIGN:tokens:CALL1:lex:source\n16:ASSIGN:lines:CALL2:split:source:\\n\n17:ASSIGN:nodes:CALL1:parse:tokens\n18:ASSIGN:items:ARRAY_EMPTY:\n19:PUSH:items:IDENT:trimmed\n20:FOR:token:tokens\n21:INDENT:2\n21:PRINT:IDENT:token\n"
+	nodes := "1:FUNC:identity:value\n2:INDENT:2\n2:RETURN:IDENT:value\n3:INDENT:0\n3:ASSIGN:message:STRING: Tya \n4:ASSIGN:trimmed:CALL1:trim:message\n5:ASSIGN:result:CALL1:identity:trimmed\n6:PRINT_CALL1:identity:trimmed\n7:ASSIGN:replaced:CALL3:replace:trimmed:STRING:T:trimmed\n8:PRINT_CALL3:replace:trimmed:STRING:T:trimmed\n9:PRINT_CALL2:contains:trimmed:STRING:T\n10:PRINT_CALL2:startsWith:trimmed:STRING:T\n11:PRINT_CALL2:endsWith:trimmed:STRING:a\n12:PRINT_CALL1:len:trimmed\n13:ASSIGN:user:OBJECT_ONE:name:IDENT:trimmed\n14:PRINT_MEMBER:user:name\n15:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\n16:ASSIGN:tokens:CALL1:lex:source\n17:ASSIGN:lines:CALL2:split:source:\\n\n18:ASSIGN:nodes:CALL1:parse:tokens\n19:ASSIGN:items:ARRAY_EMPTY:\n20:PUSH:items:IDENT:trimmed\n21:FOR:token:tokens\n22:INDENT:2\n22:PRINT:IDENT:token\n"
 	if err := os.WriteFile(path, []byte(nodes), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -168,8 +168,11 @@ func TestSelfhostCodegenEmitsSimpleReturnFunctions(t *testing.T) {
 	if !strings.Contains(out, "printf(\"%ld\\n\", (long)strlen(trimmed));") {
 		t.Fatalf("generated C missing print len lowering:\n%s", out)
 	}
-	if !strings.Contains(out, "const char *user = \"\"; /* object name */") {
-		t.Fatalf("generated C missing object placeholder:\n%s", out)
+	if !strings.Contains(out, "const char *user = trimmed; /* object name */") {
+		t.Fatalf("generated C missing object value placeholder:\n%s", out)
+	}
+	if !strings.Contains(out, "puts(user);") {
+		t.Fatalf("generated C missing print member lowering:\n%s", out)
 	}
 	if !strings.Contains(out, "int main(int argc, char **argv)") {
 		t.Fatalf("generated C missing argv-capable main:\n%s", out)

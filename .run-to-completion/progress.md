@@ -1,6 +1,6 @@
 # Run To Completion Progress
 
-Updated: 2026-05-01 21:00:04 JST
+Updated: 2026-05-01 23:27:40 JST
 
 Active phase: advance remaining self-host completion queue.
 
@@ -40,6 +40,8 @@ Completed:
 - Self-host checker parity now rejects `break` and `continue` outside loops.
 - Self-host checker parity now rejects return nodes outside functions.
 - Self-host checker parity now validates `TRY_CALL1` nodes and rejects top-level `try`.
+- Self-host C codegen now emits `print object.member` for one-property object placeholders.
+- Go interpreter string indexing and length now cache rune slices during a run, reducing self-host lexer checks from minutes to seconds.
 - `sh scripts/selfhost_bootstrap_check.sh` passes.
 - Committed deterministic stage-2 codegen checkpoint as `ad0ab90`.
 - Committed parent queue cleanup as `d4ff7f3`.

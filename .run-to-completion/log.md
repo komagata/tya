@@ -1,5 +1,22 @@
 # Run To Completion Log
 
+## 2026-05-01 23:27:40 JST
+
+- Added self-host C codegen lowering for `PRINT_MEMBER` against one-property
+  object placeholders.
+- Changed one-property object placeholders to retain the property value instead
+  of always storing an empty string.
+- Added a per-run Go interpreter rune cache so repeated `len(text)` and
+  `text[i]` operations do not rebuild `[]rune` for the same large source.
+- `selfhost/codegen_c.tya` self-host lexer profiling improved from 175,359ms
+  to 477ms.
+- `sh scripts/selfhost_check.sh` improved from about 3 minutes to 2.269s.
+- `sh scripts/selfhost_compile_check.sh` improved from about 3 minutes to
+  2.476s.
+- Bootstrap verification passed in 1m47.564s:
+  `sh scripts/selfhost_bootstrap_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+
 ## 2026-05-01 21:00:04 JST
 
 - Added self-host parser support for `return { name: value }, nil` as

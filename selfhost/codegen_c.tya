@@ -2735,10 +2735,15 @@ emitC = nodes ->
         rememberType names, types, nameOf(node), "BOOL"
 
     if kindOf(node) == "ASSIGN" and valueOf(node) == "OBJECT_ONE"
+      objectValue = "\"\""
+      if extra2Of(node) == "IDENT"
+        objectValue = cName(extra3Of(node))
+      if extra2Of(node) == "STRING"
+        objectValue = cString(extra3Of(node))
       if hasName(names, nameOf(node))
-        push lines, "  " + cName(nameOf(node)) + " = \"\"; /* object " + extraOf(node) + " */"
+        push lines, "  " + cName(nameOf(node)) + " = " + objectValue + "; /* object " + extraOf(node) + " */"
       else
-        push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* object " + extraOf(node) + " */"
+        push lines, "  const char *" + cName(nameOf(node)) + " = " + objectValue + "; /* object " + extraOf(node) + " */"
         rememberType names, types, nameOf(node), "OBJECT"
 
     if kindOf(node) == "IF"
@@ -2966,6 +2971,12 @@ emitC = nodes ->
         prefix = "    "
       if nameOf(node) == "STRING"
         push lines, prefix + "printf(\"%c\\n\", " + cString(valueOf(node)) + "[" + extraOf(node) + "]);"
+
+    if kindOf(node) == "PRINT_MEMBER"
+      prefix = "  "
+      if indent != "0"
+        prefix = "    "
+      push lines, prefix + "puts(" + cName(nameOf(node)) + ");"
 
     if kindOf(node) == "PRINT_CALL1"
       prefix = "  "
