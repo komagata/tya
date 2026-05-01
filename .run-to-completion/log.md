@@ -906,3 +906,17 @@
 - Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
 - Full verification passed: `go test ./... -count=1`.
 - Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.
+
+## 2026-05-01 11:50:13 JST
+
+- Routed stage4 lexer codegen through a source-specific lexer C emission
+  branch instead of the generated-tool mode fallback.
+- Tightened the lexer stage4 assertion to require a top-level
+  `int main(int argc, char **argv)` and no `strstr(mode, "lexer")` dispatch.
+- Refreshed the `selfhost/codegen_c.tya` stage4 node fixture after the new
+  source lines shifted generated line numbers.
+- Focused verification passed: `go test ./tests -run
+  TestStage1SelfhostSourcesEmitC -count=1`.
+- Focused self-host source check passed: `sh scripts/selfhost_check.sh`.
+- Full verification passed: `go test ./... -count=1`.
+- Bootstrap verification passed: `sh scripts/selfhost_bootstrap_check.sh`.

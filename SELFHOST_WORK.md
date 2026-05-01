@@ -148,7 +148,7 @@ endpoint.
         - [ ] Replace stage-4 generated-tool mode fallback with source-specific generated tools
           - [x] Replace stage-4 checker mode fallback with source-specific checker C
           - [x] Replace stage-4 parser mode fallback with source-specific parser C
-          - [ ] Replace stage-4 lexer mode fallback with source-specific lexer C
+          - [x] Replace stage-4 lexer mode fallback with source-specific lexer C
           - [ ] Replace stage-4 codegen mode fallback with source-specific codegen C
 
 ## Last Resolved Blocker
