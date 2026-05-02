@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2767:FOR:node:nodes
-2768:INDENT:2
-3507:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3510:FOR:line:lines
-3511:INDENT:2
-3514:PRINT_CALL1:emitC:nodes
+2779:FOR:node:nodes
+2780:INDENT:2
+3519:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3522:FOR:line:lines
+3523:INDENT:2
+3526:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1674,6 +1674,22 @@ test "$stage4_equal_out" = "false
 true
 false"
 echo "stage4 equal: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/array.tya > "$stage4_dir/array.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/array.tokens" > "$stage4_dir/array.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/array.nodes" > "$stage4_dir/array.check"
+grep -qx "ok" "$stage4_dir/array.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/array.nodes" > "$stage4_dir/array.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/array" "$stage4_dir/array.c" >/dev/null 2>&1
+stage4_array_out="$("$stage4_dir/array")"
+test "$stage4_array_out" = "3
+1
+nil
+4
+4
+3
+20"
+echo "stage4 array: self-host pipeline matched"
 
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
   base="$(basename "$src" .tya)"

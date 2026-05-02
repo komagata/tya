@@ -382,6 +382,7 @@ Self-Host Completion TODO:
     - [x] Make stage-4 generated tools compile and run `examples/file.tya`
     - [x] Make stage-4 generated tools compile and run `examples/args.tya`
     - [x] Make stage-4 generated tools compile and run `examples/equal.tya`
+    - [x] Make stage-4 generated tools compile and run `examples/array.tya`
   - [ ] Compile the Tya-written compiler with the Go compiler and run it as the stage-1 compiler
     - [x] Compile self-host compiler components with the Go C emitter and run the stage-1 pipeline on `examples/hello.tya`
   - [ ] Use the stage-1 compiler to compile the Tya-written compiler again
