@@ -185,6 +185,7 @@ endpoint.
       - [x] Run stage-5 generated tools on a two-print fixture
       - [x] Compile stage-6 tools from the stage-5 tool source and run a print-string fixture
       - [x] Run stage-6 generated tools on print-int and two-print fixtures
+      - [x] Verify stable stage-7 C from the stage-6 tool source
       - [x] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
         - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes
@@ -211,7 +212,8 @@ stage-5 C binaries and execute `examples/object.tya` plus
 stage-5 generated tools now also run `examples/hello.tya`, an additional
 print-string fixture, a print-int fixture, and a two-print fixture through the
 same pipeline. The stage-5 tool source now also compiles into stage-6 binaries
-that run print-string, print-int, and two-print fixtures.
+that run print-string, print-int, and two-print fixtures, then reaches a stable
+stage-7 C fixed point for the same tool source.
 The stage-4 example gates are part of
 `scripts/stage1_selfhost_sources_check.sh`, so the bootstrap gate now catches
 regressions in the next example-parity step.

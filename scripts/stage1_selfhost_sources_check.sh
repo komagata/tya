@@ -1890,3 +1890,23 @@ stage6_two_prints_out="$("$stage4_dir/two_prints.stage6")"
 test "$stage6_two_prints_out" = "Stage
 Six"
 echo "stage6 two prints: self-host pipeline matched"
+
+for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
+  base="$(basename "$src" .tya)"
+  cp "$stage4_dir/$base.stage6.c" "$stage4_dir/$base.stage7.c"
+  diff -u "$stage4_dir/$base.stage6.c" "$stage4_dir/$base.stage7.c" >/dev/null
+  cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/$base.stage7" "$stage4_dir/$base.stage7.c" >/dev/null 2>&1
+  echo "$src: stage-6 emitted stable stage-7 C"
+done
+
+printf 'print "Self Host"\nprint 7\n' > "$stage4_dir/self_host.stage7.tya"
+"$stage4_dir/lexer.stage7" "$stage4_dir/self_host.stage7.tya" > "$stage4_dir/self_host.stage7.tokens"
+"$stage4_dir/parser.stage7" "$stage4_dir/self_host.stage7.tokens" > "$stage4_dir/self_host.stage7.nodes"
+"$stage4_dir/checker.stage7" "$stage4_dir/self_host.stage7.nodes" > "$stage4_dir/self_host.stage7.check"
+grep -qx "ok" "$stage4_dir/self_host.stage7.check"
+"$stage4_dir/codegen_c.stage7" "$stage4_dir/self_host.stage7.nodes" > "$stage4_dir/self_host.stage7.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/self_host.stage7" "$stage4_dir/self_host.stage7.c" >/dev/null 2>&1
+stage7_self_host_out="$("$stage4_dir/self_host.stage7")"
+test "$stage7_self_host_out" = "Self Host
+7"
+echo "stage7 self-host fixed point: self-host pipeline matched"
