@@ -1118,12 +1118,12 @@ if grep -q 'strstr(mode, "lexer")' "$stage4_dir/lexer.stage4.c"; then
 fi
 echo "selfhost/lexer.tya: stage-3 codegen emitted executable lexer C"
 cat > "$stage4_dir/parser.stage4.want.nodes" <<'NODES'
-571:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-574:FOR:line:lines
-575:INDENT:2
-580:FOR:node:nodes
-581:INDENT:2
-581:PRINT:IDENT:node
+619:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+622:FOR:line:lines
+623:INDENT:2
+628:FOR:node:nodes
+629:INDENT:2
+629:PRINT:IDENT:node
 NODES
 diff -u "$stage4_dir/parser.stage4.want.nodes" "$stage4_dir/parser.stage4.nodes" >/dev/null
 echo "selfhost/parser.tya: stage-3 parser emitted real nodes"
@@ -1135,15 +1135,15 @@ echo "selfhost/parser.tya: stage-3 codegen emitted executable parser C"
 cat > "$stage4_dir/checker.stage4.want.nodes" <<'NODES'
 58:FOR:existing:names
 59:INDENT:2
-136:FOR:node:nodes
-137:INDENT:2
-702:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-705:FOR:line:lines
-706:INDENT:2
-712:PRINT:STRING:ok
-714:FOR:err:errors
-715:INDENT:2
-715:PRINT:IDENT:err
+146:FOR:node:nodes
+147:INDENT:2
+719:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+722:FOR:line:lines
+723:INDENT:2
+729:PRINT:STRING:ok
+731:FOR:err:errors
+732:INDENT:2
+732:PRINT:IDENT:err
 NODES
 diff -u "$stage4_dir/checker.stage4.want.nodes" "$stage4_dir/checker.stage4.nodes" >/dev/null
 echo "selfhost/checker.tya: stage-3 parser emitted real nodes"
@@ -1159,10 +1159,10 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 96:INDENT:2
 2797:FOR:node:nodes
 2798:INDENT:2
-3537:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3540:FOR:line:lines
-3541:INDENT:2
-3544:PRINT_CALL1:emit_c:nodes
+3551:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3554:FOR:line:lines
+3555:INDENT:2
+3558:PRINT_CALL1:emit_c:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"

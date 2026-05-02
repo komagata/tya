@@ -177,6 +177,8 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple call-and-call conditions
 - Self-hosted parser/checker/codegen carries simple call comparison conditions
 - Self-hosted parser/codegen handles simple boolean `and` / `or` assignments
+- Self-hosted parser/checker/codegen carries simple `-`, `*`, `/`, and `%`
+  arithmetic assignments
 - Self-hosted C codegen emits simple `hasT(...)` string predicate conditions used by the prototype input
 - Self-hosted parser/codegen preserves and emits the prototype `len(parts) < 3` condition
 - Stage-2 generated codegen can lower `readFile args()[0]`, `lex source`, and `parse tokens`

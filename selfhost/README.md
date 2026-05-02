@@ -40,7 +40,7 @@ Current supported subset:
 
 - Lexer: identifiers, ints, strings, comments, symbols, common two-character
   operators, source lines, and indentation counts
-- Parser: line-oriented nodes for simple assignments, simple function headers
+- Parser: line-oriented nodes for simple assignments, simple arithmetic assignments, simple function headers
   and inline returns, `push`, `return`, `if`, `else`, one-, two-, and
   three-argument function calls, selected four-argument function signatures,
   `while`, `for`, `break`, `continue`, direct comparison, `!=`, `>=`, `<=`,

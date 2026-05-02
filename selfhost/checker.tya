@@ -107,8 +107,18 @@ remember_name = names, indents, name, indent ->
   push names, name
   push indents, indent
 
+is_int_literal = name ->
+  if len(name) == 0
+    return false
+  i = 0
+  while i < len(name)
+    if not is_digit(name[i])
+      return false
+    i = i + 1
+  true
+
 is_literal_arg = name ->
-  name == "" or name == "0" or name == "1" or name == "2" or name == "3" or name == "4" or name == "5" or name == "6" or name == "7" or name == "8" or name == "9" or name == "10" or name == "\\n" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
+  name == "" or is_int_literal(name) or name == "\\n" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
 
 check = nodes ->
   names = []
@@ -281,6 +291,13 @@ check = nodes ->
         value_name = extra3_of(node)
         if extra2_of(node) == "IDENT" and not has_name(names, value_name)
           push errors, line_of(node) + ": undefined variable: " + value_name
+      if value_of(node) == "INT_ADD" or value_of(node) == "INT_SUB" or value_of(node) == "INT_MUL" or value_of(node) == "INT_DIV" or value_of(node) == "INT_MOD"
+        left_name = extra_of(node)
+        right_name = extra2_of(node)
+        if not is_literal_arg(left_name) and not has_name(names, left_name)
+          push errors, line_of(node) + ": undefined variable: " + left_name
+        if not is_literal_arg(right_name) and not has_name(names, right_name)
+          push errors, line_of(node) + ": undefined variable: " + right_name
       if value_of(node) == "COMPARE_LT" or value_of(node) == "COMPARE_EQ" or value_of(node) == "COMPARE_NE" or value_of(node) == "COMPARE_GE" or value_of(node) == "COMPARE_LE"
         left_name = extra_of(node)
         right_name = extra2_of(node)

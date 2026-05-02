@@ -2,14 +2,23 @@
 
 `Current Status`
 =================
-**Last Updated:** 2026-05-02 13:41
-**Tasks Completed:** 1
-**Current Task:** SELFHOST-001 Complete
+**Last Updated:** 2026-05-02 17:02
+**Tasks Completed:** 3
+**Current Task:** SELFHOST-003 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-02 17:02 UTC - SELFHOST-003 - Added explicit self-host parser
+  nodes for simple `-`, `*`, `/`, and `%` arithmetic assignment expressions,
+  extended checker undefined-name coverage for arithmetic operands, and emitted
+  integer C assignments for those node kinds. Updated parser parity coverage,
+  self-host stage fixtures, and self-host status docs with the next parser gap.
+  Verification: `sh scripts/selfhost_check.sh`;
+  `go test ./tests -run TestSelfhostParserMatchesGoParserSubset -count=1`;
+  `sh scripts/stage1_selfhost_sources_check.sh`; `go test ./... -count=1`;
+  `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-02 23:54 UTC - SELFHOST-002 - Added
   `scripts/selfhost_examples_manifest.txt` to classify every repository
   example as supported, expected-failing, or out-of-scope for self-host parity.

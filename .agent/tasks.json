@@ -15,7 +15,7 @@
     "id": "SELFHOST-003",
     "title": "Replace remaining line-oriented parser shortcuts with structured expression parsing",
     "priority": 3,
-    "passes": false
+    "passes": true
   },
   {
     "id": "SELFHOST-004",

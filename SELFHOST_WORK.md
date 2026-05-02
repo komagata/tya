@@ -89,6 +89,9 @@ endpoint.
     - [x] Parse `return nil, error "message"` in the self-host parser subset
     - [x] Parse `print object.member` in the self-host parser subset
     - [x] Parse `return { name: value }, nil` in the self-host parser subset
+    - [x] Parse simple `-`, `*`, `/`, and `%` arithmetic assignment expressions
+    - [ ] Next parser gap: parse function literals in expression positions
+      without relying on source-specific fallback paths
   - [ ] Expand self-host checker toward Go checker parity
     - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
     - [x] Check undefined names in two-value return nodes
@@ -218,9 +221,9 @@ are full-language parity gaps, ordered by dependency:
   - [ ] Preserve nested expression structure instead of flattening ad hoc node
     strings such as `ASSIGN:*:CALL*`, `IF_COMPARE_*`, and `PRINT_CALL*`.
   - [ ] Parse the full expression grammar from the Go parser: precedence for
-    arithmetic, comparison, equality, logical operators, grouped expressions,
-    unary `not` and unary minus, method calls, member access, indexing, and
-    calls with arbitrary expression arguments.
+    mixed arithmetic, comparison, equality, logical operators, grouped
+    expressions, unary `not` and unary minus, method calls, member access,
+    indexing, and calls with arbitrary expression arguments.
   - [ ] Parse full statement and definition forms: object blocks with methods
     and property assignment, array index assignment, imports, constants,
     implicit last-expression returns, multi-value assignment/return beyond the

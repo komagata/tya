@@ -2915,6 +2915,20 @@ emit_c = nodes ->
                   remember_type names, types, name_of(node), "STRING"
                   push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ") */"
 
+    if kind_of(node) == "ASSIGN" and (value_of(node) == "INT_SUB" or value_of(node) == "INT_MUL" or value_of(node) == "INT_DIV" or value_of(node) == "INT_MOD")
+      op = "-"
+      if value_of(node) == "INT_MUL"
+        op = "*"
+      if value_of(node) == "INT_DIV"
+        op = "/"
+      if value_of(node) == "INT_MOD"
+        op = "%"
+      if has_name(names, name_of(node))
+        push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + " " + op + " " + c_name(extra2_of(node)) + ";"
+      else
+        push lines, "  long " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + " " + op + " " + c_name(extra2_of(node)) + ";"
+        remember_type names, types, name_of(node), "INT"
+
     if kind_of(node) == "ASSIGN" and value_of(node) != "CALL1"
       if value_of(node) == "STRING"
         if has_name(names, name_of(node))

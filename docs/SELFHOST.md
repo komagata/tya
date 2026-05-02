@@ -13,7 +13,7 @@ basic escapes, comments, source line markers, indentation counts, symbols,
 `->`, `==`, `!=`, `<=`, and `>=`.
 
 The current self-hosted parser supports a line-oriented node format for simple
-assignments, bool assignments, integer addition assignments, comparison
+assignments, bool assignments, simple arithmetic assignments, comparison
 assignments, one- and two-element arrays, one-property inline objects,
 indexing, `push`, `return`, `if`, `else`, `while`, array/object `for` subset
 forms, `break`, `continue`, simple function headers, inline returns,

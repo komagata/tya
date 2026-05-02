@@ -408,6 +408,30 @@ parse = tokens ->
           left = tokens[i + 3]
           op = tokens[i + 4]
           right = tokens[i + 5]
+          if text_of(op) == "-"
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_SUB:" + text_of(left) + ":" + text_of(right)
+            push nodes, node
+            i = i + 7
+            continue
+          if text_of(op) == "*"
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_MUL:" + text_of(left) + ":" + text_of(right)
+            push nodes, node
+            i = i + 7
+            continue
+          if text_of(op) == "/"
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_DIV:" + text_of(left) + ":" + text_of(right)
+            push nodes, node
+            i = i + 7
+            continue
+          if text_of(op) == "%"
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_MOD:" + text_of(left) + ":" + text_of(right)
+            push nodes, node
+            i = i + 7
+            continue
+        if text_of(value) == "(" and i + 6 < len(tokens) and text_of(tokens[i + 6]) == ")"
+          left = tokens[i + 3]
+          op = tokens[i + 4]
+          right = tokens[i + 5]
           if text_of(op) == "=="
             node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_EQ:" + text_of(left) + ":" + text_of(right)
             push nodes, node
@@ -470,6 +494,30 @@ parse = tokens ->
         if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "+"
           right = tokens[i + 4]
           node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_ADD:" + text_of(value) + ":" + text_of(right)
+          push nodes, node
+          i = i + 5
+          continue
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "-"
+          right = tokens[i + 4]
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_SUB:" + text_of(value) + ":" + text_of(right)
+          push nodes, node
+          i = i + 5
+          continue
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "*"
+          right = tokens[i + 4]
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_MUL:" + text_of(value) + ":" + text_of(right)
+          push nodes, node
+          i = i + 5
+          continue
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "/"
+          right = tokens[i + 4]
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_DIV:" + text_of(value) + ":" + text_of(right)
+          push nodes, node
+          i = i + 5
+          continue
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "%"
+          right = tokens[i + 4]
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_MOD:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
