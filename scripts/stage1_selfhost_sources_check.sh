@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2752:FOR:node:nodes
-2753:INDENT:2
-3492:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3495:FOR:line:lines
-3496:INDENT:2
-3499:PRINT_CALL1:emitC:nodes
+2759:FOR:node:nodes
+2760:INDENT:2
+3499:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3502:FOR:line:lines
+3503:INDENT:2
+3506:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1651,6 +1651,17 @@ stage4_file_out="$("$stage4_dir/file")"
 test "$stage4_file_out" = "true
 Hello from Tya"
 echo "stage4 file: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/args.tya > "$stage4_dir/args.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/args.tokens" > "$stage4_dir/args.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/args.nodes" > "$stage4_dir/args.check"
+grep -qx "ok" "$stage4_dir/args.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/args.nodes" > "$stage4_dir/args.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/args" "$stage4_dir/args.c" >/dev/null 2>&1
+stage4_args_out="$("$stage4_dir/args")"
+test "$stage4_args_out" = "0
+nil"
+echo "stage4 args: self-host pipeline matched"
 
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
   base="$(basename "$src" .tya)"
