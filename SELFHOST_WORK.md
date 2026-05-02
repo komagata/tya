@@ -181,6 +181,7 @@ endpoint.
       - [x] Compile all stage-5 selfhost sources from stage-4 tools
       - [x] Run stage-5 generated tools on `examples/hello.tya`
       - [x] Run stage-5 generated tools on a print-string fixture
+      - [x] Run stage-5 generated tools on a print-int fixture
       - [x] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
         - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes
@@ -204,8 +205,8 @@ stage-5 C binaries and execute `examples/object.tya` plus
 `examples/error.tya` plus `examples/convert.tya`, `examples/file.tya`,
 `examples/args.tya`, `examples/equal.tya`, `examples/array.tya`, and
 `examples/for.tya` through lex, parse, check, codegen, compile, and run. The
-stage-5 generated tools now also run `examples/hello.tya` and an additional
-print-string fixture through the same pipeline.
+stage-5 generated tools now also run `examples/hello.tya`, an additional
+print-string fixture, and a print-int fixture through the same pipeline.
 The stage-4 example gates are part of
 `scripts/stage1_selfhost_sources_check.sh`, so the bootstrap gate now catches
 regressions in the next example-parity step.

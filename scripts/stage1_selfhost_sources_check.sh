@@ -1724,13 +1724,14 @@ int main(int argc, char **argv) {
   char *start = strstr(line, "print ");
   if (start) {
     start += 6;
+    const char *kind = *start == 34 ? "STRING" : ((*start >= 48 && *start <= 57) ? "INT" : "IDENT");
     if (*start == 34) start++;
     char *end = strrchr(start, 34);
     if (end) *end = 0;
     char *nl = strchr(start, 10);
     if (nl) *nl = 0;
     puts("1:IDENT:print:1");
-    printf("1:STRING:%s:7\n", start);
+    printf("1:%s:%s:7\n", kind, start);
   }
   return 0;
 }
@@ -1746,13 +1747,18 @@ int main(int argc, char **argv) {
   char line[8192];
   while (file && fgets(line, sizeof(line), file)) {
     char *start = strstr(line, ":STRING:");
+    const char *kind = "STRING";
+    if (!start) {
+      start = strstr(line, ":INT:");
+      kind = "INT";
+    }
     if (start) {
-      start += 8;
+      start += strlen(kind) + 2;
       char *end = strrchr(start, 58);
       if (end) *end = 0;
       char *nl = strchr(start, 10);
       if (nl) *nl = 0;
-      printf("1:PRINT:STRING:%s\n", start);
+      printf("1:PRINT:%s:%s\n", kind, start);
     }
   }
   return 0;
@@ -1771,11 +1777,20 @@ int main(int argc, char **argv) {
   puts("int main(void) {");
   while (file && fgets(line, sizeof(line), file)) {
     char *start = strstr(line, ":PRINT:STRING:");
+    const char *kind = "STRING";
+    if (!start) {
+      start = strstr(line, ":PRINT:INT:");
+      kind = "INT";
+    }
     if (start) {
-      start += 14;
+      start += strlen(kind) + 8;
       char *nl = strchr(start, 10);
       if (nl) *nl = 0;
-      printf("  puts(\"%s\");\n", start);
+      if (strcmp(kind, "INT") == 0) {
+        printf("  printf(\"%%ld\\n\", (long)%s);\n", start);
+      } else {
+        printf("  puts(\"%s\");\n", start);
+      }
     }
   }
   puts("  return 0;");
@@ -1808,3 +1823,14 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/print_string.stage5" "$stage
 stage5_print_string_out="$("$stage4_dir/print_string.stage5")"
 test "$stage5_print_string_out" = "Stage Five"
 echo "stage5 print string: self-host pipeline matched"
+
+printf 'print 42\n' > "$stage4_dir/print_int.stage5.tya"
+"$stage4_dir/lexer.stage5" "$stage4_dir/print_int.stage5.tya" > "$stage4_dir/print_int.stage5.tokens"
+"$stage4_dir/parser.stage5" "$stage4_dir/print_int.stage5.tokens" > "$stage4_dir/print_int.stage5.nodes"
+"$stage4_dir/checker.stage5" "$stage4_dir/print_int.stage5.nodes" > "$stage4_dir/print_int.stage5.check"
+grep -qx "ok" "$stage4_dir/print_int.stage5.check"
+"$stage4_dir/codegen_c.stage5" "$stage4_dir/print_int.stage5.nodes" > "$stage4_dir/print_int.stage5.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/print_int.stage5" "$stage4_dir/print_int.stage5.c" >/dev/null 2>&1
+stage5_print_int_out="$("$stage4_dir/print_int.stage5")"
+test "$stage5_print_int_out" = "42"
+echo "stage5 print int: self-host pipeline matched"
