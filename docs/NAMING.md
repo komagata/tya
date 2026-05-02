@@ -52,6 +52,17 @@ path =
 The second example is invalid because `file_system.tya` would expose two public
 top-level bindings: `file_system` and `path`.
 
+Use a module from another file with `import`:
+
+```tya
+import file_system
+
+print file_system.exists("memo.txt")
+```
+
+`import file_system` loads `file_system.tya` from the same directory as the
+importing file.
+
 ## Accessibility
 
 Top-level bindings beginning with `_` are private to the module.

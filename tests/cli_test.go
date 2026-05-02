@@ -103,3 +103,24 @@ func TestCLIRunPassesArgs(t *testing.T) {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }
+
+func TestCLIRunLoadsImportedModule(t *testing.T) {
+	dir := t.TempDir()
+	module := filepath.Join(dir, "greeting.tya")
+	if err := os.WriteFile(module, []byte("greeting =\n  hello: name -> \"Hello, {name}\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "main.tya")
+	if err := os.WriteFile(path, []byte("import greeting\nprint greeting.hello(\"komagata\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "run", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if string(out) != "Hello, komagata\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}

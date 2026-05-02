@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"tya/internal/ast"
 	"tya/internal/checker"
 	"tya/internal/eval"
 	"tya/internal/lexer"
@@ -15,6 +16,7 @@ import (
 )
 
 var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
+var moduleNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
 
 func ValidateFileName(path string) error {
 	if filepath.Ext(path) != ".tya" || !fileNameRE.MatchString(filepath.Base(path)) {
@@ -27,11 +29,11 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 	if err := ValidateFileName(path); err != nil {
 		return err
 	}
-	src, err := os.ReadFile(path)
+	source, err := LoadSource(path)
 	if err != nil {
 		return err
 	}
-	toks, errs := lexer.Lex(WithPrelude(path, string(src)))
+	toks, errs := lexer.Lex(source)
 	if len(errs) > 0 {
 		return errs[0]
 	}
@@ -43,6 +45,124 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 		return err
 	}
 	return eval.RunWithIO(prog, in, out, args)
+}
+
+func LoadSource(path string) (string, error) {
+	src, err := LoadUserSource(path)
+	if err != nil {
+		return "", err
+	}
+	return WithPrelude(path, src), nil
+}
+
+func LoadUserSource(path string) (string, error) {
+	if err := ValidateFileName(path); err != nil {
+		return "", err
+	}
+	src, err := loadSource(path, map[string]bool{}, false)
+	if err != nil {
+		return "", err
+	}
+	return src, nil
+}
+
+func loadSource(path string, loading map[string]bool, module bool) (string, error) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	if loading[abs] {
+		return "", fmt.Errorf("cyclic module import: %s", filepath.Base(path))
+	}
+	loading[abs] = true
+	defer delete(loading, abs)
+
+	src, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	body, imports, err := splitImports(string(src))
+	if err != nil {
+		return "", err
+	}
+	if module {
+		if err := validateModule(path, body); err != nil {
+			return "", err
+		}
+	}
+	var out strings.Builder
+	for _, name := range imports {
+		modPath := filepath.Join(filepath.Dir(path), name+".tya")
+		modSrc, err := loadSource(modPath, loading, true)
+		if err != nil {
+			return "", err
+		}
+		out.WriteString(modSrc)
+		if !strings.HasSuffix(modSrc, "\n") {
+			out.WriteString("\n")
+		}
+	}
+	out.WriteString(body)
+	if !strings.HasSuffix(body, "\n") {
+		out.WriteString("\n")
+	}
+	return out.String(), nil
+}
+
+func splitImports(src string) (string, []string, error) {
+	lines := strings.Split(src, "\n")
+	imports := []string{}
+	body := make([]string, 0, len(lines))
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			body = append(body, line)
+			continue
+		}
+		if strings.HasPrefix(trimmed, "import ") {
+			if strings.TrimLeft(line, " ") != line {
+				return "", nil, fmt.Errorf("import must be top-level: %s", trimmed)
+			}
+			name := strings.TrimSpace(strings.TrimPrefix(trimmed, "import "))
+			if !moduleNameRE.MatchString(name) {
+				return "", nil, fmt.Errorf("invalid module name: %s", name)
+			}
+			imports = append(imports, name)
+			continue
+		}
+		body = append(body, line)
+	}
+	return strings.Join(body, "\n"), imports, nil
+}
+
+func validateModule(path, src string) error {
+	toks, errs := lexer.Lex(src)
+	if len(errs) > 0 {
+		return errs[0]
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		return err
+	}
+	want := strings.TrimSuffix(filepath.Base(path), ".tya")
+	public := []string{}
+	for _, stmt := range prog.Stmts {
+		assign, ok := stmt.(*ast.AssignStmt)
+		if !ok {
+			continue
+		}
+		for _, target := range assign.Targets {
+			id, ok := target.(*ast.Ident)
+			if !ok || strings.HasPrefix(id.Name, "_") {
+				continue
+			}
+			public = append(public, id.Name)
+		}
+	}
+	if len(public) != 1 || public[0] != want {
+		return fmt.Errorf("%s must expose exactly one public binding named %s", filepath.Base(path), want)
+	}
+	return nil
 }
 
 func WithPrelude(path, src string) string {

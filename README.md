@@ -58,6 +58,8 @@ go test ./...
   `exit`, `panic`,
   `div`, `to_string`, `to_int`, `to_float`, `to_number`
 - `stdlib/prelude.tya` is loaded by the runner and `--emit-c`
+- same-directory modules with `import file_name`; each module file exposes
+  exactly one public top-level binding matching the file name
 
 ## Examples
 

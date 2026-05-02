@@ -86,7 +86,41 @@ doneOptions:
 	}
 	source := string(src)
 	if emitC && !checkUnused {
-		source = runner.WithPrelude(path, source)
+		source, err = runner.LoadSource(path)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		toks, errs := lexer.Lex(source)
+		if len(errs) > 0 {
+			for _, err := range errs {
+				fmt.Fprintln(os.Stderr, err)
+			}
+			os.Exit(1)
+		}
+		prog, err := parser.Parse(toks)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		if err := checker.Check(prog); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		csrc, err := codegen.EmitC(prog)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		fmt.Fprint(os.Stdout, csrc)
+		return
+	}
+	if checkUnused {
+		source, err = runner.LoadUserSource(path)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
 	toks, errs := lexer.Lex(source)
 	if len(errs) > 0 {
@@ -120,7 +154,12 @@ doneOptions:
 		}
 	}
 	if emitC {
-		toks, errs = lexer.Lex(runner.WithPrelude(path, source))
+		source, err = runner.LoadSource(path)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		toks, errs = lexer.Lex(source)
 		if len(errs) > 0 {
 			for _, err := range errs {
 				fmt.Fprintln(os.Stderr, err)
@@ -152,14 +191,10 @@ func usage() {
 }
 
 func compileAndRun(path string, args []string) error {
-	if err := runner.ValidateFileName(path); err != nil {
-		return err
-	}
-	src, err := os.ReadFile(path)
+	source, err := runner.LoadSource(path)
 	if err != nil {
 		return err
 	}
-	source := runner.WithPrelude(path, string(src))
 	toks, errs := lexer.Lex(source)
 	if len(errs) > 0 {
 		return errs[0]
