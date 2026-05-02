@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/tya-logo.png" alt="Tya logo" width="180">
+</p>
+
 # Tya
 
 Tya is a small indentation-based dynamic language inspired by CoffeeScript.
