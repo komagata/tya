@@ -253,6 +253,7 @@ func TestStage1SelfhostSourcesEmitC(t *testing.T) {
 	want = strings.Replace(want, "stage5 hello: self-host pipeline matched\n", "stage5 hello: self-host pipeline matched\nstage5 print string: self-host pipeline matched\n", 1)
 	want = strings.Replace(want, "stage5 print string: self-host pipeline matched\n", "stage5 print string: self-host pipeline matched\nstage5 print int: self-host pipeline matched\n", 1)
 	want = strings.Replace(want, "stage5 print int: self-host pipeline matched\n", "stage5 print int: self-host pipeline matched\nstage5 two prints: self-host pipeline matched\n", 1)
+	want = strings.Replace(want, "stage5 two prints: self-host pipeline matched\n", "stage5 two prints: self-host pipeline matched\nselfhost/lexer.tya: stage-5 emitted and compiled stage-6 C\nselfhost/parser.tya: stage-5 emitted and compiled stage-6 C\nselfhost/checker.tya: stage-5 emitted and compiled stage-6 C\nselfhost/codegen_c.tya: stage-5 emitted and compiled stage-6 C\nstage6 print string: self-host pipeline matched\n", 1)
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
