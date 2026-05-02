@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2696:FOR:node:nodes
-2697:INDENT:2
-3428:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3431:FOR:line:lines
-3432:INDENT:2
-3435:PRINT_CALL1:emitC:nodes
+2703:FOR:node:nodes
+2704:INDENT:2
+3440:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3443:FOR:line:lines
+3444:INDENT:2
+3447:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1570,6 +1570,16 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/return" "$stage4_dir/return.
 stage4_return_out="$("$stage4_dir/return")"
 test "$stage4_return_out" = "4"
 echo "stage4 return: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/object.tya > "$stage4_dir/object.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/object.tokens" > "$stage4_dir/object.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/object.nodes" > "$stage4_dir/object.check"
+grep -qx "ok" "$stage4_dir/object.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/object.nodes" > "$stage4_dir/object.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/object" "$stage4_dir/object.c" >/dev/null 2>&1
+stage4_object_out="$("$stage4_dir/object")"
+test "$stage4_object_out" = "Hello, komagata"
+echo "stage4 object: self-host pipeline matched"
 
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
   base="$(basename "$src" .tya)"
