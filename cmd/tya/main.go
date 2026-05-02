@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 
 	"tya/internal/checker"
 	"tya/internal/codegen"
@@ -21,6 +23,20 @@ func main() {
 	}
 	if os.Args[1] == "--version" {
 		fmt.Fprintln(os.Stdout, version)
+		return
+	}
+	if os.Args[1] == "run" {
+		if len(os.Args) < 3 {
+			usage()
+			os.Exit(2)
+		}
+		if err := compileAndRun(os.Args[2], os.Args[3:]); err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				os.Exit(exitErr.ExitCode())
+			}
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 		return
 	}
 	dumpTokens := false
@@ -132,4 +148,55 @@ doneOptions:
 
 func usage() {
 	fmt.Fprintln(os.Stderr, "usage: tya [--version] [--tokens] [--emit-c] [--check-unused] <file.tya> [args...]")
+	fmt.Fprintln(os.Stderr, "       tya run <file.tya> [args...]")
+}
+
+func compileAndRun(path string, args []string) error {
+	if err := runner.ValidateFileName(path); err != nil {
+		return err
+	}
+	src, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	source := runner.WithPrelude(path, string(src))
+	toks, errs := lexer.Lex(source)
+	if len(errs) > 0 {
+		return errs[0]
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		return err
+	}
+	if err := checker.Check(prog); err != nil {
+		return err
+	}
+	csrc, err := codegen.EmitC(prog)
+	if err != nil {
+		return err
+	}
+	outDir, err := os.MkdirTemp("", "tya-run-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(outDir)
+	cfile := filepath.Join(outDir, "main.c")
+	bin := filepath.Join(outDir, "main")
+	if err := os.WriteFile(cfile, []byte(csrc), 0644); err != nil {
+		return err
+	}
+	cc := os.Getenv("CC")
+	if cc == "" {
+		cc = "cc"
+	}
+	compile := exec.Command(cc, cfile, "runtime/tya_runtime.c", "-I", "runtime", "-o", bin)
+	compile.Stderr = os.Stderr
+	if err := compile.Run(); err != nil {
+		return err
+	}
+	run := exec.Command(bin, args...)
+	run.Stdin = os.Stdin
+	run.Stdout = os.Stdout
+	run.Stderr = os.Stderr
+	return run.Run()
 }

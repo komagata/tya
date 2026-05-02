@@ -9,10 +9,14 @@ interpreter, C emitter, and C runtime.
 
 ```sh
 go run ./cmd/tya examples/hello.tya
+go run ./cmd/tya run examples/hello.tya
 go run ./cmd/tya --tokens examples/hello.tya
 go run ./cmd/tya --emit-c examples/arithmetic.tya
 go run ./cmd/tya --check-unused examples/hello.tya
 ```
+
+`tya run` compiles the source to C in a temporary directory, builds it with
+`cc`, and then runs the resulting binary.
 
 ## Test
 

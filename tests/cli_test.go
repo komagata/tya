@@ -71,3 +71,35 @@ func TestCLITokensCanBeCombinedWithChecks(t *testing.T) {
 		t.Fatalf("expected tokens, got: %s", out)
 	}
 }
+
+func TestCLIRunCompilesAndRunsProgram(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "hello.tya")
+	if err := os.WriteFile(path, []byte("print \"Hello from run\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "run", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if string(out) != "Hello from run\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestCLIRunPassesArgs(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "args.tya")
+	if err := os.WriteFile(path, []byte("items = args()\nprint len items\nprint items[0]\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "run", path, "first")
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if string(out) != "1\nfirst\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
