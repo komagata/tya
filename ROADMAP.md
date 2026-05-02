@@ -309,7 +309,8 @@ Remaining hardening:
 - Bring self-host checker diagnostics and scope rules to Go checker parity
 - Replace source-specific generated-C fallbacks with general codegen for the
   full language and documented standard library
-- Promote all runnable examples into explicit generated-tool parity targets
+- Promote the examples classified in `scripts/selfhost_examples_manifest.txt`
+  from expected-failing to explicit generated-tool parity targets
 - Keep the final bootstrap gate proving repeated self-compilation and
   byte-stable generated C
 
@@ -398,6 +399,8 @@ Self-Host Completion TODO:
     - [x] Add subset generated-C parity tests for `examples/selfhost_ops.tya`
 - [ ] Bootstrap pipeline
   - [ ] Make the Tya-written compiler compile the existing executable examples
+    - [x] Classify every example in `scripts/selfhost_examples_manifest.txt`
+      as supported, expected-failing, or out-of-scope
     - [x] Make the Go-emitted stage-1 self-host compiler compile and run `examples/selfhost_ops.tya`
     - [x] Make stage-4 generated tools compile and run `examples/object.tya`
     - [x] Make stage-4 generated tools compile and run `examples/object_inline.tya`

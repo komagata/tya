@@ -63,6 +63,12 @@ four self-host compiler sources into stage-5 C binaries, uses stage-5 tools to
 compile stage-6 binaries, and verifies stable stage-7 generated C for the
 self-host compiler sources.
 
+Example parity status is tracked in
+`scripts/selfhost_examples_manifest.txt`. Each example is classified as
+supported, expected-failing with its next missing feature, or out-of-scope as a
+fixture/module support file. `go test ./tests -run Selfhost -count=1` fails if
+a new example lacks a self-host parity classification.
+
 ## Remaining Full-Parity Gaps
 
 The complete self-host goal is broader than the current bootstrap gate:
@@ -74,7 +80,8 @@ The complete self-host goal is broader than the current bootstrap gate:
 - Emit general C for functions, methods, objects, arrays, imports, errors,
   `try`, multi-return values, interpolation, unary operations, and the full
   documented standard library without source-specific fallback paths.
-- Promote all runnable examples into explicit generated-tool parity targets.
+- Promote the expected-failing examples in
+  `scripts/selfhost_examples_manifest.txt` into generated-tool parity targets.
 - Keep deterministic generated-C comparisons through the final self-host fixed
   point.
 

@@ -249,9 +249,16 @@ are full-language parity gaps, ordered by dependency:
   - [ ] Generate C against the runtime ABI used by the Go emitter, or document
     and converge any intentionally smaller ABI.
 - [ ] Broaden bootstrap parity gates.
+  - [x] Classify every runnable `examples/*.tya` and selected
+    `examples/classic/*.tya` program in
+    `scripts/selfhost_examples_manifest.txt` as supported,
+    expected-failing, or out-of-scope.
   - [ ] Promote every runnable `examples/*.tya` and selected
     `examples/classic/*.tya` program into explicit stage-generated-tool parity
     targets with interpreter-output comparison.
+    - [ ] Next unsupported dependency: `examples/array_function.tya` requires
+      generated parser/checker/codegen parity for functional array builtins
+      and closure/function-value calls.
   - [ ] Add negative parser/checker fixtures for unsupported or invalid
     language features as they become supported.
   - [ ] Keep deterministic C comparisons for each generated stage and example

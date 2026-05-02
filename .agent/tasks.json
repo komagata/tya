@@ -9,7 +9,7 @@
     "id": "SELFHOST-002",
     "title": "Promote all runnable examples into explicit self-host parity targets",
     "priority": 2,
-    "passes": false
+    "passes": true
   },
   {
     "id": "SELFHOST-003",

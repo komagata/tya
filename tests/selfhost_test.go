@@ -3,6 +3,8 @@ package tests
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -289,6 +291,88 @@ func TestGoEmitterMatchesArgsExample(t *testing.T) {
 	out := run(t, "sh", "scripts/go_emit_args_check.sh")
 	if string(out) != "examples/args.tya: matched\n" {
 		t.Fatalf("got %q", out)
+	}
+}
+
+func TestSelfhostExampleParityManifest(t *testing.T) {
+	manifestPath := filepath.Join("..", "scripts", "selfhost_examples_manifest.txt")
+	raw, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stageCheck, err := os.ReadFile(filepath.Join("..", "scripts", "stage1_selfhost_sources_check.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	exampleFiles, err := filepath.Glob(filepath.Join("..", "examples", "**", "*.tya"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	rootExamples, err := filepath.Glob(filepath.Join("..", "examples", "*.tya"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	exampleFiles = append(exampleFiles, rootExamples...)
+
+	examples := map[string]bool{}
+	for _, path := range exampleFiles {
+		rel, err := filepath.Rel("..", path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		examples[filepath.ToSlash(rel)] = true
+	}
+
+	classified := map[string]bool{}
+	for _, line := range strings.Split(string(raw), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.Split(line, "|")
+		if len(parts) != 4 {
+			t.Fatalf("invalid manifest line %q", line)
+		}
+		path, status, gate, reason := parts[0], parts[1], parts[2], parts[3]
+		if !strings.HasPrefix(path, "examples/") || !strings.HasSuffix(path, ".tya") {
+			t.Fatalf("invalid example path %q", path)
+		}
+		if reason == "" {
+			t.Fatalf("missing reason for %s", path)
+		}
+		if !examples[path] {
+			t.Fatalf("manifest references missing example %s", path)
+		}
+		if classified[path] {
+			t.Fatalf("duplicate manifest entry for %s", path)
+		}
+		classified[path] = true
+		switch status {
+		case "supported":
+			if gate != "scripts/stage1_selfhost_sources_check.sh" {
+				t.Fatalf("supported example %s has non-bootstrap gate %q", path, gate)
+			}
+			if !strings.Contains(string(stageCheck), path) {
+				t.Fatalf("supported example %s is not referenced by %s", path, gate)
+			}
+		case "expected-failing", "out-of-scope":
+			if gate == "" {
+				t.Fatalf("%s example %s needs a feature or scope reason", status, path)
+			}
+		default:
+			t.Fatalf("invalid status %q for %s", status, path)
+		}
+	}
+
+	var missing []string
+	for path := range examples {
+		if !classified[path] {
+			missing = append(missing, path)
+		}
+	}
+	sort.Strings(missing)
+	if len(missing) > 0 {
+		t.Fatalf("examples missing self-host parity classification: %s", strings.Join(missing, ", "))
 	}
 }
 
