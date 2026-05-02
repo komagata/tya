@@ -159,6 +159,8 @@ Implemented:
 - Self-hosted checker detects simple undefined assignment names
 - Self-hosted checker detects simple undefined print names
 - Self-hosted checker detects simple undefined condition names
+- Self-hosted checker rejects invalid assignment binding names and constant
+  reassignment in the supported node subset
 - Self-hosted C codegen emits simple string/int assignments and prints
 - Self-hosted C codegen emits simple variable-copy assignments
 - Self-hosted C codegen emits simple reassignments

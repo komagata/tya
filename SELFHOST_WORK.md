@@ -104,6 +104,9 @@ endpoint.
     - [x] Reject `break` and `continue` outside loops
     - [x] Reject return nodes outside functions
     - [x] Check `TRY_CALL1` nodes and reject top-level `try`
+    - [x] Reject invalid assignment binding names and constant reassignment
+    - [ ] Next checker gap: carry index/key loop bindings distinctly instead
+      of collapsing supported `for` forms to one value binding
   - [ ] Expand self-host C codegen toward executable example parity
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset

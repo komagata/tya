@@ -103,6 +103,18 @@ is_valid_binding_name = name ->
     i = i + 1
   not prev_underscore
 
+is_const_name = name ->
+  if len(name) == 0
+    return false
+  if not is_upper(name[0])
+    return false
+  i = 0
+  while i < len(name)
+    if not is_upper(name[i]) and not is_digit(name[i]) and name[i] != "_"
+      return false
+    i = i + 1
+  true
+
 remember_name = names, indents, name, indent ->
   push names, name
   push indents, indent
@@ -123,6 +135,7 @@ is_literal_arg = name ->
 check = nodes ->
   names = []
   name_indents = []
+  constants = []
   loop_indents = []
   func_indents = []
   errors = []
@@ -272,6 +285,8 @@ check = nodes ->
 
     if kind_of(node) == "ASSIGN"
       name = name_of(node)
+      if not is_valid_binding_name(name)
+        push errors, line_of(node) + ": invalid binding name: " + name
       if value_of(node) == "IDENT"
         value_name = extra_of(node)
         if not has_name(names, value_name)
@@ -369,6 +384,10 @@ check = nodes ->
           push errors, line_of(node) + ": undefined variable: " + inner_name
         if index_name != "0" and index_name != "1" and index_name != "2" and not has_name(names, index_name)
           push errors, line_of(node) + ": undefined variable: " + index_name
+      if has_name(constants, name)
+        push errors, line_of(node) + ": cannot reassign constant " + name
+      if is_const_name(name) and not has_name(constants, name)
+        push constants, name
       seen = has_name names, name
       if not seen
         remember_name names, name_indents, name, current_indent

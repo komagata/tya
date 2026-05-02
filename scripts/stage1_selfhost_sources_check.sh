@@ -352,6 +352,16 @@ check_nodes_out="$("$out_dir/check_nodes.stage2" "$out_dir/check_nodes.input")"
 test "$check_nodes_out" = ""
 echo "check nodes: stage-2 pipeline matched"
 
+cat > "$out_dir/constant_reassign.nodes" <<'NODES'
+1:ASSIGN:MAX_RETRY:INT:3
+2:ASSIGN:MAX_RETRY:INT:5
+3:ASSIGN:retry_count:INT:3
+4:ASSIGN:retry_count:INT:5
+NODES
+"$out_dir/checker.stage1" "$out_dir/constant_reassign.nodes" > "$out_dir/constant_reassign.check"
+grep -qx "2: cannot reassign constant MAX_RETRY" "$out_dir/constant_reassign.check"
+echo "constant reassignment: stage-1 checker matched"
+
 printf 'source = read_file args()[0]\nlines = split source, "\n"\nprint emit_c nodes\n' > "$out_dir/emit_c_nodes.tya"
 printf '1:PRINT:STRING:Tya\n' > "$out_dir/emit_c_nodes.input"
 "$out_dir/lexer.stage2" "$out_dir/emit_c_nodes.tya" > "$out_dir/emit_c_nodes.stage2.tokens"
@@ -1135,15 +1145,15 @@ echo "selfhost/parser.tya: stage-3 codegen emitted executable parser C"
 cat > "$stage4_dir/checker.stage4.want.nodes" <<'NODES'
 58:FOR:existing:names
 59:INDENT:2
-146:FOR:node:nodes
-147:INDENT:2
-719:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-722:FOR:line:lines
-723:INDENT:2
-729:PRINT:STRING:ok
-731:FOR:err:errors
-732:INDENT:2
-732:PRINT:IDENT:err
+159:FOR:node:nodes
+160:INDENT:2
+738:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+741:FOR:line:lines
+742:INDENT:2
+748:PRINT:STRING:ok
+750:FOR:err:errors
+751:INDENT:2
+751:PRINT:IDENT:err
 NODES
 diff -u "$stage4_dir/checker.stage4.want.nodes" "$stage4_dir/checker.stage4.nodes" >/dev/null
 echo "selfhost/checker.tya: stage-3 parser emitted real nodes"

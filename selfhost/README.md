@@ -49,7 +49,8 @@ Current supported subset:
   conditions, call-with-call-index arguments, call indexing, return calls,
   indexing, indentation, member print nodes, multiple-return subset nodes, and
   one-argument print calls
-- Checker: simple undefined assignment / print / condition names
+- Checker: simple undefined assignment / print / condition names, invalid
+  assignment binding names, and constant reassignment
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison / `!=` / `>=` / `<=` assignments, variable-copy assignments, bool assignments,
   unary `not`, one-element array paths for simple `push` / `for`, reassignment,

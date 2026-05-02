@@ -23,8 +23,9 @@ prints, and simple print calls.
 
 The current self-hosted checker supports simple undefined-name checks for
 assignments, prints, conditions, calls, pushes, returns, indexes, and `for`
-collections. It does not yet implement full lexical scope parity with the Go
-checker.
+collections. It also rejects invalid assignment binding names and reassignment
+of all-caps constants in the supported node subset. It does not yet implement
+full lexical scope parity with the Go checker.
 
 The current self-hosted C code generator emits compileable C for the prototype
 node format. It supports simple scalar assignments and prints, selected

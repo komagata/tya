@@ -21,7 +21,7 @@
     "id": "SELFHOST-004",
     "title": "Bring self-host checker semantics closer to Go checker parity",
     "priority": 4,
-    "passes": false
+    "passes": true
   },
   {
     "id": "SELFHOST-005",

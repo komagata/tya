@@ -2,14 +2,22 @@
 
 `Current Status`
 =================
-**Last Updated:** 2026-05-02 17:02
-**Tasks Completed:** 3
-**Current Task:** SELFHOST-003 Complete
+**Last Updated:** 2026-05-02 17:45
+**Tasks Completed:** 4
+**Current Task:** SELFHOST-004 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-02 17:45 UTC - SELFHOST-004 - Added self-host checker parity for
+  invalid assignment binding names and all-caps constant reassignment in the
+  supported node subset. Added focused checker tests, a generated stage-1
+  checker fixture for constant reassignment, and updated self-host status docs
+  with the next checker gap.
+  Verification: `go test ./tests -run SelfhostChecker -count=1`;
+  `sh scripts/selfhost_check.sh`; `sh scripts/stage1_selfhost_sources_check.sh`;
+  `go test ./... -count=1`; `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-02 17:02 UTC - SELFHOST-003 - Added explicit self-host parser
   nodes for simple `-`, `*`, `/`, and `%` arithmetic assignment expressions,
   extended checker undefined-name coverage for arithmetic operands, and emitted
