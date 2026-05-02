@@ -1,20 +1,20 @@
-parseUser = text ->
+parse_user = text ->
   if text == ""
     return nil, error "empty user"
   return { name: text }, nil
 
-readUser = text ->
-  user = try parseUser(text)
+read_user = text ->
+  user = try parse_user(text)
   return user.name, nil
 
-name, err = readUser "komagata"
+name, err = read_user "komagata"
 
 if err
   print err.message
 else
   print name
 
-name, err = readUser ""
+name, err = read_user ""
 
 if err
   print err.message

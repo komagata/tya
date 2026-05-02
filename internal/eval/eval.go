@@ -114,6 +114,12 @@ func (e *Env) assign(name string, v Value) bool {
 	return false
 }
 
+func (e *Env) setBuiltin(names []string, fn Builtin) {
+	for _, name := range names {
+		e.set(name, fn)
+	}
+}
+
 func Run(prog *ast.Program, out io.Writer) error {
 	return RunWithArgs(prog, out, nil)
 }
@@ -151,9 +157,9 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		fmt.Fprintln(out, stringify(args[0]))
 		return nil, nil
 	}))
-	env.set("readLine", Builtin(func(args []Value) (Value, error) {
+	env.setBuiltin([]string{"read_line", "readLine"}, Builtin(func(args []Value) (Value, error) {
 		if len(args) != 0 {
-			return nil, fmt.Errorf("readLine expects 0 arguments")
+			return nil, fmt.Errorf("read_line expects 0 arguments")
 		}
 		if lineReader == nil {
 			return nil, nil
@@ -380,9 +386,9 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return deepEqual(args[0], args[1]), nil
 	}))
-	env.set("toString", Builtin(func(args []Value) (Value, error) {
+	env.setBuiltin([]string{"to_string", "toString"}, Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
-			return nil, fmt.Errorf("toString expects 1 argument")
+			return nil, fmt.Errorf("to_string expects 1 argument")
 		}
 		return stringify(args[0]), nil
 	}))
@@ -455,36 +461,36 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return strings.Contains(text, part), nil
 	}))
-	env.set("startsWith", Builtin(func(args []Value) (Value, error) {
-		text, prefix, err := twoStrings("startsWith", args)
+	env.setBuiltin([]string{"starts_with", "startsWith"}, Builtin(func(args []Value) (Value, error) {
+		text, prefix, err := twoStrings("starts_with", args)
 		if err != nil {
 			return nil, err
 		}
 		return strings.HasPrefix(text, prefix), nil
 	}))
-	env.set("endsWith", Builtin(func(args []Value) (Value, error) {
-		text, suffix, err := twoStrings("endsWith", args)
+	env.setBuiltin([]string{"ends_with", "endsWith"}, Builtin(func(args []Value) (Value, error) {
+		text, suffix, err := twoStrings("ends_with", args)
 		if err != nil {
 			return nil, err
 		}
 		return strings.HasSuffix(text, suffix), nil
 	}))
-	env.set("byteLen", Builtin(func(args []Value) (Value, error) {
-		text, err := oneString("byteLen", args)
+	env.setBuiltin([]string{"byte_len", "byteLen"}, Builtin(func(args []Value) (Value, error) {
+		text, err := oneString("byte_len", args)
 		if err != nil {
 			return nil, err
 		}
 		return int64(len(text)), nil
 	}))
-	env.set("charLen", Builtin(func(args []Value) (Value, error) {
-		text, err := oneString("charLen", args)
+	env.setBuiltin([]string{"char_len", "charLen"}, Builtin(func(args []Value) (Value, error) {
+		text, err := oneString("char_len", args)
 		if err != nil {
 			return nil, err
 		}
 		return int64(len([]rune(text))), nil
 	}))
-	env.set("readFile", Builtin(func(args []Value) (Value, error) {
-		path, err := oneString("readFile", args)
+	env.setBuiltin([]string{"read_file", "readFile"}, Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("read_file", args)
 		if err != nil {
 			return nil, err
 		}
@@ -494,25 +500,25 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return string(data), nil
 	}))
-	env.set("writeFile", Builtin(func(args []Value) (Value, error) {
+	env.setBuiltin([]string{"write_file", "writeFile"}, Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
-			return nil, fmt.Errorf("writeFile expects 2 arguments")
+			return nil, fmt.Errorf("write_file expects 2 arguments")
 		}
 		path, ok := args[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("writeFile expects string path")
+			return nil, fmt.Errorf("write_file expects string path")
 		}
 		text, ok := args[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("writeFile expects string text")
+			return nil, fmt.Errorf("write_file expects string text")
 		}
 		if err := os.WriteFile(path, []byte(text), 0644); err != nil {
 			return nil, err
 		}
 		return nil, nil
 	}))
-	env.set("fileExists", Builtin(func(args []Value) (Value, error) {
-		path, err := oneString("fileExists", args)
+	env.setBuiltin([]string{"file_exists", "fileExists"}, Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("file_exists", args)
 		if err != nil {
 			return nil, err
 		}
@@ -592,21 +598,21 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return left / right, nil
 	}))
-	env.set("toInt", Builtin(func(args []Value) (Value, error) {
+	env.setBuiltin([]string{"to_int", "toInt"}, Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
-			return nil, fmt.Errorf("toInt expects 1 argument")
+			return nil, fmt.Errorf("to_int expects 1 argument")
 		}
 		return toInt(args[0])
 	}))
-	env.set("toFloat", Builtin(func(args []Value) (Value, error) {
+	env.setBuiltin([]string{"to_float", "toFloat"}, Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
-			return nil, fmt.Errorf("toFloat expects 1 argument")
+			return nil, fmt.Errorf("to_float expects 1 argument")
 		}
 		return toFloat(args[0])
 	}))
-	env.set("toNumber", Builtin(func(args []Value) (Value, error) {
+	env.setBuiltin([]string{"to_number", "toNumber"}, Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
-			return nil, fmt.Errorf("toNumber expects 1 argument")
+			return nil, fmt.Errorf("to_number expects 1 argument")
 		}
 		if i, err := toInt(args[0]); err == nil {
 			return i, nil

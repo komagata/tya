@@ -3,8 +3,8 @@ user =
   age: 20
 
 print has user, "name"
-userKeys = keys user
-userValues = values user
+user_keys = keys user
+user_values = values user
 print len keys user
 print len values user
 delete user, "age"

@@ -1,698 +1,705 @@
-kindOf = node ->
+kind_of = node ->
   parts = split node, ":"
   parts[1]
 
-nameOf = node ->
+name_of = node ->
   parts = split node, ":"
   if len(parts) < 3
     return ""
   parts[2]
 
-valueOf = node ->
+value_of = node ->
   parts = split node, ":"
   if len(parts) < 4
     return ""
   parts[3]
 
-extraOf = node ->
+extra_of = node ->
   parts = split node, ":"
   if len(parts) < 5
     return ""
   parts[4]
 
-extra2Of = node ->
+extra2_of = node ->
   parts = split node, ":"
   if len(parts) < 6
     return ""
   parts[5]
 
-extra3Of = node ->
+extra3_of = node ->
   parts = split node, ":"
   if len(parts) < 7
     return ""
   parts[6]
 
-extra4Of = node ->
+extra4_of = node ->
   parts = split node, ":"
   if len(parts) < 8
     return ""
   parts[7]
 
-extra5Of = node ->
+extra5_of = node ->
   parts = split node, ":"
   if len(parts) < 9
     return ""
   parts[8]
 
-extra6Of = node ->
+extra6_of = node ->
   parts = split node, ":"
   if len(parts) < 10
     return ""
   parts[9]
 
-lineOf = node ->
+line_of = node ->
   parts = split node, ":"
   parts[0]
 
-hasName = names, name ->
+has_name = names, name ->
   for existing in names
     if existing == name
       return true
   false
 
-isLower = char ->
+is_lower = char ->
   contains "abcdefghijklmnopqrstuvwxyz", char
 
-isUpper = char ->
+is_upper = char ->
   contains "ABCDEFGHIJKLMNOPQRSTUVWXYZ", char
 
-isDigit = char ->
+is_digit = char ->
   contains "0123456789", char
 
-isValidBindingName = name ->
+is_valid_binding_name = name ->
   if name == "_"
     return true
   if len(name) == 0
     return false
-  if isUpper(name[0])
+  if is_upper(name[0])
     i = 0
     while i < len(name)
-      if not isUpper(name[i]) and not isDigit(name[i]) and name[i] != "_"
+      if not is_upper(name[i]) and not is_digit(name[i]) and name[i] != "_"
         return false
       i = i + 1
     return true
   if name[0] == "_"
     if len(name) < 2
       return false
-    if not isLower(name[1])
+    if not is_lower(name[1])
       return false
   else
-    if not isLower(name[0])
+    if not is_lower(name[0])
       return false
   i = 1
+  prev_underscore = name[0] == "_"
   while i < len(name)
     if name[i] == "_"
-      return false
+      if prev_underscore
+        return false
+      prev_underscore = true
+    else
+      if not is_lower(name[i]) and not is_digit(name[i])
+        return false
+      prev_underscore = false
     i = i + 1
-  true
+  not prev_underscore
 
-rememberName = names, indents, name, indent ->
+remember_name = names, indents, name, indent ->
   push names, name
   push indents, indent
 
-isLiteralArg = name ->
+is_literal_arg = name ->
   name == "" or name == "0" or name == "1" or name == "2" or name == "3" or name == "4" or name == "5" or name == "6" or name == "7" or name == "8" or name == "9" or name == "10" or name == "\\n" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
 
 check = nodes ->
   names = []
-  nameIndents = []
-  loopIndents = []
-  funcIndents = []
+  name_indents = []
+  loop_indents = []
+  func_indents = []
   errors = []
-  currentIndent = "0"
-  rememberName names, nameIndents, "split", "0"
-  rememberName names, nameIndents, "len", "0"
-  rememberName names, nameIndents, "readFile", "0"
-  rememberName names, nameIndents, "args", "0"
-  rememberName names, nameIndents, "toString", "0"
-  rememberName names, nameIndents, "toInt", "0"
-  rememberName names, nameIndents, "trim", "0"
-  rememberName names, nameIndents, "contains", "0"
-  rememberName names, nameIndents, "startsWith", "0"
-  rememberName names, nameIndents, "endsWith", "0"
-  rememberName names, nameIndents, "replace", "0"
-  rememberName names, nameIndents, "byteLen", "0"
-  rememberName names, nameIndents, "charLen", "0"
-  rememberName names, nameIndents, "hasName", "0"
-  rememberName names, nameIndents, "error", "0"
+  current_indent = "0"
+  remember_name names, name_indents, "split", "0"
+  remember_name names, name_indents, "len", "0"
+  remember_name names, name_indents, "read_file", "0"
+  remember_name names, name_indents, "args", "0"
+  remember_name names, name_indents, "to_string", "0"
+  remember_name names, name_indents, "to_int", "0"
+  remember_name names, name_indents, "trim", "0"
+  remember_name names, name_indents, "contains", "0"
+  remember_name names, name_indents, "starts_with", "0"
+  remember_name names, name_indents, "ends_with", "0"
+  remember_name names, name_indents, "replace", "0"
+  remember_name names, name_indents, "byte_len", "0"
+  remember_name names, name_indents, "char_len", "0"
+  remember_name names, name_indents, "has_name", "0"
+  remember_name names, name_indents, "error", "0"
 
   for node in nodes
-    if kindOf(node) == "INDENT"
-      currentIndent = nameOf(node)
-      keptNames = []
-      keptIndents = []
+    if kind_of(node) == "INDENT"
+      current_indent = name_of(node)
+      kept_names = []
+      kept_indents = []
       i = 0
       while i < len(names)
-        if toInt(nameIndents[i]) <= toInt(currentIndent)
-          rememberName keptNames, keptIndents, names[i], nameIndents[i]
+        if to_int(name_indents[i]) <= to_int(current_indent)
+          remember_name kept_names, kept_indents, names[i], name_indents[i]
         i = i + 1
-      names = keptNames
-      nameIndents = keptIndents
-      keptLoopIndents = []
+      names = kept_names
+      name_indents = kept_indents
+      kept_loop_indents = []
       i = 0
-      while i < len(loopIndents)
-        if toInt(loopIndents[i]) <= toInt(currentIndent)
-          push keptLoopIndents, loopIndents[i]
+      while i < len(loop_indents)
+        if to_int(loop_indents[i]) <= to_int(current_indent)
+          push kept_loop_indents, loop_indents[i]
         i = i + 1
-      loopIndents = keptLoopIndents
-      keptFuncIndents = []
+      loop_indents = kept_loop_indents
+      kept_func_indents = []
       i = 0
-      while i < len(funcIndents)
-        if toInt(funcIndents[i]) <= toInt(currentIndent)
-          push keptFuncIndents, funcIndents[i]
+      while i < len(func_indents)
+        if to_int(func_indents[i]) <= to_int(current_indent)
+          push kept_func_indents, func_indents[i]
         i = i + 1
-      funcIndents = keptFuncIndents
+      func_indents = kept_func_indents
 
-    if kindOf(node) == "FUNC"
-      name = nameOf(node)
-      if not hasName(names, name)
-        rememberName names, nameIndents, name, currentIndent
-      arg = valueOf(node)
-      if arg != "" and not isValidBindingName(arg)
-        push errors, lineOf(node) + ": invalid binding name: " + arg
-      if arg != "" and not hasName(names, arg)
-        rememberName names, nameIndents, arg, currentIndent
-      push funcIndents, toString(toInt(currentIndent) + 2)
+    if kind_of(node) == "FUNC"
+      name = name_of(node)
+      if not has_name(names, name)
+        remember_name names, name_indents, name, current_indent
+      arg = value_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg != "" and not has_name(names, arg)
+        remember_name names, name_indents, arg, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
 
-    if kindOf(node) == "FUNC2"
-      name = nameOf(node)
-      if not hasName(names, name)
-        rememberName names, nameIndents, name, currentIndent
-      arg = valueOf(node)
-      arg2 = extraOf(node)
-      if arg != "" and not isValidBindingName(arg)
-        push errors, lineOf(node) + ": invalid binding name: " + arg
-      if arg2 != "" and not isValidBindingName(arg2)
-        push errors, lineOf(node) + ": invalid binding name: " + arg2
+    if kind_of(node) == "FUNC2"
+      name = name_of(node)
+      if not has_name(names, name)
+        remember_name names, name_indents, name, current_indent
+      arg = value_of(node)
+      arg2 = extra_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not is_valid_binding_name(arg2)
+        push errors, line_of(node) + ": invalid binding name: " + arg2
       if arg != "" and arg == arg2
-        push errors, lineOf(node) + ": duplicate function parameter: " + arg
-      if arg != "" and not hasName(names, arg)
-        rememberName names, nameIndents, arg, currentIndent
-      if arg2 != "" and not hasName(names, arg2)
-        rememberName names, nameIndents, arg2, currentIndent
-      push funcIndents, toString(toInt(currentIndent) + 2)
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
+      if arg != "" and not has_name(names, arg)
+        remember_name names, name_indents, arg, current_indent
+      if arg2 != "" and not has_name(names, arg2)
+        remember_name names, name_indents, arg2, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
 
-    if kindOf(node) == "FUNC3"
-      name = nameOf(node)
-      if not hasName(names, name)
-        rememberName names, nameIndents, name, currentIndent
-      arg = valueOf(node)
-      arg2 = extraOf(node)
-      arg3 = extra2Of(node)
-      if arg != "" and not isValidBindingName(arg)
-        push errors, lineOf(node) + ": invalid binding name: " + arg
-      if arg2 != "" and not isValidBindingName(arg2)
-        push errors, lineOf(node) + ": invalid binding name: " + arg2
-      if arg3 != "" and not isValidBindingName(arg3)
-        push errors, lineOf(node) + ": invalid binding name: " + arg3
+    if kind_of(node) == "FUNC3"
+      name = name_of(node)
+      if not has_name(names, name)
+        remember_name names, name_indents, name, current_indent
+      arg = value_of(node)
+      arg2 = extra_of(node)
+      arg3 = extra2_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not is_valid_binding_name(arg2)
+        push errors, line_of(node) + ": invalid binding name: " + arg2
+      if arg3 != "" and not is_valid_binding_name(arg3)
+        push errors, line_of(node) + ": invalid binding name: " + arg3
       if arg != "" and (arg == arg2 or arg == arg3)
-        push errors, lineOf(node) + ": duplicate function parameter: " + arg
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
       if arg2 != "" and arg2 == arg3
-        push errors, lineOf(node) + ": duplicate function parameter: " + arg2
-      if arg != "" and not hasName(names, arg)
-        rememberName names, nameIndents, arg, currentIndent
-      if arg2 != "" and not hasName(names, arg2)
-        rememberName names, nameIndents, arg2, currentIndent
-      if arg3 != "" and not hasName(names, arg3)
-        rememberName names, nameIndents, arg3, currentIndent
-      push funcIndents, toString(toInt(currentIndent) + 2)
+        push errors, line_of(node) + ": duplicate function parameter: " + arg2
+      if arg != "" and not has_name(names, arg)
+        remember_name names, name_indents, arg, current_indent
+      if arg2 != "" and not has_name(names, arg2)
+        remember_name names, name_indents, arg2, current_indent
+      if arg3 != "" and not has_name(names, arg3)
+        remember_name names, name_indents, arg3, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
 
-    if kindOf(node) == "FUNC4"
-      name = nameOf(node)
-      if not hasName(names, name)
-        rememberName names, nameIndents, name, currentIndent
-      arg = valueOf(node)
-      arg2 = extraOf(node)
-      arg3 = extra2Of(node)
-      arg4 = extra3Of(node)
-      if arg != "" and not isValidBindingName(arg)
-        push errors, lineOf(node) + ": invalid binding name: " + arg
-      if arg2 != "" and not isValidBindingName(arg2)
-        push errors, lineOf(node) + ": invalid binding name: " + arg2
-      if arg3 != "" and not isValidBindingName(arg3)
-        push errors, lineOf(node) + ": invalid binding name: " + arg3
-      if arg4 != "" and not isValidBindingName(arg4)
-        push errors, lineOf(node) + ": invalid binding name: " + arg4
+    if kind_of(node) == "FUNC4"
+      name = name_of(node)
+      if not has_name(names, name)
+        remember_name names, name_indents, name, current_indent
+      arg = value_of(node)
+      arg2 = extra_of(node)
+      arg3 = extra2_of(node)
+      arg4 = extra3_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not is_valid_binding_name(arg2)
+        push errors, line_of(node) + ": invalid binding name: " + arg2
+      if arg3 != "" and not is_valid_binding_name(arg3)
+        push errors, line_of(node) + ": invalid binding name: " + arg3
+      if arg4 != "" and not is_valid_binding_name(arg4)
+        push errors, line_of(node) + ": invalid binding name: " + arg4
       if arg != "" and (arg == arg2 or arg == arg3 or arg == arg4)
-        push errors, lineOf(node) + ": duplicate function parameter: " + arg
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
       if arg2 != "" and (arg2 == arg3 or arg2 == arg4)
-        push errors, lineOf(node) + ": duplicate function parameter: " + arg2
+        push errors, line_of(node) + ": duplicate function parameter: " + arg2
       if arg3 != "" and arg3 == arg4
-        push errors, lineOf(node) + ": duplicate function parameter: " + arg3
-      if arg != "" and not hasName(names, arg)
-        rememberName names, nameIndents, arg, currentIndent
-      if arg2 != "" and not hasName(names, arg2)
-        rememberName names, nameIndents, arg2, currentIndent
-      if arg3 != "" and not hasName(names, arg3)
-        rememberName names, nameIndents, arg3, currentIndent
-      if arg4 != "" and not hasName(names, arg4)
-        rememberName names, nameIndents, arg4, currentIndent
-      push funcIndents, toString(toInt(currentIndent) + 2)
+        push errors, line_of(node) + ": duplicate function parameter: " + arg3
+      if arg != "" and not has_name(names, arg)
+        remember_name names, name_indents, arg, current_indent
+      if arg2 != "" and not has_name(names, arg2)
+        remember_name names, name_indents, arg2, current_indent
+      if arg3 != "" and not has_name(names, arg3)
+        remember_name names, name_indents, arg3, current_indent
+      if arg4 != "" and not has_name(names, arg4)
+        remember_name names, name_indents, arg4, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
 
-    if kindOf(node) == "FOR"
-      item = nameOf(node)
-      collection = valueOf(node)
-      if not isValidBindingName(item)
-        push errors, lineOf(node) + ": invalid binding name: " + item
-      if not hasName(names, collection)
-        push errors, lineOf(node) + ": undefined variable: " + collection
-      if not hasName(names, item)
-        rememberName names, nameIndents, item, toString(toInt(currentIndent) + 2)
-      push loopIndents, toString(toInt(currentIndent) + 2)
+    if kind_of(node) == "FOR"
+      item = name_of(node)
+      collection = value_of(node)
+      if not is_valid_binding_name(item)
+        push errors, line_of(node) + ": invalid binding name: " + item
+      if not has_name(names, collection)
+        push errors, line_of(node) + ": undefined variable: " + collection
+      if not has_name(names, item)
+        remember_name names, name_indents, item, to_string(to_int(current_indent) + 2)
+      push loop_indents, to_string(to_int(current_indent) + 2)
 
-    if kindOf(node) == "WHILE" or kindOf(node) == "WHILE_LT_CALL" or kindOf(node) == "WHILE_COMPARE_LT" or kindOf(node) == "WHILE_COMPARE_NE" or kindOf(node) == "WHILE_COMPARE_GE" or kindOf(node) == "WHILE_COMPARE_LE"
-      push loopIndents, toString(toInt(currentIndent) + 2)
+    if kind_of(node) == "WHILE" or kind_of(node) == "WHILE_LT_CALL" or kind_of(node) == "WHILE_COMPARE_LT" or kind_of(node) == "WHILE_COMPARE_NE" or kind_of(node) == "WHILE_COMPARE_GE" or kind_of(node) == "WHILE_COMPARE_LE"
+      push loop_indents, to_string(to_int(current_indent) + 2)
 
-    if kindOf(node) == "ASSIGN"
-      name = nameOf(node)
-      if valueOf(node) == "IDENT"
-        valueName = extraOf(node)
-        if not hasName(names, valueName)
-          push errors, lineOf(node) + ": undefined variable: " + valueName
-      if valueOf(node) == "BOOL_NOT"
-        valueName = extraOf(node)
-        if not hasName(names, valueName)
-          push errors, lineOf(node) + ": undefined variable: " + valueName
-      if valueOf(node) == "BOOL_AND" or valueOf(node) == "BOOL_OR"
-        leftName = extraOf(node)
-        rightName = extra2Of(node)
-        if not hasName(names, leftName)
-          push errors, lineOf(node) + ": undefined variable: " + leftName
-        if not hasName(names, rightName)
-          push errors, lineOf(node) + ": undefined variable: " + rightName
-      if valueOf(node) == "OBJECT_ONE"
-        valueName = extra3Of(node)
-        if extra2Of(node) == "IDENT" and not hasName(names, valueName)
-          push errors, lineOf(node) + ": undefined variable: " + valueName
-      if valueOf(node) == "COMPARE_LT" or valueOf(node) == "COMPARE_EQ" or valueOf(node) == "COMPARE_NE" or valueOf(node) == "COMPARE_GE" or valueOf(node) == "COMPARE_LE"
-        leftName = extraOf(node)
-        rightName = extra2Of(node)
-        if not isLiteralArg(leftName) and not hasName(names, leftName)
-          push errors, lineOf(node) + ": undefined variable: " + leftName
-        if not isLiteralArg(rightName) and not hasName(names, rightName)
-          push errors, lineOf(node) + ": undefined variable: " + rightName
-      if valueOf(node) == "CALL1"
-        funcName = extraOf(node)
-        argName = extra2Of(node)
-        if not hasName(names, funcName)
-          push errors, lineOf(node) + ": undefined variable: " + funcName
-        if not hasName(names, argName)
-          push errors, lineOf(node) + ": undefined variable: " + argName
-      if valueOf(node) == "TRY_CALL1"
-        funcName = extraOf(node)
-        argName = extra2Of(node)
-        if len(funcIndents) == 0
-          push errors, lineOf(node) + ": try used outside function"
-        if not hasName(names, funcName)
-          push errors, lineOf(node) + ": undefined variable: " + funcName
-        if not hasName(names, argName)
-          push errors, lineOf(node) + ": undefined variable: " + argName
-      if valueOf(node) == "CALL2"
-        funcName = extraOf(node)
-        leftArg = extra2Of(node)
-        rightArg = extra3Of(node)
-        if not hasName(names, funcName)
-          push errors, lineOf(node) + ": undefined variable: " + funcName
-        if not hasName(names, leftArg)
-          push errors, lineOf(node) + ": undefined variable: " + leftArg
-        if not isLiteralArg(rightArg) and not hasName(names, rightArg)
-          push errors, lineOf(node) + ": undefined variable: " + rightArg
-      if valueOf(node) == "CALL3"
-        funcName = extraOf(node)
-        leftArg = extra2Of(node)
-        middleKind = extra3Of(node)
-        middleArg = extra4Of(node)
-        rightArg = extra5Of(node)
-        if not hasName(names, funcName)
-          push errors, lineOf(node) + ": undefined variable: " + funcName
-        if not hasName(names, leftArg)
-          push errors, lineOf(node) + ": undefined variable: " + leftArg
-        if middleKind == "IDENT" and not hasName(names, middleArg)
-          push errors, lineOf(node) + ": undefined variable: " + middleArg
-        if not isLiteralArg(rightArg) and not hasName(names, rightArg)
-          push errors, lineOf(node) + ": undefined variable: " + rightArg
-      if valueOf(node) == "INDEX"
-        sourceName = extraOf(node)
-        indexName = extra2Of(node)
-        if not hasName(names, sourceName)
-          push errors, lineOf(node) + ": undefined variable: " + sourceName
-        if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
-          push errors, lineOf(node) + ": undefined variable: " + indexName
-      if valueOf(node) == "CALL0_INDEX"
-        funcName = extraOf(node)
-        indexName = extra2Of(node)
-        if not hasName(names, funcName)
-          push errors, lineOf(node) + ": undefined variable: " + funcName
-        if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
-          push errors, lineOf(node) + ": undefined variable: " + indexName
-      if valueOf(node) == "CALL1_CALL0_INDEX"
-        outerName = extraOf(node)
-        innerName = extra2Of(node)
-        indexName = extra3Of(node)
-        if not hasName(names, outerName)
-          push errors, lineOf(node) + ": undefined variable: " + outerName
-        if not hasName(names, innerName)
-          push errors, lineOf(node) + ": undefined variable: " + innerName
-        if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
-          push errors, lineOf(node) + ": undefined variable: " + indexName
-      seen = hasName names, name
+    if kind_of(node) == "ASSIGN"
+      name = name_of(node)
+      if value_of(node) == "IDENT"
+        value_name = extra_of(node)
+        if not has_name(names, value_name)
+          push errors, line_of(node) + ": undefined variable: " + value_name
+      if value_of(node) == "BOOL_NOT"
+        value_name = extra_of(node)
+        if not has_name(names, value_name)
+          push errors, line_of(node) + ": undefined variable: " + value_name
+      if value_of(node) == "BOOL_AND" or value_of(node) == "BOOL_OR"
+        left_name = extra_of(node)
+        right_name = extra2_of(node)
+        if not has_name(names, left_name)
+          push errors, line_of(node) + ": undefined variable: " + left_name
+        if not has_name(names, right_name)
+          push errors, line_of(node) + ": undefined variable: " + right_name
+      if value_of(node) == "OBJECT_ONE"
+        value_name = extra3_of(node)
+        if extra2_of(node) == "IDENT" and not has_name(names, value_name)
+          push errors, line_of(node) + ": undefined variable: " + value_name
+      if value_of(node) == "COMPARE_LT" or value_of(node) == "COMPARE_EQ" or value_of(node) == "COMPARE_NE" or value_of(node) == "COMPARE_GE" or value_of(node) == "COMPARE_LE"
+        left_name = extra_of(node)
+        right_name = extra2_of(node)
+        if not is_literal_arg(left_name) and not has_name(names, left_name)
+          push errors, line_of(node) + ": undefined variable: " + left_name
+        if not is_literal_arg(right_name) and not has_name(names, right_name)
+          push errors, line_of(node) + ": undefined variable: " + right_name
+      if value_of(node) == "CALL1"
+        func_name = extra_of(node)
+        arg_name = extra2_of(node)
+        if not has_name(names, func_name)
+          push errors, line_of(node) + ": undefined variable: " + func_name
+        if not has_name(names, arg_name)
+          push errors, line_of(node) + ": undefined variable: " + arg_name
+      if value_of(node) == "TRY_CALL1"
+        func_name = extra_of(node)
+        arg_name = extra2_of(node)
+        if len(func_indents) == 0
+          push errors, line_of(node) + ": try used outside function"
+        if not has_name(names, func_name)
+          push errors, line_of(node) + ": undefined variable: " + func_name
+        if not has_name(names, arg_name)
+          push errors, line_of(node) + ": undefined variable: " + arg_name
+      if value_of(node) == "CALL2"
+        func_name = extra_of(node)
+        left_arg = extra2_of(node)
+        right_arg = extra3_of(node)
+        if not has_name(names, func_name)
+          push errors, line_of(node) + ": undefined variable: " + func_name
+        if not has_name(names, left_arg)
+          push errors, line_of(node) + ": undefined variable: " + left_arg
+        if not is_literal_arg(right_arg) and not has_name(names, right_arg)
+          push errors, line_of(node) + ": undefined variable: " + right_arg
+      if value_of(node) == "CALL3"
+        func_name = extra_of(node)
+        left_arg = extra2_of(node)
+        middle_kind = extra3_of(node)
+        middle_arg = extra4_of(node)
+        right_arg = extra5_of(node)
+        if not has_name(names, func_name)
+          push errors, line_of(node) + ": undefined variable: " + func_name
+        if not has_name(names, left_arg)
+          push errors, line_of(node) + ": undefined variable: " + left_arg
+        if middle_kind == "IDENT" and not has_name(names, middle_arg)
+          push errors, line_of(node) + ": undefined variable: " + middle_arg
+        if not is_literal_arg(right_arg) and not has_name(names, right_arg)
+          push errors, line_of(node) + ": undefined variable: " + right_arg
+      if value_of(node) == "INDEX"
+        source_name = extra_of(node)
+        index_name = extra2_of(node)
+        if not has_name(names, source_name)
+          push errors, line_of(node) + ": undefined variable: " + source_name
+        if index_name != "0" and index_name != "1" and index_name != "2" and not has_name(names, index_name)
+          push errors, line_of(node) + ": undefined variable: " + index_name
+      if value_of(node) == "CALL0_INDEX"
+        func_name = extra_of(node)
+        index_name = extra2_of(node)
+        if not has_name(names, func_name)
+          push errors, line_of(node) + ": undefined variable: " + func_name
+        if index_name != "0" and index_name != "1" and index_name != "2" and not has_name(names, index_name)
+          push errors, line_of(node) + ": undefined variable: " + index_name
+      if value_of(node) == "CALL1_CALL0_INDEX"
+        outer_name = extra_of(node)
+        inner_name = extra2_of(node)
+        index_name = extra3_of(node)
+        if not has_name(names, outer_name)
+          push errors, line_of(node) + ": undefined variable: " + outer_name
+        if not has_name(names, inner_name)
+          push errors, line_of(node) + ": undefined variable: " + inner_name
+        if index_name != "0" and index_name != "1" and index_name != "2" and not has_name(names, index_name)
+          push errors, line_of(node) + ": undefined variable: " + index_name
+      seen = has_name names, name
       if not seen
-        rememberName names, nameIndents, name, currentIndent
+        remember_name names, name_indents, name, current_indent
 
-    if kindOf(node) == "MULTI_ASSIGN2"
-      leftName = nameOf(node)
-      rightName = valueOf(node)
-      valueKind = extraOf(node)
-      valueName = extra2Of(node)
-      if not isValidBindingName(leftName)
-        push errors, lineOf(node) + ": invalid binding name: " + leftName
-      if not isValidBindingName(rightName)
-        push errors, lineOf(node) + ": invalid binding name: " + rightName
-      if valueKind == "IDENT" and not hasName(names, valueName)
-        push errors, lineOf(node) + ": undefined variable: " + valueName
-      if not hasName(names, leftName)
-        rememberName names, nameIndents, leftName, currentIndent
-      if not hasName(names, rightName)
-        rememberName names, nameIndents, rightName, currentIndent
+    if kind_of(node) == "MULTI_ASSIGN2"
+      left_name = name_of(node)
+      right_name = value_of(node)
+      value_kind = extra_of(node)
+      value_name = extra2_of(node)
+      if not is_valid_binding_name(left_name)
+        push errors, line_of(node) + ": invalid binding name: " + left_name
+      if not is_valid_binding_name(right_name)
+        push errors, line_of(node) + ": invalid binding name: " + right_name
+      if value_kind == "IDENT" and not has_name(names, value_name)
+        push errors, line_of(node) + ": undefined variable: " + value_name
+      if not has_name(names, left_name)
+        remember_name names, name_indents, left_name, current_indent
+      if not has_name(names, right_name)
+        remember_name names, name_indents, right_name, current_indent
 
-    if kindOf(node) == "MULTI_ASSIGN2_CALL1"
-      leftName = nameOf(node)
-      rightName = valueOf(node)
-      funcName = extraOf(node)
-      argKind = extra2Of(node)
-      argName = extra3Of(node)
-      if not isValidBindingName(leftName)
-        push errors, lineOf(node) + ": invalid binding name: " + leftName
-      if not isValidBindingName(rightName)
-        push errors, lineOf(node) + ": invalid binding name: " + rightName
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if argKind == "IDENT" and not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
-      if not hasName(names, leftName)
-        rememberName names, nameIndents, leftName, currentIndent
-      if not hasName(names, rightName)
-        rememberName names, nameIndents, rightName, currentIndent
+    if kind_of(node) == "MULTI_ASSIGN2_CALL1"
+      left_name = name_of(node)
+      right_name = value_of(node)
+      func_name = extra_of(node)
+      arg_kind = extra2_of(node)
+      arg_name = extra3_of(node)
+      if not is_valid_binding_name(left_name)
+        push errors, line_of(node) + ": invalid binding name: " + left_name
+      if not is_valid_binding_name(right_name)
+        push errors, line_of(node) + ": invalid binding name: " + right_name
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if arg_kind == "IDENT" and not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
+      if not has_name(names, left_name)
+        remember_name names, name_indents, left_name, current_indent
+      if not has_name(names, right_name)
+        remember_name names, name_indents, right_name, current_indent
 
-    if kindOf(node) == "PRINT"
-      if nameOf(node) == "IDENT"
-        name = valueOf(node)
-        if not hasName(names, name)
-          push errors, lineOf(node) + ": undefined variable: " + name
+    if kind_of(node) == "PRINT"
+      if name_of(node) == "IDENT"
+        name = value_of(node)
+        if not has_name(names, name)
+          push errors, line_of(node) + ": undefined variable: " + name
 
-    if kindOf(node) == "PRINT_MEMBER"
-      name = nameOf(node)
-      if not hasName(names, name)
-        push errors, lineOf(node) + ": undefined variable: " + name
+    if kind_of(node) == "PRINT_MEMBER"
+      name = name_of(node)
+      if not has_name(names, name)
+        push errors, line_of(node) + ": undefined variable: " + name
 
-    if kindOf(node) == "BREAK"
-      if len(loopIndents) == 0
-        push errors, lineOf(node) + ": break outside loop"
+    if kind_of(node) == "BREAK"
+      if len(loop_indents) == 0
+        push errors, line_of(node) + ": break outside loop"
 
-    if kindOf(node) == "CONTINUE"
-      if len(loopIndents) == 0
-        push errors, lineOf(node) + ": continue outside loop"
+    if kind_of(node) == "CONTINUE"
+      if len(loop_indents) == 0
+        push errors, line_of(node) + ": continue outside loop"
 
-    if kindOf(node) == "PRINT_CALL1"
-      funcName = nameOf(node)
-      argName = valueOf(node)
-      argKind = valueOf(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if argKind != "STRING" and not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
+    if kind_of(node) == "PRINT_CALL1"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      arg_kind = value_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if arg_kind != "STRING" and not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
 
-    if kindOf(node) == "PRINT_CALL2"
-      funcName = nameOf(node)
-      leftArg = valueOf(node)
-      rightKind = extraOf(node)
-      rightArg = extra2Of(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, leftArg)
-        push errors, lineOf(node) + ": undefined variable: " + leftArg
-      if rightKind == "IDENT" and not hasName(names, rightArg)
-        push errors, lineOf(node) + ": undefined variable: " + rightArg
+    if kind_of(node) == "PRINT_CALL2"
+      func_name = name_of(node)
+      left_arg = value_of(node)
+      right_kind = extra_of(node)
+      right_arg = extra2_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, left_arg)
+        push errors, line_of(node) + ": undefined variable: " + left_arg
+      if right_kind == "IDENT" and not has_name(names, right_arg)
+        push errors, line_of(node) + ": undefined variable: " + right_arg
 
-    if kindOf(node) == "PRINT_CALL3"
-      funcName = nameOf(node)
-      leftArg = valueOf(node)
-      middleKind = extraOf(node)
-      middleArg = extra2Of(node)
-      rightArg = extra3Of(node)
-      rightKind = ""
-      if extra3Of(node) == "STRING"
-        rightKind = extra3Of(node)
-        rightArg = extra4Of(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, leftArg)
-        push errors, lineOf(node) + ": undefined variable: " + leftArg
-      if middleKind == "IDENT" and not hasName(names, middleArg)
-        push errors, lineOf(node) + ": undefined variable: " + middleArg
-      if rightKind != "STRING" and not isLiteralArg(rightArg) and not hasName(names, rightArg)
-        push errors, lineOf(node) + ": undefined variable: " + rightArg
+    if kind_of(node) == "PRINT_CALL3"
+      func_name = name_of(node)
+      left_arg = value_of(node)
+      middle_kind = extra_of(node)
+      middle_arg = extra2_of(node)
+      right_arg = extra3_of(node)
+      right_kind = ""
+      if extra3_of(node) == "STRING"
+        right_kind = extra3_of(node)
+        right_arg = extra4_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, left_arg)
+        push errors, line_of(node) + ": undefined variable: " + left_arg
+      if middle_kind == "IDENT" and not has_name(names, middle_arg)
+        push errors, line_of(node) + ": undefined variable: " + middle_arg
+      if right_kind != "STRING" and not is_literal_arg(right_arg) and not has_name(names, right_arg)
+        push errors, line_of(node) + ": undefined variable: " + right_arg
 
-    if kindOf(node) == "IF" or kindOf(node) == "WHILE"
-      if nameOf(node) == "IDENT"
-        name = valueOf(node)
-        if not hasName(names, name)
-          push errors, lineOf(node) + ": undefined variable: " + name
+    if kind_of(node) == "IF" or kind_of(node) == "WHILE"
+      if name_of(node) == "IDENT"
+        name = value_of(node)
+        if not has_name(names, name)
+          push errors, line_of(node) + ": undefined variable: " + name
 
-    if kindOf(node) == "IF_NOT"
-      if nameOf(node) == "IDENT"
-        name = valueOf(node)
-        if not hasName(names, name)
-          push errors, lineOf(node) + ": undefined variable: " + name
+    if kind_of(node) == "IF_NOT"
+      if name_of(node) == "IDENT"
+        name = value_of(node)
+        if not has_name(names, name)
+          push errors, line_of(node) + ": undefined variable: " + name
 
-    if kindOf(node) == "IF_CALL_LT"
-      funcName = nameOf(node)
-      argName = valueOf(node)
-      rightName = extraOf(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
-      if not isLiteralArg(rightName) and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
+    if kind_of(node) == "IF_CALL_LT"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      right_name = extra_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
+      if not is_literal_arg(right_name) and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
 
-    if kindOf(node) == "IF_CALL1"
-      funcName = nameOf(node)
-      argName = valueOf(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
+    if kind_of(node) == "IF_CALL1"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
 
-    if kindOf(node) == "IF_CALL_EQ_AND_CALL_EQ"
-      funcName = nameOf(node)
-      argName = valueOf(node)
-      func2Name = extra3Of(node)
-      arg2Name = extra4Of(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
-      if not hasName(names, func2Name)
-        push errors, lineOf(node) + ": undefined variable: " + func2Name
-      if not hasName(names, arg2Name)
-        push errors, lineOf(node) + ": undefined variable: " + arg2Name
+    if kind_of(node) == "IF_CALL_EQ_AND_CALL_EQ"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      func2_name = extra3_of(node)
+      arg2_name = extra4_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
+      if not has_name(names, func2_name)
+        push errors, line_of(node) + ": undefined variable: " + func2_name
+      if not has_name(names, arg2_name)
+        push errors, line_of(node) + ": undefined variable: " + arg2_name
 
-    if kindOf(node) == "IF_CALL_EQ_AND_CALL_NE"
-      funcName = nameOf(node)
-      argName = valueOf(node)
-      func2Name = extra3Of(node)
-      arg2Name = extra4Of(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
-      if not hasName(names, func2Name)
-        push errors, lineOf(node) + ": undefined variable: " + func2Name
-      if not hasName(names, arg2Name)
-        push errors, lineOf(node) + ": undefined variable: " + arg2Name
+    if kind_of(node) == "IF_CALL_EQ_AND_CALL_NE"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      func2_name = extra3_of(node)
+      arg2_name = extra4_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
+      if not has_name(names, func2_name)
+        push errors, line_of(node) + ": undefined variable: " + func2_name
+      if not has_name(names, arg2_name)
+        push errors, line_of(node) + ": undefined variable: " + arg2_name
 
-    if kindOf(node) == "IF_NOT_CALL2"
-      funcName = nameOf(node)
-      leftArg = valueOf(node)
-      rightArg = extraOf(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, leftArg)
-        push errors, lineOf(node) + ": undefined variable: " + leftArg
-      if not hasName(names, rightArg)
-        push errors, lineOf(node) + ": undefined variable: " + rightArg
+    if kind_of(node) == "IF_NOT_CALL2"
+      func_name = name_of(node)
+      left_arg = value_of(node)
+      right_arg = extra_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, left_arg)
+        push errors, line_of(node) + ": undefined variable: " + left_arg
+      if not has_name(names, right_arg)
+        push errors, line_of(node) + ": undefined variable: " + right_arg
 
-    if kindOf(node) == "IF_NOT_CALL_AND_NOT_CALL"
-      funcName = nameOf(node)
-      argName = valueOf(node)
-      func2Name = extraOf(node)
-      arg2Name = extra2Of(node)
-      arg3Name = extra3Of(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
-      if not hasName(names, func2Name)
-        push errors, lineOf(node) + ": undefined variable: " + func2Name
-      if not hasName(names, arg2Name)
-        push errors, lineOf(node) + ": undefined variable: " + arg2Name
-      if not hasName(names, arg3Name)
-        push errors, lineOf(node) + ": undefined variable: " + arg3Name
+    if kind_of(node) == "IF_NOT_CALL_AND_NOT_CALL"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      func2_name = extra_of(node)
+      arg2_name = extra2_of(node)
+      arg3_name = extra3_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
+      if not has_name(names, func2_name)
+        push errors, line_of(node) + ": undefined variable: " + func2_name
+      if not has_name(names, arg2_name)
+        push errors, line_of(node) + ": undefined variable: " + arg2_name
+      if not has_name(names, arg3_name)
+        push errors, line_of(node) + ": undefined variable: " + arg3_name
 
-    if kindOf(node) == "WHILE_LT_CALL"
-      leftName = nameOf(node)
-      funcName = valueOf(node)
-      argName = extraOf(node)
-      if not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
+    if kind_of(node) == "WHILE_LT_CALL"
+      left_name = name_of(node)
+      func_name = value_of(node)
+      arg_name = extra_of(node)
+      if not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
 
-    if kindOf(node) == "WHILE_COMPARE_LT"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      rightKind = extraOf(node)
-      rightName = extra2Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if rightKind == "IDENT" and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
+    if kind_of(node) == "WHILE_COMPARE_LT"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if right_kind == "IDENT" and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
 
-    if kindOf(node) == "WHILE_COMPARE_NE" or kindOf(node) == "WHILE_COMPARE_GE" or kindOf(node) == "WHILE_COMPARE_LE"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      rightKind = extraOf(node)
-      rightName = extra2Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if rightKind == "IDENT" and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
+    if kind_of(node) == "WHILE_COMPARE_NE" or kind_of(node) == "WHILE_COMPARE_GE" or kind_of(node) == "WHILE_COMPARE_LE"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if right_kind == "IDENT" and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
 
-    if kindOf(node) == "IF_COMPARE_EQ"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      rightKind = extraOf(node)
-      rightName = extra2Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if rightKind == "IDENT" and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
+    if kind_of(node) == "IF_COMPARE_EQ"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if right_kind == "IDENT" and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
 
-    if kindOf(node) == "IF_COMPARE_NE"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      rightKind = extraOf(node)
-      rightName = extra2Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if rightKind == "IDENT" and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
+    if kind_of(node) == "IF_COMPARE_NE"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if right_kind == "IDENT" and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
 
-    if kindOf(node) == "IF_COMPARE_GE"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      rightKind = extraOf(node)
-      rightName = extra2Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if rightKind == "IDENT" and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
+    if kind_of(node) == "IF_COMPARE_GE"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if right_kind == "IDENT" and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
 
-    if kindOf(node) == "IF_COMPARE_LE"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      rightKind = extraOf(node)
-      rightName = extra2Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if rightKind == "IDENT" and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
+    if kind_of(node) == "IF_COMPARE_LE"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if right_kind == "IDENT" and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
 
-    if kindOf(node) == "IF_COMPARE_OR"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      rightKind = extraOf(node)
-      rightName = extra2Of(node)
-      left2Kind = extra3Of(node)
-      left2Name = extra4Of(node)
-      right2Kind = extra5Of(node)
-      right2Name = extra6Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if rightKind == "IDENT" and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
-      if left2Kind == "IDENT" and not hasName(names, left2Name)
-        push errors, lineOf(node) + ": undefined variable: " + left2Name
-      if right2Kind == "IDENT" and not hasName(names, right2Name)
-        push errors, lineOf(node) + ": undefined variable: " + right2Name
+    if kind_of(node) == "IF_COMPARE_OR"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      left2_kind = extra3_of(node)
+      left2_name = extra4_of(node)
+      right2_kind = extra5_of(node)
+      right2_name = extra6_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if right_kind == "IDENT" and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
+      if left2_kind == "IDENT" and not has_name(names, left2_name)
+        push errors, line_of(node) + ": undefined variable: " + left2_name
+      if right2_kind == "IDENT" and not has_name(names, right2_name)
+        push errors, line_of(node) + ": undefined variable: " + right2_name
 
-    if kindOf(node) == "PUSH"
-      target = nameOf(node)
-      if not hasName(names, target)
-        push errors, lineOf(node) + ": undefined variable: " + target
-      if valueOf(node) == "IDENT"
-        valueName = extraOf(node)
-        if not hasName(names, valueName)
-          push errors, lineOf(node) + ": undefined variable: " + valueName
+    if kind_of(node) == "PUSH"
+      target = name_of(node)
+      if not has_name(names, target)
+        push errors, line_of(node) + ": undefined variable: " + target
+      if value_of(node) == "IDENT"
+        value_name = extra_of(node)
+        if not has_name(names, value_name)
+          push errors, line_of(node) + ": undefined variable: " + value_name
 
-    if kindOf(node) == "RETURN"
-      if len(funcIndents) == 0
-        push errors, lineOf(node) + ": return outside function"
-      if nameOf(node) == "IDENT"
-        name = valueOf(node)
-        if not hasName(names, name)
-          push errors, lineOf(node) + ": undefined variable: " + name
-      if nameOf(node) == "INDEX"
-        sourceName = valueOf(node)
-        indexName = extraOf(node)
-        if not hasName(names, sourceName)
-          push errors, lineOf(node) + ": undefined variable: " + sourceName
-        if indexName != "0" and indexName != "1" and indexName != "2" and not hasName(names, indexName)
-          push errors, lineOf(node) + ": undefined variable: " + indexName
+    if kind_of(node) == "RETURN"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      if name_of(node) == "IDENT"
+        name = value_of(node)
+        if not has_name(names, name)
+          push errors, line_of(node) + ": undefined variable: " + name
+      if name_of(node) == "INDEX"
+        source_name = value_of(node)
+        index_name = extra_of(node)
+        if not has_name(names, source_name)
+          push errors, line_of(node) + ": undefined variable: " + source_name
+        if index_name != "0" and index_name != "1" and index_name != "2" and not has_name(names, index_name)
+          push errors, line_of(node) + ": undefined variable: " + index_name
 
-    if kindOf(node) == "RETURN2"
-      if len(funcIndents) == 0
-        push errors, lineOf(node) + ": return outside function"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      rightKind = extraOf(node)
-      rightName = extra2Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if rightKind == "IDENT" and not hasName(names, rightName)
-        push errors, lineOf(node) + ": undefined variable: " + rightName
+    if kind_of(node) == "RETURN2"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if right_kind == "IDENT" and not has_name(names, right_name)
+        push errors, line_of(node) + ": undefined variable: " + right_name
 
-    if kindOf(node) == "RETURN2_CALL1"
-      if len(funcIndents) == 0
-        push errors, lineOf(node) + ": return outside function"
-      leftKind = nameOf(node)
-      leftName = valueOf(node)
-      funcName = extraOf(node)
-      argKind = extra2Of(node)
-      argName = extra3Of(node)
-      if leftKind == "IDENT" and not hasName(names, leftName)
-        push errors, lineOf(node) + ": undefined variable: " + leftName
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if argKind == "IDENT" and not hasName(names, argName)
-        push errors, lineOf(node) + ": undefined variable: " + argName
+    if kind_of(node) == "RETURN2_CALL1"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      func_name = extra_of(node)
+      arg_kind = extra2_of(node)
+      arg_name = extra3_of(node)
+      if left_kind == "IDENT" and not has_name(names, left_name)
+        push errors, line_of(node) + ": undefined variable: " + left_name
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if arg_kind == "IDENT" and not has_name(names, arg_name)
+        push errors, line_of(node) + ": undefined variable: " + arg_name
 
-    if kindOf(node) == "RETURN2_OBJECT_NIL"
-      if len(funcIndents) == 0
-        push errors, lineOf(node) + ": return outside function"
-      valueKind = valueOf(node)
-      valueName = extraOf(node)
-      if valueKind == "IDENT" and not hasName(names, valueName)
-        push errors, lineOf(node) + ": undefined variable: " + valueName
+    if kind_of(node) == "RETURN2_OBJECT_NIL"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      value_kind = value_of(node)
+      value_name = extra_of(node)
+      if value_kind == "IDENT" and not has_name(names, value_name)
+        push errors, line_of(node) + ": undefined variable: " + value_name
 
-    if kindOf(node) == "RETURN_CALL2"
-      if len(funcIndents) == 0
-        push errors, lineOf(node) + ": return outside function"
-      funcName = nameOf(node)
-      arg2Kind = valueOf(node)
-      arg2Name = extraOf(node)
-      if not hasName(names, funcName)
-        push errors, lineOf(node) + ": undefined variable: " + funcName
-      if arg2Kind == "IDENT" and not hasName(names, arg2Name)
-        push errors, lineOf(node) + ": undefined variable: " + arg2Name
+    if kind_of(node) == "RETURN_CALL2"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      func_name = name_of(node)
+      arg2_kind = value_of(node)
+      arg2_name = extra_of(node)
+      if not has_name(names, func_name)
+        push errors, line_of(node) + ": undefined variable: " + func_name
+      if arg2_kind == "IDENT" and not has_name(names, arg2_name)
+        push errors, line_of(node) + ": undefined variable: " + arg2_name
 
   errors
 
 nodes = []
-source = readFile args()[0]
+source = read_file args()[0]
 lines = split source, "\n"
 
 for line in lines

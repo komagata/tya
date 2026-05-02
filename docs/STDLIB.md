@@ -18,10 +18,10 @@ print err.message
 ## Conversion
 
 ```tya
-print toString 20
-print toInt "42"
-print toFloat "2.5"
-print toNumber "12.5"
+print to_string 20
+print to_int "42"
+print to_float "2.5"
+print to_number "12.5"
 print div 5, 2
 ```
 
@@ -34,10 +34,10 @@ parts = split text, ","
 print join parts, "-"
 print replace text, "tya", "Tya"
 print contains text, "hello"
-print startsWith text, "hello"
-print endsWith text, "tya"
-print byteLen "ちゃ"
-print charLen "ちゃ"
+print starts_with text, "hello"
+print ends_with text, "tya"
+print byte_len "ちゃ"
+print char_len "ちゃ"
 ```
 
 ## Arrays
@@ -46,14 +46,14 @@ print charLen "ちゃ"
 items = [1, 2, 3, 4]
 
 double = item -> item * 2
-isEven = item -> item % 2 == 0
+is_even = item -> item % 2 == 0
 add = total, item -> total + item
 
 print map items, double
-print filter items, isEven
-print find items, isEven
-print any items, isEven
-print all items, isEven
+print filter items, is_even
+print find items, is_even
+print any items, is_even
+print all items, is_even
 print reduce items, 0, add
 ```
 
@@ -79,9 +79,9 @@ print equal user, { name: "komagata" }
 ## Files And Process
 
 ```tya
-writeFile "/tmp/memo.txt", "hello"
-print readFile "/tmp/memo.txt"
-print fileExists "/tmp/memo.txt"
+write_file "/tmp/memo.txt", "hello"
+print read_file "/tmp/memo.txt"
+print file_exists "/tmp/memo.txt"
 ```
 
 ```tya
@@ -91,6 +91,6 @@ print env "HOME"
 ```
 
 ```tya
-name = readLine()
+name = read_line()
 print "Hello, {name}"
 ```

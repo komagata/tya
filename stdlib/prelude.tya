@@ -1,17 +1,17 @@
 # Candidate Tya-level standard library functions.
 # These are not automatically loaded yet; import/module loading comes later.
 
-isNil = value -> value == nil
+is_nil = value -> value == nil
 
-notNil = value -> value != nil
+not_nil = value -> value != nil
 
 first = items -> items[0]
 
 second = items -> items[1]
 
-isEmpty = value -> len value == 0
+is_empty = value -> len value == 0
 
-notEmpty = value -> len value != 0
+not_empty = value -> len value != 0
 
 sum = items ->
   add = total, item -> total + item

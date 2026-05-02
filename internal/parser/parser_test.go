@@ -127,7 +127,7 @@ func TestParseWhile(t *testing.T) {
 }
 
 func TestParseReturnFunctionThenTopLevelPrint(t *testing.T) {
-	src := "findFirstOver = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\n\nprint findFirstOver 3\n"
+	src := "find_first_over = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\n\nprint find_first_over 3\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)

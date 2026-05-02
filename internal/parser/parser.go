@@ -282,7 +282,7 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 
 func isUnaryNoParenCall(name string) bool {
 	switch name {
-	case "len", "keys", "values", "trim", "toString", "toInt", "toFloat", "toNumber", "byteLen", "charLen", "readFile", "fileExists", "env", "error", "panic", "exit":
+	case "len", "keys", "values", "trim", "to_string", "toString", "to_int", "toInt", "to_float", "toFloat", "to_number", "toNumber", "byte_len", "byteLen", "char_len", "charLen", "read_file", "readFile", "read_line", "readLine", "file_exists", "fileExists", "env", "error", "panic", "exit":
 		return true
 	default:
 		return false

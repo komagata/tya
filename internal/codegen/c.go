@@ -382,7 +382,7 @@ func isSideEffectCall(expr ast.Expr) bool {
 		return false
 	}
 	switch id.Name {
-	case "push", "delete", "writeFile", "exit", "panic", "print":
+	case "push", "delete", "write_file", "writeFile", "exit", "panic", "print":
 		return true
 	default:
 		return false
@@ -452,7 +452,7 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		g.line(fmt.Sprintf("tya_delete(%s, %s);", object, key))
 		return nil
 	}
-	if id.Name == "writeFile" && len(call.Args) == 2 {
+	if (id.Name == "write_file" || id.Name == "writeFile") && len(call.Args) == 2 {
 		path, _, err := g.expr(call.Args[0])
 		if err != nil {
 			return err
@@ -616,7 +616,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_contains(%s, %s)", text, part), "TyaValue", nil
 		}
-		if ok && id.Name == "startsWith" && len(n.Args) == 2 {
+		if ok && (id.Name == "starts_with" || id.Name == "startsWith") && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
@@ -627,7 +627,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_starts_with(%s, %s)", text, prefix), "TyaValue", nil
 		}
-		if ok && id.Name == "endsWith" && len(n.Args) == 2 {
+		if ok && (id.Name == "ends_with" || id.Name == "endsWith") && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
@@ -660,14 +660,14 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_replace(%s, %s, %s)", text, old, replacement), "TyaValue", nil
 		}
-		if ok && id.Name == "byteLen" && len(n.Args) == 1 {
+		if ok && (id.Name == "byte_len" || id.Name == "byteLen") && len(n.Args) == 1 {
 			text, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_byte_len(%s)", text), "TyaValue", nil
 		}
-		if ok && id.Name == "charLen" && len(n.Args) == 1 {
+		if ok && (id.Name == "char_len" || id.Name == "charLen") && len(n.Args) == 1 {
 			text, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
@@ -684,10 +684,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_env(%s)", name), "TyaValue", nil
 		}
-		if ok && id.Name == "readLine" && len(n.Args) == 0 {
+		if ok && (id.Name == "read_line" || id.Name == "readLine") && len(n.Args) == 0 {
 			return "tya_read_line()", "TyaValue", nil
 		}
-		if ok && id.Name == "readFile" && len(n.Args) == 1 {
+		if ok && (id.Name == "read_file" || id.Name == "readFile") && len(n.Args) == 1 {
 			path, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
@@ -730,35 +730,35 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_join(%s, %s)", array, sep), "TyaValue", nil
 		}
-		if ok && id.Name == "toString" && len(n.Args) == 1 {
+		if ok && (id.Name == "to_string" || id.Name == "toString") && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_to_string(%s)", arg), "TyaValue", nil
 		}
-		if ok && id.Name == "toInt" && len(n.Args) == 1 {
+		if ok && (id.Name == "to_int" || id.Name == "toInt") && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_to_int(%s)", arg), "TyaValue", nil
 		}
-		if ok && id.Name == "toFloat" && len(n.Args) == 1 {
+		if ok && (id.Name == "to_float" || id.Name == "toFloat") && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_to_float(%s)", arg), "TyaValue", nil
 		}
-		if ok && id.Name == "toNumber" && len(n.Args) == 1 {
+		if ok && (id.Name == "to_number" || id.Name == "toNumber") && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_to_number(%s)", arg), "TyaValue", nil
 		}
-		if ok && id.Name == "fileExists" && len(n.Args) == 1 {
+		if ok && (id.Name == "file_exists" || id.Name == "fileExists") && len(n.Args) == 1 {
 			path, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err

@@ -41,7 +41,7 @@ func TestEmitCCompilesArrayProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesStringProgram(t *testing.T) {
-	src := "text = \"  hello,tya  \"\ntrimmed = trim text\nparts = split trimmed, \",\"\nprint join parts, \"-\"\nprint replace trimmed, \"tya\", \"Tya\"\nprint contains trimmed, \"hello\"\nprint startsWith trimmed, \"hello\"\nprint endsWith trimmed, \"tya\"\nprint byteLen \"ちゃ\"\nprint charLen \"ちゃ\"\nprint \"quote: \\\"tya\\\"\"\nprint \"tya\"[1]\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = trim text\nparts = split trimmed, \",\"\nprint join parts, \"-\"\nprint replace trimmed, \"tya\", \"Tya\"\nprint contains trimmed, \"hello\"\nprint starts_with trimmed, \"hello\"\nprint ends_with trimmed, \"tya\"\nprint byte_len \"ちゃ\"\nprint char_len \"ちゃ\"\nprint \"quote: \\\"tya\\\"\"\nprint \"tya\"[1]\n"
 	out := compileAndRun(t, src)
 	if string(out) != "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n6\n2\nquote: \"tya\"\ny\n" {
 		t.Fatalf("got %q", out)
@@ -73,7 +73,7 @@ func TestEmitCCompilesModuloAndCKeywordNames(t *testing.T) {
 }
 
 func TestEmitCCompilesArrayFunctionBuiltins(t *testing.T) {
-	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\nisEven = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, isEven\nfirstEven = find items, isEven\nhasEven = any items, isEven\nallEven = all items, isEven\nsum = reduce items, 0, add\neach items, double\nprint doubled[2]\nprint len evens\nprint firstEven\nprint hasEven\nprint allEven\nprint sum\n"
+	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\nis_even = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, is_even\nfirst_even = find items, is_even\nhas_even = any items, is_even\nall_even = all items, is_even\nsum = reduce items, 0, add\neach items, double\nprint doubled[2]\nprint len evens\nprint first_even\nprint has_even\nprint all_even\nprint sum\n"
 	out := compileAndRun(t, src)
 	if string(out) != "6\n2\n2\ntrue\nfalse\n10\n" {
 		t.Fatalf("got %q", out)
@@ -118,7 +118,7 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	if err := os.WriteFile(path, []byte("12\na\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	src := "path = args()[0]\ntext = readFile path\nparts = split text, \"\\n\"\nfirst = toInt parts[0]\nprint first + 8\nprint toString true\nprint join parts, \":\"\n"
+	src := "path = args()[0]\ntext = read_file path\nparts = split text, \"\\n\"\nfirst = to_int parts[0]\nprint first + 8\nprint to_string true\nprint join parts, \":\"\n"
 	out := compileAndRunArgs(t, src, path)
 	if string(out) != "20\ntrue\n12:a:\n" {
 		t.Fatalf("got %q", out)
@@ -127,7 +127,7 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 
 func TestEmitCCompilesWriteFileProgram(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "output.txt")
-	src := "path = args()[0]\nwriteFile path, \"Hello\"\nprint fileExists path\nprint readFile path\n"
+	src := "path = args()[0]\nwrite_file path, \"Hello\"\nprint file_exists path\nprint read_file path\n"
 	out := compileAndRunArgs(t, src, path)
 	if string(out) != "true\nHello\n" {
 		t.Fatalf("got %q", out)
@@ -152,7 +152,7 @@ func TestEmitCCompilesArgsAndEnvProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesReadLineProgram(t *testing.T) {
-	src := "name = readLine()\nprint \"Hello, {name}\"\n"
+	src := "name = read_line()\nprint \"Hello, {name}\"\n"
 	out := compileAndRunWithInput(t, src, "komagata\n")
 	if string(out) != "Hello, komagata\n" {
 		t.Fatalf("got %q", out)
@@ -160,7 +160,7 @@ func TestEmitCCompilesReadLineProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesExitProgram(t *testing.T) {
-	src := "items = args()\nif len(items) > 0\n  exit toInt items[0]\nprint \"no exit\"\n"
+	src := "items = args()\nif len(items) > 0\n  exit to_int items[0]\nprint \"no exit\"\n"
 	out, code := compileAndRunArgsAllowExit(t, src, "7")
 	if string(out) != "" || code != 7 {
 		t.Fatalf("got output %q and code %d", out, code)
@@ -183,7 +183,7 @@ func TestEmitCCompilesForInProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesFunctionProgram(t *testing.T) {
-	src := "add = a, b -> a + b\nprint add 2, 3\nfindFirstOver = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\nprint findFirstOver 3\n"
+	src := "add = a, b -> a + b\nprint add 2, 3\nfind_first_over = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\nprint find_first_over 3\n"
 	out := compileAndRun(t, src)
 	if string(out) != "5\n4\n" {
 		t.Fatalf("got %q", out)
@@ -191,7 +191,7 @@ func TestEmitCCompilesFunctionProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesMultipleReturnProgram(t *testing.T) {
-	src := "parseUser = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nuser, err = parseUser \"komagata\"\nif err\n  print err.message\nelse\n  print user.name\n\nmissing, err = parseUser \"\"\nif err\n  print err.message\nelse\n  print missing.name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nuser, err = parse_user \"komagata\"\nif err\n  print err.message\nelse\n  print user.name\n\nmissing, err = parse_user \"\"\nif err\n  print err.message\nelse\n  print missing.name\n"
 	out := compileAndRun(t, src)
 	if string(out) != "komagata\nempty user\n" {
 		t.Fatalf("got %q", out)
@@ -199,7 +199,7 @@ func TestEmitCCompilesMultipleReturnProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesTryProgram(t *testing.T) {
-	src := "parseUser = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nreadUser = text ->\n  user = try parseUser(text)\n  return user.name, nil\n\nname, err = readUser \"komagata\"\nif err\n  print err.message\nelse\n  print name\n\nname, err = readUser \"\"\nif err\n  print err.message\nelse\n  print name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nread_user = text ->\n  user = try parse_user(text)\n  return user.name, nil\n\nname, err = read_user \"komagata\"\nif err\n  print err.message\nelse\n  print name\n\nname, err = read_user \"\"\nif err\n  print err.message\nelse\n  print name\n"
 	out := compileAndRun(t, src)
 	if string(out) != "komagata\nempty user\n" {
 		t.Fatalf("got %q", out)

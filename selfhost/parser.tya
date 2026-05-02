@@ -1,564 +1,564 @@
-kindOf = token ->
+kind_of = token ->
   parts = split token, ":"
   parts[1]
 
-textOf = token ->
+text_of = token ->
   parts = split token, ":"
   if len(parts) < 3
     return ""
   parts[2]
 
-lineOf = token ->
+line_of = token ->
   parts = split token, ":"
   parts[0]
 
-literalKindOf = token ->
-  if kindOf(token) == "IDENT" and textOf(token) == "nil"
+literal_kind_of = token ->
+  if kind_of(token) == "IDENT" and text_of(token) == "nil"
     return "NIL"
-  if kindOf(token) == "IDENT" and (textOf(token) == "true" or textOf(token) == "false")
+  if kind_of(token) == "IDENT" and (text_of(token) == "true" or text_of(token) == "false")
     return "BOOL"
-  kindOf(token)
+  kind_of(token)
 
 parse = tokens ->
   nodes = []
   i = 0
-  currentIndent = "0"
+  current_indent = "0"
 
   while i < len(tokens)
     token = tokens[i]
 
-    if kindOf(token) == "INDENT"
-      currentIndent = textOf(token)
-      node = lineOf(token) + ":INDENT:" + currentIndent
+    if kind_of(token) == "INDENT"
+      current_indent = text_of(token)
+      node = line_of(token) + ":INDENT:" + current_indent
       push nodes, node
       i = i + 1
       continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "if"
+    if kind_of(token) == "IDENT" and text_of(token) == "if"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
-        if textOf(value) == "not" and i + 13 < len(tokens)
+        if text_of(value) == "not" and i + 13 < len(tokens)
           func = tokens[i + 2]
-          if textOf(tokens[i + 3]) == "(" and textOf(tokens[i + 5]) == ")" and textOf(tokens[i + 6]) == "and" and textOf(tokens[i + 7]) == "not"
+          if text_of(tokens[i + 3]) == "(" and text_of(tokens[i + 5]) == ")" and text_of(tokens[i + 6]) == "and" and text_of(tokens[i + 7]) == "not"
             func2 = tokens[i + 8]
-            if textOf(tokens[i + 9]) == "(" and textOf(tokens[i + 11]) == "," and textOf(tokens[i + 13]) == ")"
+            if text_of(tokens[i + 9]) == "(" and text_of(tokens[i + 11]) == "," and text_of(tokens[i + 13]) == ")"
               arg = tokens[i + 4]
               arg2 = tokens[i + 10]
               arg3 = tokens[i + 12]
-              node = lineOf(token) + ":IF_NOT_CALL_AND_NOT_CALL:" + textOf(func) + ":" + textOf(arg) + ":" + textOf(func2) + ":" + textOf(arg2) + ":" + textOf(arg3)
+              node = line_of(token) + ":IF_NOT_CALL_AND_NOT_CALL:" + text_of(func) + ":" + text_of(arg) + ":" + text_of(func2) + ":" + text_of(arg2) + ":" + text_of(arg3)
               push nodes, node
               i = i + 14
               continue
-        if textOf(value) == "not" and i + 7 < len(tokens)
+        if text_of(value) == "not" and i + 7 < len(tokens)
           func = tokens[i + 2]
-          if textOf(tokens[i + 3]) == "(" and textOf(tokens[i + 5]) == "," and textOf(tokens[i + 7]) == ")"
-            leftArg = tokens[i + 4]
-            rightArg = tokens[i + 6]
-            node = lineOf(token) + ":IF_NOT_CALL2:" + textOf(func) + ":" + textOf(leftArg) + ":" + textOf(rightArg)
+          if text_of(tokens[i + 3]) == "(" and text_of(tokens[i + 5]) == "," and text_of(tokens[i + 7]) == ")"
+            left_arg = tokens[i + 4]
+            right_arg = tokens[i + 6]
+            node = line_of(token) + ":IF_NOT_CALL2:" + text_of(func) + ":" + text_of(left_arg) + ":" + text_of(right_arg)
             push nodes, node
             i = i + 8
             continue
-        if textOf(value) == "not" and i + 2 < len(tokens)
+        if text_of(value) == "not" and i + 2 < len(tokens)
           target = tokens[i + 2]
-          node = lineOf(token) + ":IF_NOT:" + literalKindOf(target) + ":" + textOf(target)
+          node = line_of(token) + ":IF_NOT:" + literal_kind_of(target) + ":" + text_of(target)
           push nodes, node
           i = i + 3
           continue
-        if i + 13 < len(tokens) and textOf(tokens[i + 2]) == "("
-          if textOf(tokens[i + 4]) == ")" and textOf(tokens[i + 5]) == "==" and textOf(tokens[i + 7]) == "and"
+        if i + 13 < len(tokens) and text_of(tokens[i + 2]) == "("
+          if text_of(tokens[i + 4]) == ")" and text_of(tokens[i + 5]) == "==" and text_of(tokens[i + 7]) == "and"
             func2 = tokens[i + 8]
-            if textOf(tokens[i + 9]) == "(" and textOf(tokens[i + 11]) == ")" and textOf(tokens[i + 12]) == "=="
+            if text_of(tokens[i + 9]) == "(" and text_of(tokens[i + 11]) == ")" and text_of(tokens[i + 12]) == "=="
               arg = tokens[i + 3]
               right = tokens[i + 6]
               arg2 = tokens[i + 10]
               right2 = tokens[i + 13]
-              node = lineOf(token) + ":IF_CALL_EQ_AND_CALL_EQ:" + textOf(value) + ":" + textOf(arg) + ":" + literalKindOf(right) + ":" + textOf(right) + ":" + textOf(func2) + ":" + textOf(arg2) + ":" + literalKindOf(right2) + ":" + textOf(right2)
+              node = line_of(token) + ":IF_CALL_EQ_AND_CALL_EQ:" + text_of(value) + ":" + text_of(arg) + ":" + literal_kind_of(right) + ":" + text_of(right) + ":" + text_of(func2) + ":" + text_of(arg2) + ":" + literal_kind_of(right2) + ":" + text_of(right2)
               push nodes, node
               i = i + 14
               continue
-            if textOf(tokens[i + 9]) == "(" and textOf(tokens[i + 11]) == ")" and textOf(tokens[i + 12]) == "!="
+            if text_of(tokens[i + 9]) == "(" and text_of(tokens[i + 11]) == ")" and text_of(tokens[i + 12]) == "!="
               arg = tokens[i + 3]
               right = tokens[i + 6]
               arg2 = tokens[i + 10]
               right2 = tokens[i + 13]
-              node = lineOf(token) + ":IF_CALL_EQ_AND_CALL_NE:" + textOf(value) + ":" + textOf(arg) + ":" + literalKindOf(right) + ":" + textOf(right) + ":" + textOf(func2) + ":" + textOf(arg2) + ":" + literalKindOf(right2) + ":" + textOf(right2)
+              node = line_of(token) + ":IF_CALL_EQ_AND_CALL_NE:" + text_of(value) + ":" + text_of(arg) + ":" + literal_kind_of(right) + ":" + text_of(right) + ":" + text_of(func2) + ":" + text_of(arg2) + ":" + literal_kind_of(right2) + ":" + text_of(right2)
               push nodes, node
               i = i + 14
               continue
-        if i + 6 < len(tokens) and textOf(tokens[i + 2]) == "("
-          if textOf(tokens[i + 4]) == ")" and textOf(tokens[i + 5]) == "<"
+        if i + 6 < len(tokens) and text_of(tokens[i + 2]) == "("
+          if text_of(tokens[i + 4]) == ")" and text_of(tokens[i + 5]) == "<"
             arg = tokens[i + 3]
             right = tokens[i + 6]
-            node = lineOf(token) + ":IF_CALL_LT:" + textOf(value) + ":" + textOf(arg) + ":" + textOf(right)
+            node = line_of(token) + ":IF_CALL_LT:" + text_of(value) + ":" + text_of(arg) + ":" + text_of(right)
             push nodes, node
             i = i + 7
             continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 2]) == "(" and textOf(tokens[i + 4]) == ")"
+        if i + 4 < len(tokens) and text_of(tokens[i + 2]) == "(" and text_of(tokens[i + 4]) == ")"
           arg = tokens[i + 3]
-          node = lineOf(token) + ":IF_CALL1:" + textOf(value) + ":" + textOf(arg)
+          node = line_of(token) + ":IF_CALL1:" + text_of(value) + ":" + text_of(arg)
           push nodes, node
           i = i + 5
           continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "=="
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "=="
           right = tokens[i + 3]
-          if i + 7 < len(tokens) and textOf(tokens[i + 4]) == "or"
-            if textOf(tokens[i + 6]) == "=="
+          if i + 7 < len(tokens) and text_of(tokens[i + 4]) == "or"
+            if text_of(tokens[i + 6]) == "=="
               left2 = tokens[i + 5]
               right2 = tokens[i + 7]
-              node = lineOf(token) + ":IF_COMPARE_OR:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right) + ":" + literalKindOf(left2) + ":" + textOf(left2) + ":" + literalKindOf(right2) + ":" + textOf(right2)
+              node = line_of(token) + ":IF_COMPARE_OR:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right) + ":" + literal_kind_of(left2) + ":" + text_of(left2) + ":" + literal_kind_of(right2) + ":" + text_of(right2)
               push nodes, node
               i = i + 8
               continue
-          node = lineOf(token) + ":IF_COMPARE_EQ:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          node = line_of(token) + ":IF_COMPARE_EQ:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "!="
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "!="
           right = tokens[i + 3]
-          node = lineOf(token) + ":IF_COMPARE_NE:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          node = line_of(token) + ":IF_COMPARE_NE:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == ">="
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == ">="
           right = tokens[i + 3]
-          node = lineOf(token) + ":IF_COMPARE_GE:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          node = line_of(token) + ":IF_COMPARE_GE:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "<="
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "<="
           right = tokens[i + 3]
-          node = lineOf(token) + ":IF_COMPARE_LE:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          node = line_of(token) + ":IF_COMPARE_LE:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        node = lineOf(token) + ":IF:" + literalKindOf(value) + ":" + textOf(value)
+        node = line_of(token) + ":IF:" + literal_kind_of(value) + ":" + text_of(value)
         push nodes, node
         i = i + 2
         continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "while"
+    if kind_of(token) == "IDENT" and text_of(token) == "while"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
-        if i + 6 < len(tokens) and textOf(tokens[i + 2]) == "<"
-          if textOf(tokens[i + 4]) == "(" and textOf(tokens[i + 6]) == ")"
+        if i + 6 < len(tokens) and text_of(tokens[i + 2]) == "<"
+          if text_of(tokens[i + 4]) == "(" and text_of(tokens[i + 6]) == ")"
             func = tokens[i + 3]
             arg = tokens[i + 5]
-            node = lineOf(token) + ":WHILE_LT_CALL:" + textOf(value) + ":" + textOf(func) + ":" + textOf(arg)
+            node = line_of(token) + ":WHILE_LT_CALL:" + text_of(value) + ":" + text_of(func) + ":" + text_of(arg)
             push nodes, node
             i = i + 7
             continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "<"
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "<"
           right = tokens[i + 3]
-          node = lineOf(token) + ":WHILE_COMPARE_LT:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          node = line_of(token) + ":WHILE_COMPARE_LT:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "!="
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "!="
           right = tokens[i + 3]
-          node = lineOf(token) + ":WHILE_COMPARE_NE:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          node = line_of(token) + ":WHILE_COMPARE_NE:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == ">="
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == ">="
           right = tokens[i + 3]
-          node = lineOf(token) + ":WHILE_COMPARE_GE:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          node = line_of(token) + ":WHILE_COMPARE_GE:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "<="
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "<="
           right = tokens[i + 3]
-          node = lineOf(token) + ":WHILE_COMPARE_LE:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(right) + ":" + textOf(right)
+          node = line_of(token) + ":WHILE_COMPARE_LE:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(right) + ":" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        node = lineOf(token) + ":WHILE:" + literalKindOf(value) + ":" + textOf(value)
+        node = line_of(token) + ":WHILE:" + literal_kind_of(value) + ":" + text_of(value)
         push nodes, node
         i = i + 2
         continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "else"
-      node = lineOf(token) + ":ELSE"
+    if kind_of(token) == "IDENT" and text_of(token) == "else"
+      node = line_of(token) + ":ELSE"
       push nodes, node
       i = i + 1
       continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "for"
-      if i + 5 < len(tokens) and textOf(tokens[i + 2]) == "," and textOf(tokens[i + 4]) == "of"
+    if kind_of(token) == "IDENT" and text_of(token) == "for"
+      if i + 5 < len(tokens) and text_of(tokens[i + 2]) == "," and text_of(tokens[i + 4]) == "of"
         item = tokens[i + 1]
         collection = tokens[i + 5]
-        node = lineOf(token) + ":FOR:" + textOf(item) + ":" + textOf(collection)
+        node = line_of(token) + ":FOR:" + text_of(item) + ":" + text_of(collection)
         push nodes, node
         i = i + 6
         continue
-      if i + 5 < len(tokens) and textOf(tokens[i + 2]) == "," and textOf(tokens[i + 4]) == "in"
+      if i + 5 < len(tokens) and text_of(tokens[i + 2]) == "," and text_of(tokens[i + 4]) == "in"
         item = tokens[i + 1]
         collection = tokens[i + 5]
-        node = lineOf(token) + ":FOR:" + textOf(item) + ":" + textOf(collection)
+        node = line_of(token) + ":FOR:" + text_of(item) + ":" + text_of(collection)
         push nodes, node
         i = i + 6
         continue
-      if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "in"
+      if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "in"
         item = tokens[i + 1]
         collection = tokens[i + 3]
-        node = lineOf(token) + ":FOR:" + textOf(item) + ":" + textOf(collection)
+        node = line_of(token) + ":FOR:" + text_of(item) + ":" + text_of(collection)
         push nodes, node
         i = i + 4
         continue
-      if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "of"
+      if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "of"
         item = tokens[i + 1]
         collection = tokens[i + 3]
-        node = lineOf(token) + ":FOR:" + textOf(item) + ":" + textOf(collection)
+        node = line_of(token) + ":FOR:" + text_of(item) + ":" + text_of(collection)
         push nodes, node
         i = i + 4
         continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "print"
+    if kind_of(token) == "IDENT" and text_of(token) == "print"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
         step = 2
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "." and lineOf(tokens[i + 3]) == lineOf(token)
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "." and line_of(tokens[i + 3]) == line_of(token)
           member = tokens[i + 3]
-          node = lineOf(token) + ":PRINT_MEMBER:" + textOf(value) + ":" + textOf(member)
+          node = line_of(token) + ":PRINT_MEMBER:" + text_of(value) + ":" + text_of(member)
           push nodes, node
           i = i + 4
           continue
-        if i + 6 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 6]) == lineOf(token)
-          if textOf(tokens[i + 3]) == "," and textOf(tokens[i + 5]) == ","
-            leftArg = tokens[i + 2]
-            middleArg = tokens[i + 4]
-            rightArg = tokens[i + 6]
-            node = lineOf(token) + ":PRINT_CALL3:" + textOf(value) + ":" + textOf(leftArg) + ":" + literalKindOf(middleArg) + ":" + textOf(middleArg) + ":" + textOf(rightArg)
+        if i + 6 < len(tokens) and kind_of(tokens[i + 1]) == "IDENT" and line_of(tokens[i + 6]) == line_of(token)
+          if text_of(tokens[i + 3]) == "," and text_of(tokens[i + 5]) == ","
+            left_arg = tokens[i + 2]
+            middle_arg = tokens[i + 4]
+            right_arg = tokens[i + 6]
+            node = line_of(token) + ":PRINT_CALL3:" + text_of(value) + ":" + text_of(left_arg) + ":" + literal_kind_of(middle_arg) + ":" + text_of(middle_arg) + ":" + text_of(right_arg)
             push nodes, node
             i = i + 7
             continue
-        if i + 4 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 4]) == lineOf(token)
-          if textOf(tokens[i + 3]) == ","
-            leftArg = tokens[i + 2]
-            rightArg = tokens[i + 4]
-            node = lineOf(token) + ":PRINT_CALL2:" + textOf(value) + ":" + textOf(leftArg) + ":" + literalKindOf(rightArg) + ":" + textOf(rightArg)
+        if i + 4 < len(tokens) and kind_of(tokens[i + 1]) == "IDENT" and line_of(tokens[i + 4]) == line_of(token)
+          if text_of(tokens[i + 3]) == ","
+            left_arg = tokens[i + 2]
+            right_arg = tokens[i + 4]
+            node = line_of(token) + ":PRINT_CALL2:" + text_of(value) + ":" + text_of(left_arg) + ":" + literal_kind_of(right_arg) + ":" + text_of(right_arg)
             push nodes, node
             i = i + 5
             continue
-        if i + 2 < len(tokens) and kindOf(tokens[i + 1]) == "IDENT" and lineOf(tokens[i + 2]) == lineOf(token)
-          node = lineOf(token) + ":PRINT_CALL1:" + textOf(value) + ":" + textOf(tokens[i + 2])
+        if i + 2 < len(tokens) and kind_of(tokens[i + 1]) == "IDENT" and line_of(tokens[i + 2]) == line_of(token)
+          node = line_of(token) + ":PRINT_CALL1:" + text_of(value) + ":" + text_of(tokens[i + 2])
           push nodes, node
           i = i + 3
           continue
-        node = lineOf(token) + ":PRINT:" + literalKindOf(value) + ":" + textOf(value)
+        node = line_of(token) + ":PRINT:" + literal_kind_of(value) + ":" + text_of(value)
         push nodes, node
         i = i + step
         continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "break"
-      node = lineOf(token) + ":BREAK"
+    if kind_of(token) == "IDENT" and text_of(token) == "break"
+      node = line_of(token) + ":BREAK"
       push nodes, node
       i = i + 1
       continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "continue"
-      node = lineOf(token) + ":CONTINUE"
+    if kind_of(token) == "IDENT" and text_of(token) == "continue"
+      node = line_of(token) + ":CONTINUE"
       push nodes, node
       i = i + 1
       continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "push"
+    if kind_of(token) == "IDENT" and text_of(token) == "push"
       if i + 3 < len(tokens)
         target = tokens[i + 1]
         value = tokens[i + 3]
-        node = lineOf(token) + ":PUSH:" + textOf(target) + ":" + literalKindOf(value) + ":" + textOf(value)
+        node = line_of(token) + ":PUSH:" + text_of(target) + ":" + literal_kind_of(value) + ":" + text_of(value)
         push nodes, node
         i = i + 4
         continue
 
-    if kindOf(token) == "IDENT" and textOf(token) == "return"
+    if kind_of(token) == "IDENT" and text_of(token) == "return"
       if i + 1 < len(tokens)
         value = tokens[i + 1]
-        if textOf(value) == "{" and i + 7 < len(tokens)
-          if kindOf(tokens[i + 3]) == "SYMBOL" and textOf(tokens[i + 5]) == "}" and textOf(tokens[i + 6]) == "," and textOf(tokens[i + 7]) == "nil"
+        if text_of(value) == "{" and i + 7 < len(tokens)
+          if kind_of(tokens[i + 3]) == "SYMBOL" and text_of(tokens[i + 5]) == "}" and text_of(tokens[i + 6]) == "," and text_of(tokens[i + 7]) == "nil"
             key = tokens[i + 2]
             item = tokens[i + 4]
-            node = lineOf(token) + ":RETURN2_OBJECT_NIL:" + textOf(key) + ":" + literalKindOf(item) + ":" + textOf(item)
+            node = line_of(token) + ":RETURN2_OBJECT_NIL:" + text_of(key) + ":" + literal_kind_of(item) + ":" + text_of(item)
             push nodes, node
             i = i + 8
             continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == ","
-          if i + 4 < len(tokens) and lineOf(tokens[i + 4]) == lineOf(token)
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == ","
+          if i + 4 < len(tokens) and line_of(tokens[i + 4]) == line_of(token)
             value2 = tokens[i + 3]
             arg = tokens[i + 4]
-            node = lineOf(token) + ":RETURN2_CALL1:" + literalKindOf(value) + ":" + textOf(value) + ":" + textOf(value2) + ":" + literalKindOf(arg) + ":" + textOf(arg)
+            node = line_of(token) + ":RETURN2_CALL1:" + literal_kind_of(value) + ":" + text_of(value) + ":" + text_of(value2) + ":" + literal_kind_of(arg) + ":" + text_of(arg)
             push nodes, node
             i = i + 5
             continue
           value2 = tokens[i + 3]
-          node = lineOf(token) + ":RETURN2:" + literalKindOf(value) + ":" + textOf(value) + ":" + literalKindOf(value2) + ":" + textOf(value2)
+          node = line_of(token) + ":RETURN2:" + literal_kind_of(value) + ":" + text_of(value) + ":" + literal_kind_of(value2) + ":" + text_of(value2)
           push nodes, node
           i = i + 4
           continue
-        if i + 3 < len(tokens) and textOf(tokens[i + 2]) == "["
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "["
           index = tokens[i + 3]
-          node = lineOf(token) + ":RETURN:INDEX:" + textOf(value) + ":" + textOf(index)
+          node = line_of(token) + ":RETURN:INDEX:" + text_of(value) + ":" + text_of(index)
           push nodes, node
           i = i + 5
           continue
-        node = lineOf(token) + ":RETURN:" + literalKindOf(value) + ":" + textOf(value)
+        node = line_of(token) + ":RETURN:" + literal_kind_of(value) + ":" + text_of(value)
         push nodes, node
         i = i + 2
         continue
 
-    if kindOf(token) == "IDENT" and i + 4 < len(tokens)
-      if textOf(tokens[i + 1]) == "," and textOf(tokens[i + 3]) == "="
+    if kind_of(token) == "IDENT" and i + 4 < len(tokens)
+      if text_of(tokens[i + 1]) == "," and text_of(tokens[i + 3]) == "="
         target2 = tokens[i + 2]
         value = tokens[i + 4]
-        if i + 7 < len(tokens) and textOf(tokens[i + 5]) == "("
-          if textOf(tokens[i + 7]) == ")"
+        if i + 7 < len(tokens) and text_of(tokens[i + 5]) == "("
+          if text_of(tokens[i + 7]) == ")"
             arg = tokens[i + 6]
-            node = lineOf(token) + ":MULTI_ASSIGN2_CALL1:" + textOf(token) + ":" + textOf(target2) + ":" + textOf(value) + ":" + literalKindOf(arg) + ":" + textOf(arg)
+            node = line_of(token) + ":MULTI_ASSIGN2_CALL1:" + text_of(token) + ":" + text_of(target2) + ":" + text_of(value) + ":" + literal_kind_of(arg) + ":" + text_of(arg)
             push nodes, node
             i = i + 8
             continue
-        if i + 5 < len(tokens) and lineOf(tokens[i + 5]) == lineOf(token)
+        if i + 5 < len(tokens) and line_of(tokens[i + 5]) == line_of(token)
           arg = tokens[i + 5]
-          node = lineOf(token) + ":MULTI_ASSIGN2_CALL1:" + textOf(token) + ":" + textOf(target2) + ":" + textOf(value) + ":" + literalKindOf(arg) + ":" + textOf(arg)
+          node = line_of(token) + ":MULTI_ASSIGN2_CALL1:" + text_of(token) + ":" + text_of(target2) + ":" + text_of(value) + ":" + literal_kind_of(arg) + ":" + text_of(arg)
           push nodes, node
           i = i + 6
           continue
-        node = lineOf(token) + ":MULTI_ASSIGN2:" + textOf(token) + ":" + textOf(target2) + ":" + literalKindOf(value) + ":" + textOf(value)
+        node = line_of(token) + ":MULTI_ASSIGN2:" + text_of(token) + ":" + text_of(target2) + ":" + literal_kind_of(value) + ":" + text_of(value)
         push nodes, node
         i = i + 5
         continue
 
-    if kindOf(token) == "IDENT" and i + 2 < len(tokens)
-      if textOf(tokens[i + 1]) == "="
+    if kind_of(token) == "IDENT" and i + 2 < len(tokens)
+      if text_of(tokens[i + 1]) == "="
         value = tokens[i + 2]
-        if i + 9 < len(tokens) and textOf(tokens[i + 3]) == ","
-          if textOf(tokens[i + 5]) == "," and textOf(tokens[i + 7]) == "," and kindOf(tokens[i + 9]) == "ARROW"
+        if i + 9 < len(tokens) and text_of(tokens[i + 3]) == ","
+          if text_of(tokens[i + 5]) == "," and text_of(tokens[i + 7]) == "," and kind_of(tokens[i + 9]) == "ARROW"
             arg2 = tokens[i + 4]
             arg3 = tokens[i + 6]
             arg4 = tokens[i + 8]
-            node = lineOf(token) + ":FUNC4:" + textOf(token) + ":" + textOf(value) + ":" + textOf(arg2) + ":" + textOf(arg3) + ":" + textOf(arg4)
+            node = line_of(token) + ":FUNC4:" + text_of(token) + ":" + text_of(value) + ":" + text_of(arg2) + ":" + text_of(arg3) + ":" + text_of(arg4)
             push nodes, node
             i = i + 10
             continue
-        if i + 5 < len(tokens) and textOf(tokens[i + 3]) == ","
-          if kindOf(tokens[i + 5]) == "ARROW"
+        if i + 5 < len(tokens) and text_of(tokens[i + 3]) == ","
+          if kind_of(tokens[i + 5]) == "ARROW"
             arg2 = tokens[i + 4]
-            node = lineOf(token) + ":FUNC2:" + textOf(token) + ":" + textOf(value) + ":" + textOf(arg2)
+            node = line_of(token) + ":FUNC2:" + text_of(token) + ":" + text_of(value) + ":" + text_of(arg2)
             push nodes, node
             i = i + 6
             continue
-        if i + 7 < len(tokens) and textOf(tokens[i + 3]) == ","
-          if textOf(tokens[i + 5]) == "," and kindOf(tokens[i + 7]) == "ARROW"
+        if i + 7 < len(tokens) and text_of(tokens[i + 3]) == ","
+          if text_of(tokens[i + 5]) == "," and kind_of(tokens[i + 7]) == "ARROW"
             arg2 = tokens[i + 4]
             arg3 = tokens[i + 6]
-            node = lineOf(token) + ":FUNC3:" + textOf(token) + ":" + textOf(value) + ":" + textOf(arg2) + ":" + textOf(arg3)
+            node = line_of(token) + ":FUNC3:" + text_of(token) + ":" + text_of(value) + ":" + text_of(arg2) + ":" + text_of(arg3)
             push nodes, node
             i = i + 8
             continue
-        if i + 3 < len(tokens) and kindOf(tokens[i + 3]) == "ARROW"
-          node = lineOf(token) + ":FUNC:" + textOf(token) + ":" + textOf(value)
+        if i + 3 < len(tokens) and kind_of(tokens[i + 3]) == "ARROW"
+          node = line_of(token) + ":FUNC:" + text_of(token) + ":" + text_of(value)
           push nodes, node
-          if i + 4 < len(tokens) and lineOf(tokens[i + 4]) == lineOf(token)
+          if i + 4 < len(tokens) and line_of(tokens[i + 4]) == line_of(token)
             result = tokens[i + 4]
-            if i + 6 < len(tokens) and textOf(tokens[i + 5]) == ","
+            if i + 6 < len(tokens) and text_of(tokens[i + 5]) == ","
               arg2 = tokens[i + 6]
-              node = lineOf(token) + ":RETURN_CALL2:" + textOf(result) + ":" + literalKindOf(arg2) + ":" + textOf(arg2)
+              node = line_of(token) + ":RETURN_CALL2:" + text_of(result) + ":" + literal_kind_of(arg2) + ":" + text_of(arg2)
               push nodes, node
               i = i + 7
               continue
-            node = lineOf(token) + ":RETURN:" + literalKindOf(result) + ":" + textOf(result)
+            node = line_of(token) + ":RETURN:" + literal_kind_of(result) + ":" + text_of(result)
             push nodes, node
             i = i + 5
             continue
           i = i + 4
           continue
-        if textOf(value) == "[" and i + 3 < len(tokens) and textOf(tokens[i + 3]) == "]"
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":ARRAY_EMPTY:"
+        if text_of(value) == "[" and i + 3 < len(tokens) and text_of(tokens[i + 3]) == "]"
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":ARRAY_EMPTY:"
           push nodes, node
           i = i + 4
           continue
-        if textOf(value) == "[" and i + 6 < len(tokens) and textOf(tokens[i + 4]) == "," and textOf(tokens[i + 6]) == "]"
+        if text_of(value) == "[" and i + 6 < len(tokens) and text_of(tokens[i + 4]) == "," and text_of(tokens[i + 6]) == "]"
           item = tokens[i + 3]
           item2 = tokens[i + 5]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":ARRAY_TWO:" + literalKindOf(item) + ":" + textOf(item) + ":" + literalKindOf(item2) + ":" + textOf(item2)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":ARRAY_TWO:" + literal_kind_of(item) + ":" + text_of(item) + ":" + literal_kind_of(item2) + ":" + text_of(item2)
           push nodes, node
           i = i + 7
           continue
-        if textOf(value) == "{" and i + 6 < len(tokens) and kindOf(tokens[i + 4]) == "SYMBOL" and textOf(tokens[i + 6]) == "}"
+        if text_of(value) == "{" and i + 6 < len(tokens) and kind_of(tokens[i + 4]) == "SYMBOL" and text_of(tokens[i + 6]) == "}"
           key = tokens[i + 3]
           item = tokens[i + 5]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":OBJECT_ONE:" + textOf(key) + ":" + literalKindOf(item) + ":" + textOf(item)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":OBJECT_ONE:" + text_of(key) + ":" + literal_kind_of(item) + ":" + text_of(item)
           push nodes, node
           i = i + 7
           continue
-        if textOf(value) == "[" and i + 4 < len(tokens) and textOf(tokens[i + 4]) == "]"
+        if text_of(value) == "[" and i + 4 < len(tokens) and text_of(tokens[i + 4]) == "]"
           item = tokens[i + 3]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":ARRAY_ONE:" + literalKindOf(item) + ":" + textOf(item)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":ARRAY_ONE:" + literal_kind_of(item) + ":" + text_of(item)
           push nodes, node
           i = i + 5
           continue
-        if textOf(value) == "(" and i + 6 < len(tokens) and textOf(tokens[i + 4]) == "+"
-          if textOf(tokens[i + 6]) == ")"
+        if text_of(value) == "(" and i + 6 < len(tokens) and text_of(tokens[i + 4]) == "+"
+          if text_of(tokens[i + 6]) == ")"
             left = tokens[i + 3]
             right = tokens[i + 5]
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":INT_ADD:" + textOf(left) + ":" + textOf(right)
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_ADD:" + text_of(left) + ":" + text_of(right)
             push nodes, node
             i = i + 7
             continue
-        if textOf(value) == "(" and i + 6 < len(tokens) and textOf(tokens[i + 6]) == ")"
+        if text_of(value) == "(" and i + 6 < len(tokens) and text_of(tokens[i + 6]) == ")"
           left = tokens[i + 3]
           op = tokens[i + 4]
           right = tokens[i + 5]
-          if textOf(op) == "=="
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_EQ:" + textOf(left) + ":" + textOf(right)
+          if text_of(op) == "=="
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_EQ:" + text_of(left) + ":" + text_of(right)
             push nodes, node
             i = i + 7
             continue
-          if textOf(op) == "!="
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_NE:" + textOf(left) + ":" + textOf(right)
+          if text_of(op) == "!="
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_NE:" + text_of(left) + ":" + text_of(right)
             push nodes, node
             i = i + 7
             continue
-          if textOf(op) == ">="
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_GE:" + textOf(left) + ":" + textOf(right)
+          if text_of(op) == ">="
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_GE:" + text_of(left) + ":" + text_of(right)
             push nodes, node
             i = i + 7
             continue
-          if textOf(op) == "<="
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_LE:" + textOf(left) + ":" + textOf(right)
+          if text_of(op) == "<="
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_LE:" + text_of(left) + ":" + text_of(right)
             push nodes, node
             i = i + 7
             continue
-        if i + 6 < len(tokens) and textOf(tokens[i + 3]) == "("
-          if textOf(tokens[i + 4]) == ")" and textOf(tokens[i + 5]) == "["
+        if i + 6 < len(tokens) and text_of(tokens[i + 3]) == "("
+          if text_of(tokens[i + 4]) == ")" and text_of(tokens[i + 5]) == "["
             index = tokens[i + 6]
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL0_INDEX:" + textOf(value) + ":" + textOf(index)
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL0_INDEX:" + text_of(value) + ":" + text_of(index)
             push nodes, node
             i = i + 8
             continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "["
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "["
           index = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":INDEX:" + textOf(value) + ":" + textOf(index)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INDEX:" + text_of(value) + ":" + text_of(index)
           push nodes, node
           i = i + 6
           continue
-        if textOf(value) == "not" and i + 3 < len(tokens)
+        if text_of(value) == "not" and i + 3 < len(tokens)
           right = tokens[i + 3]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":BOOL_NOT:" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":BOOL_NOT:" + text_of(right)
           push nodes, node
           i = i + 4
           continue
-        if textOf(value) == "try" and i + 6 < len(tokens) and textOf(tokens[i + 4]) == "("
-          if textOf(tokens[i + 6]) == ")"
-            funcName = tokens[i + 3]
+        if text_of(value) == "try" and i + 6 < len(tokens) and text_of(tokens[i + 4]) == "("
+          if text_of(tokens[i + 6]) == ")"
+            func_name = tokens[i + 3]
             arg = tokens[i + 5]
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":TRY_CALL1:" + textOf(funcName) + ":" + textOf(arg)
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":TRY_CALL1:" + text_of(func_name) + ":" + text_of(arg)
             push nodes, node
             i = i + 7
             continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "and"
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "and"
           right = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":BOOL_AND:" + textOf(value) + ":" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":BOOL_AND:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "or"
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "or"
           right = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":BOOL_OR:" + textOf(value) + ":" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":BOOL_OR:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "+"
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "+"
           right = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":INT_ADD:" + textOf(value) + ":" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":INT_ADD:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "<"
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "<"
           right = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_LT:" + textOf(value) + ":" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_LT:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "=="
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "=="
           right = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_EQ:" + textOf(value) + ":" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_EQ:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "!="
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "!="
           right = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_NE:" + textOf(value) + ":" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_NE:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == ">="
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == ">="
           right = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_GE:" + textOf(value) + ":" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_GE:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
-        if i + 4 < len(tokens) and textOf(tokens[i + 3]) == "<="
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "<="
           right = tokens[i + 4]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":COMPARE_LE:" + textOf(value) + ":" + textOf(right)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":COMPARE_LE:" + text_of(value) + ":" + text_of(right)
           push nodes, node
           i = i + 5
           continue
-        if i + 5 < len(tokens) and kindOf(value) == "IDENT" and lineOf(tokens[i + 5]) == lineOf(token)
-          if textOf(tokens[i + 4]) == ","
-            leftArg = tokens[i + 3]
-            rightArg = tokens[i + 5]
-            if i + 7 < len(tokens) and textOf(tokens[i + 6]) == "," and lineOf(tokens[i + 7]) == lineOf(token)
-              thirdArg = tokens[i + 7]
-              node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL3:" + textOf(value) + ":" + textOf(leftArg) + ":" + literalKindOf(rightArg) + ":" + textOf(rightArg) + ":" + textOf(thirdArg)
+        if i + 5 < len(tokens) and kind_of(value) == "IDENT" and line_of(tokens[i + 5]) == line_of(token)
+          if text_of(tokens[i + 4]) == ","
+            left_arg = tokens[i + 3]
+            right_arg = tokens[i + 5]
+            if i + 7 < len(tokens) and text_of(tokens[i + 6]) == "," and line_of(tokens[i + 7]) == line_of(token)
+              third_arg = tokens[i + 7]
+              node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL3:" + text_of(value) + ":" + text_of(left_arg) + ":" + literal_kind_of(right_arg) + ":" + text_of(right_arg) + ":" + text_of(third_arg)
               push nodes, node
-              if i + 10 < len(tokens) and textOf(tokens[i + 8]) == "(" and lineOf(tokens[i + 10]) == lineOf(token)
+              if i + 10 < len(tokens) and text_of(tokens[i + 8]) == "(" and line_of(tokens[i + 10]) == line_of(token)
                 i = i + 11
                 continue
               i = i + 8
               continue
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL2:" + textOf(value) + ":" + textOf(leftArg) + ":" + textOf(rightArg)
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL2:" + text_of(value) + ":" + text_of(left_arg) + ":" + text_of(right_arg)
             push nodes, node
             i = i + 6
             continue
-        if i + 7 < len(tokens) and kindOf(value) == "IDENT" and kindOf(tokens[i + 3]) == "IDENT"
-          if textOf(tokens[i + 4]) == "(" and textOf(tokens[i + 5]) == ")" and textOf(tokens[i + 6]) == "["
+        if i + 7 < len(tokens) and kind_of(value) == "IDENT" and kind_of(tokens[i + 3]) == "IDENT"
+          if text_of(tokens[i + 4]) == "(" and text_of(tokens[i + 5]) == ")" and text_of(tokens[i + 6]) == "["
             inner = tokens[i + 3]
             index = tokens[i + 7]
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL1_CALL0_INDEX:" + textOf(value) + ":" + textOf(inner) + ":" + textOf(index)
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL1_CALL0_INDEX:" + text_of(value) + ":" + text_of(inner) + ":" + text_of(index)
             push nodes, node
             i = i + 9
             continue
-        if i + 5 < len(tokens) and kindOf(value) == "IDENT" and textOf(tokens[i + 3]) == "("
-          if textOf(tokens[i + 5]) == ")"
+        if i + 5 < len(tokens) and kind_of(value) == "IDENT" and text_of(tokens[i + 3]) == "("
+          if text_of(tokens[i + 5]) == ")"
             arg = tokens[i + 4]
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL1:" + textOf(value) + ":" + textOf(arg)
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL1:" + text_of(value) + ":" + text_of(arg)
             push nodes, node
             i = i + 6
             continue
-        if i + 7 < len(tokens) and kindOf(value) == "IDENT" and textOf(tokens[i + 3]) == "("
-          if textOf(tokens[i + 5]) == "," and textOf(tokens[i + 7]) == ")"
-            leftArg = tokens[i + 4]
-            rightArg = tokens[i + 6]
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL2:" + textOf(value) + ":" + textOf(leftArg) + ":" + textOf(rightArg)
+        if i + 7 < len(tokens) and kind_of(value) == "IDENT" and text_of(tokens[i + 3]) == "("
+          if text_of(tokens[i + 5]) == "," and text_of(tokens[i + 7]) == ")"
+            left_arg = tokens[i + 4]
+            right_arg = tokens[i + 6]
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL2:" + text_of(value) + ":" + text_of(left_arg) + ":" + text_of(right_arg)
             push nodes, node
             i = i + 8
             continue
-        if i + 9 < len(tokens) and kindOf(value) == "IDENT" and textOf(tokens[i + 3]) == "("
-          if textOf(tokens[i + 5]) == "," and textOf(tokens[i + 7]) == "," and textOf(tokens[i + 9]) == ")"
-            leftArg = tokens[i + 4]
-            middleArg = tokens[i + 6]
-            rightArg = tokens[i + 8]
-            node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL3:" + textOf(value) + ":" + textOf(leftArg) + ":" + literalKindOf(middleArg) + ":" + textOf(middleArg) + ":" + textOf(rightArg)
+        if i + 9 < len(tokens) and kind_of(value) == "IDENT" and text_of(tokens[i + 3]) == "("
+          if text_of(tokens[i + 5]) == "," and text_of(tokens[i + 7]) == "," and text_of(tokens[i + 9]) == ")"
+            left_arg = tokens[i + 4]
+            middle_arg = tokens[i + 6]
+            right_arg = tokens[i + 8]
+            node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL3:" + text_of(value) + ":" + text_of(left_arg) + ":" + literal_kind_of(middle_arg) + ":" + text_of(middle_arg) + ":" + text_of(right_arg)
             push nodes, node
             i = i + 10
             continue
-        if i + 3 < len(tokens) and kindOf(value) == "IDENT" and kindOf(tokens[i + 3]) == "IDENT" and lineOf(tokens[i + 3]) == lineOf(token)
+        if i + 3 < len(tokens) and kind_of(value) == "IDENT" and kind_of(tokens[i + 3]) == "IDENT" and line_of(tokens[i + 3]) == line_of(token)
           arg = tokens[i + 3]
-          node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":CALL1:" + textOf(value) + ":" + textOf(arg)
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL1:" + text_of(value) + ":" + text_of(arg)
           push nodes, node
           i = i + 4
           continue
-        node = lineOf(token) + ":ASSIGN:" + textOf(token) + ":" + literalKindOf(value) + ":" + textOf(value)
+        node = line_of(token) + ":ASSIGN:" + text_of(token) + ":" + literal_kind_of(value) + ":" + text_of(value)
         push nodes, node
         i = i + 3
         continue
@@ -568,7 +568,7 @@ parse = tokens ->
   nodes
 
 tokens = []
-source = readFile args()[0]
+source = read_file args()[0]
 lines = split source, "\n"
 
 for line in lines

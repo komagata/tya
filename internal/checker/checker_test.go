@@ -21,19 +21,19 @@ func TestCheckRejectsConstantReassignment(t *testing.T) {
 }
 
 func TestCheckAllowsVariableReassignment(t *testing.T) {
-	prog := parse(t, "retryCount = 3\nretryCount = 5\n")
+	prog := parse(t, "retry_count = 3\nretry_count = 5\n")
 	if err := Check(prog); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckRejectsInvalidBindingName(t *testing.T) {
-	prog := parse(t, "user_name = \"komagata\"\n")
+	prog := parse(t, "userName = \"komagata\"\n")
 	err := Check(prog)
 	if err == nil {
 		t.Fatal("expected invalid binding name error")
 	}
-	if !strings.Contains(err.Error(), "invalid binding name user_name") {
+	if !strings.Contains(err.Error(), "invalid binding name userName") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -94,12 +94,12 @@ func TestCheckRejectsInvalidObjectPropertyWithLocation(t *testing.T) {
 }
 
 func TestCheckRejectsUndefinedVariable(t *testing.T) {
-	prog := parse(t, "print userNmae\n")
+	prog := parse(t, "print user_nmae\n")
 	err := Check(prog)
 	if err == nil {
 		t.Fatal("expected undefined variable error")
 	}
-	if !strings.Contains(err.Error(), "undefined variable userNmae") {
+	if !strings.Contains(err.Error(), "undefined variable user_nmae") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

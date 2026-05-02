@@ -91,7 +91,7 @@ func TestRunArrays(t *testing.T) {
 }
 
 func TestRunArrayFunctionBuiltins(t *testing.T) {
-	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\nisEven = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, isEven\nfirstEven = find items, isEven\nhasEven = any items, isEven\nallEven = all items, isEven\nsum = reduce items, 0, add\nprint doubled[2]\nprint len evens\nprint firstEven\nprint hasEven\nprint allEven\nprint sum\n"
+	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\nis_even = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, is_even\nfirst_even = find items, is_even\nhas_even = any items, is_even\nall_even = all items, is_even\nsum = reduce items, 0, add\nprint doubled[2]\nprint len evens\nprint first_even\nprint has_even\nprint all_even\nprint sum\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -164,7 +164,7 @@ func TestRunRejectsBreakOutsideLoop(t *testing.T) {
 }
 
 func TestRunReturn(t *testing.T) {
-	src := "findFirstOver = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\nprint findFirstOver 3\n"
+	src := "find_first_over = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\nprint find_first_over 3\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -183,7 +183,7 @@ func TestRunReturn(t *testing.T) {
 }
 
 func TestRunConversions(t *testing.T) {
-	src := "print toString 20\nprint toInt \"42\"\nprint toFloat \"2.5\"\nprint toNumber \"12\"\nprint toNumber \"12.5\"\n"
+	src := "print to_string 20\nprint to_int \"42\"\nprint to_float \"2.5\"\nprint to_number \"12\"\nprint to_number \"12.5\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -203,7 +203,7 @@ func TestRunConversions(t *testing.T) {
 }
 
 func TestRunStringBuiltins(t *testing.T) {
-	src := "text = \"  hello,tya  \"\ntrimmed = trim text\nparts = split trimmed, \",\"\nprint join parts, \"-\"\nprint replace trimmed, \"tya\", \"Tya\"\nprint contains trimmed, \"hello\"\nprint startsWith trimmed, \"hello\"\nprint endsWith trimmed, \"tya\"\nprint byteLen \"ちゃ\"\nprint charLen \"ちゃ\"\nprint \"quote: \\\"tya\\\"\"\nprint \"tya\"[1]\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = trim text\nparts = split trimmed, \",\"\nprint join parts, \"-\"\nprint replace trimmed, \"tya\", \"Tya\"\nprint contains trimmed, \"hello\"\nprint starts_with trimmed, \"hello\"\nprint ends_with trimmed, \"tya\"\nprint byte_len \"ちゃ\"\nprint char_len \"ちゃ\"\nprint \"quote: \\\"tya\\\"\"\nprint \"tya\"[1]\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -263,7 +263,7 @@ func TestRunInlineObject(t *testing.T) {
 }
 
 func TestRunDeepEqualBuiltin(t *testing.T) {
-	src := "left =\n  name: \"komagata\"\n  nums: [1, 2]\nright =\n  name: \"komagata\"\n  nums: [1, 2]\nprint left == right\nsame = equal left, right\nnumsA = [1, 2]\nnumsB = [1, 3]\ndifferent = equal numsA, numsB\nprint same\nprint different\n"
+	src := "left =\n  name: \"komagata\"\n  nums: [1, 2]\nright =\n  name: \"komagata\"\n  nums: [1, 2]\nprint left == right\nsame = equal left, right\nnums_a = [1, 2]\nnums_b = [1, 3]\ndifferent = equal nums_a, nums_b\nprint same\nprint different\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -324,7 +324,7 @@ func TestRunForOfObject(t *testing.T) {
 
 func TestRunFileBuiltins(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "memo.txt")
-	src := "writeFile \"" + path + "\", \"hello\"\nprint fileExists \"" + path + "\"\nprint readFile \"" + path + "\"\n"
+	src := "write_file \"" + path + "\", \"hello\"\nprint file_exists \"" + path + "\"\nprint read_file \"" + path + "\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -365,7 +365,7 @@ func TestRunArgsAndEnvBuiltins(t *testing.T) {
 }
 
 func TestRunReadLineBuiltin(t *testing.T) {
-	toks, errs := lexer.Lex("name = readLine()\nprint \"Hello, {name}\"\n")
+	toks, errs := lexer.Lex("name = read_line()\nprint \"Hello, {name}\"\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -437,7 +437,7 @@ func TestRunErrorBuiltin(t *testing.T) {
 }
 
 func TestRunMultipleReturnAndAssignment(t *testing.T) {
-	src := "parseUser = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nuser, err = parseUser \"komagata\"\nif err\n  print err.message\nelse\n  print user.name\nmissing, err = parseUser \"\"\nif err\n  print err.message\nelse\n  print missing.name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nuser, err = parse_user \"komagata\"\nif err\n  print err.message\nelse\n  print user.name\nmissing, err = parse_user \"\"\nif err\n  print err.message\nelse\n  print missing.name\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -457,7 +457,7 @@ func TestRunMultipleReturnAndAssignment(t *testing.T) {
 }
 
 func TestRunTryPropagation(t *testing.T) {
-	src := "parseUser = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nreadUser = text ->\n  user = try parseUser(text)\n  return user.name, nil\nname, err = readUser \"komagata\"\nif err\n  print err.message\nelse\n  print name\nname, err = readUser \"\"\nif err\n  print err.message\nelse\n  print name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nread_user = text ->\n  user = try parse_user(text)\n  return user.name, nil\nname, err = read_user \"komagata\"\nif err\n  print err.message\nelse\n  print name\nname, err = read_user \"\"\nif err\n  print err.message\nelse\n  print name\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)

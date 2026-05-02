@@ -8,7 +8,7 @@ import (
 )
 
 var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
-var valueNameRE = regexp.MustCompile(`^_?[a-z][A-Za-z0-9]*$|^_$`)
+var valueNameRE = regexp.MustCompile(`^_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*$|^_$`)
 
 func Check(prog *ast.Program) error {
 	constants := map[string]bool{}
@@ -20,11 +20,12 @@ func Check(prog *ast.Program) error {
 }
 
 var builtinNames = []string{
-	"args", "byteLen", "charLen", "contains", "delete", "div", "endsWith",
-	"env", "equal", "error", "exit", "fileExists", "filter", "find", "all", "any", "each",
+	"args", "byte_len", "byteLen", "char_len", "charLen", "contains", "delete", "div", "ends_with", "endsWith",
+	"env", "equal", "error", "exit", "file_exists", "fileExists", "filter", "find", "all", "any", "each",
 	"has", "join", "keys", "len", "map", "panic", "pop", "print", "push",
-	"readFile", "readLine", "reduce", "replace", "split", "startsWith", "toFloat", "toInt",
-	"toNumber", "toString", "trim", "values", "writeFile",
+	"read_file", "read_line", "readFile", "readLine", "reduce", "replace", "split", "starts_with", "startsWith",
+	"to_float", "to_int", "to_number", "to_string", "toFloat", "toInt", "toNumber", "toString", "trim",
+	"values", "write_file", "writeFile",
 }
 
 type scope struct {

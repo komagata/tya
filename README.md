@@ -40,7 +40,7 @@ go test ./...
 - inline object literals: `{ name: "komagata" }`
 - functions and implicit last-expression return
 - explicit `return`
-- multiple assignment and returns: `value, err = readThing()`
+- multiple assignment and returns: `value, err = read_thing()`
 - `try` propagation for `value, err`
 - method calls with `@property`
 - arithmetic, comparison, equality, and logical operators
@@ -53,10 +53,10 @@ go test ./...
 - builtins: `print`, `len`, `push`, `pop`, `map`, `filter`, `find`, `any`,
   `all`, `each`, `reduce`, `keys`, `values`, `has`, `delete`,
   `equal`, `split`, `join`, `trim`,
-  `replace`, `contains`, `startsWith`, `endsWith`, `byteLen`, `charLen`,
-  `readLine`, `readFile`, `writeFile`, `fileExists`, `args`, `env`, `error`,
+  `replace`, `contains`, `starts_with`, `ends_with`, `byte_len`, `char_len`,
+  `read_line`, `read_file`, `write_file`, `file_exists`, `args`, `env`, `error`,
   `exit`, `panic`,
-  `div`, `toString`, `toInt`, `toFloat`, `toNumber`
+  `div`, `to_string`, `to_int`, `to_float`, `to_number`
 - `stdlib/prelude.tya` is loaded by the runner and `--emit-c`
 
 ## Examples

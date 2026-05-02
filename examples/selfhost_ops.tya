@@ -5,7 +5,7 @@ names = ["Tya"]
 adult = age >= 2
 young = age <= 2
 nonzero = age != 0
-groupedCompare = (age >= 2)
+grouped_compare = (age >= 2)
 both = adult and young
 either = adult or young
 
@@ -22,7 +22,7 @@ print adult
 print young
 print nonzero
 print grouped
-print groupedCompare
+print grouped_compare
 print both
 print either
 

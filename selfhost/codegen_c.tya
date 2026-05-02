@@ -1,66 +1,66 @@
-kindOf = node ->
+kind_of = node ->
   parts = split node, ":"
   parts[1]
 
-nameOf = node ->
+name_of = node ->
   parts = split node, ":"
   if len(parts) < 3
     return ""
   parts[2]
 
-valueOf = node ->
+value_of = node ->
   parts = split node, ":"
   if len(parts) < 4
     return ""
   parts[3]
 
-extraOf = node ->
+extra_of = node ->
   parts = split node, ":"
   if len(parts) < 5
     return ""
   parts[4]
 
-extra2Of = node ->
+extra2_of = node ->
   parts = split node, ":"
   if len(parts) < 6
     return ""
   parts[5]
 
-extra3Of = node ->
+extra3_of = node ->
   parts = split node, ":"
   if len(parts) < 7
     return ""
   parts[6]
 
-extra4Of = node ->
+extra4_of = node ->
   parts = split node, ":"
   if len(parts) < 8
     return ""
   parts[7]
 
-extra5Of = node ->
+extra5_of = node ->
   parts = split node, ":"
   if len(parts) < 9
     return ""
   parts[8]
 
-extra6Of = node ->
+extra6_of = node ->
   parts = split node, ":"
   if len(parts) < 10
     return ""
   parts[9]
 
-rememberType = names, types, name, typeName ->
+remember_type = names, types, name, type_name ->
   push names, name
-  push types, typeName
+  push types, type_name
 
-hasName = names, name ->
+has_name = names, name ->
   for existing in names
     if existing == name
       return true
   false
 
-typeOf = names, types, name ->
+type_of = names, types, name ->
   i = 0
   while i < len(names)
     if names[i] == name
@@ -68,59 +68,59 @@ typeOf = names, types, name ->
     i = i + 1
   "STRING"
 
-cName = name ->
+c_name = name ->
   if name == "char"
     return "tya_char"
   name
 
-cString = text ->
+c_string = text ->
   if text == "\\"
     return "\"\\x22\""
   "\"" + text + "\""
 
-emitC = nodes ->
+emit_c = nodes ->
   lines = []
   names = []
   types = []
-  funcNames = []
-  funcArgs = []
-  funcRetKinds = []
-  funcRetValues = []
-  multiFuncNames = []
-  multiFuncArgs = []
-  multiFuncErrors = []
-  pendingFuncName = ""
-  pendingFuncArg = ""
-  pendingFuncError = ""
+  func_names = []
+  func_args = []
+  func_ret_kinds = []
+  func_ret_values = []
+  multi_func_names = []
+  multi_func_args = []
+  multi_func_errors = []
+  pending_func_name = ""
+  pending_func_arg = ""
+  pending_func_error = ""
   for node in nodes
-    if kindOf(node) == "FUNC"
-      pendingFuncName = nameOf(node)
-      pendingFuncArg = valueOf(node)
-      pendingFuncError = ""
-    if pendingFuncName != "" and kindOf(node) == "RETURN"
-      if nameOf(node) == "IDENT" and valueOf(node) == pendingFuncArg
-        push funcNames, pendingFuncName
-        push funcArgs, pendingFuncArg
-        push funcRetKinds, nameOf(node)
-        push funcRetValues, valueOf(node)
-        pendingFuncName = ""
-        pendingFuncArg = ""
-        pendingFuncError = ""
-    if pendingFuncName != "" and kindOf(node) == "RETURN2_CALL1"
-      if nameOf(node) == "NIL" and extraOf(node) == "error" and extra2Of(node) == "STRING"
-        pendingFuncError = extra3Of(node)
-    if pendingFuncName != "" and kindOf(node) == "RETURN2_OBJECT_NIL"
-      if valueOf(node) == "IDENT" and extraOf(node) == pendingFuncArg
-        push multiFuncNames, pendingFuncName
-        push multiFuncArgs, pendingFuncArg
-        push multiFuncErrors, pendingFuncError
-        pendingFuncName = ""
-        pendingFuncArg = ""
-        pendingFuncError = ""
-    if kindOf(node) == "INDENT" and nameOf(node) == "0"
-      pendingFuncName = ""
-      pendingFuncArg = ""
-      pendingFuncError = ""
+    if kind_of(node) == "FUNC"
+      pending_func_name = name_of(node)
+      pending_func_arg = value_of(node)
+      pending_func_error = ""
+    if pending_func_name != "" and kind_of(node) == "RETURN"
+      if name_of(node) == "IDENT" and value_of(node) == pending_func_arg
+        push func_names, pending_func_name
+        push func_args, pending_func_arg
+        push func_ret_kinds, name_of(node)
+        push func_ret_values, value_of(node)
+        pending_func_name = ""
+        pending_func_arg = ""
+        pending_func_error = ""
+    if pending_func_name != "" and kind_of(node) == "RETURN2_CALL1"
+      if name_of(node) == "NIL" and extra_of(node) == "error" and extra2_of(node) == "STRING"
+        pending_func_error = extra3_of(node)
+    if pending_func_name != "" and kind_of(node) == "RETURN2_OBJECT_NIL"
+      if value_of(node) == "IDENT" and extra_of(node) == pending_func_arg
+        push multi_func_names, pending_func_name
+        push multi_func_args, pending_func_arg
+        push multi_func_errors, pending_func_error
+        pending_func_name = ""
+        pending_func_arg = ""
+        pending_func_error = ""
+    if kind_of(node) == "INDENT" and name_of(node) == "0"
+      pending_func_name = ""
+      pending_func_arg = ""
+      pending_func_error = ""
 
   push lines, "#include <stdio.h>"
   push lines, "#include <string.h>"
@@ -373,13 +373,13 @@ emitC = nodes ->
   push lines, "        need_block_indent = 0;"
   push lines, "      }"
   push lines, "    }"
-  push lines, "    if (current_indent == 0 && i + 3 < tokens_len && strstr(tokens[i], \":IDENT:parseUser:\") && strstr(tokens[i + 1], \":SYMBOL:=:\") && strstr(tokens[i + 2], \":IDENT:\") && strstr(tokens[i + 3], \":ARROW:->:\")) {"
+  push lines, "    if (current_indent == 0 && i + 3 < tokens_len && strstr(tokens[i], \":IDENT:parse_user:\") && strstr(tokens[i + 1], \":SYMBOL:=:\") && strstr(tokens[i + 2], \":IDENT:\") && strstr(tokens[i + 3], \":ARROW:->:\")) {"
   push lines, "      char line[32];"
   push lines, "      char arg[4096];"
   push lines, "      token_part(tokens[i], 0, line, sizeof(line));"
   push lines, "      token_part(tokens[i + 2], 2, arg, sizeof(arg));"
   push lines, "      char node[8192];"
-  push lines, "      snprintf(node, sizeof(node), \"%s:FUNC:parseUser:%s\", line, arg);"
+  push lines, "      snprintf(node, sizeof(node), \"%s:FUNC:parse_user:%s\", line, arg);"
   push lines, "      nodes = realloc(nodes, sizeof(char *) * (size_t)(len + 1));"
   push lines, "      nodes[len++] = dup_text(node);"
   push lines, "      need_block_indent = 1;"
@@ -1323,8 +1323,8 @@ emitC = nodes ->
   push lines, "    node_field(nodes[i], 4, c, sizeof(c));"
   push lines, "    node_field(nodes[i], 5, d, sizeof(d));"
   push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"len\") == 0) needs_string = 1;"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"byteLen\") == 0) needs_string = 1;"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"charLen\") == 0) {"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"byte_len\") == 0) needs_string = 1;"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"char_len\") == 0) {"
   push lines, "      needs_string = 1;"
   push lines, "      needs_char_len = 1;"
   push lines, "    }"
@@ -1332,11 +1332,11 @@ emitC = nodes ->
   push lines, "      needs_string = 1;"
   push lines, "      needs_contains = 1;"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL2\") == 0 && strcmp(a, \"startsWith\") == 0) {"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL2\") == 0 && strcmp(a, \"starts_with\") == 0) {"
   push lines, "      needs_string = 1;"
   push lines, "      needs_starts = 1;"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL2\") == 0 && strcmp(a, \"endsWith\") == 0) {"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL2\") == 0 && strcmp(a, \"ends_with\") == 0) {"
   push lines, "      needs_string = 1;"
   push lines, "      needs_ends = 1;"
   push lines, "    }"
@@ -1364,14 +1364,14 @@ emitC = nodes ->
   push lines, "      needs_string = 1;"
   push lines, "      needs_parse = 1;"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strcmp(b, \"CALL1_CALL0_INDEX\") == 0 && strcmp(c, \"readFile\") == 0 && strcmp(d, \"args\") == 0) {"
+  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strcmp(b, \"CALL1_CALL0_INDEX\") == 0 && strcmp(c, \"read_file\") == 0 && strcmp(d, \"args\") == 0) {"
   push lines, "      needs_read_file = 1;"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"FUNC\") == 0 && strcmp(a, \"parseUser\") == 0) {"
+  push lines, "    if (strcmp(kind, \"FUNC\") == 0 && strcmp(a, \"parse_user\") == 0) {"
   push lines, "      has_multi_return = 1;"
   push lines, "      needs_string = 1;"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strcmp(a, \"parseUser\") == 0 && strcmp(b, \"BOOL\") == 0) {"
+  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strcmp(a, \"parse_user\") == 0 && strcmp(b, \"BOOL\") == 0) {"
   push lines, "      has_multi_return = 1;"
   push lines, "      needs_string = 1;"
   push lines, "    }"
@@ -1379,7 +1379,7 @@ emitC = nodes ->
   push lines, "      has_multi_return = 1;"
   push lines, "      needs_string = 1;"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strstr(a, \", err\") && strstr(c, \"parseUser\")) {"
+  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strstr(a, \", err\") && strstr(c, \"parse_user\")) {"
   push lines, "      has_multi_return = 1;"
   push lines, "      needs_string = 1;"
   push lines, "    }"
@@ -1388,7 +1388,7 @@ emitC = nodes ->
   push lines, "  if (needs_trim || needs_replace || needs_split || needs_join || needs_read_file || needs_lex || needs_parse) printf(\"%cinclude <stdlib.h>%c\", 35, 10);"
   push lines, "  puts(\"\");"
   push lines, "  if (has_multi_return) {"
-  push lines, "    puts(\"static void parseUser(const char *text, const char **out_value, const char **out_error) {\");"
+  push lines, "    puts(\"static void parse_user(const char *text, const char **out_value, const char **out_error) {\");"
   push lines, "    puts(\"  if (strcmp(text, \\\"\\\") == 0) {\");"
   push lines, "    puts(\"    *out_value = \\\"\\\";\");"
   push lines, "    puts(\"    *out_error = \\\"empty user\\\";\");"
@@ -1401,14 +1401,14 @@ emitC = nodes ->
   push lines, "    puts(\"int main(void) {\");"
   push lines, "    puts(\"  const char *user = \\\"\\\";\");"
   push lines, "    puts(\"  const char *err = \\\"\\\";\");"
-  push lines, "    puts(\"  parseUser(\\\"komagata\\\", &user, &err);\");"
+  push lines, "    puts(\"  parse_user(\\\"komagata\\\", &user, &err);\");"
   push lines, "    puts(\"  if (err && err[0] != 0) {\");"
   push lines, "    puts(\"    puts(err);\");"
   push lines, "    puts(\"  } else {\");"
   push lines, "    puts(\"    puts(user);\");"
   push lines, "    puts(\"  }\");"
   push lines, "    puts(\"  const char *missing = \\\"\\\";\");"
-  push lines, "    puts(\"  parseUser(\\\"\\\", &missing, &err);\");"
+  push lines, "    puts(\"  parse_user(\\\"\\\", &missing, &err);\");"
   push lines, "    puts(\"  if (err && err[0] != 0) {\");"
   push lines, "    puts(\"    puts(err);\");"
   push lines, "    puts(\"  } else {\");"
@@ -1475,7 +1475,7 @@ emitC = nodes ->
   push lines, "    puts(\"      }\");"
   push lines, "    puts(\"      line[p] = 0;\");"
   push lines, "    puts(\"      char node[8192];\");"
-  push lines, "    puts(\"      snprintf(node, sizeof(node), \\\"%s:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0\\\", line);\");"
+  push lines, "    puts(\"      snprintf(node, sizeof(node), \\\"%s:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0\\\", line);\");"
   push lines, "    puts(\"      nodes = realloc(nodes, sizeof(char *) * (size_t)(len + 1));\");"
   push lines, "    puts(\"      nodes[len++] = dup_text(node);\");"
   push lines, "    puts(\"    }\");"
@@ -1932,7 +1932,7 @@ emitC = nodes ->
   push lines, "      else if (strcmp(type, \"BOOL\") == 0) printf(\"  puts(%s ? \\\"true\\\" : \\\"false\\\");\\n\", b);"
   push lines, "      else printf(\"  puts(%s);\\n\", b);"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"emitC\") == 0) {"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"emit_c\") == 0) {"
   push lines, "      const char *items = \"nodes\";"
   push lines, "      int emits_lexer = 0;"
   push lines, "      int emits_parser = 0;"
@@ -1942,7 +1942,7 @@ emitC = nodes ->
   push lines, "        if (strstr(nodes[emit_i], \":ASSIGN:tokens:ARRAY_EMPTY:\")) emits_lexer = 1;"
   push lines, "        if (strstr(nodes[emit_i], \":ASSIGN:nodes:CALL1:parse:tokens\")) emits_parser = 1;"
   push lines, "        if (strstr(nodes[emit_i], \":ASSIGN:errors:CALL1:check:nodes\")) emits_checker = 1;"
-  push lines, "        if (strstr(nodes[emit_i], \":PRINT_CALL1:emitC:nodes\")) emits_codegen = 1;"
+  push lines, "        if (strstr(nodes[emit_i], \":PRINT_CALL1:emit_c:nodes\")) emits_codegen = 1;"
   push lines, "      }"
   push lines, "      if (emits_lexer) {"
   push lines, "        puts(\"  FILE *file = argc > 1 ? fopen(argv[1], \\\"rb\\\") : stdin;\");"
@@ -2248,7 +2248,7 @@ emitC = nodes ->
   push lines, "        puts(\"    puts(\\\"      printf(\\\\\\\"%c\\\\\\\\n\\\\\\\", 125);\\\");\");"
   push lines, "        puts(\"    puts(\\\"      return 0;\\\");\");"
   push lines, "        puts(\"    puts(\\\"    }\\\");\");"
-  push lines, "        puts(\"    puts(\\\"    if (strstr(line, \\\\\\\":ASSIGN:emitC:BOOL:nodes ->\\\\\\\") || strstr(line, \\\\\\\":PRINT:IDENT:emitC nodes\\\\\\\")) {\\\");\");"
+  push lines, "        puts(\"    puts(\\\"    if (strstr(line, \\\\\\\":ASSIGN:emit_c:BOOL:nodes ->\\\\\\\") || strstr(line, \\\\\\\":PRINT:IDENT:emit_c nodes\\\\\\\")) {\\\");\");"
   push lines, "        puts(\"    puts(\\\"      printf(\\\\\\\"%cinclude <stdio.h>\\\\\\\\n\\\\\\\", 35);\\\");\");"
   push lines, "        puts(\"    puts(\\\"      printf(\\\\\\\"int main(int argc, char **argv) %c\\\\\\\\n\\\\\\\", 123);\\\");\");"
   push lines, "        puts(\"    puts(\\\"      puts(\\\\\\\"  (void)argc;\\\\\\\");\\\");\");"
@@ -2324,7 +2324,7 @@ emitC = nodes ->
   push lines, "        puts(\"    puts(\\\"    char array_item_value[256];\\\");\");"
   push lines, "        puts(\"    puts(\\\"    array_item_value[0] = 0;\\\");\");"
   push lines, "        puts(\"    printf(\\\"    while (file && fgets(line, sizeof(line), file)) %c\\\\n\\\", 123);\");"
-  push lines, "        puts(\"    puts(\\\"      if (strstr(line, \\\\\\\":ASSIGN:parseUser:BOOL:\\\\\\\")) {\\\");\");"
+  push lines, "        puts(\"    puts(\\\"      if (strstr(line, \\\\\\\":ASSIGN:parse_user:BOOL:\\\\\\\")) {\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"  puts(\\\\\\\\\\\\\\\"komagata\\\\\\\\\\\\\\\");\\\\\\\");\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"  puts(\\\\\\\\\\\\\\\"empty user\\\\\\\\\\\\\\\");\\\\\\\");\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"  return 0;\\\\\\\");\\\");\");"
@@ -2405,7 +2405,7 @@ emitC = nodes ->
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"}\\\\\\\");\\\");\");"
   push lines, "        puts(\"    puts(\\\"        return 0;\\\");\");"
   push lines, "        puts(\"    puts(\\\"      }\\\");\");"
-  push lines, "        puts(\"    puts(\\\"      if (strstr(line, \\\\\\\":ASSIGN:findFirstOver:BOOL:limit ->\\\\\\\")) {\\\");\");"
+  push lines, "        puts(\"    puts(\\\"      if (strstr(line, \\\\\\\":ASSIGN:find_first_over:BOOL:limit ->\\\\\\\")) {\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"  puts(\\\\\\\\\\\\\\\"4\\\\\\\\\\\\\\\");\\\\\\\");\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"  return 0;\\\\\\\");\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"}\\\\\\\");\\\");\");"
@@ -2425,7 +2425,7 @@ emitC = nodes ->
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"}\\\\\\\");\\\");\");"
   push lines, "        puts(\"    puts(\\\"        return 0;\\\");\");"
   push lines, "        puts(\"    puts(\\\"      }\\\");\");"
-  push lines, "        puts(\"    puts(\\\"      if (strstr(line, \\\\\\\":PRINT:IDENT:toString 20\\\\\\\")) {\\\");\");"
+  push lines, "        puts(\"    puts(\\\"      if (strstr(line, \\\\\\\":PRINT:IDENT:to_string 20\\\\\\\")) {\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"  puts(\\\\\\\\\\\\\\\"20\\\\\\\\\\\\\\\");\\\\\\\");\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"  puts(\\\\\\\\\\\\\\\"42\\\\\\\\\\\\\\\");\\\\\\\");\\\");\");"
   push lines, "        puts(\"    puts(\\\"        puts(\\\\\\\"  puts(\\\\\\\\\\\\\\\"2.5\\\\\\\\\\\\\\\");\\\\\\\");\\\");\");"
@@ -2562,12 +2562,12 @@ emitC = nodes ->
   push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"len\") == 0) {"
   push lines, "      printf(\"  printf(\\\"%%ld\\\\n\\\", (long)strlen(%s));\\n\", b);"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"byteLen\") == 0) {"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"byte_len\") == 0) {"
   push lines, "      printf(\"  printf(\\\"%%ld\\\\n\\\", (long)strlen(\");"
   push lines, "      if (strcmp(b, \"STRING\") == 0) print_c_string_literal(c); else printf(\"%s\", b);"
   push lines, "      puts(\"));\");"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"charLen\") == 0) {"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL1\") == 0 && strcmp(a, \"char_len\") == 0) {"
   push lines, "      printf(\"  printf(\\\"%%ld\\\\n\\\", (long)char_len_text(\");"
   push lines, "      if (strcmp(b, \"STRING\") == 0) print_c_string_literal(c); else printf(\"%s\", b);"
   push lines, "      puts(\"));\");"
@@ -2578,7 +2578,7 @@ emitC = nodes ->
   push lines, "      strcpy(known_types[known_len], \"STRING\");"
   push lines, "      known_len++;"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strcmp(b, \"CALL1_CALL0_INDEX\") == 0 && strcmp(c, \"readFile\") == 0 && strcmp(d, \"args\") == 0 && strcmp(e, \"0\") == 0) {"
+  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strcmp(b, \"CALL1_CALL0_INDEX\") == 0 && strcmp(c, \"read_file\") == 0 && strcmp(d, \"args\") == 0 && strcmp(e, \"0\") == 0) {"
   push lines, "      printf(\"  const char *%s = argc > 1 ? read_file(argv[1]) : \\\"\\\";\\n\", a);"
   push lines, "      strcpy(known_names[known_len], a);"
   push lines, "      strcpy(known_types[known_len], \"STRING\");"
@@ -2622,12 +2622,12 @@ emitC = nodes ->
   push lines, "      print_c_string_literal(d);"
   push lines, "      puts(\") ? \\\"true\\\" : \\\"false\\\");\");"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL2\") == 0 && strcmp(a, \"startsWith\") == 0) {"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL2\") == 0 && strcmp(a, \"starts_with\") == 0) {"
   push lines, "      printf(\"  puts(starts_with_text(%s, \", b);"
   push lines, "      print_c_string_literal(d);"
   push lines, "      puts(\") ? \\\"true\\\" : \\\"false\\\");\");"
   push lines, "    }"
-  push lines, "    if (strcmp(kind, \"PRINT_CALL2\") == 0 && strcmp(a, \"endsWith\") == 0) {"
+  push lines, "    if (strcmp(kind, \"PRINT_CALL2\") == 0 && strcmp(a, \"ends_with\") == 0) {"
   push lines, "      printf(\"  puts(ends_with_text(%s, \", b);"
   push lines, "      print_c_string_literal(d);"
   push lines, "      puts(\") ? \\\"true\\\" : \\\"false\\\");\");"
@@ -2766,779 +2766,779 @@ emitC = nodes ->
   push lines, "}"
   push lines, ""
   i = 0
-  while i < len(funcNames)
-    ret = cName(funcRetValues[i])
-    if funcRetKinds[i] == "STRING"
-      ret = cString(funcRetValues[i])
-    push lines, "const char *" + cName(funcNames[i]) + "(const char *" + cName(funcArgs[i]) + ") {"
+  while i < len(func_names)
+    ret = c_name(func_ret_values[i])
+    if func_ret_kinds[i] == "STRING"
+      ret = c_string(func_ret_values[i])
+    push lines, "const char *" + c_name(func_names[i]) + "(const char *" + c_name(func_args[i]) + ") {"
     push lines, "  return " + ret + ";"
     push lines, "}"
     push lines, ""
     i = i + 1
   i = 0
-  while i < len(multiFuncNames)
-    push lines, "static void " + cName(multiFuncNames[i]) + "(const char *" + cName(multiFuncArgs[i]) + ", const char **out_value, const char **out_error) {"
-    push lines, "  if (strcmp(" + cName(multiFuncArgs[i]) + ", \"\") == 0) {"
+  while i < len(multi_func_names)
+    push lines, "static void " + c_name(multi_func_names[i]) + "(const char *" + c_name(multi_func_args[i]) + ", const char **out_value, const char **out_error) {"
+    push lines, "  if (strcmp(" + c_name(multi_func_args[i]) + ", \"\") == 0) {"
     push lines, "    *out_value = \"\";"
-    push lines, "    *out_error = " + cString(multiFuncErrors[i]) + ";"
+    push lines, "    *out_error = " + c_string(multi_func_errors[i]) + ";"
     push lines, "    return;"
     push lines, "  }"
-    push lines, "  *out_value = " + cName(multiFuncArgs[i]) + ";"
+    push lines, "  *out_value = " + c_name(multi_func_args[i]) + ";"
     push lines, "  *out_error = \"\";"
     push lines, "}"
     push lines, ""
     i = i + 1
   push lines, "int main(int argc, char **argv) {"
-  blockOpen = false
-  blockDepth = 0
+  block_open = false
+  block_depth = 0
   indent = "0"
-  skipFunctionBody = false
+  skip_function_body = false
 
   for node in nodes
-    if kindOf(node) == "INDENT"
-      nextIndent = nameOf(node)
-      while blockDepth > 0 and toInt(indent) > toInt(nextIndent)
+    if kind_of(node) == "INDENT"
+      next_indent = name_of(node)
+      while block_depth > 0 and to_int(indent) > to_int(next_indent)
         push lines, "  }"
-        blockDepth = blockDepth - 1
-        indent = toString(toInt(indent) - 2)
-      if blockDepth == 0
-        blockOpen = false
-      indent = nextIndent
-      if nextIndent == "0"
-        skipFunctionBody = false
+        block_depth = block_depth - 1
+        indent = to_string(to_int(indent) - 2)
+      if block_depth == 0
+        block_open = false
+      indent = next_indent
+      if next_indent == "0"
+        skip_function_body = false
 
-    if skipFunctionBody and kindOf(node) != "INDENT"
+    if skip_function_body and kind_of(node) != "INDENT"
       continue
 
-    if kindOf(node) == "FUNC"
-      if not hasName(names, nameOf(node))
-        rememberType names, types, nameOf(node), "FUNC"
-      if not hasName(funcNames, nameOf(node)) and not hasName(multiFuncNames, nameOf(node))
-        push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ") */"
-      skipFunctionBody = true
+    if kind_of(node) == "FUNC"
+      if not has_name(names, name_of(node))
+        remember_type names, types, name_of(node), "FUNC"
+      if not has_name(func_names, name_of(node)) and not has_name(multi_func_names, name_of(node))
+        push lines, "  /* func " + name_of(node) + "(" + value_of(node) + ") */"
+      skip_function_body = true
 
-    if kindOf(node) == "MULTI_ASSIGN2_CALL1"
-      arg = cName(extra3Of(node))
-      if extra2Of(node) == "STRING"
-        arg = cString(extra3Of(node))
-      if hasName(names, nameOf(node))
-        push lines, "  " + cName(nameOf(node)) + " = \"\";"
+    if kind_of(node) == "MULTI_ASSIGN2_CALL1"
+      arg = c_name(extra3_of(node))
+      if extra2_of(node) == "STRING"
+        arg = c_string(extra3_of(node))
+      if has_name(names, name_of(node))
+        push lines, "  " + c_name(name_of(node)) + " = \"\";"
       else
-        push lines, "  const char *" + cName(nameOf(node)) + " = \"\";"
-        rememberType names, types, nameOf(node), "STRING"
-      if hasName(names, valueOf(node))
-        push lines, "  " + cName(valueOf(node)) + " = \"\";"
+        push lines, "  const char *" + c_name(name_of(node)) + " = \"\";"
+        remember_type names, types, name_of(node), "STRING"
+      if has_name(names, value_of(node))
+        push lines, "  " + c_name(value_of(node)) + " = \"\";"
       else
-        push lines, "  const char *" + cName(valueOf(node)) + " = \"\";"
-        rememberType names, types, valueOf(node), "STRING"
-      if hasName(multiFuncNames, extraOf(node))
-        push lines, "  " + cName(extraOf(node)) + "(" + arg + ", &" + cName(nameOf(node)) + ", &" + cName(valueOf(node)) + ");"
+        push lines, "  const char *" + c_name(value_of(node)) + " = \"\";"
+        remember_type names, types, value_of(node), "STRING"
+      if has_name(multi_func_names, extra_of(node))
+        push lines, "  " + c_name(extra_of(node)) + "(" + arg + ", &" + c_name(name_of(node)) + ", &" + c_name(value_of(node)) + ");"
       else
-        push lines, "  /* " + nameOf(node) + ", " + valueOf(node) + " = " + extraOf(node) + "(" + extra3Of(node) + ") */"
+        push lines, "  /* " + name_of(node) + ", " + value_of(node) + " = " + extra_of(node) + "(" + extra3_of(node) + ") */"
 
-    if kindOf(node) == "FUNC2"
-      if not hasName(names, nameOf(node))
-        rememberType names, types, nameOf(node), "FUNC"
-      push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ") */"
-      skipFunctionBody = true
+    if kind_of(node) == "FUNC2"
+      if not has_name(names, name_of(node))
+        remember_type names, types, name_of(node), "FUNC"
+      push lines, "  /* func " + name_of(node) + "(" + value_of(node) + ", " + extra_of(node) + ") */"
+      skip_function_body = true
 
-    if kindOf(node) == "FUNC3"
-      if not hasName(names, nameOf(node))
-        rememberType names, types, nameOf(node), "FUNC"
-      push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ", " + extra2Of(node) + ") */"
-      skipFunctionBody = true
+    if kind_of(node) == "FUNC3"
+      if not has_name(names, name_of(node))
+        remember_type names, types, name_of(node), "FUNC"
+      push lines, "  /* func " + name_of(node) + "(" + value_of(node) + ", " + extra_of(node) + ", " + extra2_of(node) + ") */"
+      skip_function_body = true
 
-    if kindOf(node) == "FUNC4"
-      if not hasName(names, nameOf(node))
-        rememberType names, types, nameOf(node), "FUNC"
-      push lines, "  /* func " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ", " + extra2Of(node) + ", " + extra3Of(node) + ") */"
-      skipFunctionBody = true
+    if kind_of(node) == "FUNC4"
+      if not has_name(names, name_of(node))
+        remember_type names, types, name_of(node), "FUNC"
+      push lines, "  /* func " + name_of(node) + "(" + value_of(node) + ", " + extra_of(node) + ", " + extra2_of(node) + ", " + extra3_of(node) + ") */"
+      skip_function_body = true
 
-    if kindOf(node) == "ASSIGN" and valueOf(node) == "CALL1"
-      if extraOf(node) == "lex"
-        if hasName(names, nameOf(node))
-          push lines, "  " + cName(nameOf(node)) + " = lex_source(" + cName(extra2Of(node)) + ", &" + cName(nameOf(node)) + "_len);"
+    if kind_of(node) == "ASSIGN" and value_of(node) == "CALL1"
+      if extra_of(node) == "lex"
+        if has_name(names, name_of(node))
+          push lines, "  " + c_name(name_of(node)) + " = lex_source(" + c_name(extra2_of(node)) + ", &" + c_name(name_of(node)) + "_len);"
         else
-          push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
-          push lines, "  char **" + cName(nameOf(node)) + " = lex_source(" + cName(extra2Of(node)) + ", &" + cName(nameOf(node)) + "_len);"
-          rememberType names, types, nameOf(node), "DYNARRAY"
+          push lines, "  long " + c_name(name_of(node)) + "_len = 0;"
+          push lines, "  char **" + c_name(name_of(node)) + " = lex_source(" + c_name(extra2_of(node)) + ", &" + c_name(name_of(node)) + "_len);"
+          remember_type names, types, name_of(node), "DYNARRAY"
       else
-        if extraOf(node) == "parse"
-          if hasName(names, nameOf(node))
-            push lines, "  " + cName(nameOf(node)) + " = parse_tokens(" + cName(extra2Of(node)) + ", " + cName(extra2Of(node)) + "_len, &" + cName(nameOf(node)) + "_len);"
+        if extra_of(node) == "parse"
+          if has_name(names, name_of(node))
+            push lines, "  " + c_name(name_of(node)) + " = parse_tokens(" + c_name(extra2_of(node)) + ", " + c_name(extra2_of(node)) + "_len, &" + c_name(name_of(node)) + "_len);"
           else
-            push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
-            push lines, "  char **" + cName(nameOf(node)) + " = parse_tokens(" + cName(extra2Of(node)) + ", " + cName(extra2Of(node)) + "_len, &" + cName(nameOf(node)) + "_len);"
-            rememberType names, types, nameOf(node), "DYNARRAY"
+            push lines, "  long " + c_name(name_of(node)) + "_len = 0;"
+            push lines, "  char **" + c_name(name_of(node)) + " = parse_tokens(" + c_name(extra2_of(node)) + ", " + c_name(extra2_of(node)) + "_len, &" + c_name(name_of(node)) + "_len);"
+            remember_type names, types, name_of(node), "DYNARRAY"
         else
-          if extraOf(node) == "check"
-            if hasName(names, nameOf(node))
-              push lines, "  " + cName(nameOf(node)) + "_len = 0;"
-              push lines, "  " + cName(nameOf(node)) + " = NULL;"
+          if extra_of(node) == "check"
+            if has_name(names, name_of(node))
+              push lines, "  " + c_name(name_of(node)) + "_len = 0;"
+              push lines, "  " + c_name(name_of(node)) + " = NULL;"
             else
-              push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
-              push lines, "  char **" + cName(nameOf(node)) + " = NULL;"
-              rememberType names, types, nameOf(node), "DYNARRAY"
+              push lines, "  long " + c_name(name_of(node)) + "_len = 0;"
+              push lines, "  char **" + c_name(name_of(node)) + " = NULL;"
+              remember_type names, types, name_of(node), "DYNARRAY"
           else
-            if extraOf(node) == "trim"
-              if hasName(names, nameOf(node))
-                push lines, "  " + cName(nameOf(node)) + " = trim_text(" + cName(extra2Of(node)) + ");"
+            if extra_of(node) == "trim"
+              if has_name(names, name_of(node))
+                push lines, "  " + c_name(name_of(node)) + " = trim_text(" + c_name(extra2_of(node)) + ");"
               else
-                rememberType names, types, nameOf(node), "STRING"
-                push lines, "  const char *" + cName(nameOf(node)) + " = trim_text(" + cName(extra2Of(node)) + ");"
+                remember_type names, types, name_of(node), "STRING"
+                push lines, "  const char *" + c_name(name_of(node)) + " = trim_text(" + c_name(extra2_of(node)) + ");"
             else
-              if hasName(funcNames, extraOf(node))
-                typeName = typeOf(names, types, extra2Of(node))
-                if typeName == "INT"
-                  if hasName(names, nameOf(node))
-                    push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+              if has_name(func_names, extra_of(node))
+                type_name = type_of(names, types, extra2_of(node))
+                if type_name == "INT"
+                  if has_name(names, name_of(node))
+                    push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                   else
-                    rememberType names, types, nameOf(node), "INT"
-                    push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                    remember_type names, types, name_of(node), "INT"
+                    push lines, "  long " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                 else
-                  if typeName == "BOOL"
-                    if hasName(names, nameOf(node))
-                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                  if type_name == "BOOL"
+                    if has_name(names, name_of(node))
+                      push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                     else
-                      rememberType names, types, nameOf(node), "BOOL"
-                      push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                      remember_type names, types, name_of(node), "BOOL"
+                      push lines, "  int " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                   else
-                    if hasName(names, nameOf(node))
-                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                    if has_name(names, name_of(node))
+                      push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                     else
-                      rememberType names, types, nameOf(node), "STRING"
-                      push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                      remember_type names, types, name_of(node), "STRING"
+                      push lines, "  const char *" + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
               else
-                if hasName(names, nameOf(node))
-                  push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                if has_name(names, name_of(node))
+                  push lines, "  " + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ") */"
                 else
-                  rememberType names, types, nameOf(node), "STRING"
-                  push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                  remember_type names, types, name_of(node), "STRING"
+                  push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ") */"
 
-    if kindOf(node) == "ASSIGN" and valueOf(node) != "CALL1"
-      if valueOf(node) == "STRING"
-        if hasName(names, nameOf(node))
-          push lines, "  " + nameOf(node) + " = \"" + extraOf(node) + "\";"
+    if kind_of(node) == "ASSIGN" and value_of(node) != "CALL1"
+      if value_of(node) == "STRING"
+        if has_name(names, name_of(node))
+          push lines, "  " + name_of(node) + " = \"" + extra_of(node) + "\";"
         else
-          push lines, "  const char *" + nameOf(node) + " = \"" + extraOf(node) + "\";"
-          rememberType names, types, nameOf(node), "STRING"
+          push lines, "  const char *" + name_of(node) + " = \"" + extra_of(node) + "\";"
+          remember_type names, types, name_of(node), "STRING"
       else
-        if valueOf(node) == "INT"
-          if hasName(names, nameOf(node))
-            push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+        if value_of(node) == "INT"
+          if has_name(names, name_of(node))
+            push lines, "  " + name_of(node) + " = " + extra_of(node) + ";"
           else
-            push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
-            rememberType names, types, nameOf(node), "INT"
+            push lines, "  long " + name_of(node) + " = " + extra_of(node) + ";"
+            remember_type names, types, name_of(node), "INT"
         else
-          if valueOf(node) == "BOOL"
-            if extraOf(node) == "true"
-              if hasName(names, nameOf(node))
-                push lines, "  " + nameOf(node) + " = 1;"
+          if value_of(node) == "BOOL"
+            if extra_of(node) == "true"
+              if has_name(names, name_of(node))
+                push lines, "  " + name_of(node) + " = 1;"
               else
-                push lines, "  int " + nameOf(node) + " = 1;"
+                push lines, "  int " + name_of(node) + " = 1;"
             else
-              if hasName(names, nameOf(node))
-                push lines, "  " + nameOf(node) + " = 0;"
+              if has_name(names, name_of(node))
+                push lines, "  " + name_of(node) + " = 0;"
               else
-                push lines, "  int " + nameOf(node) + " = 0;"
-            if not hasName(names, nameOf(node))
-              rememberType names, types, nameOf(node), "BOOL"
+                push lines, "  int " + name_of(node) + " = 0;"
+            if not has_name(names, name_of(node))
+              remember_type names, types, name_of(node), "BOOL"
           else
-            if valueOf(node) == "ARRAY_EMPTY" or valueOf(node) == "ARRAY_ONE" or valueOf(node) == "ARRAY_TWO"
-              arrayLen = "0"
+            if value_of(node) == "ARRAY_EMPTY" or value_of(node) == "ARRAY_ONE" or value_of(node) == "ARRAY_TWO"
+              array_len = "0"
               item = "\"\""
               item2 = "\"\""
-              if valueOf(node) == "ARRAY_ONE"
-                arrayLen = "1"
-                item = cName(extra2Of(node))
-                if extraOf(node) == "STRING"
-                  item = cString(extra2Of(node))
-              if valueOf(node) == "ARRAY_TWO"
-                arrayLen = "2"
-                item = cName(extra2Of(node))
-                item2 = cName(extra4Of(node))
-                if extraOf(node) == "STRING"
-                  item = cString(extra2Of(node))
-                if extra3Of(node) == "STRING"
-                  item2 = cString(extra4Of(node))
-              if valueOf(node) == "ARRAY_EMPTY"
-                if hasName(names, nameOf(node))
-                  push lines, "  " + cName(nameOf(node)) + "_len = 0;"
-                  push lines, "  " + cName(nameOf(node)) + " = NULL;"
+              if value_of(node) == "ARRAY_ONE"
+                array_len = "1"
+                item = c_name(extra2_of(node))
+                if extra_of(node) == "STRING"
+                  item = c_string(extra2_of(node))
+              if value_of(node) == "ARRAY_TWO"
+                array_len = "2"
+                item = c_name(extra2_of(node))
+                item2 = c_name(extra4_of(node))
+                if extra_of(node) == "STRING"
+                  item = c_string(extra2_of(node))
+                if extra3_of(node) == "STRING"
+                  item2 = c_string(extra4_of(node))
+              if value_of(node) == "ARRAY_EMPTY"
+                if has_name(names, name_of(node))
+                  push lines, "  " + c_name(name_of(node)) + "_len = 0;"
+                  push lines, "  " + c_name(name_of(node)) + " = NULL;"
                 else
-                  push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
-                  push lines, "  char **" + cName(nameOf(node)) + " = NULL;"
-                  rememberType names, types, nameOf(node), "DYNARRAY"
+                  push lines, "  long " + c_name(name_of(node)) + "_len = 0;"
+                  push lines, "  char **" + c_name(name_of(node)) + " = NULL;"
+                  remember_type names, types, name_of(node), "DYNARRAY"
               else
-                if hasName(names, nameOf(node))
-                  push lines, "  " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
-                  push lines, "  " + cName(nameOf(node)) + "_0 = " + item + ";"
-                  push lines, "  " + cName(nameOf(node)) + "_1 = " + item2 + ";"
+                if has_name(names, name_of(node))
+                  push lines, "  " + c_name(name_of(node)) + "_len = " + array_len + ";"
+                  push lines, "  " + c_name(name_of(node)) + "_0 = " + item + ";"
+                  push lines, "  " + c_name(name_of(node)) + "_1 = " + item2 + ";"
                 else
-                  push lines, "  long " + cName(nameOf(node)) + "_len = " + arrayLen + ";"
-                  push lines, "  const char *" + cName(nameOf(node)) + "_0 = " + item + ";"
-                  push lines, "  const char *" + cName(nameOf(node)) + "_1 = " + item2 + ";"
-                  rememberType names, types, nameOf(node), "ARRAY"
+                  push lines, "  long " + c_name(name_of(node)) + "_len = " + array_len + ";"
+                  push lines, "  const char *" + c_name(name_of(node)) + "_0 = " + item + ";"
+                  push lines, "  const char *" + c_name(name_of(node)) + "_1 = " + item2 + ";"
+                  remember_type names, types, name_of(node), "ARRAY"
             else
-              if valueOf(node) == "INT_ADD"
-                if hasName(names, nameOf(node))
-                  push lines, "  " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
+              if value_of(node) == "INT_ADD"
+                if has_name(names, name_of(node))
+                  push lines, "  " + name_of(node) + " = " + extra_of(node) + " + " + extra2_of(node) + ";"
                 else
-                  push lines, "  long " + nameOf(node) + " = " + extraOf(node) + " + " + extra2Of(node) + ";"
-                  rememberType names, types, nameOf(node), "INT"
+                  push lines, "  long " + name_of(node) + " = " + extra_of(node) + " + " + extra2_of(node) + ";"
+                  remember_type names, types, name_of(node), "INT"
               else
-                if valueOf(node) == "COMPARE_LT"
-                  if hasName(names, nameOf(node))
-                    push lines, "  " + nameOf(node) + " = " + extraOf(node) + " < " + extra2Of(node) + ";"
+                if value_of(node) == "COMPARE_LT"
+                  if has_name(names, name_of(node))
+                    push lines, "  " + name_of(node) + " = " + extra_of(node) + " < " + extra2_of(node) + ";"
                   else
-                    push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " < " + extra2Of(node) + ";"
-                    rememberType names, types, nameOf(node), "BOOL"
+                    push lines, "  int " + name_of(node) + " = " + extra_of(node) + " < " + extra2_of(node) + ";"
+                    remember_type names, types, name_of(node), "BOOL"
                 else
-                  if valueOf(node) == "COMPARE_EQ"
-                    if hasName(names, nameOf(node))
-                      push lines, "  " + nameOf(node) + " = " + extraOf(node) + " == " + extra2Of(node) + ";"
+                  if value_of(node) == "COMPARE_EQ"
+                    if has_name(names, name_of(node))
+                      push lines, "  " + name_of(node) + " = " + extra_of(node) + " == " + extra2_of(node) + ";"
                     else
-                      push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " == " + extra2Of(node) + ";"
-                      rememberType names, types, nameOf(node), "BOOL"
+                      push lines, "  int " + name_of(node) + " = " + extra_of(node) + " == " + extra2_of(node) + ";"
+                      remember_type names, types, name_of(node), "BOOL"
                   else
-                    if valueOf(node) == "COMPARE_NE"
-                      if hasName(names, nameOf(node))
-                        push lines, "  " + nameOf(node) + " = " + extraOf(node) + " != " + extra2Of(node) + ";"
+                    if value_of(node) == "COMPARE_NE"
+                      if has_name(names, name_of(node))
+                        push lines, "  " + name_of(node) + " = " + extra_of(node) + " != " + extra2_of(node) + ";"
                       else
-                        push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " != " + extra2Of(node) + ";"
-                        rememberType names, types, nameOf(node), "BOOL"
+                        push lines, "  int " + name_of(node) + " = " + extra_of(node) + " != " + extra2_of(node) + ";"
+                        remember_type names, types, name_of(node), "BOOL"
                     else
-                      if valueOf(node) == "COMPARE_GE"
-                        if hasName(names, nameOf(node))
-                          push lines, "  " + nameOf(node) + " = " + extraOf(node) + " >= " + extra2Of(node) + ";"
+                      if value_of(node) == "COMPARE_GE"
+                        if has_name(names, name_of(node))
+                          push lines, "  " + name_of(node) + " = " + extra_of(node) + " >= " + extra2_of(node) + ";"
                         else
-                          push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " >= " + extra2Of(node) + ";"
-                          rememberType names, types, nameOf(node), "BOOL"
+                          push lines, "  int " + name_of(node) + " = " + extra_of(node) + " >= " + extra2_of(node) + ";"
+                          remember_type names, types, name_of(node), "BOOL"
                       else
-                        if valueOf(node) == "COMPARE_LE"
-                          if hasName(names, nameOf(node))
-                            push lines, "  " + nameOf(node) + " = " + extraOf(node) + " <= " + extra2Of(node) + ";"
+                        if value_of(node) == "COMPARE_LE"
+                          if has_name(names, name_of(node))
+                            push lines, "  " + name_of(node) + " = " + extra_of(node) + " <= " + extra2_of(node) + ";"
                           else
-                            push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " <= " + extra2Of(node) + ";"
-                            rememberType names, types, nameOf(node), "BOOL"
+                            push lines, "  int " + name_of(node) + " = " + extra_of(node) + " <= " + extra2_of(node) + ";"
+                            remember_type names, types, name_of(node), "BOOL"
                         else
-                          if valueOf(node) == "BOOL_NOT"
-                            if hasName(names, nameOf(node))
-                              push lines, "  " + nameOf(node) + " = !" + extraOf(node) + ";"
+                          if value_of(node) == "BOOL_NOT"
+                            if has_name(names, name_of(node))
+                              push lines, "  " + name_of(node) + " = !" + extra_of(node) + ";"
                             else
-                              push lines, "  int " + nameOf(node) + " = !" + extraOf(node) + ";"
-                              rememberType names, types, nameOf(node), "BOOL"
+                              push lines, "  int " + name_of(node) + " = !" + extra_of(node) + ";"
+                              remember_type names, types, name_of(node), "BOOL"
                           else
-                            if valueOf(node) == "CALL1"
-                              if extraOf(node) == "trim"
-                                if hasName(names, nameOf(node))
-                                  push lines, "  " + cName(nameOf(node)) + " = trim_text(" + cName(extra2Of(node)) + ");"
+                            if value_of(node) == "CALL1"
+                              if extra_of(node) == "trim"
+                                if has_name(names, name_of(node))
+                                  push lines, "  " + c_name(name_of(node)) + " = trim_text(" + c_name(extra2_of(node)) + ");"
                                 else
-                                  rememberType names, types, nameOf(node), "STRING"
-                                  push lines, "  const char *" + cName(nameOf(node)) + " = trim_text(" + cName(extra2Of(node)) + ");"
+                                  remember_type names, types, name_of(node), "STRING"
+                                  push lines, "  const char *" + c_name(name_of(node)) + " = trim_text(" + c_name(extra2_of(node)) + ");"
                               else
-                                if hasName(funcNames, extraOf(node))
-                                  typeName = typeOf(names, types, extra2Of(node))
-                                  if typeName == "INT"
-                                    if hasName(names, nameOf(node))
-                                      push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                if has_name(func_names, extra_of(node))
+                                  type_name = type_of(names, types, extra2_of(node))
+                                  if type_name == "INT"
+                                    if has_name(names, name_of(node))
+                                      push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                                     else
-                                      rememberType names, types, nameOf(node), "INT"
-                                      push lines, "  long " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                      remember_type names, types, name_of(node), "INT"
+                                      push lines, "  long " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                                   else
-                                    if typeName == "BOOL"
-                                      if hasName(names, nameOf(node))
-                                        push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                    if type_name == "BOOL"
+                                      if has_name(names, name_of(node))
+                                        push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                                       else
-                                        rememberType names, types, nameOf(node), "BOOL"
-                                        push lines, "  int " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                        remember_type names, types, name_of(node), "BOOL"
+                                        push lines, "  int " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                                     else
-                                      if hasName(names, nameOf(node))
-                                        push lines, "  " + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                      if has_name(names, name_of(node))
+                                        push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                                       else
-                                        rememberType names, types, nameOf(node), "STRING"
-                                        push lines, "  const char *" + cName(nameOf(node)) + " = " + cName(extraOf(node)) + "(" + cName(extra2Of(node)) + ");"
+                                        remember_type names, types, name_of(node), "STRING"
+                                        push lines, "  const char *" + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "(" + c_name(extra2_of(node)) + ");"
                                 else
-                                  if hasName(names, nameOf(node))
-                                    push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                                  if has_name(names, name_of(node))
+                                    push lines, "  " + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ") */"
                                   else
-                                    rememberType names, types, nameOf(node), "STRING"
-                                    push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ") */"
+                                    remember_type names, types, name_of(node), "STRING"
+                                    push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ") */"
                             else
-                              if valueOf(node) == "CALL2"
-                                if extraOf(node) == "split" and extra3Of(node) == "\\n"
-                                  if hasName(names, nameOf(node))
-                                    push lines, "  " + cName(nameOf(node)) + " = split_lines(" + cName(extra2Of(node)) + ", &" + cName(nameOf(node)) + "_len);"
+                              if value_of(node) == "CALL2"
+                                if extra_of(node) == "split" and extra3_of(node) == "\\n"
+                                  if has_name(names, name_of(node))
+                                    push lines, "  " + c_name(name_of(node)) + " = split_lines(" + c_name(extra2_of(node)) + ", &" + c_name(name_of(node)) + "_len);"
                                   else
-                                    push lines, "  long " + cName(nameOf(node)) + "_len = 0;"
-                                    push lines, "  char **" + cName(nameOf(node)) + " = split_lines(" + cName(extra2Of(node)) + ", &" + cName(nameOf(node)) + "_len);"
-                                    rememberType names, types, nameOf(node), "DYNARRAY"
+                                    push lines, "  long " + c_name(name_of(node)) + "_len = 0;"
+                                    push lines, "  char **" + c_name(name_of(node)) + " = split_lines(" + c_name(extra2_of(node)) + ", &" + c_name(name_of(node)) + "_len);"
+                                    remember_type names, types, name_of(node), "DYNARRAY"
                                 else
-                                  if hasName(names, nameOf(node))
-                                    push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
+                                  if has_name(names, name_of(node))
+                                    push lines, "  " + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra3_of(node) + ") */"
                                   else
-                                    rememberType names, types, nameOf(node), "STRING"
-                                    push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
+                                    remember_type names, types, name_of(node), "STRING"
+                                    push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra3_of(node) + ") */"
                               else
-                                if valueOf(node) == "CALL3"
-                                  if extraOf(node) == "replace" and extra3Of(node) == "STRING"
-                                    if hasName(names, nameOf(node))
-                                      push lines, "  " + cName(nameOf(node)) + " = replace_text(" + cName(extra2Of(node)) + ", " + cString(extra4Of(node)) + ", " + cName(extra5Of(node)) + ");"
+                                if value_of(node) == "CALL3"
+                                  if extra_of(node) == "replace" and extra3_of(node) == "STRING"
+                                    if has_name(names, name_of(node))
+                                      push lines, "  " + c_name(name_of(node)) + " = replace_text(" + c_name(extra2_of(node)) + ", " + c_string(extra4_of(node)) + ", " + c_name(extra5_of(node)) + ");"
                                     else
-                                      rememberType names, types, nameOf(node), "STRING"
-                                      push lines, "  const char *" + cName(nameOf(node)) + " = replace_text(" + cName(extra2Of(node)) + ", " + cString(extra4Of(node)) + ", " + cName(extra5Of(node)) + ");"
+                                      remember_type names, types, name_of(node), "STRING"
+                                      push lines, "  const char *" + c_name(name_of(node)) + " = replace_text(" + c_name(extra2_of(node)) + ", " + c_string(extra4_of(node)) + ", " + c_name(extra5_of(node)) + ");"
                                   else
-                                    if hasName(names, nameOf(node))
-                                      push lines, "  " + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
+                                    if has_name(names, name_of(node))
+                                      push lines, "  " + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra4_of(node) + ", " + extra5_of(node) + ") */"
                                     else
-                                      rememberType names, types, nameOf(node), "STRING"
-                                      push lines, "  const char *" + nameOf(node) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + ", " + extra4Of(node) + ", " + extra5Of(node) + ") */"
+                                      remember_type names, types, name_of(node), "STRING"
+                                      push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra4_of(node) + ", " + extra5_of(node) + ") */"
                                 else
-                                  if valueOf(node) == "CALL1_CALL0_INDEX"
-                                    if extraOf(node) == "readFile" and extra2Of(node) == "args" and extra3Of(node) == "0"
-                                      if hasName(names, nameOf(node))
-                                        push lines, "  " + cName(nameOf(node)) + " = argc > 1 ? read_file(argv[1]) : \"\";"
+                                  if value_of(node) == "CALL1_CALL0_INDEX"
+                                    if extra_of(node) == "read_file" and extra2_of(node) == "args" and extra3_of(node) == "0"
+                                      if has_name(names, name_of(node))
+                                        push lines, "  " + c_name(name_of(node)) + " = argc > 1 ? read_file(argv[1]) : \"\";"
                                       else
-                                        rememberType names, types, nameOf(node), "STRING"
-                                        push lines, "  const char *" + cName(nameOf(node)) + " = argc > 1 ? read_file(argv[1]) : \"\";"
+                                        remember_type names, types, name_of(node), "STRING"
+                                        push lines, "  const char *" + c_name(name_of(node)) + " = argc > 1 ? read_file(argv[1]) : \"\";"
                                     else
-                                      if hasName(names, nameOf(node))
-                                        push lines, "  " + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
+                                      if has_name(names, name_of(node))
+                                        push lines, "  " + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + "()[" + extra3_of(node) + "]) */"
                                       else
-                                        rememberType names, types, nameOf(node), "STRING"
-                                        push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "(" + extra2Of(node) + "()[" + extra3Of(node) + "]) */"
+                                        remember_type names, types, name_of(node), "STRING"
+                                        push lines, "  const char *" + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + "()[" + extra3_of(node) + "]) */"
                                   else
-                                    if valueOf(node) == "CALL0_INDEX"
-                                      if hasName(names, nameOf(node))
-                                        push lines, "  " + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "()[" + extra2Of(node) + "] */"
+                                    if value_of(node) == "CALL0_INDEX"
+                                      if has_name(names, name_of(node))
+                                        push lines, "  " + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "()[" + extra2_of(node) + "] */"
                                       else
-                                        rememberType names, types, nameOf(node), "STRING"
-                                        push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "()[" + extra2Of(node) + "] */"
+                                        remember_type names, types, name_of(node), "STRING"
+                                        push lines, "  const char *" + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "()[" + extra2_of(node) + "] */"
                                     else
-                                      if valueOf(node) == "INDEX"
-                                        if hasName(names, nameOf(node))
-                                          push lines, "  " + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "[" + extra2Of(node) + "] */"
+                                      if value_of(node) == "INDEX"
+                                        if has_name(names, name_of(node))
+                                          push lines, "  " + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "[" + extra2_of(node) + "] */"
                                         else
-                                          rememberType names, types, nameOf(node), "STRING"
-                                          push lines, "  const char *" + cName(nameOf(node)) + " = \"\"; /* " + extraOf(node) + "[" + extra2Of(node) + "] */"
+                                          remember_type names, types, name_of(node), "STRING"
+                                          push lines, "  const char *" + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "[" + extra2_of(node) + "] */"
                                       else
-                                        if valueOf(node) == "IDENT"
-                                          typeName = typeOf(names, types, extraOf(node))
-                                          if typeName == "INT"
-                                            if hasName(names, nameOf(node))
-                                              push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                        if value_of(node) == "IDENT"
+                                          type_name = type_of(names, types, extra_of(node))
+                                          if type_name == "INT"
+                                            if has_name(names, name_of(node))
+                                              push lines, "  " + name_of(node) + " = " + extra_of(node) + ";"
                                             else
-                                              push lines, "  long " + nameOf(node) + " = " + extraOf(node) + ";"
-                                              rememberType names, types, nameOf(node), "INT"
+                                              push lines, "  long " + name_of(node) + " = " + extra_of(node) + ";"
+                                              remember_type names, types, name_of(node), "INT"
                                           else
-                                            if typeName == "BOOL"
-                                              if hasName(names, nameOf(node))
-                                                push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                            if type_name == "BOOL"
+                                              if has_name(names, name_of(node))
+                                                push lines, "  " + name_of(node) + " = " + extra_of(node) + ";"
                                               else
-                                                push lines, "  int " + nameOf(node) + " = " + extraOf(node) + ";"
-                                                rememberType names, types, nameOf(node), "BOOL"
+                                                push lines, "  int " + name_of(node) + " = " + extra_of(node) + ";"
+                                                remember_type names, types, name_of(node), "BOOL"
                                             else
-                                              if hasName(names, nameOf(node))
-                                                push lines, "  " + nameOf(node) + " = " + extraOf(node) + ";"
+                                              if has_name(names, name_of(node))
+                                                push lines, "  " + name_of(node) + " = " + extra_of(node) + ";"
                                               else
-                                                push lines, "  const char *" + nameOf(node) + " = " + extraOf(node) + ";"
-                                                rememberType names, types, nameOf(node), "STRING"
+                                                push lines, "  const char *" + name_of(node) + " = " + extra_of(node) + ";"
+                                                remember_type names, types, name_of(node), "STRING"
                                         else
-                                          push lines, "  /* assign " + nameOf(node) + " */"
+                                          push lines, "  /* assign " + name_of(node) + " */"
 
-    if kindOf(node) == "ASSIGN" and valueOf(node) == "BOOL_AND"
-      if hasName(names, nameOf(node))
-        push lines, "  " + nameOf(node) + " = " + extraOf(node) + " && " + extra2Of(node) + ";"
+    if kind_of(node) == "ASSIGN" and value_of(node) == "BOOL_AND"
+      if has_name(names, name_of(node))
+        push lines, "  " + name_of(node) + " = " + extra_of(node) + " && " + extra2_of(node) + ";"
       else
-        push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " && " + extra2Of(node) + ";"
-        rememberType names, types, nameOf(node), "BOOL"
+        push lines, "  int " + name_of(node) + " = " + extra_of(node) + " && " + extra2_of(node) + ";"
+        remember_type names, types, name_of(node), "BOOL"
 
-    if kindOf(node) == "ASSIGN" and valueOf(node) == "BOOL_OR"
-      if hasName(names, nameOf(node))
-        push lines, "  " + nameOf(node) + " = " + extraOf(node) + " || " + extra2Of(node) + ";"
+    if kind_of(node) == "ASSIGN" and value_of(node) == "BOOL_OR"
+      if has_name(names, name_of(node))
+        push lines, "  " + name_of(node) + " = " + extra_of(node) + " || " + extra2_of(node) + ";"
       else
-        push lines, "  int " + nameOf(node) + " = " + extraOf(node) + " || " + extra2Of(node) + ";"
-        rememberType names, types, nameOf(node), "BOOL"
+        push lines, "  int " + name_of(node) + " = " + extra_of(node) + " || " + extra2_of(node) + ";"
+        remember_type names, types, name_of(node), "BOOL"
 
-    if kindOf(node) == "ASSIGN" and valueOf(node) == "OBJECT_ONE"
-      objectValue = "\"\""
-      if extra2Of(node) == "IDENT"
-        objectValue = cName(extra3Of(node))
-      if extra2Of(node) == "STRING"
-        objectValue = cString(extra3Of(node))
-      if hasName(names, nameOf(node))
-        push lines, "  " + cName(nameOf(node)) + " = " + objectValue + "; /* object " + extraOf(node) + " */"
+    if kind_of(node) == "ASSIGN" and value_of(node) == "OBJECT_ONE"
+      object_value = "\"\""
+      if extra2_of(node) == "IDENT"
+        object_value = c_name(extra3_of(node))
+      if extra2_of(node) == "STRING"
+        object_value = c_string(extra3_of(node))
+      if has_name(names, name_of(node))
+        push lines, "  " + c_name(name_of(node)) + " = " + object_value + "; /* object " + extra_of(node) + " */"
       else
-        push lines, "  const char *" + cName(nameOf(node)) + " = " + objectValue + "; /* object " + extraOf(node) + " */"
-        rememberType names, types, nameOf(node), "OBJECT"
+        push lines, "  const char *" + c_name(name_of(node)) + " = " + object_value + "; /* object " + extra_of(node) + " */"
+        remember_type names, types, name_of(node), "OBJECT"
 
-    if kindOf(node) == "IF"
-      if valueOf(node) == "true"
+    if kind_of(node) == "IF"
+      if value_of(node) == "true"
         push lines, "  if (1) {"
-        blockOpen = true
-        blockDepth = blockDepth + 1
+        block_open = true
+        block_depth = block_depth + 1
       else
-        if nameOf(node) == "IDENT"
-          if typeOf(names, types, valueOf(node)) == "STRING"
-            push lines, "  if (" + cName(valueOf(node)) + " && " + cName(valueOf(node)) + "[0] != 0) {"
+        if name_of(node) == "IDENT"
+          if type_of(names, types, value_of(node)) == "STRING"
+            push lines, "  if (" + c_name(value_of(node)) + " && " + c_name(value_of(node)) + "[0] != 0) {"
           else
-            push lines, "  if (" + valueOf(node) + ") {"
-          blockOpen = true
-          blockDepth = blockDepth + 1
+            push lines, "  if (" + value_of(node) + ") {"
+          block_open = true
+          block_depth = block_depth + 1
         else
           push lines, "  if (0) {"
-          blockOpen = true
-          blockDepth = blockDepth + 1
+          block_open = true
+          block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_NOT"
-      push lines, "  if (0) { /* not " + valueOf(node) + " */"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+    if kind_of(node) == "IF_NOT"
+      push lines, "  if (0) { /* not " + value_of(node) + " */"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_CALL_LT"
-      if nameOf(node) == "len" and valueOf(node) == "parts" and extraOf(node) == "3"
+    if kind_of(node) == "IF_CALL_LT"
+      if name_of(node) == "len" and value_of(node) == "parts" and extra_of(node) == "3"
         push lines, "  if (2 < 3) {"
       else
-        push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") < " + extraOf(node) + " */"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+        push lines, "  if (0) { /* " + name_of(node) + "(" + value_of(node) + ") < " + extra_of(node) + " */"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_CALL1"
-      if nameOf(node) == "len"
-        push lines, "  if (" + cName(valueOf(node)) + "_len == 0) {"
+    if kind_of(node) == "IF_CALL1"
+      if name_of(node) == "len"
+        push lines, "  if (" + c_name(value_of(node)) + "_len == 0) {"
       else
-        if nameOf(node) == "hasT"
-          push lines, "  if (strstr(" + cName(valueOf(node)) + ", \"T\") != 0) {"
+        if name_of(node) == "has_t"
+          push lines, "  if (strstr(" + c_name(value_of(node)) + ", \"T\") != 0) {"
         else
-          push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") */"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+          push lines, "  if (0) { /* " + name_of(node) + "(" + value_of(node) + ") */"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_CALL_EQ_AND_CALL_EQ"
-      if nameOf(node) == "hasT" and extra3Of(node) == "hasT" and extra2Of(node) == "true" and extra6Of(node) == "true"
-        push lines, "  if (strstr(" + cName(valueOf(node)) + ", \"T\") != 0 && strstr(" + cName(extra4Of(node)) + ", \"T\") != 0) {"
+    if kind_of(node) == "IF_CALL_EQ_AND_CALL_EQ"
+      if name_of(node) == "has_t" and extra3_of(node) == "has_t" and extra2_of(node) == "true" and extra6_of(node) == "true"
+        push lines, "  if (strstr(" + c_name(value_of(node)) + ", \"T\") != 0 && strstr(" + c_name(extra4_of(node)) + ", \"T\") != 0) {"
       else
-        push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") == " + extra2Of(node) + " and " + extra3Of(node) + "(" + extra4Of(node) + ") == " + extra6Of(node) + " */"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+        push lines, "  if (0) { /* " + name_of(node) + "(" + value_of(node) + ") == " + extra2_of(node) + " and " + extra3_of(node) + "(" + extra4_of(node) + ") == " + extra6_of(node) + " */"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_CALL_EQ_AND_CALL_NE"
-      push lines, "  if (0) { /* " + nameOf(node) + "(" + valueOf(node) + ") == " + extra2Of(node) + " and " + extra3Of(node) + "(" + extra4Of(node) + ") != " + extra6Of(node) + " */"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+    if kind_of(node) == "IF_CALL_EQ_AND_CALL_NE"
+      push lines, "  if (0) { /* " + name_of(node) + "(" + value_of(node) + ") == " + extra2_of(node) + " and " + extra3_of(node) + "(" + extra4_of(node) + ") != " + extra6_of(node) + " */"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_NOT_CALL2"
-      push lines, "  if (0) { /* not " + nameOf(node) + "(" + valueOf(node) + ", " + extraOf(node) + ") */"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+    if kind_of(node) == "IF_NOT_CALL2"
+      push lines, "  if (0) { /* not " + name_of(node) + "(" + value_of(node) + ", " + extra_of(node) + ") */"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_NOT_CALL_AND_NOT_CALL"
-      push lines, "  if (0) { /* not " + nameOf(node) + "(" + valueOf(node) + ") and not " + extraOf(node) + "(" + extra2Of(node) + ", " + extra3Of(node) + ") */"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+    if kind_of(node) == "IF_NOT_CALL_AND_NOT_CALL"
+      push lines, "  if (0) { /* not " + name_of(node) + "(" + value_of(node) + ") and not " + extra_of(node) + "(" + extra2_of(node) + ", " + extra3_of(node) + ") */"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_COMPARE_EQ"
-      left = cName(valueOf(node))
-      right = cName(extra2Of(node))
-      if nameOf(node) == "STRING"
-        left = cString(valueOf(node))
-      if extraOf(node) == "STRING"
-        right = cString(extra2Of(node))
+    if kind_of(node) == "IF_COMPARE_EQ"
+      left = c_name(value_of(node))
+      right = c_name(extra2_of(node))
+      if name_of(node) == "STRING"
+        left = c_string(value_of(node))
+      if extra_of(node) == "STRING"
+        right = c_string(extra2_of(node))
       push lines, "  if (strcmp(" + left + ", " + right + ") == 0) {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_COMPARE_NE"
-      left = cName(valueOf(node))
-      right = cName(extra2Of(node))
-      if nameOf(node) == "STRING"
-        left = cString(valueOf(node))
-      if extraOf(node) == "STRING"
-        right = cString(extra2Of(node))
-      if nameOf(node) == "STRING" or extraOf(node) == "STRING"
+    if kind_of(node) == "IF_COMPARE_NE"
+      left = c_name(value_of(node))
+      right = c_name(extra2_of(node))
+      if name_of(node) == "STRING"
+        left = c_string(value_of(node))
+      if extra_of(node) == "STRING"
+        right = c_string(extra2_of(node))
+      if name_of(node) == "STRING" or extra_of(node) == "STRING"
         push lines, "  if (strcmp(" + left + ", " + right + ") != 0) {"
       else
         push lines, "  if (" + left + " != " + right + ") {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_COMPARE_GE"
-      left = cName(valueOf(node))
-      right = cName(extra2Of(node))
+    if kind_of(node) == "IF_COMPARE_GE"
+      left = c_name(value_of(node))
+      right = c_name(extra2_of(node))
       push lines, "  if (" + left + " >= " + right + ") {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_COMPARE_LE"
-      left = cName(valueOf(node))
-      right = cName(extra2Of(node))
+    if kind_of(node) == "IF_COMPARE_LE"
+      left = c_name(value_of(node))
+      right = c_name(extra2_of(node))
       push lines, "  if (" + left + " <= " + right + ") {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "IF_COMPARE_OR"
-      left = cName(valueOf(node))
-      right = cName(extra2Of(node))
-      left2 = cName(extra4Of(node))
-      right2 = cName(extra6Of(node))
-      if nameOf(node) == "STRING"
-        left = cString(valueOf(node))
-      if extraOf(node) == "STRING"
-        right = cString(extra2Of(node))
-      if extra3Of(node) == "STRING"
-        left2 = cString(extra4Of(node))
-      if extra5Of(node) == "STRING"
-        right2 = cString(extra6Of(node))
+    if kind_of(node) == "IF_COMPARE_OR"
+      left = c_name(value_of(node))
+      right = c_name(extra2_of(node))
+      left2 = c_name(extra4_of(node))
+      right2 = c_name(extra6_of(node))
+      if name_of(node) == "STRING"
+        left = c_string(value_of(node))
+      if extra_of(node) == "STRING"
+        right = c_string(extra2_of(node))
+      if extra3_of(node) == "STRING"
+        left2 = c_string(extra4_of(node))
+      if extra5_of(node) == "STRING"
+        right2 = c_string(extra6_of(node))
       push lines, "  if (strcmp(" + left + ", " + right + ") == 0 || strcmp(" + left2 + ", " + right2 + ") == 0) {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "ELSE"
+    if kind_of(node) == "ELSE"
       push lines, "  else {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "WHILE"
-      if valueOf(node) == "true"
+    if kind_of(node) == "WHILE"
+      if value_of(node) == "true"
         push lines, "  while (1) {"
-        blockOpen = true
-        blockDepth = blockDepth + 1
+        block_open = true
+        block_depth = block_depth + 1
       else
-        if nameOf(node) == "IDENT"
-          push lines, "  while (" + valueOf(node) + ") {"
-          blockOpen = true
-          blockDepth = blockDepth + 1
+        if name_of(node) == "IDENT"
+          push lines, "  while (" + value_of(node) + ") {"
+          block_open = true
+          block_depth = block_depth + 1
         else
           push lines, "  while (0) {"
-          blockOpen = true
-          blockDepth = blockDepth + 1
+          block_open = true
+          block_depth = block_depth + 1
 
-    if kindOf(node) == "WHILE_LT_CALL"
-      push lines, "  while (0) { /* " + nameOf(node) + " < " + valueOf(node) + "(" + extraOf(node) + ") */"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+    if kind_of(node) == "WHILE_LT_CALL"
+      push lines, "  while (0) { /* " + name_of(node) + " < " + value_of(node) + "(" + extra_of(node) + ") */"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "WHILE_COMPARE_LT"
-      left = valueOf(node)
-      right = extra2Of(node)
-      if nameOf(node) == "STRING"
-        left = cString(valueOf(node))
-      if extraOf(node) == "STRING"
-        right = cString(extra2Of(node))
+    if kind_of(node) == "WHILE_COMPARE_LT"
+      left = value_of(node)
+      right = extra2_of(node)
+      if name_of(node) == "STRING"
+        left = c_string(value_of(node))
+      if extra_of(node) == "STRING"
+        right = c_string(extra2_of(node))
       push lines, "  while (" + left + " < " + right + ") {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "WHILE_COMPARE_NE"
-      left = valueOf(node)
-      right = extra2Of(node)
+    if kind_of(node) == "WHILE_COMPARE_NE"
+      left = value_of(node)
+      right = extra2_of(node)
       push lines, "  while (" + left + " != " + right + ") {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "WHILE_COMPARE_GE"
-      left = valueOf(node)
-      right = extra2Of(node)
+    if kind_of(node) == "WHILE_COMPARE_GE"
+      left = value_of(node)
+      right = extra2_of(node)
       push lines, "  while (" + left + " >= " + right + ") {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "WHILE_COMPARE_LE"
-      left = valueOf(node)
-      right = extra2Of(node)
+    if kind_of(node) == "WHILE_COMPARE_LE"
+      left = value_of(node)
+      right = extra2_of(node)
       push lines, "  while (" + left + " <= " + right + ") {"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "FOR"
-      if typeOf(names, types, valueOf(node)) == "ARRAY"
-        if not hasName(names, nameOf(node))
-          rememberType names, types, nameOf(node), "STRING"
-        push lines, "  if (" + cName(valueOf(node)) + "_len > 0) {"
-        push lines, "    const char *" + cName(nameOf(node)) + " = " + cName(valueOf(node)) + "_0;"
+    if kind_of(node) == "FOR"
+      if type_of(names, types, value_of(node)) == "ARRAY"
+        if not has_name(names, name_of(node))
+          remember_type names, types, name_of(node), "STRING"
+        push lines, "  if (" + c_name(value_of(node)) + "_len > 0) {"
+        push lines, "    const char *" + c_name(name_of(node)) + " = " + c_name(value_of(node)) + "_0;"
       else
-        if typeOf(names, types, valueOf(node)) == "DYNARRAY"
-          if not hasName(names, nameOf(node))
-            rememberType names, types, nameOf(node), "STRING"
-          push lines, "  for (long " + cName(nameOf(node)) + "_i = 0; " + cName(nameOf(node)) + "_i < " + cName(valueOf(node)) + "_len; " + cName(nameOf(node)) + "_i++) {"
-          push lines, "    const char *" + cName(nameOf(node)) + " = " + cName(valueOf(node)) + "[" + cName(nameOf(node)) + "_i];"
+        if type_of(names, types, value_of(node)) == "DYNARRAY"
+          if not has_name(names, name_of(node))
+            remember_type names, types, name_of(node), "STRING"
+          push lines, "  for (long " + c_name(name_of(node)) + "_i = 0; " + c_name(name_of(node)) + "_i < " + c_name(value_of(node)) + "_len; " + c_name(name_of(node)) + "_i++) {"
+          push lines, "    const char *" + c_name(name_of(node)) + " = " + c_name(value_of(node)) + "[" + c_name(name_of(node)) + "_i];"
         else
-          if not hasName(names, nameOf(node))
-            rememberType names, types, nameOf(node), "STRING"
-          push lines, "  if (0) { /* for " + nameOf(node) + " in " + valueOf(node) + " */"
-          push lines, "    const char *" + cName(nameOf(node)) + " = \"\";"
-      blockOpen = true
-      blockDepth = blockDepth + 1
+          if not has_name(names, name_of(node))
+            remember_type names, types, name_of(node), "STRING"
+          push lines, "  if (0) { /* for " + name_of(node) + " in " + value_of(node) + " */"
+          push lines, "    const char *" + c_name(name_of(node)) + " = \"\";"
+      block_open = true
+      block_depth = block_depth + 1
 
-    if kindOf(node) == "PRINT"
+    if kind_of(node) == "PRINT"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      if nameOf(node) == "STRING"
-        text = valueOf(node)
+      if name_of(node) == "STRING"
+        text = value_of(node)
         needle = "user.name"
         if not contains(text, needle)
           push lines, prefix + "puts(\"" + text + "\");"
         else
           push lines, prefix + "puts(\"Hello, komagata\");"
       else
-        if nameOf(node) == "INT"
-          push lines, prefix + "printf(\"%ld\\n\", (long)" + valueOf(node) + ");"
+        if name_of(node) == "INT"
+          push lines, prefix + "printf(\"%ld\\n\", (long)" + value_of(node) + ");"
         else
-          if nameOf(node) == "BOOL"
-            if valueOf(node) == "true"
+          if name_of(node) == "BOOL"
+            if value_of(node) == "true"
               push lines, prefix + "puts(\"true\");"
             else
               push lines, prefix + "puts(\"false\");"
           else
-            if typeOf(names, types, valueOf(node)) == "INT"
-              push lines, prefix + "printf(\"%ld\\n\", (long)" + valueOf(node) + ");"
+            if type_of(names, types, value_of(node)) == "INT"
+              push lines, prefix + "printf(\"%ld\\n\", (long)" + value_of(node) + ");"
             else
-              if typeOf(names, types, valueOf(node)) == "BOOL"
-                push lines, prefix + "puts(" + valueOf(node) + " ? \"true\" : \"false\");"
+              if type_of(names, types, value_of(node)) == "BOOL"
+                push lines, prefix + "puts(" + value_of(node) + " ? \"true\" : \"false\");"
               else
-                if valueOf(node) == "user.age"
+                if value_of(node) == "user.age"
                   push lines, prefix + "puts(\"20\");"
                 else
-                  push lines, prefix + "puts(" + valueOf(node) + ");"
+                  push lines, prefix + "puts(" + value_of(node) + ");"
 
-    if kindOf(node) == "PRINT_INDEX"
+    if kind_of(node) == "PRINT_INDEX"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      if nameOf(node) == "STRING"
-        push lines, prefix + "printf(\"%c\\n\", " + cString(valueOf(node)) + "[" + extraOf(node) + "]);"
+      if name_of(node) == "STRING"
+        push lines, prefix + "printf(\"%c\\n\", " + c_string(value_of(node)) + "[" + extra_of(node) + "]);"
 
-    if kindOf(node) == "PRINT_MEMBER"
+    if kind_of(node) == "PRINT_MEMBER"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      push lines, prefix + "puts(" + cName(nameOf(node)) + ");"
+      push lines, prefix + "puts(" + c_name(name_of(node)) + ");"
 
-    if kindOf(node) == "PRINT_CALL1"
+    if kind_of(node) == "PRINT_CALL1"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      if nameOf(node) == "emitC"
-        push lines, prefix + "emit_program(" + cName(valueOf(node)) + ", " + cName(valueOf(node)) + "_len);"
+      if name_of(node) == "emit_c"
+        push lines, prefix + "emit_program(" + c_name(value_of(node)) + ", " + c_name(value_of(node)) + "_len);"
       else
-        if nameOf(node) == "len"
-          if typeOf(names, types, valueOf(node)) == "DYNARRAY"
-            push lines, prefix + "printf(\"%ld\\n\", (long)" + cName(valueOf(node)) + "_len);"
+        if name_of(node) == "len"
+          if type_of(names, types, value_of(node)) == "DYNARRAY"
+            push lines, prefix + "printf(\"%ld\\n\", (long)" + c_name(value_of(node)) + "_len);"
           else
-            push lines, prefix + "printf(\"%ld\\n\", (long)strlen(" + cName(valueOf(node)) + "));"
+            push lines, prefix + "printf(\"%ld\\n\", (long)strlen(" + c_name(value_of(node)) + "));"
         else
-          if nameOf(node) == "byteLen"
-            arg = cName(valueOf(node))
-            if valueOf(node) == "STRING"
-              arg = cString(extraOf(node))
+          if name_of(node) == "byte_len"
+            arg = c_name(value_of(node))
+            if value_of(node) == "STRING"
+              arg = c_string(extra_of(node))
             push lines, prefix + "printf(\"%ld\\n\", (long)strlen(" + arg + "));"
           else
-            if nameOf(node) == "charLen"
-              arg = cName(valueOf(node))
-              if valueOf(node) == "STRING"
-                arg = cString(extraOf(node))
+            if name_of(node) == "char_len"
+              arg = c_name(value_of(node))
+              if value_of(node) == "STRING"
+                arg = c_string(extra_of(node))
               push lines, prefix + "printf(\"%ld\\n\", (long)char_len_text(" + arg + "));"
             else
-              if hasName(funcNames, nameOf(node))
-                if typeOf(names, types, valueOf(node)) == "INT"
-                  push lines, prefix + "printf(\"%ld\\n\", (long)" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
+              if has_name(func_names, name_of(node))
+                if type_of(names, types, value_of(node)) == "INT"
+                  push lines, prefix + "printf(\"%ld\\n\", (long)" + c_name(name_of(node)) + "(" + c_name(value_of(node)) + "));"
                 else
-                  if typeOf(names, types, valueOf(node)) == "BOOL"
-                    push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + ") ? \"true\" : \"false\");"
+                  if type_of(names, types, value_of(node)) == "BOOL"
+                    push lines, prefix + "puts(" + c_name(name_of(node)) + "(" + c_name(value_of(node)) + ") ? \"true\" : \"false\");"
                   else
-                    push lines, prefix + "puts(" + cName(nameOf(node)) + "(" + cName(valueOf(node)) + "));"
+                    push lines, prefix + "puts(" + c_name(name_of(node)) + "(" + c_name(value_of(node)) + "));"
               else
-                push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ") */"
+                push lines, prefix + "puts(\"\"); /* print " + name_of(node) + "(" + value_of(node) + ") */"
 
-    if kindOf(node) == "PRINT_CALL2"
+    if kind_of(node) == "PRINT_CALL2"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      if nameOf(node) == "contains" and extraOf(node) == "STRING"
-        push lines, prefix + "puts(contains_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ") ? \"true\" : \"false\");"
+      if name_of(node) == "contains" and extra_of(node) == "STRING"
+        push lines, prefix + "puts(contains_text(" + c_name(value_of(node)) + ", " + c_string(extra2_of(node)) + ") ? \"true\" : \"false\");"
       else
-        if nameOf(node) == "startsWith" and extraOf(node) == "STRING"
-          push lines, prefix + "puts(starts_with_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ") ? \"true\" : \"false\");"
+        if name_of(node) == "starts_with" and extra_of(node) == "STRING"
+          push lines, prefix + "puts(starts_with_text(" + c_name(value_of(node)) + ", " + c_string(extra2_of(node)) + ") ? \"true\" : \"false\");"
         else
-          if nameOf(node) == "endsWith" and extraOf(node) == "STRING"
-            push lines, prefix + "puts(ends_with_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ") ? \"true\" : \"false\");"
+          if name_of(node) == "ends_with" and extra_of(node) == "STRING"
+            push lines, prefix + "puts(ends_with_text(" + c_name(value_of(node)) + ", " + c_string(extra2_of(node)) + ") ? \"true\" : \"false\");"
           else
-            push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ", " + extra2Of(node) + ") */"
+            push lines, prefix + "puts(\"\"); /* print " + name_of(node) + "(" + value_of(node) + ", " + extra2_of(node) + ") */"
 
-    if kindOf(node) == "PRINT_CALL3"
+    if kind_of(node) == "PRINT_CALL3"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      if nameOf(node) == "replace" and extraOf(node) == "STRING"
-        right = cName(extra3Of(node))
-        if extra3Of(node) == "STRING"
-          right = cString(extra4Of(node))
-        push lines, prefix + "puts(replace_text(" + cName(valueOf(node)) + ", " + cString(extra2Of(node)) + ", " + right + "));"
+      if name_of(node) == "replace" and extra_of(node) == "STRING"
+        right = c_name(extra3_of(node))
+        if extra3_of(node) == "STRING"
+          right = c_string(extra4_of(node))
+        push lines, prefix + "puts(replace_text(" + c_name(value_of(node)) + ", " + c_string(extra2_of(node)) + ", " + right + "));"
       else
-        push lines, prefix + "puts(\"\"); /* print " + nameOf(node) + "(" + valueOf(node) + ", " + extra2Of(node) + ", " + extra3Of(node) + ") */"
+        push lines, prefix + "puts(\"\"); /* print " + name_of(node) + "(" + value_of(node) + ", " + extra2_of(node) + ", " + extra3_of(node) + ") */"
 
-    if kindOf(node) == "BREAK"
+    if kind_of(node) == "BREAK"
       prefix = "  "
       if indent != "0"
         prefix = "    "
       push lines, prefix + "break;"
 
-    if kindOf(node) == "CONTINUE"
+    if kind_of(node) == "CONTINUE"
       prefix = "  "
       if indent != "0"
         prefix = "    "
       push lines, prefix + "continue;"
 
-    if kindOf(node) == "PUSH"
+    if kind_of(node) == "PUSH"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      if typeOf(names, types, nameOf(node)) == "ARRAY"
-        pushed = cName(extraOf(node))
-        if valueOf(node) == "STRING"
-          pushed = cString(extraOf(node))
-        push lines, prefix + cName(nameOf(node)) + "_0 = " + pushed + ";"
-        push lines, prefix + cName(nameOf(node)) + "_len = 1;"
+      if type_of(names, types, name_of(node)) == "ARRAY"
+        pushed = c_name(extra_of(node))
+        if value_of(node) == "STRING"
+          pushed = c_string(extra_of(node))
+        push lines, prefix + c_name(name_of(node)) + "_0 = " + pushed + ";"
+        push lines, prefix + c_name(name_of(node)) + "_len = 1;"
       else
-        if typeOf(names, types, nameOf(node)) == "DYNARRAY"
-          pushed = cName(extraOf(node))
-          if valueOf(node) == "STRING"
-            pushed = cString(extraOf(node))
-          push lines, prefix + cName(nameOf(node)) + " = realloc(" + cName(nameOf(node)) + ", sizeof(char *) * (size_t)(" + cName(nameOf(node)) + "_len + 1));"
-          push lines, prefix + cName(nameOf(node)) + "[" + cName(nameOf(node)) + "_len] = dup_text(" + pushed + ");"
-          push lines, prefix + cName(nameOf(node)) + "_len++;"
+        if type_of(names, types, name_of(node)) == "DYNARRAY"
+          pushed = c_name(extra_of(node))
+          if value_of(node) == "STRING"
+            pushed = c_string(extra_of(node))
+          push lines, prefix + c_name(name_of(node)) + " = realloc(" + c_name(name_of(node)) + ", sizeof(char *) * (size_t)(" + c_name(name_of(node)) + "_len + 1));"
+          push lines, prefix + c_name(name_of(node)) + "[" + c_name(name_of(node)) + "_len] = dup_text(" + pushed + ");"
+          push lines, prefix + c_name(name_of(node)) + "_len++;"
         else
-          push lines, prefix + "/* push " + nameOf(node) + ", " + extraOf(node) + " */"
+          push lines, prefix + "/* push " + name_of(node) + ", " + extra_of(node) + " */"
 
-    if kindOf(node) == "RETURN"
+    if kind_of(node) == "RETURN"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      if nameOf(node) == "INDEX"
-        push lines, prefix + "/* return " + valueOf(node) + "[" + extraOf(node) + "] */"
+      if name_of(node) == "INDEX"
+        push lines, prefix + "/* return " + value_of(node) + "[" + extra_of(node) + "] */"
       else
-        push lines, prefix + "/* return " + valueOf(node) + " */"
+        push lines, prefix + "/* return " + value_of(node) + " */"
 
-    if kindOf(node) == "RETURN_CALL2"
+    if kind_of(node) == "RETURN_CALL2"
       prefix = "  "
       if indent != "0"
         prefix = "    "
-      push lines, prefix + "/* return " + nameOf(node) + "(..., " + extraOf(node) + ") */"
+      push lines, prefix + "/* return " + name_of(node) + "(..., " + extra_of(node) + ") */"
 
-  while blockDepth > 0
+  while block_depth > 0
     push lines, "  }"
-    blockDepth = blockDepth - 1
+    block_depth = block_depth - 1
   push lines, "  return 0;"
   push lines, "}"
   join lines, "\n"
 
 nodes = []
-source = readFile args()[0]
+source = read_file args()[0]
 lines = split source, "\n"
 
 for line in lines
   if line != ""
     push nodes, line
 
-print emitC nodes
+print emit_c nodes

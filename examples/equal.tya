@@ -8,8 +8,8 @@ right =
 
 print left == right
 same = equal left, right
-numsA = [1, 2]
-numsB = [1, 3]
-different = equal numsA, numsB
+nums_a = [1, 2]
+nums_b = [1, 3]
+different = equal nums_a, nums_b
 print same
 print different

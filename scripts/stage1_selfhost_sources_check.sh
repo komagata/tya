@@ -255,12 +255,12 @@ false
 b"
 echo "literal reassignment: stage-2 pipeline matched"
 
-printf 'source = readFile args()[0]\nprint source\n' > "$out_dir/read_file_arg.tya"
+printf 'source = read_file args()[0]\nprint source\n' > "$out_dir/read_file_arg.tya"
 printf 'Tya' > "$out_dir/read_file_arg.input"
 "$out_dir/lexer.stage2" "$out_dir/read_file_arg.tya" > "$out_dir/read_file_arg.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/read_file_arg.stage2.tokens" > "$out_dir/read_file_arg.stage2.nodes"
 cat > "$out_dir/read_file_arg.want.nodes" <<'NODES'
-1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+1:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 2:PRINT:IDENT:source
 NODES
 diff -u "$out_dir/read_file_arg.want.nodes" "$out_dir/read_file_arg.stage2.nodes" >/dev/null
@@ -273,12 +273,12 @@ read_file_arg_out="$("$out_dir/read_file_arg.stage2" "$out_dir/read_file_arg.inp
 test "$read_file_arg_out" = "Tya"
 echo "read file arg: stage-2 pipeline matched"
 
-printf 'source = readFile args()[0]\ntokens = lex source\nfor token in tokens\n  print token\n' > "$out_dir/lex_source.tya"
+printf 'source = read_file args()[0]\ntokens = lex source\nfor token in tokens\n  print token\n' > "$out_dir/lex_source.tya"
 printf 'print "Tya"\n' > "$out_dir/lex_source.input"
 "$out_dir/lexer.stage2" "$out_dir/lex_source.tya" > "$out_dir/lex_source.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/lex_source.stage2.tokens" > "$out_dir/lex_source.stage2.nodes"
 cat > "$out_dir/lex_source.want.nodes" <<'NODES'
-1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+1:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 2:ASSIGN:tokens:CALL1:lex:source
 3:FOR:token:tokens
 4:INDENT:2
@@ -304,12 +304,12 @@ test "$lex_source_long_out" = "1:INDENT:0:1
 1:STRING:${long_lex_text}:7"
 echo "long lex source: stage-2 pipeline matched"
 
-printf 'source = readFile args()[0]\ntokens = lex source\nnodes = parse tokens\nfor node in nodes\n  print node\n' > "$out_dir/parse_tokens.tya"
+printf 'source = read_file args()[0]\ntokens = lex source\nnodes = parse tokens\nfor node in nodes\n  print node\n' > "$out_dir/parse_tokens.tya"
 printf 'print "Tya"\n' > "$out_dir/parse_tokens.input"
 "$out_dir/lexer.stage2" "$out_dir/parse_tokens.tya" > "$out_dir/parse_tokens.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/parse_tokens.stage2.tokens" > "$out_dir/parse_tokens.stage2.nodes"
 cat > "$out_dir/parse_tokens.want.nodes" <<'NODES'
-1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+1:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 2:ASSIGN:tokens:CALL1:lex:source
 3:ASSIGN:nodes:CALL1:parse:tokens
 4:FOR:node:nodes
@@ -326,12 +326,12 @@ parse_tokens_out="$("$out_dir/parse_tokens.stage2" "$out_dir/parse_tokens.input"
 test "$parse_tokens_out" = "1:PRINT:STRING:Tya"
 echo "parse tokens: stage-2 pipeline matched"
 
-printf 'source = readFile args()[0]\nlines = split source, "\n"\nerrors = check nodes\nfor err in errors\n  print err\n' > "$out_dir/check_nodes.tya"
+printf 'source = read_file args()[0]\nlines = split source, "\n"\nerrors = check nodes\nfor err in errors\n  print err\n' > "$out_dir/check_nodes.tya"
 printf '1:PRINT:STRING:Tya\n' > "$out_dir/check_nodes.input"
 "$out_dir/lexer.stage2" "$out_dir/check_nodes.tya" > "$out_dir/check_nodes.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/check_nodes.stage2.tokens" > "$out_dir/check_nodes.stage2.nodes"
 cat > "$out_dir/check_nodes.want.nodes" <<'NODES'
-1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+1:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 2:ASSIGN:lines:CALL2:split:source:STRING:
 3:ASSIGN:errors:CALL1:check:nodes
 4:FOR:err:errors
@@ -348,32 +348,32 @@ check_nodes_out="$("$out_dir/check_nodes.stage2" "$out_dir/check_nodes.input")"
 test "$check_nodes_out" = ""
 echo "check nodes: stage-2 pipeline matched"
 
-printf 'source = readFile args()[0]\nlines = split source, "\n"\nprint emitC nodes\n' > "$out_dir/emit_c_nodes.tya"
+printf 'source = read_file args()[0]\nlines = split source, "\n"\nprint emit_c nodes\n' > "$out_dir/emit_c_nodes.tya"
 printf '1:PRINT:STRING:Tya\n' > "$out_dir/emit_c_nodes.input"
 "$out_dir/lexer.stage2" "$out_dir/emit_c_nodes.tya" > "$out_dir/emit_c_nodes.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/emit_c_nodes.stage2.tokens" > "$out_dir/emit_c_nodes.stage2.nodes"
 cat > "$out_dir/emit_c_nodes.want.nodes" <<'NODES'
-1:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+1:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 2:ASSIGN:lines:CALL2:split:source:STRING:
-3:PRINT_CALL1:emitC:nodes
+3:PRINT_CALL1:emit_c:nodes
 NODES
 diff -u "$out_dir/emit_c_nodes.want.nodes" "$out_dir/emit_c_nodes.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/emit_c_nodes.stage2.nodes" > "$out_dir/emit_c_nodes.stage2.check"
 grep -qx "ok" "$out_dir/emit_c_nodes.stage2.check"
-compare_stage2_codegen "emitC nodes" "$out_dir/emit_c_nodes.stage2.nodes"
+compare_stage2_codegen "emit_c nodes" "$out_dir/emit_c_nodes.stage2.nodes"
 "$out_dir/codegen_c.stage2" "$out_dir/emit_c_nodes.stage2.nodes" > "$out_dir/emit_c_nodes.stage2.c"
 cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/emit_c_nodes.stage2" "$out_dir/emit_c_nodes.stage2.c" >/dev/null 2>&1
 "$out_dir/emit_c_nodes.stage2" "$out_dir/emit_c_nodes.input" > "$out_dir/emit_c_nodes.out.c"
 cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/emit_c_nodes.out" "$out_dir/emit_c_nodes.out.c" >/dev/null 2>&1
 emit_c_nodes_out="$("$out_dir/emit_c_nodes.out")"
 test "$emit_c_nodes_out" = "Tya"
-echo "emitC nodes: stage-2 pipeline matched"
+echo "emit_c nodes: stage-2 pipeline matched"
 
-printf 'helper = value ->\n  temp = "skip"\n  print temp\nsource = readFile args()[0]\nprint source\n' > "$out_dir/function_body_skip.tya"
+printf 'helper = value ->\n  temp = "skip"\n  print temp\nsource = read_file args()[0]\nprint source\n' > "$out_dir/function_body_skip.tya"
 "$out_dir/lexer.stage2" "$out_dir/function_body_skip.tya" > "$out_dir/function_body_skip.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/function_body_skip.stage2.tokens" > "$out_dir/function_body_skip.stage2.nodes"
 cat > "$out_dir/function_body_skip.want.nodes" <<'NODES'
-4:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+4:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 5:PRINT:IDENT:source
 NODES
 diff -u "$out_dir/function_body_skip.want.nodes" "$out_dir/function_body_skip.stage2.nodes" >/dev/null
@@ -541,13 +541,13 @@ string_contains_out="$("$out_dir/string_contains.stage2")"
 test "$string_contains_out" = "true"
 echo "string contains print: stage-2 pipeline matched"
 
-printf 'text = "hello"\nprint startsWith text, "he"\nprint endsWith text, "lo"\n' > "$out_dir/string_prefix_suffix.tya"
+printf 'text = "hello"\nprint starts_with text, "he"\nprint ends_with text, "lo"\n' > "$out_dir/string_prefix_suffix.tya"
 "$out_dir/lexer.stage2" "$out_dir/string_prefix_suffix.tya" > "$out_dir/string_prefix_suffix.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/string_prefix_suffix.stage2.tokens" > "$out_dir/string_prefix_suffix.stage2.nodes"
 cat > "$out_dir/string_prefix_suffix.want.nodes" <<'NODES'
 1:ASSIGN:text:STRING:hello
-2:PRINT_CALL2:startsWith:text:STRING:he
-3:PRINT_CALL2:endsWith:text:STRING:lo
+2:PRINT_CALL2:starts_with:text:STRING:he
+3:PRINT_CALL2:ends_with:text:STRING:lo
 NODES
 diff -u "$out_dir/string_prefix_suffix.want.nodes" "$out_dir/string_prefix_suffix.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/string_prefix_suffix.stage2.nodes" > "$out_dir/string_prefix_suffix.stage2.check"
@@ -652,12 +652,12 @@ string_split_join_out="$("$out_dir/string_split_join.stage2")"
 test "$string_split_join_out" = "hello-tya"
 echo "string split join print: stage-2 pipeline matched"
 
-printf 'print byteLen "ちゃ"\nprint charLen "ちゃ"\n' > "$out_dir/string_lengths.tya"
+printf 'print byte_len "ちゃ"\nprint char_len "ちゃ"\n' > "$out_dir/string_lengths.tya"
 "$out_dir/lexer.stage2" "$out_dir/string_lengths.tya" > "$out_dir/string_lengths.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/string_lengths.stage2.tokens" > "$out_dir/string_lengths.stage2.nodes"
 cat > "$out_dir/string_lengths.want.nodes" <<'NODES'
-1:PRINT_CALL1:byteLen:STRING:ちゃ
-2:PRINT_CALL1:charLen:STRING:ちゃ
+1:PRINT_CALL1:byte_len:STRING:ちゃ
+2:PRINT_CALL1:char_len:STRING:ちゃ
 NODES
 diff -u "$out_dir/string_lengths.want.nodes" "$out_dir/string_lengths.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/string_lengths.stage2.nodes" > "$out_dir/string_lengths.stage2.check"
@@ -894,14 +894,14 @@ echo "examples/selfhost_ops.tya: stage-2 pipeline matched"
 "$out_dir/lexer.stage2" examples/multiple_return.tya > "$out_dir/multiple_return.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/multiple_return.stage2.tokens" > "$out_dir/multiple_return.stage2.nodes"
 cat > "$out_dir/multiple_return.want.nodes" <<'NODES'
-1:FUNC:parseUser:text
+1:FUNC:parse_user:text
 2:INDENT:2
 2:IF_COMPARE_EQ:IDENT:text:STRING:
 3:INDENT:4
 3:RETURN2_CALL1:NIL:nil:error:STRING:empty user
 4:RETURN2_OBJECT_NIL:name:IDENT:text
 6:INDENT:0
-6:MULTI_ASSIGN2_CALL1:user:err:parseUser:STRING:komagata
+6:MULTI_ASSIGN2_CALL1:user:err:parse_user:STRING:komagata
 8:IF:IDENT:err
 9:INDENT:2
 9:PRINT_MEMBER:err:message
@@ -910,7 +910,7 @@ cat > "$out_dir/multiple_return.want.nodes" <<'NODES'
 11:INDENT:2
 11:PRINT_MEMBER:user:name
 13:INDENT:0
-13:MULTI_ASSIGN2_CALL1:missing:err:parseUser:STRING:
+13:MULTI_ASSIGN2_CALL1:missing:err:parse_user:STRING:
 15:IF:IDENT:err
 16:INDENT:2
 16:PRINT_MEMBER:err:message
@@ -1059,13 +1059,13 @@ test "$compare_bounds_out" = "true
 true"
 echo "bounded comparison: stage-2 pipeline matched"
 
-printf 'age = 2\ngroupedCompare = (age >= 2)\nprint groupedCompare\n' > "$out_dir/grouped_compare.tya"
+printf 'age = 2\ngrouped_compare = (age >= 2)\nprint grouped_compare\n' > "$out_dir/grouped_compare.tya"
 "$out_dir/lexer.stage2" "$out_dir/grouped_compare.tya" > "$out_dir/grouped_compare.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/grouped_compare.stage2.tokens" > "$out_dir/grouped_compare.stage2.nodes"
 cat > "$out_dir/grouped_compare.want.nodes" <<'NODES'
 1:ASSIGN:age:INT:2
-2:ASSIGN:groupedCompare:COMPARE_GE:age:2
-3:PRINT:IDENT:groupedCompare
+2:ASSIGN:grouped_compare:COMPARE_GE:age:2
+3:PRINT:IDENT:grouped_compare
 NODES
 diff -u "$out_dir/grouped_compare.want.nodes" "$out_dir/grouped_compare.stage2.nodes" >/dev/null
 "$out_dir/checker.stage2" "$out_dir/grouped_compare.stage2.nodes" > "$out_dir/grouped_compare.stage2.check"
@@ -1100,7 +1100,7 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
 done
 
 cat > "$stage4_dir/lexer.stage4.want.nodes" <<'NODES'
-149:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+149:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 150:ASSIGN:tokens:CALL1:lex:source
 152:FOR:token:tokens
 153:INDENT:2
@@ -1114,7 +1114,7 @@ if grep -q 'strstr(mode, "lexer")' "$stage4_dir/lexer.stage4.c"; then
 fi
 echo "selfhost/lexer.tya: stage-3 codegen emitted executable lexer C"
 cat > "$stage4_dir/parser.stage4.want.nodes" <<'NODES'
-571:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+571:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 574:FOR:line:lines
 575:INDENT:2
 580:FOR:node:nodes
@@ -1131,15 +1131,15 @@ echo "selfhost/parser.tya: stage-3 codegen emitted executable parser C"
 cat > "$stage4_dir/checker.stage4.want.nodes" <<'NODES'
 58:FOR:existing:names
 59:INDENT:2
-129:FOR:node:nodes
-130:INDENT:2
-695:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-698:FOR:line:lines
-699:INDENT:2
-705:PRINT:STRING:ok
-707:FOR:err:errors
-708:INDENT:2
-708:PRINT:IDENT:err
+136:FOR:node:nodes
+137:INDENT:2
+702:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+705:FOR:line:lines
+706:INDENT:2
+712:PRINT:STRING:ok
+714:FOR:err:errors
+715:INDENT:2
+715:PRINT:IDENT:err
 NODES
 diff -u "$stage4_dir/checker.stage4.want.nodes" "$stage4_dir/checker.stage4.nodes" >/dev/null
 echo "selfhost/checker.tya: stage-3 parser emitted real nodes"
@@ -1155,10 +1155,10 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 96:INDENT:2
 2797:FOR:node:nodes
 2798:INDENT:2
-3537:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3537:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
 3540:FOR:line:lines
 3541:INDENT:2
-3544:PRINT_CALL1:emitC:nodes
+3544:PRINT_CALL1:emit_c:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1465,11 +1465,11 @@ echo "stage4 array for: self-host pipeline matched"
 "$stage4_dir/lexer.stage4" examples/multiple_return.tya > "$stage4_dir/multiple_return.tokens"
 "$stage4_dir/parser.stage4" "$stage4_dir/multiple_return.tokens" > "$stage4_dir/multiple_return.nodes"
 cat > "$stage4_dir/multiple_return.want.nodes" <<'NODES'
-1:ASSIGN:parseUser:BOOL:text ->
-2:ASSIGN:user, err:INT:parseUser "komagata"
+1:ASSIGN:parse_user:BOOL:text ->
+2:ASSIGN:user, err:INT:parse_user "komagata"
 3:PRINT:IDENT:err.message
 4:PRINT:IDENT:user.name
-5:ASSIGN:missing, err:INT:parseUser ""
+5:ASSIGN:missing, err:INT:parse_user ""
 6:PRINT:IDENT:err.message
 7:PRINT:IDENT:missing.name
 NODES

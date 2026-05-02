@@ -1,22 +1,22 @@
 items = [1, 2, 3, 4]
 
-isEven = item -> item % 2 == 0
+is_even = item -> item % 2 == 0
 add = total, item -> total + item
 remember = item ->
   last = item
   nil
 
 doubled = map items, item -> item * 2
-evens = filter items, isEven
-firstEven = find items, isEven
-hasEven = any items, isEven
-allEven = all items, isEven
+evens = filter items, is_even
+first_even = find items, is_even
+has_even = any items, is_even
+all_even = all items, is_even
 sum = reduce items, 0, add
 each items, remember
 
 print doubled[2]
 print len evens
-print firstEven
-print hasEven
-print allEven
+print first_even
+print has_even
+print all_even
 print sum

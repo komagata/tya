@@ -1,2 +1,2 @@
-name = readLine()
+name = read_line()
 print "Hello, {name}"

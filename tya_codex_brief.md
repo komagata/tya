@@ -181,25 +181,25 @@ Modules are not required in Milestone 1.
 
 ## Naming Rules
 
-Variables use `smallCamelCase`.
+Variables use `snake_case`.
 
 ```tya
-userName = "komagata"
-retryCount = 3
+user_name = "komagata"
+retry_count = 3
 ```
 
-Functions use `smallCamelCase`.
+Functions use `snake_case`.
 
 ```tya
-parseUser = text ->
+parse_user = text ->
   text
 ```
 
-Object properties use `smallCamelCase`.
+Object properties use `snake_case`.
 
 ```tya
 user =
-  userName: "komagata"
+  user_name: "komagata"
   age: 20
 ```
 
@@ -219,7 +219,7 @@ MAX_RETRY = 5 # compile error
 Private top-level definitions start with `_`.
 
 ```tya
-_parseUser = text ->
+_parse_user = text ->
   text
 ```
 
@@ -284,8 +284,8 @@ Therefore these are truthy:
 Reading an undefined variable is a compile/runtime error.
 
 ```tya
-userName = "komagata"
-print userNmae # error
+user_name = "komagata"
+print user_nmae # error
 ```
 
 Reading a missing object property returns `nil`.
@@ -341,7 +341,7 @@ add = a, b -> a + b
 No-argument function:
 
 ```tya
-sayHello = ->
+say_hello = ->
   print "hello"
 ```
 
@@ -680,7 +680,7 @@ nil, err
 Example:
 
 ```tya
-text, err = readFile "memo.txt"
+text, err = read_file "memo.txt"
 
 if err
   print err.message
@@ -698,20 +698,20 @@ print err.message
 `try` eventually propagates `value, err`.
 
 ```tya
-readUser = path ->
-  text = try readFile path
-  user = try parseUser text
+read_user = path ->
+  text = try read_file path
+  user = try parse_user text
   user, nil
 ```
 
 Equivalent to:
 
 ```tya
-readUser = path ->
-  text, err = readFile path
+read_user = path ->
+  text, err = read_file path
   return nil, err if err
 
-  user, err = parseUser text
+  user, err = parse_user text
   return nil, err if err
 
   user, nil
@@ -723,30 +723,30 @@ Error handling is not required in Milestone 1 except for internal interpreter er
 
 Standard library functions are implicitly available.
 
-Names use `smallCamelCase`.
+Names use `snake_case`.
 
 Initial target list:
 
 ```text
 print
-readLine
-readFile
-writeFile
-fileExists
+read_line
+read_file
+write_file
+file_exists
 
 split
 join
 trim
 replace
 contains
-startsWith
-endsWith
-byteLen
-charLen
-toString
-toNumber
-toInt
-toFloat
+starts_with
+ends_with
+byte_len
+char_len
+to_string
+to_number
+to_int
+to_float
 
 len
 push
@@ -804,7 +804,7 @@ library file containing executable top-level code
 Explicitly discarded values use `_`.
 
 ```tya
-_ = doSomething()
+_ = do_something()
 ```
 
 Unused arguments can be `_`.

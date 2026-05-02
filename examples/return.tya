@@ -1,8 +1,8 @@
-findFirstOver = limit ->
+find_first_over = limit ->
   i = 0
   while true
     if i > limit
       return i
     i = i + 1
 
-print findFirstOver 3
+print find_first_over 3
