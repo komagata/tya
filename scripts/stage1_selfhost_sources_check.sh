@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2788:FOR:node:nodes
-2789:INDENT:2
-3528:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3531:FOR:line:lines
-3532:INDENT:2
-3535:PRINT_CALL1:emitC:nodes
+2797:FOR:node:nodes
+2798:INDENT:2
+3537:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3540:FOR:line:lines
+3541:INDENT:2
+3544:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1714,3 +1714,13 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
   cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/$base.stage5" "$stage4_dir/$base.stage5.c" >/dev/null 2>&1
   echo "$src: stage-4 emitted and compiled stage-5 C"
 done
+
+"$stage4_dir/lexer.stage5" examples/hello.tya > "$stage4_dir/hello.stage5.tokens"
+"$stage4_dir/parser.stage5" "$stage4_dir/hello.stage5.tokens" > "$stage4_dir/hello.stage5.nodes"
+"$stage4_dir/checker.stage5" "$stage4_dir/hello.stage5.nodes" > "$stage4_dir/hello.stage5.check"
+grep -qx "ok" "$stage4_dir/hello.stage5.check"
+"$stage4_dir/codegen_c.stage5" "$stage4_dir/hello.stage5.nodes" > "$stage4_dir/hello.stage5.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/hello.stage5" "$stage4_dir/hello.stage5.c" >/dev/null 2>&1
+stage5_hello_out="$("$stage4_dir/hello.stage5")"
+test "$stage5_hello_out" = "Hello, Tya"
+echo "stage5 hello: self-host pipeline matched"
