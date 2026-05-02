@@ -1153,12 +1153,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2727:FOR:node:nodes
-2728:INDENT:2
-3467:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
-3470:FOR:line:lines
-3471:INDENT:2
-3474:PRINT_CALL1:emitC:nodes
+2734:FOR:node:nodes
+2735:INDENT:2
+3474:ASSIGN:source:CALL1_CALL0_INDEX:readFile:args:0
+3477:FOR:line:lines
+3478:INDENT:2
+3481:PRINT_CALL1:emitC:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1614,6 +1614,17 @@ test "$stage4_logic_out" = "match
 anonymous
 true"
 echo "stage4 logic: self-host pipeline matched"
+
+"$stage4_dir/lexer.stage4" examples/error.tya > "$stage4_dir/error.tokens"
+"$stage4_dir/parser.stage4" "$stage4_dir/error.tokens" > "$stage4_dir/error.nodes"
+"$stage4_dir/checker.stage4" "$stage4_dir/error.nodes" > "$stage4_dir/error.check"
+grep -qx "ok" "$stage4_dir/error.check"
+"$stage4_dir/codegen_c.stage4" "$stage4_dir/error.nodes" > "$stage4_dir/error.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/error" "$stage4_dir/error.c" >/dev/null 2>&1
+stage4_error_out="$("$stage4_dir/error")"
+test "$stage4_error_out" = "error: file not found
+file not found"
+echo "stage4 error: self-host pipeline matched"
 
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
   base="$(basename "$src" .tya)"
