@@ -169,6 +169,7 @@ endpoint.
       - [x] Expand stage-4 generated tools to `examples/return.tya`
       - [x] Expand stage-4 generated tools to `examples/object.tya`
       - [x] Expand stage-4 generated tools to `examples/object_inline.tya`
+      - [x] Expand stage-4 generated tools to `examples/if.tya`
       - [x] Compile all stage-5 selfhost sources from stage-4 tools
       - [x] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
@@ -189,7 +190,7 @@ endpoint.
 
 Stage-4 generated tools now compile all four self-host compiler sources into
 stage-5 C binaries and execute `examples/object.tya` plus
-`examples/object_inline.tya` through lex, parse, check, codegen, compile, and
-run. The stage-4 object gates are part of
+`examples/object_inline.tya` and `examples/if.tya` through lex, parse, check,
+codegen, compile, and run. The stage-4 example gates are part of
 `scripts/stage1_selfhost_sources_check.sh`, so the bootstrap gate now catches
 regressions in the next example-parity step.
