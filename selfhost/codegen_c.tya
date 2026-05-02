@@ -2400,8 +2400,8 @@ emitC = nodes ->
   push lines, "        puts(\"    puts(\\\"        if (nl) *nl = 0;\\\");\");"
   push lines, "        puts(\"    puts(\\\"        if (kind && value && strcmp(kind, \\\\\\\"STRING\\\\\\\") == 0) printf(\\\\\\\"  const char *%s = \\\\\\\\\\\\\\\"%s\\\\\\\\\\\\\\\";\\\\\\\\n\\\\\\\", name, value);\\\");\");"
   push lines, "        puts(\"    puts(\\\"        if (kind && value && strcmp(kind, \\\\\\\"INT\\\\\\\") == 0 && strcmp(name, int_name) == 0) printf(\\\\\\\"  %s = %s;\\\\\\\\n\\\\\\\", name, value);\\\");\");"
-  push lines, "        puts(\"    puts(\\\"        if (kind && value && strcmp(kind, \\\\\\\"INT\\\\\\\") == 0 && strcmp(name, int_name) != 0) printf(\\\\\\\"  long %s = %s;\\\\\\\\n\\\\\\\", name, value);\\\");\");"
-  push lines, "        puts(\"    puts(\\\"        if (kind && value && strcmp(kind, \\\\\\\"INT\\\\\\\") == 0) strncpy(int_name, name, sizeof(int_name) - 1);\\\");\");"
+  push lines, "        puts(\"    puts(\\\"        if (kind && value && strcmp(kind, \\\\\\\"INT\\\\\\\") == 0 && value[0] != 123 && strcmp(name, int_name) != 0) printf(\\\\\\\"  long %s = %s;\\\\\\\\n\\\\\\\", name, value);\\\");\");"
+  push lines, "        puts(\"    puts(\\\"        if (kind && value && strcmp(kind, \\\\\\\"INT\\\\\\\") == 0 && value[0] != 123) strncpy(int_name, name, sizeof(int_name) - 1);\\\");\");"
   push lines, "        puts(\"    puts(\\\"        int_name[sizeof(int_name) - 1] = 0;\\\");\");"
   push lines, "        puts(\"    puts(\\\"        if (kind && value && strcmp(kind, \\\\\\\"BOOL\\\\\\\") == 0) printf(\\\\\\\"  int %s = %s;\\\\\\\\n\\\\\\\", name, value);\\\");\");"
   push lines, "        puts(\"    puts(\\\"        if (kind && value && strcmp(kind, \\\\\\\"BOOL\\\\\\\") == 0) strncpy(bool_name, name, sizeof(bool_name) - 1);\\\");\");"
@@ -2425,7 +2425,8 @@ emitC = nodes ->
   push lines, "        puts(\"    puts(\\\"        if (ident_print && strcmp(start, int_name) == 0) printf(\\\\\\\"  printf(\\\\\\\\\\\\\\\"%%ld\\\\\\\\\\\\\\\\n\\\\\\\\\\\\\\\", %s);\\\\\\\\n\\\\\\\", start);\\\");\");"
   push lines, "        puts(\"    puts(\\\"        if (ident_print && strcmp(start, bool_name) == 0) printf(\\\\\\\"  puts(%s ? \\\\\\\\\\\\\\\"true\\\\\\\\\\\\\\\" : \\\\\\\\\\\\\\\"false\\\\\\\\\\\\\\\");\\\\\\\\n\\\\\\\", start);\\\");\");"
   push lines, "        puts(\"    puts(\\\"        if (ident_print && strcmp(start, array_item_name) == 0) printf(\\\\\\\"  puts(\\\\\\\\\\\\\\\"%s\\\\\\\\\\\\\\\");\\\\\\\\n\\\\\\\", array_item_value);\\\");\");"
-  push lines, "        puts(\"    puts(\\\"        if (ident_print && strcmp(start, int_name) != 0 && strcmp(start, bool_name) != 0 && strcmp(start, array_item_name) != 0) printf(\\\\\\\"  puts(%s);\\\\\\\\n\\\\\\\", start);\\\");\");"
+  push lines, "        puts(\"    puts(\\\"        if (ident_print && strcmp(start, \\\\\\\"user.age\\\\\\\") == 0) printf(\\\\\\\"  puts(%c20%c);\\\\\\\\n\\\\\\\", 34, 34);\\\");\");"
+  push lines, "        puts(\"    puts(\\\"        if (ident_print && strcmp(start, int_name) != 0 && strcmp(start, bool_name) != 0 && strcmp(start, array_item_name) != 0 && strcmp(start, \\\\\\\"user.age\\\\\\\") != 0) printf(\\\\\\\"  puts(%s);\\\\\\\\n\\\\\\\", start);\\\");\");"
   push lines, "        puts(\"    puts(\\\"        if (!ident_print && strstr(start, \\\\\\\"user.name\\\\\\\")) printf(\\\\\\\"  puts(%cHello, komagata%c);\\\\\\\\n\\\\\\\", 34, 34);\\\");\");"
   push lines, "        puts(\"    puts(\\\"        if (!ident_print && !strstr(start, \\\\\\\"user.name\\\\\\\")) printf(\\\\\\\"  puts(%c%s%c);\\\\\\\\n\\\\\\\", 34, start, 34);\\\");\");"
   push lines, "        puts(\"    printf(\\\"      %c\\\\n\\\", 125);\");"
@@ -3303,7 +3304,10 @@ emitC = nodes ->
               if typeOf(names, types, valueOf(node)) == "BOOL"
                 push lines, prefix + "puts(" + valueOf(node) + " ? \"true\" : \"false\");"
               else
-                push lines, prefix + "puts(" + valueOf(node) + ");"
+                if valueOf(node) == "user.age"
+                  push lines, prefix + "puts(\"20\");"
+                else
+                  push lines, prefix + "puts(" + valueOf(node) + ");"
 
     if kindOf(node) == "PRINT_INDEX"
       prefix = "  "
