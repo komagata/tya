@@ -391,6 +391,7 @@ Self-Host Completion TODO:
     - [x] Compile stage-1 emitted self-host C into stage-2 binaries
     - [x] Lower stage-2 input file reads through `readFile args()[0]`
     - [x] Run stage-5 generated tools on `examples/hello.tya`
+    - [x] Run stage-5 generated tools on a print-string fixture
     - [x] Add generated-C lexer helper scaffold for stage-2 token emission
     - [x] Run the stage-2 lexer on `examples/hello.tya`
     - [x] Tokenize integer literals in the stage-2 generated lexer

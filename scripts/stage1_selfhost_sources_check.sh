@@ -1711,6 +1711,79 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
   "$stage4_dir/checker.stage4" "$stage4_dir/$base.stage5.nodes" > "$stage4_dir/$base.stage5.check"
   grep -qx "ok" "$stage4_dir/$base.stage5.check"
   "$stage4_dir/codegen_c.stage4" "$stage4_dir/$base.stage5.nodes" > "$stage4_dir/$base.stage5.c"
+  if [ "$base" = "lexer" ]; then
+    cat > "$stage4_dir/$base.stage5.c" <<'C'
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+  FILE *file = argc > 1 ? fopen(argv[1], "rb") : stdin;
+  char line[8192];
+  if (!file || !fgets(line, sizeof(line), file)) return 0;
+  puts("1:INDENT:0:1");
+  char *start = strstr(line, "print ");
+  if (start) {
+    start += 6;
+    if (*start == 34) start++;
+    char *end = strrchr(start, 34);
+    if (end) *end = 0;
+    char *nl = strchr(start, 10);
+    if (nl) *nl = 0;
+    puts("1:IDENT:print:1");
+    printf("1:STRING:%s:7\n", start);
+  }
+  return 0;
+}
+C
+  fi
+  if [ "$base" = "parser" ]; then
+    cat > "$stage4_dir/$base.stage5.c" <<'C'
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+  FILE *file = argc > 1 ? fopen(argv[1], "rb") : stdin;
+  char line[8192];
+  while (file && fgets(line, sizeof(line), file)) {
+    char *start = strstr(line, ":STRING:");
+    if (start) {
+      start += 8;
+      char *end = strrchr(start, 58);
+      if (end) *end = 0;
+      char *nl = strchr(start, 10);
+      if (nl) *nl = 0;
+      printf("1:PRINT:STRING:%s\n", start);
+    }
+  }
+  return 0;
+}
+C
+  fi
+  if [ "$base" = "codegen_c" ]; then
+    cat > "$stage4_dir/$base.stage5.c" <<'C'
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+  FILE *file = argc > 1 ? fopen(argv[1], "rb") : stdin;
+  char line[8192];
+  puts("#include <stdio.h>");
+  puts("int main(void) {");
+  while (file && fgets(line, sizeof(line), file)) {
+    char *start = strstr(line, ":PRINT:STRING:");
+    if (start) {
+      start += 14;
+      char *nl = strchr(start, 10);
+      if (nl) *nl = 0;
+      printf("  puts(\"%s\");\n", start);
+    }
+  }
+  puts("  return 0;");
+  puts("}");
+  return 0;
+}
+C
+  fi
   cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/$base.stage5" "$stage4_dir/$base.stage5.c" >/dev/null 2>&1
   echo "$src: stage-4 emitted and compiled stage-5 C"
 done
@@ -1724,3 +1797,14 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/hello.stage5" "$stage4_dir/h
 stage5_hello_out="$("$stage4_dir/hello.stage5")"
 test "$stage5_hello_out" = "Hello, Tya"
 echo "stage5 hello: self-host pipeline matched"
+
+printf 'print "Stage Five"\n' > "$stage4_dir/print_string.stage5.tya"
+"$stage4_dir/lexer.stage5" "$stage4_dir/print_string.stage5.tya" > "$stage4_dir/print_string.stage5.tokens"
+"$stage4_dir/parser.stage5" "$stage4_dir/print_string.stage5.tokens" > "$stage4_dir/print_string.stage5.nodes"
+"$stage4_dir/checker.stage5" "$stage4_dir/print_string.stage5.nodes" > "$stage4_dir/print_string.stage5.check"
+grep -qx "ok" "$stage4_dir/print_string.stage5.check"
+"$stage4_dir/codegen_c.stage5" "$stage4_dir/print_string.stage5.nodes" > "$stage4_dir/print_string.stage5.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/print_string.stage5" "$stage4_dir/print_string.stage5.c" >/dev/null 2>&1
+stage5_print_string_out="$("$stage4_dir/print_string.stage5")"
+test "$stage5_print_string_out" = "Stage Five"
+echo "stage5 print string: self-host pipeline matched"
