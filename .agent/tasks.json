@@ -1,0 +1,50 @@
+[
+  {
+    "id": "SELFHOST-001",
+    "title": "Inventory the remaining gap to complete self-hosting",
+    "priority": 1,
+    "passes": false
+  },
+  {
+    "id": "SELFHOST-002",
+    "title": "Promote all runnable examples into explicit self-host parity targets",
+    "priority": 2,
+    "passes": false
+  },
+  {
+    "id": "SELFHOST-003",
+    "title": "Replace remaining line-oriented parser shortcuts with structured expression parsing",
+    "priority": 3,
+    "passes": false
+  },
+  {
+    "id": "SELFHOST-004",
+    "title": "Bring self-host checker semantics closer to Go checker parity",
+    "priority": 4,
+    "passes": false
+  },
+  {
+    "id": "SELFHOST-005",
+    "title": "Expand self-host C codegen until examples run without placeholder behavior",
+    "priority": 5,
+    "passes": false
+  },
+  {
+    "id": "SELFHOST-006",
+    "title": "Make stage-generated tools compile and run every supported example",
+    "priority": 6,
+    "passes": false
+  },
+  {
+    "id": "SELFHOST-007",
+    "title": "Prove deterministic fixed-point self-host regeneration",
+    "priority": 7,
+    "passes": false
+  },
+  {
+    "id": "SELFHOST-008",
+    "title": "Document and enforce the complete self-host gate",
+    "priority": 8,
+    "passes": false
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "id": "SELFHOST-004",
+  "title": "Bring self-host checker semantics closer to Go checker parity",
+  "goal": "Expand selfhost/checker.tya so generated self-host tools reject the same important invalid programs as the Go checker for the supported subset.",
+  "context": [
+    "Start with parser node support already available after SELFHOST-003.",
+    "Use internal/checker tests as the source of truth for semantics where practical.",
+    "Focus on scoped names, invalid bindings, duplicate definitions, return/loop constraints, and module-related constraints only when supported by parser nodes."
+  ],
+  "steps": [
+    "Pick the next checker parity gap from SELFHOST_WORK.md.",
+    "Add fixture coverage that demonstrates both accepted and rejected programs.",
+    "Implement the checker behavior in selfhost/checker.tya.",
+    "Ensure generated stage tools preserve the same checker result for the covered fixture."
+  ],
+  "verification": [
+    "sh scripts/selfhost_check.sh",
+    "go test ./tests -run SelfhostChecker -count=1",
+    "sh scripts/selfhost_bootstrap_check.sh",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "One checker parity gap is closed with tests.",
+    "Generated self-host checker behavior matches the expected supported-subset semantics.",
+    "Docs and SELFHOST_WORK.md are updated."
+  ]
+}

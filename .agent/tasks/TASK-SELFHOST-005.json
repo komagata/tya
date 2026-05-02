@@ -1,0 +1,27 @@
+{
+  "id": "SELFHOST-005",
+  "title": "Expand self-host C codegen until examples run without placeholder behavior",
+  "goal": "Remove placeholder C emission paths from selfhost/codegen_c.tya by implementing real executable output for the next missing supported node family.",
+  "context": [
+    "Use the next unsupported example or feature from SELFHOST_WORK.md.",
+    "Generated C should be readable, deterministic, and compatible with runtime/tya_runtime.c.",
+    "Avoid broad rewrites; implement one coherent codegen feature slice."
+  ],
+  "steps": [
+    "Find the placeholder or skipped path that blocks the next example.",
+    "Implement real generated C for that node family.",
+    "Add or extend a stage pipeline fixture proving the generated C compiles and runs.",
+    "Remove or narrow the corresponding placeholder behavior."
+  ],
+  "verification": [
+    "sh scripts/selfhost_compile_check.sh",
+    "sh scripts/go_emit_selfhost_run_check.sh",
+    "sh scripts/selfhost_bootstrap_check.sh",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "At least one placeholder codegen path is replaced with executable generated C.",
+    "A previously blocked example or fixture runs through the self-host pipeline.",
+    "SELFHOST_WORK.md records the next codegen blocker."
+  ]
+}

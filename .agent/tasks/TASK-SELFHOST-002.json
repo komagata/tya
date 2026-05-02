@@ -1,0 +1,26 @@
+{
+  "id": "SELFHOST-002",
+  "title": "Promote all runnable examples into explicit self-host parity targets",
+  "goal": "Ensure every example that the Go implementation can run has an explicit self-host parity classification and a path into the bootstrap gate.",
+  "context": [
+    "Start from the gap inventory created by SELFHOST-001.",
+    "Use examples/ and tests/examples_test.go to discover the runnable example set.",
+    "Some examples may require staged support; classify rather than hiding them."
+  ],
+  "steps": [
+    "Build or update a self-host parity manifest in scripts or tests that lists examples as supported, expected-failing with reason, or out-of-scope for now.",
+    "Add test coverage that fails if a new example lacks a self-host parity classification.",
+    "Promote already-supported examples into scripts/selfhost_bootstrap_check.sh or the appropriate stage check.",
+    "Update SELFHOST_WORK.md with the next unsupported example or feature dependency."
+  ],
+  "verification": [
+    "go test ./tests -run Selfhost -count=1",
+    "sh scripts/selfhost_bootstrap_check.sh",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "All examples have an explicit self-host parity status.",
+    "The bootstrap gate covers all examples currently marked supported.",
+    "No supported self-host example is only documented informally."
+  ]
+}

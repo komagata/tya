@@ -1,0 +1,27 @@
+{
+  "id": "SELFHOST-003",
+  "title": "Replace remaining line-oriented parser shortcuts with structured expression parsing",
+  "goal": "Move selfhost/parser.tya away from ad hoc line patterns and toward structured parsing that can represent the remaining Tya expression forms.",
+  "context": [
+    "Start with the highest-priority parser gap from SELFHOST_WORK.md.",
+    "Prefer one feature slice that unlocks the next unsupported example.",
+    "Keep node output deterministic and compatible with checker/codegen migration."
+  ],
+  "steps": [
+    "Add parser coverage for the next missing expression or statement family from the gap list.",
+    "Represent the feature with explicit node kinds rather than string-only placeholders.",
+    "Update selfhost/checker.tya and selfhost/codegen_c.tya minimally if needed to preserve existing checks.",
+    "Add tests that compare self-host parser behavior against the Go parser subset or fixture expectations."
+  ],
+  "verification": [
+    "sh scripts/selfhost_check.sh",
+    "go test ./tests -run Selfhost -count=1",
+    "sh scripts/selfhost_bootstrap_check.sh",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "At least one previously unsupported parser gap is implemented with explicit nodes.",
+    "Existing stage bootstrap behavior remains stable.",
+    "SELFHOST_WORK.md identifies the next parser gap."
+  ]
+}

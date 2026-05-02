@@ -1,0 +1,25 @@
+{
+  "id": "SELFHOST-007",
+  "title": "Prove deterministic fixed-point self-host regeneration",
+  "goal": "Add and pass a fixed-point check showing that self-host generated compiler C remains stable across repeated generations.",
+  "context": [
+    "The current docs mention stable stage-7 C for a small probe. This task should make the fixed-point proof explicit and automated for the complete supported self-host toolchain.",
+    "Use temporary directories and deterministic diffs; do not commit generated artifacts unless the repo already expects them."
+  ],
+  "steps": [
+    "Create or extend a script that builds stage N and stage N+1 generated C for selfhost tools.",
+    "Normalize irrelevant paths or timestamps if needed.",
+    "Diff normalized generated C and fail on semantic drift.",
+    "Add a Go test or shell gate that runs the fixed-point check."
+  ],
+  "verification": [
+    "sh scripts/selfhost_bootstrap_check.sh",
+    "go test ./tests -run Selfhost -count=1",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "A deterministic fixed-point check is part of the automated self-host verification.",
+    "The check covers lexer, parser, checker, and codegen selfhost sources.",
+    "Docs state exactly what fixed point is proven."
+  ]
+}
