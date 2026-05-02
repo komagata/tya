@@ -241,6 +241,9 @@ Implemented:
 - Stage-5 generated tools run `examples/hello.tya` plus print-string, print-int, and two-print fixtures
 - Stage-5 tool source compiles into stage-6 binaries that run print-string, print-int, and two-print fixtures
 - Stage-6 tool source emits stable stage-7 C for all four self-host compiler sources
+- `scripts/selfhost_fixed_point_check.sh` proves byte-stable stage-4
+  generated C for `selfhost/lexer.tya`, `selfhost/parser.tya`,
+  `selfhost/checker.tya`, and `selfhost/codegen_c.tya`
 - Self-hosted parser/codegen handles parenthesized bounds comparison assignments
 - Self-hosted parser/codegen handles simple unary `not` assignments
 - Self-hosted parser/codegen handles empty array placeholders

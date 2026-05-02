@@ -66,5 +66,8 @@ Current supported subset:
   `continue`
 
 The bootstrap scripts now reach stable stage-7 generated C for the self-host
-compiler sources, but this is still a prototype subset. The remaining
-full-parity gap inventory is maintained in `../SELFHOST_WORK.md`.
+compiler sources. `scripts/selfhost_fixed_point_check.sh` also verifies that
+the stage-4 generated toolchain emits byte-stable C for the lexer, parser,
+checker, and C code generator self-host sources across repeated runs. This is
+still a prototype subset. The remaining full-parity gap inventory is maintained
+in `../SELFHOST_WORK.md`.

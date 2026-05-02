@@ -282,6 +282,18 @@ func TestStage1SelfhostSourcesEmitC(t *testing.T) {
 		}
 	}
 	want = strings.Replace(want, "stage4 for: self-host pipeline matched\nselfhost/lexer.tya", "stage4 for: self-host pipeline matched\n"+manifestLines.String()+"selfhost/lexer.tya", 1)
+	want = strings.Replace(want, "selfhost/lexer.tya: stage-4 emitted and compiled stage-5 C\n", "selfhost/lexer.tya: stage-4 fixed-point generated C stable\nselfhost/lexer.tya: stage-4 emitted and compiled stage-5 C\n", 1)
+	want = strings.Replace(want, "selfhost/parser.tya: stage-4 emitted and compiled stage-5 C\n", "selfhost/parser.tya: stage-4 fixed-point generated C stable\nselfhost/parser.tya: stage-4 emitted and compiled stage-5 C\n", 1)
+	want = strings.Replace(want, "selfhost/checker.tya: stage-4 emitted and compiled stage-5 C\n", "selfhost/checker.tya: stage-4 fixed-point generated C stable\nselfhost/checker.tya: stage-4 emitted and compiled stage-5 C\n", 1)
+	want = strings.Replace(want, "selfhost/codegen_c.tya: stage-4 emitted and compiled stage-5 C\n", "selfhost/codegen_c.tya: stage-4 fixed-point generated C stable\nselfhost/codegen_c.tya: stage-4 emitted and compiled stage-5 C\n", 1)
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestSelfhostFixedPointCheck(t *testing.T) {
+	out := run(t, "sh", "scripts/selfhost_fixed_point_check.sh")
+	want := "selfhost/lexer.tya: stage-4 fixed-point generated C stable\nselfhost/parser.tya: stage-4 fixed-point generated C stable\nselfhost/checker.tya: stage-4 fixed-point generated C stable\nselfhost/codegen_c.tya: stage-4 fixed-point generated C stable\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

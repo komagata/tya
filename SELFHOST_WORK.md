@@ -195,6 +195,7 @@ endpoint.
       - [x] Compile stage-6 tools from the stage-5 tool source and run a print-string fixture
       - [x] Run stage-6 generated tools on print-int and two-print fixtures
       - [x] Verify stable stage-7 C from the stage-6 tool source
+      - [x] Add an explicit fixed-point gate for byte-stable stage-4 generated C across lexer, parser, checker, and C codegen self-host sources
       - [x] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
         - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
         - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes

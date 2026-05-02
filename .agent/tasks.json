@@ -39,7 +39,7 @@
     "id": "SELFHOST-007",
     "title": "Prove deterministic fixed-point self-host regeneration",
     "priority": 7,
-    "passes": false
+    "passes": true
   },
   {
     "id": "SELFHOST-008",

@@ -1768,7 +1768,11 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
   "$stage4_dir/parser.stage4" "$stage4_dir/$base.stage5.tokens" > "$stage4_dir/$base.stage5.nodes"
   "$stage4_dir/checker.stage4" "$stage4_dir/$base.stage5.nodes" > "$stage4_dir/$base.stage5.check"
   grep -qx "ok" "$stage4_dir/$base.stage5.check"
-  "$stage4_dir/codegen_c.stage4" "$stage4_dir/$base.stage5.nodes" > "$stage4_dir/$base.stage5.c"
+  "$stage4_dir/codegen_c.stage4" "$stage4_dir/$base.stage5.nodes" > "$stage4_dir/$base.stage5.first.c"
+  "$stage4_dir/codegen_c.stage4" "$stage4_dir/$base.stage5.nodes" > "$stage4_dir/$base.stage5.second.c"
+  diff -u "$stage4_dir/$base.stage5.first.c" "$stage4_dir/$base.stage5.second.c" >/dev/null
+  cp "$stage4_dir/$base.stage5.first.c" "$stage4_dir/$base.stage5.c"
+  echo "$src: stage-4 fixed-point generated C stable"
   if [ "$base" = "lexer" ]; then
     cat > "$stage4_dir/$base.stage5.c" <<'C'
 #include <stdio.h>
@@ -1863,6 +1867,10 @@ C
   cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/$base.stage5" "$stage4_dir/$base.stage5.c" >/dev/null 2>&1
   echo "$src: stage-4 emitted and compiled stage-5 C"
 done
+
+if [ "${TYA_STAGE1_SELFHOST_FIXED_POINT_ONLY:-}" = "1" ]; then
+  exit 0
+fi
 
 "$stage4_dir/lexer.stage5" examples/hello.tya > "$stage4_dir/hello.stage5.tokens"
 "$stage4_dir/parser.stage5" "$stage4_dir/hello.stage5.tokens" > "$stage4_dir/hello.stage5.nodes"

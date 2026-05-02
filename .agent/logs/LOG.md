@@ -3,13 +3,21 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 6
-**Current Task:** SELFHOST-006 Complete
+**Tasks Completed:** 7
+**Current Task:** SELFHOST-007 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - SELFHOST-007 - Added an explicit fixed-point gate
+  that rebuilds through the stage-4 generated toolchain, emits C twice for the
+  lexer, parser, checker, and C code generator self-host sources, and fails on
+  any byte drift between repeated generated C. Added focused Go coverage and
+  documented the exact deterministic fixed point currently proven.
+  Verification: `sh scripts/selfhost_fixed_point_check.sh`;
+  `go test ./tests -run Selfhost -count=1`; `go test ./... -count=1`;
+  `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-03 00:00 UTC - SELFHOST-006 - Made the stage-4 generated-tool
   example gate iterate every `supported` entry in
   `scripts/selfhost_examples_manifest.txt`, compile and run each generated C

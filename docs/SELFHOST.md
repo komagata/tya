@@ -65,6 +65,20 @@ compile all four self-host compiler sources into stage-5 C binaries, uses
 stage-5 tools to compile stage-6 binaries, and verifies stable stage-7
 generated C for the self-host compiler sources.
 
+The explicit fixed-point gate is:
+
+```sh
+sh scripts/selfhost_fixed_point_check.sh
+```
+
+That gate rebuilds the generated toolchain through stage 4, emits C twice for
+`selfhost/lexer.tya`, `selfhost/parser.tya`, `selfhost/checker.tya`, and
+`selfhost/codegen_c.tya` with the stage-4 generated code generator, and fails
+if any byte-for-byte diff appears between the repeated generated C files. It
+does not claim full language parity; it proves deterministic regeneration for
+the complete self-host compiler source set supported by the current generated
+toolchain.
+
 Example parity status is tracked in
 `scripts/selfhost_examples_manifest.txt`. Each example is classified as
 supported, expected-failing with its next missing feature, or out-of-scope as a
