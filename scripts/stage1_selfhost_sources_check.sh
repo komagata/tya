@@ -1719,19 +1719,22 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
 int main(int argc, char **argv) {
   FILE *file = argc > 1 ? fopen(argv[1], "rb") : stdin;
   char line[8192];
-  if (!file || !fgets(line, sizeof(line), file)) return 0;
-  puts("1:INDENT:0:1");
-  char *start = strstr(line, "print ");
-  if (start) {
-    start += 6;
-    const char *kind = *start == 34 ? "STRING" : ((*start >= 48 && *start <= 57) ? "INT" : "IDENT");
-    if (*start == 34) start++;
-    char *end = strrchr(start, 34);
-    if (end) *end = 0;
-    char *nl = strchr(start, 10);
-    if (nl) *nl = 0;
-    puts("1:IDENT:print:1");
-    printf("1:%s:%s:7\n", kind, start);
+  int line_no = 1;
+  while (file && fgets(line, sizeof(line), file)) {
+    printf("%d:INDENT:0:1\n", line_no);
+    char *start = strstr(line, "print ");
+    if (start) {
+      start += 6;
+      const char *kind = *start == 34 ? "STRING" : ((*start >= 48 && *start <= 57) ? "INT" : "IDENT");
+      if (*start == 34) start++;
+      char *end = strrchr(start, 34);
+      if (end) *end = 0;
+      char *nl = strchr(start, 10);
+      if (nl) *nl = 0;
+      printf("%d:IDENT:print:1\n", line_no);
+      printf("%d:%s:%s:7\n", line_no, kind, start);
+    }
+    line_no++;
   }
   return 0;
 }
@@ -1834,3 +1837,15 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/print_int.stage5" "$stage4_d
 stage5_print_int_out="$("$stage4_dir/print_int.stage5")"
 test "$stage5_print_int_out" = "42"
 echo "stage5 print int: self-host pipeline matched"
+
+printf 'print "Stage"\nprint "Five"\n' > "$stage4_dir/two_prints.stage5.tya"
+"$stage4_dir/lexer.stage5" "$stage4_dir/two_prints.stage5.tya" > "$stage4_dir/two_prints.stage5.tokens"
+"$stage4_dir/parser.stage5" "$stage4_dir/two_prints.stage5.tokens" > "$stage4_dir/two_prints.stage5.nodes"
+"$stage4_dir/checker.stage5" "$stage4_dir/two_prints.stage5.nodes" > "$stage4_dir/two_prints.stage5.check"
+grep -qx "ok" "$stage4_dir/two_prints.stage5.check"
+"$stage4_dir/codegen_c.stage5" "$stage4_dir/two_prints.stage5.nodes" > "$stage4_dir/two_prints.stage5.c"
+cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/two_prints.stage5" "$stage4_dir/two_prints.stage5.c" >/dev/null 2>&1
+stage5_two_prints_out="$("$stage4_dir/two_prints.stage5")"
+test "$stage5_two_prints_out" = "Stage
+Five"
+echo "stage5 two prints: self-host pipeline matched"
