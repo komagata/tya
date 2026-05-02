@@ -40,12 +40,15 @@ Current supported subset:
 
 - Lexer: identifiers, ints, strings, comments, symbols, common two-character
   operators, source lines, and indentation counts
-- Parser: simple assignment, simple function headers and inline returns,
-  `push`, `return`, `if`, `else`, one-, two-, and three-argument function calls, `while`,
-  `for`, `break`, `continue`, direct comparison, `!=`, `>=`, `<=`, and `or` conditions,
-  one-argument call conditions, call comparison conditions, negated call conditions, comparison and call-based `while`
+- Parser: line-oriented nodes for simple assignments, simple function headers
+  and inline returns, `push`, `return`, `if`, `else`, one-, two-, and
+  three-argument function calls, selected four-argument function signatures,
+  `while`, `for`, `break`, `continue`, direct comparison, `!=`, `>=`, `<=`,
+  and `or` conditions, one-argument call conditions, call comparison
+  conditions, negated call conditions, comparison and call-based `while`
   conditions, call-with-call-index arguments, call indexing, return calls,
-  indexing, indentation, print nodes, and one-argument print calls
+  indexing, indentation, member print nodes, multiple-return subset nodes, and
+  one-argument print calls
 - Checker: simple undefined assignment / print / condition names
 - C codegen: string/int assignments, simple integer addition assignments,
   simple comparison / `!=` / `>=` / `<=` assignments, variable-copy assignments, bool assignments,
@@ -60,3 +63,7 @@ Current supported subset:
   call/index assignment declarations, self-host source compile smoke checks,
   and simple literal or variable `if` / `else` / `while` / `for` blocks with `break` /
   `continue`
+
+The bootstrap scripts now reach stable stage-7 generated C for the self-host
+compiler sources, but this is still a prototype subset. The remaining
+full-parity gap inventory is maintained in `../SELFHOST_WORK.md`.

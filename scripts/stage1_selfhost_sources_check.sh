@@ -2,6 +2,10 @@
 set -eu
 
 out_dir="$(mktemp -d "${TMPDIR:-/tmp}/tya-stage1-selfhost-sources.XXXXXX")"
+cc_warning_flags=""
+if printf '' | gcc -Wno-format-truncation -x c -fsyntax-only - >/dev/null 2>&1; then
+  cc_warning_flags="-Wno-format-truncation"
+fi
 
 mkdir -p "$out_dir"
 
@@ -18,7 +22,7 @@ compare_stage2_codegen() {
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
   base="$(basename "$src" .tya)"
   go run ./cmd/tya --emit-c "$src" > "$out_dir/$base.stage1.c"
-  gcc "$out_dir/$base.stage1.c" runtime/tya_runtime.c -I runtime -o "$out_dir/$base.stage1"
+  gcc $cc_warning_flags "$out_dir/$base.stage1.c" runtime/tya_runtime.c -I runtime -o "$out_dir/$base.stage1"
 done
 
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
@@ -160,7 +164,7 @@ TOKENS
 diff -u "$out_dir/operators.want.tokens" "$out_dir/operators.stage2.tokens" >/dev/null
 echo "operators: stage-2 lexer matched"
 
-printf 'ratio = 12.5\ntext = "a\\\"b"\n' > "$out_dir/literals.tya"
+printf '%s\n' 'ratio = 12.5' 'text = "a\"b"' > "$out_dir/literals.tya"
 "$out_dir/lexer.stage2" "$out_dir/literals.tya" > "$out_dir/literals.stage2.tokens"
 cat > "$out_dir/literals.want.tokens" <<'TOKENS'
 1:INDENT:0:1

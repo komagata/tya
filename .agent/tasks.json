@@ -3,7 +3,7 @@
     "id": "SELFHOST-001",
     "title": "Inventory the remaining gap to complete self-hosting",
     "priority": 1,
-    "passes": false
+    "passes": true
   },
   {
     "id": "SELFHOST-002",

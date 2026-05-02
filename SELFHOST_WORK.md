@@ -195,11 +195,74 @@ endpoint.
         - [x] Make stage-3 codegen emit executable parser C from real parser-driver nodes
         - [x] Make stage-3 codegen emit executable checker C from real checker-driver nodes
         - [x] Make stage-3 codegen emit executable codegen C from real codegen-driver nodes
-        - [x] Replace stage-4 generated-tool mode fallback with source-specific generated tools
-          - [x] Replace stage-4 checker mode fallback with source-specific checker C
-          - [x] Replace stage-4 parser mode fallback with source-specific parser C
-          - [x] Replace stage-4 lexer mode fallback with source-specific lexer C
-          - [x] Replace stage-4 codegen mode fallback with source-specific codegen C
+      - [x] Replace stage-4 generated-tool mode fallback with source-specific generated tools
+        - [x] Replace stage-4 checker mode fallback with source-specific checker C
+        - [x] Replace stage-4 parser mode fallback with source-specific parser C
+        - [x] Replace stage-4 lexer mode fallback with source-specific lexer C
+        - [x] Replace stage-4 codegen mode fallback with source-specific codegen C
+
+## Remaining Gap Inventory
+
+Complete self-hosting means the Tya-written lexer, parser, checker, and C
+generator compile themselves through repeated stages, the generated tools run
+the supported repository examples, and regenerated generated C reaches a stable
+fixed point without source-specific fallback behavior.
+
+The current bootstrap gate already reaches stage-7 C stability for the
+bootstrap tool source and stage-4/stage-5 generated tools run the supported
+example set in `scripts/stage1_selfhost_sources_check.sh`. The remaining gaps
+are full-language parity gaps, ordered by dependency:
+
+- [ ] Replace the parser's line-oriented node shortcuts with a structured AST
+  representation.
+  - [ ] Preserve nested expression structure instead of flattening ad hoc node
+    strings such as `ASSIGN:*:CALL*`, `IF_COMPARE_*`, and `PRINT_CALL*`.
+  - [ ] Parse the full expression grammar from the Go parser: precedence for
+    arithmetic, comparison, equality, logical operators, grouped expressions,
+    unary `not` and unary minus, method calls, member access, indexing, and
+    calls with arbitrary expression arguments.
+  - [ ] Parse full statement and definition forms: object blocks with methods
+    and property assignment, array index assignment, imports, constants,
+    implicit last-expression returns, multi-value assignment/return beyond the
+    current two-value cases, and `try` propagation in general expression
+    positions.
+  - [ ] Remove parser/codegen paths that recognize specific self-host source
+    shapes instead of general Tya syntax.
+- [ ] Bring the self-host checker to Go checker parity.
+  - [ ] Model lexical scopes, block/function boundaries, reassignment, and
+    shadowing consistently with `internal/checker`.
+  - [ ] Enforce constants, imports/module public-binding rules, object member
+    names, method receiver rules, duplicate declarations, optional unused
+    checks, break/continue/return placement, and naming diagnostics with source
+    line parity.
+  - [ ] Check all expression forms and builtin arities rather than only the
+    current node-string subset.
+- [ ] Expand self-host C codegen from prototype lowering to general executable
+  code generation.
+  - [ ] Emit real functions, closures/function values, methods with `@`,
+    object and array mutation, indexing, imports/prelude loading, error values,
+    `try`, multi-return values, interpolation, unary operations, and all
+    standard-library calls documented in `docs/STDLIB.md`.
+  - [ ] Remove generated-C fallback stubs and example-specific recognizers;
+    generated tools should be produced from the parsed self-host source, not
+    source-name or line-pattern special cases.
+  - [ ] Generate C against the runtime ABI used by the Go emitter, or document
+    and converge any intentionally smaller ABI.
+- [ ] Broaden bootstrap parity gates.
+  - [ ] Promote every runnable `examples/*.tya` and selected
+    `examples/classic/*.tya` program into explicit stage-generated-tool parity
+    targets with interpreter-output comparison.
+  - [ ] Add negative parser/checker fixtures for unsupported or invalid
+    language features as they become supported.
+  - [ ] Keep deterministic C comparisons for each generated stage and example
+    category.
+- [ ] Prove the final fixed point.
+  - [ ] Compile the self-host compiler sources with the generated self-host
+    tools for repeated stages without changing tool behavior or generated C.
+  - [ ] Compare regenerated generated C byte-for-byte at the final stage.
+  - [ ] Make `scripts/selfhost_bootstrap_check.sh` the complete self-host gate:
+    docs, stage progression, supported examples, and fixed-point stability must
+    all be covered by one command.
 
 ## Last Resolved Blocker
 

@@ -134,7 +134,7 @@ Remaining hardening:
 
 ## Phase 5: Self-Hosting
 
-Status: started.
+Status: bootstrap fixed-point prototype; full language parity remains.
 
 Sequence:
 
@@ -206,6 +206,17 @@ Implemented:
 - Stage-4 generated tools execute `examples/arithmetic.tya`
 - Stage-4 generated tools execute `examples/function.tya`
 - Stage-4 generated tools execute `examples/return.tya`
+- Stage-4 generated tools execute `examples/object.tya`
+- Stage-4 generated tools execute `examples/object_inline.tya`
+- Stage-4 generated tools execute `examples/if.tya`
+- Stage-4 generated tools execute `examples/logic.tya`
+- Stage-4 generated tools execute `examples/error.tya`
+- Stage-4 generated tools execute `examples/convert.tya`
+- Stage-4 generated tools execute `examples/file.tya`
+- Stage-4 generated tools execute `examples/args.tya`
+- Stage-4 generated tools execute `examples/equal.tya`
+- Stage-4 generated tools execute `examples/array.tya`
+- Stage-4 generated tools execute `examples/for.tya`
 - Stage-3 parser emits non-empty lexer-driver nodes for `selfhost/lexer.tya`
 - Stage-3 codegen emits executable lexer C from real lexer-driver nodes
 - Stage-3 parser emits non-empty parser-driver nodes for `selfhost/parser.tya`
@@ -218,6 +229,10 @@ Implemented:
 - Self-hosted parser/codegen handles simple integer addition assignments
 - Self-hosted parser/codegen handles parenthesized integer addition assignments
 - Self-hosted parser/codegen handles simple equality, inequality, and bounds comparison assignments
+- Stage-4 generated tools compile all four self-host compiler sources into stage-5 C binaries
+- Stage-5 generated tools run `examples/hello.tya` plus print-string, print-int, and two-print fixtures
+- Stage-5 tool source compiles into stage-6 binaries that run print-string, print-int, and two-print fixtures
+- Stage-6 tool source emits stable stage-7 C for all four self-host compiler sources
 - Self-hosted parser/codegen handles parenthesized bounds comparison assignments
 - Self-hosted parser/codegen handles simple unary `not` assignments
 - Self-hosted parser/codegen handles empty array placeholders
@@ -286,6 +301,17 @@ Implemented:
 - Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` conditions
 - Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` comparison assignments
 - Self-hosted parser/checker/codegen carries simple `!=`, `>=`, and `<=` `while` conditions
+
+Remaining hardening:
+
+- Replace line-oriented parser shortcuts with structured expression parsing for
+  the full Go parser grammar
+- Bring self-host checker diagnostics and scope rules to Go checker parity
+- Replace source-specific generated-C fallbacks with general codegen for the
+  full language and documented standard library
+- Promote all runnable examples into explicit generated-tool parity targets
+- Keep the final bootstrap gate proving repeated self-compilation and
+  byte-stable generated C
 
 Self-Host Completion TODO:
 
