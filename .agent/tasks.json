@@ -45,6 +45,6 @@
     "id": "SELFHOST-008",
     "title": "Document and enforce the complete self-host gate",
     "priority": 8,
-    "passes": false
+    "passes": true
   }
 ]

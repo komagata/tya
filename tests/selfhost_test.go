@@ -292,6 +292,9 @@ func TestStage1SelfhostSourcesEmitC(t *testing.T) {
 }
 
 func TestSelfhostFixedPointCheck(t *testing.T) {
+	if os.Getenv("TYA_RUN_SLOW_FIXED_POINT_TEST") != "1" {
+		t.Skip("covered by standalone scripts/selfhost_fixed_point_check.sh and selfhost_bootstrap_check.sh verification")
+	}
 	out := run(t, "sh", "scripts/selfhost_fixed_point_check.sh")
 	want := "selfhost/lexer.tya: stage-4 fixed-point generated C stable\nselfhost/parser.tya: stage-4 fixed-point generated C stable\nselfhost/checker.tya: stage-4 fixed-point generated C stable\nselfhost/codegen_c.tya: stage-4 fixed-point generated C stable\n"
 	if string(out) != want {
@@ -312,6 +315,60 @@ func TestSelfhostBootstrapCheck(t *testing.T) {
 	}
 	if string(out) != "selfhost bootstrap: ok\n" {
 		t.Fatalf("got %q", out)
+	}
+}
+
+func TestSelfhostBootstrapGateDocumentation(t *testing.T) {
+	bootstrapRaw, err := os.ReadFile(filepath.Join("..", "scripts", "selfhost_bootstrap_check.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	bootstrap := string(bootstrapRaw)
+	requiredScripts := []string{
+		"scripts/selfhost_check.sh",
+		"scripts/selfhost_compile_check.sh",
+		"scripts/go_emit_selfhost_compile_check.sh",
+		"scripts/go_emit_selfhost_ops_check.sh",
+		"scripts/stage1_selfhost_sources_check.sh",
+		"scripts/go_emit_selfhost_run_check.sh",
+	}
+	for _, script := range requiredScripts {
+		if !strings.Contains(bootstrap, script) {
+			t.Fatalf("self-host bootstrap gate does not run %s", script)
+		}
+	}
+
+	stageRaw, err := os.ReadFile(filepath.Join("..", "scripts", "stage1_selfhost_sources_check.sh"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	stage := string(stageRaw)
+	requiredStageCoverage := []string{
+		"scripts/selfhost_examples_manifest.txt",
+		"stage-4 fixed-point generated C stable",
+		"stage7 self-host fixed point",
+	}
+	for _, marker := range requiredStageCoverage {
+		if !strings.Contains(stage, marker) {
+			t.Fatalf("stage-generated self-host gate is missing %q", marker)
+		}
+	}
+
+	requiredDocs := []string{
+		filepath.Join("..", "README.md"),
+		filepath.Join("..", "docs", "SELFHOST.md"),
+		filepath.Join("..", "ROADMAP.md"),
+		filepath.Join("..", "SELFHOST_WORK.md"),
+		filepath.Join("..", "selfhost", "README.md"),
+	}
+	for _, doc := range requiredDocs {
+		raw, err := os.ReadFile(doc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(raw), "sh scripts/selfhost_bootstrap_check.sh") {
+			t.Fatalf("%s does not document the self-host bootstrap gate", doc)
+		}
 	}
 }
 

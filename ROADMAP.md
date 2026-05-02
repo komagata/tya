@@ -134,7 +134,8 @@ Remaining hardening:
 
 ## Phase 5: Self-Hosting
 
-Status: bootstrap fixed-point prototype; full language parity remains.
+Status: complete automated bootstrap gate for the supported subset; full
+language parity remains.
 
 Sequence:
 
@@ -244,6 +245,10 @@ Implemented:
 - `scripts/selfhost_fixed_point_check.sh` proves byte-stable stage-4
   generated C for `selfhost/lexer.tya`, `selfhost/parser.tya`,
   `selfhost/checker.tya`, and `selfhost/codegen_c.tya`
+- `scripts/selfhost_bootstrap_check.sh` is the single documented self-host
+  bootstrap gate, covering source checks, generated-C compile checks,
+  supported example parity, repeated bootstrap stages, and fixed-point
+  generated-C stability
 - Self-hosted parser/codegen handles parenthesized bounds comparison assignments
 - Self-hosted parser/codegen handles simple unary `not` assignments
 - Self-hosted parser/codegen handles empty array placeholders
@@ -323,7 +328,7 @@ Remaining hardening:
 - Promote the examples classified in `scripts/selfhost_examples_manifest.txt`
   from expected-failing to explicit generated-tool parity targets
 - Keep the final bootstrap gate proving repeated self-compilation and
-  byte-stable generated C
+  byte-stable generated C as the self-host subset expands
 
 Self-Host Completion TODO:
 
@@ -479,7 +484,10 @@ Self-Host Completion TODO:
 - [ ] Documentation and release readiness
   - [x] Document supported self-host subset versus full language
   - [x] Document bootstrap commands and expected artifacts
-  - [ ] Mark Phase 5 complete only after `go test ./...` and bootstrap checks pass from a clean checkout
+  - [x] Mark the supported-subset bootstrap gate complete after `go test ./...`
+    and `sh scripts/selfhost_bootstrap_check.sh` pass from a clean checkout
+  - [ ] Mark full Phase 5 language parity complete only after the remaining
+    parser, checker, codegen, and example parity gaps are closed
 
 ## Non-Goals For Now
 

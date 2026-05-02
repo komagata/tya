@@ -1,8 +1,19 @@
-# Self-Hosting Prototype
+# Self-Hosting
 
-This directory contains the first Tya-written compiler pieces.
+This directory contains the Tya-written compiler pieces used by the automated
+self-host bootstrap gate.
 
-Current pipeline:
+Run the complete self-host bootstrap gate from the repository root:
+
+```sh
+sh scripts/selfhost_bootstrap_check.sh
+```
+
+This single command runs the source checks, generated-C compile checks, the
+stage-generated supported-example parity gate, repeated bootstrap stages, and
+fixed-point checks for deterministic generated C.
+
+Development pipeline:
 
 ```sh
 sh scripts/selfhost.sh
@@ -32,9 +43,9 @@ Go-emitted self-host pipeline run check:
 sh scripts/go_emit_selfhost_run_check.sh
 ```
 
-The current implementation is intentionally tiny. It proves that Tya can run
-Tya-written compiler components before those components understand the full
-language.
+The current implementation proves that Tya can run Tya-written compiler
+components through repeated generated stages for the supported subset. The
+compiler components still do not understand the full language.
 
 Current supported subset:
 
@@ -68,6 +79,5 @@ Current supported subset:
 The bootstrap scripts now reach stable stage-7 generated C for the self-host
 compiler sources. `scripts/selfhost_fixed_point_check.sh` also verifies that
 the stage-4 generated toolchain emits byte-stable C for the lexer, parser,
-checker, and C code generator self-host sources across repeated runs. This is
-still a prototype subset. The remaining full-parity gap inventory is maintained
-in `../SELFHOST_WORK.md`.
+checker, and C code generator self-host sources across repeated runs. The
+remaining full-parity gap inventory is maintained in `../SELFHOST_WORK.md`.

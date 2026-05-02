@@ -28,6 +28,19 @@ go run ./cmd/tya --check-unused examples/hello.tya
 go test ./...
 ```
 
+## Self-Host Gate
+
+Run the complete self-host bootstrap gate from a clean checkout with:
+
+```sh
+sh scripts/selfhost_bootstrap_check.sh
+```
+
+This verifies the Tya-written compiler components, generated-C compile checks,
+the stage-generated supported-example parity gate, repeated bootstrap stages,
+and deterministic generated-C fixed-point checks. Full language parity gaps are
+tracked in `docs/SELFHOST.md`, `ROADMAP.md`, and `SELFHOST_WORK.md`.
+
 ## Implemented
 
 - `.tya` file runner

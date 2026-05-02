@@ -276,11 +276,11 @@ are full-language parity gaps, ordered by dependency:
     language features as they become supported.
   - [ ] Keep deterministic C comparisons for each generated stage and example
     category.
-- [ ] Prove the final fixed point.
-  - [ ] Compile the self-host compiler sources with the generated self-host
+  - [x] Prove the final fixed point for the current supported subset.
+  - [x] Compile the self-host compiler sources with the generated self-host
     tools for repeated stages without changing tool behavior or generated C.
-  - [ ] Compare regenerated generated C byte-for-byte at the final stage.
-  - [ ] Make `scripts/selfhost_bootstrap_check.sh` the complete self-host gate:
+  - [x] Compare regenerated generated C byte-for-byte at the final stage.
+  - [x] Make `scripts/selfhost_bootstrap_check.sh` the complete self-host gate:
     docs, stage progression, supported examples, and fixed-point stability must
     all be covered by one command.
 
@@ -305,3 +305,8 @@ supported example regresses or disappears from the generated-tool pipeline.
 The stage-2 codegen gate also now compiles and runs explicit array index
 assignment nodes, replacing the previous `INDEX` assignment placeholder for
 string static and dynamic arrays.
+`scripts/selfhost_bootstrap_check.sh` is now the documented single self-host
+bootstrap gate. It covers the source checks, generated-C compile checks,
+Go-emitted self-host checks, supported example parity through generated tools,
+repeated bootstrap stages, and fixed-point generated-C stability. Full language
+parity remains tracked in the remaining gap inventory above.

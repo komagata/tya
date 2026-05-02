@@ -3,13 +3,22 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 7
-**Current Task:** SELFHOST-007 Complete
+**Tasks Completed:** 8
+**Current Task:** SELFHOST-008 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - SELFHOST-008 - Documented
+  `sh scripts/selfhost_bootstrap_check.sh` as the single self-host bootstrap
+  gate and added focused coverage that the gate includes source checks,
+  generated-C checks, stage-generated supported-example parity, repeated
+  bootstrap stages, and fixed-point markers. Updated the self-host status docs
+  to distinguish the completed supported-subset bootstrap gate from remaining
+  full-language parity gaps.
+  Verification: `go test ./tests -run TestSelfhostBootstrapGateDocumentation -count=1`;
+  `go test ./... -count=1`; `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-03 00:00 UTC - SELFHOST-007 - Added an explicit fixed-point gate
   that rebuilds through the stage-4 generated toolchain, emits C twice for the
   lexer, parser, checker, and C code generator self-host sources, and fails on

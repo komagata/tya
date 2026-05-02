@@ -1,10 +1,11 @@
 # Self-Hosting
 
-Tya's self-hosting compiler is in the bootstrap fixed-point prototype stage.
-The Tya-written compiler components can tokenize, parse, check, emit C for,
-compile, and run the current bootstrap subset of the language through generated
-stage-4 and stage-5 tools. They also reach stable stage-7 generated C for the
-self-host compiler sources. They do not yet implement the full language.
+Tya's self-hosting compiler has a complete automated bootstrap gate for the
+current supported subset. The Tya-written compiler components can tokenize,
+parse, check, emit C for, compile, and run the supported bootstrap subset of
+the language through generated stage-4 and stage-5 tools. They also reach
+stable stage-7 generated C for the self-host compiler sources. They do not yet
+implement the full language.
 
 ## Supported Subset
 
@@ -35,9 +36,9 @@ selected string builtins, simple return-function bodies, and several source-spec
 compile the self-host source files. It still does not provide general codegen
 for the full language.
 
-## Bootstrap Checks
+## Complete Bootstrap Gate
 
-Run the current full self-host gate:
+Run the complete self-host bootstrap gate from the repository root:
 
 ```sh
 sh scripts/selfhost_bootstrap_check.sh
@@ -56,14 +57,19 @@ Expected output:
 selfhost bootstrap: ok
 ```
 
-The current bootstrap pipeline compiles the self-host compiler components with
-the Go C emitter, uses those stage-1 binaries to produce stage-2 tools, uses
-the generated tools again to produce later stages, runs the stage-4 pipeline
-across every example marked supported in the parity manifest, compares each
-generated binary's output with the Go interpreter, uses the stage-4 tools to
-compile all four self-host compiler sources into stage-5 C binaries, uses
-stage-5 tools to compile stage-6 binaries, and verifies stable stage-7
-generated C for the self-host compiler sources.
+This command is the single documented verification command for self-hosting. It
+runs the Tya source checks, self-host generated-C compile checks, Go-emitted
+self-host compile/run checks, the stage-generated supported-example parity
+gate, repeated bootstrap stages, and deterministic fixed-point checks.
+
+The bootstrap pipeline compiles the self-host compiler components with the Go C
+emitter, uses those stage-1 binaries to produce stage-2 tools, uses the
+generated tools again to produce later stages, runs the stage-4 pipeline across
+every example marked supported in the parity manifest, compares each generated
+binary's output with the Go interpreter, uses the stage-4 tools to compile all
+four self-host compiler sources into stage-5 C binaries, uses stage-5 tools to
+compile stage-6 binaries, and verifies stable stage-7 generated C for the
+self-host compiler sources.
 
 The explicit fixed-point gate is:
 
@@ -75,9 +81,9 @@ That gate rebuilds the generated toolchain through stage 4, emits C twice for
 `selfhost/lexer.tya`, `selfhost/parser.tya`, `selfhost/checker.tya`, and
 `selfhost/codegen_c.tya` with the stage-4 generated code generator, and fails
 if any byte-for-byte diff appears between the repeated generated C files. It
-does not claim full language parity; it proves deterministic regeneration for
-the complete self-host compiler source set supported by the current generated
-toolchain.
+is also covered by `sh scripts/selfhost_bootstrap_check.sh`. It does not claim
+full language parity; it proves deterministic regeneration for the complete
+self-host compiler source set supported by the current generated toolchain.
 
 Example parity status is tracked in
 `scripts/selfhost_examples_manifest.txt`. Each example is classified as
@@ -103,6 +109,6 @@ The complete self-host goal is broader than the current bootstrap gate:
 
 ## Completion Criteria
 
-The current bootstrap gate is achieved when `go test ./... -count=1` and
+The current self-host gate is achieved when `go test ./... -count=1` and
 `sh scripts/selfhost_bootstrap_check.sh` pass from a clean checkout. Full
 language parity remains tracked in `SELFHOST_WORK.md` and `ROADMAP.md`.
