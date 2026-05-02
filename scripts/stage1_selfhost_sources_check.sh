@@ -883,6 +883,24 @@ array_for_out="$("$out_dir/array_for.stage2")"
 test "$array_for_out" = "Tya"
 echo "array for: stage-2 pipeline matched"
 
+cat > "$out_dir/array_index.stage2.nodes" <<'NODES'
+1:ASSIGN:names:ARRAY_TWO:STRING:Ada:STRING:Tya
+2:ASSIGN:name:INDEX:names:1
+3:PRINT:IDENT:name
+NODES
+"$out_dir/checker.stage2" "$out_dir/array_index.stage2.nodes" > "$out_dir/array_index.stage2.check"
+grep -qx "ok" "$out_dir/array_index.stage2.check"
+compare_stage2_codegen "array index assignment" "$out_dir/array_index.stage2.nodes"
+"$out_dir/codegen_c.stage2" "$out_dir/array_index.stage2.nodes" > "$out_dir/array_index.stage2.c"
+if grep -Fq '/* names[1] */' "$out_dir/array_index.stage2.c"; then
+  echo "array index assignment kept placeholder" >&2
+  exit 1
+fi
+cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/array_index.stage2" "$out_dir/array_index.stage2.c" >/dev/null 2>&1
+array_index_out="$("$out_dir/array_index.stage2")"
+test "$array_index_out" = "Tya"
+echo "array index assignment: stage-2 pipeline matched"
+
 "$out_dir/lexer.stage2" examples/selfhost_ops.tya > "$out_dir/selfhost_ops.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/selfhost_ops.stage2.tokens" > "$out_dir/selfhost_ops.stage2.nodes"
 "$out_dir/checker.stage2" "$out_dir/selfhost_ops.stage2.nodes" > "$out_dir/selfhost_ops.stage2.check"
@@ -1167,12 +1185,12 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 59:INDENT:2
 95:FOR:node:nodes
 96:INDENT:2
-2797:FOR:node:nodes
-2798:INDENT:2
-3551:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3554:FOR:line:lines
-3555:INDENT:2
-3558:PRINT_CALL1:emit_c:nodes
+2820:FOR:node:nodes
+2821:INDENT:2
+3588:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3591:FOR:line:lines
+3592:INDENT:2
+3595:PRINT_CALL1:emit_c:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"

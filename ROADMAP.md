@@ -183,6 +183,7 @@ Implemented:
   arithmetic assignments
 - Self-hosted C codegen emits simple `hasT(...)` string predicate conditions used by the prototype input
 - Self-hosted parser/codegen preserves and emits the prototype `len(parts) < 3` condition
+- Self-hosted C codegen emits string array index assignments for static and dynamic arrays
 - Stage-2 generated codegen can lower `readFile args()[0]`, `lex source`, and `parse tokens`
 - Stage-3 generated lexer tokenizes `examples/hello.tya`
 - Stage-3 generated parser parses stage-3 lexer output for `examples/hello.tya`

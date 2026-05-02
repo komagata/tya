@@ -116,6 +116,9 @@ endpoint.
     - [x] Emit `print len(value)` calls in the self-host C codegen subset
     - [x] Emit `print object.member` for one-property object placeholders
     - [x] Emit the current multiple-return example subset with string out-params
+    - [x] Emit string array index assignments for static and dynamic arrays
+    - [ ] Next codegen blocker: emit functional array builtin calls and
+      closure/function-value arguments used by `examples/array_function.tya`
   - [ ] Advance bootstrap from subset programs toward compiling existing examples
     - [x] Run a stage-2 pipeline for printing string length
     - [x] Run a stage-2 pipeline for trimming and printing a string
@@ -293,3 +296,6 @@ stage-7 C fixed point for the same tool source.
 The stage-4 example gates are part of
 `scripts/stage1_selfhost_sources_check.sh`, so the bootstrap gate now catches
 regressions in the next example-parity step.
+The stage-2 codegen gate also now compiles and runs explicit array index
+assignment nodes, replacing the previous `INDEX` assignment placeholder for
+string static and dynamic arrays.

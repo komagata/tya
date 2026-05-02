@@ -27,7 +27,7 @@
     "id": "SELFHOST-005",
     "title": "Expand self-host C codegen until examples run without placeholder behavior",
     "priority": 5,
-    "passes": false
+    "passes": true
   },
   {
     "id": "SELFHOST-006",

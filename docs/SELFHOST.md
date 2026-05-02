@@ -30,8 +30,8 @@ full lexical scope parity with the Go checker.
 The current self-hosted C code generator emits compileable C for the prototype
 node format. It supports simple scalar assignments and prints, selected
 comparison conditions, basic `if` / `else` / `while` / `for` blocks, `break`,
-`continue`, simple array and object placeholders, selected string builtins,
-simple return-function bodies, and several source-specific paths used to
+`continue`, simple arrays, string array index assignments, object placeholders,
+selected string builtins, simple return-function bodies, and several source-specific paths used to
 compile the self-host source files. It still does not provide general codegen
 for the full language.
 

@@ -2,14 +2,23 @@
 
 `Current Status`
 =================
-**Last Updated:** 2026-05-02 17:45
-**Tasks Completed:** 4
-**Current Task:** SELFHOST-004 Complete
+**Last Updated:** 2026-05-03 00:00
+**Tasks Completed:** 5
+**Current Task:** SELFHOST-005 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - SELFHOST-005 - Replaced the self-host C codegen
+  placeholder for string array index assignments with executable lowering for
+  static and dynamic arrays. Added a stage-2 checker/codegen fixture that
+  compiles and runs indexed array assignment output, and recorded the next
+  codegen blocker as functional array builtins with closure/function-value
+  arguments.
+  Verification: `sh scripts/stage1_selfhost_sources_check.sh`;
+  `sh scripts/selfhost_compile_check.sh`; `sh scripts/go_emit_selfhost_run_check.sh`;
+  `go test ./... -count=1`; `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-02 17:45 UTC - SELFHOST-004 - Added self-host checker parity for
   invalid assignment binding names and all-caps constant reassignment in the
   supported node subset. Added focused checker tests, a generated stage-1

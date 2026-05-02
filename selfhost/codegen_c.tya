@@ -1906,6 +1906,29 @@ emit_c = nodes ->
   push lines, "      strcpy(known_types[known_len], \"DYNARRAY\");"
   push lines, "      known_len++;"
   push lines, "    }"
+  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strcmp(b, \"ARRAY_TWO\") == 0 && strcmp(c, \"STRING\") == 0 && strcmp(e, \"STRING\") == 0) {"
+  push lines, "      printf(\"  const char *%s[] = {\", a);"
+  push lines, "      print_c_string_literal(d);"
+  push lines, "      printf(\", \");"
+  push lines, "      print_c_string_literal(f);"
+  push lines, "      puts(\"};\");"
+  push lines, "      printf(\"  long %s_len = 2;\\n\", a);"
+  push lines, "      strcpy(known_names[known_len], a);"
+  push lines, "      strcpy(known_types[known_len], \"DYNARRAY\");"
+  push lines, "      known_len++;"
+  push lines, "    }"
+  push lines, "    if (strcmp(kind, \"ASSIGN\") == 0 && strcmp(b, \"INDEX\") == 0) {"
+  push lines, "      int input_known = 0;"
+  push lines, "      for (int j = 0; j < known_len; j++) if (strcmp(known_names[j], c) == 0) input_known = 1;"
+  push lines, "      if (input_known) {"
+  push lines, "        printf(\"  const char *%s = %s[%s];\\n\", a, c, d);"
+  push lines, "      } else {"
+  push lines, "        printf(\"  const char *%s = \\\"\\\"; /* %s[%s] */\\n\", a, c, d);"
+  push lines, "      }"
+  push lines, "      strcpy(known_names[known_len], a);"
+  push lines, "      strcpy(known_types[known_len], \"STRING\");"
+  push lines, "      known_len++;"
+  push lines, "    }"
   push lines, "    if (strcmp(kind, \"FOR\") == 0) {"
   push lines, "      int input_known = 0;"
   push lines, "      for (int j = 0; j < known_len; j++) if (strcmp(known_names[j], b) == 0) input_known = 1;"
@@ -3130,11 +3153,25 @@ emit_c = nodes ->
                                         push lines, "  const char *" + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "()[" + extra2_of(node) + "] */"
                                     else
                                       if value_of(node) == "INDEX"
-                                        if has_name(names, name_of(node))
-                                          push lines, "  " + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "[" + extra2_of(node) + "] */"
+                                        if type_of(names, types, extra_of(node)) == "ARRAY"
+                                          if has_name(names, name_of(node))
+                                            push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "_" + extra2_of(node) + ";"
+                                          else
+                                            remember_type names, types, name_of(node), "STRING"
+                                            push lines, "  const char *" + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "_" + extra2_of(node) + ";"
                                         else
-                                          remember_type names, types, name_of(node), "STRING"
-                                          push lines, "  const char *" + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "[" + extra2_of(node) + "] */"
+                                          if type_of(names, types, extra_of(node)) == "DYNARRAY"
+                                            if has_name(names, name_of(node))
+                                              push lines, "  " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "[" + c_name(extra2_of(node)) + "];"
+                                            else
+                                              remember_type names, types, name_of(node), "STRING"
+                                              push lines, "  const char *" + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + "[" + c_name(extra2_of(node)) + "];"
+                                          else
+                                            if has_name(names, name_of(node))
+                                              push lines, "  " + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "[" + extra2_of(node) + "] */"
+                                            else
+                                              remember_type names, types, name_of(node), "STRING"
+                                              push lines, "  const char *" + c_name(name_of(node)) + " = \"\"; /* " + extra_of(node) + "[" + extra2_of(node) + "] */"
                                       else
                                         if value_of(node) == "IDENT"
                                           type_name = type_of(names, types, extra_of(node))
