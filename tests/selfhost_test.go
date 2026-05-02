@@ -265,6 +265,23 @@ func TestStage1SelfhostSourcesEmitC(t *testing.T) {
 	want = strings.Replace(want, "stage5 two prints: self-host pipeline matched\n", "stage5 two prints: self-host pipeline matched\nselfhost/lexer.tya: stage-5 emitted and compiled stage-6 C\nselfhost/parser.tya: stage-5 emitted and compiled stage-6 C\nselfhost/checker.tya: stage-5 emitted and compiled stage-6 C\nselfhost/codegen_c.tya: stage-5 emitted and compiled stage-6 C\nstage6 print string: self-host pipeline matched\n", 1)
 	want = strings.Replace(want, "stage6 print string: self-host pipeline matched\n", "stage6 print string: self-host pipeline matched\nstage6 print int: self-host pipeline matched\nstage6 two prints: self-host pipeline matched\n", 1)
 	want = strings.Replace(want, "stage6 two prints: self-host pipeline matched\n", "stage6 two prints: self-host pipeline matched\nselfhost/lexer.tya: stage-6 emitted stable stage-7 C\nselfhost/parser.tya: stage-6 emitted stable stage-7 C\nselfhost/checker.tya: stage-6 emitted stable stage-7 C\nselfhost/codegen_c.tya: stage-6 emitted stable stage-7 C\nstage7 self-host fixed point: self-host pipeline matched\n", 1)
+	manifestRaw, err := os.ReadFile(filepath.Join("..", "scripts", "selfhost_examples_manifest.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifestLines strings.Builder
+	for _, line := range strings.Split(string(manifestRaw), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.Split(line, "|")
+		if len(parts) == 4 && parts[1] == "supported" {
+			manifestLines.WriteString(parts[0])
+			manifestLines.WriteString(": stage-4 manifest pipeline matched\n")
+		}
+	}
+	want = strings.Replace(want, "stage4 for: self-host pipeline matched\nselfhost/lexer.tya", "stage4 for: self-host pipeline matched\n"+manifestLines.String()+"selfhost/lexer.tya", 1)
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

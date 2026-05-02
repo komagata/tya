@@ -59,10 +59,11 @@ selfhost bootstrap: ok
 The current bootstrap pipeline compiles the self-host compiler components with
 the Go C emitter, uses those stage-1 binaries to produce stage-2 tools, uses
 the generated tools again to produce later stages, runs the stage-4 pipeline
-across the supported executable examples, uses the stage-4 tools to compile all
-four self-host compiler sources into stage-5 C binaries, uses stage-5 tools to
-compile stage-6 binaries, and verifies stable stage-7 generated C for the
-self-host compiler sources.
+across every example marked supported in the parity manifest, compares each
+generated binary's output with the Go interpreter, uses the stage-4 tools to
+compile all four self-host compiler sources into stage-5 C binaries, uses
+stage-5 tools to compile stage-6 binaries, and verifies stable stage-7
+generated C for the self-host compiler sources.
 
 Example parity status is tracked in
 `scripts/selfhost_examples_manifest.txt`. Each example is classified as

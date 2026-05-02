@@ -19,6 +19,21 @@ compare_stage2_codegen() {
   echo "$label: stage-2 codegen deterministic"
 }
 
+run_stage4_manifest_example() {
+  example="$1"
+  file_label="$(printf '%s' "$example" | tr '/ ' '__')"
+  "$stage4_dir/lexer.stage4" "$example" > "$stage4_dir/$file_label.manifest.tokens"
+  "$stage4_dir/parser.stage4" "$stage4_dir/$file_label.manifest.tokens" > "$stage4_dir/$file_label.manifest.nodes"
+  "$stage4_dir/checker.stage4" "$stage4_dir/$file_label.manifest.nodes" > "$stage4_dir/$file_label.manifest.check"
+  grep -qx "ok" "$stage4_dir/$file_label.manifest.check"
+  "$stage4_dir/codegen_c.stage4" "$stage4_dir/$file_label.manifest.nodes" > "$stage4_dir/$file_label.manifest.c"
+  cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/$file_label.manifest" "$stage4_dir/$file_label.manifest.c" >/dev/null 2>&1
+  go run ./cmd/tya "$example" > "$stage4_dir/$file_label.manifest.want"
+  "$stage4_dir/$file_label.manifest" > "$stage4_dir/$file_label.manifest.got"
+  diff -u "$stage4_dir/$file_label.manifest.want" "$stage4_dir/$file_label.manifest.got" >/dev/null
+  echo "$example: stage-4 manifest pipeline matched"
+}
+
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
   base="$(basename "$src" .tya)"
   go run ./cmd/tya --emit-c "$src" > "$out_dir/$base.stage1.c"
@@ -1735,6 +1750,17 @@ test "$stage4_for_out" = "12
 1:4
 2:6"
 echo "stage4 for: self-host pipeline matched"
+
+while IFS='|' read -r example status gate reason; do
+  case "$example" in
+    ''|\#*) continue ;;
+  esac
+  if [ "$status" = "supported" ]; then
+    test "$gate" = "scripts/stage1_selfhost_sources_check.sh"
+    test -n "$reason"
+    run_stage4_manifest_example "$example"
+  fi
+done < scripts/selfhost_examples_manifest.txt
 
 for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/codegen_c.tya; do
   base="$(basename "$src" .tya)"

@@ -33,7 +33,7 @@
     "id": "SELFHOST-006",
     "title": "Make stage-generated tools compile and run every supported example",
     "priority": 6,
-    "passes": false
+    "passes": true
   },
   {
     "id": "SELFHOST-007",

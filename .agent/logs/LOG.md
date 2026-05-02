@@ -3,13 +3,22 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 5
-**Current Task:** SELFHOST-005 Complete
+**Tasks Completed:** 6
+**Current Task:** SELFHOST-006 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - SELFHOST-006 - Made the stage-4 generated-tool
+  example gate iterate every `supported` entry in
+  `scripts/selfhost_examples_manifest.txt`, compile and run each generated C
+  binary, and compare its output with the Go interpreter. Updated the focused
+  self-host script test to derive the expected manifest gate lines from the
+  manifest.
+  Verification: `sh scripts/stage1_selfhost_sources_check.sh`;
+  `go test ./tests -run 'TestStage1SelfhostSourcesEmitC|TestSelfhostExampleParityManifest' -count=1`;
+  `go test ./... -count=1`; `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-03 00:00 UTC - SELFHOST-005 - Replaced the self-host C codegen
   placeholder for string array index assignments with executable lowering for
   static and dynamic arrays. Added a stage-2 checker/codegen fixture that

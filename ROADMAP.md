@@ -222,6 +222,9 @@ Implemented:
 - Stage-4 generated tools execute `examples/equal.tya`
 - Stage-4 generated tools execute `examples/array.tya`
 - Stage-4 generated tools execute `examples/for.tya`
+- Stage-4 generated tools iterate every example marked supported in
+  `scripts/selfhost_examples_manifest.txt` and compare generated binary output
+  with the Go interpreter
 - Stage-3 parser emits non-empty lexer-driver nodes for `selfhost/lexer.tya`
 - Stage-3 codegen emits executable lexer C from real lexer-driver nodes
 - Stage-3 parser emits non-empty parser-driver nodes for `selfhost/parser.tya`

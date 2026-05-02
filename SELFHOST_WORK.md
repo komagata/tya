@@ -265,6 +265,9 @@ are full-language parity gaps, ordered by dependency:
   - [ ] Promote every runnable `examples/*.tya` and selected
     `examples/classic/*.tya` program into explicit stage-generated-tool parity
     targets with interpreter-output comparison.
+    - [x] Drive the stage-4 supported-example gate from
+      `scripts/selfhost_examples_manifest.txt` and compare each supported
+      generated binary's output with the Go interpreter.
     - [ ] Next unsupported dependency: `examples/array_function.tya` requires
       generated parser/checker/codegen parity for functional array builtins
       and closure/function-value calls.
@@ -294,8 +297,10 @@ same pipeline. The stage-5 tool source now also compiles into stage-6 binaries
 that run print-string, print-int, and two-print fixtures, then reaches a stable
 stage-7 C fixed point for the same tool source.
 The stage-4 example gates are part of
-`scripts/stage1_selfhost_sources_check.sh`, so the bootstrap gate now catches
-regressions in the next example-parity step.
+`scripts/stage1_selfhost_sources_check.sh`, and the script now iterates every
+example marked supported in `scripts/selfhost_examples_manifest.txt`, compares
+each generated binary's output with the Go interpreter, and fails if a
+supported example regresses or disappears from the generated-tool pipeline.
 The stage-2 codegen gate also now compiles and runs explicit array index
 assignment nodes, replacing the previous `INDEX` assignment placeholder for
 string static and dynamic arrays.
