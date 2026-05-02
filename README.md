@@ -82,3 +82,10 @@ counter =
 print counter.inc()
 print counter.inc()
 ```
+
+Classic milestone examples live under `examples/classic/`:
+
+```sh
+go run ./cmd/tya examples/classic/fib.tya
+go run ./cmd/tya run examples/classic/fizzbuzz.tya
+```

@@ -1,0 +1,11 @@
+n = 29
+d = 2
+isPrime = true
+
+while d * d <= n
+  if n % d == 0
+    isPrime = false
+    break
+  d = d + 1
+
+print isPrime
