@@ -21,7 +21,7 @@
     "id": "CLASS-004",
     "title": "Add class declarations, constructors, and instance member access",
     "priority": 4,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-005",

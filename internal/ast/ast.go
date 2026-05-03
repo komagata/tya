@@ -64,6 +64,20 @@ type ReturnStmt struct {
 
 func (*ReturnStmt) stmt() {}
 
+type ClassDecl struct {
+	Name    string
+	NameTok token.Token
+	Methods []ClassMethod
+}
+
+func (*ClassDecl) stmt() {}
+
+type ClassMethod struct {
+	Name string
+	Tok  token.Token
+	Func *FuncLit
+}
+
 type Ident struct {
 	Name string
 	Tok  token.Token

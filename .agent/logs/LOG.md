@@ -3,13 +3,22 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 10
-**Current Task:** CLASS-002 Complete
+**Tasks Completed:** 11
+**Current Task:** CLASS-004 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - CLASS-004 - Added parser/checker/evaluator support
+  for class declarations, PascalCase class names, duplicate method diagnostics,
+  constructors via `init`, instance fields through `@field`, property reads, and
+  bound method calls. Added `examples/class.tya`, golden coverage, focused
+  parser/checker/eval tests, and an explicit generated-C rejection test for
+  class declarations until C parity is implemented.
+  Verification: `go test ./internal/lexer ./internal/parser ./internal/ast ./internal/checker -count=1`;
+  `go test ./internal/eval ./internal/runner -count=1`;
+  `go test ./internal/codegen ./tests -count=1`; `go test ./... -count=1`.
 - 2026-05-03 00:00 UTC - CLASS-003 - Separated known dictionary, set, and
   array values from member access in the checker while preserving imported
   module member access through runner-provided module metadata. Updated

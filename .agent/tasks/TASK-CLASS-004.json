@@ -1,0 +1,29 @@
+{
+  "id": "CLASS-004",
+  "title": "Add class declarations, constructors, and instance member access",
+  "passes": true,
+  "goal": "Implement the initial class/object model: `class`, `init`, instance fields, methods, construction, and `@` access inside methods.",
+  "context": [
+    "Class names are PascalCase.",
+    "Only class instances are objects.",
+    "A class can define `init` and methods using the design document syntax."
+  ],
+  "steps": [
+    "Add lexer/parser/AST support for `class` declarations and class method bodies.",
+    "Add checker support for class naming, duplicate method/member diagnostics, and method arity basics.",
+    "Implement interpreter support for construction like `User(\"komagata\")`, `init`, fields, methods, and `@field` inside methods.",
+    "Add generated-C support for a minimal class subset or explicitly gate unsupported C paths with tests and docs if full C support needs follow-up.",
+    "Add examples covering a simple class, constructor, property read, and method call."
+  ],
+  "verification": [
+    "go test ./internal/lexer ./internal/parser ./internal/ast ./internal/checker -count=1",
+    "go test ./internal/eval ./internal/runner -count=1",
+    "go test ./internal/codegen ./tests -count=1",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "A simple `class User` example runs through the interpreter.",
+    "Class names and duplicate methods are checked.",
+    "C emission behavior for the implemented subset is tested or explicitly documented as pending."
+  ]
+}

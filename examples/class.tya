@@ -1,0 +1,15 @@
+class User
+  init: name ->
+    @name = name
+
+  rename: name ->
+    @name = name
+
+  greet: ->
+    "Hello, {@name}"
+
+user = User("komagata")
+print user.name
+print user.greet()
+user.rename("Tya")
+print user.name

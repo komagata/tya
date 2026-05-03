@@ -144,6 +144,33 @@ func TestCheckAllowsKnownModuleMemberAccess(t *testing.T) {
 	}
 }
 
+func TestCheckClassDeclaration(t *testing.T) {
+	src := "class User\n  init: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nuser = User(\"komagata\")\nprint user.greet()\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsInvalidClassName(t *testing.T) {
+	err := Check(parse(t, "class user\n  init: -> nil\n"))
+	if err == nil {
+		t.Fatal("expected invalid class name error")
+	}
+	if !strings.Contains(err.Error(), "invalid class name user") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsDuplicateClassMethod(t *testing.T) {
+	err := Check(parse(t, "class User\n  greet: -> \"a\"\n  greet: -> \"b\"\n"))
+	if err == nil {
+		t.Fatal("expected duplicate method error")
+	}
+	if !strings.Contains(err.Error(), "duplicate method greet") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckRejectsUndefinedVariable(t *testing.T) {
 	prog := parse(t, "print user_nmae\n")
 	err := Check(prog)

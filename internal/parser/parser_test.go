@@ -102,8 +102,9 @@ func TestParseRejectsMixedDictAndSetLiteral(t *testing.T) {
 	}
 }
 
-func TestParseCurrentBaselineTreatsClassAsExpression(t *testing.T) {
-	toks, errs := lexer.Lex("class User\n")
+func TestParseClassDeclaration(t *testing.T) {
+	src := "class User\n  init: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n"
+	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -111,17 +112,18 @@ func TestParseCurrentBaselineTreatsClassAsExpression(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
+	decl, ok := prog.Stmts[0].(*ast.ClassDecl)
 	if !ok {
 		t.Fatalf("got %T", prog.Stmts[0])
 	}
-	call, ok := stmt.Expr.(*ast.CallExpr)
-	if !ok {
-		t.Fatalf("got %T", stmt.Expr)
+	if decl.Name != "User" {
+		t.Fatalf("got class %q", decl.Name)
 	}
-	callee, ok := call.Callee.(*ast.Ident)
-	if !ok || callee.Name != "class" {
-		t.Fatalf("got callee %#v", call.Callee)
+	if len(decl.Methods) != 2 {
+		t.Fatalf("got %d methods", len(decl.Methods))
+	}
+	if decl.Methods[0].Name != "init" || len(decl.Methods[0].Func.Params) != 1 {
+		t.Fatalf("got init method %#v", decl.Methods[0])
 	}
 }
 

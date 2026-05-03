@@ -34,6 +34,9 @@ func (p *Parser) program() (*ast.Program, error) {
 }
 
 func (p *Parser) stmt() (ast.Stmt, error) {
+	if p.at(token.IDENT) && p.peek().Lexeme == "class" {
+		return p.classDecl()
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "if" {
 		return p.ifStmt()
 	}
@@ -72,6 +75,50 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.ExprStmt{Expr: ex}, nil
+}
+
+func (p *Parser) classDecl() (ast.Stmt, error) {
+	p.next()
+	name := p.expect(token.IDENT)
+	if name.Type != token.IDENT {
+		return nil, p.err("expected class name")
+	}
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after class")
+	}
+	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name}
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		methodName := p.expect(token.IDENT)
+		if methodName.Type != token.IDENT {
+			return nil, p.err("expected method name")
+		}
+		if !p.match(token.COLON) {
+			return nil, p.err("expected ':' after method name")
+		}
+		var fn *ast.FuncLit
+		var err error
+		if p.match(token.ARROW) {
+			fn, err = p.finishFunc(nil, nil)
+		} else {
+			var value ast.Expr
+			value, err = p.exprLine()
+			var ok bool
+			fn, ok = value.(*ast.FuncLit)
+			if !ok {
+				return nil, p.err("class method must be a function")
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+		decl.Methods = append(decl.Methods, ast.ClassMethod{Name: methodName.Lexeme, Tok: methodName, Func: fn})
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after class")
+	}
+	return decl, nil
 }
 
 func (p *Parser) ifStmt() (ast.Stmt, error) {

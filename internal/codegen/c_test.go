@@ -246,6 +246,17 @@ func TestEmitCCompilesMethodProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCRejectsClassDeclarations(t *testing.T) {
+	prog := checkedProgram(t, "class User\n  init: name ->\n    @name = name\n")
+	_, err := EmitC(prog)
+	if err == nil {
+		t.Fatal("expected class C emitter error")
+	}
+	if !strings.Contains(err.Error(), "C emitter does not support class declarations yet") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)

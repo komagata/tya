@@ -49,6 +49,14 @@ type Tuple struct {
 type ErrorValue struct {
 	Message string
 }
+type Class struct {
+	Name    string
+	Methods map[string]*Function
+}
+type Instance struct {
+	Class  *Class
+	Fields Object
+}
 
 type Function struct {
 	Params []string
@@ -666,6 +674,18 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			return nil, nil
 		}
 		return values[len(values)-1], nil
+	case *ast.ClassDecl:
+		class := &Class{Name: n.Name, Methods: map[string]*Function{}}
+		env.set(n.Name, class)
+		for _, method := range n.Methods {
+			class.Methods[method.Name] = &Function{
+				Params: method.Func.Params,
+				Body:   method.Func.Body,
+				Expr:   method.Func.Expr,
+				Env:    env,
+			}
+		}
+		return class, nil
 	case *ast.ExprStmt:
 		return evalExpr(n.Expr, env)
 	case *ast.IfStmt:
@@ -923,6 +943,12 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			}
 			return nil, nil
 		}
+		if inst, ok := obj.(*Instance); ok {
+			if method, ok := inst.Class.Methods[n.Name]; ok {
+				return method, nil
+			}
+			return inst.Fields[n.Name], nil
+		}
 		o, ok := obj.(Object)
 		if !ok {
 			return nil, fmt.Errorf("cannot read property %s on non-object", n.Name)
@@ -990,6 +1016,8 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 	switch fn := fnVal.(type) {
 	case Builtin, *Function:
 		return callValue(fn, recv, args)
+	case *Class:
+		return construct(fn, args)
 	}
 	return nil, fmt.Errorf("value is not callable")
 }
@@ -1018,6 +1046,20 @@ func callValue(fn Value, recv Object, args []Value) (Value, error) {
 		return v, err
 	}
 	return nil, fmt.Errorf("value is not callable")
+}
+
+func construct(class *Class, args []Value) (Value, error) {
+	inst := &Instance{Class: class, Fields: Object{}}
+	if init, ok := class.Methods["init"]; ok {
+		if _, err := callValue(init, inst.Fields, args); err != nil {
+			return nil, err
+		}
+		return inst, nil
+	}
+	if len(args) != 0 {
+		return nil, fmt.Errorf("%s expects 0 arguments, got %d", class.Name, len(args))
+	}
+	return inst, nil
 }
 
 func evalObjectFor(n *ast.ForInStmt, iterable Value, env *Env) (Value, error) {
@@ -1051,6 +1093,13 @@ func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
 		obj, err := evalExpr(m.Object, env)
 		if err != nil {
 			return nil, nil, err
+		}
+		if inst, ok := obj.(*Instance); ok {
+			method, ok := inst.Class.Methods[m.Name]
+			if !ok {
+				return nil, nil, fmt.Errorf("undefined method %s", m.Name)
+			}
+			return method, inst.Fields, nil
 		}
 		o, ok := obj.(Object)
 		if !ok {
@@ -1147,6 +1196,10 @@ func equal(l, r Value) bool {
 	case *Function:
 		return lv == r
 	case *ErrorValue:
+		return lv == r
+	case *Class:
+		return lv == r
+	case *Instance:
 		return lv == r
 	}
 	return false
@@ -1445,6 +1498,10 @@ func stringify(v Value) string {
 			parts = append(parts, stringify(item))
 		}
 		return strings.Join(parts, ", ")
+	case *Class:
+		return "<class " + x.Name + ">"
+	case *Instance:
+		return "<" + x.Class.Name + ">"
 	default:
 		return fmt.Sprintf("%v", x)
 	}

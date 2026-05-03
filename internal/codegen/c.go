@@ -47,6 +47,8 @@ func (g *cgen) line(s string) {
 
 func (g *cgen) stmt(stmt ast.Stmt) error {
 	switch n := stmt.(type) {
+	case *ast.ClassDecl:
+		return fmt.Errorf("C emitter does not support class declarations yet")
 	case *ast.AssignStmt:
 		g.sourceLine(n.Tok.Line)
 		if len(n.Targets) != 1 || len(n.Values) != 1 {

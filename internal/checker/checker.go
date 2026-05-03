@@ -9,6 +9,7 @@ import (
 
 var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 var valueNameRE = regexp.MustCompile(`^_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*$|^_$`)
+var classNameRE = regexp.MustCompile(`^[A-Z][A-Za-z0-9]*$`)
 
 func Check(prog *ast.Program) error {
 	return CheckWithModules(prog, nil)
@@ -51,6 +52,7 @@ const (
 	kindUnknown valueKind = iota
 	kindArray
 	kindDict
+	kindClass
 	kindModule
 	kindSet
 )
@@ -110,6 +112,24 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					constants[name.Name] = true
 				}
 				scope.define(name.Name, exprKind(n.Values))
+			}
+		case *ast.ClassDecl:
+			if !classNameRE.MatchString(n.Name) {
+				return fmt.Errorf("%d:%d: invalid class name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+			}
+			seen := map[string]bool{}
+			scope.define(n.Name, kindClass)
+			for _, method := range n.Methods {
+				if !valueNameRE.MatchString(method.Name) {
+					return fmt.Errorf("%d:%d: invalid method name %s", method.Tok.Line, method.Tok.Col, method.Name)
+				}
+				if seen[method.Name] {
+					return fmt.Errorf("%d:%d: duplicate method %s", method.Tok.Line, method.Tok.Col, method.Name)
+				}
+				seen[method.Name] = true
+				if err := checkExpr(method.Func, scope); err != nil {
+					return err
+				}
 			}
 		case *ast.IfStmt:
 			if err := checkExpr(n.Cond, scope); err != nil {

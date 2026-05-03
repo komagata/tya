@@ -17,6 +17,7 @@ func TestExamplesGolden(t *testing.T) {
 		"arithmetic.tya":        "5\n14\n20\n2.5\n2\n-3\ntrue\nnil\nnext year: 21\n",
 		"array.tya":             "3\n1\nnil\n4\n4\n3\n20\n",
 		"array_function.tya":    "6\n2\n2\ntrue\nfalse\n10\n",
+		"class.tya":             "komagata\nHello, komagata\nTya\n",
 		"classic/array_sum.tya": "6\n",
 		"classic/factorial.tya": "120\n",
 		"classic/fib.tya":       "55\n",

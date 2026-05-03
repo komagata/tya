@@ -262,6 +262,26 @@ func TestRunInlineDict(t *testing.T) {
 	}
 }
 
+func TestRunClassConstructorFieldsAndMethods(t *testing.T) {
+	src := "class User\n  init: name ->\n    @name = name\n\n  rename: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nuser = User(\"komagata\")\nprint user.name\nprint user.greet()\nuser.rename(\"Tya\")\nprint user.name\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "komagata\nHello, komagata\nTya\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
 func TestRunSets(t *testing.T) {
 	src := "roles = { \"admin\", \"owner\", \"admin\" }\nempty_roles = set()\nprint len roles\nprint has roles, \"admin\"\nprint has roles, \"guest\"\nprint len empty_roles\n"
 	toks, errs := lexer.Lex(src)
