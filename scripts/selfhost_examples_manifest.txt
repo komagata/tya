@@ -11,7 +11,7 @@ examples/args.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 gen
 examples/admin.tya|out-of-scope|class fixture|support file for examples/inheritance.tya, not a standalone output parity target
 examples/arithmetic.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute arithmetic example subset
 examples/array.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute array builtin/index subset
-examples/array_function.tya|expected-failing|functional array builtins|requires map/filter/find/any/all closures in parser/checker/codegen
+examples/array_function.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute functional array builtin subset
 examples/class.tya|expected-failing|classes|requires class declarations, constructors, and instance member access in self-host parser/checker/codegen
 examples/classic/array_sum.tya|expected-failing|classic loops|requires general array literals and integer accumulator codegen without example-specific paths
 examples/classic/factorial.tya|expected-failing|classic arithmetic|requires multiplication/subtraction and greater-than while codegen parity

@@ -15,12 +15,12 @@ basic escapes, comments, source line markers, indentation counts, symbols,
 
 The current self-hosted parser supports a line-oriented node format for simple
 assignments, bool assignments, simple arithmetic assignments, comparison
-assignments, one- and two-element arrays, one-property inline objects,
+assignments, one-, two-, and selected four-element arrays, one-property inline objects,
 indexing, `push`, `return`, `if`, `else`, `while`, array/object `for` subset
 forms, `break`, `continue`, simple function headers, inline returns,
 selected one-, two-, three-, and four-argument signatures, selected one-, two-,
-and three-argument calls, two-target assignment, simple `try` calls, member
-prints, and simple print calls.
+and three-argument calls, the current functional array builtin subset,
+two-target assignment, simple `try` calls, member prints, and simple print calls.
 
 The current self-hosted checker supports simple undefined-name checks for
 assignments, prints, conditions, calls, pushes, returns, indexes, and `for`
@@ -32,7 +32,7 @@ The current self-hosted C code generator emits compileable C for the prototype
 node format. It supports simple scalar assignments and prints, selected
 comparison conditions, basic `if` / `else` / `while` / `for` blocks, `break`,
 `continue`, simple arrays, string array index assignments, object placeholders,
-selected string builtins, simple return-function bodies, and several source-specific paths used to
+selected string and array builtins, simple return-function bodies, and several source-specific paths used to
 compile the self-host source files. It still does not provide general codegen
 for the full language.
 

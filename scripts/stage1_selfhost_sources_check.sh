@@ -1159,18 +1159,18 @@ cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
 71:INDENT:2
 107:FOR:node:nodes
 108:INDENT:2
-2832:FOR:node:nodes
-2833:INDENT:2
-2976:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3144:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3153:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3162:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3167:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3186:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3656:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3659:FOR:line:lines
-3660:INDENT:2
-3663:PRINT_CALL1:emit_c:nodes
+2843:FOR:node:nodes
+2844:INDENT:2
+2987:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3155:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3164:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3173:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3178:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3197:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3667:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3670:FOR:line:lines
+3671:INDENT:2
+3674:PRINT_CALL1:emit_c:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"
@@ -1652,6 +1652,8 @@ test "$stage4_for_out" = "12
 1:4
 2:6"
 echo "stage4 for: self-host pipeline matched"
+
+# examples/array_function.tya is covered by the manifest-driven supported example loop below.
 
 while IFS='|' read -r example status gate reason; do
   case "$example" in

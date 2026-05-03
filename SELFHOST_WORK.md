@@ -117,8 +117,10 @@ endpoint.
     - [x] Emit `print object.member` for one-property object placeholders
     - [x] Emit the current multiple-return example subset with string out-params
     - [x] Emit string array index assignments for static and dynamic arrays
-    - [ ] Next codegen blocker: emit functional array builtin calls and
-      closure/function-value arguments used by `examples/array_function.tya`
+    - [x] Emit the current functional array builtin subset used by
+      `examples/array_function.tya`
+    - [ ] Next codegen blocker: replace source-specific functional array paths
+      with general closure/function-value lowering
   - [ ] Advance bootstrap from subset programs toward compiling existing examples
     - [x] Run a stage-2 pipeline for printing string length
     - [x] Run a stage-2 pipeline for trimming and printing a string
@@ -269,9 +271,9 @@ are full-language parity gaps, ordered by dependency:
     - [x] Drive the stage-4 supported-example gate from
       `scripts/selfhost_examples_manifest.txt` and compare each supported
       generated binary's output with the Go interpreter.
-    - [ ] Next unsupported dependency: `examples/array_function.tya` requires
-      generated parser/checker/codegen parity for functional array builtins
-      and closure/function-value calls.
+    - [ ] Next unsupported dependency: `examples/class.tya` requires class
+      declarations, constructors, and instance member access in generated
+      parser/checker/codegen parity.
   - [ ] Add negative parser/checker fixtures for unsupported or invalid
     language features as they become supported.
   - [ ] Keep deterministic C comparisons for each generated stage and example
