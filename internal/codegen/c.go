@@ -50,7 +50,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	case *ast.ClassDecl:
 		return fmt.Errorf("C emitter does not support class declarations yet")
 	case *ast.ModuleDecl:
-		return fmt.Errorf("C emitter does not support module declarations yet")
+		g.sourceLine(n.NameTok.Line)
+		return g.assignModuleDecl(n)
 	case *ast.AssignStmt:
 		g.sourceLine(n.Tok.Line)
 		if len(n.Targets) != 1 || len(n.Values) != 1 {
@@ -417,6 +418,38 @@ func (g *cgen) assignObjectLit(name string, obj *ast.DictLit) error {
 			return err
 		}
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_method(%s, %s));", target, strconv.Quote(method.Name), sym, target))
+	}
+	return nil
+}
+
+func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
+	entries := []string{}
+	functions := []ast.ModuleMember{}
+	for _, member := range module.Members {
+		if _, ok := member.Value.(*ast.FuncLit); ok {
+			functions = append(functions, member)
+			continue
+		}
+		value, _, err := g.expr(member.Value)
+		if err != nil {
+			return err
+		}
+		entries = append(entries, fmt.Sprintf("{%s, %s}", strconv.Quote(member.Name), value))
+	}
+	target := cName(module.Name)
+	if !g.vars[module.Name] {
+		g.vars[module.Name] = true
+		g.line(fmt.Sprintf("TyaValue %s = tya_nil();", target))
+	}
+	g.line(fmt.Sprintf("%s = tya_object((TyaObjectEntry[]){%s}, %d);", target, strings.Join(entries, ", "), len(entries)))
+	for _, member := range functions {
+		fn := member.Value.(*ast.FuncLit)
+		funcName := module.Name + "_" + member.Name
+		sym, err := g.emitFunc(funcName, fn)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_function(%s));", target, strconv.Quote(member.Name), sym))
 	}
 	return nil
 }

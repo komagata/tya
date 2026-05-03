@@ -33,7 +33,7 @@
     "id": "CLASS-006",
     "title": "Enforce one-file-one-public-definition import rules",
     "priority": 6,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-007",

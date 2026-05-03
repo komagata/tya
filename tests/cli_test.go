@@ -107,7 +107,7 @@ func TestCLIRunPassesArgs(t *testing.T) {
 func TestCLIRunLoadsImportedModule(t *testing.T) {
 	dir := t.TempDir()
 	module := filepath.Join(dir, "greeting.tya")
-	if err := os.WriteFile(module, []byte("greeting =\n  hello: name -> \"Hello, {name}\"\n"), 0644); err != nil {
+	if err := os.WriteFile(module, []byte("module greeting\n  hello: name -> \"Hello, {name}\"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	path := filepath.Join(dir, "main.tya")

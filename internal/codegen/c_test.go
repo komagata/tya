@@ -257,14 +257,11 @@ func TestEmitCRejectsClassDeclarations(t *testing.T) {
 	}
 }
 
-func TestEmitCRejectsModuleDeclarations(t *testing.T) {
-	prog := checkedProgram(t, "module util\n  foo: \"foo\"\n")
-	_, err := EmitC(prog)
-	if err == nil {
-		t.Fatal("expected module C emitter error")
-	}
-	if !strings.Contains(err.Error(), "C emitter does not support module declarations yet") {
-		t.Fatalf("unexpected error: %v", err)
+func TestEmitCCompilesModuleDeclarations(t *testing.T) {
+	src := "module util\n  foo: \"foo\"\n  bar: -> \"bar\"\nprint util.foo\nprint util.bar()\n"
+	out := compileAndRun(t, src)
+	if string(out) != "foo\nbar\n" {
+		t.Fatalf("got %q", out)
 	}
 }
 

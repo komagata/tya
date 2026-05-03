@@ -3,13 +3,24 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 12
-**Current Task:** CLASS-005 Complete
+**Tasks Completed:** 13
+**Current Task:** CLASS-006 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - CLASS-006 - Enforced imported-file
+  one-definition rules so imported files must contain exactly one top-level
+  matching `class` or `module`, reject mismatched class/module filenames,
+  reject multiple definitions, and reject top-level helper/private assignments.
+  Updated module fixtures to declaration syntax, added valid class/module import
+  coverage, kept entry files unrestricted, and added generated-C lowering for
+  module declarations so imported module examples continue through `tya run`
+  and selected C example checks.
+  Verification: `go test ./internal/checker ./internal/runner -count=1`;
+  `go test ./internal/checker ./internal/runner ./internal/codegen -count=1`;
+  `go test ./tests -count=1`; `go test ./... -count=1`.
 - 2026-05-03 00:00 UTC - CLASS-005 - Added `module name`
   declarations with parser/AST/checker support, snake_case module name and
   duplicate member diagnostics, runtime module namespace values, imported module

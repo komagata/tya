@@ -165,28 +165,70 @@ func validateModule(path, src string) error {
 		return err
 	}
 	want := strings.TrimSuffix(filepath.Base(path), ".tya")
-	public := []string{}
+	var public []string
 	for _, stmt := range prog.Stmts {
-		if decl, ok := stmt.(*ast.ModuleDecl); ok {
-			public = append(public, decl.Name)
-			continue
-		}
-		assign, ok := stmt.(*ast.AssignStmt)
-		if !ok {
-			continue
-		}
-		for _, target := range assign.Targets {
-			id, ok := target.(*ast.Ident)
-			if !ok || strings.HasPrefix(id.Name, "_") {
-				continue
+		switch n := stmt.(type) {
+		case *ast.ClassDecl:
+			public = append(public, n.Name)
+			if snakeCase(n.Name) != want {
+				return fmt.Errorf("%s must define class %s", filepath.Base(path), pascalCase(want))
 			}
-			public = append(public, id.Name)
+		case *ast.ModuleDecl:
+			public = append(public, n.Name)
+			if n.Name != want {
+				return fmt.Errorf("%s must define module %s", filepath.Base(path), want)
+			}
+		default:
+			return fmt.Errorf("%s may only contain imports and one public class or module declaration", filepath.Base(path))
 		}
 	}
-	if len(public) != 1 || public[0] != want {
-		return fmt.Errorf("%s must expose exactly one public binding named %s", filepath.Base(path), want)
+	if len(public) != 1 {
+		return fmt.Errorf("%s must define exactly one public class or module", filepath.Base(path))
 	}
 	return nil
+}
+
+func snakeCase(name string) string {
+	var out strings.Builder
+	for i, r := range name {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			out.WriteByte('_')
+		}
+		out.WriteRune(lowerASCII(r))
+	}
+	return out.String()
+}
+
+func pascalCase(name string) string {
+	var out strings.Builder
+	upper := true
+	for _, r := range name {
+		if r == '_' {
+			upper = true
+			continue
+		}
+		if upper {
+			out.WriteRune(upperASCII(r))
+			upper = false
+		} else {
+			out.WriteRune(r)
+		}
+	}
+	return out.String()
+}
+
+func lowerASCII(r rune) rune {
+	if r >= 'A' && r <= 'Z' {
+		return r + ('a' - 'A')
+	}
+	return r
+}
+
+func upperASCII(r rune) rune {
+	if r >= 'a' && r <= 'z' {
+		return r - ('a' - 'A')
+	}
+	return r
 }
 
 func WithPrelude(path, src string) string {

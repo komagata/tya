@@ -338,18 +338,17 @@ import and C-emission gaps:
 - Imports are handled by source loading, before lexing/parsing the combined
   program. `import name` loads `name.tya` from the importing file's directory,
   recursively prepends imported source, rejects cycles, and requires imported
-  files to expose exactly one public assignment matching the file basename.
-- Imported files may currently contain private top-level helpers. The planned
-  one-file-one-definition rule will disallow those helpers once `class` and
-  `module` declarations exist.
+  files to define exactly one matching top-level `class` or `module`.
+- Imported files may not contain top-level helper functions, variables, private
+  assignments, or additional class/module declarations.
 - Import aliases are not implemented. `import util as u` is rejected as an
   invalid module name today.
 - Entry files execute top-level statements directly. They are not wrapped in an
   implicit `main` function.
 - The C emitter works from the already-loaded combined AST. It supports current
   objects, methods, dictionaries, sets, member/index access, and imports through
-  source loading, but class and module declarations are explicitly rejected
-  until dedicated lowering lands.
+  source loading. Module declarations lower to namespace objects, while class
+  declarations remain explicitly rejected until dedicated lowering lands.
 
 Ordered implementation checklist:
 

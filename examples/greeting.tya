@@ -1,2 +1,2 @@
-greeting =
+module greeting
   hello: name -> "Hello, {name}"
