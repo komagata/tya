@@ -153,6 +153,13 @@ check = nodes ->
   remember_name names, name_indents, "replace", "0"
   remember_name names, name_indents, "byte_len", "0"
   remember_name names, name_indents, "char_len", "0"
+  remember_name names, name_indents, "map", "0"
+  remember_name names, name_indents, "filter", "0"
+  remember_name names, name_indents, "find", "0"
+  remember_name names, name_indents, "any", "0"
+  remember_name names, name_indents, "all", "0"
+  remember_name names, name_indents, "reduce", "0"
+  remember_name names, name_indents, "each", "0"
   remember_name names, name_indents, "has_name", "0"
   remember_name names, name_indents, "error", "0"
 
@@ -360,6 +367,10 @@ check = nodes ->
           push errors, line_of(node) + ": undefined variable: " + middle_arg
         if not is_literal_arg(right_arg) and not has_name(names, right_arg)
           push errors, line_of(node) + ": undefined variable: " + right_arg
+      if value_of(node) == "MAP_MUL"
+        source_name = extra_of(node)
+        if not has_name(names, source_name)
+          push errors, line_of(node) + ": undefined variable: " + source_name
       if value_of(node) == "INDEX"
         source_name = extra_of(node)
         index_name = extra2_of(node)

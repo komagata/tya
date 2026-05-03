@@ -1120,12 +1120,12 @@ if grep -q 'strstr(mode, "lexer")' "$stage4_dir/lexer.stage4.c"; then
 fi
 echo "selfhost/lexer.tya: stage-3 codegen emitted executable lexer C"
 cat > "$stage4_dir/parser.stage4.want.nodes" <<'NODES'
-619:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-622:FOR:line:lines
-623:INDENT:2
-628:FOR:node:nodes
-629:INDENT:2
-629:PRINT:IDENT:node
+640:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+643:FOR:line:lines
+644:INDENT:2
+649:FOR:node:nodes
+650:INDENT:2
+650:PRINT:IDENT:node
 NODES
 diff -u "$stage4_dir/parser.stage4.want.nodes" "$stage4_dir/parser.stage4.nodes" >/dev/null
 echo "selfhost/parser.tya: stage-3 parser emitted real nodes"
@@ -1137,15 +1137,15 @@ echo "selfhost/parser.tya: stage-3 codegen emitted executable parser C"
 cat > "$stage4_dir/checker.stage4.want.nodes" <<'NODES'
 58:FOR:existing:names
 59:INDENT:2
-159:FOR:node:nodes
-160:INDENT:2
-738:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-741:FOR:line:lines
-742:INDENT:2
-748:PRINT:STRING:ok
-750:FOR:err:errors
-751:INDENT:2
-751:PRINT:IDENT:err
+166:FOR:node:nodes
+167:INDENT:2
+749:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+752:FOR:line:lines
+753:INDENT:2
+759:PRINT:STRING:ok
+761:FOR:err:errors
+762:INDENT:2
+762:PRINT:IDENT:err
 NODES
 diff -u "$stage4_dir/checker.stage4.want.nodes" "$stage4_dir/checker.stage4.nodes" >/dev/null
 echo "selfhost/checker.tya: stage-3 parser emitted real nodes"
@@ -1155,16 +1155,22 @@ if grep -q 'strstr(mode, "checker")' "$stage4_dir/checker.stage4.c"; then
 fi
 echo "selfhost/checker.tya: stage-3 codegen emitted executable checker C"
 cat > "$stage4_dir/codegen_c.stage4.want.nodes" <<'NODES'
-58:FOR:existing:names
-59:INDENT:2
-95:FOR:node:nodes
-96:INDENT:2
-2820:FOR:node:nodes
-2821:INDENT:2
-3588:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
-3591:FOR:line:lines
-3592:INDENT:2
-3595:PRINT_CALL1:emit_c:nodes
+70:FOR:existing:names
+71:INDENT:2
+107:FOR:node:nodes
+108:INDENT:2
+2832:FOR:node:nodes
+2833:INDENT:2
+2976:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3144:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3153:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3162:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3167:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3186:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3656:ASSIGN:source:CALL1_CALL0_INDEX:read_file:args:0
+3659:FOR:line:lines
+3660:INDENT:2
+3663:PRINT_CALL1:emit_c:nodes
 NODES
 diff -u "$stage4_dir/codegen_c.stage4.want.nodes" "$stage4_dir/codegen_c.stage4.nodes" >/dev/null
 echo "selfhost/codegen_c.tya: stage-3 parser emitted real nodes"

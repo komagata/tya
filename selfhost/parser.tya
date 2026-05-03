@@ -222,6 +222,12 @@ parse = tokens ->
           push nodes, node
           i = i + 4
           continue
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "[" and line_of(tokens[i + 3]) == line_of(token)
+          index = tokens[i + 3]
+          node = line_of(token) + ":PRINT_INDEX:IDENT:" + text_of(value) + ":" + text_of(index)
+          push nodes, node
+          i = i + 5
+          continue
         if i + 6 < len(tokens) and kind_of(tokens[i + 1]) == "IDENT" and line_of(tokens[i + 6]) == line_of(token)
           if text_of(tokens[i + 3]) == "," and text_of(tokens[i + 5]) == ","
             left_arg = tokens[i + 2]
@@ -382,6 +388,15 @@ parse = tokens ->
           node = line_of(token) + ":ASSIGN:" + text_of(token) + ":ARRAY_TWO:" + literal_kind_of(item) + ":" + text_of(item) + ":" + literal_kind_of(item2) + ":" + text_of(item2)
           push nodes, node
           i = i + 7
+          continue
+        if text_of(value) == "[" and i + 10 < len(tokens) and text_of(tokens[i + 4]) == "," and text_of(tokens[i + 6]) == "," and text_of(tokens[i + 8]) == "," and text_of(tokens[i + 10]) == "]"
+          item = tokens[i + 3]
+          item2 = tokens[i + 5]
+          item3 = tokens[i + 7]
+          item4 = tokens[i + 9]
+          node = line_of(token) + ":ASSIGN:" + text_of(token) + ":ARRAY_FOUR:" + literal_kind_of(item) + ":" + text_of(item) + ":" + literal_kind_of(item2) + ":" + text_of(item2) + ":" + literal_kind_of(item3) + ":" + text_of(item3) + ":" + literal_kind_of(item4) + ":" + text_of(item4)
+          push nodes, node
+          i = i + 11
           continue
         if text_of(value) == "{" and i + 6 < len(tokens) and kind_of(tokens[i + 4]) == "SYMBOL" and text_of(tokens[i + 6]) == "}"
           key = tokens[i + 3]
@@ -555,6 +570,12 @@ parse = tokens ->
           if text_of(tokens[i + 4]) == ","
             left_arg = tokens[i + 3]
             right_arg = tokens[i + 5]
+            if text_of(value) == "map" and i + 9 < len(tokens) and text_of(tokens[i + 6]) == "->" and text_of(tokens[i + 8]) == "*"
+              factor = tokens[i + 9]
+              node = line_of(token) + ":ASSIGN:" + text_of(token) + ":MAP_MUL:" + text_of(left_arg) + ":" + text_of(right_arg) + ":" + text_of(factor)
+              push nodes, node
+              i = i + 10
+              continue
             if i + 7 < len(tokens) and text_of(tokens[i + 6]) == "," and line_of(tokens[i + 7]) == line_of(token)
               third_arg = tokens[i + 7]
               node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL3:" + text_of(value) + ":" + text_of(left_arg) + ":" + literal_kind_of(right_arg) + ":" + text_of(right_arg) + ":" + text_of(third_arg)

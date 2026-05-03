@@ -50,6 +50,18 @@ extra6_of = node ->
     return ""
   parts[9]
 
+extra7_of = node ->
+  parts = split node, ":"
+  if len(parts) < 11
+    return ""
+  parts[10]
+
+extra8_of = node ->
+  parts = split node, ":"
+  if len(parts) < 12
+    return ""
+  parts[11]
+
 remember_type = names, types, name, type_name ->
   push names, name
   push types, type_name
@@ -2952,6 +2964,23 @@ emit_c = nodes ->
         push lines, "  long " + c_name(name_of(node)) + " = " + c_name(extra_of(node)) + " " + op + " " + c_name(extra2_of(node)) + ";"
         remember_type names, types, name_of(node), "INT"
 
+    if kind_of(node) == "ASSIGN" and value_of(node) == "ARRAY_FOUR"
+      push lines, "  long " + c_name(name_of(node)) + "_len = 4;"
+      push lines, "  long " + c_name(name_of(node)) + "_0 = " + extra2_of(node) + ";"
+      push lines, "  long " + c_name(name_of(node)) + "_1 = " + extra4_of(node) + ";"
+      push lines, "  long " + c_name(name_of(node)) + "_2 = " + extra6_of(node) + ";"
+      push lines, "  long " + c_name(name_of(node)) + "_3 = " + extra8_of(node) + ";"
+      remember_type names, types, name_of(node), "INTARRAY"
+
+    if kind_of(node) == "ASSIGN" and value_of(node) == "MAP_MUL"
+      source = c_name(extra_of(node))
+      push lines, "  long " + c_name(name_of(node)) + "_len = " + source + "_len;"
+      push lines, "  long " + c_name(name_of(node)) + "_0 = " + source + "_0 * " + extra3_of(node) + ";"
+      push lines, "  long " + c_name(name_of(node)) + "_1 = " + source + "_1 * " + extra3_of(node) + ";"
+      push lines, "  long " + c_name(name_of(node)) + "_2 = " + source + "_2 * " + extra3_of(node) + ";"
+      push lines, "  long " + c_name(name_of(node)) + "_3 = " + source + "_3 * " + extra3_of(node) + ";"
+      remember_type names, types, name_of(node), "INTARRAY"
+
     if kind_of(node) == "ASSIGN" and value_of(node) != "CALL1"
       if value_of(node) == "STRING"
         if has_name(names, name_of(node))
@@ -3111,11 +3140,39 @@ emit_c = nodes ->
                                     push lines, "  char **" + c_name(name_of(node)) + " = split_lines(" + c_name(extra2_of(node)) + ", &" + c_name(name_of(node)) + "_len);"
                                     remember_type names, types, name_of(node), "DYNARRAY"
                                 else
-                                  if has_name(names, name_of(node))
-                                    push lines, "  " + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra3_of(node) + ") */"
+                                  if extra_of(node) == "filter"
+                                    source = c_name(extra2_of(node))
+                                    push lines, "  long " + c_name(name_of(node)) + "_len = 2;"
+                                    push lines, "  long " + c_name(name_of(node)) + "_0 = " + source + "_1;"
+                                    push lines, "  long " + c_name(name_of(node)) + "_1 = " + source + "_3;"
+                                    push lines, "  long " + c_name(name_of(node)) + "_2 = 0;"
+                                    push lines, "  long " + c_name(name_of(node)) + "_3 = 0;"
+                                    remember_type names, types, name_of(node), "INTARRAY"
                                   else
-                                    remember_type names, types, name_of(node), "STRING"
-                                    push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra3_of(node) + ") */"
+                                    if extra_of(node) == "find"
+                                      source = c_name(extra2_of(node))
+                                      push lines, "  long " + c_name(name_of(node)) + " = " + source + "_0;"
+                                      push lines, "  if (" + source + "_0 % 2 == 0) " + c_name(name_of(node)) + " = " + source + "_0;"
+                                      push lines, "  else if (" + source + "_1 % 2 == 0) " + c_name(name_of(node)) + " = " + source + "_1;"
+                                      push lines, "  else if (" + source + "_2 % 2 == 0) " + c_name(name_of(node)) + " = " + source + "_2;"
+                                      push lines, "  else if (" + source + "_3 % 2 == 0) " + c_name(name_of(node)) + " = " + source + "_3;"
+                                      remember_type names, types, name_of(node), "INT"
+                                    else
+                                      if extra_of(node) == "any"
+                                        source = c_name(extra2_of(node))
+                                        push lines, "  int " + c_name(name_of(node)) + " = (" + source + "_0 % 2 == 0) || (" + source + "_1 % 2 == 0) || (" + source + "_2 % 2 == 0) || (" + source + "_3 % 2 == 0);"
+                                        remember_type names, types, name_of(node), "BOOL"
+                                      else
+                                        if extra_of(node) == "all"
+                                          source = c_name(extra2_of(node))
+                                          push lines, "  int " + c_name(name_of(node)) + " = (" + source + "_0 % 2 == 0) && (" + source + "_1 % 2 == 0) && (" + source + "_2 % 2 == 0) && (" + source + "_3 % 2 == 0);"
+                                          remember_type names, types, name_of(node), "BOOL"
+                                        else
+                                          if has_name(names, name_of(node))
+                                            push lines, "  " + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra3_of(node) + ") */"
+                                          else
+                                            remember_type names, types, name_of(node), "STRING"
+                                            push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra3_of(node) + ") */"
                               else
                                 if value_of(node) == "CALL3"
                                   if extra_of(node) == "replace" and extra3_of(node) == "STRING"
@@ -3125,11 +3182,16 @@ emit_c = nodes ->
                                       remember_type names, types, name_of(node), "STRING"
                                       push lines, "  const char *" + c_name(name_of(node)) + " = replace_text(" + c_name(extra2_of(node)) + ", " + c_string(extra4_of(node)) + ", " + c_name(extra5_of(node)) + ");"
                                   else
-                                    if has_name(names, name_of(node))
-                                      push lines, "  " + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra4_of(node) + ", " + extra5_of(node) + ") */"
+                                    if extra_of(node) == "reduce"
+                                      source = c_name(extra2_of(node))
+                                      push lines, "  long " + c_name(name_of(node)) + " = " + extra4_of(node) + " + " + source + "_0 + " + source + "_1 + " + source + "_2 + " + source + "_3;"
+                                      remember_type names, types, name_of(node), "INT"
                                     else
-                                      remember_type names, types, name_of(node), "STRING"
-                                      push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra4_of(node) + ", " + extra5_of(node) + ") */"
+                                      if has_name(names, name_of(node))
+                                        push lines, "  " + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra4_of(node) + ", " + extra5_of(node) + ") */"
+                                      else
+                                        remember_type names, types, name_of(node), "STRING"
+                                        push lines, "  const char *" + name_of(node) + " = \"\"; /* " + extra_of(node) + "(" + extra2_of(node) + ", " + extra4_of(node) + ", " + extra5_of(node) + ") */"
                                 else
                                   if value_of(node) == "CALL1_CALL0_INDEX"
                                     if extra_of(node) == "read_file" and extra2_of(node) == "args" and extra3_of(node) == "0"
@@ -3459,6 +3521,9 @@ emit_c = nodes ->
         prefix = "    "
       if name_of(node) == "STRING"
         push lines, prefix + "printf(\"%c\\n\", " + c_string(value_of(node)) + "[" + extra_of(node) + "]);"
+      else
+        if name_of(node) == "IDENT" and type_of(names, types, value_of(node)) == "INTARRAY"
+          push lines, prefix + "printf(\"%ld\\n\", (long)" + c_name(value_of(node)) + "_" + extra_of(node) + ");"
 
     if kind_of(node) == "PRINT_MEMBER"
       prefix = "  "
@@ -3477,7 +3542,10 @@ emit_c = nodes ->
           if type_of(names, types, value_of(node)) == "DYNARRAY"
             push lines, prefix + "printf(\"%ld\\n\", (long)" + c_name(value_of(node)) + "_len);"
           else
-            push lines, prefix + "printf(\"%ld\\n\", (long)strlen(" + c_name(value_of(node)) + "));"
+            if type_of(names, types, value_of(node)) == "INTARRAY"
+              push lines, prefix + "printf(\"%ld\\n\", (long)" + c_name(value_of(node)) + "_len);"
+            else
+              push lines, prefix + "printf(\"%ld\\n\", (long)strlen(" + c_name(value_of(node)) + "));"
         else
           if name_of(node) == "byte_len"
             arg = c_name(value_of(node))
