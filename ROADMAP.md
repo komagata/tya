@@ -88,20 +88,20 @@ Implemented:
 - Initial array runtime with length, indexing, and push support
 - Generated-C array runtime supports `pop` and index assignment
 - Initial string runtime support for length, indexing, and `contains`
-- Generated-C string runtime supports `trim`, `replace`, `startsWith`, `endsWith`, `byteLen`, and `charLen`
+- Generated-C string runtime supports `trim`, `replace`, `starts_with`, `ends_with`, `byte_len`, and `char_len`
 - Runtime equality helper for nil, bool, number, string, and array identity
 - Runtime logical helpers preserve Tya `and` / `or` value semantics in generated C
 - Runtime addition helper for numeric addition and string concatenation
-- Initial generated-C runtime support for `args`, `readFile`, `split`, `toString`, and `toInt`
+- Initial generated-C runtime support for `args`, `read_file`, `split`, `to_string`, and `to_int`
 - Generated-C runtime supports `env`
 - Initial object runtime with literal construction, member reads, and `len`
 - Generated-C object runtime supports `has`, `keys`, `values`, and `delete`
 - Generated-C object runtime supports `for key, value of object`
-- Generated-C runtime supports `fileExists`, `toFloat`, and `toNumber`
-- Generated-C runtime supports `writeFile`
+- Generated-C runtime supports `file_exists`, `to_float`, and `to_number`
+- Generated-C runtime supports `write_file`
 - Generated-C runtime supports deep `equal`
 - Runtime printing and truthiness helpers
-- Runtime `toString` renders arrays and objects structurally
+- Runtime `to_string` renders arrays and objects structurally
 - Generated C can compile and run against `runtime/tya_runtime.c`
 - C runtime has direct GCC-backed Go tests for values, collections, objects, function calls, strings, files, conversions, and process exits
 
@@ -185,7 +185,7 @@ Implemented:
 - Self-hosted C codegen emits simple `hasT(...)` string predicate conditions used by the prototype input
 - Self-hosted parser/codegen preserves and emits the prototype `len(parts) < 3` condition
 - Self-hosted C codegen emits string array index assignments for static and dynamic arrays
-- Stage-2 generated codegen can lower `readFile args()[0]`, `lex source`, and `parse tokens`
+- Stage-2 generated codegen can lower `read_file args()[0]`, `lex source`, and `parse tokens`
 - Stage-3 generated lexer tokenizes `examples/hello.tya`
 - Stage-3 generated parser parses stage-3 lexer output for `examples/hello.tya`
 - Stage-3 generated checker accepts stage-3 parser output for `examples/hello.tya`
@@ -255,7 +255,7 @@ Implemented:
 - Self-hosted C codegen emits a one-element array path for simple `push` and `for x in xs`
 - Stage-2 self-host pipeline can run `examples/selfhost_ops.tya`
 - Stage-2 self-host codegen emits literal reassignment without duplicate C declarations
-- Stage-2 self-host codegen lowers `readFile args()[0]` with argv-capable generated C
+- Stage-2 self-host codegen lowers `read_file args()[0]` with argv-capable generated C
 - Stage-2 generated parser/checker covers `examples/multiple_return.tya` nodes
 - Stage-2 self-host pipeline can run `examples/multiple_return.tya`
 - Self-hosted parser/codegen carries simple `while false` blocks into generated C
@@ -298,7 +298,7 @@ Implemented:
 - Go C emitter can run `examples/logic.tya`
 - Go C emitter can run `examples/args.tya` with arguments and environment variables
 - Go C emitter can run `examples/hello.tya`, `examples/return.tya`, and `examples/exit.tya`
-- Go C emitter supports `readLine()` and can run `examples/read_line.tya`
+- Go C emitter supports `read_line()` and can run `examples/read_line.tya`
 - Go C emitter supports `exit(code)` statement calls with process exit status
 - Go C emitter supports `panic(message)` with stderr output and exit status 1
 - Go C emitter avoids C keyword name collisions and supports integer `%`
@@ -466,7 +466,7 @@ Self-Host Completion TODO:
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print contains(text, needle)` calls in the self-host C codegen subset
-    - [x] Emit `print startsWith(text, prefix)` and `print endsWith(text, suffix)` calls in the self-host C codegen subset
+    - [x] Emit `print starts_with(text, prefix)` and `print ends_with(text, suffix)` calls in the self-host C codegen subset
     - [x] Emit `trim(text)` calls in the self-host C codegen subset
     - [x] Emit `print len(value)` calls in the self-host C codegen subset
     - [x] Emit `print object.member` for one-property object placeholders
@@ -475,7 +475,7 @@ Self-Host Completion TODO:
     - [x] Emit one-property object placeholders in the self-host C codegen subset
     - [x] Emit empty arrays and `push` as dynamic string arrays in the self-host C codegen subset
   - [ ] Emit loops, conditionals, `try`, multiple return assignment, function values, and standard builtins
-    - [x] Lower `readFile args()[0]` and argv-capable `main` in the self-host C codegen subset
+    - [x] Lower `read_file args()[0]` and argv-capable `main` in the self-host C codegen subset
     - [x] Add a plain-C lexer helper scaffold for stage-2 token emission
     - [x] Lower `split(source, "\\n")` to a generated-C line splitter for stage-2 parser input
   - [ ] Add generated-C parity tests comparing interpreter output and self-hosted codegen output
@@ -501,7 +501,7 @@ Self-Host Completion TODO:
   - [ ] Use the stage-1 compiler to compile the Tya-written compiler again
     - [x] Use stage-1 compiler binaries to emit C for the self-host compiler sources
     - [x] Compile stage-1 emitted self-host C into stage-2 binaries
-    - [x] Lower stage-2 input file reads through `readFile args()[0]`
+    - [x] Lower stage-2 input file reads through `read_file args()[0]`
     - [x] Run stage-5 generated tools on `examples/hello.tya`
     - [x] Run stage-5 generated tools on a print-string fixture
     - [x] Run stage-5 generated tools on a print-int fixture

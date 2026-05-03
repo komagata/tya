@@ -75,17 +75,7 @@ Object properties beginning with `_` are not module privacy. They may be
 reserved for a future object visibility rule, but initially privacy is enforced
 only for top-level module bindings.
 
-## Builtins and Migration
+## Builtins
 
-Existing camelCase builtins are compatibility names. New standard library APIs
-should use snake_case canonical names.
-
-```text
-readFile   -> read_file
-writeFile  -> write_file
-fileExists -> file_exists
-startsWith -> starts_with
-endsWith   -> ends_with
-toString   -> to_string
-toInt      -> to_int
-```
+Standard library APIs use snake_case names. CamelCase builtin spellings are not
+part of the language surface.

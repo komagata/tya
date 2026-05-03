@@ -67,12 +67,12 @@ func collectTypeInfo(prog *ast.Program) typeInfo {
 }
 
 var builtinNames = []string{
-	"args", "byte_len", "byteLen", "char_len", "charLen", "contains", "delete", "div", "ends_with", "endsWith",
-	"env", "equal", "error", "exit", "file_exists", "fileExists", "filter", "find", "all", "any", "each",
+	"args", "byte_len", "char_len", "contains", "delete", "div", "ends_with",
+	"env", "equal", "error", "exit", "file_exists", "filter", "find", "all", "any", "each",
 	"has", "join", "keys", "len", "map", "panic", "pop", "print", "push",
-	"read_file", "read_line", "readFile", "readLine", "reduce", "replace", "set", "split", "starts_with", "startsWith",
-	"to_float", "to_int", "to_number", "to_string", "toFloat", "toInt", "toNumber", "toString", "trim",
-	"values", "write_file", "writeFile",
+	"read_file", "read_line", "reduce", "replace", "set", "split", "starts_with",
+	"to_float", "to_int", "to_number", "to_string", "trim",
+	"values", "write_file",
 }
 
 type scope struct {

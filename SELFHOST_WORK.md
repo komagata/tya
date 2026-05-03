@@ -49,7 +49,7 @@ endpoint.
 - [x] Bootstrap stage 2
   - [x] Use stage-1 compiler binaries to compile selfhost sources to C
   - [x] Compile stage-1 emitted selfhost C into stage-2 binaries
-  - [x] Lower stage-2 input file reads through `readFile args()[0]`
+  - [x] Lower stage-2 input file reads through `read_file args()[0]`
   - [x] Add generated-C lexer helper scaffold for stage-2 token emission
   - [x] Run the stage-2 lexer on `examples/hello.tya`
   - [x] Tokenize integer literals in the stage-2 generated lexer
@@ -111,7 +111,7 @@ endpoint.
     - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset
     - [x] Emit `print contains(text, needle)` calls in the self-host C codegen subset
-    - [x] Emit `print startsWith(text, prefix)` and `print endsWith(text, suffix)` calls in the self-host C codegen subset
+    - [x] Emit `print starts_with(text, prefix)` and `print ends_with(text, suffix)` calls in the self-host C codegen subset
     - [x] Emit `trim(text)` calls in the self-host C codegen subset
     - [x] Emit `print len(value)` calls in the self-host C codegen subset
     - [x] Emit `print object.member` for one-property object placeholders
@@ -145,7 +145,7 @@ endpoint.
     - [x] Run a stage-2 pipeline for one-element string arrays and `for`
     - [x] Run a stage-2 pipeline for `examples/selfhost_ops.tya`
     - [x] Run a stage-2 pipeline for literal reassignment
-    - [x] Run a stage-2 pipeline for `readFile args()[0]`
+    - [x] Run a stage-2 pipeline for `read_file args()[0]`
     - [x] Skip function bodies in the stage-2 parser subset
     - [x] Run a stage-2 parser/checker fixture for `examples/multiple_return.tya`
     - [x] Run a stage-2 pipeline for `examples/multiple_return.tya`

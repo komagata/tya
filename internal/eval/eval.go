@@ -132,12 +132,6 @@ func (e *Env) assign(name string, v Value) bool {
 	return false
 }
 
-func (e *Env) setBuiltin(names []string, fn Builtin) {
-	for _, name := range names {
-		e.set(name, fn)
-	}
-}
-
 func Run(prog *ast.Program, out io.Writer) error {
 	return RunWithArgs(prog, out, nil)
 }
@@ -175,7 +169,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		fmt.Fprintln(out, stringify(args[0]))
 		return nil, nil
 	}))
-	env.setBuiltin([]string{"read_line", "readLine"}, Builtin(func(args []Value) (Value, error) {
+	env.set("read_line", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 0 {
 			return nil, fmt.Errorf("read_line expects 0 arguments")
 		}
@@ -415,7 +409,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return deepEqual(args[0], args[1]), nil
 	}))
-	env.setBuiltin([]string{"to_string", "toString"}, Builtin(func(args []Value) (Value, error) {
+	env.set("to_string", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("to_string expects 1 argument")
 		}
@@ -490,35 +484,35 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return strings.Contains(text, part), nil
 	}))
-	env.setBuiltin([]string{"starts_with", "startsWith"}, Builtin(func(args []Value) (Value, error) {
+	env.set("starts_with", Builtin(func(args []Value) (Value, error) {
 		text, prefix, err := twoStrings("starts_with", args)
 		if err != nil {
 			return nil, err
 		}
 		return strings.HasPrefix(text, prefix), nil
 	}))
-	env.setBuiltin([]string{"ends_with", "endsWith"}, Builtin(func(args []Value) (Value, error) {
+	env.set("ends_with", Builtin(func(args []Value) (Value, error) {
 		text, suffix, err := twoStrings("ends_with", args)
 		if err != nil {
 			return nil, err
 		}
 		return strings.HasSuffix(text, suffix), nil
 	}))
-	env.setBuiltin([]string{"byte_len", "byteLen"}, Builtin(func(args []Value) (Value, error) {
+	env.set("byte_len", Builtin(func(args []Value) (Value, error) {
 		text, err := oneString("byte_len", args)
 		if err != nil {
 			return nil, err
 		}
 		return int64(len(text)), nil
 	}))
-	env.setBuiltin([]string{"char_len", "charLen"}, Builtin(func(args []Value) (Value, error) {
+	env.set("char_len", Builtin(func(args []Value) (Value, error) {
 		text, err := oneString("char_len", args)
 		if err != nil {
 			return nil, err
 		}
 		return int64(len([]rune(text))), nil
 	}))
-	env.setBuiltin([]string{"read_file", "readFile"}, Builtin(func(args []Value) (Value, error) {
+	env.set("read_file", Builtin(func(args []Value) (Value, error) {
 		path, err := oneString("read_file", args)
 		if err != nil {
 			return nil, err
@@ -529,7 +523,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return string(data), nil
 	}))
-	env.setBuiltin([]string{"write_file", "writeFile"}, Builtin(func(args []Value) (Value, error) {
+	env.set("write_file", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
 			return nil, fmt.Errorf("write_file expects 2 arguments")
 		}
@@ -546,7 +540,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return nil, nil
 	}))
-	env.setBuiltin([]string{"file_exists", "fileExists"}, Builtin(func(args []Value) (Value, error) {
+	env.set("file_exists", Builtin(func(args []Value) (Value, error) {
 		path, err := oneString("file_exists", args)
 		if err != nil {
 			return nil, err
@@ -627,26 +621,26 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return left / right, nil
 	}))
-	env.setBuiltin([]string{"to_int", "toInt"}, Builtin(func(args []Value) (Value, error) {
+	env.set("to_int", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("to_int expects 1 argument")
 		}
-		return toInt(args[0])
+		return parseIntValue(args[0])
 	}))
-	env.setBuiltin([]string{"to_float", "toFloat"}, Builtin(func(args []Value) (Value, error) {
+	env.set("to_float", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("to_float expects 1 argument")
 		}
-		return toFloat(args[0])
+		return parseFloatValue(args[0])
 	}))
-	env.setBuiltin([]string{"to_number", "toNumber"}, Builtin(func(args []Value) (Value, error) {
+	env.set("to_number", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("to_number expects 1 argument")
 		}
-		if i, err := toInt(args[0]); err == nil {
+		if i, err := parseIntValue(args[0]); err == nil {
 			return i, nil
 		}
-		return toFloat(args[0])
+		return parseFloatValue(args[0])
 	}))
 }
 
@@ -1411,7 +1405,7 @@ func asFloat(v Value) (float64, bool) {
 	return 0, false
 }
 
-func toInt(v Value) (Value, error) {
+func parseIntValue(v Value) (Value, error) {
 	switch x := v.(type) {
 	case int64:
 		return x, nil
@@ -1428,7 +1422,7 @@ func toInt(v Value) (Value, error) {
 	}
 }
 
-func toFloat(v Value) (Value, error) {
+func parseFloatValue(v Value) (Value, error) {
 	switch x := v.(type) {
 	case int64:
 		return float64(x), nil
