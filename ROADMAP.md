@@ -314,10 +314,11 @@ Implemented:
 
 ## Class, Module, Dictionary, And Set Baseline
 
-Status: design inventory complete; implementation work remains.
+Status: class/module/dictionary/set implementation is in progress.
 
 `docs/CLASS_MODULE_DESIGN.md` describes the intended semantics. The current
-implementation is still the pre-class/module baseline:
+implementation has moved past the pre-class/module baseline, with remaining
+import and C-emission gaps:
 
 - Curly and indented literals are parsed as `ObjectLit`, not dictionaries.
   Empty `{}` is an empty object. There is no set literal or `set()` builtin.
@@ -327,12 +328,13 @@ implementation is still the pre-class/module baseline:
 - The `.` operator reads and writes members on the current object value type.
   Dictionaries are not separate yet, so current examples such as `user.name`
   and imported `greeting.hello()` both use object member access.
-- `@property` works only inside current object methods. There is no class
-  instance value, constructor call, `self`, `super`, inheritance, or interface
-  checking.
-- `class`, `module`, `extends`, `implements`, `interface`, and `super` are not
-  keywords. They lex as identifiers; declarations using them are rejected by the
-  checker as normal undefined or invalid-name expressions.
+- `@property` works in object methods and class instance methods. Initial
+  `class` declarations support constructors, instance fields, property reads,
+  and bound method calls, but `self`, `super`, inheritance, and interface
+  checking remain unimplemented.
+- Initial `module` declarations define namespace values with `.` member access.
+  `extends`, `implements`, `interface`, and `super` still lex as identifiers
+  and are not implemented.
 - Imports are handled by source loading, before lexing/parsing the combined
   program. `import name` loads `name.tya` from the importing file's directory,
   recursively prepends imported source, rejects cycles, and requires imported
@@ -343,12 +345,11 @@ implementation is still the pre-class/module baseline:
 - Import aliases are not implemented. `import util as u` is rejected as an
   invalid module name today.
 - Entry files execute top-level statements directly. They are not wrapped in an
-  implicit `main` function, and imported files are not represented as module
-  namespace values separate from ordinary object bindings.
+  implicit `main` function.
 - The C emitter works from the already-loaded combined AST. It supports current
-  objects, methods, member/index access, and imports through source loading, but
-  has no separate class, module, dictionary, set, inheritance, or interface
-  lowering.
+  objects, methods, dictionaries, sets, member/index access, and imports through
+  source loading, but class and module declarations are explicitly rejected
+  until dedicated lowering lands.
 
 Ordered implementation checklist:
 

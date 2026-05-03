@@ -127,6 +127,31 @@ func TestParseClassDeclaration(t *testing.T) {
 	}
 }
 
+func TestParseModuleDeclaration(t *testing.T) {
+	src := "module util\n  foo: \"foo\"\n\n  bar: ->\n    \"bar\"\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decl, ok := prog.Stmts[0].(*ast.ModuleDecl)
+	if !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+	if decl.Name != "util" {
+		t.Fatalf("got module %q", decl.Name)
+	}
+	if len(decl.Members) != 2 {
+		t.Fatalf("got %d members", len(decl.Members))
+	}
+	if decl.Members[1].Name != "bar" {
+		t.Fatalf("got member %#v", decl.Members[1])
+	}
+}
+
 func TestParseMultipleFunctionParams(t *testing.T) {
 	toks, errs := lexer.Lex("add = a, b -> a + b\nprint add 2, 3\n")
 	if len(errs) != 0 {

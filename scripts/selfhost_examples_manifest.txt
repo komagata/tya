@@ -44,4 +44,6 @@ examples/selfhost_ops.tya|supported|scripts/stage1_selfhost_sources_check.sh|sta
 examples/string.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute string builtin/index subset
 examples/try.tya|expected-failing|try propagation|requires general try expression and multi-return propagation codegen parity
 examples/use_module.tya|expected-failing|imports|requires module import loading and module member call parity
+examples/use_module_decl.tya|expected-failing|module declarations|requires module declarations and member access in self-host parser/checker/codegen
+examples/util.tya|out-of-scope|module fixture|support file for examples/use_module_decl.tya, not a standalone output parity target
 examples/while.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute while example subset

@@ -27,7 +27,7 @@
     "id": "CLASS-005",
     "title": "Add module declarations and module member access",
     "priority": 5,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-006",

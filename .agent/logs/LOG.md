@@ -3,13 +3,23 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 11
-**Current Task:** CLASS-004 Complete
+**Tasks Completed:** 12
+**Current Task:** CLASS-005 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - CLASS-005 - Added `module name`
+  declarations with parser/AST/checker support, snake_case module name and
+  duplicate member diagnostics, runtime module namespace values, imported module
+  declaration loading, and `module.member` / `module.fn()` access. Added module
+  declaration examples and regression coverage, kept generated-C module
+  declarations explicitly gated with a focused rejection test, and updated the
+  class/module baseline roadmap.
+  Verification: `go test ./internal/lexer ./internal/parser ./internal/checker -count=1`;
+  `go test ./internal/eval ./internal/runner -count=1`;
+  `go test ./internal/codegen ./tests -count=1`; `go test ./... -count=1`.
 - 2026-05-03 00:00 UTC - CLASS-004 - Added parser/checker/evaluator support
   for class declarations, PascalCase class names, duplicate method diagnostics,
   constructors via `init`, instance fields through `@field`, property reads, and

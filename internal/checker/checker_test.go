@@ -171,6 +171,33 @@ func TestCheckRejectsDuplicateClassMethod(t *testing.T) {
 	}
 }
 
+func TestCheckModuleDeclaration(t *testing.T) {
+	src := "module util\n  foo: \"foo\"\n  bar: -> \"bar\"\n\nprint util.foo\nprint util.bar()\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsInvalidModuleName(t *testing.T) {
+	err := Check(parse(t, "module Util\n  foo: \"foo\"\n"))
+	if err == nil {
+		t.Fatal("expected invalid module name error")
+	}
+	if !strings.Contains(err.Error(), "invalid module name Util") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsDuplicateModuleMember(t *testing.T) {
+	err := Check(parse(t, "module util\n  foo: \"a\"\n  foo: \"b\"\n"))
+	if err == nil {
+		t.Fatal("expected duplicate module member error")
+	}
+	if !strings.Contains(err.Error(), "duplicate module member foo") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckRejectsUndefinedVariable(t *testing.T) {
 	prog := parse(t, "print user_nmae\n")
 	err := Check(prog)

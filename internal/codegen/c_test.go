@@ -257,6 +257,17 @@ func TestEmitCRejectsClassDeclarations(t *testing.T) {
 	}
 }
 
+func TestEmitCRejectsModuleDeclarations(t *testing.T) {
+	prog := checkedProgram(t, "module util\n  foo: \"foo\"\n")
+	_, err := EmitC(prog)
+	if err == nil {
+		t.Fatal("expected module C emitter error")
+	}
+	if !strings.Contains(err.Error(), "C emitter does not support module declarations yet") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)

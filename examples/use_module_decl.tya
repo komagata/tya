@@ -1,0 +1,4 @@
+import util
+
+print util.foo
+print util.bar()

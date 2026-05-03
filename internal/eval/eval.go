@@ -57,6 +57,10 @@ type Instance struct {
 	Class  *Class
 	Fields Object
 }
+type Module struct {
+	Name    string
+	Members Object
+}
 
 type Function struct {
 	Params []string
@@ -686,6 +690,17 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			}
 		}
 		return class, nil
+	case *ast.ModuleDecl:
+		module := &Module{Name: n.Name, Members: Object{}}
+		env.set(n.Name, module)
+		for _, member := range n.Members {
+			value, err := evalExpr(member.Value, env)
+			if err != nil {
+				return nil, err
+			}
+			module.Members[member.Name] = value
+		}
+		return module, nil
 	case *ast.ExprStmt:
 		return evalExpr(n.Expr, env)
 	case *ast.IfStmt:
@@ -949,6 +964,9 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			}
 			return inst.Fields[n.Name], nil
 		}
+		if module, ok := obj.(*Module); ok {
+			return module.Members[n.Name], nil
+		}
 		o, ok := obj.(Object)
 		if !ok {
 			return nil, fmt.Errorf("cannot read property %s on non-object", n.Name)
@@ -1101,6 +1119,9 @@ func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
 			}
 			return method, inst.Fields, nil
 		}
+		if module, ok := obj.(*Module); ok {
+			return module.Members[m.Name], nil, nil
+		}
 		o, ok := obj.(Object)
 		if !ok {
 			return nil, nil, fmt.Errorf("method receiver is not object")
@@ -1200,6 +1221,8 @@ func equal(l, r Value) bool {
 	case *Class:
 		return lv == r
 	case *Instance:
+		return lv == r
+	case *Module:
 		return lv == r
 	}
 	return false
@@ -1502,6 +1525,8 @@ func stringify(v Value) string {
 		return "<class " + x.Name + ">"
 	case *Instance:
 		return "<" + x.Class.Name + ">"
+	case *Module:
+		return "<module " + x.Name + ">"
 	default:
 		return fmt.Sprintf("%v", x)
 	}

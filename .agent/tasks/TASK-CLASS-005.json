@@ -1,0 +1,29 @@
+{
+  "id": "CLASS-005",
+  "title": "Add module declarations and module member access",
+  "passes": true,
+  "goal": "Implement `module name` declarations and module member access with `.`.",
+  "context": [
+    "Imported non-class files define a `module`.",
+    "Modules are namespace-like public values, not dictionaries.",
+    "Module members use `module.member` and callable module functions use `module.fn()`."
+  ],
+  "steps": [
+    "Add lexer/parser/AST support for `module` declarations.",
+    "Add checker rules for module names and duplicate module members.",
+    "Implement interpreter and runner support for module values and member/function access.",
+    "Add generated-C support for a minimal module subset or explicitly gate unsupported C paths with tests and docs if needed.",
+    "Add examples for `module util`, `import util`, `util.foo`, and `util.bar()`."
+  ],
+  "verification": [
+    "go test ./internal/lexer ./internal/parser ./internal/checker -count=1",
+    "go test ./internal/eval ./internal/runner -count=1",
+    "go test ./internal/codegen ./tests -count=1",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "A simple imported module example runs.",
+    "Modules use `.` access and are distinct from dictionaries.",
+    "Docs and examples reflect the implemented module subset."
+  ]
+}

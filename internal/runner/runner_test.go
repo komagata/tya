@@ -38,6 +38,21 @@ func TestRunFileLoadsImportedModule(t *testing.T) {
 	}
 }
 
+func TestRunFileLoadsImportedModuleDeclaration(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo: \"foo\"\n  bar: -> \"bar\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import util\nprint util.foo\nprint util.bar()\n")
+
+	var out strings.Builder
+	if err := RunFile(main, nil, &out, nil); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "foo\nbar\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
 func TestLoadSourceRejectsModuleWithMismatchedPublicBinding(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "message = \"hello\"\n")

@@ -167,6 +167,10 @@ func validateModule(path, src string) error {
 	want := strings.TrimSuffix(filepath.Base(path), ".tya")
 	public := []string{}
 	for _, stmt := range prog.Stmts {
+		if decl, ok := stmt.(*ast.ModuleDecl); ok {
+			public = append(public, decl.Name)
+			continue
+		}
 		assign, ok := stmt.(*ast.AssignStmt)
 		if !ok {
 			continue

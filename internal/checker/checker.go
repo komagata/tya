@@ -3,6 +3,7 @@ package checker
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"tya/internal/ast"
 )
@@ -128,6 +129,24 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				}
 				seen[method.Name] = true
 				if err := checkExpr(method.Func, scope); err != nil {
+					return err
+				}
+			}
+		case *ast.ModuleDecl:
+			if !valueNameRE.MatchString(n.Name) || strings.HasPrefix(n.Name, "_") {
+				return fmt.Errorf("%d:%d: invalid module name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+			}
+			seen := map[string]bool{}
+			scope.define(n.Name, kindModule)
+			for _, member := range n.Members {
+				if !valueNameRE.MatchString(member.Name) {
+					return fmt.Errorf("%d:%d: invalid module member %s", member.Tok.Line, member.Tok.Col, member.Name)
+				}
+				if seen[member.Name] {
+					return fmt.Errorf("%d:%d: duplicate module member %s", member.Tok.Line, member.Tok.Col, member.Name)
+				}
+				seen[member.Name] = true
+				if err := checkExpr(member.Value, scope); err != nil {
 					return err
 				}
 			}

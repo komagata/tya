@@ -78,6 +78,20 @@ type ClassMethod struct {
 	Func *FuncLit
 }
 
+type ModuleDecl struct {
+	Name    string
+	NameTok token.Token
+	Members []ModuleMember
+}
+
+func (*ModuleDecl) stmt() {}
+
+type ModuleMember struct {
+	Name  string
+	Tok   token.Token
+	Value Expr
+}
+
 type Ident struct {
 	Name string
 	Tok  token.Token

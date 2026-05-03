@@ -37,6 +37,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "class" {
 		return p.classDecl()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "module" {
+		return p.moduleDecl()
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "if" {
 		return p.ifStmt()
 	}
@@ -117,6 +120,44 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	}
 	if !p.match(token.DEDENT) {
 		return nil, p.err("expected dedent after class")
+	}
+	return decl, nil
+}
+
+func (p *Parser) moduleDecl() (ast.Stmt, error) {
+	p.next()
+	name := p.expect(token.IDENT)
+	if name.Type != token.IDENT {
+		return nil, p.err("expected module name")
+	}
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after module")
+	}
+	decl := &ast.ModuleDecl{Name: name.Lexeme, NameTok: name}
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		memberName := p.expect(token.IDENT)
+		if memberName.Type != token.IDENT {
+			return nil, p.err("expected module member name")
+		}
+		if !p.match(token.COLON) {
+			return nil, p.err("expected ':' after module member name")
+		}
+		var value ast.Expr
+		var err error
+		if p.match(token.ARROW) {
+			value, err = p.finishFunc(nil, nil)
+		} else {
+			value, err = p.exprLine()
+		}
+		if err != nil {
+			return nil, err
+		}
+		decl.Members = append(decl.Members, ast.ModuleMember{Name: memberName.Lexeme, Tok: memberName, Value: value})
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after module")
 	}
 	return decl, nil
 }
