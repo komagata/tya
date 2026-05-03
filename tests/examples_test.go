@@ -24,6 +24,7 @@ func TestExamplesGolden(t *testing.T) {
 		"classic/gcd.tya":       "6\n",
 		"classic/prime.tya":     "true\n",
 		"convert.tya":           "20\n42\n2.5\n12\n12.5\n[1, 2]\n",
+		"dict_set.tya":          "komagata\n0\n2\ntrue\n0\n",
 		"equal.tya":             "false\ntrue\nfalse\n",
 		"error.tya":             "error: file not found\nfile not found\n",
 		"for.tya":               "12\n0:2\n1:4\n2:6\n",

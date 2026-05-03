@@ -98,11 +98,13 @@ type NilLit struct{}
 
 func (*NilLit) expr() {}
 
-type ObjectLit struct {
-	Props []ObjectProp
+type DictLit struct {
+	Props []DictProp
 }
 
-func (*ObjectLit) expr() {}
+func (*DictLit) expr() {}
+
+type ObjectLit = DictLit
 
 type ArrayLit struct {
 	Elems []Expr
@@ -110,11 +112,19 @@ type ArrayLit struct {
 
 func (*ArrayLit) expr() {}
 
-type ObjectProp struct {
+type SetLit struct {
+	Elems []Expr
+}
+
+func (*SetLit) expr() {}
+
+type DictProp struct {
 	Name  string
 	Tok   token.Token
 	Value Expr
 }
+
+type ObjectProp = DictProp
 
 type FuncLit struct {
 	Params    []string

@@ -106,9 +106,13 @@ func checkUnusedExpr(expr ast.Expr, scope *useScope) {
 	switch n := expr.(type) {
 	case *ast.Ident:
 		scope.use(n.Name)
-	case *ast.ObjectLit:
+	case *ast.DictLit:
 		for _, prop := range n.Props {
 			checkUnusedExpr(prop.Value, scope)
+		}
+	case *ast.SetLit:
+		for _, elem := range n.Elems {
+			checkUnusedExpr(elem, scope)
 		}
 	case *ast.FuncLit:
 		child := newUseScope(scope)

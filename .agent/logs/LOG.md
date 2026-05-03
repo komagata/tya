@@ -3,13 +3,23 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 9
-**Current Task:** CLASS-001 Complete
+**Tasks Completed:** 10
+**Current Task:** CLASS-002 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - CLASS-002 - Implemented distinct dictionary and set
+  literal AST/parser semantics, including empty `{}` as a dictionary, set
+  literals, `set()`, duplicate-eliding set runtime behavior, mixed literal
+  rejection, dictionary index access, generated-C/runtime support, and focused
+  dictionary/set example coverage. Classified the new example for self-host
+  parity and added a C runtime string-length cache needed by generated
+  self-host lexers.
+  Verification: `go test ./internal/parser ./internal/checker ./internal/eval -count=1`;
+  `go test ./internal/codegen ./tests -count=1`; `go test ./... -count=1`;
+  `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-03 02:05 UTC - CLASS-001 - Inventoried the current
   class/module/dictionary/set baseline against the planned design, added an
   ordered implementation checklist to `ROADMAP.md`, and added regression

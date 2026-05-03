@@ -40,6 +40,9 @@ type Object map[string]Value
 type Array struct {
 	items []Value
 }
+type Set struct {
+	items []Value
+}
 type Tuple struct {
 	items []Value
 }
@@ -184,8 +187,10 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return int64(len(v.items)), nil
 		case Object:
 			return int64(len(v)), nil
+		case *Set:
+			return int64(len(v.items)), nil
 		default:
-			return nil, fmt.Errorf("len expects string, array, or object")
+			return nil, fmt.Errorf("len expects string, array, object, or set")
 		}
 	}))
 	env.set("push", Builtin(func(args []Value) (Value, error) {
@@ -354,9 +359,12 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		if len(args) != 2 {
 			return nil, fmt.Errorf("has expects 2 arguments")
 		}
+		if set, ok := args[0].(*Set); ok {
+			return setHas(set, args[1]), nil
+		}
 		obj, ok := args[0].(Object)
 		if !ok {
-			return nil, fmt.Errorf("has expects object")
+			return nil, fmt.Errorf("has expects object or set")
 		}
 		key, ok := args[1].(string)
 		if !ok {
@@ -364,6 +372,12 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		_, exists := obj[key]
 		return exists, nil
+	}))
+	env.set("set", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("set expects 0 arguments")
+		}
+		return &Set{}, nil
 	}))
 	env.set("delete", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
@@ -781,9 +795,17 @@ func assign(target ast.Expr, v Value, env *Env) error {
 		if err != nil {
 			return err
 		}
+		if dict, ok := obj.(Object); ok {
+			key, ok := idx.(string)
+			if !ok {
+				return fmt.Errorf("dictionary index must be string")
+			}
+			dict[key] = v
+			return nil
+		}
 		arr, ok := obj.(*Array)
 		if !ok {
-			return fmt.Errorf("index assignment target is not array")
+			return fmt.Errorf("index assignment target is not array or dictionary")
 		}
 		i, ok := idx.(int64)
 		if !ok {
@@ -821,7 +843,7 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		return n.Value, nil
 	case *ast.NilLit:
 		return nil, nil
-	case *ast.ObjectLit:
+	case *ast.DictLit:
 		o := Object{}
 		for _, p := range n.Props {
 			v, err := evalExpr(p.Value, env)
@@ -831,6 +853,16 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			o[p.Name] = v
 		}
 		return o, nil
+	case *ast.SetLit:
+		set := &Set{}
+		for _, elem := range n.Elems {
+			v, err := evalExpr(elem, env)
+			if err != nil {
+				return nil, err
+			}
+			setAdd(set, v)
+		}
+		return set, nil
 	case *ast.ArrayLit:
 		arr := &Array{}
 		for _, elem := range n.Elems {
@@ -904,6 +936,13 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		idx, err := evalExpr(n.Index, env)
 		if err != nil {
 			return nil, err
+		}
+		if dict, ok := obj.(Object); ok {
+			key, ok := idx.(string)
+			if !ok {
+				return nil, fmt.Errorf("dictionary index must be string")
+			}
+			return dict[key], nil
 		}
 		arr, ok := obj.(*Array)
 		if !ok {
@@ -1103,6 +1142,8 @@ func equal(l, r Value) bool {
 		return ok && fmt.Sprintf("%p", lv) == fmt.Sprintf("%p", rv)
 	case *Array:
 		return lv == r
+	case *Set:
+		return lv == r
 	case *Function:
 		return lv == r
 	case *ErrorValue:
@@ -1136,9 +1177,36 @@ func deepEqual(l, r Value) bool {
 			}
 		}
 		return true
+	case *Set:
+		rv, ok := r.(*Set)
+		if !ok || len(lv.items) != len(rv.items) {
+			return false
+		}
+		for _, item := range lv.items {
+			if !setHas(rv, item) {
+				return false
+			}
+		}
+		return true
 	default:
 		return equal(l, r)
 	}
+}
+
+func setAdd(set *Set, value Value) {
+	if setHas(set, value) {
+		return
+	}
+	set.items = append(set.items, value)
+}
+
+func setHas(set *Set, value Value) bool {
+	for _, item := range set.items {
+		if deepEqual(item, value) {
+			return true
+		}
+	}
+	return false
 }
 
 func compare(op string, l, r Value) (Value, error) {
@@ -1365,6 +1433,12 @@ func stringify(v Value) string {
 			parts = append(parts, stringify(item))
 		}
 		return "[" + strings.Join(parts, ", ") + "]"
+	case *Set:
+		parts := make([]string, 0, len(x.items))
+		for _, item := range x.items {
+			parts = append(parts, stringify(item))
+		}
+		return "{" + strings.Join(parts, ", ") + "}"
 	case *Tuple:
 		parts := make([]string, 0, len(x.items))
 		for _, item := range x.items {

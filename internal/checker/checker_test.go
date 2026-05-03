@@ -71,25 +71,32 @@ func TestCheckRejectsInvalidFunctionParameterWithLocation(t *testing.T) {
 	}
 }
 
-func TestCheckRejectsDuplicateObjectProperty(t *testing.T) {
+func TestCheckRejectsDuplicateDictKey(t *testing.T) {
 	prog := parse(t, "user =\n  name: \"a\"\n  name: \"b\"\n")
 	err := Check(prog)
 	if err == nil {
-		t.Fatal("expected duplicate property error")
+		t.Fatal("expected duplicate key error")
 	}
-	if !strings.Contains(err.Error(), "3:3: duplicate object property name") {
+	if !strings.Contains(err.Error(), "3:3: duplicate dictionary key name") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestCheckRejectsInvalidObjectPropertyWithLocation(t *testing.T) {
+func TestCheckRejectsInvalidDictKeyWithLocation(t *testing.T) {
 	prog := parse(t, "user = { Name: \"a\" }\n")
 	err := Check(prog)
 	if err == nil {
-		t.Fatal("expected invalid object property error")
+		t.Fatal("expected invalid dictionary key error")
 	}
-	if !strings.Contains(err.Error(), "1:10: invalid object property name Name") {
+	if !strings.Contains(err.Error(), "1:10: invalid dictionary key Name") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckAllowsSetLiteralAndSetBuiltin(t *testing.T) {
+	prog := parse(t, "roles = { \"admin\", \"owner\" }\nempty_roles = set()\nprint has roles, \"admin\"\nprint len empty_roles\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
 	}
 }
 

@@ -206,16 +206,16 @@ func (p *Parser) exprListLine() ([]ast.Expr, error) {
 	return values, nil
 }
 
-func (p *Parser) objectBody() (*ast.ObjectLit, error) {
-	obj := &ast.ObjectLit{}
+func (p *Parser) objectBody() (*ast.DictLit, error) {
+	dict := &ast.DictLit{}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		name := p.expect(token.IDENT)
 		if name.Type != token.IDENT {
-			return nil, p.err("expected object property name")
+			return nil, p.err("expected dictionary key")
 		}
 		if !p.match(token.COLON) {
-			return nil, p.err("expected ':' after object property")
+			return nil, p.err("expected ':' after dictionary key")
 		}
 		var val ast.Expr
 		var err error
@@ -227,13 +227,13 @@ func (p *Parser) objectBody() (*ast.ObjectLit, error) {
 		if err != nil {
 			return nil, err
 		}
-		obj.Props = append(obj.Props, ast.ObjectProp{Name: name.Lexeme, Tok: name, Value: val})
+		dict.Props = append(dict.Props, ast.DictProp{Name: name.Lexeme, Tok: name, Value: val})
 		p.skipNewlines()
 	}
 	if !p.match(token.DEDENT) {
-		return nil, p.err("expected dedent after object")
+		return nil, p.err("expected dedent after dictionary")
 	}
-	return obj, nil
+	return dict, nil
 }
 
 func (p *Parser) exprLine() (ast.Expr, error) {
@@ -558,30 +558,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}
 		return &ast.ArrayLit{Elems: elems}, nil
 	case token.LBRACE:
-		obj := &ast.ObjectLit{}
-		if !p.at(token.RBRACE) {
-			for {
-				name := p.expect(token.IDENT)
-				if name.Type != token.IDENT {
-					return nil, p.err("expected object property name")
-				}
-				if !p.match(token.COLON) {
-					return nil, p.err("expected ':' after object property")
-				}
-				value, err := p.expr()
-				if err != nil {
-					return nil, err
-				}
-				obj.Props = append(obj.Props, ast.ObjectProp{Name: name.Lexeme, Tok: name, Value: value})
-				if !p.match(token.COMMA) {
-					break
-				}
-			}
-		}
-		if !p.match(token.RBRACE) {
-			return nil, p.err("expected '}'")
-		}
-		return obj, nil
+		return p.curlyLiteral()
 	case token.AT:
 		name := p.expect(token.IDENT)
 		if name.Type != token.IDENT {
@@ -590,6 +567,60 @@ func (p *Parser) primary() (ast.Expr, error) {
 		return &ast.ThisProp{Name: name.Lexeme, Tok: tok}, nil
 	}
 	return nil, p.err("expected expression")
+}
+
+func (p *Parser) curlyLiteral() (ast.Expr, error) {
+	if p.match(token.RBRACE) {
+		return &ast.DictLit{}, nil
+	}
+	if p.at(token.IDENT) && p.peekN(1).Type == token.COLON {
+		return p.dictLiteral()
+	}
+	return p.setLiteral()
+}
+
+func (p *Parser) dictLiteral() (ast.Expr, error) {
+	dict := &ast.DictLit{}
+	for {
+		if !(p.at(token.IDENT) && p.peekN(1).Type == token.COLON) {
+			return nil, p.err("cannot mix dict entries and set entries in one literal")
+		}
+		name := p.next()
+		p.next()
+		value, err := p.expr()
+		if err != nil {
+			return nil, err
+		}
+		dict.Props = append(dict.Props, ast.DictProp{Name: name.Lexeme, Tok: name, Value: value})
+		if !p.match(token.COMMA) {
+			break
+		}
+	}
+	if !p.match(token.RBRACE) {
+		return nil, p.err("expected '}'")
+	}
+	return dict, nil
+}
+
+func (p *Parser) setLiteral() (ast.Expr, error) {
+	set := &ast.SetLit{}
+	for {
+		elem, err := p.expr()
+		if err != nil {
+			return nil, err
+		}
+		if p.at(token.COLON) {
+			return nil, p.err("cannot mix dict entries and set entries in one literal")
+		}
+		set.Elems = append(set.Elems, elem)
+		if !p.match(token.COMMA) {
+			break
+		}
+	}
+	if !p.match(token.RBRACE) {
+		return nil, p.err("expected '}'")
+	}
+	return set, nil
 }
 
 func (p *Parser) finishFunc(params []string, paramToks []token.Token) (*ast.FuncLit, error) {

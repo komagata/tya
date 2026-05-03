@@ -83,7 +83,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if tryExpr, ok := n.Values[0].(*ast.TryExpr); ok {
 			return g.assignTry(id.Name, tryExpr)
 		}
-		if obj, ok := n.Values[0].(*ast.ObjectLit); ok {
+		if obj, ok := n.Values[0].(*ast.DictLit); ok {
 			if err := g.assignObjectLit(id.Name, obj); err != nil {
 				return err
 			}
@@ -389,7 +389,7 @@ func isSideEffectCall(expr ast.Expr) bool {
 	}
 }
 
-func (g *cgen) assignObjectLit(name string, obj *ast.ObjectLit) error {
+func (g *cgen) assignObjectLit(name string, obj *ast.DictLit) error {
 	entries := []string{}
 	methods := []ast.ObjectProp{}
 	for _, prop := range obj.Props {
@@ -528,7 +528,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			elems = append(elems, ex)
 		}
 		return fmt.Sprintf("tya_array((TyaValue[]){%s}, %d)", strings.Join(elems, ", "), len(elems)), "TyaValue", nil
-	case *ast.ObjectLit:
+	case *ast.DictLit:
 		if len(n.Props) == 0 {
 			return "tya_object(0, 0)", "TyaValue", nil
 		}
@@ -541,6 +541,19 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			entries = append(entries, fmt.Sprintf("{%s, %s}", strconv.Quote(prop.Name), value))
 		}
 		return fmt.Sprintf("tya_object((TyaObjectEntry[]){%s}, %d)", strings.Join(entries, ", "), len(entries)), "TyaValue", nil
+	case *ast.SetLit:
+		if len(n.Elems) == 0 {
+			return "tya_set(0, 0)", "TyaValue", nil
+		}
+		elems := make([]string, 0, len(n.Elems))
+		for _, elem := range n.Elems {
+			ex, _, err := g.expr(elem)
+			if err != nil {
+				return "", "", err
+			}
+			elems = append(elems, ex)
+		}
+		return fmt.Sprintf("tya_set((TyaValue[]){%s}, %d)", strings.Join(elems, ", "), len(elems)), "TyaValue", nil
 	case *ast.FuncLit:
 		name := fmt.Sprintf("__anon%d", g.temp)
 		sym, err := g.emitFunc(name, n)
@@ -604,6 +617,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_len(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "set" && len(n.Args) == 0 {
+			return "tya_set(0, 0)", "TyaValue", nil
 		}
 		if ok && id.Name == "contains" && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])

@@ -9,7 +9,7 @@
     "id": "CLASS-002",
     "title": "Implement dictionary and set literal semantics",
     "priority": 2,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-003",

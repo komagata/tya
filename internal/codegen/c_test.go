@@ -215,9 +215,17 @@ func TestEmitCCompilesStringInterpolationProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesObjectProgram(t *testing.T) {
-	src := "user =\n  name: \"komagata\"\n  age: 20\nprint user.name\nprint len user\n"
+	src := "user =\n  name: \"komagata\"\n  age: 20\nprint user[\"name\"]\nprint len user\nuser[\"city\"] = \"Tokyo\"\nprint user[\"city\"]\n"
 	out := compileAndRun(t, src)
-	if string(out) != "komagata\n2\n" {
+	if string(out) != "komagata\n2\nTokyo\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCCompilesSetProgram(t *testing.T) {
+	src := "roles = { \"admin\", \"owner\", \"admin\" }\nempty_roles = set()\nprint len roles\nprint has roles, \"admin\"\nprint has roles, \"guest\"\nprint len empty_roles\n"
+	out := compileAndRun(t, src)
+	if string(out) != "2\ntrue\nfalse\n0\n" {
 		t.Fatalf("got %q", out)
 	}
 }

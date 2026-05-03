@@ -23,7 +23,7 @@ var builtinNames = []string{
 	"args", "byte_len", "byteLen", "char_len", "charLen", "contains", "delete", "div", "ends_with", "endsWith",
 	"env", "equal", "error", "exit", "file_exists", "fileExists", "filter", "find", "all", "any", "each",
 	"has", "join", "keys", "len", "map", "panic", "pop", "print", "push",
-	"read_file", "read_line", "readFile", "readLine", "reduce", "replace", "split", "starts_with", "startsWith",
+	"read_file", "read_line", "readFile", "readLine", "reduce", "replace", "set", "split", "starts_with", "startsWith",
 	"to_float", "to_int", "to_number", "to_string", "toFloat", "toInt", "toNumber", "toString", "trim",
 	"values", "write_file", "writeFile",
 }
@@ -137,17 +137,23 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		if !scope.defined(n.Name) {
 			return fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
 		}
-	case *ast.ObjectLit:
+	case *ast.DictLit:
 		seen := map[string]bool{}
 		for _, prop := range n.Props {
 			if !valueNameRE.MatchString(prop.Name) {
-				return fmt.Errorf("%d:%d: invalid object property name %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
+				return fmt.Errorf("%d:%d: invalid dictionary key %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
 			}
 			if seen[prop.Name] {
-				return fmt.Errorf("%d:%d: duplicate object property %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
+				return fmt.Errorf("%d:%d: duplicate dictionary key %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
 			}
 			seen[prop.Name] = true
 			if err := checkExpr(prop.Value, scope); err != nil {
+				return err
+			}
+		}
+	case *ast.SetLit:
+		for _, elem := range n.Elems {
+			if err := checkExpr(elem, scope); err != nil {
 				return err
 			}
 		}

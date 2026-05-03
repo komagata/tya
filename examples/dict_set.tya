@@ -1,0 +1,12 @@
+user = { name: "komagata", age: 20 }
+print user["name"]
+
+empty = {}
+print len empty
+
+roles = { "admin", "owner", "admin" }
+print len roles
+print has roles, "owner"
+
+empty_roles = set()
+print len empty_roles

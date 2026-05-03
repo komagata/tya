@@ -1,13 +1,14 @@
 package parser
 
 import (
+	"strings"
 	"testing"
 
 	"tya/internal/ast"
 	"tya/internal/lexer"
 )
 
-func TestParseObjectAssignment(t *testing.T) {
+func TestParseIndentedDictAssignment(t *testing.T) {
 	toks, errs := lexer.Lex("user =\n  name: \"komagata\"\n  age: 20\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -20,7 +21,7 @@ func TestParseObjectAssignment(t *testing.T) {
 	if !ok {
 		t.Fatalf("got %T", prog.Stmts[0])
 	}
-	obj, ok := assign.Values[0].(*ast.ObjectLit)
+	obj, ok := assign.Values[0].(*ast.DictLit)
 	if !ok {
 		t.Fatalf("got %T", assign.Values[0])
 	}
@@ -29,7 +30,7 @@ func TestParseObjectAssignment(t *testing.T) {
 	}
 }
 
-func TestParseInlineObject(t *testing.T) {
+func TestParseInlineDict(t *testing.T) {
 	toks, errs := lexer.Lex("user = { name: \"komagata\", age: 20 }\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -39,7 +40,7 @@ func TestParseInlineObject(t *testing.T) {
 		t.Fatal(err)
 	}
 	assign := prog.Stmts[0].(*ast.AssignStmt)
-	obj, ok := assign.Values[0].(*ast.ObjectLit)
+	obj, ok := assign.Values[0].(*ast.DictLit)
 	if !ok {
 		t.Fatalf("got %T", assign.Values[0])
 	}
@@ -48,13 +49,56 @@ func TestParseInlineObject(t *testing.T) {
 	}
 }
 
-func TestParseCurrentBaselineRejectsSetLikeCurlyLiteral(t *testing.T) {
+func TestParseSetLiteral(t *testing.T) {
 	toks, errs := lexer.Lex("roles = { \"admin\", \"owner\" }\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := Parse(toks); err == nil {
-		t.Fatal("expected current object parser to reject set-like curly literal")
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign := prog.Stmts[0].(*ast.AssignStmt)
+	set, ok := assign.Values[0].(*ast.SetLit)
+	if !ok {
+		t.Fatalf("got %T", assign.Values[0])
+	}
+	if len(set.Elems) != 2 {
+		t.Fatalf("got %d elems", len(set.Elems))
+	}
+}
+
+func TestParseEmptyCurlyLiteralAsDict(t *testing.T) {
+	toks, errs := lexer.Lex("empty = {}\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign := prog.Stmts[0].(*ast.AssignStmt)
+	if _, ok := assign.Values[0].(*ast.DictLit); !ok {
+		t.Fatalf("got %T", assign.Values[0])
+	}
+}
+
+func TestParseRejectsMixedDictAndSetLiteral(t *testing.T) {
+	for _, src := range []string{
+		"bad = { name: \"komagata\", \"admin\" }\n",
+		"bad = { \"admin\", name: \"komagata\" }\n",
+	} {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		_, err := Parse(toks)
+		if err == nil {
+			t.Fatalf("expected mixed literal error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "cannot mix dict entries and set entries in one literal") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	}
 }
 

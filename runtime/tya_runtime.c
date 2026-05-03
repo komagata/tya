@@ -28,6 +28,7 @@ typedef struct {
 } TyaStringBuilder;
 
 static char *tya_substr(const char *text, int start, int len);
+static int tya_string_len(const char *text);
 static void tya_write_value(FILE *out, TyaValue value);
 static void tya_build_value(TyaStringBuilder *builder, TyaValue value);
 static void tya_builder_append(TyaStringBuilder *builder, const char *text);
@@ -68,6 +69,17 @@ TyaValue tya_object(const TyaObjectEntry *entries, int count) {
     object->entries[i] = entries[i];
   }
   return (TyaValue){.kind = TYA_OBJECT, .object = object};
+}
+
+TyaValue tya_set(const TyaValue *items, int count) {
+  TyaValue set = tya_array(0, 0);
+  set.kind = TYA_SET;
+  for (int i = 0; i < count; i++) {
+    if (!tya_has(set, items[i]).boolean) {
+      tya_push(set, items[i]);
+    }
+  }
+  return set;
 }
 
 TyaValue tya_function(TyaFunctionPtr fn) {
@@ -121,13 +133,12 @@ TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third,
 
 TyaValue tya_len(TyaValue value) {
   if (value.kind == TYA_STRING && value.string != NULL) {
-    int n = 0;
-    while (value.string[n] != '\0') {
-      n++;
-    }
-    return tya_number(n);
+    return tya_number(tya_string_len(value.string));
   }
   if (value.kind == TYA_ARRAY && value.array != NULL) {
+    return tya_number(value.array->len);
+  }
+  if (value.kind == TYA_SET && value.array != NULL) {
     return tya_number(value.array->len);
   }
   if (value.kind == TYA_OBJECT && value.object != NULL) {
@@ -148,10 +159,7 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
     return value.array->items[i];
   }
   if (value.kind == TYA_STRING && value.string != NULL && i >= 0) {
-    int n = 0;
-    while (value.string[n] != '\0') {
-      n++;
-    }
+    int n = tya_string_len(value.string);
     if (i < n) {
       char *out = malloc(2);
       out[0] = value.string[i];
@@ -159,13 +167,34 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
       return tya_string(out);
     }
   }
+  if (value.kind == TYA_OBJECT && value.object != NULL && index.kind == TYA_STRING && index.string != NULL) {
+    return tya_member(value, index.string);
+  }
   return tya_nil();
+}
+
+static int tya_string_len(const char *text) {
+  static const char *last_string = NULL;
+  static int last_len = 0;
+  if (text == last_string) {
+    return last_len;
+  }
+  int n = 0;
+  while (text[n] != '\0') {
+    n++;
+  }
+  last_string = text;
+  last_len = n;
+  return n;
 }
 
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
   int i = (int)index.number;
   if (value.kind == TYA_ARRAY && value.array != NULL && i >= 0 && i < value.array->len) {
     value.array->items[i] = item;
+  }
+  if (value.kind == TYA_OBJECT && value.object != NULL && index.kind == TYA_STRING && index.string != NULL) {
+    tya_set_member(value, index.string, item);
   }
 }
 
@@ -236,6 +265,14 @@ TyaValue tya_object_value_at(TyaValue object, TyaValue index) {
 }
 
 TyaValue tya_has(TyaValue object, TyaValue key) {
+  if (object.kind == TYA_SET && object.array != NULL) {
+    for (int i = 0; i < object.array->len; i++) {
+      if (tya_deep_equal(object.array->items[i], key).boolean) {
+        return tya_bool(true);
+      }
+    }
+    return tya_bool(false);
+  }
   if (key.kind != TYA_STRING || key.string == NULL || object.kind != TYA_OBJECT || object.object == NULL) {
     return tya_bool(false);
   }
@@ -398,6 +435,7 @@ bool tya_equal(TyaValue left, TyaValue right) {
     }
     return strcmp(left.string, right.string) == 0;
   case TYA_ARRAY:
+  case TYA_SET:
     return left.array == right.array;
   case TYA_OBJECT:
     return left.object == right.object;
@@ -425,6 +463,20 @@ TyaValue tya_deep_equal(TyaValue left, TyaValue right) {
     }
     for (int i = 0; i < left.array->len; i++) {
       if (!tya_deep_equal(left.array->items[i], right.array->items[i]).boolean) {
+        return tya_bool(false);
+      }
+    }
+    return tya_bool(true);
+  }
+  if (left.kind == TYA_SET) {
+    if (left.array == NULL || right.array == NULL) {
+      return tya_bool(left.array == right.array);
+    }
+    if (left.array->len != right.array->len) {
+      return tya_bool(false);
+    }
+    for (int i = 0; i < left.array->len; i++) {
+      if (!tya_has(right, left.array->items[i]).boolean) {
         return tya_bool(false);
       }
     }
@@ -640,7 +692,8 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     tya_builder_append(builder, scratch);
     break;
   case TYA_ARRAY:
-    tya_builder_append(builder, "[");
+  case TYA_SET:
+    tya_builder_append(builder, value.kind == TYA_SET ? "{" : "[");
     if (value.array != NULL) {
       for (int i = 0; i < value.array->len; i++) {
         if (i > 0) {
@@ -649,7 +702,7 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
         tya_build_value(builder, value.array->items[i]);
       }
     }
-    tya_builder_append(builder, "]");
+    tya_builder_append(builder, value.kind == TYA_SET ? "}" : "]");
     break;
   case TYA_OBJECT:
     tya_builder_append(builder, "{");
@@ -809,7 +862,7 @@ TyaValue tya_reduce(TyaValue array, TyaValue initial, TyaValue fn) {
 }
 
 void tya_push(TyaValue array, TyaValue value) {
-  if (array.kind != TYA_ARRAY || array.array == NULL) {
+  if ((array.kind != TYA_ARRAY && array.kind != TYA_SET) || array.array == NULL) {
     return;
   }
   if (array.array->len >= array.array->cap) {
@@ -861,7 +914,8 @@ static void tya_write_value(FILE *out, TyaValue value) {
     fprintf(out, "%s", value.string);
     break;
   case TYA_ARRAY:
-    fprintf(out, "[");
+  case TYA_SET:
+    fprintf(out, value.kind == TYA_SET ? "{" : "[");
     if (value.array != NULL) {
       for (int i = 0; i < value.array->len; i++) {
         if (i > 0) {
@@ -870,7 +924,7 @@ static void tya_write_value(FILE *out, TyaValue value) {
         tya_write_value(out, value.array->items[i]);
       }
     }
-    fprintf(out, "]");
+    fprintf(out, value.kind == TYA_SET ? "}" : "]");
     break;
   case TYA_OBJECT:
     fprintf(out, "{");
