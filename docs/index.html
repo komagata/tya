@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tya Documentation</title>
+  <style>
+    :root {
+      --primary: #5f7f35;
+      --primary-dark: #3f5c24;
+      --primary-light: #edf3e2;
+      --accent: #6f8f3e;
+      --ink: #222222;
+      --muted: #666666;
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --sidebar-bg: #f6f6f6;
+      --code-bg: #f7f7f7;
+      --border: #dddddd;
+      --line: #eeeeee;
+      --shadow: none;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.65;
+    }
+
+    a {
+      color: #315f8c;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    code {
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: var(--code-bg);
+      padding: 0.12em 0.35em;
+      font-family: var(--mono);
+      font-size: 0.92em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 1px solid var(--border);
+      background: var(--sidebar-bg);
+      color: var(--ink);
+      padding: 20px 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 26px;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .nav-group {
+      margin-top: 22px;
+    }
+
+    .nav-title {
+      margin: 0 0 8px;
+      color: #777777;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .nav-link {
+      display: block;
+      margin: 2px 0;
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: #333333;
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus {
+      background: #e9eee1;
+      color: var(--primary-dark);
+      outline: none;
+    }
+
+    .content {
+      min-width: 0;
+    }
+
+    .hero {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .hero-inner {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 36px 26px;
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 40px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 640px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 0 12px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .button.primary {
+      border-color: var(--border);
+      background: var(--surface);
+      color: var(--primary-dark);
+    }
+
+    .button.secondary {
+      border-color: var(--border);
+      background: var(--surface);
+      color: var(--primary-dark);
+    }
+
+    .code-window {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .code-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cccccc;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      background: var(--code-bg);
+      padding: 20px;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    pre code {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    .kw {
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .str {
+      color: #6d5a22;
+    }
+
+    .com {
+      color: #777777;
+    }
+
+    .main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 42px 36px 72px;
+    }
+
+    .doc-section {
+      margin-top: 54px;
+      padding-top: 18px;
+    }
+
+    .doc-section:first-child {
+      margin-top: 0;
+    }
+
+    .section-kicker {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      color: var(--ink);
+      font-size: 34px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 34px 0 10px;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 15px;
+    }
+
+    .intro {
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .panel {
+      margin: 18px 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      box-shadow: none;
+    }
+
+    .panel-body {
+      padding: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      padding: 18px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .list li {
+      border-left: 3px solid var(--primary-light);
+      padding-left: 11px;
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: minmax(180px, 0.75fr) minmax(0, 1.25fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .api-name {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-weight: 800;
+    }
+
+    .note {
+      margin: 18px 0;
+      border-left: 4px solid var(--primary);
+      background: #f7f7f7;
+      padding: 13px 15px;
+      color: var(--ink);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 560px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 11px 13px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--primary-dark);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 36px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+
+    @media (max-width: 920px) {
+      .layout {
+        display: block;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+        border-right: 0;
+        padding: 18px 16px;
+      }
+
+      .nav-group {
+        display: none;
+      }
+
+      .hero-inner {
+        grid-template-columns: 1fr;
+        padding: 26px 20px;
+      }
+
+      .main {
+        padding: 30px 20px 56px;
+      }
+
+      .grid,
+      .api-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="brand" href="#top">
+        <img src="assets/tya-logo.png" alt="">
+        <span>
+          <strong>Tya</strong>
+          <span>Documentation</span>
+        </span>
+      </a>
+
+      <nav aria-label="Documentation">
+        <div class="nav-group">
+          <p class="nav-title">Start</p>
+          <a class="nav-link" href="#guide">Guide</a>
+          <a class="nav-link" href="#run-a-program">Run a Program</a>
+          <a class="nav-link" href="#guide-functions">Functions</a>
+          <a class="nav-link" href="#guide-modules">Modules</a>
+        </div>
+        <div class="nav-group">
+          <p class="nav-title">Language</p>
+          <a class="nav-link" href="#reference">Reference</a>
+          <a class="nav-link" href="#lexical-structure">Lexical Structure</a>
+          <a class="nav-link" href="#statements">Statements</a>
+          <a class="nav-link" href="#expressions">Expressions</a>
+          <a class="nav-link" href="#modules">Modules</a>
+        </div>
+        <div class="nav-group">
+          <p class="nav-title">Built-ins</p>
+          <a class="nav-link" href="#api">API</a>
+          <a class="nav-link" href="#core-api">Core</a>
+          <a class="nav-link" href="#strings-api">Strings</a>
+          <a class="nav-link" href="#arrays-api">Arrays</a>
+          <a class="nav-link" href="#files-api">Files</a>
+        </div>
+      </nav>
+    </aside>
+
+    <div class="content" id="top">
+      <header class="hero">
+        <div class="hero-inner">
+          <div>
+            <p class="eyebrow">Matcha themed language docs</p>
+            <h1>Tya Docs</h1>
+            <p class="lead">A readable manual for Tya, a small indentation-based dynamic language inspired by CoffeeScript.</p>
+            <div class="quick-links">
+              <a class="button primary" href="#guide">Read the Guide</a>
+              <a class="button secondary" href="#reference">Language Reference</a>
+              <a class="button secondary" href="#api">Built-in API</a>
+            </div>
+          </div>
+
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="doc-section" id="guide">
+          <p class="section-kicker">Guide</p>
+          <h2>Tya Guide</h2>
+          <p class="intro">Tya is a small indentation-based dynamic language inspired by CoffeeScript. This guide is for reading from top to bottom.</p>
+
+          <h3 id="run-a-program">Run a Program</h3>
+          <div class="code-window">
+            <pre><code>go run ./cmd/tya examples/hello.tya
+go run ./cmd/tya run examples/hello.tya</code></pre>
+          </div>
+          <p><code>tya run</code> compiles the source to C, builds it with <code>cc</code>, and runs the resulting binary.</p>
+
+          <h3>Values</h3>
+          <div class="code-window">
+            <pre><code>name = <span class="str">"Tya"</span>
+age = 1
+pi = 3.14
+ready = true
+missing = nil
+
+<span class="kw">print</span> <span class="str">"Hello, {name}"</span></code></pre>
+          </div>
+
+          <h3>Names</h3>
+          <p>Use <code>snake_case</code> for variables, functions, modules, and object properties. Use <code>SCREAMING_SNAKE_CASE</code> for constants.</p>
+          <div class="code-window">
+            <pre><code>user_name = <span class="str">"komagata"</span>
+MAX_COUNT = 10</code></pre>
+          </div>
+
+          <h3>Conditions</h3>
+          <div class="code-window">
+            <pre><code><span class="kw">if</span> age >= 20
+  <span class="kw">print</span> <span class="str">"adult"</span>
+<span class="kw">else</span>
+  <span class="kw">print</span> <span class="str">"young"</span>
+
+<span class="kw">if</span> ready and not missing
+  <span class="kw">print</span> <span class="str">"ok"</span></code></pre>
+          </div>
+
+          <h3>Loops</h3>
+          <div class="grid">
+            <div class="code-window">
+              <pre><code>count = 0
+<span class="kw">while</span> count < 3
+  <span class="kw">print</span> count
+  count = count + 1</code></pre>
+            </div>
+            <div class="code-window">
+              <pre><code>items = [<span class="str">"a"</span>, <span class="str">"b"</span>]
+
+<span class="kw">for</span> item in items
+  <span class="kw">print</span> item
+
+<span class="kw">for</span> item, index in items
+  <span class="kw">print</span> <span class="str">"{index}: {item}"</span></code></pre>
+            </div>
+          </div>
+          <p>Use <code>of</code> to iterate dictionary keys and values.</p>
+          <div class="code-window">
+            <pre><code>user = { name: <span class="str">"komagata"</span>, age: 20 }
+
+<span class="kw">for</span> key, value of user
+  <span class="kw">print</span> <span class="str">"{key}: {value}"</span></code></pre>
+          </div>
+
+          <h3 id="guide-functions">Functions</h3>
+          <p>Functions use <code>-></code>. The last expression is returned implicitly.</p>
+          <div class="grid">
+            <div class="code-window">
+              <pre><code>greet = name -> <span class="str">"Hello, {name}"</span>
+
+<span class="kw">print</span> greet <span class="str">"Tya"</span></code></pre>
+            </div>
+            <div class="code-window">
+              <pre><code>double = value ->
+  result = value * 2
+  result</code></pre>
+            </div>
+          </div>
+          <p>Use <code>return</code> when returning early or returning multiple values.</p>
+          <div class="code-window">
+            <pre><code>parse_user = text ->
+  <span class="kw">if</span> text == <span class="str">""</span>
+    <span class="kw">return</span> nil, error <span class="str">"empty user"</span>
+  <span class="kw">return</span> { name: text }, nil</code></pre>
+          </div>
+
+          <h3>Arrays and Dictionaries</h3>
+          <div class="grid">
+            <div class="code-window">
+              <pre><code>items = [1, 2]
+push items, 3
+<span class="kw">print</span> items[0]</code></pre>
+            </div>
+            <div class="code-window">
+              <pre><code>counter =
+  count: 0
+
+  inc: ->
+    @count = @count + 1
+    @count
+
+<span class="kw">print</span> counter.inc()</code></pre>
+            </div>
+          </div>
+
+          <h3>Errors</h3>
+          <p>Tya uses error values, not exceptions. Inside a function, <code>try</code> propagates the error part of a <code>value, err</code> result.</p>
+          <div class="grid">
+            <div class="code-window">
+              <pre><code>user, err = parse_user <span class="str">""</span>
+<span class="kw">if</span> err
+  <span class="kw">print</span> err.message</code></pre>
+            </div>
+            <div class="code-window">
+              <pre><code>load_user = text ->
+  user = <span class="kw">try</span> parse_user(text)
+  user[<span class="str">"name"</span>]</code></pre>
+            </div>
+          </div>
+
+          <h3 id="guide-modules">Modules</h3>
+          <p>Import another <code>.tya</code> file from the same directory. Each module exposes exactly one public top-level binding, and that binding must match the file name.</p>
+          <div class="grid">
+            <div class="code-window">
+              <pre><code><span class="kw">import</span> greeting
+
+<span class="kw">print</span> greeting.hello(<span class="str">"komagata"</span>)</code></pre>
+            </div>
+            <div class="code-window">
+              <pre><code><span class="com"># greeting.tya</span>
+greeting =
+  hello: name -> <span class="str">"Hello, {name}"</span></code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section" id="reference">
+          <p class="section-kicker">Reference</p>
+          <h2>Tya Reference</h2>
+          <p class="intro">This is the compact language reference for Tya. It favors exactness over tutorial flow.</p>
+
+          <div class="grid">
+            <div class="card">
+              <h3>Source Files</h3>
+              <p>Tya source files use the <code>.tya</code> extension. A program is a list of statements. Newlines separate statements.</p>
+            </div>
+            <div class="card">
+              <h3>Truthiness</h3>
+              <p><code>nil</code> and <code>false</code> are falsey. Other values are truthy.</p>
+            </div>
+          </div>
+
+          <h3 id="lexical-structure">Lexical Structure</h3>
+          <p>Comments start with <code>#</code> and continue to the end of the line. Blocks are indentation-based. One indentation level is two spaces.</p>
+          <div class="code-window">
+            <pre><code><span class="com"># comment</span>
+name = <span class="str">"Tya"</span></code></pre>
+          </div>
+          <div class="panel">
+            <div class="panel-body">
+              <p><strong>Operators and delimiters</strong></p>
+              <p><code>= == != &lt; &lt;= &gt; &gt;= : , . @ + - * / % -&gt; ( ) [ ] { }</code></p>
+              <p><strong>Keywords</strong></p>
+              <p><code>if else while for in of break continue return true false nil and or not try</code></p>
+            </div>
+          </div>
+
+          <h3>Names</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Kind</th><th>Style</th></tr></thead>
+              <tbody>
+                <tr><td>Variables and functions</td><td><code>snake_case</code></td></tr>
+                <tr><td>Private binding</td><td><code>_snake_case</code></td></tr>
+                <tr><td>Modules and files</td><td><code>snake_case</code></td></tr>
+                <tr><td>Object properties</td><td><code>snake_case</code></td></tr>
+                <tr><td>Constants</td><td><code>SCREAMING_SNAKE_CASE</code></td></tr>
+                <tr><td>Types and classes</td><td><code>PascalCase</code>, reserved</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Values</h3>
+          <p>Runtime values are <code>nil</code>, <code>boolean</code>, <code>integer</code>, <code>float</code>, <code>string</code>, <code>array</code>, <code>dictionary</code>, <code>function</code>, and <code>error</code>.</p>
+          <p>Strings support escapes for <code>\"</code>, <code>\\</code>, <code>\n</code>, and <code>\t</code>. Interpolation uses <code>{expression}</code> inside a string.</p>
+
+          <h3 id="statements">Statements</h3>
+          <div class="grid">
+            <div class="code-window">
+              <pre><code>name = <span class="str">"Tya"</span>
+left, right = pair
+items[0] = 10
+user[<span class="str">"name"</span>] = <span class="str">"komagata"</span></code></pre>
+            </div>
+            <div class="code-window">
+              <pre><code><span class="kw">if</span> condition
+  then_statement
+<span class="kw">else</span>
+  else_statement
+
+<span class="kw">while</span> condition
+  statement</code></pre>
+            </div>
+          </div>
+          <div class="code-window">
+            <pre><code><span class="kw">for</span> value in array
+  statement
+
+<span class="kw">for</span> value, index in array
+  statement
+
+<span class="kw">for</span> key, value of dictionary
+  statement
+
+<span class="kw">return</span>
+<span class="kw">return</span> value
+<span class="kw">return</span> value, err</code></pre>
+          </div>
+
+          <h3 id="expressions">Expressions</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Category</th><th>Forms</th></tr></thead>
+              <tbody>
+                <tr><td>Primary</td><td><code>identifier</code>, <code>integer</code>, <code>float</code>, <code>string</code>, <code>true</code>, <code>false</code>, <code>nil</code>, <code>[items]</code>, <code>{ name: value }</code>, <code>(expression)</code>, <code>@property</code></td></tr>
+                <tr><td>Functions</td><td><code>name -&gt; expression</code>, <code>left, right -&gt; expression</code>, or an indented body</td></tr>
+                <tr><td>Calls</td><td><code>fn(arg)</code>, <code>fn arg</code>, <code>fn arg1, arg2</code>, <code>object.method()</code></td></tr>
+                <tr><td>Access</td><td><code>module.name</code>, <code>items[0]</code>, <code>dictionary["name"]</code></td></tr>
+                <tr><td>Unary</td><td><code>not expression</code>, <code>-expression</code>, <code>try expression</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note">Binary operator precedence from low to high: <code>or</code>, <code>and</code>, <code>== !=</code>, <code>&lt; &lt;= &gt; &gt;=</code>, <code>+ -</code>, <code>* / %</code>.</div>
+
+          <h3>Functions and Errors</h3>
+          <p>A function creates a child scope. A block function returns the last expression unless <code>return</code> is used. A function can return multiple values.</p>
+          <p><code>error "message"</code> creates an error value with a <code>message</code> property. <code>try expression</code> is valid inside a function. If the error part is truthy, the current function returns <code>nil, err</code>.</p>
+
+          <h3 id="modules">Modules and Execution</h3>
+          <p><code>import module_name</code> loads <code>module_name.tya</code> from the same directory as the importing file. Each module file exposes exactly one public top-level binding.</p>
+          <div class="code-window">
+            <pre><code>go run ./cmd/tya --tokens file.tya
+go run ./cmd/tya --check-unused file.tya
+go run ./cmd/tya --emit-c file.tya
+go run ./cmd/tya run file.tya</code></pre>
+          </div>
+          <p>The runner and C emitter load <code>stdlib/prelude.tya</code>.</p>
+        </section>
+
+        <section class="doc-section" id="api">
+          <p class="section-kicker">API</p>
+          <h2>Tya API</h2>
+          <p class="intro">Built-in functions available to Tya programs.</p>
+
+          <h3 id="core-api">Core</h3>
+          <div class="panel"><div class="panel-body api-grid">
+            <p class="api-name">print, panic, exit</p>
+            <p><code>print</code> writes a value and a newline. <code>panic</code> stops with an error. <code>exit</code> terminates with a status code.</p>
+            <p class="api-name">error</p>
+            <p><code>error</code> returns an error value with a <code>message</code> property.</p>
+          </div></div>
+          <div class="code-window">
+            <pre><code><span class="kw">print</span> value
+panic <span class="str">"bad state"</span>
+exit 1
+
+err = error <span class="str">"file not found"</span>
+<span class="kw">print</span> err.message</code></pre>
+          </div>
+
+          <h3>Conversion</h3>
+          <div class="code-window">
+            <pre><code>to_string value
+to_int value
+to_float value
+to_number value
+div left, right
+
+<span class="kw">print</span> to_string 20
+<span class="kw">print</span> to_int <span class="str">"42"</span>
+<span class="kw">print</span> to_float <span class="str">"2.5"</span>
+<span class="kw">print</span> to_number <span class="str">"12.5"</span>
+<span class="kw">print</span> div 5, 2</code></pre>
+          </div>
+
+          <h3 id="strings-api">Strings</h3>
+          <div class="code-window">
+            <pre><code>split text, separator
+join items, separator
+trim text
+replace text, old, new
+contains text, search
+starts_with text, prefix
+ends_with text, suffix
+byte_len text
+char_len text</code></pre>
+          </div>
+          <div class="code-window">
+            <pre><code>text = trim <span class="str">"  hello,tya  "</span>
+parts = split text, <span class="str">","</span>
+
+<span class="kw">print</span> join parts, <span class="str">"-"</span>
+<span class="kw">print</span> replace text, <span class="str">"tya"</span>, <span class="str">"Tya"</span>
+<span class="kw">print</span> contains text, <span class="str">"hello"</span>
+<span class="kw">print</span> starts_with text, <span class="str">"hello"</span>
+<span class="kw">print</span> ends_with text, <span class="str">"tya"</span>
+<span class="kw">print</span> byte_len <span class="str">"ちゃ"</span>
+<span class="kw">print</span> char_len <span class="str">"ちゃ"</span></code></pre>
+          </div>
+
+          <h3 id="arrays-api">Arrays</h3>
+          <div class="code-window">
+            <pre><code>len value
+push array, value
+pop array
+map array, function
+filter array, function
+find array, function
+any array, function
+all array, function
+each array, function
+reduce array, initial, function</code></pre>
+          </div>
+          <div class="grid">
+            <div class="code-window">
+              <pre><code>items = [1, 2, 3, 4]
+
+double = item -> item * 2
+is_even = item -> item % 2 == 0
+add = total, item -> total + item
+
+<span class="kw">print</span> map items, double
+<span class="kw">print</span> filter items, is_even
+<span class="kw">print</span> reduce items, 0, add</code></pre>
+            </div>
+            <div class="code-window">
+              <pre><code>items = [1, 2]
+push items, 3
+<span class="kw">print</span> pop items
+<span class="kw">print</span> len items</code></pre>
+            </div>
+          </div>
+
+          <h3>Dictionaries</h3>
+          <div class="code-window">
+            <pre><code>keys dictionary
+values dictionary
+has dictionary, key
+delete dictionary, key
+equal left, right
+
+user = { name: <span class="str">"komagata"</span>, age: 20 }
+
+<span class="kw">print</span> keys user
+<span class="kw">print</span> values user
+<span class="kw">print</span> has user, <span class="str">"name"</span>
+delete user, <span class="str">"age"</span>
+<span class="kw">print</span> equal user, { name: <span class="str">"komagata"</span> }</code></pre>
+          </div>
+
+          <h3 id="files-api">Files and Process</h3>
+          <div class="grid">
+            <div class="code-window">
+              <pre><code>read_file path
+write_file path, text
+file_exists path
+
+write_file <span class="str">"/tmp/memo.txt"</span>, <span class="str">"hello"</span>
+<span class="kw">print</span> read_file <span class="str">"/tmp/memo.txt"</span>
+<span class="kw">print</span> file_exists <span class="str">"/tmp/memo.txt"</span></code></pre>
+            </div>
+            <div class="code-window">
+              <pre><code>args()
+env name
+read_line()
+
+items = args()
+<span class="kw">print</span> len items
+<span class="kw">print</span> env <span class="str">"HOME"</span>
+
+name = read_line()
+<span class="kw">print</span> <span class="str">"Hello, {name}"</span></code></pre>
+            </div>
+          </div>
+
+          <h3>Naming</h3>
+          <p>Standard library APIs use snake_case names. CamelCase builtin spellings are not part of the language surface.</p>
+        </section>
+      </main>
+
+      <footer class="footer">
+        Tya documentation generated from Guide, Reference, and API notes.
+      </footer>
+    </div>
+  </div>
+</body>
+</html>
