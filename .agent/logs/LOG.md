@@ -3,13 +3,21 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 8
-**Current Task:** SELFHOST-008 Complete
+**Tasks Completed:** 9
+**Current Task:** CLASS-001 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 02:05 UTC - CLASS-001 - Inventoried the current
+  class/module/dictionary/set baseline against the planned design, added an
+  ordered implementation checklist to `ROADMAP.md`, and added regression
+  coverage for current set-like curly literal rejection, `class` parsing as an
+  ordinary expression, import alias rejection, and imported private helper
+  allowance.
+  Verification: `go test ./internal/parser ./internal/runner -count=1`;
+  `go test ./... -count=1`.
 - 2026-05-03 00:00 UTC - SELFHOST-008 - Documented
   `sh scripts/selfhost_bootstrap_check.sh` as the single self-host bootstrap
   gate and added focused coverage that the gate includes source checks,

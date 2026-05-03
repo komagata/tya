@@ -48,6 +48,39 @@ func TestParseInlineObject(t *testing.T) {
 	}
 }
 
+func TestParseCurrentBaselineRejectsSetLikeCurlyLiteral(t *testing.T) {
+	toks, errs := lexer.Lex("roles = { \"admin\", \"owner\" }\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, err := Parse(toks); err == nil {
+		t.Fatal("expected current object parser to reject set-like curly literal")
+	}
+}
+
+func TestParseCurrentBaselineTreatsClassAsExpression(t *testing.T) {
+	toks, errs := lexer.Lex("class User\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
+	if !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+	call, ok := stmt.Expr.(*ast.CallExpr)
+	if !ok {
+		t.Fatalf("got %T", stmt.Expr)
+	}
+	callee, ok := call.Callee.(*ast.Ident)
+	if !ok || callee.Name != "class" {
+		t.Fatalf("got callee %#v", call.Callee)
+	}
+}
+
 func TestParseMultipleFunctionParams(t *testing.T) {
 	toks, errs := lexer.Lex("add = a, b -> a + b\nprint add 2, 3\n")
 	if len(errs) != 0 {

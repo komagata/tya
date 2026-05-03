@@ -311,6 +311,73 @@ Implemented:
 - Go C emitter supports tuple-style multiple return assignment and can run `examples/multiple_return.tya`
 - Go C emitter supports assignment-form `try` and can run `examples/try.tya`
 - `--emit-c` loads `stdlib/prelude.tya` like normal execution and can run `examples/prelude.tya`
+
+## Class, Module, Dictionary, And Set Baseline
+
+Status: design inventory complete; implementation work remains.
+
+`docs/CLASS_MODULE_DESIGN.md` describes the intended semantics. The current
+implementation is still the pre-class/module baseline:
+
+- Curly and indented literals are parsed as `ObjectLit`, not dictionaries.
+  Empty `{}` is an empty object. There is no set literal or `set()` builtin.
+- Inline object literal keys must be bare identifiers followed by `:`. Literal
+  keys such as `"name": value`, set entries such as `{ "admin" }`, and mixed
+  entries are parser errors today.
+- The `.` operator reads and writes members on the current object value type.
+  Dictionaries are not separate yet, so current examples such as `user.name`
+  and imported `greeting.hello()` both use object member access.
+- `@property` works only inside current object methods. There is no class
+  instance value, constructor call, `self`, `super`, inheritance, or interface
+  checking.
+- `class`, `module`, `extends`, `implements`, `interface`, and `super` are not
+  keywords. They lex as identifiers; declarations using them are rejected by the
+  checker as normal undefined or invalid-name expressions.
+- Imports are handled by source loading, before lexing/parsing the combined
+  program. `import name` loads `name.tya` from the importing file's directory,
+  recursively prepends imported source, rejects cycles, and requires imported
+  files to expose exactly one public assignment matching the file basename.
+- Imported files may currently contain private top-level helpers. The planned
+  one-file-one-definition rule will disallow those helpers once `class` and
+  `module` declarations exist.
+- Import aliases are not implemented. `import util as u` is rejected as an
+  invalid module name today.
+- Entry files execute top-level statements directly. They are not wrapped in an
+  implicit `main` function, and imported files are not represented as module
+  namespace values separate from ordinary object bindings.
+- The C emitter works from the already-loaded combined AST. It supports current
+  objects, methods, member/index access, and imports through source loading, but
+  has no separate class, module, dictionary, set, inheritance, or interface
+  lowering.
+
+Ordered implementation checklist:
+
+1. Rename the current object-literal concept to dictionary in the AST, checker,
+   interpreter, C emitter, docs, examples, and diagnostics while preserving
+   existing behavior during the transition.
+2. Implement inline and indented dictionary literals, bracket access for
+   dictionaries, empty `{}` as an empty dictionary, and diagnostics for mixed
+   dictionary/set entries.
+3. Add set literals and the empty-set constructor, including interpreter,
+   builtins, C runtime/codegen support, and collection docs.
+4. Separate dictionary access from object/member access so dictionaries, sets,
+   and arrays reject `.` and dictionaries use `[]`.
+5. Add `class` declarations, PascalCase name checks, constructors, instances,
+   instance fields/methods, and `@property` behavior on class instances.
+6. Add `module` declarations and module member access as namespace values
+   rather than ordinary object literals.
+7. Enforce one imported file per public `class` or `module`, including filename
+   matching, no extra public/private top-level helpers, and clear diagnostics.
+8. Implement Ruby-like default imports, `as` aliases, and import name conflict
+   checks.
+9. Add entry-file semantics: executable top-level entry code is wrapped in an
+   implicit `main`, while entry files cannot directly define classes/modules.
+10. Implement single inheritance, override arity checks, and explicit `super`
+    calls in `init` and methods.
+11. Implement interfaces and `implements` checks, including each class's
+    implicit public API interface.
+12. Finish generated-C/runtime parity, examples, self-host classification
+    updates where applicable, and final user-facing docs.
 - Scripted generated-C parity checks for selected examples against interpreter output
 - Self-hosted pipeline can compile and run `examples/while.tya`
 - Self-hosted parser/codegen carries simple `else` blocks

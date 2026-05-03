@@ -82,6 +82,36 @@ func TestLoadSourceRejectsInvalidModuleName(t *testing.T) {
 	}
 }
 
+func TestLoadSourceCurrentBaselineRejectsImportAlias(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "greeting = \"hello\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import greeting as g\n")
+
+	_, err := LoadSource(main)
+	if err == nil {
+		t.Fatal("expected import alias to be rejected before alias support lands")
+	}
+	if !strings.Contains(err.Error(), "invalid module name: greeting as g") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestLoadSourceCurrentBaselineAllowsPrivateHelperInImportedModule(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "greeting = _message\n_message = \"hello\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import greeting\nprint greeting\n")
+
+	source, err := LoadUserSource(main)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(source, "_message = \"hello\"") {
+		t.Fatalf("expected private helper to remain loaded in current baseline:\n%s", source)
+	}
+}
+
 func writeFile(t *testing.T, path string, src string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(src), 0644); err != nil {

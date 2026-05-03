@@ -1,50 +1,68 @@
 [
   {
-    "id": "SELFHOST-001",
-    "title": "Inventory the remaining gap to complete self-hosting",
+    "id": "CLASS-001",
+    "title": "Inventory current class/module design gaps and establish the baseline",
     "priority": 1,
     "passes": true
   },
   {
-    "id": "SELFHOST-002",
-    "title": "Promote all runnable examples into explicit self-host parity targets",
+    "id": "CLASS-002",
+    "title": "Implement dictionary and set literal semantics",
     "priority": 2,
-    "passes": true
+    "passes": false
   },
   {
-    "id": "SELFHOST-003",
-    "title": "Replace remaining line-oriented parser shortcuts with structured expression parsing",
+    "id": "CLASS-003",
+    "title": "Separate dictionaries from object/member access",
     "priority": 3,
-    "passes": true
+    "passes": false
   },
   {
-    "id": "SELFHOST-004",
-    "title": "Bring self-host checker semantics closer to Go checker parity",
+    "id": "CLASS-004",
+    "title": "Add class declarations, constructors, and instance member access",
     "priority": 4,
-    "passes": true
+    "passes": false
   },
   {
-    "id": "SELFHOST-005",
-    "title": "Expand self-host C codegen until examples run without placeholder behavior",
+    "id": "CLASS-005",
+    "title": "Add module declarations and module member access",
     "priority": 5,
-    "passes": true
+    "passes": false
   },
   {
-    "id": "SELFHOST-006",
-    "title": "Make stage-generated tools compile and run every supported example",
+    "id": "CLASS-006",
+    "title": "Enforce one-file-one-public-definition import rules",
     "priority": 6,
-    "passes": true
+    "passes": false
   },
   {
-    "id": "SELFHOST-007",
-    "title": "Prove deterministic fixed-point self-host regeneration",
+    "id": "CLASS-007",
+    "title": "Implement import aliases and import name conflict checks",
     "priority": 7,
-    "passes": true
+    "passes": false
   },
   {
-    "id": "SELFHOST-008",
-    "title": "Document and enforce the complete self-host gate",
+    "id": "CLASS-008",
+    "title": "Implement entry-file semantics for implicit main execution",
     "priority": 8,
-    "passes": true
+    "passes": false
+  },
+  {
+    "id": "CLASS-009",
+    "title": "Implement single inheritance and super calls",
+    "priority": 9,
+    "passes": false
+  },
+  {
+    "id": "CLASS-010",
+    "title": "Implement interfaces and implements checks",
+    "priority": 10,
+    "passes": false
+  },
+  {
+    "id": "CLASS-011",
+    "title": "Complete docs, examples, C emission, and regression coverage",
+    "priority": 11,
+    "passes": false
   }
 ]
