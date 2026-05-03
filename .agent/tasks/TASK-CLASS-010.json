@@ -1,0 +1,28 @@
+{
+  "id": "CLASS-010",
+  "title": "Implement interfaces and implements checks",
+  "passes": true,
+  "goal": "Add interface declarations and `implements` checking for class public APIs.",
+  "context": [
+    "Interfaces are behavior contracts.",
+    "A class may implement multiple interfaces.",
+    "Every class also defines an implicit interface for its public API.",
+    "`implements` does not inherit implementation."
+  ],
+  "steps": [
+    "Add parser/AST support for `interface` declarations and `class X implements A, B`.",
+    "Add checker support for interface member uniqueness and implemented method presence/arity.",
+    "Support classes implementing explicit interfaces and the implicit interface of another class.",
+    "Add tests for valid implementations, missing methods, wrong arity, duplicate interface methods, and no implementation inheritance."
+  ],
+  "verification": [
+    "go test ./internal/parser ./internal/checker -count=1",
+    "go test ./tests -count=1",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "Interfaces are parsed and checked.",
+    "Classes can implement multiple interfaces.",
+    "Implicit class interface checks work for the supported subset."
+  ]
+}

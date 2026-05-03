@@ -25,7 +25,45 @@ func CheckWithModules(prog *ast.Program, modules []string) error {
 	for _, name := range modules {
 		scope.define(name, kindModule)
 	}
-	return checkStmts(prog.Stmts, constants, scope)
+	info := collectTypeInfo(prog)
+	return checkStmts(prog.Stmts, constants, scope, info, checkContext{})
+}
+
+type methodSig struct{ arity int }
+type classInfo struct {
+	parent  string
+	methods map[string]methodSig
+}
+type interfaceInfo struct{ methods map[string]methodSig }
+type typeInfo struct {
+	classes    map[string]classInfo
+	interfaces map[string]interfaceInfo
+}
+type checkContext struct {
+	className  string
+	methodName string
+	hasParent  bool
+}
+
+func collectTypeInfo(prog *ast.Program) typeInfo {
+	info := typeInfo{classes: map[string]classInfo{}, interfaces: map[string]interfaceInfo{}}
+	for _, stmt := range prog.Stmts {
+		switch n := stmt.(type) {
+		case *ast.ClassDecl:
+			methods := map[string]methodSig{}
+			for _, method := range n.Methods {
+				methods[method.Name] = methodSig{arity: len(method.Func.Params)}
+			}
+			info.classes[n.Name] = classInfo{parent: n.Parent, methods: methods}
+		case *ast.InterfaceDecl:
+			methods := map[string]methodSig{}
+			for _, method := range n.Methods {
+				methods[method.Name] = methodSig{arity: len(method.ParamToks)}
+			}
+			info.interfaces[n.Name] = interfaceInfo{methods: methods}
+		}
+	}
+	return info
 }
 
 var builtinNames = []string{
@@ -86,19 +124,19 @@ func (s *scope) kind(name string) valueKind {
 	return kindUnknown
 }
 
-func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error {
+func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope, info typeInfo, ctx checkContext) error {
 	for _, stmt := range stmts {
 		switch n := stmt.(type) {
 		case *ast.AssignStmt:
 			for _, value := range n.Values {
-				if err := checkExpr(value, scope); err != nil {
+				if err := checkExpr(value, scope, info, ctx); err != nil {
 					return err
 				}
 			}
 			for _, target := range n.Targets {
 				name, ok := target.(*ast.Ident)
 				if !ok {
-					if err := checkAssignmentTarget(target, scope); err != nil {
+					if err := checkAssignmentTarget(target, scope, info, ctx); err != nil {
 						return err
 					}
 					continue
@@ -118,6 +156,14 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			if !classNameRE.MatchString(n.Name) {
 				return fmt.Errorf("%d:%d: invalid class name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 			}
+			if n.Parent != "" {
+				if !classNameRE.MatchString(n.Parent) {
+					return fmt.Errorf("%d:%d: invalid parent class name %s", n.ParentTok.Line, n.ParentTok.Col, n.Parent)
+				}
+				if _, ok := info.classes[n.Parent]; !ok {
+					return fmt.Errorf("%d:%d: undefined parent class %s", n.ParentTok.Line, n.ParentTok.Col, n.Parent)
+				}
+			}
 			seen := map[string]bool{}
 			scope.define(n.Name, kindClass)
 			for _, method := range n.Methods {
@@ -128,8 +174,29 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					return fmt.Errorf("%d:%d: duplicate method %s", method.Tok.Line, method.Tok.Col, method.Name)
 				}
 				seen[method.Name] = true
-				if err := checkExpr(method.Func, scope); err != nil {
+				if parent := info.classes[n.Parent]; n.Parent != "" && method.Name != "init" {
+					if inherited, ok := parent.methods[method.Name]; ok && inherited.arity != len(method.Func.Params) {
+						return fmt.Errorf("%d:%d: override arity mismatch for %s", method.Tok.Line, method.Tok.Col, method.Name)
+					}
+				}
+				if err := checkExpr(method.Func, scope, info, checkContext{className: n.Name, methodName: method.Name, hasParent: n.Parent != ""}); err != nil {
 					return err
+				}
+			}
+			for i, name := range n.Implements {
+				tok := n.ImplToks[i]
+				methods, ok := implementedMethods(name, info)
+				if !ok {
+					return fmt.Errorf("%d:%d: undefined interface %s", tok.Line, tok.Col, name)
+				}
+				for methodName, sig := range methods {
+					own, ok := info.classes[n.Name].methods[methodName]
+					if !ok {
+						return fmt.Errorf("%d:%d: class %s does not implement %s.%s", tok.Line, tok.Col, n.Name, name, methodName)
+					}
+					if own.arity != sig.arity {
+						return fmt.Errorf("%d:%d: class %s has wrong arity for %s.%s", tok.Line, tok.Col, n.Name, name, methodName)
+					}
 				}
 			}
 		case *ast.ModuleDecl:
@@ -146,25 +213,40 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					return fmt.Errorf("%d:%d: duplicate module member %s", member.Tok.Line, member.Tok.Col, member.Name)
 				}
 				seen[member.Name] = true
-				if err := checkExpr(member.Value, scope); err != nil {
+				if err := checkExpr(member.Value, scope, info, ctx); err != nil {
 					return err
 				}
 			}
+		case *ast.InterfaceDecl:
+			if !classNameRE.MatchString(n.Name) {
+				return fmt.Errorf("%d:%d: invalid interface name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+			}
+			seen := map[string]bool{}
+			scope.define(n.Name, kindUnknown)
+			for _, method := range n.Methods {
+				if !valueNameRE.MatchString(method.Name) {
+					return fmt.Errorf("%d:%d: invalid interface method %s", method.Tok.Line, method.Tok.Col, method.Name)
+				}
+				if seen[method.Name] {
+					return fmt.Errorf("%d:%d: duplicate interface method %s", method.Tok.Line, method.Tok.Col, method.Name)
+				}
+				seen[method.Name] = true
+			}
 		case *ast.IfStmt:
-			if err := checkExpr(n.Cond, scope); err != nil {
+			if err := checkExpr(n.Cond, scope, info, ctx); err != nil {
 				return err
 			}
-			if err := checkStmts(n.Then, constants, newScope(scope)); err != nil {
+			if err := checkStmts(n.Then, constants, newScope(scope), info, ctx); err != nil {
 				return err
 			}
-			if err := checkStmts(n.Else, constants, newScope(scope)); err != nil {
+			if err := checkStmts(n.Else, constants, newScope(scope), info, ctx); err != nil {
 				return err
 			}
 		case *ast.WhileStmt:
-			if err := checkExpr(n.Cond, scope); err != nil {
+			if err := checkExpr(n.Cond, scope, info, ctx); err != nil {
 				return err
 			}
-			if err := checkStmts(n.Body, constants, newScope(scope)); err != nil {
+			if err := checkStmts(n.Body, constants, newScope(scope), info, ctx); err != nil {
 				return err
 			}
 		case *ast.ForInStmt:
@@ -176,7 +258,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					return err
 				}
 			}
-			if err := checkExpr(n.Iterable, scope); err != nil {
+			if err := checkExpr(n.Iterable, scope, info, ctx); err != nil {
 				return err
 			}
 			child := newScope(scope)
@@ -184,16 +266,16 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			if n.IndexName != "" {
 				child.define(n.IndexName, kindUnknown)
 			}
-			if err := checkStmts(n.Body, constants, child); err != nil {
+			if err := checkStmts(n.Body, constants, child, info, ctx); err != nil {
 				return err
 			}
 		case *ast.ExprStmt:
-			if err := checkExpr(n.Expr, scope); err != nil {
+			if err := checkExpr(n.Expr, scope, info, ctx); err != nil {
 				return err
 			}
 		case *ast.ReturnStmt:
 			for _, value := range n.Values {
-				if err := checkExpr(value, scope); err != nil {
+				if err := checkExpr(value, scope, info, ctx); err != nil {
 					return err
 				}
 			}
@@ -202,7 +284,26 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 	return nil
 }
 
-func checkExpr(expr ast.Expr, scope *scope) error {
+func implementedMethods(name string, info typeInfo) (map[string]methodSig, bool) {
+	if iface, ok := info.interfaces[name]; ok {
+		return iface.methods, true
+	}
+	if class, ok := info.classes[name]; ok {
+		return class.methods, true
+	}
+	return nil, false
+}
+
+func superArity(info typeInfo, ctx checkContext) int {
+	class := info.classes[ctx.className]
+	parent := info.classes[class.parent]
+	if sig, ok := parent.methods[ctx.methodName]; ok {
+		return sig.arity
+	}
+	return 0
+}
+
+func checkExpr(expr ast.Expr, scope *scope, info typeInfo, ctx checkContext) error {
 	switch n := expr.(type) {
 	case *ast.Ident:
 		if !scope.defined(n.Name) {
@@ -218,13 +319,13 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				return fmt.Errorf("%d:%d: duplicate dictionary key %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
 			}
 			seen[prop.Name] = true
-			if err := checkExpr(prop.Value, scope); err != nil {
+			if err := checkExpr(prop.Value, scope, info, ctx); err != nil {
 				return err
 			}
 		}
 	case *ast.SetLit:
 		for _, elem := range n.Elems {
-			if err := checkExpr(elem, scope); err != nil {
+			if err := checkExpr(elem, scope, info, ctx); err != nil {
 				return err
 			}
 		}
@@ -251,30 +352,34 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			child.define(param, kindUnknown)
 		}
 		if n.Expr != nil {
-			if err := checkExpr(n.Expr, child); err != nil {
+			if err := checkExpr(n.Expr, child, info, ctx); err != nil {
 				return err
 			}
 		}
-		if err := checkStmts(n.Body, map[string]bool{}, child); err != nil {
+		if err := checkStmts(n.Body, map[string]bool{}, child, info, ctx); err != nil {
 			return err
 		}
 	case *ast.ArrayLit:
 		for _, elem := range n.Elems {
-			if err := checkExpr(elem, scope); err != nil {
+			if err := checkExpr(elem, scope, info, ctx); err != nil {
 				return err
 			}
 		}
 	case *ast.BinaryExpr:
-		if err := checkExpr(n.Left, scope); err != nil {
+		if err := checkExpr(n.Left, scope, info, ctx); err != nil {
 			return err
 		}
-		return checkExpr(n.Right, scope)
+		return checkExpr(n.Right, scope, info, ctx)
 	case *ast.UnaryExpr:
-		return checkExpr(n.Expr, scope)
+		return checkExpr(n.Expr, scope, info, ctx)
 	case *ast.TryExpr:
-		return checkExpr(n.Expr, scope)
+		return checkExpr(n.Expr, scope, info, ctx)
+	case *ast.SuperExpr:
+		if ctx.className == "" || !ctx.hasParent {
+			return fmt.Errorf("%d:%d: super used outside subclass method", n.Tok.Line, n.Tok.Col)
+		}
 	case *ast.MemberExpr:
-		if err := checkExpr(n.Object, scope); err != nil {
+		if err := checkExpr(n.Object, scope, info, ctx); err != nil {
 			return err
 		}
 		switch kindOf(n.Object, scope) {
@@ -286,16 +391,19 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			return memberAccessError(n, "array")
 		}
 	case *ast.IndexExpr:
-		if err := checkExpr(n.Object, scope); err != nil {
+		if err := checkExpr(n.Object, scope, info, ctx); err != nil {
 			return err
 		}
-		return checkExpr(n.Index, scope)
+		return checkExpr(n.Index, scope, info, ctx)
 	case *ast.CallExpr:
-		if err := checkExpr(n.Callee, scope); err != nil {
+		if err := checkExpr(n.Callee, scope, info, ctx); err != nil {
 			return err
+		}
+		if _, ok := n.Callee.(*ast.SuperExpr); ok && len(n.Args) != superArity(info, ctx) {
+			return fmt.Errorf("super expects %d arguments, got %d", superArity(info, ctx), len(n.Args))
 		}
 		for _, arg := range n.Args {
-			if err := checkExpr(arg, scope); err != nil {
+			if err := checkExpr(arg, scope, info, ctx); err != nil {
 				return err
 			}
 		}
@@ -303,10 +411,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	return nil
 }
 
-func checkAssignmentTarget(target ast.Expr, scope *scope) error {
+func checkAssignmentTarget(target ast.Expr, scope *scope, info typeInfo, ctx checkContext) error {
 	switch n := target.(type) {
 	case *ast.MemberExpr:
-		if err := checkExpr(n.Object, scope); err != nil {
+		if err := checkExpr(n.Object, scope, info, ctx); err != nil {
 			return err
 		}
 		switch kindOf(n.Object, scope) {
@@ -319,10 +427,10 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 		}
 		return nil
 	case *ast.IndexExpr:
-		if err := checkExpr(n.Object, scope); err != nil {
+		if err := checkExpr(n.Object, scope, info, ctx); err != nil {
 			return err
 		}
-		return checkExpr(n.Index, scope)
+		return checkExpr(n.Index, scope, info, ctx)
 	case *ast.ThisProp:
 		return nil
 	}

@@ -109,6 +109,13 @@ object.property
 object.method()
 ```
 
+Current implementation status: classes, constructors, instance fields, methods,
+inheritance, `super`, explicit interfaces, module declarations, import aliases,
+and entry-file/imported-file top-level rules are implemented for the
+interpreter. Generated C supports module declarations, but class, inheritance,
+`super`, and interface declarations are still interpreter/checker-only and are
+rejected before C emission.
+
 ## Inheritance And Interfaces
 
 Class inheritance is single inheritance only. A class may extend at most one

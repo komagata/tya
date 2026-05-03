@@ -51,6 +51,7 @@ type ErrorValue struct {
 }
 type Class struct {
 	Name    string
+	Parent  *Class
 	Methods map[string]*Function
 }
 type Instance struct {
@@ -63,10 +64,12 @@ type Module struct {
 }
 
 type Function struct {
-	Params []string
-	Body   []ast.Stmt
-	Expr   ast.Expr
-	Env    *Env
+	Params     []string
+	Body       []ast.Stmt
+	Expr       ast.Expr
+	Env        *Env
+	Owner      *Class
+	MethodName string
 }
 
 type Builtin func([]Value) (Value, error)
@@ -680,13 +683,26 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		return values[len(values)-1], nil
 	case *ast.ClassDecl:
 		class := &Class{Name: n.Name, Methods: map[string]*Function{}}
+		if n.Parent != "" {
+			parent, ok := env.get(n.Parent)
+			if !ok {
+				return nil, fmt.Errorf("undefined parent class %s", n.Parent)
+			}
+			parentClass, ok := parent.(*Class)
+			if !ok {
+				return nil, fmt.Errorf("%s is not a class", n.Parent)
+			}
+			class.Parent = parentClass
+		}
 		env.set(n.Name, class)
 		for _, method := range n.Methods {
 			class.Methods[method.Name] = &Function{
-				Params: method.Func.Params,
-				Body:   method.Func.Body,
-				Expr:   method.Func.Expr,
-				Env:    env,
+				Params:     method.Func.Params,
+				Body:       method.Func.Body,
+				Expr:       method.Func.Expr,
+				Env:        env,
+				Owner:      class,
+				MethodName: method.Name,
 			}
 		}
 		return class, nil
@@ -701,6 +717,8 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			module.Members[member.Name] = value
 		}
 		return module, nil
+	case *ast.InterfaceDecl:
+		return nil, nil
 	case *ast.ExprStmt:
 		return evalExpr(n.Expr, env)
 	case *ast.IfStmt:
@@ -910,6 +928,8 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		return arr, nil
 	case *ast.FuncLit:
 		return &Function{Params: n.Params, Body: n.Body, Expr: n.Expr, Env: env}, nil
+	case *ast.SuperExpr:
+		return nil, fmt.Errorf("super used outside call")
 	case *ast.BinaryExpr:
 		return evalBinary(n, env)
 	case *ast.UnaryExpr:
@@ -1019,6 +1039,17 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 }
 
 func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
+	if _, ok := c.Callee.(*ast.SuperExpr); ok {
+		args := make([]Value, 0, len(c.Args))
+		for _, a := range c.Args {
+			v, err := evalExpr(a, env)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, v)
+		}
+		return callSuper(env, args)
+	}
 	fnVal, recv, err := evalCallee(c.Callee, env)
 	if err != nil {
 		return nil, err
@@ -1053,6 +1084,9 @@ func callValue(fn Value, recv Object, args []Value) (Value, error) {
 		for i, name := range f.Params {
 			callEnv.set(name, args[i])
 		}
+		if f.Owner != nil {
+			callEnv.set("__method", f)
+		}
 		if f.Expr != nil {
 			return evalExpr(f.Expr, callEnv)
 		}
@@ -1068,7 +1102,7 @@ func callValue(fn Value, recv Object, args []Value) (Value, error) {
 
 func construct(class *Class, args []Value) (Value, error) {
 	inst := &Instance{Class: class, Fields: Object{}}
-	if init, ok := class.Methods["init"]; ok {
+	if init := lookupMethod(class, "init"); init != nil {
 		if _, err := callValue(init, inst.Fields, args); err != nil {
 			return nil, err
 		}
@@ -1113,8 +1147,8 @@ func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
 			return nil, nil, err
 		}
 		if inst, ok := obj.(*Instance); ok {
-			method, ok := inst.Class.Methods[m.Name]
-			if !ok {
+			method := lookupMethod(inst.Class, m.Name)
+			if method == nil {
 				return nil, nil, fmt.Errorf("undefined method %s", m.Name)
 			}
 			return method, inst.Fields, nil
@@ -1130,6 +1164,31 @@ func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
 	}
 	v, err := evalExpr(e, env)
 	return v, nil, err
+}
+
+func lookupMethod(class *Class, name string) *Function {
+	for c := class; c != nil; c = c.Parent {
+		if method, ok := c.Methods[name]; ok {
+			return method
+		}
+	}
+	return nil
+}
+
+func callSuper(env *Env, args []Value) (Value, error) {
+	method, ok := env.get("__method")
+	if !ok {
+		return nil, fmt.Errorf("super used outside method")
+	}
+	fn, ok := method.(*Function)
+	if !ok || fn.Owner == nil || fn.Owner.Parent == nil {
+		return nil, fmt.Errorf("super used outside subclass method")
+	}
+	parentMethod := lookupMethod(fn.Owner.Parent, fn.MethodName)
+	if parentMethod == nil {
+		return nil, fmt.Errorf("undefined super method %s", fn.MethodName)
+	}
+	return callValue(parentMethod, env.this, args)
 }
 
 func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {

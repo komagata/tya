@@ -1,0 +1,3 @@
+class PoliteUser implements Greeter
+  greet: ->
+    "hello"

@@ -8,6 +8,7 @@
 # expected-failing The Go implementation runs this example, but self-host parity still needs a listed feature.
 # out-of-scope     Fixture/module support file, not a standalone generated-tool parity target.
 examples/args.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute args() and env()
+examples/admin.tya|out-of-scope|class fixture|support file for examples/inheritance.tya, not a standalone output parity target
 examples/arithmetic.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute arithmetic example subset
 examples/array.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute array builtin/index subset
 examples/array_function.tya|expected-failing|functional array builtins|requires map/filter/find/any/all closures in parser/checker/codegen
@@ -30,6 +31,8 @@ examples/function.tya|expected-failing|dict index access|requires dictionary ind
 examples/greeting.tya|out-of-scope|module fixture|support file for examples/use_module.tya, not a standalone output parity target
 examples/hello.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute hello example
 examples/if.tya|expected-failing|dict index access|requires dictionary index access in self-host parser/checker/codegen
+examples/inheritance.tya|expected-failing|class inheritance|requires class inheritance and super calls in self-host parser/checker/codegen
+examples/interface.tya|expected-failing|interfaces|requires interface declarations and implements checks in self-host parser/checker/codegen
 examples/logic.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute boolean logic example subset
 examples/method.tya|expected-failing|methods|requires @ member assignment and method call parser/checker/codegen parity
 examples/multiple_return.tya|expected-failing|dict index access|requires dictionary index access in self-host parser/checker/codegen
@@ -37,6 +40,7 @@ examples/object.tya|expected-failing|dict index access|requires dictionary index
 examples/object_builtin.tya|expected-failing|object builtins|requires has/keys/values/delete object builtin parity
 examples/object_inline.tya|expected-failing|dict index access|requires dictionary index access in self-host parser/checker/codegen
 examples/prelude.tya|expected-failing|prelude helpers|requires stdlib prelude loading and higher-level array helper parity
+examples/polite_user.tya|out-of-scope|class fixture|support file for examples/interface.tya, not a standalone output parity target
 examples/read_line.tya|expected-failing|stdin|requires generated read_line() runtime/input parity in stage-generated tools
 examples/return.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute explicit return example subset
 examples/selfhost_input.tya|out-of-scope|prototype fixture|legacy selfhost.sh fixture covered outside stage-generated example parity
@@ -46,4 +50,5 @@ examples/try.tya|expected-failing|try propagation|requires general try expressio
 examples/use_module.tya|expected-failing|imports|requires module import loading and module member call parity
 examples/use_module_decl.tya|expected-failing|module declarations|requires module declarations and member access in self-host parser/checker/codegen
 examples/util.tya|out-of-scope|module fixture|support file for examples/use_module_decl.tya, not a standalone output parity target
+examples/user.tya|out-of-scope|class fixture|support file for examples/class.tya, not a standalone output parity target
 examples/while.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute while example subset

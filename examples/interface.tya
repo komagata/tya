@@ -1,0 +1,7 @@
+import polite_user
+
+interface Greeter
+  greet: ->
+
+user = PoliteUser()
+print user.greet()

@@ -1,0 +1,27 @@
+{
+  "id": "CLASS-007",
+  "title": "Implement import aliases and import name conflict checks",
+  "passes": true,
+  "goal": "Add `import file as alias` and reject import name conflicts unless an alias is used.",
+  "context": [
+    "Default import behavior loads the imported public name directly into the current scope.",
+    "`as` aliases the imported public value and does not load the original public name.",
+    "Import name conflicts should be errors unless an alias is used."
+  ],
+  "steps": [
+    "Extend import parsing for `as` aliases.",
+    "Update runner/checker scope loading for default imports and aliases.",
+    "Reject conflicting imported names and conflicts with existing top-level names.",
+    "Add tests for class imports, module imports, aliases, and conflict errors."
+  ],
+  "verification": [
+    "go test ./internal/parser ./internal/checker ./internal/runner -count=1",
+    "go test ./tests -count=1",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "`import user as account` works and `User` is not loaded by that import.",
+    "`import util as u` works for module access.",
+    "Import name conflicts are deterministic errors."
+  ]
+}

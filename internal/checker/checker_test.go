@@ -171,6 +171,35 @@ func TestCheckRejectsDuplicateClassMethod(t *testing.T) {
 	}
 }
 
+func TestCheckClassInheritanceAndInterfaces(t *testing.T) {
+	src := "interface Greeter\n  greet: ->\n\nclass User\n  greet: -> \"hello\"\n\nclass Admin extends User implements Greeter\n  greet: -> super()\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsOverrideArityMismatch(t *testing.T) {
+	src := "class User\n  greet: -> \"hello\"\n\nclass Admin extends User\n  greet: name -> name\n"
+	err := Check(parse(t, src))
+	if err == nil {
+		t.Fatal("expected override arity error")
+	}
+	if !strings.Contains(err.Error(), "override arity mismatch for greet") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsMissingInterfaceMethod(t *testing.T) {
+	src := "interface Greeter\n  greet: ->\n\nclass User implements Greeter\n  name: -> \"komagata\"\n"
+	err := Check(parse(t, src))
+	if err == nil {
+		t.Fatal("expected implements error")
+	}
+	if !strings.Contains(err.Error(), "does not implement Greeter.greet") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckModuleDeclaration(t *testing.T) {
 	src := "module util\n  foo: \"foo\"\n  bar: -> \"bar\"\n\nprint util.foo\nprint util.bar()\n"
 	if err := Check(parse(t, src)); err != nil {

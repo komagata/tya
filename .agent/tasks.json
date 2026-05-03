@@ -39,30 +39,30 @@
     "id": "CLASS-007",
     "title": "Implement import aliases and import name conflict checks",
     "priority": 7,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-008",
     "title": "Implement entry-file semantics for implicit main execution",
     "priority": 8,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-009",
     "title": "Implement single inheritance and super calls",
     "priority": 9,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-010",
     "title": "Implement interfaces and implements checks",
     "priority": 10,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-011",
     "title": "Complete docs, examples, C emission, and regression coverage",
     "priority": 11,
-    "passes": false
+    "passes": true
   }
 ]

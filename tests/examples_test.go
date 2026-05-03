@@ -33,6 +33,8 @@ func TestExamplesGolden(t *testing.T) {
 		"function.tya":          "Hello, komagata\n",
 		"hello.tya":             "Hello, Tya\n",
 		"if.tya":                "komagata\nmissing\n",
+		"inheritance.tya":       "komagata\nHello, komagata (owner)\n",
+		"interface.tya":         "hello\n",
 		"logic.tya":             "match\nanonymous\ntrue\n",
 		"method.tya":            "1\n2\n",
 		"multiple_return.tya":   "komagata\nempty user\n",

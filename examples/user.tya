@@ -1,0 +1,9 @@
+class User
+  init: name ->
+    @name = name
+
+  rename: name ->
+    @name = name
+
+  greet: ->
+    "Hello, {@name}"

@@ -1,0 +1,9 @@
+import user
+
+class Admin extends User
+  init: name, role ->
+    super(name)
+    @role = role
+
+  greet: ->
+    "{super()} ({@role})"

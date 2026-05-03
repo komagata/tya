@@ -127,6 +127,41 @@ func TestParseClassDeclaration(t *testing.T) {
 	}
 }
 
+func TestParseClassExtendsAndImplements(t *testing.T) {
+	src := "class Admin extends User implements Reader, Writer\n  greet: ->\n    super()\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decl := prog.Stmts[0].(*ast.ClassDecl)
+	if decl.Parent != "User" {
+		t.Fatalf("got parent %q", decl.Parent)
+	}
+	if len(decl.Implements) != 2 {
+		t.Fatalf("got implements %#v", decl.Implements)
+	}
+}
+
+func TestParseInterfaceDeclaration(t *testing.T) {
+	src := "interface Reader\n  read: ->\n  write: text ->\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decl := prog.Stmts[0].(*ast.InterfaceDecl)
+	if decl.Name != "Reader" || len(decl.Methods) != 2 {
+		t.Fatalf("got %#v", decl)
+	}
+}
+
 func TestParseModuleDeclaration(t *testing.T) {
 	src := "module util\n  foo: \"foo\"\n\n  bar: ->\n    \"bar\"\n"
 	toks, errs := lexer.Lex(src)

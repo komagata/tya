@@ -53,6 +53,51 @@ func TestRunFileLoadsImportedModuleDeclaration(t *testing.T) {
 	}
 }
 
+func TestRunFileLoadsImportedModuleAlias(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo: \"foo\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import util as u\nprint u.foo\n")
+
+	var out strings.Builder
+	if err := RunFile(main, nil, &out, nil); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "foo\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunFileLoadsImportedClassAlias(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init: name ->\n    @name = name\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import user as account\nuser = account(\"komagata\")\nprint user.name\n")
+
+	var out strings.Builder
+	if err := RunFile(main, nil, &out, nil); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "komagata\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestLoadSourceRejectsImportNameConflict(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo: \"foo\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import util\nutil = \"conflict\"\n")
+
+	_, err := LoadSource(main)
+	if err == nil {
+		t.Fatal("expected import conflict")
+	}
+	if !strings.Contains(err.Error(), "import name conflict: util") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestLoadSourceRejectsModuleWithMismatchedPublicBinding(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "module message\n  text: \"hello\"\n")
@@ -128,6 +173,20 @@ func TestLoadSourceRejectsTopLevelHelperInImportedFile(t *testing.T) {
 	}
 }
 
+func TestLoadSourceRejectsClassInEntryFile(t *testing.T) {
+	dir := t.TempDir()
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "class User\n  init: -> nil\n")
+
+	_, err := LoadSource(main)
+	if err == nil {
+		t.Fatal("expected entry class error")
+	}
+	if !strings.Contains(err.Error(), "main.tya entry file cannot define class User directly") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestLoadSourceRejectsInvalidModuleName(t *testing.T) {
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
@@ -148,12 +207,12 @@ func TestLoadSourceCurrentBaselineRejectsImportAlias(t *testing.T) {
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting as g\n")
 
-	_, err := LoadSource(main)
-	if err == nil {
-		t.Fatal("expected import alias to be rejected before alias support lands")
+	var out strings.Builder
+	if err := RunFile(main, nil, &out, nil); err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(err.Error(), "invalid module name: greeting as g") {
-		t.Fatalf("unexpected error: %v", err)
+	if out.String() != "" {
+		t.Fatalf("got %q", out.String())
 	}
 }
 

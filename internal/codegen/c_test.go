@@ -265,6 +265,17 @@ func TestEmitCCompilesModuleDeclarations(t *testing.T) {
 	}
 }
 
+func TestEmitCRejectsInterfaceDeclarations(t *testing.T) {
+	prog := checkedProgram(t, "interface Greeter\n  greet: ->\n")
+	_, err := EmitC(prog)
+	if err == nil {
+		t.Fatal("expected interface C emitter error")
+	}
+	if !strings.Contains(err.Error(), "C emitter does not support interface declarations yet") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)

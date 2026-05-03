@@ -49,6 +49,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	switch n := stmt.(type) {
 	case *ast.ClassDecl:
 		return fmt.Errorf("C emitter does not support class declarations yet")
+	case *ast.InterfaceDecl:
+		return fmt.Errorf("C emitter does not support interface declarations yet")
 	case *ast.ModuleDecl:
 		g.sourceLine(n.NameTok.Line)
 		return g.assignModuleDecl(n)
@@ -983,6 +985,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return fmt.Sprintf("tya_member(%s, %s)", object, strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.ThisProp:
 		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(n.Name)), "TyaValue", nil
+	case *ast.SuperExpr:
+		return "", "", fmt.Errorf("C emitter does not support super calls yet")
 	case *ast.TryExpr:
 		return g.expr(n.Expr)
 	}

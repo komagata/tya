@@ -1,0 +1,27 @@
+{
+  "id": "CLASS-008",
+  "title": "Implement entry-file semantics for implicit main execution",
+  "passes": true,
+  "goal": "Make directly-run entry files execute non-import top-level statements as an implicit `main` while imported files remain definition-only.",
+  "context": [
+    "Entry files may contain multiple executable statements.",
+    "Imported files may not contain arbitrary top-level executable statements.",
+    "Entry files should not define `class` or `module` directly."
+  ],
+  "steps": [
+    "Update runner/checker to distinguish entry file mode from imported file mode.",
+    "Preserve current direct-run behavior while aligning the internal model with implicit main semantics.",
+    "Reject direct class/module definitions in entry files if the design requires it at this stage.",
+    "Add tests for entry files with imports and executable statements, plus imported-file restrictions."
+  ],
+  "verification": [
+    "go test ./internal/checker ./internal/runner -count=1",
+    "go test ./tests -count=1",
+    "go test ./... -count=1"
+  ],
+  "done_when": [
+    "Entry and imported files have distinct, documented top-level rules.",
+    "Existing CLI examples still run or are intentionally migrated.",
+    "Diagnostics make file-mode violations clear."
+  ]
+}

@@ -1,0 +1,5 @@
+import admin
+
+admin = Admin("komagata", "owner")
+print admin.name
+print admin.greet()

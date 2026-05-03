@@ -1,0 +1,25 @@
+{
+  "id": "CLASS-011",
+  "title": "Complete docs, examples, C emission, and regression coverage",
+  "passes": true,
+  "goal": "Finish the class/module design track by aligning docs, examples, interpreter behavior, generated-C behavior, and tests.",
+  "context": [
+    "Run after the functional implementation tasks are complete or clearly documented as staged.",
+    "The user-facing docs should state what is implemented and what remains future work."
+  ],
+  "steps": [
+    "Audit docs/CLASS_MODULE_DESIGN.md, README.md, docs/NAMING.md, docs/STDLIB.md, and ROADMAP.md for stale language.",
+    "Add final examples for dictionaries, sets, classes, modules, imports, aliases, inheritance, interfaces, and entry files as supported.",
+    "Ensure generated-C behavior is either implemented for the supported subset or explicitly rejected before emit with tests.",
+    "Run the full test suite and any relevant self-host gates if examples/manifests changed."
+  ],
+  "verification": [
+    "go test ./... -count=1",
+    "sh scripts/selfhost_bootstrap_check.sh if self-host gates or manifests changed"
+  ],
+  "done_when": [
+    "The documented class/module subset matches actual behavior.",
+    "Examples and tests cover the completed feature track.",
+    "All CLASS tasks are passing or any remaining limitations are explicitly documented."
+  ]
+}

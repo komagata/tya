@@ -3,13 +3,26 @@
 `Current Status`
 =================
 **Last Updated:** 2026-05-03 00:00
-**Tasks Completed:** 13
-**Current Task:** CLASS-006 Complete
+**Tasks Completed:** 18
+**Current Task:** CLASS-011 Complete
 
 ----------------------------------------------
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - CLASS-007..CLASS-011 - Completed the
+  remaining class/module design track outside Ralph mode: added `import ... as`
+  aliases, deterministic import name conflict checks, entry-file restrictions
+  for direct class/module definitions, single inheritance with explicit
+  `super(...)`, interface declarations, `implements` checks including implicit
+  class interfaces, inherited method lookup, inherited constructor dispatch,
+  module declaration C lowering, and explicit C rejection for class/interface
+  declarations. Added inheritance/interface examples and manifest
+  classifications, migrated direct class examples to importable files, and
+  updated the class/module design status docs.
+  Verification: `go test ./internal/parser ./internal/checker ./internal/eval ./internal/runner ./internal/codegen -count=1`;
+  `go test ./tests -count=1`; `go test ./... -count=1`;
+  `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-03 00:00 UTC - CLASS-006 - Enforced imported-file
   one-definition rules so imported files must contain exactly one top-level
   matching `class` or `module`, reject mismatched class/module filenames,

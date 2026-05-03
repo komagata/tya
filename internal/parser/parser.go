@@ -37,6 +37,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "class" {
 		return p.classDecl()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "interface" {
+		return p.interfaceDecl()
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "module" {
 		return p.moduleDecl()
 	}
@@ -86,10 +89,34 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	if name.Type != token.IDENT {
 		return nil, p.err("expected class name")
 	}
+	var parent string
+	var parentTok token.Token
+	if p.matchWord("extends") {
+		parentTok = p.expect(token.IDENT)
+		if parentTok.Type != token.IDENT {
+			return nil, p.err("expected parent class name")
+		}
+		parent = parentTok.Lexeme
+	}
+	var implements []string
+	var implToks []token.Token
+	if p.matchWord("implements") {
+		for {
+			impl := p.expect(token.IDENT)
+			if impl.Type != token.IDENT {
+				return nil, p.err("expected interface name")
+			}
+			implements = append(implements, impl.Lexeme)
+			implToks = append(implToks, impl)
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
 	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
 		return nil, p.err("expected indented block after class")
 	}
-	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name}
+	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, ParentTok: parentTok, Implements: implements, ImplToks: implToks}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		methodName := p.expect(token.IDENT)
@@ -120,6 +147,50 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	}
 	if !p.match(token.DEDENT) {
 		return nil, p.err("expected dedent after class")
+	}
+	return decl, nil
+}
+
+func (p *Parser) interfaceDecl() (ast.Stmt, error) {
+	p.next()
+	name := p.expect(token.IDENT)
+	if name.Type != token.IDENT {
+		return nil, p.err("expected interface name")
+	}
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after interface")
+	}
+	decl := &ast.InterfaceDecl{Name: name.Lexeme, NameTok: name}
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		methodName := p.expect(token.IDENT)
+		if methodName.Type != token.IDENT {
+			return nil, p.err("expected interface method name")
+		}
+		if !p.match(token.COLON) {
+			return nil, p.err("expected ':' after interface method name")
+		}
+		var params []token.Token
+		if !p.match(token.ARROW) {
+			for {
+				param := p.expect(token.IDENT)
+				if param.Type != token.IDENT {
+					return nil, p.err("expected interface method parameter")
+				}
+				params = append(params, param)
+				if !p.match(token.COMMA) {
+					break
+				}
+			}
+			if !p.match(token.ARROW) {
+				return nil, p.err("expected '->' after interface method parameters")
+			}
+		}
+		decl.Methods = append(decl.Methods, ast.InterfaceMethod{Name: methodName.Lexeme, Tok: methodName, ParamToks: params})
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after interface")
 	}
 	return decl, nil
 }
@@ -588,6 +659,8 @@ func (p *Parser) primary() (ast.Expr, error) {
 			return &ast.BoolLit{Value: false}, nil
 		case "nil":
 			return &ast.NilLit{}, nil
+		case "super":
+			return &ast.SuperExpr{Tok: tok}, nil
 		}
 		if !p.suppressCommaFunc && p.at(token.COMMA) && p.hasArrowBeforeLine() {
 			p.next()
