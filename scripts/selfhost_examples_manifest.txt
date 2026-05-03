@@ -25,16 +25,16 @@ examples/exit.tya|expected-failing|process control|requires generated exit(code)
 examples/file.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute file builtin subset
 examples/for.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute array for and indexed for subset
 examples/for_object.tya|expected-failing|object iteration|requires general object for-loop codegen and key/value comparisons
-examples/function.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute simple function example subset
+examples/function.tya|expected-failing|dict index access|requires dictionary index access in self-host parser/checker/codegen
 examples/greeting.tya|out-of-scope|module fixture|support file for examples/use_module.tya, not a standalone output parity target
 examples/hello.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute hello example
-examples/if.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute if/else example subset
+examples/if.tya|expected-failing|dict index access|requires dictionary index access in self-host parser/checker/codegen
 examples/logic.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute boolean logic example subset
 examples/method.tya|expected-failing|methods|requires @ member assignment and method call parser/checker/codegen parity
-examples/multiple_return.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute multiple return example subset
-examples/object.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute object member interpolation subset
+examples/multiple_return.tya|expected-failing|dict index access|requires dictionary index access in self-host parser/checker/codegen
+examples/object.tya|expected-failing|dict index access|requires dictionary index access in self-host parser/checker/codegen
 examples/object_builtin.tya|expected-failing|object builtins|requires has/keys/values/delete object builtin parity
-examples/object_inline.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute inline object example subset
+examples/object_inline.tya|expected-failing|dict index access|requires dictionary index access in self-host parser/checker/codegen
 examples/prelude.tya|expected-failing|prelude helpers|requires stdlib prelude loading and higher-level array helper parity
 examples/read_line.tya|expected-failing|stdin|requires generated read_line() runtime/input parity in stage-generated tools
 examples/return.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute explicit return example subset

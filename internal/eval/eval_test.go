@@ -457,7 +457,7 @@ func TestRunErrorBuiltin(t *testing.T) {
 }
 
 func TestRunMultipleReturnAndAssignment(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nuser, err = parse_user \"komagata\"\nif err\n  print err.message\nelse\n  print user.name\nmissing, err = parse_user \"\"\nif err\n  print err.message\nelse\n  print missing.name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nuser, err = parse_user \"komagata\"\nif err\n  print err.message\nelse\n  print user[\"name\"]\nmissing, err = parse_user \"\"\nif err\n  print err.message\nelse\n  print missing[\"name\"]\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -477,7 +477,7 @@ func TestRunMultipleReturnAndAssignment(t *testing.T) {
 }
 
 func TestRunTryPropagation(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nread_user = text ->\n  user = try parse_user(text)\n  return user.name, nil\nname, err = read_user \"komagata\"\nif err\n  print err.message\nelse\n  print name\nname, err = read_user \"\"\nif err\n  print err.message\nelse\n  print name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nread_user = text ->\n  user = try parse_user(text)\n  return user[\"name\"], nil\nname, err = read_user \"komagata\"\nif err\n  print err.message\nelse\n  print name\nname, err = read_user \"\"\nif err\n  print err.message\nelse\n  print name\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)

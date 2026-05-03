@@ -11,10 +11,17 @@ var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 var valueNameRE = regexp.MustCompile(`^_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*$|^_$`)
 
 func Check(prog *ast.Program) error {
+	return CheckWithModules(prog, nil)
+}
+
+func CheckWithModules(prog *ast.Program, modules []string) error {
 	constants := map[string]bool{}
 	scope := newScope(nil)
 	for _, name := range builtinNames {
-		scope.define(name)
+		scope.define(name, kindUnknown)
+	}
+	for _, name := range modules {
+		scope.define(name, kindModule)
 	}
 	return checkStmts(prog.Stmts, constants, scope)
 }
@@ -31,14 +38,29 @@ var builtinNames = []string{
 type scope struct {
 	parent *scope
 	names  map[string]bool
+	kinds  map[string]valueKind
 }
 
 func newScope(parent *scope) *scope {
-	return &scope{parent: parent, names: map[string]bool{}}
+	return &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}}
 }
 
-func (s *scope) define(name string) {
+type valueKind int
+
+const (
+	kindUnknown valueKind = iota
+	kindArray
+	kindDict
+	kindModule
+	kindSet
+)
+
+func (s *scope) define(name string, kind valueKind) {
 	s.names[name] = true
+	if s.kinds[name] == kindModule {
+		return
+	}
+	s.kinds[name] = kind
 }
 
 func (s *scope) defined(name string) bool {
@@ -49,6 +71,16 @@ func (s *scope) defined(name string) bool {
 		return s.parent.defined(name)
 	}
 	return false
+}
+
+func (s *scope) kind(name string) valueKind {
+	if kind, ok := s.kinds[name]; ok {
+		return kind
+	}
+	if s.parent != nil {
+		return s.parent.kind(name)
+	}
+	return kindUnknown
 }
 
 func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error {
@@ -77,7 +109,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				if constNameRE.MatchString(name.Name) {
 					constants[name.Name] = true
 				}
-				scope.define(name.Name)
+				scope.define(name.Name, exprKind(n.Values))
 			}
 		case *ast.IfStmt:
 			if err := checkExpr(n.Cond, scope); err != nil {
@@ -109,9 +141,9 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				return err
 			}
 			child := newScope(scope)
-			child.define(n.ValueName)
+			child.define(n.ValueName, kindUnknown)
 			if n.IndexName != "" {
-				child.define(n.IndexName)
+				child.define(n.IndexName, kindUnknown)
 			}
 			if err := checkStmts(n.Body, constants, child); err != nil {
 				return err
@@ -177,7 +209,7 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				return fmt.Errorf("duplicate function parameter %s", param)
 			}
 			seen[param] = true
-			child.define(param)
+			child.define(param, kindUnknown)
 		}
 		if n.Expr != nil {
 			if err := checkExpr(n.Expr, child); err != nil {
@@ -203,7 +235,17 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.TryExpr:
 		return checkExpr(n.Expr, scope)
 	case *ast.MemberExpr:
-		return checkExpr(n.Object, scope)
+		if err := checkExpr(n.Object, scope); err != nil {
+			return err
+		}
+		switch kindOf(n.Object, scope) {
+		case kindDict:
+			return memberAccessError(n, "dictionary")
+		case kindSet:
+			return memberAccessError(n, "set")
+		case kindArray:
+			return memberAccessError(n, "array")
+		}
 	case *ast.IndexExpr:
 		if err := checkExpr(n.Object, scope); err != nil {
 			return err
@@ -225,7 +267,18 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 	switch n := target.(type) {
 	case *ast.MemberExpr:
-		return checkExpr(n.Object, scope)
+		if err := checkExpr(n.Object, scope); err != nil {
+			return err
+		}
+		switch kindOf(n.Object, scope) {
+		case kindDict:
+			return memberAccessError(n, "dictionary")
+		case kindSet:
+			return memberAccessError(n, "set")
+		case kindArray:
+			return memberAccessError(n, "array")
+		}
+		return nil
 	case *ast.IndexExpr:
 		if err := checkExpr(n.Object, scope); err != nil {
 			return err
@@ -235,6 +288,63 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 		return nil
 	}
 	return nil
+}
+
+func exprKind(values []ast.Expr) valueKind {
+	if len(values) != 1 {
+		return kindUnknown
+	}
+	return literalKind(values[0])
+}
+
+func kindOf(expr ast.Expr, scope *scope) valueKind {
+	if id, ok := expr.(*ast.Ident); ok {
+		return scope.kind(id.Name)
+	}
+	return literalKind(expr)
+}
+
+func literalKind(expr ast.Expr) valueKind {
+	switch n := expr.(type) {
+	case *ast.ArrayLit:
+		return kindArray
+	case *ast.DictLit:
+		if hasFunctionMember(n) {
+			return kindUnknown
+		}
+		return kindDict
+	case *ast.SetLit:
+		return kindSet
+	case *ast.CallExpr:
+		if id, ok := n.Callee.(*ast.Ident); ok && id.Name == "set" && len(n.Args) == 0 {
+			return kindSet
+		}
+	}
+	return kindUnknown
+}
+
+func hasFunctionMember(dict *ast.DictLit) bool {
+	for _, prop := range dict.Props {
+		if _, ok := prop.Value.(*ast.FuncLit); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func memberAccessError(expr *ast.MemberExpr, receiver string) error {
+	line := expr.NameTok.Line
+	col := expr.NameTok.Col
+	if receiver == "dictionary" {
+		if line > 0 {
+			return fmt.Errorf("%d:%d: cannot use . access on dictionary; use index access", line, col)
+		}
+		return fmt.Errorf("cannot use . access on dictionary; use index access")
+	}
+	if line > 0 {
+		return fmt.Errorf("%d:%d: cannot use . access on %s", line, col, receiver)
+	}
+	return fmt.Errorf("cannot use . access on %s", receiver)
 }
 
 func checkBindingName(name string, line, col int) error {

@@ -100,6 +100,50 @@ func TestCheckAllowsSetLiteralAndSetBuiltin(t *testing.T) {
 	}
 }
 
+func TestCheckAllowsDictionaryIndexAccess(t *testing.T) {
+	prog := parse(t, "user = { name: \"komagata\" }\nprint user[\"name\"]\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsDictionaryMemberAccess(t *testing.T) {
+	prog := parse(t, "user = { name: \"komagata\" }\nprint user.name\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected dictionary member access error")
+	}
+	if !strings.Contains(err.Error(), "cannot use . access on dictionary; use index access") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsArrayAndSetMemberAccess(t *testing.T) {
+	cases := map[string]string{
+		"items = [1]\nprint items.count\n":          "cannot use . access on array",
+		"roles = { \"admin\" }\nprint roles.name\n": "cannot use . access on set",
+		"roles = set()\nprint roles.name\n":         "cannot use . access on set",
+	}
+	for src, want := range cases {
+		t.Run(want, func(t *testing.T) {
+			err := Check(parse(t, src))
+			if err == nil {
+				t.Fatal("expected member access error")
+			}
+			if !strings.Contains(err.Error(), want) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestCheckAllowsKnownModuleMemberAccess(t *testing.T) {
+	prog := parse(t, "greeting = { text: \"hello\" }\nprint greeting.text\n")
+	if err := CheckWithModules(prog, []string{"greeting"}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCheckRejectsUndefinedVariable(t *testing.T) {
 	prog := parse(t, "print user_nmae\n")
 	err := Check(prog)

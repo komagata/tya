@@ -2,7 +2,7 @@ user =
   name: "komagata"
 
 if user
-  print user.name
+  print user["name"]
 else
   print "no user"
 

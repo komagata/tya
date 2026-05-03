@@ -445,7 +445,7 @@ func (p *Parser) call() (ast.Expr, error) {
 			if name.Type != token.IDENT {
 				return nil, p.err("expected property name")
 			}
-			ex = &ast.MemberExpr{Object: ex, Name: name.Lexeme}
+			ex = &ast.MemberExpr{Object: ex, Name: name.Lexeme, NameTok: name}
 			continue
 		}
 		if p.match(token.LPAREN) {
@@ -675,7 +675,7 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 	for {
 		if p.match(token.DOT) {
 			name := p.expect(token.IDENT)
-			ex = &ast.MemberExpr{Object: ex, Name: name.Lexeme}
+			ex = &ast.MemberExpr{Object: ex, Name: name.Lexeme, NameTok: name}
 			continue
 		}
 		if p.match(token.LBRACKET) {

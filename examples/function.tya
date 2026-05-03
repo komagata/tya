@@ -1,4 +1,4 @@
-greet = user -> "Hello, {user.name}"
+greet = user -> "Hello, " + user["name"]
 
 user =
   name: "komagata"

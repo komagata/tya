@@ -158,8 +158,9 @@ type TryExpr struct {
 func (*TryExpr) expr() {}
 
 type MemberExpr struct {
-	Object Expr
-	Name   string
+	Object  Expr
+	Name    string
+	NameTok token.Token
 }
 
 func (*MemberExpr) expr() {}

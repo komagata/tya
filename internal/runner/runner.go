@@ -41,62 +41,82 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := checker.Check(prog); err != nil {
+	_, modules, err := LoadUserSourceWithModules(path)
+	if err != nil {
+		return err
+	}
+	if err := checker.CheckWithModules(prog, modules); err != nil {
 		return err
 	}
 	return eval.RunWithIO(prog, in, out, args)
 }
 
 func LoadSource(path string) (string, error) {
-	src, err := LoadUserSource(path)
+	src, _, err := LoadUserSourceWithModules(path)
 	if err != nil {
 		return "", err
 	}
 	return WithPrelude(path, src), nil
 }
 
-func LoadUserSource(path string) (string, error) {
-	if err := ValidateFileName(path); err != nil {
-		return "", err
-	}
-	src, err := loadSource(path, map[string]bool{}, false)
+func LoadSourceWithModules(path string) (string, []string, error) {
+	src, modules, err := LoadUserSourceWithModules(path)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	return src, nil
+	return WithPrelude(path, src), modules, nil
 }
 
-func loadSource(path string, loading map[string]bool, module bool) (string, error) {
+func LoadUserSource(path string) (string, error) {
+	src, _, err := LoadUserSourceWithModules(path)
+	return src, err
+}
+
+func LoadUserSourceWithModules(path string) (string, []string, error) {
+	if err := ValidateFileName(path); err != nil {
+		return "", nil, err
+	}
+	src, modules, err := loadSource(path, map[string]bool{}, false)
+	if err != nil {
+		return "", nil, err
+	}
+	return src, modules, nil
+}
+
+func loadSource(path string, loading map[string]bool, module bool) (string, []string, error) {
 	abs, err := filepath.Abs(path)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if loading[abs] {
-		return "", fmt.Errorf("cyclic module import: %s", filepath.Base(path))
+		return "", nil, fmt.Errorf("cyclic module import: %s", filepath.Base(path))
 	}
 	loading[abs] = true
 	defer delete(loading, abs)
 
 	src, err := os.ReadFile(path)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	body, imports, err := splitImports(string(src))
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if module {
 		if err := validateModule(path, body); err != nil {
-			return "", err
+			return "", nil, err
 		}
 	}
 	var out strings.Builder
+	modules := []string{}
 	for _, name := range imports {
 		modPath := filepath.Join(filepath.Dir(path), name+".tya")
-		modSrc, err := loadSource(modPath, loading, true)
+		modSrc, importedModules, err := loadSource(modPath, loading, true)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
+		modules = append(modules, importedModules...)
+		modules = append(modules, name)
 		out.WriteString(modSrc)
 		if !strings.HasSuffix(modSrc, "\n") {
 			out.WriteString("\n")
@@ -106,7 +126,7 @@ func loadSource(path string, loading map[string]bool, module bool) (string, erro
 	if !strings.HasSuffix(body, "\n") {
 		out.WriteString("\n")
 	}
-	return out.String(), nil
+	return out.String(), modules, nil
 }
 
 func splitImports(src string) (string, []string, error) {

@@ -191,7 +191,7 @@ func TestEmitCCompilesFunctionProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesMultipleReturnProgram(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nuser, err = parse_user \"komagata\"\nif err\n  print err.message\nelse\n  print user.name\n\nmissing, err = parse_user \"\"\nif err\n  print err.message\nelse\n  print missing.name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nuser, err = parse_user \"komagata\"\nif err\n  print err.message\nelse\n  print user[\"name\"]\n\nmissing, err = parse_user \"\"\nif err\n  print err.message\nelse\n  print missing[\"name\"]\n"
 	out := compileAndRun(t, src)
 	if string(out) != "komagata\nempty user\n" {
 		t.Fatalf("got %q", out)
@@ -199,7 +199,7 @@ func TestEmitCCompilesMultipleReturnProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesTryProgram(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nread_user = text ->\n  user = try parse_user(text)\n  return user.name, nil\n\nname, err = read_user \"komagata\"\nif err\n  print err.message\nelse\n  print name\n\nname, err = read_user \"\"\nif err\n  print err.message\nelse\n  print name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\n\nread_user = text ->\n  user = try parse_user(text)\n  return user[\"name\"], nil\n\nname, err = read_user \"komagata\"\nif err\n  print err.message\nelse\n  print name\n\nname, err = read_user \"\"\nif err\n  print err.message\nelse\n  print name\n"
 	out := compileAndRun(t, src)
 	if string(out) != "komagata\nempty user\n" {
 		t.Fatalf("got %q", out)
@@ -231,7 +231,7 @@ func TestEmitCCompilesSetProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesMemberInterpolationProgram(t *testing.T) {
-	src := "greet = user -> \"Hello, {user.name}\"\nuser =\n  name: \"komagata\"\nprint greet user\n"
+	src := "greet = user -> \"Hello, \" + user[\"name\"]\nuser =\n  name: \"komagata\"\nprint greet user\n"
 	out := compileAndRun(t, src)
 	if string(out) != "Hello, komagata\n" {
 		t.Fatalf("got %q", out)

@@ -52,21 +52,21 @@ tracked in `docs/SELFHOST.md`, `ROADMAP.md`, and `SELFHOST_WORK.md`.
 - string interpolation with expressions: `"next year: {age + 1}"`
 - string escapes: `\"`, `\\`, `\n`, `\t`
 - string indexing: `"tya"[1]`
-- arrays and objects
+- arrays and dictionaries
 - mutable array elements: `items[1] = 20`
-- inline object literals: `{ name: "komagata" }`
+- inline dictionary literals: `{ name: "komagata" }`
 - functions and implicit last-expression return
 - explicit `return`
 - multiple assignment and returns: `value, err = read_thing()`
 - `try` propagation for `value, err`
-- method calls with `@property`
+- legacy method calls with `@property`
 - arithmetic, comparison, equality, and logical operators
 - unary `not` and `-`
 - grouped expressions with parentheses
 - `if` / `else`
 - `while`, `break`, and `continue`
 - error values via `error "message"`
-- array `for item in items` and object `for key, value of object` loops
+- array `for item in items` and dictionary `for key, value of dictionary` loops
 - builtins: `print`, `len`, `push`, `pop`, `map`, `filter`, `find`, `any`,
   `all`, `each`, `reduce`, `keys`, `values`, `has`, `delete`,
   `equal`, `split`, `join`, `trim`,
@@ -81,7 +81,7 @@ tracked in `docs/SELFHOST.md`, `ROADMAP.md`, and `SELFHOST_WORK.md`.
 ## Examples
 
 ```tya
-greet = user -> "Hello, {user.name}"
+greet = user -> "Hello, " + user["name"]
 
 user =
   name: "komagata"

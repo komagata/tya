@@ -15,7 +15,7 @@
     "id": "CLASS-003",
     "title": "Separate dictionaries from object/member access",
     "priority": 3,
-    "passes": false
+    "passes": true
   },
   {
     "id": "CLASS-004",

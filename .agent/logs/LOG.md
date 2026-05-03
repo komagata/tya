@@ -10,6 +10,15 @@
 
 ## Session Log
 
+- 2026-05-03 00:00 UTC - CLASS-003 - Separated known dictionary, set, and
+  array values from member access in the checker while preserving imported
+  module member access through runner-provided module metadata. Updated
+  dictionary examples and regression coverage to use index access, and
+  reclassified self-host example parity entries that now require dictionary
+  index access support in the self-host toolchain.
+  Verification: `go test ./internal/checker ./internal/eval ./internal/codegen -count=1`;
+  `go test ./internal/runner -count=1`; `go test ./tests -count=1`;
+  `go test ./... -count=1`; `sh scripts/selfhost_bootstrap_check.sh`.
 - 2026-05-03 00:00 UTC - CLASS-002 - Implemented distinct dictionary and set
   literal AST/parser semantics, including empty `{}` as a dictionary, set
   literals, `set()`, duplicate-eliding set runtime behavior, mixed literal

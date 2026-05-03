@@ -85,8 +85,9 @@ doneOptions:
 		os.Exit(1)
 	}
 	source := string(src)
+	modules := []string(nil)
 	if emitC && !checkUnused {
-		source, err = runner.LoadSource(path)
+		source, modules, err = runner.LoadSourceWithModules(path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -103,7 +104,7 @@ doneOptions:
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		if err := checker.Check(prog); err != nil {
+		if err := checker.CheckWithModules(prog, modules); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -116,7 +117,7 @@ doneOptions:
 		return
 	}
 	if checkUnused {
-		source, err = runner.LoadUserSource(path)
+		source, modules, err = runner.LoadUserSourceWithModules(path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -140,7 +141,7 @@ doneOptions:
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-	if err := checker.Check(prog); err != nil {
+	if err := checker.CheckWithModules(prog, modules); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -154,7 +155,7 @@ doneOptions:
 		}
 	}
 	if emitC {
-		source, err = runner.LoadSource(path)
+		source, modules, err = runner.LoadSourceWithModules(path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -171,7 +172,7 @@ doneOptions:
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		if err := checker.Check(prog); err != nil {
+		if err := checker.CheckWithModules(prog, modules); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -191,7 +192,7 @@ func usage() {
 }
 
 func compileAndRun(path string, args []string) error {
-	source, err := runner.LoadSource(path)
+	source, modules, err := runner.LoadSourceWithModules(path)
 	if err != nil {
 		return err
 	}
@@ -203,7 +204,7 @@ func compileAndRun(path string, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := checker.Check(prog); err != nil {
+	if err := checker.CheckWithModules(prog, modules); err != nil {
 		return err
 	}
 	csrc, err := codegen.EmitC(prog)

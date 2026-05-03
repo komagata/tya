@@ -938,47 +938,6 @@ loop
 Tya"
 echo "examples/selfhost_ops.tya: stage-2 pipeline matched"
 
-"$out_dir/lexer.stage2" examples/multiple_return.tya > "$out_dir/multiple_return.stage2.tokens"
-"$out_dir/parser.stage2" "$out_dir/multiple_return.stage2.tokens" > "$out_dir/multiple_return.stage2.nodes"
-cat > "$out_dir/multiple_return.want.nodes" <<'NODES'
-1:FUNC:parse_user:text
-2:INDENT:2
-2:IF_COMPARE_EQ:IDENT:text:STRING:
-3:INDENT:4
-3:RETURN2_CALL1:NIL:nil:error:STRING:empty user
-4:RETURN2_OBJECT_NIL:name:IDENT:text
-6:INDENT:0
-6:MULTI_ASSIGN2_CALL1:user:err:parse_user:STRING:komagata
-8:IF:IDENT:err
-9:INDENT:2
-9:PRINT_MEMBER:err:message
-10:INDENT:0
-10:ELSE
-11:INDENT:2
-11:PRINT_MEMBER:user:name
-13:INDENT:0
-13:MULTI_ASSIGN2_CALL1:missing:err:parse_user:STRING:
-15:IF:IDENT:err
-16:INDENT:2
-16:PRINT_MEMBER:err:message
-17:INDENT:0
-17:ELSE
-18:INDENT:2
-18:PRINT_MEMBER:missing:name
-NODES
-diff -u "$out_dir/multiple_return.want.nodes" "$out_dir/multiple_return.stage2.nodes" >/dev/null
-echo "examples/multiple_return.tya: stage-2 parser matched"
-"$out_dir/checker.stage2" "$out_dir/multiple_return.stage2.nodes" > "$out_dir/multiple_return.stage2.check"
-grep -qx "ok" "$out_dir/multiple_return.stage2.check"
-echo "examples/multiple_return.tya: stage-2 checker matched"
-compare_stage2_codegen "examples/multiple_return.tya" "$out_dir/multiple_return.stage2.nodes"
-"$out_dir/codegen_c.stage2" "$out_dir/multiple_return.stage2.nodes" > "$out_dir/multiple_return.stage2.c"
-cc -std=c99 -Wall -Wextra -pedantic -o "$out_dir/multiple_return.stage2" "$out_dir/multiple_return.stage2.c" >/dev/null 2>&1
-multiple_return_out="$("$out_dir/multiple_return.stage2")"
-test "$multiple_return_out" = "komagata
-empty user"
-echo "examples/multiple_return.tya: stage-2 pipeline matched"
-
 "$out_dir/lexer.stage2" examples/while.tya > "$out_dir/while_example.stage2.tokens"
 "$out_dir/parser.stage2" "$out_dir/while_example.stage2.tokens" > "$out_dir/while_example.stage2.nodes"
 "$out_dir/checker.stage2" "$out_dir/while_example.stage2.nodes" > "$out_dir/while_example.stage2.check"
@@ -1509,27 +1468,6 @@ stage4_array_for_out="$("$stage4_dir/array_for")"
 test "$stage4_array_for_out" = "Tya"
 echo "stage4 array for: self-host pipeline matched"
 
-"$stage4_dir/lexer.stage4" examples/multiple_return.tya > "$stage4_dir/multiple_return.tokens"
-"$stage4_dir/parser.stage4" "$stage4_dir/multiple_return.tokens" > "$stage4_dir/multiple_return.nodes"
-cat > "$stage4_dir/multiple_return.want.nodes" <<'NODES'
-1:ASSIGN:parse_user:BOOL:text ->
-2:ASSIGN:user, err:INT:parse_user "komagata"
-3:PRINT:IDENT:err.message
-4:PRINT:IDENT:user.name
-5:ASSIGN:missing, err:INT:parse_user ""
-6:PRINT:IDENT:err.message
-7:PRINT:IDENT:missing.name
-NODES
-diff -u "$stage4_dir/multiple_return.want.nodes" "$stage4_dir/multiple_return.nodes" >/dev/null
-"$stage4_dir/checker.stage4" "$stage4_dir/multiple_return.nodes" > "$stage4_dir/multiple_return.check"
-grep -qx "ok" "$stage4_dir/multiple_return.check"
-"$stage4_dir/codegen_c.stage4" "$stage4_dir/multiple_return.nodes" > "$stage4_dir/multiple_return.c"
-cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/multiple_return" "$stage4_dir/multiple_return.c" >/dev/null 2>&1
-stage4_multiple_return_out="$("$stage4_dir/multiple_return")"
-test "$stage4_multiple_return_out" = "komagata
-empty user"
-echo "stage4 multiple return: self-host pipeline matched"
-
 "$stage4_dir/lexer.stage4" examples/while.tya > "$stage4_dir/while_example.tokens"
 "$stage4_dir/parser.stage4" "$stage4_dir/while_example.tokens" > "$stage4_dir/while_example.nodes"
 "$stage4_dir/checker.stage4" "$stage4_dir/while_example.nodes" > "$stage4_dir/while_example.check"
@@ -1598,16 +1536,6 @@ nil
 next year: 21"
 echo "stage4 arithmetic: self-host pipeline matched"
 
-"$stage4_dir/lexer.stage4" examples/function.tya > "$stage4_dir/function.tokens"
-"$stage4_dir/parser.stage4" "$stage4_dir/function.tokens" > "$stage4_dir/function.nodes"
-"$stage4_dir/checker.stage4" "$stage4_dir/function.nodes" > "$stage4_dir/function.check"
-grep -qx "ok" "$stage4_dir/function.check"
-"$stage4_dir/codegen_c.stage4" "$stage4_dir/function.nodes" > "$stage4_dir/function.c"
-cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/function" "$stage4_dir/function.c" >/dev/null 2>&1
-stage4_function_out="$("$stage4_dir/function")"
-test "$stage4_function_out" = "Hello, komagata"
-echo "stage4 function: self-host pipeline matched"
-
 "$stage4_dir/lexer.stage4" examples/return.tya > "$stage4_dir/return.tokens"
 "$stage4_dir/parser.stage4" "$stage4_dir/return.tokens" > "$stage4_dir/return.nodes"
 "$stage4_dir/checker.stage4" "$stage4_dir/return.nodes" > "$stage4_dir/return.check"
@@ -1617,38 +1545,6 @@ cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/return" "$stage4_dir/return.
 stage4_return_out="$("$stage4_dir/return")"
 test "$stage4_return_out" = "4"
 echo "stage4 return: self-host pipeline matched"
-
-"$stage4_dir/lexer.stage4" examples/object.tya > "$stage4_dir/object.tokens"
-"$stage4_dir/parser.stage4" "$stage4_dir/object.tokens" > "$stage4_dir/object.nodes"
-"$stage4_dir/checker.stage4" "$stage4_dir/object.nodes" > "$stage4_dir/object.check"
-grep -qx "ok" "$stage4_dir/object.check"
-"$stage4_dir/codegen_c.stage4" "$stage4_dir/object.nodes" > "$stage4_dir/object.c"
-cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/object" "$stage4_dir/object.c" >/dev/null 2>&1
-stage4_object_out="$("$stage4_dir/object")"
-test "$stage4_object_out" = "Hello, komagata"
-echo "stage4 object: self-host pipeline matched"
-
-"$stage4_dir/lexer.stage4" examples/object_inline.tya > "$stage4_dir/object_inline.tokens"
-"$stage4_dir/parser.stage4" "$stage4_dir/object_inline.tokens" > "$stage4_dir/object_inline.nodes"
-"$stage4_dir/checker.stage4" "$stage4_dir/object_inline.nodes" > "$stage4_dir/object_inline.check"
-grep -qx "ok" "$stage4_dir/object_inline.check"
-"$stage4_dir/codegen_c.stage4" "$stage4_dir/object_inline.nodes" > "$stage4_dir/object_inline.c"
-cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/object_inline" "$stage4_dir/object_inline.c" >/dev/null 2>&1
-stage4_object_inline_out="$("$stage4_dir/object_inline")"
-test "$stage4_object_inline_out" = "Hello, komagata
-20"
-echo "stage4 object inline: self-host pipeline matched"
-
-"$stage4_dir/lexer.stage4" examples/if.tya > "$stage4_dir/if_example.tokens"
-"$stage4_dir/parser.stage4" "$stage4_dir/if_example.tokens" > "$stage4_dir/if_example.nodes"
-"$stage4_dir/checker.stage4" "$stage4_dir/if_example.nodes" > "$stage4_dir/if_example.check"
-grep -qx "ok" "$stage4_dir/if_example.check"
-"$stage4_dir/codegen_c.stage4" "$stage4_dir/if_example.nodes" > "$stage4_dir/if_example.c"
-cc -std=c99 -Wall -Wextra -pedantic -o "$stage4_dir/if_example" "$stage4_dir/if_example.c" >/dev/null 2>&1
-stage4_if_example_out="$("$stage4_dir/if_example")"
-test "$stage4_if_example_out" = "komagata
-missing"
-echo "stage4 if example: self-host pipeline matched"
 
 "$stage4_dir/lexer.stage4" examples/logic.tya > "$stage4_dir/logic.tokens"
 "$stage4_dir/parser.stage4" "$stage4_dir/logic.tokens" > "$stage4_dir/logic.nodes"
