@@ -1,21 +1,128 @@
-# Self-Host Work Protocol
+# Self-Host Work
 
-This file is the restart point for autonomous self-hosting work.
+This is the canonical internal planning document for Tya self-hosting work.
+User-facing language documentation belongs in `docs/REFERENCE.md`,
+`docs/GUIDE.md`, and `docs/STDLIB.md`; roadmap-level summaries belong in
+`ROADMAP.md`.
 
-## Non-Stop Protocol
+Delete this file after full self-hosting is complete and the remaining work
+queue is empty.
 
-When asked to continue self-hosting work:
+## Current Status
 
-1. Read `SELFHOST_WORK.md`, then `ROADMAP.md`.
+The supported-subset bootstrap gate is complete:
+
+```sh
+go test ./... -count=1
+sh scripts/selfhost_bootstrap_check.sh
+```
+
+The bootstrap pipeline currently:
+
+- compiles the Tya-written lexer, parser, checker, and C generator with the Go
+  C emitter
+- uses generated tools through repeated stages
+- runs every example marked `supported` in
+  `scripts/selfhost_examples_manifest.txt`
+- compares supported generated-program output with the Go interpreter
+- reaches stable stage-7 generated C for the self-host compiler sources
+
+This is not full language parity. The self-host compiler still uses a
+line-oriented node-string parser, subset checker behavior, subset C lowering,
+and some source-specific generated-tool paths.
+
+## Commands
+
+Run the complete gate from the repository root:
+
+```sh
+sh scripts/selfhost_bootstrap_check.sh
+```
+
+Expected output:
+
+```text
+selfhost bootstrap: ok
+```
+
+Run the development pipeline on the default fixture:
+
+```sh
+sh scripts/selfhost.sh
+```
+
+Focused checks:
+
+```sh
+sh scripts/selfhost_check.sh
+sh scripts/selfhost_compile_check.sh
+sh scripts/go_emit_selfhost_compile_check.sh
+sh scripts/go_emit_selfhost_run_check.sh
+sh scripts/selfhost_fixed_point_check.sh
+```
+
+## Bootstrap Pipeline
+
+The bootstrap pipeline:
+
+1. Compiles `selfhost/lexer.tya`, `selfhost/parser.tya`,
+   `selfhost/checker.tya`, and `selfhost/codegen_c.tya` with the Go C emitter.
+2. Uses the generated stage-1 tools to emit and compile later-stage tools.
+3. Runs generated tools on every example marked `supported` in
+   `scripts/selfhost_examples_manifest.txt`.
+4. Compares generated binary output with the Go interpreter for supported
+   examples.
+5. Verifies byte-stable generated C for the self-host compiler sources.
+
+The explicit fixed-point gate is:
+
+```sh
+sh scripts/selfhost_fixed_point_check.sh
+```
+
+It is also covered by `sh scripts/selfhost_bootstrap_check.sh`.
+
+## Example Parity
+
+Example parity status is tracked in:
+
+```text
+scripts/selfhost_examples_manifest.txt
+```
+
+Each example is classified as:
+
+- `supported`: run by the stage-generated self-host tools in the bootstrap gate
+- `expected-failing`: runnable by the Go implementation, but missing a listed
+  self-host feature
+- `out-of-scope`: fixture or support file, not a standalone parity target
+
+`go test ./tests -run Selfhost -count=1` fails if a new example lacks a
+self-host parity classification.
+
+## Self-Host Sources
+
+The Tya-written compiler pieces are:
+
+- `selfhost/lexer.tya`
+- `selfhost/parser.tya`
+- `selfhost/checker.tya`
+- `selfhost/codegen_c.tya`
+
+## Work Protocol
+
+When continuing self-host work:
+
+1. Read this file.
 2. Pick the first unchecked task in `Current Queue`.
 3. Implement the smallest useful slice that moves that task forward.
 4. Add or update focused tests for that slice.
-5. Run the focused test first.
+5. Run the focused self-host script first when applicable.
 6. Run `go test ./... -count=1`.
 7. Run `sh scripts/selfhost_bootstrap_check.sh`.
-8. Update `ROADMAP.md` and this file when a slice is complete.
+8. Update this file and `ROADMAP.md` only when the status meaningfully changes.
 9. Commit with `Masaki Komagata <komagata@gmail.com>`.
-10. Return to step 2 without waiting for confirmation.
+10. Continue unless there is a true blocker.
 
 Only stop for a true blocker:
 
@@ -23,293 +130,101 @@ Only stop for a true blocker:
 - a design choice would invalidate existing language semantics
 - the work requires external input that cannot be inferred from the repository
 
-Do not stop merely because a commit was made. A commit is a checkpoint, not an
-endpoint.
-
 ## Current Queue
 
-- [x] Make the Go-emitted stage-1 self-host compiler run `examples/selfhost_ops.tya`
-  - [x] Reproduce and capture the current C type mismatch from stage-1 codegen
-  - [x] Preserve `INT` and `BOOL` assignment type information through Go-emitted `selfhost/codegen_c.tya`
-  - [x] Ensure stage-1 generated C prints bool/int values with the correct format
-  - [x] Add `examples/selfhost_ops.tya` to `scripts/selfhost_bootstrap_check.sh`
-- [x] Expand parser subset toward full expression parsing
-  - [x] Parse grouped comparison assignments
-  - [x] Parse simple `and` / `or` assignments
-  - [x] Parse two-or-more element array literals
-  - [x] Parse simple inline object literals
-- [x] Expand checker subset
-  - [x] Track block-local names for `if`, `while`, and `for`
-  - [x] Reject duplicate simple function params in self-host checker
-  - [x] Add parity coverage for duplicate and invalid names
-- [x] Expand self-host C codegen subset
-  - [x] Emit simple function bodies instead of comments for one-expression returns
-  - [x] Emit simple function calls to generated functions
-  - [x] Emit object placeholders beyond comments
-- [x] Bootstrap stage 2
-  - [x] Use stage-1 compiler binaries to compile selfhost sources to C
-  - [x] Compile stage-1 emitted selfhost C into stage-2 binaries
-  - [x] Lower stage-2 input file reads through `read_file args()[0]`
-  - [x] Add generated-C lexer helper scaffold for stage-2 token emission
-  - [x] Run the stage-2 lexer on `examples/hello.tya`
-  - [x] Tokenize integer literals in the stage-2 generated lexer
-  - [x] Tokenize arrows and two-character comparison operators in the stage-2 generated lexer
-  - [x] Tokenize float literals and basic string escapes in the stage-2 generated lexer
-  - [x] Lower stage-2 newline splitting for parser input files
-  - [x] Preserve stage-2 parser token lines with dynamic arrays and `push`
-  - [x] Run the stage-2 parser on `examples/hello.tya`
-  - [x] Parse integer literal assignments in the stage-2 generated parser
-  - [x] Parse float and string literal assignments in the stage-2 generated parser
-  - [x] Run the stage-2 checker on `examples/hello.tya`
-  - [x] Run the stage-2 checker on literal assignments
-  - [x] Run the stage-2 codegen output for `examples/hello.tya`
-  - [x] Run the stage-2 codegen output for literal assignments
-  - [x] Run a stage-2 pipeline for printing an assigned integer
-  - [x] Run a stage-2 pipeline for printing assigned string and float values
-  - [x] Run a stage-2 pipeline for integer addition
-  - [x] Run a stage-2 pipeline for boolean assignment and print
-  - [x] Run a stage-2 pipeline for equality comparison
-  - [x] Run a stage-2 pipeline for inequality comparison
-  - [x] Compare repeated stage-2 generated C for deterministic output
-- [ ] Continue toward full self-host completion
-  - [x] Promote completed lexer parity TODOs in `ROADMAP.md`
-  - [ ] Expand self-host parser beyond line-oriented subset stubs
-    - [x] Parse one-argument parenthesized function calls in assignment expressions
-    - [x] Parse two-argument parenthesized function calls in assignment expressions
-    - [x] Parse three-argument parenthesized function calls in assignment expressions
-    - [x] Parse `print` calls with three-argument builtin calls
-    - [x] Parse modulo-equality function literals in functional builtin arguments
-    - [x] Parse `print` calls with two-argument builtin calls
-    - [x] Parse indexed `for item, index in items` loops in the self-host parser subset
-    - [x] Parse `for key, value of object` loops in the self-host parser subset
-    - [x] Parse two-target multiple assignment in the self-host parser subset
-    - [x] Parse two-value return statements in the self-host parser subset
-    - [x] Parse `target = try call(arg)` in the self-host parser subset
-    - [x] Parse `left, right = call(arg)` in the self-host parser subset
-    - [x] Parse `left, right = call "literal"` in the self-host parser subset
-    - [x] Parse `return nil, error "message"` in the self-host parser subset
-    - [x] Parse `print object.member` in the self-host parser subset
-    - [x] Parse `return { name: value }, nil` in the self-host parser subset
-    - [x] Parse simple `-`, `*`, `/`, and `%` arithmetic assignment expressions
-    - [ ] Next parser gap: parse function literals in expression positions
-      without relying on source-specific fallback paths
-  - [ ] Expand self-host checker toward Go checker parity
-    - [x] Recognize `replace` as a self-host checker builtin for three-argument calls
-    - [x] Check undefined names in two-value return nodes
-    - [x] Check two-target multiple assignment nodes
-    - [x] Check two-target assignment from one-argument calls
-    - [x] Check literal arguments in two-target one-argument calls
-    - [x] Check `return nil, error "message"` nodes
-    - [x] Check `print object.member` base names
-    - [x] Check `return { name: value }, nil` nodes
-    - [x] Reject `break` and `continue` outside loops
-    - [x] Reject return nodes outside functions
-    - [x] Check `TRY_CALL1` nodes and reject top-level `try`
-    - [x] Reject invalid assignment binding names and constant reassignment
-    - [ ] Next checker gap: carry index/key loop bindings distinctly instead
-      of collapsing supported `for` forms to one value binding
-  - [ ] Expand self-host C codegen toward executable example parity
-    - [x] Emit `replace(text, old, new)` calls in the self-host C codegen subset
-    - [x] Emit `print replace(text, old, new)` calls in the self-host C codegen subset
-    - [x] Emit `print contains(text, needle)` calls in the self-host C codegen subset
-    - [x] Emit `print starts_with(text, prefix)` and `print ends_with(text, suffix)` calls in the self-host C codegen subset
-    - [x] Emit `trim(text)` calls in the self-host C codegen subset
-    - [x] Emit `print len(value)` calls in the self-host C codegen subset
-    - [x] Emit `print object.member` for one-property object placeholders
-    - [x] Emit the current multiple-return example subset with string out-params
-    - [x] Emit string array index assignments for static and dynamic arrays
-    - [x] Emit the current functional array builtin subset used by
-      `examples/array_function.tya`
-    - [ ] Next codegen blocker: replace source-specific functional array paths
-      with general closure/function-value lowering
-  - [ ] Advance bootstrap from subset programs toward compiling existing examples
-    - [x] Run a stage-2 pipeline for printing string length
-    - [x] Run a stage-2 pipeline for trimming and printing a string
-    - [x] Run a stage-2 pipeline for printing string containment
-    - [x] Run a stage-2 pipeline for printing string prefix and suffix checks
-    - [x] Run a stage-2 pipeline for printing string replacement
-    - [x] Run a stage-2 pipeline for printing escaped quote strings
-    - [x] Preserve colon characters in stage-2 printed string nodes
-    - [x] Run a stage-2 pipeline for splitting and joining strings
-    - [x] Run a stage-2 pipeline for byte and character string lengths
-    - [x] Run a stage-2 pipeline for replacement with a string literal replacement
-    - [x] Run a stage-2 pipeline for string literal indexing
-    - [x] Run a stage-2 pipeline for `examples/string.tya`
-    - [x] Run a stage-2 pipeline for less-than comparison
-    - [x] Run a stage-2 pipeline for integer addition reassignment
-    - [x] Run a stage-2 pipeline for `while false` with `break`
-    - [x] Run a stage-2 pipeline for less-than `while` with `break`
-    - [x] Run a stage-2 pipeline for `examples/while.tya`
-    - [x] Run a stage-2 pipeline for greater-or-equal and less-or-equal comparisons
-    - [x] Run a stage-2 pipeline for grouped integer addition
-    - [x] Run a stage-2 pipeline for grouped greater-or-equal comparison
-    - [x] Run a stage-2 pipeline for boolean `and` / `or` assignments
-    - [x] Run a stage-2 pipeline for greater-or-equal `while` with `break`
-    - [x] Run a stage-2 pipeline for one-element string arrays and `for`
-    - [x] Run a stage-2 pipeline for `examples/selfhost_ops.tya`
-    - [x] Run a stage-2 pipeline for literal reassignment
-    - [x] Run a stage-2 pipeline for `read_file args()[0]`
-    - [x] Skip function bodies in the stage-2 parser subset
-    - [x] Run a stage-2 parser/checker fixture for `examples/multiple_return.tya`
-    - [x] Run a stage-2 pipeline for `examples/multiple_return.tya`
-    - [x] Advance stage-3 self-host compiler probe
-      - [x] Generate, compile, and run a stage-3 lexer on `examples/hello.tya`
-      - [x] Generate, compile, and run a stage-3 parser on stage-3 lexer output
-      - [x] Generate and run the stage-3 checker on stage-3 parser output
-      - [x] Generate and run the stage-3 codegen on stage-3 parser output
-      - [x] Compile all stage-3 selfhost sources from stage-3 tools
-      - [x] Make stage-4 generated tools execute `examples/hello.tya`
-      - [x] Make stage-4 generated tools execute another bootstrap fixture beyond hello
-      - [x] Expand stage-4 generated tools beyond single-line string print fixtures
-      - [x] Preserve proper stage-4 token/node kinds for integer print fixtures
-      - [x] Expand stage-4 generated tools to escaped string print fixtures
-      - [x] Preserve colon characters in stage-4 printed string nodes
-      - [x] Expand stage-4 generated tools to two-line print fixtures
-      - [x] Expand stage-4 generated tools to assignment plus print fixtures
-      - [x] Expand stage-4 generated tools to integer assignment plus print fixtures
-      - [x] Expand stage-4 generated tools to reassignment plus print fixtures
-      - [x] Expand stage-4 generated tools to integer addition assignment fixtures
-      - [x] Expand stage-4 generated tools to less-than comparison fixtures
-      - [x] Expand stage-4 generated tools to while/break fixtures
-      - [x] Expand stage-4 generated tools to one-element array for fixtures
-      - [x] Expand stage-4 generated tools to `examples/multiple_return.tya`
-      - [x] Expand stage-4 generated tools to `examples/while.tya`
-      - [x] Expand stage-4 generated tools to `examples/string.tya`
-      - [x] Expand stage-4 generated tools to `examples/selfhost_ops.tya`
-      - [x] Expand stage-4 generated tools to `examples/arithmetic.tya`
-      - [x] Expand stage-4 generated tools to `examples/function.tya`
-      - [x] Expand stage-4 generated tools to `examples/return.tya`
-      - [x] Expand stage-4 generated tools to `examples/object.tya`
-      - [x] Expand stage-4 generated tools to `examples/object_inline.tya`
-      - [x] Expand stage-4 generated tools to `examples/if.tya`
-      - [x] Expand stage-4 generated tools to `examples/logic.tya`
-      - [x] Expand stage-4 generated tools to `examples/error.tya`
-      - [x] Expand stage-4 generated tools to `examples/convert.tya`
-      - [x] Expand stage-4 generated tools to `examples/file.tya`
-      - [x] Expand stage-4 generated tools to `examples/args.tya`
-      - [x] Expand stage-4 generated tools to `examples/equal.tya`
-      - [x] Expand stage-4 generated tools to `examples/array.tya`
-      - [x] Expand stage-4 generated tools to `examples/for.tya`
-      - [x] Compile all stage-5 selfhost sources from stage-4 tools
-      - [x] Run stage-5 generated tools on `examples/hello.tya`
-      - [x] Run stage-5 generated tools on a print-string fixture
-      - [x] Run stage-5 generated tools on a print-int fixture
-      - [x] Run stage-5 generated tools on a two-print fixture
-      - [x] Compile stage-6 tools from the stage-5 tool source and run a print-string fixture
-      - [x] Run stage-6 generated tools on print-int and two-print fixtures
-      - [x] Verify stable stage-7 C from the stage-6 tool source
-      - [x] Add an explicit fixed-point gate for byte-stable stage-4 generated C across lexer, parser, checker, and C codegen self-host sources
-      - [x] Replace stage-4 generated-tool fallback stubs with real generated selfhost parser/codegen paths
-        - [x] Make stage-3 parser emit non-empty nodes for `selfhost/lexer.tya`
-        - [x] Make stage-3 codegen emit executable lexer C from real lexer-driver nodes
-        - [x] Make stage-3 parser emit non-empty nodes for `selfhost/parser.tya`
-        - [x] Make stage-3 parser emit non-empty nodes for `selfhost/checker.tya`
-        - [x] Make stage-3 parser emit non-empty nodes for `selfhost/codegen_c.tya`
-        - [x] Make stage-3 codegen emit executable parser C from real parser-driver nodes
-        - [x] Make stage-3 codegen emit executable checker C from real checker-driver nodes
-        - [x] Make stage-3 codegen emit executable codegen C from real codegen-driver nodes
-      - [x] Replace stage-4 generated-tool mode fallback with source-specific generated tools
-        - [x] Replace stage-4 checker mode fallback with source-specific checker C
-        - [x] Replace stage-4 parser mode fallback with source-specific parser C
-        - [x] Replace stage-4 lexer mode fallback with source-specific lexer C
-        - [x] Replace stage-4 codegen mode fallback with source-specific codegen C
-
-## Remaining Gap Inventory
-
-Complete self-hosting means the Tya-written lexer, parser, checker, and C
-generator compile themselves through repeated stages, the generated tools run
-the supported repository examples, and regenerated generated C reaches a stable
-fixed point without source-specific fallback behavior.
-
-The current bootstrap gate already reaches stage-7 C stability for the
-bootstrap tool source and stage-4/stage-5 generated tools run the supported
-example set in `scripts/stage1_selfhost_sources_check.sh`. The remaining gaps
-are full-language parity gaps, ordered by dependency:
-
-- [ ] Replace the parser's line-oriented node shortcuts with a structured AST
-  representation.
+- [ ] Replace line-oriented parser shortcuts with structured AST parsing.
   - [ ] Preserve nested expression structure instead of flattening ad hoc node
     strings such as `ASSIGN:*:CALL*`, `IF_COMPARE_*`, and `PRINT_CALL*`.
   - [ ] Parse the full expression grammar from the Go parser: precedence for
     mixed arithmetic, comparison, equality, logical operators, grouped
     expressions, unary `not` and unary minus, method calls, member access,
     indexing, and calls with arbitrary expression arguments.
+  - [ ] Parse function literals in expression positions without relying on
+    source-specific fallback paths.
   - [ ] Parse full statement and definition forms: object blocks with methods
     and property assignment, array index assignment, imports, constants,
     implicit last-expression returns, multi-value assignment/return beyond the
     current two-value cases, and `try` propagation in general expression
     positions.
-  - [ ] Remove parser/codegen paths that recognize specific self-host source
-    shapes instead of general Tya syntax.
+
 - [ ] Bring the self-host checker to Go checker parity.
   - [ ] Model lexical scopes, block/function boundaries, reassignment, and
     shadowing consistently with `internal/checker`.
+  - [ ] Carry index/key loop bindings distinctly instead of collapsing supported
+    `for` forms to one value binding.
   - [ ] Enforce constants, imports/module public-binding rules, object member
     names, method receiver rules, duplicate declarations, optional unused
     checks, break/continue/return placement, and naming diagnostics with source
     line parity.
   - [ ] Check all expression forms and builtin arities rather than only the
     current node-string subset.
-- [ ] Expand self-host C codegen from prototype lowering to general executable
-  code generation.
+
+- [ ] Replace prototype C lowering with general executable code generation.
+  - [ ] Replace source-specific functional array paths with general
+    closure/function-value lowering.
   - [ ] Emit real functions, closures/function values, methods with `@`,
     object and array mutation, indexing, imports/prelude loading, error values,
     `try`, multi-return values, interpolation, unary operations, and all
     standard-library calls documented in `docs/STDLIB.md`.
   - [ ] Remove generated-C fallback stubs and example-specific recognizers;
-    generated tools should be produced from the parsed self-host source, not
+    generated tools should be produced from parsed self-host source, not
     source-name or line-pattern special cases.
   - [ ] Generate C against the runtime ABI used by the Go emitter, or document
     and converge any intentionally smaller ABI.
+
 - [ ] Broaden bootstrap parity gates.
-  - [x] Classify every runnable `examples/*.tya` and selected
-    `examples/classic/*.tya` program in
-    `scripts/selfhost_examples_manifest.txt` as supported,
-    expected-failing, or out-of-scope.
   - [ ] Promote every runnable `examples/*.tya` and selected
-    `examples/classic/*.tya` program into explicit stage-generated-tool parity
-    targets with interpreter-output comparison.
-    - [x] Drive the stage-4 supported-example gate from
-      `scripts/selfhost_examples_manifest.txt` and compare each supported
-      generated binary's output with the Go interpreter.
-    - [ ] Next unsupported dependency: `examples/class.tya` requires class
-      declarations, constructors, and instance member access in generated
-      parser/checker/codegen parity.
+    `examples/classic/*.tya` program from `expected-failing` to `supported` in
+    `scripts/selfhost_examples_manifest.txt`.
   - [ ] Add negative parser/checker fixtures for unsupported or invalid
     language features as they become supported.
   - [ ] Keep deterministic C comparisons for each generated stage and example
     category.
-  - [x] Prove the final fixed point for the current supported subset.
-  - [x] Compile the self-host compiler sources with the generated self-host
-    tools for repeated stages without changing tool behavior or generated C.
-  - [x] Compare regenerated generated C byte-for-byte at the final stage.
-  - [x] Make `scripts/selfhost_bootstrap_check.sh` the complete self-host gate:
-    docs, stage progression, supported examples, and fixed-point stability must
-    all be covered by one command.
 
-## Last Resolved Blocker
+## Next Unsupported Example Dependency
 
-Stage-4 generated tools now compile all four self-host compiler sources into
-stage-5 C binaries and execute `examples/object.tya` plus
-`examples/object_inline.tya`, `examples/if.tya`, `examples/logic.tya`, and
-`examples/error.tya` plus `examples/convert.tya`, `examples/file.tya`,
-`examples/args.tya`, `examples/equal.tya`, `examples/array.tya`, and
-`examples/for.tya` through lex, parse, check, codegen, compile, and run. The
-stage-5 generated tools now also run `examples/hello.tya`, an additional
-print-string fixture, a print-int fixture, and a two-print fixture through the
-same pipeline. The stage-5 tool source now also compiles into stage-6 binaries
-that run print-string, print-int, and two-print fixtures, then reaches a stable
-stage-7 C fixed point for the same tool source.
-The stage-4 example gates are part of
-`scripts/stage1_selfhost_sources_check.sh`, and the script now iterates every
-example marked supported in `scripts/selfhost_examples_manifest.txt`, compares
-each generated binary's output with the Go interpreter, and fails if a
-supported example regresses or disappears from the generated-tool pipeline.
-The stage-2 codegen gate also now compiles and runs explicit array index
-assignment nodes, replacing the previous `INDEX` assignment placeholder for
-string static and dynamic arrays.
-`scripts/selfhost_bootstrap_check.sh` is now the documented single self-host
-bootstrap gate. It covers the source checks, generated-C compile checks,
-Go-emitted self-host checks, supported example parity through generated tools,
-repeated bootstrap stages, and fixed-point generated-C stability. Full language
-parity remains tracked in the remaining gap inventory above.
+`examples/class.tya` is the next broad unsupported dependency. It requires
+class declarations, constructors, instance fields, instance member access, and
+method calls in the self-host parser/checker/codegen pipeline. Recent language
+work also added class statics and predicate methods, so class parity should
+account for:
+
+- unprefixed instance fields and methods
+- `@field` instance access
+- `@@field` / `@@method` class members
+- predicate names ending in `?`
+
+## Verification Order
+
+Use the smallest relevant command first, then the full gates:
+
+```sh
+sh scripts/stage1_selfhost_sources_check.sh
+go test ./... -count=1
+sh scripts/selfhost_bootstrap_check.sh
+```
+
+## Source Map
+
+- `selfhost/lexer.tya`: Tya-written lexer
+- `selfhost/parser.tya`: Tya-written parser for the current node-string subset
+- `selfhost/checker.tya`: Tya-written checker for the current node-string subset
+- `selfhost/codegen_c.tya`: Tya-written C generator
+- `scripts/selfhost_examples_manifest.txt`: example parity classification
+- `scripts/stage1_selfhost_sources_check.sh`: stage-generated supported-example
+  parity and repeated-stage checks
+- `scripts/selfhost_bootstrap_check.sh`: top-level self-host gate
+
+## Completion Criteria
+
+Supported-subset self-hosting is complete when `go test ./... -count=1` and
+`sh scripts/selfhost_bootstrap_check.sh` pass from a clean checkout.
+
+Full self-hosting is complete only when:
+
+- the Tya-written compiler reaches a stable fixed point without source-specific
+  fallback behavior
+- generated tools implement the same lexer/parser/checker/codegen behavior as
+  the Go implementation for the full language
+- every runnable non-fixture example is a generated-tool parity target
+- the documented standard library surface is supported by generated code

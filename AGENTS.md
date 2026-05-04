@@ -27,7 +27,3 @@ sh scripts/selfhost_bootstrap_check.sh
 ```
 
 Use focused scripts under `scripts/` when changes affect examples, C emission, imports, runtime execution, stdlib loading, or self-hosting.
-
-## Ralph Tasks
-
-When working from `.agent/tasks.json`, complete exactly one task, update task status and `.agent/logs/LOG.md`, commit, and stop. Do not push from a Ralph iteration.

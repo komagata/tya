@@ -361,10 +361,8 @@ func TestSelfhostBootstrapGateDocumentation(t *testing.T) {
 
 	requiredDocs := []string{
 		filepath.Join("..", "README.md"),
-		filepath.Join("..", "docs", "SELFHOST.md"),
 		filepath.Join("..", "ROADMAP.md"),
 		filepath.Join("..", "SELFHOST_WORK.md"),
-		filepath.Join("..", "selfhost", "README.md"),
 	}
 	for _, doc := range requiredDocs {
 		raw, err := os.ReadFile(doc)
