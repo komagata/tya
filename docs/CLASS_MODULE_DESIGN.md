@@ -164,8 +164,8 @@ Current implementation status: classes, constructors, instance field defaults,
 instance methods, class fields, class methods, inheritance, `super`, explicit
 interfaces, module declarations, import aliases, and entry-file/imported-file
 top-level rules are implemented for the interpreter. Generated C supports module
-declarations, but class, inheritance, `super`, and interface declarations are
-still interpreter/checker-only and are rejected before C emission.
+declarations, class declarations, class and instance members, inheritance,
+`super`, and treats interface declarations as checker-only declarations.
 
 ## Inheritance And Interfaces
 

@@ -104,6 +104,12 @@ TyaValue tya_error(TyaValue message) {
 }
 
 TyaValue tya_call1(TyaValue fn, TyaValue arg) {
+  if (fn.kind == TYA_OBJECT) {
+    TyaValue call = tya_member(fn, "__call");
+    if (call.kind == TYA_FUNCTION && call.function != NULL && call.function->fn != NULL) {
+      return call.function->fn(fn, arg, tya_nil(), tya_nil(), tya_nil());
+    }
+  }
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
@@ -111,6 +117,12 @@ TyaValue tya_call1(TyaValue fn, TyaValue arg) {
 }
 
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
+  if (fn.kind == TYA_OBJECT) {
+    TyaValue call = tya_member(fn, "__call");
+    if (call.kind == TYA_FUNCTION && call.function != NULL && call.function->fn != NULL) {
+      return call.function->fn(fn, first, second, tya_nil(), tya_nil());
+    }
+  }
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
@@ -118,6 +130,12 @@ TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
 }
 
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third) {
+  if (fn.kind == TYA_OBJECT) {
+    TyaValue call = tya_member(fn, "__call");
+    if (call.kind == TYA_FUNCTION && call.function != NULL && call.function->fn != NULL) {
+      return call.function->fn(fn, first, second, third, tya_nil());
+    }
+  }
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
@@ -125,6 +143,12 @@ TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third)
 }
 
 TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth) {
+  if (fn.kind == TYA_OBJECT) {
+    TyaValue call = tya_member(fn, "__call");
+    if (call.kind == TYA_FUNCTION && call.function != NULL && call.function->fn != NULL) {
+      return call.function->fn(fn, first, second, third, fourth);
+    }
+  }
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }

@@ -246,14 +246,27 @@ func TestEmitCCompilesMethodProgram(t *testing.T) {
 	}
 }
 
-func TestEmitCRejectsClassDeclarations(t *testing.T) {
-	prog := checkedProgram(t, "class User\n  init: name ->\n    @name = name\n")
-	_, err := EmitC(prog)
-	if err == nil {
-		t.Fatal("expected class C emitter error")
+func TestEmitCCompilesClassDeclarations(t *testing.T) {
+	src := "class User\n  name: \"guest\"\n\n  init: name ->\n    @name = name\n\n  rename: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nclass Guest\n  name: \"guest\"\n\nanon = Guest()\nuser = User(\"komagata\")\nprint anon.name\nprint user.name\nprint user.greet()\nuser.rename(\"Tya\")\nprint user.name\n"
+	out := compileAndRun(t, src)
+	if string(out) != "guest\nkomagata\nHello, komagata\nTya\n" {
+		t.Fatalf("got %q", out)
 	}
-	if !strings.Contains(err.Error(), "C emitter does not support class declarations yet") {
-		t.Fatalf("unexpected error: %v", err)
+}
+
+func TestEmitCCompilesClassVariablesAndClassMethods(t *testing.T) {
+	src := "class User\n  @@count: 0\n\n  @@next: ->\n    @@count = @@count + 1\n    @@count\n\n  init: ->\n    @@count = @@count + 1\n\nprint User.count\nprint User.next()\nprint User.next()\nUser()\nprint User.count\n"
+	out := compileAndRun(t, src)
+	if string(out) != "0\n1\n2\n3\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCCompilesClassInheritanceAndSuper(t *testing.T) {
+	src := "class User\n  init: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nclass Admin extends User\n  init: name, role ->\n    super(name)\n    @role = role\n\n  greet: ->\n    \"{super()} ({@role})\"\n\nadmin = Admin(\"komagata\", \"owner\")\nprint admin.name\nprint admin.greet()\n"
+	out := compileAndRun(t, src)
+	if string(out) != "komagata\nHello, komagata (owner)\n" {
+		t.Fatalf("got %q", out)
 	}
 }
 
@@ -265,14 +278,11 @@ func TestEmitCCompilesModuleDeclarations(t *testing.T) {
 	}
 }
 
-func TestEmitCRejectsInterfaceDeclarations(t *testing.T) {
-	prog := checkedProgram(t, "interface Greeter\n  greet: ->\n")
-	_, err := EmitC(prog)
-	if err == nil {
-		t.Fatal("expected interface C emitter error")
-	}
-	if !strings.Contains(err.Error(), "C emitter does not support interface declarations yet") {
-		t.Fatalf("unexpected error: %v", err)
+func TestEmitCCompilesInterfaceDeclarations(t *testing.T) {
+	src := "interface Greeter\n  greet: ->\n\nclass User implements Greeter\n  greet: -> \"hello\"\n\nuser = User()\nprint user.greet()\n"
+	out := compileAndRun(t, src)
+	if string(out) != "hello\n" {
+		t.Fatalf("got %q", out)
 	}
 }
 
