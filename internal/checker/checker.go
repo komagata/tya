@@ -9,7 +9,7 @@ import (
 )
 
 var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
-var valueNameRE = regexp.MustCompile(`^_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*$|^_$`)
+var valueNameRE = regexp.MustCompile(`^_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*\??$|^_$`)
 var classNameRE = regexp.MustCompile(`^[A-Z][A-Za-z0-9]*$`)
 
 func Check(prog *ast.Program) error {
@@ -31,8 +31,9 @@ func CheckWithModules(prog *ast.Program, modules []string) error {
 
 type methodSig struct{ arity int }
 type classInfo struct {
-	parent  string
-	methods map[string]methodSig
+	parent       string
+	methods      map[string]methodSig
+	classMethods map[string]methodSig
 }
 type interfaceInfo struct{ methods map[string]methodSig }
 type typeInfo struct {
@@ -54,7 +55,11 @@ func collectTypeInfo(prog *ast.Program) typeInfo {
 			for _, method := range n.Methods {
 				methods[method.Name] = methodSig{arity: len(method.Func.Params)}
 			}
-			info.classes[n.Name] = classInfo{parent: n.Parent, methods: methods}
+			classMethods := map[string]methodSig{}
+			for _, method := range n.ClassMethods {
+				classMethods[method.Name] = methodSig{arity: len(method.Func.Params)}
+			}
+			info.classes[n.Name] = classInfo{parent: n.Parent, methods: methods, classMethods: classMethods}
 		case *ast.InterfaceDecl:
 			methods := map[string]methodSig{}
 			for _, method := range n.Methods {
@@ -147,6 +152,9 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope, info 
 				if constants[name.Name] {
 					return fmt.Errorf("%d:%d: cannot reassign constant %s", n.Tok.Line, n.Tok.Col, name.Name)
 				}
+				if strings.HasSuffix(name.Name, "?") && !singleFuncLit(n.Values) {
+					return fmt.Errorf("%d:%d: predicate %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
+				}
 				if constNameRE.MatchString(name.Name) {
 					constants[name.Name] = true
 				}
@@ -165,13 +173,29 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope, info 
 				}
 			}
 			seen := map[string]bool{}
+			classSeen := map[string]bool{}
 			scope.define(n.Name, kindClass)
+			for _, field := range n.Fields {
+				if !valueNameRE.MatchString(field.Name) {
+					return fmt.Errorf("%d:%d: invalid field name %s", field.Tok.Line, field.Tok.Col, field.Name)
+				}
+				if seen[field.Name] {
+					return fmt.Errorf("%d:%d: duplicate class member %s", field.Tok.Line, field.Tok.Col, field.Name)
+				}
+				if strings.HasSuffix(field.Name, "?") {
+					return fmt.Errorf("%d:%d: predicate %s must be a method", field.Tok.Line, field.Tok.Col, field.Name)
+				}
+				seen[field.Name] = true
+				if err := checkExpr(field.Value, scope, info, checkContext{className: n.Name, hasParent: n.Parent != ""}); err != nil {
+					return err
+				}
+			}
 			for _, method := range n.Methods {
 				if !valueNameRE.MatchString(method.Name) {
 					return fmt.Errorf("%d:%d: invalid method name %s", method.Tok.Line, method.Tok.Col, method.Name)
 				}
 				if seen[method.Name] {
-					return fmt.Errorf("%d:%d: duplicate method %s", method.Tok.Line, method.Tok.Col, method.Name)
+					return fmt.Errorf("%d:%d: duplicate class member %s", method.Tok.Line, method.Tok.Col, method.Name)
 				}
 				seen[method.Name] = true
 				if parent := info.classes[n.Parent]; n.Parent != "" && method.Name != "init" {
@@ -179,6 +203,33 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope, info 
 						return fmt.Errorf("%d:%d: override arity mismatch for %s", method.Tok.Line, method.Tok.Col, method.Name)
 					}
 				}
+				if err := checkExpr(method.Func, scope, info, checkContext{className: n.Name, methodName: method.Name, hasParent: n.Parent != ""}); err != nil {
+					return err
+				}
+			}
+			for _, field := range n.ClassFields {
+				if !valueNameRE.MatchString(field.Name) {
+					return fmt.Errorf("%d:%d: invalid class field name %s", field.Tok.Line, field.Tok.Col, field.Name)
+				}
+				if classSeen[field.Name] {
+					return fmt.Errorf("%d:%d: duplicate class member %s", field.Tok.Line, field.Tok.Col, field.Name)
+				}
+				if strings.HasSuffix(field.Name, "?") {
+					return fmt.Errorf("%d:%d: predicate %s must be a method", field.Tok.Line, field.Tok.Col, field.Name)
+				}
+				classSeen[field.Name] = true
+				if err := checkExpr(field.Value, scope, info, checkContext{className: n.Name, hasParent: n.Parent != ""}); err != nil {
+					return err
+				}
+			}
+			for _, method := range n.ClassMethods {
+				if !valueNameRE.MatchString(method.Name) {
+					return fmt.Errorf("%d:%d: invalid class method name %s", method.Tok.Line, method.Tok.Col, method.Name)
+				}
+				if classSeen[method.Name] {
+					return fmt.Errorf("%d:%d: duplicate class member %s", method.Tok.Line, method.Tok.Col, method.Name)
+				}
+				classSeen[method.Name] = true
 				if err := checkExpr(method.Func, scope, info, checkContext{className: n.Name, methodName: method.Name, hasParent: n.Parent != ""}); err != nil {
 					return err
 				}
@@ -211,6 +262,11 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope, info 
 				}
 				if seen[member.Name] {
 					return fmt.Errorf("%d:%d: duplicate module member %s", member.Tok.Line, member.Tok.Col, member.Name)
+				}
+				if strings.HasSuffix(member.Name, "?") {
+					if _, ok := member.Value.(*ast.FuncLit); !ok {
+						return fmt.Errorf("%d:%d: predicate %s must be a method", member.Tok.Line, member.Tok.Col, member.Name)
+					}
 				}
 				seen[member.Name] = true
 				if err := checkExpr(member.Value, scope, info, ctx); err != nil {
@@ -318,6 +374,11 @@ func checkExpr(expr ast.Expr, scope *scope, info typeInfo, ctx checkContext) err
 			if seen[prop.Name] {
 				return fmt.Errorf("%d:%d: duplicate dictionary key %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
 			}
+			if strings.HasSuffix(prop.Name, "?") {
+				if _, ok := prop.Value.(*ast.FuncLit); !ok {
+					return fmt.Errorf("%d:%d: predicate %s must be a method", prop.Tok.Line, prop.Tok.Col, prop.Name)
+				}
+			}
 			seen[prop.Name] = true
 			if err := checkExpr(prop.Value, scope, info, ctx); err != nil {
 				return err
@@ -378,6 +439,10 @@ func checkExpr(expr ast.Expr, scope *scope, info typeInfo, ctx checkContext) err
 		if ctx.className == "" || !ctx.hasParent {
 			return fmt.Errorf("%d:%d: super used outside subclass method", n.Tok.Line, n.Tok.Col)
 		}
+	case *ast.ClassProp:
+		if ctx.className == "" {
+			return fmt.Errorf("%d:%d: @@%s used outside class", n.Tok.Line, n.Tok.Col, n.Name)
+		}
 	case *ast.MemberExpr:
 		if err := checkExpr(n.Object, scope, info, ctx); err != nil {
 			return err
@@ -432,6 +497,11 @@ func checkAssignmentTarget(target ast.Expr, scope *scope, info typeInfo, ctx che
 		}
 		return checkExpr(n.Index, scope, info, ctx)
 	case *ast.ThisProp:
+		return nil
+	case *ast.ClassProp:
+		if ctx.className == "" {
+			return fmt.Errorf("%d:%d: @@%s used outside class", n.Tok.Line, n.Tok.Col, n.Name)
+		}
 		return nil
 	}
 	return nil
@@ -502,4 +572,12 @@ func checkBindingName(name string, line, col int) error {
 		return fmt.Errorf("%d:%d: invalid binding name %s", line, col, name)
 	}
 	return fmt.Errorf("invalid binding name %s", name)
+}
+
+func singleFuncLit(values []ast.Expr) bool {
+	if len(values) != 1 {
+		return false
+	}
+	_, ok := values[0].(*ast.FuncLit)
+	return ok
 }

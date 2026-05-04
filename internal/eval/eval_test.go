@@ -91,7 +91,7 @@ func TestRunArrays(t *testing.T) {
 }
 
 func TestRunArrayFunctionBuiltins(t *testing.T) {
-	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\nis_even = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, is_even\nfirst_even = find items, is_even\nhas_even = any items, is_even\nall_even = all items, is_even\nsum = reduce items, 0, add\nprint doubled[2]\nprint len evens\nprint first_even\nprint has_even\nprint all_even\nprint sum\n"
+	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\neven? = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, even?\nfirst_even = find items, even?\nhas_even = any items, even?\nall_even = all items, even?\nsum = reduce items, 0, add\nprint doubled[2]\nprint len evens\nprint first_even\nprint has_even\nprint all_even\nprint sum\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -263,7 +263,7 @@ func TestRunInlineDict(t *testing.T) {
 }
 
 func TestRunClassConstructorFieldsAndMethods(t *testing.T) {
-	src := "class User\n  init: name ->\n    @name = name\n\n  rename: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nuser = User(\"komagata\")\nprint user.name\nprint user.greet()\nuser.rename(\"Tya\")\nprint user.name\n"
+	src := "class User\n  name: \"guest\"\n\n  init: name ->\n    @name = name\n\n  rename: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nclass Guest\n  name: \"guest\"\n\nanon = Guest()\nuser = User(\"komagata\")\nprint anon.name\nprint user.name\nprint user.greet()\nuser.rename(\"Tya\")\nprint user.name\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -276,9 +276,69 @@ func TestRunClassConstructorFieldsAndMethods(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "komagata\nHello, komagata\nTya\n"
+	want := "guest\nkomagata\nHello, komagata\nTya\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunClassVariablesAndClassMethods(t *testing.T) {
+	src := "class User\n  @@count: 0\n\n  @@next: ->\n    @@count = @@count + 1\n    @@count\n\n  init: ->\n    @@count = @@count + 1\n\nprint User.count\nprint User.next()\nprint User.next()\nUser()\nprint User.count\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "0\n1\n2\n3\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunPredicateMethodsRequireBooleanReturn(t *testing.T) {
+	src := "class User\n  active?: ->\n    true\n\n  @@ready?: ->\n    false\n\nuser = User()\nprint user.active?()\nprint User.ready?()\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "true\nfalse\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunPredicateMethodRejectsNonBooleanReturn(t *testing.T) {
+	src := "class User\n  active?: ->\n    \"yes\"\n\nuser = User()\nprint user.active?()\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	if err == nil {
+		t.Fatal("expected predicate return error")
+	}
+	if !strings.Contains(err.Error(), "active? must return boolean") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

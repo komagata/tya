@@ -103,7 +103,7 @@ func TestParseRejectsMixedDictAndSetLiteral(t *testing.T) {
 }
 
 func TestParseClassDeclaration(t *testing.T) {
-	src := "class User\n  init: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n"
+	src := "class User\n  name: \"\"\n  @@count: 0\n\n  init: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\n  @@build: ->\n    User(\"Tya\")\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -119,11 +119,20 @@ func TestParseClassDeclaration(t *testing.T) {
 	if decl.Name != "User" {
 		t.Fatalf("got class %q", decl.Name)
 	}
+	if len(decl.Fields) != 1 {
+		t.Fatalf("got %d fields", len(decl.Fields))
+	}
+	if len(decl.ClassFields) != 1 {
+		t.Fatalf("got %d class fields", len(decl.ClassFields))
+	}
 	if len(decl.Methods) != 2 {
 		t.Fatalf("got %d methods", len(decl.Methods))
 	}
 	if decl.Methods[0].Name != "init" || len(decl.Methods[0].Func.Params) != 1 {
 		t.Fatalf("got init method %#v", decl.Methods[0])
+	}
+	if len(decl.ClassMethods) != 1 || decl.ClassMethods[0].Name != "build" {
+		t.Fatalf("got class methods %#v", decl.ClassMethods)
 	}
 }
 

@@ -119,30 +119,39 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, ParentTok: parentTok, Implements: implements, ImplToks: implToks}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		isClassMember := p.match(token.ATAT)
 		methodName := p.expect(token.IDENT)
 		if methodName.Type != token.IDENT {
-			return nil, p.err("expected method name")
+			return nil, p.err("expected class member name")
 		}
 		if !p.match(token.COLON) {
-			return nil, p.err("expected ':' after method name")
+			return nil, p.err("expected ':' after class member name")
 		}
-		var fn *ast.FuncLit
+		var value ast.Expr
 		var err error
 		if p.match(token.ARROW) {
-			fn, err = p.finishFunc(nil, nil)
+			value, err = p.finishFunc(nil, nil)
 		} else {
-			var value ast.Expr
 			value, err = p.exprLine()
-			var ok bool
-			fn, ok = value.(*ast.FuncLit)
-			if !ok {
-				return nil, p.err("class method must be a function")
-			}
 		}
 		if err != nil {
 			return nil, err
 		}
-		decl.Methods = append(decl.Methods, ast.ClassMethod{Name: methodName.Lexeme, Tok: methodName, Func: fn})
+		if fn, ok := value.(*ast.FuncLit); ok {
+			method := ast.ClassMethod{Name: methodName.Lexeme, Tok: methodName, Func: fn}
+			if isClassMember {
+				decl.ClassMethods = append(decl.ClassMethods, method)
+			} else {
+				decl.Methods = append(decl.Methods, method)
+			}
+		} else {
+			field := ast.ClassField{Name: methodName.Lexeme, Tok: methodName, Value: value}
+			if isClassMember {
+				decl.ClassFields = append(decl.ClassFields, field)
+			} else {
+				decl.Fields = append(decl.Fields, field)
+			}
+		}
 		p.skipNewlines()
 	}
 	if !p.match(token.DEDENT) {
@@ -726,6 +735,12 @@ func (p *Parser) primary() (ast.Expr, error) {
 			return nil, p.err("expected property name after @")
 		}
 		return &ast.ThisProp{Name: name.Lexeme, Tok: tok}, nil
+	case token.ATAT:
+		name := p.expect(token.IDENT)
+		if name.Type != token.IDENT {
+			return nil, p.err("expected property name after @@")
+		}
+		return &ast.ClassProp{Name: name.Lexeme, Tok: tok}, nil
 	}
 	return nil, p.err("expected expression")
 }
@@ -831,6 +846,10 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 		name := p.expect(token.IDENT)
 		return &ast.ThisProp{Name: name.Lexeme, Tok: name}, nil
 	}
+	if p.match(token.ATAT) {
+		name := p.expect(token.IDENT)
+		return &ast.ClassProp{Name: name.Lexeme, Tok: name}, nil
+	}
 	tok := p.expect(token.IDENT)
 	ex := ast.Expr(&ast.Ident{Name: tok.Lexeme, Tok: tok})
 	for {
@@ -874,6 +893,10 @@ func (p *Parser) scanAssignTarget(i *int) bool {
 		*i += 2
 		return true
 	}
+	if p.toks[*i].Type == token.ATAT {
+		*i += 2
+		return true
+	}
 	if p.toks[*i].Type != token.IDENT {
 		return false
 	}
@@ -907,7 +930,7 @@ func (p *Parser) skipNewlines() {
 	}
 }
 func (p *Parser) startsExpr() bool {
-	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT) || p.at(token.LPAREN) || p.at(token.LBRACKET) || p.at(token.LBRACE)
+	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT) || p.at(token.ATAT) || p.at(token.LPAREN) || p.at(token.LBRACKET) || p.at(token.LBRACE)
 }
 func (p *Parser) at(t token.Type) bool { return p.peek().Type == t }
 func (p *Parser) match(t token.Type) bool {

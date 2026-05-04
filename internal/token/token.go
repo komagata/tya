@@ -26,6 +26,7 @@ const (
 	COMMA    Type = ","
 	DOT      Type = "."
 	AT       Type = "@"
+	ATAT     Type = "@@"
 	PLUS     Type = "+"
 	MINUS    Type = "-"
 	STAR     Type = "*"

@@ -65,13 +65,16 @@ type ReturnStmt struct {
 func (*ReturnStmt) stmt() {}
 
 type ClassDecl struct {
-	Name       string
-	NameTok    token.Token
-	Parent     string
-	ParentTok  token.Token
-	Implements []string
-	ImplToks   []token.Token
-	Methods    []ClassMethod
+	Name         string
+	NameTok      token.Token
+	Parent       string
+	ParentTok    token.Token
+	Implements   []string
+	ImplToks     []token.Token
+	Fields       []ClassField
+	Methods      []ClassMethod
+	ClassFields  []ClassField
+	ClassMethods []ClassMethod
 }
 
 func (*ClassDecl) stmt() {}
@@ -80,6 +83,12 @@ type ClassMethod struct {
 	Name string
 	Tok  token.Token
 	Func *FuncLit
+}
+
+type ClassField struct {
+	Name  string
+	Tok   token.Token
+	Value Expr
 }
 
 type ModuleDecl struct {
@@ -208,6 +217,13 @@ type SuperExpr struct {
 }
 
 func (*SuperExpr) expr() {}
+
+type ClassProp struct {
+	Name string
+	Tok  token.Token
+}
+
+func (*ClassProp) expr() {}
 
 type MemberExpr struct {
 	Object  Expr

@@ -576,6 +576,13 @@ parse = tokens ->
               push nodes, node
               i = i + 10
               continue
+            if i + 11 < len(tokens) and text_of(tokens[i + 6]) == "->" and text_of(tokens[i + 8]) == "%" and text_of(tokens[i + 10]) == "=="
+              divisor = tokens[i + 9]
+              expected = tokens[i + 11]
+              node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL2_FUNC_MOD_EQ:" + text_of(value) + ":" + text_of(left_arg) + ":" + text_of(right_arg) + ":" + text_of(divisor) + ":" + text_of(expected)
+              push nodes, node
+              i = i + 12
+              continue
             if i + 7 < len(tokens) and text_of(tokens[i + 6]) == "," and line_of(tokens[i + 7]) == line_of(token)
               third_arg = tokens[i + 7]
               node = line_of(token) + ":ASSIGN:" + text_of(token) + ":CALL3:" + text_of(value) + ":" + text_of(left_arg) + ":" + literal_kind_of(right_arg) + ":" + text_of(right_arg) + ":" + text_of(third_arg)

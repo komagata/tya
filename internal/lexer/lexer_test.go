@@ -40,3 +40,16 @@ func TestLexStringEscapes(t *testing.T) {
 		t.Fatalf("got %q", toks[1].Lexeme)
 	}
 }
+
+func TestLexPredicateIdentifier(t *testing.T) {
+	toks, errs := Lex("empty? = -> true\nprint empty?()\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	if toks[0].Lexeme != "empty?" {
+		t.Fatalf("got %q", toks[0].Lexeme)
+	}
+	if toks[6].Lexeme != "empty?" {
+		t.Fatalf("got %q", toks[6].Lexeme)
+	}
+}

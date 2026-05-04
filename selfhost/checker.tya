@@ -92,6 +92,10 @@ is_valid_binding_name = name ->
   i = 1
   prev_underscore = name[0] == "_"
   while i < len(name)
+    if name[i] == "?" and i == len(name) - 1
+      if prev_underscore
+        return false
+      return true
     if name[i] == "_"
       if prev_underscore
         return false
@@ -371,6 +375,16 @@ check = nodes ->
         source_name = extra_of(node)
         if not has_name(names, source_name)
           push errors, line_of(node) + ": undefined variable: " + source_name
+      if value_of(node) == "CALL2_FUNC_MOD_EQ"
+        func_name = extra_of(node)
+        source_name = extra2_of(node)
+        param_name = extra3_of(node)
+        if not has_name(names, func_name)
+          push errors, line_of(node) + ": undefined variable: " + func_name
+        if not has_name(names, source_name)
+          push errors, line_of(node) + ": undefined variable: " + source_name
+        if not is_valid_binding_name(param_name)
+          push errors, line_of(node) + ": invalid parameter name: " + param_name
       if value_of(node) == "INDEX"
         source_name = extra_of(node)
         index_name = extra2_of(node)

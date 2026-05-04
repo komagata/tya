@@ -78,6 +78,10 @@ lex = source ->
         text = text + source[i]
         i = i + 1
         col = col + 1
+      if i < len(source) and source[i] == "?"
+        text = text + source[i]
+        i = i + 1
+        col = col + 1
       token = emit line, "IDENT", text, start_col
       push tokens, token
       continue

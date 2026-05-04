@@ -166,8 +166,57 @@ func TestCheckRejectsDuplicateClassMethod(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected duplicate method error")
 	}
-	if !strings.Contains(err.Error(), "duplicate method greet") {
+	if !strings.Contains(err.Error(), "duplicate class member greet") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckClassFieldsAndClassMethods(t *testing.T) {
+	src := "class User\n  name: \"guest\"\n  @@count: 0\n\n  @@next: ->\n    @@count = @@count + 1\n    @@count\n\n  greet: ->\n    @name\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsClassPropOutsideClass(t *testing.T) {
+	err := Check(parse(t, "@@count = 1\n"))
+	if err == nil {
+		t.Fatal("expected @@ outside class error")
+	}
+	if !strings.Contains(err.Error(), "@@count used outside class") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckAllowsInstanceAndClassMembersWithSameName(t *testing.T) {
+	src := "class User\n  count: 0\n  @@count: 0\n\n  next: ->\n    @count\n\n  @@next: ->\n    @@count\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckAllowsPredicateMethods(t *testing.T) {
+	src := "ready? = value -> true\n\nmodule util\n  ready?: -> true\n\nclass User\n  active?: -> true\n  @@ready?: -> true\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsPredicateNonFunction(t *testing.T) {
+	for _, src := range []string{
+		"ready? = true\n",
+		"class User\n  active?: true\n",
+		"class User\n  @@active?: true\n",
+		"module util\n  active?: true\n",
+		"user = { active?: true }\n",
+	} {
+		err := Check(parse(t, src))
+		if err == nil {
+			t.Fatalf("expected predicate non-function error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "predicate") {
+			t.Fatalf("unexpected error for %q: %v", src, err)
+		}
 	}
 }
 

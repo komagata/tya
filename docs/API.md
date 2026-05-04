@@ -84,14 +84,14 @@ reduce array, initial, function
 items = [1, 2, 3, 4]
 
 double = item -> item * 2
-is_even = item -> item % 2 == 0
+even? = item -> item % 2 == 0
 add = total, item -> total + item
 
 print map items, double
-print filter items, is_even
-print find items, is_even
-print any items, is_even
-print all items, is_even
+print filter items, even?
+print find items, even?
+print any items, even?
+print all items, even?
 print reduce items, 0, add
 ```
 

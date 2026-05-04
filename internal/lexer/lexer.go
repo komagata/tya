@@ -90,6 +90,9 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			for i < len(s) && (isAlpha(s[i]) || isDigit(s[i]) || s[i] == '_') {
 				i++
 			}
+			if i < len(s) && s[i] == '?' {
+				i++
+			}
 			l.add(token.IDENT, s[start:i], line, baseCol+start)
 			continue
 		}
@@ -167,6 +170,10 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 				continue
 			case ">=":
 				l.add(token.GTE, two, line, col)
+				i += 2
+				continue
+			case "@@":
+				l.add(token.ATAT, two, line, col)
 				i += 2
 				continue
 			}

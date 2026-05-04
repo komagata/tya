@@ -78,6 +78,7 @@ endpoint.
     - [x] Parse two-argument parenthesized function calls in assignment expressions
     - [x] Parse three-argument parenthesized function calls in assignment expressions
     - [x] Parse `print` calls with three-argument builtin calls
+    - [x] Parse modulo-equality function literals in functional builtin arguments
     - [x] Parse `print` calls with two-argument builtin calls
     - [x] Parse indexed `for item, index in items` loops in the self-host parser subset
     - [x] Parse `for key, value of object` loops in the self-host parser subset

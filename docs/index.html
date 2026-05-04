@@ -836,11 +836,11 @@ reduce array, initial, function</code></pre>
               <pre><code>items = [1, 2, 3, 4]
 
 double = item -> item * 2
-is_even = item -> item % 2 == 0
+even? = item -> item % 2 == 0
 add = total, item -> total + item
 
 <span class="kw">print</span> map items, double
-<span class="kw">print</span> filter items, is_even
+<span class="kw">print</span> filter items, even?
 <span class="kw">print</span> reduce items, 0, add</code></pre>
             </div>
             <div class="code-window">

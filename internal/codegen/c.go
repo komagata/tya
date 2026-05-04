@@ -30,13 +30,14 @@ func EmitC(prog *ast.Program) (string, error) {
 }
 
 type cgen struct {
-	out     strings.Builder
-	funcOut strings.Builder
-	indent  int
-	vars    map[string]bool
-	funcs   map[string]string
-	temp    int
-	inFunc  bool
+	out           strings.Builder
+	funcOut       strings.Builder
+	indent        int
+	vars          map[string]bool
+	funcs         map[string]string
+	temp          int
+	inFunc        bool
+	predicateName string
 }
 
 func (g *cgen) line(s string) {
@@ -217,7 +218,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			return nil
 		}
 		if len(n.Values) == 0 {
-			g.line("return tya_nil();")
+			g.returnLine("tya_nil()")
 			return nil
 		}
 		if len(n.Values) > 1 {
@@ -229,14 +230,14 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 				}
 				values = append(values, value)
 			}
-			g.line(fmt.Sprintf("return tya_array((TyaValue[]){%s}, %d);", strings.Join(values, ", "), len(values)))
+			g.returnLine(fmt.Sprintf("tya_array((TyaValue[]){%s}, %d)", strings.Join(values, ", "), len(values)))
 			return nil
 		}
 		value, _, err := g.expr(n.Values[0])
 		if err != nil {
 			return err
 		}
-		g.line(fmt.Sprintf("return %s;", value))
+		g.returnLine(value)
 	default:
 		return fmt.Errorf("C emitter does not support %T", stmt)
 	}
@@ -312,11 +313,12 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 	out.WriteString(sym)
 	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
 	child := &cgen{
-		vars:   map[string]bool{},
-		funcs:  g.funcs,
-		temp:   g.temp,
-		indent: 1,
-		inFunc: true,
+		vars:          map[string]bool{},
+		funcs:         g.funcs,
+		temp:          g.temp,
+		indent:        1,
+		inFunc:        true,
+		predicateName: predicateName(name),
 	}
 	for i, param := range fn.Params {
 		child.vars[param] = true
@@ -336,7 +338,7 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		child.line(fmt.Sprintf("return %s;", value))
+		child.returnLine(value)
 	} else {
 		body := fn.Body
 		if len(body) > 0 {
@@ -351,13 +353,13 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 					if err := child.stmt(last); err != nil {
 						return "", err
 					}
-					child.line("return tya_nil();")
+					child.returnLine("tya_nil()")
 				} else {
 					value, _, err := child.expr(last.Expr)
 					if err != nil {
 						return "", err
 					}
-					child.line(fmt.Sprintf("return %s;", value))
+					child.returnLine(value)
 				}
 			} else {
 				for _, stmt := range body {
@@ -365,10 +367,10 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 						return "", err
 					}
 				}
-				child.line("return tya_nil();")
+				child.returnLine("tya_nil()")
 			}
 		} else {
-			child.line("return tya_nil();")
+			child.returnLine("tya_nil()")
 		}
 	}
 	g.temp = child.temp
@@ -377,6 +379,31 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 	out.WriteString("}\n\n")
 	g.funcOut.WriteString(out.String())
 	return sym, nil
+}
+
+func (g *cgen) returnLine(value string) {
+	if g.predicateName == "" {
+		g.line(fmt.Sprintf("return %s;", value))
+		return
+	}
+	result := fmt.Sprintf("__predicate_result_%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = %s;", result, value))
+	g.line(fmt.Sprintf("if (%s.kind != TYA_BOOL) {", result))
+	g.indent++
+	g.line(fmt.Sprintf("tya_panic(tya_string(%s));", strconv.Quote(g.predicateName+" must return boolean")))
+	g.indent--
+	g.line("}")
+	g.line(fmt.Sprintf("return %s;", result))
+}
+
+func predicateName(name string) string {
+	parts := strings.Split(name, "_")
+	name = parts[len(parts)-1]
+	if strings.HasSuffix(name, "?") {
+		return name
+	}
+	return ""
 }
 
 func isSideEffectCall(expr ast.Expr) bool {
@@ -994,6 +1021,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 }
 
 func cName(name string) string {
+	name = strings.ReplaceAll(name, "?", "_p")
 	switch name {
 	case "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
 		"else", "enum", "extern", "float", "for", "goto", "if", "inline", "int",

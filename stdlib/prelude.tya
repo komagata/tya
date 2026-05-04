@@ -1,7 +1,7 @@
 # Candidate Tya-level standard library functions.
 # These are not automatically loaded yet; import/module loading comes later.
 
-is_nil = value -> value == nil
+nil? = value -> value == nil
 
 not_nil = value -> value != nil
 
@@ -9,7 +9,7 @@ first = items -> items[0]
 
 second = items -> items[1]
 
-is_empty = value -> len value == 0
+empty? = value -> len value == 0
 
 not_empty = value -> len value != 0
 

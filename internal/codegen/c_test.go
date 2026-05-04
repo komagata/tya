@@ -73,7 +73,7 @@ func TestEmitCCompilesModuloAndCKeywordNames(t *testing.T) {
 }
 
 func TestEmitCCompilesArrayFunctionBuiltins(t *testing.T) {
-	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\nis_even = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, is_even\nfirst_even = find items, is_even\nhas_even = any items, is_even\nall_even = all items, is_even\nsum = reduce items, 0, add\neach items, double\nprint doubled[2]\nprint len evens\nprint first_even\nprint has_even\nprint all_even\nprint sum\n"
+	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\neven? = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, even?\nfirst_even = find items, even?\nhas_even = any items, even?\nall_even = all items, even?\nsum = reduce items, 0, add\neach items, double\nprint doubled[2]\nprint len evens\nprint first_even\nprint has_even\nprint all_even\nprint sum\n"
 	out := compileAndRun(t, src)
 	if string(out) != "6\n2\n2\ntrue\nfalse\n10\n" {
 		t.Fatalf("got %q", out)

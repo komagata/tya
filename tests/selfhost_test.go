@@ -258,6 +258,7 @@ func TestStage1SelfhostSourcesEmitC(t *testing.T) {
 	want = strings.Replace(want, "stage4 equal: self-host pipeline matched\nselfhost/lexer.tya", "stage4 equal: self-host pipeline matched\nstage4 array: self-host pipeline matched\nselfhost/lexer.tya", 1)
 	want = strings.Replace(want, "stage4 array: self-host pipeline matched\nselfhost/lexer.tya", "stage4 array: self-host pipeline matched\nstage4 for: self-host pipeline matched\nselfhost/lexer.tya", 1)
 	want = strings.Replace(want, "array for: stage-2 pipeline matched\nexamples/selfhost_ops.tya", "array for: stage-2 pipeline matched\narray index assignment: stage-2 codegen deterministic\narray index assignment: stage-2 pipeline matched\nexamples/selfhost_ops.tya", 1)
+	want = strings.Replace(want, "array index assignment: stage-2 pipeline matched\nexamples/selfhost_ops.tya", "array index assignment: stage-2 pipeline matched\ninline filter function literal: stage-2 codegen deterministic\ninline filter function literal: stage-2 pipeline matched\nexamples/selfhost_ops.tya", 1)
 	want = strings.ReplaceAll(want, "examples/multiple_return.tya: stage-2 parser matched\nexamples/multiple_return.tya: stage-2 checker matched\nexamples/multiple_return.tya: stage-2 codegen deterministic\nexamples/multiple_return.tya: stage-2 pipeline matched\n", "")
 	want = strings.ReplaceAll(want, "stage4 multiple return: self-host pipeline matched\n", "")
 	want = strings.ReplaceAll(want, "stage4 function: self-host pipeline matched\n", "")

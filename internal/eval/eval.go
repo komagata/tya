@@ -50,9 +50,12 @@ type ErrorValue struct {
 	Message string
 }
 type Class struct {
-	Name    string
-	Parent  *Class
-	Methods map[string]*Function
+	Name          string
+	Parent        *Class
+	FieldDefaults Object
+	Members       Object
+	Methods       map[string]*Function
+	ClassMethods  map[string]*Function
 }
 type Instance struct {
 	Class  *Class
@@ -70,6 +73,9 @@ type Function struct {
 	Env        *Env
 	Owner      *Class
 	MethodName string
+	Name       string
+	Predicate  bool
+	Static     bool
 }
 
 type Builtin func([]Value) (Value, error)
@@ -78,6 +84,7 @@ type Env struct {
 	parent    *Env
 	vars      map[string]Value
 	this      Object
+	classThis Object
 	inFunc    bool
 	runeCache map[string][]rune
 }
@@ -87,7 +94,7 @@ func NewEnv() *Env {
 }
 
 func (e *Env) child(this Object) *Env {
-	return &Env{parent: e, vars: map[string]Value{}, this: this, inFunc: e.inFunc, runeCache: e.runeCache}
+	return &Env{parent: e, vars: map[string]Value{}, this: this, classThis: e.classThis, inFunc: e.inFunc, runeCache: e.runeCache}
 }
 
 func (e *Env) runes(text string) []rune {
@@ -667,6 +674,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			return nil, fmt.Errorf("assignment expects %d values, got %d", len(n.Targets), len(values))
 		}
 		for i, target := range n.Targets {
+			if id, ok := target.(*ast.Ident); ok {
+				values[i] = nameFunction(id.Name, values[i])
+			}
 			if err := assign(target, values[i], env); err != nil {
 				return nil, err
 			}
@@ -676,7 +686,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		}
 		return values[len(values)-1], nil
 	case *ast.ClassDecl:
-		class := &Class{Name: n.Name, Methods: map[string]*Function{}}
+		class := &Class{Name: n.Name, FieldDefaults: Object{}, Members: Object{}, Methods: map[string]*Function{}, ClassMethods: map[string]*Function{}}
 		if n.Parent != "" {
 			parent, ok := env.get(n.Parent)
 			if !ok {
@@ -689,6 +699,22 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			class.Parent = parentClass
 		}
 		env.set(n.Name, class)
+		classEnv := env.child(nil)
+		classEnv.classThis = class.Members
+		for _, field := range n.Fields {
+			value, err := evalExpr(field.Value, classEnv)
+			if err != nil {
+				return nil, err
+			}
+			class.FieldDefaults[field.Name] = value
+		}
+		for _, field := range n.ClassFields {
+			value, err := evalExpr(field.Value, classEnv)
+			if err != nil {
+				return nil, err
+			}
+			class.Members[field.Name] = value
+		}
 		for _, method := range n.Methods {
 			class.Methods[method.Name] = &Function{
 				Params:     method.Func.Params,
@@ -697,6 +723,21 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 				Env:        env,
 				Owner:      class,
 				MethodName: method.Name,
+				Name:       method.Name,
+				Predicate:  strings.HasSuffix(method.Name, "?"),
+			}
+		}
+		for _, method := range n.ClassMethods {
+			class.ClassMethods[method.Name] = &Function{
+				Params:     method.Func.Params,
+				Body:       method.Func.Body,
+				Expr:       method.Func.Expr,
+				Env:        env,
+				Owner:      class,
+				MethodName: method.Name,
+				Name:       method.Name,
+				Predicate:  strings.HasSuffix(method.Name, "?"),
+				Static:     true,
 			}
 		}
 		return class, nil
@@ -708,7 +749,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			module.Members[member.Name] = value
+			module.Members[member.Name] = nameFunction(member.Name, value)
 		}
 		return module, nil
 	case *ast.InterfaceDecl:
@@ -822,6 +863,12 @@ func assign(target ast.Expr, v Value, env *Env) error {
 		}
 		env.this[t.Name] = v
 		return nil
+	case *ast.ClassProp:
+		if env.classThis == nil {
+			return fmt.Errorf("@@%s used outside class", t.Name)
+		}
+		env.classThis[t.Name] = v
+		return nil
 	case *ast.MemberExpr:
 		obj, err := evalExpr(t.Object, env)
 		if err != nil {
@@ -880,6 +927,11 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			return nil, fmt.Errorf("@%s used outside method", n.Name)
 		}
 		return env.this[n.Name], nil
+	case *ast.ClassProp:
+		if env.classThis == nil {
+			return nil, fmt.Errorf("@@%s used outside class", n.Name)
+		}
+		return env.classThis[n.Name], nil
 	case *ast.IntLit:
 		return n.Value, nil
 	case *ast.FloatLit:
@@ -897,7 +949,7 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			o[p.Name] = v
+			o[p.Name] = nameFunction(p.Name, v)
 		}
 		return o, nil
 	case *ast.SetLit:
@@ -980,6 +1032,12 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		}
 		if module, ok := obj.(*Module); ok {
 			return module.Members[n.Name], nil
+		}
+		if class, ok := obj.(*Class); ok {
+			if method, ok := class.ClassMethods[n.Name]; ok {
+				return method, nil
+			}
+			return class.Members[n.Name], nil
 		}
 		o, ok := obj.(Object)
 		if !ok {
@@ -1074,28 +1132,58 @@ func callValue(fn Value, recv Object, args []Value) (Value, error) {
 			return nil, fmt.Errorf("function expects %d arguments, got %d", len(f.Params), len(args))
 		}
 		callEnv := f.Env.child(recv)
+		if f.Static {
+			callEnv.this = nil
+		}
 		callEnv.inFunc = true
 		for i, name := range f.Params {
 			callEnv.set(name, args[i])
 		}
 		if f.Owner != nil {
 			callEnv.set("__method", f)
+			callEnv.classThis = f.Owner.Members
 		}
 		if f.Expr != nil {
-			return evalExpr(f.Expr, callEnv)
+			v, err := evalExpr(f.Expr, callEnv)
+			return checkPredicateReturn(f, v, err)
 		}
 		v, err := evalStmts(f.Body, callEnv)
 		var ret *returnSignal
 		if errors.As(err, &ret) {
-			return ret.value, nil
+			return checkPredicateReturn(f, ret.value, nil)
 		}
-		return v, err
+		return checkPredicateReturn(f, v, err)
 	}
 	return nil, fmt.Errorf("value is not callable")
 }
 
+func nameFunction(name string, value Value) Value {
+	if fn, ok := value.(*Function); ok {
+		fn.Name = name
+		fn.Predicate = strings.HasSuffix(name, "?")
+	}
+	return value
+}
+
+func checkPredicateReturn(fn *Function, value Value, err error) (Value, error) {
+	if err != nil {
+		return nil, err
+	}
+	if !fn.Predicate {
+		return value, nil
+	}
+	if _, ok := value.(bool); !ok {
+		name := fn.Name
+		if name == "" {
+			name = fn.MethodName
+		}
+		return nil, fmt.Errorf("%s must return boolean", name)
+	}
+	return value, nil
+}
+
 func construct(class *Class, args []Value) (Value, error) {
-	inst := &Instance{Class: class, Fields: Object{}}
+	inst := &Instance{Class: class, Fields: classDefaults(class)}
 	if init := lookupMethod(class, "init"); init != nil {
 		if _, err := callValue(init, inst.Fields, args); err != nil {
 			return nil, err
@@ -1106,6 +1194,19 @@ func construct(class *Class, args []Value) (Value, error) {
 		return nil, fmt.Errorf("%s expects 0 arguments, got %d", class.Name, len(args))
 	}
 	return inst, nil
+}
+
+func classDefaults(class *Class) Object {
+	fields := Object{}
+	if class.Parent != nil {
+		for name, value := range classDefaults(class.Parent) {
+			fields[name] = value
+		}
+	}
+	for name, value := range class.FieldDefaults {
+		fields[name] = value
+	}
+	return fields
 }
 
 func evalObjectFor(n *ast.ForInStmt, iterable Value, env *Env) (Value, error) {
@@ -1150,6 +1251,12 @@ func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
 		if module, ok := obj.(*Module); ok {
 			return module.Members[m.Name], nil, nil
 		}
+		if class, ok := obj.(*Class); ok {
+			if method := lookupClassMethod(class, m.Name); method != nil {
+				return method, class.Members, nil
+			}
+			return class.Members[m.Name], nil, nil
+		}
 		o, ok := obj.(Object)
 		if !ok {
 			return nil, nil, fmt.Errorf("method receiver is not object")
@@ -1158,6 +1265,15 @@ func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
 	}
 	v, err := evalExpr(e, env)
 	return v, nil, err
+}
+
+func lookupClassMethod(class *Class, name string) *Function {
+	for c := class; c != nil; c = c.Parent {
+		if method, ok := c.ClassMethods[name]; ok {
+			return method
+		}
+	}
+	return nil
 }
 
 func lookupMethod(class *Class, name string) *Function {

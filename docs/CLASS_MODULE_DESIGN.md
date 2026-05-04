@@ -76,11 +76,22 @@ Only class instances are objects.
 ```tya
 # user.tya
 class User
+  name: ""
+
+  @@count: 0
+
   init: name ->
     @name = name
 
+  @@build: name ->
+    @@count = @@count + 1
+    User(name)
+
   greet: ->
     "Hello, {@name}"
+
+  active?: ->
+    @name != ""
 ```
 
 ```tya
@@ -109,12 +120,52 @@ object.property
 object.method()
 ```
 
-Current implementation status: classes, constructors, instance fields, methods,
-inheritance, `super`, explicit interfaces, module declarations, import aliases,
-and entry-file/imported-file top-level rules are implemented for the
-interpreter. Generated C supports module declarations, but class, inheritance,
-`super`, and interface declarations are still interpreter/checker-only and are
-rejected before C emission.
+Class body members without a prefix define instance members. A non-function
+value is copied into each new instance as a default field value, and a function
+value defines an instance method.
+
+```tya
+class User
+  name: ""
+
+  greet: ->
+    "Hello, {@name}"
+```
+
+Class body members prefixed with `@@` define class members. `@@name` can also be
+used inside class and instance methods to read or assign the current class's
+member. Outside the class body, class members are accessed with the class name.
+
+```tya
+class User
+  @@count: 0
+
+  @@next: ->
+    @@count = @@count + 1
+    @@count
+
+print User.next()
+```
+
+Method names may end with `?` for boolean predicates. Predicate methods must
+return a boolean value; returning any other value is a runtime error. The same
+suffix rule applies to functions and module or object methods.
+
+```tya
+class User
+  active?: ->
+    @name != ""
+
+  @@ready?: ->
+    true
+```
+
+Current implementation status: classes, constructors, instance field defaults,
+instance methods, class fields, class methods, inheritance, `super`, explicit
+interfaces, module declarations, import aliases, and entry-file/imported-file
+top-level rules are implemented for the interpreter. Generated C supports module
+declarations, but class, inheritance, `super`, and interface declarations are
+still interpreter/checker-only and are rejected before C emission.
 
 ## Inheritance And Interfaces
 
