@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tya - A small indentation-based dynamic language</title>
-  <meta name="description" content="Tya is a small indentation-based dynamic language inspired by CoffeeScript, with practical tooling and self-hosting work in progress.">
+  <meta name="description" content="Tya is a small indentation-based dynamic language inspired by CoffeeScript, with readable syntax and practical tooling.">
   <style>
     :root {
       --matcha: #5f7f35;
@@ -526,7 +526,6 @@
           <a href="#language">Language</a>
           <a href="#try">Try it</a>
           <a href="#docs">Docs</a>
-          <a href="#self-hosting">Self-hosting</a>
         </div>
       </nav>
     </header>
@@ -540,13 +539,13 @@
           </div>
           <p class="eyebrow">Small language, plain tools</p>
           <h1>CoffeeScript feel, Go-style practicality.</h1>
-          <p class="lead">Tya is a small indentation-based dynamic language for writing readable scripts and turning them into simple binaries with a cross-build-friendly workflow.</p>
+          <p class="lead">Tya is a small indentation-based dynamic language for writing readable scripts and compiling them to simple binaries through C.</p>
           <div class="hero-actions">
             <a class="button primary" href="#try">Run Tya</a>
             <a class="button" href="GUIDE.md">Read the guide</a>
             <a class="button" href="REFERENCE.md">Reference</a>
           </div>
-          <p class="hero-note">The current implementation is written in Go and emits C; the language is moving toward practical single-binary distribution and easy cross-builds.</p>
+          <p class="hero-note">Tya v0.1 is defined by the compile-to-C path; older self-host and class-design notes are archived as historical references.</p>
         </div>
 
         <div class="code-window" aria-label="Tya example">
@@ -556,9 +555,7 @@
           </div>
           <pre><code>greet = user -> <span class="str">"Hello, {user["name"]}"</span>
 
-user =
-  name: <span class="str">"komagata"</span>
-  age: 20
+user = { name: <span class="str">"komagata"</span>, age: 20 }
 
 <span class="kw">if</span> user[<span class="str">"age"</span>] >= 20
   <span class="kw">print</span> greet user</code></pre>
@@ -571,7 +568,7 @@ user =
         <div class="section-head">
           <p class="section-kicker">Language</p>
           <h2>Designed to be small enough to understand.</h2>
-          <p>Tya uses indentation for blocks, simple values, first-class functions, object-style dictionaries, error values, and a compact standard library.</p>
+          <p>Tya v0.1 uses indentation for blocks, simple values, first-class functions, dictionaries, modules, error values, and a compact standard library.</p>
         </div>
 
         <div class="feature-grid">
@@ -581,7 +578,7 @@ user =
           </article>
           <article class="feature">
             <h3>Dynamic values</h3>
-            <p>Use <code>nil</code>, booleans, numbers, strings, arrays, dictionaries, functions, and error values.</p>
+            <p>Use <code>nil</code>, booleans, numbers, strings, arrays, dictionaries, functions, error values, and modules.</p>
           </article>
           <article class="feature">
             <h3>Expression-friendly</h3>
@@ -592,12 +589,12 @@ user =
             <p>The checker catches undefined variables, const reassignment, duplicate declarations, and placement errors.</p>
           </article>
           <article class="feature">
-            <h3>Runs two ways</h3>
-            <p>Run through the interpreter, or emit C on the path toward single-binary builds and simple cross-platform distribution.</p>
+            <h3>Compile-to-C</h3>
+            <p>The v0.1 reference path emits C, builds with <code>cc</code>, and runs the resulting executable.</p>
           </article>
           <article class="feature">
-            <h3>Self-hosting work</h3>
-            <p>Tya-written compiler components exist under <code>selfhost/</code>; full language parity is still in progress.</p>
+            <h3>Small implementation</h3>
+            <p>The v0.1 implementation target is a readable lexer, parser, AST, checker, C emitter, and compact runtime.</p>
           </article>
         </div>
       </section>
@@ -606,19 +603,19 @@ user =
         <div class="section-head">
           <p class="section-kicker">Try it</p>
           <h2>Run examples from the repository.</h2>
-          <p>The command-line tool can print tokens, check unused names, interpret a file, emit C, or compile and run through C.</p>
+          <p>The command-line tool can print tokens, check unused names, emit C, or compile and run through C.</p>
         </div>
 
         <div class="split">
           <ol class="steps">
             <li>
-              <span><strong>Run a source file</strong><code>go run ./cmd/tya examples/hello.tya</code></span>
-            </li>
-            <li>
-              <span><strong>Compile and execute through C</strong><code>go run ./cmd/tya run examples/hello.tya</code></span>
+              <span><strong>Compile and run</strong><code>go run ./cmd/tya run examples/hello.tya</code></span>
             </li>
             <li>
               <span><strong>Inspect generated C</strong><code>go run ./cmd/tya --emit-c examples/arithmetic.tya</code></span>
+            </li>
+            <li>
+              <span><strong>Check a file</strong><code>go run ./cmd/tya --check-unused examples/hello.tya</code></span>
             </li>
           </ol>
 
@@ -628,9 +625,8 @@ user =
               <span class="dots" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
             </div>
             <pre><code>go test ./...
-go run ./cmd/tya examples/classic/fib.tya
-go run ./cmd/tya run examples/classic/fizzbuzz.tya
-sh scripts/selfhost_bootstrap_check.sh</code></pre>
+go run ./cmd/tya --emit-c examples/arithmetic.tya
+go run ./cmd/tya run examples/classic/fizzbuzz.tya</code></pre>
           </div>
         </div>
       </section>
@@ -657,39 +653,18 @@ sh scripts/selfhost_bootstrap_check.sh</code></pre>
           </a>
           <a class="doc-link" href="NAMING.md">
             <strong>Naming</strong>
-            <span>Rules for variables, functions, constants, modules, classes, and predicates.</span>
-          </a>
-          <a class="doc-link" href="CLASS_MODULE_DESIGN.md">
-            <strong>Class and module design</strong>
-            <span>Current direction for classes, modules, dictionaries, and sets.</span>
+            <span>Rules for variables, functions, constants, modules, dictionary keys, and reserved names.</span>
           </a>
           <a class="doc-link" href="../ROADMAP.md">
             <strong>Roadmap</strong>
-            <span>Current project work, self-hosting status, and remaining implementation tasks.</span>
+            <span>Current v0.1 implementation plan and the path to a future AST-based Tya compiler.</span>
           </a>
-        </div>
-      </section>
-
-      <section class="section" id="self-hosting">
-        <div class="section-head">
-          <p class="section-kicker">Self-hosting</p>
-          <h2>The compiler is being rewritten in Tya.</h2>
-          <p>The repository contains Tya-written lexer, parser, checker, and C code generator sources. The supported-subset bootstrap gate is complete; full language parity is still tracked in the roadmap.</p>
-        </div>
-
-        <div class="status">
-          <p>The next major work is moving the self-host parser away from line-oriented node strings and toward structured AST parsing.</p>
-          <ul>
-            <li><code>selfhost/lexer.tya</code>, <code>selfhost/parser.tya</code>, <code>selfhost/checker.tya</code>, and <code>selfhost/codegen_c.tya</code> exist.</li>
-            <li><code>sh scripts/selfhost_bootstrap_check.sh</code> is the main bootstrap gate.</li>
-            <li>Full completion requires removing generated-tool fallback behavior and matching the Go implementation for the full language.</li>
-          </ul>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      Tya is a small language implementation project built for clarity, experiments, and self-hosting work.
+      Tya is a small language implementation project built for clarity, readable scripts, and practical tooling.
     </footer>
   </div>
 </body>
