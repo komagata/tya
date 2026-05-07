@@ -552,7 +552,7 @@
             <h1>Small scripts, clear blocks, practical tools.</h1>
             <p class="lead">Tya keeps programs readable with indentation-based blocks, dynamic values, first-class functions, dictionaries, modules, and error values.</p>
             <div class="actions">
-              <a class="button primary" href="#quick-run">Run an example</a>
+              <a class="button primary" href="#example">View example</a>
               <a class="button" href="GUIDE.md">Guide</a>
               <a class="button" href="REFERENCE.md">Reference</a>
             </div>
@@ -573,7 +573,33 @@
           </div>
         </section>
 
-        <aside class="quick-run" id="quick-run">
+      </header>
+
+      <main>
+        <section class="section section-grid" id="example">
+          <div class="section-title">
+            <p class="kicker">Example</p>
+            <h2>A small program should look like itself.</h2>
+            <p>The syntax favors direct data access, simple function literals, and normal control flow.</p>
+          </div>
+
+          <div class="code-panel" aria-label="Tya example">
+            <div class="code-head">
+              <span>hello.tya</span>
+              <span>two-space blocks</span>
+            </div>
+            <pre><code>user =
+  name: <span class="str">"komagata"</span>
+  age: 20
+
+greet = user -> <span class="str">"Hello, "</span> + user[<span class="str">"name"</span>]
+
+<span class="kw">if</span> user[<span class="str">"age"</span>] >= 20
+  <span class="kw">print</span> greet(user)</code></pre>
+          </div>
+        </section>
+
+        <aside class="quick-run section" id="quick-run">
           <div class="quick-head">
             <strong>Quick run</strong>
             <span>Use the repository command-line tool.</span>
@@ -589,9 +615,7 @@
             </li>
           </ul>
         </aside>
-      </header>
 
-      <main>
         <section class="section section-grid" id="shape">
           <div class="section-title">
             <p class="kicker">Language shape</p>
@@ -624,29 +648,6 @@
               <h3>Boundaries</h3>
               <p>Objects, classes, interfaces, inheritance, aliases, macros, async, and package management are outside v0.1.</p>
             </article>
-          </div>
-        </section>
-
-        <section class="section section-grid" id="example">
-          <div class="section-title">
-            <p class="kicker">Example</p>
-            <h2>A small program should look like itself.</h2>
-            <p>The syntax favors direct data access, simple function literals, and normal control flow.</p>
-          </div>
-
-          <div class="code-panel" aria-label="Tya example">
-            <div class="code-head">
-              <span>hello.tya</span>
-              <span>two-space blocks</span>
-            </div>
-            <pre><code>user =
-  name: <span class="str">"komagata"</span>
-  age: 20
-
-greet = user -> <span class="str">"Hello, "</span> + user[<span class="str">"name"</span>]
-
-<span class="kw">if</span> user[<span class="str">"age"</span>] >= 20
-  <span class="kw">print</span> greet(user)</code></pre>
           </div>
         </section>
 
