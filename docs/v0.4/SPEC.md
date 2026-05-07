@@ -1,6 +1,6 @@
-# Tya v0.4 Draft Plan
+# Tya v0.4 Draft Specification
 
-This document captures the planned direction for Tya v0.4 after v0.3 standard
+This document is the draft specification for Tya v0.4 after v0.3 standard
 attached libraries.
 
 ## Theme
@@ -20,7 +20,7 @@ those modules, and user scripts built on them, easier to verify.
 
 ## Included in v0.4
 
-v0.4 should add:
+v0.4 adds:
 
 - `tya test`
 - `*_test.tya` discovery
@@ -32,7 +32,7 @@ v0.4 should add:
 
 ## Not Included in v0.4
 
-v0.4 should not include:
+v0.4 does not include:
 
 - `describe` / `it` DSL
 - mocking
@@ -117,4 +117,3 @@ import string
 assert string.blank(" ")
 assert_equal false, string.blank("tya")
 ```
-

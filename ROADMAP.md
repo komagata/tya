@@ -34,7 +34,7 @@ Current planned minor-version documents are:
 
 1. [`docs/v0.3/SPEC.md`](docs/v0.3/SPEC.md)
 1. [`docs/v0.3/STDLIB.md`](docs/v0.3/STDLIB.md)
-1. [`docs/v0.4/PLAN.md`](docs/v0.4/PLAN.md)
+1. [`docs/v0.4/SPEC.md`](docs/v0.4/SPEC.md)
 
 The v0.3 reference implementation remains:
 
@@ -115,7 +115,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 - [ ] Ship v0.4 testing and script confidence
   - [x] Decide that v0.4 focuses on tests instead of expanding stdlib.
   - [x] Keep native-backed stdlib, JSON, and CSV out of v0.4.
-  - [x] Document v0.4 direction in `docs/v0.4/PLAN.md`.
+  - [x] Document v0.4 direction in `docs/v0.4/SPEC.md`.
   - [ ] Add `tya test`.
     - [ ] With no argument, discover `*_test.tya` under the current directory.
     - [ ] With a directory argument, discover `*_test.tya` under that directory.

@@ -11,7 +11,7 @@ historical copy, such as `v0.1.0` and `v0.2.0`.
 
 ## v0.4
 
-- [Plan](v0.4/plan.html)
+- [Spec](v0.4/spec.html)
 
 ## v0.3
 

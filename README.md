@@ -128,7 +128,7 @@ print array.first(["tya"])
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
-- [v0.4 Plan](https://tya-lang.org/v0.4/plan.html): planned testing direction.
+- [v0.4 Spec](https://tya-lang.org/v0.4/spec.html): planned testing direction.
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
 Markdown source files are kept in `docs/` for editing. The public website uses
