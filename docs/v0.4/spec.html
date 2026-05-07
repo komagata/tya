@@ -24,11 +24,11 @@
       </div>
     </nav>
     <article class="doc-content">
-<h1 id="tya-v0-4-draft-specification">Tya v0.4 Draft Specification</h1>
-<p>This document is the draft specification for Tya v0.4 after v0.3 standard attached libraries.</p>
+<h1 id="tya-v0-4-specification">Tya v0.4 Specification</h1>
+<p>This document is the specification for Tya v0.4 after v0.3 standard attached libraries.</p>
 <h2 id="theme">Theme</h2>
 <p>Tya v0.4 is about testing and script confidence.</p>
-<p>v0.3 makes shared <code>.tya</code> modules easier to ship and import. v0.4 should make those modules, and user scripts built on them, easier to verify.</p>
+<p>v0.3 makes shared <code>.tya</code> modules easier to ship and import. v0.4 makes those modules, and user scripts built on them, easier to verify.</p>
 <h2 id="goals">Goals</h2>
 <ul>
 <li>Add a simple built-in test runner for Tya projects.</li>
@@ -92,7 +92,7 @@ assert_equal [&quot;a&quot;, &quot;b&quot;], names</code></pre>
 expected: 4
 actual: 5</code></pre>
 <h2 id="stdlib-tests">Stdlib Tests</h2>
-<p>The v0.3 standard attached library should be tested through the same runner that user projects use.</p>
+<p>The v0.3 standard attached library is tested through the same runner that user projects use.</p>
 <p>Preferred layout:</p>
 <pre><code class="language-text">tests/
   stdlib_string_test.tya

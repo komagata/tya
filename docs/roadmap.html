@@ -28,7 +28,7 @@
 <p><code>ROADMAP.md</code> is the single source of truth for current TODO, TASK, and roadmap planning.</p>
 <p>Pre-v0.1 planning documents and self-host migration notes are archived under <a href="docs/archive/pre-v0.1/"><code>docs/archive/pre-v0.1/</code></a>. They are historical references, not current language or implementation authority.</p>
 <h2 id="current-direction">Current Direction</h2>
-<p>Tya v0.3 is implemented as a small compile-to-C language. The frozen release documents are:</p>
+<p>Tya v0.4 is implemented as a small compile-to-C language. The frozen release documents are:</p>
 <ol>
 <li><a href="docs/v0.1.0/SPEC.md"><code>docs/v0.1.0/SPEC.md</code></a></li>
 <li><a href="docs/v0.1.0/API.md"><code>docs/v0.1.0/API.md</code></a></li>
@@ -49,24 +49,24 @@
 <li><a href="docs/v0.3/STDLIB.md"><code>docs/v0.3/STDLIB.md</code></a></li>
 <li><a href="docs/v0.4/SPEC.md"><code>docs/v0.4/SPEC.md</code></a></li>
 </ol>
-<p>The v0.3 reference implementation remains:</p>
+<p>The v0.4 reference implementation remains:</p>
 <pre><code class="language-text">Go lexer
 Go parser
 Go AST
 Go checker
 Go C emitter
 C runtime
-v0.3 specification tests</code></pre>
-<p>Go interpreter behavior, current <code>selfhost/*</code>, ASTMODE, legacy node strings, and self-host bootstrap gates are not v0.3 authority.</p>
+v0.4 specification tests</code></pre>
+<p>Go interpreter behavior, current <code>selfhost/*</code>, ASTMODE, legacy node strings, and self-host bootstrap gates are not v0.4 authority.</p>
 <h2 id="implementation-tooling-policy">Implementation Tooling Policy</h2>
-<p>The v0.3 compiler implementation should stay hand-written:</p>
+<p>The v0.4 compiler implementation should stay hand-written:</p>
 <pre><code class="language-text">Go lexer
 Go parser
 Go AST
 Go checker
 Go C emitter</code></pre>
-<p>Do not add a parser generator or large grammar framework for v0.3. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler-front-end authority. They may be useful references or future editor tooling, but the active compiler path should remain explicit Go code.</p>
-<p>Use small test-support dependencies where they make the v0.3 specification easier to verify:</p>
+<p>Do not add a parser generator or large grammar framework for v0.4. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler-front-end authority. They may be useful references or future editor tooling, but the active compiler path should remain explicit Go code.</p>
+<p>Use small test-support dependencies where they make the v0.4 specification easier to verify:</p>
 <pre><code class="language-text">github.com/google/go-cmp/cmp
 github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
@@ -114,45 +114,45 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Update README install, run, development, and documentation sections for v0.3.</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.4 testing and script confidence</li>
+<li>[x] Ship v0.4 testing and script confidence</li>
 <ul>
 <li>[x] Decide that v0.4 focuses on tests instead of expanding stdlib.</li>
 <li>[x] Keep native-backed stdlib, JSON, and CSV out of v0.4.</li>
 <li>[x] Document v0.4 direction in <code>docs/v0.4/SPEC.md</code>.</li>
-<li>[ ] Add <code>tya test</code>.</li>
+<li>[x] Add <code>tya test</code>.</li>
 <ul>
-<li>[ ] With no argument, discover <code>*_test.tya</code> under the current directory.</li>
-<li>[ ] With a directory argument, discover <code>*_test.tya</code> under that directory.</li>
-<li>[ ] With a file argument, run that file only.</li>
-<li>[ ] Exit non-zero when any test file fails.</li>
+<li>[x] With no argument, discover <code>*_test.tya</code> under the current directory.</li>
+<li>[x] With a directory argument, discover <code>*_test.tya</code> under that directory.</li>
+<li>[x] With a file argument, run that file only.</li>
+<li>[x] Exit non-zero when any test file fails.</li>
 </ul>
-<li>[ ] Add assertions.</li>
+<li>[x] Add assertions.</li>
 <ul>
-<li>[ ] Add <code>assert value</code>.</li>
-<li>[ ] Add <code>assert_equal expected, actual</code>.</li>
-<li>[ ] Use deep equality for <code>assert_equal</code>.</li>
-<li>[ ] Emit source-oriented assertion diagnostics.</li>
+<li>[x] Add <code>assert value</code>.</li>
+<li>[x] Add <code>assert_equal expected, actual</code>.</li>
+<li>[x] Use deep equality for <code>assert_equal</code>.</li>
+<li>[x] Emit source-oriented assertion diagnostics.</li>
 </ul>
-<li>[ ] Add stdlib tests as first-class examples.</li>
+<li>[x] Add stdlib tests as first-class examples.</li>
 <ul>
-<li>[ ] Add <code>tests/stdlib_string_test.tya</code>.</li>
-<li>[ ] Add <code>tests/stdlib_array_test.tya</code>.</li>
-<li>[ ] Ensure stdlib tests run through <code>tya test</code>.</li>
+<li>[x] Add <code>tests/stdlib_string_test.tya</code>.</li>
+<li>[x] Add <code>tests/stdlib_array_test.tya</code>.</li>
+<li>[x] Ensure stdlib tests run through <code>tya test</code>.</li>
 </ul>
-<li>[ ] Keep v0.4 documentation and release snapshots aligned.</li>
+<li>[x] Keep v0.4 documentation and release snapshots aligned.</li>
 <ul>
-<li>[ ] Update latest docs when v0.4 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.4/</code> aligned with the v0.4 minor specification.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Create a patch-tag snapshot only when an exact release archive needs one.</li>
-<li>[ ] Update README install, run, development, and documentation sections for v0.4.</li>
+<li>[x] Update latest docs when v0.4 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.4/</code> aligned with the v0.4 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Create a patch-tag snapshot only when an exact release archive needs one.</li>
+<li>[x] Update README install, run, development, and documentation sections for v0.4.</li>
 </ul>
 </ul>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>
 <pre><code class="language-sh">go test ./... -count=1</code></pre>
-<p>Focused verification should prefer tests for the touched lexer, parser, checker, C emitter, runtime, examples, stdlib, or docs. Self-host bootstrap checks are historical pre-v0.1 gates and are not default v0.3 verification.</p>
+<p>Focused verification should prefer tests for the touched lexer, parser, checker, C emitter, runtime, examples, stdlib, or docs. Self-host bootstrap checks are historical pre-v0.1 gates and are not default v0.4 verification.</p>
     </article>
   </main>
 </body>

@@ -1,17 +1,21 @@
-# Tya v0.3 API
+# Tya v0.4 API
 
-This document defines the standard built-in functions for Tya v0.3.
+This document defines the standard built-in functions for Tya v0.4.
 
 ## Core
 
 ```tya
 print value
+assert value
+assert_equal expected, actual
 panic "bad state"
 exit 1
 ```
 
-`print` writes a value followed by a newline. `panic` stops execution with an
-error. `exit` exits with the specified status code.
+`print` writes a value followed by a newline. `assert` stops execution with a
+source-oriented diagnostic when the value is falsey. `assert_equal` compares
+with deep equality and prints expected and actual values on failure. `panic`
+stops execution with an error. `exit` exits with the specified status code.
 
 ```tya
 err = error "file not found"

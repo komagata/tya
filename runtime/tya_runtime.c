@@ -843,6 +843,27 @@ void tya_print(TyaValue value) {
   putchar('\n');
 }
 
+void tya_assert(TyaValue value, const char *path, int line) {
+  if (tya_truthy(value)) {
+    return;
+  }
+  fprintf(stderr, "%s:%d:1: assertion failed\n", path == NULL || path[0] == '\0' ? "<unknown>" : path, line);
+  exit(1);
+}
+
+void tya_assert_equal(TyaValue expected, TyaValue actual, const char *path, int line) {
+  if (tya_deep_equal_bool(expected, actual)) {
+    return;
+  }
+  fprintf(stderr, "%s:%d:1: assert_equal failed\n", path == NULL || path[0] == '\0' ? "<unknown>" : path, line);
+  fprintf(stderr, "expected: ");
+  tya_write_value(stderr, expected);
+  fprintf(stderr, "\nactual: ");
+  tya_write_value(stderr, actual);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+
 static void tya_write_value(FILE *out, TyaValue value) {
   switch (value.kind) {
   case TYA_NIL:

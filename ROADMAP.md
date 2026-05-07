@@ -9,7 +9,7 @@ references, not current language or implementation authority.
 
 ## Current Direction
 
-Tya v0.3 is implemented as a small compile-to-C language. The frozen release
+Tya v0.4 is implemented as a small compile-to-C language. The frozen release
 documents are:
 
 1. [`docs/v0.1.0/SPEC.md`](docs/v0.1.0/SPEC.md)
@@ -36,7 +36,7 @@ Current planned minor-version documents are:
 1. [`docs/v0.3/STDLIB.md`](docs/v0.3/STDLIB.md)
 1. [`docs/v0.4/SPEC.md`](docs/v0.4/SPEC.md)
 
-The v0.3 reference implementation remains:
+The v0.4 reference implementation remains:
 
 ```text
 Go lexer
@@ -45,15 +45,15 @@ Go AST
 Go checker
 Go C emitter
 C runtime
-v0.3 specification tests
+v0.4 specification tests
 ```
 
 Go interpreter behavior, current `selfhost/*`, ASTMODE, legacy node strings,
-and self-host bootstrap gates are not v0.3 authority.
+and self-host bootstrap gates are not v0.4 authority.
 
 ## Implementation Tooling Policy
 
-The v0.3 compiler implementation should stay hand-written:
+The v0.4 compiler implementation should stay hand-written:
 
 ```text
 Go lexer
@@ -63,12 +63,12 @@ Go checker
 Go C emitter
 ```
 
-Do not add a parser generator or large grammar framework for v0.3. In
+Do not add a parser generator or large grammar framework for v0.4. In
 particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter
 as compiler-front-end authority. They may be useful references or future editor
 tooling, but the active compiler path should remain explicit Go code.
 
-Use small test-support dependencies where they make the v0.3 specification
+Use small test-support dependencies where they make the v0.4 specification
 easier to verify:
 
 ```text
@@ -112,30 +112,30 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Create a patch-tag snapshot only when an exact release archive needs one.
     - [x] Update README install, run, development, and documentation sections for v0.3.
-- [ ] Ship v0.4 testing and script confidence
+- [x] Ship v0.4 testing and script confidence
   - [x] Decide that v0.4 focuses on tests instead of expanding stdlib.
   - [x] Keep native-backed stdlib, JSON, and CSV out of v0.4.
   - [x] Document v0.4 direction in `docs/v0.4/SPEC.md`.
-  - [ ] Add `tya test`.
-    - [ ] With no argument, discover `*_test.tya` under the current directory.
-    - [ ] With a directory argument, discover `*_test.tya` under that directory.
-    - [ ] With a file argument, run that file only.
-    - [ ] Exit non-zero when any test file fails.
-  - [ ] Add assertions.
-    - [ ] Add `assert value`.
-    - [ ] Add `assert_equal expected, actual`.
-    - [ ] Use deep equality for `assert_equal`.
-    - [ ] Emit source-oriented assertion diagnostics.
-  - [ ] Add stdlib tests as first-class examples.
-    - [ ] Add `tests/stdlib_string_test.tya`.
-    - [ ] Add `tests/stdlib_array_test.tya`.
-    - [ ] Ensure stdlib tests run through `tya test`.
-  - [ ] Keep v0.4 documentation and release snapshots aligned.
-    - [ ] Update latest docs when v0.4 behavior is implemented.
-    - [ ] Keep `docs/v0.4/` aligned with the v0.4 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Create a patch-tag snapshot only when an exact release archive needs one.
-    - [ ] Update README install, run, development, and documentation sections for v0.4.
+  - [x] Add `tya test`.
+    - [x] With no argument, discover `*_test.tya` under the current directory.
+    - [x] With a directory argument, discover `*_test.tya` under that directory.
+    - [x] With a file argument, run that file only.
+    - [x] Exit non-zero when any test file fails.
+  - [x] Add assertions.
+    - [x] Add `assert value`.
+    - [x] Add `assert_equal expected, actual`.
+    - [x] Use deep equality for `assert_equal`.
+    - [x] Emit source-oriented assertion diagnostics.
+  - [x] Add stdlib tests as first-class examples.
+    - [x] Add `tests/stdlib_string_test.tya`.
+    - [x] Add `tests/stdlib_array_test.tya`.
+    - [x] Ensure stdlib tests run through `tya test`.
+  - [x] Keep v0.4 documentation and release snapshots aligned.
+    - [x] Update latest docs when v0.4 behavior is implemented.
+    - [x] Keep `docs/v0.4/` aligned with the v0.4 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Create a patch-tag snapshot only when an exact release archive needs one.
+    - [x] Update README install, run, development, and documentation sections for v0.4.
 
 ## Verification Reference
 
@@ -147,4 +147,4 @@ go test ./... -count=1
 
 Focused verification should prefer tests for the touched lexer, parser, checker,
 C emitter, runtime, examples, stdlib, or docs. Self-host bootstrap checks are
-historical pre-v0.1 gates and are not default v0.3 verification.
+historical pre-v0.1 gates and are not default v0.4 verification.

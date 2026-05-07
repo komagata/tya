@@ -1,0 +1,59 @@
+# v0.4 test discovery and assertions.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+exec go run ./cmd/tya test $WORK/pass
+! stdout .
+! stderr .
+
+cd $WORK/pass
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+exec $WORK/tya test
+! stdout .
+! stderr .
+
+cd $REPO
+exec go run ./cmd/tya test $WORK/pass/nested/one_test.tya
+! stdout .
+! stderr .
+
+! exec go run ./cmd/tya test $WORK/fail/fail_assert_test.tya
+stderr 'fail_assert_test.tya:1:1: assertion failed'
+! stdout .
+
+! exec go run ./cmd/tya test $WORK/fail/fail_equal_test.tya
+stderr 'fail_equal_test.tya:1:1: assert_equal failed'
+stderr 'expected:'
+stderr 'name: tya'
+stderr 'actual:'
+stderr 'name: Tya'
+! stdout .
+
+exec go run ./cmd/tya test tests/stdlib_string_test.tya
+! stdout .
+! stderr .
+
+exec go run ./cmd/tya test tests
+! stdout .
+! stderr .
+
+exec go run ./cmd/tya version
+stdout '0.4.0\n'
+! stderr .
+
+-- pass/nested/one_test.tya --
+assert true
+assert_equal [1, {name: "tya"}], [1, {name: "tya"}]
+
+-- pass/two_test.tya --
+assert 1 + 1 == 2
+assert_equal "tya", "ty" + "a"
+
+-- pass/not_a_test_file.tya --
+assert false
+
+-- fail/fail_assert_test.tya --
+assert false
+
+-- fail/fail_equal_test.tya --
+assert_equal [1, {name: "tya"}], [1, {name: "Tya"}]

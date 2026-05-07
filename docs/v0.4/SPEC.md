@@ -1,13 +1,13 @@
-# Tya v0.4 Draft Specification
+# Tya v0.4 Specification
 
-This document is the draft specification for Tya v0.4 after v0.3 standard
+This document is the specification for Tya v0.4 after v0.3 standard
 attached libraries.
 
 ## Theme
 
 Tya v0.4 is about testing and script confidence.
 
-v0.3 makes shared `.tya` modules easier to ship and import. v0.4 should make
+v0.3 makes shared `.tya` modules easier to ship and import. v0.4 makes
 those modules, and user scripts built on them, easier to verify.
 
 ## Goals
@@ -98,7 +98,7 @@ actual: 5
 
 ## Stdlib Tests
 
-The v0.3 standard attached library should be tested through the same runner
+The v0.3 standard attached library is tested through the same runner
 that user projects use.
 
 Preferred layout:

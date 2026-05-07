@@ -1,0 +1,6 @@
+import string
+
+assert string.blank(" ")
+assert string.present("tya")
+assert_equal false, string.blank("tya")
+assert_equal true, string.present("tya")

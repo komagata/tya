@@ -24,13 +24,15 @@
       </div>
     </nav>
     <article class="doc-content">
-<h1 id="tya-v0-3-api">Tya v0.3 API</h1>
-<p>This document defines the standard built-in functions for Tya v0.3.</p>
+<h1 id="tya-v0-4-api">Tya v0.4 API</h1>
+<p>This document defines the standard built-in functions for Tya v0.4.</p>
 <h2 id="core">Core</h2>
 <pre><code class="language-tya">print value
+assert value
+assert_equal expected, actual
 panic &quot;bad state&quot;
 exit 1</code></pre>
-<p><code>print</code> writes a value followed by a newline. <code>panic</code> stops execution with an error. <code>exit</code> exits with the specified status code.</p>
+<p><code>print</code> writes a value followed by a newline. <code>assert</code> stops execution with a source-oriented diagnostic when the value is falsey. <code>assert_equal</code> compares with deep equality and prints expected and actual values on failure. <code>panic</code> stops execution with an error. <code>exit</code> exits with the specified status code.</p>
 <pre><code class="language-tya">err = error &quot;file not found&quot;
 print err[&quot;message&quot;]</code></pre>
 <p><code>error</code> returns an error value with a <code>message</code>.</p>

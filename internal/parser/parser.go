@@ -322,14 +322,25 @@ func (p *Parser) dictBody() (*ast.DictLit, error) {
 }
 
 func (p *Parser) stmtExprLine() (ast.Expr, error) {
-	if p.at(token.IDENT) && p.peek().Lexeme == "print" && p.peekN(1).Type != token.LPAREN && p.startsExprAt(p.pos+1) {
+	if p.at(token.IDENT) && p.peek().Lexeme == "assert_equal" && p.peekN(1).Type != token.LPAREN && p.startsExprAt(p.pos+1) {
+		callee := &ast.Ident{Name: p.peek().Lexeme, Tok: p.next()}
+		args, err := p.exprListLine()
+		if err != nil {
+			return nil, err
+		}
+		if len(args) != 2 {
+			return nil, p.errAt(callee.Tok, "assert_equal expects two expressions")
+		}
+		return &ast.CallExpr{Callee: callee, Args: args}, nil
+	}
+	if p.at(token.IDENT) && (p.peek().Lexeme == "print" || p.peek().Lexeme == "assert") && p.peekN(1).Type != token.LPAREN && p.startsExprAt(p.pos+1) {
 		callee := &ast.Ident{Name: p.peek().Lexeme, Tok: p.next()}
 		arg, err := p.expr()
 		if err != nil {
 			return nil, err
 		}
 		if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
-			return nil, p.err("print expects one expression")
+			return nil, p.err(callee.Name + " expects one expression")
 		}
 		return &ast.CallExpr{Callee: callee, Args: []ast.Expr{arg}}, nil
 	}
@@ -348,17 +359,18 @@ func (p *Parser) exprLineWithPrintSugar(allowPrintSugar bool) (ast.Expr, error) 
 	if _, ok := ex.(*ast.FuncLit); ok {
 		return ex, nil
 	}
-	if allowPrintSugar && p.isPrintIdent(ex) && p.startsExpr() {
+	if allowPrintSugar && p.isSingleArgStatementSugarIdent(ex) && p.startsExpr() {
 		arg, err := p.expr()
 		if err != nil {
 			return nil, err
 		}
 		if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
-			return nil, p.err("print expects one expression")
+			id := ex.(*ast.Ident)
+			return nil, p.err(id.Name + " expects one expression")
 		}
 		return &ast.CallExpr{Callee: ex, Args: []ast.Expr{arg}}, nil
 	}
-	if !allowPrintSugar && p.isPrintIdent(ex) && p.startsExpr() {
+	if !allowPrintSugar && p.isSingleArgStatementSugarIdent(ex) && p.startsExpr() {
 		return nil, p.err("no-paren calls are not in Tya v0.1; use parentheses")
 	}
 	if p.startsExpr() {
@@ -367,9 +379,9 @@ func (p *Parser) exprLineWithPrintSugar(allowPrintSugar bool) (ast.Expr, error) 
 	return ex, nil
 }
 
-func (p *Parser) isPrintIdent(expr ast.Expr) bool {
+func (p *Parser) isSingleArgStatementSugarIdent(expr ast.Expr) bool {
 	id, ok := expr.(*ast.Ident)
-	return ok && id.Name == "print"
+	return ok && (id.Name == "print" || id.Name == "assert")
 }
 
 func (p *Parser) expr() (ast.Expr, error) {

@@ -9,7 +9,11 @@ import (
 )
 
 func EmitC(prog *ast.Program) (string, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}}
+	return EmitCWithPath(prog, "")
+}
+
+func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, sourcePath: sourcePath}
 	for _, name := range assignedNames(prog.Stmts) {
 		g.vars[name] = true
 		g.globalLine(fmt.Sprintf("TyaValue %s;", cName(name)))
@@ -37,6 +41,7 @@ type cgen struct {
 	out           strings.Builder
 	globalOut     strings.Builder
 	funcOut       strings.Builder
+	sourcePath    string
 	indent        int
 	vars          map[string]bool
 	funcs         map[string]string
@@ -540,6 +545,30 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 			return err
 		}
 		g.line(fmt.Sprintf("tya_panic(%s);", message))
+		return nil
+	}
+	line := 1
+	if ident, ok := call.Callee.(*ast.Ident); ok {
+		line = ident.Tok.Line
+	}
+	if id.Name == "assert" && len(call.Args) == 1 {
+		arg, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_assert(%s, %s, %d);", arg, strconv.Quote(g.sourcePath), line))
+		return nil
+	}
+	if id.Name == "assert_equal" && len(call.Args) == 2 {
+		expected, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		actual, _, err := g.expr(call.Args[1])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_assert_equal(%s, %s, %s, %d);", expected, actual, strconv.Quote(g.sourcePath), line))
 		return nil
 	}
 	if id.Name != "print" || len(call.Args) != 1 {

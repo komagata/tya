@@ -183,7 +183,11 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 }
 
 func stdlibDirs() []string {
-	dirs := []string{filepath.Join("stdlib")}
+	dirs := []string{}
+	if dir := os.Getenv("TYA_STDLIB_DIR"); dir != "" {
+		dirs = append(dirs, dir)
+	}
+	dirs = append(dirs, filepath.Join("stdlib"))
 	if exe, err := os.Executable(); err == nil {
 		exeDir := filepath.Dir(exe)
 		dirs = append(dirs,

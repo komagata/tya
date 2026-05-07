@@ -93,6 +93,8 @@ TyaValue tya_pop(TyaValue array);
 void tya_exit(TyaValue code);
 void tya_panic(TyaValue message);
 void tya_print(TyaValue value);
+void tya_assert(TyaValue value, const char *path, int line);
+void tya_assert_equal(TyaValue expected, TyaValue actual, const char *path, int line);
 bool tya_truthy(TyaValue value);
 
 #endif

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -17,9 +19,10 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.3.0"
+const version = "0.4.0"
 
 var lineColErrorRE = regexp.MustCompile(`^(\d+):(\d+):\s*(.*)$`)
+var errTestsFailed = errors.New("test failed")
 
 func main() {
 	if len(os.Args) < 2 {
@@ -87,6 +90,23 @@ func main() {
 		}
 		fmt.Fprint(os.Stdout, csrc)
 		return
+	case "test":
+		if len(os.Args) > 3 {
+			usage()
+			os.Exit(2)
+		}
+		root := "."
+		if len(os.Args) == 3 {
+			root = os.Args[2]
+		}
+		if err := testCommand(root); err != nil {
+			if errors.Is(err, errTestsFailed) {
+				os.Exit(1)
+			}
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
 	}
 	dumpTokens := false
 	emitC := false
@@ -150,7 +170,7 @@ doneOptions:
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		csrc, err := codegen.EmitC(prog)
+		csrc, err := codegen.EmitCWithPath(prog, path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -218,7 +238,7 @@ doneOptions:
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		csrc, err := codegen.EmitC(prog)
+		csrc, err := codegen.EmitCWithPath(prog, path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -234,6 +254,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya check <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya fmt [-w] <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya emit-c <file.tya>")
+	fmt.Fprintln(os.Stderr, "       tya test [path]")
 	fmt.Fprintln(os.Stderr, "       tya version")
 }
 
@@ -332,11 +353,63 @@ func compileToC(path string) (string, error) {
 	if err := checker.CheckWithModules(prog, modules); err != nil {
 		return "", err
 	}
-	csrc, err := codegen.EmitC(prog)
+	csrc, err := codegen.EmitCWithPath(prog, path)
 	if err != nil {
 		return "", err
 	}
 	return csrc, nil
+}
+
+func testCommand(root string) error {
+	files, err := testFiles(root)
+	if err != nil {
+		return err
+	}
+	failed := false
+	for _, file := range files {
+		if err := compileAndRun(file, nil); err != nil {
+			failed = true
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				_ = exitErr
+				continue
+			}
+			return err
+		}
+	}
+	if failed {
+		return errTestsFailed
+	}
+	return nil
+}
+
+func testFiles(root string) ([]string, error) {
+	info, err := os.Stat(root)
+	if err != nil {
+		return nil, err
+	}
+	if !info.IsDir() {
+		if !strings.HasSuffix(filepath.Base(root), "_test.tya") {
+			return nil, fmt.Errorf("test file must match *_test.tya: %s", root)
+		}
+		return []string{root}, nil
+	}
+	files := []string{}
+	if err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(filepath.Base(path), "_test.tya") {
+			files = append(files, path)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	sort.Strings(files)
+	return files, nil
 }
 
 func checkFile(path string) error {

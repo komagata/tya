@@ -53,11 +53,12 @@ func CheckModuleFile(prog *ast.Program, path string) error {
 }
 
 var builtinNames = []string{
-	"all", "any", "args", "contains", "delete", "ends_with", "env", "equal",
-	"error", "exit", "file_exists", "filter", "find", "has", "join", "keys",
-	"len", "map", "panic", "pop", "print", "push", "read_file", "read_line",
-	"reduce", "replace", "split", "starts_with", "to_float", "to_int",
-	"to_number", "to_string", "trim", "values", "write_file",
+	"all", "any", "args", "assert", "assert_equal", "contains", "delete",
+	"ends_with", "env", "equal", "error", "exit", "file_exists", "filter",
+	"find", "has", "join", "keys", "len", "map", "panic", "pop", "print",
+	"push", "read_file", "read_line", "reduce", "replace", "split",
+	"starts_with", "to_float", "to_int", "to_number", "to_string", "trim",
+	"values", "write_file",
 }
 
 type scope struct {

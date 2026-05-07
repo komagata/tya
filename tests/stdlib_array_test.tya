@@ -1,0 +1,6 @@
+import array
+
+assert array.empty([])
+assert_equal false, array.empty(["tya"])
+assert_equal "tya", array.first(["tya"])
+assert_equal [1, {name: "tya"}], [1, {name: "tya"}]
