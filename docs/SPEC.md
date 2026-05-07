@@ -1,37 +1,35 @@
-# Tya v0.2 Draft Language Spec
+# Tya v0.3 Draft Language Spec
 
-This document is the draft language specification for Tya v0.2.
+This document is the draft language specification for Tya v0.3.
 
-v0.2 builds on v0.1. The theme is friendly scripting: practical builtins,
-better diagnostics, formatting, and small module ergonomics without introducing
-objects or classes.
+v0.3 builds on v0.2. The theme is standard attached libraries: Tya should ship
+small `.tya` modules that can be imported without a package manager.
 
-v0.1 remains the baseline. Anything not changed here follows the v0.1
+v0.2 remains the baseline. Anything not changed here follows the v0.2
 specification.
 
 ## Goals
 
-- Make everyday scripts easier to write and read.
-- Improve the command-line experience for users and language implementers.
+- Make shared utility code available as ordinary Tya modules.
+- Keep the language core small by avoiding format-specific builtins.
 - Keep the language small and indentation-based.
 - Preserve the compile-to-C execution path.
-- Avoid object and class design until the data model is more mature.
+- Preserve the existing `import module_name` syntax.
+- Avoid package management until local module behavior is mature.
 
-## Included in v0.2
+## Included in v0.3
 
-v0.2 adds:
+v0.3 adds:
 
-- practical collection builtins
-- practical equality and input builtins
-- better diagnostics
-- formatting command
-- check command
-- public C emission command
-- small module import ergonomics
+- a `stdlib/` directory distributed with Tya
+- standard attached library imports through existing `import module_name` syntax
+- installed-tool lookup for the attached standard library
+- initial lightweight standard modules such as `string` and `array`
+- documentation for attached library APIs
 
-## Not Included in v0.2
+## Not Included in v0.3
 
-v0.2 still does not include:
+v0.3 does not include:
 
 - object
 - class
@@ -47,13 +45,103 @@ v0.2 still does not include:
 - dictionary member access
 - set literal
 - package manager
+- remote module install
+- versioned dependencies
+- native-backed standard modules
+- JSON parser
+- CSV parser
 - async
 - macro
 - exception
 
+## Standard Attached Libraries
+
+Standard attached libraries are `.tya` modules shipped with the Tya
+distribution. They are imported with the same syntax as user modules.
+
+```tya
+import string
+import array
+
+print string.blank("  ")
+print array.empty([])
+```
+
+The standard attached library is not a package manager. It does not download
+remote code, resolve dependency versions, or install third-party modules.
+
+Standard modules should be written as normal Tya modules whenever practical.
+v0.3 does not add native-backed standard modules. Format-heavy modules such as
+JSON and CSV are intentionally deferred.
+
+## Standard Library Search
+
+v0.3 keeps v0.2 module syntax:
+
+```tya
+import module_name
+
+print module_name.member()
+```
+
+Import aliases are still not included.
+
+The v0.3 module search order is:
+
+1. The importing file's directory.
+1. Directories listed in `TYA_PATH`, searched left to right.
+1. The `stdlib/` directory shipped with Tya.
+
+`TYA_PATH` uses the host platform's path-list separator.
+
+The module file name still matches the module name.
+
+```text
+string.tya -> module string
+```
+
+Installed tools must be able to find the shipped `stdlib/` directory even when
+`tya` is run outside the source checkout. Packaged installs may place it under
+the same shared data root as the C runtime, for example:
+
+```text
+share/tya/stdlib/string.tya
+share/tya/stdlib/array.tya
+```
+
+## Initial Standard Modules
+
+The initial v0.3 standard attached library should stay lightweight. It should
+prove the attached-library mechanism before adding parser-heavy modules.
+
+Initial module candidates:
+
+- `string`
+- `array`
+
+Example `string` API:
+
+```tya
+import string
+
+print string.blank("  ")
+print string.present("tya")
+```
+
+Example `array` API:
+
+```tya
+import array
+
+print array.empty([])
+print array.first(["tya"])
+```
+
+The exact attached library API is documented in `docs/STDLIB.md`.
+
 ## Dictionary Direction
 
-Dictionaries remain the main structured data value in v0.2.
+Dictionaries remain the main structured data value in v0.3.
 
 Dictionary member access is still invalid.
 
@@ -62,12 +150,17 @@ print user["name"] # ok
 print user.name    # invalid
 ```
 
-v0.2 should improve dictionary usefulness without changing dictionary syntax
+v0.3 should improve library organization without changing dictionary syntax
 into object syntax.
+
+## v0.2 Baseline
+
+v0.3 keeps the v0.2 builtins, commands, diagnostics, formatting behavior, and
+module syntax unless this document explicitly changes them.
 
 ## Standard Builtins
 
-v0.2 keeps every v0.1 standard builtin and adds the following standard builtins.
+v0.3 keeps every v0.2 standard builtin.
 
 ### Collections
 
@@ -190,44 +283,16 @@ Formatting rules:
 - Remove trailing whitespace.
 - Keep one statement per line.
 - Keep dictionary indentation readable.
-- Keep array and dictionary inline literals inline when they already fit on one
-  line.
+- Keep array and dictionary inline literals inline when they already fit on one line.
 - Do not rewrite names.
 - Do not change semantics.
 
 The formatter is allowed to be conservative in v0.2. It should prefer stable,
 predictable output over aggressive rewriting.
 
-## Module Ergonomics
-
-v0.2 keeps v0.1 module syntax:
-
-```tya
-import module_name
-
-print module_name.member()
-```
-
-Import aliases are still not included.
-
-v0.2 may improve module loading rules without adding a package manager.
-
-The initial v0.2 module search order is:
-
-1. The importing file's directory.
-1. Directories listed in `TYA_PATH`, searched left to right.
-
-`TYA_PATH` uses the host platform's path-list separator.
-
-The module file name still matches the module name.
-
-```text
-json_parser.tya -> module json_parser
-```
-
 ## Reference Implementation
 
-The v0.2 reference implementation remains the Go compile-to-C implementation:
+The v0.3 reference implementation remains the Go compile-to-C implementation:
 
 ```text
 Go lexer
@@ -236,7 +301,7 @@ Go AST
 Go checker
 Go C emitter
 C runtime
-v0.2 specification tests
+v0.3 specification tests
 ```
 
 The current execution path remains:
@@ -245,5 +310,5 @@ The current execution path remains:
 Tya source -> lexer -> parser -> AST -> checker -> C emitter -> C compiler -> executable
 ```
 
-The Tya-written compiler can continue separately, but v0.2 language authority
+The Tya-written compiler can continue separately, but v0.3 language authority
 comes from the spec and the Go compile-to-C reference implementation.

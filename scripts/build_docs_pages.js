@@ -10,8 +10,10 @@ const pages = [
   { source: path.join(docsDir, "GUIDE.md"), output: path.join(docsDir, "guide.html"), title: "Guide" },
   { source: path.join(docsDir, "SPEC.md"), output: path.join(docsDir, "spec.html"), title: "Spec" },
   { source: path.join(docsDir, "API.md"), output: path.join(docsDir, "api.html"), title: "API" },
+  { source: path.join(docsDir, "STDLIB.md"), output: path.join(docsDir, "stdlib.html"), title: "Stdlib" },
   { source: path.join(docsDir, "NAMING.md"), output: path.join(docsDir, "naming.html"), title: "Naming" },
   { source: path.join(docsDir, "VERSIONS.md"), output: path.join(docsDir, "versions.html"), title: "Versions" },
+  { source: path.join(docsDir, "v0.4.md"), output: path.join(docsDir, "v0.4.html"), title: "v0.4 Plan" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(docsDir, "roadmap.html"), title: "Roadmap" },
   { source: path.join(docsDir, "v0.2.0", "SPEC.md"), output: path.join(docsDir, "v0.2.0", "spec.html"), title: "Spec v0.2.0", versioned: true },
   { source: path.join(docsDir, "v0.2.0", "API.md"), output: path.join(docsDir, "v0.2.0", "api.html"), title: "API v0.2.0", versioned: true },
@@ -54,8 +56,10 @@ function rewriteHref(href, page) {
     "GUIDE.md": "guide.html",
     "SPEC.md": "spec.html",
     "API.md": "api.html",
+    "STDLIB.md": "stdlib.html",
     "NAMING.md": "naming.html",
     "VERSIONS.md": "versions.html",
+    "v0.4.md": "v0.4.html",
     "ROADMAP.md": "roadmap.html",
     "../ROADMAP.md": "roadmap.html",
   };
@@ -192,8 +196,10 @@ function renderPage(page, body) {
         <a href="${prefix}guide.html">Guide</a>
         <a href="${prefix}spec.html">Spec</a>
         <a href="${prefix}api.html">API</a>
+        <a href="${prefix}stdlib.html">Stdlib</a>
         <a href="${prefix}naming.html">Naming</a>
         <a href="${prefix}versions.html">Versions</a>
+        <a href="${prefix}v0.4.html">v0.4</a>
         <a href="${prefix}roadmap.html">Roadmap</a>
       </div>
     </nav>

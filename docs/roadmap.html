@@ -17,8 +17,10 @@
         <a href="guide.html">Guide</a>
         <a href="spec.html">Spec</a>
         <a href="api.html">API</a>
+        <a href="stdlib.html">Stdlib</a>
         <a href="naming.html">Naming</a>
         <a href="versions.html">Versions</a>
+        <a href="v0.4.html">v0.4</a>
         <a href="roadmap.html">Roadmap</a>
       </div>
     </nav>
@@ -40,81 +42,108 @@
 <li><a href="api.html"><code>docs/API.md</code></a></li>
 <li><a href="naming.html"><code>docs/NAMING.md</code></a></li>
 </ol>
-<p>The v0.2 reference implementation remains:</p>
+<p>The v0.3 reference implementation remains:</p>
 <pre><code class="language-text">Go lexer
 Go parser
 Go AST
 Go checker
 Go C emitter
 C runtime
-v0.2 specification tests</code></pre>
-<p>Go interpreter behavior, current <code>selfhost/*</code>, ASTMODE, legacy node strings, and self-host bootstrap gates are not v0.2 authority.</p>
+v0.3 specification tests</code></pre>
+<p>Go interpreter behavior, current <code>selfhost/*</code>, ASTMODE, legacy node strings, and self-host bootstrap gates are not v0.3 authority.</p>
 <h2 id="implementation-tooling-policy">Implementation Tooling Policy</h2>
-<p>The v0.2 compiler implementation should stay hand-written:</p>
+<p>The v0.3 compiler implementation should stay hand-written:</p>
 <pre><code class="language-text">Go lexer
 Go parser
 Go AST
 Go checker
 Go C emitter</code></pre>
-<p>Do not add a parser generator or large grammar framework for v0.2. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler-front-end authority. They may be useful references or future editor tooling, but the active compiler path should remain explicit Go code.</p>
-<p>Use small test-support dependencies where they make the v0.2 specification easier to verify:</p>
+<p>Do not add a parser generator or large grammar framework for v0.3. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler-front-end authority. They may be useful references or future editor tooling, but the active compiler path should remain explicit Go code.</p>
+<p>Use small test-support dependencies where they make the v0.3 specification easier to verify:</p>
 <pre><code class="language-text">github.com/google/go-cmp/cmp
 github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="current-roadmap">Current Roadmap</h2>
 <ul>
-<li>[x] Ship v0.2 friendly scripting</li>
+<li>[ ] Ship v0.3 standard attached libraries</li>
 <ul>
-<li>[x] Add v0.2 standard builtins</li>
+<li>[ ] Define v0.3 attached library scope</li>
 <ul>
-<li>[x] Implement collection builtins: <code>map</code>, <code>filter</code>, <code>find</code>, <code>any</code>, <code>all</code>, and <code>reduce</code>.</li>
-<li>[x] Implement deep equality builtin: <code>equal(left, right)</code>.</li>
-<li>[x] Implement input builtin: <code>read_line()</code>.</li>
-<li>[x] Add API documentation and examples for every v0.2 builtin.</li>
-<li>[x] Add parser/checker/C-emitter/runtime tests for v0.2 builtins.</li>
+<li>[x] Decide that JSON and CSV parsers are deferred from v0.3.</li>
+<li>[x] Keep JSON and CSV out of builtins and out of initial stdlib scope.</li>
+<li>[x] Specify that v0.3 adds attached libraries, not a package manager.</li>
+<li>[x] Document v0.3 scope in <code>docs/SPEC.md</code> and <code>docs/STDLIB.md</code>.</li>
 </ul>
-<li>[x] Add v0.2 user-facing CLI commands</li>
+<li>[ ] Add stdlib import search</li>
 <ul>
-<li>[x] Add <code>tya check file.tya</code>.</li>
-<li>[x] Add <code>tya fmt file.tya</code>.</li>
-<li>[x] Add <code>tya fmt -w file.tya</code>.</li>
-<li>[x] Add <code>tya emit-c file.tya</code>.</li>
-<li>[x] Replace or retire hidden <code>--emit-c</code> documentation in favor of <code>tya emit-c</code>.</li>
-<li>[x] Add CLI tests for success, diagnostics, and exit statuses.</li>
+<li>[ ] Add a <code>stdlib/</code> directory for shipped <code>.tya</code> modules.</li>
+<li>[ ] Search stdlib after the importing file's directory and <code>TYA_PATH</code>.</li>
+<li>[ ] Keep user modules and <code>TYA_PATH</code> entries higher priority than stdlib.</li>
+<li>[ ] Keep module file name and <code>module</code> declaration matching rules.</li>
+<li>[ ] Add tests for same-directory, <code>TYA_PATH</code>, and stdlib precedence.</li>
 </ul>
-<li>[x] Improve diagnostics</li>
+<li>[ ] Package stdlib with installed Tya</li>
 <ul>
-<li>[x] Add source-oriented diagnostic formatting with file, line, column, message, source line, and caret marker when available.</li>
-<li>[x] Keep user-facing diagnostics free of Go implementation terms.</li>
-<li>[x] Add golden tests for parser, checker, and CLI diagnostic output.</li>
+<li>[ ] Make installed <code>tya</code> find <code>share/tya/stdlib</code> outside the source checkout.</li>
+<li>[ ] Install <code>stdlib/*</code> from the Homebrew Formula.</li>
+<li>[ ] Add an installed-layout test for runtime plus stdlib lookup.</li>
 </ul>
-<li>[x] Add formatter</li>
+<li>[ ] Add initial lightweight stdlib modules</li>
 <ul>
-<li>[x] Define conservative formatting behavior for indentation, trailing whitespace, one statement per line, dictionaries, and inline literals.</li>
-<li>[x] Implement formatter output for <code>tya fmt</code>.</li>
-<li>[x] Implement in-place write behavior for <code>tya fmt -w</code>.</li>
-<li>[x] Add formatter idempotence tests.</li>
+<li>[ ] Add <code>stdlib/string.tya</code>.</li>
+<li>[ ] Add <code>string.blank(text)</code>.</li>
+<li>[ ] Add <code>string.present(text)</code>.</li>
+<li>[ ] Add <code>stdlib/array.tya</code>.</li>
+<li>[ ] Add <code>array.empty(items)</code>.</li>
+<li>[ ] Add <code>array.first(items)</code>.</li>
+<li>[ ] Add tests and examples for every initial stdlib function.</li>
 </ul>
-<li>[x] Improve module ergonomics</li>
+<li>[ ] Keep v0.3 documentation and release snapshots aligned</li>
 <ul>
-<li>[x] Add <code>TYA_PATH</code> search after the importing file's directory.</li>
-<li>[x] Keep module file name and <code>module</code> declaration matching rules.</li>
-<li>[x] Preserve the v0.2 exclusion of import aliases and package manager behavior.</li>
-<li>[x] Add module loading tests for same-directory imports, <code>TYA_PATH</code>, and missing modules.</li>
+<li>[ ] Update latest <code>docs/SPEC.md</code> and <code>docs/STDLIB.md</code> when v0.3 behavior is implemented.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Create <code>docs/v0.3.0/</code> spec, API, and stdlib snapshots before release.</li>
+<li>[ ] Update README install, run, development, and documentation sections for v0.3.0.</li>
 </ul>
-<li>[x] Keep v0.2 documentation and release snapshots aligned</li>
+</ul>
+<li>[ ] Ship v0.4 testing and script confidence</li>
 <ul>
-<li>[x] Update latest <code>docs/SPEC.md</code> and <code>docs/API.md</code> when v0.2 behavior is implemented.</li>
-<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[x] Create <code>docs/v0.2.0/</code> spec and API snapshots before release.</li>
-<li>[x] Update README install, run, development, and documentation sections for v0.2.0.</li>
+<li>[x] Decide that v0.4 focuses on tests instead of expanding stdlib.</li>
+<li>[x] Keep native-backed stdlib, JSON, and CSV out of v0.4.</li>
+<li>[x] Document v0.4 direction in <code>docs/v0.4.md</code>.</li>
+<li>[ ] Add <code>tya test</code>.</li>
+<ul>
+<li>[ ] With no argument, discover <code>*_test.tya</code> under the current directory.</li>
+<li>[ ] With a directory argument, discover <code>*_test.tya</code> under that directory.</li>
+<li>[ ] With a file argument, run that file only.</li>
+<li>[ ] Exit non-zero when any test file fails.</li>
+</ul>
+<li>[ ] Add assertions.</li>
+<ul>
+<li>[ ] Add <code>assert value</code>.</li>
+<li>[ ] Add <code>assert_equal expected, actual</code>.</li>
+<li>[ ] Use deep equality for <code>assert_equal</code>.</li>
+<li>[ ] Emit source-oriented assertion diagnostics.</li>
+</ul>
+<li>[ ] Add stdlib tests as first-class examples.</li>
+<ul>
+<li>[ ] Add <code>tests/stdlib_string_test.tya</code>.</li>
+<li>[ ] Add <code>tests/stdlib_array_test.tya</code>.</li>
+<li>[ ] Ensure stdlib tests run through <code>tya test</code>.</li>
+</ul>
+<li>[ ] Keep v0.4 documentation and release snapshots aligned.</li>
+<ul>
+<li>[ ] Update latest docs when v0.4 behavior is implemented.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Create <code>docs/v0.4.0/</code> snapshots before release.</li>
+<li>[ ] Update README install, run, development, and documentation sections for v0.4.0.</li>
 </ul>
 </ul>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>
 <pre><code class="language-sh">go test ./... -count=1</code></pre>
-<p>Focused verification should prefer tests for the touched lexer, parser, checker, C emitter, runtime, examples, or docs. Self-host bootstrap checks are historical pre-v0.1 gates and are not default v0.2 verification.</p>
+<p>Focused verification should prefer tests for the touched lexer, parser, checker, C emitter, runtime, examples, stdlib, or docs. Self-host bootstrap checks are historical pre-v0.1 gates and are not default v0.3 verification.</p>
     </article>
   </main>
 </body>

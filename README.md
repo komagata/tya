@@ -112,11 +112,13 @@ print greeting.hello("komagata")
 ## Documentation
 
 - [Guide](https://tya-lang.org/guide.html): read this first to learn Tya.
-- [Spec](https://tya-lang.org/spec.html): Tya v0.2 language specification.
-- [API](https://tya-lang.org/api.html): v0.2 built-in function reference.
+- [Spec](https://tya-lang.org/spec.html): latest Tya language specification.
+- [API](https://tya-lang.org/api.html): latest built-in function reference.
+- [Stdlib](https://tya-lang.org/stdlib.html): standard attached library reference.
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): release snapshots of the spec
   and API.
+- [v0.4 Plan](https://tya-lang.org/v0.4.html): planned testing direction.
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
 Markdown source files are kept in `docs/` for editing. The public website uses

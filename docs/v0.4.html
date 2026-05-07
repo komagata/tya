@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>v0.4 Plan - Tya</title>
+  <link rel="stylesheet" href="document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="index.html">
+        <img src="assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="guide.html">Guide</a>
+        <a href="spec.html">Spec</a>
+        <a href="api.html">API</a>
+        <a href="stdlib.html">Stdlib</a>
+        <a href="naming.html">Naming</a>
+        <a href="versions.html">Versions</a>
+        <a href="v0.4.html">v0.4</a>
+        <a href="roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-4-draft-plan">Tya v0.4 Draft Plan</h1>
+<p>This document captures the planned direction for Tya v0.4 after v0.3 standard attached libraries.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.4 is about testing and script confidence.</p>
+<p>v0.3 makes shared <code>.tya</code> modules easier to ship and import. v0.4 should make those modules, and user scripts built on them, easier to verify.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Add a simple built-in test runner for Tya projects.</li>
+<li>Keep tests as ordinary <code>.tya</code> programs.</li>
+<li>Provide minimal assertions without adding a large test framework.</li>
+<li>Make stdlib tests the first real user of the test runner.</li>
+<li>Keep the language core small and compile-to-C.</li>
+</ul>
+<h2 id="included-in-v0-4">Included in v0.4</h2>
+<p>v0.4 should add:</p>
+<ul>
+<li><code>tya test</code></li>
+<li><code>*_test.tya</code> discovery</li>
+<li><code>assert value</code></li>
+<li><code>assert_equal expected, actual</code></li>
+<li>deep equality in <code>assert_equal</code></li>
+<li>specified test output and exit status behavior</li>
+<li>stdlib tests written as ordinary Tya test files</li>
+</ul>
+<h2 id="not-included-in-v0-4">Not Included in v0.4</h2>
+<p>v0.4 should not include:</p>
+<ul>
+<li><code>describe</code> / <code>it</code> DSL</li>
+<li>mocking</li>
+<li>coverage</li>
+<li>snapshot testing</li>
+<li>benchmark</li>
+<li>watch mode</li>
+<li>parallel test execution</li>
+<li>package manager</li>
+<li>native-backed stdlib</li>
+<li>JSON parser</li>
+<li>CSV parser</li>
+</ul>
+<h2 id="test-command">Test Command</h2>
+<p><code>tya test</code> runs Tya test files.</p>
+<pre><code class="language-sh">tya test
+tya test tests
+tya test tests/string_test.tya</code></pre>
+<p>Discovery rules:</p>
+<ol>
+<li>With no argument, search the current directory recursively for <code>*_test.tya</code>.</li>
+<li>With a directory argument, search that directory recursively for</li>
+</ol>
+<p>   <code>*_test.tya</code>.</p>
+<ol>
+<li>With a file argument, run that file only.</li>
+</ol>
+<p>Each test file is a normal Tya program. If any test file fails, <code>tya test</code> exits with a non-zero status.</p>
+<h2 id="assertions">Assertions</h2>
+<p><code>assert value</code> fails when <code>value</code> is falsey.</p>
+<pre><code class="language-tya">assert true
+assert 1 + 1 == 2</code></pre>
+<p><code>assert_equal expected, actual</code> compares with deep equality.</p>
+<pre><code class="language-tya">assert_equal 4, add(2, 2)
+assert_equal [&quot;a&quot;, &quot;b&quot;], names</code></pre>
+<p>Failure output should be source-oriented and concise.</p>
+<pre><code class="language-text">tests/math_test.tya:3:1: assertion failed</code></pre>
+<p>For <code>assert_equal</code>, include expected and actual values.</p>
+<pre><code class="language-text">tests/math_test.tya:4:1: assert_equal failed
+expected: 4
+actual: 5</code></pre>
+<h2 id="stdlib-tests">Stdlib Tests</h2>
+<p>The v0.3 standard attached library should be tested through the same runner that user projects use.</p>
+<p>Preferred layout:</p>
+<pre><code class="language-text">tests/
+  stdlib_string_test.tya
+  stdlib_array_test.tya</code></pre>
+<p>Example:</p>
+<pre><code class="language-tya">import string
+
+assert string.blank(&quot; &quot;)
+assert_equal false, string.blank(&quot;tya&quot;)</code></pre>
+    </article>
+  </main>
+</body>
+</html>
