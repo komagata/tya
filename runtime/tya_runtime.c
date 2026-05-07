@@ -11,9 +11,9 @@ struct TyaArray {
   TyaValue *items;
 };
 
-struct TyaObject {
+struct TyaDict {
   int len;
-  TyaObjectEntry *entries;
+  TyaDictEntry *entries;
 };
 
 struct TyaFunction {
@@ -61,38 +61,20 @@ TyaValue tya_array(const TyaValue *items, int count) {
   return (TyaValue){.kind = TYA_ARRAY, .array = array};
 }
 
-TyaValue tya_object(const TyaObjectEntry *entries, int count) {
-  TyaObject *object = malloc(sizeof(TyaObject));
-  object->len = count;
-  object->entries = malloc(sizeof(TyaObjectEntry) * count);
+TyaValue tya_dict(const TyaDictEntry *entries, int count) {
+  TyaDict *dict = malloc(sizeof(TyaDict));
+  dict->len = count;
+  dict->entries = malloc(sizeof(TyaDictEntry) * count);
   for (int i = 0; i < count; i++) {
-    object->entries[i] = entries[i];
+    dict->entries[i] = entries[i];
   }
-  return (TyaValue){.kind = TYA_OBJECT, .object = object};
-}
-
-TyaValue tya_set(const TyaValue *items, int count) {
-  TyaValue set = tya_array(0, 0);
-  set.kind = TYA_SET;
-  for (int i = 0; i < count; i++) {
-    if (!tya_has(set, items[i]).boolean) {
-      tya_push(set, items[i]);
-    }
-  }
-  return set;
+  return (TyaValue){.kind = TYA_DICT, .dict = dict};
 }
 
 TyaValue tya_function(TyaFunctionPtr fn) {
   TyaFunction *function = malloc(sizeof(TyaFunction));
   function->fn = fn;
   function->receiver = tya_nil();
-  return (TyaValue){.kind = TYA_FUNCTION, .function = function};
-}
-
-TyaValue tya_method(TyaFunctionPtr fn, TyaValue receiver) {
-  TyaFunction *function = malloc(sizeof(TyaFunction));
-  function->fn = fn;
-  function->receiver = receiver;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
@@ -104,12 +86,6 @@ TyaValue tya_error(TyaValue message) {
 }
 
 TyaValue tya_call1(TyaValue fn, TyaValue arg) {
-  if (fn.kind == TYA_OBJECT) {
-    TyaValue call = tya_member(fn, "__call");
-    if (call.kind == TYA_FUNCTION && call.function != NULL && call.function->fn != NULL) {
-      return call.function->fn(fn, arg, tya_nil(), tya_nil(), tya_nil());
-    }
-  }
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
@@ -117,12 +93,6 @@ TyaValue tya_call1(TyaValue fn, TyaValue arg) {
 }
 
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
-  if (fn.kind == TYA_OBJECT) {
-    TyaValue call = tya_member(fn, "__call");
-    if (call.kind == TYA_FUNCTION && call.function != NULL && call.function->fn != NULL) {
-      return call.function->fn(fn, first, second, tya_nil(), tya_nil());
-    }
-  }
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
@@ -130,12 +100,6 @@ TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
 }
 
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third) {
-  if (fn.kind == TYA_OBJECT) {
-    TyaValue call = tya_member(fn, "__call");
-    if (call.kind == TYA_FUNCTION && call.function != NULL && call.function->fn != NULL) {
-      return call.function->fn(fn, first, second, third, tya_nil());
-    }
-  }
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
@@ -143,12 +107,6 @@ TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third)
 }
 
 TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth) {
-  if (fn.kind == TYA_OBJECT) {
-    TyaValue call = tya_member(fn, "__call");
-    if (call.kind == TYA_FUNCTION && call.function != NULL && call.function->fn != NULL) {
-      return call.function->fn(fn, first, second, third, fourth);
-    }
-  }
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
@@ -162,13 +120,10 @@ TyaValue tya_len(TyaValue value) {
   if (value.kind == TYA_ARRAY && value.array != NULL) {
     return tya_number(value.array->len);
   }
-  if (value.kind == TYA_SET && value.array != NULL) {
-    return tya_number(value.array->len);
-  }
-  if (value.kind == TYA_OBJECT && value.object != NULL) {
+  if (value.kind == TYA_DICT && value.dict != NULL) {
     int count = 0;
-    for (int i = 0; i < value.object->len; i++) {
-      if (value.object->entries[i].key != NULL) {
+    for (int i = 0; i < value.dict->len; i++) {
+      if (value.dict->entries[i].key != NULL) {
         count++;
       }
     }
@@ -191,7 +146,10 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
       return tya_string(out);
     }
   }
-  if (value.kind == TYA_OBJECT && value.object != NULL && index.kind == TYA_STRING && index.string != NULL) {
+  if (value.kind == TYA_DICT && value.dict != NULL && index.kind == TYA_STRING && index.string != NULL) {
+    return tya_member(value, index.string);
+  }
+  if (value.kind == TYA_ERROR && index.kind == TYA_STRING && index.string != NULL) {
     return tya_member(value, index.string);
   }
   return tya_nil();
@@ -217,131 +175,123 @@ void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
   if (value.kind == TYA_ARRAY && value.array != NULL && i >= 0 && i < value.array->len) {
     value.array->items[i] = item;
   }
-  if (value.kind == TYA_OBJECT && value.object != NULL && index.kind == TYA_STRING && index.string != NULL) {
+  if (value.kind == TYA_DICT && value.dict != NULL && index.kind == TYA_STRING && index.string != NULL) {
     tya_set_member(value, index.string, item);
   }
 }
 
-TyaValue tya_member(TyaValue object, const char *key) {
-  if (object.kind == TYA_ERROR && strcmp(key, "message") == 0) {
-    return tya_string(object.error == NULL ? "" : object.error);
+TyaValue tya_member(TyaValue dict, const char *key) {
+  if (dict.kind == TYA_ERROR && strcmp(key, "message") == 0) {
+    return tya_string(dict.error == NULL ? "" : dict.error);
   }
-  if (object.kind != TYA_OBJECT || object.object == NULL) {
+  if (dict.kind != TYA_DICT || dict.dict == NULL) {
     return tya_nil();
   }
-  for (int i = 0; i < object.object->len; i++) {
-    if (object.object->entries[i].key != NULL && strcmp(object.object->entries[i].key, key) == 0) {
-      return object.object->entries[i].value;
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key) == 0) {
+      return dict.dict->entries[i].value;
     }
   }
   return tya_nil();
 }
 
-void tya_set_member(TyaValue object, const char *key, TyaValue value) {
-  if (object.kind != TYA_OBJECT || object.object == NULL) {
+void tya_set_member(TyaValue dict, const char *key, TyaValue value) {
+  if (dict.kind != TYA_DICT || dict.dict == NULL) {
     return;
   }
-  for (int i = 0; i < object.object->len; i++) {
-    if (object.object->entries[i].key != NULL && strcmp(object.object->entries[i].key, key) == 0) {
-      object.object->entries[i].value = value;
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key) == 0) {
+      dict.dict->entries[i].value = value;
       return;
     }
   }
-  object.object->entries = realloc(object.object->entries, sizeof(TyaObjectEntry) * (object.object->len + 1));
-  object.object->entries[object.object->len] = (TyaObjectEntry){key, value};
-  object.object->len++;
+  dict.dict->entries = realloc(dict.dict->entries, sizeof(TyaDictEntry) * (dict.dict->len + 1));
+  dict.dict->entries[dict.dict->len] = (TyaDictEntry){key, value};
+  dict.dict->len++;
 }
 
-TyaValue tya_object_key_at(TyaValue object, TyaValue index) {
-  if (object.kind != TYA_OBJECT || object.object == NULL) {
+TyaValue tya_dict_key_at(TyaValue dict, TyaValue index) {
+  if (dict.kind != TYA_DICT || dict.dict == NULL) {
     return tya_nil();
   }
   int target = (int)index.number;
   int seen = 0;
-  for (int i = 0; i < object.object->len; i++) {
-    if (object.object->entries[i].key == NULL) {
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key == NULL) {
       continue;
     }
     if (seen == target) {
-      return tya_string(object.object->entries[i].key);
+      return tya_string(dict.dict->entries[i].key);
     }
     seen++;
   }
   return tya_nil();
 }
 
-TyaValue tya_object_value_at(TyaValue object, TyaValue index) {
-  if (object.kind != TYA_OBJECT || object.object == NULL) {
+TyaValue tya_dict_value_at(TyaValue dict, TyaValue index) {
+  if (dict.kind != TYA_DICT || dict.dict == NULL) {
     return tya_nil();
   }
   int target = (int)index.number;
   int seen = 0;
-  for (int i = 0; i < object.object->len; i++) {
-    if (object.object->entries[i].key == NULL) {
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key == NULL) {
       continue;
     }
     if (seen == target) {
-      return object.object->entries[i].value;
+      return dict.dict->entries[i].value;
     }
     seen++;
   }
   return tya_nil();
 }
 
-TyaValue tya_has(TyaValue object, TyaValue key) {
-  if (object.kind == TYA_SET && object.array != NULL) {
-    for (int i = 0; i < object.array->len; i++) {
-      if (tya_deep_equal(object.array->items[i], key).boolean) {
-        return tya_bool(true);
-      }
-    }
+TyaValue tya_has(TyaValue dict, TyaValue key) {
+  if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
     return tya_bool(false);
   }
-  if (key.kind != TYA_STRING || key.string == NULL || object.kind != TYA_OBJECT || object.object == NULL) {
-    return tya_bool(false);
-  }
-  for (int i = 0; i < object.object->len; i++) {
-    if (object.object->entries[i].key != NULL && strcmp(object.object->entries[i].key, key.string) == 0) {
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key.string) == 0) {
       return tya_bool(true);
     }
   }
   return tya_bool(false);
 }
 
-TyaValue tya_keys(TyaValue object) {
+TyaValue tya_keys(TyaValue dict) {
   TyaValue out = tya_array(0, 0);
-  if (object.kind != TYA_OBJECT || object.object == NULL) {
+  if (dict.kind != TYA_DICT || dict.dict == NULL) {
     return out;
   }
-  for (int i = 0; i < object.object->len; i++) {
-    if (object.object->entries[i].key != NULL) {
-      tya_push(out, tya_string(object.object->entries[i].key));
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key != NULL) {
+      tya_push(out, tya_string(dict.dict->entries[i].key));
     }
   }
   return out;
 }
 
-TyaValue tya_values(TyaValue object) {
+TyaValue tya_values(TyaValue dict) {
   TyaValue out = tya_array(0, 0);
-  if (object.kind != TYA_OBJECT || object.object == NULL) {
+  if (dict.kind != TYA_DICT || dict.dict == NULL) {
     return out;
   }
-  for (int i = 0; i < object.object->len; i++) {
-    if (object.object->entries[i].key != NULL) {
-      tya_push(out, object.object->entries[i].value);
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key != NULL) {
+      tya_push(out, dict.dict->entries[i].value);
     }
   }
   return out;
 }
 
-void tya_delete(TyaValue object, TyaValue key) {
-  if (key.kind != TYA_STRING || key.string == NULL || object.kind != TYA_OBJECT || object.object == NULL) {
+void tya_delete(TyaValue dict, TyaValue key) {
+  if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
     return;
   }
-  for (int i = 0; i < object.object->len; i++) {
-    if (object.object->entries[i].key != NULL && strcmp(object.object->entries[i].key, key.string) == 0) {
-      object.object->entries[i].key = NULL;
-      object.object->entries[i].value = tya_nil();
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key.string) == 0) {
+      dict.dict->entries[i].key = NULL;
+      dict.dict->entries[i].value = tya_nil();
       return;
     }
   }
@@ -421,27 +371,6 @@ TyaValue tya_replace(TyaValue text, TyaValue old, TyaValue replacement) {
   return tya_string(out);
 }
 
-TyaValue tya_byte_len(TyaValue text) {
-  if (text.kind != TYA_STRING || text.string == NULL) {
-    return tya_number(0);
-  }
-  return tya_number(strlen(text.string));
-}
-
-TyaValue tya_char_len(TyaValue text) {
-  if (text.kind != TYA_STRING || text.string == NULL) {
-    return tya_number(0);
-  }
-  int count = 0;
-  for (int i = 0; text.string[i] != '\0'; i++) {
-    unsigned char c = (unsigned char)text.string[i];
-    if ((c & 0xC0) != 0x80) {
-      count++;
-    }
-  }
-  return tya_number(count);
-}
-
 bool tya_equal(TyaValue left, TyaValue right) {
   if (left.kind != right.kind) {
     return false;
@@ -459,10 +388,9 @@ bool tya_equal(TyaValue left, TyaValue right) {
     }
     return strcmp(left.string, right.string) == 0;
   case TYA_ARRAY:
-  case TYA_SET:
     return left.array == right.array;
-  case TYA_OBJECT:
-    return left.object == right.object;
+  case TYA_DICT:
+    return left.dict == right.dict;
   case TYA_FUNCTION:
     return left.function == right.function;
   case TYA_ERROR:
@@ -472,63 +400,6 @@ bool tya_equal(TyaValue left, TyaValue right) {
     return strcmp(left.error, right.error) == 0;
   }
   return false;
-}
-
-TyaValue tya_deep_equal(TyaValue left, TyaValue right) {
-  if (left.kind != right.kind) {
-    return tya_bool(false);
-  }
-  if (left.kind == TYA_ARRAY) {
-    if (left.array == NULL || right.array == NULL) {
-      return tya_bool(left.array == right.array);
-    }
-    if (left.array->len != right.array->len) {
-      return tya_bool(false);
-    }
-    for (int i = 0; i < left.array->len; i++) {
-      if (!tya_deep_equal(left.array->items[i], right.array->items[i]).boolean) {
-        return tya_bool(false);
-      }
-    }
-    return tya_bool(true);
-  }
-  if (left.kind == TYA_SET) {
-    if (left.array == NULL || right.array == NULL) {
-      return tya_bool(left.array == right.array);
-    }
-    if (left.array->len != right.array->len) {
-      return tya_bool(false);
-    }
-    for (int i = 0; i < left.array->len; i++) {
-      if (!tya_has(right, left.array->items[i]).boolean) {
-        return tya_bool(false);
-      }
-    }
-    return tya_bool(true);
-  }
-  if (left.kind == TYA_OBJECT) {
-    if (left.object == NULL || right.object == NULL) {
-      return tya_bool(left.object == right.object);
-    }
-    if ((int)tya_len(left).number != (int)tya_len(right).number) {
-      return tya_bool(false);
-    }
-    for (int i = 0; i < left.object->len; i++) {
-      const char *key = left.object->entries[i].key;
-      if (key == NULL) {
-        continue;
-      }
-      TyaValue right_value = tya_member(right, key);
-      if (right_value.kind == TYA_NIL && left.object->entries[i].value.kind != TYA_NIL) {
-        return tya_bool(false);
-      }
-      if (!tya_deep_equal(left.object->entries[i].value, right_value).boolean) {
-        return tya_bool(false);
-      }
-    }
-    return tya_bool(true);
-  }
-  return tya_bool(tya_equal(left, right));
 }
 
 TyaValue tya_add(TyaValue left, TyaValue right) {
@@ -585,33 +456,6 @@ TyaValue tya_env(TyaValue name) {
     return tya_nil();
   }
   return tya_string(value);
-}
-
-TyaValue tya_read_line(void) {
-  size_t cap = 128;
-  size_t len = 0;
-  char *line = malloc(cap);
-  int ch;
-  while ((ch = getchar()) != EOF) {
-    if (ch == '\n') {
-      break;
-    }
-    if (len + 1 >= cap) {
-      cap *= 2;
-      line = realloc(line, cap);
-    }
-    line[len] = (char)ch;
-    len++;
-  }
-  if (ch == EOF && len == 0) {
-    free(line);
-    return tya_nil();
-  }
-  if (len > 0 && line[len - 1] == '\r') {
-    len--;
-  }
-  line[len] = '\0';
-  return tya_string(line);
 }
 
 TyaValue tya_read_file(TyaValue path) {
@@ -716,8 +560,7 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     tya_builder_append(builder, scratch);
     break;
   case TYA_ARRAY:
-  case TYA_SET:
-    tya_builder_append(builder, value.kind == TYA_SET ? "{" : "[");
+    tya_builder_append(builder, "[");
     if (value.array != NULL) {
       for (int i = 0; i < value.array->len; i++) {
         if (i > 0) {
@@ -726,22 +569,22 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
         tya_build_value(builder, value.array->items[i]);
       }
     }
-    tya_builder_append(builder, value.kind == TYA_SET ? "}" : "]");
+    tya_builder_append(builder, "]");
     break;
-  case TYA_OBJECT:
+  case TYA_DICT:
     tya_builder_append(builder, "{");
-    if (value.object != NULL) {
+    if (value.dict != NULL) {
       int written = 0;
-      for (int i = 0; i < value.object->len; i++) {
-        if (value.object->entries[i].key == NULL) {
+      for (int i = 0; i < value.dict->len; i++) {
+        if (value.dict->entries[i].key == NULL) {
           continue;
         }
         if (written > 0) {
           tya_builder_append(builder, ", ");
         }
-        tya_builder_append(builder, value.object->entries[i].key);
+        tya_builder_append(builder, value.dict->entries[i].key);
         tya_builder_append(builder, ": ");
-        tya_build_value(builder, value.object->entries[i].value);
+        tya_build_value(builder, value.dict->entries[i].value);
         written++;
       }
     }
@@ -802,91 +645,8 @@ TyaValue tya_file_exists(TyaValue path) {
   return tya_bool(access(path.string, F_OK) == 0);
 }
 
-TyaValue tya_map(TyaValue array, TyaValue fn) {
-  TyaValue out = tya_array(0, 0);
-  if (array.kind != TYA_ARRAY || array.array == NULL) {
-    return out;
-  }
-  for (int i = 0; i < array.array->len; i++) {
-    tya_push(out, tya_call1(fn, array.array->items[i]));
-  }
-  return out;
-}
-
-TyaValue tya_filter(TyaValue array, TyaValue fn) {
-  TyaValue out = tya_array(0, 0);
-  if (array.kind != TYA_ARRAY || array.array == NULL) {
-    return out;
-  }
-  for (int i = 0; i < array.array->len; i++) {
-    TyaValue item = array.array->items[i];
-    if (tya_truthy(tya_call1(fn, item))) {
-      tya_push(out, item);
-    }
-  }
-  return out;
-}
-
-TyaValue tya_find(TyaValue array, TyaValue fn) {
-  if (array.kind != TYA_ARRAY || array.array == NULL) {
-    return tya_nil();
-  }
-  for (int i = 0; i < array.array->len; i++) {
-    TyaValue item = array.array->items[i];
-    if (tya_truthy(tya_call1(fn, item))) {
-      return item;
-    }
-  }
-  return tya_nil();
-}
-
-TyaValue tya_any(TyaValue array, TyaValue fn) {
-  if (array.kind != TYA_ARRAY || array.array == NULL) {
-    return tya_bool(false);
-  }
-  for (int i = 0; i < array.array->len; i++) {
-    if (tya_truthy(tya_call1(fn, array.array->items[i]))) {
-      return tya_bool(true);
-    }
-  }
-  return tya_bool(false);
-}
-
-TyaValue tya_all(TyaValue array, TyaValue fn) {
-  if (array.kind != TYA_ARRAY || array.array == NULL) {
-    return tya_bool(false);
-  }
-  for (int i = 0; i < array.array->len; i++) {
-    if (!tya_truthy(tya_call1(fn, array.array->items[i]))) {
-      return tya_bool(false);
-    }
-  }
-  return tya_bool(true);
-}
-
-TyaValue tya_each(TyaValue array, TyaValue fn) {
-  if (array.kind != TYA_ARRAY || array.array == NULL) {
-    return tya_nil();
-  }
-  for (int i = 0; i < array.array->len; i++) {
-    tya_call1(fn, array.array->items[i]);
-  }
-  return tya_nil();
-}
-
-TyaValue tya_reduce(TyaValue array, TyaValue initial, TyaValue fn) {
-  TyaValue total = initial;
-  if (array.kind != TYA_ARRAY || array.array == NULL) {
-    return total;
-  }
-  for (int i = 0; i < array.array->len; i++) {
-    total = tya_call2(fn, total, array.array->items[i]);
-  }
-  return total;
-}
-
 void tya_push(TyaValue array, TyaValue value) {
-  if ((array.kind != TYA_ARRAY && array.kind != TYA_SET) || array.array == NULL) {
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
     return;
   }
   if (array.array->len >= array.array->cap) {
@@ -938,8 +698,7 @@ static void tya_write_value(FILE *out, TyaValue value) {
     fprintf(out, "%s", value.string);
     break;
   case TYA_ARRAY:
-  case TYA_SET:
-    fprintf(out, value.kind == TYA_SET ? "{" : "[");
+    fprintf(out, "[");
     if (value.array != NULL) {
       for (int i = 0; i < value.array->len; i++) {
         if (i > 0) {
@@ -948,21 +707,21 @@ static void tya_write_value(FILE *out, TyaValue value) {
         tya_write_value(out, value.array->items[i]);
       }
     }
-    fprintf(out, value.kind == TYA_SET ? "}" : "]");
+    fprintf(out, "]");
     break;
-  case TYA_OBJECT:
+  case TYA_DICT:
     fprintf(out, "{");
-    if (value.object != NULL) {
+    if (value.dict != NULL) {
       int written = 0;
-      for (int i = 0; i < value.object->len; i++) {
-        if (value.object->entries[i].key == NULL) {
+      for (int i = 0; i < value.dict->len; i++) {
+        if (value.dict->entries[i].key == NULL) {
           continue;
         }
         if (written > 0) {
           fprintf(out, ", ");
         }
-        fprintf(out, "%s: ", value.object->entries[i].key);
-        tya_write_value(out, value.object->entries[i].value);
+        fprintf(out, "%s: ", value.dict->entries[i].key);
+        tya_write_value(out, value.dict->entries[i].value);
         written++;
       }
     }

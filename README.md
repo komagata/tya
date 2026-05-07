@@ -10,7 +10,7 @@ This repository currently contains a Go lexer, parser, AST, checker,
 C emitter, C runtime, and historical implementation experiments.
 
 Tya v0.1 is defined as a compile-to-C language. The current language authority
-is `docs/REFERENCE.md` plus `docs/API.md`; older self-host and class/module
+is `docs/SPEC.md` plus `docs/API.md`; older self-host and class/module
 planning documents are archived under `docs/archive/pre-v0.1/`.
 
 ## Run
@@ -34,7 +34,7 @@ go test ./...
 ## Documentation
 
 - `docs/GUIDE.md`: read this first to learn Tya.
-- `docs/REFERENCE.md`: Tya v0.1 language reference.
+- `docs/SPEC.md`: Tya v0.1 language spec.
 - `docs/API.md`: Tya v0.1 built-in function reference.
 - `docs/NAMING.md`: naming rules.
 - `ROADMAP.md`: current v0.1 implementation roadmap.

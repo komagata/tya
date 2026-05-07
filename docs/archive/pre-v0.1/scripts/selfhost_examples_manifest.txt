@@ -1,0 +1,55 @@
+# Self-host example parity manifest.
+#
+# Format:
+# path|status|gate|reason
+#
+# status:
+# supported        The stage-generated self-host tools execute this example in the bootstrap gate.
+# expected-failing The Go implementation runs this example, but self-host parity still needs a listed feature.
+# out-of-scope     Fixture/module support file, not a standalone generated-tool parity target.
+examples/args.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute args() and env()
+examples/admin.tya|out-of-scope|class fixture|support file for examples/inheritance.tya, not a standalone output parity target
+examples/arithmetic.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute arithmetic example subset
+examples/array.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute array builtin/index subset
+examples/archive/pre-v0.1/array_function.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute functional array builtin subset
+examples/class.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute basic class import example
+examples/classic/array_sum.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute classic array accumulation loop
+examples/classic/factorial.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute classic factorial loop
+examples/classic/fib.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute classic fibonacci loop
+examples/classic/fizzbuzz.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute classic fizzbuzz loop
+examples/classic/gcd.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute classic gcd loop
+examples/classic/prime.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute classic prime check
+examples/convert.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute conversion builtin subset
+examples/dict_set.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute dict/set literal example
+examples/equal.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute equality example subset
+examples/error.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute error object/message subset
+examples/exit.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute process exit example
+examples/file.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute file builtin subset
+examples/for.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute array for and indexed for subset
+examples/for_object.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute object iteration example
+examples/function.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute function and dict lookup example
+examples/greeting.tya|out-of-scope|module fixture|support file for examples/use_module.tya, not a standalone output parity target
+examples/hello.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute hello example
+examples/if.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute if/dict example
+examples/inheritance.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute inheritance example
+examples/interface.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute interface example
+examples/logic.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute boolean logic example subset
+examples/method.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute object method example
+examples/multiple_return.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute multiple return/dict lookup example
+examples/object.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute object lookup example
+examples/object_builtin.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute object builtin example
+examples/object_inline.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute inline object lookup example
+examples/panic.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute panic status and stderr behavior
+examples/prelude.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute prelude helper example
+examples/polite_user.tya|out-of-scope|class fixture|support file for examples/interface.tya, not a standalone output parity target
+examples/read_line.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute stdin read_line example
+examples/return.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute explicit return example subset
+examples/selfhost_input.tya|out-of-scope|prototype fixture|legacy selfhost.sh fixture covered outside stage-generated example parity
+examples/selfhost_ops.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute self-host operation subset
+examples/string.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute string builtin/index subset
+examples/try.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute try propagation example
+examples/use_module.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute module import example
+examples/use_module_decl.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute module declaration import example
+examples/util.tya|out-of-scope|module fixture|support file for examples/use_module_decl.tya, not a standalone output parity target
+examples/user.tya|out-of-scope|class fixture|support file for examples/class.tya, not a standalone output parity target
+examples/while.tya|supported|scripts/stage1_selfhost_sources_check.sh|stage-4 generated tools execute while example subset

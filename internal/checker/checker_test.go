@@ -93,13 +93,6 @@ func TestCheckRejectsInvalidDictKeyWithLocation(t *testing.T) {
 	}
 }
 
-func TestCheckAllowsSetLiteralAndSetBuiltin(t *testing.T) {
-	prog := parse(t, "roles = { \"admin\", \"owner\" }\nempty_roles = set()\nprint has roles, \"admin\"\nprint len empty_roles\n")
-	if err := Check(prog); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestCheckAllowsDictionaryIndexAccess(t *testing.T) {
 	prog := parse(t, "user = { name: \"komagata\" }\nprint user[\"name\"]\n")
 	if err := Check(prog); err != nil {
@@ -118,11 +111,9 @@ func TestCheckRejectsDictionaryMemberAccess(t *testing.T) {
 	}
 }
 
-func TestCheckRejectsArrayAndSetMemberAccess(t *testing.T) {
+func TestCheckRejectsArrayMemberAccess(t *testing.T) {
 	cases := map[string]string{
-		"items = [1]\nprint items.count\n":          "cannot use . access on array",
-		"roles = { \"admin\" }\nprint roles.name\n": "cannot use . access on set",
-		"roles = set()\nprint roles.name\n":         "cannot use . access on set",
+		"items = [1]\nprint items.count\n": "cannot use . access on array",
 	}
 	for src, want := range cases {
 		t.Run(want, func(t *testing.T) {
@@ -144,120 +135,15 @@ func TestCheckAllowsKnownModuleMemberAccess(t *testing.T) {
 	}
 }
 
-func TestCheckClassDeclaration(t *testing.T) {
-	src := "class User\n  init: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nuser = User(\"komagata\")\nprint user.greet()\n"
-	if err := Check(parse(t, src)); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestCheckRejectsInvalidClassName(t *testing.T) {
-	err := Check(parse(t, "class user\n  init: -> nil\n"))
-	if err == nil {
-		t.Fatal("expected invalid class name error")
-	}
-	if !strings.Contains(err.Error(), "invalid class name user") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestCheckRejectsDuplicateClassMethod(t *testing.T) {
-	err := Check(parse(t, "class User\n  greet: -> \"a\"\n  greet: -> \"b\"\n"))
-	if err == nil {
-		t.Fatal("expected duplicate method error")
-	}
-	if !strings.Contains(err.Error(), "duplicate class member greet") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestCheckClassFieldsAndClassMethods(t *testing.T) {
-	src := "class User\n  name: \"guest\"\n  @@count: 0\n\n  @@next: ->\n    @@count = @@count + 1\n    @@count\n\n  greet: ->\n    @name\n"
-	if err := Check(parse(t, src)); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestCheckRejectsClassPropOutsideClass(t *testing.T) {
-	err := Check(parse(t, "@@count = 1\n"))
-	if err == nil {
-		t.Fatal("expected @@ outside class error")
-	}
-	if !strings.Contains(err.Error(), "@@count used outside class") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestCheckAllowsInstanceAndClassMembersWithSameName(t *testing.T) {
-	src := "class User\n  count: 0\n  @@count: 0\n\n  next: ->\n    @count\n\n  @@next: ->\n    @@count\n"
-	if err := Check(parse(t, src)); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestCheckAllowsPredicateMethods(t *testing.T) {
-	src := "ready? = value -> true\n\nmodule util\n  ready?: -> true\n\nclass User\n  active?: -> true\n  @@ready?: -> true\n"
-	if err := Check(parse(t, src)); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestCheckRejectsPredicateNonFunction(t *testing.T) {
-	for _, src := range []string{
-		"ready? = true\n",
-		"class User\n  active?: true\n",
-		"class User\n  @@active?: true\n",
-		"module util\n  active?: true\n",
-		"user = { active?: true }\n",
-	} {
-		err := Check(parse(t, src))
-		if err == nil {
-			t.Fatalf("expected predicate non-function error for %q", src)
-		}
-		if !strings.Contains(err.Error(), "predicate") {
-			t.Fatalf("unexpected error for %q: %v", src, err)
-		}
-	}
-}
-
-func TestCheckClassInheritanceAndInterfaces(t *testing.T) {
-	src := "interface Greeter\n  greet: ->\n\nclass User\n  greet: -> \"hello\"\n\nclass Admin extends User implements Greeter\n  greet: -> super()\n"
-	if err := Check(parse(t, src)); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestCheckRejectsOverrideArityMismatch(t *testing.T) {
-	src := "class User\n  greet: -> \"hello\"\n\nclass Admin extends User\n  greet: name -> name\n"
-	err := Check(parse(t, src))
-	if err == nil {
-		t.Fatal("expected override arity error")
-	}
-	if !strings.Contains(err.Error(), "override arity mismatch for greet") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestCheckRejectsMissingInterfaceMethod(t *testing.T) {
-	src := "interface Greeter\n  greet: ->\n\nclass User implements Greeter\n  name: -> \"komagata\"\n"
-	err := Check(parse(t, src))
-	if err == nil {
-		t.Fatal("expected implements error")
-	}
-	if !strings.Contains(err.Error(), "does not implement Greeter.greet") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
 func TestCheckModuleDeclaration(t *testing.T) {
-	src := "module util\n  foo: \"foo\"\n  bar: -> \"bar\"\n\nprint util.foo\nprint util.bar()\n"
+	src := "module util\n  foo = \"foo\"\n  bar = -> \"bar\"\n\nprint util.foo\nprint util.bar()\n"
 	if err := Check(parse(t, src)); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckRejectsInvalidModuleName(t *testing.T) {
-	err := Check(parse(t, "module Util\n  foo: \"foo\"\n"))
+	err := Check(parse(t, "module Util\n  foo = \"foo\"\n"))
 	if err == nil {
 		t.Fatal("expected invalid module name error")
 	}
@@ -267,11 +153,48 @@ func TestCheckRejectsInvalidModuleName(t *testing.T) {
 }
 
 func TestCheckRejectsDuplicateModuleMember(t *testing.T) {
-	err := Check(parse(t, "module util\n  foo: \"a\"\n  foo: \"b\"\n"))
+	err := Check(parse(t, "module util\n  foo = \"a\"\n  foo = \"b\"\n"))
 	if err == nil {
 		t.Fatal("expected duplicate module member error")
 	}
 	if !strings.Contains(err.Error(), "duplicate module member foo") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckModuleFileAllowsImportsAndMatchingModule(t *testing.T) {
+	src := "import dependency\nmodule greeting\n  hello = name -> \"Hello, {name}\"\n"
+	if err := CheckModuleFile(parse(t, src), "greeting.tya"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckModuleFileRejectsMismatchedModuleName(t *testing.T) {
+	err := CheckModuleFile(parse(t, "module message\n  text = \"hello\"\n"), "greeting.tya")
+	if err == nil {
+		t.Fatal("expected module name mismatch error")
+	}
+	if !strings.Contains(err.Error(), "greeting.tya must define module greeting") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckModuleFileRejectsMultipleModules(t *testing.T) {
+	err := CheckModuleFile(parse(t, "module greeting\n  text = \"hello\"\nmodule greeting\n  extra = \"extra\"\n"), "greeting.tya")
+	if err == nil {
+		t.Fatal("expected multiple module error")
+	}
+	if !strings.Contains(err.Error(), "greeting.tya must define exactly one module") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckModuleFileRejectsTopLevelStatements(t *testing.T) {
+	err := CheckModuleFile(parse(t, "module greeting\n  text = \"hello\"\n_helper = \"bad\"\n"), "greeting.tya")
+	if err == nil {
+		t.Fatal("expected top-level helper error")
+	}
+	if !strings.Contains(err.Error(), "greeting.tya may only contain imports and one module declaration") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -287,8 +210,46 @@ func TestCheckRejectsUndefinedVariable(t *testing.T) {
 	}
 }
 
+func TestCheckRejectsNonV01Builtins(t *testing.T) {
+	for _, name := range []string{
+		"map",
+		"filter",
+		"find",
+		"any",
+		"all",
+		"each",
+		"reduce",
+		"byte_len",
+		"char_len",
+		"equal",
+		"div",
+		"read_line",
+	} {
+		t.Run(name, func(t *testing.T) {
+			err := Check(parse(t, name+"()\n"))
+			if err == nil {
+				t.Fatalf("expected %s to be rejected", name)
+			}
+			if !strings.Contains(err.Error(), "undefined variable "+name) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestCheckRejectsMemberAccessOnUnknownValue(t *testing.T) {
+	prog := parse(t, "show = user -> user.name\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected member access error")
+	}
+	if !strings.Contains(err.Error(), "cannot use . access on non-module value") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckAllowsFunctionParameterAndLoopVariable(t *testing.T) {
-	prog := parse(t, "show = user -> user.name\nitems = [1]\nfor item in items\n  print item\n")
+	prog := parse(t, "show = user -> user\nitems = [1]\nfor item in items\n  print item\nprint show(1)\n")
 	if err := Check(prog); err != nil {
 		t.Fatal(err)
 	}
@@ -306,7 +267,7 @@ func TestCheckUnusedRejectsUnusedVariable(t *testing.T) {
 }
 
 func TestCheckUnusedRejectsUnusedFunctionParameter(t *testing.T) {
-	prog := parse(t, "first = value, unused -> value\nprint first 1, 2\n")
+	prog := parse(t, "first = value, unused -> value\nprint first(1, 2)\n")
 	err := CheckUnused(prog)
 	if err == nil {
 		t.Fatal("expected unused parameter error")
@@ -317,7 +278,7 @@ func TestCheckUnusedRejectsUnusedFunctionParameter(t *testing.T) {
 }
 
 func TestCheckUnusedAllowsUsedBindings(t *testing.T) {
-	prog := parse(t, "items = [1]\nfor item in items\n  print item\nshow = value -> value\nprint show 1\n")
+	prog := parse(t, "items = [1]\nfor item in items\n  print item\nshow = value -> value\nprint show(1)\n")
 	if err := CheckUnused(prog); err != nil {
 		t.Fatal(err)
 	}

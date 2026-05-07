@@ -1,0 +1,7 @@
+items = [1, nil, 2]
+
+print first(items)
+print second(items)
+print compact(items)
+nums = [1, 2, 3]
+print sum(nums)

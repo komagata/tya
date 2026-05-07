@@ -1,0 +1,1210 @@
+kind_of = node ->
+  parts = split node, ":"
+  parts[1]
+
+name_of = node ->
+  parts = split node, ":"
+  if len(parts) < 3
+    return ""
+  parts[2]
+
+value_of = node ->
+  parts = split node, ":"
+  if len(parts) < 4
+    return ""
+  parts[3]
+
+extra_of = node ->
+  parts = split node, ":"
+  if len(parts) < 5
+    return ""
+  parts[4]
+
+extra2_of = node ->
+  parts = split node, ":"
+  if len(parts) < 6
+    return ""
+  parts[5]
+
+extra3_of = node ->
+  parts = split node, ":"
+  if len(parts) < 7
+    return ""
+  parts[6]
+
+extra4_of = node ->
+  parts = split node, ":"
+  if len(parts) < 8
+    return ""
+  parts[7]
+
+extra5_of = node ->
+  parts = split node, ":"
+  if len(parts) < 9
+    return ""
+  parts[8]
+
+extra6_of = node ->
+  parts = split node, ":"
+  if len(parts) < 10
+    return ""
+  parts[9]
+
+line_of = node ->
+  parts = split node, ":"
+  parts[0]
+
+has_name = names, name ->
+  for existing in names
+    if existing == name
+      return true
+  false
+
+is_lower = char ->
+  contains "abcdefghijklmnopqrstuvwxyz", char
+
+is_upper = char ->
+  contains "ABCDEFGHIJKLMNOPQRSTUVWXYZ", char
+
+is_digit = char ->
+  contains "0123456789", char
+
+is_valid_binding_name = name ->
+  if name == "_"
+    return true
+  if len(name) == 0
+    return false
+  if is_upper(name[0])
+    i = 0
+    while i < len(name)
+      if not is_upper(name[i]) and not is_digit(name[i]) and name[i] != "_"
+        return false
+      i = i + 1
+    return true
+  if name[0] == "_"
+    if len(name) < 2
+      return false
+    if not is_lower(name[1])
+      return false
+  else
+    if not is_lower(name[0])
+      return false
+  i = 1
+  prev_underscore = name[0] == "_"
+  while i < len(name)
+    if name[i] == "?" and i == len(name) - 1
+      if prev_underscore
+        return false
+      return true
+    if name[i] == "_"
+      if prev_underscore
+        return false
+      prev_underscore = true
+    else
+      if not is_lower(name[i]) and not is_digit(name[i])
+        return false
+      prev_underscore = false
+    i = i + 1
+  not prev_underscore
+
+is_const_name = name ->
+  if len(name) == 0
+    return false
+  if not is_upper(name[0])
+    return false
+  i = 0
+  while i < len(name)
+    if not is_upper(name[i]) and not is_digit(name[i]) and name[i] != "_"
+      return false
+    i = i + 1
+  true
+
+remember_name = names, indents, name, indent ->
+  push names, name
+  push indents, indent
+
+remember_builtin_names = names, indents ->
+  remember_name names, indents, "split", "0"
+  remember_name names, indents, "len", "0"
+  remember_name names, indents, "read_file", "0"
+  remember_name names, indents, "write_file", "0"
+  remember_name names, indents, "file_exists", "0"
+  remember_name names, indents, "read_line", "0"
+  remember_name names, indents, "args", "0"
+  remember_name names, indents, "env", "0"
+  remember_name names, indents, "to_string", "0"
+  remember_name names, indents, "to_int", "0"
+  remember_name names, indents, "to_float", "0"
+  remember_name names, indents, "to_number", "0"
+  remember_name names, indents, "trim", "0"
+  remember_name names, indents, "join", "0"
+  remember_name names, indents, "contains", "0"
+  remember_name names, indents, "starts_with", "0"
+  remember_name names, indents, "ends_with", "0"
+  remember_name names, indents, "replace", "0"
+  remember_name names, indents, "byte_len", "0"
+  remember_name names, indents, "char_len", "0"
+  remember_name names, indents, "map", "0"
+  remember_name names, indents, "filter", "0"
+  remember_name names, indents, "find", "0"
+  remember_name names, indents, "any", "0"
+  remember_name names, indents, "all", "0"
+  remember_name names, indents, "reduce", "0"
+  remember_name names, indents, "each", "0"
+  remember_name names, indents, "has", "0"
+  remember_name names, indents, "keys", "0"
+  remember_name names, indents, "values", "0"
+  remember_name names, indents, "delete", "0"
+  remember_name names, indents, "set", "0"
+  remember_name names, indents, "equal", "0"
+  remember_name names, indents, "has_name", "0"
+  remember_name names, indents, "error", "0"
+
+is_int_literal = name ->
+  if len(name) == 0
+    return false
+  i = 0
+  while i < len(name)
+    if not is_digit(name[i])
+      return false
+    i = i + 1
+  true
+
+is_literal_arg = name ->
+  name == "" or is_int_literal(name) or name == "." or name == "[" or name == "(" or name == ")" or name == " " or name == "+" or name == "+ " or name == "ident" or name == "binary" or name == "member" or name == "index" or name == "call" or name == "string" or name == "ident(" or name == "member(" or name == "index(" or name == "call(" or name == "\\n" or name == "INDENT" or name == "IDENT" or name == "INT" or name == "STRING" or name == "ARROW" or name == "SYMBOL" or name == "->"
+
+check_name = errors, names, line, name ->
+  if name != "" and not contains(name, "(") and not contains(name, ")") and not contains(name, " ") and not has_name(names, name)
+    push errors, line + ": undefined variable: " + name
+
+check_ast_name = errors, names, line, name ->
+  if not is_literal_arg(name) and is_valid_binding_name(name) and not has_name(names, name)
+    push errors, line + ": undefined variable: " + name
+
+root_name_of = name ->
+  member_parts = split name, "."
+  index_parts = split member_parts[0], "["
+  index_parts[0]
+
+check_collection_name = errors, names, line, name ->
+  check_name errors, names, line, root_name_of(name)
+
+check_non_literal_name = errors, names, line, name ->
+  if not is_literal_arg(name) and not has_name(names, name)
+    push errors, line + ": undefined variable: " + name
+
+check_assign_call2 = errors, names, node ->
+  check_name errors, names, line_of(node), extra_of(node)
+  check_name errors, names, line_of(node), extra2_of(node)
+  check_non_literal_name errors, names, line_of(node), extra3_of(node)
+
+check_assign_call3 = errors, names, node ->
+  check_name errors, names, line_of(node), extra_of(node)
+  check_name errors, names, line_of(node), extra2_of(node)
+  if extra3_of(node) == "IDENT"
+    check_name errors, names, line_of(node), extra4_of(node)
+  check_non_literal_name errors, names, line_of(node), extra5_of(node)
+
+check_print_call2 = errors, names, node ->
+  check_name errors, names, line_of(node), name_of(node)
+  check_name errors, names, line_of(node), value_of(node)
+  if extra_of(node) == "IDENT"
+    check_name errors, names, line_of(node), extra2_of(node)
+
+check_print_call3 = errors, names, node ->
+  right_kind = ""
+  right_arg = extra3_of(node)
+  if extra3_of(node) == "STRING"
+    right_kind = extra3_of(node)
+    right_arg = extra4_of(node)
+  check_name errors, names, line_of(node), name_of(node)
+  check_name errors, names, line_of(node), value_of(node)
+  if extra_of(node) == "IDENT"
+    check_name errors, names, line_of(node), extra2_of(node)
+  if right_kind != "STRING"
+    check_non_literal_name errors, names, line_of(node), right_arg
+
+check_assign_call1 = errors, names, node ->
+  if value_of(node) == "CALL1"
+    func_name = extra_of(node)
+    arg_name = extra2_of(node)
+    check_name errors, names, line_of(node), func_name
+    check_name errors, names, line_of(node), arg_name
+  if value_of(node) == "CALL1_INDEX"
+    func_name = extra_of(node)
+    object_name = extra2_of(node)
+    index_name = extra3_of(node)
+    check_name errors, names, line_of(node), func_name
+    check_name errors, names, line_of(node), object_name
+    check_non_literal_name errors, names, line_of(node), index_name
+  if value_of(node) == "CALL1_INDEX_BINARY"
+    func_name = extra_of(node)
+    object_name = extra2_of(node)
+    left_name = extra3_of(node)
+    right_name = extra5_of(node)
+    check_name errors, names, line_of(node), func_name
+    check_name errors, names, line_of(node), object_name
+    check_non_literal_name errors, names, line_of(node), left_name
+    check_non_literal_name errors, names, line_of(node), right_name
+  if value_of(node) == "CALL1_EXPR"
+    func_name = extra_of(node)
+    left_name = extra3_of(node)
+    right_name = extra4_of(node)
+    check_name errors, names, line_of(node), func_name
+    check_non_literal_name errors, names, line_of(node), left_name
+    check_non_literal_name errors, names, line_of(node), right_name
+
+check_print_call1 = errors, names, node ->
+  if kind_of(node) == "PRINT_CALL1"
+    func_name = name_of(node)
+    arg_name = value_of(node)
+    arg_kind = value_of(node)
+    check_name errors, names, line_of(node), func_name
+    if arg_kind != "STRING"
+      check_name errors, names, line_of(node), arg_name
+  if kind_of(node) == "PRINT_CALL1_INDEX"
+    func_name = name_of(node)
+    object_name = value_of(node)
+    index_name = extra_of(node)
+    check_name errors, names, line_of(node), func_name
+    check_name errors, names, line_of(node), object_name
+    check_non_literal_name errors, names, line_of(node), index_name
+  if kind_of(node) == "PRINT_CALL1_INDEX_BINARY"
+    func_name = name_of(node)
+    object_name = value_of(node)
+    left_name = extra_of(node)
+    right_name = extra3_of(node)
+    check_name errors, names, line_of(node), func_name
+    check_name errors, names, line_of(node), object_name
+    check_non_literal_name errors, names, line_of(node), left_name
+    check_non_literal_name errors, names, line_of(node), right_name
+  if kind_of(node) == "PRINT_CALL1_EXPR"
+    func_name = name_of(node)
+    left_name = extra_of(node)
+    right_name = extra2_of(node)
+    check_name errors, names, line_of(node), func_name
+    check_non_literal_name errors, names, line_of(node), left_name
+    check_non_literal_name errors, names, line_of(node), right_name
+
+check = nodes ->
+  names = []
+  name_indents = []
+  constants = []
+  loop_indents = []
+  func_indents = []
+  errors = []
+  current_indent = "0"
+  remember_builtin_names names, name_indents
+
+  for node in nodes
+    if kind_of(node) == "INDENT"
+      current_indent = name_of(node)
+      kept_names = []
+      kept_indents = []
+      i = 0
+      while i < len(names)
+        if to_int(name_indents[i]) <= to_int(current_indent)
+          remember_name kept_names, kept_indents, names[i], name_indents[i]
+        i = i + 1
+      names = kept_names
+      name_indents = kept_indents
+      kept_loop_indents = []
+      i = 0
+      while i < len(loop_indents)
+        if to_int(loop_indents[i]) <= to_int(current_indent)
+          push kept_loop_indents, loop_indents[i]
+        i = i + 1
+      loop_indents = kept_loop_indents
+      kept_func_indents = []
+      i = 0
+      while i < len(func_indents)
+        if to_int(func_indents[i]) <= to_int(current_indent)
+          push kept_func_indents, func_indents[i]
+        i = i + 1
+      func_indents = kept_func_indents
+
+    if kind_of(node) == "FUNC"
+      name = name_of(node)
+      if not has_name(names, name)
+        remember_name names, name_indents, name, current_indent
+      arg = value_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg != "" and not has_name(names, arg)
+        remember_name names, name_indents, arg, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "FUNC2"
+      name = name_of(node)
+      if not has_name(names, name)
+        remember_name names, name_indents, name, current_indent
+      arg = value_of(node)
+      arg2 = extra_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not is_valid_binding_name(arg2)
+        push errors, line_of(node) + ": invalid binding name: " + arg2
+      if arg != "" and arg == arg2
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
+      if arg != "" and not has_name(names, arg)
+        remember_name names, name_indents, arg, current_indent
+      if arg2 != "" and not has_name(names, arg2)
+        remember_name names, name_indents, arg2, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "FUNC3"
+      name = name_of(node)
+      if not has_name(names, name)
+        remember_name names, name_indents, name, current_indent
+      arg = value_of(node)
+      arg2 = extra_of(node)
+      arg3 = extra2_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not is_valid_binding_name(arg2)
+        push errors, line_of(node) + ": invalid binding name: " + arg2
+      if arg3 != "" and not is_valid_binding_name(arg3)
+        push errors, line_of(node) + ": invalid binding name: " + arg3
+      if arg != "" and (arg == arg2 or arg == arg3)
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
+      if arg2 != "" and arg2 == arg3
+        push errors, line_of(node) + ": duplicate function parameter: " + arg2
+      if arg != "" and not has_name(names, arg)
+        remember_name names, name_indents, arg, current_indent
+      if arg2 != "" and not has_name(names, arg2)
+        remember_name names, name_indents, arg2, current_indent
+      if arg3 != "" and not has_name(names, arg3)
+        remember_name names, name_indents, arg3, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "FUNC4"
+      name = name_of(node)
+      if not has_name(names, name)
+        remember_name names, name_indents, name, current_indent
+      arg = value_of(node)
+      arg2 = extra_of(node)
+      arg3 = extra2_of(node)
+      arg4 = extra3_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not is_valid_binding_name(arg2)
+        push errors, line_of(node) + ": invalid binding name: " + arg2
+      if arg3 != "" and not is_valid_binding_name(arg3)
+        push errors, line_of(node) + ": invalid binding name: " + arg3
+      if arg4 != "" and not is_valid_binding_name(arg4)
+        push errors, line_of(node) + ": invalid binding name: " + arg4
+      if arg != "" and (arg == arg2 or arg == arg3 or arg == arg4)
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
+      if arg2 != "" and (arg2 == arg3 or arg2 == arg4)
+        push errors, line_of(node) + ": duplicate function parameter: " + arg2
+      if arg3 != "" and arg3 == arg4
+        push errors, line_of(node) + ": duplicate function parameter: " + arg3
+      if arg != "" and not has_name(names, arg)
+        remember_name names, name_indents, arg, current_indent
+      if arg2 != "" and not has_name(names, arg2)
+        remember_name names, name_indents, arg2, current_indent
+      if arg3 != "" and not has_name(names, arg3)
+        remember_name names, name_indents, arg3, current_indent
+      if arg4 != "" and not has_name(names, arg4)
+        remember_name names, name_indents, arg4, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "FOR"
+      item = name_of(node)
+      collection = value_of(node)
+      if not is_valid_binding_name(item)
+        push errors, line_of(node) + ": invalid binding name: " + item
+      check_collection_name errors, names, line_of(node), collection
+      if not has_name(names, item)
+        remember_name names, name_indents, item, to_string(to_int(current_indent) + 2)
+      push loop_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "FOR_INDEX"
+      item = name_of(node)
+      index = value_of(node)
+      collection = extra_of(node)
+      if not is_valid_binding_name(item)
+        push errors, line_of(node) + ": invalid binding name: " + item
+      if not is_valid_binding_name(index)
+        push errors, line_of(node) + ": invalid binding name: " + index
+      check_collection_name errors, names, line_of(node), collection
+      if not has_name(names, item)
+        remember_name names, name_indents, item, to_string(to_int(current_indent) + 2)
+      if not has_name(names, index)
+        remember_name names, name_indents, index, to_string(to_int(current_indent) + 2)
+      push loop_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "WHILE" or kind_of(node) == "WHILE_LT_CALL" or kind_of(node) == "WHILE_COMPARE_LT" or kind_of(node) == "WHILE_COMPARE_NE" or kind_of(node) == "WHILE_COMPARE_GE" or kind_of(node) == "WHILE_COMPARE_GT" or kind_of(node) == "WHILE_COMPARE_LE"
+      push loop_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "ASSIGN"
+      name = name_of(node)
+      if not is_valid_binding_name(name)
+        push errors, line_of(node) + ": invalid binding name: " + name
+      if value_of(node) == "IDENT"
+        value_name = extra_of(node)
+        check_name errors, names, line_of(node), value_name
+      if value_of(node) == "BOOL_NOT"
+        value_name = extra_of(node)
+        check_name errors, names, line_of(node), value_name
+      if value_of(node) == "BOOL_AND" or value_of(node) == "BOOL_OR"
+        left_name = extra_of(node)
+        right_name = extra2_of(node)
+        check_name errors, names, line_of(node), left_name
+        check_name errors, names, line_of(node), right_name
+      if value_of(node) == "OBJECT_ONE"
+        value_name = extra3_of(node)
+        if extra2_of(node) == "IDENT"
+          check_name errors, names, line_of(node), value_name
+      if value_of(node) == "INT_ADD" or value_of(node) == "INT_SUB" or value_of(node) == "INT_MUL" or value_of(node) == "INT_DIV" or value_of(node) == "INT_MOD"
+        left_name = extra_of(node)
+        right_name = extra2_of(node)
+        check_non_literal_name errors, names, line_of(node), left_name
+        check_non_literal_name errors, names, line_of(node), right_name
+      if value_of(node) == "INT_MUL_ADD"
+        left_name = extra_of(node)
+        right_name = extra2_of(node)
+        factor_name = extra3_of(node)
+        check_non_literal_name errors, names, line_of(node), left_name
+        check_non_literal_name errors, names, line_of(node), right_name
+        check_non_literal_name errors, names, line_of(node), factor_name
+      if value_of(node) == "COMPARE_LT" or value_of(node) == "COMPARE_EQ" or value_of(node) == "COMPARE_NE" or value_of(node) == "COMPARE_GE" or value_of(node) == "COMPARE_GT" or value_of(node) == "COMPARE_LE"
+        left_name = extra_of(node)
+        right_name = extra2_of(node)
+        check_non_literal_name errors, names, line_of(node), left_name
+        check_non_literal_name errors, names, line_of(node), right_name
+      check_assign_call1 errors, names, node
+      if value_of(node) == "TRY_CALL1"
+        func_name = extra_of(node)
+        arg_name = extra2_of(node)
+        if len(func_indents) == 0
+          push errors, line_of(node) + ": try used outside function"
+        check_name errors, names, line_of(node), func_name
+        check_name errors, names, line_of(node), arg_name
+      if value_of(node) == "CALL2"
+        check_assign_call2 errors, names, node
+      if value_of(node) == "CALL3"
+        check_assign_call3 errors, names, node
+      if value_of(node) == "MAP_MUL"
+        source_name = extra_of(node)
+        check_name errors, names, line_of(node), source_name
+      if value_of(node) == "CALL2_FUNC_MOD_EQ"
+        func_name = extra_of(node)
+        source_name = extra2_of(node)
+        param_name = extra3_of(node)
+        check_name errors, names, line_of(node), func_name
+        check_name errors, names, line_of(node), source_name
+        if not is_valid_binding_name(param_name)
+          push errors, line_of(node) + ": invalid parameter name: " + param_name
+      if value_of(node) == "INDEX"
+        source_name = extra_of(node)
+        index_name = extra2_of(node)
+        check_name errors, names, line_of(node), source_name
+        check_non_literal_name errors, names, line_of(node), index_name
+      if value_of(node) == "CALL0_INDEX"
+        func_name = extra_of(node)
+        index_name = extra2_of(node)
+        check_name errors, names, line_of(node), func_name
+        check_non_literal_name errors, names, line_of(node), index_name
+      if value_of(node) == "CALL1_CALL0_INDEX"
+        outer_name = extra_of(node)
+        inner_name = extra2_of(node)
+        index_name = extra3_of(node)
+        check_name errors, names, line_of(node), outer_name
+        check_name errors, names, line_of(node), inner_name
+        check_non_literal_name errors, names, line_of(node), index_name
+      if has_name(constants, name)
+        push errors, line_of(node) + ": cannot reassign constant " + name
+      if is_const_name(name) and not has_name(constants, name)
+        push constants, name
+      seen = has_name names, name
+      if not seen
+        remember_name names, name_indents, name, current_indent
+
+    if kind_of(node) == "MULTI_ASSIGN2"
+      left_name = name_of(node)
+      right_name = value_of(node)
+      value_kind = extra_of(node)
+      value_name = extra2_of(node)
+      if not is_valid_binding_name(left_name)
+        push errors, line_of(node) + ": invalid binding name: " + left_name
+      if not is_valid_binding_name(right_name)
+        push errors, line_of(node) + ": invalid binding name: " + right_name
+      if value_kind == "IDENT" and not has_name(names, value_name)
+        check_name errors, names, line_of(node), value_name
+      if not has_name(names, left_name)
+        remember_name names, name_indents, left_name, current_indent
+      if not has_name(names, right_name)
+        remember_name names, name_indents, right_name, current_indent
+
+    if kind_of(node) == "MULTI_ASSIGN2_CALL1"
+      left_name = name_of(node)
+      right_name = value_of(node)
+      func_name = extra_of(node)
+      arg_kind = extra2_of(node)
+      arg_name = extra3_of(node)
+      if not is_valid_binding_name(left_name)
+        push errors, line_of(node) + ": invalid binding name: " + left_name
+      if not is_valid_binding_name(right_name)
+        push errors, line_of(node) + ": invalid binding name: " + right_name
+      check_name errors, names, line_of(node), func_name
+      if arg_kind == "IDENT"
+        check_name errors, names, line_of(node), arg_name
+      if not has_name(names, left_name)
+        remember_name names, name_indents, left_name, current_indent
+      if not has_name(names, right_name)
+        remember_name names, name_indents, right_name, current_indent
+
+    if kind_of(node) == "AST_MULTI_ASSIGN2"
+      left_name = name_of(node)
+      right_name = value_of(node)
+      expr = extra_of(node)
+      if not is_valid_binding_name(left_name)
+        push errors, line_of(node) + ": invalid binding name: " + left_name
+      if not is_valid_binding_name(right_name)
+        push errors, line_of(node) + ": invalid binding name: " + right_name
+      ast_parts = split expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      if not has_name(names, left_name)
+        remember_name names, name_indents, left_name, current_indent
+      if not has_name(names, right_name)
+        remember_name names, name_indents, right_name, current_indent
+
+    if kind_of(node) == "AST_CALL_STMT2"
+      expr = value_of(node) + " " + extra_of(node)
+      ast_parts = split expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+
+    if kind_of(node) == "PRINT"
+      if name_of(node) == "IDENT"
+        check_name errors, names, line_of(node), value_of(node)
+
+    if kind_of(node) == "AST_ASSIGN"
+      if not is_valid_binding_name(name_of(node))
+        push errors, line_of(node) + ": invalid binding name: " + name_of(node)
+      ast_parts = split value_of(node), "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split value_of(node), "member("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != "." and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split value_of(node), "index("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != "." and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_j = ast_j + 1
+        ast_name = ""
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")"
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        if not is_literal_arg(ast_name) and not contains(value_of(node), "call_index(")
+          check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split value_of(node), "call("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split value_of(node), "call_index("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_fields = split ast_part, " "
+        if len(ast_fields) >= 2
+          check_name errors, names, line_of(node), ast_fields[0]
+          if ast_fields[0] != "read_file"
+            check_name errors, names, line_of(node), ast_fields[1]
+        ast_i = ast_i + 1
+      if not has_name(names, name_of(node))
+        remember_name names, name_indents, name_of(node), current_indent
+
+    if kind_of(node) == "AST_PRINT"
+      print_expr = name_of(node)
+      ast_parts = split print_expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split print_expr, "member("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != "." and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split print_expr, "index("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != "." and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_j = ast_j + 1
+        ast_name = ""
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")"
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        if not is_literal_arg(ast_name)
+          check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split print_expr, "call("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+
+    if kind_of(node) == "AST_IF" or kind_of(node) == "AST_WHILE"
+      cond_expr = name_of(node)
+      ast_parts = split cond_expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      if kind_of(node) == "AST_WHILE"
+        push loop_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "AST_PUSH"
+      check_name errors, names, line_of(node), name_of(node)
+      push_expr = value_of(node)
+      ast_parts = split push_expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+
+    if kind_of(node) == "AST_DELETE"
+      check_name errors, names, line_of(node), name_of(node)
+      delete_expr = value_of(node)
+      ast_parts = split delete_expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+
+    if kind_of(node) == "AST_FOR"
+      item = name_of(node)
+      collection = value_of(node)
+      if not is_valid_binding_name(item)
+        push errors, line_of(node) + ": invalid binding name: " + item
+      check_collection_name errors, names, line_of(node), collection
+      if not has_name(names, item)
+        remember_name names, name_indents, item, to_string(to_int(current_indent) + 2)
+      push loop_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "AST_FOR_INDEX"
+      item = name_of(node)
+      index = value_of(node)
+      collection = extra_of(node)
+      if not is_valid_binding_name(item)
+        push errors, line_of(node) + ": invalid binding name: " + item
+      if not is_valid_binding_name(index)
+        push errors, line_of(node) + ": invalid binding name: " + index
+      check_collection_name errors, names, line_of(node), collection
+      if not has_name(names, item)
+        remember_name names, name_indents, item, to_string(to_int(current_indent) + 2)
+      if not has_name(names, index)
+        remember_name names, name_indents, index, to_string(to_int(current_indent) + 2)
+      push loop_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "AST_FOR_OBJECT"
+      key = name_of(node)
+      value = value_of(node)
+      collection = extra_of(node)
+      if not is_valid_binding_name(key)
+        push errors, line_of(node) + ": invalid binding name: " + key
+      if not is_valid_binding_name(value)
+        push errors, line_of(node) + ": invalid binding name: " + value
+      check_collection_name errors, names, line_of(node), collection
+      if not has_name(names, key)
+        remember_name names, name_indents, key, to_string(to_int(current_indent) + 2)
+      if not has_name(names, value)
+        remember_name names, name_indents, value, to_string(to_int(current_indent) + 2)
+      push loop_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "AST_EXIT" or kind_of(node) == "AST_PANIC"
+      expr = name_of(node)
+      ast_parts = split expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+
+    if kind_of(node) == "AST_FUNC"
+      name = name_of(node)
+      if not is_valid_binding_name(name)
+        push errors, line_of(node) + ": invalid function name: " + name
+      arg = value_of(node)
+      arg2 = extra_of(node)
+      arg3 = extra2_of(node)
+      arg4 = extra3_of(node)
+      if arg != "" and not is_valid_binding_name(arg)
+        push errors, line_of(node) + ": invalid binding name: " + arg
+      if arg2 != "" and not is_valid_binding_name(arg2)
+        push errors, line_of(node) + ": invalid binding name: " + arg2
+      if arg3 != "" and not is_valid_binding_name(arg3)
+        push errors, line_of(node) + ": invalid binding name: " + arg3
+      if arg4 != "" and not is_valid_binding_name(arg4)
+        push errors, line_of(node) + ": invalid binding name: " + arg4
+      if arg != "" and arg == arg2
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
+      if arg != "" and arg == arg3
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
+      if arg2 != "" and arg2 == arg3
+        push errors, line_of(node) + ": duplicate function parameter: " + arg2
+      if arg != "" and arg == arg4
+        push errors, line_of(node) + ": duplicate function parameter: " + arg
+      if arg2 != "" and arg2 == arg4
+        push errors, line_of(node) + ": duplicate function parameter: " + arg2
+      if arg3 != "" and arg3 == arg4
+        push errors, line_of(node) + ": duplicate function parameter: " + arg3
+      remember_name names, name_indents, name, current_indent
+      if arg != ""
+        remember_name names, name_indents, arg, current_indent
+      if arg2 != ""
+        remember_name names, name_indents, arg2, current_indent
+      if arg3 != ""
+        remember_name names, name_indents, arg3, current_indent
+      if arg4 != ""
+        remember_name names, name_indents, arg4, current_indent
+      push func_indents, to_string(to_int(current_indent) + 2)
+
+    if kind_of(node) == "AST_RETURN"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      return_expr = name_of(node)
+      ast_parts = split return_expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split return_expr, "member("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != "." and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split return_expr, "index("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != "." and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_j = ast_j + 1
+        ast_name = ""
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")"
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        if not is_literal_arg(ast_name)
+          check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+      ast_parts = split return_expr, "call("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+
+    if kind_of(node) == "AST_RETURN2"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      return_expr = name_of(node) + " " + value_of(node)
+      ast_parts = split return_expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+
+    if kind_of(node) == "AST_EXPR"
+      expr = name_of(node)
+      ast_parts = split expr, "ident("
+      ast_i = 1
+      while ast_i < len(ast_parts)
+        ast_part = ast_parts[ast_i]
+        ast_name = ""
+        ast_j = 0
+        while ast_j < len(ast_part) and ast_part[ast_j] != ")" and ast_part[ast_j] != " "
+          ast_name = ast_name + ast_part[ast_j]
+          ast_j = ast_j + 1
+        check_ast_name errors, names, line_of(node), ast_name
+        ast_i = ast_i + 1
+
+    if kind_of(node) == "PRINT_MEMBER"
+      name = name_of(node)
+      check_name errors, names, line_of(node), name
+
+    if kind_of(node) == "BREAK"
+      if len(loop_indents) == 0
+        push errors, line_of(node) + ": break outside loop"
+
+    if kind_of(node) == "CONTINUE"
+      if len(loop_indents) == 0
+        push errors, line_of(node) + ": continue outside loop"
+
+    if kind_of(node) == "AST_BREAK"
+      if len(loop_indents) == 0
+        push errors, line_of(node) + ": break outside loop"
+
+    if kind_of(node) == "AST_CONTINUE"
+      if len(loop_indents) == 0
+        push errors, line_of(node) + ": continue outside loop"
+
+    check_print_call1 errors, names, node
+
+    if kind_of(node) == "PRINT_CALL2"
+      check_print_call2 errors, names, node
+
+    if kind_of(node) == "PRINT_CALL3"
+      check_print_call3 errors, names, node
+
+    if kind_of(node) == "IF" or kind_of(node) == "WHILE"
+      if name_of(node) == "IDENT"
+        check_name errors, names, line_of(node), value_of(node)
+
+    if kind_of(node) == "IF_NOT"
+      if name_of(node) == "IDENT"
+        check_name errors, names, line_of(node), value_of(node)
+
+    if kind_of(node) == "IF_CALL_LT"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      right_name = extra_of(node)
+      check_name errors, names, line_of(node), func_name
+      check_name errors, names, line_of(node), arg_name
+      check_non_literal_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "IF_CALL1"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      check_name errors, names, line_of(node), func_name
+      check_name errors, names, line_of(node), arg_name
+
+    if kind_of(node) == "IF_CALL_EQ_AND_CALL_EQ"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      func2_name = extra3_of(node)
+      arg2_name = extra4_of(node)
+      check_name errors, names, line_of(node), func_name
+      check_name errors, names, line_of(node), arg_name
+      check_name errors, names, line_of(node), func2_name
+      check_name errors, names, line_of(node), arg2_name
+
+    if kind_of(node) == "IF_CALL_EQ_AND_CALL_NE"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      func2_name = extra3_of(node)
+      arg2_name = extra4_of(node)
+      check_name errors, names, line_of(node), func_name
+      check_name errors, names, line_of(node), arg_name
+      check_name errors, names, line_of(node), func2_name
+      check_name errors, names, line_of(node), arg2_name
+
+    if kind_of(node) == "IF_NOT_CALL2"
+      func_name = name_of(node)
+      left_arg = value_of(node)
+      right_arg = extra_of(node)
+      check_name errors, names, line_of(node), func_name
+      check_name errors, names, line_of(node), left_arg
+      check_name errors, names, line_of(node), right_arg
+
+    if kind_of(node) == "IF_NOT_CALL_AND_NOT_CALL"
+      func_name = name_of(node)
+      arg_name = value_of(node)
+      func2_name = extra_of(node)
+      arg2_name = extra2_of(node)
+      arg3_name = extra3_of(node)
+      check_name errors, names, line_of(node), func_name
+      check_name errors, names, line_of(node), arg_name
+      check_name errors, names, line_of(node), func2_name
+      check_name errors, names, line_of(node), arg2_name
+      check_name errors, names, line_of(node), arg3_name
+
+    if kind_of(node) == "WHILE_LT_CALL"
+      left_name = name_of(node)
+      func_name = value_of(node)
+      arg_name = extra_of(node)
+      check_name errors, names, line_of(node), left_name
+      check_name errors, names, line_of(node), func_name
+      check_name errors, names, line_of(node), arg_name
+
+    if kind_of(node) == "WHILE_COMPARE_LT"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "WHILE_COMPARE_NE" or kind_of(node) == "WHILE_COMPARE_GE" or kind_of(node) == "WHILE_COMPARE_GT" or kind_of(node) == "WHILE_COMPARE_LE"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "IF_COMPARE_EQ"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "IF_COMPARE_NE"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "IF_COMPARE_GE"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "IF_COMPARE_GT"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "IF_COMPARE_LE"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "IF_COMPARE_OR"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      left2_kind = extra3_of(node)
+      left2_name = extra4_of(node)
+      right2_kind = extra5_of(node)
+      right2_name = extra6_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+      if left2_kind == "IDENT"
+        check_name errors, names, line_of(node), left2_name
+      if right2_kind == "IDENT"
+        check_name errors, names, line_of(node), right2_name
+
+    if kind_of(node) == "PUSH"
+      target = name_of(node)
+      check_name errors, names, line_of(node), target
+      if value_of(node) == "IDENT"
+        value_name = extra_of(node)
+        check_name errors, names, line_of(node), value_name
+
+    if kind_of(node) == "RETURN"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      if name_of(node) == "IDENT"
+        check_name errors, names, line_of(node), value_of(node)
+      if name_of(node) == "INDEX"
+        source_name = value_of(node)
+        index_name = extra_of(node)
+        check_name errors, names, line_of(node), source_name
+        check_non_literal_name errors, names, line_of(node), index_name
+
+    if kind_of(node) == "RETURN2"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      right_kind = extra_of(node)
+      right_name = extra2_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      if right_kind == "IDENT"
+        check_name errors, names, line_of(node), right_name
+
+    if kind_of(node) == "RETURN2_CALL1"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      left_kind = name_of(node)
+      left_name = value_of(node)
+      func_name = extra_of(node)
+      arg_kind = extra2_of(node)
+      arg_name = extra3_of(node)
+      if left_kind == "IDENT"
+        check_name errors, names, line_of(node), left_name
+      check_name errors, names, line_of(node), func_name
+      if arg_kind == "IDENT"
+        check_name errors, names, line_of(node), arg_name
+
+    if kind_of(node) == "RETURN2_OBJECT_NIL"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      value_kind = value_of(node)
+      value_name = extra_of(node)
+      if value_kind == "IDENT"
+        check_name errors, names, line_of(node), value_name
+
+    if kind_of(node) == "RETURN_CALL2"
+      if len(func_indents) == 0
+        push errors, line_of(node) + ": return outside function"
+      func_name = name_of(node)
+      arg2_kind = value_of(node)
+      arg2_name = extra_of(node)
+      check_name errors, names, line_of(node), func_name
+      if arg2_kind == "IDENT"
+        check_name errors, names, line_of(node), arg2_name
+
+  errors
+
+nodes = []
+source = read_file args()[0]
+lines = split source, "\n"
+
+for line in lines
+  if line != ""
+    push nodes, line
+
+errors = check nodes
+
+if len(errors) == 0
+  print "ok"
+else
+  for err in errors
+    print err

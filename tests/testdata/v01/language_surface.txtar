@@ -1,0 +1,52 @@
+# run a broad v0.1 language-surface program through generated C
+cd $REPO
+exec go run ./cmd/tya run $WORK/main.tya first second
+stdout 'large\nHello, Tya\n2\ntrue\nTya-lang\n3\nx:y\nfalse\nmissing\ntrue\ntrue\nfirst\n'
+! stderr .
+
+-- main.tya --
+import greeting
+
+score = 85
+if score >= 90
+  print "top"
+elseif score >= 80
+  print "large"
+else
+  print "small"
+
+user = { name: "Tya", active: true }
+print greeting.hello(user["name"])
+print len(user)
+print has(user, "active")
+delete(user, "active")
+user["kind"] = "lang"
+print user["name"] + "-" + user["kind"]
+
+items = [1, 2, 3]
+print len(items)
+
+labels = { x: "X", y: "Y" }
+joined = ""
+for key, value of labels
+  if joined == ""
+    joined = key
+  else
+    joined = joined + ":" + key
+print joined
+
+err = error("missing")
+print err["message"] == "other"
+print err["message"]
+
+text = trim(" hello,tya ")
+parts = split(text, ",")
+print contains(join(parts, "-"), "hello")
+print starts_with(replace(text, "tya", "Tya"), "hello")
+
+arguments = args()
+print arguments[0]
+
+-- greeting.tya --
+module greeting
+  hello = name -> "Hello, {name}"

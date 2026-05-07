@@ -1,0 +1,11 @@
+# v0.1 does not implicitly load stdlib/prelude.tya
+cd $REPO
+exec go run ./cmd/tya run $WORK/app/main.tya
+stdout 'main\n'
+! stderr .
+
+-- app/main.tya --
+print "main"
+
+-- stdlib/prelude.tya --
+print "prelude"

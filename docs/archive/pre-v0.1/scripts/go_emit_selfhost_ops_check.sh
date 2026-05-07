@@ -15,13 +15,13 @@ for src in selfhost/lexer.tya selfhost/parser.tya selfhost/checker.tya selfhost/
   gcc $cc_warning_flags "$out_dir/$base.c" runtime/tya_runtime.c -I runtime -o "$out_dir/$base"
 done
 
-"$out_dir/lexer" examples/selfhost_ops.tya > "$out_dir/tokens.txt"
+"$out_dir/lexer" examples/archive/pre-v0.1/selfhost_ops.tya > "$out_dir/tokens.txt"
 "$out_dir/parser" "$out_dir/tokens.txt" > "$out_dir/nodes.txt"
 "$out_dir/checker" "$out_dir/nodes.txt" > "$out_dir/check.txt"
 grep -qx "ok" "$out_dir/check.txt"
 "$out_dir/codegen_c" "$out_dir/nodes.txt" > "$out_dir/main.c"
 gcc $cc_warning_flags "$out_dir/main.c" -o "$out_dir/main"
 "$out_dir/main" > "$out_dir/out.txt"
-go run ./cmd/tya examples/selfhost_ops.tya > "$out_dir/want.txt"
+go run ./cmd/tya examples/archive/pre-v0.1/selfhost_ops.tya > "$out_dir/want.txt"
 cmp "$out_dir/out.txt" "$out_dir/want.txt"
-printf 'examples/selfhost_ops.tya: stage-1 matched\n'
+printf 'examples/archive/pre-v0.1/selfhost_ops.tya: stage-1 matched\n'

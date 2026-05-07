@@ -57,6 +57,9 @@ func (s *useScope) use(name string) {
 func checkUnusedStmts(stmts []ast.Stmt, scope *useScope) error {
 	for _, stmt := range stmts {
 		switch n := stmt.(type) {
+		case *ast.ImportStmt:
+			scope.define(n.Name, n.NameTok.Line, n.NameTok.Col)
+			scope.use(n.Name)
 		case *ast.AssignStmt:
 			for _, value := range n.Values {
 				checkUnusedExpr(value, scope)
@@ -110,10 +113,6 @@ func checkUnusedExpr(expr ast.Expr, scope *useScope) {
 		for _, prop := range n.Props {
 			checkUnusedExpr(prop.Value, scope)
 		}
-	case *ast.SetLit:
-		for _, elem := range n.Elems {
-			checkUnusedExpr(elem, scope)
-		}
 	case *ast.FuncLit:
 		child := newUseScope(scope)
 		for _, param := range n.Params {
@@ -135,9 +134,9 @@ func checkUnusedExpr(expr ast.Expr, scope *useScope) {
 	case *ast.TryExpr:
 		checkUnusedExpr(n.Expr, scope)
 	case *ast.MemberExpr:
-		checkUnusedExpr(n.Object, scope)
+		checkUnusedExpr(n.Target, scope)
 	case *ast.IndexExpr:
-		checkUnusedExpr(n.Object, scope)
+		checkUnusedExpr(n.Target, scope)
 		checkUnusedExpr(n.Index, scope)
 	case *ast.CallExpr:
 		checkUnusedExpr(n.Callee, scope)
@@ -150,9 +149,9 @@ func checkUnusedExpr(expr ast.Expr, scope *useScope) {
 func checkUnusedAssignmentTarget(target ast.Expr, scope *useScope) {
 	switch n := target.(type) {
 	case *ast.MemberExpr:
-		checkUnusedExpr(n.Object, scope)
+		checkUnusedExpr(n.Target, scope)
 	case *ast.IndexExpr:
-		checkUnusedExpr(n.Object, scope)
+		checkUnusedExpr(n.Target, scope)
 		checkUnusedExpr(n.Index, scope)
 	}
 }

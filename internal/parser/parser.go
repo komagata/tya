@@ -9,9 +9,11 @@ import (
 )
 
 type Parser struct {
-	toks              []token.Token
-	pos               int
-	suppressCommaFunc bool
+	toks          []token.Token
+	pos           int
+	blockDepth    int
+	loopDepth     int
+	functionDepth int
 }
 
 func Parse(toks []token.Token) (*ast.Program, error) {
@@ -34,14 +36,20 @@ func (p *Parser) program() (*ast.Program, error) {
 }
 
 func (p *Parser) stmt() (ast.Stmt, error) {
-	if p.at(token.IDENT) && p.peek().Lexeme == "class" {
-		return p.classDecl()
-	}
-	if p.at(token.IDENT) && p.peek().Lexeme == "interface" {
-		return p.interfaceDecl()
+	if err := p.rejectV01ExcludedIdent(); err != nil {
+		return nil, err
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "module" {
+		if p.blockDepth != 0 {
+			return nil, p.err("module must be top-level")
+		}
 		return p.moduleDecl()
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "import" {
+		if p.blockDepth != 0 {
+			return nil, p.err("import must be top-level")
+		}
+		return p.importStmt()
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "if" {
 		return p.ifStmt()
@@ -53,14 +61,23 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		return p.forStmt()
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "break" {
+		if p.loopDepth == 0 {
+			return nil, p.err("break must be inside a loop")
+		}
 		p.next()
 		return &ast.BreakStmt{}, nil
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "continue" {
+		if p.loopDepth == 0 {
+			return nil, p.err("continue must be inside a loop")
+		}
 		p.next()
 		return &ast.ContinueStmt{}, nil
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "return" {
+		if p.functionDepth == 0 {
+			return nil, p.err("return must be inside a function")
+		}
 		return p.returnStmt()
 	}
 	if p.isAssignStart() {
@@ -76,139 +93,33 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		}
 		return &ast.AssignStmt{Targets: targets, Values: values, Tok: tok}, nil
 	}
-	ex, err := p.exprLine()
+	ex, err := p.stmtExprLine()
 	if err != nil {
 		return nil, err
 	}
 	return &ast.ExprStmt{Expr: ex}, nil
 }
 
-func (p *Parser) classDecl() (ast.Stmt, error) {
+func (p *Parser) importStmt() (ast.Stmt, error) {
 	p.next()
-	name := p.expect(token.IDENT)
-	if name.Type != token.IDENT {
-		return nil, p.err("expected class name")
+	name, err := p.expectName("expected module name after import")
+	if err != nil {
+		return nil, err
 	}
-	var parent string
-	var parentTok token.Token
-	if p.matchWord("extends") {
-		parentTok = p.expect(token.IDENT)
-		if parentTok.Type != token.IDENT {
-			return nil, p.err("expected parent class name")
-		}
-		parent = parentTok.Lexeme
+	if p.at(token.IDENT) && p.peek().Lexeme == "as" {
+		return nil, p.err("import aliases are not in Tya v0.1")
 	}
-	var implements []string
-	var implToks []token.Token
-	if p.matchWord("implements") {
-		for {
-			impl := p.expect(token.IDENT)
-			if impl.Type != token.IDENT {
-				return nil, p.err("expected interface name")
-			}
-			implements = append(implements, impl.Lexeme)
-			implToks = append(implToks, impl)
-			if !p.match(token.COMMA) {
-				break
-			}
-		}
+	if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+		return nil, p.err("expected newline after import")
 	}
-	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
-		return nil, p.err("expected indented block after class")
-	}
-	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, ParentTok: parentTok, Implements: implements, ImplToks: implToks}
-	p.skipNewlines()
-	for !p.at(token.DEDENT) && !p.at(token.EOF) {
-		isClassMember := p.match(token.ATAT)
-		methodName := p.expect(token.IDENT)
-		if methodName.Type != token.IDENT {
-			return nil, p.err("expected class member name")
-		}
-		if !p.match(token.COLON) {
-			return nil, p.err("expected ':' after class member name")
-		}
-		var value ast.Expr
-		var err error
-		if p.match(token.ARROW) {
-			value, err = p.finishFunc(nil, nil)
-		} else {
-			value, err = p.exprLine()
-		}
-		if err != nil {
-			return nil, err
-		}
-		if fn, ok := value.(*ast.FuncLit); ok {
-			method := ast.ClassMethod{Name: methodName.Lexeme, Tok: methodName, Func: fn}
-			if isClassMember {
-				decl.ClassMethods = append(decl.ClassMethods, method)
-			} else {
-				decl.Methods = append(decl.Methods, method)
-			}
-		} else {
-			field := ast.ClassField{Name: methodName.Lexeme, Tok: methodName, Value: value}
-			if isClassMember {
-				decl.ClassFields = append(decl.ClassFields, field)
-			} else {
-				decl.Fields = append(decl.Fields, field)
-			}
-		}
-		p.skipNewlines()
-	}
-	if !p.match(token.DEDENT) {
-		return nil, p.err("expected dedent after class")
-	}
-	return decl, nil
-}
-
-func (p *Parser) interfaceDecl() (ast.Stmt, error) {
-	p.next()
-	name := p.expect(token.IDENT)
-	if name.Type != token.IDENT {
-		return nil, p.err("expected interface name")
-	}
-	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
-		return nil, p.err("expected indented block after interface")
-	}
-	decl := &ast.InterfaceDecl{Name: name.Lexeme, NameTok: name}
-	p.skipNewlines()
-	for !p.at(token.DEDENT) && !p.at(token.EOF) {
-		methodName := p.expect(token.IDENT)
-		if methodName.Type != token.IDENT {
-			return nil, p.err("expected interface method name")
-		}
-		if !p.match(token.COLON) {
-			return nil, p.err("expected ':' after interface method name")
-		}
-		var params []token.Token
-		if !p.match(token.ARROW) {
-			for {
-				param := p.expect(token.IDENT)
-				if param.Type != token.IDENT {
-					return nil, p.err("expected interface method parameter")
-				}
-				params = append(params, param)
-				if !p.match(token.COMMA) {
-					break
-				}
-			}
-			if !p.match(token.ARROW) {
-				return nil, p.err("expected '->' after interface method parameters")
-			}
-		}
-		decl.Methods = append(decl.Methods, ast.InterfaceMethod{Name: methodName.Lexeme, Tok: methodName, ParamToks: params})
-		p.skipNewlines()
-	}
-	if !p.match(token.DEDENT) {
-		return nil, p.err("expected dedent after interface")
-	}
-	return decl, nil
+	return &ast.ImportStmt{Name: name.Lexeme, NameTok: name}, nil
 }
 
 func (p *Parser) moduleDecl() (ast.Stmt, error) {
 	p.next()
-	name := p.expect(token.IDENT)
-	if name.Type != token.IDENT {
-		return nil, p.err("expected module name")
+	name, err := p.expectName("expected module name")
+	if err != nil {
+		return nil, err
 	}
 	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
 		return nil, p.err("expected indented block after module")
@@ -216,20 +127,14 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 	decl := &ast.ModuleDecl{Name: name.Lexeme, NameTok: name}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
-		memberName := p.expect(token.IDENT)
-		if memberName.Type != token.IDENT {
-			return nil, p.err("expected module member name")
+		memberName, err := p.expectName("expected module member name")
+		if err != nil {
+			return nil, err
 		}
-		if !p.match(token.COLON) {
-			return nil, p.err("expected ':' after module member name")
+		if !p.match(token.ASSIGN) {
+			return nil, p.err("expected '=' after module member name")
 		}
-		var value ast.Expr
-		var err error
-		if p.match(token.ARROW) {
-			value, err = p.finishFunc(nil, nil)
-		} else {
-			value, err = p.exprLine()
-		}
+		value, err := p.exprLine()
 		if err != nil {
 			return nil, err
 		}
@@ -244,7 +149,7 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 
 func (p *Parser) ifStmt() (ast.Stmt, error) {
 	p.next()
-	cond, err := p.expr()
+	cond, err := p.exprLine()
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +159,13 @@ func (p *Parser) ifStmt() (ast.Stmt, error) {
 	}
 	var elseBlock []ast.Stmt
 	p.skipNewlines()
-	if p.at(token.IDENT) && p.peek().Lexeme == "else" {
+	if p.at(token.IDENT) && p.peek().Lexeme == "elseif" {
+		elseif, err := p.ifStmt()
+		if err != nil {
+			return nil, err
+		}
+		elseBlock = []ast.Stmt{elseif}
+	} else if p.at(token.IDENT) && p.peek().Lexeme == "else" {
 		p.next()
 		elseBlock, err = p.block("else")
 		if err != nil {
@@ -266,11 +177,13 @@ func (p *Parser) ifStmt() (ast.Stmt, error) {
 
 func (p *Parser) whileStmt() (ast.Stmt, error) {
 	p.next()
-	cond, err := p.expr()
+	cond, err := p.exprLine()
 	if err != nil {
 		return nil, err
 	}
+	p.loopDepth++
 	body, err := p.block("while")
+	p.loopDepth--
 	if err != nil {
 		return nil, err
 	}
@@ -279,17 +192,17 @@ func (p *Parser) whileStmt() (ast.Stmt, error) {
 
 func (p *Parser) forStmt() (ast.Stmt, error) {
 	p.next()
-	valueTok := p.expect(token.IDENT)
-	if valueTok.Type != token.IDENT {
-		return nil, p.err("expected loop variable")
+	valueTok, err := p.expectName("expected loop variable")
+	if err != nil {
+		return nil, err
 	}
 	valueName := valueTok.Lexeme
 	var indexName string
 	var indexTok token.Token
 	if p.match(token.COMMA) {
-		idx := p.expect(token.IDENT)
-		if idx.Type != token.IDENT {
-			return nil, p.err("expected loop index variable")
+		idx, err := p.expectName("expected loop index variable")
+		if err != nil {
+			return nil, err
 		}
 		indexName = idx.Lexeme
 		indexTok = idx
@@ -302,11 +215,13 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 	} else {
 		return nil, p.err("expected 'in' or 'of' in for loop")
 	}
-	iterable, err := p.expr()
+	iterable, err := p.exprLine()
 	if err != nil {
 		return nil, err
 	}
+	p.loopDepth++
 	body, err := p.block("for")
+	p.loopDepth--
 	if err != nil {
 		return nil, err
 	}
@@ -329,6 +244,8 @@ func (p *Parser) block(owner string) ([]ast.Stmt, error) {
 	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
 		return nil, p.err("expected indented block after " + owner)
 	}
+	p.blockDepth++
+	defer func() { p.blockDepth-- }()
 	var stmts []ast.Stmt
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
@@ -349,7 +266,7 @@ func (p *Parser) valuesAfterAssign() ([]ast.Expr, error) {
 	if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
 		p.next()
 		p.next()
-		obj, err := p.objectBody()
+		obj, err := p.dictBody()
 		if err != nil {
 			return nil, err
 		}
@@ -374,7 +291,7 @@ func (p *Parser) exprListLine() ([]ast.Expr, error) {
 	return values, nil
 }
 
-func (p *Parser) objectBody() (*ast.DictLit, error) {
+func (p *Parser) dictBody() (*ast.DictLit, error) {
 	dict := &ast.DictLit{}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
@@ -404,7 +321,26 @@ func (p *Parser) objectBody() (*ast.DictLit, error) {
 	return dict, nil
 }
 
+func (p *Parser) stmtExprLine() (ast.Expr, error) {
+	if p.at(token.IDENT) && p.peek().Lexeme == "print" && p.peekN(1).Type != token.LPAREN && p.startsExprAt(p.pos+1) {
+		callee := &ast.Ident{Name: p.peek().Lexeme, Tok: p.next()}
+		arg, err := p.expr()
+		if err != nil {
+			return nil, err
+		}
+		if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+			return nil, p.err("print expects one expression")
+		}
+		return &ast.CallExpr{Callee: callee, Args: []ast.Expr{arg}}, nil
+	}
+	return p.exprLineWithPrintSugar(true)
+}
+
 func (p *Parser) exprLine() (ast.Expr, error) {
+	return p.exprLineWithPrintSugar(false)
+}
+
+func (p *Parser) exprLineWithPrintSugar(allowPrintSugar bool) (ast.Expr, error) {
 	ex, err := p.expr()
 	if err != nil {
 		return nil, err
@@ -412,62 +348,46 @@ func (p *Parser) exprLine() (ast.Expr, error) {
 	if _, ok := ex.(*ast.FuncLit); ok {
 		return ex, nil
 	}
-	var args []ast.Expr
-	for p.startsExpr() {
-		p.suppressCommaFunc = true
+	if allowPrintSugar && p.isPrintIdent(ex) && p.startsExpr() {
 		arg, err := p.expr()
-		p.suppressCommaFunc = false
 		if err != nil {
 			return nil, err
 		}
-		args = append(args, arg)
-		p.match(token.COMMA)
-	}
-	if len(args) == 0 {
-		return ex, nil
-	}
-	if id, ok := ex.(*ast.Ident); ok && isUnaryNoParenCall(id.Name) && len(args) > 1 {
-		return &ast.CallExpr{
-			Callee: ex,
-			Args:   []ast.Expr{nestUnaryNoParen(args)},
-		}, nil
-	}
-	if id, ok := ex.(*ast.Ident); ok && id.Name == "print" && len(args) > 1 {
-		if first, ok := args[0].(*ast.Ident); ok && isUnaryNoParenCall(first.Name) {
-			return &ast.CallExpr{
-				Callee: ex,
-				Args:   []ast.Expr{nestUnaryNoParen(args)},
-			}, nil
+		if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+			return nil, p.err("print expects one expression")
 		}
-		return &ast.CallExpr{
-			Callee: ex,
-			Args:   []ast.Expr{&ast.CallExpr{Callee: args[0], Args: args[1:]}},
-		}, nil
+		return &ast.CallExpr{Callee: ex, Args: []ast.Expr{arg}}, nil
 	}
-	ex = &ast.CallExpr{Callee: ex, Args: args}
+	if !allowPrintSugar && p.isPrintIdent(ex) && p.startsExpr() {
+		return nil, p.err("no-paren calls are not in Tya v0.1; use parentheses")
+	}
+	if p.startsExpr() {
+		return nil, p.err("no-paren calls are not in Tya v0.1; use parentheses")
+	}
 	return ex, nil
 }
 
-func isUnaryNoParenCall(name string) bool {
-	switch name {
-	case "len", "keys", "values", "trim", "to_string", "to_int", "to_float", "to_number", "byte_len", "char_len", "read_file", "read_line", "file_exists", "env", "error", "panic", "exit":
-		return true
-	default:
-		return false
-	}
-}
-
-func nestUnaryNoParen(exprs []ast.Expr) ast.Expr {
-	if len(exprs) == 1 {
-		return exprs[0]
-	}
-	return &ast.CallExpr{
-		Callee: exprs[0],
-		Args:   []ast.Expr{nestUnaryNoParen(exprs[1:])},
-	}
+func (p *Parser) isPrintIdent(expr ast.Expr) bool {
+	id, ok := expr.(*ast.Ident)
+	return ok && id.Name == "print"
 }
 
 func (p *Parser) expr() (ast.Expr, error) {
+	return p.exprWithCommaFunc(true)
+}
+
+func (p *Parser) exprNoCommaFunc() (ast.Expr, error) {
+	return p.exprWithCommaFunc(false)
+}
+
+func (p *Parser) exprWithCommaFunc(allowCommaFunc bool) (ast.Expr, error) {
+	if p.startsFunctionParams(allowCommaFunc) {
+		params, paramToks, err := p.functionParams()
+		if err != nil {
+			return nil, err
+		}
+		return p.finishFunc(params, paramToks)
+	}
 	left, err := p.logicOr()
 	if err != nil {
 		return nil, err
@@ -484,6 +404,55 @@ func (p *Parser) expr() (ast.Expr, error) {
 		return p.finishFunc(params, paramToks)
 	}
 	return left, nil
+}
+
+func (p *Parser) startsFunctionParams(allowCommaFunc bool) bool {
+	if !p.at(token.IDENT) {
+		return false
+	}
+	if p.peekN(1).Type == token.ARROW {
+		return true
+	}
+	if !allowCommaFunc || p.peekN(1).Type != token.COMMA {
+		return false
+	}
+	i := p.pos + 2
+	if p.toks[i].Type != token.IDENT {
+		return false
+	}
+	for {
+		i++
+		switch p.toks[i].Type {
+		case token.ARROW:
+			return true
+		case token.COMMA:
+			i++
+			if p.toks[i].Type != token.IDENT {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+}
+
+func (p *Parser) functionParams() ([]string, []token.Token, error) {
+	first, err := p.expectName("expected function parameter")
+	if err != nil {
+		return nil, nil, err
+	}
+	params := []string{first.Lexeme}
+	paramToks := []token.Token{first}
+	for p.match(token.COMMA) {
+		next, err := p.expectName("expected function parameter")
+		if err != nil {
+			return nil, nil, err
+		}
+		params = append(params, next.Lexeme)
+		paramToks = append(paramToks, next)
+	}
+	p.match(token.ARROW)
+	return params, paramToks, nil
 }
 
 func (p *Parser) logicOr() (ast.Expr, error) {
@@ -584,6 +553,9 @@ func (p *Parser) factor() (ast.Expr, error) {
 
 func (p *Parser) unary() (ast.Expr, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "try" {
+		if p.functionDepth == 0 {
+			return nil, p.err("try must be inside a function")
+		}
 		tok := p.next()
 		ex, err := p.unary()
 		if err != nil {
@@ -609,20 +581,18 @@ func (p *Parser) call() (ast.Expr, error) {
 	}
 	for {
 		if p.match(token.DOT) {
-			name := p.expect(token.IDENT)
-			if name.Type != token.IDENT {
-				return nil, p.err("expected property name")
+			name, err := p.expectName("expected property name")
+			if err != nil {
+				return nil, err
 			}
-			ex = &ast.MemberExpr{Object: ex, Name: name.Lexeme, NameTok: name}
+			ex = &ast.MemberExpr{Target: ex, Name: name.Lexeme, NameTok: name}
 			continue
 		}
 		if p.match(token.LPAREN) {
 			var args []ast.Expr
 			if !p.at(token.RPAREN) {
 				for {
-					p.suppressCommaFunc = true
-					arg, err := p.expr()
-					p.suppressCommaFunc = false
+					arg, err := p.exprNoCommaFunc()
 					if err != nil {
 						return nil, err
 					}
@@ -646,7 +616,7 @@ func (p *Parser) call() (ast.Expr, error) {
 			if !p.match(token.RBRACKET) {
 				return nil, p.err("expected ']'")
 			}
-			ex = &ast.IndexExpr{Object: ex, Index: index}
+			ex = &ast.IndexExpr{Target: ex, Index: index}
 			continue
 		}
 		break
@@ -658,38 +628,17 @@ func (p *Parser) primary() (ast.Expr, error) {
 	tok := p.next()
 	switch tok.Type {
 	case token.IDENT:
-		if p.match(token.ARROW) {
-			return p.finishFunc([]string{tok.Lexeme}, []token.Token{tok})
-		}
-		switch tok.Lexeme {
-		case "true":
+		if tok.Lexeme == "true" {
 			return &ast.BoolLit{Value: true}, nil
-		case "false":
-			return &ast.BoolLit{Value: false}, nil
-		case "nil":
-			return &ast.NilLit{}, nil
-		case "super":
-			return &ast.SuperExpr{Tok: tok}, nil
 		}
-		if !p.suppressCommaFunc && p.at(token.COMMA) && p.hasArrowBeforeLine() {
-			p.next()
-			params := []string{tok.Lexeme}
-			paramToks := []token.Token{tok}
-			for {
-				next := p.expect(token.IDENT)
-				if next.Type != token.IDENT {
-					return nil, p.err("expected function parameter")
-				}
-				params = append(params, next.Lexeme)
-				paramToks = append(paramToks, next)
-				if !p.match(token.COMMA) {
-					break
-				}
-			}
-			if !p.match(token.ARROW) {
-				return nil, p.err("expected '->' after function parameters")
-			}
-			return p.finishFunc(params, paramToks)
+		if tok.Lexeme == "false" {
+			return &ast.BoolLit{Value: false}, nil
+		}
+		if tok.Lexeme == "nil" {
+			return &ast.NilLit{}, nil
+		}
+		if err := p.rejectReservedName(tok); err != nil {
+			return nil, err
 		}
 		return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
 	case token.INT:
@@ -701,6 +650,12 @@ func (p *Parser) primary() (ast.Expr, error) {
 	case token.STRING:
 		return &ast.StringLit{Value: tok.Lexeme}, nil
 	case token.LPAREN:
+		if p.match(token.RPAREN) {
+			if p.match(token.ARROW) {
+				return p.finishFunc(nil, nil)
+			}
+			return nil, p.err("expected expression")
+		}
 		ex, err := p.expr()
 		if err != nil {
 			return nil, err
@@ -729,18 +684,8 @@ func (p *Parser) primary() (ast.Expr, error) {
 		return &ast.ArrayLit{Elems: elems}, nil
 	case token.LBRACE:
 		return p.curlyLiteral()
-	case token.AT:
-		name := p.expect(token.IDENT)
-		if name.Type != token.IDENT {
-			return nil, p.err("expected property name after @")
-		}
-		return &ast.ThisProp{Name: name.Lexeme, Tok: tok}, nil
-	case token.ATAT:
-		name := p.expect(token.IDENT)
-		if name.Type != token.IDENT {
-			return nil, p.err("expected property name after @@")
-		}
-		return &ast.ClassProp{Name: name.Lexeme, Tok: tok}, nil
+	case token.ARROW:
+		return p.finishFunc(nil, nil)
 	}
 	return nil, p.err("expected expression")
 }
@@ -752,7 +697,7 @@ func (p *Parser) curlyLiteral() (ast.Expr, error) {
 	if p.at(token.IDENT) && p.peekN(1).Type == token.COLON {
 		return p.dictLiteral()
 	}
-	return p.setLiteral()
+	return nil, p.err("set literals are not in Tya v0.1")
 }
 
 func (p *Parser) dictLiteral() (ast.Expr, error) {
@@ -778,31 +723,20 @@ func (p *Parser) dictLiteral() (ast.Expr, error) {
 	return dict, nil
 }
 
-func (p *Parser) setLiteral() (ast.Expr, error) {
-	set := &ast.SetLit{}
-	for {
-		elem, err := p.expr()
-		if err != nil {
-			return nil, err
-		}
-		if p.at(token.COLON) {
-			return nil, p.err("cannot mix dict entries and set entries in one literal")
-		}
-		set.Elems = append(set.Elems, elem)
-		if !p.match(token.COMMA) {
-			break
-		}
-	}
-	if !p.match(token.RBRACE) {
-		return nil, p.err("expected '}'")
-	}
-	return set, nil
-}
-
 func (p *Parser) finishFunc(params []string, paramToks []token.Token) (*ast.FuncLit, error) {
+	p.functionDepth++
+	defer func() { p.functionDepth-- }()
+
 	if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
 		p.next()
 		p.next()
+		p.blockDepth++
+		prevLoopDepth := p.loopDepth
+		p.loopDepth = 0
+		defer func() {
+			p.loopDepth = prevLoopDepth
+			p.blockDepth--
+		}()
 		var body []ast.Stmt
 		p.skipNewlines()
 		for !p.at(token.DEDENT) && !p.at(token.EOF) {
@@ -832,9 +766,15 @@ func (p *Parser) assignTargets() ([]ast.Expr, error) {
 	}
 	targets := []ast.Expr{first}
 	for p.match(token.COMMA) {
+		if _, ok := first.(*ast.Ident); !ok {
+			return nil, p.err("multiple assignment targets must be identifiers")
+		}
 		next, err := p.assignTarget()
 		if err != nil {
 			return nil, err
+		}
+		if _, ok := next.(*ast.Ident); !ok {
+			return nil, p.err("multiple assignment targets must be identifiers")
 		}
 		targets = append(targets, next)
 	}
@@ -842,21 +782,14 @@ func (p *Parser) assignTargets() ([]ast.Expr, error) {
 }
 
 func (p *Parser) assignTarget() (ast.Expr, error) {
-	if p.match(token.AT) {
-		name := p.expect(token.IDENT)
-		return &ast.ThisProp{Name: name.Lexeme, Tok: name}, nil
+	tok, err := p.expectName("expected assignment target")
+	if err != nil {
+		return nil, err
 	}
-	if p.match(token.ATAT) {
-		name := p.expect(token.IDENT)
-		return &ast.ClassProp{Name: name.Lexeme, Tok: name}, nil
-	}
-	tok := p.expect(token.IDENT)
 	ex := ast.Expr(&ast.Ident{Name: tok.Lexeme, Tok: tok})
 	for {
 		if p.match(token.DOT) {
-			name := p.expect(token.IDENT)
-			ex = &ast.MemberExpr{Object: ex, Name: name.Lexeme, NameTok: name}
-			continue
+			return nil, p.err("member assignment is not in Tya v0.1")
 		}
 		if p.match(token.LBRACKET) {
 			index, err := p.expr()
@@ -866,7 +799,7 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 			if !p.match(token.RBRACKET) {
 				return nil, p.err("expected ']'")
 			}
-			ex = &ast.IndexExpr{Object: ex, Index: index}
+			ex = &ast.IndexExpr{Target: ex, Index: index}
 			continue
 		}
 		break
@@ -889,14 +822,6 @@ func (p *Parser) isAssignStart() bool {
 }
 
 func (p *Parser) scanAssignTarget(i *int) bool {
-	if p.toks[*i].Type == token.AT {
-		*i += 2
-		return true
-	}
-	if p.toks[*i].Type == token.ATAT {
-		*i += 2
-		return true
-	}
 	if p.toks[*i].Type != token.IDENT {
 		return false
 	}
@@ -930,7 +855,18 @@ func (p *Parser) skipNewlines() {
 	}
 }
 func (p *Parser) startsExpr() bool {
-	return p.at(token.IDENT) || p.at(token.STRING) || p.at(token.INT) || p.at(token.FLOAT) || p.at(token.AT) || p.at(token.ATAT) || p.at(token.LPAREN) || p.at(token.LBRACKET) || p.at(token.LBRACE)
+	return p.startsExprAt(p.pos)
+}
+func (p *Parser) startsExprAt(pos int) bool {
+	if pos >= len(p.toks) {
+		return false
+	}
+	switch p.toks[pos].Type {
+	case token.IDENT, token.STRING, token.INT, token.FLOAT, token.MINUS, token.LPAREN, token.LBRACKET, token.LBRACE, token.ARROW:
+		return true
+	default:
+		return false
+	}
 }
 func (p *Parser) at(t token.Type) bool { return p.peek().Type == t }
 func (p *Parser) match(t token.Type) bool {
@@ -962,24 +898,50 @@ func (p *Parser) peekN(n int) token.Token {
 	}
 	return p.toks[p.pos+n]
 }
-func (p *Parser) hasArrowBeforeLine() bool {
-	for i := p.pos; i < len(p.toks); i++ {
-		switch p.toks[i].Type {
-		case token.ARROW:
-			return true
-		case token.NEWLINE, token.EOF, token.RPAREN, token.RBRACKET:
-			return false
-		}
-	}
-	return false
-}
 func (p *Parser) expect(t token.Type) token.Token {
 	if p.at(t) {
 		return p.next()
 	}
 	return token.Token{}
 }
+func (p *Parser) expectName(msg string) (token.Token, error) {
+	if !p.at(token.IDENT) {
+		return token.Token{}, p.err(msg)
+	}
+	tok := p.next()
+	if err := p.rejectReservedName(tok); err != nil {
+		return token.Token{}, err
+	}
+	return tok, nil
+}
+func (p *Parser) rejectV01ExcludedIdent() error {
+	if !p.at(token.IDENT) {
+		return nil
+	}
+	return p.rejectV01ExcludedWord(p.peek().Lexeme)
+}
+func (p *Parser) rejectV01ExcludedWord(word string) error {
+	switch word {
+	case "class", "interface", "object", "set", "self", "super":
+		return p.err(word + " is not in Tya v0.1")
+	default:
+		return nil
+	}
+}
+func (p *Parser) rejectReservedName(tok token.Token) error {
+	switch tok.Lexeme {
+	case "class", "interface", "object", "set", "self", "super":
+		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
+	case "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
+		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
+	default:
+		return nil
+	}
+}
 func (p *Parser) err(msg string) error {
 	tok := p.peek()
+	return p.errAt(tok, msg)
+}
+func (p *Parser) errAt(tok token.Token, msg string) error {
 	return fmt.Errorf("%d:%d: %s near %q", tok.Line, tok.Col, msg, tok.Lexeme)
 }

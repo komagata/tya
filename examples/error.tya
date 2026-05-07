@@ -1,4 +1,4 @@
-err = error "file not found"
+err = error("file not found")
 
 print err
-print err.message
+print err["message"]

@@ -5,4 +5,4 @@ find_first_over = limit ->
       return i
     i = i + 1
 
-print find_first_over 3
+print find_first_over(3)

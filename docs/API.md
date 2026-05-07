@@ -1,6 +1,9 @@
-# Tya API
+# Tya v0.1 API
 
-This document lists the built-in functions available to Tya programs.
+この文書は Tya v0.1 の標準組み込み関数を定義する。
+
+v0.1 では、self-host compiler と基本的なプログラムに必要な最小 API だけを
+標準組み込みとして固定する。便利関数は後続バージョンで追加する。
 
 ## Core
 
@@ -10,15 +13,16 @@ panic "bad state"
 exit 1
 ```
 
-`print` writes a value and a newline. `panic` stops with an error. `exit`
-terminates with a status code.
+`print` は値と newline を出力する。`panic` はエラーとして停止する。`exit` は
+status code を指定して終了する。
 
 ```tya
 err = error "file not found"
-print err.message
+print err["message"]
 ```
 
-`error` returns an error value with a `message` property.
+`error` は `message` を持つ error value を返す。v0.1 では `.` が module
+member access 専用なので、message は `err["message"]` で読む。
 
 ## Conversion
 
@@ -27,7 +31,6 @@ to_string value
 to_int value
 to_float value
 to_number value
-div left, right
 ```
 
 ```tya
@@ -35,7 +38,6 @@ print to_string 20
 print to_int "42"
 print to_float "2.5"
 print to_number "12.5"
-print div 5, 2
 ```
 
 ## Strings
@@ -48,8 +50,6 @@ replace text, old, new
 contains text, search
 starts_with text, prefix
 ends_with text, suffix
-byte_len text
-char_len text
 ```
 
 ```tya
@@ -61,8 +61,6 @@ print replace text, "tya", "Tya"
 print contains text, "hello"
 print starts_with text, "hello"
 print ends_with text, "tya"
-print byte_len "ちゃ"
-print char_len "ちゃ"
 ```
 
 ## Arrays
@@ -71,28 +69,6 @@ print char_len "ちゃ"
 len value
 push array, value
 pop array
-map array, function
-filter array, function
-find array, function
-any array, function
-all array, function
-each array, function
-reduce array, initial, function
-```
-
-```tya
-items = [1, 2, 3, 4]
-
-double = item -> item * 2
-even? = item -> item % 2 == 0
-add = total, item -> total + item
-
-print map items, double
-print filter items, even?
-print find items, even?
-print any items, even?
-print all items, even?
-print reduce items, 0, add
 ```
 
 ```tya
@@ -102,6 +78,8 @@ print pop items
 print len items
 ```
 
+`len` は string、array、dictionary に使える。
+
 ## Dictionaries
 
 ```tya
@@ -109,7 +87,6 @@ keys dictionary
 values dictionary
 has dictionary, key
 delete dictionary, key
-equal left, right
 ```
 
 ```tya
@@ -119,7 +96,6 @@ print keys user
 print values user
 print has user, "name"
 delete user, "age"
-print equal user, { name: "komagata" }
 ```
 
 ## Files
@@ -141,7 +117,6 @@ print file_exists "/tmp/memo.txt"
 ```tya
 args()
 env name
-read_line()
 ```
 
 ```tya
@@ -150,12 +125,27 @@ print len items
 print env "HOME"
 ```
 
-```tya
-name = read_line()
-print "Hello, {name}"
+## Not In v0.1
+
+以下は v0.1 標準組み込みに含めない。
+
+```text
+map
+filter
+find
+any
+all
+each
+reduce
+byte_len
+char_len
+equal
+div
+read_line
+set
 ```
 
 ## Naming
 
-Standard library APIs use snake_case names. CamelCase builtin spellings are not
-part of the language surface.
+標準組み込み関数は `snake_case` を使う。CamelCase の builtin spelling は
+言語仕様に含めない。

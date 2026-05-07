@@ -36,11 +36,8 @@ func (e *ExitError) Error() string {
 
 type Value any
 
-type Object map[string]Value
+type Dict map[string]Value
 type Array struct {
-	items []Value
-}
-type Set struct {
 	items []Value
 }
 type Tuple struct {
@@ -49,33 +46,17 @@ type Tuple struct {
 type ErrorValue struct {
 	Message string
 }
-type Class struct {
-	Name          string
-	Parent        *Class
-	FieldDefaults Object
-	Members       Object
-	Methods       map[string]*Function
-	ClassMethods  map[string]*Function
-}
-type Instance struct {
-	Class  *Class
-	Fields Object
-}
 type Module struct {
 	Name    string
-	Members Object
+	Members Dict
 }
 
 type Function struct {
-	Params     []string
-	Body       []ast.Stmt
-	Expr       ast.Expr
-	Env        *Env
-	Owner      *Class
-	MethodName string
-	Name       string
-	Predicate  bool
-	Static     bool
+	Params []string
+	Body   []ast.Stmt
+	Expr   ast.Expr
+	Env    *Env
+	Name   string
 }
 
 type Builtin func([]Value) (Value, error)
@@ -83,8 +64,6 @@ type Builtin func([]Value) (Value, error)
 type Env struct {
 	parent    *Env
 	vars      map[string]Value
-	this      Object
-	classThis Object
 	inFunc    bool
 	runeCache map[string][]rune
 }
@@ -93,8 +72,8 @@ func NewEnv() *Env {
 	return &Env{vars: map[string]Value{}, runeCache: map[string][]rune{}}
 }
 
-func (e *Env) child(this Object) *Env {
-	return &Env{parent: e, vars: map[string]Value{}, this: this, classThis: e.classThis, inFunc: e.inFunc, runeCache: e.runeCache}
+func (e *Env) child() *Env {
+	return &Env{parent: e, vars: map[string]Value{}, inFunc: e.inFunc, runeCache: e.runeCache}
 }
 
 func (e *Env) runes(text string) []rune {
@@ -201,12 +180,10 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return int64(len(env.runes(v))), nil
 		case *Array:
 			return int64(len(v.items)), nil
-		case Object:
+		case Dict:
 			return int64(len(v)), nil
-		case *Set:
-			return int64(len(v.items)), nil
 		default:
-			return nil, fmt.Errorf("len expects string, array, object, or set")
+			return nil, fmt.Errorf("len expects string, array, or dictionary")
 		}
 	}))
 	env.set("push", Builtin(func(args []Value) (Value, error) {
@@ -242,7 +219,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		out := &Array{items: make([]Value, 0, len(arr.items))}
 		for _, item := range arr.items {
-			mapped, err := callValue(fn, nil, []Value{item})
+			mapped, err := callValue(fn, []Value{item})
 			if err != nil {
 				return nil, err
 			}
@@ -257,7 +234,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		out := &Array{}
 		for _, item := range arr.items {
-			keep, err := callValue(fn, nil, []Value{item})
+			keep, err := callValue(fn, []Value{item})
 			if err != nil {
 				return nil, err
 			}
@@ -273,7 +250,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return nil, err
 		}
 		for _, item := range arr.items {
-			found, err := callValue(fn, nil, []Value{item})
+			found, err := callValue(fn, []Value{item})
 			if err != nil {
 				return nil, err
 			}
@@ -289,7 +266,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return nil, err
 		}
 		for _, item := range arr.items {
-			ok, err := callValue(fn, nil, []Value{item})
+			ok, err := callValue(fn, []Value{item})
 			if err != nil {
 				return nil, err
 			}
@@ -305,7 +282,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return nil, err
 		}
 		for _, item := range arr.items {
-			ok, err := callValue(fn, nil, []Value{item})
+			ok, err := callValue(fn, []Value{item})
 			if err != nil {
 				return nil, err
 			}
@@ -321,7 +298,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return nil, err
 		}
 		for _, item := range arr.items {
-			if _, err := callValue(fn, nil, []Value{item}); err != nil {
+			if _, err := callValue(fn, []Value{item}); err != nil {
 				return nil, err
 			}
 		}
@@ -341,7 +318,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		acc := args[1]
 		for _, item := range arr.items {
-			next, err := callValue(fn, nil, []Value{acc, item})
+			next, err := callValue(fn, []Value{acc, item})
 			if err != nil {
 				return nil, err
 			}
@@ -350,7 +327,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		return acc, nil
 	}))
 	env.set("keys", Builtin(func(args []Value) (Value, error) {
-		obj, err := oneObject("keys", args)
+		obj, err := oneDict("keys", args)
 		if err != nil {
 			return nil, err
 		}
@@ -361,7 +338,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		return arr, nil
 	}))
 	env.set("values", Builtin(func(args []Value) (Value, error) {
-		obj, err := oneObject("values", args)
+		obj, err := oneDict("values", args)
 		if err != nil {
 			return nil, err
 		}
@@ -375,12 +352,9 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		if len(args) != 2 {
 			return nil, fmt.Errorf("has expects 2 arguments")
 		}
-		if set, ok := args[0].(*Set); ok {
-			return setHas(set, args[1]), nil
-		}
-		obj, ok := args[0].(Object)
+		obj, ok := args[0].(Dict)
 		if !ok {
-			return nil, fmt.Errorf("has expects object or set")
+			return nil, fmt.Errorf("has expects dictionary")
 		}
 		key, ok := args[1].(string)
 		if !ok {
@@ -389,19 +363,13 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		_, exists := obj[key]
 		return exists, nil
 	}))
-	env.set("set", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 0 {
-			return nil, fmt.Errorf("set expects 0 arguments")
-		}
-		return &Set{}, nil
-	}))
 	env.set("delete", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
 			return nil, fmt.Errorf("delete expects 2 arguments")
 		}
-		obj, ok := args[0].(Object)
+		obj, ok := args[0].(Dict)
 		if !ok {
-			return nil, fmt.Errorf("delete expects object")
+			return nil, fmt.Errorf("delete expects dictionary")
 		}
 		key, ok := args[1].(string)
 		if !ok {
@@ -665,6 +633,8 @@ func evalStmts(stmts []ast.Stmt, env *Env) (Value, error) {
 
 func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 	switch n := s.(type) {
+	case *ast.ImportStmt:
+		return nil, nil
 	case *ast.AssignStmt:
 		values, err := evalValues(n.Values, env)
 		if err != nil {
@@ -685,64 +655,8 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			return nil, nil
 		}
 		return values[len(values)-1], nil
-	case *ast.ClassDecl:
-		class := &Class{Name: n.Name, FieldDefaults: Object{}, Members: Object{}, Methods: map[string]*Function{}, ClassMethods: map[string]*Function{}}
-		if n.Parent != "" {
-			parent, ok := env.get(n.Parent)
-			if !ok {
-				return nil, fmt.Errorf("undefined parent class %s", n.Parent)
-			}
-			parentClass, ok := parent.(*Class)
-			if !ok {
-				return nil, fmt.Errorf("%s is not a class", n.Parent)
-			}
-			class.Parent = parentClass
-		}
-		env.set(n.Name, class)
-		classEnv := env.child(nil)
-		classEnv.classThis = class.Members
-		for _, field := range n.Fields {
-			value, err := evalExpr(field.Value, classEnv)
-			if err != nil {
-				return nil, err
-			}
-			class.FieldDefaults[field.Name] = value
-		}
-		for _, field := range n.ClassFields {
-			value, err := evalExpr(field.Value, classEnv)
-			if err != nil {
-				return nil, err
-			}
-			class.Members[field.Name] = value
-		}
-		for _, method := range n.Methods {
-			class.Methods[method.Name] = &Function{
-				Params:     method.Func.Params,
-				Body:       method.Func.Body,
-				Expr:       method.Func.Expr,
-				Env:        env,
-				Owner:      class,
-				MethodName: method.Name,
-				Name:       method.Name,
-				Predicate:  strings.HasSuffix(method.Name, "?"),
-			}
-		}
-		for _, method := range n.ClassMethods {
-			class.ClassMethods[method.Name] = &Function{
-				Params:     method.Func.Params,
-				Body:       method.Func.Body,
-				Expr:       method.Func.Expr,
-				Env:        env,
-				Owner:      class,
-				MethodName: method.Name,
-				Name:       method.Name,
-				Predicate:  strings.HasSuffix(method.Name, "?"),
-				Static:     true,
-			}
-		}
-		return class, nil
 	case *ast.ModuleDecl:
-		module := &Module{Name: n.Name, Members: Object{}}
+		module := &Module{Name: n.Name, Members: Dict{}}
 		env.set(n.Name, module)
 		for _, member := range n.Members {
 			value, err := evalExpr(member.Value, env)
@@ -752,8 +666,6 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			module.Members[member.Name] = nameFunction(member.Name, value)
 		}
 		return module, nil
-	case *ast.InterfaceDecl:
-		return nil, nil
 	case *ast.ExprStmt:
 		return evalExpr(n.Expr, env)
 	case *ast.IfStmt:
@@ -792,7 +704,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			return nil, err
 		}
 		if n.Kind == "of" {
-			return evalObjectFor(n, iterable, env)
+			return evalDictFor(n, iterable, env)
 		}
 		arr, ok := iterable.(*Array)
 		if !ok {
@@ -857,31 +769,19 @@ func assign(target ast.Expr, v Value, env *Env) error {
 	case *ast.Ident:
 		env.set(t.Name, v)
 		return nil
-	case *ast.ThisProp:
-		if env.this == nil {
-			return fmt.Errorf("@%s used outside method", t.Name)
-		}
-		env.this[t.Name] = v
-		return nil
-	case *ast.ClassProp:
-		if env.classThis == nil {
-			return fmt.Errorf("@@%s used outside class", t.Name)
-		}
-		env.classThis[t.Name] = v
-		return nil
 	case *ast.MemberExpr:
-		obj, err := evalExpr(t.Object, env)
+		obj, err := evalExpr(t.Target, env)
 		if err != nil {
 			return err
 		}
-		o, ok := obj.(Object)
+		o, ok := obj.(Dict)
 		if !ok {
-			return fmt.Errorf("cannot assign property on non-object")
+			return fmt.Errorf("cannot assign property on non-dictionary")
 		}
 		o[t.Name] = v
 		return nil
 	case *ast.IndexExpr:
-		obj, err := evalExpr(t.Object, env)
+		obj, err := evalExpr(t.Target, env)
 		if err != nil {
 			return err
 		}
@@ -889,7 +789,7 @@ func assign(target ast.Expr, v Value, env *Env) error {
 		if err != nil {
 			return err
 		}
-		if dict, ok := obj.(Object); ok {
+		if dict, ok := obj.(Dict); ok {
 			key, ok := idx.(string)
 			if !ok {
 				return fmt.Errorf("dictionary index must be string")
@@ -922,16 +822,6 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			return nil, fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
 		}
 		return v, nil
-	case *ast.ThisProp:
-		if env.this == nil {
-			return nil, fmt.Errorf("@%s used outside method", n.Name)
-		}
-		return env.this[n.Name], nil
-	case *ast.ClassProp:
-		if env.classThis == nil {
-			return nil, fmt.Errorf("@@%s used outside class", n.Name)
-		}
-		return env.classThis[n.Name], nil
 	case *ast.IntLit:
 		return n.Value, nil
 	case *ast.FloatLit:
@@ -943,25 +833,15 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 	case *ast.NilLit:
 		return nil, nil
 	case *ast.DictLit:
-		o := Object{}
+		dict := Dict{}
 		for _, p := range n.Props {
 			v, err := evalExpr(p.Value, env)
 			if err != nil {
 				return nil, err
 			}
-			o[p.Name] = nameFunction(p.Name, v)
+			dict[p.Name] = nameFunction(p.Name, v)
 		}
-		return o, nil
-	case *ast.SetLit:
-		set := &Set{}
-		for _, elem := range n.Elems {
-			v, err := evalExpr(elem, env)
-			if err != nil {
-				return nil, err
-			}
-			setAdd(set, v)
-		}
-		return set, nil
+		return dict, nil
 	case *ast.ArrayLit:
 		arr := &Array{}
 		for _, elem := range n.Elems {
@@ -974,8 +854,6 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		return arr, nil
 	case *ast.FuncLit:
 		return &Function{Params: n.Params, Body: n.Body, Expr: n.Expr, Env: env}, nil
-	case *ast.SuperExpr:
-		return nil, fmt.Errorf("super used outside call")
 	case *ast.BinaryExpr:
 		return evalBinary(n, env)
 	case *ast.UnaryExpr:
@@ -1014,7 +892,7 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		}
 		return tuple.items[0], nil
 	case *ast.MemberExpr:
-		obj, err := evalExpr(n.Object, env)
+		obj, err := evalExpr(n.Target, env)
 		if err != nil {
 			return nil, err
 		}
@@ -1024,28 +902,16 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			}
 			return nil, nil
 		}
-		if inst, ok := obj.(*Instance); ok {
-			if method, ok := inst.Class.Methods[n.Name]; ok {
-				return method, nil
-			}
-			return inst.Fields[n.Name], nil
-		}
 		if module, ok := obj.(*Module); ok {
 			return module.Members[n.Name], nil
 		}
-		if class, ok := obj.(*Class); ok {
-			if method, ok := class.ClassMethods[n.Name]; ok {
-				return method, nil
-			}
-			return class.Members[n.Name], nil
-		}
-		o, ok := obj.(Object)
+		o, ok := obj.(Dict)
 		if !ok {
-			return nil, fmt.Errorf("cannot read property %s on non-object", n.Name)
+			return nil, fmt.Errorf("cannot read property %s on non-dictionary", n.Name)
 		}
 		return o[n.Name], nil
 	case *ast.IndexExpr:
-		obj, err := evalExpr(n.Object, env)
+		obj, err := evalExpr(n.Target, env)
 		if err != nil {
 			return nil, err
 		}
@@ -1053,12 +919,22 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		if dict, ok := obj.(Object); ok {
+		if dict, ok := obj.(Dict); ok {
 			key, ok := idx.(string)
 			if !ok {
 				return nil, fmt.Errorf("dictionary index must be string")
 			}
 			return dict[key], nil
+		}
+		if errValue, ok := obj.(*ErrorValue); ok {
+			key, ok := idx.(string)
+			if !ok {
+				return nil, fmt.Errorf("error index must be string")
+			}
+			if key == "message" {
+				return errValue.Message, nil
+			}
+			return nil, nil
 		}
 		arr, ok := obj.(*Array)
 		if !ok {
@@ -1091,18 +967,7 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 }
 
 func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
-	if _, ok := c.Callee.(*ast.SuperExpr); ok {
-		args := make([]Value, 0, len(c.Args))
-		for _, a := range c.Args {
-			v, err := evalExpr(a, env)
-			if err != nil {
-				return nil, err
-			}
-			args = append(args, v)
-		}
-		return callSuper(env, args)
-	}
-	fnVal, recv, err := evalCallee(c.Callee, env)
+	fnVal, err := evalCallee(c.Callee, env)
 	if err != nil {
 		return nil, err
 	}
@@ -1116,14 +981,12 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 	}
 	switch fn := fnVal.(type) {
 	case Builtin, *Function:
-		return callValue(fn, recv, args)
-	case *Class:
-		return construct(fn, args)
+		return callValue(fn, args)
 	}
 	return nil, fmt.Errorf("value is not callable")
 }
 
-func callValue(fn Value, recv Object, args []Value) (Value, error) {
+func callValue(fn Value, args []Value) (Value, error) {
 	switch f := fn.(type) {
 	case Builtin:
 		return f(args)
@@ -1131,28 +994,20 @@ func callValue(fn Value, recv Object, args []Value) (Value, error) {
 		if len(args) != len(f.Params) {
 			return nil, fmt.Errorf("function expects %d arguments, got %d", len(f.Params), len(args))
 		}
-		callEnv := f.Env.child(recv)
-		if f.Static {
-			callEnv.this = nil
-		}
+		callEnv := f.Env.child()
 		callEnv.inFunc = true
 		for i, name := range f.Params {
 			callEnv.set(name, args[i])
 		}
-		if f.Owner != nil {
-			callEnv.set("__method", f)
-			callEnv.classThis = f.Owner.Members
-		}
 		if f.Expr != nil {
-			v, err := evalExpr(f.Expr, callEnv)
-			return checkPredicateReturn(f, v, err)
+			return evalExpr(f.Expr, callEnv)
 		}
 		v, err := evalStmts(f.Body, callEnv)
 		var ret *returnSignal
 		if errors.As(err, &ret) {
-			return checkPredicateReturn(f, ret.value, nil)
+			return ret.value, nil
 		}
-		return checkPredicateReturn(f, v, err)
+		return v, err
 	}
 	return nil, fmt.Errorf("value is not callable")
 }
@@ -1160,59 +1015,14 @@ func callValue(fn Value, recv Object, args []Value) (Value, error) {
 func nameFunction(name string, value Value) Value {
 	if fn, ok := value.(*Function); ok {
 		fn.Name = name
-		fn.Predicate = strings.HasSuffix(name, "?")
 	}
 	return value
 }
 
-func checkPredicateReturn(fn *Function, value Value, err error) (Value, error) {
-	if err != nil {
-		return nil, err
-	}
-	if !fn.Predicate {
-		return value, nil
-	}
-	if _, ok := value.(bool); !ok {
-		name := fn.Name
-		if name == "" {
-			name = fn.MethodName
-		}
-		return nil, fmt.Errorf("%s must return boolean", name)
-	}
-	return value, nil
-}
-
-func construct(class *Class, args []Value) (Value, error) {
-	inst := &Instance{Class: class, Fields: classDefaults(class)}
-	if init := lookupMethod(class, "init"); init != nil {
-		if _, err := callValue(init, inst.Fields, args); err != nil {
-			return nil, err
-		}
-		return inst, nil
-	}
-	if len(args) != 0 {
-		return nil, fmt.Errorf("%s expects 0 arguments, got %d", class.Name, len(args))
-	}
-	return inst, nil
-}
-
-func classDefaults(class *Class) Object {
-	fields := Object{}
-	if class.Parent != nil {
-		for name, value := range classDefaults(class.Parent) {
-			fields[name] = value
-		}
-	}
-	for name, value := range class.FieldDefaults {
-		fields[name] = value
-	}
-	return fields
-}
-
-func evalObjectFor(n *ast.ForInStmt, iterable Value, env *Env) (Value, error) {
-	obj, ok := iterable.(Object)
+func evalDictFor(n *ast.ForInStmt, iterable Value, env *Env) (Value, error) {
+	obj, ok := iterable.(Dict)
 	if !ok {
-		return nil, fmt.Errorf("for of expects object")
+		return nil, fmt.Errorf("for of expects dictionary")
 	}
 	var last Value
 	for key, value := range obj {
@@ -1235,70 +1045,18 @@ func evalObjectFor(n *ast.ForInStmt, iterable Value, env *Env) (Value, error) {
 	return last, nil
 }
 
-func evalCallee(e ast.Expr, env *Env) (Value, Object, error) {
+func evalCallee(e ast.Expr, env *Env) (Value, error) {
 	if m, ok := e.(*ast.MemberExpr); ok {
-		obj, err := evalExpr(m.Object, env)
+		obj, err := evalExpr(m.Target, env)
 		if err != nil {
-			return nil, nil, err
-		}
-		if inst, ok := obj.(*Instance); ok {
-			method := lookupMethod(inst.Class, m.Name)
-			if method == nil {
-				return nil, nil, fmt.Errorf("undefined method %s", m.Name)
-			}
-			return method, inst.Fields, nil
+			return nil, err
 		}
 		if module, ok := obj.(*Module); ok {
-			return module.Members[m.Name], nil, nil
+			return module.Members[m.Name], nil
 		}
-		if class, ok := obj.(*Class); ok {
-			if method := lookupClassMethod(class, m.Name); method != nil {
-				return method, class.Members, nil
-			}
-			return class.Members[m.Name], nil, nil
-		}
-		o, ok := obj.(Object)
-		if !ok {
-			return nil, nil, fmt.Errorf("method receiver is not object")
-		}
-		return o[m.Name], o, nil
+		return nil, fmt.Errorf("member calls require module receiver")
 	}
-	v, err := evalExpr(e, env)
-	return v, nil, err
-}
-
-func lookupClassMethod(class *Class, name string) *Function {
-	for c := class; c != nil; c = c.Parent {
-		if method, ok := c.ClassMethods[name]; ok {
-			return method
-		}
-	}
-	return nil
-}
-
-func lookupMethod(class *Class, name string) *Function {
-	for c := class; c != nil; c = c.Parent {
-		if method, ok := c.Methods[name]; ok {
-			return method
-		}
-	}
-	return nil
-}
-
-func callSuper(env *Env, args []Value) (Value, error) {
-	method, ok := env.get("__method")
-	if !ok {
-		return nil, fmt.Errorf("super used outside method")
-	}
-	fn, ok := method.(*Function)
-	if !ok || fn.Owner == nil || fn.Owner.Parent == nil {
-		return nil, fmt.Errorf("super used outside subclass method")
-	}
-	parentMethod := lookupMethod(fn.Owner.Parent, fn.MethodName)
-	if parentMethod == nil {
-		return nil, fmt.Errorf("undefined super method %s", fn.MethodName)
-	}
-	return callValue(parentMethod, env.this, args)
+	return evalExpr(e, env)
 }
 
 func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
@@ -1376,20 +1134,14 @@ func equal(l, r Value) bool {
 	case string:
 		rv, ok := r.(string)
 		return ok && lv == rv
-	case Object:
-		rv, ok := r.(Object)
+	case Dict:
+		rv, ok := r.(Dict)
 		return ok && fmt.Sprintf("%p", lv) == fmt.Sprintf("%p", rv)
 	case *Array:
-		return lv == r
-	case *Set:
 		return lv == r
 	case *Function:
 		return lv == r
 	case *ErrorValue:
-		return lv == r
-	case *Class:
-		return lv == r
-	case *Instance:
 		return lv == r
 	case *Module:
 		return lv == r
@@ -1410,8 +1162,8 @@ func deepEqual(l, r Value) bool {
 			}
 		}
 		return true
-	case Object:
-		rv, ok := r.(Object)
+	case Dict:
+		rv, ok := r.(Dict)
 		if !ok || len(lv) != len(rv) {
 			return false
 		}
@@ -1422,36 +1174,9 @@ func deepEqual(l, r Value) bool {
 			}
 		}
 		return true
-	case *Set:
-		rv, ok := r.(*Set)
-		if !ok || len(lv.items) != len(rv.items) {
-			return false
-		}
-		for _, item := range lv.items {
-			if !setHas(rv, item) {
-				return false
-			}
-		}
-		return true
 	default:
 		return equal(l, r)
 	}
-}
-
-func setAdd(set *Set, value Value) {
-	if setHas(set, value) {
-		return
-	}
-	set.items = append(set.items, value)
-}
-
-func setHas(set *Set, value Value) bool {
-	for _, item := range set.items {
-		if deepEqual(item, value) {
-			return true
-		}
-	}
-	return false
 }
 
 func compare(op string, l, r Value) (Value, error) {
@@ -1581,13 +1306,13 @@ func twoStrings(name string, args []Value) (string, string, error) {
 	return first, second, nil
 }
 
-func oneObject(name string, args []Value) (Object, error) {
+func oneDict(name string, args []Value) (Dict, error) {
 	if len(args) != 1 {
 		return nil, fmt.Errorf("%s expects 1 argument", name)
 	}
-	obj, ok := args[0].(Object)
+	obj, ok := args[0].(Dict)
 	if !ok {
-		return nil, fmt.Errorf("%s expects object", name)
+		return nil, fmt.Errorf("%s expects dictionary", name)
 	}
 	return obj, nil
 }
@@ -1678,22 +1403,12 @@ func stringify(v Value) string {
 			parts = append(parts, stringify(item))
 		}
 		return "[" + strings.Join(parts, ", ") + "]"
-	case *Set:
-		parts := make([]string, 0, len(x.items))
-		for _, item := range x.items {
-			parts = append(parts, stringify(item))
-		}
-		return "{" + strings.Join(parts, ", ") + "}"
 	case *Tuple:
 		parts := make([]string, 0, len(x.items))
 		for _, item := range x.items {
 			parts = append(parts, stringify(item))
 		}
 		return strings.Join(parts, ", ")
-	case *Class:
-		return "<class " + x.Name + ">"
-	case *Instance:
-		return "<" + x.Class.Name + ">"
 	case *Module:
 		return "<module " + x.Name + ">"
 	default:

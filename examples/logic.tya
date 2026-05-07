@@ -7,4 +7,4 @@ else
   print "no"
 
 print nil or "anonymous"
-print not false
+print not(false)

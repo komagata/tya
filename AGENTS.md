@@ -1,13 +1,14 @@
 # Tya Development Guidelines
 
-Tya is a small indentation-based dynamic language implemented in Go. Before editing, inspect the existing lexer, parser, AST, checker, interpreter, C emitter, runner, tests, and examples that are closest to the requested behavior.
+Tya is a small indentation-based dynamic language implemented in Go. Tya v0.1 is defined as a compile-to-C language. Before editing, inspect the existing lexer, parser, AST, checker, C emitter, runner, tests, and examples that are closest to the requested behavior.
 
 ## Project Rules
 
-- Prefer the current hand-written compiler/interpreter style over adding parser generators or large dependencies.
-- Keep language syntax and naming consistent with `docs/NAMING.md`.
-- Keep stdlib behavior consistent with `docs/STDLIB.md`.
-- Treat self-hosting changes as cross-cutting; check `SELFHOST_WORK.md`, `ROADMAP.md`, `docs/SELFHOST.md`, and `selfhost/README.md`.
+- Prefer the current hand-written compiler style over adding parser generators or large dependencies.
+- Keep language syntax and naming consistent with `docs/SPEC.md` and `docs/NAMING.md`.
+- Keep stdlib behavior consistent with `docs/API.md`.
+- Treat `docs/archive/pre-v0.1/` as historical reference only. Archived self-host, class/module, and stdlib notes are not current v0.1 authority.
+- Use `ROADMAP.md` as the single source of truth for TODO, TASK, and roadmap planning. Express roadmap work as Markdown nested task lists: top-level items are Epics, second-level items are Milestones, and third-level items are Tasks. A Milestone is complete when every Task below it is complete, and an Epic is complete when every Milestone below it is complete.
 - Do not rewrite unrelated user changes.
 
 ## Verification
@@ -20,10 +21,6 @@ Default verification:
 go test ./... -count=1
 ```
 
-For self-hosting work, also run:
+Self-host bootstrap checks are pre-v0.1 historical gates, not default v0.1 verification.
 
-```sh
-sh scripts/selfhost_bootstrap_check.sh
-```
-
-Use focused scripts under `scripts/` when changes affect examples, C emission, imports, runtime execution, stdlib loading, or self-hosting.
+Use focused scripts under `scripts/` when changes affect examples, C emission, imports, runtime execution, or stdlib loading.

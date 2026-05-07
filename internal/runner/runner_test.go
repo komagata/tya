@@ -25,7 +25,7 @@ func TestValidateFileName(t *testing.T) {
 
 func TestRunFileLoadsImportedModule(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  hello: name -> \"Hello, {name}\"\n")
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  hello = name -> \"Hello, {name}\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting\nprint greeting.hello(\"komagata\")\n")
 
@@ -40,7 +40,7 @@ func TestRunFileLoadsImportedModule(t *testing.T) {
 
 func TestRunFileLoadsImportedModuleDeclaration(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo: \"foo\"\n  bar: -> \"bar\"\n")
+	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo = \"foo\"\n  bar = -> \"bar\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import util\nprint util.foo\nprint util.bar()\n")
 
@@ -53,39 +53,41 @@ func TestRunFileLoadsImportedModuleDeclaration(t *testing.T) {
 	}
 }
 
-func TestRunFileLoadsImportedModuleAlias(t *testing.T) {
+func TestRunFileRejectsImportedModuleAlias(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo: \"foo\"\n")
+	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo = \"foo\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import util as u\nprint u.foo\n")
 
 	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
-		t.Fatal(err)
+	err := RunFile(main, nil, &out, nil)
+	if err == nil {
+		t.Fatal("expected import alias error")
 	}
-	if out.String() != "foo\n" {
-		t.Fatalf("got %q", out.String())
+	if !strings.Contains(err.Error(), "import aliases are not in Tya v0.1") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestRunFileLoadsImportedClassAlias(t *testing.T) {
+func TestRunFileRejectsImportedClass(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init: name ->\n    @name = name\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init = name ->\n    name\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import user as account\nuser = account(\"komagata\")\nprint user.name\n")
+	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint user.name\n")
 
 	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
-		t.Fatal(err)
+	err := RunFile(main, nil, &out, nil)
+	if err == nil {
+		t.Fatal("expected class rejection")
 	}
-	if out.String() != "komagata\n" {
-		t.Fatalf("got %q", out.String())
+	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestLoadSourceRejectsImportNameConflict(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo: \"foo\"\n")
+	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo = \"foo\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import util\nutil = \"conflict\"\n")
 
@@ -100,7 +102,7 @@ func TestLoadSourceRejectsImportNameConflict(t *testing.T) {
 
 func TestLoadSourceRejectsModuleWithMismatchedPublicBinding(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "greeting.tya"), "module message\n  text: \"hello\"\n")
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "module message\n  text = \"hello\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting\nprint message\n")
 
@@ -115,7 +117,7 @@ func TestLoadSourceRejectsModuleWithMismatchedPublicBinding(t *testing.T) {
 
 func TestLoadSourceRejectsModuleWithMultiplePublicBindings(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text: \"hello\"\nmodule greeting\n  extra: \"extra\"\n")
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text = \"hello\"\nmodule greeting\n  extra = \"extra\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting\nprint greeting\n")
 
@@ -123,27 +125,27 @@ func TestLoadSourceRejectsModuleWithMultiplePublicBindings(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected module binding error")
 	}
-	if !strings.Contains(err.Error(), "greeting.tya must define exactly one public class or module") {
+	if !strings.Contains(err.Error(), "greeting.tya must define exactly one module") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestRunFileLoadsImportedClassDeclaration(t *testing.T) {
+func TestLoadSourceRejectsImportedClassDeclaration(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init: name ->\n    @name = name\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init = name ->\n    name\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint user.name\n")
 
-	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
-		t.Fatal(err)
+	_, err := LoadSource(main)
+	if err == nil {
+		t.Fatal("expected class rejection")
 	}
-	if out.String() != "komagata\n" {
-		t.Fatalf("got %q", out.String())
+	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestLoadSourceRejectsImportedClassNameMismatch(t *testing.T) {
+func TestLoadSourceRejectsImportedClassBeforeNameValidation(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "user.tya"), "class Account\n  init: -> nil\n")
 	main := filepath.Join(dir, "main.tya")
@@ -153,14 +155,14 @@ func TestLoadSourceRejectsImportedClassNameMismatch(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected class filename mismatch error")
 	}
-	if !strings.Contains(err.Error(), "user.tya must define class User") {
+	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestLoadSourceRejectsTopLevelHelperInImportedFile(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text: \"hello\"\n_helper = \"bad\"\n")
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text = \"hello\"\n_helper = \"bad\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting\n")
 
@@ -168,7 +170,7 @@ func TestLoadSourceRejectsTopLevelHelperInImportedFile(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected top-level helper error")
 	}
-	if !strings.Contains(err.Error(), "greeting.tya may only contain imports and one public class or module declaration") {
+	if !strings.Contains(err.Error(), "greeting.tya may only contain imports and one module declaration") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -182,7 +184,7 @@ func TestLoadSourceRejectsClassInEntryFile(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected entry class error")
 	}
-	if !strings.Contains(err.Error(), "main.tya entry file cannot define class User directly") {
+	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -201,24 +203,25 @@ func TestLoadSourceRejectsInvalidModuleName(t *testing.T) {
 	}
 }
 
-func TestLoadSourceCurrentBaselineRejectsImportAlias(t *testing.T) {
+func TestLoadSourceRejectsImportAlias(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text: \"hello\"\n")
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text = \"hello\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting as g\n")
 
 	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
-		t.Fatal(err)
+	err := RunFile(main, nil, &out, nil)
+	if err == nil {
+		t.Fatal("expected import alias error")
 	}
-	if out.String() != "" {
-		t.Fatalf("got %q", out.String())
+	if !strings.Contains(err.Error(), "import aliases are not in Tya v0.1") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestLoadSourceRejectsPrivateHelperInImportedModule(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text: _message\n_message = \"hello\"\n")
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text = _message\n_message = \"hello\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting\nprint greeting\n")
 
@@ -226,7 +229,7 @@ func TestLoadSourceRejectsPrivateHelperInImportedModule(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected private helper rejection")
 	}
-	if !strings.Contains(err.Error(), "greeting.tya may only contain imports and one public class or module declaration") {
+	if !strings.Contains(err.Error(), "greeting.tya may only contain imports and one module declaration") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

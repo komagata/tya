@@ -23,6 +23,13 @@ type ExprStmt struct {
 
 func (*ExprStmt) stmt() {}
 
+type ImportStmt struct {
+	Name    string
+	NameTok token.Token
+}
+
+func (*ImportStmt) stmt() {}
+
 type IfStmt struct {
 	Cond Expr
 	Then []Stmt
@@ -64,33 +71,6 @@ type ReturnStmt struct {
 
 func (*ReturnStmt) stmt() {}
 
-type ClassDecl struct {
-	Name         string
-	NameTok      token.Token
-	Parent       string
-	ParentTok    token.Token
-	Implements   []string
-	ImplToks     []token.Token
-	Fields       []ClassField
-	Methods      []ClassMethod
-	ClassFields  []ClassField
-	ClassMethods []ClassMethod
-}
-
-func (*ClassDecl) stmt() {}
-
-type ClassMethod struct {
-	Name string
-	Tok  token.Token
-	Func *FuncLit
-}
-
-type ClassField struct {
-	Name  string
-	Tok   token.Token
-	Value Expr
-}
-
 type ModuleDecl struct {
 	Name    string
 	NameTok token.Token
@@ -105,33 +85,12 @@ type ModuleMember struct {
 	Value Expr
 }
 
-type InterfaceDecl struct {
-	Name    string
-	NameTok token.Token
-	Methods []InterfaceMethod
-}
-
-func (*InterfaceDecl) stmt() {}
-
-type InterfaceMethod struct {
-	Name      string
-	Tok       token.Token
-	ParamToks []token.Token
-}
-
 type Ident struct {
 	Name string
 	Tok  token.Token
 }
 
 func (*Ident) expr() {}
-
-type ThisProp struct {
-	Name string
-	Tok  token.Token
-}
-
-func (*ThisProp) expr() {}
 
 type IntLit struct{ Value int64 }
 
@@ -159,27 +118,17 @@ type DictLit struct {
 
 func (*DictLit) expr() {}
 
-type ObjectLit = DictLit
-
 type ArrayLit struct {
 	Elems []Expr
 }
 
 func (*ArrayLit) expr() {}
 
-type SetLit struct {
-	Elems []Expr
-}
-
-func (*SetLit) expr() {}
-
 type DictProp struct {
 	Name  string
 	Tok   token.Token
 	Value Expr
 }
-
-type ObjectProp = DictProp
 
 type FuncLit struct {
 	Params    []string
@@ -212,21 +161,8 @@ type TryExpr struct {
 
 func (*TryExpr) expr() {}
 
-type SuperExpr struct {
-	Tok token.Token
-}
-
-func (*SuperExpr) expr() {}
-
-type ClassProp struct {
-	Name string
-	Tok  token.Token
-}
-
-func (*ClassProp) expr() {}
-
 type MemberExpr struct {
-	Object  Expr
+	Target  Expr
 	Name    string
 	NameTok token.Token
 }
@@ -234,7 +170,7 @@ type MemberExpr struct {
 func (*MemberExpr) expr() {}
 
 type IndexExpr struct {
-	Object Expr
+	Target Expr
 	Index  Expr
 }
 

@@ -1,11 +1,11 @@
 items = [1, 2, 3]
 
-print len items
+print len(items)
 print items[0]
 print items[9]
-push items, 4
-print len items
-print pop items
-print len items
+push(items, 4)
+print len(items)
+print pop(items)
+print len(items)
 items[1] = 20
 print items[1]

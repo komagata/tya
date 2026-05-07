@@ -1,0 +1,12 @@
+user =
+  name: "komagata"
+  age: 20
+
+print has(user, "name")
+user_keys = keys(user)
+user_values = values(user)
+print len(keys(user))
+print len(values(user))
+delete(user, "age")
+print has(user, "age")
+print user["age"]

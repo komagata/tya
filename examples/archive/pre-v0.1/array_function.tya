@@ -1,0 +1,22 @@
+items = [1, 2, 3, 4]
+
+even = item -> item % 2 == 0
+add = total, item -> total + item
+remember = item ->
+  last = item
+  nil
+
+doubled = map(items, item -> item * 2)
+evens = filter(items, even)
+first_even = find(items, even)
+has_even = any(items, even)
+all_even = all(items, even)
+sum = reduce(items, 0, add)
+each(items, remember)
+
+print doubled[2]
+print len(evens)
+print first_even
+print has_even
+print all_even
+print sum

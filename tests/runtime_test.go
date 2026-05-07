@@ -20,15 +20,14 @@ int main(void) {
   tya_print(tya_len(items));
   tya_print(tya_index(items, tya_number(2)));
 
-  TyaValue object = tya_object((TyaObjectEntry[]){{"name", tya_string("Tya")}}, 1);
-  tya_set_member(object, "version", tya_number(1));
-  tya_print(object);
-  tya_print(tya_member(object, "name"));
-  tya_print(tya_member(object, "version"));
+  TyaValue dict = tya_dict((TyaDictEntry[]){{"name", tya_string("Tya")}}, 1);
+  tya_set_member(dict, "version", tya_number(1));
+  tya_print(dict);
+  tya_print(tya_member(dict, "name"));
+  tya_print(tya_member(dict, "version"));
 
-  TyaValue doubled = tya_map(items, tya_function(double_value));
-  tya_print(tya_index(doubled, tya_number(2)));
-  tya_print(tya_to_string(doubled));
+  TyaValue doubled = tya_call1(tya_function(double_value), tya_index(items, tya_number(2)));
+  tya_print(doubled);
 
   TyaValue err = tya_error(tya_string("bad"));
   tya_print(err);
@@ -37,7 +36,7 @@ int main(void) {
 }
 `
 	out := compileAndRunRuntime(t, src)
-	want := "3\n3\n{name: Tya, version: 1}\nTya\n1\n6\n[2, 4, 6]\nerror: bad\nbad\n"
+	want := "3\n3\n{name: Tya, version: 1}\nTya\n1\n6\nerror: bad\nbad\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
@@ -81,7 +80,7 @@ int main(void) {
 }
 `)
 	if string(out) != "" || code != 7 {
-		t.Fatalf("exit got output %q and code %d", out, code)
+		t.Fatalf("exit(got) output %q and code %d", out, code)
 	}
 
 	out, code = compileAndRunRuntimeAllowExit(t, `#include "tya_runtime.h"
@@ -100,7 +99,7 @@ func compileAndRunRuntime(t *testing.T, src string, args ...string) []byte {
 	t.Helper()
 	out, code := compileAndRunRuntimeAllowExit(t, src, args...)
 	if code != 0 {
-		t.Fatalf("exit code %d\n%s", code, out)
+		t.Fatalf("exit(code) %d\n%s", code, out)
 	}
 	return out
 }

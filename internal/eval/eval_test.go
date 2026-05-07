@@ -3,7 +3,6 @@ package eval
 import (
 	"bytes"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"tya/internal/lexer"
@@ -11,7 +10,7 @@ import (
 )
 
 func TestRunArithmeticAndLiterals(t *testing.T) {
-	src := "add = a, b -> a + b\nprint add 2, 3\nprint 2 + 3 * 4\ngrouped = (2 + 3) * 4\nprint grouped\nprint 5 / 2\nprint div 5, 2\nnegative = -5 + 2\nprint negative\nprint true\nprint nil\nage = 20\nprint \"next year: {age + 1}\"\n"
+	src := "add = a, b -> a + b\nprint add(2, 3)\nprint 2 + 3 * 4\ngrouped = (2 + 3) * 4\nprint grouped\nprint 5 / 2\nnegative = -5 + 2\nprint negative\nprint true\nprint nil\nage = 20\nprint \"next year: {age + 1}\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -24,7 +23,7 @@ func TestRunArithmeticAndLiterals(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "5\n14\n20\n2.5\n2\n-3\ntrue\nnil\nnext year: 21\n"
+	want := "5\n14\n20\n2.5\n-3\ntrue\nnil\nnext year: 21\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
@@ -71,7 +70,7 @@ func TestRunComparisonAndLogic(t *testing.T) {
 }
 
 func TestRunArrays(t *testing.T) {
-	src := "items = [1, 2, 3]\nprint len items\nprint items[0]\nprint items[9]\npush items, 4\nprint len items\nprint pop items\nprint len items\nitems[1] = 20\nprint items[1]\n"
+	src := "items = [1, 2, 3]\nprint len(items)\nprint items[0]\nprint items[9]\npush(items, 4)\nprint len(items)\nprint pop(items)\nprint len(items)\nitems[1] = 20\nprint items[1]\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -87,45 +86,6 @@ func TestRunArrays(t *testing.T) {
 	want := "3\n1\nnil\n4\n4\n3\n20\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
-	}
-}
-
-func TestRunArrayFunctionBuiltins(t *testing.T) {
-	src := "items = [1, 2, 3, 4]\ndouble = item -> item * 2\neven? = item -> item % 2 == 0\nadd = total, item -> total + item\ndoubled = map items, double\nevens = filter items, even?\nfirst_even = find items, even?\nhas_even = any items, even?\nall_even = all items, even?\nsum = reduce items, 0, add\nprint doubled[2]\nprint len evens\nprint first_even\nprint has_even\nprint all_even\nprint sum\n"
-	toks, errs := lexer.Lex(src)
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err != nil {
-		t.Fatal(err)
-	}
-	want := "6\n2\n2\ntrue\nfalse\n10\n"
-	if out.String() != want {
-		t.Fatalf("got %q, want %q", out.String(), want)
-	}
-}
-
-func TestRunNoParenCallWithFunctionLiteralArgument(t *testing.T) {
-	src := "items = [1, 2, 3]\ndoubled = map items, item -> item * 2\nprint doubled[2]\n"
-	toks, errs := lexer.Lex(src)
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err != nil {
-		t.Fatal(err)
-	}
-	if out.String() != "6\n" {
-		t.Fatalf("got %q", out.String())
 	}
 }
 
@@ -153,18 +113,13 @@ func TestRunRejectsBreakOutsideLoop(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err == nil {
-		t.Fatal("expected error")
+	if _, err := parser.Parse(toks); err == nil {
+		t.Fatal("expected parser error")
 	}
 }
 
 func TestRunReturn(t *testing.T) {
-	src := "find_first_over = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\nprint find_first_over 3\n"
+	src := "find_first_over = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\nprint find_first_over(3)\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -183,7 +138,7 @@ func TestRunReturn(t *testing.T) {
 }
 
 func TestRunConversions(t *testing.T) {
-	src := "print to_string 20\nprint to_int \"42\"\nprint to_float \"2.5\"\nprint to_number \"12\"\nprint to_number \"12.5\"\n"
+	src := "print to_string(20)\nprint to_int(\"42\")\nprint to_float(\"2.5\")\nprint to_number(\"12\")\nprint to_number(\"12.5\")\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -203,7 +158,7 @@ func TestRunConversions(t *testing.T) {
 }
 
 func TestRunStringBuiltins(t *testing.T) {
-	src := "text = \"  hello,tya  \"\ntrimmed = trim text\nparts = split trimmed, \",\"\nprint join parts, \"-\"\nprint replace trimmed, \"tya\", \"Tya\"\nprint contains trimmed, \"hello\"\nprint starts_with trimmed, \"hello\"\nprint ends_with trimmed, \"tya\"\nprint byte_len \"ちゃ\"\nprint char_len \"ちゃ\"\nprint \"quote: \\\"tya\\\"\"\nprint \"tya\"[1]\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = trim(text)\nparts = split(trimmed, \",\")\nprint join(parts, \"-\")\nprint replace(trimmed, \"tya\", \"Tya\")\nprint contains(trimmed, \"hello\")\nprint starts_with(trimmed, \"hello\")\nprint ends_with(trimmed, \"tya\")\nprint \"quote: \\\"tya\\\"\"\nprint \"tya\"[1]\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -216,14 +171,14 @@ func TestRunStringBuiltins(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n6\n2\nquote: \"tya\"\ny\n"
+	want := "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\nquote: \"tya\"\ny\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
 }
 
 func TestRunDictBuiltins(t *testing.T) {
-	src := "user =\n  name: \"komagata\"\n  age: 20\n\nprint has user, \"name\"\nprint len keys user\nprint len values user\ndelete user, \"age\"\nprint has user, \"age\"\nprint user[\"age\"]\nuser[\"city\"] = \"Tokyo\"\nprint user[\"city\"]\n"
+	src := "user =\n  name: \"komagata\"\n  age: 20\n\nprint has(user, \"name\")\nprint len(keys(user))\nprint len(values(user))\ndelete(user, \"age\")\nprint has(user, \"age\")\nprint user[\"age\"]\nuser[\"city\"] = \"Tokyo\"\nprint user[\"city\"]\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -262,108 +217,8 @@ func TestRunInlineDict(t *testing.T) {
 	}
 }
 
-func TestRunClassConstructorFieldsAndMethods(t *testing.T) {
-	src := "class User\n  name: \"guest\"\n\n  init: name ->\n    @name = name\n\n  rename: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nclass Guest\n  name: \"guest\"\n\nanon = Guest()\nuser = User(\"komagata\")\nprint anon.name\nprint user.name\nprint user.greet()\nuser.rename(\"Tya\")\nprint user.name\n"
-	toks, errs := lexer.Lex(src)
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err != nil {
-		t.Fatal(err)
-	}
-	want := "guest\nkomagata\nHello, komagata\nTya\n"
-	if out.String() != want {
-		t.Fatalf("got %q, want %q", out.String(), want)
-	}
-}
-
-func TestRunClassVariablesAndClassMethods(t *testing.T) {
-	src := "class User\n  @@count: 0\n\n  @@next: ->\n    @@count = @@count + 1\n    @@count\n\n  init: ->\n    @@count = @@count + 1\n\nprint User.count\nprint User.next()\nprint User.next()\nUser()\nprint User.count\n"
-	toks, errs := lexer.Lex(src)
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err != nil {
-		t.Fatal(err)
-	}
-	want := "0\n1\n2\n3\n"
-	if out.String() != want {
-		t.Fatalf("got %q, want %q", out.String(), want)
-	}
-}
-
-func TestRunPredicateMethodsRequireBooleanReturn(t *testing.T) {
-	src := "class User\n  active?: ->\n    true\n\n  @@ready?: ->\n    false\n\nuser = User()\nprint user.active?()\nprint User.ready?()\n"
-	toks, errs := lexer.Lex(src)
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err != nil {
-		t.Fatal(err)
-	}
-	want := "true\nfalse\n"
-	if out.String() != want {
-		t.Fatalf("got %q, want %q", out.String(), want)
-	}
-}
-
-func TestRunPredicateMethodRejectsNonBooleanReturn(t *testing.T) {
-	src := "class User\n  active?: ->\n    \"yes\"\n\nuser = User()\nprint user.active?()\n"
-	toks, errs := lexer.Lex(src)
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	err = Run(prog, &out)
-	if err == nil {
-		t.Fatal("expected predicate return error")
-	}
-	if !strings.Contains(err.Error(), "active? must return boolean") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestRunClassInheritanceAndSuper(t *testing.T) {
-	src := "class User\n  init: name ->\n    @name = name\n\n  greet: ->\n    \"Hello, {@name}\"\n\nclass Admin extends User\n  init: name, role ->\n    super(name)\n    @role = role\n\n  greet: ->\n    \"{super()} ({@role})\"\n\nadmin = Admin(\"komagata\", \"owner\")\nprint admin.name\nprint admin.greet()\n"
-	toks, errs := lexer.Lex(src)
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err != nil {
-		t.Fatal(err)
-	}
-	want := "komagata\nHello, komagata (owner)\n"
-	if out.String() != want {
-		t.Fatalf("got %q, want %q", out.String(), want)
-	}
-}
-
 func TestRunModuleDeclaration(t *testing.T) {
-	src := "module util\n  foo: \"foo\"\n\n  bar: ->\n    \"bar\"\n\nprint util.foo\nprint util.bar()\n"
+	src := "module util\n  foo = \"foo\"\n\n  bar = ->\n    \"bar\"\n\nprint util.foo\nprint util.bar()\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -382,8 +237,8 @@ func TestRunModuleDeclaration(t *testing.T) {
 	}
 }
 
-func TestRunSets(t *testing.T) {
-	src := "roles = { \"admin\", \"owner\", \"admin\" }\nempty_roles = set()\nprint len roles\nprint has roles, \"admin\"\nprint has roles, \"guest\"\nprint len empty_roles\n"
+func TestRunDictionaryEquality(t *testing.T) {
+	src := "left =\n  name: \"komagata\"\n  nums: [1, 2]\nright =\n  name: \"komagata\"\n  nums: [1, 2]\nprint left == right\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -396,27 +251,7 @@ func TestRunSets(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "2\ntrue\nfalse\n0\n"
-	if out.String() != want {
-		t.Fatalf("got %q, want %q", out.String(), want)
-	}
-}
-
-func TestRunDeepEqualBuiltin(t *testing.T) {
-	src := "left =\n  name: \"komagata\"\n  nums: [1, 2]\nright =\n  name: \"komagata\"\n  nums: [1, 2]\nprint left == right\nsame = equal left, right\nnums_a = [1, 2]\nnums_b = [1, 3]\ndifferent = equal nums_a, nums_b\nprint same\nprint different\n"
-	toks, errs := lexer.Lex(src)
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err != nil {
-		t.Fatal(err)
-	}
-	want := "false\ntrue\nfalse\n"
+	want := "false\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
@@ -464,7 +299,7 @@ func TestRunForOfObject(t *testing.T) {
 
 func TestRunFileBuiltins(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "memo.txt")
-	src := "write_file \"" + path + "\", \"hello\"\nprint file_exists \"" + path + "\"\nprint read_file \"" + path + "\"\n"
+	src := "write_file(\"" + path + "\", \"hello\")\nprint file_exists(\"" + path + "\")\nprint read_file(\"" + path + "\")\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -485,7 +320,7 @@ func TestRunFileBuiltins(t *testing.T) {
 
 func TestRunArgsAndEnvBuiltins(t *testing.T) {
 	t.Setenv("TYA_TEST_ENV", "ok")
-	src := "items = args()\nprint len items\nprint items[0]\nprint env \"TYA_TEST_ENV\"\nprint env \"TYA_MISSING_ENV\"\n"
+	src := "items = args()\nprint len(items)\nprint items[0]\nprint env(\"TYA_TEST_ENV\")\nprint env(\"TYA_MISSING_ENV\")\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -504,26 +339,8 @@ func TestRunArgsAndEnvBuiltins(t *testing.T) {
 	}
 }
 
-func TestRunReadLineBuiltin(t *testing.T) {
-	toks, errs := lexer.Lex("name = read_line()\nprint \"Hello, {name}\"\n")
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := RunWithIO(prog, strings.NewReader("komagata\n"), &out, nil); err != nil {
-		t.Fatal(err)
-	}
-	if out.String() != "Hello, komagata\n" {
-		t.Fatalf("got %q", out.String())
-	}
-}
-
 func TestRunExitBuiltin(t *testing.T) {
-	toks, errs := lexer.Lex("exit 7\n")
+	toks, errs := lexer.Lex("exit(7)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -538,12 +355,12 @@ func TestRunExitBuiltin(t *testing.T) {
 		t.Fatalf("got %T %v", err, err)
 	}
 	if exitErr.Code != 7 {
-		t.Fatalf("got exit code %d", exitErr.Code)
+		t.Fatalf("got exit(code) %d", exitErr.Code)
 	}
 }
 
 func TestRunPanicBuiltin(t *testing.T) {
-	toks, errs := lexer.Lex("panic \"bad\"\n")
+	toks, errs := lexer.Lex("panic(\"bad\")\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -558,7 +375,7 @@ func TestRunPanicBuiltin(t *testing.T) {
 }
 
 func TestRunErrorBuiltin(t *testing.T) {
-	toks, errs := lexer.Lex("err = error \"file not found\"\nprint err\nprint err.message\n")
+	toks, errs := lexer.Lex("err = error(\"file not found\")\nprint err\nprint err[\"message\"]\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -577,7 +394,7 @@ func TestRunErrorBuiltin(t *testing.T) {
 }
 
 func TestRunMultipleReturnAndAssignment(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nuser, err = parse_user \"komagata\"\nif err\n  print err.message\nelse\n  print user[\"name\"]\nmissing, err = parse_user \"\"\nif err\n  print err.message\nelse\n  print missing[\"name\"]\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error(\"empty user\")\n  return { name: text }, nil\nuser, err = parse_user(\"komagata\")\nif err\n  print err[\"message\"]\nelse\n  print user[\"name\"]\nmissing, err = parse_user(\"\")\nif err\n  print err[\"message\"]\nelse\n  print missing[\"name\"]\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -597,7 +414,7 @@ func TestRunMultipleReturnAndAssignment(t *testing.T) {
 }
 
 func TestRunTryPropagation(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error \"empty user\"\n  return { name: text }, nil\nread_user = text ->\n  user = try parse_user(text)\n  return user[\"name\"], nil\nname, err = read_user \"komagata\"\nif err\n  print err.message\nelse\n  print name\nname, err = read_user \"\"\nif err\n  print err.message\nelse\n  print name\n"
+	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error(\"empty user\")\n  return { name: text }, nil\nread_user = text ->\n  user = try parse_user(text)\n  return user[\"name\"], nil\nname, err = read_user(\"komagata\")\nif err\n  print err[\"message\"]\nelse\n  print name\nname, err = read_user(\"\")\nif err\n  print err[\"message\"]\nelse\n  print name\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -621,12 +438,7 @@ func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out bytes.Buffer
-	if err := Run(prog, &out); err == nil {
-		t.Fatal("expected error")
+	if _, err := parser.Parse(toks); err == nil {
+		t.Fatal("expected parser error")
 	}
 }

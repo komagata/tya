@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-input="${1:-examples/selfhost_input.tya}"
+input="${1:-examples/archive/pre-v0.1/selfhost_input.tya}"
 out_dir="$(mktemp -d "${TMPDIR:-/tmp}/tya-selfhost.XXXXXX")"
 cc_warning_flags=""
 if printf '' | gcc -Wno-format-truncation -x c -fsyntax-only - >/dev/null 2>&1; then

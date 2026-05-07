@@ -9,10 +9,10 @@ import (
 )
 
 func EmitC(prog *ast.Program) (string, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: collectClasses(prog.Stmts)}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}}
 	for _, name := range assignedNames(prog.Stmts) {
 		g.vars[name] = true
-		g.line(fmt.Sprintf("TyaValue %s = tya_nil();", cName(name)))
+		g.globalLine(fmt.Sprintf("TyaValue %s;", cName(name)))
 	}
 	for _, stmt := range prog.Stmts {
 		if err := g.stmt(stmt); err != nil {
@@ -21,14 +21,8 @@ func EmitC(prog *ast.Program) (string, error) {
 	}
 	var out strings.Builder
 	out.WriteString("#include \"tya_runtime.h\"\n\n")
-	for _, stmt := range prog.Stmts {
-		if class, ok := stmt.(*ast.ClassDecl); ok {
-			out.WriteString("static TyaValue ")
-			out.WriteString(cName(class.Name))
-			out.WriteString(";\n")
-		}
-	}
-	if out.Len() > len("#include \"tya_runtime.h\"\n\n") {
+	out.WriteString(g.globalOut.String())
+	if g.globalOut.Len() > 0 {
 		out.WriteByte('\n')
 	}
 	out.WriteString(g.funcOut.String())
@@ -41,16 +35,19 @@ func EmitC(prog *ast.Program) (string, error) {
 
 type cgen struct {
 	out           strings.Builder
+	globalOut     strings.Builder
 	funcOut       strings.Builder
 	indent        int
 	vars          map[string]bool
 	funcs         map[string]string
-	classes       map[string]*ast.ClassDecl
 	temp          int
 	inFunc        bool
 	predicateName string
-	currentClass  string
-	currentMethod string
+}
+
+func (g *cgen) globalLine(s string) {
+	g.globalOut.WriteString(s)
+	g.globalOut.WriteByte('\n')
 }
 
 func (g *cgen) line(s string) {
@@ -61,12 +58,9 @@ func (g *cgen) line(s string) {
 
 func (g *cgen) stmt(stmt ast.Stmt) error {
 	switch n := stmt.(type) {
-	case *ast.ClassDecl:
+	case *ast.ImportStmt:
 		g.sourceLine(n.NameTok.Line)
-		return g.assignClassDecl(n)
-	case *ast.InterfaceDecl:
-		g.sourceLine(n.NameTok.Line)
-		g.line("/* interface declaration */")
+		g.line("/* import resolved by runner */")
 		return nil
 	case *ast.ModuleDecl:
 		g.sourceLine(n.NameTok.Line)
@@ -77,7 +71,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			return g.multiAssign(n)
 		}
 		if target, ok := n.Targets[0].(*ast.IndexExpr); ok {
-			object, _, err := g.expr(target.Object)
+			dict, _, err := g.expr(target.Target)
 			if err != nil {
 				return err
 			}
@@ -89,27 +83,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			if err != nil {
 				return err
 			}
-			g.line(fmt.Sprintf("tya_set_index(%s, %s, %s);", object, index, value))
-			return nil
-		}
-		if target, ok := n.Targets[0].(*ast.ThisProp); ok {
-			value, _, err := g.expr(n.Values[0])
-			if err != nil {
-				return err
-			}
-			g.line(fmt.Sprintf("tya_set_member(__this, %s, %s);", strconv.Quote(target.Name), value))
-			return nil
-		}
-		if target, ok := n.Targets[0].(*ast.ClassProp); ok {
-			value, _, err := g.expr(n.Values[0])
-			if err != nil {
-				return err
-			}
-			className := g.currentClass
-			if className == "" {
-				return fmt.Errorf("C emitter only supports @@ assignment inside class methods")
-			}
-			g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", cName(className), strconv.Quote(target.Name), value))
+			g.line(fmt.Sprintf("tya_set_index(%s, %s, %s);", dict, index, value))
 			return nil
 		}
 		id, ok := n.Targets[0].(*ast.Ident)
@@ -120,7 +94,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			return g.assignTry(id.Name, tryExpr)
 		}
 		if obj, ok := n.Values[0].(*ast.DictLit); ok {
-			if err := g.assignObjectLit(id.Name, obj); err != nil {
+			if err := g.assignDictLit(id.Name, obj); err != nil {
 				return err
 			}
 			return nil
@@ -204,17 +178,17 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.indent++
 		if n.Kind == "of" {
 			if g.vars[n.ValueName] {
-				g.line(fmt.Sprintf("%s = tya_object_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
+				g.line(fmt.Sprintf("%s = tya_dict_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
 			} else {
 				g.vars[n.ValueName] = true
-				g.line(fmt.Sprintf("TyaValue %s = tya_object_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
+				g.line(fmt.Sprintf("TyaValue %s = tya_dict_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
 			}
 			if n.IndexName != "" {
 				if g.vars[n.IndexName] {
-					g.line(fmt.Sprintf("%s = tya_object_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
+					g.line(fmt.Sprintf("%s = tya_dict_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
 				} else {
 					g.vars[n.IndexName] = true
-					g.line(fmt.Sprintf("TyaValue %s = tya_object_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
+					g.line(fmt.Sprintf("TyaValue %s = tya_dict_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
 				}
 			}
 		} else {
@@ -337,7 +311,7 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 	return g.emitFuncWithContext(name, fn, "", "")
 }
 
-func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, className string, methodName string) (string, error) {
+func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, _ string, _ string) (string, error) {
 	sym := cFuncName(name, g.temp)
 	g.temp++
 	var out strings.Builder
@@ -347,13 +321,10 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, className strin
 	child := &cgen{
 		vars:          map[string]bool{},
 		funcs:         g.funcs,
-		classes:       g.classes,
 		temp:          g.temp,
 		indent:        1,
 		inFunc:        true,
 		predicateName: predicateName(name),
-		currentClass:  className,
-		currentMethod: methodName,
 	}
 	for i, param := range fn.Params {
 		child.vars[param] = true
@@ -416,84 +387,6 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, className strin
 	return sym, nil
 }
 
-func (g *cgen) assignClassDecl(class *ast.ClassDecl) error {
-	constructor, err := g.emitClassConstructor(class)
-	if err != nil {
-		return err
-	}
-	prevClass := g.currentClass
-	g.currentClass = class.Name
-	defer func() {
-		g.currentClass = prevClass
-	}()
-	entries := []string{}
-	for _, field := range class.ClassFields {
-		value, _, err := g.expr(field.Value)
-		if err != nil {
-			return err
-		}
-		entries = append(entries, fmt.Sprintf("{%s, %s}", strconv.Quote(field.Name), value))
-	}
-	g.line(fmt.Sprintf("%s = tya_object((TyaObjectEntry[]){%s}, %d);", cName(class.Name), strings.Join(entries, ", "), len(entries)))
-	g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_method(%s, %s));", cName(class.Name), strconv.Quote("__call"), constructor, cName(class.Name)))
-	for _, method := range class.ClassMethods {
-		sym, err := g.emitFuncWithContext(class.Name+"_"+method.Name, method.Func, class.Name, method.Name)
-		if err != nil {
-			return err
-		}
-		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_method(%s, %s));", cName(class.Name), strconv.Quote(method.Name), sym, cName(class.Name)))
-	}
-	return nil
-}
-
-func (g *cgen) emitClassConstructor(class *ast.ClassDecl) (string, error) {
-	sym := cFuncName(class.Name+"_ctor", g.temp)
-	g.temp++
-	var out strings.Builder
-	out.WriteString("TyaValue ")
-	out.WriteString(sym)
-	out.WriteString("(TyaValue __class, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
-	child := &cgen{
-		vars:         map[string]bool{},
-		funcs:        g.funcs,
-		classes:      g.classes,
-		temp:         g.temp,
-		indent:       1,
-		inFunc:       true,
-		currentClass: class.Name,
-	}
-	child.line("(void)__class;")
-	child.line("TyaValue __this = tya_object(0, 0);")
-	for _, field := range g.instanceFields(class) {
-		value, _, err := child.expr(field.Value)
-		if err != nil {
-			return "", err
-		}
-		child.line(fmt.Sprintf("tya_set_member(__this, %s, %s);", strconv.Quote(field.Name), value))
-	}
-	for _, method := range g.instanceMethods(class) {
-		sym, err := g.emitFuncWithContext(class.Name+"_"+method.Name, method.Func, methodOwner(g.classes, class, method.Name), method.Name)
-		if err != nil {
-			return "", err
-		}
-		child.line(fmt.Sprintf("tya_set_member(__this, %s, tya_method(%s, __this));", strconv.Quote(method.Name), sym))
-	}
-	if init := findOwnMethod(class, "init"); init != nil {
-		sym, err := g.emitFuncWithContext(class.Name+"_init", init.Func, class.Name, "init")
-		if err != nil {
-			return "", err
-		}
-		child.line(fmt.Sprintf("%s(__this, __arg0, __arg1, __arg2, __arg3);", sym))
-	}
-	child.line("return __this;")
-	g.temp = child.temp
-	g.funcOut.WriteString(child.funcOut.String())
-	out.WriteString(child.out.String())
-	out.WriteString("}\n\n")
-	g.funcOut.WriteString(out.String())
-	return sym, nil
-}
-
 func (g *cgen) returnLine(value string) {
 	if g.predicateName == "" {
 		g.line(fmt.Sprintf("return %s;", value))
@@ -536,14 +429,9 @@ func isSideEffectCall(expr ast.Expr) bool {
 	}
 }
 
-func (g *cgen) assignObjectLit(name string, obj *ast.DictLit) error {
+func (g *cgen) assignDictLit(name string, obj *ast.DictLit) error {
 	entries := []string{}
-	methods := []ast.ObjectProp{}
 	for _, prop := range obj.Props {
-		if _, ok := prop.Value.(*ast.FuncLit); ok {
-			methods = append(methods, prop)
-			continue
-		}
 		value, _, err := g.expr(prop.Value)
 		if err != nil {
 			return err
@@ -551,16 +439,7 @@ func (g *cgen) assignObjectLit(name string, obj *ast.DictLit) error {
 		entries = append(entries, fmt.Sprintf("{%s, %s}", strconv.Quote(prop.Name), value))
 	}
 	target := cName(name)
-	g.line(fmt.Sprintf("%s = tya_object((TyaObjectEntry[]){%s}, %d);", target, strings.Join(entries, ", "), len(entries)))
-	for _, method := range methods {
-		fn := method.Value.(*ast.FuncLit)
-		funcName := name + "_" + method.Name
-		sym, err := g.emitFunc(funcName, fn)
-		if err != nil {
-			return err
-		}
-		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_method(%s, %s));", target, strconv.Quote(method.Name), sym, target))
-	}
+	g.line(fmt.Sprintf("%s = tya_dict((TyaDictEntry[]){%s}, %d);", target, strings.Join(entries, ", "), len(entries)))
 	return nil
 }
 
@@ -583,7 +462,7 @@ func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
 		g.vars[module.Name] = true
 		g.line(fmt.Sprintf("TyaValue %s = tya_nil();", target))
 	}
-	g.line(fmt.Sprintf("%s = tya_object((TyaObjectEntry[]){%s}, %d);", target, strings.Join(entries, ", "), len(entries)))
+	g.line(fmt.Sprintf("%s = tya_dict((TyaDictEntry[]){%s}, %d);", target, strings.Join(entries, ", "), len(entries)))
 	for _, member := range functions {
 		fn := member.Value.(*ast.FuncLit)
 		funcName := module.Name + "_" + member.Name
@@ -624,7 +503,7 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		return nil
 	}
 	if id.Name == "delete" && len(call.Args) == 2 {
-		object, _, err := g.expr(call.Args[0])
+		dict, _, err := g.expr(call.Args[0])
 		if err != nil {
 			return err
 		}
@@ -632,7 +511,7 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		if err != nil {
 			return err
 		}
-		g.line(fmt.Sprintf("tya_delete(%s, %s);", object, key))
+		g.line(fmt.Sprintf("tya_delete(%s, %s);", dict, key))
 		return nil
 	}
 	if id.Name == "write_file" && len(call.Args) == 2 {
@@ -713,7 +592,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return fmt.Sprintf("tya_array((TyaValue[]){%s}, %d)", strings.Join(elems, ", "), len(elems)), "TyaValue", nil
 	case *ast.DictLit:
 		if len(n.Props) == 0 {
-			return "tya_object(0, 0)", "TyaValue", nil
+			return "tya_dict(0, 0)", "TyaValue", nil
 		}
 		entries := make([]string, 0, len(n.Props))
 		for _, prop := range n.Props {
@@ -723,20 +602,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			entries = append(entries, fmt.Sprintf("{%s, %s}", strconv.Quote(prop.Name), value))
 		}
-		return fmt.Sprintf("tya_object((TyaObjectEntry[]){%s}, %d)", strings.Join(entries, ", "), len(entries)), "TyaValue", nil
-	case *ast.SetLit:
-		if len(n.Elems) == 0 {
-			return "tya_set(0, 0)", "TyaValue", nil
-		}
-		elems := make([]string, 0, len(n.Elems))
-		for _, elem := range n.Elems {
-			ex, _, err := g.expr(elem)
-			if err != nil {
-				return "", "", err
-			}
-			elems = append(elems, ex)
-		}
-		return fmt.Sprintf("tya_set((TyaValue[]){%s}, %d)", strings.Join(elems, ", "), len(elems)), "TyaValue", nil
+		return fmt.Sprintf("tya_dict((TyaDictEntry[]){%s}, %d)", strings.Join(entries, ", "), len(entries)), "TyaValue", nil
 	case *ast.FuncLit:
 		name := fmt.Sprintf("__anon%d", g.temp)
 		sym, err := g.emitFunc(name, n)
@@ -793,39 +659,6 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return "tya_number(-" + ex + ".number)", typ, nil
 	case *ast.CallExpr:
-		if _, ok := n.Callee.(*ast.SuperExpr); ok {
-			if g.currentClass == "" || g.currentMethod == "" {
-				return "", "", fmt.Errorf("C emitter does not support super outside class methods")
-			}
-			class := g.classes[g.currentClass]
-			if class == nil || class.Parent == "" {
-				return "", "", fmt.Errorf("C emitter does not support super outside subclass methods")
-			}
-			parent := g.classes[class.Parent]
-			if parent == nil {
-				return "", "", fmt.Errorf("C emitter cannot resolve parent class %s", class.Parent)
-			}
-			method, owner := findMethod(g.classes, parent, g.currentMethod)
-			if method == nil {
-				return "", "", fmt.Errorf("C emitter cannot resolve super method %s", g.currentMethod)
-			}
-			sym, err := g.emitFuncWithContext(owner+"_"+method.Name, method.Func, owner, method.Name)
-			if err != nil {
-				return "", "", err
-			}
-			args := make([]string, 0, len(n.Args))
-			for _, arg := range n.Args {
-				ex, _, err := g.expr(arg)
-				if err != nil {
-					return "", "", err
-				}
-				args = append(args, ex)
-			}
-			for len(args) < 4 {
-				args = append(args, "tya_nil()")
-			}
-			return fmt.Sprintf("%s(__this, %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
-		}
 		id, ok := n.Callee.(*ast.Ident)
 		if ok && id.Name == "len" && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
@@ -833,9 +666,6 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_len(%s)", arg), "TyaValue", nil
-		}
-		if ok && id.Name == "set" && len(n.Args) == 0 {
-			return "tya_set(0, 0)", "TyaValue", nil
 		}
 		if ok && id.Name == "contains" && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])
@@ -892,20 +722,6 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_replace(%s, %s, %s)", text, old, replacement), "TyaValue", nil
 		}
-		if ok && id.Name == "byte_len" && len(n.Args) == 1 {
-			text, _, err := g.expr(n.Args[0])
-			if err != nil {
-				return "", "", err
-			}
-			return fmt.Sprintf("tya_byte_len(%s)", text), "TyaValue", nil
-		}
-		if ok && id.Name == "char_len" && len(n.Args) == 1 {
-			text, _, err := g.expr(n.Args[0])
-			if err != nil {
-				return "", "", err
-			}
-			return fmt.Sprintf("tya_char_len(%s)", text), "TyaValue", nil
-		}
 		if ok && id.Name == "args" && len(n.Args) == 0 {
 			return "tya_args(argc, argv)", "TyaValue", nil
 		}
@@ -915,9 +731,6 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_env(%s)", name), "TyaValue", nil
-		}
-		if ok && id.Name == "read_line" && len(n.Args) == 0 {
-			return "tya_read_line()", "TyaValue", nil
 		}
 		if ok && id.Name == "read_file" && len(n.Args) == 1 {
 			path, _, err := g.expr(n.Args[0])
@@ -997,19 +810,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_file_exists(%s)", path), "TyaValue", nil
 		}
-		if ok && id.Name == "equal" && len(n.Args) == 2 {
-			left, _, err := g.expr(n.Args[0])
-			if err != nil {
-				return "", "", err
-			}
-			right, _, err := g.expr(n.Args[1])
-			if err != nil {
-				return "", "", err
-			}
-			return fmt.Sprintf("tya_deep_equal(%s, %s)", left, right), "TyaValue", nil
-		}
 		if ok && id.Name == "has" && len(n.Args) == 2 {
-			object, _, err := g.expr(n.Args[0])
+			dict, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
 			}
@@ -1017,21 +819,21 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			if err != nil {
 				return "", "", err
 			}
-			return fmt.Sprintf("tya_has(%s, %s)", object, key), "TyaValue", nil
+			return fmt.Sprintf("tya_has(%s, %s)", dict, key), "TyaValue", nil
 		}
 		if ok && id.Name == "keys" && len(n.Args) == 1 {
-			object, _, err := g.expr(n.Args[0])
+			dict, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
 			}
-			return fmt.Sprintf("tya_keys(%s)", object), "TyaValue", nil
+			return fmt.Sprintf("tya_keys(%s)", dict), "TyaValue", nil
 		}
 		if ok && id.Name == "values" && len(n.Args) == 1 {
-			object, _, err := g.expr(n.Args[0])
+			dict, _, err := g.expr(n.Args[0])
 			if err != nil {
 				return "", "", err
 			}
-			return fmt.Sprintf("tya_values(%s)", object), "TyaValue", nil
+			return fmt.Sprintf("tya_values(%s)", dict), "TyaValue", nil
 		}
 		if ok && id.Name == "pop" && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
@@ -1039,43 +841,6 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_pop(%s)", arg), "TyaValue", nil
-		}
-		if ok && (id.Name == "map" || id.Name == "filter" || id.Name == "find" || id.Name == "any" || id.Name == "all" || id.Name == "each") && len(n.Args) == 2 {
-			array, _, err := g.expr(n.Args[0])
-			if err != nil {
-				return "", "", err
-			}
-			fn, _, err := g.expr(n.Args[1])
-			if err != nil {
-				return "", "", err
-			}
-			return fmt.Sprintf("tya_%s(%s, %s)", id.Name, array, fn), "TyaValue", nil
-		}
-		if ok && id.Name == "reduce" && len(n.Args) == 3 {
-			array, _, err := g.expr(n.Args[0])
-			if err != nil {
-				return "", "", err
-			}
-			initial, _, err := g.expr(n.Args[1])
-			if err != nil {
-				return "", "", err
-			}
-			fn, _, err := g.expr(n.Args[2])
-			if err != nil {
-				return "", "", err
-			}
-			return fmt.Sprintf("tya_reduce(%s, %s, %s)", array, initial, fn), "TyaValue", nil
-		}
-		if ok && id.Name == "div" && len(n.Args) == 2 {
-			left, _, err := g.expr(n.Args[0])
-			if err != nil {
-				return "", "", err
-			}
-			right, _, err := g.expr(n.Args[1])
-			if err != nil {
-				return "", "", err
-			}
-			return fmt.Sprintf("tya_number((long)%s.number / (long)%s.number)", left, right), "TyaValue", nil
 		}
 		if ok {
 			if sym, found := g.funcs[id.Name]; found {
@@ -1094,7 +859,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 		}
 		if member, ok := n.Callee.(*ast.MemberExpr); ok {
-			receiver, _, err := g.expr(member.Object)
+			receiver, _, err := g.expr(member.Target)
 			if err != nil {
 				return "", "", err
 			}
@@ -1145,7 +910,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return "tya_nil()", "TyaValue", nil
 	case *ast.IndexExpr:
-		object, _, err := g.expr(n.Object)
+		dict, _, err := g.expr(n.Target)
 		if err != nil {
 			return "", "", err
 		}
@@ -1153,22 +918,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
-		return fmt.Sprintf("tya_index(%s, %s)", object, index), "TyaValue", nil
+		return fmt.Sprintf("tya_index(%s, %s)", dict, index), "TyaValue", nil
 	case *ast.MemberExpr:
-		object, _, err := g.expr(n.Object)
+		dict, _, err := g.expr(n.Target)
 		if err != nil {
 			return "", "", err
 		}
-		return fmt.Sprintf("tya_member(%s, %s)", object, strconv.Quote(n.Name)), "TyaValue", nil
-	case *ast.ThisProp:
-		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(n.Name)), "TyaValue", nil
-	case *ast.ClassProp:
-		if g.currentClass == "" {
-			return "", "", fmt.Errorf("C emitter only supports @@ inside class methods")
-		}
-		return fmt.Sprintf("tya_member(%s, %s)", cName(g.currentClass), strconv.Quote(n.Name)), "TyaValue", nil
-	case *ast.SuperExpr:
-		return "", "", fmt.Errorf("C emitter does not support super calls yet")
+		return fmt.Sprintf("tya_member(%s, %s)", dict, strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.TryExpr:
 		return g.expr(n.Expr)
 	}
@@ -1179,11 +935,11 @@ func cName(name string) string {
 	name = strings.ReplaceAll(name, "?", "_p")
 	switch name {
 	case "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
-		"else", "enum", "extern", "float", "for", "goto", "if", "inline", "int",
+		"else", "enum", "extern", "float", "for", "goto", "if", "index", "inline", "int",
 		"long", "register", "restrict", "return", "short", "signed", "sizeof",
 		"static", "struct", "switch", "typedef", "union", "unsigned", "void",
 		"volatile", "while":
-		return "tya_" + name
+		return "tya_var_" + name
 	}
 	return name
 }
@@ -1230,25 +986,6 @@ func (g *cgen) interpolateString(value string) string {
 
 func (g *cgen) interpolationExpr(expr string) (string, bool) {
 	expr = strings.TrimSpace(expr)
-	if strings.HasPrefix(expr, "@@") && isIdentName(expr[2:]) && g.currentClass != "" {
-		return fmt.Sprintf("tya_member(%s, %s)", cName(g.currentClass), strconv.Quote(expr[2:])), true
-	}
-	if strings.HasPrefix(expr, "@") && isIdentName(expr[1:]) {
-		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(expr[1:])), true
-	}
-	if expr == "super()" && g.currentClass != "" && g.currentMethod != "" {
-		class := g.classes[g.currentClass]
-		if class != nil && class.Parent != "" {
-			if parent := g.classes[class.Parent]; parent != nil {
-				if method, owner := findMethod(g.classes, parent, g.currentMethod); method != nil {
-					sym, err := g.emitFuncWithContext(owner+"_"+method.Name, method.Func, owner, method.Name)
-					if err == nil {
-						return fmt.Sprintf("%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil())", sym), true
-					}
-				}
-			}
-		}
-	}
 	return interpolationExpr(expr)
 }
 
@@ -1356,81 +1093,4 @@ func assignedNames(stmts []ast.Stmt) []string {
 	}
 	walk(stmts)
 	return names
-}
-
-func collectClasses(stmts []ast.Stmt) map[string]*ast.ClassDecl {
-	classes := map[string]*ast.ClassDecl{}
-	for _, stmt := range stmts {
-		if class, ok := stmt.(*ast.ClassDecl); ok {
-			classes[class.Name] = class
-		}
-	}
-	return classes
-}
-
-func (g *cgen) instanceFields(class *ast.ClassDecl) []ast.ClassField {
-	fields := []ast.ClassField{}
-	if class.Parent != "" {
-		if parent := g.classes[class.Parent]; parent != nil {
-			fields = append(fields, g.instanceFields(parent)...)
-		}
-	}
-	fields = append(fields, class.Fields...)
-	return fields
-}
-
-func (g *cgen) instanceMethods(class *ast.ClassDecl) []ast.ClassMethod {
-	byName := map[string]ast.ClassMethod{}
-	order := []string{}
-	if class.Parent != "" {
-		if parent := g.classes[class.Parent]; parent != nil {
-			for _, method := range g.instanceMethods(parent) {
-				byName[method.Name] = method
-				order = append(order, method.Name)
-			}
-		}
-	}
-	for _, method := range class.Methods {
-		if method.Name == "init" {
-			continue
-		}
-		if _, ok := byName[method.Name]; !ok {
-			order = append(order, method.Name)
-		}
-		byName[method.Name] = method
-	}
-	methods := make([]ast.ClassMethod, 0, len(order))
-	for _, name := range order {
-		methods = append(methods, byName[name])
-	}
-	return methods
-}
-
-func methodOwner(classes map[string]*ast.ClassDecl, class *ast.ClassDecl, name string) string {
-	for c := class; c != nil; c = classes[c.Parent] {
-		for _, method := range c.Methods {
-			if method.Name == name {
-				return c.Name
-			}
-		}
-	}
-	return class.Name
-}
-
-func findOwnMethod(class *ast.ClassDecl, name string) *ast.ClassMethod {
-	for i := range class.Methods {
-		if class.Methods[i].Name == name {
-			return &class.Methods[i]
-		}
-	}
-	return nil
-}
-
-func findMethod(classes map[string]*ast.ClassDecl, class *ast.ClassDecl, name string) (*ast.ClassMethod, string) {
-	for c := class; c != nil; c = classes[c.Parent] {
-		if method := findOwnMethod(c, name); method != nil {
-			return method, c.Name
-		}
-	}
-	return nil, ""
 }

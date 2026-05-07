@@ -6,12 +6,31 @@ This guide is for reading from top to bottom.
 ## Run A Program
 
 ```sh
-go run ./cmd/tya examples/hello.tya
-go run ./cmd/tya run examples/hello.tya
+tya run examples/hello.tya
 ```
 
-`tya run` compiles the source to C, builds it with `cc`, and runs the
-resulting binary.
+`tya run` builds a temporary executable, runs it, and removes the temporary
+file. This is the normal way to run a Tya program during development.
+
+To keep the executable, use `tya build`.
+
+```sh
+tya build examples/hello.tya
+./hello
+```
+
+Without `-o`, `tya build` writes an executable named after the input file
+basename in the current directory. Use `-o` to choose the output path.
+
+```sh
+tya build examples/hello.tya -o bin/hello
+```
+
+To print the installed Tya version:
+
+```sh
+tya version
+```
 
 ## Values
 
@@ -31,7 +50,8 @@ print "Hello, {name}"
 
 ## Names
 
-Use `snake_case` for variables, functions, modules, and object properties.
+Use `snake_case` for variables, functions, modules, dictionary keys, and module
+members.
 Use `SCREAMING_SNAKE_CASE` for constants.
 
 ```tya
@@ -46,6 +66,8 @@ See `docs/NAMING.md` for the full naming rules.
 ```tya
 if age >= 20
   print "adult"
+elseif age >= 13
+  print "teen"
 else
   print "young"
 ```
@@ -121,25 +143,13 @@ print items[0]
 ```
 
 ```tya
-user =
-  name: "komagata"
-  age: 20
+user = { name: "komagata", age: 20 }
 
 print user["name"]
 ```
 
-Legacy method objects can use `@property` as the receiver.
-
-```tya
-counter =
-  count: 0
-
-  inc: ->
-    @count = @count + 1
-    @count
-
-print counter.inc()
-```
+Use index access for dictionaries. Dictionary member access is not part of
+Tya v0.1.
 
 ## Errors
 
@@ -148,7 +158,7 @@ Tya uses error values, not exceptions.
 ```tya
 user, err = parse_user ""
 if err
-  print err.message
+  print err["message"]
 ```
 
 Inside a function, `try` propagates the error part of a `value, err` result.
@@ -169,16 +179,16 @@ import greeting
 print greeting.hello("komagata")
 ```
 
-Each module exposes exactly one public top-level binding. The binding must
+Each module file defines exactly one top-level `module`. The module name must
 match the file name.
 
 ```tya
 # greeting.tya
-greeting =
-  hello: name -> "Hello, {name}"
+module greeting
+  hello = name -> "Hello, {name}"
 ```
 
 ## Standard Library
 
-See `docs/API.md` for built-in functions such as `print`, `len`, `map`,
+See `docs/API.md` for v0.1 built-in functions such as `print`, `len`,
 `read_file`, and `to_string`.

@@ -3,19 +3,19 @@ alias = message
 identity = value ->
   return value
 echo = text -> text
-has_t = text -> contains "T", text
+has_t = text -> contains("T", text)
 triple = a, b, c ->
   return a
 emit = line, kind, text ->
   return line
-result = identity message
-parts = split message, alias
+result = identity(message)
+parts = split(message, alias)
 first = parts[0]
 input = args()[0]
-source = read_file args()[0]
+source = read_file(args()[0])
 index = 0
 char = source[index]
-token = emit index, "IDENT", message
+token = emit(index, "IDENT", message)
 if len(parts) < 3
   print "short"
 if message == alias
@@ -23,9 +23,9 @@ if message == alias
 if message == alias or alias == message
   print "either"
 log = message
-push log, alias
+push(log, alias)
 queue = []
-push queue, message
+push(queue, message)
 if not has_name(queue, message)
   print "missing"
 if has_t(message)

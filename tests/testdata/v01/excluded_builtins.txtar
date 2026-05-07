@@ -1,0 +1,28 @@
+# reject convenience builtins that are explicitly outside v0.1
+cd $REPO
+
+! exec go run ./cmd/tya --emit-c $WORK/map.tya
+stderr 'undefined variable map'
+
+! exec go run ./cmd/tya --emit-c $WORK/read_line.tya
+stderr 'undefined variable read_line'
+
+! exec go run ./cmd/tya --emit-c $WORK/byte_len.tya
+stderr 'undefined variable byte_len'
+
+! exec go run ./cmd/tya --emit-c $WORK/equal.tya
+stderr 'undefined variable equal'
+
+-- map.tya --
+items = [1, 2]
+print map(items, item -> item * 2)
+
+-- read_line.tya --
+name = read_line()
+print name
+
+-- byte_len.tya --
+print byte_len("Tya")
+
+-- equal.tya --
+print equal([1], [1])

@@ -1,0 +1,9 @@
+# emit C for a v0.1 source
+cd $REPO
+exec go run ./cmd/tya --emit-c $WORK/main.tya
+stdout 'tya_print'
+! stderr .
+
+-- main.tya --
+name = "Tya"
+print "Hello, {name}"

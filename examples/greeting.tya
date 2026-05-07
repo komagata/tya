@@ -1,2 +1,2 @@
 module greeting
-  hello: name -> "Hello, {name}"
+  hello = name -> "Hello, {name}"

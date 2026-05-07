@@ -4,4 +4,4 @@ user =
   name: "komagata"
   age: 20
 
-print greet user
+print greet(user)

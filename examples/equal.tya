@@ -7,9 +7,3 @@ right =
   nums: [1, 2]
 
 print left == right
-same = equal left, right
-nums_a = [1, 2]
-nums_b = [1, 3]
-different = equal nums_a, nums_b
-print same
-print different

@@ -29,7 +29,7 @@ func (l *Lexer) lex() {
 	lines := strings.Split(l.src, "\n")
 	for i, raw := range lines {
 		lineNo := i + 1
-		line := stripComment(raw)
+		line := strings.TrimRight(stripComment(raw), " ")
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
@@ -90,9 +90,6 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			for i < len(s) && (isAlpha(s[i]) || isDigit(s[i]) || s[i] == '_') {
 				i++
 			}
-			if i < len(s) && s[i] == '?' {
-				i++
-			}
 			l.add(token.IDENT, s[start:i], line, baseCol+start)
 			continue
 		}
@@ -102,7 +99,7 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			for i < len(s) && isDigit(s[i]) {
 				i++
 			}
-			if i < len(s) && s[i] == '.' {
+			if i+1 < len(s) && s[i] == '.' && isDigit(s[i+1]) {
 				typ = token.FLOAT
 				i++
 				for i < len(s) && isDigit(s[i]) {
@@ -172,10 +169,6 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 				l.add(token.GTE, two, line, col)
 				i += 2
 				continue
-			case "@@":
-				l.add(token.ATAT, two, line, col)
-				i += 2
-				continue
 			}
 		}
 		switch ch {
@@ -191,8 +184,6 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			l.add(token.COMMA, ",", line, col)
 		case '.':
 			l.add(token.DOT, ".", line, col)
-		case '@':
-			l.add(token.AT, "@", line, col)
 		case '+':
 			l.add(token.PLUS, "+", line, col)
 		case '-':
@@ -224,11 +215,21 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 
 func stripComment(s string) string {
 	inString := false
-	for i, r := range s {
-		if r == '"' {
+	escaped := false
+	for i := 0; i < len(s); i++ {
+		ch := s[i]
+		if escaped {
+			escaped = false
+			continue
+		}
+		if inString && ch == '\\' {
+			escaped = true
+			continue
+		}
+		if ch == '"' {
 			inString = !inString
 		}
-		if r == '#' && !inString {
+		if ch == '#' && !inString {
 			return s[:i]
 		}
 	}

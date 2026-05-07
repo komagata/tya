@@ -1,0 +1,1623 @@
+kind_of = token ->
+  parts = split token, ":"
+  parts[1]
+
+text_of = token ->
+  parts = split token, ":"
+  if len(parts) < 3
+    return ""
+  parts[2]
+
+line_of = token ->
+  parts = split token, ":"
+  parts[0]
+
+literal_kind_of = token ->
+  if kind_of(token) == "IDENT" and text_of(token) == "nil"
+    return "NIL"
+  if kind_of(token) == "IDENT" and (text_of(token) == "true" or text_of(token) == "false")
+    return "BOOL"
+  kind_of(token)
+
+scalar_kind_of = token ->
+  if kind_of(token) == "IDENT" and text_of(token) == "nil"
+    return "nil"
+  if kind_of(token) == "IDENT" and (text_of(token) == "true" or text_of(token) == "false")
+    return "bool"
+  if kind_of(token) == "IDENT"
+    return "ident"
+  if kind_of(token) == "INT"
+    return "int"
+  if kind_of(token) == "FLOAT"
+    return "float"
+  if kind_of(token) == "STRING"
+    return "string"
+  "scalar"
+
+scalar_name_of = token ->
+  if kind_of(token) == "IDENT"
+    return text_of(token)
+  ""
+
+scalar_expr = token ->
+  { kind: scalar_kind_of(token), legacy_kind: literal_kind_of(token), name: scalar_name_of(token), value: text_of(token), line: line_of(token) }
+
+negative_int_expr = op, value ->
+  { kind: "int", legacy_kind: "INT", name: "", value: "-" + text_of(value), line: line_of(op) }
+
+expr_kind = expr ->
+  expr["kind"]
+
+expr_value = expr ->
+  expr["value"]
+
+expr_name = expr ->
+  expr["name"]
+
+expr_legacy_kind = expr ->
+  expr["legacy_kind"]
+
+expr_line = expr ->
+  expr["line"]
+
+binary_op_of = legacy_kind ->
+  if legacy_kind == "INT_ADD"
+    return "+"
+  if legacy_kind == "INT_SUB"
+    return "-"
+  if legacy_kind == "INT_MUL"
+    return "*"
+  if legacy_kind == "INT_DIV"
+    return "/"
+  if legacy_kind == "INT_MOD"
+    return "%"
+  if legacy_kind == "COMPARE_LT"
+    return "<"
+  if legacy_kind == "COMPARE_EQ"
+    return "=="
+  if legacy_kind == "COMPARE_NE"
+    return "!="
+  if legacy_kind == "COMPARE_GE"
+    return ">="
+  if legacy_kind == "COMPARE_GT"
+    return ">"
+  if legacy_kind == "COMPARE_LE"
+    return "<="
+  if legacy_kind == "BOOL_AND"
+    return "and"
+  if legacy_kind == "BOOL_OR"
+    return "or"
+  legacy_kind
+
+binary_kind_of = op ->
+  if op == "+"
+    return "INT_ADD"
+  if op == "-"
+    return "INT_SUB"
+  if op == "*"
+    return "INT_MUL"
+  if op == "/"
+    return "INT_DIV"
+  if op == "%"
+    return "INT_MOD"
+  if op == "<"
+    return "COMPARE_LT"
+  if op == "=="
+    return "COMPARE_EQ"
+  if op == "!="
+    return "COMPARE_NE"
+  if op == ">="
+    return "COMPARE_GE"
+  if op == ">"
+    return "COMPARE_GT"
+  if op == "<="
+    return "COMPARE_LE"
+  if op == "and"
+    return "BOOL_AND"
+  if op == "or"
+    return "BOOL_OR"
+  op
+
+is_binary_op_text = op ->
+  if op == "+"
+    return true
+  if op == "-"
+    return true
+  if op == "*"
+    return true
+  if op == "/"
+    return true
+  if op == "%"
+    return true
+  if op == "<"
+    return true
+  if op == "=="
+    return true
+  if op == "!="
+    return true
+  if op == ">="
+    return true
+  if op == ">"
+    return true
+  if op == "<="
+    return true
+  if op == "and"
+    return true
+  if op == "or"
+    return true
+  false
+
+is_binary_op_token = token ->
+  is_binary_op_text text_of(token)
+
+is_grouped_binary_op_text = op ->
+  if op == "+"
+    return true
+  if op == "-"
+    return true
+  if op == "*"
+    return true
+  if op == "/"
+    return true
+  if op == "%"
+    return true
+  if op == "=="
+    return true
+  if op == "!="
+    return true
+  if op == ">="
+    return true
+  if op == ">"
+    return true
+  if op == "<="
+    return true
+  false
+
+is_grouped_binary_op_token = token ->
+  is_grouped_binary_op_text text_of(token)
+
+binary_expr = legacy_kind, left, right ->
+  { kind: "binary", legacy_kind: legacy_kind, op: binary_op_of(legacy_kind), left: scalar_expr(left), right: scalar_expr(right), value: text_of(left), line: line_of(left) }
+
+unary_expr = legacy_kind, right ->
+  { kind: "unary", legacy_kind: legacy_kind, right: scalar_expr(right), line: line_of(right) }
+
+binary_op_expr = op, left, right ->
+  binary_expr binary_kind_of(op), left, right
+
+binary_result_expr = op, left, right ->
+  { kind: "binary", legacy_kind: binary_kind_of(op), op: op, left: left, right: right, value: expr_value(left), line: expr_line(left) }
+
+parse_binary_expr = left, op, right ->
+  binary_op_expr text_of(op), left, right
+
+parse_binary_at = tokens, start ->
+  left = tokens[start]
+  op = tokens[start + 1]
+  right = tokens[start + 2]
+  parse_binary_expr left, op, right
+
+parse_print_or_at = tokens, start ->
+  binary_expr "OR", tokens[start], tokens[start + 2]
+
+parse_grouped_binary_at = tokens, start ->
+  left = tokens[start + 1]
+  op = tokens[start + 2]
+  right = tokens[start + 3]
+  parse_binary_expr left, op, right
+
+index_expr = object, index ->
+  { kind: "index", legacy_kind: "INDEX", object: scalar_expr(object), index: scalar_expr(index), line: line_of(object) }
+
+index_binary_expr = object, left, op, right ->
+  { kind: "index_binary", legacy_kind: "INDEX_BINARY", object: scalar_expr(object), left: scalar_expr(left), op: text_of(op), right: scalar_expr(right), value: text_of(object), line: line_of(object) }
+
+index_binary_expr_from_expr = object, left, op, right ->
+  { kind: "index_binary", legacy_kind: "INDEX_BINARY", object: object, left: scalar_expr(left), op: text_of(op), right: scalar_expr(right), value: expr_value(object), line: expr_line(object) }
+
+call0_index_expr = callee, index ->
+  { kind: "call0_index", callee: scalar_expr(callee), index: scalar_expr(index), line: line_of(callee) }
+
+call1_call0_index_expr = callee, inner, index ->
+  { kind: "call1_call0_index", callee: scalar_expr(callee), inner: scalar_expr(inner), index: scalar_expr(index), line: line_of(callee) }
+
+int_mul_add_expr = left, right, factor ->
+  { kind: "int_mul_add", left: scalar_expr(left), right: scalar_expr(right), factor: scalar_expr(factor), line: line_of(left) }
+
+map_mul_expr = left_arg, right_arg, factor ->
+  { kind: "map_mul", left_arg: scalar_expr(left_arg), right_arg: scalar_expr(right_arg), factor: scalar_expr(factor), line: line_of(left_arg) }
+
+filter_mod_eq_expr = source, param, divisor, expected ->
+  { kind: "filter_mod_eq", source: scalar_expr(source), param: scalar_expr(param), divisor: scalar_expr(divisor), expected: scalar_expr(expected), line: line_of(source) }
+
+int_mod_eq_expr = left, divisor, right ->
+  { kind: "int_mod_eq", left: scalar_expr(left), divisor: scalar_expr(divisor), right: scalar_expr(right), line: line_of(left) }
+
+call_compare_expr = legacy_kind, callee, arg, right ->
+  { kind: "call_compare", legacy_kind: legacy_kind, callee: scalar_expr(callee), arg: scalar_expr(arg), right: scalar_expr(right), line: line_of(callee) }
+
+scalar_call_compare_expr = legacy_kind, left, callee, arg ->
+  { kind: "scalar_call_compare", legacy_kind: legacy_kind, left: scalar_expr(left), callee: scalar_expr(callee), arg: scalar_expr(arg), line: line_of(left) }
+
+not_call2_expr = callee, left_arg, right_arg ->
+  { kind: "not_call2", callee: scalar_expr(callee), left_arg: scalar_expr(left_arg), right_arg: scalar_expr(right_arg), line: line_of(callee) }
+
+not_call1_expr = callee, arg ->
+  { kind: "not_call1", callee: scalar_expr(callee), arg: scalar_expr(arg), line: line_of(callee) }
+
+not_call_and_not_call_expr = left, right ->
+  { kind: "not_call_and_not_call", left: left, right: right, line: expr_line(left) }
+
+compare_or_expr = left, right, left2, right2 ->
+  { kind: "compare_or", left: scalar_expr(left), right: scalar_expr(right), left2: scalar_expr(left2), right2: scalar_expr(right2), line: line_of(left) }
+
+call_eq_literal_expr = callee, arg, right ->
+  { kind: "call_eq_literal", callee: scalar_expr(callee), arg: scalar_expr(arg), right: scalar_expr(right), line: line_of(callee) }
+
+call_and_eq_expr = left, right ->
+  { kind: "call_and_compare", legacy_kind: "CALL_EQ_AND_CALL_EQ", left: left, right: right, line: expr_line(left) }
+
+call_and_ne_expr = left, right ->
+  { kind: "call_and_compare", legacy_kind: "CALL_EQ_AND_CALL_NE", left: left, right: right, line: expr_line(left) }
+
+parse_not_call2_at = tokens, start ->
+  not_call2_expr tokens[start + 1], tokens[start + 3], tokens[start + 5]
+
+parse_not_call_and_not_call_at = tokens, start ->
+  left = not_call1_expr tokens[start + 1], tokens[start + 3]
+  right = not_call2_expr tokens[start + 7], tokens[start + 9], tokens[start + 11]
+  not_call_and_not_call_expr left, right
+
+parse_int_mod_eq_at = tokens, start ->
+  int_mod_eq_expr tokens[start], tokens[start + 2], tokens[start + 4]
+
+parse_compare_or_at = tokens, start ->
+  compare_or_expr tokens[start], tokens[start + 2], tokens[start + 4], tokens[start + 6]
+
+parse_call_compare_at = tokens, start, legacy_kind ->
+  call_compare_expr legacy_kind, tokens[start], tokens[start + 2], tokens[start + 5]
+
+parse_scalar_call_compare_at = tokens, start, legacy_kind ->
+  scalar_call_compare_expr legacy_kind, tokens[start], tokens[start + 2], tokens[start + 4]
+
+parse_call_and_compare_at = tokens, start, legacy_kind ->
+  left_cmp = call_eq_literal_expr tokens[start], tokens[start + 2], tokens[start + 5]
+  right_cmp = call_eq_literal_expr tokens[start + 7], tokens[start + 9], tokens[start + 12]
+  if legacy_kind == "CALL_EQ_AND_CALL_NE"
+    return call_and_ne_expr left_cmp, right_cmp
+  call_and_eq_expr left_cmp, right_cmp
+
+expr_parse_result = expr, next ->
+  { expr: expr, next: next }
+
+result_expr = result ->
+  result["expr"]
+
+result_next = result ->
+  result["next"]
+
+binary_precedence_of = op ->
+  if op == "or"
+    return 1
+  if op == "and"
+    return 2
+  if op == "==" or op == "!="
+    return 3
+  if op == "<" or op == "<=" or op == ">" or op == ">="
+    return 4
+  if op == "+" or op == "-"
+    return 5
+  if op == "*" or op == "/" or op == "%"
+    return 6
+  0
+
+is_scalar_ast_expr = expr ->
+  kind = expr_kind(expr)
+  if kind == "ident"
+    return true
+  if kind == "int"
+    return true
+  if kind == "float"
+    return true
+  if kind == "string"
+    return true
+  if kind == "bool"
+    return true
+  if kind == "nil"
+    return true
+  false
+
+call_expr_from_expr = callee, args ->
+  { kind: "call", callee: callee, args: args, value: expr_value(callee), line: expr_line(callee) }
+
+call_expr = callee, args ->
+  call_expr_from_expr scalar_expr(callee), args
+
+try_expr = expr ->
+  { kind: "try", expr: expr, line: expr_line(expr) }
+
+member_expr_from_expr = object, member ->
+  { kind: "member", legacy_kind: "MEMBER", object: object, member: text_of(member), value: expr_value(object) + "." + text_of(member), line: expr_line(object) }
+
+member_expr = object, member ->
+  member_expr_from_expr scalar_expr(object), member
+
+index_expr_from_expr = object, index ->
+  { kind: "index", legacy_kind: "INDEX", object: object, index: scalar_expr(index), value: expr_value(object), line: expr_line(object) }
+
+parse_postfix_result_at = tokens, start ->
+  expr = scalar_expr(tokens[start])
+  next = start + 1
+  while next < len(tokens) and line_of(tokens[next]) == expr_line(expr)
+    if text_of(tokens[next]) == ")"
+      return expr_parse_result expr, next
+    if text_of(tokens[next]) == ","
+      return expr_parse_result expr, next
+    if is_binary_op_token(tokens[next])
+      return expr_parse_result expr, next
+    if text_of(tokens[next]) == "." and next + 1 < len(tokens)
+      expr = member_expr_from_expr expr, tokens[next + 1]
+      next = next + 2
+    else
+      if text_of(tokens[next]) == "[" and next + 2 < len(tokens)
+        if next + 4 < len(tokens) and is_binary_op_token(tokens[next + 2]) and text_of(tokens[next + 4]) == "]"
+          expr = index_binary_expr_from_expr expr, tokens[next + 1], tokens[next + 2], tokens[next + 3]
+          next = next + 5
+        else
+          expr = index_expr_from_expr expr, tokens[next + 1]
+          next = next + 3
+      else
+        if expr_kind(expr) == "ident"
+          arg = scalar_expr(tokens[next])
+          arg_next = next + 1
+          if next + 2 < len(tokens) and line_of(tokens[next + 1]) == expr_line(arg)
+            if text_of(tokens[next + 1]) == "."
+              arg = member_expr_from_expr arg, tokens[next + 2]
+              arg_next = next + 3
+          if next + 2 < len(tokens) and line_of(tokens[next + 1]) == expr_line(arg)
+            if text_of(tokens[next + 1]) == "["
+              arg = index_expr_from_expr arg, tokens[next + 2]
+              arg_next = next + 3
+          args = [arg]
+          expr = call_expr_from_expr expr, args
+          next = arg_next
+        else
+          return expr_parse_result expr, next
+  expr_parse_result expr, next
+
+parse_call_arg_result_at = tokens, start ->
+  if start + 3 < len(tokens) and kind_of(tokens[start]) == "IDENT" and text_of(tokens[start + 1]) == "("
+    result = parse_postfix_result_at tokens, start + 2
+    inner = result_expr result
+    next = result_next result
+    if next + 1 < len(tokens) and is_binary_op_token(tokens[next])
+      inner = binary_result_expr text_of(tokens[next]), inner, scalar_expr(tokens[next + 1])
+      next = next + 2
+    if next < len(tokens) and text_of(tokens[next]) == ")"
+      nested_args = [inner]
+      nested_call = call_expr tokens[start], nested_args
+      return expr_parse_result nested_call, next + 1
+  result = parse_postfix_result_at tokens, start
+  left = result_expr result
+  next = result_next result
+  if next + 1 < len(tokens) and line_of(tokens[next]) == expr_line(left) and is_binary_op_token(tokens[next])
+    right = scalar_expr(tokens[next + 1])
+    return expr_parse_result binary_result_expr(text_of(tokens[next]), left, right), next + 2
+  result
+
+parse_paren_call_result_at = tokens, start ->
+  first = tokens[start]
+  limit = 3
+  if len(tokens) > 0 and kind_of(tokens[0]) == "IDENT" and text_of(tokens[0]) == "ASTMODE"
+    limit = 16
+  result = parse_call_arg_result_at tokens, start + 2
+  arg = result_expr result
+  paren_args = [arg]
+  next = result_next result
+  while len(paren_args) < limit and next + 1 < len(tokens) and text_of(tokens[next]) == ","
+    result = parse_call_arg_result_at tokens, next + 1
+    push paren_args, result_expr(result)
+    next = result_next result
+  if next < len(tokens) and text_of(tokens[next]) == ")"
+    paren_call = call_expr first, paren_args
+    return expr_parse_result paren_call, next + 1
+  expr_parse_result scalar_expr(first), start + 1
+
+parse_bare_call_result_at = tokens, start ->
+  first = tokens[start]
+  limit = 3
+  if len(tokens) > 0 and kind_of(tokens[0]) == "IDENT" and text_of(tokens[0]) == "ASTMODE"
+    limit = 16
+  result = parse_call_arg_result_at tokens, start + 1
+  bare_args = [result_expr(result)]
+  next = result_next result
+  while len(bare_args) < limit and next + 1 < len(tokens) and line_of(tokens[next]) == line_of(first) and text_of(tokens[next]) == ","
+    result = parse_call_arg_result_at tokens, next + 1
+    push bare_args, result_expr(result)
+    next = result_next result
+  if next >= len(tokens) or line_of(tokens[next]) != line_of(first)
+    bare_call = call_expr first, bare_args
+    return expr_parse_result bare_call, next
+  expr_parse_result scalar_expr(first), start + 1
+
+parse_primary_result_at = tokens, start, not_kind ->
+  first = tokens[start]
+  if text_of(first) == "not" and start + 1 < len(tokens)
+    return expr_parse_result unary_expr(not_kind, tokens[start + 1]), start + 2
+  if text_of(first) == "-" and start + 1 < len(tokens) and kind_of(tokens[start + 1]) == "INT"
+    return expr_parse_result negative_int_expr(first, tokens[start + 1]), start + 2
+  if text_of(first) == "(" and start + 4 < len(tokens) and text_of(tokens[start + 4]) == ")"
+    if is_grouped_binary_op_token(tokens[start + 2])
+      return expr_parse_result parse_grouped_binary_at(tokens, start), start + 5
+  if start + 5 < len(tokens) and kind_of(first) == "IDENT" and kind_of(tokens[start + 1]) == "IDENT"
+    if text_of(tokens[start + 2]) == "(" and text_of(tokens[start + 3]) == ")" and text_of(tokens[start + 4]) == "["
+      return expr_parse_result call1_call0_index_expr(first, tokens[start + 1], tokens[start + 5]), start + 7
+  if start + 4 < len(tokens) and kind_of(first) == "IDENT" and text_of(tokens[start + 1]) == "("
+    if text_of(tokens[start + 2]) == ")" and text_of(tokens[start + 3]) == "["
+      return expr_parse_result call0_index_expr(first, tokens[start + 4]), start + 6
+  if start + 2 < len(tokens) and kind_of(first) == "IDENT" and text_of(tokens[start + 1]) == "("
+    if text_of(tokens[start + 2]) == ")"
+      return expr_parse_result call_expr(first, []), start + 3
+  if start + 3 < len(tokens) and kind_of(first) == "IDENT" and text_of(tokens[start + 1]) == "("
+    return parse_paren_call_result_at tokens, start
+  if len(tokens) > 0 and kind_of(tokens[0]) == "IDENT" and text_of(tokens[0]) == "ASTMODE"
+    if start + 1 < len(tokens) and kind_of(first) == "IDENT" and line_of(tokens[start + 1]) == line_of(first)
+      if text_of(tokens[start + 1]) != "=" and text_of(tokens[start + 1]) != "," and text_of(tokens[start + 1]) != ")" and text_of(tokens[start + 1]) != "." and text_of(tokens[start + 1]) != "[" and not is_binary_op_token(tokens[start + 1])
+        return parse_bare_call_result_at tokens, start
+  if start + 5 < len(tokens) and kind_of(first) == "IDENT" and line_of(tokens[start + 5]) == line_of(first)
+    if text_of(tokens[start + 2]) == "," and text_of(tokens[start + 4]) == ","
+      return expr_parse_result call_expr(first, [scalar_expr(tokens[start + 1]), scalar_expr(tokens[start + 3]), scalar_expr(tokens[start + 5])]), start + 6
+  if start + 3 < len(tokens) and kind_of(first) == "IDENT" and line_of(tokens[start + 3]) == line_of(first)
+    if text_of(tokens[start + 2]) == ","
+      return expr_parse_result call_expr(first, [scalar_expr(tokens[start + 1]), scalar_expr(tokens[start + 3])]), start + 4
+  parse_postfix_result_at tokens, start
+
+parse_precedence_result_at = tokens, start, min_prec, not_kind ->
+  result = parse_primary_result_at tokens, start, not_kind
+  left = result_expr result
+  next = result_next result
+  while next + 1 < len(tokens) and line_of(tokens[next]) == expr_line(left) and is_binary_op_token(tokens[next])
+    prec = binary_precedence_of text_of(tokens[next])
+    if prec < min_prec
+      return expr_parse_result left, next
+    op = tokens[next]
+    result = parse_primary_result_at tokens, next + 1, not_kind
+    right = result_expr result
+    right_next = result_next result
+    while right_next + 1 < len(tokens) and line_of(tokens[right_next]) == expr_line(right) and is_binary_op_token(tokens[right_next]) and binary_precedence_of(text_of(tokens[right_next])) > prec
+      right_op = tokens[right_next]
+      result = parse_primary_result_at tokens, right_next + 1, not_kind
+      right = binary_result_expr text_of(right_op), right, result_expr(result)
+      right_next = result_next result
+    left = binary_result_expr text_of(op), left, right
+    next = right_next
+  expr_parse_result left, next
+
+parse_expr_result_at = tokens, start ->
+  parse_precedence_result_at tokens, start, 1, "BOOL_NOT"
+
+parse_expr_with_unary_at = tokens, start, not_kind ->
+  result = parse_precedence_result_at tokens, start, 1, not_kind
+  result_expr result
+
+parse_expr_at = tokens, start ->
+  result = parse_expr_result_at tokens, start
+  result_expr result
+
+parse_try_expr_result_at = tokens, start ->
+  result = parse_expr_result_at tokens, start + 1
+  inner = result_expr result
+  expr = try_expr inner
+  next = result_next result
+  expr_parse_result expr, next
+
+parse_try_expr_at = tokens, start ->
+  result = parse_try_expr_result_at tokens, start
+  result_expr result
+
+array_expr = elems ->
+  { kind: "array", elems: elems }
+
+object_expr = key, value ->
+  { kind: "object", key: text_of(key), value: scalar_expr(value), line: line_of(key) }
+
+legacy_call1_arg_kind = arg ->
+  if expr_kind(arg) == "index"
+    return "CALL1_INDEX"
+  if expr_kind(arg) == "index_binary"
+    return "CALL1_INDEX_BINARY"
+  if expr_kind(arg) == "binary"
+    return "CALL1_EXPR"
+  "CALL1"
+
+legacy_call1_arg_payload = arg ->
+  if expr_kind(arg) == "index"
+    return expr_value(arg["object"]) + ":" + expr_value(arg["index"])
+  if expr_kind(arg) == "index_binary"
+    return expr_value(arg["object"]) + ":" + expr_value(arg["left"]) + ":" + arg["op"] + ":" + expr_value(arg["right"])
+  if expr_kind(arg) == "binary"
+    return expr_legacy_kind(arg) + ":" + expr_value(arg["left"]) + ":" + expr_value(arg["right"])
+  expr_value(arg)
+
+legacy_call1 = callee, arg ->
+  kind = legacy_call1_arg_kind(arg)
+  payload = legacy_call1_arg_payload(arg)
+  kind + ":" + expr_value(callee) + ":" + payload
+
+legacy_call2 = callee, args ->
+  "CALL2:" + expr_value(callee) + ":" + expr_value(args[0]) + ":" + expr_value(args[1])
+
+legacy_call2_kinded = callee, args ->
+  "CALL2:" + expr_value(callee) + ":" + expr_value(args[0]) + ":" + expr_legacy_kind(args[1]) + ":" + expr_value(args[1])
+
+legacy_call3 = callee, args ->
+  "CALL3:" + expr_value(callee) + ":" + expr_value(args[0]) + ":" + expr_legacy_kind(args[1]) + ":" + expr_value(args[1]) + ":" + expr_value(args[2])
+
+legacy_shallow_expr = expr ->
+  if expr_kind(expr) == "index"
+    return expr_legacy_kind(expr) + ":" + expr_value(expr["object"]) + ":" + expr_value(expr["index"])
+  if expr_kind(expr) == "index_binary"
+    return expr_legacy_kind(expr) + ":" + expr_value(expr["object"]) + ":" + expr_value(expr["left"]) + ":" + expr["op"] + ":" + expr_value(expr["right"])
+  expr_legacy_kind(expr) + ":" + expr_value(expr)
+
+legacy_expr = expr ->
+  if expr_kind(expr) == "array"
+    elems = expr["elems"]
+    if len(elems) == 0
+      return "ARRAY_EMPTY:"
+    if len(elems) == 1
+      return "ARRAY_ONE:" + expr_legacy_kind(elems[0]) + ":" + expr_value(elems[0])
+    if len(elems) == 2
+      return "ARRAY_TWO:" + expr_legacy_kind(elems[0]) + ":" + expr_value(elems[0]) + ":" + expr_legacy_kind(elems[1]) + ":" + expr_value(elems[1])
+    if len(elems) == 3
+      return "ARRAY_THREE:" + expr_legacy_kind(elems[0]) + ":" + expr_value(elems[0]) + ":" + expr_legacy_kind(elems[1]) + ":" + expr_value(elems[1]) + ":" + expr_legacy_kind(elems[2]) + ":" + expr_value(elems[2])
+    if len(elems) == 4
+      return "ARRAY_FOUR:" + expr_legacy_kind(elems[0]) + ":" + expr_value(elems[0]) + ":" + expr_legacy_kind(elems[1]) + ":" + expr_value(elems[1]) + ":" + expr_legacy_kind(elems[2]) + ":" + expr_value(elems[2]) + ":" + expr_legacy_kind(elems[3]) + ":" + expr_value(elems[3])
+  if expr_kind(expr) == "object"
+    return "OBJECT_ONE:" + expr["key"] + ":" + expr_legacy_kind(expr["value"]) + ":" + expr_value(expr["value"])
+  if expr_kind(expr) == "call"
+    args = expr["args"]
+    if len(args) == 1
+      return legacy_call1(expr["callee"], args[0])
+    if len(args) == 2
+      return legacy_call2 expr["callee"], args
+    if len(args) == 3
+      return legacy_call3 expr["callee"], args
+    if len(args) > 3
+      return legacy_call3 expr["callee"], args
+  if expr_kind(expr) == "try"
+    inner = expr["expr"]
+    if expr_kind(inner) == "call" and len(inner["args"]) == 1
+      return "TRY_CALL1:" + expr_value(inner["callee"]) + ":" + expr_value(inner["args"][0])
+  if expr_kind(expr) == "unary"
+    return expr_legacy_kind(expr) + ":" + expr_value(expr["right"])
+  if expr_kind(expr) == "binary"
+    if not is_scalar_ast_expr(expr["left"])
+      return legacy_shallow_expr expr["left"]
+    if not is_scalar_ast_expr(expr["right"])
+      return expr_legacy_kind(expr) + ":" + expr_value(expr["left"]) + ":" + expr_value(expr["right"])
+    return expr_legacy_kind(expr) + ":" + expr_value(expr["left"]) + ":" + expr_value(expr["right"])
+  if expr_kind(expr) == "index"
+    return expr_legacy_kind(expr) + ":" + expr_value(expr["object"]) + ":" + expr_value(expr["index"])
+  if expr_kind(expr) == "index_binary"
+    return expr_legacy_kind(expr) + ":" + expr_value(expr["object"]) + ":" + expr_value(expr["left"]) + ":" + expr["op"] + ":" + expr_value(expr["right"])
+  if expr_kind(expr) == "call0_index"
+    return "CALL0_INDEX:" + expr_value(expr["callee"]) + ":" + expr_value(expr["index"])
+  if expr_kind(expr) == "call1_call0_index"
+    return "CALL1_CALL0_INDEX:" + expr_value(expr["callee"]) + ":" + expr_value(expr["inner"]) + ":" + expr_value(expr["index"])
+  if expr_kind(expr) == "int_mul_add"
+    return "INT_MUL_ADD:" + expr_value(expr["left"]) + ":" + expr_value(expr["right"]) + ":" + expr_value(expr["factor"])
+  if expr_kind(expr) == "map_mul"
+    return "MAP_MUL:" + expr_value(expr["left_arg"]) + ":" + expr_value(expr["right_arg"]) + ":" + expr_value(expr["factor"])
+  if expr_kind(expr) == "filter_mod_eq"
+    return "CALL2_FUNC_MOD_EQ:filter:" + expr_value(expr["source"]) + ":" + expr_value(expr["param"]) + ":" + expr_value(expr["divisor"]) + ":" + expr_value(expr["expected"])
+  expr_legacy_kind(expr) + ":" + expr_value(expr)
+
+assign_stmt = line, name, expr ->
+  { kind: "assign", line: line, name: name, targets: [name], expr: expr, values: [expr] }
+
+legacy_assign = stmt ->
+  stmt["line"] + ":ASSIGN:" + stmt["name"] + ":" + legacy_expr(stmt["expr"])
+
+print_stmt = line, expr ->
+  { kind: "print", line: line, expr: expr }
+
+if_stmt = line, expr ->
+  { kind: "IF", line: line, expr: expr }
+
+while_stmt = line, expr ->
+  { kind: "WHILE", line: line, expr: expr }
+
+exit_stmt = line, expr ->
+  { kind: "exit", line: line, expr: expr }
+
+panic_stmt = line, expr ->
+  { kind: "panic", line: line, expr: expr }
+
+push_stmt = line, target, expr ->
+  { kind: "push", line: line, target: target, expr: expr }
+
+delete_stmt = line, target, key ->
+  { kind: "delete", line: line, target: target, key: key }
+
+return_stmt = line, exprs ->
+  { kind: "return", line: line, exprs: exprs, values: exprs }
+
+expr_stmt = line, expr ->
+  { kind: "expr", line: line, expr: expr, values: [expr] }
+
+for_stmt = line, item, index, collection ->
+  { kind: "for", line: line, item: item, value_name: item, index: index, index_name: index, collection: collection, iterable: collection }
+
+expr_iterable_value = expr ->
+  if expr["kind"] == "index"
+    return expr_value(expr["object"]) + "[" + expr_value(expr["index"]) + "]"
+  expr_value(expr)
+
+for_stmt_expr = line, item, index, collection ->
+  { kind: "for", line: line, item: item, value_name: item, index: index, index_name: index, collection: expr_iterable_value(collection), iterable: expr_iterable_value(collection), expr: collection }
+
+stmt_values = stmt ->
+  stmt["values"]
+
+stmt_value_name = stmt ->
+  stmt["value_name"]
+
+stmt_index_name = stmt ->
+  stmt["index_name"]
+
+stmt_iterable = stmt ->
+  stmt["iterable"]
+
+call_stmt = line, callee, args ->
+  { kind: "call_stmt", line: line, callee: callee, args: args }
+
+multi_assign_stmt = line, target, target2, expr ->
+  { kind: "multi_assign", line: line, target: target, target2: target2, expr: expr }
+
+func_stmt = line, name, params ->
+  { kind: "func", line: line, name: name, params: params }
+
+marker_stmt = line, kind, value ->
+  { kind: kind, line: line, value: value }
+
+with_indent = stmt, indent ->
+  kind = stmt["kind"]
+  if kind == "assign"
+    return { kind: "assign", line: stmt["line"], indent: indent, name: stmt["name"], targets: stmt["targets"], expr: stmt["expr"], values: stmt["values"] }
+  if kind == "print"
+    return { kind: "print", line: stmt["line"], indent: indent, expr: stmt["expr"] }
+  if kind == "IF"
+    return { kind: "IF", line: stmt["line"], indent: indent, expr: stmt["expr"] }
+  if kind == "WHILE"
+    return { kind: "WHILE", line: stmt["line"], indent: indent, expr: stmt["expr"] }
+  if kind == "exit"
+    return { kind: "exit", line: stmt["line"], indent: indent, expr: stmt["expr"] }
+  if kind == "panic"
+    return { kind: "panic", line: stmt["line"], indent: indent, expr: stmt["expr"] }
+  if kind == "push"
+    return { kind: "push", line: stmt["line"], indent: indent, target: stmt["target"], expr: stmt["expr"] }
+  if kind == "delete"
+    return { kind: "delete", line: stmt["line"], indent: indent, target: stmt["target"], key: stmt["key"] }
+  if kind == "return"
+    return { kind: "return", line: stmt["line"], indent: indent, exprs: stmt["exprs"], values: stmt["values"] }
+  if kind == "expr"
+    return { kind: "expr", line: stmt["line"], indent: indent, expr: stmt["expr"], values: stmt["values"] }
+  if kind == "for"
+    return { kind: "for", line: stmt["line"], indent: indent, item: stmt["item"], value_name: stmt["value_name"], index: stmt["index"], index_name: stmt["index_name"], collection: stmt["collection"], iterable: stmt["iterable"] }
+  if kind == "call_stmt"
+    return { kind: "call_stmt", line: stmt["line"], indent: indent, callee: stmt["callee"], args: stmt["args"] }
+  if kind == "multi_assign"
+    return { kind: "multi_assign", line: stmt["line"], indent: indent, target: stmt["target"], target2: stmt["target2"], expr: stmt["expr"] }
+  if kind == "func"
+    return { kind: "func", line: stmt["line"], indent: indent, name: stmt["name"], params: stmt["params"] }
+  { kind: kind, line: stmt["line"], indent: indent, value: stmt["value"] }
+
+push_stmt_ast = stmts, stmt, indent ->
+  push stmts, with_indent(stmt, indent)
+
+legacy_marker = stmt ->
+  if stmt["value"] != ""
+    return stmt["line"] + ":" + stmt["kind"] + ":" + stmt["value"]
+  stmt["line"] + ":" + stmt["kind"]
+
+legacy_print = stmt ->
+  if stmt["expr"]["kind"] == "member"
+    return stmt["line"] + ":PRINT_MEMBER:" + stmt["expr"]["object"]["value"] + ":" + stmt["expr"]["member"]
+  if stmt["expr"]["kind"] == "index"
+    return stmt["line"] + ":PRINT_INDEX:" + stmt["expr"]["object"]["legacy_kind"] + ":" + stmt["expr"]["object"]["value"] + ":" + stmt["expr"]["index"]["value"]
+  if stmt["expr"]["kind"] == "binary"
+    return stmt["line"] + ":PRINT_" + stmt["expr"]["legacy_kind"] + ":" + stmt["expr"]["left"]["legacy_kind"] + ":" + stmt["expr"]["left"]["value"] + ":" + stmt["expr"]["right"]["legacy_kind"] + ":" + stmt["expr"]["right"]["value"]
+  if stmt["expr"]["kind"] == "unary"
+    return stmt["line"] + ":PRINT_" + stmt["expr"]["legacy_kind"] + ":" + stmt["expr"]["right"]["legacy_kind"] + ":" + stmt["expr"]["right"]["value"]
+  if stmt["expr"]["kind"] == "call"
+    args = stmt["expr"]["args"]
+    if len(args) == 1
+      return stmt["line"] + ":PRINT_" + legacy_call1(stmt["expr"]["callee"], args[0])
+    if len(args) == 2
+      return stmt["line"] + ":PRINT_" + legacy_call2_kinded(stmt["expr"]["callee"], args)
+    if len(args) == 3
+      return stmt["line"] + ":PRINT_" + legacy_call3(stmt["expr"]["callee"], args)
+  stmt["line"] + ":PRINT:" + legacy_expr(stmt["expr"])
+
+legacy_condition = stmt ->
+  if stmt["expr"]["kind"] == "unary"
+    return stmt["line"] + ":" + stmt["kind"] + "_" + stmt["expr"]["legacy_kind"] + ":" + stmt["expr"]["right"]["legacy_kind"] + ":" + stmt["expr"]["right"]["value"]
+  if stmt["expr"]["kind"] == "call"
+    args = stmt["expr"]["args"]
+    if len(args) == 1
+      return stmt["line"] + ":" + stmt["kind"] + "_CALL1:" + stmt["expr"]["callee"]["value"] + ":" + args[0]["value"]
+  if stmt["expr"]["kind"] == "int_mod_eq"
+    return stmt["line"] + ":" + stmt["kind"] + "_INT_MOD_EQ:" + stmt["expr"]["left"]["legacy_kind"] + ":" + stmt["expr"]["left"]["value"] + ":" + stmt["expr"]["divisor"]["legacy_kind"] + ":" + stmt["expr"]["divisor"]["value"] + ":" + stmt["expr"]["right"]["legacy_kind"] + ":" + stmt["expr"]["right"]["value"]
+  if stmt["expr"]["kind"] == "call_compare"
+    return stmt["line"] + ":" + stmt["kind"] + "_" + stmt["expr"]["legacy_kind"] + ":" + stmt["expr"]["callee"]["value"] + ":" + stmt["expr"]["arg"]["value"] + ":" + stmt["expr"]["right"]["value"]
+  if stmt["expr"]["kind"] == "scalar_call_compare"
+    return stmt["line"] + ":" + stmt["kind"] + "_" + stmt["expr"]["legacy_kind"] + ":" + stmt["expr"]["left"]["value"] + ":" + stmt["expr"]["callee"]["value"] + ":" + stmt["expr"]["arg"]["value"]
+  if stmt["expr"]["kind"] == "not_call2"
+    return stmt["line"] + ":" + stmt["kind"] + "_NOT_CALL2:" + stmt["expr"]["callee"]["value"] + ":" + stmt["expr"]["left_arg"]["value"] + ":" + stmt["expr"]["right_arg"]["value"]
+  if stmt["expr"]["kind"] == "not_call_and_not_call"
+    left = stmt["expr"]["left"]
+    right = stmt["expr"]["right"]
+    return stmt["line"] + ":" + stmt["kind"] + "_NOT_CALL_AND_NOT_CALL:" + left["callee"]["value"] + ":" + left["arg"]["value"] + ":" + right["callee"]["value"] + ":" + right["left_arg"]["value"] + ":" + right["right_arg"]["value"]
+  if stmt["expr"]["kind"] == "compare_or"
+    return stmt["line"] + ":" + stmt["kind"] + "_COMPARE_OR:" + stmt["expr"]["left"]["legacy_kind"] + ":" + stmt["expr"]["left"]["value"] + ":" + stmt["expr"]["right"]["legacy_kind"] + ":" + stmt["expr"]["right"]["value"] + ":" + stmt["expr"]["left2"]["legacy_kind"] + ":" + stmt["expr"]["left2"]["value"] + ":" + stmt["expr"]["right2"]["legacy_kind"] + ":" + stmt["expr"]["right2"]["value"]
+  if stmt["expr"]["kind"] == "call_and_compare"
+    left = stmt["expr"]["left"]
+    right = stmt["expr"]["right"]
+    return stmt["line"] + ":" + stmt["kind"] + "_" + stmt["expr"]["legacy_kind"] + ":" + left["callee"]["value"] + ":" + left["arg"]["value"] + ":" + left["right"]["legacy_kind"] + ":" + left["right"]["value"] + ":" + right["callee"]["value"] + ":" + right["arg"]["value"] + ":" + right["right"]["legacy_kind"] + ":" + right["right"]["value"]
+  if stmt["expr"]["kind"] == "binary"
+    return stmt["line"] + ":" + stmt["kind"] + "_" + stmt["expr"]["legacy_kind"] + ":" + stmt["expr"]["left"]["legacy_kind"] + ":" + stmt["expr"]["left"]["value"] + ":" + stmt["expr"]["right"]["legacy_kind"] + ":" + stmt["expr"]["right"]["value"]
+  stmt["line"] + ":" + stmt["kind"] + ":" + legacy_expr(stmt["expr"])
+
+legacy_exit = stmt ->
+  stmt["line"] + ":EXIT:" + legacy_expr(stmt["expr"])
+
+legacy_panic = stmt ->
+  stmt["line"] + ":PANIC:" + legacy_expr(stmt["expr"])
+
+legacy_push = stmt ->
+  stmt["line"] + ":PUSH:" + stmt["target"] + ":" + legacy_expr(stmt["expr"])
+
+legacy_delete = stmt ->
+  stmt["line"] + ":DELETE:" + stmt["target"] + ":" + legacy_expr(stmt["key"])
+
+legacy_return = stmt ->
+  exprs = stmt_values stmt
+  if len(exprs) == 2
+    if exprs[0]["kind"] == "object" and exprs[1]["legacy_kind"] == "NIL"
+      return stmt["line"] + ":RETURN2_OBJECT_NIL:" + exprs[0]["key"] + ":" + exprs[0]["value"]["legacy_kind"] + ":" + exprs[0]["value"]["value"]
+    if exprs[1]["kind"] == "call" and len(exprs[1]["args"]) == 1
+      return stmt["line"] + ":RETURN2_CALL1:" + exprs[0]["legacy_kind"] + ":" + exprs[0]["value"] + ":" + exprs[1]["callee"]["value"] + ":" + exprs[1]["args"][0]["legacy_kind"] + ":" + exprs[1]["args"][0]["value"]
+    return stmt["line"] + ":RETURN2:" + legacy_expr(exprs[0]) + ":" + legacy_expr(exprs[1])
+  if exprs[0]["kind"] == "call" and len(exprs[0]["args"]) == 1
+    return stmt["line"] + ":RETURN_CALL2:" + exprs[0]["callee"]["value"] + ":" + exprs[0]["args"][0]["legacy_kind"] + ":" + exprs[0]["args"][0]["value"]
+  if exprs[0]["kind"] == "index"
+    return stmt["line"] + ":RETURN:INDEX:" + exprs[0]["object"]["value"] + ":" + exprs[0]["index"]["value"]
+  stmt["line"] + ":RETURN:" + legacy_expr(exprs[0])
+
+legacy_for = stmt ->
+  if stmt_index_name(stmt) != ""
+    return stmt["line"] + ":FOR_INDEX:" + stmt_value_name(stmt) + ":" + stmt_index_name(stmt) + ":" + stmt_iterable(stmt)
+  stmt["line"] + ":FOR:" + stmt_value_name(stmt) + ":" + stmt_iterable(stmt)
+
+legacy_call_stmt = stmt ->
+  args = stmt["args"]
+  if len(args) == 2
+    return stmt["line"] + ":CALL_STMT2:" + stmt["callee"] + ":" + args[0]["value"] + ":" + legacy_expr(args[1])
+  stmt["line"] + ":CALL_STMT:" + stmt["callee"]
+
+legacy_multi_assign = stmt ->
+  if stmt["expr"]["kind"] == "call" and len(stmt["expr"]["args"]) == 1
+    return stmt["line"] + ":MULTI_ASSIGN2_CALL1:" + stmt["target"] + ":" + stmt["target2"] + ":" + stmt["expr"]["callee"]["value"] + ":" + stmt["expr"]["args"][0]["legacy_kind"] + ":" + stmt["expr"]["args"][0]["value"]
+  stmt["line"] + ":MULTI_ASSIGN2:" + stmt["target"] + ":" + stmt["target2"] + ":" + legacy_expr(stmt["expr"])
+
+legacy_func = stmt ->
+  params = stmt["params"]
+  if len(params) == 4
+    return stmt["line"] + ":FUNC4:" + stmt["name"] + ":" + params[0] + ":" + params[1] + ":" + params[2] + ":" + params[3]
+  if len(params) == 3
+    return stmt["line"] + ":FUNC3:" + stmt["name"] + ":" + params[0] + ":" + params[1] + ":" + params[2]
+  if len(params) == 2
+    return stmt["line"] + ":FUNC2:" + stmt["name"] + ":" + params[0] + ":" + params[1]
+  stmt["line"] + ":FUNC:" + stmt["name"] + ":" + params[0]
+
+legacy_stmt = stmt ->
+  kind = stmt["kind"]
+  if kind == "assign"
+    return legacy_assign(stmt)
+  if kind == "print"
+    return legacy_print(stmt)
+  if kind == "IF" or kind == "WHILE"
+    return legacy_condition(stmt)
+  if kind == "exit"
+    return legacy_exit(stmt)
+  if kind == "panic"
+    return legacy_panic(stmt)
+  if kind == "push"
+    return legacy_push(stmt)
+  if kind == "delete"
+    return legacy_delete(stmt)
+  if kind == "return"
+    return legacy_return(stmt)
+  if kind == "for"
+    return legacy_for(stmt)
+  if kind == "call_stmt"
+    return legacy_call_stmt(stmt)
+  if kind == "multi_assign"
+    return legacy_multi_assign(stmt)
+  if kind == "func"
+    return legacy_func(stmt)
+  legacy_marker(stmt)
+
+program_ast = stmts ->
+  { kind: "program", body: stmts }
+
+body_of = nodes ->
+  nodes["body"]
+
+legacy_program = nodes ->
+  body = body_of nodes
+  legacy_nodes = []
+  for stmt in body
+    push legacy_nodes, legacy_stmt(stmt)
+  legacy_nodes
+
+expr_ast_arg_shape = expr ->
+  if expr_kind(expr) == "call"
+    arg_shapes = expr["args"]
+    rendered = "call(" + expr_value(expr["callee"])
+    if len(arg_shapes) > 0
+      rendered = rendered + " " + expr_kind(arg_shapes[0]) + "(" + expr_value(arg_shapes[0]) + ")"
+    if len(arg_shapes) > 1
+      rendered = rendered + " " + expr_kind(arg_shapes[1]) + "(" + expr_value(arg_shapes[1]) + ")"
+    if len(arg_shapes) > 2
+      rendered = rendered + " " + expr_kind(arg_shapes[2]) + "(" + expr_value(arg_shapes[2]) + ")"
+    if len(arg_shapes) > 3
+      rendered = rendered + " " + expr_kind(arg_shapes[3]) + "(" + expr_value(arg_shapes[3]) + ")"
+    return rendered + ")"
+  if expr_kind(expr) == "member"
+    return "member(" + expr_value(expr["object"]) + "." + expr["member"] + ")"
+  if expr_kind(expr) == "index"
+    index_value = expr_value(expr["index"])
+    if expr_kind(expr["index"]) == "string"
+      index_value = "string" + "(" + index_value + ")"
+    return "index(" + expr_value(expr["object"]) + " " + index_value + ")"
+  if expr_kind(expr) == "binary"
+    return "binary(" + expr["op"] + " " + expr_kind(expr["left"]) + "(" + expr_value(expr["left"]) + ") " + expr_kind(expr["right"]) + "(" + expr_value(expr["right"]) + "))"
+  expr_kind(expr) + "(" + expr_value(expr) + ")"
+
+expr_ast_leaf_shape = expr ->
+  if expr_kind(expr) == "call"
+    leaf_args = expr["args"]
+    rendered = "call(" + expr_value(expr["callee"])
+    i = 0
+    while i < len(leaf_args)
+      rendered = rendered + " " + expr_ast_arg_shape(leaf_args[i])
+      i = i + 1
+    return rendered + ")"
+  if expr_kind(expr) == "member"
+    return "member(" + expr_value(expr["object"]) + "." + expr["member"] + ")"
+  if expr_kind(expr) == "index"
+    index_value = expr_value(expr["index"])
+    if expr_kind(expr["index"]) == "string"
+      index_value = "string" + "(" + index_value + ")"
+    return "index(" + expr_value(expr["object"]) + " " + index_value + ")"
+  if expr_kind(expr) == "call1_call0_index"
+    return "call_index(" + expr_value(expr["callee"]) + " " + expr_value(expr["inner"]) + " " + expr_value(expr["index"]) + ")"
+  if expr_kind(expr) == "array"
+    elems = expr["elems"]
+    if len(elems) == 0
+      return "array0()"
+    if len(elems) == 1
+      return "array1(" + expr_ast_arg_shape(elems[0]) + ")"
+    if len(elems) == 2
+      return "array2(" + expr_ast_arg_shape(elems[0]) + " " + expr_ast_arg_shape(elems[1]) + ")"
+    if len(elems) == 3
+      return "array3(" + expr_ast_arg_shape(elems[0]) + " " + expr_ast_arg_shape(elems[1]) + " " + expr_ast_arg_shape(elems[2]) + ")"
+  if expr_kind(expr) == "object"
+    return "object1(" + expr["key"] + " " + expr_ast_arg_shape(expr["value"]) + ")"
+  if expr_kind(expr) == "unary"
+    return "unary(" + expr["legacy_kind"] + " " + expr_ast_arg_shape(expr["right"]) + ")"
+  expr_kind(expr) + "(" + expr_value(expr) + ")"
+
+expr_ast_child_shape = expr ->
+  if expr_kind(expr) == "binary"
+    return "binary(" + expr["op"] + " " + expr_ast_leaf_shape(expr["left"]) + " " + expr_ast_leaf_shape(expr["right"]) + ")"
+  expr_ast_leaf_shape expr
+
+expr_ast_shape = expr ->
+  if expr_kind(expr) == "int_mul_add"
+    return "binary(* binary(+ " + expr_ast_leaf_shape(expr["left"]) + " " + expr_ast_leaf_shape(expr["right"]) + ") " + expr_ast_leaf_shape(expr["factor"]) + ")"
+  if expr_kind(expr) == "int_mod_eq"
+    left = expr_ast_leaf_shape expr["left"]
+    divisor = expr_ast_leaf_shape expr["divisor"]
+    right = expr_ast_leaf_shape expr["right"]
+    return "binary(== binary(% " + left + " " + divisor + ") " + right + ")"
+  if expr_kind(expr) == "binary"
+    return "binary(" + expr["op"] + " " + expr_ast_child_shape(expr["left"]) + " " + expr_ast_child_shape(expr["right"]) + ")"
+  expr_ast_leaf_shape expr
+
+stmt_ast_shape = stmt ->
+  if stmt["kind"] == "assign"
+    return "assign(" + stmt["name"] + " " + expr_ast_shape(stmt["expr"]) + ")"
+  if stmt["kind"] == "print"
+    return "print(" + expr_ast_shape(stmt["expr"]) + ")"
+  stmt["kind"]
+
+ast_node = stmt ->
+  if stmt["kind"] == "assign"
+    return stmt["line"] + ":AST_ASSIGN:" + stmt["name"] + ":" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "print"
+    return stmt["line"] + ":AST_PRINT:" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "IF"
+    return stmt["line"] + ":AST_IF:" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "WHILE"
+    return stmt["line"] + ":AST_WHILE:" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "push"
+    return stmt["line"] + ":AST_PUSH:" + stmt["target"] + ":" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "delete"
+    return stmt["line"] + ":AST_DELETE:" + stmt["target"] + ":" + expr_ast_shape(stmt["key"])
+  if stmt["kind"] == "exit"
+    return stmt["line"] + ":AST_EXIT:" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "panic"
+    return stmt["line"] + ":AST_PANIC:" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "for"
+    if stmt_index_name(stmt) != ""
+      return stmt["line"] + ":AST_FOR_INDEX:" + stmt_value_name(stmt) + ":" + stmt_index_name(stmt) + ":" + stmt_iterable(stmt)
+    return stmt["line"] + ":AST_FOR:" + stmt_value_name(stmt) + ":" + stmt_iterable(stmt)
+  if stmt["kind"] == "multi_assign"
+    return stmt["line"] + ":AST_MULTI_ASSIGN2:" + stmt["target"] + ":" + stmt["target2"] + ":" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "call_stmt"
+    args = stmt["args"]
+    if len(args) == 2
+      return stmt["line"] + ":AST_CALL_STMT2:" + stmt["callee"] + ":" + expr_ast_shape(args[0]) + ":" + expr_ast_shape(args[1])
+  if stmt["kind"] == "BREAK"
+    return stmt["line"] + ":AST_BREAK"
+  if stmt["kind"] == "CONTINUE"
+    return stmt["line"] + ":AST_CONTINUE"
+  if stmt["kind"] == "ELSE"
+    return stmt["line"] + ":AST_ELSE"
+  if stmt["kind"] == "return"
+    exprs = stmt_values stmt
+    if len(exprs) == 1
+      return stmt["line"] + ":AST_RETURN:" + expr_ast_shape(exprs[0])
+    if len(exprs) == 2
+      return stmt["line"] + ":AST_RETURN2:" + expr_ast_shape(exprs[0]) + ":" + expr_ast_shape(exprs[1])
+  if stmt["kind"] == "expr"
+    return stmt["line"] + ":AST_EXPR:" + expr_ast_shape(stmt["expr"])
+  if stmt["kind"] == "func"
+    params = stmt["params"]
+    rendered = stmt["line"] + ":AST_FUNC:" + stmt["name"]
+    i = 0
+    while i < len(params)
+      rendered = rendered + ":" + params[i]
+      i = i + 1
+    return rendered
+  if stmt["kind"] == "INDENT"
+    return stmt["line"] + ":INDENT:" + stmt["value"]
+  stmt["line"] + ":AST_STMT:" + stmt["kind"]
+
+ast_nodes = nodes ->
+  body = body_of nodes
+  rendered = []
+  for stmt in body
+    push rendered, ast_node(stmt)
+  rendered
+
+parse_ast = tokens ->
+  stmts = []
+  i = 0
+  current_indent = "0"
+  ast_mode = false
+
+  while i < len(tokens)
+    token = tokens[i]
+
+    if kind_of(token) == "IDENT" and text_of(token) == "ASTMODE"
+      ast_mode = true
+      i = i + 1
+      continue
+
+    if kind_of(token) == "INDENT"
+      current_indent = text_of(token)
+      stmt = marker_stmt line_of(token), "INDENT", current_indent
+      push_stmt_ast stmts, stmt, current_indent
+      i = i + 1
+      continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "if"
+      if i + 1 < len(tokens)
+        value = tokens[i + 1]
+        if text_of(value) == "not" and i + 13 < len(tokens)
+          if text_of(tokens[i + 3]) == "(" and text_of(tokens[i + 5]) == ")" and text_of(tokens[i + 6]) == "and" and text_of(tokens[i + 7]) == "not"
+            if text_of(tokens[i + 9]) == "(" and text_of(tokens[i + 11]) == "," and text_of(tokens[i + 13]) == ")"
+              stmt = if_stmt line_of(token), parse_not_call_and_not_call_at(tokens, i + 1)
+              push_stmt_ast stmts, stmt, current_indent
+              i = i + 14
+              continue
+        if text_of(value) == "not" and i + 7 < len(tokens)
+          if text_of(tokens[i + 3]) == "(" and text_of(tokens[i + 5]) == "," and text_of(tokens[i + 7]) == ")"
+            stmt = if_stmt line_of(token), parse_not_call2_at(tokens, i + 1)
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 8
+            continue
+        if text_of(value) == "not" and i + 2 < len(tokens)
+          target = tokens[i + 2]
+          stmt = if_stmt line_of(token), unary_expr("NOT", target)
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 3
+          continue
+        if i + 5 < len(tokens) and text_of(tokens[i + 2]) == "%" and text_of(tokens[i + 4]) == "=="
+          stmt = if_stmt line_of(token), parse_int_mod_eq_at(tokens, i + 1)
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 6
+          continue
+        if i + 13 < len(tokens) and text_of(tokens[i + 2]) == "("
+          if text_of(tokens[i + 4]) == ")" and text_of(tokens[i + 5]) == "==" and text_of(tokens[i + 7]) == "and"
+            if text_of(tokens[i + 9]) == "(" and text_of(tokens[i + 11]) == ")" and text_of(tokens[i + 12]) == "=="
+              stmt = if_stmt line_of(token), parse_call_and_compare_at(tokens, i + 1, "CALL_EQ_AND_CALL_EQ")
+              push_stmt_ast stmts, stmt, current_indent
+              i = i + 14
+              continue
+            if text_of(tokens[i + 9]) == "(" and text_of(tokens[i + 11]) == ")" and text_of(tokens[i + 12]) == "!="
+              stmt = if_stmt line_of(token), parse_call_and_compare_at(tokens, i + 1, "CALL_EQ_AND_CALL_NE")
+              push_stmt_ast stmts, stmt, current_indent
+              i = i + 14
+              continue
+        if i + 6 < len(tokens) and text_of(tokens[i + 2]) == "("
+          if text_of(tokens[i + 4]) == ")" and text_of(tokens[i + 5]) == "<"
+            stmt = if_stmt line_of(token), parse_call_compare_at(tokens, i + 1, "CALL_LT")
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 7
+            continue
+          if text_of(tokens[i + 4]) == ")" and text_of(tokens[i + 5]) == ">"
+            stmt = if_stmt line_of(token), parse_call_compare_at(tokens, i + 1, "CALL_GT")
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 7
+            continue
+        if i + 4 < len(tokens) and text_of(tokens[i + 2]) == "(" and text_of(tokens[i + 4]) == ")" and not (ast_mode and i + 5 < len(tokens) and line_of(tokens[i + 5]) == line_of(token) and is_binary_op_token(tokens[i + 5]))
+          arg = tokens[i + 3]
+          stmt = if_stmt line_of(token), call_expr(value, [scalar_expr(arg)])
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 5
+          continue
+        if i + 3 < len(tokens) and is_binary_op_token(tokens[i + 2])
+          if text_of(tokens[i + 2]) == "=="
+            if i + 7 < len(tokens) and text_of(tokens[i + 4]) == "or"
+              if text_of(tokens[i + 6]) == "=="
+                stmt = if_stmt line_of(token), parse_compare_or_at(tokens, i + 1)
+                push_stmt_ast stmts, stmt, current_indent
+                i = i + 8
+                continue
+          result = parse_expr_result_at tokens, i + 1
+          stmt = if_stmt line_of(token), result_expr(result)
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 2 < len(tokens) and line_of(tokens[i + 2]) == line_of(token)
+          if text_of(tokens[i + 2]) == "." or text_of(tokens[i + 2]) == "["
+            result = parse_expr_result_at tokens, i + 1
+            stmt = if_stmt line_of(token), result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+          if ast_mode and text_of(tokens[i + 2]) == "("
+            result = parse_expr_result_at tokens, i + 1
+            stmt = if_stmt line_of(token), result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        stmt = if_stmt line_of(token), scalar_expr(value)
+        push_stmt_ast stmts, stmt, current_indent
+        i = i + 2
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "while"
+      if i + 1 < len(tokens)
+        value = tokens[i + 1]
+        if i + 6 < len(tokens) and text_of(tokens[i + 2]) == "<"
+          if not ast_mode and text_of(tokens[i + 4]) == "(" and text_of(tokens[i + 6]) == ")"
+            stmt = while_stmt line_of(token), parse_scalar_call_compare_at(tokens, i + 1, "LT_CALL")
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 7
+            continue
+        if i + 3 < len(tokens) and is_binary_op_token(tokens[i + 2])
+          result = parse_expr_result_at tokens, i + 1
+          stmt = while_stmt line_of(token), result_expr(result)
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 2 < len(tokens) and line_of(tokens[i + 2]) == line_of(token)
+          if text_of(tokens[i + 2]) == "." or text_of(tokens[i + 2]) == "["
+            result = parse_expr_result_at tokens, i + 1
+            stmt = while_stmt line_of(token), result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        stmt = while_stmt line_of(token), scalar_expr(value)
+        push_stmt_ast stmts, stmt, current_indent
+        i = i + 2
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "else"
+      stmt = marker_stmt line_of(token), "ELSE", ""
+      push_stmt_ast stmts, stmt, current_indent
+      i = i + 1
+      continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "for"
+      if i + 5 < len(tokens) and text_of(tokens[i + 2]) == "," and text_of(tokens[i + 4]) == "of"
+        item = tokens[i + 1]
+        index = tokens[i + 3]
+        collection = tokens[i + 5]
+        stmt = for_stmt line_of(token), text_of(item), text_of(index), text_of(collection)
+        push_stmt_ast stmts, stmt, current_indent
+        i = i + 6
+        continue
+      if i + 5 < len(tokens) and text_of(tokens[i + 2]) == "," and text_of(tokens[i + 4]) == "in"
+        item = tokens[i + 1]
+        index = tokens[i + 3]
+        collection = tokens[i + 5]
+        if i + 6 < len(tokens) and line_of(tokens[i + 6]) == line_of(token)
+          if text_of(tokens[i + 6]) == "." or text_of(tokens[i + 6]) == "["
+            result = parse_expr_result_at tokens, i + 5
+            stmt = for_stmt_expr line_of(token), text_of(item), text_of(index), result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        stmt = for_stmt line_of(token), text_of(item), text_of(index), text_of(collection)
+        push_stmt_ast stmts, stmt, current_indent
+        i = i + 6
+        continue
+      if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "in"
+        item = tokens[i + 1]
+        collection = tokens[i + 3]
+        if i + 4 < len(tokens) and line_of(tokens[i + 4]) == line_of(token)
+          if text_of(tokens[i + 4]) == "." or text_of(tokens[i + 4]) == "["
+            result = parse_expr_result_at tokens, i + 3
+            stmt = for_stmt_expr line_of(token), text_of(item), "", result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        stmt = for_stmt line_of(token), text_of(item), "", text_of(collection)
+        push_stmt_ast stmts, stmt, current_indent
+        i = i + 4
+        continue
+      if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "of"
+        item = tokens[i + 1]
+        collection = tokens[i + 3]
+        stmt = for_stmt line_of(token), text_of(item), "", text_of(collection)
+        push_stmt_ast stmts, stmt, current_indent
+        i = i + 4
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "write_file"
+      if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "," and line_of(tokens[i + 3]) == line_of(token)
+        result = parse_expr_result_at tokens, i + 1
+        left_expr = result_expr result
+        result = parse_expr_result_at tokens, i + 3
+        stmt = call_stmt line_of(token), "write_file", [left_expr, result_expr(result)]
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "print"
+      if i + 1 < len(tokens)
+        value = tokens[i + 1]
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "." and line_of(tokens[i + 3]) == line_of(token)
+          result = parse_expr_result_at tokens, i + 1
+          stmt = print_stmt line_of(token), result_expr(result)
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "==" and line_of(tokens[i + 3]) == line_of(token)
+          result = parse_expr_result_at tokens, i + 1
+          stmt = print_stmt line_of(token), result_expr(result)
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "or" and line_of(tokens[i + 3]) == line_of(token)
+          stmt = print_stmt line_of(token), parse_print_or_at(tokens, i + 1)
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 4
+          continue
+        if text_of(value) == "not" and i + 2 < len(tokens) and line_of(tokens[i + 2]) == line_of(token)
+          result = parse_precedence_result_at tokens, i + 1, 1, "NOT"
+          stmt = print_stmt line_of(token), result_expr(result)
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "[" and line_of(tokens[i + 3]) == line_of(token)
+          result = parse_expr_result_at tokens, i + 1
+          stmt = print_stmt line_of(token), result_expr(result)
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 6 < len(tokens) and kind_of(tokens[i + 1]) == "IDENT" and line_of(tokens[i + 6]) == line_of(token)
+          if text_of(tokens[i + 3]) == "," and text_of(tokens[i + 5]) == ","
+            result = parse_expr_result_at tokens, i + 1
+            stmt = print_stmt line_of(token), result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        if i + 4 < len(tokens) and kind_of(tokens[i + 1]) == "IDENT" and line_of(tokens[i + 4]) == line_of(token)
+          if text_of(tokens[i + 3]) == ","
+            result = parse_expr_result_at tokens, i + 1
+            stmt = print_stmt line_of(token), result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        if i + 2 < len(tokens) and kind_of(tokens[i + 1]) == "IDENT" and line_of(tokens[i + 2]) == line_of(token)
+          result = parse_expr_result_at tokens, i + 1
+          stmt = print_stmt line_of(token), result_expr(result)
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        result = parse_expr_result_at tokens, i + 1
+        stmt = print_stmt line_of(token), result_expr(result)
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "break"
+      stmt = marker_stmt line_of(token), "BREAK", ""
+      push_stmt_ast stmts, stmt, current_indent
+      i = i + 1
+      continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "continue"
+      stmt = marker_stmt line_of(token), "CONTINUE", ""
+      push_stmt_ast stmts, stmt, current_indent
+      i = i + 1
+      continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "exit"
+      if i + 1 < len(tokens)
+        result = parse_expr_result_at tokens, i + 1
+        stmt = exit_stmt line_of(token), result_expr(result)
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "panic"
+      if i + 1 < len(tokens)
+        result = parse_expr_result_at tokens, i + 1
+        stmt = panic_stmt line_of(token), result_expr(result)
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "push"
+      if i + 3 < len(tokens)
+        target = tokens[i + 1]
+        result = parse_expr_result_at tokens, i + 3
+        stmt = push_stmt line_of(token), text_of(target), result_expr(result)
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "delete"
+      if i + 3 < len(tokens)
+        target = tokens[i + 1]
+        result = parse_expr_result_at tokens, i + 3
+        stmt = delete_stmt line_of(token), text_of(target), result_expr(result)
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+
+    if kind_of(token) == "IDENT" and text_of(token) == "return"
+      if i + 1 < len(tokens)
+        value = tokens[i + 1]
+        if text_of(value) == "{" and i + 7 < len(tokens)
+          if kind_of(tokens[i + 3]) == "SYMBOL" and text_of(tokens[i + 5]) == "}" and text_of(tokens[i + 6]) == "," and text_of(tokens[i + 7]) == "nil"
+            key = tokens[i + 2]
+            item = tokens[i + 4]
+            nil_value = tokens[i + 7]
+            stmt = return_stmt line_of(token), [object_expr(key, item), scalar_expr(nil_value)]
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 8
+            continue
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == ","
+          if i + 4 < len(tokens) and line_of(tokens[i + 4]) == line_of(token)
+            result = parse_expr_result_at tokens, i + 1
+            left_expr = result_expr result
+            result = parse_expr_result_at tokens, i + 3
+            stmt = return_stmt line_of(token), [left_expr, result_expr(result)]
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+          value2 = tokens[i + 3]
+          stmt = return_stmt line_of(token), [scalar_expr(value), scalar_expr(value2)]
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 4
+          continue
+        if i + 3 < len(tokens) and text_of(tokens[i + 2]) == "["
+          result = parse_expr_result_at tokens, i + 1
+          stmt = return_stmt line_of(token), [result_expr(result)]
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        result = parse_expr_result_at tokens, i + 1
+        stmt = return_stmt line_of(token), [result_expr(result)]
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+
+    if kind_of(token) == "IDENT" and i + 4 < len(tokens)
+      if text_of(tokens[i + 1]) == "," and text_of(tokens[i + 3]) == "="
+        target2 = tokens[i + 2]
+        value = tokens[i + 4]
+        if i + 7 < len(tokens) and text_of(tokens[i + 5]) == "("
+          if text_of(tokens[i + 7]) == ")"
+            result = parse_expr_result_at tokens, i + 4
+            stmt = multi_assign_stmt line_of(token), text_of(token), text_of(target2), result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        if i + 5 < len(tokens) and line_of(tokens[i + 5]) == line_of(token)
+          result = parse_expr_result_at tokens, i + 4
+          stmt = multi_assign_stmt line_of(token), text_of(token), text_of(target2), result_expr(result)
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        result = parse_expr_result_at tokens, i + 4
+        stmt = multi_assign_stmt line_of(token), text_of(token), text_of(target2), result_expr(result)
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+
+    if kind_of(token) == "IDENT" and i + 2 < len(tokens)
+      if i + 5 < len(tokens) and text_of(tokens[i + 1]) == "[" and text_of(tokens[i + 3]) == "]" and text_of(tokens[i + 4]) == "="
+        slot_name = text_of(token) + "_" + text_of(tokens[i + 2])
+        result = parse_expr_result_at tokens, i + 5
+        stmt = assign_stmt line_of(token), slot_name, result_expr(result)
+        push_stmt_ast stmts, stmt, current_indent
+        i = result_next result
+        continue
+      if text_of(tokens[i + 1]) == "="
+        value = tokens[i + 2]
+        if i + 9 < len(tokens) and text_of(tokens[i + 3]) == ","
+          if text_of(tokens[i + 5]) == "," and text_of(tokens[i + 7]) == "," and kind_of(tokens[i + 9]) == "ARROW"
+            arg2 = tokens[i + 4]
+            arg3 = tokens[i + 6]
+            arg4 = tokens[i + 8]
+            stmt = func_stmt line_of(token), text_of(token), [text_of(value), text_of(arg2), text_of(arg3), text_of(arg4)]
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 10
+            continue
+        if i + 5 < len(tokens) and text_of(tokens[i + 3]) == ","
+          if kind_of(tokens[i + 5]) == "ARROW"
+            arg2 = tokens[i + 4]
+            stmt = func_stmt line_of(token), text_of(token), [text_of(value), text_of(arg2)]
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 6
+            continue
+        if i + 7 < len(tokens) and text_of(tokens[i + 3]) == ","
+          if text_of(tokens[i + 5]) == "," and kind_of(tokens[i + 7]) == "ARROW"
+            arg2 = tokens[i + 4]
+            arg3 = tokens[i + 6]
+            stmt = func_stmt line_of(token), text_of(token), [text_of(value), text_of(arg2), text_of(arg3)]
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 8
+            continue
+        if i + 3 < len(tokens) and kind_of(tokens[i + 3]) == "ARROW"
+          stmt = func_stmt line_of(token), text_of(token), [text_of(value)]
+          push_stmt_ast stmts, stmt, current_indent
+          if i + 4 < len(tokens) and line_of(tokens[i + 4]) == line_of(token)
+            result = tokens[i + 4]
+            if i + 6 < len(tokens) and text_of(tokens[i + 5]) == ","
+              arg2 = tokens[i + 6]
+              stmt = return_stmt line_of(token), [call_expr(result, [scalar_expr(arg2)])]
+              push_stmt_ast stmts, stmt, current_indent
+              i = i + 7
+              continue
+            stmt = return_stmt line_of(token), [scalar_expr(result)]
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 5
+            continue
+          i = i + 4
+          continue
+        if text_of(value) == "[" and i + 3 < len(tokens) and text_of(tokens[i + 3]) == "]"
+          stmt = assign_stmt line_of(token), text_of(token), array_expr([])
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 4
+          continue
+        if text_of(value) == "[" and i + 6 < len(tokens) and text_of(tokens[i + 4]) == "," and text_of(tokens[i + 6]) == "]"
+          item = tokens[i + 3]
+          item2 = tokens[i + 5]
+          stmt = assign_stmt line_of(token), text_of(token), array_expr([scalar_expr(item), scalar_expr(item2)])
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 7
+          continue
+        if text_of(value) == "[" and i + 8 < len(tokens) and text_of(tokens[i + 4]) == "," and text_of(tokens[i + 6]) == "," and text_of(tokens[i + 8]) == "]"
+          item = tokens[i + 3]
+          item2 = tokens[i + 5]
+          item3 = tokens[i + 7]
+          stmt = assign_stmt line_of(token), text_of(token), array_expr([scalar_expr(item), scalar_expr(item2), scalar_expr(item3)])
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 9
+          continue
+        if text_of(value) == "[" and i + 10 < len(tokens) and text_of(tokens[i + 4]) == "," and text_of(tokens[i + 6]) == "," and text_of(tokens[i + 8]) == "," and text_of(tokens[i + 10]) == "]"
+          item = tokens[i + 3]
+          item2 = tokens[i + 5]
+          item3 = tokens[i + 7]
+          item4 = tokens[i + 9]
+          stmt = assign_stmt line_of(token), text_of(token), array_expr([scalar_expr(item), scalar_expr(item2), scalar_expr(item3), scalar_expr(item4)])
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 11
+          continue
+        if text_of(value) == "{" and i + 6 < len(tokens) and kind_of(tokens[i + 4]) == "SYMBOL" and text_of(tokens[i + 6]) == "}"
+          key = tokens[i + 3]
+          item = tokens[i + 5]
+          stmt = assign_stmt line_of(token), text_of(token), object_expr(key, item)
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 7
+          continue
+        if text_of(value) == "[" and i + 4 < len(tokens) and text_of(tokens[i + 4]) == "]"
+          item = tokens[i + 3]
+          stmt = assign_stmt line_of(token), text_of(token), array_expr([scalar_expr(item)])
+          push_stmt_ast stmts, stmt, current_indent
+          i = i + 5
+          continue
+        if text_of(value) == "(" and i + 8 < len(tokens) and text_of(tokens[i + 4]) == "+"
+          if text_of(tokens[i + 6]) == ")" and text_of(tokens[i + 7]) == "*"
+            left = tokens[i + 3]
+            right = tokens[i + 5]
+            factor = tokens[i + 8]
+            stmt = assign_stmt line_of(token), text_of(token), int_mul_add_expr(left, right, factor)
+            push_stmt_ast stmts, stmt, current_indent
+            i = i + 9
+            continue
+        if text_of(value) == "(" and i + 6 < len(tokens) and text_of(tokens[i + 6]) == ")"
+          if is_grouped_binary_op_token(tokens[i + 4])
+            result = parse_expr_result_at tokens, i + 2
+            expr = result_expr result
+            stmt = assign_stmt line_of(token), text_of(token), expr
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        if i + 4 < len(tokens) and text_of(tokens[i + 3]) == "["
+          result = parse_expr_result_at tokens, i + 2
+          expr = result_expr result
+          stmt = assign_stmt line_of(token), text_of(token), expr
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if text_of(value) == "not" and i + 3 < len(tokens)
+          result = parse_expr_result_at tokens, i + 2
+          expr = result_expr result
+          stmt = assign_stmt line_of(token), text_of(token), expr
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if text_of(value) == "-" and i + 3 < len(tokens)
+          result = parse_expr_result_at tokens, i + 2
+          expr = result_expr result
+          stmt = assign_stmt line_of(token), text_of(token), expr
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if text_of(value) == "try" and i + 6 < len(tokens) and text_of(tokens[i + 4]) == "("
+          if text_of(tokens[i + 6]) == ")"
+            result = parse_try_expr_result_at tokens, i + 2
+            expr = result_expr result
+            stmt = assign_stmt line_of(token), text_of(token), expr
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        if i + 3 < len(tokens) and kind_of(value) == "IDENT" and text_of(tokens[i + 3]) == "("
+          result = parse_expr_result_at tokens, i + 2
+          expr = result_expr result
+          stmt = assign_stmt line_of(token), text_of(token), expr
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 4 < len(tokens) and is_binary_op_token(tokens[i + 3])
+          result = parse_expr_result_at tokens, i + 2
+          expr = result_expr result
+          stmt = assign_stmt line_of(token), text_of(token), expr
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 5 < len(tokens) and kind_of(value) == "IDENT" and line_of(tokens[i + 5]) == line_of(token)
+          if text_of(tokens[i + 4]) == ","
+            left_arg = tokens[i + 3]
+            right_arg = tokens[i + 5]
+            if text_of(value) == "map" and i + 9 < len(tokens) and text_of(tokens[i + 6]) == "->" and text_of(tokens[i + 8]) == "*"
+              factor = tokens[i + 9]
+              stmt = assign_stmt line_of(token), text_of(token), map_mul_expr(left_arg, right_arg, factor)
+              push_stmt_ast stmts, stmt, current_indent
+              i = i + 10
+              continue
+            if text_of(value) == "filter" and i + 11 < len(tokens) and text_of(tokens[i + 6]) == "->" and text_of(tokens[i + 8]) == "%" and text_of(tokens[i + 10]) == "=="
+              divisor = tokens[i + 9]
+              expected = tokens[i + 11]
+              stmt = assign_stmt line_of(token), text_of(token), filter_mod_eq_expr(left_arg, right_arg, divisor, expected)
+              push_stmt_ast stmts, stmt, current_indent
+              i = i + 12
+              continue
+            if i + 7 < len(tokens) and text_of(tokens[i + 6]) == "," and line_of(tokens[i + 7]) == line_of(token)
+              result = parse_expr_result_at tokens, i + 2
+              expr = result_expr result
+              stmt = assign_stmt line_of(token), text_of(token), expr
+              push_stmt_ast stmts, stmt, current_indent
+              if not ast_mode and i + 10 < len(tokens) and text_of(tokens[i + 8]) == "(" and line_of(tokens[i + 10]) == line_of(token)
+                i = i + 11
+                continue
+              i = result_next result
+              continue
+            result = parse_expr_result_at tokens, i + 2
+            expr = result_expr result
+            stmt = assign_stmt line_of(token), text_of(token), expr
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        if i + 7 < len(tokens) and kind_of(value) == "IDENT" and kind_of(tokens[i + 3]) == "IDENT"
+          if text_of(tokens[i + 4]) == "(" and text_of(tokens[i + 5]) == ")" and text_of(tokens[i + 6]) == "["
+            result = parse_expr_result_at tokens, i + 2
+            expr = result_expr result
+            stmt = assign_stmt line_of(token), text_of(token), expr
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        if i + 3 < len(tokens) and kind_of(value) == "IDENT" and kind_of(tokens[i + 3]) == "IDENT" and line_of(tokens[i + 3]) == line_of(token)
+          result = parse_expr_result_at tokens, i + 2
+          expr = result_expr result
+          stmt = assign_stmt line_of(token), text_of(token), expr
+          push_stmt_ast stmts, stmt, current_indent
+          i = result_next result
+          continue
+        if i + 3 < len(tokens) and line_of(tokens[i + 3]) == line_of(token)
+          if text_of(tokens[i + 3]) == "." or text_of(tokens[i + 3]) == "["
+            result = parse_expr_result_at tokens, i + 2
+            stmt = assign_stmt line_of(token), text_of(token), result_expr(result)
+            push_stmt_ast stmts, stmt, current_indent
+            i = result_next result
+            continue
+        stmt = assign_stmt line_of(token), text_of(token), scalar_expr(value)
+        push_stmt_ast stmts, stmt, current_indent
+        i = i + 3
+        continue
+
+    if ast_mode and (kind_of(token) == "IDENT" or kind_of(token) == "INT" or kind_of(token) == "STRING")
+      result = parse_expr_result_at tokens, i
+      next_i = result_next result
+      if next_i >= len(tokens) or line_of(tokens[next_i]) != line_of(token)
+        stmt = expr_stmt line_of(token), result_expr(result)
+        push_stmt_ast stmts, stmt, current_indent
+        i = next_i
+        continue
+      while i < len(tokens) and line_of(tokens[i]) == line_of(token)
+        i = i + 1
+      continue
+
+    i = i + 1
+
+  program_ast stmts
+
+parse = tokens ->
+  stmts = parse_ast tokens
+  legacy_program stmts
+
+tokens = []
+source = read_file args()[0]
+lines = split source, "\n"
+
+for line in lines
+  if line != ""
+    push tokens, line
+
+ast_mode = false
+first_kind = kind_of tokens[0]
+first_text = text_of tokens[0]
+if first_kind == "IDENT"
+  if first_text == "ASTMODE"
+    ast_mode = true
+
+nodes = parse tokens
+if ast_mode
+  stmts = parse_ast tokens
+  nodes = ast_nodes stmts
+
+for node in nodes
+  print node

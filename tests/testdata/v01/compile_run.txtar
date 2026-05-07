@@ -1,0 +1,19 @@
+# compile and run a v0.1 source through C
+cd $REPO
+exec go run ./cmd/tya run $WORK/hello.tya
+stdout 'Hello, v0.1\n'
+! stderr .
+
+exec go run ./cmd/tya build $WORK/hello.tya -o $WORK/hello
+! stderr .
+
+exec $WORK/hello
+stdout 'Hello, v0.1\n'
+! stderr .
+
+exec go run ./cmd/tya version
+stdout '0.1.0\n'
+! stderr .
+
+-- hello.tya --
+print "Hello, v0.1"

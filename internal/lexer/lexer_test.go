@@ -1,6 +1,13 @@
 package lexer
 
-import "testing"
+import (
+	"strings"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+
+	"tya/internal/token"
+)
 
 func TestLexIndentAndDedent(t *testing.T) {
 	toks, errs := Lex("user =\n  name: \"komagata\"\nprint \"ok\"\n")
@@ -11,16 +18,168 @@ func TestLexIndentAndDedent(t *testing.T) {
 	for _, tok := range toks {
 		got = append(got, string(tok.Type))
 	}
-	wantHas := map[string]bool{"INDENT": false, "DEDENT": false}
+	wantHas := map[string]bool{"INDENT": true, "DEDENT": true}
+	gotHas := map[string]bool{"INDENT": false, "DEDENT": false}
 	for _, typ := range got {
-		if _, ok := wantHas[typ]; ok {
-			wantHas[typ] = true
+		if _, ok := gotHas[typ]; ok {
+			gotHas[typ] = true
 		}
 	}
-	for typ, ok := range wantHas {
-		if !ok {
-			t.Fatalf("missing %s in %#v", typ, got)
-		}
+	if diff := cmp.Diff(wantHas, gotHas); diff != "" {
+		t.Fatalf("indent token presence mismatch (-want +got):\n%s\nall tokens: %#v", diff, got)
+	}
+}
+
+func TestLexV01TokenSequence(t *testing.T) {
+	toks, errs := Lex("if score >= 90\n  print \"A\"\nelseif score >= 80\n  print \"B\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{
+		"IDENT", "IDENT", ">=", "INT", "NEWLINE",
+		"INDENT", "IDENT", "STRING", "NEWLINE",
+		"DEDENT", "IDENT", "IDENT", ">=", "INT", "NEWLINE",
+		"INDENT", "IDENT", "STRING", "NEWLINE",
+		"DEDENT", "EOF",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestLexV01OperatorsAndDelimiters(t *testing.T) {
+	toks, errs := Lex("= == != < <= > >= : , . + - * / % -> ( ) [ ] { }\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{
+		"=", "==", "!=", "<", "<=", ">", ">=", ":", ",", ".", "+", "-", "*", "/", "%", "->",
+		"(", ")", "[", "]", "{", "}", "NEWLINE", "EOF",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestLexCommentAfterCodeAllowsSpaceBeforeComment(t *testing.T) {
+	toks, errs := Lex("name = 1 # comment\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{"IDENT", "=", "INT", "NEWLINE", "EOF"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestLexV01ModuleAndImportProgram(t *testing.T) {
+	toks, errs := Lex("import greeting\n\nmodule greeting\n  hello = name -> \"Hello, {name}\"\n\nprint greeting.hello(\"komagata\")\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{
+		"IDENT", "IDENT", "NEWLINE",
+		"IDENT", "IDENT", "NEWLINE",
+		"INDENT", "IDENT", "=", "IDENT", "->", "STRING", "NEWLINE",
+		"DEDENT", "IDENT", "IDENT", ".", "IDENT", "(", "STRING", ")", "NEWLINE",
+		"EOF",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestLexV01CollectionsAndIndexing(t *testing.T) {
+	toks, errs := Lex("items = [1, 2, 3]\nuser = { name: \"komagata\", age: 20 }\nitems[0] = user[\"age\"]\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{
+		"IDENT", "=", "[", "INT", ",", "INT", ",", "INT", "]", "NEWLINE",
+		"IDENT", "=", "{", "IDENT", ":", "STRING", ",", "IDENT", ":", "INT", "}", "NEWLINE",
+		"IDENT", "[", "INT", "]", "=", "IDENT", "[", "STRING", "]", "NEWLINE",
+		"EOF",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestLexV01FunctionsReturnTryAndLoops(t *testing.T) {
+	src := strings.Join([]string{
+		"parse_user = text ->",
+		"  if text == \"\"",
+		"    return nil, error \"empty\"",
+		"  return { name: text }, nil",
+		"",
+		"load_user = text ->",
+		"  user = try parse_user(text)",
+		"  user[\"name\"]",
+		"",
+		"for item, index in items",
+		"  if index % 2 == 0 and not item == nil",
+		"    continue",
+		"  else",
+		"    break",
+		"",
+		"for key, value of user",
+		"  print \"{key}: {value}\"",
+		"",
+		"while count < 3",
+		"  count = count + 1",
+	}, "\n") + "\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{
+		"IDENT", "=", "IDENT", "->", "NEWLINE",
+		"INDENT", "IDENT", "IDENT", "==", "STRING", "NEWLINE",
+		"INDENT", "IDENT", "IDENT", ",", "IDENT", "STRING", "NEWLINE",
+		"DEDENT", "IDENT", "{", "IDENT", ":", "IDENT", "}", ",", "IDENT", "NEWLINE",
+		"DEDENT", "IDENT", "=", "IDENT", "->", "NEWLINE",
+		"INDENT", "IDENT", "=", "IDENT", "IDENT", "(", "IDENT", ")", "NEWLINE",
+		"IDENT", "[", "STRING", "]", "NEWLINE",
+		"DEDENT", "IDENT", "IDENT", ",", "IDENT", "IDENT", "IDENT", "NEWLINE",
+		"INDENT", "IDENT", "IDENT", "%", "INT", "==", "INT", "IDENT", "IDENT", "IDENT", "==", "IDENT", "NEWLINE",
+		"INDENT", "IDENT", "NEWLINE",
+		"DEDENT", "IDENT", "NEWLINE",
+		"INDENT", "IDENT", "NEWLINE",
+		"DEDENT", "DEDENT", "IDENT", "IDENT", ",", "IDENT", "IDENT", "IDENT", "NEWLINE",
+		"INDENT", "IDENT", "STRING", "NEWLINE",
+		"DEDENT", "IDENT", "IDENT", "<", "INT", "NEWLINE",
+		"INDENT", "IDENT", "=", "IDENT", "+", "INT", "NEWLINE",
+		"DEDENT", "EOF",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestLexV01BlankLinesCommentsCRLFAndLocations(t *testing.T) {
+	src := "# heading\r\nmodule util\r\n\r\n  # member\r\n  name = \"Tya\" # inline\r\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{
+		"IDENT", "IDENT", "NEWLINE",
+		"INDENT", "IDENT", "=", "STRING", "NEWLINE",
+		"DEDENT", "EOF",
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
+	}
+	name := toks[4]
+	if name.Lexeme != "name" || name.Line != 5 || name.Col != 3 {
+		t.Fatalf("got token %+v, want name at 5:3", name)
 	}
 }
 
@@ -41,15 +200,48 @@ func TestLexStringEscapes(t *testing.T) {
 	}
 }
 
-func TestLexPredicateIdentifier(t *testing.T) {
-	toks, errs := Lex("empty? = -> true\nprint empty?()\n")
+func TestLexStringHashAfterEscapedQuote(t *testing.T) {
+	toks, errs := Lex("print \"a \\\" # not comment\"\n")
 	if len(errs) != 0 {
 		t.Fatalf("unexpected errors: %v", errs)
 	}
-	if toks[0].Lexeme != "empty?" {
-		t.Fatalf("got %q", toks[0].Lexeme)
+	if toks[1].Lexeme != "a \" # not comment" {
+		t.Fatalf("got %q", toks[1].Lexeme)
 	}
-	if toks[6].Lexeme != "empty?" {
-		t.Fatalf("got %q", toks[6].Lexeme)
+}
+
+func TestLexRejectsPredicateIdentifier(t *testing.T) {
+	_, errs := Lex("empty? = -> true\n")
+	if len(errs) == 0 {
+		t.Fatal("expected predicate identifier error")
 	}
+}
+
+func TestLexRejectsAtTokens(t *testing.T) {
+	for _, src := range []string{"@name = 1\n", "@@count = 1\n"} {
+		_, errs := Lex(src)
+		if len(errs) == 0 {
+			t.Fatalf("expected @ token error for %q", src)
+		}
+	}
+}
+
+func TestLexFloatRequiresFractionDigits(t *testing.T) {
+	toks, errs := Lex("value = 1.\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{"IDENT", "=", "INT", ".", "NEWLINE", "EOF"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func tokenTypes(toks []token.Token) []string {
+	types := make([]string, len(toks))
+	for i, tok := range toks {
+		types[i] = string(tok.Type)
+	}
+	return types
 }

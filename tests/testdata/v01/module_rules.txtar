@@ -1,0 +1,33 @@
+# imported module files must declare exactly one matching v0.1 module
+cd $REPO
+
+! exec go run ./cmd/tya --emit-c $WORK/mismatch/main.tya
+stderr 'greeting.tya must define module greeting'
+
+! exec go run ./cmd/tya --emit-c $WORK/two_modules/main.tya
+stderr 'greeting.tya must define exactly one module'
+
+! exec go run ./cmd/tya --emit-c $WORK/alias/main.tya
+stderr 'import aliases are not in Tya v0.1'
+
+-- mismatch/main.tya --
+import greeting
+print greeting.text
+
+-- mismatch/greeting.tya --
+module message
+  text = "hello"
+
+-- two_modules/main.tya --
+import greeting
+print greeting.text
+
+-- two_modules/greeting.tya --
+module greeting
+  text = "hello"
+module greeting
+  extra = "bad"
+
+-- alias/main.tya --
+import greeting as message
+print message.text

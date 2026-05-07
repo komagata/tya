@@ -5,10 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"tya/internal/checker"
 	"tya/internal/codegen"
-	"tya/internal/eval"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 	"tya/internal/runner"
@@ -21,11 +21,12 @@ func main() {
 		usage()
 		os.Exit(2)
 	}
-	if os.Args[1] == "--version" {
+	if os.Args[1] == "version" || os.Args[1] == "--version" {
 		fmt.Fprintln(os.Stdout, version)
 		return
 	}
-	if os.Args[1] == "run" {
+	switch os.Args[1] {
+	case "run":
 		if len(os.Args) < 3 {
 			usage()
 			os.Exit(2)
@@ -34,6 +35,21 @@ func main() {
 			if exitErr, ok := err.(*exec.ExitError); ok {
 				os.Exit(exitErr.ExitCode())
 			}
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "build":
+		if len(os.Args) < 3 {
+			usage()
+			os.Exit(2)
+		}
+		path, output, err := parseBuildArgs(os.Args[2:])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+		if err := buildExecutable(path, output); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -64,20 +80,13 @@ doneOptions:
 		os.Exit(2)
 	}
 	path := args[0]
-	processArgs := args[1:]
 	if err := runner.ValidateFileName(path); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	if !dumpTokens && !emitC && !checkUnused {
-		if err := runner.RunFile(path, os.Stdin, os.Stdout, processArgs); err != nil {
-			if exitErr, ok := err.(*eval.ExitError); ok {
-				os.Exit(exitErr.Code)
-			}
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		return
+		usage()
+		os.Exit(2)
 	}
 	src, err := os.ReadFile(path)
 	if err != nil {
@@ -187,47 +196,19 @@ doneOptions:
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: tya [--version] [--tokens] [--emit-c] [--check-unused] <file.tya> [args...]")
-	fmt.Fprintln(os.Stderr, "       tya run <file.tya> [args...]")
+	fmt.Fprintln(os.Stderr, "usage: tya run <file.tya> [args...]")
+	fmt.Fprintln(os.Stderr, "       tya build <file.tya> [-o <output>]")
+	fmt.Fprintln(os.Stderr, "       tya version")
 }
 
 func compileAndRun(path string, args []string) error {
-	source, modules, err := runner.LoadSourceWithModules(path)
-	if err != nil {
-		return err
-	}
-	toks, errs := lexer.Lex(source)
-	if len(errs) > 0 {
-		return errs[0]
-	}
-	prog, err := parser.Parse(toks)
-	if err != nil {
-		return err
-	}
-	if err := checker.CheckWithModules(prog, modules); err != nil {
-		return err
-	}
-	csrc, err := codegen.EmitC(prog)
-	if err != nil {
-		return err
-	}
 	outDir, err := os.MkdirTemp("", "tya-run-*")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(outDir)
-	cfile := filepath.Join(outDir, "main.c")
 	bin := filepath.Join(outDir, "main")
-	if err := os.WriteFile(cfile, []byte(csrc), 0644); err != nil {
-		return err
-	}
-	cc := os.Getenv("CC")
-	if cc == "" {
-		cc = "cc"
-	}
-	compile := exec.Command(cc, cfile, "runtime/tya_runtime.c", "-I", "runtime", "-o", bin)
-	compile.Stderr = os.Stderr
-	if err := compile.Run(); err != nil {
+	if err := buildExecutable(path, bin); err != nil {
 		return err
 	}
 	run := exec.Command(bin, args...)
@@ -235,4 +216,88 @@ func compileAndRun(path string, args []string) error {
 	run.Stdout = os.Stdout
 	run.Stderr = os.Stderr
 	return run.Run()
+}
+
+func buildExecutable(path string, output string) error {
+	csrc, err := compileToC(path)
+	if err != nil {
+		return err
+	}
+	if output == "" {
+		output = defaultOutputPath(path)
+	}
+	outDir, err := os.MkdirTemp("", "tya-build-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(outDir)
+	cfile := filepath.Join(outDir, "main.c")
+	if err := os.WriteFile(cfile, []byte(csrc), 0644); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
+		return err
+	}
+	cc := os.Getenv("CC")
+	if cc == "" {
+		cc = "cc"
+	}
+	compile := exec.Command(cc, cfile, "runtime/tya_runtime.c", "-I", "runtime", "-o", output)
+	compile.Stderr = os.Stderr
+	return compile.Run()
+}
+
+func compileToC(path string) (string, error) {
+	source, modules, err := runner.LoadSourceWithModules(path)
+	if err != nil {
+		return "", err
+	}
+	toks, errs := lexer.Lex(source)
+	if len(errs) > 0 {
+		return "", errs[0]
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		return "", err
+	}
+	if err := checker.CheckWithModules(prog, modules); err != nil {
+		return "", err
+	}
+	csrc, err := codegen.EmitC(prog)
+	if err != nil {
+		return "", err
+	}
+	return csrc, nil
+}
+
+func parseBuildArgs(args []string) (string, string, error) {
+	path := ""
+	output := ""
+	for i := 0; i < len(args); i++ {
+		if args[i] == "-o" {
+			if i+1 >= len(args) {
+				return "", "", fmt.Errorf("missing output after -o")
+			}
+			output = args[i+1]
+			i++
+			continue
+		}
+		if strings.HasPrefix(args[i], "-") {
+			return "", "", fmt.Errorf("unknown build option: %s", args[i])
+		}
+		if path != "" {
+			return "", "", fmt.Errorf("unexpected build argument: %s", args[i])
+		}
+		path = args[i]
+	}
+	if path == "" {
+		return "", "", fmt.Errorf("missing input file")
+	}
+	return path, output, nil
+}
+
+func defaultOutputPath(path string) string {
+	base := filepath.Base(path)
+	ext := filepath.Ext(base)
+	return strings.TrimSuffix(base, ext)
 }
