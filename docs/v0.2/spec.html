@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.2 Draft - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-2-draft-language-spec">Tya v0.2 Draft Language Spec</h1>
+<p>This document is the draft language specification for Tya v0.2.</p>
+<p>v0.2 builds on v0.1. The theme is friendly scripting: practical builtins, better diagnostics, formatting, and small module ergonomics without introducing objects or classes.</p>
+<p>v0.1 remains the baseline. Anything not changed here follows the v0.1 specification.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Make everyday scripts easier to write and read.</li>
+<li>Improve the command-line experience for users and language implementers.</li>
+<li>Keep the language small and indentation-based.</li>
+<li>Preserve the compile-to-C execution path.</li>
+<li>Avoid object and class design until the data model is more mature.</li>
+</ul>
+<h2 id="included-in-v0-2">Included in v0.2</h2>
+<p>v0.2 adds:</p>
+<ul>
+<li>practical collection builtins</li>
+<li>practical equality and input builtins</li>
+<li>better diagnostics</li>
+<li>formatting command</li>
+<li>check command</li>
+<li>public C emission command</li>
+<li>small module import ergonomics</li>
+</ul>
+<h2 id="not-included-in-v0-2">Not Included in v0.2</h2>
+<p>v0.2 still does not include:</p>
+<ul>
+<li>object</li>
+<li>class</li>
+<li>interface</li>
+<li>inheritance</li>
+<li><code>self</code></li>
+<li><code>super</code></li>
+<li><code>@property</code></li>
+<li>object method</li>
+<li>class method</li>
+<li>class field</li>
+<li>import alias</li>
+<li>dictionary member access</li>
+<li>set literal</li>
+<li>package manager</li>
+<li>async</li>
+<li>macro</li>
+<li>exception</li>
+</ul>
+<h2 id="dictionary-direction">Dictionary Direction</h2>
+<p>Dictionaries remain the main structured data value in v0.2.</p>
+<p>Dictionary member access is still invalid.</p>
+<pre><code class="language-tya">print user[&quot;name&quot;] # ok
+print user.name    # invalid</code></pre>
+<p>v0.2 should improve dictionary usefulness without changing dictionary syntax into object syntax.</p>
+<h2 id="standard-builtins">Standard Builtins</h2>
+<p>v0.2 keeps every v0.1 standard builtin and adds the following standard builtins.</p>
+<h3 id="collections">Collections</h3>
+<pre><code class="language-tya">map(items, item -&gt; item * 2)
+filter(items, item -&gt; item &gt; 10)
+find(items, item -&gt; item == &quot;tya&quot;)
+any(items, item -&gt; item == &quot;tya&quot;)
+all(items, item -&gt; len(item) &gt; 0)
+reduce(items, 0, total, item -&gt; total + item)</code></pre>
+<p><code>map(array, function)</code> returns a new array containing the mapped values.</p>
+<p><code>filter(array, function)</code> returns a new array containing values for which the function returns truthy.</p>
+<p><code>find(array, function)</code> returns the first value for which the function returns truthy. If no value matches, it returns <code>nil</code>.</p>
+<p><code>any(array, function)</code> returns <code>true</code> if the function returns truthy for at least one value.</p>
+<p><code>all(array, function)</code> returns <code>true</code> if the function returns truthy for every value.</p>
+<p><code>reduce(array, initial, function)</code> folds an array from left to right. The function receives the current accumulator and the item.</p>
+<h3 id="equality">Equality</h3>
+<pre><code class="language-tya">equal(left, right)</code></pre>
+<p><code>equal(left, right)</code> performs deep equality for v0.2 runtime values.</p>
+<p>The <code>==</code> operator keeps its existing v0.1 behavior. <code>equal</code> is the explicit choice for deep equality in scripts and tests.</p>
+<h3 id="input">Input</h3>
+<pre><code class="language-tya">read_line()</code></pre>
+<p><code>read_line()</code> reads one line from standard input and returns it without the trailing newline. At end of input, it returns <code>nil</code>.</p>
+<h2 id="command-line">Command Line</h2>
+<p>v0.2 keeps the v0.1 user-facing commands:</p>
+<pre><code class="language-sh">tya run file.tya [args...]
+tya build file.tya -o output
+tya version</code></pre>
+<p>v0.2 adds:</p>
+<pre><code class="language-sh">tya check file.tya
+tya fmt file.tya
+tya emit-c file.tya</code></pre>
+<p><code>tya check</code> lexes, parses, and checks the file without writing an executable. It exits with status <code>0</code> when the program is valid and non-zero when diagnostics are emitted.</p>
+<p><code>tya fmt</code> writes formatted Tya source to standard output by default.</p>
+<pre><code class="language-sh">tya fmt file.tya</code></pre>
+<p>In-place formatting can be added with an explicit option:</p>
+<pre><code class="language-sh">tya fmt -w file.tya</code></pre>
+<p><code>tya emit-c</code> emits generated C to standard output. This makes C emission a public developer-facing command instead of a hidden inspection option.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.2 diagnostics should be friendly and source-oriented.</p>
+<p>Diagnostics should include:</p>
+<ul>
+<li>file path</li>
+<li>line number</li>
+<li>column number</li>
+<li>concise message</li>
+<li>source line when available</li>
+<li>caret marker when available</li>
+</ul>
+<p>Example format:</p>
+<pre><code class="language-text">main.tya:3:8: expected expression after +
+  total = count +
+                ^</code></pre>
+<p>Diagnostics should avoid Go implementation terms such as token struct names, panic traces, or internal node names unless an explicit developer inspection command asks for them.</p>
+<h2 id="formatting">Formatting</h2>
+<p><code>tya fmt</code> defines the canonical source layout.</p>
+<p>Formatting rules:</p>
+<ul>
+<li>Use 2 spaces for each indentation level.</li>
+<li>Remove trailing whitespace.</li>
+<li>Keep one statement per line.</li>
+<li>Keep dictionary indentation readable.</li>
+<li>Keep array and dictionary inline literals inline when they already fit on one</li>
+</ul>
+<p>  line.</p>
+<ul>
+<li>Do not rewrite names.</li>
+<li>Do not change semantics.</li>
+</ul>
+<p>The formatter is allowed to be conservative in v0.2. It should prefer stable, predictable output over aggressive rewriting.</p>
+<h2 id="module-ergonomics">Module Ergonomics</h2>
+<p>v0.2 keeps v0.1 module syntax:</p>
+<pre><code class="language-tya">import module_name
+
+print module_name.member()</code></pre>
+<p>Import aliases are still not included.</p>
+<p>v0.2 may improve module loading rules without adding a package manager.</p>
+<p>The initial v0.2 module search order is:</p>
+<ol>
+<li>The importing file's directory.</li>
+<li>Directories listed in <code>TYA_PATH</code>, searched left to right.</li>
+</ol>
+<p><code>TYA_PATH</code> uses the host platform's path-list separator.</p>
+<p>The module file name still matches the module name.</p>
+<pre><code class="language-text">json_parser.tya -&gt; module json_parser</code></pre>
+<h2 id="reference-implementation">Reference Implementation</h2>
+<p>The v0.2 reference implementation remains the Go compile-to-C implementation:</p>
+<pre><code class="language-text">Go lexer
+Go parser
+Go AST
+Go checker
+Go C emitter
+C runtime
+v0.2 specification tests</code></pre>
+<p>The current execution path remains:</p>
+<pre><code class="language-text">Tya source -&gt; lexer -&gt; parser -&gt; AST -&gt; checker -&gt; C emitter -&gt; C compiler -&gt; executable</code></pre>
+<p>The Tya-written compiler can continue separately, but v0.2 language authority comes from the spec and the Go compile-to-C reference implementation.</p>
+    </article>
+  </main>
+</body>
+</html>
