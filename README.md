@@ -88,6 +88,8 @@ print greeting.hello("komagata")
 - [Spec](https://tya-lang.org/spec.html): Tya v0.1 language specification.
 - [API](https://tya-lang.org/api.html): v0.1 built-in function reference.
 - [Naming](https://tya-lang.org/naming.html): naming rules.
+- [Versions](https://tya-lang.org/versions.html): release snapshots of the spec
+  and API.
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
 Markdown source files are kept in `docs/` for editing. The public website uses

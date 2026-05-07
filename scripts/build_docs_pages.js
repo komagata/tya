@@ -11,8 +11,11 @@ const pages = [
   { source: path.join(docsDir, "SPEC.md"), output: path.join(docsDir, "spec.html"), title: "Spec" },
   { source: path.join(docsDir, "API.md"), output: path.join(docsDir, "api.html"), title: "API" },
   { source: path.join(docsDir, "NAMING.md"), output: path.join(docsDir, "naming.html"), title: "Naming" },
+  { source: path.join(docsDir, "VERSIONS.md"), output: path.join(docsDir, "versions.html"), title: "Versions" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(docsDir, "roadmap.html"), title: "Roadmap" },
   { source: path.join(docsDir, "ROADMAP_STRUCTURE.md"), output: path.join(docsDir, "roadmap-structure.html"), title: "Roadmap Structure" },
+  { source: path.join(docsDir, "v0.1.0", "SPEC.md"), output: path.join(docsDir, "v0.1.0", "spec.html"), title: "Spec v0.1.0", versioned: true },
+  { source: path.join(docsDir, "v0.1.0", "API.md"), output: path.join(docsDir, "v0.1.0", "api.html"), title: "API v0.1.0", versioned: true },
 ];
 
 function escapeHtml(value) {
@@ -31,13 +34,27 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-function rewriteHref(href) {
+function rewriteHref(href, page) {
   const clean = href.replace(/^docs\//, "");
+  if (page && page.versioned) {
+    const versionedMapping = {
+      "SPEC.md": "spec.html",
+      "API.md": "api.html",
+      "docs/SPEC.md": "spec.html",
+      "docs/API.md": "api.html",
+      "NAMING.md": "../naming.html",
+      "docs/NAMING.md": "../naming.html",
+    };
+    if (versionedMapping[href] || versionedMapping[clean]) {
+      return versionedMapping[href] || versionedMapping[clean];
+    }
+  }
   const mapping = {
     "GUIDE.md": "guide.html",
     "SPEC.md": "spec.html",
     "API.md": "api.html",
     "NAMING.md": "naming.html",
+    "VERSIONS.md": "versions.html",
     "ROADMAP.md": "roadmap.html",
     "../ROADMAP.md": "roadmap.html",
     "docs/ROADMAP_STRUCTURE.md": "roadmap-structure.html",
@@ -46,12 +63,12 @@ function rewriteHref(href) {
   return mapping[href] || mapping[clean] || href;
 }
 
-function inlineMarkdown(value) {
+function inlineMarkdown(value, page) {
   const escaped = escapeHtml(value);
   return escaped
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-      return `<a href="${escapeHtml(rewriteHref(href))}">${label}</a>`;
+      return `<a href="${escapeHtml(rewriteHref(href, page))}">${label}</a>`;
     });
 }
 
@@ -62,7 +79,7 @@ function closeList(state, html) {
   }
 }
 
-function markdownToHtml(markdown) {
+function markdownToHtml(markdown, page) {
   const html = [];
   const lines = markdown.split(/\r?\n/);
   const state = { listType: null, inCode: false, codeLang: "", code: [], paragraph: [] };
@@ -71,7 +88,7 @@ function markdownToHtml(markdown) {
     if (state.paragraph.length === 0) {
       return;
     }
-    html.push(`<p>${inlineMarkdown(state.paragraph.join(" "))}</p>`);
+    html.push(`<p>${inlineMarkdown(state.paragraph.join(" "), page)}</p>`);
     state.paragraph = [];
   }
 
@@ -109,7 +126,7 @@ function markdownToHtml(markdown) {
       closeList(state, html);
       const level = heading[1].length;
       const text = heading[2];
-      html.push(`<h${level} id="${escapeHtml(slugify(text))}">${inlineMarkdown(text)}</h${level}>`);
+      html.push(`<h${level} id="${escapeHtml(slugify(text))}">${inlineMarkdown(text, page)}</h${level}>`);
       continue;
     }
 
@@ -121,7 +138,7 @@ function markdownToHtml(markdown) {
         html.push("<ul>");
         state.listType = "ul";
       }
-      html.push(`<li>${inlineMarkdown(bullet[1])}</li>`);
+      html.push(`<li>${inlineMarkdown(bullet[1], page)}</li>`);
       continue;
     }
 
@@ -133,7 +150,7 @@ function markdownToHtml(markdown) {
         html.push("<ol>");
         state.listType = "ol";
       }
-      html.push(`<li>${inlineMarkdown(ordered[1])}</li>`);
+      html.push(`<li>${inlineMarkdown(ordered[1], page)}</li>`);
       continue;
     }
 
@@ -150,28 +167,29 @@ function markdownToHtml(markdown) {
 }
 
 function renderPage(page, body) {
+  const prefix = page.versioned ? "../" : "";
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(page.title)} - Tya</title>
-  <link rel="stylesheet" href="document.css">
+  <link rel="stylesheet" href="${prefix}document.css">
 </head>
 <body>
   <main class="doc-shell">
     <nav class="doc-nav" aria-label="Documentation">
-      <a class="brand" href="index.html">
-        <img src="assets/tya-logo.png" alt="Tya">
+      <a class="brand" href="${prefix}index.html">
+        <img src="${prefix}assets/tya-logo.png" alt="Tya">
         <span>Tya</span>
       </a>
       <div class="links">
-        <a href="guide.html">Guide</a>
-        <a href="spec.html">Spec</a>
-        <a href="api.html">API</a>
-        <a href="naming.html">Naming</a>
-        <a href="roadmap.html">Roadmap</a>
-        <a href="roadmap-structure.html">Structure</a>
+        <a href="${prefix}guide.html">Guide</a>
+        <a href="${prefix}spec.html">Spec</a>
+        <a href="${prefix}api.html">API</a>
+        <a href="${prefix}naming.html">Naming</a>
+        <a href="${prefix}versions.html">Versions</a>
+        <a href="${prefix}roadmap.html">Roadmap</a>
       </div>
     </nav>
     <article class="doc-content">
@@ -185,6 +203,7 @@ ${body}
 
 for (const page of pages) {
   const markdown = fs.readFileSync(page.source, "utf8");
-  const body = markdownToHtml(markdown);
+  const body = markdownToHtml(markdown, page);
+  fs.mkdirSync(path.dirname(page.output), { recursive: true });
   fs.writeFileSync(page.output, renderPage(page, body));
 }
