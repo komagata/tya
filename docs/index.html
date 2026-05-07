@@ -65,8 +65,8 @@
 
     .hero-inner {
       display: grid;
-      grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr);
-      gap: 42px;
+      grid-template-columns: 180px minmax(0, 1fr) minmax(360px, 0.98fr);
+      gap: 36px;
       align-items: center;
       max-width: 1120px;
       margin: 0 auto;
@@ -74,11 +74,13 @@
     }
 
     .hero-logo {
-      display: block;
       width: 168px;
       height: 168px;
-      margin: 0 0 22px;
       object-fit: contain;
+    }
+
+    .hero-copy {
+      min-width: 0;
     }
 
     .eyebrow {
@@ -434,8 +436,9 @@
   <div class="page">
     <section class="hero" id="top">
       <div class="hero-inner">
-        <div>
-          <img class="hero-logo" src="assets/tya-logo.png" alt="Tya">
+        <img class="hero-logo" src="assets/tya-logo.png" alt="Tya">
+
+        <div class="hero-copy">
           <p class="eyebrow">Small language, plain tools</p>
           <h1>CoffeeScript feel, Go-style practicality.</h1>
           <p class="lead">Tya is a small indentation-based dynamic language for writing readable scripts and compiling them to simple binaries through C.</p>
