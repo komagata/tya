@@ -639,12 +639,14 @@
               <span>hello.tya</span>
               <span>two-space blocks</span>
             </div>
-            <pre><code>greet = user -> <span class="str">"Hello, {user["name"]}"</span>
+            <pre><code>greet = user -> <span class="str">"Hello, "</span> + user[<span class="str">"name"</span>]
 
-user = { name: <span class="str">"komagata"</span>, age: 20 }
+user =
+  name: <span class="str">"komagata"</span>
+  age: 20
 
 <span class="kw">if</span> user[<span class="str">"age"</span>] >= 20
-  <span class="kw">print</span> greet user</code></pre>
+  <span class="kw">print</span> greet(user)</code></pre>
           </div>
         </section>
 
