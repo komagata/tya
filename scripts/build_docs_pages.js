@@ -13,8 +13,10 @@ const pages = [
   { source: path.join(docsDir, "STDLIB.md"), output: path.join(docsDir, "stdlib.html"), title: "Stdlib" },
   { source: path.join(docsDir, "NAMING.md"), output: path.join(docsDir, "naming.html"), title: "Naming" },
   { source: path.join(docsDir, "VERSIONS.md"), output: path.join(docsDir, "versions.html"), title: "Versions" },
-  { source: path.join(docsDir, "v0.4.md"), output: path.join(docsDir, "v0.4.html"), title: "v0.4 Plan" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(docsDir, "roadmap.html"), title: "Roadmap" },
+  { source: path.join(docsDir, "v0.4", "PLAN.md"), output: path.join(docsDir, "v0.4", "plan.html"), title: "Plan v0.4", versioned: true },
+  { source: path.join(docsDir, "v0.3", "SPEC.md"), output: path.join(docsDir, "v0.3", "spec.html"), title: "Spec v0.3", versioned: true },
+  { source: path.join(docsDir, "v0.3", "STDLIB.md"), output: path.join(docsDir, "v0.3", "stdlib.html"), title: "Stdlib v0.3", versioned: true },
   { source: path.join(docsDir, "v0.2.0", "SPEC.md"), output: path.join(docsDir, "v0.2.0", "spec.html"), title: "Spec v0.2.0", versioned: true },
   { source: path.join(docsDir, "v0.2.0", "API.md"), output: path.join(docsDir, "v0.2.0", "api.html"), title: "API v0.2.0", versioned: true },
   { source: path.join(docsDir, "v0.1.0", "SPEC.md"), output: path.join(docsDir, "v0.1.0", "spec.html"), title: "Spec v0.1.0", versioned: true },
@@ -43,8 +45,11 @@ function rewriteHref(href, page) {
     const versionedMapping = {
       "SPEC.md": "spec.html",
       "API.md": "api.html",
+      "STDLIB.md": "stdlib.html",
+      "PLAN.md": "plan.html",
       "docs/SPEC.md": "spec.html",
       "docs/API.md": "api.html",
+      "docs/STDLIB.md": "stdlib.html",
       "NAMING.md": "../naming.html",
       "docs/NAMING.md": "../naming.html",
     };
@@ -59,7 +64,7 @@ function rewriteHref(href, page) {
     "STDLIB.md": "stdlib.html",
     "NAMING.md": "naming.html",
     "VERSIONS.md": "versions.html",
-    "v0.4.md": "v0.4.html",
+    "v0.4.md": "v0.4/plan.html",
     "ROADMAP.md": "roadmap.html",
     "../ROADMAP.md": "roadmap.html",
   };
@@ -199,7 +204,6 @@ function renderPage(page, body) {
         <a href="${prefix}stdlib.html">Stdlib</a>
         <a href="${prefix}naming.html">Naming</a>
         <a href="${prefix}versions.html">Versions</a>
-        <a href="${prefix}v0.4.html">v0.4</a>
         <a href="${prefix}roadmap.html">Roadmap</a>
       </div>
     </nav>
