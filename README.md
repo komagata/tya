@@ -125,3 +125,75 @@ access.
 ```sh
 go test ./... -count=1
 ```
+
+## Development
+
+Clone the repository and verify the local toolchain first.
+
+```sh
+git clone https://github.com/komagata/tya.git
+cd tya
+go run ./cmd/tya version
+go test ./... -count=1
+```
+
+The compiler is intentionally hand-written Go. The main implementation areas
+are:
+
+- `internal/lexer/`: source text to tokens.
+- `internal/parser/`: tokens to AST.
+- `internal/ast/`: AST node definitions.
+- `internal/checker/`: language and module validation.
+- `internal/codegen/`: C emitter.
+- `internal/runner/`: source loading, module loading, and run helpers.
+- `runtime/`: C runtime used by generated programs.
+- `cmd/tya/`: user-facing CLI.
+- `tests/`: CLI, example, and specification-level tests.
+
+Useful local commands:
+
+```sh
+go run ./cmd/tya run examples/hello.tya
+go run ./cmd/tya build examples/hello.tya -o hello
+go run ./cmd/tya version
+```
+
+Developer inspection commands are intentionally not part of the public CLI
+surface, but they are useful when working on the compiler:
+
+```sh
+go run ./cmd/tya --tokens examples/hello.tya
+go run ./cmd/tya --emit-c examples/hello.tya
+go run ./cmd/tya --check-unused examples/hello.tya
+```
+
+Run focused compile-to-C checks when changing examples, argument handling, C
+emission, imports, runtime execution, or stdlib loading.
+
+```sh
+sh scripts/go_emit_examples_check.sh
+sh scripts/go_emit_args_check.sh
+```
+
+The website is served from `docs/` by GitHub Pages. Markdown source files are
+converted to static HTML pages with:
+
+```sh
+node scripts/build_docs_pages.js
+```
+
+When changing released language docs, keep versioned snapshots under
+`docs/vX.Y.Z/` and regenerate the HTML pages. For v0.1.0, the frozen documents
+live under `docs/v0.1.0/`.
+
+Before committing Go changes, format touched Go files and run the default test
+suite.
+
+```sh
+gofmt -w path/to/changed.go
+go test ./... -count=1
+```
+
+Historical pre-v0.1 self-host notes and experiments live under
+`docs/archive/pre-v0.1/`. They are reference material, not current v0.1
+authority or default verification gates.
