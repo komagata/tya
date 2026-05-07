@@ -13,7 +13,6 @@ const pages = [
   { source: path.join(docsDir, "NAMING.md"), output: path.join(docsDir, "naming.html"), title: "Naming" },
   { source: path.join(docsDir, "VERSIONS.md"), output: path.join(docsDir, "versions.html"), title: "Versions" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(docsDir, "roadmap.html"), title: "Roadmap" },
-  { source: path.join(docsDir, "ROADMAP_STRUCTURE.md"), output: path.join(docsDir, "roadmap-structure.html"), title: "Roadmap Structure" },
   { source: path.join(docsDir, "v0.1.0", "SPEC.md"), output: path.join(docsDir, "v0.1.0", "spec.html"), title: "Spec v0.1.0", versioned: true },
   { source: path.join(docsDir, "v0.1.0", "API.md"), output: path.join(docsDir, "v0.1.0", "api.html"), title: "API v0.1.0", versioned: true },
 ];
@@ -57,8 +56,6 @@ function rewriteHref(href, page) {
     "VERSIONS.md": "versions.html",
     "ROADMAP.md": "roadmap.html",
     "../ROADMAP.md": "roadmap.html",
-    "docs/ROADMAP_STRUCTURE.md": "roadmap-structure.html",
-    "ROADMAP_STRUCTURE.md": "roadmap-structure.html",
   };
   return mapping[href] || mapping[clean] || href;
 }

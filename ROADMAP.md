@@ -7,11 +7,6 @@ Pre-v0.1 planning documents and self-host migration notes are archived under
 [`docs/archive/pre-v0.1/`](docs/archive/pre-v0.1/). They are historical
 references, not current language or implementation authority.
 
-## Roadmap Structure
-
-Roadmap item definitions and maintenance rules live in
-[`docs/ROADMAP_STRUCTURE.md`](docs/ROADMAP_STRUCTURE.md).
-
 ## Current Direction
 
 Tya v0.1 is frozen as a small compile-to-C language. The authoritative
