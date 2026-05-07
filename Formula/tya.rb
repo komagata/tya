@@ -1,13 +1,13 @@
 class Tya < Formula
   desc "Small indentation-based dynamic language"
-  homepage "https://tya-lang.org/"
+  homepage "https://github.com/komagata/tya"
   head "https://github.com/komagata/tya.git", branch: "main"
 
   depends_on "go" => :build
 
   def install
     system "go", "build", *std_go_args(output: bin/"tya"), "./cmd/tya"
-    (share/"tya/runtime").install Dir["runtime/*"]
+    (pkgshare/"runtime").install Dir["runtime/*"]
   end
 
   test do
