@@ -9,8 +9,8 @@
 Tya is a small indentation-based dynamic language with CoffeeScript feel and
 Golang practicality.
 
-Tya v0.1 is a compile-to-C language. The reference implementation contains a Go
-lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.1
+Tya v0.2 is a compile-to-C language. The reference implementation contains a Go
+lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.2
 specification tests.
 
 Website: <https://tya-lang.org/>
@@ -21,15 +21,25 @@ Website: <https://tya-lang.org/>
 
 ## Install
 
-Prebuilt installers are not published yet.
+On macOS, install Tya with Homebrew:
 
-For v0.1.0, download the release source and build the `tya` command locally.
-This currently requires Go because the v0.1 reference implementation is written
+```sh
+brew install komagata/tap/tya
+```
+
+For local formula development from this repository:
+
+```sh
+brew install --HEAD ./Formula/tya.rb
+```
+
+For v0.2.0, download the release source and build the `tya` command locally.
+This currently requires Go because the v0.2 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.1.0.tar.gz | tar xz
-cd tya-0.1.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.2.0.tar.gz | tar xz
+cd tya-0.2.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -60,6 +70,15 @@ To print the installed version:
 
 ```sh
 tya version
+```
+
+To check, format, or inspect generated C:
+
+```sh
+tya check hello.tya
+tya fmt hello.tya
+tya fmt -w hello.tya
+tya emit-c hello.tya
 ```
 
 ## Example
@@ -93,8 +112,8 @@ print greeting.hello("komagata")
 ## Documentation
 
 - [Guide](https://tya-lang.org/guide.html): read this first to learn Tya.
-- [Spec](https://tya-lang.org/spec.html): Tya v0.1 language specification.
-- [API](https://tya-lang.org/api.html): v0.1 built-in function reference.
+- [Spec](https://tya-lang.org/spec.html): Tya v0.2 language specification.
+- [API](https://tya-lang.org/api.html): v0.2 built-in function reference.
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): release snapshots of the spec
   and API.
@@ -105,7 +124,7 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-Tya v0.1 includes:
+Tya v0.2 includes:
 
 - `.tya` files
 - indentation-based blocks
@@ -120,11 +139,14 @@ Tya v0.1 includes:
 - implicit final-expression returns, explicit `return`, and multiple return
   values
 - `try` error propagation
-- same-directory `import module_name` and `module.member` access
+- same-directory and `TYA_PATH` `import module_name` lookup with
+  `module.member` access
 - standard builtins listed in the API document
-- compile-to-C execution through `tya run` and `tya build`
+- compile-to-C execution through `tya run`, `tya build`, and `tya emit-c`
+- source checking through `tya check`
+- conservative source formatting through `tya fmt`
 
-Tya v0.1 does not include objects, classes, interfaces, inheritance, async,
+Tya v0.2 does not include objects, classes, interfaces, inheritance, async,
 macros, package management, set literals, import aliases, or dictionary member
 access.
 
@@ -163,6 +185,9 @@ Useful local commands:
 ```sh
 go run ./cmd/tya run examples/hello.tya
 go run ./cmd/tya build examples/hello.tya -o hello
+go run ./cmd/tya check examples/hello.tya
+go run ./cmd/tya fmt examples/hello.tya
+go run ./cmd/tya emit-c examples/hello.tya
 go run ./cmd/tya version
 ```
 
@@ -171,7 +196,6 @@ surface, but they are useful when working on the compiler:
 
 ```sh
 go run ./cmd/tya --tokens examples/hello.tya
-go run ./cmd/tya --emit-c examples/hello.tya
 go run ./cmd/tya --check-unused examples/hello.tya
 ```
 
@@ -191,8 +215,8 @@ node scripts/build_docs_pages.js
 ```
 
 When changing released language docs, keep versioned snapshots under
-`docs/vX.Y.Z/` and regenerate the HTML pages. For v0.1.0, the frozen documents
-live under `docs/v0.1.0/`.
+`docs/vX.Y.Z/` and regenerate the HTML pages. The v0.2.0 frozen documents live
+under `docs/v0.2.0/`.
 
 Before committing Go changes, format touched Go files and run the default test
 suite.
@@ -203,5 +227,5 @@ go test ./... -count=1
 ```
 
 Historical pre-v0.1 self-host notes and experiments live under
-`docs/archive/pre-v0.1/`. They are reference material, not current v0.1
+`docs/archive/pre-v0.1/`. They are reference material, not current v0.2
 authority or default verification gates.

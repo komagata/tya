@@ -1,0 +1,20 @@
+# TYA_PATH module search order.
+cd $REPO
+env TYA_PATH=$WORK/lib
+exec go run ./cmd/tya run $WORK/app/main.tya
+stdout 'Hello, path\n'
+! stderr .
+
+! exec go run ./cmd/tya check $WORK/app/no_module.tya
+stderr 'module not found: absent'
+
+-- app/main.tya --
+import greeting
+print greeting.hello("path")
+
+-- app/no_module.tya --
+import absent
+
+-- lib/greeting.tya --
+module greeting
+  hello = name -> "Hello, {name}"

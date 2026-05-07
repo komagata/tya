@@ -27,14 +27,12 @@
 <p><code>ROADMAP.md</code> is the single source of truth for current TODO, TASK, and roadmap planning.</p>
 <p>Pre-v0.1 planning documents and self-host migration notes are archived under <a href="docs/archive/pre-v0.1/"><code>docs/archive/pre-v0.1/</code></a>. They are historical references, not current language or implementation authority.</p>
 <h2 id="current-direction">Current Direction</h2>
-<p>Tya v0.1 is released as a small compile-to-C language. The frozen v0.1 release documents are:</p>
+<p>Tya v0.2.0 is implemented as a small compile-to-C language. The frozen release documents are:</p>
 <ol>
 <li><a href="docs/v0.1.0/SPEC.md"><code>docs/v0.1.0/SPEC.md</code></a></li>
 <li><a href="docs/v0.1.0/API.md"><code>docs/v0.1.0/API.md</code></a></li>
-</ol>
-<p>The current active draft is v0.2:</p>
-<ol>
-<li><a href="docs/v0.2/SPEC.md"><code>docs/v0.2/SPEC.md</code></a></li>
+<li><a href="docs/v0.2.0/SPEC.md"><code>docs/v0.2.0/SPEC.md</code></a></li>
+<li><a href="docs/v0.2.0/API.md"><code>docs/v0.2.0/API.md</code></a></li>
 </ol>
 <p>Latest editable documentation is:</p>
 <ol>
@@ -50,7 +48,7 @@ Go checker
 Go C emitter
 C runtime
 v0.2 specification tests</code></pre>
-<p>Go interpreter behavior, current <code>selfhost/*</code>, ASTMODE, legacy node strings, and self-host bootstrap gates are not v0.1 authority.</p>
+<p>Go interpreter behavior, current <code>selfhost/*</code>, ASTMODE, legacy node strings, and self-host bootstrap gates are not v0.2 authority.</p>
 <h2 id="implementation-tooling-policy">Implementation Tooling Policy</h2>
 <p>The v0.2 compiler implementation should stay hand-written:</p>
 <pre><code class="language-text">Go lexer
@@ -65,58 +63,58 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="current-roadmap">Current Roadmap</h2>
 <ul>
-<li>[ ] Ship v0.2 friendly scripting</li>
+<li>[x] Ship v0.2 friendly scripting</li>
 <ul>
-<li>[ ] Add v0.2 standard builtins</li>
+<li>[x] Add v0.2 standard builtins</li>
 <ul>
-<li>[ ] Implement collection builtins: <code>map</code>, <code>filter</code>, <code>find</code>, <code>any</code>, <code>all</code>, and <code>reduce</code>.</li>
-<li>[ ] Implement deep equality builtin: <code>equal(left, right)</code>.</li>
-<li>[ ] Implement input builtin: <code>read_line()</code>.</li>
-<li>[ ] Add API documentation and examples for every v0.2 builtin.</li>
-<li>[ ] Add parser/checker/C-emitter/runtime tests for v0.2 builtins.</li>
+<li>[x] Implement collection builtins: <code>map</code>, <code>filter</code>, <code>find</code>, <code>any</code>, <code>all</code>, and <code>reduce</code>.</li>
+<li>[x] Implement deep equality builtin: <code>equal(left, right)</code>.</li>
+<li>[x] Implement input builtin: <code>read_line()</code>.</li>
+<li>[x] Add API documentation and examples for every v0.2 builtin.</li>
+<li>[x] Add parser/checker/C-emitter/runtime tests for v0.2 builtins.</li>
 </ul>
-<li>[ ] Add v0.2 user-facing CLI commands</li>
+<li>[x] Add v0.2 user-facing CLI commands</li>
 <ul>
-<li>[ ] Add <code>tya check file.tya</code>.</li>
-<li>[ ] Add <code>tya fmt file.tya</code>.</li>
-<li>[ ] Add <code>tya fmt -w file.tya</code>.</li>
-<li>[ ] Add <code>tya emit-c file.tya</code>.</li>
-<li>[ ] Replace or retire hidden <code>--emit-c</code> documentation in favor of <code>tya emit-c</code>.</li>
-<li>[ ] Add CLI tests for success, diagnostics, and exit statuses.</li>
+<li>[x] Add <code>tya check file.tya</code>.</li>
+<li>[x] Add <code>tya fmt file.tya</code>.</li>
+<li>[x] Add <code>tya fmt -w file.tya</code>.</li>
+<li>[x] Add <code>tya emit-c file.tya</code>.</li>
+<li>[x] Replace or retire hidden <code>--emit-c</code> documentation in favor of <code>tya emit-c</code>.</li>
+<li>[x] Add CLI tests for success, diagnostics, and exit statuses.</li>
 </ul>
-<li>[ ] Improve diagnostics</li>
+<li>[x] Improve diagnostics</li>
 <ul>
-<li>[ ] Add source-oriented diagnostic formatting with file, line, column, message, source line, and caret marker when available.</li>
-<li>[ ] Keep user-facing diagnostics free of Go implementation terms.</li>
-<li>[ ] Add golden tests for parser, checker, and CLI diagnostic output.</li>
+<li>[x] Add source-oriented diagnostic formatting with file, line, column, message, source line, and caret marker when available.</li>
+<li>[x] Keep user-facing diagnostics free of Go implementation terms.</li>
+<li>[x] Add golden tests for parser, checker, and CLI diagnostic output.</li>
 </ul>
-<li>[ ] Add formatter</li>
+<li>[x] Add formatter</li>
 <ul>
-<li>[ ] Define conservative formatting behavior for indentation, trailing whitespace, one statement per line, dictionaries, and inline literals.</li>
-<li>[ ] Implement formatter output for <code>tya fmt</code>.</li>
-<li>[ ] Implement in-place write behavior for <code>tya fmt -w</code>.</li>
-<li>[ ] Add formatter idempotence tests.</li>
+<li>[x] Define conservative formatting behavior for indentation, trailing whitespace, one statement per line, dictionaries, and inline literals.</li>
+<li>[x] Implement formatter output for <code>tya fmt</code>.</li>
+<li>[x] Implement in-place write behavior for <code>tya fmt -w</code>.</li>
+<li>[x] Add formatter idempotence tests.</li>
 </ul>
-<li>[ ] Improve module ergonomics</li>
+<li>[x] Improve module ergonomics</li>
 <ul>
-<li>[ ] Add <code>TYA_PATH</code> search after the importing file's directory.</li>
-<li>[ ] Keep module file name and <code>module</code> declaration matching rules.</li>
-<li>[ ] Preserve the v0.2 exclusion of import aliases and package manager behavior.</li>
-<li>[ ] Add module loading tests for same-directory imports, <code>TYA_PATH</code>, and missing modules.</li>
+<li>[x] Add <code>TYA_PATH</code> search after the importing file's directory.</li>
+<li>[x] Keep module file name and <code>module</code> declaration matching rules.</li>
+<li>[x] Preserve the v0.2 exclusion of import aliases and package manager behavior.</li>
+<li>[x] Add module loading tests for same-directory imports, <code>TYA_PATH</code>, and missing modules.</li>
 </ul>
-<li>[ ] Keep v0.2 documentation and release snapshots aligned</li>
+<li>[x] Keep v0.2 documentation and release snapshots aligned</li>
 <ul>
-<li>[ ] Update latest <code>docs/SPEC.md</code> and <code>docs/API.md</code> when v0.2 behavior is implemented.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Create <code>docs/v0.2.0/</code> spec and API snapshots before release.</li>
-<li>[ ] Update README install, run, development, and documentation sections for v0.2.0.</li>
+<li>[x] Update latest <code>docs/SPEC.md</code> and <code>docs/API.md</code> when v0.2 behavior is implemented.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Create <code>docs/v0.2.0/</code> spec and API snapshots before release.</li>
+<li>[x] Update README install, run, development, and documentation sections for v0.2.0.</li>
 </ul>
 </ul>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>
 <pre><code class="language-sh">go test ./... -count=1</code></pre>
-<p>Focused verification should prefer tests for the touched lexer, parser, checker, C emitter, runtime, examples, or docs. Self-host bootstrap checks are historical pre-v0.1 gates and are not default v0.1 verification.</p>
+<p>Focused verification should prefer tests for the touched lexer, parser, checker, C emitter, runtime, examples, or docs. Self-host bootstrap checks are historical pre-v0.1 gates and are not default v0.2 verification.</p>
     </article>
   </main>
 </body>

@@ -210,20 +210,12 @@ func TestCheckRejectsUndefinedVariable(t *testing.T) {
 	}
 }
 
-func TestCheckRejectsNonV01Builtins(t *testing.T) {
+func TestCheckRejectsExcludedBuiltins(t *testing.T) {
 	for _, name := range []string{
-		"map",
-		"filter",
-		"find",
-		"any",
-		"all",
 		"each",
-		"reduce",
 		"byte_len",
 		"char_len",
-		"equal",
 		"div",
-		"read_line",
 	} {
 		t.Run(name, func(t *testing.T) {
 			err := Check(parse(t, name+"()\n"))

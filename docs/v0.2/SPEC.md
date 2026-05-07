@@ -77,7 +77,8 @@ filter(items, item -> item > 10)
 find(items, item -> item == "tya")
 any(items, item -> item == "tya")
 all(items, item -> len(item) > 0)
-reduce(items, 0, total, item -> total + item)
+sum = total, item -> total + item
+reduce(items, 0, sum)
 ```
 
 `map(array, function)` returns a new array containing the mapped values.

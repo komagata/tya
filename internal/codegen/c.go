@@ -667,6 +667,90 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_len(%s)", arg), "TyaValue", nil
 		}
+		if ok && id.Name == "map" && len(n.Args) == 2 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			fn, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_map(%s, %s)", array, fn), "TyaValue", nil
+		}
+		if ok && id.Name == "filter" && len(n.Args) == 2 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			fn, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_filter(%s, %s)", array, fn), "TyaValue", nil
+		}
+		if ok && id.Name == "find" && len(n.Args) == 2 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			fn, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_find(%s, %s)", array, fn), "TyaValue", nil
+		}
+		if ok && id.Name == "any" && len(n.Args) == 2 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			fn, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_any(%s, %s)", array, fn), "TyaValue", nil
+		}
+		if ok && id.Name == "all" && len(n.Args) == 2 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			fn, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_all(%s, %s)", array, fn), "TyaValue", nil
+		}
+		if ok && id.Name == "reduce" && len(n.Args) == 3 {
+			array, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			initial, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			fn, _, err := g.expr(n.Args[2])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_reduce(%s, %s, %s)", array, initial, fn), "TyaValue", nil
+		}
+		if ok && id.Name == "equal" && len(n.Args) == 2 {
+			left, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			right, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_deep_equal(%s, %s)", left, right), "TyaValue", nil
+		}
+		if ok && id.Name == "read_line" && len(n.Args) == 0 {
+			return "tya_read_line()", "TyaValue", nil
+		}
 		if ok && id.Name == "contains" && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])
 			if err != nil {

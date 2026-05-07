@@ -123,7 +123,10 @@ func loadSource(path string, loading map[string]bool, module bool) (string, []st
 	modules := []string{}
 	visibleImports := map[string]bool{}
 	for _, imp := range imports {
-		modPath := filepath.Join(filepath.Dir(path), imp+".tya")
+		modPath, err := resolveModulePath(path, imp)
+		if err != nil {
+			return "", nil, err
+		}
 		importDef, err := publicDefForFile(modPath)
 		if err != nil {
 			return "", nil, err
@@ -155,6 +158,25 @@ func loadSource(path string, loading map[string]bool, module bool) (string, []st
 		out.WriteString("\n")
 	}
 	return out.String(), modules, nil
+}
+
+func resolveModulePath(importerPath string, name string) (string, error) {
+	fileName := name + ".tya"
+	candidates := []string{filepath.Join(filepath.Dir(importerPath), fileName)}
+	for _, dir := range filepath.SplitList(os.Getenv("TYA_PATH")) {
+		if dir == "" {
+			continue
+		}
+		candidates = append(candidates, filepath.Join(dir, fileName))
+	}
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		} else if !os.IsNotExist(err) {
+			return "", err
+		}
+	}
+	return "", fmt.Errorf("module not found: %s", name)
 }
 
 func publicDefForFile(path string) (publicDef, error) {
