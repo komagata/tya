@@ -1,32 +1,33 @@
 # Tya v0.1 Language Spec
 
-この文書は Tya v0.1 の言語仕様である。
+This document is the language specification for Tya v0.1.
 
-v0.1 の正規の実行経路は、Tya ソースを lex / parse / check し、C を出力し、
-C コンパイラで実行可能ファイルにする経路である。
+The canonical v0.1 execution path lexes, parses, and checks Tya source, emits C,
+and uses a C compiler to produce an executable.
 
 ```text
 Tya source -> lexer -> parser -> AST -> checker -> C emitter -> C compiler -> executable
 ```
 
-Go interpreter、現行 `selfhost/*`、ASTMODE、legacy node string、self-host
-bootstrap gate は v0.1 仕様の正ではない。削除しなくてもよいが、v0.1
-実装完了まではメンテナンス対象外とする。
+The Go interpreter, current `selfhost/*`, ASTMODE, legacy node strings, and
+self-host bootstrap gates are not v0.1 specification authority. They do not
+need to be deleted, but they are outside the maintained v0.1 path until the
+v0.1 implementation is complete.
 
 ## Scope
 
-v0.1 に含めるもの:
+Included in v0.1:
 
-- `.tya` ファイル
-- 2スペースインデントのブロック構文
-- コメント
-- 代入
-- 複数代入
-- 配列
-- 辞書
-- 添字アクセス
-- 関数リテラル
-- 関数呼び出し
+- `.tya` files
+- 2-space indentation block syntax
+- comments
+- assignment
+- multiple assignment
+- arrays
+- dictionaries
+- index access
+- function literals
+- function calls
 - `if` / `elseif` / `else`
 - `while`
 - `for value in array`
@@ -34,17 +35,17 @@ v0.1 に含めるもの:
 - `for key, value of dictionary`
 - `break` / `continue`
 - `return`
-- 複数戻り値
+- multiple return values
 - `try`
 - `error`
 - `module`
 - `import module_name`
 - `module.member`
-- 文字列補間
-- v0.1 標準組み込み関数
-- C へのコンパイルと実行
+- string interpolation
+- v0.1 standard built-in functions
+- compilation to C and execution
 
-v0.1 に含めないもの:
+Not included in v0.1:
 
 - object
 - class
@@ -63,15 +64,15 @@ v0.1 に含めないもの:
 - async
 - macro
 - exception
-- Go interpreter を正規実行経路にすること
-- legacy node string 互換を仕様に含めること
+- using the Go interpreter as the canonical execution path
+- including legacy node string compatibility in the specification
 
 ## Source Files
 
-Tya ソースファイルは `.tya` 拡張子を使う。
+Tya source files use the `.tya` extension.
 
-entry file は `import` と文を持てる。imported module file は、ファイル名と同じ
-名前の `module` 宣言を1つ持つ。
+An entry file can contain imports and statements. An imported module file has
+exactly one `module` declaration with the same name as the file.
 
 ```tya
 # main.tya
@@ -88,24 +89,25 @@ module greeting
 
 ## Lexical Structure
 
-コメントは `#` から行末まで。
+Comments start with `#` and continue to the end of the line.
 
 ```tya
 # comment
 name = "Tya"
 ```
 
-ブロックはインデントで表す。1インデントは2スペースである。lexer は
-インデント増減に応じて `INDENT` / `DEDENT` token を出す。
+Blocks are represented by indentation. One indentation level is 2 spaces. The
+lexer emits `INDENT` and `DEDENT` tokens when indentation increases or
+decreases.
 
-token には identifier、integer literal、float literal、string literal、
-newline、indentation token、および以下の operator / delimiter がある。
+Tokens include identifiers, integer literals, float literals, string literals,
+newlines, indentation tokens, and the following operators and delimiters.
 
 ```text
 = == != < <= > >= : , . + - * / % -> ( ) [ ] { }
 ```
 
-以下の identifier は予約された意味を持つ。
+The following identifiers have reserved meanings.
 
 ```text
 if elseif else while for in of break continue return
@@ -113,25 +115,26 @@ import module
 true false nil and or not try
 ```
 
-`print`、`panic`、`exit`、`error` などは keyword ではなく標準組み込み関数である。
+`print`, `panic`, `exit`, `error`, and similar names are standard built-in
+functions, not keywords.
 
 ## Names
 
-名前は `docs/NAMING.md` に従う。
+Names follow `docs/NAMING.md`.
 
 ```text
-変数・関数:             snake_case
+variable / function:    snake_case
 private binding:        _snake_case
 module / file:          snake_case
 dictionary key:         snake_case
 module member:          snake_case
 constant:               SCREAMING_SNAKE_CASE
-type / class name:      PascalCase  # v0.1 では予約
+type / class name:      PascalCase  # reserved in v0.1
 ```
 
 ## Values
 
-v0.1 の runtime value は以下。
+v0.1 has the following runtime values.
 
 ```text
 nil
@@ -146,18 +149,18 @@ error
 module
 ```
 
-v0.1 には object は存在しない。将来 class を導入するとき、object は class
-instance として定義する。
+v0.1 has no objects. If classes are introduced in the future, objects will be
+defined as class instances.
 
 ## Strings
 
-文字列は以下の escape をサポートする。
+Strings support the following escapes.
 
 ```text
 \" \\ \n \t
 ```
 
-文字列内の `{expression}` は補間される。
+`{expression}` inside a string is interpolated.
 
 ```tya
 name = "Tya"
@@ -166,27 +169,27 @@ print "Hello, {name}"
 
 ## Dictionaries
 
-辞書は key-value collection である。
+Dictionaries are key-value collections.
 
 ```tya
 user = { name: "komagata", age: 20 }
 empty = {}
 ```
 
-v0.1 の辞書 literal の key は `snake_case` identifier である。辞書の値は添字で
-読む。
+Dictionary literal keys are `snake_case` identifiers in v0.1. Dictionary values
+are read with index access.
 
 ```tya
 print user["name"] # ok
 print user.name    # invalid
 ```
 
-`.` は v0.1 では module member access 専用である。辞書に対する member access
-は無効である。
+In v0.1, `.` is reserved for module member access. Member access on dictionaries
+is invalid.
 
 ## Statements
 
-代入:
+assignment:
 
 ```tya
 name = "Tya"
@@ -195,13 +198,13 @@ items[0] = 10
 user["name"] = "komagata"
 ```
 
-式文:
+expression statement:
 
 ```tya
 print "hello"
 ```
 
-条件分岐:
+conditional branch:
 
 ```tya
 if score >= 90
@@ -214,9 +217,9 @@ else
   print "D"
 ```
 
-`elseif` は `if` の後に0個以上書ける。`else` は最後に0個または1個だけ書ける。
-`elseif` と `else` は対応する `if` と同じインデントに置く。`elseif` は
-`else if` ではなく1語の reserved identifier である。
+An `if` can have zero or more `elseif` branches. It can have zero or one final
+`else` branch. `elseif` and `else` are placed at the same indentation as the
+matching `if`. `elseif` is a single reserved identifier, not `else if`.
 
 while loop:
 
@@ -298,12 +301,12 @@ fn(arg1, arg2)
 module.member()
 ```
 
-v0.1 では、通常の関数呼び出しは必ず `()` を使う。`fn arg`、
-`fn arg1, arg2`、`fn arg1 arg2`、`print len keys user` のような
-no-paren call chain は構文に含めない。
+In v0.1, ordinary function calls must use `()`. No-paren call chains such as
+`fn arg`, `fn arg1, arg2`, `fn arg1 arg2`, and `print len keys user` are not
+part of the syntax.
 
-例外として、`print` だけは statement-level の表示構文として `print expression`
-を許す。`print` は後続の1式だけを受け取る。
+As an exception, `print` is allowed as statement-level output syntax:
+`print expression`. `print` accepts only the single expression that follows it.
 
 ```tya
 print "hello"
@@ -312,7 +315,7 @@ print len(keys(user))
 print add(2, 3)
 ```
 
-複数引数や入れ子呼び出しは `()` で明示する。
+Multiple arguments and nested calls are written explicitly with `()`.
 
 ```tya
 add(2, 3)
@@ -341,7 +344,7 @@ not expression
 try expression
 ```
 
-binary operator precedence は低い順に以下。
+Binary operator precedence, from lowest to highest, is as follows.
 
 ```text
 or
@@ -357,11 +360,11 @@ primary
 
 ## Truthiness
 
-`nil` と `false` は falsey である。それ以外の値は truthy である。
+`nil` and `false` are falsey. All other values are truthy.
 
 ## Functions
 
-関数は child scope を作る。
+Functions create a child scope.
 
 ```tya
 double = value -> value * 2
@@ -373,8 +376,8 @@ sum = values ->
   total
 ```
 
-block function は、明示的な `return` がない場合、最後の式を返す。関数は複数の
-値を返せる。
+If a block function has no explicit `return`, it returns the final expression.
+Functions can return multiple values.
 
 ```tya
 parse_user = text ->
@@ -385,17 +388,18 @@ parse_user = text ->
 
 ## Errors
 
-`error("message")` は `message` を持つ error value を作る。v0.1 では `.`
-が module member access 専用なので、message は `err["message"]` で読む。
+`error("message")` creates an error value with a `message`. In v0.1, `.` is
+reserved for module member access, so read the message with `err["message"]`.
 
 ```tya
 err = error("file not found")
 print err["message"]
 ```
 
-`try expression` は関数内でのみ使える。対象式は `value, err` の2値を返す想定と
-する。`err` が truthy なら現在の関数から `nil, err` を返す。`err` が falsey
-なら `value` を式の値にする。
+`try expression` can only be used inside a function. The target expression is
+expected to return two values: `value, err`. If `err` is truthy, the current
+function returns `nil, err`. If `err` is falsey, `value` becomes the expression
+value.
 
 ```tya
 load_user = text ->
@@ -405,10 +409,11 @@ load_user = text ->
 
 ## Modules
 
-`import module_name` は、importing file と同じディレクトリの
-`module_name.tya` を読む。
+`import module_name` reads `module_name.tya` from the same directory as the
+importing file.
 
-imported module file はファイル名と同じ名前の `module` 宣言を1つ持つ。
+An imported module file has exactly one `module` declaration with the same name
+as the file.
 
 ```tya
 # greeting.tya
@@ -423,24 +428,24 @@ import greeting
 print greeting.hello("komagata")
 ```
 
-module member は `module_name.member_name` で読む。v0.1 の `.` は module
-member access 専用である。
+Module members are read with `module_name.member_name`. In v0.1, `.` is
+reserved for module member access.
 
-import alias は v0.1 に含めない。
+Import aliases are not included in v0.1.
 
 ## Standard Builtins
 
-v0.1 標準組み込み関数は `docs/API.md` に定義する。v0.1 では必須でない便利関数を
-標準組み込みに含めない。
+Standard built-in functions for v0.1 are defined in `docs/API.md`. Convenience
+functions that are not required in v0.1 are not included as standard builtins.
 
 ## Execution
 
-v0.1 の正規実行経路は、Tya ソースから実行可能ファイルを作って実行する経路である。
-ユーザー向け CLI は Go のコマンドを要求しない。
+The canonical v0.1 execution path builds and runs an executable from Tya source.
+The user-facing CLI does not require Go commands.
 
 ## Command Line
 
-v0.1 は以下のユーザー向けコマンドを持つ。
+v0.1 has the following user-facing commands.
 
 ```sh
 tya run file.tya [args...]
@@ -448,13 +453,13 @@ tya build file.tya -o output
 tya version
 ```
 
-`tya run` は一時的な実行可能ファイルを作り、それを実行し、実行後に一時ファイルを
-削除する。これは Go の `go run` と同じ位置づけのコマンドであり、
-インタプリター実行ではない。
+`tya run` builds a temporary executable, runs it, and removes the temporary file
+after execution. It has the same role as Go's `go run`; it is not interpreter
+execution.
 
-`tya build` は実行可能ファイルを作り、指定された出力先に残す。`-o` が
-指定されていない場合は、入力ファイルの basename から `.tya` を除いた名前で、
-カレントディレクトリに実行可能ファイルを作る。
+`tya build` builds an executable and leaves it at the specified output path. If
+`-o` is not specified, it removes `.tya` from the input file basename and writes
+the executable in the current directory.
 
 ```sh
 tya build hello.tya
@@ -467,13 +472,14 @@ tya build examples/hello.tya -o bin/hello
 # writes ./bin/hello
 ```
 
-`tya version` は Tya のバージョンを標準出力に表示する。
+`tya version` prints the Tya version to stdout.
 
-Go interpreter と Go 開発用コマンドは v0.1 のユーザー向け正規実行経路ではない。
+The Go interpreter and Go development commands are not the user-facing canonical
+execution path for v0.1.
 
 ## v0.1 Reference Implementation
 
-v0.1 の参照実装としてメンテナンスする対象は以下。
+The following components are maintained as the v0.1 reference implementation.
 
 ```text
 Go lexer
@@ -485,5 +491,5 @@ C runtime
 v0.1 specification tests
 ```
 
-Tya 版 compiler は、v0.1 仕様が Go 版 compile-to-C 経路で完全に動作してから、
-AST ベースで新規実装する。
+The Tya-written compiler should be newly implemented on an AST basis after the
+v0.1 specification works fully through the Go compile-to-C path.

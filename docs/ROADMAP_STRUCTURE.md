@@ -33,27 +33,27 @@ Roadmap Structure
 
 ████░░░░░░ 45% Self-host tya
     ████░░░░░░ 40% 1 Self-host AST migration
-        ████░░░░░░ 40% 1-1 Parser AST化
-            ████████░░ 80% 1-1-1 expression AST対応
-            ░░░░░░░░░░ 0% 1-1-2 statement AST対応
-        ██░░░░░░░░ 20% 1-2 Checker対応
+        ████░░░░░░ 40% 1-1 Parser AST migration
+            ████████░░ 80% 1-1-1 Expression AST support
+            ░░░░░░░░░░ 0% 1-1-2 Statement AST support
+        ██░░░░░░░░ 20% 1-2 Checker support
             ░░░░░░░░░░ 0% 1-2-1 AST node type checking
-        █░░░░░░░░░ 10% 1-3 Codegen対応
+        █░░░░░░░░░ 10% 1-3 Codegen support
             █░░░░░░░░░ 10% 1-3-1 AST code generation
     ██████░░░░ 60% 2 CLI usability
         ███████░░░ 70% 2-1 Error output
-            ██████████ 100% 2-1-1 行番号と列番号を表示
-            ████░░░░░░ 40% 2-1-2 diagnostic message整理
+            ██████████ 100% 2-1-1 Show line and column numbers
+            ████░░░░░░ 40% 2-1-2 Organize diagnostic messages
         ███░░░░░░░ 30% 2-2 Commands
-            ░░░░░░░░░░ 0% 2-2-1 format command追加
-            ░░░░░░░░░░ 0% 2-2-2 inspect AST command追加
+            ░░░░░░░░░░ 0% 2-2-1 Add format command
+            ░░░░░░░░░░ 0% 2-2-2 Add inspect AST command
     ███░░░░░░░ 30% 3 Documentation
         ██████████ 100% 3-1 Roadmap
-            ██████████ 100% 3-1-1 Roadmap Structure定義
+            ██████████ 100% 3-1-1 Define Roadmap Structure
         ██░░░░░░░░ 20% 3-2 Self-host
-            ██░░░░░░░░ 20% 3-2-1 AST移行手順を書く
+            ██░░░░░░░░ 20% 3-2-1 Write AST migration steps
         ███░░░░░░░ 30% 3-3 CLI
-            ███░░░░░░░ 30% 3-3-1 usage examplesを整理
+            ███░░░░░░░ 30% 3-3-1 Organize usage examples
 ```
 
 ## Terms

@@ -1,9 +1,10 @@
 # Tya v0.1 API
 
-この文書は Tya v0.1 の標準組み込み関数を定義する。
+This document defines the standard built-in functions for Tya v0.1.
 
-v0.1 では、self-host compiler と基本的なプログラムに必要な最小 API だけを
-標準組み込みとして固定する。便利関数は後続バージョンで追加する。
+v0.1 fixes only the minimal API needed by the self-host compiler and basic
+programs as standard builtins. Convenience functions can be added in later
+versions.
 
 ## Core
 
@@ -13,16 +14,16 @@ panic "bad state"
 exit 1
 ```
 
-`print` は値と newline を出力する。`panic` はエラーとして停止する。`exit` は
-status code を指定して終了する。
+`print` writes a value followed by a newline. `panic` stops execution with an
+error. `exit` exits with the specified status code.
 
 ```tya
 err = error "file not found"
 print err["message"]
 ```
 
-`error` は `message` を持つ error value を返す。v0.1 では `.` が module
-member access 専用なので、message は `err["message"]` で読む。
+`error` returns an error value with a `message`. In v0.1, `.` is reserved for
+module member access, so read the message with `err["message"]`.
 
 ## Conversion
 
@@ -78,7 +79,7 @@ print pop items
 print len items
 ```
 
-`len` は string、array、dictionary に使える。
+`len` works with strings, arrays, and dictionaries.
 
 ## Dictionaries
 
@@ -127,7 +128,7 @@ print env "HOME"
 
 ## Not In v0.1
 
-以下は v0.1 標準組み込みに含めない。
+The following functions are not standard builtins in v0.1.
 
 ```text
 map
@@ -147,5 +148,5 @@ set
 
 ## Naming
 
-標準組み込み関数は `snake_case` を使う。CamelCase の builtin spelling は
-言語仕様に含めない。
+Standard built-in functions use `snake_case`. CamelCase builtin spellings are
+not part of the language spec.
