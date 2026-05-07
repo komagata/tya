@@ -70,17 +70,31 @@ function inlineMarkdown(value, page) {
     });
 }
 
-function closeList(state, html) {
-  if (state.listType) {
-    html.push(`</${state.listType}>`);
-    state.listType = null;
+function closeLists(state, html, targetIndent = -1) {
+  while (state.lists.length > 0 && state.lists[state.lists.length - 1].indent > targetIndent) {
+    const list = state.lists.pop();
+    html.push(`</${list.type}>`);
+  }
+}
+
+function ensureList(state, html, type, indent) {
+  closeLists(state, html, indent);
+  const current = state.lists[state.lists.length - 1];
+  if (current && current.indent === indent && current.type !== type) {
+    state.lists.pop();
+    html.push(`</${current.type}>`);
+  }
+  const next = state.lists[state.lists.length - 1];
+  if (!next || next.indent < indent || next.type !== type) {
+    html.push(`<${type}>`);
+    state.lists.push({ type, indent });
   }
 }
 
 function markdownToHtml(markdown, page) {
   const html = [];
   const lines = markdown.split(/\r?\n/);
-  const state = { listType: null, inCode: false, codeLang: "", code: [], paragraph: [] };
+  const state = { lists: [], inCode: false, codeLang: "", code: [], paragraph: [] };
 
   function flushParagraph() {
     if (state.paragraph.length === 0) {
@@ -100,7 +114,7 @@ function markdownToHtml(markdown, page) {
         state.code = [];
       } else {
         flushParagraph();
-        closeList(state, html);
+        closeLists(state, html);
         state.inCode = true;
         state.codeLang = fence[1] || "";
       }
@@ -114,45 +128,37 @@ function markdownToHtml(markdown, page) {
 
     if (line.trim() === "") {
       flushParagraph();
-      closeList(state, html);
+      closeLists(state, html);
       continue;
     }
 
     const heading = line.match(/^(#{1,6})\s+(.+)$/);
     if (heading) {
       flushParagraph();
-      closeList(state, html);
+      closeLists(state, html);
       const level = heading[1].length;
       const text = heading[2];
       html.push(`<h${level} id="${escapeHtml(slugify(text))}">${inlineMarkdown(text, page)}</h${level}>`);
       continue;
     }
 
-    const bullet = line.match(/^- (.+)$/);
+    const bullet = line.match(/^(\s*)- (.+)$/);
     if (bullet) {
       flushParagraph();
-      if (state.listType !== "ul") {
-        closeList(state, html);
-        html.push("<ul>");
-        state.listType = "ul";
-      }
-      html.push(`<li>${inlineMarkdown(bullet[1], page)}</li>`);
+      ensureList(state, html, "ul", bullet[1].length);
+      html.push(`<li>${inlineMarkdown(bullet[2], page)}</li>`);
       continue;
     }
 
-    const ordered = line.match(/^1\. (.+)$/);
+    const ordered = line.match(/^(\s*)1\. (.+)$/);
     if (ordered) {
       flushParagraph();
-      if (state.listType !== "ol") {
-        closeList(state, html);
-        html.push("<ol>");
-        state.listType = "ol";
-      }
-      html.push(`<li>${inlineMarkdown(ordered[1], page)}</li>`);
+      ensureList(state, html, "ol", ordered[1].length);
+      html.push(`<li>${inlineMarkdown(ordered[2], page)}</li>`);
       continue;
     }
 
-    closeList(state, html);
+    closeLists(state, html);
     state.paragraph.push(line);
   }
 
@@ -160,7 +166,7 @@ function markdownToHtml(markdown, page) {
   if (state.inCode) {
     html.push(`<pre><code${state.codeLang ? ` class="language-${escapeHtml(state.codeLang)}"` : ""}>${escapeHtml(state.code.join("\n"))}</code></pre>`);
   }
-  closeList(state, html);
+  closeLists(state, html);
   return html.join("\n");
 }
 
