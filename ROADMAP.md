@@ -9,7 +9,7 @@ references, not current language or implementation authority.
 
 ## Current Direction
 
-Tya v0.2.0 is implemented as a small compile-to-C language. The frozen release
+Tya v0.3 is implemented as a small compile-to-C language. The frozen release
 documents are:
 
 1. [`docs/v0.1.0/SPEC.md`](docs/v0.1.0/SPEC.md)
@@ -17,11 +17,24 @@ documents are:
 1. [`docs/v0.2.0/SPEC.md`](docs/v0.2.0/SPEC.md)
 1. [`docs/v0.2.0/API.md`](docs/v0.2.0/API.md)
 
+Tya uses semantic versioning. Specification changes happen at the minor version
+level, such as `v0.3` and `v0.4`. Patch releases such as `v0.3.1` must not
+change language or standard-library semantics. In other words, the `x` in
+`0.0.x` is never a specification-change unit. Therefore, specification
+documents use minor-version labels such as `v0.3`.
+
 Latest editable documentation is:
 
 1. [`docs/SPEC.md`](docs/SPEC.md)
 1. [`docs/API.md`](docs/API.md)
+1. [`docs/STDLIB.md`](docs/STDLIB.md)
 1. [`docs/NAMING.md`](docs/NAMING.md)
+
+Current planned minor-version documents are:
+
+1. [`docs/v0.3/SPEC.md`](docs/v0.3/SPEC.md)
+1. [`docs/v0.3/STDLIB.md`](docs/v0.3/STDLIB.md)
+1. [`docs/v0.4/PLAN.md`](docs/v0.4/PLAN.md)
 
 The v0.3 reference implementation remains:
 
@@ -69,39 +82,40 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Current Roadmap
 
-- [ ] Ship v0.3 standard attached libraries
-  - [ ] Define v0.3 attached library scope
+- [x] Ship v0.3 standard attached libraries
+  - [x] Define v0.3 attached library scope
     - [x] Decide that JSON and CSV parsers are deferred from v0.3.
     - [x] Keep JSON and CSV out of builtins and out of initial stdlib scope.
     - [x] Specify that v0.3 adds attached libraries, not a package manager.
     - [x] Document v0.3 scope in `docs/SPEC.md` and `docs/STDLIB.md`.
-  - [ ] Add stdlib import search
-    - [ ] Add a `stdlib/` directory for shipped `.tya` modules.
-    - [ ] Search stdlib after the importing file's directory and `TYA_PATH`.
-    - [ ] Keep user modules and `TYA_PATH` entries higher priority than stdlib.
-    - [ ] Keep module file name and `module` declaration matching rules.
-    - [ ] Add tests for same-directory, `TYA_PATH`, and stdlib precedence.
-  - [ ] Package stdlib with installed Tya
-    - [ ] Make installed `tya` find `share/tya/stdlib` outside the source checkout.
-    - [ ] Install `stdlib/*` from the Homebrew Formula.
-    - [ ] Add an installed-layout test for runtime plus stdlib lookup.
-  - [ ] Add initial lightweight stdlib modules
-    - [ ] Add `stdlib/string.tya`.
-    - [ ] Add `string.blank(text)`.
-    - [ ] Add `string.present(text)`.
-    - [ ] Add `stdlib/array.tya`.
-    - [ ] Add `array.empty(items)`.
-    - [ ] Add `array.first(items)`.
-    - [ ] Add tests and examples for every initial stdlib function.
-  - [ ] Keep v0.3 documentation and release snapshots aligned
-    - [ ] Update latest `docs/SPEC.md` and `docs/STDLIB.md` when v0.3 behavior is implemented.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Create `docs/v0.3.0/` spec, API, and stdlib snapshots before release.
-    - [ ] Update README install, run, development, and documentation sections for v0.3.0.
+  - [x] Add stdlib import search
+    - [x] Add a `stdlib/` directory for shipped `.tya` modules.
+    - [x] Search stdlib after the importing file's directory and `TYA_PATH`.
+    - [x] Keep user modules and `TYA_PATH` entries higher priority than stdlib.
+    - [x] Keep module file name and `module` declaration matching rules.
+    - [x] Add tests for same-directory, `TYA_PATH`, and stdlib precedence.
+  - [x] Package stdlib with installed Tya
+    - [x] Make installed `tya` find `share/tya/stdlib` outside the source checkout.
+    - [x] Install `stdlib/*` from the Homebrew Formula.
+    - [x] Add an installed-layout test for runtime plus stdlib lookup.
+  - [x] Add initial lightweight stdlib modules
+    - [x] Add `stdlib/string.tya`.
+    - [x] Add `string.blank(text)`.
+    - [x] Add `string.present(text)`.
+    - [x] Add `stdlib/array.tya`.
+    - [x] Add `array.empty(items)`.
+    - [x] Add `array.first(items)`.
+    - [x] Add tests and examples for every initial stdlib function.
+  - [x] Keep v0.3 documentation and release snapshots aligned
+    - [x] Update latest `docs/SPEC.md` and `docs/STDLIB.md` when v0.3 behavior is implemented.
+    - [x] Keep `docs/v0.3/` aligned with the v0.3 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Create a patch-tag snapshot only when an exact release archive needs one.
+    - [x] Update README install, run, development, and documentation sections for v0.3.
 - [ ] Ship v0.4 testing and script confidence
   - [x] Decide that v0.4 focuses on tests instead of expanding stdlib.
   - [x] Keep native-backed stdlib, JSON, and CSV out of v0.4.
-  - [x] Document v0.4 direction in `docs/v0.4.md`.
+  - [x] Document v0.4 direction in `docs/v0.4/PLAN.md`.
   - [ ] Add `tya test`.
     - [ ] With no argument, discover `*_test.tya` under the current directory.
     - [ ] With a directory argument, discover `*_test.tya` under that directory.
@@ -118,9 +132,10 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Ensure stdlib tests run through `tya test`.
   - [ ] Keep v0.4 documentation and release snapshots aligned.
     - [ ] Update latest docs when v0.4 behavior is implemented.
+    - [ ] Keep `docs/v0.4/` aligned with the v0.4 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Create `docs/v0.4.0/` snapshots before release.
-    - [ ] Update README install, run, development, and documentation sections for v0.4.0.
+    - [ ] Create a patch-tag snapshot only when an exact release archive needs one.
+    - [ ] Update README install, run, development, and documentation sections for v0.4.
 
 ## Verification Reference
 

@@ -1,6 +1,6 @@
 # Tya v0.3 Standard Attached Library
 
-This document defines the standard attached library planned for Tya v0.3.
+This document defines the standard attached library for Tya v0.3.
 
 The standard attached library is a set of `.tya` modules shipped with Tya. It is
 not a package manager and it does not download third-party code.
@@ -22,7 +22,7 @@ The module search order is:
 
 ## Initial Scope
 
-v0.3 should start with lightweight modules that prove the attached-library
+v0.3 starts with lightweight modules that prove the attached-library
 mechanism.
 
 Included in the initial scope:
@@ -48,7 +48,7 @@ print string.blank("  ")
 print string.present("tya")
 ```
 
-Planned functions:
+Functions:
 
 ```tya
 blank text
@@ -68,7 +68,7 @@ print array.empty([])
 print array.first(["tya"])
 ```
 
-Planned functions:
+Functions:
 
 ```tya
 empty items

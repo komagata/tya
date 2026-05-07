@@ -1,0 +1,38 @@
+# v0.3 attached standard library imports.
+cd $REPO
+exec go run ./cmd/tya run $WORK/std/main.tya
+stdout 'true\nfalse\ntrue\ntya\n'
+! stderr .
+
+env TYA_PATH=$WORK/lib
+exec go run ./cmd/tya run $WORK/precedence/main.tya
+stdout 'local string\npath array\n'
+! stderr .
+
+exec go run ./cmd/tya version
+stdout '0.3.0\n'
+! stderr .
+
+-- std/main.tya --
+import string
+import array
+
+print string.blank("  ")
+print string.present("  ")
+print array.empty([])
+print array.first(["tya"])
+
+-- precedence/main.tya --
+import string
+import array
+
+print string.blank("ignored")
+print array.empty([])
+
+-- precedence/string.tya --
+module string
+  blank = text -> "local string"
+
+-- lib/array.tya --
+module array
+  empty = items -> "path array"

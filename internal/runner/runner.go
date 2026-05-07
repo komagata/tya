@@ -169,6 +169,9 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 		}
 		candidates = append(candidates, filepath.Join(dir, fileName))
 	}
+	for _, dir := range stdlibDirs() {
+		candidates = append(candidates, filepath.Join(dir, fileName))
+	}
 	for _, candidate := range candidates {
 		if _, err := os.Stat(candidate); err == nil {
 			return candidate, nil
@@ -177,6 +180,27 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("module not found: %s", name)
+}
+
+func stdlibDirs() []string {
+	dirs := []string{filepath.Join("stdlib")}
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		dirs = append(dirs,
+			filepath.Join(exeDir, "stdlib"),
+			filepath.Clean(filepath.Join(exeDir, "..", "share", "tya", "stdlib")),
+		)
+	}
+	seen := map[string]bool{}
+	out := []string{}
+	for _, dir := range dirs {
+		if seen[dir] {
+			continue
+		}
+		seen[dir] = true
+		out = append(out, dir)
+	}
+	return out
 }
 
 func publicDefForFile(path string) (publicDef, error) {

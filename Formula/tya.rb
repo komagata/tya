@@ -8,14 +8,18 @@ class Tya < Formula
   def install
     system "go", "build", *std_go_args(output: bin/"tya"), "./cmd/tya"
     (pkgshare/"runtime").install Dir["runtime/*"]
+    (pkgshare/"stdlib").install Dir["stdlib/*"]
   end
 
   test do
     (testpath/"hello.tya").write <<~TYA
+      import string
+
       print "Hello, Tya"
+      print string.blank("  ")
     TYA
 
-    assert_equal "0.2.0\n", shell_output("#{bin}/tya version")
-    assert_equal "Hello, Tya\n", shell_output("#{bin}/tya run #{testpath}/hello.tya")
+    assert_equal "0.3.0\n", shell_output("#{bin}/tya version")
+    assert_equal "Hello, Tya\ntrue\n", shell_output("#{bin}/tya run #{testpath}/hello.tya")
   end
 end

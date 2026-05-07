@@ -143,17 +143,17 @@ reduce(items, 0, sum)</code></pre>
 <p><code>reduce(array, initial, function)</code> folds an array from left to right. The function receives the current accumulator and the item.</p>
 <h3 id="equality">Equality</h3>
 <pre><code class="language-tya">equal(left, right)</code></pre>
-<p><code>equal(left, right)</code> performs deep equality for v0.2 runtime values.</p>
+<p><code>equal(left, right)</code> performs deep equality for v0.3 runtime values.</p>
 <p>The <code>==</code> operator keeps its existing v0.1 behavior. <code>equal</code> is the explicit choice for deep equality in scripts and tests.</p>
 <h3 id="input">Input</h3>
 <pre><code class="language-tya">read_line()</code></pre>
 <p><code>read_line()</code> reads one line from standard input and returns it without the trailing newline. At end of input, it returns <code>nil</code>.</p>
 <h2 id="command-line">Command Line</h2>
-<p>v0.2 keeps the v0.1 user-facing commands:</p>
+<p>v0.3 keeps the v0.2 user-facing commands:</p>
 <pre><code class="language-sh">tya run file.tya [args...]
 tya build file.tya -o output
 tya version</code></pre>
-<p>v0.2 adds:</p>
+<p>v0.3 keeps:</p>
 <pre><code class="language-sh">tya check file.tya
 tya fmt file.tya
 tya emit-c file.tya</code></pre>
@@ -164,7 +164,7 @@ tya emit-c file.tya</code></pre>
 <pre><code class="language-sh">tya fmt -w file.tya</code></pre>
 <p><code>tya emit-c</code> emits generated C to standard output. This makes C emission a public developer-facing command instead of a hidden inspection option.</p>
 <h2 id="diagnostics">Diagnostics</h2>
-<p>v0.2 diagnostics should be friendly and source-oriented.</p>
+<p>v0.3 diagnostics should be friendly and source-oriented.</p>
 <p>Diagnostics should include:</p>
 <ul>
 <li>file path</li>
@@ -191,7 +191,7 @@ tya emit-c file.tya</code></pre>
 <li>Do not rewrite names.</li>
 <li>Do not change semantics.</li>
 </ul>
-<p>The formatter is allowed to be conservative in v0.2. It should prefer stable, predictable output over aggressive rewriting.</p>
+<p>The formatter is allowed to be conservative in v0.3. It should prefer stable, predictable output over aggressive rewriting.</p>
 <h2 id="reference-implementation">Reference Implementation</h2>
 <p>The v0.3 reference implementation remains the Go compile-to-C implementation:</p>
 <pre><code class="language-text">Go lexer

@@ -9,8 +9,8 @@
 Tya is a small indentation-based dynamic language with CoffeeScript feel and
 Golang practicality.
 
-Tya v0.2 is a compile-to-C language. The reference implementation contains a Go
-lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.2
+Tya v0.3 is a compile-to-C language. The reference implementation contains a Go
+lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.3
 specification tests.
 
 Website: <https://tya-lang.org/>
@@ -33,13 +33,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.2.0, download the release source and build the `tya` command locally.
-This currently requires Go because the v0.2 reference implementation is written
+For v0.3.0, download the release source and build the `tya` command locally.
+This currently requires Go because the v0.3 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.2.0.tar.gz | tar xz
-cd tya-0.2.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.3.0.tar.gz | tar xz
+cd tya-0.3.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -109,6 +109,16 @@ import greeting
 print greeting.hello("komagata")
 ```
 
+Standard attached libraries ship with Tya and use the same import syntax.
+
+```tya
+import string
+import array
+
+print string.blank("  ")
+print array.first(["tya"])
+```
+
 ## Documentation
 
 - [Guide](https://tya-lang.org/guide.html): read this first to learn Tya.
@@ -116,8 +126,8 @@ print greeting.hello("komagata")
 - [API](https://tya-lang.org/api.html): latest built-in function reference.
 - [Stdlib](https://tya-lang.org/stdlib.html): standard attached library reference.
 - [Naming](https://tya-lang.org/naming.html): naming rules.
-- [Versions](https://tya-lang.org/versions.html): release snapshots of the spec
-  and API.
+- [Versions](https://tya-lang.org/versions.html): minor-version specs and release
+  snapshots.
 - [v0.4 Plan](https://tya-lang.org/v0.4/plan.html): planned testing direction.
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
@@ -126,7 +136,7 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-Tya v0.2 includes:
+Tya v0.3 includes:
 
 - `.tya` files
 - indentation-based blocks
@@ -143,14 +153,15 @@ Tya v0.2 includes:
 - `try` error propagation
 - same-directory and `TYA_PATH` `import module_name` lookup with
   `module.member` access
+- attached standard library modules loaded from `stdlib/`
 - standard builtins listed in the API document
 - compile-to-C execution through `tya run`, `tya build`, and `tya emit-c`
 - source checking through `tya check`
 - conservative source formatting through `tya fmt`
 
-Tya v0.2 does not include objects, classes, interfaces, inheritance, async,
-macros, package management, set literals, import aliases, or dictionary member
-access.
+Tya v0.3 does not include objects, classes, interfaces, inheritance, async,
+macros, package management, remote module install, JSON or CSV parsers, native
+standard modules, set literals, import aliases, or dictionary member access.
 
 ## Test
 
@@ -216,9 +227,15 @@ converted to static HTML pages with:
 node scripts/build_docs_pages.js
 ```
 
-When changing released language docs, keep versioned snapshots under
-`docs/vX.Y.Z/` and regenerate the HTML pages. The v0.2.0 frozen documents live
-under `docs/v0.2.0/`.
+Tya uses semantic versioning. Specification changes happen at the minor version
+level, such as `v0.3` and `v0.4`. Patch releases such as `v0.3.1` must not
+change language or standard-library semantics. Specification documents use
+minor-version labels such as `v0.3`.
+
+When changing planned language docs, keep minor-version documents under
+`docs/vX.Y/` and regenerate the HTML pages. Release snapshots for exact patch
+tags may live under `docs/vX.Y.Z/`; the v0.2.0 frozen documents live under
+`docs/v0.2.0/`.
 
 Before committing Go changes, format touched Go files and run the default test
 suite.
@@ -229,5 +246,5 @@ go test ./... -count=1
 ```
 
 Historical pre-v0.1 self-host notes and experiments live under
-`docs/archive/pre-v0.1/`. They are reference material, not current v0.2
+`docs/archive/pre-v0.1/`. They are reference material, not current v0.3
 authority or default verification gates.

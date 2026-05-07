@@ -25,7 +25,7 @@
     </nav>
     <article class="doc-content">
 <h1 id="tya-v0-3-standard-attached-library">Tya v0.3 Standard Attached Library</h1>
-<p>This document defines the standard attached library planned for Tya v0.3.</p>
+<p>This document defines the standard attached library for Tya v0.3.</p>
 <p>The standard attached library is a set of <code>.tya</code> modules shipped with Tya. It is not a package manager and it does not download third-party code.</p>
 <h2 id="importing">Importing</h2>
 <p>Standard modules use the same import syntax as user modules.</p>
@@ -38,7 +38,7 @@ import array</code></pre>
 <li>The <code>stdlib/</code> directory shipped with Tya.</li>
 </ol>
 <h2 id="initial-scope">Initial Scope</h2>
-<p>v0.3 should start with lightweight modules that prove the attached-library mechanism.</p>
+<p>v0.3 starts with lightweight modules that prove the attached-library mechanism.</p>
 <p>Included in the initial scope:</p>
 <ul>
 <li><code>string</code></li>
@@ -58,7 +58,7 @@ import array</code></pre>
 
 print string.blank(&quot;  &quot;)
 print string.present(&quot;tya&quot;)</code></pre>
-<p>Planned functions:</p>
+<p>Functions:</p>
 <pre><code class="language-tya">blank text
 present text</code></pre>
 <p><code>blank(text)</code> returns <code>true</code> when <code>trim(text) == &quot;&quot;</code>.</p>
@@ -68,7 +68,7 @@ present text</code></pre>
 
 print array.empty([])
 print array.first([&quot;tya&quot;])</code></pre>
-<p>Planned functions:</p>
+<p>Functions:</p>
 <pre><code class="language-tya">empty items
 first items</code></pre>
 <p><code>empty(items)</code> returns <code>len(items) == 0</code>.</p>

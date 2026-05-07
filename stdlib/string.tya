@@ -1,0 +1,3 @@
+module string
+  blank = text -> trim(text) == ""
+  present = text -> trim(text) != ""

@@ -28,18 +28,26 @@
 <p><code>ROADMAP.md</code> is the single source of truth for current TODO, TASK, and roadmap planning.</p>
 <p>Pre-v0.1 planning documents and self-host migration notes are archived under <a href="docs/archive/pre-v0.1/"><code>docs/archive/pre-v0.1/</code></a>. They are historical references, not current language or implementation authority.</p>
 <h2 id="current-direction">Current Direction</h2>
-<p>Tya v0.2.0 is implemented as a small compile-to-C language. The frozen release documents are:</p>
+<p>Tya v0.3 is implemented as a small compile-to-C language. The frozen release documents are:</p>
 <ol>
 <li><a href="docs/v0.1.0/SPEC.md"><code>docs/v0.1.0/SPEC.md</code></a></li>
 <li><a href="docs/v0.1.0/API.md"><code>docs/v0.1.0/API.md</code></a></li>
 <li><a href="docs/v0.2.0/SPEC.md"><code>docs/v0.2.0/SPEC.md</code></a></li>
 <li><a href="docs/v0.2.0/API.md"><code>docs/v0.2.0/API.md</code></a></li>
 </ol>
+<p>Tya uses semantic versioning. Specification changes happen at the minor version level, such as <code>v0.3</code> and <code>v0.4</code>. Patch releases such as <code>v0.3.1</code> must not change language or standard-library semantics. In other words, the <code>x</code> in <code>0.0.x</code> is never a specification-change unit. Therefore, specification documents use minor-version labels such as <code>v0.3</code>.</p>
 <p>Latest editable documentation is:</p>
 <ol>
 <li><a href="spec.html"><code>docs/SPEC.md</code></a></li>
 <li><a href="api.html"><code>docs/API.md</code></a></li>
+<li><a href="stdlib.html"><code>docs/STDLIB.md</code></a></li>
 <li><a href="naming.html"><code>docs/NAMING.md</code></a></li>
+</ol>
+<p>Current planned minor-version documents are:</p>
+<ol>
+<li><a href="docs/v0.3/SPEC.md"><code>docs/v0.3/SPEC.md</code></a></li>
+<li><a href="docs/v0.3/STDLIB.md"><code>docs/v0.3/STDLIB.md</code></a></li>
+<li><a href="docs/v0.4/PLAN.md"><code>docs/v0.4/PLAN.md</code></a></li>
 </ol>
 <p>The v0.3 reference implementation remains:</p>
 <pre><code class="language-text">Go lexer
@@ -64,52 +72,53 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="current-roadmap">Current Roadmap</h2>
 <ul>
-<li>[ ] Ship v0.3 standard attached libraries</li>
+<li>[x] Ship v0.3 standard attached libraries</li>
 <ul>
-<li>[ ] Define v0.3 attached library scope</li>
+<li>[x] Define v0.3 attached library scope</li>
 <ul>
 <li>[x] Decide that JSON and CSV parsers are deferred from v0.3.</li>
 <li>[x] Keep JSON and CSV out of builtins and out of initial stdlib scope.</li>
 <li>[x] Specify that v0.3 adds attached libraries, not a package manager.</li>
 <li>[x] Document v0.3 scope in <code>docs/SPEC.md</code> and <code>docs/STDLIB.md</code>.</li>
 </ul>
-<li>[ ] Add stdlib import search</li>
+<li>[x] Add stdlib import search</li>
 <ul>
-<li>[ ] Add a <code>stdlib/</code> directory for shipped <code>.tya</code> modules.</li>
-<li>[ ] Search stdlib after the importing file's directory and <code>TYA_PATH</code>.</li>
-<li>[ ] Keep user modules and <code>TYA_PATH</code> entries higher priority than stdlib.</li>
-<li>[ ] Keep module file name and <code>module</code> declaration matching rules.</li>
-<li>[ ] Add tests for same-directory, <code>TYA_PATH</code>, and stdlib precedence.</li>
+<li>[x] Add a <code>stdlib/</code> directory for shipped <code>.tya</code> modules.</li>
+<li>[x] Search stdlib after the importing file's directory and <code>TYA_PATH</code>.</li>
+<li>[x] Keep user modules and <code>TYA_PATH</code> entries higher priority than stdlib.</li>
+<li>[x] Keep module file name and <code>module</code> declaration matching rules.</li>
+<li>[x] Add tests for same-directory, <code>TYA_PATH</code>, and stdlib precedence.</li>
 </ul>
-<li>[ ] Package stdlib with installed Tya</li>
+<li>[x] Package stdlib with installed Tya</li>
 <ul>
-<li>[ ] Make installed <code>tya</code> find <code>share/tya/stdlib</code> outside the source checkout.</li>
-<li>[ ] Install <code>stdlib/*</code> from the Homebrew Formula.</li>
-<li>[ ] Add an installed-layout test for runtime plus stdlib lookup.</li>
+<li>[x] Make installed <code>tya</code> find <code>share/tya/stdlib</code> outside the source checkout.</li>
+<li>[x] Install <code>stdlib/*</code> from the Homebrew Formula.</li>
+<li>[x] Add an installed-layout test for runtime plus stdlib lookup.</li>
 </ul>
-<li>[ ] Add initial lightweight stdlib modules</li>
+<li>[x] Add initial lightweight stdlib modules</li>
 <ul>
-<li>[ ] Add <code>stdlib/string.tya</code>.</li>
-<li>[ ] Add <code>string.blank(text)</code>.</li>
-<li>[ ] Add <code>string.present(text)</code>.</li>
-<li>[ ] Add <code>stdlib/array.tya</code>.</li>
-<li>[ ] Add <code>array.empty(items)</code>.</li>
-<li>[ ] Add <code>array.first(items)</code>.</li>
-<li>[ ] Add tests and examples for every initial stdlib function.</li>
+<li>[x] Add <code>stdlib/string.tya</code>.</li>
+<li>[x] Add <code>string.blank(text)</code>.</li>
+<li>[x] Add <code>string.present(text)</code>.</li>
+<li>[x] Add <code>stdlib/array.tya</code>.</li>
+<li>[x] Add <code>array.empty(items)</code>.</li>
+<li>[x] Add <code>array.first(items)</code>.</li>
+<li>[x] Add tests and examples for every initial stdlib function.</li>
 </ul>
-<li>[ ] Keep v0.3 documentation and release snapshots aligned</li>
+<li>[x] Keep v0.3 documentation and release snapshots aligned</li>
 <ul>
-<li>[ ] Update latest <code>docs/SPEC.md</code> and <code>docs/STDLIB.md</code> when v0.3 behavior is implemented.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Create <code>docs/v0.3.0/</code> spec, API, and stdlib snapshots before release.</li>
-<li>[ ] Update README install, run, development, and documentation sections for v0.3.0.</li>
+<li>[x] Update latest <code>docs/SPEC.md</code> and <code>docs/STDLIB.md</code> when v0.3 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.3/</code> aligned with the v0.3 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Create a patch-tag snapshot only when an exact release archive needs one.</li>
+<li>[x] Update README install, run, development, and documentation sections for v0.3.</li>
 </ul>
 </ul>
 <li>[ ] Ship v0.4 testing and script confidence</li>
 <ul>
 <li>[x] Decide that v0.4 focuses on tests instead of expanding stdlib.</li>
 <li>[x] Keep native-backed stdlib, JSON, and CSV out of v0.4.</li>
-<li>[x] Document v0.4 direction in <code>docs/v0.4.md</code>.</li>
+<li>[x] Document v0.4 direction in <code>docs/v0.4/PLAN.md</code>.</li>
 <li>[ ] Add <code>tya test</code>.</li>
 <ul>
 <li>[ ] With no argument, discover <code>*_test.tya</code> under the current directory.</li>
@@ -133,9 +142,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[ ] Keep v0.4 documentation and release snapshots aligned.</li>
 <ul>
 <li>[ ] Update latest docs when v0.4 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.4/</code> aligned with the v0.4 minor specification.</li>
 <li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Create <code>docs/v0.4.0/</code> snapshots before release.</li>
-<li>[ ] Update README install, run, development, and documentation sections for v0.4.0.</li>
+<li>[ ] Create a patch-tag snapshot only when an exact release archive needs one.</li>
+<li>[ ] Update README install, run, development, and documentation sections for v0.4.</li>
 </ul>
 </ul>
 </ul>

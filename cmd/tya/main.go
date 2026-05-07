@@ -17,7 +17,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.2.0"
+const version = "0.3.0"
 
 var lineColErrorRE = regexp.MustCompile(`^(\d+):(\d+):\s*(.*)$`)
 

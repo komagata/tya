@@ -1,6 +1,6 @@
-# Tya v0.2 API
+# Tya v0.3 API
 
-This document defines the standard built-in functions for Tya v0.2.
+This document defines the standard built-in functions for Tya v0.3.
 
 ## Core
 
@@ -119,9 +119,9 @@ args()
 env name
 ```
 
-## Not In v0.2
+## Not In v0.3
 
-The following functions are not standard builtins in v0.2.
+The following functions are not standard builtins in v0.3.
 
 ```text
 each

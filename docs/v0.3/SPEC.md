@@ -197,7 +197,7 @@ function receives the current accumulator and the item.
 equal(left, right)
 ```
 
-`equal(left, right)` performs deep equality for v0.2 runtime values.
+`equal(left, right)` performs deep equality for v0.3 runtime values.
 
 The `==` operator keeps its existing v0.1 behavior. `equal` is the explicit
 choice for deep equality in scripts and tests.
@@ -213,7 +213,7 @@ trailing newline. At end of input, it returns `nil`.
 
 ## Command Line
 
-v0.2 keeps the v0.1 user-facing commands:
+v0.3 keeps the v0.2 user-facing commands:
 
 ```sh
 tya run file.tya [args...]
@@ -221,7 +221,7 @@ tya build file.tya -o output
 tya version
 ```
 
-v0.2 adds:
+v0.3 keeps:
 
 ```sh
 tya check file.tya
@@ -250,7 +250,7 @@ public developer-facing command instead of a hidden inspection option.
 
 ## Diagnostics
 
-v0.2 diagnostics should be friendly and source-oriented.
+v0.3 diagnostics should be friendly and source-oriented.
 
 Diagnostics should include:
 
@@ -287,7 +287,7 @@ Formatting rules:
 - Do not rewrite names.
 - Do not change semantics.
 
-The formatter is allowed to be conservative in v0.2. It should prefer stable,
+The formatter is allowed to be conservative in v0.3. It should prefer stable,
 predictable output over aggressive rewriting.
 
 ## Reference Implementation
