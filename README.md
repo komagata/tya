@@ -17,25 +17,33 @@ Website: <https://tya-lang.org/>
 
 ## Requirements
 
-- Go
 - A C compiler available as `cc`
 
 ## Install
 
-```sh
-go install github.com/komagata/tya/cmd/tya@v0.1.0
-```
+Prebuilt installers are not published yet.
 
-For local development from this repository:
+For v0.1.0, download the release source and build the `tya` command locally.
+This currently requires Go because the v0.1 reference implementation is written
+in Go.
 
 ```sh
-go run ./cmd/tya version
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.1.0.tar.gz | tar xz
+cd tya-0.1.0
+go build -o tya ./cmd/tya
+./tya version
 ```
 
 ## Run
 
+Create `hello.tya`.
+
+```tya
+print "Hello, Tya"
+```
+
 ```sh
-tya run examples/hello.tya
+tya run hello.tya
 ```
 
 `tya run` builds a temporary executable, runs it, and removes the temporary
@@ -44,7 +52,7 @@ file after execution.
 To keep the executable:
 
 ```sh
-tya build examples/hello.tya -o hello
+tya build hello.tya -o hello
 ./hello
 ```
 
