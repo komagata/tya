@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guide - Tya</title>
+  <link rel="stylesheet" href="document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="index.html">
+        <img src="assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="guide.html">Guide</a>
+        <a href="spec.html">Spec</a>
+        <a href="api.html">API</a>
+        <a href="naming.html">Naming</a>
+        <a href="roadmap.html">Roadmap</a>
+        <a href="roadmap-structure.html">Structure</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-guide">Tya Guide</h1>
+<p>Tya is a small indentation-based dynamic language inspired by CoffeeScript. This guide is for reading from top to bottom.</p>
+<h2 id="run-a-program">Run A Program</h2>
+<pre><code class="language-sh">tya run examples/hello.tya</code></pre>
+<p><code>tya run</code> builds a temporary executable, runs it, and removes the temporary file. This is the normal way to run a Tya program during development.</p>
+<p>To keep the executable, use <code>tya build</code>.</p>
+<pre><code class="language-sh">tya build examples/hello.tya
+./hello</code></pre>
+<p>Without <code>-o</code>, <code>tya build</code> writes an executable named after the input file basename in the current directory. Use <code>-o</code> to choose the output path.</p>
+<pre><code class="language-sh">tya build examples/hello.tya -o bin/hello</code></pre>
+<p>To print the installed Tya version:</p>
+<pre><code class="language-sh">tya version</code></pre>
+<h2 id="values">Values</h2>
+<pre><code class="language-tya">name = &quot;Tya&quot;
+age = 1
+pi = 3.14
+ready = true
+missing = nil</code></pre>
+<p>Strings can contain interpolated expressions.</p>
+<pre><code class="language-tya">print &quot;Hello, {name}&quot;</code></pre>
+<h2 id="names">Names</h2>
+<p>Use <code>snake_case</code> for variables, functions, modules, dictionary keys, and module members. Use <code>SCREAMING_SNAKE_CASE</code> for constants.</p>
+<pre><code class="language-tya">user_name = &quot;komagata&quot;
+MAX_COUNT = 10</code></pre>
+<p>See <code>docs/NAMING.md</code> for the full naming rules.</p>
+<h2 id="conditions">Conditions</h2>
+<pre><code class="language-tya">if age &gt;= 20
+  print &quot;adult&quot;
+elseif age &gt;= 13
+  print &quot;teen&quot;
+else
+  print &quot;young&quot;</code></pre>
+<p>Use <code>and</code>, <code>or</code>, and <code>not</code> for logic.</p>
+<pre><code class="language-tya">if ready and not missing
+  print &quot;ok&quot;</code></pre>
+<h2 id="loops">Loops</h2>
+<pre><code class="language-tya">count = 0
+while count &lt; 3
+  print count
+  count = count + 1</code></pre>
+<pre><code class="language-tya">items = [&quot;a&quot;, &quot;b&quot;]
+
+for item in items
+  print item
+
+for item, index in items
+  print &quot;{index}: {item}&quot;</code></pre>
+<p>Use <code>of</code> to iterate dictionary keys and values.</p>
+<pre><code class="language-tya">user = { name: &quot;komagata&quot;, age: 20 }
+
+for key, value of user
+  print &quot;{key}: {value}&quot;</code></pre>
+<h2 id="functions">Functions</h2>
+<p>Functions use <code>-&gt;</code>. The last expression is returned implicitly.</p>
+<pre><code class="language-tya">greet = name -&gt; &quot;Hello, {name}&quot;
+
+print greet &quot;Tya&quot;</code></pre>
+<p>Use an indented body for multiple statements.</p>
+<pre><code class="language-tya">double = value -&gt;
+  result = value * 2
+  result</code></pre>
+<p>Use <code>return</code> when returning early or returning multiple values.</p>
+<pre><code class="language-tya">parse_user = text -&gt;
+  if text == &quot;&quot;
+    return nil, error &quot;empty user&quot;
+  return { name: text }, nil</code></pre>
+<h2 id="arrays-and-dictionaries">Arrays And Dictionaries</h2>
+<pre><code class="language-tya">items = [1, 2]
+push items, 3
+print items[0]</code></pre>
+<pre><code class="language-tya">user = { name: &quot;komagata&quot;, age: 20 }
+
+print user[&quot;name&quot;]</code></pre>
+<p>Use index access for dictionaries. Dictionary member access is not part of Tya v0.1.</p>
+<h2 id="errors">Errors</h2>
+<p>Tya uses error values, not exceptions.</p>
+<pre><code class="language-tya">user, err = parse_user &quot;&quot;
+if err
+  print err[&quot;message&quot;]</code></pre>
+<p>Inside a function, <code>try</code> propagates the error part of a <code>value, err</code> result.</p>
+<pre><code class="language-tya">load_user = text -&gt;
+  user = try parse_user(text)
+  user[&quot;name&quot;]</code></pre>
+<h2 id="modules">Modules</h2>
+<p>Import another <code>.tya</code> file from the same directory.</p>
+<pre><code class="language-tya">import greeting
+
+print greeting.hello(&quot;komagata&quot;)</code></pre>
+<p>Each module file defines exactly one top-level <code>module</code>. The module name must match the file name.</p>
+<pre><code class="language-tya"># greeting.tya
+module greeting
+  hello = name -&gt; &quot;Hello, {name}&quot;</code></pre>
+<h2 id="standard-library">Standard Library</h2>
+<p>See <code>docs/API.md</code> for v0.1 built-in functions such as <code>print</code>, <code>len</code>, <code>read_file</code>, and <code>to_string</code>.</p>
+    </article>
+  </main>
+</body>
+</html>

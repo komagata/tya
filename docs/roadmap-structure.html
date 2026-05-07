@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roadmap Structure - Tya</title>
+  <link rel="stylesheet" href="document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="index.html">
+        <img src="assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="guide.html">Guide</a>
+        <a href="spec.html">Spec</a>
+        <a href="api.html">API</a>
+        <a href="naming.html">Naming</a>
+        <a href="roadmap.html">Roadmap</a>
+        <a href="roadmap-structure.html">Structure</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="roadmap-structure">Roadmap Structure</h1>
+<p>Roadmap Structure is a compact text format for showing roadmap hierarchy and progress in a way that remains readable in both monospace and proportional font environments.</p>
+<p>The format has one root Goal. Under the Goal are one or more Epics. Under each Epic are one or more Milestones. Under each Milestone are one or more Tasks.</p>
+<pre><code class="language-text">Goal
+    Epic
+        Milestone
+            Task</code></pre>
+<p>Each item is written on one line.</p>
+<pre><code class="language-text">{progress_bar} {percent}% {number} {title}</code></pre>
+<p>The Goal line has no number because there is only one Goal.</p>
+<pre><code class="language-text">{progress_bar} {percent}% {goal_title}</code></pre>
+<h2 id="example">Example</h2>
+<pre><code class="language-text">Roadmap Structure
+
+████░░░░░░ 45% Self-host tya
+    ████░░░░░░ 40% 1 Self-host AST migration
+        ████░░░░░░ 40% 1-1 Parser AST migration
+            ████████░░ 80% 1-1-1 Expression AST support
+            ░░░░░░░░░░ 0% 1-1-2 Statement AST support
+        ██░░░░░░░░ 20% 1-2 Checker support
+            ░░░░░░░░░░ 0% 1-2-1 AST node type checking
+        █░░░░░░░░░ 10% 1-3 Codegen support
+            █░░░░░░░░░ 10% 1-3-1 AST code generation
+    ██████░░░░ 60% 2 CLI usability
+        ███████░░░ 70% 2-1 Error output
+            ██████████ 100% 2-1-1 Show line and column numbers
+            ████░░░░░░ 40% 2-1-2 Organize diagnostic messages
+        ███░░░░░░░ 30% 2-2 Commands
+            ░░░░░░░░░░ 0% 2-2-1 Add format command
+            ░░░░░░░░░░ 0% 2-2-2 Add inspect AST command
+    ███░░░░░░░ 30% 3 Documentation
+        ██████████ 100% 3-1 Roadmap
+            ██████████ 100% 3-1-1 Define Roadmap Structure
+        ██░░░░░░░░ 20% 3-2 Self-host
+            ██░░░░░░░░ 20% 3-2-1 Write AST migration steps
+        ███░░░░░░░ 30% 3-3 CLI
+            ███░░░░░░░ 30% 3-3-1 Organize usage examples</code></pre>
+<h2 id="terms">Terms</h2>
+<ul>
+<li>Goal: the single top-level objective of the roadmap.</li>
+<li>Epic: a large outcome that contributes to the Goal.</li>
+<li>Milestone: a meaningful checkpoint that completes part of an Epic.</li>
+<li>Task: a leaf-level work item with implementation, docs, and verification.</li>
+</ul>
+<h2 id="numbering">Numbering</h2>
+<ul>
+<li>Epics use integer numbers: <code>1</code>, <code>2</code>, <code>3</code>.</li>
+<li>Milestones use the Epic number plus a local number: <code>1-1</code>, <code>1-2</code>, <code>2-1</code>.</li>
+<li>Tasks use the Milestone number plus a local number: <code>1-1-1</code>, <code>1-1-2</code>,</li>
+</ul>
+<p>  <code>2-1-1</code>.</p>
+<ul>
+<li>The number describes the item's position in the hierarchy.</li>
+<li>Renumber items when the roadmap is reorganized.</li>
+</ul>
+<h2 id="progress-bars">Progress Bars</h2>
+<ul>
+<li>Use a 10-cell progress bar.</li>
+<li>Use <code>█</code> for completed cells.</li>
+<li>Use <code>░</code> for incomplete cells.</li>
+<li>Put the percentage to the right of the bar.</li>
+<li>Do not put variable-width text to the left of the bar.</li>
+<li>Round progress to the nearest 10% for the bar. Keep the numeric percentage</li>
+</ul>
+<p>  accurate enough for planning.</p>
+<p>Examples:</p>
+<pre><code class="language-text">░░░░░░░░░░ 0%
+█░░░░░░░░░ 10%
+█████░░░░░ 50%
+██████████ 100%</code></pre>
+<h2 id="indentation">Indentation</h2>
+<ul>
+<li>The Goal is not indented.</li>
+<li>Epics are indented by 4 spaces.</li>
+<li>Milestones are indented by 8 spaces.</li>
+<li>Tasks are indented by 12 spaces.</li>
+<li>Keep exactly one item per line.</li>
+<li>Do not add blank lines between Epics.</li>
+</ul>
+<h2 id="completion-rules">Completion Rules</h2>
+<ul>
+<li>A Task is complete when its implementation, docs, and required verification</li>
+</ul>
+<p>  are complete.</p>
+<ul>
+<li>A Milestone is complete when every Task below it is complete.</li>
+<li>An Epic is complete when every Milestone below it is complete.</li>
+<li>The Goal progress is derived from the Epics.</li>
+</ul>
+<h2 id="maintenance-rules">Maintenance Rules</h2>
+<ul>
+<li>Keep active work near the top.</li>
+<li>Do not update <code>ROADMAP.md</code> for every small implementation slice.</li>
+<li>Report small completed slices in chat using this format instead of changing</li>
+</ul>
+<p>  the roadmap immediately.</p>
+<ul>
+<li>Batch <code>ROADMAP.md</code> updates after several related Tasks complete, when a</li>
+</ul>
+<p>  Milestone changes meaningfully, or when the strategy changes.</p>
+<ul>
+<li>Treat <code>ROADMAP.md</code> as the stable remaining-work plan, not as a chronological</li>
+</ul>
+<p>  progress log.</p>
+<ul>
+<li>When finishing work, remove the completed Task from the roadmap instead of</li>
+</ul>
+<p>  keeping historical completion records there.</p>
+<ul>
+<li>If all Tasks under a Milestone have been removed, remove the Milestone too</li>
+</ul>
+<p>  unless it still has meaningful remaining work.</p>
+<ul>
+<li>If all Milestones under an Epic have been removed, remove the Epic too unless</li>
+</ul>
+<p>  it still has meaningful remaining work.</p>
+<ul>
+<li>If a supporting document contains a task list, replace it with a pointer to</li>
+</ul>
+<p>  the relevant roadmap task.</p>
+<ul>
+<li>Update <code>ROADMAP.md</code> only in the same change that meaningfully changes the</li>
+</ul>
+<p>  remaining-work plan.</p>
+<h2 id="stability-rules">Stability Rules</h2>
+<p><code>ROADMAP.md</code> is a planning document, not a work diary. To prevent roadmap churn, apply these rules before editing it:</p>
+<ul>
+<li>Do not append a new status bullet for each passing test, helper extraction,</li>
+</ul>
+<p>  fixture adjustment, or narrow implementation slice.</p>
+<ul>
+<li>Do not rewrite task titles only to match the latest implementation wording if</li>
+</ul>
+<p>  the remaining outcome is unchanged.</p>
+<ul>
+<li>Do not renumber items unless the hierarchy itself changes.</li>
+<li>Keep completed micro-work out of <code>ROADMAP.md</code>; report it in chat using the</li>
+</ul>
+<p>  Roadmap Structure format instead.</p>
+<ul>
+<li>Batch roadmap edits into one update after several related slices complete, a</li>
+</ul>
+<p>  Task is fully removed, a Milestone changes scope, or the strategy changes.</p>
+<ul>
+<li>If progress needs to be recorded between roadmap updates, use a short chat</li>
+</ul>
+<p>  report or a dedicated design/status note. Do not grow <code>ROADMAP.md</code> as a   chronological log.</p>
+<ul>
+<li>Before editing <code>ROADMAP.md</code>, state which of these edit reasons applies:</li>
+</ul>
+<p>  completed Task removal, Milestone scope change, Epic scope change, strategy   change, or verification policy change.</p>
+<ul>
+<li>If none of those reasons applies, leave <code>ROADMAP.md</code> unchanged.</li>
+<li>Do not treat a passing focused test, a newly covered example, or a helper</li>
+</ul>
+<p>  extraction as a roadmap edit reason by itself.</p>
+<ul>
+<li>Prefer updating chat progress after every small Task and updating</li>
+</ul>
+<p>  <code>ROADMAP.md</code> only after a coherent batch changes the remaining-work plan.</p>
+<h2 id="readability-test">Readability Test</h2>
+<p>When changing this format, test it with:</p>
+<ul>
+<li>one Goal.</li>
+<li>multiple Epics.</li>
+<li>multiple Milestones under each Epic.</li>
+<li>multiple Tasks under each Milestone.</li>
+<li>one item per line.</li>
+<li>percentage text on the right side of the progress bar.</li>
+<li>no variable-width text on the left side of the progress bar.</li>
+<li>no blank lines between Epics.</li>
+<li>readable output in both monospace and proportional font environments.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

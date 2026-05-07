@@ -1,0 +1,148 @@
+:root {
+  color-scheme: light;
+  --ink: #17201b;
+  --muted: #5f6b64;
+  --line: #dfe8e1;
+  --panel: #f7faf7;
+  --code: #15201b;
+  --accent: #2f7d5b;
+  --paper: #fffdf7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.65;
+}
+
+a {
+  color: var(--accent);
+}
+
+.doc-shell {
+  width: min(920px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 64px;
+}
+
+.doc-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.brand img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: flex-end;
+  font-size: 0.95rem;
+}
+
+.links a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.links a:hover {
+  color: var(--accent);
+}
+
+.doc-content {
+  padding-top: 34px;
+}
+
+.doc-content h1 {
+  margin: 0 0 20px;
+  font-size: clamp(2.2rem, 7vw, 4rem);
+  line-height: 0.98;
+}
+
+.doc-content h2 {
+  margin: 42px 0 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 1.55rem;
+}
+
+.doc-content h3 {
+  margin: 28px 0 8px;
+  font-size: 1.2rem;
+}
+
+.doc-content p,
+.doc-content li {
+  font-size: 1rem;
+}
+
+.doc-content p {
+  margin: 12px 0;
+}
+
+.doc-content ul,
+.doc-content ol {
+  margin: 12px 0 18px;
+  padding-left: 24px;
+}
+
+.doc-content code {
+  border-radius: 5px;
+  background: #eef4ee;
+  padding: 0.12em 0.34em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.92em;
+}
+
+.doc-content pre {
+  overflow-x: auto;
+  margin: 18px 0;
+  border: 1px solid #26392f;
+  border-radius: 8px;
+  background: var(--code);
+  padding: 16px;
+}
+
+.doc-content pre code {
+  display: block;
+  min-width: max-content;
+  background: transparent;
+  color: #eaf2ed;
+  padding: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .doc-nav {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .links {
+    justify-content: flex-start;
+  }
+}

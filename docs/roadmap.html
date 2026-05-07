@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roadmap - Tya</title>
+  <link rel="stylesheet" href="document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="index.html">
+        <img src="assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="guide.html">Guide</a>
+        <a href="spec.html">Spec</a>
+        <a href="api.html">API</a>
+        <a href="naming.html">Naming</a>
+        <a href="roadmap.html">Roadmap</a>
+        <a href="roadmap-structure.html">Structure</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-roadmap">Tya Roadmap</h1>
+<p><code>ROADMAP.md</code> is the single source of truth for current TODO, TASK, and roadmap planning.</p>
+<p>Pre-v0.1 planning documents and self-host migration notes are archived under <a href="docs/archive/pre-v0.1/"><code>docs/archive/pre-v0.1/</code></a>. They are historical references, not current language or implementation authority.</p>
+<h2 id="roadmap-structure">Roadmap Structure</h2>
+<p>Roadmap item definitions and maintenance rules live in <a href="roadmap-structure.html"><code>docs/ROADMAP_STRUCTURE.md</code></a>.</p>
+<h2 id="current-direction">Current Direction</h2>
+<p>Tya v0.1 is frozen as a small compile-to-C language. The authoritative specification is:</p>
+<ol>
+<li><a href="spec.html"><code>docs/SPEC.md</code></a></li>
+<li><a href="api.html"><code>docs/API.md</code></a></li>
+<li><a href="naming.html"><code>docs/NAMING.md</code></a></li>
+</ol>
+<p>The v0.1 reference implementation is:</p>
+<pre><code class="language-text">Go lexer
+Go parser
+Go AST
+Go checker
+Go C emitter
+C runtime
+v0.1 specification tests</code></pre>
+<p>Go interpreter behavior, current <code>selfhost/*</code>, ASTMODE, legacy node strings, and self-host bootstrap gates are not v0.1 authority.</p>
+<h2 id="implementation-tooling-policy">Implementation Tooling Policy</h2>
+<p>The v0.1 compiler implementation should stay hand-written:</p>
+<pre><code class="language-text">Go lexer
+Go parser
+Go AST
+Go checker
+Go C emitter</code></pre>
+<p>Do not add a parser generator or large grammar framework for v0.1. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler-front-end authority. They may be useful references or future editor tooling, but the v0.1 compiler path should remain explicit Go code.</p>
+<p>Use small test-support dependencies where they make the v0.1 specification easier to verify:</p>
+<pre><code class="language-text">github.com/google/go-cmp/cmp
+github.com/rogpeppe/go-internal/testscript</code></pre>
+<p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
+<h2 id="current-roadmap">Current Roadmap</h2>
+<p>There are no active roadmap items right now.</p>
+<p>Add new work here as unchecked Markdown nested task lists. Remove completed tasks instead of keeping <code>[x]</code> history in this file.</p>
+<h2 id="verification-reference">Verification Reference</h2>
+<p>Default verification:</p>
+<pre><code class="language-sh">go test ./... -count=1</code></pre>
+<p>Focused verification should prefer tests for the touched lexer, parser, checker, C emitter, runtime, examples, or docs. Self-host bootstrap checks are historical pre-v0.1 gates and are not default v0.1 verification.</p>
+    </article>
+  </main>
+</body>
+</html>
