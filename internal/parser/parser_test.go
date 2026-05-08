@@ -348,7 +348,7 @@ func TestParseRejectsLegacyModuleColonMember(t *testing.T) {
 }
 
 func TestParseImportStatement(t *testing.T) {
-	toks, errs := lexer.Lex("import greeting\nprint greeting.hello(\"komagata\")\n")
+	toks, errs := lexer.Lex("import http/server as http_server\nprint http_server.listen(8080)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -360,8 +360,11 @@ func TestParseImportStatement(t *testing.T) {
 	if !ok {
 		t.Fatalf("got %T", prog.Stmts[0])
 	}
-	if imp.Name != "greeting" {
+	if imp.Name != "http/server" {
 		t.Fatalf("got import %q", imp.Name)
+	}
+	if imp.Alias != "http_server" {
+		t.Fatalf("got alias %q", imp.Alias)
 	}
 }
 
@@ -393,17 +396,21 @@ func TestParseRejectsModuleInsideBlock(t *testing.T) {
 	}
 }
 
-func TestParseRejectsImportAlias(t *testing.T) {
+func TestParseImportAlias(t *testing.T) {
 	toks, errs := lexer.Lex("import greeting as g\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
-	if err == nil {
-		t.Fatal("expected import alias error")
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(err.Error(), "import aliases are not in Tya v0.1") {
-		t.Fatalf("unexpected error: %v", err)
+	imp, ok := prog.Stmts[0].(*ast.ImportStmt)
+	if !ok {
+		t.Fatalf("got %T", prog.Stmts[0])
+	}
+	if imp.Name != "greeting" || imp.Alias != "g" {
+		t.Fatalf("got import %#v", imp)
 	}
 }
 
@@ -1144,6 +1151,9 @@ func dumpProgram(prog *ast.Program) string {
 func dumpStmt(stmt ast.Stmt) string {
 	switch n := stmt.(type) {
 	case *ast.ImportStmt:
+		if n.Alias != "" {
+			return "import " + n.Name + " as " + n.Alias
+		}
 		return "import " + n.Name
 	case *ast.ModuleDecl:
 		parts := make([]string, 0, len(n.Members))

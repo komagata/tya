@@ -226,6 +226,17 @@ func TestEmitCCompilesImportedModuleMemberCalls(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesImportedModuleAlias(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  hello = name -> \"Hello, {name}\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import greeting as g\nsay = name -> g.hello(name)\nprint say(\"komagata\")\n")
+	out := compileAndRunFile(t, main)
+	if string(out) != "Hello, komagata\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)

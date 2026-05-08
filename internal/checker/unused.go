@@ -58,8 +58,13 @@ func checkUnusedStmts(stmts []ast.Stmt, scope *useScope) error {
 	for _, stmt := range stmts {
 		switch n := stmt.(type) {
 		case *ast.ImportStmt:
-			scope.define(n.Name, n.NameTok.Line, n.NameTok.Col)
-			scope.use(n.Name)
+			binding := n.BindingName()
+			tok := n.NameTok
+			if n.Alias != "" {
+				tok = n.AliasTok
+			}
+			scope.define(binding, tok.Line, tok.Col)
+			scope.use(binding)
 		case *ast.AssignStmt:
 			for _, value := range n.Values {
 				checkUnusedExpr(value, scope)

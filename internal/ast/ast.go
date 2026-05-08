@@ -1,6 +1,10 @@
 package ast
 
-import "tya/internal/token"
+import (
+	"strings"
+
+	"tya/internal/token"
+)
 
 type Program struct {
 	Stmts []Stmt
@@ -24,11 +28,27 @@ type ExprStmt struct {
 func (*ExprStmt) stmt() {}
 
 type ImportStmt struct {
-	Name    string
-	NameTok token.Token
+	Name     string
+	NameTok  token.Token
+	Alias    string
+	AliasTok token.Token
 }
 
 func (*ImportStmt) stmt() {}
+
+func (s *ImportStmt) ModuleName() string {
+	if i := strings.LastIndex(s.Name, "/"); i >= 0 {
+		return s.Name[i+1:]
+	}
+	return s.Name
+}
+
+func (s *ImportStmt) BindingName() string {
+	if s.Alias != "" {
+		return s.Alias
+	}
+	return s.ModuleName()
+}
 
 type IfStmt struct {
 	Cond Expr

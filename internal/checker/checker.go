@@ -41,10 +41,15 @@ func CheckModuleFile(prog *ast.Program, path string) error {
 		return fmt.Errorf("invalid module file name %s", filepath.Base(path))
 	}
 	modules := []string{}
+	seenModule := false
 	for _, stmt := range prog.Stmts {
 		switch n := stmt.(type) {
 		case *ast.ImportStmt:
+			if seenModule {
+				return fmt.Errorf("%s may only contain imports before its module declaration", filepath.Base(path))
+			}
 		case *ast.ModuleDecl:
+			seenModule = true
 			modules = append(modules, n.Name)
 			if n.Name != want {
 				return fmt.Errorf("%s must define module %s", filepath.Base(path), want)
@@ -179,10 +184,20 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 	for _, stmt := range stmts {
 		switch n := stmt.(type) {
 		case *ast.ImportStmt:
-			if !valueNameRE.MatchString(n.Name) || strings.HasPrefix(n.Name, "_") {
-				return fmt.Errorf("%d:%d: invalid module name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+			for _, segment := range strings.Split(n.Name, "/") {
+				if !valueNameRE.MatchString(segment) || strings.HasPrefix(segment, "_") {
+					return fmt.Errorf("%d:%d: invalid module name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+				}
 			}
-			scope.define(n.Name, kindModule)
+			binding := n.BindingName()
+			tok := n.NameTok
+			if n.Alias != "" {
+				tok = n.AliasTok
+			}
+			if !valueNameRE.MatchString(binding) || strings.HasPrefix(binding, "_") {
+				return fmt.Errorf("%d:%d: invalid import binding %s", tok.Line, tok.Col, binding)
+			}
+			scope.define(binding, kindModule)
 		case *ast.AssignStmt:
 			for _, value := range n.Values {
 				if err := checkExpr(value, scope); err != nil {

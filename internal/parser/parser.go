@@ -135,13 +135,29 @@ func (p *Parser) importStmt() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+	parts := []string{name.Lexeme}
+	for p.match(token.SLASH) {
+		seg, err := p.expectName("expected module path segment after '/'")
+		if err != nil {
+			return nil, err
+		}
+		parts = append(parts, seg.Lexeme)
+	}
+	var alias string
+	var aliasTok token.Token
 	if p.at(token.IDENT) && p.peek().Lexeme == "as" {
-		return nil, p.err("import aliases are not in Tya v0.1")
+		p.next()
+		tok, err := p.expectName("expected import alias after as")
+		if err != nil {
+			return nil, err
+		}
+		alias = tok.Lexeme
+		aliasTok = tok
 	}
 	if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
 		return nil, p.err("expected newline after import")
 	}
-	return &ast.ImportStmt{Name: name.Lexeme, NameTok: name}, nil
+	return &ast.ImportStmt{Name: strings.Join(parts, "/"), NameTok: name, Alias: alias, AliasTok: aliasTok}, nil
 }
 
 func (p *Parser) moduleDecl() (ast.Stmt, error) {

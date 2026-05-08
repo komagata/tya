@@ -1,0 +1,79 @@
+# v0.17 import aliases, module paths, conflicts, load-once, and cycles.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/alias/main.tya
+stdout 'Hello, komagata\n'
+
+! exec go run ./cmd/tya run $WORK/alias_only/main.tya
+stderr 'undefined variable greeting'
+
+exec go run ./cmd/tya run $WORK/path/main.tya
+stdout 'listening on 8080\n'
+
+exec go run ./cmd/tya run $WORK/load_once/main.tya
+stdout 'util\nutil\n'
+
+! exec go run ./cmd/tya --emit-c $WORK/conflict/main.tya
+stderr 'import name conflict: util'
+
+! exec go run ./cmd/tya --emit-c $WORK/cycle/main.tya
+stderr 'import cycle: a -> b -> a'
+
+-- alias/main.tya --
+import greeting as g
+print g.hello("komagata")
+
+-- alias/greeting.tya --
+module greeting
+  hello = name -> "Hello, {name}"
+
+-- alias_only/main.tya --
+import greeting as g
+print greeting.hello("komagata")
+
+-- alias_only/greeting.tya --
+module greeting
+  hello = name -> "Hello, {name}"
+
+-- path/main.tya --
+import http/server as http_server
+print http_server.listen(8080)
+
+-- path/http/server.tya --
+module server
+  listen = port -> "listening on {port}"
+
+-- load_once/main.tya --
+import util
+import util as u
+print util.name
+print u.name
+
+-- load_once/util.tya --
+module util
+  name = "util"
+
+-- conflict/main.tya --
+import string as util
+import array as util
+
+-- conflict/string.tya --
+module string
+  name = "string"
+
+-- conflict/array.tya --
+module array
+  name = "array"
+
+-- cycle/main.tya --
+import a
+
+-- cycle/a.tya --
+import b
+module a
+  name = "a"
+
+-- cycle/b.tya --
+import a
+module b
+  name = "b"

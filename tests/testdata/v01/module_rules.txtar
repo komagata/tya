@@ -7,8 +7,7 @@ stderr 'greeting.tya must define module greeting'
 ! exec go run ./cmd/tya --emit-c $WORK/two_modules/main.tya
 stderr 'greeting.tya must define exactly one module'
 
-! exec go run ./cmd/tya --emit-c $WORK/alias/main.tya
-stderr 'import aliases are not in Tya v0.1'
+exec go run ./cmd/tya --emit-c $WORK/alias/main.tya
 
 -- mismatch/main.tya --
 import greeting
@@ -31,3 +30,7 @@ module greeting
 -- alias/main.tya --
 import greeting as message
 print message.text
+
+-- alias/greeting.tya --
+module greeting
+  text = "hello"

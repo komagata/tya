@@ -76,7 +76,8 @@ func LoadUserSourceWithModules(path string) (string, []string, error) {
 	if err := ValidateFileName(path); err != nil {
 		return "", nil, err
 	}
-	src, modules, err := loadSource(path, map[string]bool{}, false)
+	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}}
+	src, modules, err := loadSource(path, state, false)
 	if err != nil {
 		return "", nil, err
 	}
@@ -88,16 +89,64 @@ type publicDef struct {
 	kind string
 }
 
-func loadSource(path string, loading map[string]bool, module bool) (string, []string, error) {
+type importSpec struct {
+	stmt    *ast.ImportStmt
+	path    string
+	binding string
+}
+
+type loadState struct {
+	loading map[string]bool
+	loaded  map[string]bool
+	stack   []loadFrame
+}
+
+type loadFrame struct {
+	path string
+	name string
+}
+
+func (s *loadState) cyclePath(abs string, name string) string {
+	for i, frame := range s.stack {
+		if frame.path == abs {
+			parts := []string{}
+			for _, f := range s.stack[i:] {
+				parts = append(parts, f.name)
+			}
+			parts = append(parts, name)
+			return strings.Join(parts, " -> ")
+		}
+	}
+	parts := []string{}
+	for _, f := range s.stack {
+		parts = append(parts, f.name)
+	}
+	parts = append(parts, name)
+	return strings.Join(parts, " -> ")
+}
+
+func displayModuleName(path string) string {
+	return strings.TrimSuffix(filepath.Base(path), ".tya")
+}
+
+func loadSource(path string, state *loadState, module bool) (string, []string, error) {
 	abs, err := filepath.Abs(path)
 	if err != nil {
 		return "", nil, err
 	}
-	if loading[abs] {
-		return "", nil, fmt.Errorf("cyclic module import: %s", filepath.Base(path))
+	abs = filepath.Clean(abs)
+	if state.loading[abs] {
+		return "", nil, fmt.Errorf("import cycle: %s", state.cyclePath(abs, displayModuleName(path)))
 	}
-	loading[abs] = true
-	defer delete(loading, abs)
+	if module && state.loaded[abs] {
+		return "", nil, nil
+	}
+	state.loading[abs] = true
+	state.stack = append(state.stack, loadFrame{path: abs, name: displayModuleName(path)})
+	defer func() {
+		delete(state.loading, abs)
+		state.stack = state.stack[:len(state.stack)-1]
+	}()
 
 	src, err := os.ReadFile(path)
 	if err != nil {
@@ -123,7 +172,7 @@ func loadSource(path string, loading map[string]bool, module bool) (string, []st
 	modules := []string{}
 	visibleImports := map[string]bool{}
 	for _, imp := range imports {
-		modPath, err := resolveModulePath(path, imp)
+		modPath, err := resolveModulePath(path, imp.path)
 		if err != nil {
 			return "", nil, err
 		}
@@ -131,24 +180,31 @@ func loadSource(path string, loading map[string]bool, module bool) (string, []st
 		if err != nil {
 			return "", nil, err
 		}
-		modSrc, importedModules, err := loadSource(modPath, loading, true)
+		modSrc, importedModules, err := loadSource(modPath, state, true)
 		if err != nil {
 			return "", nil, err
 		}
 		modules = append(modules, importedModules...)
-		visible := importDef.name
-		if visibleImports[visible] {
-			return "", nil, fmt.Errorf("import name conflict: %s", visible)
+		if importDef.name != imp.stmt.ModuleName() {
+			return "", nil, fmt.Errorf("%s must define module %s", filepath.Base(modPath), imp.stmt.ModuleName())
 		}
-		visibleImports[visible] = true
-		modules = append(modules, visible)
-		out.WriteString(modSrc)
-		if !strings.HasSuffix(modSrc, "\n") {
-			out.WriteString("\n")
+		if visibleImports[imp.binding] {
+			return "", nil, fmt.Errorf("import name conflict: %s", imp.binding)
+		}
+		visibleImports[imp.binding] = true
+		modules = append(modules, imp.binding)
+		if modSrc != "" {
+			out.WriteString(modSrc)
+			if !strings.HasSuffix(modSrc, "\n") {
+				out.WriteString("\n")
+			}
 		}
 	}
 	if !module {
 		if err := validateEntry(path, prog, visibleImports); err != nil {
+			return "", nil, err
+		}
+		if err := validateAliasedImportOriginals(prog, imports); err != nil {
 			return "", nil, err
 		}
 	}
@@ -157,11 +213,15 @@ func loadSource(path string, loading map[string]bool, module bool) (string, []st
 	if !strings.HasSuffix(source, "\n") {
 		out.WriteString("\n")
 	}
+	if module {
+		state.loaded[abs] = true
+	}
 	return out.String(), modules, nil
 }
 
 func resolveModulePath(importerPath string, name string) (string, error) {
-	fileName := name + ".tya"
+	parts := strings.Split(name, "/")
+	fileName := filepath.Join(append(parts[:len(parts)-1], parts[len(parts)-1]+".tya")...)
 	candidates := []string{filepath.Join(filepath.Dir(importerPath), fileName)}
 	for _, dir := range filepath.SplitList(os.Getenv("TYA_PATH")) {
 		if dir == "" {
@@ -174,7 +234,11 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 	}
 	for _, candidate := range candidates {
 		if _, err := os.Stat(candidate); err == nil {
-			return candidate, nil
+			abs, err := filepath.Abs(candidate)
+			if err != nil {
+				return "", err
+			}
+			return filepath.Clean(abs), nil
 		} else if !os.IsNotExist(err) {
 			return "", err
 		}
@@ -227,19 +291,38 @@ func parseSource(src string) (*ast.Program, error) {
 	return parser.Parse(toks)
 }
 
-func collectImports(prog *ast.Program) ([]string, error) {
-	imports := []string{}
+func collectImports(prog *ast.Program) ([]importSpec, error) {
+	imports := []importSpec{}
 	for _, stmt := range prog.Stmts {
 		imp, ok := stmt.(*ast.ImportStmt)
 		if !ok {
 			continue
 		}
-		if !moduleNameRE.MatchString(imp.Name) {
-			return nil, fmt.Errorf("invalid module name: %s", imp.Name)
+		if err := validateImportPath(imp.Name); err != nil {
+			return nil, err
 		}
-		imports = append(imports, imp.Name)
+		binding := imp.BindingName()
+		if !moduleNameRE.MatchString(binding) {
+			return nil, fmt.Errorf("invalid import binding: %s", binding)
+		}
+		if strings.HasPrefix(binding, "_") {
+			return nil, fmt.Errorf("invalid import binding: %s", binding)
+		}
+		imports = append(imports, importSpec{stmt: imp, path: imp.Name, binding: binding})
 	}
 	return imports, nil
+}
+
+func validateImportPath(name string) error {
+	if name == "" || strings.HasPrefix(name, "/") || strings.HasPrefix(name, "./") || strings.HasPrefix(name, "../") {
+		return fmt.Errorf("invalid module name: %s", name)
+	}
+	for _, segment := range strings.Split(name, "/") {
+		if segment == "" || !moduleNameRE.MatchString(segment) {
+			return fmt.Errorf("invalid module name: %s", name)
+		}
+	}
+	return nil
 }
 
 func validateModule(path string, prog *ast.Program) (publicDef, error) {
@@ -260,6 +343,14 @@ func validateEntry(path string, prog *ast.Program, imports map[string]bool) erro
 		switch n := stmt.(type) {
 		case *ast.ModuleDecl:
 			return fmt.Errorf("%s entry file cannot define module %s directly", filepath.Base(path), n.Name)
+		case *ast.ClassDecl:
+			if imports[n.Name] {
+				return fmt.Errorf("import name conflict: %s", n.Name)
+			}
+		case *ast.InterfaceDecl:
+			if imports[n.Name] {
+				return fmt.Errorf("import name conflict: %s", n.Name)
+			}
 		case *ast.AssignStmt:
 			for _, target := range n.Targets {
 				if id, ok := target.(*ast.Ident); ok && imports[id.Name] {
@@ -269,6 +360,217 @@ func validateEntry(path string, prog *ast.Program, imports map[string]bool) erro
 		}
 	}
 	return nil
+}
+
+func validateAliasedImportOriginals(prog *ast.Program, imports []importSpec) error {
+	hidden := map[string]bool{}
+	topLevel := map[string]bool{}
+	for _, imp := range imports {
+		topLevel[imp.binding] = true
+		if imp.stmt.Alias != "" {
+			hidden[imp.stmt.ModuleName()] = true
+		}
+	}
+	if len(hidden) == 0 {
+		return nil
+	}
+	for _, stmt := range prog.Stmts {
+		switch n := stmt.(type) {
+		case *ast.AssignStmt:
+			for _, target := range n.Targets {
+				if id, ok := target.(*ast.Ident); ok {
+					topLevel[id.Name] = true
+				}
+			}
+		case *ast.ClassDecl:
+			topLevel[n.Name] = true
+		case *ast.InterfaceDecl:
+			topLevel[n.Name] = true
+		}
+	}
+	for name := range topLevel {
+		delete(hidden, name)
+	}
+	if len(hidden) == 0 {
+		return nil
+	}
+	for _, stmt := range prog.Stmts {
+		if err := rejectHiddenImportUseStmt(stmt, hidden, topLevel); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func rejectHiddenImportUseStmt(stmt ast.Stmt, hidden map[string]bool, bound map[string]bool) error {
+	switch n := stmt.(type) {
+	case *ast.ImportStmt:
+		return nil
+	case *ast.AssignStmt:
+		for _, value := range n.Values {
+			if err := rejectHiddenImportUseExpr(value, hidden, bound); err != nil {
+				return err
+			}
+		}
+		for _, target := range n.Targets {
+			if _, ok := target.(*ast.Ident); ok {
+				continue
+			}
+			if err := rejectHiddenImportUseExpr(target, hidden, bound); err != nil {
+				return err
+			}
+		}
+	case *ast.ExprStmt:
+		return rejectHiddenImportUseExpr(n.Expr, hidden, bound)
+	case *ast.IfStmt:
+		if err := rejectHiddenImportUseExpr(n.Cond, hidden, bound); err != nil {
+			return err
+		}
+		if err := rejectHiddenImportUseStmts(n.Then, hidden, bound); err != nil {
+			return err
+		}
+		return rejectHiddenImportUseStmts(n.Else, hidden, bound)
+	case *ast.WhileStmt:
+		if err := rejectHiddenImportUseExpr(n.Cond, hidden, bound); err != nil {
+			return err
+		}
+		return rejectHiddenImportUseStmts(n.Body, hidden, bound)
+	case *ast.ForInStmt:
+		if err := rejectHiddenImportUseExpr(n.Iterable, hidden, bound); err != nil {
+			return err
+		}
+		child := cloneBoolMap(bound)
+		child[n.ValueName] = true
+		if n.IndexName != "" {
+			child[n.IndexName] = true
+		}
+		return rejectHiddenImportUseStmts(n.Body, hidden, child)
+	case *ast.ReturnStmt:
+		for _, value := range n.Values {
+			if err := rejectHiddenImportUseExpr(value, hidden, bound); err != nil {
+				return err
+			}
+		}
+	case *ast.RaiseStmt:
+		return rejectHiddenImportUseExpr(n.Value, hidden, bound)
+	case *ast.TryCatchStmt:
+		if err := rejectHiddenImportUseStmts(n.Try, hidden, bound); err != nil {
+			return err
+		}
+		child := cloneBoolMap(bound)
+		child[n.CatchName] = true
+		return rejectHiddenImportUseStmts(n.Catch, hidden, child)
+	case *ast.MatchStmt:
+		if err := rejectHiddenImportUseExpr(n.Value, hidden, bound); err != nil {
+			return err
+		}
+		for _, c := range n.Cases {
+			if err := rejectHiddenImportUseExpr(c.Pattern, hidden, bound); err != nil {
+				return err
+			}
+			if err := rejectHiddenImportUseStmts(c.Body, hidden, bound); err != nil {
+				return err
+			}
+		}
+	case *ast.ModuleDecl:
+		for _, member := range n.Members {
+			if err := rejectHiddenImportUseExpr(member.Value, hidden, bound); err != nil {
+				return err
+			}
+		}
+	case *ast.ClassDecl:
+		for _, field := range n.Fields {
+			if err := rejectHiddenImportUseExpr(field.Value, hidden, bound); err != nil {
+				return err
+			}
+		}
+		for _, classVar := range n.Vars {
+			if err := rejectHiddenImportUseExpr(classVar.Value, hidden, bound); err != nil {
+				return err
+			}
+		}
+		for _, method := range n.Methods {
+			if err := rejectHiddenImportUseExpr(method.Func, hidden, bound); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func rejectHiddenImportUseStmts(stmts []ast.Stmt, hidden map[string]bool, bound map[string]bool) error {
+	for _, stmt := range stmts {
+		if err := rejectHiddenImportUseStmt(stmt, hidden, bound); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func rejectHiddenImportUseExpr(expr ast.Expr, hidden map[string]bool, bound map[string]bool) error {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		if hidden[n.Name] && !bound[n.Name] {
+			return fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
+		}
+	case *ast.DictLit:
+		for _, prop := range n.Props {
+			if err := rejectHiddenImportUseExpr(prop.Value, hidden, bound); err != nil {
+				return err
+			}
+		}
+	case *ast.ArrayLit:
+		for _, elem := range n.Elems {
+			if err := rejectHiddenImportUseExpr(elem, hidden, bound); err != nil {
+				return err
+			}
+		}
+	case *ast.FuncLit:
+		child := cloneBoolMap(bound)
+		for _, param := range n.Params {
+			child[param] = true
+		}
+		if n.Expr != nil {
+			if err := rejectHiddenImportUseExpr(n.Expr, hidden, child); err != nil {
+				return err
+			}
+		}
+		return rejectHiddenImportUseStmts(n.Body, hidden, child)
+	case *ast.BinaryExpr:
+		if err := rejectHiddenImportUseExpr(n.Left, hidden, bound); err != nil {
+			return err
+		}
+		return rejectHiddenImportUseExpr(n.Right, hidden, bound)
+	case *ast.UnaryExpr:
+		return rejectHiddenImportUseExpr(n.Expr, hidden, bound)
+	case *ast.TryExpr:
+		return rejectHiddenImportUseExpr(n.Expr, hidden, bound)
+	case *ast.MemberExpr:
+		return rejectHiddenImportUseExpr(n.Target, hidden, bound)
+	case *ast.IndexExpr:
+		if err := rejectHiddenImportUseExpr(n.Target, hidden, bound); err != nil {
+			return err
+		}
+		return rejectHiddenImportUseExpr(n.Index, hidden, bound)
+	case *ast.CallExpr:
+		if err := rejectHiddenImportUseExpr(n.Callee, hidden, bound); err != nil {
+			return err
+		}
+		for _, arg := range n.Args {
+			if err := rejectHiddenImportUseExpr(arg, hidden, bound); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func cloneBoolMap(in map[string]bool) map[string]bool {
+	out := map[string]bool{}
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
 }
 
 func snakeCase(name string) string {

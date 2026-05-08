@@ -645,6 +645,14 @@ func evalStmts(stmts []ast.Stmt, env *Env) (Value, error) {
 func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 	switch n := s.(type) {
 	case *ast.ImportStmt:
+		if n.Alias != "" {
+			value, ok := env.get(n.ModuleName())
+			if !ok {
+				return nil, fmt.Errorf("undefined imported module %s", n.ModuleName())
+			}
+			env.set(n.Alias, value)
+			return value, nil
+		}
 		return nil, nil
 	case *ast.AssignStmt:
 		values, err := evalValues(n.Values, env)

@@ -104,7 +104,18 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	switch n := stmt.(type) {
 	case *ast.ImportStmt:
 		g.sourceLine(n.NameTok.Line)
-		g.line("/* import resolved by runner */")
+		if n.Alias != "" {
+			target := cName(n.Alias)
+			source := cName(n.ModuleName())
+			if g.vars[n.Alias] {
+				g.line(fmt.Sprintf("%s = %s;", target, source))
+			} else {
+				g.vars[n.Alias] = true
+				g.line(fmt.Sprintf("TyaValue %s = %s;", target, source))
+			}
+		} else {
+			g.line("/* import resolved by runner */")
+		}
 		return nil
 	case *ast.ModuleDecl:
 		g.sourceLine(n.NameTok.Line)
@@ -1773,6 +1784,11 @@ func assignedNames(stmts []ast.Stmt) []string {
 	walk = func(stmts []ast.Stmt) {
 		for _, stmt := range stmts {
 			switch n := stmt.(type) {
+			case *ast.ImportStmt:
+				if n.Alias != "" && !seen[n.Alias] {
+					seen[n.Alias] = true
+					names = append(names, n.Alias)
+				}
 			case *ast.AssignStmt:
 				for _, target := range n.Targets {
 					id, ok := target.(*ast.Ident)

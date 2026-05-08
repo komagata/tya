@@ -53,19 +53,18 @@ func TestRunFileLoadsImportedModuleDeclaration(t *testing.T) {
 	}
 }
 
-func TestRunFileRejectsImportedModuleAlias(t *testing.T) {
+func TestRunFileLoadsImportedModuleAlias(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo = \"foo\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import util as u\nprint u.foo\n")
 
 	var out strings.Builder
-	err := RunFile(main, nil, &out, nil)
-	if err == nil {
-		t.Fatal("expected import alias error")
+	if err := RunFile(main, nil, &out, nil); err != nil {
+		t.Fatal(err)
 	}
-	if !strings.Contains(err.Error(), "import aliases are not in Tya v0.1") {
-		t.Fatalf("unexpected error: %v", err)
+	if out.String() != "foo\n" {
+		t.Fatalf("got %q", out.String())
 	}
 }
 
@@ -203,18 +202,106 @@ func TestLoadSourceRejectsInvalidModuleName(t *testing.T) {
 	}
 }
 
-func TestLoadSourceRejectsImportAlias(t *testing.T) {
+func TestRunFileBindsOnlyImportAlias(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text = \"hello\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import greeting as g\n")
+	writeFile(t, main, "import greeting as g\nprint greeting.text\n")
 
 	var out strings.Builder
 	err := RunFile(main, nil, &out, nil)
 	if err == nil {
-		t.Fatal("expected import alias error")
+		t.Fatal("expected unbound original module name")
 	}
-	if !strings.Contains(err.Error(), "import aliases are not in Tya v0.1") {
+	if !strings.Contains(err.Error(), "undefined variable greeting") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunFileLoadsSlashModulePath(t *testing.T) {
+	dir := t.TempDir()
+	httpDir := filepath.Join(dir, "http")
+	if err := os.Mkdir(httpDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(httpDir, "server.tya"), "module server\n  listen = port -> \"listening on {port}\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import http/server\nprint server.listen(8080)\n")
+
+	var out strings.Builder
+	if err := RunFile(main, nil, &out, nil); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "listening on 8080\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunFileLoadsSlashModulePathAlias(t *testing.T) {
+	dir := t.TempDir()
+	httpDir := filepath.Join(dir, "http")
+	if err := os.Mkdir(httpDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(httpDir, "server.tya"), "module server\n  listen = port -> \"listening on {port}\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import http/server as http_server\nprint http_server.listen(8080)\n")
+
+	var out strings.Builder
+	if err := RunFile(main, nil, &out, nil); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "listening on 8080\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestLoadSourceRejectsImportBindingConflict(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "string.tya"), "module string\n  text = \"string\"\n")
+	writeFile(t, filepath.Join(dir, "array.tya"), "module array\n  text = \"array\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import string as util\nimport array as util\n")
+
+	_, err := LoadSource(main)
+	if err == nil {
+		t.Fatal("expected import conflict")
+	}
+	if !strings.Contains(err.Error(), "import name conflict: util") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestLoadSourceLoadsResolvedModuleOnce(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  text = \"hello\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import util\nimport util as u\nprint util.text\nprint u.text\n")
+
+	source, modules, err := LoadSourceWithModules(main)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(source, "module util") != 1 {
+		t.Fatalf("expected one loaded module, got source:\n%s", source)
+	}
+	if strings.Join(modules, ",") != "util,u" {
+		t.Fatalf("got modules %v", modules)
+	}
+}
+
+func TestLoadSourceRejectsImportCycle(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "a.tya"), "import b\nmodule a\n  text = \"a\"\n")
+	writeFile(t, filepath.Join(dir, "b.tya"), "import a\nmodule b\n  text = \"b\"\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "import a\n")
+
+	_, err := LoadSource(main)
+	if err == nil {
+		t.Fatal("expected import cycle")
+	}
+	if !strings.Contains(err.Error(), "import cycle: a -> b -> a") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
