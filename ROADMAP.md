@@ -371,7 +371,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.10 abstract methods and final classes.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.11 explicit interfaces
+- [x] Ship v0.11 explicit interfaces
   - [x] Define v0.11 explicit interface scope
     - [x] Add `docs/v0.11/SPEC.md`.
     - [x] Specify `interface Name`.
@@ -380,23 +380,87 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Specify `extends` with `implements`.
     - [x] Specify concrete and abstract class implementation checks.
     - [x] Keep implicit interfaces, class-as-interface conformance, interface fields, interface class methods, interface inheritance, default interface methods, type annotations, and generics out of v0.11.
-  - [ ] Add interface parsing and checking
-    - [ ] Parse interface declarations.
-    - [ ] Parse body-free interface method requirements.
-    - [ ] Reject invalid members inside interface bodies.
-    - [ ] Parse `implements` lists.
-    - [ ] Reject `implements` targets that are not interfaces.
-  - [ ] Add interface implementation checks
-    - [ ] Require concrete classes to implement required interface methods.
-    - [ ] Allow inherited instance methods to satisfy interface requirements.
-    - [ ] Allow abstract classes to leave interface methods unimplemented.
-    - [ ] Check implementation arity against interface method arity.
-    - [ ] Reject conflicting interface method arity requirements.
-  - [ ] Keep v0.11 documentation and tests aligned
-    - [ ] Update latest docs when v0.11 behavior is implemented.
-    - [ ] Keep `docs/v0.11/` aligned with the v0.11 minor specification.
+  - [x] Add interface parsing and checking
+    - [x] Parse interface declarations.
+    - [x] Parse body-free interface method requirements.
+    - [x] Reject invalid members inside interface bodies.
+    - [x] Parse `implements` lists.
+    - [x] Reject `implements` targets that are not interfaces.
+  - [x] Add interface implementation checks
+    - [x] Require concrete classes to implement required interface methods.
+    - [x] Allow inherited instance methods to satisfy interface requirements.
+    - [x] Allow abstract classes to leave interface methods unimplemented.
+    - [x] Check implementation arity against interface method arity.
+    - [x] Reject conflicting interface method arity requirements.
+  - [x] Keep v0.11 documentation and tests aligned
+    - [x] Update latest docs when v0.11 behavior is implemented.
+    - [x] Keep `docs/v0.11/` aligned with the v0.11 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.11 interfaces.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.12 interface inheritance
+  - [x] Define v0.12 interface inheritance scope
+    - [x] Add `docs/v0.12/SPEC.md`.
+    - [x] Specify `interface Child extends Parent`.
+    - [x] Specify multiple interface inheritance.
+    - [x] Specify transitive interface inheritance.
+    - [x] Specify inherited interface implementation checks.
+    - [x] Specify interface inheritance cycle errors.
+    - [x] Specify conflict diagnostics for incompatible method requirements.
+    - [x] Keep class-as-interface conformance, classes extending interfaces, interfaces extending classes, default interface methods, interface fields, interface class methods, type annotations, and generics out of v0.12.
+  - [ ] Add interface inheritance parsing and checking
+    - [ ] Parse interface `extends` lists.
+    - [ ] Resolve parent interface names, including module-qualified names.
+    - [ ] Reject interfaces extending classes.
+    - [ ] Reject classes extending interfaces.
+    - [ ] Reject interface inheritance cycles.
+  - [ ] Add inherited requirement checks
+    - [ ] Collect direct and inherited interface method requirements.
+    - [ ] Treat duplicate method requirements with matching arity as compatible.
+    - [ ] Reject duplicate method requirements with conflicting arity.
+    - [ ] Require concrete classes to implement inherited interface requirements.
+    - [ ] Allow abstract classes to leave inherited interface requirements unimplemented.
+  - [ ] Improve interface conflict diagnostics
+    - [ ] Include child interface name in conflict errors.
+    - [ ] Include conflicting method name in conflict errors.
+    - [ ] Include parent interface names in conflict errors.
+    - [ ] Include conflicting arities in conflict errors.
+  - [ ] Keep v0.12 documentation and tests aligned
+    - [ ] Update latest docs when v0.12 behavior is implemented.
+    - [ ] Keep `docs/v0.12/` aligned with the v0.12 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, and negative tests for v0.11 interfaces.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.12 interface inheritance.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.13 override and constructor chaining checks
+  - [x] Define v0.13 override and constructor chaining scope
+    - [x] Add `docs/v0.13/SPEC.md`.
+    - [x] Specify `override method = args ->`.
+    - [x] Specify `override @@method = args ->`.
+    - [x] Specify override target and arity checks.
+    - [x] Keep `override` optional in v0.13.
+    - [x] Specify required parent `init` chaining when subclass `init` exists.
+    - [x] Specify constructor `super(...)` count, placement, and arity checks.
+    - [x] Keep mandatory `override`, final methods, final fields, duplicate method definition errors, default interface methods, type annotations, and generics out of v0.13.
+  - [ ] Add override parsing and checking
+    - [ ] Parse `override` instance method declarations.
+    - [ ] Parse `override` class method declarations.
+    - [ ] Reject `override` declarations with no inherited class method target.
+    - [ ] Reject `override` arity mismatches.
+    - [ ] Reject instance/class method kind mismatches.
+    - [ ] Reject `override` used only to satisfy interface requirements.
+  - [ ] Add constructor chaining checks
+    - [ ] Require subclass `init` to call parent public `init` when it exists.
+    - [ ] Reject more than one constructor `super(...)` call.
+    - [ ] Reject constructor `super(...)` when parent public `init` does not exist.
+    - [ ] Reject instance field assignment before constructor `super(...)`.
+    - [ ] Reject explicit `return` before constructor `super(...)`.
+    - [ ] Check constructor `super(...)` arity against parent public `init`.
+    - [ ] Reject constructor `super(...)` targeting parent `_init`.
+  - [ ] Keep v0.13 documentation and tests aligned
+    - [ ] Update latest docs when v0.13 behavior is implemented.
+    - [ ] Keep `docs/v0.13/` aligned with the v0.13 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.13 override and constructor chaining checks.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference

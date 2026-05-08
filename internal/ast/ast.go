@@ -72,10 +72,11 @@ type ReturnStmt struct {
 func (*ReturnStmt) stmt() {}
 
 type ModuleDecl struct {
-	Name    string
-	NameTok token.Token
-	Members []ModuleMember
-	Classes []*ClassDecl
+	Name       string
+	NameTok    token.Token
+	Members    []ModuleMember
+	Classes    []*ClassDecl
+	Interfaces []*InterfaceDecl
 }
 
 func (*ModuleDecl) stmt() {}
@@ -87,17 +88,33 @@ type ModuleMember struct {
 }
 
 type ClassDecl struct {
-	Name     string
-	NameTok  token.Token
-	Parent   *ClassRef
-	Abstract bool
-	Final    bool
-	Fields   []ClassField
-	Vars     []ClassVar
-	Methods  []ClassMethod
+	Name       string
+	NameTok    token.Token
+	Parent     *ClassRef
+	Implements []ClassRef
+	Abstract   bool
+	Final      bool
+	Fields     []ClassField
+	Vars       []ClassVar
+	Methods    []ClassMethod
 }
 
 func (*ClassDecl) stmt() {}
+
+type InterfaceDecl struct {
+	Name    string
+	NameTok token.Token
+	Methods []InterfaceMethod
+}
+
+func (*InterfaceDecl) stmt() {}
+
+type InterfaceMethod struct {
+	Name      string
+	Tok       token.Token
+	Params    []string
+	ParamToks []token.Token
+}
 
 type ClassField struct {
 	Name  string

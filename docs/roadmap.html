@@ -445,7 +445,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.11 explicit interfaces</li>
+<li>[x] Ship v0.11 explicit interfaces</li>
 <ul>
 <li>[x] Define v0.11 explicit interface scope</li>
 <ul>
@@ -457,28 +457,114 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Specify concrete and abstract class implementation checks.</li>
 <li>[x] Keep implicit interfaces, class-as-interface conformance, interface fields, interface class methods, interface inheritance, default interface methods, type annotations, and generics out of v0.11.</li>
 </ul>
-<li>[ ] Add interface parsing and checking</li>
+<li>[x] Add interface parsing and checking</li>
 <ul>
-<li>[ ] Parse interface declarations.</li>
-<li>[ ] Parse body-free interface method requirements.</li>
-<li>[ ] Reject invalid members inside interface bodies.</li>
-<li>[ ] Parse <code>implements</code> lists.</li>
-<li>[ ] Reject <code>implements</code> targets that are not interfaces.</li>
+<li>[x] Parse interface declarations.</li>
+<li>[x] Parse body-free interface method requirements.</li>
+<li>[x] Reject invalid members inside interface bodies.</li>
+<li>[x] Parse <code>implements</code> lists.</li>
+<li>[x] Reject <code>implements</code> targets that are not interfaces.</li>
 </ul>
-<li>[ ] Add interface implementation checks</li>
+<li>[x] Add interface implementation checks</li>
 <ul>
-<li>[ ] Require concrete classes to implement required interface methods.</li>
-<li>[ ] Allow inherited instance methods to satisfy interface requirements.</li>
-<li>[ ] Allow abstract classes to leave interface methods unimplemented.</li>
-<li>[ ] Check implementation arity against interface method arity.</li>
-<li>[ ] Reject conflicting interface method arity requirements.</li>
+<li>[x] Require concrete classes to implement required interface methods.</li>
+<li>[x] Allow inherited instance methods to satisfy interface requirements.</li>
+<li>[x] Allow abstract classes to leave interface methods unimplemented.</li>
+<li>[x] Check implementation arity against interface method arity.</li>
+<li>[x] Reject conflicting interface method arity requirements.</li>
 </ul>
-<li>[ ] Keep v0.11 documentation and tests aligned</li>
+<li>[x] Keep v0.11 documentation and tests aligned</li>
 <ul>
-<li>[ ] Update latest docs when v0.11 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.11/</code> aligned with the v0.11 minor specification.</li>
+<li>[x] Update latest docs when v0.11 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.11/</code> aligned with the v0.11 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.11 interfaces.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.12 interface inheritance</li>
+<ul>
+<li>[x] Define v0.12 interface inheritance scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.12/SPEC.md</code>.</li>
+<li>[x] Specify <code>interface Child extends Parent</code>.</li>
+<li>[x] Specify multiple interface inheritance.</li>
+<li>[x] Specify transitive interface inheritance.</li>
+<li>[x] Specify inherited interface implementation checks.</li>
+<li>[x] Specify interface inheritance cycle errors.</li>
+<li>[x] Specify conflict diagnostics for incompatible method requirements.</li>
+<li>[x] Keep class-as-interface conformance, classes extending interfaces, interfaces extending classes, default interface methods, interface fields, interface class methods, type annotations, and generics out of v0.12.</li>
+</ul>
+<li>[ ] Add interface inheritance parsing and checking</li>
+<ul>
+<li>[ ] Parse interface <code>extends</code> lists.</li>
+<li>[ ] Resolve parent interface names, including module-qualified names.</li>
+<li>[ ] Reject interfaces extending classes.</li>
+<li>[ ] Reject classes extending interfaces.</li>
+<li>[ ] Reject interface inheritance cycles.</li>
+</ul>
+<li>[ ] Add inherited requirement checks</li>
+<ul>
+<li>[ ] Collect direct and inherited interface method requirements.</li>
+<li>[ ] Treat duplicate method requirements with matching arity as compatible.</li>
+<li>[ ] Reject duplicate method requirements with conflicting arity.</li>
+<li>[ ] Require concrete classes to implement inherited interface requirements.</li>
+<li>[ ] Allow abstract classes to leave inherited interface requirements unimplemented.</li>
+</ul>
+<li>[ ] Improve interface conflict diagnostics</li>
+<ul>
+<li>[ ] Include child interface name in conflict errors.</li>
+<li>[ ] Include conflicting method name in conflict errors.</li>
+<li>[ ] Include parent interface names in conflict errors.</li>
+<li>[ ] Include conflicting arities in conflict errors.</li>
+</ul>
+<li>[ ] Keep v0.12 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.12 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.12/</code> aligned with the v0.12 minor specification.</li>
 <li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add compiler, runtime, module, and negative tests for v0.11 interfaces.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.12 interface inheritance.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.13 override and constructor chaining checks</li>
+<ul>
+<li>[x] Define v0.13 override and constructor chaining scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.13/SPEC.md</code>.</li>
+<li>[x] Specify <code>override method = args -&gt;</code>.</li>
+<li>[x] Specify <code>override @@method = args -&gt;</code>.</li>
+<li>[x] Specify override target and arity checks.</li>
+<li>[x] Keep <code>override</code> optional in v0.13.</li>
+<li>[x] Specify required parent <code>init</code> chaining when subclass <code>init</code> exists.</li>
+<li>[x] Specify constructor <code>super(...)</code> count, placement, and arity checks.</li>
+<li>[x] Keep mandatory <code>override</code>, final methods, final fields, duplicate method definition errors, default interface methods, type annotations, and generics out of v0.13.</li>
+</ul>
+<li>[ ] Add override parsing and checking</li>
+<ul>
+<li>[ ] Parse <code>override</code> instance method declarations.</li>
+<li>[ ] Parse <code>override</code> class method declarations.</li>
+<li>[ ] Reject <code>override</code> declarations with no inherited class method target.</li>
+<li>[ ] Reject <code>override</code> arity mismatches.</li>
+<li>[ ] Reject instance/class method kind mismatches.</li>
+<li>[ ] Reject <code>override</code> used only to satisfy interface requirements.</li>
+</ul>
+<li>[ ] Add constructor chaining checks</li>
+<ul>
+<li>[ ] Require subclass <code>init</code> to call parent public <code>init</code> when it exists.</li>
+<li>[ ] Reject more than one constructor <code>super(...)</code> call.</li>
+<li>[ ] Reject constructor <code>super(...)</code> when parent public <code>init</code> does not exist.</li>
+<li>[ ] Reject instance field assignment before constructor <code>super(...)</code>.</li>
+<li>[ ] Reject explicit <code>return</code> before constructor <code>super(...)</code>.</li>
+<li>[ ] Check constructor <code>super(...)</code> arity against parent public <code>init</code>.</li>
+<li>[ ] Reject constructor <code>super(...)</code> targeting parent <code>_init</code>.</li>
+</ul>
+<li>[ ] Keep v0.13 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.13 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.13/</code> aligned with the v0.13 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.13 override and constructor chaining checks.</li>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>

@@ -666,6 +666,8 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			module.Members[member.Name] = nameFunction(member.Name, value)
 		}
 		return module, nil
+	case *ast.InterfaceDecl:
+		return nil, nil
 	case *ast.ExprStmt:
 		return evalExpr(n.Expr, env)
 	case *ast.IfStmt:

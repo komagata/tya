@@ -1,273 +1,359 @@
-# Tya v0.10 Specification
+# Tya v0.11 Specification
 
-This document is the specification for Tya v0.10 after v0.9 class visibility,
-private members, private constructors, and abstract classes.
+This document is the specification for Tya v0.11 after v0.10 abstract methods
+and final classes.
 
 ## Theme
 
-Tya v0.10 is about abstract behavior contracts and final classes.
+Tya v0.11 is about explicit interface contracts.
 
-v0.9 adds abstract classes that cannot be directly constructed. v0.10 adds
-abstract methods so abstract classes can require subclasses to implement
-specific behavior. It also adds `final class` so a class can explicitly opt out
-of subclassing.
+v0.10 lets abstract classes describe required behavior while still belonging to
+the class inheritance tree. v0.11 adds `interface` and `implements` so a class
+can declare a behavior contract separately from implementation inheritance.
+
+Tya does not adopt Dart-style implicit interfaces. A class never becomes an
+interface automatically. A class implements an interface only when it explicitly
+uses `implements InterfaceName`.
 
 ## Goals
 
-- Add abstract instance methods.
-- Add abstract class methods.
-- Require concrete subclasses to implement inherited abstract methods.
-- Keep abstract methods body-free.
-- Add final classes.
-- Keep interfaces and implicit interface conformance for later versions.
+- Add explicit `interface Name` declarations.
+- Add `class Name implements InterfaceName`.
+- Allow a class to implement multiple interfaces.
+- Allow `extends` and `implements` to be used together.
+- Check implemented method names and arity.
+- Keep interface bodies small and method-only.
+- Avoid implicit interface conformance.
 
-## Included in v0.10
+## Included in v0.11
 
-v0.10 includes all v0.9 class behavior and adds:
+v0.11 includes all v0.10 class behavior and adds:
 
-- `abstract method = args ->`
-- `abstract @@method = args ->`
-- abstract methods only inside abstract classes
-- concrete subclass implementation checks
-- abstract subclass partial implementation
-- abstract method overriding with matching arity
-- `final class Name`
-- final class inheritance checks
+- `interface Name`
+- interface instance method requirements
+- `class Name implements InterfaceName`
+- multiple implemented interfaces
+- `class Name extends Parent implements InterfaceName`
+- implementation checks for concrete classes
+- partial implementation by abstract classes
+- interface method arity checks
+- interface declarations inside modules
 
-## Not Included in v0.10
+## Not Included in v0.11
 
-v0.10 does not include:
+v0.11 does not include:
 
-- interface declarations
-- `implements`
-- implicit interface conformance checks
-- abstract fields
-- abstract constructors
-- final methods
-- final fields
+- implicit interfaces generated from classes
+- implementing a class as if it were an interface
+- class methods in interfaces
+- fields in interfaces
+- class variables in interfaces
+- constructors in interfaces
+- interface inheritance
+- private interface methods
+- default interface method bodies
+- interface introspection
+- type annotations
+- generics
+- mixins
+- traits
 - sealed classes
 - base classes
-- mixins
+- final methods
+- final fields
 - method overloading
 - operator overloading
 - decorators
 - metaclasses
-- type annotations
-- generics
 - dictionary member access with `dict.key`
 - package manager
 - native-backed stdlib
 
-## Abstract Instance Methods
+## Interface Declarations
 
-An abstract instance method declares a required instance method without a body.
+An interface declares required instance methods without method bodies.
 
 ```tya
-abstract class Repository
-  abstract find = id ->
-  abstract save = record ->
+interface Reader
+  read = ->
+
+interface Writer
+  write = value ->
 ```
 
-Only abstract classes may declare abstract methods.
+Interface method declarations use the same parameter-list syntax as methods.
+They do not use `abstract` because every interface method is abstract.
 
 ```tya
-class Repository
-  abstract find = id ->
-```
-
-The `abstract find` declaration is an error because `Repository` is not
-abstract.
-
-An abstract method has a name and parameter list. It does not have a method
-body.
-
-## Implementing Abstract Instance Methods
-
-A concrete subclass must implement every inherited abstract instance method.
-
-```tya
-abstract class Repository
-  abstract find = id ->
-  abstract save = record ->
-
-class UserRepository extends Repository
+interface Repository
   find = id ->
-    "user"
-
   save = record ->
+```
+
+Interface declarations do not create constructible values.
+
+```tya
+reader = Reader()
+```
+
+The `Reader()` construction is an error because `Reader` is an interface, not a
+class.
+
+## Interface Bodies
+
+Only instance method requirements are valid inside an interface.
+
+```tya
+interface Named
+  name = ->
+```
+
+Fields are not valid inside an interface.
+
+```tya
+interface Named
+  name = ""
+```
+
+Class variables and class methods are not valid inside an interface.
+
+```tya
+interface Model
+  @@table_name = ->
+```
+
+Private methods are not valid inside an interface.
+
+```tya
+interface Reader
+  _read = ->
+```
+
+Interface methods cannot have bodies.
+
+```tya
+interface Reader
+  read = ->
+    "value"
+```
+
+The `read` declaration is an error because interface method declarations are
+body-free.
+
+## Implementing an Interface
+
+A class implements an interface with `implements`.
+
+```tya
+interface Reader
+  read = ->
+
+class FileReader implements Reader
+  read = ->
+    "data"
+```
+
+A concrete class must implement every method required by every interface it
+implements.
+
+```tya
+class BrokenReader implements Reader
+```
+
+`BrokenReader` is invalid because `read` is not implemented.
+
+The implementation must use the same arity as the interface method.
+
+```tya
+class BadReader implements Reader
+  read = path ->
+    "data"
+```
+
+The `read` implementation is invalid because `Reader.read` has arity 0.
+
+## Multiple Interfaces
+
+A class may implement multiple interfaces.
+
+```tya
+interface Reader
+  read = ->
+
+interface Writer
+  write = value ->
+
+class File implements Reader, Writer
+  read = ->
+    "data"
+
+  write = value ->
     nil
 ```
 
-If a concrete subclass omits an abstract method, it is an error.
+If two implemented interfaces require the same method with the same arity, one
+implementation satisfies both requirements.
 
 ```tya
-class BrokenRepository extends Repository
+interface Named
+  name = ->
+
+interface Labeled
+  name = ->
+
+class User implements Named, Labeled
+  name = ->
+    "komagata"
+```
+
+If two implemented interfaces require the same method name with different
+arity, the class declaration is an error.
+
+```tya
+interface LookupById
+  find = id ->
+
+interface LookupByName
+  find = first, last ->
+
+class UserRepository implements LookupById, LookupByName
   find = id ->
     "user"
 ```
 
-`BrokenRepository` is invalid because `save` is not implemented.
+`UserRepository` is invalid because one method implementation cannot satisfy
+both required `find` arities.
 
-The implementation must use the same arity as the abstract method.
+## `extends` with `implements`
+
+`extends` may be combined with `implements`. `extends` comes before
+`implements`.
 
 ```tya
-class BadRepository extends Repository
-  find = first, second ->
+interface Named
+  name = ->
+
+class User
+  name = ->
     "user"
 
-  save = record ->
-    nil
+class Admin extends User implements Named
 ```
 
-The `find` implementation is invalid because its arity differs from the
-abstract method.
+Inherited instance methods can satisfy interface requirements.
 
-## Abstract Subclasses
-
-An abstract subclass may leave inherited abstract methods unimplemented.
+`implements` must name interfaces, not classes.
 
 ```tya
-abstract class ReadOnlyRepository extends Repository
+class User
+  name = ->
+    "user"
+
+class Admin implements User
+```
+
+The `Admin` declaration is an error because `User` is a class.
+
+## Abstract Classes and Interfaces
+
+An abstract class may implement an interface without implementing all required
+methods.
+
+```tya
+interface Repository
+  find = id ->
+  save = record ->
+
+abstract class ReadOnlyRepository implements Repository
   find = id ->
     "record"
 ```
 
-`ReadOnlyRepository` is valid because it is abstract. A concrete subclass of
-`ReadOnlyRepository` must still implement `save`.
-
-An abstract subclass may also introduce new abstract methods.
+`ReadOnlyRepository` is valid because it is abstract. A concrete subclass must
+implement the remaining requirements.
 
 ```tya
-abstract class SearchRepository extends Repository
-  abstract search = query ->
+class UserRepository extends ReadOnlyRepository
+  save = record ->
+    nil
 ```
 
-## Abstract Class Methods
-
-An abstract class method declares a required class method without a body.
+An abstract class may also restate an interface requirement as an abstract
+method.
 
 ```tya
-abstract class Model
-  abstract @@table_name = ->
+abstract class BaseRepository implements Repository
+  abstract find = id ->
+  abstract save = record ->
 ```
 
-A concrete subclass must implement inherited abstract class methods.
+The abstract method arity must match the interface method arity.
+
+## Final Classes and Interfaces
+
+A final class may implement interfaces.
 
 ```tya
-class User extends Model
-  @@table_name = ->
-    "users"
+interface Named
+  name = ->
+
+final class User implements Named
+  name = ->
+    "user"
 ```
 
-The implementation must use the same arity as the abstract class method.
-
-Abstract class methods participate in class-level inheritance like normal class
-methods once they are implemented.
-
-## Abstract Methods and `super`
-
-`super(args...)` cannot call an abstract parent method because there is no
-method body to execute.
-
-```tya
-abstract class User
-  abstract label = ->
-
-class Admin extends User
-  label = ->
-    super()
-```
-
-The `super()` call is an error.
-
-## Final Classes
-
-A final class can be constructed normally but cannot be extended.
-
-```tya
-final class User
-  name = ""
-```
-
-Direct construction is valid.
-
-```tya
-user = User()
-```
-
-Subclassing is invalid.
-
-```tya
-class Admin extends User
-```
-
-The `Admin` declaration is an error because `User` is final.
-
-## Final and Abstract Modifiers
-
-`abstract` and `final` cannot be used together on the same class.
-
-```tya
-abstract final class User
-```
-
-The declaration is an error.
-
-`final class` may still contain private members, class variables, class
-methods, instance field defaults, and constructors.
-
-```tya
-final class User
-  _name = ""
-
-  init = name ->
-    @_name = name
-```
+The class is constructible and satisfies `Named`, but it still cannot be
+extended.
 
 ## Modules
 
-Abstract methods and final classes work inside modules.
+Interfaces work inside modules.
 
 ```tya
-module repositories
-  abstract class Repository
-    abstract find = id ->
+module io
+  interface Reader
+    read = ->
 
-  final class UserRepository extends Repository
-    find = id ->
-      "user"
+  class FileReader implements Reader
+    read = ->
+      "data"
 ```
 
-Module users follow the same construction and inheritance rules.
+Module users refer to exported interfaces with normal module member syntax.
 
 ```tya
-import repositories
+import io
 
-repo = repositories.UserRepository()
+class MemoryReader implements io.Reader
+  read = ->
+    "memory"
 ```
 
 ## Introspection
 
-v0.10 keeps the v0.8 introspection surface:
+v0.11 keeps the v0.8 introspection surface:
 
 - `object.class`
 - `object.class_name`
 - `ClassName.name`
 - `ClassName.parent`
 
-v0.10 does not add introspection for abstract methods or final classes.
+v0.11 does not add interface introspection.
 
 ## Diagnostics
 
-v0.10 implementations should report source-oriented errors for:
+v0.11 implementations should report source-oriented errors for:
 
-- abstract methods declared outside abstract classes
-- abstract methods with bodies
-- concrete classes missing inherited abstract instance methods
-- concrete classes missing inherited abstract class methods
-- abstract method implementation arity mismatch
-- abstract class method implementation arity mismatch
-- `super` targeting an abstract parent method
-- extending a final class
-- declaring a class as both abstract and final
-- dictionary member access with dot syntax
+- constructing an interface
+- invalid members inside an interface body
+- interface method declarations with bodies
+- `implements` targets that are not interfaces
+- missing interface method implementations on concrete classes
+- interface method implementation arity mismatch
+- conflicting interface method arity requirements
+- abstract method arity mismatch against an implemented interface
+- duplicate interface names in a single `implements` list
+- duplicate interface declarations in the same scope
+
+Diagnostics should mention the relevant class, interface, and method names when
+available.

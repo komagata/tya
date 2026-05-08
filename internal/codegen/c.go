@@ -109,6 +109,10 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	case *ast.ClassDecl:
 		g.sourceLine(n.NameTok.Line)
 		return g.assignClassDecl(n.Name, n)
+	case *ast.InterfaceDecl:
+		g.sourceLine(n.NameTok.Line)
+		g.line("/* interface declaration checked at compile time */")
+		return nil
 	case *ast.AssignStmt:
 		g.sourceLine(n.Tok.Line)
 		if len(n.Targets) != 1 || len(n.Values) != 1 {

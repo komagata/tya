@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"tya/internal/ast"
 	"tya/internal/token"
@@ -37,20 +38,26 @@ func (p *Parser) program() (*ast.Program, error) {
 }
 
 func (p *Parser) stmt() (ast.Stmt, error) {
-	if err := p.rejectV01ExcludedIdent(); err != nil {
-		return nil, err
-	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "module" {
 		if p.blockDepth != 0 {
 			return nil, p.err("module must be top-level")
 		}
 		return p.moduleDecl()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "interface" {
+		if p.blockDepth != 0 {
+			return nil, p.err("interface must be top-level")
+		}
+		return p.interfaceDecl()
+	}
 	if p.startsClassDecl() {
 		if p.blockDepth != 0 {
 			return nil, p.err("class must be top-level")
 		}
 		return p.classDecl()
+	}
+	if err := p.rejectV01ExcludedIdent(); err != nil {
+		return nil, err
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "import" {
 		if p.blockDepth != 0 {
@@ -134,6 +141,15 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 	decl := &ast.ModuleDecl{Name: name.Lexeme, NameTok: name}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		if p.at(token.IDENT) && p.peek().Lexeme == "interface" {
+			iface, err := p.interfaceDecl()
+			if err != nil {
+				return nil, err
+			}
+			decl.Interfaces = append(decl.Interfaces, iface.(*ast.InterfaceDecl))
+			p.skipNewlines()
+			continue
+		}
 		if p.startsClassDecl() {
 			cls, err := p.classDecl()
 			if err != nil {
@@ -192,6 +208,20 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 			return nil, p.err("multiple inheritance is not in Tya v0.7")
 		}
 	}
+	var implements []ast.ClassRef
+	if p.at(token.IDENT) && p.peek().Lexeme == "implements" {
+		p.next()
+		for {
+			ref, err := p.classRef()
+			if err != nil {
+				return nil, err
+			}
+			implements = append(implements, *ref)
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
 	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
 		return nil, p.err("expected indented block after class")
 	}
@@ -201,7 +231,7 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		p.classDepth--
 		p.blockDepth--
 	}()
-	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, Abstract: abstract, Final: final}
+	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, Implements: implements, Abstract: abstract, Final: final}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		isAbstractMethod := false
@@ -246,6 +276,49 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	}
 	if !p.match(token.DEDENT) {
 		return nil, p.err("expected dedent after class")
+	}
+	return decl, nil
+}
+
+func (p *Parser) interfaceDecl() (ast.Stmt, error) {
+	p.next()
+	name, err := p.expectName("expected interface name")
+	if err != nil {
+		return nil, err
+	}
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after interface")
+	}
+	p.blockDepth++
+	defer func() { p.blockDepth-- }()
+	decl := &ast.InterfaceDecl{Name: name.Lexeme, NameTok: name}
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		if p.match(token.AT) {
+			return nil, p.err("interface bodies may only contain instance method requirements")
+		}
+		methodName, err := p.expectName("expected interface method name")
+		if err != nil {
+			return nil, err
+		}
+		if strings.HasPrefix(methodName.Lexeme, "_") {
+			return nil, p.errAt(methodName, "private interface methods are not in Tya v0.11")
+		}
+		if !p.match(token.ASSIGN) {
+			return nil, p.err("expected '=' after interface method name")
+		}
+		if !p.at(token.IDENT) && !p.at(token.ARROW) {
+			return nil, p.err("interface bodies may only contain instance method requirements")
+		}
+		params, paramToks, err := p.abstractMethodParams()
+		if err != nil {
+			return nil, err
+		}
+		decl.Methods = append(decl.Methods, ast.InterfaceMethod{Name: methodName.Lexeme, Tok: methodName, Params: params, ParamToks: paramToks})
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after interface")
 	}
 	return decl, nil
 }
@@ -1169,7 +1242,7 @@ func (p *Parser) rejectV01ExcludedIdent() error {
 }
 func (p *Parser) rejectV01ExcludedWord(word string) error {
 	switch word {
-	case "interface", "object", "set":
+	case "object", "set":
 		return p.err(word + " is not in Tya v0.1")
 	default:
 		return nil
@@ -1177,9 +1250,9 @@ func (p *Parser) rejectV01ExcludedWord(word string) error {
 }
 func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
-	case "interface", "object", "set":
+	case "object", "set":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
-	case "class", "self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
+	case "interface", "class", "self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
 	default:
 		return nil

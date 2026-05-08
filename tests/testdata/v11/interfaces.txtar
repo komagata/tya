@@ -1,0 +1,188 @@
+# v0.11 explicit interfaces and implements.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/interfaces.tya
+stdout 'data\nsaved:record\nuser\nmemory\nmodule\nqualified\nfinal\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/construct_interface.tya
+stderr 'cannot construct interface Reader'
+
+! exec go run ./cmd/tya run $WORK/interface_field.tya
+stderr 'interface bodies may only contain instance method requirements'
+
+! exec go run ./cmd/tya run $WORK/interface_class_method.tya
+stderr 'interface bodies may only contain instance method requirements'
+
+! exec go run ./cmd/tya run $WORK/interface_private_method.tya
+stderr 'private interface methods are not in Tya v0.11'
+
+! exec go run ./cmd/tya run $WORK/missing_method.tya
+stderr 'class BrokenReader must implement interface method read'
+
+! exec go run ./cmd/tya run $WORK/missing_inherited_interface_method.tya
+stderr 'class UserRepository must implement interface method save'
+
+! exec go run ./cmd/tya run $WORK/bad_arity.tya
+stderr 'implementing interface method read expects 0 parameters'
+
+! exec go run ./cmd/tya run $WORK/conflicting_arity.tya
+stderr 'conflicting interface method find arity requirements'
+
+! exec go run ./cmd/tya run $WORK/implements_class.tya
+stderr 'implements target User is not an interface'
+
+! exec go run ./cmd/tya run $WORK/duplicate_interface.tya
+stderr 'duplicate interface Reader'
+
+! exec go run ./cmd/tya run $WORK/abstract_bad_arity.tya
+stderr 'abstract interface method read expects 0 parameters'
+
+exec go run ./cmd/tya version
+stdout '0.11.0\n'
+! stderr .
+
+-- interfaces.tya --
+interface Reader
+  read = ->
+
+interface Writer
+  write = value ->
+
+interface Named
+  name = ->
+
+class File implements Reader, Writer
+  read = ->
+    "data"
+
+  write = value ->
+    "saved:{value}"
+
+class User
+  name = ->
+    "user"
+
+class Admin extends User implements Named
+  role = "admin"
+
+abstract class AbstractReader implements Reader
+  abstract read = ->
+
+class MemoryReader extends AbstractReader
+  read = ->
+    "memory"
+
+final class FinalReader implements Reader
+  read = ->
+    "final"
+
+import io
+
+class QualifiedMemoryReader implements io.Reader
+  read = ->
+    "qualified"
+
+file = File()
+print file.read()
+print file.write("record")
+admin = Admin()
+print admin.name()
+memory = MemoryReader()
+print memory.read()
+
+module_reader = io.MemoryReader()
+print module_reader.read()
+qualified_reader = QualifiedMemoryReader()
+print qualified_reader.read()
+final_reader = FinalReader()
+print final_reader.read()
+
+-- io.tya --
+module io
+  interface Reader
+    read = ->
+
+  class MemoryReader implements Reader
+    read = ->
+      "module"
+
+-- construct_interface.tya --
+interface Reader
+  read = ->
+
+reader = Reader()
+
+-- interface_field.tya --
+interface Named
+  name = ""
+
+-- interface_class_method.tya --
+interface Model
+  @@table_name = ->
+
+-- interface_private_method.tya --
+interface Reader
+  _read = ->
+
+-- missing_method.tya --
+interface Reader
+  read = ->
+
+class BrokenReader implements Reader
+  name = ""
+
+-- missing_inherited_interface_method.tya --
+interface Repository
+  find = id ->
+  save = record ->
+
+abstract class ReadOnlyRepository implements Repository
+  find = id ->
+    "record"
+
+class UserRepository extends ReadOnlyRepository
+  name = ""
+
+-- bad_arity.tya --
+interface Reader
+  read = ->
+
+class BadReader implements Reader
+  read = path ->
+    "data"
+
+-- conflicting_arity.tya --
+interface LookupById
+  find = id ->
+
+interface LookupByName
+  find = first, last ->
+
+class UserRepository implements LookupById, LookupByName
+  find = id ->
+    "user"
+
+-- implements_class.tya --
+class User
+  name = ->
+    "user"
+
+class Admin implements User
+  name = ->
+    "admin"
+
+-- duplicate_interface.tya --
+interface Reader
+  read = ->
+
+class File implements Reader, Reader
+  read = ->
+    "data"
+
+-- abstract_bad_arity.tya --
+interface Reader
+  read = ->
+
+abstract class BaseReader implements Reader
+  abstract read = path ->

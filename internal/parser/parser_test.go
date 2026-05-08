@@ -125,18 +125,22 @@ func TestParseClassDeclaration(t *testing.T) {
 	}
 }
 
-func TestParseRejectsInterfaceDeclaration(t *testing.T) {
-	src := "interface Reader\n  read: ->\n  write: text ->\n"
+func TestParseInterfaceDeclaration(t *testing.T) {
+	src := "interface Reader\n  read = ->\n  write = text ->\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
-	if err == nil {
-		t.Fatal("expected interface error")
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("parse interface: %v", err)
 	}
-	if !strings.Contains(err.Error(), "interface is not in Tya v0.1") {
-		t.Fatalf("unexpected error: %v", err)
+	iface, ok := prog.Stmts[0].(*ast.InterfaceDecl)
+	if !ok {
+		t.Fatalf("stmt type = %T", prog.Stmts[0])
+	}
+	if iface.Name != "Reader" || len(iface.Methods) != 2 || len(iface.Methods[1].Params) != 1 {
+		t.Fatalf("interface = %#v", iface)
 	}
 }
 
@@ -154,7 +158,7 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 		{
 			name: "interface inheritance",
 			src:  "interface Writer < Reader\n  write: text -> text\n",
-			want: "interface is not in Tya v0.1",
+			want: "expected indented block after interface",
 		},
 		{
 			name: "nested import in function",
@@ -189,7 +193,7 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 		{
 			name: "interface expression",
 			src:  "value = interface\n",
-			want: "interface is not in Tya v0.1",
+			want: "interface cannot be used as a name",
 		},
 	}
 	for _, tt := range tests {
