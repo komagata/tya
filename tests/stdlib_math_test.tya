@@ -1,0 +1,10 @@
+import math
+
+assert_equal 3, math.abs(-3)
+assert_equal 5, math.abs(5)
+assert_equal 0, math.abs(0)
+assert_equal 2, math.min(2, 5)
+assert_equal 5, math.max(2, 5)
+assert_equal 10, math.clamp(12, 0, 10)
+assert_equal 0, math.clamp(-1, 0, 10)
+assert_equal 5, math.clamp(5, 0, 10)

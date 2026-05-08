@@ -73,6 +73,42 @@ print array.first([&quot;tya&quot;])</code></pre>
 first items</code></pre>
 <p><code>empty(items)</code> returns <code>len(items) == 0</code>.</p>
 <p><code>first(items)</code> returns <code>items[0]</code>.</p>
+<h2 id="math"><code>math</code></h2>
+<pre><code class="language-tya">import math
+
+print math.abs(-3)
+print math.min(2, 5)
+print math.max(2, 5)
+print math.clamp(12, 0, 10)</code></pre>
+<p>Functions:</p>
+<pre><code class="language-tya">abs value
+min left, right
+max left, right
+clamp value, min, max</code></pre>
+<p><code>abs(value)</code> returns the absolute value of an integer or float.</p>
+<p><code>min(left, right)</code> returns the smaller number.</p>
+<p><code>max(left, right)</code> returns the larger number.</p>
+<p><code>clamp(value, min, max)</code> returns <code>min</code> when <code>value &lt; min</code>, <code>max</code> when <code>value &gt; max</code>, and <code>value</code> otherwise. It raises an error when <code>min &gt; max</code>.</p>
+<h2 id="path"><code>path</code></h2>
+<pre><code class="language-tya">import path
+
+print path.join([&quot;tmp&quot;, &quot;tya&quot;, &quot;memo.txt&quot;])
+print path.clean(&quot;tmp/./tya/../memo.txt&quot;)
+print path.basename(&quot;/tmp/tya/memo.txt&quot;)
+print path.dirname(&quot;/tmp/tya/memo.txt&quot;)
+print path.extname(&quot;/tmp/tya/memo.txt&quot;)</code></pre>
+<p>Functions:</p>
+<pre><code class="language-tya">join parts
+clean value
+basename value
+dirname value
+extname value</code></pre>
+<p><code>join(parts)</code> joins an array of path segments with <code>/</code> and cleans the result.</p>
+<p><code>clean(value)</code> normalizes <code>.</code> segments, <code>..</code> segments, and repeated <code>/</code> separators lexically.</p>
+<p><code>basename(value)</code> returns the final path segment.</p>
+<p><code>dirname(value)</code> returns the path without the final segment, or <code>.</code> when no directory segment exists.</p>
+<p><code>extname(value)</code> returns the final file extension including the leading <code>.</code>, or <code>&quot;&quot;</code> when the basename has no extension.</p>
+<p>The <code>path</code> module uses <code>/</code> as the path separator and does not access the file system.</p>
     </article>
   </main>
 </body>

@@ -1,0 +1,87 @@
+module path
+  basename = value ->
+    parts = split(value, "/")
+    i = len(parts) - 1
+    while i >= 0
+      if parts[i] != ""
+        return parts[i]
+      i = i - 1
+    return ""
+  dirname = value ->
+    parts = split(value, "/")
+    last = len(parts) - 1
+    while last >= 0 and parts[last] == ""
+      last = last - 1
+    if last <= 0
+      if starts_with(value, "/")
+        return "/"
+      return "."
+    head = []
+    i = 0
+    while i < last
+      push(head, parts[i])
+      i = i + 1
+    joined = join(head, "/")
+    if joined == ""
+      return "."
+    return joined
+  extname = value ->
+    bparts = split(value, "/")
+    bi = len(bparts) - 1
+    base = ""
+    while bi >= 0 and base == ""
+      if bparts[bi] != ""
+        base = bparts[bi]
+      bi = bi - 1
+    parts = split(base, ".")
+    n = len(parts)
+    if n < 2
+      return ""
+    if parts[0] == "" and n == 2
+      return ""
+    return "." + parts[n - 1]
+  clean = value ->
+    if value == ""
+      return "."
+    is_abs = starts_with(value, "/")
+    parts = split(value, "/")
+    result = []
+    for part in parts
+      if part != "" and part != "."
+        if part == ".."
+          n = len(result)
+          if n > 0 and result[n - 1] != ".."
+            pop(result)
+          elseif not is_abs
+            push(result, "..")
+        else
+          push(result, part)
+    joined = join(result, "/")
+    if is_abs
+      return "/" + joined
+    if joined == ""
+      return "."
+    return joined
+  join = parts ->
+    raw = join(parts, "/")
+    if raw == ""
+      return "."
+    is_abs = starts_with(raw, "/")
+    sparts = split(raw, "/")
+    result = []
+    for part in sparts
+      if part != "" and part != "."
+        if part == ".."
+          n = len(result)
+          if n > 0 and result[n - 1] != ".."
+            pop(result)
+          elseif not is_abs
+            push(result, "..")
+        else
+          push(result, part)
+    joined = join(result, "/")
+    if is_abs
+      return "/" + joined
+    if joined == ""
+      return "."
+    return joined

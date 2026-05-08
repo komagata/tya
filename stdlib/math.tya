@@ -1,0 +1,21 @@
+module math
+  abs = value ->
+    if value < 0
+      return 0 - value
+    return value
+  min = left, right ->
+    if left < right
+      return left
+    return right
+  max = left, right ->
+    if left > right
+      return left
+    return right
+  clamp = value, lo, hi ->
+    if lo > hi
+      raise "math.clamp: min must be less than or equal to max"
+    if value < lo
+      return lo
+    if value > hi
+      return hi
+    return value

@@ -660,7 +660,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [ ] Add compiler, runtime, method, module, and negative tests for v0.19 predicate names.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.20 standard attached library expansion
+- [x] Ship v0.20 standard attached library expansion
   - [x] Define v0.20 standard library scope
     - [x] Add `docs/v0.20/SPEC.md`.
     - [x] Add `math` standard module.
@@ -668,26 +668,26 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Keep both modules import-only and explicit.
     - [x] Keep JSON, CSV, regex, HTTP, date/time, native-backed standard modules, package manager, remote module install, and versioned dependencies out of v0.20.
     - [x] Keep existing global built-ins unchanged in v0.20.
-  - [ ] Implement `math` module
-    - [ ] Add `math.abs(value)`.
-    - [ ] Add `math.min(left, right)`.
-    - [ ] Add `math.max(left, right)`.
-    - [ ] Add `math.clamp(value, min, max)`.
-    - [ ] Report invalid numeric arguments.
-  - [ ] Implement `path` module
-    - [ ] Add `path.join(parts)`.
-    - [ ] Add `path.clean(value)`.
-    - [ ] Add `path.basename(value)`.
-    - [ ] Add `path.dirname(value)`.
-    - [ ] Add `path.extname(value)`.
-    - [ ] Keep path behavior lexical and `/`-based.
-    - [ ] Report invalid string arguments and invalid `path.join` item types.
-  - [ ] Keep v0.20 documentation and tests aligned
-    - [ ] Update latest docs when v0.20 behavior is implemented.
-    - [ ] Keep `docs/v0.20/` aligned with the v0.20 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, and negative tests for v0.20 `math` and `path`.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Implement `math` module
+    - [x] Add `math.abs(value)`.
+    - [x] Add `math.min(left, right)`.
+    - [x] Add `math.max(left, right)`.
+    - [x] Add `math.clamp(value, min, max)`.
+    - [x] Report invalid numeric arguments.
+  - [x] Implement `path` module
+    - [x] Add `path.join(parts)`.
+    - [x] Add `path.clean(value)`.
+    - [x] Add `path.basename(value)`.
+    - [x] Add `path.dirname(value)`.
+    - [x] Add `path.extname(value)`.
+    - [x] Keep path behavior lexical and `/`-based.
+    - [x] Report invalid string arguments and invalid `path.join` item types.
+  - [x] Keep v0.20 documentation and tests aligned
+    - [x] Update latest docs when v0.20 behavior is implemented.
+    - [x] Keep `docs/v0.20/` aligned with the v0.20 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.20 `math` and `path`.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Ship v0.21 native-backed standard library APIs
   - [x] Define v0.21 native-backed stdlib scope
     - [x] Add `docs/v0.21/SPEC.md`.

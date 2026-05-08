@@ -834,7 +834,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.20 standard attached library expansion</li>
+<li>[x] Ship v0.20 standard attached library expansion</li>
 <ul>
 <li>[x] Define v0.20 standard library scope</li>
 <ul>
@@ -845,31 +845,31 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Keep JSON, CSV, regex, HTTP, date/time, native-backed standard modules, package manager, remote module install, and versioned dependencies out of v0.20.</li>
 <li>[x] Keep existing global built-ins unchanged in v0.20.</li>
 </ul>
-<li>[ ] Implement <code>math</code> module</li>
+<li>[x] Implement <code>math</code> module</li>
 <ul>
-<li>[ ] Add <code>math.abs(value)</code>.</li>
-<li>[ ] Add <code>math.min(left, right)</code>.</li>
-<li>[ ] Add <code>math.max(left, right)</code>.</li>
-<li>[ ] Add <code>math.clamp(value, min, max)</code>.</li>
-<li>[ ] Report invalid numeric arguments.</li>
+<li>[x] Add <code>math.abs(value)</code>.</li>
+<li>[x] Add <code>math.min(left, right)</code>.</li>
+<li>[x] Add <code>math.max(left, right)</code>.</li>
+<li>[x] Add <code>math.clamp(value, min, max)</code>.</li>
+<li>[x] Report invalid numeric arguments.</li>
 </ul>
-<li>[ ] Implement <code>path</code> module</li>
+<li>[x] Implement <code>path</code> module</li>
 <ul>
-<li>[ ] Add <code>path.join(parts)</code>.</li>
-<li>[ ] Add <code>path.clean(value)</code>.</li>
-<li>[ ] Add <code>path.basename(value)</code>.</li>
-<li>[ ] Add <code>path.dirname(value)</code>.</li>
-<li>[ ] Add <code>path.extname(value)</code>.</li>
-<li>[ ] Keep path behavior lexical and <code>/</code>-based.</li>
-<li>[ ] Report invalid string arguments and invalid <code>path.join</code> item types.</li>
+<li>[x] Add <code>path.join(parts)</code>.</li>
+<li>[x] Add <code>path.clean(value)</code>.</li>
+<li>[x] Add <code>path.basename(value)</code>.</li>
+<li>[x] Add <code>path.dirname(value)</code>.</li>
+<li>[x] Add <code>path.extname(value)</code>.</li>
+<li>[x] Keep path behavior lexical and <code>/</code>-based.</li>
+<li>[x] Report invalid string arguments and invalid <code>path.join</code> item types.</li>
 </ul>
-<li>[ ] Keep v0.20 documentation and tests aligned</li>
+<li>[x] Keep v0.20 documentation and tests aligned</li>
 <ul>
-<li>[ ] Update latest docs when v0.20 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.20/</code> aligned with the v0.20 minor specification.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add compiler, runtime, module, and negative tests for v0.20 <code>math</code> and <code>path</code>.</li>
-<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+<li>[x] Update latest docs when v0.20 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.20/</code> aligned with the v0.20 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.20 <code>math</code> and <code>path</code>.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
 <li>[ ] Ship v0.21 native-backed standard library APIs</li>
@@ -956,6 +956,92 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[ ] Keep <code>docs/v0.22/</code> aligned with the v0.22 minor specification.</li>
 <li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
 <li>[ ] Add compiler, runtime, module, C emission, and negative tests for v0.22 filesystem stdlib APIs.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.23 NestedText standard module</li>
+<ul>
+<li>[ ] Define v0.23 NestedText scope</li>
+<ul>
+<li>[ ] Add <code>docs/v0.23/SPEC.md</code>.</li>
+<li>[ ] Add <code>nestedtext</code> standard module reading and writing <code>.nt</code> files.</li>
+<li>[ ] Specify <code>nestedtext.parse(text)</code> returning nested dicts, arrays, and strings.</li>
+<li>[ ] Specify <code>nestedtext.dump(value)</code> emitting NestedText.</li>
+<li>[ ] Treat every leaf value as a string with no implicit type coercion.</li>
+<li>[ ] Support indented block dictionaries, lists, and multi-line strings (<code>&gt; </code> prefix).</li>
+<li>[ ] Support <code>#</code> line comments.</li>
+<li>[ ] Reject non-string dictionary keys.</li>
+<li>[ ] Keep schema validation, type inference, anchors, references, and binary content out of v0.23.</li>
+</ul>
+<li>[ ] Implement the NestedText parser</li>
+<ul>
+<li>[ ] Add a lexer for indented blocks, list items, key/value lines, and multi-line strings.</li>
+<li>[ ] Treat every scalar value as a string.</li>
+<li>[ ] Report syntax errors with source locations.</li>
+</ul>
+<li>[ ] Implement the NestedText writer</li>
+<ul>
+<li>[ ] Emit indented block syntax.</li>
+<li>[ ] Use <code>&gt; </code> multi-line strings when values contain newlines or leading whitespace.</li>
+<li>[ ] Reject non-string keys and non-supported value kinds.</li>
+</ul>
+<li>[ ] Keep v0.23 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.23 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.23/</code> aligned with the v0.23 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add parser, writer, module, and negative tests for v0.23 NestedText.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.24 package manifest and version resolution</li>
+<ul>
+<li>[ ] Define v0.24 package manifest scope</li>
+<ul>
+<li>[ ] Add <code>docs/v0.24/SPEC.md</code>.</li>
+<li>[ ] Decide the package manifest filename (placeholder: <code>Tyafile</code>).</li>
+<li>[ ] Specify the manifest format as NestedText, parsed by the v0.23 <code>nestedtext</code> standard module.</li>
+<li>[ ] Specify the resolved-version lock filename and format (placeholder: <code>Tyafile.lock</code>).</li>
+<li>[ ] Specify package source identity (name plus version constraints).</li>
+<li>[ ] Specify version operators <code>~&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>=</code>.</li>
+<li>[ ] Specify Bundler-style single-version-per-source resolution policy.</li>
+<li>[ ] Specify <code>tya install</code> to resolve and write the lock file.</li>
+<li>[ ] Specify <code>tya update [package]</code> to recompute resolution for one or all packages.</li>
+<li>[ ] Specify import resolution to honor the lock file for declared dependencies.</li>
+<li>[ ] Keep multi-version coexistence, package alias, <code>unique</code> declarations, semver-aware type identity, remote registry install, native dependency build, content-addressed lock checksums, and circular dependency healing out of v0.24.</li>
+</ul>
+<li>[ ] Add manifest parsing</li>
+<ul>
+<li>[ ] Parse the manifest via the <code>nestedtext</code> standard module.</li>
+<li>[ ] Read package metadata section.</li>
+<li>[ ] Read dependencies section with version constraints.</li>
+<li>[ ] Report manifest validation errors with source locations.</li>
+</ul>
+<li>[ ] Add version constraint resolver</li>
+<ul>
+<li>[ ] Implement backtracking dependency resolver.</li>
+<li>[ ] Pick the highest version satisfying all constraints.</li>
+<li>[ ] Detect and report unsolvable constraint sets (diamond conflicts).</li>
+<li>[ ] Write resolved versions to the lock file.</li>
+</ul>
+<li>[ ] Wire dependency loading into module resolution</li>
+<ul>
+<li>[ ] Resolve manifest-declared dependencies before bundled stdlib lookup.</li>
+<li>[ ] Honor the lock file for reproducible loads.</li>
+<li>[ ] Preserve same-directory and <code>TYA_PATH</code> precedence.</li>
+</ul>
+<li>[ ] Add <code>tya install</code> and <code>tya update</code> CLI commands</li>
+<ul>
+<li>[ ] Add <code>tya install</code> to read the manifest, resolve, and write the lock file.</li>
+<li>[ ] Add <code>tya update [package]</code> to recompute the lock for one or all packages.</li>
+<li>[ ] Report missing or conflicting requirements with source-oriented diagnostics.</li>
+</ul>
+<li>[ ] Keep v0.24 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.24 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.24/</code> aligned with the v0.24 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add CLI, resolver, lockfile, and negative tests for v0.24.</li>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>

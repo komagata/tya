@@ -1,0 +1,18 @@
+import path
+
+assert_equal "tmp/tya/memo.txt", path.join(["tmp", "tya", "memo.txt"])
+assert_equal "tmp/memo.txt", path.clean("tmp/./tya/../memo.txt")
+assert_equal "memo.txt", path.basename("/tmp/tya/memo.txt")
+assert_equal "/tmp/tya", path.dirname("/tmp/tya/memo.txt")
+assert_equal ".txt", path.extname("/tmp/tya/memo.txt")
+assert_equal "memo.txt", path.basename("memo.txt")
+assert_equal ".", path.dirname("memo.txt")
+assert_equal "/", path.dirname("/")
+assert_equal "", path.extname("foo")
+assert_equal "", path.extname(".bashrc")
+assert_equal ".gz", path.extname("foo.tar.gz")
+assert_equal ".", path.clean("")
+assert_equal "/", path.clean("/")
+assert_equal "a/b/d", path.clean("a//b/./c/../d")
+assert_equal "../a/b", path.clean("../a/b")
+assert_equal "/a/b", path.join(["/", "a", "b"])
