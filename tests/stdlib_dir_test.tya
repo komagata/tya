@@ -1,0 +1,34 @@
+import unittest
+import dir
+import file
+
+module stdlib_dir_test
+  test_mkdir_list_rmdir = ->
+    root = "/tmp/tya_v23_dir_a"
+    try
+      dir.rmdir(root)
+    catch _
+      nil
+    dir.mkdir(root)
+    file.write("{root}/b.txt", "")
+    file.write("{root}/a.txt", "")
+    unittest.assert_equal(["a.txt", "b.txt"], dir.list(root), "sorted list")
+    file.remove("{root}/a.txt")
+    file.remove("{root}/b.txt")
+    dir.rmdir(root)
+    unittest.assert_equal(false, file.exists?(root), "rmdir removed")
+
+  test_mkdir_existing_raises = ->
+    root = "/tmp/tya_v23_dir_b"
+    try
+      dir.rmdir(root)
+    catch _
+      nil
+    dir.mkdir(root)
+    raised = false
+    try
+      dir.mkdir(root)
+    catch _
+      raised = true
+    unittest.assert(raised, "duplicate mkdir raises")
+    dir.rmdir(root)

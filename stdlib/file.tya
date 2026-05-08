@@ -2,3 +2,6 @@ module file
   read = path -> read_file(path)
   write = path, text -> write_file(path, text)
   exists? = path -> file_exists(path)
+  remove = path -> file_remove(path)
+  rename = old_path, new_path -> file_rename(old_path, new_path)
+  stat = path -> file_stat(path)

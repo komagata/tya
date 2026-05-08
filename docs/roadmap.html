@@ -72,13 +72,13 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="current-roadmap">Current Roadmap</h2>
 <ul>
-<li>[ ] Ship filesystem standard library expansion (deferred from v0.22, schedule TBD)</li>
+<li>[x] Ship filesystem standard library expansion (deferred from v0.22)</li>
 <ul>
-<li>[ ] Implement <code>dir</code> module: <code>dir.list</code>, <code>dir.mkdir</code>, <code>dir.rmdir</code> with structured errors.</li>
-<li>[ ] Expand <code>file</code> module: <code>file.remove</code>, <code>file.rename</code>, <code>file.stat</code> (kind/size/readable/writable/executable).</li>
-<li>[ ] Expand <code>path</code> and <code>os</code> modules: <code>path.expand_user</code>, <code>os.cwd</code>, <code>os.chdir</code>.</li>
-<li>[ ] Keep time/date, streaming IO, binary IO, async IO, recursive walking, <code>mkdir_all</code>, <code>remove_all</code>, copy, symlink, chmod/chown, file handles, <code>$VAR</code> path expansion, and platform-specific path separators out of scope.</li>
-<li>[ ] Add tests, regenerate docs, preserve the selfhost fixed point.</li>
+<li>[x] Implement <code>dir</code> module: <code>dir.list</code>, <code>dir.mkdir</code>, <code>dir.rmdir</code> with structured errors.</li>
+<li>[x] Expand <code>file</code> module: <code>file.remove</code>, <code>file.rename</code>, <code>file.stat</code> (kind/size/readable/writable/executable).</li>
+<li>[x] Expand <code>path</code> and <code>os</code> modules: <code>path.expand_user</code>, <code>os.cwd</code>, <code>os.chdir</code>.</li>
+<li>[x] Keep time/date, streaming IO, binary IO, async IO, recursive walking, <code>mkdir_all</code>, <code>remove_all</code>, copy, symlink, chmod/chown, file handles, <code>$VAR</code> path expansion, and platform-specific path separators out of scope.</li>
+<li>[x] Add tests, regenerate docs, preserve the selfhost fixed point.</li>
 </ul>
 <li>[ ] Ship v0.23 data-format and utility stdlib expansion</li>
 <ul>

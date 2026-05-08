@@ -103,12 +103,12 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Current Roadmap
 
-- [ ] Ship filesystem standard library expansion (deferred from v0.22, schedule TBD)
-  - [ ] Implement `dir` module: `dir.list`, `dir.mkdir`, `dir.rmdir` with structured errors.
-  - [ ] Expand `file` module: `file.remove`, `file.rename`, `file.stat` (kind/size/readable/writable/executable).
-  - [ ] Expand `path` and `os` modules: `path.expand_user`, `os.cwd`, `os.chdir`.
-  - [ ] Keep time/date, streaming IO, binary IO, async IO, recursive walking, `mkdir_all`, `remove_all`, copy, symlink, chmod/chown, file handles, `$VAR` path expansion, and platform-specific path separators out of scope.
-  - [ ] Add tests, regenerate docs, preserve the selfhost fixed point.
+- [x] Ship filesystem standard library expansion (deferred from v0.22)
+  - [x] Implement `dir` module: `dir.list`, `dir.mkdir`, `dir.rmdir` with structured errors.
+  - [x] Expand `file` module: `file.remove`, `file.rename`, `file.stat` (kind/size/readable/writable/executable).
+  - [x] Expand `path` and `os` modules: `path.expand_user`, `os.cwd`, `os.chdir`.
+  - [x] Keep time/date, streaming IO, binary IO, async IO, recursive walking, `mkdir_all`, `remove_all`, copy, symlink, chmod/chown, file handles, `$VAR` path expansion, and platform-specific path separators out of scope.
+  - [x] Add tests, regenerate docs, preserve the selfhost fixed point.
 - [ ] Ship v0.23 data-format and utility stdlib expansion
   - [x] Define v0.23 scope
     - [x] Add `docs/v0.23/SPEC.md`.

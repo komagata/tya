@@ -85,3 +85,4 @@ module path
     if joined == ""
       return "."
     return joined
+  expand_user = value -> path_expand_user(value)

@@ -547,6 +547,136 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return nil, statErr
 	}))
+	env.set("dir_list", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("dir_list", args)
+		if err != nil {
+			return nil, err
+		}
+		entries, listErr := os.ReadDir(path)
+		if listErr != nil {
+			return nil, &raisedSignal{value: listErr.Error()}
+		}
+		arr := &Array{items: make([]Value, 0, len(entries))}
+		for _, e := range entries {
+			arr.items = append(arr.items, e.Name())
+		}
+		return arr, nil
+	}))
+	env.set("dir_mkdir", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("dir_mkdir", args)
+		if err != nil {
+			return nil, err
+		}
+		if mkErr := os.Mkdir(path, 0755); mkErr != nil {
+			return nil, &raisedSignal{value: mkErr.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("dir_rmdir", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("dir_rmdir", args)
+		if err != nil {
+			return nil, err
+		}
+		if rmErr := os.Remove(path); rmErr != nil {
+			return nil, &raisedSignal{value: rmErr.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("file_remove", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("file_remove", args)
+		if err != nil {
+			return nil, err
+		}
+		info, statErr := os.Stat(path)
+		if statErr != nil {
+			return nil, &raisedSignal{value: statErr.Error()}
+		}
+		if info.IsDir() {
+			return nil, &raisedSignal{value: "file.remove: target is a directory"}
+		}
+		if rmErr := os.Remove(path); rmErr != nil {
+			return nil, &raisedSignal{value: rmErr.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("file_rename", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("file_rename expects 2 arguments")
+		}
+		oldPath, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("file_rename expects string old path")
+		}
+		newPath, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("file_rename expects string new path")
+		}
+		if rnErr := os.Rename(oldPath, newPath); rnErr != nil {
+			return nil, &raisedSignal{value: rnErr.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("file_stat", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("file_stat", args)
+		if err != nil {
+			return nil, err
+		}
+		info, statErr := os.Stat(path)
+		if statErr != nil {
+			return nil, &raisedSignal{value: statErr.Error()}
+		}
+		kind := "other"
+		if info.Mode().IsRegular() {
+			kind = "file"
+		} else if info.IsDir() {
+			kind = "dir"
+		}
+		out := Dict{}
+		out["kind"] = kind
+		out["size"] = int64(info.Size())
+		mode := info.Mode()
+		out["readable"] = mode&0444 != 0
+		out["writable"] = mode&0222 != 0
+		out["executable"] = mode&0111 != 0
+		return out, nil
+	}))
+	env.set("path_expand_user", Builtin(func(args []Value) (Value, error) {
+		v, err := oneString("path_expand_user", args)
+		if err != nil {
+			return nil, err
+		}
+		if v == "" || v[0] != '~' {
+			return v, nil
+		}
+		home := os.Getenv("HOME")
+		if v == "~" {
+			return home, nil
+		}
+		if len(v) > 1 && v[1] == '/' {
+			return home + v[1:], nil
+		}
+		return v, nil
+	}))
+	env.set("cwd", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("cwd expects 0 arguments")
+		}
+		dir, cwdErr := os.Getwd()
+		if cwdErr != nil {
+			return nil, &raisedSignal{value: cwdErr.Error()}
+		}
+		return dir, nil
+	}))
+	env.set("chdir", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("chdir", args)
+		if err != nil {
+			return nil, err
+		}
+		if cdErr := os.Chdir(path); cdErr != nil {
+			return nil, &raisedSignal{value: cdErr.Error()}
+		}
+		return nil, nil
+	}))
 	env.set("args", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 0 {
 			return nil, fmt.Errorf("args expects 0 arguments")

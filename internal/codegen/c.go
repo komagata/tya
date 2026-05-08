@@ -1105,6 +1105,50 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		g.line(fmt.Sprintf("tya_panic(%s);", message))
 		return nil
 	}
+	if id.Name == "dir_mkdir" && len(call.Args) == 1 {
+		arg, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_dir_mkdir(%s);", arg))
+		return nil
+	}
+	if id.Name == "dir_rmdir" && len(call.Args) == 1 {
+		arg, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_dir_rmdir(%s);", arg))
+		return nil
+	}
+	if id.Name == "file_remove" && len(call.Args) == 1 {
+		arg, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_file_remove(%s);", arg))
+		return nil
+	}
+	if id.Name == "file_rename" && len(call.Args) == 2 {
+		oldArg, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		newArg, _, err := g.expr(call.Args[1])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_file_rename(%s, %s);", oldArg, newArg))
+		return nil
+	}
+	if id.Name == "chdir" && len(call.Args) == 1 {
+		arg, _, err := g.expr(call.Args[0])
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_chdir(%s);", arg))
+		return nil
+	}
 	line := 1
 	if ident, ok := call.Callee.(*ast.Ident); ok {
 		line = ident.Tok.Line
@@ -1489,6 +1533,69 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("(tya_write_file(%s, %s), tya_nil())", path, text), "TyaValue", nil
+		}
+		if ok && id.Name == "dir_list" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_dir_list(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "dir_mkdir" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_dir_mkdir(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "dir_rmdir" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_dir_rmdir(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "file_remove" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_file_remove(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "file_rename" && len(n.Args) == 2 {
+			oldArg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			newArg, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_file_rename(%s, %s)", oldArg, newArg), "TyaValue", nil
+		}
+		if ok && id.Name == "file_stat" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_file_stat(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "path_expand_user" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_path_expand_user(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "cwd" && len(n.Args) == 0 {
+			return "tya_cwd()", "TyaValue", nil
+		}
+		if ok && id.Name == "chdir" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_chdir(%s)", arg), "TyaValue", nil
 		}
 		if ok && id.Name == "split" && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])

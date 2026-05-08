@@ -136,6 +136,34 @@ exit code</code></pre>
 <p><code>args()</code> returns the command-line arguments as an array of strings.</p>
 <p><code>env(name)</code> returns the environment variable value, or <code>nil</code> when not present.</p>
 <p><code>exit(code)</code> exits the process with <code>code</code>.</p>
+<p><code>cwd()</code> returns the current working directory as a string.</p>
+<p><code>chdir(path)</code> changes the process working directory and raises an error on failure.</p>
+<h2 id="dir"><code>dir</code></h2>
+<pre><code class="language-tya">import dir
+
+names = dir.list(&quot;.&quot;)
+dir.mkdir(&quot;tmp&quot;)
+dir.rmdir(&quot;tmp&quot;)</code></pre>
+<p>Functions:</p>
+<pre><code class="language-tya">list path
+mkdir path
+rmdir path</code></pre>
+<p><code>list(path)</code> returns an array of names directly under <code>path</code> in dictionary order. <code>.</code> and <code>..</code> are excluded.</p>
+<p><code>mkdir(path)</code> creates one directory level. It raises an error when the parent directory does not exist or when <code>path</code> already exists.</p>
+<p><code>rmdir(path)</code> removes an empty directory. It raises an error when the directory is not empty.</p>
+<h2 id="file-additional-functions"><code>file</code> (additional functions)</h2>
+<pre><code class="language-tya">import file
+
+file.remove(&quot;memo.txt&quot;)
+file.rename(&quot;a.txt&quot;, &quot;b.txt&quot;)
+info = file.stat(&quot;b.txt&quot;)
+println info[&quot;kind&quot;]
+println info[&quot;size&quot;]</code></pre>
+<p><code>remove(path)</code> removes a file. It raises an error when <code>path</code> is a directory.</p>
+<p><code>rename(old_path, new_path)</code> renames a file or directory.</p>
+<p><code>stat(path)</code> returns a dictionary with <code>kind</code> (<code>&quot;file&quot;</code>, <code>&quot;dir&quot;</code>, or <code>&quot;other&quot;</code>), <code>size</code> in bytes, and <code>readable</code>, <code>writable</code>, <code>executable</code> booleans.</p>
+<h2 id="path-additional-functions"><code>path</code> (additional functions)</h2>
+<p><code>expand_user(value)</code> expands <code>~</code> and <code>~/...</code> to the current user's home directory. Other strings are returned unchanged.</p>
 <h2 id="unittest"><code>unittest</code></h2>
 <pre><code class="language-tya">import unittest
 import string

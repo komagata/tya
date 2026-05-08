@@ -195,6 +195,64 @@ exit code
 
 `exit(code)` exits the process with `code`.
 
+`cwd()` returns the current working directory as a string.
+
+`chdir(path)` changes the process working directory and raises an error on
+failure.
+
+## `dir`
+
+```tya
+import dir
+
+names = dir.list(".")
+dir.mkdir("tmp")
+dir.rmdir("tmp")
+```
+
+Functions:
+
+```tya
+list path
+mkdir path
+rmdir path
+```
+
+`list(path)` returns an array of names directly under `path` in dictionary
+order. `.` and `..` are excluded.
+
+`mkdir(path)` creates one directory level. It raises an error when the
+parent directory does not exist or when `path` already exists.
+
+`rmdir(path)` removes an empty directory. It raises an error when the
+directory is not empty.
+
+## `file` (additional functions)
+
+```tya
+import file
+
+file.remove("memo.txt")
+file.rename("a.txt", "b.txt")
+info = file.stat("b.txt")
+println info["kind"]
+println info["size"]
+```
+
+`remove(path)` removes a file. It raises an error when `path` is a
+directory.
+
+`rename(old_path, new_path)` renames a file or directory.
+
+`stat(path)` returns a dictionary with `kind` (`"file"`, `"dir"`, or
+`"other"`), `size` in bytes, and `readable`, `writable`, `executable`
+booleans.
+
+## `path` (additional functions)
+
+`expand_user(value)` expands `~` and `~/...` to the current user's home
+directory. Other strings are returned unchanged.
+
 ## `unittest`
 
 ```tya
