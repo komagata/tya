@@ -103,43 +103,61 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Current Roadmap
 
-- [ ] Ship v0.24 package manifest and version resolution
-  - [ ] Define v0.24 package manifest scope
-    - [ ] Add `docs/v0.24/SPEC.md`.
-    - [ ] Decide the package manifest filename (placeholder: `Tyafile`).
-    - [ ] Specify the manifest format as TOML, parsed by the v0.23 `toml` standard module.
-    - [ ] Specify the resolved-version lock filename and format (placeholder: `Tyafile.lock`).
-    - [ ] Specify package source identity (name plus version constraints).
-    - [ ] Specify version operators `~>`, `>=`, `<`, `=`.
-    - [ ] Specify Bundler-style single-version-per-source resolution policy.
-    - [ ] Specify `tya install` to resolve and write the lock file.
-    - [ ] Specify `tya update [package]` to recompute resolution for one or all packages.
-    - [ ] Specify import resolution to honor the lock file for declared dependencies.
-    - [ ] Keep multi-version coexistence, package alias, `unique` declarations, semver-aware type identity, remote registry install, native dependency build, content-addressed lock checksums, and circular dependency healing out of v0.24.
-  - [ ] Add manifest parsing
-    - [ ] Parse the manifest via the `toml` standard module.
-    - [ ] Read package metadata section.
-    - [ ] Read dependencies section with version constraints.
-    - [ ] Report manifest validation errors with source locations.
-  - [ ] Add version constraint resolver
-    - [ ] Implement backtracking dependency resolver.
-    - [ ] Pick the highest version satisfying all constraints.
-    - [ ] Detect and report unsolvable constraint sets (diamond conflicts).
-    - [ ] Write resolved versions to the lock file.
-  - [ ] Wire dependency loading into module resolution
-    - [ ] Resolve manifest-declared dependencies before bundled stdlib lookup.
-    - [ ] Honor the lock file for reproducible loads.
-    - [ ] Preserve same-directory and `TYA_PATH` precedence.
-  - [ ] Add `tya install` and `tya update` CLI commands
-    - [ ] Add `tya install` to read the manifest, resolve, and write the lock file.
-    - [ ] Add `tya update [package]` to recompute the lock for one or all packages.
-    - [ ] Report missing or conflicting requirements with source-oriented diagnostics.
+- [ ] Ship v0.24 scripting toolkit and lightweight numerics
+  - [x] Define v0.24 scope
+    - [x] Add `docs/v0.24/SPEC.md`.
+    - [x] Add `time`, `random`, `process`, `hex`, `digest`, `secure_random`, and `matrix` standard modules.
+    - [x] Expand `math` with `sqrt`, `pow`, `floor`, `ceil`, `round`, `trunc`, `log`, `log2`, `log10`, `exp`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `pi`, `e`.
+    - [x] Keep all native-backed APIs import-only and explicit.
+    - [x] Use structured `raise` for native operation failures.
+    - [x] Keep byte-array type, streaming digest, HTTP/TCP/UDP/TLS, regex, yaml, xml, markdown, async/threads, subprocess pipes, matrix inverse/eigenvalues, and shell-string parsing out of v0.24.
+  - [ ] Implement the `time` module
+    - [ ] Add `time.now`, `time.sleep`, `time.format`, `time.parse`, `time.since`.
+    - [ ] Use UNIX timestamp seconds (float, sub-second precision) as the time value.
+    - [ ] Support `"iso"`, `"date"`, `"time"`, `"unix"` format layouts.
+    - [ ] Raise on invalid `time.parse` input or negative `time.sleep` argument.
+  - [ ] Implement the `random` module (PRNG, seedable)
+    - [ ] Add `random.seed`, `random.int`, `random.float`, `random.choice`, `random.shuffle`.
+    - [ ] Use a Mersenne Twister or equivalent PRNG; seedable by int or string.
+    - [ ] Raise on empty `random.choice` input or invalid `random.int` range.
+  - [ ] Expand the `math` module
+    - [ ] Wire libm functions (`sqrt`, `pow`, `floor`, `ceil`, `round`, `trunc`, `log`, `log2`, `log10`, `exp`, trig and inverse trig, `atan2`).
+    - [ ] Expose `math.pi` and `math.e` as numeric constants (not functions).
+    - [ ] Raise on `sqrt` of negative numbers and on non-positive `log` arguments.
+  - [ ] Implement the `process` module
+    - [ ] Add `process.run(command, options)` returning `{exit_code, stdout, stderr}`.
+    - [ ] Accept array form only (no shell-string).
+    - [ ] Support `cwd`, `env`, and `input` options.
+    - [ ] Buffer stdout/stderr fully into memory.
+    - [ ] Raise only on launch failures; non-zero exit codes are returned in the result.
+  - [ ] Implement the `hex` module
+    - [ ] Add `hex.encode` (lowercase) and `hex.decode` (case-insensitive).
+    - [ ] Raise on odd-length or non-hex input to `hex.decode`.
+  - [ ] Implement the `digest` module
+    - [ ] Add `md5`, `sha1`, `sha256`, `sha384`, `sha512` returning lowercase hex strings.
+    - [ ] Implement digests in C without external deps for portability (target macOS and Linux).
+    - [ ] Hash UTF-8 bytes of the input string; do not introduce a byte-array type.
+  - [ ] Implement the `secure_random` module
+    - [ ] Add `bytes`, `hex`, `base64`, `uuid` (RFC 4122 v4), and `int`.
+    - [ ] Source entropy from `getentropy` (macOS/BSD), `getrandom`, or `/dev/urandom` as fallback.
+    - [ ] Use rejection sampling in `secure_random.int` to avoid modulo bias.
+  - [ ] Implement the `matrix` module (pure Tya)
+    - [ ] Represent a matrix as `{rows, cols, data}`.
+    - [ ] Add `new`, `zero`, `identity`, `at`, `set`, `add`, `sub`, `scale`, `mul`, `transpose`, `det`, `equal?`.
+    - [ ] Implement `det` via cofactor expansion for sizes up to 4x4; raise for larger sizes.
+    - [ ] Validate dimensions on construction and per-operation.
   - [ ] Keep v0.24 documentation and tests aligned
     - [ ] Update latest docs when v0.24 behavior is implemented.
     - [ ] Keep `docs/v0.24/` aligned with the v0.24 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add CLI, resolver, lockfile, and negative tests for v0.24.
+    - [ ] Add unittest-form tests for each new module.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Future: package manifest and version resolution (deferred, schedule TBD)
+  - [ ] Decide manifest filename (placeholder `Tyafile`) and lockfile format.
+  - [ ] Specify version operators and Bundler-style single-version-per-source resolution.
+  - [ ] Add `tya install` / `tya update` CLI commands.
+  - [ ] Wire manifest dependencies into module resolution before bundled stdlib lookup.
+  - [ ] Use the `toml` standard module to parse the manifest.
 
 ## Verification Reference
 

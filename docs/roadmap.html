@@ -72,56 +72,84 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="current-roadmap">Current Roadmap</h2>
 <ul>
-<li>[ ] Ship v0.24 package manifest and version resolution</li>
+<li>[ ] Ship v0.24 scripting toolkit and lightweight numerics</li>
 <ul>
-<li>[ ] Define v0.24 package manifest scope</li>
+<li>[x] Define v0.24 scope</li>
 <ul>
-<li>[ ] Add <code>docs/v0.24/SPEC.md</code>.</li>
-<li>[ ] Decide the package manifest filename (placeholder: <code>Tyafile</code>).</li>
-<li>[ ] Specify the manifest format as TOML, parsed by the v0.23 <code>toml</code> standard module.</li>
-<li>[ ] Specify the resolved-version lock filename and format (placeholder: <code>Tyafile.lock</code>).</li>
-<li>[ ] Specify package source identity (name plus version constraints).</li>
-<li>[ ] Specify version operators <code>~&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>=</code>.</li>
-<li>[ ] Specify Bundler-style single-version-per-source resolution policy.</li>
-<li>[ ] Specify <code>tya install</code> to resolve and write the lock file.</li>
-<li>[ ] Specify <code>tya update [package]</code> to recompute resolution for one or all packages.</li>
-<li>[ ] Specify import resolution to honor the lock file for declared dependencies.</li>
-<li>[ ] Keep multi-version coexistence, package alias, <code>unique</code> declarations, semver-aware type identity, remote registry install, native dependency build, content-addressed lock checksums, and circular dependency healing out of v0.24.</li>
+<li>[x] Add <code>docs/v0.24/SPEC.md</code>.</li>
+<li>[x] Add <code>time</code>, <code>random</code>, <code>process</code>, <code>hex</code>, <code>digest</code>, <code>secure_random</code>, and <code>matrix</code> standard modules.</li>
+<li>[x] Expand <code>math</code> with <code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, <code>atan2</code>, <code>pi</code>, <code>e</code>.</li>
+<li>[x] Keep all native-backed APIs import-only and explicit.</li>
+<li>[x] Use structured <code>raise</code> for native operation failures.</li>
+<li>[x] Keep byte-array type, streaming digest, HTTP/TCP/UDP/TLS, regex, yaml, xml, markdown, async/threads, subprocess pipes, matrix inverse/eigenvalues, and shell-string parsing out of v0.24.</li>
 </ul>
-<li>[ ] Add manifest parsing</li>
+<li>[ ] Implement the <code>time</code> module</li>
 <ul>
-<li>[ ] Parse the manifest via the <code>toml</code> standard module.</li>
-<li>[ ] Read package metadata section.</li>
-<li>[ ] Read dependencies section with version constraints.</li>
-<li>[ ] Report manifest validation errors with source locations.</li>
+<li>[ ] Add <code>time.now</code>, <code>time.sleep</code>, <code>time.format</code>, <code>time.parse</code>, <code>time.since</code>.</li>
+<li>[ ] Use UNIX timestamp seconds (float, sub-second precision) as the time value.</li>
+<li>[ ] Support <code>&quot;iso&quot;</code>, <code>&quot;date&quot;</code>, <code>&quot;time&quot;</code>, <code>&quot;unix&quot;</code> format layouts.</li>
+<li>[ ] Raise on invalid <code>time.parse</code> input or negative <code>time.sleep</code> argument.</li>
 </ul>
-<li>[ ] Add version constraint resolver</li>
+<li>[ ] Implement the <code>random</code> module (PRNG, seedable)</li>
 <ul>
-<li>[ ] Implement backtracking dependency resolver.</li>
-<li>[ ] Pick the highest version satisfying all constraints.</li>
-<li>[ ] Detect and report unsolvable constraint sets (diamond conflicts).</li>
-<li>[ ] Write resolved versions to the lock file.</li>
+<li>[ ] Add <code>random.seed</code>, <code>random.int</code>, <code>random.float</code>, <code>random.choice</code>, <code>random.shuffle</code>.</li>
+<li>[ ] Use a Mersenne Twister or equivalent PRNG; seedable by int or string.</li>
+<li>[ ] Raise on empty <code>random.choice</code> input or invalid <code>random.int</code> range.</li>
 </ul>
-<li>[ ] Wire dependency loading into module resolution</li>
+<li>[ ] Expand the <code>math</code> module</li>
 <ul>
-<li>[ ] Resolve manifest-declared dependencies before bundled stdlib lookup.</li>
-<li>[ ] Honor the lock file for reproducible loads.</li>
-<li>[ ] Preserve same-directory and <code>TYA_PATH</code> precedence.</li>
+<li>[ ] Wire libm functions (<code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, trig and inverse trig, <code>atan2</code>).</li>
+<li>[ ] Expose <code>math.pi</code> and <code>math.e</code> as numeric constants (not functions).</li>
+<li>[ ] Raise on <code>sqrt</code> of negative numbers and on non-positive <code>log</code> arguments.</li>
 </ul>
-<li>[ ] Add <code>tya install</code> and <code>tya update</code> CLI commands</li>
+<li>[ ] Implement the <code>process</code> module</li>
 <ul>
-<li>[ ] Add <code>tya install</code> to read the manifest, resolve, and write the lock file.</li>
-<li>[ ] Add <code>tya update [package]</code> to recompute the lock for one or all packages.</li>
-<li>[ ] Report missing or conflicting requirements with source-oriented diagnostics.</li>
+<li>[ ] Add <code>process.run(command, options)</code> returning <code>{exit_code, stdout, stderr}</code>.</li>
+<li>[ ] Accept array form only (no shell-string).</li>
+<li>[ ] Support <code>cwd</code>, <code>env</code>, and <code>input</code> options.</li>
+<li>[ ] Buffer stdout/stderr fully into memory.</li>
+<li>[ ] Raise only on launch failures; non-zero exit codes are returned in the result.</li>
+</ul>
+<li>[ ] Implement the <code>hex</code> module</li>
+<ul>
+<li>[ ] Add <code>hex.encode</code> (lowercase) and <code>hex.decode</code> (case-insensitive).</li>
+<li>[ ] Raise on odd-length or non-hex input to <code>hex.decode</code>.</li>
+</ul>
+<li>[ ] Implement the <code>digest</code> module</li>
+<ul>
+<li>[ ] Add <code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code> returning lowercase hex strings.</li>
+<li>[ ] Implement digests in C without external deps for portability (target macOS and Linux).</li>
+<li>[ ] Hash UTF-8 bytes of the input string; do not introduce a byte-array type.</li>
+</ul>
+<li>[ ] Implement the <code>secure_random</code> module</li>
+<ul>
+<li>[ ] Add <code>bytes</code>, <code>hex</code>, <code>base64</code>, <code>uuid</code> (RFC 4122 v4), and <code>int</code>.</li>
+<li>[ ] Source entropy from <code>getentropy</code> (macOS/BSD), <code>getrandom</code>, or <code>/dev/urandom</code> as fallback.</li>
+<li>[ ] Use rejection sampling in <code>secure_random.int</code> to avoid modulo bias.</li>
+</ul>
+<li>[ ] Implement the <code>matrix</code> module (pure Tya)</li>
+<ul>
+<li>[ ] Represent a matrix as <code>{rows, cols, data}</code>.</li>
+<li>[ ] Add <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>set</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code>, <code>equal?</code>.</li>
+<li>[ ] Implement <code>det</code> via cofactor expansion for sizes up to 4x4; raise for larger sizes.</li>
+<li>[ ] Validate dimensions on construction and per-operation.</li>
 </ul>
 <li>[ ] Keep v0.24 documentation and tests aligned</li>
 <ul>
 <li>[ ] Update latest docs when v0.24 behavior is implemented.</li>
 <li>[ ] Keep <code>docs/v0.24/</code> aligned with the v0.24 minor specification.</li>
 <li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add CLI, resolver, lockfile, and negative tests for v0.24.</li>
+<li>[ ] Add unittest-form tests for each new module.</li>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
+</ul>
+<li>[ ] Future: package manifest and version resolution (deferred, schedule TBD)</li>
+<ul>
+<li>[ ] Decide manifest filename (placeholder <code>Tyafile</code>) and lockfile format.</li>
+<li>[ ] Specify version operators and Bundler-style single-version-per-source resolution.</li>
+<li>[ ] Add <code>tya install</code> / <code>tya update</code> CLI commands.</li>
+<li>[ ] Wire manifest dependencies into module resolution before bundled stdlib lookup.</li>
+<li>[ ] Use the <code>toml</code> standard module to parse the manifest.</li>
 </ul>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>

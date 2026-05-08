@@ -130,6 +130,7 @@ print array.first(["tya"])
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
+- [v0.24 Spec](https://tya-lang.org/v0.24/spec.html): time, random, math expansion, process, hex, digest, secure_random, and matrix standard modules.
 - [v0.23 Spec](https://tya-lang.org/v0.23/spec.html): TOML, JSON, CSV, base64, and URL standard modules.
 - [v0.22 Spec](https://tya-lang.org/v0.22/spec.html): unittest standard module, module reflection, and `tya test` runner.
 - [v0.21 Spec](https://tya-lang.org/v0.21/spec.html): native-backed `file` and `os` standard modules.
