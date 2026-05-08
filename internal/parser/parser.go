@@ -181,22 +181,30 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
-		methodName, err := p.expectName("expected method name")
+		isClassMember := p.match(token.AT)
+		if isClassMember {
+			if !p.match(token.AT) {
+				return nil, p.err("expected '@' for class member")
+			}
+		}
+		memberName, err := p.expectName("expected class member name")
 		if err != nil {
 			return nil, err
 		}
 		if !p.match(token.ASSIGN) {
-			return nil, p.err("expected '=' after method name")
+			return nil, p.err("expected '=' after class member name")
 		}
-		fn, err := p.exprLine()
+		value, err := p.exprLine()
 		if err != nil {
 			return nil, err
 		}
-		funcLit, ok := fn.(*ast.FuncLit)
-		if !ok {
-			return nil, p.errAt(methodName, "class body may only contain method definitions")
+		if funcLit, ok := value.(*ast.FuncLit); ok {
+			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: funcLit, Class: isClassMember})
+		} else if isClassMember {
+			decl.Vars = append(decl.Vars, ast.ClassVar{Name: memberName.Lexeme, Tok: memberName, Value: value})
+		} else {
+			decl.Fields = append(decl.Fields, ast.ClassField{Name: memberName.Lexeme, Tok: memberName, Value: value})
 		}
-		decl.Methods = append(decl.Methods, ast.ClassMethod{Name: methodName.Lexeme, Tok: methodName, Func: funcLit})
 		p.skipNewlines()
 	}
 	if !p.match(token.DEDENT) {
@@ -699,7 +707,12 @@ func (p *Parser) primary() (ast.Expr, error) {
 	switch tok.Type {
 	case token.AT:
 		if p.at(token.AT) {
-			return nil, p.err("@@field is not in Tya v0.5")
+			p.next()
+			name, err := p.expectName("expected class variable name")
+			if err != nil {
+				return nil, err
+			}
+			return &ast.ClassVarExpr{Name: name.Lexeme, NameTok: name}, nil
 		}
 		name, err := p.expectName("expected instance field name")
 		if err != nil {
@@ -864,13 +877,19 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 	var ex ast.Expr
 	if p.match(token.AT) {
 		if p.at(token.AT) {
-			return nil, p.err("@@field is not in Tya v0.5")
+			p.next()
+			name, err := p.expectName("expected class variable name")
+			if err != nil {
+				return nil, err
+			}
+			ex = &ast.ClassVarExpr{Name: name.Lexeme, NameTok: name}
+		} else {
+			name, err := p.expectName("expected instance field name")
+			if err != nil {
+				return nil, err
+			}
+			ex = &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}
 		}
-		name, err := p.expectName("expected instance field name")
-		if err != nil {
-			return nil, err
-		}
-		ex = &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}
 	} else {
 		tok, err := p.expectName("expected assignment target")
 		if err != nil {
@@ -920,6 +939,9 @@ func (p *Parser) isAssignStart() bool {
 func (p *Parser) scanAssignTarget(i *int) bool {
 	if p.toks[*i].Type == token.AT {
 		*i++
+		if p.toks[*i].Type == token.AT {
+			*i++
+		}
 		if p.toks[*i].Type != token.IDENT {
 			return false
 		}

@@ -10,9 +10,13 @@ module_stmt = name, members, line -> { kind: "module", name: name, members: memb
 
 module_member = name, value, line -> { name: name, value: value, line: line }
 
-class_stmt = name, methods, line -> { kind: "class", name: name, methods: methods, line: line }
+class_stmt = name, methods, line -> { kind: "class", name: name, methods: methods, fields: [], vars: [], line: line }
 
-class_method = name, value, line -> { name: name, value: value, line: line }
+class_method = name, value, line -> { name: name, value: value, line: line, class: false }
+
+class_member_method = name, value, line -> { name: name, value: value, line: line, class: true }
+
+class_field = name, value, line -> { name: name, value: value, line: line }
 
 multi_assign_stmt = names, value, line -> { kind: "multi_assign", names: names, value: value, line: line }
 
@@ -60,7 +64,11 @@ member_expr = target, name, line -> { kind: "member", target: target, name: name
 
 field_expr = name, line -> { kind: "field", name: name, line: line }
 
+class_var_expr = name, line -> { kind: "class_var", name: name, line: line }
+
 field_assign_stmt = name, value, line -> { kind: "field_assign", name: name, value: value, line: line }
+
+class_var_assign_stmt = name, value, line -> { kind: "class_var_assign", name: name, value: value, line: line }
 
 member_assign_stmt = target, name, value, line -> { kind: "member_assign", target: target, name: name, value: value, line: line }
 
@@ -73,6 +81,7 @@ try_expr = expr, line -> { kind: "try", expr: expr, line: line }
 syntax_errors = []
 parse_state = { function_depth: 0, loop_depth: 0 }
 checker_modules = []
+emitter_state = { class_ref: "" }
 
 has_name = names, name ->
   found = false
@@ -471,8 +480,7 @@ parse_primary = tokens, index ->
     return left, next
   if token_kind(tok) == "SYMBOL" and token_text(tok) == "@"
     if token_text(tokens[index + 1]) == "@"
-      push(syntax_errors, to_string(token_line(tok)) + ": @@field is not in Tya v0.5")
-      return nil_expr(token_line(tok)), index + 2
+      return class_var_expr(token_text(tokens[index + 2]), token_line(tok)), index + 3
     return field_expr(token_text(tokens[index + 1]), token_line(tok)), index + 2
   if token_kind(tok) == "IDENT"
     if token_text(tok) == "true"
@@ -677,9 +685,9 @@ parse_simple_statement = tokens, index ->
     return member_assign_stmt(ident_expr(token_text(current), token_line(current)), token_text(tokens[index + 2]), value, token_line(current)), next
   if token_text(current) == "@"
     if token_text(tokens[index + 1]) == "@"
-      push(syntax_errors, to_string(token_line(current)) + ": @@field is not in Tya v0.5")
-      value, next = parse_expr(tokens, index + 3)
-      return expr_stmt(value, token_line(current)), next
+      if token_text(tokens[index + 3]) == "="
+        value, next = parse_expr(tokens, index + 4)
+        return class_var_assign_stmt(token_text(tokens[index + 2]), value, token_line(current)), next
     if token_text(tokens[index + 2]) == "="
       value, next = parse_expr(tokens, index + 3)
       return field_assign_stmt(token_text(tokens[index + 1]), value, token_line(current)), next
@@ -769,13 +777,42 @@ parse_simple_block = tokens, index ->
     if token_kind(current) == "IDENT" and token_text(current) == "class"
       body, after_class = parse_simple_block(tokens, next + 2)
       methods = []
+      fields = []
+      vars = []
       for stmt in body
         if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
           push(methods, class_method(stmt["name"], stmt["value"], stmt["line"]))
         else
-          push(syntax_errors, to_string(stmt["line"]) + ": class body may only contain method definitions")
-      push(statements, class_stmt(token_text(tokens[next + 1]), methods, token_line(current)))
+          if stmt["kind"] == "assign"
+            push(fields, class_field(stmt["name"], stmt["value"], stmt["line"]))
+          else
+            if stmt["kind"] == "class_var_assign"
+              if stmt["value"]["kind"] == "func"
+                push(methods, class_member_method(stmt["name"], stmt["value"], stmt["line"]))
+              else
+                push(vars, class_field(stmt["name"], stmt["value"], stmt["line"]))
+            else
+              push(syntax_errors, to_string(stmt["line"]) + ": class body may only contain member definitions")
+      cls = class_stmt(token_text(tokens[next + 1]), methods, token_line(current))
+      cls["fields"] = fields
+      cls["vars"] = vars
+      push(statements, cls)
       next = after_class
+      continue
+    if token_text(current) == "@" and token_text(tokens[next + 1]) == "@" and token_text(tokens[next + 3]) == "=" and token_kind(tokens[next + 4]) == "IDENT" and token_text(tokens[next + 5]) == "->" and token_kind(tokens[next + 6]) == "NEWLINE"
+      record_name_error(tokens[next + 4])
+      body, after_block_func = parse_function_body_block(tokens, next + 6)
+      fn = func_expr([token_text(tokens[next + 4])], nil_expr(token_line(current)), token_line(current))
+      fn["body_stmts"] = body
+      push(statements, class_var_assign_stmt(token_text(tokens[next + 2]), fn, token_line(current)))
+      next = after_block_func
+      continue
+    if token_text(current) == "@" and token_text(tokens[next + 1]) == "@" and token_text(tokens[next + 3]) == "=" and token_text(tokens[next + 4]) == "->" and token_kind(tokens[next + 5]) == "NEWLINE"
+      body, after_block_func = parse_function_body_block(tokens, next + 5)
+      fn = func_expr([], nil_expr(token_line(current)), token_line(current))
+      fn["body_stmts"] = body
+      push(statements, class_var_assign_stmt(token_text(tokens[next + 2]), fn, token_line(current)))
+      next = after_block_func
       continue
     if token_kind(current) == "IDENT" and token_text(tokens[next + 1]) == "=" and token_text(tokens[next + 2]) == "->" and token_kind(tokens[next + 3]) == "NEWLINE"
       record_name_error(current)
@@ -908,12 +945,26 @@ parse_statement = tokens, index ->
   if token_kind(current) == "IDENT" and token_text(current) == "class"
     body, next = parse_simple_block(tokens, index + 2)
     methods = []
+    fields = []
+    vars = []
     for stmt in body
       if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
         push(methods, class_method(stmt["name"], stmt["value"], stmt["line"]))
       else
-        push(syntax_errors, to_string(stmt["line"]) + ": class body may only contain method definitions")
-    return class_stmt(token_text(tokens[index + 1]), methods, token_line(current)), next
+        if stmt["kind"] == "assign"
+          push(fields, class_field(stmt["name"], stmt["value"], stmt["line"]))
+        else
+          if stmt["kind"] == "class_var_assign"
+            if stmt["value"]["kind"] == "func"
+              push(methods, class_member_method(stmt["name"], stmt["value"], stmt["line"]))
+            else
+              push(vars, class_field(stmt["name"], stmt["value"], stmt["line"]))
+          else
+            push(syntax_errors, to_string(stmt["line"]) + ": class body may only contain member definitions")
+    cls = class_stmt(token_text(tokens[index + 1]), methods, token_line(current))
+    cls["fields"] = fields
+    cls["vars"] = vars
+    return cls, next
   if token_kind(current) == "IDENT" and token_text(current) == "module"
     record_name_error(tokens[index + 1])
     body, next = parse_simple_block(tokens, index + 2)
@@ -1215,6 +1266,9 @@ check_expr = ctx, expr ->
     if current["kind"] == "field"
       if not has(ctx, "in_method")
         push(errors, to_string(current["line"]) + ": @" + current["name"] + " is only valid inside an instance method")
+    if current["kind"] == "class_var"
+      if not has(ctx, "in_class")
+        push(errors, to_string(current["line"]) + ": @@" + current["name"] + " is only valid inside a class")
     if current["kind"] == "call"
       push(work, current["callee"])
       for arg in current["args"]
@@ -1226,6 +1280,8 @@ check_expr = ctx, expr ->
       fn_ctx = checker_context(errors, fn_names, fn_kinds, fn_constants)
       if has(ctx, "in_method")
         fn_ctx["in_method"] = true
+      if has(ctx, "in_class")
+        fn_ctx["in_class"] = true
       param_names = []
       for param in current["params"]
         if has_name(param_names, param)
@@ -1269,14 +1325,18 @@ check_simple_stmt = ctx, stmt ->
       remember(member_names, class_value["name"])
       for method in class_value["methods"]
         method_ctx = checker_context(errors, names, kinds, constants)
-        method_ctx["in_method"] = true
+        method_ctx["in_class"] = true
+        if not method["class"]
+          method_ctx["in_method"] = true
         check_expr(method_ctx, method["value"])
   if stmt["kind"] == "class"
     remember(names, stmt["name"])
     kinds[stmt["name"]] = "class"
     for method in stmt["methods"]
       method_ctx = checker_context(errors, names, kinds, constants)
-      method_ctx["in_method"] = true
+      method_ctx["in_class"] = true
+      if not method["class"]
+        method_ctx["in_method"] = true
       check_expr(method_ctx, method["value"])
   if stmt["kind"] == "assign"
     check_name(errors, stmt["line"], "variable", stmt["name"])
@@ -1307,6 +1367,10 @@ check_simple_stmt = ctx, stmt ->
   if stmt["kind"] == "field_assign"
     if not has(ctx, "in_method")
       push(errors, to_string(stmt["line"]) + ": @" + stmt["name"] + " is only valid inside an instance method")
+    check_expr(ctx, stmt["value"])
+  if stmt["kind"] == "class_var_assign"
+    if not has(ctx, "in_class")
+      push(errors, to_string(stmt["line"]) + ": @@" + stmt["name"] + " is only valid inside a class")
     check_expr(ctx, stmt["value"])
   if stmt["kind"] == "return"
     check_expr(ctx, stmt["value"])
@@ -1428,6 +1492,7 @@ c_name = name -> "tya_user_" + name
 c_func_name = name -> "tya_fn_" + name
 
 emitter_functions = []
+emitter_classes = []
 emitter_anon_functions = []
 emitter_source_path = ""
 
@@ -1534,15 +1599,23 @@ emit_string_value = text ->
         if literal != ""
           push(parts, "tya_string(" + c_string(literal) + ")")
           literal = ""
-        if len(name) > 0 and name[0] == "@"
+        if len(name) > 1 and name[0] == "@" and name[1] == "@"
           field_name = ""
-          field_index = 1
+          field_index = 2
           while field_index < len(name)
             field_name = field_name + name[field_index]
             field_index = field_index + 1
-          push(parts, "tya_to_string(tya_member(__this, " + c_string(field_name) + "))")
+          push(parts, "tya_to_string(tya_member(" + emitter_state["class_ref"] + ", " + c_string(field_name) + "))")
         else
-          push(parts, "tya_to_string(" + c_name(name) + ")")
+          if len(name) > 0 and name[0] == "@"
+            field_name = ""
+            field_index = 1
+            while field_index < len(name)
+              field_name = field_name + name[field_index]
+              field_index = field_index + 1
+            push(parts, "tya_to_string(tya_member(__this, " + c_string("@" + field_name) + "))")
+          else
+            push(parts, "tya_to_string(" + c_name(name) + ")")
         i = j + 1
       else
         literal = literal + char
@@ -1563,6 +1636,8 @@ emit_string_value = text ->
 
 emit_atom = expr ->
   if expr["kind"] == "ident"
+    if has_name(emitter_classes, expr["name"])
+      return c_name(expr["name"])
     if has_name(emitter_functions, expr["name"])
       return "tya_function(" + c_func_name(expr["name"]) + ")"
     return c_name(expr["name"])
@@ -1581,7 +1656,9 @@ emit_atom = expr ->
   if expr["kind"] == "func"
     return "tya_function(" + c_func_name(expr["anon_name"]) + ")"
   if expr["kind"] == "field"
-    return "tya_member(__this, " + c_string(expr["name"]) + ")"
+    return "tya_member(__this, " + c_string("@" + expr["name"]) + ")"
+  if expr["kind"] == "class_var"
+    return "tya_member(" + emitter_state["class_ref"] + ", " + c_string(expr["name"]) + ")"
   if expr["kind"] == "member"
     return "tya_member(" + emit_atom(expr["target"]) + ", " + c_string(expr["name"]) + ")"
   "tya_nil()"
@@ -1592,7 +1669,9 @@ emit_nested = expr ->
   if expr["kind"] == "member"
     return "tya_member(" + emit_nested(expr["target"]) + ", " + c_string(expr["name"]) + ")"
   if expr["kind"] == "field"
-    return "tya_member(__this, " + c_string(expr["name"]) + ")"
+    return "tya_member(__this, " + c_string("@" + expr["name"]) + ")"
+  if expr["kind"] == "class_var"
+    return "tya_member(" + emitter_state["class_ref"] + ", " + c_string(expr["name"]) + ")"
   if expr["kind"] == "call"
     if expr["callee"]["kind"] == "ident"
       name = expr["callee"]["name"]
@@ -1643,6 +1722,8 @@ emit_nested = expr ->
 
 emit_scalar = expr ->
   if expr["kind"] == "ident"
+    if has_name(emitter_classes, expr["name"])
+      return c_name(expr["name"])
     if has_name(emitter_functions, expr["name"])
       return "tya_function(" + c_func_name(expr["name"]) + ")"
     return c_name(expr["name"])
@@ -1661,7 +1742,9 @@ emit_scalar = expr ->
   if expr["kind"] == "func"
     return "tya_function(" + c_func_name(expr["anon_name"]) + ")"
   if expr["kind"] == "field"
-    return "tya_member(__this, " + c_string(expr["name"]) + ")"
+    return "tya_member(__this, " + c_string("@" + expr["name"]) + ")"
+  if expr["kind"] == "class_var"
+    return "tya_member(" + emitter_state["class_ref"] + ", " + c_string(expr["name"]) + ")"
   if expr["kind"] == "array"
     parts = []
     for item in expr["items"]
@@ -1830,7 +1913,12 @@ emit_simple_stmt = lines, names, stmt ->
   if stmt["kind"] == "member_assign"
     push(lines, "  tya_set_member(" + emit_expr(stmt["target"]) + ", " + c_string(stmt["name"]) + ", " + emit_expr(stmt["value"]) + ");")
   if stmt["kind"] == "field_assign"
-    push(lines, "  tya_set_member(__this, " + c_string(stmt["name"]) + ", " + emit_expr(stmt["value"]) + ");")
+    tmp_name = "__field" + to_string(len(lines))
+    push(lines, "  TyaValue " + tmp_name + " = " + emit_expr(stmt["value"]) + ";")
+    push(lines, "  tya_set_member(__this, " + c_string("@" + stmt["name"]) + ", " + tmp_name + ");")
+    push(lines, "  tya_set_member(__this, " + c_string(stmt["name"]) + ", " + tmp_name + ");")
+  if stmt["kind"] == "class_var_assign"
+    push(lines, "  tya_set_member(" + emitter_state["class_ref"] + ", " + c_string(stmt["name"]) + ", " + emit_expr(stmt["value"]) + ");")
   if stmt["kind"] == "multi_assign"
     tuple_name = "__tuple" + to_string(len(lines))
     push(lines, "  TyaValue " + tuple_name + " = " + emit_expr(stmt["value"]) + ";")
@@ -1923,7 +2011,15 @@ emit_stmt = lines, names, stmt ->
       push(lines, "  " + c_name(stmt["name"]) + " = tya_function(" + c_func_name(stmt["name"]) + ");")
     else
       push(names, stmt["name"])
-      push(lines, "  TyaValue " + c_name(stmt["name"]) + " = tya_function(" + c_func_name(stmt["name"]) + ");")
+      push(lines, "  " + c_name(stmt["name"]) + " = tya_function(" + c_func_name(stmt["name"]) + ");")
+    saved_class_ref = emitter_state["class_ref"]
+    emitter_state["class_ref"] = c_name(stmt["name"])
+    for variable in stmt["vars"]
+      push(lines, "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(variable["name"]) + ", " + emit_expr(variable["value"]) + ");")
+    for method in stmt["methods"]
+      if method["class"]
+        push(lines, "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(method["name"]) + ", tya_bind_method(" + c_name(stmt["name"]) + ", " + c_func_name(stmt["name"] + "_" + method["name"]) + "));")
+    emitter_state["class_ref"] = saved_class_ref
   if stmt["kind"] == "if"
     push(lines, "  if (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {")
     for child in stmt["then"]
@@ -2033,17 +2129,25 @@ emit_function_definition = lines, c_fn_name, fn, use_this ->
   return nil
 
 emit_class_definition = lines, class_name, class_value ->
+  saved_class_ref = emitter_state["class_ref"]
+  emitter_state["class_ref"] = c_name(class_name)
   for method in class_value["methods"]
     emit_function_definition(lines, c_func_name(class_name + "_" + method["name"]), method["value"], true)
+  emitter_state["class_ref"] = saved_class_ref
   push(lines, "TyaValue " + c_func_name(class_name) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
   push(lines, "  (void)__this;")
   push(lines, "  TyaValue __obj = tya_object();")
+  saved_class_ref = emitter_state["class_ref"]
+  emitter_state["class_ref"] = c_name(class_name)
+  for field in class_value["fields"]
+    field_tmp = "__field" + to_string(len(lines))
+    push(lines, "  TyaValue " + field_tmp + " = " + emit_expr(field["value"]) + ";")
+    push(lines, "  tya_set_member(__obj, " + c_string("@" + field["name"]) + ", " + field_tmp + ");")
+    push(lines, "  tya_set_member(__obj, " + c_string(field["name"]) + ", " + field_tmp + ");")
   has_init = false
   for method in class_value["methods"]
-    if method["name"] == "init"
+    if method["name"] == "init" and not method["class"]
       has_init = true
-    else
-      push(lines, "  tya_set_member(__obj, " + c_string(method["name"]) + ", tya_bind_method(__obj, " + c_func_name(class_name + "_" + method["name"]) + "));")
   if has_init
     push(lines, "  (void)" + c_func_name(class_name + "_init") + "(__obj, __arg0, __arg1, __arg2, __arg3);")
   else
@@ -2051,6 +2155,10 @@ emit_class_definition = lines, class_name, class_value ->
     push(lines, "  (void)__arg1;")
     push(lines, "  (void)__arg2;")
     push(lines, "  (void)__arg3;")
+  for method in class_value["methods"]
+    if not method["class"] and method["name"] != "init"
+      push(lines, "  tya_set_member(__obj, " + c_string(method["name"]) + ", tya_bind_method(__obj, " + c_func_name(class_name + "_" + method["name"]) + "));")
+  emitter_state["class_ref"] = saved_class_ref
   push(lines, "  return __obj;")
   push(lines, "}")
   push(lines, "")
@@ -2059,6 +2167,8 @@ emit_class_definition = lines, class_name, class_value ->
 emit_c = program ->
   while len(emitter_functions) > 0
     pop(emitter_functions)
+  while len(emitter_classes) > 0
+    pop(emitter_classes)
   while len(emitter_anon_functions) > 0
     pop(emitter_anon_functions)
   for stmt in program["statements"]
@@ -2074,6 +2184,7 @@ emit_c = program ->
           remember(emitter_functions, stmt["name"] + "_" + class_value["name"] + "_" + method["name"])
     if stmt["kind"] == "class"
       remember(emitter_functions, stmt["name"])
+      remember(emitter_classes, stmt["name"])
       for method in stmt["methods"]
         remember(emitter_functions, stmt["name"] + "_" + method["name"])
   for stmt in program["statements"]

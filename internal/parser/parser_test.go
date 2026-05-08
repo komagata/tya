@@ -120,7 +120,7 @@ func TestParseClassDeclaration(t *testing.T) {
 	if !ok {
 		t.Fatalf("stmt type = %T", prog.Stmts[0])
 	}
-	if class.Name != "User" || len(class.Methods) != 2 {
+	if class.Name != "User" || len(class.Methods) != 2 || len(class.Fields) != 0 || len(class.Vars) != 0 {
 		t.Fatalf("class = %#v", class)
 	}
 }
@@ -233,16 +233,17 @@ func TestParseInstanceFieldSyntax(t *testing.T) {
 		t.Fatalf("parse instance fields: %v", err)
 	}
 
-	toks, errs = lexer.Lex("class User\n  init = ->\n    @@name = 1\n")
+	toks, errs = lexer.Lex("class User\n  name = \"\"\n  @@count = 0\n  init = ->\n    @@count = @@count + 1\n  @@count_users = ->\n    @@count\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
-	if err == nil {
-		t.Fatal("expected @@field error")
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("parse class variables: %v", err)
 	}
-	if !strings.Contains(err.Error(), "@@field is not in Tya v0.5") {
-		t.Fatalf("unexpected error: %v", err)
+	class := prog.Stmts[0].(*ast.ClassDecl)
+	if len(class.Fields) != 1 || len(class.Vars) != 1 || len(class.Methods) != 2 || !class.Methods[1].Class {
+		t.Fatalf("class = %#v", class)
 	}
 }
 

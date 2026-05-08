@@ -16,11 +16,11 @@ stderr 'invalid class name user'
 stderr '@name is only valid inside an instance method'
 
 ! exec go run ./cmd/tya run $WORK/class_variable.tya
-stderr '@@field is not in Tya v0.5'
+stderr '@@name is only valid inside a class'
 ! stdout .
 
 ! exec go run ./cmd/tya run $WORK/duplicate_method.tya
-stderr 'duplicate method name'
+stderr 'duplicate instance member name'
 
 ! exec go run ./cmd/tya run $WORK/constructor_arity.tya
 stderr 'class User constructor expects 1 arguments'
@@ -36,7 +36,7 @@ stderr 'missing object field or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.5.0\n'
+stdout '0.6.0\n'
 ! stderr .
 
 -- classes.tya --
@@ -100,9 +100,7 @@ class user
 @name = "bad"
 
 -- class_variable.tya --
-class User
-  init = ->
-    @@name = "bad"
+@@name = "bad"
 
 -- duplicate_method.tya --
 class User

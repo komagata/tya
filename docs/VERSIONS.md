@@ -9,6 +9,14 @@ Therefore, specification documents use minor-version labels such as `v0.3`.
 Released patch-tag snapshots are kept separately when a release needs an exact
 historical copy, such as `v0.1.0` and `v0.2.0`.
 
+## v0.7
+
+- [Spec](v0.7/spec.html)
+
+## v0.6
+
+- [Spec](v0.6/spec.html)
+
 ## v0.5
 
 - [Spec](v0.5/spec.html)

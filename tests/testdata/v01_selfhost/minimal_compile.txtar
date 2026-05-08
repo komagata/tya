@@ -83,7 +83,7 @@ stdout '1: unexpected token before block'
 stdout '1: try must be inside a function'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/class.tya
-stdout 'class body may only contain method definitions'
+stdout 'class body may only contain member definitions'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/self.tya
 stdout '1: self is not in Tya v0.1'
@@ -403,7 +403,7 @@ value = try parse_user("x")
 
 -- class.tya --
 class User
-  name = ""
+  1
 
 -- self.tya --
 print self

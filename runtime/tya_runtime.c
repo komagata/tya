@@ -19,6 +19,7 @@ struct TyaDict {
 struct TyaFunction {
   TyaFunctionPtr fn;
   TyaValue receiver;
+  TyaDict *members;
 };
 
 typedef struct {
@@ -83,6 +84,9 @@ TyaValue tya_function(TyaFunctionPtr fn) {
   TyaFunction *function = malloc(sizeof(TyaFunction));
   function->fn = fn;
   function->receiver = tya_nil();
+  function->members = malloc(sizeof(TyaDict));
+  function->members->len = 0;
+  function->members->entries = NULL;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
@@ -90,6 +94,9 @@ TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn) {
   TyaFunction *function = malloc(sizeof(TyaFunction));
   function->fn = fn;
   function->receiver = receiver;
+  function->members = malloc(sizeof(TyaDict));
+  function->members->len = 0;
+  function->members->entries = NULL;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
@@ -199,6 +206,15 @@ TyaValue tya_member(TyaValue dict, const char *key) {
   if (dict.kind == TYA_ERROR && strcmp(key, "message") == 0) {
     return tya_string(dict.error == NULL ? "" : dict.error);
   }
+  if (dict.kind == TYA_FUNCTION && dict.function != NULL && dict.function->members != NULL) {
+    for (int i = 0; i < dict.function->members->len; i++) {
+      if (dict.function->members->entries[i].key != NULL && strcmp(dict.function->members->entries[i].key, key) == 0) {
+        return dict.function->members->entries[i].value;
+      }
+    }
+    fprintf(stderr, "missing class variable or method: %s\n", key == NULL ? "" : key);
+    exit(1);
+  }
   if ((dict.kind != TYA_DICT && dict.kind != TYA_OBJECT) || dict.dict == NULL) {
     return tya_nil();
   }
@@ -215,8 +231,31 @@ TyaValue tya_member(TyaValue dict, const char *key) {
 }
 
 void tya_set_member(TyaValue dict, const char *key, TyaValue value) {
+  if (dict.kind == TYA_FUNCTION && dict.function != NULL && dict.function->members != NULL) {
+    for (int i = 0; i < dict.function->members->len; i++) {
+      if (dict.function->members->entries[i].key != NULL && strcmp(dict.function->members->entries[i].key, key) == 0) {
+        dict.function->members->entries[i].value = value;
+        return;
+      }
+    }
+    dict.function->members->entries = realloc(dict.function->members->entries, sizeof(TyaDictEntry) * (dict.function->members->len + 1));
+    dict.function->members->entries[dict.function->members->len] = (TyaDictEntry){key, value};
+    dict.function->members->len++;
+    return;
+  }
   if ((dict.kind != TYA_DICT && dict.kind != TYA_OBJECT) || dict.dict == NULL) {
     return;
+  }
+  if (dict.kind == TYA_OBJECT && value.kind != TYA_FUNCTION && key != NULL && key[0] != '@') {
+    size_t hidden_len = strlen(key) + 2;
+    char *hidden_key = malloc(hidden_len);
+    snprintf(hidden_key, hidden_len, "@%s", key);
+    for (int i = 0; i < dict.dict->len; i++) {
+      if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, hidden_key) == 0) {
+        dict.dict->entries[i].value = value;
+        break;
+      }
+    }
   }
   for (int i = 0; i < dict.dict->len; i++) {
     if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key) == 0) {

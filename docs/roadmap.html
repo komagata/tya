@@ -54,6 +54,8 @@
 <li><a href="v0.3/stdlib.html"><code>docs/v0.3/STDLIB.md</code></a></li>
 <li><a href="v0.4/spec.html"><code>docs/v0.4/SPEC.md</code></a></li>
 <li><a href="v0.5/spec.html"><code>docs/v0.5/SPEC.md</code></a></li>
+<li><a href="v0.6/spec.html"><code>docs/v0.6/SPEC.md</code></a></li>
+<li><a href="v0.7/spec.html"><code>docs/v0.7/SPEC.md</code></a></li>
 </ol>
 <p>The v0.5 reference implementation remains:</p>
 <pre><code class="language-text">Go lexer
@@ -197,6 +199,104 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
 <li>[x] Add compiler, runtime, module, and negative tests for v0.5 classes.</li>
 <li>[x] Update README examples when v0.5 is implemented.</li>
+</ul>
+</ul>
+<li>[x] Ship v0.6 class-level members and field defaults</li>
+<ul>
+<li>[x] Define v0.6 class-level member scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.6/SPEC.md</code>.</li>
+<li>[x] Specify <code>@@field</code> class variables.</li>
+<li>[x] Specify <code>@@method = args -&gt;</code> class methods.</li>
+<li>[x] Specify <code>field = value</code> instance field defaults.</li>
+<li>[x] Specify public class variable and class method access through <code>ClassName.member</code>.</li>
+<li>[x] Keep inheritance, <code>super</code>, interfaces, visibility, and private class members out of v0.6.</li>
+<li>[x] Keep dictionary member access with <code>dict.key</code> out of v0.6.</li>
+</ul>
+<li>[x] Add class variables to the compiler front end</li>
+<ul>
+<li>[x] Add lexer/parser support for <code>@@field</code> class member declarations.</li>
+<li>[x] Add AST nodes for class variable declaration, read, and assignment.</li>
+<li>[x] Add checker diagnostics for invalid <code>@@field</code> usage and duplicate class members.</li>
+</ul>
+<li>[x] Add instance field defaults to the compiler front end</li>
+<ul>
+<li>[x] Parse class body <code>field = value</code> as an instance field default.</li>
+<li>[x] Add AST nodes for instance field defaults.</li>
+<li>[x] Reject duplicate instance member names across field defaults and methods.</li>
+</ul>
+<li>[x] Add class methods to the compiler front end</li>
+<ul>
+<li>[x] Add parser support for <code>@@method = args -&gt;</code> declarations.</li>
+<li>[x] Add AST nodes for class method declarations and class method calls.</li>
+<li>[x] Reject <code>@field</code> inside class methods.</li>
+</ul>
+<li>[x] Add class-level runtime and C emission</li>
+<ul>
+<li>[x] Initialize class variables once when the class is defined.</li>
+<li>[x] Copy instance field defaults into each new object before <code>init</code> runs.</li>
+<li>[x] Support class variable read/write through <code>ClassName.field</code>.</li>
+<li>[x] Support class methods through <code>ClassName.method(args...)</code>.</li>
+<li>[x] Support class variables from instance methods.</li>
+<li>[x] Support module class access such as <code>module_name.ClassName.method(...)</code>.</li>
+</ul>
+<li>[x] Keep modules and self-host compatible</li>
+<ul>
+<li>[x] Preserve v0.5 instance class behavior.</li>
+<li>[x] Preserve existing module member access behavior.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+<li>[x] Keep v0.6 documentation and tests aligned</li>
+<ul>
+<li>[x] Update latest docs when v0.6 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.6/</code> aligned with the v0.6 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.6 class-level members and field defaults.</li>
+<li>[x] Update README examples when v0.6 is implemented.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.7 single inheritance</li>
+<ul>
+<li>[x] Define v0.7 inheritance scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.7/SPEC.md</code>.</li>
+<li>[x] Specify <code>class Child extends Parent</code>.</li>
+<li>[x] Specify <code>super(args...)</code> in <code>init</code> and overridden instance methods.</li>
+<li>[x] Specify inherited instance field defaults and instance methods.</li>
+<li>[x] Keep class variable inheritance, class method inheritance, interfaces, and mixins out of v0.7.</li>
+</ul>
+<li>[ ] Add inheritance to the compiler front end</li>
+<ul>
+<li>[ ] Parse <code>extends</code> clauses with local and module-qualified parent classes.</li>
+<li>[ ] Add AST fields for parent class references.</li>
+<li>[ ] Detect unknown parent classes and inheritance cycles.</li>
+</ul>
+<li>[ ] Add inherited instance behavior</li>
+<ul>
+<li>[ ] Apply parent field defaults before child field defaults.</li>
+<li>[ ] Inherit instance methods from parent classes.</li>
+<li>[ ] Support instance method overriding with matching arity.</li>
+</ul>
+<li>[ ] Add <code>super</code></li>
+<ul>
+<li>[ ] Support <code>super(args...)</code> in subclass <code>init</code>.</li>
+<li>[ ] Support <code>super(args...)</code> in overridden instance methods.</li>
+<li>[ ] Reject <code>super</code> outside <code>init</code> and instance methods.</li>
+<li>[ ] Reject <code>super</code> inside class methods.</li>
+</ul>
+<li>[ ] Keep class-level inheritance out of scope</li>
+<ul>
+<li>[ ] Keep <code>@@field</code> class variables local to the declaring class.</li>
+<li>[ ] Keep <code>@@method</code> class methods local to the declaring class.</li>
+<li>[ ] Reject or report missing subclass class-level member access when only the parent declares it.</li>
+</ul>
+<li>[ ] Keep v0.7 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.7 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.7/</code> aligned with the v0.7 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.7 inheritance.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
 </ul>

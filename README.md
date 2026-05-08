@@ -9,8 +9,8 @@
 Tya is a small indentation-based dynamic language with CoffeeScript feel and
 Golang practicality.
 
-Tya v0.5 is a compile-to-C language. The reference implementation contains a Go
-lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.5
+Tya v0.6 is a compile-to-C language. The reference implementation contains a Go
+lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.6
 specification tests.
 
 Website: <https://tya-lang.org/>
@@ -33,13 +33,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.5.0, download the release source and build the `tya` command locally.
-This currently requires Go because the v0.5 reference implementation is written
+For v0.6.0, download the release source and build the `tya` command locally.
+This currently requires Go because the v0.6 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.5.0.tar.gz | tar xz
-cd tya-0.5.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.6.0.tar.gz | tar xz
+cd tya-0.6.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -130,6 +130,8 @@ print array.first(["tya"])
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
+- [v0.7 Spec](https://tya-lang.org/v0.7/spec.html): planned single inheritance.
+- [v0.6 Spec](https://tya-lang.org/v0.6/spec.html): released class variables and class methods.
 - [v0.5 Spec](https://tya-lang.org/v0.5/spec.html): released class syntax.
 - [v0.4 Spec](https://tya-lang.org/v0.4/spec.html): released testing direction.
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
@@ -139,7 +141,7 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-The current released implementation, Tya v0.5, includes:
+The current released implementation, Tya v0.6, includes:
 
 - `.tya` files
 - indentation-based blocks
@@ -162,11 +164,11 @@ The current released implementation, Tya v0.5, includes:
 - source checking through `tya check`
 - test discovery and assertions through `tya test`
 - conservative source formatting through `tya fmt`
-- minimal classes, constructor calls, `init`, public instance fields, and
-  instance methods
+- minimal classes, constructor calls, `init`, public instance fields,
+  instance methods, instance field defaults, class variables, and class methods
 
-Tya v0.5 does not include interfaces, inheritance, `super`, class methods,
-class fields, visibility modifiers, async, macros, package management, remote
+Tya v0.6 does not include interfaces, inheritance, `super`, visibility
+modifiers, async, macros, package management, remote
 module install, JSON or CSV parsers, native standard modules, mocking,
 coverage, benchmark, watch mode, parallel test execution, set literals, import
 aliases, or dictionary member access.

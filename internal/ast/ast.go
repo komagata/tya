@@ -89,15 +89,30 @@ type ModuleMember struct {
 type ClassDecl struct {
 	Name    string
 	NameTok token.Token
+	Fields  []ClassField
+	Vars    []ClassVar
 	Methods []ClassMethod
 }
 
 func (*ClassDecl) stmt() {}
 
+type ClassField struct {
+	Name  string
+	Tok   token.Token
+	Value Expr
+}
+
+type ClassVar struct {
+	Name  string
+	Tok   token.Token
+	Value Expr
+}
+
 type ClassMethod struct {
-	Name string
-	Tok  token.Token
-	Func *FuncLit
+	Name  string
+	Tok   token.Token
+	Func  *FuncLit
+	Class bool
 }
 
 type Ident struct {
@@ -190,6 +205,13 @@ type InstanceFieldExpr struct {
 }
 
 func (*InstanceFieldExpr) expr() {}
+
+type ClassVarExpr struct {
+	Name    string
+	NameTok token.Token
+}
+
+func (*ClassVarExpr) expr() {}
 
 type IndexExpr struct {
 	Target Expr

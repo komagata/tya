@@ -1,0 +1,44 @@
+# Tya-written compiler supports the current v0.6 class-level member surface while preserving self-host.
+cd $REPO
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya selfhost/v01/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+
+exec sh -c '"$WORK/stage1" "$WORK/current_v06.tya" > "$WORK/current_v06.c"'
+! stderr .
+
+exec cc $WORK/current_v06.c runtime/tya_runtime.c -I runtime -o $WORK/current_v06
+! stderr .
+
+exec $WORK/current_v06
+stdout 'Hello, komagata\nkomagata\n1\n1\n'
+! stderr .
+
+-- current_v06.tya --
+class User
+  name = ""
+  @@count = 0
+
+  init = name ->
+    @name = name
+    @@count = @@count + 1
+
+  greeting = ->
+    "Hello, {@name}"
+
+  count = ->
+    @@count
+
+  @@build = name ->
+    User(name)
+
+  @@count_users = ->
+    @@count
+
+user = User.build("komagata")
+print user.greeting()
+print user.name
+print user.count()
+print User.count_users()

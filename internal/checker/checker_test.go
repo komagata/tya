@@ -229,13 +229,9 @@ func TestCheckRejectsExcludedBuiltins(t *testing.T) {
 	}
 }
 
-func TestCheckRejectsMemberAccessOnUnknownValue(t *testing.T) {
+func TestCheckAllowsMemberAccessOnUnknownValue(t *testing.T) {
 	prog := parse(t, "show = user -> user.name\n")
-	err := Check(prog)
-	if err == nil {
-		t.Fatal("expected member access error")
-	}
-	if !strings.Contains(err.Error(), "cannot use . access on non-module value") {
+	if err := Check(prog); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

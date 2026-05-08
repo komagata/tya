@@ -63,11 +63,13 @@ var builtinNames = []string{
 }
 
 type scope struct {
-	parent   *scope
-	names    map[string]bool
-	kinds    map[string]valueKind
-	classes  map[string]classInfo
-	inMethod bool
+	parent           *scope
+	names            map[string]bool
+	kinds            map[string]valueKind
+	classes          map[string]classInfo
+	inInstanceMethod bool
+	inClassMethod    bool
+	inClassBody      bool
 }
 
 type classInfo struct {
@@ -80,7 +82,9 @@ func newScope(parent *scope) *scope {
 	s := &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}}
 	if parent != nil {
 		s.classes = parent.classes
-		s.inMethod = parent.inMethod
+		s.inInstanceMethod = parent.inInstanceMethod
+		s.inClassMethod = parent.inClassMethod
+		s.inClassBody = parent.inClassBody
 	} else {
 		s.classes = map[string]classInfo{}
 	}
@@ -358,11 +362,18 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.TryExpr:
 		return checkExpr(n.Expr, scope)
 	case *ast.InstanceFieldExpr:
-		if !scope.inMethod {
+		if !scope.inInstanceMethod {
 			return fmt.Errorf("%d:%d: @%s is only valid inside an instance method", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
 		if !valueNameRE.MatchString(n.Name) {
 			return fmt.Errorf("%d:%d: invalid field name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
+	case *ast.ClassVarExpr:
+		if !scope.inClassBody && !scope.inInstanceMethod && !scope.inClassMethod {
+			return fmt.Errorf("%d:%d: @@%s is only valid inside a class", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
+		if !valueNameRE.MatchString(n.Name) {
+			return fmt.Errorf("%d:%d: invalid class variable name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
 	case *ast.MemberExpr:
 		if err := checkExpr(n.Target, scope); err != nil {
@@ -371,6 +382,8 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		switch kindOf(n.Target, scope) {
 		case kindModule:
 			return nil
+		case kindClass:
+			return nil
 		case kindObject:
 			return nil
 		case kindDict:
@@ -378,7 +391,7 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		case kindArray:
 			return memberAccessError(n, "array")
 		default:
-			return memberAccessError(n, "non-module value")
+			return nil
 		}
 	case *ast.IndexExpr:
 		if err := checkExpr(n.Target, scope); err != nil {
@@ -411,17 +424,56 @@ func checkClass(class *ast.ClassDecl, scope *scope) error {
 	if !classNameRE.MatchString(class.Name) {
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
-	seen := map[string]bool{}
+	instanceMembers := map[string]bool{}
+	classMembers := map[string]bool{}
+	classBody := newScope(scope)
+	classBody.inClassBody = true
+	for _, field := range class.Fields {
+		if !valueNameRE.MatchString(field.Name) {
+			return fmt.Errorf("%d:%d: invalid field name %s", field.Tok.Line, field.Tok.Col, field.Name)
+		}
+		if instanceMembers[field.Name] {
+			return fmt.Errorf("%d:%d: duplicate instance member %s", field.Tok.Line, field.Tok.Col, field.Name)
+		}
+		instanceMembers[field.Name] = true
+		if err := checkExpr(field.Value, classBody); err != nil {
+			return err
+		}
+	}
+	for _, variable := range class.Vars {
+		if !valueNameRE.MatchString(variable.Name) {
+			return fmt.Errorf("%d:%d: invalid class variable name %s", variable.Tok.Line, variable.Tok.Col, variable.Name)
+		}
+		if classMembers[variable.Name] {
+			return fmt.Errorf("%d:%d: duplicate class member %s", variable.Tok.Line, variable.Tok.Col, variable.Name)
+		}
+		classMembers[variable.Name] = true
+		if err := checkExpr(variable.Value, classBody); err != nil {
+			return err
+		}
+	}
 	for _, method := range class.Methods {
 		if !valueNameRE.MatchString(method.Name) {
 			return fmt.Errorf("%d:%d: invalid method name %s", method.Tok.Line, method.Tok.Col, method.Name)
 		}
-		if seen[method.Name] {
-			return fmt.Errorf("%d:%d: duplicate method %s", method.Tok.Line, method.Tok.Col, method.Name)
+		if method.Class {
+			if classMembers[method.Name] {
+				return fmt.Errorf("%d:%d: duplicate class member %s", method.Tok.Line, method.Tok.Col, method.Name)
+			}
+			classMembers[method.Name] = true
+		} else {
+			if instanceMembers[method.Name] {
+				return fmt.Errorf("%d:%d: duplicate instance member %s", method.Tok.Line, method.Tok.Col, method.Name)
+			}
+			instanceMembers[method.Name] = true
 		}
-		seen[method.Name] = true
 		child := newScope(scope)
-		child.inMethod = true
+		child.inClassBody = true
+		if method.Class {
+			child.inClassMethod = true
+		} else {
+			child.inInstanceMethod = true
+		}
 		if err := checkExpr(method.Func, child); err != nil {
 			return err
 		}
@@ -443,11 +495,18 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 		}
 		return nil
 	case *ast.InstanceFieldExpr:
-		if !scope.inMethod {
+		if !scope.inInstanceMethod {
 			return fmt.Errorf("%d:%d: @%s is only valid inside an instance method", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
 		if !valueNameRE.MatchString(n.Name) {
 			return fmt.Errorf("%d:%d: invalid field name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
+	case *ast.ClassVarExpr:
+		if !scope.inClassBody && !scope.inInstanceMethod && !scope.inClassMethod {
+			return fmt.Errorf("%d:%d: @@%s is only valid inside a class", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
+		if !valueNameRE.MatchString(n.Name) {
+			return fmt.Errorf("%d:%d: invalid class variable name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
 	case *ast.IndexExpr:
 		if err := checkExpr(n.Target, scope); err != nil {

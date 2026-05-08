@@ -52,6 +52,8 @@ Current planned minor-version documents are:
 1. [`docs/v0.3/STDLIB.md`](docs/v0.3/STDLIB.md)
 1. [`docs/v0.4/SPEC.md`](docs/v0.4/SPEC.md)
 1. [`docs/v0.5/SPEC.md`](docs/v0.5/SPEC.md)
+1. [`docs/v0.6/SPEC.md`](docs/v0.6/SPEC.md)
+1. [`docs/v0.7/SPEC.md`](docs/v0.7/SPEC.md)
 
 The v0.5 reference implementation remains:
 
@@ -195,6 +197,74 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.5 classes.
     - [x] Update README examples when v0.5 is implemented.
+- [x] Ship v0.6 class-level members and field defaults
+  - [x] Define v0.6 class-level member scope
+    - [x] Add `docs/v0.6/SPEC.md`.
+    - [x] Specify `@@field` class variables.
+    - [x] Specify `@@method = args ->` class methods.
+    - [x] Specify `field = value` instance field defaults.
+    - [x] Specify public class variable and class method access through `ClassName.member`.
+    - [x] Keep inheritance, `super`, interfaces, visibility, and private class members out of v0.6.
+    - [x] Keep dictionary member access with `dict.key` out of v0.6.
+  - [x] Add class variables to the compiler front end
+    - [x] Add lexer/parser support for `@@field` class member declarations.
+    - [x] Add AST nodes for class variable declaration, read, and assignment.
+    - [x] Add checker diagnostics for invalid `@@field` usage and duplicate class members.
+  - [x] Add instance field defaults to the compiler front end
+    - [x] Parse class body `field = value` as an instance field default.
+    - [x] Add AST nodes for instance field defaults.
+    - [x] Reject duplicate instance member names across field defaults and methods.
+  - [x] Add class methods to the compiler front end
+    - [x] Add parser support for `@@method = args ->` declarations.
+    - [x] Add AST nodes for class method declarations and class method calls.
+    - [x] Reject `@field` inside class methods.
+  - [x] Add class-level runtime and C emission
+    - [x] Initialize class variables once when the class is defined.
+    - [x] Copy instance field defaults into each new object before `init` runs.
+    - [x] Support class variable read/write through `ClassName.field`.
+    - [x] Support class methods through `ClassName.method(args...)`.
+    - [x] Support class variables from instance methods.
+    - [x] Support module class access such as `module_name.ClassName.method(...)`.
+  - [x] Keep modules and self-host compatible
+    - [x] Preserve v0.5 instance class behavior.
+    - [x] Preserve existing module member access behavior.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Keep v0.6 documentation and tests aligned
+    - [x] Update latest docs when v0.6 behavior is implemented.
+    - [x] Keep `docs/v0.6/` aligned with the v0.6 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.6 class-level members and field defaults.
+    - [x] Update README examples when v0.6 is implemented.
+- [ ] Ship v0.7 single inheritance
+  - [x] Define v0.7 inheritance scope
+    - [x] Add `docs/v0.7/SPEC.md`.
+    - [x] Specify `class Child extends Parent`.
+    - [x] Specify `super(args...)` in `init` and overridden instance methods.
+    - [x] Specify inherited instance field defaults and instance methods.
+    - [x] Keep class variable inheritance, class method inheritance, interfaces, and mixins out of v0.7.
+  - [ ] Add inheritance to the compiler front end
+    - [ ] Parse `extends` clauses with local and module-qualified parent classes.
+    - [ ] Add AST fields for parent class references.
+    - [ ] Detect unknown parent classes and inheritance cycles.
+  - [ ] Add inherited instance behavior
+    - [ ] Apply parent field defaults before child field defaults.
+    - [ ] Inherit instance methods from parent classes.
+    - [ ] Support instance method overriding with matching arity.
+  - [ ] Add `super`
+    - [ ] Support `super(args...)` in subclass `init`.
+    - [ ] Support `super(args...)` in overridden instance methods.
+    - [ ] Reject `super` outside `init` and instance methods.
+    - [ ] Reject `super` inside class methods.
+  - [ ] Keep class-level inheritance out of scope
+    - [ ] Keep `@@field` class variables local to the declaring class.
+    - [ ] Keep `@@method` class methods local to the declaring class.
+    - [ ] Reject or report missing subclass class-level member access when only the parent declares it.
+  - [ ] Keep v0.7 documentation and tests aligned
+    - [ ] Update latest docs when v0.7 behavior is implemented.
+    - [ ] Keep `docs/v0.7/` aligned with the v0.7 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.7 inheritance.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 
