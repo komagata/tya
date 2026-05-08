@@ -33,8 +33,8 @@
 <pre><code class="language-sh">go test ./tests -run TestSelfhostV01Scripts -count=1</code></pre>
 <p>This gate proves that the Tya-written compiler can compile itself to stable stage-2/stage-3 C output, and that the self-hosted stage-2 compiler can compile and run representative programs through the maintained surface.</p>
 <h2 id="current-direction">Current Direction</h2>
-<p>Tya is implemented as a small compile-to-C language. The latest released specification is v0.21. Frozen release documents live under <code>docs/vX.Y.Z/</code> and <code>docs/vX.Y/</code>; the latest editable specification, API, stdlib, and naming documents live directly under <code>docs/</code>.</p>
-<p>Tya uses semantic versioning. Specification changes happen at the minor version level, such as <code>v0.21</code> and <code>v0.22</code>. Patch releases such as <code>v0.21.1</code> must not change language or standard-library semantics.</p>
+<p>Tya is implemented as a small compile-to-C language. The latest released specification is v0.23. Frozen release documents live under <code>docs/vX.Y.Z/</code> and <code>docs/vX.Y/</code>; the latest editable specification, API, stdlib, and naming documents live directly under <code>docs/</code>.</p>
+<p>Tya uses semantic versioning. Specification changes happen at the minor version level, such as <code>v0.23</code> and <code>v0.24</code>. Patch releases such as <code>v0.23.1</code> must not change language or standard-library semantics.</p>
 <p>Latest editable documentation:</p>
 <ol>
 <li><a href="spec.html"><code>docs/SPEC.md</code></a></li>
@@ -72,71 +72,6 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="current-roadmap">Current Roadmap</h2>
 <ul>
-<li>[x] Ship filesystem standard library expansion (deferred from v0.22)</li>
-<ul>
-<li>[x] Implement <code>dir</code> module: <code>dir.list</code>, <code>dir.mkdir</code>, <code>dir.rmdir</code> with structured errors.</li>
-<li>[x] Expand <code>file</code> module: <code>file.remove</code>, <code>file.rename</code>, <code>file.stat</code> (kind/size/readable/writable/executable).</li>
-<li>[x] Expand <code>path</code> and <code>os</code> modules: <code>path.expand_user</code>, <code>os.cwd</code>, <code>os.chdir</code>.</li>
-<li>[x] Keep time/date, streaming IO, binary IO, async IO, recursive walking, <code>mkdir_all</code>, <code>remove_all</code>, copy, symlink, chmod/chown, file handles, <code>$VAR</code> path expansion, and platform-specific path separators out of scope.</li>
-<li>[x] Add tests, regenerate docs, preserve the selfhost fixed point.</li>
-</ul>
-<li>[x] Ship v0.23 data-format and utility stdlib expansion</li>
-<ul>
-<li>[x] Define v0.23 scope</li>
-<ul>
-<li>[x] Add <code>docs/v0.23/SPEC.md</code>.</li>
-<li>[x] Add <code>toml</code>, <code>json</code>, <code>csv</code>, <code>base64</code>, and <code>url</code> standard modules.</li>
-<li>[x] Keep all five implementations pure Tya (no new builtins).</li>
-<li>[x] Use <code>parse</code>/<code>dump</code> (or <code>encode</code>/<code>decode</code>) shape across modules.</li>
-<li>[x] Keep schema validation, streaming, comment-preserving round-trip, formatting-preserving round-trip, TOML 1.1 extensions, JSON5, CSV dialects beyond RFC 4180, URL-safe base64, IDN handling, HTTP, YAML, regex, random, time, and crypto out of v0.23.</li>
-</ul>
-<li>[x] Implement the <code>toml</code> module</li>
-<ul>
-<li>[x] Lex TOML tokens (keys, strings, numbers, booleans, dates, brackets, equals, dots, newlines, comments).</li>
-<li>[x] Parse top-level key/value pairs, <code>[table]</code> and <code>[[array.of.tables]]</code> headers, inline tables, arrays.</li>
-<li>[x] Map TOML primitive types to Tya values per the SPEC.</li>
-<li>[x] Implement <code>toml.dump</code> emitting tables, inline tables, and arrays of tables.</li>
-<li>[x] Report syntax errors with line numbers.</li>
-<li>[x] Reject <code>nil</code>, functions, classes, objects, modules, and non-string dict keys on dump.</li>
-</ul>
-<li>[x] Implement the <code>json</code> module</li>
-<ul>
-<li>[x] Parse RFC 8259 JSON into Tya values (object→dict, array, string, int/float, bool, null→nil).</li>
-<li>[x] Implement <code>json.dump(value)</code> (compact) and <code>json.dump(value, indent)</code> (pretty).</li>
-<li>[x] Reject <code>nan</code>/<code>inf</code>/<code>-inf</code> and non-string dict keys on dump.</li>
-<li>[x] Report syntax errors with line numbers.</li>
-</ul>
-<li>[x] Implement the <code>csv</code> module</li>
-<ul>
-<li>[x] Parse RFC 4180 CSV with optional header row producing dicts.</li>
-<li>[x] Accept a <code>separator</code> option (default <code>,</code>, <code>\t</code> for TSV).</li>
-<li>[x] Emit <code>csv.dump</code> quoting fields containing the separator, quote, CR, or LF.</li>
-<li>[x] Accept LF or CRLF on parse, emit LF on dump.</li>
-<li>[x] Report unterminated quoted fields and malformed escapes as structured errors.</li>
-</ul>
-<li>[x] Implement the <code>base64</code> module</li>
-<ul>
-<li>[x] Implement <code>base64.encode(text)</code> using the standard alphabet with <code>=</code> padding.</li>
-<li>[x] Implement <code>base64.decode(text)</code> accepting standard alphabet input with or without padding, ignoring whitespace.</li>
-<li>[x] Treat decoded bytes as UTF-8 and raise on invalid UTF-8.</li>
-</ul>
-<li>[x] Implement the <code>url</code> module</li>
-<ul>
-<li>[x] Implement <code>url.encode</code> and <code>url.decode</code> per RFC 3986.</li>
-<li>[x] Implement <code>url.encode_query</code> and <code>url.decode_query</code> (decode <code>+</code> and <code>%20</code> to space).</li>
-<li>[x] Implement <code>url.parse</code> returning scheme/user/password/host/port/path/query/fragment.</li>
-<li>[x] Implement <code>url.build</code> as the inverse.</li>
-<li>[x] Report malformed percent-escapes and non-UTF-8 byte sequences as structured errors.</li>
-</ul>
-<li>[x] Keep v0.23 documentation and tests aligned</li>
-<ul>
-<li>[x] Update latest docs when v0.23 behavior is implemented.</li>
-<li>[x] Keep <code>docs/v0.23/</code> aligned with the v0.23 minor specification.</li>
-<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[x] Add parser, writer, module, and negative tests for each new module.</li>
-<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
-</ul>
-</ul>
 <li>[ ] Ship v0.24 package manifest and version resolution</li>
 <ul>
 <li>[ ] Define v0.24 package manifest scope</li>
