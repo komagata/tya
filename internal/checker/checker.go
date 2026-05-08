@@ -190,7 +190,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			for _, target := range n.Targets {
 				name, ok := target.(*ast.Ident)
 				if !ok {
-					if err := checkAssignmentTarget(target, scope); err != nil {
+					if err := checkAssignmentTarget(target, n.Values, constants, scope); err != nil {
 						return err
 					}
 					continue
@@ -1553,7 +1553,7 @@ func constructorSuperStats(fn *ast.FuncLit) (count int, firstSuper int, firstFie
 	return count, firstSuper, firstField, firstReturn
 }
 
-func checkAssignmentTarget(target ast.Expr, scope *scope) error {
+func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[string]bool, scope *scope) error {
 	switch n := target.(type) {
 	case *ast.MemberExpr:
 		if n.Name == "class" || n.Name == "class_name" || ((n.Name == "name" || n.Name == "parent") && kindOf(n.Target, scope) == kindClass) {
@@ -1597,8 +1597,52 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 			return err
 		}
 		return checkExpr(n.Index, scope)
+	case *ast.ArrayLit:
+		for _, elem := range n.Elems {
+			if err := checkDestructuringTarget(elem, values, constants, scope); err != nil {
+				return err
+			}
+		}
+	case *ast.DictLit:
+		seen := map[string]bool{}
+		for _, prop := range n.Props {
+			if prop.Name == "" {
+				return fmt.Errorf("%d:%d: destructuring dictionary keys must be string literals", prop.Tok.Line, prop.Tok.Col)
+			}
+			if seen[prop.Name] {
+				return fmt.Errorf("%d:%d: duplicate destructuring dictionary key %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
+			}
+			seen[prop.Name] = true
+			if err := checkDestructuringTarget(prop.Value, values, constants, scope); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
+}
+
+func checkDestructuringTarget(target ast.Expr, values []ast.Expr, constants map[string]bool, scope *scope) error {
+	switch n := target.(type) {
+	case *ast.Ident:
+		if n.Name == "_" {
+			return nil
+		}
+		if err := checkBindingName(n.Name, n.Tok.Line, n.Tok.Col); err != nil {
+			return err
+		}
+		if constants[n.Name] {
+			return fmt.Errorf("%d:%d: cannot reassign constant %s", n.Tok.Line, n.Tok.Col, n.Name)
+		}
+		if constNameRE.MatchString(n.Name) {
+			constants[n.Name] = true
+		}
+		scope.define(n.Name, exprKind(values, scope))
+		return nil
+	case *ast.ArrayLit, *ast.DictLit:
+		return checkAssignmentTarget(target, values, constants, scope)
+	default:
+		return fmt.Errorf("invalid destructuring target")
+	}
 }
 
 func exprKind(values []ast.Expr, scope *scope) valueKind {

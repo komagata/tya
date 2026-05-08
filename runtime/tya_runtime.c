@@ -194,6 +194,36 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
   return tya_nil();
 }
 
+TyaValue tya_destructure_array(TyaValue value, int expected, int index) {
+  if (value.kind != TYA_ARRAY || value.array == NULL) {
+    tya_panic(tya_string("array destructuring target is not array"));
+  }
+  if (value.array->len != expected) {
+    char message[96];
+    snprintf(message, sizeof(message), "array destructuring expects %d elements, got %d", expected, value.array->len);
+    tya_panic(tya_string(message));
+  }
+  if (index < 0 || index >= value.array->len) {
+    tya_panic(tya_string("array destructuring index out of range"));
+  }
+  return value.array->items[index];
+}
+
+TyaValue tya_destructure_dict(TyaValue value, const char *key) {
+  if (value.kind != TYA_DICT || value.dict == NULL) {
+    tya_panic(tya_string("dictionary destructuring target is not dictionary"));
+  }
+  for (int i = 0; i < value.dict->len; i++) {
+    if (value.dict->entries[i].key != NULL && strcmp(value.dict->entries[i].key, key) == 0) {
+      return value.dict->entries[i].value;
+    }
+  }
+  char message[256];
+  snprintf(message, sizeof(message), "dictionary destructuring missing key %s", key == NULL ? "" : key);
+  tya_panic(tya_string(message));
+  return tya_nil();
+}
+
 static int tya_string_len(const char *text) {
   static const char *last_string = NULL;
   static int last_len = 0;

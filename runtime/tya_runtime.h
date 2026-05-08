@@ -55,6 +55,8 @@ TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third)
 TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth);
 TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
+TyaValue tya_destructure_array(TyaValue value, int expected, int index);
+TyaValue tya_destructure_dict(TyaValue value, const char *key);
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item);
 TyaValue tya_member(TyaValue dict, const char *key);
 void tya_set_member(TyaValue dict, const char *key, TyaValue value);

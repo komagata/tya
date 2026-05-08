@@ -462,6 +462,35 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.13 override and constructor chaining checks.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [x] Ship v0.14 destructuring assignment
+  - [x] Define v0.14 destructuring assignment scope
+    - [x] Add `docs/v0.14/SPEC.md`.
+    - [x] Specify array destructuring assignment.
+    - [x] Specify dictionary destructuring assignment with explicit string keys.
+    - [x] Specify nested destructuring patterns.
+    - [x] Specify `_` discard targets.
+    - [x] Specify runtime mismatch and missing-key errors.
+    - [x] Keep rest destructuring, default values, dictionary key shorthand, function parameter destructuring, `for` destructuring, pattern matching, class object destructuring, type annotations, and generics out of v0.14.
+  - [x] Add destructuring parsing and checking
+    - [x] Parse array destructuring assignment targets.
+    - [x] Parse dictionary destructuring assignment targets.
+    - [x] Parse nested destructuring targets.
+    - [x] Reject non-string dictionary keys in destructuring patterns.
+    - [x] Reject destructuring assignment used as an expression.
+  - [x] Add destructuring runtime behavior
+    - [x] Assign array elements by position.
+    - [x] Assign dictionary values by explicit string key.
+    - [x] Ignore `_` discard targets without creating or updating `_`.
+    - [x] Evaluate the right-hand expression once before destructuring.
+    - [x] Report runtime array length mismatches.
+    - [x] Report runtime dictionary missing-key errors.
+    - [x] Report runtime nested shape mismatches.
+  - [x] Keep v0.14 documentation and tests aligned
+    - [x] Update latest docs when v0.14 behavior is implemented.
+    - [x] Keep `docs/v0.14/` aligned with the v0.14 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.14 destructuring assignment.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 

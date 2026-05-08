@@ -568,6 +568,44 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
+<li>[x] Ship v0.14 destructuring assignment</li>
+<ul>
+<li>[x] Define v0.14 destructuring assignment scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.14/SPEC.md</code>.</li>
+<li>[x] Specify array destructuring assignment.</li>
+<li>[x] Specify dictionary destructuring assignment with explicit string keys.</li>
+<li>[x] Specify nested destructuring patterns.</li>
+<li>[x] Specify <code>_</code> discard targets.</li>
+<li>[x] Specify runtime mismatch and missing-key errors.</li>
+<li>[x] Keep rest destructuring, default values, dictionary key shorthand, function parameter destructuring, <code>for</code> destructuring, pattern matching, class object destructuring, type annotations, and generics out of v0.14.</li>
+</ul>
+<li>[x] Add destructuring parsing and checking</li>
+<ul>
+<li>[x] Parse array destructuring assignment targets.</li>
+<li>[x] Parse dictionary destructuring assignment targets.</li>
+<li>[x] Parse nested destructuring targets.</li>
+<li>[x] Reject non-string dictionary keys in destructuring patterns.</li>
+<li>[x] Reject destructuring assignment used as an expression.</li>
+</ul>
+<li>[x] Add destructuring runtime behavior</li>
+<ul>
+<li>[x] Assign array elements by position.</li>
+<li>[x] Assign dictionary values by explicit string key.</li>
+<li>[x] Ignore <code>_</code> discard targets without creating or updating <code>_</code>.</li>
+<li>[x] Evaluate the right-hand expression once before destructuring.</li>
+<li>[x] Report runtime array length mismatches.</li>
+<li>[x] Report runtime dictionary missing-key errors.</li>
+<li>[x] Report runtime nested shape mismatches.</li>
+</ul>
+<li>[x] Keep v0.14 documentation and tests aligned</li>
+<ul>
+<li>[x] Update latest docs when v0.14 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.14/</code> aligned with the v0.14 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.14 destructuring assignment.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>

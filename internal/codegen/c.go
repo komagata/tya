@@ -118,6 +118,9 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if len(n.Targets) != 1 || len(n.Values) != 1 {
 			return g.multiAssign(n)
 		}
+		if isDestructuringTarget(n.Targets[0]) {
+			return g.assignDestructuring(n.Targets[0], n.Values[0])
+		}
 		if target, ok := n.Targets[0].(*ast.IndexExpr); ok {
 			dict, _, err := g.expr(target.Target)
 			if err != nil {
@@ -389,6 +392,64 @@ func (g *cgen) multiAssign(n *ast.AssignStmt) error {
 		}
 	}
 	return nil
+}
+
+func (g *cgen) assignDestructuring(target ast.Expr, value ast.Expr) error {
+	ex, _, err := g.expr(value)
+	if err != nil {
+		return err
+	}
+	temp := fmt.Sprintf("__destructure%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = %s;", temp, ex))
+	return g.assignDestructuringValue(target, temp)
+}
+
+func (g *cgen) assignDestructuringValue(target ast.Expr, value string) error {
+	switch n := target.(type) {
+	case *ast.Ident:
+		return g.assignIdentValue(n.Name, value)
+	case *ast.ArrayLit:
+		for i, elem := range n.Elems {
+			item := fmt.Sprintf("tya_destructure_array(%s, %d, %d)", value, len(n.Elems), i)
+			if err := g.assignDestructuringValue(elem, item); err != nil {
+				return err
+			}
+		}
+		return nil
+	case *ast.DictLit:
+		for _, prop := range n.Props {
+			item := fmt.Sprintf("tya_destructure_dict(%s, %s)", value, strconv.Quote(prop.Name))
+			if err := g.assignDestructuringValue(prop.Value, item); err != nil {
+				return err
+			}
+		}
+		return nil
+	default:
+		return fmt.Errorf("C emitter only supports identifier destructuring targets")
+	}
+}
+
+func (g *cgen) assignIdentValue(name string, value string) error {
+	if name == "_" {
+		return nil
+	}
+	if g.vars[name] {
+		g.line(fmt.Sprintf("%s = %s;", cName(name), value))
+	} else {
+		g.vars[name] = true
+		g.line(fmt.Sprintf("TyaValue %s = %s;", cName(name), value))
+	}
+	return nil
+}
+
+func isDestructuringTarget(target ast.Expr) bool {
+	switch target.(type) {
+	case *ast.ArrayLit, *ast.DictLit:
+		return true
+	default:
+		return false
+	}
 }
 
 func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {

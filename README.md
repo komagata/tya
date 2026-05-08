@@ -33,13 +33,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.13.0, download the release source and build the `tya` command locally.
+For v0.14.0, download the release source and build the `tya` command locally.
 This currently requires Go because the v0.13 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.13.0.tar.gz | tar xz
-cd tya-0.13.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.14.0.tar.gz | tar xz
+cd tya-0.14.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -130,6 +130,7 @@ print array.first(["tya"])
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
+- [v0.14 Spec](https://tya-lang.org/v0.14/spec.html): destructuring assignment.
 - [v0.13 Spec](https://tya-lang.org/v0.13/spec.html): explicit override and constructor chaining checks.
 - [v0.12 Spec](https://tya-lang.org/v0.12/spec.html): interface inheritance and conflict diagnostics.
 - [v0.11 Spec](https://tya-lang.org/v0.11/spec.html): explicit interfaces and implements.

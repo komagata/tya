@@ -1076,6 +1076,9 @@ func (p *Parser) assignTargets() ([]ast.Expr, error) {
 	}
 	targets := []ast.Expr{first}
 	for p.match(token.COMMA) {
+		if isDestructuringTarget(first) {
+			return nil, p.err("mixed destructuring and multiple assignment is not in Tya v0.14")
+		}
 		if _, ok := first.(*ast.Ident); !ok {
 			return nil, p.err("multiple assignment targets must be identifiers")
 		}
@@ -1093,6 +1096,12 @@ func (p *Parser) assignTargets() ([]ast.Expr, error) {
 
 func (p *Parser) assignTarget() (ast.Expr, error) {
 	var ex ast.Expr
+	if p.at(token.LBRACKET) {
+		return p.arrayPattern()
+	}
+	if p.at(token.LBRACE) {
+		return p.dictPattern()
+	}
 	if p.match(token.AT) {
 		if p.at(token.AT) {
 			p.next()
@@ -1140,6 +1149,69 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 	return ex, nil
 }
 
+func (p *Parser) arrayPattern() (ast.Expr, error) {
+	p.next()
+	var elems []ast.Expr
+	if !p.at(token.RBRACKET) {
+		for {
+			elem, err := p.patternTarget()
+			if err != nil {
+				return nil, err
+			}
+			elems = append(elems, elem)
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+	if !p.match(token.RBRACKET) {
+		return nil, p.err("expected ']'")
+	}
+	return &ast.ArrayLit{Elems: elems}, nil
+}
+
+func (p *Parser) dictPattern() (ast.Expr, error) {
+	p.next()
+	dict := &ast.DictLit{}
+	if !p.at(token.RBRACE) {
+		for {
+			if !p.at(token.STRING) {
+				return nil, p.err("destructuring dictionary keys must be string literals")
+			}
+			key := p.next()
+			if !p.match(token.COLON) {
+				return nil, p.err("expected ':' after destructuring dictionary key")
+			}
+			value, err := p.patternTarget()
+			if err != nil {
+				return nil, err
+			}
+			dict.Props = append(dict.Props, ast.DictProp{Name: key.Lexeme, Tok: key, Value: value})
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+	if !p.match(token.RBRACE) {
+		return nil, p.err("expected '}'")
+	}
+	return dict, nil
+}
+
+func (p *Parser) patternTarget() (ast.Expr, error) {
+	switch p.peek().Type {
+	case token.IDENT:
+		tok := p.next()
+		return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
+	case token.LBRACKET:
+		return p.arrayPattern()
+	case token.LBRACE:
+		return p.dictPattern()
+	default:
+		return nil, p.err("expected destructuring target")
+	}
+}
+
 func (p *Parser) isAssignStart() bool {
 	i := p.pos
 	if !p.scanAssignTarget(&i) {
@@ -1155,6 +1227,9 @@ func (p *Parser) isAssignStart() bool {
 }
 
 func (p *Parser) scanAssignTarget(i *int) bool {
+	if p.toks[*i].Type == token.LBRACKET || p.toks[*i].Type == token.LBRACE {
+		return p.scanBalancedPattern(i)
+	}
 	if p.toks[*i].Type == token.AT {
 		*i++
 		if p.toks[*i].Type == token.AT {
@@ -1192,6 +1267,41 @@ func (p *Parser) scanAssignTarget(i *int) bool {
 		break
 	}
 	return true
+}
+
+func (p *Parser) scanBalancedPattern(i *int) bool {
+	stack := []token.Type{}
+	for *i < len(p.toks) {
+		switch p.toks[*i].Type {
+		case token.LBRACKET:
+			stack = append(stack, token.RBRACKET)
+		case token.LBRACE:
+			stack = append(stack, token.RBRACE)
+		case token.RBRACKET, token.RBRACE:
+			if len(stack) == 0 || stack[len(stack)-1] != p.toks[*i].Type {
+				return false
+			}
+			stack = stack[:len(stack)-1]
+			*i++
+			if len(stack) == 0 {
+				return true
+			}
+			continue
+		case token.NEWLINE, token.EOF:
+			return false
+		}
+		*i++
+	}
+	return false
+}
+
+func isDestructuringTarget(target ast.Expr) bool {
+	switch target.(type) {
+	case *ast.ArrayLit, *ast.DictLit:
+		return true
+	default:
+		return false
+	}
 }
 
 func (p *Parser) skipNewlines() {

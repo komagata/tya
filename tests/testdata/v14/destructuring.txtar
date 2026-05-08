@@ -1,0 +1,59 @@
+# v0.14 destructuring assignment.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/destructuring.tya
+stdout 'ada\n31\nx\nleft\nnested\nada\nchanged\n7\nlocal\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/bad_array_len.tya
+stderr 'array destructuring expects 2 elements, got 1'
+
+! exec go run ./cmd/tya run $WORK/bad_dict_missing.tya
+stderr 'dictionary destructuring missing key email'
+
+! exec go run ./cmd/tya check $WORK/bad_dict_key.tya
+stderr 'destructuring dictionary keys must be string literals'
+
+! exec go run ./cmd/tya check $WORK/bad_mixed.tya
+stderr 'mixed destructuring and multiple assignment is not in Tya v0.14'
+
+exec go run ./cmd/tya version
+stdout '0.14.0\n'
+! stderr .
+
+-- destructuring.tya --
+user = {name: "ada", age: 31, email: "ada@example.test"}
+{"name": name, "age": age} = user
+print name
+print age
+
+[first, _, third] = ["x", "ignored", "left"]
+print first
+print third
+
+[outer, {"name": nested_name}] = [["nested"], user]
+[nested] = outer
+print nested
+print nested_name
+
+name = "changed"
+print name
+
+run = ->
+  [local, value] = ["local", 7]
+  print value
+  print local
+
+run()
+
+-- bad_array_len.tya --
+[name, age] = ["ada"]
+
+-- bad_dict_missing.tya --
+{"name": name, "email": email} = {name: "ada"}
+
+-- bad_dict_key.tya --
+{name: value} = {name: "ada"}
+
+-- bad_mixed.tya --
+[name, age], other = [["ada", 31], "x"]

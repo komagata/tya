@@ -769,7 +769,39 @@ func evalValues(exprs []ast.Expr, env *Env) ([]Value, error) {
 func assign(target ast.Expr, v Value, env *Env) error {
 	switch t := target.(type) {
 	case *ast.Ident:
-		env.set(t.Name, v)
+		if t.Name == "_" {
+			return nil
+		}
+		env.set(t.Name, nameFunction(t.Name, v))
+		return nil
+	case *ast.ArrayLit:
+		arr, ok := v.(*Array)
+		if !ok {
+			return fmt.Errorf("array destructuring target is not array")
+		}
+		if len(arr.items) != len(t.Elems) {
+			return fmt.Errorf("array destructuring expects %d elements, got %d", len(t.Elems), len(arr.items))
+		}
+		for i, elem := range t.Elems {
+			if err := assign(elem, arr.items[i], env); err != nil {
+				return err
+			}
+		}
+		return nil
+	case *ast.DictLit:
+		dict, ok := v.(Dict)
+		if !ok {
+			return fmt.Errorf("dictionary destructuring target is not dictionary")
+		}
+		for _, prop := range t.Props {
+			value, ok := dict[prop.Name]
+			if !ok {
+				return fmt.Errorf("dictionary destructuring missing key %s", prop.Name)
+			}
+			if err := assign(prop.Value, value, env); err != nil {
+				return err
+			}
+		}
 		return nil
 	case *ast.MemberExpr:
 		obj, err := evalExpr(t.Target, env)
