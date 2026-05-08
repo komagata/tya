@@ -210,10 +210,15 @@ func TestLexStringHashAfterEscapedQuote(t *testing.T) {
 	}
 }
 
-func TestLexRejectsPredicateIdentifier(t *testing.T) {
-	_, errs := Lex("empty? = -> true\n")
-	if len(errs) == 0 {
-		t.Fatal("expected predicate identifier error")
+func TestLexPredicateQuestionToken(t *testing.T) {
+	toks, errs := Lex("empty? = -> true\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{"IDENT", "?", "=", "->", "IDENT", "NEWLINE", "EOF"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("token sequence mismatch (-want +got):\n%s", diff)
 	}
 }
 

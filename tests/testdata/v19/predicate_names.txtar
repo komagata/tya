@@ -1,0 +1,81 @@
+# v0.19 predicate names.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/predicates.tya
+stdout 'true\nfalse\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n'
+
+exec go run ./cmd/tya build $WORK/predicates.tya -o $WORK/predicates
+exec $WORK/predicates
+stdout 'true\nfalse\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n'
+
+! exec go run ./cmd/tya run $WORK/non_callable_binding.tya
+stderr 'predicate binding active\? must be a function'
+
+! exec go run ./cmd/tya run $WORK/bad_field.tya
+stderr 'expected expression'
+
+! exec go run ./cmd/tya run $WORK/bad_class_var.tya
+stderr 'invalid class variable name enabled\?'
+
+! exec go run ./cmd/tya run $WORK/non_bool_return.tya
+stderr 'name\? must return boolean'
+
+exec go run ./cmd/tya build $WORK/non_bool_return.tya -o $WORK/non_bool_return
+! exec $WORK/non_bool_return
+stderr 'name\? must return boolean'
+
+-- predicates.tya --
+import array
+import dict
+import value
+
+empty? = values -> len(values) == 0
+has_name? = user -> has(user, "name")
+_internal? = item -> item == nil
+
+print empty?([])
+print empty?(["a"])
+
+user =
+  name: "komagata"
+
+print has_name?(user)
+print _internal?(nil)
+print array.empty?([])
+print dict.has?(user, "name")
+print value.nil?(nil)
+
+class User
+  init = name ->
+    @name = name
+
+  named? = ->
+    @name != ""
+
+class Feature
+  @@enabled = true
+
+  @@enabled? = ->
+    @@enabled
+
+person = User("komagata")
+print person.named?()
+print Feature.enabled?()
+
+-- non_callable_binding.tya --
+active? = true
+
+-- bad_field.tya --
+class User
+  init = ->
+    @active? = true
+
+-- bad_class_var.tya --
+class Feature
+  @@enabled? = true
+
+-- non_bool_return.tya --
+name? = ->
+  "komagata"
+
+print name?()

@@ -184,6 +184,8 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			l.add(token.COMMA, ",", line, col)
 		case '.':
 			l.add(token.DOT, ".", line, col)
+		case '?':
+			l.add(token.QUESTION, "?", line, col)
 		case '@':
 			l.add(token.AT, "@", line, col)
 		case '+':

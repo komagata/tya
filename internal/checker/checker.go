@@ -19,6 +19,22 @@ func isPrivateName(name string) bool {
 	return strings.HasPrefix(name, "_") && name != "_"
 }
 
+func isPredicateName(name string) bool {
+	return strings.HasSuffix(name, "?")
+}
+
+func predicateBaseName(name string) string {
+	return strings.TrimSuffix(name, "?")
+}
+
+func validCallableName(name string) bool {
+	if isPredicateName(name) {
+		base := predicateBaseName(name)
+		return base != "" && valueNameRE.MatchString(base)
+	}
+	return valueNameRE.MatchString(name)
+}
+
 func Check(prog *ast.Program) error {
 	return CheckWithModules(prog, nil)
 }
@@ -212,7 +228,17 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					}
 					continue
 				}
-				if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
+				if isPredicateName(name.Name) {
+					if len(n.Targets) != 1 || len(n.Values) != 1 {
+						return fmt.Errorf("%d:%d: predicate binding %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
+					}
+					if _, ok := n.Values[0].(*ast.FuncLit); !ok {
+						return fmt.Errorf("%d:%d: predicate binding %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
+					}
+					if !validCallableName(name.Name) {
+						return fmt.Errorf("%d:%d: invalid predicate name %s", name.Tok.Line, name.Tok.Col, name.Name)
+					}
+				} else if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
 					return err
 				}
 				if constants[name.Name] {
@@ -256,7 +282,14 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				}
 			}
 			for _, member := range n.Members {
-				if !valueNameRE.MatchString(member.Name) {
+				if isPredicateName(member.Name) {
+					if _, ok := member.Value.(*ast.FuncLit); !ok {
+						return fmt.Errorf("%d:%d: predicate module member %s must be a function", member.Tok.Line, member.Tok.Col, member.Name)
+					}
+					if !validCallableName(member.Name) {
+						return fmt.Errorf("%d:%d: invalid predicate name %s", member.Tok.Line, member.Tok.Col, member.Name)
+					}
+				} else if !valueNameRE.MatchString(member.Name) {
 					return fmt.Errorf("%d:%d: invalid module member %s", member.Tok.Line, member.Tok.Col, member.Name)
 				}
 				if seen[member.Name] {
@@ -410,8 +443,14 @@ func predeclareFunctionBindings(stmts []ast.Stmt, scope *scope) error {
 			if _, ok := n.Values[0].(*ast.FuncLit); !ok {
 				continue
 			}
-			if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
-				return err
+			if isPredicateName(name.Name) {
+				if !validCallableName(name.Name) {
+					return fmt.Errorf("%d:%d: invalid predicate name %s", name.Tok.Line, name.Tok.Col, name.Name)
+				}
+			} else {
+				if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
+					return err
+				}
 			}
 			scope.define(name.Name, kindUnknown)
 		case *ast.ClassDecl:
@@ -918,7 +957,7 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		}
 	}
 	for _, method := range class.Methods {
-		if !valueNameRE.MatchString(method.Name) {
+		if !validCallableName(method.Name) {
 			return fmt.Errorf("%d:%d: invalid method name %s", method.Tok.Line, method.Tok.Col, method.Name)
 		}
 		if method.Abstract && !class.Abstract {

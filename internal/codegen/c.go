@@ -1856,6 +1856,11 @@ func (g *cgen) standardModuleCall(module string, name string, argExprs []ast.Exp
 			return call, nil
 		}
 		return "", nil
+	case "value":
+		if name == "nil?" && len(args) == 1 {
+			return fmt.Sprintf("tya_bool(%s.kind == TYA_NIL)", args[0]), nil
+		}
+		return "", nil
 	default:
 		return "", nil
 	}
@@ -1920,6 +1925,10 @@ func standardArrayCall(name string, args []string) string {
 	case "len":
 		if len(args) == 1 {
 			return fmt.Sprintf("tya_len(%s)", args[0])
+		}
+	case "empty?":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_bool((int)tya_len(%s).number == 0)", args[0])
 		}
 	case "first":
 		if len(args) == 1 {
@@ -1987,7 +1996,7 @@ func standardDictCall(name string, args []string) string {
 		if len(args) == 1 {
 			return fmt.Sprintf("tya_len(%s)", args[0])
 		}
-	case "has":
+	case "has", "has?":
 		if len(args) == 2 {
 			return fmt.Sprintf("tya_has(%s, %s)", args[0], args[1])
 		}

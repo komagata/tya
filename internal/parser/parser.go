@@ -190,7 +190,7 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 			p.skipNewlines()
 			continue
 		}
-		memberName, err := p.expectName("expected module member name")
+		memberName, err := p.expectCallableName("expected module member name")
 		if err != nil {
 			return nil, err
 		}
@@ -284,7 +284,7 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 				return nil, p.err("expected '@' for class member")
 			}
 		}
-		memberName, err := p.expectName("expected class member name")
+		memberName, err := p.expectCallableName("expected class member name")
 		if err != nil {
 			return nil, err
 		}
@@ -977,7 +977,7 @@ func (p *Parser) call() (ast.Expr, error) {
 	}
 	for {
 		if p.match(token.DOT) {
-			name, err := p.expectIdent("expected property name")
+			name, err := p.expectCallableIdent("expected property name")
 			if err != nil {
 				return nil, err
 			}
@@ -1038,6 +1038,11 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}
 		return &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}, nil
 	case token.IDENT:
+		if p.peek().Type == token.QUESTION {
+			p.next()
+			tok.Lexeme += "?"
+			return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
+		}
 		if tok.Lexeme == "true" {
 			return &ast.BoolLit{Value: true}, nil
 		}
@@ -1224,7 +1229,7 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 			ex = &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}
 		}
 	} else {
-		tok, err := p.expectName("expected assignment target")
+		tok, err := p.expectCallableName("expected assignment target")
 		if err != nil {
 			return nil, err
 		}
@@ -1232,7 +1237,7 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 	}
 	for {
 		if p.match(token.DOT) {
-			name, err := p.expectIdent("expected property name")
+			name, err := p.expectCallableIdent("expected property name")
 			if err != nil {
 				return nil, err
 			}
@@ -1438,15 +1443,24 @@ func (p *Parser) scanAssignTarget(i *int) bool {
 			return false
 		}
 		*i++
+		if p.toks[*i].Type == token.QUESTION {
+			*i++
+		}
 		return true
 	}
 	if p.toks[*i].Type != token.IDENT {
 		return false
 	}
 	*i++
+	if p.toks[*i].Type == token.QUESTION {
+		*i++
+	}
 	for {
 		if p.toks[*i].Type == token.DOT {
 			*i += 2
+			if p.toks[*i].Type == token.QUESTION {
+				*i++
+			}
 			continue
 		}
 		if p.toks[*i].Type == token.LBRACKET {
@@ -1567,11 +1581,35 @@ func (p *Parser) expectName(msg string) (token.Token, error) {
 	}
 	return tok, nil
 }
+func (p *Parser) expectCallableName(msg string) (token.Token, error) {
+	if !p.at(token.IDENT) {
+		return token.Token{}, p.err(msg)
+	}
+	tok := p.next()
+	if p.match(token.QUESTION) {
+		tok.Lexeme += "?"
+		return tok, nil
+	}
+	if err := p.rejectReservedName(tok); err != nil {
+		return token.Token{}, err
+	}
+	return tok, nil
+}
 func (p *Parser) expectIdent(msg string) (token.Token, error) {
 	if !p.at(token.IDENT) {
 		return token.Token{}, p.err(msg)
 	}
 	return p.next(), nil
+}
+func (p *Parser) expectCallableIdent(msg string) (token.Token, error) {
+	tok, err := p.expectIdent(msg)
+	if err != nil {
+		return token.Token{}, err
+	}
+	if p.match(token.QUESTION) {
+		tok.Lexeme += "?"
+	}
+	return tok, nil
 }
 func (p *Parser) rejectV01ExcludedIdent() error {
 	if !p.at(token.IDENT) {

@@ -1,0 +1,2 @@
+module value
+  nil? = item -> item == nil

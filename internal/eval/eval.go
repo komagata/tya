@@ -1161,6 +1161,14 @@ func evalStandardModuleCall(module string, name string, args []Value, env *Env) 
 		}
 		value, err := evalDictModuleCall(name, args, env)
 		return value, true, err
+	case "value":
+		if name != "nil?" {
+			return nil, false, nil
+		}
+		if len(args) != 1 {
+			return nil, true, fmt.Errorf("value.nil? expects 1 argument")
+		}
+		return args[0] == nil, true, nil
 	default:
 		return nil, false, nil
 	}
@@ -1177,7 +1185,7 @@ func isStandardStringCall(name string) bool {
 
 func isStandardArrayCall(name string) bool {
 	switch name {
-	case "len", "first", "last", "push", "pop", "slice", "reverse", "join", "map", "filter", "find", "any", "all", "each", "reduce":
+	case "len", "empty?", "first", "last", "push", "pop", "slice", "reverse", "join", "map", "filter", "find", "any", "all", "each", "reduce":
 		return true
 	default:
 		return false
@@ -1186,7 +1194,7 @@ func isStandardArrayCall(name string) bool {
 
 func isStandardDictCall(name string) bool {
 	switch name {
-	case "len", "has", "get", "set", "delete", "keys", "values", "merge":
+	case "len", "has", "has?", "get", "set", "delete", "keys", "values", "merge":
 		return true
 	default:
 		return false
@@ -1306,6 +1314,12 @@ func evalArrayModuleCall(name string, args []Value, env *Env) (Value, error) {
 	switch name {
 	case "len":
 		return evalLen("array.len", args, env)
+	case "empty?":
+		arr, err := oneArray("array.empty?", args)
+		if err != nil {
+			return nil, err
+		}
+		return len(arr.items) == 0, nil
 	case "first":
 		arr, err := oneArray("array.first", args)
 		if err != nil {
@@ -1392,7 +1406,7 @@ func evalDictModuleCall(name string, args []Value, env *Env) (Value, error) {
 	switch name {
 	case "len":
 		return evalLen("dict.len", args, env)
-	case "has":
+	case "has", "has?":
 		return evalHas("dict.has", args)
 	case "get":
 		if len(args) != 2 && len(args) != 3 {
@@ -1666,15 +1680,27 @@ func callValue(fn Value, args []Value) (Value, error) {
 		for i, name := range f.Params {
 			callEnv.set(name, args[i])
 		}
+		checkPredicate := func(v Value, err error) (Value, error) {
+			if err != nil {
+				return v, err
+			}
+			if !strings.HasSuffix(f.Name, "?") {
+				return v, nil
+			}
+			if _, ok := v.(bool); !ok {
+				return nil, fmt.Errorf("%s must return boolean", f.Name)
+			}
+			return v, nil
+		}
 		if f.Expr != nil {
-			return evalExpr(f.Expr, callEnv)
+			return checkPredicate(evalExpr(f.Expr, callEnv))
 		}
 		v, err := evalStmts(f.Body, callEnv)
 		var ret *returnSignal
 		if errors.As(err, &ret) {
-			return ret.value, nil
+			return checkPredicate(ret.value, nil)
 		}
-		return v, err
+		return checkPredicate(v, err)
 	}
 	return nil, fmt.Errorf("value is not callable")
 }
