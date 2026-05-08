@@ -25,6 +25,7 @@ const (
 	COLON    Type = ":"
 	COMMA    Type = ","
 	DOT      Type = "."
+	AT       Type = "@"
 	PLUS     Type = "+"
 	MINUS    Type = "-"
 	STAR     Type = "*"

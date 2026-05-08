@@ -13,7 +13,7 @@ func EmitC(prog *ast.Program) (string, error) {
 }
 
 func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, sourcePath: sourcePath}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, sourcePath: sourcePath}
 	for _, name := range assignedNames(prog.Stmts) {
 		g.vars[name] = true
 		g.globalLine(fmt.Sprintf("TyaValue %s;", cName(name)))
@@ -45,6 +45,7 @@ type cgen struct {
 	indent        int
 	vars          map[string]bool
 	funcs         map[string]string
+	classes       map[string]string
 	temp          int
 	inFunc        bool
 	predicateName string
@@ -70,6 +71,9 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	case *ast.ModuleDecl:
 		g.sourceLine(n.NameTok.Line)
 		return g.assignModuleDecl(n)
+	case *ast.ClassDecl:
+		g.sourceLine(n.NameTok.Line)
+		return g.assignClassDecl(n.Name, n)
 	case *ast.AssignStmt:
 		g.sourceLine(n.Tok.Line)
 		if len(n.Targets) != 1 || len(n.Values) != 1 {
@@ -89,6 +93,26 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 				return err
 			}
 			g.line(fmt.Sprintf("tya_set_index(%s, %s, %s);", dict, index, value))
+			return nil
+		}
+		if target, ok := n.Targets[0].(*ast.MemberExpr); ok {
+			receiver, _, err := g.expr(target.Target)
+			if err != nil {
+				return err
+			}
+			value, _, err := g.expr(n.Values[0])
+			if err != nil {
+				return err
+			}
+			g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", receiver, strconv.Quote(target.Name), value))
+			return nil
+		}
+		if target, ok := n.Targets[0].(*ast.InstanceFieldExpr); ok {
+			value, _, err := g.expr(n.Values[0])
+			if err != nil {
+				return err
+			}
+			g.line(fmt.Sprintf("tya_set_member(__this, %s, %s);", strconv.Quote(target.Name), value))
 			return nil
 		}
 		id, ok := n.Targets[0].(*ast.Ident)
@@ -326,6 +350,8 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, _ string, _ str
 	child := &cgen{
 		vars:          map[string]bool{},
 		funcs:         g.funcs,
+		classes:       g.classes,
+		sourcePath:    g.sourcePath,
 		temp:          g.temp,
 		indent:        1,
 		inFunc:        true,
@@ -451,6 +477,7 @@ func (g *cgen) assignDictLit(name string, obj *ast.DictLit) error {
 func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
 	entries := []string{}
 	functions := []ast.ModuleMember{}
+	classes := module.Classes
 	for _, member := range module.Members {
 		if _, ok := member.Value.(*ast.FuncLit); ok {
 			functions = append(functions, member)
@@ -477,7 +504,69 @@ func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
 		}
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_function(%s));", target, strconv.Quote(member.Name), sym))
 	}
+	for _, class := range classes {
+		sym, err := g.emitClass(module.Name+"_"+class.Name, class)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_function(%s));", target, strconv.Quote(class.Name), sym))
+	}
 	return nil
+}
+
+func (g *cgen) assignClassDecl(name string, class *ast.ClassDecl) error {
+	sym, err := g.emitClass(name, class)
+	if err != nil {
+		return err
+	}
+	g.classes[name] = sym
+	target := cName(name)
+	if g.vars[name] {
+		g.line(fmt.Sprintf("%s = tya_function(%s);", target, sym))
+	} else {
+		g.vars[name] = true
+		g.line(fmt.Sprintf("TyaValue %s = tya_function(%s);", target, sym))
+	}
+	return nil
+}
+
+func (g *cgen) emitClass(name string, class *ast.ClassDecl) (string, error) {
+	methodSyms := map[string]string{}
+	var initMethod *ast.ClassMethod
+	for i := range class.Methods {
+		method := &class.Methods[i]
+		sym, err := g.emitFuncWithContext(name+"_"+method.Name, method.Func, "", "")
+		if err != nil {
+			return "", err
+		}
+		methodSyms[method.Name] = sym
+		if method.Name == "init" {
+			initMethod = method
+		}
+	}
+	sym := cFuncName(name+"_new", g.temp)
+	g.temp++
+	var out strings.Builder
+	out.WriteString("TyaValue ")
+	out.WriteString(sym)
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
+	out.WriteString("  (void)__this;\n")
+	out.WriteString("  TyaValue __obj = tya_object();\n")
+	for _, method := range class.Methods {
+		if method.Name == "init" {
+			continue
+		}
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
+	}
+	if initMethod != nil {
+		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", methodSyms["init"]))
+	} else {
+		out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
+	}
+	out.WriteString("  return __obj;\n")
+	out.WriteString("}\n\n")
+	g.funcOut.WriteString(out.String())
+	return sym, nil
 }
 
 func (g *cgen) exprStmt(expr ast.Expr) error {
@@ -641,6 +730,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return fmt.Sprintf("tya_function(%s)", sym), "TyaValue", nil
 	case *ast.Ident:
 		return cName(n.Name), "TyaValue", nil
+	case *ast.InstanceFieldExpr:
+		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.BinaryExpr:
 		left, _, err := g.expr(n.Left)
 		if err != nil {
@@ -689,6 +780,22 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return "tya_number(-" + ex + ".number)", typ, nil
 	case *ast.CallExpr:
 		id, ok := n.Callee.(*ast.Ident)
+		if ok {
+			if sym, found := g.classes[id.Name]; found {
+				args := make([]string, 0, len(n.Args))
+				for _, arg := range n.Args {
+					ex, _, err := g.expr(arg)
+					if err != nil {
+						return "", "", err
+					}
+					args = append(args, ex)
+				}
+				for len(args) < 4 {
+					args = append(args, "tya_nil()")
+				}
+				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
+			}
+		}
 		if ok && id.Name == "len" && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])
 			if err != nil {
@@ -1128,6 +1235,9 @@ func isPathName(name string) bool {
 }
 
 func pathExpr(name string) string {
+	if strings.HasPrefix(name, "@") && isIdentName(strings.TrimPrefix(name, "@")) {
+		return "tya_member(__this, " + strconv.Quote(strings.TrimPrefix(name, "@")) + ")"
+	}
 	parts := strings.Split(name, ".")
 	expr := cName(parts[0])
 	for _, part := range parts[1:] {
@@ -1138,6 +1248,9 @@ func pathExpr(name string) string {
 
 func interpolationExpr(expr string) (string, bool) {
 	expr = strings.TrimSpace(expr)
+	if strings.HasPrefix(expr, "@") && isIdentName(strings.TrimPrefix(expr, "@")) {
+		return pathExpr(expr), true
+	}
 	if isPathName(expr) {
 		return pathExpr(expr), true
 	}

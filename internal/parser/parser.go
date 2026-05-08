@@ -14,6 +14,7 @@ type Parser struct {
 	blockDepth    int
 	loopDepth     int
 	functionDepth int
+	classDepth    int
 }
 
 func Parse(toks []token.Token) (*ast.Program, error) {
@@ -44,6 +45,12 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 			return nil, p.err("module must be top-level")
 		}
 		return p.moduleDecl()
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "class" {
+		if p.blockDepth != 0 {
+			return nil, p.err("class must be top-level")
+		}
+		return p.classDecl()
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "import" {
 		if p.blockDepth != 0 {
@@ -127,6 +134,15 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 	decl := &ast.ModuleDecl{Name: name.Lexeme, NameTok: name}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		if p.at(token.IDENT) && p.peek().Lexeme == "class" {
+			cls, err := p.classDecl()
+			if err != nil {
+				return nil, err
+			}
+			decl.Classes = append(decl.Classes, cls.(*ast.ClassDecl))
+			p.skipNewlines()
+			continue
+		}
 		memberName, err := p.expectName("expected module member name")
 		if err != nil {
 			return nil, err
@@ -143,6 +159,48 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 	}
 	if !p.match(token.DEDENT) {
 		return nil, p.err("expected dedent after module")
+	}
+	return decl, nil
+}
+
+func (p *Parser) classDecl() (ast.Stmt, error) {
+	p.next()
+	name, err := p.expectName("expected class name")
+	if err != nil {
+		return nil, err
+	}
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after class")
+	}
+	p.blockDepth++
+	p.classDepth++
+	defer func() {
+		p.classDepth--
+		p.blockDepth--
+	}()
+	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name}
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		methodName, err := p.expectName("expected method name")
+		if err != nil {
+			return nil, err
+		}
+		if !p.match(token.ASSIGN) {
+			return nil, p.err("expected '=' after method name")
+		}
+		fn, err := p.exprLine()
+		if err != nil {
+			return nil, err
+		}
+		funcLit, ok := fn.(*ast.FuncLit)
+		if !ok {
+			return nil, p.errAt(methodName, "class body may only contain method definitions")
+		}
+		decl.Methods = append(decl.Methods, ast.ClassMethod{Name: methodName.Lexeme, Tok: methodName, Func: funcLit})
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after class")
 	}
 	return decl, nil
 }
@@ -639,6 +697,15 @@ func (p *Parser) call() (ast.Expr, error) {
 func (p *Parser) primary() (ast.Expr, error) {
 	tok := p.next()
 	switch tok.Type {
+	case token.AT:
+		if p.at(token.AT) {
+			return nil, p.err("@@field is not in Tya v0.5")
+		}
+		name, err := p.expectName("expected instance field name")
+		if err != nil {
+			return nil, err
+		}
+		return &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}, nil
 	case token.IDENT:
 		if tok.Lexeme == "true" {
 			return &ast.BoolLit{Value: true}, nil
@@ -794,14 +861,31 @@ func (p *Parser) assignTargets() ([]ast.Expr, error) {
 }
 
 func (p *Parser) assignTarget() (ast.Expr, error) {
-	tok, err := p.expectName("expected assignment target")
-	if err != nil {
-		return nil, err
+	var ex ast.Expr
+	if p.match(token.AT) {
+		if p.at(token.AT) {
+			return nil, p.err("@@field is not in Tya v0.5")
+		}
+		name, err := p.expectName("expected instance field name")
+		if err != nil {
+			return nil, err
+		}
+		ex = &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}
+	} else {
+		tok, err := p.expectName("expected assignment target")
+		if err != nil {
+			return nil, err
+		}
+		ex = ast.Expr(&ast.Ident{Name: tok.Lexeme, Tok: tok})
 	}
-	ex := ast.Expr(&ast.Ident{Name: tok.Lexeme, Tok: tok})
 	for {
 		if p.match(token.DOT) {
-			return nil, p.err("member assignment is not in Tya v0.1")
+			name, err := p.expectName("expected property name")
+			if err != nil {
+				return nil, err
+			}
+			ex = &ast.MemberExpr{Target: ex, Name: name.Lexeme, NameTok: name}
+			continue
 		}
 		if p.match(token.LBRACKET) {
 			index, err := p.expr()
@@ -834,6 +918,14 @@ func (p *Parser) isAssignStart() bool {
 }
 
 func (p *Parser) scanAssignTarget(i *int) bool {
+	if p.toks[*i].Type == token.AT {
+		*i++
+		if p.toks[*i].Type != token.IDENT {
+			return false
+		}
+		*i++
+		return true
+	}
 	if p.toks[*i].Type != token.IDENT {
 		return false
 	}
@@ -874,7 +966,7 @@ func (p *Parser) startsExprAt(pos int) bool {
 		return false
 	}
 	switch p.toks[pos].Type {
-	case token.IDENT, token.STRING, token.INT, token.FLOAT, token.MINUS, token.LPAREN, token.LBRACKET, token.LBRACE, token.ARROW:
+	case token.IDENT, token.STRING, token.INT, token.FLOAT, token.MINUS, token.LPAREN, token.LBRACKET, token.LBRACE, token.ARROW, token.AT:
 		return true
 	default:
 		return false
@@ -934,7 +1026,7 @@ func (p *Parser) rejectV01ExcludedIdent() error {
 }
 func (p *Parser) rejectV01ExcludedWord(word string) error {
 	switch word {
-	case "class", "interface", "object", "set", "self", "super":
+	case "interface", "object", "set", "self", "super":
 		return p.err(word + " is not in Tya v0.1")
 	default:
 		return nil
@@ -942,9 +1034,9 @@ func (p *Parser) rejectV01ExcludedWord(word string) error {
 }
 func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
-	case "class", "interface", "object", "set", "self", "super":
+	case "interface", "object", "set", "self", "super":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
-	case "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
+	case "class", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
 	default:
 		return nil

@@ -1,6 +1,6 @@
-# Tya v0.4 API
+# Tya v0.5 API
 
-This document defines the standard built-in functions for Tya v0.4.
+This document defines the standard built-in functions for Tya v0.5.
 
 ## Core
 

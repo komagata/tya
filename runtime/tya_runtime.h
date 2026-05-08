@@ -10,6 +10,7 @@ typedef enum {
   TYA_STRING,
   TYA_ARRAY,
   TYA_DICT,
+  TYA_OBJECT,
   TYA_FUNCTION,
   TYA_ERROR,
 } TyaKind;
@@ -43,7 +44,9 @@ TyaValue tya_number(double value);
 TyaValue tya_string(const char *value);
 TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_dict(const TyaDictEntry *entries, int count);
+TyaValue tya_object(void);
 TyaValue tya_function(TyaFunctionPtr fn);
+TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn);
 TyaValue tya_error(TyaValue message);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);

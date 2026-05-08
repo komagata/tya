@@ -1,0 +1,77 @@
+# Tya-written compiler supports the current v0.5 class surface while preserving self-host.
+cd $REPO
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya selfhost/v01/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+
+exec sh -c '"$WORK/stage1" selfhost/v01/compiler.tya > "$WORK/stage2.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" 2>/dev/null'
+
+exec sh -c '"$WORK/stage2" "$WORK/current_v05.tya" > "$WORK/current_v05.c"'
+! stderr .
+
+exec cc $WORK/current_v05.c runtime/tya_runtime.c -I runtime -o $WORK/current_v05
+! stderr .
+
+exec $WORK/current_v05
+stdout 'Hello, komagata\nTya\nHello, Ty\n1\n2\n'
+! stderr .
+
+exec sh -c '"$WORK/stage2" "$WORK/module_main.tya" > "$WORK/module_main.c"'
+! stderr .
+
+exec cc $WORK/module_main.c runtime/tya_runtime.c -I runtime -o $WORK/module_main
+! stderr .
+
+exec $WORK/module_main
+stdout 'Hello, module\n'
+! stderr .
+
+-- current_v05.tya --
+class User
+  init = name ->
+    @name = name
+
+  rename = name ->
+    @name = name
+
+  greeting = ->
+    "Hello, {@name}"
+
+class Counter
+  init = ->
+    @value = 0
+
+  increment = ->
+    @value = @value + 1
+    @value
+
+user = User("komagata")
+print user.greeting()
+user.rename("Tya")
+print user.name
+user.name = "Ty"
+print user.greeting()
+
+counter = Counter()
+print counter.increment()
+print counter.increment()
+
+-- user.tya --
+module user
+  class User
+    init = name ->
+      @name = name
+
+    greeting = ->
+      "Hello, {@name}"
+
+-- module_main.tya --
+import user
+
+item = user.User("module")
+print item.greeting()

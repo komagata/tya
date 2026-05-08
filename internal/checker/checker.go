@@ -11,6 +11,7 @@ import (
 
 var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 var valueNameRE = regexp.MustCompile(`^_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*$|^_$`)
+var classNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
 
 func Check(prog *ast.Program) error {
 	return CheckWithModules(prog, nil)
@@ -62,13 +63,28 @@ var builtinNames = []string{
 }
 
 type scope struct {
-	parent *scope
-	names  map[string]bool
-	kinds  map[string]valueKind
+	parent   *scope
+	names    map[string]bool
+	kinds    map[string]valueKind
+	classes  map[string]classInfo
+	inMethod bool
+}
+
+type classInfo struct {
+	hasInit   bool
+	initArity int
+	methods   map[string]bool
 }
 
 func newScope(parent *scope) *scope {
-	return &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}}
+	s := &scope{parent: parent, names: map[string]bool{}, kinds: map[string]valueKind{}}
+	if parent != nil {
+		s.classes = parent.classes
+		s.inMethod = parent.inMethod
+	} else {
+		s.classes = map[string]classInfo{}
+	}
+	return s
 }
 
 type valueKind int
@@ -78,6 +94,8 @@ const (
 	kindArray
 	kindDict
 	kindModule
+	kindClass
+	kindObject
 )
 
 func (s *scope) define(name string, kind valueKind) {
@@ -142,7 +160,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				if constNameRE.MatchString(name.Name) {
 					constants[name.Name] = true
 				}
-				scope.define(name.Name, exprKind(n.Values))
+				scope.define(name.Name, exprKind(n.Values, scope))
 			}
 		case *ast.ModuleDecl:
 			if !valueNameRE.MatchString(n.Name) || strings.HasPrefix(n.Name, "_") {
@@ -150,6 +168,18 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			}
 			seen := map[string]bool{}
 			scope.define(n.Name, kindModule)
+			for _, class := range n.Classes {
+				if !classNameRE.MatchString(class.Name) {
+					return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+				}
+				if seen[class.Name] {
+					return fmt.Errorf("%d:%d: duplicate module member %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+				}
+				seen[class.Name] = true
+				if err := checkClass(class, scope); err != nil {
+					return err
+				}
+			}
 			for _, member := range n.Members {
 				if !valueNameRE.MatchString(member.Name) {
 					return fmt.Errorf("%d:%d: invalid module member %s", member.Tok.Line, member.Tok.Col, member.Name)
@@ -161,6 +191,10 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				if err := checkExpr(member.Value, scope); err != nil {
 					return err
 				}
+			}
+		case *ast.ClassDecl:
+			if err := checkClass(n, scope); err != nil {
+				return err
 			}
 		case *ast.IfStmt:
 			if err := checkExpr(n.Cond, scope); err != nil {
@@ -216,22 +250,45 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 
 func predeclareFunctionBindings(stmts []ast.Stmt, scope *scope) error {
 	for _, stmt := range stmts {
-		assign, ok := stmt.(*ast.AssignStmt)
-		if !ok || len(assign.Targets) != 1 || len(assign.Values) != 1 {
-			continue
+		switch n := stmt.(type) {
+		case *ast.AssignStmt:
+			if len(n.Targets) != 1 || len(n.Values) != 1 {
+				continue
+			}
+			name, ok := n.Targets[0].(*ast.Ident)
+			if !ok {
+				continue
+			}
+			if _, ok := n.Values[0].(*ast.FuncLit); !ok {
+				continue
+			}
+			if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
+				return err
+			}
+			scope.define(name.Name, kindUnknown)
+		case *ast.ClassDecl:
+			if err := predeclareClass(n, scope); err != nil {
+				return err
+			}
 		}
-		name, ok := assign.Targets[0].(*ast.Ident)
-		if !ok {
-			continue
-		}
-		if _, ok := assign.Values[0].(*ast.FuncLit); !ok {
-			continue
-		}
-		if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
-			return err
-		}
-		scope.define(name.Name, kindUnknown)
 	}
+	return nil
+}
+
+func predeclareClass(class *ast.ClassDecl, scope *scope) error {
+	if !classNameRE.MatchString(class.Name) {
+		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+	}
+	info := classInfo{methods: map[string]bool{}}
+	for _, method := range class.Methods {
+		info.methods[method.Name] = true
+		if method.Name == "init" {
+			info.hasInit = true
+			info.initArity = len(method.Func.Params)
+		}
+	}
+	scope.define(class.Name, kindClass)
+	scope.classes[class.Name] = info
 	return nil
 }
 
@@ -300,12 +357,21 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		return checkExpr(n.Expr, scope)
 	case *ast.TryExpr:
 		return checkExpr(n.Expr, scope)
+	case *ast.InstanceFieldExpr:
+		if !scope.inMethod {
+			return fmt.Errorf("%d:%d: @%s is only valid inside an instance method", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
+		if !valueNameRE.MatchString(n.Name) {
+			return fmt.Errorf("%d:%d: invalid field name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
 	case *ast.MemberExpr:
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
 		}
 		switch kindOf(n.Target, scope) {
 		case kindModule:
+			return nil
+		case kindObject:
 			return nil
 		case kindDict:
 			return memberAccessError(n, "dictionary")
@@ -323,10 +389,41 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		if err := checkExpr(n.Callee, scope); err != nil {
 			return err
 		}
+		if id, ok := n.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindClass {
+			info := scope.classes[id.Name]
+			if !info.hasInit && len(n.Args) > 0 {
+				return fmt.Errorf("%d:%d: class %s has no init and takes no arguments", id.Tok.Line, id.Tok.Col, id.Name)
+			}
+			if info.hasInit && len(n.Args) != info.initArity {
+				return fmt.Errorf("%d:%d: class %s constructor expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, info.initArity)
+			}
+		}
 		for _, arg := range n.Args {
 			if err := checkExpr(arg, scope); err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+func checkClass(class *ast.ClassDecl, scope *scope) error {
+	if !classNameRE.MatchString(class.Name) {
+		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+	}
+	seen := map[string]bool{}
+	for _, method := range class.Methods {
+		if !valueNameRE.MatchString(method.Name) {
+			return fmt.Errorf("%d:%d: invalid method name %s", method.Tok.Line, method.Tok.Col, method.Name)
+		}
+		if seen[method.Name] {
+			return fmt.Errorf("%d:%d: duplicate method %s", method.Tok.Line, method.Tok.Col, method.Name)
+		}
+		seen[method.Name] = true
+		child := newScope(scope)
+		child.inMethod = true
+		if err := checkExpr(method.Func, child); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -345,6 +442,13 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 			return memberAccessError(n, "array")
 		}
 		return nil
+	case *ast.InstanceFieldExpr:
+		if !scope.inMethod {
+			return fmt.Errorf("%d:%d: @%s is only valid inside an instance method", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
+		if !valueNameRE.MatchString(n.Name) {
+			return fmt.Errorf("%d:%d: invalid field name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
 	case *ast.IndexExpr:
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
@@ -354,9 +458,17 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 	return nil
 }
 
-func exprKind(values []ast.Expr) valueKind {
+func exprKind(values []ast.Expr, scope *scope) valueKind {
 	if len(values) != 1 {
 		return kindUnknown
+	}
+	if call, ok := values[0].(*ast.CallExpr); ok {
+		if id, ok := call.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindClass {
+			return kindObject
+		}
+		if member, ok := call.Callee.(*ast.MemberExpr); ok && kindOf(member.Target, scope) == kindModule && classNameRE.MatchString(member.Name) {
+			return kindObject
+		}
 	}
 	return literalKind(values[0])
 }

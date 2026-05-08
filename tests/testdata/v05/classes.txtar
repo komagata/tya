@@ -1,0 +1,138 @@
+# v0.5 minimal classes and objects.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/classes.tya
+stdout 'Hello, komagata\nTya\nHello, Ty\n1\n2\nmarker\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'Hello, module\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/bad_class_name.tya
+stderr 'invalid class name user'
+
+! exec go run ./cmd/tya run $WORK/at_outside_method.tya
+stderr '@name is only valid inside an instance method'
+
+! exec go run ./cmd/tya run $WORK/class_variable.tya
+stderr '@@field is not in Tya v0.5'
+! stdout .
+
+! exec go run ./cmd/tya run $WORK/duplicate_method.tya
+stderr 'duplicate method name'
+
+! exec go run ./cmd/tya run $WORK/constructor_arity.tya
+stderr 'class User constructor expects 1 arguments'
+
+! exec go run ./cmd/tya run $WORK/no_init_args.tya
+stderr 'class Marker has no init and takes no arguments'
+
+! exec go run ./cmd/tya run $WORK/dict_dot.tya
+stderr 'cannot use . access on dictionary; use index access'
+
+! exec go run ./cmd/tya run $WORK/missing_field.tya
+stderr 'missing object field or method: missing'
+! stdout .
+
+exec go run ./cmd/tya version
+stdout '0.5.0\n'
+! stderr .
+
+-- classes.tya --
+class User
+  init = name ->
+    @name = name
+
+  rename = name ->
+    @name = name
+
+  greeting = ->
+    "Hello, {@name}"
+
+class Counter
+  init = ->
+    @value = 0
+
+  increment = ->
+    @value = @value + 1
+    @value
+
+class Marker
+  label = ->
+    "marker"
+
+user = User("komagata")
+print user.greeting()
+user.rename("Tya")
+print user.name
+user.name = "Ty"
+print user.greeting()
+
+counter = Counter()
+print counter.increment()
+print counter.increment()
+
+marker = Marker()
+print marker.label()
+
+-- user.tya --
+module user
+  class User
+    init = name ->
+      @name = name
+
+    greeting = ->
+      "Hello, {@name}"
+
+-- main.tya --
+import user
+
+item = user.User("module")
+print item.greeting()
+
+-- bad_class_name.tya --
+class user
+  init = ->
+    @name = "bad"
+
+-- at_outside_method.tya --
+@name = "bad"
+
+-- class_variable.tya --
+class User
+  init = ->
+    @@name = "bad"
+
+-- duplicate_method.tya --
+class User
+  name = ->
+    "a"
+
+  name = ->
+    "b"
+
+-- constructor_arity.tya --
+class User
+  init = name ->
+    @name = name
+
+user = User()
+
+-- no_init_args.tya --
+class Marker
+  label = -> "marker"
+
+marker = Marker("bad")
+
+-- dict_dot.tya --
+profile = {name: "komagata"}
+print profile.name
+
+-- missing_field.tya --
+class User
+  init = name ->
+    @name = name
+
+user = User("komagata")
+print user.missing

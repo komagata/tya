@@ -72,10 +72,24 @@ TyaValue tya_dict(const TyaDictEntry *entries, int count) {
   return (TyaValue){.kind = TYA_DICT, .dict = dict};
 }
 
+TyaValue tya_object(void) {
+  TyaDict *dict = malloc(sizeof(TyaDict));
+  dict->len = 0;
+  dict->entries = NULL;
+  return (TyaValue){.kind = TYA_OBJECT, .dict = dict};
+}
+
 TyaValue tya_function(TyaFunctionPtr fn) {
   TyaFunction *function = malloc(sizeof(TyaFunction));
   function->fn = fn;
   function->receiver = tya_nil();
+  return (TyaValue){.kind = TYA_FUNCTION, .function = function};
+}
+
+TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn) {
+  TyaFunction *function = malloc(sizeof(TyaFunction));
+  function->fn = fn;
+  function->receiver = receiver;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
@@ -121,7 +135,7 @@ TyaValue tya_len(TyaValue value) {
   if (value.kind == TYA_ARRAY && value.array != NULL) {
     return tya_number(value.array->len);
   }
-  if (value.kind == TYA_DICT && value.dict != NULL) {
+  if ((value.kind == TYA_DICT || value.kind == TYA_OBJECT) && value.dict != NULL) {
     int count = 0;
     for (int i = 0; i < value.dict->len; i++) {
       if (value.dict->entries[i].key != NULL) {
@@ -147,7 +161,7 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
       return tya_string(out);
     }
   }
-  if (value.kind == TYA_DICT && value.dict != NULL && index.kind == TYA_STRING && index.string != NULL) {
+  if ((value.kind == TYA_DICT || value.kind == TYA_OBJECT) && value.dict != NULL && index.kind == TYA_STRING && index.string != NULL) {
     return tya_member(value, index.string);
   }
   if (value.kind == TYA_ERROR && index.kind == TYA_STRING && index.string != NULL) {
@@ -176,7 +190,7 @@ void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
   if (value.kind == TYA_ARRAY && value.array != NULL && i >= 0 && i < value.array->len) {
     value.array->items[i] = item;
   }
-  if (value.kind == TYA_DICT && value.dict != NULL && index.kind == TYA_STRING && index.string != NULL) {
+  if ((value.kind == TYA_DICT || value.kind == TYA_OBJECT) && value.dict != NULL && index.kind == TYA_STRING && index.string != NULL) {
     tya_set_member(value, index.string, item);
   }
 }
@@ -185,7 +199,7 @@ TyaValue tya_member(TyaValue dict, const char *key) {
   if (dict.kind == TYA_ERROR && strcmp(key, "message") == 0) {
     return tya_string(dict.error == NULL ? "" : dict.error);
   }
-  if (dict.kind != TYA_DICT || dict.dict == NULL) {
+  if ((dict.kind != TYA_DICT && dict.kind != TYA_OBJECT) || dict.dict == NULL) {
     return tya_nil();
   }
   for (int i = 0; i < dict.dict->len; i++) {
@@ -193,11 +207,15 @@ TyaValue tya_member(TyaValue dict, const char *key) {
       return dict.dict->entries[i].value;
     }
   }
+  if (dict.kind == TYA_OBJECT) {
+    fprintf(stderr, "missing object field or method: %s\n", key == NULL ? "" : key);
+    exit(1);
+  }
   return tya_nil();
 }
 
 void tya_set_member(TyaValue dict, const char *key, TyaValue value) {
-  if (dict.kind != TYA_DICT || dict.dict == NULL) {
+  if ((dict.kind != TYA_DICT && dict.kind != TYA_OBJECT) || dict.dict == NULL) {
     return;
   }
   for (int i = 0; i < dict.dict->len; i++) {
@@ -391,6 +409,7 @@ bool tya_equal(TyaValue left, TyaValue right) {
   case TYA_ARRAY:
     return left.array == right.array;
   case TYA_DICT:
+  case TYA_OBJECT:
     return left.dict == right.dict;
   case TYA_FUNCTION:
     return left.function == right.function;
@@ -437,6 +456,7 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
     }
     return true;
   case TYA_DICT:
+  case TYA_OBJECT:
     if (left.dict == NULL || right.dict == NULL) {
       return left.dict == right.dict;
     }
@@ -638,6 +658,7 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     tya_builder_append(builder, "]");
     break;
   case TYA_DICT:
+  case TYA_OBJECT:
     tya_builder_append(builder, "{");
     if (value.dict != NULL) {
       int written = 0;
@@ -891,6 +912,7 @@ static void tya_write_value(FILE *out, TyaValue value) {
     fprintf(out, "]");
     break;
   case TYA_DICT:
+  case TYA_OBJECT:
     fprintf(out, "{");
     if (value.dict != NULL) {
       int written = 0;

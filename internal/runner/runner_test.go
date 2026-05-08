@@ -69,7 +69,7 @@ func TestRunFileRejectsImportedModuleAlias(t *testing.T) {
 	}
 }
 
-func TestRunFileRejectsImportedClass(t *testing.T) {
+func TestRunFileRejectsTopLevelClassInImportedModule(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init = name ->\n    name\n")
 	main := filepath.Join(dir, "main.tya")
@@ -78,9 +78,9 @@ func TestRunFileRejectsImportedClass(t *testing.T) {
 	var out strings.Builder
 	err := RunFile(main, nil, &out, nil)
 	if err == nil {
-		t.Fatal("expected class rejection")
+		t.Fatal("expected module shape rejection")
 	}
-	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
+	if !strings.Contains(err.Error(), "user.tya may only contain imports and one module declaration") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -130,7 +130,7 @@ func TestLoadSourceRejectsModuleWithMultiplePublicBindings(t *testing.T) {
 	}
 }
 
-func TestLoadSourceRejectsImportedClassDeclaration(t *testing.T) {
+func TestLoadSourceRejectsTopLevelClassInImportedModule(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init = name ->\n    name\n")
 	main := filepath.Join(dir, "main.tya")
@@ -138,25 +138,25 @@ func TestLoadSourceRejectsImportedClassDeclaration(t *testing.T) {
 
 	_, err := LoadSource(main)
 	if err == nil {
-		t.Fatal("expected class rejection")
+		t.Fatal("expected module shape rejection")
 	}
-	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
+	if !strings.Contains(err.Error(), "user.tya may only contain imports and one module declaration") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestLoadSourceRejectsImportedClassBeforeNameValidation(t *testing.T) {
+func TestLoadSourceLoadsModuleClassDeclaration(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "class Account\n  init: -> nil\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "module user\n  class User\n    init = name ->\n      @name = name\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import user\n")
+	writeFile(t, main, "import user\nitem = user.User(\"komagata\")\n")
 
-	_, err := LoadSource(main)
-	if err == nil {
-		t.Fatal("expected class filename mismatch error")
+	source, err := LoadSource(main)
+	if err != nil {
+		t.Fatalf("load source: %v", err)
 	}
-	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
-		t.Fatalf("unexpected error: %v", err)
+	if !strings.Contains(source, "class User") {
+		t.Fatalf("source does not include module class: %s", source)
 	}
 }
 
@@ -175,17 +175,17 @@ func TestLoadSourceRejectsTopLevelHelperInImportedFile(t *testing.T) {
 	}
 }
 
-func TestLoadSourceRejectsClassInEntryFile(t *testing.T) {
+func TestLoadSourceAcceptsClassInEntryFile(t *testing.T) {
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "class User\n  init: -> nil\n")
+	writeFile(t, main, "class User\n  init = name ->\n    @name = name\n")
 
-	_, err := LoadSource(main)
-	if err == nil {
-		t.Fatal("expected entry class error")
+	source, err := LoadSource(main)
+	if err != nil {
+		t.Fatalf("load source: %v", err)
 	}
-	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
-		t.Fatalf("unexpected error: %v", err)
+	if !strings.Contains(source, "class User") {
+		t.Fatalf("source does not include class: %s", source)
 	}
 }
 

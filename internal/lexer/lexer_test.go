@@ -217,12 +217,15 @@ func TestLexRejectsPredicateIdentifier(t *testing.T) {
 	}
 }
 
-func TestLexRejectsAtTokens(t *testing.T) {
-	for _, src := range []string{"@name = 1\n", "@@count = 1\n"} {
-		_, errs := Lex(src)
-		if len(errs) == 0 {
-			t.Fatalf("expected @ token error for %q", src)
-		}
+func TestLexAtTokens(t *testing.T) {
+	toks, errs := Lex("@name = 1\n@@count = 2\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	got := tokenTypes(toks)
+	want := []string{"@", "IDENT", "=", "INT", "NEWLINE", "@", "@", "IDENT", "=", "INT", "NEWLINE", "EOF"}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatal(diff)
 	}
 }
 

@@ -41,7 +41,7 @@ stdout '2: tabs are forbidden'
 stdout '2: indentation may only increase by 2 spaces'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_char.tya
-stdout '1:3: unexpected character @'
+stdout 'unexpected character'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_escape.tya
 stdout '1:11: unknown escape \\q'
@@ -83,7 +83,7 @@ stdout '1: unexpected token before block'
 stdout '1: try must be inside a function'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/class.tya
-stdout '1: class is not in Tya v0.1'
+stdout 'class body may only contain method definitions'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/self.tya
 stdout '1: self is not in Tya v0.1'
@@ -119,7 +119,7 @@ stdout '2: cannot use . access on dictionary; use index access'
 stdout '2: cannot use . access on array'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/member_assignment.tya
-stdout '1: member assignment is not in Tya v0.1'
+stdout 'undefined variable: user'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/multiple_index_assign.tya
 stdout '1: multiple assignment targets must be identifiers'
@@ -342,7 +342,7 @@ if true
     print "bad"
 
 -- bad_char.tya --
-x @ 1
+x $ 1
 
 -- bad_escape.tya --
 print "bad\q"

@@ -21,11 +21,11 @@ go test ./tests -run TestSelfhostV01Scripts -count=1
 
 This gate proves that the Tya-written compiler can compile itself to stable
 stage-2/stage-3 C output, and that the self-hosted stage-2 compiler can compile
-and run representative programs through the maintained v0.4 surface.
+and run representative programs through the maintained v0.5 surface.
 
 ## Current Direction
 
-Tya v0.4 is implemented as a small compile-to-C language. The frozen release
+Tya v0.5 is implemented as a small compile-to-C language. The frozen release
 documents are:
 
 1. [`docs/v0.1.0/SPEC.md`](docs/v0.1.0/SPEC.md)
@@ -34,7 +34,7 @@ documents are:
 1. [`docs/v0.2.0/API.md`](docs/v0.2.0/API.md)
 
 Tya uses semantic versioning. Specification changes happen at the minor version
-level, such as `v0.3` and `v0.4`. Patch releases such as `v0.3.1` must not
+level, such as `v0.3` and `v0.5`. Patch releases such as `v0.3.1` must not
 change language or standard-library semantics. In other words, the `x` in
 `0.0.x` is never a specification-change unit. Therefore, specification
 documents use minor-version labels such as `v0.3`.
@@ -53,7 +53,7 @@ Current planned minor-version documents are:
 1. [`docs/v0.4/SPEC.md`](docs/v0.4/SPEC.md)
 1. [`docs/v0.5/SPEC.md`](docs/v0.5/SPEC.md)
 
-The v0.4 reference implementation remains:
+The v0.5 reference implementation remains:
 
 ```text
 Go lexer
@@ -62,16 +62,16 @@ Go AST
 Go checker
 Go C emitter
 C runtime
-v0.4 specification tests
+v0.5 specification tests
 ```
 
 Go interpreter behavior, ASTMODE, and legacy archived node-string experiments
-are not v0.4 authority. The maintained `selfhost/v01/compiler.tya` fixed point
+are not v0.5 authority. The maintained `selfhost/v01/compiler.tya` fixed point
 is still required not to regress.
 
 ## Implementation Tooling Policy
 
-The v0.4 compiler implementation should stay hand-written:
+The v0.5 compiler implementation should stay hand-written:
 
 ```text
 Go lexer
@@ -81,7 +81,7 @@ Go checker
 Go C emitter
 ```
 
-Do not add a parser generator or large grammar framework for v0.4. In
+Do not add a parser generator or large grammar framework for v0.5. In
 particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter
 as compiler-front-end authority. They may be useful references or future editor
 tooling, but the active compiler path should remain explicit Go code.
@@ -101,7 +101,7 @@ Tya C emitter
 Each Tya component must preserve the self-host fixed point before moving to the
 next component.
 
-Use small test-support dependencies where they make the v0.4 specification
+Use small test-support dependencies where they make the v0.5 specification
 easier to verify:
 
 ```text
@@ -169,32 +169,32 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Create a patch-tag snapshot only when an exact release archive needs one.
     - [x] Update README install, run, development, and documentation sections for v0.4.
-- [ ] Ship v0.5 minimal classes and objects
+- [x] Ship v0.5 minimal classes and objects
   - [x] Define v0.5 class scope
     - [x] Add `docs/v0.5/SPEC.md`.
     - [x] Specify `class Name`, constructor calls, `init`, `@field` instance fields, methods, and module class access.
     - [x] Reserve `@@field` for future class variables and keep it invalid in v0.5.
     - [x] Exclude inheritance, `super`, interfaces, class methods, class fields, and visibility from v0.5.
     - [x] Keep dictionary member access with `dict.key` out of v0.5.
-  - [ ] Add class syntax to the compiler front end
-    - [ ] Add lexer/parser support for class declarations.
-    - [ ] Add AST nodes for class declarations, methods, object field access, and object field assignment.
-    - [ ] Add checker diagnostics for class naming, duplicate methods, invalid `@field`, invalid `@@field`, and invalid dot access.
-  - [ ] Add class runtime and C emission
-    - [ ] Emit object construction through `ClassName(args...)`.
-    - [ ] Call `init` during construction and ignore its explicit return value.
-    - [ ] Support public instance field read/write through dot access.
-    - [ ] Support instance method calls with `object.method(args...)`.
-  - [ ] Keep modules and self-host compatible
-    - [ ] Expose classes declared inside modules as PascalCase module members.
-    - [ ] Preserve existing module member access behavior.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
-  - [ ] Keep v0.5 documentation and tests aligned
-    - [ ] Update latest docs when v0.5 behavior is implemented.
-    - [ ] Keep `docs/v0.5/` aligned with the v0.5 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, and negative tests for v0.5 classes.
-    - [ ] Update README examples when v0.5 is implemented.
+  - [x] Add class syntax to the compiler front end
+    - [x] Add lexer/parser support for class declarations.
+    - [x] Add AST nodes for class declarations, methods, object field access, and object field assignment.
+    - [x] Add checker diagnostics for class naming, duplicate methods, invalid `@field`, invalid `@@field`, and invalid dot access.
+  - [x] Add class runtime and C emission
+    - [x] Emit object construction through `ClassName(args...)`.
+    - [x] Call `init` during construction and ignore its explicit return value.
+    - [x] Support public instance field read/write through dot access.
+    - [x] Support instance method calls with `object.method(args...)`.
+  - [x] Keep modules and self-host compatible
+    - [x] Expose classes declared inside modules as PascalCase module members.
+    - [x] Preserve existing module member access behavior.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Keep v0.5 documentation and tests aligned
+    - [x] Update latest docs when v0.5 behavior is implemented.
+    - [x] Keep `docs/v0.5/` aligned with the v0.5 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.5 classes.
+    - [x] Update README examples when v0.5 is implemented.
 
 ## Verification Reference
 

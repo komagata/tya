@@ -31,16 +31,16 @@
 <p>The Tya-written compiler fixed point is a maintained invariant. Later language, runtime, CLI, stdlib, and documentation work must not regress <code>selfhost/v01/compiler.tya</code>.</p>
 <p>Required evidence:</p>
 <pre><code class="language-sh">go test ./tests -run TestSelfhostV01Scripts -count=1</code></pre>
-<p>This gate proves that the Tya-written compiler can compile itself to stable stage-2/stage-3 C output, and that the self-hosted stage-2 compiler can compile and run representative programs through the maintained v0.4 surface.</p>
+<p>This gate proves that the Tya-written compiler can compile itself to stable stage-2/stage-3 C output, and that the self-hosted stage-2 compiler can compile and run representative programs through the maintained v0.5 surface.</p>
 <h2 id="current-direction">Current Direction</h2>
-<p>Tya v0.4 is implemented as a small compile-to-C language. The frozen release documents are:</p>
+<p>Tya v0.5 is implemented as a small compile-to-C language. The frozen release documents are:</p>
 <ol>
 <li><a href="v0.1.0/spec.html"><code>docs/v0.1.0/SPEC.md</code></a></li>
 <li><a href="v0.1.0/api.html"><code>docs/v0.1.0/API.md</code></a></li>
 <li><a href="v0.2.0/spec.html"><code>docs/v0.2.0/SPEC.md</code></a></li>
 <li><a href="v0.2.0/api.html"><code>docs/v0.2.0/API.md</code></a></li>
 </ol>
-<p>Tya uses semantic versioning. Specification changes happen at the minor version level, such as <code>v0.3</code> and <code>v0.4</code>. Patch releases such as <code>v0.3.1</code> must not change language or standard-library semantics. In other words, the <code>x</code> in <code>0.0.x</code> is never a specification-change unit. Therefore, specification documents use minor-version labels such as <code>v0.3</code>.</p>
+<p>Tya uses semantic versioning. Specification changes happen at the minor version level, such as <code>v0.3</code> and <code>v0.5</code>. Patch releases such as <code>v0.3.1</code> must not change language or standard-library semantics. In other words, the <code>x</code> in <code>0.0.x</code> is never a specification-change unit. Therefore, specification documents use minor-version labels such as <code>v0.3</code>.</p>
 <p>Latest editable documentation is:</p>
 <ol>
 <li><a href="spec.html"><code>docs/SPEC.md</code></a></li>
@@ -55,23 +55,23 @@
 <li><a href="v0.4/spec.html"><code>docs/v0.4/SPEC.md</code></a></li>
 <li><a href="v0.5/spec.html"><code>docs/v0.5/SPEC.md</code></a></li>
 </ol>
-<p>The v0.4 reference implementation remains:</p>
+<p>The v0.5 reference implementation remains:</p>
 <pre><code class="language-text">Go lexer
 Go parser
 Go AST
 Go checker
 Go C emitter
 C runtime
-v0.4 specification tests</code></pre>
-<p>Go interpreter behavior, ASTMODE, and legacy archived node-string experiments are not v0.4 authority. The maintained <code>selfhost/v01/compiler.tya</code> fixed point is still required not to regress.</p>
+v0.5 specification tests</code></pre>
+<p>Go interpreter behavior, ASTMODE, and legacy archived node-string experiments are not v0.5 authority. The maintained <code>selfhost/v01/compiler.tya</code> fixed point is still required not to regress.</p>
 <h2 id="implementation-tooling-policy">Implementation Tooling Policy</h2>
-<p>The v0.4 compiler implementation should stay hand-written:</p>
+<p>The v0.5 compiler implementation should stay hand-written:</p>
 <pre><code class="language-text">Go lexer
 Go parser
 Go AST
 Go checker
 Go C emitter</code></pre>
-<p>Do not add a parser generator or large grammar framework for v0.4. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler-front-end authority. They may be useful references or future editor tooling, but the active compiler path should remain explicit Go code.</p>
+<p>Do not add a parser generator or large grammar framework for v0.5. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler-front-end authority. They may be useful references or future editor tooling, but the active compiler path should remain explicit Go code.</p>
 <p>After the Go implementation reaches a complete lexer, parser, AST, checker, and C emitter for the current specification, continue self-host work in the same component order:</p>
 <pre><code class="language-text">Tya lexer
 Tya parser
@@ -79,7 +79,7 @@ Tya AST
 Tya checker
 Tya C emitter</code></pre>
 <p>Each Tya component must preserve the self-host fixed point before moving to the next component.</p>
-<p>Use small test-support dependencies where they make the v0.4 specification easier to verify:</p>
+<p>Use small test-support dependencies where they make the v0.5 specification easier to verify:</p>
 <pre><code class="language-text">github.com/google/go-cmp/cmp
 github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
@@ -161,7 +161,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Update README install, run, development, and documentation sections for v0.4.</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.5 minimal classes and objects</li>
+<li>[x] Ship v0.5 minimal classes and objects</li>
 <ul>
 <li>[x] Define v0.5 class scope</li>
 <ul>
@@ -171,32 +171,32 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Exclude inheritance, <code>super</code>, interfaces, class methods, class fields, and visibility from v0.5.</li>
 <li>[x] Keep dictionary member access with <code>dict.key</code> out of v0.5.</li>
 </ul>
-<li>[ ] Add class syntax to the compiler front end</li>
+<li>[x] Add class syntax to the compiler front end</li>
 <ul>
-<li>[ ] Add lexer/parser support for class declarations.</li>
-<li>[ ] Add AST nodes for class declarations, methods, object field access, and object field assignment.</li>
-<li>[ ] Add checker diagnostics for class naming, duplicate methods, invalid <code>@field</code>, invalid <code>@@field</code>, and invalid dot access.</li>
+<li>[x] Add lexer/parser support for class declarations.</li>
+<li>[x] Add AST nodes for class declarations, methods, object field access, and object field assignment.</li>
+<li>[x] Add checker diagnostics for class naming, duplicate methods, invalid <code>@field</code>, invalid <code>@@field</code>, and invalid dot access.</li>
 </ul>
-<li>[ ] Add class runtime and C emission</li>
+<li>[x] Add class runtime and C emission</li>
 <ul>
-<li>[ ] Emit object construction through <code>ClassName(args...)</code>.</li>
-<li>[ ] Call <code>init</code> during construction and ignore its explicit return value.</li>
-<li>[ ] Support public instance field read/write through dot access.</li>
-<li>[ ] Support instance method calls with <code>object.method(args...)</code>.</li>
+<li>[x] Emit object construction through <code>ClassName(args...)</code>.</li>
+<li>[x] Call <code>init</code> during construction and ignore its explicit return value.</li>
+<li>[x] Support public instance field read/write through dot access.</li>
+<li>[x] Support instance method calls with <code>object.method(args...)</code>.</li>
 </ul>
-<li>[ ] Keep modules and self-host compatible</li>
+<li>[x] Keep modules and self-host compatible</li>
 <ul>
-<li>[ ] Expose classes declared inside modules as PascalCase module members.</li>
-<li>[ ] Preserve existing module member access behavior.</li>
-<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+<li>[x] Expose classes declared inside modules as PascalCase module members.</li>
+<li>[x] Preserve existing module member access behavior.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
-<li>[ ] Keep v0.5 documentation and tests aligned</li>
+<li>[x] Keep v0.5 documentation and tests aligned</li>
 <ul>
-<li>[ ] Update latest docs when v0.5 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.5/</code> aligned with the v0.5 minor specification.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add compiler, runtime, module, and negative tests for v0.5 classes.</li>
-<li>[ ] Update README examples when v0.5 is implemented.</li>
+<li>[x] Update latest docs when v0.5 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.5/</code> aligned with the v0.5 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.5 classes.</li>
+<li>[x] Update README examples when v0.5 is implemented.</li>
 </ul>
 </ul>
 </ul>

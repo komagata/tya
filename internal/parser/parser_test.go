@@ -103,18 +103,25 @@ func TestParseRejectsMixedDictAndSetLiteral(t *testing.T) {
 	}
 }
 
-func TestParseRejectsClassDeclaration(t *testing.T) {
-	src := "class User\n  name: \"\"\n"
+func TestParseClassDeclaration(t *testing.T) {
+	src := "class User\n  init = name ->\n    @name = name\n\n  greeting = ->\n    \"Hello, {@name}\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
-	if err == nil {
-		t.Fatal("expected class error")
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("parse class: %v", err)
 	}
-	if !strings.Contains(err.Error(), "class is not in Tya v0.1") {
-		t.Fatalf("unexpected error: %v", err)
+	if len(prog.Stmts) != 1 {
+		t.Fatalf("stmt count = %d", len(prog.Stmts))
+	}
+	class, ok := prog.Stmts[0].(*ast.ClassDecl)
+	if !ok {
+		t.Fatalf("stmt type = %T", prog.Stmts[0])
+	}
+	if class.Name != "User" || len(class.Methods) != 2 {
+		t.Fatalf("class = %#v", class)
 	}
 }
 
@@ -142,7 +149,7 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 		{
 			name: "class inheritance",
 			src:  "class Admin < User\n  name = \"\"\n",
-			want: "class is not in Tya v0.1",
+			want: "expected indented block after class",
 		},
 		{
 			name: "interface inheritance",
@@ -192,7 +199,7 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 		{
 			name: "class expression",
 			src:  "value = class\n",
-			want: "class is not in Tya v0.1",
+			want: "class cannot be used as a name",
 		},
 		{
 			name: "interface expression",
@@ -217,18 +224,25 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 	}
 }
 
-func TestParseRejectsV01ExcludedAtSyntaxAtLexerBoundary(t *testing.T) {
-	for _, src := range []string{
-		"@name = 1\n",
-		"@@name = 1\n",
-		"print @name\n",
-	} {
-		t.Run(src, func(t *testing.T) {
-			_, errs := lexer.Lex(src)
-			if len(errs) == 0 {
-				t.Fatal("expected lexer error for v0.1 excluded @ syntax")
-			}
-		})
+func TestParseInstanceFieldSyntax(t *testing.T) {
+	toks, errs := lexer.Lex("class User\n  init = name ->\n    @name = name\n  name = ->\n    @name\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, err := Parse(toks); err != nil {
+		t.Fatalf("parse instance fields: %v", err)
+	}
+
+	toks, errs = lexer.Lex("class User\n  init = ->\n    @@name = 1\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	_, err := Parse(toks)
+	if err == nil {
+		t.Fatal("expected @@field error")
+	}
+	if !strings.Contains(err.Error(), "@@field is not in Tya v0.5") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
@@ -251,7 +265,7 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 		{
 			name: "multi function parameter",
 			src:  "value = left, class -> left\n",
-			want: "class is not in Tya v0.1",
+			want: "class cannot be used as a name",
 		},
 		{
 			name: "loop value",
@@ -266,7 +280,7 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 		{
 			name: "module name",
 			src:  "module class\n  name = \"bad\"\n",
-			want: "class is not in Tya v0.1",
+			want: "class cannot be used as a name",
 		},
 		{
 			name: "module member",
@@ -538,7 +552,7 @@ func TestParseIndexAssignment(t *testing.T) {
 	}
 }
 
-func TestParseRejectsMemberAssignment(t *testing.T) {
+func TestParseMemberAssignment(t *testing.T) {
 	tests := []string{
 		"user.name = \"komagata\"\n",
 		"greeting.hello = -> \"hello\"\n",
@@ -549,12 +563,8 @@ func TestParseRejectsMemberAssignment(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			_, err := Parse(toks)
-			if err == nil {
-				t.Fatal("expected member assignment error")
-			}
-			if !strings.Contains(err.Error(), "member assignment is not in Tya v0.1") {
-				t.Fatalf("unexpected error: %v", err)
+			if _, err := Parse(toks); err != nil {
+				t.Fatalf("parse member assignment: %v", err)
 			}
 		})
 	}

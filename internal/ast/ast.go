@@ -75,6 +75,7 @@ type ModuleDecl struct {
 	Name    string
 	NameTok token.Token
 	Members []ModuleMember
+	Classes []*ClassDecl
 }
 
 func (*ModuleDecl) stmt() {}
@@ -83,6 +84,20 @@ type ModuleMember struct {
 	Name  string
 	Tok   token.Token
 	Value Expr
+}
+
+type ClassDecl struct {
+	Name    string
+	NameTok token.Token
+	Methods []ClassMethod
+}
+
+func (*ClassDecl) stmt() {}
+
+type ClassMethod struct {
+	Name string
+	Tok  token.Token
+	Func *FuncLit
 }
 
 type Ident struct {
@@ -168,6 +183,13 @@ type MemberExpr struct {
 }
 
 func (*MemberExpr) expr() {}
+
+type InstanceFieldExpr struct {
+	Name    string
+	NameTok token.Token
+}
+
+func (*InstanceFieldExpr) expr() {}
 
 type IndexExpr struct {
 	Target Expr
