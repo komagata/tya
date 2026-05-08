@@ -751,10 +751,35 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [ ] Add compiler, runtime, module, C emission, and negative tests for v0.22 filesystem stdlib APIs.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.23 Tyafile and package version resolution
-  - [ ] Define v0.23 Tyafile scope
+- [ ] Ship v0.23 StrictYAML standard module
+  - [ ] Define v0.23 StrictYAML scope
     - [ ] Add `docs/v0.23/SPEC.md`.
-    - [ ] Specify `Tyafile` manifest format (initial minimal strict-YAML subset, parsed by a self-contained Go parser).
+    - [ ] Add `yaml` standard module backed by a StrictYAML-style strict subset.
+    - [ ] Specify `yaml.parse(text)` returning nested dicts, arrays, and strings.
+    - [ ] Specify `yaml.dump(value)` emitting the strict subset.
+    - [ ] Forbid implicit type coercion (Norway problem, sexagesimal, octal).
+    - [ ] Forbid anchors, aliases, tags, flow style, and multi-document streams.
+    - [ ] Allow comments and indentation-based block syntax.
+    - [ ] Keep schema validation, full YAML 1.2, custom tags, and binary content out of v0.23.
+  - [ ] Implement the strict YAML parser
+    - [ ] Add a lexer for indented blocks, scalars, sequences, and mappings.
+    - [ ] Treat every scalar value as a string by default.
+    - [ ] Reject anchors, aliases, tags, flow style, and multi-document markers.
+    - [ ] Report syntax errors with source locations.
+  - [ ] Implement the strict YAML writer
+    - [ ] Emit indented block syntax.
+    - [ ] Quote ambiguous scalar values.
+    - [ ] Reject non-string keys.
+  - [ ] Keep v0.23 documentation and tests aligned
+    - [ ] Update latest docs when v0.23 behavior is implemented.
+    - [ ] Keep `docs/v0.23/` aligned with the v0.23 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add parser, writer, module, and negative tests for v0.23 strict YAML.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.24 Tyafile and package version resolution
+  - [ ] Define v0.24 Tyafile scope
+    - [ ] Add `docs/v0.24/SPEC.md`.
+    - [ ] Specify `Tyafile` manifest format parsed by the v0.23 `yaml` standard module.
     - [ ] Specify `Tyafile.lock` resolved-version lock format.
     - [ ] Specify package source identity (name plus version constraints).
     - [ ] Specify version operators `~>`, `>=`, `<`, `=`.
@@ -762,12 +787,12 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Specify `tya install` to resolve and write `Tyafile.lock`.
     - [ ] Specify `tya update [package]` to recompute resolution for one or all packages.
     - [ ] Specify import resolution to honor `Tyafile.lock` for declared dependencies.
-    - [ ] Keep multi-version coexistence, package alias, `unique` declarations, semver-aware type identity, remote registry install, native dependency build, content-addressed lock checksums, and circular dependency healing out of v0.23.
-  - [ ] Add Tyafile manifest parser
-    - [ ] Write a self-contained strict subset parser (no implicit type coercion, no anchors, no flow style).
-    - [ ] Parse package metadata section.
-    - [ ] Parse dependencies section with version constraints.
-    - [ ] Report syntax errors with source locations.
+    - [ ] Keep multi-version coexistence, package alias, `unique` declarations, semver-aware type identity, remote registry install, native dependency build, content-addressed lock checksums, and circular dependency healing out of v0.24.
+  - [ ] Add Tyafile manifest parsing
+    - [ ] Parse `Tyafile` via the `yaml` standard module.
+    - [ ] Read package metadata section.
+    - [ ] Read dependencies section with version constraints.
+    - [ ] Report manifest validation errors with source locations.
   - [ ] Add version constraint resolver
     - [ ] Implement backtracking dependency resolver.
     - [ ] Pick the highest version satisfying all constraints.
@@ -781,41 +806,11 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Add `tya install` to read `Tyafile`, resolve, and write `Tyafile.lock`.
     - [ ] Add `tya update [package]` to recompute the lock for one or all packages.
     - [ ] Report missing or conflicting requirements with source-oriented diagnostics.
-  - [ ] Keep v0.23 documentation and tests aligned
-    - [ ] Update latest docs when v0.23 behavior is implemented.
-    - [ ] Keep `docs/v0.23/` aligned with the v0.23 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add CLI, resolver, lockfile, and negative tests for v0.23.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.24 StrictYAML standard module
-  - [ ] Define v0.24 StrictYAML scope
-    - [ ] Add `docs/v0.24/SPEC.md`.
-    - [ ] Add `yaml` standard module backed by a StrictYAML-style strict subset.
-    - [ ] Specify `yaml.parse(text)` returning nested dicts, arrays, and strings.
-    - [ ] Specify `yaml.dump(value)` emitting the strict subset.
-    - [ ] Forbid implicit type coercion (Norway problem, sexagesimal, octal).
-    - [ ] Forbid anchors, aliases, tags, flow style, and multi-document streams.
-    - [ ] Allow comments and indentation-based block syntax.
-    - [ ] Migrate the v0.23 Tyafile parser to use the `yaml` standard module.
-    - [ ] Keep schema validation, full YAML 1.2, custom tags, and binary content out of v0.24.
-  - [ ] Implement the strict YAML parser
-    - [ ] Add a lexer for indented blocks, scalars, sequences, and mappings.
-    - [ ] Treat every scalar value as a string by default.
-    - [ ] Reject anchors, aliases, tags, flow style, and multi-document markers.
-    - [ ] Report syntax errors with source locations.
-  - [ ] Implement the strict YAML writer
-    - [ ] Emit indented block syntax.
-    - [ ] Quote ambiguous scalar values.
-    - [ ] Reject non-string keys.
-  - [ ] Migrate the Tyafile parser
-    - [ ] Replace the v0.23 self-contained parser with the `yaml` standard module.
-    - [ ] Keep Tyafile syntax stable across the migration.
-    - [ ] Update v0.23 references to point at the `yaml` standard module.
   - [ ] Keep v0.24 documentation and tests aligned
     - [ ] Update latest docs when v0.24 behavior is implemented.
     - [ ] Keep `docs/v0.24/` aligned with the v0.24 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add parser, writer, module, and negative tests for v0.24 strict YAML.
+    - [ ] Add CLI, resolver, lockfile, and negative tests for v0.24.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
