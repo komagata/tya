@@ -1,66 +1,61 @@
-# Tya v0.11 Specification
+# Tya v0.12 Specification
 
-This document is the specification for Tya v0.11 after v0.10 abstract methods
-and final classes.
+This document is the specification for Tya v0.12 after v0.11 explicit
+interfaces and `implements`.
 
 ## Theme
 
-Tya v0.11 is about explicit interface contracts.
+Tya v0.12 is about interface inheritance and precise conflict diagnostics.
 
-v0.10 lets abstract classes describe required behavior while still belonging to
-the class inheritance tree. v0.11 adds `interface` and `implements` so a class
-can declare a behavior contract separately from implementation inheritance.
-
-Tya does not adopt Dart-style implicit interfaces. A class never becomes an
-interface automatically. A class implements an interface only when it explicitly
-uses `implements InterfaceName`.
+v0.11 adds explicit interfaces as standalone contracts. v0.12 lets interfaces
+extend other interfaces so contracts can be composed without repeating method
+requirements. Because Tya does not support method overloading, v0.12 also
+defines how conflicting interface requirements are rejected and reported.
 
 ## Goals
 
-- Add explicit `interface Name` declarations.
-- Add `class Name implements InterfaceName`.
-- Allow a class to implement multiple interfaces.
-- Allow `extends` and `implements` to be used together.
-- Check implemented method names and arity.
-- Keep interface bodies small and method-only.
-- Avoid implicit interface conformance.
+- Add `interface Child extends Parent`.
+- Allow an interface to extend multiple interfaces.
+- Require classes that implement a child interface to satisfy inherited requirements.
+- Reject interface inheritance cycles.
+- Reject method requirement conflicts with different arity.
+- Require conflict diagnostics to name the relevant interfaces, method, and arities.
+- Keep interface inheritance separate from class inheritance.
 
-## Included in v0.11
+## Included in v0.12
 
-v0.11 includes all v0.10 class behavior and adds:
+v0.12 includes all v0.11 interface behavior and adds:
 
-- `interface Name`
-- interface instance method requirements
-- `class Name implements InterfaceName`
-- multiple implemented interfaces
-- `class Name extends Parent implements InterfaceName`
-- implementation checks for concrete classes
-- partial implementation by abstract classes
-- interface method arity checks
-- interface declarations inside modules
+- `interface Child extends Parent`
+- `interface Combined extends First, Second`
+- inherited interface method requirements
+- transitive interface inheritance
+- implementation checks through inherited interface requirements
+- interface inheritance cycle checks
+- conflict diagnostics for incompatible interface method requirements
+- module-qualified interface inheritance
 
-## Not Included in v0.11
+## Not Included in v0.12
 
-v0.11 does not include:
+v0.12 does not include:
 
 - implicit interfaces generated from classes
 - implementing a class as if it were an interface
-- class methods in interfaces
-- fields in interfaces
-- class variables in interfaces
-- constructors in interfaces
-- interface inheritance
-- private interface methods
+- classes extending interfaces
+- interfaces extending classes
 - default interface method bodies
+- interface fields
+- interface class methods
+- private interface methods
 - interface introspection
-- type annotations
-- generics
-- mixins
-- traits
 - sealed classes
 - base classes
+- mixins
+- traits
 - final methods
 - final fields
+- type annotations
+- generics
 - method overloading
 - operator overloading
 - decorators
@@ -69,9 +64,45 @@ v0.11 does not include:
 - package manager
 - native-backed stdlib
 
-## Interface Declarations
+## Interface Inheritance
 
-An interface declares required instance methods without method bodies.
+An interface may extend another interface.
+
+```tya
+interface Reader
+  read = ->
+
+interface SeekableReader extends Reader
+  seek = offset ->
+```
+
+`SeekableReader` requires both `read` and `seek`.
+
+A class that implements `SeekableReader` must implement inherited requirements
+from `Reader` as well as requirements declared directly in `SeekableReader`.
+
+```tya
+class File implements SeekableReader
+  read = ->
+    "data"
+
+  seek = offset ->
+    nil
+```
+
+This is valid because `File` implements both required methods.
+
+```tya
+class BrokenFile implements SeekableReader
+  seek = offset ->
+    nil
+```
+
+`BrokenFile` is invalid because the inherited `read` requirement is missing.
+
+## Multiple Interface Inheritance
+
+An interface may extend multiple interfaces.
 
 ```tya
 interface Reader
@@ -79,120 +110,45 @@ interface Reader
 
 interface Writer
   write = value ->
+
+interface ReadWriter extends Reader, Writer
 ```
 
-Interface method declarations use the same parameter-list syntax as methods.
-They do not use `abstract` because every interface method is abstract.
+`ReadWriter` requires both `read` and `write`.
+
+An interface may add its own requirements while extending other interfaces.
 
 ```tya
-interface Repository
-  find = id ->
-  save = record ->
+interface Closable
+  close = ->
+
+interface FileHandle extends Reader, Writer, Closable
+  path = ->
 ```
 
-Interface declarations do not create constructible values.
+`FileHandle` requires `read`, `write`, `close`, and `path`.
 
-```tya
-reader = Reader()
-```
+## Transitive Inheritance
 
-The `Reader()` construction is an error because `Reader` is an interface, not a
-class.
-
-## Interface Bodies
-
-Only instance method requirements are valid inside an interface.
+Interface inheritance is transitive.
 
 ```tya
 interface Named
   name = ->
+
+interface Displayable extends Named
+  display = ->
+
+interface MenuItem extends Displayable
+  select = ->
 ```
 
-Fields are not valid inside an interface.
+`MenuItem` requires `name`, `display`, and `select`.
 
-```tya
-interface Named
-  name = ""
-```
+## Compatible Duplicate Requirements
 
-Class variables and class methods are not valid inside an interface.
-
-```tya
-interface Model
-  @@table_name = ->
-```
-
-Private methods are not valid inside an interface.
-
-```tya
-interface Reader
-  _read = ->
-```
-
-Interface methods cannot have bodies.
-
-```tya
-interface Reader
-  read = ->
-    "value"
-```
-
-The `read` declaration is an error because interface method declarations are
-body-free.
-
-## Implementing an Interface
-
-A class implements an interface with `implements`.
-
-```tya
-interface Reader
-  read = ->
-
-class FileReader implements Reader
-  read = ->
-    "data"
-```
-
-A concrete class must implement every method required by every interface it
-implements.
-
-```tya
-class BrokenReader implements Reader
-```
-
-`BrokenReader` is invalid because `read` is not implemented.
-
-The implementation must use the same arity as the interface method.
-
-```tya
-class BadReader implements Reader
-  read = path ->
-    "data"
-```
-
-The `read` implementation is invalid because `Reader.read` has arity 0.
-
-## Multiple Interfaces
-
-A class may implement multiple interfaces.
-
-```tya
-interface Reader
-  read = ->
-
-interface Writer
-  write = value ->
-
-class File implements Reader, Writer
-  read = ->
-    "data"
-
-  write = value ->
-    nil
-```
-
-If two implemented interfaces require the same method with the same arity, one
-implementation satisfies both requirements.
+If inherited interfaces require the same method with the same arity, the
+requirements are compatible.
 
 ```tya
 interface Named
@@ -201,13 +157,23 @@ interface Named
 interface Labeled
   name = ->
 
-class User implements Named, Labeled
-  name = ->
-    "komagata"
+interface MenuItem extends Named, Labeled
 ```
 
-If two implemented interfaces require the same method name with different
-arity, the class declaration is an error.
+`MenuItem` has one `name` requirement.
+
+```tya
+class Item implements MenuItem
+  name = ->
+    "File"
+```
+
+One implementation satisfies both inherited requirements.
+
+## Conflicting Requirements
+
+If inherited interfaces require the same method name with different arity, the
+interface declaration is an error.
 
 ```tya
 interface LookupById
@@ -216,144 +182,190 @@ interface LookupById
 interface LookupByName
   find = first, last ->
 
-class UserRepository implements LookupById, LookupByName
-  find = id ->
-    "user"
+interface Searchable extends LookupById, LookupByName
 ```
 
-`UserRepository` is invalid because one method implementation cannot satisfy
-both required `find` arities.
+`Searchable` is invalid because Tya does not support method overloading. A
+single `find` method cannot satisfy both arities.
 
-## `extends` with `implements`
+Conflict diagnostics should identify the interface being declared, the method
+name, both source interfaces, and both arities.
 
-`extends` may be combined with `implements`. `extends` comes before
-`implements`.
+For example:
+
+```text
+interface Searchable has conflicting method requirement find:
+LookupById.find expects 1 argument, LookupByName.find expects 2 arguments
+```
+
+The exact wording may differ, but the diagnostic must include:
+
+- the child interface name
+- the conflicting method name
+- the parent interface names
+- the conflicting arities
+
+## Direct and Inherited Conflicts
+
+A method declared directly in a child interface must also be compatible with
+inherited requirements.
+
+```tya
+interface Lookup
+  find = id ->
+
+interface BadLookup extends Lookup
+  find = first, last ->
+```
+
+`BadLookup` is invalid because its direct `find` requirement conflicts with the
+inherited `Lookup.find` requirement.
+
+If the direct requirement uses the same arity, it is valid and represents the
+same requirement.
+
+```tya
+interface Lookup
+  find = id ->
+
+interface CachedLookup extends Lookup
+  find = key ->
+```
+
+`CachedLookup` is valid because both `find` requirements have arity 1.
+Parameter names are local to each declaration and are not part of
+compatibility.
+
+## Inheritance Cycles
+
+Interface inheritance cannot form cycles.
+
+```tya
+interface A extends B
+
+interface B extends A
+```
+
+This is an error.
+
+Longer cycles are also errors.
+
+```tya
+interface A extends B
+interface B extends C
+interface C extends A
+```
+
+Cycle diagnostics should mention the interfaces involved in the cycle when
+available.
+
+## Interface and Class Boundaries
+
+Interfaces may extend only interfaces.
+
+```tya
+class Base
+  name = ->
+    "base"
+
+interface Named extends Base
+```
+
+`Named` is invalid because `Base` is a class.
+
+Classes may extend only classes.
 
 ```tya
 interface Named
   name = ->
 
-class User
+class User extends Named
+```
+
+`User` is invalid because `Named` is an interface.
+
+Classes continue to use `implements` for interfaces.
+
+```tya
+class User implements Named
   name = ->
     "user"
-
-class Admin extends User implements Named
 ```
 
-Inherited instance methods can satisfy interface requirements.
+## Abstract Classes and Inherited Interfaces
 
-`implements` must name interfaces, not classes.
-
-```tya
-class User
-  name = ->
-    "user"
-
-class Admin implements User
-```
-
-The `Admin` declaration is an error because `User` is a class.
-
-## Abstract Classes and Interfaces
-
-An abstract class may implement an interface without implementing all required
-methods.
+An abstract class may implement an interface that inherits requirements without
+implementing every requirement.
 
 ```tya
-interface Repository
-  find = id ->
-  save = record ->
+interface Reader
+  read = ->
 
-abstract class ReadOnlyRepository implements Repository
-  find = id ->
-    "record"
-```
+interface SeekableReader extends Reader
+  seek = offset ->
 
-`ReadOnlyRepository` is valid because it is abstract. A concrete subclass must
-implement the remaining requirements.
-
-```tya
-class UserRepository extends ReadOnlyRepository
-  save = record ->
+abstract class AbstractFile implements SeekableReader
+  seek = offset ->
     nil
 ```
 
-An abstract class may also restate an interface requirement as an abstract
-method.
+`AbstractFile` is valid because it is abstract. A concrete subclass must still
+implement `read`.
 
 ```tya
-abstract class BaseRepository implements Repository
-  abstract find = id ->
-  abstract save = record ->
+class File extends AbstractFile
+  read = ->
+    "data"
 ```
-
-The abstract method arity must match the interface method arity.
-
-## Final Classes and Interfaces
-
-A final class may implement interfaces.
-
-```tya
-interface Named
-  name = ->
-
-final class User implements Named
-  name = ->
-    "user"
-```
-
-The class is constructible and satisfies `Named`, but it still cannot be
-extended.
 
 ## Modules
 
-Interfaces work inside modules.
+Interface inheritance works with module-qualified interface names.
 
 ```tya
 module io
   interface Reader
     read = ->
 
-  class FileReader implements Reader
-    read = ->
-      "data"
+interface FileReader extends io.Reader
+  path = ->
 ```
 
-Module users refer to exported interfaces with normal module member syntax.
+A class implementing `FileReader` must satisfy both `io.Reader.read` and
+`FileReader.path`.
 
 ```tya
-import io
-
-class MemoryReader implements io.Reader
+class MemoryFile implements FileReader
   read = ->
+    "data"
+
+  path = ->
     "memory"
 ```
 
 ## Introspection
 
-v0.11 keeps the v0.8 introspection surface:
+v0.12 keeps the v0.8 introspection surface:
 
 - `object.class`
 - `object.class_name`
 - `ClassName.name`
 - `ClassName.parent`
 
-v0.11 does not add interface introspection.
+v0.12 does not add interface introspection.
 
 ## Diagnostics
 
-v0.11 implementations should report source-oriented errors for:
+v0.12 implementations should report source-oriented errors for:
 
-- constructing an interface
-- invalid members inside an interface body
-- interface method declarations with bodies
-- `implements` targets that are not interfaces
-- missing interface method implementations on concrete classes
-- interface method implementation arity mismatch
-- conflicting interface method arity requirements
-- abstract method arity mismatch against an implemented interface
-- duplicate interface names in a single `implements` list
-- duplicate interface declarations in the same scope
+- interfaces extending missing names
+- interfaces extending classes
+- classes extending interfaces
+- interface inheritance cycles
+- conflicting inherited interface method requirements
+- direct interface method requirements that conflict with inherited requirements
+- concrete classes missing inherited interface method requirements
+- concrete class implementation arity mismatch against inherited interface requirements
 
-Diagnostics should mention the relevant class, interface, and method names when
-available.
+Conflict diagnostics must include the relevant interface names, method name, and
+arity values when available.

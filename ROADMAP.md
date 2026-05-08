@@ -398,7 +398,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.11 interfaces.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.12 interface inheritance
+- [x] Ship v0.12 interface inheritance
   - [x] Define v0.12 interface inheritance scope
     - [x] Add `docs/v0.12/SPEC.md`.
     - [x] Specify `interface Child extends Parent`.
@@ -408,29 +408,29 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Specify interface inheritance cycle errors.
     - [x] Specify conflict diagnostics for incompatible method requirements.
     - [x] Keep class-as-interface conformance, classes extending interfaces, interfaces extending classes, default interface methods, interface fields, interface class methods, type annotations, and generics out of v0.12.
-  - [ ] Add interface inheritance parsing and checking
-    - [ ] Parse interface `extends` lists.
-    - [ ] Resolve parent interface names, including module-qualified names.
-    - [ ] Reject interfaces extending classes.
-    - [ ] Reject classes extending interfaces.
-    - [ ] Reject interface inheritance cycles.
-  - [ ] Add inherited requirement checks
-    - [ ] Collect direct and inherited interface method requirements.
-    - [ ] Treat duplicate method requirements with matching arity as compatible.
-    - [ ] Reject duplicate method requirements with conflicting arity.
-    - [ ] Require concrete classes to implement inherited interface requirements.
-    - [ ] Allow abstract classes to leave inherited interface requirements unimplemented.
-  - [ ] Improve interface conflict diagnostics
-    - [ ] Include child interface name in conflict errors.
-    - [ ] Include conflicting method name in conflict errors.
-    - [ ] Include parent interface names in conflict errors.
-    - [ ] Include conflicting arities in conflict errors.
-  - [ ] Keep v0.12 documentation and tests aligned
-    - [ ] Update latest docs when v0.12 behavior is implemented.
-    - [ ] Keep `docs/v0.12/` aligned with the v0.12 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, and negative tests for v0.12 interface inheritance.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Add interface inheritance parsing and checking
+    - [x] Parse interface `extends` lists.
+    - [x] Resolve parent interface names, including module-qualified names.
+    - [x] Reject interfaces extending classes.
+    - [x] Reject classes extending interfaces.
+    - [x] Reject interface inheritance cycles.
+  - [x] Add inherited requirement checks
+    - [x] Collect direct and inherited interface method requirements.
+    - [x] Treat duplicate method requirements with matching arity as compatible.
+    - [x] Reject duplicate method requirements with conflicting arity.
+    - [x] Require concrete classes to implement inherited interface requirements.
+    - [x] Allow abstract classes to leave inherited interface requirements unimplemented.
+  - [x] Improve interface conflict diagnostics
+    - [x] Include child interface name in conflict errors.
+    - [x] Include conflicting method name in conflict errors.
+    - [x] Include parent interface names in conflict errors.
+    - [x] Include conflicting arities in conflict errors.
+  - [x] Keep v0.12 documentation and tests aligned
+    - [x] Update latest docs when v0.12 behavior is implemented.
+    - [x] Keep `docs/v0.12/` aligned with the v0.12 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.12 interface inheritance.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Ship v0.13 override and constructor chaining checks
   - [x] Define v0.13 override and constructor chaining scope
     - [x] Add `docs/v0.13/SPEC.md`.

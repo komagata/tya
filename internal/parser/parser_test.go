@@ -126,7 +126,7 @@ func TestParseClassDeclaration(t *testing.T) {
 }
 
 func TestParseInterfaceDeclaration(t *testing.T) {
-	src := "interface Reader\n  read = ->\n  write = text ->\n"
+	src := "interface Reader extends io.Source, Seekable\n  read = ->\n  write = text ->\ninterface Named extends Reader\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -139,8 +139,15 @@ func TestParseInterfaceDeclaration(t *testing.T) {
 	if !ok {
 		t.Fatalf("stmt type = %T", prog.Stmts[0])
 	}
-	if iface.Name != "Reader" || len(iface.Methods) != 2 || len(iface.Methods[1].Params) != 1 {
+	if iface.Name != "Reader" || len(iface.Parents) != 2 || iface.Parents[0].Module != "io" || len(iface.Methods) != 2 || len(iface.Methods[1].Params) != 1 {
 		t.Fatalf("interface = %#v", iface)
+	}
+	child, ok := prog.Stmts[1].(*ast.InterfaceDecl)
+	if !ok {
+		t.Fatalf("second stmt type = %T", prog.Stmts[1])
+	}
+	if child.Name != "Named" || len(child.Parents) != 1 || len(child.Methods) != 0 {
+		t.Fatalf("child interface = %#v", child)
 	}
 }
 

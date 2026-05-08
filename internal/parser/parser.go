@@ -286,12 +286,32 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+	var parents []ast.ClassRef
+	if p.at(token.IDENT) && p.peek().Lexeme == "extends" {
+		p.next()
+		for {
+			ref, err := p.classRef()
+			if err != nil {
+				return nil, err
+			}
+			parents = append(parents, *ref)
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+	if !p.match(token.NEWLINE) {
+		return nil, p.err("expected indented block after interface")
+	}
+	decl := &ast.InterfaceDecl{Name: name.Lexeme, NameTok: name, Parents: parents}
+	if !p.match(token.INDENT) {
+		if len(parents) > 0 {
+			return decl, nil
+		}
 		return nil, p.err("expected indented block after interface")
 	}
 	p.blockDepth++
 	defer func() { p.blockDepth-- }()
-	decl := &ast.InterfaceDecl{Name: name.Lexeme, NameTok: name}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		if p.match(token.AT) {
@@ -302,7 +322,7 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 			return nil, err
 		}
 		if strings.HasPrefix(methodName.Lexeme, "_") {
-			return nil, p.errAt(methodName, "private interface methods are not in Tya v0.11")
+			return nil, p.errAt(methodName, "private interface methods are not in Tya v0.12")
 		}
 		if !p.match(token.ASSIGN) {
 			return nil, p.err("expected '=' after interface method name")

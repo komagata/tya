@@ -1,0 +1,172 @@
+# v0.12 interface inheritance and conflict diagnostics.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/interfaces.tya
+stdout 'data\nseek:3\nclosed\nname\nmodule-data\nmodule-path\nabstract-data\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/missing_inherited.tya
+stderr 'class BrokenFile must implement interface method read'
+
+! exec go run ./cmd/tya run $WORK/bad_inherited_arity.tya
+stderr 'implementing interface method read expects 0 parameters'
+
+! exec go run ./cmd/tya run $WORK/interface_extends_class.tya
+stderr 'interface Named extends class Base'
+
+! exec go run ./cmd/tya run $WORK/class_extends_interface.tya
+stderr 'class User extends interface Named'
+
+! exec go run ./cmd/tya run $WORK/interface_cycle.tya
+stderr 'interface inheritance cycle involving A'
+
+! exec go run ./cmd/tya run $WORK/interface_conflict.tya
+stderr 'interface Searchable has conflicting method requirement find'
+stderr 'LookupById.find expects 1 arguments'
+stderr 'LookupByName.find expects 2 arguments'
+
+! exec go run ./cmd/tya run $WORK/direct_conflict.tya
+stderr 'interface BadLookup has conflicting method requirement find'
+stderr 'BadLookup.find expects 2 arguments'
+stderr 'Lookup.find expects 1 arguments'
+
+exec go run ./cmd/tya version
+stdout '0.12.0\n'
+! stderr .
+
+-- interfaces.tya --
+interface Reader
+  read = ->
+
+interface Seeker
+  seek = offset ->
+
+interface Closable
+  close = ->
+
+interface Named
+  name = ->
+
+interface Labeled
+  name = ->
+
+interface Readable extends Reader
+
+interface FileHandle extends Readable, Seeker, Closable
+
+interface MenuItem extends Named, Labeled
+
+class File implements FileHandle
+  read = ->
+    "data"
+
+  seek = offset ->
+    "seek:{offset}"
+
+  close = ->
+    "closed"
+
+class Item implements MenuItem
+  name = ->
+    "name"
+
+interface ModuleFile extends io.Reader
+  path = ->
+
+class MemoryFile implements ModuleFile
+  read = ->
+    "module-data"
+
+  path = ->
+    "module-path"
+
+abstract class AbstractFile implements FileHandle
+  seek = offset ->
+    nil
+
+  close = ->
+    nil
+
+class ConcreteFile extends AbstractFile
+  read = ->
+    "abstract-data"
+
+import io
+
+file = File()
+print file.read()
+print file.seek(3)
+print file.close()
+item = Item()
+print item.name()
+memory = MemoryFile()
+print memory.read()
+print memory.path()
+concrete = ConcreteFile()
+print concrete.read()
+
+-- io.tya --
+module io
+  interface Reader
+    read = ->
+
+-- missing_inherited.tya --
+interface Reader
+  read = ->
+
+interface SeekableReader extends Reader
+  seek = offset ->
+
+class BrokenFile implements SeekableReader
+  seek = offset ->
+    nil
+
+-- bad_inherited_arity.tya --
+interface Reader
+  read = ->
+
+interface SeekableReader extends Reader
+  seek = offset ->
+
+class BadFile implements SeekableReader
+  read = path ->
+    "data"
+
+  seek = offset ->
+    nil
+
+-- interface_extends_class.tya --
+class Base
+  name = ->
+    "base"
+
+interface Named extends Base
+
+-- class_extends_interface.tya --
+interface Named
+  name = ->
+
+class User extends Named
+  name = ->
+    "user"
+
+-- interface_cycle.tya --
+interface A extends B
+
+interface B extends A
+
+-- interface_conflict.tya --
+interface LookupById
+  find = id ->
+
+interface LookupByName
+  find = first, last ->
+
+interface Searchable extends LookupById, LookupByName
+
+-- direct_conflict.tya --
+interface Lookup
+  find = id ->
+
+interface BadLookup extends Lookup
+  find = first, last ->

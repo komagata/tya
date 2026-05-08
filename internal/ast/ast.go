@@ -104,6 +104,7 @@ func (*ClassDecl) stmt() {}
 type InterfaceDecl struct {
 	Name    string
 	NameTok token.Token
+	Parents []ClassRef
 	Methods []InterfaceMethod
 }
 

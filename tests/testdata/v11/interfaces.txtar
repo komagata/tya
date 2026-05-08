@@ -15,7 +15,7 @@ stderr 'interface bodies may only contain instance method requirements'
 stderr 'interface bodies may only contain instance method requirements'
 
 ! exec go run ./cmd/tya run $WORK/interface_private_method.tya
-stderr 'private interface methods are not in Tya v0.11'
+stderr 'private interface methods are not in Tya v0.12'
 
 ! exec go run ./cmd/tya run $WORK/missing_method.tya
 stderr 'class BrokenReader must implement interface method read'
@@ -39,7 +39,7 @@ stderr 'duplicate interface Reader'
 stderr 'abstract interface method read expects 0 parameters'
 
 exec go run ./cmd/tya version
-stdout '0.11.0\n'
+stdout '0.12.0\n'
 ! stderr .
 
 -- interfaces.tya --

@@ -101,7 +101,16 @@ type classInfo struct {
 
 type interfaceInfo struct {
 	name    string
+	parents []string
 	methods map[string]int
+	tokLine int
+	tokCol  int
+}
+
+type interfaceRequirement struct {
+	arity     int
+	source    string
+	sourceTok ast.ClassRef
 }
 
 func newScope(parent *scope) *scope {
@@ -212,7 +221,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				}
 				seen[iface.Name] = true
 				scope.define(n.Name+"."+iface.Name, kindInterface)
-				if err := checkInterface(iface, scope); err != nil {
+				if err := checkInterface(iface, scope, n.Name); err != nil {
 					return err
 				}
 			}
@@ -246,7 +255,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				return err
 			}
 		case *ast.InterfaceDecl:
-			if err := checkInterface(n, scope); err != nil {
+			if err := checkInterface(n, scope, ""); err != nil {
 				return err
 			}
 		case *ast.IfStmt:
@@ -354,7 +363,10 @@ func predeclareInterface(module string, iface *ast.InterfaceDecl, scope *scope) 
 	if scope.kind(key) == kindInterface {
 		return fmt.Errorf("%d:%d: duplicate interface %s", iface.NameTok.Line, iface.NameTok.Col, iface.Name)
 	}
-	info := interfaceInfo{name: key, methods: map[string]int{}}
+	info := interfaceInfo{name: key, methods: map[string]int{}, tokLine: iface.NameTok.Line, tokCol: iface.NameTok.Col}
+	for _, parent := range iface.Parents {
+		info.parents = append(info.parents, refKey(&parent, module, scope))
+	}
 	for _, method := range iface.Methods {
 		info.methods[method.Name] = len(method.Params)
 	}
@@ -772,6 +784,9 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 	key := classKey(module, class)
 	if class.Parent != nil {
 		parentKey := refKey(class.Parent, module, scope)
+		if _, ok := scope.interfaces[parentKey]; ok {
+			return fmt.Errorf("%d:%d: class %s extends interface %s", class.Parent.Tok.Line, class.Parent.Tok.Col, class.Name, parentName(class.Parent))
+		}
 		if _, ok := scope.classes[parentKey]; !ok {
 			return fmt.Errorf("%d:%d: unknown parent class %s", class.Parent.Tok.Line, class.Parent.Tok.Col, parentName(class.Parent))
 		}
@@ -887,10 +902,11 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 	return nil
 }
 
-func checkInterface(iface *ast.InterfaceDecl, scope *scope) error {
+func checkInterface(iface *ast.InterfaceDecl, scope *scope, module string) error {
 	if !classNameRE.MatchString(iface.Name) {
 		return fmt.Errorf("%d:%d: invalid interface name %s", iface.NameTok.Line, iface.NameTok.Col, iface.Name)
 	}
+	key := refKey(&ast.ClassRef{Name: iface.Name, Tok: iface.NameTok}, module, scope)
 	seen := map[string]bool{}
 	for _, method := range iface.Methods {
 		if !valueNameRE.MatchString(method.Name) || isPrivateName(method.Name) {
@@ -900,6 +916,9 @@ func checkInterface(iface *ast.InterfaceDecl, scope *scope) error {
 			return fmt.Errorf("%d:%d: duplicate interface method %s", method.Tok.Line, method.Tok.Col, method.Name)
 		}
 		seen[method.Name] = true
+	}
+	if _, err := effectiveInterfaceRequirements(key, scope, nil); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1125,11 +1144,15 @@ func checkInterfaceImplementations(class *ast.ClassDecl, scope *scope, key strin
 		if scope.kind(ifaceKey) != kindInterface {
 			return fmt.Errorf("%d:%d: implements target %s is not an interface", ref.Tok.Line, ref.Tok.Col, parentName(&ref))
 		}
-		for name, arity := range scope.interfaces[ifaceKey].methods {
-			if existing, ok := reqs[name]; ok && existing != arity {
+		ifaceReqs, err := effectiveInterfaceRequirements(ifaceKey, scope, nil)
+		if err != nil {
+			return err
+		}
+		for name, req := range ifaceReqs {
+			if existing, ok := reqs[name]; ok && existing != req.arity {
 				return fmt.Errorf("%d:%d: conflicting interface method %s arity requirements", ref.Tok.Line, ref.Tok.Col, name)
 			}
-			reqs[name] = arity
+			reqs[name] = req.arity
 		}
 	}
 	info := scope.classes[key]
@@ -1157,6 +1180,52 @@ func checkInterfaceImplementations(class *ast.ClassDecl, scope *scope, key strin
 		}
 	}
 	return nil
+}
+
+func effectiveInterfaceRequirements(key string, scope *scope, stack []string) (map[string]interfaceRequirement, error) {
+	info, ok := scope.interfaces[key]
+	if !ok {
+		if scope.kind(key) == kindClass {
+			return nil, fmt.Errorf("interface %s extends class %s", displayName(key), displayName(key))
+		}
+		return nil, fmt.Errorf("unknown interface %s", displayName(key))
+	}
+	for _, active := range stack {
+		if active == key {
+			return nil, fmt.Errorf("%d:%d: interface inheritance cycle involving %s", info.tokLine, info.tokCol, displayName(key))
+		}
+	}
+	stack = append(stack, key)
+	reqs := map[string]interfaceRequirement{}
+	for name, arity := range info.methods {
+		reqs[name] = interfaceRequirement{arity: arity, source: key}
+	}
+	for _, parent := range info.parents {
+		if scope.kind(parent) == kindClass {
+			return nil, fmt.Errorf("%d:%d: interface %s extends class %s", info.tokLine, info.tokCol, displayName(key), displayName(parent))
+		}
+		if scope.kind(parent) != kindInterface {
+			return nil, fmt.Errorf("%d:%d: unknown interface %s", info.tokLine, info.tokCol, displayName(parent))
+		}
+		parentReqs, err := effectiveInterfaceRequirements(parent, scope, stack)
+		if err != nil {
+			return nil, err
+		}
+		for name, parentReq := range parentReqs {
+			if existing, ok := reqs[name]; ok && existing.arity != parentReq.arity {
+				return nil, fmt.Errorf("%d:%d: interface %s has conflicting method requirement %s: %s.%s expects %d arguments, %s.%s expects %d arguments",
+					info.tokLine, info.tokCol, displayName(key), name,
+					displayName(existing.source), name, existing.arity,
+					displayName(parentReq.source), name, parentReq.arity)
+			}
+			reqs[name] = parentReq
+		}
+	}
+	return reqs, nil
+}
+
+func displayName(key string) string {
+	return key
 }
 
 func effectiveMethodArity(className string, method string, scope *scope) (int, bool) {
