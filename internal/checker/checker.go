@@ -91,6 +91,16 @@ var builtinNames = []string{
 	"push", "read_file", "read_line", "reduce", "replace", "split",
 	"starts_with", "to_float", "to_int", "to_number", "to_string", "trim",
 	"values", "write_file",
+	// v0.24
+	"time_now", "time_sleep", "time_format", "time_parse", "time_since",
+	"random_seed", "random_int", "random_float",
+	"math_sqrt", "math_pow", "math_floor", "math_ceil", "math_round",
+	"math_trunc", "math_log", "math_log2", "math_log10", "math_exp",
+	"math_sin", "math_cos", "math_tan", "math_asin", "math_acos", "math_atan",
+	"math_atan2",
+	"process_run",
+	"digest_md5", "digest_sha1", "digest_sha256", "digest_sha384", "digest_sha512",
+	"secure_random_bytes", "secure_random_int",
 }
 
 type scope struct {

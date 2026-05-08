@@ -103,7 +103,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Current Roadmap
 
-- [ ] Ship v0.24 scripting toolkit and lightweight numerics
+- [x] Ship v0.24 scripting toolkit and lightweight numerics
   - [x] Define v0.24 scope
     - [x] Add `docs/v0.24/SPEC.md`.
     - [x] Add `time`, `random`, `process`, `hex`, `digest`, `secure_random`, and `matrix` standard modules.
@@ -111,47 +111,47 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Keep all native-backed APIs import-only and explicit.
     - [x] Use structured `raise` for native operation failures.
     - [x] Keep byte-array type, streaming digest, HTTP/TCP/UDP/TLS, regex, yaml, xml, markdown, async/threads, subprocess pipes, matrix inverse/eigenvalues, and shell-string parsing out of v0.24.
-  - [ ] Implement the `time` module
-    - [ ] Add `time.now`, `time.sleep`, `time.format`, `time.parse`, `time.since`.
-    - [ ] Use UNIX timestamp seconds (float, sub-second precision) as the time value.
-    - [ ] Support `"iso"`, `"date"`, `"time"`, `"unix"` format layouts.
-    - [ ] Raise on invalid `time.parse` input or negative `time.sleep` argument.
-  - [ ] Implement the `random` module (PRNG, seedable)
-    - [ ] Add `random.seed`, `random.int`, `random.float`, `random.choice`, `random.shuffle`.
-    - [ ] Use a Mersenne Twister or equivalent PRNG; seedable by int or string.
-    - [ ] Raise on empty `random.choice` input or invalid `random.int` range.
-  - [ ] Expand the `math` module
-    - [ ] Wire libm functions (`sqrt`, `pow`, `floor`, `ceil`, `round`, `trunc`, `log`, `log2`, `log10`, `exp`, trig and inverse trig, `atan2`).
-    - [ ] Expose `math.pi` and `math.e` as numeric constants (not functions).
-    - [ ] Raise on `sqrt` of negative numbers and on non-positive `log` arguments.
-  - [ ] Implement the `process` module
-    - [ ] Add `process.run(command, options)` returning `{exit_code, stdout, stderr}`.
-    - [ ] Accept array form only (no shell-string).
-    - [ ] Support `cwd`, `env`, and `input` options.
-    - [ ] Buffer stdout/stderr fully into memory.
-    - [ ] Raise only on launch failures; non-zero exit codes are returned in the result.
-  - [ ] Implement the `hex` module
-    - [ ] Add `hex.encode` (lowercase) and `hex.decode` (case-insensitive).
-    - [ ] Raise on odd-length or non-hex input to `hex.decode`.
-  - [ ] Implement the `digest` module
-    - [ ] Add `md5`, `sha1`, `sha256`, `sha384`, `sha512` returning lowercase hex strings.
-    - [ ] Implement digests in C without external deps for portability (target macOS and Linux).
-    - [ ] Hash UTF-8 bytes of the input string; do not introduce a byte-array type.
-  - [ ] Implement the `secure_random` module
-    - [ ] Add `bytes`, `hex`, `base64`, `uuid` (RFC 4122 v4), and `int`.
-    - [ ] Source entropy from `getentropy` (macOS/BSD), `getrandom`, or `/dev/urandom` as fallback.
-    - [ ] Use rejection sampling in `secure_random.int` to avoid modulo bias.
-  - [ ] Implement the `matrix` module (pure Tya)
-    - [ ] Represent a matrix as `{rows, cols, data}`.
-    - [ ] Add `new`, `zero`, `identity`, `at`, `set`, `add`, `sub`, `scale`, `mul`, `transpose`, `det`, `equal?`.
-    - [ ] Implement `det` via cofactor expansion for sizes up to 4x4; raise for larger sizes.
-    - [ ] Validate dimensions on construction and per-operation.
-  - [ ] Keep v0.24 documentation and tests aligned
-    - [ ] Update latest docs when v0.24 behavior is implemented.
-    - [ ] Keep `docs/v0.24/` aligned with the v0.24 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add unittest-form tests for each new module.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Implement the `time` module
+    - [x] Add `time.now`, `time.sleep`, `time.format`, `time.parse`, `time.since`.
+    - [x] Use UNIX timestamp seconds (float, sub-second precision) as the time value.
+    - [x] Support `"iso"`, `"date"`, `"time"`, `"unix"` format layouts.
+    - [x] Raise on invalid `time.parse` input or negative `time.sleep` argument.
+  - [x] Implement the `random` module (PRNG, seedable)
+    - [x] Add `random.seed`, `random.int`, `random.float`, `random.choice`, `random.shuffle`.
+    - [x] Use a Mersenne Twister or equivalent PRNG; seedable by int or string.
+    - [x] Raise on empty `random.choice` input or invalid `random.int` range.
+  - [x] Expand the `math` module
+    - [x] Wire libm functions (`sqrt`, `pow`, `floor`, `ceil`, `round`, `trunc`, `log`, `log2`, `log10`, `exp`, trig and inverse trig, `atan2`).
+    - [x] Expose `math.pi` and `math.e` as numeric constants (not functions).
+    - [x] Raise on `sqrt` of negative numbers and on non-positive `log` arguments.
+  - [x] Implement the `process` module
+    - [x] Add `process.run(command, options)` returning `{exit_code, stdout, stderr}`.
+    - [x] Accept array form only (no shell-string).
+    - [x] Support `cwd`, `env`, and `input` options.
+    - [x] Buffer stdout/stderr fully into memory.
+    - [x] Raise only on launch failures; non-zero exit codes are returned in the result.
+  - [x] Implement the `hex` module
+    - [x] Add `hex.encode` (lowercase) and `hex.decode` (case-insensitive).
+    - [x] Raise on odd-length or non-hex input to `hex.decode`.
+  - [x] Implement the `digest` module
+    - [x] Add `md5`, `sha1`, `sha256`, `sha384`, `sha512` returning lowercase hex strings.
+    - [x] Implement digests in C without external deps for portability (target macOS and Linux).
+    - [x] Hash UTF-8 bytes of the input string; do not introduce a byte-array type.
+  - [x] Implement the `secure_random` module
+    - [x] Add `bytes`, `hex`, `base64`, `uuid` (RFC 4122 v4), and `int`.
+    - [x] Source entropy from `getentropy` (macOS/BSD), `getrandom`, or `/dev/urandom` as fallback.
+    - [x] Use rejection sampling in `secure_random.int` to avoid modulo bias.
+  - [x] Implement the `matrix` module (pure Tya)
+    - [x] Represent a matrix as `{rows, cols, data}`.
+    - [x] Add `new`, `zero`, `identity`, `at`, `set`, `add`, `sub`, `scale`, `mul`, `transpose`, `det`, `equal?`.
+    - [x] Implement `det` via cofactor expansion for sizes up to 4x4; raise for larger sizes.
+    - [x] Validate dimensions on construction and per-operation.
+  - [x] Keep v0.24 documentation and tests aligned
+    - [x] Update latest docs when v0.24 behavior is implemented.
+    - [x] Keep `docs/v0.24/` aligned with the v0.24 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add unittest-form tests for each new module.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Ship v0.25 bit-level operations and byte sequences
   - [ ] Add bitwise operators: `&`, `|`, `^`, `~`, `<<`, `>>` for integers.
   - [ ] Add a byte-sequence value type (literal form, indexing returns int, slicing, concat, len).

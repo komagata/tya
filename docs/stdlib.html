@@ -194,6 +194,61 @@ println csv.dump([[&quot;a&quot;, &quot;b&quot;], [&quot;1&quot;, &quot;2&quot;]
 config = toml.parse(&quot;[server]\nhost = \&quot;localhost\&quot;\nport = 80\n&quot;)
 println toml.dump(config)</code></pre>
 <p><code>parse(text)</code> parses TOML 1.0 documents. <code>dump(value)</code> emits TOML for a dict of primitives, arrays, and nested tables (including arrays of tables).</p>
+<h2 id="time"><code>time</code></h2>
+<pre><code class="language-tya">import time
+
+now = time.now()
+println time.format(now, &quot;iso&quot;)
+time.sleep(0.1)
+println time.since(now)</code></pre>
+<p>Functions: <code>now</code>, <code>sleep</code>, <code>format</code>, <code>parse</code>, <code>since</code>. Format layouts: <code>&quot;iso&quot;</code>, <code>&quot;date&quot;</code>, <code>&quot;time&quot;</code>, <code>&quot;unix&quot;</code>.</p>
+<h2 id="random"><code>random</code></h2>
+<pre><code class="language-tya">import random
+
+random.seed(42)
+println random.int(1, 100)
+println random.float()
+println random.choice([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])</code></pre>
+<p>Seedable PRNG. **Not** cryptographically secure — use <code>secure_random</code> for tokens.</p>
+<h2 id="math-additional-functions"><code>math</code> (additional functions)</h2>
+<p><code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, <code>atan2</code>, plus the constants <code>pi</code> and <code>e</code>.</p>
+<h2 id="process"><code>process</code></h2>
+<pre><code class="language-tya">import process
+
+result = process.run([&quot;echo&quot;, &quot;hello&quot;], nil)
+println result[&quot;stdout&quot;]
+println result[&quot;exit_code&quot;]
+
+process.run([&quot;sh&quot;, &quot;-c&quot;, &quot;echo $X&quot;], { env: { X: &quot;tya&quot; } })</code></pre>
+<p><code>run(command, options)</code> returns <code>{exit_code, stdout, stderr}</code>. <code>command</code> is an array of strings — never a shell string. Options: <code>cwd</code>, <code>env</code>, <code>input</code>.</p>
+<h2 id="hex"><code>hex</code></h2>
+<pre><code class="language-tya">import hex
+
+println hex.encode(&quot;Tya&quot;)     # 547961
+println hex.decode(&quot;547961&quot;)  # Tya</code></pre>
+<h2 id="digest"><code>digest</code></h2>
+<pre><code class="language-tya">import digest
+
+println digest.md5(&quot;hello&quot;)
+println digest.sha256(&quot;hello&quot;)</code></pre>
+<p>Functions: <code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code>. Each takes a text and returns a lowercase hex digest string.</p>
+<h2 id="secure-random"><code>secure_random</code></h2>
+<pre><code class="language-tya">import secure_random
+
+println secure_random.hex(16)     # 32 hex chars
+println secure_random.uuid()      # RFC 4122 v4
+println secure_random.int(0, 99)</code></pre>
+<p>Cryptographically secure. Functions: <code>bytes</code>, <code>hex</code>, <code>base64</code>, <code>uuid</code>, <code>int</code>.</p>
+<h2 id="matrix"><code>matrix</code></h2>
+<pre><code class="language-tya">import matrix
+
+a = matrix.new([[1, 2], [3, 4]])
+b = matrix.identity(2)
+
+println matrix.add(a, b)[&quot;data&quot;]
+println matrix.mul(a, a)[&quot;data&quot;]
+println matrix.det(a)</code></pre>
+<p>Functions: <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>put</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code> (≤ 4×4), <code>equal?</code>.</p>
 <h2 id="unittest"><code>unittest</code></h2>
 <pre><code class="language-tya">import unittest
 import string

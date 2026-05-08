@@ -2,12 +2,24 @@ package eval
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/md5"
+	"crypto/rand"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
+	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	mathpkg "math"
+	mathrand "math/rand"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"tya/internal/ast"
 	"tya/internal/lexer"
@@ -727,6 +739,7 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return nil, nil
 	}))
+	registerV24Builtins(env)
 	env.set("args", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 0 {
 			return nil, fmt.Errorf("args expects 0 arguments")
@@ -2318,4 +2331,350 @@ func stringify(v Value) string {
 	default:
 		return fmt.Sprintf("%v", x)
 	}
+}
+
+// v0.24 builtins
+var tyaRng = mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
+
+func registerV24Builtins(env *Env) {
+	env.set("time_now", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("time_now expects 0 arguments")
+		}
+		return float64(time.Now().UnixNano()) / 1e9, nil
+	}))
+	env.set("time_sleep", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("time_sleep expects 1 argument")
+		}
+		secs, ok := numberAsFloat(args[0])
+		if !ok {
+			return nil, fmt.Errorf("time_sleep expects number")
+		}
+		if secs < 0 {
+			return nil, &raisedSignal{value: "time.sleep: negative duration"}
+		}
+		time.Sleep(time.Duration(secs * float64(time.Second)))
+		return nil, nil
+	}))
+	env.set("time_format", Builtin(func(args []Value) (Value, error) {
+		if len(args) < 1 || len(args) > 2 {
+			return nil, fmt.Errorf("time_format expects 1 or 2 arguments")
+		}
+		secs, ok := numberAsFloat(args[0])
+		if !ok {
+			return nil, fmt.Errorf("time_format expects number")
+		}
+		layout := "iso"
+		if len(args) == 2 {
+			s, ok := args[1].(string)
+			if !ok {
+				return nil, fmt.Errorf("time_format layout must be string")
+			}
+			layout = s
+		}
+		t := time.Unix(int64(secs), int64((secs-mathpkg.Floor(secs))*1e9)).UTC()
+		switch layout {
+		case "iso":
+			return t.Format("2006-01-02T15:04:05Z"), nil
+		case "date":
+			return t.Format("2006-01-02"), nil
+		case "time":
+			return t.Format("15:04:05"), nil
+		case "unix":
+			return strconv.FormatInt(t.Unix(), 10), nil
+		}
+		return nil, &raisedSignal{value: "time.format: unknown layout"}
+	}))
+	env.set("time_parse", Builtin(func(args []Value) (Value, error) {
+		s, err := oneString("time_parse", args)
+		if err != nil {
+			return nil, err
+		}
+		layouts := []string{"2006-01-02T15:04:05Z", "2006-01-02"}
+		for _, l := range layouts {
+			if t, err := time.Parse(l, s); err == nil {
+				return float64(t.Unix()), nil
+			}
+		}
+		return nil, &raisedSignal{value: "time.parse: invalid timestamp"}
+	}))
+	env.set("time_since", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("time_since expects 1 argument")
+		}
+		t, ok := numberAsFloat(args[0])
+		if !ok {
+			return nil, fmt.Errorf("time_since expects number")
+		}
+		return float64(time.Now().UnixNano())/1e9 - t, nil
+	}))
+
+	env.set("random_seed", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("random_seed expects 1 argument")
+		}
+		var seed int64
+		switch v := args[0].(type) {
+		case int64:
+			seed = v
+		case float64:
+			seed = int64(v)
+		case string:
+			h := uint64(14695981039346656037)
+			for _, b := range []byte(v) {
+				h ^= uint64(b)
+				h *= 1099511628211
+			}
+			seed = int64(h)
+		default:
+			return nil, fmt.Errorf("random_seed expects int or string")
+		}
+		tyaRng = mathrand.New(mathrand.NewSource(seed))
+		return nil, nil
+	}))
+	env.set("random_int", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("random_int expects 2 arguments")
+		}
+		mn, ok1 := numberAsInt(args[0])
+		mx, ok2 := numberAsInt(args[1])
+		if !ok1 || !ok2 {
+			return nil, fmt.Errorf("random_int expects ints")
+		}
+		if mx < mn {
+			return nil, &raisedSignal{value: "random.int: max < min"}
+		}
+		return mn + tyaRng.Int63n(mx-mn+1), nil
+	}))
+	env.set("random_float", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("random_float expects 0 arguments")
+		}
+		return tyaRng.Float64(), nil
+	}))
+
+	addMath := func(name string, fn func(float64) float64) {
+		env.set(name, Builtin(func(args []Value) (Value, error) {
+			if len(args) != 1 {
+				return nil, fmt.Errorf("%s expects 1 argument", name)
+			}
+			x, ok := numberAsFloat(args[0])
+			if !ok {
+				return nil, fmt.Errorf("%s expects number", name)
+			}
+			return fn(x), nil
+		}))
+	}
+	env.set("math_sqrt", Builtin(func(args []Value) (Value, error) {
+		x, _ := numberAsFloat(args[0])
+		if x < 0 {
+			return nil, &raisedSignal{value: "math.sqrt: negative argument"}
+		}
+		return mathpkg.Sqrt(x), nil
+	}))
+	env.set("math_pow", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("math_pow expects 2 arguments")
+		}
+		x, _ := numberAsFloat(args[0])
+		y, _ := numberAsFloat(args[1])
+		return mathpkg.Pow(x, y), nil
+	}))
+	addMath("math_floor", mathpkg.Floor)
+	addMath("math_ceil", mathpkg.Ceil)
+	env.set("math_round", Builtin(func(args []Value) (Value, error) {
+		x, _ := numberAsFloat(args[0])
+		if x >= 0 {
+			return mathpkg.Floor(x + 0.5), nil
+		}
+		return -mathpkg.Floor(-x + 0.5), nil
+	}))
+	addMath("math_trunc", mathpkg.Trunc)
+	addLog := func(name string, fn func(float64) float64) {
+		env.set(name, Builtin(func(args []Value) (Value, error) {
+			x, _ := numberAsFloat(args[0])
+			if x <= 0 {
+				return nil, &raisedSignal{value: "math: non-positive argument to log"}
+			}
+			return fn(x), nil
+		}))
+	}
+	addLog("math_log", mathpkg.Log)
+	addLog("math_log2", mathpkg.Log2)
+	addLog("math_log10", mathpkg.Log10)
+	addMath("math_exp", mathpkg.Exp)
+	addMath("math_sin", mathpkg.Sin)
+	addMath("math_cos", mathpkg.Cos)
+	addMath("math_tan", mathpkg.Tan)
+	addMath("math_asin", mathpkg.Asin)
+	addMath("math_acos", mathpkg.Acos)
+	addMath("math_atan", mathpkg.Atan)
+	env.set("math_atan2", Builtin(func(args []Value) (Value, error) {
+		y, _ := numberAsFloat(args[0])
+		x, _ := numberAsFloat(args[1])
+		return mathpkg.Atan2(y, x), nil
+	}))
+
+	env.set("process_run", Builtin(func(args []Value) (Value, error) {
+		if len(args) < 1 || len(args) > 2 {
+			return nil, fmt.Errorf("process_run expects 1 or 2 arguments")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok || len(arr.items) == 0 {
+			return nil, &raisedSignal{value: "process.run: command must be a non-empty array"}
+		}
+		cmdArgs := make([]string, len(arr.items))
+		for i, v := range arr.items {
+			s, ok := v.(string)
+			if !ok {
+				return nil, &raisedSignal{value: "process.run: command items must be strings"}
+			}
+			cmdArgs[i] = s
+		}
+		cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+		var stdoutBuf, stderrBuf bytes.Buffer
+		cmd.Stdout = &stdoutBuf
+		cmd.Stderr = &stderrBuf
+		if len(args) == 2 {
+			opts, ok := args[1].(Dict)
+			if ok {
+				if cwd, has := opts["cwd"].(string); has {
+					cmd.Dir = cwd
+				}
+				if input, has := opts["input"].(string); has {
+					cmd.Stdin = strings.NewReader(input)
+				}
+				if envDict, has := opts["env"].(Dict); has {
+					envSlice := []string{}
+					for k, v := range envDict {
+						s, ok := v.(string)
+						if !ok {
+							return nil, &raisedSignal{value: "process.run: env values must be strings"}
+						}
+						envSlice = append(envSlice, k+"="+s)
+					}
+					cmd.Env = envSlice
+				}
+			}
+		}
+		err := cmd.Run()
+		exitCode := 0
+		if err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok {
+				exitCode = exitErr.ExitCode()
+			} else {
+				return nil, &raisedSignal{value: "process.run: " + err.Error()}
+			}
+		}
+		out := Dict{}
+		out["exit_code"] = int64(exitCode)
+		out["stdout"] = stdoutBuf.String()
+		out["stderr"] = stderrBuf.String()
+		return out, nil
+	}))
+
+	env.set("digest_md5", Builtin(func(args []Value) (Value, error) {
+		s, err := oneString("digest_md5", args)
+		if err != nil {
+			return nil, err
+		}
+		h := md5.Sum([]byte(s))
+		return hex.EncodeToString(h[:]), nil
+	}))
+	env.set("digest_sha1", Builtin(func(args []Value) (Value, error) {
+		s, err := oneString("digest_sha1", args)
+		if err != nil {
+			return nil, err
+		}
+		h := sha1.Sum([]byte(s))
+		return hex.EncodeToString(h[:]), nil
+	}))
+	env.set("digest_sha256", Builtin(func(args []Value) (Value, error) {
+		s, err := oneString("digest_sha256", args)
+		if err != nil {
+			return nil, err
+		}
+		h := sha256.Sum256([]byte(s))
+		return hex.EncodeToString(h[:]), nil
+	}))
+	env.set("digest_sha384", Builtin(func(args []Value) (Value, error) {
+		s, err := oneString("digest_sha384", args)
+		if err != nil {
+			return nil, err
+		}
+		h := sha512.Sum384([]byte(s))
+		return hex.EncodeToString(h[:]), nil
+	}))
+	env.set("digest_sha512", Builtin(func(args []Value) (Value, error) {
+		s, err := oneString("digest_sha512", args)
+		if err != nil {
+			return nil, err
+		}
+		h := sha512.Sum512([]byte(s))
+		return hex.EncodeToString(h[:]), nil
+	}))
+
+	env.set("secure_random_bytes", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("secure_random_bytes expects 1 argument")
+		}
+		n, ok := numberAsInt(args[0])
+		if !ok || n < 0 || n > 4096 {
+			return nil, &raisedSignal{value: "secure_random.bytes: count out of range"}
+		}
+		buf := make([]byte, n)
+		if _, err := rand.Read(buf); err != nil {
+			return nil, &raisedSignal{value: "secure_random: entropy unavailable"}
+		}
+		return string(buf), nil
+	}))
+	env.set("secure_random_int", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("secure_random_int expects 2 arguments")
+		}
+		mn, ok1 := numberAsInt(args[0])
+		mx, ok2 := numberAsInt(args[1])
+		if !ok1 || !ok2 {
+			return nil, fmt.Errorf("secure_random_int expects ints")
+		}
+		if mx < mn {
+			return nil, &raisedSignal{value: "secure_random.int: max < min"}
+		}
+		rng := uint64(mx - mn + 1)
+		threshold := uint64(0)
+		if rng != 0 {
+			threshold = (^uint64(0) - rng + 1) % rng
+		}
+		for {
+			var b [8]byte
+			if _, err := rand.Read(b[:]); err != nil {
+				return nil, &raisedSignal{value: "secure_random.int: entropy unavailable"}
+			}
+			r := binary.BigEndian.Uint64(b[:])
+			if r >= threshold {
+				return mn + int64(r%rng), nil
+			}
+		}
+	}))
+}
+
+func numberAsFloat(v Value) (float64, bool) {
+	switch x := v.(type) {
+	case int64:
+		return float64(x), true
+	case float64:
+		return x, true
+	}
+	return 0, false
+}
+
+func numberAsInt(v Value) (int64, bool) {
+	switch x := v.(type) {
+	case int64:
+		return x, true
+	case float64:
+		return int64(x), true
+	}
+	return 0, false
 }

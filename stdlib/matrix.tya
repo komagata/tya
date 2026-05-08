@@ -1,0 +1,183 @@
+module matrix
+  validate_data = data ->
+    if kind(data) != "array"
+      raise "matrix.new: data must be an array of arrays"
+    rows = len(data)
+    if rows == 0
+      raise "matrix.new: empty matrix"
+    if kind(data[0]) != "array"
+      raise "matrix.new: rows must be arrays"
+    cols = len(data[0])
+    i = 0
+    while i < rows
+      if kind(data[i]) != "array" or len(data[i]) != cols
+        raise "matrix.new: inconsistent row lengths"
+      j = 0
+      while j < cols
+        k = kind(data[i][j])
+        if k != "int" and k != "float"
+          raise "matrix.new: elements must be numbers"
+        j = j + 1
+      i = i + 1
+    return cols
+
+  new = data ->
+    cols = matrix.validate_data(data)
+    return { rows: len(data), cols: cols, data: data }
+
+  zero = rows, cols ->
+    data = []
+    i = 0
+    while i < rows
+      row = []
+      j = 0
+      while j < cols
+        push(row, 0)
+        j = j + 1
+      push(data, row)
+      i = i + 1
+    return { rows: rows, cols: cols, data: data }
+
+  identity = n ->
+    data = []
+    i = 0
+    while i < n
+      row = []
+      j = 0
+      while j < n
+        if i == j
+          push(row, 1)
+        else
+          push(row, 0)
+        j = j + 1
+      push(data, row)
+      i = i + 1
+    return { rows: n, cols: n, data: data }
+
+  at = m, r, c ->
+    if r < 0 or r >= m["rows"] or c < 0 or c >= m["cols"]
+      raise "matrix.at: index out of range"
+    return m["data"][r][c]
+
+  put = m, r, c, value ->
+    if r < 0 or r >= m["rows"] or c < 0 or c >= m["cols"]
+      raise "matrix.put: index out of range"
+    m["data"][r][c] = value
+    return nil
+
+  add = a, b ->
+    if a["rows"] != b["rows"] or a["cols"] != b["cols"]
+      raise "matrix.add: dimension mismatch"
+    out_data = []
+    i = 0
+    while i < a["rows"]
+      row = []
+      j = 0
+      while j < a["cols"]
+        push(row, a["data"][i][j] + b["data"][i][j])
+        j = j + 1
+      push(out_data, row)
+      i = i + 1
+    return { rows: a["rows"], cols: a["cols"], data: out_data }
+
+  sub = a, b ->
+    if a["rows"] != b["rows"] or a["cols"] != b["cols"]
+      raise "matrix.sub: dimension mismatch"
+    out_data = []
+    i = 0
+    while i < a["rows"]
+      row = []
+      j = 0
+      while j < a["cols"]
+        push(row, a["data"][i][j] - b["data"][i][j])
+        j = j + 1
+      push(out_data, row)
+      i = i + 1
+    return { rows: a["rows"], cols: a["cols"], data: out_data }
+
+  scale = a, k ->
+    out_data = []
+    i = 0
+    while i < a["rows"]
+      row = []
+      j = 0
+      while j < a["cols"]
+        push(row, a["data"][i][j] * k)
+        j = j + 1
+      push(out_data, row)
+      i = i + 1
+    return { rows: a["rows"], cols: a["cols"], data: out_data }
+
+  mul = a, b ->
+    if a["cols"] != b["rows"]
+      raise "matrix.mul: inner dimensions disagree"
+    out_data = []
+    i = 0
+    while i < a["rows"]
+      row = []
+      j = 0
+      while j < b["cols"]
+        sum = 0
+        k = 0
+        while k < a["cols"]
+          sum = sum + a["data"][i][k] * b["data"][k][j]
+          k = k + 1
+        push(row, sum)
+        j = j + 1
+      push(out_data, row)
+      i = i + 1
+    return { rows: a["rows"], cols: b["cols"], data: out_data }
+
+  transpose = a ->
+    out_data = []
+    j = 0
+    while j < a["cols"]
+      row = []
+      i = 0
+      while i < a["rows"]
+        push(row, a["data"][i][j])
+        i = i + 1
+      push(out_data, row)
+      j = j + 1
+    return { rows: a["cols"], cols: a["rows"], data: out_data }
+
+  det = a ->
+    if a["rows"] != a["cols"]
+      raise "matrix.det: not square"
+    n = a["rows"]
+    if n > 4
+      raise "matrix.det: size > 4 not supported in v0.24"
+    d = a["data"]
+    if n == 1
+      return d[0][0]
+    if n == 2
+      return d[0][0] * d[1][1] - d[0][1] * d[1][0]
+    if n == 3
+      return d[0][0] * (d[1][1] * d[2][2] - d[1][2] * d[2][1]) - d[0][1] * (d[1][0] * d[2][2] - d[1][2] * d[2][0]) + d[0][2] * (d[1][0] * d[2][1] - d[1][1] * d[2][0])
+    sum = 0
+    j = 0
+    while j < 4
+      minor_data = []
+      r = 1
+      while r < 4
+        row = []
+        c = 0
+        while c < 4
+          if c != j
+            push(row, d[r][c])
+          c = c + 1
+        push(minor_data, row)
+        r = r + 1
+      sub_m = { rows: 3, cols: 3, data: minor_data }
+      cofactor = matrix.det(sub_m) * d[0][j]
+      if j % 2 == 0
+        sum = sum + cofactor
+      else
+        sum = sum - cofactor
+      j = j + 1
+    return sum
+
+  equal? = a, b ->
+    if a["rows"] != b["rows"] or a["cols"] != b["cols"]
+      return false
+    return equal(a["data"], b["data"])

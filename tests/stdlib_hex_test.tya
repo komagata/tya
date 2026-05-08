@@ -1,0 +1,15 @@
+import unittest
+import hex
+
+module stdlib_hex_test
+  test_encode = ->
+    unittest.assert_equal("547961", hex.encode("Tya"), "encode Tya")
+    unittest.assert_equal("", hex.encode(""), "empty")
+  test_decode = ->
+    unittest.assert_equal("Tya", hex.decode("547961"), "decode lower")
+    unittest.assert_equal("Tya", hex.decode("547961"), "round trip")
+  test_decode_uppercase = ->
+    unittest.assert_equal("Tya", hex.decode("547961"), "lower")
+  test_round_trip = ->
+    text = "hello world"
+    unittest.assert_equal(text, hex.decode(hex.encode(text)), "round trip")

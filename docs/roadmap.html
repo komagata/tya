@@ -72,7 +72,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="current-roadmap">Current Roadmap</h2>
 <ul>
-<li>[ ] Ship v0.24 scripting toolkit and lightweight numerics</li>
+<li>[x] Ship v0.24 scripting toolkit and lightweight numerics</li>
 <ul>
 <li>[x] Define v0.24 scope</li>
 <ul>
@@ -83,64 +83,64 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Use structured <code>raise</code> for native operation failures.</li>
 <li>[x] Keep byte-array type, streaming digest, HTTP/TCP/UDP/TLS, regex, yaml, xml, markdown, async/threads, subprocess pipes, matrix inverse/eigenvalues, and shell-string parsing out of v0.24.</li>
 </ul>
-<li>[ ] Implement the <code>time</code> module</li>
+<li>[x] Implement the <code>time</code> module</li>
 <ul>
-<li>[ ] Add <code>time.now</code>, <code>time.sleep</code>, <code>time.format</code>, <code>time.parse</code>, <code>time.since</code>.</li>
-<li>[ ] Use UNIX timestamp seconds (float, sub-second precision) as the time value.</li>
-<li>[ ] Support <code>&quot;iso&quot;</code>, <code>&quot;date&quot;</code>, <code>&quot;time&quot;</code>, <code>&quot;unix&quot;</code> format layouts.</li>
-<li>[ ] Raise on invalid <code>time.parse</code> input or negative <code>time.sleep</code> argument.</li>
+<li>[x] Add <code>time.now</code>, <code>time.sleep</code>, <code>time.format</code>, <code>time.parse</code>, <code>time.since</code>.</li>
+<li>[x] Use UNIX timestamp seconds (float, sub-second precision) as the time value.</li>
+<li>[x] Support <code>&quot;iso&quot;</code>, <code>&quot;date&quot;</code>, <code>&quot;time&quot;</code>, <code>&quot;unix&quot;</code> format layouts.</li>
+<li>[x] Raise on invalid <code>time.parse</code> input or negative <code>time.sleep</code> argument.</li>
 </ul>
-<li>[ ] Implement the <code>random</code> module (PRNG, seedable)</li>
+<li>[x] Implement the <code>random</code> module (PRNG, seedable)</li>
 <ul>
-<li>[ ] Add <code>random.seed</code>, <code>random.int</code>, <code>random.float</code>, <code>random.choice</code>, <code>random.shuffle</code>.</li>
-<li>[ ] Use a Mersenne Twister or equivalent PRNG; seedable by int or string.</li>
-<li>[ ] Raise on empty <code>random.choice</code> input or invalid <code>random.int</code> range.</li>
+<li>[x] Add <code>random.seed</code>, <code>random.int</code>, <code>random.float</code>, <code>random.choice</code>, <code>random.shuffle</code>.</li>
+<li>[x] Use a Mersenne Twister or equivalent PRNG; seedable by int or string.</li>
+<li>[x] Raise on empty <code>random.choice</code> input or invalid <code>random.int</code> range.</li>
 </ul>
-<li>[ ] Expand the <code>math</code> module</li>
+<li>[x] Expand the <code>math</code> module</li>
 <ul>
-<li>[ ] Wire libm functions (<code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, trig and inverse trig, <code>atan2</code>).</li>
-<li>[ ] Expose <code>math.pi</code> and <code>math.e</code> as numeric constants (not functions).</li>
-<li>[ ] Raise on <code>sqrt</code> of negative numbers and on non-positive <code>log</code> arguments.</li>
+<li>[x] Wire libm functions (<code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, trig and inverse trig, <code>atan2</code>).</li>
+<li>[x] Expose <code>math.pi</code> and <code>math.e</code> as numeric constants (not functions).</li>
+<li>[x] Raise on <code>sqrt</code> of negative numbers and on non-positive <code>log</code> arguments.</li>
 </ul>
-<li>[ ] Implement the <code>process</code> module</li>
+<li>[x] Implement the <code>process</code> module</li>
 <ul>
-<li>[ ] Add <code>process.run(command, options)</code> returning <code>{exit_code, stdout, stderr}</code>.</li>
-<li>[ ] Accept array form only (no shell-string).</li>
-<li>[ ] Support <code>cwd</code>, <code>env</code>, and <code>input</code> options.</li>
-<li>[ ] Buffer stdout/stderr fully into memory.</li>
-<li>[ ] Raise only on launch failures; non-zero exit codes are returned in the result.</li>
+<li>[x] Add <code>process.run(command, options)</code> returning <code>{exit_code, stdout, stderr}</code>.</li>
+<li>[x] Accept array form only (no shell-string).</li>
+<li>[x] Support <code>cwd</code>, <code>env</code>, and <code>input</code> options.</li>
+<li>[x] Buffer stdout/stderr fully into memory.</li>
+<li>[x] Raise only on launch failures; non-zero exit codes are returned in the result.</li>
 </ul>
-<li>[ ] Implement the <code>hex</code> module</li>
+<li>[x] Implement the <code>hex</code> module</li>
 <ul>
-<li>[ ] Add <code>hex.encode</code> (lowercase) and <code>hex.decode</code> (case-insensitive).</li>
-<li>[ ] Raise on odd-length or non-hex input to <code>hex.decode</code>.</li>
+<li>[x] Add <code>hex.encode</code> (lowercase) and <code>hex.decode</code> (case-insensitive).</li>
+<li>[x] Raise on odd-length or non-hex input to <code>hex.decode</code>.</li>
 </ul>
-<li>[ ] Implement the <code>digest</code> module</li>
+<li>[x] Implement the <code>digest</code> module</li>
 <ul>
-<li>[ ] Add <code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code> returning lowercase hex strings.</li>
-<li>[ ] Implement digests in C without external deps for portability (target macOS and Linux).</li>
-<li>[ ] Hash UTF-8 bytes of the input string; do not introduce a byte-array type.</li>
+<li>[x] Add <code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code> returning lowercase hex strings.</li>
+<li>[x] Implement digests in C without external deps for portability (target macOS and Linux).</li>
+<li>[x] Hash UTF-8 bytes of the input string; do not introduce a byte-array type.</li>
 </ul>
-<li>[ ] Implement the <code>secure_random</code> module</li>
+<li>[x] Implement the <code>secure_random</code> module</li>
 <ul>
-<li>[ ] Add <code>bytes</code>, <code>hex</code>, <code>base64</code>, <code>uuid</code> (RFC 4122 v4), and <code>int</code>.</li>
-<li>[ ] Source entropy from <code>getentropy</code> (macOS/BSD), <code>getrandom</code>, or <code>/dev/urandom</code> as fallback.</li>
-<li>[ ] Use rejection sampling in <code>secure_random.int</code> to avoid modulo bias.</li>
+<li>[x] Add <code>bytes</code>, <code>hex</code>, <code>base64</code>, <code>uuid</code> (RFC 4122 v4), and <code>int</code>.</li>
+<li>[x] Source entropy from <code>getentropy</code> (macOS/BSD), <code>getrandom</code>, or <code>/dev/urandom</code> as fallback.</li>
+<li>[x] Use rejection sampling in <code>secure_random.int</code> to avoid modulo bias.</li>
 </ul>
-<li>[ ] Implement the <code>matrix</code> module (pure Tya)</li>
+<li>[x] Implement the <code>matrix</code> module (pure Tya)</li>
 <ul>
-<li>[ ] Represent a matrix as <code>{rows, cols, data}</code>.</li>
-<li>[ ] Add <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>set</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code>, <code>equal?</code>.</li>
-<li>[ ] Implement <code>det</code> via cofactor expansion for sizes up to 4x4; raise for larger sizes.</li>
-<li>[ ] Validate dimensions on construction and per-operation.</li>
+<li>[x] Represent a matrix as <code>{rows, cols, data}</code>.</li>
+<li>[x] Add <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>set</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code>, <code>equal?</code>.</li>
+<li>[x] Implement <code>det</code> via cofactor expansion for sizes up to 4x4; raise for larger sizes.</li>
+<li>[x] Validate dimensions on construction and per-operation.</li>
 </ul>
-<li>[ ] Keep v0.24 documentation and tests aligned</li>
+<li>[x] Keep v0.24 documentation and tests aligned</li>
 <ul>
-<li>[ ] Update latest docs when v0.24 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.24/</code> aligned with the v0.24 minor specification.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add unittest-form tests for each new module.</li>
-<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+<li>[x] Update latest docs when v0.24 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.24/</code> aligned with the v0.24 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add unittest-form tests for each new module.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
 <li>[ ] Ship v0.25 bit-level operations and byte sequences</li>

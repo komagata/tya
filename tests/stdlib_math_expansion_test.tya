@@ -1,0 +1,30 @@
+import unittest
+import math
+
+module stdlib_math_expansion_test
+  test_sqrt = ->
+    unittest.assert_equal(2, math.sqrt(4), "sqrt 4")
+    unittest.assert_equal(3, math.sqrt(9), "sqrt 9")
+  test_pow = ->
+    unittest.assert_equal(8, math.pow(2, 3), "2^3")
+    unittest.assert_equal(1024, math.pow(2, 10), "2^10")
+  test_floor_ceil = ->
+    unittest.assert_equal(1, math.floor(1.9), "floor")
+    unittest.assert_equal(2, math.ceil(1.1), "ceil")
+  test_round_trunc = ->
+    unittest.assert_equal(2, math.round(1.5), "round")
+    unittest.assert_equal(1, math.trunc(1.9), "trunc")
+  test_constants = ->
+    unittest.assert(math.pi > 3.14, "pi")
+    unittest.assert(math.pi < 3.15, "pi")
+    unittest.assert(math.e > 2.71, "e")
+  test_log_exp = ->
+    unittest.assert(math.log(math.e) > 0.99, "log(e)")
+    unittest.assert(math.log(math.e) < 1.01, "log(e)")
+  test_trig = ->
+    s = math.sin(0)
+    unittest.assert(s < 0.001 and s > -0.001, "sin 0")
+    c = math.cos(0)
+    unittest.assert_equal(1, c, "cos 0")
+  test_atan2 = ->
+    unittest.assert_equal(0, math.atan2(0, 1), "atan2 0,1")

@@ -315,6 +315,105 @@ println toml.dump(config)
 `parse(text)` parses TOML 1.0 documents. `dump(value)` emits TOML for a dict
 of primitives, arrays, and nested tables (including arrays of tables).
 
+## `time`
+
+```tya
+import time
+
+now = time.now()
+println time.format(now, "iso")
+time.sleep(0.1)
+println time.since(now)
+```
+
+Functions: `now`, `sleep`, `format`, `parse`, `since`. Format layouts:
+`"iso"`, `"date"`, `"time"`, `"unix"`.
+
+## `random`
+
+```tya
+import random
+
+random.seed(42)
+println random.int(1, 100)
+println random.float()
+println random.choice(["a", "b", "c"])
+```
+
+Seedable PRNG. **Not** cryptographically secure — use `secure_random` for
+tokens.
+
+## `math` (additional functions)
+
+`sqrt`, `pow`, `floor`, `ceil`, `round`, `trunc`, `log`, `log2`, `log10`,
+`exp`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, plus the
+constants `pi` and `e`.
+
+## `process`
+
+```tya
+import process
+
+result = process.run(["echo", "hello"], nil)
+println result["stdout"]
+println result["exit_code"]
+
+process.run(["sh", "-c", "echo $X"], { env: { X: "tya" } })
+```
+
+`run(command, options)` returns `{exit_code, stdout, stderr}`. `command` is
+an array of strings — never a shell string. Options: `cwd`, `env`, `input`.
+
+## `hex`
+
+```tya
+import hex
+
+println hex.encode("Tya")     # 547961
+println hex.decode("547961")  # Tya
+```
+
+## `digest`
+
+```tya
+import digest
+
+println digest.md5("hello")
+println digest.sha256("hello")
+```
+
+Functions: `md5`, `sha1`, `sha256`, `sha384`, `sha512`. Each takes a text
+and returns a lowercase hex digest string.
+
+## `secure_random`
+
+```tya
+import secure_random
+
+println secure_random.hex(16)     # 32 hex chars
+println secure_random.uuid()      # RFC 4122 v4
+println secure_random.int(0, 99)
+```
+
+Cryptographically secure. Functions: `bytes`, `hex`, `base64`, `uuid`,
+`int`.
+
+## `matrix`
+
+```tya
+import matrix
+
+a = matrix.new([[1, 2], [3, 4]])
+b = matrix.identity(2)
+
+println matrix.add(a, b)["data"]
+println matrix.mul(a, a)["data"]
+println matrix.det(a)
+```
+
+Functions: `new`, `zero`, `identity`, `at`, `put`, `add`, `sub`, `scale`,
+`mul`, `transpose`, `det` (≤ 4×4), `equal?`.
+
 ## `unittest`
 
 ```tya

@@ -1,0 +1,25 @@
+import unittest
+import secure_random
+
+module stdlib_secure_random_test
+  test_hex_length = ->
+    s = secure_random.hex(16)
+    unittest.assert_equal(32, byte_len(s), "32 hex chars for 16 bytes")
+  test_uuid_format = ->
+    u = secure_random.uuid()
+    unittest.assert_equal(36, byte_len(u), "uuid is 36 chars")
+    unittest.assert_equal("-", u[8], "dash at 8")
+    unittest.assert_equal("-", u[13], "dash at 13")
+    unittest.assert_equal("-", u[18], "dash at 18")
+    unittest.assert_equal("-", u[23], "dash at 23")
+    unittest.assert_equal("4", u[14], "version 4")
+  test_int_in_range = ->
+    i = 0
+    while i < 100
+      v = secure_random.int(0, 99)
+      unittest.assert(v >= 0, "lower")
+      unittest.assert(v <= 99, "upper")
+      i = i + 1
+  test_base64_length = ->
+    s = secure_random.base64(3)
+    unittest.assert_equal(4, byte_len(s), "4 chars for 3 bytes")

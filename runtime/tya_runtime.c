@@ -3,12 +3,23 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <math.h>
+#include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
+#include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
+
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#include <sys/random.h>
+#endif
 
 struct TyaArray {
   int len;
@@ -1480,4 +1491,1046 @@ bool tya_truthy(TyaValue value) {
     return value.boolean;
   }
   return true;
+}
+
+/* =========================================================================
+ * v0.24: time
+ * ========================================================================= */
+
+TyaValue tya_time_now(void) {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tya_number((double)tv.tv_sec + (double)tv.tv_usec / 1.0e6);
+}
+
+TyaValue tya_time_sleep(TyaValue seconds) {
+  if (seconds.kind != TYA_NUMBER) {
+    tya_raise(tya_string("time.sleep: argument must be a number"));
+    return tya_nil();
+  }
+  if (seconds.number < 0) {
+    tya_raise(tya_string("time.sleep: negative duration"));
+    return tya_nil();
+  }
+  double whole = floor(seconds.number);
+  double frac = seconds.number - whole;
+  struct timespec req;
+  req.tv_sec = (time_t)whole;
+  req.tv_nsec = (long)(frac * 1.0e9);
+  nanosleep(&req, NULL);
+  return tya_nil();
+}
+
+TyaValue tya_time_format(TyaValue t, TyaValue layout, bool has_layout) {
+  if (t.kind != TYA_NUMBER) {
+    tya_raise(tya_string("time.format: argument must be a number"));
+    return tya_nil();
+  }
+  const char *layout_name = "iso";
+  if (has_layout) {
+    if (layout.kind != TYA_STRING || layout.string == NULL) {
+      tya_raise(tya_string("time.format: layout must be a string"));
+      return tya_nil();
+    }
+    layout_name = layout.string;
+  }
+  if (strcmp(layout_name, "unix") == 0) {
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%ld", (long)t.number);
+    char *out = malloc(strlen(buf) + 1);
+    strcpy(out, buf);
+    return tya_string(out);
+  }
+  time_t tt = (time_t)t.number;
+  struct tm gm;
+  gmtime_r(&tt, &gm);
+  char buf[64];
+  if (strcmp(layout_name, "iso") == 0) {
+    strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &gm);
+  } else if (strcmp(layout_name, "date") == 0) {
+    strftime(buf, sizeof(buf), "%Y-%m-%d", &gm);
+  } else if (strcmp(layout_name, "time") == 0) {
+    strftime(buf, sizeof(buf), "%H:%M:%S", &gm);
+  } else {
+    tya_raise(tya_string("time.format: unknown layout"));
+    return tya_nil();
+  }
+  char *out = malloc(strlen(buf) + 1);
+  strcpy(out, buf);
+  return tya_string(out);
+}
+
+TyaValue tya_time_parse(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("time.parse: argument must be a string"));
+    return tya_nil();
+  }
+  struct tm tm;
+  memset(&tm, 0, sizeof(tm));
+  const char *s = text.string;
+  size_t n = strlen(s);
+  const char *fmt;
+  if (n >= 20 && s[10] == 'T' && s[n - 1] == 'Z') {
+    fmt = "%Y-%m-%dT%H:%M:%SZ";
+  } else if (n == 10) {
+    fmt = "%Y-%m-%d";
+  } else {
+    tya_raise(tya_string("time.parse: unsupported format"));
+    return tya_nil();
+  }
+  if (strptime(s, fmt, &tm) == NULL) {
+    tya_raise(tya_string("time.parse: invalid timestamp"));
+    return tya_nil();
+  }
+  time_t tt = timegm(&tm);
+  return tya_number((double)tt);
+}
+
+TyaValue tya_time_since(TyaValue t) {
+  if (t.kind != TYA_NUMBER) {
+    tya_raise(tya_string("time.since: argument must be a number"));
+    return tya_nil();
+  }
+  TyaValue now = tya_time_now();
+  return tya_number(now.number - t.number);
+}
+
+/* =========================================================================
+ * v0.24: random (xoshiro256** PRNG, seedable)
+ * ========================================================================= */
+
+static uint64_t tya_rng_state[4] = {
+    0x9E3779B97F4A7C15ULL, 0xBF58476D1CE4E5B9ULL,
+    0x94D049BB133111EBULL, 0x4F4A0E1D0E2A0B5DULL,
+};
+static int tya_rng_seeded = 0;
+
+static uint64_t tya_rng_rotl(uint64_t x, int k) {
+  return (x << k) | (x >> (64 - k));
+}
+
+static uint64_t tya_rng_next(void) {
+  if (!tya_rng_seeded) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    uint64_t seed = (uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec;
+    seed ^= (uint64_t)getpid() << 32;
+    /* splitmix64 to expand seed */
+    for (int i = 0; i < 4; i++) {
+      seed += 0x9E3779B97F4A7C15ULL;
+      uint64_t z = seed;
+      z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
+      z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
+      z = z ^ (z >> 31);
+      tya_rng_state[i] = z;
+    }
+    tya_rng_seeded = 1;
+  }
+  const uint64_t result = tya_rng_rotl(tya_rng_state[1] * 5, 7) * 9;
+  const uint64_t t = tya_rng_state[1] << 17;
+  tya_rng_state[2] ^= tya_rng_state[0];
+  tya_rng_state[3] ^= tya_rng_state[1];
+  tya_rng_state[1] ^= tya_rng_state[2];
+  tya_rng_state[0] ^= tya_rng_state[3];
+  tya_rng_state[2] ^= t;
+  tya_rng_state[3] = tya_rng_rotl(tya_rng_state[3], 45);
+  return result;
+}
+
+TyaValue tya_random_seed(TyaValue value) {
+  uint64_t seed = 0;
+  if (value.kind == TYA_NUMBER) {
+    seed = (uint64_t)(int64_t)value.number;
+  } else if (value.kind == TYA_STRING && value.string != NULL) {
+    /* FNV-1a 64-bit */
+    seed = 14695981039346656037ULL;
+    for (const unsigned char *p = (const unsigned char *)value.string; *p; p++) {
+      seed ^= *p;
+      seed *= 1099511628211ULL;
+    }
+  } else {
+    tya_raise(tya_string("random.seed: argument must be int or string"));
+    return tya_nil();
+  }
+  for (int i = 0; i < 4; i++) {
+    seed += 0x9E3779B97F4A7C15ULL;
+    uint64_t z = seed;
+    z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
+    z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
+    z = z ^ (z >> 31);
+    tya_rng_state[i] = z;
+  }
+  tya_rng_seeded = 1;
+  return tya_nil();
+}
+
+TyaValue tya_random_int(TyaValue min, TyaValue max) {
+  if (min.kind != TYA_NUMBER || max.kind != TYA_NUMBER) {
+    tya_raise(tya_string("random.int: arguments must be numbers"));
+    return tya_nil();
+  }
+  long mn = (long)min.number;
+  long mx = (long)max.number;
+  if (mx < mn) {
+    tya_raise(tya_string("random.int: max < min"));
+    return tya_nil();
+  }
+  uint64_t range = (uint64_t)(mx - mn) + 1ULL;
+  uint64_t r = tya_rng_next();
+  return tya_number((double)((long)(r % range) + mn));
+}
+
+TyaValue tya_random_float(void) {
+  uint64_t r = tya_rng_next() >> 11; /* 53 bits */
+  double v = (double)r / (double)(1ULL << 53);
+  return tya_number(v);
+}
+
+/* =========================================================================
+ * v0.24: math expansion
+ * ========================================================================= */
+
+static TyaValue tya_math_unary(double (*fn)(double), TyaValue x, const char *name) {
+  if (x.kind != TYA_NUMBER) {
+    tya_raise(tya_string("math: argument must be a number"));
+    return tya_nil();
+  }
+  (void)name;
+  return tya_number(fn(x.number));
+}
+
+TyaValue tya_math_sqrt(TyaValue x) {
+  if (x.kind != TYA_NUMBER) {
+    tya_raise(tya_string("math.sqrt: argument must be a number"));
+    return tya_nil();
+  }
+  if (x.number < 0) {
+    tya_raise(tya_string("math.sqrt: negative argument"));
+    return tya_nil();
+  }
+  return tya_number(sqrt(x.number));
+}
+
+TyaValue tya_math_pow(TyaValue x, TyaValue y) {
+  if (x.kind != TYA_NUMBER || y.kind != TYA_NUMBER) {
+    tya_raise(tya_string("math.pow: arguments must be numbers"));
+    return tya_nil();
+  }
+  return tya_number(pow(x.number, y.number));
+}
+
+TyaValue tya_math_floor(TyaValue x) { return tya_math_unary(floor, x, "floor"); }
+TyaValue tya_math_ceil(TyaValue x) { return tya_math_unary(ceil, x, "ceil"); }
+TyaValue tya_math_round(TyaValue x) {
+  if (x.kind != TYA_NUMBER) {
+    tya_raise(tya_string("math.round: argument must be a number"));
+    return tya_nil();
+  }
+  double v = x.number;
+  if (v >= 0) {
+    return tya_number(floor(v + 0.5));
+  }
+  return tya_number(-floor(-v + 0.5));
+}
+TyaValue tya_math_trunc(TyaValue x) { return tya_math_unary(trunc, x, "trunc"); }
+
+static TyaValue tya_math_log_kind(double (*fn)(double), TyaValue x, const char *name) {
+  if (x.kind != TYA_NUMBER) {
+    tya_raise(tya_string("math: argument must be a number"));
+    return tya_nil();
+  }
+  if (x.number <= 0) {
+    tya_raise(tya_string("math: non-positive argument to log"));
+    return tya_nil();
+  }
+  (void)name;
+  return tya_number(fn(x.number));
+}
+
+TyaValue tya_math_log(TyaValue x) { return tya_math_log_kind(log, x, "log"); }
+TyaValue tya_math_log2(TyaValue x) { return tya_math_log_kind(log2, x, "log2"); }
+TyaValue tya_math_log10(TyaValue x) { return tya_math_log_kind(log10, x, "log10"); }
+TyaValue tya_math_exp(TyaValue x) { return tya_math_unary(exp, x, "exp"); }
+TyaValue tya_math_sin(TyaValue x) { return tya_math_unary(sin, x, "sin"); }
+TyaValue tya_math_cos(TyaValue x) { return tya_math_unary(cos, x, "cos"); }
+TyaValue tya_math_tan(TyaValue x) { return tya_math_unary(tan, x, "tan"); }
+TyaValue tya_math_asin(TyaValue x) { return tya_math_unary(asin, x, "asin"); }
+TyaValue tya_math_acos(TyaValue x) { return tya_math_unary(acos, x, "acos"); }
+TyaValue tya_math_atan(TyaValue x) { return tya_math_unary(atan, x, "atan"); }
+
+TyaValue tya_math_atan2(TyaValue y, TyaValue x) {
+  if (x.kind != TYA_NUMBER || y.kind != TYA_NUMBER) {
+    tya_raise(tya_string("math.atan2: arguments must be numbers"));
+    return tya_nil();
+  }
+  return tya_number(atan2(y.number, x.number));
+}
+
+/* =========================================================================
+ * v0.24: process
+ * ========================================================================= */
+
+static char *tya_dup_cstr(const char *s) {
+  size_t n = strlen(s) + 1;
+  char *out = malloc(n);
+  memcpy(out, s, n);
+  return out;
+}
+
+static char *tya_read_all(int fd) {
+  size_t cap = 256;
+  size_t len = 0;
+  char *buf = malloc(cap);
+  for (;;) {
+    if (len + 1 >= cap) {
+      cap *= 2;
+      buf = realloc(buf, cap);
+    }
+    ssize_t r = read(fd, buf + len, cap - len - 1);
+    if (r < 0) {
+      if (errno == EINTR) continue;
+      free(buf);
+      return NULL;
+    }
+    if (r == 0) break;
+    len += (size_t)r;
+  }
+  buf[len] = '\0';
+  return buf;
+}
+
+TyaValue tya_process_run(TyaValue command, TyaValue options) {
+  if (command.kind != TYA_ARRAY || command.array == NULL || command.array->len == 0) {
+    tya_raise(tya_string("process.run: command must be a non-empty array of strings"));
+    return tya_nil();
+  }
+  int argc = command.array->len;
+  char **argv = malloc(sizeof(char *) * (size_t)(argc + 1));
+  for (int i = 0; i < argc; i++) {
+    TyaValue item = command.array->items[i];
+    if (item.kind != TYA_STRING || item.string == NULL) {
+      for (int j = 0; j < i; j++) free(argv[j]);
+      free(argv);
+      tya_raise(tya_string("process.run: command items must be strings"));
+      return tya_nil();
+    }
+    argv[i] = tya_dup_cstr(item.string);
+  }
+  argv[argc] = NULL;
+
+  const char *cwd_path = NULL;
+  const char *input_text = NULL;
+  size_t input_len = 0;
+  char **child_env = NULL;
+  bool replace_env = false;
+  if (options.kind == TYA_DICT && options.dict != NULL) {
+    TyaValue cwd = tya_member(options, "cwd");
+    if (cwd.kind == TYA_STRING && cwd.string != NULL) {
+      cwd_path = cwd.string;
+    }
+    TyaValue inp = tya_member(options, "input");
+    if (inp.kind == TYA_STRING && inp.string != NULL) {
+      input_text = inp.string;
+      input_len = strlen(input_text);
+    }
+    TyaValue env_v = tya_member(options, "env");
+    if (env_v.kind == TYA_DICT && env_v.dict != NULL) {
+      replace_env = true;
+      int env_count = 0;
+      for (int i = 0; i < env_v.dict->len; i++) {
+        if (env_v.dict->entries[i].key != NULL) env_count++;
+      }
+      child_env = malloc(sizeof(char *) * (size_t)(env_count + 1));
+      int idx = 0;
+      for (int i = 0; i < env_v.dict->len; i++) {
+        if (env_v.dict->entries[i].key == NULL) continue;
+        TyaValue val = env_v.dict->entries[i].value;
+        if (val.kind != TYA_STRING || val.string == NULL) {
+          for (int j = 0; j < idx; j++) free(child_env[j]);
+          free(child_env);
+          for (int j = 0; j < argc; j++) free(argv[j]);
+          free(argv);
+          tya_raise(tya_string("process.run: env values must be strings"));
+          return tya_nil();
+        }
+        size_t kl = strlen(env_v.dict->entries[i].key);
+        size_t vl = strlen(val.string);
+        char *entry = malloc(kl + 1 + vl + 1);
+        memcpy(entry, env_v.dict->entries[i].key, kl);
+        entry[kl] = '=';
+        memcpy(entry + kl + 1, val.string, vl);
+        entry[kl + 1 + vl] = '\0';
+        child_env[idx++] = entry;
+      }
+      child_env[idx] = NULL;
+    }
+  }
+
+  int in_pipe[2] = {-1, -1};
+  int out_pipe[2] = {-1, -1};
+  int err_pipe[2] = {-1, -1};
+  if (pipe(in_pipe) < 0 || pipe(out_pipe) < 0 || pipe(err_pipe) < 0) {
+    tya_raise(tya_string("process.run: pipe failed"));
+    return tya_nil();
+  }
+
+  pid_t pid = fork();
+  if (pid < 0) {
+    tya_raise(tya_string("process.run: fork failed"));
+    return tya_nil();
+  }
+  if (pid == 0) {
+    /* child */
+    dup2(in_pipe[0], 0);
+    dup2(out_pipe[1], 1);
+    dup2(err_pipe[1], 2);
+    close(in_pipe[0]); close(in_pipe[1]);
+    close(out_pipe[0]); close(out_pipe[1]);
+    close(err_pipe[0]); close(err_pipe[1]);
+    if (cwd_path && chdir(cwd_path) < 0) {
+      _exit(127);
+    }
+    if (replace_env) {
+      execve(argv[0], argv, child_env);
+    } else {
+      execvp(argv[0], argv);
+    }
+    _exit(127);
+  }
+  /* parent */
+  close(in_pipe[0]);
+  close(out_pipe[1]);
+  close(err_pipe[1]);
+  if (input_text && input_len > 0) {
+    size_t written = 0;
+    while (written < input_len) {
+      ssize_t w = write(in_pipe[1], input_text + written, input_len - written);
+      if (w < 0) {
+        if (errno == EINTR) continue;
+        break;
+      }
+      written += (size_t)w;
+    }
+  }
+  close(in_pipe[1]);
+  char *out_buf = tya_read_all(out_pipe[0]);
+  char *err_buf = tya_read_all(err_pipe[0]);
+  close(out_pipe[0]);
+  close(err_pipe[0]);
+  int status = 0;
+  while (waitpid(pid, &status, 0) < 0) {
+    if (errno != EINTR) break;
+  }
+
+  for (int i = 0; i < argc; i++) free(argv[i]);
+  free(argv);
+  if (child_env) {
+    for (int i = 0; child_env[i]; i++) free(child_env[i]);
+    free(child_env);
+  }
+
+  int exit_code = 0;
+  if (WIFEXITED(status)) {
+    exit_code = WEXITSTATUS(status);
+  } else if (WIFSIGNALED(status)) {
+    exit_code = 128 + WTERMSIG(status);
+  }
+
+  TyaValue result = tya_dict(NULL, 0);
+  tya_set_member(result, "exit_code", tya_number((double)exit_code));
+  tya_set_member(result, "stdout", tya_string(out_buf ? out_buf : ""));
+  tya_set_member(result, "stderr", tya_string(err_buf ? err_buf : ""));
+  if (out_buf == NULL) free(out_buf);
+  if (err_buf == NULL) free(err_buf);
+  return result;
+}
+
+/* =========================================================================
+ * v0.24: digest (MD5, SHA1, SHA256, SHA384, SHA512)
+ * Public-domain inline implementations.
+ * ========================================================================= */
+
+/* ---- MD5 ---- */
+typedef struct {
+  uint32_t state[4];
+  uint64_t count;
+  uint8_t buffer[64];
+} tya_md5_ctx;
+
+static void tya_md5_init(tya_md5_ctx *c) {
+  c->state[0] = 0x67452301; c->state[1] = 0xEFCDAB89;
+  c->state[2] = 0x98BADCFE; c->state[3] = 0x10325476;
+  c->count = 0;
+}
+
+#define TYA_MD5_F(x, y, z) (((x) & (y)) | (~(x) & (z)))
+#define TYA_MD5_G(x, y, z) (((x) & (z)) | ((y) & ~(z)))
+#define TYA_MD5_H(x, y, z) ((x) ^ (y) ^ (z))
+#define TYA_MD5_I(x, y, z) ((y) ^ ((x) | ~(z)))
+#define TYA_MD5_ROL(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
+#define TYA_MD5_STEP(f, a, b, c, d, x, t, s) \
+  (a) += f((b), (c), (d)) + (x) + (t); \
+  (a) = TYA_MD5_ROL((a), (s)); \
+  (a) += (b);
+
+static void tya_md5_transform(tya_md5_ctx *ctx, const uint8_t block[64]) {
+  uint32_t a = ctx->state[0], b = ctx->state[1], c = ctx->state[2], d = ctx->state[3];
+  uint32_t x[16];
+  for (int i = 0; i < 16; i++) {
+    x[i] = (uint32_t)block[i * 4] | ((uint32_t)block[i * 4 + 1] << 8) |
+           ((uint32_t)block[i * 4 + 2] << 16) | ((uint32_t)block[i * 4 + 3] << 24);
+  }
+  TYA_MD5_STEP(TYA_MD5_F, a, b, c, d, x[ 0], 0xD76AA478,  7)
+  TYA_MD5_STEP(TYA_MD5_F, d, a, b, c, x[ 1], 0xE8C7B756, 12)
+  TYA_MD5_STEP(TYA_MD5_F, c, d, a, b, x[ 2], 0x242070DB, 17)
+  TYA_MD5_STEP(TYA_MD5_F, b, c, d, a, x[ 3], 0xC1BDCEEE, 22)
+  TYA_MD5_STEP(TYA_MD5_F, a, b, c, d, x[ 4], 0xF57C0FAF,  7)
+  TYA_MD5_STEP(TYA_MD5_F, d, a, b, c, x[ 5], 0x4787C62A, 12)
+  TYA_MD5_STEP(TYA_MD5_F, c, d, a, b, x[ 6], 0xA8304613, 17)
+  TYA_MD5_STEP(TYA_MD5_F, b, c, d, a, x[ 7], 0xFD469501, 22)
+  TYA_MD5_STEP(TYA_MD5_F, a, b, c, d, x[ 8], 0x698098D8,  7)
+  TYA_MD5_STEP(TYA_MD5_F, d, a, b, c, x[ 9], 0x8B44F7AF, 12)
+  TYA_MD5_STEP(TYA_MD5_F, c, d, a, b, x[10], 0xFFFF5BB1, 17)
+  TYA_MD5_STEP(TYA_MD5_F, b, c, d, a, x[11], 0x895CD7BE, 22)
+  TYA_MD5_STEP(TYA_MD5_F, a, b, c, d, x[12], 0x6B901122,  7)
+  TYA_MD5_STEP(TYA_MD5_F, d, a, b, c, x[13], 0xFD987193, 12)
+  TYA_MD5_STEP(TYA_MD5_F, c, d, a, b, x[14], 0xA679438E, 17)
+  TYA_MD5_STEP(TYA_MD5_F, b, c, d, a, x[15], 0x49B40821, 22)
+  TYA_MD5_STEP(TYA_MD5_G, a, b, c, d, x[ 1], 0xF61E2562,  5)
+  TYA_MD5_STEP(TYA_MD5_G, d, a, b, c, x[ 6], 0xC040B340,  9)
+  TYA_MD5_STEP(TYA_MD5_G, c, d, a, b, x[11], 0x265E5A51, 14)
+  TYA_MD5_STEP(TYA_MD5_G, b, c, d, a, x[ 0], 0xE9B6C7AA, 20)
+  TYA_MD5_STEP(TYA_MD5_G, a, b, c, d, x[ 5], 0xD62F105D,  5)
+  TYA_MD5_STEP(TYA_MD5_G, d, a, b, c, x[10], 0x02441453,  9)
+  TYA_MD5_STEP(TYA_MD5_G, c, d, a, b, x[15], 0xD8A1E681, 14)
+  TYA_MD5_STEP(TYA_MD5_G, b, c, d, a, x[ 4], 0xE7D3FBC8, 20)
+  TYA_MD5_STEP(TYA_MD5_G, a, b, c, d, x[ 9], 0x21E1CDE6,  5)
+  TYA_MD5_STEP(TYA_MD5_G, d, a, b, c, x[14], 0xC33707D6,  9)
+  TYA_MD5_STEP(TYA_MD5_G, c, d, a, b, x[ 3], 0xF4D50D87, 14)
+  TYA_MD5_STEP(TYA_MD5_G, b, c, d, a, x[ 8], 0x455A14ED, 20)
+  TYA_MD5_STEP(TYA_MD5_G, a, b, c, d, x[13], 0xA9E3E905,  5)
+  TYA_MD5_STEP(TYA_MD5_G, d, a, b, c, x[ 2], 0xFCEFA3F8,  9)
+  TYA_MD5_STEP(TYA_MD5_G, c, d, a, b, x[ 7], 0x676F02D9, 14)
+  TYA_MD5_STEP(TYA_MD5_G, b, c, d, a, x[12], 0x8D2A4C8A, 20)
+  TYA_MD5_STEP(TYA_MD5_H, a, b, c, d, x[ 5], 0xFFFA3942,  4)
+  TYA_MD5_STEP(TYA_MD5_H, d, a, b, c, x[ 8], 0x8771F681, 11)
+  TYA_MD5_STEP(TYA_MD5_H, c, d, a, b, x[11], 0x6D9D6122, 16)
+  TYA_MD5_STEP(TYA_MD5_H, b, c, d, a, x[14], 0xFDE5380C, 23)
+  TYA_MD5_STEP(TYA_MD5_H, a, b, c, d, x[ 1], 0xA4BEEA44,  4)
+  TYA_MD5_STEP(TYA_MD5_H, d, a, b, c, x[ 4], 0x4BDECFA9, 11)
+  TYA_MD5_STEP(TYA_MD5_H, c, d, a, b, x[ 7], 0xF6BB4B60, 16)
+  TYA_MD5_STEP(TYA_MD5_H, b, c, d, a, x[10], 0xBEBFBC70, 23)
+  TYA_MD5_STEP(TYA_MD5_H, a, b, c, d, x[13], 0x289B7EC6,  4)
+  TYA_MD5_STEP(TYA_MD5_H, d, a, b, c, x[ 0], 0xEAA127FA, 11)
+  TYA_MD5_STEP(TYA_MD5_H, c, d, a, b, x[ 3], 0xD4EF3085, 16)
+  TYA_MD5_STEP(TYA_MD5_H, b, c, d, a, x[ 6], 0x04881D05, 23)
+  TYA_MD5_STEP(TYA_MD5_H, a, b, c, d, x[ 9], 0xD9D4D039,  4)
+  TYA_MD5_STEP(TYA_MD5_H, d, a, b, c, x[12], 0xE6DB99E5, 11)
+  TYA_MD5_STEP(TYA_MD5_H, c, d, a, b, x[15], 0x1FA27CF8, 16)
+  TYA_MD5_STEP(TYA_MD5_H, b, c, d, a, x[ 2], 0xC4AC5665, 23)
+  TYA_MD5_STEP(TYA_MD5_I, a, b, c, d, x[ 0], 0xF4292244,  6)
+  TYA_MD5_STEP(TYA_MD5_I, d, a, b, c, x[ 7], 0x432AFF97, 10)
+  TYA_MD5_STEP(TYA_MD5_I, c, d, a, b, x[14], 0xAB9423A7, 15)
+  TYA_MD5_STEP(TYA_MD5_I, b, c, d, a, x[ 5], 0xFC93A039, 21)
+  TYA_MD5_STEP(TYA_MD5_I, a, b, c, d, x[12], 0x655B59C3,  6)
+  TYA_MD5_STEP(TYA_MD5_I, d, a, b, c, x[ 3], 0x8F0CCC92, 10)
+  TYA_MD5_STEP(TYA_MD5_I, c, d, a, b, x[10], 0xFFEFF47D, 15)
+  TYA_MD5_STEP(TYA_MD5_I, b, c, d, a, x[ 1], 0x85845DD1, 21)
+  TYA_MD5_STEP(TYA_MD5_I, a, b, c, d, x[ 8], 0x6FA87E4F,  6)
+  TYA_MD5_STEP(TYA_MD5_I, d, a, b, c, x[15], 0xFE2CE6E0, 10)
+  TYA_MD5_STEP(TYA_MD5_I, c, d, a, b, x[ 6], 0xA3014314, 15)
+  TYA_MD5_STEP(TYA_MD5_I, b, c, d, a, x[13], 0x4E0811A1, 21)
+  TYA_MD5_STEP(TYA_MD5_I, a, b, c, d, x[ 4], 0xF7537E82,  6)
+  TYA_MD5_STEP(TYA_MD5_I, d, a, b, c, x[11], 0xBD3AF235, 10)
+  TYA_MD5_STEP(TYA_MD5_I, c, d, a, b, x[ 2], 0x2AD7D2BB, 15)
+  TYA_MD5_STEP(TYA_MD5_I, b, c, d, a, x[ 9], 0xEB86D391, 21)
+  ctx->state[0] += a; ctx->state[1] += b;
+  ctx->state[2] += c; ctx->state[3] += d;
+}
+
+static void tya_md5_update(tya_md5_ctx *c, const uint8_t *data, size_t len) {
+  size_t buf_used = (size_t)((c->count >> 3) & 0x3F);
+  c->count += (uint64_t)len << 3;
+  size_t need = 64 - buf_used;
+  if (len >= need) {
+    memcpy(c->buffer + buf_used, data, need);
+    tya_md5_transform(c, c->buffer);
+    data += need; len -= need;
+    while (len >= 64) {
+      tya_md5_transform(c, data);
+      data += 64; len -= 64;
+    }
+    buf_used = 0;
+  }
+  memcpy(c->buffer + buf_used, data, len);
+}
+
+static void tya_md5_final(tya_md5_ctx *c, uint8_t out[16]) {
+  size_t buf_used = (size_t)((c->count >> 3) & 0x3F);
+  c->buffer[buf_used++] = 0x80;
+  if (buf_used > 56) {
+    memset(c->buffer + buf_used, 0, 64 - buf_used);
+    tya_md5_transform(c, c->buffer);
+    buf_used = 0;
+  }
+  memset(c->buffer + buf_used, 0, 56 - buf_used);
+  for (int i = 0; i < 8; i++) {
+    c->buffer[56 + i] = (uint8_t)((c->count >> (i * 8)) & 0xFF);
+  }
+  tya_md5_transform(c, c->buffer);
+  for (int i = 0; i < 4; i++) {
+    out[i * 4] = (uint8_t)(c->state[i] & 0xFF);
+    out[i * 4 + 1] = (uint8_t)((c->state[i] >> 8) & 0xFF);
+    out[i * 4 + 2] = (uint8_t)((c->state[i] >> 16) & 0xFF);
+    out[i * 4 + 3] = (uint8_t)((c->state[i] >> 24) & 0xFF);
+  }
+}
+
+/* ---- SHA1 ---- */
+typedef struct {
+  uint32_t state[5];
+  uint64_t count;
+  uint8_t buffer[64];
+} tya_sha1_ctx;
+
+static void tya_sha1_init(tya_sha1_ctx *c) {
+  c->state[0] = 0x67452301; c->state[1] = 0xEFCDAB89;
+  c->state[2] = 0x98BADCFE; c->state[3] = 0x10325476;
+  c->state[4] = 0xC3D2E1F0;
+  c->count = 0;
+}
+
+#define TYA_SHA1_ROL(x, n) (((x) << (n)) | ((x) >> (32 - (n))))
+
+static void tya_sha1_transform(tya_sha1_ctx *ctx, const uint8_t block[64]) {
+  uint32_t w[80];
+  for (int i = 0; i < 16; i++) {
+    w[i] = ((uint32_t)block[i * 4] << 24) | ((uint32_t)block[i * 4 + 1] << 16) |
+           ((uint32_t)block[i * 4 + 2] << 8) | (uint32_t)block[i * 4 + 3];
+  }
+  for (int i = 16; i < 80; i++) {
+    w[i] = TYA_SHA1_ROL(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+  }
+  uint32_t a = ctx->state[0], b = ctx->state[1], c = ctx->state[2], d = ctx->state[3], e = ctx->state[4];
+  for (int i = 0; i < 80; i++) {
+    uint32_t f, k;
+    if (i < 20) { f = (b & c) | (~b & d); k = 0x5A827999; }
+    else if (i < 40) { f = b ^ c ^ d; k = 0x6ED9EBA1; }
+    else if (i < 60) { f = (b & c) | (b & d) | (c & d); k = 0x8F1BBCDC; }
+    else { f = b ^ c ^ d; k = 0xCA62C1D6; }
+    uint32_t t = TYA_SHA1_ROL(a, 5) + f + e + k + w[i];
+    e = d; d = c; c = TYA_SHA1_ROL(b, 30); b = a; a = t;
+  }
+  ctx->state[0] += a; ctx->state[1] += b;
+  ctx->state[2] += c; ctx->state[3] += d;
+  ctx->state[4] += e;
+}
+
+static void tya_sha1_update(tya_sha1_ctx *c, const uint8_t *data, size_t len) {
+  size_t buf_used = (size_t)((c->count >> 3) & 0x3F);
+  c->count += (uint64_t)len << 3;
+  size_t need = 64 - buf_used;
+  if (len >= need) {
+    memcpy(c->buffer + buf_used, data, need);
+    tya_sha1_transform(c, c->buffer);
+    data += need; len -= need;
+    while (len >= 64) {
+      tya_sha1_transform(c, data);
+      data += 64; len -= 64;
+    }
+    buf_used = 0;
+  }
+  memcpy(c->buffer + buf_used, data, len);
+}
+
+static void tya_sha1_final(tya_sha1_ctx *c, uint8_t out[20]) {
+  size_t buf_used = (size_t)((c->count >> 3) & 0x3F);
+  c->buffer[buf_used++] = 0x80;
+  if (buf_used > 56) {
+    memset(c->buffer + buf_used, 0, 64 - buf_used);
+    tya_sha1_transform(c, c->buffer);
+    buf_used = 0;
+  }
+  memset(c->buffer + buf_used, 0, 56 - buf_used);
+  for (int i = 0; i < 8; i++) {
+    c->buffer[56 + i] = (uint8_t)((c->count >> (56 - i * 8)) & 0xFF);
+  }
+  tya_sha1_transform(c, c->buffer);
+  for (int i = 0; i < 5; i++) {
+    out[i * 4] = (uint8_t)((c->state[i] >> 24) & 0xFF);
+    out[i * 4 + 1] = (uint8_t)((c->state[i] >> 16) & 0xFF);
+    out[i * 4 + 2] = (uint8_t)((c->state[i] >> 8) & 0xFF);
+    out[i * 4 + 3] = (uint8_t)(c->state[i] & 0xFF);
+  }
+}
+
+/* ---- SHA-256 ---- */
+typedef struct {
+  uint32_t state[8];
+  uint64_t count;
+  uint8_t buffer[64];
+} tya_sha256_ctx;
+
+static const uint32_t tya_sha256_k[64] = {
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+};
+
+static void tya_sha256_init(tya_sha256_ctx *c) {
+  c->state[0] = 0x6a09e667; c->state[1] = 0xbb67ae85;
+  c->state[2] = 0x3c6ef372; c->state[3] = 0xa54ff53a;
+  c->state[4] = 0x510e527f; c->state[5] = 0x9b05688c;
+  c->state[6] = 0x1f83d9ab; c->state[7] = 0x5be0cd19;
+  c->count = 0;
+}
+
+#define TYA_SHA256_ROR(x, n) (((x) >> (n)) | ((x) << (32 - (n))))
+
+static void tya_sha256_transform(tya_sha256_ctx *ctx, const uint8_t block[64]) {
+  uint32_t w[64];
+  for (int i = 0; i < 16; i++) {
+    w[i] = ((uint32_t)block[i * 4] << 24) | ((uint32_t)block[i * 4 + 1] << 16) |
+           ((uint32_t)block[i * 4 + 2] << 8) | (uint32_t)block[i * 4 + 3];
+  }
+  for (int i = 16; i < 64; i++) {
+    uint32_t s0 = TYA_SHA256_ROR(w[i - 15], 7) ^ TYA_SHA256_ROR(w[i - 15], 18) ^ (w[i - 15] >> 3);
+    uint32_t s1 = TYA_SHA256_ROR(w[i - 2], 17) ^ TYA_SHA256_ROR(w[i - 2], 19) ^ (w[i - 2] >> 10);
+    w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+  }
+  uint32_t a = ctx->state[0], b = ctx->state[1], c = ctx->state[2], d = ctx->state[3];
+  uint32_t e = ctx->state[4], f = ctx->state[5], g = ctx->state[6], h = ctx->state[7];
+  for (int i = 0; i < 64; i++) {
+    uint32_t S1 = TYA_SHA256_ROR(e, 6) ^ TYA_SHA256_ROR(e, 11) ^ TYA_SHA256_ROR(e, 25);
+    uint32_t ch = (e & f) ^ (~e & g);
+    uint32_t t1 = h + S1 + ch + tya_sha256_k[i] + w[i];
+    uint32_t S0 = TYA_SHA256_ROR(a, 2) ^ TYA_SHA256_ROR(a, 13) ^ TYA_SHA256_ROR(a, 22);
+    uint32_t mj = (a & b) ^ (a & c) ^ (b & c);
+    uint32_t t2 = S0 + mj;
+    h = g; g = f; f = e; e = d + t1;
+    d = c; c = b; b = a; a = t1 + t2;
+  }
+  ctx->state[0] += a; ctx->state[1] += b;
+  ctx->state[2] += c; ctx->state[3] += d;
+  ctx->state[4] += e; ctx->state[5] += f;
+  ctx->state[6] += g; ctx->state[7] += h;
+}
+
+static void tya_sha256_update(tya_sha256_ctx *c, const uint8_t *data, size_t len) {
+  size_t buf_used = (size_t)((c->count >> 3) & 0x3F);
+  c->count += (uint64_t)len << 3;
+  size_t need = 64 - buf_used;
+  if (len >= need) {
+    memcpy(c->buffer + buf_used, data, need);
+    tya_sha256_transform(c, c->buffer);
+    data += need; len -= need;
+    while (len >= 64) {
+      tya_sha256_transform(c, data);
+      data += 64; len -= 64;
+    }
+    buf_used = 0;
+  }
+  memcpy(c->buffer + buf_used, data, len);
+}
+
+static void tya_sha256_final(tya_sha256_ctx *c, uint8_t out[32]) {
+  size_t buf_used = (size_t)((c->count >> 3) & 0x3F);
+  c->buffer[buf_used++] = 0x80;
+  if (buf_used > 56) {
+    memset(c->buffer + buf_used, 0, 64 - buf_used);
+    tya_sha256_transform(c, c->buffer);
+    buf_used = 0;
+  }
+  memset(c->buffer + buf_used, 0, 56 - buf_used);
+  for (int i = 0; i < 8; i++) {
+    c->buffer[56 + i] = (uint8_t)((c->count >> (56 - i * 8)) & 0xFF);
+  }
+  tya_sha256_transform(c, c->buffer);
+  for (int i = 0; i < 8; i++) {
+    out[i * 4] = (uint8_t)((c->state[i] >> 24) & 0xFF);
+    out[i * 4 + 1] = (uint8_t)((c->state[i] >> 16) & 0xFF);
+    out[i * 4 + 2] = (uint8_t)((c->state[i] >> 8) & 0xFF);
+    out[i * 4 + 3] = (uint8_t)(c->state[i] & 0xFF);
+  }
+}
+
+/* ---- SHA-512 (and SHA-384) ---- */
+typedef struct {
+  uint64_t state[8];
+  uint64_t count_lo;
+  uint64_t count_hi;
+  uint8_t buffer[128];
+} tya_sha512_ctx;
+
+static const uint64_t tya_sha512_k[80] = {
+  0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL, 0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL,
+  0x3956c25bf348b538ULL, 0x59f111f1b605d019ULL, 0x923f82a4af194f9bULL, 0xab1c5ed5da6d8118ULL,
+  0xd807aa98a3030242ULL, 0x12835b0145706fbeULL, 0x243185be4ee4b28cULL, 0x550c7dc3d5ffb4e2ULL,
+  0x72be5d74f27b896fULL, 0x80deb1fe3b1696b1ULL, 0x9bdc06a725c71235ULL, 0xc19bf174cf692694ULL,
+  0xe49b69c19ef14ad2ULL, 0xefbe4786384f25e3ULL, 0x0fc19dc68b8cd5b5ULL, 0x240ca1cc77ac9c65ULL,
+  0x2de92c6f592b0275ULL, 0x4a7484aa6ea6e483ULL, 0x5cb0a9dcbd41fbd4ULL, 0x76f988da831153b5ULL,
+  0x983e5152ee66dfabULL, 0xa831c66d2db43210ULL, 0xb00327c898fb213fULL, 0xbf597fc7beef0ee4ULL,
+  0xc6e00bf33da88fc2ULL, 0xd5a79147930aa725ULL, 0x06ca6351e003826fULL, 0x142929670a0e6e70ULL,
+  0x27b70a8546d22ffcULL, 0x2e1b21385c26c926ULL, 0x4d2c6dfc5ac42aedULL, 0x53380d139d95b3dfULL,
+  0x650a73548baf63deULL, 0x766a0abb3c77b2a8ULL, 0x81c2c92e47edaee6ULL, 0x92722c851482353bULL,
+  0xa2bfe8a14cf10364ULL, 0xa81a664bbc423001ULL, 0xc24b8b70d0f89791ULL, 0xc76c51a30654be30ULL,
+  0xd192e819d6ef5218ULL, 0xd69906245565a910ULL, 0xf40e35855771202aULL, 0x106aa07032bbd1b8ULL,
+  0x19a4c116b8d2d0c8ULL, 0x1e376c085141ab53ULL, 0x2748774cdf8eeb99ULL, 0x34b0bcb5e19b48a8ULL,
+  0x391c0cb3c5c95a63ULL, 0x4ed8aa4ae3418acbULL, 0x5b9cca4f7763e373ULL, 0x682e6ff3d6b2b8a3ULL,
+  0x748f82ee5defb2fcULL, 0x78a5636f43172f60ULL, 0x84c87814a1f0ab72ULL, 0x8cc702081a6439ecULL,
+  0x90befffa23631e28ULL, 0xa4506cebde82bde9ULL, 0xbef9a3f7b2c67915ULL, 0xc67178f2e372532bULL,
+  0xca273eceea26619cULL, 0xd186b8c721c0c207ULL, 0xeada7dd6cde0eb1eULL, 0xf57d4f7fee6ed178ULL,
+  0x06f067aa72176fbaULL, 0x0a637dc5a2c898a6ULL, 0x113f9804bef90daeULL, 0x1b710b35131c471bULL,
+  0x28db77f523047d84ULL, 0x32caab7b40c72493ULL, 0x3c9ebe0a15c9bebcULL, 0x431d67c49c100d4cULL,
+  0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL, 0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL,
+};
+
+#define TYA_SHA512_ROR(x, n) (((x) >> (n)) | ((x) << (64 - (n))))
+
+static void tya_sha512_transform(tya_sha512_ctx *ctx, const uint8_t block[128]) {
+  uint64_t w[80];
+  for (int i = 0; i < 16; i++) {
+    w[i] = 0;
+    for (int j = 0; j < 8; j++) {
+      w[i] = (w[i] << 8) | block[i * 8 + j];
+    }
+  }
+  for (int i = 16; i < 80; i++) {
+    uint64_t s0 = TYA_SHA512_ROR(w[i - 15], 1) ^ TYA_SHA512_ROR(w[i - 15], 8) ^ (w[i - 15] >> 7);
+    uint64_t s1 = TYA_SHA512_ROR(w[i - 2], 19) ^ TYA_SHA512_ROR(w[i - 2], 61) ^ (w[i - 2] >> 6);
+    w[i] = w[i - 16] + s0 + w[i - 7] + s1;
+  }
+  uint64_t a = ctx->state[0], b = ctx->state[1], c = ctx->state[2], d = ctx->state[3];
+  uint64_t e = ctx->state[4], f = ctx->state[5], g = ctx->state[6], h = ctx->state[7];
+  for (int i = 0; i < 80; i++) {
+    uint64_t S1 = TYA_SHA512_ROR(e, 14) ^ TYA_SHA512_ROR(e, 18) ^ TYA_SHA512_ROR(e, 41);
+    uint64_t ch = (e & f) ^ (~e & g);
+    uint64_t t1 = h + S1 + ch + tya_sha512_k[i] + w[i];
+    uint64_t S0 = TYA_SHA512_ROR(a, 28) ^ TYA_SHA512_ROR(a, 34) ^ TYA_SHA512_ROR(a, 39);
+    uint64_t mj = (a & b) ^ (a & c) ^ (b & c);
+    uint64_t t2 = S0 + mj;
+    h = g; g = f; f = e; e = d + t1;
+    d = c; c = b; b = a; a = t1 + t2;
+  }
+  ctx->state[0] += a; ctx->state[1] += b;
+  ctx->state[2] += c; ctx->state[3] += d;
+  ctx->state[4] += e; ctx->state[5] += f;
+  ctx->state[6] += g; ctx->state[7] += h;
+}
+
+static void tya_sha512_init(tya_sha512_ctx *c) {
+  c->state[0] = 0x6a09e667f3bcc908ULL; c->state[1] = 0xbb67ae8584caa73bULL;
+  c->state[2] = 0x3c6ef372fe94f82bULL; c->state[3] = 0xa54ff53a5f1d36f1ULL;
+  c->state[4] = 0x510e527fade682d1ULL; c->state[5] = 0x9b05688c2b3e6c1fULL;
+  c->state[6] = 0x1f83d9abfb41bd6bULL; c->state[7] = 0x5be0cd19137e2179ULL;
+  c->count_lo = 0; c->count_hi = 0;
+}
+
+static void tya_sha384_init(tya_sha512_ctx *c) {
+  c->state[0] = 0xcbbb9d5dc1059ed8ULL; c->state[1] = 0x629a292a367cd507ULL;
+  c->state[2] = 0x9159015a3070dd17ULL; c->state[3] = 0x152fecd8f70e5939ULL;
+  c->state[4] = 0x67332667ffc00b31ULL; c->state[5] = 0x8eb44a8768581511ULL;
+  c->state[6] = 0xdb0c2e0d64f98fa7ULL; c->state[7] = 0x47b5481dbefa4fa4ULL;
+  c->count_lo = 0; c->count_hi = 0;
+}
+
+static void tya_sha512_update(tya_sha512_ctx *c, const uint8_t *data, size_t len) {
+  size_t buf_used = (size_t)((c->count_lo >> 3) & 0x7F);
+  uint64_t add = (uint64_t)len << 3;
+  uint64_t old_lo = c->count_lo;
+  c->count_lo += add;
+  if (c->count_lo < old_lo) c->count_hi++;
+  c->count_hi += (uint64_t)len >> 61;
+  size_t need = 128 - buf_used;
+  if (len >= need) {
+    memcpy(c->buffer + buf_used, data, need);
+    tya_sha512_transform(c, c->buffer);
+    data += need; len -= need;
+    while (len >= 128) {
+      tya_sha512_transform(c, data);
+      data += 128; len -= 128;
+    }
+    buf_used = 0;
+  }
+  memcpy(c->buffer + buf_used, data, len);
+}
+
+static void tya_sha512_final_n(tya_sha512_ctx *c, uint8_t *out, int out_words) {
+  size_t buf_used = (size_t)((c->count_lo >> 3) & 0x7F);
+  c->buffer[buf_used++] = 0x80;
+  if (buf_used > 112) {
+    memset(c->buffer + buf_used, 0, 128 - buf_used);
+    tya_sha512_transform(c, c->buffer);
+    buf_used = 0;
+  }
+  memset(c->buffer + buf_used, 0, 112 - buf_used);
+  for (int i = 0; i < 8; i++) {
+    c->buffer[112 + i] = (uint8_t)((c->count_hi >> (56 - i * 8)) & 0xFF);
+  }
+  for (int i = 0; i < 8; i++) {
+    c->buffer[120 + i] = (uint8_t)((c->count_lo >> (56 - i * 8)) & 0xFF);
+  }
+  tya_sha512_transform(c, c->buffer);
+  for (int i = 0; i < out_words; i++) {
+    for (int j = 0; j < 8; j++) {
+      out[i * 8 + j] = (uint8_t)((c->state[i] >> (56 - j * 8)) & 0xFF);
+    }
+  }
+}
+
+static const char tya_hex_digits[] = "0123456789abcdef";
+
+static TyaValue tya_hex_string(const uint8_t *data, size_t n) {
+  char *out = malloc(n * 2 + 1);
+  for (size_t i = 0; i < n; i++) {
+    out[i * 2] = tya_hex_digits[(data[i] >> 4) & 0xF];
+    out[i * 2 + 1] = tya_hex_digits[data[i] & 0xF];
+  }
+  out[n * 2] = '\0';
+  return tya_string(out);
+}
+
+TyaValue tya_digest_md5(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("digest.md5: argument must be a string"));
+    return tya_nil();
+  }
+  tya_md5_ctx c;
+  tya_md5_init(&c);
+  tya_md5_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  uint8_t digest[16];
+  tya_md5_final(&c, digest);
+  return tya_hex_string(digest, 16);
+}
+
+TyaValue tya_digest_sha1(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("digest.sha1: argument must be a string"));
+    return tya_nil();
+  }
+  tya_sha1_ctx c;
+  tya_sha1_init(&c);
+  tya_sha1_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  uint8_t digest[20];
+  tya_sha1_final(&c, digest);
+  return tya_hex_string(digest, 20);
+}
+
+TyaValue tya_digest_sha256(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("digest.sha256: argument must be a string"));
+    return tya_nil();
+  }
+  tya_sha256_ctx c;
+  tya_sha256_init(&c);
+  tya_sha256_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  uint8_t digest[32];
+  tya_sha256_final(&c, digest);
+  return tya_hex_string(digest, 32);
+}
+
+TyaValue tya_digest_sha384(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("digest.sha384: argument must be a string"));
+    return tya_nil();
+  }
+  tya_sha512_ctx c;
+  tya_sha384_init(&c);
+  tya_sha512_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  uint8_t digest[48];
+  tya_sha512_final_n(&c, digest, 6);
+  return tya_hex_string(digest, 48);
+}
+
+TyaValue tya_digest_sha512(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("digest.sha512: argument must be a string"));
+    return tya_nil();
+  }
+  tya_sha512_ctx c;
+  tya_sha512_init(&c);
+  tya_sha512_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  uint8_t digest[64];
+  tya_sha512_final_n(&c, digest, 8);
+  return tya_hex_string(digest, 64);
+}
+
+/* =========================================================================
+ * v0.24: secure_random
+ * ========================================================================= */
+
+static int tya_secure_random_fill(uint8_t *buf, size_t n) {
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+  while (n > 0) {
+    size_t chunk = n > 256 ? 256 : n;
+    if (getentropy(buf, chunk) < 0) return -1;
+    buf += chunk; n -= chunk;
+  }
+  return 0;
+#else
+  int fd = open("/dev/urandom", O_RDONLY);
+  if (fd < 0) return -1;
+  while (n > 0) {
+    ssize_t r = read(fd, buf, n);
+    if (r < 0) {
+      if (errno == EINTR) continue;
+      close(fd);
+      return -1;
+    }
+    if (r == 0) { close(fd); return -1; }
+    buf += r; n -= (size_t)r;
+  }
+  close(fd);
+  return 0;
+#endif
+}
+
+TyaValue tya_secure_random_bytes(TyaValue n) {
+  if (n.kind != TYA_NUMBER) {
+    tya_raise(tya_string("secure_random: count must be a number"));
+    return tya_nil();
+  }
+  long count = (long)n.number;
+  if (count < 0 || count > 4096) {
+    tya_raise(tya_string("secure_random: count out of range"));
+    return tya_nil();
+  }
+  uint8_t *buf = malloc((size_t)count + 1);
+  if (tya_secure_random_fill(buf, (size_t)count) < 0) {
+    free(buf);
+    tya_raise(tya_string("secure_random: entropy source unavailable"));
+    return tya_nil();
+  }
+  buf[count] = '\0';
+  return tya_string((const char *)buf);
+}
+
+TyaValue tya_secure_random_int(TyaValue min, TyaValue max) {
+  if (min.kind != TYA_NUMBER || max.kind != TYA_NUMBER) {
+    tya_raise(tya_string("secure_random.int: arguments must be numbers"));
+    return tya_nil();
+  }
+  long mn = (long)min.number;
+  long mx = (long)max.number;
+  if (mx < mn) {
+    tya_raise(tya_string("secure_random.int: max < min"));
+    return tya_nil();
+  }
+  uint64_t range = (uint64_t)(mx - mn) + 1ULL;
+  uint64_t threshold = (uint64_t)(-(int64_t)range) % range;
+  for (;;) {
+    uint64_t r;
+    if (tya_secure_random_fill((uint8_t *)&r, sizeof(r)) < 0) {
+      tya_raise(tya_string("secure_random.int: entropy source unavailable"));
+      return tya_nil();
+    }
+    if (r >= threshold) {
+      return tya_number((double)(long)((r % range) + (uint64_t)mn));
+    }
+  }
 }

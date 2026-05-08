@@ -1,0 +1,38 @@
+module hex
+  hex_digit = d ->
+    if d < 10
+      return chr(48 + d)
+    return chr(87 + d)
+
+  decode_digit = c ->
+    code = ord(c)
+    if code >= 48 and code <= 57
+      return code - 48
+    if code >= 65 and code <= 70
+      return code - 55
+    if code >= 97 and code <= 102
+      return code - 87
+    raise "hex.decode: invalid hex digit"
+
+  encode = text ->
+    n = byte_len(text)
+    out = ""
+    i = 0
+    while i < n
+      code = ord(text[i])
+      out = out + hex.hex_digit(to_int(code / 16)) + hex.hex_digit(code % 16)
+      i = i + 1
+    return out
+
+  decode = text ->
+    n = byte_len(text)
+    if n % 2 != 0
+      raise "hex.decode: odd-length input"
+    out = ""
+    i = 0
+    while i < n
+      hi = hex.decode_digit(text[i])
+      lo = hex.decode_digit(text[i + 1])
+      out = out + chr(hi * 16 + lo)
+      i = i + 2
+    return out

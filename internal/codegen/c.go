@@ -1597,6 +1597,11 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_chdir(%s)", arg), "TyaValue", nil
 		}
+		if ok {
+			if call := v24Codegen(g, id.Name, n.Args); call != "" {
+				return call, "TyaValue", nil
+			}
+		}
 		if ok && id.Name == "split" && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])
 			if err != nil {
@@ -2226,4 +2231,121 @@ func patternBindings(pattern ast.Expr) []string {
 	}
 	walk(pattern)
 	return names
+}
+
+// v0.24 native builtin codegen (returns C expression or "" if not v0.24).
+func v24Codegen(g *cgen, name string, args []ast.Expr) string {
+	emit := func(format string, n int) string {
+		if len(args) != n {
+			return ""
+		}
+		out := make([]string, n)
+		for i, a := range args {
+			expr, _, err := g.expr(a)
+			if err != nil {
+				return ""
+			}
+			out[i] = expr
+		}
+		switch n {
+		case 0:
+			return format
+		case 1:
+			return fmt.Sprintf(format, out[0])
+		case 2:
+			return fmt.Sprintf(format, out[0], out[1])
+		}
+		return ""
+	}
+	switch name {
+	case "time_now":
+		return emit("tya_time_now()", 0)
+	case "time_sleep":
+		return emit("tya_time_sleep(%s)", 1)
+	case "time_format":
+		if len(args) == 1 {
+			return emit("tya_time_format(%s, tya_nil(), false)", 1)
+		}
+		if len(args) == 2 {
+			a, _, err := g.expr(args[0])
+			if err != nil {
+				return ""
+			}
+			b, _, err := g.expr(args[1])
+			if err != nil {
+				return ""
+			}
+			return fmt.Sprintf("tya_time_format(%s, %s, true)", a, b)
+		}
+	case "time_parse":
+		return emit("tya_time_parse(%s)", 1)
+	case "time_since":
+		return emit("tya_time_since(%s)", 1)
+	case "random_seed":
+		return emit("tya_random_seed(%s)", 1)
+	case "random_int":
+		return emit("tya_random_int(%s, %s)", 2)
+	case "random_float":
+		return emit("tya_random_float()", 0)
+	case "math_sqrt":
+		return emit("tya_math_sqrt(%s)", 1)
+	case "math_pow":
+		return emit("tya_math_pow(%s, %s)", 2)
+	case "math_floor":
+		return emit("tya_math_floor(%s)", 1)
+	case "math_ceil":
+		return emit("tya_math_ceil(%s)", 1)
+	case "math_round":
+		return emit("tya_math_round(%s)", 1)
+	case "math_trunc":
+		return emit("tya_math_trunc(%s)", 1)
+	case "math_log":
+		return emit("tya_math_log(%s)", 1)
+	case "math_log2":
+		return emit("tya_math_log2(%s)", 1)
+	case "math_log10":
+		return emit("tya_math_log10(%s)", 1)
+	case "math_exp":
+		return emit("tya_math_exp(%s)", 1)
+	case "math_sin":
+		return emit("tya_math_sin(%s)", 1)
+	case "math_cos":
+		return emit("tya_math_cos(%s)", 1)
+	case "math_tan":
+		return emit("tya_math_tan(%s)", 1)
+	case "math_asin":
+		return emit("tya_math_asin(%s)", 1)
+	case "math_acos":
+		return emit("tya_math_acos(%s)", 1)
+	case "math_atan":
+		return emit("tya_math_atan(%s)", 1)
+	case "math_atan2":
+		return emit("tya_math_atan2(%s, %s)", 2)
+	case "process_run":
+		if len(args) == 1 {
+			a, _, err := g.expr(args[0])
+			if err != nil {
+				return ""
+			}
+			return fmt.Sprintf("tya_process_run(%s, tya_nil())", a)
+		}
+		if len(args) == 2 {
+			return emit("tya_process_run(%s, %s)", 2)
+		}
+	case "digest_md5":
+		return emit("tya_digest_md5(%s)", 1)
+	case "digest_sha1":
+		return emit("tya_digest_sha1(%s)", 1)
+	case "digest_sha256":
+		return emit("tya_digest_sha256(%s)", 1)
+	case "digest_sha384":
+		return emit("tya_digest_sha384(%s)", 1)
+	case "digest_sha512":
+		return emit("tya_digest_sha512(%s)", 1)
+	case "secure_random_bytes":
+		return emit("tya_secure_random_bytes(%s)", 1)
+	case "secure_random_int":
+		return emit("tya_secure_random_int(%s, %s)", 2)
+	}
+	return ""
 }

@@ -115,6 +115,45 @@ TyaValue tya_file_stat(TyaValue path);
 TyaValue tya_path_expand_user(TyaValue value);
 TyaValue tya_cwd(void);
 TyaValue tya_chdir(TyaValue path);
+
+TyaValue tya_time_now(void);
+TyaValue tya_time_sleep(TyaValue seconds);
+TyaValue tya_time_format(TyaValue t, TyaValue layout, bool has_layout);
+TyaValue tya_time_parse(TyaValue text);
+TyaValue tya_time_since(TyaValue t);
+
+TyaValue tya_random_seed(TyaValue value);
+TyaValue tya_random_int(TyaValue min, TyaValue max);
+TyaValue tya_random_float(void);
+
+TyaValue tya_math_sqrt(TyaValue x);
+TyaValue tya_math_pow(TyaValue x, TyaValue y);
+TyaValue tya_math_floor(TyaValue x);
+TyaValue tya_math_ceil(TyaValue x);
+TyaValue tya_math_round(TyaValue x);
+TyaValue tya_math_trunc(TyaValue x);
+TyaValue tya_math_log(TyaValue x);
+TyaValue tya_math_log2(TyaValue x);
+TyaValue tya_math_log10(TyaValue x);
+TyaValue tya_math_exp(TyaValue x);
+TyaValue tya_math_sin(TyaValue x);
+TyaValue tya_math_cos(TyaValue x);
+TyaValue tya_math_tan(TyaValue x);
+TyaValue tya_math_asin(TyaValue x);
+TyaValue tya_math_acos(TyaValue x);
+TyaValue tya_math_atan(TyaValue x);
+TyaValue tya_math_atan2(TyaValue y, TyaValue x);
+
+TyaValue tya_process_run(TyaValue command, TyaValue options);
+
+TyaValue tya_digest_md5(TyaValue text);
+TyaValue tya_digest_sha1(TyaValue text);
+TyaValue tya_digest_sha256(TyaValue text);
+TyaValue tya_digest_sha384(TyaValue text);
+TyaValue tya_digest_sha512(TyaValue text);
+
+TyaValue tya_secure_random_bytes(TyaValue n);
+TyaValue tya_secure_random_int(TyaValue min, TyaValue max);
 TyaValue tya_read_line(void);
 TyaValue tya_map(TyaValue array, TyaValue fn);
 TyaValue tya_filter(TyaValue array, TyaValue fn);
