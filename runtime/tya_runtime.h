@@ -14,7 +14,10 @@ typedef enum {
   TYA_OBJECT,
   TYA_FUNCTION,
   TYA_ERROR,
+  TYA_BYTES,
 } TyaKind;
+
+typedef struct TyaBytes TyaBytes;
 
 typedef struct TyaArray TyaArray;
 typedef struct TyaDict TyaDict;
@@ -31,6 +34,7 @@ typedef struct {
   TyaDict *dict;
   TyaFunction *function;
   const char *error;
+  TyaBytes *bytes;
 } TyaValue;
 
 typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
@@ -154,6 +158,16 @@ TyaValue tya_digest_sha512(TyaValue text);
 
 TyaValue tya_secure_random_bytes(TyaValue n);
 TyaValue tya_secure_random_int(TyaValue min, TyaValue max);
+
+TyaValue tya_bytes_lit(const char *data, int len);
+TyaValue tya_bytes_from_array(TyaValue arr);
+TyaValue tya_bytes_of(TyaValue text);
+TyaValue tya_bytes_text(TyaValue b);
+TyaValue tya_bytes_array(TyaValue b);
+TyaValue tya_bytes_concat(TyaValue a, TyaValue b);
+TyaValue tya_bytes_slice(TyaValue b, TyaValue start, TyaValue end);
+TyaValue tya_file_read_bytes(TyaValue path);
+TyaValue tya_file_write_bytes(TyaValue path, TyaValue b);
 TyaValue tya_read_line(void);
 TyaValue tya_map(TyaValue array, TyaValue fn);
 TyaValue tya_filter(TyaValue array, TyaValue fn);

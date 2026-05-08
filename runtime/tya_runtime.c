@@ -27,6 +27,11 @@ struct TyaArray {
   TyaValue *items;
 };
 
+struct TyaBytes {
+  int len;
+  uint8_t *data;
+};
+
 struct TyaDict {
   int len;
   TyaDictEntry *entries;
@@ -177,6 +182,9 @@ TyaValue tya_len(TyaValue value) {
   if (value.kind == TYA_ARRAY && value.array != NULL) {
     return tya_number(value.array->len);
   }
+  if (value.kind == TYA_BYTES && value.bytes != NULL) {
+    return tya_number(value.bytes->len);
+  }
   if ((value.kind == TYA_DICT || value.kind == TYA_OBJECT) && value.dict != NULL) {
     int count = 0;
     for (int i = 0; i < value.dict->len; i++) {
@@ -191,6 +199,9 @@ TyaValue tya_len(TyaValue value) {
 
 TyaValue tya_index(TyaValue value, TyaValue index) {
   int i = (int)index.number;
+  if (value.kind == TYA_BYTES && value.bytes != NULL && i >= 0 && i < value.bytes->len) {
+    return tya_number((double)value.bytes->data[i]);
+  }
   if (value.kind == TYA_ARRAY && value.array != NULL && i >= 0 && i < value.array->len) {
     return value.array->items[i];
   }
@@ -592,6 +603,8 @@ TyaValue tya_kind(TyaValue value) {
     return tya_string("function");
   case TYA_ERROR:
     return tya_string("error");
+  case TYA_BYTES:
+    return tya_string("bytes");
   }
   return tya_string("unknown");
 }
@@ -689,6 +702,14 @@ bool tya_equal(TyaValue left, TyaValue right) {
       return left.error == right.error;
     }
     return strcmp(left.error, right.error) == 0;
+  case TYA_BYTES:
+    if (left.bytes == NULL || right.bytes == NULL) {
+      return left.bytes == right.bytes;
+    }
+    if (left.bytes->len != right.bytes->len) {
+      return false;
+    }
+    return memcmp(left.bytes->data, right.bytes->data, (size_t)left.bytes->len) == 0;
   }
   return false;
 }
@@ -755,11 +776,22 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
       return left.error == right.error;
     }
     return strcmp(left.error, right.error) == 0;
+  case TYA_BYTES:
+    if (left.bytes == NULL || right.bytes == NULL) {
+      return left.bytes == right.bytes;
+    }
+    if (left.bytes->len != right.bytes->len) {
+      return false;
+    }
+    return memcmp(left.bytes->data, right.bytes->data, (size_t)left.bytes->len) == 0;
   }
   return false;
 }
 
 TyaValue tya_add(TyaValue left, TyaValue right) {
+  if (left.kind == TYA_BYTES && right.kind == TYA_BYTES && left.bytes != NULL && right.bytes != NULL) {
+    return tya_bytes_concat(left, right);
+  }
   if (left.kind == TYA_STRING && right.kind == TYA_STRING && left.string != NULL && right.string != NULL) {
     int left_len = 0;
     int right_len = 0;
@@ -961,6 +993,16 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     break;
   case TYA_STRING:
     tya_builder_append(builder, value.string == NULL ? "" : value.string);
+    break;
+  case TYA_BYTES:
+    tya_builder_append(builder, "<bytes:");
+    if (value.bytes != NULL) {
+      snprintf(scratch, sizeof(scratch), "%d", value.bytes->len);
+      tya_builder_append(builder, scratch);
+    } else {
+      tya_builder_append(builder, "0");
+    }
+    tya_builder_append(builder, ">");
     break;
   }
 }
@@ -1479,6 +1521,9 @@ static void tya_write_value(FILE *out, TyaValue value) {
     break;
   case TYA_ERROR:
     fprintf(out, "error: %s", value.error == NULL ? "" : value.error);
+    break;
+  case TYA_BYTES:
+    fprintf(out, "<bytes:%d>", value.bytes == NULL ? 0 : value.bytes->len);
     break;
   }
 }
@@ -2396,65 +2441,92 @@ static TyaValue tya_hex_string(const uint8_t *data, size_t n) {
 }
 
 TyaValue tya_digest_md5(TyaValue text) {
-  if (text.kind != TYA_STRING || text.string == NULL) {
-    tya_raise(tya_string("digest.md5: argument must be a string"));
+  const uint8_t *data;
+  size_t dlen;
+  if (text.kind == TYA_STRING && text.string != NULL) {
+    data = (const uint8_t *)text.string;
+    dlen = strlen(text.string);
+  } else if (text.kind == TYA_BYTES && text.bytes != NULL) {
+    data = text.bytes->data;
+    dlen = (size_t)text.bytes->len;
+  } else {
+    tya_raise(tya_string("digest.md5: argument must be a string or bytes"));
     return tya_nil();
   }
   tya_md5_ctx c;
   tya_md5_init(&c);
-  tya_md5_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  tya_md5_update(&c, data, dlen);
   uint8_t digest[16];
   tya_md5_final(&c, digest);
   return tya_hex_string(digest, 16);
 }
 
+static int tya_digest_input(TyaValue v, const uint8_t **data, size_t *dlen, const char *err_msg) {
+  if (v.kind == TYA_STRING && v.string != NULL) {
+    *data = (const uint8_t *)v.string;
+    *dlen = strlen(v.string);
+    return 0;
+  }
+  if (v.kind == TYA_BYTES && v.bytes != NULL) {
+    *data = v.bytes->data;
+    *dlen = (size_t)v.bytes->len;
+    return 0;
+  }
+  tya_raise(tya_string(err_msg));
+  return -1;
+}
+
 TyaValue tya_digest_sha1(TyaValue text) {
-  if (text.kind != TYA_STRING || text.string == NULL) {
-    tya_raise(tya_string("digest.sha1: argument must be a string"));
+  const uint8_t *data;
+  size_t dlen;
+  if (tya_digest_input(text, &data, &dlen, "digest.sha1: argument must be a string or bytes") < 0) {
     return tya_nil();
   }
   tya_sha1_ctx c;
   tya_sha1_init(&c);
-  tya_sha1_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  tya_sha1_update(&c, data, dlen);
   uint8_t digest[20];
   tya_sha1_final(&c, digest);
   return tya_hex_string(digest, 20);
 }
 
 TyaValue tya_digest_sha256(TyaValue text) {
-  if (text.kind != TYA_STRING || text.string == NULL) {
-    tya_raise(tya_string("digest.sha256: argument must be a string"));
+  const uint8_t *data;
+  size_t dlen;
+  if (tya_digest_input(text, &data, &dlen, "digest.sha256: argument must be a string or bytes") < 0) {
     return tya_nil();
   }
   tya_sha256_ctx c;
   tya_sha256_init(&c);
-  tya_sha256_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  tya_sha256_update(&c, data, dlen);
   uint8_t digest[32];
   tya_sha256_final(&c, digest);
   return tya_hex_string(digest, 32);
 }
 
 TyaValue tya_digest_sha384(TyaValue text) {
-  if (text.kind != TYA_STRING || text.string == NULL) {
-    tya_raise(tya_string("digest.sha384: argument must be a string"));
+  const uint8_t *data;
+  size_t dlen;
+  if (tya_digest_input(text, &data, &dlen, "digest.sha384: argument must be a string or bytes") < 0) {
     return tya_nil();
   }
   tya_sha512_ctx c;
   tya_sha384_init(&c);
-  tya_sha512_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  tya_sha512_update(&c, data, dlen);
   uint8_t digest[48];
   tya_sha512_final_n(&c, digest, 6);
   return tya_hex_string(digest, 48);
 }
 
 TyaValue tya_digest_sha512(TyaValue text) {
-  if (text.kind != TYA_STRING || text.string == NULL) {
-    tya_raise(tya_string("digest.sha512: argument must be a string"));
+  const uint8_t *data;
+  size_t dlen;
+  if (tya_digest_input(text, &data, &dlen, "digest.sha512: argument must be a string or bytes") < 0) {
     return tya_nil();
   }
   tya_sha512_ctx c;
   tya_sha512_init(&c);
-  tya_sha512_update(&c, (const uint8_t *)text.string, strlen(text.string));
+  tya_sha512_update(&c, data, dlen);
   uint8_t digest[64];
   tya_sha512_final_n(&c, digest, 8);
   return tya_hex_string(digest, 64);
@@ -2500,14 +2572,15 @@ TyaValue tya_secure_random_bytes(TyaValue n) {
     tya_raise(tya_string("secure_random: count out of range"));
     return tya_nil();
   }
-  uint8_t *buf = malloc((size_t)count + 1);
-  if (tya_secure_random_fill(buf, (size_t)count) < 0) {
-    free(buf);
+  TyaBytes *bb = malloc(sizeof(TyaBytes));
+  bb->len = (int)count;
+  bb->data = malloc((size_t)(count > 0 ? count : 1));
+  if (tya_secure_random_fill(bb->data, (size_t)count) < 0) {
+    free(bb->data); free(bb);
     tya_raise(tya_string("secure_random: entropy source unavailable"));
     return tya_nil();
   }
-  buf[count] = '\0';
-  return tya_string((const char *)buf);
+  return (TyaValue){.kind = TYA_BYTES, .bytes = bb};
 }
 
 TyaValue tya_secure_random_int(TyaValue min, TyaValue max) {
@@ -2533,4 +2606,157 @@ TyaValue tya_secure_random_int(TyaValue min, TyaValue max) {
       return tya_number((double)(long)((r % range) + (uint64_t)mn));
     }
   }
+}
+
+/* =========================================================================
+ * v0.25: bytes type and binary I/O
+ * ========================================================================= */
+
+TyaValue tya_bytes_lit(const char *data, int len) {
+  TyaBytes *b = malloc(sizeof(TyaBytes));
+  b->len = len;
+  b->data = malloc((size_t)(len > 0 ? len : 1));
+  if (len > 0) memcpy(b->data, data, (size_t)len);
+  return (TyaValue){.kind = TYA_BYTES, .bytes = b};
+}
+
+TyaValue tya_bytes_from_array(TyaValue arr) {
+  if (arr.kind != TYA_ARRAY || arr.array == NULL) {
+    tya_raise(tya_string("bytes: argument must be an array of ints"));
+    return tya_nil();
+  }
+  int n = arr.array->len;
+  TyaBytes *b = malloc(sizeof(TyaBytes));
+  b->len = n;
+  b->data = malloc((size_t)(n > 0 ? n : 1));
+  for (int i = 0; i < n; i++) {
+    TyaValue item = arr.array->items[i];
+    if (item.kind != TYA_NUMBER) {
+      free(b->data); free(b);
+      tya_raise(tya_string("bytes: items must be ints"));
+      return tya_nil();
+    }
+    int v = (int)item.number;
+    if (v < 0 || v > 255) {
+      free(b->data); free(b);
+      tya_raise(tya_string("bytes: item out of 0..255"));
+      return tya_nil();
+    }
+    b->data[i] = (uint8_t)v;
+  }
+  return (TyaValue){.kind = TYA_BYTES, .bytes = b};
+}
+
+TyaValue tya_bytes_of(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("bytes_of: argument must be a string"));
+    return tya_nil();
+  }
+  int n = (int)strlen(text.string);
+  return tya_bytes_lit(text.string, n);
+}
+
+TyaValue tya_bytes_text(TyaValue b) {
+  if (b.kind != TYA_BYTES || b.bytes == NULL) {
+    tya_raise(tya_string("bytes_text: argument must be bytes"));
+    return tya_nil();
+  }
+  for (int i = 0; i < b.bytes->len; i++) {
+    if (b.bytes->data[i] == 0) {
+      tya_raise(tya_string("bytes_text: NUL byte not allowed in string"));
+      return tya_nil();
+    }
+  }
+  char *out = malloc((size_t)b.bytes->len + 1);
+  memcpy(out, b.bytes->data, (size_t)b.bytes->len);
+  out[b.bytes->len] = '\0';
+  return tya_string(out);
+}
+
+TyaValue tya_bytes_array(TyaValue b) {
+  if (b.kind != TYA_BYTES || b.bytes == NULL) {
+    tya_raise(tya_string("bytes_array: argument must be bytes"));
+    return tya_nil();
+  }
+  TyaValue out = tya_array(NULL, 0);
+  for (int i = 0; i < b.bytes->len; i++) {
+    tya_push(out, tya_number((double)b.bytes->data[i]));
+  }
+  return out;
+}
+
+TyaValue tya_bytes_concat(TyaValue a, TyaValue b) {
+  if (a.kind != TYA_BYTES || b.kind != TYA_BYTES || a.bytes == NULL || b.bytes == NULL) {
+    tya_raise(tya_string("bytes_concat: arguments must be bytes"));
+    return tya_nil();
+  }
+  int total = a.bytes->len + b.bytes->len;
+  TyaBytes *out = malloc(sizeof(TyaBytes));
+  out->len = total;
+  out->data = malloc((size_t)(total > 0 ? total : 1));
+  if (a.bytes->len > 0) memcpy(out->data, a.bytes->data, (size_t)a.bytes->len);
+  if (b.bytes->len > 0) memcpy(out->data + a.bytes->len, b.bytes->data, (size_t)b.bytes->len);
+  return (TyaValue){.kind = TYA_BYTES, .bytes = out};
+}
+
+TyaValue tya_bytes_slice(TyaValue b, TyaValue start_v, TyaValue end_v) {
+  if (b.kind != TYA_BYTES || b.bytes == NULL) {
+    tya_raise(tya_string("bytes_slice: first argument must be bytes"));
+    return tya_nil();
+  }
+  if (start_v.kind != TYA_NUMBER || end_v.kind != TYA_NUMBER) {
+    tya_raise(tya_string("bytes_slice: indices must be ints"));
+    return tya_nil();
+  }
+  int s = (int)start_v.number;
+  int e = (int)end_v.number;
+  if (s < 0 || e < s || e > b.bytes->len) {
+    tya_raise(tya_string("bytes_slice: index out of range"));
+    return tya_nil();
+  }
+  return tya_bytes_lit((const char *)(b.bytes->data + s), e - s);
+}
+
+TyaValue tya_file_read_bytes(TyaValue path) {
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    tya_raise(tya_string("file.read_bytes: path must be a string"));
+    return tya_nil();
+  }
+  FILE *fp = fopen(path.string, "rb");
+  if (fp == NULL) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  fseek(fp, 0, SEEK_END);
+  long size = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+  if (size < 0) size = 0;
+  TyaBytes *bb = malloc(sizeof(TyaBytes));
+  bb->len = (int)size;
+  bb->data = malloc((size_t)(size > 0 ? size : 1));
+  size_t got = fread(bb->data, 1, (size_t)size, fp);
+  fclose(fp);
+  bb->len = (int)got;
+  return (TyaValue){.kind = TYA_BYTES, .bytes = bb};
+}
+
+TyaValue tya_file_write_bytes(TyaValue path, TyaValue b) {
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    tya_raise(tya_string("file.write_bytes: path must be a string"));
+    return tya_nil();
+  }
+  if (b.kind != TYA_BYTES || b.bytes == NULL) {
+    tya_raise(tya_string("file.write_bytes: data must be bytes"));
+    return tya_nil();
+  }
+  FILE *fp = fopen(path.string, "wb");
+  if (fp == NULL) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  if (b.bytes->len > 0) {
+    fwrite(b.bytes->data, 1, (size_t)b.bytes->len, fp);
+  }
+  fclose(fp);
+  return tya_nil();
 }

@@ -1202,6 +1202,20 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			return value, "TyaValue", err
 		}
 		return "tya_string(" + strconv.Quote(n.Value) + ")", "TyaValue", nil
+	case *ast.BytesLit:
+		if n.Value == "" {
+			return "tya_bytes_lit((const char *)0, 0)", "TyaValue", nil
+		}
+		var b strings.Builder
+		b.WriteString("tya_bytes_lit((const char *)(unsigned char[]){")
+		for i := 0; i < len(n.Value); i++ {
+			if i > 0 {
+				b.WriteByte(',')
+			}
+			fmt.Fprintf(&b, "0x%02x", n.Value[i])
+		}
+		fmt.Fprintf(&b, "}, %d)", len(n.Value))
+		return b.String(), "TyaValue", nil
 	case *ast.BoolLit:
 		if n.Value {
 			return "tya_bool(true)", "TyaValue", nil
@@ -1285,6 +1299,16 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			expr = fmt.Sprintf("(tya_truthy(%s) ? tya_bool(true) : (%s))", left, right)
 		case "%":
 			expr = fmt.Sprintf("tya_number((long)%s.number %% (long)%s.number)", left, right)
+		case "&":
+			expr = fmt.Sprintf("tya_number((long)%s.number & (long)%s.number)", left, right)
+		case "|":
+			expr = fmt.Sprintf("tya_number((long)%s.number | (long)%s.number)", left, right)
+		case "^":
+			expr = fmt.Sprintf("tya_number((long)%s.number ^ (long)%s.number)", left, right)
+		case "<<":
+			expr = fmt.Sprintf("tya_number((long)%s.number << (long)%s.number)", left, right)
+		case ">>":
+			expr = fmt.Sprintf("tya_number((long)%s.number >> (long)%s.number)", left, right)
 		case "<", "<=", ">", ">=":
 			expr = fmt.Sprintf("tya_bool(%s.number %s %s.number)", left, op, right)
 		default:
@@ -1298,6 +1322,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		if n.Op.Lexeme == "not" {
 			return "tya_bool(!tya_truthy(" + ex + "))", "TyaValue", nil
+		}
+		if n.Op.Lexeme == "~" {
+			return "tya_number(~(long)" + ex + ".number)", "TyaValue", nil
 		}
 		return "tya_number(-" + ex + ".number)", typ, nil
 	case *ast.CallExpr:
@@ -2254,6 +2281,8 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 			return fmt.Sprintf(format, out[0])
 		case 2:
 			return fmt.Sprintf(format, out[0], out[1])
+		case 3:
+			return fmt.Sprintf(format, out[0], out[1], out[2])
 		}
 		return ""
 	}
@@ -2346,6 +2375,22 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_secure_random_bytes(%s)", 1)
 	case "secure_random_int":
 		return emit("tya_secure_random_int(%s, %s)", 2)
+	case "bytes":
+		return emit("tya_bytes_from_array(%s)", 1)
+	case "bytes_of":
+		return emit("tya_bytes_of(%s)", 1)
+	case "bytes_text":
+		return emit("tya_bytes_text(%s)", 1)
+	case "bytes_array":
+		return emit("tya_bytes_array(%s)", 1)
+	case "bytes_concat":
+		return emit("tya_bytes_concat(%s, %s)", 2)
+	case "bytes_slice":
+		return emit("tya_bytes_slice(%s, %s, %s)", 3)
+	case "file_read_bytes":
+		return emit("tya_file_read_bytes(%s)", 1)
+	case "file_write_bytes":
+		return emit("tya_file_write_bytes(%s, %s)", 2)
 	}
 	return ""
 }

@@ -1,0 +1,31 @@
+import unittest
+
+module bitwise_test
+  test_and = ->
+    unittest.assert_equal(12, 15 & 12, "15 & 12")
+    unittest.assert_equal(0, 255 & 0, "255 & 0")
+  test_or = ->
+    unittest.assert_equal(15, 12 | 3, "12 | 3")
+  test_xor = ->
+    unittest.assert_equal(3, 15 ^ 12, "15 ^ 12")
+    unittest.assert_equal(0, 7 ^ 7, "self xor")
+  test_not = ->
+    unittest.assert_equal(-1, ~0, "~0")
+    unittest.assert_equal(-256, ~255, "~255")
+  test_shl = ->
+    unittest.assert_equal(16, 1 << 4, "1 << 4")
+    unittest.assert_equal(1024, 1 << 10, "1 << 10")
+  test_shr = ->
+    unittest.assert_equal(16, 256 >> 4, "256 >> 4")
+    unittest.assert_equal(0, 1 >> 1, "1 >> 1")
+  test_precedence = ->
+    unittest.assert_equal(15, (12 | 3) & 15, "or then and")
+    unittest.assert_equal(7, 15 & 7 | 0, "and then or")
+  test_compound = ->
+    status = 0
+    status = status | 1
+    status = status | 4
+    unittest.assert_equal(5, status, "set bits")
+    unittest.assert_equal(true, (status & 1) != 0, "bit 0 set")
+    unittest.assert_equal(true, (status & 4) != 0, "bit 2 set")
+    unittest.assert_equal(false, (status & 2) != 0, "bit 1 unset")

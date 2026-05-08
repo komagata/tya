@@ -1,13 +1,31 @@
 module base64
-  encode = text ->
-    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    n = byte_len(text)
+  alphabet = ->
+    return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+  byte_at = value, i ->
+    k = kind(value)
+    if k == "bytes"
+      return value[i]
+    return ord(value[i])
+
+  byte_count = value ->
+    k = kind(value)
+    if k == "bytes"
+      return len(value)
+    return byte_len(value)
+
+  encode = value ->
+    k = kind(value)
+    if k != "bytes" and k != "string"
+      raise "base64.encode: argument must be a string or bytes"
+    alphabet = base64.alphabet()
+    n = base64.byte_count(value)
     out = ""
     i = 0
     while i + 3 <= n
-      b1 = ord(text[i])
-      b2 = ord(text[i + 1])
-      b3 = ord(text[i + 2])
+      b1 = base64.byte_at(value, i)
+      b2 = base64.byte_at(value, i + 1)
+      b3 = base64.byte_at(value, i + 2)
       g1 = to_int(b1 / 4)
       g2 = (b1 % 4) * 16 + to_int(b2 / 16)
       g3 = (b2 % 16) * 4 + to_int(b3 / 64)
@@ -16,13 +34,13 @@ module base64
       i = i + 3
     rem = n - i
     if rem == 1
-      b1 = ord(text[i])
+      b1 = base64.byte_at(value, i)
       g1 = to_int(b1 / 4)
       g2 = (b1 % 4) * 16
       out = out + alphabet[g1] + alphabet[g2] + "=="
     elseif rem == 2
-      b1 = ord(text[i])
-      b2 = ord(text[i + 1])
+      b1 = base64.byte_at(value, i)
+      b2 = base64.byte_at(value, i + 1)
       g1 = to_int(b1 / 4)
       g2 = (b1 % 4) * 16 + to_int(b2 / 16)
       g3 = (b2 % 16) * 4
@@ -56,29 +74,26 @@ module base64
     m = byte_len(cleaned)
     if m % 4 == 1
       raise "base64.decode: invalid length"
-    out = ""
+    arr = []
     j = 0
     while j + 4 <= m
       v1 = base64.index_of(cleaned[j])
       v2 = base64.index_of(cleaned[j + 1])
       v3 = base64.index_of(cleaned[j + 2])
       v4 = base64.index_of(cleaned[j + 3])
-      b1 = v1 * 4 + to_int(v2 / 16)
-      b2 = (v2 % 16) * 16 + to_int(v3 / 4)
-      b3 = (v3 % 4) * 64 + v4
-      out = out + chr(b1) + chr(b2) + chr(b3)
+      push(arr, v1 * 4 + to_int(v2 / 16))
+      push(arr, (v2 % 16) * 16 + to_int(v3 / 4))
+      push(arr, (v3 % 4) * 64 + v4)
       j = j + 4
     rem = m - j
     if rem == 2
       v1 = base64.index_of(cleaned[j])
       v2 = base64.index_of(cleaned[j + 1])
-      b1 = v1 * 4 + to_int(v2 / 16)
-      out = out + chr(b1)
+      push(arr, v1 * 4 + to_int(v2 / 16))
     elseif rem == 3
       v1 = base64.index_of(cleaned[j])
       v2 = base64.index_of(cleaned[j + 1])
       v3 = base64.index_of(cleaned[j + 2])
-      b1 = v1 * 4 + to_int(v2 / 16)
-      b2 = (v2 % 16) * 16 + to_int(v3 / 4)
-      out = out + chr(b1) + chr(b2)
-    return out
+      push(arr, v1 * 4 + to_int(v2 / 16))
+      push(arr, (v2 % 16) * 16 + to_int(v3 / 4))
+    return bytes(arr)

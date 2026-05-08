@@ -414,6 +414,48 @@ println matrix.det(a)
 Functions: `new`, `zero`, `identity`, `at`, `put`, `add`, `sub`, `scale`,
 `mul`, `transpose`, `det` (≤ 4×4), `equal?`.
 
+## `bytes` (v0.25)
+
+`bytes` is a built-in value type for raw byte sequences (each element is an
+int 0..255). Construct with the `b"..."` literal or builtins:
+
+```tya
+b1 = b"hello"
+b2 = b"\x00\x01\xff"
+b3 = bytes([72, 101, 108, 108, 111])
+
+println len(b1)              # 5
+println b1[0]                # 104
+println bytes_text(b1)       # hello
+println bytes_array(b1)      # [104, 101, 108, 108, 111]
+println bytes_slice(b1, 0, 3)
+println b1 + b2              # concat
+```
+
+Builtins: `bytes(int_array)`, `bytes_of(text)`, `bytes_text(b)`,
+`bytes_array(b)`, `bytes_concat(a, b)`, `bytes_slice(b, start, end)`.
+
+## `file` (v0.25 binary I/O)
+
+```tya
+import file
+
+raw = file.read_bytes("/path/to/file")
+file.write_bytes("/tmp/copy", raw)
+```
+
+`read_bytes(path)` returns a `bytes` value. `write_bytes(path, b)` writes
+raw bytes.
+
+## Updated for bytes (v0.25)
+
+- `digest.md5/sha1/sha256/sha384/sha512` accept either `string` or `bytes`.
+- `secure_random.bytes(n)` returns `bytes`.
+- `hex.encode(value)` accepts `string` or `bytes`. `hex.decode(text)` returns
+  `bytes` (was `string` in v0.24 — breaking change).
+- `base64.encode(value)` accepts `string` or `bytes`. `base64.decode(text)`
+  returns `bytes` (was `string` in v0.24 — breaking change).
+
 ## `unittest`
 
 ```tya

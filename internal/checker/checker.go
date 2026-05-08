@@ -91,6 +91,9 @@ var builtinNames = []string{
 	"push", "read_file", "read_line", "reduce", "replace", "split",
 	"starts_with", "to_float", "to_int", "to_number", "to_string", "trim",
 	"values", "write_file",
+	// v0.25
+	"bytes", "bytes_of", "bytes_text", "bytes_array", "bytes_concat", "bytes_slice",
+	"file_read_bytes", "file_write_bytes",
 	// v0.24
 	"time_now", "time_sleep", "time_format", "time_parse", "time_since",
 	"random_seed", "random_int", "random_float",

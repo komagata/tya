@@ -59,6 +59,9 @@ type Dict map[string]Value
 type Array struct {
 	items []Value
 }
+type Bytes struct {
+	data []byte
+}
 type Tuple struct {
 	items []Value
 }
@@ -210,10 +213,12 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return int64(len(env.runes(v))), nil
 		case *Array:
 			return int64(len(v.items)), nil
+		case *Bytes:
+			return int64(len(v.data)), nil
 		case Dict:
 			return int64(len(v)), nil
 		default:
-			return nil, fmt.Errorf("len expects string, array, or dictionary")
+			return nil, fmt.Errorf("len expects string, array, bytes, or dictionary")
 		}
 	}))
 	env.set("push", Builtin(func(args []Value) (Value, error) {
@@ -521,6 +526,9 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		case string:
 			_ = v
 			return "string", nil
+		case *Bytes:
+			_ = v
+			return "bytes", nil
 		case *Array:
 			_ = v
 			return "array", nil
@@ -1161,6 +1169,8 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		return n.Value, nil
 	case *ast.StringLit:
 		return interpolate(n.Value, env)
+	case *ast.BytesLit:
+		return &Bytes{data: []byte(n.Value)}, nil
 	case *ast.BoolLit:
 		return n.Value, nil
 	case *ast.NilLit:
@@ -1206,6 +1216,13 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			default:
 				return nil, fmt.Errorf("- expects number")
 			}
+		}
+		if n.Op.Lexeme == "~" {
+			i, ok := numberAsInt(v)
+			if !ok {
+				return nil, fmt.Errorf("~ expects integer")
+			}
+			return ^i, nil
 		}
 		return nil, fmt.Errorf("unknown unary operator %s", n.Op.Lexeme)
 	case *ast.TryExpr:
@@ -1268,6 +1285,16 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 				return errValue.Message, nil
 			}
 			return nil, nil
+		}
+		if bytesVal, ok := obj.(*Bytes); ok {
+			i, ok := idx.(int64)
+			if !ok {
+				return nil, fmt.Errorf("bytes index must be int")
+			}
+			if i < 0 || i >= int64(len(bytesVal.data)) {
+				return nil, &raisedSignal{value: "bytes index out of range"}
+			}
+			return int64(bytesVal.data[i]), nil
 		}
 		arr, ok := obj.(*Array)
 		if !ok {
@@ -1973,9 +2000,50 @@ func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 		return !equal(l, r), nil
 	case "<", "<=", ">", ">=":
 		return compare(b.Op.Lexeme, l, r)
+	case "&", "|", "^", "<<", ">>":
+		li, lok := numberAsInt(l)
+		ri, rok := numberAsInt(r)
+		if !lok || !rok {
+			return nil, fmt.Errorf("%s expects integers", b.Op.Lexeme)
+		}
+		switch b.Op.Lexeme {
+		case "&":
+			return li & ri, nil
+		case "|":
+			return li | ri, nil
+		case "^":
+			return li ^ ri, nil
+		case "<<":
+			if ri < 0 {
+				return nil, &raisedSignal{value: "<< : negative shift count"}
+			}
+			if ri >= 64 {
+				return int64(0), nil
+			}
+			return li << uint(ri), nil
+		case ">>":
+			if ri < 0 {
+				return nil, &raisedSignal{value: ">> : negative shift count"}
+			}
+			if ri >= 64 {
+				if li < 0 {
+					return int64(-1), nil
+				}
+				return int64(0), nil
+			}
+			return li >> uint(ri), nil
+		}
 	}
 	if b.Op.Lexeme != "+" {
 		return evalNumeric(b.Op.Lexeme, l, r)
+	}
+	if lb, ok := l.(*Bytes); ok {
+		if rb, ok := r.(*Bytes); ok {
+			out := make([]byte, len(lb.data)+len(rb.data))
+			copy(out, lb.data)
+			copy(out[len(lb.data):], rb.data)
+			return &Bytes{data: out}, nil
+		}
 	}
 	if _, ok := l.(string); ok {
 		return stringify(l) + stringify(r), nil
@@ -2574,44 +2642,56 @@ func registerV24Builtins(env *Env) {
 		return out, nil
 	}))
 
+	digestInput := func(name string, args []Value) ([]byte, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("%s expects 1 argument", name)
+		}
+		switch v := args[0].(type) {
+		case string:
+			return []byte(v), nil
+		case *Bytes:
+			return v.data, nil
+		}
+		return nil, &raisedSignal{value: name + ": argument must be a string or bytes"}
+	}
 	env.set("digest_md5", Builtin(func(args []Value) (Value, error) {
-		s, err := oneString("digest_md5", args)
+		data, err := digestInput("digest.md5", args)
 		if err != nil {
 			return nil, err
 		}
-		h := md5.Sum([]byte(s))
+		h := md5.Sum(data)
 		return hex.EncodeToString(h[:]), nil
 	}))
 	env.set("digest_sha1", Builtin(func(args []Value) (Value, error) {
-		s, err := oneString("digest_sha1", args)
+		data, err := digestInput("digest.sha1", args)
 		if err != nil {
 			return nil, err
 		}
-		h := sha1.Sum([]byte(s))
+		h := sha1.Sum(data)
 		return hex.EncodeToString(h[:]), nil
 	}))
 	env.set("digest_sha256", Builtin(func(args []Value) (Value, error) {
-		s, err := oneString("digest_sha256", args)
+		data, err := digestInput("digest.sha256", args)
 		if err != nil {
 			return nil, err
 		}
-		h := sha256.Sum256([]byte(s))
+		h := sha256.Sum256(data)
 		return hex.EncodeToString(h[:]), nil
 	}))
 	env.set("digest_sha384", Builtin(func(args []Value) (Value, error) {
-		s, err := oneString("digest_sha384", args)
+		data, err := digestInput("digest.sha384", args)
 		if err != nil {
 			return nil, err
 		}
-		h := sha512.Sum384([]byte(s))
+		h := sha512.Sum384(data)
 		return hex.EncodeToString(h[:]), nil
 	}))
 	env.set("digest_sha512", Builtin(func(args []Value) (Value, error) {
-		s, err := oneString("digest_sha512", args)
+		data, err := digestInput("digest.sha512", args)
 		if err != nil {
 			return nil, err
 		}
-		h := sha512.Sum512([]byte(s))
+		h := sha512.Sum512(data)
 		return hex.EncodeToString(h[:]), nil
 	}))
 
@@ -2627,7 +2707,7 @@ func registerV24Builtins(env *Env) {
 		if _, err := rand.Read(buf); err != nil {
 			return nil, &raisedSignal{value: "secure_random: entropy unavailable"}
 		}
-		return string(buf), nil
+		return &Bytes{data: buf}, nil
 	}))
 	env.set("secure_random_int", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
@@ -2656,6 +2736,127 @@ func registerV24Builtins(env *Env) {
 				return mn + int64(r%rng), nil
 			}
 		}
+	}))
+	registerV25Builtins(env)
+}
+
+func registerV25Builtins(env *Env) {
+	env.set("bytes", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("bytes expects 1 argument")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, &raisedSignal{value: "bytes: argument must be an array of ints"}
+		}
+		out := make([]byte, len(arr.items))
+		for i, item := range arr.items {
+			n, ok := numberAsInt(item)
+			if !ok {
+				return nil, &raisedSignal{value: "bytes: items must be ints"}
+			}
+			if n < 0 || n > 255 {
+				return nil, &raisedSignal{value: "bytes: item out of 0..255"}
+			}
+			out[i] = byte(n)
+		}
+		return &Bytes{data: out}, nil
+	}))
+	env.set("bytes_of", Builtin(func(args []Value) (Value, error) {
+		s, err := oneString("bytes_of", args)
+		if err != nil {
+			return nil, err
+		}
+		return &Bytes{data: []byte(s)}, nil
+	}))
+	env.set("bytes_text", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("bytes_text expects 1 argument")
+		}
+		b, ok := args[0].(*Bytes)
+		if !ok {
+			return nil, &raisedSignal{value: "bytes_text: argument must be bytes"}
+		}
+		for _, c := range b.data {
+			if c == 0 {
+				return nil, &raisedSignal{value: "bytes_text: NUL byte not allowed"}
+			}
+		}
+		return string(b.data), nil
+	}))
+	env.set("bytes_array", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("bytes_array expects 1 argument")
+		}
+		b, ok := args[0].(*Bytes)
+		if !ok {
+			return nil, &raisedSignal{value: "bytes_array: argument must be bytes"}
+		}
+		out := &Array{items: make([]Value, len(b.data))}
+		for i, c := range b.data {
+			out.items[i] = int64(c)
+		}
+		return out, nil
+	}))
+	env.set("bytes_concat", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("bytes_concat expects 2 arguments")
+		}
+		a, aok := args[0].(*Bytes)
+		b, bok := args[1].(*Bytes)
+		if !aok || !bok {
+			return nil, &raisedSignal{value: "bytes_concat: arguments must be bytes"}
+		}
+		out := make([]byte, len(a.data)+len(b.data))
+		copy(out, a.data)
+		copy(out[len(a.data):], b.data)
+		return &Bytes{data: out}, nil
+	}))
+	env.set("bytes_slice", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 3 {
+			return nil, fmt.Errorf("bytes_slice expects 3 arguments")
+		}
+		b, ok := args[0].(*Bytes)
+		if !ok {
+			return nil, &raisedSignal{value: "bytes_slice: first argument must be bytes"}
+		}
+		s, sok := numberAsInt(args[1])
+		e, eok := numberAsInt(args[2])
+		if !sok || !eok {
+			return nil, &raisedSignal{value: "bytes_slice: indices must be ints"}
+		}
+		if s < 0 || e < s || int(e) > len(b.data) {
+			return nil, &raisedSignal{value: "bytes_slice: index out of range"}
+		}
+		return &Bytes{data: append([]byte{}, b.data[s:e]...)}, nil
+	}))
+	env.set("file_read_bytes", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("file_read_bytes", args)
+		if err != nil {
+			return nil, err
+		}
+		data, rerr := os.ReadFile(path)
+		if rerr != nil {
+			return nil, &raisedSignal{value: rerr.Error()}
+		}
+		return &Bytes{data: data}, nil
+	}))
+	env.set("file_write_bytes", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("file_write_bytes expects 2 arguments")
+		}
+		path, ok := args[0].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "file.write_bytes: path must be a string"}
+		}
+		b, ok := args[1].(*Bytes)
+		if !ok {
+			return nil, &raisedSignal{value: "file.write_bytes: data must be bytes"}
+		}
+		if err := os.WriteFile(path, b.data, 0644); err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return nil, nil
 	}))
 }
 

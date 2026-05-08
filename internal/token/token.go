@@ -39,6 +39,14 @@ const (
 	RBRACKET Type = "]"
 	LBRACE   Type = "{"
 	RBRACE   Type = "}"
+
+	AMP   Type = "&"
+	PIPE  Type = "|"
+	CARET Type = "^"
+	TILDE Type = "~"
+	SHL   Type = "<<"
+	SHR   Type = ">>"
+	BYTES Type = "BYTES"
 )
 
 type Token struct {

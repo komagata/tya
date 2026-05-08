@@ -85,6 +85,59 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			i++
 			continue
 		}
+		if ch == 'b' && i+1 < len(s) && s[i+1] == '"' {
+			var b strings.Builder
+			start := baseCol + i
+			i += 2
+			for i < len(s) && s[i] != '"' {
+				if s[i] == '\\' {
+					if i+1 >= len(s) {
+						l.errs = append(l.errs, fmt.Errorf("%d:%d: unterminated escape", line, baseCol+i))
+						return
+					}
+					switch s[i+1] {
+					case 'n':
+						b.WriteByte('\n')
+					case 't':
+						b.WriteByte('\t')
+					case 'r':
+						b.WriteByte('\r')
+					case '"':
+						b.WriteByte('"')
+					case '\\':
+						b.WriteByte('\\')
+					case 'x':
+						if i+3 >= len(s) {
+							l.errs = append(l.errs, fmt.Errorf("%d:%d: truncated \\x escape", line, baseCol+i))
+							return
+						}
+						hi := hexDigit(s[i+2])
+						lo := hexDigit(s[i+3])
+						if hi < 0 || lo < 0 {
+							l.errs = append(l.errs, fmt.Errorf("%d:%d: invalid \\x escape", line, baseCol+i))
+							return
+						}
+						b.WriteByte(byte(hi*16 + lo))
+						i += 4
+						continue
+					default:
+						l.errs = append(l.errs, fmt.Errorf("%d:%d: unknown escape \\%c", line, baseCol+i, s[i+1]))
+						return
+					}
+					i += 2
+					continue
+				}
+				b.WriteByte(s[i])
+				i++
+			}
+			if i >= len(s) {
+				l.errs = append(l.errs, fmt.Errorf("%d:%d: unterminated bytes literal", line, start))
+				return
+			}
+			i++
+			l.add(token.BYTES, b.String(), line, start)
+			continue
+		}
 		if isAlpha(ch) || ch == '_' {
 			start := i
 			for i < len(s) && (isAlpha(s[i]) || isDigit(s[i]) || s[i] == '_') {
@@ -169,6 +222,14 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 				l.add(token.GTE, two, line, col)
 				i += 2
 				continue
+			case "<<":
+				l.add(token.SHL, two, line, col)
+				i += 2
+				continue
+			case ">>":
+				l.add(token.SHR, two, line, col)
+				i += 2
+				continue
 			}
 		}
 		switch ch {
@@ -210,6 +271,14 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			l.add(token.LBRACE, "{", line, col)
 		case '}':
 			l.add(token.RBRACE, "}", line, col)
+		case '&':
+			l.add(token.AMP, "&", line, col)
+		case '|':
+			l.add(token.PIPE, "|", line, col)
+		case '^':
+			l.add(token.CARET, "^", line, col)
+		case '~':
+			l.add(token.TILDE, "~", line, col)
 		default:
 			l.errs = append(l.errs, fmt.Errorf("%d:%d: unexpected character %q", line, col, ch))
 		}
@@ -242,3 +311,16 @@ func stripComment(s string) string {
 
 func isAlpha(b byte) bool { return b < unicode.MaxASCII && (unicode.IsLetter(rune(b))) }
 func isDigit(b byte) bool { return b >= '0' && b <= '9' }
+
+func hexDigit(b byte) int {
+	if b >= '0' && b <= '9' {
+		return int(b - '0')
+	}
+	if b >= 'a' && b <= 'f' {
+		return int(b-'a') + 10
+	}
+	if b >= 'A' && b <= 'F' {
+		return int(b-'A') + 10
+	}
+	return -1
+}

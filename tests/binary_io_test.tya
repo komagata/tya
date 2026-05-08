@@ -1,0 +1,17 @@
+import unittest
+import file
+
+module binary_io_test
+  test_round_trip = ->
+    p = "/tmp/tya_v25_test.bin"
+    data = b"\x00\x01\x02\xff"
+    file.write_bytes(p, data)
+    back = file.read_bytes(p)
+    unittest.assert_equal(4, len(back), "len")
+    unittest.assert_equal(255, back[3], "byte 3")
+    unittest.assert(data == back, "equal")
+  test_text_to_bytes_roundtrip = ->
+    p = "/tmp/tya_v25_text.bin"
+    file.write_bytes(p, bytes_of("Tya"))
+    back = file.read_bytes(p)
+    unittest.assert_equal("Tya", bytes_text(back), "round trip")

@@ -152,7 +152,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add unittest-form tests for each new module.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.25 bit-level operations and byte sequences
+- [x] Ship v0.25 bit-level operations and byte sequences
   - [x] Define v0.25 scope
     - [x] Add `docs/v0.25/SPEC.md`.
     - [x] Specify bitwise operators `&`, `|`, `^`, `~`, `<<`, `>>` on integers.
@@ -161,32 +161,32 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Specify bytes-aware updates to `digest`, `secure_random`, `hex`, and `base64` (keep string input compatibility).
     - [x] Document the `hex.decode` / `base64.decode` return-type breaking change (now bytes).
     - [x] Keep arbitrary-precision integers, fixed-width integer types, mutable byte buffers, character-set conversion, and streaming IO out of v0.25.
-  - [ ] Add bitwise operators
-    - [ ] Lex `&`, `|`, `^`, `~`, `<<`, `>>` tokens (avoid conflict with existing operators).
-    - [ ] Add precedence levels to the parser.
-    - [ ] Reject non-integer operands with structured errors.
-    - [ ] Emit C bitwise operators in codegen on `(long)x.number`.
-    - [ ] Add eval support for the new operators.
-  - [ ] Add the `bytes` value type
-    - [ ] Add `TYA_BYTES` value kind with separate length to the C runtime.
-    - [ ] Add `bytes`, `bytes_of`, `bytes_text`, `bytes_array`, `bytes_concat`, `bytes_slice` builtins.
-    - [ ] Lex and parse `b"..."` literals with `\xHH` escapes.
-    - [ ] Wire indexing, length, equality, concat through eval and codegen.
-    - [ ] Update `kind` to return `"bytes"`.
-  - [ ] Add binary file I/O
-    - [ ] Add `file.read_bytes(path)` and `file.write_bytes(path, b)` builtins.
-    - [ ] Wire stdlib `file` module wrappers.
-  - [ ] Update existing stdlib for bytes
-    - [ ] Make `digest.*` accept either string or bytes.
-    - [ ] Change `secure_random.bytes(n)` to return a bytes value.
-    - [ ] Make `hex.encode` accept either string or bytes; `hex.decode` returns bytes.
-    - [ ] Make `base64.encode` accept either string or bytes; `base64.decode` returns bytes.
-  - [ ] Keep v0.25 documentation and tests aligned
-    - [ ] Update latest docs when v0.25 behavior is implemented.
-    - [ ] Keep `docs/v0.25/` aligned with the v0.25 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add unittest-form tests for bitwise operators, the bytes type, binary IO, and the migrated digest/secure_random/hex/base64 modules.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Add bitwise operators
+    - [x] Lex `&`, `|`, `^`, `~`, `<<`, `>>` tokens (avoid conflict with existing operators).
+    - [x] Add precedence levels to the parser.
+    - [x] Reject non-integer operands with structured errors.
+    - [x] Emit C bitwise operators in codegen on `(long)x.number`.
+    - [x] Add eval support for the new operators.
+  - [x] Add the `bytes` value type
+    - [x] Add `TYA_BYTES` value kind with separate length to the C runtime.
+    - [x] Add `bytes`, `bytes_of`, `bytes_text`, `bytes_array`, `bytes_concat`, `bytes_slice` builtins.
+    - [x] Lex and parse `b"..."` literals with `\xHH` escapes.
+    - [x] Wire indexing, length, equality, concat through eval and codegen.
+    - [x] Update `kind` to return `"bytes"`.
+  - [x] Add binary file I/O
+    - [x] Add `file.read_bytes(path)` and `file.write_bytes(path, b)` builtins.
+    - [x] Wire stdlib `file` module wrappers.
+  - [x] Update existing stdlib for bytes
+    - [x] Make `digest.*` accept either string or bytes.
+    - [x] Change `secure_random.bytes(n)` to return a bytes value.
+    - [x] Make `hex.encode` accept either string or bytes; `hex.decode` returns bytes.
+    - [x] Make `base64.encode` accept either string or bytes; `base64.decode` returns bytes.
+  - [x] Keep v0.25 documentation and tests aligned
+    - [x] Update latest docs when v0.25 behavior is implemented.
+    - [x] Keep `docs/v0.25/` aligned with the v0.25 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add unittest-form tests for bitwise operators, the bytes type, binary IO, and the migrated digest/secure_random/hex/base64 modules.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Ship v0.26 external packages and version resolution
   - [ ] Define v0.26 scope
     - [ ] Add `docs/v0.26/SPEC.md`.

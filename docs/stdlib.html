@@ -249,6 +249,36 @@ println matrix.add(a, b)[&quot;data&quot;]
 println matrix.mul(a, a)[&quot;data&quot;]
 println matrix.det(a)</code></pre>
 <p>Functions: <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>put</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code> (≤ 4×4), <code>equal?</code>.</p>
+<h2 id="bytes-v0-25"><code>bytes</code> (v0.25)</h2>
+<p><code>bytes</code> is a built-in value type for raw byte sequences (each element is an int 0..255). Construct with the <code>b&quot;...&quot;</code> literal or builtins:</p>
+<pre><code class="language-tya">b1 = b&quot;hello&quot;
+b2 = b&quot;\x00\x01\xff&quot;
+b3 = bytes([72, 101, 108, 108, 111])
+
+println len(b1)              # 5
+println b1[0]                # 104
+println bytes_text(b1)       # hello
+println bytes_array(b1)      # [104, 101, 108, 108, 111]
+println bytes_slice(b1, 0, 3)
+println b1 + b2              # concat</code></pre>
+<p>Builtins: <code>bytes(int_array)</code>, <code>bytes_of(text)</code>, <code>bytes_text(b)</code>, <code>bytes_array(b)</code>, <code>bytes_concat(a, b)</code>, <code>bytes_slice(b, start, end)</code>.</p>
+<h2 id="file-v0-25-binary-i-o"><code>file</code> (v0.25 binary I/O)</h2>
+<pre><code class="language-tya">import file
+
+raw = file.read_bytes(&quot;/path/to/file&quot;)
+file.write_bytes(&quot;/tmp/copy&quot;, raw)</code></pre>
+<p><code>read_bytes(path)</code> returns a <code>bytes</code> value. <code>write_bytes(path, b)</code> writes raw bytes.</p>
+<h2 id="updated-for-bytes-v0-25">Updated for bytes (v0.25)</h2>
+<ul>
+<li><code>digest.md5/sha1/sha256/sha384/sha512</code> accept either <code>string</code> or <code>bytes</code>.</li>
+<li><code>secure_random.bytes(n)</code> returns <code>bytes</code>.</li>
+<li><code>hex.encode(value)</code> accepts <code>string</code> or <code>bytes</code>. <code>hex.decode(text)</code> returns</li>
+</ul>
+<p>  <code>bytes</code> (was <code>string</code> in v0.24 — breaking change).</p>
+<ul>
+<li><code>base64.encode(value)</code> accepts <code>string</code> or <code>bytes</code>. <code>base64.decode(text)</code></li>
+</ul>
+<p>  returns <code>bytes</code> (was <code>string</code> in v0.24 — breaking change).</p>
 <h2 id="unittest"><code>unittest</code></h2>
 <pre><code class="language-tya">import unittest
 import string

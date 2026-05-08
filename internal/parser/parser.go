@@ -900,11 +900,59 @@ func (p *Parser) equality() (ast.Expr, error) {
 }
 
 func (p *Parser) comparison() (ast.Expr, error) {
-	left, err := p.term()
+	left, err := p.bitOr()
 	if err != nil {
 		return nil, err
 	}
 	for p.match(token.LT) || p.match(token.LTE) || p.match(token.GT) || p.match(token.GTE) {
+		op := p.prev()
+		right, err := p.bitOr()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
+}
+
+func (p *Parser) bitOr() (ast.Expr, error) {
+	left, err := p.bitXor()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.PIPE) {
+		op := p.prev()
+		right, err := p.bitXor()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
+}
+
+func (p *Parser) bitXor() (ast.Expr, error) {
+	left, err := p.bitAnd()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.CARET) {
+		op := p.prev()
+		right, err := p.bitAnd()
+		if err != nil {
+			return nil, err
+		}
+		left = &ast.BinaryExpr{Left: left, Op: op, Right: right}
+	}
+	return left, nil
+}
+
+func (p *Parser) bitAnd() (ast.Expr, error) {
+	left, err := p.term()
+	if err != nil {
+		return nil, err
+	}
+	for p.match(token.AMP) {
 		op := p.prev()
 		right, err := p.term()
 		if err != nil {
@@ -936,7 +984,7 @@ func (p *Parser) factor() (ast.Expr, error) {
 	if err != nil {
 		return nil, err
 	}
-	for p.match(token.STAR) || p.match(token.SLASH) || p.match(token.PERCENT) {
+	for p.match(token.STAR) || p.match(token.SLASH) || p.match(token.PERCENT) || p.match(token.SHL) || p.match(token.SHR) {
 		op := p.prev()
 		right, err := p.unary()
 		if err != nil {
@@ -959,7 +1007,7 @@ func (p *Parser) unary() (ast.Expr, error) {
 		}
 		return &ast.TryExpr{Expr: ex, Tok: tok}, nil
 	}
-	if p.matchWord("not") || p.match(token.MINUS) {
+	if p.matchWord("not") || p.match(token.MINUS) || p.match(token.TILDE) {
 		op := p.prev()
 		ex, err := p.unary()
 		if err != nil {
@@ -1070,6 +1118,8 @@ func (p *Parser) primary() (ast.Expr, error) {
 		return &ast.FloatLit{Value: v}, nil
 	case token.STRING:
 		return &ast.StringLit{Value: tok.Lexeme}, nil
+	case token.BYTES:
+		return &ast.BytesLit{Value: tok.Lexeme}, nil
 	case token.LPAREN:
 		if p.match(token.RPAREN) {
 			if p.match(token.ARROW) {
@@ -1529,7 +1579,7 @@ func (p *Parser) startsExprAt(pos int) bool {
 		return false
 	}
 	switch p.toks[pos].Type {
-	case token.IDENT, token.STRING, token.INT, token.FLOAT, token.MINUS, token.LPAREN, token.LBRACKET, token.LBRACE, token.ARROW, token.AT:
+	case token.IDENT, token.STRING, token.BYTES, token.INT, token.FLOAT, token.MINUS, token.TILDE, token.LPAREN, token.LBRACKET, token.LBRACE, token.ARROW, token.AT:
 		return true
 	default:
 		return false

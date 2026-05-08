@@ -14,25 +14,36 @@ module hex
       return code - 87
     raise "hex.decode: invalid hex digit"
 
-  encode = text ->
-    n = byte_len(text)
+  encode = value ->
+    k = kind(value)
     out = ""
-    i = 0
-    while i < n
-      code = ord(text[i])
-      out = out + hex.hex_digit(to_int(code / 16)) + hex.hex_digit(code % 16)
-      i = i + 1
-    return out
+    if k == "bytes"
+      n = len(value)
+      i = 0
+      while i < n
+        code = value[i]
+        out = out + hex.hex_digit(to_int(code / 16)) + hex.hex_digit(code % 16)
+        i = i + 1
+      return out
+    if k == "string"
+      n = byte_len(value)
+      i = 0
+      while i < n
+        code = ord(value[i])
+        out = out + hex.hex_digit(to_int(code / 16)) + hex.hex_digit(code % 16)
+        i = i + 1
+      return out
+    raise "hex.encode: argument must be a string or bytes"
 
   decode = text ->
     n = byte_len(text)
     if n % 2 != 0
       raise "hex.decode: odd-length input"
-    out = ""
+    arr = []
     i = 0
     while i < n
       hi = hex.decode_digit(text[i])
       lo = hex.decode_digit(text[i + 1])
-      out = out + chr(hi * 16 + lo)
+      push(arr, hi * 16 + lo)
       i = i + 2
-    return out
+    return bytes(arr)

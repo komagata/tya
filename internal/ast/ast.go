@@ -215,6 +215,10 @@ type StringLit struct{ Value string }
 
 func (*StringLit) expr() {}
 
+type BytesLit struct{ Value string }
+
+func (*BytesLit) expr() {}
+
 type BoolLit struct{ Value bool }
 
 func (*BoolLit) expr() {}
