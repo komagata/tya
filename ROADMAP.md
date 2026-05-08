@@ -751,45 +751,46 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [ ] Add compiler, runtime, module, C emission, and negative tests for v0.22 filesystem stdlib APIs.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.23 StrictYAML standard module
-  - [ ] Define v0.23 StrictYAML scope
+- [ ] Ship v0.23 NestedText standard module
+  - [ ] Define v0.23 NestedText scope
     - [ ] Add `docs/v0.23/SPEC.md`.
-    - [ ] Add `yaml` standard module backed by a StrictYAML-style strict subset.
-    - [ ] Specify `yaml.parse(text)` returning nested dicts, arrays, and strings.
-    - [ ] Specify `yaml.dump(value)` emitting the strict subset.
-    - [ ] Forbid implicit type coercion (Norway problem, sexagesimal, octal).
-    - [ ] Forbid anchors, aliases, tags, flow style, and multi-document streams.
-    - [ ] Allow comments and indentation-based block syntax.
-    - [ ] Keep schema validation, full YAML 1.2, custom tags, and binary content out of v0.23.
-  - [ ] Implement the strict YAML parser
-    - [ ] Add a lexer for indented blocks, scalars, sequences, and mappings.
-    - [ ] Treat every scalar value as a string by default.
-    - [ ] Reject anchors, aliases, tags, flow style, and multi-document markers.
+    - [ ] Add `nestedtext` standard module reading and writing `.nt` files.
+    - [ ] Specify `nestedtext.parse(text)` returning nested dicts, arrays, and strings.
+    - [ ] Specify `nestedtext.dump(value)` emitting NestedText.
+    - [ ] Treat every leaf value as a string with no implicit type coercion.
+    - [ ] Support indented block dictionaries, lists, and multi-line strings (`> ` prefix).
+    - [ ] Support `#` line comments.
+    - [ ] Reject non-string dictionary keys.
+    - [ ] Keep schema validation, type inference, anchors, references, and binary content out of v0.23.
+  - [ ] Implement the NestedText parser
+    - [ ] Add a lexer for indented blocks, list items, key/value lines, and multi-line strings.
+    - [ ] Treat every scalar value as a string.
     - [ ] Report syntax errors with source locations.
-  - [ ] Implement the strict YAML writer
+  - [ ] Implement the NestedText writer
     - [ ] Emit indented block syntax.
-    - [ ] Quote ambiguous scalar values.
-    - [ ] Reject non-string keys.
+    - [ ] Use `> ` multi-line strings when values contain newlines or leading whitespace.
+    - [ ] Reject non-string keys and non-supported value kinds.
   - [ ] Keep v0.23 documentation and tests aligned
     - [ ] Update latest docs when v0.23 behavior is implemented.
     - [ ] Keep `docs/v0.23/` aligned with the v0.23 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add parser, writer, module, and negative tests for v0.23 strict YAML.
+    - [ ] Add parser, writer, module, and negative tests for v0.23 NestedText.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.24 Tyafile and package version resolution
-  - [ ] Define v0.24 Tyafile scope
+- [ ] Ship v0.24 package manifest and version resolution
+  - [ ] Define v0.24 package manifest scope
     - [ ] Add `docs/v0.24/SPEC.md`.
-    - [ ] Specify `Tyafile` manifest format parsed by the v0.23 `yaml` standard module.
-    - [ ] Specify `Tyafile.lock` resolved-version lock format.
+    - [ ] Decide the package manifest filename (placeholder: `Tyafile`).
+    - [ ] Specify the manifest format as NestedText, parsed by the v0.23 `nestedtext` standard module.
+    - [ ] Specify the resolved-version lock filename and format (placeholder: `Tyafile.lock`).
     - [ ] Specify package source identity (name plus version constraints).
     - [ ] Specify version operators `~>`, `>=`, `<`, `=`.
     - [ ] Specify Bundler-style single-version-per-source resolution policy.
-    - [ ] Specify `tya install` to resolve and write `Tyafile.lock`.
+    - [ ] Specify `tya install` to resolve and write the lock file.
     - [ ] Specify `tya update [package]` to recompute resolution for one or all packages.
-    - [ ] Specify import resolution to honor `Tyafile.lock` for declared dependencies.
+    - [ ] Specify import resolution to honor the lock file for declared dependencies.
     - [ ] Keep multi-version coexistence, package alias, `unique` declarations, semver-aware type identity, remote registry install, native dependency build, content-addressed lock checksums, and circular dependency healing out of v0.24.
-  - [ ] Add Tyafile manifest parsing
-    - [ ] Parse `Tyafile` via the `yaml` standard module.
+  - [ ] Add manifest parsing
+    - [ ] Parse the manifest via the `nestedtext` standard module.
     - [ ] Read package metadata section.
     - [ ] Read dependencies section with version constraints.
     - [ ] Report manifest validation errors with source locations.
@@ -797,13 +798,13 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Implement backtracking dependency resolver.
     - [ ] Pick the highest version satisfying all constraints.
     - [ ] Detect and report unsolvable constraint sets (diamond conflicts).
-    - [ ] Write resolved versions to `Tyafile.lock`.
+    - [ ] Write resolved versions to the lock file.
   - [ ] Wire dependency loading into module resolution
-    - [ ] Resolve Tyafile-declared dependencies before bundled stdlib lookup.
-    - [ ] Honor `Tyafile.lock` for reproducible loads.
+    - [ ] Resolve manifest-declared dependencies before bundled stdlib lookup.
+    - [ ] Honor the lock file for reproducible loads.
     - [ ] Preserve same-directory and `TYA_PATH` precedence.
   - [ ] Add `tya install` and `tya update` CLI commands
-    - [ ] Add `tya install` to read `Tyafile`, resolve, and write `Tyafile.lock`.
+    - [ ] Add `tya install` to read the manifest, resolve, and write the lock file.
     - [ ] Add `tya update [package]` to recompute the lock for one or all packages.
     - [ ] Report missing or conflicting requirements with source-oriented diagnostics.
   - [ ] Keep v0.24 documentation and tests aligned
