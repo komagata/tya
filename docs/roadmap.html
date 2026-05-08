@@ -57,6 +57,8 @@
 <li><a href="v0.6/spec.html"><code>docs/v0.6/SPEC.md</code></a></li>
 <li><a href="v0.7/spec.html"><code>docs/v0.7/SPEC.md</code></a></li>
 <li><a href="v0.8/spec.html"><code>docs/v0.8/SPEC.md</code></a></li>
+<li><a href="v0.9/spec.html"><code>docs/v0.9/SPEC.md</code></a></li>
+<li><a href="v0.10/spec.html"><code>docs/v0.10/SPEC.md</code></a></li>
 </ol>
 <p>The v0.5 reference implementation remains:</p>
 <pre><code class="language-text">Go lexer
@@ -300,7 +302,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.8 class-level inheritance</li>
+<li>[x] Ship v0.8 class-level inheritance</li>
 <ul>
 <li>[x] Define v0.8 class-level inheritance scope</li>
 <ul>
@@ -313,40 +315,133 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Specify <code>object.class</code> and <code>object.class_name</code>.</li>
 <li>[x] Specify <code>ClassName.name</code> and <code>ClassName.parent</code>.</li>
 </ul>
-<li>[ ] Add inherited class variable lookup</li>
+<li>[x] Add inherited class variable lookup</li>
 <ul>
-<li>[ ] Resolve <code>ClassName.field</code> through the class inheritance chain.</li>
-<li>[ ] Resolve <code>@@field</code> in class methods from the receiving class.</li>
-<li>[ ] Resolve <code>@@field</code> in instance methods from the instance's class.</li>
-<li>[ ] Create or update subclass-owned class variables on subclass assignment.</li>
+<li>[x] Resolve <code>ClassName.field</code> through the class inheritance chain.</li>
+<li>[x] Resolve <code>@@field</code> in class methods from the receiving class.</li>
+<li>[x] Resolve <code>@@field</code> in instance methods from the instance's class.</li>
+<li>[x] Create or update subclass-owned class variables on subclass assignment.</li>
 </ul>
-<li>[ ] Add inherited class method lookup</li>
+<li>[x] Add inherited class method lookup</li>
 <ul>
-<li>[ ] Resolve <code>ClassName.method(args...)</code> through the class inheritance chain.</li>
-<li>[ ] Bind inherited class methods to the receiving class.</li>
-<li>[ ] Support class method overriding with matching arity.</li>
+<li>[x] Resolve <code>ClassName.method(args...)</code> through the class inheritance chain.</li>
+<li>[x] Bind inherited class methods to the receiving class.</li>
+<li>[x] Support class method overriding with matching arity.</li>
 </ul>
-<li>[ ] Add class-method <code>self</code> and <code>super</code></li>
+<li>[x] Add class-method <code>self</code> and <code>super</code></li>
 <ul>
-<li>[ ] Support <code>self</code> inside class methods.</li>
-<li>[ ] Reject <code>self</code> inside instance methods.</li>
-<li>[ ] Support <code>super(args...)</code> inside overridden class methods.</li>
-<li>[ ] Reject class-method <code>super</code> when no parent class method exists.</li>
+<li>[x] Support <code>self</code> inside class methods.</li>
+<li>[x] Reject <code>self</code> inside instance methods.</li>
+<li>[x] Support <code>super(args...)</code> inside overridden class methods.</li>
+<li>[x] Reject class-method <code>super</code> when no parent class method exists.</li>
 </ul>
-<li>[ ] Add small class introspection</li>
+<li>[x] Add small class introspection</li>
 <ul>
-<li>[ ] Support <code>object.class</code> as the object's actual class.</li>
-<li>[ ] Support <code>object.class_name</code> as the object's actual class name string.</li>
-<li>[ ] Support <code>ClassName.name</code> as the class name string.</li>
-<li>[ ] Support <code>ClassName.parent</code> as the parent class or <code>nil</code>.</li>
-<li>[ ] Reject assignment to read-only introspection members.</li>
+<li>[x] Support <code>object.class</code> as the object's actual class.</li>
+<li>[x] Support <code>object.class_name</code> as the object's actual class name string.</li>
+<li>[x] Support <code>ClassName.name</code> as the class name string.</li>
+<li>[x] Support <code>ClassName.parent</code> as the parent class or <code>nil</code>.</li>
+<li>[x] Reject assignment to read-only introspection members.</li>
 </ul>
-<li>[ ] Keep v0.8 documentation and tests aligned</li>
+<li>[x] Keep v0.8 documentation and tests aligned</li>
 <ul>
-<li>[ ] Update latest docs when v0.8 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.8/</code> aligned with the v0.8 minor specification.</li>
+<li>[x] Update latest docs when v0.8 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.8/</code> aligned with the v0.8 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.8 class-level inheritance and introspection.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[x] Ship v0.9 class visibility and private members</li>
+<ul>
+<li>[x] Define v0.9 private member scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.9/SPEC.md</code>.</li>
+<li>[x] Specify private instance fields with <code>@_field</code>.</li>
+<li>[x] Specify private instance methods with <code>_method = args -&gt;</code>.</li>
+<li>[x] Specify private class variables with <code>@@_field</code>.</li>
+<li>[x] Specify private class methods with <code>@@_method = args -&gt;</code>.</li>
+<li>[x] Specify private constructors with <code>_init</code>.</li>
+<li>[x] Specify <code>abstract class Name</code> as directly non-constructible.</li>
+<li>[x] Keep protected visibility, visibility keywords, interfaces, abstract methods, and mixins out of v0.9.</li>
+</ul>
+<li>[x] Add private instance member checks</li>
+<ul>
+<li>[x] Reject external access to private instance fields.</li>
+<li>[x] Reject external calls to private instance methods.</li>
+<li>[x] Allow private instance access from methods declared in the same class.</li>
+<li>[x] Reject subclass direct access to parent private instance members.</li>
+</ul>
+<li>[x] Add private class member checks</li>
+<ul>
+<li>[x] Reject external access to private class variables.</li>
+<li>[x] Reject external calls to private class methods.</li>
+<li>[x] Allow private class access from methods declared in the same class.</li>
+<li>[x] Reject subclass direct access to parent private class members.</li>
+</ul>
+<li>[x] Keep inheritance and introspection compatible</li>
+<ul>
+<li>[x] Treat subclass private members with the same name as parent private members as separate members.</li>
+<li>[x] Reject <code>super</code> calls that target private parent methods.</li>
+<li>[x] Reject <code>super</code> calls that target parent <code>_init</code>.</li>
+<li>[x] Keep v0.8 introspection from exposing private member lists.</li>
+</ul>
+<li>[x] Add constructor visibility and abstract class checks</li>
+<ul>
+<li>[x] Support <code>_init</code> as a private constructor.</li>
+<li>[x] Reject external construction of classes with <code>_init</code>.</li>
+<li>[x] Allow construction from methods declared in the same class.</li>
+<li>[x] Reject classes declaring both <code>init</code> and <code>_init</code>.</li>
+<li>[x] Parse <code>abstract class Name</code>.</li>
+<li>[x] Reject direct construction of abstract classes.</li>
+<li>[x] Allow construction of non-abstract subclasses of abstract classes.</li>
+</ul>
+<li>[x] Keep v0.9 documentation and tests aligned</li>
+<ul>
+<li>[x] Update latest docs when v0.9 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.9/</code> aligned with the v0.9 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.9 private members, <code>_init</code>, and abstract classes.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.10 abstract methods and final classes</li>
+<ul>
+<li>[x] Define v0.10 abstract method and final class scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.10/SPEC.md</code>.</li>
+<li>[x] Specify <code>abstract method = args -&gt;</code>.</li>
+<li>[x] Specify <code>abstract @@method = args -&gt;</code>.</li>
+<li>[x] Specify concrete subclass implementation checks.</li>
+<li>[x] Specify <code>final class Name</code>.</li>
+<li>[x] Keep interfaces, <code>implements</code>, abstract fields, final methods, sealed classes, base classes, type annotations, and generics out of v0.10.</li>
+</ul>
+<li>[ ] Add abstract method parsing and checking</li>
+<ul>
+<li>[ ] Parse abstract instance method declarations without bodies.</li>
+<li>[ ] Parse abstract class method declarations without bodies.</li>
+<li>[ ] Reject abstract methods outside abstract classes.</li>
+<li>[ ] Reject abstract methods with bodies.</li>
+</ul>
+<li>[ ] Add abstract implementation checks</li>
+<ul>
+<li>[ ] Require concrete subclasses to implement inherited abstract instance methods.</li>
+<li>[ ] Require concrete subclasses to implement inherited abstract class methods.</li>
+<li>[ ] Allow abstract subclasses to leave abstract methods unimplemented.</li>
+<li>[ ] Check implementation arity against abstract method arity.</li>
+</ul>
+<li>[ ] Add final class checks</li>
+<ul>
+<li>[ ] Parse <code>final class Name</code>.</li>
+<li>[ ] Reject extending final classes.</li>
+<li>[ ] Reject classes declared as both abstract and final.</li>
+</ul>
+<li>[ ] Keep v0.10 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.10 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.10/</code> aligned with the v0.10 minor specification.</li>
 <li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add compiler, runtime, module, and negative tests for v0.8 class-level inheritance and introspection.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.10 abstract methods and final classes.</li>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>

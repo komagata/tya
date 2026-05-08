@@ -46,6 +46,12 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		}
 		return p.moduleDecl()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "abstract" && p.peekN(1).Lexeme == "class" {
+		if p.blockDepth != 0 {
+			return nil, p.err("class must be top-level")
+		}
+		return p.classDecl()
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "class" {
 		if p.blockDepth != 0 {
 			return nil, p.err("class must be top-level")
@@ -134,6 +140,15 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 	decl := &ast.ModuleDecl{Name: name.Lexeme, NameTok: name}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		if p.at(token.IDENT) && p.peek().Lexeme == "abstract" && p.peekN(1).Lexeme == "class" {
+			cls, err := p.classDecl()
+			if err != nil {
+				return nil, err
+			}
+			decl.Classes = append(decl.Classes, cls.(*ast.ClassDecl))
+			p.skipNewlines()
+			continue
+		}
 		if p.at(token.IDENT) && p.peek().Lexeme == "class" {
 			cls, err := p.classDecl()
 			if err != nil {
@@ -164,6 +179,11 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 }
 
 func (p *Parser) classDecl() (ast.Stmt, error) {
+	abstract := false
+	if p.at(token.IDENT) && p.peek().Lexeme == "abstract" {
+		abstract = true
+		p.next()
+	}
 	p.next()
 	name, err := p.expectName("expected class name")
 	if err != nil {
@@ -189,7 +209,7 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		p.classDepth--
 		p.blockDepth--
 	}()
-	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent}
+	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, Abstract: abstract}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		isClassMember := p.match(token.AT)

@@ -55,6 +55,8 @@ Current planned minor-version documents are:
 1. [`docs/v0.6/SPEC.md`](docs/v0.6/SPEC.md)
 1. [`docs/v0.7/SPEC.md`](docs/v0.7/SPEC.md)
 1. [`docs/v0.8/SPEC.md`](docs/v0.8/SPEC.md)
+1. [`docs/v0.9/SPEC.md`](docs/v0.9/SPEC.md)
+1. [`docs/v0.10/SPEC.md`](docs/v0.10/SPEC.md)
 
 The v0.5 reference implementation remains:
 
@@ -302,6 +304,73 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.8 class-level inheritance and introspection.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [x] Ship v0.9 class visibility and private members
+  - [x] Define v0.9 private member scope
+    - [x] Add `docs/v0.9/SPEC.md`.
+    - [x] Specify private instance fields with `@_field`.
+    - [x] Specify private instance methods with `_method = args ->`.
+    - [x] Specify private class variables with `@@_field`.
+    - [x] Specify private class methods with `@@_method = args ->`.
+    - [x] Specify private constructors with `_init`.
+    - [x] Specify `abstract class Name` as directly non-constructible.
+    - [x] Keep protected visibility, visibility keywords, interfaces, abstract methods, and mixins out of v0.9.
+  - [x] Add private instance member checks
+    - [x] Reject external access to private instance fields.
+    - [x] Reject external calls to private instance methods.
+    - [x] Allow private instance access from methods declared in the same class.
+    - [x] Reject subclass direct access to parent private instance members.
+  - [x] Add private class member checks
+    - [x] Reject external access to private class variables.
+    - [x] Reject external calls to private class methods.
+    - [x] Allow private class access from methods declared in the same class.
+    - [x] Reject subclass direct access to parent private class members.
+  - [x] Keep inheritance and introspection compatible
+    - [x] Treat subclass private members with the same name as parent private members as separate members.
+    - [x] Reject `super` calls that target private parent methods.
+    - [x] Reject `super` calls that target parent `_init`.
+    - [x] Keep v0.8 introspection from exposing private member lists.
+  - [x] Add constructor visibility and abstract class checks
+    - [x] Support `_init` as a private constructor.
+    - [x] Reject external construction of classes with `_init`.
+    - [x] Allow construction from methods declared in the same class.
+    - [x] Reject classes declaring both `init` and `_init`.
+    - [x] Parse `abstract class Name`.
+    - [x] Reject direct construction of abstract classes.
+    - [x] Allow construction of non-abstract subclasses of abstract classes.
+  - [x] Keep v0.9 documentation and tests aligned
+    - [x] Update latest docs when v0.9 behavior is implemented.
+    - [x] Keep `docs/v0.9/` aligned with the v0.9 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.9 private members, `_init`, and abstract classes.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.10 abstract methods and final classes
+  - [x] Define v0.10 abstract method and final class scope
+    - [x] Add `docs/v0.10/SPEC.md`.
+    - [x] Specify `abstract method = args ->`.
+    - [x] Specify `abstract @@method = args ->`.
+    - [x] Specify concrete subclass implementation checks.
+    - [x] Specify `final class Name`.
+    - [x] Keep interfaces, `implements`, abstract fields, final methods, sealed classes, base classes, type annotations, and generics out of v0.10.
+  - [ ] Add abstract method parsing and checking
+    - [ ] Parse abstract instance method declarations without bodies.
+    - [ ] Parse abstract class method declarations without bodies.
+    - [ ] Reject abstract methods outside abstract classes.
+    - [ ] Reject abstract methods with bodies.
+  - [ ] Add abstract implementation checks
+    - [ ] Require concrete subclasses to implement inherited abstract instance methods.
+    - [ ] Require concrete subclasses to implement inherited abstract class methods.
+    - [ ] Allow abstract subclasses to leave abstract methods unimplemented.
+    - [ ] Check implementation arity against abstract method arity.
+  - [ ] Add final class checks
+    - [ ] Parse `final class Name`.
+    - [ ] Reject extending final classes.
+    - [ ] Reject classes declared as both abstract and final.
+  - [ ] Keep v0.10 documentation and tests aligned
+    - [ ] Update latest docs when v0.10 behavior is implemented.
+    - [ ] Keep `docs/v0.10/` aligned with the v0.10 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.10 abstract methods and final classes.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 

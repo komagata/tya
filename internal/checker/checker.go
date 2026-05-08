@@ -13,6 +13,10 @@ var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
 var valueNameRE = regexp.MustCompile(`^_?[a-z][a-z0-9]*(?:_[a-z0-9]+)*$|^_$`)
 var classNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
 
+func isPrivateName(name string) bool {
+	return strings.HasPrefix(name, "_") && name != "_"
+}
+
 func Check(prog *ast.Program) error {
 	return CheckWithModules(prog, nil)
 }
@@ -75,12 +79,19 @@ type scope struct {
 }
 
 type classInfo struct {
-	name         string
-	parent       string
-	hasInit      bool
-	initArity    int
-	methods      map[string]int
-	classMethods map[string]int
+	name                 string
+	parent               string
+	abstract             bool
+	hasInit              bool
+	initArity            int
+	privateInit          bool
+	methods              map[string]int
+	classMethods         map[string]int
+	privateFields        map[string]bool
+	privateMethods       map[string]bool
+	privateClassMembers  map[string]bool
+	privateClassMethods  map[string]bool
+	privateFieldAssigned map[string]bool
 }
 
 func newScope(parent *scope) *scope {
@@ -298,21 +309,33 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
 	key := classKey(module, class)
-	info := classInfo{name: key, methods: map[string]int{}, classMethods: map[string]int{}}
+	info := classInfo{name: key, abstract: class.Abstract, methods: map[string]int{}, classMethods: map[string]int{}, privateFields: map[string]bool{}, privateMethods: map[string]bool{}, privateClassMembers: map[string]bool{}, privateClassMethods: map[string]bool{}, privateFieldAssigned: map[string]bool{}}
 	if class.Parent != nil {
 		info.parent = refKey(class.Parent, module, scope)
 	}
 	for _, method := range class.Methods {
 		if method.Class {
 			info.classMethods[method.Name] = len(method.Func.Params)
+			if isPrivateName(method.Name) {
+				info.privateClassMembers[method.Name] = true
+				info.privateClassMethods[method.Name] = true
+			}
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
+		if isPrivateName(method.Name) {
+			info.privateMethods[method.Name] = true
+		}
 		if method.Name == "init" {
 			info.hasInit = true
 			info.initArity = len(method.Func.Params)
+		} else if method.Name == "_init" {
+			info.hasInit = true
+			info.initArity = len(method.Func.Params)
+			info.privateInit = true
 		}
 	}
+	collectPrivateClassMembers(&info, class)
 	scope.define(module+"."+class.Name, kindClass)
 	scope.classes[key] = info
 	return nil
@@ -323,29 +346,126 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
 	key := classKey("", class)
-	info := classInfo{name: key, methods: map[string]int{}, classMethods: map[string]int{}}
+	info := classInfo{name: key, abstract: class.Abstract, methods: map[string]int{}, classMethods: map[string]int{}, privateFields: map[string]bool{}, privateMethods: map[string]bool{}, privateClassMembers: map[string]bool{}, privateClassMethods: map[string]bool{}, privateFieldAssigned: map[string]bool{}}
 	if class.Parent != nil {
 		info.parent = refKey(class.Parent, "", scope)
 	}
 	for _, method := range class.Methods {
 		if method.Class {
 			info.classMethods[method.Name] = len(method.Func.Params)
+			if isPrivateName(method.Name) {
+				info.privateClassMembers[method.Name] = true
+				info.privateClassMethods[method.Name] = true
+			}
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
+		if isPrivateName(method.Name) {
+			info.privateMethods[method.Name] = true
+		}
 		if method.Name == "init" {
 			info.hasInit = true
 			info.initArity = len(method.Func.Params)
+		} else if method.Name == "_init" {
+			info.hasInit = true
+			info.initArity = len(method.Func.Params)
+			info.privateInit = true
 		}
 	}
+	collectPrivateClassMembers(&info, class)
 	scope.define(class.Name, kindClass)
 	scope.classes[key] = info
 	return nil
 }
 
+func collectPrivateClassMembers(info *classInfo, class *ast.ClassDecl) {
+	for _, field := range class.Fields {
+		if isPrivateName(field.Name) {
+			info.privateFields[field.Name] = true
+		}
+	}
+	for _, variable := range class.Vars {
+		if isPrivateName(variable.Name) {
+			info.privateClassMembers[variable.Name] = true
+		}
+	}
+	for _, method := range class.Methods {
+		collectPrivateAssignments(info, method.Func)
+	}
+}
+
+func collectPrivateAssignments(info *classInfo, fn *ast.FuncLit) {
+	var walkExpr func(ast.Expr, bool)
+	walkExpr = func(expr ast.Expr, assignmentTarget bool) {
+		switch n := expr.(type) {
+		case *ast.InstanceFieldExpr:
+			if assignmentTarget && isPrivateName(n.Name) {
+				info.privateFieldAssigned[n.Name] = true
+				info.privateFields[n.Name] = true
+			}
+		case *ast.ClassVarExpr:
+			if assignmentTarget && isPrivateName(n.Name) {
+				info.privateClassMembers[n.Name] = true
+			}
+		case *ast.BinaryExpr:
+			walkExpr(n.Left, false)
+			walkExpr(n.Right, false)
+		case *ast.UnaryExpr:
+			walkExpr(n.Expr, false)
+		case *ast.TryExpr:
+			walkExpr(n.Expr, false)
+		case *ast.ArrayLit:
+			for _, elem := range n.Elems {
+				walkExpr(elem, false)
+			}
+		case *ast.DictLit:
+			for _, prop := range n.Props {
+				walkExpr(prop.Value, false)
+			}
+		case *ast.IndexExpr:
+			walkExpr(n.Target, false)
+			walkExpr(n.Index, false)
+		case *ast.MemberExpr:
+			walkExpr(n.Target, false)
+		case *ast.CallExpr:
+			walkExpr(n.Callee, false)
+			for _, arg := range n.Args {
+				walkExpr(arg, false)
+			}
+		case *ast.FuncLit:
+			collectPrivateAssignments(info, n)
+		}
+	}
+	for _, stmt := range fn.Body {
+		switch n := stmt.(type) {
+		case *ast.AssignStmt:
+			for _, target := range n.Targets {
+				walkExpr(target, true)
+			}
+			for _, value := range n.Values {
+				walkExpr(value, false)
+			}
+		case *ast.ExprStmt:
+			walkExpr(n.Expr, false)
+		case *ast.ReturnStmt:
+			for _, value := range n.Values {
+				walkExpr(value, false)
+			}
+		}
+	}
+	if fn.Expr != nil {
+		walkExpr(fn.Expr, false)
+	}
+}
+
 func checkExpr(expr ast.Expr, scope *scope) error {
 	switch n := expr.(type) {
 	case *ast.Ident:
+		if isPrivateName(n.Name) && scope.inInstanceMethod && scope.currentClass != "" {
+			if scope.classes[scope.currentClass].privateMethods[n.Name] {
+				return nil
+			}
+		}
 		if !scope.defined(n.Name) {
 			return fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
 		}
@@ -421,6 +541,9 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		if !valueNameRE.MatchString(n.Name) {
 			return fmt.Errorf("%d:%d: invalid field name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
+		if err := checkPrivateInstanceAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope, false); err != nil {
+			return err
+		}
 	case *ast.ClassVarExpr:
 		if !scope.inClassBody && !scope.inInstanceMethod && !scope.inClassMethod {
 			return fmt.Errorf("%d:%d: @@%s is only valid inside a class", n.NameTok.Line, n.NameTok.Col, n.Name)
@@ -428,9 +551,15 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		if !valueNameRE.MatchString(n.Name) {
 			return fmt.Errorf("%d:%d: invalid class variable name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
+		if err := checkPrivateClassAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+			return err
+		}
 	case *ast.MemberExpr:
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
+		}
+		if isPrivateName(n.Name) {
+			return fmt.Errorf("%d:%d: private member %s is not accessible here", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
 		switch kindOf(n.Target, scope) {
 		case kindModule:
@@ -468,7 +597,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				if len(n.Args) != arity {
 					return fmt.Errorf("%d:%d: super class method %s expects %d arguments", super.Tok.Line, super.Tok.Col, scope.currentMethod, arity)
 				}
-			} else if scope.currentMethod == "init" {
+			} else if scope.currentMethod == "init" || scope.currentMethod == "_init" {
+				if parentInfo := scope.classes[parent]; parentInfo.privateInit {
+					return fmt.Errorf("%d:%d: super cannot call private parent constructor", super.Tok.Line, super.Tok.Col)
+				}
 				arity, ok := inheritedInitArity(parent, scope)
 				if !ok {
 					return fmt.Errorf("%d:%d: super has no parent method", super.Tok.Line, super.Tok.Col)
@@ -492,17 +624,31 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 			return nil
 		}
+		if id, ok := n.Callee.(*ast.Ident); ok && isPrivateName(id.Name) && scope.inInstanceMethod && scope.currentClass != "" {
+			if !scope.classes[scope.currentClass].privateMethods[id.Name] {
+				return fmt.Errorf("%d:%d: private method %s is not declared in %s", id.Tok.Line, id.Tok.Col, id.Name, scope.currentClass)
+			}
+			for _, arg := range n.Args {
+				if err := checkExpr(arg, scope); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
 		if err := checkExpr(n.Callee, scope); err != nil {
 			return err
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindClass {
-			info := scope.classes[id.Name]
-			hasInit, arity := effectiveInit(info, scope)
-			if !hasInit && len(n.Args) > 0 {
-				return fmt.Errorf("%d:%d: class %s has no init and takes no arguments", id.Tok.Line, id.Tok.Col, id.Name)
+			if err := checkClassCall(id.Name, id.Name, id.Tok.Line, id.Tok.Col, len(n.Args), scope); err != nil {
+				return err
 			}
-			if hasInit && len(n.Args) != arity {
-				return fmt.Errorf("%d:%d: class %s constructor expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
+		}
+		if member, ok := n.Callee.(*ast.MemberExpr); ok && kindOf(member.Target, scope) == kindModule && classNameRE.MatchString(member.Name) {
+			key := memberKey(member)
+			if scope.kind(key) == kindClass {
+				if err := checkClassCall(key, member.Name, member.NameTok.Line, member.NameTok.Col, len(n.Args), scope); err != nil {
+					return err
+				}
 			}
 		}
 		for _, arg := range n.Args {
@@ -530,6 +676,8 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 	}
 	instanceMembers := map[string]bool{}
 	classMembers := map[string]bool{}
+	hasPublicInit := false
+	hasPrivateInit := false
 	classBody := newScope(scope)
 	classBody.inClassBody = true
 	for _, field := range class.Fields {
@@ -568,6 +716,15 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		} else {
 			if instanceMembers[method.Name] {
 				return fmt.Errorf("%d:%d: duplicate instance member %s", method.Tok.Line, method.Tok.Col, method.Name)
+			}
+			if method.Name == "init" {
+				hasPublicInit = true
+			}
+			if method.Name == "_init" {
+				hasPrivateInit = true
+			}
+			if hasPublicInit && hasPrivateInit {
+				return fmt.Errorf("%d:%d: class cannot declare both init and _init", method.Tok.Line, method.Tok.Col)
 			}
 			instanceMembers[method.Name] = true
 		}
@@ -656,13 +813,70 @@ func effectiveInit(info classInfo, scope *scope) (bool, int) {
 	return false, 0
 }
 
+func checkClassCall(key, display string, line, col, argc int, scope *scope) error {
+	info := scope.classes[key]
+	if info.abstract {
+		return fmt.Errorf("%d:%d: cannot construct abstract class %s", line, col, display)
+	}
+	if info.privateInit && scope.currentClass != key {
+		return fmt.Errorf("%d:%d: class %s constructor is private", line, col, display)
+	}
+	hasInit, arity := effectiveInit(info, scope)
+	if !hasInit && argc > 0 {
+		return fmt.Errorf("%d:%d: class %s has no init and takes no arguments", line, col, display)
+	}
+	if hasInit && argc != arity {
+		return fmt.Errorf("%d:%d: class %s constructor expects %d arguments", line, col, display, arity)
+	}
+	return nil
+}
+
+func checkPrivateInstanceAccess(name string, line, col int, scope *scope, assignment bool) error {
+	if !isPrivateName(name) || scope.currentClass == "" {
+		return nil
+	}
+	info := scope.classes[scope.currentClass]
+	if info.privateFields[name] || info.privateMethods[name] {
+		return nil
+	}
+	if assignment {
+		return nil
+	}
+	for parent := info.parent; parent != ""; {
+		parentInfo := scope.classes[parent]
+		if parentInfo.privateFields[name] || parentInfo.privateMethods[name] {
+			return fmt.Errorf("%d:%d: private instance member %s is not accessible from %s", line, col, name, scope.currentClass)
+		}
+		parent = parentInfo.parent
+	}
+	return nil
+}
+
+func checkPrivateClassAccess(name string, line, col int, scope *scope) error {
+	if !isPrivateName(name) || scope.currentClass == "" {
+		return nil
+	}
+	info := scope.classes[scope.currentClass]
+	if info.privateClassMembers[name] || info.privateClassMethods[name] {
+		return nil
+	}
+	for parent := info.parent; parent != ""; {
+		parentInfo := scope.classes[parent]
+		if parentInfo.privateClassMembers[name] || parentInfo.privateClassMethods[name] {
+			return fmt.Errorf("%d:%d: private class member %s is not accessible from %s", line, col, name, scope.currentClass)
+		}
+		parent = parentInfo.parent
+	}
+	return nil
+}
+
 func inheritedInitArity(className string, scope *scope) (int, bool) {
 	for className != "" {
 		info, ok := scope.classes[className]
 		if !ok {
 			return 0, false
 		}
-		if info.hasInit {
+		if info.hasInit && !info.privateInit {
 			return info.initArity, true
 		}
 		className = info.parent
@@ -771,6 +985,9 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 		if n.Name == "class" || n.Name == "class_name" || ((n.Name == "name" || n.Name == "parent") && kindOf(n.Target, scope) == kindClass) {
 			return fmt.Errorf("%d:%d: cannot assign to read-only introspection member %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
+		if isPrivateName(n.Name) {
+			return fmt.Errorf("%d:%d: private member %s is not accessible here", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
 		}
@@ -788,12 +1005,18 @@ func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 		if !valueNameRE.MatchString(n.Name) {
 			return fmt.Errorf("%d:%d: invalid field name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
+		if err := checkPrivateInstanceAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope, true); err != nil {
+			return err
+		}
 	case *ast.ClassVarExpr:
 		if !scope.inClassBody && !scope.inInstanceMethod && !scope.inClassMethod {
 			return fmt.Errorf("%d:%d: @@%s is only valid inside a class", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
 		if !valueNameRE.MatchString(n.Name) {
 			return fmt.Errorf("%d:%d: invalid class variable name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
+		if err := checkPrivateClassAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+			return err
 		}
 	case *ast.IndexExpr:
 		if err := checkExpr(n.Target, scope); err != nil {

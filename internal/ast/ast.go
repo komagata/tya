@@ -87,12 +87,13 @@ type ModuleMember struct {
 }
 
 type ClassDecl struct {
-	Name    string
-	NameTok token.Token
-	Parent  *ClassRef
-	Fields  []ClassField
-	Vars    []ClassVar
-	Methods []ClassMethod
+	Name     string
+	NameTok  token.Token
+	Parent   *ClassRef
+	Abstract bool
+	Fields   []ClassField
+	Vars     []ClassVar
+	Methods  []ClassMethod
 }
 
 func (*ClassDecl) stmt() {}

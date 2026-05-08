@@ -159,7 +159,11 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			if err != nil {
 				return err
 			}
-			g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", g.classTarget(), strconv.Quote(target.Name), value))
+			receiver := g.classTarget()
+			if strings.HasPrefix(target.Name, "_") && g.classRef != "" {
+				receiver = g.classRef
+			}
+			g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", receiver, strconv.Quote(target.Name), value))
 			return nil
 		}
 		id, ok := n.Targets[0].(*ast.Ident)
@@ -611,7 +615,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		}
 		methodSyms[method.Name] = sym
 		g.classMethods[name+"."+method.Name] = sym
-		if method.Name == "init" && !method.Class {
+		if (method.Name == "init" || method.Name == "_init") && !method.Class {
 			initMethod = method
 		}
 	}
@@ -638,8 +642,14 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote("@"+field.Name), value))
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote(field.Name), value))
 	}
+	for _, method := range class.Methods {
+		if method.Class || method.Name == "init" || method.Name == "_init" || !strings.HasPrefix(method.Name, "_") {
+			continue
+		}
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
+	}
 	if initMethod != nil {
-		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", methodSyms["init"]))
+		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", methodSyms[initMethod.Name]))
 	} else if parentKey != "" {
 		if parentInit := g.inheritedMethodSym(parentKey, "init"); parentInit != "" {
 			out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", parentInit))
@@ -653,7 +663,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		g.emitParentMethods(&out, parentKey, class)
 	}
 	for _, method := range class.Methods {
-		if method.Class || method.Name == "init" {
+		if method.Class || method.Name == "init" || method.Name == "_init" {
 			continue
 		}
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
@@ -751,7 +761,7 @@ func (g *cgen) emitParentMethods(out *strings.Builder, parentKey string, class *
 		}
 	}
 	for _, method := range parent.Methods {
-		if method.Class || method.Name == "init" || overrides[method.Name] {
+		if method.Class || method.Name == "init" || method.Name == "_init" || strings.HasPrefix(method.Name, "_") || overrides[method.Name] {
 			continue
 		}
 		sym := g.classMethods[g.cClassName(parentKey)+"."+method.Name]
@@ -959,7 +969,11 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.InstanceFieldExpr:
 		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote("@"+n.Name)), "TyaValue", nil
 	case *ast.ClassVarExpr:
-		return fmt.Sprintf("tya_member(%s, %s)", g.classTarget(), strconv.Quote(n.Name)), "TyaValue", nil
+		target := g.classTarget()
+		if strings.HasPrefix(n.Name, "_") && g.classRef != "" {
+			target = g.classRef
+		}
+		return fmt.Sprintf("tya_member(%s, %s)", target, strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.BinaryExpr:
 		left, _, err := g.expr(n.Left)
 		if err != nil {
@@ -1312,6 +1326,17 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			return fmt.Sprintf("tya_pop(%s)", arg), "TyaValue", nil
 		}
 		if ok {
+			if strings.HasPrefix(id.Name, "_") && g.inInstanceMethod {
+				args := make([]string, 0, len(n.Args))
+				for _, arg := range n.Args {
+					ex, _, err := g.expr(arg)
+					if err != nil {
+						return "", "", err
+					}
+					args = append(args, ex)
+				}
+				return g.emitDynamicCall(fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(id.Name)), args), "TyaValue", nil
+			}
 			if sym, found := g.funcs[id.Name]; found {
 				args := make([]string, 0, len(n.Args))
 				for _, arg := range n.Args {
@@ -1400,6 +1425,21 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	return "", "", fmt.Errorf("C emitter does not support expression %T", expr)
 }
 
+func (g *cgen) emitDynamicCall(callee string, args []string) string {
+	switch len(args) {
+	case 0:
+		return fmt.Sprintf("tya_call1(%s, tya_nil())", callee)
+	case 1:
+		return fmt.Sprintf("tya_call1(%s, %s)", callee, args[0])
+	case 2:
+		return fmt.Sprintf("tya_call2(%s, %s, %s)", callee, args[0], args[1])
+	case 3:
+		return fmt.Sprintf("tya_call3(%s, %s, %s, %s)", callee, args[0], args[1], args[2])
+	default:
+		return fmt.Sprintf("tya_call4(%s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3])
+	}
+}
+
 func cName(name string) string {
 	name = strings.ReplaceAll(name, "?", "_p")
 	switch name {
@@ -1466,7 +1506,12 @@ func (g *cgen) interpolationExpr(expr string) (string, bool) {
 		return fmt.Sprintf("%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil())", sym), true
 	}
 	if strings.HasPrefix(expr, "@@") && isIdentName(strings.TrimPrefix(expr, "@@")) {
-		return "tya_member(" + g.classTarget() + ", " + strconv.Quote(strings.TrimPrefix(expr, "@@")) + ")", true
+		name := strings.TrimPrefix(expr, "@@")
+		target := g.classTarget()
+		if strings.HasPrefix(name, "_") && g.classRef != "" {
+			target = g.classRef
+		}
+		return "tya_member(" + target + ", " + strconv.Quote(name) + ")", true
 	}
 	return interpolationExpr(expr)
 }

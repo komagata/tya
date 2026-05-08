@@ -1,0 +1,219 @@
+# v0.9 private members, private constructors, and abstract classes.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/private_members.tya
+stdout 'KOMAGATA\n1\n2\nhidden\n1\nchild\nchild-secret\nusers\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'module\n1\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/external_private_field.tya
+stderr 'private member _name is not accessible here'
+
+! exec go run ./cmd/tya run $WORK/external_private_method.tya
+stderr 'private member _normalize_name is not accessible here'
+
+! exec go run ./cmd/tya run $WORK/external_private_class_var.tya
+stderr 'private member _count is not accessible here'
+
+! exec go run ./cmd/tya run $WORK/external_private_class_method.tya
+stderr 'private member _new_user is not accessible here'
+
+! exec go run ./cmd/tya run $WORK/subclass_parent_private_field.tya
+stderr 'private instance member _name is not accessible from Admin'
+
+! exec go run ./cmd/tya run $WORK/subclass_parent_private_class_var.tya
+stderr 'private class member _count is not accessible from Admin'
+
+! exec go run ./cmd/tya run $WORK/private_constructor_external.tya
+stderr 'class User constructor is private'
+
+! exec go run ./cmd/tya run $WORK/duplicate_constructors.tya
+stderr 'class cannot declare both init and _init'
+
+! exec go run ./cmd/tya run $WORK/private_parent_init_super.tya
+stderr 'super cannot call private parent constructor'
+
+! exec go run ./cmd/tya run $WORK/abstract_direct.tya
+stderr 'cannot construct abstract class Repository'
+
+exec go run ./cmd/tya version
+stdout '0.9.0\n'
+! stderr .
+
+-- private_members.tya --
+class User
+  @@_count = 0
+
+  _init = name ->
+    @_name = _normalize_name(name)
+    @@_count = @@_count + 1
+
+  _normalize_name = name ->
+    replace(name, "komagata", "KOMAGATA")
+
+  name = ->
+    @_name
+
+  @@build = name ->
+    User(name)
+
+  @@count = ->
+    @@_count
+
+  @@_secret = ->
+    "hidden"
+
+  @@secret = ->
+    @@_secret()
+
+class Admin extends User
+  _init = name ->
+    @_name = "child"
+    @@_count = 2
+
+  name = ->
+    @_name
+
+  @@build = name ->
+    Admin(name)
+
+  @@count = ->
+    @@_count
+
+  @@_secret = ->
+    "child-secret"
+
+  @@secret = ->
+    @@_secret()
+
+abstract class Repository
+  init = name ->
+    @name = name
+
+class UserRepository extends Repository
+  kind = ->
+    "user"
+
+user = User.build("komagata")
+print user.name()
+print User.count()
+admin = Admin.build("komagata")
+print Admin.count()
+print User.secret()
+print User.count()
+print admin.name()
+print Admin.secret()
+repo = UserRepository("users")
+print repo.name
+
+-- user.tya --
+module user
+  class User
+    @@_count = 0
+
+    _init = name ->
+      @_name = name
+      @@_count = @@_count + 1
+
+    name = ->
+      @_name
+
+    @@build = name ->
+      self(name)
+
+    @@count = ->
+      @@_count
+
+-- main.tya --
+import user
+
+u = user.User.build("module")
+print u.name()
+print user.User.count()
+
+-- external_private_field.tya --
+class User
+  _init = name ->
+    @_name = name
+
+  @@build = name ->
+    User(name)
+
+user = User.build("komagata")
+print user._name
+
+-- external_private_method.tya --
+class User
+  _normalize_name = name ->
+    name
+
+user = User()
+print user._normalize_name("tya")
+
+-- external_private_class_var.tya --
+class User
+  @@_count = 0
+
+print User._count
+
+-- external_private_class_method.tya --
+class User
+  @@_new_user = name ->
+    User()
+
+user = User._new_user("komagata")
+
+-- subclass_parent_private_field.tya --
+class User
+  _init = name ->
+    @_name = name
+
+class Admin extends User
+  name = ->
+    @_name
+
+print Admin().name()
+
+-- subclass_parent_private_class_var.tya --
+class User
+  @@_count = 0
+
+class Admin extends User
+  @@count = ->
+    @@_count
+
+print Admin.count()
+
+-- private_constructor_external.tya --
+class User
+  _init = name ->
+    @_name = name
+
+user = User("komagata")
+
+-- duplicate_constructors.tya --
+class User
+  init = name ->
+    @name = name
+
+  _init = name ->
+    @_name = name
+
+-- private_parent_init_super.tya --
+class User
+  _init = name ->
+    @_name = name
+
+class Admin extends User
+  init = name ->
+    super(name)
+
+-- abstract_direct.tya --
+abstract class Repository
+  init = name ->
+    @name = name
+
+repo = Repository("users")
