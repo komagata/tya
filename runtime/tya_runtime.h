@@ -2,6 +2,7 @@
 #define TYA_RUNTIME_H
 
 #include <stdbool.h>
+#include <setjmp.h>
 
 typedef enum {
   TYA_NIL,
@@ -19,6 +20,7 @@ typedef struct TyaArray TyaArray;
 typedef struct TyaDict TyaDict;
 typedef struct TyaDictEntry TyaDictEntry;
 typedef struct TyaFunction TyaFunction;
+typedef struct TyaRaiseFrame TyaRaiseFrame;
 
 typedef struct {
   TyaKind kind;
@@ -36,6 +38,12 @@ typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaVa
 struct TyaDictEntry {
   const char *key;
   TyaValue value;
+};
+
+struct TyaRaiseFrame {
+  jmp_buf env;
+  TyaValue value;
+  TyaRaiseFrame *prev;
 };
 
 TyaValue tya_nil(void);
@@ -98,6 +106,10 @@ void tya_push(TyaValue array, TyaValue value);
 TyaValue tya_pop(TyaValue array);
 void tya_exit(TyaValue code);
 void tya_panic(TyaValue message);
+void tya_push_raise_frame(TyaRaiseFrame *frame);
+void tya_pop_raise_frame(void);
+TyaValue tya_current_raise(void);
+void tya_raise(TyaValue value);
 void tya_print(TyaValue value);
 void tya_assert(TyaValue value, const char *path, int line);
 void tya_assert_equal(TyaValue expected, TyaValue actual, const char *path, int line);

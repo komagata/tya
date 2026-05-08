@@ -72,6 +72,23 @@ type ReturnStmt struct {
 
 func (*ReturnStmt) stmt() {}
 
+type RaiseStmt struct {
+	Value Expr
+	Tok   token.Token
+}
+
+func (*RaiseStmt) stmt() {}
+
+type TryCatchStmt struct {
+	Try       []Stmt
+	CatchName string
+	CatchTok  token.Token
+	Catch     []Stmt
+	Tok       token.Token
+}
+
+func (*TryCatchStmt) stmt() {}
+
 type ModuleDecl struct {
 	Name       string
 	NameTok    token.Token

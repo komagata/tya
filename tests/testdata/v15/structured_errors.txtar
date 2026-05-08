@@ -1,0 +1,108 @@
+# v0.15 structured error handling.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/structured_errors.tya
+stdout 'ok\nfailed\nouter:failed\nfailed\nouter\nfallback\nloop-done\nmissing config\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/uncaught.tya
+stderr 'uncaught raised value: boom'
+
+! exec go run ./cmd/tya check $WORK/raise_without_expression.tya
+stderr 'raise requires an expression'
+
+! exec go run ./cmd/tya check $WORK/catch_without_binding.tya
+stderr 'catch requires a binding name'
+
+! exec go run ./cmd/tya check $WORK/catch_outside.tya
+stderr 'catch outside block try'
+
+! exec go run ./cmd/tya check $WORK/try_without_catch.tya
+stderr 'block try requires catch'
+
+! exec go run ./cmd/tya check $WORK/catch_bad_name.tya
+stderr 'invalid binding name User'
+
+exec go run ./cmd/tya version
+stdout '0.15.0\n'
+! stderr .
+
+-- structured_errors.tya --
+import config
+
+print "ok"
+
+risky = ->
+  raise error("failed")
+
+try
+  risky()
+catch err
+  print err["message"]
+
+try
+  try
+    risky()
+  catch err
+    raise err
+catch outer
+  outer_message = outer["message"]
+  print "outer:{outer_message}"
+
+err = "outer"
+try
+  risky()
+catch err
+  print err["message"]
+print err
+
+try
+  risky()
+catch _
+  print "fallback"
+
+loop_once = ->
+  while true
+    try
+      break
+    catch err
+      print "bad"
+  "loop-done"
+
+print loop_once()
+
+try
+  config.load()
+catch err
+  print err["message"]
+
+-- config.tya --
+module config
+  load = ->
+    raise error("missing config")
+
+-- uncaught.tya --
+raise "boom"
+
+-- raise_without_expression.tya --
+raise
+
+-- catch_without_binding.tya --
+try
+  print "x"
+catch
+  print "bad"
+
+-- catch_outside.tya --
+catch err
+  print err
+
+-- try_without_catch.tya --
+try
+  print "x"
+
+-- catch_bad_name.tya --
+try
+  raise "x"
+catch User
+  print User

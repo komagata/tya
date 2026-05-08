@@ -607,6 +607,50 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
+<li>[x] Ship v0.15 structured error handling</li>
+<ul>
+<li>[x] Define v0.15 structured error handling scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.15/SPEC.md</code>.</li>
+<li>[x] Specify <code>raise expression</code>.</li>
+<li>[x] Specify block <code>try ... catch name ...</code>.</li>
+<li>[x] Specify <code>_</code> catch discard binding.</li>
+<li>[x] Specify raised value propagation and re-raise.</li>
+<li>[x] Keep existing <code>try expression</code> behavior unchanged.</li>
+<li>[x] Keep <code>finally</code>, <code>ensure</code>, typed catch, multiple catch clauses, catch filters, try/catch expressions, destructuring catch bindings, error class hierarchy, and stack trace API out of v0.15.</li>
+</ul>
+<li>[x] Add <code>raise</code> parsing and runtime behavior</li>
+<ul>
+<li>[x] Parse <code>raise expression</code>.</li>
+<li>[x] Reject <code>raise</code> without an expression.</li>
+<li>[x] Propagate raised values to the nearest enclosing block <code>try/catch</code>.</li>
+<li>[x] Report uncaught raised values.</li>
+</ul>
+<li>[x] Add block <code>try/catch</code></li>
+<ul>
+<li>[x] Parse block <code>try ... catch name ...</code>.</li>
+<li>[x] Reject <code>catch</code> without a binding name.</li>
+<li>[x] Reject <code>catch</code> outside block <code>try</code>.</li>
+<li>[x] Reject block <code>try</code> without <code>catch</code>.</li>
+<li>[x] Bind caught values only inside the catch block.</li>
+<li>[x] Treat <code>_</code> as a discard catch binding.</li>
+<li>[x] Allow catch blocks to re-raise.</li>
+</ul>
+<li>[x] Preserve existing error propagation semantics</li>
+<ul>
+<li>[x] Keep <code>try expression</code> as <code>value, err</code> propagation.</li>
+<li>[x] Ensure <code>try expression</code> does not catch raised values.</li>
+<li>[x] Keep <code>return</code>, <code>break</code>, and <code>continue</code> separate from raised values.</li>
+</ul>
+<li>[x] Keep v0.15 documentation and tests aligned</li>
+<ul>
+<li>[x] Update latest docs when v0.15 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.15/</code> aligned with the v0.15 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.15 structured error handling.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>
 <pre><code class="language-sh">go test ./... -count=1</code></pre>

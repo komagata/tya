@@ -491,7 +491,38 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.14 destructuring assignment.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-
+- [x] Ship v0.15 structured error handling
+  - [x] Define v0.15 structured error handling scope
+    - [x] Add `docs/v0.15/SPEC.md`.
+    - [x] Specify `raise expression`.
+    - [x] Specify block `try ... catch name ...`.
+    - [x] Specify `_` catch discard binding.
+    - [x] Specify raised value propagation and re-raise.
+    - [x] Keep existing `try expression` behavior unchanged.
+    - [x] Keep `finally`, `ensure`, typed catch, multiple catch clauses, catch filters, try/catch expressions, destructuring catch bindings, error class hierarchy, and stack trace API out of v0.15.
+  - [x] Add `raise` parsing and runtime behavior
+    - [x] Parse `raise expression`.
+    - [x] Reject `raise` without an expression.
+    - [x] Propagate raised values to the nearest enclosing block `try/catch`.
+    - [x] Report uncaught raised values.
+  - [x] Add block `try/catch`
+    - [x] Parse block `try ... catch name ...`.
+    - [x] Reject `catch` without a binding name.
+    - [x] Reject `catch` outside block `try`.
+    - [x] Reject block `try` without `catch`.
+    - [x] Bind caught values only inside the catch block.
+    - [x] Treat `_` as a discard catch binding.
+    - [x] Allow catch blocks to re-raise.
+  - [x] Preserve existing error propagation semantics
+    - [x] Keep `try expression` as `value, err` propagation.
+    - [x] Ensure `try expression` does not catch raised values.
+    - [x] Keep `return`, `break`, and `continue` separate from raised values.
+  - [x] Keep v0.15 documentation and tests aligned
+    - [x] Update latest docs when v0.15 behavior is implemented.
+    - [x] Keep `docs/v0.15/` aligned with the v0.15 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.15 structured error handling.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 ## Verification Reference
 
 Default verification:

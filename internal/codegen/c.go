@@ -58,6 +58,7 @@ type cgen struct {
 	methodName       string
 	superClass       string
 	predicateName    string
+	raiseDepth       int
 }
 
 func (g *cgen) globalLine(s string) {
@@ -252,6 +253,14 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.line("break;")
 	case *ast.ContinueStmt:
 		g.line("continue;")
+	case *ast.RaiseStmt:
+		value, _, err := g.expr(n.Value)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_raise(%s);", value))
+	case *ast.TryCatchStmt:
+		return g.tryCatchStmt(n)
 	case *ast.ForInStmt:
 		iterable, _, err := g.expr(n.Iterable)
 		if err != nil {
@@ -337,6 +346,40 @@ func (g *cgen) sourceLine(line int) {
 	if line > 0 {
 		g.line(fmt.Sprintf("/* tya:%d */", line))
 	}
+}
+
+func (g *cgen) tryCatchStmt(n *ast.TryCatchStmt) error {
+	frame := fmt.Sprintf("__raise_frame%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaRaiseFrame %s;", frame))
+	g.line(fmt.Sprintf("tya_push_raise_frame(&%s);", frame))
+	g.line(fmt.Sprintf("if (setjmp(%s.env) == 0) {", frame))
+	g.indent++
+	g.raiseDepth++
+	for _, stmt := range n.Try {
+		if err := g.stmt(stmt); err != nil {
+			return err
+		}
+	}
+	g.raiseDepth--
+	g.line("tya_pop_raise_frame();")
+	g.indent--
+	g.line("} else {")
+	g.indent++
+	if n.CatchName != "_" {
+		name := cName(n.CatchName)
+		g.vars[n.CatchName] = true
+		g.line(fmt.Sprintf("TyaValue %s = tya_current_raise();", name))
+	}
+	g.line("tya_pop_raise_frame();")
+	for _, stmt := range n.Catch {
+		if err := g.stmt(stmt); err != nil {
+			return err
+		}
+	}
+	g.indent--
+	g.line("}")
+	return nil
 }
 
 func (g *cgen) assignTry(name string, tryExpr *ast.TryExpr) error {
@@ -543,6 +586,9 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string
 }
 
 func (g *cgen) returnLine(value string) {
+	for i := 0; i < g.raiseDepth; i++ {
+		g.line("tya_pop_raise_frame();")
+	}
 	if g.predicateName == "" {
 		g.line(fmt.Sprintf("return %s;", value))
 		return
@@ -1689,6 +1735,9 @@ func assignedNames(stmts []ast.Stmt) []string {
 					names = append(names, name)
 				}
 				walk(n.Body)
+			case *ast.TryCatchStmt:
+				walk(n.Try)
+				walk(n.Catch)
 			}
 		}
 	}

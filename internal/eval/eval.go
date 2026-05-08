@@ -26,6 +26,14 @@ type returnSignal struct {
 
 func (r *returnSignal) Error() string { return "return" }
 
+type raisedSignal struct {
+	value Value
+}
+
+func (r *raisedSignal) Error() string {
+	return "uncaught raised value: " + stringify(r.value)
+}
+
 type ExitError struct {
 	Code int
 }
@@ -139,6 +147,10 @@ func RunWithIO(prog *ast.Program, in io.Reader, out io.Writer, args []string) er
 	var ret *returnSignal
 	if errors.As(err, &ret) {
 		return fmt.Errorf("return used outside function")
+	}
+	var raised *raisedSignal
+	if errors.As(err, &raised) {
+		return fmt.Errorf("uncaught raised value: %s", stringify(raised.value))
 	}
 	return err
 }
@@ -746,6 +758,23 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			return nil, &returnSignal{value: values[0]}
 		}
 		return nil, &returnSignal{value: &Tuple{items: values}}
+	case *ast.RaiseStmt:
+		value, err := evalExpr(n.Value, env)
+		if err != nil {
+			return nil, err
+		}
+		return nil, &raisedSignal{value: value}
+	case *ast.TryCatchStmt:
+		last, err := evalStmts(n.Try, env)
+		var raised *raisedSignal
+		if !errors.As(err, &raised) {
+			return last, err
+		}
+		catchEnv := env.child()
+		if n.CatchName != "_" {
+			catchEnv.set(n.CatchName, raised.value)
+		}
+		return evalStmts(n.Catch, catchEnv)
 	}
 	return nil, fmt.Errorf("unknown statement")
 }

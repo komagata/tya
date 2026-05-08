@@ -38,6 +38,8 @@ static void tya_write_value(FILE *out, TyaValue value);
 static void tya_build_value(TyaStringBuilder *builder, TyaValue value);
 static void tya_builder_append(TyaStringBuilder *builder, const char *text);
 
+static TyaRaiseFrame *tya_raise_frame = NULL;
+
 TyaValue tya_nil(void) {
   return (TyaValue){.kind = TYA_NIL};
 }
@@ -960,6 +962,35 @@ void tya_panic(TyaValue message) {
   TyaValue text = tya_to_string(message);
   fprintf(stderr, "panic: %s\n", text.string == NULL ? "" : text.string);
   exit(1);
+}
+
+void tya_push_raise_frame(TyaRaiseFrame *frame) {
+  frame->value = tya_nil();
+  frame->prev = tya_raise_frame;
+  tya_raise_frame = frame;
+}
+
+void tya_pop_raise_frame(void) {
+  if (tya_raise_frame != NULL) {
+    tya_raise_frame = tya_raise_frame->prev;
+  }
+}
+
+TyaValue tya_current_raise(void) {
+  if (tya_raise_frame == NULL) {
+    return tya_nil();
+  }
+  return tya_raise_frame->value;
+}
+
+void tya_raise(TyaValue value) {
+  if (tya_raise_frame == NULL) {
+    TyaValue text = tya_to_string(value);
+    fprintf(stderr, "uncaught raised value: %s\n", text.string == NULL ? "" : text.string);
+    exit(1);
+  }
+  tya_raise_frame->value = value;
+  longjmp(tya_raise_frame->env, 1);
 }
 
 void tya_print(TyaValue value) {

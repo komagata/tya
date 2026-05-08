@@ -74,6 +74,15 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "for" {
 		return p.forStmt()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "try" && p.peekN(1).Type == token.NEWLINE {
+		return p.tryCatchStmt()
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "catch" {
+		return nil, p.err("catch outside block try")
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "raise" {
+		return p.raiseStmt()
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "break" {
 		if p.loopDepth == 0 {
 			return nil, p.err("break must be inside a loop")
@@ -516,6 +525,43 @@ func (p *Parser) returnStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.ReturnStmt{Values: values, Tok: tok}, nil
+}
+
+func (p *Parser) raiseStmt() (ast.Stmt, error) {
+	tok := p.next()
+	if p.at(token.NEWLINE) || p.at(token.DEDENT) || p.at(token.EOF) {
+		return nil, p.errAt(tok, "raise requires an expression")
+	}
+	value, err := p.exprLine()
+	if err != nil {
+		return nil, err
+	}
+	return &ast.RaiseStmt{Value: value, Tok: tok}, nil
+}
+
+func (p *Parser) tryCatchStmt() (ast.Stmt, error) {
+	tok := p.next()
+	body, err := p.block("try")
+	if err != nil {
+		return nil, err
+	}
+	p.skipNewlines()
+	if !(p.at(token.IDENT) && p.peek().Lexeme == "catch") {
+		return nil, p.errAt(tok, "block try requires catch")
+	}
+	catchTok := p.next()
+	if !p.at(token.IDENT) {
+		return nil, p.errAt(catchTok, "catch requires a binding name")
+	}
+	name := p.next()
+	if p.at(token.COMMA) || p.at(token.LBRACKET) || p.at(token.LBRACE) {
+		return nil, p.errAt(name, "catch binding must be a name")
+	}
+	catchBody, err := p.block("catch")
+	if err != nil {
+		return nil, err
+	}
+	return &ast.TryCatchStmt{Try: body, CatchName: name.Lexeme, CatchTok: name, Catch: catchBody, Tok: tok}, nil
 }
 
 func (p *Parser) block(owner string) ([]ast.Stmt, error) {

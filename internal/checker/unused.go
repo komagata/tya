@@ -100,6 +100,19 @@ func checkUnusedStmts(stmts []ast.Stmt, scope *useScope) error {
 			for _, value := range n.Values {
 				checkUnusedExpr(value, scope)
 			}
+		case *ast.RaiseStmt:
+			checkUnusedExpr(n.Value, scope)
+		case *ast.TryCatchStmt:
+			if err := checkUnusedStmts(n.Try, newUseScope(scope)); err != nil {
+				return err
+			}
+			child := newUseScope(scope)
+			if n.CatchName != "_" {
+				child.define(n.CatchName, n.CatchTok.Line, n.CatchTok.Col)
+			}
+			if err := checkUnusedStmts(n.Catch, child); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

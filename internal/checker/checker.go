@@ -305,6 +305,24 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					return err
 				}
 			}
+		case *ast.RaiseStmt:
+			if err := checkExpr(n.Value, scope); err != nil {
+				return err
+			}
+		case *ast.TryCatchStmt:
+			if err := checkStmts(n.Try, constants, newScope(scope)); err != nil {
+				return err
+			}
+			catchScope := newScope(scope)
+			if n.CatchName != "_" {
+				if err := checkBindingName(n.CatchName, n.CatchTok.Line, n.CatchTok.Col); err != nil {
+					return err
+				}
+				catchScope.define(n.CatchName, kindUnknown)
+			}
+			if err := checkStmts(n.Catch, constants, catchScope); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
