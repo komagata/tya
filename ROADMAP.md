@@ -109,32 +109,46 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   - [ ] Expand `path` and `os` modules: `path.expand_user`, `os.cwd`, `os.chdir`.
   - [ ] Keep time/date, streaming IO, binary IO, async IO, recursive walking, `mkdir_all`, `remove_all`, copy, symlink, chmod/chown, file handles, `$VAR` path expansion, and platform-specific path separators out of scope.
   - [ ] Add tests, regenerate docs, preserve the selfhost fixed point.
-- [ ] Ship v0.23 TOML standard module
-  - [x] Define v0.23 TOML scope
+- [ ] Ship v0.23 data-format and utility stdlib expansion
+  - [x] Define v0.23 scope
     - [x] Add `docs/v0.23/SPEC.md`.
-    - [x] Add `toml` standard module reading and writing `.toml` files.
-    - [x] Specify `toml.parse(text)` returning nested dicts, arrays, and primitives.
-    - [x] Specify `toml.dump(value)` emitting TOML text.
-    - [x] Specify TOML-to-Tya value mapping (string/int/float/bool/array/dict, dates as strings).
-    - [x] Support TOML 1.0 features: comments, dotted keys, multi-line strings, integers (decimal/hex/oct/bin), floats, arrays, inline tables, tables, arrays of tables.
-    - [x] Keep schema validation, streaming, comment-preserving round-trip, formatting-preserving round-trip, TOML 1.1 extensions, and binary content out of v0.23.
-  - [ ] Implement the TOML parser
-    - [ ] Lex tokens (keys, strings, numbers, booleans, dates, brackets, equals, dots, newlines, comments).
-    - [ ] Parse top-level key/value pairs into a dict.
-    - [ ] Parse `[table]` and `[[array.of.tables]]` headers.
-    - [ ] Parse inline tables and arrays.
+    - [x] Add `toml`, `json`, `csv`, `base64`, and `url` standard modules.
+    - [x] Keep all five implementations pure Tya (no new builtins).
+    - [x] Use `parse`/`dump` (or `encode`/`decode`) shape across modules.
+    - [x] Keep schema validation, streaming, comment-preserving round-trip, formatting-preserving round-trip, TOML 1.1 extensions, JSON5, CSV dialects beyond RFC 4180, URL-safe base64, IDN handling, HTTP, YAML, regex, random, time, and crypto out of v0.23.
+  - [ ] Implement the `toml` module
+    - [ ] Lex TOML tokens (keys, strings, numbers, booleans, dates, brackets, equals, dots, newlines, comments).
+    - [ ] Parse top-level key/value pairs, `[table]` and `[[array.of.tables]]` headers, inline tables, arrays.
     - [ ] Map TOML primitive types to Tya values per the SPEC.
+    - [ ] Implement `toml.dump` emitting tables, inline tables, and arrays of tables.
     - [ ] Report syntax errors with line numbers.
-  - [ ] Implement the TOML writer
-    - [ ] Emit primitive values with TOML-correct quoting and escaping.
-    - [ ] Emit nested dicts as `[parent.child]` table sections at top level.
-    - [ ] Emit dicts inside arrays as inline tables.
-    - [ ] Reject `nil`, functions, classes, objects, modules, and non-string dict keys.
+    - [ ] Reject `nil`, functions, classes, objects, modules, and non-string dict keys on dump.
+  - [ ] Implement the `json` module
+    - [ ] Parse RFC 8259 JSON into Tya values (object→dict, array, string, int/float, bool, null→nil).
+    - [ ] Implement `json.dump(value)` (compact) and `json.dump(value, indent)` (pretty).
+    - [ ] Reject `nan`/`inf`/`-inf` and non-string dict keys on dump.
+    - [ ] Report syntax errors with line numbers.
+  - [ ] Implement the `csv` module
+    - [ ] Parse RFC 4180 CSV with optional header row producing dicts.
+    - [ ] Accept a `separator` option (default `,`, `\t` for TSV).
+    - [ ] Emit `csv.dump` quoting fields containing the separator, quote, CR, or LF.
+    - [ ] Accept LF or CRLF on parse, emit LF on dump.
+    - [ ] Report unterminated quoted fields and malformed escapes as structured errors.
+  - [ ] Implement the `base64` module
+    - [ ] Implement `base64.encode(text)` using the standard alphabet with `=` padding.
+    - [ ] Implement `base64.decode(text)` accepting standard alphabet input with or without padding, ignoring whitespace.
+    - [ ] Treat decoded bytes as UTF-8 and raise on invalid UTF-8.
+  - [ ] Implement the `url` module
+    - [ ] Implement `url.encode` and `url.decode` per RFC 3986.
+    - [ ] Implement `url.encode_query` and `url.decode_query` (decode `+` and `%20` to space).
+    - [ ] Implement `url.parse` returning scheme/user/password/host/port/path/query/fragment.
+    - [ ] Implement `url.build` as the inverse.
+    - [ ] Report malformed percent-escapes and non-UTF-8 byte sequences as structured errors.
   - [ ] Keep v0.23 documentation and tests aligned
     - [ ] Update latest docs when v0.23 behavior is implemented.
     - [ ] Keep `docs/v0.23/` aligned with the v0.23 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add parser, writer, module, and negative tests for v0.23 TOML.
+    - [ ] Add parser, writer, module, and negative tests for each new module.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Ship v0.24 package manifest and version resolution
   - [ ] Define v0.24 package manifest scope

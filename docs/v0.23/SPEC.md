@@ -4,55 +4,74 @@ This document is the specification for Tya v0.23 after v0.22 unit testing.
 
 ## Theme
 
-Tya v0.23 adds a TOML standard library module.
+Tya v0.23 expands the standard library with data-format and small utility
+modules.
 
-v0.23 introduces `toml`, a pure-Tya `.toml` reader and writer. TOML is a
-well-known configuration format with explicit types, table headers, and
-nested tables, suited for editing by humans and parsing by tools.
+v0.23 introduces five pure-Tya modules: `toml`, `json`, `csv`, `base64`, and
+`url`. Together they cover human-edited configuration, machine data
+interchange, tabular data, byte-to-text encoding, and URL handling. None of
+them require new global built-ins.
 
 ## Goals
 
-- Add a `toml` standard module.
-- Parse TOML 1.0 documents into Tya values (dictionaries, arrays, primitives).
-- Emit TOML text from Tya values.
-- Keep the API surface small and explicit.
-- Avoid schema validation, type coercion beyond standard TOML, and partial
-  parsing.
+- Add `toml`, `json`, `csv`, `base64`, and `url` standard modules.
+- Keep all five implementations pure Tya.
+- Use the same `parse` / `dump` (or `encode` / `decode`) shape across modules.
+- Avoid schema validation, type coercion beyond each format's standard, and
+  partial parsing.
+- Avoid new global built-ins.
 
 ## Included in v0.23
 
 v0.23 includes all v0.22 behavior and adds:
 
-- `toml` standard module
-- `toml.parse(text)`
-- `toml.dump(value)`
+- `toml` standard module (`toml.parse`, `toml.dump`)
+- `json` standard module (`json.parse`, `json.dump`)
+- `csv` standard module (`csv.parse`, `csv.dump`)
+- `base64` standard module (`base64.encode`, `base64.decode`)
+- `url` standard module (`url.encode`, `url.decode`, `url.parse`, `url.build`,
+  `url.encode_query`, `url.decode_query`)
 
 ## Not Included in v0.23
 
 v0.23 does not include:
 
 - schema validation
-- streaming parser
+- streaming parsers
 - preserving comments through round-trip
 - preserving original formatting through round-trip
 - TOML 1.1+ extensions
-- binary content
-- any other configuration format (YAML, JSON, NestedText, etc.)
+- JSON5, JSONC, or other JSON dialects
+- CSV dialects beyond RFC 4180 (TSV is allowed via separator argument)
+- url-safe base64 variants beyond what is described below
+- IDN (internationalized domain name) handling
+- HTTP, YAML, regex, random, time, or crypto modules
 
 ## Importing
 
-`toml` is a standard attached-library module. It is not available without
-import.
+All five modules are standard attached-library modules. They are not
+available without import.
 
 ```tya
 import toml
+import json
+import csv
+import base64
+import url
 ```
 
 The standard module search behavior from v0.17 applies.
 
-## Data Model
+## `toml`
 
-`toml.parse(text)` returns Tya values according to the following mapping:
+The `toml` module reads and writes TOML 1.0 documents.
+
+### Functions
+
+- `toml.parse(text)`
+- `toml.dump(value)`
+
+### Data model
 
 | TOML kind | Tya kind |
 |---|---|
@@ -64,17 +83,14 @@ The standard module search behavior from v0.17 applies.
 | inline table | dict |
 | table | dict |
 | array of tables | array of dicts |
-| offset date-time | string (RFC 3339, as written) |
+| offset date-time | string (as written, RFC 3339) |
 | local date-time | string (as written) |
 | local date | string (as written) |
 | local time | string (as written) |
 
-Date and time values are returned as strings in v0.23. v0.23 does not add a
-date/time value type to Tya.
-
 The top-level result of `toml.parse(text)` is always a dict.
 
-## `toml.parse(value)`
+### Example
 
 ```tya
 import toml
@@ -88,94 +104,298 @@ port = 8080
 
 config = toml.parse(text)
 println config["title"]
-println config["server"]["host"]
 println config["server"]["port"]
-```
-
-`toml.parse(text)` parses a complete TOML document.
-
-`toml.parse(text)` raises a structured error on syntax errors. Errors include
-a line number and a short message.
-
-`toml.parse(text)` requires a string argument.
-
-## `toml.dump(value)`
-
-```tya
-import toml
-
-config = {
-  title: "Example",
-  server: {
-    host: "127.0.0.1",
-    port: 8080,
-  },
-}
 
 println toml.dump(config)
 ```
 
-`toml.dump(value)` emits a TOML representation of `value`.
+### Subset
 
-`value` must be a dict at the top level. Nested values follow the inverse of
-the parse mapping:
+v0.23 supports the following TOML 1.0 features: comments, bare and quoted
+keys, dotted keys, basic and multi-line basic strings, literal and multi-line
+literal strings, integers (decimal/hex/oct/bin), floats including `inf` and
+`nan`, booleans, homogeneous and heterogeneous arrays, inline tables,
+`[table]` headers, `[[array.of.tables]]` headers, and date/time scalars
+(returned as strings).
 
-| Tya kind | TOML kind |
+### Errors
+
+`toml.parse(text)` raises a structured error on syntax errors with a line
+number.
+
+`toml.dump(value)` requires a dict at the top level. It raises a structured
+error when the value contains `nil`, a function, class, object, module, or a
+dict with a non-string key.
+
+## `json`
+
+The `json` module reads and writes JSON documents (RFC 8259).
+
+### Functions
+
+- `json.parse(text)`
+- `json.dump(value)`
+- `json.dump(value, indent)`
+
+### Data model
+
+| JSON kind | Tya kind |
 |---|---|
-| string | string |
-| int | integer |
-| float | float |
-| bool | boolean |
-| array of dicts | array of tables (or inline arrays of inline tables) |
+| object | dict |
 | array | array |
-| dict | table (or inline table) |
-| nil | error (TOML has no null) |
+| string | string |
+| number (integer) | int |
+| number (fractional or exponent) | float |
+| `true` / `false` | bool |
+| `null` | nil |
 
-`toml.dump(value)` decides between table and inline table form using a
-simple rule: dictionaries appearing as values directly under a parent table
-are emitted as `[parent.child]` table sections; dictionaries appearing inside
-arrays are emitted as inline tables.
+### Example
 
-`toml.dump(value)` does not preserve key order across round-trip. Output key
-order follows the dictionary iteration order of the input.
+```tya
+import json
 
-`toml.dump(value)` raises a structured error when:
+text = "{\"name\": \"tya\", \"versions\": [0.22, 0.23]}"
+data = json.parse(text)
+println data["name"]
+println data["versions"][1]
 
-- `value` is not a dict
-- `value` contains a `nil`
-- `value` contains a function, class, object, or module
-- `value` contains a dict with a non-string key
+println json.dump(data)
+println json.dump(data, 2)
+```
 
-## TOML Subset
+### Behavior
 
-v0.23 supports the following TOML 1.0 features:
+`json.parse(text)` parses a complete JSON document. The top-level value may
+be any JSON value (object, array, string, number, boolean, or null).
 
-- comments (`# ...`)
-- bare keys, quoted keys (basic and literal)
-- dotted keys
-- basic strings, multi-line basic strings
-- literal strings, multi-line literal strings
-- integers (decimal, hexadecimal, octal, binary)
-- floats (including special values `inf`, `-inf`, `nan`)
-- booleans
-- arrays (homogeneous and heterogeneous)
-- inline tables
-- tables and dotted-key headers
-- arrays of tables
-- offset / local date-time, local date, local time (returned as strings)
+`json.dump(value)` emits compact JSON (no insignificant whitespace).
 
-v0.23 does not support TOML 1.1 features that are not in 1.0.
+`json.dump(value, indent)` emits pretty-printed JSON with `indent` spaces of
+indentation per nesting level. `indent` must be a non-negative integer.
+
+### Errors
+
+`json.parse(text)` raises a structured error on syntax errors with a line
+number and a short message.
+
+`json.dump(value)` raises a structured error when the value contains a
+function, class, object, module, a dict with a non-string key, or a float
+that is `nan`, `inf`, or `-inf` (JSON does not represent these).
+
+## `csv`
+
+The `csv` module reads and writes CSV documents (RFC 4180).
+
+### Functions
+
+- `csv.parse(text)`
+- `csv.parse(text, options)`
+- `csv.dump(rows)`
+- `csv.dump(rows, options)`
+
+### Data model
+
+CSV is row-oriented. By default `csv.parse(text)` returns an array of arrays
+of strings, one inner array per row. With the `header: true` option, it
+returns an array of dicts using the first row as keys.
+
+`csv.dump(rows)` accepts:
+
+- an array of arrays of strings, or
+- an array of dicts (in which case all dicts must share the same set of keys
+  and their union determines the header row)
+
+Every CSV value is emitted and parsed as a string. Numeric or boolean
+inference is not performed in v0.23.
+
+### Options
+
+`options` is a dict with the following keys; all are optional:
+
+- `separator`: the field separator character (default `","`). `"\t"` enables
+  TSV.
+- `header`: when `true`, treat the first row as a header on parse; when
+  `true` on dump, emit the dict keys as the first row.
+
+### Example
+
+```tya
+import csv
+
+text = "name,age\ntya,1\nzig,12\n"
+rows = csv.parse(text, { header: true })
+for row in rows
+  println "{row[\"name\"]}: {row[\"age\"]}"
+
+raw = [["a", "b"], ["1", "2"]]
+println csv.dump(raw)
+```
+
+### Behavior
+
+`csv.parse(text)` accepts CRLF or LF line endings.
+
+`csv.dump(rows)` emits LF line endings and quotes fields that contain the
+separator, double-quote, CR, or LF. Double-quotes inside quoted fields are
+doubled per RFC 4180.
+
+### Errors
+
+`csv.parse(text)` raises a structured error on unterminated quoted fields or
+malformed escapes.
+
+`csv.dump(rows)` raises a structured error when rows are not a uniform
+structure (mixed array-of-arrays and array-of-dicts), when a row contains
+non-string values, or when dict rows have inconsistent keys.
+
+## `base64`
+
+The `base64` module encodes and decodes Base64 (RFC 4648).
+
+### Functions
+
+- `base64.encode(text)`
+- `base64.decode(text)`
+
+### Behavior
+
+`base64.encode(text)` encodes a Tya string (UTF-8 bytes) and returns the
+Base64 representation as a string. Output uses the standard alphabet with
+`=` padding.
+
+`base64.decode(text)` decodes a Base64 string and returns a Tya string. It
+accepts standard alphabet input with or without padding. Whitespace inside
+the input is ignored.
+
+### Example
+
+```tya
+import base64
+
+encoded = base64.encode("hello")
+println encoded                # aGVsbG8=
+
+println base64.decode(encoded) # hello
+```
+
+### Errors
+
+`base64.encode(text)` requires a string argument.
+
+`base64.decode(text)` raises a structured error on characters outside the
+standard alphabet, or on input that does not decode cleanly. The decoded
+result is interpreted as a UTF-8 string; non-UTF-8 byte sequences raise an
+error.
+
+### Out of scope
+
+URL-safe Base64 (`-` and `_` instead of `+` and `/`) is not part of v0.23.
+Binary blob handling is not part of v0.23 because Tya has no byte-array type
+yet.
+
+## `url`
+
+The `url` module performs percent-encoding, percent-decoding, and basic URL
+parsing and construction.
+
+### Functions
+
+- `url.encode(text)`
+- `url.decode(text)`
+- `url.encode_query(pairs)`
+- `url.decode_query(text)`
+- `url.parse(text)`
+- `url.build(parts)`
+
+### Encoding helpers
+
+`url.encode(text)` percent-encodes a string for safe inclusion in a URL
+component. Characters that are unreserved per RFC 3986 (letters, digits,
+`-`, `.`, `_`, `~`) are passed through; all other bytes are encoded as
+`%XX`.
+
+`url.decode(text)` reverses percent-encoding. It decodes `%XX` to bytes and
+returns the result interpreted as a UTF-8 string. Plus signs are not treated
+as spaces; for that, use `url.decode_query`.
+
+### Query helpers
+
+`url.encode_query(pairs)` accepts either:
+
+- a dict of `{ key: value }` pairs, or
+- an array of `[key, value]` two-element arrays (for ordered or duplicate
+  keys).
+
+It emits `key=value&key=value` form, percent-encoding each key and value
+using the same rules as `url.encode`. Spaces are encoded as `%20` (not `+`).
+
+`url.decode_query(text)` parses a `key=value&key=value` string. It returns
+an array of `[key, value]` two-element arrays so that order and duplicate
+keys are preserved. Both `+` and `%20` decode to a space, matching common
+practice.
+
+### Parsing and building
+
+`url.parse(text)` returns a dict with the following string members:
+
+- `scheme`
+- `user`
+- `password`
+- `host`
+- `port`
+- `path`
+- `query`
+- `fragment`
+
+Members that are absent in the input are returned as the empty string. The
+`query` is returned as the raw string; pass it to `url.decode_query` to get
+key/value pairs.
+
+`url.build(parts)` is the inverse of `url.parse`. It accepts a dict with the
+same keys (any may be omitted) and returns a URL string.
+
+### Example
+
+```tya
+import url
+
+println url.encode("hello world")            # hello%20world
+println url.decode("hello%20world")          # hello world
+
+q = url.encode_query({ q: "tya lang", page: "2" })
+println q                                    # q=tya%20lang&page=2
+
+parts = url.parse("https://example.com:8080/path?x=1#frag")
+println parts["host"]                        # example.com
+println parts["port"]                        # 8080
+
+rebuilt = url.build({
+  scheme: "https",
+  host: "example.com",
+  path: "/search",
+  query: "q=tya",
+})
+println rebuilt                              # https://example.com/search?q=tya
+```
+
+### Errors
+
+All `url.*` functions raise a structured error on wrong argument kinds.
+`url.decode` and `url.decode_query` raise a structured error on malformed
+percent-escapes or non-UTF-8 byte sequences.
 
 ## Diagnostics
 
 v0.23 implementations should report source-oriented errors for:
 
-- missing imports for `toml`
-- unknown `toml` module functions
+- missing imports for `toml`, `json`, `csv`, `base64`, or `url`
+- unknown module functions
 - wrong argument counts
 - wrong argument kinds
-- syntax errors during `toml.parse(text)` (with line number)
-- unsupported value kinds during `toml.dump(value)`
+- syntax errors during `toml.parse`, `json.parse`, `csv.parse`, `url.parse`
+  (with line number where applicable)
+- unsupported value kinds during `toml.dump`, `json.dump`, `csv.dump`,
+  `url.build`
 
 Diagnostics should mention the module name, function name, expected argument
 shape, and actual value kind when available.
