@@ -1,0 +1,4 @@
+module file
+  read = path -> read_file(path)
+  write = path, text -> write_file(path, text)
+  exists? = path -> file_exists(path)

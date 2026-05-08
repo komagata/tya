@@ -109,6 +109,33 @@ extname value</code></pre>
 <p><code>dirname(value)</code> returns the path without the final segment, or <code>.</code> when no directory segment exists.</p>
 <p><code>extname(value)</code> returns the final file extension including the leading <code>.</code>, or <code>&quot;&quot;</code> when the basename has no extension.</p>
 <p>The <code>path</code> module uses <code>/</code> as the path separator and does not access the file system.</p>
+<h2 id="file"><code>file</code></h2>
+<pre><code class="language-tya">import file
+
+if file.exists?(&quot;memo.txt&quot;)
+  text = file.read(&quot;memo.txt&quot;)
+  println text
+
+file.write(&quot;out.txt&quot;, &quot;hello&quot;)</code></pre>
+<p>Functions:</p>
+<pre><code class="language-tya">read path
+write path, text
+exists? path</code></pre>
+<p><code>read(path)</code> reads the entire file and returns it as a string.</p>
+<p><code>write(path, text)</code> writes <code>text</code> to <code>path</code> and returns <code>nil</code> on success.</p>
+<p><code>exists?(path)</code> returns <code>true</code> when the path exists, <code>false</code> when it does not.</p>
+<h2 id="os"><code>os</code></h2>
+<pre><code class="language-tya">import os
+
+args = os.args()
+home = os.env(&quot;HOME&quot;)</code></pre>
+<p>Functions:</p>
+<pre><code class="language-tya">args
+env name
+exit code</code></pre>
+<p><code>args()</code> returns the command-line arguments as an array of strings.</p>
+<p><code>env(name)</code> returns the environment variable value, or <code>nil</code> when not present.</p>
+<p><code>exit(code)</code> exits the process with <code>code</code>.</p>
     </article>
   </main>
 </body>

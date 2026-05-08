@@ -688,7 +688,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.20 `math` and `path`.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.21 native-backed standard library APIs
+- [x] Ship v0.21 native-backed standard library APIs
   - [x] Define v0.21 native-backed stdlib scope
     - [x] Add `docs/v0.21/SPEC.md`.
     - [x] Add native-backed stdlib support for `file` and `os`.
@@ -698,28 +698,28 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Keep native-backed APIs import-only and explicit.
     - [x] Keep existing global IO/process built-ins available for compatibility in v0.21.
     - [x] Keep directory listing, directory mutation, file removal/rename, stat metadata, path expansion, current-directory APIs, time/date, HTTP, JSON, CSV, permissions, streaming IO, binary IO, and async IO out of v0.21.
-  - [ ] Implement native-backed stdlib mechanism
-    - [ ] Resolve native-backed module functions through explicit imports.
-    - [ ] Connect native-backed module calls in the Go evaluator.
-    - [ ] Connect native-backed module calls in C codegen/runtime.
-    - [ ] Preserve source locations for native-backed diagnostics.
-  - [ ] Implement `file` module
-    - [ ] Add `file.read(path)`.
-    - [ ] Add `file.write(path, text)`.
-    - [ ] Add `file.exists?(path)`.
-    - [ ] Raise structured errors for native file failures.
-    - [ ] Report invalid argument kinds.
-  - [ ] Implement `os` module
-    - [ ] Add `os.args()`.
-    - [ ] Add `os.env(name)`.
-    - [ ] Add `os.exit(code)`.
-    - [ ] Report invalid argument kinds and invalid exit codes.
-  - [ ] Keep v0.21 documentation and tests aligned
-    - [ ] Update latest docs when v0.21 behavior is implemented.
-    - [ ] Keep `docs/v0.21/` aligned with the v0.21 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, C emission, and negative tests for v0.21 native-backed stdlib APIs.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Implement native-backed stdlib mechanism
+    - [x] Resolve native-backed module functions through explicit imports.
+    - [x] Connect native-backed module calls in the Go evaluator.
+    - [x] Connect native-backed module calls in C codegen/runtime.
+    - [x] Preserve source locations for native-backed diagnostics.
+  - [x] Implement `file` module
+    - [x] Add `file.read(path)`.
+    - [x] Add `file.write(path, text)`.
+    - [x] Add `file.exists?(path)`.
+    - [x] Raise structured errors for native file failures.
+    - [x] Report invalid argument kinds.
+  - [x] Implement `os` module
+    - [x] Add `os.args()`.
+    - [x] Add `os.env(name)`.
+    - [x] Add `os.exit(code)`.
+    - [x] Report invalid argument kinds and invalid exit codes.
+  - [x] Keep v0.21 documentation and tests aligned
+    - [x] Update latest docs when v0.21 behavior is implemented.
+    - [x] Keep `docs/v0.21/` aligned with the v0.21 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, C emission, and negative tests for v0.21 native-backed stdlib APIs.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Ship v0.22 filesystem standard library expansion
   - [x] Define v0.22 filesystem stdlib scope
     - [x] Add `docs/v0.22/SPEC.md`.

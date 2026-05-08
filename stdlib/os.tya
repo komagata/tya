@@ -1,0 +1,4 @@
+module os
+  args = -> args()
+  env = name -> env(name)
+  exit = code -> exit(code)

@@ -145,3 +145,52 @@ or `""` when the basename has no extension.
 
 The `path` module uses `/` as the path separator and does not access the file
 system.
+
+## `file`
+
+```tya
+import file
+
+if file.exists?("memo.txt")
+  text = file.read("memo.txt")
+  println text
+
+file.write("out.txt", "hello")
+```
+
+Functions:
+
+```tya
+read path
+write path, text
+exists? path
+```
+
+`read(path)` reads the entire file and returns it as a string.
+
+`write(path, text)` writes `text` to `path` and returns `nil` on success.
+
+`exists?(path)` returns `true` when the path exists, `false` when it does not.
+
+## `os`
+
+```tya
+import os
+
+args = os.args()
+home = os.env("HOME")
+```
+
+Functions:
+
+```tya
+args
+env name
+exit code
+```
+
+`args()` returns the command-line arguments as an array of strings.
+
+`env(name)` returns the environment variable value, or `nil` when not present.
+
+`exit(code)` exits the process with `code`.

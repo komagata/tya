@@ -28,12 +28,14 @@ func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
 	}
 	var out strings.Builder
 	out.WriteString("#include \"tya_runtime.h\"\n\n")
+	out.WriteString("static int g_tya_argc = 0;\nstatic char **g_tya_argv = (char **)0;\n\n")
 	out.WriteString(g.globalOut.String())
 	if g.globalOut.Len() > 0 {
 		out.WriteByte('\n')
 	}
 	out.WriteString(g.funcOut.String())
 	out.WriteString("int main(int argc, char **argv) {\n")
+	out.WriteString("  g_tya_argc = argc; g_tya_argv = argv;\n")
 	out.WriteString(g.out.String())
 	out.WriteString("  return 0;\n")
 	out.WriteString("}\n")
@@ -1440,7 +1442,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			return fmt.Sprintf("tya_replace(%s, %s, %s)", text, old, replacement), "TyaValue", nil
 		}
 		if ok && id.Name == "args" && len(n.Args) == 0 {
-			return "tya_args(argc, argv)", "TyaValue", nil
+			return "tya_args(g_tya_argc, g_tya_argv)", "TyaValue", nil
 		}
 		if ok && id.Name == "env" && len(n.Args) == 1 {
 			name, _, err := g.expr(n.Args[0])
@@ -1469,6 +1471,24 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("(tya_panic(%s), tya_nil())", message), "TyaValue", nil
+		}
+		if ok && id.Name == "exit" && len(n.Args) == 1 {
+			code, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("(tya_exit(%s), tya_nil())", code), "TyaValue", nil
+		}
+		if ok && id.Name == "write_file" && len(n.Args) == 2 {
+			path, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			text, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("(tya_write_file(%s, %s), tya_nil())", path, text), "TyaValue", nil
 		}
 		if ok && id.Name == "split" && len(n.Args) == 2 {
 			text, _, err := g.expr(n.Args[0])

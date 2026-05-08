@@ -1,0 +1,7 @@
+import file
+
+path = "/tmp/tya_v021_test.txt"
+file.write(path, "hello tya")
+assert_equal "hello tya", file.read(path)
+assert file.exists?(path)
+assert_equal false, file.exists?("/tmp/__tya_v021_no_such__")

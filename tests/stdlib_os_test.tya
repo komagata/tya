@@ -1,0 +1,8 @@
+import os
+
+a = os.args()
+assert_equal 0, len(a) - len(a)
+home = os.env("HOME")
+assert home != nil
+missing = os.env("__TYA_V021_NO_SUCH_ENV__")
+assert_equal nil, missing
