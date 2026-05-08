@@ -166,6 +166,13 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		fmt.Fprintln(out, stringify(args[0]))
 		return nil, nil
 	}))
+	env.set("println", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("println expects 1 argument")
+		}
+		fmt.Fprintln(out, stringify(args[0]))
+		return nil, nil
+	}))
 	env.set("read_line", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 0 {
 			return nil, fmt.Errorf("read_line expects 0 arguments")
@@ -1100,6 +1107,21 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 }
 
 func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
+	if member, ok := c.Callee.(*ast.MemberExpr); ok {
+		if target, ok := member.Target.(*ast.Ident); ok {
+			args := make([]Value, 0, len(c.Args))
+			for _, a := range c.Args {
+				v, err := evalExpr(a, env)
+				if err != nil {
+					return nil, err
+				}
+				args = append(args, v)
+			}
+			if value, handled, err := evalStandardModuleCall(target.Name, member.Name, args, env); handled {
+				return value, err
+			}
+		}
+	}
 	fnVal, err := evalCallee(c.Callee, env)
 	if err != nil {
 		return nil, err
@@ -1117,6 +1139,518 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 		return callValue(fn, args)
 	}
 	return nil, fmt.Errorf("value is not callable")
+}
+
+func evalStandardModuleCall(module string, name string, args []Value, env *Env) (Value, bool, error) {
+	switch module {
+	case "string":
+		if !isStandardStringCall(name) {
+			return nil, false, nil
+		}
+		value, err := evalStringModuleCall(name, args, env)
+		return value, true, err
+	case "array":
+		if !isStandardArrayCall(name) {
+			return nil, false, nil
+		}
+		value, err := evalArrayModuleCall(name, args, env)
+		return value, true, err
+	case "dict":
+		if !isStandardDictCall(name) {
+			return nil, false, nil
+		}
+		value, err := evalDictModuleCall(name, args, env)
+		return value, true, err
+	default:
+		return nil, false, nil
+	}
+}
+
+func isStandardStringCall(name string) bool {
+	switch name {
+	case "len", "byte_len", "char_len", "trim", "contains", "starts_with", "ends_with", "replace", "split", "join", "lines", "upcase", "downcase":
+		return true
+	default:
+		return false
+	}
+}
+
+func isStandardArrayCall(name string) bool {
+	switch name {
+	case "len", "first", "last", "push", "pop", "slice", "reverse", "join", "map", "filter", "find", "any", "all", "each", "reduce":
+		return true
+	default:
+		return false
+	}
+}
+
+func isStandardDictCall(name string) bool {
+	switch name {
+	case "len", "has", "get", "set", "delete", "keys", "values", "merge":
+		return true
+	default:
+		return false
+	}
+}
+
+func evalStringModuleCall(name string, args []Value, env *Env) (Value, error) {
+	switch name {
+	case "len":
+		return evalLen("string.len", args, env)
+	case "byte_len":
+		text, err := oneString("string.byte_len", args)
+		if err != nil {
+			return nil, err
+		}
+		return int64(len(text)), nil
+	case "char_len":
+		text, err := oneString("string.char_len", args)
+		if err != nil {
+			return nil, err
+		}
+		return int64(len([]rune(text))), nil
+	case "trim":
+		text, err := oneString("string.trim", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.TrimSpace(text), nil
+	case "contains":
+		text, part, err := twoStrings("string.contains", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.Contains(text, part), nil
+	case "starts_with":
+		text, prefix, err := twoStrings("string.starts_with", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.HasPrefix(text, prefix), nil
+	case "ends_with":
+		text, suffix, err := twoStrings("string.ends_with", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.HasSuffix(text, suffix), nil
+	case "replace":
+		if len(args) != 3 {
+			return nil, fmt.Errorf("string.replace expects 3 arguments")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.replace expects string text")
+		}
+		old, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.replace expects string old value")
+		}
+		newValue, ok := args[2].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.replace expects string new value")
+		}
+		return strings.ReplaceAll(text, old, newValue), nil
+	case "split":
+		if len(args) != 2 {
+			return nil, fmt.Errorf("string.split expects 2 arguments")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.split expects string text")
+		}
+		sep, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.split expects string separator")
+		}
+		parts := strings.Split(text, sep)
+		arr := &Array{items: make([]Value, 0, len(parts))}
+		for _, part := range parts {
+			arr.items = append(arr.items, part)
+		}
+		return arr, nil
+	case "join":
+		return evalJoin("string.join", args)
+	case "lines":
+		text, err := oneString("string.lines", args)
+		if err != nil {
+			return nil, err
+		}
+		text = strings.TrimSuffix(strings.TrimSuffix(text, "\n"), "\r")
+		if text == "" {
+			return &Array{}, nil
+		}
+		raw := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
+		arr := &Array{items: make([]Value, 0, len(raw))}
+		for _, line := range raw {
+			arr.items = append(arr.items, strings.TrimSuffix(line, "\r"))
+		}
+		return arr, nil
+	case "upcase":
+		text, err := oneString("string.upcase", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.ToUpper(text), nil
+	case "downcase":
+		text, err := oneString("string.downcase", args)
+		if err != nil {
+			return nil, err
+		}
+		return strings.ToLower(text), nil
+	default:
+		return nil, fmt.Errorf("unknown string.%s", name)
+	}
+}
+
+func evalArrayModuleCall(name string, args []Value, env *Env) (Value, error) {
+	switch name {
+	case "len":
+		return evalLen("array.len", args, env)
+	case "first":
+		arr, err := oneArray("array.first", args)
+		if err != nil {
+			return nil, err
+		}
+		if len(arr.items) == 0 {
+			return nil, nil
+		}
+		return arr.items[0], nil
+	case "last":
+		arr, err := oneArray("array.last", args)
+		if err != nil {
+			return nil, err
+		}
+		if len(arr.items) == 0 {
+			return nil, nil
+		}
+		return arr.items[len(arr.items)-1], nil
+	case "push":
+		if len(args) != 2 {
+			return nil, fmt.Errorf("array.push expects 2 arguments")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, fmt.Errorf("array.push expects array")
+		}
+		arr.items = append(arr.items, args[1])
+		return arr, nil
+	case "pop":
+		arr, err := oneArray("array.pop", args)
+		if err != nil {
+			return nil, err
+		}
+		if len(arr.items) == 0 {
+			return nil, nil
+		}
+		last := arr.items[len(arr.items)-1]
+		arr.items = arr.items[:len(arr.items)-1]
+		return last, nil
+	case "slice":
+		if len(args) != 3 {
+			return nil, fmt.Errorf("array.slice expects 3 arguments")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, fmt.Errorf("array.slice expects array")
+		}
+		start, ok := args[1].(int64)
+		if !ok {
+			return nil, fmt.Errorf("array.slice expects integer start")
+		}
+		end, ok := args[2].(int64)
+		if !ok {
+			return nil, fmt.Errorf("array.slice expects integer end")
+		}
+		if start < 0 || end < 0 {
+			return nil, fmt.Errorf("array.slice does not support negative indexes")
+		}
+		if start > end || int(end) > len(arr.items) {
+			return nil, fmt.Errorf("array.slice index out of range")
+		}
+		out := &Array{items: append([]Value{}, arr.items[int(start):int(end)]...)}
+		return out, nil
+	case "reverse":
+		arr, err := oneArray("array.reverse", args)
+		if err != nil {
+			return nil, err
+		}
+		out := &Array{items: make([]Value, len(arr.items))}
+		for i := range arr.items {
+			out.items[len(arr.items)-1-i] = arr.items[i]
+		}
+		return out, nil
+	case "join":
+		return evalJoin("array.join", args)
+	case "map", "filter", "find", "any", "all", "each", "reduce":
+		return evalCollectionBuiltin(name, args)
+	default:
+		return nil, fmt.Errorf("unknown array.%s", name)
+	}
+}
+
+func evalDictModuleCall(name string, args []Value, env *Env) (Value, error) {
+	switch name {
+	case "len":
+		return evalLen("dict.len", args, env)
+	case "has":
+		return evalHas("dict.has", args)
+	case "get":
+		if len(args) != 2 && len(args) != 3 {
+			return nil, fmt.Errorf("dict.get expects 2 or 3 arguments")
+		}
+		obj, ok := args[0].(Dict)
+		if !ok {
+			return nil, fmt.Errorf("dict.get expects dictionary")
+		}
+		key, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("dict.get expects string key")
+		}
+		value, exists := obj[key]
+		if exists {
+			return value, nil
+		}
+		if len(args) == 3 {
+			return args[2], nil
+		}
+		return nil, nil
+	case "set":
+		if len(args) != 3 {
+			return nil, fmt.Errorf("dict.set expects 3 arguments")
+		}
+		obj, ok := args[0].(Dict)
+		if !ok {
+			return nil, fmt.Errorf("dict.set expects dictionary")
+		}
+		key, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("dict.set expects string key")
+		}
+		obj[key] = args[2]
+		return obj, nil
+	case "delete":
+		if len(args) != 2 {
+			return nil, fmt.Errorf("dict.delete expects 2 arguments")
+		}
+		obj, ok := args[0].(Dict)
+		if !ok {
+			return nil, fmt.Errorf("dict.delete expects dictionary")
+		}
+		key, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("dict.delete expects string key")
+		}
+		value := obj[key]
+		delete(obj, key)
+		return value, nil
+	case "keys":
+		obj, err := oneDict("dict.keys", args)
+		if err != nil {
+			return nil, err
+		}
+		arr := &Array{}
+		for key := range obj {
+			arr.items = append(arr.items, key)
+		}
+		return arr, nil
+	case "values":
+		obj, err := oneDict("dict.values", args)
+		if err != nil {
+			return nil, err
+		}
+		arr := &Array{}
+		for _, value := range obj {
+			arr.items = append(arr.items, value)
+		}
+		return arr, nil
+	case "merge":
+		if len(args) != 2 {
+			return nil, fmt.Errorf("dict.merge expects 2 arguments")
+		}
+		left, ok := args[0].(Dict)
+		if !ok {
+			return nil, fmt.Errorf("dict.merge expects dictionary left")
+		}
+		right, ok := args[1].(Dict)
+		if !ok {
+			return nil, fmt.Errorf("dict.merge expects dictionary right")
+		}
+		out := Dict{}
+		for key, value := range left {
+			out[key] = value
+		}
+		for key, value := range right {
+			out[key] = value
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("unknown dict.%s", name)
+	}
+}
+
+func evalLen(name string, args []Value, env *Env) (Value, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("%s expects 1 argument", name)
+	}
+	switch v := args[0].(type) {
+	case string:
+		return int64(len(env.runes(v))), nil
+	case *Array:
+		return int64(len(v.items)), nil
+	case Dict:
+		return int64(len(v)), nil
+	default:
+		return nil, fmt.Errorf("%s expects string, array, or dictionary", name)
+	}
+}
+
+func evalJoin(name string, args []Value) (Value, error) {
+	if len(args) != 2 {
+		return nil, fmt.Errorf("%s expects 2 arguments", name)
+	}
+	arr, ok := args[0].(*Array)
+	if !ok {
+		return nil, fmt.Errorf("%s expects array", name)
+	}
+	sep, ok := args[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("%s expects string separator", name)
+	}
+	parts := make([]string, 0, len(arr.items))
+	for _, item := range arr.items {
+		parts = append(parts, stringify(item))
+	}
+	return strings.Join(parts, sep), nil
+}
+
+func evalHas(name string, args []Value) (Value, error) {
+	if len(args) != 2 {
+		return nil, fmt.Errorf("%s expects 2 arguments", name)
+	}
+	obj, ok := args[0].(Dict)
+	if !ok {
+		return nil, fmt.Errorf("%s expects dictionary", name)
+	}
+	key, ok := args[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("%s expects string key", name)
+	}
+	_, exists := obj[key]
+	return exists, nil
+}
+
+func evalCollectionBuiltin(name string, args []Value) (Value, error) {
+	switch name {
+	case "map":
+		arr, fn, err := arrayAndFunction("array.map", args)
+		if err != nil {
+			return nil, err
+		}
+		out := &Array{items: make([]Value, 0, len(arr.items))}
+		for _, item := range arr.items {
+			mapped, err := callValue(fn, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			out.items = append(out.items, mapped)
+		}
+		return out, nil
+	case "filter":
+		arr, fn, err := arrayAndFunction("array.filter", args)
+		if err != nil {
+			return nil, err
+		}
+		out := &Array{}
+		for _, item := range arr.items {
+			keep, err := callValue(fn, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if truthy(keep) {
+				out.items = append(out.items, item)
+			}
+		}
+		return out, nil
+	case "find":
+		arr, fn, err := arrayAndFunction("array.find", args)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range arr.items {
+			found, err := callValue(fn, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if truthy(found) {
+				return item, nil
+			}
+		}
+		return nil, nil
+	case "any":
+		arr, fn, err := arrayAndFunction("array.any", args)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range arr.items {
+			ok, err := callValue(fn, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if truthy(ok) {
+				return true, nil
+			}
+		}
+		return false, nil
+	case "all":
+		arr, fn, err := arrayAndFunction("array.all", args)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range arr.items {
+			ok, err := callValue(fn, []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if !truthy(ok) {
+				return false, nil
+			}
+		}
+		return true, nil
+	case "each":
+		arr, fn, err := arrayAndFunction("array.each", args)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range arr.items {
+			if _, err := callValue(fn, []Value{item}); err != nil {
+				return nil, err
+			}
+		}
+		return nil, nil
+	case "reduce":
+		if len(args) != 3 {
+			return nil, fmt.Errorf("array.reduce expects 3 arguments")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, fmt.Errorf("array.reduce expects array")
+		}
+		fn, ok := args[2].(*Function)
+		if !ok {
+			return nil, fmt.Errorf("array.reduce expects function")
+		}
+		acc := args[1]
+		for _, item := range arr.items {
+			next, err := callValue(fn, []Value{acc, item})
+			if err != nil {
+				return nil, err
+			}
+			acc = next
+		}
+		return acc, nil
+	default:
+		return nil, fmt.Errorf("unknown array.%s", name)
+	}
 }
 
 func callValue(fn Value, args []Value) (Value, error) {
@@ -1448,6 +1982,17 @@ func oneDict(name string, args []Value) (Dict, error) {
 		return nil, fmt.Errorf("%s expects dictionary", name)
 	}
 	return obj, nil
+}
+
+func oneArray(name string, args []Value) (*Array, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("%s expects 1 argument", name)
+	}
+	arr, ok := args[0].(*Array)
+	if !ok {
+		return nil, fmt.Errorf("%s expects array", name)
+	}
+	return arr, nil
 }
 
 func arrayAndFunction(name string, args []Value) (*Array, *Function, error) {

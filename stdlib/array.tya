@@ -1,3 +1,12 @@
 module array
+  len = items -> len(items)
   empty = items -> len(items) == 0
   first = items -> items[0]
+  pop = items -> pop(items)
+  join = items, separator -> join(items, separator)
+  map = items, fn -> map(items, fn)
+  filter = items, fn -> filter(items, fn)
+  find = items, fn -> find(items, fn)
+  any = items, fn -> any(items, fn)
+  all = items, fn -> all(items, fn)
+  reduce = items, initial, fn -> reduce(items, initial, fn)

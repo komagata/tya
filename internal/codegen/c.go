@@ -742,7 +742,7 @@ func isSideEffectCall(expr ast.Expr) bool {
 		return false
 	}
 	switch id.Name {
-	case "push", "delete", "write_file", "exit", "panic", "print":
+	case "push", "delete", "write_file", "exit", "panic", "print", "println":
 		return true
 	default:
 		return false
@@ -1127,7 +1127,7 @@ func (g *cgen) exprStmt(expr ast.Expr) error {
 		g.line(fmt.Sprintf("tya_assert_equal(%s, %s, %s, %d);", expected, actual, strconv.Quote(g.sourcePath), line))
 		return nil
 	}
-	if id.Name != "print" || len(call.Args) != 1 {
+	if (id.Name != "print" && id.Name != "println") || len(call.Args) != 1 {
 		ex, _, err := g.expr(call)
 		if err != nil {
 			return err
@@ -1587,6 +1587,11 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 		}
 		if member, ok := n.Callee.(*ast.MemberExpr); ok {
+			if target, ok := member.Target.(*ast.Ident); ok {
+				if call, err := g.standardModuleCall(target.Name, member.Name, n.Args); call != "" || err != nil {
+					return call, "TyaValue", err
+				}
+			}
 			receiver, _, err := g.expr(member.Target)
 			if err != nil {
 				return "", "", err
@@ -1824,6 +1829,197 @@ func assignedNames(stmts []ast.Stmt) []string {
 	}
 	walk(stmts)
 	return names
+}
+
+func (g *cgen) standardModuleCall(module string, name string, argExprs []ast.Expr) (string, error) {
+	args := make([]string, 0, len(argExprs))
+	for _, arg := range argExprs {
+		ex, _, err := g.expr(arg)
+		if err != nil {
+			return "", err
+		}
+		args = append(args, ex)
+	}
+	switch module {
+	case "string":
+		if call := standardStringCall(name, args); call != "" {
+			return call, nil
+		}
+		return "", nil
+	case "array":
+		if call := standardArrayCall(name, args); call != "" {
+			return call, nil
+		}
+		return "", nil
+	case "dict":
+		if call := standardDictCall(name, args); call != "" {
+			return call, nil
+		}
+		return "", nil
+	default:
+		return "", nil
+	}
+}
+
+func standardStringCall(name string, args []string) string {
+	switch name {
+	case "len", "char_len":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_len(%s)", args[0])
+		}
+	case "byte_len":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_byte_len(%s)", args[0])
+		}
+	case "trim":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_trim(%s)", args[0])
+		}
+	case "contains":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_contains(%s, %s)", args[0], args[1])
+		}
+	case "starts_with":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_starts_with(%s, %s)", args[0], args[1])
+		}
+	case "ends_with":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_ends_with(%s, %s)", args[0], args[1])
+		}
+	case "replace":
+		if len(args) == 3 {
+			return fmt.Sprintf("tya_replace(%s, %s, %s)", args[0], args[1], args[2])
+		}
+	case "split":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_split(%s, %s)", args[0], args[1])
+		}
+	case "join":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_join(%s, %s)", args[0], args[1])
+		}
+	case "lines":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_lines(%s)", args[0])
+		}
+	case "upcase":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_upcase(%s)", args[0])
+		}
+	case "downcase":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_downcase(%s)", args[0])
+		}
+	}
+	return ""
+}
+
+func standardArrayCall(name string, args []string) string {
+	switch name {
+	case "len":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_len(%s)", args[0])
+		}
+	case "first":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_first(%s)", args[0])
+		}
+	case "last":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_last(%s)", args[0])
+		}
+	case "push":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_array_push(%s, %s)", args[0], args[1])
+		}
+	case "pop":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_pop(%s)", args[0])
+		}
+	case "slice":
+		if len(args) == 3 {
+			return fmt.Sprintf("tya_slice(%s, %s, %s)", args[0], args[1], args[2])
+		}
+	case "reverse":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_reverse(%s)", args[0])
+		}
+	case "join":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_join(%s, %s)", args[0], args[1])
+		}
+	case "map":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_map(%s, %s)", args[0], args[1])
+		}
+	case "filter":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_filter(%s, %s)", args[0], args[1])
+		}
+	case "find":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_find(%s, %s)", args[0], args[1])
+		}
+	case "any":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_any(%s, %s)", args[0], args[1])
+		}
+	case "all":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_all(%s, %s)", args[0], args[1])
+		}
+	case "each":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_each(%s, %s)", args[0], args[1])
+		}
+	case "reduce":
+		if len(args) == 3 {
+			return fmt.Sprintf("tya_reduce(%s, %s, %s)", args[0], args[1], args[2])
+		}
+	}
+	return ""
+}
+
+func standardDictCall(name string, args []string) string {
+	switch name {
+	case "len":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_len(%s)", args[0])
+		}
+	case "has":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_has(%s, %s)", args[0], args[1])
+		}
+	case "get":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_dict_get(%s, %s, tya_nil(), false)", args[0], args[1])
+		}
+		if len(args) == 3 {
+			return fmt.Sprintf("tya_dict_get(%s, %s, %s, true)", args[0], args[1], args[2])
+		}
+	case "set":
+		if len(args) == 3 {
+			return fmt.Sprintf("tya_dict_set(%s, %s, %s)", args[0], args[1], args[2])
+		}
+	case "delete":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_dict_delete(%s, %s)", args[0], args[1])
+		}
+	case "keys":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_keys(%s)", args[0])
+		}
+	case "values":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_values(%s)", args[0])
+		}
+	case "merge":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_dict_merge(%s, %s)", args[0], args[1])
+		}
+	}
+	return ""
 }
 
 func patternBindings(pattern ast.Expr) []string {

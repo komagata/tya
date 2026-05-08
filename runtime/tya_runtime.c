@@ -1,5 +1,6 @@
 #include "tya_runtime.h"
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -405,16 +406,61 @@ TyaValue tya_values(TyaValue dict) {
 }
 
 void tya_delete(TyaValue dict, TyaValue key) {
+  (void)tya_dict_delete(dict, key);
+}
+
+TyaValue tya_dict_get(TyaValue dict, TyaValue key, TyaValue fallback, bool has_fallback) {
   if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
-    return;
+    return has_fallback ? fallback : tya_nil();
   }
   for (int i = 0; i < dict.dict->len; i++) {
     if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key.string) == 0) {
-      dict.dict->entries[i].key = NULL;
-      dict.dict->entries[i].value = tya_nil();
-      return;
+      return dict.dict->entries[i].value;
     }
   }
+  return has_fallback ? fallback : tya_nil();
+}
+
+TyaValue tya_dict_set(TyaValue dict, TyaValue key, TyaValue value) {
+  if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
+    return dict;
+  }
+  tya_set_index(dict, key, value);
+  return dict;
+}
+
+TyaValue tya_dict_delete(TyaValue dict, TyaValue key) {
+  if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
+    return tya_nil();
+  }
+  for (int i = 0; i < dict.dict->len; i++) {
+    if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key.string) == 0) {
+      TyaValue value = dict.dict->entries[i].value;
+      dict.dict->entries[i].key = NULL;
+      dict.dict->entries[i].value = tya_nil();
+      return value;
+    }
+  }
+  return tya_nil();
+}
+
+TyaValue tya_dict_merge(TyaValue left, TyaValue right) {
+  TyaValue out = tya_dict(NULL, 0);
+  if (left.kind == TYA_DICT && left.dict != NULL) {
+    for (int i = 0; i < left.dict->len; i++) {
+      if (left.dict->entries[i].key != NULL) {
+        tya_set_index(out, tya_string(left.dict->entries[i].key), left.dict->entries[i].value);
+      }
+    }
+  }
+  if (right.kind == TYA_DICT && right.dict != NULL) {
+    for (int i = 0; i < right.dict->len; i++) {
+      if (right.dict->entries[i].key != NULL) {
+        tya_set_index(out, tya_string(right.dict->entries[i].key), right.dict->entries[i].value);
+      }
+    }
+  }
+  return out;
 }
 
 TyaValue tya_contains(TyaValue text, TyaValue part) {
@@ -488,6 +534,62 @@ TyaValue tya_replace(TyaValue text, TyaValue old, TyaValue replacement) {
     cursor = next + old_len;
   }
   strcpy(dst, cursor);
+  return tya_string(out);
+}
+
+TyaValue tya_byte_len(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    return tya_number(0);
+  }
+  return tya_number((double)strlen(text.string));
+}
+
+TyaValue tya_lines(TyaValue text) {
+  TyaValue out = tya_array(NULL, 0);
+  if (text.kind != TYA_STRING || text.string == NULL || text.string[0] == '\0') {
+    return out;
+  }
+  int start = 0;
+  int len = (int)strlen(text.string);
+  while (len > 0 && (text.string[len - 1] == '\n' || text.string[len - 1] == '\r')) {
+    len--;
+  }
+  for (int i = 0; i <= len; i++) {
+    if (i == len || text.string[i] == '\n') {
+      int end = i;
+      if (end > start && text.string[end - 1] == '\r') {
+        end--;
+      }
+      tya_push(out, tya_string(tya_substr(text.string, start, end - start)));
+      start = i + 1;
+    }
+  }
+  return out;
+}
+
+TyaValue tya_upcase(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    return tya_string("");
+  }
+  int len = (int)strlen(text.string);
+  char *out = malloc((size_t)len + 1);
+  for (int i = 0; i < len; i++) {
+    out[i] = (char)toupper((unsigned char)text.string[i]);
+  }
+  out[len] = '\0';
+  return tya_string(out);
+}
+
+TyaValue tya_downcase(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    return tya_string("");
+  }
+  int len = (int)strlen(text.string);
+  char *out = malloc((size_t)len + 1);
+  for (int i = 0; i < len; i++) {
+    out[i] = (char)tolower((unsigned char)text.string[i]);
+  }
+  out[len] = '\0';
   return tya_string(out);
 }
 
@@ -920,6 +1022,16 @@ TyaValue tya_all(TyaValue array, TyaValue fn) {
   return tya_bool(true);
 }
 
+TyaValue tya_each(TyaValue array, TyaValue fn) {
+  if (array.kind != TYA_ARRAY || array.array == NULL || fn.kind != TYA_FUNCTION) {
+    return tya_nil();
+  }
+  for (int i = 0; i < array.array->len; i++) {
+    (void)tya_call1(fn, array.array->items[i]);
+  }
+  return tya_nil();
+}
+
 TyaValue tya_reduce(TyaValue array, TyaValue initial, TyaValue fn) {
   TyaValue acc = initial;
   if (array.kind != TYA_ARRAY || array.array == NULL || fn.kind != TYA_FUNCTION) {
@@ -943,12 +1055,61 @@ void tya_push(TyaValue array, TyaValue value) {
   array.array->len++;
 }
 
+TyaValue tya_array_push(TyaValue array, TyaValue value) {
+  tya_push(array, value);
+  return array;
+}
+
 TyaValue tya_pop(TyaValue array) {
   if (array.kind != TYA_ARRAY || array.array == NULL || array.array->len == 0) {
     return tya_nil();
   }
   array.array->len--;
   return array.array->items[array.array->len];
+}
+
+TyaValue tya_first(TyaValue array) {
+  if (array.kind != TYA_ARRAY || array.array == NULL || array.array->len == 0) {
+    return tya_nil();
+  }
+  return array.array->items[0];
+}
+
+TyaValue tya_last(TyaValue array) {
+  if (array.kind != TYA_ARRAY || array.array == NULL || array.array->len == 0) {
+    return tya_nil();
+  }
+  return array.array->items[array.array->len - 1];
+}
+
+TyaValue tya_slice(TyaValue array, TyaValue start, TyaValue end) {
+  if (array.kind != TYA_ARRAY || array.array == NULL || start.kind != TYA_NUMBER || end.kind != TYA_NUMBER) {
+    return tya_array(NULL, 0);
+  }
+  int s = (int)start.number;
+  int e = (int)end.number;
+  if (s < 0 || e < 0) {
+    tya_panic(tya_string("array.slice does not support negative indexes"));
+  }
+  if (s > e || e > array.array->len) {
+    tya_panic(tya_string("array.slice index out of range"));
+  }
+  TyaValue out = tya_array(NULL, 0);
+  for (int i = s; i < e; i++) {
+    tya_push(out, array.array->items[i]);
+  }
+  return out;
+}
+
+TyaValue tya_reverse(TyaValue array) {
+  TyaValue out = tya_array(NULL, 0);
+  if (array.kind != TYA_ARRAY || array.array == NULL) {
+    return out;
+  }
+  for (int i = array.array->len - 1; i >= 0; i--) {
+    tya_push(out, array.array->items[i]);
+  }
+  return out;
 }
 
 void tya_exit(TyaValue code) {
