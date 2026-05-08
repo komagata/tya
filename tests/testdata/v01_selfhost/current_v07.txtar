@@ -1,0 +1,47 @@
+# Tya-written compiler supports the current v0.7 inheritance surface while preserving self-host.
+cd $REPO
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya selfhost/v01/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+
+exec sh -c '"$WORK/stage1" "$WORK/current_v07.tya" > "$WORK/current_v07.c"'
+! stderr .
+
+exec cc $WORK/current_v07.c runtime/tya_runtime.c -I runtime -o $WORK/current_v07
+! stderr .
+
+exec $WORK/current_v07
+stdout 'komagata\nadmin\nHello, komagata \(admin\)\nTya\n'
+! stderr .
+
+-- current_v07.tya --
+class User
+  name = ""
+  role = "user"
+
+  init = name ->
+    @name = name
+
+  greeting = ->
+    "Hello, {@name}"
+
+  rename = name ->
+    @name = name
+
+class Admin extends User
+  role = "admin"
+
+  init = name ->
+    super(name)
+
+  greeting = ->
+    "{super()} (admin)"
+
+admin = Admin("komagata")
+print admin.name
+print admin.role
+print admin.greeting()
+admin.rename("Tya")
+print admin.name

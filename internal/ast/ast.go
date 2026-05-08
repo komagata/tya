@@ -89,6 +89,7 @@ type ModuleMember struct {
 type ClassDecl struct {
 	Name    string
 	NameTok token.Token
+	Parent  *ClassRef
 	Fields  []ClassField
 	Vars    []ClassVar
 	Methods []ClassMethod
@@ -113,6 +114,12 @@ type ClassMethod struct {
 	Tok   token.Token
 	Func  *FuncLit
 	Class bool
+}
+
+type ClassRef struct {
+	Module string
+	Name   string
+	Tok    token.Token
 }
 
 type Ident struct {
@@ -190,6 +197,12 @@ type TryExpr struct {
 }
 
 func (*TryExpr) expr() {}
+
+type SuperExpr struct {
+	Tok token.Token
+}
+
+func (*SuperExpr) expr() {}
 
 type MemberExpr struct {
 	Target  Expr

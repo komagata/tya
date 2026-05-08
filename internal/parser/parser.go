@@ -169,6 +169,17 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+	var parent *ast.ClassRef
+	if p.at(token.IDENT) && p.peek().Lexeme == "extends" {
+		p.next()
+		parent, err = p.classRef()
+		if err != nil {
+			return nil, err
+		}
+		if p.match(token.COMMA) {
+			return nil, p.err("multiple inheritance is not in Tya v0.7")
+		}
+	}
 	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
 		return nil, p.err("expected indented block after class")
 	}
@@ -178,7 +189,7 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		p.classDepth--
 		p.blockDepth--
 	}()
-	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name}
+	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		isClassMember := p.match(token.AT)
@@ -211,6 +222,24 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		return nil, p.err("expected dedent after class")
 	}
 	return decl, nil
+}
+
+func (p *Parser) classRef() (*ast.ClassRef, error) {
+	first, err := p.expectName("expected parent class name")
+	if err != nil {
+		return nil, err
+	}
+	ref := &ast.ClassRef{Name: first.Lexeme, Tok: first}
+	if p.match(token.DOT) {
+		second, err := p.expectName("expected parent class name")
+		if err != nil {
+			return nil, err
+		}
+		ref.Module = first.Lexeme
+		ref.Name = second.Lexeme
+		ref.Tok = second
+	}
+	return ref, nil
 }
 
 func (p *Parser) ifStmt() (ast.Stmt, error) {
@@ -729,6 +758,9 @@ func (p *Parser) primary() (ast.Expr, error) {
 		if tok.Lexeme == "nil" {
 			return &ast.NilLit{}, nil
 		}
+		if tok.Lexeme == "super" {
+			return &ast.SuperExpr{Tok: tok}, nil
+		}
 		if err := p.rejectReservedName(tok); err != nil {
 			return nil, err
 		}
@@ -1048,7 +1080,7 @@ func (p *Parser) rejectV01ExcludedIdent() error {
 }
 func (p *Parser) rejectV01ExcludedWord(word string) error {
 	switch word {
-	case "interface", "object", "set", "self", "super":
+	case "interface", "object", "set", "self":
 		return p.err(word + " is not in Tya v0.1")
 	default:
 		return nil
@@ -1056,7 +1088,7 @@ func (p *Parser) rejectV01ExcludedWord(word string) error {
 }
 func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
-	case "interface", "object", "set", "self", "super":
+	case "interface", "object", "set", "self":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
 	case "class", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")

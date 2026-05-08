@@ -56,6 +56,7 @@
 <li><a href="v0.5/spec.html"><code>docs/v0.5/SPEC.md</code></a></li>
 <li><a href="v0.6/spec.html"><code>docs/v0.6/SPEC.md</code></a></li>
 <li><a href="v0.7/spec.html"><code>docs/v0.7/SPEC.md</code></a></li>
+<li><a href="v0.8/spec.html"><code>docs/v0.8/SPEC.md</code></a></li>
 </ol>
 <p>The v0.5 reference implementation remains:</p>
 <pre><code class="language-text">Go lexer
@@ -255,7 +256,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Update README examples when v0.6 is implemented.</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.7 single inheritance</li>
+<li>[x] Ship v0.7 single inheritance</li>
 <ul>
 <li>[x] Define v0.7 inheritance scope</li>
 <ul>
@@ -265,37 +266,87 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Specify inherited instance field defaults and instance methods.</li>
 <li>[x] Keep class variable inheritance, class method inheritance, interfaces, and mixins out of v0.7.</li>
 </ul>
-<li>[ ] Add inheritance to the compiler front end</li>
+<li>[x] Add inheritance to the compiler front end</li>
 <ul>
-<li>[ ] Parse <code>extends</code> clauses with local and module-qualified parent classes.</li>
-<li>[ ] Add AST fields for parent class references.</li>
-<li>[ ] Detect unknown parent classes and inheritance cycles.</li>
+<li>[x] Parse <code>extends</code> clauses with local and module-qualified parent classes.</li>
+<li>[x] Add AST fields for parent class references.</li>
+<li>[x] Detect unknown parent classes and inheritance cycles.</li>
 </ul>
-<li>[ ] Add inherited instance behavior</li>
+<li>[x] Add inherited instance behavior</li>
 <ul>
-<li>[ ] Apply parent field defaults before child field defaults.</li>
-<li>[ ] Inherit instance methods from parent classes.</li>
-<li>[ ] Support instance method overriding with matching arity.</li>
+<li>[x] Apply parent field defaults before child field defaults.</li>
+<li>[x] Inherit instance methods from parent classes.</li>
+<li>[x] Support instance method overriding with matching arity.</li>
 </ul>
-<li>[ ] Add <code>super</code></li>
+<li>[x] Add <code>super</code></li>
 <ul>
-<li>[ ] Support <code>super(args...)</code> in subclass <code>init</code>.</li>
-<li>[ ] Support <code>super(args...)</code> in overridden instance methods.</li>
-<li>[ ] Reject <code>super</code> outside <code>init</code> and instance methods.</li>
-<li>[ ] Reject <code>super</code> inside class methods.</li>
+<li>[x] Support <code>super(args...)</code> in subclass <code>init</code>.</li>
+<li>[x] Support <code>super(args...)</code> in overridden instance methods.</li>
+<li>[x] Reject <code>super</code> outside <code>init</code> and instance methods.</li>
+<li>[x] Reject <code>super</code> inside class methods.</li>
 </ul>
-<li>[ ] Keep class-level inheritance out of scope</li>
+<li>[x] Keep class-level inheritance out of scope</li>
 <ul>
-<li>[ ] Keep <code>@@field</code> class variables local to the declaring class.</li>
-<li>[ ] Keep <code>@@method</code> class methods local to the declaring class.</li>
-<li>[ ] Reject or report missing subclass class-level member access when only the parent declares it.</li>
+<li>[x] Keep <code>@@field</code> class variables local to the declaring class.</li>
+<li>[x] Keep <code>@@method</code> class methods local to the declaring class.</li>
+<li>[x] Reject or report missing subclass class-level member access when only the parent declares it.</li>
 </ul>
-<li>[ ] Keep v0.7 documentation and tests aligned</li>
+<li>[x] Keep v0.7 documentation and tests aligned</li>
 <ul>
-<li>[ ] Update latest docs when v0.7 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.7/</code> aligned with the v0.7 minor specification.</li>
+<li>[x] Update latest docs when v0.7 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.7/</code> aligned with the v0.7 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.7 inheritance.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.8 class-level inheritance</li>
+<ul>
+<li>[x] Define v0.8 class-level inheritance scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.8/SPEC.md</code>.</li>
+<li>[x] Specify inherited class variables.</li>
+<li>[x] Specify inherited class methods.</li>
+<li>[x] Specify subclass-local class variable shadowing on assignment.</li>
+<li>[x] Specify <code>self</code> inside class methods as the receiving class.</li>
+<li>[x] Specify <code>super(args...)</code> inside overridden class methods.</li>
+<li>[x] Specify <code>object.class</code> and <code>object.class_name</code>.</li>
+<li>[x] Specify <code>ClassName.name</code> and <code>ClassName.parent</code>.</li>
+</ul>
+<li>[ ] Add inherited class variable lookup</li>
+<ul>
+<li>[ ] Resolve <code>ClassName.field</code> through the class inheritance chain.</li>
+<li>[ ] Resolve <code>@@field</code> in class methods from the receiving class.</li>
+<li>[ ] Resolve <code>@@field</code> in instance methods from the instance's class.</li>
+<li>[ ] Create or update subclass-owned class variables on subclass assignment.</li>
+</ul>
+<li>[ ] Add inherited class method lookup</li>
+<ul>
+<li>[ ] Resolve <code>ClassName.method(args...)</code> through the class inheritance chain.</li>
+<li>[ ] Bind inherited class methods to the receiving class.</li>
+<li>[ ] Support class method overriding with matching arity.</li>
+</ul>
+<li>[ ] Add class-method <code>self</code> and <code>super</code></li>
+<ul>
+<li>[ ] Support <code>self</code> inside class methods.</li>
+<li>[ ] Reject <code>self</code> inside instance methods.</li>
+<li>[ ] Support <code>super(args...)</code> inside overridden class methods.</li>
+<li>[ ] Reject class-method <code>super</code> when no parent class method exists.</li>
+</ul>
+<li>[ ] Add small class introspection</li>
+<ul>
+<li>[ ] Support <code>object.class</code> as the object's actual class.</li>
+<li>[ ] Support <code>object.class_name</code> as the object's actual class name string.</li>
+<li>[ ] Support <code>ClassName.name</code> as the class name string.</li>
+<li>[ ] Support <code>ClassName.parent</code> as the parent class or <code>nil</code>.</li>
+<li>[ ] Reject assignment to read-only introspection members.</li>
+</ul>
+<li>[ ] Keep v0.8 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.8 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.8/</code> aligned with the v0.8 minor specification.</li>
 <li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add compiler, runtime, module, and negative tests for v0.7 inheritance.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.8 class-level inheritance and introspection.</li>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>

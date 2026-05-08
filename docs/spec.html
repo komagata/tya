@@ -24,43 +24,49 @@
       </div>
     </nav>
     <article class="doc-content">
-<h1 id="tya-v0-6-specification">Tya v0.6 Specification</h1>
-<p>This document is the specification for Tya v0.6 after v0.5 minimal classes and objects.</p>
+<h1 id="tya-v0-7-specification">Tya v0.7 Specification</h1>
+<p>This document is the specification for Tya v0.7 after v0.6 class-level members and instance field defaults.</p>
 <h2 id="theme">Theme</h2>
-<p>Tya v0.6 is about class-level state and behavior.</p>
-<p>v0.5 adds instance fields and instance methods. v0.6 extends the same class model with class variables and class methods, using the <code>@@field</code> syntax that v0.5 reserved for future class-level members.</p>
+<p>Tya v0.7 is about single inheritance for instance behavior.</p>
+<p>v0.5 adds minimal classes and objects. v0.6 adds class variables, class methods, and instance field defaults. v0.7 lets one class reuse and specialize another class's instance fields, initializer, and instance methods.</p>
 <h2 id="goals">Goals</h2>
 <ul>
-<li>Add class variables.</li>
-<li>Add class methods.</li>
-<li>Add instance field defaults in class bodies.</li>
-<li>Keep <code>@field</code> and <code>@@field</code> visually distinct.</li>
-<li>Keep class-level members explicit and easy to compile to C.</li>
-<li>Leave inheritance and richer object-oriented features for later versions.</li>
+<li>Add single inheritance with <code>extends</code>.</li>
+<li>Add <code>super(args...)</code> for parent <code>init</code> and overridden instance methods.</li>
+<li>Allow instance method overriding.</li>
+<li>Inherit instance field defaults.</li>
+<li>Keep class-level member inheritance out of v0.7.</li>
+<li>Leave interfaces and richer object-oriented features for later versions.</li>
 </ul>
-<h2 id="included-in-v0-6">Included in v0.6</h2>
-<p>v0.6 includes all v0.5 class behavior and adds:</p>
+<h2 id="included-in-v0-7">Included in v0.7</h2>
+<p>v0.7 includes all v0.6 class behavior and adds:</p>
 <ul>
-<li><code>@@field</code> class variable syntax</li>
-<li>instance field defaults declared with <code>field = value</code></li>
-<li>class variables declared in class bodies</li>
-<li>class variable read/write inside instance methods</li>
-<li>class variable read/write inside class methods</li>
-<li>public class variable read/write with <code>ClassName.field</code></li>
-<li>class methods declared with <code>@@method = args -&gt;</code></li>
-<li>public class method calls with <code>ClassName.method(args...)</code></li>
-<li>class methods as module class members with <code>module_name.ClassName.method(...)</code></li>
+<li><code>class Child extends Parent</code></li>
+<li>single inheritance only</li>
+<li>inherited instance field defaults</li>
+<li>inherited instance methods</li>
+<li>instance method overriding</li>
+<li><code>super(args...)</code> inside <code>init</code></li>
+<li><code>super(args...)</code> inside overridden instance methods</li>
+<li>constructor behavior for subclasses</li>
+<li>module class inheritance with <code>module_name.Parent</code></li>
 </ul>
-<h2 id="not-included-in-v0-6">Not Included in v0.6</h2>
-<p>v0.6 does not include:</p>
+<h2 id="not-included-in-v0-7">Not Included in v0.7</h2>
+<p>v0.7 does not include:</p>
 <ul>
-<li>inheritance</li>
-<li><code>super</code></li>
+<li>multiple inheritance</li>
+<li>mixins</li>
 <li>interfaces</li>
+<li><code>implements</code></li>
+<li>abstract classes</li>
 <li>visibility modifiers</li>
 <li>private fields</li>
-<li>private class variables</li>
-<li>private class methods</li>
+<li>protected fields</li>
+<li>class variable inheritance</li>
+<li>class method inheritance</li>
+<li><code>super</code> inside class methods</li>
+<li><code>super.field</code></li>
+<li><code>super.method(args...)</code></li>
 <li>method overloading</li>
 <li>operator overloading</li>
 <li>decorators</li>
@@ -69,164 +75,147 @@
 <li>package manager</li>
 <li>native-backed stdlib</li>
 </ul>
-<h2 id="instance-and-class-fields">Instance and Class Fields</h2>
-<p><code>@field</code> is an instance field.</p>
-<pre><code class="language-tya">class User
-  init = name -&gt;
-    @name = name</code></pre>
-<p><code>@@field</code> is a class variable.</p>
-<pre><code class="language-tya">class User
-  @@count = 0</code></pre>
-<p>The distinction is lexical:</p>
-<ul>
-<li><code>@name</code> belongs to the current object.</li>
-<li><code>@@count</code> belongs to the current class.</li>
-</ul>
-<h2 id="class-variables">Class Variables</h2>
-<p>Class variables are declared directly in the class body with <code>@@field = value</code>.</p>
-<pre><code class="language-tya">class User
-  @@count = 0
-
-  init = name -&gt;
-    @name = name
-    @@count = @@count + 1</code></pre>
-<p>The initializer expression is evaluated once when the class is defined.</p>
-<p>Class variables are shared by all instances of the class.</p>
-<pre><code class="language-tya">User(&quot;komagata&quot;)
-User(&quot;tya&quot;)
-
-print User.count</code></pre>
-<p>Class variables are public in v0.6. They can be read or assigned through the class name.</p>
-<pre><code class="language-tya">User.count = 0
-print User.count</code></pre>
-<p>Reading a missing class variable is an error.</p>
-<h2 id="instance-field-defaults">Instance Field Defaults</h2>
-<p>Instance field defaults are declared directly in the class body with <code>field = value</code>.</p>
-<pre><code class="language-tya">class Counter
-  value = 0
-
-  increment = -&gt;
-    @value = @value + 1</code></pre>
-<p>The default value is copied into each new instance before <code>init</code> runs.</p>
-<pre><code class="language-tya">counter = Counter()
-print counter.value</code></pre>
-<p><code>init</code> may overwrite a default field.</p>
+<h2 id="extending-a-class">Extending a Class</h2>
+<p>A class may extend one parent class.</p>
 <pre><code class="language-tya">class User
   name = &quot;&quot;
-  active = true
 
+  init = name -&gt;
+    @name = name
+
+  greeting = -&gt;
+    &quot;Hello, {@name}&quot;
+
+class Admin extends User
+  role = &quot;admin&quot;</code></pre>
+<p><code>Admin</code> is a subclass of <code>User</code>. It inherits <code>User</code>'s instance field defaults and instance methods.</p>
+<pre><code class="language-tya">admin = Admin(&quot;komagata&quot;)
+print admin.name
+print admin.role
+print admin.greeting()</code></pre>
+<p>Multiple inheritance is invalid.</p>
+<pre><code class="language-tya">class Bad extends User, Account</code></pre>
+<h2 id="constructor-behavior">Constructor Behavior</h2>
+<p>If a subclass does not define <code>init</code>, its constructor uses the nearest inherited <code>init</code>.</p>
+<pre><code class="language-tya">class User
+  init = name -&gt;
+    @name = name
+
+class Admin extends User
+
+admin = Admin(&quot;komagata&quot;)
+print admin.name</code></pre>
+<p>If a subclass defines <code>init</code>, it is responsible for calling the parent <code>init</code> with <code>super(args...)</code> when the parent has one.</p>
+<pre><code class="language-tya">class Admin extends User
+  init = name, role -&gt;
+    super(name)
+    @role = role</code></pre>
+<p>There is no implicit argument forwarding from a subclass <code>init</code> to a parent <code>init</code>.</p>
+<p>If a subclass defines <code>init</code> and the parent class defines <code>init</code>, omitting <code>super(args...)</code> is an error.</p>
+<pre><code class="language-tya">class Admin extends User
   init = name -&gt;
     @name = name</code></pre>
-<p>Field defaults define instance fields, not class variables. Use <code>@@field</code> for class-level state.</p>
+<p>The <code>Admin</code> initializer is invalid because <code>User.init</code> is not called.</p>
+<h2 id="field-defaults-and-inheritance">Field Defaults and Inheritance</h2>
+<p>Instance field defaults are applied from parent to child before <code>init</code> runs.</p>
 <pre><code class="language-tya">class User
-  name = &quot;&quot;   # instance field default
-  @@count = 0 # class variable</code></pre>
-<p>Field default names use snake_case. A field default and an instance method may not share the same name in the same class.</p>
-<h2 id="class-methods">Class Methods</h2>
-<p>Class methods are declared in the class body with <code>@@method = args -&gt;</code>.</p>
+  active = true
+
+class Admin extends User
+  role = &quot;admin&quot;
+
+admin = Admin()
+print admin.active
+print admin.role</code></pre>
+<p>A subclass may override a parent field default by declaring the same field name.</p>
+<pre><code class="language-tya">class User
+  role = &quot;user&quot;
+
+class Admin extends User
+  role = &quot;admin&quot;</code></pre>
+<p>The subclass default wins for instances of the subclass.</p>
+<h2 id="method-inheritance">Method Inheritance</h2>
+<p>Instance methods are inherited by subclasses.</p>
+<pre><code class="language-tya">class User
+  greeting = -&gt;
+    &quot;Hello&quot;
+
+class Admin extends User
+
+admin = Admin()
+print admin.greeting()</code></pre>
+<p>A subclass may override an inherited instance method by declaring a method with the same name.</p>
+<pre><code class="language-tya">class User
+  greeting = -&gt;
+    &quot;Hello&quot;
+
+class Admin extends User
+  greeting = -&gt;
+    &quot;Admin&quot;</code></pre>
+<p>The subclass method is used for subclass instances.</p>
+<h2 id="super-in-instance-methods"><code>super</code> in Instance Methods</h2>
+<p>Inside an overridden instance method, <code>super(args...)</code> calls the parent method with the same name.</p>
+<pre><code class="language-tya">class User
+  greeting = -&gt;
+    &quot;Hello, {@name}&quot;
+
+class Admin extends User
+  greeting = -&gt;
+    &quot;{super()} (admin)&quot;</code></pre>
+<p><code>super(args...)</code> must be called explicitly with parentheses when there are no arguments.</p>
+<pre><code class="language-tya">super()</code></pre>
+<p>There is no <code>super.greeting()</code> form in v0.7.</p>
+<h2 id="override-rules">Override Rules</h2>
+<p>An overriding instance method must use the same arity as the parent method.</p>
+<pre><code class="language-tya">class User
+  rename = name -&gt;
+    @name = name
+
+class Admin extends User
+  rename = first_name, last_name -&gt;
+    @name = first_name + &quot; &quot; + last_name</code></pre>
+<p>The <code>Admin.rename</code> override is invalid because the arity differs from <code>User.rename</code>.</p>
+<p>Return values are not checked beyond existing runtime behavior because v0.7 has no type annotations.</p>
+<h2 id="class-level-members-and-inheritance">Class-Level Members and Inheritance</h2>
+<p>v0.7 inheritance applies to instance behavior only.</p>
+<p>Class variables and class methods are not inherited in v0.7.</p>
 <pre><code class="language-tya">class User
   @@count = 0
-
-  @@build = name -&gt;
-    User(name)
 
   @@count_users = -&gt;
-    @@count</code></pre>
-<p>Call class methods through the class name.</p>
-<pre><code class="language-tya">user = User.build(&quot;komagata&quot;)
+    @@count
+
+class Admin extends User
+
+print User.count
 print User.count_users()</code></pre>
-<p>Class methods do not have an instance receiver. <code>@field</code> is invalid inside a class method. Use <code>@@field</code> for class-level state.</p>
-<pre><code class="language-tya">class User
-  @@count = 0
-
-  @@reset = -&gt;
-    @@count = 0</code></pre>
-<p>Reading a class method as a first-class value without calling it is not part of v0.6.</p>
-<h2 id="instance-methods-and-class-variables">Instance Methods and Class Variables</h2>
-<p>Instance methods may read and write class variables with <code>@@field</code>.</p>
-<pre><code class="language-tya">class User
-  @@count = 0
-
-  init = name -&gt;
-    @name = name
-    @@count = @@count + 1
-
-  count = -&gt;
-    @@count</code></pre>
-<p><code>@field</code> and <code>@@field</code> may appear in the same instance method.</p>
-<pre><code class="language-tya">class User
-  @@prefix = &quot;user&quot;
-
-  init = name -&gt;
-    @name = name
-
-  label = -&gt;
-    &quot;{@@prefix}:{@name}&quot;</code></pre>
-<h2 id="module-classes">Module Classes</h2>
-<p>A class declared inside a module exposes class variables and class methods through the module namespace.</p>
+<p><code>Admin.count</code> and <code>Admin.count_users()</code> are not part of v0.7 unless <code>Admin</code> declares its own class variable or class method.</p>
+<p>This keeps <code>@@field</code> simple and avoids shared class-variable behavior across inheritance chains.</p>
+<h2 id="modules-and-inheritance">Modules and Inheritance</h2>
+<p>A class may extend a class from an imported module.</p>
 <pre><code class="language-tya"># user.tya
 module user
   class User
-    @@count = 0
-
     init = name -&gt;
       @name = name
-      @@count = @@count + 1
 
-    @@count_users = -&gt;
-      @@count</code></pre>
-<p>Use the class-level members through the module class.</p>
+    greeting = -&gt;
+      &quot;Hello, {@name}&quot;</code></pre>
 <pre><code class="language-tya">import user
 
-user.User(&quot;komagata&quot;)
-print user.User.count
-print user.User.count_users()</code></pre>
-<p>v0.6 does not import module classes directly into the local namespace.</p>
-<h2 id="member-namespaces">Member Namespaces</h2>
-<p>A class has two member namespaces:</p>
-<ul>
-<li>instance members, used through objects</li>
-<li>class members, used through the class name</li>
-</ul>
-<p>An instance member and a class member may use the same name because they are called through different receivers.</p>
-<pre><code class="language-tya">class User
-  init = name -&gt;
-    @name = name
+class Admin extends user.User
+  greeting = -&gt;
+    &quot;{super()} (admin)&quot;</code></pre>
+<p>Classes declared inside a module can also extend another class declared in the same module.</p>
+<pre><code class="language-tya">module accounts
+  class User
+    name = &quot;&quot;
 
-  name = -&gt;
-    @name
-
-  @@name = -&gt;
-    &quot;User&quot;
-
-user = User(&quot;komagata&quot;)
-print user.name()
-print User.name()</code></pre>
-<p>Within the class member namespace, a class variable and a class method may not share the same name.</p>
-<pre><code class="language-tya">class User
-  @@name = &quot;User&quot;
-  @@name = -&gt;
-    &quot;User&quot;</code></pre>
-<p>The second <code>@@name</code> is an error.</p>
-<p>Within the instance member namespace, a field default and an instance method may not share the same name.</p>
-<pre><code class="language-tya">class User
-  name = &quot;&quot;
-  name = -&gt;
-    @name</code></pre>
-<p>The second <code>name</code> is an error.</p>
-<h2 id="construction-and-init">Construction and <code>init</code></h2>
-<p>v0.6 keeps the v0.5 construction rules.</p>
-<pre><code class="language-tya">class User
-  init = name -&gt;
-    @name = name
-
-user = User(&quot;komagata&quot;)</code></pre>
-<p><code>init</code> is still an instance initializer. v0.6 does not add class constructors or factory constructors. Use a class method when factory-like construction is needed.</p>
-<pre><code class="language-tya">class User
-  @@build = name -&gt;
-    User(name)</code></pre>
+  class Admin extends User
+    role = &quot;admin&quot;</code></pre>
+<p>v0.7 does not import module classes directly into the local namespace.</p>
 <h2 id="dot-access-boundary">Dot Access Boundary</h2>
-<p>Dot access has these specified meanings in v0.6:</p>
+<p>Dot access keeps the v0.6 meanings:</p>
 <ul>
 <li>module member access: <code>module_name.member</code></li>
 <li>object field access: <code>object.field</code></li>
@@ -234,26 +223,32 @@ user = User(&quot;komagata&quot;)</code></pre>
 <li>class variable access: <code>ClassName.field</code></li>
 <li>class method calls: <code>ClassName.method(args...)</code></li>
 </ul>
+<p>v0.7 also allows a module class path in an <code>extends</code> clause:</p>
+<pre><code class="language-tya">class Admin extends user.User</code></pre>
 <p>Dictionaries continue to use bracket access.</p>
 <pre><code class="language-tya">profile = {&quot;name&quot;: &quot;komagata&quot;}
 print profile[&quot;name&quot;]</code></pre>
-<p>Dictionary member access with <code>profile.name</code> is not part of v0.6.</p>
+<p>Dictionary member access with <code>profile.name</code> is not part of v0.7.</p>
 <h2 id="naming">Naming</h2>
 <p>Class names use PascalCase.</p>
 <pre><code class="language-tya">class User
-class HttpClient
-class CsvRow</code></pre>
+class AdminUser
+class HttpClient</code></pre>
 <p>Variables, functions, methods, fields, class variables, modules, files, and dictionary keys keep using snake_case.</p>
 <h2 id="diagnostics">Diagnostics</h2>
-<p>v0.6 implementations should report source-oriented errors for:</p>
+<p>v0.7 implementations should report source-oriented errors for:</p>
 <ul>
 <li>non-PascalCase class names</li>
-<li><code>@field</code> outside an instance method</li>
-<li><code>@field</code> inside a class method</li>
-<li><code>@@field</code> outside a class body, instance method, or class method</li>
-<li>duplicate class members in the same class</li>
+<li>unknown parent class</li>
+<li>multiple inheritance syntax</li>
+<li>inheritance cycles</li>
+<li><code>super</code> outside <code>init</code> or an instance method</li>
+<li><code>super</code> inside a class method</li>
+<li><code>super</code> in a method that has no parent method</li>
+<li>subclass <code>init</code> missing a required parent <code>init</code> call</li>
+<li>overriding an instance method with different arity</li>
 <li>duplicate instance members in the same class</li>
-<li>constructor arity mismatch</li>
+<li>duplicate class members in the same class</li>
 <li>missing object fields</li>
 <li>missing object methods</li>
 <li>missing class variables</li>

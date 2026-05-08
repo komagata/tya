@@ -10,7 +10,7 @@ module_stmt = name, members, line -> { kind: "module", name: name, members: memb
 
 module_member = name, value, line -> { name: name, value: value, line: line }
 
-class_stmt = name, methods, line -> { kind: "class", name: name, methods: methods, fields: [], vars: [], line: line }
+class_stmt = name, methods, line -> { kind: "class", name: name, parent: "", methods: methods, fields: [], vars: [], line: line }
 
 class_method = name, value, line -> { name: name, value: value, line: line, class: false }
 
@@ -81,7 +81,7 @@ try_expr = expr, line -> { kind: "try", expr: expr, line: line }
 syntax_errors = []
 parse_state = { function_depth: 0, loop_depth: 0 }
 checker_modules = []
-emitter_state = { class_ref: "" }
+emitter_state = { class_ref: "", super_class: "", method_name: "", class_values: {} }
 
 has_name = names, name ->
   found = false
@@ -350,7 +350,7 @@ print_ast = program ->
     print stmt_label(stmt)
 
 is_v01_excluded_word = word ->
-  word == "interface" or word == "object" or word == "set" or word == "self" or word == "super"
+  word == "interface" or word == "object" or word == "set" or word == "self"
 
 is_v01_reserved_name = word ->
   word == "true" or word == "false" or word == "nil" or word == "if" or word == "elseif" or word == "else" or word == "while" or word == "for" or word == "in" or word == "of" or word == "break" or word == "continue" or word == "return" or word == "import" or word == "module" or word == "and" or word == "or" or word == "not" or word == "try"
@@ -678,6 +678,14 @@ record_block_header_error = tokens, index ->
       index = index + 1
   index
 
+class_body_start = tokens, index ->
+  next = index + 2
+  parent = ""
+  if token_text(tokens[next]) == "extends"
+    parent = token_text(tokens[next + 1])
+    next = next + 2
+  return parent, next
+
 parse_simple_statement = tokens, index ->
   current = tokens[index]
   if token_kind(current) == "IDENT" and token_text(tokens[index + 1]) == "." and token_kind(tokens[index + 2]) == "IDENT" and token_text(tokens[index + 3]) == "="
@@ -775,7 +783,8 @@ parse_simple_block = tokens, index ->
       continue
     current = tokens[next]
     if token_kind(current) == "IDENT" and token_text(current) == "class"
-      body, after_class = parse_simple_block(tokens, next + 2)
+      parent, body_start = class_body_start(tokens, next)
+      body, after_class = parse_simple_block(tokens, body_start)
       methods = []
       fields = []
       vars = []
@@ -794,6 +803,7 @@ parse_simple_block = tokens, index ->
             else
               push(syntax_errors, to_string(stmt["line"]) + ": class body may only contain member definitions")
       cls = class_stmt(token_text(tokens[next + 1]), methods, token_line(current))
+      cls["parent"] = parent
       cls["fields"] = fields
       cls["vars"] = vars
       push(statements, cls)
@@ -943,7 +953,8 @@ parse_statement = tokens, index ->
     record_name_error(tokens[index + 1])
     return import_stmt(token_text(tokens[index + 1]), token_line(current)), index + 2
   if token_kind(current) == "IDENT" and token_text(current) == "class"
-    body, next = parse_simple_block(tokens, index + 2)
+    parent, body_start = class_body_start(tokens, index)
+    body, next = parse_simple_block(tokens, body_start)
     methods = []
     fields = []
     vars = []
@@ -962,6 +973,7 @@ parse_statement = tokens, index ->
           else
             push(syntax_errors, to_string(stmt["line"]) + ": class body may only contain member definitions")
     cls = class_stmt(token_text(tokens[index + 1]), methods, token_line(current))
+    cls["parent"] = parent
     cls["fields"] = fields
     cls["vars"] = vars
     return cls, next
@@ -1231,8 +1243,11 @@ check_expr = ctx, expr ->
   while len(work) > 0
     current = pop(work)
     if current["kind"] == "ident"
-      if not has_name(names, current["name"])
-        push(errors, to_string(current["line"]) + ": undefined variable: " + current["name"])
+      if current["name"] == "super"
+        names = names
+      else
+        if not has_name(names, current["name"])
+          push(errors, to_string(current["line"]) + ": undefined variable: " + current["name"])
     if current["kind"] == "binary"
       push(work, current["left"])
       push(work, current["right"])
@@ -1607,15 +1622,18 @@ emit_string_value = text ->
             field_index = field_index + 1
           push(parts, "tya_to_string(tya_member(" + emitter_state["class_ref"] + ", " + c_string(field_name) + "))")
         else
-          if len(name) > 0 and name[0] == "@"
-            field_name = ""
-            field_index = 1
-            while field_index < len(name)
-              field_name = field_name + name[field_index]
-              field_index = field_index + 1
-            push(parts, "tya_to_string(tya_member(__this, " + c_string("@" + field_name) + "))")
+          if name == "super()"
+            push(parts, "tya_to_string(" + c_func_name(emitter_state["super_class"] + "_" + emitter_state["method_name"]) + "(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil()))")
           else
-            push(parts, "tya_to_string(" + c_name(name) + ")")
+            if len(name) > 0 and name[0] == "@"
+              field_name = ""
+              field_index = 1
+              while field_index < len(name)
+                field_name = field_name + name[field_index]
+                field_index = field_index + 1
+              push(parts, "tya_to_string(tya_member(__this, " + c_string("@" + field_name) + "))")
+            else
+              push(parts, "tya_to_string(" + c_name(name) + ")")
         i = j + 1
       else
         literal = literal + char
@@ -1675,6 +1693,15 @@ emit_nested = expr ->
   if expr["kind"] == "call"
     if expr["callee"]["kind"] == "ident"
       name = expr["callee"]["name"]
+      if name == "super"
+        parent_name = emitter_state["super_class"]
+        method_name = emitter_state["method_name"]
+        parts = []
+        for arg in expr["args"]
+          push(parts, emit_expr(arg))
+        while len(parts) < 4
+          push(parts, "tya_nil()")
+        return c_func_name(parent_name + "_" + method_name) + "(__this, " + parts[0] + ", " + parts[1] + ", " + parts[2] + ", " + parts[3] + ")"
       if has_name(emitter_functions, name)
         return emit_direct_call(name, expr["args"])
       if name == "len"
@@ -1766,6 +1793,15 @@ emit_scalar = expr ->
   if expr["kind"] == "call"
     if expr["callee"]["kind"] == "ident"
       name = expr["callee"]["name"]
+      if name == "super"
+        parent_name = emitter_state["super_class"]
+        method_name = emitter_state["method_name"]
+        parts = []
+        for arg in expr["args"]
+          push(parts, emit_expr(arg))
+        while len(parts) < 4
+          push(parts, "tya_nil()")
+        return c_func_name(parent_name + "_" + method_name) + "(__this, " + parts[0] + ", " + parts[1] + ", " + parts[2] + ", " + parts[3] + ")"
       if has_name(emitter_functions, name)
         return emit_direct_call(name, expr["args"])
       if name == "len"
@@ -2132,13 +2168,26 @@ emit_class_definition = lines, class_name, class_value ->
   saved_class_ref = emitter_state["class_ref"]
   emitter_state["class_ref"] = c_name(class_name)
   for method in class_value["methods"]
+    saved_super = emitter_state["super_class"]
+    saved_method = emitter_state["method_name"]
+    emitter_state["super_class"] = class_value["parent"]
+    emitter_state["method_name"] = method["name"]
     emit_function_definition(lines, c_func_name(class_name + "_" + method["name"]), method["value"], true)
+    emitter_state["super_class"] = saved_super
+    emitter_state["method_name"] = saved_method
   emitter_state["class_ref"] = saved_class_ref
   push(lines, "TyaValue " + c_func_name(class_name) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
   push(lines, "  (void)__this;")
   push(lines, "  TyaValue __obj = tya_object();")
   saved_class_ref = emitter_state["class_ref"]
   emitter_state["class_ref"] = c_name(class_name)
+  if class_value["parent"] != "" and has(emitter_state["class_values"], class_value["parent"])
+    parent_class = emitter_state["class_values"][class_value["parent"]]
+    for field in parent_class["fields"]
+      field_tmp = "__field" + to_string(len(lines))
+      push(lines, "  TyaValue " + field_tmp + " = " + emit_expr(field["value"]) + ";")
+      push(lines, "  tya_set_member(__obj, " + c_string("@" + field["name"]) + ", " + field_tmp + ");")
+      push(lines, "  tya_set_member(__obj, " + c_string(field["name"]) + ", " + field_tmp + ");")
   for field in class_value["fields"]
     field_tmp = "__field" + to_string(len(lines))
     push(lines, "  TyaValue " + field_tmp + " = " + emit_expr(field["value"]) + ";")
@@ -2151,10 +2200,34 @@ emit_class_definition = lines, class_name, class_value ->
   if has_init
     push(lines, "  (void)" + c_func_name(class_name + "_init") + "(__obj, __arg0, __arg1, __arg2, __arg3);")
   else
-    push(lines, "  (void)__arg0;")
-    push(lines, "  (void)__arg1;")
-    push(lines, "  (void)__arg2;")
-    push(lines, "  (void)__arg3;")
+    if class_value["parent"] != "" and has(emitter_state["class_values"], class_value["parent"])
+      parent_class = emitter_state["class_values"][class_value["parent"]]
+      parent_has_init = false
+      for method in parent_class["methods"]
+        if method["name"] == "init" and not method["class"]
+          parent_has_init = true
+      if parent_has_init
+        push(lines, "  (void)" + c_func_name(class_value["parent"] + "_init") + "(__obj, __arg0, __arg1, __arg2, __arg3);")
+      else
+        push(lines, "  (void)__arg0;")
+        push(lines, "  (void)__arg1;")
+        push(lines, "  (void)__arg2;")
+        push(lines, "  (void)__arg3;")
+    else
+      push(lines, "  (void)__arg0;")
+      push(lines, "  (void)__arg1;")
+      push(lines, "  (void)__arg2;")
+      push(lines, "  (void)__arg3;")
+  if class_value["parent"] != "" and has(emitter_state["class_values"], class_value["parent"])
+    parent_class = emitter_state["class_values"][class_value["parent"]]
+    for method in parent_class["methods"]
+      if not method["class"] and method["name"] != "init"
+        overridden = false
+        for own_method in class_value["methods"]
+          if not own_method["class"] and own_method["name"] == method["name"]
+            overridden = true
+        if not overridden
+          push(lines, "  tya_set_member(__obj, " + c_string(method["name"]) + ", tya_bind_method(__obj, " + c_func_name(class_value["parent"] + "_" + method["name"]) + "));")
   for method in class_value["methods"]
     if not method["class"] and method["name"] != "init"
       push(lines, "  tya_set_member(__obj, " + c_string(method["name"]) + ", tya_bind_method(__obj, " + c_func_name(class_name + "_" + method["name"]) + "));")
@@ -2169,6 +2242,7 @@ emit_c = program ->
     pop(emitter_functions)
   while len(emitter_classes) > 0
     pop(emitter_classes)
+  emitter_state["class_values"] = {}
   while len(emitter_anon_functions) > 0
     pop(emitter_anon_functions)
   for stmt in program["statements"]
@@ -2185,6 +2259,7 @@ emit_c = program ->
     if stmt["kind"] == "class"
       remember(emitter_functions, stmt["name"])
       remember(emitter_classes, stmt["name"])
+      emitter_state["class_values"][stmt["name"]] = stmt
       for method in stmt["methods"]
         remember(emitter_functions, stmt["name"] + "_" + method["name"])
   for stmt in program["statements"]

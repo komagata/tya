@@ -13,7 +13,8 @@ func EmitC(prog *ast.Program) (string, error) {
 }
 
 func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, sourcePath: sourcePath}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, sourcePath: sourcePath}
+	g.collectClasses(prog.Stmts)
 	for _, name := range assignedNames(prog.Stmts) {
 		g.vars[name] = true
 		g.globalLine(fmt.Sprintf("TyaValue %s;", cName(name)))
@@ -47,9 +48,13 @@ type cgen struct {
 	funcs         map[string]string
 	classes       map[string]string
 	classMethods  map[string]string
+	classDecls    map[string]*ast.ClassDecl
 	temp          int
 	inFunc        bool
 	classRef      string
+	className     string
+	methodName    string
+	superClass    string
 	predicateName string
 }
 
@@ -69,6 +74,19 @@ func (g *cgen) classTarget() string {
 		return g.classRef
 	}
 	return "__this"
+}
+
+func (g *cgen) collectClasses(stmts []ast.Stmt) {
+	for _, stmt := range stmts {
+		switch n := stmt.(type) {
+		case *ast.ClassDecl:
+			g.classDecls[n.Name] = n
+		case *ast.ModuleDecl:
+			for _, class := range n.Classes {
+				g.classDecls[n.Name+"."+class.Name] = class
+			}
+		}
+	}
 }
 
 func (g *cgen) stmt(stmt ast.Stmt) error {
@@ -373,11 +391,15 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string
 		funcs:         g.funcs,
 		classes:       g.classes,
 		classMethods:  g.classMethods,
+		classDecls:    g.classDecls,
 		sourcePath:    g.sourcePath,
 		temp:          g.temp,
 		indent:        1,
 		inFunc:        true,
 		classRef:      classRef,
+		className:     g.className,
+		methodName:    g.methodName,
+		superClass:    g.superClass,
 		predicateName: predicateName(name),
 	}
 	for i, param := range fn.Params {
@@ -563,9 +585,13 @@ func (g *cgen) assignClassDecl(name string, class *ast.ClassDecl) error {
 func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (string, error) {
 	methodSyms := map[string]string{}
 	var initMethod *ast.ClassMethod
+	parentKey := g.parentKey(name, class)
 	for i := range class.Methods {
 		method := &class.Methods[i]
+		prevClass, prevMethod, prevSuper := g.className, g.methodName, g.superClass
+		g.className, g.methodName, g.superClass = name, method.Name, parentKey
 		sym, err := g.emitFuncWithContext(name+"_"+method.Name, method.Func, classRef, "")
+		g.className, g.methodName, g.superClass = prevClass, prevMethod, prevSuper
 		if err != nil {
 			return "", err
 		}
@@ -583,6 +609,11 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
 	out.WriteString("  (void)__this;\n")
 	out.WriteString("  TyaValue __obj = tya_object();\n")
+	if parentKey != "" {
+		if err := g.emitParentDefaults(&out, parentKey); err != nil {
+			return "", err
+		}
+	}
 	for _, field := range class.Fields {
 		value, _, err := g.expr(field.Value)
 		if err != nil {
@@ -593,8 +624,17 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 	}
 	if initMethod != nil {
 		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", methodSyms["init"]))
+	} else if parentKey != "" {
+		if parentInit := g.inheritedMethodSym(parentKey, "init"); parentInit != "" {
+			out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", parentInit))
+		} else {
+			out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
+		}
 	} else {
 		out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
+	}
+	if parentKey != "" {
+		g.emitParentMethods(&out, parentKey, class)
 	}
 	for _, method := range class.Methods {
 		if method.Class || method.Name == "init" {
@@ -624,6 +664,90 @@ func (g *cgen) emitClassMembers(target string, name string, class *ast.ClassDecl
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_bind_method(%s, %s));", target, strconv.Quote(method.Name), target, sym))
 	}
 	return nil
+}
+
+func (g *cgen) parentKey(name string, class *ast.ClassDecl) string {
+	if class.Parent == nil {
+		return ""
+	}
+	if class.Parent.Module != "" {
+		return class.Parent.Module + "." + class.Parent.Name
+	}
+	if strings.Contains(name, "_") {
+		module := strings.SplitN(name, "_", 2)[0]
+		if _, ok := g.classDecls[module+"."+class.Parent.Name]; ok {
+			return module + "." + class.Parent.Name
+		}
+	}
+	return class.Parent.Name
+}
+
+func (g *cgen) cClassName(key string) string {
+	return strings.ReplaceAll(key, ".", "_")
+}
+
+func (g *cgen) emitParentDefaults(out *strings.Builder, parentKey string) error {
+	parent := g.classDecls[parentKey]
+	if parent == nil {
+		return nil
+	}
+	grand := g.parentKey(g.cClassName(parentKey), parent)
+	if grand != "" {
+		if err := g.emitParentDefaults(out, grand); err != nil {
+			return err
+		}
+	}
+	for _, field := range parent.Fields {
+		value, _, err := g.expr(field.Value)
+		if err != nil {
+			return err
+		}
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote("@"+field.Name), value))
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote(field.Name), value))
+	}
+	return nil
+}
+
+func (g *cgen) emitParentMethods(out *strings.Builder, parentKey string, class *ast.ClassDecl) {
+	parent := g.classDecls[parentKey]
+	if parent == nil {
+		return
+	}
+	grand := g.parentKey(g.cClassName(parentKey), parent)
+	if grand != "" {
+		g.emitParentMethods(out, grand, class)
+	}
+	overrides := map[string]bool{}
+	for _, method := range class.Methods {
+		if !method.Class {
+			overrides[method.Name] = true
+		}
+	}
+	for _, method := range parent.Methods {
+		if method.Class || method.Name == "init" || overrides[method.Name] {
+			continue
+		}
+		sym := g.classMethods[g.cClassName(parentKey)+"."+method.Name]
+		if sym != "" {
+			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), sym))
+		}
+	}
+}
+
+func (g *cgen) inheritedMethodSym(parentKey string, method string) string {
+	for parentKey != "" {
+		parent := g.classDecls[parentKey]
+		if parent == nil {
+			return ""
+		}
+		for _, parentMethod := range parent.Methods {
+			if !parentMethod.Class && parentMethod.Name == method {
+				return g.classMethods[g.cClassName(parentKey)+"."+method]
+			}
+		}
+		parentKey = g.parentKey(g.cClassName(parentKey), parent)
+	}
+	return ""
 }
 
 func (g *cgen) exprStmt(expr ast.Expr) error {
@@ -838,6 +962,24 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return "tya_number(-" + ex + ".number)", typ, nil
 	case *ast.CallExpr:
+		if _, ok := n.Callee.(*ast.SuperExpr); ok {
+			sym := g.inheritedMethodSym(g.superClass, g.methodName)
+			if sym == "" {
+				return "tya_nil()", "TyaValue", nil
+			}
+			args := make([]string, 0, len(n.Args))
+			for _, arg := range n.Args {
+				ex, _, err := g.expr(arg)
+				if err != nil {
+					return "", "", err
+				}
+				args = append(args, ex)
+			}
+			for len(args) < 4 {
+				args = append(args, "tya_nil()")
+			}
+			return fmt.Sprintf("%s(__this, %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
+		}
 		id, ok := n.Callee.(*ast.Ident)
 		if ok {
 			if sym, found := g.classes[id.Name]; found {
@@ -1265,6 +1407,13 @@ func (g *cgen) interpolateString(value string) string {
 
 func (g *cgen) interpolationExpr(expr string) (string, bool) {
 	expr = strings.TrimSpace(expr)
+	if expr == "super()" {
+		sym := g.inheritedMethodSym(g.superClass, g.methodName)
+		if sym == "" {
+			return "tya_nil()", true
+		}
+		return fmt.Sprintf("%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil())", sym), true
+	}
 	if strings.HasPrefix(expr, "@@") && isIdentName(strings.TrimPrefix(expr, "@@")) {
 		return "tya_member(" + g.classTarget() + ", " + strconv.Quote(strings.TrimPrefix(expr, "@@")) + ")", true
 	}

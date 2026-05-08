@@ -70,12 +70,16 @@ type scope struct {
 	inInstanceMethod bool
 	inClassMethod    bool
 	inClassBody      bool
+	currentMethod    string
+	currentClass     string
 }
 
 type classInfo struct {
+	name      string
+	parent    string
 	hasInit   bool
 	initArity int
-	methods   map[string]bool
+	methods   map[string]int
 }
 
 func newScope(parent *scope) *scope {
@@ -85,6 +89,8 @@ func newScope(parent *scope) *scope {
 		s.inInstanceMethod = parent.inInstanceMethod
 		s.inClassMethod = parent.inClassMethod
 		s.inClassBody = parent.inClassBody
+		s.currentMethod = parent.currentMethod
+		s.currentClass = parent.currentClass
 	} else {
 		s.classes = map[string]classInfo{}
 	}
@@ -180,7 +186,8 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					return fmt.Errorf("%d:%d: duplicate module member %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 				}
 				seen[class.Name] = true
-				if err := checkClass(class, scope); err != nil {
+				scope.define(n.Name+"."+class.Name, kindClass)
+				if err := checkClass(class, scope, n.Name); err != nil {
 					return err
 				}
 			}
@@ -197,7 +204,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				}
 			}
 		case *ast.ClassDecl:
-			if err := checkClass(n, scope); err != nil {
+			if err := checkClass(n, scope, ""); err != nil {
 				return err
 			}
 		case *ast.IfStmt:
@@ -274,8 +281,38 @@ func predeclareFunctionBindings(stmts []ast.Stmt, scope *scope) error {
 			if err := predeclareClass(n, scope); err != nil {
 				return err
 			}
+		case *ast.ModuleDecl:
+			for _, class := range n.Classes {
+				if err := predeclareModuleClass(n.Name, class, scope); err != nil {
+					return err
+				}
+			}
 		}
 	}
+	return nil
+}
+
+func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) error {
+	if !classNameRE.MatchString(class.Name) {
+		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+	}
+	key := classKey(module, class)
+	info := classInfo{name: key, methods: map[string]int{}}
+	if class.Parent != nil {
+		info.parent = refKey(class.Parent, module, scope)
+	}
+	for _, method := range class.Methods {
+		if method.Class {
+			continue
+		}
+		info.methods[method.Name] = len(method.Func.Params)
+		if method.Name == "init" {
+			info.hasInit = true
+			info.initArity = len(method.Func.Params)
+		}
+	}
+	scope.define(module+"."+class.Name, kindClass)
+	scope.classes[key] = info
 	return nil
 }
 
@@ -283,16 +320,23 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 	if !classNameRE.MatchString(class.Name) {
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
-	info := classInfo{methods: map[string]bool{}}
+	key := classKey("", class)
+	info := classInfo{name: key, methods: map[string]int{}}
+	if class.Parent != nil {
+		info.parent = refKey(class.Parent, "", scope)
+	}
 	for _, method := range class.Methods {
-		info.methods[method.Name] = true
+		if method.Class {
+			continue
+		}
+		info.methods[method.Name] = len(method.Func.Params)
 		if method.Name == "init" {
 			info.hasInit = true
 			info.initArity = len(method.Func.Params)
 		}
 	}
 	scope.define(class.Name, kindClass)
-	scope.classes[class.Name] = info
+	scope.classes[key] = info
 	return nil
 }
 
@@ -361,6 +405,8 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		return checkExpr(n.Expr, scope)
 	case *ast.TryExpr:
 		return checkExpr(n.Expr, scope)
+	case *ast.SuperExpr:
+		return fmt.Errorf("%d:%d: super must be called inside init or an instance method", n.Tok.Line, n.Tok.Col)
 	case *ast.InstanceFieldExpr:
 		if !scope.inInstanceMethod {
 			return fmt.Errorf("%d:%d: @%s is only valid inside an instance method", n.NameTok.Line, n.NameTok.Col, n.Name)
@@ -399,16 +445,49 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		}
 		return checkExpr(n.Index, scope)
 	case *ast.CallExpr:
+		if super, ok := n.Callee.(*ast.SuperExpr); ok {
+			if scope.inClassMethod || !scope.inInstanceMethod || scope.currentMethod == "" || scope.currentClass == "" {
+				return fmt.Errorf("%d:%d: super must be called inside init or an instance method", super.Tok.Line, super.Tok.Col)
+			}
+			parent := scope.classes[scope.currentClass].parent
+			if parent == "" {
+				return fmt.Errorf("%d:%d: super has no parent method", super.Tok.Line, super.Tok.Col)
+			}
+			if scope.currentMethod == "init" {
+				arity, ok := inheritedInitArity(parent, scope)
+				if !ok {
+					return fmt.Errorf("%d:%d: super has no parent method", super.Tok.Line, super.Tok.Col)
+				}
+				if len(n.Args) != arity {
+					return fmt.Errorf("%d:%d: super init expects %d arguments", super.Tok.Line, super.Tok.Col, arity)
+				}
+			} else {
+				arity, ok := inheritedMethodArity(parent, scope.currentMethod, scope)
+				if !ok {
+					return fmt.Errorf("%d:%d: super has no parent method %s", super.Tok.Line, super.Tok.Col, scope.currentMethod)
+				}
+				if len(n.Args) != arity {
+					return fmt.Errorf("%d:%d: super method %s expects %d arguments", super.Tok.Line, super.Tok.Col, scope.currentMethod, arity)
+				}
+			}
+			for _, arg := range n.Args {
+				if err := checkExpr(arg, scope); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
 		if err := checkExpr(n.Callee, scope); err != nil {
 			return err
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindClass {
 			info := scope.classes[id.Name]
-			if !info.hasInit && len(n.Args) > 0 {
+			hasInit, arity := effectiveInit(info, scope)
+			if !hasInit && len(n.Args) > 0 {
 				return fmt.Errorf("%d:%d: class %s has no init and takes no arguments", id.Tok.Line, id.Tok.Col, id.Name)
 			}
-			if info.hasInit && len(n.Args) != info.initArity {
-				return fmt.Errorf("%d:%d: class %s constructor expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, info.initArity)
+			if hasInit && len(n.Args) != arity {
+				return fmt.Errorf("%d:%d: class %s constructor expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
 			}
 		}
 		for _, arg := range n.Args {
@@ -420,9 +499,19 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	return nil
 }
 
-func checkClass(class *ast.ClassDecl, scope *scope) error {
+func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 	if !classNameRE.MatchString(class.Name) {
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+	}
+	key := classKey(module, class)
+	if class.Parent != nil {
+		parentKey := refKey(class.Parent, module, scope)
+		if _, ok := scope.classes[parentKey]; !ok {
+			return fmt.Errorf("%d:%d: unknown parent class %s", class.Parent.Tok.Line, class.Parent.Tok.Col, parentName(class.Parent))
+		}
+		if hasInheritanceCycle(key, scope) {
+			return fmt.Errorf("%d:%d: inheritance cycle involving %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+		}
 	}
 	instanceMembers := map[string]bool{}
 	classMembers := map[string]bool{}
@@ -469,6 +558,8 @@ func checkClass(class *ast.ClassDecl, scope *scope) error {
 		}
 		child := newScope(scope)
 		child.inClassBody = true
+		child.currentClass = key
+		child.currentMethod = method.Name
 		if method.Class {
 			child.inClassMethod = true
 		} else {
@@ -477,8 +568,165 @@ func checkClass(class *ast.ClassDecl, scope *scope) error {
 		if err := checkExpr(method.Func, child); err != nil {
 			return err
 		}
+		if !method.Class {
+			parent := scope.classes[key].parent
+			if parent != "" {
+				if method.Name == "init" {
+					if _, ok := inheritedInitArity(parent, scope); ok && !funcCallsSuper(method.Func) {
+						return fmt.Errorf("%d:%d: subclass init must call super", method.Tok.Line, method.Tok.Col)
+					}
+				} else if arity, ok := inheritedMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
+					return fmt.Errorf("%d:%d: overriding method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+				}
+			}
+		}
 	}
 	return nil
+}
+
+func classKey(module string, class *ast.ClassDecl) string {
+	if module != "" {
+		return module + "." + class.Name
+	}
+	return class.Name
+}
+
+func refKey(ref *ast.ClassRef, currentModule string, scope *scope) string {
+	if ref.Module != "" {
+		return ref.Module + "." + ref.Name
+	}
+	if currentModule != "" {
+		if _, ok := scope.classes[currentModule+"."+ref.Name]; ok {
+			return currentModule + "." + ref.Name
+		}
+	}
+	return ref.Name
+}
+
+func parentName(ref *ast.ClassRef) string {
+	if ref.Module != "" {
+		return ref.Module + "." + ref.Name
+	}
+	return ref.Name
+}
+
+func hasInheritanceCycle(start string, scope *scope) bool {
+	seen := map[string]bool{}
+	current := start
+	for current != "" {
+		if seen[current] {
+			return true
+		}
+		seen[current] = true
+		current = scope.classes[current].parent
+	}
+	return false
+}
+
+func effectiveInit(info classInfo, scope *scope) (bool, int) {
+	if info.hasInit {
+		return true, info.initArity
+	}
+	if info.parent != "" {
+		arity, ok := inheritedInitArity(info.parent, scope)
+		return ok, arity
+	}
+	return false, 0
+}
+
+func inheritedInitArity(className string, scope *scope) (int, bool) {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return 0, false
+		}
+		if info.hasInit {
+			return info.initArity, true
+		}
+		className = info.parent
+	}
+	return 0, false
+}
+
+func inheritedMethodArity(className string, method string, scope *scope) (int, bool) {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return 0, false
+		}
+		if arity, ok := info.methods[method]; ok {
+			return arity, true
+		}
+		className = info.parent
+	}
+	return 0, false
+}
+
+func funcCallsSuper(fn *ast.FuncLit) bool {
+	var exprHasSuper func(ast.Expr) bool
+	exprHasSuper = func(expr ast.Expr) bool {
+		switch n := expr.(type) {
+		case *ast.CallExpr:
+			if _, ok := n.Callee.(*ast.SuperExpr); ok {
+				return true
+			}
+			if exprHasSuper(n.Callee) {
+				return true
+			}
+			for _, arg := range n.Args {
+				if exprHasSuper(arg) {
+					return true
+				}
+			}
+		case *ast.BinaryExpr:
+			return exprHasSuper(n.Left) || exprHasSuper(n.Right)
+		case *ast.UnaryExpr:
+			return exprHasSuper(n.Expr)
+		case *ast.TryExpr:
+			return exprHasSuper(n.Expr)
+		case *ast.MemberExpr:
+			return exprHasSuper(n.Target)
+		case *ast.IndexExpr:
+			return exprHasSuper(n.Target) || exprHasSuper(n.Index)
+		case *ast.ArrayLit:
+			for _, elem := range n.Elems {
+				if exprHasSuper(elem) {
+					return true
+				}
+			}
+		case *ast.DictLit:
+			for _, prop := range n.Props {
+				if exprHasSuper(prop.Value) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	if fn.Expr != nil && exprHasSuper(fn.Expr) {
+		return true
+	}
+	for _, stmt := range fn.Body {
+		switch n := stmt.(type) {
+		case *ast.ExprStmt:
+			if exprHasSuper(n.Expr) {
+				return true
+			}
+		case *ast.AssignStmt:
+			for _, value := range n.Values {
+				if exprHasSuper(value) {
+					return true
+				}
+			}
+		case *ast.ReturnStmt:
+			for _, value := range n.Values {
+				if exprHasSuper(value) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func checkAssignmentTarget(target ast.Expr, scope *scope) error {

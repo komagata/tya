@@ -1,0 +1,188 @@
+# v0.7 single inheritance and super.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/inheritance.tya
+stdout 'komagata\nadmin\nHello, komagata \(admin\)\nTya\nHello, Tya \(admin\)\n1\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'module\nHello, module \(admin\)\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/accounts_main.tya
+stdout 'komagata\nadmin\nHello, komagata \(admin\)\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/unknown_parent.tya
+stderr 'unknown parent class Missing'
+
+! exec go run ./cmd/tya run $WORK/multiple_inheritance.tya
+stderr 'multiple inheritance is not in Tya v0.7'
+
+! exec go run ./cmd/tya run $WORK/cycle.tya
+stderr 'inheritance cycle involving User'
+
+! exec go run ./cmd/tya run $WORK/super_outside.tya
+stderr 'super must be called inside init or an instance method'
+
+! exec go run ./cmd/tya run $WORK/super_in_class_method.tya
+stderr 'super must be called inside init or an instance method'
+
+! exec go run ./cmd/tya run $WORK/no_parent_method.tya
+stderr 'super has no parent method greeting'
+
+! exec go run ./cmd/tya run $WORK/missing_super.tya
+stderr 'subclass init must call super'
+
+! exec go run ./cmd/tya run $WORK/bad_override_arity.tya
+stderr 'overriding method rename expects 1 parameters'
+
+! exec go run ./cmd/tya run $WORK/no_class_member_inheritance.tya
+stderr 'missing class variable or method: count'
+! stdout .
+
+exec go run ./cmd/tya version
+stdout '0.7.0\n'
+! stderr .
+
+-- inheritance.tya --
+class User
+  name = ""
+  role = "user"
+  @@count = 0
+
+  init = name ->
+    @name = name
+    @@count = @@count + 1
+
+  greeting = ->
+    "Hello, {@name}"
+
+  rename = name ->
+    @name = name
+
+class Admin extends User
+  role = "admin"
+
+  init = name ->
+    super(name)
+
+  greeting = ->
+    "{super()} ({@role})"
+
+admin = Admin("komagata")
+print admin.name
+print admin.role
+print admin.greeting()
+admin.rename("Tya")
+print admin.name
+print admin.greeting()
+print User.count
+
+-- user.tya --
+module user
+  class User
+    name = ""
+
+    init = name ->
+      @name = name
+
+    greeting = ->
+      "Hello, {@name}"
+
+-- main.tya --
+import user
+
+class Admin extends user.User
+  greeting = ->
+    "{super()} (admin)"
+
+admin = Admin("module")
+print admin.name
+print admin.greeting()
+
+-- accounts.tya --
+module accounts
+  class User
+    name = ""
+
+    init = name ->
+      @name = name
+
+    greeting = ->
+      "Hello, {@name}"
+
+  class Admin extends User
+    role = "admin"
+
+    greeting = ->
+      "{super()} ({@role})"
+
+-- accounts_main.tya --
+import accounts
+
+admin = accounts.Admin("komagata")
+print admin.name
+print admin.role
+print admin.greeting()
+
+-- unknown_parent.tya --
+class Admin extends Missing
+  name = ""
+
+-- multiple_inheritance.tya --
+class Bad extends User, Account
+  name = ""
+
+-- cycle.tya --
+class User extends Admin
+  name = ""
+class Admin extends User
+  name = ""
+
+-- super_outside.tya --
+print super()
+
+-- super_in_class_method.tya --
+class User
+  greeting = ->
+    "Hello"
+
+class Admin extends User
+  @@build = ->
+    super()
+
+-- no_parent_method.tya --
+class User
+  name = ""
+
+class Admin extends User
+  greeting = ->
+    super()
+
+-- missing_super.tya --
+class User
+  init = name ->
+    @name = name
+
+class Admin extends User
+  init = name ->
+    @name = name
+
+-- bad_override_arity.tya --
+class User
+  rename = name ->
+    @name = name
+
+class Admin extends User
+  rename = first_name, last_name ->
+    @name = first_name + " " + last_name
+
+-- no_class_member_inheritance.tya --
+class User
+  @@count = 0
+
+class Admin extends User
+  name = ""
+
+print Admin.count

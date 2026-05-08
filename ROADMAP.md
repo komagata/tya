@@ -54,6 +54,7 @@ Current planned minor-version documents are:
 1. [`docs/v0.5/SPEC.md`](docs/v0.5/SPEC.md)
 1. [`docs/v0.6/SPEC.md`](docs/v0.6/SPEC.md)
 1. [`docs/v0.7/SPEC.md`](docs/v0.7/SPEC.md)
+1. [`docs/v0.8/SPEC.md`](docs/v0.8/SPEC.md)
 
 The v0.5 reference implementation remains:
 
@@ -235,35 +236,71 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.6 class-level members and field defaults.
     - [x] Update README examples when v0.6 is implemented.
-- [ ] Ship v0.7 single inheritance
+- [x] Ship v0.7 single inheritance
   - [x] Define v0.7 inheritance scope
     - [x] Add `docs/v0.7/SPEC.md`.
     - [x] Specify `class Child extends Parent`.
     - [x] Specify `super(args...)` in `init` and overridden instance methods.
     - [x] Specify inherited instance field defaults and instance methods.
     - [x] Keep class variable inheritance, class method inheritance, interfaces, and mixins out of v0.7.
-  - [ ] Add inheritance to the compiler front end
-    - [ ] Parse `extends` clauses with local and module-qualified parent classes.
-    - [ ] Add AST fields for parent class references.
-    - [ ] Detect unknown parent classes and inheritance cycles.
-  - [ ] Add inherited instance behavior
-    - [ ] Apply parent field defaults before child field defaults.
-    - [ ] Inherit instance methods from parent classes.
-    - [ ] Support instance method overriding with matching arity.
-  - [ ] Add `super`
-    - [ ] Support `super(args...)` in subclass `init`.
-    - [ ] Support `super(args...)` in overridden instance methods.
-    - [ ] Reject `super` outside `init` and instance methods.
-    - [ ] Reject `super` inside class methods.
-  - [ ] Keep class-level inheritance out of scope
-    - [ ] Keep `@@field` class variables local to the declaring class.
-    - [ ] Keep `@@method` class methods local to the declaring class.
-    - [ ] Reject or report missing subclass class-level member access when only the parent declares it.
-  - [ ] Keep v0.7 documentation and tests aligned
-    - [ ] Update latest docs when v0.7 behavior is implemented.
-    - [ ] Keep `docs/v0.7/` aligned with the v0.7 minor specification.
+  - [x] Add inheritance to the compiler front end
+    - [x] Parse `extends` clauses with local and module-qualified parent classes.
+    - [x] Add AST fields for parent class references.
+    - [x] Detect unknown parent classes and inheritance cycles.
+  - [x] Add inherited instance behavior
+    - [x] Apply parent field defaults before child field defaults.
+    - [x] Inherit instance methods from parent classes.
+    - [x] Support instance method overriding with matching arity.
+  - [x] Add `super`
+    - [x] Support `super(args...)` in subclass `init`.
+    - [x] Support `super(args...)` in overridden instance methods.
+    - [x] Reject `super` outside `init` and instance methods.
+    - [x] Reject `super` inside class methods.
+  - [x] Keep class-level inheritance out of scope
+    - [x] Keep `@@field` class variables local to the declaring class.
+    - [x] Keep `@@method` class methods local to the declaring class.
+    - [x] Reject or report missing subclass class-level member access when only the parent declares it.
+  - [x] Keep v0.7 documentation and tests aligned
+    - [x] Update latest docs when v0.7 behavior is implemented.
+    - [x] Keep `docs/v0.7/` aligned with the v0.7 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.7 inheritance.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.8 class-level inheritance
+  - [x] Define v0.8 class-level inheritance scope
+    - [x] Add `docs/v0.8/SPEC.md`.
+    - [x] Specify inherited class variables.
+    - [x] Specify inherited class methods.
+    - [x] Specify subclass-local class variable shadowing on assignment.
+    - [x] Specify `self` inside class methods as the receiving class.
+    - [x] Specify `super(args...)` inside overridden class methods.
+    - [x] Specify `object.class` and `object.class_name`.
+    - [x] Specify `ClassName.name` and `ClassName.parent`.
+  - [ ] Add inherited class variable lookup
+    - [ ] Resolve `ClassName.field` through the class inheritance chain.
+    - [ ] Resolve `@@field` in class methods from the receiving class.
+    - [ ] Resolve `@@field` in instance methods from the instance's class.
+    - [ ] Create or update subclass-owned class variables on subclass assignment.
+  - [ ] Add inherited class method lookup
+    - [ ] Resolve `ClassName.method(args...)` through the class inheritance chain.
+    - [ ] Bind inherited class methods to the receiving class.
+    - [ ] Support class method overriding with matching arity.
+  - [ ] Add class-method `self` and `super`
+    - [ ] Support `self` inside class methods.
+    - [ ] Reject `self` inside instance methods.
+    - [ ] Support `super(args...)` inside overridden class methods.
+    - [ ] Reject class-method `super` when no parent class method exists.
+  - [ ] Add small class introspection
+    - [ ] Support `object.class` as the object's actual class.
+    - [ ] Support `object.class_name` as the object's actual class name string.
+    - [ ] Support `ClassName.name` as the class name string.
+    - [ ] Support `ClassName.parent` as the parent class or `nil`.
+    - [ ] Reject assignment to read-only introspection members.
+  - [ ] Keep v0.8 documentation and tests aligned
+    - [ ] Update latest docs when v0.8 behavior is implemented.
+    - [ ] Keep `docs/v0.8/` aligned with the v0.8 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, and negative tests for v0.7 inheritance.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.8 class-level inheritance and introspection.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference

@@ -167,16 +167,6 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 			want: "module must be top-level",
 		},
 		{
-			name: "super member",
-			src:  "print super.name\n",
-			want: "super is not in Tya v0.1",
-		},
-		{
-			name: "super method",
-			src:  "print super.save()\n",
-			want: "super is not in Tya v0.1",
-		},
-		{
 			name: "identifier set literal",
 			src:  "roles = { admin }\n",
 			want: "set literals are not in Tya v0.1",
@@ -275,8 +265,8 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 		},
 		{
 			name: "loop index",
-			src:  "for item, super in items\n  print item\n",
-			want: "super is not in Tya v0.1",
+			src:  "for item, class in items\n  print item\n",
+			want: "class cannot be used as a name",
 		},
 		{
 			name: "module name",
@@ -411,17 +401,18 @@ func TestParseRejectsImportAlias(t *testing.T) {
 	}
 }
 
-func TestParseRejectsSuper(t *testing.T) {
-	toks, errs := lexer.Lex("print super()\n")
+func TestParseSuperCall(t *testing.T) {
+	toks, errs := lexer.Lex("class Admin extends User\n  init = name ->\n    super(name)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
-	if err == nil {
-		t.Fatal("expected super error")
+	prog, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("parse super: %v", err)
 	}
-	if !strings.Contains(err.Error(), "super is not in Tya v0.1") {
-		t.Fatalf("unexpected error: %v", err)
+	class := prog.Stmts[0].(*ast.ClassDecl)
+	if class.Parent == nil || class.Parent.Name != "User" {
+		t.Fatalf("parent = %#v", class.Parent)
 	}
 }
 
