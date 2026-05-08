@@ -67,6 +67,7 @@ func (*ContinueStmt) stmt() {}
 
 type ReturnStmt struct {
 	Values []Expr
+	Tok    token.Token
 }
 
 func (*ReturnStmt) stmt() {}
@@ -135,6 +136,7 @@ type ClassMethod struct {
 	Func     *FuncLit
 	Class    bool
 	Abstract bool
+	Override bool
 }
 
 type ClassRef struct {

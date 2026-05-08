@@ -431,7 +431,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.12 interface inheritance.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.13 override and constructor chaining checks
+- [x] Ship v0.13 override and constructor chaining checks
   - [x] Define v0.13 override and constructor chaining scope
     - [x] Add `docs/v0.13/SPEC.md`.
     - [x] Specify `override method = args ->`.
@@ -441,27 +441,27 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Specify required parent `init` chaining when subclass `init` exists.
     - [x] Specify constructor `super(...)` count, placement, and arity checks.
     - [x] Keep mandatory `override`, final methods, final fields, duplicate method definition errors, default interface methods, type annotations, and generics out of v0.13.
-  - [ ] Add override parsing and checking
-    - [ ] Parse `override` instance method declarations.
-    - [ ] Parse `override` class method declarations.
-    - [ ] Reject `override` declarations with no inherited class method target.
-    - [ ] Reject `override` arity mismatches.
-    - [ ] Reject instance/class method kind mismatches.
-    - [ ] Reject `override` used only to satisfy interface requirements.
-  - [ ] Add constructor chaining checks
-    - [ ] Require subclass `init` to call parent public `init` when it exists.
-    - [ ] Reject more than one constructor `super(...)` call.
-    - [ ] Reject constructor `super(...)` when parent public `init` does not exist.
-    - [ ] Reject instance field assignment before constructor `super(...)`.
-    - [ ] Reject explicit `return` before constructor `super(...)`.
-    - [ ] Check constructor `super(...)` arity against parent public `init`.
-    - [ ] Reject constructor `super(...)` targeting parent `_init`.
-  - [ ] Keep v0.13 documentation and tests aligned
-    - [ ] Update latest docs when v0.13 behavior is implemented.
-    - [ ] Keep `docs/v0.13/` aligned with the v0.13 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, and negative tests for v0.13 override and constructor chaining checks.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Add override parsing and checking
+    - [x] Parse `override` instance method declarations.
+    - [x] Parse `override` class method declarations.
+    - [x] Reject `override` declarations with no inherited class method target.
+    - [x] Reject `override` arity mismatches.
+    - [x] Reject instance/class method kind mismatches.
+    - [x] Reject `override` used only to satisfy interface requirements.
+  - [x] Add constructor chaining checks
+    - [x] Require subclass `init` to call parent public `init` when it exists.
+    - [x] Reject more than one constructor `super(...)` call.
+    - [x] Reject constructor `super(...)` when parent public `init` does not exist.
+    - [x] Reject instance field assignment before constructor `super(...)`.
+    - [x] Reject explicit `return` before constructor `super(...)`.
+    - [x] Check constructor `super(...)` arity against parent public `init`.
+    - [x] Reject constructor `super(...)` targeting parent `_init`.
+  - [x] Keep v0.13 documentation and tests aligned
+    - [x] Update latest docs when v0.13 behavior is implemented.
+    - [x] Keep `docs/v0.13/` aligned with the v0.13 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.13 override and constructor chaining checks.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 

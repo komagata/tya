@@ -235,9 +235,17 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		isAbstractMethod := false
+		isOverrideMethod := false
 		if p.at(token.IDENT) && p.peek().Lexeme == "abstract" {
 			isAbstractMethod = true
 			p.next()
+		}
+		if p.at(token.IDENT) && p.peek().Lexeme == "override" {
+			isOverrideMethod = true
+			p.next()
+		}
+		if isAbstractMethod && isOverrideMethod {
+			return nil, p.err("method cannot be both abstract and override")
 		}
 		isClassMember := p.match(token.AT)
 		if isClassMember {
@@ -266,7 +274,9 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 			return nil, err
 		}
 		if funcLit, ok := value.(*ast.FuncLit); ok {
-			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: funcLit, Class: isClassMember})
+			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: funcLit, Class: isClassMember, Override: isOverrideMethod})
+		} else if isOverrideMethod {
+			return nil, p.err("override can only be used on methods")
 		} else if isClassMember {
 			decl.Vars = append(decl.Vars, ast.ClassVar{Name: memberName.Lexeme, Tok: memberName, Value: value})
 		} else {
@@ -322,7 +332,7 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 			return nil, err
 		}
 		if strings.HasPrefix(methodName.Lexeme, "_") {
-			return nil, p.errAt(methodName, "private interface methods are not in Tya v0.12")
+			return nil, p.errAt(methodName, "private interface methods are not in Tya v0.13")
 		}
 		if !p.match(token.ASSIGN) {
 			return nil, p.err("expected '=' after interface method name")
@@ -497,15 +507,15 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 }
 
 func (p *Parser) returnStmt() (ast.Stmt, error) {
-	p.next()
+	tok := p.next()
 	if p.at(token.NEWLINE) || p.at(token.DEDENT) || p.at(token.EOF) {
-		return &ast.ReturnStmt{}, nil
+		return &ast.ReturnStmt{Tok: tok}, nil
 	}
 	values, err := p.exprListLine()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.ReturnStmt{Values: values}, nil
+	return &ast.ReturnStmt{Values: values, Tok: tok}, nil
 }
 
 func (p *Parser) block(owner string) ([]ast.Stmt, error) {

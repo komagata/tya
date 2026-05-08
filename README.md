@@ -9,8 +9,8 @@
 Tya is a small indentation-based dynamic language with CoffeeScript feel and
 Golang practicality.
 
-Tya v0.12 is a compile-to-C language. The reference implementation contains a Go
-lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.12
+Tya v0.13 is a compile-to-C language. The reference implementation contains a Go
+lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.13
 specification tests.
 
 Website: <https://tya-lang.org/>
@@ -33,13 +33,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.12.0, download the release source and build the `tya` command locally.
-This currently requires Go because the v0.12 reference implementation is written
+For v0.13.0, download the release source and build the `tya` command locally.
+This currently requires Go because the v0.13 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.12.0.tar.gz | tar xz
-cd tya-0.12.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.13.0.tar.gz | tar xz
+cd tya-0.13.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -147,7 +147,7 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-The current released implementation, Tya v0.12, includes:
+The current released implementation, Tya v0.13, includes:
 
 - `.tya` files
 - indentation-based blocks
@@ -177,7 +177,7 @@ The current released implementation, Tya v0.12, includes:
   classes, explicit interfaces, interface inheritance, method overrides,
   class-method `self`, and `super(args...)`
 
-Tya v0.12 does not include implicit interfaces, multiple inheritance,
+Tya v0.13 does not include implicit interfaces, multiple inheritance,
 visibility keywords, protected members, async, macros, package management, remote
 module install, JSON or CSV parsers, native standard modules, mocking,
 coverage, benchmark, watch mode, parallel test execution, set literals, import

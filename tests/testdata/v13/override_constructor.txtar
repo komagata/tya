@@ -1,0 +1,239 @@
+# v0.13 override and constructor chaining checks.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/override_constructor.tya
+stdout 'admin\nfound:7\nmodels\nadmin:ada:owner\nmodule:editor\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/missing_override_target.tya
+stderr 'override method lable has no inherited method target'
+
+! exec go run ./cmd/tya run $WORK/interface_only_override.tya
+stderr 'override method name has no inherited method target'
+
+! exec go run ./cmd/tya run $WORK/bad_override_arity.tya
+stderr 'override method label expects 1 parameters'
+
+! exec go run ./cmd/tya run $WORK/bad_class_override_arity.tya
+stderr 'override class method table_name expects 1 parameters'
+
+! exec go run ./cmd/tya run $WORK/class_override_instance_target.tya
+stderr 'override class method table_name targets inherited instance method'
+
+! exec go run ./cmd/tya run $WORK/instance_override_class_target.tya
+stderr 'override method table_name targets inherited class method'
+
+! exec go run ./cmd/tya run $WORK/missing_constructor_super.tya
+stderr 'subclass init must call super'
+
+! exec go run ./cmd/tya run $WORK/double_constructor_super.tya
+stderr 'constructor super called more than once'
+
+! exec go run ./cmd/tya run $WORK/super_without_parent_init.tya
+stderr 'constructor super has no parent init'
+
+! exec go run ./cmd/tya run $WORK/field_before_super.tya
+stderr 'instance field access before constructor super'
+
+! exec go run ./cmd/tya run $WORK/return_before_super.tya
+stderr 'return before constructor super'
+
+! exec go run ./cmd/tya run $WORK/bad_constructor_super_arity.tya
+stderr 'super init expects 2 arguments'
+
+! exec go run ./cmd/tya run $WORK/private_parent_init_super.tya
+stderr 'super cannot call private parent constructor'
+
+exec go run ./cmd/tya version
+stdout '0.13.0\n'
+! stderr .
+
+-- override_constructor.tya --
+import accounts
+
+class User
+  init = name ->
+    @name = name
+
+  label = ->
+    "user"
+
+  @@table_name = ->
+    "users"
+
+class Admin extends User
+  init = name, role ->
+    normalized = name
+    super(normalized)
+    @role = role
+
+  override label = ->
+    "admin"
+
+  @@table_name = ->
+    "admins"
+
+abstract class Repository
+  abstract find = id ->
+
+class UserRepository extends Repository
+  override find = id ->
+    "found:{id}"
+
+class Model
+  @@table_name = prefix ->
+    "{prefix}s"
+
+class Post extends Model
+  override @@table_name = prefix ->
+    "{prefix}s"
+
+admin = Admin("ada", "owner")
+print admin.label()
+repo = UserRepository()
+print repo.find(7)
+print Post.table_name("model")
+admin_label = admin.label()
+print "{admin_label}:{admin.name}:{admin.role}"
+editor = accounts.Editor("ada", "editor")
+print editor.label()
+
+-- accounts.tya --
+module accounts
+  class User
+    init = name ->
+      @name = name
+
+    label = ->
+      "module:{@name}"
+
+  class Editor extends User
+    init = name, role ->
+      super(name)
+      @role = role
+
+    override label = ->
+      "module:{@role}"
+
+-- missing_override_target.tya --
+class User
+  label = ->
+    "user"
+
+class Admin extends User
+  override lable = ->
+    "admin"
+
+-- interface_only_override.tya --
+interface Named
+  name = ->
+
+class User implements Named
+  override name = ->
+    "user"
+
+-- bad_override_arity.tya --
+class User
+  label = prefix ->
+    prefix + " user"
+
+class Admin extends User
+  override label = ->
+    "admin"
+
+-- bad_class_override_arity.tya --
+class Model
+  @@table_name = prefix ->
+    "{prefix}s"
+
+class User extends Model
+  override @@table_name = ->
+    "users"
+
+-- class_override_instance_target.tya --
+class Model
+  table_name = ->
+    "models"
+
+class User extends Model
+  override @@table_name = ->
+    "users"
+
+-- instance_override_class_target.tya --
+class Model
+  @@table_name = ->
+    "models"
+
+class User extends Model
+  override table_name = ->
+    "users"
+
+-- missing_constructor_super.tya --
+class User
+  init = name ->
+    @name = name
+
+class Admin extends User
+  init = name, role ->
+    @name = name
+    @role = role
+
+-- double_constructor_super.tya --
+class User
+  init = name ->
+    @name = name
+
+class Admin extends User
+  init = name, role ->
+    super(name)
+    super(name)
+    @role = role
+
+-- super_without_parent_init.tya --
+class User
+  label = ->
+    "user"
+
+class Admin extends User
+  init = role ->
+    super()
+    @role = role
+
+-- field_before_super.tya --
+class User
+  init = name ->
+    @name = name
+
+class Admin extends User
+  init = name, role ->
+    @role = role
+    super(name)
+
+-- return_before_super.tya --
+class User
+  init = name ->
+    @name = name
+
+class Admin extends User
+  init = name, role ->
+    return nil
+    super(name)
+
+-- bad_constructor_super_arity.tya --
+class User
+  init = first, last ->
+    @name = first + " " + last
+
+class Admin extends User
+  init = name, role ->
+    super(name)
+    @role = role
+
+-- private_parent_init_super.tya --
+class Token
+  _init = value ->
+    @value = value
+
+class ApiToken extends Token
+  init = value ->
+    super(value)

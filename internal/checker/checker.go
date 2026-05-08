@@ -708,7 +708,7 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				}
 				arity, ok := inheritedInitArity(parent, scope)
 				if !ok {
-					return fmt.Errorf("%d:%d: super has no parent method", super.Tok.Line, super.Tok.Col)
+					return fmt.Errorf("%d:%d: constructor super has no parent init", super.Tok.Line, super.Tok.Col)
 				}
 				if len(n.Args) != arity {
 					return fmt.Errorf("%d:%d: super init expects %d arguments", super.Tok.Line, super.Tok.Col, arity)
@@ -834,6 +834,9 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		if method.Abstract && !class.Abstract {
 			return fmt.Errorf("%d:%d: abstract method %s must be declared inside an abstract class", method.Tok.Line, method.Tok.Col, method.Name)
 		}
+		if method.Abstract && method.Override {
+			return fmt.Errorf("%d:%d: method %s cannot be both abstract and override", method.Tok.Line, method.Tok.Col, method.Name)
+		}
 		if method.Class {
 			if classMembers[method.Name] {
 				return fmt.Errorf("%d:%d: duplicate class member %s", method.Tok.Line, method.Tok.Col, method.Name)
@@ -873,23 +876,38 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			parent := scope.classes[key].parent
 			if parent != "" {
 				if method.Name == "init" {
+					if err := checkConstructorSuper(class, method, parent, scope); err != nil {
+						return err
+					}
 					if _, ok := inheritedInitArity(parent, scope); ok && !funcCallsSuper(method.Func) {
 						return fmt.Errorf("%d:%d: subclass init must call super", method.Tok.Line, method.Tok.Col)
 					}
-				} else if arity, ok := inheritedMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
-					return fmt.Errorf("%d:%d: overriding method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
-				} else if arity, ok := inheritedAbstractMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
-					return fmt.Errorf("%d:%d: implementing abstract method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+				} else {
+					if err := checkOverrideMethod(class, method, parent, scope); err != nil {
+						return err
+					}
+					if arity, ok := inheritedMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
+						return fmt.Errorf("%d:%d: overriding method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+					} else if arity, ok := inheritedAbstractMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
+						return fmt.Errorf("%d:%d: implementing abstract method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+					}
 				}
+			} else if method.Override {
+				return fmt.Errorf("%d:%d: override method %s has no inherited method target", method.Tok.Line, method.Tok.Col, method.Name)
 			}
 		} else {
 			parent := scope.classes[key].parent
 			if parent != "" {
+				if err := checkOverrideMethod(class, method, parent, scope); err != nil {
+					return err
+				}
 				if arity, ok := inheritedClassMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
 					return fmt.Errorf("%d:%d: overriding class method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
 				} else if arity, ok := inheritedAbstractClassMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
 					return fmt.Errorf("%d:%d: implementing abstract class method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
 				}
+			} else if method.Override {
+				return fmt.Errorf("%d:%d: override class method %s has no inherited class method target", method.Tok.Line, method.Tok.Col, method.Name)
 			}
 		}
 	}
@@ -1107,6 +1125,86 @@ func inheritedAbstractClassMethodArity(className string, method string, scope *s
 		className = info.parent
 	}
 	return 0, false
+}
+
+func checkOverrideMethod(class *ast.ClassDecl, method ast.ClassMethod, parent string, scope *scope) error {
+	if !method.Override {
+		return nil
+	}
+	if method.Class {
+		if arity, ok := inheritedClassMethodArity(parent, method.Name, scope); ok {
+			if arity != len(method.Func.Params) {
+				return fmt.Errorf("%d:%d: override class method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+			}
+			return nil
+		}
+		if arity, ok := inheritedAbstractClassMethodArity(parent, method.Name, scope); ok {
+			if arity != len(method.Func.Params) {
+				return fmt.Errorf("%d:%d: override class method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+			}
+			return nil
+		}
+		if _, ok := inheritedMethodArity(parent, method.Name, scope); ok {
+			return fmt.Errorf("%d:%d: override class method %s targets inherited instance method", method.Tok.Line, method.Tok.Col, method.Name)
+		}
+		if _, ok := inheritedAbstractMethodArity(parent, method.Name, scope); ok {
+			return fmt.Errorf("%d:%d: override class method %s targets inherited instance method", method.Tok.Line, method.Tok.Col, method.Name)
+		}
+		return fmt.Errorf("%d:%d: override class method %s has no inherited class method target", method.Tok.Line, method.Tok.Col, method.Name)
+	}
+	if arity, ok := inheritedMethodArity(parent, method.Name, scope); ok {
+		if arity != len(method.Func.Params) {
+			return fmt.Errorf("%d:%d: override method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+		}
+		return nil
+	}
+	if arity, ok := inheritedAbstractMethodArity(parent, method.Name, scope); ok {
+		if arity != len(method.Func.Params) {
+			return fmt.Errorf("%d:%d: override method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+		}
+		return nil
+	}
+	if _, ok := inheritedClassMethodArity(parent, method.Name, scope); ok {
+		return fmt.Errorf("%d:%d: override method %s targets inherited class method", method.Tok.Line, method.Tok.Col, method.Name)
+	}
+	if _, ok := inheritedAbstractClassMethodArity(parent, method.Name, scope); ok {
+		return fmt.Errorf("%d:%d: override method %s targets inherited class method", method.Tok.Line, method.Tok.Col, method.Name)
+	}
+	return fmt.Errorf("%d:%d: override method %s has no inherited method target", method.Tok.Line, method.Tok.Col, method.Name)
+}
+
+func checkConstructorSuper(class *ast.ClassDecl, method ast.ClassMethod, parent string, scope *scope) error {
+	count, firstSuper, firstField, firstReturn := constructorSuperStats(method.Func)
+	if count > 1 {
+		return fmt.Errorf("%d:%d: constructor super called more than once", method.Tok.Line, method.Tok.Col)
+	}
+	parentHasInit := false
+	parentInitArity := 0
+	if arity, ok := inheritedInitArity(parent, scope); ok {
+		parentHasInit = true
+		parentInitArity = arity
+	}
+	if count > 0 && !parentHasInit {
+		return fmt.Errorf("%d:%d: constructor super has no parent init", method.Tok.Line, method.Tok.Col)
+	}
+	if parentHasInit && count == 0 {
+		return nil
+	}
+	if count == 0 {
+		return nil
+	}
+	if firstField != 0 && (firstSuper == 0 || firstField < firstSuper) {
+		return fmt.Errorf("%d:%d: instance field access before constructor super", firstField, 1)
+	}
+	if firstReturn != 0 && (firstSuper == 0 || firstReturn < firstSuper) {
+		return fmt.Errorf("%d:%d: return before constructor super", firstReturn, 1)
+	}
+	if parentInfo := scope.classes[parent]; parentInfo.privateInit {
+		return fmt.Errorf("%d:%d: super cannot call private parent constructor", method.Tok.Line, method.Tok.Col)
+	}
+	_ = class
+	_ = parentInitArity
+	return nil
 }
 
 func checkAbstractImplementations(class *ast.ClassDecl, scope *scope, key string) error {
@@ -1333,6 +1431,126 @@ func funcCallsSuper(fn *ast.FuncLit) bool {
 		}
 	}
 	return false
+}
+
+func constructorSuperStats(fn *ast.FuncLit) (count int, firstSuper int, firstField int, firstReturn int) {
+	var exprLine func(ast.Expr) int
+	exprLine = func(expr ast.Expr) int {
+		switch n := expr.(type) {
+		case *ast.CallExpr:
+			if super, ok := n.Callee.(*ast.SuperExpr); ok {
+				return super.Tok.Line
+			}
+			if line := exprLine(n.Callee); line != 0 {
+				return line
+			}
+			for _, arg := range n.Args {
+				if line := exprLine(arg); line != 0 {
+					return line
+				}
+			}
+		case *ast.InstanceFieldExpr:
+			return n.NameTok.Line
+		case *ast.BinaryExpr:
+			if line := exprLine(n.Left); line != 0 {
+				return line
+			}
+			return exprLine(n.Right)
+		case *ast.UnaryExpr:
+			return exprLine(n.Expr)
+		case *ast.TryExpr:
+			return exprLine(n.Expr)
+		case *ast.MemberExpr:
+			return exprLine(n.Target)
+		case *ast.IndexExpr:
+			if line := exprLine(n.Target); line != 0 {
+				return line
+			}
+			return exprLine(n.Index)
+		case *ast.ArrayLit:
+			for _, elem := range n.Elems {
+				if line := exprLine(elem); line != 0 {
+					return line
+				}
+			}
+		case *ast.DictLit:
+			for _, prop := range n.Props {
+				if line := exprLine(prop.Value); line != 0 {
+					return line
+				}
+			}
+		}
+		return 0
+	}
+	var countExprSuper func(ast.Expr)
+	countExprSuper = func(expr ast.Expr) {
+		switch n := expr.(type) {
+		case *ast.CallExpr:
+			if super, ok := n.Callee.(*ast.SuperExpr); ok {
+				count++
+				if firstSuper == 0 {
+					firstSuper = super.Tok.Line
+				}
+			}
+			countExprSuper(n.Callee)
+			for _, arg := range n.Args {
+				countExprSuper(arg)
+			}
+		case *ast.BinaryExpr:
+			countExprSuper(n.Left)
+			countExprSuper(n.Right)
+		case *ast.UnaryExpr:
+			countExprSuper(n.Expr)
+		case *ast.TryExpr:
+			countExprSuper(n.Expr)
+		case *ast.MemberExpr:
+			countExprSuper(n.Target)
+		case *ast.IndexExpr:
+			countExprSuper(n.Target)
+			countExprSuper(n.Index)
+		case *ast.ArrayLit:
+			for _, elem := range n.Elems {
+				countExprSuper(elem)
+			}
+		case *ast.DictLit:
+			for _, prop := range n.Props {
+				countExprSuper(prop.Value)
+			}
+		}
+	}
+	observeField := func(line int) {
+		if line != 0 && firstField == 0 {
+			firstField = line
+		}
+	}
+	if fn.Expr != nil {
+		observeField(exprLine(fn.Expr))
+		countExprSuper(fn.Expr)
+	}
+	for _, stmt := range fn.Body {
+		switch n := stmt.(type) {
+		case *ast.ExprStmt:
+			observeField(exprLine(n.Expr))
+			countExprSuper(n.Expr)
+		case *ast.AssignStmt:
+			for _, target := range n.Targets {
+				observeField(exprLine(target))
+			}
+			for _, value := range n.Values {
+				observeField(exprLine(value))
+				countExprSuper(value)
+			}
+		case *ast.ReturnStmt:
+			if firstReturn == 0 {
+				firstReturn = n.Tok.Line
+			}
+			for _, value := range n.Values {
+				observeField(exprLine(value))
+				countExprSuper(value)
+			}
+		}
+	}
+	return count, firstSuper, firstField, firstReturn
 }
 
 func checkAssignmentTarget(target ast.Expr, scope *scope) error {
