@@ -14,6 +14,7 @@ const pages = [
   { source: path.join(docsDir, "NAMING.md"), output: path.join(docsDir, "naming.html"), title: "Naming" },
   { source: path.join(docsDir, "VERSIONS.md"), output: path.join(docsDir, "versions.html"), title: "Versions" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(docsDir, "roadmap.html"), title: "Roadmap" },
+  { source: path.join(docsDir, "v0.5", "SPEC.md"), output: path.join(docsDir, "v0.5", "spec.html"), title: "Spec v0.5", versioned: true },
   { source: path.join(docsDir, "v0.4", "SPEC.md"), output: path.join(docsDir, "v0.4", "spec.html"), title: "Spec v0.4", versioned: true },
   { source: path.join(docsDir, "v0.3", "SPEC.md"), output: path.join(docsDir, "v0.3", "spec.html"), title: "Spec v0.3", versioned: true },
   { source: path.join(docsDir, "v0.3", "STDLIB.md"), output: path.join(docsDir, "v0.3", "stdlib.html"), title: "Stdlib v0.3", versioned: true },
@@ -41,6 +42,18 @@ function slugify(value) {
 
 function rewriteHref(href, page) {
   const clean = href.replace(/^docs\//, "");
+  const versionedSpec = clean.match(/^(v\d+\.\d+(?:\.\d+)?)\/SPEC\.md$/);
+  if (versionedSpec) {
+    return `${versionedSpec[1]}/spec.html`;
+  }
+  const versionedApi = clean.match(/^(v\d+\.\d+(?:\.\d+)?)\/API\.md$/);
+  if (versionedApi) {
+    return `${versionedApi[1]}/api.html`;
+  }
+  const versionedStdlib = clean.match(/^(v\d+\.\d+(?:\.\d+)?)\/STDLIB\.md$/);
+  if (versionedStdlib) {
+    return `${versionedStdlib[1]}/stdlib.html`;
+  }
   if (page && page.versioned) {
     const versionedMapping = {
       "SPEC.md": "spec.html",

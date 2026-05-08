@@ -10,9 +10,9 @@ variables/functions: snake_case
 private binding:     _snake_case
 modules/files:       snake_case
 dictionary keys:     snake_case
-module members:      snake_case
+module members:      snake_case or PascalCase classes
 constants:           SCREAMING_SNAKE_CASE
-types/classes:       PascalCase  # reserved for future use
+classes:             PascalCase
 ```
 
 ## Module Rule

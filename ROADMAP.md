@@ -51,6 +51,7 @@ Current planned minor-version documents are:
 1. [`docs/v0.3/SPEC.md`](docs/v0.3/SPEC.md)
 1. [`docs/v0.3/STDLIB.md`](docs/v0.3/STDLIB.md)
 1. [`docs/v0.4/SPEC.md`](docs/v0.4/SPEC.md)
+1. [`docs/v0.5/SPEC.md`](docs/v0.5/SPEC.md)
 
 The v0.4 reference implementation remains:
 
@@ -168,6 +169,31 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Create a patch-tag snapshot only when an exact release archive needs one.
     - [x] Update README install, run, development, and documentation sections for v0.4.
+- [ ] Ship v0.5 minimal classes and objects
+  - [x] Define v0.5 class scope
+    - [x] Add `docs/v0.5/SPEC.md`.
+    - [x] Specify `class Name`, constructor calls, `init`, `self`, fields, methods, and module class access.
+    - [x] Exclude inheritance, `super`, interfaces, class methods, class fields, visibility, and `@field` shorthand from v0.5.
+    - [x] Keep dictionary member access with `dict.key` out of v0.5.
+  - [ ] Add class syntax to the compiler front end
+    - [ ] Add lexer/parser support for class declarations.
+    - [ ] Add AST nodes for class declarations, methods, object field access, and object field assignment.
+    - [ ] Add checker diagnostics for class naming, duplicate methods, invalid `self`, and invalid dot access.
+  - [ ] Add class runtime and C emission
+    - [ ] Emit object construction through `ClassName(args...)`.
+    - [ ] Call `init` during construction and ignore its explicit return value.
+    - [ ] Support public instance field read/write through dot access.
+    - [ ] Support instance method calls with `object.method(args...)`.
+  - [ ] Keep modules and self-host compatible
+    - [ ] Expose classes declared inside modules as PascalCase module members.
+    - [ ] Preserve existing module member access behavior.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [ ] Keep v0.5 documentation and tests aligned
+    - [ ] Update latest docs when v0.5 behavior is implemented.
+    - [ ] Keep `docs/v0.5/` aligned with the v0.5 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.5 classes.
+    - [ ] Update README examples when v0.5 is implemented.
 
 ## Verification Reference
 

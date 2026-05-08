@@ -130,7 +130,8 @@ print array.first(["tya"])
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
-- [v0.4 Spec](https://tya-lang.org/v0.4/spec.html): planned testing direction.
+- [v0.5 Spec](https://tya-lang.org/v0.5/spec.html): planned class syntax.
+- [v0.4 Spec](https://tya-lang.org/v0.4/spec.html): released testing direction.
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
 Markdown source files are kept in `docs/` for editing. The public website uses
@@ -138,7 +139,7 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-Tya v0.4 includes:
+The current released implementation, Tya v0.4, includes:
 
 - `.tya` files
 - indentation-based blocks
@@ -166,6 +167,9 @@ Tya v0.4 does not include objects, classes, interfaces, inheritance, async,
 macros, package management, remote module install, JSON or CSV parsers, native
 standard modules, mocking, coverage, benchmark, watch mode, parallel test
 execution, set literals, import aliases, or dictionary member access.
+
+The planned Tya v0.5 specification adds minimal class syntax with `class`,
+constructor calls, `init`, `self`, public instance fields, and instance methods.
 
 ## Test
 
