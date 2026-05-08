@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.20 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-20-specification">Tya v0.20 Specification</h1>
+<p>This document is the specification for Tya v0.20 after v0.19 predicate names.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.20 expands the standard attached library with small, dependency-free modules.</p>
+<p>v0.20 adds <code>math</code> and <code>path</code>. These modules improve everyday scripting without adding new language syntax, parsers, network behavior, package management, or native-backed libraries.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Add a <code>math</code> standard module.</li>
+<li>Add a <code>path</code> standard module.</li>
+<li>Keep both modules import-only and explicit.</li>
+<li>Keep the APIs small enough to implement in Tya or existing runtime helpers.</li>
+<li>Avoid JSON, CSV, regex, HTTP, date/time, and other heavier libraries.</li>
+<li>Avoid moving existing global built-ins in this version.</li>
+</ul>
+<h2 id="included-in-v0-20">Included in v0.20</h2>
+<p>v0.20 includes all v0.19 behavior and adds:</p>
+<ul>
+<li><code>math</code> standard module</li>
+<li><code>path</code> standard module</li>
+<li>source-oriented diagnostics for invalid <code>math</code> and <code>path</code> arguments</li>
+<li>documentation and tests for both modules</li>
+</ul>
+<h2 id="not-included-in-v0-20">Not Included in v0.20</h2>
+<p>v0.20 does not include:</p>
+<ul>
+<li>new language syntax</li>
+<li>changes to v0.18 global built-ins</li>
+<li>JSON parser</li>
+<li>CSV parser</li>
+<li>regex engine</li>
+<li>HTTP client or server</li>
+<li>date/time library</li>
+<li>native-backed standard modules</li>
+<li>package manager</li>
+<li>remote module install</li>
+<li>versioned dependencies</li>
+</ul>
+<h2 id="importing">Importing</h2>
+<p><code>math</code> and <code>path</code> are standard attached-library modules. They are not available without import.</p>
+<pre><code class="language-tya">import math
+import path</code></pre>
+<p>The standard module search behavior from v0.17 applies.</p>
+<h2 id="math"><code>math</code></h2>
+<p>The <code>math</code> module contains small numeric helpers.</p>
+<p>Functions:</p>
+<ul>
+<li><code>math.abs(value)</code></li>
+<li><code>math.min(left, right)</code></li>
+<li><code>math.max(left, right)</code></li>
+<li><code>math.clamp(value, min, max)</code></li>
+</ul>
+<p>Examples:</p>
+<pre><code class="language-tya">import math
+
+print math.abs(-3)
+print math.min(2, 5)
+print math.max(2, 5)
+print math.clamp(12, 0, 10)</code></pre>
+<p><code>math.abs(value)</code> returns the absolute value of an integer or float.</p>
+<p><code>math.min(left, right)</code> returns the smaller number.</p>
+<p><code>math.max(left, right)</code> returns the larger number.</p>
+<p><code>math.clamp(value, min, max)</code> returns <code>min</code> when <code>value &lt; min</code>, <code>max</code> when <code>value &gt; max</code>, and <code>value</code> otherwise.</p>
+<p>All <code>math</code> functions require numeric arguments. Passing a non-number is an error.</p>
+<p><code>math.clamp(value, min, max)</code> is an error when <code>min &gt; max</code>.</p>
+<h2 id="path"><code>path</code></h2>
+<p>The <code>path</code> module contains lexical path helpers. It does not access the file system.</p>
+<p>Functions:</p>
+<ul>
+<li><code>path.join(parts)</code></li>
+<li><code>path.clean(value)</code></li>
+<li><code>path.basename(value)</code></li>
+<li><code>path.dirname(value)</code></li>
+<li><code>path.extname(value)</code></li>
+</ul>
+<p>Examples:</p>
+<pre><code class="language-tya">import path
+
+print path.join([&quot;tmp&quot;, &quot;tya&quot;, &quot;memo.txt&quot;])
+print path.clean(&quot;tmp/./tya/../memo.txt&quot;)
+print path.basename(&quot;/tmp/tya/memo.txt&quot;)
+print path.dirname(&quot;/tmp/tya/memo.txt&quot;)
+print path.extname(&quot;/tmp/tya/memo.txt&quot;)</code></pre>
+<p><code>path.join(parts)</code> joins an array of path segments with <code>/</code> and cleans the result.</p>
+<p><code>path.clean(value)</code> normalizes <code>.</code> segments, <code>..</code> segments, and repeated <code>/</code> separators lexically.</p>
+<p><code>path.basename(value)</code> returns the final path segment.</p>
+<p><code>path.dirname(value)</code> returns the path without the final segment. It returns <code>.</code> when no directory segment exists.</p>
+<p><code>path.extname(value)</code> returns the final file extension including the leading <code>.</code>. It returns <code>&quot;&quot;</code> when the basename has no extension.</p>
+<p>The <code>path</code> module uses <code>/</code> as the path separator. Platform-specific path behavior is not part of v0.20.</p>
+<p>All <code>path</code> functions require string arguments, except <code>path.join(parts)</code>, which requires an array of strings.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.20 implementations should report source-oriented errors for:</p>
+<ul>
+<li>missing imports for <code>math</code> or <code>path</code></li>
+<li>unknown <code>math</code> or <code>path</code> module functions</li>
+<li>wrong argument counts</li>
+<li>wrong argument kinds</li>
+<li>non-number arguments passed to <code>math</code> functions</li>
+<li><code>math.clamp(value, min, max)</code> where <code>min &gt; max</code></li>
+<li>non-string values passed to <code>path</code> functions</li>
+<li>non-string array items passed to <code>path.join(parts)</code></li>
+</ul>
+<p>Diagnostics should mention the module name, function name, expected argument shape, and actual value kind when available.</p>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.22 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-22-specification">Tya v0.22 Specification</h1>
+<p>This document is the specification for Tya v0.22 after v0.21 native-backed <code>file</code> and <code>os</code> standard modules.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.22 expands native-backed filesystem standard library APIs.</p>
+<p>v0.21 adds the minimal native-backed surface. v0.22 makes filesystem scripting practical by adding directory operations, file metadata, path user expansion, and current-directory helpers.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Add a <code>dir</code> standard module.</li>
+<li>Expand the <code>file</code> standard module.</li>
+<li>Expand the <code>path</code> standard module.</li>
+<li>Expand the <code>os</code> standard module with current-directory helpers.</li>
+<li>Keep permissions API small and metadata-based.</li>
+<li>Keep time/date, streaming IO, binary IO, and async IO out of v0.22.</li>
+</ul>
+<h2 id="included-in-v0-22">Included in v0.22</h2>
+<p>v0.22 includes all v0.21 behavior and adds:</p>
+<ul>
+<li><code>dir.list(path)</code></li>
+<li><code>dir.mkdir(path)</code></li>
+<li><code>dir.rmdir(path)</code></li>
+<li><code>file.remove(path)</code></li>
+<li><code>file.rename(old_path, new_path)</code></li>
+<li><code>file.stat(path)</code></li>
+<li><code>path.expand_user(value)</code></li>
+<li><code>os.cwd()</code></li>
+<li><code>os.chdir(path)</code></li>
+<li>permission booleans returned by <code>file.stat(path)</code></li>
+</ul>
+<h2 id="not-included-in-v0-22">Not Included in v0.22</h2>
+<p>v0.22 does not include:</p>
+<ul>
+<li>time/date APIs</li>
+<li>streaming IO</li>
+<li>binary IO</li>
+<li>async IO</li>
+<li>recursive directory walking</li>
+<li><code>mkdir_all</code></li>
+<li><code>remove_all</code></li>
+<li>file copy</li>
+<li>symlink APIs</li>
+<li>chmod/chown</li>
+<li>file handles</li>
+<li><code>$VAR</code> environment expansion in paths</li>
+<li>platform-specific path separators</li>
+</ul>
+<h2 id="dir"><code>dir</code></h2>
+<p>The <code>dir</code> module contains directory operations.</p>
+<p>Functions:</p>
+<ul>
+<li><code>dir.list(path)</code></li>
+<li><code>dir.mkdir(path)</code></li>
+<li><code>dir.rmdir(path)</code></li>
+</ul>
+<p>Examples:</p>
+<pre><code class="language-tya">import dir
+
+names = dir.list(&quot;.&quot;)
+dir.mkdir(&quot;tmp&quot;)
+dir.rmdir(&quot;tmp&quot;)</code></pre>
+<p><code>dir.list(path)</code> returns an array of names directly under <code>path</code>.</p>
+<p><code>dir.list(path)</code> does not include <code>.</code> or <code>..</code>. The returned names are sorted in dictionary order for stable results.</p>
+<p><code>dir.mkdir(path)</code> creates one directory level. It raises an error when the parent directory does not exist or when <code>path</code> already exists.</p>
+<p><code>dir.rmdir(path)</code> removes an empty directory. It raises an error when the directory is not empty.</p>
+<p>All <code>dir</code> functions require string path arguments.</p>
+<h2 id="file-expansion"><code>file</code> Expansion</h2>
+<p>v0.22 expands the <code>file</code> module from v0.21.</p>
+<p>New functions:</p>
+<ul>
+<li><code>file.remove(path)</code></li>
+<li><code>file.rename(old_path, new_path)</code></li>
+<li><code>file.stat(path)</code></li>
+</ul>
+<p>Examples:</p>
+<pre><code class="language-tya">import file
+
+file.rename(&quot;memo.txt&quot;, &quot;memo.old.txt&quot;)
+info = file.stat(&quot;memo.old.txt&quot;)
+
+println info[&quot;kind&quot;]
+println info[&quot;size&quot;]
+println info[&quot;readable&quot;]
+
+file.remove(&quot;memo.old.txt&quot;)</code></pre>
+<p><code>file.remove(path)</code> removes a file. It does not remove directories.</p>
+<p><code>file.rename(old_path, new_path)</code> renames a file or directory.</p>
+<p><code>file.stat(path)</code> returns a dictionary with metadata:</p>
+<pre><code class="language-tya">{
+  kind: &quot;file&quot;,
+  size: 120,
+  readable: true,
+  writable: true,
+  executable: false,
+}</code></pre>
+<p><code>kind</code> is one of:</p>
+<ul>
+<li><code>&quot;file&quot;</code></li>
+<li><code>&quot;dir&quot;</code></li>
+<li><code>&quot;other&quot;</code></li>
+</ul>
+<p><code>size</code> is the file size in bytes. For directories and other filesystem objects, <code>size</code> is implementation-defined.</p>
+<p><code>readable</code>, <code>writable</code>, and <code>executable</code> are booleans. They are the v0.22 permissions API.</p>
+<p><code>file.stat(path)</code> does not include modification time, creation time, owner, group, inode, device, or platform-specific metadata in v0.22.</p>
+<p>All new <code>file</code> functions require string path arguments.</p>
+<h2 id="path-expansion"><code>path</code> Expansion</h2>
+<p>v0.22 adds user-home expansion to the <code>path</code> module.</p>
+<p>New function:</p>
+<ul>
+<li><code>path.expand_user(value)</code></li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-tya">import path
+
+memo = path.expand_user(&quot;~/memo.txt&quot;)</code></pre>
+<p><code>path.expand_user(value)</code> expands <code>~</code> and <code>~/...</code> to the current user's home directory.</p>
+<p>Other strings are returned unchanged.</p>
+<p><code>path.expand_user(value)</code> is lexical except for reading the current user's home directory. It does not check whether the resulting path exists.</p>
+<p><code>$VAR</code> environment expansion is not part of v0.22.</p>
+<h2 id="os-expansion"><code>os</code> Expansion</h2>
+<p>v0.22 expands the <code>os</code> module with current-directory helpers.</p>
+<p>New functions:</p>
+<ul>
+<li><code>os.cwd()</code></li>
+<li><code>os.chdir(path)</code></li>
+</ul>
+<p>Examples:</p>
+<pre><code class="language-tya">import os
+
+original = os.cwd()
+os.chdir(&quot;/tmp&quot;)
+println os.cwd()
+os.chdir(original)</code></pre>
+<p><code>os.cwd()</code> returns the current working directory as a string.</p>
+<p><code>os.chdir(path)</code> changes the process working directory and returns <code>nil</code> on success.</p>
+<p><code>os.chdir(path)</code> affects the whole running process. It raises an error on failure.</p>
+<h2 id="errors">Errors</h2>
+<p>Native-backed operation failures raise structured errors. They do not call <code>panic</code>.</p>
+<p>This matches v0.21 native-backed stdlib behavior.</p>
+<pre><code class="language-tya">import dir
+
+try
+  dir.rmdir(&quot;not-empty&quot;)
+catch err
+  println err</code></pre>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.22 implementations should report source-oriented errors for:</p>
+<ul>
+<li>missing imports for <code>dir</code>, <code>file</code>, <code>path</code>, or <code>os</code></li>
+<li>unknown <code>dir</code>, <code>file</code>, <code>path</code>, or <code>os</code> module functions</li>
+<li>wrong argument counts</li>
+<li>wrong argument kinds</li>
+<li>failed <code>dir.list(path)</code></li>
+<li>failed <code>dir.mkdir(path)</code></li>
+<li>failed <code>dir.rmdir(path)</code></li>
+<li>failed <code>file.remove(path)</code></li>
+<li>failed <code>file.rename(old_path, new_path)</code></li>
+<li>failed <code>file.stat(path)</code></li>
+<li>failed <code>path.expand_user(value)</code></li>
+<li>failed <code>os.cwd()</code></li>
+<li>failed <code>os.chdir(path)</code></li>
+</ul>
+<p>Diagnostics should mention the module name, function name, expected argument shape, and actual value kind when available.</p>
+    </article>
+  </main>
+</body>
+</html>

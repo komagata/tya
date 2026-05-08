@@ -561,6 +561,197 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.16 pattern matching and interpolation.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.17 import aliases and module loading rules
+  - [x] Define v0.17 import scope
+    - [x] Add `docs/v0.17/SPEC.md`.
+    - [x] Specify `import module_name as alias`.
+    - [x] Specify alias-only binding.
+    - [x] Specify import binding conflict checks.
+    - [x] Specify imported file shape rules.
+    - [x] Specify same-directory, `TYA_PATH`, bundled stdlib resolution order.
+    - [x] Specify module load-once behavior.
+    - [x] Specify import cycle detection and diagnostics.
+    - [x] Keep selective imports, wildcard imports, relative path import syntax, dotted package imports, remote imports, package manager, dynamic imports, re-exports, and export lists out of v0.17.
+  - [ ] Add import alias parsing and checking
+    - [ ] Parse `import module_name as alias`.
+    - [ ] Bind only the alias name when an alias is used.
+    - [ ] Reject invalid alias names.
+    - [ ] Reject import binding conflicts.
+    - [ ] Keep imports top-level only.
+  - [ ] Formalize module loading
+    - [ ] Enforce imported file shape: imports plus exactly one module declaration.
+    - [ ] Require imported module name to match the import name.
+    - [ ] Resolve imports from same directory, `TYA_PATH`, then bundled stdlib.
+    - [ ] Load each resolved module file once.
+    - [ ] Detect import cycles.
+  - [ ] Keep v0.17 documentation and tests aligned
+    - [ ] Update latest docs when v0.17 behavior is implemented.
+    - [ ] Keep `docs/v0.17/` aligned with the v0.17 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.17 import aliases and module loading.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.18 expanded module-style standard APIs
+  - [x] Define v0.18 module-style API expansion scope
+    - [x] Add `docs/v0.18/SPEC.md`.
+    - [x] Specify expanded `string` module API.
+    - [x] Specify expanded `array` module API.
+    - [x] Specify expanded `dict` module API.
+    - [x] Specify Go-like minimal global built-ins: `print`, `println`, `len`, and `panic`.
+    - [x] Specify `try`, `catch`, and `raise` as language syntax, not built-in functions.
+    - [x] Keep module function style as the primary API style.
+    - [x] Keep built-in value method calls, `String`/`Array`/`Dictionary` class objects, built-in class inheritance, monkey patching, user-defined extension methods, method extraction, operator methods, `[]`/`[]=` method syntax, property-style access, and tuple literals out of v0.18.
+  - [ ] Expand string module APIs
+    - [ ] Add `string.join(values, separator)`.
+    - [ ] Add `string.lines(value)`.
+    - [ ] Add `string.upcase(value)`.
+    - [ ] Add `string.downcase(value)`.
+    - [ ] Keep existing string helpers working.
+  - [ ] Expand array module APIs
+    - [ ] Add `array.last(values)`.
+    - [ ] Add `array.slice(values, start, end)`.
+    - [ ] Add `array.reverse(values)`.
+    - [ ] Keep existing array helpers working.
+    - [ ] Document mutation behavior for `array.push` and `array.pop`.
+  - [ ] Expand dict module APIs
+    - [ ] Add `dict.get(value, key)`.
+    - [ ] Add `dict.get(value, key, default)`.
+    - [ ] Add `dict.set(value, key, item)`.
+    - [ ] Add `dict.merge(left, right)`.
+    - [ ] Keep existing dict helpers working.
+    - [ ] Document mutation behavior for `dict.set` and `dict.delete`.
+  - [ ] Add module API diagnostics
+    - [ ] Report unknown `string`, `array`, or `dict` module functions.
+    - [ ] Report wrong argument counts.
+    - [ ] Report wrong argument kinds.
+    - [ ] Report unsupported negative indexes in `array.slice`.
+    - [ ] Report callback arity mismatches in higher-order array functions.
+  - [ ] Keep v0.18 documentation and tests aligned
+    - [ ] Update latest docs when v0.18 behavior is implemented.
+    - [ ] Keep `docs/v0.18/` aligned with the v0.18 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.18 module-style standard APIs.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.19 predicate names
+  - [x] Define v0.19 predicate naming scope
+    - [x] Add `docs/v0.19/SPEC.md`.
+    - [x] Allow function names ending with `?`.
+    - [x] Allow instance method names ending with `?`.
+    - [x] Allow class method names ending with `?`.
+    - [x] Require predicate functions and methods to return boolean values.
+    - [x] Prefer names such as `nil?` over `is_nil?`.
+    - [x] Keep `?` out of variable, module, class, field, and constant names.
+    - [x] Keep optional chaining, nil-coalescing, ternary operators, type annotations, and static boolean return inference out of v0.19.
+  - [ ] Add predicate name parsing and checking
+    - [ ] Parse predicate function names.
+    - [ ] Parse predicate instance method names.
+    - [ ] Parse predicate class method names.
+    - [ ] Parse predicate module function names.
+    - [ ] Reject invalid `?` placement in names.
+    - [ ] Reject `?` suffixes on non-callable bindings.
+  - [ ] Enforce predicate boolean returns
+    - [ ] Check predicate function call results.
+    - [ ] Check predicate instance method call results.
+    - [ ] Check predicate class method call results.
+    - [ ] Check predicate module function call results.
+    - [ ] Report source-oriented diagnostics for non-boolean predicate results.
+  - [ ] Keep v0.19 documentation and tests aligned
+    - [ ] Update latest docs when v0.19 behavior is implemented.
+    - [ ] Keep `docs/v0.19/` aligned with the v0.19 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, method, module, and negative tests for v0.19 predicate names.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.20 standard attached library expansion
+  - [x] Define v0.20 standard library scope
+    - [x] Add `docs/v0.20/SPEC.md`.
+    - [x] Add `math` standard module.
+    - [x] Add `path` standard module.
+    - [x] Keep both modules import-only and explicit.
+    - [x] Keep JSON, CSV, regex, HTTP, date/time, native-backed standard modules, package manager, remote module install, and versioned dependencies out of v0.20.
+    - [x] Keep existing global built-ins unchanged in v0.20.
+  - [ ] Implement `math` module
+    - [ ] Add `math.abs(value)`.
+    - [ ] Add `math.min(left, right)`.
+    - [ ] Add `math.max(left, right)`.
+    - [ ] Add `math.clamp(value, min, max)`.
+    - [ ] Report invalid numeric arguments.
+  - [ ] Implement `path` module
+    - [ ] Add `path.join(parts)`.
+    - [ ] Add `path.clean(value)`.
+    - [ ] Add `path.basename(value)`.
+    - [ ] Add `path.dirname(value)`.
+    - [ ] Add `path.extname(value)`.
+    - [ ] Keep path behavior lexical and `/`-based.
+    - [ ] Report invalid string arguments and invalid `path.join` item types.
+  - [ ] Keep v0.20 documentation and tests aligned
+    - [ ] Update latest docs when v0.20 behavior is implemented.
+    - [ ] Keep `docs/v0.20/` aligned with the v0.20 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.20 `math` and `path`.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.21 native-backed standard library APIs
+  - [x] Define v0.21 native-backed stdlib scope
+    - [x] Add `docs/v0.21/SPEC.md`.
+    - [x] Add native-backed stdlib support for `file` and `os`.
+    - [x] Add `file.read(path)`, `file.write(path, text)`, and `file.exists?(path)`.
+    - [x] Add `os.args()`, `os.env(name)`, and `os.exit(code)`.
+    - [x] Specify native failures as structured `raise` errors, not `panic`.
+    - [x] Keep native-backed APIs import-only and explicit.
+    - [x] Keep existing global IO/process built-ins available for compatibility in v0.21.
+    - [x] Keep directory listing, directory mutation, file removal/rename, stat metadata, path expansion, current-directory APIs, time/date, HTTP, JSON, CSV, permissions, streaming IO, binary IO, and async IO out of v0.21.
+  - [ ] Implement native-backed stdlib mechanism
+    - [ ] Resolve native-backed module functions through explicit imports.
+    - [ ] Connect native-backed module calls in the Go evaluator.
+    - [ ] Connect native-backed module calls in C codegen/runtime.
+    - [ ] Preserve source locations for native-backed diagnostics.
+  - [ ] Implement `file` module
+    - [ ] Add `file.read(path)`.
+    - [ ] Add `file.write(path, text)`.
+    - [ ] Add `file.exists?(path)`.
+    - [ ] Raise structured errors for native file failures.
+    - [ ] Report invalid argument kinds.
+  - [ ] Implement `os` module
+    - [ ] Add `os.args()`.
+    - [ ] Add `os.env(name)`.
+    - [ ] Add `os.exit(code)`.
+    - [ ] Report invalid argument kinds and invalid exit codes.
+  - [ ] Keep v0.21 documentation and tests aligned
+    - [ ] Update latest docs when v0.21 behavior is implemented.
+    - [ ] Keep `docs/v0.21/` aligned with the v0.21 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, C emission, and negative tests for v0.21 native-backed stdlib APIs.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.22 filesystem standard library expansion
+  - [x] Define v0.22 filesystem stdlib scope
+    - [x] Add `docs/v0.22/SPEC.md`.
+    - [x] Add `dir.list(path)`, `dir.mkdir(path)`, and `dir.rmdir(path)`.
+    - [x] Add `file.remove(path)`, `file.rename(old_path, new_path)`, and `file.stat(path)`.
+    - [x] Add `path.expand_user(value)`.
+    - [x] Add `os.cwd()` and `os.chdir(path)`.
+    - [x] Define permissions API as `file.stat` booleans.
+    - [x] Keep time/date, streaming IO, binary IO, async IO, recursive walking, `mkdir_all`, `remove_all`, copy, symlink, chmod/chown, file handles, `$VAR` path expansion, and platform-specific path separators out of v0.22.
+  - [ ] Implement `dir` module
+    - [ ] Add `dir.list(path)` with stable sorted names.
+    - [ ] Add `dir.mkdir(path)` for one-level directory creation.
+    - [ ] Add `dir.rmdir(path)` for empty directory removal.
+    - [ ] Raise structured errors for native directory failures.
+  - [ ] Expand `file` module
+    - [ ] Add `file.remove(path)` for files only.
+    - [ ] Add `file.rename(old_path, new_path)`.
+    - [ ] Add `file.stat(path)` metadata dictionary.
+    - [ ] Include `kind`, `size`, `readable`, `writable`, and `executable` in `file.stat`.
+    - [ ] Keep time and platform-specific metadata out of `file.stat`.
+  - [ ] Expand `path` and `os` modules
+    - [ ] Add `path.expand_user(value)`.
+    - [ ] Add `os.cwd()`.
+    - [ ] Add `os.chdir(path)`.
+    - [ ] Raise structured errors for native failures.
+  - [ ] Keep v0.22 documentation and tests aligned
+    - [ ] Update latest docs when v0.22 behavior is implemented.
+    - [ ] Keep `docs/v0.22/` aligned with the v0.22 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add compiler, runtime, module, C emission, and negative tests for v0.22 filesystem stdlib APIs.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
 ## Verification Reference
 
 Default verification:

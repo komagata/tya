@@ -701,6 +701,265 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
+<li>[ ] Ship v0.17 import aliases and module loading rules</li>
+<ul>
+<li>[x] Define v0.17 import scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.17/SPEC.md</code>.</li>
+<li>[x] Specify <code>import module_name as alias</code>.</li>
+<li>[x] Specify alias-only binding.</li>
+<li>[x] Specify import binding conflict checks.</li>
+<li>[x] Specify imported file shape rules.</li>
+<li>[x] Specify same-directory, <code>TYA_PATH</code>, bundled stdlib resolution order.</li>
+<li>[x] Specify module load-once behavior.</li>
+<li>[x] Specify import cycle detection and diagnostics.</li>
+<li>[x] Keep selective imports, wildcard imports, relative path import syntax, dotted package imports, remote imports, package manager, dynamic imports, re-exports, and export lists out of v0.17.</li>
+</ul>
+<li>[ ] Add import alias parsing and checking</li>
+<ul>
+<li>[ ] Parse <code>import module_name as alias</code>.</li>
+<li>[ ] Bind only the alias name when an alias is used.</li>
+<li>[ ] Reject invalid alias names.</li>
+<li>[ ] Reject import binding conflicts.</li>
+<li>[ ] Keep imports top-level only.</li>
+</ul>
+<li>[ ] Formalize module loading</li>
+<ul>
+<li>[ ] Enforce imported file shape: imports plus exactly one module declaration.</li>
+<li>[ ] Require imported module name to match the import name.</li>
+<li>[ ] Resolve imports from same directory, <code>TYA_PATH</code>, then bundled stdlib.</li>
+<li>[ ] Load each resolved module file once.</li>
+<li>[ ] Detect import cycles.</li>
+</ul>
+<li>[ ] Keep v0.17 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.17 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.17/</code> aligned with the v0.17 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.17 import aliases and module loading.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.18 expanded module-style standard APIs</li>
+<ul>
+<li>[x] Define v0.18 module-style API expansion scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.18/SPEC.md</code>.</li>
+<li>[x] Specify expanded <code>string</code> module API.</li>
+<li>[x] Specify expanded <code>array</code> module API.</li>
+<li>[x] Specify expanded <code>dict</code> module API.</li>
+<li>[x] Specify Go-like minimal global built-ins: <code>print</code>, <code>println</code>, <code>len</code>, and <code>panic</code>.</li>
+<li>[x] Specify <code>try</code>, <code>catch</code>, and <code>raise</code> as language syntax, not built-in functions.</li>
+<li>[x] Keep module function style as the primary API style.</li>
+<li>[x] Keep built-in value method calls, <code>String</code>/<code>Array</code>/<code>Dictionary</code> class objects, built-in class inheritance, monkey patching, user-defined extension methods, method extraction, operator methods, <code>[]</code>/<code>[]=</code> method syntax, property-style access, and tuple literals out of v0.18.</li>
+</ul>
+<li>[ ] Expand string module APIs</li>
+<ul>
+<li>[ ] Add <code>string.join(values, separator)</code>.</li>
+<li>[ ] Add <code>string.lines(value)</code>.</li>
+<li>[ ] Add <code>string.upcase(value)</code>.</li>
+<li>[ ] Add <code>string.downcase(value)</code>.</li>
+<li>[ ] Keep existing string helpers working.</li>
+</ul>
+<li>[ ] Expand array module APIs</li>
+<ul>
+<li>[ ] Add <code>array.last(values)</code>.</li>
+<li>[ ] Add <code>array.slice(values, start, end)</code>.</li>
+<li>[ ] Add <code>array.reverse(values)</code>.</li>
+<li>[ ] Keep existing array helpers working.</li>
+<li>[ ] Document mutation behavior for <code>array.push</code> and <code>array.pop</code>.</li>
+</ul>
+<li>[ ] Expand dict module APIs</li>
+<ul>
+<li>[ ] Add <code>dict.get(value, key)</code>.</li>
+<li>[ ] Add <code>dict.get(value, key, default)</code>.</li>
+<li>[ ] Add <code>dict.set(value, key, item)</code>.</li>
+<li>[ ] Add <code>dict.merge(left, right)</code>.</li>
+<li>[ ] Keep existing dict helpers working.</li>
+<li>[ ] Document mutation behavior for <code>dict.set</code> and <code>dict.delete</code>.</li>
+</ul>
+<li>[ ] Add module API diagnostics</li>
+<ul>
+<li>[ ] Report unknown <code>string</code>, <code>array</code>, or <code>dict</code> module functions.</li>
+<li>[ ] Report wrong argument counts.</li>
+<li>[ ] Report wrong argument kinds.</li>
+<li>[ ] Report unsupported negative indexes in <code>array.slice</code>.</li>
+<li>[ ] Report callback arity mismatches in higher-order array functions.</li>
+</ul>
+<li>[ ] Keep v0.18 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.18 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.18/</code> aligned with the v0.18 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.18 module-style standard APIs.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.19 predicate names</li>
+<ul>
+<li>[x] Define v0.19 predicate naming scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.19/SPEC.md</code>.</li>
+<li>[x] Allow function names ending with <code>?</code>.</li>
+<li>[x] Allow instance method names ending with <code>?</code>.</li>
+<li>[x] Allow class method names ending with <code>?</code>.</li>
+<li>[x] Require predicate functions and methods to return boolean values.</li>
+<li>[x] Prefer names such as <code>nil?</code> over <code>is_nil?</code>.</li>
+<li>[x] Keep <code>?</code> out of variable, module, class, field, and constant names.</li>
+<li>[x] Keep optional chaining, nil-coalescing, ternary operators, type annotations, and static boolean return inference out of v0.19.</li>
+</ul>
+<li>[ ] Add predicate name parsing and checking</li>
+<ul>
+<li>[ ] Parse predicate function names.</li>
+<li>[ ] Parse predicate instance method names.</li>
+<li>[ ] Parse predicate class method names.</li>
+<li>[ ] Parse predicate module function names.</li>
+<li>[ ] Reject invalid <code>?</code> placement in names.</li>
+<li>[ ] Reject <code>?</code> suffixes on non-callable bindings.</li>
+</ul>
+<li>[ ] Enforce predicate boolean returns</li>
+<ul>
+<li>[ ] Check predicate function call results.</li>
+<li>[ ] Check predicate instance method call results.</li>
+<li>[ ] Check predicate class method call results.</li>
+<li>[ ] Check predicate module function call results.</li>
+<li>[ ] Report source-oriented diagnostics for non-boolean predicate results.</li>
+</ul>
+<li>[ ] Keep v0.19 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.19 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.19/</code> aligned with the v0.19 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add compiler, runtime, method, module, and negative tests for v0.19 predicate names.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.20 standard attached library expansion</li>
+<ul>
+<li>[x] Define v0.20 standard library scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.20/SPEC.md</code>.</li>
+<li>[x] Add <code>math</code> standard module.</li>
+<li>[x] Add <code>path</code> standard module.</li>
+<li>[x] Keep both modules import-only and explicit.</li>
+<li>[x] Keep JSON, CSV, regex, HTTP, date/time, native-backed standard modules, package manager, remote module install, and versioned dependencies out of v0.20.</li>
+<li>[x] Keep existing global built-ins unchanged in v0.20.</li>
+</ul>
+<li>[ ] Implement <code>math</code> module</li>
+<ul>
+<li>[ ] Add <code>math.abs(value)</code>.</li>
+<li>[ ] Add <code>math.min(left, right)</code>.</li>
+<li>[ ] Add <code>math.max(left, right)</code>.</li>
+<li>[ ] Add <code>math.clamp(value, min, max)</code>.</li>
+<li>[ ] Report invalid numeric arguments.</li>
+</ul>
+<li>[ ] Implement <code>path</code> module</li>
+<ul>
+<li>[ ] Add <code>path.join(parts)</code>.</li>
+<li>[ ] Add <code>path.clean(value)</code>.</li>
+<li>[ ] Add <code>path.basename(value)</code>.</li>
+<li>[ ] Add <code>path.dirname(value)</code>.</li>
+<li>[ ] Add <code>path.extname(value)</code>.</li>
+<li>[ ] Keep path behavior lexical and <code>/</code>-based.</li>
+<li>[ ] Report invalid string arguments and invalid <code>path.join</code> item types.</li>
+</ul>
+<li>[ ] Keep v0.20 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.20 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.20/</code> aligned with the v0.20 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.20 <code>math</code> and <code>path</code>.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.21 native-backed standard library APIs</li>
+<ul>
+<li>[x] Define v0.21 native-backed stdlib scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.21/SPEC.md</code>.</li>
+<li>[x] Add native-backed stdlib support for <code>file</code> and <code>os</code>.</li>
+<li>[x] Add <code>file.read(path)</code>, <code>file.write(path, text)</code>, and <code>file.exists?(path)</code>.</li>
+<li>[x] Add <code>os.args()</code>, <code>os.env(name)</code>, and <code>os.exit(code)</code>.</li>
+<li>[x] Specify native failures as structured <code>raise</code> errors, not <code>panic</code>.</li>
+<li>[x] Keep native-backed APIs import-only and explicit.</li>
+<li>[x] Keep existing global IO/process built-ins available for compatibility in v0.21.</li>
+<li>[x] Keep directory listing, directory mutation, file removal/rename, stat metadata, path expansion, current-directory APIs, time/date, HTTP, JSON, CSV, permissions, streaming IO, binary IO, and async IO out of v0.21.</li>
+</ul>
+<li>[ ] Implement native-backed stdlib mechanism</li>
+<ul>
+<li>[ ] Resolve native-backed module functions through explicit imports.</li>
+<li>[ ] Connect native-backed module calls in the Go evaluator.</li>
+<li>[ ] Connect native-backed module calls in C codegen/runtime.</li>
+<li>[ ] Preserve source locations for native-backed diagnostics.</li>
+</ul>
+<li>[ ] Implement <code>file</code> module</li>
+<ul>
+<li>[ ] Add <code>file.read(path)</code>.</li>
+<li>[ ] Add <code>file.write(path, text)</code>.</li>
+<li>[ ] Add <code>file.exists?(path)</code>.</li>
+<li>[ ] Raise structured errors for native file failures.</li>
+<li>[ ] Report invalid argument kinds.</li>
+</ul>
+<li>[ ] Implement <code>os</code> module</li>
+<ul>
+<li>[ ] Add <code>os.args()</code>.</li>
+<li>[ ] Add <code>os.env(name)</code>.</li>
+<li>[ ] Add <code>os.exit(code)</code>.</li>
+<li>[ ] Report invalid argument kinds and invalid exit codes.</li>
+</ul>
+<li>[ ] Keep v0.21 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.21 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.21/</code> aligned with the v0.21 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add compiler, runtime, module, C emission, and negative tests for v0.21 native-backed stdlib APIs.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.22 filesystem standard library expansion</li>
+<ul>
+<li>[x] Define v0.22 filesystem stdlib scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.22/SPEC.md</code>.</li>
+<li>[x] Add <code>dir.list(path)</code>, <code>dir.mkdir(path)</code>, and <code>dir.rmdir(path)</code>.</li>
+<li>[x] Add <code>file.remove(path)</code>, <code>file.rename(old_path, new_path)</code>, and <code>file.stat(path)</code>.</li>
+<li>[x] Add <code>path.expand_user(value)</code>.</li>
+<li>[x] Add <code>os.cwd()</code> and <code>os.chdir(path)</code>.</li>
+<li>[x] Define permissions API as <code>file.stat</code> booleans.</li>
+<li>[x] Keep time/date, streaming IO, binary IO, async IO, recursive walking, <code>mkdir_all</code>, <code>remove_all</code>, copy, symlink, chmod/chown, file handles, <code>$VAR</code> path expansion, and platform-specific path separators out of v0.22.</li>
+</ul>
+<li>[ ] Implement <code>dir</code> module</li>
+<ul>
+<li>[ ] Add <code>dir.list(path)</code> with stable sorted names.</li>
+<li>[ ] Add <code>dir.mkdir(path)</code> for one-level directory creation.</li>
+<li>[ ] Add <code>dir.rmdir(path)</code> for empty directory removal.</li>
+<li>[ ] Raise structured errors for native directory failures.</li>
+</ul>
+<li>[ ] Expand <code>file</code> module</li>
+<ul>
+<li>[ ] Add <code>file.remove(path)</code> for files only.</li>
+<li>[ ] Add <code>file.rename(old_path, new_path)</code>.</li>
+<li>[ ] Add <code>file.stat(path)</code> metadata dictionary.</li>
+<li>[ ] Include <code>kind</code>, <code>size</code>, <code>readable</code>, <code>writable</code>, and <code>executable</code> in <code>file.stat</code>.</li>
+<li>[ ] Keep time and platform-specific metadata out of <code>file.stat</code>.</li>
+</ul>
+<li>[ ] Expand <code>path</code> and <code>os</code> modules</li>
+<ul>
+<li>[ ] Add <code>path.expand_user(value)</code>.</li>
+<li>[ ] Add <code>os.cwd()</code>.</li>
+<li>[ ] Add <code>os.chdir(path)</code>.</li>
+<li>[ ] Raise structured errors for native failures.</li>
+</ul>
+<li>[ ] Keep v0.22 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.22 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.22/</code> aligned with the v0.22 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add compiler, runtime, module, C emission, and negative tests for v0.22 filesystem stdlib APIs.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+</ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>
 <pre><code class="language-sh">go test ./... -count=1</code></pre>
