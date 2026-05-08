@@ -1,0 +1,168 @@
+module csv
+  default_options = ->
+    return { separator: ",", header: false }
+
+  merge_options = options ->
+    base = csv.default_options()
+    if options == nil
+      return base
+    if has(options, "separator")
+      base["separator"] = options["separator"]
+    if has(options, "header")
+      base["header"] = options["header"]
+    return base
+
+  parse_rows = text, separator ->
+    rows = []
+    n = byte_len(text)
+    i = 0
+    cr = chr(13)
+    while i < n
+      row = []
+      field = ""
+      in_quote = false
+      ended = false
+      while i < n and not ended
+        c = text[i]
+        if in_quote
+          if c == "\""
+            if i + 1 < n and text[i + 1] == "\""
+              field = field + "\""
+              i = i + 2
+            else
+              in_quote = false
+              i = i + 1
+          else
+            field = field + c
+            i = i + 1
+        else
+          if c == "\""
+            in_quote = true
+            i = i + 1
+          elseif c == separator
+            push(row, field)
+            field = ""
+            i = i + 1
+          elseif c == "\n"
+            push(row, field)
+            i = i + 1
+            ended = true
+          elseif c == cr
+            push(row, field)
+            i = i + 1
+            if i < n and text[i] == "\n"
+              i = i + 1
+            ended = true
+          else
+            field = field + c
+            i = i + 1
+      if in_quote
+        raise "csv.parse: unterminated quoted field"
+      if not ended
+        push(row, field)
+      push(rows, row)
+    return rows
+
+  parse = text, options ->
+    opts = csv.merge_options(options)
+    rows = csv.parse_rows(text, opts["separator"])
+    if not opts["header"]
+      return rows
+    if len(rows) == 0
+      return []
+    header = rows[0]
+    out = []
+    i = 1
+    while i < len(rows)
+      r = rows[i]
+      d = {}
+      j = 0
+      while j < len(header)
+        if j < len(r)
+          d[header[j]] = r[j]
+        else
+          d[header[j]] = ""
+        j = j + 1
+      push(out, d)
+      i = i + 1
+    return out
+
+  escape_field = field, separator ->
+    needs_quote = false
+    n = byte_len(field)
+    cr = chr(13)
+    i = 0
+    while i < n
+      c = field[i]
+      if c == separator or c == "\"" or c == "\n" or c == cr
+        needs_quote = true
+        i = n
+      i = i + 1
+    if not needs_quote
+      return field
+    out = "\""
+    i = 0
+    while i < n
+      c = field[i]
+      if c == "\""
+        out = out + "\"\""
+      else
+        out = out + c
+      i = i + 1
+    return out + "\""
+
+  dump_array_rows = rows, separator ->
+    out = ""
+    i = 0
+    while i < len(rows)
+      r = rows[i]
+      j = 0
+      while j < len(r)
+        if j > 0
+          out = out + separator
+        if kind(r[j]) != "string"
+          raise "csv.dump: row values must be strings"
+        out = out + csv.escape_field(r[j], separator)
+        j = j + 1
+      out = out + "\n"
+      i = i + 1
+    return out
+
+  dump = rows, options ->
+    opts = csv.merge_options(options)
+    sep = opts["separator"]
+    if len(rows) == 0
+      return ""
+    first_kind = kind(rows[0])
+    if first_kind == "array"
+      return csv.dump_array_rows(rows, sep)
+    if first_kind == "dict"
+      header = keys(rows[0])
+      out = ""
+      if opts["header"]
+        j = 0
+        while j < len(header)
+          if j > 0
+            out = out + sep
+          out = out + csv.escape_field(header[j], sep)
+          j = j + 1
+        out = out + "\n"
+      i = 0
+      while i < len(rows)
+        r = rows[i]
+        j = 0
+        while j < len(header)
+          if j > 0
+            out = out + sep
+          v = ""
+          if has(r, header[j])
+            raw = r[header[j]]
+            if kind(raw) != "string"
+              raise "csv.dump: row values must be strings"
+            v = raw
+          out = out + csv.escape_field(v, sep)
+          j = j + 1
+        out = out + "\n"
+        i = i + 1
+      return out
+    raise "csv.dump: rows must be array of arrays or array of dicts"

@@ -164,6 +164,36 @@ println info[&quot;size&quot;]</code></pre>
 <p><code>stat(path)</code> returns a dictionary with <code>kind</code> (<code>&quot;file&quot;</code>, <code>&quot;dir&quot;</code>, or <code>&quot;other&quot;</code>), <code>size</code> in bytes, and <code>readable</code>, <code>writable</code>, <code>executable</code> booleans.</p>
 <h2 id="path-additional-functions"><code>path</code> (additional functions)</h2>
 <p><code>expand_user(value)</code> expands <code>~</code> and <code>~/...</code> to the current user's home directory. Other strings are returned unchanged.</p>
+<h2 id="base64"><code>base64</code></h2>
+<pre><code class="language-tya">import base64
+
+println base64.encode(&quot;hello&quot;)
+println base64.decode(&quot;aGVsbG8=&quot;)</code></pre>
+<p><code>encode(text)</code> returns the standard-alphabet Base64 representation with <code>=</code> padding. <code>decode(text)</code> decodes standard Base64 (padding optional, whitespace ignored).</p>
+<h2 id="url"><code>url</code></h2>
+<pre><code class="language-tya">import url
+
+println url.encode(&quot;hello world&quot;)
+parts = url.parse(&quot;https://example.com:8080/path?x=1&quot;)</code></pre>
+<p>Functions: <code>encode</code>, <code>decode</code>, <code>encode_query</code>, <code>decode_query</code>, <code>parse</code>, <code>build</code>. See the v0.23 spec for full details.</p>
+<h2 id="json"><code>json</code></h2>
+<pre><code class="language-tya">import json
+
+println json.dump({ name: &quot;tya&quot;, version: 23 })
+data = json.parse(&quot;[1, 2, 3]&quot;)</code></pre>
+<p><code>parse(text)</code> parses RFC 8259 JSON; <code>dump(value)</code> emits compact JSON. Numbers without fractional parts decode to ints; with fractional parts to floats.</p>
+<h2 id="csv"><code>csv</code></h2>
+<pre><code class="language-tya">import csv
+
+rows = csv.parse(&quot;name,age\ntya,1\n&quot;, { header: true })
+println csv.dump([[&quot;a&quot;, &quot;b&quot;], [&quot;1&quot;, &quot;2&quot;]], nil)</code></pre>
+<p><code>parse(text, options)</code> accepts <code>{ separator, header }</code> options. <code>dump(rows, options)</code> quotes fields containing the separator, quote, CR, or LF.</p>
+<h2 id="toml"><code>toml</code></h2>
+<pre><code class="language-tya">import toml
+
+config = toml.parse(&quot;[server]\nhost = \&quot;localhost\&quot;\nport = 80\n&quot;)
+println toml.dump(config)</code></pre>
+<p><code>parse(text)</code> parses TOML 1.0 documents. <code>dump(value)</code> emits TOML for a dict of primitives, arrays, and nested tables (including arrays of tables).</p>
 <h2 id="unittest"><code>unittest</code></h2>
 <pre><code class="language-tya">import unittest
 import string

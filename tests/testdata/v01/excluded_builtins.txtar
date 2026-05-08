@@ -1,17 +1,11 @@
 # reject convenience builtins that are still outside v0.2
 cd $REPO
 
-! exec go run ./cmd/tya --emit-c $WORK/byte_len.tya
-stderr 'undefined variable byte_len'
-
 ! exec go run ./cmd/tya --emit-c $WORK/each.tya
 stderr 'undefined variable each'
 
 ! exec go run ./cmd/tya --emit-c $WORK/div.tya
 stderr 'undefined variable div'
-
--- byte_len.tya --
-print byte_len("Tya")
 
 -- each.tya --
 print each([1], item -> item)

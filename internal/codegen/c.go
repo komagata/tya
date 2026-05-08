@@ -1280,9 +1280,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		case "!=":
 			expr = fmt.Sprintf("tya_bool(!tya_equal(%s, %s))", left, right)
 		case "&&":
-			expr = fmt.Sprintf("tya_and(%s, %s)", left, right)
+			expr = fmt.Sprintf("(tya_truthy(%s) ? (%s) : tya_bool(false))", left, right)
 		case "||":
-			expr = fmt.Sprintf("tya_or(%s, %s)", left, right)
+			expr = fmt.Sprintf("(tya_truthy(%s) ? tya_bool(true) : (%s))", left, right)
 		case "%":
 			expr = fmt.Sprintf("tya_number((long)%s.number %% (long)%s.number)", left, right)
 		case "<", "<=", ">", ">=":
@@ -1632,6 +1632,41 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return "", "", err
 			}
 			return fmt.Sprintf("tya_to_int(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "byte_len" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_byte_len(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "char_len" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_len(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "ord" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_ord(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "kind" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_kind(%s)", arg), "TyaValue", nil
+		}
+		if ok && id.Name == "chr" && len(n.Args) == 1 {
+			arg, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_chr(%s)", arg), "TyaValue", nil
 		}
 		if ok && id.Name == "to_float" && len(n.Args) == 1 {
 			arg, _, err := g.expr(n.Args[0])

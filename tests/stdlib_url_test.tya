@@ -1,0 +1,30 @@
+import unittest
+import url
+
+module stdlib_url_test
+  test_encode_space = ->
+    unittest.assert_equal("hello%20world", url.encode("hello world"), "space")
+  test_encode_special = ->
+    unittest.assert_equal("a%2Fb%3Fc%3Dd", url.encode("a/b?c=d"), "special chars")
+  test_decode_space = ->
+    unittest.assert_equal("hello world", url.decode("hello%20world"), "decode space")
+  test_decode_round_trip = ->
+    text = "tya v0.23"
+    unittest.assert_equal(text, url.decode(url.encode(text)), "round trip")
+  test_decode_query_plus = ->
+    pairs = url.decode_query("q=tya+lang&page=2")
+    unittest.assert_equal([["q", "tya lang"], ["page", "2"]], pairs, "decode_query")
+  test_parse_full_url = ->
+    p = url.parse("https://user:pw@example.com:8080/path?x=1#frag")
+    unittest.assert_equal("https", p["scheme"], "scheme")
+    unittest.assert_equal("user", p["user"], "user")
+    unittest.assert_equal("pw", p["password"], "password")
+    unittest.assert_equal("example.com", p["host"], "host")
+    unittest.assert_equal("8080", p["port"], "port")
+    unittest.assert_equal("/path", p["path"], "path")
+    unittest.assert_equal("x=1", p["query"], "query")
+    unittest.assert_equal("frag", p["fragment"], "fragment")
+  test_build = ->
+    expected = "https://example.com/search?q=tya"
+    parts = { scheme: "https", host: "example.com", path: "/search", query: "q=tya" }
+    unittest.assert_equal(expected, url.build(parts), "build")

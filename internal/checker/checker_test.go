@@ -213,8 +213,6 @@ func TestCheckRejectsUndefinedVariable(t *testing.T) {
 func TestCheckRejectsExcludedBuiltins(t *testing.T) {
 	for _, name := range []string{
 		"each",
-		"byte_len",
-		"char_len",
 		"div",
 	} {
 		t.Run(name, func(t *testing.T) {

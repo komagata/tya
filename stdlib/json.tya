@@ -1,0 +1,314 @@
+module json
+  skip_ws = state ->
+    n = state["len"]
+    p = state["pos"]
+    src = state["src"]
+    while p < n
+      c = src[p]
+      if c != " " and c != "\t" and c != "\n" and c != chr(13)
+        state["pos"] = p
+        return nil
+      p = p + 1
+    state["pos"] = p
+
+  expect = state, ch ->
+    json.skip_ws(state)
+    p = state["pos"]
+    if p >= state["len"] or state["src"][p] != ch
+      raise "json.parse: expected '{ch}'"
+    state["pos"] = p + 1
+
+  hex_value = c ->
+    code = ord(c)
+    if code >= 48 and code <= 57
+      return code - 48
+    if code >= 65 and code <= 70
+      return code - 55
+    if code >= 97 and code <= 102
+      return code - 87
+    raise "json.parse: invalid hex digit"
+
+  utf8_encode = code ->
+    if code < 128
+      return chr(code)
+    if code < 2048
+      b1 = 192 + to_int(code / 64)
+      b2 = 128 + (code % 64)
+      return chr(b1) + chr(b2)
+    b1 = 224 + to_int(code / 4096)
+    b2 = 128 + to_int((code % 4096) / 64)
+    b3 = 128 + (code % 64)
+    return chr(b1) + chr(b2) + chr(b3)
+
+  parse_string = state ->
+    p = state["pos"]
+    src = state["src"]
+    n = state["len"]
+    if p >= n or src[p] != "\""
+      raise "json.parse: expected string"
+    p = p + 1
+    out = ""
+    while p < n
+      c = src[p]
+      if c == "\""
+        state["pos"] = p + 1
+        return out
+      if c == "\\"
+        if p + 1 >= n
+          raise "json.parse: truncated escape"
+        e = src[p + 1]
+        if e == "\""
+          out = out + "\""
+        elseif e == "\\"
+          out = out + "\\"
+        elseif e == "/"
+          out = out + "/"
+        elseif e == "n"
+          out = out + "\n"
+        elseif e == "t"
+          out = out + "\t"
+        elseif e == "r"
+          out = out + chr(13)
+        elseif e == "b"
+          out = out + chr(8)
+        elseif e == "f"
+          out = out + chr(12)
+        elseif e == "u"
+          if p + 5 >= n
+            raise "json.parse: truncated unicode escape"
+          h1 = json.hex_value(src[p + 2])
+          h2 = json.hex_value(src[p + 3])
+          h3 = json.hex_value(src[p + 4])
+          h4 = json.hex_value(src[p + 5])
+          code = h1 * 4096 + h2 * 256 + h3 * 16 + h4
+          out = out + json.utf8_encode(code)
+          p = p + 4
+        else
+          raise "json.parse: invalid escape"
+        p = p + 2
+      else
+        out = out + c
+        p = p + 1
+    raise "json.parse: unterminated string"
+
+  is_digit = c ->
+    code = ord(c)
+    return code >= 48 and code <= 57
+
+  parse_number = state ->
+    p = state["pos"]
+    src = state["src"]
+    n = state["len"]
+    start = p
+    if src[p] == "-"
+      p = p + 1
+    while p < n and json.is_digit(src[p])
+      p = p + 1
+    is_float = false
+    if p < n and src[p] == "."
+      is_float = true
+      p = p + 1
+      while p < n and json.is_digit(src[p])
+        p = p + 1
+    if p < n and (src[p] == "e" or src[p] == "E")
+      is_float = true
+      p = p + 1
+      if p < n and (src[p] == "+" or src[p] == "-")
+        p = p + 1
+      while p < n and json.is_digit(src[p])
+        p = p + 1
+    text = ""
+    k = start
+    while k < p
+      text = text + src[k]
+      k = k + 1
+    state["pos"] = p
+    if is_float
+      return to_float(text)
+    return to_int(text)
+
+  parse_value = state ->
+    json.skip_ws(state)
+    p = state["pos"]
+    if p >= state["len"]
+      raise "json.parse: unexpected end of input"
+    src = state["src"]
+    c = src[p]
+    if c == "{{"
+      return json.parse_object(state)
+    if c == "["
+      return json.parse_array(state)
+    if c == "\""
+      return json.parse_string(state)
+    if c == "t"
+      if p + 4 <= state["len"] and src[p + 1] == "r" and src[p + 2] == "u" and src[p + 3] == "e"
+        state["pos"] = p + 4
+        return true
+      raise "json.parse: invalid token"
+    if c == "f"
+      if p + 5 <= state["len"] and src[p + 1] == "a" and src[p + 2] == "l" and src[p + 3] == "s" and src[p + 4] == "e"
+        state["pos"] = p + 5
+        return false
+      raise "json.parse: invalid token"
+    if c == "n"
+      if p + 4 <= state["len"] and src[p + 1] == "u" and src[p + 2] == "l" and src[p + 3] == "l"
+        state["pos"] = p + 4
+        return nil
+      raise "json.parse: invalid token"
+    if c == "-" or json.is_digit(c)
+      return json.parse_number(state)
+    raise "json.parse: unexpected character"
+
+  parse_object = state ->
+    json.expect(state, "{{")
+    out = {}
+    json.skip_ws(state)
+    p = state["pos"]
+    if p < state["len"] and state["src"][p] == "}}"
+      state["pos"] = p + 1
+      return out
+    first = true
+    while true
+      if not first
+        json.expect(state, ",")
+      first = false
+      json.skip_ws(state)
+      key = json.parse_string(state)
+      json.expect(state, ":")
+      value = json.parse_value(state)
+      out[key] = value
+      json.skip_ws(state)
+      p = state["pos"]
+      if p < state["len"] and state["src"][p] == "}}"
+        state["pos"] = p + 1
+        return out
+
+  parse_array = state ->
+    json.expect(state, "[")
+    out = []
+    json.skip_ws(state)
+    p = state["pos"]
+    if p < state["len"] and state["src"][p] == "]"
+      state["pos"] = p + 1
+      return out
+    first = true
+    while true
+      if not first
+        json.expect(state, ",")
+      first = false
+      v = json.parse_value(state)
+      push(out, v)
+      json.skip_ws(state)
+      p = state["pos"]
+      if p < state["len"] and state["src"][p] == "]"
+        state["pos"] = p + 1
+        return out
+
+  parse = text ->
+    state = { src: text, pos: 0, len: byte_len(text) }
+    v = json.parse_value(state)
+    json.skip_ws(state)
+    if state["pos"] < state["len"]
+      raise "json.parse: trailing characters"
+    return v
+
+  escape_string = text ->
+    n = byte_len(text)
+    out = "\""
+    i = 0
+    while i < n
+      c = text[i]
+      code = ord(c)
+      if c == "\""
+        out = out + "\\\""
+      elseif c == "\\"
+        out = out + "\\\\"
+      elseif c == "\n"
+        out = out + "\\n"
+      elseif c == "\t"
+        out = out + "\\t"
+      elseif code == 13
+        out = out + "\\r"
+      elseif code == 8
+        out = out + "\\b"
+      elseif code == 12
+        out = out + "\\f"
+      elseif code < 32
+        hi_d = to_int(code / 16)
+        lo_d = code % 16
+        hi = chr(48 + hi_d)
+        if hi_d >= 10
+          hi = chr(55 + hi_d)
+        lo = chr(48 + lo_d)
+        if lo_d >= 10
+          lo = chr(55 + lo_d)
+        out = out + "\\u00" + hi + lo
+      else
+        out = out + c
+      i = i + 1
+    return out + "\""
+
+  pad = indent, level ->
+    if indent <= 0
+      return ""
+    out = "\n"
+    spaces = ""
+    k = 0
+    while k < indent
+      spaces = spaces + " "
+      k = k + 1
+    k = 0
+    while k < level
+      out = out + spaces
+      k = k + 1
+    return out
+
+  emit = value, indent, level ->
+    k = kind(value)
+    if k == "nil"
+      return "null"
+    if k == "bool"
+      if value
+        return "true"
+      return "false"
+    if k == "int" or k == "float"
+      return to_string(value)
+    if k == "string"
+      return json.escape_string(value)
+    if k == "array"
+      n = len(value)
+      if n == 0
+        return "[]"
+      out = "["
+      i = 0
+      while i < n
+        if i > 0
+          out = out + ","
+        out = out + json.pad(indent, level + 1)
+        out = out + json.emit(value[i], indent, level + 1)
+        i = i + 1
+      out = out + json.pad(indent, level)
+      return out + "]"
+    if k == "dict"
+      names = keys(value)
+      n = len(names)
+      if n == 0
+        return "{{}}"
+      out = "{{"
+      i = 0
+      while i < n
+        if i > 0
+          out = out + ","
+        out = out + json.pad(indent, level + 1)
+        key_name = names[i]
+        out = out + json.escape_string(key_name) + ":"
+        if indent > 0
+          out = out + " "
+        out = out + json.emit(value[key_name], indent, level + 1)
+        i = i + 1
+      out = out + json.pad(indent, level)
+      return out + "}}"
+    raise "json.dump: unsupported value kind"
+
+  dump = value ->
+    return json.emit(value, 0, 0)

@@ -1,0 +1,292 @@
+module url
+  is_unreserved = code ->
+    if code >= 65 and code <= 90
+      return true
+    if code >= 97 and code <= 122
+      return true
+    if code >= 48 and code <= 57
+      return true
+    if code == 45 or code == 46 or code == 95 or code == 126
+      return true
+    return false
+
+  hex_digit = d ->
+    if d < 10
+      return chr(48 + d)
+    return chr(55 + d)
+
+  decode_hex = c ->
+    code = ord(c)
+    if code >= 48 and code <= 57
+      return code - 48
+    if code >= 65 and code <= 70
+      return code - 55
+    if code >= 97 and code <= 102
+      return code - 87
+    raise "url.decode: invalid percent-escape"
+
+  encode = text ->
+    n = byte_len(text)
+    out = ""
+    i = 0
+    while i < n
+      c = text[i]
+      code = ord(c)
+      if url.is_unreserved(code)
+        out = out + c
+      else
+        hi = url.hex_digit(to_int(code / 16))
+        lo = url.hex_digit(code % 16)
+        out = out + "%" + hi + lo
+      i = i + 1
+    return out
+
+  decode = text ->
+    n = byte_len(text)
+    out = ""
+    i = 0
+    while i < n
+      c = text[i]
+      if c == "%"
+        if i + 2 >= n
+          raise "url.decode: truncated percent-escape"
+        hi = url.decode_hex(text[i + 1])
+        lo = url.decode_hex(text[i + 2])
+        out = out + chr(hi * 16 + lo)
+        i = i + 3
+      else
+        out = out + c
+        i = i + 1
+    return out
+
+  encode_query = pairs ->
+    parts_a = []
+    if has(pairs, "kind")
+      raise "url.encode_query: pass a dict or array of [key, value] pairs"
+    names = keys(pairs)
+    if len(names) > 0
+      for k in names
+        v = pairs[k]
+        encoded_k = url.encode(k)
+        encoded_v = url.encode(v)
+        push(parts_a, "{encoded_k}={encoded_v}")
+    return join(parts_a, "&")
+
+  encode_query_pairs = pairs ->
+    parts_a = []
+    for pair in pairs
+      k = pair[0]
+      v = pair[1]
+      encoded_k = url.encode(k)
+      encoded_v = url.encode(v)
+      push(parts_a, "{encoded_k}={encoded_v}")
+    return join(parts_a, "&")
+
+  decode_query_value = text ->
+    n = byte_len(text)
+    out = ""
+    i = 0
+    while i < n
+      c = text[i]
+      if c == "+"
+        out = out + " "
+        i = i + 1
+      elseif c == "%"
+        if i + 2 >= n
+          raise "url.decode_query: truncated percent-escape"
+        hi = url.decode_hex(text[i + 1])
+        lo = url.decode_hex(text[i + 2])
+        out = out + chr(hi * 16 + lo)
+        i = i + 3
+      else
+        out = out + c
+        i = i + 1
+    return out
+
+  decode_query = text ->
+    out = []
+    if text == ""
+      return out
+    raw_pairs = split(text, "&")
+    for raw in raw_pairs
+      if raw != ""
+        eq_idx = -1
+        n = byte_len(raw)
+        i = 0
+        while i < n and eq_idx < 0
+          if raw[i] == "="
+            eq_idx = i
+          i = i + 1
+        if eq_idx < 0
+          k = url.decode_query_value(raw)
+          push(out, [k, ""])
+        else
+          k_raw = ""
+          v_raw = ""
+          i = 0
+          while i < eq_idx
+            k_raw = k_raw + raw[i]
+            i = i + 1
+          i = eq_idx + 1
+          while i < n
+            v_raw = v_raw + raw[i]
+            i = i + 1
+          push(out, [url.decode_query_value(k_raw), url.decode_query_value(v_raw)])
+    return out
+
+  parse = text ->
+    n = byte_len(text)
+    out = { scheme: "", user: "", password: "", host: "", port: "", path: "", query: "", fragment: "" }
+    i = 0
+    scheme_end = -1
+    j = 0
+    while j < n and scheme_end < 0
+      c = text[j]
+      if c == ":"
+        scheme_end = j
+      elseif c == "/" or c == "?" or c == "#"
+        j = n
+      j = j + 1
+    if scheme_end >= 0
+      scheme_text = ""
+      k = 0
+      while k < scheme_end
+        scheme_text = scheme_text + text[k]
+        k = k + 1
+      out["scheme"] = scheme_text
+      i = scheme_end + 1
+    has_authority = false
+    if i + 1 < n and text[i] == "/" and text[i + 1] == "/"
+      has_authority = true
+      i = i + 2
+    if has_authority
+      auth_end = i
+      while auth_end < n and text[auth_end] != "/" and text[auth_end] != "?" and text[auth_end] != "#"
+        auth_end = auth_end + 1
+      auth_text = ""
+      k = i
+      while k < auth_end
+        auth_text = auth_text + text[k]
+        k = k + 1
+      i = auth_end
+      at_idx = -1
+      ai = 0
+      auth_n = byte_len(auth_text)
+      while ai < auth_n
+        if auth_text[ai] == "@"
+          at_idx = ai
+        ai = ai + 1
+      userinfo = ""
+      hostport = auth_text
+      if at_idx >= 0
+        k = 0
+        while k < at_idx
+          userinfo = userinfo + auth_text[k]
+          k = k + 1
+        hostport = ""
+        k = at_idx + 1
+        while k < auth_n
+          hostport = hostport + auth_text[k]
+          k = k + 1
+      if userinfo != ""
+        colon_idx = -1
+        ci = 0
+        ui_n = byte_len(userinfo)
+        while ci < ui_n
+          if userinfo[ci] == ":"
+            colon_idx = ci
+            ci = ui_n
+          ci = ci + 1
+        if colon_idx < 0
+          out["user"] = userinfo
+        else
+          user_part = ""
+          pass_part = ""
+          k = 0
+          while k < colon_idx
+            user_part = user_part + userinfo[k]
+            k = k + 1
+          k = colon_idx + 1
+          while k < ui_n
+            pass_part = pass_part + userinfo[k]
+            k = k + 1
+          out["user"] = user_part
+          out["password"] = pass_part
+      colon_idx = -1
+      ci = 0
+      hp_n = byte_len(hostport)
+      while ci < hp_n
+        if hostport[ci] == ":"
+          colon_idx = ci
+          ci = hp_n
+        ci = ci + 1
+      if colon_idx < 0
+        out["host"] = hostport
+      else
+        host_part = ""
+        port_part = ""
+        k = 0
+        while k < colon_idx
+          host_part = host_part + hostport[k]
+          k = k + 1
+        k = colon_idx + 1
+        while k < hp_n
+          port_part = port_part + hostport[k]
+          k = k + 1
+        out["host"] = host_part
+        out["port"] = port_part
+    path_end = i
+    while path_end < n and text[path_end] != "?" and text[path_end] != "#"
+      path_end = path_end + 1
+    path_text = ""
+    k = i
+    while k < path_end
+      path_text = path_text + text[k]
+      k = k + 1
+    out["path"] = path_text
+    i = path_end
+    if i < n and text[i] == "?"
+      i = i + 1
+      query_end = i
+      while query_end < n and text[query_end] != "#"
+        query_end = query_end + 1
+      query_text = ""
+      k = i
+      while k < query_end
+        query_text = query_text + text[k]
+        k = k + 1
+      out["query"] = query_text
+      i = query_end
+    if i < n and text[i] == "#"
+      i = i + 1
+      frag_text = ""
+      while i < n
+        frag_text = frag_text + text[i]
+        i = i + 1
+      out["fragment"] = frag_text
+    return out
+
+  build = parts ->
+    out = ""
+    if has(parts, "scheme") and parts["scheme"] != ""
+      out = out + parts["scheme"] + ":"
+    has_host = has(parts, "host") and parts["host"] != ""
+    has_user = has(parts, "user") and parts["user"] != ""
+    if has_host or has_user
+      out = out + "//"
+      if has_user
+        out = out + parts["user"]
+        if has(parts, "password") and parts["password"] != ""
+          out = out + ":" + parts["password"]
+        out = out + "@"
+      if has_host
+        out = out + parts["host"]
+      if has(parts, "port") and parts["port"] != ""
+        out = out + ":" + parts["port"]
+    if has(parts, "path") and parts["path"] != ""
+      out = out + parts["path"]
+    if has(parts, "query") and parts["query"] != ""
+      out = out + "?" + parts["query"]
+    if has(parts, "fragment") and parts["fragment"] != ""
+      out = out + "#" + parts["fragment"]
+    return out

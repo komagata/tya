@@ -1,0 +1,84 @@
+module base64
+  encode = text ->
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    n = byte_len(text)
+    out = ""
+    i = 0
+    while i + 3 <= n
+      b1 = ord(text[i])
+      b2 = ord(text[i + 1])
+      b3 = ord(text[i + 2])
+      g1 = to_int(b1 / 4)
+      g2 = (b1 % 4) * 16 + to_int(b2 / 16)
+      g3 = (b2 % 16) * 4 + to_int(b3 / 64)
+      g4 = b3 % 64
+      out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + alphabet[g4]
+      i = i + 3
+    rem = n - i
+    if rem == 1
+      b1 = ord(text[i])
+      g1 = to_int(b1 / 4)
+      g2 = (b1 % 4) * 16
+      out = out + alphabet[g1] + alphabet[g2] + "=="
+    elseif rem == 2
+      b1 = ord(text[i])
+      b2 = ord(text[i + 1])
+      g1 = to_int(b1 / 4)
+      g2 = (b1 % 4) * 16 + to_int(b2 / 16)
+      g3 = (b2 % 16) * 4
+      out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
+    return out
+
+  index_of = c ->
+    code = ord(c)
+    if code >= 65 and code <= 90
+      return code - 65
+    if code >= 97 and code <= 122
+      return code - 71
+    if code >= 48 and code <= 57
+      return code + 4
+    if code == 43
+      return 62
+    if code == 47
+      return 63
+    raise "base64.decode: invalid character"
+
+  decode = text ->
+    cleaned = ""
+    n = byte_len(text)
+    cr = chr(13)
+    i = 0
+    while i < n
+      c = text[i]
+      if c != " " and c != "\n" and c != cr and c != "\t" and c != "="
+        cleaned = cleaned + c
+      i = i + 1
+    m = byte_len(cleaned)
+    if m % 4 == 1
+      raise "base64.decode: invalid length"
+    out = ""
+    j = 0
+    while j + 4 <= m
+      v1 = base64.index_of(cleaned[j])
+      v2 = base64.index_of(cleaned[j + 1])
+      v3 = base64.index_of(cleaned[j + 2])
+      v4 = base64.index_of(cleaned[j + 3])
+      b1 = v1 * 4 + to_int(v2 / 16)
+      b2 = (v2 % 16) * 16 + to_int(v3 / 4)
+      b3 = (v3 % 4) * 64 + v4
+      out = out + chr(b1) + chr(b2) + chr(b3)
+      j = j + 4
+    rem = m - j
+    if rem == 2
+      v1 = base64.index_of(cleaned[j])
+      v2 = base64.index_of(cleaned[j + 1])
+      b1 = v1 * 4 + to_int(v2 / 16)
+      out = out + chr(b1)
+    elseif rem == 3
+      v1 = base64.index_of(cleaned[j])
+      v2 = base64.index_of(cleaned[j + 1])
+      v3 = base64.index_of(cleaned[j + 2])
+      b1 = v1 * 4 + to_int(v2 / 16)
+      b2 = (v2 % 16) * 16 + to_int(v3 / 4)
+      out = out + chr(b1) + chr(b2)
+    return out

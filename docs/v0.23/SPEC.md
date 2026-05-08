@@ -5,12 +5,19 @@ This document is the specification for Tya v0.23 after v0.22 unit testing.
 ## Theme
 
 Tya v0.23 expands the standard library with data-format and small utility
-modules.
+modules, completes the deferred filesystem stdlib expansion, and adds three
+character-level primitives that enable data-format work in Tya.
 
-v0.23 introduces five pure-Tya modules: `toml`, `json`, `csv`, `base64`, and
-`url`. Together they cover human-edited configuration, machine data
-interchange, tabular data, byte-to-text encoding, and URL handling. None of
-them require new global built-ins.
+v0.23 introduces five pure-Tya modules — `toml`, `json`, `csv`, `base64`,
+and `url` — covering human-edited configuration, machine data interchange,
+tabular data, byte-to-text encoding, and URL handling. v0.23 also ships the
+filesystem expansion that was deferred from v0.22 (`dir`, `file.remove` /
+`file.rename` / `file.stat`, `path.expand_user`, `os.cwd` / `os.chdir`).
+
+Three small global built-ins are added to enable pure-Tya data-format
+implementations: `ord`, `chr`, and `kind`. These are character-level and
+type-introspection primitives, not data-format functions; they unblock
+parser and emitter work in Tya itself.
 
 ## Goals
 
@@ -19,7 +26,9 @@ them require new global built-ins.
 - Use the same `parse` / `dump` (or `encode` / `decode`) shape across modules.
 - Avoid schema validation, type coercion beyond each format's standard, and
   partial parsing.
-- Avoid new global built-ins.
+- Add `ord`, `chr`, `kind` global built-ins as character-level primitives
+  needed by pure-Tya data-format code.
+- Complete the filesystem stdlib expansion deferred from v0.22.
 
 ## Included in v0.23
 
@@ -31,6 +40,12 @@ v0.23 includes all v0.22 behavior and adds:
 - `base64` standard module (`base64.encode`, `base64.decode`)
 - `url` standard module (`url.encode`, `url.decode`, `url.parse`, `url.build`,
   `url.encode_query`, `url.decode_query`)
+- `dir` standard module (`dir.list`, `dir.mkdir`, `dir.rmdir`)
+- `file.remove`, `file.rename`, `file.stat`
+- `path.expand_user`
+- `os.cwd`, `os.chdir`
+- `ord(char)`, `chr(byte)`, `kind(value)` global built-ins
+- short-circuiting evaluation of `and` and `or`
 
 ## Not Included in v0.23
 
@@ -46,6 +61,10 @@ v0.23 does not include:
 - url-safe base64 variants beyond what is described below
 - IDN (internationalized domain name) handling
 - HTTP, YAML, regex, random, time, or crypto modules
+- TOML multi-line strings (basic and literal)
+- TOML hexadecimal, octal, and binary integer literals
+- TOML date and time scalar value types (returned as strings only)
+- dotted-key TOML assignments (`a.b.c = 1`)
 
 ## Importing
 
@@ -383,6 +402,50 @@ println rebuilt                              # https://example.com/search?q=tya
 All `url.*` functions raise a structured error on wrong argument kinds.
 `url.decode` and `url.decode_query` raise a structured error on malformed
 percent-escapes or non-UTF-8 byte sequences.
+
+## New Built-ins
+
+v0.23 adds three small global built-ins that data-format code in Tya needs:
+
+- `ord(char)` returns the byte value (0..255) of the first byte of the
+  argument string. Empty input is an error.
+- `chr(byte)` returns a one-byte string for the given byte value (0..255).
+  Out-of-range values are an error.
+- `kind(value)` returns one of `"nil"`, `"bool"`, `"int"`, `"float"`,
+  `"string"`, `"array"`, `"dict"`, `"object"`, `"function"`, `"error"`.
+
+`ord` and `chr` are byte-level. They are not full Unicode primitives.
+Multi-byte sequences must be handled by the caller (for example by reading
+raw UTF-8 bytes from a string).
+
+`kind` distinguishes integer and float numbers based on whether the numeric
+value is exactly representable as an integer.
+
+## Short-circuit Evaluation
+
+v0.23 changes `and` and `or` to short-circuit. The right operand is
+evaluated only when the left operand does not already determine the result.
+This matches the conventional behavior of Boolean operators in mainstream
+languages and is required to write parser-style Tya code that guards index
+accesses with `i < n and is_valid(s[i])`.
+
+## Filesystem Modules
+
+v0.23 ships the filesystem stdlib expansion deferred from v0.22. See
+`docs/STDLIB.md` for usage details. Native operation failures raise
+structured errors so they can be caught with block `try ... catch`.
+
+- `dir.list(path)` returns an array of names directly under `path` in
+  dictionary order, excluding `.` and `..`.
+- `dir.mkdir(path)` creates one directory level.
+- `dir.rmdir(path)` removes an empty directory.
+- `file.remove(path)` removes a regular file.
+- `file.rename(old_path, new_path)` renames a file or directory.
+- `file.stat(path)` returns `{ kind, size, readable, writable, executable }`.
+- `path.expand_user(value)` expands a leading `~` or `~/...` to the user's
+  home directory.
+- `os.cwd()` returns the current working directory.
+- `os.chdir(path)` changes it.
 
 ## Diagnostics
 

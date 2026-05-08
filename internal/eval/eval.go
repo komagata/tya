@@ -491,6 +491,56 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return strings.HasSuffix(text, suffix), nil
 	}))
+	env.set("kind", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("kind expects 1 argument")
+		}
+		switch v := args[0].(type) {
+		case nil:
+			return "nil", nil
+		case bool:
+			return "bool", nil
+		case int64:
+			_ = v
+			return "int", nil
+		case float64:
+			_ = v
+			return "float", nil
+		case string:
+			_ = v
+			return "string", nil
+		case *Array:
+			_ = v
+			return "array", nil
+		case Dict:
+			_ = v
+			return "dict", nil
+		}
+		return "unknown", nil
+	}))
+	env.set("ord", Builtin(func(args []Value) (Value, error) {
+		s, err := oneString("ord", args)
+		if err != nil {
+			return nil, err
+		}
+		if len(s) == 0 {
+			return nil, &raisedSignal{value: "ord: argument must be a non-empty string"}
+		}
+		return int64(s[0]), nil
+	}))
+	env.set("chr", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("chr expects 1 argument")
+		}
+		v, ok := args[0].(int64)
+		if !ok {
+			return nil, fmt.Errorf("chr expects int argument")
+		}
+		if v < 0 || v > 255 {
+			return nil, &raisedSignal{value: "chr: byte value out of range (0..255)"}
+		}
+		return string([]byte{byte(v)}), nil
+	}))
 	env.set("byte_len", Builtin(func(args []Value) (Value, error) {
 		text, err := oneString("byte_len", args)
 		if err != nil {

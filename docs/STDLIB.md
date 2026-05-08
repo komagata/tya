@@ -253,6 +253,68 @@ booleans.
 `expand_user(value)` expands `~` and `~/...` to the current user's home
 directory. Other strings are returned unchanged.
 
+## `base64`
+
+```tya
+import base64
+
+println base64.encode("hello")
+println base64.decode("aGVsbG8=")
+```
+
+`encode(text)` returns the standard-alphabet Base64 representation with `=`
+padding. `decode(text)` decodes standard Base64 (padding optional, whitespace
+ignored).
+
+## `url`
+
+```tya
+import url
+
+println url.encode("hello world")
+parts = url.parse("https://example.com:8080/path?x=1")
+```
+
+Functions: `encode`, `decode`, `encode_query`, `decode_query`, `parse`,
+`build`. See the v0.23 spec for full details.
+
+## `json`
+
+```tya
+import json
+
+println json.dump({ name: "tya", version: 23 })
+data = json.parse("[1, 2, 3]")
+```
+
+`parse(text)` parses RFC 8259 JSON; `dump(value)` emits compact JSON.
+Numbers without fractional parts decode to ints; with fractional parts to
+floats.
+
+## `csv`
+
+```tya
+import csv
+
+rows = csv.parse("name,age\ntya,1\n", { header: true })
+println csv.dump([["a", "b"], ["1", "2"]], nil)
+```
+
+`parse(text, options)` accepts `{ separator, header }` options. `dump(rows,
+options)` quotes fields containing the separator, quote, CR, or LF.
+
+## `toml`
+
+```tya
+import toml
+
+config = toml.parse("[server]\nhost = \"localhost\"\nport = 80\n")
+println toml.dump(config)
+```
+
+`parse(text)` parses TOML 1.0 documents. `dump(value)` emits TOML for a dict
+of primitives, arrays, and nested tables (including arrays of tables).
+
 ## `unittest`
 
 ```tya

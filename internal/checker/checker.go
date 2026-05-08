@@ -81,11 +81,12 @@ func CheckModuleFile(prog *ast.Program, path string) error {
 }
 
 var builtinNames = []string{
-	"all", "any", "args", "assert", "assert_equal", "chdir", "contains", "cwd",
-	"delete", "dir_list", "dir_mkdir", "dir_rmdir",
+	"all", "any", "args", "assert", "assert_equal", "byte_len", "chdir", "char_len", "chr", "contains",
+	"cwd", "delete", "dir_list", "dir_mkdir", "dir_rmdir",
 	"ends_with", "env", "equal", "error", "exit", "file_exists", "file_remove",
 	"file_rename", "file_stat", "filter",
-	"find", "has", "join", "keys", "len", "map", "panic", "path_expand_user",
+	"find", "has", "join", "keys", "kind", "len", "map", "ord", "panic",
+	"path_expand_user",
 	"pop", "print", "println",
 	"push", "read_file", "read_line", "reduce", "replace", "split",
 	"starts_with", "to_float", "to_int", "to_number", "to_string", "trim",

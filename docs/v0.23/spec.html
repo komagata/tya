@@ -27,8 +27,9 @@
 <h1 id="tya-v0-23-specification">Tya v0.23 Specification</h1>
 <p>This document is the specification for Tya v0.23 after v0.22 unit testing.</p>
 <h2 id="theme">Theme</h2>
-<p>Tya v0.23 expands the standard library with data-format and small utility modules.</p>
-<p>v0.23 introduces five pure-Tya modules: <code>toml</code>, <code>json</code>, <code>csv</code>, <code>base64</code>, and <code>url</code>. Together they cover human-edited configuration, machine data interchange, tabular data, byte-to-text encoding, and URL handling. None of them require new global built-ins.</p>
+<p>Tya v0.23 expands the standard library with data-format and small utility modules, completes the deferred filesystem stdlib expansion, and adds three character-level primitives that enable data-format work in Tya.</p>
+<p>v0.23 introduces five pure-Tya modules — <code>toml</code>, <code>json</code>, <code>csv</code>, <code>base64</code>, and <code>url</code> — covering human-edited configuration, machine data interchange, tabular data, byte-to-text encoding, and URL handling. v0.23 also ships the filesystem expansion that was deferred from v0.22 (<code>dir</code>, <code>file.remove</code> / <code>file.rename</code> / <code>file.stat</code>, <code>path.expand_user</code>, <code>os.cwd</code> / <code>os.chdir</code>).</p>
+<p>Three small global built-ins are added to enable pure-Tya data-format implementations: <code>ord</code>, <code>chr</code>, and <code>kind</code>. These are character-level and type-introspection primitives, not data-format functions; they unblock parser and emitter work in Tya itself.</p>
 <h2 id="goals">Goals</h2>
 <ul>
 <li>Add <code>toml</code>, <code>json</code>, <code>csv</code>, <code>base64</code>, and <code>url</code> standard modules.</li>
@@ -38,7 +39,11 @@
 </ul>
 <p>  partial parsing.</p>
 <ul>
-<li>Avoid new global built-ins.</li>
+<li>Add <code>ord</code>, <code>chr</code>, <code>kind</code> global built-ins as character-level primitives</li>
+</ul>
+<p>  needed by pure-Tya data-format code.</p>
+<ul>
+<li>Complete the filesystem stdlib expansion deferred from v0.22.</li>
 </ul>
 <h2 id="included-in-v0-23">Included in v0.23</h2>
 <p>v0.23 includes all v0.22 behavior and adds:</p>
@@ -50,6 +55,14 @@
 <li><code>url</code> standard module (<code>url.encode</code>, <code>url.decode</code>, <code>url.parse</code>, <code>url.build</code>,</li>
 </ul>
 <p>  <code>url.encode_query</code>, <code>url.decode_query</code>)</p>
+<ul>
+<li><code>dir</code> standard module (<code>dir.list</code>, <code>dir.mkdir</code>, <code>dir.rmdir</code>)</li>
+<li><code>file.remove</code>, <code>file.rename</code>, <code>file.stat</code></li>
+<li><code>path.expand_user</code></li>
+<li><code>os.cwd</code>, <code>os.chdir</code></li>
+<li><code>ord(char)</code>, <code>chr(byte)</code>, <code>kind(value)</code> global built-ins</li>
+<li>short-circuiting evaluation of <code>and</code> and <code>or</code></li>
+</ul>
 <h2 id="not-included-in-v0-23">Not Included in v0.23</h2>
 <p>v0.23 does not include:</p>
 <ul>
@@ -63,6 +76,10 @@
 <li>url-safe base64 variants beyond what is described below</li>
 <li>IDN (internationalized domain name) handling</li>
 <li>HTTP, YAML, regex, random, time, or crypto modules</li>
+<li>TOML multi-line strings (basic and literal)</li>
+<li>TOML hexadecimal, octal, and binary integer literals</li>
+<li>TOML date and time scalar value types (returned as strings only)</li>
+<li>dotted-key TOML assignments (<code>a.b.c = 1</code>)</li>
 </ul>
 <h2 id="importing">Importing</h2>
 <p>All five modules are standard attached-library modules. They are not available without import.</p>
@@ -254,6 +271,43 @@ rebuilt = url.build({
 println rebuilt                              # https://example.com/search?q=tya</code></pre>
 <h3 id="errors">Errors</h3>
 <p>All <code>url.*</code> functions raise a structured error on wrong argument kinds. <code>url.decode</code> and <code>url.decode_query</code> raise a structured error on malformed percent-escapes or non-UTF-8 byte sequences.</p>
+<h2 id="new-built-ins">New Built-ins</h2>
+<p>v0.23 adds three small global built-ins that data-format code in Tya needs:</p>
+<ul>
+<li><code>ord(char)</code> returns the byte value (0..255) of the first byte of the</li>
+</ul>
+<p>  argument string. Empty input is an error.</p>
+<ul>
+<li><code>chr(byte)</code> returns a one-byte string for the given byte value (0..255).</li>
+</ul>
+<p>  Out-of-range values are an error.</p>
+<ul>
+<li><code>kind(value)</code> returns one of <code>&quot;nil&quot;</code>, <code>&quot;bool&quot;</code>, <code>&quot;int&quot;</code>, <code>&quot;float&quot;</code>,</li>
+</ul>
+<p>  <code>&quot;string&quot;</code>, <code>&quot;array&quot;</code>, <code>&quot;dict&quot;</code>, <code>&quot;object&quot;</code>, <code>&quot;function&quot;</code>, <code>&quot;error&quot;</code>.</p>
+<p><code>ord</code> and <code>chr</code> are byte-level. They are not full Unicode primitives. Multi-byte sequences must be handled by the caller (for example by reading raw UTF-8 bytes from a string).</p>
+<p><code>kind</code> distinguishes integer and float numbers based on whether the numeric value is exactly representable as an integer.</p>
+<h2 id="short-circuit-evaluation">Short-circuit Evaluation</h2>
+<p>v0.23 changes <code>and</code> and <code>or</code> to short-circuit. The right operand is evaluated only when the left operand does not already determine the result. This matches the conventional behavior of Boolean operators in mainstream languages and is required to write parser-style Tya code that guards index accesses with <code>i &lt; n and is_valid(s[i])</code>.</p>
+<h2 id="filesystem-modules">Filesystem Modules</h2>
+<p>v0.23 ships the filesystem stdlib expansion deferred from v0.22. See <code>docs/STDLIB.md</code> for usage details. Native operation failures raise structured errors so they can be caught with block <code>try ... catch</code>.</p>
+<ul>
+<li><code>dir.list(path)</code> returns an array of names directly under <code>path</code> in</li>
+</ul>
+<p>  dictionary order, excluding <code>.</code> and <code>..</code>.</p>
+<ul>
+<li><code>dir.mkdir(path)</code> creates one directory level.</li>
+<li><code>dir.rmdir(path)</code> removes an empty directory.</li>
+<li><code>file.remove(path)</code> removes a regular file.</li>
+<li><code>file.rename(old_path, new_path)</code> renames a file or directory.</li>
+<li><code>file.stat(path)</code> returns <code>{ kind, size, readable, writable, executable }</code>.</li>
+<li><code>path.expand_user(value)</code> expands a leading <code>~</code> or <code>~/...</code> to the user's</li>
+</ul>
+<p>  home directory.</p>
+<ul>
+<li><code>os.cwd()</code> returns the current working directory.</li>
+<li><code>os.chdir(path)</code> changes it.</li>
+</ul>
 <h2 id="diagnostics">Diagnostics</h2>
 <p>v0.23 implementations should report source-oriented errors for:</p>
 <ul>

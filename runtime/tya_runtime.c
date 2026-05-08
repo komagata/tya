@@ -548,6 +548,59 @@ TyaValue tya_byte_len(TyaValue text) {
   return tya_number((double)strlen(text.string));
 }
 
+TyaValue tya_ord(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL || text.string[0] == '\0') {
+    tya_raise(tya_string("ord: argument must be a non-empty string"));
+    return tya_nil();
+  }
+  return tya_number((double)((unsigned char)text.string[0]));
+}
+
+TyaValue tya_kind(TyaValue value) {
+  switch (value.kind) {
+  case TYA_NIL:
+    return tya_string("nil");
+  case TYA_BOOL:
+    return tya_string("bool");
+  case TYA_NUMBER: {
+    double d = value.number;
+    if (d == (double)((long)d)) {
+      return tya_string("int");
+    }
+    return tya_string("float");
+  }
+  case TYA_STRING:
+    return tya_string("string");
+  case TYA_ARRAY:
+    return tya_string("array");
+  case TYA_DICT:
+    return tya_string("dict");
+  case TYA_OBJECT:
+    return tya_string("object");
+  case TYA_FUNCTION:
+    return tya_string("function");
+  case TYA_ERROR:
+    return tya_string("error");
+  }
+  return tya_string("unknown");
+}
+
+TyaValue tya_chr(TyaValue code) {
+  if (code.kind != TYA_NUMBER) {
+    tya_raise(tya_string("chr: argument must be an int"));
+    return tya_nil();
+  }
+  int v = (int)code.number;
+  if (v < 0 || v > 255) {
+    tya_raise(tya_string("chr: byte value out of range (0..255)"));
+    return tya_nil();
+  }
+  char *out = malloc(2);
+  out[0] = (char)v;
+  out[1] = '\0';
+  return tya_string(out);
+}
+
 TyaValue tya_lines(TyaValue text) {
   TyaValue out = tya_array(NULL, 0);
   if (text.kind != TYA_STRING || text.string == NULL || text.string[0] == '\0') {
@@ -914,10 +967,10 @@ static void tya_builder_append(TyaStringBuilder *builder, const char *text) {
 
 TyaValue tya_to_int(TyaValue value) {
   if (value.kind == TYA_NUMBER) {
-    return value;
+    return tya_number((double)((long)value.number));
   }
   if (value.kind == TYA_STRING && value.string != NULL) {
-    return tya_number(strtol(value.string, NULL, 10));
+    return tya_number((double)strtol(value.string, NULL, 10));
   }
   return tya_number(0);
 }
