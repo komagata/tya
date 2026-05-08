@@ -143,6 +143,15 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
+<li>[ ] Ship v0.25 bit-level operations and byte sequences</li>
+<ul>
+<li>[ ] Add bitwise operators: <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> for integers.</li>
+<li>[ ] Add a byte-sequence value type (literal form, indexing returns int, slicing, concat, len).</li>
+<li>[ ] Add <code>file.read_bytes(path)</code> and <code>file.write_bytes(path, bytes)</code>.</li>
+<li>[ ] Extend <code>digest</code>, <code>secure_random</code>, <code>hex</code>, and <code>base64</code> to accept and return byte sequences (keep string compatibility).</li>
+<li>[ ] Document that these features unblock NES-emulator-class workloads.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
 <li>[ ] Future: package manifest and version resolution (deferred, schedule TBD)</li>
 <ul>
 <li>[ ] Decide manifest filename (placeholder <code>Tyafile</code>) and lockfile format.</li>

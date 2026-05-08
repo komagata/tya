@@ -152,6 +152,13 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [ ] Add unittest-form tests for each new module.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.25 bit-level operations and byte sequences
+  - [ ] Add bitwise operators: `&`, `|`, `^`, `~`, `<<`, `>>` for integers.
+  - [ ] Add a byte-sequence value type (literal form, indexing returns int, slicing, concat, len).
+  - [ ] Add `file.read_bytes(path)` and `file.write_bytes(path, bytes)`.
+  - [ ] Extend `digest`, `secure_random`, `hex`, and `base64` to accept and return byte sequences (keep string compatibility).
+  - [ ] Document that these features unblock NES-emulator-class workloads.
+  - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Future: package manifest and version resolution (deferred, schedule TBD)
   - [ ] Decide manifest filename (placeholder `Tyafile`) and lockfile format.
   - [ ] Specify version operators and Bundler-style single-version-per-source resolution.
