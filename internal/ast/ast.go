@@ -91,6 +91,7 @@ type ClassDecl struct {
 	NameTok  token.Token
 	Parent   *ClassRef
 	Abstract bool
+	Final    bool
 	Fields   []ClassField
 	Vars     []ClassVar
 	Methods  []ClassMethod
@@ -111,10 +112,11 @@ type ClassVar struct {
 }
 
 type ClassMethod struct {
-	Name  string
-	Tok   token.Token
-	Func  *FuncLit
-	Class bool
+	Name     string
+	Tok      token.Token
+	Func     *FuncLit
+	Class    bool
+	Abstract bool
 }
 
 type ClassRef struct {

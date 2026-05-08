@@ -405,7 +405,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.10 abstract methods and final classes</li>
+<li>[x] Ship v0.10 abstract methods and final classes</li>
 <ul>
 <li>[x] Define v0.10 abstract method and final class scope</li>
 <ul>
@@ -416,32 +416,69 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Specify <code>final class Name</code>.</li>
 <li>[x] Keep interfaces, <code>implements</code>, abstract fields, final methods, sealed classes, base classes, type annotations, and generics out of v0.10.</li>
 </ul>
-<li>[ ] Add abstract method parsing and checking</li>
+<li>[x] Add abstract method parsing and checking</li>
 <ul>
-<li>[ ] Parse abstract instance method declarations without bodies.</li>
-<li>[ ] Parse abstract class method declarations without bodies.</li>
-<li>[ ] Reject abstract methods outside abstract classes.</li>
-<li>[ ] Reject abstract methods with bodies.</li>
+<li>[x] Parse abstract instance method declarations without bodies.</li>
+<li>[x] Parse abstract class method declarations without bodies.</li>
+<li>[x] Reject abstract methods outside abstract classes.</li>
+<li>[x] Reject abstract methods with bodies.</li>
 </ul>
-<li>[ ] Add abstract implementation checks</li>
+<li>[x] Add abstract implementation checks</li>
 <ul>
-<li>[ ] Require concrete subclasses to implement inherited abstract instance methods.</li>
-<li>[ ] Require concrete subclasses to implement inherited abstract class methods.</li>
-<li>[ ] Allow abstract subclasses to leave abstract methods unimplemented.</li>
-<li>[ ] Check implementation arity against abstract method arity.</li>
+<li>[x] Require concrete subclasses to implement inherited abstract instance methods.</li>
+<li>[x] Require concrete subclasses to implement inherited abstract class methods.</li>
+<li>[x] Allow abstract subclasses to leave abstract methods unimplemented.</li>
+<li>[x] Check implementation arity against abstract method arity.</li>
 </ul>
-<li>[ ] Add final class checks</li>
+<li>[x] Add final class checks</li>
 <ul>
-<li>[ ] Parse <code>final class Name</code>.</li>
-<li>[ ] Reject extending final classes.</li>
-<li>[ ] Reject classes declared as both abstract and final.</li>
+<li>[x] Parse <code>final class Name</code>.</li>
+<li>[x] Reject extending final classes.</li>
+<li>[x] Reject classes declared as both abstract and final.</li>
 </ul>
-<li>[ ] Keep v0.10 documentation and tests aligned</li>
+<li>[x] Keep v0.10 documentation and tests aligned</li>
 <ul>
-<li>[ ] Update latest docs when v0.10 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.10/</code> aligned with the v0.10 minor specification.</li>
+<li>[x] Update latest docs when v0.10 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.10/</code> aligned with the v0.10 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.10 abstract methods and final classes.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
+<li>[ ] Ship v0.11 explicit interfaces</li>
+<ul>
+<li>[x] Define v0.11 explicit interface scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.11/SPEC.md</code>.</li>
+<li>[x] Specify <code>interface Name</code>.</li>
+<li>[x] Specify <code>class Name implements InterfaceName</code>.</li>
+<li>[x] Specify multiple interfaces.</li>
+<li>[x] Specify <code>extends</code> with <code>implements</code>.</li>
+<li>[x] Specify concrete and abstract class implementation checks.</li>
+<li>[x] Keep implicit interfaces, class-as-interface conformance, interface fields, interface class methods, interface inheritance, default interface methods, type annotations, and generics out of v0.11.</li>
+</ul>
+<li>[ ] Add interface parsing and checking</li>
+<ul>
+<li>[ ] Parse interface declarations.</li>
+<li>[ ] Parse body-free interface method requirements.</li>
+<li>[ ] Reject invalid members inside interface bodies.</li>
+<li>[ ] Parse <code>implements</code> lists.</li>
+<li>[ ] Reject <code>implements</code> targets that are not interfaces.</li>
+</ul>
+<li>[ ] Add interface implementation checks</li>
+<ul>
+<li>[ ] Require concrete classes to implement required interface methods.</li>
+<li>[ ] Allow inherited instance methods to satisfy interface requirements.</li>
+<li>[ ] Allow abstract classes to leave interface methods unimplemented.</li>
+<li>[ ] Check implementation arity against interface method arity.</li>
+<li>[ ] Reject conflicting interface method arity requirements.</li>
+</ul>
+<li>[ ] Keep v0.11 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.11 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.11/</code> aligned with the v0.11 minor specification.</li>
 <li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add compiler, runtime, module, and negative tests for v0.10 abstract methods and final classes.</li>
+<li>[ ] Add compiler, runtime, module, and negative tests for v0.11 interfaces.</li>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>

@@ -1,437 +1,273 @@
-# Tya v0.9 Specification
+# Tya v0.10 Specification
 
-This document is the specification for Tya v0.9 after v0.8 class-level
-inheritance and class introspection.
+This document is the specification for Tya v0.10 after v0.9 class visibility,
+private members, private constructors, and abstract classes.
 
 ## Theme
 
-Tya v0.9 is about class visibility and encapsulation.
+Tya v0.10 is about abstract behavior contracts and final classes.
 
-v0.5 through v0.8 make classes useful for state, behavior, inheritance, and
-basic introspection. v0.9 adds private class members so a class can keep helper
-state and helper behavior out of its public API.
+v0.9 adds abstract classes that cannot be directly constructed. v0.10 adds
+abstract methods so abstract classes can require subclasses to implement
+specific behavior. It also adds `final class` so a class can explicitly opt out
+of subclassing.
 
 ## Goals
 
-- Add private instance fields.
-- Add private instance methods.
-- Add private class variables.
-- Add private class methods.
-- Add private constructors with `_init`.
-- Add abstract classes.
-- Keep privacy based on the existing leading `_` naming convention.
-- Keep public class behavior unchanged.
-- Leave protected visibility and richer access-control features for later versions.
+- Add abstract instance methods.
+- Add abstract class methods.
+- Require concrete subclasses to implement inherited abstract methods.
+- Keep abstract methods body-free.
+- Add final classes.
+- Keep interfaces and implicit interface conformance for later versions.
 
-## Included in v0.9
+## Included in v0.10
 
-v0.9 includes all v0.8 class behavior and adds:
+v0.10 includes all v0.9 class behavior and adds:
 
-- private instance fields with `@_field`
-- private instance methods with `_method = args ->`
-- private class variables with `@@_field`
-- private class methods with `@@_method = args ->`
-- private member access from methods declared in the same class
-- private class member access from class methods declared in the same class
-- private constructors with `_init = args ->`
-- private construction from methods declared in the same class
-- `abstract class Name`
-- direct construction checks for abstract classes
-- privacy checks for external object access
-- privacy checks for external class access
-- privacy checks across inheritance boundaries
-- privacy checks across module boundaries
+- `abstract method = args ->`
+- `abstract @@method = args ->`
+- abstract methods only inside abstract classes
+- concrete subclass implementation checks
+- abstract subclass partial implementation
+- abstract method overriding with matching arity
+- `final class Name`
+- final class inheritance checks
 
-## Not Included in v0.9
+## Not Included in v0.10
 
-v0.9 does not include:
+v0.10 does not include:
 
-- protected fields
-- protected methods
-- `public` / `private` keywords
-- per-member annotations
-- friend classes
-- package-private visibility
 - interface declarations
-- abstract methods
+- `implements`
+- implicit interface conformance checks
+- abstract fields
+- abstract constructors
+- final methods
+- final fields
+- sealed classes
+- base classes
 - mixins
 - method overloading
 - operator overloading
 - decorators
 - metaclasses
-- listing methods or fields
-- dynamic method calls
-- monkey patching
+- type annotations
+- generics
 - dictionary member access with `dict.key`
 - package manager
 - native-backed stdlib
 
-## Private Instance Fields
+## Abstract Instance Methods
 
-An instance field whose name starts with `_` is private.
-
-```tya
-class User
-  init = name ->
-    @_name = name
-
-  name = ->
-    @_name
-```
-
-Private instance fields can be read and written only by methods declared in the
-same class.
-
-```tya
-user = User("komagata")
-
-print user.name()
-print user._name
-```
-
-The `user._name` access is an error.
-
-Instance field defaults can also be private.
-
-```tya
-class User
-  _active = true
-
-  active = ->
-    @_active
-```
-
-The field is still private even though the default is declared in the class
-body without `@`.
-
-## Private Instance Methods
-
-An instance method whose name starts with `_` is private.
-
-```tya
-class User
-  init = name ->
-    @name = _normalize_name(name)
-
-  _normalize_name = name ->
-    name
-```
-
-Private instance methods can be called only by methods declared in the same
-class.
-
-```tya
-user = User("komagata")
-print user._normalize_name("tya")
-```
-
-The external method call is an error.
-
-## Private Class Variables
-
-A class variable whose name starts with `_` is private.
-
-```tya
-class User
-  @@_count = 0
-
-  @@count = ->
-    @@_count
-```
-
-Private class variables can be read and written only by methods declared in the
-same class.
-
-```tya
-print User.count()
-print User._count
-```
-
-The `User._count` access is an error.
-
-## Private Class Methods
-
-A class method whose name starts with `_` is private.
-
-```tya
-class User
-  @@build = name ->
-    @@_new_user(name)
-
-  @@_new_user = name ->
-    User(name)
-```
-
-Private class methods can be called only by methods declared in the same class.
-
-```tya
-user = User.build("komagata")
-user = User._new_user("komagata")
-```
-
-The external class method call is an error.
-
-## Private Constructors
-
-`_init` is a private constructor.
-
-```tya
-class User
-  _init = name ->
-    @_name = name
-
-  @@build = name ->
-    User(name)
-```
-
-A class with `_init` cannot be constructed from outside the class.
-
-```tya
-user = User("komagata")
-```
-
-The external constructor call is an error.
-
-Methods declared in the same class may construct the class.
-
-```tya
-user = User.build("komagata")
-```
-
-`init` and `_init` may not both be declared in the same class.
-
-```tya
-class User
-  init = name ->
-    @name = name
-
-  _init = name ->
-    @_name = name
-```
-
-The second constructor declaration is an error.
-
-Subclasses cannot call a parent `_init` with `super(args...)`.
-
-```tya
-class User
-  _init = name ->
-    @_name = name
-
-class Admin extends User
-  init = name ->
-    super(name)
-```
-
-The `super(name)` call is an error because the parent constructor is private.
-
-## Abstract Classes
-
-An abstract class cannot be constructed directly.
+An abstract instance method declares a required instance method without a body.
 
 ```tya
 abstract class Repository
-  init = name ->
-    @name = name
+  abstract find = id ->
+  abstract save = record ->
 ```
 
-Direct construction is an error.
+Only abstract classes may declare abstract methods.
 
 ```tya
-repo = Repository("users")
+class Repository
+  abstract find = id ->
 ```
 
-Subclasses of an abstract class can be constructed when they are not abstract.
+The `abstract find` declaration is an error because `Repository` is not
+abstract.
+
+An abstract method has a name and parameter list. It does not have a method
+body.
+
+## Implementing Abstract Instance Methods
+
+A concrete subclass must implement every inherited abstract instance method.
 
 ```tya
+abstract class Repository
+  abstract find = id ->
+  abstract save = record ->
+
 class UserRepository extends Repository
-
-repo = UserRepository("users")
-```
-
-Abstract classes may define field defaults, instance methods, class variables,
-class methods, private members, and constructors.
-
-v0.9 does not include abstract methods. An abstract class is only a class that
-cannot be directly constructed.
-
-## Inheritance and Private Members
-
-Private members are private to the class that declares them.
-
-A subclass does not access a parent's private instance fields or private
-instance methods directly.
-
-```tya
-class User
-  init = name ->
-    @_name = name
-
-class Admin extends User
-  name = ->
-    @_name
-```
-
-The `@_name` access in `Admin` is an error because `_name` is private to
-`User`.
-
-A subclass does not access a parent's private class variables or private class
-methods directly.
-
-```tya
-class User
-  @@_count = 0
-
-class Admin extends User
-  @@count = ->
-    @@_count
-```
-
-The `@@_count` access in `Admin` is an error because `_count` is private to
-`User`.
-
-Private members are not inherited as callable public API.
-
-```tya
-class User
-  _normalize_name = name ->
-    name
-
-class Admin extends User
-
-admin = Admin()
-print admin._normalize_name("tya")
-```
-
-The method call is an error.
-
-## Overriding and Private Names
-
-A subclass may declare a private member with the same name as a parent private
-member. It is a separate member, not an override.
-
-```tya
-class User
-  _label = ->
+  find = id ->
     "user"
 
-class Admin extends User
-  _label = ->
-    "admin"
+  save = record ->
+    nil
 ```
 
-Public methods may still override public parent methods.
+If a concrete subclass omits an abstract method, it is an error.
 
 ```tya
-class User
-  label = ->
+class BrokenRepository extends Repository
+  find = id ->
     "user"
-
-class Admin extends User
-  label = ->
-    "admin"
 ```
 
-## Private Members and `super`
+`BrokenRepository` is invalid because `save` is not implemented.
 
-`super(args...)` can call only parent public methods.
+The implementation must use the same arity as the abstract method.
 
 ```tya
-class User
-  _label = ->
+class BadRepository extends Repository
+  find = first, second ->
     "user"
+
+  save = record ->
+    nil
+```
+
+The `find` implementation is invalid because its arity differs from the
+abstract method.
+
+## Abstract Subclasses
+
+An abstract subclass may leave inherited abstract methods unimplemented.
+
+```tya
+abstract class ReadOnlyRepository extends Repository
+  find = id ->
+    "record"
+```
+
+`ReadOnlyRepository` is valid because it is abstract. A concrete subclass of
+`ReadOnlyRepository` must still implement `save`.
+
+An abstract subclass may also introduce new abstract methods.
+
+```tya
+abstract class SearchRepository extends Repository
+  abstract search = query ->
+```
+
+## Abstract Class Methods
+
+An abstract class method declares a required class method without a body.
+
+```tya
+abstract class Model
+  abstract @@table_name = ->
+```
+
+A concrete subclass must implement inherited abstract class methods.
+
+```tya
+class User extends Model
+  @@table_name = ->
+    "users"
+```
+
+The implementation must use the same arity as the abstract class method.
+
+Abstract class methods participate in class-level inheritance like normal class
+methods once they are implemented.
+
+## Abstract Methods and `super`
+
+`super(args...)` cannot call an abstract parent method because there is no
+method body to execute.
+
+```tya
+abstract class User
+  abstract label = ->
 
 class Admin extends User
   label = ->
     super()
 ```
 
-The `super()` call is an error because there is no public parent `label`
-method.
+The `super()` call is an error.
 
-There is no syntax for calling a parent private method.
+## Final Classes
 
-`super(args...)` also cannot call a parent `_init`.
-
-## Module Boundaries
-
-Private class members stay private even when the class is exported by a module.
+A final class can be constructed normally but cannot be extended.
 
 ```tya
-# user.tya
-module user
-  class User
-    _normalize_name = name ->
-      name
-
-    @@_count = 0
+final class User
+  name = ""
 ```
+
+Direct construction is valid.
 
 ```tya
-import user
-
-u = user.User("komagata")
-print u._normalize_name("tya")
-print user.User._count
+user = User()
 ```
 
-Both accesses are errors.
+Subclassing is invalid.
+
+```tya
+class Admin extends User
+```
+
+The `Admin` declaration is an error because `User` is final.
+
+## Final and Abstract Modifiers
+
+`abstract` and `final` cannot be used together on the same class.
+
+```tya
+abstract final class User
+```
+
+The declaration is an error.
+
+`final class` may still contain private members, class variables, class
+methods, instance field defaults, and constructors.
+
+```tya
+final class User
+  _name = ""
+
+  init = name ->
+    @_name = name
+```
+
+## Modules
+
+Abstract methods and final classes work inside modules.
+
+```tya
+module repositories
+  abstract class Repository
+    abstract find = id ->
+
+  final class UserRepository extends Repository
+    find = id ->
+      "user"
+```
+
+Module users follow the same construction and inheritance rules.
+
+```tya
+import repositories
+
+repo = repositories.UserRepository()
+```
 
 ## Introspection
 
-v0.9 keeps the small v0.8 introspection surface:
+v0.10 keeps the v0.8 introspection surface:
 
 - `object.class`
 - `object.class_name`
 - `ClassName.name`
 - `ClassName.parent`
 
-These APIs do not expose private member lists because v0.9 does not include
-method or field listing.
-
-## Naming
-
-Private class member names use a leading `_` after the class-member prefix.
-
-```tya
-@_name
-_normalize_name = name ->
-@@_count = 0
-@@_build = name ->
-```
-
-Private constructors use `_init`.
-
-```tya
-_init = name ->
-```
-
-Public class member names keep using snake_case without a leading `_`.
-
-```tya
-@name
-normalize_name = name ->
-@@count = 0
-@@build = name ->
-```
+v0.10 does not add introspection for abstract methods or final classes.
 
 ## Diagnostics
 
-v0.9 implementations should report source-oriented errors for:
+v0.10 implementations should report source-oriented errors for:
 
-- external access to private instance fields
-- external calls to private instance methods
-- external access to private class variables
-- external calls to private class methods
-- subclass direct access to parent private instance fields
-- subclass direct calls to parent private instance methods
-- subclass direct access to parent private class variables
-- subclass direct calls to parent private class methods
-- `super` targeting a private parent method
-- `super` targeting a parent `_init`
-- external construction of a class with `_init`
-- duplicate `init` and `_init` constructors
-- direct construction of an abstract class
-- duplicate private members in the same class namespace
-- duplicate public members in the same class namespace
+- abstract methods declared outside abstract classes
+- abstract methods with bodies
+- concrete classes missing inherited abstract instance methods
+- concrete classes missing inherited abstract class methods
+- abstract method implementation arity mismatch
+- abstract class method implementation arity mismatch
+- `super` targeting an abstract parent method
+- extending a final class
+- declaring a class as both abstract and final
 - dictionary member access with dot syntax

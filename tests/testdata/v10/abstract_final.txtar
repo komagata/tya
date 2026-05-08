@@ -1,0 +1,149 @@
+# v0.10 abstract methods and final classes.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/abstract_final.tya
+stdout 'user:42\nusers\nreadonly:7\nmodule:3\nfinal\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/abstract_in_concrete.tya
+stderr 'abstract method find must be declared inside an abstract class'
+
+! exec go run ./cmd/tya run $WORK/abstract_method_body.tya
+stderr 'abstract methods cannot have bodies'
+
+! exec go run ./cmd/tya run $WORK/missing_instance_method.tya
+stderr 'class BrokenRepository must implement abstract method save'
+
+! exec go run ./cmd/tya run $WORK/bad_instance_arity.tya
+stderr 'implementing abstract method find expects 1 parameters'
+
+! exec go run ./cmd/tya run $WORK/missing_class_method.tya
+stderr 'class BrokenModel must implement abstract class method table_name'
+
+! exec go run ./cmd/tya run $WORK/bad_class_arity.tya
+stderr 'implementing abstract class method table_name expects 0 parameters'
+
+! exec go run ./cmd/tya run $WORK/super_abstract.tya
+stderr 'super cannot call abstract parent method label'
+
+! exec go run ./cmd/tya run $WORK/extend_final.tya
+stderr 'cannot extend final class User'
+
+! exec go run ./cmd/tya run $WORK/abstract_final_class.tya
+stderr 'class cannot be both abstract and final'
+
+exec go run ./cmd/tya version
+stdout '0.10.0\n'
+! stderr .
+
+-- abstract_final.tya --
+abstract class Repository
+  abstract find = id ->
+  abstract save = record ->
+
+abstract class ReadOnlyRepository extends Repository
+  find = id ->
+    "readonly:{id}"
+
+class ConcreteReadOnlyRepository extends ReadOnlyRepository
+  save = record ->
+    nil
+
+class UserRepository extends Repository
+  find = id ->
+    "user:{id}"
+
+  save = record ->
+    nil
+
+abstract class Model
+  abstract @@table_name = ->
+
+class User extends Model
+  @@table_name = ->
+    "users"
+
+final class FinalUser
+  label = ->
+    "final"
+
+repo = UserRepository()
+print repo.find(42)
+repo.save("record")
+print User.table_name()
+read = ConcreteReadOnlyRepository()
+print read.find(7)
+final_user = FinalUser()
+
+import repositories
+module_repo = repositories.UserRepository()
+print module_repo.find(3)
+print final_user.label()
+
+-- repositories.tya --
+module repositories
+  abstract class Repository
+    abstract find = id ->
+
+  final class UserRepository extends Repository
+    find = id ->
+      "module:{id}"
+
+-- abstract_in_concrete.tya --
+class Repository
+  abstract find = id ->
+
+-- abstract_method_body.tya --
+abstract class Repository
+  abstract find = id -> "bad"
+
+-- missing_instance_method.tya --
+abstract class Repository
+  abstract find = id ->
+  abstract save = record ->
+
+class BrokenRepository extends Repository
+  find = id ->
+    "user"
+
+-- bad_instance_arity.tya --
+abstract class Repository
+  abstract find = id ->
+
+class BadRepository extends Repository
+  find = first, second ->
+    "user"
+
+-- missing_class_method.tya --
+abstract class Model
+  abstract @@table_name = ->
+
+class BrokenModel extends Model
+  name = ""
+
+-- bad_class_arity.tya --
+abstract class Model
+  abstract @@table_name = ->
+
+class BadModel extends Model
+  @@table_name = name ->
+    name
+
+-- super_abstract.tya --
+abstract class User
+  abstract label = ->
+
+class Admin extends User
+  label = ->
+    super()
+
+-- extend_final.tya --
+final class User
+  name = ""
+
+class Admin extends User
+  role = "admin"
+
+-- abstract_final_class.tya --
+abstract final class User
+  name = ""

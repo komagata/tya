@@ -24,276 +24,171 @@
       </div>
     </nav>
     <article class="doc-content">
-<h1 id="tya-v0-9-specification">Tya v0.9 Specification</h1>
-<p>This document is the specification for Tya v0.9 after v0.8 class-level inheritance and class introspection.</p>
+<h1 id="tya-v0-10-specification">Tya v0.10 Specification</h1>
+<p>This document is the specification for Tya v0.10 after v0.9 class visibility, private members, private constructors, and abstract classes.</p>
 <h2 id="theme">Theme</h2>
-<p>Tya v0.9 is about class visibility and encapsulation.</p>
-<p>v0.5 through v0.8 make classes useful for state, behavior, inheritance, and basic introspection. v0.9 adds private class members so a class can keep helper state and helper behavior out of its public API.</p>
+<p>Tya v0.10 is about abstract behavior contracts and final classes.</p>
+<p>v0.9 adds abstract classes that cannot be directly constructed. v0.10 adds abstract methods so abstract classes can require subclasses to implement specific behavior. It also adds <code>final class</code> so a class can explicitly opt out of subclassing.</p>
 <h2 id="goals">Goals</h2>
 <ul>
-<li>Add private instance fields.</li>
-<li>Add private instance methods.</li>
-<li>Add private class variables.</li>
-<li>Add private class methods.</li>
-<li>Add private constructors with <code>_init</code>.</li>
-<li>Add abstract classes.</li>
-<li>Keep privacy based on the existing leading <code>_</code> naming convention.</li>
-<li>Keep public class behavior unchanged.</li>
-<li>Leave protected visibility and richer access-control features for later versions.</li>
+<li>Add abstract instance methods.</li>
+<li>Add abstract class methods.</li>
+<li>Require concrete subclasses to implement inherited abstract methods.</li>
+<li>Keep abstract methods body-free.</li>
+<li>Add final classes.</li>
+<li>Keep interfaces and implicit interface conformance for later versions.</li>
 </ul>
-<h2 id="included-in-v0-9">Included in v0.9</h2>
-<p>v0.9 includes all v0.8 class behavior and adds:</p>
+<h2 id="included-in-v0-10">Included in v0.10</h2>
+<p>v0.10 includes all v0.9 class behavior and adds:</p>
 <ul>
-<li>private instance fields with <code>@_field</code></li>
-<li>private instance methods with <code>_method = args -&gt;</code></li>
-<li>private class variables with <code>@@_field</code></li>
-<li>private class methods with <code>@@_method = args -&gt;</code></li>
-<li>private member access from methods declared in the same class</li>
-<li>private class member access from class methods declared in the same class</li>
-<li>private constructors with <code>_init = args -&gt;</code></li>
-<li>private construction from methods declared in the same class</li>
-<li><code>abstract class Name</code></li>
-<li>direct construction checks for abstract classes</li>
-<li>privacy checks for external object access</li>
-<li>privacy checks for external class access</li>
-<li>privacy checks across inheritance boundaries</li>
-<li>privacy checks across module boundaries</li>
+<li><code>abstract method = args -&gt;</code></li>
+<li><code>abstract @@method = args -&gt;</code></li>
+<li>abstract methods only inside abstract classes</li>
+<li>concrete subclass implementation checks</li>
+<li>abstract subclass partial implementation</li>
+<li>abstract method overriding with matching arity</li>
+<li><code>final class Name</code></li>
+<li>final class inheritance checks</li>
 </ul>
-<h2 id="not-included-in-v0-9">Not Included in v0.9</h2>
-<p>v0.9 does not include:</p>
+<h2 id="not-included-in-v0-10">Not Included in v0.10</h2>
+<p>v0.10 does not include:</p>
 <ul>
-<li>protected fields</li>
-<li>protected methods</li>
-<li><code>public</code> / <code>private</code> keywords</li>
-<li>per-member annotations</li>
-<li>friend classes</li>
-<li>package-private visibility</li>
 <li>interface declarations</li>
-<li>abstract methods</li>
+<li><code>implements</code></li>
+<li>implicit interface conformance checks</li>
+<li>abstract fields</li>
+<li>abstract constructors</li>
+<li>final methods</li>
+<li>final fields</li>
+<li>sealed classes</li>
+<li>base classes</li>
 <li>mixins</li>
 <li>method overloading</li>
 <li>operator overloading</li>
 <li>decorators</li>
 <li>metaclasses</li>
-<li>listing methods or fields</li>
-<li>dynamic method calls</li>
-<li>monkey patching</li>
+<li>type annotations</li>
+<li>generics</li>
 <li>dictionary member access with <code>dict.key</code></li>
 <li>package manager</li>
 <li>native-backed stdlib</li>
 </ul>
-<h2 id="private-instance-fields">Private Instance Fields</h2>
-<p>An instance field whose name starts with <code>_</code> is private.</p>
-<pre><code class="language-tya">class User
-  init = name -&gt;
-    @_name = name
-
-  name = -&gt;
-    @_name</code></pre>
-<p>Private instance fields can be read and written only by methods declared in the same class.</p>
-<pre><code class="language-tya">user = User(&quot;komagata&quot;)
-
-print user.name()
-print user._name</code></pre>
-<p>The <code>user._name</code> access is an error.</p>
-<p>Instance field defaults can also be private.</p>
-<pre><code class="language-tya">class User
-  _active = true
-
-  active = -&gt;
-    @_active</code></pre>
-<p>The field is still private even though the default is declared in the class body without <code>@</code>.</p>
-<h2 id="private-instance-methods">Private Instance Methods</h2>
-<p>An instance method whose name starts with <code>_</code> is private.</p>
-<pre><code class="language-tya">class User
-  init = name -&gt;
-    @name = _normalize_name(name)
-
-  _normalize_name = name -&gt;
-    name</code></pre>
-<p>Private instance methods can be called only by methods declared in the same class.</p>
-<pre><code class="language-tya">user = User(&quot;komagata&quot;)
-print user._normalize_name(&quot;tya&quot;)</code></pre>
-<p>The external method call is an error.</p>
-<h2 id="private-class-variables">Private Class Variables</h2>
-<p>A class variable whose name starts with <code>_</code> is private.</p>
-<pre><code class="language-tya">class User
-  @@_count = 0
-
-  @@count = -&gt;
-    @@_count</code></pre>
-<p>Private class variables can be read and written only by methods declared in the same class.</p>
-<pre><code class="language-tya">print User.count()
-print User._count</code></pre>
-<p>The <code>User._count</code> access is an error.</p>
-<h2 id="private-class-methods">Private Class Methods</h2>
-<p>A class method whose name starts with <code>_</code> is private.</p>
-<pre><code class="language-tya">class User
-  @@build = name -&gt;
-    @@_new_user(name)
-
-  @@_new_user = name -&gt;
-    User(name)</code></pre>
-<p>Private class methods can be called only by methods declared in the same class.</p>
-<pre><code class="language-tya">user = User.build(&quot;komagata&quot;)
-user = User._new_user(&quot;komagata&quot;)</code></pre>
-<p>The external class method call is an error.</p>
-<h2 id="private-constructors">Private Constructors</h2>
-<p><code>_init</code> is a private constructor.</p>
-<pre><code class="language-tya">class User
-  _init = name -&gt;
-    @_name = name
-
-  @@build = name -&gt;
-    User(name)</code></pre>
-<p>A class with <code>_init</code> cannot be constructed from outside the class.</p>
-<pre><code class="language-tya">user = User(&quot;komagata&quot;)</code></pre>
-<p>The external constructor call is an error.</p>
-<p>Methods declared in the same class may construct the class.</p>
-<pre><code class="language-tya">user = User.build(&quot;komagata&quot;)</code></pre>
-<p><code>init</code> and <code>_init</code> may not both be declared in the same class.</p>
-<pre><code class="language-tya">class User
-  init = name -&gt;
-    @name = name
-
-  _init = name -&gt;
-    @_name = name</code></pre>
-<p>The second constructor declaration is an error.</p>
-<p>Subclasses cannot call a parent <code>_init</code> with <code>super(args...)</code>.</p>
-<pre><code class="language-tya">class User
-  _init = name -&gt;
-    @_name = name
-
-class Admin extends User
-  init = name -&gt;
-    super(name)</code></pre>
-<p>The <code>super(name)</code> call is an error because the parent constructor is private.</p>
-<h2 id="abstract-classes">Abstract Classes</h2>
-<p>An abstract class cannot be constructed directly.</p>
+<h2 id="abstract-instance-methods">Abstract Instance Methods</h2>
+<p>An abstract instance method declares a required instance method without a body.</p>
 <pre><code class="language-tya">abstract class Repository
-  init = name -&gt;
-    @name = name</code></pre>
-<p>Direct construction is an error.</p>
-<pre><code class="language-tya">repo = Repository(&quot;users&quot;)</code></pre>
-<p>Subclasses of an abstract class can be constructed when they are not abstract.</p>
-<pre><code class="language-tya">class UserRepository extends Repository
+  abstract find = id -&gt;
+  abstract save = record -&gt;</code></pre>
+<p>Only abstract classes may declare abstract methods.</p>
+<pre><code class="language-tya">class Repository
+  abstract find = id -&gt;</code></pre>
+<p>The <code>abstract find</code> declaration is an error because <code>Repository</code> is not abstract.</p>
+<p>An abstract method has a name and parameter list. It does not have a method body.</p>
+<h2 id="implementing-abstract-instance-methods">Implementing Abstract Instance Methods</h2>
+<p>A concrete subclass must implement every inherited abstract instance method.</p>
+<pre><code class="language-tya">abstract class Repository
+  abstract find = id -&gt;
+  abstract save = record -&gt;
 
-repo = UserRepository(&quot;users&quot;)</code></pre>
-<p>Abstract classes may define field defaults, instance methods, class variables, class methods, private members, and constructors.</p>
-<p>v0.9 does not include abstract methods. An abstract class is only a class that cannot be directly constructed.</p>
-<h2 id="inheritance-and-private-members">Inheritance and Private Members</h2>
-<p>Private members are private to the class that declares them.</p>
-<p>A subclass does not access a parent's private instance fields or private instance methods directly.</p>
-<pre><code class="language-tya">class User
-  init = name -&gt;
-    @_name = name
-
-class Admin extends User
-  name = -&gt;
-    @_name</code></pre>
-<p>The <code>@_name</code> access in <code>Admin</code> is an error because <code>_name</code> is private to <code>User</code>.</p>
-<p>A subclass does not access a parent's private class variables or private class methods directly.</p>
-<pre><code class="language-tya">class User
-  @@_count = 0
-
-class Admin extends User
-  @@count = -&gt;
-    @@_count</code></pre>
-<p>The <code>@@_count</code> access in <code>Admin</code> is an error because <code>_count</code> is private to <code>User</code>.</p>
-<p>Private members are not inherited as callable public API.</p>
-<pre><code class="language-tya">class User
-  _normalize_name = name -&gt;
-    name
-
-class Admin extends User
-
-admin = Admin()
-print admin._normalize_name(&quot;tya&quot;)</code></pre>
-<p>The method call is an error.</p>
-<h2 id="overriding-and-private-names">Overriding and Private Names</h2>
-<p>A subclass may declare a private member with the same name as a parent private member. It is a separate member, not an override.</p>
-<pre><code class="language-tya">class User
-  _label = -&gt;
+class UserRepository extends Repository
+  find = id -&gt;
     &quot;user&quot;
 
-class Admin extends User
-  _label = -&gt;
-    &quot;admin&quot;</code></pre>
-<p>Public methods may still override public parent methods.</p>
-<pre><code class="language-tya">class User
-  label = -&gt;
+  save = record -&gt;
+    nil</code></pre>
+<p>If a concrete subclass omits an abstract method, it is an error.</p>
+<pre><code class="language-tya">class BrokenRepository extends Repository
+  find = id -&gt;
+    &quot;user&quot;</code></pre>
+<p><code>BrokenRepository</code> is invalid because <code>save</code> is not implemented.</p>
+<p>The implementation must use the same arity as the abstract method.</p>
+<pre><code class="language-tya">class BadRepository extends Repository
+  find = first, second -&gt;
     &quot;user&quot;
 
-class Admin extends User
-  label = -&gt;
-    &quot;admin&quot;</code></pre>
-<h2 id="private-members-and-super">Private Members and <code>super</code></h2>
-<p><code>super(args...)</code> can call only parent public methods.</p>
-<pre><code class="language-tya">class User
-  _label = -&gt;
-    &quot;user&quot;
+  save = record -&gt;
+    nil</code></pre>
+<p>The <code>find</code> implementation is invalid because its arity differs from the abstract method.</p>
+<h2 id="abstract-subclasses">Abstract Subclasses</h2>
+<p>An abstract subclass may leave inherited abstract methods unimplemented.</p>
+<pre><code class="language-tya">abstract class ReadOnlyRepository extends Repository
+  find = id -&gt;
+    &quot;record&quot;</code></pre>
+<p><code>ReadOnlyRepository</code> is valid because it is abstract. A concrete subclass of <code>ReadOnlyRepository</code> must still implement <code>save</code>.</p>
+<p>An abstract subclass may also introduce new abstract methods.</p>
+<pre><code class="language-tya">abstract class SearchRepository extends Repository
+  abstract search = query -&gt;</code></pre>
+<h2 id="abstract-class-methods">Abstract Class Methods</h2>
+<p>An abstract class method declares a required class method without a body.</p>
+<pre><code class="language-tya">abstract class Model
+  abstract @@table_name = -&gt;</code></pre>
+<p>A concrete subclass must implement inherited abstract class methods.</p>
+<pre><code class="language-tya">class User extends Model
+  @@table_name = -&gt;
+    &quot;users&quot;</code></pre>
+<p>The implementation must use the same arity as the abstract class method.</p>
+<p>Abstract class methods participate in class-level inheritance like normal class methods once they are implemented.</p>
+<h2 id="abstract-methods-and-super">Abstract Methods and <code>super</code></h2>
+<p><code>super(args...)</code> cannot call an abstract parent method because there is no method body to execute.</p>
+<pre><code class="language-tya">abstract class User
+  abstract label = -&gt;
 
 class Admin extends User
   label = -&gt;
     super()</code></pre>
-<p>The <code>super()</code> call is an error because there is no public parent <code>label</code> method.</p>
-<p>There is no syntax for calling a parent private method.</p>
-<p><code>super(args...)</code> also cannot call a parent <code>_init</code>.</p>
-<h2 id="module-boundaries">Module Boundaries</h2>
-<p>Private class members stay private even when the class is exported by a module.</p>
-<pre><code class="language-tya"># user.tya
-module user
-  class User
-    _normalize_name = name -&gt;
-      name
+<p>The <code>super()</code> call is an error.</p>
+<h2 id="final-classes">Final Classes</h2>
+<p>A final class can be constructed normally but cannot be extended.</p>
+<pre><code class="language-tya">final class User
+  name = &quot;&quot;</code></pre>
+<p>Direct construction is valid.</p>
+<pre><code class="language-tya">user = User()</code></pre>
+<p>Subclassing is invalid.</p>
+<pre><code class="language-tya">class Admin extends User</code></pre>
+<p>The <code>Admin</code> declaration is an error because <code>User</code> is final.</p>
+<h2 id="final-and-abstract-modifiers">Final and Abstract Modifiers</h2>
+<p><code>abstract</code> and <code>final</code> cannot be used together on the same class.</p>
+<pre><code class="language-tya">abstract final class User</code></pre>
+<p>The declaration is an error.</p>
+<p><code>final class</code> may still contain private members, class variables, class methods, instance field defaults, and constructors.</p>
+<pre><code class="language-tya">final class User
+  _name = &quot;&quot;
 
-    @@_count = 0</code></pre>
-<pre><code class="language-tya">import user
+  init = name -&gt;
+    @_name = name</code></pre>
+<h2 id="modules">Modules</h2>
+<p>Abstract methods and final classes work inside modules.</p>
+<pre><code class="language-tya">module repositories
+  abstract class Repository
+    abstract find = id -&gt;
 
-u = user.User(&quot;komagata&quot;)
-print u._normalize_name(&quot;tya&quot;)
-print user.User._count</code></pre>
-<p>Both accesses are errors.</p>
+  final class UserRepository extends Repository
+    find = id -&gt;
+      &quot;user&quot;</code></pre>
+<p>Module users follow the same construction and inheritance rules.</p>
+<pre><code class="language-tya">import repositories
+
+repo = repositories.UserRepository()</code></pre>
 <h2 id="introspection">Introspection</h2>
-<p>v0.9 keeps the small v0.8 introspection surface:</p>
+<p>v0.10 keeps the v0.8 introspection surface:</p>
 <ul>
 <li><code>object.class</code></li>
 <li><code>object.class_name</code></li>
 <li><code>ClassName.name</code></li>
 <li><code>ClassName.parent</code></li>
 </ul>
-<p>These APIs do not expose private member lists because v0.9 does not include method or field listing.</p>
-<h2 id="naming">Naming</h2>
-<p>Private class member names use a leading <code>_</code> after the class-member prefix.</p>
-<pre><code class="language-tya">@_name
-_normalize_name = name -&gt;
-@@_count = 0
-@@_build = name -&gt;</code></pre>
-<p>Private constructors use <code>_init</code>.</p>
-<pre><code class="language-tya">_init = name -&gt;</code></pre>
-<p>Public class member names keep using snake_case without a leading <code>_</code>.</p>
-<pre><code class="language-tya">@name
-normalize_name = name -&gt;
-@@count = 0
-@@build = name -&gt;</code></pre>
+<p>v0.10 does not add introspection for abstract methods or final classes.</p>
 <h2 id="diagnostics">Diagnostics</h2>
-<p>v0.9 implementations should report source-oriented errors for:</p>
+<p>v0.10 implementations should report source-oriented errors for:</p>
 <ul>
-<li>external access to private instance fields</li>
-<li>external calls to private instance methods</li>
-<li>external access to private class variables</li>
-<li>external calls to private class methods</li>
-<li>subclass direct access to parent private instance fields</li>
-<li>subclass direct calls to parent private instance methods</li>
-<li>subclass direct access to parent private class variables</li>
-<li>subclass direct calls to parent private class methods</li>
-<li><code>super</code> targeting a private parent method</li>
-<li><code>super</code> targeting a parent <code>_init</code></li>
-<li>external construction of a class with <code>_init</code></li>
-<li>duplicate <code>init</code> and <code>_init</code> constructors</li>
-<li>direct construction of an abstract class</li>
-<li>duplicate private members in the same class namespace</li>
-<li>duplicate public members in the same class namespace</li>
+<li>abstract methods declared outside abstract classes</li>
+<li>abstract methods with bodies</li>
+<li>concrete classes missing inherited abstract instance methods</li>
+<li>concrete classes missing inherited abstract class methods</li>
+<li>abstract method implementation arity mismatch</li>
+<li>abstract class method implementation arity mismatch</li>
+<li><code>super</code> targeting an abstract parent method</li>
+<li>extending a final class</li>
+<li>declaring a class as both abstract and final</li>
 <li>dictionary member access with dot syntax</li>
 </ul>
     </article>

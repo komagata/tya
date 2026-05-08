@@ -343,7 +343,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.9 private members, `_init`, and abstract classes.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.10 abstract methods and final classes
+- [x] Ship v0.10 abstract methods and final classes
   - [x] Define v0.10 abstract method and final class scope
     - [x] Add `docs/v0.10/SPEC.md`.
     - [x] Specify `abstract method = args ->`.
@@ -351,25 +351,52 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Specify concrete subclass implementation checks.
     - [x] Specify `final class Name`.
     - [x] Keep interfaces, `implements`, abstract fields, final methods, sealed classes, base classes, type annotations, and generics out of v0.10.
-  - [ ] Add abstract method parsing and checking
-    - [ ] Parse abstract instance method declarations without bodies.
-    - [ ] Parse abstract class method declarations without bodies.
-    - [ ] Reject abstract methods outside abstract classes.
-    - [ ] Reject abstract methods with bodies.
-  - [ ] Add abstract implementation checks
-    - [ ] Require concrete subclasses to implement inherited abstract instance methods.
-    - [ ] Require concrete subclasses to implement inherited abstract class methods.
-    - [ ] Allow abstract subclasses to leave abstract methods unimplemented.
-    - [ ] Check implementation arity against abstract method arity.
-  - [ ] Add final class checks
-    - [ ] Parse `final class Name`.
-    - [ ] Reject extending final classes.
-    - [ ] Reject classes declared as both abstract and final.
-  - [ ] Keep v0.10 documentation and tests aligned
-    - [ ] Update latest docs when v0.10 behavior is implemented.
-    - [ ] Keep `docs/v0.10/` aligned with the v0.10 minor specification.
+  - [x] Add abstract method parsing and checking
+    - [x] Parse abstract instance method declarations without bodies.
+    - [x] Parse abstract class method declarations without bodies.
+    - [x] Reject abstract methods outside abstract classes.
+    - [x] Reject abstract methods with bodies.
+  - [x] Add abstract implementation checks
+    - [x] Require concrete subclasses to implement inherited abstract instance methods.
+    - [x] Require concrete subclasses to implement inherited abstract class methods.
+    - [x] Allow abstract subclasses to leave abstract methods unimplemented.
+    - [x] Check implementation arity against abstract method arity.
+  - [x] Add final class checks
+    - [x] Parse `final class Name`.
+    - [x] Reject extending final classes.
+    - [x] Reject classes declared as both abstract and final.
+  - [x] Keep v0.10 documentation and tests aligned
+    - [x] Update latest docs when v0.10 behavior is implemented.
+    - [x] Keep `docs/v0.10/` aligned with the v0.10 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.10 abstract methods and final classes.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.11 explicit interfaces
+  - [x] Define v0.11 explicit interface scope
+    - [x] Add `docs/v0.11/SPEC.md`.
+    - [x] Specify `interface Name`.
+    - [x] Specify `class Name implements InterfaceName`.
+    - [x] Specify multiple interfaces.
+    - [x] Specify `extends` with `implements`.
+    - [x] Specify concrete and abstract class implementation checks.
+    - [x] Keep implicit interfaces, class-as-interface conformance, interface fields, interface class methods, interface inheritance, default interface methods, type annotations, and generics out of v0.11.
+  - [ ] Add interface parsing and checking
+    - [ ] Parse interface declarations.
+    - [ ] Parse body-free interface method requirements.
+    - [ ] Reject invalid members inside interface bodies.
+    - [ ] Parse `implements` lists.
+    - [ ] Reject `implements` targets that are not interfaces.
+  - [ ] Add interface implementation checks
+    - [ ] Require concrete classes to implement required interface methods.
+    - [ ] Allow inherited instance methods to satisfy interface requirements.
+    - [ ] Allow abstract classes to leave interface methods unimplemented.
+    - [ ] Check implementation arity against interface method arity.
+    - [ ] Reject conflicting interface method arity requirements.
+  - [ ] Keep v0.11 documentation and tests aligned
+    - [ ] Update latest docs when v0.11 behavior is implemented.
+    - [ ] Keep `docs/v0.11/` aligned with the v0.11 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, and negative tests for v0.10 abstract methods and final classes.
+    - [ ] Add compiler, runtime, module, and negative tests for v0.11 interfaces.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference

@@ -46,13 +46,7 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		}
 		return p.moduleDecl()
 	}
-	if p.at(token.IDENT) && p.peek().Lexeme == "abstract" && p.peekN(1).Lexeme == "class" {
-		if p.blockDepth != 0 {
-			return nil, p.err("class must be top-level")
-		}
-		return p.classDecl()
-	}
-	if p.at(token.IDENT) && p.peek().Lexeme == "class" {
+	if p.startsClassDecl() {
 		if p.blockDepth != 0 {
 			return nil, p.err("class must be top-level")
 		}
@@ -140,16 +134,7 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 	decl := &ast.ModuleDecl{Name: name.Lexeme, NameTok: name}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
-		if p.at(token.IDENT) && p.peek().Lexeme == "abstract" && p.peekN(1).Lexeme == "class" {
-			cls, err := p.classDecl()
-			if err != nil {
-				return nil, err
-			}
-			decl.Classes = append(decl.Classes, cls.(*ast.ClassDecl))
-			p.skipNewlines()
-			continue
-		}
-		if p.at(token.IDENT) && p.peek().Lexeme == "class" {
+		if p.startsClassDecl() {
 			cls, err := p.classDecl()
 			if err != nil {
 				return nil, err
@@ -180,11 +165,18 @@ func (p *Parser) moduleDecl() (ast.Stmt, error) {
 
 func (p *Parser) classDecl() (ast.Stmt, error) {
 	abstract := false
-	if p.at(token.IDENT) && p.peek().Lexeme == "abstract" {
-		abstract = true
+	final := false
+	for p.at(token.IDENT) && (p.peek().Lexeme == "abstract" || p.peek().Lexeme == "final") {
+		if p.peek().Lexeme == "abstract" {
+			abstract = true
+		} else {
+			final = true
+		}
 		p.next()
 	}
-	p.next()
+	if !p.matchWord("class") {
+		return nil, p.err("expected class")
+	}
 	name, err := p.expectName("expected class name")
 	if err != nil {
 		return nil, err
@@ -209,9 +201,14 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		p.classDepth--
 		p.blockDepth--
 	}()
-	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, Abstract: abstract}
+	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, Abstract: abstract, Final: final}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		isAbstractMethod := false
+		if p.at(token.IDENT) && p.peek().Lexeme == "abstract" {
+			isAbstractMethod = true
+			p.next()
+		}
 		isClassMember := p.match(token.AT)
 		if isClassMember {
 			if !p.match(token.AT) {
@@ -224,6 +221,15 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		}
 		if !p.match(token.ASSIGN) {
 			return nil, p.err("expected '=' after class member name")
+		}
+		if isAbstractMethod {
+			params, paramToks, err := p.abstractMethodParams()
+			if err != nil {
+				return nil, err
+			}
+			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: &ast.FuncLit{Params: params, ParamToks: paramToks}, Class: isClassMember, Abstract: true})
+			p.skipNewlines()
+			continue
 		}
 		value, err := p.exprLine()
 		if err != nil {
@@ -242,6 +248,60 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		return nil, p.err("expected dedent after class")
 	}
 	return decl, nil
+}
+
+func (p *Parser) startsClassDecl() bool {
+	if !p.at(token.IDENT) {
+		return false
+	}
+	if p.peek().Lexeme == "class" {
+		return true
+	}
+	if (p.peek().Lexeme == "abstract" || p.peek().Lexeme == "final") && p.peekN(1).Lexeme == "class" {
+		return true
+	}
+	if p.peek().Lexeme == "abstract" && p.peekN(1).Lexeme == "final" && p.peekN(2).Lexeme == "class" {
+		return true
+	}
+	if p.peek().Lexeme == "final" && p.peekN(1).Lexeme == "abstract" && p.peekN(2).Lexeme == "class" {
+		return true
+	}
+	return false
+}
+
+func (p *Parser) abstractMethodParams() ([]string, []token.Token, error) {
+	var params []string
+	var paramToks []token.Token
+	if p.match(token.ARROW) {
+		if p.startsExpr() {
+			return nil, nil, p.err("abstract methods cannot have bodies")
+		}
+		if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
+			return nil, nil, p.err("abstract methods cannot have bodies")
+		}
+		return params, paramToks, nil
+	}
+	for {
+		param, err := p.expectName("expected abstract method parameter")
+		if err != nil {
+			return nil, nil, err
+		}
+		params = append(params, param.Lexeme)
+		paramToks = append(paramToks, param)
+		if !p.match(token.COMMA) {
+			break
+		}
+	}
+	if !p.match(token.ARROW) {
+		return nil, nil, p.err("expected '->' after abstract method parameters")
+	}
+	if p.startsExpr() {
+		return nil, nil, p.err("abstract methods cannot have bodies")
+	}
+	if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
+		return nil, nil, p.err("abstract methods cannot have bodies")
+	}
+	return params, paramToks, nil
 }
 
 func (p *Parser) classRef() (*ast.ClassRef, error) {

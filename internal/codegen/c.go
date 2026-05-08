@@ -602,6 +602,9 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 	parentKey := g.parentKey(name, class)
 	for i := range class.Methods {
 		method := &class.Methods[i]
+		if method.Abstract {
+			continue
+		}
 		prevClass, prevMethod, prevSuper := g.className, g.methodName, g.superClass
 		g.className, g.methodName, g.superClass = name, method.Name, parentKey
 		methodKind := "instance"
@@ -643,7 +646,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote(field.Name), value))
 	}
 	for _, method := range class.Methods {
-		if method.Class || method.Name == "init" || method.Name == "_init" || !strings.HasPrefix(method.Name, "_") {
+		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || !strings.HasPrefix(method.Name, "_") {
 			continue
 		}
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
@@ -663,7 +666,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		g.emitParentMethods(&out, parentKey, class)
 	}
 	for _, method := range class.Methods {
-		if method.Class || method.Name == "init" || method.Name == "_init" {
+		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" {
 			continue
 		}
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
@@ -683,7 +686,7 @@ func (g *cgen) emitClassMembers(target string, name string, class *ast.ClassDecl
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote(variable.Name), value))
 	}
 	for _, method := range class.Methods {
-		if !method.Class {
+		if method.Abstract || !method.Class {
 			continue
 		}
 		sym := g.classMethods[name+"."+method.Name]
@@ -761,7 +764,7 @@ func (g *cgen) emitParentMethods(out *strings.Builder, parentKey string, class *
 		}
 	}
 	for _, method := range parent.Methods {
-		if method.Class || method.Name == "init" || method.Name == "_init" || strings.HasPrefix(method.Name, "_") || overrides[method.Name] {
+		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || strings.HasPrefix(method.Name, "_") || overrides[method.Name] {
 			continue
 		}
 		sym := g.classMethods[g.cClassName(parentKey)+"."+method.Name]

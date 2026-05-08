@@ -82,11 +82,14 @@ type classInfo struct {
 	name                 string
 	parent               string
 	abstract             bool
+	final                bool
 	hasInit              bool
 	initArity            int
 	privateInit          bool
 	methods              map[string]int
 	classMethods         map[string]int
+	abstractMethods      map[string]int
+	abstractClassMethods map[string]int
 	privateFields        map[string]bool
 	privateMethods       map[string]bool
 	privateClassMembers  map[string]bool
@@ -309,11 +312,19 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
 	key := classKey(module, class)
-	info := classInfo{name: key, abstract: class.Abstract, methods: map[string]int{}, classMethods: map[string]int{}, privateFields: map[string]bool{}, privateMethods: map[string]bool{}, privateClassMembers: map[string]bool{}, privateClassMethods: map[string]bool{}, privateFieldAssigned: map[string]bool{}}
+	info := newClassInfo(key, class)
 	if class.Parent != nil {
 		info.parent = refKey(class.Parent, module, scope)
 	}
 	for _, method := range class.Methods {
+		if method.Abstract {
+			if method.Class {
+				info.abstractClassMethods[method.Name] = len(method.Func.Params)
+			} else {
+				info.abstractMethods[method.Name] = len(method.Func.Params)
+			}
+			continue
+		}
 		if method.Class {
 			info.classMethods[method.Name] = len(method.Func.Params)
 			if isPrivateName(method.Name) {
@@ -346,11 +357,19 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
 	key := classKey("", class)
-	info := classInfo{name: key, abstract: class.Abstract, methods: map[string]int{}, classMethods: map[string]int{}, privateFields: map[string]bool{}, privateMethods: map[string]bool{}, privateClassMembers: map[string]bool{}, privateClassMethods: map[string]bool{}, privateFieldAssigned: map[string]bool{}}
+	info := newClassInfo(key, class)
 	if class.Parent != nil {
 		info.parent = refKey(class.Parent, "", scope)
 	}
 	for _, method := range class.Methods {
+		if method.Abstract {
+			if method.Class {
+				info.abstractClassMethods[method.Name] = len(method.Func.Params)
+			} else {
+				info.abstractMethods[method.Name] = len(method.Func.Params)
+			}
+			continue
+		}
 		if method.Class {
 			info.classMethods[method.Name] = len(method.Func.Params)
 			if isPrivateName(method.Name) {
@@ -376,6 +395,23 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 	scope.define(class.Name, kindClass)
 	scope.classes[key] = info
 	return nil
+}
+
+func newClassInfo(key string, class *ast.ClassDecl) classInfo {
+	return classInfo{
+		name:                 key,
+		abstract:             class.Abstract,
+		final:                class.Final,
+		methods:              map[string]int{},
+		classMethods:         map[string]int{},
+		abstractMethods:      map[string]int{},
+		abstractClassMethods: map[string]int{},
+		privateFields:        map[string]bool{},
+		privateMethods:       map[string]bool{},
+		privateClassMembers:  map[string]bool{},
+		privateClassMethods:  map[string]bool{},
+		privateFieldAssigned: map[string]bool{},
+	}
 }
 
 func collectPrivateClassMembers(info *classInfo, class *ast.ClassDecl) {
@@ -609,6 +645,9 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 					return fmt.Errorf("%d:%d: super init expects %d arguments", super.Tok.Line, super.Tok.Col, arity)
 				}
 			} else {
+				if _, ok := inheritedAbstractMethodArity(parent, scope.currentMethod, scope); ok {
+					return fmt.Errorf("%d:%d: super cannot call abstract parent method %s", super.Tok.Line, super.Tok.Col, scope.currentMethod)
+				}
 				arity, ok := inheritedMethodArity(parent, scope.currentMethod, scope)
 				if !ok {
 					return fmt.Errorf("%d:%d: super has no parent method %s", super.Tok.Line, super.Tok.Col, scope.currentMethod)
@@ -664,11 +703,17 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 	if !classNameRE.MatchString(class.Name) {
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
+	if class.Abstract && class.Final {
+		return fmt.Errorf("%d:%d: class cannot be both abstract and final", class.NameTok.Line, class.NameTok.Col)
+	}
 	key := classKey(module, class)
 	if class.Parent != nil {
 		parentKey := refKey(class.Parent, module, scope)
 		if _, ok := scope.classes[parentKey]; !ok {
 			return fmt.Errorf("%d:%d: unknown parent class %s", class.Parent.Tok.Line, class.Parent.Tok.Col, parentName(class.Parent))
+		}
+		if scope.classes[parentKey].final {
+			return fmt.Errorf("%d:%d: cannot extend final class %s", class.Parent.Tok.Line, class.Parent.Tok.Col, parentName(class.Parent))
 		}
 		if hasInheritanceCycle(key, scope) {
 			return fmt.Errorf("%d:%d: inheritance cycle involving %s", class.NameTok.Line, class.NameTok.Col, class.Name)
@@ -708,6 +753,9 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		if !valueNameRE.MatchString(method.Name) {
 			return fmt.Errorf("%d:%d: invalid method name %s", method.Tok.Line, method.Tok.Col, method.Name)
 		}
+		if method.Abstract && !class.Abstract {
+			return fmt.Errorf("%d:%d: abstract method %s must be declared inside an abstract class", method.Tok.Line, method.Tok.Col, method.Name)
+		}
 		if method.Class {
 			if classMembers[method.Name] {
 				return fmt.Errorf("%d:%d: duplicate class member %s", method.Tok.Line, method.Tok.Col, method.Name)
@@ -732,6 +780,9 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		child.inClassBody = true
 		child.currentClass = key
 		child.currentMethod = method.Name
+		if method.Abstract {
+			continue
+		}
 		if method.Class {
 			child.inClassMethod = true
 		} else {
@@ -749,6 +800,8 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 					}
 				} else if arity, ok := inheritedMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
 					return fmt.Errorf("%d:%d: overriding method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+				} else if arity, ok := inheritedAbstractMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
+					return fmt.Errorf("%d:%d: implementing abstract method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
 				}
 			}
 		} else {
@@ -756,9 +809,14 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			if parent != "" {
 				if arity, ok := inheritedClassMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
 					return fmt.Errorf("%d:%d: overriding class method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+				} else if arity, ok := inheritedAbstractClassMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
+					return fmt.Errorf("%d:%d: implementing abstract class method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
 				}
 			}
 		}
+	}
+	if err := checkAbstractImplementations(class, scope, key); err != nil {
+		return err
 	}
 	return nil
 }
@@ -910,6 +968,84 @@ func inheritedClassMethodArity(className string, method string, scope *scope) (i
 		className = info.parent
 	}
 	return 0, false
+}
+
+func inheritedAbstractMethodArity(className string, method string, scope *scope) (int, bool) {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return 0, false
+		}
+		if _, ok := info.methods[method]; ok {
+			return 0, false
+		}
+		if arity, ok := info.abstractMethods[method]; ok {
+			return arity, true
+		}
+		className = info.parent
+	}
+	return 0, false
+}
+
+func inheritedAbstractClassMethodArity(className string, method string, scope *scope) (int, bool) {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return 0, false
+		}
+		if _, ok := info.classMethods[method]; ok {
+			return 0, false
+		}
+		if arity, ok := info.abstractClassMethods[method]; ok {
+			return arity, true
+		}
+		className = info.parent
+	}
+	return 0, false
+}
+
+func checkAbstractImplementations(class *ast.ClassDecl, scope *scope, key string) error {
+	instanceReqs, classReqs := effectiveAbstractRequirements(key, scope)
+	if class.Abstract {
+		return nil
+	}
+	if len(instanceReqs) > 0 {
+		for name := range instanceReqs {
+			return fmt.Errorf("%d:%d: class %s must implement abstract method %s", class.NameTok.Line, class.NameTok.Col, class.Name, name)
+		}
+	}
+	if len(classReqs) > 0 {
+		for name := range classReqs {
+			return fmt.Errorf("%d:%d: class %s must implement abstract class method %s", class.NameTok.Line, class.NameTok.Col, class.Name, name)
+		}
+	}
+	return nil
+}
+
+func effectiveAbstractRequirements(className string, scope *scope) (map[string]int, map[string]int) {
+	chain := []classInfo{}
+	for className != "" {
+		info := scope.classes[className]
+		chain = append([]classInfo{info}, chain...)
+		className = info.parent
+	}
+	instanceReqs := map[string]int{}
+	classReqs := map[string]int{}
+	for _, info := range chain {
+		for name, arity := range info.abstractMethods {
+			instanceReqs[name] = arity
+		}
+		for name := range info.methods {
+			delete(instanceReqs, name)
+		}
+		for name, arity := range info.abstractClassMethods {
+			classReqs[name] = arity
+		}
+		for name := range info.classMethods {
+			delete(classReqs, name)
+		}
+	}
+	return instanceReqs, classReqs
 }
 
 func funcCallsSuper(fn *ast.FuncLit) bool {

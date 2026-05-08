@@ -9,8 +9,8 @@
 Tya is a small indentation-based dynamic language with CoffeeScript feel and
 Golang practicality.
 
-Tya v0.9 is a compile-to-C language. The reference implementation contains a Go
-lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.9
+Tya v0.10 is a compile-to-C language. The reference implementation contains a Go
+lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.10
 specification tests.
 
 Website: <https://tya-lang.org/>
@@ -33,13 +33,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.9.0, download the release source and build the `tya` command locally.
-This currently requires Go because the v0.9 reference implementation is written
+For v0.10.0, download the release source and build the `tya` command locally.
+This currently requires Go because the v0.10 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.9.0.tar.gz | tar xz
-cd tya-0.9.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.10.0.tar.gz | tar xz
+cd tya-0.10.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -130,6 +130,7 @@ print array.first(["tya"])
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
+- [v0.11 Spec](https://tya-lang.org/v0.11/spec.html): explicit interfaces and implements.
 - [v0.10 Spec](https://tya-lang.org/v0.10/spec.html): abstract methods and final classes.
 - [v0.9 Spec](https://tya-lang.org/v0.9/spec.html): class visibility, private members, and abstract classes.
 - [v0.8 Spec](https://tya-lang.org/v0.8/spec.html): class-level inheritance and introspection.
@@ -144,7 +145,7 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-The current released implementation, Tya v0.9, includes:
+The current released implementation, Tya v0.10, includes:
 
 - `.tya` files
 - indentation-based blocks
@@ -170,11 +171,11 @@ The current released implementation, Tya v0.9, includes:
 - minimal classes, constructor calls, `init`, public instance fields,
   instance methods, instance field defaults, class variables, class methods,
   single inheritance, class-level inheritance, class introspection, private
-  members, private constructors, abstract classes, method overrides,
-  class-method `self`, and `super(args...)`
+  members, private constructors, abstract classes, abstract methods, final
+  classes, method overrides, class-method `self`, and `super(args...)`
 
-Tya v0.9 does not include interfaces, multiple inheritance, visibility
-keywords, protected members, abstract methods, async, macros, package management, remote
+Tya v0.10 does not include interfaces, multiple inheritance, visibility
+keywords, protected members, async, macros, package management, remote
 module install, JSON or CSV parsers, native standard modules, mocking,
 coverage, benchmark, watch mode, parallel test execution, set literals, import
 aliases, or dictionary member access.
