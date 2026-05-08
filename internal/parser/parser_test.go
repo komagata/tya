@@ -182,11 +182,6 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 			want: "object is not in Tya v0.1",
 		},
 		{
-			name: "self keyword",
-			src:  "print self\n",
-			want: "self is not in Tya v0.1",
-		},
-		{
 			name: "class expression",
 			src:  "value = class\n",
 			want: "class cannot be used as a name",
@@ -251,7 +246,7 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 		{
 			name: "function parameter",
 			src:  "value = self -> self\n",
-			want: "self is not in Tya v0.1",
+			want: "self cannot be used as a name",
 		},
 		{
 			name: "multi function parameter",
@@ -261,7 +256,7 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 		{
 			name: "loop value",
 			src:  "for self in items\n  print self\n",
-			want: "self is not in Tya v0.1",
+			want: "self cannot be used as a name",
 		},
 		{
 			name: "loop index",

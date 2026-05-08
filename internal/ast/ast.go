@@ -204,6 +204,12 @@ type SuperExpr struct {
 
 func (*SuperExpr) expr() {}
 
+type SelfExpr struct {
+	Tok token.Token
+}
+
+func (*SelfExpr) expr() {}
+
 type MemberExpr struct {
 	Target  Expr
 	Name    string

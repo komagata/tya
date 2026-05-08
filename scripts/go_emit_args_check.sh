@@ -5,8 +5,8 @@ out_dir="$(mktemp -d "${TMPDIR:-/tmp}/tya-go-emit-args.XXXXXX")"
 
 mkdir -p "$out_dir"
 
-TYA_EXAMPLE=hello go run ./cmd/tya examples/args.tya foo > "$out_dir/args.want"
-go run ./cmd/tya --emit-c examples/args.tya > "$out_dir/args.c"
+TYA_EXAMPLE=hello go run ./cmd/tya run examples/args.tya foo > "$out_dir/args.want"
+go run ./cmd/tya emit-c examples/args.tya > "$out_dir/args.c"
 gcc "$out_dir/args.c" runtime/tya_runtime.c -I runtime -o "$out_dir/args"
 TYA_EXAMPLE=hello "$out_dir/args" foo > "$out_dir/args.got"
 diff -u "$out_dir/args.want" "$out_dir/args.got"

@@ -266,7 +266,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.7 inheritance.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.8 class-level inheritance
+- [x] Ship v0.8 class-level inheritance
   - [x] Define v0.8 class-level inheritance scope
     - [x] Add `docs/v0.8/SPEC.md`.
     - [x] Specify inherited class variables.
@@ -276,32 +276,32 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Specify `super(args...)` inside overridden class methods.
     - [x] Specify `object.class` and `object.class_name`.
     - [x] Specify `ClassName.name` and `ClassName.parent`.
-  - [ ] Add inherited class variable lookup
-    - [ ] Resolve `ClassName.field` through the class inheritance chain.
-    - [ ] Resolve `@@field` in class methods from the receiving class.
-    - [ ] Resolve `@@field` in instance methods from the instance's class.
-    - [ ] Create or update subclass-owned class variables on subclass assignment.
-  - [ ] Add inherited class method lookup
-    - [ ] Resolve `ClassName.method(args...)` through the class inheritance chain.
-    - [ ] Bind inherited class methods to the receiving class.
-    - [ ] Support class method overriding with matching arity.
-  - [ ] Add class-method `self` and `super`
-    - [ ] Support `self` inside class methods.
-    - [ ] Reject `self` inside instance methods.
-    - [ ] Support `super(args...)` inside overridden class methods.
-    - [ ] Reject class-method `super` when no parent class method exists.
-  - [ ] Add small class introspection
-    - [ ] Support `object.class` as the object's actual class.
-    - [ ] Support `object.class_name` as the object's actual class name string.
-    - [ ] Support `ClassName.name` as the class name string.
-    - [ ] Support `ClassName.parent` as the parent class or `nil`.
-    - [ ] Reject assignment to read-only introspection members.
-  - [ ] Keep v0.8 documentation and tests aligned
-    - [ ] Update latest docs when v0.8 behavior is implemented.
-    - [ ] Keep `docs/v0.8/` aligned with the v0.8 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, and negative tests for v0.8 class-level inheritance and introspection.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Add inherited class variable lookup
+    - [x] Resolve `ClassName.field` through the class inheritance chain.
+    - [x] Resolve `@@field` in class methods from the receiving class.
+    - [x] Resolve `@@field` in instance methods from the instance's class.
+    - [x] Create or update subclass-owned class variables on subclass assignment.
+  - [x] Add inherited class method lookup
+    - [x] Resolve `ClassName.method(args...)` through the class inheritance chain.
+    - [x] Bind inherited class methods to the receiving class.
+    - [x] Support class method overriding with matching arity.
+  - [x] Add class-method `self` and `super`
+    - [x] Support `self` inside class methods.
+    - [x] Reject `self` inside instance methods.
+    - [x] Support `super(args...)` inside overridden class methods.
+    - [x] Reject class-method `super` when no parent class method exists.
+  - [x] Add small class introspection
+    - [x] Support `object.class` as the object's actual class.
+    - [x] Support `object.class_name` as the object's actual class name string.
+    - [x] Support `ClassName.name` as the class name string.
+    - [x] Support `ClassName.parent` as the parent class or `nil`.
+    - [x] Reject assignment to read-only introspection members.
+  - [x] Keep v0.8 documentation and tests aligned
+    - [x] Update latest docs when v0.8 behavior is implemented.
+    - [x] Keep `docs/v0.8/` aligned with the v0.8 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.8 class-level inheritance and introspection.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 

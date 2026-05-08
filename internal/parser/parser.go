@@ -688,7 +688,7 @@ func (p *Parser) call() (ast.Expr, error) {
 	}
 	for {
 		if p.match(token.DOT) {
-			name, err := p.expectName("expected property name")
+			name, err := p.expectIdent("expected property name")
 			if err != nil {
 				return nil, err
 			}
@@ -760,6 +760,9 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}
 		if tok.Lexeme == "super" {
 			return &ast.SuperExpr{Tok: tok}, nil
+		}
+		if tok.Lexeme == "self" {
+			return &ast.SelfExpr{Tok: tok}, nil
 		}
 		if err := p.rejectReservedName(tok); err != nil {
 			return nil, err
@@ -931,7 +934,7 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 	}
 	for {
 		if p.match(token.DOT) {
-			name, err := p.expectName("expected property name")
+			name, err := p.expectIdent("expected property name")
 			if err != nil {
 				return nil, err
 			}
@@ -1072,6 +1075,12 @@ func (p *Parser) expectName(msg string) (token.Token, error) {
 	}
 	return tok, nil
 }
+func (p *Parser) expectIdent(msg string) (token.Token, error) {
+	if !p.at(token.IDENT) {
+		return token.Token{}, p.err(msg)
+	}
+	return p.next(), nil
+}
 func (p *Parser) rejectV01ExcludedIdent() error {
 	if !p.at(token.IDENT) {
 		return nil
@@ -1080,7 +1089,7 @@ func (p *Parser) rejectV01ExcludedIdent() error {
 }
 func (p *Parser) rejectV01ExcludedWord(word string) error {
 	switch word {
-	case "interface", "object", "set", "self":
+	case "interface", "object", "set":
 		return p.err(word + " is not in Tya v0.1")
 	default:
 		return nil
@@ -1088,9 +1097,9 @@ func (p *Parser) rejectV01ExcludedWord(word string) error {
 }
 func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
-	case "interface", "object", "set", "self":
+	case "interface", "object", "set":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
-	case "class", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
+	case "class", "self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
 	default:
 		return nil

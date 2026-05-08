@@ -75,11 +75,12 @@ type scope struct {
 }
 
 type classInfo struct {
-	name      string
-	parent    string
-	hasInit   bool
-	initArity int
-	methods   map[string]int
+	name         string
+	parent       string
+	hasInit      bool
+	initArity    int
+	methods      map[string]int
+	classMethods map[string]int
 }
 
 func newScope(parent *scope) *scope {
@@ -297,12 +298,13 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
 	key := classKey(module, class)
-	info := classInfo{name: key, methods: map[string]int{}}
+	info := classInfo{name: key, methods: map[string]int{}, classMethods: map[string]int{}}
 	if class.Parent != nil {
 		info.parent = refKey(class.Parent, module, scope)
 	}
 	for _, method := range class.Methods {
 		if method.Class {
+			info.classMethods[method.Name] = len(method.Func.Params)
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
@@ -321,12 +323,13 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 	}
 	key := classKey("", class)
-	info := classInfo{name: key, methods: map[string]int{}}
+	info := classInfo{name: key, methods: map[string]int{}, classMethods: map[string]int{}}
 	if class.Parent != nil {
 		info.parent = refKey(class.Parent, "", scope)
 	}
 	for _, method := range class.Methods {
 		if method.Class {
+			info.classMethods[method.Name] = len(method.Func.Params)
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
@@ -406,7 +409,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.TryExpr:
 		return checkExpr(n.Expr, scope)
 	case *ast.SuperExpr:
-		return fmt.Errorf("%d:%d: super must be called inside init or an instance method", n.Tok.Line, n.Tok.Col)
+		return fmt.Errorf("%d:%d: super must be called inside init, an instance method, or a class method", n.Tok.Line, n.Tok.Col)
+	case *ast.SelfExpr:
+		if !scope.inClassMethod {
+			return fmt.Errorf("%d:%d: self is only valid inside a class method", n.Tok.Line, n.Tok.Col)
+		}
 	case *ast.InstanceFieldExpr:
 		if !scope.inInstanceMethod {
 			return fmt.Errorf("%d:%d: @%s is only valid inside an instance method", n.NameTok.Line, n.NameTok.Col, n.Name)
@@ -446,14 +453,22 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		return checkExpr(n.Index, scope)
 	case *ast.CallExpr:
 		if super, ok := n.Callee.(*ast.SuperExpr); ok {
-			if scope.inClassMethod || !scope.inInstanceMethod || scope.currentMethod == "" || scope.currentClass == "" {
-				return fmt.Errorf("%d:%d: super must be called inside init or an instance method", super.Tok.Line, super.Tok.Col)
+			if (!scope.inInstanceMethod && !scope.inClassMethod) || scope.currentMethod == "" || scope.currentClass == "" {
+				return fmt.Errorf("%d:%d: super must be called inside init, an instance method, or a class method", super.Tok.Line, super.Tok.Col)
 			}
 			parent := scope.classes[scope.currentClass].parent
 			if parent == "" {
 				return fmt.Errorf("%d:%d: super has no parent method", super.Tok.Line, super.Tok.Col)
 			}
-			if scope.currentMethod == "init" {
+			if scope.inClassMethod {
+				arity, ok := inheritedClassMethodArity(parent, scope.currentMethod, scope)
+				if !ok {
+					return fmt.Errorf("%d:%d: super has no parent class method %s", super.Tok.Line, super.Tok.Col, scope.currentMethod)
+				}
+				if len(n.Args) != arity {
+					return fmt.Errorf("%d:%d: super class method %s expects %d arguments", super.Tok.Line, super.Tok.Col, scope.currentMethod, arity)
+				}
+			} else if scope.currentMethod == "init" {
 				arity, ok := inheritedInitArity(parent, scope)
 				if !ok {
 					return fmt.Errorf("%d:%d: super has no parent method", super.Tok.Line, super.Tok.Col)
@@ -579,6 +594,13 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 					return fmt.Errorf("%d:%d: overriding method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
 				}
 			}
+		} else {
+			parent := scope.classes[key].parent
+			if parent != "" {
+				if arity, ok := inheritedClassMethodArity(parent, method.Name, scope); ok && arity != len(method.Func.Params) {
+					return fmt.Errorf("%d:%d: overriding class method %s expects %d parameters", method.Tok.Line, method.Tok.Col, method.Name, arity)
+				}
+			}
 		}
 	}
 	return nil
@@ -662,6 +684,20 @@ func inheritedMethodArity(className string, method string, scope *scope) (int, b
 	return 0, false
 }
 
+func inheritedClassMethodArity(className string, method string, scope *scope) (int, bool) {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return 0, false
+		}
+		if arity, ok := info.classMethods[method]; ok {
+			return arity, true
+		}
+		className = info.parent
+	}
+	return 0, false
+}
+
 func funcCallsSuper(fn *ast.FuncLit) bool {
 	var exprHasSuper func(ast.Expr) bool
 	exprHasSuper = func(expr ast.Expr) bool {
@@ -732,6 +768,9 @@ func funcCallsSuper(fn *ast.FuncLit) bool {
 func checkAssignmentTarget(target ast.Expr, scope *scope) error {
 	switch n := target.(type) {
 	case *ast.MemberExpr:
+		if n.Name == "class" || n.Name == "class_name" || ((n.Name == "name" || n.Name == "parent") && kindOf(n.Target, scope) == kindClass) {
+			return fmt.Errorf("%d:%d: cannot assign to read-only introspection member %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
 		}
@@ -784,7 +823,28 @@ func kindOf(expr ast.Expr, scope *scope) valueKind {
 	if id, ok := expr.(*ast.Ident); ok {
 		return scope.kind(id.Name)
 	}
+	if member, ok := expr.(*ast.MemberExpr); ok && kindOf(member.Target, scope) == kindModule {
+		if scope.kind(memberKey(member)) == kindClass {
+			return kindClass
+		}
+	}
 	return literalKind(expr)
+}
+
+func memberKey(member *ast.MemberExpr) string {
+	parts := []string{member.Name}
+	for target := member.Target; ; {
+		switch n := target.(type) {
+		case *ast.Ident:
+			parts = append([]string{n.Name}, parts...)
+			return strings.Join(parts, ".")
+		case *ast.MemberExpr:
+			parts = append([]string{n.Name}, parts...)
+			target = n.Target
+		default:
+			return strings.Join(parts, ".")
+		}
+	}
 }
 
 func literalKind(expr ast.Expr) valueKind {

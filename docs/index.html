@@ -71,7 +71,7 @@
       justify-content: flex-start;
       width: min(100%, 1180px);
       margin: 0 auto;
-      padding: 58px 32px 8px;
+      padding: 34px 32px 8px;
       text-align: center;
     }
 
@@ -83,8 +83,8 @@
     }
 
     .brand img {
-      width: min(360px, 72vw);
-      height: min(360px, 72vw);
+      width: min(320px, 70vw);
+      height: min(320px, 70vw);
       object-fit: contain;
     }
 
@@ -97,6 +97,7 @@
     .brand span {
       display: block;
       max-width: 520px;
+      margin-top: 18px;
       color: var(--muted);
       font-size: 18px;
     }
@@ -106,7 +107,7 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 6px;
-      margin-top: 30px;
+      margin-top: 24px;
     }
 
     .nav a {
@@ -159,6 +160,7 @@
 
     .statement {
       display: grid;
+      gap: 30px;
       align-content: space-between;
       min-height: 0;
       padding: 38px;
@@ -182,7 +184,7 @@
     h1 {
       max-width: 900px;
       margin: 0;
-      font-size: 64px;
+      font-size: 56px;
       line-height: 1;
     }
 
@@ -225,29 +227,6 @@
     .button:focus {
       transform: translateY(-1px);
       outline: none;
-    }
-
-    .facts {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-top: 34px;
-    }
-
-    .fact {
-      border-top: 2px solid var(--green-2);
-      padding: 12px 0 0;
-    }
-
-    .fact strong {
-      display: block;
-      font-size: 16px;
-    }
-
-    .fact span {
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
     }
 
     .quick-run {
@@ -299,6 +278,72 @@
       padding: 10px 12px;
       overflow-wrap: anywhere;
       white-space: normal;
+    }
+
+    .install-tabs {
+      padding: 18px;
+    }
+
+    .install-tabs input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tab-labels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      width: fit-content;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-soft);
+      padding: 4px;
+      margin-bottom: 14px;
+    }
+
+    .tab-labels label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      border-radius: 5px;
+      padding: 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    #install-mac:checked ~ .tab-labels label[for="install-mac"],
+    #install-linux:checked ~ .tab-labels label[for="install-linux"],
+    #install-windows:checked ~ .tab-labels label[for="install-windows"] {
+      background: var(--panel);
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(35, 47, 38, 0.08);
+    }
+
+    .tab-panels {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      padding: 18px;
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    #install-mac:checked ~ .tab-panels .mac-panel,
+    #install-linux:checked ~ .tab-panels .linux-panel,
+    #install-windows:checked ~ .tab-panels .windows-panel {
+      display: block;
+    }
+
+    .install-note {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 14px;
     }
 
     main {
@@ -487,8 +532,8 @@
       }
 
       .brand img {
-        width: min(260px, 76vw);
-        height: min(260px, 76vw);
+        width: min(240px, 74vw);
+        height: min(240px, 74vw);
       }
 
       .brand strong {
@@ -515,14 +560,13 @@
       }
 
       h1 {
-        font-size: 42px;
+        font-size: 38px;
       }
 
       .lead {
         font-size: 18px;
       }
 
-      .facts,
       .command-list,
       .matrix,
       .flow,
@@ -566,48 +610,7 @@
             <p class="kicker">Small language, practical scripts</p>
             <h1>CoffeeScript feel. Golang practicality.</h1>
             <p class="lead">Tya pairs lightweight, indentation-based writing with straightforward command-line tooling and compile-to-C execution.</p>
-            <div class="actions">
-              <a class="button primary" href="#example">View example</a>
-              <a class="button" href="guide.html">Guide</a>
-              <a class="button" href="spec.html">Spec</a>
-              <a class="button" href="versions.html">Versions</a>
-            </div>
           </div>
-          <div class="facts" aria-label="Tya facts">
-            <div class="fact">
-              <strong>Indentation-based</strong>
-              <span>Blocks are visible in the source.</span>
-            </div>
-            <div class="fact">
-              <strong>Practical running</strong>
-              <span>Run scripts from the command line.</span>
-            </div>
-          </div>
-        </section>
-
-      </header>
-
-      <main>
-        <aside class="quick-run section" id="install">
-          <div class="quick-head">
-            <strong>Install</strong>
-            <span>Use Homebrew on macOS.</span>
-          </div>
-          <ul class="command-list">
-            <li>
-              <span>Homebrew</span>
-              <code>brew install komagata/tap/tya</code>
-            </li>
-          </ul>
-        </aside>
-
-        <section class="section section-grid" id="example">
-          <div class="section-title">
-            <p class="kicker">Example</p>
-            <h2>A small program should look like itself.</h2>
-            <p>The syntax favors direct data access, simple function literals, and normal control flow.</p>
-          </div>
-
           <div class="code-panel" aria-label="Tya example">
             <div class="code-head">
               <span>hello.tya</span>
@@ -623,6 +626,50 @@ greet = user -> <span class="str">"Hello, "</span> + user[<span class="str">"nam
   <span class="kw">print</span> greet(user)</code></pre>
           </div>
         </section>
+
+      </header>
+
+      <main>
+        <aside class="quick-run section" id="install">
+          <div class="quick-head">
+            <strong>Install</strong>
+            <span>Choose your platform.</span>
+          </div>
+          <div class="install-tabs">
+            <input id="install-mac" name="install-platform" type="radio" checked>
+            <input id="install-linux" name="install-platform" type="radio">
+            <input id="install-windows" name="install-platform" type="radio">
+
+            <div class="tab-labels" role="tablist" aria-label="Install platforms">
+              <label for="install-mac" role="tab">mac</label>
+              <label for="install-linux" role="tab">linux</label>
+              <label for="install-windows" role="tab">windows</label>
+            </div>
+
+            <div class="tab-panels">
+              <div class="tab-panel mac-panel" role="tabpanel">
+                <p class="install-note">Install with Homebrew.</p>
+                <pre><code>brew install komagata/tap/tya</code></pre>
+              </div>
+
+              <div class="tab-panel linux-panel" role="tabpanel">
+                <p class="install-note">Download the Linux tarball and install it under <code>~/.local</code>.</p>
+                <pre><code>curl -LO https://github.com/komagata/tya/releases/download/v0.8.0/tya-v0.8.0-linux-amd64.tar.gz
+tar xzf tya-v0.8.0-linux-amd64.tar.gz
+cd tya-v0.8.0-linux-amd64
+./install.sh</code></pre>
+              </div>
+
+              <div class="tab-panel windows-panel" role="tabpanel">
+                <p class="install-note">Download the Windows tarball and run the installer script.</p>
+                <pre><code>curl.exe -LO https://github.com/komagata/tya/releases/download/v0.8.0/tya-v0.8.0-windows-amd64.tar.gz
+tar.exe xzf tya-v0.8.0-windows-amd64.tar.gz
+cd tya-v0.8.0-windows-amd64
+powershell -ExecutionPolicy Bypass -File .\install.ps1</code></pre>
+              </div>
+            </div>
+          </div>
+        </aside>
 
         <aside class="quick-run section" id="quick-run">
           <div class="quick-head">
@@ -703,26 +750,6 @@ greet = user -> <span class="str">"Hello, "</span> + user[<span class="str">"nam
             <a class="doc" href="naming.html">
               <strong>Naming</strong>
               <span>Use consistent names for variables, functions, constants, modules, dictionary keys, and reserved names.</span>
-            </a>
-            <a class="doc" href="v0.4/spec.html">
-              <strong>v0.4 Spec</strong>
-              <span>Review the testing and script confidence release.</span>
-            </a>
-            <a class="doc" href="v0.5/spec.html">
-              <strong>v0.5 Spec</strong>
-              <span>Review the released minimal class syntax.</span>
-            </a>
-            <a class="doc" href="v0.6/spec.html">
-              <strong>v0.6 Spec</strong>
-              <span>Review the planned class-level members and field defaults.</span>
-            </a>
-            <a class="doc" href="v0.7/spec.html">
-              <strong>v0.7 Spec</strong>
-              <span>Review the planned single inheritance and super behavior.</span>
-            </a>
-            <a class="doc" href="v0.8/spec.html">
-              <strong>v0.8 Spec</strong>
-              <span>Review the planned class-level inheritance and introspection behavior.</span>
             </a>
             <a class="doc" href="roadmap.html">
               <strong>Roadmap</strong>

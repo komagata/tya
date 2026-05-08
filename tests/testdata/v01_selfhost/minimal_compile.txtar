@@ -86,7 +86,7 @@ stdout '1: try must be inside a function'
 stdout 'class body may only contain member definitions'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/self.tya
-stdout '1: self is not in Tya v0.1'
+stdout '1: self is only valid inside a class method'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/set_literal.tya
 stdout '1: set literals are not in Tya v0.1'

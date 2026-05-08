@@ -350,10 +350,10 @@ print_ast = program ->
     print stmt_label(stmt)
 
 is_v01_excluded_word = word ->
-  word == "interface" or word == "object" or word == "set" or word == "self"
+  word == "interface" or word == "object" or word == "set"
 
 is_v01_reserved_name = word ->
-  word == "true" or word == "false" or word == "nil" or word == "if" or word == "elseif" or word == "else" or word == "while" or word == "for" or word == "in" or word == "of" or word == "break" or word == "continue" or word == "return" or word == "import" or word == "module" or word == "and" or word == "or" or word == "not" or word == "try"
+  word == "self" or word == "true" or word == "false" or word == "nil" or word == "if" or word == "elseif" or word == "else" or word == "while" or word == "for" or word == "in" or word == "of" or word == "break" or word == "continue" or word == "return" or word == "import" or word == "module" or word == "and" or word == "or" or word == "not" or word == "try"
 
 record_name_error = tok ->
   if token_kind(tok) == "IDENT" and is_v01_reserved_name(token_text(tok))
@@ -1246,8 +1246,12 @@ check_expr = ctx, expr ->
       if current["name"] == "super"
         names = names
       else
-        if not has_name(names, current["name"])
-          push(errors, to_string(current["line"]) + ": undefined variable: " + current["name"])
+        if current["name"] == "self"
+          if not has(ctx, "in_class_method")
+            push(errors, to_string(current["line"]) + ": self is only valid inside a class method")
+        else
+          if not has_name(names, current["name"])
+            push(errors, to_string(current["line"]) + ": undefined variable: " + current["name"])
     if current["kind"] == "binary"
       push(work, current["left"])
       push(work, current["right"])
@@ -1297,6 +1301,8 @@ check_expr = ctx, expr ->
         fn_ctx["in_method"] = true
       if has(ctx, "in_class")
         fn_ctx["in_class"] = true
+      if has(ctx, "in_class_method")
+        fn_ctx["in_class_method"] = true
       param_names = []
       for param in current["params"]
         if has_name(param_names, param)
@@ -1343,6 +1349,8 @@ check_simple_stmt = ctx, stmt ->
         method_ctx["in_class"] = true
         if not method["class"]
           method_ctx["in_method"] = true
+        else
+          method_ctx["in_class_method"] = true
         check_expr(method_ctx, method["value"])
   if stmt["kind"] == "class"
     remember(names, stmt["name"])
@@ -1352,6 +1360,8 @@ check_simple_stmt = ctx, stmt ->
       method_ctx["in_class"] = true
       if not method["class"]
         method_ctx["in_method"] = true
+      else
+        method_ctx["in_class_method"] = true
       check_expr(method_ctx, method["value"])
   if stmt["kind"] == "assign"
     check_name(errors, stmt["line"], "variable", stmt["name"])
@@ -1654,6 +1664,8 @@ emit_string_value = text ->
 
 emit_atom = expr ->
   if expr["kind"] == "ident"
+    if expr["name"] == "self"
+      return "__this"
     if has_name(emitter_classes, expr["name"])
       return c_name(expr["name"])
     if has_name(emitter_functions, expr["name"])
@@ -1749,6 +1761,8 @@ emit_nested = expr ->
 
 emit_scalar = expr ->
   if expr["kind"] == "ident"
+    if expr["name"] == "self"
+      return "__this"
     if has_name(emitter_classes, expr["name"])
       return c_name(expr["name"])
     if has_name(emitter_functions, expr["name"])
@@ -2041,13 +2055,20 @@ emit_stmt = lines, names, stmt ->
       if member["value"]["kind"] == "func"
         push(lines, "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(member["name"]) + ", tya_function(" + c_func_name(stmt["name"] + "_" + member["name"]) + "));")
     for class_value in stmt["classes"]
-      push(lines, "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(class_value["name"]) + ", tya_function(" + c_func_name(stmt["name"] + "_" + class_value["name"]) + "));")
+      class_parent = "tya_nil()"
+      if class_value["parent"] != ""
+        class_parent = c_name(stmt["name"] + "_" + class_value["parent"])
+      push(lines, "  " + c_name(stmt["name"] + "_" + class_value["name"]) + " = tya_class(" + c_func_name(stmt["name"] + "_" + class_value["name"]) + ", " + c_string(class_value["name"]) + ", " + class_parent + ");")
+      push(lines, "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(class_value["name"]) + ", " + c_name(stmt["name"] + "_" + class_value["name"]) + ");")
   if stmt["kind"] == "class"
+    class_parent = "tya_nil()"
+    if stmt["parent"] != ""
+      class_parent = c_name(stmt["parent"])
     if has_name(names, stmt["name"])
-      push(lines, "  " + c_name(stmt["name"]) + " = tya_function(" + c_func_name(stmt["name"]) + ");")
+      push(lines, "  " + c_name(stmt["name"]) + " = tya_class(" + c_func_name(stmt["name"]) + ", " + c_string(stmt["name"]) + ", " + class_parent + ");")
     else
       push(names, stmt["name"])
-      push(lines, "  " + c_name(stmt["name"]) + " = tya_function(" + c_func_name(stmt["name"]) + ");")
+      push(lines, "  " + c_name(stmt["name"]) + " = tya_class(" + c_func_name(stmt["name"]) + ", " + c_string(stmt["name"]) + ", " + class_parent + ");")
     saved_class_ref = emitter_state["class_ref"]
     emitter_state["class_ref"] = c_name(stmt["name"])
     for variable in stmt["vars"]
@@ -2166,19 +2187,26 @@ emit_function_definition = lines, c_fn_name, fn, use_this ->
 
 emit_class_definition = lines, class_name, class_value ->
   saved_class_ref = emitter_state["class_ref"]
-  emitter_state["class_ref"] = c_name(class_name)
   for method in class_value["methods"]
     saved_super = emitter_state["super_class"]
     saved_method = emitter_state["method_name"]
+    saved_method_class_ref = emitter_state["class_ref"]
     emitter_state["super_class"] = class_value["parent"]
     emitter_state["method_name"] = method["name"]
+    if method["class"]
+      emitter_state["class_ref"] = "__this"
+    else
+      emitter_state["class_ref"] = "tya_member(__this, " + c_string("class") + ")"
     emit_function_definition(lines, c_func_name(class_name + "_" + method["name"]), method["value"], true)
     emitter_state["super_class"] = saved_super
     emitter_state["method_name"] = saved_method
+    emitter_state["class_ref"] = saved_method_class_ref
   emitter_state["class_ref"] = saved_class_ref
   push(lines, "TyaValue " + c_func_name(class_name) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
   push(lines, "  (void)__this;")
   push(lines, "  TyaValue __obj = tya_object();")
+  push(lines, "  tya_set_member(__obj, " + c_string("class") + ", " + c_name(class_name) + ");")
+  push(lines, "  tya_set_member(__obj, " + c_string("class_name") + ", tya_string(" + c_string(class_value["name"]) + "));")
   saved_class_ref = emitter_state["class_ref"]
   emitter_state["class_ref"] = c_name(class_name)
   if class_value["parent"] != "" and has(emitter_state["class_values"], class_value["parent"])
@@ -2254,6 +2282,8 @@ emit_c = program ->
           remember(emitter_functions, stmt["name"] + "_" + member["name"])
       for class_value in stmt["classes"]
         remember(emitter_functions, stmt["name"] + "_" + class_value["name"])
+        remember(emitter_classes, stmt["name"] + "_" + class_value["name"])
+        emitter_state["class_values"][stmt["name"] + "_" + class_value["name"]] = class_value
         for method in class_value["methods"]
           remember(emitter_functions, stmt["name"] + "_" + class_value["name"] + "_" + method["name"])
     if stmt["kind"] == "class"
@@ -2271,6 +2301,8 @@ emit_c = program ->
   for stmt in program["statements"]
     if stmt["kind"] == "module"
       remember(global_names, stmt["name"])
+      for class_value in stmt["classes"]
+        remember(global_names, stmt["name"] + "_" + class_value["name"])
     if stmt["kind"] == "class"
       remember(global_names, stmt["name"])
   for name in global_names

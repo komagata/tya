@@ -39,23 +39,25 @@ func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
 }
 
 type cgen struct {
-	out           strings.Builder
-	globalOut     strings.Builder
-	funcOut       strings.Builder
-	sourcePath    string
-	indent        int
-	vars          map[string]bool
-	funcs         map[string]string
-	classes       map[string]string
-	classMethods  map[string]string
-	classDecls    map[string]*ast.ClassDecl
-	temp          int
-	inFunc        bool
-	classRef      string
-	className     string
-	methodName    string
-	superClass    string
-	predicateName string
+	out              strings.Builder
+	globalOut        strings.Builder
+	funcOut          strings.Builder
+	sourcePath       string
+	indent           int
+	vars             map[string]bool
+	funcs            map[string]string
+	classes          map[string]string
+	classMethods     map[string]string
+	classDecls       map[string]*ast.ClassDecl
+	temp             int
+	inFunc           bool
+	inClassMethod    bool
+	inInstanceMethod bool
+	classRef         string
+	className        string
+	methodName       string
+	superClass       string
+	predicateName    string
 }
 
 func (g *cgen) globalLine(s string) {
@@ -70,6 +72,12 @@ func (g *cgen) line(s string) {
 }
 
 func (g *cgen) classTarget() string {
+	if g.inClassMethod {
+		return "__this"
+	}
+	if g.inInstanceMethod {
+		return "tya_member(__this, \"class\")"
+	}
 	if g.classRef != "" {
 		return g.classRef
 	}
@@ -379,7 +387,7 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 	return g.emitFuncWithContext(name, fn, "", "")
 }
 
-func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string, _ string) (string, error) {
+func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string, methodKind string) (string, error) {
 	sym := cFuncName(name, g.temp)
 	g.temp++
 	var out strings.Builder
@@ -387,20 +395,22 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string
 	out.WriteString(sym)
 	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
 	child := &cgen{
-		vars:          map[string]bool{},
-		funcs:         g.funcs,
-		classes:       g.classes,
-		classMethods:  g.classMethods,
-		classDecls:    g.classDecls,
-		sourcePath:    g.sourcePath,
-		temp:          g.temp,
-		indent:        1,
-		inFunc:        true,
-		classRef:      classRef,
-		className:     g.className,
-		methodName:    g.methodName,
-		superClass:    g.superClass,
-		predicateName: predicateName(name),
+		vars:             map[string]bool{},
+		funcs:            g.funcs,
+		classes:          g.classes,
+		classMethods:     g.classMethods,
+		classDecls:       g.classDecls,
+		sourcePath:       g.sourcePath,
+		temp:             g.temp,
+		indent:           1,
+		inFunc:           true,
+		inClassMethod:    methodKind == "class",
+		inInstanceMethod: methodKind == "instance",
+		classRef:         classRef,
+		className:        g.className,
+		methodName:       g.methodName,
+		superClass:       g.superClass,
+		predicateName:    predicateName(name),
 	}
 	for i, param := range fn.Params {
 		child.vars[param] = true
@@ -556,7 +566,7 @@ func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
 			return err
 		}
 		g.globalLine(fmt.Sprintf("TyaValue %s;", classTarget))
-		g.line(fmt.Sprintf("%s = tya_function(%s);", classTarget, sym))
+		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", classTarget, sym, strconv.Quote(class.Name), g.parentExpr(module.Name+"_"+class.Name, class)))
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote(class.Name), classTarget))
 		if err := g.emitClassMembers(classTarget, module.Name+"_"+class.Name, class); err != nil {
 			return err
@@ -573,11 +583,11 @@ func (g *cgen) assignClassDecl(name string, class *ast.ClassDecl) error {
 	}
 	g.classes[name] = sym
 	if g.vars[name] {
-		g.line(fmt.Sprintf("%s = tya_function(%s);", target, sym))
+		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", target, sym, strconv.Quote(name), g.parentExpr(name, class)))
 	} else {
 		g.vars[name] = true
 		g.globalLine(fmt.Sprintf("TyaValue %s;", target))
-		g.line(fmt.Sprintf("%s = tya_function(%s);", target, sym))
+		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", target, sym, strconv.Quote(name), g.parentExpr(name, class)))
 	}
 	return g.emitClassMembers(target, name, class)
 }
@@ -590,7 +600,11 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		method := &class.Methods[i]
 		prevClass, prevMethod, prevSuper := g.className, g.methodName, g.superClass
 		g.className, g.methodName, g.superClass = name, method.Name, parentKey
-		sym, err := g.emitFuncWithContext(name+"_"+method.Name, method.Func, classRef, "")
+		methodKind := "instance"
+		if method.Class {
+			methodKind = "class"
+		}
+		sym, err := g.emitFuncWithContext(name+"_"+method.Name, method.Func, classRef, methodKind)
 		g.className, g.methodName, g.superClass = prevClass, prevMethod, prevSuper
 		if err != nil {
 			return "", err
@@ -609,6 +623,8 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
 	out.WriteString("  (void)__this;\n")
 	out.WriteString("  TyaValue __obj = tya_object();\n")
+	out.WriteString(fmt.Sprintf("  tya_set_member(__obj, \"class\", %s);\n", classRef))
+	out.WriteString(fmt.Sprintf("  tya_set_member(__obj, \"class_name\", tya_string(%s));\n", strconv.Quote(class.Name)))
 	if parentKey != "" {
 		if err := g.emitParentDefaults(&out, parentKey); err != nil {
 			return "", err
@@ -682,6 +698,17 @@ func (g *cgen) parentKey(name string, class *ast.ClassDecl) string {
 	return class.Parent.Name
 }
 
+func (g *cgen) parentExpr(name string, class *ast.ClassDecl) string {
+	parent := g.parentKey(name, class)
+	if parent == "" {
+		return "tya_nil()"
+	}
+	if strings.Contains(parent, ".") {
+		return cName(g.cClassName(parent) + "_class")
+	}
+	return cName(parent)
+}
+
 func (g *cgen) cClassName(key string) string {
 	return strings.ReplaceAll(key, ".", "_")
 }
@@ -742,6 +769,22 @@ func (g *cgen) inheritedMethodSym(parentKey string, method string) string {
 		}
 		for _, parentMethod := range parent.Methods {
 			if !parentMethod.Class && parentMethod.Name == method {
+				return g.classMethods[g.cClassName(parentKey)+"."+method]
+			}
+		}
+		parentKey = g.parentKey(g.cClassName(parentKey), parent)
+	}
+	return ""
+}
+
+func (g *cgen) inheritedClassMethodSym(parentKey string, method string) string {
+	for parentKey != "" {
+		parent := g.classDecls[parentKey]
+		if parent == nil {
+			return ""
+		}
+		for _, parentMethod := range parent.Methods {
+			if parentMethod.Class && parentMethod.Name == method {
 				return g.classMethods[g.cClassName(parentKey)+"."+method]
 			}
 		}
@@ -911,6 +954,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return fmt.Sprintf("tya_function(%s)", sym), "TyaValue", nil
 	case *ast.Ident:
 		return cName(n.Name), "TyaValue", nil
+	case *ast.SelfExpr:
+		return "__this", "TyaValue", nil
 	case *ast.InstanceFieldExpr:
 		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote("@"+n.Name)), "TyaValue", nil
 	case *ast.ClassVarExpr:
@@ -964,6 +1009,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.CallExpr:
 		if _, ok := n.Callee.(*ast.SuperExpr); ok {
 			sym := g.inheritedMethodSym(g.superClass, g.methodName)
+			if g.inClassMethod {
+				sym = g.inheritedClassMethodSym(g.superClass, g.methodName)
+			}
 			if sym == "" {
 				return "tya_nil()", "TyaValue", nil
 			}
@@ -1409,6 +1457,9 @@ func (g *cgen) interpolationExpr(expr string) (string, bool) {
 	expr = strings.TrimSpace(expr)
 	if expr == "super()" {
 		sym := g.inheritedMethodSym(g.superClass, g.methodName)
+		if g.inClassMethod {
+			sym = g.inheritedClassMethodSym(g.superClass, g.methodName)
+		}
 		if sym == "" {
 			return "tya_nil()", true
 		}

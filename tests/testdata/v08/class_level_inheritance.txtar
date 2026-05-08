@@ -1,0 +1,190 @@
+# v0.8 class-level inheritance, class-method self/super, and introspection.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/class_level.tya
+stdout '0\n0\n0\n10\nadmin\nuser\nadmin\nuser admin\nAdmin\nAdmin\nAdmin\nUser\nUser\nnil\nUser\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'Ada\neditor\neditor\naccount\nEditor\nEditor\nAccount\nAccount\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/self_outside.tya
+stderr 'self is only valid inside a class method'
+
+! exec go run ./cmd/tya run $WORK/self_in_instance_method.tya
+stderr 'self is only valid inside a class method'
+
+! exec go run ./cmd/tya run $WORK/super_no_parent_class_method.tya
+stderr 'super has no parent class method make'
+
+! exec go run ./cmd/tya run $WORK/bad_class_method_override_arity.tya
+stderr 'overriding class method role expects 0 parameters'
+
+! exec go run ./cmd/tya run $WORK/assign_object_class.tya
+stderr 'cannot assign to read-only introspection member class'
+
+! exec go run ./cmd/tya run $WORK/assign_object_class_name.tya
+stderr 'cannot assign to read-only introspection member class_name'
+
+! exec go run ./cmd/tya run $WORK/assign_class_name.tya
+stderr 'cannot assign to read-only introspection member name'
+
+! exec go run ./cmd/tya run $WORK/assign_class_parent.tya
+stderr 'cannot assign to read-only introspection member parent'
+
+! exec go run ./cmd/tya run $WORK/assign_module_class_parent.tya
+stderr 'cannot assign to read-only introspection member parent'
+
+! exec go run ./cmd/tya run $WORK/missing_class_member.tya
+stderr 'missing class variable or method: missing'
+! stdout .
+
+exec go run ./cmd/tya version
+stdout '0.8.0\n'
+! stderr .
+
+-- class_level.tya --
+class User
+  @@count = 0
+  @@label = "user"
+
+  init = name ->
+    @name = name
+    @@count = @@count + 1
+
+  label = ->
+    @@label
+
+  @@build = name ->
+    self(name)
+
+  @@label_name = ->
+    @@label
+
+  @@role = ->
+    "user"
+
+class Admin extends User
+  @@label = "admin"
+
+  @@role = ->
+    "{super()} admin"
+
+print User.count
+print Admin.count
+Admin.count = 10
+print User.count
+print Admin.count
+print Admin.label_name()
+print User.label_name()
+admin = Admin.build("komagata")
+print admin.label()
+print Admin.role()
+print admin.class
+print admin.class_name
+print Admin.name
+print Admin.parent
+print User.name
+print User.parent
+print admin.class.parent
+
+-- account.tya --
+module account
+  class Account
+    @@kind = "account"
+
+    init = name ->
+      @name = name
+
+    kind = ->
+      @@kind
+
+    @@build = name ->
+      self(name)
+
+    @@kind_name = ->
+      @@kind
+
+  class Editor extends Account
+    @@kind = "editor"
+
+-- main.tya --
+import account
+
+editor = account.Editor.build("Ada")
+print editor.name
+print editor.kind()
+print account.Editor.kind_name()
+print account.Editor.parent.kind_name()
+print editor.class
+print editor.class_name
+print account.Editor.parent
+print account.Account.name
+
+-- self_outside.tya --
+print self
+
+-- self_in_instance_method.tya --
+class User
+  name = ->
+    self.name
+
+print User().name()
+
+-- super_no_parent_class_method.tya --
+class User
+  @@build = ->
+    "user"
+
+class Admin extends User
+  @@make = ->
+    super()
+
+print Admin.make()
+
+-- bad_class_method_override_arity.tya --
+class User
+  @@role = ->
+    "user"
+
+class Admin extends User
+  @@role = name ->
+    name
+
+-- assign_object_class.tya --
+class User
+  name = ""
+
+user = User()
+user.class = "bad"
+
+-- assign_object_class_name.tya --
+class User
+  name = ""
+
+user = User()
+user.class_name = "bad"
+
+-- assign_class_name.tya --
+class User
+  name = ""
+
+User.name = "bad"
+
+-- assign_class_parent.tya --
+class User
+  name = ""
+
+User.parent = "bad"
+
+-- assign_module_class_parent.tya --
+import account
+
+account.Editor.parent = "bad"
+
+-- missing_class_member.tya --
+class User
+  name = ""
+
+print User.missing

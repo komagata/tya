@@ -46,6 +46,7 @@ TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_dict(const TyaDictEntry *entries, int count);
 TyaValue tya_object(void);
 TyaValue tya_function(TyaFunctionPtr fn);
+TyaValue tya_class(TyaFunctionPtr fn, const char *name, TyaValue parent);
 TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn);
 TyaValue tya_error(TyaValue message);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);

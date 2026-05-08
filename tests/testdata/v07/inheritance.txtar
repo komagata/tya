@@ -2,7 +2,7 @@
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/inheritance.tya
-stdout 'komagata\nadmin\nHello, komagata \(admin\)\nTya\nHello, Tya \(admin\)\n1\n'
+stdout 'komagata\nadmin\nHello, komagata \(admin\)\nTya\nHello, Tya \(admin\)\n0\n1\n'
 ! stderr .
 
 exec go run ./cmd/tya run $WORK/main.tya
@@ -23,10 +23,10 @@ stderr 'multiple inheritance is not in Tya v0.7'
 stderr 'inheritance cycle involving User'
 
 ! exec go run ./cmd/tya run $WORK/super_outside.tya
-stderr 'super must be called inside init or an instance method'
+stderr 'super must be called inside init, an instance method, or a class method'
 
 ! exec go run ./cmd/tya run $WORK/super_in_class_method.tya
-stderr 'super must be called inside init or an instance method'
+stderr 'super has no parent class method build'
 
 ! exec go run ./cmd/tya run $WORK/no_parent_method.tya
 stderr 'super has no parent method greeting'
@@ -37,12 +37,12 @@ stderr 'subclass init must call super'
 ! exec go run ./cmd/tya run $WORK/bad_override_arity.tya
 stderr 'overriding method rename expects 1 parameters'
 
-! exec go run ./cmd/tya run $WORK/no_class_member_inheritance.tya
-stderr 'missing class variable or method: count'
-! stdout .
+exec go run ./cmd/tya run $WORK/class_member_inheritance.tya
+stdout '0\n'
+! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.7.0\n'
+stdout '0.8.0\n'
 ! stderr .
 
 -- inheritance.tya --
@@ -78,6 +78,7 @@ admin.rename("Tya")
 print admin.name
 print admin.greeting()
 print User.count
+print Admin.count
 
 -- user.tya --
 module user
@@ -178,7 +179,7 @@ class Admin extends User
   rename = first_name, last_name ->
     @name = first_name + " " + last_name
 
--- no_class_member_inheritance.tya --
+-- class_member_inheritance.tya --
 class User
   @@count = 0
 

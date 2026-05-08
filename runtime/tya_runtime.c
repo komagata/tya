@@ -20,6 +20,9 @@ struct TyaFunction {
   TyaFunctionPtr fn;
   TyaValue receiver;
   TyaDict *members;
+  const char *class_name;
+  TyaValue parent;
+  bool is_class;
 };
 
 typedef struct {
@@ -87,7 +90,18 @@ TyaValue tya_function(TyaFunctionPtr fn) {
   function->members = malloc(sizeof(TyaDict));
   function->members->len = 0;
   function->members->entries = NULL;
+  function->class_name = NULL;
+  function->parent = tya_nil();
+  function->is_class = false;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
+}
+
+TyaValue tya_class(TyaFunctionPtr fn, const char *name, TyaValue parent) {
+  TyaValue value = tya_function(fn);
+  value.function->class_name = name;
+  value.function->parent = parent;
+  value.function->is_class = true;
+  return value;
 }
 
 TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn) {
@@ -97,6 +111,9 @@ TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn) {
   function->members = malloc(sizeof(TyaDict));
   function->members->len = 0;
   function->members->entries = NULL;
+  function->class_name = NULL;
+  function->parent = tya_nil();
+  function->is_class = false;
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
@@ -207,10 +224,23 @@ TyaValue tya_member(TyaValue dict, const char *key) {
     return tya_string(dict.error == NULL ? "" : dict.error);
   }
   if (dict.kind == TYA_FUNCTION && dict.function != NULL && dict.function->members != NULL) {
+    if (dict.function->is_class && key != NULL && strcmp(key, "name") == 0) {
+      return tya_string(dict.function->class_name == NULL ? "" : dict.function->class_name);
+    }
+    if (dict.function->is_class && key != NULL && strcmp(key, "parent") == 0) {
+      return dict.function->parent;
+    }
     for (int i = 0; i < dict.function->members->len; i++) {
       if (dict.function->members->entries[i].key != NULL && strcmp(dict.function->members->entries[i].key, key) == 0) {
         return dict.function->members->entries[i].value;
       }
+    }
+    if (dict.function->is_class && dict.function->parent.kind == TYA_FUNCTION) {
+      TyaValue inherited = tya_member(dict.function->parent, key);
+      if (inherited.kind == TYA_FUNCTION && inherited.function != NULL && inherited.function->fn != NULL) {
+        return tya_bind_method(dict, inherited.function->fn);
+      }
+      return inherited;
     }
     fprintf(stderr, "missing class variable or method: %s\n", key == NULL ? "" : key);
     exit(1);
@@ -717,7 +747,11 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     tya_builder_append(builder, "}");
     break;
   case TYA_FUNCTION:
-    tya_builder_append(builder, "[function]");
+    if (value.function != NULL && value.function->is_class) {
+      tya_builder_append(builder, value.function->class_name == NULL ? "" : value.function->class_name);
+    } else {
+      tya_builder_append(builder, "[function]");
+    }
     break;
   case TYA_ERROR:
     tya_builder_append(builder, "error: ");
@@ -970,7 +1004,11 @@ static void tya_write_value(FILE *out, TyaValue value) {
     fprintf(out, "}");
     break;
   case TYA_FUNCTION:
-    fprintf(out, "[function]");
+    if (value.function != NULL && value.function->is_class) {
+      fprintf(out, "%s", value.function->class_name == NULL ? "" : value.function->class_name);
+    } else {
+      fprintf(out, "[function]");
+    }
     break;
   case TYA_ERROR:
     fprintf(out, "error: %s", value.error == NULL ? "" : value.error);
