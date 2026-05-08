@@ -38,7 +38,7 @@ exec go run ./cmd/tya test tests
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.16.0\n'
+stdout '0.17.0\n'
 ! stderr .
 
 -- pass/nested/one_test.tya --
