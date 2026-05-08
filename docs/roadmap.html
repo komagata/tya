@@ -166,15 +166,16 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Define v0.5 class scope</li>
 <ul>
 <li>[x] Add <code>docs/v0.5/SPEC.md</code>.</li>
-<li>[x] Specify <code>class Name</code>, constructor calls, <code>init</code>, <code>self</code>, fields, methods, and module class access.</li>
-<li>[x] Exclude inheritance, <code>super</code>, interfaces, class methods, class fields, visibility, and <code>@field</code> shorthand from v0.5.</li>
+<li>[x] Specify <code>class Name</code>, constructor calls, <code>init</code>, <code>@field</code> instance fields, methods, and module class access.</li>
+<li>[x] Reserve <code>@@field</code> for future class variables and keep it invalid in v0.5.</li>
+<li>[x] Exclude inheritance, <code>super</code>, interfaces, class methods, class fields, and visibility from v0.5.</li>
 <li>[x] Keep dictionary member access with <code>dict.key</code> out of v0.5.</li>
 </ul>
 <li>[ ] Add class syntax to the compiler front end</li>
 <ul>
 <li>[ ] Add lexer/parser support for class declarations.</li>
 <li>[ ] Add AST nodes for class declarations, methods, object field access, and object field assignment.</li>
-<li>[ ] Add checker diagnostics for class naming, duplicate methods, invalid <code>self</code>, and invalid dot access.</li>
+<li>[ ] Add checker diagnostics for class naming, duplicate methods, invalid <code>@field</code>, invalid <code>@@field</code>, and invalid dot access.</li>
 </ul>
 <li>[ ] Add class runtime and C emission</li>
 <ul>

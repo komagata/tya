@@ -28,8 +28,8 @@ v0.5 adds:
 - PascalCase class names
 - constructor calls with `Name(args...)`
 - an optional `init` method
-- `self` inside instance methods
-- public instance fields assigned with `self.field = value`
+- `@field` instance field syntax
+- public instance fields assigned with `@field = value`
 - public instance field reads with `object.field`
 - public instance method calls with `object.method(args...)`
 - classes as module members
@@ -44,13 +44,13 @@ v0.5 does not include:
 - class methods
 - class fields
 - field defaults in class bodies
+- `@@field` class variable syntax
 - visibility modifiers
 - private fields
 - method overloading
 - operator overloading
 - decorators
 - metaclasses
-- `@field` shorthand
 - dictionary member access with `dict.key`
 - package manager
 - native-backed stdlib
@@ -63,14 +63,15 @@ The class body is indentation-based.
 ```tya
 class User
   init = name ->
-    self.name = name
+    @name = name
 
   greet = ->
-    "Hello, {self.name}"
+    "Hello, {@name}"
 ```
 
 A class body may contain instance method definitions. v0.5 does not allow
-arbitrary statements or field defaults directly in the class body.
+arbitrary statements, field defaults, class fields, or class variables directly
+in the class body.
 
 ## Construction and `init`
 
@@ -86,8 +87,8 @@ If the class defines `init`, the constructor call passes its arguments to
 ```tya
 class Point
   init = x, y ->
-    self.x = x
-    self.y = y
+    @x = x
+    @y = y
 
 point = Point(10, 20)
 ```
@@ -109,15 +110,15 @@ Passing arguments to a class without `init` is an error.
 
 ## Instance Fields
 
-Instance fields are created by assigning through `self`.
+Instance fields are created by assigning through `@field` syntax.
 
 ```tya
 class Counter
   init = ->
-    self.value = 0
+    @value = 0
 
   increment = ->
-    self.value = self.value + 1
+    @value = @value + 1
 ```
 
 Fields are public and can be read or assigned through dot access.
@@ -129,6 +130,9 @@ print counter.value
 counter.value = 10
 ```
 
+`@field` is only valid inside an instance method. It is shorthand for a field
+on the current receiver object, similar to Ruby instance variables.
+
 Reading a missing object field is an error. This keeps field typos visible.
 
 ## Instance Methods
@@ -138,16 +142,17 @@ Methods are functions defined in the class body.
 ```tya
 class User
   init = name ->
-    self.name = name
+    @name = name
 
   rename = name ->
-    self.name = name
+    @name = name
 
   greeting = ->
-    "Hello, {self.name}"
+    "Hello, {@name}"
 ```
 
-Inside an instance method, `self` refers to the receiver object.
+Inside an instance method, `@field` reads or writes a field on the receiver
+object.
 
 ```tya
 user = User("komagata")
@@ -157,6 +162,21 @@ print user.greeting()
 
 v0.5 specifies method calls with `object.method(args...)`. Reading a method as
 a first-class value without calling it is not part of v0.5.
+
+## Instance and Class Variables
+
+v0.5 has instance fields but does not have class variables.
+
+```tya
+class User
+  init = name ->
+    @name = name
+```
+
+`@name` is always an instance field.
+
+`@@name` is reserved for a future class variable feature. It is not valid in
+v0.5.
 
 ## Modules and Classes
 
@@ -168,10 +188,10 @@ is public.
 module user
   class User
     init = name ->
-      self.name = name
+      @name = name
 
     greeting = ->
-      "Hello, {self.name}"
+      "Hello, {@name}"
 ```
 
 Use the class through the module namespace.
@@ -220,7 +240,8 @@ using snake_case.
 v0.5 implementations should report source-oriented errors for:
 
 - non-PascalCase class names
-- `self` outside an instance method
+- `@field` outside an instance method
+- `@@field` usage
 - duplicate methods in the same class
 - constructor arity mismatch
 - missing object fields

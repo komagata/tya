@@ -169,7 +169,7 @@ standard modules, mocking, coverage, benchmark, watch mode, parallel test
 execution, set literals, import aliases, or dictionary member access.
 
 The planned Tya v0.5 specification adds minimal class syntax with `class`,
-constructor calls, `init`, `self`, public instance fields, and instance methods.
+constructor calls, `init`, `@field` instance fields, and instance methods.
 
 ## Test
 

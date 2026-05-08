@@ -172,13 +172,14 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 - [ ] Ship v0.5 minimal classes and objects
   - [x] Define v0.5 class scope
     - [x] Add `docs/v0.5/SPEC.md`.
-    - [x] Specify `class Name`, constructor calls, `init`, `self`, fields, methods, and module class access.
-    - [x] Exclude inheritance, `super`, interfaces, class methods, class fields, visibility, and `@field` shorthand from v0.5.
+    - [x] Specify `class Name`, constructor calls, `init`, `@field` instance fields, methods, and module class access.
+    - [x] Reserve `@@field` for future class variables and keep it invalid in v0.5.
+    - [x] Exclude inheritance, `super`, interfaces, class methods, class fields, and visibility from v0.5.
     - [x] Keep dictionary member access with `dict.key` out of v0.5.
   - [ ] Add class syntax to the compiler front end
     - [ ] Add lexer/parser support for class declarations.
     - [ ] Add AST nodes for class declarations, methods, object field access, and object field assignment.
-    - [ ] Add checker diagnostics for class naming, duplicate methods, invalid `self`, and invalid dot access.
+    - [ ] Add checker diagnostics for class naming, duplicate methods, invalid `@field`, invalid `@@field`, and invalid dot access.
   - [ ] Add class runtime and C emission
     - [ ] Emit object construction through `ClassName(args...)`.
     - [ ] Call `init` during construction and ignore its explicit return value.
