@@ -130,7 +130,8 @@ print array.first(["tya"])
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
-- [v0.22 Spec](https://tya-lang.org/v0.22/spec.html): filesystem standard library expansion.
+- [v0.23 Spec](https://tya-lang.org/v0.23/spec.html): TOML standard module.
+- [v0.22 Spec](https://tya-lang.org/v0.22/spec.html): unittest standard module, module reflection, and `tya test` runner.
 - [v0.21 Spec](https://tya-lang.org/v0.21/spec.html): native-backed `file` and `os` standard modules.
 - [v0.20 Spec](https://tya-lang.org/v0.20/spec.html): standard attached `math` and `path` modules.
 - [v0.19 Spec](https://tya-lang.org/v0.19/spec.html): predicate function and method names ending with `?`.

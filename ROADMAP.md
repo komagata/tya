@@ -109,36 +109,38 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   - [ ] Expand `path` and `os` modules: `path.expand_user`, `os.cwd`, `os.chdir`.
   - [ ] Keep time/date, streaming IO, binary IO, async IO, recursive walking, `mkdir_all`, `remove_all`, copy, symlink, chmod/chown, file handles, `$VAR` path expansion, and platform-specific path separators out of scope.
   - [ ] Add tests, regenerate docs, preserve the selfhost fixed point.
-- [ ] Ship v0.23 NestedText standard module
-  - [ ] Define v0.23 NestedText scope
-    - [ ] Add `docs/v0.23/SPEC.md`.
-    - [ ] Add `nestedtext` standard module reading and writing `.nt` files.
-    - [ ] Specify `nestedtext.parse(text)` returning nested dicts, arrays, and strings.
-    - [ ] Specify `nestedtext.dump(value)` emitting NestedText.
-    - [ ] Treat every leaf value as a string with no implicit type coercion.
-    - [ ] Support indented block dictionaries, lists, and multi-line strings (`> ` prefix).
-    - [ ] Support `#` line comments.
-    - [ ] Reject non-string dictionary keys.
-    - [ ] Keep schema validation, type inference, anchors, references, and binary content out of v0.23.
-  - [ ] Implement the NestedText parser
-    - [ ] Add a lexer for indented blocks, list items, key/value lines, and multi-line strings.
-    - [ ] Treat every scalar value as a string.
-    - [ ] Report syntax errors with source locations.
-  - [ ] Implement the NestedText writer
-    - [ ] Emit indented block syntax.
-    - [ ] Use `> ` multi-line strings when values contain newlines or leading whitespace.
-    - [ ] Reject non-string keys and non-supported value kinds.
+- [ ] Ship v0.23 TOML standard module
+  - [x] Define v0.23 TOML scope
+    - [x] Add `docs/v0.23/SPEC.md`.
+    - [x] Add `toml` standard module reading and writing `.toml` files.
+    - [x] Specify `toml.parse(text)` returning nested dicts, arrays, and primitives.
+    - [x] Specify `toml.dump(value)` emitting TOML text.
+    - [x] Specify TOML-to-Tya value mapping (string/int/float/bool/array/dict, dates as strings).
+    - [x] Support TOML 1.0 features: comments, dotted keys, multi-line strings, integers (decimal/hex/oct/bin), floats, arrays, inline tables, tables, arrays of tables.
+    - [x] Keep schema validation, streaming, comment-preserving round-trip, formatting-preserving round-trip, TOML 1.1 extensions, and binary content out of v0.23.
+  - [ ] Implement the TOML parser
+    - [ ] Lex tokens (keys, strings, numbers, booleans, dates, brackets, equals, dots, newlines, comments).
+    - [ ] Parse top-level key/value pairs into a dict.
+    - [ ] Parse `[table]` and `[[array.of.tables]]` headers.
+    - [ ] Parse inline tables and arrays.
+    - [ ] Map TOML primitive types to Tya values per the SPEC.
+    - [ ] Report syntax errors with line numbers.
+  - [ ] Implement the TOML writer
+    - [ ] Emit primitive values with TOML-correct quoting and escaping.
+    - [ ] Emit nested dicts as `[parent.child]` table sections at top level.
+    - [ ] Emit dicts inside arrays as inline tables.
+    - [ ] Reject `nil`, functions, classes, objects, modules, and non-string dict keys.
   - [ ] Keep v0.23 documentation and tests aligned
     - [ ] Update latest docs when v0.23 behavior is implemented.
     - [ ] Keep `docs/v0.23/` aligned with the v0.23 minor specification.
     - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add parser, writer, module, and negative tests for v0.23 NestedText.
+    - [ ] Add parser, writer, module, and negative tests for v0.23 TOML.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Ship v0.24 package manifest and version resolution
   - [ ] Define v0.24 package manifest scope
     - [ ] Add `docs/v0.24/SPEC.md`.
     - [ ] Decide the package manifest filename (placeholder: `Tyafile`).
-    - [ ] Specify the manifest format as NestedText, parsed by the v0.23 `nestedtext` standard module.
+    - [ ] Specify the manifest format as TOML, parsed by the v0.23 `toml` standard module.
     - [ ] Specify the resolved-version lock filename and format (placeholder: `Tyafile.lock`).
     - [ ] Specify package source identity (name plus version constraints).
     - [ ] Specify version operators `~>`, `>=`, `<`, `=`.
@@ -148,7 +150,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [ ] Specify import resolution to honor the lock file for declared dependencies.
     - [ ] Keep multi-version coexistence, package alias, `unique` declarations, semver-aware type identity, remote registry install, native dependency build, content-addressed lock checksums, and circular dependency healing out of v0.24.
   - [ ] Add manifest parsing
-    - [ ] Parse the manifest via the `nestedtext` standard module.
+    - [ ] Parse the manifest via the `toml` standard module.
     - [ ] Read package metadata section.
     - [ ] Read dependencies section with version constraints.
     - [ ] Report manifest validation errors with source locations.
