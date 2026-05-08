@@ -8,6 +8,7 @@ Tya is a small indentation-based dynamic language implemented in Go. Tya v0.1 is
 - Keep language syntax and naming consistent with `docs/SPEC.md` and `docs/NAMING.md`.
 - Keep stdlib behavior consistent with `docs/API.md`.
 - Treat `docs/archive/pre-v0.1/` as historical reference only. Archived self-host, class/module, and stdlib notes are not current v0.1 authority.
+- Preserve the existing Tya-written self-host compiler fixed point. Once self-host works, do not regress it while implementing later versions. Changes to lexer, parser, AST, checker, C emitter, runtime, CLI, examples, stdlib, or tests must keep `selfhost/v01/compiler.tya` compiling itself to a stable stage-2/stage-3 fixed point.
 - Use `ROADMAP.md` as the single source of truth for TODO, TASK, and roadmap planning. Express roadmap work as Markdown nested task lists: top-level items are Epics, second-level items are Milestones, and third-level items are Tasks. A Milestone is complete when every Task below it is complete, and an Epic is complete when every Milestone below it is complete.
 - Do not rewrite unrelated user changes.
 
@@ -21,6 +22,8 @@ Default verification:
 go test ./... -count=1
 ```
 
-Self-host bootstrap checks are pre-v0.1 historical gates, not default v0.1 verification.
+The self-host invariant is part of default verification. Do not skip or weaken
+`TestSelfhostV01Scripts`; it proves the Tya-written compiler can compile itself
+to a stable fixed point.
 
 Use focused scripts under `scripts/` when changes affect examples, C emission, imports, runtime execution, or stdlib loading.

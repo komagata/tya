@@ -242,7 +242,7 @@ tags may live under `docs/vX.Y.Z/`; the v0.2.0 frozen documents live under
 `docs/v0.2.0/`.
 
 Before committing Go changes, format touched Go files and run the default test
-suite.
+suite. The default suite includes the maintained self-host fixed-point check.
 
 ```sh
 gofmt -w path/to/changed.go
@@ -250,5 +250,5 @@ go test ./... -count=1
 ```
 
 Historical pre-v0.1 self-host notes and experiments live under
-`docs/archive/pre-v0.1/`. They are reference material, not current v0.3
-authority or default verification gates.
+`docs/archive/pre-v0.1/`. They are reference material, but the current
+`selfhost/v01/compiler.tya` fixed point is maintained and must not regress.

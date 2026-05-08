@@ -7,6 +7,22 @@ Pre-v0.1 planning documents and self-host migration notes are archived under
 [`docs/archive/pre-v0.1/`](docs/archive/pre-v0.1/). They are historical
 references, not current language or implementation authority.
 
+## Self-Host Invariant
+
+The Tya-written compiler fixed point is a maintained invariant. Later language,
+runtime, CLI, stdlib, and documentation work must not regress
+`selfhost/v01/compiler.tya`.
+
+Required evidence:
+
+```sh
+go test ./tests -run TestSelfhostV01Scripts -count=1
+```
+
+This gate proves that the Tya-written compiler can compile itself to stable
+stage-2/stage-3 C output, and that the self-hosted stage-2 compiler can compile
+and run representative programs through the maintained v0.4 surface.
+
 ## Current Direction
 
 Tya v0.4 is implemented as a small compile-to-C language. The frozen release
@@ -48,8 +64,9 @@ C runtime
 v0.4 specification tests
 ```
 
-Go interpreter behavior, current `selfhost/*`, ASTMODE, legacy node strings,
-and self-host bootstrap gates are not v0.4 authority.
+Go interpreter behavior, ASTMODE, and legacy archived node-string experiments
+are not v0.4 authority. The maintained `selfhost/v01/compiler.tya` fixed point
+is still required not to regress.
 
 ## Implementation Tooling Policy
 
@@ -67,6 +84,21 @@ Do not add a parser generator or large grammar framework for v0.4. In
 particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter
 as compiler-front-end authority. They may be useful references or future editor
 tooling, but the active compiler path should remain explicit Go code.
+
+After the Go implementation reaches a complete lexer, parser, AST, checker, and
+C emitter for the current specification, continue self-host work in the same
+component order:
+
+```text
+Tya lexer
+Tya parser
+Tya AST
+Tya checker
+Tya C emitter
+```
+
+Each Tya component must preserve the self-host fixed point before moving to the
+next component.
 
 Use small test-support dependencies where they make the v0.4 specification
 easier to verify:
@@ -146,5 +178,5 @@ go test ./... -count=1
 ```
 
 Focused verification should prefer tests for the touched lexer, parser, checker,
-C emitter, runtime, examples, stdlib, or docs. Self-host bootstrap checks are
-historical pre-v0.1 gates and are not default v0.4 verification.
+C emitter, runtime, examples, stdlib, or docs. The self-host fixed-point gate is
+part of the maintained project invariant and must stay green.

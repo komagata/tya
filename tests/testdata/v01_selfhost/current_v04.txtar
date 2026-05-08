@@ -1,0 +1,100 @@
+# Tya-written compiler supports the current v0.4 surface while preserving self-host.
+cd $REPO
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/current_v04.tya" > "$WORK/current_v04.c"'
+! stderr .
+
+exec cc $WORK/current_v04.c runtime/tya_runtime.c -I runtime -o $WORK/current_v04
+! stderr .
+
+exec $WORK/current_v04
+stdout 'ok\n'
+! stderr .
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya selfhost/v01/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+
+exec sh -c '"$WORK/stage1" selfhost/v01/compiler.tya > "$WORK/stage2.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" 2>/dev/null'
+
+exec sh -c '"$WORK/stage2" "$WORK/current_v04.tya" > "$WORK/current_v04_stage2.c"'
+! stderr .
+
+exec cc $WORK/current_v04_stage2.c runtime/tya_runtime.c -I runtime -o $WORK/current_v04_stage2
+! stderr .
+
+exec $WORK/current_v04_stage2
+stdout 'ok\n'
+! stderr .
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/fail_assert.tya" > "$WORK/fail_assert.c"'
+! stderr .
+
+exec cc $WORK/fail_assert.c runtime/tya_runtime.c -I runtime -o $WORK/fail_assert
+! stderr .
+
+! exec $WORK/fail_assert
+stderr 'fail_assert.tya:1:1: assertion failed'
+! stdout .
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/fail_equal.tya" > "$WORK/fail_equal.c"'
+! stderr .
+
+exec cc $WORK/fail_equal.c runtime/tya_runtime.c -I runtime -o $WORK/fail_equal
+! stderr .
+
+! exec $WORK/fail_equal
+stderr 'fail_equal.tya:1:1: assert_equal failed'
+stderr 'expected:'
+stderr 'name: tya'
+stderr 'actual:'
+stderr 'name: Tya'
+! stdout .
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya tests/stdlib_string_test.tya > "$WORK/stdlib_string_test.c"'
+! stderr .
+
+exec cc $WORK/stdlib_string_test.c runtime/tya_runtime.c -I runtime -o $WORK/stdlib_string_test
+! stderr .
+
+exec $WORK/stdlib_string_test
+! stdout .
+! stderr .
+
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya tests/stdlib_array_test.tya > "$WORK/stdlib_array_test.c"'
+! stderr .
+
+exec cc $WORK/stdlib_array_test.c runtime/tya_runtime.c -I runtime -o $WORK/stdlib_array_test
+! stderr .
+
+exec $WORK/stdlib_array_test
+! stdout .
+! stderr .
+
+-- current_v04.tya --
+import string
+import array
+
+items = [1, 2, 3]
+doubled = map(items, item -> item * 2)
+sum = total, item -> total + item
+
+assert string.blank("  ")
+assert array.empty([])
+assert_equal [2, 4, 6], doubled
+assert_equal 6, reduce(items, 0, sum)
+assert_equal true, any(items, item -> item == 2)
+assert_equal true, all(items, item -> item > 0)
+assert_equal 2, find(items, item -> item == 2)
+assert_equal true, equal([1, {name: "tya"}], [1, {name: "tya"}])
+print array.first(["ok"])
+
+-- fail_assert.tya --
+assert false
+
+-- fail_equal.tya --
+assert_equal [1, {name: "tya"}], [1, {name: "Tya"}]

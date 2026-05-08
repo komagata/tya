@@ -687,6 +687,17 @@ parse_simple_statement = tokens, index ->
   if token_kind(current) == "IDENT" and token_text(current) == "print"
     expr, next = parse_expr(tokens, index + 1)
     return expr_stmt(call_expr(ident_expr("print", token_line(current)), [expr], token_line(current)), token_line(current)), next
+  if token_kind(current) == "IDENT" and token_text(current) == "assert"
+    expr, next = parse_expr(tokens, index + 1)
+    return expr_stmt(call_expr(ident_expr("assert", token_line(current)), [expr], token_line(current)), token_line(current)), next
+  if token_kind(current) == "IDENT" and token_text(current) == "assert_equal"
+    expected, after_expected = parse_expr(tokens, index + 1)
+    next = after_expected
+    if token_text(tokens[next]) == ","
+      actual, after_actual = parse_expr(tokens, next + 1)
+      return expr_stmt(call_expr(ident_expr("assert_equal", token_line(current)), [expected, actual], token_line(current)), token_line(current)), after_actual
+    push(syntax_errors, to_string(token_line(current)) + ": assert_equal expects two expressions")
+    return expr_stmt(call_expr(ident_expr("assert_equal", token_line(current)), [expected], token_line(current)), token_line(current)), next
   if token_kind(current) == "IDENT" and token_text(tokens[index + 1]) == "["
     target = ident_expr(token_text(current), token_line(current))
     index_value, after_index = parse_expr(tokens, index + 2)
@@ -1062,6 +1073,22 @@ is_pure_builtin_name = name ->
     return true
   if name == "ends_with"
     return true
+  if name == "map"
+    return true
+  if name == "filter"
+    return true
+  if name == "find"
+    return true
+  if name == "any"
+    return true
+  if name == "all"
+    return true
+  if name == "reduce"
+    return true
+  if name == "equal"
+    return true
+  if name == "read_line"
+    return true
   false
 
 check_name = errors, line, kind, name ->
@@ -1291,6 +1318,16 @@ check = program ->
   remember(names, "contains")
   remember(names, "starts_with")
   remember(names, "ends_with")
+  remember(names, "map")
+  remember(names, "filter")
+  remember(names, "find")
+  remember(names, "any")
+  remember(names, "all")
+  remember(names, "reduce")
+  remember(names, "equal")
+  remember(names, "read_line")
+  remember(names, "assert")
+  remember(names, "assert_equal")
   ctx = checker_context(errors, names, kinds, constants)
   predeclare_function_bindings(ctx, program["statements"])
   for stmt in program["statements"]
@@ -1320,6 +1357,74 @@ c_name = name -> "tya_user_" + name
 c_func_name = name -> "tya_fn_" + name
 
 emitter_functions = []
+emitter_anon_functions = []
+emitter_source_path = ""
+
+register_anon_expr = expr ->
+  if expr["kind"] == "func"
+    if not has(expr, "anon_name")
+      name = "__anon" + to_string(len(emitter_anon_functions))
+      expr["anon_name"] = name
+      push(emitter_anon_functions, expr)
+  if expr["kind"] == "binary"
+    register_anon_expr(expr["left"])
+    register_anon_expr(expr["right"])
+  if expr["kind"] == "unary" or expr["kind"] == "try"
+    register_anon_expr(expr["expr"])
+  if expr["kind"] == "array"
+    for item in expr["items"]
+      register_anon_expr(item)
+  if expr["kind"] == "dict"
+    for entry in expr["entries"]
+      register_anon_expr(entry["value"])
+  if expr["kind"] == "index"
+    register_anon_expr(expr["target"])
+    register_anon_expr(expr["index"])
+  if expr["kind"] == "member"
+    register_anon_expr(expr["target"])
+  if expr["kind"] == "call"
+    register_anon_expr(expr["callee"])
+    for arg in expr["args"]
+      register_anon_expr(arg)
+
+register_anon_stmt = stmt ->
+  if stmt["kind"] == "assign"
+    if stmt["value"]["kind"] != "func"
+      register_anon_expr(stmt["value"])
+  if stmt["kind"] == "multi_assign"
+    register_anon_expr(stmt["value"])
+  if stmt["kind"] == "index_assign"
+    register_anon_expr(stmt["target"])
+    register_anon_expr(stmt["index"])
+    register_anon_expr(stmt["value"])
+  if stmt["kind"] == "return"
+    register_anon_expr(stmt["value"])
+  if stmt["kind"] == "expr_stmt"
+    register_anon_expr(stmt["expr"])
+  if stmt["kind"] == "module"
+    for member in stmt["members"]
+      if member["value"]["kind"] != "func"
+        register_anon_expr(member["value"])
+  if stmt["kind"] == "if"
+    register_anon_expr(stmt["cond"])
+    for child in stmt["then"]
+      register_anon_stmt(child)
+    for child in stmt["else"]
+      register_anon_stmt(child)
+    elseif_index = 0
+    while elseif_index < len(stmt["elseif_conds"])
+      register_anon_expr(stmt["elseif_conds"][elseif_index])
+      for child in stmt["elseif_bodies"][elseif_index]
+        register_anon_stmt(child)
+      elseif_index = elseif_index + 1
+  if stmt["kind"] == "while"
+    register_anon_expr(stmt["cond"])
+    for child in stmt["body"]
+      register_anon_stmt(child)
+  if stmt["kind"] == "for"
+    register_anon_expr(stmt["iterable"])
+    for child in stmt["body"]
+      register_anon_stmt(child)
 
 emit_direct_call = name, args ->
   parts = []
@@ -1381,6 +1486,8 @@ emit_atom = expr ->
     return "tya_bool(false)"
   if expr["kind"] == "nil"
     return "tya_nil()"
+  if expr["kind"] == "func"
+    return "tya_function(" + c_func_name(expr["anon_name"]) + ")"
   if expr["kind"] == "member"
     return "tya_member(" + emit_atom(expr["target"]) + ", " + c_string(expr["name"]) + ")"
   "tya_nil()"
@@ -1409,6 +1516,22 @@ emit_nested = expr ->
         return "tya_split(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
       if name == "join"
         return "tya_join(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "map"
+        return "tya_map(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "filter"
+        return "tya_filter(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "find"
+        return "tya_find(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "any"
+        return "tya_any(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "all"
+        return "tya_all(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "reduce"
+        return "tya_reduce(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ", " + emit_nested(expr["args"][2]) + ")"
+      if name == "equal"
+        return "tya_deep_equal(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "read_line"
+        return "tya_read_line()"
       if is_pure_builtin_name(name)
         return emit_scalar(expr)
     if len(expr["args"]) == 0
@@ -1439,6 +1562,8 @@ emit_scalar = expr ->
     return "tya_bool(false)"
   if expr["kind"] == "nil"
     return "tya_nil()"
+  if expr["kind"] == "func"
+    return "tya_function(" + c_func_name(expr["anon_name"]) + ")"
   if expr["kind"] == "array"
     parts = []
     for item in expr["items"]
@@ -1504,6 +1629,22 @@ emit_scalar = expr ->
         return "tya_starts_with(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
       if name == "ends_with"
         return "tya_ends_with(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "map"
+        return "tya_map(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "filter"
+        return "tya_filter(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "find"
+        return "tya_find(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "any"
+        return "tya_any(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "all"
+        return "tya_all(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "reduce"
+        return "tya_reduce(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ", " + emit_nested(expr["args"][2]) + ")"
+      if name == "equal"
+        return "tya_deep_equal(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
+      if name == "read_line"
+        return "tya_read_line()"
     if len(expr["args"]) == 0
       return "tya_call1(" + emit_nested(expr["callee"]) + ", tya_nil())"
     if len(expr["args"]) == 2
@@ -1644,7 +1785,13 @@ emit_simple_stmt = lines, names, stmt ->
               if expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "exit"
                 push(lines, "  tya_exit(" + emit_expr(expr["args"][0]) + ");")
               else
-                push(lines, "  (void)" + emit_expr(expr) + ";")
+                if expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "assert"
+                  push(lines, "  tya_assert(" + emit_expr(expr["args"][0]) + ", " + c_string(emitter_source_path) + ", " + to_string(stmt["line"]) + ");")
+                else
+                  if expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "assert_equal"
+                    push(lines, "  tya_assert_equal(" + emit_expr(expr["args"][0]) + ", " + emit_expr(expr["args"][1]) + ", " + c_string(emitter_source_path) + ", " + to_string(stmt["line"]) + ");")
+                  else
+                    push(lines, "  (void)" + emit_expr(expr) + ";")
 
 emit_stmt = lines, names, stmt ->
   emit_simple_stmt(lines, names, stmt)
@@ -1741,6 +1888,8 @@ collect_assigned_names = statements ->
 emit_c = program ->
   while len(emitter_functions) > 0
     pop(emitter_functions)
+  while len(emitter_anon_functions) > 0
+    pop(emitter_anon_functions)
   for stmt in program["statements"]
     if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
       remember(emitter_functions, stmt["name"])
@@ -1748,6 +1897,8 @@ emit_c = program ->
       for member in stmt["members"]
         if member["value"]["kind"] == "func"
           remember(emitter_functions, stmt["name"] + "_" + member["name"])
+  for stmt in program["statements"]
+    register_anon_stmt(stmt)
   lines = []
   push(lines, "#include \"tya_runtime.h\"")
   push(lines, "")
@@ -1767,6 +1918,8 @@ emit_c = program ->
       for member in stmt["members"]
         if member["value"]["kind"] == "func"
           push(lines, "TyaValue " + c_func_name(stmt["name"] + "_" + member["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);")
+  for fn in emitter_anon_functions
+    push(lines, "TyaValue " + c_func_name(fn["anon_name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);")
   push(lines, "")
   for stmt in program["statements"]
     if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
@@ -1839,6 +1992,20 @@ emit_c = program ->
             push(lines, "  return " + emit_expr(fn["body"]) + ";")
           push(lines, "}")
           push(lines, "")
+  for fn in emitter_anon_functions
+    push(lines, "TyaValue " + c_func_name(fn["anon_name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
+    push(lines, "  (void)__this;")
+    push(lines, "  (void)__arg2;")
+    push(lines, "  (void)__arg3;")
+    if len(fn["params"]) < 2
+      push(lines, "  (void)__arg1;")
+    arg_index = 0
+    for param in fn["params"]
+      push(lines, "  TyaValue " + c_name(param) + " = __arg" + to_string(arg_index) + ";")
+      arg_index = arg_index + 1
+    push(lines, "  return " + emit_expr(fn["body"]) + ";")
+    push(lines, "}")
+    push(lines, "")
   push(lines, "int main(int argc, char **argv) {")
   push(lines, "  (void)argc;")
   push(lines, "  (void)argv;")
@@ -1870,12 +2037,34 @@ join_path = dir, name ->
     return name
   dir + "/" + name
 
+find_module_path = dir, name ->
+  file_name = name + ".tya"
+  same_dir = join_path(dir, file_name)
+  if file_exists(same_dir)
+    return same_dir
+  path_list = env("TYA_PATH")
+  if path_list != ""
+    for entry in split(path_list, ":")
+      if entry != ""
+        candidate = join_path(entry, file_name)
+        if file_exists(candidate)
+          return candidate
+  stdlib_dir = env("TYA_STDLIB_DIR")
+  if stdlib_dir != ""
+    candidate = join_path(stdlib_dir, file_name)
+    if file_exists(candidate)
+      return candidate
+  candidate = join_path("stdlib", file_name)
+  if file_exists(candidate)
+    return candidate
+  file_name
+
 load_imports = program, path ->
   dir = dir_name(path)
   extra = []
   for stmt in program["statements"]
     if stmt["kind"] == "import"
-      module_path = join_path(dir, stmt["name"] + ".tya")
+      module_path = find_module_path(dir, stmt["name"])
       module_source = read_file(module_path)
       module_tokens, module_errors = lex(module_source)
       for message in module_errors
@@ -1981,4 +2170,5 @@ if len(errors) > 0
     print message
   exit(1)
 
+emitter_source_path = path
 print emit_c(program)
