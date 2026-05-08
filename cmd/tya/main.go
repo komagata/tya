@@ -19,7 +19,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.21.0"
+const version = "0.22.0"
 
 var lineColErrorRE = regexp.MustCompile(`^(\d+):(\d+):\s*(.*)$`)
 var errTestsFailed = errors.New("test failed")
@@ -365,21 +365,79 @@ func testCommand(root string) error {
 	if err != nil {
 		return err
 	}
-	failed := false
-	for _, file := range files {
-		if err := compileAndRun(file, nil); err != nil {
-			failed = true
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				_ = exitErr
-				continue
-			}
-			return err
-		}
+	if len(files) == 0 {
+		return nil
 	}
-	if failed {
-		return errTestsFailed
+	suiteSrc, err := synthesizeTestSuite(files)
+	if err != nil {
+		return err
+	}
+	dirSet := map[string]struct{}{}
+	for _, f := range files {
+		dirSet[filepath.Dir(f)] = struct{}{}
+	}
+	pathDirs := []string{}
+	for d := range dirSet {
+		pathDirs = append(pathDirs, d)
+	}
+	sort.Strings(pathDirs)
+
+	suiteDir, err := os.MkdirTemp("", "tya-test-suite-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(suiteDir)
+	suitePath := filepath.Join(suiteDir, "main.tya")
+	if err := os.WriteFile(suitePath, []byte(suiteSrc), 0644); err != nil {
+		return err
+	}
+
+	prevPath := os.Getenv("TYA_PATH")
+	combined := strings.Join(pathDirs, string(os.PathListSeparator))
+	if prevPath != "" {
+		combined = combined + string(os.PathListSeparator) + prevPath
+	}
+	if err := os.Setenv("TYA_PATH", combined); err != nil {
+		return err
+	}
+	defer os.Setenv("TYA_PATH", prevPath)
+
+	if err := compileAndRun(suitePath, nil); err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return errTestsFailed
+		}
+		return err
 	}
 	return nil
+}
+
+func synthesizeTestSuite(files []string) (string, error) {
+	moduleNames := []string{}
+	seen := map[string]string{}
+	for _, f := range files {
+		mod := strings.TrimSuffix(filepath.Base(f), ".tya")
+		if existing, ok := seen[mod]; ok {
+			return "", fmt.Errorf("duplicate test module name %s: %s and %s", mod, existing, f)
+		}
+		seen[mod] = f
+		moduleNames = append(moduleNames, mod)
+	}
+	var b strings.Builder
+	b.WriteString("import unittest\n")
+	for _, m := range moduleNames {
+		b.WriteString("import ")
+		b.WriteString(m)
+		b.WriteString("\n")
+	}
+	b.WriteString("\nunittest.run([")
+	for i, m := range moduleNames {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		b.WriteString(m)
+	}
+	b.WriteString("])\n")
+	return b.String(), nil
 }
 
 func testFiles(root string) ([]string, error) {

@@ -1,0 +1,67 @@
+module unittest
+  assert = cond, desc ->
+    if not cond
+      raise { kind: "unittest_fail", message: desc }
+
+  assert_falsy = cond, desc ->
+    if cond
+      raise { kind: "unittest_fail", message: desc }
+
+  assert_equal = expected, actual, desc ->
+    if not equal(expected, actual)
+      msg = "{desc}: expected {expected}, got {actual}"
+      raise { kind: "unittest_fail", message: msg }
+
+  assert_not_equal = left, right, desc ->
+    if equal(left, right)
+      raise { kind: "unittest_fail", message: "{desc}: expected not equal" }
+
+  assert_nil = value, desc ->
+    if value != nil
+      raise { kind: "unittest_fail", message: "{desc}: expected nil, got {value}" }
+
+  assert_raises = body ->
+    raised = false
+    try
+      body()
+    catch _
+      raised = true
+    if not raised
+      raise { kind: "unittest_fail", message: "expected raise but none" }
+
+  fail = msg ->
+    raise { kind: "unittest_fail", message: msg }
+
+  run = cases ->
+    total_passes = 0
+    total_failures = 0
+    for c in cases
+      names = keys(c)
+      setup_fn = nil
+      teardown_fn = nil
+      if has(c, "setup")
+        setup_fn = c["setup"]
+      if has(c, "teardown")
+        teardown_fn = c["teardown"]
+      for name in names
+        if starts_with(name, "test_")
+          if setup_fn != nil
+            setup_fn()
+          try
+            fn = c[name]
+            fn()
+            total_passes = total_passes + 1
+            println("  PASS  {name}")
+          catch err
+            total_failures = total_failures + 1
+            msg = err
+            if has(err, "message")
+              msg = err["message"]
+            println("  FAIL  {name}")
+            println("        {msg}")
+          if teardown_fn != nil
+            teardown_fn()
+    total = total_passes + total_failures
+    println("{total} tests, {total_passes} passed, {total_failures} failed")
+    if total_failures > 0
+      exit(1)

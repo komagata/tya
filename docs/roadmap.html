@@ -72,48 +72,13 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="current-roadmap">Current Roadmap</h2>
 <ul>
-<li>[ ] Ship v0.22 filesystem standard library expansion</li>
+<li>[ ] Ship filesystem standard library expansion (deferred from v0.22, schedule TBD)</li>
 <ul>
-<li>[x] Define v0.22 filesystem stdlib scope</li>
-<ul>
-<li>[x] Add <code>docs/v0.22/SPEC.md</code>.</li>
-<li>[x] Add <code>dir.list(path)</code>, <code>dir.mkdir(path)</code>, and <code>dir.rmdir(path)</code>.</li>
-<li>[x] Add <code>file.remove(path)</code>, <code>file.rename(old_path, new_path)</code>, and <code>file.stat(path)</code>.</li>
-<li>[x] Add <code>path.expand_user(value)</code>.</li>
-<li>[x] Add <code>os.cwd()</code> and <code>os.chdir(path)</code>.</li>
-<li>[x] Define permissions API as <code>file.stat</code> booleans.</li>
-<li>[x] Keep time/date, streaming IO, binary IO, async IO, recursive walking, <code>mkdir_all</code>, <code>remove_all</code>, copy, symlink, chmod/chown, file handles, <code>$VAR</code> path expansion, and platform-specific path separators out of v0.22.</li>
-</ul>
-<li>[ ] Implement <code>dir</code> module</li>
-<ul>
-<li>[ ] Add <code>dir.list(path)</code> with stable sorted names.</li>
-<li>[ ] Add <code>dir.mkdir(path)</code> for one-level directory creation.</li>
-<li>[ ] Add <code>dir.rmdir(path)</code> for empty directory removal.</li>
-<li>[ ] Raise structured errors for native directory failures.</li>
-</ul>
-<li>[ ] Expand <code>file</code> module</li>
-<ul>
-<li>[ ] Add <code>file.remove(path)</code> for files only.</li>
-<li>[ ] Add <code>file.rename(old_path, new_path)</code>.</li>
-<li>[ ] Add <code>file.stat(path)</code> metadata dictionary.</li>
-<li>[ ] Include <code>kind</code>, <code>size</code>, <code>readable</code>, <code>writable</code>, and <code>executable</code> in <code>file.stat</code>.</li>
-<li>[ ] Keep time and platform-specific metadata out of <code>file.stat</code>.</li>
-</ul>
-<li>[ ] Expand <code>path</code> and <code>os</code> modules</li>
-<ul>
-<li>[ ] Add <code>path.expand_user(value)</code>.</li>
-<li>[ ] Add <code>os.cwd()</code>.</li>
-<li>[ ] Add <code>os.chdir(path)</code>.</li>
-<li>[ ] Raise structured errors for native failures.</li>
-</ul>
-<li>[ ] Keep v0.22 documentation and tests aligned</li>
-<ul>
-<li>[ ] Update latest docs when v0.22 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.22/</code> aligned with the v0.22 minor specification.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add compiler, runtime, module, C emission, and negative tests for v0.22 filesystem stdlib APIs.</li>
-<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
-</ul>
+<li>[ ] Implement <code>dir</code> module: <code>dir.list</code>, <code>dir.mkdir</code>, <code>dir.rmdir</code> with structured errors.</li>
+<li>[ ] Expand <code>file</code> module: <code>file.remove</code>, <code>file.rename</code>, <code>file.stat</code> (kind/size/readable/writable/executable).</li>
+<li>[ ] Expand <code>path</code> and <code>os</code> modules: <code>path.expand_user</code>, <code>os.cwd</code>, <code>os.chdir</code>.</li>
+<li>[ ] Keep time/date, streaming IO, binary IO, async IO, recursive walking, <code>mkdir_all</code>, <code>remove_all</code>, copy, symlink, chmod/chown, file handles, <code>$VAR</code> path expansion, and platform-specific path separators out of scope.</li>
+<li>[ ] Add tests, regenerate docs, preserve the selfhost fixed point.</li>
 </ul>
 <li>[ ] Ship v0.23 NestedText standard module</li>
 <ul>

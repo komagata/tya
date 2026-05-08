@@ -1,6 +1,12 @@
+import unittest
 import string
 
-assert string.blank(" ")
-assert string.present("tya")
-assert_equal false, string.blank("tya")
-assert_equal true, string.present("tya")
+module stdlib_string_test
+  test_blank_for_whitespace = ->
+    unittest.assert(string.blank(" "), "blank for spaces")
+  test_present_for_content = ->
+    unittest.assert(string.present("tya"), "present for content")
+  test_blank_returns_false_for_content = ->
+    unittest.assert_equal(false, string.blank("tya"), "blank false")
+  test_present_returns_true_for_content = ->
+    unittest.assert_equal(true, string.present("tya"), "present true")

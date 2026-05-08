@@ -103,37 +103,12 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Current Roadmap
 
-- [ ] Ship v0.22 filesystem standard library expansion
-  - [x] Define v0.22 filesystem stdlib scope
-    - [x] Add `docs/v0.22/SPEC.md`.
-    - [x] Add `dir.list(path)`, `dir.mkdir(path)`, and `dir.rmdir(path)`.
-    - [x] Add `file.remove(path)`, `file.rename(old_path, new_path)`, and `file.stat(path)`.
-    - [x] Add `path.expand_user(value)`.
-    - [x] Add `os.cwd()` and `os.chdir(path)`.
-    - [x] Define permissions API as `file.stat` booleans.
-    - [x] Keep time/date, streaming IO, binary IO, async IO, recursive walking, `mkdir_all`, `remove_all`, copy, symlink, chmod/chown, file handles, `$VAR` path expansion, and platform-specific path separators out of v0.22.
-  - [ ] Implement `dir` module
-    - [ ] Add `dir.list(path)` with stable sorted names.
-    - [ ] Add `dir.mkdir(path)` for one-level directory creation.
-    - [ ] Add `dir.rmdir(path)` for empty directory removal.
-    - [ ] Raise structured errors for native directory failures.
-  - [ ] Expand `file` module
-    - [ ] Add `file.remove(path)` for files only.
-    - [ ] Add `file.rename(old_path, new_path)`.
-    - [ ] Add `file.stat(path)` metadata dictionary.
-    - [ ] Include `kind`, `size`, `readable`, `writable`, and `executable` in `file.stat`.
-    - [ ] Keep time and platform-specific metadata out of `file.stat`.
-  - [ ] Expand `path` and `os` modules
-    - [ ] Add `path.expand_user(value)`.
-    - [ ] Add `os.cwd()`.
-    - [ ] Add `os.chdir(path)`.
-    - [ ] Raise structured errors for native failures.
-  - [ ] Keep v0.22 documentation and tests aligned
-    - [ ] Update latest docs when v0.22 behavior is implemented.
-    - [ ] Keep `docs/v0.22/` aligned with the v0.22 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add compiler, runtime, module, C emission, and negative tests for v0.22 filesystem stdlib APIs.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship filesystem standard library expansion (deferred from v0.22, schedule TBD)
+  - [ ] Implement `dir` module: `dir.list`, `dir.mkdir`, `dir.rmdir` with structured errors.
+  - [ ] Expand `file` module: `file.remove`, `file.rename`, `file.stat` (kind/size/readable/writable/executable).
+  - [ ] Expand `path` and `os` modules: `path.expand_user`, `os.cwd`, `os.chdir`.
+  - [ ] Keep time/date, streaming IO, binary IO, async IO, recursive walking, `mkdir_all`, `remove_all`, copy, symlink, chmod/chown, file handles, `$VAR` path expansion, and platform-specific path separators out of scope.
+  - [ ] Add tests, regenerate docs, preserve the selfhost fixed point.
 - [ ] Ship v0.23 NestedText standard module
   - [ ] Define v0.23 NestedText scope
     - [ ] Add `docs/v0.23/SPEC.md`.

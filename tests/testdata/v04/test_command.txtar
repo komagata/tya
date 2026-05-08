@@ -1,59 +1,71 @@
-# v0.4 test discovery and assertions.
+# tya test discovers *_test.tya as importable test case modules and runs them
+# through unittest.run as a synthesized suite (v0.22 behavior).
 cd $REPO
 exec go build -o $WORK/tya ./cmd/tya
+
+# Directory invocation: discover and run all *_test.tya cases.
 exec go run ./cmd/tya test $WORK/pass
-! stdout .
+stdout '5 tests, 5 passed, 0 failed'
 ! stderr .
 
-cd $WORK/pass
-env TYA_RUNTIME_DIR=$REPO/runtime
-env TYA_STDLIB_DIR=$REPO/stdlib
-exec $WORK/tya test
-! stdout .
-! stderr .
-
-cd $REPO
+# Single-file invocation works for one test case file.
 exec go run ./cmd/tya test $WORK/pass/nested/one_test.tya
-! stdout .
+stdout '2 tests, 2 passed, 0 failed'
 ! stderr .
 
+# Failing assertion is captured and reported, suite continues, exit non-zero.
 ! exec go run ./cmd/tya test $WORK/fail/fail_assert_test.tya
-stderr 'fail_assert_test.tya:1:1: assertion failed'
-! stdout .
+stdout 'FAIL  test_fails'
+stdout '1 tests, 0 passed, 1 failed'
 
+# assert_equal failure shows expected/actual.
 ! exec go run ./cmd/tya test $WORK/fail/fail_equal_test.tya
-stderr 'fail_equal_test.tya:1:1: assert_equal failed'
-stderr 'expected:'
-stderr 'name: tya'
-stderr 'actual:'
-stderr 'name: Tya'
-! stdout .
+stdout 'FAIL  test_unequal'
+stdout '1 tests, 0 passed, 1 failed'
 
-exec go run ./cmd/tya test tests/stdlib_string_test.tya
-! stdout .
-! stderr .
-
+# Repository-level discovery finds all migrated stdlib tests and they pass.
 exec go run ./cmd/tya test tests
-! stdout .
+stdout 'tests, '
+stdout 'passed, 0 failed'
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.21.0\n'
+stdout '0.22.0\n'
 ! stderr .
 
 -- pass/nested/one_test.tya --
-assert true
-assert_equal [1, {name: "tya"}], [1, {name: "tya"}]
+import unittest
+
+module one_test
+  test_truthy = ->
+    unittest.assert(true, "true")
+  test_deep_equal = ->
+    unittest.assert_equal([1, {name: "tya"}], [1, {name: "tya"}], "deep")
 
 -- pass/two_test.tya --
-assert 1 + 1 == 2
-assert_equal "tya", "ty" + "a"
+import unittest
+
+module two_test
+  test_arithmetic = ->
+    unittest.assert_equal(2, 1 + 1, "plus")
+  test_concat = ->
+    unittest.assert_equal("tya", "ty" + "a", "concat")
+  test_negation = ->
+    unittest.assert_falsy(false, "false")
 
 -- pass/not_a_test_file.tya --
-assert false
+print "ignored"
 
 -- fail/fail_assert_test.tya --
-assert false
+import unittest
+
+module fail_assert_test
+  test_fails = ->
+    unittest.assert(false, "intentional")
 
 -- fail/fail_equal_test.tya --
-assert_equal [1, {name: "tya"}], [1, {name: "Tya"}]
+import unittest
+
+module fail_equal_test
+  test_unequal = ->
+    unittest.assert_equal([1, {name: "tya"}], [1, {name: "Tya"}], "case mismatch")

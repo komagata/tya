@@ -136,6 +136,28 @@ exit code</code></pre>
 <p><code>args()</code> returns the command-line arguments as an array of strings.</p>
 <p><code>env(name)</code> returns the environment variable value, or <code>nil</code> when not present.</p>
 <p><code>exit(code)</code> exits the process with <code>code</code>.</p>
+<h2 id="unittest"><code>unittest</code></h2>
+<pre><code class="language-tya">import unittest
+import string
+
+module string_blank_test
+  test_blank_for_whitespace = -&gt;
+    unittest.assert(string.blank(&quot; &quot;), &quot;spaces&quot;)
+  test_blank_returns_false_for_content = -&gt;
+    unittest.assert_equal(false, string.blank(&quot;tya&quot;), &quot;content&quot;)</code></pre>
+<p>A test case is an importable module containing <code>test_*</code> functions. Tests are run by <code>tya test</code> (which synthesizes a suite) or by a user-written entry program calling <code>unittest.run([cases...])</code>.</p>
+<p>Functions:</p>
+<pre><code class="language-tya">assert cond, desc
+assert_falsy cond, desc
+assert_equal expected, actual, desc
+assert_not_equal left, right, desc
+assert_nil value, desc
+assert_raises body
+fail message
+run cases</code></pre>
+<p>Each assertion raises a structured <code>{kind: &quot;unittest_fail&quot;, message}</code> value on failure; the test runner catches it so a single failed test does not stop the rest of the suite.</p>
+<p><code>unittest.run(cases)</code> iterates each module's <code>test_*</code> members in dictionary order, runs <code>setup</code> / <code>teardown</code> around each test, prints a summary line and exits non-zero when at least one test failed.</p>
+<p>See the v0.22 SPEC for the full surface.</p>
     </article>
   </main>
 </body>

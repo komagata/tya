@@ -1,7 +1,14 @@
+import unittest
 import file
 
-path = "/tmp/tya_v021_test.txt"
-file.write(path, "hello tya")
-assert_equal "hello tya", file.read(path)
-assert file.exists?(path)
-assert_equal false, file.exists?("/tmp/__tya_v021_no_such__")
+module stdlib_file_test
+  test_write_then_read = ->
+    p = "/tmp/tya_v022_test.txt"
+    file.write(p, "hello tya")
+    unittest.assert_equal("hello tya", file.read(p), "round-trip")
+  test_exists_true = ->
+    p = "/tmp/tya_v022_test.txt"
+    file.write(p, "hi")
+    unittest.assert(file.exists?(p), "exists")
+  test_exists_false = ->
+    unittest.assert_equal(false, file.exists?("/tmp/__tya_v022_no_such__"), "missing")

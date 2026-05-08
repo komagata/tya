@@ -55,23 +55,23 @@ stderr 'actual:'
 stderr 'name: Tya'
 ! stdout .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya tests/stdlib_string_test.tya > "$WORK/stdlib_string_test.c"'
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_string.tya" > "$WORK/v04_string.c"'
 ! stderr .
 
-exec cc $WORK/stdlib_string_test.c runtime/tya_runtime.c -I runtime -o $WORK/stdlib_string_test
+exec cc $WORK/v04_string.c runtime/tya_runtime.c -I runtime -o $WORK/v04_string
 ! stderr .
 
-exec $WORK/stdlib_string_test
+exec $WORK/v04_string
 ! stdout .
 ! stderr .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya tests/stdlib_array_test.tya > "$WORK/stdlib_array_test.c"'
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_array.tya" > "$WORK/v04_array.c"'
 ! stderr .
 
-exec cc $WORK/stdlib_array_test.c runtime/tya_runtime.c -I runtime -o $WORK/stdlib_array_test
+exec cc $WORK/v04_array.c runtime/tya_runtime.c -I runtime -o $WORK/v04_array
 ! stderr .
 
-exec $WORK/stdlib_array_test
+exec $WORK/v04_array
 ! stdout .
 ! stderr .
 
@@ -98,3 +98,19 @@ assert false
 
 -- fail_equal.tya --
 assert_equal [1, {name: "tya"}], [1, {name: "Tya"}]
+
+-- v04_string.tya --
+import string
+
+assert string.blank(" ")
+assert string.present("tya")
+assert_equal false, string.blank("tya")
+assert_equal true, string.present("tya")
+
+-- v04_array.tya --
+import array
+
+assert array.empty([])
+assert_equal false, array.empty(["tya"])
+assert_equal "tya", array.first(["tya"])
+assert_equal [1, {name: "tya"}], [1, {name: "tya"}]

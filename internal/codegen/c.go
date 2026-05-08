@@ -1814,6 +1814,16 @@ func assignedNames(stmts []ast.Stmt) []string {
 					seen[n.Alias] = true
 					names = append(names, n.Alias)
 				}
+			case *ast.ModuleDecl:
+				if !seen[n.Name] {
+					seen[n.Name] = true
+					names = append(names, n.Name)
+				}
+			case *ast.ClassDecl:
+				if !seen[n.Name] {
+					seen[n.Name] = true
+					names = append(names, n.Name)
+				}
 			case *ast.AssignStmt:
 				for _, target := range n.Targets {
 					id, ok := target.(*ast.Ident)
