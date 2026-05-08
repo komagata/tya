@@ -153,18 +153,77 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Add unittest-form tests for each new module.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Ship v0.25 bit-level operations and byte sequences
-  - [ ] Add bitwise operators: `&`, `|`, `^`, `~`, `<<`, `>>` for integers.
-  - [ ] Add a byte-sequence value type (literal form, indexing returns int, slicing, concat, len).
-  - [ ] Add `file.read_bytes(path)` and `file.write_bytes(path, bytes)`.
-  - [ ] Extend `digest`, `secure_random`, `hex`, and `base64` to accept and return byte sequences (keep string compatibility).
-  - [ ] Document that these features unblock NES-emulator-class workloads.
-  - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Future: package manifest and version resolution (deferred, schedule TBD)
-  - [ ] Decide manifest filename (placeholder `Tyafile`) and lockfile format.
-  - [ ] Specify version operators and Bundler-style single-version-per-source resolution.
-  - [ ] Add `tya install` / `tya update` CLI commands.
-  - [ ] Wire manifest dependencies into module resolution before bundled stdlib lookup.
-  - [ ] Use the `toml` standard module to parse the manifest.
+  - [x] Define v0.25 scope
+    - [x] Add `docs/v0.25/SPEC.md`.
+    - [x] Specify bitwise operators `&`, `|`, `^`, `~`, `<<`, `>>` on integers.
+    - [x] Specify the `bytes` value type with `b"..."` literal, `\xHH` escapes, indexing returning int, slicing, concat, len.
+    - [x] Specify `file.read_bytes` and `file.write_bytes`.
+    - [x] Specify bytes-aware updates to `digest`, `secure_random`, `hex`, and `base64` (keep string input compatibility).
+    - [x] Document the `hex.decode` / `base64.decode` return-type breaking change (now bytes).
+    - [x] Keep arbitrary-precision integers, fixed-width integer types, mutable byte buffers, character-set conversion, and streaming IO out of v0.25.
+  - [ ] Add bitwise operators
+    - [ ] Lex `&`, `|`, `^`, `~`, `<<`, `>>` tokens (avoid conflict with existing operators).
+    - [ ] Add precedence levels to the parser.
+    - [ ] Reject non-integer operands with structured errors.
+    - [ ] Emit C bitwise operators in codegen on `(long)x.number`.
+    - [ ] Add eval support for the new operators.
+  - [ ] Add the `bytes` value type
+    - [ ] Add `TYA_BYTES` value kind with separate length to the C runtime.
+    - [ ] Add `bytes`, `bytes_of`, `bytes_text`, `bytes_array`, `bytes_concat`, `bytes_slice` builtins.
+    - [ ] Lex and parse `b"..."` literals with `\xHH` escapes.
+    - [ ] Wire indexing, length, equality, concat through eval and codegen.
+    - [ ] Update `kind` to return `"bytes"`.
+  - [ ] Add binary file I/O
+    - [ ] Add `file.read_bytes(path)` and `file.write_bytes(path, b)` builtins.
+    - [ ] Wire stdlib `file` module wrappers.
+  - [ ] Update existing stdlib for bytes
+    - [ ] Make `digest.*` accept either string or bytes.
+    - [ ] Change `secure_random.bytes(n)` to return a bytes value.
+    - [ ] Make `hex.encode` accept either string or bytes; `hex.decode` returns bytes.
+    - [ ] Make `base64.encode` accept either string or bytes; `base64.decode` returns bytes.
+  - [ ] Keep v0.25 documentation and tests aligned
+    - [ ] Update latest docs when v0.25 behavior is implemented.
+    - [ ] Keep `docs/v0.25/` aligned with the v0.25 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add unittest-form tests for bitwise operators, the bytes type, binary IO, and the migrated digest/secure_random/hex/base64 modules.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.26 external packages and version resolution
+  - [ ] Define v0.26 scope
+    - [ ] Add `docs/v0.26/SPEC.md`.
+    - [ ] Specify the `tya.toml` manifest (name, version, dependencies, dev-dependencies).
+    - [ ] Specify the `tya.lock` lockfile (deterministic resolved versions, source identity, checksums).
+    - [ ] Specify version constraint syntax (`^x.y.z`, `~x.y.z`, `>=x.y.z, <a.b.c`, exact).
+    - [ ] Specify Bundler-style single-version-per-package resolution with backtracking.
+    - [ ] Specify git and path sources; defer central registry to a later version.
+    - [ ] Specify import resolution order: same dir → `tya.toml` deps → `TYA_PATH` → bundled stdlib.
+    - [ ] Specify the package directory layout (`src/` for public modules).
+  - [ ] Implement manifest and lockfile parsing
+    - [ ] Parse `tya.toml` via the `toml` standard module.
+    - [ ] Validate manifest fields and version strings.
+    - [ ] Read and write `tya.lock` deterministically.
+  - [ ] Implement version constraint resolver
+    - [ ] Implement backtracking dependency resolver picking the highest valid version.
+    - [ ] Detect and report unsolvable constraint sets (diamond conflicts) with source-oriented diagnostics.
+  - [ ] Implement source fetchers
+    - [ ] Add a git fetcher (clone + checkout tag/rev) with caching under `.tya/cache`.
+    - [ ] Add a path fetcher (symlink or direct read).
+    - [ ] Verify and record checksums in the lockfile.
+  - [ ] Wire dependency loading into module resolution
+    - [ ] Resolve manifest-declared dependencies before `TYA_PATH` and bundled stdlib.
+    - [ ] Honor the lockfile for reproducible loads.
+    - [ ] Preserve same-directory precedence.
+  - [ ] Add CLI commands
+    - [ ] Add `tya install` (resolve and write lockfile, download packages to `.tya/packages/`).
+    - [ ] Add `tya update [pkg]` (recompute the lockfile for one or all packages).
+    - [ ] Add `tya add <pkg> [constraint]` and `tya remove <pkg>` (edit `tya.toml` + re-resolve).
+    - [ ] Add `tya outdated` (report newer versions available).
+    - [ ] Report missing or conflicting requirements with source-oriented diagnostics.
+  - [ ] Keep v0.26 documentation and tests aligned
+    - [ ] Update latest docs when v0.26 behavior is implemented.
+    - [ ] Keep `docs/v0.26/` aligned with the v0.26 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add CLI, resolver, fetcher, and lockfile tests.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 

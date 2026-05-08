@@ -145,20 +145,105 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 <li>[ ] Ship v0.25 bit-level operations and byte sequences</li>
 <ul>
-<li>[ ] Add bitwise operators: <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> for integers.</li>
-<li>[ ] Add a byte-sequence value type (literal form, indexing returns int, slicing, concat, len).</li>
-<li>[ ] Add <code>file.read_bytes(path)</code> and <code>file.write_bytes(path, bytes)</code>.</li>
-<li>[ ] Extend <code>digest</code>, <code>secure_random</code>, <code>hex</code>, and <code>base64</code> to accept and return byte sequences (keep string compatibility).</li>
-<li>[ ] Document that these features unblock NES-emulator-class workloads.</li>
+<li>[x] Define v0.25 scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.25/SPEC.md</code>.</li>
+<li>[x] Specify bitwise operators <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> on integers.</li>
+<li>[x] Specify the <code>bytes</code> value type with <code>b&quot;...&quot;</code> literal, <code>\xHH</code> escapes, indexing returning int, slicing, concat, len.</li>
+<li>[x] Specify <code>file.read_bytes</code> and <code>file.write_bytes</code>.</li>
+<li>[x] Specify bytes-aware updates to <code>digest</code>, <code>secure_random</code>, <code>hex</code>, and <code>base64</code> (keep string input compatibility).</li>
+<li>[x] Document the <code>hex.decode</code> / <code>base64.decode</code> return-type breaking change (now bytes).</li>
+<li>[x] Keep arbitrary-precision integers, fixed-width integer types, mutable byte buffers, character-set conversion, and streaming IO out of v0.25.</li>
+</ul>
+<li>[ ] Add bitwise operators</li>
+<ul>
+<li>[ ] Lex <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> tokens (avoid conflict with existing operators).</li>
+<li>[ ] Add precedence levels to the parser.</li>
+<li>[ ] Reject non-integer operands with structured errors.</li>
+<li>[ ] Emit C bitwise operators in codegen on <code>(long)x.number</code>.</li>
+<li>[ ] Add eval support for the new operators.</li>
+</ul>
+<li>[ ] Add the <code>bytes</code> value type</li>
+<ul>
+<li>[ ] Add <code>TYA_BYTES</code> value kind with separate length to the C runtime.</li>
+<li>[ ] Add <code>bytes</code>, <code>bytes_of</code>, <code>bytes_text</code>, <code>bytes_array</code>, <code>bytes_concat</code>, <code>bytes_slice</code> builtins.</li>
+<li>[ ] Lex and parse <code>b&quot;...&quot;</code> literals with <code>\xHH</code> escapes.</li>
+<li>[ ] Wire indexing, length, equality, concat through eval and codegen.</li>
+<li>[ ] Update <code>kind</code> to return <code>&quot;bytes&quot;</code>.</li>
+</ul>
+<li>[ ] Add binary file I/O</li>
+<ul>
+<li>[ ] Add <code>file.read_bytes(path)</code> and <code>file.write_bytes(path, b)</code> builtins.</li>
+<li>[ ] Wire stdlib <code>file</code> module wrappers.</li>
+</ul>
+<li>[ ] Update existing stdlib for bytes</li>
+<ul>
+<li>[ ] Make <code>digest.*</code> accept either string or bytes.</li>
+<li>[ ] Change <code>secure_random.bytes(n)</code> to return a bytes value.</li>
+<li>[ ] Make <code>hex.encode</code> accept either string or bytes; <code>hex.decode</code> returns bytes.</li>
+<li>[ ] Make <code>base64.encode</code> accept either string or bytes; <code>base64.decode</code> returns bytes.</li>
+</ul>
+<li>[ ] Keep v0.25 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.25 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.25/</code> aligned with the v0.25 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add unittest-form tests for bitwise operators, the bytes type, binary IO, and the migrated digest/secure_random/hex/base64 modules.</li>
 <li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
-<li>[ ] Future: package manifest and version resolution (deferred, schedule TBD)</li>
+</ul>
+<li>[ ] Ship v0.26 external packages and version resolution</li>
 <ul>
-<li>[ ] Decide manifest filename (placeholder <code>Tyafile</code>) and lockfile format.</li>
-<li>[ ] Specify version operators and Bundler-style single-version-per-source resolution.</li>
-<li>[ ] Add <code>tya install</code> / <code>tya update</code> CLI commands.</li>
-<li>[ ] Wire manifest dependencies into module resolution before bundled stdlib lookup.</li>
-<li>[ ] Use the <code>toml</code> standard module to parse the manifest.</li>
+<li>[ ] Define v0.26 scope</li>
+<ul>
+<li>[ ] Add <code>docs/v0.26/SPEC.md</code>.</li>
+<li>[ ] Specify the <code>tya.toml</code> manifest (name, version, dependencies, dev-dependencies).</li>
+<li>[ ] Specify the <code>tya.lock</code> lockfile (deterministic resolved versions, source identity, checksums).</li>
+<li>[ ] Specify version constraint syntax (<code>^x.y.z</code>, <code>~x.y.z</code>, <code>&gt;=x.y.z, &lt;a.b.c</code>, exact).</li>
+<li>[ ] Specify Bundler-style single-version-per-package resolution with backtracking.</li>
+<li>[ ] Specify git and path sources; defer central registry to a later version.</li>
+<li>[ ] Specify import resolution order: same dir → <code>tya.toml</code> deps → <code>TYA_PATH</code> → bundled stdlib.</li>
+<li>[ ] Specify the package directory layout (<code>src/</code> for public modules).</li>
+</ul>
+<li>[ ] Implement manifest and lockfile parsing</li>
+<ul>
+<li>[ ] Parse <code>tya.toml</code> via the <code>toml</code> standard module.</li>
+<li>[ ] Validate manifest fields and version strings.</li>
+<li>[ ] Read and write <code>tya.lock</code> deterministically.</li>
+</ul>
+<li>[ ] Implement version constraint resolver</li>
+<ul>
+<li>[ ] Implement backtracking dependency resolver picking the highest valid version.</li>
+<li>[ ] Detect and report unsolvable constraint sets (diamond conflicts) with source-oriented diagnostics.</li>
+</ul>
+<li>[ ] Implement source fetchers</li>
+<ul>
+<li>[ ] Add a git fetcher (clone + checkout tag/rev) with caching under <code>.tya/cache</code>.</li>
+<li>[ ] Add a path fetcher (symlink or direct read).</li>
+<li>[ ] Verify and record checksums in the lockfile.</li>
+</ul>
+<li>[ ] Wire dependency loading into module resolution</li>
+<ul>
+<li>[ ] Resolve manifest-declared dependencies before <code>TYA_PATH</code> and bundled stdlib.</li>
+<li>[ ] Honor the lockfile for reproducible loads.</li>
+<li>[ ] Preserve same-directory precedence.</li>
+</ul>
+<li>[ ] Add CLI commands</li>
+<ul>
+<li>[ ] Add <code>tya install</code> (resolve and write lockfile, download packages to <code>.tya/packages/</code>).</li>
+<li>[ ] Add <code>tya update [pkg]</code> (recompute the lockfile for one or all packages).</li>
+<li>[ ] Add <code>tya add &lt;pkg&gt; [constraint]</code> and <code>tya remove &lt;pkg&gt;</code> (edit <code>tya.toml</code> + re-resolve).</li>
+<li>[ ] Add <code>tya outdated</code> (report newer versions available).</li>
+<li>[ ] Report missing or conflicting requirements with source-oriented diagnostics.</li>
+</ul>
+<li>[ ] Keep v0.26 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.26 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.26/</code> aligned with the v0.26 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add CLI, resolver, fetcher, and lockfile tests.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
 </ul>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
