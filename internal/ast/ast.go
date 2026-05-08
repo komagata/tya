@@ -89,6 +89,20 @@ type TryCatchStmt struct {
 
 func (*TryCatchStmt) stmt() {}
 
+type MatchStmt struct {
+	Value Expr
+	Cases []MatchCase
+	Tok   token.Token
+}
+
+func (*MatchStmt) stmt() {}
+
+type MatchCase struct {
+	Pattern Expr
+	Tok     token.Token
+	Body    []Stmt
+}
+
 type ModuleDecl struct {
 	Name       string
 	NameTok    token.Token

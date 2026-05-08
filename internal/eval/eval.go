@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -775,8 +774,71 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			catchEnv.set(n.CatchName, raised.value)
 		}
 		return evalStmts(n.Catch, catchEnv)
+	case *ast.MatchStmt:
+		value, err := evalExpr(n.Value, env)
+		if err != nil {
+			return nil, err
+		}
+		for _, c := range n.Cases {
+			bindings := map[string]Value{}
+			if !matchPattern(c.Pattern, value, bindings) {
+				continue
+			}
+			caseEnv := env.child()
+			for name, value := range bindings {
+				caseEnv.vars[name] = value
+			}
+			return evalStmts(c.Body, caseEnv)
+		}
+		return nil, nil
 	}
 	return nil, fmt.Errorf("unknown statement")
+}
+
+func matchPattern(pattern ast.Expr, value Value, bindings map[string]Value) bool {
+	switch n := pattern.(type) {
+	case *ast.Ident:
+		if n.Name == "_" {
+			return true
+		}
+		bindings[n.Name] = value
+		return true
+	case *ast.IntLit:
+		return equal(value, n.Value)
+	case *ast.FloatLit:
+		return equal(value, n.Value)
+	case *ast.StringLit:
+		return equal(value, n.Value)
+	case *ast.BoolLit:
+		return equal(value, n.Value)
+	case *ast.NilLit:
+		return value == nil
+	case *ast.ArrayLit:
+		arr, ok := value.(*Array)
+		if !ok || len(arr.items) != len(n.Elems) {
+			return false
+		}
+		for i, elem := range n.Elems {
+			if !matchPattern(elem, arr.items[i], bindings) {
+				return false
+			}
+		}
+		return true
+	case *ast.DictLit:
+		dict, ok := value.(Dict)
+		if !ok {
+			return false
+		}
+		for _, prop := range n.Props {
+			item, ok := dict[prop.Name]
+			if !ok || !matchPattern(prop.Value, item, bindings) {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
 }
 
 func evalValues(exprs []ast.Expr, env *Env) ([]Value, error) {
@@ -1405,42 +1467,62 @@ func truthy(v Value) bool {
 	return true
 }
 
-var interp = regexp.MustCompile(`\{([^{}]+)\}`)
-
 func interpolate(s string, env *Env) (string, error) {
-	var first error
-	out := interp.ReplaceAllStringFunc(s, func(m string) string {
-		if first != nil {
-			return ""
+	var out strings.Builder
+	for i := 0; i < len(s); {
+		switch s[i] {
+		case '{':
+			if i+1 < len(s) && s[i+1] == '{' {
+				out.WriteByte('{')
+				i += 2
+				continue
+			}
+			close := strings.IndexByte(s[i+1:], '}')
+			if close < 0 {
+				return "", fmt.Errorf("unclosed interpolation")
+			}
+			expr := strings.TrimSpace(s[i+1 : i+1+close])
+			if expr == "" {
+				return "", fmt.Errorf("empty interpolation")
+			}
+			v, err := evalInterpolationExpr(expr, env)
+			if err != nil {
+				return "", err
+			}
+			out.WriteString(stringify(v))
+			i += close + 2
+		case '}':
+			if i+1 < len(s) && s[i+1] == '}' {
+				out.WriteByte('}')
+				i += 2
+				continue
+			}
+			return "", fmt.Errorf("unmatched '}' in string interpolation")
+		default:
+			out.WriteByte(s[i])
+			i++
 		}
-		expr := strings.TrimSpace(m[1 : len(m)-1])
-		toks, errs := lexer.Lex(expr)
-		if len(errs) > 0 {
-			first = errs[0]
-			return ""
-		}
-		prog, err := parser.Parse(toks)
-		if err != nil {
-			first = err
-			return ""
-		}
-		if len(prog.Stmts) != 1 {
-			first = fmt.Errorf("interpolation must contain one expression")
-			return ""
-		}
-		stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
-		if !ok {
-			first = fmt.Errorf("interpolation must contain an expression")
-			return ""
-		}
-		v, err := evalExpr(stmt.Expr, env)
-		if err != nil {
-			first = err
-			return ""
-		}
-		return stringify(v)
-	})
-	return out, first
+	}
+	return out.String(), nil
+}
+
+func evalInterpolationExpr(expr string, env *Env) (Value, error) {
+	toks, errs := lexer.Lex(expr)
+	if len(errs) > 0 {
+		return nil, fmt.Errorf("invalid interpolation expression: %w", errs[0])
+	}
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		return nil, fmt.Errorf("invalid interpolation expression: %w", err)
+	}
+	if len(prog.Stmts) != 1 {
+		return nil, fmt.Errorf("interpolation must contain one expression")
+	}
+	stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
+	if !ok {
+		return nil, fmt.Errorf("interpolation must contain an expression")
+	}
+	return evalExpr(stmt.Expr, env)
 }
 
 func stringify(v Value) string {

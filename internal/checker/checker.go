@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/lexer"
+	"tya/internal/parser"
 )
 
 var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
@@ -323,7 +325,58 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			if err := checkStmts(n.Catch, constants, catchScope); err != nil {
 				return err
 			}
+		case *ast.MatchStmt:
+			if err := checkExpr(n.Value, scope); err != nil {
+				return err
+			}
+			for _, c := range n.Cases {
+				caseScope := newScope(scope)
+				if err := checkPattern(c.Pattern, caseScope); err != nil {
+					return err
+				}
+				if err := checkStmts(c.Body, constants, caseScope); err != nil {
+					return err
+				}
+			}
 		}
+	}
+	return nil
+}
+
+func checkPattern(pattern ast.Expr, scope *scope) error {
+	switch n := pattern.(type) {
+	case *ast.Ident:
+		if n.Name == "_" {
+			return nil
+		}
+		if err := checkBindingName(n.Name, n.Tok.Line, n.Tok.Col); err != nil {
+			return err
+		}
+		scope.define(n.Name, kindUnknown)
+	case *ast.IntLit, *ast.FloatLit, *ast.StringLit, *ast.BoolLit, *ast.NilLit:
+		return nil
+	case *ast.ArrayLit:
+		for _, elem := range n.Elems {
+			if err := checkPattern(elem, scope); err != nil {
+				return err
+			}
+		}
+	case *ast.DictLit:
+		seen := map[string]bool{}
+		for _, prop := range n.Props {
+			if prop.Name == "" {
+				return fmt.Errorf("%d:%d: pattern dictionary keys must be string literals", prop.Tok.Line, prop.Tok.Col)
+			}
+			if seen[prop.Name] {
+				return fmt.Errorf("%d:%d: duplicate pattern dictionary key %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
+			}
+			seen[prop.Name] = true
+			if err := checkPattern(prop.Value, scope); err != nil {
+				return err
+			}
+		}
+	default:
+		return fmt.Errorf("invalid pattern syntax")
 	}
 	return nil
 }
@@ -591,6 +644,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		}
 		if !scope.defined(n.Name) {
 			return fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
+		}
+	case *ast.StringLit:
+		if err := checkInterpolation(n.Value, scope); err != nil {
+			return err
 		}
 	case *ast.DictLit:
 		seen := map[string]bool{}
@@ -1661,6 +1718,54 @@ func checkDestructuringTarget(target ast.Expr, values []ast.Expr, constants map[
 	default:
 		return fmt.Errorf("invalid destructuring target")
 	}
+}
+
+func checkInterpolation(value string, scope *scope) error {
+	for i := 0; i < len(value); {
+		switch value[i] {
+		case '{':
+			if i+1 < len(value) && value[i+1] == '{' {
+				i += 2
+				continue
+			}
+			close := strings.IndexByte(value[i+1:], '}')
+			if close < 0 {
+				return fmt.Errorf("unclosed interpolation")
+			}
+			expr := strings.TrimSpace(value[i+1 : i+1+close])
+			if expr == "" {
+				return fmt.Errorf("empty interpolation")
+			}
+			toks, errs := lexer.Lex(expr)
+			if len(errs) > 0 {
+				return fmt.Errorf("invalid interpolation expression: %w", errs[0])
+			}
+			prog, err := parser.Parse(toks)
+			if err != nil {
+				return fmt.Errorf("invalid interpolation expression: %w", err)
+			}
+			if len(prog.Stmts) != 1 {
+				return fmt.Errorf("interpolation must contain one expression")
+			}
+			stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
+			if !ok {
+				return fmt.Errorf("interpolation must contain an expression")
+			}
+			if err := checkExpr(stmt.Expr, scope); err != nil {
+				return err
+			}
+			i += close + 2
+		case '}':
+			if i+1 < len(value) && value[i+1] == '}' {
+				i += 2
+				continue
+			}
+			return fmt.Errorf("unmatched '}' in string interpolation")
+		default:
+			i++
+		}
+	}
+	return nil
 }
 
 func exprKind(values []ast.Expr, scope *scope) valueKind {

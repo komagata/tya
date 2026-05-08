@@ -651,6 +651,56 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
+<li>[x] Ship v0.16 pattern matching and string interpolation polish</li>
+<ul>
+<li>[x] Define v0.16 pattern matching and interpolation scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.16/SPEC.md</code>.</li>
+<li>[x] Specify <code>match value</code>.</li>
+<li>[x] Specify <code>case pattern</code>.</li>
+<li>[x] Specify literal, wildcard, binding, array, dictionary, and nested patterns.</li>
+<li>[x] Specify first-match-only execution and no fallthrough.</li>
+<li>[x] Keep match expressions, <code>else</code>, guards, OR patterns, rest patterns, class object patterns, typed patterns, regex patterns, and exhaustiveness checks out of v0.16.</li>
+<li>[x] Formalize string interpolation rules.</li>
+<li>[x] Specify <code>{{</code> and <code>}}</code> literal brace escapes.</li>
+</ul>
+<li>[x] Add match parsing and checking</li>
+<ul>
+<li>[x] Parse <code>match value</code> blocks.</li>
+<li>[x] Parse <code>case pattern</code> branches.</li>
+<li>[x] Parse literal, wildcard, binding, array, dictionary, and nested patterns.</li>
+<li>[x] Reject <code>case</code> outside <code>match</code>.</li>
+<li>[x] Reject non-string dictionary keys in patterns.</li>
+<li>[x] Reject match statement used as an expression.</li>
+<li>[x] Reject duplicate binding names inside one pattern.</li>
+</ul>
+<li>[x] Add match runtime behavior</li>
+<ul>
+<li>[x] Evaluate the match value once.</li>
+<li>[x] Run only the first matching case.</li>
+<li>[x] Avoid fallthrough between cases.</li>
+<li>[x] Treat no matching case as no-op.</li>
+<li>[x] Bind pattern names only inside the matched case block.</li>
+<li>[x] Treat pattern mismatches as non-match, not runtime errors.</li>
+</ul>
+<li>[x] Polish string interpolation</li>
+<ul>
+<li>[x] Use <code>to_string</code> conversion behavior for interpolated values.</li>
+<li>[x] Require exactly one expression inside interpolation braces.</li>
+<li>[x] Report empty interpolation.</li>
+<li>[x] Report unclosed interpolation.</li>
+<li>[x] Report unmatched <code>}</code> in strings.</li>
+<li>[x] Support <code>{{</code> and <code>}}</code> literal brace escapes.</li>
+</ul>
+<li>[x] Keep v0.16 documentation and tests aligned</li>
+<ul>
+<li>[x] Update latest docs when v0.16 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.16/</code> aligned with the v0.16 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add compiler, runtime, module, and negative tests for v0.16 pattern matching and interpolation.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>
 <pre><code class="language-sh">go test ./... -count=1</code></pre>

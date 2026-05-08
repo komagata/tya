@@ -267,7 +267,7 @@ lex = source ->
         i = i + 2
         col = col + 2
         continue
-    if contains("=<>:,.@+-*/%()[]{}", char)
+    if contains("=<>:,.@+-*/%()[]{{}}", char)
       push(tokens, token_node("SYMBOL", char, line, col))
       i = i + 1
       col = col + 1
@@ -506,14 +506,14 @@ parse_primary = tokens, index ->
       if token_text(tokens[next]) == ","
         next = next + 1
     return array_expr(items, token_line(tok)), next + 1
-  if token_kind(tok) == "SYMBOL" and token_text(tok) == "{"
+  if token_kind(tok) == "SYMBOL" and token_text(tok) == "{{"
     entries = []
     next = index + 1
-    while token_text(tokens[next]) != "}" and token_kind(tokens[next]) != "EOF"
+    while token_text(tokens[next]) != "}}" and token_kind(tokens[next]) != "EOF"
       key = token_text(tokens[next])
       if token_text(tokens[next + 1]) != ":"
         push(syntax_errors, to_string(token_line(tokens[next])) + ": set literals are not in Tya v0.1")
-        while token_text(tokens[next]) != "}" and token_kind(tokens[next]) != "EOF"
+        while token_text(tokens[next]) != "}}" and token_kind(tokens[next]) != "EOF"
           next = next + 1
         return dict_expr(entries, token_line(tok)), next + 1
       next = next + 2
@@ -1614,43 +1614,51 @@ emit_string_value = text ->
   i = 0
   while i < len(text)
     char = text[i]
-    if char == "{"
-      name = ""
-      j = i + 1
-      while j < len(text) and text[j] != "}"
-        name = name + text[j]
-        j = j + 1
-      if j < len(text) and text[j] == "}" and name != ""
-        if literal != ""
-          push(parts, "tya_string(" + c_string(literal) + ")")
-          literal = ""
-        if len(name) > 1 and name[0] == "@" and name[1] == "@"
-          field_name = ""
-          field_index = 2
-          while field_index < len(name)
-            field_name = field_name + name[field_index]
-            field_index = field_index + 1
-          push(parts, "tya_to_string(tya_member(" + emitter_state["class_ref"] + ", " + c_string(field_name) + "))")
-        else
-          if name == "super()"
-            push(parts, "tya_to_string(" + c_func_name(emitter_state["super_class"] + "_" + emitter_state["method_name"]) + "(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil()))")
+    if char == "{{"
+      if i + 1 < len(text) and text[i + 1] == "{{"
+        literal = literal + "{{"
+        i = i + 2
+      else
+        name = ""
+        j = i + 1
+        while j < len(text) and text[j] != "}}"
+          name = name + text[j]
+          j = j + 1
+        if j < len(text) and text[j] == "}}" and name != ""
+          if literal != ""
+            push(parts, "tya_string(" + c_string(literal) + ")")
+            literal = ""
+          if len(name) > 1 and name[0] == "@" and name[1] == "@"
+            field_name = ""
+            field_index = 2
+            while field_index < len(name)
+              field_name = field_name + name[field_index]
+              field_index = field_index + 1
+            push(parts, "tya_to_string(tya_member(" + emitter_state["class_ref"] + ", " + c_string(field_name) + "))")
           else
-            if len(name) > 0 and name[0] == "@"
-              field_name = ""
-              field_index = 1
-              while field_index < len(name)
-                field_name = field_name + name[field_index]
-                field_index = field_index + 1
-              push(parts, "tya_to_string(tya_member(__this, " + c_string("@" + field_name) + "))")
+            if name == "super()"
+              push(parts, "tya_to_string(" + c_func_name(emitter_state["super_class"] + "_" + emitter_state["method_name"]) + "(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil()))")
             else
-              push(parts, "tya_to_string(" + c_name(name) + ")")
-        i = j + 1
+              if len(name) > 0 and name[0] == "@"
+                field_name = ""
+                field_index = 1
+                while field_index < len(name)
+                  field_name = field_name + name[field_index]
+                  field_index = field_index + 1
+                push(parts, "tya_to_string(tya_member(__this, " + c_string("@" + field_name) + "))")
+              else
+                push(parts, "tya_to_string(" + c_name(name) + ")")
+          i = j + 1
+        else
+          literal = literal + char
+          i = i + 1
+    else
+      if char == "}}" and i + 1 < len(text) and text[i + 1] == "}}"
+        literal = literal + "}}"
+        i = i + 2
       else
         literal = literal + char
         i = i + 1
-    else
-      literal = literal + char
-      i = i + 1
   if literal != ""
     push(parts, "tya_string(" + c_string(literal) + ")")
   if len(parts) == 0
@@ -1792,14 +1800,14 @@ emit_scalar = expr ->
       push(parts, emit_nested(item))
     if len(parts) == 0
       return "tya_array(0, 0)"
-    return "tya_array((TyaValue[]){" + join(parts, ", ") + "}, " + to_string(len(parts)) + ")"
+    return "tya_array((TyaValue[]){{" + join(parts, ", ") + "}}, " + to_string(len(parts)) + ")"
   if expr["kind"] == "dict"
     parts = []
     for entry in expr["entries"]
-      push(parts, "{" + c_string(entry["key"]) + ", " + emit_nested(entry["value"]) + "}")
+      push(parts, "{{" + c_string(entry["key"]) + ", " + emit_nested(entry["value"]) + "}}")
     if len(parts) == 0
       return "tya_dict(0, 0)"
-    return "tya_dict((TyaDictEntry[]){" + join(parts, ", ") + "}, " + to_string(len(parts)) + ")"
+    return "tya_dict((TyaDictEntry[]){{" + join(parts, ", ") + "}}, " + to_string(len(parts)) + ")"
   if expr["kind"] == "index"
     return "tya_index(" + emit_nested(expr["target"]) + ", " + emit_nested(expr["index"]) + ")"
   if expr["kind"] == "member"
@@ -1987,9 +1995,9 @@ emit_simple_stmt = lines, names, stmt ->
       err_name = "__tryErr" + to_string(len(lines))
       push(lines, "  TyaValue " + tuple_name + " = " + emit_expr(stmt["value"]["expr"]) + ";")
       push(lines, "  TyaValue " + err_name + " = tya_index(" + tuple_name + ", tya_number(1));")
-      push(lines, "  if (tya_truthy(" + err_name + ")) {")
-      push(lines, "    return tya_array((TyaValue[]){tya_nil(), " + err_name + "}, 2);")
-      push(lines, "  }")
+      push(lines, "  if (tya_truthy(" + err_name + ")) {{")
+      push(lines, "    return tya_array((TyaValue[]){{tya_nil(), " + err_name + "}}, 2);")
+      push(lines, "  }}")
       item = "tya_index(" + tuple_name + ", tya_number(0))"
       if has_name(names, stmt["name"])
         push(lines, "  " + c_name(stmt["name"]) + " = " + item + ";")
@@ -2041,7 +2049,7 @@ emit_stmt = lines, names, stmt ->
     entries = []
     for member in stmt["members"]
       if member["value"]["kind"] != "func"
-        push(entries, "{" + c_string(member["name"]) + ", " + emit_expr(member["value"]) + "}")
+        push(entries, "{{" + c_string(member["name"]) + ", " + emit_expr(member["value"]) + "}}")
     prefix = "TyaValue " + c_name(stmt["name"]) + " = "
     if has_name(names, stmt["name"])
       prefix = c_name(stmt["name"]) + " = "
@@ -2050,7 +2058,7 @@ emit_stmt = lines, names, stmt ->
     if len(entries) == 0
       push(lines, "  " + prefix + "tya_dict(0, 0);")
     else
-      push(lines, "  " + prefix + "tya_dict((TyaDictEntry[]){" + join(entries, ", ") + "}, " + to_string(len(entries)) + ");")
+      push(lines, "  " + prefix + "tya_dict((TyaDictEntry[]){{" + join(entries, ", ") + "}}, " + to_string(len(entries)) + ");")
     for member in stmt["members"]
       if member["value"]["kind"] == "func"
         push(lines, "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(member["name"]) + ", tya_function(" + c_func_name(stmt["name"] + "_" + member["name"]) + "));")
@@ -2078,30 +2086,30 @@ emit_stmt = lines, names, stmt ->
         push(lines, "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(method["name"]) + ", tya_bind_method(" + c_name(stmt["name"]) + ", " + c_func_name(stmt["name"] + "_" + method["name"]) + "));")
     emitter_state["class_ref"] = saved_class_ref
   if stmt["kind"] == "if"
-    push(lines, "  if (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {")
+    push(lines, "  if (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {{")
     for child in stmt["then"]
       emit_stmt(lines, names, child)
     elseif_index = 0
     while elseif_index < len(stmt["elseif_conds"])
-      push(lines, "  } else if (tya_truthy(" + emit_expr(stmt["elseif_conds"][elseif_index]) + ")) {")
+      push(lines, "  }} else if (tya_truthy(" + emit_expr(stmt["elseif_conds"][elseif_index]) + ")) {{")
       for child in stmt["elseif_bodies"][elseif_index]
         emit_stmt(lines, names, child)
       elseif_index = elseif_index + 1
     if len(stmt["else"]) > 0
-      push(lines, "  } else {")
+      push(lines, "  }} else {{")
       for child in stmt["else"]
         emit_stmt(lines, names, child)
-    push(lines, "  }")
+    push(lines, "  }}")
   if stmt["kind"] == "while"
-    push(lines, "  while (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {")
+    push(lines, "  while (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {{")
     for child in stmt["body"]
       emit_stmt(lines, names, child)
-    push(lines, "  }")
+    push(lines, "  }}")
   if stmt["kind"] == "for"
     iter_name = "__iter" + to_string(len(lines))
     index_name = "__i" + to_string(len(lines))
     push(lines, "  TyaValue " + iter_name + " = " + emit_expr(stmt["iterable"]) + ";")
-    push(lines, "  for (int " + index_name + " = 0; " + index_name + " < (int)tya_len(" + iter_name + ").number; " + index_name + "++) {")
+    push(lines, "  for (int " + index_name + " = 0; " + index_name + " < (int)tya_len(" + iter_name + ").number; " + index_name + "++) {{")
     item_expr = "tya_index(" + iter_name + ", tya_number(" + index_name + "))"
     if stmt["loop_kind"] == "of"
       item_expr = "tya_dict_key_at(" + iter_name + ", tya_number(" + index_name + "))"
@@ -2113,7 +2121,7 @@ emit_stmt = lines, names, stmt ->
       push(lines, "  TyaValue " + c_name(stmt["index_name"]) + " = " + index_value_expr + ";")
     for child in stmt["body"]
       emit_stmt(lines, names, child)
-    push(lines, "  }")
+    push(lines, "  }}")
 
 collect_assigned_names = statements ->
   names = []
@@ -2149,7 +2157,7 @@ collect_assigned_names = statements ->
   names
 
 emit_function_definition = lines, c_fn_name, fn, use_this ->
-  push(lines, "TyaValue " + c_fn_name + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
+  push(lines, "TyaValue " + c_fn_name + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{")
   if not use_this
     push(lines, "  (void)__this;")
   push(lines, "  (void)__arg2;")
@@ -2181,7 +2189,7 @@ emit_function_definition = lines, c_fn_name, fn, use_this ->
       push(lines, "  return tya_nil();")
   else
     push(lines, "  return " + emit_expr(fn["body"]) + ";")
-  push(lines, "}")
+  push(lines, "}}")
   push(lines, "")
   return nil
 
@@ -2202,7 +2210,7 @@ emit_class_definition = lines, class_name, class_value ->
     emitter_state["method_name"] = saved_method
     emitter_state["class_ref"] = saved_method_class_ref
   emitter_state["class_ref"] = saved_class_ref
-  push(lines, "TyaValue " + c_func_name(class_name) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
+  push(lines, "TyaValue " + c_func_name(class_name) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{")
   push(lines, "  (void)__this;")
   push(lines, "  TyaValue __obj = tya_object();")
   push(lines, "  tya_set_member(__obj, " + c_string("class") + ", " + c_name(class_name) + ");")
@@ -2261,7 +2269,7 @@ emit_class_definition = lines, class_name, class_value ->
       push(lines, "  tya_set_member(__obj, " + c_string(method["name"]) + ", tya_bind_method(__obj, " + c_func_name(class_name + "_" + method["name"]) + "));")
   emitter_state["class_ref"] = saved_class_ref
   push(lines, "  return __obj;")
-  push(lines, "}")
+  push(lines, "}}")
   push(lines, "")
   return nil
 
@@ -2331,7 +2339,7 @@ emit_c = program ->
   for stmt in program["statements"]
     if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
       fn = stmt["value"]
-      push(lines, "TyaValue " + c_func_name(stmt["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
+      push(lines, "TyaValue " + c_func_name(stmt["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{")
       push(lines, "  (void)__this;")
       push(lines, "  (void)__arg2;")
       push(lines, "  (void)__arg3;")
@@ -2361,13 +2369,13 @@ emit_c = program ->
           push(lines, "  return tya_nil();")
       else
         push(lines, "  return " + emit_expr(fn["body"]) + ";")
-      push(lines, "}")
+      push(lines, "}}")
       push(lines, "")
     if stmt["kind"] == "module"
       for member in stmt["members"]
         if member["value"]["kind"] == "func"
           fn = member["value"]
-          push(lines, "TyaValue " + c_func_name(stmt["name"] + "_" + member["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
+          push(lines, "TyaValue " + c_func_name(stmt["name"] + "_" + member["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{")
           push(lines, "  (void)__this;")
           push(lines, "  (void)__arg2;")
           push(lines, "  (void)__arg3;")
@@ -2397,14 +2405,14 @@ emit_c = program ->
               push(lines, "  return tya_nil();")
           else
             push(lines, "  return " + emit_expr(fn["body"]) + ";")
-          push(lines, "}")
+          push(lines, "}}")
           push(lines, "")
       for class_value in stmt["classes"]
         emit_class_definition(lines, stmt["name"] + "_" + class_value["name"], class_value)
     if stmt["kind"] == "class"
       emit_class_definition(lines, stmt["name"], stmt)
   for fn in emitter_anon_functions
-    push(lines, "TyaValue " + c_func_name(fn["anon_name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {")
+    push(lines, "TyaValue " + c_func_name(fn["anon_name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{")
     push(lines, "  (void)__this;")
     push(lines, "  (void)__arg2;")
     push(lines, "  (void)__arg3;")
@@ -2415,16 +2423,16 @@ emit_c = program ->
       push(lines, "  TyaValue " + c_name(param) + " = __arg" + to_string(arg_index) + ";")
       arg_index = arg_index + 1
     push(lines, "  return " + emit_expr(fn["body"]) + ";")
-    push(lines, "}")
+    push(lines, "}}")
     push(lines, "")
-  push(lines, "int main(int argc, char **argv) {")
+  push(lines, "int main(int argc, char **argv) {{")
   push(lines, "  (void)argc;")
   push(lines, "  (void)argv;")
   names = clone_names(global_names)
   for stmt in program["statements"]
     emit_stmt(lines, names, stmt)
   push(lines, "  return 0;")
-  push(lines, "}")
+  push(lines, "}}")
   join(lines, "\n") + "\n"
 
 dir_name = path ->

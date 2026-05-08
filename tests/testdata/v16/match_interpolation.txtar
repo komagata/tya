@@ -1,0 +1,97 @@
+# v0.16 match statements and string interpolation polish.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/match_interpolation.tya
+stdout 'first\nkomagata\nfallback\nerror:bad\nliteral { brace }\nnext age: 49\nready: true\n'
+! stderr .
+
+! exec go run ./cmd/tya check $WORK/case_outside.tya
+stderr 'case outside match'
+
+! exec go run ./cmd/tya check $WORK/match_without_value.tya
+stderr 'match requires a value expression'
+
+! exec go run ./cmd/tya check $WORK/bad_dict_key.tya
+stderr 'pattern dictionary keys must be string literals'
+
+! exec go run ./cmd/tya check $WORK/duplicate_binding.tya
+stderr 'duplicate binding name in pattern'
+
+! exec go run ./cmd/tya check $WORK/empty_interpolation.tya
+stderr 'empty interpolation'
+
+! exec go run ./cmd/tya check $WORK/unclosed_interpolation.tya
+stderr 'unclosed interpolation'
+
+! exec go run ./cmd/tya check $WORK/unmatched_brace.tya
+stderr 'unmatched .* in string interpolation'
+
+exec go run ./cmd/tya version
+stdout '0.16.0\n'
+! stderr .
+
+-- match_interpolation.tya --
+status = "ok"
+match status
+  case "ok"
+    print "first"
+  case "ok"
+    print "second"
+
+user = {name: "komagata", age: 48, email: "k@example.test"}
+match user
+  case {"name": name, "email": email}
+    print name
+  case _
+    print "unknown"
+
+match ["komagata"]
+  case [name, age]
+    print name
+  case _
+    print "fallback"
+
+response = {type: "error", message: "bad"}
+match response
+  case {"type": "ok", "value": [name, email]}
+    print name
+  case {"type": "error", "message": message}
+    print "error:{message}"
+  case _
+    print "unknown"
+
+age = 48
+enabled = true
+ready = true
+print "literal {{ brace }}"
+print "next age: {age + 1}"
+print "ready: {enabled and ready}"
+
+-- case_outside.tya --
+case _
+  print "bad"
+
+-- match_without_value.tya --
+match
+  case _
+    print "bad"
+
+-- bad_dict_key.tya --
+user = {name: "komagata"}
+match user
+  case {name: value}
+    print value
+
+-- duplicate_binding.tya --
+match ["a", "b"]
+  case [name, name]
+    print name
+
+-- empty_interpolation.tya --
+print "Hello, {}"
+
+-- unclosed_interpolation.tya --
+print "Hello, {name"
+
+-- unmatched_brace.tya --
+print "bad } brace"

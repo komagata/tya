@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/lexer"
+	"tya/internal/parser"
 )
 
 func EmitC(prog *ast.Program) (string, error) {
@@ -261,6 +263,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.line(fmt.Sprintf("tya_raise(%s);", value))
 	case *ast.TryCatchStmt:
 		return g.tryCatchStmt(n)
+	case *ast.MatchStmt:
+		return g.matchStmt(n)
 	case *ast.ForInStmt:
 		iterable, _, err := g.expr(n.Iterable)
 		if err != nil {
@@ -379,6 +383,110 @@ func (g *cgen) tryCatchStmt(n *ast.TryCatchStmt) error {
 	}
 	g.indent--
 	g.line("}")
+	return nil
+}
+
+func (g *cgen) matchStmt(n *ast.MatchStmt) error {
+	value, _, err := g.expr(n.Value)
+	if err != nil {
+		return err
+	}
+	matchValue := fmt.Sprintf("__match%d", g.temp)
+	matched := fmt.Sprintf("__matched%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = %s;", matchValue, value))
+	g.line(fmt.Sprintf("bool %s = false;", matched))
+	for _, c := range n.Cases {
+		cond, err := g.matchCondition(c.Pattern, matchValue)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("if (!%s && (%s)) {", matched, cond))
+		g.indent++
+		g.line(fmt.Sprintf("%s = true;", matched))
+		bindings := patternBindings(c.Pattern)
+		oldVars := map[string]bool{}
+		for _, binding := range bindings {
+			oldVars[binding] = g.vars[binding]
+			g.vars[binding] = true
+		}
+		if err := g.bindPattern(c.Pattern, matchValue); err != nil {
+			return err
+		}
+		for _, stmt := range c.Body {
+			if err := g.stmt(stmt); err != nil {
+				return err
+			}
+		}
+		for _, binding := range bindings {
+			if oldVars[binding] {
+				g.vars[binding] = true
+			} else {
+				delete(g.vars, binding)
+			}
+		}
+		g.indent--
+		g.line("}")
+	}
+	return nil
+}
+
+func (g *cgen) matchCondition(pattern ast.Expr, value string) (string, error) {
+	switch n := pattern.(type) {
+	case *ast.Ident:
+		return "true", nil
+	case *ast.IntLit, *ast.FloatLit, *ast.StringLit, *ast.BoolLit, *ast.NilLit:
+		lit, _, err := g.expr(pattern)
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("tya_truthy(tya_deep_equal(%s, %s))", value, lit), nil
+	case *ast.ArrayLit:
+		parts := []string{fmt.Sprintf("%s.kind == TYA_ARRAY", value), fmt.Sprintf("(int)tya_len(%s).number == %d", value, len(n.Elems))}
+		for i, elem := range n.Elems {
+			cond, err := g.matchCondition(elem, fmt.Sprintf("tya_index(%s, tya_number(%d))", value, i))
+			if err != nil {
+				return "", err
+			}
+			parts = append(parts, cond)
+		}
+		return strings.Join(parts, " && "), nil
+	case *ast.DictLit:
+		parts := []string{fmt.Sprintf("%s.kind == TYA_DICT", value)}
+		for _, prop := range n.Props {
+			key := fmt.Sprintf("tya_string(%s)", strconv.Quote(prop.Name))
+			parts = append(parts, fmt.Sprintf("tya_truthy(tya_has(%s, %s))", value, key))
+			cond, err := g.matchCondition(prop.Value, fmt.Sprintf("tya_index(%s, %s)", value, key))
+			if err != nil {
+				return "", err
+			}
+			parts = append(parts, cond)
+		}
+		return strings.Join(parts, " && "), nil
+	default:
+		return "", fmt.Errorf("C emitter does not support pattern %T", pattern)
+	}
+}
+
+func (g *cgen) bindPattern(pattern ast.Expr, value string) error {
+	switch n := pattern.(type) {
+	case *ast.Ident:
+		if n.Name != "_" {
+			g.line(fmt.Sprintf("TyaValue %s = %s;", cName(n.Name), value))
+		}
+	case *ast.ArrayLit:
+		for i, elem := range n.Elems {
+			if err := g.bindPattern(elem, fmt.Sprintf("tya_index(%s, tya_number(%d))", value, i)); err != nil {
+				return err
+			}
+		}
+	case *ast.DictLit:
+		for _, prop := range n.Props {
+			if err := g.bindPattern(prop.Value, fmt.Sprintf("tya_index(%s, tya_string(%s))", value, strconv.Quote(prop.Name))); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -1032,8 +1140,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.FloatLit:
 		return "tya_number(" + strconv.FormatFloat(n.Value, 'f', -1, 64) + ")", "TyaValue", nil
 	case *ast.StringLit:
-		if strings.Contains(n.Value, "{") {
-			return g.interpolateString(n.Value), "TyaValue", nil
+		if strings.ContainsAny(n.Value, "{}") {
+			value, err := g.interpolateString(n.Value)
+			return value, "TyaValue", err
 		}
 		return "tya_string(" + strconv.Quote(n.Value) + ")", "TyaValue", nil
 	case *ast.BoolLit:
@@ -1571,43 +1680,62 @@ func cFuncName(name string, serial int) string {
 	return fmt.Sprintf("tya_fn_%s_%d", cName(name), serial)
 }
 
-func (g *cgen) interpolateString(value string) string {
+func (g *cgen) interpolateString(value string) (string, error) {
 	parts := []string{}
-	for len(value) > 0 {
-		open := strings.IndexByte(value, '{')
-		if open < 0 {
-			if value != "" {
-				parts = append(parts, "tya_string("+strconv.Quote(value)+")")
-			}
-			break
+	var text strings.Builder
+	flushText := func() {
+		if text.Len() > 0 {
+			parts = append(parts, "tya_string("+strconv.Quote(text.String())+")")
+			text.Reset()
 		}
-		if open > 0 {
-			parts = append(parts, "tya_string("+strconv.Quote(value[:open])+")")
-		}
-		close := strings.IndexByte(value[open+1:], '}')
-		if close < 0 {
-			parts = append(parts, "tya_string("+strconv.Quote(value[open:])+")")
-			break
-		}
-		name := value[open+1 : open+1+close]
-		if expr, ok := g.interpolationExpr(name); ok {
-			parts = append(parts, "tya_to_string("+expr+")")
-		} else {
-			parts = append(parts, "tya_string("+strconv.Quote(value[open:open+close+2])+")")
-		}
-		value = value[open+close+2:]
 	}
+	for i := 0; i < len(value); {
+		switch value[i] {
+		case '{':
+			if i+1 < len(value) && value[i+1] == '{' {
+				text.WriteByte('{')
+				i += 2
+				continue
+			}
+			close := strings.IndexByte(value[i+1:], '}')
+			if close < 0 {
+				return "", fmt.Errorf("unclosed interpolation")
+			}
+			expr := strings.TrimSpace(value[i+1 : i+1+close])
+			if expr == "" {
+				return "", fmt.Errorf("empty interpolation")
+			}
+			compiled, err := g.interpolationExpr(expr)
+			if err != nil {
+				return "", err
+			}
+			flushText()
+			parts = append(parts, "tya_to_string("+compiled+")")
+			i += close + 2
+		case '}':
+			if i+1 < len(value) && value[i+1] == '}' {
+				text.WriteByte('}')
+				i += 2
+				continue
+			}
+			return "", fmt.Errorf("unmatched '}' in string interpolation")
+		default:
+			text.WriteByte(value[i])
+			i++
+		}
+	}
+	flushText()
 	if len(parts) == 0 {
-		return "tya_string(\"\")"
+		return "tya_string(\"\")", nil
 	}
 	expr := parts[0]
 	for _, part := range parts[1:] {
 		expr = "tya_add(" + expr + ", " + part + ")"
 	}
-	return expr
+	return expr, nil
 }
 
-func (g *cgen) interpolationExpr(expr string) (string, bool) {
+func (g *cgen) interpolationExpr(expr string) (string, error) {
 	expr = strings.TrimSpace(expr)
 	if expr == "super()" {
 		sym := g.inheritedMethodSym(g.superClass, g.methodName)
@@ -1615,94 +1743,27 @@ func (g *cgen) interpolationExpr(expr string) (string, bool) {
 			sym = g.inheritedClassMethodSym(g.superClass, g.methodName)
 		}
 		if sym == "" {
-			return "tya_nil()", true
+			return "tya_nil()", nil
 		}
-		return fmt.Sprintf("%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil())", sym), true
+		return fmt.Sprintf("%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil())", sym), nil
 	}
-	if strings.HasPrefix(expr, "@@") && isIdentName(strings.TrimPrefix(expr, "@@")) {
-		name := strings.TrimPrefix(expr, "@@")
-		target := g.classTarget()
-		if strings.HasPrefix(name, "_") && g.classRef != "" {
-			target = g.classRef
-		}
-		return "tya_member(" + target + ", " + strconv.Quote(name) + ")", true
+	toks, errs := lexer.Lex(expr)
+	if len(errs) > 0 {
+		return "", fmt.Errorf("invalid interpolation expression: %w", errs[0])
 	}
-	return interpolationExpr(expr)
-}
-
-func isIdentName(name string) bool {
-	if name == "" {
-		return false
+	prog, err := parser.Parse(toks)
+	if err != nil {
+		return "", fmt.Errorf("invalid interpolation expression: %w", err)
 	}
-	for i, r := range name {
-		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '_' || i > 0 && r >= '0' && r <= '9' {
-			continue
-		}
-		return false
+	if len(prog.Stmts) != 1 {
+		return "", fmt.Errorf("interpolation must contain one expression")
 	}
-	return true
-}
-
-func isPathName(name string) bool {
-	if name == "" {
-		return false
+	stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
+	if !ok {
+		return "", fmt.Errorf("interpolation must contain an expression")
 	}
-	for _, part := range strings.Split(name, ".") {
-		if !isIdentName(part) {
-			return false
-		}
-	}
-	return true
-}
-
-func pathExpr(name string) string {
-	if strings.HasPrefix(name, "@") && isIdentName(strings.TrimPrefix(name, "@")) {
-		return "tya_member(__this, " + strconv.Quote(name) + ")"
-	}
-	parts := strings.Split(name, ".")
-	expr := cName(parts[0])
-	for _, part := range parts[1:] {
-		expr = "tya_member(" + expr + ", " + strconv.Quote(part) + ")"
-	}
-	return expr
-}
-
-func interpolationExpr(expr string) (string, bool) {
-	expr = strings.TrimSpace(expr)
-	if strings.HasPrefix(expr, "@") && isIdentName(strings.TrimPrefix(expr, "@")) {
-		return pathExpr(expr), true
-	}
-	if isPathName(expr) {
-		return pathExpr(expr), true
-	}
-	for _, op := range []string{" + "} {
-		if strings.Contains(expr, op) {
-			parts := strings.Split(expr, op)
-			if len(parts) != 2 {
-				return "", false
-			}
-			left, ok := interpolationExpr(parts[0])
-			if !ok {
-				return "", false
-			}
-			right, ok := interpolationExpr(parts[1])
-			if !ok {
-				return "", false
-			}
-			return "tya_add(" + left + ", " + right + ")", true
-		}
-	}
-	if n, err := strconv.ParseInt(expr, 10, 64); err == nil {
-		return "tya_number(" + strconv.FormatInt(n, 10) + ")", true
-	}
-	if strings.HasPrefix(expr, "\"") && strings.HasSuffix(expr, "\"") {
-		unquoted, err := strconv.Unquote(expr)
-		if err != nil {
-			return "", false
-		}
-		return "tya_string(" + strconv.Quote(unquoted) + ")", true
-	}
-	return "", false
+	value, _, err := g.expr(stmt.Expr)
+	return value, err
 }
 
 func assignedNames(stmts []ast.Stmt) []string {
@@ -1738,9 +1799,38 @@ func assignedNames(stmts []ast.Stmt) []string {
 			case *ast.TryCatchStmt:
 				walk(n.Try)
 				walk(n.Catch)
+			case *ast.MatchStmt:
+				for _, c := range n.Cases {
+					walk(c.Body)
+				}
 			}
 		}
 	}
 	walk(stmts)
+	return names
+}
+
+func patternBindings(pattern ast.Expr) []string {
+	seen := map[string]bool{}
+	var names []string
+	var walk func(ast.Expr)
+	walk = func(pattern ast.Expr) {
+		switch n := pattern.(type) {
+		case *ast.Ident:
+			if n.Name != "_" && !seen[n.Name] {
+				seen[n.Name] = true
+				names = append(names, n.Name)
+			}
+		case *ast.ArrayLit:
+			for _, elem := range n.Elems {
+				walk(elem)
+			}
+		case *ast.DictLit:
+			for _, prop := range n.Props {
+				walk(prop.Value)
+			}
+		}
+	}
+	walk(pattern)
 	return names
 }

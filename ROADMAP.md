@@ -523,6 +523,44 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add compiler, runtime, module, and negative tests for v0.15 structured error handling.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [x] Ship v0.16 pattern matching and string interpolation polish
+  - [x] Define v0.16 pattern matching and interpolation scope
+    - [x] Add `docs/v0.16/SPEC.md`.
+    - [x] Specify `match value`.
+    - [x] Specify `case pattern`.
+    - [x] Specify literal, wildcard, binding, array, dictionary, and nested patterns.
+    - [x] Specify first-match-only execution and no fallthrough.
+    - [x] Keep match expressions, `else`, guards, OR patterns, rest patterns, class object patterns, typed patterns, regex patterns, and exhaustiveness checks out of v0.16.
+    - [x] Formalize string interpolation rules.
+    - [x] Specify `{{` and `}}` literal brace escapes.
+  - [x] Add match parsing and checking
+    - [x] Parse `match value` blocks.
+    - [x] Parse `case pattern` branches.
+    - [x] Parse literal, wildcard, binding, array, dictionary, and nested patterns.
+    - [x] Reject `case` outside `match`.
+    - [x] Reject non-string dictionary keys in patterns.
+    - [x] Reject match statement used as an expression.
+    - [x] Reject duplicate binding names inside one pattern.
+  - [x] Add match runtime behavior
+    - [x] Evaluate the match value once.
+    - [x] Run only the first matching case.
+    - [x] Avoid fallthrough between cases.
+    - [x] Treat no matching case as no-op.
+    - [x] Bind pattern names only inside the matched case block.
+    - [x] Treat pattern mismatches as non-match, not runtime errors.
+  - [x] Polish string interpolation
+    - [x] Use `to_string` conversion behavior for interpolated values.
+    - [x] Require exactly one expression inside interpolation braces.
+    - [x] Report empty interpolation.
+    - [x] Report unclosed interpolation.
+    - [x] Report unmatched `}` in strings.
+    - [x] Support `{{` and `}}` literal brace escapes.
+  - [x] Keep v0.16 documentation and tests aligned
+    - [x] Update latest docs when v0.16 behavior is implemented.
+    - [x] Keep `docs/v0.16/` aligned with the v0.16 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add compiler, runtime, module, and negative tests for v0.16 pattern matching and interpolation.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 ## Verification Reference
 
 Default verification:

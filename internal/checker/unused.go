@@ -113,9 +113,35 @@ func checkUnusedStmts(stmts []ast.Stmt, scope *useScope) error {
 			if err := checkUnusedStmts(n.Catch, child); err != nil {
 				return err
 			}
+		case *ast.MatchStmt:
+			checkUnusedExpr(n.Value, scope)
+			for _, c := range n.Cases {
+				child := newUseScope(scope)
+				definePatternBindings(c.Pattern, child)
+				if err := checkUnusedStmts(c.Body, child); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
+}
+
+func definePatternBindings(pattern ast.Expr, scope *useScope) {
+	switch n := pattern.(type) {
+	case *ast.Ident:
+		if n.Name != "_" {
+			scope.define(n.Name, n.Tok.Line, n.Tok.Col)
+		}
+	case *ast.ArrayLit:
+		for _, elem := range n.Elems {
+			definePatternBindings(elem, scope)
+		}
+	case *ast.DictLit:
+		for _, prop := range n.Props {
+			definePatternBindings(prop.Value, scope)
+		}
+	}
 }
 
 func checkUnusedExpr(expr ast.Expr, scope *useScope) {

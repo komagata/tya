@@ -74,6 +74,12 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "for" {
 		return p.forStmt()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "match" {
+		return p.matchStmt()
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "case" {
+		return nil, p.err("case outside match")
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "try" && p.peekN(1).Type == token.NEWLINE {
 		return p.tryCatchStmt()
 	}
@@ -562,6 +568,44 @@ func (p *Parser) tryCatchStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.TryCatchStmt{Try: body, CatchName: name.Lexeme, CatchTok: name, Catch: catchBody, Tok: tok}, nil
+}
+
+func (p *Parser) matchStmt() (ast.Stmt, error) {
+	tok := p.next()
+	if p.at(token.NEWLINE) || p.at(token.DEDENT) || p.at(token.EOF) {
+		return nil, p.errAt(tok, "match requires a value expression")
+	}
+	value, err := p.exprLine()
+	if err != nil {
+		return nil, err
+	}
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after match")
+	}
+	p.blockDepth++
+	defer func() { p.blockDepth-- }()
+	var cases []ast.MatchCase
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		if !(p.at(token.IDENT) && p.peek().Lexeme == "case") {
+			return nil, p.err("expected case in match")
+		}
+		caseTok := p.next()
+		pattern, err := p.pattern()
+		if err != nil {
+			return nil, err
+		}
+		body, err := p.block("case")
+		if err != nil {
+			return nil, err
+		}
+		cases = append(cases, ast.MatchCase{Pattern: pattern, Tok: caseTok, Body: body})
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after match")
+	}
+	return &ast.MatchStmt{Value: value, Cases: cases, Tok: tok}, nil
 }
 
 func (p *Parser) block(owner string) ([]ast.Stmt, error) {
@@ -1256,6 +1300,99 @@ func (p *Parser) patternTarget() (ast.Expr, error) {
 	default:
 		return nil, p.err("expected destructuring target")
 	}
+}
+
+func (p *Parser) pattern() (ast.Expr, error) {
+	return p.patternValue(map[string]bool{})
+}
+
+func (p *Parser) patternValue(bindings map[string]bool) (ast.Expr, error) {
+	switch p.peek().Type {
+	case token.IDENT:
+		tok := p.next()
+		switch tok.Lexeme {
+		case "nil":
+			return &ast.NilLit{}, nil
+		case "true":
+			return &ast.BoolLit{Value: true}, nil
+		case "false":
+			return &ast.BoolLit{Value: false}, nil
+		case "_":
+			return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
+		default:
+			if bindings[tok.Lexeme] {
+				return nil, p.errAt(tok, "duplicate binding name in pattern")
+			}
+			bindings[tok.Lexeme] = true
+			return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
+		}
+	case token.INT:
+		tok := p.next()
+		v, _ := strconv.ParseInt(tok.Lexeme, 10, 64)
+		return &ast.IntLit{Value: v}, nil
+	case token.FLOAT:
+		tok := p.next()
+		v, _ := strconv.ParseFloat(tok.Lexeme, 64)
+		return &ast.FloatLit{Value: v}, nil
+	case token.STRING:
+		tok := p.next()
+		return &ast.StringLit{Value: tok.Lexeme}, nil
+	case token.LBRACKET:
+		return p.arrayPatternValue(bindings)
+	case token.LBRACE:
+		return p.dictPatternValue(bindings)
+	default:
+		return nil, p.err("invalid pattern syntax")
+	}
+}
+
+func (p *Parser) arrayPatternValue(bindings map[string]bool) (ast.Expr, error) {
+	p.next()
+	var elems []ast.Expr
+	if !p.at(token.RBRACKET) {
+		for {
+			elem, err := p.patternValue(bindings)
+			if err != nil {
+				return nil, err
+			}
+			elems = append(elems, elem)
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+	if !p.match(token.RBRACKET) {
+		return nil, p.err("expected ']'")
+	}
+	return &ast.ArrayLit{Elems: elems}, nil
+}
+
+func (p *Parser) dictPatternValue(bindings map[string]bool) (ast.Expr, error) {
+	p.next()
+	dict := &ast.DictLit{}
+	if !p.at(token.RBRACE) {
+		for {
+			if !p.at(token.STRING) {
+				return nil, p.err("pattern dictionary keys must be string literals")
+			}
+			key := p.next()
+			if !p.match(token.COLON) {
+				return nil, p.err("expected ':' after pattern dictionary key")
+			}
+			value, err := p.patternValue(bindings)
+			if err != nil {
+				return nil, err
+			}
+			dict.Props = append(dict.Props, ast.DictProp{Name: key.Lexeme, Tok: key, Value: value})
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+	if !p.match(token.RBRACE) {
+		return nil, p.err("expected '}'")
+	}
+	return dict, nil
 }
 
 func (p *Parser) isAssignStart() bool {
