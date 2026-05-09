@@ -7,6 +7,7 @@ module path
         return parts[i]
       i = i - 1
     return ""
+
   dirname = value ->
     parts = split(value, "/")
     last = len(parts) - 1
@@ -25,6 +26,7 @@ module path
     if joined == ""
       return "."
     return joined
+
   extname = value ->
     bparts = split(value, "/")
     bi = len(bparts) - 1
@@ -40,6 +42,7 @@ module path
     if parts[0] == "" and n == 2
       return ""
     return "." + parts[n - 1]
+
   clean = value ->
     if value == ""
       return "."
@@ -62,6 +65,7 @@ module path
     if joined == ""
       return "."
     return joined
+
   join = parts ->
     raw = join(parts, "/")
     if raw == ""
@@ -85,4 +89,5 @@ module path
     if joined == ""
       return "."
     return joined
+
   expand_user = value -> path_expand_user(value)

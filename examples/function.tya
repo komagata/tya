@@ -1,7 +1,3 @@
 greet = user -> "Hello, " + user["name"]
-
-user =
-  name: "komagata"
-  age: 20
-
+user = { name: "komagata", age: 20 }
 print greet(user)

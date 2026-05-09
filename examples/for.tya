@@ -1,10 +1,7 @@
 items = [2, 4, 6]
 sum = 0
-
 for item in items
   sum = sum + item
-
 print sum
-
 for item, index in items
   print "{index}:{item}"

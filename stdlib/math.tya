@@ -1,18 +1,23 @@
 module math
   pi = 3.141592653589793
+
   e = 2.718281828459045
+
   abs = value ->
     if value < 0
       return 0 - value
     return value
+
   min = left, right ->
     if left < right
       return left
     return right
+
   max = left, right ->
     if left > right
       return left
     return right
+
   clamp = value, lo, hi ->
     if lo > hi
       raise "math.clamp: min must be less than or equal to max"
@@ -21,20 +26,37 @@ module math
     if value > hi
       return hi
     return value
+
   sqrt = x -> math_sqrt(x)
+
   pow = x, y -> math_pow(x, y)
+
   floor = x -> math_floor(x)
+
   ceil = x -> math_ceil(x)
+
   round = x -> math_round(x)
+
   trunc = x -> math_trunc(x)
+
   log = x -> math_log(x)
+
   log2 = x -> math_log2(x)
+
   log10 = x -> math_log10(x)
+
   exp = x -> math_exp(x)
+
   sin = x -> math_sin(x)
+
   cos = x -> math_cos(x)
+
   tan = x -> math_tan(x)
+
   asin = x -> math_asin(x)
+
   acos = x -> math_acos(x)
+
   atan = x -> math_atan(x)
+
   atan2 = y, x -> math_atan2(y, x)

@@ -1,5 +1,2 @@
-user =
-  name: "komagata"
-  age: 20
-
+user = { name: "komagata", age: 20 }
 print "Hello, " + user["name"]

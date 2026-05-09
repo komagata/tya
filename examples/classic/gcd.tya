@@ -1,9 +1,7 @@
 a = 48
 b = 18
-
 while b != 0
   next = a % b
   a = b
   b = next
-
 print a

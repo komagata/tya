@@ -12,11 +12,13 @@ module secure_random
     i = 0
     while i < n
       b = secure_random_int(0, 255)
-      out = out + secure_random.hex_digit(to_int(b / 16)) + secure_random.hex_digit(b % 16)
+      out = out
+        + secure_random.hex_digit(to_int(b / 16))
+        + secure_random.hex_digit(b % 16)
       i = i + 1
     return out
 
-  base64_alphabet = ->
+  base64_alphabet = () ->
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
   base64 = n ->
@@ -28,8 +30,8 @@ module secure_random
       b2 = secure_random_int(0, 255)
       b3 = secure_random_int(0, 255)
       g1 = to_int(b1 / 4)
-      g2 = (b1 % 4) * 16 + to_int(b2 / 16)
-      g3 = (b2 % 16) * 4 + to_int(b3 / 64)
+      g2 = b1 % 4 * 16 + to_int(b2 / 16)
+      g3 = b2 % 16 * 4 + to_int(b3 / 64)
       g4 = b3 % 64
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + alphabet[g4]
       i = i + 3
@@ -37,34 +39,36 @@ module secure_random
     if rem == 1
       b1 = secure_random_int(0, 255)
       g1 = to_int(b1 / 4)
-      g2 = (b1 % 4) * 16
+      g2 = b1 % 4 * 16
       out = out + alphabet[g1] + alphabet[g2] + "=="
     elseif rem == 2
       b1 = secure_random_int(0, 255)
       b2 = secure_random_int(0, 255)
       g1 = to_int(b1 / 4)
-      g2 = (b1 % 4) * 16 + to_int(b2 / 16)
-      g3 = (b2 % 16) * 4
+      g2 = b1 % 4 * 16 + to_int(b2 / 16)
+      g3 = b2 % 16 * 4
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
     return out
 
-  hex_byte = ->
+  hex_byte = () ->
     b = secure_random_int(0, 255)
     return secure_random.hex_digit(to_int(b / 16)) + secure_random.hex_digit(b % 16)
 
-  uuid = ->
+  uuid = () ->
     bs = []
     i = 0
     while i < 16
       push(bs, secure_random_int(0, 255))
       i = i + 1
-    bs[6] = (bs[6] % 16) + 64
-    bs[8] = (bs[8] % 64) + 128
+    bs[6] = bs[6] % 16 + 64
+    bs[8] = bs[8] % 64 + 128
     parts = ""
     i = 0
     while i < 16
       b = bs[i]
-      parts = parts + secure_random.hex_digit(to_int(b / 16)) + secure_random.hex_digit(b % 16)
+      parts = parts
+        + secure_random.hex_digit(to_int(b / 16))
+        + secure_random.hex_digit(b % 16)
       if i == 3 or i == 5 or i == 7 or i == 9
         parts = parts + "-"
       i = i + 1

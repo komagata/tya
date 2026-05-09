@@ -1,5 +1,5 @@
 module base64
-  alphabet = ->
+  alphabet = () ->
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
   byte_at = value, i ->
@@ -27,8 +27,8 @@ module base64
       b2 = base64.byte_at(value, i + 1)
       b3 = base64.byte_at(value, i + 2)
       g1 = to_int(b1 / 4)
-      g2 = (b1 % 4) * 16 + to_int(b2 / 16)
-      g3 = (b2 % 16) * 4 + to_int(b3 / 64)
+      g2 = b1 % 4 * 16 + to_int(b2 / 16)
+      g3 = b2 % 16 * 4 + to_int(b3 / 64)
       g4 = b3 % 64
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + alphabet[g4]
       i = i + 3
@@ -36,14 +36,14 @@ module base64
     if rem == 1
       b1 = base64.byte_at(value, i)
       g1 = to_int(b1 / 4)
-      g2 = (b1 % 4) * 16
+      g2 = b1 % 4 * 16
       out = out + alphabet[g1] + alphabet[g2] + "=="
     elseif rem == 2
       b1 = base64.byte_at(value, i)
       b2 = base64.byte_at(value, i + 1)
       g1 = to_int(b1 / 4)
-      g2 = (b1 % 4) * 16 + to_int(b2 / 16)
-      g3 = (b2 % 16) * 4
+      g2 = b1 % 4 * 16 + to_int(b2 / 16)
+      g3 = b2 % 16 * 4
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
     return out
 
@@ -82,8 +82,8 @@ module base64
       v3 = base64.index_of(cleaned[j + 2])
       v4 = base64.index_of(cleaned[j + 3])
       push(arr, v1 * 4 + to_int(v2 / 16))
-      push(arr, (v2 % 16) * 16 + to_int(v3 / 4))
-      push(arr, (v3 % 4) * 64 + v4)
+      push(arr, v2 % 16 * 16 + to_int(v3 / 4))
+      push(arr, v3 % 4 * 64 + v4)
       j = j + 4
     rem = m - j
     if rem == 2
@@ -95,5 +95,5 @@ module base64
       v2 = base64.index_of(cleaned[j + 1])
       v3 = base64.index_of(cleaned[j + 2])
       push(arr, v1 * 4 + to_int(v2 / 16))
-      push(arr, (v2 % 16) * 16 + to_int(v3 / 4))
+      push(arr, v2 % 16 * 16 + to_int(v3 / 4))
     return bytes(arr)

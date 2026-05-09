@@ -131,12 +131,23 @@ module url
           while i < n
             v_raw = v_raw + raw[i]
             i = i + 1
-          push(out, [url.decode_query_value(k_raw), url.decode_query_value(v_raw)])
+          push(
+            out,
+            [url.decode_query_value(k_raw), url.decode_query_value(v_raw)],
+          )
     return out
 
   parse = text ->
     n = byte_len(text)
-    out = { scheme: "", user: "", password: "", host: "", port: "", path: "", query: "", fragment: "" }
+    out =
+      scheme: ""
+      user: ""
+      password: ""
+      host: ""
+      port: ""
+      path: ""
+      query: ""
+      fragment: ""
     i = 0
     scheme_end = -1
     j = 0
@@ -161,7 +172,9 @@ module url
       i = i + 2
     if has_authority
       auth_end = i
-      while auth_end < n and text[auth_end] != "/" and text[auth_end] != "?" and text[auth_end] != "#"
+      while (
+        auth_end < n and text[auth_end] != "/" and text[auth_end] != "?" and text[auth_end] != "#"
+      )
         auth_end = auth_end + 1
       auth_text = ""
       k = i

@@ -1,4 +1,3 @@
 err = error("file not found")
-
 print err
 print err["message"]

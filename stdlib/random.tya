@@ -1,12 +1,16 @@
 module random
   seed = value -> random_seed(value)
+
   int = min, max -> random_int(min, max)
-  float = -> random_float()
+
+  float = () -> random_float()
+
   choice = items ->
     n = len(items)
     if n == 0
       raise "random.choice: empty array"
     return items[random_int(0, n - 1)]
+
   shuffle = items ->
     n = len(items)
     i = n - 1

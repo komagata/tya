@@ -6,16 +6,12 @@ parse_user = text ->
 read_user = text ->
   user = try parse_user(text)
   return user["name"], nil
-
 name, err = read_user("komagata")
-
 if err
   print err["message"]
 else
   print name
-
 name, err = read_user("")
-
 if err
   print err["message"]
 else

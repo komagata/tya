@@ -1,7 +1,6 @@
 text = "  hello,tya  "
 trimmed = trim(text)
 parts = split(trimmed, ",")
-
 print join(parts, "-")
 print replace(trimmed, "tya", "Tya")
 print contains(trimmed, "hello")

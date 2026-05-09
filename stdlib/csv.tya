@@ -1,5 +1,5 @@
 module csv
-  default_options = ->
+  default_options = () ->
     return { separator: ",", header: false }
 
   merge_options = options ->
@@ -35,11 +35,11 @@ module csv
           else
             field = field + c
             i = i + 1
+        elseif c == "\""
+          in_quote = true
+          i = i + 1
         else
-          if c == "\""
-            in_quote = true
-            i = i + 1
-          elseif c == separator
+          if c == separator
             push(row, field)
             field = ""
             i = i + 1
@@ -47,15 +47,16 @@ module csv
             push(row, field)
             i = i + 1
             ended = true
-          elseif c == cr
-            push(row, field)
-            i = i + 1
-            if i < n and text[i] == "\n"
-              i = i + 1
-            ended = true
           else
-            field = field + c
-            i = i + 1
+            if c == cr
+              push(row, field)
+              i = i + 1
+              if i < n and text[i] == "\n"
+                i = i + 1
+              ended = true
+            else
+              field = field + c
+              i = i + 1
       if in_quote
         raise "csv.parse: unterminated quoted field"
       if not ended

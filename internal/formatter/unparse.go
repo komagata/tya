@@ -708,6 +708,61 @@ func (u *unparser) emitWrappedBinary(stmt ast.Stmt, prefix string, expr *ast.Bin
 	return nil
 }
 
+// binaryOperand renders an operand of a binary expression and
+// wraps it in parentheses when its precedence is lower than the
+// parent operator's. left=true means the operand is the left side
+// (which can stay un-parenthesized for same-precedence
+// left-associative operators).
+func (u *unparser) binaryOperand(e ast.Expr, parentOp string, left bool) (string, error) {
+	s, err := u.expr(e)
+	if err != nil {
+		return "", err
+	}
+	be, ok := e.(*ast.BinaryExpr)
+	if !ok {
+		return s, nil
+	}
+	pp := opPrecedence(parentOp)
+	cp := opPrecedence(be.Op.Lexeme)
+	if cp < pp {
+		return "(" + s + ")", nil
+	}
+	if cp == pp && !left {
+		// Right operand of left-associative operator at same
+		// precedence needs parens to preserve grouping.
+		return "(" + s + ")", nil
+	}
+	return s, nil
+}
+
+// opPrecedence returns the precedence of a binary operator. Higher
+// numbers bind tighter. Mirrors the parser's precedence ordering.
+func opPrecedence(op string) int {
+	switch op {
+	case "or":
+		return 1
+	case "and":
+		return 2
+	case "==", "!=":
+		return 3
+	case "<", "<=", ">", ">=":
+		return 4
+	case "|":
+		return 5
+	case "^":
+		return 6
+	case "&":
+		return 7
+	case "<<", ">>":
+		return 8
+	case "+", "-":
+		return 9
+	case "*", "/", "%":
+		return 10
+	}
+	return 0
+}
+
 // emitTripleQuoted emits a string literal as a triple-quoted
 // multi-line literal per CANONICAL §6.3. The closing """ sits at
 // the current indent + 2; each body line is also at +2 indent and
@@ -896,11 +951,11 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 	case *ast.NilLit:
 		return "nil", nil
 	case *ast.BinaryExpr:
-		left, err := u.expr(n.Left)
+		left, err := u.binaryOperand(n.Left, n.Op.Lexeme, true)
 		if err != nil {
 			return "", err
 		}
-		right, err := u.expr(n.Right)
+		right, err := u.binaryOperand(n.Right, n.Op.Lexeme, false)
 		if err != nil {
 			return "", err
 		}
@@ -915,6 +970,11 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		inner, err := u.expr(n.Expr)
 		if err != nil {
 			return "", err
+		}
+		// Parenthesize binary operands inside unary so
+		// `not (a or b)` does not flatten to `not a or b`.
+		if _, ok := n.Expr.(*ast.BinaryExpr); ok {
+			inner = "(" + inner + ")"
 		}
 		op := n.Op.Lexeme
 		if op == "not" {

@@ -317,7 +317,11 @@ module markdown
       return nil
     inner = markdown.slice_str(text, start + 1, close_text)
     url = markdown.slice_str(text, close_text + 2, close_url)
-    html = "<a href=\"" + markdown.escape_attr(url) + "\">" + markdown.inline(inner) + "</a>"
+    html = "<a href=\""
+      + markdown.escape_attr(url)
+      + "\">"
+      + markdown.inline(inner)
+      + "</a>"
     return { html: html, end: close_url + 1 }
 
   try_autolink = text, start ->
@@ -327,5 +331,9 @@ module markdown
     inner = markdown.slice_str(text, start + 1, close)
     if not (starts_with(inner, "http://") or starts_with(inner, "https://"))
       return nil
-    html = "<a href=\"" + markdown.escape_attr(inner) + "\">" + markdown.escape_html(inner) + "</a>"
+    html = "<a href=\""
+      + markdown.escape_attr(inner)
+      + "\">"
+      + markdown.escape_html(inner)
+      + "</a>"
     return { html: html, end: close + 1 }

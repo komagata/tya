@@ -2,16 +2,12 @@ parse_user = text ->
   if text == ""
     return nil, error("empty user")
   return { name: text }, nil
-
 user, err = parse_user("komagata")
-
 if err
   print err["message"]
 else
   print user["name"]
-
 missing, err = parse_user("")
-
 if err
   print err["message"]
 else

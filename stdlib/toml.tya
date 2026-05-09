@@ -68,18 +68,21 @@ module toml
           out = out + "\""
         elseif e == "\\"
           out = out + "\\"
-        elseif e == "n"
-          out = out + "\n"
-        elseif e == "t"
-          out = out + "\t"
-        elseif e == "r"
-          out = out + chr(13)
-        elseif e == "b"
-          out = out + chr(8)
-        elseif e == "f"
-          out = out + chr(12)
         else
-          raise "toml.parse: invalid escape"
+          if e == "n"
+            out = out + "\n"
+          elseif e == "t"
+            out = out + "\t"
+          else
+            if e == "r"
+              out = out + chr(13)
+            elseif e == "b"
+              out = out + chr(8)
+            else
+              if e == "f"
+                out = out + chr(12)
+              else
+                raise "toml.parse: invalid escape"
         p = p + 2
       elseif c == "\n"
         raise "toml.parse: newline in basic string"
@@ -394,14 +397,16 @@ module toml
         out = out + "\\\""
       elseif c == "\\"
         out = out + "\\\\"
-      elseif c == "\n"
-        out = out + "\\n"
-      elseif c == "\t"
-        out = out + "\\t"
-      elseif code == 13
-        out = out + "\\r"
       else
-        out = out + c
+        if c == "\n"
+          out = out + "\\n"
+        elseif c == "\t"
+          out = out + "\\t"
+        else
+          if code == 13
+            out = out + "\\r"
+          else
+            out = out + c
       i = i + 1
     return out + "\""
 
@@ -433,7 +438,10 @@ module toml
       while i < len(ks)
         if i > 0
           out = out + ", "
-        out = out + toml.format_key(ks[i]) + " = " + toml.format_inline_value(value[ks[i]])
+        out = out
+          + toml.format_key(ks[i])
+          + " = "
+          + toml.format_inline_value(value[ks[i]])
         i = i + 1
       return out + "}}"
     raise "toml.dump: unsupported value kind"
@@ -465,7 +473,11 @@ module toml
           new_prefix = toml.format_key(k)
         else
           new_prefix = prefix + "." + toml.format_key(k)
-        sub_tables = sub_tables + "\n[" + new_prefix + "]\n" + toml.emit_table(v, new_prefix)
+        sub_tables = sub_tables
+          + "\n["
+          + new_prefix
+          + "]\n"
+          + toml.emit_table(v, new_prefix)
       elseif toml.is_array_of_dicts(v)
         new_prefix = ""
         if prefix == ""
@@ -474,10 +486,18 @@ module toml
           new_prefix = prefix + "." + toml.format_key(k)
         j = 0
         while j < len(v)
-          sub_tables = sub_tables + "\n[[" + new_prefix + "]]\n" + toml.emit_table(v[j], new_prefix)
+          sub_tables = sub_tables
+            + "\n[["
+            + new_prefix
+            + "]]\n"
+            + toml.emit_table(v[j], new_prefix)
           j = j + 1
       else
-        primitives = primitives + toml.format_key(k) + " = " + toml.format_inline_value(v) + "\n"
+        primitives = primitives
+          + toml.format_key(k)
+          + " = "
+          + toml.format_inline_value(v)
+          + "\n"
       i = i + 1
     return primitives + sub_tables
 

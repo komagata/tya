@@ -1,5 +1,4 @@
 add = a, b -> a + b
-
 print add(2, 3)
 print 2 + 3 * 4
 grouped = (2 + 3) * 4

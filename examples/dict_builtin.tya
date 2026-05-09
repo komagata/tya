@@ -1,7 +1,4 @@
-user =
-  name: "komagata"
-  age: 20
-
+user = { name: "komagata", age: 20 }
 print has(user, "name")
 user_keys = keys(user)
 user_values = values(user)

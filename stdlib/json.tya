@@ -33,11 +33,11 @@ module json
       return chr(code)
     if code < 2048
       b1 = 192 + to_int(code / 64)
-      b2 = 128 + (code % 64)
+      b2 = 128 + code % 64
       return chr(b1) + chr(b2)
     b1 = 224 + to_int(code / 4096)
-    b2 = 128 + to_int((code % 4096) / 64)
-    b3 = 128 + (code % 64)
+    b2 = 128 + to_int(code % 4096 / 64)
+    b3 = 128 + code % 64
     return chr(b1) + chr(b2) + chr(b3)
 
   parse_string = state ->
@@ -61,30 +61,34 @@ module json
           out = out + "\""
         elseif e == "\\"
           out = out + "\\"
-        elseif e == "/"
-          out = out + "/"
-        elseif e == "n"
-          out = out + "\n"
-        elseif e == "t"
-          out = out + "\t"
-        elseif e == "r"
-          out = out + chr(13)
-        elseif e == "b"
-          out = out + chr(8)
-        elseif e == "f"
-          out = out + chr(12)
-        elseif e == "u"
-          if p + 5 >= n
-            raise "json.parse: truncated unicode escape"
-          h1 = json.hex_value(src[p + 2])
-          h2 = json.hex_value(src[p + 3])
-          h3 = json.hex_value(src[p + 4])
-          h4 = json.hex_value(src[p + 5])
-          code = h1 * 4096 + h2 * 256 + h3 * 16 + h4
-          out = out + json.utf8_encode(code)
-          p = p + 4
         else
-          raise "json.parse: invalid escape"
+          if e == "/"
+            out = out + "/"
+          elseif e == "n"
+            out = out + "\n"
+          else
+            if e == "t"
+              out = out + "\t"
+            elseif e == "r"
+              out = out + chr(13)
+            else
+              if e == "b"
+                out = out + chr(8)
+              elseif e == "f"
+                out = out + chr(12)
+              else
+                if e == "u"
+                  if p + 5 >= n
+                    raise "json.parse: truncated unicode escape"
+                  h1 = json.hex_value(src[p + 2])
+                  h2 = json.hex_value(src[p + 3])
+                  h3 = json.hex_value(src[p + 4])
+                  h4 = json.hex_value(src[p + 5])
+                  code = h1 * 4096 + h2 * 256 + h3 * 16 + h4
+                  out = out + json.utf8_encode(code)
+                  p = p + 4
+                else
+                  raise "json.parse: invalid escape"
         p = p + 2
       else
         out = out + c
@@ -141,17 +145,23 @@ module json
     if c == "\""
       return json.parse_string(state)
     if c == "t"
-      if p + 4 <= state["len"] and src[p + 1] == "r" and src[p + 2] == "u" and src[p + 3] == "e"
+      if (
+        p + 4 <= state["len"] and src[p + 1] == "r" and src[p + 2] == "u" and src[p + 3] == "e"
+      )
         state["pos"] = p + 4
         return true
       raise "json.parse: invalid token"
     if c == "f"
-      if p + 5 <= state["len"] and src[p + 1] == "a" and src[p + 2] == "l" and src[p + 3] == "s" and src[p + 4] == "e"
+      if (
+        p + 5 <= state["len"] and src[p + 1] == "a" and src[p + 2] == "l" and src[p + 3] == "s" and src[p + 4] == "e"
+      )
         state["pos"] = p + 5
         return false
       raise "json.parse: invalid token"
     if c == "n"
-      if p + 4 <= state["len"] and src[p + 1] == "u" and src[p + 2] == "l" and src[p + 3] == "l"
+      if (
+        p + 4 <= state["len"] and src[p + 1] == "u" and src[p + 2] == "l" and src[p + 3] == "l"
+      )
         state["pos"] = p + 4
         return nil
       raise "json.parse: invalid token"
@@ -223,28 +233,31 @@ module json
         out = out + "\\\""
       elseif c == "\\"
         out = out + "\\\\"
-      elseif c == "\n"
-        out = out + "\\n"
-      elseif c == "\t"
-        out = out + "\\t"
-      elseif code == 13
-        out = out + "\\r"
-      elseif code == 8
-        out = out + "\\b"
-      elseif code == 12
-        out = out + "\\f"
-      elseif code < 32
-        hi_d = to_int(code / 16)
-        lo_d = code % 16
-        hi = chr(48 + hi_d)
-        if hi_d >= 10
-          hi = chr(55 + hi_d)
-        lo = chr(48 + lo_d)
-        if lo_d >= 10
-          lo = chr(55 + lo_d)
-        out = out + "\\u00" + hi + lo
       else
-        out = out + c
+        if c == "\n"
+          out = out + "\\n"
+        elseif c == "\t"
+          out = out + "\\t"
+        else
+          if code == 13
+            out = out + "\\r"
+          elseif code == 8
+            out = out + "\\b"
+          else
+            if code == 12
+              out = out + "\\f"
+            elseif code < 32
+              hi_d = to_int(code / 16)
+              lo_d = code % 16
+              hi = chr(48 + hi_d)
+              if hi_d >= 10
+                hi = chr(55 + hi_d)
+              lo = chr(48 + lo_d)
+              if lo_d >= 10
+                lo = chr(55 + lo_d)
+              out = out + "\\u00" + hi + lo
+            else
+              out = out + c
       i = i + 1
     return out + "\""
 
