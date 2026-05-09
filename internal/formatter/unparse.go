@@ -584,6 +584,8 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			return u.emitWrappedArray(n, strings.Join(targets, ", ")+" = ", v)
 		case *ast.BinaryExpr:
 			return u.emitWrappedBinary(n, strings.Join(targets, ", ")+" = ", v)
+		case *ast.DictLit:
+			return u.emitDictBlock(n, strings.Join(targets, ", "), v)
 		case *ast.FuncLit:
 			// §5.3.8: a single-line `name -> expr` whose
 			// rendering exceeds 80 columns switches to the
@@ -694,6 +696,30 @@ func (u *unparser) emitWrappedBinary(stmt ast.Stmt, prefix string, expr *ast.Bin
 		u.line(ops[i-1] + " " + s)
 	}
 	u.indent--
+	return nil
+}
+
+// emitDictBlock emits a dict literal as the §5.3.3 block form:
+//
+//	target =
+//	  key: value
+//	  key: value
+//
+// Used when the inline `target = { k: v, ... }` form would
+// exceed the column limit. The parser already accepts this form
+// (parser.valuesAfterAssign treats `=` followed by NEWLINE INDENT
+// as a dictBody).
+func (u *unparser) emitDictBlock(stmt ast.Stmt, target string, dict *ast.DictLit) error {
+	u.line(target + " =")
+	u.indent++
+	defer func() { u.indent-- }()
+	for _, p := range dict.Props {
+		v, err := u.expr(p.Value)
+		if err != nil {
+			return err
+		}
+		u.line(p.Name + ": " + v)
+	}
 	return nil
 }
 

@@ -167,6 +167,32 @@ func TestUnparseIdempotent(t *testing.T) {
 	}
 }
 
+func TestUnparseWrapsLongDictToBlock(t *testing.T) {
+	src := "user = { full_name: \"Alice Example\", role: \"administrator-level\", region: \"asia\" }\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"user =",
+		"  full_name: \"Alice Example\"",
+		"  role: \"administrator-level\"",
+		"  region: \"asia\"",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+	// Idempotent.
+	second, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != second {
+		t.Errorf("not idempotent\nfirst:\n%s\nsecond:\n%s", got, second)
+	}
+}
+
 func TestUnparseWrapsBinaryChain(t *testing.T) {
 	src := "total = first_part_value + second_part_value + third_part_value + fourth_part_value\n"
 	got, err := unparseSource(t, src)
