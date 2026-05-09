@@ -6,8 +6,42 @@ import (
 	"strings"
 	"unicode"
 
+	"tya/internal/diag"
 	"tya/internal/token"
 )
+
+// Diagnostic is the v0.32 lexer-error wrapper. It implements `error`
+// so the existing []error API works, and exposes the underlying
+// diag.Diagnostic for the CLI's renderer.
+type Diagnostic struct {
+	Diag diag.Diagnostic
+}
+
+func (e *Diagnostic) Error() string {
+	d := e.Diag
+	return fmt.Sprintf("%d:%d: %s", d.Primary.Start.Line, d.Primary.Start.Col, d.Message)
+}
+
+func (l *Lexer) diagErr(code, title, msg, hint string, line, col, length int) {
+	if length < 1 {
+		length = 1
+	}
+	d := diag.Diagnostic{
+		Severity: diag.Error,
+		Code:     code,
+		Title:    title,
+		Message:  msg,
+		Primary: diag.Region{
+			Start: diag.Pos{Line: line, Col: col},
+			End:   diag.Pos{Line: line, Col: col + length},
+		},
+		Source: "lexer",
+	}
+	if hint != "" {
+		d.Hints = []string{hint}
+	}
+	l.errs = append(l.errs, &Diagnostic{Diag: d})
+}
 
 func prefixName(c byte) string {
 	if c == 'x' || c == 'X' {
@@ -43,16 +77,25 @@ func (l *Lexer) lex() {
 			continue
 		}
 		if strings.Contains(line, "\t") {
-			l.errs = append(l.errs, fmt.Errorf("%d: tabs are forbidden", lineNo))
+			l.diagErr("TYA-E0001", "Tabs are forbidden",
+				"This line contains a tab character; Tya source must use spaces only.",
+				"Replace the tab with two spaces.",
+				lineNo, 1, 1)
 			continue
 		}
 		if strings.TrimRight(line, " ") != line {
-			l.errs = append(l.errs, fmt.Errorf("%d: trailing whitespace is forbidden", lineNo))
+			l.diagErr("TYA-E0002", "Trailing whitespace",
+				"This line has trailing whitespace.",
+				"Remove the trailing spaces.",
+				lineNo, 1, 1)
 			continue
 		}
 		spaces := len(line) - len(strings.TrimLeft(line, " "))
 		if spaces%2 != 0 {
-			l.errs = append(l.errs, fmt.Errorf("%d: indentation must use exactly 2 spaces", lineNo))
+			l.diagErr("TYA-E0003", "Indentation step",
+				"Indentation must use exactly 2 spaces.",
+				"Round the leading-space count to a multiple of 2.",
+				lineNo, 1, 1)
 			continue
 		}
 		l.handleIndent(spaces, lineNo)
@@ -119,7 +162,10 @@ func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, li
 		}
 	}
 	if !closingFound {
-		l.errs = append(l.errs, fmt.Errorf("%d:%d: unterminated triple-quoted string", line, baseCol+tq))
+		l.diagErr("TYA-E0016", "Unterminated triple-quoted string",
+			`This """ literal is not closed.`,
+			`Add a matching """ on a later line.`,
+			line, baseCol+tq, 3)
 		return 0
 	}
 	var b strings.Builder
@@ -134,7 +180,10 @@ func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, li
 	for j := lineIdx + 1; j < closingIdx; j++ {
 		bodyLine := lines[j]
 		if strings.Contains(bodyLine, "\t") {
-			l.errs = append(l.errs, fmt.Errorf("%d: tabs are forbidden", j+1))
+			l.diagErr("TYA-E0001", "Tabs are forbidden",
+				"This line of the triple-quoted string contains a tab character.",
+				"Replace the tab with spaces.",
+				j+1, 1, 1)
 			return closingIdx - lineIdx
 		}
 		if bodyLine == "" {
@@ -148,7 +197,10 @@ func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, li
 				b.WriteByte('\n')
 				continue
 			}
-			l.errs = append(l.errs, fmt.Errorf("%d:1: mixed indentation in triple-quoted string", j+1))
+			l.diagErr("TYA-E0017", "Mixed indentation in triple-string",
+				"This line is shallower than the closing \"\"\" indent baseline.",
+				"Indent every body line at least as far as the closing \"\"\".",
+				j+1, 1, 1)
 			return closingIdx - lineIdx
 		}
 		b.WriteString(bodyLine[closingIndent:])
@@ -179,7 +231,18 @@ func interpretEscapes(s string, line, col int) (string, error) {
 		c := s[i]
 		if c == '\\' {
 			if i+1 >= len(s) {
-				return "", fmt.Errorf("%d:%d: unterminated escape", line, col+i)
+				return "", &Diagnostic{Diag: diag.Diagnostic{
+					Severity: diag.Error,
+					Code:     "TYA-E0007",
+					Title:    "Unterminated escape",
+					Message:  "Backslash at end of string body has no escape character.",
+					Primary: diag.Region{
+						Start: diag.Pos{Line: line, Col: col + i},
+						End:   diag.Pos{Line: line, Col: col + i + 1},
+					},
+					Hints:  []string{"Add the escape character (e.g. \\n, \\t, \\\\)."},
+					Source: "lexer",
+				}}
 			}
 			switch s[i+1] {
 			case 'n':
@@ -193,7 +256,18 @@ func interpretEscapes(s string, line, col int) (string, error) {
 			case '{':
 				b.WriteString(`\{`)
 			default:
-				return "", fmt.Errorf("%d:%d: unknown escape \\%c", line, col+i, s[i+1])
+				return "", &Diagnostic{Diag: diag.Diagnostic{
+					Severity: diag.Error,
+					Code:     "TYA-E0008",
+					Title:    "Unknown escape",
+					Message:  fmt.Sprintf("Unknown escape sequence \\%c.", s[i+1]),
+					Primary: diag.Region{
+						Start: diag.Pos{Line: line, Col: col + i},
+						End:   diag.Pos{Line: line, Col: col + i + 2},
+					},
+					Hints:  []string{"Supported escapes: \\n, \\t, \\\", \\\\, \\{."},
+					Source: "lexer",
+				}}
 			}
 			i++
 			continue
@@ -207,7 +281,10 @@ func (l *Lexer) handleIndent(n, line int) {
 	cur := l.ind[len(l.ind)-1]
 	if n > cur {
 		if n != cur+2 {
-			l.errs = append(l.errs, fmt.Errorf("%d: indentation may only increase by 2 spaces", line))
+			l.diagErr("TYA-E0005", "Indentation step",
+				"Indentation may only increase by 2 spaces.",
+				"Match the previous indent and add exactly 2 spaces.",
+				line, 1, 1)
 		}
 		l.ind = append(l.ind, n)
 		l.add(token.INDENT, "", line, 1)
@@ -219,7 +296,10 @@ func (l *Lexer) handleIndent(n, line int) {
 		cur = l.ind[len(l.ind)-1]
 	}
 	if n != cur {
-		l.errs = append(l.errs, fmt.Errorf("%d: inconsistent indentation", line))
+		l.diagErr("TYA-E0004", "Inconsistent indentation",
+			"This line's indentation does not match any enclosing block.",
+			"Align this line with the surrounding block.",
+			line, 1, 1)
 	}
 }
 
@@ -390,7 +470,10 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			for i < len(s) && s[i] != '"' {
 				if s[i] == '\\' {
 					if i+1 >= len(s) {
-						l.errs = append(l.errs, fmt.Errorf("%d:%d: unterminated escape", line, baseCol+i))
+						l.diagErr("TYA-E0007", "Unterminated escape",
+							"Backslash at end of string has no escape character.",
+							"Add the escape character (e.g. \\n, \\t, \\\\).",
+							line, baseCol+i, 1)
 						return
 					}
 					switch s[i+1] {
@@ -403,7 +486,10 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 					case '\\':
 						b.WriteByte('\\')
 					default:
-						l.errs = append(l.errs, fmt.Errorf("%d:%d: unknown escape \\%c", line, baseCol+i, s[i+1]))
+						l.diagErr("TYA-E0008", "Unknown escape",
+							fmt.Sprintf("Unknown escape sequence \\%c.", s[i+1]),
+							"Supported escapes: \\n, \\t, \\\", \\\\.",
+							line, baseCol+i, 2)
 						return
 					}
 					i += 2
@@ -413,7 +499,10 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 				i++
 			}
 			if i >= len(s) {
-				l.errs = append(l.errs, fmt.Errorf("%d:%d: unterminated string", line, col))
+				l.diagErr("TYA-E0006", "Unterminated string",
+					"This string literal has no closing quote.",
+					`Add a closing " on the same line, or use """...""" for a multi-line string.`,
+					line, col, 1)
 				return
 			}
 			i++
@@ -502,7 +591,10 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 		case '~':
 			l.add(token.TILDE, "~", line, col)
 		default:
-			l.errs = append(l.errs, fmt.Errorf("%d:%d: unexpected character %q", line, col, ch))
+			l.diagErr("TYA-E0015", "Unexpected character",
+				fmt.Sprintf("Unexpected character %q.", ch),
+				"Remove or replace this character.",
+				line, col, 1)
 		}
 		i++
 	}

@@ -18,7 +18,7 @@ stderr 'destructuring dictionary keys must be string literals'
 stderr 'mixed destructuring and multiple assignment is not in Tya v0.14'
 
 exec go run ./cmd/tya version
-stdout '0.31.0\n'
+stdout '0.32.0\n'
 ! stderr .
 
 -- destructuring.tya --

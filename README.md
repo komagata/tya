@@ -6,12 +6,27 @@
 
 # Tya
 
-Tya is a small indentation-based dynamic language with CoffeeScript feel and
-Golang practicality.
+**A language without hesitation.**
 
-Tya v0.13 is a compile-to-C language. The reference implementation contains a Go
-lexer, parser, AST, checker, C emitter, C runtime, CLI, examples, and v0.13
-specification tests.
+Tya removes the small decisions that interrupt your work — how to format,
+which tool to install, what an error means.
+
+## At a glance
+
+- **Canonical Syntax** — every program has exactly one source representation.
+  The formatter is part of the language, not a separate opinion.
+- **Dynamically typed**, indentation-based, with strict semantics
+  (no implicit conversions, no `nil` arithmetic).
+- **Compiles to C** for a small, portable runtime.
+- **All-in-one toolchain** (Gleam-style) — the `tya` binary holds the
+  compiler, formatter, language server, test runner, doc generator, and
+  package manager.
+- **Kind diagnostics** (Elm-grade) — every error has a stable code, an
+  expected/found block, an actionable hint, and a linked explanation.
+
+The reference implementation is a hand-written Go compiler (lexer, parser,
+AST, checker, C emitter) with a small C runtime and a self-hosted Tya
+compiler that compiles itself.
 
 Website: <https://tya-lang.org/>
 
@@ -33,13 +48,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.31.0, download the release source and build the `tya` command locally.
+For v0.32.0, download the release source and build the `tya` command locally.
 This currently requires Go because the v0.13 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.31.0.tar.gz | tar xz
-cd tya-0.31.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.32.0.tar.gz | tar xz
+cd tya-0.32.0
 go build -o tya ./cmd/tya
 ./tya version
 ```

@@ -14,6 +14,7 @@ const pages = [
   { source: path.join(docsDir, "NAMING.md"), output: path.join(docsDir, "naming.html"), title: "Naming" },
   { source: path.join(docsDir, "VERSIONS.md"), output: path.join(docsDir, "versions.html"), title: "Versions" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(docsDir, "roadmap.html"), title: "Roadmap" },
+  { source: path.join(docsDir, "v0.32", "SPEC.md"), output: path.join(docsDir, "v0.32", "spec.html"), title: "Spec v0.32", versioned: true },
   { source: path.join(docsDir, "v0.31", "SPEC.md"), output: path.join(docsDir, "v0.31", "spec.html"), title: "Spec v0.31", versioned: true },
   { source: path.join(docsDir, "v0.30", "SPEC.md"), output: path.join(docsDir, "v0.30", "spec.html"), title: "Spec v0.30", versioned: true },
   { source: path.join(docsDir, "v0.29", "SPEC.md"), output: path.join(docsDir, "v0.29", "spec.html"), title: "Spec v0.29", versioned: true },

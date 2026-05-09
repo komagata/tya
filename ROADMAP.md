@@ -23,6 +23,42 @@ This gate proves that the Tya-written compiler can compile itself to stable
 stage-2/stage-3 C output, and that the self-hosted stage-2 compiler can compile
 and run representative programs through the maintained surface.
 
+## v1.0.0 Goal
+
+Tya v1.0.0 is the version at which all five language commitments hold and
+are publicly defensible. These commitments are also Tya's external "at a
+glance" feature list:
+
+1. **Canonical Syntax** — every program has exactly one source representation.
+   The formatter is part of the language, not a separate opinion.
+   (Unprecedented among practical text-based languages.)
+2. **Dynamically typed**, indentation-based, with strict semantics
+   (no implicit conversions, no `nil` arithmetic).
+3. **Compiles to C** for a small, portable runtime.
+4. **All-in-one toolchain** (Gleam-style) — the `tya` binary holds the
+   compiler, formatter, language server, test runner, doc generator, and
+   package manager.
+5. **Kind diagnostics** (Elm-grade) — every error has a stable code, an
+   expected/found block, an actionable hint, and a linked explanation.
+
+Each commitment maps to one or more Future Work Epics below:
+
+- Commitment 1 → *Rename `tya fmt` to `tya format` and lock it in as the
+  one canonical formatter*, *Ship multi-line string literal syntax*.
+- Commitment 2 → strict-semantics audit (currently implicit; to be made
+  an explicit Epic).
+- Commitment 3 → already shipped; maintained.
+- Commitment 4 → *Ship `tya lsp` Language Server*, *Ship `tya doc` source
+  documentation generator*, *Ship `tya new` project scaffolder*, *Ship
+  `tya task` project task runner*, *Lock in `tya fmt` …*, plus existing
+  `tya check` / `tya test` / package manager.
+- Commitment 5 → *Adopt Elm-grade diagnostics across the toolchain*.
+
+Other Future Work Epics (GC, WASM target, syntax coloring, embedding,
+self-introspection library, coverage, markdown stdlib, lint, Omakase
+Declaration adoption) are valuable but not strictly required for v1.0.0.
+They may ship before v1.0.0 if convenient, or in v1.x after v1.0.0.
+
 ## Current Direction
 
 Tya is implemented as a small compile-to-C language. The latest released
@@ -319,8 +355,14 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - [x] Add `internal/diag` unit tests.
     - [x] Add `tests/testdata/v29/diagnostics.txtar` golden test.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [x] Ship v0.32 lexer diagnostics + markdown foundation
+  - [x] Define v0.32 scope (`docs/v0.32/SPEC.md`).
+  - [x] Migrate lexer errors to `diag.Diagnostic` (`TYA-E0001`–`TYA-E0017`).
+  - [x] Wire CLI to render lexer diagnostics in human and JSON formats.
+  - [x] Ship `stdlib/markdown.tya` with `markdown.to_html(text)` covering ATX headings, paragraphs, thematic breaks, fenced code blocks, blockquotes, single-level lists, emphasis, strong, inline code, links, autolinks.
+  - [x] Add `tests/testdata/v32/{lexer_diag,markdown}.txtar` golden tests.
+  - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 - [ ] Migrate remaining stages to the diagnostics pipeline
-  - [ ] Lexer → `TYA-E0001`–`E0099`.
   - [ ] Parser → `TYA-E0100`–`E0299`.
   - [ ] Codegen → `TYA-E0600`–`E0799`.
   - [ ] Runner → `TYA-E0800`–`E0899`.
@@ -510,24 +552,13 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Map coverage to per-import-source lines instead of the synthesized entry path.
   - [ ] Add a recommended CI snippet (fail when coverage drops below a threshold).
 
-- [ ] Ship `markdown` stdlib module
-  - [ ] Define markdown scope
-    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the `markdown` module.
-    - [ ] Target the CommonMark specification as the baseline dialect.
-    - [ ] Specify the GitHub Flavored Markdown extensions to support (tables, task lists, strikethrough, autolinks, fenced code with info string).
-    - [ ] Specify the public API: `markdown.parse(text) -> ast`, `markdown.to_html(text) -> string`, `markdown.to_html_ast(ast) -> string`, `markdown.render(ast, visitor) -> string`.
-    - [ ] Specify the AST shape (block / inline node kinds, attributes, source spans) and treat it as part of the module's compatibility surface.
-    - [ ] Keep math extensions, footnote extensions beyond GFM, custom directive syntax, and a Markdown writer / formatter out of the initial scope.
-  - [ ] Implement the module
-    - [ ] Implement the parser in pure Tya, no native dependency, so it works under every `tya build` target including WASM.
-    - [ ] Implement HTML rendering with safe escaping by default; expose an opt-in for raw HTML pass-through with a clear security note.
-    - [ ] Provide a visitor / walk helper for custom rendering (e.g. extracting headings for a table of contents).
-    - [ ] Diagnose malformed input gracefully — Markdown is forgiving by spec; surface only structural problems via structured errors.
-  - [ ] Keep markdown documentation and tests aligned
-    - [ ] Document the API, supported GFM extensions, AST schema, and the security posture for raw HTML in `docs/STDLIB.md`.
-    - [ ] Run a representative subset of the CommonMark test suite as part of `go test ./...`.
-    - [ ] Add unittest-form tests for each GFM extension and for AST round-trips through the visitor API.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Extend `markdown` stdlib module (post-v0.32 foundation)
+  - [ ] Public AST: `markdown.parse(text) -> ast`, `markdown.to_html_ast(ast) -> string`, `markdown.render(ast, visitor) -> string`, AST node spec.
+  - [ ] GFM extensions: tables, task lists, strikethrough, fenced-code info-string class.
+  - [ ] Reference link definitions, images, nested lists, setext headings, HTML blocks.
+  - [ ] Raw HTML pass-through with security note.
+  - [ ] CommonMark conformance subset run as part of `go test ./...`.
+  - [ ] `docs/STDLIB.md` markdown section.
 
 - [ ] Ship a garbage collector for the C runtime
   - [ ] Define GC scope

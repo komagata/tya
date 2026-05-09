@@ -1,0 +1,20 @@
+# v0.32 lexer diagnostics: errors render with banners + codes.
+cd $REPO
+
+! exec go run ./cmd/tya check $WORK/unterminated.tya
+stderr 'TYA-E0006'
+stderr '-- UNTERMINATED STRING'
+
+! exec go run ./cmd/tya check $WORK/unknown_escape.tya
+stderr 'TYA-E0008'
+stderr '-- UNKNOWN ESCAPE'
+
+! exec go run ./cmd/tya check $WORK/tabs.tya
+stderr 'TYA-E0001'
+
+-- unterminated.tya --
+print "no close
+-- unknown_escape.tya --
+print "bad \q escape"
+-- tabs.tya --
+print	"tabbed"
