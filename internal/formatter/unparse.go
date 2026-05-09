@@ -20,6 +20,7 @@ package formatter
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -29,6 +30,12 @@ import (
 // Unparse renders prog as canonical Tya source. When prog was
 // produced by parser.ParseWithComments, header and per-statement
 // comments are emitted per docs/CANONICAL_SYNTAX.md §3.
+//
+// Top-level statements follow the §3.5 / §8.4 normalization rules:
+// imports are sorted alphabetically and grouped (stdlib first, then
+// user); a blank line separates each top-level definition (module,
+// class, interface, function-typed assignment) from the previous
+// statement; otherwise no blank lines are emitted.
 func Unparse(prog *ast.Program) (string, error) {
 	u := &unparser{comments: prog.Comments}
 	if len(prog.HeaderComments) > 0 {
@@ -37,12 +44,129 @@ func Unparse(prog *ast.Program) (string, error) {
 		}
 		u.b.WriteByte('\n')
 	}
-	for _, stmt := range prog.Stmts {
+	stmts := canonicalizeTopLevel(prog.Stmts)
+	for i, stmt := range stmts {
+		if i > 0 && requiresBlankBefore(stmt, stmts[i-1]) {
+			u.b.WriteByte('\n')
+		}
 		if err := u.stmt(stmt); err != nil {
 			return "", err
 		}
 	}
 	return u.b.String(), nil
+}
+
+// canonicalizeTopLevel reorders top-level statements per §8.4: any
+// run of consecutive ImportStmts is sorted alphabetically with
+// stdlib imports first, then user imports. Non-import statements
+// keep their original order.
+func canonicalizeTopLevel(stmts []ast.Stmt) []ast.Stmt {
+	out := make([]ast.Stmt, 0, len(stmts))
+	i := 0
+	for i < len(stmts) {
+		if _, ok := stmts[i].(*ast.ImportStmt); !ok {
+			out = append(out, stmts[i])
+			i++
+			continue
+		}
+		j := i
+		var imports []*ast.ImportStmt
+		for j < len(stmts) {
+			imp, ok := stmts[j].(*ast.ImportStmt)
+			if !ok {
+				break
+			}
+			imports = append(imports, imp)
+			j++
+		}
+		sortImports(imports)
+		for _, imp := range imports {
+			out = append(out, imp)
+		}
+		i = j
+	}
+	return out
+}
+
+func sortImports(imports []*ast.ImportStmt) {
+	sort.SliceStable(imports, func(a, b int) bool {
+		ia, ib := imports[a], imports[b]
+		sa, sb := isStdlibImport(ia.Name), isStdlibImport(ib.Name)
+		if sa != sb {
+			return sa
+		}
+		return ia.BindingName() < ib.BindingName()
+	})
+}
+
+// stdlibModules is the set of names recognized as stdlib for
+// import grouping. Kept in sync with stdlib/*.tya.
+var stdlibModules = map[string]bool{
+	"array":         true,
+	"base64":        true,
+	"csv":           true,
+	"dict":          true,
+	"digest":        true,
+	"dir":           true,
+	"file":          true,
+	"hex":           true,
+	"json":          true,
+	"markdown":      true,
+	"math":          true,
+	"os":            true,
+	"path":          true,
+	"process":       true,
+	"random":        true,
+	"secure_random": true,
+	"string":        true,
+	"time":          true,
+	"unittest":      true,
+	"url":           true,
+	"matrix":        true,
+}
+
+func isStdlibImport(name string) bool {
+	// Strip any leading path components — stdlib names are always
+	// bare module names (no slashes).
+	if strings.ContainsAny(name, "/.") {
+		return false
+	}
+	return stdlibModules[name]
+}
+
+// requiresBlankBefore reports whether canonical layout puts a blank
+// line between prev and cur at the top level. Per §3.5 / §8.4: a
+// blank line goes between two top-level definitions, between an
+// import and any following non-import statement, and at the
+// stdlib/user import-group boundary. All other transitions get no
+// blank line.
+func requiresBlankBefore(cur, prev ast.Stmt) bool {
+	pi, prevImport := prev.(*ast.ImportStmt)
+	ci, curImport := cur.(*ast.ImportStmt)
+	if prevImport && curImport {
+		return isStdlibImport(pi.Name) != isStdlibImport(ci.Name)
+	}
+	if prevImport && !curImport {
+		return true
+	}
+	if isTopDefinition(prev) && isTopDefinition(cur) {
+		return true
+	}
+	return false
+}
+
+func isTopDefinition(s ast.Stmt) bool {
+	switch n := s.(type) {
+	case *ast.ModuleDecl, *ast.ClassDecl, *ast.InterfaceDecl:
+		return true
+	case *ast.AssignStmt:
+		if len(n.Values) == 1 {
+			if _, ok := n.Values[0].(*ast.FuncLit); ok {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 type unparser struct {
@@ -471,12 +595,23 @@ func (u *unparser) ifStmt(n *ast.IfStmt) error {
 func (u *unparser) block(stmts []ast.Stmt) error {
 	u.indent++
 	defer func() { u.indent-- }()
-	for _, s := range stmts {
+	for i, s := range stmts {
+		if i > 0 && u.hasLeadingComments(s) {
+			u.b.WriteByte('\n')
+		}
 		if err := u.stmt(s); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (u *unparser) hasLeadingComments(s ast.Stmt) bool {
+	if u.comments == nil {
+		return false
+	}
+	sc, ok := u.comments[s]
+	return ok && len(sc.Leading) > 0
 }
 
 func (u *unparser) blockBody(stmts []ast.Stmt) error {

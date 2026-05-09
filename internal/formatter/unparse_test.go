@@ -138,6 +138,18 @@ func TestUnparseImports(t *testing.T) {
 	}
 }
 
+func TestUnparseImportSortAndBlankLines(t *testing.T) {
+	src := "import zmod\nimport string\nimport file\nimport mylib\n\ngreet = name -> name\nx = 1\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "import file\nimport string\n\nimport mylib\nimport zmod\n\ngreet = name -> name\nx = 1\n"
+	if got != want {
+		t.Errorf("import sort/blank-line layout mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+}
+
 func TestUnparseModule(t *testing.T) {
 	src := "module greet\n  hello = name -> \"Hello, \" + name\n  bye = -> \"bye\"\n"
 	got, err := unparseSource(t, src)
