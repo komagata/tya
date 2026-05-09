@@ -1,0 +1,33 @@
+import runtime
+
+# Demonstrates that the v0.41 GC keeps a long-running allocation loop's
+# resident set bounded.
+#
+# In v0.41 the auto-trigger only fires between top-level statements;
+# inside a `while` body it does not run automatically yet (locals on
+# the C stack are not roots, so the runtime cannot reclaim safely
+# without help). Long-running loops therefore call runtime.gc()
+# themselves at iteration boundaries — at that point every TyaValue
+# the program still wants is already stored in a top-level binding,
+# so the collection is safe.
+
+iterations = 5000
+i = 0
+peak = 0
+while i < iterations
+  scratch = [i, [i + 1, i + 2], [i + 3, [i + 4, i + 5]]]
+  scratch = nil
+  if i % 100 == 0
+    runtime.gc()
+    live = runtime.gc_stats()["live_count"]
+    if live > peak
+      peak = live
+  i = i + 1
+
+stats = runtime.gc_stats()
+print "iterations: " + to_string(iterations)
+print "alloc_count: " + to_string(stats["alloc_count"])
+print "freed_count: " + to_string(stats["freed_count"])
+print "live_count after final gc: " + to_string(stats["live_count"])
+print "collect_count: " + to_string(stats["collect_count"])
+print "peak live during loop: " + to_string(peak)

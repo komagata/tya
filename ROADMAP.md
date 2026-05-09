@@ -157,6 +157,9 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`.
 
+- **v0.41** — precise mark-and-sweep garbage collector for the C runtime.
+  `runtime.gc()` and `runtime.gc_stats()`; auto-trigger between top-level
+  statements. Foundation for v0.42 Concurrency.
 - **v0.40** — raw and bytes string extensions: `r"..."`, `r"""..."""`,
   `b"""..."""`.
 - **v0.39** — Canonical Syntax surface cleanup. `tya format` only spelling;
@@ -192,54 +195,6 @@ implemented in numbered STEPs. Every STEP must pass `go test ./... -count=1`
 and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
-
-### v0.41 — Garbage collector
-
-Single-threaded precise mark-and-sweep over the C runtime. Foundation for
-v0.42 Concurrency (multi-thread GC extension lives in v0.42).
-
-- [ ] **Ship v0.41 GC**
-  - [ ] STEP 1: GC-aware allocator
-    - [ ] Add a GC header (mark bit, kind field reuse) to every heap
-      allocation in `runtime/`.
-    - [ ] Route every `malloc` for runtime values (string, dict, array,
-      bytes, error, function/closure environment, future task) through a
-      central GC allocator.
-    - [ ] Maintain a doubly-linked list (or vector) of live heap objects
-      for scan/sweep.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 2: Mark phase
-    - [ ] Implement root scanning: value stack, active locals, module
-      globals, currently-active closure environments, error reraise
-      slots.
-    - [ ] Implement transitive mark over reachable values; handle cycles.
-    - [ ] Add tests: simple reachability, cycle reachability, large
-      object graphs.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 3: Sweep phase
-    - [ ] Free unmarked objects; return memory to the allocator.
-    - [ ] Reset mark bits after sweep.
-    - [ ] Add cycle-reclamation tests; verify with `valgrind` or
-      `leaks` on representative programs.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 4: Trigger policy + `runtime.gc()` API
-    - [ ] Allocation-threshold trigger: GC runs when bytes-allocated
-      since last GC exceeds a fraction of live-after-last-GC.
-    - [ ] Add `runtime.gc()` builtin for tests / benchmarks (forces a GC).
-    - [ ] Add `runtime.gc_stats()` returning collected/live/cycles.
-    - [ ] Stress tests for bounded resident set on aggressive
-      allocation loops.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 5: Documentation, examples, v0.41 SPEC finalization
-    - [ ] Add `docs/v0.41/SPEC.md` describing observable GC behavior
-      (no user-visible semantics changes; only memory pressure and
-      timing).
-    - [ ] Update `docs/SPEC.md` to point to v0.41.
-    - [ ] Add `examples/long_running_loop.tya` demonstrating bounded
-      resident set.
-    - [ ] Run focused regressions: `sh scripts/go_emit_examples_check.sh`,
-      `sh scripts/go_emit_args_check.sh`.
-    - [ ] Self-host fixed point preserved.
 
 ### v0.42 — Tya Concurrency
 

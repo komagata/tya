@@ -1,8 +1,5 @@
 # Tya v0.41 Specification
 
-This document is the in-progress specification for Tya v0.41. It is updated
-as each STEP of the v0.41 GC Epic lands.
-
 ## Theme
 
 v0.41 ships a precise mark-and-sweep garbage collector for the C runtime.
@@ -15,91 +12,188 @@ run identically on v0.41 except for memory pressure and timing.
 
 ## Goals
 
-- Bound the resident set of long-running Tya programs.
+- Bound the resident set of long-running Tya programs at points where the
+  collector is allowed to run.
 - Reclaim cyclic data without extra programmer effort.
 - Keep the runtime small and dependency-free; no Boehm GC.
 - Provide a small introspection API for tests, benchmarks, and
   documentation.
 
-## Non-goals (deferred)
+## Non-goals (deferred to later minor versions)
 
 - Generational, incremental, or concurrent collection.
 - Weak references and finalizers.
 - User-tunable GC parameters.
 - Multi-thread support; that arrives with v0.42 Concurrency.
+- Precise tracking of locals inside user functions; collections inside
+  function bodies are not safe in v0.41 (see Safety contract below).
 
-## Implementation status
+## Observable language behavior
 
-v0.41 is implemented in five STEPs. Each STEP keeps every existing test
-green and preserves the self-host fixed point.
+None beyond two new APIs in the `runtime` stdlib module:
 
-### STEP 1 — GC-aware allocator (landed)
+```tya
+import runtime
+
+stats = runtime.gc_stats()
+runtime.gc()
+```
+
+`runtime.gc_stats()` returns a dict snapshot of the GC counters with
+keys:
+
+| key             | meaning                                                  |
+|-----------------|----------------------------------------------------------|
+| `alloc_count`   | total tracked allocations made since program start       |
+| `alloc_bytes`   | total tracked allocation bytes since program start       |
+| `freed_count`   | total tracked allocations reclaimed by collections       |
+| `freed_bytes`   | total tracked allocation bytes reclaimed                 |
+| `live_count`    | `alloc_count - freed_count`                              |
+| `live_bytes`    | `alloc_bytes - freed_bytes`                              |
+| `collect_count` | number of collections performed                          |
+| `threshold`     | live_count threshold that triggers an auto-collection    |
+
+`runtime.gc()` runs a full mark-and-sweep collection. See the safety
+contract below.
+
+## Implementation
+
+### Tracked allocations
 
 Every heap allocation that holds Tya runtime values now carries a
-`TyaGcHeader` as its first field. The four GC-tracked struct kinds are
-`TyaArray`, `TyaDict` (also used for object-style dicts and function
-member tables), `TyaFunction`, and `TyaBytes`.
+`TyaGcHeader` as its first field. The four GC-tracked struct kinds are:
+
+- `TyaArray`
+- `TyaDict` (also used for object-style dicts and function member tables)
+- `TyaFunction`
+- `TyaBytes`
 
 A central allocator routes every tracked allocation through
 `tya_gc_alloc(size, kind)`, which:
 
 - calls `malloc` for the requested size,
-- initializes the header (`mark = 0`, `kind`),
+- initializes the header (`mark = 0`, `kind`, `size`),
 - prepends the new header to the global linked list `tya_gc_head`,
 - increments `tya_gc_alloc_count` and `tya_gc_alloc_bytes`,
 - returns the pointer.
 
-Internal allocations owned by tracked structs (e.g.
-`array->items`, `dict->entries`, `bytes->data`, char strings) remain
-plain `malloc` calls. They are reclaimed when their owning tracked
-struct is reclaimed. STEP 1 does not free anything yet, so these are
-counted toward live memory until subsequent STEPs land.
+Internal allocations owned by tracked structs (e.g. `array->items`,
+`dict->entries`, `bytes->data`, char strings) remain plain `malloc`
+calls. They are reclaimed when their owning tracked struct is reclaimed.
 
-**STEP 1 introduces no new language syntax.** It adds one builtin and
-one stdlib module:
+### Roots
 
-- Builtin `runtime_gc_stats() -> dict` returns a snapshot of the
-  collector counters.
-- Stdlib `runtime` module re-exports the builtin as
-  `runtime.gc_stats()`.
+Generated code calls `tya_gc_register_root(&g_<name>)` for every
+module-level `TyaValue` global at `main()` startup, so the collector can
+trace them as roots. The active raise-frame chain is also walked as
+roots so that an in-flight `raise` value survives a collection.
 
-The dict returned by `runtime.gc_stats()` has these keys:
+Locals inside user functions are **not** roots in v0.41.
 
-| key           | meaning                                                  |
-|---------------|----------------------------------------------------------|
-| `alloc_count` | total tracked allocations made since program start       |
-| `alloc_bytes` | total tracked allocation bytes since program start       |
-| `freed_count` | total tracked allocations reclaimed by collections       |
-| `freed_bytes` | total tracked allocation bytes reclaimed                 |
-| `live_count`  | `alloc_count - freed_count`                              |
-| `live_bytes`  | `alloc_bytes - freed_bytes`                              |
+### Mark phase
 
-In STEP 1, no collection runs, so `freed_count` and `freed_bytes` are
-always `0`, and `live_*` equals `alloc_*`.
+Mark traversal recurses through:
 
-### STEP 2 — Mark phase (planned)
+- `TyaArray.items[i]` for each `i` in `0..len`.
+- `TyaDict.entries[i].value` for each non-null entry key.
+- `TyaFunction.receiver`, `TyaFunction.parent`, and
+  `TyaFunction.members`.
+- `TyaBytes` is a leaf.
 
-Scan roots (value stack, active locals, module globals,
-currently-active closure environments, in-flight error reraise slots)
-and transitively mark every reachable tracked allocation.
+Headers reach a fixed point: a header is marked at most once per
+collection, and the traversal short-circuits on already-marked headers,
+so cycles are handled without extra effort.
 
-### STEP 3 — Sweep phase (planned)
+### Sweep phase
 
-Walk the linked list, free unmarked allocations and any inner
-allocations they own, reset mark bits.
+Sweep walks `tya_gc_head` once. For each header:
 
-### STEP 4 — Trigger policy and `runtime.gc()` API (planned)
+- If `mark == 0`, the header is unlinked from the list, and
+  `tya_gc_free_one` runs the kind-specific free routine
+  (which also frees the inner buffer). `tya_gc_freed_count` and
+  `tya_gc_freed_bytes` advance by the freed object's size.
+- If `mark == 1`, the mark bit is reset to `0` for the next collection.
 
-Allocation-threshold trigger; `runtime.gc()` for explicit invocation in
-tests and benchmarks.
+### Trigger policy
 
-### STEP 5 — Documentation and examples (planned)
+Two trigger paths exist:
 
-Long-running examples demonstrating bounded resident set; cycle
-reclamation tests; finalization of this spec.
+1. **Explicit**: a Tya program calls `runtime.gc()`, which calls
+   `tya_gc_collect`. This is the primary way to run the collector in
+   v0.41.
 
-## Observable language behavior
+2. **Automatic safe-point**: the code generator emits
+   `tya_gc_maybe_collect();` between top-level statements in `main()`.
+   That helper checks the live-count threshold and, when the threshold
+   is exceeded, runs a collection. The threshold is `2 * live_count`
+   after the previous collection, with a minimum of `1024`. This
+   trigger covers programs whose work happens at the top level — a
+   sequence of top-level stmts that allocate and discard data — but
+   does **not** fire inside a `while` or `for` body.
 
-None at STEP 1 beyond the new builtin. The next STEPs will not change
-language semantics either; they will only reclaim memory that is no
-longer reachable.
+## Safety contract
+
+`tya_gc_collect` reclaims any tracked allocation that is not reachable
+from a registered root (module global) or the active raise chain.
+Locals inside user functions, including the implicit `__iter` value of
+a `for x in y` loop, are not roots. Collecting while such a local
+holds the only reference to a heap value would free that value out
+from under the local, leading to use-after-free.
+
+In v0.41 the collector is therefore safe to run only at points where
+every live local TyaValue is also reachable from a registered root.
+The two safe places are:
+
+1. The top level of the program, between top-level statements
+   (`main()`-level boundaries). The generator's automatic trigger fires
+   only here.
+2. Any point in user code where the program has assigned every
+   currently-needed TyaValue into a top-level binding before calling
+   `runtime.gc()`. This is the safe contract for explicit
+   `runtime.gc()` calls inside loops or functions: the program must
+   have spilled live values to top-level bindings first.
+
+Future minor versions will extend the runtime with precise local
+tracking (a shadow stack written by the code generator) or
+conservative stack scanning, at which point the collector will become
+safe to call from any context. v0.41 leaves that work for v0.42+.
+
+## Examples
+
+```tya
+# Reclamation of an unreachable subgraph.
+import runtime
+
+root = []
+i = 0
+while i < 50
+  push(root, [i, i + 1, i + 2])
+  i = i + 1
+
+peak = runtime.gc_stats()["live_count"]
+root = []
+runtime.gc()
+after = runtime.gc_stats()["live_count"]
+print "peak: " + to_string(peak)
+print "after: " + to_string(after)
+```
+
+```tya
+# Reclamation of a cycle.
+import runtime
+
+root = []
+i = 0
+while i < 30
+  c = {}
+  c["self"] = c
+  push(root, c)
+  i = i + 1
+
+root = []
+runtime.gc()
+print runtime.gc_stats()["live_count"]
+```
+
+See `examples/long_running_loop.tya` for a long-running loop that calls
+`runtime.gc()` inside its body to keep the resident set bounded.

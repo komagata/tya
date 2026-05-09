@@ -496,3 +496,33 @@ exits non-zero when at least one test failed.
 
 See the v0.22 SPEC for the full surface.
 
+
+## `runtime` (v0.41)
+
+GC introspection and explicit collection.
+
+```tya
+import runtime
+
+stats = runtime.gc_stats()
+runtime.gc()
+```
+
+Functions:
+
+```tya
+gc_stats ()
+gc       ()
+```
+
+`runtime.gc_stats()` returns a dict snapshot of the GC counters with
+keys `alloc_count`, `alloc_bytes`, `freed_count`, `freed_bytes`,
+`live_count`, `live_bytes`, `collect_count`, `threshold`.
+
+`runtime.gc()` runs a full mark-and-sweep collection. The collector
+treats module-level globals as roots (plus the active raise-frame
+chain). Locals inside user functions are not roots in v0.41, so
+`runtime.gc()` is safe to call only at points where every live local
+TyaValue is also reachable from a registered root — in practice, at
+the top level of the program. See the v0.41 SPEC for the full safety
+contract and known limitations.

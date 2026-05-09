@@ -57,9 +57,18 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 		g.vars[name] = true
 		g.globalLine(fmt.Sprintf("TyaValue %s;", cName(name)))
 	}
-	for _, stmt := range prog.Stmts {
+	for i, stmt := range prog.Stmts {
 		if err := g.stmt(stmt); err != nil {
 			return "", nil, err
+		}
+		// v0.41: emit a safe-point GC trigger between top-level
+		// statements. After a top-level statement finishes, any heap
+		// values it produced are either stored into a registered global
+		// or are no longer referenced; locals used during evaluation are
+		// gone. The trigger only collects when allocations have grown
+		// past the threshold, so it is cheap when nothing has happened.
+		if i < len(prog.Stmts)-1 {
+			g.line("tya_gc_maybe_collect();")
 		}
 	}
 	var out strings.Builder
