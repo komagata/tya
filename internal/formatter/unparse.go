@@ -175,6 +175,17 @@ type unparser struct {
 	comments map[ast.Stmt]ast.StmtComments
 }
 
+// columnLimit is the canonical wrap target (CANONICAL §5.1).
+const columnLimit = 80
+
+func (u *unparser) currentIndent() int { return u.indent * 2 }
+
+// fitsInline reports whether body fits on a single line at the
+// current indent (no trailing comment).
+func (u *unparser) fitsInline(body string) bool {
+	return u.currentIndent()+len(body) <= columnLimit
+}
+
 // preStmt writes leading comments for stmt, when any are attached.
 func (u *unparser) preStmt(stmt ast.Stmt) {
 	if u.comments == nil {
@@ -255,6 +266,11 @@ func (u *unparser) stmt(s ast.Stmt) error {
 					return nil
 				}
 			}
+		}
+		// Wrap a top-level CallExpr if the single-line form
+		// exceeds the column limit.
+		if call, ok := n.Expr.(*ast.CallExpr); ok && !u.fitsInline(ex) {
+			return u.emitWrappedCall(s, "", call)
 		}
 		u.emitStmtLine(s, ex)
 		return nil
@@ -554,7 +570,80 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 		}
 		values = append(values, s)
 	}
-	u.emitStmtLine(n, strings.Join(targets, ", ")+" = "+strings.Join(values, ", "))
+	body := strings.Join(targets, ", ") + " = " + strings.Join(values, ", ")
+	if u.fitsInline(body) {
+		u.emitStmtLine(n, body)
+		return nil
+	}
+	// Single-line too long. Wrap the rhs when it is a single
+	// CallExpr or ArrayLit. Other rhs shapes fall back to the
+	// long single-line under the atomic-token exception.
+	if len(n.Values) == 1 {
+		switch v := n.Values[0].(type) {
+		case *ast.CallExpr:
+			return u.emitWrappedCall(n, strings.Join(targets, ", ")+" = ", v)
+		case *ast.ArrayLit:
+			return u.emitWrappedArray(n, strings.Join(targets, ", ")+" = ", v)
+		}
+	}
+	u.emitStmtLine(n, body)
+	return nil
+}
+
+// emitWrappedCall emits a call as the multi-line form per §5.3.1:
+//
+//	prefix callee(
+//	  arg1,
+//	  arg2,
+//	  ...
+//	)
+//
+// prefix is "" for an ExprStmt or "name = " for an AssignStmt rhs.
+func (u *unparser) emitWrappedCall(stmt ast.Stmt, prefix string, call *ast.CallExpr) error {
+	callee, err := u.expr(call.Callee)
+	if err != nil {
+		return err
+	}
+	u.line(prefix + callee + "(")
+	u.indent++
+	for _, a := range call.Args {
+		s, err := u.expr(a)
+		if err != nil {
+			u.indent--
+			return err
+		}
+		u.line(s + ",")
+	}
+	u.indent--
+	closing := ")"
+	if t := u.trailingFor(stmt); t != "" {
+		u.line(closing + "  #" + t)
+	} else {
+		u.line(closing)
+	}
+	return nil
+}
+
+// emitWrappedArray emits an array literal as the multi-line form
+// per §5.3.2.
+func (u *unparser) emitWrappedArray(stmt ast.Stmt, prefix string, arr *ast.ArrayLit) error {
+	u.line(prefix + "[")
+	u.indent++
+	for _, el := range arr.Elems {
+		s, err := u.expr(el)
+		if err != nil {
+			u.indent--
+			return err
+		}
+		u.line(s + ",")
+	}
+	u.indent--
+	closing := "]"
+	if t := u.trailingFor(stmt); t != "" {
+		u.line(closing + "  #" + t)
+	} else {
+		u.line(closing)
+	}
 	return nil
 }
 

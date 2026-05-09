@@ -138,6 +138,31 @@ func TestUnparseImports(t *testing.T) {
 	}
 }
 
+func TestUnparseWrapsLongCall(t *testing.T) {
+	src := "result = compute_filtered_items(source_alpha, source_beta, source_gamma, source_delta)\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "result = compute_filtered_items(\n  source_alpha,\n  source_beta,\n  source_gamma,\n  source_delta,\n)\n"
+	if got != want {
+		t.Errorf("wrap mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+}
+
+func TestUnparseWrapsLongArray(t *testing.T) {
+	src := "items = [first_item_name, second_item_name, third_item_name, fourth_item_name, fifth_item_name]\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"items = [\n  first_item_name,\n", "  fifth_item_name,\n]\n"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
 func TestUnparseImportSortAndBlankLines(t *testing.T) {
 	src := "import zmod\nimport string\nimport file\nimport mylib\n\ngreet = name -> name\nx = 1\n"
 	got, err := unparseSource(t, src)
