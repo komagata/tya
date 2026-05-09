@@ -16,10 +16,11 @@ import (
 	"tya/internal/formatter"
 	"tya/internal/lexer"
 	"tya/internal/parser"
+	"tya/internal/pkg"
 	"tya/internal/runner"
 )
 
-const version = "0.25.0"
+const version = "0.26.0"
 
 var lineColErrorRE = regexp.MustCompile(`^(\d+):(\d+):\s*(.*)$`)
 var errTestsFailed = errors.New("test failed")
@@ -103,6 +104,44 @@ func main() {
 			if errors.Is(err, errTestsFailed) {
 				os.Exit(1)
 			}
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "install":
+		if err := installCommand(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "update":
+		target := ""
+		if len(os.Args) > 2 {
+			target = os.Args[2]
+		}
+		if err := updateCommand(target); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "add":
+		if err := addCommand(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "remove":
+		if len(os.Args) != 3 {
+			usage()
+			os.Exit(2)
+		}
+		if err := removeCommand(os.Args[2]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "outdated":
+		if err := outdatedCommand(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -255,6 +294,11 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya fmt [-w] <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya emit-c <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya test [path]")
+	fmt.Fprintln(os.Stderr, "       tya install")
+	fmt.Fprintln(os.Stderr, "       tya update [package]")
+	fmt.Fprintln(os.Stderr, "       tya add <name> [<constraint>] [--git URL --tag T] [--path P] [--dev]")
+	fmt.Fprintln(os.Stderr, "       tya remove <name>")
+	fmt.Fprintln(os.Stderr, "       tya outdated")
 	fmt.Fprintln(os.Stderr, "       tya version")
 }
 
@@ -590,4 +634,161 @@ func defaultOutputPath(path string) string {
 	base := filepath.Base(path)
 	ext := filepath.Ext(base)
 	return strings.TrimSuffix(base, ext)
+}
+
+func installCommand() error {
+	root, err := projectRoot()
+	if err != nil {
+		return err
+	}
+	m, lf, err := pkg.Install(root)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stdout, "Resolved %d packages for %s\n", len(lf.Packages), m.Name)
+	for _, p := range lf.Packages {
+		fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", p.Name, p.Version, p.Source)
+	}
+	return nil
+}
+
+func updateCommand(target string) error {
+	root, err := projectRoot()
+	if err != nil {
+		return err
+	}
+	m, lf, err := pkg.Update(root, target)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stdout, "Updated %s (%d packages)\n", m.Name, len(lf.Packages))
+	return nil
+}
+
+func addCommand(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("tya add: missing package name")
+	}
+	root, err := projectRoot()
+	if err != nil {
+		return err
+	}
+	dep := pkg.Dependency{Name: args[0]}
+	isDev := false
+	args = args[1:]
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		switch a {
+		case "--dev":
+			isDev = true
+		case "--git":
+			if i+1 >= len(args) {
+				return fmt.Errorf("--git requires a URL")
+			}
+			dep.Source = "git"
+			dep.Git = args[i+1]
+			i++
+		case "--tag":
+			if i+1 >= len(args) {
+				return fmt.Errorf("--tag requires a value")
+			}
+			dep.Tag = args[i+1]
+			i++
+		case "--branch":
+			if i+1 >= len(args) {
+				return fmt.Errorf("--branch requires a value")
+			}
+			dep.Branch = args[i+1]
+			i++
+		case "--rev":
+			if i+1 >= len(args) {
+				return fmt.Errorf("--rev requires a value")
+			}
+			dep.Rev = args[i+1]
+			i++
+		case "--path":
+			if i+1 >= len(args) {
+				return fmt.Errorf("--path requires a value")
+			}
+			dep.Source = "path"
+			dep.PathRef = args[i+1]
+			i++
+		default:
+			c, perr := pkg.ParseConstraint(a)
+			if perr != nil {
+				return fmt.Errorf("tya add: %v", perr)
+			}
+			dep.Constraint = c
+			if dep.Source == "" {
+				dep.Source = "version"
+			}
+		}
+	}
+	if dep.Source == "" {
+		return fmt.Errorf("tya add: missing source (constraint, --git, or --path)")
+	}
+	if err := pkg.AddDependency(root, dep, isDev); err != nil {
+		return err
+	}
+	if dep.Source == "version" {
+		fmt.Fprintf(os.Stdout, "Added %s %s to manifest. Run `tya install` after pinning to a git or path source.\n", dep.Name, dep.Constraint.Raw)
+		return nil
+	}
+	_, lf, err := pkg.Install(root)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stdout, "Added %s. Resolved %d packages.\n", dep.Name, len(lf.Packages))
+	return nil
+}
+
+func removeCommand(name string) error {
+	root, err := projectRoot()
+	if err != nil {
+		return err
+	}
+	if err := pkg.RemoveDependency(root, name); err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stdout, "Removed %s.\n", name)
+	return nil
+}
+
+func outdatedCommand() error {
+	root, err := projectRoot()
+	if err != nil {
+		return err
+	}
+	lockPath := filepath.Join(root, pkg.LockfileName)
+	lf, err := pkg.ReadLockfile(lockPath)
+	if err != nil {
+		return fmt.Errorf("no lockfile: run `tya install` first")
+	}
+	if len(lf.Packages) == 0 {
+		fmt.Fprintln(os.Stdout, "No locked packages.")
+		return nil
+	}
+	fmt.Fprintf(os.Stdout, "Locked packages (newer-version detection requires fetching, run `tya update` to refresh):\n")
+	for _, p := range lf.Packages {
+		fmt.Fprintf(os.Stdout, "  %s %s (%s)\n", p.Name, p.Version, p.Source)
+	}
+	return nil
+}
+
+func projectRoot() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	for i := 0; i < 16; i++ {
+		if _, err := os.Stat(filepath.Join(dir, pkg.ManifestName)); err == nil {
+			return dir, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return "", fmt.Errorf("no tya.toml found in current directory or any parent")
 }

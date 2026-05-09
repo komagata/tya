@@ -13,6 +13,7 @@ import (
 	"tya/internal/eval"
 	"tya/internal/lexer"
 	"tya/internal/parser"
+	"tya/internal/pkg"
 )
 
 var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
@@ -221,8 +222,15 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 
 func resolveModulePath(importerPath string, name string) (string, error) {
 	parts := strings.Split(name, "/")
-	fileName := filepath.Join(append(parts[:len(parts)-1], parts[len(parts)-1]+".tya")...)
+	leading := parts[0]
+	pathParts := append([]string{}, parts...)
+	pathParts[len(pathParts)-1] = pathParts[len(pathParts)-1] + ".tya"
+	fileName := filepath.Join(pathParts...)
 	candidates := []string{filepath.Join(filepath.Dir(importerPath), fileName)}
+	// v0.26: manifest-declared packages live under .tya/packages/<name>-<version>/src/
+	for _, dir := range packageSrcDirs(importerPath, leading) {
+		candidates = append(candidates, filepath.Join(dir, fileName))
+	}
 	for _, dir := range filepath.SplitList(os.Getenv("TYA_PATH")) {
 		if dir == "" {
 			continue
@@ -244,6 +252,50 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("module not found: %s", name)
+}
+
+// packageSrcDirs walks up from importerPath looking for a project root that
+// contains a tya.toml, then returns candidate src/ directories. It consults
+// tya.lock for package locations: git-sourced packages live under
+// .tya/packages/<name>-<version>/, while path-sourced packages are read
+// directly from the path recorded in the lockfile.
+func packageSrcDirs(importerPath, leadingName string) []string {
+	dir := filepath.Dir(importerPath)
+	for i := 0; i < 8; i++ {
+		if _, err := os.Stat(filepath.Join(dir, "tya.toml")); err == nil {
+			out := []string{}
+			lockPath := filepath.Join(dir, "tya.lock")
+			if lf, err := pkg.ReadLockfile(lockPath); err == nil {
+				for i := range lf.Packages {
+					p := &lf.Packages[i]
+					if p.Name != leadingName {
+						continue
+					}
+					out = append(out, filepath.Join(pkg.PackageDir(dir, p), "src"))
+				}
+			}
+			pkgs := filepath.Join(dir, ".tya", "packages")
+			entries, err := os.ReadDir(pkgs)
+			if err == nil {
+				prefix := leadingName + "-"
+				for _, e := range entries {
+					if !e.IsDir() {
+						continue
+					}
+					if e.Name() == leadingName || strings.HasPrefix(e.Name(), prefix) {
+						out = append(out, filepath.Join(pkgs, e.Name(), "src"))
+					}
+				}
+			}
+			return out
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return nil
 }
 
 func stdlibDirs() []string {

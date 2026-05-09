@@ -187,43 +187,43 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add unittest-form tests for bitwise operators, the bytes type, binary IO, and the migrated digest/secure_random/hex/base64 modules.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.26 external packages and version resolution
-  - [ ] Define v0.26 scope
-    - [ ] Add `docs/v0.26/SPEC.md`.
-    - [ ] Specify the `tya.toml` manifest (name, version, dependencies, dev-dependencies).
-    - [ ] Specify the `tya.lock` lockfile (deterministic resolved versions, source identity, checksums).
-    - [ ] Specify version constraint syntax (`^x.y.z`, `~x.y.z`, `>=x.y.z, <a.b.c`, exact).
-    - [ ] Specify Bundler-style single-version-per-package resolution with backtracking.
-    - [ ] Specify git and path sources; defer central registry to a later version.
-    - [ ] Specify import resolution order: same dir → `tya.toml` deps → `TYA_PATH` → bundled stdlib.
-    - [ ] Specify the package directory layout (`src/` for public modules).
-  - [ ] Implement manifest and lockfile parsing
-    - [ ] Parse `tya.toml` via the `toml` standard module.
-    - [ ] Validate manifest fields and version strings.
-    - [ ] Read and write `tya.lock` deterministically.
-  - [ ] Implement version constraint resolver
-    - [ ] Implement backtracking dependency resolver picking the highest valid version.
-    - [ ] Detect and report unsolvable constraint sets (diamond conflicts) with source-oriented diagnostics.
-  - [ ] Implement source fetchers
-    - [ ] Add a git fetcher (clone + checkout tag/rev) with caching under `.tya/cache`.
-    - [ ] Add a path fetcher (symlink or direct read).
-    - [ ] Verify and record checksums in the lockfile.
-  - [ ] Wire dependency loading into module resolution
-    - [ ] Resolve manifest-declared dependencies before `TYA_PATH` and bundled stdlib.
-    - [ ] Honor the lockfile for reproducible loads.
-    - [ ] Preserve same-directory precedence.
-  - [ ] Add CLI commands
-    - [ ] Add `tya install` (resolve and write lockfile, download packages to `.tya/packages/`).
-    - [ ] Add `tya update [pkg]` (recompute the lockfile for one or all packages).
-    - [ ] Add `tya add <pkg> [constraint]` and `tya remove <pkg>` (edit `tya.toml` + re-resolve).
-    - [ ] Add `tya outdated` (report newer versions available).
-    - [ ] Report missing or conflicting requirements with source-oriented diagnostics.
-  - [ ] Keep v0.26 documentation and tests aligned
-    - [ ] Update latest docs when v0.26 behavior is implemented.
-    - [ ] Keep `docs/v0.26/` aligned with the v0.26 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add CLI, resolver, fetcher, and lockfile tests.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [x] Ship v0.26 external packages and version resolution
+  - [x] Define v0.26 scope
+    - [x] Add `docs/v0.26/SPEC.md`.
+    - [x] Specify the `tya.toml` manifest (name, version, dependencies, dev-dependencies).
+    - [x] Specify the `tya.lock` lockfile (deterministic resolved versions, source identity, checksums).
+    - [x] Specify version constraint syntax (`^x.y.z`, `~x.y.z`, `>=x.y.z, <a.b.c`, exact).
+    - [x] Specify Bundler-style single-version-per-package resolution with backtracking.
+    - [x] Specify git and path sources; defer central registry to a later version.
+    - [x] Specify import resolution order: same dir → `tya.toml` deps → `TYA_PATH` → bundled stdlib.
+    - [x] Specify the package directory layout (`src/` for public modules).
+  - [x] Implement manifest and lockfile parsing
+    - [x] Parse `tya.toml` via the `toml` standard module.
+    - [x] Validate manifest fields and version strings.
+    - [x] Read and write `tya.lock` deterministically.
+  - [x] Implement version constraint resolver
+    - [x] Implement backtracking dependency resolver picking the highest valid version.
+    - [x] Detect and report unsolvable constraint sets (diamond conflicts) with source-oriented diagnostics.
+  - [x] Implement source fetchers
+    - [x] Add a git fetcher (clone + checkout tag/rev) with caching under `.tya/cache`.
+    - [x] Add a path fetcher (symlink or direct read).
+    - [x] Verify and record checksums in the lockfile.
+  - [x] Wire dependency loading into module resolution
+    - [x] Resolve manifest-declared dependencies before `TYA_PATH` and bundled stdlib.
+    - [x] Honor the lockfile for reproducible loads.
+    - [x] Preserve same-directory precedence.
+  - [x] Add CLI commands
+    - [x] Add `tya install` (resolve and write lockfile, download packages to `.tya/packages/`).
+    - [x] Add `tya update [pkg]` (recompute the lockfile for one or all packages).
+    - [x] Add `tya add <pkg> [constraint]` and `tya remove <pkg>` (edit `tya.toml` + re-resolve).
+    - [x] Add `tya outdated` (report newer versions available).
+    - [x] Report missing or conflicting requirements with source-oriented diagnostics.
+  - [x] Keep v0.26 documentation and tests aligned
+    - [x] Update latest docs when v0.26 behavior is implemented.
+    - [x] Keep `docs/v0.26/` aligned with the v0.26 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add CLI, resolver, fetcher, and lockfile tests.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 

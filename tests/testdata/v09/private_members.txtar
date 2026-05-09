@@ -40,7 +40,7 @@ stderr 'super cannot call private parent constructor'
 stderr 'cannot construct abstract class Repository'
 
 exec go run ./cmd/tya version
-stdout '0.25.0\n'
+stdout '0.26.0\n'
 ! stderr .
 
 -- private_members.tya --

@@ -192,57 +192,57 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.26 external packages and version resolution</li>
+<li>[x] Ship v0.26 external packages and version resolution</li>
 <ul>
-<li>[ ] Define v0.26 scope</li>
+<li>[x] Define v0.26 scope</li>
 <ul>
-<li>[ ] Add <code>docs/v0.26/SPEC.md</code>.</li>
-<li>[ ] Specify the <code>tya.toml</code> manifest (name, version, dependencies, dev-dependencies).</li>
-<li>[ ] Specify the <code>tya.lock</code> lockfile (deterministic resolved versions, source identity, checksums).</li>
-<li>[ ] Specify version constraint syntax (<code>^x.y.z</code>, <code>~x.y.z</code>, <code>&gt;=x.y.z, &lt;a.b.c</code>, exact).</li>
-<li>[ ] Specify Bundler-style single-version-per-package resolution with backtracking.</li>
-<li>[ ] Specify git and path sources; defer central registry to a later version.</li>
-<li>[ ] Specify import resolution order: same dir → <code>tya.toml</code> deps → <code>TYA_PATH</code> → bundled stdlib.</li>
-<li>[ ] Specify the package directory layout (<code>src/</code> for public modules).</li>
+<li>[x] Add <code>docs/v0.26/SPEC.md</code>.</li>
+<li>[x] Specify the <code>tya.toml</code> manifest (name, version, dependencies, dev-dependencies).</li>
+<li>[x] Specify the <code>tya.lock</code> lockfile (deterministic resolved versions, source identity, checksums).</li>
+<li>[x] Specify version constraint syntax (<code>^x.y.z</code>, <code>~x.y.z</code>, <code>&gt;=x.y.z, &lt;a.b.c</code>, exact).</li>
+<li>[x] Specify Bundler-style single-version-per-package resolution with backtracking.</li>
+<li>[x] Specify git and path sources; defer central registry to a later version.</li>
+<li>[x] Specify import resolution order: same dir → <code>tya.toml</code> deps → <code>TYA_PATH</code> → bundled stdlib.</li>
+<li>[x] Specify the package directory layout (<code>src/</code> for public modules).</li>
 </ul>
-<li>[ ] Implement manifest and lockfile parsing</li>
+<li>[x] Implement manifest and lockfile parsing</li>
 <ul>
-<li>[ ] Parse <code>tya.toml</code> via the <code>toml</code> standard module.</li>
-<li>[ ] Validate manifest fields and version strings.</li>
-<li>[ ] Read and write <code>tya.lock</code> deterministically.</li>
+<li>[x] Parse <code>tya.toml</code> via the <code>toml</code> standard module.</li>
+<li>[x] Validate manifest fields and version strings.</li>
+<li>[x] Read and write <code>tya.lock</code> deterministically.</li>
 </ul>
-<li>[ ] Implement version constraint resolver</li>
+<li>[x] Implement version constraint resolver</li>
 <ul>
-<li>[ ] Implement backtracking dependency resolver picking the highest valid version.</li>
-<li>[ ] Detect and report unsolvable constraint sets (diamond conflicts) with source-oriented diagnostics.</li>
+<li>[x] Implement backtracking dependency resolver picking the highest valid version.</li>
+<li>[x] Detect and report unsolvable constraint sets (diamond conflicts) with source-oriented diagnostics.</li>
 </ul>
-<li>[ ] Implement source fetchers</li>
+<li>[x] Implement source fetchers</li>
 <ul>
-<li>[ ] Add a git fetcher (clone + checkout tag/rev) with caching under <code>.tya/cache</code>.</li>
-<li>[ ] Add a path fetcher (symlink or direct read).</li>
-<li>[ ] Verify and record checksums in the lockfile.</li>
+<li>[x] Add a git fetcher (clone + checkout tag/rev) with caching under <code>.tya/cache</code>.</li>
+<li>[x] Add a path fetcher (symlink or direct read).</li>
+<li>[x] Verify and record checksums in the lockfile.</li>
 </ul>
-<li>[ ] Wire dependency loading into module resolution</li>
+<li>[x] Wire dependency loading into module resolution</li>
 <ul>
-<li>[ ] Resolve manifest-declared dependencies before <code>TYA_PATH</code> and bundled stdlib.</li>
-<li>[ ] Honor the lockfile for reproducible loads.</li>
-<li>[ ] Preserve same-directory precedence.</li>
+<li>[x] Resolve manifest-declared dependencies before <code>TYA_PATH</code> and bundled stdlib.</li>
+<li>[x] Honor the lockfile for reproducible loads.</li>
+<li>[x] Preserve same-directory precedence.</li>
 </ul>
-<li>[ ] Add CLI commands</li>
+<li>[x] Add CLI commands</li>
 <ul>
-<li>[ ] Add <code>tya install</code> (resolve and write lockfile, download packages to <code>.tya/packages/</code>).</li>
-<li>[ ] Add <code>tya update [pkg]</code> (recompute the lockfile for one or all packages).</li>
-<li>[ ] Add <code>tya add &lt;pkg&gt; [constraint]</code> and <code>tya remove &lt;pkg&gt;</code> (edit <code>tya.toml</code> + re-resolve).</li>
-<li>[ ] Add <code>tya outdated</code> (report newer versions available).</li>
-<li>[ ] Report missing or conflicting requirements with source-oriented diagnostics.</li>
+<li>[x] Add <code>tya install</code> (resolve and write lockfile, download packages to <code>.tya/packages/</code>).</li>
+<li>[x] Add <code>tya update [pkg]</code> (recompute the lockfile for one or all packages).</li>
+<li>[x] Add <code>tya add &lt;pkg&gt; [constraint]</code> and <code>tya remove &lt;pkg&gt;</code> (edit <code>tya.toml</code> + re-resolve).</li>
+<li>[x] Add <code>tya outdated</code> (report newer versions available).</li>
+<li>[x] Report missing or conflicting requirements with source-oriented diagnostics.</li>
 </ul>
-<li>[ ] Keep v0.26 documentation and tests aligned</li>
+<li>[x] Keep v0.26 documentation and tests aligned</li>
 <ul>
-<li>[ ] Update latest docs when v0.26 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.26/</code> aligned with the v0.26 minor specification.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add CLI, resolver, fetcher, and lockfile tests.</li>
-<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+<li>[x] Update latest docs when v0.26 behavior is implemented.</li>
+<li>[x] Keep <code>docs/v0.26/</code> aligned with the v0.26 minor specification.</li>
+<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[x] Add CLI, resolver, fetcher, and lockfile tests.</li>
+<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
 </ul>
