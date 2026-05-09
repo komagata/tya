@@ -26,11 +26,17 @@ import (
 	"tya/internal/ast"
 )
 
-// Unparse renders prog as canonical Tya source. v0.37 covers a
-// useful subset of programs; unsupported AST shapes return a
-// non-nil error.
+// Unparse renders prog as canonical Tya source. When prog was
+// produced by parser.ParseWithComments, header and per-statement
+// comments are emitted per docs/CANONICAL_SYNTAX.md §3.
 func Unparse(prog *ast.Program) (string, error) {
-	u := &unparser{}
+	u := &unparser{comments: prog.Comments}
+	if len(prog.HeaderComments) > 0 {
+		for _, c := range prog.HeaderComments {
+			u.line("#" + c)
+		}
+		u.b.WriteByte('\n')
+	}
 	for _, stmt := range prog.Stmts {
 		if err := u.stmt(stmt); err != nil {
 			return "", err
@@ -40,8 +46,46 @@ func Unparse(prog *ast.Program) (string, error) {
 }
 
 type unparser struct {
-	b      strings.Builder
-	indent int
+	b        strings.Builder
+	indent   int
+	comments map[ast.Stmt]ast.StmtComments
+}
+
+// preStmt writes leading comments for stmt, when any are attached.
+func (u *unparser) preStmt(stmt ast.Stmt) {
+	if u.comments == nil {
+		return
+	}
+	sc, ok := u.comments[stmt]
+	if !ok {
+		return
+	}
+	for _, c := range sc.Leading {
+		u.line("#" + c)
+	}
+}
+
+// trailingFor returns the line-end comment text for stmt, or "" when
+// none. The caller is responsible for concatenating it onto the
+// emitted line.
+func (u *unparser) trailingFor(stmt ast.Stmt) string {
+	if u.comments == nil {
+		return ""
+	}
+	if sc, ok := u.comments[stmt]; ok {
+		return sc.LineEnd
+	}
+	return ""
+}
+
+// emitStmtLine writes a one-line statement, appending its line-end
+// comment when set.
+func (u *unparser) emitStmtLine(stmt ast.Stmt, body string) {
+	if t := u.trailingFor(stmt); t != "" {
+		u.line(body + "  #" + t)
+		return
+	}
+	u.line(body)
 }
 
 func (u *unparser) line(s string) {
@@ -51,12 +95,13 @@ func (u *unparser) line(s string) {
 }
 
 func (u *unparser) stmt(s ast.Stmt) error {
+	u.preStmt(s)
 	switch n := s.(type) {
 	case *ast.ImportStmt:
 		if n.Alias != "" {
-			u.line(fmt.Sprintf("import %s as %s", n.Name, n.Alias))
+			u.emitStmtLine(s, fmt.Sprintf("import %s as %s", n.Name, n.Alias))
 		} else {
-			u.line(fmt.Sprintf("import %s", n.Name))
+			u.emitStmtLine(s, fmt.Sprintf("import %s", n.Name))
 		}
 		return nil
 	case *ast.AssignStmt:
@@ -66,7 +111,7 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		// v0.37: render `print foo` and `assert ...` keyword forms
+		// Render `print foo` and `assert ...` keyword forms
 		// faithfully. The parser accepts them; the AST stores them
 		// as ExprStmt with a CallExpr whose callee is the keyword
 		// ident. We emit the canonical keyword form.
@@ -82,16 +127,16 @@ func (u *unparser) stmt(s ast.Stmt) error {
 						}
 						args = append(args, s)
 					}
-					u.line(id.Name + " " + strings.Join(args, ", "))
+					u.emitStmtLine(s, id.Name+" "+strings.Join(args, ", "))
 					return nil
 				}
 			}
 		}
-		u.line(ex)
+		u.emitStmtLine(s, ex)
 		return nil
 	case *ast.ReturnStmt:
 		if len(n.Values) == 0 {
-			u.line("return")
+			u.emitStmtLine(s, "return")
 			return nil
 		}
 		parts := make([]string, 0, len(n.Values))
@@ -102,20 +147,20 @@ func (u *unparser) stmt(s ast.Stmt) error {
 			}
 			parts = append(parts, s)
 		}
-		u.line("return " + strings.Join(parts, ", "))
+		u.emitStmtLine(s, "return "+strings.Join(parts, ", "))
 		return nil
 	case *ast.RaiseStmt:
-		s, err := u.expr(n.Value)
+		ex, err := u.expr(n.Value)
 		if err != nil {
 			return err
 		}
-		u.line("raise " + s)
+		u.emitStmtLine(s, "raise "+ex)
 		return nil
 	case *ast.BreakStmt:
-		u.line("break")
+		u.emitStmtLine(s, "break")
 		return nil
 	case *ast.ContinueStmt:
-		u.line("continue")
+		u.emitStmtLine(s, "continue")
 		return nil
 	case *ast.IfStmt:
 		return u.ifStmt(n)
@@ -385,7 +430,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 		}
 		values = append(values, s)
 	}
-	u.line(strings.Join(targets, ", ") + " = " + strings.Join(values, ", "))
+	u.emitStmtLine(n, strings.Join(targets, ", ")+" = "+strings.Join(values, ", "))
 	return nil
 }
 

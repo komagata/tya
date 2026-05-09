@@ -8,6 +8,42 @@ import (
 	"tya/internal/parser"
 )
 
+func unparseSourceWithComments(t *testing.T, src string) (string, error) {
+	t.Helper()
+	toks, lcomments, errs := lexer.LexWithComments(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errs: %v", errs)
+	}
+	comments := make([]parser.CommentInfo, 0, len(lcomments))
+	for _, c := range lcomments {
+		comments = append(comments, parser.CommentInfo{Line: c.Line, Col: c.Col, Indent: c.Indent, Text: c.Text, IsFullLine: c.IsFullLine})
+	}
+	prog, err := parser.ParseWithComments(toks, comments)
+	if err != nil {
+		t.Fatalf("parse err: %v", err)
+	}
+	return Unparse(prog)
+}
+
+func TestUnparseEmitsHeaderAndStmtComments(t *testing.T) {
+	src := "# header line one\n# header line two\n\n# greet a user\ngreet = name -> name\nx = 1  # initial value\n"
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"# header line one",
+		"# header line two",
+		"# greet a user",
+		"greet = name -> name",
+		"x = 1  # initial value",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
 func unparseSource(t *testing.T, src string) (string, error) {
 	t.Helper()
 	toks, errs := lexer.Lex(src)
