@@ -39,7 +39,7 @@ stderr 'duplicate interface Reader'
 stderr 'abstract interface method read expects 0 parameters'
 
 exec go run ./cmd/tya version
-stdout '0.37.0\n'
+stdout '0.38.0\n'
 ! stderr .
 
 -- interfaces.tya --
