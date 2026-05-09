@@ -586,6 +586,15 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			return u.emitWrappedBinary(n, strings.Join(targets, ", ")+" = ", v)
 		case *ast.DictLit:
 			return u.emitDictBlock(n, strings.Join(targets, ", "), v)
+		case *ast.StringLit:
+			// §6.3: long single-line string with embedded
+			// newlines rewrites to """ ... """. Strings
+			// without \n or containing literal `"""` fall
+			// back to the atomic-token exception (long
+			// single-line is OK).
+			if strings.Contains(v.Value, "\n") && !strings.Contains(v.Value, `"""`) {
+				return u.emitTripleQuoted(n, strings.Join(targets, ", ")+" = ", v)
+			}
 		case *ast.FuncLit:
 			// §5.3.8: a single-line `name -> expr` whose
 			// rendering exceeds 80 columns switches to the
@@ -696,6 +705,36 @@ func (u *unparser) emitWrappedBinary(stmt ast.Stmt, prefix string, expr *ast.Bin
 		u.line(ops[i-1] + " " + s)
 	}
 	u.indent--
+	return nil
+}
+
+// emitTripleQuoted emits a string literal as a triple-quoted
+// multi-line literal per CANONICAL §6.3. The closing """ sits at
+// the current indent + 2; each body line is also at +2 indent and
+// the lexer's normalization step strips that baseline back out.
+//
+//	target = """
+//	  first line
+//	  second line
+//	  """
+func (u *unparser) emitTripleQuoted(stmt ast.Stmt, prefix string, lit *ast.StringLit) error {
+	u.line(prefix + `"""`)
+	u.indent++
+	defer func() { u.indent-- }()
+	// The triple-quoted body ends with a newline by virtue of
+	// the closing `"""` being on its own line. Drop a single
+	// trailing empty segment from the split so re-parsing the
+	// emitted form (which adds that trailing newline back to
+	// StringLit.Value) is idempotent.
+	body := lit.Value
+	if strings.HasSuffix(body, "\n") {
+		body = strings.TrimSuffix(body, "\n")
+	}
+	for _, line := range strings.Split(body, "\n") {
+		encoded := strings.ReplaceAll(line, `\`, `\\`)
+		u.line(encoded)
+	}
+	u.line(`"""`)
 	return nil
 }
 

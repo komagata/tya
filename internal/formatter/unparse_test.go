@@ -167,6 +167,44 @@ func TestUnparseIdempotent(t *testing.T) {
 	}
 }
 
+func TestUnparseRewritesLongStringWithNewlines(t *testing.T) {
+	src := "msg = \"line one of message\\nline two of message\\nline three of message and a bit more here\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"msg = \"\"\"",
+		"  line one of message",
+		"  line two of message",
+		"  line three of message and a bit more here",
+		"  \"\"\"",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+	// Idempotent.
+	second, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != second {
+		t.Errorf("not idempotent\nfirst:\n%s\nsecond:\n%s", got, second)
+	}
+}
+
+func TestUnparseLongStringWithoutNewlinesStaysSingleLine(t *testing.T) {
+	src := "url = \"https://example.com/path/to/very/long/resource/that/does/not/contain/whitespace\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "url = \"https://example.com") || strings.Contains(got, `"""`) {
+		t.Errorf("expected single-line atomic-token exception, got:\n%s", got)
+	}
+}
+
 func TestUnparseWrapsLongDictToBlock(t *testing.T) {
 	src := "user = { full_name: \"Alice Example\", role: \"administrator-level\", region: \"asia\" }\n"
 	got, err := unparseSource(t, src)
