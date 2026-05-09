@@ -13,6 +13,7 @@ import (
 
 	"tya/internal/checker"
 	"tya/internal/codegen"
+	"tya/internal/diag"
 	"tya/internal/formatter"
 	"tya/internal/lexer"
 	"tya/internal/parser"
@@ -20,12 +21,19 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.28.0"
+const version = "0.29.0"
+
+var cliFormat = diag.FormatHuman
+var cliColor = diag.ColorAuto
 
 var lineColErrorRE = regexp.MustCompile(`^(\d+):(\d+):\s*(.*)$`)
 var errTestsFailed = errors.New("test failed")
 
 func main() {
+	if err := parseGlobalDiagFlags(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
 	if len(os.Args) < 2 {
 		usage()
 		os.Exit(2)
@@ -69,7 +77,9 @@ func main() {
 			os.Exit(2)
 		}
 		if err := checkFile(os.Args[2]); err != nil {
-			printDiagnostic(os.Args[2], err)
+			if !errors.Is(err, errStrictReported) {
+				printDiagnostic(os.Args[2], err)
+			}
 			os.Exit(1)
 		}
 		return
@@ -527,7 +537,104 @@ func checkFile(path string) error {
 	if err != nil {
 		return err
 	}
-	return checker.CheckWithModules(prog, modules)
+	diags, err := checker.CheckAll(prog, modules, path, true)
+	if err != nil {
+		return err
+	}
+	if len(diags) == 0 {
+		return nil
+	}
+	emitDiagnostics(diags, path)
+	return errStrictReported
+}
+
+// errStrictReported signals that diagnostics were already printed.
+// Callers should exit with a non-zero status without re-printing.
+var errStrictReported = errors.New("__strict_reported__")
+
+// parseGlobalDiagFlags scans os.Args for --format=… and --color=…
+// (and the ` ` form) anywhere in the command line. Recognized flags
+// are removed from os.Args so the rest of the CLI parsing is unchanged.
+func parseGlobalDiagFlags() error {
+	out := []string{os.Args[0]}
+	args := os.Args[1:]
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		switch {
+		case strings.HasPrefix(a, "--format="):
+			f, err := diag.ParseFormat(strings.TrimPrefix(a, "--format="))
+			if err != nil {
+				return err
+			}
+			cliFormat = f
+		case a == "--format":
+			if i+1 >= len(args) {
+				return fmt.Errorf("missing value for --format")
+			}
+			f, err := diag.ParseFormat(args[i+1])
+			if err != nil {
+				return err
+			}
+			cliFormat = f
+			i++
+		case strings.HasPrefix(a, "--color="):
+			c, err := diag.ParseColorMode(strings.TrimPrefix(a, "--color="))
+			if err != nil {
+				return err
+			}
+			cliColor = c
+		case a == "--color":
+			if i+1 >= len(args) {
+				return fmt.Errorf("missing value for --color")
+			}
+			c, err := diag.ParseColorMode(args[i+1])
+			if err != nil {
+				return err
+			}
+			cliColor = c
+			i++
+		default:
+			out = append(out, a)
+		}
+	}
+	os.Args = out
+	return nil
+}
+
+// emitDiagnostics renders strict diagnostics to stderr in the user's
+// chosen format. file is used to populate the source map when paths
+// in diagnostics differ.
+func emitDiagnostics(diags []diag.Diagnostic, file string) {
+	if cliFormat == diag.FormatJSON {
+		fmt.Fprint(os.Stderr, diag.RenderJSON(diags))
+		return
+	}
+	sm := diag.NewSourceMap()
+	seen := map[string]bool{}
+	if file != "" && !seen[file] {
+		_ = sm.AddFromDisk(file)
+		seen[file] = true
+	}
+	for _, d := range diags {
+		if d.Primary.File != "" && !seen[d.Primary.File] {
+			_ = sm.AddFromDisk(d.Primary.File)
+			seen[d.Primary.File] = true
+		}
+	}
+	opts := diag.RenderOptions{
+		Color:   cliColor,
+		IsTTY:   isTTY(os.Stderr),
+		NoColor: os.Getenv("NO_COLOR") != "",
+	}
+	fmt.Fprint(os.Stderr, diag.Render(diags, sm, opts))
+}
+
+func isTTY(f *os.File) bool {
+	info, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return (info.Mode() & os.ModeCharDevice) != 0
 }
 
 func formatCommand(args []string) error {
@@ -565,6 +672,11 @@ func formatCommand(args []string) error {
 }
 
 func printDiagnostic(path string, err error) {
+	var serr *checker.StrictError
+	if errors.As(err, &serr) && len(serr.Diags) > 0 {
+		emitDiagnostics(serr.Diags, path)
+		return
+	}
 	src, readErr := os.ReadFile(path)
 	if readErr != nil {
 		fmt.Fprintln(os.Stderr, err)

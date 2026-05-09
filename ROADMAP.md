@@ -300,22 +300,33 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Editor integration
     - [ ] Publish a minimal VS Code extension that just spawns `tya lsp`.
     - [ ] Document Zed / Helix / Neovim / Emacs setup in `docs/`.
-- [ ] Adopt Elm-grade diagnostics across the toolchain
-  - [ ] Author the diagnostics philosophy document
-    - [ ] Add `docs/DIAGNOSTICS.md` as the single source of truth for how every Tya error, warning, and lint is written.
-    - [ ] State the philosophy: every diagnostic must say what was expected, what was found, why it is wrong, and where reasonable suggest a concrete next action — in a kind, non-blaming tone.
-    - [ ] Define the required diagnostic shape: stable error code (e.g. `TYA0042`), one-line title, source span with caret, expected-vs-found block, and a "hint" or "did you mean" line when applicable.
-    - [ ] Define a doc URL convention so each error code links to a longer explanation page under `docs/errors/`.
-    - [ ] Forbid jargon-only messages and stack-trace-only messages in user-facing output; internal panics are a bug.
-  - [ ] Build the diagnostic infrastructure
-    - [ ] Introduce a shared diagnostic type used by lexer, parser, checker, codegen, runner, and the future `tya lsp`.
-    - [ ] Add a registry of error codes with titles and doc URLs, asserted in tests so codes are stable and unique.
-    - [ ] Add a `--format=json` option for machine-readable diagnostics so editors, CI, and AI agents can consume them.
-  - [ ] Migrate existing diagnostics
-    - [ ] Audit every existing error message in lexer, parser, checker, codegen, runner, and stdlib loaders against `docs/DIAGNOSTICS.md`.
-    - [ ] Rewrite each to match the required shape and assign a stable error code.
-    - [ ] Add positive and negative tests pinning the rewritten messages.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point through the migration.
+- [x] Ship v0.29 diagnostics foundation
+  - [x] Define v0.29 scope
+    - [x] Add `docs/v0.29/SPEC.md`.
+    - [x] Specify the shared `internal/diag` model, human + JSON renderers, color modes, and the `TYA-Xnnnn` code namespace.
+    - [x] Migrate the v0.28 checker strict diagnostics to the new pipeline.
+    - [x] Make `tya check` collect multiple strict diagnostics in one run.
+    - [x] Keep lexer / parser / codegen / runner / fmt errors out of v0.29.
+  - [x] Implement diagnostics infrastructure
+    - [x] Build `internal/diag` with `Diagnostic`, `Region`, `SourceMap`, human renderer, JSON renderer, color resolution.
+    - [x] Wire `--format=human|json` and `--color=auto|always|never` through every CLI subcommand.
+    - [x] Honor `NO_COLOR`.
+  - [x] Migrate checker strict diagnostics
+    - [x] Assign codes `TYA-E0301`–`TYA-E0306`.
+    - [x] Emit banner, snippet, hint, and code for each.
+    - [x] Document every code in `docs/v0.29/CODES.md`.
+  - [x] Verification
+    - [x] Add `internal/diag` unit tests.
+    - [x] Add `tests/testdata/v29/diagnostics.txtar` golden test.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Migrate remaining stages to the diagnostics pipeline
+  - [ ] Lexer → `TYA-E0001`–`E0099`.
+  - [ ] Parser → `TYA-E0100`–`E0299`.
+  - [ ] Codegen → `TYA-E0600`–`E0799`.
+  - [ ] Runner → `TYA-E0800`–`E0899`.
+  - [ ] Fmt → `TYA-E0900`–`E0999`.
+  - [ ] Add did-you-mean suggestions for unknown-name diagnostics.
+  - [ ] Add multi-error parsing.
 
 - [ ] Ship WebAssembly compilation target
   - [ ] Define WASM scope
@@ -488,6 +499,99 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - [ ] Document the API, supported GFM extensions, AST schema, and the security posture for raw HTML in `docs/STDLIB.md`.
     - [ ] Run a representative subset of the CommonMark test suite as part of `go test ./...`.
     - [ ] Add unittest-form tests for each GFM extension and for AST round-trips through the visitor API.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship a garbage collector for the C runtime
+  - [ ] Define GC scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the GC.
+    - [ ] State the goal: long-running Tya programs should not leak heap memory; short scripts should run with bounded resident set.
+    - [ ] Decide the GC strategy: start with a conservative mark-and-sweep collector over the existing C runtime values (string, dict, array, bytes, error, function closure). Defer generational, incremental, and concurrent collectors.
+    - [ ] Decide trigger policy: allocation threshold based, with an explicit `runtime.gc()` for tests and benchmarks.
+    - [ ] Specify which roots are scanned: the value stack, currently active locals, module-level globals, and finalized-but-not-yet-collected closures.
+    - [ ] Keep weak references, finalizers, and tunable GC parameters out of the initial scope.
+    - [ ] Preserve current language semantics: GC must be invisible to Tya programs except for memory pressure and timing.
+  - [ ] Implement the collector
+    - [ ] Replace the current allocation path with a GC-aware allocator that records every heap-allocated value.
+    - [ ] Implement marking from the rooted set; sweep frees unreachable values and returns memory to the allocator.
+    - [ ] Ensure correctness across all current value kinds (string, dict, array, bytes, error, function, closure environments) and mixed nesting.
+    - [ ] Make the collector deterministic enough that the self-host fixed point and existing CLI tests stay green.
+    - [ ] Avoid regressing startup time and small-script performance materially; document any trade-offs.
+  - [ ] Keep GC documentation and tests aligned
+    - [ ] Document the GC strategy, trigger policy, and `runtime.gc()` in `docs/`.
+    - [ ] Add stress tests that allocate aggressively in loops and assert bounded resident set.
+    - [ ] Add cycle tests (mutually referencing dicts / arrays / closures) and assert they are reclaimed.
+    - [ ] Add a focused leak test under `valgrind` or `leaks` for representative programs.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship `tya doc` source documentation generator
+  - [ ] Define doc generator scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for `tya doc`.
+    - [ ] Specify the doc comment syntax: a contiguous run of comment lines immediately preceding a top-level definition (function, constant, module-level binding) is its doc comment. No separate `/** */` form.
+    - [ ] Specify the doc comment body as Markdown, rendered with the `markdown` stdlib module once that ships.
+    - [ ] Specify the discovered surface: every top-level binding in every `.tya` file under `src/` plus the package's stdlib re-exports.
+    - [ ] Specify the CLI surface: `tya doc` prints to stdout in plain text; `tya doc --html <out>` writes a static HTML site; `tya doc --serve` runs a local HTTP server; `tya doc --json` emits a machine-readable model for editors and AI agents.
+    - [ ] Keep cross-package linking, search, and versioned doc archives out of the initial scope; design data structures so they can be added later.
+  - [ ] Implement the generator
+    - [ ] Reuse the public Tya self-introspection library to parse sources and pair doc comments with their definitions.
+    - [ ] Build an in-memory doc model: package, modules, definitions, signatures, source spans, doc comment text.
+    - [ ] Render plain text, JSON, and a small static HTML site (one page per module, with a package index).
+    - [ ] Use `tya format` to render code examples in signatures consistently.
+    - [ ] Diagnose orphan doc comments, duplicate definitions, and unparseable Markdown bodies with structured errors.
+  - [ ] Keep doc generator documentation and tests aligned
+    - [ ] Document doc comment conventions, supported Markdown subset, and the CLI in `docs/`.
+    - [ ] Add CLI tests for plain text, JSON, and HTML outputs over a representative package.
+    - [ ] Add a golden-file test for the static HTML site so the rendering stays stable.
+    - [ ] Generate and publish documentation for the bundled stdlib as a worked example.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship syntax coloring for the major editors
+  - [ ] Define editor coverage and shared assets
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for editor syntax coloring.
+    - [ ] Define the **major editors** that Tya commits to supporting: **VS Code, Emacs, Vim, GitHub**. Other editors (Zed, Helix, Neovim, JetBrains) are welcome but not required for "major editor" coverage.
+    - [ ] Document the canonical token taxonomy (keyword, builtin, type, string, interpolated expression, number, operator, comment, function name, parameter, module name) once, in `docs/`, so each editor grammar maps to the same names.
+    - [ ] Keep these grammars as editor-tooling assets only. They are not authority over the language; the hand-written compiler in `internal/parser/` (and its self-hosted successor) remains the sole authority for what Tya accepts. See *Implementation Tooling Policy*.
+    - [ ] House all editor assets under a top-level `editors/` directory: `editors/vscode/`, `editors/emacs/`, `editors/vim/`, `editors/tree-sitter-tya/`.
+  - [ ] VS Code support
+    - [ ] Author a TextMate grammar (`editors/vscode/syntaxes/tya.tmLanguage.json`) covering the canonical token taxonomy.
+    - [ ] Build a minimal extension (`editors/vscode/`) that registers the grammar, the `.tya` file association, and a language configuration (comment toggling, bracket pairs, indent rules).
+    - [ ] Publish the extension to the VS Code Marketplace and Open VSX.
+  - [ ] Emacs support
+    - [ ] Author `editors/emacs/tya-mode.el` as a `define-derived-mode` major mode using `font-lock` keywords for the canonical token taxonomy.
+    - [ ] Auto-associate `.tya` files via `auto-mode-alist`.
+    - [ ] Provide indentation rules consistent with `tya format`.
+    - [ ] Publish to MELPA.
+  - [ ] Vim support
+    - [ ] Author `editors/vim/syntax/tya.vim`, `editors/vim/ftdetect/tya.vim`, and `editors/vim/indent/tya.vim` covering the canonical token taxonomy and `.tya` auto-detection.
+    - [ ] Verify the same files work under Neovim as a free side-effect (no separate maintenance burden).
+    - [ ] Document installation via plug.vim, packer, lazy.nvim, and Vim 8 native packages.
+  - [ ] GitHub support
+    - [ ] Author a Tree-sitter grammar (`editors/tree-sitter-tya/`) covering the canonical token taxonomy.
+    - [ ] Register Tya with [github-linguist/linguist](https://github.com/github-linguist/linguist): file extension `.tya`, color, sample file, and the Tree-sitter grammar pointer so GitHub can highlight Tya source on the web and in pull requests.
+    - [ ] Confirm rendering on a public Tya repository.
+  - [ ] Keep editor documentation and tests aligned
+    - [ ] Document install instructions for each major editor in `docs/`.
+    - [ ] Add a small corpus of representative `.tya` snippets and snapshot-test each grammar against expected token classifications.
+    - [ ] Run grammar tests in CI so regressions are caught before publish.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship `tya lint` source linter
+  - [ ] Define lint scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for `tya lint`.
+    - [ ] State the boundary against existing tools: `tya format` enforces canonical formatting (no opinions about logic), `tya check` enforces compile-time correctness, `tya lint` enforces stylistic and semantic best practices that are not formatting and not type errors.
+    - [ ] Specify the CLI surface: `tya lint [paths...]`, `tya lint --fix` (apply safe auto-fixes), `tya lint --format=json` (machine-readable output for CI and AI agents).
+    - [ ] Define an initial rule set: unused locals, dead code after `return` / `raise`, redundant `if true`/`if false`, `==` / `!=` against `nil` instead of truthiness when intent is ambiguous, shadowed catch bindings, suspicious `for` index patterns, deeply nested blocks, very long functions.
+    - [ ] Each rule has a stable code (e.g. `TYAL0001`), a one-line title, and a doc URL under `docs/lints/`, mirroring the diagnostics philosophy.
+    - [ ] Keep custom user-defined rules, plugin systems, and lint-config files out of the initial scope. The rule set ships with the compiler and is enabled by default.
+    - [ ] Allow per-line opt-out via a single comment form (e.g. `# tya-lint-ignore: TYAL0001`); no project-wide config file.
+  - [ ] Implement the linter
+    - [ ] Reuse the public Tya self-introspection library to walk the AST and the checker's resolved bindings.
+    - [ ] Emit findings through the shared structured diagnostic type used by `tya check` and `tya lsp`.
+    - [ ] Implement `--fix` only for rules whose fix is unambiguous and idempotent; everything else is report-only.
+    - [ ] Surface lints in `tya lsp` via diagnostics and code actions for fixable rules.
+  - [ ] Keep linter documentation and tests aligned
+    - [ ] Document each rule in `docs/lints/<code>.md` with a short rationale, a bad example, and a good example.
+    - [ ] Add positive and negative tests pinning each rule's diagnostic and (where applicable) its `--fix` output.
+    - [ ] Add CLI tests for plain output, `--format=json`, and exit-code behavior.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference

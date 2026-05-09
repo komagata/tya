@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/diag"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 )
@@ -44,6 +45,20 @@ func CheckWithModules(prog *ast.Program, modules []string) error {
 		return err
 	}
 	return CheckStrict(prog, modules)
+}
+
+// CheckAll runs checkStructure followed by the strict pass, collecting
+// every strict diagnostic when collectAll is true. file is recorded as
+// Diagnostic.Primary.File for strict diagnostics.
+//
+// The structural check is still fail-fast in v0.29; on structural error
+// it returns (nil, error). On success it returns the strict diagnostics
+// (possibly empty) and a nil error.
+func CheckAll(prog *ast.Program, modules []string, file string, collectAll bool) ([]diag.Diagnostic, error) {
+	if err := checkStructure(prog, modules); err != nil {
+		return nil, err
+	}
+	return CheckStrictDiagnostics(prog, modules, file, collectAll), nil
 }
 
 // checkStructure runs the structural checker (parse-tree validity, scope

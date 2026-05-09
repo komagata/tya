@@ -1,0 +1,45 @@
+# v0.29 diagnostics: banner format, codes, JSON, color, multi-error.
+cd $REPO
+
+# Single shadow diagnostic in human format.
+! exec go run ./cmd/tya check $WORK/shadow.tya
+stderr 'TYA-E0301'
+stderr '-- SHADOWED BINDING'
+stderr 'shadow.tya:3:5'
+stderr 'Hint: Rename'
+stderr 'Found 1 error'
+
+# JSON format produces NDJSON + summary line.
+! exec go run ./cmd/tya check --format=json $WORK/shadow.tya
+stderr '"code":"TYA-E0301"'
+stderr '"summary":\{"errors":1'
+
+# tya check collects multiple strict diagnostics in one run.
+! exec go run ./cmd/tya check $WORK/multi.tya
+stderr 'TYA-E0303'
+stderr 'TYA-E0304'
+stderr 'Found 2 error'
+
+# --color=never disables ANSI codes.
+! exec go run ./cmd/tya check --color=never $WORK/shadow.tya
+! stderr '\x1b\['
+
+# NO_COLOR honored in auto mode.
+env NO_COLOR=1
+! exec go run ./cmd/tya check $WORK/shadow.tya
+! stderr '\x1b\['
+
+# version
+exec go run ./cmd/tya version
+stdout '0.29.0\n'
+
+-- shadow.tya --
+x = 1
+items = [1, 2, 3]
+for x in items
+  print x
+
+-- multi.tya --
+greet = value -> "hello"
+_helper = 42
+print greet(1)

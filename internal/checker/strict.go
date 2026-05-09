@@ -5,13 +5,12 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/diag"
 )
 
 // v0.28 strict-lint checks: shadowing forbidden, unused imports, unused
-// function arguments, unused private top-level definitions.
-//
-// This file implements a separate AST walk that runs after the structural
-// checker. Violations are reported as compile errors.
+// function arguments, unused private top-level definitions. v0.29 routes
+// them through the diag.Diagnostic pipeline.
 
 type strictBinding struct {
 	name string
@@ -46,30 +45,69 @@ func newStrictScope(parent *strictScope) *strictScope {
 	return s
 }
 
-func (s *strictScope) define(name string, kind strictKind, line, col int) error {
-	if name == "_" {
-		return nil
+// strictCtx accumulates diagnostics during a strict pass. file is the
+// reporting path used for Diagnostic.Primary.File.
+type strictCtx struct {
+	file  string
+	diags []diag.Diagnostic
+	// stop is set after the first diagnostic when collectAll=false.
+	collectAll bool
+	stop       bool
+}
+
+func (c *strictCtx) report(d diag.Diagnostic) {
+	if c.stop {
+		return
 	}
-	if existing, ok := s.bindings[name]; ok {
-		// Same-scope rebinding is not shadowing; just reuse the slot.
-		_ = existing
-		return nil
+	d.Primary.File = c.file
+	d.Source = "checker"
+	c.diags = append(c.diags, d)
+	if !c.collectAll {
+		c.stop = true
+	}
+}
+
+func (c *strictCtx) halted() bool { return c.stop }
+
+func (s *strictScope) define(name string, kind strictKind, line, col int, ctx *strictCtx, identLen int) {
+	if name == "_" {
+		return
+	}
+	if _, ok := s.bindings[name]; ok {
+		return
 	}
 	if !s.root {
-		// Look up the chain (excluding current) for shadowing.
 		for anc := s.parent; anc != nil; anc = anc.parent {
 			if b, ok := anc.bindings[name]; ok {
 				if b.kind == strictPredeclared {
 					break
 				}
-				return fmt.Errorf("%d:%d: %s shadows outer binding %s", line, col, name, name)
+				ctx.report(diag.Diagnostic{
+					Severity: diag.Error,
+					Code:     "TYA-E0301",
+					Title:    "Shadowed binding",
+					Message:  fmt.Sprintf("This binding shadows the outer name `%s`.", name),
+					Primary:  region(line, col, identLen),
+					Hints:    []string{"Rename the inner binding, or prefix it with `_` to mark it as intentional."},
+				})
+				return
 			}
 		}
 	}
 	b := &strictBinding{name: name, kind: kind, line: line, col: col}
 	s.bindings[name] = b
 	s.order = append(s.order, b)
-	return nil
+}
+
+// definePredeclared records a builtin/module name without running shadow
+// checks (used during scope bootstrap).
+func (s *strictScope) definePredeclared(name string) {
+	if _, ok := s.bindings[name]; ok {
+		return
+	}
+	b := &strictBinding{name: name, kind: strictPredeclared, used: true}
+	s.bindings[name] = b
+	s.order = append(s.order, b)
 }
 
 func (s *strictScope) use(name string) {
@@ -106,35 +144,67 @@ func (s *strictScope) bindLocal(name string, kind strictKind, line, col int) {
 	s.order = append(s.order, b)
 }
 
-// CheckStrict performs the v0.28 strict checks on prog. modules lists the
-// pre-imported module names that the runner has already woven into the
-// source; they are treated as predeclared so user code can reference
-// `string`, `array`, etc. without triggering shadow errors.
-func CheckStrict(prog *ast.Program, modules []string) error {
-	root := newStrictScope(nil)
-	for _, name := range builtinNames {
-		_ = root.define(name, strictPredeclared, 0, 0)
-		root.bindings[name].used = true
+func region(line, col, length int) diag.Region {
+	if length < 1 {
+		length = 1
 	}
-	for _, name := range modules {
-		_ = root.define(name, strictPredeclared, 0, 0)
-		root.bindings[name].used = true
+	return diag.Region{
+		Start: diag.Pos{Line: line, Col: col},
+		End:   diag.Pos{Line: line, Col: col + length},
 	}
-	if err := strictCollectTopLevel(prog.Stmts, root); err != nil {
-		return err
-	}
-	if err := strictWalkStmts(prog.Stmts, root, true); err != nil {
-		return err
-	}
-	return strictDiagnoseScope(root)
 }
 
-// strictCollectTopLevel pre-binds top-level names so within-file mutual
-// references work. Imports are recorded with kind=import. Names starting
-// with `_` are recorded as kind=privateTop. Other top-level assignments,
-// modules, classes, interfaces are kind=local.
-func strictCollectTopLevel(stmts []ast.Stmt, scope *strictScope) error {
+// CheckStrict runs the strict pass and stops at the first diagnostic.
+// It returns an error wrapping a single Diagnostic, or nil.
+func CheckStrict(prog *ast.Program, modules []string) error {
+	diags := CheckStrictDiagnostics(prog, modules, "", false)
+	if len(diags) == 0 {
+		return nil
+	}
+	return &StrictError{Diags: diags}
+}
+
+// CheckStrictDiagnostics runs the strict pass. If collectAll is true,
+// every diagnostic is collected; otherwise only the first.
+// file is recorded as Diagnostic.Primary.File.
+func CheckStrictDiagnostics(prog *ast.Program, modules []string, file string, collectAll bool) []diag.Diagnostic {
+	ctx := &strictCtx{file: file, collectAll: collectAll}
+	root := newStrictScope(nil)
+	for _, name := range builtinNames {
+		root.definePredeclared(name)
+	}
+	for _, name := range modules {
+		root.definePredeclared(name)
+	}
+	strictCollectTopLevel(prog.Stmts, root, ctx)
+	if !ctx.halted() {
+		strictWalkStmts(prog.Stmts, root, true, ctx)
+	}
+	if !ctx.halted() {
+		strictDiagnoseScope(root, ctx)
+	}
+	return ctx.diags
+}
+
+// StrictError carries strict diagnostics. The first diagnostic's
+// line:col:msg is used for Error() so legacy callers keep working.
+type StrictError struct {
+	Diags []diag.Diagnostic
+}
+
+func (e *StrictError) Error() string {
+	if len(e.Diags) == 0 {
+		return "strict check failed"
+	}
+	d := e.Diags[0]
+	return fmt.Sprintf("%d:%d: %s", d.Primary.Start.Line, d.Primary.Start.Col, d.Message)
+}
+
+func strictCollectTopLevel(stmts []ast.Stmt, scope *strictScope, ctx *strictCtx) {
 	for _, stmt := range stmts {
+		if ctx.halted() {
+			return
+		}
 		switch n := stmt.(type) {
 		case *ast.ImportStmt:
 			binding := n.BindingName()
@@ -142,9 +212,7 @@ func strictCollectTopLevel(stmts []ast.Stmt, scope *strictScope) error {
 			if n.Alias != "" {
 				tok = n.AliasTok
 			}
-			if err := scope.define(binding, strictImport, tok.Line, tok.Col); err != nil {
-				return err
-			}
+			scope.define(binding, strictImport, tok.Line, tok.Col, ctx, len(binding))
 		case *ast.AssignStmt:
 			for _, target := range n.Targets {
 				if id, ok := target.(*ast.Ident); ok {
@@ -152,60 +220,49 @@ func strictCollectTopLevel(stmts []ast.Stmt, scope *strictScope) error {
 					if strings.HasPrefix(id.Name, "_") && id.Name != "_" {
 						kind = strictPrivateTop
 					}
-					if err := scope.define(id.Name, kind, id.Tok.Line, id.Tok.Col); err != nil {
-						return err
-					}
+					scope.define(id.Name, kind, id.Tok.Line, id.Tok.Col, ctx, len(id.Name))
 				}
 			}
 		case *ast.ModuleDecl:
-			if err := scope.define(n.Name, strictLocal, n.NameTok.Line, n.NameTok.Col); err != nil {
-				return err
+			scope.define(n.Name, strictLocal, n.NameTok.Line, n.NameTok.Col, ctx, len(n.Name))
+			if b, ok := scope.bindings[n.Name]; ok {
+				b.used = true
 			}
-			scope.bindings[n.Name].used = true // module decl is a public artifact
 		case *ast.ClassDecl:
-			if err := scope.define(n.Name, strictLocal, n.NameTok.Line, n.NameTok.Col); err != nil {
-				return err
+			scope.define(n.Name, strictLocal, n.NameTok.Line, n.NameTok.Col, ctx, len(n.Name))
+			if b, ok := scope.bindings[n.Name]; ok {
+				b.used = true
 			}
-			scope.bindings[n.Name].used = true
 		case *ast.InterfaceDecl:
-			if err := scope.define(n.Name, strictLocal, n.NameTok.Line, n.NameTok.Col); err != nil {
-				return err
+			scope.define(n.Name, strictLocal, n.NameTok.Line, n.NameTok.Col, ctx, len(n.Name))
+			if b, ok := scope.bindings[n.Name]; ok {
+				b.used = true
 			}
-			scope.bindings[n.Name].used = true
 		}
 	}
-	return nil
 }
 
-// strictWalkStmts walks statement bodies. atRoot=true skips re-defining
-// top-level names (they were collected by strictCollectTopLevel) but still
-// walks their values.
-func strictWalkStmts(stmts []ast.Stmt, scope *strictScope, atRoot bool) error {
+func strictWalkStmts(stmts []ast.Stmt, scope *strictScope, atRoot bool, ctx *strictCtx) {
 	for _, stmt := range stmts {
-		if err := strictWalkStmt(stmt, scope, atRoot); err != nil {
-			return err
+		if ctx.halted() {
+			return
 		}
+		strictWalkStmt(stmt, scope, atRoot, ctx)
 	}
-	return nil
 }
 
-func strictWalkStmt(stmt ast.Stmt, scope *strictScope, atRoot bool) error {
+func strictWalkStmt(stmt ast.Stmt, scope *strictScope, atRoot bool, ctx *strictCtx) {
 	switch n := stmt.(type) {
 	case *ast.ImportStmt:
-		// Already defined in collect; nothing more to do.
-		return nil
+		return
 	case *ast.AssignStmt:
 		for _, value := range n.Values {
-			if err := strictWalkExpr(value, scope); err != nil {
-				return err
+			strictWalkExpr(value, scope, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
 		if !atRoot {
-			// `=` in Tya reassigns an outer-scope binding when one exists,
-			// otherwise creates a local. Either way, this is not the kind
-			// of "new binding" form that triggers shadow checks; the
-			// shadow rule applies only to for-loop variables, catch
-			// bindings, and parameters (which are exempted separately).
 			for _, target := range n.Targets {
 				if id, ok := target.(*ast.Ident); ok {
 					if !scope.resolves(id.Name) {
@@ -217,170 +274,184 @@ func strictWalkStmt(stmt ast.Stmt, scope *strictScope, atRoot bool) error {
 			}
 		}
 		for _, target := range n.Targets {
-			strictWalkAssignTarget(target, scope)
+			strictWalkAssignTarget(target, scope, ctx)
+			if ctx.halted() {
+				return
+			}
 		}
-		return nil
 	case *ast.ExprStmt:
-		return strictWalkExpr(n.Expr, scope)
+		strictWalkExpr(n.Expr, scope, ctx)
 	case *ast.IfStmt:
-		if err := strictWalkExpr(n.Cond, scope); err != nil {
-			return err
+		strictWalkExpr(n.Cond, scope, ctx)
+		if ctx.halted() {
+			return
 		}
-		if err := strictWalkStmts(n.Then, newStrictScope(scope), false); err != nil {
-			return err
+		strictWalkStmts(n.Then, newStrictScope(scope), false, ctx)
+		if ctx.halted() {
+			return
 		}
-		return strictWalkStmts(n.Else, newStrictScope(scope), false)
+		strictWalkStmts(n.Else, newStrictScope(scope), false, ctx)
 	case *ast.WhileStmt:
-		if err := strictWalkExpr(n.Cond, scope); err != nil {
-			return err
+		strictWalkExpr(n.Cond, scope, ctx)
+		if ctx.halted() {
+			return
 		}
-		return strictWalkStmts(n.Body, newStrictScope(scope), false)
+		strictWalkStmts(n.Body, newStrictScope(scope), false, ctx)
 	case *ast.ForInStmt:
-		if err := strictWalkExpr(n.Iterable, scope); err != nil {
-			return err
+		strictWalkExpr(n.Iterable, scope, ctx)
+		if ctx.halted() {
+			return
 		}
 		child := newStrictScope(scope)
-		if err := child.define(n.ValueName, strictLocal, 0, 0); err != nil {
-			return err
-		}
+		child.define(n.ValueName, strictLocal, n.ValueTok.Line, n.ValueTok.Col, ctx, len(n.ValueName))
 		if n.IndexName != "" {
-			if err := child.define(n.IndexName, strictLocal, 0, 0); err != nil {
-				return err
-			}
+			child.define(n.IndexName, strictLocal, n.IndexTok.Line, n.IndexTok.Col, ctx, len(n.IndexName))
 		}
 		if name := n.ValueName; name != "" && name != "_" {
-			child.bindings[name].used = true
-		}
-		if name := n.IndexName; name != "" && name != "_" {
-			child.bindings[name].used = true
-		}
-		return strictWalkStmts(n.Body, child, false)
-	case *ast.ReturnStmt:
-		for _, value := range n.Values {
-			if err := strictWalkExpr(value, scope); err != nil {
-				return err
+			if b, ok := child.bindings[name]; ok {
+				b.used = true
 			}
 		}
-		return nil
+		if name := n.IndexName; name != "" && name != "_" {
+			if b, ok := child.bindings[name]; ok {
+				b.used = true
+			}
+		}
+		strictWalkStmts(n.Body, child, false, ctx)
+	case *ast.ReturnStmt:
+		for _, value := range n.Values {
+			strictWalkExpr(value, scope, ctx)
+			if ctx.halted() {
+				return
+			}
+		}
 	case *ast.RaiseStmt:
-		return strictWalkExpr(n.Value, scope)
+		strictWalkExpr(n.Value, scope, ctx)
 	case *ast.TryCatchStmt:
-		if err := strictWalkStmts(n.Try, newStrictScope(scope), false); err != nil {
-			return err
+		strictWalkStmts(n.Try, newStrictScope(scope), false, ctx)
+		if ctx.halted() {
+			return
 		}
 		child := newStrictScope(scope)
 		if n.CatchName != "_" {
-			if err := child.define(n.CatchName, strictLocal, n.CatchTok.Line, n.CatchTok.Col); err != nil {
-				return err
+			child.define(n.CatchName, strictLocal, n.CatchTok.Line, n.CatchTok.Col, ctx, len(n.CatchName))
+			if b, ok := child.bindings[n.CatchName]; ok {
+				b.used = true
 			}
-			child.bindings[n.CatchName].used = true
 		}
-		return strictWalkStmts(n.Catch, child, false)
+		strictWalkStmts(n.Catch, child, false, ctx)
 	case *ast.MatchStmt:
-		if err := strictWalkExpr(n.Value, scope); err != nil {
-			return err
+		strictWalkExpr(n.Value, scope, ctx)
+		if ctx.halted() {
+			return
 		}
 		for _, c := range n.Cases {
 			child := newStrictScope(scope)
-			if err := strictDefinePatternBindings(c.Pattern, child); err != nil {
-				return err
+			strictDefinePatternBindings(c.Pattern, child, ctx)
+			if ctx.halted() {
+				return
 			}
-			if err := strictWalkStmts(c.Body, child, false); err != nil {
-				return err
+			strictWalkStmts(c.Body, child, false, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
-		return nil
 	case *ast.ModuleDecl:
-		// Module body is a separate scope; classes, methods, interfaces
-		// inside don't shadow outer for v0.28's purposes.
-		return strictWalkModule(n, scope)
+		strictWalkModule(n, scope, ctx)
 	case *ast.ClassDecl:
-		return strictWalkClass(n, scope)
+		strictWalkClass(n, scope, ctx)
 	case *ast.InterfaceDecl:
-		return nil
+		return
 	case *ast.BreakStmt, *ast.ContinueStmt:
-		return nil
+		return
 	}
-	return nil
 }
 
-func strictWalkModule(m *ast.ModuleDecl, scope *strictScope) error {
+func strictWalkModule(m *ast.ModuleDecl, scope *strictScope, ctx *strictCtx) {
 	body := newStrictScope(scope)
-	body.root = true // suppress shadow check inside module member declarations
+	body.root = true
 	for _, member := range m.Members {
-		if err := strictWalkExpr(member.Value, body); err != nil {
-			return err
+		strictWalkExpr(member.Value, body, ctx)
+		if ctx.halted() {
+			return
 		}
 	}
 	for _, class := range m.Classes {
-		if err := strictWalkClass(class, body); err != nil {
-			return err
+		strictWalkClass(class, body, ctx)
+		if ctx.halted() {
+			return
 		}
 	}
-	return nil
 }
 
-func strictWalkClass(c *ast.ClassDecl, scope *strictScope) error {
+func strictWalkClass(c *ast.ClassDecl, scope *strictScope, ctx *strictCtx) {
 	body := newStrictScope(scope)
 	body.root = true
 	for _, m := range c.Methods {
 		if m.Abstract {
 			continue
 		}
-		if err := strictWalkExpr(m.Func, body); err != nil {
-			return err
+		strictWalkExpr(m.Func, body, ctx)
+		if ctx.halted() {
+			return
 		}
 	}
 	for _, f := range c.Fields {
 		if f.Value != nil {
-			if err := strictWalkExpr(f.Value, body); err != nil {
-				return err
+			strictWalkExpr(f.Value, body, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
 	}
 	for _, v := range c.Vars {
 		if v.Value != nil {
-			if err := strictWalkExpr(v.Value, body); err != nil {
-				return err
+			strictWalkExpr(v.Value, body, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
 	}
-	return nil
 }
 
-func strictWalkExpr(expr ast.Expr, scope *strictScope) error {
+func strictWalkExpr(expr ast.Expr, scope *strictScope, ctx *strictCtx) {
 	switch n := expr.(type) {
 	case *ast.Ident:
 		scope.use(n.Name)
-		strictUseInterpolation(n.Name, scope)
 	case *ast.StringLit:
 		strictUseInterpolations(n.Value, scope)
 	case *ast.DictLit:
 		for _, prop := range n.Props {
-			if err := strictWalkExpr(prop.Value, scope); err != nil {
-				return err
+			strictWalkExpr(prop.Value, scope, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
 	case *ast.ArrayLit:
 		for _, elem := range n.Elems {
-			if err := strictWalkExpr(elem, scope); err != nil {
-				return err
+			strictWalkExpr(elem, scope, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
 	case *ast.FuncLit:
 		fnScope := newStrictScope(scope)
-		// Parameters do not participate in the shadow check against the
-		// enclosing scope: a function arg may share a name with a
-		// top-level binding without error. Body-local bindings still walk
-		// from fnScope outward and so participate in shadow checks.
 		for _, param := range n.Params {
 			if param == "_" {
 				continue
 			}
 			if _, dup := fnScope.bindings[param]; dup {
-				return fmt.Errorf("duplicate parameter %s", param)
+				ctx.report(diag.Diagnostic{
+					Severity: diag.Error,
+					Code:     "TYA-E0305",
+					Title:    "Duplicate parameter",
+					Message:  fmt.Sprintf("The parameter `%s` appears more than once in this function.", param),
+					Primary:  region(0, 0, len(param)),
+					Hints:    []string{"Rename one of the parameters."},
+				})
+				return
 			}
-			b := &strictBinding{name: param, kind: strictArg, line: 0, col: 0}
+			b := &strictBinding{name: param, kind: strictArg}
 			if strings.HasPrefix(param, "_") {
 				b.used = true
 			}
@@ -388,86 +459,99 @@ func strictWalkExpr(expr ast.Expr, scope *strictScope) error {
 			fnScope.order = append(fnScope.order, b)
 		}
 		if n.Expr != nil {
-			if err := strictWalkExpr(n.Expr, fnScope); err != nil {
-				return err
+			strictWalkExpr(n.Expr, fnScope, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
-		if err := strictWalkStmts(n.Body, fnScope, false); err != nil {
-			return err
+		strictWalkStmts(n.Body, fnScope, false, ctx)
+		if ctx.halted() {
+			return
 		}
-		return strictDiagnoseScope(fnScope)
+		strictDiagnoseScope(fnScope, ctx)
 	case *ast.BinaryExpr:
-		if err := strictWalkExpr(n.Left, scope); err != nil {
-			return err
+		strictWalkExpr(n.Left, scope, ctx)
+		if ctx.halted() {
+			return
 		}
-		return strictWalkExpr(n.Right, scope)
+		strictWalkExpr(n.Right, scope, ctx)
 	case *ast.UnaryExpr:
-		return strictWalkExpr(n.Expr, scope)
+		strictWalkExpr(n.Expr, scope, ctx)
 	case *ast.TryExpr:
-		return strictWalkExpr(n.Expr, scope)
+		strictWalkExpr(n.Expr, scope, ctx)
 	case *ast.MemberExpr:
-		return strictWalkExpr(n.Target, scope)
+		strictWalkExpr(n.Target, scope, ctx)
 	case *ast.IndexExpr:
-		if err := strictWalkExpr(n.Target, scope); err != nil {
-			return err
+		strictWalkExpr(n.Target, scope, ctx)
+		if ctx.halted() {
+			return
 		}
-		return strictWalkExpr(n.Index, scope)
+		strictWalkExpr(n.Index, scope, ctx)
 	case *ast.CallExpr:
-		if err := strictWalkExpr(n.Callee, scope); err != nil {
-			return err
+		strictWalkExpr(n.Callee, scope, ctx)
+		if ctx.halted() {
+			return
 		}
 		for _, arg := range n.Args {
-			if err := strictWalkExpr(arg, scope); err != nil {
-				return err
+			strictWalkExpr(arg, scope, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
 	}
-	return nil
 }
 
-func strictWalkAssignTarget(target ast.Expr, scope *strictScope) {
+func strictWalkAssignTarget(target ast.Expr, scope *strictScope, ctx *strictCtx) {
 	switch n := target.(type) {
 	case *ast.Ident:
-		// Assignment to a name; not a use.
 	case *ast.MemberExpr:
-		_ = strictWalkExpr(n.Target, scope)
+		strictWalkExpr(n.Target, scope, ctx)
 	case *ast.IndexExpr:
-		_ = strictWalkExpr(n.Target, scope)
-		_ = strictWalkExpr(n.Index, scope)
+		strictWalkExpr(n.Target, scope, ctx)
+		if ctx.halted() {
+			return
+		}
+		strictWalkExpr(n.Index, scope, ctx)
 	}
 }
 
-func strictDefinePatternBindings(pattern ast.Expr, scope *strictScope) error {
+func strictDefinePatternBindings(pattern ast.Expr, scope *strictScope, ctx *strictCtx) {
 	switch n := pattern.(type) {
 	case *ast.Ident:
 		if n.Name != "_" {
-			if err := scope.define(n.Name, strictLocal, n.Tok.Line, n.Tok.Col); err != nil {
-				return err
+			if _, dup := scope.bindings[n.Name]; dup {
+				ctx.report(diag.Diagnostic{
+					Severity: diag.Error,
+					Code:     "TYA-E0306",
+					Title:    "Duplicate binding in pattern",
+					Message:  fmt.Sprintf("The name `%s` is bound more than once in this pattern.", n.Name),
+					Primary:  region(n.Tok.Line, n.Tok.Col, len(n.Name)),
+					Hints:    []string{"Rename one of the bindings."},
+				})
+				return
 			}
+			scope.define(n.Name, strictLocal, n.Tok.Line, n.Tok.Col, ctx, len(n.Name))
 			if b, ok := scope.bindings[n.Name]; ok {
 				b.used = true
 			}
 		}
 	case *ast.ArrayLit:
 		for _, elem := range n.Elems {
-			if err := strictDefinePatternBindings(elem, scope); err != nil {
-				return err
+			strictDefinePatternBindings(elem, scope, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
 	case *ast.DictLit:
 		for _, prop := range n.Props {
-			if err := strictDefinePatternBindings(prop.Value, scope); err != nil {
-				return err
+			strictDefinePatternBindings(prop.Value, scope, ctx)
+			if ctx.halted() {
+				return
 			}
 		}
 	}
-	return nil
 }
 
-// strictUseInterpolations scans a string literal value for `{name}`
-// interpolations and marks the names used. The full lexer/parser already
-// handled interpolation at compile time; here we just scan for identifier
-// references.
 func strictUseInterpolations(s string, scope *strictScope) {
 	for i := 0; i < len(s); i++ {
 		if s[i] != '{' {
@@ -492,13 +576,6 @@ func strictUseInterpolations(s string, scope *strictScope) {
 	}
 }
 
-func strictUseInterpolation(_ string, _ *strictScope) {
-	// Identifier itself was marked used in caller.
-}
-
-// strictUseExprText takes interpolated expression text and marks the
-// outermost identifier references used. It's intentionally a simple scan;
-// false positives only relax checks, not tighten them.
 func strictUseExprText(text string, scope *strictScope) {
 	cur := strings.Builder{}
 	for i := 0; i < len(text); i++ {
@@ -517,19 +594,42 @@ func strictUseExprText(text string, scope *strictScope) {
 	}
 }
 
-func strictDiagnoseScope(scope *strictScope) error {
+func strictDiagnoseScope(scope *strictScope, ctx *strictCtx) {
 	for _, b := range scope.order {
+		if ctx.halted() {
+			return
+		}
 		if b.used {
 			continue
 		}
 		switch b.kind {
 		case strictImport:
-			return fmt.Errorf("%d:%d: unused import %s", b.line, b.col, b.name)
+			ctx.report(diag.Diagnostic{
+				Severity: diag.Error,
+				Code:     "TYA-E0302",
+				Title:    "Unused import",
+				Message:  fmt.Sprintf("The module `%s` is imported but never used.", b.name),
+				Primary:  region(b.line, b.col, len(b.name)),
+				Hints:    []string{"Remove the import, or reference the module somewhere in this file."},
+			})
 		case strictArg:
-			return fmt.Errorf("%d:%d: unused argument %s", b.line, b.col, b.name)
+			ctx.report(diag.Diagnostic{
+				Severity: diag.Error,
+				Code:     "TYA-E0303",
+				Title:    "Unused argument",
+				Message:  fmt.Sprintf("The argument `%s` is never used in the body of this function.", b.name),
+				Primary:  region(b.line, b.col, len(b.name)),
+				Hints:    []string{"Rename it to `_` or prefix it with `_` (e.g. `_" + b.name + "`) to mark it as intentional."},
+			})
 		case strictPrivateTop:
-			return fmt.Errorf("%d:%d: unused private top-level definition %s", b.line, b.col, b.name)
+			ctx.report(diag.Diagnostic{
+				Severity: diag.Error,
+				Code:     "TYA-E0304",
+				Title:    "Unused private definition",
+				Message:  fmt.Sprintf("The private top-level definition `%s` is never referenced in this file.", b.name),
+				Primary:  region(b.line, b.col, len(b.name)),
+				Hints:    []string{"Remove the definition, or reference it elsewhere in this file."},
+			})
 		}
 	}
-	return nil
 }
