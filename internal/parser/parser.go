@@ -1313,6 +1313,12 @@ func (p *Parser) call() (ast.Expr, error) {
 					if !p.match(token.COMMA) {
 						break
 					}
+					// Trailing comma in multi-line call form
+					// (CANONICAL §5.4): allow `,` immediately
+					// before `)`.
+					if p.at(token.RPAREN) {
+						break
+					}
 				}
 			}
 			if !p.match(token.RPAREN) {
@@ -1414,6 +1420,12 @@ func (p *Parser) primary() (ast.Expr, error) {
 				}
 				elems = append(elems, elem)
 				if !p.match(token.COMMA) {
+					break
+				}
+				// Trailing comma in multi-line array form
+				// (CANONICAL §5.4): allow `,` immediately
+				// before `]`.
+				if p.at(token.RBRACKET) {
 					break
 				}
 			}

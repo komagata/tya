@@ -73,7 +73,7 @@ type Comment struct {
 func Lex(src string) ([]token.Token, []error) {
 	l := &Lexer{src: strings.ReplaceAll(src, "\r\n", "\n"), ind: []int{0}}
 	l.lex()
-	return l.tokens, l.errs
+	return suppressBracketNewlines(l.tokens), l.errs
 }
 
 // LexWithComments runs the lexer and returns the captured comments
@@ -81,7 +81,33 @@ func Lex(src string) ([]token.Token, []error) {
 func LexWithComments(src string) ([]token.Token, []Comment, []error) {
 	l := &Lexer{src: strings.ReplaceAll(src, "\r\n", "\n"), ind: []int{0}}
 	l.lex()
-	return l.tokens, l.comments, l.errs
+	return suppressBracketNewlines(l.tokens), l.comments, l.errs
+}
+
+// suppressBracketNewlines drops NEWLINE / INDENT / DEDENT tokens
+// that fall inside `(` / `[` brackets so the parser can read
+// multi-line call argument lists and array literals as a single
+// logical line. Brace literals (`{`) stay single-line per
+// CANONICAL §5.3.3 (the dict block form has no braces) and are
+// not affected.
+func suppressBracketNewlines(toks []token.Token) []token.Token {
+	out := make([]token.Token, 0, len(toks))
+	depth := 0
+	for _, t := range toks {
+		switch t.Type {
+		case token.LPAREN, token.LBRACKET:
+			depth++
+		case token.RPAREN, token.RBRACKET:
+			if depth > 0 {
+				depth--
+			}
+		}
+		if depth > 0 && (t.Type == token.NEWLINE || t.Type == token.INDENT || t.Type == token.DEDENT) {
+			continue
+		}
+		out = append(out, t)
+	}
+	return out
 }
 
 func (l *Lexer) add(t token.Type, s string, line, col int) {

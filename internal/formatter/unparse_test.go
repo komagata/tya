@@ -139,11 +139,6 @@ func TestUnparseImports(t *testing.T) {
 }
 
 func TestUnparseIdempotent(t *testing.T) {
-	// Idempotency holds for inputs whose canonical form is
-	// parseable today. Wrap forms (long-call multi-line) are
-	// emitted but the parser still needs the v0.38 multi-line
-	// extensions to round-trip them; those cases are tracked by
-	// TestUnparseWrapsLongCall instead.
 	cases := []string{
 		"x = 1\n",
 		"x = 1\nprint x\n",
@@ -152,6 +147,10 @@ func TestUnparseIdempotent(t *testing.T) {
 		"f = x ->\n  y = x + 1\n  return y\nprint f(2)\n",
 		"if x == 0\n  print \"a\"\nelseif x == 1\n  print \"b\"\nelse\n  print \"c\"\n",
 		"items = [1, 2, 3]\nfor item in items\n  print item\n",
+		// Wrap forms now round-trip after lexer/parser learned
+		// to ignore newlines inside (...) and [...].
+		"result = compute_filtered_items(source_alpha, source_beta, source_gamma, source_delta)\n",
+		"items = [first_item_name, second_item_name, third_item_name, fourth_item_name, fifth_item_name]\n",
 	}
 	for _, src := range cases {
 		first, err := unparseSource(t, src)
