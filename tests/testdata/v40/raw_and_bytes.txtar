@@ -1,0 +1,28 @@
+# v0.40 raw and bytes string extensions: r"..." / r"""...""" /
+# b"""..."""
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/sample.tya
+stdout '\\d\+ files in \{dir\}'
+stdout 'Use \{name\} with care:'
+stdout '  \\n is two characters here.'
+stdout 'bytes len: 12'
+
+exec go run ./cmd/tya version
+stdout '0.40.0\n'
+
+-- sample.tya --
+re = r"\d+ files in {dir}"
+print re
+
+template = r"""
+  Use {name} with care:
+    \n is two characters here.
+  """
+print template
+
+multi = b"""
+  hello
+  world
+  """
+print "bytes len: " + to_string(len(multi))

@@ -228,24 +228,41 @@ func (l *Lexer) lex() {
 // from `lines` starting after `lineIdx`. Returns the number of extra
 // lines consumed (0 if none).
 func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, lineIdx int) int {
-	tq := strings.Index(s, `"""`)
+	tq, prefix := findTripleQuote(s)
 	if tq < 0 {
 		l.lexLine(s, line, baseCol)
 		return 0
 	}
-	// Lex everything before the triple-quote normally.
-	if tq > 0 {
-		l.lexLine(s[:tq], line, baseCol)
+	// Lex everything before the (optional prefix +) triple-quote normally.
+	preEnd := tq
+	if prefix != 0 {
+		preEnd = tq - 1
+	}
+	if preEnd > 0 {
+		l.lexLine(s[:preEnd], line, baseCol)
 	}
 	// Single-line triple quote? Look for a closing """ on the same line.
 	body := s[tq+3:]
 	if close := strings.Index(body, `"""`); close >= 0 {
-		value, err := interpretEscapes(body[:close], line, baseCol+tq)
-		if err != nil {
-			l.errs = append(l.errs, err)
-			return 0
+		raw := body[:close]
+		switch prefix {
+		case 'r':
+			l.add(token.STRING, encodeRawString(raw), line, baseCol+preEnd)
+		case 'b':
+			value, err := interpretBytesEscapes(raw, line, baseCol+tq)
+			if err != nil {
+				l.errs = append(l.errs, err)
+				return 0
+			}
+			l.add(token.BYTES, value, line, baseCol+preEnd)
+		default:
+			value, err := interpretEscapes(raw, line, baseCol+tq)
+			if err != nil {
+				l.errs = append(l.errs, err)
+				return 0
+			}
+			l.add(token.STRING, value, line, baseCol+tq)
 		}
-		l.add(token.STRING, value, line, baseCol+tq)
 		// Lex the remainder after the closing """.
 		rest := body[close+3:]
 		if rest != "" {
@@ -315,12 +332,28 @@ func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, li
 		b.WriteString(bodyLine[closingIndent:])
 		b.WriteByte('\n')
 	}
-	value, err := interpretEscapes(b.String(), line, baseCol+tq)
-	if err != nil {
-		l.errs = append(l.errs, err)
-		return closingIdx - lineIdx
+	preEndCol := tq
+	if prefix != 0 {
+		preEndCol = tq - 1
 	}
-	l.add(token.STRING, value, line, baseCol+tq)
+	switch prefix {
+	case 'r':
+		l.add(token.STRING, encodeRawString(b.String()), line, baseCol+preEndCol)
+	case 'b':
+		value, err := interpretBytesEscapes(b.String(), line, baseCol+tq)
+		if err != nil {
+			l.errs = append(l.errs, err)
+			return closingIdx - lineIdx
+		}
+		l.add(token.BYTES, value, line, baseCol+preEndCol)
+	default:
+		value, err := interpretEscapes(b.String(), line, baseCol+tq)
+		if err != nil {
+			l.errs = append(l.errs, err)
+			return closingIdx - lineIdx
+		}
+		l.add(token.STRING, value, line, baseCol+tq)
+	}
 	// Lex any content after the closing """ on its line.
 	closingLine := lines[closingIdx]
 	closingTrimmed := strings.TrimLeft(closingLine, " ")
@@ -329,6 +362,100 @@ func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, li
 		l.lexLine(tail, closingIdx+1, closingIndent+4)
 	}
 	return closingIdx - lineIdx
+}
+
+// findTripleQuote scans s for the earliest triple-quote, optionally
+// preceded by a single-character prefix (`r` or `b`). It returns the
+// byte offset of the first `"` of the `"""` sequence and the prefix
+// byte, or (-1, 0) when no triple-quote occurs. The prefix is
+// recognized only when it sits immediately before `"""` and is not
+// part of a longer identifier (the byte before, if any, is not an
+// ident-continuation character).
+func findTripleQuote(s string) (int, byte) {
+	for i := 0; i+2 < len(s); i++ {
+		if s[i] != '"' || s[i+1] != '"' || s[i+2] != '"' {
+			continue
+		}
+		// Plain triple-quote at i. Check for r/b prefix.
+		if i > 0 {
+			prev := s[i-1]
+			if prev == 'r' || prev == 'b' {
+				if i-2 < 0 || !isIdentChar(s[i-2]) {
+					return i, prev
+				}
+			}
+		}
+		return i, 0
+	}
+	return -1, 0
+}
+
+func isIdentChar(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9') || b == '_'
+}
+
+// encodeRawString turns a raw-string body into a STRING.Lexeme that
+// the existing interpolation runtime decodes back to the verbatim
+// body. Brace characters are doubled so `{name}` is treated as
+// literal text.
+func encodeRawString(body string) string {
+	var out strings.Builder
+	for i := 0; i < len(body); i++ {
+		switch body[i] {
+		case '{':
+			out.WriteString("{{")
+		case '}':
+			out.WriteString("}}")
+		default:
+			out.WriteByte(body[i])
+		}
+	}
+	return out.String()
+}
+
+// interpretBytesEscapes processes \n, \t, \r, \", \\, and \xHH
+// escapes for a bytes-literal body. Mirrors the v0.25 single-line
+// `b"..."` escape rules but is reused for `b"""..."""`.
+func interpretBytesEscapes(s string, line, col int) (string, error) {
+	var b strings.Builder
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c != '\\' {
+			b.WriteByte(c)
+			continue
+		}
+		if i+1 >= len(s) {
+			return "", fmt.Errorf("%d:%d: unterminated escape", line, col+i)
+		}
+		switch s[i+1] {
+		case 'n':
+			b.WriteByte('\n')
+		case 't':
+			b.WriteByte('\t')
+		case 'r':
+			b.WriteByte('\r')
+		case '"':
+			b.WriteByte('"')
+		case '\\':
+			b.WriteByte('\\')
+		case 'x':
+			if i+3 >= len(s) {
+				return "", fmt.Errorf("%d:%d: truncated \\x escape", line, col+i)
+			}
+			hi := hexDigit(s[i+2])
+			lo := hexDigit(s[i+3])
+			if hi < 0 || lo < 0 {
+				return "", fmt.Errorf("%d:%d: invalid \\x escape", line, col+i)
+			}
+			b.WriteByte(byte(hi*16 + lo))
+			i += 3
+			continue
+		default:
+			return "", fmt.Errorf("%d:%d: unknown escape \\%c", line, col+i, s[i+1])
+		}
+		i++
+	}
+	return b.String(), nil
 }
 
 // interpretEscapes processes \n, \t, \", \\, \{ inside a string body
@@ -420,7 +547,37 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			i++
 			continue
 		}
-		if ch == 'b' && i+1 < len(s) && s[i+1] == '"' {
+		if ch == 'r' && i+1 < len(s) && s[i+1] == '"' && !(i+3 < len(s) && s[i+2] == '"' && s[i+3] == '"') {
+			// Raw single-line string. Body is verbatim until the
+			// next `"`. Brace characters are doubled so the
+			// existing interpolation pipeline treats them as
+			// literal.
+			start := baseCol + i
+			i += 2
+			var b strings.Builder
+			for i < len(s) && s[i] != '"' {
+				switch s[i] {
+				case '{':
+					b.WriteString("{{")
+				case '}':
+					b.WriteString("}}")
+				default:
+					b.WriteByte(s[i])
+				}
+				i++
+			}
+			if i >= len(s) {
+				l.diagErr("TYA-E0006", "Unterminated string",
+					"This raw string literal has no closing quote.",
+					`Add a closing " on the same line, or use r"""...""" for a multi-line raw string.`,
+					line, start, 1)
+				return
+			}
+			i++
+			l.add(token.STRING, b.String(), line, start)
+			continue
+		}
+		if ch == 'b' && i+1 < len(s) && s[i+1] == '"' && !(i+3 < len(s) && s[i+2] == '"' && s[i+3] == '"') {
 			var b strings.Builder
 			start := baseCol + i
 			i += 2

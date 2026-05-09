@@ -242,6 +242,54 @@ func TestLexTripleQuoteInterpolationPreserved(t *testing.T) {
 	}
 }
 
+func TestLexRawSingleLine(t *testing.T) {
+	src := "x = r\"\\d+ {name}\"\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("errs: %v", errs)
+	}
+	if toks[2].Type != "STRING" {
+		t.Fatalf("kind: %v", toks[2].Type)
+	}
+	// `{` and `}` are doubled so the runtime decodes them as
+	// literal braces.
+	if toks[2].Lexeme != "\\d+ {{name}}" {
+		t.Fatalf("got %q", toks[2].Lexeme)
+	}
+}
+
+func TestLexRawTriple(t *testing.T) {
+	src := "x = r\"\"\"\n  hi {name}\n  \"\"\"\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("errs: %v", errs)
+	}
+	if toks[2].Type != "STRING" {
+		t.Fatalf("kind: %v", toks[2].Type)
+	}
+	if toks[2].Lexeme != "hi {{name}}\n" {
+		t.Fatalf("got %q", toks[2].Lexeme)
+	}
+}
+
+func TestLexBytesTriple(t *testing.T) {
+	src := "x = b\"\"\"\n  AB\\n\n  \"\"\"\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("errs: %v", errs)
+	}
+	if toks[2].Type != "BYTES" {
+		t.Fatalf("kind: %v", toks[2].Type)
+	}
+	// Body line "AB\n" with escape interpretation: A B \n
+	// (3 bytes). Indentation-normalization strips the 2-space
+	// baseline, then a `\n` line-separator is appended after the
+	// body line.
+	if toks[2].Lexeme != "AB\n\n" {
+		t.Fatalf("got %q", toks[2].Lexeme)
+	}
+}
+
 func TestLexTripleQuoteUnterminated(t *testing.T) {
 	_, errs := Lex("x = \"\"\"\n  hello\n")
 	if len(errs) == 0 {

@@ -141,6 +141,8 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`.
 
+- **v0.40** — raw and bytes string extensions: `r"..."`, `r"""..."""`,
+  `b"""..."""`.
 - **v0.39** — Canonical Syntax surface cleanup. `tya format` only spelling;
   `--text` / `--ast` opt-outs removed.
 - **v0.38** — Canonical Syntax landing. AST-driven serializer is the default;
@@ -295,11 +297,9 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Raw HTML pass-through with security note.
   - [ ] CommonMark conformance subset run as part of `go test ./...`.
 
-- [ ] **Extend multi-line strings (post-v0.31.0)**
-  - [ ] Raw-string prefix `r"""..."""`.
-  - [ ] Bytes equivalent `b"""..."""`.
-  - [ ] Heredoc-style markers, language-tagged interpolation specifiers (if
-    needed).
+- [ ] **Extend multi-line strings further** (heredoc-style markers,
+  language-tagged interpolation specifiers like `sql"""..."""`) — only if
+  demand emerges.
 
 ### Editor and ecosystem
 
