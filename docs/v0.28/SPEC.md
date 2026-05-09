@@ -61,23 +61,26 @@ v0.28 does not include:
 A binding *shadows* another when a nested lexical scope introduces a name
 that is visible from a strictly enclosing scope.
 
+Tya assignment (`name = value`) reassigns an outer-scope binding when one
+already exists, and otherwise creates a new local. Because `=` does not
+declare a fresh binding unambiguously, **assignment statements are not
+subject to the shadow check**. Shadowing is reported only for binding
+forms that explicitly introduce a new name in a nested scope: `for` loop
+variables and `try ... catch` bindings. Function parameters are also
+exempt (see "Function parameters and shadowing" below).
+
 ### Forbidden examples
 
 ```tya
-x = 1
-greet = ->
-  x = 2          # error: shadows outer x
-  print x
-
 count = 0
-for count in items   # error: shadows outer count
+for count in items   # error: loop variable shadows outer count
   print count
 
-read_user = ->
-  user = parse()
-  if user
-    user = repair(user)   # error: shadows outer user
-    print user
+err = "outer"
+try
+  risky()
+catch err            # error: catch binding shadows outer err
+  print err
 ```
 
 ### Allowed examples
@@ -90,6 +93,11 @@ greet = ->
 x = 1
 print x
 
+# Function parameters MAY share a name with an outer binding.
+user = { name: "komagata" }
+has_name? = user -> has(user, "name")
+print has_name?(user)
+
 # Sibling scopes do not see each other.
 process = ->
   total = 0
@@ -101,6 +109,24 @@ count = ->
   total = 1
   total
 ```
+
+### Function parameters and shadowing
+
+Function parameters introduce names in the function's own scope, but for
+shadowing checks parameters are exempt from the rule. A function may take
+an argument with the same name as an outer binding:
+
+```tya
+user = current_user()
+greet = user ->        # ok: parameter user shadows outer user without error
+  print user
+```
+
+This exemption matches the typical "outer name describes a value, parameter
+describes a parameter of that kind" idiom from CoffeeScript / Ruby /
+Python. Body-local bindings (assignments, loop variables, catch bindings)
+still participate in the shadow check against both the parameter scope and
+the enclosing scope.
 
 A binding can be reassigned in the **same** scope without error:
 

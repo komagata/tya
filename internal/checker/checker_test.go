@@ -163,7 +163,7 @@ func TestCheckRejectsDuplicateModuleMember(t *testing.T) {
 }
 
 func TestCheckModuleFileAllowsImportsAndMatchingModule(t *testing.T) {
-	src := "import dependency\nmodule greeting\n  hello = name -> \"Hello, {name}\"\n"
+	src := "import dependency\nmodule greeting\n  hello = name -> dependency.wrap(name)\n"
 	if err := CheckModuleFile(parse(t, src), "greeting.tya"); err != nil {
 		t.Fatal(err)
 	}

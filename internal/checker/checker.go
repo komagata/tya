@@ -40,6 +40,18 @@ func Check(prog *ast.Program) error {
 }
 
 func CheckWithModules(prog *ast.Program, modules []string) error {
+	if err := checkStructure(prog, modules); err != nil {
+		return err
+	}
+	return CheckStrict(prog, modules)
+}
+
+// checkStructure runs the structural checker (parse-tree validity, scope
+// rules, class hierarchy, predicate names, ...) without the v0.28 strict
+// lint pass. It is the right entry point when validating individual
+// imported modules during source loading; the strict pass runs once at
+// the entry-program level.
+func checkStructure(prog *ast.Program, modules []string) error {
 	constants := map[string]bool{}
 	scope := newScope(nil)
 	for _, name := range builtinNames {
@@ -77,7 +89,7 @@ func CheckModuleFile(prog *ast.Program, path string) error {
 	if len(modules) != 1 {
 		return fmt.Errorf("%s must define exactly one module", filepath.Base(path))
 	}
-	return Check(prog)
+	return checkStructure(prog, nil)
 }
 
 var builtinNames = []string{

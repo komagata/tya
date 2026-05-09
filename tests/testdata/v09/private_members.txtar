@@ -40,7 +40,7 @@ stderr 'super cannot call private parent constructor'
 stderr 'cannot construct abstract class Repository'
 
 exec go run ./cmd/tya version
-stdout '0.27.0\n'
+stdout '0.28.0\n'
 ! stderr .
 
 -- private_members.tya --
@@ -70,7 +70,7 @@ class User
     @@_secret()
 
 class Admin extends User
-  _init = name ->
+  _init = _name ->
     @_name = "child"
     @@_count = 2
 

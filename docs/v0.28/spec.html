@@ -81,21 +81,17 @@
 </ul>
 <h2 id="shadowing">Shadowing</h2>
 <p>A binding *shadows* another when a nested lexical scope introduces a name that is visible from a strictly enclosing scope.</p>
+<p>Tya assignment (<code>name = value</code>) reassigns an outer-scope binding when one already exists, and otherwise creates a new local. Because <code>=</code> does not declare a fresh binding unambiguously, **assignment statements are not subject to the shadow check**. Shadowing is reported only for binding forms that explicitly introduce a new name in a nested scope: <code>for</code> loop variables and <code>try ... catch</code> bindings. Function parameters are also exempt (see &quot;Function parameters and shadowing&quot; below).</p>
 <h3 id="forbidden-examples">Forbidden examples</h3>
-<pre><code class="language-tya">x = 1
-greet = -&gt;
-  x = 2          # error: shadows outer x
-  print x
-
-count = 0
-for count in items   # error: shadows outer count
+<pre><code class="language-tya">count = 0
+for count in items   # error: loop variable shadows outer count
   print count
 
-read_user = -&gt;
-  user = parse()
-  if user
-    user = repair(user)   # error: shadows outer user
-    print user</code></pre>
+err = &quot;outer&quot;
+try
+  risky()
+catch err            # error: catch binding shadows outer err
+  print err</code></pre>
 <h3 id="allowed-examples">Allowed examples</h3>
 <pre><code class="language-tya">greet = -&gt;
   x = 2
@@ -103,6 +99,11 @@ read_user = -&gt;
 
 x = 1
 print x
+
+# Function parameters MAY share a name with an outer binding.
+user = { name: &quot;komagata&quot; }
+has_name? = user -&gt; has(user, &quot;name&quot;)
+print has_name?(user)
 
 # Sibling scopes do not see each other.
 process = -&gt;
@@ -114,6 +115,12 @@ process = -&gt;
 count = -&gt;
   total = 1
   total</code></pre>
+<h3 id="function-parameters-and-shadowing">Function parameters and shadowing</h3>
+<p>Function parameters introduce names in the function's own scope, but for shadowing checks parameters are exempt from the rule. A function may take an argument with the same name as an outer binding:</p>
+<pre><code class="language-tya">user = current_user()
+greet = user -&gt;        # ok: parameter user shadows outer user without error
+  print user</code></pre>
+<p>This exemption matches the typical &quot;outer name describes a value, parameter describes a parameter of that kind&quot; idiom from CoffeeScript / Ruby / Python. Body-local bindings (assignments, loop variables, catch bindings) still participate in the shadow check against both the parameter scope and the enclosing scope.</p>
 <p>A binding can be reassigned in the **same** scope without error:</p>
 <pre><code class="language-tya">x = 1
 x = 2          # ok: same scope, not a new binding</code></pre>

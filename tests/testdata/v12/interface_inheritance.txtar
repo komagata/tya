@@ -31,7 +31,7 @@ stderr 'BadLookup.find expects 2 arguments'
 stderr 'Lookup.find expects 1 arguments'
 
 exec go run ./cmd/tya version
-stdout '0.27.0\n'
+stdout '0.28.0\n'
 ! stderr .
 
 -- interfaces.tya --
@@ -81,7 +81,7 @@ class MemoryFile implements ModuleFile
     "module-path"
 
 abstract class AbstractFile implements FileHandle
-  seek = offset ->
+  seek = _offset ->
     nil
 
   close = ->
@@ -118,7 +118,7 @@ interface SeekableReader extends Reader
   seek = offset ->
 
 class BrokenFile implements SeekableReader
-  seek = offset ->
+  seek = _offset ->
     nil
 
 -- bad_inherited_arity.tya --
@@ -129,10 +129,10 @@ interface SeekableReader extends Reader
   seek = offset ->
 
 class BadFile implements SeekableReader
-  read = path ->
+  read = _path ->
     "data"
 
-  seek = offset ->
+  seek = _offset ->
     nil
 
 -- interface_extends_class.tya --

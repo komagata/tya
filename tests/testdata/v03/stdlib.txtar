@@ -10,7 +10,7 @@ stdout 'local string\npath array\n'
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.27.0\n'
+stdout '0.28.0\n'
 ! stderr .
 
 -- std/main.tya --
@@ -31,8 +31,8 @@ print array.empty([])
 
 -- precedence/string.tya --
 module string
-  blank = text -> "local string"
+  blank = _text -> "local string"
 
 -- lib/array.tya --
 module array
-  empty = items -> "path array"
+  empty = _items -> "path array"

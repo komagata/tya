@@ -27,7 +27,7 @@ stderr 'unclosed interpolation'
 stderr 'unmatched .* in string interpolation'
 
 exec go run ./cmd/tya version
-stdout '0.27.0\n'
+stdout '0.28.0\n'
 ! stderr .
 
 -- match_interpolation.tya --
@@ -60,11 +60,11 @@ match response
   case _
     print "unknown"
 
-age = 48
+current_age = 48
 enabled = true
 ready = true
 print "literal {{ brace }}"
-print "next age: {age + 1}"
+print "next age: {current_age + 1}"
 print "ready: {enabled and ready}"
 
 -- case_outside.tya --

@@ -24,7 +24,7 @@ stderr 'block try requires catch'
 stderr 'invalid binding name User'
 
 exec go run ./cmd/tya version
-stdout '0.27.0\n'
+stdout '0.28.0\n'
 ! stderr .
 
 -- structured_errors.tya --
@@ -49,12 +49,12 @@ catch outer
   outer_message = outer["message"]
   print "outer:{outer_message}"
 
-err = "outer"
+top_err = "outer"
 try
   risky()
 catch err
   print err["message"]
-print err
+print top_err
 
 try
   risky()

@@ -243,7 +243,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add lexer and end-to-end tests for hex, binary, and underscore literals.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.28 strict compile-time checks
+- [x] Ship v0.28 strict compile-time checks
   - [x] Define v0.28 scope
     - [x] Add `docs/v0.28/SPEC.md`.
     - [x] Specify shadowing forbidden across nested scopes.
@@ -252,31 +252,243 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Specify unused private top-level definitions (leading `_`) as compile errors.
     - [x] Keep unused-local-variable check opt-in via `--check-unused`.
     - [x] Keep tab/trailing-whitespace lint, main.tya restriction, and naming-convention expansions out of v0.28.
-  - [ ] Implement shadowing check
-    - [ ] Track enclosing scope chain in the checker.
-    - [ ] Reject any new binding that matches a name visible in a strictly enclosing scope.
-    - [ ] Allow same-scope reassignment.
-    - [ ] Treat `_` as a non-binding discard; underscore-prefixed names still bind.
-  - [ ] Implement unused-import check
-    - [ ] Track module/alias bindings introduced by `import`.
-    - [ ] Mark them used on any read.
-    - [ ] Diagnose any unused binding at the importing file's top level.
-  - [ ] Implement unused-argument check
-    - [ ] Track parameter names per function.
-    - [ ] Mark used on any read in the body.
-    - [ ] Skip names equal to `_` and names starting with `_`.
-    - [ ] Skip parameters of abstract method declarations.
-  - [ ] Implement unused-private-top-level check
-    - [ ] Detect top-level bindings whose names start with `_`.
-    - [ ] Diagnose if no expression in the file references the name.
-  - [ ] Migrate the project to satisfy the new checks
-    - [ ] Audit stdlib, examples, and tests for shadowing / unused imports / unused args / unused private defs and fix or rename to `_`.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
-  - [ ] Keep v0.28 documentation and tests aligned
-    - [ ] Update latest docs when v0.28 behavior is implemented.
-    - [ ] Keep `docs/v0.28/` aligned with the v0.28 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+  - [x] Implement shadowing check
+    - [x] Track enclosing scope chain in the checker.
+    - [x] Reject any new binding that matches a name visible in a strictly enclosing scope.
+    - [x] Allow same-scope reassignment.
+    - [x] Treat `_` as a non-binding discard; underscore-prefixed names still bind.
+  - [x] Implement unused-import check
+    - [x] Track module/alias bindings introduced by `import`.
+    - [x] Mark them used on any read.
+    - [x] Diagnose any unused binding at the importing file's top level.
+  - [x] Implement unused-argument check
+    - [x] Track parameter names per function.
+    - [x] Mark used on any read in the body.
+    - [x] Skip names equal to `_` and names starting with `_`.
+    - [x] Skip parameters of abstract method declarations.
+  - [x] Implement unused-private-top-level check
+    - [x] Detect top-level bindings whose names start with `_`.
+    - [x] Diagnose if no expression in the file references the name.
+  - [x] Migrate the project to satisfy the new checks
+    - [x] Audit stdlib, examples, and tests for shadowing / unused imports / unused args / unused private defs and fix or rename to `_`.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Keep v0.28 documentation and tests aligned
+    - [x] Update latest docs when v0.28 behavior is implemented.
+    - [x] Keep `docs/v0.28/` aligned with the v0.28 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [ ] Add positive and negative tests for each new check.
+
+## Future Work (Unscheduled)
+
+These epics are committed direction but not yet scheduled to a specific minor
+version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
+
+- [ ] Ship `tya lsp` Language Server
+  - [ ] Define LSP scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the LSP surface.
+    - [ ] Ship `tya lsp` as a subcommand of the same `tya` binary so the compiler and language server cannot drift in version.
+    - [ ] Speak Language Server Protocol over stdio (JSON-RPC) so VS Code, Zed, Helix, Neovim, and Emacs can all drive it.
+  - [ ] Implement core editor features
+    - [ ] Diagnostics on save and on change, sourced from the same checker the CLI uses.
+    - [ ] Hover with type / inferred shape / doc comment.
+    - [ ] Go to definition and find references for top-level bindings, imports, and locals.
+    - [ ] Document and workspace symbol search.
+    - [ ] Completion for in-scope names, imported module members, and stdlib.
+    - [ ] Formatting (full document and range) backed by `tya format`.
+    - [ ] Rename for safe symbols.
+    - [ ] Code actions for the most common diagnostics (e.g. add missing import, remove unused import, wrap in `try`).
+  - [ ] Editor integration
+    - [ ] Publish a minimal VS Code extension that just spawns `tya lsp`.
+    - [ ] Document Zed / Helix / Neovim / Emacs setup in `docs/`.
+- [ ] Adopt Elm-grade diagnostics across the toolchain
+  - [ ] Author the diagnostics philosophy document
+    - [ ] Add `docs/DIAGNOSTICS.md` as the single source of truth for how every Tya error, warning, and lint is written.
+    - [ ] State the philosophy: every diagnostic must say what was expected, what was found, why it is wrong, and where reasonable suggest a concrete next action — in a kind, non-blaming tone.
+    - [ ] Define the required diagnostic shape: stable error code (e.g. `TYA0042`), one-line title, source span with caret, expected-vs-found block, and a "hint" or "did you mean" line when applicable.
+    - [ ] Define a doc URL convention so each error code links to a longer explanation page under `docs/errors/`.
+    - [ ] Forbid jargon-only messages and stack-trace-only messages in user-facing output; internal panics are a bug.
+  - [ ] Build the diagnostic infrastructure
+    - [ ] Introduce a shared diagnostic type used by lexer, parser, checker, codegen, runner, and the future `tya lsp`.
+    - [ ] Add a registry of error codes with titles and doc URLs, asserted in tests so codes are stable and unique.
+    - [ ] Add a `--format=json` option for machine-readable diagnostics so editors, CI, and AI agents can consume them.
+  - [ ] Migrate existing diagnostics
+    - [ ] Audit every existing error message in lexer, parser, checker, codegen, runner, and stdlib loaders against `docs/DIAGNOSTICS.md`.
+    - [ ] Rewrite each to match the required shape and assign a stable error code.
+    - [ ] Add positive and negative tests pinning the rewritten messages.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point through the migration.
+
+- [ ] Ship WebAssembly compilation target
+  - [ ] Define WASM scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the WASM target.
+    - [ ] Use Zig (`zig cc --target=wasm32-wasi` and `zig cc --target=wasm32-freestanding`) as the WASM toolchain. Tya emits C as today and Zig compiles it to `.wasm`; do not depend on Emscripten or a separate WASI SDK.
+    - [ ] Decide the system interface: WASI for CLI-style programs, plus a browser-friendly subset that omits filesystem and process APIs.
+    - [ ] Define which stdlib modules are available per target (e.g. `file` / `process` unavailable in browser, available under WASI).
+  - [ ] Implement the WASM build path
+    - [ ] Add `tya build --target wasm32-wasi` and `tya build --target wasm32-browser` to the CLI.
+    - [ ] Wire `zig cc` into the runner for WASM builds, with clear diagnostics when the `zig` binary is missing or too old.
+    - [ ] Gate unavailable stdlib modules per target with structured errors at import time.
+    - [ ] Provide a minimal JS glue example for running a Tya-compiled `.wasm` in a browser and in Node.
+  - [ ] Keep WASM documentation and tests aligned
+    - [ ] Document the WASM target, supported stdlib, and known limitations in `docs/`.
+    - [ ] Add CLI and end-to-end tests that build representative examples to `.wasm` and execute them under a WASI runtime.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship `tya task` project task runner
+  - [ ] Define task runner scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the task runner.
+    - [ ] Define a `[tasks]` table in `tya.toml` as the single source of truth (no separate `Taskfile` / `justfile` / `Makefile`).
+    - [ ] Support both string form (`ci = "tya fmt && tya test"`) and array form (sequence of commands) for tasks.
+    - [ ] Keep the runner intentionally small: no file-level dependency tracking, no incremental rebuild, no implicit rules. Build-graph concerns stay inside `tya build`.
+    - [ ] Keep parallelism, file-watching, and task graphs (task-depends-on-task) out of the initial scope.
+  - [ ] Implement the runner
+    - [ ] Add `tya task <name>` and `tya task` (list available tasks) subcommands.
+    - [ ] Resolve `tya.toml` from the working directory upward, like the existing manifest loader.
+    - [ ] Execute commands through the user's shell with the project root as the working directory and the manifest's environment.
+    - [ ] Stream stdout / stderr through unchanged and propagate the exit code of the failed step.
+    - [ ] Diagnose unknown task names, malformed `[tasks]` entries, and empty command lists with structured errors.
+  - [ ] Keep task runner documentation and tests aligned
+    - [ ] Document `[tasks]` syntax and `tya task` usage in `docs/`.
+    - [ ] Add CLI tests for task discovery, success, failure propagation, and diagnostics.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship asset embedding for single-binary distribution
+  - [ ] Define embedding scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the embedding feature.
+    - [ ] Specify an `embed` directive (e.g. `embed "assets/logo.png" as logo`) that bakes a file's bytes into the compiled binary at build time.
+    - [ ] Specify directory / glob form (e.g. `embed "static/**" as static`) returning a dictionary keyed by relative path.
+    - [ ] Specify the value type: text files load as string, binary files as `bytes` (v0.25 type); allow an explicit `as bytes` / `as text` modifier.
+    - [ ] Specify path resolution relative to the source file declaring the embed, with structured errors for missing files.
+    - [ ] Keep runtime filesystem mounting, compression, and encryption out of scope.
+  - [ ] Implement the embedding pipeline
+    - [ ] Read embedded files at compile time and emit their bytes as C constants in codegen.
+    - [ ] Expose them to the program as ordinary `string` / `bytes` / dict values with no runtime IO.
+    - [ ] Record embedded paths in build output for reproducible builds.
+    - [ ] Diagnose missing files, unreadable files, and ambiguous globs with structured errors.
+  - [ ] Keep embedding documentation and tests aligned
+    - [ ] Document the `embed` directive, supported forms, and reproducible-build behavior in `docs/`.
+    - [ ] Add end-to-end tests that build a binary embedding text and binary assets and verify the running binary serves them without filesystem access.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Rename `tya fmt` to `tya format` and lock it in as the one canonical formatter
+  - [ ] Define the formatter policy
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the formatter policy.
+    - [ ] Rename the subcommand from `tya fmt` to `tya format`. The full word is the only spelling; no short alias is provided. Short subcommand names like `fmt` are rejected on principle.
+    - [ ] Add `docs/FORMAT.md` as the single source of truth for canonical Tya formatting, in the spirit of `gofmt`.
+    - [ ] State the policy: there is exactly one canonical format. The formatter has no style flags, no config file, no per-project overrides, and no opt-out for individual rules.
+    - [ ] Forbid introducing options like line width, quote style, or indent size; the canonical choice is baked into the formatter itself.
+    - [ ] Define the only public CLI surface: `tya format [paths...]` (write in place by default), `tya format --check` (exit non-zero on diff), `tya format --stdin` (read from stdin, write to stdout). No other flags.
+    - [ ] Specify the canonical rules (indentation, spacing, trailing commas, string quote normalization, import grouping, blank-line rules) as the source of truth in `docs/FORMAT.md`.
+  - [ ] Resolve every "two valid spellings" point in current Tya syntax in `docs/FORMAT.md`
+    - [ ] Decide the canonical form for dictionary literals: block form (`user =\n  name: ...`) vs inline form (`{ name: ..., age: ... }`), including the length / element-count threshold that switches between them.
+    - [ ] Decide the canonical form for array literals: single-line vs multi-line, and the threshold that switches between them.
+    - [ ] Decide trailing comma policy for multi-line arrays, dicts, and argument lists (required / forbidden — pick one).
+    - [ ] Decide whether the formatter rewrites string concatenation (`"Hello, " + name`) into interpolation (`"Hello, {name}"`) or leaves it alone, and document the decision (rewriting risks changing semantics, but two spellings violate the one-canonical-form policy).
+    - [ ] Decide blank-line rules: between top-level definitions, between functions, around `import` blocks, and inside indented blocks.
+    - [ ] Decide operator spacing: binary operators, unary operators, `:` in dict key-value pairs, `,` in lists, `->` in function expressions.
+    - [ ] Decide function body form: single-line lambda (`f = x -> expr`) vs multi-line block (`f = x ->\n  ...`), and when each is canonical.
+    - [ ] Decide `return value` vs `return value, nil` policy in multiple-return functions until a static type system removes the ambiguity.
+    - [ ] Confirm string quote normalization: `"..."` is canonical; document why `'...'` is not used outside embedded examples.
+    - [ ] Confirm `elseif` is canonical and `else if` is rejected by the formatter (and ideally by the parser).
+    - [ ] Decide import ordering and grouping: alphabetical, stdlib-vs-user separation, blank-line separators.
+    - [ ] Decide canonical position for `case _` in `match` statements (e.g. last only).
+    - [ ] Decide canonical empty-collection forms (`{}` and `[]`) and forbid alternative spellings.
+    - [ ] Decide whether an `else` branch with an empty body is rewritten away or kept.
+  - [ ] Migrate the subcommand name
+    - [ ] Replace the `fmt` subcommand registration with `format` in `cmd/tya/`.
+    - [ ] Remove `tya fmt` entirely (no compatibility alias). Diagnose `tya fmt` invocations with a structured error pointing to `tya format`.
+    - [ ] Update all docs, examples, scripts, README, AGENTS.md, and CLAUDE.md references from `tya fmt` to `tya format`.
+  - [ ] Bring the implementation in line with the policy
+    - [ ] Audit the existing `internal/formatter/` for any flags, env vars, or hidden configuration and remove them.
+    - [ ] Make the formatter idempotent: running it twice must produce identical output.
+    - [ ] Make output stable across platforms (line endings, locale-independent).
+    - [ ] Wire `tya format --check` into recommended CI usage and document it in `docs/`.
+  - [ ] Keep formatter documentation and tests aligned
+    - [ ] Add golden-file tests covering each rule in `docs/FORMAT.md`, including idempotency tests.
+    - [ ] Add a CLI test that any attempt to pass an unknown flag fails with a structured diagnostic.
+    - [ ] Add a CLI test that `tya fmt` is rejected with a diagnostic naming `tya format`.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship `tya new` project scaffolder
+  - [ ] Define scaffolder scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for `tya new`.
+    - [ ] Specify the CLI surface: `tya new <name>` creates a new project directory; `tya new --here` initializes the current directory.
+    - [ ] Specify the default template: `tya.toml` manifest, `src/main.tya` with a runnable hello-world, `tests/` with one passing unittest, `.gitignore`, and a minimal `README.md`.
+    - [ ] Specify a small, fixed set of templates (e.g. `--template app`, `--template lib`); keep custom / remote templates out of scope.
+    - [ ] Specify behavior on conflict: refuse to overwrite existing files unless `--force` is given, with a structured diagnostic listing the conflicts.
+    - [ ] Initialize a git repository by default; allow `--no-git` to skip.
+  - [ ] Implement the scaffolder
+    - [ ] Embed template files into the `tya` binary (reuse the future asset-embedding feature once shipped; until then, embed via Go).
+    - [ ] Validate the project name against the same rules `tya.toml` requires for `name`, with a structured diagnostic on rejection.
+    - [ ] Render templates with the project name and the current Tya version substituted in.
+    - [ ] Print next-step guidance after success (`cd <name> && tya run`).
+  - [ ] Keep scaffolder documentation and tests aligned
+    - [ ] Document `tya new`, available templates, and conflict / `--force` behavior in `docs/`.
+    - [ ] Add CLI tests for each template, for `--here`, for name validation, for conflict diagnostics, and for `--no-git`.
+    - [ ] Verify generated projects build and test green via `tya run` and `tya test` in CI.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship a public Tya self-introspection library
+  - [ ] Define library scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the self-introspection library.
+    - [ ] State the goal: Tya programs (and external tools) can lex, parse, walk, and re-emit Tya source through a stable, documented API. This unlocks codemods, linters, doc extractors, refactoring tools, AI-agent code edits, and the `tya lsp` server.
+    - [ ] Specify the surface as Tya stdlib modules, written in Tya on top of the existing self-host components: `compiler.lexer`, `compiler.parser`, `compiler.ast`, `compiler.checker`, `compiler.format`.
+    - [ ] Specify the AST as the single canonical representation. Define each node kind, its fields, and its source span.
+    - [ ] Keep code generation (C emission), runtime evaluation, and macro / quasi-quote constructs out of the initial scope.
+  - [ ] Implement the API
+    - [ ] `compiler.lexer.tokenize(source) -> tokens` returning tokens with kind, lexeme, and source span.
+    - [ ] `compiler.parser.parse(source) -> ast` and `compiler.parser.parse_tokens(tokens) -> ast`.
+    - [ ] AST walking helpers: visitor / walk callback, child enumeration, parent lookup.
+    - [ ] AST construction helpers for codemods, with span-preserving and span-synthesizing variants.
+    - [ ] `compiler.format.print(ast) -> source` that round-trips through the canonical formatter (shares the implementation with `tya format`).
+    - [ ] `compiler.checker.check(ast) -> diagnostics` returning the same structured diagnostics the CLI emits.
+    - [ ] Stable diagnostic shape reused across the CLI, LSP, and this library.
+  - [ ] Stability and reuse
+    - [ ] Treat the AST schema and module surface as part of the language's compatibility promise; breaking changes ride minor versions and are documented.
+    - [ ] Reuse the same Tya-implemented lexer / parser / checker that the self-host compiler uses, so the library and the compiler cannot diverge.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point; the library is a re-export of the self-host components, not a parallel reimplementation.
+  - [ ] Keep library documentation and tests aligned
+    - [ ] Document each module, every node kind, and the AST schema in `docs/`.
+    - [ ] Add round-trip tests: `format(parse(source)) == format(parse(format(parse(source))))` over a representative corpus.
+    - [ ] Add a small example codemod (e.g. rename an identifier across a file) demonstrated in `docs/`.
+    - [ ] Add tests that the library's diagnostics match the CLI's diagnostics byte-for-byte for a fixed corpus.
+
+- [ ] Ship test coverage support
+  - [ ] Define coverage scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the coverage feature.
+    - [ ] Specify the granularity: line coverage as the baseline, with branch coverage as an explicit follow-up if needed.
+    - [ ] Specify the CLI surface: `tya test --cover` runs tests with instrumentation and writes a coverage profile; `tya cover report` prints a human-readable summary; `tya cover html` writes an HTML report; `tya cover --format=json` emits machine-readable output for CI and AI agents.
+    - [ ] Specify the profile file format and location (e.g. `.tya/coverage/profile`).
+    - [ ] Keep mutation testing, MC/DC coverage, and cross-process / cross-binary aggregation out of the initial scope.
+  - [ ] Implement the coverage pipeline
+    - [ ] Instrument generated C with per-statement counters keyed by Tya source span; preserve the `selfhost/v01/compiler.tya` fixed point.
+    - [ ] Aggregate counters at process exit into the profile file.
+    - [ ] Map profile entries back to Tya source spans for reporting.
+    - [ ] Exclude generated code, third-party dependencies under `.tya/packages/`, and the stdlib by default; allow `--include` / `--exclude` overrides.
+    - [ ] Diagnose misuse (missing profile, mismatched source) with structured errors.
+  - [ ] Keep coverage documentation and tests aligned
+    - [ ] Document `tya test --cover`, `tya cover report`, `tya cover html`, and `--format=json` in `docs/`.
+    - [ ] Add CLI and end-to-end tests covering profile generation, reporting, JSON output, and include/exclude behavior.
+    - [ ] Add a recommended CI snippet (fail when coverage drops below a threshold).
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship `markdown` stdlib module
+  - [ ] Define markdown scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the `markdown` module.
+    - [ ] Target the CommonMark specification as the baseline dialect.
+    - [ ] Specify the GitHub Flavored Markdown extensions to support (tables, task lists, strikethrough, autolinks, fenced code with info string).
+    - [ ] Specify the public API: `markdown.parse(text) -> ast`, `markdown.to_html(text) -> string`, `markdown.to_html_ast(ast) -> string`, `markdown.render(ast, visitor) -> string`.
+    - [ ] Specify the AST shape (block / inline node kinds, attributes, source spans) and treat it as part of the module's compatibility surface.
+    - [ ] Keep math extensions, footnote extensions beyond GFM, custom directive syntax, and a Markdown writer / formatter out of the initial scope.
+  - [ ] Implement the module
+    - [ ] Implement the parser in pure Tya, no native dependency, so it works under every `tya build` target including WASM.
+    - [ ] Implement HTML rendering with safe escaping by default; expose an opt-in for raw HTML pass-through with a clear security note.
+    - [ ] Provide a visitor / walk helper for custom rendering (e.g. extracting headings for a table of contents).
+    - [ ] Diagnose malformed input gracefully — Markdown is forgiving by spec; surface only structural problems via structured errors.
+  - [ ] Keep markdown documentation and tests aligned
+    - [ ] Document the API, supported GFM extensions, AST schema, and the security posture for raw HTML in `docs/STDLIB.md`.
+    - [ ] Run a representative subset of the CommonMark test suite as part of `go test ./...`.
+    - [ ] Add unittest-form tests for each GFM extension and for AST round-trips through the visitor API.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 
