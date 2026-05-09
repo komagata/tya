@@ -575,15 +575,32 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 		u.emitStmtLine(n, body)
 		return nil
 	}
-	// Single-line too long. Wrap the rhs when it is a single
-	// CallExpr or ArrayLit. Other rhs shapes fall back to the
-	// long single-line under the atomic-token exception.
+	// Single-line too long. Wrap the rhs based on its shape.
 	if len(n.Values) == 1 {
 		switch v := n.Values[0].(type) {
 		case *ast.CallExpr:
 			return u.emitWrappedCall(n, strings.Join(targets, ", ")+" = ", v)
 		case *ast.ArrayLit:
 			return u.emitWrappedArray(n, strings.Join(targets, ", ")+" = ", v)
+		case *ast.FuncLit:
+			// §5.3.8: a single-line `name -> expr` whose
+			// rendering exceeds 80 columns switches to the
+			// block-body form `name ->\n  expr`.
+			if v.Expr != nil {
+				head, err := u.funcHead(v)
+				if err != nil {
+					return err
+				}
+				bodyStr, err := u.expr(v.Expr)
+				if err != nil {
+					return err
+				}
+				u.line(strings.Join(targets, ", ") + " = " + head + " ->")
+				u.indent++
+				u.line(bodyStr)
+				u.indent--
+				return nil
+			}
 		}
 	}
 	u.emitStmtLine(n, body)

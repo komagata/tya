@@ -167,6 +167,22 @@ func TestUnparseIdempotent(t *testing.T) {
 	}
 }
 
+func TestUnparseWrapsLongLambdaBody(t *testing.T) {
+	src := "greet = recipient_name -> \"Hello, \" + recipient_name + \"! Welcome to the service.\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"greet = recipient_name ->",
+		"  \"Hello, \" + recipient_name + \"! Welcome to the service.\"",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
 func TestUnparseWrapsLongCall(t *testing.T) {
 	src := "result = compute_filtered_items(source_alpha, source_beta, source_gamma, source_delta)\n"
 	got, err := unparseSource(t, src)
