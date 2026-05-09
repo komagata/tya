@@ -87,13 +87,21 @@ func LexWithComments(src string) ([]token.Token, []Comment, []error) {
 // suppressBracketNewlines drops NEWLINE / INDENT / DEDENT tokens
 // that fall inside `(` / `[` brackets so the parser can read
 // multi-line call argument lists and array literals as a single
-// logical line. Brace literals (`{`) stay single-line per
-// CANONICAL §5.3.3 (the dict block form has no braces) and are
-// not affected.
+// logical line. It also recognizes binary-operator continuation
+// lines per CANONICAL §5.3.5: when a line starts with a binary
+// operator at deeper indent, the NEWLINE+INDENT before the
+// operator and the matching DEDENT after the continued
+// expression are dropped, so the leading-operator multi-line
+// form parses as a single binary expression.
+//
+// Brace literals (`{`) stay single-line per §5.3.3 (the dict
+// block form has no braces) and are not affected.
 func suppressBracketNewlines(toks []token.Token) []token.Token {
 	out := make([]token.Token, 0, len(toks))
 	depth := 0
-	for _, t := range toks {
+	pendingDedent := 0
+	for i := 0; i < len(toks); i++ {
+		t := toks[i]
 		switch t.Type {
 		case token.LPAREN, token.LBRACKET:
 			depth++
@@ -105,9 +113,51 @@ func suppressBracketNewlines(toks []token.Token) []token.Token {
 		if depth > 0 && (t.Type == token.NEWLINE || t.Type == token.INDENT || t.Type == token.DEDENT) {
 			continue
 		}
+		// Detect `NEWLINE INDENT <binary-op>` and drop
+		// the NEWLINE and INDENT, marking that we owe a
+		// DEDENT-drop later.
+		// `NEWLINE INDENT <binary-op>` opens a continuation
+		// indented block — drop both, owe a DEDENT-drop.
+		if t.Type == token.NEWLINE && i+2 < len(toks) &&
+			toks[i+1].Type == token.INDENT &&
+			isContinuationOp(toks[i+2]) {
+			pendingDedent++
+			i++ // skip INDENT
+			continue
+		}
+		// `NEWLINE <binary-op>` at the same depth (subsequent
+		// continuation lines after the first) — drop the
+		// NEWLINE only.
+		if t.Type == token.NEWLINE && i+1 < len(toks) && isContinuationOp(toks[i+1]) {
+			continue
+		}
+		// `INDENT <binary-op>` (no preceding NEWLINE in the
+		// stream — defensive).
+		if t.Type == token.INDENT && i+1 < len(toks) && isContinuationOp(toks[i+1]) {
+			pendingDedent++
+			continue
+		}
+		if t.Type == token.DEDENT && pendingDedent > 0 {
+			pendingDedent--
+			continue
+		}
 		out = append(out, t)
 	}
 	return out
+}
+
+// isContinuationOp reports whether t can start a leading-operator
+// continuation line per CANONICAL §5.3.5.
+func isContinuationOp(t token.Token) bool {
+	switch t.Type {
+	case token.PLUS, token.MINUS, token.STAR, token.SLASH, token.PERCENT,
+		token.EQ, token.NEQ, token.LT, token.LTE, token.GT, token.GTE,
+		token.AMP, token.PIPE, token.CARET, token.SHL, token.SHR:
+		return true
+	case token.IDENT:
+		return t.Lexeme == "and" || t.Lexeme == "or"
+	}
+	return false
 }
 
 func (l *Lexer) add(t token.Type, s string, line, col int) {

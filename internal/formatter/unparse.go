@@ -582,6 +582,8 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			return u.emitWrappedCall(n, strings.Join(targets, ", ")+" = ", v)
 		case *ast.ArrayLit:
 			return u.emitWrappedArray(n, strings.Join(targets, ", ")+" = ", v)
+		case *ast.BinaryExpr:
+			return u.emitWrappedBinary(n, strings.Join(targets, ", ")+" = ", v)
 		case *ast.FuncLit:
 			// §5.3.8: a single-line `name -> expr` whose
 			// rendering exceeds 80 columns switches to the
@@ -638,6 +640,60 @@ func (u *unparser) emitWrappedCall(stmt ast.Stmt, prefix string, call *ast.CallE
 	} else {
 		u.line(closing)
 	}
+	return nil
+}
+
+// emitWrappedBinary emits a left-associative binary chain in the
+// leading-operator style per CANONICAL §5.3.5:
+//
+//	prefix a
+//	  + b
+//	  + c
+//
+// The chain is flattened by repeated left descent. Operators that
+// would change associativity (mixed precedence) fall back to the
+// long single-line under the atomic-token exception.
+func (u *unparser) emitWrappedBinary(stmt ast.Stmt, prefix string, expr *ast.BinaryExpr) error {
+	// Flatten left-associative same-operator chain. We collect
+	// operands and the operators between them.
+	rootOp := expr.Op.Lexeme
+	var operands []ast.Expr
+	var ops []string
+	var walk func(e ast.Expr)
+	walk = func(e ast.Expr) {
+		if be, ok := e.(*ast.BinaryExpr); ok && be.Op.Lexeme == rootOp {
+			walk(be.Left)
+			ops = append(ops, be.Op.Lexeme)
+			operands = append(operands, be.Right)
+			return
+		}
+		operands = append(operands, e)
+	}
+	walk(expr)
+	if len(operands) < 2 {
+		// Mixed or unsupported chain — fall through to inline.
+		body, err := u.expr(expr)
+		if err != nil {
+			return err
+		}
+		u.emitStmtLine(stmt, prefix+body)
+		return nil
+	}
+	first, err := u.expr(operands[0])
+	if err != nil {
+		return err
+	}
+	u.line(prefix + first)
+	u.indent++
+	for i := 1; i < len(operands); i++ {
+		s, err := u.expr(operands[i])
+		if err != nil {
+			u.indent--
+			return err
+		}
+		u.line(ops[i-1] + " " + s)
+	}
+	u.indent--
 	return nil
 }
 
