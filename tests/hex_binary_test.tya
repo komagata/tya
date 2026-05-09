@@ -1,0 +1,37 @@
+import unittest
+
+module hex_binary_test
+  test_hex_lower = ->
+    unittest.assert_equal(255, 0xff, "0xff")
+    unittest.assert_equal(51966, 0xcafe, "0xcafe")
+  test_hex_upper = ->
+    unittest.assert_equal(255, 0xFF, "0xFF")
+    unittest.assert_equal(15, 0x0F, "0x0F")
+  test_hex_mixed_case = ->
+    unittest.assert_equal(43981, 0xaBcD, "mixed case")
+  test_binary = ->
+    unittest.assert_equal(10, 0b1010, "0b1010")
+    unittest.assert_equal(255, 0b11111111, "0b11111111")
+    unittest.assert_equal(0, 0b0, "0b0")
+  test_binary_upper_prefix = ->
+    unittest.assert_equal(5, 0B101, "0B101")
+  test_underscore_decimal = ->
+    unittest.assert_equal(1000000, 1_000_000, "1_000_000")
+  test_underscore_hex = ->
+    unittest.assert_equal(16772829, 0xff_ee_dd, "0xff_ee_dd")
+  test_underscore_binary = ->
+    unittest.assert_equal(255, 0b1111_1111, "0b1111_1111")
+  test_underscore_float = ->
+    unittest.assert_equal(1000.5, 1_000.5, "1_000.5")
+  test_negative_hex = ->
+    unittest.assert_equal(-255, -0xff, "-0xff")
+  test_equivalence = ->
+    unittest.assert(255 == 0xff, "decimal == hex")
+    unittest.assert(255 == 0b1111_1111, "decimal == binary")
+  test_kind = ->
+    unittest.assert_equal("int", kind(0xff), "hex is int")
+    unittest.assert_equal("int", kind(0b10), "binary is int")
+  test_bit_ops_with_hex = ->
+    unittest.assert_equal(0xf0, 0xff & 0xf0, "and")
+    unittest.assert_equal(0xff, 0x0f | 0xf0, "or")
+    unittest.assert_equal(16, 1 << 4, "shift")

@@ -224,25 +224,25 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add CLI, resolver, fetcher, and lockfile tests.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
-- [ ] Ship v0.27 hexadecimal and binary integer literals
+- [x] Ship v0.27 hexadecimal and binary integer literals
   - [x] Define v0.27 scope
     - [x] Add `docs/v0.27/SPEC.md`.
     - [x] Specify `0xFF` / `0xff` hexadecimal integer literals.
     - [x] Specify `0b1010` binary integer literals.
     - [x] Specify underscore digit-group separators in decimal, hex, and binary literals.
     - [x] Keep octal literals, hex floats, numeric type suffixes, and big-int out of v0.27.
-  - [ ] Implement hex and binary literals
-    - [ ] Lex `0x`/`0X` followed by hex digits (and underscores) into an `INT` token.
-    - [ ] Lex `0b`/`0B` followed by binary digits (and underscores) into an `INT` token.
-    - [ ] Reject `0x` / `0b` with no digits, and digits outside the base.
-    - [ ] Allow underscore separators in plain decimal integer and float literals.
-    - [ ] Make value handling identical to existing decimal integer literals (no AST change required).
-  - [ ] Keep v0.27 documentation and tests aligned
-    - [ ] Update latest docs when v0.27 behavior is implemented.
-    - [ ] Keep `docs/v0.27/` aligned with the v0.27 minor specification.
-    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
-    - [ ] Add lexer and end-to-end tests for hex, binary, and underscore literals.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Implement hex and binary literals
+    - [x] Lex `0x`/`0X` followed by hex digits (and underscores) into an `INT` token.
+    - [x] Lex `0b`/`0B` followed by binary digits (and underscores) into an `INT` token.
+    - [x] Reject `0x` / `0b` with no digits, and digits outside the base.
+    - [x] Allow underscore separators in plain decimal integer and float literals.
+    - [x] Make value handling identical to existing decimal integer literals (no AST change required).
+  - [x] Keep v0.27 documentation and tests aligned
+    - [x] Update latest docs when v0.27 behavior is implemented.
+    - [x] Keep `docs/v0.27/` aligned with the v0.27 minor specification.
+    - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [x] Add lexer and end-to-end tests for hex, binary, and underscore literals.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference
 

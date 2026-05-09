@@ -2,11 +2,19 @@ package lexer
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"unicode"
 
 	"tya/internal/token"
 )
+
+func prefixName(c byte) string {
+	if c == 'x' || c == 'X' {
+		return "hex"
+	}
+	return "binary"
+}
 
 type Lexer struct {
 	src    string
@@ -148,18 +156,94 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 		}
 		if isDigit(ch) {
 			start := i
-			typ := token.INT
-			for i < len(s) && isDigit(s[i]) {
+			// Hex / binary literal: 0x... or 0b...
+			if ch == '0' && i+1 < len(s) && (s[i+1] == 'x' || s[i+1] == 'X' || s[i+1] == 'b' || s[i+1] == 'B') {
+				prefix := s[i+1]
+				i += 2
+				digitStart := i
+				digits := strings.Builder{}
+				isHex := prefix == 'x' || prefix == 'X'
+				for i < len(s) {
+					c := s[i]
+					if c == '_' {
+						i++
+						continue
+					}
+					if isHex && hexDigit(c) >= 0 {
+						digits.WriteByte(c)
+						i++
+						continue
+					}
+					if !isHex && (c == '0' || c == '1') {
+						digits.WriteByte(c)
+						i++
+						continue
+					}
+					break
+				}
+				if digits.Len() == 0 {
+					l.errs = append(l.errs, fmt.Errorf("%d:%d: %s literal needs at least one digit", line, baseCol+start, prefixName(prefix)))
+					return
+				}
+				if i < len(s) && (isAlpha(s[i]) || isDigit(s[i])) {
+					l.errs = append(l.errs, fmt.Errorf("%d:%d: invalid digit %q in %s literal", line, baseCol+i, s[i], prefixName(prefix)))
+					return
+				}
+				_ = digitStart
+				base := 16
+				if !isHex {
+					base = 2
+				}
+				n, err := strconv.ParseInt(digits.String(), base, 64)
+				if err != nil {
+					l.errs = append(l.errs, fmt.Errorf("%d:%d: invalid %s literal", line, baseCol+start, prefixName(prefix)))
+					return
+				}
+				l.add(token.INT, strconv.FormatInt(n, 10), line, baseCol+start)
+				continue
+			}
+			// Decimal literal with optional underscore separators.
+			intDigits := strings.Builder{}
+			intDigits.WriteByte(ch)
+			i++
+			for i < len(s) {
+				c := s[i]
+				if c == '_' {
+					if i+1 >= len(s) || !isDigit(s[i+1]) {
+						break
+					}
+					i++
+					continue
+				}
+				if !isDigit(c) {
+					break
+				}
+				intDigits.WriteByte(c)
 				i++
 			}
+			typ := token.INT
+			lexeme := intDigits.String()
 			if i+1 < len(s) && s[i] == '.' && isDigit(s[i+1]) {
 				typ = token.FLOAT
+				lexeme += "."
 				i++
-				for i < len(s) && isDigit(s[i]) {
+				for i < len(s) {
+					c := s[i]
+					if c == '_' {
+						if i+1 >= len(s) || !isDigit(s[i+1]) {
+							break
+						}
+						i++
+						continue
+					}
+					if !isDigit(c) {
+						break
+					}
+					lexeme += string(c)
 					i++
 				}
 			}
-			l.add(typ, s[start:i], line, baseCol+start)
+			l.add(typ, lexeme, line, baseCol+start)
 			continue
 		}
 		if ch == '"' {
