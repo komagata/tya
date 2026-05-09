@@ -907,29 +907,17 @@ func isTTY(f *os.File) bool {
 
 func formatCommand(args []string) error {
 	write := false
-	useAST := true
 	path := ""
 	for _, arg := range args {
 		if arg == "-w" {
 			write = true
 			continue
 		}
-		if arg == "--ast" {
-			useAST = true
-			continue
-		}
-		if arg == "--text" {
-			// --text falls back to the v0.2 conservative text
-			// pass. Reserved for transitional use; the AST
-			// serializer is the canonical default from v0.38.
-			useAST = false
-			continue
-		}
 		if strings.HasPrefix(arg, "-") {
-			return fmt.Errorf("unknown fmt option: %s", arg)
+			return fmt.Errorf("unknown format option: %s", arg)
 		}
 		if path != "" {
-			return fmt.Errorf("unexpected fmt argument: %s", arg)
+			return fmt.Errorf("unexpected format argument: %s", arg)
 		}
 		path = arg
 	}
@@ -943,7 +931,7 @@ func formatCommand(args []string) error {
 	if err != nil {
 		return err
 	}
-	formatted := formatSource(string(src), useAST)
+	formatted := formatSource(string(src))
 	if write {
 		return os.WriteFile(path, []byte(formatted), 0644)
 	}
@@ -951,14 +939,12 @@ func formatCommand(args []string) error {
 	return nil
 }
 
-// formatSource applies the canonical AST-driven serializer when
-// useAST is set, falling back to the conservative v0.2 text pass on
-// any lex / parse / unparse error. The text pass is the v0.2
-// stable behavior when useAST is false.
-func formatSource(src string, useAST bool) string {
-	if !useAST {
-		return formatter.FormatSource(src)
-	}
+// formatSource applies the canonical AST-driven serializer. On
+// any lex / parse / unparse error it falls back to the v0.2 text
+// pass so editor save hooks remain safe; this fallback is
+// invisible to the caller and is expected to shrink as Unparse
+// coverage grows.
+func formatSource(src string) string {
 	toks, lcomments, errs := lexer.LexWithComments(src)
 	if len(errs) > 0 {
 		return formatter.FormatSource(src)
