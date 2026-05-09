@@ -428,9 +428,15 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [x] **v0.35** Step 3: per-stmt `Comments map[Stmt]StmtComments` populated by `ParseWithComments` for top-level statements (leading + line-end). Inner-stmt attachment deferred.
   - [x] **v0.36** Step 4: comment attachment recurses into if/while/for/match/try bodies and `FuncLit.Body`.
   - [x] **v0.37** Step 5: `formatter.Unparse(prog)` foundation covering imports, simple assignments, expression statements, returns/raises/break/continue, `if`/`elseif`/`else`, `while`, `for`, single-line + block-bodied lambdas, and the common literal/operator/call/member/index/array/dict expressions. Returns an error for module/class/match/try (deferred).
-  - [ ] **v0.38** Step 6: extend `Unparse` to modules / classes / match / try; emit comments; add empty-`else` removal, import sort, blank-line rules.
-  - [ ] **v0.39** Step 7: multi-line wrap (§5), 80-column limit, atomic-token exception, `"""..."""` rewrite (§6.3), idempotency.
-  - [ ] **v0.40** Step 8: replace text formatter with the AST-driven serializer; normalize `stdlib/`, `examples/`, `selfhost/`, `tests/testdata/`; reject non-canonical forms at parse time.
+  - In-progress (committed to main, not yet released):
+    - Unparse covers modules / classes / interfaces / match / try; emits header + per-stmt comments; applies §8.4 import sort + §3.5 blank-line rules; §5 wrap rules for call / array / dict block / binary chain leading-operator / if/while parens / lambda body; §6.3 long-string `"""..."""` rewrite; §11 BinaryExpr precedence parens; lexer/parser accept multi-line `(...)` / `[...]` and leading-operator continuation lines; corpus round-trip test pre-flights normalization; `tya fmt --ast` opt-in.
+    - `examples/` and `stdlib/` already normalized via `tya fmt --ast -w`.
+  - [ ] **Outstanding for v0.38 release**:
+    - [ ] Realign `selfhost/v01/compiler.tya` with the canonical formatter. Currently `tya fmt --ast -w` over `selfhost/` breaks the self-host fixed point because the Tya-written v0.1 compiler does not parse the dict block form (§5.3.3), the leading-operator binary chain (§5.3.5), or multi-line `(...)` / `[...]` continuations. Two options: (a) extend `selfhost/v01/compiler.tya`'s Tya-side lexer/parser to accept these forms, then run `tya fmt --ast -w selfhost/`, or (b) make the formatter avoid emitting any §5 wrap forms when called on a v0.1-only input (rejected as context-dependent). Option (a) is the maintained path.
+    - [ ] Reject non-canonical forms at parse time: §3.4 forbidden comment positions (block-trailing, file-trailing, brackets-internal, all-comment block bodies); enforce structured diagnostics via `internal/diag`.
+    - [ ] Make `tya fmt` / `tya format` use the AST serializer by default (currently behind `--ast`). The text pass remains as the documented fallback for unsupported inputs but graceful-fallback is invisible to the user.
+    - [ ] Normalize `tests/testdata/` and `selfhost/` once selfhost realignment lands.
+    - [ ] Add `docs/v0.38/SPEC.md` summarizing the landed Canonical Syntax and bump version + cut release.
 
 - [ ] Rename `tya fmt` to `tya format` and lock it in as the one canonical formatter
   - [ ] Define the formatter policy
