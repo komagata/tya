@@ -2748,14 +2748,23 @@ func registerV41Builtins(env *Env) {
 			return nil, fmt.Errorf("runtime_gc_stats expects 0 arguments")
 		}
 		out := Dict{
-			"alloc_count": float64(0),
-			"alloc_bytes": float64(0),
-			"freed_count": float64(0),
-			"freed_bytes": float64(0),
-			"live_count":  float64(0),
-			"live_bytes":  float64(0),
+			"alloc_count":   float64(0),
+			"alloc_bytes":   float64(0),
+			"freed_count":   float64(0),
+			"freed_bytes":   float64(0),
+			"live_count":    float64(0),
+			"live_bytes":    float64(0),
+			"collect_count": float64(0),
+			"threshold":     float64(0),
 		}
 		return out, nil
+	}))
+	// runtime_gc_collect() — eval has no real GC; no-op for parity.
+	env.set("runtime_gc_collect", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("runtime_gc_collect expects 0 arguments")
+		}
+		return nil, nil
 	}))
 }
 

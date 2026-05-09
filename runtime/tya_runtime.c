@@ -21,17 +21,19 @@
 #include <sys/random.h>
 #endif
 
-/* GC infrastructure (v0.41 STEP 1).
+/* GC infrastructure (v0.41).
  *
  * Every heap allocation that holds Tya runtime values (arrays, dicts,
  * functions, bytes) carries a TyaGcHeader as its first field. The
  * collector links headers into a single linked list rooted at
  * tya_gc_head, so it can iterate all live allocations.
  *
- * STEP 1 only adds the header, the central allocator, and tracking
- * counters. No mark or sweep happens yet. STEP 2 adds the mark phase,
- * STEP 3 adds sweep, STEP 4 adds the trigger policy and runtime.gc()
- * API. */
+ * Roots: pointers to module-level TyaValue globals registered by
+ * generated code at startup, plus the active raise-frame chain. Locals
+ * inside user functions are NOT roots, so the collector must only run
+ * at points where every live local is also reachable from these
+ * globals (e.g. between top-level statements). See docs/v0.41/SPEC.md
+ * for limitations and future work. */
 typedef enum {
   TYA_GC_ARRAY = 1,
   TYA_GC_DICT = 2,
@@ -42,29 +44,9 @@ typedef enum {
 typedef struct TyaGcHeader {
   unsigned char mark;
   unsigned char kind;
+  size_t size;
   struct TyaGcHeader *next;
 } TyaGcHeader;
-
-static TyaGcHeader *tya_gc_head = NULL;
-static size_t tya_gc_alloc_count = 0;
-static size_t tya_gc_alloc_bytes = 0;
-static size_t tya_gc_freed_count = 0;
-static size_t tya_gc_freed_bytes = 0;
-
-static void *tya_gc_alloc(size_t size, TyaGcKind kind) {
-  TyaGcHeader *header = (TyaGcHeader *)malloc(size);
-  if (header == NULL) {
-    fprintf(stderr, "tya: out of memory\n");
-    exit(1);
-  }
-  header->mark = 0;
-  header->kind = (unsigned char)kind;
-  header->next = tya_gc_head;
-  tya_gc_head = header;
-  tya_gc_alloc_count++;
-  tya_gc_alloc_bytes += size;
-  return header;
-}
 
 struct TyaArray {
   TyaGcHeader gc;
@@ -94,6 +76,151 @@ struct TyaFunction {
   TyaValue parent;
   bool is_class;
 };
+
+static TyaGcHeader *tya_gc_head = NULL;
+static size_t tya_gc_alloc_count = 0;
+static size_t tya_gc_alloc_bytes = 0;
+static size_t tya_gc_freed_count = 0;
+static size_t tya_gc_freed_bytes = 0;
+static size_t tya_gc_collect_count = 0;
+static size_t tya_gc_live_after_last = 0;
+static size_t tya_gc_threshold = 1024;
+
+static TyaValue **tya_gc_roots = NULL;
+static size_t tya_gc_root_count = 0;
+static size_t tya_gc_root_cap = 0;
+
+static void *tya_gc_alloc(size_t size, TyaGcKind kind) {
+  TyaGcHeader *header = (TyaGcHeader *)malloc(size);
+  if (header == NULL) {
+    fprintf(stderr, "tya: out of memory\n");
+    exit(1);
+  }
+  header->mark = 0;
+  header->kind = (unsigned char)kind;
+  header->size = size;
+  header->next = tya_gc_head;
+  tya_gc_head = header;
+  tya_gc_alloc_count++;
+  tya_gc_alloc_bytes += size;
+  return header;
+}
+
+void tya_gc_register_root(TyaValue *p) {
+  if (tya_gc_root_count == tya_gc_root_cap) {
+    size_t new_cap = tya_gc_root_cap == 0 ? 16 : tya_gc_root_cap * 2;
+    tya_gc_roots = realloc(tya_gc_roots, sizeof(TyaValue *) * new_cap);
+    tya_gc_root_cap = new_cap;
+  }
+  tya_gc_roots[tya_gc_root_count++] = p;
+}
+
+static void tya_gc_mark_value(TyaValue v);
+static void tya_gc_mark_header(TyaGcHeader *h);
+
+static void tya_gc_mark_header(TyaGcHeader *h) {
+  if (h == NULL || h->mark != 0) return;
+  h->mark = 1;
+  switch ((TyaGcKind)h->kind) {
+    case TYA_GC_ARRAY: {
+      TyaArray *a = (TyaArray *)h;
+      for (int i = 0; i < a->len; i++) {
+        tya_gc_mark_value(a->items[i]);
+      }
+      break;
+    }
+    case TYA_GC_DICT: {
+      TyaDict *d = (TyaDict *)h;
+      for (int i = 0; i < d->len; i++) {
+        if (d->entries[i].key != NULL) {
+          tya_gc_mark_value(d->entries[i].value);
+        }
+      }
+      break;
+    }
+    case TYA_GC_FUNCTION: {
+      TyaFunction *f = (TyaFunction *)h;
+      tya_gc_mark_value(f->receiver);
+      tya_gc_mark_value(f->parent);
+      if (f->members) {
+        tya_gc_mark_header((TyaGcHeader *)f->members);
+      }
+      break;
+    }
+    case TYA_GC_BYTES:
+      /* leaf */
+      break;
+  }
+}
+
+static void tya_gc_mark_value(TyaValue v) {
+  switch (v.kind) {
+    case TYA_ARRAY:
+      if (v.array) tya_gc_mark_header((TyaGcHeader *)v.array);
+      break;
+    case TYA_DICT:
+    case TYA_OBJECT:
+      if (v.dict) tya_gc_mark_header((TyaGcHeader *)v.dict);
+      break;
+    case TYA_FUNCTION:
+      if (v.function) tya_gc_mark_header((TyaGcHeader *)v.function);
+      break;
+    case TYA_BYTES:
+      if (v.bytes) tya_gc_mark_header((TyaGcHeader *)v.bytes);
+      break;
+    default:
+      break;
+  }
+}
+
+static void tya_gc_free_one(TyaGcHeader *h) {
+  switch ((TyaGcKind)h->kind) {
+    case TYA_GC_ARRAY: {
+      TyaArray *a = (TyaArray *)h;
+      free(a->items);
+      free(a);
+      break;
+    }
+    case TYA_GC_DICT: {
+      TyaDict *d = (TyaDict *)h;
+      free(d->entries);
+      free(d);
+      break;
+    }
+    case TYA_GC_FUNCTION: {
+      TyaFunction *f = (TyaFunction *)h;
+      /* members is a separately tracked TyaDict; the collector frees it
+       * on its own pass through the linked list if it is unreachable. */
+      free(f);
+      break;
+    }
+    case TYA_GC_BYTES: {
+      TyaBytes *b = (TyaBytes *)h;
+      free(b->data);
+      free(b);
+      break;
+    }
+  }
+}
+
+static void tya_gc_sweep(void) {
+  TyaGcHeader **prev = &tya_gc_head;
+  TyaGcHeader *h = *prev;
+  while (h) {
+    TyaGcHeader *next = h->next;
+    if (h->mark == 0) {
+      size_t freed = h->size;
+      tya_gc_free_one(h);
+      tya_gc_freed_count++;
+      tya_gc_freed_bytes += freed;
+      *prev = next;
+    } else {
+      h->mark = 0;
+      prev = &h->next;
+    }
+    h = next;
+  }
+}
 
 typedef struct {
   char *text;
@@ -2814,19 +2941,51 @@ TyaValue tya_file_write_bytes(TyaValue path, TyaValue b) {
 }
 
 /* =========================================================================
- * v0.41 GC introspection
+ * v0.41 GC API
  * ========================================================================= */
+
+void tya_gc_collect(void) {
+  /* Mark from registered globals. */
+  for (size_t i = 0; i < tya_gc_root_count; i++) {
+    tya_gc_mark_value(*tya_gc_roots[i]);
+  }
+  /* Mark in-flight raise values. */
+  for (TyaRaiseFrame *frame = tya_raise_frame; frame != NULL; frame = frame->prev) {
+    tya_gc_mark_value(frame->value);
+  }
+  /* Sweep. */
+  tya_gc_sweep();
+  tya_gc_collect_count++;
+  tya_gc_live_after_last = tya_gc_alloc_count - tya_gc_freed_count;
+  /* Recompute threshold: collect again when allocations grow by another
+   * factor over what survived. Minimum 1024 to avoid thrashing on tiny
+   * programs. */
+  size_t target = tya_gc_live_after_last * 2;
+  tya_gc_threshold = (target > 1024) ? target : 1024;
+}
+
+void tya_gc_maybe_collect(void) {
+  /* Called by generated code at safe points (between top-level
+   * statements). Triggers a collection when allocations since the last
+   * collection exceed the threshold. */
+  size_t live = tya_gc_alloc_count - tya_gc_freed_count;
+  if (live >= tya_gc_threshold) {
+    tya_gc_collect();
+  }
+}
 
 TyaValue tya_gc_stats(void) {
   size_t live_count = tya_gc_alloc_count - tya_gc_freed_count;
   size_t live_bytes = tya_gc_alloc_bytes - tya_gc_freed_bytes;
-  TyaDictEntry entries[6] = {
-    {"alloc_count", tya_number((double)tya_gc_alloc_count)},
-    {"alloc_bytes", tya_number((double)tya_gc_alloc_bytes)},
-    {"freed_count", tya_number((double)tya_gc_freed_count)},
-    {"freed_bytes", tya_number((double)tya_gc_freed_bytes)},
-    {"live_count",  tya_number((double)live_count)},
-    {"live_bytes",  tya_number((double)live_bytes)},
+  TyaDictEntry entries[8] = {
+    {"alloc_count",   tya_number((double)tya_gc_alloc_count)},
+    {"alloc_bytes",   tya_number((double)tya_gc_alloc_bytes)},
+    {"freed_count",   tya_number((double)tya_gc_freed_count)},
+    {"freed_bytes",   tya_number((double)tya_gc_freed_bytes)},
+    {"live_count",    tya_number((double)live_count)},
+    {"live_bytes",    tya_number((double)live_bytes)},
+    {"collect_count", tya_number((double)tya_gc_collect_count)},
+    {"threshold",     tya_number((double)tya_gc_threshold)},
   };
-  return tya_dict(entries, 6);
+  return tya_dict(entries, 8);
 }

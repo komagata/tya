@@ -159,10 +159,22 @@ TyaValue tya_digest_sha512(TyaValue text);
 TyaValue tya_secure_random_bytes(TyaValue n);
 TyaValue tya_secure_random_int(TyaValue min, TyaValue max);
 
-/* GC introspection (v0.41 STEP 1).
- * Returns a dict with alloc_count, alloc_bytes, live_count, live_bytes,
- * freed_count, freed_bytes. STEP 1 only counts allocations and bytes; no
- * collection has happened yet, so freed_* are zero. */
+/* GC API (v0.41).
+ *
+ * tya_gc_register_root  generated code calls this at startup for every
+ *                       module-level TyaValue global so the collector can
+ *                       reach them as roots.
+ * tya_gc_collect        runs a full mark-and-sweep collection. Safe only
+ *                       at points where every live local TyaValue is also
+ *                       reachable from a registered root (e.g. between
+ *                       top-level statements). See docs/v0.41/SPEC.md.
+ * tya_gc_maybe_collect  threshold-driven trigger emitted by generated
+ *                       code at safe points; calls tya_gc_collect when
+ *                       the live set has grown past the threshold.
+ * tya_gc_stats          returns a dict snapshot of the GC counters. */
+void tya_gc_register_root(TyaValue *p);
+void tya_gc_collect(void);
+void tya_gc_maybe_collect(void);
 TyaValue tya_gc_stats(void);
 
 TyaValue tya_bytes_lit(const char *data, int len);

@@ -52,7 +52,8 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 		g.coverOpt = opt
 	}
 	g.collectClasses(prog.Stmts)
-	for _, name := range assignedNames(prog.Stmts) {
+	globalNames := assignedNames(prog.Stmts)
+	for _, name := range globalNames {
 		g.vars[name] = true
 		g.globalLine(fmt.Sprintf("TyaValue %s;", cName(name)))
 	}
@@ -78,6 +79,9 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 	out.WriteString("  g_tya_argc = argc; g_tya_argv = argv;\n")
 	if g.coverEnabled {
 		out.WriteString("  tya_cov_init(tya_cov_n);\n")
+	}
+	for _, name := range globalNames {
+		fmt.Fprintf(&out, "  tya_gc_register_root(&%s);\n", cName(name))
 	}
 	out.WriteString(g.out.String())
 	out.WriteString("  return 0;\n")
@@ -2519,6 +2523,8 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_secure_random_int(%s, %s)", 2)
 	case "runtime_gc_stats":
 		return emit("tya_gc_stats()", 0)
+	case "runtime_gc_collect":
+		return "(tya_gc_collect(), tya_nil())"
 	case "bytes":
 		return emit("tya_bytes_from_array(%s)", 1)
 	case "bytes_of":

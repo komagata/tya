@@ -133,6 +133,7 @@ var builtinNames = []string{
 	"secure_random_bytes", "secure_random_int",
 	// v0.41 GC
 	"runtime_gc_stats",
+	"runtime_gc_collect",
 }
 
 type scope struct {
