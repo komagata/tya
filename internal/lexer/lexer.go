@@ -51,16 +51,37 @@ func prefixName(c byte) string {
 }
 
 type Lexer struct {
-	src    string
-	tokens []token.Token
-	errs   []error
-	ind    []int
+	src      string
+	tokens   []token.Token
+	errs     []error
+	ind      []int
+	comments []Comment
+}
+
+// Comment carries one captured `# …` comment from the source.
+// IsFullLine is true when the source line contains nothing but the
+// comment (after leading whitespace); otherwise the comment was at
+// end-of-line after a statement.
+type Comment struct {
+	Line       int
+	Col        int
+	Indent     int
+	Text       string
+	IsFullLine bool
 }
 
 func Lex(src string) ([]token.Token, []error) {
 	l := &Lexer{src: strings.ReplaceAll(src, "\r\n", "\n"), ind: []int{0}}
 	l.lex()
 	return l.tokens, l.errs
+}
+
+// LexWithComments runs the lexer and returns the captured comments
+// alongside the token stream.
+func LexWithComments(src string) ([]token.Token, []Comment, []error) {
+	l := &Lexer{src: strings.ReplaceAll(src, "\r\n", "\n"), ind: []int{0}}
+	l.lex()
+	return l.tokens, l.comments, l.errs
 }
 
 func (l *Lexer) add(t token.Type, s string, line, col int) {
@@ -72,7 +93,19 @@ func (l *Lexer) lex() {
 	for i := 0; i < len(lines); i++ {
 		raw := lines[i]
 		lineNo := i + 1
-		line := strings.TrimRight(stripComment(raw), " ")
+		stripped, commentText, commentCol, hasComment := splitComment(raw)
+		if hasComment {
+			indent := len(raw) - len(strings.TrimLeft(raw, " "))
+			fullLine := strings.TrimSpace(stripped) == ""
+			l.comments = append(l.comments, Comment{
+				Line:       lineNo,
+				Col:        commentCol + 1,
+				Indent:     indent,
+				Text:       commentText,
+				IsFullLine: fullLine,
+			})
+		}
+		line := strings.TrimRight(stripped, " ")
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
@@ -598,6 +631,33 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 		}
 		i++
 	}
+}
+
+// splitComment scans s for an unescaped `#` outside strings. When
+// found, it returns the part before `#`, the comment text (without
+// the `#` itself), the byte offset of the `#`, and true. When no
+// comment is found, hasComment is false and stripped == s.
+func splitComment(s string) (stripped, comment string, pos int, hasComment bool) {
+	inString := false
+	escaped := false
+	for i := 0; i < len(s); i++ {
+		ch := s[i]
+		if escaped {
+			escaped = false
+			continue
+		}
+		if inString && ch == '\\' {
+			escaped = true
+			continue
+		}
+		if ch == '"' {
+			inString = !inString
+		}
+		if ch == '#' && !inString {
+			return s[:i], strings.TrimRight(s[i+1:], " \t"), i, true
+		}
+	}
+	return s, "", 0, false
 }
 
 func stripComment(s string) string {

@@ -424,7 +424,7 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
 
 - [-] Adopt Canonical Syntax (multi-version landing per `docs/CANONICAL_SYNTAX.md`)
   - [x] **v0.33** Step 1: parser accepts `(a, b) -> body` parenthesized multi-parameter lambda (additive).
-  - [ ] **v0.34** Step 2: AST gains `leading_comments` / `line_end_comment` / `file_header_comments`. Parser attaches comments per §3 and rejects `else if`, single-line trailing commas, and forbidden comment positions.
+  - [x] **v0.34** Step 2: lexer captures comments via `LexWithComments`; `ast.Program` gains `HeaderComments`; `parser.ParseWithComments` populates it per §3.3. Existing `Lex` / `Parse` APIs unchanged. (`else if` and single-line trailing commas are already rejected by the existing grammar.)
   - [ ] **v0.35** Step 3: formatter v1 — operator spacing, blank-line rules, single-line forms, empty `else` removal, import sort/grouping, empty-collection normalization. No wrapping yet.
   - [ ] **v0.36** Step 4: formatter v2 — per-construct multi-line wrap (§5), 80-column limit, atomic-token exception, `"""..."""` rewrite (§6.3), idempotency.
   - [ ] **v0.37** Step 5: normalize `stdlib/`, `examples/`, `selfhost/`, `tests/testdata/` with the formatter; reject non-canonical forms at parse time once the codebase is fully normalized.

@@ -8,6 +8,13 @@ import (
 
 type Program struct {
 	Stmts []Stmt
+
+	// HeaderComments holds the file-header comment block introduced
+	// in v0.34. Per docs/CANONICAL_SYNTAX.md §3.3, these are `#` lines
+	// at the top of the file separated from the body by exactly one
+	// blank line. The slice contains the comment texts in source
+	// order, without the leading `#`.
+	HeaderComments []string
 }
 
 type Stmt interface{ stmt() }

@@ -23,6 +23,72 @@ func Parse(toks []token.Token) (*ast.Program, error) {
 	return p.program()
 }
 
+// ParseWithComments runs Parse and additionally fills
+// Program.HeaderComments from the supplied comments slice. Per
+// docs/CANONICAL_SYNTAX.md §3.3, header comments are leading `#`
+// lines at the top of the file followed by exactly one blank line
+// before the first statement. The blank-line check uses the line of
+// the first non-comment token.
+func ParseWithComments(toks []token.Token, comments []CommentInfo) (*ast.Program, error) {
+	prog, err := Parse(toks)
+	if err != nil {
+		return nil, err
+	}
+	if len(comments) == 0 {
+		return prog, nil
+	}
+	firstStmtLine := 0
+	for _, t := range toks {
+		if t.Type == token.NEWLINE || t.Type == token.INDENT || t.Type == token.DEDENT || t.Type == token.EOF {
+			continue
+		}
+		firstStmtLine = t.Line
+		break
+	}
+	header := []string{}
+	lastHeaderLine := 0
+	for _, c := range comments {
+		if !c.IsFullLine {
+			continue
+		}
+		if c.Indent != 0 {
+			continue
+		}
+		if firstStmtLine > 0 && c.Line >= firstStmtLine {
+			break
+		}
+		// Contiguous block from line 1: each comment's line must
+		// follow the previous one with no gap, or start at line 1.
+		if len(header) == 0 {
+			if c.Line != 1 {
+				continue
+			}
+		} else if c.Line != lastHeaderLine+1 {
+			break
+		}
+		header = append(header, c.Text)
+		lastHeaderLine = c.Line
+	}
+	if len(header) > 0 && firstStmtLine > 0 {
+		// Require a blank line between the header block and the body.
+		if firstStmtLine == lastHeaderLine+1 {
+			return prog, nil
+		}
+	}
+	prog.HeaderComments = header
+	return prog, nil
+}
+
+// CommentInfo mirrors lexer.Comment to avoid an import cycle. The
+// CLI converts before calling.
+type CommentInfo struct {
+	Line       int
+	Col        int
+	Indent     int
+	Text       string
+	IsFullLine bool
+}
+
 func (p *Parser) program() (*ast.Program, error) {
 	var stmts []ast.Stmt
 	p.skipNewlines()
