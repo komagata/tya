@@ -1,0 +1,15 @@
+module runtime
+  # Returns a snapshot of the current GC counters as a dict with the
+  # following keys:
+  #
+  #   alloc_count  total tracked allocations made since program start
+  #   alloc_bytes  total tracked allocation bytes since program start
+  #   freed_count  total tracked allocations reclaimed by collections
+  #   freed_bytes  total tracked allocation bytes reclaimed
+  #   live_count   alloc_count - freed_count
+  #   live_bytes   alloc_bytes - freed_bytes
+  #
+  # In v0.41 STEP 1 the collector only tracks allocations; no
+  # collection has happened yet, so freed_count and freed_bytes are
+  # always 0 and live_* equals alloc_*.
+  gc_stats = () -> runtime_gc_stats()

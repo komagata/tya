@@ -2517,6 +2517,8 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_secure_random_bytes(%s)", 1)
 	case "secure_random_int":
 		return emit("tya_secure_random_int(%s, %s)", 2)
+	case "runtime_gc_stats":
+		return emit("tya_gc_stats()", 0)
 	case "bytes":
 		return emit("tya_bytes_from_array(%s)", 1)
 	case "bytes_of":

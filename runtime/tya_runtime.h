@@ -159,6 +159,12 @@ TyaValue tya_digest_sha512(TyaValue text);
 TyaValue tya_secure_random_bytes(TyaValue n);
 TyaValue tya_secure_random_int(TyaValue min, TyaValue max);
 
+/* GC introspection (v0.41 STEP 1).
+ * Returns a dict with alloc_count, alloc_bytes, live_count, live_bytes,
+ * freed_count, freed_bytes. STEP 1 only counts allocations and bytes; no
+ * collection has happened yet, so freed_* are zero. */
+TyaValue tya_gc_stats(void);
+
 TyaValue tya_bytes_lit(const char *data, int len);
 TyaValue tya_bytes_from_array(TyaValue arr);
 TyaValue tya_bytes_of(TyaValue text);

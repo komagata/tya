@@ -131,6 +131,8 @@ var builtinNames = []string{
 	"process_run",
 	"digest_md5", "digest_sha1", "digest_sha256", "digest_sha384", "digest_sha512",
 	"secure_random_bytes", "secure_random_int",
+	// v0.41 GC
+	"runtime_gc_stats",
 }
 
 type scope struct {

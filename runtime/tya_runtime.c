@@ -21,23 +21,72 @@
 #include <sys/random.h>
 #endif
 
+/* GC infrastructure (v0.41 STEP 1).
+ *
+ * Every heap allocation that holds Tya runtime values (arrays, dicts,
+ * functions, bytes) carries a TyaGcHeader as its first field. The
+ * collector links headers into a single linked list rooted at
+ * tya_gc_head, so it can iterate all live allocations.
+ *
+ * STEP 1 only adds the header, the central allocator, and tracking
+ * counters. No mark or sweep happens yet. STEP 2 adds the mark phase,
+ * STEP 3 adds sweep, STEP 4 adds the trigger policy and runtime.gc()
+ * API. */
+typedef enum {
+  TYA_GC_ARRAY = 1,
+  TYA_GC_DICT = 2,
+  TYA_GC_FUNCTION = 3,
+  TYA_GC_BYTES = 4,
+} TyaGcKind;
+
+typedef struct TyaGcHeader {
+  unsigned char mark;
+  unsigned char kind;
+  struct TyaGcHeader *next;
+} TyaGcHeader;
+
+static TyaGcHeader *tya_gc_head = NULL;
+static size_t tya_gc_alloc_count = 0;
+static size_t tya_gc_alloc_bytes = 0;
+static size_t tya_gc_freed_count = 0;
+static size_t tya_gc_freed_bytes = 0;
+
+static void *tya_gc_alloc(size_t size, TyaGcKind kind) {
+  TyaGcHeader *header = (TyaGcHeader *)malloc(size);
+  if (header == NULL) {
+    fprintf(stderr, "tya: out of memory\n");
+    exit(1);
+  }
+  header->mark = 0;
+  header->kind = (unsigned char)kind;
+  header->next = tya_gc_head;
+  tya_gc_head = header;
+  tya_gc_alloc_count++;
+  tya_gc_alloc_bytes += size;
+  return header;
+}
+
 struct TyaArray {
+  TyaGcHeader gc;
   int len;
   int cap;
   TyaValue *items;
 };
 
 struct TyaBytes {
+  TyaGcHeader gc;
   int len;
   uint8_t *data;
 };
 
 struct TyaDict {
+  TyaGcHeader gc;
   int len;
   TyaDictEntry *entries;
 };
 
 struct TyaFunction {
+  TyaGcHeader gc;
   TyaFunctionPtr fn;
   TyaValue receiver;
   TyaDict *members;
@@ -78,7 +127,7 @@ TyaValue tya_string(const char *value) {
 }
 
 TyaValue tya_array(const TyaValue *items, int count) {
-  TyaArray *array = malloc(sizeof(TyaArray));
+  TyaArray *array = tya_gc_alloc(sizeof(TyaArray), TYA_GC_ARRAY);
   int cap = count > 0 ? count : 4;
   array->len = count;
   array->cap = cap;
@@ -90,7 +139,7 @@ TyaValue tya_array(const TyaValue *items, int count) {
 }
 
 TyaValue tya_dict(const TyaDictEntry *entries, int count) {
-  TyaDict *dict = malloc(sizeof(TyaDict));
+  TyaDict *dict = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
   dict->len = count;
   dict->entries = malloc(sizeof(TyaDictEntry) * count);
   for (int i = 0; i < count; i++) {
@@ -100,17 +149,17 @@ TyaValue tya_dict(const TyaDictEntry *entries, int count) {
 }
 
 TyaValue tya_object(void) {
-  TyaDict *dict = malloc(sizeof(TyaDict));
+  TyaDict *dict = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
   dict->len = 0;
   dict->entries = NULL;
   return (TyaValue){.kind = TYA_OBJECT, .dict = dict};
 }
 
 TyaValue tya_function(TyaFunctionPtr fn) {
-  TyaFunction *function = malloc(sizeof(TyaFunction));
+  TyaFunction *function = tya_gc_alloc(sizeof(TyaFunction), TYA_GC_FUNCTION);
   function->fn = fn;
   function->receiver = tya_nil();
-  function->members = malloc(sizeof(TyaDict));
+  function->members = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
   function->members->len = 0;
   function->members->entries = NULL;
   function->class_name = NULL;
@@ -128,10 +177,10 @@ TyaValue tya_class(TyaFunctionPtr fn, const char *name, TyaValue parent) {
 }
 
 TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn) {
-  TyaFunction *function = malloc(sizeof(TyaFunction));
+  TyaFunction *function = tya_gc_alloc(sizeof(TyaFunction), TYA_GC_FUNCTION);
   function->fn = fn;
   function->receiver = receiver;
-  function->members = malloc(sizeof(TyaDict));
+  function->members = tya_gc_alloc(sizeof(TyaDict), TYA_GC_DICT);
   function->members->len = 0;
   function->members->entries = NULL;
   function->class_name = NULL;
@@ -2572,11 +2621,12 @@ TyaValue tya_secure_random_bytes(TyaValue n) {
     tya_raise(tya_string("secure_random: count out of range"));
     return tya_nil();
   }
-  TyaBytes *bb = malloc(sizeof(TyaBytes));
+  TyaBytes *bb = tya_gc_alloc(sizeof(TyaBytes), TYA_GC_BYTES);
   bb->len = (int)count;
   bb->data = malloc((size_t)(count > 0 ? count : 1));
   if (tya_secure_random_fill(bb->data, (size_t)count) < 0) {
-    free(bb->data); free(bb);
+    free(bb->data);
+    /* bb is GC-tracked; leak now, the next collection will reclaim it. */
     tya_raise(tya_string("secure_random: entropy source unavailable"));
     return tya_nil();
   }
@@ -2613,7 +2663,7 @@ TyaValue tya_secure_random_int(TyaValue min, TyaValue max) {
  * ========================================================================= */
 
 TyaValue tya_bytes_lit(const char *data, int len) {
-  TyaBytes *b = malloc(sizeof(TyaBytes));
+  TyaBytes *b = tya_gc_alloc(sizeof(TyaBytes), TYA_GC_BYTES);
   b->len = len;
   b->data = malloc((size_t)(len > 0 ? len : 1));
   if (len > 0) memcpy(b->data, data, (size_t)len);
@@ -2626,19 +2676,21 @@ TyaValue tya_bytes_from_array(TyaValue arr) {
     return tya_nil();
   }
   int n = arr.array->len;
-  TyaBytes *b = malloc(sizeof(TyaBytes));
+  TyaBytes *b = tya_gc_alloc(sizeof(TyaBytes), TYA_GC_BYTES);
   b->len = n;
   b->data = malloc((size_t)(n > 0 ? n : 1));
   for (int i = 0; i < n; i++) {
     TyaValue item = arr.array->items[i];
     if (item.kind != TYA_NUMBER) {
-      free(b->data); free(b);
+      free(b->data);
+      /* b is GC-tracked; leak now, the next collection will reclaim it. */
       tya_raise(tya_string("bytes: items must be ints"));
       return tya_nil();
     }
     int v = (int)item.number;
     if (v < 0 || v > 255) {
-      free(b->data); free(b);
+      free(b->data);
+      /* b is GC-tracked; leak now, the next collection will reclaim it. */
       tya_raise(tya_string("bytes: item out of 0..255"));
       return tya_nil();
     }
@@ -2691,7 +2743,7 @@ TyaValue tya_bytes_concat(TyaValue a, TyaValue b) {
     return tya_nil();
   }
   int total = a.bytes->len + b.bytes->len;
-  TyaBytes *out = malloc(sizeof(TyaBytes));
+  TyaBytes *out = tya_gc_alloc(sizeof(TyaBytes), TYA_GC_BYTES);
   out->len = total;
   out->data = malloc((size_t)(total > 0 ? total : 1));
   if (a.bytes->len > 0) memcpy(out->data, a.bytes->data, (size_t)a.bytes->len);
@@ -2731,7 +2783,7 @@ TyaValue tya_file_read_bytes(TyaValue path) {
   long size = ftell(fp);
   fseek(fp, 0, SEEK_SET);
   if (size < 0) size = 0;
-  TyaBytes *bb = malloc(sizeof(TyaBytes));
+  TyaBytes *bb = tya_gc_alloc(sizeof(TyaBytes), TYA_GC_BYTES);
   bb->len = (int)size;
   bb->data = malloc((size_t)(size > 0 ? size : 1));
   size_t got = fread(bb->data, 1, (size_t)size, fp);
@@ -2759,4 +2811,22 @@ TyaValue tya_file_write_bytes(TyaValue path, TyaValue b) {
   }
   fclose(fp);
   return tya_nil();
+}
+
+/* =========================================================================
+ * v0.41 GC introspection
+ * ========================================================================= */
+
+TyaValue tya_gc_stats(void) {
+  size_t live_count = tya_gc_alloc_count - tya_gc_freed_count;
+  size_t live_bytes = tya_gc_alloc_bytes - tya_gc_freed_bytes;
+  TyaDictEntry entries[6] = {
+    {"alloc_count", tya_number((double)tya_gc_alloc_count)},
+    {"alloc_bytes", tya_number((double)tya_gc_alloc_bytes)},
+    {"freed_count", tya_number((double)tya_gc_freed_count)},
+    {"freed_bytes", tya_number((double)tya_gc_freed_bytes)},
+    {"live_count",  tya_number((double)live_count)},
+    {"live_bytes",  tya_number((double)live_bytes)},
+  };
+  return tya_dict(entries, 6);
 }

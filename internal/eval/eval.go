@@ -2738,6 +2738,25 @@ func registerV24Builtins(env *Env) {
 		}
 	}))
 	registerV25Builtins(env)
+	registerV41Builtins(env)
+}
+
+func registerV41Builtins(env *Env) {
+	// runtime_gc_stats() — eval has no real GC; return zeros for parity with C runtime.
+	env.set("runtime_gc_stats", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("runtime_gc_stats expects 0 arguments")
+		}
+		out := Dict{
+			"alloc_count": float64(0),
+			"alloc_bytes": float64(0),
+			"freed_count": float64(0),
+			"freed_bytes": float64(0),
+			"live_count":  float64(0),
+			"live_bytes":  float64(0),
+		}
+		return out, nil
+	}))
 }
 
 func registerV25Builtins(env *Env) {
