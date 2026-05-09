@@ -245,6 +245,33 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
+<li>[ ] Ship v0.27 hexadecimal and binary integer literals</li>
+<ul>
+<li>[x] Define v0.27 scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.27/SPEC.md</code>.</li>
+<li>[x] Specify <code>0xFF</code> / <code>0xff</code> hexadecimal integer literals.</li>
+<li>[x] Specify <code>0b1010</code> binary integer literals.</li>
+<li>[x] Specify underscore digit-group separators in decimal, hex, and binary literals.</li>
+<li>[x] Keep octal literals, hex floats, numeric type suffixes, and big-int out of v0.27.</li>
+</ul>
+<li>[ ] Implement hex and binary literals</li>
+<ul>
+<li>[ ] Lex <code>0x</code>/<code>0X</code> followed by hex digits (and underscores) into an <code>INT</code> token.</li>
+<li>[ ] Lex <code>0b</code>/<code>0B</code> followed by binary digits (and underscores) into an <code>INT</code> token.</li>
+<li>[ ] Reject <code>0x</code> / <code>0b</code> with no digits, and digits outside the base.</li>
+<li>[ ] Allow underscore separators in plain decimal integer and float literals.</li>
+<li>[ ] Make value handling identical to existing decimal integer literals (no AST change required).</li>
+</ul>
+<li>[ ] Keep v0.27 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.27 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.27/</code> aligned with the v0.27 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add lexer and end-to-end tests for hex, binary, and underscore literals.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+</ul>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>

@@ -130,6 +130,7 @@ print array.first(["tya"])
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
+- [v0.27 Spec](https://tya-lang.org/v0.27/spec.html): hexadecimal and binary integer literals.
 - [v0.26 Spec](https://tya-lang.org/v0.26/spec.html): external packages, `tya.toml`, and version resolution.
 - [v0.25 Spec](https://tya-lang.org/v0.25/spec.html): bitwise operators, byte sequences, and binary file I/O.
 - [v0.24 Spec](https://tya-lang.org/v0.24/spec.html): time, random, math expansion, process, hex, digest, secure_random, and matrix standard modules.
