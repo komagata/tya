@@ -389,9 +389,9 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - [ ] Forbid introducing options like line width, quote style, or indent size; the canonical choice is baked into the formatter itself.
     - [ ] Define the only public CLI surface: `tya format [paths...]` (write in place by default), `tya format --check` (exit non-zero on diff), `tya format --stdin` (read from stdin, write to stdout). No other flags.
     - [ ] Specify the canonical rules (indentation, spacing, trailing commas, string quote normalization, import grouping, blank-line rules) as the source of truth in `docs/FORMAT.md`.
-  - [ ] Adopt the **zero-freedom syntax** principle in `docs/FORMAT.md`
-    - [ ] State the philosophy: every Tya program has exactly **one** canonical byte sequence per AST. `unparse(parse(source)) == source` byte-for-byte. The formatter is a canonical serializer, not a beautifier. The language spec eliminates layout freedom; it is not a separate optional tool.
-    - [ ] Document the language-level invariant: `source ↔ AST` is a bijection (subject to atomic-token exception below). This is a maintained property, second only to the self-host fixed point.
+  - [ ] Adopt the **Canonical Syntax** principle in `docs/FORMAT.md`
+    - [ ] State the principle: Tya has a Canonical Syntax. Every Tya program has exactly **one** source representation. `unparse(parse(source)) == source` byte-for-byte. The formatter is the canonical serializer, not a beautifier. The single representation is a property of the language specification, not of an optional tool.
+    - [ ] Document the language-level invariant: `source ↔ AST` is a bijection (subject to the atomic-token exception below). This is a maintained property, second only to the self-host fixed point.
     - [ ] Document the atomic-token exception: a single atomic token (identifier, numeric literal, string literal after multi-line normalization, import path) that exceeds the column limit is emitted as-is. The formatter never chooses to exceed; the exception only reflects an unbreakable token in user code.
   - [ ] Lock in the canonical comment rules
     - [ ] Allow exactly three comment kinds: **leading comment** (`#` lines immediately before a node, same indent, attached to that node), **line-end comment** (single `#` on the same line as a statement), **file header comment** (`#` lines at file start, separated from the body by exactly one blank line, attached to the file AST node).
@@ -622,28 +622,28 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - [ ] Add CLI tests for plain output, `--format=json`, and exit-code behavior.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
-- [ ] Ship multi-line string literal syntax
-  - [ ] Define multi-line string scope
-    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for multi-line strings.
-    - [ ] Specify triple-quote `"""..."""` as the multi-line literal form, opened and closed by `"""` on their own boundaries.
-    - [ ] Specify that newlines inside `"""..."""` are part of the string value.
-    - [ ] Specify that `{expr}` interpolation works the same as in regular `"..."` strings.
-    - [ ] Specify **indentation normalization**: the indentation of the closing `"""` defines a baseline; that baseline is stripped from every line of the literal. This makes nested multi-line strings readable without leaking enclosing indent into the value.
-    - [ ] Specify escape rules: `\n`, `\t`, `\\`, `\"`, `\{`, `{{`, `}}` work as in regular strings; literal `"""` inside the body is not allowed.
-    - [ ] Keep heredoc-style markers, raw-string prefixes, and language-tagged interpolation specifiers out of the initial scope.
-  - [ ] Implement multi-line strings
-    - [ ] Lex `"""` as a distinct token boundary; collect lines until the matching `"""`.
-    - [ ] Apply indentation normalization in the lexer or parser, deterministically.
-    - [ ] Reuse the existing interpolation pipeline for `{expr}`.
-    - [ ] Wire codegen and eval to produce the same string value as a regular `"..."` literal would.
-  - [ ] Integrate with the formatter
-    - [ ] When `tya format` sees a single-line `"..."` literal that exceeds 80 columns and contains content where a multi-line form would be readable (e.g. embedded newlines in `\n` form), rewrite it to `"""..."""`. Define this rewrite rule precisely in `docs/FORMAT.md` so that AST → source remains a bijection.
-    - [ ] When the literal cannot be naturally split (e.g. a long URL with no whitespace), leave it as-is under the atomic-token exception.
-  - [ ] Keep multi-line string documentation and tests aligned
-    - [ ] Document the syntax, indentation normalization, escape behavior, and formatter rewrite rule in `docs/`.
-    - [ ] Add lexer / parser / codegen / eval tests for multi-line literals with and without interpolation, including indentation normalization edge cases.
-    - [ ] Add formatter golden tests for the long-string-rewrite rule.
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [x] Ship v0.31 multi-line string literals
+  - [x] Define v0.31 scope
+    - [x] Add `docs/v0.31/SPEC.md`.
+    - [x] Specify triple-quote `"""..."""` (single-line and multi-line forms).
+    - [x] Specify newlines inside the body are part of the value.
+    - [x] Specify `{expr}` interpolation reuses the existing pipeline.
+    - [x] Specify indentation normalization keyed on the closing-`"""` indent.
+    - [x] Specify escape rules (`\n`, `\t`, `\\`, `\"`, `\{`, `{{`, `}}`).
+    - [x] Defer raw-string prefix, heredoc markers, language-tagged interpolation, bytes form, and the formatter rewrite rule.
+  - [x] Implement multi-line strings
+    - [x] Detect `"""` in `lexLine` and consume across line boundaries when no closing `"""` is on the opening line.
+    - [x] Apply indentation normalization based on the closing `"""` indent.
+    - [x] Reuse the existing interpolation pipeline (`{expr}`, `{{`, `}}`) without parser/codegen changes.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [x] Verification
+    - [x] Add lexer unit tests (single-line, multi-line normalized, interpolation, unterminated, mixed-indent).
+    - [x] Add `tests/testdata/v31/multiline.txtar` end-to-end golden test.
+    - [x] `go test ./...` remains green.
+- [ ] Extend multi-line strings (post-v0.31.0)
+  - [ ] Implement the formatter rewrite rule for long single-line `"..."` literals.
+  - [ ] Add a raw-string prefix `r"""..."""` if needed.
+  - [ ] Add a bytes equivalent `b"""..."""`.
 
 ## Verification Reference
 

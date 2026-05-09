@@ -1,0 +1,31 @@
+# v0.31 multi-line string literals: """...""" preserves newlines,
+# supports interpolation, and applies closing-""" indentation
+# normalization.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/m.tya
+stdout 'Hello, Tya'
+stdout 'Multi'
+stdout 'line'
+stdout 'one shot'
+stdout '"x": 1'
+
+exec go run ./cmd/tya version
+stdout '0.31.0\n'
+
+-- m.tya --
+name = "Tya"
+poem = """
+Hello, {name}
+Multi
+line
+"""
+print poem
+single = """one shot"""
+print single
+nested = """
+  {{
+    "x": 1
+  }}
+  """
+print nested

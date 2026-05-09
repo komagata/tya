@@ -35,7 +35,8 @@ func (l *Lexer) add(t token.Type, s string, line, col int) {
 
 func (l *Lexer) lex() {
 	lines := strings.Split(l.src, "\n")
-	for i, raw := range lines {
+	for i := 0; i < len(lines); i++ {
+		raw := lines[i]
 		lineNo := i + 1
 		line := strings.TrimRight(stripComment(raw), " ")
 		if strings.TrimSpace(line) == "" {
@@ -55,7 +56,12 @@ func (l *Lexer) lex() {
 			continue
 		}
 		l.handleIndent(spaces, lineNo)
-		l.lexLine(strings.TrimLeft(line, " "), lineNo, spaces+1)
+		consumed := l.lexLineWithLines(strings.TrimLeft(line, " "), lineNo, spaces+1, lines, i)
+		if consumed > 0 {
+			i += consumed
+			l.add(token.NEWLINE, "", i+1, 1)
+			continue
+		}
 		l.add(token.NEWLINE, "", lineNo, len(raw)+1)
 	}
 	for len(l.ind) > 1 {
@@ -63,6 +69,138 @@ func (l *Lexer) lex() {
 		l.add(token.DEDENT, "", len(lines), 1)
 	}
 	l.add(token.EOF, "", len(lines), 1)
+}
+
+// lexLineWithLines lexes a single logical line, but if a multi-line
+// triple-quoted string is encountered, it consumes additional lines
+// from `lines` starting after `lineIdx`. Returns the number of extra
+// lines consumed (0 if none).
+func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, lineIdx int) int {
+	tq := strings.Index(s, `"""`)
+	if tq < 0 {
+		l.lexLine(s, line, baseCol)
+		return 0
+	}
+	// Lex everything before the triple-quote normally.
+	if tq > 0 {
+		l.lexLine(s[:tq], line, baseCol)
+	}
+	// Single-line triple quote? Look for a closing """ on the same line.
+	body := s[tq+3:]
+	if close := strings.Index(body, `"""`); close >= 0 {
+		value, err := interpretEscapes(body[:close], line, baseCol+tq)
+		if err != nil {
+			l.errs = append(l.errs, err)
+			return 0
+		}
+		l.add(token.STRING, value, line, baseCol+tq)
+		// Lex the remainder after the closing """.
+		rest := body[close+3:]
+		if rest != "" {
+			l.lexLine(rest, line, baseCol+tq+3+close+3)
+		}
+		return 0
+	}
+	// Multi-line triple-quoted string. Collect raw body across lines,
+	// strip the closing line's indent baseline, interpret escapes,
+	// emit STRING.
+	openingLineRest := body
+	closingFound := false
+	closingIdx := -1
+	closingIndent := 0
+	for j := lineIdx + 1; j < len(lines); j++ {
+		ln := lines[j]
+		trimmed := strings.TrimLeft(ln, " ")
+		if strings.HasPrefix(trimmed, `"""`) {
+			closingFound = true
+			closingIdx = j
+			closingIndent = len(ln) - len(trimmed)
+			break
+		}
+	}
+	if !closingFound {
+		l.errs = append(l.errs, fmt.Errorf("%d:%d: unterminated triple-quoted string", line, baseCol+tq))
+		return 0
+	}
+	var b strings.Builder
+	openingHasContent := openingLineRest != ""
+	if openingHasContent {
+		b.WriteString(openingLineRest)
+		b.WriteByte('\n')
+	} else {
+		// Skip the immediate newline after `"""` only when nothing
+		// followed on the opening line.
+	}
+	for j := lineIdx + 1; j < closingIdx; j++ {
+		bodyLine := lines[j]
+		if strings.Contains(bodyLine, "\t") {
+			l.errs = append(l.errs, fmt.Errorf("%d: tabs are forbidden", j+1))
+			return closingIdx - lineIdx
+		}
+		if bodyLine == "" {
+			b.WriteByte('\n')
+			continue
+		}
+		if len(bodyLine) < closingIndent || bodyLine[:closingIndent] != strings.Repeat(" ", closingIndent) {
+			leading := len(bodyLine) - len(strings.TrimLeft(bodyLine, " "))
+			if leading == len(bodyLine) {
+				// Whitespace-only line: treat as empty.
+				b.WriteByte('\n')
+				continue
+			}
+			l.errs = append(l.errs, fmt.Errorf("%d:1: mixed indentation in triple-quoted string", j+1))
+			return closingIdx - lineIdx
+		}
+		b.WriteString(bodyLine[closingIndent:])
+		b.WriteByte('\n')
+	}
+	value, err := interpretEscapes(b.String(), line, baseCol+tq)
+	if err != nil {
+		l.errs = append(l.errs, err)
+		return closingIdx - lineIdx
+	}
+	l.add(token.STRING, value, line, baseCol+tq)
+	// Lex any content after the closing """ on its line.
+	closingLine := lines[closingIdx]
+	closingTrimmed := strings.TrimLeft(closingLine, " ")
+	tail := closingTrimmed[3:]
+	if tail != "" {
+		l.lexLine(tail, closingIdx+1, closingIndent+4)
+	}
+	return closingIdx - lineIdx
+}
+
+// interpretEscapes processes \n, \t, \", \\, \{ inside a string body
+// the same way the single-line "..." path does. {{ and }} pass
+// through unchanged for the interpolation pipeline.
+func interpretEscapes(s string, line, col int) (string, error) {
+	var b strings.Builder
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c == '\\' {
+			if i+1 >= len(s) {
+				return "", fmt.Errorf("%d:%d: unterminated escape", line, col+i)
+			}
+			switch s[i+1] {
+			case 'n':
+				b.WriteByte('\n')
+			case 't':
+				b.WriteByte('\t')
+			case '"':
+				b.WriteByte('"')
+			case '\\':
+				b.WriteByte('\\')
+			case '{':
+				b.WriteString(`\{`)
+			default:
+				return "", fmt.Errorf("%d:%d: unknown escape \\%c", line, col+i, s[i+1])
+			}
+			i++
+			continue
+		}
+		b.WriteByte(c)
+	}
+	return b.String(), nil
 }
 
 func (l *Lexer) handleIndent(n, line int) {

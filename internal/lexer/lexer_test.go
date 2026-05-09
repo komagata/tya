@@ -210,6 +210,52 @@ func TestLexStringHashAfterEscapedQuote(t *testing.T) {
 	}
 }
 
+func TestLexTripleQuoteSingleLine(t *testing.T) {
+	toks, errs := Lex("x = \"\"\"hello\"\"\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	if toks[2].Type != "STRING" || toks[2].Lexeme != "hello" {
+		t.Fatalf("got %v %q", toks[2].Type, toks[2].Lexeme)
+	}
+}
+
+func TestLexTripleQuoteMultiLineNormalized(t *testing.T) {
+	src := "x = \"\"\"\n  hello\n  Tya\n  \"\"\"\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	if toks[2].Type != "STRING" || toks[2].Lexeme != "hello\nTya\n" {
+		t.Fatalf("got %v %q", toks[2].Type, toks[2].Lexeme)
+	}
+}
+
+func TestLexTripleQuoteInterpolationPreserved(t *testing.T) {
+	src := "x = \"\"\"\n  hi {name}\n  \"\"\"\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	if toks[2].Lexeme != "hi {name}\n" {
+		t.Fatalf("got %q", toks[2].Lexeme)
+	}
+}
+
+func TestLexTripleQuoteUnterminated(t *testing.T) {
+	_, errs := Lex("x = \"\"\"\n  hello\n")
+	if len(errs) == 0 {
+		t.Fatal("expected unterminated error")
+	}
+}
+
+func TestLexTripleQuoteMixedIndent(t *testing.T) {
+	_, errs := Lex("x = \"\"\"\n  hello\n there\n  \"\"\"\n")
+	if len(errs) == 0 {
+		t.Fatal("expected mixed-indent error")
+	}
+}
+
 func TestLexPredicateQuestionToken(t *testing.T) {
 	toks, errs := Lex("empty? = -> true\n")
 	if len(errs) != 0 {
