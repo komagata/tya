@@ -426,10 +426,11 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [x] **v0.33** Step 1: parser accepts `(a, b) -> body` parenthesized multi-parameter lambda (additive).
   - [x] **v0.34** Step 2: lexer captures comments via `LexWithComments`; `ast.Program` gains `HeaderComments`; `parser.ParseWithComments` populates it per §3.3. Existing `Lex` / `Parse` APIs unchanged. (`else if` and single-line trailing commas are already rejected by the existing grammar.)
   - [x] **v0.35** Step 3: per-stmt `Comments map[Stmt]StmtComments` populated by `ParseWithComments` for top-level statements (leading + line-end). Inner-stmt attachment deferred.
-  - [x] **v0.36** Step 4: comment attachment recurses into if/while/for/match/try bodies and `FuncLit.Body`. Module/class member attachment and the AST-driven formatter deferred.
-  - [ ] **v0.37** Step 5: module / class member comment attachment + AST-driven formatter v1 (operator spacing, blank-line rules, single-line forms, empty `else` removal, import sort/grouping, empty-collection normalization, comment emission).
-  - [ ] **v0.38** Step 6: formatter v2 — per-construct multi-line wrap (§5), 80-column limit, atomic-token exception, `"""..."""` rewrite (§6.3), idempotency.
-  - [ ] **v0.39** Step 7: normalize `stdlib/`, `examples/`, `selfhost/`, `tests/testdata/` with the formatter; reject non-canonical forms at parse time once the codebase is fully normalized.
+  - [x] **v0.36** Step 4: comment attachment recurses into if/while/for/match/try bodies and `FuncLit.Body`.
+  - [x] **v0.37** Step 5: `formatter.Unparse(prog)` foundation covering imports, simple assignments, expression statements, returns/raises/break/continue, `if`/`elseif`/`else`, `while`, `for`, single-line + block-bodied lambdas, and the common literal/operator/call/member/index/array/dict expressions. Returns an error for module/class/match/try (deferred).
+  - [ ] **v0.38** Step 6: extend `Unparse` to modules / classes / match / try; emit comments; add empty-`else` removal, import sort, blank-line rules.
+  - [ ] **v0.39** Step 7: multi-line wrap (§5), 80-column limit, atomic-token exception, `"""..."""` rewrite (§6.3), idempotency.
+  - [ ] **v0.40** Step 8: replace text formatter with the AST-driven serializer; normalize `stdlib/`, `examples/`, `selfhost/`, `tests/testdata/`; reject non-canonical forms at parse time.
 
 - [ ] Rename `tya fmt` to `tya format` and lock it in as the one canonical formatter
   - [ ] Define the formatter policy
