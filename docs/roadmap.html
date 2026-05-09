@@ -32,15 +32,37 @@
 <p>Required evidence:</p>
 <pre><code class="language-sh">go test ./tests -run TestSelfhostV01Scripts -count=1</code></pre>
 <p>This gate proves that the Tya-written compiler can compile itself to stable stage-2/stage-3 C output, and that the self-hosted stage-2 compiler can compile and run representative programs through the maintained surface.</p>
+<h2 id="v1-0-0-goal">v1.0.0 Goal</h2>
+<p>Tya v1.0.0 is the version at which all five language commitments hold and are publicly defensible. These commitments are also Tya's external &quot;at a glance&quot; feature list:</p>
+<ol>
+<li>**Canonical Syntax** — every program has exactly one source representation.</li>
+</ol>
+<p>   The formatter is part of the language, not a separate opinion.    *(Shipped in v0.38 / v0.39.)* 2. **Dynamically typed**, indentation-based, with strict semantics    (no implicit conversions, no <code>nil</code> arithmetic). 3. **Compiles to C** for a small, portable runtime. 4. **All-in-one toolchain** (Gleam-style) — the <code>tya</code> binary holds the    compiler, formatter, language server, test runner, doc generator, and    package manager. 5. **Kind diagnostics** (Elm-grade) — every error has a stable code, an    expected/found block, an actionable hint, and a linked explanation.</p>
+<p>Each commitment maps to one or more Epics below:</p>
+<ul>
+<li>Commitment 1 → *(landed)*.</li>
+<li>Commitment 2 → strict-semantics audit (currently implicit; to be made</li>
+</ul>
+<p>  an explicit Epic).</p>
+<ul>
+<li>Commitment 3 → already shipped; maintained.</li>
+<li>Commitment 4 → *Ship <code>tya lsp</code> Language Server*, *Ship <code>tya doc</code> source</li>
+</ul>
+<p>  documentation generator*, *Ship <code>tya new</code> project scaffolder*, *Ship   <code>tya task</code> project task runner*, plus existing <code>tya check</code> /   <code>tya test</code> / <code>tya format</code> / package manager.</p>
+<ul>
+<li>Commitment 5 → *Migrate remaining stages to the diagnostics pipeline*.</li>
+</ul>
+<p>Other Epics (GC, WASM target, syntax coloring, embedding, self-introspection library, coverage extensions, markdown extensions, lint, multi-line string extensions) are valuable but not strictly required for v1.0.0. They may ship before or after v1.0.0.</p>
 <h2 id="current-direction">Current Direction</h2>
-<p>Tya is implemented as a small compile-to-C language. The latest released specification is v0.23. Frozen release documents live under <code>docs/vX.Y.Z/</code> and <code>docs/vX.Y/</code>; the latest editable specification, API, stdlib, and naming documents live directly under <code>docs/</code>.</p>
-<p>Tya uses semantic versioning. Specification changes happen at the minor version level, such as <code>v0.23</code> and <code>v0.24</code>. Patch releases such as <code>v0.23.1</code> must not change language or standard-library semantics.</p>
+<p>Tya is implemented as a small compile-to-C language. The latest released specification is **v0.39**. Frozen release documents live under <code>docs/vX.Y.Z/</code> and <code>docs/vX.Y/</code>; the latest editable specification, API, stdlib, and naming documents live directly under <code>docs/</code>.</p>
+<p>Tya uses semantic versioning. Specification changes happen at the minor version level. Patch releases must not change language or standard-library semantics.</p>
 <p>Latest editable documentation:</p>
 <ol>
 <li><a href="spec.html"><code>docs/SPEC.md</code></a></li>
 <li><a href="api.html"><code>docs/API.md</code></a></li>
 <li><a href="stdlib.html"><code>docs/STDLIB.md</code></a></li>
 <li><a href="naming.html"><code>docs/NAMING.md</code></a></li>
+<li><a href="docs/CANONICAL_SYNTAX.md"><code>docs/CANONICAL_SYNTAX.md</code></a></li>
 </ol>
 <p>The reference implementation is:</p>
 <pre><code class="language-text">Go lexer
@@ -70,258 +92,284 @@ Tya C emitter</code></pre>
 <pre><code class="language-text">github.com/google/go-cmp/cmp
 github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
-<h2 id="current-roadmap">Current Roadmap</h2>
+<h2 id="released">Released</h2>
+<p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>.</p>
 <ul>
-<li>[x] Ship v0.24 scripting toolkit and lightweight numerics</li>
-<ul>
-<li>[x] Define v0.24 scope</li>
-<ul>
-<li>[x] Add <code>docs/v0.24/SPEC.md</code>.</li>
-<li>[x] Add <code>time</code>, <code>random</code>, <code>process</code>, <code>hex</code>, <code>digest</code>, <code>secure_random</code>, and <code>matrix</code> standard modules.</li>
-<li>[x] Expand <code>math</code> with <code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, <code>atan2</code>, <code>pi</code>, <code>e</code>.</li>
-<li>[x] Keep all native-backed APIs import-only and explicit.</li>
-<li>[x] Use structured <code>raise</code> for native operation failures.</li>
-<li>[x] Keep byte-array type, streaming digest, HTTP/TCP/UDP/TLS, regex, yaml, xml, markdown, async/threads, subprocess pipes, matrix inverse/eigenvalues, and shell-string parsing out of v0.24.</li>
+<li>**v0.39** — Canonical Syntax surface cleanup. <code>tya format</code> only spelling;</li>
 </ul>
-<li>[x] Implement the <code>time</code> module</li>
+<p>  <code>--text</code> / <code>--ast</code> opt-outs removed.</p>
 <ul>
-<li>[x] Add <code>time.now</code>, <code>time.sleep</code>, <code>time.format</code>, <code>time.parse</code>, <code>time.since</code>.</li>
-<li>[x] Use UNIX timestamp seconds (float, sub-second precision) as the time value.</li>
-<li>[x] Support <code>&quot;iso&quot;</code>, <code>&quot;date&quot;</code>, <code>&quot;time&quot;</code>, <code>&quot;unix&quot;</code> format layouts.</li>
-<li>[x] Raise on invalid <code>time.parse</code> input or negative <code>time.sleep</code> argument.</li>
+<li>**v0.38** — Canonical Syntax landing. AST-driven serializer is the default;</li>
 </ul>
-<li>[x] Implement the <code>random</code> module (PRNG, seedable)</li>
+<p>  examples / stdlib / selfhost normalized; selfhost compiler extended for   canonical wrap forms.</p>
 <ul>
-<li>[x] Add <code>random.seed</code>, <code>random.int</code>, <code>random.float</code>, <code>random.choice</code>, <code>random.shuffle</code>.</li>
-<li>[x] Use a Mersenne Twister or equivalent PRNG; seedable by int or string.</li>
-<li>[x] Raise on empty <code>random.choice</code> input or invalid <code>random.int</code> range.</li>
+<li>**v0.37** — <code>formatter.Unparse</code> foundation for the common-case subset.</li>
+<li>**v0.36** — comment attachment recurses into nested Stmt-list bodies.</li>
+<li>**v0.35** — per-stmt <code>Comments</code> map at top level.</li>
+<li>**v0.34** — lexer comment capture; <code>Program.HeaderComments</code>.</li>
+<li>**v0.33** — parser accepts <code>(a, b) -&gt; body</code> parenthesized multi-parameter</li>
 </ul>
-<li>[x] Expand the <code>math</code> module</li>
+<p>  lambda.</p>
 <ul>
-<li>[x] Wire libm functions (<code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, trig and inverse trig, <code>atan2</code>).</li>
-<li>[x] Expose <code>math.pi</code> and <code>math.e</code> as numeric constants (not functions).</li>
-<li>[x] Raise on <code>sqrt</code> of negative numbers and on non-positive <code>log</code> arguments.</li>
+<li>**v0.32** — lexer diagnostics migration (<code>TYA-E0001</code>–<code>TYA-E0017</code>); pure-Tya</li>
 </ul>
-<li>[x] Implement the <code>process</code> module</li>
+<p>  <code>markdown.to_html</code> foundation.</p>
 <ul>
-<li>[x] Add <code>process.run(command, options)</code> returning <code>{exit_code, stdout, stderr}</code>.</li>
-<li>[x] Accept array form only (no shell-string).</li>
-<li>[x] Support <code>cwd</code>, <code>env</code>, and <code>input</code> options.</li>
-<li>[x] Buffer stdout/stderr fully into memory.</li>
-<li>[x] Raise only on launch failures; non-zero exit codes are returned in the result.</li>
+<li>**v0.31** — multi-line <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> string literals.</li>
+<li>**v0.30** — test coverage foundation: <code>tya test --cover</code>, <code>tya cover</code>,</li>
 </ul>
-<li>[x] Implement the <code>hex</code> module</li>
+<p>  <code># tya-cover 1</code> profile format.</p>
 <ul>
-<li>[x] Add <code>hex.encode</code> (lowercase) and <code>hex.decode</code> (case-insensitive).</li>
-<li>[x] Raise on odd-length or non-hex input to <code>hex.decode</code>.</li>
+<li>**v0.29** — diagnostics foundation: <code>internal/diag</code> model, human + JSON</li>
 </ul>
-<li>[x] Implement the <code>digest</code> module</li>
+<p>  renderers, color modes, <code>TYA-Xnnnn</code> code namespace.</p>
 <ul>
-<li>[x] Add <code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code> returning lowercase hex strings.</li>
-<li>[x] Implement digests in C without external deps for portability (target macOS and Linux).</li>
-<li>[x] Hash UTF-8 bytes of the input string; do not introduce a byte-array type.</li>
+<li>**v0.28** — strict compile-time checks (shadowing, unused</li>
 </ul>
-<li>[x] Implement the <code>secure_random</code> module</li>
+<p>  imports/args/private definitions).</p>
 <ul>
-<li>[x] Add <code>bytes</code>, <code>hex</code>, <code>base64</code>, <code>uuid</code> (RFC 4122 v4), and <code>int</code>.</li>
-<li>[x] Source entropy from <code>getentropy</code> (macOS/BSD), <code>getrandom</code>, or <code>/dev/urandom</code> as fallback.</li>
-<li>[x] Use rejection sampling in <code>secure_random.int</code> to avoid modulo bias.</li>
+<li>**v0.27** — hexadecimal and binary integer literals.</li>
+<li>**v0.26** — external packages, <code>tya.toml</code>, version resolution.</li>
+<li>**v0.25** — bitwise operators, byte sequences, binary file I/O.</li>
+<li>**v0.24** — <code>time</code>, <code>random</code>, <code>process</code>, <code>hex</code>, <code>digest</code>, <code>secure_random</code>,</li>
 </ul>
-<li>[x] Implement the <code>matrix</code> module (pure Tya)</li>
+<p>  <code>matrix</code> modules; <code>math</code> expansion.</p>
+<h2 id="future-work">Future Work</h2>
+<p>Epics below are committed direction but not yet scheduled to a specific minor version. Each will be scoped into a <code>docs/vX.Y/SPEC.md</code> when picked up.</p>
+<h3 id="toolchain">Toolchain</h3>
 <ul>
-<li>[x] Represent a matrix as <code>{rows, cols, data}</code>.</li>
-<li>[x] Add <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>set</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code>, <code>equal?</code>.</li>
-<li>[x] Implement <code>det</code> via cofactor expansion for sizes up to 4x4; raise for larger sizes.</li>
-<li>[x] Validate dimensions on construction and per-operation.</li>
-</ul>
-<li>[x] Keep v0.24 documentation and tests aligned</li>
+<li>[ ] **Migrate remaining stages to the diagnostics pipeline**</li>
 <ul>
-<li>[x] Update latest docs when v0.24 behavior is implemented.</li>
-<li>[x] Keep <code>docs/v0.24/</code> aligned with the v0.24 minor specification.</li>
-<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[x] Add unittest-form tests for each new module.</li>
-<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+<li>[ ] Parser → <code>TYA-E0100</code>–<code>E0299</code>.</li>
+<li>[ ] Codegen → <code>TYA-E0600</code>–<code>E0799</code>.</li>
+<li>[ ] Runner → <code>TYA-E0800</code>–<code>E0899</code>.</li>
+<li>[ ] Add did-you-mean suggestions for unknown-name diagnostics.</li>
+<li>[ ] Add multi-error parsing.</li>
 </ul>
 </ul>
-<li>[x] Ship v0.25 bit-level operations and byte sequences</li>
 <ul>
-<li>[x] Define v0.25 scope</li>
+<li>[ ] **Ship <code>tya lsp</code> Language Server**</li>
 <ul>
-<li>[x] Add <code>docs/v0.25/SPEC.md</code>.</li>
-<li>[x] Specify bitwise operators <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> on integers.</li>
-<li>[x] Specify the <code>bytes</code> value type with <code>b&quot;...&quot;</code> literal, <code>\xHH</code> escapes, indexing returning int, slicing, concat, len.</li>
-<li>[x] Specify <code>file.read_bytes</code> and <code>file.write_bytes</code>.</li>
-<li>[x] Specify bytes-aware updates to <code>digest</code>, <code>secure_random</code>, <code>hex</code>, and <code>base64</code> (keep string input compatibility).</li>
-<li>[x] Document the <code>hex.decode</code> / <code>base64.decode</code> return-type breaking change (now bytes).</li>
-<li>[x] Keep arbitrary-precision integers, fixed-width integer types, mutable byte buffers, character-set conversion, and streaming IO out of v0.25.</li>
-</ul>
-<li>[x] Add bitwise operators</li>
-<ul>
-<li>[x] Lex <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> tokens (avoid conflict with existing operators).</li>
-<li>[x] Add precedence levels to the parser.</li>
-<li>[x] Reject non-integer operands with structured errors.</li>
-<li>[x] Emit C bitwise operators in codegen on <code>(long)x.number</code>.</li>
-<li>[x] Add eval support for the new operators.</li>
-</ul>
-<li>[x] Add the <code>bytes</code> value type</li>
-<ul>
-<li>[x] Add <code>TYA_BYTES</code> value kind with separate length to the C runtime.</li>
-<li>[x] Add <code>bytes</code>, <code>bytes_of</code>, <code>bytes_text</code>, <code>bytes_array</code>, <code>bytes_concat</code>, <code>bytes_slice</code> builtins.</li>
-<li>[x] Lex and parse <code>b&quot;...&quot;</code> literals with <code>\xHH</code> escapes.</li>
-<li>[x] Wire indexing, length, equality, concat through eval and codegen.</li>
-<li>[x] Update <code>kind</code> to return <code>&quot;bytes&quot;</code>.</li>
-</ul>
-<li>[x] Add binary file I/O</li>
-<ul>
-<li>[x] Add <code>file.read_bytes(path)</code> and <code>file.write_bytes(path, b)</code> builtins.</li>
-<li>[x] Wire stdlib <code>file</code> module wrappers.</li>
-</ul>
-<li>[x] Update existing stdlib for bytes</li>
-<ul>
-<li>[x] Make <code>digest.*</code> accept either string or bytes.</li>
-<li>[x] Change <code>secure_random.bytes(n)</code> to return a bytes value.</li>
-<li>[x] Make <code>hex.encode</code> accept either string or bytes; <code>hex.decode</code> returns bytes.</li>
-<li>[x] Make <code>base64.encode</code> accept either string or bytes; <code>base64.decode</code> returns bytes.</li>
-</ul>
-<li>[x] Keep v0.25 documentation and tests aligned</li>
-<ul>
-<li>[x] Update latest docs when v0.25 behavior is implemented.</li>
-<li>[x] Keep <code>docs/v0.25/</code> aligned with the v0.25 minor specification.</li>
-<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[x] Add unittest-form tests for bitwise operators, the bytes type, binary IO, and the migrated digest/secure_random/hex/base64 modules.</li>
-<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+<li>[ ] Define LSP scope; ship <code>tya lsp</code> as a subcommand of the same</li>
 </ul>
 </ul>
-<li>[x] Ship v0.26 external packages and version resolution</li>
+<p>    binary so compiler and language server cannot drift in version.</p>
 <ul>
-<li>[x] Define v0.26 scope</li>
-<ul>
-<li>[x] Add <code>docs/v0.26/SPEC.md</code>.</li>
-<li>[x] Specify the <code>tya.toml</code> manifest (name, version, dependencies, dev-dependencies).</li>
-<li>[x] Specify the <code>tya.lock</code> lockfile (deterministic resolved versions, source identity, checksums).</li>
-<li>[x] Specify version constraint syntax (<code>^x.y.z</code>, <code>~x.y.z</code>, <code>&gt;=x.y.z, &lt;a.b.c</code>, exact).</li>
-<li>[x] Specify Bundler-style single-version-per-package resolution with backtracking.</li>
-<li>[x] Specify git and path sources; defer central registry to a later version.</li>
-<li>[x] Specify import resolution order: same dir → <code>tya.toml</code> deps → <code>TYA_PATH</code> → bundled stdlib.</li>
-<li>[x] Specify the package directory layout (<code>src/</code> for public modules).</li>
+<li>[ ] Speak LSP over stdio (JSON-RPC) for VS Code, Zed, Helix, Neovim,</li>
 </ul>
-<li>[x] Implement manifest and lockfile parsing</li>
+<p>    Emacs.</p>
 <ul>
-<li>[x] Parse <code>tya.toml</code> via the <code>toml</code> standard module.</li>
-<li>[x] Validate manifest fields and version strings.</li>
-<li>[x] Read and write <code>tya.lock</code> deterministically.</li>
+<li>[ ] Implement diagnostics on save / on change, hover, go-to-definition,</li>
 </ul>
-<li>[x] Implement version constraint resolver</li>
+<p>    find-references, completion (in-scope names + module members + stdlib),     formatting (full + range, backed by <code>tya format</code>), rename, code     actions for common diagnostics.</p>
 <ul>
-<li>[x] Implement backtracking dependency resolver picking the highest valid version.</li>
-<li>[x] Detect and report unsolvable constraint sets (diamond conflicts) with source-oriented diagnostics.</li>
+<li>[ ] Publish a minimal VS Code extension and document Zed / Helix /</li>
 </ul>
-<li>[x] Implement source fetchers</li>
+<p>    Neovim / Emacs setup.</p>
 <ul>
-<li>[x] Add a git fetcher (clone + checkout tag/rev) with caching under <code>.tya/cache</code>.</li>
-<li>[x] Add a path fetcher (symlink or direct read).</li>
-<li>[x] Verify and record checksums in the lockfile.</li>
-</ul>
-<li>[x] Wire dependency loading into module resolution</li>
+<li>[ ] **Ship <code>tya doc</code> source documentation generator**</li>
 <ul>
-<li>[x] Resolve manifest-declared dependencies before <code>TYA_PATH</code> and bundled stdlib.</li>
-<li>[x] Honor the lockfile for reproducible loads.</li>
-<li>[x] Preserve same-directory precedence.</li>
-</ul>
-<li>[x] Add CLI commands</li>
-<ul>
-<li>[x] Add <code>tya install</code> (resolve and write lockfile, download packages to <code>.tya/packages/</code>).</li>
-<li>[x] Add <code>tya update [pkg]</code> (recompute the lockfile for one or all packages).</li>
-<li>[x] Add <code>tya add &lt;pkg&gt; [constraint]</code> and <code>tya remove &lt;pkg&gt;</code> (edit <code>tya.toml</code> + re-resolve).</li>
-<li>[x] Add <code>tya outdated</code> (report newer versions available).</li>
-<li>[x] Report missing or conflicting requirements with source-oriented diagnostics.</li>
-</ul>
-<li>[x] Keep v0.26 documentation and tests aligned</li>
-<ul>
-<li>[x] Update latest docs when v0.26 behavior is implemented.</li>
-<li>[x] Keep <code>docs/v0.26/</code> aligned with the v0.26 minor specification.</li>
-<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[x] Add CLI, resolver, fetcher, and lockfile tests.</li>
-<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+<li>[ ] Define doc comment syntax: contiguous comment lines immediately</li>
 </ul>
 </ul>
-<li>[x] Ship v0.27 hexadecimal and binary integer literals</li>
+<p>    preceding a top-level definition. Body is Markdown rendered with the     <code>markdown</code> stdlib module.</p>
 <ul>
-<li>[x] Define v0.27 scope</li>
-<ul>
-<li>[x] Add <code>docs/v0.27/SPEC.md</code>.</li>
-<li>[x] Specify <code>0xFF</code> / <code>0xff</code> hexadecimal integer literals.</li>
-<li>[x] Specify <code>0b1010</code> binary integer literals.</li>
-<li>[x] Specify underscore digit-group separators in decimal, hex, and binary literals.</li>
-<li>[x] Keep octal literals, hex floats, numeric type suffixes, and big-int out of v0.27.</li>
+<li>[ ] Discover every top-level binding under <code>src/</code> plus stdlib re-exports.</li>
+<li>[ ] CLI surface: <code>tya doc</code> (text), <code>tya doc --html &lt;out&gt;</code> (static site),</li>
 </ul>
-<li>[x] Implement hex and binary literals</li>
+<p>    <code>tya doc --serve</code> (HTTP), <code>tya doc --json</code> (machine-readable).</p>
 <ul>
-<li>[x] Lex <code>0x</code>/<code>0X</code> followed by hex digits (and underscores) into an <code>INT</code> token.</li>
-<li>[x] Lex <code>0b</code>/<code>0B</code> followed by binary digits (and underscores) into an <code>INT</code> token.</li>
-<li>[x] Reject <code>0x</code> / <code>0b</code> with no digits, and digits outside the base.</li>
-<li>[x] Allow underscore separators in plain decimal integer and float literals.</li>
-<li>[x] Make value handling identical to existing decimal integer literals (no AST change required).</li>
+<li>[ ] Reuse the public Tya self-introspection library.</li>
+<li>[ ] Diagnose orphan doc comments, duplicate definitions, unparseable</li>
 </ul>
-<li>[x] Keep v0.27 documentation and tests aligned</li>
+<p>    Markdown bodies.</p>
 <ul>
-<li>[x] Update latest docs when v0.27 behavior is implemented.</li>
-<li>[x] Keep <code>docs/v0.27/</code> aligned with the v0.27 minor specification.</li>
-<li>[x] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[x] Add lexer and end-to-end tests for hex, binary, and underscore literals.</li>
-<li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+<li>[ ] **Ship <code>tya new</code> project scaffolder**</li>
+<ul>
+<li>[ ] CLI: <code>tya new &lt;name&gt;</code>, <code>tya new --here</code>, fixed templates</li>
 </ul>
 </ul>
-<li>[ ] Ship v0.28 strict compile-time checks</li>
+<p>    (<code>--template app|lib</code>).</p>
 <ul>
-<li>[x] Define v0.28 scope</li>
-<ul>
-<li>[x] Add <code>docs/v0.28/SPEC.md</code>.</li>
-<li>[x] Specify shadowing forbidden across nested scopes.</li>
-<li>[x] Specify unused imports as compile errors.</li>
-<li>[x] Specify unused function arguments as compile errors with <code>_</code> opt-out.</li>
-<li>[x] Specify unused private top-level definitions (leading <code>_</code>) as compile errors.</li>
-<li>[x] Keep unused-local-variable check opt-in via <code>--check-unused</code>.</li>
-<li>[x] Keep tab/trailing-whitespace lint, main.tya restriction, and naming-convention expansions out of v0.28.</li>
+<li>[ ] Default template: <code>tya.toml</code>, <code>src/main.tya</code> hello-world, <code>tests/</code></li>
 </ul>
-<li>[ ] Implement shadowing check</li>
+<p>    with one passing unittest, <code>.gitignore</code>, minimal <code>README.md</code>.</p>
 <ul>
-<li>[ ] Track enclosing scope chain in the checker.</li>
-<li>[ ] Reject any new binding that matches a name visible in a strictly enclosing scope.</li>
-<li>[ ] Allow same-scope reassignment.</li>
-<li>[ ] Treat <code>_</code> as a non-binding discard; underscore-prefixed names still bind.</li>
+<li>[ ] Refuse to overwrite existing files unless <code>--force</code>. Initialize git</li>
 </ul>
-<li>[ ] Implement unused-import check</li>
+<p>    by default; <code>--no-git</code> to skip.</p>
 <ul>
-<li>[ ] Track module/alias bindings introduced by <code>import</code>.</li>
-<li>[ ] Mark them used on any read.</li>
-<li>[ ] Diagnose any unused binding at the importing file's top level.</li>
-</ul>
-<li>[ ] Implement unused-argument check</li>
+<li>[ ] **Ship <code>tya task</code> project task runner**</li>
 <ul>
-<li>[ ] Track parameter names per function.</li>
-<li>[ ] Mark used on any read in the body.</li>
-<li>[ ] Skip names equal to <code>_</code> and names starting with <code>_</code>.</li>
-<li>[ ] Skip parameters of abstract method declarations.</li>
-</ul>
-<li>[ ] Implement unused-private-top-level check</li>
-<ul>
-<li>[ ] Detect top-level bindings whose names start with <code>_</code>.</li>
-<li>[ ] Diagnose if no expression in the file references the name.</li>
-</ul>
-<li>[ ] Migrate the project to satisfy the new checks</li>
-<ul>
-<li>[ ] Audit stdlib, examples, and tests for shadowing / unused imports / unused args / unused private defs and fix or rename to <code>_</code>.</li>
-<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
-</ul>
-<li>[ ] Keep v0.28 documentation and tests aligned</li>
-<ul>
-<li>[ ] Update latest docs when v0.28 behavior is implemented.</li>
-<li>[ ] Keep <code>docs/v0.28/</code> aligned with the v0.28 minor specification.</li>
-<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add positive and negative tests for each new check.</li>
+<li>[ ] <code>[tasks]</code> table in <code>tya.toml</code> is the single source of truth.</li>
+<li>[ ] String form (<code>ci = &quot;tya format &amp;&amp; tya test&quot;</code>) and array form.</li>
+<li>[ ] CLI: <code>tya task &lt;name&gt;</code> and <code>tya task</code> (list).</li>
+<li>[ ] Resolve <code>tya.toml</code> from working directory upward; execute via the</li>
 </ul>
 </ul>
+<p>    user's shell with the project root as CWD.</p>
+<ul>
+<li>[ ] Keep parallelism, file-watching, task graphs out of the initial</li>
+</ul>
+<p>    scope.</p>
+<ul>
+<li>[ ] **Ship <code>tya lint</code> source linter**</li>
+<ul>
+<li>[ ] Boundary: <code>tya format</code> is layout, <code>tya check</code> is correctness, `tya</li>
+</ul>
+</ul>
+<p>    lint` is stylistic / semantic best practices.</p>
+<ul>
+<li>[ ] CLI: <code>tya lint [paths]</code>, <code>tya lint --fix</code>, <code>tya lint --format=json</code>.</li>
+<li>[ ] Initial rule set: unused locals, dead code after <code>return</code> / <code>raise</code>,</li>
+</ul>
+<p>    redundant <code>if true</code> / <code>if false</code>, suspicious <code>for</code> index patterns,     deeply nested blocks, very long functions.</p>
+<ul>
+<li>[ ] Each rule has a stable code (e.g. <code>TYAL0001</code>), title, doc URL.</li>
+<li>[ ] Per-line opt-out via <code># tya-lint-ignore: TYAL0001</code>.</li>
+</ul>
+<ul>
+<li>[ ] **Ship a public Tya self-introspection library**</li>
+<ul>
+<li>[ ] Goal: Tya programs and external tools can lex, parse, walk, and</li>
+</ul>
+</ul>
+<p>    re-emit Tya source through a stable, documented API. Unlocks     codemods, linters, doc extractors, refactoring, AI-agent edits, and     <code>tya lsp</code>.</p>
+<ul>
+<li>[ ] Surface as Tya stdlib modules built on the self-host components:</li>
+</ul>
+<p>    <code>compiler.lexer</code>, <code>compiler.parser</code>, <code>compiler.ast</code>, <code>compiler.checker</code>,     <code>compiler.format</code>.</p>
+<ul>
+<li>[ ] AST is the single canonical representation; node kinds, fields,</li>
+</ul>
+<p>    spans documented.</p>
+<ul>
+<li>[ ] Round-trip tests over a representative corpus.</li>
+</ul>
+<h3 id="language">Language</h3>
+<ul>
+<li>[ ] **Ship WebAssembly compilation target**</li>
+<ul>
+<li>[ ] Use Zig (<code>zig cc --target=wasm32-wasi</code> and</li>
+</ul>
+</ul>
+<p>    <code>zig cc --target=wasm32-freestanding</code>) as the WASM toolchain.</p>
+<ul>
+<li>[ ] CLI: <code>tya build --target wasm32-wasi</code>,</li>
+</ul>
+<p>    <code>tya build --target wasm32-browser</code>.</p>
+<ul>
+<li>[ ] Decide system interface: WASI for CLI-style programs, browser-friendly</li>
+</ul>
+<p>    subset omits filesystem and process APIs.</p>
+<ul>
+<li>[ ] Gate unavailable stdlib modules per target with structured errors at</li>
+</ul>
+<p>    import time.</p>
+<ul>
+<li>[ ] **Ship asset embedding for single-binary distribution**</li>
+<ul>
+<li>[ ] <code>embed &quot;assets/logo.png&quot; as logo</code> bakes file bytes into the compiled</li>
+</ul>
+</ul>
+<p>    binary at build time.</p>
+<ul>
+<li>[ ] Directory / glob form (<code>embed &quot;static/**&quot; as static</code>) returns a dict</li>
+</ul>
+<p>    keyed by relative path.</p>
+<ul>
+<li>[ ] Text loads as <code>string</code>, binary as <code>bytes</code>; explicit <code>as bytes</code> /</li>
+</ul>
+<p>    <code>as text</code> modifier supported.</p>
+<ul>
+<li>[ ] **Ship a garbage collector for the C runtime**</li>
+<ul>
+<li>[ ] Conservative mark-and-sweep over current runtime values (string,</li>
+</ul>
+</ul>
+<p>    dict, array, bytes, error, function closure).</p>
+<ul>
+<li>[ ] Allocation-threshold trigger; explicit <code>runtime.gc()</code> for</li>
+</ul>
+<p>    tests/benchmarks.</p>
+<ul>
+<li>[ ] Roots: value stack, active locals, module globals,</li>
+</ul>
+<p>    finalized-but-not-yet-collected closures.</p>
+<ul>
+<li>[ ] Defer generational, incremental, concurrent variants and weak refs /</li>
+</ul>
+<p>    finalizers.</p>
+<h3 id="stdlib-extensions">Stdlib extensions</h3>
+<ul>
+<li>[ ] **Extend coverage tooling (post-v0.30.0)**</li>
+<ul>
+<li>[ ] <code>tya cover html</code> self-contained report.</li>
+<li>[ ] <code>--include</code> / <code>--exclude</code> glob filters on <code>tya cover</code>.</li>
+<li>[ ] Read <code>coverage.include</code> / <code>coverage.exclude</code> from <code>Tyafile</code>.</li>
+<li>[ ] Give <code>BreakStmt</code> / <code>ContinueStmt</code> source positions and instrument</li>
+</ul>
+</ul>
+<p>    them.</p>
+<ul>
+<li>[ ] Map coverage to per-import-source lines instead of the synthesized</li>
+</ul>
+<p>    entry path.</p>
+<ul>
+<li>[ ] Recommended CI snippet (fail when coverage drops below a threshold).</li>
+</ul>
+<ul>
+<li>[ ] **Extend <code>markdown</code> stdlib module (post-v0.32 foundation)**</li>
+<ul>
+<li>[ ] Public AST: <code>markdown.parse(text) -&gt; ast</code>, `markdown.to_html_ast(ast)</li>
+</ul>
+</ul>
+<p>    -&gt; string<code>, </code>markdown.render(ast, visitor) -&gt; string`, AST node spec.</p>
+<ul>
+<li>[ ] GFM extensions: tables, task lists, strikethrough, fenced-code</li>
+</ul>
+<p>    info-string class.</p>
+<ul>
+<li>[ ] Reference link definitions, images, nested lists, setext headings,</li>
+</ul>
+<p>    HTML blocks.</p>
+<ul>
+<li>[ ] Raw HTML pass-through with security note.</li>
+<li>[ ] CommonMark conformance subset run as part of <code>go test ./...</code>.</li>
+</ul>
+<ul>
+<li>[ ] **Extend multi-line strings (post-v0.31.0)**</li>
+<ul>
+<li>[ ] Raw-string prefix <code>r&quot;&quot;&quot;...&quot;&quot;&quot;</code>.</li>
+<li>[ ] Bytes equivalent <code>b&quot;&quot;&quot;...&quot;&quot;&quot;</code>.</li>
+<li>[ ] Heredoc-style markers, language-tagged interpolation specifiers (if</li>
+</ul>
+</ul>
+<p>    needed).</p>
+<h3 id="editor-and-ecosystem">Editor and ecosystem</h3>
+<ul>
+<li>[ ] **Ship syntax coloring for the major editors**</li>
+<ul>
+<li>[ ] Define **major editors**: VS Code, Emacs, Vim, GitHub. Others (Zed,</li>
+</ul>
+</ul>
+<p>    Helix, Neovim, JetBrains) welcome but not required for &quot;major editor&quot;     coverage.</p>
+<ul>
+<li>[ ] Canonical token taxonomy (keyword, builtin, type, string,</li>
+</ul>
+<p>    interpolated expression, number, operator, comment, function name,     parameter, module name) documented in <code>docs/</code>.</p>
+<ul>
+<li>[ ] House all editor assets under <code>editors/</code>: <code>editors/vscode/</code>,</li>
+</ul>
+<p>    <code>editors/emacs/</code>, <code>editors/vim/</code>, <code>editors/tree-sitter-tya/</code>.</p>
+<ul>
+<li>[ ] VS Code: TextMate grammar + minimal extension; publish to</li>
+</ul>
+<p>    Marketplace and Open VSX.</p>
+<ul>
+<li>[ ] Emacs: <code>tya-mode.el</code> derived mode; publish to MELPA.</li>
+<li>[ ] Vim: <code>syntax/</code>, <code>ftdetect/</code>, <code>indent/</code> files (also covers Neovim).</li>
+<li>[ ] GitHub: Tree-sitter grammar registered with <code>github-linguist/linguist</code>.</li>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>
