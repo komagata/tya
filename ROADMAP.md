@@ -389,21 +389,42 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - [ ] Forbid introducing options like line width, quote style, or indent size; the canonical choice is baked into the formatter itself.
     - [ ] Define the only public CLI surface: `tya format [paths...]` (write in place by default), `tya format --check` (exit non-zero on diff), `tya format --stdin` (read from stdin, write to stdout). No other flags.
     - [ ] Specify the canonical rules (indentation, spacing, trailing commas, string quote normalization, import grouping, blank-line rules) as the source of truth in `docs/FORMAT.md`.
-  - [ ] Resolve every "two valid spellings" point in current Tya syntax in `docs/FORMAT.md`
-    - [ ] Decide the canonical form for dictionary literals: block form (`user =\n  name: ...`) vs inline form (`{ name: ..., age: ... }`), including the length / element-count threshold that switches between them.
-    - [ ] Decide the canonical form for array literals: single-line vs multi-line, and the threshold that switches between them.
-    - [ ] Decide trailing comma policy for multi-line arrays, dicts, and argument lists (required / forbidden — pick one).
-    - [ ] Decide whether the formatter rewrites string concatenation (`"Hello, " + name`) into interpolation (`"Hello, {name}"`) or leaves it alone, and document the decision (rewriting risks changing semantics, but two spellings violate the one-canonical-form policy).
-    - [ ] Decide blank-line rules: between top-level definitions, between functions, around `import` blocks, and inside indented blocks.
-    - [ ] Decide operator spacing: binary operators, unary operators, `:` in dict key-value pairs, `,` in lists, `->` in function expressions.
-    - [ ] Decide function body form: single-line lambda (`f = x -> expr`) vs multi-line block (`f = x ->\n  ...`), and when each is canonical.
+  - [ ] Adopt the **zero-freedom syntax** principle in `docs/FORMAT.md`
+    - [ ] State the philosophy: every Tya program has exactly **one** canonical byte sequence per AST. `unparse(parse(source)) == source` byte-for-byte. The formatter is a canonical serializer, not a beautifier. The language spec eliminates layout freedom; it is not a separate optional tool.
+    - [ ] Document the language-level invariant: `source ↔ AST` is a bijection (subject to atomic-token exception below). This is a maintained property, second only to the self-host fixed point.
+    - [ ] Document the atomic-token exception: a single atomic token (identifier, numeric literal, string literal after multi-line normalization, import path) that exceeds the column limit is emitted as-is. The formatter never chooses to exceed; the exception only reflects an unbreakable token in user code.
+  - [ ] Lock in the canonical comment rules
+    - [ ] Allow exactly three comment kinds: **leading comment** (`#` lines immediately before a node, same indent, attached to that node), **line-end comment** (single `#` on the same line as a statement), **file header comment** (`#` lines at file start, separated from the body by exactly one blank line, attached to the file AST node).
+    - [ ] Reject every other comment position with a parse error: block-end comments (no following node), file-end comments, comments inside expressions / argument lists / brackets, blocks whose body is comments only.
+    - [ ] Define deterministic blank-line rules: exactly one blank line between top-level definitions; exactly one blank line before any in-block statement that has a leading comment block, except when that statement is the first in its block; otherwise no blank lines.
+    - [ ] Add positive and negative tests for each comment position rule.
+  - [ ] Lock in the canonical long-line wrapping rules
+    - [ ] Set the column limit to **80**.
+    - [ ] Define the wrap algorithm: render single-line; if the rendered length plus current indent exceeds 80, emit the construct's multi-line form; recurse into nested constructs minimally (only what overflows).
+    - [ ] Function calls multi-line form: each argument on its own line, **trailing comma required**, closing paren on its own line at the call's indent.
+    - [ ] Array literals multi-line form: each element on its own line, **trailing comma required**, closing bracket on its own line at the literal's indent.
+    - [ ] Dict literals: single-line is the inline form `{ k: v, ... }`; multi-line is the block form (key per line, no braces, no commas). The column limit drives the choice; users do not pick.
+    - [ ] Function expressions with multiple parameters: introduce `(a, b) -> body` syntax. Single-line stays as today; multi-line wraps each parameter on its own line with required trailing comma.
+    - [ ] Binary operator chains: when wrapped, use **leading-operator** style — operators start each continuation line, indented `+2` from the expression's start.
+    - [ ] `if` / `while` long conditions: wrap the condition in parentheses (formatter-inserted), each sub-expression on its own line at `+2` indent, closing paren on its own line at the keyword's indent, body indented as usual.
+    - [ ] `for x in iterable` and `match value`: wrap the iterable / value with the normal construct rule (e.g. function call wrap); no extra outer parentheses.
+    - [ ] Function body `f = x -> long_expr`: when the single-line form exceeds 80, switch to block form `f = x ->\n  ...` and recursively wrap the body.
+    - [ ] Continuation indent is exactly `+2` from the parent.
+    - [ ] Single-line forms forbid trailing commas; multi-line forms require them.
+    - [ ] Imports are atomic: do not wrap; allow the rare 80+ line if a path is unusually long.
+    - [ ] String literals are atomic: do not split. If a long single-line `"..."` exceeds 80 and contains a newline-friendly content, the formatter rewrites it to the multi-line `"""..."""` form. Otherwise it is emitted as-is.
+    - [ ] Add positive and negative golden tests for each construct's wrap behavior at the boundary (just under, just over 80).
+  - [ ] Resolve remaining canonical-form decisions in `docs/FORMAT.md`
+    - [ ] Decide whether the formatter rewrites string concatenation (`"Hello, " + name`) into interpolation (`"Hello, {name}"`) or leaves it alone. Default: leave alone (rewriting risks changing semantics).
+    - [ ] Decide operator spacing: one space around binary operators, one space after `,` and `:`, one space around `->`. No space inside `(`/`[`/`{`.
     - [ ] Decide `return value` vs `return value, nil` policy in multiple-return functions until a static type system removes the ambiguity.
-    - [ ] Confirm string quote normalization: `"..."` is canonical; document why `'...'` is not used outside embedded examples.
-    - [ ] Confirm `elseif` is canonical and `else if` is rejected by the formatter (and ideally by the parser).
-    - [ ] Decide import ordering and grouping: alphabetical, stdlib-vs-user separation, blank-line separators.
+    - [ ] Confirm string quote normalization: `"..."` is canonical.
+    - [ ] Confirm `elseif` is canonical and `else if` is rejected by the parser.
+    - [ ] Decide import ordering and grouping: alphabetical, stdlib-vs-user separation, blank-line separators between groups.
     - [ ] Decide canonical position for `case _` in `match` statements (e.g. last only).
     - [ ] Decide canonical empty-collection forms (`{}` and `[]`) and forbid alternative spellings.
     - [ ] Decide whether an `else` branch with an empty body is rewritten away or kept.
+    - [ ] Document the project-policy boundary: per-project rules like maximum identifier length belong in `tya lint`, not in the language or the formatter.
   - [ ] Migrate the subcommand name
     - [ ] Replace the `fmt` subcommand registration with `format` in `cmd/tya/`.
     - [ ] Remove `tya fmt` entirely (no compatibility alias). Diagnose `tya fmt` invocations with a structured error pointing to `tya format`.
@@ -463,24 +484,31 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - [ ] Add a small example codemod (e.g. rename an identifier across a file) demonstrated in `docs/`.
     - [ ] Add tests that the library's diagnostics match the CLI's diagnostics byte-for-byte for a fixed corpus.
 
-- [ ] Ship test coverage support
-  - [ ] Define coverage scope
-    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for the coverage feature.
-    - [ ] Specify the granularity: line coverage as the baseline, with branch coverage as an explicit follow-up if needed.
-    - [ ] Specify the CLI surface: `tya test --cover` runs tests with instrumentation and writes a coverage profile; `tya cover report` prints a human-readable summary; `tya cover html` writes an HTML report; `tya cover --format=json` emits machine-readable output for CI and AI agents.
-    - [ ] Specify the profile file format and location (e.g. `.tya/coverage/profile`).
-    - [ ] Keep mutation testing, MC/DC coverage, and cross-process / cross-binary aggregation out of the initial scope.
-  - [ ] Implement the coverage pipeline
-    - [ ] Instrument generated C with per-statement counters keyed by Tya source span; preserve the `selfhost/v01/compiler.tya` fixed point.
-    - [ ] Aggregate counters at process exit into the profile file.
-    - [ ] Map profile entries back to Tya source spans for reporting.
-    - [ ] Exclude generated code, third-party dependencies under `.tya/packages/`, and the stdlib by default; allow `--include` / `--exclude` overrides.
-    - [ ] Diagnose misuse (missing profile, mismatched source) with structured errors.
-  - [ ] Keep coverage documentation and tests aligned
-    - [ ] Document `tya test --cover`, `tya cover report`, `tya cover html`, and `--format=json` in `docs/`.
-    - [ ] Add CLI and end-to-end tests covering profile generation, reporting, JSON output, and include/exclude behavior.
-    - [ ] Add a recommended CI snippet (fail when coverage drops below a threshold).
-    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [x] Ship v0.30 test coverage foundation
+  - [x] Define v0.30 scope
+    - [x] Add `docs/v0.30/SPEC.md`.
+    - [x] Specify statement coverage projected to line coverage.
+    - [x] Specify CLI: `tya test --cover` and `tya cover [--format=json] [--profile FILE]`.
+    - [x] Specify the profile file format (`# tya-cover 1`, `F` / `S` / `H` records) and default location (`.tya/coverage/profile`).
+    - [x] Defer HTML report, `--include` / `--exclude`, `Tyafile` `coverage:` section, branch / MC/DC, cross-binary aggregation, and `Break`/`Continue` instrumentation.
+  - [x] Implement the coverage pipeline
+    - [x] Instrument generated C with per-statement counters via `EmitCWithCoverage`.
+    - [x] Add `runtime/tya_cover.c` with `tya_cov_init` / `tya_cov_inc` and an atexit fragment writer keyed on `TYA_COVERAGE_FRAGMENT`.
+    - [x] Wire `tya test --cover` to build with instrumentation, run, merge fragments with the codegen registry, and write the profile.
+    - [x] Implement `internal/cover` profile parser, serializer, merger, summary, text and JSON renderers.
+    - [x] Exclude stdlib, `.tya/packages/`, and synthesized test-suite paths by default.
+    - [x] Preserve the `selfhost/v01/compiler.tya` fixed point (non-coverage builds emit identical C).
+  - [x] Verification
+    - [x] Add `internal/cover` round-trip and merge tests.
+    - [x] Add `tests/testdata/v30/coverage.txtar` golden test.
+    - [x] `go test ./...` remains green.
+- [ ] Extend coverage tooling (post-v0.30.0)
+  - [ ] Implement `tya cover html` self-contained report.
+  - [ ] Add `--include` / `--exclude` glob filters to `tya cover`.
+  - [ ] Read `coverage.include` / `coverage.exclude` from `Tyafile`.
+  - [ ] Give `BreakStmt` / `ContinueStmt` source positions and instrument them.
+  - [ ] Map coverage to per-import-source lines instead of the synthesized entry path.
+  - [ ] Add a recommended CI snippet (fail when coverage drops below a threshold).
 
 - [ ] Ship `markdown` stdlib module
   - [ ] Define markdown scope
@@ -592,6 +620,29 @@ version. They will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - [ ] Document each rule in `docs/lints/<code>.md` with a short rationale, a bad example, and a good example.
     - [ ] Add positive and negative tests pinning each rule's diagnostic and (where applicable) its `--fix` output.
     - [ ] Add CLI tests for plain output, `--format=json`, and exit-code behavior.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+
+- [ ] Ship multi-line string literal syntax
+  - [ ] Define multi-line string scope
+    - [ ] Decide on a target minor version and add `docs/vX.Y/SPEC.md` for multi-line strings.
+    - [ ] Specify triple-quote `"""..."""` as the multi-line literal form, opened and closed by `"""` on their own boundaries.
+    - [ ] Specify that newlines inside `"""..."""` are part of the string value.
+    - [ ] Specify that `{expr}` interpolation works the same as in regular `"..."` strings.
+    - [ ] Specify **indentation normalization**: the indentation of the closing `"""` defines a baseline; that baseline is stripped from every line of the literal. This makes nested multi-line strings readable without leaking enclosing indent into the value.
+    - [ ] Specify escape rules: `\n`, `\t`, `\\`, `\"`, `\{`, `{{`, `}}` work as in regular strings; literal `"""` inside the body is not allowed.
+    - [ ] Keep heredoc-style markers, raw-string prefixes, and language-tagged interpolation specifiers out of the initial scope.
+  - [ ] Implement multi-line strings
+    - [ ] Lex `"""` as a distinct token boundary; collect lines until the matching `"""`.
+    - [ ] Apply indentation normalization in the lexer or parser, deterministically.
+    - [ ] Reuse the existing interpolation pipeline for `{expr}`.
+    - [ ] Wire codegen and eval to produce the same string value as a regular `"..."` literal would.
+  - [ ] Integrate with the formatter
+    - [ ] When `tya format` sees a single-line `"..."` literal that exceeds 80 columns and contains content where a multi-line form would be readable (e.g. embedded newlines in `\n` form), rewrite it to `"""..."""`. Define this rewrite rule precisely in `docs/FORMAT.md` so that AST → source remains a bijection.
+    - [ ] When the literal cannot be naturally split (e.g. a long URL with no whitespace), leave it as-is under the atomic-token exception.
+  - [ ] Keep multi-line string documentation and tests aligned
+    - [ ] Document the syntax, indentation normalization, escape behavior, and formatter rewrite rule in `docs/`.
+    - [ ] Add lexer / parser / codegen / eval tests for multi-line literals with and without interpolation, including indentation normalization edge cases.
+    - [ ] Add formatter golden tests for the long-string-rewrite rule.
     - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
 
 ## Verification Reference

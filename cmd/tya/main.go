@@ -13,6 +13,7 @@ import (
 
 	"tya/internal/checker"
 	"tya/internal/codegen"
+	"tya/internal/cover"
 	"tya/internal/diag"
 	"tya/internal/formatter"
 	"tya/internal/lexer"
@@ -21,7 +22,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.29.0"
+const version = "0.30.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -102,18 +103,42 @@ func main() {
 		fmt.Fprint(os.Stdout, csrc)
 		return
 	case "test":
-		if len(os.Args) > 3 {
-			usage()
-			os.Exit(2)
-		}
 		root := "."
-		if len(os.Args) == 3 {
-			root = os.Args[2]
+		coverEnabled := false
+		profilePath := ""
+		args := os.Args[2:]
+		for i := 0; i < len(args); i++ {
+			a := args[i]
+			switch {
+			case a == "--cover":
+				coverEnabled = true
+			case strings.HasPrefix(a, "--profile="):
+				profilePath = strings.TrimPrefix(a, "--profile=")
+			case a == "--profile":
+				if i+1 >= len(args) {
+					fmt.Fprintln(os.Stderr, "missing value for --profile")
+					os.Exit(2)
+				}
+				profilePath = args[i+1]
+				i++
+			default:
+				if strings.HasPrefix(a, "--") {
+					fmt.Fprintf(os.Stderr, "unknown test option: %s\n", a)
+					os.Exit(2)
+				}
+				root = a
+			}
 		}
-		if err := testCommand(root); err != nil {
+		if err := testCommand(root, coverEnabled, profilePath); err != nil {
 			if errors.Is(err, errTestsFailed) {
 				os.Exit(1)
 			}
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "cover":
+		if err := coverCommand(os.Args[2:]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -303,7 +328,8 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya check <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya fmt [-w] <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya emit-c <file.tya>")
-	fmt.Fprintln(os.Stderr, "       tya test [path]")
+	fmt.Fprintln(os.Stderr, "       tya test [--cover [--profile FILE]] [path]")
+	fmt.Fprintln(os.Stderr, "       tya cover [--format=human|json] [--profile FILE]")
 	fmt.Fprintln(os.Stderr, "       tya install")
 	fmt.Fprintln(os.Stderr, "       tya update [package]")
 	fmt.Fprintln(os.Stderr, "       tya add <name> [<constraint>] [--git URL --tag T] [--path P] [--dev]")
@@ -330,24 +356,29 @@ func compileAndRun(path string, args []string) error {
 }
 
 func buildExecutable(path string, output string) error {
-	csrc, err := compileToC(path)
+	_, err := buildExecutableWithCover(path, output, nil)
+	return err
+}
+
+func buildExecutableWithCover(path string, output string, opt *codegen.CoverageOptions) (*codegen.CoverageRegistry, error) {
+	csrc, reg, err := compileToCWithCover(path, opt)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if output == "" {
 		output = defaultOutputPath(path)
 	}
 	outDir, err := os.MkdirTemp("", "tya-build-*")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer os.RemoveAll(outDir)
 	cfile := filepath.Join(outDir, "main.c")
 	if err := os.WriteFile(cfile, []byte(csrc), 0644); err != nil {
-		return err
+		return nil, err
 	}
 	if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
-		return err
+		return nil, err
 	}
 	cc := os.Getenv("CC")
 	if cc == "" {
@@ -355,11 +386,22 @@ func buildExecutable(path string, output string) error {
 	}
 	runtimeDir, err := findRuntimeDir()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	compile := exec.Command(cc, cfile, filepath.Join(runtimeDir, "tya_runtime.c"), "-I", runtimeDir, "-o", output)
+	args := []string{cfile, filepath.Join(runtimeDir, "tya_runtime.c")}
+	if opt != nil {
+		coverC := filepath.Join(runtimeDir, "tya_cover.c")
+		if _, err := os.Stat(coverC); err == nil {
+			args = append(args, coverC)
+		}
+	}
+	args = append(args, "-I", runtimeDir, "-o", output)
+	compile := exec.Command(cc, args...)
 	compile.Stderr = os.Stderr
-	return compile.Run()
+	if err := compile.Run(); err != nil {
+		return nil, err
+	}
+	return reg, nil
 }
 
 func findRuntimeDir() (string, error) {
@@ -392,29 +434,34 @@ func runtimeExists(dir string) bool {
 }
 
 func compileToC(path string) (string, error) {
+	csrc, _, err := compileToCWithCover(path, nil)
+	return csrc, err
+}
+
+func compileToCWithCover(path string, opt *codegen.CoverageOptions) (string, *codegen.CoverageRegistry, error) {
 	source, modules, err := runner.LoadSourceWithModules(path)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	toks, errs := lexer.Lex(source)
 	if len(errs) > 0 {
-		return "", errs[0]
+		return "", nil, errs[0]
 	}
 	prog, err := parser.Parse(toks)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if err := checker.CheckWithModules(prog, modules); err != nil {
-		return "", err
+		return "", nil, err
 	}
-	csrc, err := codegen.EmitCWithPath(prog, path)
+	csrc, reg, err := codegen.EmitCWithCoverage(prog, path, opt)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	return csrc, nil
+	return csrc, reg, nil
 }
 
-func testCommand(root string) error {
+func testCommand(root string, coverEnabled bool, profilePath string) error {
 	files, err := testFiles(root)
 	if err != nil {
 		return err
@@ -456,13 +503,175 @@ func testCommand(root string) error {
 	}
 	defer os.Setenv("TYA_PATH", prevPath)
 
-	if err := compileAndRun(suitePath, nil); err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return errTestsFailed
+	if !coverEnabled {
+		if err := compileAndRun(suitePath, nil); err != nil {
+			if _, ok := err.(*exec.ExitError); ok {
+				return errTestsFailed
+			}
+			return err
 		}
+		return nil
+	}
+
+	// Coverage path: build with instrumentation, run with
+	// TYA_COVERAGE_FRAGMENT, then merge fragment with registry.
+	covDir := os.Getenv("TYA_COVERAGE_DIR")
+	if covDir == "" {
+		covDir = filepath.Join(".tya", "coverage")
+	}
+	if profilePath == "" {
+		profilePath = filepath.Join(covDir, "profile")
+	}
+	fragDir := filepath.Join(covDir, "fragments")
+	if err := os.MkdirAll(fragDir, 0o755); err != nil {
 		return err
 	}
+	fragPath := filepath.Join(fragDir, "main.cov")
+	_ = os.Remove(fragPath)
+
+	binDir, err := os.MkdirTemp("", "tya-test-bin-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(binDir)
+	bin := filepath.Join(binDir, "main")
+
+	opt := &codegen.CoverageOptions{
+		StdlibDir:   firstStdlibDir(),
+		PackagesDir: firstPackagesDir(),
+	}
+	reg, err := buildExecutableWithCover(suitePath, bin, opt)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(bin)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = append(os.Environ(), "TYA_COVERAGE_FRAGMENT="+fragPath)
+	runErr := cmd.Run()
+
+	if err := mergeCoverageFragments(profilePath, fragDir, reg); err != nil {
+		return err
+	}
+	_ = os.RemoveAll(fragDir)
+
+	if runErr != nil {
+		if _, ok := runErr.(*exec.ExitError); ok {
+			return errTestsFailed
+		}
+		return runErr
+	}
 	return nil
+}
+
+func firstStdlibDir() string {
+	if dir := os.Getenv("TYA_STDLIB_DIR"); dir != "" {
+		return dir
+	}
+	if exe, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exe)
+		for _, c := range []string{
+			filepath.Join(exeDir, "stdlib"),
+			filepath.Clean(filepath.Join(exeDir, "..", "share", "tya", "stdlib")),
+		} {
+			if info, err := os.Stat(c); err == nil && info.IsDir() {
+				return c
+			}
+		}
+	}
+	if info, err := os.Stat("stdlib"); err == nil && info.IsDir() {
+		return "stdlib"
+	}
+	return ""
+}
+
+func firstPackagesDir() string {
+	if info, err := os.Stat(".tya/packages"); err == nil && info.IsDir() {
+		return ".tya/packages"
+	}
+	return ""
+}
+
+func mergeCoverageFragments(profilePath, fragDir string, reg *codegen.CoverageRegistry) error {
+	prof := cover.New()
+	if reg != nil {
+		fileIDByPath := map[string]int{}
+		for _, e := range reg.Entries {
+			fid, ok := fileIDByPath[e.File]
+			if !ok {
+				fid = len(prof.Files)
+				fileIDByPath[e.File] = fid
+				prof.Files = append(prof.Files, cover.File{ID: fid, Path: e.File})
+			}
+			prof.Stmts = append(prof.Stmts, cover.Stmt{ID: e.ID, FileID: fid, Line: e.Line, Col: e.Col})
+		}
+	}
+	entries, err := os.ReadDir(fragDir)
+	if err == nil {
+		for _, e := range entries {
+			if e.IsDir() {
+				continue
+			}
+			frag, err := cover.ReadProfile(filepath.Join(fragDir, e.Name()))
+			if err != nil {
+				continue
+			}
+			cover.Merge(prof, frag)
+		}
+	}
+	return cover.WriteProfile(profilePath, prof)
+}
+
+func coverCommand(args []string) error {
+	format := cliFormat
+	profilePath := filepath.Join(".tya", "coverage", "profile")
+	sub := ""
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		switch {
+		case a == "report" || a == "html":
+			sub = a
+		case a == "--format":
+			if i+1 >= len(args) {
+				return fmt.Errorf("missing value for --format")
+			}
+			f, err := diag.ParseFormat(args[i+1])
+			if err != nil {
+				return err
+			}
+			format = f
+			i++
+		case strings.HasPrefix(a, "--format="):
+			f, err := diag.ParseFormat(strings.TrimPrefix(a, "--format="))
+			if err != nil {
+				return err
+			}
+			format = f
+		case a == "--profile":
+			if i+1 >= len(args) {
+				return fmt.Errorf("missing value for --profile")
+			}
+			profilePath = args[i+1]
+			i++
+		case strings.HasPrefix(a, "--profile="):
+			profilePath = strings.TrimPrefix(a, "--profile=")
+		default:
+			return fmt.Errorf("unknown cover option: %s", a)
+		}
+	}
+	if sub == "html" {
+		return fmt.Errorf("tya cover html is deferred to a later release")
+	}
+	prof, err := cover.ReadProfile(profilePath)
+	if err != nil {
+		return err
+	}
+	if format == diag.FormatJSON {
+		return cover.RenderJSON(os.Stdout, prof, profilePath, version)
+	}
+	return cover.RenderText(os.Stdout, cover.Summarize(prof))
 }
 
 func synthesizeTestSuite(files []string) (string, error) {

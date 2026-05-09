@@ -25,6 +25,9 @@ build_package() {
   mkdir -p "$root/bin" "$root/share/tya/runtime" "$root/share/tya/stdlib"
   GOOS="$goos" GOARCH="$goarch" go build -o "$root/bin/tya$ext" ./cmd/tya
   cp runtime/tya_runtime.c runtime/tya_runtime.h "$root/share/tya/runtime/"
+  if [ -f runtime/tya_cover.c ]; then
+    cp runtime/tya_cover.c "$root/share/tya/runtime/"
+  fi
   cp stdlib/*.tya "$root/share/tya/stdlib/"
   cp README.md "$root/"
 

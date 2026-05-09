@@ -15,7 +15,42 @@ func EmitC(prog *ast.Program) (string, error) {
 }
 
 func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
+	src, _, err := EmitCWithCoverage(prog, sourcePath, nil)
+	return src, err
+}
+
+// CoverageOptions enables v0.30 coverage instrumentation. Stdlib,
+// .tya/packages/, synthesized test-suite source, and empty paths are
+// always excluded; ExcludePaths additions extend that set.
+type CoverageOptions struct {
+	StdlibDir    string
+	PackagesDir  string
+	ExcludePaths []string
+}
+
+// CoverageEntry describes one registered statement counter.
+type CoverageEntry struct {
+	ID   int
+	File string
+	Line int
+	Col  int
+}
+
+// CoverageRegistry is returned by EmitCWithCoverage when coverage is
+// enabled. The runner uses it to emit F/S records into fragment files.
+type CoverageRegistry struct {
+	Entries []CoverageEntry
+}
+
+// EmitCWithCoverage is like EmitCWithPath but emits per-statement
+// counter increments when opt is non-nil. When opt is nil, it is
+// identical to EmitCWithPath and returns a nil registry.
+func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, error) {
 	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, sourcePath: sourcePath}
+	if opt != nil {
+		g.coverEnabled = true
+		g.coverOpt = opt
+	}
 	g.collectClasses(prog.Stmts)
 	for _, name := range assignedNames(prog.Stmts) {
 		g.vars[name] = true
@@ -23,11 +58,16 @@ func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
 	}
 	for _, stmt := range prog.Stmts {
 		if err := g.stmt(stmt); err != nil {
-			return "", err
+			return "", nil, err
 		}
 	}
 	var out strings.Builder
 	out.WriteString("#include \"tya_runtime.h\"\n\n")
+	if g.coverEnabled {
+		out.WriteString("extern void tya_cov_init(int n);\n")
+		out.WriteString("extern void tya_cov_inc(int id);\n")
+		fmt.Fprintf(&out, "static int tya_cov_n = %d;\n", len(g.coverEntries))
+	}
 	out.WriteString("static int g_tya_argc = 0;\nstatic char **g_tya_argv = (char **)0;\n\n")
 	out.WriteString(g.globalOut.String())
 	if g.globalOut.Len() > 0 {
@@ -36,10 +76,17 @@ func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
 	out.WriteString(g.funcOut.String())
 	out.WriteString("int main(int argc, char **argv) {\n")
 	out.WriteString("  g_tya_argc = argc; g_tya_argv = argv;\n")
+	if g.coverEnabled {
+		out.WriteString("  tya_cov_init(tya_cov_n);\n")
+	}
 	out.WriteString(g.out.String())
 	out.WriteString("  return 0;\n")
 	out.WriteString("}\n")
-	return out.String(), nil
+	var reg *CoverageRegistry
+	if g.coverEnabled {
+		reg = &CoverageRegistry{Entries: append([]CoverageEntry(nil), g.coverEntries...)}
+	}
+	return out.String(), reg, nil
 }
 
 type cgen struct {
@@ -63,6 +110,9 @@ type cgen struct {
 	superClass       string
 	predicateName    string
 	raiseDepth       int
+	coverEnabled     bool
+	coverOpt         *CoverageOptions
+	coverEntries     []CoverageEntry
 }
 
 func (g *cgen) globalLine(s string) {
@@ -103,6 +153,7 @@ func (g *cgen) collectClasses(stmts []ast.Stmt) {
 }
 
 func (g *cgen) stmt(stmt ast.Stmt) error {
+	g.instrument(stmt)
 	switch n := stmt.(type) {
 	case *ast.ImportStmt:
 		g.sourceLine(n.NameTok.Line)
@@ -363,6 +414,97 @@ func (g *cgen) sourceLine(line int) {
 	if line > 0 {
 		g.line(fmt.Sprintf("/* tya:%d */", line))
 	}
+}
+
+// stmtPos returns the source position of stmt for coverage purposes.
+// ok=false means the stmt is not instrumentable (no token, or no
+// position information was preserved through parsing).
+func stmtPos(stmt ast.Stmt) (line, col int, ok bool) {
+	switch n := stmt.(type) {
+	case *ast.AssignStmt:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.ImportStmt:
+		return n.NameTok.Line, n.NameTok.Col, n.NameTok.Line > 0
+	case *ast.ModuleDecl:
+		return n.NameTok.Line, n.NameTok.Col, n.NameTok.Line > 0
+	case *ast.ClassDecl:
+		return n.NameTok.Line, n.NameTok.Col, n.NameTok.Line > 0
+	case *ast.InterfaceDecl:
+		return n.NameTok.Line, n.NameTok.Col, n.NameTok.Line > 0
+	case *ast.ReturnStmt:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.RaiseStmt:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.MatchStmt:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.TryCatchStmt:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.ForInStmt:
+		return n.ValueTok.Line, n.ValueTok.Col, n.ValueTok.Line > 0
+	case *ast.ExprStmt:
+		return exprPos(n.Expr)
+	}
+	return 0, 0, false
+}
+
+func exprPos(expr ast.Expr) (line, col int, ok bool) {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.CallExpr:
+		return exprPos(n.Callee)
+	case *ast.BinaryExpr:
+		return exprPos(n.Left)
+	case *ast.MemberExpr:
+		return exprPos(n.Target)
+	case *ast.IndexExpr:
+		return exprPos(n.Target)
+	case *ast.UnaryExpr:
+		return exprPos(n.Expr)
+	case *ast.TryExpr:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	}
+	return 0, 0, false
+}
+
+// instrument emits tya_cov_inc(<id>); when coverage is on and the stmt
+// has a position in a non-excluded source file.
+func (g *cgen) instrument(stmt ast.Stmt) {
+	if !g.coverEnabled {
+		return
+	}
+	line, col, ok := stmtPos(stmt)
+	if !ok {
+		return
+	}
+	file := g.sourcePath
+	if g.excludedSource(file) {
+		return
+	}
+	id := len(g.coverEntries)
+	g.coverEntries = append(g.coverEntries, CoverageEntry{ID: id, File: file, Line: line, Col: col})
+	g.line(fmt.Sprintf("tya_cov_inc(%d);", id))
+}
+
+func (g *cgen) excludedSource(path string) bool {
+	if path == "" {
+		return true
+	}
+	if g.coverOpt == nil {
+		return false
+	}
+	if g.coverOpt.StdlibDir != "" && strings.HasPrefix(path, g.coverOpt.StdlibDir) {
+		return true
+	}
+	if g.coverOpt.PackagesDir != "" && strings.HasPrefix(path, g.coverOpt.PackagesDir) {
+		return true
+	}
+	for _, p := range g.coverOpt.ExcludePaths {
+		if path == p || strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *cgen) tryCatchStmt(n *ast.TryCatchStmt) error {
