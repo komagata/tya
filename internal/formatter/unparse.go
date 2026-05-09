@@ -905,6 +905,12 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 			return "", err
 		}
 		return left + " " + n.Op.Lexeme + " " + right, nil
+	case *ast.TryExpr:
+		inner, err := u.expr(n.Expr)
+		if err != nil {
+			return "", err
+		}
+		return "try " + inner, nil
 	case *ast.UnaryExpr:
 		inner, err := u.expr(n.Expr)
 		if err != nil {
