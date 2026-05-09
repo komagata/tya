@@ -272,6 +272,56 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[x] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
 </ul>
 </ul>
+<li>[ ] Ship v0.28 strict compile-time checks</li>
+<ul>
+<li>[x] Define v0.28 scope</li>
+<ul>
+<li>[x] Add <code>docs/v0.28/SPEC.md</code>.</li>
+<li>[x] Specify shadowing forbidden across nested scopes.</li>
+<li>[x] Specify unused imports as compile errors.</li>
+<li>[x] Specify unused function arguments as compile errors with <code>_</code> opt-out.</li>
+<li>[x] Specify unused private top-level definitions (leading <code>_</code>) as compile errors.</li>
+<li>[x] Keep unused-local-variable check opt-in via <code>--check-unused</code>.</li>
+<li>[x] Keep tab/trailing-whitespace lint, main.tya restriction, and naming-convention expansions out of v0.28.</li>
+</ul>
+<li>[ ] Implement shadowing check</li>
+<ul>
+<li>[ ] Track enclosing scope chain in the checker.</li>
+<li>[ ] Reject any new binding that matches a name visible in a strictly enclosing scope.</li>
+<li>[ ] Allow same-scope reassignment.</li>
+<li>[ ] Treat <code>_</code> as a non-binding discard; underscore-prefixed names still bind.</li>
+</ul>
+<li>[ ] Implement unused-import check</li>
+<ul>
+<li>[ ] Track module/alias bindings introduced by <code>import</code>.</li>
+<li>[ ] Mark them used on any read.</li>
+<li>[ ] Diagnose any unused binding at the importing file's top level.</li>
+</ul>
+<li>[ ] Implement unused-argument check</li>
+<ul>
+<li>[ ] Track parameter names per function.</li>
+<li>[ ] Mark used on any read in the body.</li>
+<li>[ ] Skip names equal to <code>_</code> and names starting with <code>_</code>.</li>
+<li>[ ] Skip parameters of abstract method declarations.</li>
+</ul>
+<li>[ ] Implement unused-private-top-level check</li>
+<ul>
+<li>[ ] Detect top-level bindings whose names start with <code>_</code>.</li>
+<li>[ ] Diagnose if no expression in the file references the name.</li>
+</ul>
+<li>[ ] Migrate the project to satisfy the new checks</li>
+<ul>
+<li>[ ] Audit stdlib, examples, and tests for shadowing / unused imports / unused args / unused private defs and fix or rename to <code>_</code>.</li>
+<li>[ ] Preserve the <code>selfhost/v01/compiler.tya</code> fixed point.</li>
+</ul>
+<li>[ ] Keep v0.28 documentation and tests aligned</li>
+<ul>
+<li>[ ] Update latest docs when v0.28 behavior is implemented.</li>
+<li>[ ] Keep <code>docs/v0.28/</code> aligned with the v0.28 minor specification.</li>
+<li>[ ] Regenerate HTML documentation with <code>node scripts/build_docs_pages.js</code>.</li>
+<li>[ ] Add positive and negative tests for each new check.</li>
+</ul>
+</ul>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>

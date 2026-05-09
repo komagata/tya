@@ -243,6 +243,40 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     - [x] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
     - [x] Add lexer and end-to-end tests for hex, binary, and underscore literals.
     - [x] Preserve the `selfhost/v01/compiler.tya` fixed point.
+- [ ] Ship v0.28 strict compile-time checks
+  - [x] Define v0.28 scope
+    - [x] Add `docs/v0.28/SPEC.md`.
+    - [x] Specify shadowing forbidden across nested scopes.
+    - [x] Specify unused imports as compile errors.
+    - [x] Specify unused function arguments as compile errors with `_` opt-out.
+    - [x] Specify unused private top-level definitions (leading `_`) as compile errors.
+    - [x] Keep unused-local-variable check opt-in via `--check-unused`.
+    - [x] Keep tab/trailing-whitespace lint, main.tya restriction, and naming-convention expansions out of v0.28.
+  - [ ] Implement shadowing check
+    - [ ] Track enclosing scope chain in the checker.
+    - [ ] Reject any new binding that matches a name visible in a strictly enclosing scope.
+    - [ ] Allow same-scope reassignment.
+    - [ ] Treat `_` as a non-binding discard; underscore-prefixed names still bind.
+  - [ ] Implement unused-import check
+    - [ ] Track module/alias bindings introduced by `import`.
+    - [ ] Mark them used on any read.
+    - [ ] Diagnose any unused binding at the importing file's top level.
+  - [ ] Implement unused-argument check
+    - [ ] Track parameter names per function.
+    - [ ] Mark used on any read in the body.
+    - [ ] Skip names equal to `_` and names starting with `_`.
+    - [ ] Skip parameters of abstract method declarations.
+  - [ ] Implement unused-private-top-level check
+    - [ ] Detect top-level bindings whose names start with `_`.
+    - [ ] Diagnose if no expression in the file references the name.
+  - [ ] Migrate the project to satisfy the new checks
+    - [ ] Audit stdlib, examples, and tests for shadowing / unused imports / unused args / unused private defs and fix or rename to `_`.
+    - [ ] Preserve the `selfhost/v01/compiler.tya` fixed point.
+  - [ ] Keep v0.28 documentation and tests aligned
+    - [ ] Update latest docs when v0.28 behavior is implemented.
+    - [ ] Keep `docs/v0.28/` aligned with the v0.28 minor specification.
+    - [ ] Regenerate HTML documentation with `node scripts/build_docs_pages.js`.
+    - [ ] Add positive and negative tests for each new check.
 
 ## Verification Reference
 

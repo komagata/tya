@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.28 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-28-specification">Tya v0.28 Specification</h1>
+<p>This document is the specification for Tya v0.28 after v0.27 hexadecimal and binary integer literals.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.28 turns the project's strict-lint goals into compile errors by default.</p>
+<p>The Tya brief from the start lists &quot;lint-like rules as compile errors&quot; as a core principle. v0.28 adopts the most useful subset and makes them mandatory: shadowing, unused imports, unused function arguments, and unused private top-level definitions.</p>
+<p>The effect is fewer silent bugs at the cost of slightly more discipline at write time. Where intent is genuinely &quot;I do not need this name,&quot; the discard form <code>_</code> makes it explicit.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Reject variable shadowing.</li>
+<li>Reject unused <code>import</code> bindings.</li>
+<li>Reject unused function arguments (with <code>_</code> opt-out).</li>
+<li>Reject unused private top-level definitions (names starting with <code>_</code>).</li>
+<li>Make these checks default compile errors, not opt-in.</li>
+<li>Keep migration straightforward: the discard underscore covers each case.</li>
+</ul>
+<h2 id="included-in-v0-28">Included in v0.28</h2>
+<p>v0.28 includes all v0.27 behavior and adds:</p>
+<ul>
+<li>**Shadowing**: a name introduced in a nested scope must not match a</li>
+</ul>
+<p>  binding visible from the enclosing scope.</p>
+<ul>
+<li>**Unused imports**: <code>import foo</code> (with or without <code>as</code>) is an error if</li>
+</ul>
+<p>  the binding is never read.</p>
+<ul>
+<li>**Unused function arguments**: a parameter that is never referenced in</li>
+</ul>
+<p>  the function body is an error unless its name is <code>_</code> or starts with <code>_</code>.</p>
+<ul>
+<li>**Unused private top-level definitions**: a top-level binding whose</li>
+</ul>
+<p>  name starts with <code>_</code> and which is never referenced is an error.</p>
+<h2 id="not-included-in-v0-28">Not Included in v0.28</h2>
+<p>v0.28 does not include:</p>
+<ul>
+<li>Unused **local** variables as a compile error (the existing</li>
+</ul>
+<p>  <code>--check-unused</code> opt-in flag remains; it is not promoted to the default   in v0.28 to avoid a wave of churn in third-party code).</p>
+<ul>
+<li>Tab-character-in-indentation as a compile error (already rejected at</li>
+</ul>
+<p>  lexer level; this is unchanged).</p>
+<ul>
+<li>Trailing-whitespace lint.</li>
+<li>&quot;Top-level executable code only in <code>main.tya</code>&quot; enforcement (a separate</li>
+</ul>
+<p>  breaking change to entry-program semantics, deferred).</p>
+<ul>
+<li>Naming-convention enforcement beyond what already exists (snake_case</li>
+</ul>
+<p>  file names, predicate <code>?</code> rules from v0.19, private <code>_</code> prefix; v0.28   does not add new naming bans).</p>
+<ul>
+<li>Duplicate-definition tightening beyond what already exists.</li>
+</ul>
+<h2 id="shadowing">Shadowing</h2>
+<p>A binding *shadows* another when a nested lexical scope introduces a name that is visible from a strictly enclosing scope.</p>
+<h3 id="forbidden-examples">Forbidden examples</h3>
+<pre><code class="language-tya">x = 1
+greet = -&gt;
+  x = 2          # error: shadows outer x
+  print x
+
+count = 0
+for count in items   # error: shadows outer count
+  print count
+
+read_user = -&gt;
+  user = parse()
+  if user
+    user = repair(user)   # error: shadows outer user
+    print user</code></pre>
+<h3 id="allowed-examples">Allowed examples</h3>
+<pre><code class="language-tya">greet = -&gt;
+  x = 2
+  print x
+
+x = 1
+print x
+
+# Sibling scopes do not see each other.
+process = -&gt;
+  total = 0
+  for item in items
+    total = total + item
+  total
+
+count = -&gt;
+  total = 1
+  total</code></pre>
+<p>A binding can be reassigned in the **same** scope without error:</p>
+<pre><code class="language-tya">x = 1
+x = 2          # ok: same scope, not a new binding</code></pre>
+<h3 id="what-counts-as-a-binding">What counts as a binding</h3>
+<p>The following introduce a new binding for the purpose of shadowing checks:</p>
+<ul>
+<li>Top-level <code>name = value</code></li>
+<li>Function parameters (<code>name = arg1, arg2 -&gt; ...</code>)</li>
+<li><code>for x in xs</code> and <code>for x, y in xs</code> loop variables</li>
+<li><code>for k, v of obj</code> variables</li>
+<li><code>try ... catch name ...</code> catch binding</li>
+<li>Assignment statements inside a nested scope where the name is not</li>
+</ul>
+<p>  already bound in that same scope</p>
+<h3 id="underscore-discards-do-not-shadow">Underscore discards do not shadow</h3>
+<p>Names that are exactly <code>_</code> are not bindings. Multiple <code>_</code> in the same scope are allowed, and <code>_</code> does not collide with any other name. Names that begin with <code>_</code> (private discards) are bindings and **do** participate in shadowing checks.</p>
+<h2 id="unused-imports">Unused Imports</h2>
+<pre><code class="language-tya">import string       # error: unused
+import array
+import string as s  # error: unused
+
+print array.first(items)</code></pre>
+<p>A <code>import</code> is unused when no expression in the importing file references the bound name (the alias if <code>as</code> is used, otherwise the module name).</p>
+<h3 id="opt-out">Opt-out</h3>
+<p>There is no opt-out. The fix is to remove the import. Importing for side effects is not a Tya idiom; <code>import</code> only binds a module.</p>
+<h2 id="unused-function-arguments">Unused Function Arguments</h2>
+<pre><code class="language-tya">greet = name -&gt; &quot;Hello, world&quot;   # error: name is unused
+
+handler = event -&gt;
+  log(&quot;hit&quot;)
+  nil
+
+# fix 1: rename to underscore prefix
+handler = _event -&gt;
+  log(&quot;hit&quot;)
+  nil
+
+# fix 2: rename to bare underscore
+handler = _ -&gt;
+  log(&quot;hit&quot;)
+  nil
+
+# fix 3: actually use the argument
+greet = name -&gt; &quot;Hello, {name}&quot;</code></pre>
+<h3 id="method-receivers">Method receivers</h3>
+<p>The implicit <code>@</code> receiver is not a parameter and is not subject to this check.</p>
+<h3 id="class-abstract-method-declarations">Class abstract method declarations</h3>
+<p>Abstract method declarations (<code>abstract method = a, b -&gt;</code> without a body) are signature-only. Their parameter names are not checked for use.</p>
+<h3 id="pattern-parameters-destructuring">Pattern parameters (destructuring)</h3>
+<p>Destructuring parameters are checked at the level of bound names. If you destructure a value but never use one of the names, that name needs <code>_</code>:</p>
+<pre><code class="language-tya">process = [first, _second, third] -&gt;
+  use(first, third)</code></pre>
+<p>(Destructuring as a parameter form is not introduced in v0.28; this clarification is forward-compatible.)</p>
+<h2 id="unused-private-top-level-definitions">Unused Private Top-Level Definitions</h2>
+<pre><code class="language-tya"># private_helper is never used in this file
+_private_helper = x -&gt; x + 1
+
+print &quot;main&quot;</code></pre>
+<p>Top-level bindings whose names start with <code>_</code> are private to their file. v0.28 makes &quot;defined but never used&quot; a compile error for these names so that dead helper functions are caught.</p>
+<h3 id="opt-out">Opt-out</h3>
+<p>Rename without the leading underscore (and accept it becomes part of the file's public surface), or delete the definition. There is no inline suppression.</p>
+<h2 id="migration">Migration</h2>
+<p>Existing code that does not satisfy the new rules has three migration options for each violation:</p>
+<p>| Violation | Fix | |---|---| | Unused import | Remove the import | | Unused arg <code>name</code> | Rename to <code>_name</code> or <code>_</code> | | Unused private <code>_helper</code> | Remove or actually call it | | Shadowing inner binding | Rename inner binding | | Shadowing loop variable | Rename loop variable |</p>
+<p>The Tya v0.28 release migrates the standard library, examples, and tests internally. Third-party code may need a one-time pass.</p>
+<h2 id="cli">CLI</h2>
+<p>The existing <code>--check-unused</code> flag retains its current behavior (warns on unused **local** variables, which v0.28 does not promote). All checks described above are emitted as compile errors by every command that does type/scope checking (<code>tya check</code>, <code>tya run</code>, <code>tya build</code>, <code>tya emit-c</code>, <code>tya test</code>, <code>tya fmt -w</code>).</p>
+<p><code>tya fmt</code> without <code>-w</code> is a syntax-only formatter and does not run the new strict checks.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.28 implementations should report source-oriented errors with one of these messages (or close equivalents):</p>
+<ul>
+<li><code>shadows outer binding &lt;name&gt;</code> — points at the inner binding</li>
+<li><code>unused import &lt;name&gt;</code> — points at the <code>import</code> statement</li>
+<li><code>unused argument &lt;name&gt;</code> — points at the parameter</li>
+<li><code>unused private top-level definition &lt;name&gt;</code> — points at the binding</li>
+</ul>
+<p>Diagnostics should mention the line and column and the offending name.</p>
+<h2 id="implementation-notes-non-normative">Implementation Notes (non-normative)</h2>
+<ul>
+<li>Shadowing: the checker maintains the chain of enclosing scopes. When</li>
+</ul>
+<p>  binding a new name, walk the chain (excluding the current scope) and   reject if any frame holds the same name.</p>
+<ul>
+<li>Unused tracking: each scope records <code>(declared, read)</code> sets per name.</li>
+</ul>
+<p>  At scope exit, names in <code>declared</code> minus <code>read</code> are diagnosed.</p>
+<ul>
+<li>Underscore: treat the bare name <code>_</code> as a fresh scope-anonymous binding</li>
+</ul>
+<p>  that no read can target.</p>
+<ul>
+<li>Top-level private: the checker scans assigned names starting with <code>_</code></li>
+</ul>
+<p>  before the body and counts a use whenever any expression contains an   identifier matching the name.</p>
+<ul>
+<li>Tests: each rule's positive / negative case in</li>
+</ul>
+<p>  <code>tests/strict_lint_test.tya</code> plus targeted txtar.</p>
+<p>These notes are guidance, not the spec.</p>
+    </article>
+  </main>
+</body>
+</html>
