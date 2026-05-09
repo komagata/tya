@@ -91,8 +91,8 @@ To check, format, or inspect generated C:
 
 ```sh
 tya check hello.tya
-tya fmt hello.tya
-tya fmt -w hello.tya
+tya format hello.tya
+tya format -w hello.tya
 tya emit-c hello.tya
 tya test
 tya test tests
@@ -199,7 +199,7 @@ The current released implementation, Tya v0.13, includes:
 - compile-to-C execution through `tya run`, `tya build`, and `tya emit-c`
 - source checking through `tya check`
 - test discovery and assertions through `tya test`
-- conservative source formatting through `tya fmt`
+- conservative source formatting through `tya format`
 - minimal classes, constructor calls, `init`, public instance fields,
   instance methods, instance field defaults, class variables, class methods,
   single inheritance, class-level inheritance, class introspection, private
@@ -249,7 +249,7 @@ Useful local commands:
 go run ./cmd/tya run examples/hello.tya
 go run ./cmd/tya build examples/hello.tya -o hello
 go run ./cmd/tya check examples/hello.tya
-go run ./cmd/tya fmt examples/hello.tya
+go run ./cmd/tya format examples/hello.tya
 go run ./cmd/tya emit-c examples/hello.tya
 go run ./cmd/tya version
 ```

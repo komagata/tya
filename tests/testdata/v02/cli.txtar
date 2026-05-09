@@ -8,12 +8,12 @@ exec go run ./cmd/tya emit-c $WORK/good.tya
 stdout 'tya_print'
 ! stderr .
 
-exec go run ./cmd/tya fmt $WORK/messy.tya
+exec go run ./cmd/tya format $WORK/messy.tya
 stdout 'name = "Tya"\nprint name\n'
 ! stderr .
 
 cp $WORK/messy.tya $WORK/write.tya
-exec go run ./cmd/tya fmt -w $WORK/write.tya
+exec go run ./cmd/tya format -w $WORK/write.tya
 ! stdout .
 ! stderr .
 cmp $WORK/write.tya $WORK/formatted.tya

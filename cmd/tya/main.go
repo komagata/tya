@@ -85,6 +85,10 @@ func main() {
 		}
 		return
 	case "fmt":
+		fmt.Fprintln(os.Stderr, "tya fmt is no longer accepted; use `tya format`")
+		os.Exit(2)
+		return
+	case "format":
 		if err := formatCommand(os.Args[2:]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -326,7 +330,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "usage: tya run <file.tya> [args...]")
 	fmt.Fprintln(os.Stderr, "       tya build <file.tya> [-o <output>]")
 	fmt.Fprintln(os.Stderr, "       tya check <file.tya>")
-	fmt.Fprintln(os.Stderr, "       tya fmt [-w] <file.tya>")
+	fmt.Fprintln(os.Stderr, "       tya format [-w] <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya emit-c <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya test [--cover [--profile FILE]] [path]")
 	fmt.Fprintln(os.Stderr, "       tya cover [--format=human|json] [--profile FILE]")
