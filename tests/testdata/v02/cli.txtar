@@ -24,7 +24,7 @@ stderr 'print missing'
 stderr '^'
 
 exec go run ./cmd/tya version
-stdout '0.38.0\n'
+stdout '0.39.0\n'
 ! stderr .
 
 -- good.tya --
