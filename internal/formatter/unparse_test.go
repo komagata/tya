@@ -167,6 +167,24 @@ func TestUnparseIdempotent(t *testing.T) {
 	}
 }
 
+func TestUnparseWrapsLongIfCondition(t *testing.T) {
+	src := "if some_condition_value + another_part_value > threshold_limit and not exceptional_case_was_seen\n  process(a, b)\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"if (",
+		"  some_condition_value + another_part_value > threshold_limit and not exceptional_case_was_seen",
+		")",
+		"  process(a, b)",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
 func TestUnparseWrapsLongLambdaBody(t *testing.T) {
 	src := "greet = recipient_name -> \"Hello, \" + recipient_name + \"! Welcome to the service.\"\n"
 	got, err := unparseSource(t, src)

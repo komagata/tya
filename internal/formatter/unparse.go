@@ -309,7 +309,7 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		u.line("while " + cond)
+		u.emitCondHeader("while", cond)
 		return u.block(n.Body)
 	case *ast.ForInStmt:
 		iter, err := u.expr(n.Iterable)
@@ -669,7 +669,7 @@ func (u *unparser) ifStmt(n *ast.IfStmt) error {
 	if err != nil {
 		return err
 	}
-	u.line("if " + cond)
+	u.emitCondHeader("if", cond)
 	if err := u.block(n.Then); err != nil {
 		return err
 	}
@@ -683,7 +683,7 @@ func (u *unparser) ifStmt(n *ast.IfStmt) error {
 			if err != nil {
 				return err
 			}
-			u.line("elseif " + cond2)
+			u.emitCondHeader("elseif", cond2)
 			if err := u.block(inner.Then); err != nil {
 				return err
 			}
@@ -696,6 +696,29 @@ func (u *unparser) ifStmt(n *ast.IfStmt) error {
 	}
 	u.line("else")
 	return u.blockBody(n.Else)
+}
+
+// emitCondHeader writes `keyword cond` on a single line, falling
+// back to the parenthesized multi-line form (CANONICAL §5.3.6) when
+// the inline form exceeds the column limit. The wrapped form is
+//
+//	keyword (
+//	  cond
+//	)
+//
+// In v0.38 this is a single-condition wrap; binary-chain
+// leading-operator wrap of the inner condition arrives in §5.3.5.
+func (u *unparser) emitCondHeader(keyword, cond string) {
+	inline := keyword + " " + cond
+	if u.fitsInline(inline) {
+		u.line(inline)
+		return
+	}
+	u.line(keyword + " (")
+	u.indent++
+	u.line(cond)
+	u.indent--
+	u.line(")")
 }
 
 func (u *unparser) block(stmts []ast.Stmt) error {
