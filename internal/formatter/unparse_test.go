@@ -102,10 +102,45 @@ func TestUnparseImports(t *testing.T) {
 	}
 }
 
-func TestUnparseUnsupportedReturnsError(t *testing.T) {
-	src := "module m\n  helper = -> 1\n"
-	_, err := unparseSource(t, src)
-	if err == nil {
-		t.Error("expected unsupported error for module decl in v0.37")
+func TestUnparseModule(t *testing.T) {
+	src := "module greet\n  hello = name -> \"Hello, \" + name\n  bye = -> \"bye\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"module greet",
+		"  hello = name -> \"Hello, \" + name",
+		"  bye = () -> \"bye\"",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
+func TestUnparseClass(t *testing.T) {
+	src := "class Dog\n  bark = ->\n    return \"woof\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"class Dog", "  bark = () ->", "    return \"woof\""} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
+
+func TestUnparseMatch(t *testing.T) {
+	src := "match x\n  case 1\n    print \"one\"\n  case _\n    print \"other\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"match x", "  case 1", "    print \"one\"", "  case _"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
 	}
 }

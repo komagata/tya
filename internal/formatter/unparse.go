@@ -141,8 +141,216 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		}
 		u.line(head + " " + kind + " " + iter)
 		return u.block(n.Body)
+	case *ast.MatchStmt:
+		return u.matchStmt(n)
+	case *ast.TryCatchStmt:
+		return u.tryStmt(n)
+	case *ast.ModuleDecl:
+		return u.moduleDecl(n)
+	case *ast.ClassDecl:
+		return u.classDecl(n)
+	case *ast.InterfaceDecl:
+		return u.interfaceDecl(n)
 	}
-	return fmt.Errorf("formatter.Unparse: stmt %T not supported in v0.37", s)
+	return fmt.Errorf("formatter.Unparse: stmt %T not supported", s)
+}
+
+func (u *unparser) matchStmt(n *ast.MatchStmt) error {
+	val, err := u.expr(n.Value)
+	if err != nil {
+		return err
+	}
+	u.line("match " + val)
+	u.indent++
+	defer func() { u.indent-- }()
+	for _, c := range n.Cases {
+		pat, err := u.expr(c.Pattern)
+		if err != nil {
+			return err
+		}
+		u.line("case " + pat)
+		if err := u.block(c.Body); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (u *unparser) tryStmt(n *ast.TryCatchStmt) error {
+	u.line("try")
+	if err := u.block(n.Try); err != nil {
+		return err
+	}
+	if n.CatchName != "" {
+		u.line("catch " + n.CatchName)
+	} else {
+		u.line("catch _")
+	}
+	return u.block(n.Catch)
+}
+
+func (u *unparser) moduleDecl(n *ast.ModuleDecl) error {
+	u.line("module " + n.Name)
+	u.indent++
+	defer func() { u.indent-- }()
+	first := true
+	for _, m := range n.Members {
+		if !first {
+			u.b.WriteByte('\n')
+		}
+		first = false
+		if err := u.moduleMember(m); err != nil {
+			return err
+		}
+	}
+	for _, c := range n.Classes {
+		if !first {
+			u.b.WriteByte('\n')
+		}
+		first = false
+		if err := u.classDecl(c); err != nil {
+			return err
+		}
+	}
+	for _, i := range n.Interfaces {
+		if !first {
+			u.b.WriteByte('\n')
+		}
+		first = false
+		if err := u.interfaceDecl(i); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (u *unparser) moduleMember(m ast.ModuleMember) error {
+	if fn, ok := m.Value.(*ast.FuncLit); ok && fn.Expr == nil && len(fn.Body) > 0 {
+		head, err := u.funcHead(fn)
+		if err != nil {
+			return err
+		}
+		u.line(m.Name + " = " + head + " ->")
+		return u.block(fn.Body)
+	}
+	val, err := u.expr(m.Value)
+	if err != nil {
+		return err
+	}
+	u.line(m.Name + " = " + val)
+	return nil
+}
+
+func (u *unparser) classDecl(n *ast.ClassDecl) error {
+	head := "class " + n.Name
+	if n.Abstract {
+		head = "abstract " + head
+	}
+	if n.Final {
+		head = "final " + head
+	}
+	if n.Parent != nil {
+		head += " < " + classRefString(*n.Parent)
+	}
+	if len(n.Implements) > 0 {
+		impls := make([]string, 0, len(n.Implements))
+		for _, r := range n.Implements {
+			impls = append(impls, classRefString(r))
+		}
+		head += " : " + strings.Join(impls, ", ")
+	}
+	u.line(head)
+	u.indent++
+	defer func() { u.indent-- }()
+	first := true
+	for _, f := range n.Fields {
+		if !first {
+			u.b.WriteByte('\n')
+		}
+		first = false
+		val, err := u.expr(f.Value)
+		if err != nil {
+			return err
+		}
+		u.line(f.Name + " = " + val)
+	}
+	for _, v := range n.Vars {
+		if !first {
+			u.b.WriteByte('\n')
+		}
+		first = false
+		val, err := u.expr(v.Value)
+		if err != nil {
+			return err
+		}
+		u.line("@@" + v.Name + " = " + val)
+	}
+	for _, m := range n.Methods {
+		if !first {
+			u.b.WriteByte('\n')
+		}
+		first = false
+		if err := u.classMethod(m); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (u *unparser) classMethod(m ast.ClassMethod) error {
+	prefix := ""
+	if m.Class {
+		prefix = "class."
+	}
+	if m.Abstract {
+		head, err := u.funcHead(m.Func)
+		if err != nil {
+			return err
+		}
+		u.line("abstract " + prefix + m.Name + " = " + head)
+		return nil
+	}
+	fn := m.Func
+	head, err := u.funcHead(fn)
+	if err != nil {
+		return err
+	}
+	if fn.Expr != nil {
+		body, err := u.expr(fn.Expr)
+		if err != nil {
+			return err
+		}
+		u.line(prefix + m.Name + " = " + head + " -> " + body)
+		return nil
+	}
+	u.line(prefix + m.Name + " = " + head + " ->")
+	return u.block(fn.Body)
+}
+
+func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
+	head := "interface " + n.Name
+	if len(n.Parents) > 0 {
+		parents := make([]string, 0, len(n.Parents))
+		for _, r := range n.Parents {
+			parents = append(parents, classRefString(r))
+		}
+		head += " < " + strings.Join(parents, ", ")
+	}
+	u.line(head)
+	u.indent++
+	defer func() { u.indent-- }()
+	for _, m := range n.Methods {
+		params := strings.Join(m.Params, ", ")
+		u.line(m.Name + " = " + params)
+	}
+	return nil
+}
+
+func classRefString(r ast.ClassRef) string {
+	if r.Module != "" {
+		return r.Module + "." + r.Name
+	}
+	return r.Name
 }
 
 func (u *unparser) assignStmt(n *ast.AssignStmt) error {
