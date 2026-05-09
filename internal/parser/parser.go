@@ -95,25 +95,28 @@ type CommentInfo struct {
 	IsFullLine bool
 }
 
-// attachStmtComments walks top-level statements and attaches leading
-// and line-end comments per §3.1 / §3.2.
+// attachStmtComments walks every Stmt body in prog and attaches
+// leading and line-end comments per §3.1 / §3.2. Top-level
+// statements use indent 0; nested bodies inherit indent + 2.
+// ModuleDecl.Members and ClassDecl.Methods are not Stmt slices and
+// are not visited in v0.36.
 func attachStmtComments(prog *ast.Program, comments []CommentInfo) {
 	if prog == nil || len(prog.Stmts) == 0 {
 		return
 	}
 	prog.Comments = map[ast.Stmt]ast.StmtComments{}
 	used := make([]bool, len(comments))
-	for i := 0; i < len(prog.Stmts); i++ {
-		stmt := prog.Stmts[i]
+	attachStmtBlock(prog.Comments, prog.Stmts, 0, comments, used)
+}
+
+func attachStmtBlock(out map[ast.Stmt]ast.StmtComments, stmts []ast.Stmt, indent int, comments []CommentInfo, used []bool) {
+	for i := 0; i < len(stmts); i++ {
+		stmt := stmts[i]
 		startLine, _ := stmtPos(stmt)
 		if startLine == 0 {
+			recurseStmtBodies(out, stmt, indent, comments, used)
 			continue
 		}
-		// Top-level statements always have indent 0; CANONICAL §3.1
-		// requires leading comments at the same indent. Inner stmts
-		// (inside if/while/match/module bodies) are handled in a
-		// later release.
-		indent := 0
 		// Leading: walk backward from comments preceding startLine.
 		var leading []string
 		expectedLine := startLine - 1
@@ -155,10 +158,45 @@ func attachStmtComments(prog *ast.Program, comments []CommentInfo) {
 			used[j] = true
 			break
 		}
-		if len(leading) == 0 && lineEnd == "" {
-			continue
+		if len(leading) > 0 || lineEnd != "" {
+			out[stmt] = ast.StmtComments{Leading: leading, LineEnd: lineEnd}
 		}
-		prog.Comments[stmt] = ast.StmtComments{Leading: leading, LineEnd: lineEnd}
+		recurseStmtBodies(out, stmt, indent, comments, used)
+	}
+}
+
+func recurseStmtBodies(out map[ast.Stmt]ast.StmtComments, stmt ast.Stmt, indent int, comments []CommentInfo, used []bool) {
+	inner := indent + 2
+	switch n := stmt.(type) {
+	case *ast.IfStmt:
+		attachStmtBlock(out, n.Then, inner, comments, used)
+		attachStmtBlock(out, n.Else, inner, comments, used)
+	case *ast.WhileStmt:
+		attachStmtBlock(out, n.Body, inner, comments, used)
+	case *ast.ForInStmt:
+		attachStmtBlock(out, n.Body, inner, comments, used)
+	case *ast.TryCatchStmt:
+		attachStmtBlock(out, n.Try, inner, comments, used)
+		attachStmtBlock(out, n.Catch, inner, comments, used)
+	case *ast.MatchStmt:
+		for _, c := range n.Cases {
+			attachStmtBlock(out, c.Body, inner, comments, used)
+		}
+	case *ast.AssignStmt:
+		// Walk function-literal bodies on the rhs so nested stmts
+		// inside `f = x -> ...` are visited.
+		for _, v := range n.Values {
+			recurseExprBodies(out, v, inner, comments, used)
+		}
+	case *ast.ExprStmt:
+		recurseExprBodies(out, n.Expr, inner, comments, used)
+	}
+}
+
+func recurseExprBodies(out map[ast.Stmt]ast.StmtComments, expr ast.Expr, indent int, comments []CommentInfo, used []bool) {
+	switch n := expr.(type) {
+	case *ast.FuncLit:
+		attachStmtBlock(out, n.Body, indent, comments, used)
 	}
 }
 

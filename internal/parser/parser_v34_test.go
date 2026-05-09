@@ -3,6 +3,7 @@ package parser
 import (
 	"testing"
 
+	"tya/internal/ast"
 	"tya/internal/lexer"
 )
 
@@ -82,6 +83,48 @@ x = 1  # initial value
 	}
 	if xc.LineEnd != " initial value" {
 		t.Errorf("x line-end: %q", xc.LineEnd)
+	}
+}
+
+func TestParseWithCommentsNested(t *testing.T) {
+	src := `outer = ->
+  # inner leading
+  x = 1
+  if x > 0
+    # then leading
+    y = 2  # then end
+`
+	toks, lcomments, _ := lexer.LexWithComments(src)
+	comments := make([]CommentInfo, 0, len(lcomments))
+	for _, c := range lcomments {
+		comments = append(comments, CommentInfo{Line: c.Line, Col: c.Col, Indent: c.Indent, Text: c.Text, IsFullLine: c.IsFullLine})
+	}
+	prog, err := ParseWithComments(toks, comments)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if prog.Comments == nil {
+		t.Fatal("Comments map is nil")
+	}
+	// Find x=1 and y=2 inside the function body and the if-body.
+	var found []string
+	for stmt, sc := range prog.Comments {
+		switch s := stmt.(type) {
+		case *ast.AssignStmt:
+			id, ok := s.Targets[0].(*ast.Ident)
+			if !ok {
+				continue
+			}
+			if id.Name == "x" && len(sc.Leading) == 1 && sc.Leading[0] == " inner leading" {
+				found = append(found, "x")
+			}
+			if id.Name == "y" && len(sc.Leading) == 1 && sc.Leading[0] == " then leading" && sc.LineEnd == " then end" {
+				found = append(found, "y")
+			}
+		}
+	}
+	if len(found) != 2 {
+		t.Errorf("expected nested attachments for x and y, got %v (map %v)", found, prog.Comments)
 	}
 }
 
