@@ -1,0 +1,22 @@
+# v0.33 Canonical Syntax step 1: parenthesized multi-parameter lambda.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/lambda.tya
+stdout '5'
+stdout '16'
+stdout '6'
+stdout '30'
+
+exec go run ./cmd/tya version
+stdout '0.33.0\n'
+
+-- lambda.tya --
+add = (a, b) -> a + b
+print add(2, 3)
+single = (x) -> x * x
+print single(4)
+threearg = (a, b, c) ->
+  return a + b + c
+print threearg(1, 2, 3)
+old_form = a, b -> a + b
+print old_form(10, 20)

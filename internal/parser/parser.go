@@ -784,6 +784,13 @@ func (p *Parser) exprWithCommaFunc(allowCommaFunc bool) (ast.Expr, error) {
 		}
 		return p.finishFunc(params, paramToks)
 	}
+	if p.startsParenFunctionParams() {
+		params, paramToks, err := p.parenFunctionParams()
+		if err != nil {
+			return nil, err
+		}
+		return p.finishFunc(params, paramToks)
+	}
 	left, err := p.logicOr()
 	if err != nil {
 		return nil, err
@@ -830,6 +837,62 @@ func (p *Parser) startsFunctionParams(allowCommaFunc bool) bool {
 			return false
 		}
 	}
+}
+
+// startsParenFunctionParams returns true when the current token starts
+// a parenthesized function-parameter list of the form `(a, b, c) ->`.
+// The form `() -> body` is already handled by primary(), so we only
+// match LPAREN immediately followed by an IDENT here.
+func (p *Parser) startsParenFunctionParams() bool {
+	if !p.at(token.LPAREN) {
+		return false
+	}
+	i := p.pos + 1
+	if p.toks[i].Type != token.IDENT {
+		return false
+	}
+	for {
+		i++
+		switch p.toks[i].Type {
+		case token.RPAREN:
+			if p.toks[i+1].Type == token.ARROW {
+				return true
+			}
+			return false
+		case token.COMMA:
+			i++
+			if p.toks[i].Type != token.IDENT {
+				return false
+			}
+		default:
+			return false
+		}
+	}
+}
+
+func (p *Parser) parenFunctionParams() ([]string, []token.Token, error) {
+	if !p.match(token.LPAREN) {
+		return nil, nil, p.err("expected '('")
+	}
+	first, err := p.expectName("expected function parameter")
+	if err != nil {
+		return nil, nil, err
+	}
+	params := []string{first.Lexeme}
+	paramToks := []token.Token{first}
+	for p.match(token.COMMA) {
+		next, err := p.expectName("expected function parameter")
+		if err != nil {
+			return nil, nil, err
+		}
+		params = append(params, next.Lexeme)
+		paramToks = append(paramToks, next)
+	}
+	if !p.match(token.RPAREN) {
+		return nil, nil, p.err("expected ')'")
+	}
+	p.match(token.ARROW)
+	return params, paramToks, nil
 }
 
 func (p *Parser) functionParams() ([]string, []token.Token, error) {

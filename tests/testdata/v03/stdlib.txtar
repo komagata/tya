@@ -10,7 +10,7 @@ stdout 'local string\npath array\n'
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.32.0\n'
+stdout '0.33.0\n'
 ! stderr .
 
 -- std/main.tya --
