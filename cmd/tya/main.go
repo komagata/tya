@@ -750,11 +750,66 @@ func checkFile(path string) error {
 	if err != nil {
 		return err
 	}
+	commentDiags, cerr := commentPositionDiagnostics(path)
+	if cerr == nil {
+		diags = append(diags, commentDiags...)
+	}
 	if len(diags) == 0 {
 		return nil
 	}
 	emitDiagnostics(diags, path)
 	return errStrictReported
+}
+
+// commentPositionDiagnostics validates the user's own source file
+// (not the inlined import-resolved one) for CANONICAL §3.4
+// forbidden comment positions. Block-trailing, file-trailing, and
+// orphaned comments not attached to any header, leading, or
+// line-end slot become structured diagnostics.
+func commentPositionDiagnostics(path string) ([]diag.Diagnostic, error) {
+	src, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	toks, lcomments, lerrs := lexer.LexWithComments(string(src))
+	if len(lerrs) > 0 {
+		return nil, lerrs[0]
+	}
+	infos := make([]parser.CommentInfo, 0, len(lcomments))
+	for _, c := range lcomments {
+		infos = append(infos, parser.CommentInfo{
+			Line: c.Line, Col: c.Col, Indent: c.Indent,
+			Text: c.Text, IsFullLine: c.IsFullLine,
+		})
+	}
+	prog, err := parser.ParseWithComments(toks, infos)
+	if err != nil {
+		return nil, err
+	}
+	orphans := parser.OrphanComments(prog, infos)
+	if len(orphans) == 0 {
+		return nil, nil
+	}
+	out := make([]diag.Diagnostic, 0, len(orphans))
+	for _, c := range orphans {
+		title := "Comment at forbidden position"
+		message := "This comment is not attached to a header, a leading-comment block, or a line-end slot."
+		hint := "Move the comment immediately above the statement it documents (no blank line between), or to the file header (separated from the body by exactly one blank line)."
+		out = append(out, diag.Diagnostic{
+			Severity: diag.Error,
+			Code:     "TYA-E0150",
+			Title:    title,
+			Message:  message,
+			Primary: diag.Region{
+				File:  path,
+				Start: diag.Pos{Line: c.Line, Col: c.Col},
+				End:   diag.Pos{Line: c.Line, Col: c.Col + 1},
+			},
+			Hints:  []string{hint},
+			Source: "checker",
+		})
+	}
+	return out, nil
 }
 
 // errStrictReported signals that diagnostics were already printed.

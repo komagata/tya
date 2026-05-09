@@ -101,12 +101,55 @@ type CommentInfo struct {
 // ModuleDecl.Members and ClassDecl.Methods are not Stmt slices and
 // are not visited in v0.36.
 func attachStmtComments(prog *ast.Program, comments []CommentInfo) {
-	if prog == nil || len(prog.Stmts) == 0 {
-		return
+	attachStmtCommentsTracked(prog, comments)
+}
+
+// attachStmtCommentsTracked is attachStmtComments plus a returned
+// `used` slice marking which comments were attached as
+// header / leading / line-end.  Comments with used[i] == false are
+// at forbidden positions per CANONICAL §3.4.
+func attachStmtCommentsTracked(prog *ast.Program, comments []CommentInfo) []bool {
+	used := make([]bool, len(comments))
+	if prog == nil {
+		return used
+	}
+	// Header comments were claimed already in ParseWithComments;
+	// mark their indices as used.
+	if len(prog.HeaderComments) > 0 {
+		count := len(prog.HeaderComments)
+		consumed := 0
+		for i := 0; i < len(comments) && consumed < count; i++ {
+			c := comments[i]
+			if !c.IsFullLine || c.Indent != 0 {
+				continue
+			}
+			used[i] = true
+			consumed++
+		}
+	}
+	if len(prog.Stmts) == 0 {
+		return used
 	}
 	prog.Comments = map[ast.Stmt]ast.StmtComments{}
-	used := make([]bool, len(comments))
 	attachStmtBlock(prog.Comments, prog.Stmts, 0, comments, used)
+	return used
+}
+
+// OrphanComments reports comments that ParseWithComments could not
+// attach to a header, leading, or line-end position. Per CANONICAL
+// §3.4 these are forbidden: block-trailing, file-trailing, and
+// (when the lexer surfaces them) bracket-internal comments. The
+// caller (typically `tya check`) renders them as structured
+// diagnostics.
+func OrphanComments(prog *ast.Program, comments []CommentInfo) []CommentInfo {
+	used := attachStmtCommentsTracked(prog, comments)
+	var orphans []CommentInfo
+	for i, c := range comments {
+		if !used[i] {
+			orphans = append(orphans, c)
+		}
+	}
+	return orphans
 }
 
 func attachStmtBlock(out map[ast.Stmt]ast.StmtComments, stmts []ast.Stmt, indent int, comments []CommentInfo, used []bool) {
