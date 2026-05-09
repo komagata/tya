@@ -848,10 +848,15 @@ func isTTY(f *os.File) bool {
 
 func formatCommand(args []string) error {
 	write := false
+	useAST := false
 	path := ""
 	for _, arg := range args {
 		if arg == "-w" {
 			write = true
+			continue
+		}
+		if arg == "--ast" {
+			useAST = true
 			continue
 		}
 		if strings.HasPrefix(arg, "-") {
@@ -872,12 +877,42 @@ func formatCommand(args []string) error {
 	if err != nil {
 		return err
 	}
-	formatted := formatter.FormatSource(string(src))
+	formatted := formatSource(string(src), useAST)
 	if write {
 		return os.WriteFile(path, []byte(formatted), 0644)
 	}
 	fmt.Fprint(os.Stdout, formatted)
 	return nil
+}
+
+// formatSource applies the canonical AST-driven serializer when
+// useAST is set, falling back to the conservative v0.2 text pass on
+// any lex / parse / unparse error. The text pass is the v0.2
+// stable behavior when useAST is false.
+func formatSource(src string, useAST bool) string {
+	if !useAST {
+		return formatter.FormatSource(src)
+	}
+	toks, lcomments, errs := lexer.LexWithComments(src)
+	if len(errs) > 0 {
+		return formatter.FormatSource(src)
+	}
+	comments := make([]parser.CommentInfo, 0, len(lcomments))
+	for _, c := range lcomments {
+		comments = append(comments, parser.CommentInfo{
+			Line: c.Line, Col: c.Col, Indent: c.Indent,
+			Text: c.Text, IsFullLine: c.IsFullLine,
+		})
+	}
+	prog, err := parser.ParseWithComments(toks, comments)
+	if err != nil {
+		return formatter.FormatSource(src)
+	}
+	out, err := formatter.Unparse(prog)
+	if err != nil {
+		return formatter.FormatSource(src)
+	}
+	return out
 }
 
 func printDiagnostic(path string, err error) {
