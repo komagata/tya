@@ -138,6 +138,36 @@ func TestUnparseImports(t *testing.T) {
 	}
 }
 
+func TestUnparseIdempotent(t *testing.T) {
+	// Idempotency holds for inputs whose canonical form is
+	// parseable today. Wrap forms (long-call multi-line) are
+	// emitted but the parser still needs the v0.38 multi-line
+	// extensions to round-trip them; those cases are tracked by
+	// TestUnparseWrapsLongCall instead.
+	cases := []string{
+		"x = 1\n",
+		"x = 1\nprint x\n",
+		"x = 1\ny = x + 2 * 3\nprint y\n",
+		"add = (a, b) -> a + b\nprint add(2, 3)\n",
+		"f = x ->\n  y = x + 1\n  return y\nprint f(2)\n",
+		"if x == 0\n  print \"a\"\nelseif x == 1\n  print \"b\"\nelse\n  print \"c\"\n",
+		"items = [1, 2, 3]\nfor item in items\n  print item\n",
+	}
+	for _, src := range cases {
+		first, err := unparseSource(t, src)
+		if err != nil {
+			t.Fatalf("unparse(parse(%q)): %v", src, err)
+		}
+		second, err := unparseSource(t, first)
+		if err != nil {
+			t.Fatalf("unparse(parse(unparse(parse(%q)))): %v", src, err)
+		}
+		if first != second {
+			t.Errorf("not idempotent for %q\nfirst:\n%s\nsecond:\n%s", src, first, second)
+		}
+	}
+}
+
 func TestUnparseWrapsLongCall(t *testing.T) {
 	src := "result = compute_filtered_items(source_alpha, source_beta, source_gamma, source_delta)\n"
 	got, err := unparseSource(t, src)
