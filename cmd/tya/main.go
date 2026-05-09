@@ -848,7 +848,7 @@ func isTTY(f *os.File) bool {
 
 func formatCommand(args []string) error {
 	write := false
-	useAST := false
+	useAST := true
 	path := ""
 	for _, arg := range args {
 		if arg == "-w" {
@@ -857,6 +857,13 @@ func formatCommand(args []string) error {
 		}
 		if arg == "--ast" {
 			useAST = true
+			continue
+		}
+		if arg == "--text" {
+			// --text falls back to the v0.2 conservative text
+			// pass. Reserved for transitional use; the AST
+			// serializer is the canonical default from v0.38.
+			useAST = false
 			continue
 		}
 		if strings.HasPrefix(arg, "-") {
