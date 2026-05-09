@@ -15,6 +15,21 @@ type Program struct {
 	// blank line. The slice contains the comment texts in source
 	// order, without the leading `#`.
 	HeaderComments []string
+
+	// Comments associates each Stmt with its leading and line-end
+	// comments per docs/CANONICAL_SYNTAX.md §3.1 and §3.2. The map is
+	// introduced in v0.35; it is populated by ParseWithComments and
+	// is nil from the default Parse path. Keyed by Stmt pointer.
+	Comments map[Stmt]StmtComments
+}
+
+// StmtComments are the comments attached to a single statement.
+// Leading is the block of `#` lines immediately before the statement
+// at the same indentation, in source order. LineEnd is the optional
+// trailing comment on the same line as the statement's start.
+type StmtComments struct {
+	Leading []string
+	LineEnd string
 }
 
 type Stmt interface{ stmt() }

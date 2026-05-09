@@ -12,7 +12,7 @@ stdout 'Hello, v0.1\n'
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.34.0\n'
+stdout '0.35.0\n'
 ! stderr .
 
 -- hello.tya --

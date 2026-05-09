@@ -24,11 +24,16 @@ func Parse(toks []token.Token) (*ast.Program, error) {
 }
 
 // ParseWithComments runs Parse and additionally fills
-// Program.HeaderComments from the supplied comments slice. Per
-// docs/CANONICAL_SYNTAX.md §3.3, header comments are leading `#`
-// lines at the top of the file followed by exactly one blank line
-// before the first statement. The blank-line check uses the line of
-// the first non-comment token.
+// Program.HeaderComments and Program.Comments from the supplied
+// comments slice. Per docs/CANONICAL_SYNTAX.md §3.1–§3.3:
+//
+//   - Leading comments: contiguous `#` lines immediately before a
+//     statement, at the same indent as that statement.
+//   - Line-end comments: a single non-full-line `#` comment on the
+//     same source line as the statement's start.
+//   - Header comments: contiguous full-line `#` lines starting at
+//     line 1 at indent 0, separated from the body by exactly one
+//     blank line.
 func ParseWithComments(toks []token.Token, comments []CommentInfo) (*ast.Program, error) {
 	prog, err := Parse(toks)
 	if err != nil {
@@ -37,6 +42,7 @@ func ParseWithComments(toks []token.Token, comments []CommentInfo) (*ast.Program
 	if len(comments) == 0 {
 		return prog, nil
 	}
+	attachStmtComments(prog, comments)
 	firstStmtLine := 0
 	for _, t := range toks {
 		if t.Type == token.NEWLINE || t.Type == token.INDENT || t.Type == token.DEDENT || t.Type == token.EOF {
@@ -87,6 +93,102 @@ type CommentInfo struct {
 	Indent     int
 	Text       string
 	IsFullLine bool
+}
+
+// attachStmtComments walks top-level statements and attaches leading
+// and line-end comments per §3.1 / §3.2.
+func attachStmtComments(prog *ast.Program, comments []CommentInfo) {
+	if prog == nil || len(prog.Stmts) == 0 {
+		return
+	}
+	prog.Comments = map[ast.Stmt]ast.StmtComments{}
+	used := make([]bool, len(comments))
+	for i := 0; i < len(prog.Stmts); i++ {
+		stmt := prog.Stmts[i]
+		startLine, _ := stmtPos(stmt)
+		if startLine == 0 {
+			continue
+		}
+		// Top-level statements always have indent 0; CANONICAL §3.1
+		// requires leading comments at the same indent. Inner stmts
+		// (inside if/while/match/module bodies) are handled in a
+		// later release.
+		indent := 0
+		// Leading: walk backward from comments preceding startLine.
+		var leading []string
+		expectedLine := startLine - 1
+		for j := len(comments) - 1; j >= 0; j-- {
+			if used[j] {
+				continue
+			}
+			c := comments[j]
+			if c.Line >= startLine {
+				continue
+			}
+			if c.Line < expectedLine {
+				break
+			}
+			if !c.IsFullLine {
+				break
+			}
+			if c.Indent != indent {
+				break
+			}
+			leading = append([]string{c.Text}, leading...)
+			used[j] = true
+			expectedLine = c.Line - 1
+		}
+		// Line-end: a non-full-line comment whose Line == startLine.
+		var lineEnd string
+		for j := range comments {
+			if used[j] {
+				continue
+			}
+			c := comments[j]
+			if c.Line != startLine {
+				continue
+			}
+			if c.IsFullLine {
+				continue
+			}
+			lineEnd = c.Text
+			used[j] = true
+			break
+		}
+		if len(leading) == 0 && lineEnd == "" {
+			continue
+		}
+		prog.Comments[stmt] = ast.StmtComments{Leading: leading, LineEnd: lineEnd}
+	}
+}
+
+// stmtPos returns the source line and indent (column - 1) of stmt's
+// first significant token, or (0, 0) when stmt does not carry a
+// position.
+func stmtPos(stmt ast.Stmt) (line, indent int) {
+	switch n := stmt.(type) {
+	case *ast.AssignStmt:
+		return n.Tok.Line, n.Tok.Col - 1
+	case *ast.ImportStmt:
+		return n.NameTok.Line, n.NameTok.Col - 1
+	case *ast.ModuleDecl:
+		return n.NameTok.Line, n.NameTok.Col - 1
+	case *ast.ClassDecl:
+		return n.NameTok.Line, n.NameTok.Col - 1
+	case *ast.InterfaceDecl:
+		return n.NameTok.Line, n.NameTok.Col - 1
+	case *ast.ReturnStmt:
+		return n.Tok.Line, n.Tok.Col - 1
+	case *ast.RaiseStmt:
+		return n.Tok.Line, n.Tok.Col - 1
+	case *ast.MatchStmt:
+		return n.Tok.Line, n.Tok.Col - 1
+	case *ast.TryCatchStmt:
+		return n.Tok.Line, n.Tok.Col - 1
+	case *ast.ForInStmt:
+		return n.ValueTok.Line, n.ValueTok.Col - 1
+	}
+	return 0, 0
 }
 
 func (p *Parser) program() (*ast.Program, error) {
