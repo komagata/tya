@@ -1,0 +1,38 @@
+# v0.44 nested package directories.
+# Packages may nest to arbitrary depth via directory nesting; the
+# import binding is the terminal segment of the import path.
+#
+# Note: within-package class-to-class references at call sites
+# (e.g. `Request(...)` inside Client.fetch's body) are not yet
+# resolved without prefix when classes are wrapped in the
+# synthesized package module. That gap is tracked as a M5 follow-up.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'GET /\n200\n'
+! stderr .
+
+-- main.tya --
+import api/v1
+
+req = v1.Request("GET", "/")
+res = v1.Response(200)
+print(req.summary())
+print(res.status())
+
+-- api/v1/Request.tya --
+class Request
+  init = method, url ->
+    @method = method
+    @url = url
+
+  summary = ->
+    "{@method} {@url}"
+
+-- api/v1/Response.tya --
+class Response
+  init = status ->
+    @status = status
+
+  status = ->
+    @status
