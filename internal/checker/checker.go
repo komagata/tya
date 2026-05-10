@@ -135,7 +135,7 @@ var builtinNames = []string{
 	"runtime_gc_stats",
 	"runtime_gc_collect",
 	// v0.42 channel
-	"channel_new", "channel_send", "channel_receive", "channel_close", "channel_closed_p",
+	"channel_new", "channel_send", "channel_receive", "channel_receive_timeout", "channel_close", "channel_closed_p",
 }
 
 type scope struct {

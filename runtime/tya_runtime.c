@@ -3419,6 +3419,62 @@ TyaValue tya_channel_receive(TyaValue ch) {
   return value;
 }
 
+TyaValue tya_channel_receive_timeout(TyaValue ch, TyaValue seconds) {
+  if (ch.kind != TYA_CHANNEL || ch.channel == NULL) {
+    tya_raise(tya_string("channel.receive_timeout: first argument must be a channel"));
+    return tya_nil();
+  }
+  if (seconds.kind != TYA_NUMBER) {
+    tya_raise(tya_string("channel.receive_timeout: seconds must be a number"));
+    return tya_nil();
+  }
+  if (seconds.number < 0.0) {
+    tya_raise(tya_string("channel.receive_timeout: seconds must be >= 0"));
+    return tya_nil();
+  }
+  TyaChannel *c = ch.channel;
+  struct timespec deadline;
+#if defined(__APPLE__)
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  deadline.tv_sec = now.tv_sec + (time_t)seconds.number;
+  long add_nsec = (long)((seconds.number - (double)((long)seconds.number)) * 1e9) + now.tv_usec * 1000;
+  if (add_nsec >= 1000000000L) {
+    deadline.tv_sec += add_nsec / 1000000000L;
+    add_nsec %= 1000000000L;
+  }
+  deadline.tv_nsec = add_nsec;
+#else
+  clock_gettime(CLOCK_REALTIME, &deadline);
+  deadline.tv_sec += (time_t)seconds.number;
+  long add_nsec = (long)((seconds.number - (double)((long)seconds.number)) * 1e9) + deadline.tv_nsec;
+  if (add_nsec >= 1000000000L) {
+    deadline.tv_sec += add_nsec / 1000000000L;
+    add_nsec %= 1000000000L;
+  }
+  deadline.tv_nsec = add_nsec;
+#endif
+  pthread_mutex_lock(&c->mu);
+  while (c->len == 0 && !c->closed) {
+    int rc = pthread_cond_timedwait(&c->not_empty, &c->mu, &deadline);
+    if (rc == ETIMEDOUT) {
+      pthread_mutex_unlock(&c->mu);
+      return tya_nil();
+    }
+  }
+  if (c->len == 0 && c->closed) {
+    pthread_mutex_unlock(&c->mu);
+    return tya_nil();
+  }
+  TyaValue value = c->buffer[c->head];
+  c->buffer[c->head] = tya_nil();
+  c->head = (c->head + 1) % c->capacity;
+  c->len--;
+  pthread_cond_signal(&c->not_full);
+  pthread_mutex_unlock(&c->mu);
+  return value;
+}
+
 TyaValue tya_channel_close(TyaValue ch) {
   if (ch.kind != TYA_CHANNEL || ch.channel == NULL) {
     tya_raise(tya_string("channel.close: argument must be a channel"));

@@ -14,6 +14,11 @@ module channel
   # for every later call.
   receive = c -> channel_receive(c)
 
+  # channel.receive_timeout(c, seconds) blocks until a value is
+  # available or the timeout elapses. Returns nil on timeout. seconds
+  # is a non-negative number; 0 means do not wait.
+  receive_timeout = c, seconds -> channel_receive_timeout(c, seconds)
+
   # channel.close(c) marks the channel closed and wakes everyone
   # waiting on it.
   close = c -> channel_close(c)

@@ -2603,6 +2603,8 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_channel_send(%s, %s)", 2)
 	case "channel_receive":
 		return emit("tya_channel_receive(%s)", 1)
+	case "channel_receive_timeout":
+		return emit("tya_channel_receive_timeout(%s, %s)", 2)
 	case "channel_close":
 		return emit("tya_channel_close(%s)", 1)
 	case "channel_closed_p":

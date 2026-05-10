@@ -2785,6 +2785,7 @@ func registerV41Builtins(env *Env) {
 	env.set("channel_new", stub("channel_new", 1))
 	env.set("channel_send", stub("channel_send", 2))
 	env.set("channel_receive", stub("channel_receive", 1))
+	env.set("channel_receive_timeout", stub("channel_receive_timeout", 2))
 	env.set("channel_close", stub("channel_close", 1))
 	env.set("channel_closed_p", stub("channel_closed_p", 1))
 }

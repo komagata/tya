@@ -213,6 +213,7 @@ void tya_scope_exit(TyaScope *scope);
 TyaValue tya_channel_new(TyaValue capacity);
 TyaValue tya_channel_send(TyaValue ch, TyaValue value);
 TyaValue tya_channel_receive(TyaValue ch);
+TyaValue tya_channel_receive_timeout(TyaValue ch, TyaValue seconds);
 TyaValue tya_channel_close(TyaValue ch);
 TyaValue tya_channel_closed(TyaValue ch);
 

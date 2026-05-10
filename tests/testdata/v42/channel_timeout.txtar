@@ -1,0 +1,22 @@
+# v0.42 STEP 6: channel.receive_timeout returns nil if no value
+# arrives within the deadline, otherwise the dequeued value.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/sample.tya
+stdout 'timed out'
+stdout 'got 42'
+
+-- sample.tya --
+import channel
+
+c = channel.new(1)
+v = channel.receive_timeout(c, 0.1)
+if v == nil
+  print "timed out"
+else
+  print v
+
+c2 = channel.new(1)
+channel.send(c2, 42)
+v2 = channel.receive_timeout(c2, 0.1)
+print "got " + to_string(v2)

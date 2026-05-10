@@ -167,9 +167,21 @@ A new `TYA_CHANNEL` value kind is reserved with the matching
 `tya_to_string` and `tya_print` render a channel as `[channel]`,
 and equality is identity equality.
 
-### STEP 6 — `channel.receive_timeout` and `channel.select` (planned)
+### STEP 6 — `channel.receive_timeout` (landed)
 
-`channel.receive_timeout(c, seconds)` and `channel.select([...])`.
+`channel.receive_timeout(c, seconds)` blocks until either a value is
+available or the wall-clock deadline elapses, then returns the
+dequeued value (on success) or `nil` (on timeout). `seconds` is a
+non-negative number; `0` means "do not wait" (a single best-effort
+poll). The implementation uses `pthread_cond_timedwait` against
+`CLOCK_REALTIME`. On macOS / BSD the deadline is computed from
+`gettimeofday`; elsewhere it is read from `clock_gettime`.
+
+`channel.select` (a multiplexed select-like primitive) is deferred
+to a follow-up STEP. The minimum-effort substitute today is
+`receive_timeout` with a small budget plus polling, or one
+forwarding task per source channel that funnels into a shared
+inbox.
 
 ### STEP 7 — `sync` stdlib module (planned)
 
