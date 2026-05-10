@@ -1,0 +1,37 @@
+# v0.44 read-only developer flags (--tokens, --emit-c) accept
+# class files in addition to script files. The flags route through
+# isolated parse + check + (for --emit-c) class-file codegen,
+# producing partial output (no main()) without invoking entry-only
+# import resolution.
+cd $REPO
+
+# --tokens on a class file: lexer output for the file content.
+exec go run ./cmd/tya --tokens $WORK/Foo.tya
+stdout 'IDENT.*class'
+stdout 'IDENT.*Foo'
+! stderr .
+
+# --emit-c on a class file: emits the class constructor function
+# and a main() that initializes the class global, sufficient to
+# compile and link as a standalone C program (the resulting binary
+# would just initialize Foo and exit).
+exec go run ./cmd/tya --emit-c $WORK/Foo.tya
+stdout 'TyaValue Foo;'
+stdout 'tya_fn_Foo_'
+stdout 'int main\('
+! stderr .
+
+# --emit-c on a structurally bad class file fails with a class
+# file diagnostic, not the entry-only TYA-E0850 message.
+! exec go run ./cmd/tya --emit-c $WORK/BadName.tya
+stderr 'must define class BadName'
+
+-- Foo.tya --
+class Foo
+  init = ->
+    @x = 1
+
+-- BadName.tya --
+class WrongName
+  init = ->
+    @x = 1

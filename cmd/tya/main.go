@@ -212,7 +212,10 @@ doneOptions:
 		os.Exit(2)
 	}
 	path := args[0]
-	if err := runner.ValidateFileName(path); err != nil {
+	// v0.44: developer flags are read-only — accept both script and
+	// class files. Strict entry-only validation (ValidateFileName)
+	// only fires when the flag actually requires entry semantics.
+	if err := runner.ValidateAnyTyaFileName(path); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
@@ -227,7 +230,38 @@ doneOptions:
 	}
 	source := string(src)
 	modules := []string(nil)
+	isClassFile := checker.IsClassFileName(path)
 	if emitC && !checkUnused {
+		if isClassFile {
+			// v0.44: emit C for a class file in isolation. Skip the
+			// entry-only LoadSourceWithModules path and validate
+			// the class file via CheckClassFile. The C output is
+			// partial (no main()); useful for inspection /
+			// debugging.
+			toks, errs := lexer.Lex(source)
+			if len(errs) > 0 {
+				for _, err := range errs {
+					fmt.Fprintln(os.Stderr, err)
+				}
+				os.Exit(1)
+			}
+			prog, err := parser.Parse(toks)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			if err := checker.CheckClassFile(prog, path); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			csrc, err := codegen.EmitCWithPath(prog, path)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			fmt.Fprint(os.Stdout, csrc)
+			return
+		}
 		source, modules, err = runner.LoadSourceWithModules(path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
