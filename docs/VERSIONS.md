@@ -12,6 +12,7 @@ historical copy, such as `v0.1.0` and `v0.2.0`.
 ## v0.44 (in progress)
 
 - [Spec](v0.44/spec.html)
+- [Migration Guide](v0.44/migration.html)
 
 ## v0.43
 
