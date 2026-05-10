@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -13,6 +14,8 @@ import (
 	"tya/internal/parser"
 	"tya/internal/runner"
 )
+
+var runtimeOS = runtime.GOOS
 
 func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	src := "x = 2 + 3 * 4\nprint x\n"
@@ -330,7 +333,11 @@ func compileAndRunC(t *testing.T, csrc string, input string, args ...string) ([]
 	}
 	runtime := filepath.Join("..", "..", "runtime", "tya_runtime.c")
 	include := filepath.Join("..", "..", "runtime")
-	if out, err := exec.Command("gcc", cfile, runtime, "-I", include, "-o", bin).CombinedOutput(); err != nil {
+	gccArgs := []string{cfile, runtime, "-I", include, "-o", bin}
+	if runtimeOS == "linux" {
+		gccArgs = append(gccArgs, "-lpthread")
+	}
+	if out, err := exec.Command("gcc", gccArgs...).CombinedOutput(); err != nil {
 		t.Fatalf("gcc: %v\n%s\n%s", err, out, csrc)
 	}
 	cmd := exec.Command(bin, args...)

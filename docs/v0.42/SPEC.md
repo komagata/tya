@@ -55,11 +55,27 @@ green and preserves the self-host fixed point.
 - The canonical formatter (`tya format`) emits all three forms.
 - Self-host fixed point preserved.
 
-### STEP 2 — Multi-thread GC extension and `task` value (planned)
+### STEP 2 — Multi-thread GC extension and `task` value (landed)
 
-Mutex-protect the v0.41 allocator. Add a `task` value kind backed by a
-runtime task struct (pthread, return slot, completion condvar, cancel
-flag). Stop-the-world for GC across all worker threads.
+The v0.41 allocator is now mutex-protected. `tya_gc_alloc`,
+`tya_gc_register_root`, `tya_gc_collect`, `tya_gc_maybe_collect`, and
+`tya_gc_stats` all serialize on a single `pthread_mutex_t`. A future
+minor will move to a finer-grained design when an M:N scheduler lands.
+
+A new `task` value kind (`TYA_TASK` / `TyaTask`) is reserved with the
+following layout: `pthread_t`, `pthread_mutex_t`, `pthread_cond_t`,
+`done`, `joined`, `raised`, `cancelled` (atomic), `callee` (the
+callable), `result`, and `raise_value`. The collector marks `callee`,
+`result`, and `raise_value`; the sweeper destroys the mutex and
+condvar before freeing the task. STEP 3 will populate the struct from
+`spawn` and read it from `await`.
+
+`kind(t)` for a task value returns `"task"`. `tya_to_string` and
+`tya_print` render a task as `"[task]"`. Equality (`tya_equal`) is
+identity equality.
+
+Generated programs link with `pthread` on Linux (`-lpthread`); on
+macOS / BSD pthread is in libc.
 
 ### STEP 3 — `spawn` / `await` codegen and runtime (planned)
 

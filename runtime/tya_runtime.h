@@ -15,6 +15,7 @@ typedef enum {
   TYA_FUNCTION,
   TYA_ERROR,
   TYA_BYTES,
+  TYA_TASK,
 } TyaKind;
 
 typedef struct TyaBytes TyaBytes;
@@ -24,6 +25,7 @@ typedef struct TyaDict TyaDict;
 typedef struct TyaDictEntry TyaDictEntry;
 typedef struct TyaFunction TyaFunction;
 typedef struct TyaRaiseFrame TyaRaiseFrame;
+typedef struct TyaTask TyaTask;
 
 typedef struct {
   TyaKind kind;
@@ -35,6 +37,7 @@ typedef struct {
   TyaFunction *function;
   const char *error;
   TyaBytes *bytes;
+  TyaTask *task;
 } TyaValue;
 
 typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);

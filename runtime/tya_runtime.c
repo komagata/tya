@@ -5,7 +5,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <math.h>
+#include <pthread.h>
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +41,7 @@ typedef enum {
   TYA_GC_DICT = 2,
   TYA_GC_FUNCTION = 3,
   TYA_GC_BYTES = 4,
+  TYA_GC_TASK = 5,
 } TyaGcKind;
 
 typedef struct TyaGcHeader {
@@ -77,6 +80,23 @@ struct TyaFunction {
   bool is_class;
 };
 
+/* TyaTask is the runtime representation of a task value (v0.42).
+ * v0.42 STEP 2 only declares the struct and links it through the GC;
+ * STEP 3 wires spawn / await codegen against this layout. */
+struct TyaTask {
+  TyaGcHeader gc;
+  pthread_t thread;
+  pthread_mutex_t mu;
+  pthread_cond_t cv;
+  bool done;
+  bool joined;
+  bool raised;
+  atomic_bool cancelled;
+  TyaValue callee;       /* the callable that the task runs */
+  TyaValue result;       /* return value when done && !raised */
+  TyaValue raise_value;  /* in-flight raise to propagate to await */
+};
+
 static TyaGcHeader *tya_gc_head = NULL;
 static size_t tya_gc_alloc_count = 0;
 static size_t tya_gc_alloc_bytes = 0;
@@ -90,6 +110,12 @@ static TyaValue **tya_gc_roots = NULL;
 static size_t tya_gc_root_count = 0;
 static size_t tya_gc_root_cap = 0;
 
+/* tya_gc_mu serializes allocator state, the live-allocation list, the
+ * global root array, and the collector. v0.42 uses a single mutex; an
+ * M:N scheduler in a future minor will move this to a finer-grained
+ * design. */
+static pthread_mutex_t tya_gc_mu = PTHREAD_MUTEX_INITIALIZER;
+
 static void *tya_gc_alloc(size_t size, TyaGcKind kind) {
   TyaGcHeader *header = (TyaGcHeader *)malloc(size);
   if (header == NULL) {
@@ -99,20 +125,24 @@ static void *tya_gc_alloc(size_t size, TyaGcKind kind) {
   header->mark = 0;
   header->kind = (unsigned char)kind;
   header->size = size;
+  pthread_mutex_lock(&tya_gc_mu);
   header->next = tya_gc_head;
   tya_gc_head = header;
   tya_gc_alloc_count++;
   tya_gc_alloc_bytes += size;
+  pthread_mutex_unlock(&tya_gc_mu);
   return header;
 }
 
 void tya_gc_register_root(TyaValue *p) {
+  pthread_mutex_lock(&tya_gc_mu);
   if (tya_gc_root_count == tya_gc_root_cap) {
     size_t new_cap = tya_gc_root_cap == 0 ? 16 : tya_gc_root_cap * 2;
     tya_gc_roots = realloc(tya_gc_roots, sizeof(TyaValue *) * new_cap);
     tya_gc_root_cap = new_cap;
   }
   tya_gc_roots[tya_gc_root_count++] = p;
+  pthread_mutex_unlock(&tya_gc_mu);
 }
 
 static void tya_gc_mark_value(TyaValue v);
@@ -150,6 +180,13 @@ static void tya_gc_mark_header(TyaGcHeader *h) {
     case TYA_GC_BYTES:
       /* leaf */
       break;
+    case TYA_GC_TASK: {
+      TyaTask *t = (TyaTask *)h;
+      tya_gc_mark_value(t->callee);
+      tya_gc_mark_value(t->result);
+      tya_gc_mark_value(t->raise_value);
+      break;
+    }
   }
 }
 
@@ -167,6 +204,9 @@ static void tya_gc_mark_value(TyaValue v) {
       break;
     case TYA_BYTES:
       if (v.bytes) tya_gc_mark_header((TyaGcHeader *)v.bytes);
+      break;
+    case TYA_TASK:
+      if (v.task) tya_gc_mark_header((TyaGcHeader *)v.task);
       break;
     default:
       break;
@@ -198,6 +238,13 @@ static void tya_gc_free_one(TyaGcHeader *h) {
       TyaBytes *b = (TyaBytes *)h;
       free(b->data);
       free(b);
+      break;
+    }
+    case TYA_GC_TASK: {
+      TyaTask *t = (TyaTask *)h;
+      pthread_mutex_destroy(&t->mu);
+      pthread_cond_destroy(&t->cv);
+      free(t);
       break;
     }
   }
@@ -781,6 +828,8 @@ TyaValue tya_kind(TyaValue value) {
     return tya_string("error");
   case TYA_BYTES:
     return tya_string("bytes");
+  case TYA_TASK:
+    return tya_string("task");
   }
   return tya_string("unknown");
 }
@@ -886,6 +935,8 @@ bool tya_equal(TyaValue left, TyaValue right) {
       return false;
     }
     return memcmp(left.bytes->data, right.bytes->data, (size_t)left.bytes->len) == 0;
+  case TYA_TASK:
+    return left.task == right.task;
   }
   return false;
 }
@@ -960,6 +1011,8 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
       return false;
     }
     return memcmp(left.bytes->data, right.bytes->data, (size_t)left.bytes->len) == 0;
+  case TYA_TASK:
+    return left.task == right.task;
   }
   return false;
 }
@@ -1169,6 +1222,9 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     break;
   case TYA_STRING:
     tya_builder_append(builder, value.string == NULL ? "" : value.string);
+    break;
+  case TYA_TASK:
+    tya_builder_append(builder, "[task]");
     break;
   case TYA_BYTES:
     tya_builder_append(builder, "<bytes:");
@@ -1700,6 +1756,9 @@ static void tya_write_value(FILE *out, TyaValue value) {
     break;
   case TYA_BYTES:
     fprintf(out, "<bytes:%d>", value.bytes == NULL ? 0 : value.bytes->len);
+    break;
+  case TYA_TASK:
+    fprintf(out, "[task]");
     break;
   }
 }
@@ -2945,6 +3004,7 @@ TyaValue tya_file_write_bytes(TyaValue path, TyaValue b) {
  * ========================================================================= */
 
 void tya_gc_collect(void) {
+  pthread_mutex_lock(&tya_gc_mu);
   /* Mark from registered globals. */
   for (size_t i = 0; i < tya_gc_root_count; i++) {
     tya_gc_mark_value(*tya_gc_roots[i]);
@@ -2962,30 +3022,42 @@ void tya_gc_collect(void) {
    * programs. */
   size_t target = tya_gc_live_after_last * 2;
   tya_gc_threshold = (target > 1024) ? target : 1024;
+  pthread_mutex_unlock(&tya_gc_mu);
 }
 
 void tya_gc_maybe_collect(void) {
   /* Called by generated code at safe points (between top-level
    * statements). Triggers a collection when allocations since the last
    * collection exceed the threshold. */
+  pthread_mutex_lock(&tya_gc_mu);
   size_t live = tya_gc_alloc_count - tya_gc_freed_count;
-  if (live >= tya_gc_threshold) {
+  size_t threshold = tya_gc_threshold;
+  pthread_mutex_unlock(&tya_gc_mu);
+  if (live >= threshold) {
     tya_gc_collect();
   }
 }
 
 TyaValue tya_gc_stats(void) {
-  size_t live_count = tya_gc_alloc_count - tya_gc_freed_count;
-  size_t live_bytes = tya_gc_alloc_bytes - tya_gc_freed_bytes;
+  pthread_mutex_lock(&tya_gc_mu);
+  size_t alloc_count = tya_gc_alloc_count;
+  size_t alloc_bytes = tya_gc_alloc_bytes;
+  size_t freed_count = tya_gc_freed_count;
+  size_t freed_bytes = tya_gc_freed_bytes;
+  size_t collect_count = tya_gc_collect_count;
+  size_t threshold = tya_gc_threshold;
+  pthread_mutex_unlock(&tya_gc_mu);
+  size_t live_count = alloc_count - freed_count;
+  size_t live_bytes = alloc_bytes - freed_bytes;
   TyaDictEntry entries[8] = {
-    {"alloc_count",   tya_number((double)tya_gc_alloc_count)},
-    {"alloc_bytes",   tya_number((double)tya_gc_alloc_bytes)},
-    {"freed_count",   tya_number((double)tya_gc_freed_count)},
-    {"freed_bytes",   tya_number((double)tya_gc_freed_bytes)},
+    {"alloc_count",   tya_number((double)alloc_count)},
+    {"alloc_bytes",   tya_number((double)alloc_bytes)},
+    {"freed_count",   tya_number((double)freed_count)},
+    {"freed_bytes",   tya_number((double)freed_bytes)},
     {"live_count",    tya_number((double)live_count)},
     {"live_bytes",    tya_number((double)live_bytes)},
-    {"collect_count", tya_number((double)tya_gc_collect_count)},
-    {"threshold",     tya_number((double)tya_gc_threshold)},
+    {"collect_count", tya_number((double)collect_count)},
+    {"threshold",     tya_number((double)threshold)},
   };
   return tya_dict(entries, 8);
 }

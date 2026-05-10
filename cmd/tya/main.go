@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -400,6 +401,11 @@ func buildExecutableWithCover(path string, output string, opt *codegen.CoverageO
 		}
 	}
 	args = append(args, "-I", runtimeDir, "-o", output)
+	// v0.42 runtime uses pthread for spawn / await / channels / sync.
+	// On macOS/BSD pthread is in libc; on Linux/glibc it lives in -lpthread.
+	if runtime.GOOS == "linux" {
+		args = append(args, "-lpthread")
+	}
 	compile := exec.Command(cc, args...)
 	compile.Stderr = os.Stderr
 	if err := compile.Run(); err != nil {
