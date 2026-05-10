@@ -1,0 +1,58 @@
+# v0.44 directory-as-package import.
+# A directory containing PascalCase class files is an importable package.
+# `import net/http` resolves to the directory and the binding is `http`.
+# Cross-package access uses `<binding>.<ClassName>`.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'http://example.com\n200\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/bad_pkg_main.tya
+stderr 'package bad_pkg contains script file'
+
+! exec go run ./cmd/tya run $WORK/Hello.tya
+stderr 'Hello.tya is a class file'
+
+-- main.tya --
+import net/http
+
+request = http.Request("http://example.com")
+response = http.Response()
+print(request.url())
+print(response.status())
+
+-- net/http/Request.tya --
+class Request
+  init = url ->
+    @url = url
+
+  url = ->
+    @url
+
+-- net/http/Response.tya --
+class Response
+  init = ->
+    @status = 200
+
+  status = ->
+    @status
+
+-- bad_pkg_main.tya --
+import bad_pkg
+
+x = bad_pkg.Helper()
+print(x)
+
+-- bad_pkg/Helper.tya --
+class Helper
+  init = ->
+    @x = 1
+
+-- bad_pkg/oops.tya --
+print("this is a script file inside a package; should be rejected")
+
+-- Hello.tya --
+class Hello
+  init = ->
+    @x = 1

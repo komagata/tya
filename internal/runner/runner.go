@@ -158,11 +158,47 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 		state.stack = state.stack[:len(state.stack)-1]
 	}()
 
-	src, err := os.ReadFile(path)
-	if err != nil {
-		return "", nil, err
+	info, statErr := os.Stat(path)
+	if statErr != nil {
+		return "", nil, statErr
 	}
-	source := string(src)
+	var source string
+	if info.IsDir() {
+		// v0.44 directory-as-package: synthesize a virtual module
+		// source that wraps every class file in the directory under
+		// `module <last-segment>`.
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return "", nil, err
+		}
+		classFiles := []string{}
+		for _, e := range entries {
+			if e.IsDir() || filepath.Ext(e.Name()) != ".tya" {
+				continue
+			}
+			if checker.IsScriptFileName(e.Name()) {
+				return "", nil, fmt.Errorf("package %s contains script file %s; packages may not include lowercase .tya files", filepath.Base(path), e.Name())
+			}
+			if !checker.IsClassFileName(e.Name()) {
+				continue
+			}
+			classFiles = append(classFiles, filepath.Join(path, e.Name()))
+		}
+		if len(classFiles) == 0 {
+			return "", nil, fmt.Errorf("package %s contains no class files", filepath.Base(path))
+		}
+		synth, err := synthesizePackageSource(classFiles, filepath.Base(path))
+		if err != nil {
+			return "", nil, err
+		}
+		source = synth
+	} else {
+		src, err := os.ReadFile(path)
+		if err != nil {
+			return "", nil, err
+		}
+		source = string(src)
+	}
 	prog, err := parseSource(source)
 	if err != nil {
 		return "", nil, err
@@ -184,7 +220,15 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 	for _, imp := range imports {
 		modPath, err := resolveModulePath(path, imp.path)
 		if err != nil {
-			return "", nil, err
+			// v0.44 fallback: try directory-as-package resolution.
+			pkgDir, _, perr := resolvePackageDir(path, imp.path)
+			if perr != nil {
+				return "", nil, perr
+			}
+			if pkgDir == "" {
+				return "", nil, err
+			}
+			modPath = pkgDir
 		}
 		importDef, err := publicDefForFile(modPath)
 		if err != nil {
@@ -333,6 +377,19 @@ func stdlibDirs() []string {
 }
 
 func publicDefForFile(path string) (publicDef, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return publicDef{}, err
+	}
+	if info.IsDir() {
+		// v0.44 package directory: the public binding is the
+		// directory's leaf name, treated as a synthesized module.
+		name := filepath.Base(path)
+		if !moduleNameRE.MatchString(name) {
+			return publicDef{}, fmt.Errorf("invalid package directory name: %s", name)
+		}
+		return publicDef{name: name, kind: "module"}, nil
+	}
 	src, err := os.ReadFile(path)
 	if err != nil {
 		return publicDef{}, err
@@ -384,6 +441,100 @@ func validateImportPath(name string) error {
 		}
 	}
 	return nil
+}
+
+// synthesizePackageSource takes a list of class file paths and a
+// package name and produces a single Tya source string declaring
+// `module <pkgName>` whose body contains every class file's
+// non-import top-level content. Imports from the class files are
+// hoisted above the synthesized module declaration and deduplicated
+// by their (path, alias) pair.
+//
+// Each class file is validated via checker.CheckClassFile before
+// inclusion; its imports are extracted from the AST, and the file's
+// source text (with import lines removed) is indented by two spaces
+// so it nests correctly inside the synthesized module block.
+//
+// Limitation: multi-line strings inside a class file body whose
+// content lines start at column zero will gain two leading spaces
+// after re-indentation. Class file authors should avoid placing
+// multi-line string content at column zero within a v0.44 package.
+func synthesizePackageSource(classFiles []string, pkgName string) (string, error) {
+	if !moduleNameRE.MatchString(pkgName) {
+		return "", fmt.Errorf("invalid package name: %s", pkgName)
+	}
+	type importKey struct {
+		path  string
+		alias string
+	}
+	var orderedImports []*ast.ImportStmt
+	seenImports := map[importKey]bool{}
+	var bodies []string
+
+	for _, file := range classFiles {
+		raw, err := os.ReadFile(file)
+		if err != nil {
+			return "", err
+		}
+		text := string(raw)
+		prog, err := parseSource(text)
+		if err != nil {
+			return "", fmt.Errorf("%s: %w", file, err)
+		}
+		if err := checker.CheckClassFile(prog, file); err != nil {
+			return "", err
+		}
+		for _, stmt := range prog.Stmts {
+			imp, ok := stmt.(*ast.ImportStmt)
+			if !ok {
+				continue
+			}
+			key := importKey{path: imp.Name, alias: imp.Alias}
+			if seenImports[key] {
+				continue
+			}
+			seenImports[key] = true
+			orderedImports = append(orderedImports, imp)
+		}
+		// Strip top-level import lines from the source text and
+		// re-indent the rest by two spaces.
+		var body strings.Builder
+		for _, line := range strings.Split(text, "\n") {
+			trimmed := strings.TrimLeft(line, " \t")
+			if strings.HasPrefix(trimmed, "import ") || trimmed == "import" {
+				// Only strip when at column zero (top-level import).
+				if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+					continue
+				}
+			}
+			if strings.TrimSpace(line) == "" {
+				body.WriteString("\n")
+				continue
+			}
+			body.WriteString("  ")
+			body.WriteString(line)
+			body.WriteString("\n")
+		}
+		bodies = append(bodies, body.String())
+	}
+
+	var out strings.Builder
+	for _, imp := range orderedImports {
+		out.WriteString("import ")
+		out.WriteString(imp.Name)
+		if imp.Alias != "" {
+			out.WriteString(" as ")
+			out.WriteString(imp.Alias)
+		}
+		out.WriteString("\n")
+	}
+	out.WriteString("module ")
+	out.WriteString(pkgName)
+	out.WriteString("\n")
+	for _, b := range bodies {
+		out.WriteString(b)
+	}
+	return out.String(), nil
 }
 
 // resolvePackageDir attempts to resolve an import path to a v0.44
