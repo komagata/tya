@@ -157,6 +157,23 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`.
 
+- **v0.44** — Class-oriented namespace and entry-file model
+  (`docs/v0.44/SPEC.md`, `docs/v0.44/MIGRATION.md`,
+  `docs/v0.44/RELEASE_NOTES.md`). Directory-as-package import,
+  PascalCase class files, lowercase script files, within-package
+  bare class references (calls / member / extends / implements /
+  super), same-directory sibling auto-visibility, same-segment
+  package collision detection, full import path validation,
+  cycle detection through directory packages, TYA_PATH search,
+  aliased imports, interface-in-package, all read-only CLI
+  commands accept class files (check / format / --tokens /
+  --emit-c / --check-unused), 19 of 27 stdlib packages migrated
+  to the class form, `[TYA-EXXXX]` structured diagnostic codes
+  on every new runtime error. Held back to v0.45: M5 cross-file
+  private enforcement, M6 string/array/dict (paired with M8
+  self-host migration), M7 examples/* migration, M8 self-host
+  v0.44 surface, M9 `module` keyword removal, M10 docs/SPEC.md
+  promotion.
 - **v0.43** — Concurrency known-gap close-out: cooperative
   cancellation (`task.cancel` / `task.cancelled?` / `task.current`),
   `scope` body raises run cleanup before unwinding,
