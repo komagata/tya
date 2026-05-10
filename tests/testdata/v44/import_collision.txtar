@@ -1,0 +1,24 @@
+# v0.44 import binding collision: two imports that bind the same
+# prefix are rejected. Without aliases, two packages whose
+# directories share a terminal segment both bind that segment and
+# collide at the second `import`.
+cd $REPO
+
+! exec go run ./cmd/tya run $WORK/main.tya
+stderr 'import name conflict: net'
+
+-- main.tya --
+import a/net
+import b/net
+
+print("unreachable")
+
+-- a/net/Request.tya --
+class Request
+  init = ->
+    @label = "a"
+
+-- b/net/Request.tya --
+class Request
+  init = ->
+    @label = "b"
