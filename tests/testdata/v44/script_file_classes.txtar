@@ -1,0 +1,43 @@
+# v0.44 script files can declare private classes that the entry's
+# top-level code uses. Per SPEC §"Public and Private Classes", every
+# class inside a script file is private; the runner-generated
+# unnamed class is the only public one.
+cd $REPO
+
+# A script file can define classes used at top level without an
+# explicit import. The classes are file-local; another script file
+# in a sibling directory cannot reference them.
+exec go run ./cmd/tya run $WORK/inline.tya
+stdout 'inline:hello\n'
+! stderr .
+
+# A script with multiple private classes that interact.
+exec go run ./cmd/tya run $WORK/multi.tya
+stdout 'A->B->C\n'
+! stderr .
+
+-- inline.tya --
+class Wrapper
+  init = msg ->
+    @msg = msg
+
+  show = ->
+    "inline:{@msg}"
+
+w = Wrapper("hello")
+print(w.show())
+
+-- multi.tya --
+class A
+  pass = next ->
+    "A->{next.pass(C())}"
+
+class B
+  pass = c ->
+    "B->{c.label()}"
+
+class C
+  label = ->
+    "C"
+
+print(A().pass(B()))
