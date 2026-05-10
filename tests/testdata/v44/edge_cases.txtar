@@ -1,0 +1,73 @@
+# v0.44 edge cases for directory-as-package import.
+# Pin behavior we explicitly want stable:
+# - Three-level package nesting (foo/bar/baz) works; `import x/y/z`
+#   binds the prefix `z`.
+# - A package containing only one class file still uses the
+#   `<pkg>.<Class>` form even when pkg name and class name match.
+#   The redundancy `solo.Solo` is intentional per SPEC
+#   §"Cross-Package Reference".
+# - Within-package class-to-class bare reference works under
+#   nesting too.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'deep\nsolo\nGET /\n'
+! stderr .
+
+# Importing a directory that mixes a class file and a script file
+# at its leaf is rejected.
+! exec go run ./cmd/tya run $WORK/bad/bad_main.tya
+stderr 'package mixed_pkg contains script file'
+
+-- main.tya --
+import x/y/z
+import solo
+import api/v2
+
+print(z.Tag.label())
+print(solo.Solo.greet())
+client = v2.Client()
+print(client.summary())
+
+-- x/y/z/Tag.tya --
+class Tag
+  @@label = ->
+    "deep"
+
+-- solo/Solo.tya --
+class Solo
+  @@greet = ->
+    "solo"
+
+-- api/v2/Client.tya --
+class Client
+  init = ->
+    @method = "GET"
+
+  summary = ->
+    req = Request(@method)
+    "{req.method()} {req.url()}"
+
+-- api/v2/Request.tya --
+class Request
+  init = method ->
+    @method = method
+
+  method = ->
+    @method
+
+  url = ->
+    "/"
+
+-- bad/bad_main.tya --
+import mixed_pkg
+
+print(mixed_pkg.Helper())
+
+-- bad/mixed_pkg/Helper.tya --
+class Helper
+  @@show = ->
+    "ok"
+
+-- bad/mixed_pkg/oops.tya --
+print("script file is not allowed inside a package")
