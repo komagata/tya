@@ -38,4 +38,4 @@ line <html>
 
 ---
 """
-print(markdown.to_html(src))
+print markdown.to_html(src)

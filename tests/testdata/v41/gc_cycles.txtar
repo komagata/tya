@@ -20,7 +20,7 @@ while i < 30
   i = i + 1
 
 peak = runtime.gc_stats()
-print("made cycles, peak live: " + to_string(peak["live_count"]))
+print "made cycles, peak live: " + to_string(peak["live_count"])
 
 # Drop the only reference. The cycles are now unreachable yet still
 # reference each other.
@@ -28,5 +28,5 @@ root = []
 runtime.gc()
 
 after = runtime.gc_stats()
-print("cleared root, after gc: " + to_string(after["live_count"]))
-print("cycle reclaimed: " + to_string(after["live_count"] < peak["live_count"]))
+print "cleared root, after gc: " + to_string(after["live_count"])
+print "cycle reclaimed: " + to_string(after["live_count"] < peak["live_count"])

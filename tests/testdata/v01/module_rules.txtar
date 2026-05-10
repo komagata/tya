@@ -11,7 +11,7 @@ exec go run ./cmd/tya --emit-c $WORK/alias/main.tya
 
 -- mismatch/main.tya --
 import greeting
-print(greeting.text)
+print greeting.text
 
 -- mismatch/greeting.tya --
 module message
@@ -19,7 +19,7 @@ module message
 
 -- two_modules/main.tya --
 import greeting
-print(greeting.text)
+print greeting.text
 
 -- two_modules/greeting.tya --
 module greeting
@@ -29,7 +29,7 @@ module greeting
 
 -- alias/main.tya --
 import greeting as message
-print(message.text)
+print message.text
 
 -- alias/greeting.tya --
 module greeting

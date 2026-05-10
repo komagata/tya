@@ -89,14 +89,14 @@ class Post extends Model
     "{prefix}s"
 
 admin = Admin("ada", "owner")
-print(admin.label())
+print admin.label()
 repo = UserRepository()
-print(repo.find(7))
-print(Post.table_name("model"))
+print repo.find(7)
+print Post.table_name("model")
 admin_label = admin.label()
-print("{admin_label}:{admin.name}:{admin.role}")
+print "{admin_label}:{admin.name}:{admin.role}"
 editor = accounts.Editor("ada", "editor")
-print(editor.label())
+print editor.label()
 
 -- accounts.tya --
 module accounts

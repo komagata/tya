@@ -16,10 +16,10 @@ stdout 'caught after scope: boom'
 
 -- joins.tya --
 double = x -> x * 2
-print("before scope")
+print "before scope"
 scope
   t = spawn double(5)
-print("after scope")
+print "after scope"
 
 -- results.tya --
 double = x -> x * 2
@@ -29,7 +29,7 @@ scope
   push(results, spawn double(20))
   push(results, spawn double(30))
 for r in results
-  print(await r)
+  print await r
 
 -- raise_in_task.tya --
 boom = () ->
@@ -41,6 +41,6 @@ try
     t1 = spawn ok()
     t2 = spawn boom()
     t3 = spawn ok()
-  print("scope completed (unreachable)")
+  print "scope completed (unreachable)"
 catch e
-  print("caught after scope: " + e)
+  print "caught after scope: " + e

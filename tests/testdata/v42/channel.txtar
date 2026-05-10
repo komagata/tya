@@ -21,7 +21,7 @@ import channel
 
 c = channel.new(1)
 channel.send(c, "hi")
-print(channel.receive(c))
+print channel.receive(c)
 
 -- concurrent.tya --
 import channel
@@ -29,7 +29,7 @@ import channel
 c = channel.new(1)
 worker = ic -> channel.send(ic, 42)
 spawn worker(c)
-print("received: " + to_string(channel.receive(c)))
+print "received: " + to_string(channel.receive(c))
 
 -- counter_actor.tya --
 import channel
@@ -56,10 +56,10 @@ channel.send(inbox, "inc")
 
 reply_chan = channel.new(1)
 channel.send(inbox, reply_chan)
-print("count after three increments: " + to_string(channel.receive(reply_chan)))
+print "count after three increments: " + to_string(channel.receive(reply_chan))
 
 channel.send(inbox, "stop")
-print("final: " + to_string(await t))
+print "final: " + to_string(await t)
 
 -- close_drains.tya --
 import channel
@@ -68,10 +68,10 @@ c = channel.new(2)
 channel.send(c, 1)
 channel.send(c, 2)
 channel.close(c)
-print("first: " + to_string(channel.receive(c)))
-print("second: " + to_string(channel.receive(c)))
+print "first: " + to_string(channel.receive(c))
+print "second: " + to_string(channel.receive(c))
 nilv = channel.receive(c)
 if nilv == nil
-  print("after close, drained: 0")
+  print "after close, drained: 0"
 else
-  print("after close, drained: 1")
+  print "after close, drained: 1"

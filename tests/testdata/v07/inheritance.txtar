@@ -71,14 +71,14 @@ class Admin extends User
     "{super()} ({@role})"
 
 admin = Admin("komagata")
-print(admin.name)
-print(admin.role)
-print(admin.greeting())
+print admin.name
+print admin.role
+print admin.greeting()
 admin.rename("Tya")
-print(admin.name)
-print(admin.greeting())
-print(User.count)
-print(Admin.count)
+print admin.name
+print admin.greeting()
+print User.count
+print Admin.count
 
 -- user.tya --
 module user
@@ -99,8 +99,8 @@ class Admin extends user.User
     "{super()} (admin)"
 
 admin = Admin("module")
-print(admin.name)
-print(admin.greeting())
+print admin.name
+print admin.greeting()
 
 -- accounts.tya --
 module accounts
@@ -123,9 +123,9 @@ module accounts
 import accounts
 
 admin = accounts.Admin("komagata")
-print(admin.name)
-print(admin.role)
-print(admin.greeting())
+print admin.name
+print admin.role
+print admin.greeting()
 
 -- unknown_parent.tya --
 class Admin extends Missing
@@ -142,7 +142,7 @@ class Admin extends User
   name = ""
 
 -- super_outside.tya --
-print(super())
+print super()
 
 -- super_in_class_method.tya --
 class User
@@ -186,4 +186,4 @@ class User
 class Admin extends User
   name = ""
 
-print(Admin.count)
+print Admin.count

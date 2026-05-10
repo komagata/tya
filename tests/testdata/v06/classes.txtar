@@ -58,17 +58,17 @@ class User
   @@reset = ->
     @@count = 0
 
-print(User.count)
+print User.count
 user = User.build("komagata")
-print(user.greeting())
-print(user.name)
-print(user.count())
-print(User.count_users())
+print user.greeting()
+print user.name
+print user.count()
+print User.count_users()
 User.count = 9
-print(User.count)
-print(user.label())
+print User.count
+print user.label()
 User.reset()
-print(User.count)
+print User.count
 
 -- user.tya --
 module user
@@ -89,11 +89,11 @@ module user
 import user
 
 u = user.User("module")
-print(u.name())
-print(user.User.count)
-print(user.User.count_users())
+print u.name()
+print user.User.count
+print user.User.count_users()
 user.User.count = 7
-print(user.User.count)
+print user.User.count
 
 -- at_in_class_method.tya --
 class User
@@ -119,4 +119,4 @@ class User
 class User
   @@count = 0
 
-print(User.missing)
+print User.missing

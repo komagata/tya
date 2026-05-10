@@ -68,17 +68,17 @@ final class FinalUser
     "final"
 
 repo = UserRepository()
-print(repo.find(42))
+print repo.find(42)
 repo.save("record")
-print(User.table_name())
+print User.table_name()
 read = ConcreteReadOnlyRepository()
-print(read.find(7))
+print read.find(7)
 final_user = FinalUser()
 
 import repositories
 module_repo = repositories.UserRepository()
-print(module_repo.find(3))
-print(final_user.label())
+print module_repo.find(3)
+print final_user.label()
 
 -- repositories.tya --
 module repositories

@@ -20,12 +20,12 @@ Hello, {name}
 Multi
 line
 """
-print(poem)
+print poem
 single = """one shot"""
-print(single)
+print single
 nested = """
   {{
     "x": 1
   }}
   """
-print(nested)
+print nested

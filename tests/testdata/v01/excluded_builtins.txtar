@@ -8,7 +8,7 @@ stderr 'undefined variable each'
 stderr 'undefined variable div'
 
 -- each.tya --
-print(each([1], item -> item))
+print each([1], item -> item)
 
 -- div.tya --
-print(div(4, 2))
+print div(4, 2)

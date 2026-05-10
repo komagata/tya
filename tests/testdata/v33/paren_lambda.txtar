@@ -12,11 +12,11 @@ stdout '0.43.0\n'
 
 -- lambda.tya --
 add = (a, b) -> a + b
-print(add(2, 3))
+print add(2, 3)
 single = (x) -> x * x
-print(single(4))
+print single(4)
 threearg = (a, b, c) ->
   return a + b + c
-print(threearg(1, 2, 3))
+print threearg(1, 2, 3)
 old_form = a, b -> a + b
-print(old_form(10, 20))
+print old_form(10, 20)

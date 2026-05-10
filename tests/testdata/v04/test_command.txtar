@@ -54,7 +54,7 @@ module two_test
     unittest.assert_falsy(false, "false")
 
 -- pass/not_a_test_file.tya --
-print("ignored")
+print "ignored"
 
 -- fail/fail_assert_test.tya --
 import unittest

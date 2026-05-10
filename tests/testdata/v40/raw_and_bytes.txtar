@@ -13,16 +13,16 @@ stdout '0.43.0\n'
 
 -- sample.tya --
 re = r"\d+ files in {dir}"
-print(re)
+print re
 
 template = r"""
   Use {name} with care:
     \n is two characters here.
   """
-print(template)
+print template
 
 multi = b"""
   hello
   world
   """
-print("bytes len: " + to_string(len(multi)))
+print "bytes len: " + to_string(len(multi))

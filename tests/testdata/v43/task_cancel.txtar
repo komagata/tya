@@ -20,7 +20,7 @@ worker = () ->
 
 t = spawn worker()
 time.sleep(0.05)
-print("before cancel: " + to_string(task.cancelled?(t)))
+print "before cancel: " + to_string(task.cancelled?(t))
 task.cancel(t)
 n = await t
-print("iterations > 0: " + to_string(n > 0))
+print "iterations > 0: " + to_string(n > 0)

@@ -21,7 +21,7 @@ stderr 'import cycle: a -> b -> a'
 
 -- alias/main.tya --
 import greeting as g
-print(g.hello("komagata"))
+print g.hello("komagata")
 
 -- alias/greeting.tya --
 module greeting
@@ -29,7 +29,7 @@ module greeting
 
 -- alias_only/main.tya --
 import greeting as g
-print(greeting.hello("komagata"))
+print greeting.hello("komagata")
 
 -- alias_only/greeting.tya --
 module greeting
@@ -37,7 +37,7 @@ module greeting
 
 -- path/main.tya --
 import http/server as http_server
-print(http_server.listen(8080))
+print http_server.listen(8080)
 
 -- path/http/server.tya --
 module server
@@ -46,8 +46,8 @@ module server
 -- load_once/main.tya --
 import util
 import util as u
-print(util.name)
-print(u.name)
+print util.name
+print u.name
 
 -- load_once/util.tya --
 module util

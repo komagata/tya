@@ -29,10 +29,10 @@ stdout 'Hello, stage2\n3\nx:y\nsecond\n'
 
 -- app.tya --
 name = "stage2"
-print("Hello, {name}")
+print "Hello, {name}"
 
 items = [1, 2, 3]
-print(len(items))
+print len(items)
 
 labels = { x: "X", y: "Y" }
 joined = ""
@@ -41,7 +41,7 @@ for key, value of labels
     joined = key
   else
     joined = joined + ":" + key
-print(joined)
+print joined
 
 argv = args()
-print(argv[1])
+print argv[1]

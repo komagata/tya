@@ -37,9 +37,9 @@ stdout '0.43.0\n'
 x = 1
 items = [1, 2, 3]
 for x in items
-  print(x)
+  print x
 
 -- multi.tya --
 greet = value -> "hello"
 _helper = 42
-print(greet(1))
+print greet(1)

@@ -13,8 +13,8 @@ stderr '-- UNKNOWN ESCAPE'
 stderr 'TYA-E0001'
 
 -- unterminated.tya --
-print("no close)
+print "no close
 -- unknown_escape.tya --
-print("bad \q escape")
+print "bad \q escape"
 -- tabs.tya --
 print	"tabbed"

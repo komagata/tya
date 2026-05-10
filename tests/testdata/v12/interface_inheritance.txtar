@@ -94,16 +94,16 @@ class ConcreteFile extends AbstractFile
 import io
 
 file = File()
-print(file.read())
-print(file.seek(3))
-print(file.close())
+print file.read()
+print file.seek(3)
+print file.close()
 item = Item()
-print(item.name())
+print item.name()
 memory = MemoryFile()
-print(memory.read())
-print(memory.path())
+print memory.read()
+print memory.path()
 concrete = ConcreteFile()
-print(concrete.read())
+print concrete.read()
 
 -- io.tya --
 module io

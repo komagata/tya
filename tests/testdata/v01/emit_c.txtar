@@ -6,4 +6,4 @@ stdout 'tya_print'
 
 -- main.tya --
 name = "Tya"
-print("Hello, {name}")
+print "Hello, {name}"

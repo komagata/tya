@@ -20,16 +20,16 @@ stdout 'noargs'
 -- single.tya --
 double = x -> x * 2
 t = spawn double(21)
-print(await t)
+print await t
 
 -- many.tya --
 double = x -> x * 2
 t1 = spawn double(10)
 t2 = spawn double(20)
 t3 = spawn double(30)
-print(await t1)
-print(await t2)
-print(await t3)
+print await t1
+print await t2
+print await t3
 
 -- raise.tya --
 boom = x ->
@@ -37,14 +37,14 @@ boom = x ->
   return x
 
 t = spawn boom(1)
-print("spawned")
+print "spawned"
 try
   v = await t
-  print("got: " + to_string(v))
+  print "got: " + to_string(v)
 catch e
-  print("caught: " + e)
+  print "caught: " + e
 
 -- no_args.tya --
 greet = () -> "noargs"
 t = spawn greet()
-print(await t)
+print await t

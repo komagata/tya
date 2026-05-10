@@ -33,17 +33,17 @@ empty? = values -> len(values) == 0
 has_name? = user -> has(user, "name")
 _internal? = item -> item == nil
 
-print(empty?([]))
-print(empty?(["a"]))
+print empty?([])
+print empty?(["a"])
 
 user =
   name: "komagata"
 
-print(has_name?(user))
-print(_internal?(nil))
-print(array.empty?([]))
-print(dict.has?(user, "name"))
-print(value.nil?(nil))
+print has_name?(user)
+print _internal?(nil)
+print array.empty?([])
+print dict.has?(user, "name")
+print value.nil?(nil)
 
 class User
   init = name ->
@@ -59,8 +59,8 @@ class Feature
     @@enabled
 
 person = User("komagata")
-print(person.named?())
-print(Feature.enabled?())
+print person.named?()
+print Feature.enabled?()
 
 -- non_callable_binding.tya --
 active? = true
@@ -78,4 +78,4 @@ class Feature
 name? = ->
   "komagata"
 
-print(name?())
+print name?()
