@@ -55,20 +55,20 @@ stderr 'actual:'
 stderr 'name: Tya'
 ! stdout .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_string.tya" > "$WORK/v04_string.c"'
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_string.String.tya" > "$WORK/v04_string.String.c"'
 ! stderr .
 
-exec cc $WORK/v04_string.c runtime/tya_runtime.c -I runtime -o $WORK/v04_string
+exec cc $WORK/v04_string.String.c runtime/tya_runtime.c -I runtime -o $WORK/v04_string
 ! stderr .
 
 exec $WORK/v04_string
 ! stdout .
 ! stderr .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_array.tya" > "$WORK/v04_array.c"'
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_array.Array.tya" > "$WORK/v04_array.Array.c"'
 ! stderr .
 
-exec cc $WORK/v04_array.c runtime/tya_runtime.c -I runtime -o $WORK/v04_array
+exec cc $WORK/v04_array.Array.c runtime/tya_runtime.c -I runtime -o $WORK/v04_array
 ! stderr .
 
 exec $WORK/v04_array
@@ -99,7 +99,7 @@ assert false
 -- fail_equal.tya --
 assert_equal [1, {name: "tya"}], [1, {name: "Tya"}]
 
--- v04_string.tya --
+-- v04_string.String.tya --
 import string
 
 assert string.String.blank(" ")
@@ -107,7 +107,7 @@ assert string.String.present("tya")
 assert_equal false, string.String.blank("tya")
 assert_equal true, string.String.present("tya")
 
--- v04_array.tya --
+-- v04_array.Array.tya --
 import array
 
 assert array.Array.empty([])

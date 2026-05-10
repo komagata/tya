@@ -29,10 +29,10 @@ import array
 print string.String.blank("ignored")
 print array.Array.empty([])
 
--- precedence/string.tya --
+-- precedence/string.String.tya --
 module string
   blank = _text -> "local string"
 
--- lib/array.tya --
+-- lib/array.Array.tya --
 module array
   empty = _items -> "path array"

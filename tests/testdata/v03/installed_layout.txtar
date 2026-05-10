@@ -8,8 +8,8 @@ mkdir $WORK/install/share/tya/runtime
 mkdir $WORK/install/share/tya/stdlib
 cp runtime/tya_runtime.c $WORK/install/share/tya/runtime/tya_runtime.c
 cp runtime/tya_runtime.h $WORK/install/share/tya/runtime/tya_runtime.h
-cp stdlib/string.tya $WORK/install/share/tya/stdlib/string.tya
-cp stdlib/array.tya $WORK/install/share/tya/stdlib/array.tya
+cp stdlib/string.String.tya $WORK/install/share/tya/stdlib/string.String.tya
+cp stdlib/array.Array.tya $WORK/install/share/tya/stdlib/array.Array.tya
 exec go build -o $WORK/install/bin/tya ./cmd/tya
 mkdir $WORK/outside
 cd $WORK/outside
