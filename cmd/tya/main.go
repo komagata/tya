@@ -930,7 +930,7 @@ func formatCommand(args []string) error {
 	if path == "" {
 		return fmt.Errorf("missing input file")
 	}
-	if err := runner.ValidateFileName(path); err != nil {
+	if err := runner.ValidateAnyTyaFileName(path); err != nil {
 		return err
 	}
 	src, err := os.ReadFile(path)

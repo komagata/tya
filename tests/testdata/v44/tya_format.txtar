@@ -1,23 +1,32 @@
-# v0.44 `tya format` works on script files. Class files are not
-# yet accepted by `tya format` because runner.ValidateFileName
-# (shared with `tya run` / `tya --tokens` / `tya emit-c`) rejects
-# PascalCase filenames; the rejection message currently mentions
-# `tya run`. Fixing this requires either a separate file-name
-# validator for read-only commands (format/check) or relaxing
-# ValidateFileName when the caller is not the runner. Tracked as
-# a v0.44 follow-up; this testscript pins the script-file behavior
-# that already works.
+# v0.44 `tya format` accepts both script files and class files. The
+# formatter is the same `formatter.Unparse` foundation from v0.37
+# plus subsequent refinements; v0.44's class-file shape doesn't
+# introduce new constructs, so format passes through canonical
+# class syntax unchanged.
+#
+# Implementation note: format uses runner.ValidateAnyTyaFileName
+# (read-only-friendly), distinct from runner.ValidateFileName
+# (entry-only, rejects PascalCase) used by `tya run`.
 cd $REPO
+
+exec go run ./cmd/tya format $WORK/Greeter.tya
+stdout 'class Greeter'
+stdout 'init = name ->'
+stdout 'greet = ->'
+! stderr .
 
 exec go run ./cmd/tya format $WORK/main.tya
 stdout 'import lib'
 stdout 'lib.Lib.greet'
 ! stderr .
 
-# Known follow-up: format on a class file currently fails with the
-# misleading "tya run" message.
-! exec go run ./cmd/tya format $WORK/lib/Lib.tya
-stderr 'is a class file'
+-- Greeter.tya --
+class Greeter
+  init = name ->
+    @name = name
+
+  greet = ->
+    "Hello, {@name}"
 
 -- main.tya --
 import lib

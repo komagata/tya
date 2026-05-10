@@ -19,6 +19,14 @@ import (
 var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
 var moduleNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
 
+// ValidateFileName enforces the strict file-name rules for entry
+// points: the file must be a `.tya` lowercase script file. PascalCase
+// class files are rejected with the v0.44 [TYA-E0850] diagnostic
+// because class files are library-only.
+//
+// Use ValidateAnyTyaFileName for read-only commands (tya format,
+// tya check, tya emit-c) that should accept both script and class
+// files.
 func ValidateFileName(path string) error {
 	base := filepath.Base(path)
 	if filepath.Ext(path) != ".tya" {
@@ -31,6 +39,25 @@ func ValidateFileName(path string) error {
 	// are library-only; tya run accepts only script files (lowercase).
 	if checker.IsClassFileName(base) {
 		return fmt.Errorf("[TYA-E0850] %s is a class file; tya run accepts only script files (lowercase filename)", base)
+	}
+	return fmt.Errorf("invalid Tya file name: %s", base)
+}
+
+// ValidateAnyTyaFileName accepts any well-formed v0.44 .tya file:
+// either a script file (lowercase) or a class file (PascalCase). It
+// is intended for read-only developer commands like `tya format`,
+// `tya check`, and `tya emit-c` that operate on individual files
+// without running them as entry points.
+func ValidateAnyTyaFileName(path string) error {
+	base := filepath.Base(path)
+	if filepath.Ext(path) != ".tya" {
+		return fmt.Errorf("invalid Tya file name: %s", base)
+	}
+	if fileNameRE.MatchString(base) {
+		return nil
+	}
+	if checker.IsClassFileName(base) {
+		return nil
 	}
 	return fmt.Errorf("invalid Tya file name: %s", base)
 }
