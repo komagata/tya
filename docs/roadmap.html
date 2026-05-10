@@ -170,81 +170,85 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <ul>
 <li>[ ] **Land class-oriented namespace and entry-file model**</li>
 <ul>
-<li>[ ] **M1: Spec and design groundwork**</li>
+<li>[x] **M1: Spec and design groundwork**</li>
 <ul>
-<li>[ ] Land <code>docs/v0.44/SPEC.md</code> with the new model.</li>
-<li>[ ] Add <code>docs/v0.44/spec.html</code> rendering and link it from</li>
+<li>[x] Land <code>docs/v0.44/SPEC.md</code> with the new model.</li>
+<li>[x] Add <code>docs/v0.44/spec.html</code> rendering and link it from</li>
 </ul>
 </ul>
 </ul>
 <p>      <code>docs/VERSIONS.md</code>.</p>
 <ul>
-<li>[ ] Reserve diagnostic code ranges for the new errors (parser,</li>
+<li>[x] Reserve diagnostic code ranges for the new errors (parser,</li>
 </ul>
 <p>      checker, runner) and document them in <code>docs/v0.44/SPEC.md</code>.</p>
 <ul>
-<li>[ ] Document the migration policy: <code>module</code> files keep working</li>
+<li>[x] Document the migration policy: <code>module</code> files keep working</li>
 </ul>
 <p>      until M8; class files coexist additively from M2 onward.</p>
 <ul>
-<li>[ ] **M2: Parser and checker accept class files additively**</li>
+<li>[x] **M2: Parser and checker accept class files additively**</li>
 <ul>
-<li>[ ] Parser allows a <code>.tya</code> file whose top level is one or more</li>
+<li>[x] Parser allows a <code>.tya</code> file whose top level is one or more</li>
 </ul>
 </ul>
 <p>      <code>class</code> / <code>interface</code> declarations with no <code>module</code> wrapper.</p>
 <ul>
-<li>[ ] Checker enforces &quot;PascalCase filename → public class name</li>
+<li>[x] Checker enforces &quot;PascalCase filename → public class name</li>
 </ul>
 <p>      matches filename&quot; only when the new shape is used.</p>
 <ul>
-<li>[ ] Checker enforces &quot;exactly one public class per class file&quot;</li>
+<li>[x] Checker enforces &quot;exactly one public class per class file&quot;</li>
 </ul>
 <p>      and &quot;additional classes are private to the file&quot;.</p>
 <ul>
-<li>[ ] Add positive and negative parser/checker tests for class</li>
+<li>[x] Add positive and negative parser/checker tests for class</li>
 </ul>
 <p>      files. Existing <code>module</code> files keep parsing.</p>
 <ul>
-<li>[ ] No change to runner, resolver, stdlib, or selfhost yet.</li>
+<li>[x] No change to runner, resolver, stdlib, or selfhost yet.</li>
 </ul>
 <ul>
-<li>[ ] **M3: Resolver gains directory-as-package import**</li>
+<li>[x] **M3: Resolver gains directory-as-package import**</li>
 <ul>
-<li>[ ] <code>import path/to/pkg</code> resolves to a directory.</li>
-<li>[ ] Resolution roots: entry directory, <code>TYA_PATH</code>, <code>stdlib/</code>.</li>
-<li>[ ] Reject <code>..</code>, absolute paths, and paths whose terminal segment</li>
+<li>[x] <code>import path/to/pkg</code> resolves to a directory.</li>
+<li>[x] Resolution roots: entry directory, <code>TYA_PATH</code>, <code>stdlib/</code>.</li>
+<li>[x] Reject <code>..</code>, absolute paths, and paths whose terminal segment</li>
 </ul>
 </ul>
 <p>      is not a valid <code>snake_case</code> package name.</p>
 <ul>
-<li>[ ] Reject importing a directory that contains a script file at</li>
+<li>[x] Reject importing a directory that contains a script file at</li>
 </ul>
 <p>      its leaf (no script-file imports).</p>
 <ul>
-<li>[ ] Same-directory class-file siblings are auto-visible without</li>
+<li>[x] Same-directory class-file siblings are auto-visible without</li>
 </ul>
 <p>      prefix.</p>
 <ul>
-<li>[ ] Cross-package access is <code>&lt;terminal-segment&gt;.&lt;ClassName&gt;</code>.</li>
-<li>[ ] Existing single-file <code>module</code> imports keep working.</li>
-<li>[ ] Add testdata under <code>tests/testdata/v0.44/</code> covering nested</li>
+<li>[x] Cross-package access is <code>&lt;terminal-segment&gt;.&lt;ClassName&gt;</code>.</li>
+<li>[x] Existing single-file <code>module</code> imports keep working.</li>
+<li>[x] Add testdata under <code>tests/testdata/v44/</code> covering nested</li>
 </ul>
 <p>      packages, name-collision diagnostics, and rejected paths.</p>
 <ul>
+<li>[x] Within-package class-to-class bare references resolve</li>
+</ul>
+<p>      through the <code>&lt;currentModule&gt;.&lt;Name&gt;</code> fallback in checker and       codegen (commit f6d276b). Sibling classes inside the same       synthesized package call each other without prefix.</p>
+<ul>
 <li>[ ] **M4: Compact entry-file desugaring**</li>
 <ul>
-<li>[ ] Runner accepts only lowercase script files for <code>tya run</code>.</li>
-<li>[ ] Lowercase script files desugar to an implicit unnamed class</li>
+<li>[x] Runner accepts only lowercase script files for <code>tya run</code>.</li>
+<li>[x] PascalCase class files are rejected as runner targets with a</li>
 </ul>
+</ul>
+<p>      structured diagnostic.</p>
+<ul>
+<li>[ ] Lowercase script files desugar to an implicit unnamed class</li>
 </ul>
 <p>      with <code>main</code> containing the file's top-level statements.</p>
 <ul>
 <li>[ ] Top-level bindings become locals of <code>main</code>.</li>
-<li>[ ] PascalCase class files are rejected as runner targets with a</li>
-</ul>
-<p>      structured diagnostic.</p>
-<ul>
 <li>[ ] Define and reserve the <code>_Anonymous</code> (or equivalent) implicit</li>
 </ul>
 <p>      class name and ensure it is unspeakable from user code.</p>
@@ -258,15 +262,19 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[ ] Script files: every class is private.</li>
 <li>[ ] Private classes are not visible to other files.</li>
 <li>[ ] Diagnostics for cross-file private references.</li>
+<li>[ ] Note: full enforcement requires AST-level <code>OriginFile</code></li>
 </ul>
+</ul>
+<p>      tracking on every <code>ClassDecl</code> propagated through synthesis →       parse → check; the source-concat pipeline does not carry that       information today. Implementation is paired with M8 self-host       migration when AST-merge replaces source-concat.</p>
+<ul>
 <li>[ ] **M6: Stdlib migration**</li>
 <ul>
-<li>[ ] Add <code>stdlib/&lt;pkg&gt;/&lt;Class&gt;.tya</code> form for each existing stdlib</li>
+<li>[x] Add <code>stdlib/&lt;pkg&gt;/&lt;Class&gt;.tya</code> form for each existing stdlib</li>
 </ul>
 </ul>
 <p>      module, in dependency order.</p>
 <ul>
-<li>[ ] Per package: introduce class file, port functionality,</li>
+<li>[x] Per package: introduce class file, port functionality,</li>
 </ul>
 <p>      switch internal users, delete the old <code>module</code> file.</p>
 <ul>
@@ -277,6 +285,26 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[ ] Migrate, in order: <code>runtime</code>, <code>os</code>, <code>path</code>, <code>string</code>, <code>array</code>,</li>
 </ul>
 <p>      <code>dict</code>, <code>math</code>, <code>time</code>, <code>random</code>, <code>process</code>, <code>hex</code>, <code>digest</code>,       <code>secure_random</code>, <code>matrix</code>, <code>file</code>, <code>dir</code>, <code>csv</code>, <code>json</code>,       <code>markdown</code>, <code>base64</code>, <code>channel</code>, <code>sync</code>. Each item is its own       STEP that keeps tests green.</p>
+<ul>
+<li>[x] <code>path</code>, <code>random</code>, <code>hex</code>, <code>base64</code>, <code>digest</code>,</li>
+</ul>
+<p>        <code>secure_random</code> (commits dcf7cd9, 5763729)</p>
+<ul>
+<li>[x] <code>process</code>, <code>dir</code>, <code>file</code>, <code>os</code>, <code>math</code>, <code>csv</code>, <code>matrix</code>,</li>
+</ul>
+<p>        <code>json</code>, <code>toml</code>, <code>url</code> (commit 0cbf27e + revert 6138f80)</p>
+<ul>
+<li>[x] <code>unittest</code>, <code>value</code>, <code>markdown</code> (commits d8a8cd0, cb51b56,</li>
+</ul>
+<p>        0aa3a4c)</p>
+<ul>
+<li>[ ] <code>string</code>, <code>array</code>, <code>dict</code> — held back for v0.1 self-host</li>
+</ul>
+<p>        compatibility (the v0.1 compiler resolves <code>import X</code> only as         single-file modules; see <code>docs/v0.44/SPEC.md</code> §&quot;Self-Host         Invariant Constraint&quot;). Migrate alongside M8.</p>
+<ul>
+<li>[ ] <code>runtime</code>, <code>time</code>, <code>channel</code>, <code>sync</code>, <code>task</code> — held back</li>
+</ul>
+<p>        because their callers in <code>examples/</code> and <code>tests/testdata/</code>         carry pending working-tree edits unrelated to v0.44; migrate         when the working tree is clean.</p>
 <ul>
 <li>[ ] Update <code>docs/STDLIB.md</code> per package as it lands.</li>
 </ul>

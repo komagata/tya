@@ -220,44 +220,48 @@ onto the new model, then in removal STEPs that delete the legacy
 every STEP boundary.
 
 - [ ] **Land class-oriented namespace and entry-file model**
-  - [ ] **M1: Spec and design groundwork**
-    - [ ] Land `docs/v0.44/SPEC.md` with the new model.
-    - [ ] Add `docs/v0.44/spec.html` rendering and link it from
+  - [x] **M1: Spec and design groundwork**
+    - [x] Land `docs/v0.44/SPEC.md` with the new model.
+    - [x] Add `docs/v0.44/spec.html` rendering and link it from
       `docs/VERSIONS.md`.
-    - [ ] Reserve diagnostic code ranges for the new errors (parser,
+    - [x] Reserve diagnostic code ranges for the new errors (parser,
       checker, runner) and document them in `docs/v0.44/SPEC.md`.
-    - [ ] Document the migration policy: `module` files keep working
+    - [x] Document the migration policy: `module` files keep working
       until M8; class files coexist additively from M2 onward.
-  - [ ] **M2: Parser and checker accept class files additively**
-    - [ ] Parser allows a `.tya` file whose top level is one or more
+  - [x] **M2: Parser and checker accept class files additively**
+    - [x] Parser allows a `.tya` file whose top level is one or more
       `class` / `interface` declarations with no `module` wrapper.
-    - [ ] Checker enforces "PascalCase filename → public class name
+    - [x] Checker enforces "PascalCase filename → public class name
       matches filename" only when the new shape is used.
-    - [ ] Checker enforces "exactly one public class per class file"
+    - [x] Checker enforces "exactly one public class per class file"
       and "additional classes are private to the file".
-    - [ ] Add positive and negative parser/checker tests for class
+    - [x] Add positive and negative parser/checker tests for class
       files. Existing `module` files keep parsing.
-    - [ ] No change to runner, resolver, stdlib, or selfhost yet.
-  - [ ] **M3: Resolver gains directory-as-package import**
-    - [ ] `import path/to/pkg` resolves to a directory.
-    - [ ] Resolution roots: entry directory, `TYA_PATH`, `stdlib/`.
-    - [ ] Reject `..`, absolute paths, and paths whose terminal segment
+    - [x] No change to runner, resolver, stdlib, or selfhost yet.
+  - [x] **M3: Resolver gains directory-as-package import**
+    - [x] `import path/to/pkg` resolves to a directory.
+    - [x] Resolution roots: entry directory, `TYA_PATH`, `stdlib/`.
+    - [x] Reject `..`, absolute paths, and paths whose terminal segment
       is not a valid `snake_case` package name.
-    - [ ] Reject importing a directory that contains a script file at
+    - [x] Reject importing a directory that contains a script file at
       its leaf (no script-file imports).
-    - [ ] Same-directory class-file siblings are auto-visible without
+    - [x] Same-directory class-file siblings are auto-visible without
       prefix.
-    - [ ] Cross-package access is `<terminal-segment>.<ClassName>`.
-    - [ ] Existing single-file `module` imports keep working.
-    - [ ] Add testdata under `tests/testdata/v0.44/` covering nested
+    - [x] Cross-package access is `<terminal-segment>.<ClassName>`.
+    - [x] Existing single-file `module` imports keep working.
+    - [x] Add testdata under `tests/testdata/v44/` covering nested
       packages, name-collision diagnostics, and rejected paths.
+    - [x] Within-package class-to-class bare references resolve
+      through the `<currentModule>.<Name>` fallback in checker and
+      codegen (commit f6d276b). Sibling classes inside the same
+      synthesized package call each other without prefix.
   - [ ] **M4: Compact entry-file desugaring**
-    - [ ] Runner accepts only lowercase script files for `tya run`.
+    - [x] Runner accepts only lowercase script files for `tya run`.
+    - [x] PascalCase class files are rejected as runner targets with a
+      structured diagnostic.
     - [ ] Lowercase script files desugar to an implicit unnamed class
       with `main` containing the file's top-level statements.
     - [ ] Top-level bindings become locals of `main`.
-    - [ ] PascalCase class files are rejected as runner targets with a
-      structured diagnostic.
     - [ ] Define and reserve the `_Anonymous` (or equivalent) implicit
       class name and ensure it is unspeakable from user code.
     - [ ] Update CLI tests for `tya run`.
@@ -266,10 +270,15 @@ every STEP boundary.
     - [ ] Script files: every class is private.
     - [ ] Private classes are not visible to other files.
     - [ ] Diagnostics for cross-file private references.
+    - [ ] Note: full enforcement requires AST-level `OriginFile`
+      tracking on every `ClassDecl` propagated through synthesis →
+      parse → check; the source-concat pipeline does not carry that
+      information today. Implementation is paired with M8 self-host
+      migration when AST-merge replaces source-concat.
   - [ ] **M6: Stdlib migration**
-    - [ ] Add `stdlib/<pkg>/<Class>.tya` form for each existing stdlib
+    - [x] Add `stdlib/<pkg>/<Class>.tya` form for each existing stdlib
       module, in dependency order.
-    - [ ] Per package: introduce class file, port functionality,
+    - [x] Per package: introduce class file, port functionality,
       switch internal users, delete the old `module` file.
     - [ ] Add `os.Os.args()` (or finalized API) as part of the `os`
       migration. Update existing CLI args call sites.
@@ -278,6 +287,20 @@ every STEP boundary.
       `secure_random`, `matrix`, `file`, `dir`, `csv`, `json`,
       `markdown`, `base64`, `channel`, `sync`. Each item is its own
       STEP that keeps tests green.
+      - [x] `path`, `random`, `hex`, `base64`, `digest`,
+        `secure_random` (commits dcf7cd9, 5763729)
+      - [x] `process`, `dir`, `file`, `os`, `math`, `csv`, `matrix`,
+        `json`, `toml`, `url` (commit 0cbf27e + revert 6138f80)
+      - [x] `unittest`, `value`, `markdown` (commits d8a8cd0, cb51b56,
+        0aa3a4c)
+      - [ ] `string`, `array`, `dict` — held back for v0.1 self-host
+        compatibility (the v0.1 compiler resolves `import X` only as
+        single-file modules; see `docs/v0.44/SPEC.md` §"Self-Host
+        Invariant Constraint"). Migrate alongside M8.
+      - [ ] `runtime`, `time`, `channel`, `sync`, `task` — held back
+        because their callers in `examples/` and `tests/testdata/`
+        carry pending working-tree edits unrelated to v0.44; migrate
+        when the working tree is clean.
     - [ ] Update `docs/STDLIB.md` per package as it lands.
   - [ ] **M7: Examples migration**
     - [ ] Convert each `examples/*.tya` to the new model: lowercase
