@@ -220,7 +220,44 @@ and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
 
-### v0.44 — Class-oriented namespace and entry-file model
+### v0.45 — Class-oriented namespace and entry-file model: completion
+
+The v0.44 release ships the model (see Released entry above) but
+holds back five M-series tasks because they require either an
+AST-merge refactor or working-tree coordination that did not fit
+the v0.44 window. v0.45 lands them.
+
+- [ ] **M5 cross-file private class enforcement**
+  - Replace the synthesizePackageSource source-concat pipeline
+    with an AST-merge that propagates `OriginFile` metadata onto
+    each `ClassDecl`. The checker then rejects a reference to a
+    private class whose origin file differs from the reference
+    site, with `[TYA-E0406]`.
+- [ ] **M6 remaining stdlib (8 packages)**
+  - `runtime`, `time`, `channel`, `sync`, `task` migrate as the
+    M7 examples migration lands their callers.
+  - `string`, `array`, `dict` migrate together with M8 (the v0.1
+    self-host compiler currently resolves `import X` only as a
+    single file).
+- [ ] **M7 examples/* migration**
+  - Convert every `examples/*.tya` to v0.44 form and delete the
+    old `module` declarations.
+- [ ] **M8 self-host compiler v0.44 surface**
+  - Bring `selfhost/v01/compiler.tya` (or a parallel
+    `selfhost/v02/compiler.tya`) up to the v0.44 surface so it
+    resolves directory packages.
+- [ ] **M9 module keyword removal**
+  - Parser rejects `module` after M8 retires the legacy
+    self-host fixed point.
+- [ ] **M10 docs/SPEC.md promotion**
+  - Promote v0.44 SPEC content into `docs/SPEC.md`, update
+    `docs/NAMING.md` and `docs/STDLIB.md` to remove the legacy
+    module rule.
+- [ ] **TYA-Exxxx code wiring follow-ups**
+  - Wire `[TYA-E0406]` from M5 enforcement.
+  - Wire `[TYA-E0200]` from M9 parser rejection.
+
+### v0.44 — Class-oriented namespace and entry-file model (shipped)
 
 Replace the snake_case `module name` namespace with directory-as-package,
 require every importable file to be a PascalCase class file, and define

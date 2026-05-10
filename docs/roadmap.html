@@ -167,7 +167,62 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>  <code>matrix</code> modules; <code>math</code> expansion.</p>
 <h2 id="scheduled">Scheduled</h2>
 <p>Epics with assigned minor versions, on the path to v1.0.0. Each Epic is implemented in numbered STEPs. Every STEP must pass <code>go test ./... -count=1</code> and <code>go test ./tests -run TestSelfhostV01Scripts -count=1</code> before the next STEP starts. The STEP also keeps <code>docs/vX.Y/SPEC.md</code> consistent with the implementation up to that STEP.</p>
-<h3 id="v0-44-class-oriented-namespace-and-entry-file-model">v0.44 — Class-oriented namespace and entry-file model</h3>
+<h3 id="v0-45-class-oriented-namespace-and-entry-file-model-completion">v0.45 — Class-oriented namespace and entry-file model: completion</h3>
+<p>The v0.44 release ships the model (see Released entry above) but holds back five M-series tasks because they require either an AST-merge refactor or working-tree coordination that did not fit the v0.44 window. v0.45 lands them.</p>
+<ul>
+<li>[ ] **M5 cross-file private class enforcement**</li>
+<ul>
+<li>Replace the synthesizePackageSource source-concat pipeline</li>
+</ul>
+</ul>
+<p>    with an AST-merge that propagates <code>OriginFile</code> metadata onto     each <code>ClassDecl</code>. The checker then rejects a reference to a     private class whose origin file differs from the reference     site, with <code>[TYA-E0406]</code>.</p>
+<ul>
+<li>[ ] **M6 remaining stdlib (8 packages)**</li>
+<ul>
+<li><code>runtime</code>, <code>time</code>, <code>channel</code>, <code>sync</code>, <code>task</code> migrate as the</li>
+</ul>
+</ul>
+<p>    M7 examples migration lands their callers.</p>
+<ul>
+<li><code>string</code>, <code>array</code>, <code>dict</code> migrate together with M8 (the v0.1</li>
+</ul>
+<p>    self-host compiler currently resolves <code>import X</code> only as a     single file).</p>
+<ul>
+<li>[ ] **M7 examples/* migration**</li>
+<ul>
+<li>Convert every <code>examples/*.tya</code> to v0.44 form and delete the</li>
+</ul>
+</ul>
+<p>    old <code>module</code> declarations.</p>
+<ul>
+<li>[ ] **M8 self-host compiler v0.44 surface**</li>
+<ul>
+<li>Bring <code>selfhost/v01/compiler.tya</code> (or a parallel</li>
+</ul>
+</ul>
+<p>    <code>selfhost/v02/compiler.tya</code>) up to the v0.44 surface so it     resolves directory packages.</p>
+<ul>
+<li>[ ] **M9 module keyword removal**</li>
+<ul>
+<li>Parser rejects <code>module</code> after M8 retires the legacy</li>
+</ul>
+</ul>
+<p>    self-host fixed point.</p>
+<ul>
+<li>[ ] **M10 docs/SPEC.md promotion**</li>
+<ul>
+<li>Promote v0.44 SPEC content into <code>docs/SPEC.md</code>, update</li>
+</ul>
+</ul>
+<p>    <code>docs/NAMING.md</code> and <code>docs/STDLIB.md</code> to remove the legacy     module rule.</p>
+<ul>
+<li>[ ] **TYA-Exxxx code wiring follow-ups**</li>
+<ul>
+<li>Wire <code>[TYA-E0406]</code> from M5 enforcement.</li>
+<li>Wire <code>[TYA-E0200]</code> from M9 parser rejection.</li>
+</ul>
+</ul>
+<h3 id="v0-44-class-oriented-namespace-and-entry-file-model-shipped">v0.44 — Class-oriented namespace and entry-file model (shipped)</h3>
 <p>Replace the snake_case <code>module name</code> namespace with directory-as-package, require every importable file to be a PascalCase class file, and define the entry file as a lowercase script file desugared to an unnamed class. This Epic is destructive: it removes the <code>module</code> keyword, renames every stdlib file, and rewrites the self-host compiler.</p>
 <p>Spec: <a href="v0.44/spec.html"><code>docs/v0.44/SPEC.md</code></a>.</p>
 <p>The Epic ships in additive STEPs first so existing tests stay green, then in migration STEPs that move each consumer (stdlib, examples, selfhost) onto the new model, then in removal STEPs that delete the legacy <code>module</code> surface. The self-host fixed point gate must stay green at every STEP boundary.</p>
