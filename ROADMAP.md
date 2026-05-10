@@ -203,7 +203,113 @@ and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
 
+### v0.44 — Class-oriented namespace and entry-file model
+
+Replace the snake_case `module name` namespace with directory-as-package,
+require every importable file to be a PascalCase class file, and define
+the entry file as a lowercase script file desugared to an unnamed class.
+This Epic is destructive: it removes the `module` keyword, renames every
+stdlib file, and rewrites the self-host compiler.
+
+Spec: [`docs/v0.44/SPEC.md`](docs/v0.44/SPEC.md).
+
+The Epic ships in additive STEPs first so existing tests stay green, then
+in migration STEPs that move each consumer (stdlib, examples, selfhost)
+onto the new model, then in removal STEPs that delete the legacy
+`module` surface. The self-host fixed point gate must stay green at
+every STEP boundary.
+
+- [ ] **Land class-oriented namespace and entry-file model**
+  - [ ] **M1: Spec and design groundwork**
+    - [ ] Land `docs/v0.44/SPEC.md` with the new model.
+    - [ ] Add `docs/v0.44/spec.html` rendering and link it from
+      `docs/VERSIONS.md`.
+    - [ ] Reserve diagnostic code ranges for the new errors (parser,
+      checker, runner) and document them in `docs/v0.44/SPEC.md`.
+    - [ ] Document the migration policy: `module` files keep working
+      until M8; class files coexist additively from M2 onward.
+  - [ ] **M2: Parser and checker accept class files additively**
+    - [ ] Parser allows a `.tya` file whose top level is one or more
+      `class` / `interface` declarations with no `module` wrapper.
+    - [ ] Checker enforces "PascalCase filename → public class name
+      matches filename" only when the new shape is used.
+    - [ ] Checker enforces "exactly one public class per class file"
+      and "additional classes are private to the file".
+    - [ ] Add positive and negative parser/checker tests for class
+      files. Existing `module` files keep parsing.
+    - [ ] No change to runner, resolver, stdlib, or selfhost yet.
+  - [ ] **M3: Resolver gains directory-as-package import**
+    - [ ] `import path/to/pkg` resolves to a directory.
+    - [ ] Resolution roots: entry directory, `TYA_PATH`, `stdlib/`.
+    - [ ] Reject `..`, absolute paths, and paths whose terminal segment
+      is not a valid `snake_case` package name.
+    - [ ] Reject importing a directory that contains a script file at
+      its leaf (no script-file imports).
+    - [ ] Same-directory class-file siblings are auto-visible without
+      prefix.
+    - [ ] Cross-package access is `<terminal-segment>.<ClassName>`.
+    - [ ] Existing single-file `module` imports keep working.
+    - [ ] Add testdata under `tests/testdata/v0.44/` covering nested
+      packages, name-collision diagnostics, and rejected paths.
+  - [ ] **M4: Compact entry-file desugaring**
+    - [ ] Runner accepts only lowercase script files for `tya run`.
+    - [ ] Lowercase script files desugar to an implicit unnamed class
+      with `main` containing the file's top-level statements.
+    - [ ] Top-level bindings become locals of `main`.
+    - [ ] PascalCase class files are rejected as runner targets with a
+      structured diagnostic.
+    - [ ] Define and reserve the `_Anonymous` (or equivalent) implicit
+      class name and ensure it is unspeakable from user code.
+    - [ ] Update CLI tests for `tya run`.
+  - [ ] **M5: Private-class enforcement**
+    - [ ] Class files: every class beyond the public one is private.
+    - [ ] Script files: every class is private.
+    - [ ] Private classes are not visible to other files.
+    - [ ] Diagnostics for cross-file private references.
+  - [ ] **M6: Stdlib migration**
+    - [ ] Add `stdlib/<pkg>/<Class>.tya` form for each existing stdlib
+      module, in dependency order.
+    - [ ] Per package: introduce class file, port functionality,
+      switch internal users, delete the old `module` file.
+    - [ ] Add `os.Os.args()` (or finalized API) as part of the `os`
+      migration. Update existing CLI args call sites.
+    - [ ] Migrate, in order: `runtime`, `os`, `path`, `string`, `array`,
+      `dict`, `math`, `time`, `random`, `process`, `hex`, `digest`,
+      `secure_random`, `matrix`, `file`, `dir`, `csv`, `json`,
+      `markdown`, `base64`, `channel`, `sync`. Each item is its own
+      STEP that keeps tests green.
+    - [ ] Update `docs/STDLIB.md` per package as it lands.
+  - [ ] **M7: Examples migration**
+    - [ ] Convert each `examples/*.tya` to the new model: lowercase
+      script files for entries, PascalCase class files for libraries.
+    - [ ] Remove obsolete `module` declarations from examples.
+    - [ ] Update example-driven tests and `scripts/go_emit_examples_check.sh`.
+  - [ ] **M8: Self-host compiler migration**
+    - [ ] Land a class-shaped `selfhost/v02/compiler.tya` (or
+      equivalent path; final naming TBD) targeting the v0.44 surface.
+    - [ ] Preserve the v01 fixed point on the v0.43 surface; both
+      live side by side until parity is proven.
+    - [ ] Stage-2 == stage-3 fixed point on the v0.44 surface.
+    - [ ] Replace `TestSelfhostV01Scripts` target only after parity
+      and a release boundary.
+  - [ ] **M9: Remove the `module` keyword**
+    - [ ] Parser rejects `module` as a reserved-word error.
+    - [ ] Checker, formatter, and emitter drop `module` paths.
+    - [ ] Delete remaining `module`-only files.
+    - [ ] Remove `module`-related diagnostics that no longer apply.
+  - [ ] **M10: Documentation cleanup**
+    - [ ] Promote `docs/v0.44/SPEC.md` content into `docs/SPEC.md`.
+    - [ ] Rewrite `docs/NAMING.md` for the new file-kind rules and
+      remove the Module Rule section.
+    - [ ] Update `docs/STDLIB.md` cross-references.
+    - [ ] Update `docs/CANONICAL_SYNTAX.md` for the file-kind rules.
+    - [ ] Update `docs/GUIDE.md`, `docs/API.md`, `docs/TERMINOLOGY.md`,
+      `docs/LIBRARIES.md` as needed.
+    - [ ] Rebuild HTML via `node scripts/build_docs_pages.js`.
+    - [ ] Add a release note entry under "Released" in this file.
+
 _v0.42 shipped — see Released above and `docs/v0.42/SPEC.md`._
+_v0.43 shipped — see Released above and `docs/v0.43/SPEC.md`._
 
 ## Future Work
 
@@ -300,6 +406,25 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     keyed by relative path.
   - [ ] Text loads as `string`, binary as `bytes`; explicit `as bytes` /
     `as text` modifier supported.
+
+- [ ] **Primitive literals as class-instance sugar**
+  - [ ] Follow-up to v0.44 class-oriented namespace. Extend
+    "everything is a class" to literal values: `1` is sugar for
+    `Integer(1)`, `"hello"` for `String("hello")`, `[1, 2]` for
+    `Array(1, 2)`, `{a: 1}` for `Dict("a", 1)`, `true` / `false`
+    for `Boolean(true)` / `Boolean(false)`, `nil` for the unique
+    `Nil` instance.
+  - [ ] Define the public surface of the wrapper classes: methods,
+    constructors, and how method-call syntax (`x.foo()`) routes
+    through them.
+  - [ ] Decide the runtime representation. Boxed-everywhere is
+    simple but slow; unboxed-with-virtual-dispatch is a runtime
+    overhaul. Performance trade-offs are explicitly part of this
+    Epic and are not committed to in advance.
+  - [ ] Re-open the conversation on syntax and semantics before
+    implementation; this Epic is direction, not a frozen design.
+  - [ ] Migrate stdlib and examples once the wrapper classes land.
+  - [ ] Land a separate `docs/vX.Y/SPEC.md` when scheduled.
 
 - [ ] **Migrate selfhost compiler to latest spec and remove Go reference**
   - [ ] Bring `selfhost/` up from v0.1 surface to the v1.0.0 spec
