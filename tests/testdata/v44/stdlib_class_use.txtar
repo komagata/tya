@@ -1,0 +1,15 @@
+# v0.44 use a migrated stdlib package directly from a script entry.
+# Exercises that the migrated stdlib (e.g. math) integrates with
+# the v0.44 model end-to-end through the resolver.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout '3.14159\n2\n9\n'
+! stderr .
+
+-- main.tya --
+import math
+
+print(math.Math.pi)
+print(math.Math.abs(0 - 2))
+print(math.Math.pow(3, 2))
