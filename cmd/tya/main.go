@@ -292,10 +292,18 @@ doneOptions:
 		return
 	}
 	if checkUnused {
-		source, modules, err = runner.LoadUserSourceWithModules(path)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
+		if isClassFile {
+			// v0.44: --check-unused on a class file uses the source
+			// already read from disk; entry-only import resolution
+			// is skipped because a class file is a library member.
+			// The strict pass downstream walks classes + methods
+			// the same way it does for entry programs.
+		} else {
+			source, modules, err = runner.LoadUserSourceWithModules(path)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
 		}
 	}
 	toks, errs := lexer.Lex(source)

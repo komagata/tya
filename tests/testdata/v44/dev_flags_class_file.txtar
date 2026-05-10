@@ -26,6 +26,15 @@ stdout 'int main\('
 ! exec go run ./cmd/tya --emit-c $WORK/BadName.tya
 stderr 'must define class BadName'
 
+# --check-unused on a clean class file: passes silently.
+exec go run ./cmd/tya --check-unused $WORK/Foo.tya
+! stderr .
+
+# --check-unused on a class file with an unused method argument
+# reports the unused-argument diagnostic from the strict pass.
+! exec go run ./cmd/tya --check-unused $WORK/Unused.tya
+stderr 'never used'
+
 -- Foo.tya --
 class Foo
   init = ->
@@ -35,3 +44,11 @@ class Foo
 class WrongName
   init = ->
     @x = 1
+
+-- Unused.tya --
+class Unused
+  init = ->
+    @x = 1
+
+  helper = unused_arg ->
+    @x
