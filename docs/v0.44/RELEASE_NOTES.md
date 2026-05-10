@@ -1,8 +1,7 @@
-# Tya v0.44 Release Notes (draft)
+# Tya v0.44 Release Notes
 
-> **Status:** in progress. This document accumulates the user-visible
-> changes that ship with v0.44. It promotes into a `Released` entry
-> on `ROADMAP.md` and an entry in `docs/SPEC.md` at release time.
+> **Status:** shipped. The `tya version` constant is `0.44.0` and
+> `ROADMAP.md` carries the matching `Released` entry.
 
 ## TL;DR
 
