@@ -34,9 +34,9 @@ module stdlib_filesystem_test
 
   test_path_expand_user_tilde = ->
     home = os.env("HOME")
-    unittest.assert_equal(home, path.expand_user("~"), "tilde alone")
-    unittest.assert_equal("{home}/foo", path.expand_user("~/foo"), "tilde slash")
-    unittest.assert_equal("/abs/path", path.expand_user("/abs/path"), "absolute unchanged")
+    unittest.assert_equal(home, path.Path.expand_user("~"), "tilde alone")
+    unittest.assert_equal("{home}/foo", path.Path.expand_user("~/foo"), "tilde slash")
+    unittest.assert_equal("/abs/path", path.Path.expand_user("/abs/path"), "absolute unchanged")
 
   test_os_cwd_returns_string = ->
     here = os.cwd()
