@@ -275,8 +275,8 @@ class Greeter
   greet = -&gt;
     &quot;Hello, {@name}&quot;</code></pre>
 <pre><code class="language-tya"># main.tya
-greeter = Greeter()
-print(greeter.greet(&quot;komagata&quot;))</code></pre>
+greeter = Greeter(&quot;komagata&quot;)
+print(greeter.greet())</code></pre>
 <pre><code class="language-sh">$ tya run main.tya
 Hello, komagata</code></pre>
 <h3 id="imported-package-with-multiple-classes">Imported package with multiple classes</h3>

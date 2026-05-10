@@ -438,8 +438,8 @@ class Greeter
 
 ```tya
 # main.tya
-greeter = Greeter()
-print(greeter.greet("komagata"))
+greeter = Greeter("komagata")
+print(greeter.greet())
 ```
 
 ```sh
