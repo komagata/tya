@@ -226,6 +226,12 @@ every STEP boundary.
       `docs/VERSIONS.md`.
     - [x] Reserve diagnostic code ranges for the new errors (parser,
       checker, runner) and document them in `docs/v0.44/SPEC.md`.
+    - [x] Wire the reserved codes as `[TYA-EXXXX]` inline prefixes
+      on the v0.44 runtime errors (commit 3ef398f7). `E0400`,
+      `E0402`–`E0405` (checker class file rules) and
+      `E0850`–`E0855` (runner package rules) are emitted; `E0406`
+      (cross-file private) and `E0200` (module keyword removal)
+      remain TBD.
     - [x] Document the migration policy: `module` files keep working
       until M8; class files coexist additively from M2 onward.
   - [x] **M2: Parser and checker accept class files additively**

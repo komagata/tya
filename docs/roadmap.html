@@ -183,6 +183,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 <p>      checker, runner) and document them in <code>docs/v0.44/SPEC.md</code>.</p>
 <ul>
+<li>[x] Wire the reserved codes as <code>[TYA-EXXXX]</code> inline prefixes</li>
+</ul>
+<p>      on the v0.44 runtime errors (commit 3ef398f7). <code>E0400</code>,       <code>E0402</code>–<code>E0405</code> (checker class file rules) and       <code>E0850</code>–<code>E0855</code> (runner package rules) are emitted; <code>E0406</code>       (cross-file private) and <code>E0200</code> (module keyword removal)       remain TBD.</p>
+<ul>
 <li>[x] Document the migration policy: <code>module</code> files keep working</li>
 </ul>
 <p>      until M8; class files coexist additively from M2 onward.</p>
