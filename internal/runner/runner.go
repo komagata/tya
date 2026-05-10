@@ -262,6 +262,77 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 			return "", nil, err
 		}
 	}
+
+	// v0.44 same-directory sibling auto-visibility: when loading an
+	// entry script, every PascalCase class file in the entry's
+	// directory is auto-loaded so its public class is in scope without
+	// an explicit import. Sibling class files' imports are resolved
+	// alongside the entry's own imports and deduplicated by binding.
+	if !module && info.Mode().IsRegular() {
+		siblings, err := findEntrySiblings(path)
+		if err != nil {
+			return "", nil, err
+		}
+		for _, sib := range siblings {
+			sibBytes, err := os.ReadFile(sib)
+			if err != nil {
+				return "", nil, err
+			}
+			sibSrc := string(sibBytes)
+			sibProg, err := parseSource(sibSrc)
+			if err != nil {
+				return "", nil, fmt.Errorf("%s: %w", sib, err)
+			}
+			if err := checker.CheckClassFile(sibProg, sib); err != nil {
+				return "", nil, err
+			}
+			sibImports, err := collectImports(sibProg)
+			if err != nil {
+				return "", nil, err
+			}
+			for _, imp := range sibImports {
+				if visibleImports[imp.binding] {
+					continue
+				}
+				modPath, err := resolveModulePath(sib, imp.path)
+				if err != nil {
+					pkgDir, _, perr := resolvePackageDir(sib, imp.path)
+					if perr != nil {
+						return "", nil, perr
+					}
+					if pkgDir == "" {
+						return "", nil, err
+					}
+					modPath = pkgDir
+				}
+				importDef, err := publicDefForFile(modPath)
+				if err != nil {
+					return "", nil, err
+				}
+				modSrc, importedModules, err := loadSource(modPath, state, true)
+				if err != nil {
+					return "", nil, err
+				}
+				modules = append(modules, importedModules...)
+				if importDef.name != imp.stmt.ModuleName() {
+					return "", nil, fmt.Errorf("%s must define module %s", filepath.Base(modPath), imp.stmt.ModuleName())
+				}
+				visibleImports[imp.binding] = true
+				modules = append(modules, imp.binding)
+				if modSrc != "" {
+					out.WriteString(modSrc)
+					if !strings.HasSuffix(modSrc, "\n") {
+						out.WriteString("\n")
+					}
+				}
+			}
+			body := stripTopLevelImports(sibSrc)
+			out.WriteString(body)
+			if !strings.HasSuffix(body, "\n") {
+				out.WriteString("\n")
+			}
+		}
+	}
 	_ = def
 	out.WriteString(source)
 	if !strings.HasSuffix(source, "\n") {
@@ -441,6 +512,50 @@ func validateImportPath(name string) error {
 		}
 	}
 	return nil
+}
+
+// findEntrySiblings returns the absolute paths of every PascalCase
+// class file that shares the entry's directory. It excludes the
+// entry itself, hidden files, subdirectories, and non-class .tya
+// files. Used by entry script loading to implement v0.44
+// same-directory sibling auto-visibility.
+func findEntrySiblings(entryPath string) ([]string, error) {
+	dir := filepath.Dir(entryPath)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	out := []string{}
+	for _, e := range entries {
+		if e.IsDir() || filepath.Ext(e.Name()) != ".tya" {
+			continue
+		}
+		if !checker.IsClassFileName(e.Name()) {
+			continue
+		}
+		abs, err := filepath.Abs(filepath.Join(dir, e.Name()))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, filepath.Clean(abs))
+	}
+	return out, nil
+}
+
+// stripTopLevelImports removes top-level (column-zero) `import`
+// lines from a class file source. Used when injecting sibling class
+// file content into an entry script's merged source so duplicate
+// imports do not appear in the final program.
+func stripTopLevelImports(src string) string {
+	var out strings.Builder
+	for _, line := range strings.Split(src, "\n") {
+		if strings.HasPrefix(line, "import ") || line == "import" {
+			continue
+		}
+		out.WriteString(line)
+		out.WriteString("\n")
+	}
+	return strings.TrimRight(out.String(), "\n") + "\n"
 }
 
 // synthesizePackageSource takes a list of class file paths and a

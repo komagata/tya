@@ -14,6 +14,12 @@ stderr 'package bad_pkg contains script file'
 ! exec go run ./cmd/tya run $WORK/Hello.tya
 stderr 'Hello.tya is a class file'
 
+# v0.44 same-directory sibling auto-visibility: an entry script sees
+# every PascalCase class file in its directory without an import.
+exec go run ./cmd/tya run $WORK/two_files/main.tya
+stdout 'Hello, komagata\n'
+! stderr .
+
 -- main.tya --
 import net/http
 
@@ -56,3 +62,15 @@ print("this is a script file inside a package; should be rejected")
 class Hello
   init = ->
     @x = 1
+
+-- two_files/main.tya --
+g = Greeter("komagata")
+print(g.greet())
+
+-- two_files/Greeter.tya --
+class Greeter
+  init = name ->
+    @name = name
+
+  greet = ->
+    "Hello, {@name}"
