@@ -1,0 +1,17 @@
+# v0.44 import aliases work with directory packages: `import path as
+# alias` binds `alias` instead of the path's terminal segment.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'aliased!\n'
+! stderr .
+
+-- main.tya --
+import lib/util as helper
+
+print(helper.Util.greet())
+
+-- lib/util/Util.tya --
+class Util
+  @@greet = ->
+    "aliased!"
