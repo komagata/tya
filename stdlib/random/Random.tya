@@ -1,17 +1,20 @@
-module random
-  seed = value -> random_seed(value)
+class Random
+  @@seed = value ->
+    random_seed(value)
 
-  int = min, max -> random_int(min, max)
+  @@int = min, max ->
+    random_int(min, max)
 
-  float = () -> random_float()
+  @@float = ->
+    random_float()
 
-  choice = items ->
+  @@choice = items ->
     n = len(items)
     if n == 0
       raise "random.choice: empty array"
     return items[random_int(0, n - 1)]
 
-  shuffle = items ->
+  @@shuffle = items ->
     n = len(items)
     i = n - 1
     while i > 0
