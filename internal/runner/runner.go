@@ -86,7 +86,7 @@ func LoadUserSourceWithModules(path string) (string, []string, error) {
 	if err := ValidateFileName(path); err != nil {
 		return "", nil, err
 	}
-	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}}
+	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}}
 	src, modules, err := loadSource(path, state, false)
 	if err != nil {
 		return "", nil, err
@@ -109,6 +109,13 @@ type loadState struct {
 	loading map[string]bool
 	loaded  map[string]bool
 	stack   []loadFrame
+	// synthModules tracks synthesized v0.44 package module names
+	// → the absolute path of the directory that produced them. If
+	// two different package directories synthesize the same module
+	// name (terminal segment of their paths matches), the second
+	// load fails with a clear collision error rather than silently
+	// overwriting the first.
+	synthModules map[string]string
 }
 
 type loadFrame struct {
@@ -187,7 +194,16 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 		if len(classFiles) == 0 {
 			return "", nil, fmt.Errorf("package %s contains no class files", filepath.Base(path))
 		}
-		synth, err := synthesizePackageSource(classFiles, filepath.Base(path))
+		pkgName := filepath.Base(path)
+		// v0.44: detect aliased same-segment package collision. If
+		// another path already synthesized a module with this name,
+		// fail clearly rather than silently overwriting the first
+		// in the merged source.
+		if prev, taken := state.synthModules[pkgName]; taken && prev != abs {
+			return "", nil, fmt.Errorf("package name conflict: both %s and %s would synthesize module %s; use distinct directory names or rename one", prev, abs, pkgName)
+		}
+		state.synthModules[pkgName] = abs
+		synth, err := synthesizePackageSource(classFiles, pkgName)
 		if err != nil {
 			return "", nil, err
 		}

@@ -1,15 +1,26 @@
-# v0.44 import binding collision: two imports that bind the same
-# prefix are rejected. Without aliases, two packages whose
-# directories share a terminal segment both bind that segment and
-# collide at the second `import`.
+# v0.44 directory-package name collision: two imports whose
+# directories share a terminal segment would synthesize the same
+# module name. The runner detects this at synthesis time and fails
+# with a clear message naming both directories. The check fires
+# before the visibleImports binding check, so it covers both
+# unaliased and aliased same-segment imports.
 cd $REPO
 
 ! exec go run ./cmd/tya run $WORK/main.tya
-stderr 'import name conflict: net'
+stderr 'package name conflict.*module net'
+
+! exec go run ./cmd/tya run $WORK/aliased.tya
+stderr 'package name conflict.*module net'
 
 -- main.tya --
 import a/net
 import b/net
+
+print("unreachable")
+
+-- aliased.tya --
+import a/net as a_net
+import b/net as b_net
 
 print("unreachable")
 
