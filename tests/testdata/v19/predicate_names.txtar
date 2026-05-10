@@ -41,8 +41,8 @@ user =
 
 print has_name?(user)
 print _internal?(nil)
-print array.Array.empty?([])
-print dict.Dict.has?(user, "name")
+print array.empty?([])
+print dict.has?(user, "name")
 print value.Value.nil?(nil)
 
 class User

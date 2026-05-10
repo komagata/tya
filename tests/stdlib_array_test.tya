@@ -3,10 +3,10 @@ import array
 
 module stdlib_array_test
   test_empty_array = ->
-    unittest.Unittest.assert(array.Array.empty([]), "empty []")
+    unittest.Unittest.assert(array.empty([]), "empty []")
   test_non_empty_array = ->
-    unittest.Unittest.assert_equal(false, array.Array.empty(["tya"]), "non-empty array")
+    unittest.Unittest.assert_equal(false, array.empty(["tya"]), "non-empty array")
   test_first_returns_first = ->
-    unittest.Unittest.assert_equal("tya", array.Array.first(["tya"]), "first of single")
+    unittest.Unittest.assert_equal("tya", array.first(["tya"]), "first of single")
   test_array_deep_equal = ->
     unittest.Unittest.assert_equal([1, { name: "tya" }], [1, { name: "tya" }], "deep equal")

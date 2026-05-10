@@ -1,0 +1,20 @@
+module string
+  len = text -> len(text)
+
+  trim = text -> trim(text)
+
+  contains = text, needle -> contains(text, needle)
+
+  starts_with = text, prefix -> starts_with(text, prefix)
+
+  ends_with = text, suffix -> ends_with(text, suffix)
+
+  replace = text, old, new -> replace(text, old, new)
+
+  split = text, separator -> split(text, separator)
+
+  join = values, separator -> join(values, separator)
+
+  blank = text -> trim(text) == ""
+
+  present = text -> trim(text) != ""

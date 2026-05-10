@@ -9,7 +9,7 @@ exec $WORK/module_apis
 stdout 'hello\n3\n3\ntrue\ntrue\ntrue\nHi, Tya\na:b:c\na\nb\nTYA\ntya\n3\na\nc\n\[a, b\]\n\[c, b, a\]\na:b:c\n\[a, b, c, d\]\nd\nc\n2\ntrue\n1\nfallback\nadmin\nfalse\neditor\ntokyo\n'
 
 ! exec go run ./cmd/tya run $WORK/bad_slice.tya
-stderr 'array.Array.slice does not support negative indexes'
+stderr 'array.slice does not support negative indexes'
 
 -- module_apis.tya --
 import string
@@ -28,41 +28,41 @@ override =
   role: "editor"
   city: "tokyo"
 
-print string.String.len("tya")
-print string.String.byte_len("tya")
-print string.String.contains("hello", "ell")
-print string.String.starts_with("hello", "he")
-print string.String.ends_with("hello", "lo")
-print string.String.replace("Hi, NAME", "NAME", "Tya")
-print string.String.join(items, ":")
-lines = string.String.lines("a\nb\n")
+print string.len("tya")
+print string.byte_len("tya")
+print string.contains("hello", "ell")
+print string.starts_with("hello", "he")
+print string.ends_with("hello", "lo")
+print string.replace("Hi, NAME", "NAME", "Tya")
+print string.join(items, ":")
+lines = string.lines("a\nb\n")
 print lines[0]
 print lines[1]
-print string.String.upcase("tya")
-print string.String.downcase("TYA")
+print string.upcase("tya")
+print string.downcase("TYA")
 
-print array.Array.len(items)
-print array.Array.first(items)
-print array.Array.last(items)
-print array.Array.slice(items, 0, 2)
-print array.Array.reverse(items)
-print array.Array.join(items, ":")
-print array.Array.push(items, "d")
-print array.Array.pop(items)
-print array.Array.last(items)
+print array.len(items)
+print array.first(items)
+print array.last(items)
+print array.slice(items, 0, 2)
+print array.reverse(items)
+print array.join(items, ":")
+print array.push(items, "d")
+print array.pop(items)
+print array.last(items)
 
-print dict.Dict.len(user)
-print dict.Dict.has(user, "name")
-print dict.Dict.get(count, "count")
-print dict.Dict.get(user, "missing", "fallback")
-dict.Dict.set(user, "role", "admin")
-print dict.Dict.delete(user, "role")
-print dict.Dict.has(user, "role")
-merged = dict.Dict.merge(user, override)
-print dict.Dict.get(merged, "role")
-print dict.Dict.get(merged, "city")
+print dict.len(user)
+print dict.has(user, "name")
+print dict.get(count, "count")
+print dict.get(user, "missing", "fallback")
+dict.set(user, "role", "admin")
+print dict.delete(user, "role")
+print dict.has(user, "role")
+merged = dict.merge(user, override)
+print dict.get(merged, "role")
+print dict.get(merged, "city")
 
 -- bad_slice.tya --
 import array
 
-print array.Array.slice(["a"], -1, 1)
+print array.slice(["a"], -1, 1)

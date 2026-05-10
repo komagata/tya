@@ -17,22 +17,22 @@ stdout '0.43.0\n'
 import string
 import array
 
-print string.String.blank("  ")
-print string.String.present("  ")
-print array.Array.empty([])
-print array.Array.first(["tya"])
+print string.blank("  ")
+print string.present("  ")
+print array.empty([])
+print array.first(["tya"])
 
 -- precedence/main.tya --
 import string
 import array
 
-print string.String.blank("ignored")
-print array.Array.empty([])
+print string.blank("ignored")
+print array.empty([])
 
--- precedence/string.String.tya --
+-- precedence/string.tya --
 module string
   blank = _text -> "local string"
 
--- lib/array.Array.tya --
+-- lib/array.tya --
 module array
   empty = _items -> "path array"

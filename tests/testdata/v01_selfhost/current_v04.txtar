@@ -55,20 +55,20 @@ stderr 'actual:'
 stderr 'name: Tya'
 ! stdout .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_string.String.tya" > "$WORK/v04_string.String.c"'
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_string.tya" > "$WORK/v04_string.c"'
 ! stderr .
 
-exec cc $WORK/v04_string.String.c runtime/tya_runtime.c -I runtime -o $WORK/v04_string
+exec cc $WORK/v04_string.c runtime/tya_runtime.c -I runtime -o $WORK/v04_string
 ! stderr .
 
 exec $WORK/v04_string
 ! stdout .
 ! stderr .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_array.Array.tya" > "$WORK/v04_array.Array.c"'
+exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_array.tya" > "$WORK/v04_array.c"'
 ! stderr .
 
-exec cc $WORK/v04_array.Array.c runtime/tya_runtime.c -I runtime -o $WORK/v04_array
+exec cc $WORK/v04_array.c runtime/tya_runtime.c -I runtime -o $WORK/v04_array
 ! stderr .
 
 exec $WORK/v04_array
@@ -83,15 +83,15 @@ items = [1, 2, 3]
 doubled = map(items, item -> item * 2)
 sum = total, item -> total + item
 
-assert string.String.blank("  ")
-assert array.Array.empty([])
+assert string.blank("  ")
+assert array.empty([])
 assert_equal [2, 4, 6], doubled
 assert_equal 6, reduce(items, 0, sum)
 assert_equal true, any(items, item -> item == 2)
 assert_equal true, all(items, item -> item > 0)
 assert_equal 2, find(items, item -> item == 2)
 assert_equal true, equal([1, {name: "tya"}], [1, {name: "tya"}])
-print array.Array.first(["ok"])
+print array.first(["ok"])
 
 -- fail_assert.tya --
 assert false
@@ -99,18 +99,18 @@ assert false
 -- fail_equal.tya --
 assert_equal [1, {name: "tya"}], [1, {name: "Tya"}]
 
--- v04_string.String.tya --
+-- v04_string.tya --
 import string
 
-assert string.String.blank(" ")
-assert string.String.present("tya")
-assert_equal false, string.String.blank("tya")
-assert_equal true, string.String.present("tya")
+assert string.blank(" ")
+assert string.present("tya")
+assert_equal false, string.blank("tya")
+assert_equal true, string.present("tya")
 
--- v04_array.Array.tya --
+-- v04_array.tya --
 import array
 
-assert array.Array.empty([])
-assert_equal false, array.Array.empty(["tya"])
-assert_equal "tya", array.Array.first(["tya"])
+assert array.empty([])
+assert_equal false, array.empty(["tya"])
+assert_equal "tya", array.first(["tya"])
 assert_equal [1, {name: "tya"}], [1, {name: "tya"}]

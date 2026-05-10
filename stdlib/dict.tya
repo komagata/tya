@@ -1,0 +1,8 @@
+module dict
+  len = value -> len(value)
+
+  has = value, key -> has(value, key)
+
+  keys = value -> keys(value)
+
+  values = value -> values(value)
