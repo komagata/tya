@@ -57,11 +57,11 @@ module util
 import string as util
 import array as util
 
--- conflict/string.tya --
+-- conflict/string.String.tya --
 module string
   name = "string"
 
--- conflict/array.tya --
+-- conflict/array.Array.tya --
 module array
   name = "array"
 
