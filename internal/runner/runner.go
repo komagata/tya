@@ -734,7 +734,11 @@ func resolvePackageDir(importerPath string, name string) (string, []string, erro
 			classFiles = append(classFiles, filepath.Clean(abs))
 		}
 		if len(classFiles) == 0 {
-			continue
+			// Directory exists but contains no class files. Surface
+			// a clear error rather than letting the resolver fall
+			// back to "module not found", which would suggest the
+			// package itself is missing.
+			return "", nil, fmt.Errorf("package %s contains no class files", name)
 		}
 		absDir, err := filepath.Abs(candidate)
 		if err != nil {

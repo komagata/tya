@@ -1,0 +1,15 @@
+# v0.44 importing a directory that exists but contains no class
+# files is a clear error, distinct from "module not found".
+cd $REPO
+
+! exec go run ./cmd/tya run $WORK/main.tya
+stderr 'package empty_pkg contains no class files'
+
+-- main.tya --
+import empty_pkg
+
+print("unreachable")
+
+# Empty directory: present at the file system but contains no
+# .tya files at all.
+-- empty_pkg/.gitkeep --
