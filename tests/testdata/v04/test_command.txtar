@@ -1,5 +1,5 @@
 # tya test discovers *_test.tya as importable test case modules and runs them
-# through unittest.run as a synthesized suite (v0.22 behavior).
+# through unittest.Unittest.run as a synthesized suite (v0.22 behavior).
 cd $REPO
 exec go build -o $WORK/tya ./cmd/tya
 
@@ -38,20 +38,20 @@ import unittest
 
 module one_test
   test_truthy = ->
-    unittest.assert(true, "true")
+    unittest.Unittest.assert(true, "true")
   test_deep_equal = ->
-    unittest.assert_equal([1, {name: "tya"}], [1, {name: "tya"}], "deep")
+    unittest.Unittest.assert_equal([1, {name: "tya"}], [1, {name: "tya"}], "deep")
 
 -- pass/two_test.tya --
 import unittest
 
 module two_test
   test_arithmetic = ->
-    unittest.assert_equal(2, 1 + 1, "plus")
+    unittest.Unittest.assert_equal(2, 1 + 1, "plus")
   test_concat = ->
-    unittest.assert_equal("tya", "ty" + "a", "concat")
+    unittest.Unittest.assert_equal("tya", "ty" + "a", "concat")
   test_negation = ->
-    unittest.assert_falsy(false, "false")
+    unittest.Unittest.assert_falsy(false, "false")
 
 -- pass/not_a_test_file.tya --
 print "ignored"
@@ -61,11 +61,11 @@ import unittest
 
 module fail_assert_test
   test_fails = ->
-    unittest.assert(false, "intentional")
+    unittest.Unittest.assert(false, "intentional")
 
 -- fail/fail_equal_test.tya --
 import unittest
 
 module fail_equal_test
   test_unequal = ->
-    unittest.assert_equal([1, {name: "tya"}], [1, {name: "Tya"}], "case mismatch")
+    unittest.Unittest.assert_equal([1, {name: "tya"}], [1, {name: "Tya"}], "case mismatch")
