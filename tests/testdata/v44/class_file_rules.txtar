@@ -1,0 +1,82 @@
+# v0.44 class-file structural rules at the runner level (M2).
+# A class file imported as part of a package must satisfy
+# CheckClassFileStructure: PascalCase filename, exactly one class
+# whose name matches the filename, and only import / class /
+# interface declarations at top level.
+cd $REPO
+
+# Public class name must match the filename.
+! exec go run ./cmd/tya run $WORK/wrong_main.tya
+stderr 'must define class WrongName'
+
+# A class file with no public class at all is rejected. The error
+# fires under "may only contain import, class, and interface" if the
+# file has any top-level non-class content; here the file only has
+# an interface, so the missing-class rule fires.
+! exec go run ./cmd/tya run $WORK/empty_main.tya
+stderr 'must define class EmptyClass'
+
+# A class file with a top-level non-class statement is rejected.
+! exec go run ./cmd/tya run $WORK/stray_main.tya
+stderr 'may only contain import, class, and interface'
+
+# A class file with a private companion class is accepted; the
+# private class is visible to the public class within the same file.
+exec go run ./cmd/tya run $WORK/ok_main.tya
+stdout 'wrapped:hello\n'
+! stderr .
+
+-- wrong_main.tya --
+import wrong_pkg
+
+print(wrong_pkg.WrongName())
+
+-- wrong_pkg/WrongName.tya --
+class DifferentName
+  init = ->
+    @x = 1
+
+-- empty_main.tya --
+import empty_pkg
+
+print(empty_pkg.EmptyClass())
+
+-- empty_pkg/EmptyClass.tya --
+# Only an interface declaration; no public class with the matching
+# filename. CheckClassFileStructure flags missing public class.
+interface Empty
+  noop = ->
+
+-- stray_main.tya --
+import stray_pkg
+
+print(stray_pkg.Stray())
+
+-- stray_pkg/Stray.tya --
+class Stray
+  init = ->
+    @x = 1
+
+x = 1
+
+-- ok_main.tya --
+import ok_pkg
+
+s = ok_pkg.Server()
+print(s.run("hello"))
+
+-- ok_pkg/Server.tya --
+class Connection
+  init = msg ->
+    @msg = msg
+
+  body = ->
+    @msg
+
+class Server
+  init = ->
+    @prefix = "wrapped"
+
+  run = msg ->
+    conn = Connection(msg)
+    "{@prefix}:{conn.body()}"
