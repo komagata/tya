@@ -2012,9 +2012,42 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.TryExpr:
 		return g.expr(n.Expr)
 	case *ast.SpawnExpr:
-		return "", "", fmt.Errorf("spawn: not yet implemented (v0.42 STEP 1 only added syntax)")
+		// spawn fn(args) takes the args evaluated in this thread, then
+		// runs fn(args...) on a new pthread. Decompose the CallExpr to
+		// pass callee and args separately to tya_task_new.
+		if call, ok := n.Callee.(*ast.CallExpr); ok {
+			callee, _, err := g.expr(call.Callee)
+			if err != nil {
+				return "", "", err
+			}
+			if len(call.Args) > 4 {
+				return "", "", fmt.Errorf("spawn: at most 4 arguments are supported, got %d", len(call.Args))
+			}
+			argv := make([]string, 4)
+			for i := range argv {
+				argv[i] = "tya_nil()"
+			}
+			for i, arg := range call.Args {
+				s, _, err := g.expr(arg)
+				if err != nil {
+					return "", "", err
+				}
+				argv[i] = s
+			}
+			return fmt.Sprintf("tya_task_new(%s, %d, %s, %s, %s, %s)",
+				callee, len(call.Args), argv[0], argv[1], argv[2], argv[3]), "TyaValue", nil
+		}
+		callee, _, err := g.expr(n.Callee)
+		if err != nil {
+			return "", "", err
+		}
+		return fmt.Sprintf("tya_task_new(%s, 0, tya_nil(), tya_nil(), tya_nil(), tya_nil())", callee), "TyaValue", nil
 	case *ast.AwaitExpr:
-		return "", "", fmt.Errorf("await: not yet implemented (v0.42 STEP 1 only added syntax)")
+		target, _, err := g.expr(n.Target)
+		if err != nil {
+			return "", "", err
+		}
+		return fmt.Sprintf("tya_task_await(%s)", target), "TyaValue", nil
 	}
 	return "", "", fmt.Errorf("C emitter does not support expression %T", expr)
 }

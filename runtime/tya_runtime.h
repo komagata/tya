@@ -162,6 +162,19 @@ TyaValue tya_digest_sha512(TyaValue text);
 TyaValue tya_secure_random_bytes(TyaValue n);
 TyaValue tya_secure_random_int(TyaValue min, TyaValue max);
 
+/* Concurrency API (v0.42).
+ *
+ * tya_task_new    creates a task, allocates a TyaTask, spawns a
+ *                 pthread that runs the callable with the given
+ *                 arguments (0 to 4), and returns a TyaValue of kind
+ *                 TYA_TASK. The arguments are evaluated in the
+ *                 spawning thread before the new pthread starts.
+ * tya_task_await  blocks the current thread until the task completes,
+ *                 then returns the task's return value or re-raises
+ *                 the propagated raise. */
+TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
+TyaValue tya_task_await(TyaValue task);
+
 /* GC API (v0.41).
  *
  * tya_gc_register_root  generated code calls this at startup for every

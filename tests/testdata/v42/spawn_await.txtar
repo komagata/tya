@@ -1,0 +1,50 @@
+# v0.42 STEP 3: spawn / await run a callable on a fresh pthread, then
+# the awaiter blocks for the return value (or re-raises).
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/single.tya
+stdout '42'
+
+exec go run ./cmd/tya run $WORK/many.tya
+stdout '20'
+stdout '40'
+stdout '60'
+
+exec go run ./cmd/tya run $WORK/raise.tya
+stdout 'spawned'
+stdout 'caught: boom!'
+
+exec go run ./cmd/tya run $WORK/no_args.tya
+stdout 'noargs'
+
+-- single.tya --
+double = x -> x * 2
+t = spawn double(21)
+print await t
+
+-- many.tya --
+double = x -> x * 2
+t1 = spawn double(10)
+t2 = spawn double(20)
+t3 = spawn double(30)
+print await t1
+print await t2
+print await t3
+
+-- raise.tya --
+boom = x ->
+  raise "boom!"
+  return x
+
+t = spawn boom(1)
+print "spawned"
+try
+  v = await t
+  print "got: " + to_string(v)
+catch e
+  print "caught: " + e
+
+-- no_args.tya --
+greet = () -> "noargs"
+t = spawn greet()
+print await t

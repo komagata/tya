@@ -77,12 +77,35 @@ identity equality.
 Generated programs link with `pthread` on Linux (`-lpthread`); on
 macOS / BSD pthread is in libc.
 
-### STEP 3 — `spawn` / `await` codegen and runtime (planned)
+### STEP 3 — `spawn` / `await` codegen and runtime (landed)
 
-Codegen for `spawn callable` and `await task`. Spawn helper creates a
-pthread running the callable with copied / shared arguments. Await
-helper joins and returns. Raises in the spawned task propagate to the
-caller's `await`.
+`spawn callable` is a unary expression that produces a task value.
+The spawning thread evaluates the callable expression and the
+arguments first, then `tya_task_new` allocates a `TyaTask`,
+initializes its mutex / condvar, and starts a pthread that calls
+`callable(args...)` once. The arguments are copied into the task's
+`argv` array before the pthread runs. Up to four positional
+arguments are supported; passing more is a structured error at
+codegen time.
+
+`await task` blocks the current thread on `pthread_join`, then
+returns either the task's `result` or re-raises its
+`raise_value`. The raise frame is thread-local
+(`_Thread_local`), so a raise inside the spawned body never
+corrupts the awaiter's raise stack.
+
+Special forms recognized by codegen:
+
+- `spawn fn(args)` — call form. `fn` and each argument are evaluated
+  in the spawning thread; the new pthread then calls
+  `fn(arg0, arg1, ...)`.
+- `spawn callable_value` — bare callable. The new pthread calls
+  `callable_value()` with no arguments.
+
+Both forms return a `TyaValue` of kind `TYA_TASK`. Awaiting a task
+twice is allowed; the first `await` joins the pthread, subsequent
+`await`s return the cached `result` (or re-raise the cached
+`raise_value`).
 
 ### STEP 4 — `scope` block (planned)
 

@@ -93,6 +93,8 @@ struct TyaTask {
   bool raised;
   atomic_bool cancelled;
   TyaValue callee;       /* the callable that the task runs */
+  int argc;              /* number of arguments (0..4) */
+  TyaValue argv[4];      /* arguments evaluated in the spawning thread */
   TyaValue result;       /* return value when done && !raised */
   TyaValue raise_value;  /* in-flight raise to propagate to await */
 };
@@ -183,6 +185,9 @@ static void tya_gc_mark_header(TyaGcHeader *h) {
     case TYA_GC_TASK: {
       TyaTask *t = (TyaTask *)h;
       tya_gc_mark_value(t->callee);
+      for (int i = 0; i < t->argc; i++) {
+        tya_gc_mark_value(t->argv[i]);
+      }
       tya_gc_mark_value(t->result);
       tya_gc_mark_value(t->raise_value);
       break;
@@ -282,7 +287,14 @@ static void tya_write_value(FILE *out, TyaValue value);
 static void tya_build_value(TyaStringBuilder *builder, TyaValue value);
 static void tya_builder_append(TyaStringBuilder *builder, const char *text);
 
-static TyaRaiseFrame *tya_raise_frame = NULL;
+/* Each task (including the main thread) has its own raise-frame chain.
+ * Storing it as _Thread_local keeps tya_raise / tya_pop_raise_frame
+ * unchanged in single-threaded code while letting workers raise
+ * independently. The collector only walks the main thread's chain when
+ * it runs, which is safe because the main thread holds tya_gc_mu
+ * throughout collection and worker threads cannot allocate or raise
+ * while waiting on that lock. */
+static _Thread_local TyaRaiseFrame *tya_raise_frame = NULL;
 
 TyaValue tya_nil(void) {
   return (TyaValue){.kind = TYA_NIL};
@@ -3060,4 +3072,109 @@ TyaValue tya_gc_stats(void) {
     {"threshold",     tya_number((double)threshold)},
   };
   return tya_dict(entries, 8);
+}
+
+
+/* =========================================================================
+ * v0.42 STEP 3: spawn / await runtime
+ * ========================================================================= */
+
+static TyaValue tya_task_invoke(TyaValue callee, int argc, TyaValue *argv) {
+  switch (argc) {
+    case 0:
+      return tya_call1(callee, tya_nil());
+    case 1:
+      return tya_call1(callee, argv[0]);
+    case 2:
+      return tya_call2(callee, argv[0], argv[1]);
+    case 3:
+      return tya_call3(callee, argv[0], argv[1], argv[2]);
+    case 4:
+      return tya_call4(callee, argv[0], argv[1], argv[2], argv[3]);
+  }
+  return tya_nil();
+}
+
+static void *tya_task_thread_main(void *arg) {
+  TyaTask *t = (TyaTask *)arg;
+  TyaRaiseFrame frame;
+  frame.prev = NULL;
+  if (setjmp(frame.env) == 0) {
+    tya_push_raise_frame(&frame);
+    TyaValue result = tya_task_invoke(t->callee, t->argc, t->argv);
+    tya_pop_raise_frame();
+    pthread_mutex_lock(&t->mu);
+    t->result = result;
+    t->done = true;
+    pthread_cond_broadcast(&t->cv);
+    pthread_mutex_unlock(&t->mu);
+  } else {
+    /* The body raised; capture the value and propagate it from the
+     * awaiter. The raise frame is the one this task pushed, so it has
+     * already been longjmp'd back to; no pop is needed. */
+    pthread_mutex_lock(&t->mu);
+    t->raise_value = frame.value;
+    t->raised = true;
+    t->done = true;
+    pthread_cond_broadcast(&t->cv);
+    pthread_mutex_unlock(&t->mu);
+  }
+  return NULL;
+}
+
+TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValue c, TyaValue d) {
+  if (callee.kind != TYA_FUNCTION || callee.function == NULL) {
+    tya_raise(tya_string("spawn: argument must be a callable"));
+    return tya_nil();
+  }
+  if (argc < 0 || argc > 4) {
+    tya_raise(tya_string("spawn: at most 4 arguments are supported"));
+    return tya_nil();
+  }
+  TyaTask *t = tya_gc_alloc(sizeof(TyaTask), TYA_GC_TASK);
+  pthread_mutex_init(&t->mu, NULL);
+  pthread_cond_init(&t->cv, NULL);
+  t->done = false;
+  t->joined = false;
+  t->raised = false;
+  atomic_store(&t->cancelled, false);
+  t->callee = callee;
+  t->argc = argc;
+  t->argv[0] = a;
+  t->argv[1] = b;
+  t->argv[2] = c;
+  t->argv[3] = d;
+  t->result = tya_nil();
+  t->raise_value = tya_nil();
+  if (pthread_create(&t->thread, NULL, tya_task_thread_main, t) != 0) {
+    tya_raise(tya_string("spawn: pthread_create failed"));
+    return tya_nil();
+  }
+  return (TyaValue){.kind = TYA_TASK, .task = t};
+}
+
+TyaValue tya_task_await(TyaValue v) {
+  if (v.kind != TYA_TASK || v.task == NULL) {
+    tya_raise(tya_string("await: argument must be a task"));
+    return tya_nil();
+  }
+  TyaTask *t = v.task;
+  pthread_mutex_lock(&t->mu);
+  bool already_joined = t->joined;
+  pthread_mutex_unlock(&t->mu);
+  if (!already_joined) {
+    pthread_join(t->thread, NULL);
+    pthread_mutex_lock(&t->mu);
+    t->joined = true;
+    pthread_mutex_unlock(&t->mu);
+  }
+  pthread_mutex_lock(&t->mu);
+  bool raised = t->raised;
+  TyaValue value = raised ? t->raise_value : t->result;
+  pthread_mutex_unlock(&t->mu);
+  if (raised) {
+    tya_raise(value);
+    return tya_nil();
+  }
+  return value;
 }
