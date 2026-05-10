@@ -1,34 +1,48 @@
 # v0.44 `tya check` validates a v0.44 entry without running it.
-# Same resolution + class-file validation as `tya run`.
+# Same resolution + class-file validation as `tya run`. In addition,
+# `tya check` accepts class files directly (read-only validation):
+# the structure rules from CheckClassFile fire and report any
+# violations.
 cd $REPO
 
-exec go run ./cmd/tya check $WORK/main.tya
+# Happy path: script entry with a clean directory package.
+exec go run ./cmd/tya check $WORK/good_entry/main.tya
 ! stderr .
 
-# Check failure on a class-file entry — same diagnostic as run.
-! exec go run ./cmd/tya check $WORK/Hello.tya
-stderr 'Hello.tya is a class file'
+# Class file checked successfully — reads the file as a v0.44
+# library member without entry semantics.
+exec go run ./cmd/tya check $WORK/standalone/Good.tya
+! stderr .
+
+# Class file with a name mismatch fails the structure check.
+! exec go run ./cmd/tya check $WORK/standalone/Hello.tya
+stderr 'must define class Hello'
 
 # Check failure on an unresolved import.
-! exec go run ./cmd/tya check $WORK/missing.tya
+! exec go run ./cmd/tya check $WORK/missing/main.tya
 stderr 'module not found: never_exists'
 
--- main.tya --
+-- good_entry/main.tya --
 import lib
 
 print(lib.Lib.greet())
 
--- lib/Lib.tya --
+-- good_entry/lib/Lib.tya --
 class Lib
   @@greet = ->
     "hi"
 
--- Hello.tya --
-class Hello
+-- standalone/Good.tya --
+class Good
+  init = ->
+    @x = 1
+
+-- standalone/Hello.tya --
+class WrongName
   @@noop = ->
     nil
 
--- missing.tya --
+-- missing/main.tya --
 import never_exists
 
 print(never_exists.Never.X())

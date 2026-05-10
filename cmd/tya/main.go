@@ -744,6 +744,25 @@ func testFiles(root string) ([]string, error) {
 }
 
 func checkFile(path string) error {
+	// v0.44: tya check on a PascalCase class file is allowed
+	// (read-only, no entry semantics). Skip the entry-only
+	// runner.LoadSourceWithModules path and validate the class
+	// file structure + body in isolation.
+	if checker.IsClassFileName(path) {
+		src, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		toks, errs := lexer.Lex(string(src))
+		if len(errs) > 0 {
+			return errs[0]
+		}
+		prog, err := parser.Parse(toks)
+		if err != nil {
+			return err
+		}
+		return checker.CheckClassFile(prog, path)
+	}
 	source, modules, err := runner.LoadSourceWithModules(path)
 	if err != nil {
 		return err
