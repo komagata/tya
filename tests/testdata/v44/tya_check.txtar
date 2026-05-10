@@ -1,0 +1,34 @@
+# v0.44 `tya check` validates a v0.44 entry without running it.
+# Same resolution + class-file validation as `tya run`.
+cd $REPO
+
+exec go run ./cmd/tya check $WORK/main.tya
+! stderr .
+
+# Check failure on a class-file entry — same diagnostic as run.
+! exec go run ./cmd/tya check $WORK/Hello.tya
+stderr 'Hello.tya is a class file'
+
+# Check failure on an unresolved import.
+! exec go run ./cmd/tya check $WORK/missing.tya
+stderr 'module not found: never_exists'
+
+-- main.tya --
+import lib
+
+print(lib.Lib.greet())
+
+-- lib/Lib.tya --
+class Lib
+  @@greet = ->
+    "hi"
+
+-- Hello.tya --
+class Hello
+  @@noop = ->
+    nil
+
+-- missing.tya --
+import never_exists
+
+print(never_exists.Never.X())
