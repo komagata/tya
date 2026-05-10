@@ -334,22 +334,41 @@ constants:            SCREAMING_SNAKE_CASE
 
 ## Errors
 
-The new rules introduce the following diagnostics. Codes are reserved in
-the parser/checker ranges and finalized when each STEP lands.
+The new rules introduce the following diagnostics. Code blocks are
+reserved per stage; individual codes are finalized when each STEP lands.
 
-- Class file does not contain a class declaration.
-- Class file's public class name does not match the filename.
-- Class file contains top-level statements other than `import`, classes,
-  and interfaces.
-- Script file declares a public class with a filename-matching name.
-- Filename starts with an unsupported character.
-- `import` path contains `..` or starts with `/`.
-- `import` path's terminal segment is not a valid package directory name.
-- `import` path resolves to a script file.
-- `import` path cannot be resolved against the configured roots.
-- `module` keyword used (removed).
-- Same-directory class name collision.
-- Cross-file reference to a private class.
+Reserved ranges:
+
+| Range           | Stage    | Purpose                                  |
+| --------------- | -------- | ---------------------------------------- |
+| `E0200`–`E0219` | parser   | `module` keyword removed (M9)            |
+| `E0400`–`E0429` | checker  | class file structure (M2, M5)            |
+| `E0850`–`E0879` | runner   | import resolution and entry kind (M3, M4) |
+
+Diagnostics in scope:
+
+| Code (TBD)  | Stage   | Condition                                                                      |
+| ----------- | ------- | ------------------------------------------------------------------------------ |
+| `E0400`     | checker | Class file does not contain a class declaration.                               |
+| `E0401`     | checker | Class file's public class name does not match the filename.                    |
+| `E0402`     | checker | Class file contains a non-import / non-class / non-interface top-level statement. |
+| `E0403`     | checker | Script file declares a public class with a filename-matching name.             |
+| `E0404`     | checker | Filename starts with an unsupported character (not ASCII letter).              |
+| `E0405`     | checker | Same-directory class name collision.                                           |
+| `E0406`     | checker | Cross-file reference to a private class.                                       |
+| `E0850`     | runner  | `import` path contains `..` or starts with `/`.                                |
+| `E0851`     | runner  | `import` path's terminal segment is not a valid package directory name.        |
+| `E0852`     | runner  | `import` path resolves to a script file (lowercase leaf).                      |
+| `E0853`     | runner  | `import` path cannot be resolved against the configured roots.                 |
+| `E0854`     | runner  | `tya run` invoked on a class file (only script files are runnable).            |
+| `E0200`     | parser  | `module` keyword used (removed in M9).                                         |
+
+Codes in `E04xx` and `E08xx` are additive within the checker and runner
+ranges already reserved by `docs/v0.29/CODES.md`. The parser block
+`E0200`–`E0219` is reserved out of the parser range `E0100`–`E0299`
+allocated for the Toolchain "Migrate remaining stages to the
+diagnostics pipeline" Epic; the `module`-removal code lands when the
+parser has been migrated.
 
 ## Examples
 

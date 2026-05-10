@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.44 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-44-specification">Tya v0.44 Specification</h1>
+<p>This document is the specification for Tya v0.44 after v0.43 concurrency known-gap close-out.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.44 is about a **class-oriented namespace and entry-file model**.</p>
+<p>Through v0.43 Tya carried two coexisting library shapes: snake_case <code>module name</code> files containing free functions, and PascalCase <code>class</code> declarations placed inside modules. v0.44 picks one shape — class — and reorganizes the surrounding namespace machinery so that every reusable unit is a class, every file's role is decidable from its name alone, and every program has exactly one source representation in the spirit of Canonical Syntax.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Replace the snake_case <code>module name</code> namespace with directory-as-package.</li>
+<li>Make every importable file a class file: PascalCase filename, single</li>
+</ul>
+<p>  top-level <code>class X</code> whose name matches the filename.</p>
+<ul>
+<li>Make every entry file a script file: lowercase filename, top-level</li>
+</ul>
+<p>  statements only, internally desugared to an unnamed class with <code>main</code>.</p>
+<ul>
+<li>Make <code>tya run</code> accept only script files (compact form). Class files cannot</li>
+</ul>
+<p>  be entries.</p>
+<ul>
+<li>Allow arbitrary-depth namespace hierarchy through directory nesting.</li>
+<li>Forbid <code>..</code> and absolute paths in <code>import</code>. Resolve only against the entry</li>
+</ul>
+<p>  directory, <code>TYA_PATH</code>, and <code>stdlib</code>.</p>
+<ul>
+<li>Allow same-directory siblings to refer to each other without prefix.</li>
+<li>Allow private classes (only visible within the same file).</li>
+<li>Remove the <code>module</code> keyword.</li>
+<li>Keep current class machinery (<code>@field</code>, <code>@@method</code>, <code>init</code>, <code>extends</code>,</li>
+</ul>
+<p>  <code>implements</code>, <code>abstract</code>, <code>final</code>, <code>override</code>, <code>interface</code>) unchanged.</p>
+<h2 id="non-goals">Non-Goals</h2>
+<p>v0.44 does not include:</p>
+<ul>
+<li>primitive-as-class sugar (<code>1</code> desugared to <code>Integer(1)</code>); deferred to a</li>
+</ul>
+<p>  later Epic.</p>
+<ul>
+<li>module mixins / <code>include</code> (Ruby-style).</li>
+<li>a <code>static class</code> keyword. Java-style utility classes are written as</li>
+</ul>
+<p>  ordinary classes with no <code>init</code> and only <code>@@method</code> members; this is a   convention, not a language feature.</p>
+<ul>
+<li>a separate <code>module</code> (Ruby-style non-instantiable class) construct.</li>
+<li>changes to lambda or class member syntax.</li>
+<li>changes to the formatter except as needed for the new file kinds.</li>
+<li>changes to the C runtime or GC.</li>
+<li>automatic migration of third-party Tya code; the migration tool, if any,</li>
+</ul>
+<p>  ships in a later minor.</p>
+<h2 id="file-kinds">File Kinds</h2>
+<p>A <code>.tya</code> file's role is determined by the first character of its filename:</p>
+<p>| Filename starts with | Kind          | Role                           | | -------------------- | ------------- | ------------------------------ | | Uppercase letter     | Class file    | Library; importable            | | Lowercase letter     | Script file   | Entry; not importable          |</p>
+<p>Filenames starting with <code>_</code>, digits, or other characters are language errors.</p>
+<h3 id="class-file">Class file</h3>
+<p>A class file is a PascalCase <code>.tya</code> file containing **exactly one top-level public class** whose name matches the filename without <code>.tya</code>.</p>
+<pre><code class="language-text">Request.tya          -&gt;  class Request
+HttpClient.tya       -&gt;  class HttpClient</code></pre>
+<p>A class file may additionally declare any number of **private classes** below the public one. Private classes are visible only within the same file.</p>
+<pre><code class="language-tya"># Request.tya
+class _Header
+  init = name, value -&gt;
+    @name = name
+    @value = value
+
+class Request
+  init = url -&gt;
+    @url = url
+    @headers = []</code></pre>
+<p>A class file must not contain top-level statements other than <code>import</code>, class declarations, and interface declarations.</p>
+<h3 id="script-file">Script file</h3>
+<p>A script file is a lowercase <code>.tya</code> file. Its body is **top-level statements and bindings**, optionally preceded by <code>import</code> lines.</p>
+<pre><code class="language-tya"># hello.tya
+print(&quot;hello&quot;)</code></pre>
+<pre><code class="language-tya"># client.tya
+import net/http
+
+request = http.Request()
+print(request.get(&quot;http://example.com&quot;))</code></pre>
+<p>A script file may declare private classes; they are visible only within the file. A script file must not declare a public class with a name matching the filename, because a script file's public class is generated implicitly (see *Entry execution*).</p>
+<p>A script file is not importable. <code>import</code> paths never resolve to a script file.</p>
+<h2 id="namespace-and-packages">Namespace and Packages</h2>
+<p>A **package** is a directory. The directory name is the package's identifier. Package directory names must match the variables-and-functions naming rule (<code>snake_case</code>). All <code>.tya</code> files in a directory share that package's namespace.</p>
+<p>Within a single package directory, sibling class files refer to each other's public classes without any prefix.</p>
+<pre><code class="language-tya"># net/http/Response.tya
+class Response
+  ...
+
+# net/http/Request.tya
+class Request
+  init = url -&gt;
+    @url = url
+
+  send = -&gt;
+    Response()                # sibling, no prefix</code></pre>
+<p>Packages may nest arbitrarily deep through directory nesting:</p>
+<pre><code class="language-text">stdlib/
+  net/
+    http/
+      Request.tya
+      Response.tya
+    tcp/
+      Socket.tya
+  os/
+    Os.tya</code></pre>
+<h2 id="import">Import</h2>
+<p><code>import path/to/package</code> loads the package directory at <code>path/to/package</code> and binds the **last path segment** as the prefix used at call sites.</p>
+<pre><code class="language-tya">import net/http
+
+req = http.Request()
+res = req.send()</code></pre>
+<h3 id="resolution">Resolution</h3>
+<p><code>import path</code> resolves <code>path</code> against the following roots, in order:</p>
+<ol>
+<li>The directory containing the entry script file.</li>
+</ol>
+<p>2. Each entry of <code>TYA_PATH</code>, in order. 3. The bundled <code>stdlib/</code> directory.</p>
+<p>The first directory found that matches <code>path</code> exactly is the resolved package.</p>
+<h3 id="restrictions">Restrictions</h3>
+<ul>
+<li>The path must use forward slashes (<code>/</code>) as separators.</li>
+<li><code>..</code> segments are forbidden.</li>
+<li>Absolute paths (paths beginning with <code>/</code>) are forbidden.</li>
+<li>The path must end on a directory, not a file. Importing a class file</li>
+</ul>
+<p>  directly (<code>import net/http/Request</code>) is forbidden.</p>
+<ul>
+<li>The terminal segment must be a valid <code>snake_case</code> identifier (i.e., it is a</li>
+</ul>
+<p>  package directory, not a class file).</p>
+<ul>
+<li>Importing a script file is impossible because script-file directories</li>
+</ul>
+<p>  cannot be the terminal segment.</p>
+<h3 id="same-package-reference">Same-Package Reference</h3>
+<p>A <code>.tya</code> file does not need to <code>import</code> its own package. All public classes in the same directory are in scope without prefix.</p>
+<h3 id="cross-package-reference">Cross-Package Reference</h3>
+<p>Public classes in another package are only reachable through <code>import</code> and the package prefix. The full reference form is <code>&lt;last-segment&gt;.&lt;ClassName&gt;</code>, even when the package contains a single class whose name matches the directory:</p>
+<pre><code class="language-text">stdlib/math/Math.tya       contains class Math
+
+import math
+Math.sin(0.5)              # ERROR: Math is not in scope
+math.Math.sin(0.5)         # OK</code></pre>
+<p>The <code>math.Math</code> repetition is intentional and consistent with Java's <code>java.lang.Math.sin()</code> style.</p>
+<h2 id="entry-execution">Entry Execution</h2>
+<p><code>tya run path/to/file.tya</code> accepts **only script files** (lowercase filename). Running a class file is a runner error.</p>
+<p>The runner desugars the script file into a class file with an unnamed class that has a <code>main</code> method whose body is the script's top-level statements:</p>
+<pre><code class="language-tya"># hello.tya  (what the user writes)
+import os
+
+print(&quot;hello&quot;)
+for arg in os.Os.args()
+  print(arg)</code></pre>
+<p>is internally equivalent to:</p>
+<pre><code class="language-text"># implicit form  (not user-writable)
+import os
+
+class _Anonymous
+  main = -&gt;
+    print(&quot;hello&quot;)
+    for arg in os.Os.args()
+      print(arg)</code></pre>
+<p>The implicit class is unnamed; it has no source-level identifier and cannot be referred to from any file. Bindings introduced at script top-level (e.g. <code>request = http.Request()</code>) become locals of the implicit <code>main</code>.</p>
+<p>This desugaring is internal. The strict form is **not user-writable**: PascalCase class files with a <code>main</code> method exist as ordinary library classes and are not entry points.</p>
+<h2 id="class-files-are-library-only">Class Files Are Library-Only</h2>
+<p>A class file's <code>main</code> method, if defined, has no special meaning. It is an ordinary instance method. <code>tya run Hello.tya</code> is a runner error regardless of whether <code>Hello.tya</code> defines <code>main</code>.</p>
+<p>Rationale: every Tya program has exactly one source representation per Canonical Syntax. Allowing both <code>tya run Hello.tya</code> (with <code>class Hello + main</code>) and <code>tya run hello.tya</code> (compact) to launch a program would create two ways to write the same thing.</p>
+<h2 id="public-and-private-classes">Public and Private Classes</h2>
+<p>Every <code>.tya</code> file contains exactly one **public class**:</p>
+<ul>
+<li>In a class file the public class is the user-declared class whose name</li>
+</ul>
+<p>  matches the filename.</p>
+<ul>
+<li>In a script file the public class is the runner-generated unnamed class.</li>
+</ul>
+<p>Any additional class declared in the same file is **private**: it is visible only to code inside that file. Private classes have no externally visible name and cannot be referenced from another file under any mechanism, including reflection.</p>
+<p>Private classes follow the same naming rules as public classes (PascalCase). They may use <code>extends</code>, <code>implements</code>, <code>abstract</code>, <code>final</code>, and <code>override</code> exactly like public classes.</p>
+<h2 id="class-member-conventions-unchanged">Class Member Conventions (Unchanged)</h2>
+<p>The class member surface from v0.10–v0.13 is preserved without change:</p>
+<ul>
+<li><code>@field</code> — instance field.</li>
+<li><code>@@method = args -&gt; body</code> — class method, called as <code>Class.method(args)</code>.</li>
+<li><code>init = args -&gt; ...</code> — constructor.</li>
+<li><code>extends</code>, <code>implements</code>, <code>abstract class</code>, <code>final class</code>,</li>
+</ul>
+<p>  <code>abstract @@method</code>, <code>override</code>, <code>override @@method</code> — unchanged.</p>
+<p>A class with no <code>init</code> and only <code>@@method</code> members is a Java-style utility class. This is a documented convention; the language does not add a keyword for it.</p>
+<h2 id="cli-arguments">CLI Arguments</h2>
+<p>CLI arguments are not delivered as a <code>main</code> parameter. They are read through the standard library:</p>
+<pre><code class="language-tya">import os
+
+for arg in os.Os.args()
+  print(arg)</code></pre>
+<p><code>os.Os.args()</code> returns an array of strings (empty when no arguments). <code>main</code>'s signature is fixed at no parameters.</p>
+<h2 id="removed-constructs">Removed Constructs</h2>
+<ul>
+<li>The <code>module</code> keyword is removed. Files may not declare <code>module name</code>.</li>
+<li>The naming rule &quot;module file: snake_case, must match filename&quot; no longer</li>
+</ul>
+<p>  applies; that rule is replaced by file-kind rules above.</p>
+<ul>
+<li>Module-private <code>_name</code> members no longer exist as a category. Privacy is</li>
+</ul>
+<p>  expressed through class private members (existing <code>_name</code> rule on class   members is unchanged) and the file-private nature of private classes.</p>
+<h2 id="naming-rules-v0-44">Naming Rules (v0.44)</h2>
+<pre><code class="language-text">script file (entry):  lowercase ASCII (e.g. hello.tya, client.tya)
+class file:           PascalCase (e.g. Request.tya), filename = class name
+package directory:    snake_case (e.g. net, http, file_system)
+variables/functions:  snake_case
+private binding:      _snake_case
+classes:              PascalCase
+class methods:        @@snake_case
+instance fields:      @snake_case
+dictionary keys:      snake_case
+constants:            SCREAMING_SNAKE_CASE</code></pre>
+<h2 id="errors">Errors</h2>
+<p>The new rules introduce the following diagnostics. Code blocks are reserved per stage; individual codes are finalized when each STEP lands.</p>
+<p>Reserved ranges:</p>
+<p>| Range           | Stage    | Purpose                                  | | --------------- | -------- | ---------------------------------------- | | <code>E0200</code>–<code>E0219</code> | parser   | <code>module</code> keyword removed (M9)            | | <code>E0400</code>–<code>E0429</code> | checker  | class file structure (M2, M5)            | | <code>E0850</code>–<code>E0879</code> | runner   | import resolution and entry kind (M3, M4) |</p>
+<p>Diagnostics in scope:</p>
+<p>| Code (TBD)  | Stage   | Condition                                                                      | | ----------- | ------- | ------------------------------------------------------------------------------ | | <code>E0400</code>     | checker | Class file does not contain a class declaration.                               | | <code>E0401</code>     | checker | Class file's public class name does not match the filename.                    | | <code>E0402</code>     | checker | Class file contains a non-import / non-class / non-interface top-level statement. | | <code>E0403</code>     | checker | Script file declares a public class with a filename-matching name.             | | <code>E0404</code>     | checker | Filename starts with an unsupported character (not ASCII letter).              | | <code>E0405</code>     | checker | Same-directory class name collision.                                           | | <code>E0406</code>     | checker | Cross-file reference to a private class.                                       | | <code>E0850</code>     | runner  | <code>import</code> path contains <code>..</code> or starts with <code>/</code>.                                | | <code>E0851</code>     | runner  | <code>import</code> path's terminal segment is not a valid package directory name.        | | <code>E0852</code>     | runner  | <code>import</code> path resolves to a script file (lowercase leaf).                      | | <code>E0853</code>     | runner  | <code>import</code> path cannot be resolved against the configured roots.                 | | <code>E0854</code>     | runner  | <code>tya run</code> invoked on a class file (only script files are runnable).            | | <code>E0200</code>     | parser  | <code>module</code> keyword used (removed in M9).                                         |</p>
+<p>Codes in <code>E04xx</code> and <code>E08xx</code> are additive within the checker and runner ranges already reserved by <code>docs/v0.29/CODES.md</code>. The parser block <code>E0200</code>–<code>E0219</code> is reserved out of the parser range <code>E0100</code>–<code>E0299</code> allocated for the Toolchain &quot;Migrate remaining stages to the diagnostics pipeline&quot; Epic; the <code>module</code>-removal code lands when the parser has been migrated.</p>
+<h2 id="examples">Examples</h2>
+<h3 id="single-file-script">Single-file script</h3>
+<pre><code class="language-text">hello.tya</code></pre>
+<pre><code class="language-tya"># hello.tya
+print(&quot;hello&quot;)</code></pre>
+<pre><code class="language-sh">$ tya run hello.tya
+hello</code></pre>
+<h3 id="two-file-program">Two-file program</h3>
+<pre><code class="language-text">Greeter.tya
+main.tya</code></pre>
+<pre><code class="language-tya"># Greeter.tya
+class Greeter
+  init = name -&gt;
+    @name = name
+
+  greet = -&gt;
+    &quot;Hello, {@name}&quot;</code></pre>
+<pre><code class="language-tya"># main.tya
+greeter = Greeter()
+print(greeter.greet(&quot;komagata&quot;))</code></pre>
+<pre><code class="language-sh">$ tya run main.tya
+Hello, komagata</code></pre>
+<h3 id="imported-package-with-multiple-classes">Imported package with multiple classes</h3>
+<pre><code class="language-text">lib/
+  net/
+    http/
+      Request.tya
+      Response.tya
+client.tya</code></pre>
+<pre><code class="language-tya"># lib/net/http/Request.tya
+class Request
+  init = url -&gt;
+    @url = url
+
+  send = -&gt;
+    Response()        # same package, no prefix</code></pre>
+<pre><code class="language-tya"># lib/net/http/Response.tya
+class Response
+  status = -&gt;
+    200</code></pre>
+<pre><code class="language-tya"># client.tya
+import net/http
+
+request = http.Request(&quot;http://example.com&quot;)
+response = request.send()
+print(response.status())</code></pre>
+<h3 id="utility-class">Utility class</h3>
+<pre><code class="language-text">stdlib/
+  math/
+    Math.tya</code></pre>
+<pre><code class="language-tya"># stdlib/math/Math.tya
+class Math
+  pi = 3.14159265358979
+
+  @@sin = x -&gt;
+    ...
+
+  @@cos = x -&gt;
+    ...</code></pre>
+<pre><code class="language-tya"># user code
+import math
+
+print(math.Math.sin(0.5))
+print(math.Math.pi)</code></pre>
+<h3 id="private-class-inside-a-class-file">Private class inside a class file</h3>
+<pre><code class="language-tya"># Server.tya
+class _Connection
+  init = socket -&gt;
+    @socket = socket
+
+  close = -&gt;
+    ...
+
+class Server
+  init = port -&gt;
+    @port = port
+    @connections = []
+
+  accept = -&gt;
+    conn = _Connection(socket)    # _Connection is file-private
+    push(@connections, conn)</code></pre>
+<h2 id="migration-sketch-informative">Migration Sketch (informative)</h2>
+<p>The implementation order, captured for cross-reference with <code>ROADMAP.md</code>:</p>
+<ol>
+<li>Parser/checker accepts the new model alongside the existing <code>module</code></li>
+</ol>
+<p>   keyword. Both shapes coexist temporarily. 2. Resolver gains directory-as-package support. Existing module imports    keep working. 3. Compact entry-file desugaring becomes the runner's default for    lowercase files; existing top-level execution semantics are preserved. 4. Private-class semantics land. 5. <code>stdlib/</code> is migrated package by package from <code>module + functions</code>    to class-file form. Each package landing keeps tests green. 6. <code>examples/</code> is migrated. 7. <code>selfhost/v01/compiler.tya</code> is migrated, preserving the self-host    fixed point at every STEP. 8. The <code>module</code> keyword is removed; remaining <code>module</code> files are deleted    or moved. 9. <code>docs/SPEC.md</code>, <code>docs/NAMING.md</code>, <code>docs/STDLIB.md</code>, and    <code>docs/CANONICAL_SYNTAX.md</code> are updated to reflect v0.44.</p>
+<p>The detailed STEP breakdown lives in <code>ROADMAP.md</code>.</p>
+    </article>
+  </main>
+</body>
+</html>
