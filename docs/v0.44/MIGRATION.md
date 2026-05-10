@@ -269,7 +269,7 @@ class Server                     # public; matches filename
 | `tya test`         | yes (test)  | —          | Operates on `*_test.tya` script files.                         |
 | `tya --tokens`     | yes         | yes        | Lexer dump.                                                    |
 | `tya --emit-c`     | yes         | yes        | Class file emits a standalone-compilable C with trivial main.  |
-| `tya --check-unused` | yes       | no         | Entry-only path; unchanged.                                    |
+| `tya --check-unused` | yes       | yes        | Strict-pass diagnostics on class files too.                    |
 
 Practical examples:
 
