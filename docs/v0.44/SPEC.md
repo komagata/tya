@@ -512,6 +512,43 @@ class Server
 `Server` matches the filename and is public. `Connection` does not
 match and is private; nothing outside `Server.tya` can reference it.
 
+## Self-Host Invariant Constraint (informative)
+
+The Tya-written self-host compiler at `selfhost/v01/compiler.tya` is
+a v0.1 surface compiler that resolves `import X` by reading `X.tya`
+as a single-file module. It does not understand v0.44
+directory-as-package layout.
+
+`tests/testdata/v01_selfhost/*.txtar` invokes that v0.1 compiler on
+test inputs that may import `string` and `array` (and any other
+stdlib module the v0.1 compiler exercise depends on). For the v0.44
+migration to preserve the self-host fixed-point gate
+`TestSelfhostV01Scripts`, every stdlib package referenced by these
+tests **must remain in the legacy `module name + .tya` file shape**
+until either:
+
+- the self-host compiler itself is migrated to v0.44 surface (M8),
+  giving it directory-as-package resolution; or
+- the v0.1 self-host fixed-point invariant is formally retired (a
+  separate Epic decision, post-v1.0.0).
+
+In practice, M6 keeps the following stdlib packages in the legacy
+module-file shape and defers their class migration to M8:
+
+- `stdlib/string.tya`
+- `stdlib/array.tya`
+
+`stdlib/dict.tya` is not currently exercised by v0.1 selfhost tests
+but is grouped with string/array for consistency: the three core
+collection-style modules migrate together when M8 lands.
+
+Other stdlib packages (`runtime`, `time`, `channel`, `sync`,
+`task`) are independently held back in M6 because their callers in
+`examples/` and `tests/testdata/v4{1,2,3}/` need updating in the
+same change, and that touches a broader cross-section of the
+working tree than this Epic should sweep at once. They migrate in
+follow-up STEPs.
+
 ## Migration Sketch (informative)
 
 The implementation order, captured for cross-reference with `ROADMAP.md`:

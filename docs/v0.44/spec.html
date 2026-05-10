@@ -330,6 +330,24 @@ class Server
     conn = Connection(socket)    # Connection is file-private
     push(@connections, conn)</code></pre>
 <p><code>Server</code> matches the filename and is public. <code>Connection</code> does not match and is private; nothing outside <code>Server.tya</code> can reference it.</p>
+<h2 id="self-host-invariant-constraint-informative">Self-Host Invariant Constraint (informative)</h2>
+<p>The Tya-written self-host compiler at <code>selfhost/v01/compiler.tya</code> is a v0.1 surface compiler that resolves <code>import X</code> by reading <code>X.tya</code> as a single-file module. It does not understand v0.44 directory-as-package layout.</p>
+<p><code>tests/testdata/v01_selfhost/*.txtar</code> invokes that v0.1 compiler on test inputs that may import <code>string</code> and <code>array</code> (and any other stdlib module the v0.1 compiler exercise depends on). For the v0.44 migration to preserve the self-host fixed-point gate <code>TestSelfhostV01Scripts</code>, every stdlib package referenced by these tests **must remain in the legacy <code>module name + .tya</code> file shape** until either:</p>
+<ul>
+<li>the self-host compiler itself is migrated to v0.44 surface (M8),</li>
+</ul>
+<p>  giving it directory-as-package resolution; or</p>
+<ul>
+<li>the v0.1 self-host fixed-point invariant is formally retired (a</li>
+</ul>
+<p>  separate Epic decision, post-v1.0.0).</p>
+<p>In practice, M6 keeps the following stdlib packages in the legacy module-file shape and defers their class migration to M8:</p>
+<ul>
+<li><code>stdlib/string.tya</code></li>
+<li><code>stdlib/array.tya</code></li>
+</ul>
+<p><code>stdlib/dict.tya</code> is not currently exercised by v0.1 selfhost tests but is grouped with string/array for consistency: the three core collection-style modules migrate together when M8 lands.</p>
+<p>Other stdlib packages (<code>runtime</code>, <code>time</code>, <code>channel</code>, <code>sync</code>, <code>task</code>) are independently held back in M6 because their callers in <code>examples/</code> and <code>tests/testdata/v4{1,2,3}/</code> need updating in the same change, and that touches a broader cross-section of the working tree than this Epic should sweep at once. They migrate in follow-up STEPs.</p>
 <h2 id="migration-sketch-informative">Migration Sketch (informative)</h2>
 <p>The implementation order, captured for cross-reference with <code>ROADMAP.md</code>:</p>
 <ol>
