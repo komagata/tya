@@ -219,6 +219,30 @@ math.Math.sin(0.5)         # OK
 The `math.Math` repetition is intentional and consistent with Java's
 `java.lang.Math.sin()` style.
 
+### Same-Segment Package Collision
+
+Two directory packages whose paths share the same terminal segment
+synthesize the same module name and would clobber each other in
+the merged source. The runner detects this at synthesis time and
+rejects the second load with a `package name conflict` diagnostic
+that names both originating directories. The check covers both
+unaliased and aliased imports:
+
+```tya
+# Both rejected at synthesis time:
+import a/net           # would synthesize module net
+import b/net           # would also synthesize module net → conflict
+
+import a/net as a_net  # synthesis still uses terminal segment net
+import b/net as b_net  # → conflict
+```
+
+Resolve by giving the directories distinct names
+(`import a/net` + `import b/socket`, etc.). Same-name packages
+behind different aliases are tracked under M5 / M8 follow-up; the
+underlying limitation is that the synthesized module name is
+derived from the terminal segment alone.
+
 ## Entry Execution
 
 `tya run path/to/file.tya` accepts **only script files** (lowercase

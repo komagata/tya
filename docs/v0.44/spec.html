@@ -169,6 +169,15 @@ import math
 Math.sin(0.5)              # ERROR: Math is not in scope
 math.Math.sin(0.5)         # OK</code></pre>
 <p>The <code>math.Math</code> repetition is intentional and consistent with Java's <code>java.lang.Math.sin()</code> style.</p>
+<h3 id="same-segment-package-collision">Same-Segment Package Collision</h3>
+<p>Two directory packages whose paths share the same terminal segment synthesize the same module name and would clobber each other in the merged source. The runner detects this at synthesis time and rejects the second load with a <code>package name conflict</code> diagnostic that names both originating directories. The check covers both unaliased and aliased imports:</p>
+<pre><code class="language-tya"># Both rejected at synthesis time:
+import a/net           # would synthesize module net
+import b/net           # would also synthesize module net → conflict
+
+import a/net as a_net  # synthesis still uses terminal segment net
+import b/net as b_net  # → conflict</code></pre>
+<p>Resolve by giving the directories distinct names (<code>import a/net</code> + <code>import b/socket</code>, etc.). Same-name packages behind different aliases are tracked under M5 / M8 follow-up; the underlying limitation is that the synthesized module name is derived from the terminal segment alone.</p>
 <h2 id="entry-execution">Entry Execution</h2>
 <p><code>tya run path/to/file.tya</code> accepts **only script files** (lowercase filename). Running a class file is a runner error.</p>
 <p>The runner desugars the script file into a class file with an unnamed class that has a <code>main</code> method whose body is the script's top-level statements:</p>
