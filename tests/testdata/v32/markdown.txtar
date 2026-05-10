@@ -1,4 +1,4 @@
-# v0.32 markdown.to_html: minimal CommonMark subset.
+# v0.32 markdown.Markdown.to_html: minimal CommonMark subset.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/sample.tya
@@ -38,4 +38,4 @@ line <html>
 
 ---
 """
-print markdown.to_html(src)
+print markdown.Markdown.to_html(src)
