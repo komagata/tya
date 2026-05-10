@@ -42,11 +42,23 @@ The new builtins are `task_cancel`, `task_is_cancelled_p`,
 `task_current`. They go through stdlib `task` module wrappers
 named `cancel`, `cancelled?`, `current`.
 
-### STEP 2 — `scope` body raise propagation (planned)
+### STEP 2 — `scope` body raise propagation (landed)
 
-Codegen wraps the `scope` body in a setjmp/longjmp pair so a
-synchronous raise from the body still calls `tya_scope_exit`
-before unwinding.
+Codegen now wraps the `scope` body in `setjmp` + a raise frame.
+
+- Normal exit:   `tya_pop_raise_frame` and `tya_scope_exit`
+                 (joins siblings, may re-raise the first task raise).
+- Body raise:    `tya_scope_raise(scope, value)` cancels every
+                 sibling, joins them, and re-raises the body's
+                 value (taking precedence over any task raise).
+- Task raise during normal exit: `tya_scope_exit` already cancels
+  remaining tasks once it observes the first task raise, so a
+  cooperatively-cancellable worker can return early instead of
+  running to completion.
+
+The body's raise is preserved across the join, so
+`try { scope { ...; raise "body" } } catch e -> e == "body"`
+holds even when sibling tasks are still running.
 
 ### STEP 3 — `channel.select` multiplex (planned)
 

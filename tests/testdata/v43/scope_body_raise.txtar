@@ -1,0 +1,34 @@
+# v0.43 STEP 2: a synchronous raise from a scope body still calls
+# tya_scope_raise so siblings are cancelled and joined before control
+# unwinds.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/sample.tya
+stdout 'caught: body raise'
+stdout 'fast: true'
+stdout 'after'
+
+-- sample.tya --
+import task
+import time
+
+cooperative_worker = () ->
+  me = task.current()
+  i = 0
+  while not task.cancelled?(me)
+    i = i + 1
+    if i % 1000 == 0
+      time.sleep(0.001)
+  return i
+
+start = time.now()
+try
+  scope
+    t = spawn cooperative_worker()
+    raise "body raise"
+  print "unreachable"
+catch e
+  elapsed = time.now() - start
+  print "caught: " + e
+  print "fast: " + to_string(elapsed < 1.0)
+print "after"

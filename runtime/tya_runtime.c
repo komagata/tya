@@ -3284,6 +3284,12 @@ void tya_scope_exit(TyaScope *scope) {
   bool had_raise = false;
   for (int i = 0; i < scope->len; i++) {
     TyaTask *t = scope->tasks[i];
+    /* Once any sibling has raised, request cancel on every remaining
+     * task so a cooperative worker can return early instead of running
+     * to completion before the scope can re-raise. */
+    if (had_raise) {
+      atomic_store(&t->cancelled, true);
+    }
     pthread_mutex_lock(&t->mu);
     bool already_joined = t->joined;
     pthread_mutex_unlock(&t->mu);
@@ -3309,6 +3315,34 @@ void tya_scope_exit(TyaScope *scope) {
   if (had_raise) {
     tya_raise(first_raise);
   }
+}
+
+/* tya_scope_raise is called when control unwinds out of a scope body
+ * via raise. It cancels every sibling, joins them, and then re-raises
+ * the original raise value (taking precedence over any task raise). */
+void tya_scope_raise(TyaScope *scope, TyaValue value) {
+  for (int i = 0; i < scope->len; i++) {
+    atomic_store(&scope->tasks[i]->cancelled, true);
+  }
+  for (int i = 0; i < scope->len; i++) {
+    TyaTask *t = scope->tasks[i];
+    pthread_mutex_lock(&t->mu);
+    bool already_joined = t->joined;
+    pthread_mutex_unlock(&t->mu);
+    if (!already_joined) {
+      pthread_join(t->thread, NULL);
+      pthread_mutex_lock(&t->mu);
+      t->joined = true;
+      pthread_mutex_unlock(&t->mu);
+      tya_live_tasks_remove(t);
+    }
+  }
+  free(scope->tasks);
+  scope->tasks = NULL;
+  scope->len = 0;
+  scope->cap = 0;
+  tya_current_scope = scope->prev;
+  tya_raise(value);
 }
 
 /* Add a freshly created task to the live-tasks list; called once

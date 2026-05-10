@@ -343,17 +343,34 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	case *ast.MatchStmt:
 		return g.matchStmt(n)
 	case *ast.ScopeBlock:
+		// scope wraps its body in setjmp so a synchronous raise from
+		// the body still runs tya_scope_raise (which cancels siblings,
+		// joins them, then re-raises the body's value).
 		scopeName := fmt.Sprintf("__scope%d", g.temp)
+		frameName := fmt.Sprintf("__scope_frame%d", g.temp)
 		g.temp++
 		g.line(fmt.Sprintf("{ TyaScope %s; tya_scope_enter(&%s);", scopeName, scopeName))
+		g.line(fmt.Sprintf("TyaRaiseFrame %s;", frameName))
+		g.line(fmt.Sprintf("tya_push_raise_frame(&%s);", frameName))
+		g.line(fmt.Sprintf("if (setjmp(%s.env) == 0) {", frameName))
 		g.indent++
+		g.raiseDepth++
 		for _, st := range n.Body {
 			if err := g.stmt(st); err != nil {
 				return err
 			}
 		}
+		g.raiseDepth--
+		g.line("tya_pop_raise_frame();")
+		g.line(fmt.Sprintf("tya_scope_exit(&%s);", scopeName))
 		g.indent--
-		g.line(fmt.Sprintf("tya_scope_exit(&%s); }", scopeName))
+		g.line("} else {")
+		g.indent++
+		g.line(fmt.Sprintf("TyaValue __scope_raised = %s.value;", frameName))
+		g.line("tya_pop_raise_frame();")
+		g.line(fmt.Sprintf("tya_scope_raise(&%s, __scope_raised);", scopeName))
+		g.indent--
+		g.line("} }")
 		return nil
 	case *ast.ForInStmt:
 		iterable, _, err := g.expr(n.Iterable)
