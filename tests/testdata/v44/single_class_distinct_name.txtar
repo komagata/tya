@@ -1,0 +1,19 @@
+# v0.44 single-class package where the class name and directory
+# name differ: the access form is `<dir>.<Class>` with no
+# redundancy. Distinguishes from the solo case in edge_cases.txtar
+# where dir and class share the same name.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'helper used\n'
+! stderr .
+
+-- main.tya --
+import tools
+
+print(tools.Helper.use())
+
+-- tools/Helper.tya --
+class Helper
+  @@use = ->
+    "helper used"
