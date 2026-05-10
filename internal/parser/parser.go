@@ -326,6 +326,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "match" {
 		return p.matchStmt()
 	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "scope" && p.peekN(1).Type == token.NEWLINE {
+		return p.scopeBlock()
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "case" {
 		return nil, p.err("case outside match")
 	}
@@ -746,6 +749,15 @@ func (p *Parser) whileStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.WhileStmt{Cond: cond, Body: body}, nil
+}
+
+func (p *Parser) scopeBlock() (ast.Stmt, error) {
+	tok := p.next()
+	body, err := p.block("scope")
+	if err != nil {
+		return nil, err
+	}
+	return &ast.ScopeBlock{Body: body, Tok: tok}, nil
 }
 
 func (p *Parser) forStmt() (ast.Stmt, error) {
@@ -1318,6 +1330,22 @@ func (p *Parser) unary() (ast.Expr, error) {
 			return nil, err
 		}
 		return &ast.TryExpr{Expr: ex, Tok: tok}, nil
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "spawn" {
+		tok := p.next()
+		ex, err := p.unary()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.SpawnExpr{Callee: ex, Tok: tok}, nil
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "await" {
+		tok := p.next()
+		ex, err := p.unary()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.AwaitExpr{Target: ex, Tok: tok}, nil
 	}
 	if p.matchWord("not") || p.match(token.MINUS) || p.match(token.TILDE) {
 		op := p.prev()
@@ -2003,7 +2031,7 @@ func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
 	case "object", "set":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
-	case "interface", "class", "self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not":
+	case "interface", "class", "self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not", "spawn", "await", "scope":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
 	default:
 		return nil

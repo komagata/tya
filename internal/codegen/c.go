@@ -342,6 +342,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		return g.tryCatchStmt(n)
 	case *ast.MatchStmt:
 		return g.matchStmt(n)
+	case *ast.ScopeBlock:
+		return fmt.Errorf("scope block: not yet implemented (v0.42 STEP 1 only added syntax)")
 	case *ast.ForInStmt:
 		iterable, _, err := g.expr(n.Iterable)
 		if err != nil {
@@ -2009,6 +2011,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return fmt.Sprintf("tya_member(%s, %s)", dict, strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.TryExpr:
 		return g.expr(n.Expr)
+	case *ast.SpawnExpr:
+		return "", "", fmt.Errorf("spawn: not yet implemented (v0.42 STEP 1 only added syntax)")
+	case *ast.AwaitExpr:
+		return "", "", fmt.Errorf("await: not yet implemented (v0.42 STEP 1 only added syntax)")
 	}
 	return "", "", fmt.Errorf("C emitter does not support expression %T", expr)
 }

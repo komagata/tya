@@ -1,0 +1,52 @@
+# v0.42 STEP 1: spawn / await / scope are reserved keywords parsed by
+# the front end. They produce a structured "not yet implemented" error
+# at codegen time until later STEPs land.
+cd $REPO
+
+# Parser accepts spawn / await as expressions; codegen rejects them.
+! exec go run ./cmd/tya run $WORK/uses_spawn.tya
+stderr 'spawn: not yet implemented'
+
+! exec go run ./cmd/tya run $WORK/uses_await.tya
+stderr 'await: not yet implemented'
+
+# Parser accepts scope as a statement; codegen rejects it.
+! exec go run ./cmd/tya run $WORK/uses_scope.tya
+stderr 'scope block: not yet implemented'
+
+# Reserved keywords cannot be used as variable names.
+! exec go run ./cmd/tya check $WORK/spawn_as_var.tya
+stderr 'spawn cannot be used as a name'
+
+! exec go run ./cmd/tya check $WORK/await_as_var.tya
+stderr 'await cannot be used as a name'
+
+! exec go run ./cmd/tya check $WORK/scope_as_var.tya
+stderr 'scope cannot be used as a name'
+
+-- uses_spawn.tya --
+identity = x -> x
+t = spawn identity(1)
+print t
+
+-- uses_await.tya --
+identity = x -> x
+t = identity(1)
+v = await t
+print v
+
+-- uses_scope.tya --
+scope
+  print "in scope"
+
+-- spawn_as_var.tya --
+spawn = 1
+print spawn
+
+-- await_as_var.tya --
+await = 1
+print await
+
+-- scope_as_var.tya --
+scope = 1
+print scope

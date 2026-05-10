@@ -433,6 +433,10 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					return err
 				}
 			}
+		case *ast.ScopeBlock:
+			if err := checkStmts(n.Body, constants, newScope(scope)); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -691,6 +695,10 @@ func collectPrivateAssignments(info *classInfo, fn *ast.FuncLit) {
 			walkExpr(n.Expr, false)
 		case *ast.TryExpr:
 			walkExpr(n.Expr, false)
+		case *ast.SpawnExpr:
+			walkExpr(n.Callee, false)
+		case *ast.AwaitExpr:
+			walkExpr(n.Target, false)
 		case *ast.ArrayLit:
 			for _, elem := range n.Elems {
 				walkExpr(elem, false)

@@ -1007,6 +1007,8 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			return evalStmts(c.Body, caseEnv)
 		}
 		return nil, nil
+	case *ast.ScopeBlock:
+		return nil, fmt.Errorf("%d:%d: scope block: not yet implemented (v0.42 STEP 1 only added syntax)", n.Tok.Line, n.Tok.Col)
 	}
 	return nil, fmt.Errorf("unknown statement")
 }
@@ -1225,6 +1227,10 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			return ^i, nil
 		}
 		return nil, fmt.Errorf("unknown unary operator %s", n.Op.Lexeme)
+	case *ast.SpawnExpr:
+		return nil, fmt.Errorf("%d:%d: spawn: not yet implemented (v0.42 STEP 1 only added syntax)", n.Tok.Line, n.Tok.Col)
+	case *ast.AwaitExpr:
+		return nil, fmt.Errorf("%d:%d: await: not yet implemented (v0.42 STEP 1 only added syntax)", n.Tok.Line, n.Tok.Col)
 	case *ast.TryExpr:
 		if !env.inFunc {
 			return nil, fmt.Errorf("%d:%d: try used outside function", n.Tok.Line, n.Tok.Col)

@@ -330,6 +330,9 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		return u.matchStmt(n)
 	case *ast.TryCatchStmt:
 		return u.tryStmt(n)
+	case *ast.ScopeBlock:
+		u.line("scope")
+		return u.block(n.Body)
 	case *ast.ModuleDecl:
 		return u.moduleDecl(n)
 	case *ast.ClassDecl:
@@ -966,6 +969,18 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 			return "", err
 		}
 		return "try " + inner, nil
+	case *ast.SpawnExpr:
+		inner, err := u.expr(n.Callee)
+		if err != nil {
+			return "", err
+		}
+		return "spawn " + inner, nil
+	case *ast.AwaitExpr:
+		inner, err := u.expr(n.Target)
+		if err != nil {
+			return "", err
+		}
+		return "await " + inner, nil
 	case *ast.UnaryExpr:
 		inner, err := u.expr(n.Expr)
 		if err != nil {

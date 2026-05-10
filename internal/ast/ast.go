@@ -345,3 +345,35 @@ type CallExpr struct {
 }
 
 func (*CallExpr) expr() {}
+
+// v0.42 Tya Concurrency
+
+// SpawnExpr starts a concurrent task. Its operand is a callable
+// expression that the runtime will invoke in a fresh task. The
+// expression evaluates to a task value.
+type SpawnExpr struct {
+	Callee Expr
+	Tok    token.Token
+}
+
+func (*SpawnExpr) expr() {}
+
+// AwaitExpr blocks the current task until the operand task completes
+// and yields its return value (or re-raises a propagated raise).
+type AwaitExpr struct {
+	Target Expr
+	Tok    token.Token
+}
+
+func (*AwaitExpr) expr() {}
+
+// ScopeBlock is a structured-concurrency block. Tasks spawned inside
+// the block are guaranteed to complete before control leaves the
+// block; if any task raises, sibling tasks are cancelled and the raise
+// propagates out of the scope.
+type ScopeBlock struct {
+	Body []Stmt
+	Tok  token.Token
+}
+
+func (*ScopeBlock) stmt() {}
