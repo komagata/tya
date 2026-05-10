@@ -2788,6 +2788,7 @@ func registerV41Builtins(env *Env) {
 	env.set("channel_receive_timeout", stub("channel_receive_timeout", 2))
 	env.set("channel_close", stub("channel_close", 1))
 	env.set("channel_closed_p", stub("channel_closed_p", 1))
+	env.set("channel_select", stub("channel_select", 1))
 	env.set("task_cancel", stub("task_cancel", 1))
 	env.set("task_is_cancelled_p", stub("task_is_cancelled_p", 1))
 	env.set("task_current", stub("task_current", 0))

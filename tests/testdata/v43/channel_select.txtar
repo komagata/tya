@@ -1,0 +1,32 @@
+# v0.43 STEP 3: channel.select multiplexes a list of channel ops
+# and returns the first ready one.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/receive.tya
+stdout 'index: 1'
+stdout 'value: from c2'
+
+exec go run ./cmd/tya run $WORK/send.tya
+stdout 'sent index: 0'
+
+-- receive.tya --
+import channel
+
+c1 = channel.new(1)
+c2 = channel.new(1)
+
+worker = c, val -> channel.send(c, val)
+spawn worker(c2, "from c2")
+
+result = channel.select([[c1, "receive"], [c2, "receive"]])
+print "index: " + to_string(result["index"])
+print "value: " + result["value"]
+
+-- send.tya --
+import channel
+
+c1 = channel.new(1)
+c2 = channel.new(1)
+
+result = channel.select([[c1, "send", "to c1"], [c2, "send", "to c2"]])
+print "sent index: " + to_string(result["index"])

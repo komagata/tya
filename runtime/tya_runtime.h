@@ -234,6 +234,13 @@ TyaValue tya_channel_receive(TyaValue ch);
 TyaValue tya_channel_receive_timeout(TyaValue ch, TyaValue seconds);
 TyaValue tya_channel_close(TyaValue ch);
 TyaValue tya_channel_closed(TyaValue ch);
+/* tya_channel_select runs a multi-channel wait. ops is an array of
+ * arrays: each inner array is [channel, "receive"] or
+ * [channel, "send", value]. Returns a dict {index, kind, value} for
+ * the first ready operation. v0.43 polls every operation in a tight
+ * loop with a short sleep when nothing is ready; this is functional
+ * but not the most efficient implementation. */
+TyaValue tya_channel_select(TyaValue ops);
 
 /* Synchronization primitives (v0.42 STEP 7).
  *

@@ -3591,6 +3591,106 @@ TyaValue tya_channel_receive_timeout(TyaValue ch, TyaValue seconds) {
   return value;
 }
 
+TyaValue tya_channel_select(TyaValue ops) {
+  if (ops.kind != TYA_ARRAY || ops.array == NULL) {
+    tya_raise(tya_string("channel.select: argument must be an array of operations"));
+    return tya_nil();
+  }
+  int n = ops.array->len;
+  if (n == 0) {
+    tya_raise(tya_string("channel.select: at least one operation is required"));
+    return tya_nil();
+  }
+  /* Validate every op once before entering the polling loop. */
+  for (int i = 0; i < n; i++) {
+    TyaValue op = ops.array->items[i];
+    if (op.kind != TYA_ARRAY || op.array == NULL || op.array->len < 2) {
+      tya_raise(tya_string("channel.select: operation must be [channel, \"receive\"] or [channel, \"send\", value]"));
+      return tya_nil();
+    }
+    TyaValue ch = op.array->items[0];
+    TyaValue kind_v = op.array->items[1];
+    if (ch.kind != TYA_CHANNEL || ch.channel == NULL) {
+      tya_raise(tya_string("channel.select: operation channel must be a channel"));
+      return tya_nil();
+    }
+    if (kind_v.kind != TYA_STRING) {
+      tya_raise(tya_string("channel.select: operation kind must be \"receive\" or \"send\""));
+      return tya_nil();
+    }
+    bool is_receive = strcmp(kind_v.string, "receive") == 0;
+    bool is_send = strcmp(kind_v.string, "send") == 0;
+    if (!is_receive && !is_send) {
+      tya_raise(tya_string("channel.select: operation kind must be \"receive\" or \"send\""));
+      return tya_nil();
+    }
+    if (is_send && op.array->len < 3) {
+      tya_raise(tya_string("channel.select: send operation must include the value"));
+      return tya_nil();
+    }
+  }
+  /* Polling loop: try each op non-blocking; sleep briefly when nothing
+   * is ready. */
+  while (true) {
+    for (int i = 0; i < n; i++) {
+      TyaValue op = ops.array->items[i];
+      TyaChannel *c = op.array->items[0].channel;
+      const char *kind_s = op.array->items[1].string;
+      if (strcmp(kind_s, "receive") == 0) {
+        pthread_mutex_lock(&c->mu);
+        if (c->len > 0) {
+          TyaValue v = c->buffer[c->head];
+          c->buffer[c->head] = tya_nil();
+          c->head = (c->head + 1) % c->capacity;
+          c->len--;
+          pthread_cond_signal(&c->not_full);
+          pthread_mutex_unlock(&c->mu);
+          TyaDictEntry entries[3] = {
+            {"index", tya_number((double)i)},
+            {"kind", tya_string("receive")},
+            {"value", v},
+          };
+          return tya_dict(entries, 3);
+        }
+        if (c->closed) {
+          pthread_mutex_unlock(&c->mu);
+          TyaDictEntry entries[3] = {
+            {"index", tya_number((double)i)},
+            {"kind", tya_string("receive")},
+            {"value", tya_nil()},
+          };
+          return tya_dict(entries, 3);
+        }
+        pthread_mutex_unlock(&c->mu);
+      } else {
+        TyaValue value = op.array->items[2];
+        pthread_mutex_lock(&c->mu);
+        if (c->closed) {
+          pthread_mutex_unlock(&c->mu);
+          tya_raise(tya_string("channel.select: send on closed channel"));
+          return tya_nil();
+        }
+        if (c->len < c->capacity) {
+          int tail = (c->head + c->len) % c->capacity;
+          c->buffer[tail] = value;
+          c->len++;
+          pthread_cond_signal(&c->not_empty);
+          pthread_mutex_unlock(&c->mu);
+          TyaDictEntry entries[3] = {
+            {"index", tya_number((double)i)},
+            {"kind", tya_string("send")},
+            {"value", tya_nil()},
+          };
+          return tya_dict(entries, 3);
+        }
+        pthread_mutex_unlock(&c->mu);
+      }
+    }
+    /* Nothing ready — sleep 1 ms then retry. */
+    usleep(1000);
+  }
+}
+
 TyaValue tya_channel_close(TyaValue ch) {
   if (ch.kind != TYA_CHANNEL || ch.channel == NULL) {
     tya_raise(tya_string("channel.close: argument must be a channel"));

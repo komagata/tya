@@ -60,7 +60,31 @@ The body's raise is preserved across the join, so
 `try { scope { ...; raise "body" } } catch e -> e == "body"`
 holds even when sibling tasks are still running.
 
-### STEP 3 — `channel.select` multiplex (planned)
+### STEP 3 — `channel.select` multiplex (landed)
 
-Function-form select that waits on a list of channel ops and
-returns the index of the operation that completed.
+`channel.select(ops)` waits for the first ready operation in `ops`.
+`ops` is an array of arrays:
+
+```tya
+[c, "receive"]            receive from channel c
+[c, "send", value]        send value to channel c
+```
+
+The result is a dict with three keys:
+
+- `index` — the position in `ops` that completed.
+- `kind`  — `"receive"` or `"send"`.
+- `value` — for `"receive"`, the dequeued element (`nil` when the
+            channel is closed and drained); for `"send"`, `nil`.
+
+v0.43 polls every operation in a tight loop and sleeps briefly when
+nothing is ready. This is functional but not the most efficient
+implementation; a future minor will add a proper waiter-list
+mechanism inside `TyaChannel`. The current behavior preserves
+fairness only in the limit (any operation that becomes ready will
+eventually be picked up); ties between two simultaneously-ready ops
+are resolved by index order.
+
+A send to a closed channel from inside `select` raises (matches
+`channel.send` semantics). A receive from a closed channel returns
+the operation result with `value = nil`.

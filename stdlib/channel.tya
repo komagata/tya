@@ -25,3 +25,16 @@ module channel
 
   # channel.closed?(c) returns true once the channel has been closed.
   closed? = c -> channel_closed_p(c)
+
+  # channel.select(ops) waits for the first ready operation in ops.
+  # ops is an array of arrays:
+  #
+  #   [c, "receive"]            receive from channel c
+  #   [c, "send", value]        send value to channel c
+  #
+  # Returns a dict { index, kind, value }. For "receive", value is
+  # the dequeued element (nil when the channel is closed and drained).
+  # For "send", value is nil. v0.43 polls every operation in a tight
+  # loop and sleeps briefly when nothing is ready; future minors will
+  # add a more efficient implementation.
+  select = ops -> channel_select(ops)
