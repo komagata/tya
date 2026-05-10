@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tya - Small indentation-based dynamic language</title>
-  <meta name="description" content="Tya is a small indentation-based dynamic language with readable syntax and practical tooling.">
+  <title>Tya — A language without hesitation</title>
+  <meta name="description" content="Tya is a language without hesitation. Canonical syntax, all-in-one toolchain, kind diagnostics, compile-to-C. Built so you never have to stop and decide about small things.">
   <style>
     :root {
       --ink: #18211d;
@@ -591,7 +591,7 @@
         <img src="assets/tya-logo.png" alt="Tya">
         <div>
           <strong>Tya</strong>
-          <span>Easy to write. Easy to read. Friendly to use.</span>
+          <span>A language without hesitation.</span>
         </div>
       </div>
       <nav class="nav" aria-label="Page sections">
@@ -600,16 +600,16 @@
         <a href="#shape">Language</a>
         <a href="#docs">Docs</a>
       </nav>
-      <p class="rail-note">Easy to write. Easy to read. Friendly to use.</p>
+      <p class="rail-note">Built to remove the small decisions that interrupt your work.</p>
     </aside>
 
     <div class="content">
       <header class="intro" id="overview">
         <section class="statement">
           <div>
-            <p class="kicker">Small language, practical scripts</p>
-            <h1>CoffeeScript feel. Golang practicality.</h1>
-            <p class="lead">Tya pairs lightweight, indentation-based writing with straightforward command-line tooling and compile-to-C execution.</p>
+            <p class="kicker">No hesitation by design</p>
+            <h1>A language without hesitation.</h1>
+            <p class="lead">Tya removes the small decisions that interrupt your work — how to format, which tool to install, what an error means. Canonical syntax, all-in-one toolchain, kind diagnostics, compile-to-C.</p>
           </div>
           <div class="code-panel" aria-label="Tya example">
             <div class="code-head">
@@ -654,17 +654,17 @@ greet = user -> <span class="str">"Hello, "</span> + user[<span class="str">"nam
 
               <div class="tab-panel linux-panel" role="tabpanel">
                 <p class="install-note">Download the Linux tarball and install it under <code>~/.local</code>.</p>
-                <pre><code>curl -LO https://github.com/komagata/tya/releases/download/v0.19.0/tya-v0.19.0-linux-amd64.tar.gz
-tar xzf tya-v0.19.0-linux-amd64.tar.gz
-cd tya-v0.19.0-linux-amd64
+                <pre><code>curl -LO https://github.com/komagata/tya/releases/download/v0.41.0/tya-v0.41.0-linux-amd64.tar.gz
+tar xzf tya-v0.41.0-linux-amd64.tar.gz
+cd tya-v0.41.0-linux-amd64
 ./install.sh</code></pre>
               </div>
 
               <div class="tab-panel windows-panel" role="tabpanel">
                 <p class="install-note">Download the Windows tarball and run the installer script.</p>
-                <pre><code>curl.exe -LO https://github.com/komagata/tya/releases/download/v0.19.0/tya-v0.19.0-windows-amd64.tar.gz
-tar.exe xzf tya-v0.19.0-windows-amd64.tar.gz
-cd tya-v0.19.0-windows-amd64
+                <pre><code>curl.exe -LO https://github.com/komagata/tya/releases/download/v0.41.0/tya-v0.41.0-windows-amd64.tar.gz
+tar.exe xzf tya-v0.41.0-windows-amd64.tar.gz
+cd tya-v0.41.0-windows-amd64
 powershell -ExecutionPolicy Bypass -File .\install.ps1</code></pre>
               </div>
             </div>
@@ -690,31 +690,31 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1</code></pre>
 
         <section class="section section-grid" id="shape">
           <div class="section-title">
-            <p class="kicker">Language shape</p>
-            <h2>Readable by design, small by constraint.</h2>
-            <p>The page is organized around what the language feels like to read and write.</p>
+            <p class="kicker">At a glance</p>
+            <h2>Five commitments that remove small decisions.</h2>
+            <p>Every technical choice in Tya exists to reduce a specific kind of hesitation. These five work together.</p>
           </div>
 
           <div class="panel matrix">
             <article class="tile">
-              <h3>Blocks</h3>
-              <p>Indented lines form blocks, so nested logic stays visible without extra braces.</p>
+              <h3>Canonical Syntax</h3>
+              <p>Every program has exactly one source representation. <code>tya format</code> is the canonical serializer, not a separate opinion — no style flags, no config file, no per-project overrides. Shipped in v0.38.</p>
             </article>
             <article class="tile">
-              <h3>Values</h3>
-              <p>Use <code>nil</code>, booleans, numbers, strings, arrays, dictionaries, functions, errors, and modules.</p>
+              <h3>Dynamically typed, strict</h3>
+              <p>Indentation-based syntax with strict semantics — no implicit conversions, no <code>nil</code> arithmetic, no implicit truthiness coercion you didn't ask for.</p>
             </article>
             <article class="tile">
-              <h3>Control</h3>
-              <p><code>if</code>, <code>elseif</code>, <code>else</code>, <code>while</code>, array loops, dictionary loops, <code>break</code>, and <code>continue</code>.</p>
+              <h3>Compiles to C</h3>
+              <p>Small, portable runtime with a precise mark-and-sweep collector. No virtual machine, no embedded interpreter — just a single binary you ship.</p>
             </article>
             <article class="tile">
-              <h3>Functions</h3>
-              <p>Function literals, calls, implicit returns, explicit <code>return</code>, and multiple return values keep scripts compact.</p>
+              <h3>All-in-one toolchain</h3>
+              <p>The <code>tya</code> binary holds the compiler (<code>run</code>, <code>build</code>, <code>emit-c</code>), formatter (<code>format</code>), checker (<code>check</code>), test runner (<code>test</code>), coverage (<code>cover</code>), and package manager (<code>install</code>, <code>add</code>). Gleam-style.</p>
             </article>
             <article class="tile">
-              <h3>Modules</h3>
-              <p>Split code with <code>module</code>, load it with <code>import module_name</code>, and call members with <code>module.member</code>.</p>
+              <h3>Kind diagnostics</h3>
+              <p>Every error has a stable code (<code>TYA-Exxxx</code>), a banner with the source snippet, an actionable hint, and a linked explanation. JSON output for CI and editors. Elm-grade.</p>
             </article>
           </div>
         </section>
@@ -722,7 +722,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1</code></pre>
         <section class="section section-grid" id="docs">
           <div class="section-title">
             <p class="kicker">Documentation</p>
-            <h2>Friendly docs for reading and writing Tya.</h2>
+            <h2>Read once, write without hesitation.</h2>
             <p>Start with the guide, then open the current reference when you want exact behavior.</p>
           </div>
 
@@ -733,7 +733,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1</code></pre>
             </a>
             <a class="doc" href="spec.html">
               <strong>Spec</strong>
-              <span>Look up the exact syntax and language behavior.</span>
+              <span>Look up the exact syntax and language behavior of the current release.</span>
             </a>
             <a class="doc" href="api.html">
               <strong>API</strong>
@@ -741,46 +741,34 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1</code></pre>
             </a>
             <a class="doc" href="stdlib.html">
               <strong>Stdlib</strong>
-              <span>Review the standard attached library planned for v0.3.</span>
+              <span>Browse the standard attached library: time, random, math, file, os, json, csv, base64, url, digest, secure_random, markdown, and more.</span>
             </a>
             <a class="doc" href="naming.html">
               <strong>Naming</strong>
               <span>Use consistent names for variables, functions, constants, modules, dictionary keys, and reserved names.</span>
             </a>
-            <a class="doc" href="v0.22/spec.html">
-              <strong>v0.22 Spec</strong>
-              <span>Review filesystem standard library expansion.</span>
+            <a class="doc" href="CANONICAL_SYNTAX.html">
+              <strong>Canonical Syntax</strong>
+              <span>The authoritative specification for the one canonical source representation every Tya program has.</span>
             </a>
-            <a class="doc" href="v0.21/spec.html">
-              <strong>v0.21 Spec</strong>
-              <span>Review native-backed file and os standard modules.</span>
+            <a class="doc" href="v0.29/codes.html">
+              <strong>Diagnostic Codes</strong>
+              <span>Stable <code>TYA-Exxxx</code> code reference: title, example, and what fixes it.</span>
             </a>
-            <a class="doc" href="v0.20/spec.html">
-              <strong>v0.20 Spec</strong>
-              <span>Review standard attached math and path modules.</span>
-            </a>
-            <a class="doc" href="v0.19/spec.html">
-              <strong>v0.19 Spec</strong>
-              <span>Review predicate function and method names ending with ?.</span>
-            </a>
-            <a class="doc" href="v0.18/spec.html">
-              <strong>v0.18 Spec</strong>
-              <span>Review expanded module-style string, array, and dict APIs.</span>
-            </a>
-            <a class="doc" href="v0.17/spec.html">
-              <strong>v0.17 Spec</strong>
-              <span>Review import aliases and module loading rules.</span>
+            <a class="doc" href="versions.html">
+              <strong>Versions</strong>
+              <span>Per-minor-version specification snapshots from v0.1 through v0.41.</span>
             </a>
             <a class="doc" href="roadmap.html">
               <strong>Roadmap</strong>
-              <span>See what is planned for the language and documentation.</span>
+              <span>See what is shipped, what is in flight, and what is planned next.</span>
             </a>
           </div>
         </section>
       </main>
 
       <footer>
-        Tya is a small language implementation project built for clarity, readable scripts, and practical tooling.
+        Tya — a language without hesitation. Built to make small decisions for you, kindly.
       </footer>
     </div>
   </div>

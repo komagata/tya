@@ -1,11 +1,65 @@
-# Roadmap Structure
+# Goal Tree
 
-Roadmap Structure is a compact text format for showing roadmap hierarchy and
-progress in a way that remains readable in both monospace and proportional
-font environments.
+Goal Tree is a compact format for describing a hierarchical, status-tracked
+plan as a rooted tree. It is readable in both monospace and proportional font
+environments and has three official renderings (plain text, Markdown, HTML)
+that all encode the same model.
 
-The format has one root Goal. Under the Goal are one or more Epics. Under each
-Epic are one or more Milestones. Under each Milestone are one or more Tasks.
+The name "Goal Tree" refers to both the abstract model and the format. A
+project's `ROADMAP.md` is one application of Goal Tree, but the format itself
+is not tied to roadmaps and can describe any goal-rooted plan.
+
+## Model
+
+The format defines an abstract model first, then a textual rendering of that
+model. Both must agree.
+
+A roadmap is a **tree with exactly one root node**. The root is the Goal.
+
+Every node in the tree has:
+
+- a **kind**, which is one of `Goal`, `Epic`, `Milestone`, or `Task`;
+- a **title**, a non-empty string;
+- a **status**, one of `complete` or `incomplete`, expressible as a checkbox.
+
+The tree has exactly **four levels of kinds**, in this fixed parent-child order:
+
+```text
+Goal
+  Epic
+    Milestone
+      Task
+```
+
+- The Goal is the unique root.
+- An Epic's parent must be the Goal.
+- A Milestone's parent must be an Epic.
+- A Task's parent must be a Milestone.
+- A node's children must all be of the next kind below it; mixing kinds at the
+  same level is not allowed.
+- A Task is a leaf and has no children.
+
+Status derivation:
+
+- A Task's status is set directly.
+- A non-leaf node (Goal, Epic, Milestone) is `complete` if and only if every
+  child is `complete`. Otherwise it is `incomplete`.
+
+Everything else in this document — progress bars, percentages, hierarchical
+numbering, indentation widths — is a rendering of this model, not part of the
+model itself.
+
+## Renderings
+
+The model defined above can be written out in three official renderings:
+**plain text**, **Markdown**, and **HTML**. All three encode the same tree, the
+same kinds, the same titles, and the same statuses; converting between them
+must be lossless for the model.
+
+### Plain text rendering
+
+Plain text uses indentation, a 10-cell progress bar, a percentage, an optional
+hierarchical number, and the title, one node per line.
 
 ```text
 Goal
@@ -14,22 +68,28 @@ Goal
             Task
 ```
 
-Each item is written on one line.
+Per-line shape:
 
 ```text
 {progress_bar} {percent}% {number} {title}
 ```
 
-The Goal line has no number because there is only one Goal.
+The Goal has no number:
 
 ```text
 {progress_bar} {percent}% {goal_title}
 ```
 
-## Example
+The progress bar and percent are derived from the model's status: a `complete`
+node renders as `██████████ 100%`, an `incomplete` leaf renders as
+`░░░░░░░░░░ 0%`, and an `incomplete` non-leaf renders the share of complete
+descendants as defined in *Progress Bars* below. See *Indentation* and
+*Numbering* for the remaining details.
+
+Plain text example:
 
 ```text
-Roadmap Structure
+Goal Tree
 
 ████░░░░░░ 45% Self-host tya
     ████░░░░░░ 40% 1 Self-host AST migration
@@ -49,11 +109,86 @@ Roadmap Structure
             ░░░░░░░░░░ 0% 2-2-2 Add inspect AST command
     ███░░░░░░░ 30% 3 Documentation
         ██████████ 100% 3-1 Roadmap
-            ██████████ 100% 3-1-1 Define Roadmap Structure
+            ██████████ 100% 3-1-1 Define Goal Tree
         ██░░░░░░░░ 20% 3-2 Self-host
             ██░░░░░░░░ 20% 3-2-1 Write AST migration steps
         ███░░░░░░░ 30% 3-3 CLI
             ███░░░░░░░ 30% 3-3-1 Organize usage examples
+```
+
+### Markdown rendering
+
+Markdown uses a top-level heading for the Goal and a GitHub Flavored Markdown
+nested task list for Epics, Milestones, and Tasks. The status of each Epic /
+Milestone / Task maps to the GFM checkbox: `- [x]` for `complete`, `- [ ]` for
+`incomplete`. The Goal has no checkbox; its status is derived from its Epics.
+
+Per-node shape:
+
+- Goal: `# {title}`
+- Epic: `- [ ] {title}` or `- [x] {title}` at the top level of the list
+- Milestone: indented two spaces under its Epic, same checkbox shape
+- Task: indented four spaces under its Milestone, same checkbox shape
+
+Hierarchical numbers and progress bars are not part of the Markdown rendering;
+GitHub displays an automatic completion count for each list. The Markdown
+rendering is the canonical form for `ROADMAP.md` in this repository.
+
+Markdown example:
+
+```markdown
+# Self-host tya
+
+- [ ] Self-host AST migration
+  - [ ] Parser AST migration
+    - [ ] Expression AST support
+    - [ ] Statement AST support
+  - [ ] Checker support
+    - [ ] AST node type checking
+- [x] Documentation
+  - [x] Roadmap
+    - [x] Define Goal Tree
+```
+
+### HTML rendering
+
+HTML uses semantic list elements with `data-` attributes that carry the model
+fields, so it can be rendered with progress bars and numbers in a browser while
+remaining machine-readable.
+
+- Goal: `<h1 class="roadmap-goal" data-status="...">{title}</h1>`
+- The list of Epics is wrapped in `<ul class="roadmap">`.
+- Each non-Goal node is `<li data-kind="epic|milestone|task" data-status="complete|incomplete" data-number="1-2-3">{title}</li>`.
+- A node with children contains a nested `<ul>` after its title.
+- Progress bars and percentages, when shown, are emitted as additional inline
+  elements (e.g. `<span class="roadmap-bar">██████████</span>`) and are derived
+  from `data-status`, not authored separately.
+
+HTML example:
+
+```html
+<h1 class="roadmap-goal" data-status="incomplete">Self-host tya</h1>
+<ul class="roadmap">
+  <li data-kind="epic" data-status="incomplete" data-number="1">Self-host AST migration
+    <ul>
+      <li data-kind="milestone" data-status="incomplete" data-number="1-1">Parser AST migration
+        <ul>
+          <li data-kind="task" data-status="incomplete" data-number="1-1-1">Expression AST support</li>
+          <li data-kind="task" data-status="incomplete" data-number="1-1-2">Statement AST support</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li data-kind="epic" data-status="complete" data-number="2">Documentation
+    <ul>
+      <li data-kind="milestone" data-status="complete" data-number="2-1">Roadmap
+        <ul>
+          <li data-kind="task" data-status="complete" data-number="2-1-1">Define Goal Tree</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
 ```
 
 ## Terms
@@ -140,7 +275,7 @@ apply these rules before editing it:
   the remaining outcome is unchanged.
 - Do not renumber items unless the hierarchy itself changes.
 - Keep completed micro-work out of `ROADMAP.md`; report it in chat using the
-  Roadmap Structure format instead.
+  Goal Tree format instead.
 - Batch roadmap edits into one update after several related slices complete, a
   Task is fully removed, a Milestone changes scope, or the strategy changes.
 - If progress needs to be recorded between roadmap updates, use a short chat

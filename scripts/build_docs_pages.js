@@ -13,6 +13,7 @@ const pages = [
   { source: path.join(docsDir, "STDLIB.md"), output: path.join(docsDir, "stdlib.html"), title: "Stdlib" },
   { source: path.join(docsDir, "NAMING.md"), output: path.join(docsDir, "naming.html"), title: "Naming" },
   { source: path.join(docsDir, "VERSIONS.md"), output: path.join(docsDir, "versions.html"), title: "Versions" },
+  { source: path.join(docsDir, "CANONICAL_SYNTAX.md"), output: path.join(docsDir, "CANONICAL_SYNTAX.html"), title: "Canonical Syntax" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(docsDir, "roadmap.html"), title: "Roadmap" },
   { source: path.join(docsDir, "v0.41", "SPEC.md"), output: path.join(docsDir, "v0.41", "spec.html"), title: "Spec v0.41", versioned: true },
   { source: path.join(docsDir, "v0.40", "SPEC.md"), output: path.join(docsDir, "v0.40", "spec.html"), title: "Spec v0.40", versioned: true },

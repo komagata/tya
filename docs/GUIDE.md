@@ -1,7 +1,7 @@
 # Tya Guide
 
-Tya is a small indentation-based dynamic language inspired by CoffeeScript.
-This guide is for reading from top to bottom.
+Tya is a language without hesitation — an indentation-based, dynamically
+typed compile-to-C language. This guide is for reading from top to bottom.
 
 ## Run A Program
 
