@@ -12,11 +12,11 @@ import channel
 c = channel.new(1)
 v = channel.receive_timeout(c, 0.1)
 if v == nil
-  print "timed out"
+  print("timed out")
 else
-  print v
+  print(v)
 
 c2 = channel.new(1)
 channel.send(c2, 42)
 v2 = channel.receive_timeout(c2, 0.1)
-print "got " + to_string(v2)
+print("got " + to_string(v2))

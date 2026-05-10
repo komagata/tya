@@ -1,9 +1,9 @@
-module toml
-  is_digit = c ->
+class Toml
+  @@is_digit = c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
-  is_bare_key_char = c ->
+  @@is_bare_key_char = c ->
     code = ord(c)
     if code >= 65 and code <= 90
       return true
@@ -13,7 +13,7 @@ module toml
       return true
     return c == "_" or c == "-"
 
-  skip_ws_in_line = state ->
+  @@skip_ws_in_line = state ->
     p = state["pos"]
     n = state["len"]
     src = state["src"]
@@ -30,7 +30,7 @@ module toml
         return nil
     state["pos"] = p
 
-  skip_ws_and_newlines = state ->
+  @@skip_ws_and_newlines = state ->
     p = state["pos"]
     n = state["len"]
     src = state["src"]
@@ -47,7 +47,7 @@ module toml
         return nil
     state["pos"] = p
 
-  parse_basic_string = state ->
+  @@parse_basic_string = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -91,7 +91,7 @@ module toml
         p = p + 1
     raise "toml.parse: unterminated string"
 
-  parse_literal_string = state ->
+  @@parse_literal_string = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -110,8 +110,8 @@ module toml
       p = p + 1
     raise "toml.parse: unterminated literal string"
 
-  parse_key = state ->
-    toml.skip_ws_in_line(state)
+  @@parse_key = state ->
+    Toml.skip_ws_in_line(state)
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -119,11 +119,11 @@ module toml
       raise "toml.parse: expected key"
     c = src[p]
     if c == "\""
-      return toml.parse_basic_string(state)
+      return Toml.parse_basic_string(state)
     if c == "'"
-      return toml.parse_literal_string(state)
+      return Toml.parse_literal_string(state)
     out = ""
-    while p < n and toml.is_bare_key_char(src[p])
+    while p < n and Toml.is_bare_key_char(src[p])
       out = out + src[p]
       p = p + 1
     if out == ""
@@ -131,27 +131,27 @@ module toml
     state["pos"] = p
     return out
 
-  parse_number_or_keyword = state ->
+  @@parse_number_or_keyword = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
     start = p
     if src[p] == "-" or src[p] == "+"
       p = p + 1
-    while p < n and (toml.is_digit(src[p]) or src[p] == "_")
+    while p < n and (Toml.is_digit(src[p]) or src[p] == "_")
       p = p + 1
     is_float = false
     if p < n and src[p] == "."
       is_float = true
       p = p + 1
-      while p < n and (toml.is_digit(src[p]) or src[p] == "_")
+      while p < n and (Toml.is_digit(src[p]) or src[p] == "_")
         p = p + 1
     if p < n and (src[p] == "e" or src[p] == "E")
       is_float = true
       p = p + 1
       if p < n and (src[p] == "+" or src[p] == "-")
         p = p + 1
-      while p < n and (toml.is_digit(src[p]) or src[p] == "_")
+      while p < n and (Toml.is_digit(src[p]) or src[p] == "_")
         p = p + 1
     raw = ""
     k = start
@@ -164,7 +164,7 @@ module toml
       return to_float(raw)
     return to_int(raw)
 
-  starts_with_text = state, word ->
+  @@starts_with_text = state, word ->
     src = state["src"]
     n = state["len"]
     p = state["pos"]
@@ -178,8 +178,8 @@ module toml
       k = k + 1
     return true
 
-  parse_value = state ->
-    toml.skip_ws_in_line(state)
+  @@parse_value = state ->
+    Toml.skip_ws_in_line(state)
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -187,40 +187,40 @@ module toml
       raise "toml.parse: expected value"
     c = src[p]
     if c == "\""
-      return toml.parse_basic_string(state)
+      return Toml.parse_basic_string(state)
     if c == "'"
-      return toml.parse_literal_string(state)
+      return Toml.parse_literal_string(state)
     if c == "["
-      return toml.parse_array(state)
-    if toml.starts_with_text(state, "true")
+      return Toml.parse_array(state)
+    if Toml.starts_with_text(state, "true")
       state["pos"] = p + 4
       return true
-    if toml.starts_with_text(state, "false")
+    if Toml.starts_with_text(state, "false")
       state["pos"] = p + 5
       return false
-    return toml.parse_number_or_keyword(state)
+    return Toml.parse_number_or_keyword(state)
 
-  parse_array = state ->
+  @@parse_array = state ->
     p = state["pos"]
     if state["src"][p] != "["
       raise "toml.parse: expected '['"
     state["pos"] = p + 1
     out = []
-    toml.skip_ws_and_newlines(state)
+    Toml.skip_ws_and_newlines(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "]"
       state["pos"] = p + 1
       return out
     while true
-      v = toml.parse_value(state)
+      v = Toml.parse_value(state)
       push(out, v)
-      toml.skip_ws_and_newlines(state)
+      Toml.skip_ws_and_newlines(state)
       p = state["pos"]
       if p >= state["len"]
         raise "toml.parse: unterminated array"
       if state["src"][p] == ","
         state["pos"] = p + 1
-        toml.skip_ws_and_newlines(state)
+        Toml.skip_ws_and_newlines(state)
         p = state["pos"]
         if p < state["len"] and state["src"][p] == "]"
           state["pos"] = p + 1
@@ -231,45 +231,45 @@ module toml
       else
         raise "toml.parse: expected ',' or ']' in array"
 
-  parse_inline_table = state ->
+  @@parse_inline_table = state ->
     p = state["pos"]
     if state["src"][p] != "{{"
       raise "toml.parse: expected inline table"
     state["pos"] = p + 1
     out = {}
-    toml.skip_ws_in_line(state)
+    Toml.skip_ws_in_line(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "}}"
       state["pos"] = p + 1
       return out
     while true
-      key = toml.parse_key(state)
-      toml.skip_ws_in_line(state)
+      key = Toml.parse_key(state)
+      Toml.skip_ws_in_line(state)
       p = state["pos"]
       if p >= state["len"] or state["src"][p] != "="
         raise "toml.parse: expected '=' in inline table"
       state["pos"] = p + 1
-      v = toml.parse_value_with_inline(state)
+      v = Toml.parse_value_with_inline(state)
       out[key] = v
-      toml.skip_ws_in_line(state)
+      Toml.skip_ws_in_line(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == ","
         state["pos"] = p + 1
-        toml.skip_ws_in_line(state)
+        Toml.skip_ws_in_line(state)
       elseif p < state["len"] and state["src"][p] == "}}"
         state["pos"] = p + 1
         return out
       else
         raise "toml.parse: expected ',' or '}}' in inline table"
 
-  parse_value_with_inline = state ->
-    toml.skip_ws_in_line(state)
+  @@parse_value_with_inline = state ->
+    Toml.skip_ws_in_line(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "{{"
-      return toml.parse_inline_table(state)
-    return toml.parse_value(state)
+      return Toml.parse_inline_table(state)
+    return Toml.parse_value(state)
 
-  ensure_path = root, segments ->
+  @@ensure_path = root, segments ->
     cur = root
     i = 0
     while i < len(segments)
@@ -280,7 +280,7 @@ module toml
       i = i + 1
     return cur
 
-  ensure_array_path = root, segments ->
+  @@ensure_array_path = root, segments ->
     cur = root
     i = 0
     last = len(segments) - 1
@@ -298,25 +298,25 @@ module toml
     push(arr, new_table)
     return new_table
 
-  parse_header_segments = state ->
+  @@parse_header_segments = state ->
     segments = []
     while true
-      toml.skip_ws_in_line(state)
-      key = toml.parse_key(state)
+      Toml.skip_ws_in_line(state)
+      key = Toml.parse_key(state)
       push(segments, key)
-      toml.skip_ws_in_line(state)
+      Toml.skip_ws_in_line(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == "."
         state["pos"] = p + 1
       else
         return segments
 
-  parse = text ->
+  @@parse = text ->
     state = { src: text, pos: 0, len: byte_len(text) }
     root = {}
     current = root
     while state["pos"] < state["len"]
-      toml.skip_ws_and_newlines(state)
+      Toml.skip_ws_and_newlines(state)
       p = state["pos"]
       if p >= state["len"]
         return root
@@ -329,48 +329,48 @@ module toml
           state["pos"] = p + 2
         else
           state["pos"] = p + 1
-        segments = toml.parse_header_segments(state)
-        toml.skip_ws_in_line(state)
+        segments = Toml.parse_header_segments(state)
+        Toml.skip_ws_in_line(state)
         p = state["pos"]
         if is_array_table
           if p + 1 >= state["len"] or src[p] != "]" or src[p + 1] != "]"
             raise "toml.parse: expected ']]'"
           state["pos"] = p + 2
-          current = toml.ensure_array_path(root, segments)
+          current = Toml.ensure_array_path(root, segments)
         else
           if p >= state["len"] or src[p] != "]"
             raise "toml.parse: expected ']'"
           state["pos"] = p + 1
-          current = toml.ensure_path(root, segments)
+          current = Toml.ensure_path(root, segments)
       else
-        key = toml.parse_key(state)
-        toml.skip_ws_in_line(state)
+        key = Toml.parse_key(state)
+        Toml.skip_ws_in_line(state)
         p = state["pos"]
         if p >= state["len"] or state["src"][p] != "="
           raise "toml.parse: expected '=' after key"
         state["pos"] = p + 1
-        v = toml.parse_value_with_inline(state)
+        v = Toml.parse_value_with_inline(state)
         current[key] = v
-        toml.skip_ws_in_line(state)
+        Toml.skip_ws_in_line(state)
         p = state["pos"]
         if p < state["len"] and state["src"][p] != "\n"
           if state["src"][p] != "#"
             raise "toml.parse: unexpected trailing characters on line"
     return root
 
-  is_bare_key = text ->
+  @@is_bare_key = text ->
     n = byte_len(text)
     if n == 0
       return false
     i = 0
     while i < n
-      if not toml.is_bare_key_char(text[i])
+      if not Toml.is_bare_key_char(text[i])
         return false
       i = i + 1
     return true
 
-  format_key = text ->
-    if toml.is_bare_key(text)
+  @@format_key = text ->
+    if Toml.is_bare_key(text)
       return text
     out = "\""
     n = byte_len(text)
@@ -386,7 +386,7 @@ module toml
       i = i + 1
     return out + "\""
 
-  format_string = text ->
+  @@format_string = text ->
     out = "\""
     n = byte_len(text)
     i = 0
@@ -410,7 +410,7 @@ module toml
       i = i + 1
     return out + "\""
 
-  format_inline_value = value ->
+  @@format_inline_value = value ->
     k = kind(value)
     if k == "nil"
       raise "toml.dump: nil is not representable in TOML"
@@ -421,14 +421,14 @@ module toml
     if k == "int" or k == "float"
       return to_string(value)
     if k == "string"
-      return toml.format_string(value)
+      return Toml.format_string(value)
     if k == "array"
       out = "["
       i = 0
       while i < len(value)
         if i > 0
           out = out + ", "
-        out = out + toml.format_inline_value(value[i])
+        out = out + Toml.format_inline_value(value[i])
         i = i + 1
       return out + "]"
     if k == "dict"
@@ -439,14 +439,14 @@ module toml
         if i > 0
           out = out + ", "
         out = out
-          + toml.format_key(ks[i])
+          + Toml.format_key(ks[i])
           + " = "
-          + toml.format_inline_value(value[ks[i]])
+          + Toml.format_inline_value(value[ks[i]])
         i = i + 1
       return out + "}}"
     raise "toml.dump: unsupported value kind"
 
-  is_array_of_dicts = value ->
+  @@is_array_of_dicts = value ->
     if kind(value) != "array"
       return false
     if len(value) == 0
@@ -458,7 +458,7 @@ module toml
       i = i + 1
     return true
 
-  emit_table = value, prefix ->
+  @@emit_table = value, prefix ->
     primitives = ""
     sub_tables = ""
     ks = keys(value)
@@ -470,38 +470,38 @@ module toml
       if vk == "dict"
         new_prefix = ""
         if prefix == ""
-          new_prefix = toml.format_key(k)
+          new_prefix = Toml.format_key(k)
         else
-          new_prefix = prefix + "." + toml.format_key(k)
+          new_prefix = prefix + "." + Toml.format_key(k)
         sub_tables = sub_tables
           + "\n["
           + new_prefix
           + "]\n"
-          + toml.emit_table(v, new_prefix)
-      elseif toml.is_array_of_dicts(v)
+          + Toml.emit_table(v, new_prefix)
+      elseif Toml.is_array_of_dicts(v)
         new_prefix = ""
         if prefix == ""
-          new_prefix = toml.format_key(k)
+          new_prefix = Toml.format_key(k)
         else
-          new_prefix = prefix + "." + toml.format_key(k)
+          new_prefix = prefix + "." + Toml.format_key(k)
         j = 0
         while j < len(v)
           sub_tables = sub_tables
             + "\n[["
             + new_prefix
             + "]]\n"
-            + toml.emit_table(v[j], new_prefix)
+            + Toml.emit_table(v[j], new_prefix)
           j = j + 1
       else
         primitives = primitives
-          + toml.format_key(k)
+          + Toml.format_key(k)
           + " = "
-          + toml.format_inline_value(v)
+          + Toml.format_inline_value(v)
           + "\n"
       i = i + 1
     return primitives + sub_tables
 
-  dump = value ->
+  @@dump = value ->
     if kind(value) != "dict"
       raise "toml.dump: top-level value must be a dict"
-    return toml.emit_table(value, "")
+    return Toml.emit_table(value, "")

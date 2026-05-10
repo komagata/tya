@@ -5,7 +5,7 @@ stdout 'main\n'
 ! stderr .
 
 -- app/main.tya --
-print "main"
+print("main")
 
 -- stdlib/prelude.tya --
-print "prelude"
+print("prelude")

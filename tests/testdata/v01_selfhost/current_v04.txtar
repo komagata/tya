@@ -83,34 +83,34 @@ items = [1, 2, 3]
 doubled = map(items, item -> item * 2)
 sum = total, item -> total + item
 
-assert string.blank("  ")
-assert array.empty([])
-assert_equal [2, 4, 6], doubled
-assert_equal 6, reduce(items, 0, sum)
-assert_equal true, any(items, item -> item == 2)
-assert_equal true, all(items, item -> item > 0)
-assert_equal 2, find(items, item -> item == 2)
-assert_equal true, equal([1, {name: "tya"}], [1, {name: "tya"}])
-print array.first(["ok"])
+assert(string.blank("  "))
+assert(array.empty([]))
+assert_equal([2, 4, 6], doubled)
+assert_equal(6, reduce(items, 0, sum))
+assert_equal(true, any(items, item -> item == 2))
+assert_equal(true, all(items, item -> item > 0))
+assert_equal(2, find(items, item -> item == 2))
+assert_equal(true, equal([1, {name: "tya"}], [1, {name: "tya"}]))
+print(array.first(["ok"]))
 
 -- fail_assert.tya --
-assert false
+assert(false)
 
 -- fail_equal.tya --
-assert_equal [1, {name: "tya"}], [1, {name: "Tya"}]
+assert_equal([1, {name: "tya"}], [1, {name: "Tya"}])
 
 -- v04_string.tya --
 import string
 
-assert string.blank(" ")
-assert string.present("tya")
-assert_equal false, string.blank("tya")
-assert_equal true, string.present("tya")
+assert(string.blank(" "))
+assert(string.present("tya"))
+assert_equal(false, string.blank("tya"))
+assert_equal(true, string.present("tya"))
 
 -- v04_array.tya --
 import array
 
-assert array.empty([])
-assert_equal false, array.empty(["tya"])
-assert_equal "tya", array.first(["tya"])
-assert_equal [1, {name: "tya"}], [1, {name: "tya"}]
+assert(array.empty([]))
+assert_equal(false, array.empty(["tya"]))
+assert_equal("tya", array.first(["tya"]))
+assert_equal([1, {name: "tya"}], [1, {name: "tya"}])

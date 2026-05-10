@@ -29,15 +29,15 @@ stdout '0.43.0\n'
 
 -- good.tya --
 name = "Tya"
-print name
+print(name)
 
 -- bad.tya --
-print missing
+print(missing)
 
 -- messy.tya --
 name = "Tya"  
-print name	
+print(name)
 
 -- formatted.tya --
 name = "Tya"
-print name
+print(name)

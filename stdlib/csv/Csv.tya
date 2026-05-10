@@ -1,9 +1,9 @@
-module csv
-  default_options = () ->
+class Csv
+  @@default_options = () ->
     return { separator: ",", header: false }
 
-  merge_options = options ->
-    base = csv.default_options()
+  @@merge_options = options ->
+    base = Csv.default_options()
     if options == nil
       return base
     if has(options, "separator")
@@ -12,7 +12,7 @@ module csv
       base["header"] = options["header"]
     return base
 
-  parse_rows = text, separator ->
+  @@parse_rows = text, separator ->
     rows = []
     n = byte_len(text)
     i = 0
@@ -64,9 +64,9 @@ module csv
       push(rows, row)
     return rows
 
-  parse = text, options ->
-    opts = csv.merge_options(options)
-    rows = csv.parse_rows(text, opts["separator"])
+  @@parse = text, options ->
+    opts = Csv.merge_options(options)
+    rows = Csv.parse_rows(text, opts["separator"])
     if not opts["header"]
       return rows
     if len(rows) == 0
@@ -88,7 +88,7 @@ module csv
       i = i + 1
     return out
 
-  escape_field = field, separator ->
+  @@escape_field = field, separator ->
     needs_quote = false
     n = byte_len(field)
     cr = chr(13)
@@ -112,7 +112,7 @@ module csv
       i = i + 1
     return out + "\""
 
-  dump_array_rows = rows, separator ->
+  @@dump_array_rows = rows, separator ->
     out = ""
     i = 0
     while i < len(rows)
@@ -123,20 +123,20 @@ module csv
           out = out + separator
         if kind(r[j]) != "string"
           raise "csv.dump: row values must be strings"
-        out = out + csv.escape_field(r[j], separator)
+        out = out + Csv.escape_field(r[j], separator)
         j = j + 1
       out = out + "\n"
       i = i + 1
     return out
 
-  dump = rows, options ->
-    opts = csv.merge_options(options)
+  @@dump = rows, options ->
+    opts = Csv.merge_options(options)
     sep = opts["separator"]
     if len(rows) == 0
       return ""
     first_kind = kind(rows[0])
     if first_kind == "array"
-      return csv.dump_array_rows(rows, sep)
+      return Csv.dump_array_rows(rows, sep)
     if first_kind == "dict"
       header = keys(rows[0])
       out = ""
@@ -145,7 +145,7 @@ module csv
         while j < len(header)
           if j > 0
             out = out + sep
-          out = out + csv.escape_field(header[j], sep)
+          out = out + Csv.escape_field(header[j], sep)
           j = j + 1
         out = out + "\n"
       i = 0
@@ -161,7 +161,7 @@ module csv
             if kind(raw) != "string"
               raise "csv.dump: row values must be strings"
             v = raw
-          out = out + csv.escape_field(v, sep)
+          out = out + Csv.escape_field(v, sep)
           j = j + 1
         out = out + "\n"
         i = i + 1

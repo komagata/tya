@@ -26,9 +26,9 @@ try
   scope
     t = spawn cooperative_worker()
     raise "body raise"
-  print "unreachable"
+  print("unreachable")
 catch e
   elapsed = time.now() - start
-  print "caught: " + e
-  print "fast: " + to_string(elapsed < 1.0)
-print "after"
+  print("caught: " + e)
+  print("fast: " + to_string(elapsed < 1.0))
+print("after")

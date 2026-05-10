@@ -10,7 +10,7 @@ stderr 'module not found: absent'
 
 -- app/main.tya --
 import greeting
-print greeting.hello("path")
+print(greeting.hello("path"))
 
 -- app/no_module.tya --
 import absent

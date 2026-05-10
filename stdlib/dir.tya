@@ -1,6 +1,0 @@
-module dir
-  list = path -> dir_list(path)
-
-  mkdir = path -> dir_mkdir(path)
-
-  rmdir = path -> dir_rmdir(path)

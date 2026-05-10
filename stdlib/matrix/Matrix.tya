@@ -1,5 +1,5 @@
-module matrix
-  validate_data = data ->
+class Matrix
+  @@validate_data = data ->
     if kind(data) != "array"
       raise "matrix.new: data must be an array of arrays"
     rows = len(data)
@@ -21,11 +21,11 @@ module matrix
       i = i + 1
     return cols
 
-  new = data ->
-    cols = matrix.validate_data(data)
+  @@new = data ->
+    cols = Matrix.validate_data(data)
     return { rows: len(data), cols: cols, data: data }
 
-  zero = rows, cols ->
+  @@zero = rows, cols ->
     data = []
     i = 0
     while i < rows
@@ -38,7 +38,7 @@ module matrix
       i = i + 1
     return { rows: rows, cols: cols, data: data }
 
-  identity = n ->
+  @@identity = n ->
     data = []
     i = 0
     while i < n
@@ -54,18 +54,18 @@ module matrix
       i = i + 1
     return { rows: n, cols: n, data: data }
 
-  at = m, r, c ->
+  @@at = m, r, c ->
     if r < 0 or r >= m["rows"] or c < 0 or c >= m["cols"]
       raise "matrix.at: index out of range"
     return m["data"][r][c]
 
-  put = m, r, c, value ->
+  @@put = m, r, c, value ->
     if r < 0 or r >= m["rows"] or c < 0 or c >= m["cols"]
       raise "matrix.put: index out of range"
     m["data"][r][c] = value
     return nil
 
-  add = a, b ->
+  @@add = a, b ->
     if a["rows"] != b["rows"] or a["cols"] != b["cols"]
       raise "matrix.add: dimension mismatch"
     out_data = []
@@ -80,7 +80,7 @@ module matrix
       i = i + 1
     return { rows: a["rows"], cols: a["cols"], data: out_data }
 
-  sub = a, b ->
+  @@sub = a, b ->
     if a["rows"] != b["rows"] or a["cols"] != b["cols"]
       raise "matrix.sub: dimension mismatch"
     out_data = []
@@ -95,7 +95,7 @@ module matrix
       i = i + 1
     return { rows: a["rows"], cols: a["cols"], data: out_data }
 
-  scale = a, k ->
+  @@scale = a, k ->
     out_data = []
     i = 0
     while i < a["rows"]
@@ -108,7 +108,7 @@ module matrix
       i = i + 1
     return { rows: a["rows"], cols: a["cols"], data: out_data }
 
-  mul = a, b ->
+  @@mul = a, b ->
     if a["cols"] != b["rows"]
       raise "matrix.mul: inner dimensions disagree"
     out_data = []
@@ -128,7 +128,7 @@ module matrix
       i = i + 1
     return { rows: a["rows"], cols: b["cols"], data: out_data }
 
-  transpose = a ->
+  @@transpose = a ->
     out_data = []
     j = 0
     while j < a["cols"]
@@ -141,7 +141,7 @@ module matrix
       j = j + 1
     return { rows: a["cols"], cols: a["rows"], data: out_data }
 
-  det = a ->
+  @@det = a ->
     if a["rows"] != a["cols"]
       raise "matrix.det: not square"
     n = a["rows"]
@@ -169,7 +169,7 @@ module matrix
         push(minor_data, row)
         r = r + 1
       sub_m = { rows: 3, cols: 3, data: minor_data }
-      cofactor = matrix.det(sub_m) * d[0][j]
+      cofactor = Matrix.det(sub_m) * d[0][j]
       if j % 2 == 0
         sum = sum + cofactor
       else
@@ -177,7 +177,7 @@ module matrix
       j = j + 1
     return sum
 
-  equal? = a, b ->
+  @@equal? = a, b ->
     if a["rows"] != b["rows"] or a["cols"] != b["cols"]
       return false
     return equal(a["data"], b["data"])

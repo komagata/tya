@@ -6,46 +6,46 @@ import os
 module stdlib_filesystem_test
   test_file_remove = ->
     p = "/tmp/tya_v23_remove.txt"
-    file.write(p, "x")
-    file.remove(p)
-    unittest.assert_equal(false, file.exists?(p), "removed")
+    file.File.write(p, "x")
+    file.File.remove(p)
+    unittest.assert_equal(false, file.File.exists?(p), "removed")
 
   test_file_rename = ->
     a = "/tmp/tya_v23_rename_a.txt"
     b = "/tmp/tya_v23_rename_b.txt"
     try
-      file.remove(b)
+      file.File.remove(b)
     catch _
       nil
-    file.write(a, "hi")
-    file.rename(a, b)
-    unittest.assert_equal(false, file.exists?(a), "old gone")
-    unittest.assert(file.exists?(b), "new exists")
-    file.remove(b)
+    file.File.write(a, "hi")
+    file.File.rename(a, b)
+    unittest.assert_equal(false, file.File.exists?(a), "old gone")
+    unittest.assert(file.File.exists?(b), "new exists")
+    file.File.remove(b)
 
   test_file_stat_kind_size = ->
     p = "/tmp/tya_v23_stat.txt"
-    file.write(p, "abcde")
-    info = file.stat(p)
+    file.File.write(p, "abcde")
+    info = file.File.stat(p)
     unittest.assert_equal("file", info["kind"], "kind file")
     unittest.assert_equal(5, info["size"], "size 5")
     unittest.assert(info["readable"], "readable")
-    file.remove(p)
+    file.File.remove(p)
 
   test_path_expand_user_tilde = ->
-    home = os.env("HOME")
+    home = os.Os.env("HOME")
     unittest.assert_equal(home, path.Path.expand_user("~"), "tilde alone")
     unittest.assert_equal("{home}/foo", path.Path.expand_user("~/foo"), "tilde slash")
     unittest.assert_equal("/abs/path", path.Path.expand_user("/abs/path"), "absolute unchanged")
 
   test_os_cwd_returns_string = ->
-    here = os.cwd()
+    here = os.Os.cwd()
     unittest.assert(here != nil, "cwd not nil")
 
   test_os_chdir_round_trip = ->
-    original = os.cwd()
-    os.chdir("/tmp")
-    new = os.cwd()
+    original = os.Os.cwd()
+    os.Os.chdir("/tmp")
+    new = os.Os.cwd()
     unittest.assert(new != original, "cwd changed")
-    os.chdir(original)
-    unittest.assert_equal(original, os.cwd(), "restored")
+    os.Os.chdir(original)
+    unittest.assert_equal(original, os.Os.cwd(), "restored")

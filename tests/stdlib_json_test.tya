@@ -3,27 +3,27 @@ import json
 
 module stdlib_json_test
   test_dump_object = ->
-    out = json.dump({ name: "tya", n: 23 })
+    out = json.Json.dump({ name: "tya", n: 23 })
     unittest.assert_equal("{{\"name\":\"tya\",\"n\":23}}", out, "object")
   test_dump_array = ->
-    unittest.assert_equal("[1,2,3]", json.dump([1, 2, 3]), "array")
+    unittest.assert_equal("[1,2,3]", json.Json.dump([1, 2, 3]), "array")
   test_dump_primitives = ->
-    unittest.assert_equal("null", json.dump(nil), "nil")
-    unittest.assert_equal("true", json.dump(true), "true")
-    unittest.assert_equal("false", json.dump(false), "false")
-    unittest.assert_equal("42", json.dump(42), "int")
+    unittest.assert_equal("null", json.Json.dump(nil), "nil")
+    unittest.assert_equal("true", json.Json.dump(true), "true")
+    unittest.assert_equal("false", json.Json.dump(false), "false")
+    unittest.assert_equal("42", json.Json.dump(42), "int")
   test_dump_string_escapes = ->
-    unittest.assert_equal("\"a\\nb\"", json.dump("a\nb"), "newline")
+    unittest.assert_equal("\"a\\nb\"", json.Json.dump("a\nb"), "newline")
   test_parse_object = ->
     src = "{{\"name\":\"tya\",\"n\":23}}"
-    v = json.parse(src)
+    v = json.Json.parse(src)
     unittest.assert_equal("tya", v["name"], "name")
     unittest.assert_equal(23, v["n"], "n")
   test_parse_array = ->
-    v = json.parse("[1, 2, 3]")
+    v = json.Json.parse("[1, 2, 3]")
     unittest.assert_equal([1, 2, 3], v, "array")
   test_parse_primitives = ->
-    unittest.assert_equal(nil, json.parse("null"), "null")
-    unittest.assert_equal(true, json.parse("true"), "true")
-    unittest.assert_equal(false, json.parse("false"), "false")
-    unittest.assert_equal(42, json.parse("42"), "int")
+    unittest.assert_equal(nil, json.Json.parse("null"), "null")
+    unittest.assert_equal(true, json.Json.parse("true"), "true")
+    unittest.assert_equal(false, json.Json.parse("false"), "false")
+    unittest.assert_equal(42, json.Json.parse("42"), "int")

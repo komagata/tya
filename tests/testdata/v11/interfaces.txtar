@@ -84,19 +84,19 @@ class QualifiedMemoryReader implements io.Reader
     "qualified"
 
 file = File()
-print file.read()
-print file.write("record")
+print(file.read())
+print(file.write("record"))
 admin = Admin()
-print admin.name()
+print(admin.name())
 memory = MemoryReader()
-print memory.read()
+print(memory.read())
 
 module_reader = io.MemoryReader()
-print module_reader.read()
+print(module_reader.read())
 qualified_reader = QualifiedMemoryReader()
-print qualified_reader.read()
+print(qualified_reader.read())
 final_reader = FinalReader()
-print final_reader.read()
+print(final_reader.read())
 
 -- io.tya --
 module io

@@ -3,15 +3,15 @@ import process
 
 module stdlib_process_test
   test_echo = ->
-    r = process.run(["echo", "hello"], nil)
+    r = process.Process.run(["echo", "hello"], nil)
     unittest.assert_equal(0, r["exit_code"], "exit 0")
     unittest.assert_equal("hello\n", r["stdout"], "stdout")
   test_exit_code = ->
-    r = process.run(["sh", "-c", "exit 42"], nil)
+    r = process.Process.run(["sh", "-c", "exit 42"], nil)
     unittest.assert_equal(42, r["exit_code"], "exit 42")
   test_stderr_capture = ->
-    r = process.run(["sh", "-c", "echo err 1>&2"], nil)
+    r = process.Process.run(["sh", "-c", "echo err 1>&2"], nil)
     unittest.assert_equal("err\n", r["stderr"], "stderr")
   test_input = ->
-    r = process.run(["cat"], { input: "piped" })
+    r = process.Process.run(["cat"], { input: "piped" })
     unittest.assert_equal("piped", r["stdout"], "stdin")

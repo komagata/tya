@@ -3,11 +3,11 @@ import os
 
 module stdlib_os_test
   test_args_returns_array = ->
-    a = os.args()
+    a = os.Os.args()
     unittest.assert_equal(0, len(a) - len(a), "args len roundtrip")
   test_env_home_present = ->
-    home = os.env("HOME")
+    home = os.Os.env("HOME")
     unittest.assert(home != nil, "HOME present")
   test_env_missing_is_nil = ->
-    missing = os.env("__TYA_V022_NO_SUCH_ENV__")
+    missing = os.Os.env("__TYA_V022_NO_SUCH_ENV__")
     unittest.assert_nil(missing, "missing env nil")

@@ -30,7 +30,7 @@ stdout '0.43.0\n'
 -- structured_errors.tya --
 import config
 
-print "ok"
+print("ok")
 
 risky = ->
   raise error("failed")
@@ -38,7 +38,7 @@ risky = ->
 try
   risky()
 catch err
-  print err["message"]
+  print(err["message"])
 
 try
   try
@@ -47,34 +47,34 @@ try
     raise err
 catch outer
   outer_message = outer["message"]
-  print "outer:{outer_message}"
+  print("outer:{outer_message}")
 
 top_err = "outer"
 try
   risky()
 catch err
-  print err["message"]
-print top_err
+  print(err["message"])
+print(top_err)
 
 try
   risky()
 catch _
-  print "fallback"
+  print("fallback")
 
 loop_once = ->
   while true
     try
       break
     catch err
-      print "bad"
+      print("bad")
   "loop-done"
 
-print loop_once()
+print(loop_once())
 
 try
   config.load()
 catch err
-  print err["message"]
+  print(err["message"])
 
 -- config.tya --
 module config
@@ -89,20 +89,20 @@ raise
 
 -- catch_without_binding.tya --
 try
-  print "x"
+  print("x")
 catch
-  print "bad"
+  print("bad")
 
 -- catch_outside.tya --
 catch err
-  print err
+  print(err)
 
 -- try_without_catch.tya --
 try
-  print "x"
+  print("x")
 
 -- catch_bad_name.tya --
 try
   raise "x"
 catch User
-  print User
+  print(User)

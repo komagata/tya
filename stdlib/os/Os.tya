@@ -1,0 +1,15 @@
+class Os
+  @@args = ->
+    args()
+
+  @@env = name ->
+    env(name)
+
+  @@exit = code ->
+    exit(code)
+
+  @@cwd = ->
+    cwd()
+
+  @@chdir = path ->
+    chdir(path)

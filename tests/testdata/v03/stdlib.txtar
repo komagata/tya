@@ -17,17 +17,17 @@ stdout '0.43.0\n'
 import string
 import array
 
-print string.blank("  ")
-print string.present("  ")
-print array.empty([])
-print array.first(["tya"])
+print(string.blank("  "))
+print(string.present("  "))
+print(array.empty([]))
+print(array.first(["tya"]))
 
 -- precedence/main.tya --
 import string
 import array
 
-print string.blank("ignored")
-print array.empty([])
+print(string.blank("ignored"))
+print(array.empty([]))
 
 -- precedence/string.tya --
 module string

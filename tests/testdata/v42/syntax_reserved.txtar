@@ -13,12 +13,12 @@ stderr 'scope cannot be used as a name'
 
 -- spawn_as_var.tya --
 spawn = 1
-print spawn
+print(spawn)
 
 -- await_as_var.tya --
 await = 1
-print await
+print(await)
 
 -- scope_as_var.tya --
 scope = 1
-print scope
+print(scope)

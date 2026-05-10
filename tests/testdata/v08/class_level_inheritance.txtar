@@ -71,23 +71,23 @@ class Admin extends User
   @@role = ->
     "{super()} admin"
 
-print User.count
-print Admin.count
+print(User.count)
+print(Admin.count)
 Admin.count = 10
-print User.count
-print Admin.count
-print Admin.label_name()
-print User.label_name()
+print(User.count)
+print(Admin.count)
+print(Admin.label_name())
+print(User.label_name())
 admin = Admin.build("komagata")
-print admin.label()
-print Admin.role()
-print admin.class
-print admin.class_name
-print Admin.name
-print Admin.parent
-print User.name
-print User.parent
-print admin.class.parent
+print(admin.label())
+print(Admin.role())
+print(admin.class)
+print(admin.class_name)
+print(Admin.name)
+print(Admin.parent)
+print(User.name)
+print(User.parent)
+print(admin.class.parent)
 
 -- account.tya --
 module account
@@ -113,24 +113,24 @@ module account
 import account
 
 editor = account.Editor.build("Ada")
-print editor.name
-print editor.kind()
-print account.Editor.kind_name()
-print account.Editor.parent.kind_name()
-print editor.class
-print editor.class_name
-print account.Editor.parent
-print account.Account.name
+print(editor.name)
+print(editor.kind())
+print(account.Editor.kind_name())
+print(account.Editor.parent.kind_name())
+print(editor.class)
+print(editor.class_name)
+print(account.Editor.parent)
+print(account.Account.name)
 
 -- self_outside.tya --
-print self
+print(self)
 
 -- self_in_instance_method.tya --
 class User
   name = ->
     self.name
 
-print User().name()
+print(User().name())
 
 -- super_no_parent_class_method.tya --
 class User
@@ -141,7 +141,7 @@ class Admin extends User
   @@make = ->
     super()
 
-print Admin.make()
+print(Admin.make())
 
 -- bad_class_method_override_arity.tya --
 class User
@@ -187,4 +187,4 @@ account.Editor.parent = "bad"
 class User
   name = ""
 
-print User.missing
+print(User.missing)

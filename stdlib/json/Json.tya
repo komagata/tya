@@ -1,5 +1,5 @@
-module json
-  skip_ws = state ->
+class Json
+  @@skip_ws = state ->
     n = state["len"]
     p = state["pos"]
     src = state["src"]
@@ -11,14 +11,14 @@ module json
       p = p + 1
     state["pos"] = p
 
-  expect = state, ch ->
-    json.skip_ws(state)
+  @@expect = state, ch ->
+    Json.skip_ws(state)
     p = state["pos"]
     if p >= state["len"] or state["src"][p] != ch
       raise "json.parse: expected '{ch}'"
     state["pos"] = p + 1
 
-  hex_value = c ->
+  @@hex_value = c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -28,7 +28,7 @@ module json
       return code - 87
     raise "json.parse: invalid hex digit"
 
-  utf8_encode = code ->
+  @@utf8_encode = code ->
     if code < 128
       return chr(code)
     if code < 2048
@@ -40,7 +40,7 @@ module json
     b3 = 128 + code % 64
     return chr(b1) + chr(b2) + chr(b3)
 
-  parse_string = state ->
+  @@parse_string = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -80,12 +80,12 @@ module json
                 if e == "u"
                   if p + 5 >= n
                     raise "json.parse: truncated unicode escape"
-                  h1 = json.hex_value(src[p + 2])
-                  h2 = json.hex_value(src[p + 3])
-                  h3 = json.hex_value(src[p + 4])
-                  h4 = json.hex_value(src[p + 5])
+                  h1 = Json.hex_value(src[p + 2])
+                  h2 = Json.hex_value(src[p + 3])
+                  h3 = Json.hex_value(src[p + 4])
+                  h4 = Json.hex_value(src[p + 5])
                   code = h1 * 4096 + h2 * 256 + h3 * 16 + h4
-                  out = out + json.utf8_encode(code)
+                  out = out + Json.utf8_encode(code)
                   p = p + 4
                 else
                   raise "json.parse: invalid escape"
@@ -95,31 +95,31 @@ module json
         p = p + 1
     raise "json.parse: unterminated string"
 
-  is_digit = c ->
+  @@is_digit = c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
-  parse_number = state ->
+  @@parse_number = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
     start = p
     if src[p] == "-"
       p = p + 1
-    while p < n and json.is_digit(src[p])
+    while p < n and Json.is_digit(src[p])
       p = p + 1
     is_float = false
     if p < n and src[p] == "."
       is_float = true
       p = p + 1
-      while p < n and json.is_digit(src[p])
+      while p < n and Json.is_digit(src[p])
         p = p + 1
     if p < n and (src[p] == "e" or src[p] == "E")
       is_float = true
       p = p + 1
       if p < n and (src[p] == "+" or src[p] == "-")
         p = p + 1
-      while p < n and json.is_digit(src[p])
+      while p < n and Json.is_digit(src[p])
         p = p + 1
     text = ""
     k = start
@@ -131,19 +131,19 @@ module json
       return to_float(text)
     return to_int(text)
 
-  parse_value = state ->
-    json.skip_ws(state)
+  @@parse_value = state ->
+    Json.skip_ws(state)
     p = state["pos"]
     if p >= state["len"]
       raise "json.parse: unexpected end of input"
     src = state["src"]
     c = src[p]
     if c == "{{"
-      return json.parse_object(state)
+      return Json.parse_object(state)
     if c == "["
-      return json.parse_array(state)
+      return Json.parse_array(state)
     if c == "\""
-      return json.parse_string(state)
+      return Json.parse_string(state)
     if c == "t"
       if (
         p + 4 <= state["len"] and src[p + 1] == "r" and src[p + 2] == "u" and src[p + 3] == "e"
@@ -165,14 +165,14 @@ module json
         state["pos"] = p + 4
         return nil
       raise "json.parse: invalid token"
-    if c == "-" or json.is_digit(c)
-      return json.parse_number(state)
+    if c == "-" or Json.is_digit(c)
+      return Json.parse_number(state)
     raise "json.parse: unexpected character"
 
-  parse_object = state ->
-    json.expect(state, "{{")
+  @@parse_object = state ->
+    Json.expect(state, "{{")
     out = {}
-    json.skip_ws(state)
+    Json.skip_ws(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "}}"
       state["pos"] = p + 1
@@ -180,23 +180,23 @@ module json
     first = true
     while true
       if not first
-        json.expect(state, ",")
+        Json.expect(state, ",")
       first = false
-      json.skip_ws(state)
-      key = json.parse_string(state)
-      json.expect(state, ":")
-      value = json.parse_value(state)
+      Json.skip_ws(state)
+      key = Json.parse_string(state)
+      Json.expect(state, ":")
+      value = Json.parse_value(state)
       out[key] = value
-      json.skip_ws(state)
+      Json.skip_ws(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == "}}"
         state["pos"] = p + 1
         return out
 
-  parse_array = state ->
-    json.expect(state, "[")
+  @@parse_array = state ->
+    Json.expect(state, "[")
     out = []
-    json.skip_ws(state)
+    Json.skip_ws(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "]"
       state["pos"] = p + 1
@@ -204,25 +204,25 @@ module json
     first = true
     while true
       if not first
-        json.expect(state, ",")
+        Json.expect(state, ",")
       first = false
-      v = json.parse_value(state)
+      v = Json.parse_value(state)
       push(out, v)
-      json.skip_ws(state)
+      Json.skip_ws(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == "]"
         state["pos"] = p + 1
         return out
 
-  parse = text ->
+  @@parse = text ->
     state = { src: text, pos: 0, len: byte_len(text) }
-    v = json.parse_value(state)
-    json.skip_ws(state)
+    v = Json.parse_value(state)
+    Json.skip_ws(state)
     if state["pos"] < state["len"]
       raise "json.parse: trailing characters"
     return v
 
-  escape_string = text ->
+  @@escape_string = text ->
     n = byte_len(text)
     out = "\""
     i = 0
@@ -261,7 +261,7 @@ module json
       i = i + 1
     return out + "\""
 
-  pad = indent, level ->
+  @@pad = indent, level ->
     if indent <= 0
       return ""
     out = "\n"
@@ -276,7 +276,7 @@ module json
       k = k + 1
     return out
 
-  emit = value, indent, level ->
+  @@emit = value, indent, level ->
     k = kind(value)
     if k == "nil"
       return "null"
@@ -287,7 +287,7 @@ module json
     if k == "int" or k == "float"
       return to_string(value)
     if k == "string"
-      return json.escape_string(value)
+      return Json.escape_string(value)
     if k == "array"
       n = len(value)
       if n == 0
@@ -297,10 +297,10 @@ module json
       while i < n
         if i > 0
           out = out + ","
-        out = out + json.pad(indent, level + 1)
-        out = out + json.emit(value[i], indent, level + 1)
+        out = out + Json.pad(indent, level + 1)
+        out = out + Json.emit(value[i], indent, level + 1)
         i = i + 1
-      out = out + json.pad(indent, level)
+      out = out + Json.pad(indent, level)
       return out + "]"
     if k == "dict"
       names = keys(value)
@@ -312,16 +312,16 @@ module json
       while i < n
         if i > 0
           out = out + ","
-        out = out + json.pad(indent, level + 1)
+        out = out + Json.pad(indent, level + 1)
         key_name = names[i]
-        out = out + json.escape_string(key_name) + ":"
+        out = out + Json.escape_string(key_name) + ":"
         if indent > 0
           out = out + " "
-        out = out + json.emit(value[key_name], indent, level + 1)
+        out = out + Json.emit(value[key_name], indent, level + 1)
         i = i + 1
-      out = out + json.pad(indent, level)
+      out = out + Json.pad(indent, level)
       return out + "}}"
     raise "json.dump: unsupported value kind"
 
-  dump = value ->
-    return json.emit(value, 0, 0)
+  @@dump = value ->
+    return Json.emit(value, 0, 0)
