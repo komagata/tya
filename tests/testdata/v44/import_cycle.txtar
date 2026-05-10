@@ -1,0 +1,27 @@
+# v0.44 import cycle detection works through directory packages.
+# The runner's loadState.loading set tracks in-progress loads by
+# absolute path; a cycle through packages is detected the same way
+# as a cycle through legacy module files.
+cd $REPO
+
+! exec go run ./cmd/tya run $WORK/main.tya
+stderr 'import cycle'
+
+-- main.tya --
+import a
+
+print(a.A.go())
+
+-- a/A.tya --
+import b
+
+class A
+  @@go = ->
+    "via " + b.B.go()
+
+-- b/B.tya --
+import a
+
+class B
+  @@go = ->
+    "via " + a.A.go()
