@@ -1,0 +1,22 @@
+module channel
+  # channel.new(capacity) creates a channel with the given buffer
+  # capacity. capacity must be a non-negative integer. In v0.42 a
+  # capacity of 0 behaves like 1 (true rendezvous arrives in a
+  # later minor).
+  new = capacity -> channel_new(capacity)
+
+  # channel.send(c, value) blocks while the buffer is full, then
+  # enqueues the value. Raises if the channel has been closed.
+  send = c, value -> channel_send(c, value)
+
+  # channel.receive(c) blocks while the buffer is empty, then
+  # dequeues. After close, drains the buffer and then returns nil
+  # for every later call.
+  receive = c -> channel_receive(c)
+
+  # channel.close(c) marks the channel closed and wakes everyone
+  # waiting on it.
+  close = c -> channel_close(c)
+
+  # channel.closed?(c) returns true once the channel has been closed.
+  closed? = c -> channel_closed_p(c)

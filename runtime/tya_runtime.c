@@ -42,6 +42,7 @@ typedef enum {
   TYA_GC_FUNCTION = 3,
   TYA_GC_BYTES = 4,
   TYA_GC_TASK = 5,
+  TYA_GC_CHANNEL = 6,
 } TyaGcKind;
 
 typedef struct TyaGcHeader {
@@ -80,6 +81,22 @@ struct TyaFunction {
   bool is_class;
 };
 
+/* TyaChannel is the runtime representation of a channel value (v0.42).
+ * Items are stored in a ring buffer protected by mu; sends wait on
+ * not_full when the buffer is full and receives wait on not_empty when
+ * empty. close() sets closed=true and broadcasts both condvars. */
+struct TyaChannel {
+  TyaGcHeader gc;
+  TyaValue *buffer;
+  int capacity;
+  int len;
+  int head;
+  pthread_mutex_t mu;
+  pthread_cond_t not_full;
+  pthread_cond_t not_empty;
+  bool closed;
+};
+
 /* TyaTask is the runtime representation of a task value (v0.42).
  * v0.42 STEP 2 only declares the struct and links it through the GC;
  * STEP 3 wires spawn / await codegen against this layout. */
@@ -97,7 +114,19 @@ struct TyaTask {
   TyaValue argv[4];      /* arguments evaluated in the spawning thread */
   TyaValue result;       /* return value when done && !raised */
   TyaValue raise_value;  /* in-flight raise to propagate to await */
+  /* Every not-yet-joined task lives in a global doubly-linked list so
+   * the collector treats them as roots. Without this, a top-level
+   * spawn whose handle is dropped before the worker finishes would
+   * be reclaimed mid-flight, freeing its mutex and pthread state. */
+  struct TyaTask *prev_live;
+  struct TyaTask *next_live;
+  bool in_live_list;
 };
+
+static TyaTask *tya_live_tasks = NULL;
+
+static void tya_live_tasks_add(TyaTask *t);
+static void tya_live_tasks_remove(TyaTask *t);
 
 static TyaGcHeader *tya_gc_head = NULL;
 static size_t tya_gc_alloc_count = 0;
@@ -192,6 +221,16 @@ static void tya_gc_mark_header(TyaGcHeader *h) {
       tya_gc_mark_value(t->raise_value);
       break;
     }
+    case TYA_GC_CHANNEL: {
+      TyaChannel *c = (TyaChannel *)h;
+      pthread_mutex_lock(&c->mu);
+      for (int i = 0; i < c->len; i++) {
+        int idx = (c->head + i) % c->capacity;
+        tya_gc_mark_value(c->buffer[idx]);
+      }
+      pthread_mutex_unlock(&c->mu);
+      break;
+    }
   }
 }
 
@@ -212,6 +251,9 @@ static void tya_gc_mark_value(TyaValue v) {
       break;
     case TYA_TASK:
       if (v.task) tya_gc_mark_header((TyaGcHeader *)v.task);
+      break;
+    case TYA_CHANNEL:
+      if (v.channel) tya_gc_mark_header((TyaGcHeader *)v.channel);
       break;
     default:
       break;
@@ -250,6 +292,15 @@ static void tya_gc_free_one(TyaGcHeader *h) {
       pthread_mutex_destroy(&t->mu);
       pthread_cond_destroy(&t->cv);
       free(t);
+      break;
+    }
+    case TYA_GC_CHANNEL: {
+      TyaChannel *c = (TyaChannel *)h;
+      pthread_mutex_destroy(&c->mu);
+      pthread_cond_destroy(&c->not_full);
+      pthread_cond_destroy(&c->not_empty);
+      free(c->buffer);
+      free(c);
       break;
     }
   }
@@ -842,6 +893,8 @@ TyaValue tya_kind(TyaValue value) {
     return tya_string("bytes");
   case TYA_TASK:
     return tya_string("task");
+  case TYA_CHANNEL:
+    return tya_string("channel");
   }
   return tya_string("unknown");
 }
@@ -949,6 +1002,8 @@ bool tya_equal(TyaValue left, TyaValue right) {
     return memcmp(left.bytes->data, right.bytes->data, (size_t)left.bytes->len) == 0;
   case TYA_TASK:
     return left.task == right.task;
+  case TYA_CHANNEL:
+    return left.channel == right.channel;
   }
   return false;
 }
@@ -1025,6 +1080,8 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
     return memcmp(left.bytes->data, right.bytes->data, (size_t)left.bytes->len) == 0;
   case TYA_TASK:
     return left.task == right.task;
+  case TYA_CHANNEL:
+    return left.channel == right.channel;
   }
   return false;
 }
@@ -1237,6 +1294,9 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     break;
   case TYA_TASK:
     tya_builder_append(builder, "[task]");
+    break;
+  case TYA_CHANNEL:
+    tya_builder_append(builder, "[channel]");
     break;
   case TYA_BYTES:
     tya_builder_append(builder, "<bytes:");
@@ -1771,6 +1831,9 @@ static void tya_write_value(FILE *out, TyaValue value) {
     break;
   case TYA_TASK:
     fprintf(out, "[task]");
+    break;
+  case TYA_CHANNEL:
+    fprintf(out, "[channel]");
     break;
   }
 }
@@ -3025,6 +3088,11 @@ void tya_gc_collect(void) {
   for (TyaRaiseFrame *frame = tya_raise_frame; frame != NULL; frame = frame->prev) {
     tya_gc_mark_value(frame->value);
   }
+  /* Mark every not-yet-joined task so its mutex / pthread state
+   * cannot be reclaimed while the worker thread is still alive. */
+  for (TyaTask *t = tya_live_tasks; t != NULL; t = t->next_live) {
+    tya_gc_mark_header((TyaGcHeader *)t);
+  }
   /* Sweep. */
   tya_gc_sweep();
   tya_gc_collect_count++;
@@ -3159,6 +3227,7 @@ void tya_scope_exit(TyaScope *scope) {
       pthread_mutex_lock(&t->mu);
       t->joined = true;
       pthread_mutex_unlock(&t->mu);
+      tya_live_tasks_remove(t);
     }
     pthread_mutex_lock(&t->mu);
     if (t->raised && !had_raise) {
@@ -3175,6 +3244,38 @@ void tya_scope_exit(TyaScope *scope) {
   if (had_raise) {
     tya_raise(first_raise);
   }
+}
+
+/* Add a freshly created task to the live-tasks list; called once
+ * before pthread_create so the task is reachable as a root from
+ * the moment it exists. */
+static void tya_live_tasks_add(TyaTask *t) {
+  pthread_mutex_lock(&tya_gc_mu);
+  if (!t->in_live_list) {
+    t->prev_live = NULL;
+    t->next_live = tya_live_tasks;
+    if (tya_live_tasks) tya_live_tasks->prev_live = t;
+    tya_live_tasks = t;
+    t->in_live_list = true;
+  }
+  pthread_mutex_unlock(&tya_gc_mu);
+}
+
+/* Remove a task from the live-tasks list; called once the task has
+ * been joined and its result is either consumed or otherwise reachable
+ * through normal value plumbing. After this call the GC may reclaim
+ * the task struct as soon as nothing else references it. */
+static void tya_live_tasks_remove(TyaTask *t) {
+  pthread_mutex_lock(&tya_gc_mu);
+  if (t->in_live_list) {
+    if (t->prev_live) t->prev_live->next_live = t->next_live;
+    else tya_live_tasks = t->next_live;
+    if (t->next_live) t->next_live->prev_live = t->prev_live;
+    t->prev_live = NULL;
+    t->next_live = NULL;
+    t->in_live_list = false;
+  }
+  pthread_mutex_unlock(&tya_gc_mu);
 }
 
 TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValue c, TyaValue d) {
@@ -3201,7 +3302,12 @@ TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValu
   t->argv[3] = d;
   t->result = tya_nil();
   t->raise_value = tya_nil();
+  t->prev_live = NULL;
+  t->next_live = NULL;
+  t->in_live_list = false;
+  tya_live_tasks_add(t);
   if (pthread_create(&t->thread, NULL, tya_task_thread_main, t) != 0) {
+    tya_live_tasks_remove(t);
     tya_raise(tya_string("spawn: pthread_create failed"));
     return tya_nil();
   }
@@ -3223,6 +3329,7 @@ TyaValue tya_task_await(TyaValue v) {
     pthread_mutex_lock(&t->mu);
     t->joined = true;
     pthread_mutex_unlock(&t->mu);
+    tya_live_tasks_remove(t);
   }
   pthread_mutex_lock(&t->mu);
   bool raised = t->raised;
@@ -3233,4 +3340,107 @@ TyaValue tya_task_await(TyaValue v) {
     return tya_nil();
   }
   return value;
+}
+
+
+/* =========================================================================
+ * v0.42 STEP 5: channel runtime
+ * ========================================================================= */
+
+TyaValue tya_channel_new(TyaValue capacity) {
+  if (capacity.kind != TYA_NUMBER) {
+    tya_raise(tya_string("channel.new: capacity must be a number"));
+    return tya_nil();
+  }
+  int cap = (int)capacity.number;
+  if (cap < 0) {
+    tya_raise(tya_string("channel.new: capacity must be >= 0"));
+    return tya_nil();
+  }
+  /* v0.42 STEP 5: capacity 0 is treated as 1. True rendezvous arrives
+   * in a later minor. */
+  if (cap == 0) cap = 1;
+  TyaChannel *c = tya_gc_alloc(sizeof(TyaChannel), TYA_GC_CHANNEL);
+  c->buffer = malloc(sizeof(TyaValue) * (size_t)cap);
+  for (int i = 0; i < cap; i++) c->buffer[i] = tya_nil();
+  c->capacity = cap;
+  c->len = 0;
+  c->head = 0;
+  pthread_mutex_init(&c->mu, NULL);
+  pthread_cond_init(&c->not_full, NULL);
+  pthread_cond_init(&c->not_empty, NULL);
+  c->closed = false;
+  return (TyaValue){.kind = TYA_CHANNEL, .channel = c};
+}
+
+TyaValue tya_channel_send(TyaValue ch, TyaValue value) {
+  if (ch.kind != TYA_CHANNEL || ch.channel == NULL) {
+    tya_raise(tya_string("channel.send: first argument must be a channel"));
+    return tya_nil();
+  }
+  TyaChannel *c = ch.channel;
+  pthread_mutex_lock(&c->mu);
+  while (c->len == c->capacity && !c->closed) {
+    pthread_cond_wait(&c->not_full, &c->mu);
+  }
+  if (c->closed) {
+    pthread_mutex_unlock(&c->mu);
+    tya_raise(tya_string("channel.send: channel is closed"));
+    return tya_nil();
+  }
+  int tail = (c->head + c->len) % c->capacity;
+  c->buffer[tail] = value;
+  c->len++;
+  pthread_cond_signal(&c->not_empty);
+  pthread_mutex_unlock(&c->mu);
+  return tya_nil();
+}
+
+TyaValue tya_channel_receive(TyaValue ch) {
+  if (ch.kind != TYA_CHANNEL || ch.channel == NULL) {
+    tya_raise(tya_string("channel.receive: argument must be a channel"));
+    return tya_nil();
+  }
+  TyaChannel *c = ch.channel;
+  pthread_mutex_lock(&c->mu);
+  while (c->len == 0 && !c->closed) {
+    pthread_cond_wait(&c->not_empty, &c->mu);
+  }
+  if (c->len == 0 && c->closed) {
+    pthread_mutex_unlock(&c->mu);
+    return tya_nil();
+  }
+  TyaValue value = c->buffer[c->head];
+  c->buffer[c->head] = tya_nil();
+  c->head = (c->head + 1) % c->capacity;
+  c->len--;
+  pthread_cond_signal(&c->not_full);
+  pthread_mutex_unlock(&c->mu);
+  return value;
+}
+
+TyaValue tya_channel_close(TyaValue ch) {
+  if (ch.kind != TYA_CHANNEL || ch.channel == NULL) {
+    tya_raise(tya_string("channel.close: argument must be a channel"));
+    return tya_nil();
+  }
+  TyaChannel *c = ch.channel;
+  pthread_mutex_lock(&c->mu);
+  c->closed = true;
+  pthread_cond_broadcast(&c->not_full);
+  pthread_cond_broadcast(&c->not_empty);
+  pthread_mutex_unlock(&c->mu);
+  return tya_nil();
+}
+
+TyaValue tya_channel_closed(TyaValue ch) {
+  if (ch.kind != TYA_CHANNEL || ch.channel == NULL) {
+    tya_raise(tya_string("channel.closed?: argument must be a channel"));
+    return tya_nil();
+  }
+  TyaChannel *c = ch.channel;
+  pthread_mutex_lock(&c->mu);
+  bool closed = c->closed;
+  pthread_mutex_unlock(&c->mu);
+  return tya_bool(closed);
 }

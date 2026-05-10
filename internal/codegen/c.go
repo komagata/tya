@@ -1207,6 +1207,19 @@ func (g *cgen) inheritedClassMethodSym(parentKey string, method string) string {
 }
 
 func (g *cgen) exprStmt(expr ast.Expr) error {
+	// v0.42: spawn / await have side effects (start / join a worker
+	// thread). When used at statement position the value is dropped
+	// but the call still has to be emitted, so route through the same
+	// (void) path as CallExpr.
+	switch expr.(type) {
+	case *ast.SpawnExpr, *ast.AwaitExpr:
+		ex, _, err := g.expr(expr)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("(void)%s;", ex))
+		return nil
+	}
 	call, ok := expr.(*ast.CallExpr)
 	if !ok {
 		_, _, err := g.expr(expr)
@@ -2584,6 +2597,16 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_gc_stats()", 0)
 	case "runtime_gc_collect":
 		return "(tya_gc_collect(), tya_nil())"
+	case "channel_new":
+		return emit("tya_channel_new(%s)", 1)
+	case "channel_send":
+		return emit("tya_channel_send(%s, %s)", 2)
+	case "channel_receive":
+		return emit("tya_channel_receive(%s)", 1)
+	case "channel_close":
+		return emit("tya_channel_close(%s)", 1)
+	case "channel_closed_p":
+		return emit("tya_channel_closed(%s)", 1)
 	case "bytes":
 		return emit("tya_bytes_from_array(%s)", 1)
 	case "bytes_of":

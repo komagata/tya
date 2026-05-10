@@ -16,6 +16,7 @@ typedef enum {
   TYA_ERROR,
   TYA_BYTES,
   TYA_TASK,
+  TYA_CHANNEL,
 } TyaKind;
 
 typedef struct TyaBytes TyaBytes;
@@ -26,6 +27,7 @@ typedef struct TyaDictEntry TyaDictEntry;
 typedef struct TyaFunction TyaFunction;
 typedef struct TyaRaiseFrame TyaRaiseFrame;
 typedef struct TyaTask TyaTask;
+typedef struct TyaChannel TyaChannel;
 
 typedef struct {
   TyaKind kind;
@@ -38,6 +40,7 @@ typedef struct {
   const char *error;
   TyaBytes *bytes;
   TyaTask *task;
+  TyaChannel *channel;
 } TyaValue;
 
 typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
@@ -192,6 +195,26 @@ TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValu
 TyaValue tya_task_await(TyaValue task);
 void tya_scope_enter(TyaScope *scope);
 void tya_scope_exit(TyaScope *scope);
+
+/* Channel API (v0.42 STEP 5).
+ *
+ * tya_channel_new       creates a channel with the given buffer size.
+ *                       Capacity of 0 is treated as 1 in v0.42; true
+ *                       rendezvous arrives in a later minor.
+ * tya_channel_send      blocks the caller while the buffer is full,
+ *                       then enqueues the value. Raises if the channel
+ *                       has been closed.
+ * tya_channel_receive   blocks the caller while the buffer is empty,
+ *                       then dequeues. After close, drains the buffer
+ *                       and then returns nil for every later call.
+ * tya_channel_close     marks the channel closed and wakes everyone
+ *                       waiting on it.
+ * tya_channel_closed    predicate for the closed flag. */
+TyaValue tya_channel_new(TyaValue capacity);
+TyaValue tya_channel_send(TyaValue ch, TyaValue value);
+TyaValue tya_channel_receive(TyaValue ch);
+TyaValue tya_channel_close(TyaValue ch);
+TyaValue tya_channel_closed(TyaValue ch);
 
 /* GC API (v0.41).
  *

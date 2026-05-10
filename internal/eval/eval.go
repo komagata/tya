@@ -2772,6 +2772,21 @@ func registerV41Builtins(env *Env) {
 		}
 		return nil, nil
 	}))
+	// v0.42 channel: eval is single-threaded; the stubs below raise so
+	// programs that require concurrency are routed through the C runtime.
+	stub := func(name string, want int) Builtin {
+		return func(args []Value) (Value, error) {
+			if len(args) != want {
+				return nil, fmt.Errorf("%s expects %d arguments", name, want)
+			}
+			return nil, &raisedSignal{value: name + ": eval interpreter does not support concurrency; use tya run"}
+		}
+	}
+	env.set("channel_new", stub("channel_new", 1))
+	env.set("channel_send", stub("channel_send", 2))
+	env.set("channel_receive", stub("channel_receive", 1))
+	env.set("channel_close", stub("channel_close", 1))
+	env.set("channel_closed_p", stub("channel_closed_p", 1))
 }
 
 func registerV25Builtins(env *Env) {

@@ -126,10 +126,46 @@ back without running `tya_scope_exit`). Cooperative cancel
 (`task.is_cancelled()`) is not yet wired. Both will land in a
 follow-up.
 
-### STEP 5 — `channel` stdlib module (planned)
+### STEP 5 — `channel` stdlib module (landed)
 
-`channel.new`, `channel.send`, `channel.receive`, `channel.close`,
-`channel.closed?`. Buffered and unbuffered channels.
+The new stdlib `channel` module exposes:
+
+```tya
+channel.new(capacity)
+channel.send(c, value)
+channel.receive(c)
+channel.close(c)
+channel.closed?(c)
+```
+
+Channels are FIFO bounded queues backed by a ring buffer guarded by a
+`pthread_mutex_t` plus two condition variables (`not_full`,
+`not_empty`). `channel.send` blocks while the buffer is full and
+raises if the channel has been closed. `channel.receive` blocks
+while the buffer is empty; once the channel is closed, it drains the
+remaining elements and then returns `nil` for every later call.
+`channel.close` marks the channel closed and broadcasts both
+condvars so every waiter wakes up.
+
+`capacity = 0` is treated as `1` in v0.42; true rendezvous
+(synchronous) channels arrive in a later minor.
+
+Two operational fixes ride this STEP:
+
+- Tasks that have not yet been joined are kept in a global
+  doubly-linked list so the collector treats them as roots; without
+  this, a top-level `spawn` whose handle is dropped before the
+  worker finishes would be reclaimed mid-flight, freeing its mutex
+  and pthread state.
+- `tya format` already kept side-effecting expression statements;
+  codegen now also emits the `(void)expr;` form for `spawn` and
+  `await` when they appear at statement position, so a fire-and-
+  forget `spawn fn(args)` actually runs.
+
+A new `TYA_CHANNEL` value kind is reserved with the matching
+`TyaChannel` struct. `kind(c)` returns `"channel"`,
+`tya_to_string` and `tya_print` render a channel as `[channel]`,
+and equality is identity equality.
 
 ### STEP 6 — `channel.receive_timeout` and `channel.select` (planned)
 
