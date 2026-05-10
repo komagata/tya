@@ -189,6 +189,12 @@ class Server                     # public; matches filename
 <li>A class with no <code>init</code> and only <code>@@method</code> members is a</li>
 </ul>
 <p>  Java-style utility class. This is a documented convention; the   language does not add a keyword for it.</p>
+<h2 id="read-only-cli-commands">Read-only CLI commands</h2>
+<p><code>tya format</code> and <code>tya check</code> accept both script files and class files. Pass any <code>.tya</code> file:</p>
+<pre><code class="language-sh">tya format src/Greeter.tya     # canonical-formats the class file
+tya check src/Greeter.tya      # validates the class file structure</code></pre>
+<p><code>tya format</code> round-trips the canonical syntax through <code>formatter.Unparse</code>. <code>tya check</code> runs <code>CheckClassFile</code> on a class file (file-level structure + body-level scope) without invoking the entry-point pipeline.</p>
+<p><code>tya run</code> and <code>tya build</code> only accept script files (lowercase filename); a class file passed there is rejected with the <code>[TYA-E0850]</code> diagnostic.</p>
 <h2 id="cli-arguments">CLI arguments</h2>
 <p>CLI arguments are not delivered as a <code>main</code> parameter. They are read through the standard library:</p>
 <pre><code class="language-tya">import os

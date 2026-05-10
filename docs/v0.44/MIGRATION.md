@@ -258,6 +258,25 @@ class Server                     # public; matches filename
   Java-style utility class. This is a documented convention; the
   language does not add a keyword for it.
 
+## Read-only CLI commands
+
+`tya format` and `tya check` accept both script files and class
+files. Pass any `.tya` file:
+
+```sh
+tya format src/Greeter.tya     # canonical-formats the class file
+tya check src/Greeter.tya      # validates the class file structure
+```
+
+`tya format` round-trips the canonical syntax through
+`formatter.Unparse`. `tya check` runs `CheckClassFile` on a class
+file (file-level structure + body-level scope) without invoking
+the entry-point pipeline.
+
+`tya run` and `tya build` only accept script files (lowercase
+filename); a class file passed there is rejected with the
+`[TYA-E0850]` diagnostic.
+
 ## CLI arguments
 
 CLI arguments are not delivered as a `main` parameter. They are read
