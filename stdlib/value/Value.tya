@@ -1,0 +1,3 @@
+class Value
+  @@nil? = item ->
+    item == nil

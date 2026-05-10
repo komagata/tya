@@ -43,7 +43,7 @@ print has_name?(user)
 print _internal?(nil)
 print array.empty?([])
 print dict.has?(user, "name")
-print value.nil?(nil)
+print value.Value.nil?(nil)
 
 class User
   init = name ->
