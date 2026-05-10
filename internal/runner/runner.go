@@ -20,10 +20,19 @@ var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
 var moduleNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
 
 func ValidateFileName(path string) error {
-	if filepath.Ext(path) != ".tya" || !fileNameRE.MatchString(filepath.Base(path)) {
-		return fmt.Errorf("invalid Tya file name: %s", filepath.Base(path))
+	base := filepath.Base(path)
+	if filepath.Ext(path) != ".tya" {
+		return fmt.Errorf("invalid Tya file name: %s", base)
 	}
-	return nil
+	if fileNameRE.MatchString(base) {
+		return nil
+	}
+	// v0.44: a PascalCase filename identifies a class file. Class files
+	// are library-only; tya run accepts only script files (lowercase).
+	if checker.IsClassFileName(base) {
+		return fmt.Errorf("%s is a class file; tya run accepts only script files (lowercase filename)", base)
+	}
+	return fmt.Errorf("invalid Tya file name: %s", base)
 }
 
 func RunFile(path string, in io.Reader, out io.Writer, args []string) error {

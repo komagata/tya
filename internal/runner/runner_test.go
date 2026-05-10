@@ -321,6 +321,32 @@ func TestLoadSourceRejectsPrivateHelperInImportedModule(t *testing.T) {
 	}
 }
 
+func TestValidateFileNameRejectsClassFileWithSpecificMessage(t *testing.T) {
+	err := ValidateFileName("Hello.tya")
+	if err == nil {
+		t.Fatal("expected class file rejection")
+	}
+	if !strings.Contains(err.Error(), "class file") {
+		t.Fatalf("expected class-file diagnostic, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "script files") {
+		t.Fatalf("expected script-file hint, got: %v", err)
+	}
+}
+
+func TestValidateFileNameRejectsOtherInvalidNamesGenerically(t *testing.T) {
+	cases := []string{"user-utils.tya", "userUtils.tya", "main.txt"}
+	for _, name := range cases {
+		err := ValidateFileName(name)
+		if err == nil {
+			t.Fatalf("%s: expected error", name)
+		}
+		if strings.Contains(err.Error(), "class file") {
+			t.Fatalf("%s: should not get class-file diagnostic, got: %v", name, err)
+		}
+	}
+}
+
 func TestResolvePackageDirFindsClassFiles(t *testing.T) {
 	dir := t.TempDir()
 	pkgDir := filepath.Join(dir, "net", "http")
