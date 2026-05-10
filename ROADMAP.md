@@ -386,6 +386,21 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     against the `tya` binary.
   - [ ] This Epic ships at v1.0.0 and is tied to Commitment 6.
 
+- [ ] **Allow raw `"` inside `{expr}` interpolation body**
+  - [ ] Today the lexer reads a string literal as "until the next
+    unescaped `"`", so an interpolation `{user["name"]}` is cut at
+    the inner `"`. The user has to write `{user[\"name\"]}` or hoist
+    the expression into a local. Make the lexer balance `{` / `}`
+    while inside an interpolation expression so the body can
+    contain quoted sub-expressions verbatim.
+  - [ ] Round-trip through the existing interpolation pipeline
+    unchanged; only lexer scanning state needs to track depth.
+  - [ ] Update the `"""..."""` and raw `r"..."` lexer paths the same
+    way so the rule is uniform.
+  - [ ] Add positive lexer + script tests pinning
+    `"Hello, {user["name"]}!"` and the matching multi-line and raw
+    cases.
+
 ### Stdlib extensions
 
 - [ ] **Extend coverage tooling (post-v0.30.0)**

@@ -467,6 +467,25 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <ul>
 <li>[ ] This Epic ships at v1.0.0 and is tied to Commitment 6.</li>
 </ul>
+<ul>
+<li>[ ] **Allow raw <code>&quot;</code> inside <code>{expr}</code> interpolation body**</li>
+<ul>
+<li>[ ] Today the lexer reads a string literal as &quot;until the next</li>
+</ul>
+</ul>
+<p>    unescaped <code>&quot;</code>&quot;, so an interpolation <code>{user[&quot;name&quot;]}</code> is cut at     the inner <code>&quot;</code>. The user has to write <code>{user[\&quot;name\&quot;]}</code> or hoist     the expression into a local. Make the lexer balance <code>{</code> / <code>}</code>     while inside an interpolation expression so the body can     contain quoted sub-expressions verbatim.</p>
+<ul>
+<li>[ ] Round-trip through the existing interpolation pipeline</li>
+</ul>
+<p>    unchanged; only lexer scanning state needs to track depth.</p>
+<ul>
+<li>[ ] Update the <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> and raw <code>r&quot;...&quot;</code> lexer paths the same</li>
+</ul>
+<p>    way so the rule is uniform.</p>
+<ul>
+<li>[ ] Add positive lexer + script tests pinning</li>
+</ul>
+<p>    <code>&quot;Hello, {user[&quot;name&quot;]}!&quot;</code> and the matching multi-line and raw     cases.</p>
 <h3 id="stdlib-extensions">Stdlib extensions</h3>
 <ul>
 <li>[ ] **Extend coverage tooling (post-v0.30.0)**</li>
