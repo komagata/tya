@@ -1,0 +1,32 @@
+# v0.44 a class file inside a package may extend another sibling
+# class in the same package using the bare name. The within-package
+# fallback (commit f6d276b) covers `extends`/`implements` references
+# the same way it covers method-body call sites.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'animal:dog\n'
+! stderr .
+
+-- main.tya --
+import zoo
+
+d = zoo.Dog()
+print(d.describe())
+
+-- zoo/Animal.tya --
+class Animal
+  init = ->
+    @category = "animal"
+
+  category = ->
+    @category
+
+-- zoo/Dog.tya --
+class Dog extends Animal
+  init = ->
+    super()
+    @kind = "dog"
+
+  describe = ->
+    "{@category}:{@kind}"
