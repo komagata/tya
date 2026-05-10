@@ -258,24 +258,27 @@ class Server                     # public; matches filename
   Java-style utility class. This is a documented convention; the
   language does not add a keyword for it.
 
-## Read-only CLI commands
+## CLI commands and file kinds
 
-`tya format` and `tya check` accept both script files and class
-files. Pass any `.tya` file:
+| Command            | Script file | Class file | Notes                                                          |
+| ------------------ | ----------- | ---------- | -------------------------------------------------------------- |
+| `tya run`          | yes         | no         | Entry only; class file rejected with `[TYA-E0850]`.            |
+| `tya build`        | yes         | no         | Entry only.                                                    |
+| `tya check`        | yes         | yes        | Validates class file via `CheckClassFile` in isolation.        |
+| `tya format`       | yes         | yes        | Round-trips canonical syntax.                                  |
+| `tya test`         | yes (test)  | —          | Operates on `*_test.tya` script files.                         |
+| `tya --tokens`     | yes         | yes        | Lexer dump.                                                    |
+| `tya --emit-c`     | yes         | yes        | Class file emits a standalone-compilable C with trivial main.  |
+| `tya --check-unused` | yes       | no         | Entry-only path; unchanged.                                    |
+
+Practical examples:
 
 ```sh
-tya format src/Greeter.tya     # canonical-formats the class file
-tya check src/Greeter.tya      # validates the class file structure
+tya format src/Greeter.tya     # round-trip a class file
+tya check src/Greeter.tya      # validate a class file
+tya --emit-c src/Greeter.tya   # see the C codegen for a class file
+tya run main.tya               # run an entry script
 ```
-
-`tya format` round-trips the canonical syntax through
-`formatter.Unparse`. `tya check` runs `CheckClassFile` on a class
-file (file-level structure + body-level scope) without invoking
-the entry-point pipeline.
-
-`tya run` and `tya build` only accept script files (lowercase
-filename); a class file passed there is rejected with the
-`[TYA-E0850]` diagnostic.
 
 ## CLI arguments
 
