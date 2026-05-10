@@ -1,0 +1,25 @@
+# v0.44 `tya test` synthesizes a test suite from one or more
+# *_test.tya files. Each test file may import v0.44 directory
+# packages alongside `unittest`. Pin that the test runner correctly
+# resolves and exercises a v0.44 package import from inside a test
+# module.
+cd $REPO
+env TYA_PATH=$WORK
+
+exec go run ./cmd/tya test $WORK/feature_test.tya
+stdout 'PASS  test_greet'
+stdout '1 tests, 1 passed, 0 failed'
+! stderr .
+
+-- feature_test.tya --
+import unittest
+import feature
+
+module feature_test
+  test_greet = ->
+    unittest.Unittest.assert_equal("hi", feature.Feature.greet(), "greet")
+
+-- feature/Feature.tya --
+class Feature
+  @@greet = ->
+    "hi"
