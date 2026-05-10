@@ -1,0 +1,25 @@
+# v0.44 within a package, calling a sibling class's @@method via
+# member expression (`Helper.info()`) works the same as calling its
+# constructor (`Helper()`). The Ident-side fallback resolves
+# `Helper` to `<currentModule>.Helper`, then `.info()` dispatches
+# through the class method.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'helper-info\n'
+! stderr .
+
+-- main.tya --
+import api/v3
+
+print(v3.Client.get_info())
+
+-- api/v3/Helper.tya --
+class Helper
+  @@info = ->
+    "helper-info"
+
+-- api/v3/Client.tya --
+class Client
+  @@get_info = ->
+    Helper.info()
