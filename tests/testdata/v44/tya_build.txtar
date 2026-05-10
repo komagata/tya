@@ -1,0 +1,26 @@
+# v0.44 `tya build` and `tya emit-c` work with directory packages.
+cd $REPO
+
+# Build to executable
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/app
+! stderr .
+
+exec $WORK/app
+stdout 'hi from app\n'
+! stderr .
+
+# emit-c produces C source that includes the synthesized class
+# methods from the imported package
+exec go run ./cmd/tya emit-c $WORK/main.tya
+stdout 'tya_fn_lib_Lib_greet'
+! stderr .
+
+-- main.tya --
+import lib
+
+print(lib.Lib.greet())
+
+-- lib/Lib.tya --
+class Lib
+  @@greet = ->
+    "hi from app"
