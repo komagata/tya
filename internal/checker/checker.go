@@ -94,17 +94,16 @@ func IsScriptFileName(path string) bool {
 	return valueNameRE.MatchString(base) && !strings.HasPrefix(base, "_")
 }
 
-// CheckClassFile validates a v0.44 class file at the given path. The
-// file must contain exactly one public class whose name matches the
-// filename without ".tya". Additional class declarations are private
-// to the file (visibility is enforced separately in M5). Top-level
-// statements other than import, class, and interface declarations are
-// rejected. Imports must precede any class or interface declaration.
-//
-// CheckClassFile is additive: it does not replace CheckModuleFile.
-// During the v0.44 transition both shapes coexist; the runner picks the
-// right validator based on the file's leaf-name kind.
-func CheckClassFile(prog *ast.Program, path string) error {
+// CheckClassFileStructure validates the file-level shape of a v0.44
+// class file: PascalCase filename, exactly one public class whose
+// name matches the filename, additional class declarations allowed
+// as private siblings, imports preceding class/interface
+// declarations, and no other top-level statements. It does NOT
+// recurse into class bodies, so cross-class references inside method
+// bodies are deferred to the full checker pass on the merged
+// program. Use CheckClassFile when both file structure and body
+// validity are needed in isolation (single-file inputs).
+func CheckClassFileStructure(prog *ast.Program, path string) error {
 	base := filepath.Base(path)
 	want := strings.TrimSuffix(base, ".tya")
 	if !classNameRE.MatchString(want) {
@@ -134,6 +133,30 @@ func CheckClassFile(prog *ast.Program, path string) error {
 	}
 	if !publicSeen {
 		return fmt.Errorf("class file %s must define class %s", base, want)
+	}
+	return nil
+}
+
+// CheckClassFile validates a v0.44 class file at the given path. The
+// file must contain exactly one public class whose name matches the
+// filename without ".tya". Additional class declarations are private
+// to the file (visibility is enforced separately in M5). Top-level
+// statements other than import, class, and interface declarations are
+// rejected. Imports must precede any class or interface declaration.
+//
+// CheckClassFile is additive: it does not replace CheckModuleFile.
+// During the v0.44 transition both shapes coexist; the runner picks the
+// right validator based on the file's leaf-name kind.
+//
+// CheckClassFile runs both file-level structure validation and a
+// body-level scope check on the file in isolation. For files that are
+// part of a v0.44 package (where bodies may reference sibling classes
+// from other files), call CheckClassFileStructure instead and rely on
+// the merged-source checker to validate bodies after package
+// synthesis.
+func CheckClassFile(prog *ast.Program, path string) error {
+	if err := CheckClassFileStructure(prog, path); err != nil {
+		return err
 	}
 	return checkStructure(prog, nil)
 }
@@ -823,6 +846,18 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 		}
 		if !scope.defined(n.Name) {
+			// v0.44 within-package fallback: inside a module's class
+			// method body, an unqualified PascalCase reference resolves
+			// to <currentModule>.<Name> when that key names a sibling
+			// class or interface in the same module. This makes
+			// references between class files of the same package work
+			// without an explicit module prefix.
+			if mod := currentModulePrefix(scope); mod != "" && classNameRE.MatchString(n.Name) {
+				key := mod + "." + n.Name
+				if scope.kind(key) == kindClass || scope.kind(key) == kindInterface {
+					return nil
+				}
+			}
 			return fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
 		}
 	case *ast.StringLit:
@@ -1008,6 +1043,22 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindInterface {
 			return fmt.Errorf("%d:%d: cannot construct interface %s", id.Tok.Line, id.Tok.Col, id.Name)
+		}
+		// v0.44 within-package fallback for class calls: `Foo(args)`
+		// inside a module's class method resolves to the sibling
+		// `<module>.Foo` class.
+		if id, ok := n.Callee.(*ast.Ident); ok && classNameRE.MatchString(id.Name) {
+			if mod := currentModulePrefix(scope); mod != "" {
+				key := mod + "." + id.Name
+				if scope.kind(key) == kindClass {
+					if err := checkClassCall(key, id.Name, id.Tok.Line, id.Tok.Col, len(n.Args), scope); err != nil {
+						return err
+					}
+				}
+				if scope.kind(key) == kindInterface {
+					return fmt.Errorf("%d:%d: cannot construct interface %s", id.Tok.Line, id.Tok.Col, id.Name)
+				}
+			}
 		}
 		if member, ok := n.Callee.(*ast.MemberExpr); ok && kindOf(member.Target, scope) == kindModule && classNameRE.MatchString(member.Name) {
 			key := memberKey(member)
@@ -1201,6 +1252,22 @@ func classKey(module string, class *ast.ClassDecl) string {
 		return module + "." + class.Name
 	}
 	return class.Name
+}
+
+// currentModulePrefix returns the module prefix when the scope is
+// positioned inside a module class method or class body. The
+// module prefix is the part before the first dot in scope.currentClass
+// (a module class is keyed as "module.ClassName"). Returns "" when
+// the current class is at top level (no dot in the key) or no class
+// context is set.
+func currentModulePrefix(scope *scope) string {
+	if scope == nil || scope.currentClass == "" {
+		return ""
+	}
+	if i := strings.IndexByte(scope.currentClass, '.'); i > 0 {
+		return scope.currentClass[:i]
+	}
+	return ""
 }
 
 func refKey(ref *ast.ClassRef, currentModule string, scope *scope) string {

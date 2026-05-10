@@ -2,6 +2,7 @@ package codegen
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -9,6 +10,26 @@ import (
 	"tya/internal/lexer"
 	"tya/internal/parser"
 )
+
+var classNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
+
+// currentModulePrefix returns the module prefix for the class
+// currently being emitted, or "" when at top level. cgen.className
+// is set to "module_ClassName" for module classes via emitClass; we
+// recover the module by checking for an underscore separator and
+// confirming the suffix matches a known module class entry in
+// g.classes (which is shared across child cgens spawned for class
+// method bodies). For top-level classes, className has no
+// underscore-separated module prefix so this returns "".
+func (g *cgen) currentModulePrefix() string {
+	if g.className == "" {
+		return ""
+	}
+	if mod, found := g.moduleClasses[g.className]; found {
+		return mod
+	}
+	return ""
+}
 
 func EmitC(prog *ast.Program) (string, error) {
 	return EmitCWithPath(prog, "")
@@ -46,7 +67,7 @@ type CoverageRegistry struct {
 // counter increments when opt is non-nil. When opt is nil, it is
 // identical to EmitCWithPath and returns a nil registry.
 func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, sourcePath: sourcePath}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
 	if opt != nil {
 		g.coverEnabled = true
 		g.coverOpt = opt
@@ -113,6 +134,13 @@ type cgen struct {
 	classes          map[string]string
 	classMethods     map[string]string
 	classDecls       map[string]*ast.ClassDecl
+	// moduleClasses maps a module-class key ("module_ClassName") to
+	// its module name. Populated for every v0.44 module class so the
+	// within-package fallback in currentModulePrefix and the call
+	// emission can resolve unqualified PascalCase references inside
+	// sibling method bodies before the constructor sym is filled in
+	// to g.classes. Shared across child cgens.
+	moduleClasses map[string]string
 	temp             int
 	inFunc           bool
 	inClassMethod    bool
@@ -818,6 +846,7 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string
 		classes:          g.classes,
 		classMethods:     g.classMethods,
 		classDecls:       g.classDecls,
+		moduleClasses:    g.moduleClasses,
 		sourcePath:       g.sourcePath,
 		temp:             g.temp,
 		indent:           1,
@@ -980,12 +1009,27 @@ func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
 		}
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_function(%s));", target, strconv.Quote(member.Name), sym))
 	}
+	// Pre-register every module class so the within-package fallback
+	// in expr (Ident) and CallExpr can resolve unqualified references
+	// between sibling class method bodies emitted in any order. The
+	// constructor sym slot is filled in after emitClass returns;
+	// before that, the entry serves as a marker that this name is a
+	// known module class.
+	for _, class := range classes {
+		g.vars[module.Name+"_"+class.Name+"_class"] = true
+		g.moduleClasses[module.Name+"_"+class.Name] = module.Name
+	}
 	for _, class := range classes {
 		classTarget := cName(module.Name + "_" + class.Name + "_class")
 		sym, err := g.emitClass(module.Name+"_"+class.Name, class, classTarget)
 		if err != nil {
 			return err
 		}
+		// Record the constructor symbol under the keyed-name form so
+		// the within-package CallExpr fallback can resolve
+		// unqualified PascalCase calls to the module-class
+		// constructor.
+		g.classes[module.Name+"_"+class.Name] = sym
 		g.globalLine(fmt.Sprintf("TyaValue %s;", classTarget))
 		g.line(fmt.Sprintf("%s = tya_class(%s, %s, %s);", classTarget, sym, strconv.Quote(class.Name), g.parentExpr(module.Name+"_"+class.Name, class)))
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote(class.Name), classTarget))
@@ -1455,6 +1499,17 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return fmt.Sprintf("tya_function(%s)", sym), "TyaValue", nil
 	case *ast.Ident:
+		// v0.44 within-package fallback: inside a module class
+		// method, an unqualified PascalCase identifier that names a
+		// sibling module class resolves to the module-prefixed C
+		// symbol. See checker.currentModulePrefix for the matching
+		// rule on the type-check side.
+		if mod := g.currentModulePrefix(); mod != "" && classNameRE.MatchString(n.Name) {
+			key := mod + "_" + n.Name
+			if _, found := g.moduleClasses[key]; found {
+				return cName(key + "_class"), "TyaValue", nil
+			}
+		}
 		return cName(n.Name), "TyaValue", nil
 	case *ast.SelfExpr:
 		return "__this", "TyaValue", nil
@@ -1549,7 +1604,18 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		id, ok := n.Callee.(*ast.Ident)
 		if ok {
-			if sym, found := g.classes[id.Name]; found {
+			classKey := id.Name
+			sym, found := g.classes[classKey]
+			if !found {
+				// v0.44 within-package fallback: inside a module
+				// class, resolve unqualified PascalCase calls to
+				// `<currentModule>_<Name>` constructor.
+				if mod := g.currentModulePrefix(); mod != "" && classNameRE.MatchString(id.Name) {
+					classKey = mod + "_" + id.Name
+					sym, found = g.classes[classKey]
+				}
+			}
+			if found {
 				args := make([]string, 0, len(n.Args))
 				for _, arg := range n.Args {
 					ex, _, err := g.expr(arg)

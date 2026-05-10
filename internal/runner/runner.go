@@ -283,7 +283,7 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 			if err != nil {
 				return "", nil, fmt.Errorf("%s: %w", sib, err)
 			}
-			if err := checker.CheckClassFile(sibProg, sib); err != nil {
+			if err := checker.CheckClassFileStructure(sibProg, sib); err != nil {
 				return "", nil, err
 			}
 			sibImports, err := collectImports(sibProg)
@@ -596,7 +596,7 @@ func synthesizePackageSource(classFiles []string, pkgName string) (string, error
 		if err != nil {
 			return "", fmt.Errorf("%s: %w", file, err)
 		}
-		if err := checker.CheckClassFile(prog, file); err != nil {
+		if err := checker.CheckClassFileStructure(prog, file); err != nil {
 			return "", err
 		}
 		for _, stmt := range prog.Stmts {
