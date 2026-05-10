@@ -591,13 +591,13 @@
         <img src="assets/tya-logo.png" alt="Tya">
         <div>
           <strong>Tya</strong>
-          <span>A language without hesitation.</span>
+          <span>Compile-to-C, indentation-based.</span>
         </div>
       </div>
       <nav class="nav" aria-label="Page sections">
         <a href="#overview">Overview</a>
+        <a href="#shape">At a glance</a>
         <a href="#install">Install</a>
-        <a href="#shape">Language</a>
         <a href="#docs">Docs</a>
       </nav>
       <p class="rail-note">Built to remove the small decisions that interrupt your work.</p>
@@ -607,8 +607,8 @@
       <header class="intro" id="overview">
         <section class="statement">
           <div>
-            <p class="kicker">No hesitation by design</p>
-            <h1>A language without hesitation.</h1>
+            <h1>Tya</h1>
+            <p class="kicker">A language without hesitation.</p>
             <p class="lead">Tya removes the small decisions that interrupt your work — how to format, which tool to install, what an error means. Canonical syntax, all-in-one toolchain, kind diagnostics, compile-to-C.</p>
           </div>
           <div class="code-panel" aria-label="Tya example">
@@ -616,9 +616,7 @@
               <span>hello.tya</span>
               <span>indented blocks</span>
             </div>
-            <pre><code>user =
-  name: <span class="str">"komagata"</span>
-  age: 20
+            <pre><code>user = { name: <span class="str">"komagata"</span>, age: 20 }
 
 greet = user -> <span class="str">"Hello, "</span> + user[<span class="str">"name"</span>]
 
@@ -630,6 +628,37 @@ greet = user -> <span class="str">"Hello, "</span> + user[<span class="str">"nam
       </header>
 
       <main>
+        <section class="section section-grid" id="shape">
+          <div class="section-title">
+            <p class="kicker">At a glance</p>
+            <h2>Five commitments that remove small decisions.</h2>
+            <p>Every technical choice in Tya exists to reduce a specific kind of hesitation. These five work together.</p>
+          </div>
+
+          <div class="panel matrix">
+            <article class="tile">
+              <h3>Canonical Syntax</h3>
+              <p>Every program has exactly one source representation. <code>tya format</code> is the canonical serializer, not a separate opinion — no style flags, no config file, no per-project overrides. Shipped in v0.38.</p>
+            </article>
+            <article class="tile">
+              <h3>Dynamically typed, strict</h3>
+              <p>Indentation-based syntax with strict semantics — no implicit conversions, no <code>nil</code> arithmetic, no implicit truthiness coercion you didn't ask for.</p>
+            </article>
+            <article class="tile">
+              <h3>Compiles to C</h3>
+              <p>Small, portable runtime with a precise mark-and-sweep collector. No virtual machine, no embedded interpreter — just a single binary you ship.</p>
+            </article>
+            <article class="tile">
+              <h3>All-in-one toolchain</h3>
+              <p>The <code>tya</code> binary holds the compiler (<code>run</code>, <code>build</code>, <code>emit-c</code>), formatter (<code>format</code>), checker (<code>check</code>), test runner (<code>test</code>), coverage (<code>cover</code>), and package manager (<code>install</code>, <code>add</code>). Gleam-style.</p>
+            </article>
+            <article class="tile">
+              <h3>Kind diagnostics</h3>
+              <p>Every error has a stable code (<code>TYA-Exxxx</code>), a banner with the source snippet, an actionable hint, and a linked explanation. JSON output for CI and editors. Elm-grade.</p>
+            </article>
+          </div>
+        </section>
+
         <aside class="quick-run section" id="install">
           <div class="quick-head">
             <strong>Install</strong>
@@ -687,37 +716,6 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1</code></pre>
             </li>
           </ul>
         </aside>
-
-        <section class="section section-grid" id="shape">
-          <div class="section-title">
-            <p class="kicker">At a glance</p>
-            <h2>Five commitments that remove small decisions.</h2>
-            <p>Every technical choice in Tya exists to reduce a specific kind of hesitation. These five work together.</p>
-          </div>
-
-          <div class="panel matrix">
-            <article class="tile">
-              <h3>Canonical Syntax</h3>
-              <p>Every program has exactly one source representation. <code>tya format</code> is the canonical serializer, not a separate opinion — no style flags, no config file, no per-project overrides. Shipped in v0.38.</p>
-            </article>
-            <article class="tile">
-              <h3>Dynamically typed, strict</h3>
-              <p>Indentation-based syntax with strict semantics — no implicit conversions, no <code>nil</code> arithmetic, no implicit truthiness coercion you didn't ask for.</p>
-            </article>
-            <article class="tile">
-              <h3>Compiles to C</h3>
-              <p>Small, portable runtime with a precise mark-and-sweep collector. No virtual machine, no embedded interpreter — just a single binary you ship.</p>
-            </article>
-            <article class="tile">
-              <h3>All-in-one toolchain</h3>
-              <p>The <code>tya</code> binary holds the compiler (<code>run</code>, <code>build</code>, <code>emit-c</code>), formatter (<code>format</code>), checker (<code>check</code>), test runner (<code>test</code>), coverage (<code>cover</code>), and package manager (<code>install</code>, <code>add</code>). Gleam-style.</p>
-            </article>
-            <article class="tile">
-              <h3>Kind diagnostics</h3>
-              <p>Every error has a stable code (<code>TYA-Exxxx</code>), a banner with the source snippet, an actionable hint, and a linked explanation. JSON output for CI and editors. Elm-grade.</p>
-            </article>
-          </div>
-        </section>
 
         <section class="section section-grid" id="docs">
           <div class="section-title">
