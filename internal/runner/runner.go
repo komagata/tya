@@ -30,7 +30,7 @@ func ValidateFileName(path string) error {
 	// v0.44: a PascalCase filename identifies a class file. Class files
 	// are library-only; tya run accepts only script files (lowercase).
 	if checker.IsClassFileName(base) {
-		return fmt.Errorf("%s is a class file; tya run accepts only script files (lowercase filename)", base)
+		return fmt.Errorf("[TYA-E0850] %s is a class file; tya run accepts only script files (lowercase filename)", base)
 	}
 	return fmt.Errorf("invalid Tya file name: %s", base)
 }
@@ -184,7 +184,7 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 				continue
 			}
 			if checker.IsScriptFileName(e.Name()) {
-				return "", nil, fmt.Errorf("package %s contains script file %s; packages may not include lowercase .tya files", filepath.Base(path), e.Name())
+				return "", nil, fmt.Errorf("[TYA-E0852] package %s contains script file %s; packages may not include lowercase .tya files", filepath.Base(path), e.Name())
 			}
 			if !checker.IsClassFileName(e.Name()) {
 				continue
@@ -192,7 +192,7 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 			classFiles = append(classFiles, filepath.Join(path, e.Name()))
 		}
 		if len(classFiles) == 0 {
-			return "", nil, fmt.Errorf("package %s contains no class files", filepath.Base(path))
+			return "", nil, fmt.Errorf("[TYA-E0853] package %s contains no class files", filepath.Base(path))
 		}
 		pkgName := filepath.Base(path)
 		// v0.44: detect aliased same-segment package collision. If
@@ -200,7 +200,7 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 		// fail clearly rather than silently overwriting the first
 		// in the merged source.
 		if prev, taken := state.synthModules[pkgName]; taken && prev != abs {
-			return "", nil, fmt.Errorf("package name conflict: both %s and %s would synthesize module %s; use distinct directory names or rename one", prev, abs, pkgName)
+			return "", nil, fmt.Errorf("[TYA-E0855] package name conflict: both %s and %s would synthesize module %s; use distinct directory names or rename one", prev, abs, pkgName)
 		}
 		state.synthModules[pkgName] = abs
 		synth, err := synthesizePackageSource(classFiles, pkgName)
@@ -473,7 +473,7 @@ func publicDefForFile(path string) (publicDef, error) {
 		// directory's leaf name, treated as a synthesized module.
 		name := filepath.Base(path)
 		if !moduleNameRE.MatchString(name) {
-			return publicDef{}, fmt.Errorf("invalid package directory name: %s", name)
+			return publicDef{}, fmt.Errorf("[TYA-E0854] invalid package directory name: %s", name)
 		}
 		return publicDef{name: name, kind: "module"}, nil
 	}
@@ -520,11 +520,11 @@ func collectImports(prog *ast.Program) ([]importSpec, error) {
 
 func validateImportPath(name string) error {
 	if name == "" || strings.HasPrefix(name, "/") || strings.HasPrefix(name, "./") || strings.HasPrefix(name, "../") {
-		return fmt.Errorf("invalid module name: %s", name)
+		return fmt.Errorf("[TYA-E0851] invalid module name: %s", name)
 	}
 	for _, segment := range strings.Split(name, "/") {
 		if segment == "" || !moduleNameRE.MatchString(segment) {
-			return fmt.Errorf("invalid module name: %s", name)
+			return fmt.Errorf("[TYA-E0851] invalid module name: %s", name)
 		}
 	}
 	return nil

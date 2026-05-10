@@ -107,7 +107,7 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 	base := filepath.Base(path)
 	want := strings.TrimSuffix(base, ".tya")
 	if !classNameRE.MatchString(want) {
-		return fmt.Errorf("class file %s must have a PascalCase name", base)
+		return fmt.Errorf("[TYA-E0404] class file %s must have a PascalCase name", base)
 	}
 	publicSeen := false
 	inDeclarations := false
@@ -115,7 +115,7 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 		switch n := stmt.(type) {
 		case *ast.ImportStmt:
 			if inDeclarations {
-				return fmt.Errorf("class file %s imports must precede class and interface declarations", base)
+				return fmt.Errorf("[TYA-E0403] class file %s imports must precede class and interface declarations", base)
 			}
 		case *ast.InterfaceDecl:
 			inDeclarations = true
@@ -123,16 +123,16 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 			inDeclarations = true
 			if n.Name == want {
 				if publicSeen {
-					return fmt.Errorf("class file %s declares public class %s more than once", base, want)
+					return fmt.Errorf("[TYA-E0405] class file %s declares public class %s more than once", base, want)
 				}
 				publicSeen = true
 			}
 		default:
-			return fmt.Errorf("class file %s may only contain import, class, and interface declarations", base)
+			return fmt.Errorf("[TYA-E0402] class file %s may only contain import, class, and interface declarations", base)
 		}
 	}
 	if !publicSeen {
-		return fmt.Errorf("class file %s must define class %s", base, want)
+		return fmt.Errorf("[TYA-E0400] class file %s must define class %s", base, want)
 	}
 	return nil
 }

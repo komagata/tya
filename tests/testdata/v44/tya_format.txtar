@@ -1,0 +1,30 @@
+# v0.44 `tya format` works on script files. Class files are not
+# yet accepted by `tya format` because runner.ValidateFileName
+# (shared with `tya run` / `tya --tokens` / `tya emit-c`) rejects
+# PascalCase filenames; the rejection message currently mentions
+# `tya run`. Fixing this requires either a separate file-name
+# validator for read-only commands (format/check) or relaxing
+# ValidateFileName when the caller is not the runner. Tracked as
+# a v0.44 follow-up; this testscript pins the script-file behavior
+# that already works.
+cd $REPO
+
+exec go run ./cmd/tya format $WORK/main.tya
+stdout 'import lib'
+stdout 'lib.Lib.greet'
+! stderr .
+
+# Known follow-up: format on a class file currently fails with the
+# misleading "tya run" message.
+! exec go run ./cmd/tya format $WORK/lib/Lib.tya
+stderr 'is a class file'
+
+-- main.tya --
+import lib
+
+print(lib.Lib.greet())
+
+-- lib/Lib.tya --
+class Lib
+  @@greet = ->
+    "hi"
