@@ -2788,6 +2788,18 @@ func registerV41Builtins(env *Env) {
 	env.set("channel_receive_timeout", stub("channel_receive_timeout", 2))
 	env.set("channel_close", stub("channel_close", 1))
 	env.set("channel_closed_p", stub("channel_closed_p", 1))
+	env.set("sync_mutex_new", stub("sync_mutex_new", 0))
+	env.set("sync_lock", stub("sync_lock", 1))
+	env.set("sync_unlock", stub("sync_unlock", 1))
+	env.set("sync_atomic_integer_new", stub("sync_atomic_integer_new", 1))
+	env.set("sync_atomic_integer_add", stub("sync_atomic_integer_add", 2))
+	env.set("sync_atomic_integer_load", stub("sync_atomic_integer_load", 1))
+	env.set("sync_atomic_integer_store", stub("sync_atomic_integer_store", 2))
+	env.set("sync_atomic_integer_cas", stub("sync_atomic_integer_cas", 3))
+	env.set("sync_wait_group_new", stub("sync_wait_group_new", 0))
+	env.set("sync_wait_group_add", stub("sync_wait_group_add", 2))
+	env.set("sync_wait_group_done", stub("sync_wait_group_done", 1))
+	env.set("sync_wait_group_wait", stub("sync_wait_group_wait", 1))
 }
 
 func registerV25Builtins(env *Env) {

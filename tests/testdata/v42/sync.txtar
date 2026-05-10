@@ -1,0 +1,64 @@
+# v0.42 STEP 7: sync stdlib (mutex, atomic_integer, wait_group).
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/mutex.tya
+stdout 'count: 200'
+
+exec go run ./cmd/tya run $WORK/atomic.tya
+stdout 'atomic: 15'
+stdout 'cas success: true'
+stdout 'cas value: 99'
+
+exec go run ./cmd/tya run $WORK/waitgroup.tya
+stdout 'wait_group ok'
+
+-- mutex.tya --
+import sync
+
+state = {}
+state["count"] = 0
+m = sync.mutex()
+
+inc100 = mref, sref ->
+  i = 0
+  while i < 100
+    sync.lock(mref)
+    sref["count"] = sref["count"] + 1
+    sync.unlock(mref)
+    i = i + 1
+
+t1 = spawn inc100(m, state)
+t2 = spawn inc100(m, state)
+await t1
+await t2
+print "count: " + to_string(state["count"])
+
+-- atomic.tya --
+import sync
+
+a = sync.atomic_integer(0)
+sync.atomic_add(a, 10)
+sync.atomic_add(a, 5)
+print "atomic: " + to_string(sync.atomic_load(a))
+
+ok = sync.atomic_cas(a, 15, 99)
+print "cas success: " + to_string(ok)
+print "cas value: " + to_string(sync.atomic_load(a))
+
+-- waitgroup.tya --
+import sync
+import channel
+
+wg = sync.wait_group()
+sync.wait_group_add(wg, 3)
+
+ch = channel.new(3)
+worker = wgr, chr ->
+  channel.send(chr, "ok")
+  sync.wait_group_done(wgr)
+
+spawn worker(wg, ch)
+spawn worker(wg, ch)
+spawn worker(wg, ch)
+sync.wait_group_wait(wg)
+print "wait_group ok"

@@ -183,9 +183,50 @@ to a follow-up STEP. The minimum-effort substitute today is
 forwarding task per source channel that funnels into a shared
 inbox.
 
-### STEP 7 — `sync` stdlib module (planned)
+### STEP 7 — `sync` stdlib module (landed)
 
-`sync.mutex`, `sync.atomic_integer`, `sync.wait_group`.
+The new stdlib `sync` module exposes three families:
+
+```tya
+sync.mutex()
+sync.lock(m); sync.unlock(m); sync.with_lock(m, fn)
+sync.atomic_integer(initial)
+sync.atomic_add(a, n); sync.atomic_load(a); sync.atomic_store(a, n)
+sync.atomic_cas(a, expected, new)
+sync.wait_group()
+sync.wait_group_add(wg, n); sync.wait_group_done(wg); sync.wait_group_wait(wg)
+```
+
+The runtime uses one `TyaResource` value kind for all three
+primitives (sub-tagged `MUTEX`, `ATOMIC_INTEGER`, `WAIT_GROUP`),
+backed by `pthread_mutex_t`, `stdatomic.h` `atomic_long`, and a
+counter + condvar respectively. `kind(r)` returns `"mutex"`,
+`"atomic_integer"`, or `"wait_group"`. Equality is identity
+equality.
+
+Note on Tya closure semantics. Tya closures cannot write back to
+outer variables. To share mutable state across `spawn`ed tasks,
+pass a dict / array as an argument and mutate it through indexed
+assignment:
+
+```tya
+state = {}
+state["count"] = 0
+m = sync.mutex()
+
+inc = mref, sref ->
+  sync.lock(mref)
+  sref["count"] = sref["count"] + 1
+  sync.unlock(mref)
+
+t = spawn inc(m, state)
+await t
+```
+
+The `tests/testdata/v42/sync.txtar` testscript covers a
+mutex-protected dict counter, atomic add / load / cas, and
+`wait_group_wait` blocking until every spawned worker has
+called `done`.
 
 ### STEP 8 — Documentation, examples, v0.42 SPEC finalization (planned)
 

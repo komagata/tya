@@ -43,7 +43,17 @@ typedef enum {
   TYA_GC_BYTES = 4,
   TYA_GC_TASK = 5,
   TYA_GC_CHANNEL = 6,
+  TYA_GC_RESOURCE = 7,
 } TyaGcKind;
+
+/* Sub-tag for the multi-purpose TyaResource container. v0.42 STEP 7
+ * uses one container kind to host the three sync primitives so the
+ * value-kind switch table stays compact. */
+typedef enum {
+  TYA_RES_MUTEX = 1,
+  TYA_RES_ATOMIC_INTEGER = 2,
+  TYA_RES_WAIT_GROUP = 3,
+} TyaResourceSubkind;
 
 typedef struct TyaGcHeader {
   unsigned char mark;
@@ -79,6 +89,19 @@ struct TyaFunction {
   const char *class_name;
   TyaValue parent;
   bool is_class;
+};
+
+/* TyaResource owns a sync primitive (mutex / atomic / wait group).
+ * The subkind drives which fields are valid. */
+struct TyaResource {
+  TyaGcHeader gc;
+  TyaResourceSubkind subkind;
+  pthread_mutex_t mu;       /* mutex + wait_group */
+  pthread_cond_t cv;        /* wait_group only */
+  long counter;             /* wait_group counter */
+  atomic_long atomic_value; /* atomic_integer only */
+  bool mu_initialized;
+  bool cv_initialized;
 };
 
 /* TyaChannel is the runtime representation of a channel value (v0.42).
@@ -231,6 +254,9 @@ static void tya_gc_mark_header(TyaGcHeader *h) {
       pthread_mutex_unlock(&c->mu);
       break;
     }
+    case TYA_GC_RESOURCE:
+      /* leaf — sync primitives hold no Tya values */
+      break;
   }
 }
 
@@ -254,6 +280,9 @@ static void tya_gc_mark_value(TyaValue v) {
       break;
     case TYA_CHANNEL:
       if (v.channel) tya_gc_mark_header((TyaGcHeader *)v.channel);
+      break;
+    case TYA_RESOURCE:
+      if (v.resource) tya_gc_mark_header((TyaGcHeader *)v.resource);
       break;
     default:
       break;
@@ -301,6 +330,13 @@ static void tya_gc_free_one(TyaGcHeader *h) {
       pthread_cond_destroy(&c->not_empty);
       free(c->buffer);
       free(c);
+      break;
+    }
+    case TYA_GC_RESOURCE: {
+      TyaResource *r = (TyaResource *)h;
+      if (r->mu_initialized) pthread_mutex_destroy(&r->mu);
+      if (r->cv_initialized) pthread_cond_destroy(&r->cv);
+      free(r);
       break;
     }
   }
@@ -895,6 +931,14 @@ TyaValue tya_kind(TyaValue value) {
     return tya_string("task");
   case TYA_CHANNEL:
     return tya_string("channel");
+  case TYA_RESOURCE:
+    if (value.resource == NULL) return tya_string("resource");
+    switch (value.resource->subkind) {
+      case TYA_RES_MUTEX: return tya_string("mutex");
+      case TYA_RES_ATOMIC_INTEGER: return tya_string("atomic_integer");
+      case TYA_RES_WAIT_GROUP: return tya_string("wait_group");
+    }
+    return tya_string("resource");
   }
   return tya_string("unknown");
 }
@@ -1004,6 +1048,8 @@ bool tya_equal(TyaValue left, TyaValue right) {
     return left.task == right.task;
   case TYA_CHANNEL:
     return left.channel == right.channel;
+  case TYA_RESOURCE:
+    return left.resource == right.resource;
   }
   return false;
 }
@@ -1082,6 +1128,8 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
     return left.task == right.task;
   case TYA_CHANNEL:
     return left.channel == right.channel;
+  case TYA_RESOURCE:
+    return left.resource == right.resource;
   }
   return false;
 }
@@ -1297,6 +1345,9 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     break;
   case TYA_CHANNEL:
     tya_builder_append(builder, "[channel]");
+    break;
+  case TYA_RESOURCE:
+    tya_builder_append(builder, "[resource]");
     break;
   case TYA_BYTES:
     tya_builder_append(builder, "<bytes:");
@@ -1834,6 +1885,9 @@ static void tya_write_value(FILE *out, TyaValue value) {
     break;
   case TYA_CHANNEL:
     fprintf(out, "[channel]");
+    break;
+  case TYA_RESOURCE:
+    fprintf(out, "[resource]");
     break;
   }
 }
@@ -3499,4 +3553,153 @@ TyaValue tya_channel_closed(TyaValue ch) {
   bool closed = c->closed;
   pthread_mutex_unlock(&c->mu);
   return tya_bool(closed);
+}
+
+/* =========================================================================
+ * v0.42 STEP 7: sync primitives (mutex, atomic_integer, wait_group)
+ * ========================================================================= */
+
+static TyaResource *tya_resource_new(TyaResourceSubkind sub) {
+  TyaResource *r = tya_gc_alloc(sizeof(TyaResource), TYA_GC_RESOURCE);
+  r->subkind = sub;
+  r->counter = 0;
+  atomic_store(&r->atomic_value, 0);
+  r->mu_initialized = false;
+  r->cv_initialized = false;
+  return r;
+}
+
+static TyaResource *tya_resource_check(TyaValue v, TyaResourceSubkind want, const char *op) {
+  if (v.kind != TYA_RESOURCE || v.resource == NULL || v.resource->subkind != want) {
+    char buf[128];
+    const char *expected = "resource";
+    switch (want) {
+      case TYA_RES_MUTEX: expected = "mutex"; break;
+      case TYA_RES_ATOMIC_INTEGER: expected = "atomic_integer"; break;
+      case TYA_RES_WAIT_GROUP: expected = "wait_group"; break;
+    }
+    snprintf(buf, sizeof(buf), "%s: argument must be a %s", op, expected);
+    tya_raise(tya_string(buf));
+    return NULL;
+  }
+  return v.resource;
+}
+
+TyaValue tya_sync_mutex_new(void) {
+  TyaResource *r = tya_resource_new(TYA_RES_MUTEX);
+  pthread_mutex_init(&r->mu, NULL);
+  r->mu_initialized = true;
+  return (TyaValue){.kind = TYA_RESOURCE, .resource = r};
+}
+
+TyaValue tya_sync_lock(TyaValue m) {
+  TyaResource *r = tya_resource_check(m, TYA_RES_MUTEX, "sync.lock");
+  if (r == NULL) return tya_nil();
+  pthread_mutex_lock(&r->mu);
+  return tya_nil();
+}
+
+TyaValue tya_sync_unlock(TyaValue m) {
+  TyaResource *r = tya_resource_check(m, TYA_RES_MUTEX, "sync.unlock");
+  if (r == NULL) return tya_nil();
+  pthread_mutex_unlock(&r->mu);
+  return tya_nil();
+}
+
+TyaValue tya_sync_atomic_integer_new(TyaValue initial) {
+  if (initial.kind != TYA_NUMBER) {
+    tya_raise(tya_string("sync.atomic_integer: initial value must be a number"));
+    return tya_nil();
+  }
+  TyaResource *r = tya_resource_new(TYA_RES_ATOMIC_INTEGER);
+  atomic_store(&r->atomic_value, (long)initial.number);
+  return (TyaValue){.kind = TYA_RESOURCE, .resource = r};
+}
+
+TyaValue tya_sync_atomic_integer_add(TyaValue a, TyaValue n) {
+  TyaResource *r = tya_resource_check(a, TYA_RES_ATOMIC_INTEGER, "sync.atomic_integer.add");
+  if (r == NULL) return tya_nil();
+  if (n.kind != TYA_NUMBER) {
+    tya_raise(tya_string("sync.atomic_integer.add: delta must be a number"));
+    return tya_nil();
+  }
+  long old = atomic_fetch_add(&r->atomic_value, (long)n.number);
+  return tya_number((double)(old + (long)n.number));
+}
+
+TyaValue tya_sync_atomic_integer_load(TyaValue a) {
+  TyaResource *r = tya_resource_check(a, TYA_RES_ATOMIC_INTEGER, "sync.atomic_integer.load");
+  if (r == NULL) return tya_nil();
+  long v = atomic_load(&r->atomic_value);
+  return tya_number((double)v);
+}
+
+TyaValue tya_sync_atomic_integer_store(TyaValue a, TyaValue n) {
+  TyaResource *r = tya_resource_check(a, TYA_RES_ATOMIC_INTEGER, "sync.atomic_integer.store");
+  if (r == NULL) return tya_nil();
+  if (n.kind != TYA_NUMBER) {
+    tya_raise(tya_string("sync.atomic_integer.store: value must be a number"));
+    return tya_nil();
+  }
+  atomic_store(&r->atomic_value, (long)n.number);
+  return tya_nil();
+}
+
+TyaValue tya_sync_atomic_integer_cas(TyaValue a, TyaValue expected, TyaValue new_value) {
+  TyaResource *r = tya_resource_check(a, TYA_RES_ATOMIC_INTEGER, "sync.atomic_integer.compare_and_swap");
+  if (r == NULL) return tya_nil();
+  if (expected.kind != TYA_NUMBER || new_value.kind != TYA_NUMBER) {
+    tya_raise(tya_string("sync.atomic_integer.compare_and_swap: expected and new must be numbers"));
+    return tya_nil();
+  }
+  long e = (long)expected.number;
+  long n = (long)new_value.number;
+  bool ok = atomic_compare_exchange_strong(&r->atomic_value, &e, n);
+  return tya_bool(ok);
+}
+
+TyaValue tya_sync_wait_group_new(void) {
+  TyaResource *r = tya_resource_new(TYA_RES_WAIT_GROUP);
+  pthread_mutex_init(&r->mu, NULL);
+  pthread_cond_init(&r->cv, NULL);
+  r->mu_initialized = true;
+  r->cv_initialized = true;
+  r->counter = 0;
+  return (TyaValue){.kind = TYA_RESOURCE, .resource = r};
+}
+
+TyaValue tya_sync_wait_group_add(TyaValue wg, TyaValue n) {
+  TyaResource *r = tya_resource_check(wg, TYA_RES_WAIT_GROUP, "sync.wait_group.add");
+  if (r == NULL) return tya_nil();
+  if (n.kind != TYA_NUMBER) {
+    tya_raise(tya_string("sync.wait_group.add: count must be a number"));
+    return tya_nil();
+  }
+  pthread_mutex_lock(&r->mu);
+  r->counter += (long)n.number;
+  if (r->counter < 0) {
+    pthread_mutex_unlock(&r->mu);
+    tya_raise(tya_string("sync.wait_group.add: counter would go negative"));
+    return tya_nil();
+  }
+  if (r->counter == 0) {
+    pthread_cond_broadcast(&r->cv);
+  }
+  pthread_mutex_unlock(&r->mu);
+  return tya_nil();
+}
+
+TyaValue tya_sync_wait_group_done(TyaValue wg) {
+  return tya_sync_wait_group_add(wg, tya_number(-1));
+}
+
+TyaValue tya_sync_wait_group_wait(TyaValue wg) {
+  TyaResource *r = tya_resource_check(wg, TYA_RES_WAIT_GROUP, "sync.wait_group.wait");
+  if (r == NULL) return tya_nil();
+  pthread_mutex_lock(&r->mu);
+  while (r->counter > 0) {
+    pthread_cond_wait(&r->cv, &r->mu);
+  }
+  pthread_mutex_unlock(&r->mu);
+  return tya_nil();
 }

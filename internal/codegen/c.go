@@ -2609,6 +2609,30 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_channel_close(%s)", 1)
 	case "channel_closed_p":
 		return emit("tya_channel_closed(%s)", 1)
+	case "sync_mutex_new":
+		return emit("tya_sync_mutex_new()", 0)
+	case "sync_lock":
+		return emit("tya_sync_lock(%s)", 1)
+	case "sync_unlock":
+		return emit("tya_sync_unlock(%s)", 1)
+	case "sync_atomic_integer_new":
+		return emit("tya_sync_atomic_integer_new(%s)", 1)
+	case "sync_atomic_integer_add":
+		return emit("tya_sync_atomic_integer_add(%s, %s)", 2)
+	case "sync_atomic_integer_load":
+		return emit("tya_sync_atomic_integer_load(%s)", 1)
+	case "sync_atomic_integer_store":
+		return emit("tya_sync_atomic_integer_store(%s, %s)", 2)
+	case "sync_atomic_integer_cas":
+		return emit("tya_sync_atomic_integer_cas(%s, %s, %s)", 3)
+	case "sync_wait_group_new":
+		return emit("tya_sync_wait_group_new()", 0)
+	case "sync_wait_group_add":
+		return emit("tya_sync_wait_group_add(%s, %s)", 2)
+	case "sync_wait_group_done":
+		return emit("tya_sync_wait_group_done(%s)", 1)
+	case "sync_wait_group_wait":
+		return emit("tya_sync_wait_group_wait(%s)", 1)
 	case "bytes":
 		return emit("tya_bytes_from_array(%s)", 1)
 	case "bytes_of":

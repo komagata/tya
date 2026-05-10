@@ -17,6 +17,7 @@ typedef enum {
   TYA_BYTES,
   TYA_TASK,
   TYA_CHANNEL,
+  TYA_RESOURCE,
 } TyaKind;
 
 typedef struct TyaBytes TyaBytes;
@@ -28,6 +29,7 @@ typedef struct TyaFunction TyaFunction;
 typedef struct TyaRaiseFrame TyaRaiseFrame;
 typedef struct TyaTask TyaTask;
 typedef struct TyaChannel TyaChannel;
+typedef struct TyaResource TyaResource;
 
 typedef struct {
   TyaKind kind;
@@ -41,6 +43,7 @@ typedef struct {
   TyaBytes *bytes;
   TyaTask *task;
   TyaChannel *channel;
+  TyaResource *resource;
 } TyaValue;
 
 typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
@@ -216,6 +219,31 @@ TyaValue tya_channel_receive(TyaValue ch);
 TyaValue tya_channel_receive_timeout(TyaValue ch, TyaValue seconds);
 TyaValue tya_channel_close(TyaValue ch);
 TyaValue tya_channel_closed(TyaValue ch);
+
+/* Synchronization primitives (v0.42 STEP 7).
+ *
+ * Mutex:           tya_sync_mutex_new returns an unlocked mutex
+ *                  resource; tya_sync_lock blocks until the mutex
+ *                  is acquired; tya_sync_unlock releases it.
+ * Atomic integer:  tya_sync_atomic_integer_new wraps an int64
+ *                  counter; add / load / store / compare-and-swap
+ *                  use stdatomic.
+ * Wait group:      tya_sync_wait_group_new wraps a counter +
+ *                  mutex + condvar so workers can announce that
+ *                  they finished and a coordinator can block
+ *                  until everyone has done so. */
+TyaValue tya_sync_mutex_new(void);
+TyaValue tya_sync_lock(TyaValue m);
+TyaValue tya_sync_unlock(TyaValue m);
+TyaValue tya_sync_atomic_integer_new(TyaValue initial);
+TyaValue tya_sync_atomic_integer_add(TyaValue a, TyaValue n);
+TyaValue tya_sync_atomic_integer_load(TyaValue a);
+TyaValue tya_sync_atomic_integer_store(TyaValue a, TyaValue n);
+TyaValue tya_sync_atomic_integer_cas(TyaValue a, TyaValue expected, TyaValue new_value);
+TyaValue tya_sync_wait_group_new(void);
+TyaValue tya_sync_wait_group_add(TyaValue wg, TyaValue n);
+TyaValue tya_sync_wait_group_done(TyaValue wg);
+TyaValue tya_sync_wait_group_wait(TyaValue wg);
 
 /* GC API (v0.41).
  *

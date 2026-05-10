@@ -136,6 +136,11 @@ var builtinNames = []string{
 	"runtime_gc_collect",
 	// v0.42 channel
 	"channel_new", "channel_send", "channel_receive", "channel_receive_timeout", "channel_close", "channel_closed_p",
+	// v0.42 sync
+	"sync_mutex_new", "sync_lock", "sync_unlock",
+	"sync_atomic_integer_new", "sync_atomic_integer_add", "sync_atomic_integer_load",
+	"sync_atomic_integer_store", "sync_atomic_integer_cas",
+	"sync_wait_group_new", "sync_wait_group_add", "sync_wait_group_done", "sync_wait_group_wait",
 }
 
 type scope struct {
