@@ -285,8 +285,12 @@ every STEP boundary.
       module, in dependency order.
     - [x] Per package: introduce class file, port functionality,
       switch internal users, delete the old `module` file.
-    - [ ] Add `os.Os.args()` (or finalized API) as part of the `os`
-      migration. Update existing CLI args call sites.
+    - [x] Add `os.Os.args()` (or finalized API) as part of the `os`
+      migration. The migrated `stdlib/os/Os.tya` exposes
+      `@@args` which delegates to the existing `args()` builtin;
+      callers spell it `os.Os.args()`. Existing call sites that
+      remain in the legacy `module` form continue to use `args()`
+      directly until M7 examples migration.
     - [ ] Migrate, in order: `runtime`, `os`, `path`, `string`, `array`,
       `dict`, `math`, `time`, `random`, `process`, `hex`, `digest`,
       `secure_random`, `matrix`, `file`, `dir`, `csv`, `json`,
@@ -437,22 +441,149 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
 
 - [ ] **Primitive literals as class-instance sugar**
   - [ ] Follow-up to v0.44 class-oriented namespace. Extend
-    "everything is a class" to literal values: `1` is sugar for
-    `Integer(1)`, `"hello"` for `String("hello")`, `[1, 2]` for
-    `Array(1, 2)`, `{a: 1}` for `Dict("a", 1)`, `true` / `false`
-    for `Boolean(true)` / `Boolean(false)`, `nil` for the unique
+    "everything is a class" to literal values: `1` and `1.0` are
+    both sugar for `Number(...)` (a single numeric class — no
+    Integer/Float split, matching the current `TyaValue.number`
+    `double` representation in `runtime/tya_runtime.h`),
+    `"hello"` for `String("hello")`, `[1, 2]` for `Array(1, 2)`,
+    `{a: 1}` for `Dict("a", 1)`, `true` / `false` for
+    `Boolean(true)` / `Boolean(false)`, `nil` for the unique
     `Nil` instance.
-  - [ ] Define the public surface of the wrapper classes: methods,
-    constructors, and how method-call syntax (`x.foo()`) routes
-    through them.
-  - [ ] Decide the runtime representation. Boxed-everywhere is
-    simple but slow; unboxed-with-virtual-dispatch is a runtime
-    overhaul. Performance trade-offs are explicitly part of this
-    Epic and are not committed to in advance.
-  - [ ] Re-open the conversation on syntax and semantics before
-    implementation; this Epic is direction, not a frozen design.
+  - [ ] Method-call syntax on literals is required: `42.to_s()`,
+    `"hi".len()`, `true.to_s()`, `[1,2].len()` all dispatch through
+    the wrapper class. Lexer must keep `42.0` (float literal) and
+    `42.foo` (method call) unambiguous (Ruby rule: a digit
+    immediately after `.` means the dot is part of a float literal;
+    otherwise it is a method call).
+  - [ ] Operators (`+`, `-`, `*`, `/`, `<`, `==`, `[]`, ...) are
+    **not user-redefinable**. They desugar to fixed method names
+    on the wrapper class (e.g. `a + b` → `a.__add__(b)`,
+    `a == b` → `a.__eq__(b)`). User classes may **define** these
+    methods to participate, but cannot **override** them on the
+    built-in primitive classes.
+  - [ ] Monkey-patching primitive classes (`Number`, `String`,
+    `Boolean`, `Nil`, `Array`, `Dict`) is forbidden. The method
+    table of each built-in wrapper is fixed at compile time so the
+    optimizer can keep the fast path always live.
+  - [ ] Cross-type equality is a method-level decision, not a
+    language-level one. Standard built-in `__eq__` implementations
+    are type-strict: `String#__eq__` returns `false` for
+    non-`String` arguments, etc. Because numbers are a single
+    `Number` class, `1 == 1.0` is naturally `true` (no cross-type
+    case to resolve). Users who want lenient comparison write it
+    in their own class's `__eq__`.
+  - [ ] No automatic type coercion. There is no Integer/Float
+    split today, so the question of fixnum→float or float→bignum
+    promotion does not arise. If a future Epic introduces a
+    distinct integer type, promotion semantics are decided then.
+  - [ ] Runtime representation: keep the current `TyaValue`
+    tagged-union (`runtime/tya_runtime.h`, `kind` enum + payload
+    fields; `TYA_NUMBER` already stores both integer- and
+    fractional-valued numbers as `double`). Wrapper classes
+    (`Number`, `Boolean`, `Nil`, `String`, `Array`, `Dict`) are
+    process-global singleton class objects created once at
+    runtime startup; `x.class` returns the appropriate singleton
+    based on the value's `kind` with no allocation. No boxing
+    of primitives into heap objects.
+  - [ ] Hidden-from-user fast path: the C emitter lowers operator
+    desugaring on known-primitive operands directly to the
+    existing C arithmetic / comparison helpers, bypassing method
+    dispatch. Because monkey-patching and operator redefinition
+    are forbidden, this fast path is unconditional — there is no
+    "redefinition check" of the kind CRuby needs. Method dispatch
+    is only used when the static type is unknown or the receiver
+    is a user class.
   - [ ] Migrate stdlib and examples once the wrapper classes land.
   - [ ] Land a separate `docs/vX.Y/SPEC.md` when scheduled.
+
+- [ ] **Grow `interface` toward stackable-trait capability**
+  - [ ] **Phase 1: default methods on `interface`**
+    - [ ] Allow `interface` declarations to provide method bodies as
+      default implementations, in the spirit of Java 8 default methods.
+    - [ ] An implementing class inherits the default body unless it
+      provides its own override.
+    - [ ] Multiple interfaces declaring the same default-method name
+      and signature is a compile-time conflict; the implementing
+      class must resolve it explicitly. No implicit "first wins"
+      rule.
+    - [ ] No state, no initialization, no `super` chaining at this
+      phase. Defaults may call `self.<other_method>()` only.
+    - [ ] Extend checker, C emitter, formatter, and diagnostics for
+      the new shape. Reserve a diagnostic code range for default-method
+      conflicts and missing required methods.
+    - [ ] Keep `selfhost/v01/compiler.tya` (or its v0.44 successor)
+      compiling itself to a stable stage-2/stage-3 fixed point.
+  - [ ] **Phase 2: state and initialization on `interface`**
+    - [ ] Allow `interface` to declare instance fields and an
+      initialization block that runs as part of the implementing
+      class's construction.
+    - [ ] Define a single rule for diamond inheritance of state. The
+      starting position is "explicit resolution required": if the
+      same ancestor interface contributes the same field via two
+      paths, the implementing class must resolve it. Do not silently
+      duplicate or silently merge.
+    - [ ] Define and document the order in which interface init
+      blocks run relative to each other and to the class body. The
+      order must be deterministic and stable across recompiles.
+    - [ ] Define `self.<field>` scoping inside default methods and
+      init blocks: which interface's field is being referenced and
+      how name collisions are reported.
+    - [ ] C emitter: lay out interface-contributed fields in the
+      implementing struct without duplication for the diamond-resolved
+      cases; document the layout rule.
+    - [ ] Self-host implications: either keep the self-host compiler
+      written without using interface state, or migrate it to the
+      new shape and re-prove stage-2 == stage-3.
+  - [ ] **Phase 3 (optional): linearization and stackable trait**
+    - [ ] Decide whether `super` inside an `interface` default method
+      means "the parent" (simple) or "the next interface in a
+      linearization order" (Scala-style stackable). Until this Epic
+      reaches Phase 3, `super` keeps its parent-class meaning only.
+    - [ ] If adopted: implement C3 linearization in the checker;
+      route `super.method(...)` through the linearized order;
+      document the rule in `docs/SPEC.md`.
+    - [ ] Re-evaluate vtable / dispatch design in the C emitter for
+      stackable dispatch.
+    - [ ] Re-prove the self-host fixed point on the new surface.
+  - [ ] **Naming decision: keep `interface`, or rename to `trait`**
+    - [ ] Defer the rename until at least Phase 2 has shipped and
+      real Tya code uses interface state. The choice is editorial,
+      not technical: if the strengthened `interface` clearly behaves
+      like a Scala trait in stdlib usage, consider a rename in a
+      single dedicated Epic with a destructive migration plan.
+    - [ ] Do not introduce both `interface` and `trait` as separate
+      kinds. One concept, one keyword, consistent with the
+      "no hesitation" philosophy.
+
+- [ ] **Forbid closure write-back (strict shadowing extension)**
+  - [ ] Background: Tya function bodies can read outer-scope bindings
+    but plain `=` assignment to such a name silently creates a new
+    local instead of writing back to the enclosing scope. This is a
+    common source of bugs (counters that "don't update", caches that
+    "don't accumulate") and conflicts with the kind-diagnostics
+    commitment.
+  - [ ] Decision: forbid `=` reassignment of any name that resolves
+    above the current function body. Emit `TYA-E0307`
+    "Assignment to outer binding" with hints — pass a dict/array
+    argument and mutate its contents (`state["k"] = ...`), use
+    `sync.atomic_integer` for a single counter, or rename the inner
+    binding to shadow intentionally.
+  - [ ] Reading outer bindings stays allowed. Mutating an outer
+    container via `push` / index assignment / dict member assignment
+    stays allowed (the container itself is not reassigned).
+  - [ ] Checker: extend `internal/checker/strict.go` with a per-scope
+    `funcBody` flag and a `resolvesAboveFunction` walk that skips
+    `strictPredeclared` builtins; fire on `AssignStmt` targets whose
+    name resolves above the enclosing function body.
+  - [ ] Migrate `selfhost/v01/compiler.tya`, stdlib, and examples to
+    comply: rename top-level globals that collide with inner
+    function-local bindings (e.g. top-level `tokens` / `errors`),
+    and replace `xs = []` resets inside function bodies with
+    `while len(xs) > 0; pop(xs)` patterns.
+  - [ ] Add positive and negative checker tests; a doc page
+    describing the rule and the recommended workarounds.
+  - [ ] Schedule into a minor version after v0.44; do not bundle
+    with the class-oriented namespace work.
 
 - [ ] **Migrate selfhost compiler to latest spec and remove Go reference**
   - [ ] Bring `selfhost/` up from v0.1 surface to the v1.0.0 spec

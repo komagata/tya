@@ -282,9 +282,9 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 <p>      switch internal users, delete the old <code>module</code> file.</p>
 <ul>
-<li>[ ] Add <code>os.Os.args()</code> (or finalized API) as part of the <code>os</code></li>
+<li>[x] Add <code>os.Os.args()</code> (or finalized API) as part of the <code>os</code></li>
 </ul>
-<p>      migration. Update existing CLI args call sites.</p>
+<p>      migration. The migrated <code>stdlib/os/Os.tya</code> exposes       <code>@@args</code> which delegates to the existing <code>args()</code> builtin;       callers spell it <code>os.Os.args()</code>. Existing call sites that       remain in the legacy <code>module</code> form continue to use <code>args()</code>       directly until M7 examples migration.</p>
 <ul>
 <li>[ ] Migrate, in order: <code>runtime</code>, <code>os</code>, <code>path</code>, <code>string</code>, <code>array</code>,</li>
 </ul>
@@ -518,23 +518,156 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[ ] Follow-up to v0.44 class-oriented namespace. Extend</li>
 </ul>
 </ul>
-<p>    &quot;everything is a class&quot; to literal values: <code>1</code> is sugar for     <code>Integer(1)</code>, <code>&quot;hello&quot;</code> for <code>String(&quot;hello&quot;)</code>, <code>[1, 2]</code> for     <code>Array(1, 2)</code>, <code>{a: 1}</code> for <code>Dict(&quot;a&quot;, 1)</code>, <code>true</code> / <code>false</code>     for <code>Boolean(true)</code> / <code>Boolean(false)</code>, <code>nil</code> for the unique     <code>Nil</code> instance.</p>
+<p>    &quot;everything is a class&quot; to literal values: <code>1</code> and <code>1.0</code> are     both sugar for <code>Number(...)</code> (a single numeric class — no     Integer/Float split, matching the current <code>TyaValue.number</code>     <code>double</code> representation in <code>runtime/tya_runtime.h</code>),     <code>&quot;hello&quot;</code> for <code>String(&quot;hello&quot;)</code>, <code>[1, 2]</code> for <code>Array(1, 2)</code>,     <code>{a: 1}</code> for <code>Dict(&quot;a&quot;, 1)</code>, <code>true</code> / <code>false</code> for     <code>Boolean(true)</code> / <code>Boolean(false)</code>, <code>nil</code> for the unique     <code>Nil</code> instance.</p>
 <ul>
-<li>[ ] Define the public surface of the wrapper classes: methods,</li>
+<li>[ ] Method-call syntax on literals is required: <code>42.to_s()</code>,</li>
 </ul>
-<p>    constructors, and how method-call syntax (<code>x.foo()</code>) routes     through them.</p>
+<p>    <code>&quot;hi&quot;.len()</code>, <code>true.to_s()</code>, <code>[1,2].len()</code> all dispatch through     the wrapper class. Lexer must keep <code>42.0</code> (float literal) and     <code>42.foo</code> (method call) unambiguous (Ruby rule: a digit     immediately after <code>.</code> means the dot is part of a float literal;     otherwise it is a method call).</p>
 <ul>
-<li>[ ] Decide the runtime representation. Boxed-everywhere is</li>
+<li>[ ] Operators (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>&lt;</code>, <code>==</code>, <code>[]</code>, ...) are</li>
 </ul>
-<p>    simple but slow; unboxed-with-virtual-dispatch is a runtime     overhaul. Performance trade-offs are explicitly part of this     Epic and are not committed to in advance.</p>
+<p>    **not user-redefinable**. They desugar to fixed method names     on the wrapper class (e.g. <code>a + b</code> → <code>a.__add__(b)</code>,     <code>a == b</code> → <code>a.__eq__(b)</code>). User classes may **define** these     methods to participate, but cannot **override** them on the     built-in primitive classes.</p>
 <ul>
-<li>[ ] Re-open the conversation on syntax and semantics before</li>
+<li>[ ] Monkey-patching primitive classes (<code>Number</code>, <code>String</code>,</li>
 </ul>
-<p>    implementation; this Epic is direction, not a frozen design.</p>
+<p>    <code>Boolean</code>, <code>Nil</code>, <code>Array</code>, <code>Dict</code>) is forbidden. The method     table of each built-in wrapper is fixed at compile time so the     optimizer can keep the fast path always live.</p>
+<ul>
+<li>[ ] Cross-type equality is a method-level decision, not a</li>
+</ul>
+<p>    language-level one. Standard built-in <code>__eq__</code> implementations     are type-strict: <code>String#__eq__</code> returns <code>false</code> for     non-<code>String</code> arguments, etc. Because numbers are a single     <code>Number</code> class, <code>1 == 1.0</code> is naturally <code>true</code> (no cross-type     case to resolve). Users who want lenient comparison write it     in their own class's <code>__eq__</code>.</p>
+<ul>
+<li>[ ] No automatic type coercion. There is no Integer/Float</li>
+</ul>
+<p>    split today, so the question of fixnum→float or float→bignum     promotion does not arise. If a future Epic introduces a     distinct integer type, promotion semantics are decided then.</p>
+<ul>
+<li>[ ] Runtime representation: keep the current <code>TyaValue</code></li>
+</ul>
+<p>    tagged-union (<code>runtime/tya_runtime.h</code>, <code>kind</code> enum + payload     fields; <code>TYA_NUMBER</code> already stores both integer- and     fractional-valued numbers as <code>double</code>). Wrapper classes     (<code>Number</code>, <code>Boolean</code>, <code>Nil</code>, <code>String</code>, <code>Array</code>, <code>Dict</code>) are     process-global singleton class objects created once at     runtime startup; <code>x.class</code> returns the appropriate singleton     based on the value's <code>kind</code> with no allocation. No boxing     of primitives into heap objects.</p>
+<ul>
+<li>[ ] Hidden-from-user fast path: the C emitter lowers operator</li>
+</ul>
+<p>    desugaring on known-primitive operands directly to the     existing C arithmetic / comparison helpers, bypassing method     dispatch. Because monkey-patching and operator redefinition     are forbidden, this fast path is unconditional — there is no     &quot;redefinition check&quot; of the kind CRuby needs. Method dispatch     is only used when the static type is unknown or the receiver     is a user class.</p>
 <ul>
 <li>[ ] Migrate stdlib and examples once the wrapper classes land.</li>
 <li>[ ] Land a separate <code>docs/vX.Y/SPEC.md</code> when scheduled.</li>
 </ul>
+<ul>
+<li>[ ] **Grow <code>interface</code> toward stackable-trait capability**</li>
+<ul>
+<li>[ ] **Phase 1: default methods on <code>interface</code>**</li>
+<ul>
+<li>[ ] Allow <code>interface</code> declarations to provide method bodies as</li>
+</ul>
+</ul>
+</ul>
+<p>      default implementations, in the spirit of Java 8 default methods.</p>
+<ul>
+<li>[ ] An implementing class inherits the default body unless it</li>
+</ul>
+<p>      provides its own override.</p>
+<ul>
+<li>[ ] Multiple interfaces declaring the same default-method name</li>
+</ul>
+<p>      and signature is a compile-time conflict; the implementing       class must resolve it explicitly. No implicit &quot;first wins&quot;       rule.</p>
+<ul>
+<li>[ ] No state, no initialization, no <code>super</code> chaining at this</li>
+</ul>
+<p>      phase. Defaults may call <code>self.&lt;other_method&gt;()</code> only.</p>
+<ul>
+<li>[ ] Extend checker, C emitter, formatter, and diagnostics for</li>
+</ul>
+<p>      the new shape. Reserve a diagnostic code range for default-method       conflicts and missing required methods.</p>
+<ul>
+<li>[ ] Keep <code>selfhost/v01/compiler.tya</code> (or its v0.44 successor)</li>
+</ul>
+<p>      compiling itself to a stable stage-2/stage-3 fixed point.</p>
+<ul>
+<li>[ ] **Phase 2: state and initialization on <code>interface</code>**</li>
+<ul>
+<li>[ ] Allow <code>interface</code> to declare instance fields and an</li>
+</ul>
+</ul>
+<p>      initialization block that runs as part of the implementing       class's construction.</p>
+<ul>
+<li>[ ] Define a single rule for diamond inheritance of state. The</li>
+</ul>
+<p>      starting position is &quot;explicit resolution required&quot;: if the       same ancestor interface contributes the same field via two       paths, the implementing class must resolve it. Do not silently       duplicate or silently merge.</p>
+<ul>
+<li>[ ] Define and document the order in which interface init</li>
+</ul>
+<p>      blocks run relative to each other and to the class body. The       order must be deterministic and stable across recompiles.</p>
+<ul>
+<li>[ ] Define <code>self.&lt;field&gt;</code> scoping inside default methods and</li>
+</ul>
+<p>      init blocks: which interface's field is being referenced and       how name collisions are reported.</p>
+<ul>
+<li>[ ] C emitter: lay out interface-contributed fields in the</li>
+</ul>
+<p>      implementing struct without duplication for the diamond-resolved       cases; document the layout rule.</p>
+<ul>
+<li>[ ] Self-host implications: either keep the self-host compiler</li>
+</ul>
+<p>      written without using interface state, or migrate it to the       new shape and re-prove stage-2 == stage-3.</p>
+<ul>
+<li>[ ] **Phase 3 (optional): linearization and stackable trait**</li>
+<ul>
+<li>[ ] Decide whether <code>super</code> inside an <code>interface</code> default method</li>
+</ul>
+</ul>
+<p>      means &quot;the parent&quot; (simple) or &quot;the next interface in a       linearization order&quot; (Scala-style stackable). Until this Epic       reaches Phase 3, <code>super</code> keeps its parent-class meaning only.</p>
+<ul>
+<li>[ ] If adopted: implement C3 linearization in the checker;</li>
+</ul>
+<p>      route <code>super.method(...)</code> through the linearized order;       document the rule in <code>docs/SPEC.md</code>.</p>
+<ul>
+<li>[ ] Re-evaluate vtable / dispatch design in the C emitter for</li>
+</ul>
+<p>      stackable dispatch.</p>
+<ul>
+<li>[ ] Re-prove the self-host fixed point on the new surface.</li>
+</ul>
+<ul>
+<li>[ ] **Naming decision: keep <code>interface</code>, or rename to <code>trait</code>**</li>
+<ul>
+<li>[ ] Defer the rename until at least Phase 2 has shipped and</li>
+</ul>
+</ul>
+<p>      real Tya code uses interface state. The choice is editorial,       not technical: if the strengthened <code>interface</code> clearly behaves       like a Scala trait in stdlib usage, consider a rename in a       single dedicated Epic with a destructive migration plan.</p>
+<ul>
+<li>[ ] Do not introduce both <code>interface</code> and <code>trait</code> as separate</li>
+</ul>
+<p>      kinds. One concept, one keyword, consistent with the       &quot;no hesitation&quot; philosophy.</p>
+<ul>
+<li>[ ] **Forbid closure write-back (strict shadowing extension)**</li>
+<ul>
+<li>[ ] Background: Tya function bodies can read outer-scope bindings</li>
+</ul>
+</ul>
+<p>    but plain <code>=</code> assignment to such a name silently creates a new     local instead of writing back to the enclosing scope. This is a     common source of bugs (counters that &quot;don't update&quot;, caches that     &quot;don't accumulate&quot;) and conflicts with the kind-diagnostics     commitment.</p>
+<ul>
+<li>[ ] Decision: forbid <code>=</code> reassignment of any name that resolves</li>
+</ul>
+<p>    above the current function body. Emit <code>TYA-E0307</code>     &quot;Assignment to outer binding&quot; with hints — pass a dict/array     argument and mutate its contents (<code>state[&quot;k&quot;] = ...</code>), use     <code>sync.atomic_integer</code> for a single counter, or rename the inner     binding to shadow intentionally.</p>
+<ul>
+<li>[ ] Reading outer bindings stays allowed. Mutating an outer</li>
+</ul>
+<p>    container via <code>push</code> / index assignment / dict member assignment     stays allowed (the container itself is not reassigned).</p>
+<ul>
+<li>[ ] Checker: extend <code>internal/checker/strict.go</code> with a per-scope</li>
+</ul>
+<p>    <code>funcBody</code> flag and a <code>resolvesAboveFunction</code> walk that skips     <code>strictPredeclared</code> builtins; fire on <code>AssignStmt</code> targets whose     name resolves above the enclosing function body.</p>
+<ul>
+<li>[ ] Migrate <code>selfhost/v01/compiler.tya</code>, stdlib, and examples to</li>
+</ul>
+<p>    comply: rename top-level globals that collide with inner     function-local bindings (e.g. top-level <code>tokens</code> / <code>errors</code>),     and replace <code>xs = []</code> resets inside function bodies with     <code>while len(xs) &gt; 0; pop(xs)</code> patterns.</p>
+<ul>
+<li>[ ] Add positive and negative checker tests; a doc page</li>
+</ul>
+<p>    describing the rule and the recommended workarounds.</p>
+<ul>
+<li>[ ] Schedule into a minor version after v0.44; do not bundle</li>
+</ul>
+<p>    with the class-oriented namespace work.</p>
 <ul>
 <li>[ ] **Migrate selfhost compiler to latest spec and remove Go reference**</li>
 <ul>
