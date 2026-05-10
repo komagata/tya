@@ -40,11 +40,18 @@ namespace and entry-file model. Group the files by milestone:
 
 ## M3 — CLI surface
 
-- `tya_check.txtar` — `tya check` applies same rules as `tya run`
+- `tya_check.txtar` — `tya check` on script entries (v0.44 class
+  rules apply) and on standalone class files (CheckClassFile)
 - `tya_build.txtar` — `tya build` and `tya emit-c` work with
   directory packages
 - `tya_test_with_pkg.txtar` — `tya test` synthesized suite
   resolves a v0.44 directory package import
+- `tya_format.txtar` — `tya format` round-trips both script and
+  class files
+- `dev_flags_class_file.txtar` — `--tokens` and `--emit-c`
+  developer flags accept class files; emit-c on a class file
+  produces a standalone-compilable C output (class globals +
+  trivial main)
 
 ## M6 — Stdlib migration sanity
 
