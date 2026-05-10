@@ -101,11 +101,9 @@ tya test tests
 ## Example
 
 ```tya
-user =
-  name: "komagata"
-  age: 20
+user = { name: "komagata", age: 20 }
 
-greet = user -> "Hello, " + user["name"]
+greet = user -> "Hello, {user["name"]}!"
 
 if user["age"] >= 20
   print greet(user)
