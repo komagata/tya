@@ -106,6 +106,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>.</p>
 <ul>
+<li>**v0.42** — Tya Concurrency: <code>spawn</code> / <code>await</code> / <code>scope</code> keywords;</li>
+</ul>
+<p>  <code>task</code> / <code>channel</code> / <code>mutex</code> / <code>atomic_integer</code> / <code>wait_group</code> value   kinds; <code>channel</code> and <code>sync</code> stdlib modules; multi-thread GC.</p>
+<ul>
 <li>**v0.41** — precise mark-and-sweep garbage collector for the C runtime.</li>
 </ul>
 <p>  <code>runtime.gc()</code> and <code>runtime.gc_stats()</code>; auto-trigger between top-level   statements. Foundation for v0.42 Concurrency.</p>
@@ -155,147 +159,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>  <code>matrix</code> modules; <code>math</code> expansion.</p>
 <h2 id="scheduled">Scheduled</h2>
 <p>Epics with assigned minor versions, on the path to v1.0.0. Each Epic is implemented in numbered STEPs. Every STEP must pass <code>go test ./... -count=1</code> and <code>go test ./tests -run TestSelfhostV01Scripts -count=1</code> before the next STEP starts. The STEP also keeps <code>docs/vX.Y/SPEC.md</code> consistent with the implementation up to that STEP.</p>
-<h3 id="v0-42-tya-concurrency">v0.42 — Tya Concurrency</h3>
-<p><code>spawn</code> / <code>await</code> / <code>scope</code> keywords plus <code>channel</code> / <code>sync</code> stdlib modules. 1:1 OS-thread implementation backed by <code>pthread</code>. M:N scheduler deferred to a later minor.</p>
-<ul>
-<li>[ ] **Ship v0.42 Tya Concurrency**</li>
-<ul>
-<li>[ ] STEP 1: Lexer / parser / AST for <code>spawn</code> / <code>await</code> / <code>scope</code></li>
-<ul>
-<li>[ ] Reserve keywords <code>spawn</code>, <code>await</code>, <code>scope</code>.</li>
-<li>[ ] Add AST nodes: <code>SpawnExpr</code>, <code>AwaitExpr</code>, <code>ScopeBlock</code>.</li>
-<li>[ ] Parser accepts: <code>spawn fn(args)</code>, <code>await task_expr</code>, <code>scope</code></li>
-</ul>
-</ul>
-</ul>
-<p>      indented block.</p>
-<ul>
-<li>[ ] Checker: <code>spawn</code> requires callable, <code>await</code> requires task,</li>
-</ul>
-<p>      <code>scope</code> body is a statement list.</p>
-<ul>
-<li>[ ] Codegen returns &quot;not yet implemented&quot; structured diagnostic.</li>
-<li>[ ] Self-host fixed point preserved.</li>
-</ul>
-<ul>
-<li>[ ] STEP 2: Multi-thread GC extension + thread-safe allocator</li>
-<ul>
-<li>[ ] Mutex-protect the allocator from STEP 1 of v0.41.</li>
-<li>[ ] Stop-the-world for GC: suspend all worker threads at safe</li>
-</ul>
-</ul>
-<p>      points, scan each thread's value stack and active locals, then       resume.</p>
-<ul>
-<li>[ ] Add a <code>task</code> value kind (<code>TYA_TASK</code>) and runtime task struct</li>
-</ul>
-<p>      (pthread_t, return slot, completion condvar, cancel flag).</p>
-<ul>
-<li>[ ] Self-host fixed point preserved.</li>
-</ul>
-<ul>
-<li>[ ] STEP 3: <code>spawn</code> / <code>await</code> codegen and runtime</li>
-<ul>
-<li>[ ] Codegen <code>spawn fn(args)</code> → spawn helper that creates a</li>
-</ul>
-</ul>
-<p>      pthread running the function with copied/shared args.</p>
-<ul>
-<li>[ ] Codegen <code>await task</code> → join helper returning the task's</li>
-</ul>
-<p>      return value.</p>
-<ul>
-<li>[ ] Propagate <code>raise</code> from a spawned task to its <code>await</code> caller.</li>
-<li>[ ] Tests: single spawn/await, many spawn/await, raise</li>
-</ul>
-<p>      propagation.</p>
-<ul>
-<li>[ ] Self-host fixed point preserved.</li>
-</ul>
-<ul>
-<li>[ ] STEP 4: <code>scope</code> block — structured concurrency</li>
-<ul>
-<li>[ ] Codegen <code>scope</code>: track tasks created inside the block, await</li>
-</ul>
-</ul>
-<p>      all on normal exit.</p>
-<ul>
-<li>[ ] On <code>raise</code> inside the scope, signal cancel to outstanding</li>
-</ul>
-<p>      tasks and re-raise after they settle.</p>
-<ul>
-<li>[ ] Add <code>task.is_cancelled()</code> poll API for cooperative cancel.</li>
-<li>[ ] Tests: bounded lifetime, raise-cancels-siblings, nested</li>
-</ul>
-<p>      scopes.</p>
-<ul>
-<li>[ ] Self-host fixed point preserved.</li>
-</ul>
-<ul>
-<li>[ ] STEP 5: <code>channel</code> stdlib module — basic send / receive</li>
-<ul>
-<li>[ ] Runtime: channel struct (mutex + condvar + bounded queue).</li>
-<li>[ ] Stdlib API: <code>channel.new()</code>, <code>channel.new(buffer_size)</code>,</li>
-</ul>
-</ul>
-<p>      <code>channel.send</code>, <code>channel.receive</code>, <code>channel.close</code>,       <code>channel.closed?</code>.</p>
-<ul>
-<li>[ ] Closed channel semantics: send raises, receive drains then</li>
-</ul>
-<p>      returns nil.</p>
-<ul>
-<li>[ ] Tests: producer-consumer, long-lived worker, close.</li>
-<li>[ ] Self-host fixed point preserved.</li>
-</ul>
-<ul>
-<li>[ ] STEP 6: <code>channel.receive_timeout</code> and <code>channel.select</code></li>
-<ul>
-<li>[ ] Runtime: <code>channel_receive_timeout</code> (cond timed wait).</li>
-<li>[ ] Runtime: <code>channel_select</code> selecting one ready operation among</li>
-</ul>
-</ul>
-<p>      a list.</p>
-<ul>
-<li>[ ] Stdlib API: <code>channel.receive_timeout(c, seconds)</code>,</li>
-</ul>
-<p>      <code>channel.select([...])</code>.</p>
-<ul>
-<li>[ ] Tests: timeout, fairness, send/receive multiplexing.</li>
-<li>[ ] Self-host fixed point preserved.</li>
-</ul>
-<ul>
-<li>[ ] STEP 7: <code>sync</code> stdlib module</li>
-<ul>
-<li>[ ] Runtime: mutex (pthread_mutex_t), atomic_integer (C11</li>
-</ul>
-</ul>
-<p>      stdatomic), wait_group (counter + condvar).</p>
-<ul>
-<li>[ ] Stdlib API: <code>sync.mutex</code>, <code>sync.lock</code>, <code>sync.unlock</code>,</li>
-</ul>
-<p>      <code>sync.with_lock</code>, <code>sync.atomic_integer</code>,       <code>sync.atomic_integer.add</code> / <code>.load</code> / <code>.store</code> /       <code>.compare_and_swap</code>, <code>sync.wait_group</code>,       <code>sync.wait_group.add</code> / <code>.done</code> / <code>.wait</code>.</p>
-<ul>
-<li>[ ] Tests: shared cache + mutex, atomic counter, worker pool with</li>
-</ul>
-<p>      wait_group.</p>
-<ul>
-<li>[ ] Self-host fixed point preserved.</li>
-</ul>
-<ul>
-<li>[ ] STEP 8: Documentation, examples, v0.42 SPEC finalization</li>
-<ul>
-<li>[ ] Write <code>docs/CONCURRENCY.md</code> (full spec, alongside</li>
-</ul>
-</ul>
-<p>      <code>docs/CANONICAL_SYNTAX.md</code>).</p>
-<ul>
-<li>[ ] Add <code>docs/v0.42/SPEC.md</code> (release spec).</li>
-<li>[ ] Add <code>examples/concurrent/</code> with concurrent fetch, Counter</li>
-</ul>
-<p>      actor pattern, shared cache, worker pool, producer-consumer,       timeout patterns.</p>
-<ul>
-<li>[ ] Run integration tests covering combinations.</li>
-<li>[ ] Self-host fixed point preserved.</li>
-</ul>
+<p>_v0.42 shipped — see Released above and <code>docs/v0.42/SPEC.md</code>._</p>
 <h2 id="future-work">Future Work</h2>
 <p>Epics below are committed direction but not yet scheduled to a specific minor version. Each will be scoped into a <code>docs/vX.Y/SPEC.md</code> when picked up.</p>
 <h3 id="toolchain">Toolchain</h3>

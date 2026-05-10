@@ -36,7 +36,7 @@ stderr 'missing object field or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.41.0\n'
+stdout '0.42.0\n'
 ! stderr .
 
 -- classes.tya --

@@ -1,0 +1,23 @@
+# Producer / consumer over a buffered channel. The producer pushes
+# numbers, signals end-of-stream by closing, and the consumer drains
+# until receive returns nil.
+import channel
+
+c = channel.new(4)
+
+produce = ch ->
+  i = 1
+  while i <= 5
+    channel.send(ch, i)
+    i = i + 1
+  channel.close(ch)
+
+producer = spawn produce(c)
+
+while true
+  v = channel.receive(c)
+  if v == nil
+    break
+  print "got " + to_string(v)
+
+await producer

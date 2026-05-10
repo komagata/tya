@@ -157,6 +157,9 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`.
 
+- **v0.42** — Tya Concurrency: `spawn` / `await` / `scope` keywords;
+  `task` / `channel` / `mutex` / `atomic_integer` / `wait_group` value
+  kinds; `channel` and `sync` stdlib modules; multi-thread GC.
 - **v0.41** — precise mark-and-sweep garbage collector for the C runtime.
   `runtime.gc()` and `runtime.gc_stats()`; auto-trigger between top-level
   statements. Foundation for v0.42 Concurrency.
@@ -196,85 +199,7 @@ and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
 
-### v0.42 — Tya Concurrency
-
-`spawn` / `await` / `scope` keywords plus `channel` / `sync` stdlib
-modules. 1:1 OS-thread implementation backed by `pthread`. M:N scheduler
-deferred to a later minor.
-
-- [ ] **Ship v0.42 Tya Concurrency**
-  - [ ] STEP 1: Lexer / parser / AST for `spawn` / `await` / `scope`
-    - [ ] Reserve keywords `spawn`, `await`, `scope`.
-    - [ ] Add AST nodes: `SpawnExpr`, `AwaitExpr`, `ScopeBlock`.
-    - [ ] Parser accepts: `spawn fn(args)`, `await task_expr`, `scope`
-      indented block.
-    - [ ] Checker: `spawn` requires callable, `await` requires task,
-      `scope` body is a statement list.
-    - [ ] Codegen returns "not yet implemented" structured diagnostic.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 2: Multi-thread GC extension + thread-safe allocator
-    - [ ] Mutex-protect the allocator from STEP 1 of v0.41.
-    - [ ] Stop-the-world for GC: suspend all worker threads at safe
-      points, scan each thread's value stack and active locals, then
-      resume.
-    - [ ] Add a `task` value kind (`TYA_TASK`) and runtime task struct
-      (pthread_t, return slot, completion condvar, cancel flag).
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 3: `spawn` / `await` codegen and runtime
-    - [ ] Codegen `spawn fn(args)` → spawn helper that creates a
-      pthread running the function with copied/shared args.
-    - [ ] Codegen `await task` → join helper returning the task's
-      return value.
-    - [ ] Propagate `raise` from a spawned task to its `await` caller.
-    - [ ] Tests: single spawn/await, many spawn/await, raise
-      propagation.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 4: `scope` block — structured concurrency
-    - [ ] Codegen `scope`: track tasks created inside the block, await
-      all on normal exit.
-    - [ ] On `raise` inside the scope, signal cancel to outstanding
-      tasks and re-raise after they settle.
-    - [ ] Add `task.is_cancelled()` poll API for cooperative cancel.
-    - [ ] Tests: bounded lifetime, raise-cancels-siblings, nested
-      scopes.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 5: `channel` stdlib module — basic send / receive
-    - [ ] Runtime: channel struct (mutex + condvar + bounded queue).
-    - [ ] Stdlib API: `channel.new()`, `channel.new(buffer_size)`,
-      `channel.send`, `channel.receive`, `channel.close`,
-      `channel.closed?`.
-    - [ ] Closed channel semantics: send raises, receive drains then
-      returns nil.
-    - [ ] Tests: producer-consumer, long-lived worker, close.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 6: `channel.receive_timeout` and `channel.select`
-    - [ ] Runtime: `channel_receive_timeout` (cond timed wait).
-    - [ ] Runtime: `channel_select` selecting one ready operation among
-      a list.
-    - [ ] Stdlib API: `channel.receive_timeout(c, seconds)`,
-      `channel.select([...])`.
-    - [ ] Tests: timeout, fairness, send/receive multiplexing.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 7: `sync` stdlib module
-    - [ ] Runtime: mutex (pthread_mutex_t), atomic_integer (C11
-      stdatomic), wait_group (counter + condvar).
-    - [ ] Stdlib API: `sync.mutex`, `sync.lock`, `sync.unlock`,
-      `sync.with_lock`, `sync.atomic_integer`,
-      `sync.atomic_integer.add` / `.load` / `.store` /
-      `.compare_and_swap`, `sync.wait_group`,
-      `sync.wait_group.add` / `.done` / `.wait`.
-    - [ ] Tests: shared cache + mutex, atomic counter, worker pool with
-      wait_group.
-    - [ ] Self-host fixed point preserved.
-  - [ ] STEP 8: Documentation, examples, v0.42 SPEC finalization
-    - [ ] Write `docs/CONCURRENCY.md` (full spec, alongside
-      `docs/CANONICAL_SYNTAX.md`).
-    - [ ] Add `docs/v0.42/SPEC.md` (release spec).
-    - [ ] Add `examples/concurrent/` with concurrent fetch, Counter
-      actor pattern, shared cache, worker pool, producer-consumer,
-      timeout patterns.
-    - [ ] Run integration tests covering combinations.
-    - [ ] Self-host fixed point preserved.
+_v0.42 shipped — see Released above and `docs/v0.42/SPEC.md`._
 
 ## Future Work
 

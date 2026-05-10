@@ -1,0 +1,17 @@
+# Parallel "fetch" using `scope`. Tasks spawned inside the block are
+# guaranteed to complete before control leaves it; a fake `fetch`
+# stands in for any blocking I/O.
+import time
+
+fetch = url ->
+  time.sleep(0.05)
+  return url + " ok"
+
+results = []
+scope
+  push(results, spawn fetch("https://a"))
+  push(results, spawn fetch("https://b"))
+  push(results, spawn fetch("https://c"))
+
+for r in results
+  print await r

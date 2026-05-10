@@ -228,14 +228,27 @@ mutex-protected dict counter, atomic add / load / cas, and
 `wait_group_wait` blocking until every spawned worker has
 called `done`.
 
-### STEP 8 — Documentation, examples, v0.42 SPEC finalization (planned)
+### STEP 8 — Documentation, examples, release (landed)
 
-`docs/CONCURRENCY.md` companion document, `examples/concurrent/`,
-release prep.
+`examples/concurrent/` ships representative end-to-end programs:
+parallel fetch via `scope`, a long-lived `Counter` actor that owns
+its state and answers requests over a `channel`, a worker pool
+co-ordinated through `sync.wait_group`, and a producer / consumer
+streaming through a buffered channel. `docs/STDLIB.md` gains
+sections for the new `channel` and `sync` modules; the v0.42 SPEC
+above is the canonical surface description.
 
-## Observable language behavior
+## Observable language behavior summary
 
-After STEP 1, three keywords are reserved and three syntactic forms are
-recognized. Programs that try to evaluate any of the forms get a
-structured "not yet implemented" error. STEP 2 onward will progressively
-make them functional.
+- Three new keywords: `spawn`, `await`, `scope`.
+- Two new value kinds: `task`, `channel`. A third (`resource`)
+  hosts the sync primitives and surfaces as `kind(r) ==
+  "mutex" | "atomic_integer" | "wait_group"`.
+- Two new stdlib modules: `channel`, `sync`.
+- Generated programs link with `pthread` on Linux.
+- `runtime.gc()` is now thread-safe.
+
+The full safety contract (locals are still not roots; collections
+inside function bodies are not safe in v0.42 either; the existing
+v0.41 limitations still apply) is documented in
+`docs/v0.41/SPEC.md` and inherited by v0.42 unchanged.

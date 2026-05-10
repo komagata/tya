@@ -526,3 +526,78 @@ chain). Locals inside user functions are not roots in v0.41, so
 TyaValue is also reachable from a registered root — in practice, at
 the top level of the program. See the v0.41 SPEC for the full safety
 contract and known limitations.
+
+## `channel` (v0.42)
+
+Bounded, FIFO buffered channels for inter-task communication.
+
+```tya
+import channel
+
+c = channel.new(10)
+spawn (() -> channel.send(c, "hello"))
+print channel.receive(c)
+channel.close(c)
+```
+
+Functions:
+
+```tya
+new(capacity)
+send(c, value)
+receive(c)
+receive_timeout(c, seconds)
+close(c)
+closed?(c)
+```
+
+`channel.send` blocks while the buffer is full and raises if the
+channel has been closed. `channel.receive` blocks while the buffer
+is empty; once closed, it drains the buffer and then returns `nil`
+for every later call. `channel.receive_timeout` returns `nil` when
+the deadline elapses without a value. v0.42 treats `capacity = 0`
+as `1`; true rendezvous channels arrive in a later minor.
+
+## `sync` (v0.42)
+
+Mutex, atomic integer, and wait group primitives.
+
+```tya
+import sync
+
+m = sync.mutex()
+sync.lock(m)
+sync.unlock(m)
+
+a = sync.atomic_integer(0)
+sync.atomic_add(a, 1)
+print sync.atomic_load(a)
+
+wg = sync.wait_group()
+sync.wait_group_add(wg, 1)
+spawn (() -> sync.wait_group_done(wg))
+sync.wait_group_wait(wg)
+```
+
+Functions:
+
+```tya
+mutex ()
+lock m
+unlock m
+with_lock m, fn
+atomic_integer initial
+atomic_add a, n
+atomic_load a
+atomic_store a, n
+atomic_cas a, expected, new_value
+wait_group ()
+wait_group_add wg, n
+wait_group_done wg
+wait_group_wait wg
+```
+
+`sync.with_lock(m, fn)` runs `fn()` with the mutex held and releases
+the mutex even when `fn` raises. Tya closures cannot write back to
+outer variables, so to share mutable state across tasks pass a
+dict or array argument and mutate it through indexed assignment.

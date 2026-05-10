@@ -9,7 +9,7 @@ stdout '  \\n is two characters here.'
 stdout 'bytes len: 12'
 
 exec go run ./cmd/tya version
-stdout '0.41.0\n'
+stdout '0.42.0\n'
 
 -- sample.tya --
 re = r"\d+ files in {dir}"
