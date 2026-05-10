@@ -157,6 +157,10 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`.
 
+- **v0.43** — Concurrency known-gap close-out: cooperative
+  cancellation (`task.cancel` / `task.cancelled?` / `task.current`),
+  `scope` body raises run cleanup before unwinding,
+  `channel.select` multiplex.
 - **v0.42** — Tya Concurrency: `spawn` / `await` / `scope` keywords;
   `task` / `channel` / `mutex` / `atomic_integer` / `wait_group` value
   kinds; `channel` and `sync` stdlib modules; multi-thread GC.

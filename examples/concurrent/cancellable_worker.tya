@@ -1,0 +1,36 @@
+# A cancellable worker pool. Each worker polls task.cancelled?
+# at safe points; the coordinator cancels every worker after a
+# short deadline.
+import channel
+import sync
+import task
+import time
+
+results = channel.new(64)
+
+worker = id, rc ->
+  me = task.current()
+  produced = 0
+  while not task.cancelled?(me)
+    channel.send(rc, id * 1000 + produced)
+    produced = produced + 1
+    time.sleep(0.005)
+  return produced
+
+t1 = spawn worker(1, results)
+t2 = spawn worker(2, results)
+t3 = spawn worker(3, results)
+
+# Let the workers produce for a short while.
+time.sleep(0.05)
+task.cancel(t1)
+task.cancel(t2)
+task.cancel(t3)
+
+p1 = await t1
+p2 = await t2
+p3 = await t3
+
+print "produced 1: " + to_string(p1 > 0)
+print "produced 2: " + to_string(p2 > 0)
+print "produced 3: " + to_string(p3 > 0)

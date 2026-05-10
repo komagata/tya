@@ -601,3 +601,55 @@ wait_group_wait wg
 the mutex even when `fn` raises. Tya closures cannot write back to
 outer variables, so to share mutable state across tasks pass a
 dict or array argument and mutate it through indexed assignment.
+
+## `task` (v0.43)
+
+Cooperative cancellation for `spawn`-ed tasks.
+
+```tya
+import task
+
+worker = () ->
+  me = task.current()
+  while not task.cancelled?(me)
+    do_one_step()
+
+t = spawn worker()
+task.cancel(t)
+await t
+```
+
+Functions:
+
+```tya
+cancel t
+cancelled? t
+current ()
+```
+
+`cancel` sets the cancel flag on a task. `cancelled?` reads it.
+Cancellation is cooperative: setting the flag does not stop a
+worker, only signals it. Long-running workers must poll
+`cancelled?(current())` at safe points and return early.
+
+`current()` returns the currently-running task value, or `nil`
+on the main thread. Workers use `task.cancelled?(task.current())`
+to check whether they have been asked to stop.
+
+A `scope` block also sets the cancel flag on every remaining
+sibling once it observes the first task raise, and a synchronous
+raise from the body sets the cancel flag on every spawned sibling
+before the raise propagates.
+
+## Updated for v0.43: `channel.select`
+
+```tya
+result = channel.select([
+  [c1, "receive"],
+  [c2, "send", value],
+])
+```
+
+Returns a dict `{ index, kind, value }`. v0.43 polls each
+operation in a tight loop and sleeps briefly when nothing is
+ready; future minors will add a proper waiter-list mechanism.

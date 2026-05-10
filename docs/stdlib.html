@@ -359,6 +359,31 @@ wait_group_add wg, n
 wait_group_done wg
 wait_group_wait wg</code></pre>
 <p><code>sync.with_lock(m, fn)</code> runs <code>fn()</code> with the mutex held and releases the mutex even when <code>fn</code> raises. Tya closures cannot write back to outer variables, so to share mutable state across tasks pass a dict or array argument and mutate it through indexed assignment.</p>
+<h2 id="task-v0-43"><code>task</code> (v0.43)</h2>
+<p>Cooperative cancellation for <code>spawn</code>-ed tasks.</p>
+<pre><code class="language-tya">import task
+
+worker = () -&gt;
+  me = task.current()
+  while not task.cancelled?(me)
+    do_one_step()
+
+t = spawn worker()
+task.cancel(t)
+await t</code></pre>
+<p>Functions:</p>
+<pre><code class="language-tya">cancel t
+cancelled? t
+current ()</code></pre>
+<p><code>cancel</code> sets the cancel flag on a task. <code>cancelled?</code> reads it. Cancellation is cooperative: setting the flag does not stop a worker, only signals it. Long-running workers must poll <code>cancelled?(current())</code> at safe points and return early.</p>
+<p><code>current()</code> returns the currently-running task value, or <code>nil</code> on the main thread. Workers use <code>task.cancelled?(task.current())</code> to check whether they have been asked to stop.</p>
+<p>A <code>scope</code> block also sets the cancel flag on every remaining sibling once it observes the first task raise, and a synchronous raise from the body sets the cancel flag on every spawned sibling before the raise propagates.</p>
+<h2 id="updated-for-v0-43-channel-select">Updated for v0.43: <code>channel.select</code></h2>
+<pre><code class="language-tya">result = channel.select([
+  [c1, &quot;receive&quot;],
+  [c2, &quot;send&quot;, value],
+])</code></pre>
+<p>Returns a dict <code>{ index, kind, value }</code>. v0.43 polls each operation in a tight loop and sleeps briefly when nothing is ready; future minors will add a proper waiter-list mechanism.</p>
     </article>
   </main>
 </body>

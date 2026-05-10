@@ -60,6 +60,13 @@ The body's raise is preserved across the join, so
 `try { scope { ...; raise "body" } } catch e -> e == "body"`
 holds even when sibling tasks are still running.
 
+### STEP 4 — Documentation, examples, release (landed)
+
+`docs/STDLIB.md` gains `channel.select`, `task.cancel` /
+`task.cancelled?` / `task.current`. `examples/concurrent/` gains
+a cancellable worker pool. `docs/v0.42/SPEC.md` "known gaps" is
+linked to this v0.43 SPEC.
+
 ### STEP 3 — `channel.select` multiplex (landed)
 
 `channel.select(ops)` waits for the first ready operation in `ops`.

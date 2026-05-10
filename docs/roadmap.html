@@ -106,6 +106,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>.</p>
 <ul>
+<li>**v0.43** — Concurrency known-gap close-out: cooperative</li>
+</ul>
+<p>  cancellation (<code>task.cancel</code> / <code>task.cancelled?</code> / <code>task.current</code>),   <code>scope</code> body raises run cleanup before unwinding,   <code>channel.select</code> multiplex.</p>
+<ul>
 <li>**v0.42** — Tya Concurrency: <code>spawn</code> / <code>await</code> / <code>scope</code> keywords;</li>
 </ul>
 <p>  <code>task</code> / <code>channel</code> / <code>mutex</code> / <code>atomic_integer</code> / <code>wait_group</code> value   kinds; <code>channel</code> and <code>sync</code> stdlib modules; multi-thread GC.</p>
