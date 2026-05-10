@@ -1,0 +1,48 @@
+# v0.44 TYA_PATH search picks up packages outside the entry's
+# directory. The resolver consults: entry's directory, each
+# TYA_PATH entry (left to right), then stdlib/.
+cd $REPO
+env TYA_PATH=$WORK/lib
+
+# Package found via TYA_PATH.
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'from-lib\n'
+! stderr .
+
+# When TYA_PATH points to multiple directories, the first match
+# wins (left to right).
+env TYA_PATH=$WORK/lib_a:$WORK/lib_b
+exec go run ./cmd/tya run $WORK/which.tya
+stdout 'a\n'
+! stderr .
+
+# Reverse the search order: lib_b should win.
+env TYA_PATH=$WORK/lib_b:$WORK/lib_a
+exec go run ./cmd/tya run $WORK/which.tya
+stdout 'b\n'
+! stderr .
+
+-- main.tya --
+import shared
+
+print(shared.Shared.label())
+
+-- lib/shared/Shared.tya --
+class Shared
+  @@label = ->
+    "from-lib"
+
+-- which.tya --
+import overlay
+
+print(overlay.Overlay.tag())
+
+-- lib_a/overlay/Overlay.tya --
+class Overlay
+  @@tag = ->
+    "a"
+
+-- lib_b/overlay/Overlay.tya --
+class Overlay
+  @@tag = ->
+    "b"
