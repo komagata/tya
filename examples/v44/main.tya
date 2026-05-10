@@ -1,0 +1,8 @@
+import calc
+
+a = calc.Adder()
+d = calc.Doubler()
+
+a.add(3)
+a.add(4)
+print(a.add(d.apply(5)))
