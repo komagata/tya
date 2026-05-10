@@ -1,5 +1,10 @@
 # v0.44 import aliases work with directory packages: `import path as
 # alias` binds `alias` instead of the path's terminal segment.
+#
+# Aliasing two directory packages that share a terminal segment
+# (e.g. `a/net as a_net` + `b/net as b_net`) is a separate test in
+# import_collision.txtar — it fails at synthesis with a clear
+# "package name conflict" diagnostic, not silent overwrite.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/main.tya
