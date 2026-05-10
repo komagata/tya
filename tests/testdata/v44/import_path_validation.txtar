@@ -1,0 +1,49 @@
+# v0.44 import path validation: SPEC §"Restrictions" forbids `..`,
+# absolute paths, and segments that do not match the snake_case
+# package-name pattern. The lexer/parser already rejects most ill
+# formed paths at parse time; the cases that survive to runtime are
+# rejected by the resolver's validateImportPath / moduleNameRE.
+cd $REPO
+
+# An absolute-style path is rejected at parse: `/` is not a valid
+# identifier start.
+! exec go run ./cmd/tya run $WORK/abs.tya
+stderr 'expected module name after import'
+
+# `./` and `../` prefixes are rejected at parse for the same reason.
+! exec go run ./cmd/tya run $WORK/dot.tya
+stderr 'expected module name after import'
+
+! exec go run ./cmd/tya run $WORK/dotdot.tya
+stderr 'expected module name after import'
+
+# Embedded `..` and empty segments are rejected at parse with
+# "expected module path segment after '/'".
+! exec go run ./cmd/tya run $WORK/middle.tya
+stderr 'expected module path segment'
+
+! exec go run ./cmd/tya run $WORK/empty_segment.tya
+stderr 'expected module path segment'
+
+# A PascalCase terminal segment passes the parser but fails the
+# resolver's snake_case-package-name check.
+! exec go run ./cmd/tya run $WORK/pascal.tya
+stderr 'invalid module name: foo/Bar'
+
+-- abs.tya --
+import /etc/passwd
+
+-- dot.tya --
+import ./foo
+
+-- dotdot.tya --
+import ../foo
+
+-- middle.tya --
+import foo/../bar
+
+-- empty_segment.tya --
+import foo//bar
+
+-- pascal.tya --
+import foo/Bar
