@@ -3122,6 +3122,61 @@ static void *tya_task_thread_main(void *arg) {
   return NULL;
 }
 
+/* Per-thread chain of structured-concurrency scopes. tya_task_new
+ * registers each new task in the innermost scope (if any) so that
+ * tya_scope_exit can wait for it before returning. */
+static _Thread_local TyaScope *tya_current_scope = NULL;
+
+static void tya_scope_register_task(TyaTask *t) {
+  TyaScope *s = tya_current_scope;
+  if (s == NULL) return;
+  if (s->len == s->cap) {
+    int new_cap = s->cap == 0 ? 8 : s->cap * 2;
+    s->tasks = realloc(s->tasks, sizeof(TyaTask *) * (size_t)new_cap);
+    s->cap = new_cap;
+  }
+  s->tasks[s->len++] = t;
+}
+
+void tya_scope_enter(TyaScope *scope) {
+  scope->tasks = NULL;
+  scope->len = 0;
+  scope->cap = 0;
+  scope->prev = tya_current_scope;
+  tya_current_scope = scope;
+}
+
+void tya_scope_exit(TyaScope *scope) {
+  TyaValue first_raise = tya_nil();
+  bool had_raise = false;
+  for (int i = 0; i < scope->len; i++) {
+    TyaTask *t = scope->tasks[i];
+    pthread_mutex_lock(&t->mu);
+    bool already_joined = t->joined;
+    pthread_mutex_unlock(&t->mu);
+    if (!already_joined) {
+      pthread_join(t->thread, NULL);
+      pthread_mutex_lock(&t->mu);
+      t->joined = true;
+      pthread_mutex_unlock(&t->mu);
+    }
+    pthread_mutex_lock(&t->mu);
+    if (t->raised && !had_raise) {
+      first_raise = t->raise_value;
+      had_raise = true;
+    }
+    pthread_mutex_unlock(&t->mu);
+  }
+  free(scope->tasks);
+  scope->tasks = NULL;
+  scope->len = 0;
+  scope->cap = 0;
+  tya_current_scope = scope->prev;
+  if (had_raise) {
+    tya_raise(first_raise);
+  }
+}
+
 TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValue c, TyaValue d) {
   if (callee.kind != TYA_FUNCTION || callee.function == NULL) {
     tya_raise(tya_string("spawn: argument must be a callable"));
@@ -3150,6 +3205,7 @@ TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValu
     tya_raise(tya_string("spawn: pthread_create failed"));
     return tya_nil();
   }
+  tya_scope_register_task(t);
   return (TyaValue){.kind = TYA_TASK, .task = t};
 }
 

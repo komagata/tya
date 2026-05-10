@@ -1,9 +1,7 @@
 # v0.42: spawn / await / scope are reserved keywords parsed by the
-# front end. spawn / await are functional from STEP 3; scope is still
-# a "not yet implemented" diagnostic until STEP 4 lands.
+# front end. They cannot be used as variable names.
 cd $REPO
 
-# Reserved keywords cannot be used as variable names.
 ! exec go run ./cmd/tya check $WORK/spawn_as_var.tya
 stderr 'spawn cannot be used as a name'
 
@@ -12,14 +10,6 @@ stderr 'await cannot be used as a name'
 
 ! exec go run ./cmd/tya check $WORK/scope_as_var.tya
 stderr 'scope cannot be used as a name'
-
-# scope block still pending.
-! exec go run ./cmd/tya run $WORK/uses_scope.tya
-stderr 'scope block: not yet implemented'
-
--- uses_scope.tya --
-scope
-  print "in scope"
 
 -- spawn_as_var.tya --
 spawn = 1

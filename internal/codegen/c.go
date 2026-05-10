@@ -343,7 +343,18 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 	case *ast.MatchStmt:
 		return g.matchStmt(n)
 	case *ast.ScopeBlock:
-		return fmt.Errorf("scope block: not yet implemented (v0.42 STEP 1 only added syntax)")
+		scopeName := fmt.Sprintf("__scope%d", g.temp)
+		g.temp++
+		g.line(fmt.Sprintf("{ TyaScope %s; tya_scope_enter(&%s);", scopeName, scopeName))
+		g.indent++
+		for _, st := range n.Body {
+			if err := g.stmt(st); err != nil {
+				return err
+			}
+		}
+		g.indent--
+		g.line(fmt.Sprintf("tya_scope_exit(&%s); }", scopeName))
+		return nil
 	case *ast.ForInStmt:
 		iterable, _, err := g.expr(n.Iterable)
 		if err != nil {

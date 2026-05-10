@@ -107,12 +107,24 @@ twice is allowed; the first `await` joins the pthread, subsequent
 `await`s return the cached `result` (or re-raise the cached
 `raise_value`).
 
-### STEP 4 — `scope` block (planned)
+### STEP 4 — `scope` block (landed)
 
-Codegen for the structured-concurrency `scope` block. Track tasks
-created inside the block and await all on exit. On `raise`, signal
-cancel to outstanding tasks and re-raise after they settle. Add
-`task.is_cancelled()` poll API for cooperative cancel.
+`scope` opens a structured-concurrency block. Codegen wraps the body
+in a fresh C scope and brackets it with `tya_scope_enter` /
+`tya_scope_exit`. The runtime maintains a thread-local stack of
+`TyaScope` records, and `tya_task_new` registers each new task in
+the innermost open scope.
+
+When control leaves a `scope` block normally, `tya_scope_exit` joins
+every task spawned inside the block (in spawn order). If any of
+those tasks raised, the first such raise is re-raised after every
+sibling has joined.
+
+Open question for a later STEP: a synchronous raise from within the
+`scope` body itself bypasses the cleanup (the raise frame walks
+back without running `tya_scope_exit`). Cooperative cancel
+(`task.is_cancelled()`) is not yet wired. Both will land in a
+follow-up.
 
 ### STEP 5 — `channel` stdlib module (planned)
 

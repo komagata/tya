@@ -1,0 +1,46 @@
+# v0.42 STEP 4: scope block awaits every task spawned inside it before
+# control leaves the block, and re-raises the first task raise it sees.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/joins.tya
+stdout 'before scope'
+stdout 'after scope'
+
+exec go run ./cmd/tya run $WORK/results.tya
+stdout '20'
+stdout '40'
+stdout '60'
+
+exec go run ./cmd/tya run $WORK/raise_in_task.tya
+stdout 'caught after scope: boom'
+
+-- joins.tya --
+double = x -> x * 2
+print "before scope"
+scope
+  t = spawn double(5)
+print "after scope"
+
+-- results.tya --
+double = x -> x * 2
+results = []
+scope
+  push(results, spawn double(10))
+  push(results, spawn double(20))
+  push(results, spawn double(30))
+for r in results
+  print await r
+
+-- raise_in_task.tya --
+boom = () ->
+  raise "boom"
+ok = () ->
+  return 1
+try
+  scope
+    t1 = spawn ok()
+    t2 = spawn boom()
+    t3 = spawn ok()
+  print "scope completed (unreachable)"
+catch e
+  print "caught after scope: " + e
