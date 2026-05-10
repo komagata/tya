@@ -3,23 +3,23 @@ import base64
 
 module stdlib_base64_test
   test_encode_basic = ->
-    unittest.assert_equal("aGVsbG8=", base64.Base64.encode("hello"), "encode hello")
+    unittest.Unittest.assert_equal("aGVsbG8=", base64.Base64.encode("hello"), "encode hello")
   test_encode_bytes = ->
-    unittest.assert_equal("aGVsbG8=", base64.Base64.encode(b"hello"), "encode bytes")
+    unittest.Unittest.assert_equal("aGVsbG8=", base64.Base64.encode(b"hello"), "encode bytes")
   test_encode_two = ->
-    unittest.assert_equal("aGk=", base64.Base64.encode("hi"), "encode 2 bytes")
+    unittest.Unittest.assert_equal("aGk=", base64.Base64.encode("hi"), "encode 2 bytes")
   test_encode_one = ->
-    unittest.assert_equal("aA==", base64.Base64.encode("h"), "encode 1 byte")
+    unittest.Unittest.assert_equal("aA==", base64.Base64.encode("h"), "encode 1 byte")
   test_encode_empty = ->
-    unittest.assert_equal("", base64.Base64.encode(""), "empty")
+    unittest.Unittest.assert_equal("", base64.Base64.encode(""), "empty")
   test_decode_returns_bytes = ->
     decoded = base64.Base64.decode("aGVsbG8=")
-    unittest.assert_equal("bytes", kind(decoded), "decode returns bytes")
-    unittest.assert_equal("hello", bytes_text(decoded), "decoded value")
+    unittest.Unittest.assert_equal("bytes", kind(decoded), "decode returns bytes")
+    unittest.Unittest.assert_equal("hello", bytes_text(decoded), "decoded value")
   test_decode_no_padding = ->
-    unittest.assert_equal("hi", bytes_text(base64.Base64.decode("aGk")), "no padding")
+    unittest.Unittest.assert_equal("hi", bytes_text(base64.Base64.decode("aGk")), "no padding")
   test_decode_with_whitespace = ->
-    unittest.assert_equal("hello world", bytes_text(base64.Base64.decode("aGVsbG8gd29ybGQ=")), "longer")
+    unittest.Unittest.assert_equal("hello world", bytes_text(base64.Base64.decode("aGVsbG8gd29ybGQ=")), "longer")
   test_round_trip = ->
     text = "The quick brown fox"
-    unittest.assert_equal(text, bytes_text(base64.Base64.decode(base64.Base64.encode(text))), "round trip")
+    unittest.Unittest.assert_equal(text, bytes_text(base64.Base64.decode(base64.Base64.encode(text))), "round trip")

@@ -1,26 +1,26 @@
-module unittest
-  assert = cond, desc ->
+class Unittest
+  @@assert = cond, desc ->
     if not cond
       raise { kind: "unittest_fail", message: desc }
 
-  assert_falsy = cond, desc ->
+  @@assert_falsy = cond, desc ->
     if cond
       raise { kind: "unittest_fail", message: desc }
 
-  assert_equal = expected, actual, desc ->
+  @@assert_equal = expected, actual, desc ->
     if not equal(expected, actual)
       msg = "{desc}: expected {expected}, got {actual}"
       raise { kind: "unittest_fail", message: msg }
 
-  assert_not_equal = left, right, desc ->
+  @@assert_not_equal = left, right, desc ->
     if equal(left, right)
       raise { kind: "unittest_fail", message: "{desc}: expected not equal" }
 
-  assert_nil = value, desc ->
+  @@assert_nil = value, desc ->
     if value != nil
       raise { kind: "unittest_fail", message: "{desc}: expected nil, got {value}" }
 
-  assert_raises = body ->
+  @@assert_raises = body ->
     raised = false
     try
       body()
@@ -29,10 +29,10 @@ module unittest
     if not raised
       raise { kind: "unittest_fail", message: "expected raise but none" }
 
-  fail = msg ->
+  @@fail = msg ->
     raise { kind: "unittest_fail", message: msg }
 
-  run = cases ->
+  @@run = cases ->
     total_passes = 0
     total_failures = 0
     for c in cases

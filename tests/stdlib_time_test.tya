@@ -3,16 +3,16 @@ import time
 
 module stdlib_time_test
   test_now_returns_positive = ->
-    unittest.assert(time.now() > 1700000000, "epoch is recent")
+    unittest.Unittest.assert(time.now() > 1700000000, "epoch is recent")
   test_format_iso = ->
-    unittest.assert_equal("1970-01-01T00:00:00Z", time.format(0, "iso"), "epoch iso")
+    unittest.Unittest.assert_equal("1970-01-01T00:00:00Z", time.format(0, "iso"), "epoch iso")
   test_format_date = ->
-    unittest.assert_equal("1970-01-01", time.format(0, "date"), "epoch date")
+    unittest.Unittest.assert_equal("1970-01-01", time.format(0, "date"), "epoch date")
   test_parse_iso = ->
-    unittest.assert_equal(0, time.parse("1970-01-01T00:00:00Z"), "parse epoch")
+    unittest.Unittest.assert_equal(0, time.parse("1970-01-01T00:00:00Z"), "parse epoch")
   test_parse_date = ->
-    unittest.assert_equal(0, time.parse("1970-01-01"), "parse date")
+    unittest.Unittest.assert_equal(0, time.parse("1970-01-01"), "parse date")
   test_since_zero = ->
     n = time.now()
     elapsed = time.since(n)
-    unittest.assert(elapsed >= 0, "since non-negative")
+    unittest.Unittest.assert(elapsed >= 0, "since non-negative")

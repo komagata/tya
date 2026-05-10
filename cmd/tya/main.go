@@ -702,7 +702,7 @@ func synthesizeTestSuite(files []string) (string, error) {
 		b.WriteString(m)
 		b.WriteString("\n")
 	}
-	b.WriteString("\nunittest.run([")
+	b.WriteString("\nunittest.Unittest.run([")
 	for i, m := range moduleNames {
 		if i > 0 {
 			b.WriteString(", ")

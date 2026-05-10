@@ -5,10 +5,10 @@ module stdlib_file_test
   test_write_then_read = ->
     p = "/tmp/tya_v022_test.txt"
     file.File.write(p, "hello tya")
-    unittest.assert_equal("hello tya", file.File.read(p), "round-trip")
+    unittest.Unittest.assert_equal("hello tya", file.File.read(p), "round-trip")
   test_exists_true = ->
     p = "/tmp/tya_v022_test.txt"
     file.File.write(p, "hi")
-    unittest.assert(file.File.exists?(p), "exists")
+    unittest.Unittest.assert(file.File.exists?(p), "exists")
   test_exists_false = ->
-    unittest.assert_equal(false, file.File.exists?("/tmp/__tya_v022_no_such__"), "missing")
+    unittest.Unittest.assert_equal(false, file.File.exists?("/tmp/__tya_v022_no_such__"), "missing")

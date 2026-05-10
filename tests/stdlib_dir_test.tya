@@ -12,11 +12,11 @@ module stdlib_dir_test
     dir.Dir.mkdir(root)
     file.File.write("{root}/b.txt", "")
     file.File.write("{root}/a.txt", "")
-    unittest.assert_equal(["a.txt", "b.txt"], dir.Dir.list(root), "sorted list")
+    unittest.Unittest.assert_equal(["a.txt", "b.txt"], dir.Dir.list(root), "sorted list")
     file.File.remove("{root}/a.txt")
     file.File.remove("{root}/b.txt")
     dir.Dir.rmdir(root)
-    unittest.assert_equal(false, file.File.exists?(root), "rmdir removed")
+    unittest.Unittest.assert_equal(false, file.File.exists?(root), "rmdir removed")
 
   test_mkdir_existing_raises = ->
     root = "/tmp/tya_v23_dir_b"
@@ -30,5 +30,5 @@ module stdlib_dir_test
       dir.Dir.mkdir(root)
     catch _
       raised = true
-    unittest.assert(raised, "duplicate mkdir raises")
+    unittest.Unittest.assert(raised, "duplicate mkdir raises")
     dir.Dir.rmdir(root)

@@ -3,18 +3,18 @@ import math
 
 module stdlib_math_test
   test_abs_negative = ->
-    unittest.assert_equal(3, math.Math.abs(-3), "abs negative")
+    unittest.Unittest.assert_equal(3, math.Math.abs(-3), "abs negative")
   test_abs_positive = ->
-    unittest.assert_equal(5, math.Math.abs(5), "abs positive")
+    unittest.Unittest.assert_equal(5, math.Math.abs(5), "abs positive")
   test_abs_zero = ->
-    unittest.assert_equal(0, math.Math.abs(0), "abs zero")
+    unittest.Unittest.assert_equal(0, math.Math.abs(0), "abs zero")
   test_min = ->
-    unittest.assert_equal(2, math.Math.min(2, 5), "min")
+    unittest.Unittest.assert_equal(2, math.Math.min(2, 5), "min")
   test_max = ->
-    unittest.assert_equal(5, math.Math.max(2, 5), "max")
+    unittest.Unittest.assert_equal(5, math.Math.max(2, 5), "max")
   test_clamp_above_max = ->
-    unittest.assert_equal(10, math.Math.clamp(12, 0, 10), "clamp above max")
+    unittest.Unittest.assert_equal(10, math.Math.clamp(12, 0, 10), "clamp above max")
   test_clamp_below_min = ->
-    unittest.assert_equal(0, math.Math.clamp(-1, 0, 10), "clamp below min")
+    unittest.Unittest.assert_equal(0, math.Math.clamp(-1, 0, 10), "clamp below min")
   test_clamp_within = ->
-    unittest.assert_equal(5, math.Math.clamp(5, 0, 10), "clamp within")
+    unittest.Unittest.assert_equal(5, math.Math.clamp(5, 0, 10), "clamp within")

@@ -3,28 +3,28 @@ import math
 
 module stdlib_math_expansion_test
   test_sqrt = ->
-    unittest.assert_equal(2, math.Math.sqrt(4), "sqrt 4")
-    unittest.assert_equal(3, math.Math.sqrt(9), "sqrt 9")
+    unittest.Unittest.assert_equal(2, math.Math.sqrt(4), "sqrt 4")
+    unittest.Unittest.assert_equal(3, math.Math.sqrt(9), "sqrt 9")
   test_pow = ->
-    unittest.assert_equal(8, math.Math.pow(2, 3), "2^3")
-    unittest.assert_equal(1024, math.Math.pow(2, 10), "2^10")
+    unittest.Unittest.assert_equal(8, math.Math.pow(2, 3), "2^3")
+    unittest.Unittest.assert_equal(1024, math.Math.pow(2, 10), "2^10")
   test_floor_ceil = ->
-    unittest.assert_equal(1, math.Math.floor(1.9), "floor")
-    unittest.assert_equal(2, math.Math.ceil(1.1), "ceil")
+    unittest.Unittest.assert_equal(1, math.Math.floor(1.9), "floor")
+    unittest.Unittest.assert_equal(2, math.Math.ceil(1.1), "ceil")
   test_round_trunc = ->
-    unittest.assert_equal(2, math.Math.round(1.5), "round")
-    unittest.assert_equal(1, math.Math.trunc(1.9), "trunc")
+    unittest.Unittest.assert_equal(2, math.Math.round(1.5), "round")
+    unittest.Unittest.assert_equal(1, math.Math.trunc(1.9), "trunc")
   test_constants = ->
-    unittest.assert(math.Math.pi > 3.14, "pi")
-    unittest.assert(math.Math.pi < 3.15, "pi")
-    unittest.assert(math.Math.e > 2.71, "e")
+    unittest.Unittest.assert(math.Math.pi > 3.14, "pi")
+    unittest.Unittest.assert(math.Math.pi < 3.15, "pi")
+    unittest.Unittest.assert(math.Math.e > 2.71, "e")
   test_log_exp = ->
-    unittest.assert(math.Math.log(math.Math.e) > 0.99, "log(e)")
-    unittest.assert(math.Math.log(math.Math.e) < 1.01, "log(e)")
+    unittest.Unittest.assert(math.Math.log(math.Math.e) > 0.99, "log(e)")
+    unittest.Unittest.assert(math.Math.log(math.Math.e) < 1.01, "log(e)")
   test_trig = ->
     s = math.Math.sin(0)
-    unittest.assert(s < 0.001 and s > -0.001, "sin 0")
+    unittest.Unittest.assert(s < 0.001 and s > -0.001, "sin 0")
     c = math.Math.cos(0)
-    unittest.assert_equal(1, c, "cos 0")
+    unittest.Unittest.assert_equal(1, c, "cos 0")
   test_atan2 = ->
-    unittest.assert_equal(0, math.Math.atan2(0, 1), "atan2 0,1")
+    unittest.Unittest.assert_equal(0, math.Math.atan2(0, 1), "atan2 0,1")

@@ -3,34 +3,34 @@ import path
 
 module stdlib_path_test
   test_join_segments = ->
-    unittest.assert_equal("tmp/tya/memo.txt", path.Path.join(["tmp", "tya", "memo.txt"]), "join")
+    unittest.Unittest.assert_equal("tmp/tya/memo.txt", path.Path.join(["tmp", "tya", "memo.txt"]), "join")
   test_clean_dot_dotdot = ->
-    unittest.assert_equal("tmp/memo.txt", path.Path.clean("tmp/./tya/../memo.txt"), "clean")
+    unittest.Unittest.assert_equal("tmp/memo.txt", path.Path.clean("tmp/./tya/../memo.txt"), "clean")
   test_basename_abs = ->
-    unittest.assert_equal("memo.txt", path.Path.basename("/tmp/tya/memo.txt"), "basename abs")
+    unittest.Unittest.assert_equal("memo.txt", path.Path.basename("/tmp/tya/memo.txt"), "basename abs")
   test_dirname_abs = ->
-    unittest.assert_equal("/tmp/tya", path.Path.dirname("/tmp/tya/memo.txt"), "dirname abs")
+    unittest.Unittest.assert_equal("/tmp/tya", path.Path.dirname("/tmp/tya/memo.txt"), "dirname abs")
   test_extname_normal = ->
-    unittest.assert_equal(".txt", path.Path.extname("/tmp/tya/memo.txt"), "extname normal")
+    unittest.Unittest.assert_equal(".txt", path.Path.extname("/tmp/tya/memo.txt"), "extname normal")
   test_basename_no_dir = ->
-    unittest.assert_equal("memo.txt", path.Path.basename("memo.txt"), "basename bare")
+    unittest.Unittest.assert_equal("memo.txt", path.Path.basename("memo.txt"), "basename bare")
   test_dirname_bare = ->
-    unittest.assert_equal(".", path.Path.dirname("memo.txt"), "dirname bare")
+    unittest.Unittest.assert_equal(".", path.Path.dirname("memo.txt"), "dirname bare")
   test_dirname_root = ->
-    unittest.assert_equal("/", path.Path.dirname("/"), "dirname root")
+    unittest.Unittest.assert_equal("/", path.Path.dirname("/"), "dirname root")
   test_extname_none = ->
-    unittest.assert_equal("", path.Path.extname("foo"), "no ext")
+    unittest.Unittest.assert_equal("", path.Path.extname("foo"), "no ext")
   test_extname_dotfile = ->
-    unittest.assert_equal("", path.Path.extname(".bashrc"), "dotfile")
+    unittest.Unittest.assert_equal("", path.Path.extname(".bashrc"), "dotfile")
   test_extname_double = ->
-    unittest.assert_equal(".gz", path.Path.extname("foo.tar.gz"), "double ext")
+    unittest.Unittest.assert_equal(".gz", path.Path.extname("foo.tar.gz"), "double ext")
   test_clean_empty = ->
-    unittest.assert_equal(".", path.Path.clean(""), "clean empty")
+    unittest.Unittest.assert_equal(".", path.Path.clean(""), "clean empty")
   test_clean_root = ->
-    unittest.assert_equal("/", path.Path.clean("/"), "clean root")
+    unittest.Unittest.assert_equal("/", path.Path.clean("/"), "clean root")
   test_clean_messy = ->
-    unittest.assert_equal("a/b/d", path.Path.clean("a//b/./c/../d"), "clean messy")
+    unittest.Unittest.assert_equal("a/b/d", path.Path.clean("a//b/./c/../d"), "clean messy")
   test_clean_relative_dotdot = ->
-    unittest.assert_equal("../a/b", path.Path.clean("../a/b"), "rel dotdot")
+    unittest.Unittest.assert_equal("../a/b", path.Path.clean("../a/b"), "rel dotdot")
   test_join_absolute = ->
-    unittest.assert_equal("/a/b", path.Path.join(["/", "a", "b"]), "join abs")
+    unittest.Unittest.assert_equal("/a/b", path.Path.join(["/", "a", "b"]), "join abs")

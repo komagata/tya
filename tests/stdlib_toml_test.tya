@@ -4,31 +4,31 @@ import toml
 module stdlib_toml_test
   test_parse_basic = ->
     v = toml.Toml.parse("name = \"tya\"\nport = 8080\n")
-    unittest.assert_equal("tya", v["name"], "name")
-    unittest.assert_equal(8080, v["port"], "port")
+    unittest.Unittest.assert_equal("tya", v["name"], "name")
+    unittest.Unittest.assert_equal(8080, v["port"], "port")
   test_parse_section = ->
     text = "[server]\nhost = \"localhost\"\nport = 80\n"
     v = toml.Toml.parse(text)
-    unittest.assert_equal("localhost", v["server"]["host"], "host")
-    unittest.assert_equal(80, v["server"]["port"], "port")
+    unittest.Unittest.assert_equal("localhost", v["server"]["host"], "host")
+    unittest.Unittest.assert_equal(80, v["server"]["port"], "port")
   test_parse_array = ->
     v = toml.Toml.parse("nums = [1, 2, 3]\n")
-    unittest.assert_equal([1, 2, 3], v["nums"], "array")
+    unittest.Unittest.assert_equal([1, 2, 3], v["nums"], "array")
   test_parse_array_of_tables = ->
     text = "[[items]]\nname = \"a\"\n[[items]]\nname = \"b\"\n"
     v = toml.Toml.parse(text)
-    unittest.assert_equal(2, len(v["items"]), "two items")
-    unittest.assert_equal("a", v["items"][0]["name"], "first")
-    unittest.assert_equal("b", v["items"][1]["name"], "second")
+    unittest.Unittest.assert_equal(2, len(v["items"]), "two items")
+    unittest.Unittest.assert_equal("a", v["items"][0]["name"], "first")
+    unittest.Unittest.assert_equal("b", v["items"][1]["name"], "second")
   test_parse_booleans = ->
     v = toml.Toml.parse("a = true\nb = false\n")
-    unittest.assert_equal(true, v["a"], "true")
-    unittest.assert_equal(false, v["b"], "false")
+    unittest.Unittest.assert_equal(true, v["a"], "true")
+    unittest.Unittest.assert_equal(false, v["b"], "false")
   test_dump_basic = ->
     out = toml.Toml.dump({ name: "tya", port: 8080 })
     expected = "name = \"tya\"\nport = 8080\n"
-    unittest.assert_equal(expected, out, "dump basic")
+    unittest.Unittest.assert_equal(expected, out, "dump basic")
   test_dump_section = ->
     out = toml.Toml.dump({ server: { host: "x", port: 80 } })
     expected = "\n[server]\nhost = \"x\"\nport = 80\n"
-    unittest.assert_equal(expected, out, "dump section")
+    unittest.Unittest.assert_equal(expected, out, "dump section")
