@@ -3217,8 +3217,19 @@ static TyaValue tya_task_invoke(TyaValue callee, int argc, TyaValue *argv) {
   return tya_nil();
 }
 
+/* Pointer to the currently-running task; nil on the main thread.
+ * tya_current_task() reads it; tya_task_thread_main sets it on entry. */
+static _Thread_local TyaTask *tya_current_task_ptr = NULL;
+
+TyaValue tya_current_task(void) {
+  TyaTask *t = tya_current_task_ptr;
+  if (t == NULL) return tya_nil();
+  return (TyaValue){.kind = TYA_TASK, .task = t};
+}
+
 static void *tya_task_thread_main(void *arg) {
   TyaTask *t = (TyaTask *)arg;
+  tya_current_task_ptr = t;
   TyaRaiseFrame frame;
   frame.prev = NULL;
   if (setjmp(frame.env) == 0) {
@@ -3367,6 +3378,23 @@ TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValu
   }
   tya_scope_register_task(t);
   return (TyaValue){.kind = TYA_TASK, .task = t};
+}
+
+TyaValue tya_task_cancel(TyaValue v) {
+  if (v.kind != TYA_TASK || v.task == NULL) {
+    tya_raise(tya_string("task.cancel: argument must be a task"));
+    return tya_nil();
+  }
+  atomic_store(&v.task->cancelled, true);
+  return tya_nil();
+}
+
+TyaValue tya_task_is_cancelled(TyaValue v) {
+  if (v.kind != TYA_TASK || v.task == NULL) {
+    tya_raise(tya_string("task.is_cancelled: argument must be a task"));
+    return tya_nil();
+  }
+  return tya_bool(atomic_load(&v.task->cancelled));
 }
 
 TyaValue tya_task_await(TyaValue v) {

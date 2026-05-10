@@ -2609,6 +2609,12 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_channel_close(%s)", 1)
 	case "channel_closed_p":
 		return emit("tya_channel_closed(%s)", 1)
+	case "task_cancel":
+		return emit("tya_task_cancel(%s)", 1)
+	case "task_is_cancelled_p":
+		return emit("tya_task_is_cancelled(%s)", 1)
+	case "task_current":
+		return emit("tya_current_task()", 0)
 	case "sync_mutex_new":
 		return emit("tya_sync_mutex_new()", 0)
 	case "sync_lock":

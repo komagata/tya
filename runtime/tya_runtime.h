@@ -196,8 +196,23 @@ typedef struct TyaScope {
 
 TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
 TyaValue tya_task_await(TyaValue task);
+/* Cooperative cancellation (v0.43). The cancel flag is set to true;
+ * worker code is expected to poll task_is_cancelled at safe points and
+ * return early. tya_scope_exit also sets the cancel flag on every
+ * sibling when one task raises. */
+TyaValue tya_task_cancel(TyaValue task);
+TyaValue tya_task_is_cancelled(TyaValue task);
+/* tya_current_task returns the task value of the currently-running
+ * task (or nil for the main thread). Worker bodies use it to poll
+ * task.is_cancelled() on themselves. */
+TyaValue tya_current_task(void);
 void tya_scope_enter(TyaScope *scope);
 void tya_scope_exit(TyaScope *scope);
+/* tya_scope_raise is invoked by codegen when control unwinds out of
+ * a scope body via raise. It joins outstanding tasks first and then
+ * re-raises the original raise value, taking precedence over any
+ * subsequent task raise. */
+void tya_scope_raise(TyaScope *scope, TyaValue value);
 
 /* Channel API (v0.42 STEP 5).
  *

@@ -136,6 +136,8 @@ var builtinNames = []string{
 	"runtime_gc_collect",
 	// v0.42 channel
 	"channel_new", "channel_send", "channel_receive", "channel_receive_timeout", "channel_close", "channel_closed_p",
+	// v0.43 task cooperative cancel
+	"task_cancel", "task_is_cancelled_p", "task_current",
 	// v0.42 sync
 	"sync_mutex_new", "sync_lock", "sync_unlock",
 	"sync_atomic_integer_new", "sync_atomic_integer_add", "sync_atomic_integer_load",
