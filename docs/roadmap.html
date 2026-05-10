@@ -236,6 +236,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 <p>      through the <code>&lt;currentModule&gt;.&lt;Name&gt;</code> fallback in checker and       codegen (commit f6d276b). Sibling classes inside the same       synthesized package call each other without prefix.</p>
 <ul>
+<li>[x] Same-segment package collision detection (commit c3bfa48e).</li>
+</ul>
+<p>      Two directory packages whose paths share the terminal segment       are caught at synthesis time with a &quot;package name conflict&quot;       diagnostic, both for unaliased and aliased imports. Pinned by       <code>tests/testdata/v44/import_collision.txtar</code>.</p>
+<ul>
 <li>[ ] **M4: Compact entry-file desugaring**</li>
 <ul>
 <li>[x] Runner accepts only lowercase script files for <code>tya run</code>.</li>

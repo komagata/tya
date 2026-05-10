@@ -255,6 +255,11 @@ every STEP boundary.
       through the `<currentModule>.<Name>` fallback in checker and
       codegen (commit f6d276b). Sibling classes inside the same
       synthesized package call each other without prefix.
+    - [x] Same-segment package collision detection (commit c3bfa48e).
+      Two directory packages whose paths share the terminal segment
+      are caught at synthesis time with a "package name conflict"
+      diagnostic, both for unaliased and aliased imports. Pinned by
+      `tests/testdata/v44/import_collision.txtar`.
   - [ ] **M4: Compact entry-file desugaring**
     - [x] Runner accepts only lowercase script files for `tya run`.
     - [x] PascalCase class files are rejected as runner targets with a
