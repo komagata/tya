@@ -71,12 +71,15 @@ Request.tya          ->  class Request
 HttpClient.tya       ->  class HttpClient
 ```
 
-A class file may additionally declare any number of **private classes** below
-the public one. Private classes are visible only within the same file.
+A class file may additionally declare any number of **private classes**
+alongside the public one. A class is the file's public class only if its
+name matches the filename without `.tya`. Every other class in the file is
+private and visible only within that file. Private classes follow the
+same `PascalCase` naming rule.
 
 ```tya
 # Request.tya
-class _Header
+class Header
   init = name, value ->
     @name = name
     @value = value
@@ -86,6 +89,10 @@ class Request
     @url = url
     @headers = []
 ```
+
+Here `Request` matches the filename and is the file's public class.
+`Header` does not match the filename and is private; another file may
+declare its own `Header` without conflict.
 
 A class file must not contain top-level statements other than `import`,
 class declarations, and interface declarations.
@@ -485,7 +492,7 @@ print(math.Math.pi)
 
 ```tya
 # Server.tya
-class _Connection
+class Connection
   init = socket ->
     @socket = socket
 
@@ -498,9 +505,12 @@ class Server
     @connections = []
 
   accept = ->
-    conn = _Connection(socket)    # _Connection is file-private
+    conn = Connection(socket)    # Connection is file-private
     push(@connections, conn)
 ```
+
+`Server` matches the filename and is public. `Connection` does not
+match and is private; nothing outside `Server.tya` can reference it.
 
 ## Migration Sketch (informative)
 

@@ -270,6 +270,133 @@ func TestCheckUnusedAllowsUsedBindings(t *testing.T) {
 	}
 }
 
+func TestIsClassFileName(t *testing.T) {
+	cases := []struct {
+		path string
+		want bool
+	}{
+		{"Request.tya", true},
+		{"HttpClient.tya", true},
+		{"foo/bar/Request.tya", true},
+		{"request.tya", false},
+		{"http_client.tya", false},
+		{"_Hidden.tya", false},
+		{"123.tya", false},
+	}
+	for _, c := range cases {
+		if got := IsClassFileName(c.path); got != c.want {
+			t.Errorf("IsClassFileName(%q) = %v, want %v", c.path, got, c.want)
+		}
+	}
+}
+
+func TestIsScriptFileName(t *testing.T) {
+	cases := []struct {
+		path string
+		want bool
+	}{
+		{"hello.tya", true},
+		{"client.tya", true},
+		{"http_client.tya", true},
+		{"Hello.tya", false},
+		{"_hidden.tya", false},
+	}
+	for _, c := range cases {
+		if got := IsScriptFileName(c.path); got != c.want {
+			t.Errorf("IsScriptFileName(%q) = %v, want %v", c.path, got, c.want)
+		}
+	}
+}
+
+func TestCheckClassFileAcceptsMatchingClass(t *testing.T) {
+	prog := parse(t, "class Request\n  init = url ->\n    @url = url\n")
+	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckClassFileAcceptsImportsBeforeClass(t *testing.T) {
+	prog := parse(t, "import string\n\nclass Request\n  init = url ->\n    @url = url\n")
+	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckClassFileAcceptsPrivateClasses(t *testing.T) {
+	src := "class Header\n  init = name, value ->\n    @name = name\n    @value = value\n\n" +
+		"class Request\n  init = url ->\n    @url = url\n"
+	prog := parse(t, src)
+	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckClassFileAcceptsInterfaceCompanion(t *testing.T) {
+	src := "interface Sendable\n  send = ->\n\nclass Request\n  init = ->\n    @url = nil\n"
+	prog := parse(t, src)
+	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckClassFileRejectsMissingPublicClass(t *testing.T) {
+	prog := parse(t, "class Helper\n  init = ->\n    @x = 1\n")
+	err := CheckClassFile(prog, "Request.tya")
+	if err == nil {
+		t.Fatal("expected missing public class error")
+	}
+	if !strings.Contains(err.Error(), "must define class Request") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckClassFileRejectsNonPascalCaseFilename(t *testing.T) {
+	prog := parse(t, "class Request\n  init = ->\n    @x = 1\n")
+	err := CheckClassFile(prog, "request.tya")
+	if err == nil {
+		t.Fatal("expected PascalCase filename error")
+	}
+	if !strings.Contains(err.Error(), "PascalCase name") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckClassFileRejectsTopLevelStatement(t *testing.T) {
+	src := "class Request\n  init = ->\n    @x = 1\n\nx = 1\n"
+	prog := parse(t, src)
+	err := CheckClassFile(prog, "Request.tya")
+	if err == nil {
+		t.Fatal("expected top-level statement error")
+	}
+	if !strings.Contains(err.Error(), "may only contain import, class, and interface") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckClassFileRejectsImportAfterClass(t *testing.T) {
+	src := "class Request\n  init = ->\n    @x = 1\n\nimport string\n"
+	prog := parse(t, src)
+	err := CheckClassFile(prog, "Request.tya")
+	if err == nil {
+		t.Fatal("expected import-after-class error")
+	}
+	if !strings.Contains(err.Error(), "imports must precede") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckClassFileRejectsDuplicatePublicClass(t *testing.T) {
+	// Duplicate top-level class names are caught earlier by the
+	// structure checker, not by CheckClassFile itself, but we still
+	// document the behavior.
+	src := "class Request\n  init = ->\n    @x = 1\n\nclass Request\n  init = ->\n    @y = 1\n"
+	prog := parse(t, src)
+	err := CheckClassFile(prog, "Request.tya")
+	if err == nil {
+		t.Fatal("expected duplicate-class error")
+	}
+}
+
 func parse(t *testing.T, src string) *ast.Program {
 	t.Helper()
 	toks, errs := lexer.Lex(src)

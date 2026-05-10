@@ -78,6 +78,66 @@ func checkStructure(prog *ast.Program, modules []string) error {
 	return checkStmts(prog.Stmts, constants, scope)
 }
 
+// IsClassFileName reports whether the given path identifies a v0.44
+// class file based on its leaf name: the leaf without ".tya" is a
+// PascalCase identifier (matches classNameRE).
+func IsClassFileName(path string) bool {
+	base := strings.TrimSuffix(filepath.Base(path), ".tya")
+	return classNameRE.MatchString(base)
+}
+
+// IsScriptFileName reports whether the given path identifies a v0.44
+// script file based on its leaf name: the leaf without ".tya" is a
+// snake_case identifier with no leading underscore.
+func IsScriptFileName(path string) bool {
+	base := strings.TrimSuffix(filepath.Base(path), ".tya")
+	return valueNameRE.MatchString(base) && !strings.HasPrefix(base, "_")
+}
+
+// CheckClassFile validates a v0.44 class file at the given path. The
+// file must contain exactly one public class whose name matches the
+// filename without ".tya". Additional class declarations are private
+// to the file (visibility is enforced separately in M5). Top-level
+// statements other than import, class, and interface declarations are
+// rejected. Imports must precede any class or interface declaration.
+//
+// CheckClassFile is additive: it does not replace CheckModuleFile.
+// During the v0.44 transition both shapes coexist; the runner picks the
+// right validator based on the file's leaf-name kind.
+func CheckClassFile(prog *ast.Program, path string) error {
+	base := filepath.Base(path)
+	want := strings.TrimSuffix(base, ".tya")
+	if !classNameRE.MatchString(want) {
+		return fmt.Errorf("class file %s must have a PascalCase name", base)
+	}
+	publicSeen := false
+	inDeclarations := false
+	for _, stmt := range prog.Stmts {
+		switch n := stmt.(type) {
+		case *ast.ImportStmt:
+			if inDeclarations {
+				return fmt.Errorf("class file %s imports must precede class and interface declarations", base)
+			}
+		case *ast.InterfaceDecl:
+			inDeclarations = true
+		case *ast.ClassDecl:
+			inDeclarations = true
+			if n.Name == want {
+				if publicSeen {
+					return fmt.Errorf("class file %s declares public class %s more than once", base, want)
+				}
+				publicSeen = true
+			}
+		default:
+			return fmt.Errorf("class file %s may only contain import, class, and interface declarations", base)
+		}
+	}
+	if !publicSeen {
+		return fmt.Errorf("class file %s must define class %s", base, want)
+	}
+	return checkStructure(prog, nil)
+}
+
 func CheckModuleFile(prog *ast.Program, path string) error {
 	want := strings.TrimSuffix(filepath.Base(path), ".tya")
 	if !valueNameRE.MatchString(want) || strings.HasPrefix(want, "_") {

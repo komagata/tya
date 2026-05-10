@@ -82,9 +82,9 @@
 <p>A class file is a PascalCase <code>.tya</code> file containing **exactly one top-level public class** whose name matches the filename without <code>.tya</code>.</p>
 <pre><code class="language-text">Request.tya          -&gt;  class Request
 HttpClient.tya       -&gt;  class HttpClient</code></pre>
-<p>A class file may additionally declare any number of **private classes** below the public one. Private classes are visible only within the same file.</p>
+<p>A class file may additionally declare any number of **private classes** alongside the public one. A class is the file's public class only if its name matches the filename without <code>.tya</code>. Every other class in the file is private and visible only within that file. Private classes follow the same <code>PascalCase</code> naming rule.</p>
 <pre><code class="language-tya"># Request.tya
-class _Header
+class Header
   init = name, value -&gt;
     @name = name
     @value = value
@@ -93,6 +93,7 @@ class Request
   init = url -&gt;
     @url = url
     @headers = []</code></pre>
+<p>Here <code>Request</code> matches the filename and is the file's public class. <code>Header</code> does not match the filename and is private; another file may declare its own <code>Header</code> without conflict.</p>
 <p>A class file must not contain top-level statements other than <code>import</code>, class declarations, and interface declarations.</p>
 <h3 id="script-file">Script file</h3>
 <p>A script file is a lowercase <code>.tya</code> file. Its body is **top-level statements and bindings**, optionally preceded by <code>import</code> lines.</p>
@@ -313,7 +314,7 @@ print(math.Math.sin(0.5))
 print(math.Math.pi)</code></pre>
 <h3 id="private-class-inside-a-class-file">Private class inside a class file</h3>
 <pre><code class="language-tya"># Server.tya
-class _Connection
+class Connection
   init = socket -&gt;
     @socket = socket
 
@@ -326,8 +327,9 @@ class Server
     @connections = []
 
   accept = -&gt;
-    conn = _Connection(socket)    # _Connection is file-private
+    conn = Connection(socket)    # Connection is file-private
     push(@connections, conn)</code></pre>
+<p><code>Server</code> matches the filename and is public. <code>Connection</code> does not match and is private; nothing outside <code>Server.tya</code> can reference it.</p>
 <h2 id="migration-sketch-informative">Migration Sketch (informative)</h2>
 <p>The implementation order, captured for cross-reference with <code>ROADMAP.md</code>:</p>
 <ol>
