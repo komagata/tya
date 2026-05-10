@@ -400,6 +400,14 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Add positive lexer + script tests pinning
     `"Hello, {user["name"]}!"` and the matching multi-line and raw
     cases.
+  - [ ] Reference: most modern interpolation languages already
+    allow this (JavaScript template literals, C# `$"..."`, Kotlin,
+    Ruby `"#{...}"`, Scala, Dart, Elixir, Swift `\( )`). Python
+    aligned in 3.12 via PEP 701; Tya should follow the same model.
+    The minority that still forbids nested same-quote is PHP
+    `"...{$x['k']}..."` and pre-3.12 Python f-strings — Tya's
+    current behavior matches that older / minority position and
+    should not stay there.
 
 ### Stdlib extensions
 
