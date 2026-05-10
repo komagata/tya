@@ -376,23 +376,25 @@ Reserved ranges:
 | `E0400`–`E0429` | checker  | class file structure (M2, M5)            |
 | `E0850`–`E0879` | runner   | import resolution and entry kind (M3, M4) |
 
-Diagnostics in scope:
+Diagnostics in scope (wired codes are emitted as `[TYA-EXXXX]`
+prefixes on the runtime error message; "TBD" entries are reserved
+but not yet wired):
 
-| Code (TBD)  | Stage   | Condition                                                                      |
-| ----------- | ------- | ------------------------------------------------------------------------------ |
-| `E0400`     | checker | Class file does not contain a class declaration.                               |
-| `E0401`     | checker | Class file's public class name does not match the filename.                    |
-| `E0402`     | checker | Class file contains a non-import / non-class / non-interface top-level statement. |
-| `E0403`     | checker | Script file declares a public class with a filename-matching name.             |
-| `E0404`     | checker | Filename starts with an unsupported character (not ASCII letter).              |
-| `E0405`     | checker | Same-directory class name collision.                                           |
-| `E0406`     | checker | Cross-file reference to a private class.                                       |
-| `E0850`     | runner  | `import` path contains `..` or starts with `/`.                                |
-| `E0851`     | runner  | `import` path's terminal segment is not a valid package directory name.        |
-| `E0852`     | runner  | `import` path resolves to a script file (lowercase leaf).                      |
-| `E0853`     | runner  | `import` path cannot be resolved against the configured roots.                 |
-| `E0854`     | runner  | `tya run` invoked on a class file (only script files are runnable).            |
-| `E0200`     | parser  | `module` keyword used (removed in M9).                                         |
+| Code        | Wired? | Stage   | Condition                                                                      |
+| ----------- | ------ | ------- | ------------------------------------------------------------------------------ |
+| `E0400`     | yes    | checker | Class file does not define the matching public class.                          |
+| `E0402`     | yes    | checker | Class file contains a non-import / non-class / non-interface top-level statement. |
+| `E0403`     | yes    | checker | Class file's imports do not precede class / interface declarations.            |
+| `E0404`     | yes    | checker | Class file's filename is not PascalCase.                                       |
+| `E0405`     | yes    | checker | Duplicate public class declaration in a class file.                            |
+| `E0406`     | TBD    | checker | Cross-file reference to a private class (M5 enforcement).                      |
+| `E0850`     | yes    | runner  | `tya run` invoked on a class file (only script files are runnable).            |
+| `E0851`     | yes    | runner  | `import` path is invalid (absolute, dotted, empty segment, PascalCase).        |
+| `E0852`     | yes    | runner  | Package directory contains a script file (lowercase leaf).                     |
+| `E0853`     | yes    | runner  | Package directory contains no class files.                                     |
+| `E0854`     | yes    | runner  | Package directory name is not a valid `snake_case` identifier.                 |
+| `E0855`     | yes    | runner  | Two directory packages would synthesize the same module name.                  |
+| `E0200`     | TBD    | parser  | `module` keyword used (removed in M9).                                         |
 
 Codes in `E04xx` and `E08xx` are additive within the checker and runner
 ranges already reserved by `docs/v0.29/CODES.md`. The parser block
