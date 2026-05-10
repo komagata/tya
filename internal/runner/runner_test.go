@@ -321,6 +321,24 @@ func TestLoadSourceRejectsPrivateHelperInImportedModule(t *testing.T) {
 	}
 }
 
+func TestValidateAnyTyaFileNameAcceptsBothKinds(t *testing.T) {
+	cases := []string{"hello.tya", "main.tya", "Greeter.tya", "HttpClient.tya"}
+	for _, name := range cases {
+		if err := ValidateAnyTyaFileName(name); err != nil {
+			t.Errorf("%s: expected accepted, got %v", name, err)
+		}
+	}
+}
+
+func TestValidateAnyTyaFileNameRejectsBadShapes(t *testing.T) {
+	cases := []string{"_hidden.tya", "user-utils.tya", "userUtils.tya", "main.txt"}
+	for _, name := range cases {
+		if err := ValidateAnyTyaFileName(name); err == nil {
+			t.Errorf("%s: expected rejection", name)
+		}
+	}
+}
+
 func TestValidateFileNameRejectsClassFileWithSpecificMessage(t *testing.T) {
 	err := ValidateFileName("Hello.tya")
 	if err == nil {
