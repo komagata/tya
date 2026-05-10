@@ -377,6 +377,83 @@ func validateImportPath(name string) error {
 	return nil
 }
 
+// resolvePackageDir attempts to resolve an import path to a v0.44
+// package directory (a directory containing one or more PascalCase
+// class files). It searches the same roots as resolveModulePath:
+// importer's directory, manifest packages, TYA_PATH, and stdlib.
+//
+// On success it returns the absolute directory path and a sorted list
+// of the absolute paths of class files (PascalCase .tya files) inside
+// it. On failure it returns ("", nil, nil) without an error so callers
+// can fall back to file-based module resolution.
+//
+// Directories are rejected when they contain a script file at the
+// leaf (lowercase .tya), to forbid script-file imports.
+//
+// This helper is part of v0.44 STEP M3 foundation; the runner does
+// not consume it yet. It exists so the import flow can be wired in a
+// follow-up STEP without further resolver changes.
+func resolvePackageDir(importerPath string, name string) (string, []string, error) {
+	parts := strings.Split(name, "/")
+	leading := parts[0]
+	relDir := filepath.Join(parts...)
+	candidates := []string{filepath.Join(filepath.Dir(importerPath), relDir)}
+	for _, dir := range packageSrcDirs(importerPath, leading) {
+		candidates = append(candidates, filepath.Join(dir, relDir))
+	}
+	for _, dir := range filepath.SplitList(os.Getenv("TYA_PATH")) {
+		if dir == "" {
+			continue
+		}
+		candidates = append(candidates, filepath.Join(dir, relDir))
+	}
+	for _, dir := range stdlibDirs() {
+		candidates = append(candidates, filepath.Join(dir, relDir))
+	}
+	for _, candidate := range candidates {
+		info, err := os.Stat(candidate)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return "", nil, err
+		}
+		if !info.IsDir() {
+			continue
+		}
+		entries, err := os.ReadDir(candidate)
+		if err != nil {
+			return "", nil, err
+		}
+		classFiles := []string{}
+		for _, entry := range entries {
+			if entry.IsDir() || filepath.Ext(entry.Name()) != ".tya" {
+				continue
+			}
+			if checker.IsScriptFileName(entry.Name()) {
+				return "", nil, fmt.Errorf("package %s contains script file %s; packages may not include lowercase .tya files", name, entry.Name())
+			}
+			if !checker.IsClassFileName(entry.Name()) {
+				continue
+			}
+			abs, err := filepath.Abs(filepath.Join(candidate, entry.Name()))
+			if err != nil {
+				return "", nil, err
+			}
+			classFiles = append(classFiles, filepath.Clean(abs))
+		}
+		if len(classFiles) == 0 {
+			continue
+		}
+		absDir, err := filepath.Abs(candidate)
+		if err != nil {
+			return "", nil, err
+		}
+		return filepath.Clean(absDir), classFiles, nil
+	}
+	return "", nil, nil
+}
+
 func validateModule(path string, prog *ast.Program) (publicDef, error) {
 	if err := checker.CheckModuleFile(prog, path); err != nil {
 		return publicDef{}, err

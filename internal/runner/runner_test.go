@@ -321,6 +321,78 @@ func TestLoadSourceRejectsPrivateHelperInImportedModule(t *testing.T) {
 	}
 }
 
+func TestResolvePackageDirFindsClassFiles(t *testing.T) {
+	dir := t.TempDir()
+	pkgDir := filepath.Join(dir, "net", "http")
+	if err := os.MkdirAll(pkgDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(pkgDir, "Request.tya"), "class Request\n  init = ->\n    @url = nil\n")
+	writeFile(t, filepath.Join(pkgDir, "Response.tya"), "class Response\n  init = ->\n    @status = 200\n")
+	importer := filepath.Join(dir, "main.tya")
+	writeFile(t, importer, "")
+
+	gotDir, files, err := resolvePackageDir(importer, "net/http")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotDir == "" {
+		t.Fatal("expected package directory to resolve, got empty")
+	}
+	if len(files) != 2 {
+		t.Fatalf("expected 2 class files, got %d: %v", len(files), files)
+	}
+}
+
+func TestResolvePackageDirReturnsNothingWhenAbsent(t *testing.T) {
+	dir := t.TempDir()
+	importer := filepath.Join(dir, "main.tya")
+	writeFile(t, importer, "")
+
+	gotDir, files, err := resolvePackageDir(importer, "missing/pkg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotDir != "" || files != nil {
+		t.Fatalf("expected no resolution for missing package, got dir=%q files=%v", gotDir, files)
+	}
+}
+
+func TestResolvePackageDirRejectsPackageWithScriptFile(t *testing.T) {
+	dir := t.TempDir()
+	pkgDir := filepath.Join(dir, "bad")
+	if err := os.MkdirAll(pkgDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(pkgDir, "Helper.tya"), "class Helper\n  init = ->\n    @x = 1\n")
+	writeFile(t, filepath.Join(pkgDir, "script.tya"), "print(\"hi\")\n")
+	importer := filepath.Join(dir, "main.tya")
+	writeFile(t, importer, "")
+
+	_, _, err := resolvePackageDir(importer, "bad")
+	if err == nil {
+		t.Fatal("expected script-file rejection")
+	}
+	if !strings.Contains(err.Error(), "script file") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestResolvePackageDirIgnoresFileOnlyMatch(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "math.tya"), "module math\n  pi = 3.14\n")
+	importer := filepath.Join(dir, "main.tya")
+	writeFile(t, importer, "")
+
+	gotDir, _, err := resolvePackageDir(importer, "math")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotDir != "" {
+		t.Fatalf("expected no directory match for module-file-only path, got %q", gotDir)
+	}
+}
+
 func writeFile(t *testing.T, path string, src string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
