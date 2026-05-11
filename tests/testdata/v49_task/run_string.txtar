@@ -1,0 +1,17 @@
+# v0.49 `tya task <name>` for a String-form task runs the command
+# verbatim under /bin/sh -c. stdout / stderr stream straight to the
+# parent process.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya task hello
+stdout 'hello world\n'
+! stderr .
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks]
+hello = "echo hello world"

@@ -23,7 +23,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.48.0"
+const version = "0.49.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -185,6 +185,22 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+		return
+	case "task":
+		code, err := taskCommand(os.Args[2:])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		os.Exit(code)
+		return
+	case "new":
+		if err := newCommand(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "lint":
+		os.Exit(lintCommand(os.Args[2:]))
 		return
 	}
 	dumpTokens := false
@@ -388,6 +404,9 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya add <name> [<constraint>] [--git URL --tag T] [--path P] [--dev]")
 	fmt.Fprintln(os.Stderr, "       tya remove <name>")
 	fmt.Fprintln(os.Stderr, "       tya outdated")
+	fmt.Fprintln(os.Stderr, "       tya new <name>")
+	fmt.Fprintln(os.Stderr, "       tya task [name] [args...]")
+	fmt.Fprintln(os.Stderr, "       tya lint [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya version")
 }
 
@@ -451,8 +470,12 @@ func buildExecutableWithCover(path string, output string, opt *codegen.CoverageO
 	args = append(args, "-I", runtimeDir, "-o", output)
 	// v0.42 runtime uses pthread for spawn / await / channels / sync.
 	// On macOS/BSD pthread is in libc; on Linux/glibc it lives in -lpthread.
+	// libm provides log2 / exp / sin / cos / atan2 etc. — glibc requires
+	// explicit -lm, macOS rolls it into libSystem so the flag is harmless.
 	if runtime.GOOS == "linux" {
-		args = append(args, "-lpthread")
+		args = append(args, "-lpthread", "-lm")
+	} else if runtime.GOOS != "windows" {
+		args = append(args, "-lm")
 	}
 	compile := exec.Command(cc, args...)
 	compile.Stderr = os.Stderr
@@ -1272,15 +1295,6 @@ func projectRoot() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for i := 0; i < 16; i++ {
-		if _, err := os.Stat(filepath.Join(dir, pkg.ManifestName)); err == nil {
-			return dir, nil
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			break
-		}
-		dir = parent
-	}
-	return "", fmt.Errorf("no tya.toml found in current directory or any parent")
+	root, _, err := pkg.FindManifest(dir)
+	return root, err
 }

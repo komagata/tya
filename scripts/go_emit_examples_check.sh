@@ -9,7 +9,7 @@ for src in examples/hello.tya examples/arithmetic.tya examples/function.tya exam
   base="$(basename "$src" .tya)"
   go run ./cmd/tya run "$src" > "$out_dir/$base.want"
   go run ./cmd/tya emit-c "$src" > "$out_dir/$base.c"
-  gcc "$out_dir/$base.c" runtime/tya_runtime.c -I runtime -o "$out_dir/$base"
+  gcc "$out_dir/$base.c" runtime/tya_runtime.c -I runtime -o "$out_dir/$base" -lpthread -lm
   "$out_dir/$base" > "$out_dir/$base.got"
   diff -u "$out_dir/$base.want" "$out_dir/$base.got"
   echo "$src: matched"

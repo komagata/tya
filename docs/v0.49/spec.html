@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.49 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-49-specification">Tya v0.49 Specification</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.49.0</code>. &gt; v0.49 ships three independent toolchain additions: &gt; &gt; - **<code>tya new</code>** — project scaffolder &gt; - **<code>tya task</code>** — project task runner &gt; - **<code>tya lint</code>** — source linter (initial rule: <code>TYAL0001</code> unused locals)</p>
+<h2 id="theme">Theme</h2>
+<p>v0.48 closed the class-member surface arc. v0.49 starts the &quot;Toolchain&quot; track from <code>ROADMAP.md</code> § Future Work, picking up the three smallest end-user tools that compose well into a single release. All three are CLI subcommands of the existing <code>tya</code> binary; no new dependencies are added.</p>
+<p>The language surface is unchanged from v0.48. Existing programs keep compiling without modification.</p>
+<h2 id="tya-new-project-scaffolder"><code>tya new</code> — project scaffolder</h2>
+<p>CLI:</p>
+<pre><code>tya new &lt;name&gt;</code></pre>
+<p>Creates a new directory <code>&lt;name&gt;</code> in the current working directory and writes a minimal project scaffold:</p>
+<pre><code>&lt;name&gt;/
+  tya.toml      — name, version, sample [tasks] table
+  src/main.tya  — hello-world entry point
+  .gitignore    — .tya/ and dist/</code></pre>
+<p><code>tya.toml</code> is generated with:</p>
+<pre><code class="language-toml">name = &quot;&lt;name&gt;&quot;
+version = &quot;0.1.0&quot;
+
+[tasks]
+run = &quot;tya run src/main.tya&quot;</code></pre>
+<p><code>src/main.tya</code>:</p>
+<pre><code class="language-tya">print(&quot;Hello, Tya!&quot;)</code></pre>
+<p><code>.gitignore</code>:</p>
+<pre><code>.tya/
+dist/</code></pre>
+<h3 id="errors-and-exit-codes">Errors and exit codes</h3>
+<p>| Exit | When | |------|------| | 0 | Scaffold created | | 1 | Validation or I/O error (see below) |</p>
+<p>Diagnostic codes:</p>
+<ul>
+<li><code>[TYA-E0910]</code> — invalid project name. Names containing the path</li>
+</ul>
+<p>  separator are rejected.</p>
+<ul>
+<li><code>[TYA-E0911]</code> — target directory already exists. Refuse to</li>
+</ul>
+<p>  overwrite.</p>
+<h3 id="scope-out-deferred">Scope-out (deferred)</h3>
+<p>The following flags from <code>ROADMAP.md</code> § Future Work § <code>tya new</code> are intentionally not in v0.49 and may land in a follow-up minor when the need is concrete:</p>
+<ul>
+<li><code>--here</code> (initialize the current directory)</li>
+<li><code>--template app|lib</code></li>
+<li><code>--force</code> (overwrite an existing directory)</li>
+<li>Automatic <code>git init</code> and <code>--no-git</code></li>
+<li><code>tests/</code> boilerplate with a passing unittest</li>
+<li><code>README.md</code> boilerplate</li>
+</ul>
+<h2 id="tya-task-project-task-runner"><code>tya task</code> — project task runner</h2>
+<p>CLI:</p>
+<pre><code>tya task                       # list every entry under [tasks]
+tya task &lt;name&gt;                # run the named task
+tya task &lt;name&gt; &lt;args...&gt;      # run the named task with extra args appended</code></pre>
+<h3 id="configuration">Configuration</h3>
+<p>A new <code>[tasks]</code> table in <code>tya.toml</code>. Each key is a task name; each value is either a single string (run that command verbatim) or an array of strings (run each command in order, stopping on the first failure).</p>
+<pre><code class="language-toml">[tasks]
+ci      = &quot;tya format &amp;&amp; tya test&quot;
+release = [&quot;tya build&quot;, &quot;git tag v1.0.0&quot;, &quot;git push --tags&quot;]</code></pre>
+<p>The <code>[tasks]</code> table is additive on top of the existing manifest shape; v0.48 manifests parse unchanged in v0.49.</p>
+<h3 id="execution-model">Execution model</h3>
+<ul>
+<li>**Shell**: every command is passed to <code>/bin/sh -c &quot;&lt;command&gt;&quot;</code>.</li>
+</ul>
+<p>  POSIX <code>sh</code> (not bash) is the contract; bash-specific syntax   must be wrapped explicitly (<code>bash -c &quot;...&quot;</code>). This keeps task   behavior stable across local and CI environments.</p>
+<ul>
+<li>**CWD**: the project root — the directory containing the</li>
+</ul>
+<p>  resolved <code>tya.toml</code>. tya walks up from the current working   directory to locate it.</p>
+<ul>
+<li>**stdin / stdout / stderr**: inherited from the parent.</li>
+<li>**Environment**: inherited from the parent. v0.49 has no</li>
+</ul>
+<p>  per-task env mechanism.</p>
+<h3 id="argument-passthrough">Argument passthrough</h3>
+<p>Extra arguments after <code>&lt;name&gt;</code> are POSIX-shell-quoted and appended to the command, mirroring <code>$@</code> in shell scripts. Each argument is wrapped in single quotes, with any internal <code>'</code> replaced by the four-character sequence <code>'\''</code>.</p>
+<pre><code>$ tya task greet world peace      # runs:  echo hi 'world' 'peace'
+$ tya task lint --fix             # runs:  tya lint '--fix'</code></pre>
+<h3 id="array-form-failure">Array-form failure</h3>
+<p>For an array-form task, tya runs each entry under its own <code>/bin/sh -c</code>. If a command exits non-zero, tya stops, reports the failing entry, and propagates the child's exit code.</p>
+<pre><code>$ tya task fail
+first
+[TYA-E0901] task &quot;fail&quot; command #2 (&quot;exit 7&quot;) failed with exit code 7
+$ echo $?
+7</code></pre>
+<h3 id="errors-and-exit-codes">Errors and exit codes</h3>
+<p>| Exit | When | |------|------| | 0 | Task succeeded | | Non-zero | Task's child process exit code (string form), or the failing array entry's exit code |</p>
+<p>Diagnostic codes:</p>
+<ul>
+<li><code>[TYA-E0900]</code> — <code>tya task &lt;name&gt;</code> for a name not in the manifest.</li>
+<li><code>[TYA-E0901]</code> — array-form task: one entry failed. Includes the</li>
+</ul>
+<p>  1-origin index, the original command string, and the exit code.</p>
+<ul>
+<li><code>[TYA-E0902]</code> — no <code>tya.toml</code> found walking up from the current</li>
+</ul>
+<p>  directory.</p>
+<h3 id="listing">Listing</h3>
+<p><code>tya task</code> with no arguments prints each registered task in source order on its own line, formatted as <code>&lt;name&gt;\t&lt;summary&gt;</code> where the summary is the verbatim command for a string-form task or the elements joined with <code> &amp;&amp; </code> for an array-form task. Long summaries are truncated to 80 characters with <code>…</code> as the truncation marker.</p>
+<h3 id="scope-out-deferred">Scope-out (deferred)</h3>
+<p>The following items from <code>ROADMAP.md</code> § Future Work § <code>tya task</code> are intentionally not in v0.49:</p>
+<ul>
+<li>Parallel execution (the <code>[tasks]</code> Array form is fixed to</li>
+</ul>
+<p>  &quot;sequential, stop on first failure&quot;; parallel execution is left   to a future dedicated syntax)</p>
+<ul>
+<li>File watching</li>
+<li>Task dependency graphs</li>
+<li>Per-task environment variables (<code>[tasks.env]</code> or similar)</li>
+</ul>
+<h2 id="tya-lint-source-linter"><code>tya lint</code> — source linter</h2>
+<p>CLI:</p>
+<pre><code>tya lint [paths...]</code></pre>
+<p>Each path is either a <code>.tya</code> file or a directory. Directories are walked recursively, picking up every file ending in <code>.tya</code>. With no paths, lint defaults to the current directory.</p>
+<h3 id="tyal0001-unused-local">TYAL0001 — unused local</h3>
+<p>The single v0.49 rule. A binding is &quot;unused&quot; if it is introduced as a local variable or function parameter and never read in its scope. Sub-scopes (<code>if</code>/<code>while</code>/<code>for</code>/<code>try</code>/lambda bodies) are checked recursively. The <code>_</code> placeholder is exempt by convention.</p>
+<p>Finding format (one per line, sorted by path/line/column):</p>
+<pre><code>&lt;path&gt;:&lt;line&gt;:&lt;col&gt;: TYAL0001 unused local &quot;&lt;name&gt;&quot;</code></pre>
+<h3 id="errors-and-exit-codes">Errors and exit codes</h3>
+<p>| Exit | When | |------|------| | 0 | No findings | | 1 | At least one finding was reported | | 2 | Argument or I/O error (missing path, parse error, etc.) |</p>
+<h3 id="scope-out-deferred">Scope-out (deferred)</h3>
+<p>The following items from <code>ROADMAP.md</code> § Future Work § <code>tya lint</code> are intentionally not in v0.49 and will land as additional rules or features in follow-up minors:</p>
+<ul>
+<li><code>--fix</code> autofix mode</li>
+<li><code>--format=json</code> output</li>
+<li>Additional rules (<code>if true</code>/<code>if false</code>, dead code after</li>
+</ul>
+<p>  <code>return</code>/<code>raise</code>, suspicious <code>for</code> index patterns, deeply   nested blocks, very long functions)</p>
+<ul>
+<li>Per-line opt-out via <code># tya-lint-ignore: TYAL0001</code></li>
+<li>Rule documentation URLs</li>
+</ul>
+<h2 id="diagnostic-code-registry">Diagnostic code registry</h2>
+<p>v0.49 reserves the <code>TYA-E090x</code> range for CLI/task-runner errors, distinct from the runner range <code>TYA-E0800–E0899</code> that other Future Work items will use:</p>
+<p>| Code | Subcommand | Meaning | |------|------------|---------| | TYA-E0900 | <code>tya task</code> | Unknown task name | | TYA-E0901 | <code>tya task</code> | Array-form task: one entry failed | | TYA-E0902 | <code>tya task</code> | No <code>tya.toml</code> found | | TYA-E0910 | <code>tya new</code>  | Invalid project name | | TYA-E0911 | <code>tya new</code>  | Target directory already exists | | TYAL0001  | <code>tya lint</code> | Unused local binding |</p>
+    </article>
+  </main>
+</body>
+</html>

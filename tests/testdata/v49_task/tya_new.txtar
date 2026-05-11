@@ -1,0 +1,43 @@
+# v0.49 `tya new <name>` creates a minimal project scaffold:
+#   <name>/tya.toml      — name, version, sample [tasks].run
+#   <name>/src/main.tya  — hello-world entry point
+#   <name>/.gitignore    — .tya/ and dist/
+# The target must not already exist. v0.49 keeps the surface minimal
+# (no --template, --here, --force, or automatic git init).
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya new myapp
+stdout 'Created myapp\n'
+stdout '  cd myapp && tya task run\n'
+! stderr .
+
+exists myapp/tya.toml
+exists myapp/src/main.tya
+exists myapp/.gitignore
+
+cmp myapp/tya.toml expected_tya.toml
+cmp myapp/src/main.tya expected_main.tya
+cmp myapp/.gitignore expected_gitignore
+
+! exec $WORK/tya new myapp
+stderr '\[TYA-E0911\] myapp already exists'
+
+! exec $WORK/tya new bad/name
+stderr '\[TYA-E0910\] invalid project name "bad/name"'
+
+! exec $WORK/tya new
+stderr 'usage: tya new <name>'
+
+-- expected_tya.toml --
+name = "myapp"
+version = "0.1.0"
+
+[tasks]
+run = "tya run src/main.tya"
+-- expected_main.tya --
+print("Hello, Tya!")
+-- expected_gitignore --
+.tya/
+dist/

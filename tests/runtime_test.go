@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	goruntime "runtime"
 	"testing"
 )
 
@@ -114,7 +115,16 @@ func compileAndRunRuntimeAllowExit(t *testing.T, src string, args ...string) ([]
 	}
 	runtime := filepath.Join("..", "runtime", "tya_runtime.c")
 	include := filepath.Join("..", "runtime")
-	if out, err := exec.Command("gcc", cfile, runtime, "-I", include, "-o", bin).CombinedOutput(); err != nil {
+	gccArgs := []string{cfile, runtime, "-I", include, "-o", bin}
+	switch goruntime.GOOS {
+	case "linux":
+		gccArgs = append(gccArgs, "-lpthread", "-lm")
+	case "windows":
+		// no extra flags
+	default:
+		gccArgs = append(gccArgs, "-lm")
+	}
+	if out, err := exec.Command("gcc", gccArgs...).CombinedOutput(); err != nil {
 		t.Fatalf("gcc: %v\n%s", err, out)
 	}
 	out, err := exec.Command(bin, args...).CombinedOutput()

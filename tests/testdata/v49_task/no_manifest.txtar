@@ -1,0 +1,13 @@
+# v0.49 `tya task` outside any project (no tya.toml anywhere up the
+# directory tree) fails with TYA-E0902 and exit 1.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+mkdir empty
+cd $WORK/empty
+
+! exec $WORK/tya task
+stderr '\[TYA-E0902\] no tya.toml found in current directory or any parent'
+
+! exec $WORK/tya task hello
+stderr '\[TYA-E0902\] no tya.toml found in current directory or any parent'

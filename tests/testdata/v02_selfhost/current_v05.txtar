@@ -4,17 +4,17 @@ cd $REPO
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm 2>/dev/null'
 
 exec sh -c '"$WORK/stage1" selfhost/v02/compiler.tya > "$WORK/stage2.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" 2>/dev/null'
+exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" -lpthread -lm 2>/dev/null'
 
 exec sh -c '"$WORK/stage2" "$WORK/current_v05.tya" > "$WORK/current_v05.c"'
 ! stderr .
 
-exec cc $WORK/current_v05.c runtime/tya_runtime.c -I runtime -o $WORK/current_v05
+exec cc $WORK/current_v05.c runtime/tya_runtime.c -I runtime -o $WORK/current_v05 -lpthread -lm
 ! stderr .
 
 exec $WORK/current_v05
@@ -24,7 +24,7 @@ stdout 'Hello, komagata\nTya\nHello, Ty\n1\n2\n'
 exec sh -c '"$WORK/stage2" "$WORK/module_main.tya" > "$WORK/module_main.c"'
 ! stderr .
 
-exec cc $WORK/module_main.c runtime/tya_runtime.c -I runtime -o $WORK/module_main
+exec cc $WORK/module_main.c runtime/tya_runtime.c -I runtime -o $WORK/module_main -lpthread -lm
 ! stderr .
 
 exec $WORK/module_main

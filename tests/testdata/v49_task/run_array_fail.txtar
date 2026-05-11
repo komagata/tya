@@ -1,0 +1,18 @@
+# v0.49 An Array-form task stops at the first failing command and
+# reports its 1-origin index, the original command string, and the
+# child exit code via TYA-E0901. tya exits with the child's exit code.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya task fail
+stdout 'first\n'
+! stdout 'never\n'
+stderr '\[TYA-E0901\] task "fail" command #2 \("exit 7"\) failed with exit code 7'
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks]
+fail = ["echo first", "exit 7", "echo never"]

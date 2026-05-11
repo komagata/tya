@@ -28,6 +28,37 @@ func CheckUnused(prog *ast.Program) error {
 	return firstUnused(scope)
 }
 
+// UnusedBinding describes a single unused local binding (variable or
+// parameter). Line and Col are 1-origin source positions; Col is 0
+// when the parser did not record a column for the binding.
+type UnusedBinding struct {
+	Name string
+	Line int
+	Col  int
+}
+
+// CollectUnused returns every unused local binding in prog, in scope
+// declaration order (root scope first, then each child scope
+// depth-first). Used by `tya lint` for the TYAL0001 rule.
+func CollectUnused(prog *ast.Program) []UnusedBinding {
+	scope := newUseScope(nil)
+	_ = checkUnusedStmts(prog.Stmts, scope)
+	var out []UnusedBinding
+	walkUnused(scope, &out)
+	return out
+}
+
+func walkUnused(scope *useScope, out *[]UnusedBinding) {
+	for _, b := range scope.order {
+		if !b.used {
+			*out = append(*out, UnusedBinding{Name: b.name, Line: b.line, Col: b.col})
+		}
+	}
+	for _, c := range scope.children {
+		walkUnused(c, out)
+	}
+}
+
 func newUseScope(parent *useScope) *useScope {
 	scope := &useScope{parent: parent, bindings: map[string]*bindingUse{}}
 	if parent != nil {

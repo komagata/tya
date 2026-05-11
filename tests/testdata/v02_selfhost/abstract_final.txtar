@@ -8,12 +8,12 @@ cd $REPO
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm 2>/dev/null'
 
 exec sh -c '"$WORK/stage1" "$WORK/abstract_final.tya" > "$WORK/abstract_final.c"'
 ! stderr .
 
-exec cc $WORK/abstract_final.c runtime/tya_runtime.c -I runtime -o $WORK/abstract_final
+exec cc $WORK/abstract_final.c runtime/tya_runtime.c -I runtime -o $WORK/abstract_final -lpthread -lm
 ! stderr .
 
 exec $WORK/abstract_final

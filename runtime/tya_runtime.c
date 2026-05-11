@@ -1,3 +1,14 @@
+// glibc hides strptime / getrandom unless an X/Open or default-source
+// feature-test macro is set. Define both so the runtime compiles with a
+// stock cc invocation on Linux distributions that ship a strict default
+// (e.g. Arch). Must precede every system header include.
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
+#endif
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE
+#endif
+
 #include "tya_runtime.h"
 
 #include <ctype.h>

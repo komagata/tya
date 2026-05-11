@@ -1,0 +1,16 @@
+# v0.49 `tya task <name>` for an undefined task name fails with
+# TYA-E0900 and exit 1. The error message names the task that was
+# requested.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya task nosuch
+stderr '\[TYA-E0900\] no task "nosuch" defined in tya.toml'
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks]
+hello = "echo hi"

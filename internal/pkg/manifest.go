@@ -3,7 +3,28 @@ package pkg
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
+
+// FindManifest walks startDir and its parents (up to 16 levels) looking
+// for a tya.toml. It returns the project root directory and the full
+// manifest path. When no manifest is found, it returns an error whose
+// message matches the historical phrasing used by `tya install` etc.
+func FindManifest(startDir string) (rootDir, manifestPath string, err error) {
+	dir := startDir
+	for i := 0; i < 16; i++ {
+		candidate := filepath.Join(dir, ManifestName)
+		if _, statErr := os.Stat(candidate); statErr == nil {
+			return dir, candidate, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return "", "", fmt.Errorf("no tya.toml found in current directory or any parent")
+}
 
 // Manifest is the parsed tya.toml.
 type Manifest struct {
@@ -16,6 +37,8 @@ type Manifest struct {
 	DevDeps     map[string]Dependency
 	DepOrder    []string // insertion order for Deps
 	DevOrder    []string
+	Tasks       map[string]Task // task name -> task definition
+	TaskOrder   []string        // insertion order for Tasks
 
 	Path string // path to the manifest file (for relative path deps)
 }
@@ -31,6 +54,16 @@ type Dependency struct {
 	PathRef    string // for path source
 }
 
+// Task is a single entry under [tasks] in tya.toml. A task is either a
+// single shell command (Kind == "string") or a sequence of commands run
+// in order, stopping on the first failure (Kind == "array").
+type Task struct {
+	Name   string
+	Kind   string   // "string" or "array"
+	String string   // populated when Kind == "string"
+	Array  []string // populated when Kind == "array"
+}
+
 func ReadManifest(path string) (*Manifest, error) {
 	src, err := os.ReadFile(path)
 	if err != nil {
@@ -40,7 +73,7 @@ func ReadManifest(path string) (*Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
-	m := &Manifest{Path: path, Deps: map[string]Dependency{}, DevDeps: map[string]Dependency{}}
+	m := &Manifest{Path: path, Deps: map[string]Dependency{}, DevDeps: map[string]Dependency{}, Tasks: map[string]Task{}}
 	if v, ok := tv.Table["name"]; ok && v.Kind == "string" {
 		m.Name = v.Str
 	}
@@ -84,6 +117,16 @@ func ReadManifest(path string) (*Manifest, error) {
 			m.DevOrder = append(m.DevOrder, name)
 		}
 	}
+	if tasks, ok := tv.Table["tasks"]; ok && tasks.Kind == "table" {
+		for _, name := range tasks.Order {
+			t, err := readTask(name, tasks.Table[name])
+			if err != nil {
+				return nil, fmt.Errorf("tasks.%s: %v", name, err)
+			}
+			m.Tasks[name] = t
+			m.TaskOrder = append(m.TaskOrder, name)
+		}
+	}
 	if m.Name == "" {
 		return nil, fmt.Errorf("tya.toml: missing name")
 	}
@@ -91,6 +134,27 @@ func ReadManifest(path string) (*Manifest, error) {
 		return nil, fmt.Errorf("tya.toml: missing version")
 	}
 	return m, nil
+}
+
+func readTask(name string, v TomlValue) (Task, error) {
+	t := Task{Name: name}
+	switch v.Kind {
+	case "string":
+		t.Kind = "string"
+		t.String = v.Str
+		return t, nil
+	case "array":
+		t.Kind = "array"
+		for i, item := range v.Array {
+			if item.Kind != "string" {
+				return t, fmt.Errorf("array element #%d: expected string, got %s", i+1, item.Kind)
+			}
+			t.Array = append(t.Array, item.Str)
+		}
+		return t, nil
+	default:
+		return t, fmt.Errorf("expected string or array of strings, got %s", v.Kind)
+	}
 }
 
 func readDep(name string, v TomlValue) (Dependency, error) {
@@ -176,7 +240,25 @@ func WriteManifest(m *Manifest) error {
 		}
 		t.SetField("dev-dependencies", dep)
 	}
+	if len(m.TaskOrder) > 0 {
+		tasks := NewTomlTable()
+		for _, k := range m.TaskOrder {
+			tasks.SetField(k, taskToToml(m.Tasks[k]))
+		}
+		t.SetField("tasks", tasks)
+	}
 	return os.WriteFile(m.Path, []byte(EmitToml(t)), 0644)
+}
+
+func taskToToml(t Task) TomlValue {
+	if t.Kind == "array" {
+		arr := NewTomlArray()
+		for _, cmd := range t.Array {
+			arr.Array = append(arr.Array, TomlString(cmd))
+		}
+		return arr
+	}
+	return TomlString(t.String)
 }
 
 func depToToml(d Dependency) TomlValue {

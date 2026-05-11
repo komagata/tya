@@ -97,6 +97,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
 <ul>
+<li>**v0.49** — Toolchain track kickoff: three new CLI subcommands</li>
+</ul>
+<p>  (<code>docs/v0.49/SPEC.md</code>, <code>docs/v0.49/RELEASE_NOTES.md</code>). <code>tya new   &lt;name&gt;</code> scaffolds a minimal project (<code>tya.toml</code> + <code>src/main.tya</code>   + <code>.gitignore</code>) with a sample <code>[tasks]</code> entry. <code>tya task [name]   [args...]</code> lists and runs tasks defined under a new <code>[tasks]</code>   table in <code>tya.toml</code>; commands run under <code>/bin/sh -c</code> from the   project root, trailing arguments are POSIX-quoted and appended   to the command (<code>$@</code> style), and array-form tasks run each   entry in order stopping on the first failure. <code>tya lint   [paths...]</code> ships rule <code>TYAL0001</code> — unused local — as the first   member of a planned rule set; findings print   <code>path:line:col: TYAL0001 unused local &quot;name&quot;</code>, exit 1 when any   finding is reported. New diagnostic code range <code>TYA-E090x</code>   reserved for these subcommands (<code>E0900</code> unknown task, <code>E0901</code>   array-form failure, <code>E0902</code> no tya.toml, <code>E0910</code> invalid project   name, <code>E0911</code> project dir exists). Manifest-discovery helper   extracted to <code>pkg.FindManifest</code> and shared with the existing   <code>projectRoot</code>. Language surface unchanged from v0.48. Build   driver now links <code>-lm</code> on non-Windows hosts and the runtime   defines <code>_XOPEN_SOURCE</code>/<code>_DEFAULT_SOURCE</code> so strict glibc   defaults (Arch Linux) accept the compiled programs.</p>
+<ul>
 <li>**v0.48** — Canonical receiver rule + formatter v0.46 keyword</li>
 </ul>
 <p>  surface completion (<code>docs/v0.48/SPEC.md</code>,   <code>docs/v0.48/RELEASE_NOTES.md</code>). G1 (strict bare-name receivers)   is codified — bare identifiers inside class method bodies   resolve to locals / params / imports only, never to class   members; this was already enforced from v0.46 as a side effect   of G2/G4. G6 wires <code>[TYA-E0413]</code> as a strict-mode warning when   <code>&lt;DeclaringClass&gt;.foo</code> is written inside the declaring class   body, and <code>tya format</code> rewrites the same shape to the canonical   <code>Self.foo</code>. The formatter also now consistently emits the v0.46   keyword surface (<code>private</code>, <code>static</code>, <code>self.</code>, <code>Self.</code>,   <code>initialize</code>) for every class shape, rewriting any remaining   legacy sigils on output.</p>
@@ -122,21 +126,21 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>  cancellation (<code>task.cancel</code> / <code>task.cancelled?</code> / <code>task.current</code>),   <code>scope</code> body raises run cleanup before unwinding,   <code>channel.select</code> multiplex.</p>
 <h2 id="scheduled">Scheduled</h2>
 <p>Epics with assigned minor versions, on the path to v1.0.0. Each Epic is implemented in numbered STEPs. Every STEP must pass <code>go test ./... -count=1</code> and <code>go test ./tests -run TestSelfhostV01Scripts -count=1</code> before the next STEP starts. The STEP also keeps <code>docs/vX.Y/SPEC.md</code> consistent with the implementation up to that STEP.</p>
-<h3 id="v0-4x-self-host-v0-44-surface-module-keyword-retirement">v0.4x — Self-host v0.44 surface + <code>module</code> keyword retirement</h3>
-<p>The remainder of the v0.44 model-completion work, deferred to the v1.0.0 prep window because it requires landing a Tya-written compiler on the v0.44 surface (<code>selfhost/v02/</code>) before the <code>module</code> keyword can be retired (<code>v01</code> still consumes it). Held-back stdlib packages and docs promotion ride the same Epic for a coherent cut.</p>
+<h3 id="v0-4x-self-host-v0-46-surface-module-keyword-retirement">v0.4x — Self-host v0.46+ surface + <code>module</code> keyword retirement</h3>
+<p>The remainder of the class-oriented namespace model-completion work, deferred to the v1.0.0 prep window because it requires landing a Tya-written compiler on the **v0.46+ keyword surface** (<code>selfhost/v02/</code>) before the <code>module</code> keyword can be retired (<code>v01</code> still consumes it). Held-back stdlib packages and docs promotion ride the same Epic for a coherent cut.</p>
 <ul>
-<li>[ ] **M8 self-host v02 on v0.44 surface** *(critical path)*</li>
+<li>[ ] **M8 self-host v02 on v0.46+ surface** *(critical path)*</li>
 <ul>
-<li>[ ] Add <code>selfhost/v02/compiler.tya</code> resolving directory</li>
+<li>[ ] Grow <code>selfhost/v02/compiler.tya</code> to resolve directory</li>
 </ul>
 </ul>
-<p>    packages, parsing class files (<code>extends</code> / <code>implements</code> /     <code>interface</code> / <code>abstract</code> / <code>final</code> / <code>override</code> / <code>@@</code>).</p>
+<p>    packages and parse class files on the v0.46/v0.47/v0.48     surface (<code>private</code> / <code>static</code> / <code>self.</code> / <code>Self.</code> /     <code>initialize</code> / <code>extends</code> / <code>implements</code> / <code>interface</code> /     <code>abstract</code> / <code>final</code> / <code>override</code>).</p>
 <ul>
 <li>[ ] Keep the <code>v01</code> fixed point on the v0.43 surface until v02</li>
 </ul>
-<p>    reaches parity; both compilers live side by side.</p>
+<p>    reaches parity; both compilers live side by side. The Go     reference impl already exempts <code>selfhost/v01/</code> from v0.47     diagnostics via <code>checker.SetPermissiveLegacy</code>.</p>
 <ul>
-<li>[ ] Prove stage-2 == stage-3 fixed point for v02 on a v0.44-</li>
+<li>[ ] Prove stage-2 == stage-3 fixed point for v02 on a v0.48-</li>
 </ul>
 <p>    surface program (<code>TestSelfhostV02Scripts</code>).</p>
 <ul>
@@ -238,49 +242,43 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 <p>    Markdown bodies.</p>
 <ul>
-<li>[ ] **Ship <code>tya new</code> project scaffolder**</li>
-<ul>
-<li>[ ] CLI: <code>tya new &lt;name&gt;</code>, <code>tya new --here</code>, fixed templates</li>
+<li>[ ] **Extend <code>tya new</code> project scaffolder** *(v0.49 shipped the</li>
 </ul>
-</ul>
-<p>    (<code>--template app|lib</code>).</p>
+<p>  minimal form: <code>tya new &lt;name&gt;</code> → tya.toml + src/main.tya +   .gitignore. Remaining work below.)*</p>
 <ul>
-<li>[ ] Default template: <code>tya.toml</code>, <code>src/main.tya</code> hello-world, <code>tests/</code></li>
+<li>[ ] <code>tya new --here</code> initialize current directory.</li>
+<li>[ ] <code>--template app|lib</code> (built-in fixed templates).</li>
+<li>[ ] <code>--force</code> to overwrite existing target.</li>
+<li>[ ] Initialize git by default; <code>--no-git</code> to skip.</li>
+<li>[ ] Default template includes <code>tests/</code> with one passing</li>
 </ul>
-<p>    with one passing unittest, <code>.gitignore</code>, minimal <code>README.md</code>.</p>
+<p>    unittest and a minimal <code>README.md</code>.</p>
 <ul>
-<li>[ ] Refuse to overwrite existing files unless <code>--force</code>. Initialize git</li>
+<li>[ ] **Extend <code>tya task</code> project task runner** *(v0.49 shipped the</li>
 </ul>
-<p>    by default; <code>--no-git</code> to skip.</p>
+<p>  minimal form: <code>[tasks]</code> table with string + array forms,   <code>/bin/sh -c</code> execution, project-root CWD, POSIX-quoted argument   passthrough, structured failure diagnostic. Remaining work   below.)*</p>
 <ul>
-<li>[ ] **Ship <code>tya task</code> project task runner**</li>
-<ul>
-<li>[ ] <code>[tasks]</code> table in <code>tya.toml</code> is the single source of truth.</li>
-<li>[ ] String form (<code>ci = &quot;tya format &amp;&amp; tya test&quot;</code>) and array form.</li>
-<li>[ ] CLI: <code>tya task &lt;name&gt;</code> and <code>tya task</code> (list).</li>
-<li>[ ] Resolve <code>tya.toml</code> from working directory upward; execute via the</li>
+<li>[ ] Parallel execution syntax (decide between <code>parallel = [...]</code></li>
 </ul>
-</ul>
-<p>    user's shell with the project root as CWD.</p>
+<p>    table form and a dedicated keyword).</p>
 <ul>
-<li>[ ] Keep parallelism, file-watching, task graphs out of the initial</li>
+<li>[ ] File-watching mode (<code>tya task &lt;name&gt; --watch</code>).</li>
+<li>[ ] Task dependency graphs (depend-on declaration).</li>
+<li>[ ] Per-task environment variables.</li>
 </ul>
-<p>    scope.</p>
 <ul>
-<li>[ ] **Ship <code>tya lint</code> source linter**</li>
-<ul>
-<li>[ ] Boundary: <code>tya format</code> is layout, <code>tya check</code> is correctness, `tya</li>
+<li>[ ] **Extend <code>tya lint</code> source linter** *(v0.49 shipped rule</li>
 </ul>
-</ul>
-<p>    lint` is stylistic / semantic best practices.</p>
+<p>  <code>TYAL0001</code> unused local + CLI surface. Remaining work below.)*</p>
 <ul>
-<li>[ ] CLI: <code>tya lint [paths]</code>, <code>tya lint --fix</code>, <code>tya lint --format=json</code>.</li>
-<li>[ ] Initial rule set: unused locals, dead code after <code>return</code> / <code>raise</code>,</li>
+<li>[ ] <code>--fix</code> autofix mode.</li>
+<li>[ ] <code>--format=json</code> machine-readable output.</li>
+<li>[ ] Additional rules: dead code after <code>return</code> / <code>raise</code>,</li>
 </ul>
-<p>    redundant <code>if true</code> / <code>if false</code>, suspicious <code>for</code> index patterns,     deeply nested blocks, very long functions.</p>
+<p>    redundant <code>if true</code> / <code>if false</code>, suspicious <code>for</code> index     patterns, deeply nested blocks, very long functions.</p>
 <ul>
-<li>[ ] Each rule has a stable code (e.g. <code>TYAL0001</code>), title, doc URL.</li>
 <li>[ ] Per-line opt-out via <code># tya-lint-ignore: TYAL0001</code>.</li>
+<li>[ ] Each rule has a stable code (<code>TYAL00xx</code>), title, doc URL.</li>
 </ul>
 <ul>
 <li>[ ] **Ship a public Tya self-introspection library**</li>

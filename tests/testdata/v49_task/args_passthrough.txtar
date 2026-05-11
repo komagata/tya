@@ -1,0 +1,27 @@
+# v0.49 Extra arguments passed to `tya task <name> <args...>` are
+# POSIX-shell-quoted and appended to the task command, mirroring $@
+# in shell scripts. Arguments containing spaces or quotes round-trip
+# safely.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya task greet world peace
+stdout 'hi world peace\n'
+! stderr .
+
+exec $WORK/tya task greet 'hello world' simple
+stdout 'hi hello world simple\n'
+! stderr .
+
+exec $WORK/tya task printraw 'a''b'
+stdout 'a''b\n'
+! stderr .
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks]
+greet = "echo hi"
+printraw = "echo"

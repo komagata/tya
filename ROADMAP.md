@@ -148,6 +148,27 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.49** — Toolchain track kickoff: three new CLI subcommands
+  (`docs/v0.49/SPEC.md`, `docs/v0.49/RELEASE_NOTES.md`). `tya new
+  <name>` scaffolds a minimal project (`tya.toml` + `src/main.tya`
+  + `.gitignore`) with a sample `[tasks]` entry. `tya task [name]
+  [args...]` lists and runs tasks defined under a new `[tasks]`
+  table in `tya.toml`; commands run under `/bin/sh -c` from the
+  project root, trailing arguments are POSIX-quoted and appended
+  to the command (`$@` style), and array-form tasks run each
+  entry in order stopping on the first failure. `tya lint
+  [paths...]` ships rule `TYAL0001` — unused local — as the first
+  member of a planned rule set; findings print
+  `path:line:col: TYAL0001 unused local "name"`, exit 1 when any
+  finding is reported. New diagnostic code range `TYA-E090x`
+  reserved for these subcommands (`E0900` unknown task, `E0901`
+  array-form failure, `E0902` no tya.toml, `E0910` invalid project
+  name, `E0911` project dir exists). Manifest-discovery helper
+  extracted to `pkg.FindManifest` and shared with the existing
+  `projectRoot`. Language surface unchanged from v0.48. Build
+  driver now links `-lm` on non-Windows hosts and the runtime
+  defines `_XOPEN_SOURCE`/`_DEFAULT_SOURCE` so strict glibc
+  defaults (Arch Linux) accept the compiled programs.
 - **v0.48** — Canonical receiver rule + formatter v0.46 keyword
   surface completion (`docs/v0.48/SPEC.md`,
   `docs/v0.48/RELEASE_NOTES.md`). G1 (strict bare-name receivers)
@@ -334,32 +355,36 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Diagnose orphan doc comments, duplicate definitions, unparseable
     Markdown bodies.
 
-- [ ] **Ship `tya new` project scaffolder**
-  - [ ] CLI: `tya new <name>`, `tya new --here`, fixed templates
-    (`--template app|lib`).
-  - [ ] Default template: `tya.toml`, `src/main.tya` hello-world, `tests/`
-    with one passing unittest, `.gitignore`, minimal `README.md`.
-  - [ ] Refuse to overwrite existing files unless `--force`. Initialize git
-    by default; `--no-git` to skip.
+- [ ] **Extend `tya new` project scaffolder** *(v0.49 shipped the
+  minimal form: `tya new <name>` → tya.toml + src/main.tya +
+  .gitignore. Remaining work below.)*
+  - [ ] `tya new --here` initialize current directory.
+  - [ ] `--template app|lib` (built-in fixed templates).
+  - [ ] `--force` to overwrite existing target.
+  - [ ] Initialize git by default; `--no-git` to skip.
+  - [ ] Default template includes `tests/` with one passing
+    unittest and a minimal `README.md`.
 
-- [ ] **Ship `tya task` project task runner**
-  - [ ] `[tasks]` table in `tya.toml` is the single source of truth.
-  - [ ] String form (`ci = "tya format && tya test"`) and array form.
-  - [ ] CLI: `tya task <name>` and `tya task` (list).
-  - [ ] Resolve `tya.toml` from working directory upward; execute via the
-    user's shell with the project root as CWD.
-  - [ ] Keep parallelism, file-watching, task graphs out of the initial
-    scope.
+- [ ] **Extend `tya task` project task runner** *(v0.49 shipped the
+  minimal form: `[tasks]` table with string + array forms,
+  `/bin/sh -c` execution, project-root CWD, POSIX-quoted argument
+  passthrough, structured failure diagnostic. Remaining work
+  below.)*
+  - [ ] Parallel execution syntax (decide between `parallel = [...]`
+    table form and a dedicated keyword).
+  - [ ] File-watching mode (`tya task <name> --watch`).
+  - [ ] Task dependency graphs (depend-on declaration).
+  - [ ] Per-task environment variables.
 
-- [ ] **Ship `tya lint` source linter**
-  - [ ] Boundary: `tya format` is layout, `tya check` is correctness, `tya
-    lint` is stylistic / semantic best practices.
-  - [ ] CLI: `tya lint [paths]`, `tya lint --fix`, `tya lint --format=json`.
-  - [ ] Initial rule set: unused locals, dead code after `return` / `raise`,
-    redundant `if true` / `if false`, suspicious `for` index patterns,
-    deeply nested blocks, very long functions.
-  - [ ] Each rule has a stable code (e.g. `TYAL0001`), title, doc URL.
+- [ ] **Extend `tya lint` source linter** *(v0.49 shipped rule
+  `TYAL0001` unused local + CLI surface. Remaining work below.)*
+  - [ ] `--fix` autofix mode.
+  - [ ] `--format=json` machine-readable output.
+  - [ ] Additional rules: dead code after `return` / `raise`,
+    redundant `if true` / `if false`, suspicious `for` index
+    patterns, deeply nested blocks, very long functions.
   - [ ] Per-line opt-out via `# tya-lint-ignore: TYAL0001`.
+  - [ ] Each rule has a stable code (`TYAL00xx`), title, doc URL.
 
 - [ ] **Ship a public Tya self-introspection library**
   - [ ] Goal: Tya programs and external tools can lex, parse, walk, and

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	goruntime "runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -6638,6 +6639,19 @@ func runToFile(t *testing.T, path string, name string, args ...string) {
 
 func run(t *testing.T, name string, args ...string) []byte {
 	t.Helper()
+	if name == "cc" {
+		// glibc needs explicit -lpthread / -lm for the runtime's
+		// thread + math intrinsics. macOS rolls both into libSystem
+		// so the flags are harmless there.
+		switch goruntime.GOOS {
+		case "linux":
+			args = append(args, "-lpthread", "-lm")
+		case "windows":
+			// no extra flags
+		default:
+			args = append(args, "-lm")
+		}
+	}
 	cmd := exec.Command(name, args...)
 	cmd.Dir = ".."
 	out, err := cmd.CombinedOutput()

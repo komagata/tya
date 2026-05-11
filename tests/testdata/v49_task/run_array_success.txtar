@@ -1,0 +1,17 @@
+# v0.49 `tya task <name>` for an Array-form task runs each entry in
+# sequence under its own /bin/sh -c. When every entry exits 0 the task
+# succeeds and tya exits 0.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya task chain
+stdout 'step1\nstep2\nstep3\n'
+! stderr .
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks]
+chain = ["echo step1", "echo step2", "echo step3"]

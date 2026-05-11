@@ -1,0 +1,34 @@
+# v0.49 `tya lint` reports TYAL0001 for each unused local. Clean
+# sources exit 0; corpora with at least one finding exit 1. Findings
+# are written to stdout, one per line, sorted by path/line/col, in
+# the form `path:line:col: TYAL0001 unused local "<name>"`.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+# clean file: exit 0, no output
+exec $WORK/tya lint clean.tya
+! stdout .
+! stderr .
+
+# dirty file: exit 1, one finding
+! exec $WORK/tya lint dirty.tya
+stdout 'dirty\.tya:2:1: TYAL0001 unused local "y"'
+! stderr .
+
+# directory walk: picks up only the .tya file under the tree
+! exec $WORK/tya lint .
+stdout 'dirty\.tya:2:1: TYAL0001 unused local "y"'
+! stderr .
+
+# missing path: exit 2
+! exec $WORK/tya lint does_not_exist.tya
+stderr 'no such file or directory'
+
+-- clean.tya --
+x = 1
+print(x)
+-- dirty.tya --
+x = 1
+y = 2
+print(x)

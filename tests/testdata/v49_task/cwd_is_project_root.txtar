@@ -1,0 +1,25 @@
+# v0.49 `tya task` discovers tya.toml by walking up from the current
+# directory. The task command runs with the project root (the
+# directory containing tya.toml) as CWD, not the invocation
+# directory.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+mkdir sub
+
+exec $WORK/tya task pwd
+stdout '^'$WORK'\n$'
+! stderr .
+
+cd $WORK/sub
+
+exec $WORK/tya task pwd
+stdout '^'$WORK'\n$'
+! stderr .
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks]
+pwd = "pwd"

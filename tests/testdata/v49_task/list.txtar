@@ -1,0 +1,21 @@
+# v0.49 `tya task` with no arguments lists every entry under [tasks]
+# in tya.toml in source order, with the command summary truncated to
+# 80 characters and joined with " && " for array-form tasks.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya task
+stdout 'ci\ttya format && tya test\n'
+stdout 'release\ttya build && git tag v1.0.0\n'
+stdout 'greet\techo hello\n'
+! stderr .
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks]
+ci = "tya format && tya test"
+release = ["tya build", "git tag v1.0.0"]
+greet = "echo hello"
