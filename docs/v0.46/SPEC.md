@@ -28,6 +28,7 @@ ambiguity (a real footgun in a dynamically-typed language) by
 - **G4.** Enforce explicit receivers — bare identifiers in method
   bodies resolve to locals / parameters / imports only, never to
   class members.
+- **G5.** Rename the constructor method from `init` to `initialize`.
 
 ## Non-Goals
 
@@ -55,10 +56,10 @@ class User
   static count = 0         # public class field
   private static seed = 1  # private class field
 
-  init = name ->           # public constructor
+  initialize = name ->           # public constructor
     self.name = name
 
-  private init_with_id = name, id ->   # private constructor
+  private initialize_with_id = name, id ->   # private constructor
     self.name = name
     self.id = id
 
@@ -84,8 +85,8 @@ Canonical modifier order:
 Other orders are rejected by the parser (canonical syntax: every
 program has exactly one source representation).
 
-`_init` is no longer special-cased. `private init` is the only
-spelling for a private constructor.
+`_init` is no longer special-cased. The v0.46 private constructor
+is spelled `private initialize` (see G5 for the constructor rename).
 
 ## G2 — `self` and `Self` keywords
 
@@ -121,7 +122,7 @@ class User
   name = ""
   static count = 0
 
-  init = name ->
+  initialize = name ->
     self.name = name              # instance field write
     Self.count = Self.count + 1   # class field write
 
@@ -132,7 +133,7 @@ class User
     Self(name)                    # constructs an instance of User
 
 class Admin extends User
-  init = name ->
+  initialize = name ->
     super(name)                   # parent constructor
     self.role = "admin"
     Self.count = Self.count + 1   # Admin's own count (if redeclared);
@@ -198,7 +199,7 @@ never touches `Self.count`. To update a class field, write
 | `count = count + 1` ambiguous   | Bare `count` is **always** a local.      |
 | `this` works only in instance   | `Self` is symmetric and works in static. |
 | `ClassName.foo` hardcoded       | `Self.foo` is rename-safe.               |
-| `_init` / `_foo` underscore     | `private init` / `private foo`.          |
+| `_init` / `_foo` underscore     | `private initialize` / `private foo`.    |
 | `public` is a verbose default   | Public is implicit (no marker).          |
 | Static access bare or qualified | One canonical form: `Self.foo`.          |
 
@@ -231,6 +232,42 @@ class Admin extends User
 If the access target is `Self` (the declaring class) but written
 as a class name, the formatter rewrites it; the checker emits a
 warning under `--check-unused` strict mode (`[TYA-E0413]`).
+
+## G5 — `initialize` constructor name
+
+The constructor method name changes from `init` to `initialize`.
+Tya joins the Ruby tradition (`initialize`) rather than Swift's
+abbreviation (`init`); the longer name is unambiguous and stops
+reading as a regular noun.
+
+```tya
+class User
+  name = ""
+
+  initialize = name ->         # public constructor (was: init)
+    self.name = name
+
+  private initialize_with_id = name, id ->   # private constructor variant
+    self.name = name
+    self.id = id
+
+  greeting = ->
+    "Hello, {self.name}"
+```
+
+The `init` identifier becomes a regular name with no special
+status. Code that previously declared `init = ...` either
+(a) renames to `initialize` (typical migration) or (b) keeps the
+name `init` if it was a non-constructor helper method (unusual but
+allowed — `init` is no longer reserved).
+
+Combined with G1: the v0.45 `_init` private constructor becomes
+`private initialize` in v0.46, not `private init`.
+
+Diagnostic: `[TYA-E0414]` — a class declares `init = ...` (or
+`private init = ...`) where `initialize` is expected. The error
+points at the rename. Wired in v0.46 as a clean cut; there is no
+deprecation window.
 
 ## Static dispatch semantics
 
@@ -272,7 +309,7 @@ abstract class Shape
   private name = ""
   static species_count = 0
 
-  init = name ->
+  initialize = name ->
     self.name = name
     Self.species_count = Self.species_count + 1
 
@@ -291,7 +328,7 @@ abstract class Shape
 final class Circle extends Shape
   private radius = 0
 
-  init = name, radius ->
+  initialize = name, radius ->
     super(name)
     self.radius = radius
 
@@ -313,7 +350,8 @@ Mechanical rewrites:
 | `@@build = -> ...`     | `static build = -> ...`           |
 | `_name = ...`          | `private name = ...`              |
 | `_method = -> ...`     | `private method = -> ...`         |
-| `_init = name -> ...`  | `private init = name -> ...`     |
+| `init = name -> ...`   | `initialize = name -> ...`        |
+| `_init = name -> ...`  | `private initialize = name -> ...` |
 | `@@_count = 0`         | `private static count = 0`        |
 | `@@_helper = -> ...`   | `private static helper = -> ...`  |
 | `User.foo` (inside User) | `Self.foo`                      |
@@ -334,6 +372,7 @@ diagnostics table below pointing at every site that needs editing.
 | `[TYA-E0411]`  | checker | v0.46    | `self` used inside a `static` method. `self` refers to the instance and is unavailable here; use `Self`. |
 | `[TYA-E0412]`  | checker | v0.46    | `Self` used outside a class body.                      |
 | `[TYA-E0413]`  | checker | v0.46    | `<DeclaringClass>.foo` written inside its own class body. Canonical form is `Self.foo`. (Strict-mode warning; the formatter auto-rewrites.) |
+| `[TYA-E0414]`  | checker | v0.46    | Class declares `init = ...` (or `private init = ...`) where `initialize` is expected. Constructor renamed to `initialize` in v0.46. |
 
 ## Implementation Sketch
 
@@ -437,7 +476,7 @@ permitted form). Revisit if subclasses need to call shadowed
 parent statics frequently.
 
 **Q3.** Reserve `this` even though v0.46 does not use it? Yes,
-for future-proofing. `[TYA-E0414]` "`this` is reserved" if a user
+for future-proofing. `[TYA-E0415]` "`this` is reserved" if a user
 tries to use it as an identifier — prevents future surprises.
 
 **Q4.** Adopt Swift's dynamic-`Self` (polymorphic statics) in a
