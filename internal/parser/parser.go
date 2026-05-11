@@ -517,11 +517,19 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, Implements: implements, Abstract: abstract, Final: final}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
-		// v0.46 G1: optional `private` keyword precedes the other
-		// member modifiers. Canonical order: private → abstract|override → @@name.
+		// v0.46 canonical modifier order:
+		//   [private] [static] [abstract|override] [@@] <name> = <body>
 		isPrivateMember := false
 		if p.at(token.IDENT) && p.peek().Lexeme == "private" {
 			isPrivateMember = true
+			p.next()
+		}
+		// v0.46 G3: optional `static` keyword. Sets the same Class flag
+		// as the legacy `@@` prefix; both forms coexist during the
+		// transition.
+		isStaticMember := false
+		if p.at(token.IDENT) && p.peek().Lexeme == "static" {
+			isStaticMember = true
 			p.next()
 		}
 		isAbstractMethod := false
@@ -537,8 +545,8 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		if isAbstractMethod && isOverrideMethod {
 			return nil, p.err("method cannot be both abstract and override")
 		}
-		isClassMember := p.match(token.AT)
-		if isClassMember {
+		isClassMember := isStaticMember || p.match(token.AT)
+		if isClassMember && !isStaticMember {
 			if !p.match(token.AT) {
 				return nil, p.err("expected '@' for class member")
 			}
