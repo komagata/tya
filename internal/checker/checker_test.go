@@ -309,22 +309,22 @@ func TestIsScriptFileName(t *testing.T) {
 }
 
 func TestCheckClassFileAcceptsMatchingClass(t *testing.T) {
-	prog := parse(t, "class Request\n  init = url ->\n    @url = url\n")
+	prog := parse(t, "class Request\n  initialize = url ->\n    self.url = url\n")
 	if err := CheckClassFile(prog, "Request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckClassFileAcceptsImportsBeforeClass(t *testing.T) {
-	prog := parse(t, "import string\n\nclass Request\n  init = url ->\n    @url = url\n")
+	prog := parse(t, "import string\n\nclass Request\n  initialize = url ->\n    self.url = url\n")
 	if err := CheckClassFile(prog, "Request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckClassFileAcceptsPrivateClasses(t *testing.T) {
-	src := "class Header\n  init = name, value ->\n    @name = name\n    @value = value\n\n" +
-		"class Request\n  init = url ->\n    @url = url\n"
+	src := "class Header\n  initialize = name, value ->\n    self.name = name\n    self.value = value\n\n" +
+		"class Request\n  initialize = url ->\n    self.url = url\n"
 	prog := parse(t, src)
 	if err := CheckClassFile(prog, "Request.tya"); err != nil {
 		t.Fatal(err)
@@ -332,7 +332,7 @@ func TestCheckClassFileAcceptsPrivateClasses(t *testing.T) {
 }
 
 func TestCheckClassFileAcceptsInterfaceCompanion(t *testing.T) {
-	src := "interface Sendable\n  send = ->\n\nclass Request\n  init = ->\n    @url = nil\n"
+	src := "interface Sendable\n  send = ->\n\nclass Request\n  initialize = ->\n    self.url = nil\n"
 	prog := parse(t, src)
 	if err := CheckClassFile(prog, "Request.tya"); err != nil {
 		t.Fatal(err)
@@ -340,7 +340,7 @@ func TestCheckClassFileAcceptsInterfaceCompanion(t *testing.T) {
 }
 
 func TestCheckClassFileRejectsMissingPublicClass(t *testing.T) {
-	prog := parse(t, "class Helper\n  init = ->\n    @x = 1\n")
+	prog := parse(t, "class Helper\n  initialize = ->\n    self.x = 1\n")
 	err := CheckClassFile(prog, "Request.tya")
 	if err == nil {
 		t.Fatal("expected missing public class error")
@@ -351,7 +351,7 @@ func TestCheckClassFileRejectsMissingPublicClass(t *testing.T) {
 }
 
 func TestCheckClassFileRejectsNonPascalCaseFilename(t *testing.T) {
-	prog := parse(t, "class Request\n  init = ->\n    @x = 1\n")
+	prog := parse(t, "class Request\n  initialize = ->\n    self.x = 1\n")
 	err := CheckClassFile(prog, "request.tya")
 	if err == nil {
 		t.Fatal("expected PascalCase filename error")
@@ -362,7 +362,7 @@ func TestCheckClassFileRejectsNonPascalCaseFilename(t *testing.T) {
 }
 
 func TestCheckClassFileRejectsTopLevelStatement(t *testing.T) {
-	src := "class Request\n  init = ->\n    @x = 1\n\nx = 1\n"
+	src := "class Request\n  initialize = ->\n    self.x = 1\n\nx = 1\n"
 	prog := parse(t, src)
 	err := CheckClassFile(prog, "Request.tya")
 	if err == nil {
@@ -374,7 +374,7 @@ func TestCheckClassFileRejectsTopLevelStatement(t *testing.T) {
 }
 
 func TestCheckClassFileRejectsImportAfterClass(t *testing.T) {
-	src := "class Request\n  init = ->\n    @x = 1\n\nimport string\n"
+	src := "class Request\n  initialize = ->\n    self.x = 1\n\nimport string\n"
 	prog := parse(t, src)
 	err := CheckClassFile(prog, "Request.tya")
 	if err == nil {
@@ -389,7 +389,7 @@ func TestCheckClassFileRejectsDuplicatePublicClass(t *testing.T) {
 	// Duplicate top-level class names are caught earlier by the
 	// structure checker, not by CheckClassFile itself, but we still
 	// document the behavior.
-	src := "class Request\n  init = ->\n    @x = 1\n\nclass Request\n  init = ->\n    @y = 1\n"
+	src := "class Request\n  initialize = ->\n    self.x = 1\n\nclass Request\n  initialize = ->\n    self.y = 1\n"
 	prog := parse(t, src)
 	err := CheckClassFile(prog, "Request.tya")
 	if err == nil {

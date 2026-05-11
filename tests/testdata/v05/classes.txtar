@@ -13,10 +13,10 @@ stdout 'Hello, module\n'
 stderr 'invalid class name user'
 
 ! exec go run ./cmd/tya run $WORK/at_outside_method.tya
-stderr '@name is only valid inside an instance method'
+stderr 'self is only valid inside a class method or instance method'
 
 ! exec go run ./cmd/tya run $WORK/class_variable.tya
-stderr '@@name is only valid inside a class'
+stderr 'TYA-E0412'
 ! stdout .
 
 ! exec go run ./cmd/tya run $WORK/duplicate_method.tya
@@ -36,27 +36,27 @@ stderr 'missing object field or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.46.0\n'
+stdout '0.47.0\n'
 ! stderr .
 
 -- classes.tya --
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
   rename = name ->
-    @name = name
+    self.name = name
 
   greeting = ->
-    "Hello, {@name}"
+    "Hello, {self.name}"
 
 class Counter
-  init = ->
-    @value = 0
+  initialize = ->
+    self.value = 0
 
   increment = ->
-    @value = @value + 1
-    @value
+    self.value = self.value + 1
+    self.value
 
 class Marker
   label = ->
@@ -79,11 +79,11 @@ print(marker.label())
 -- user.tya --
 module user
   class User
-    init = name ->
-      @name = name
+    initialize = name ->
+      self.name = name
 
     greeting = ->
-      "Hello, {@name}"
+      "Hello, {self.name}"
 
 -- main.tya --
 import user
@@ -93,14 +93,14 @@ print(item.greeting())
 
 -- bad_class_name.tya --
 class user
-  init = ->
-    @name = "bad"
+  initialize = ->
+    self.name = "bad"
 
 -- at_outside_method.tya --
-@name = "bad"
+self.name = "bad"
 
 -- class_variable.tya --
-@@name = "bad"
+Self.name = "bad"
 
 -- duplicate_method.tya --
 class User
@@ -112,8 +112,8 @@ class User
 
 -- constructor_arity.tya --
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
 user = User()
 
@@ -129,8 +129,8 @@ print(profile.name)
 
 -- missing_field.tya --
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
 user = User("komagata")
 print(user.missing)

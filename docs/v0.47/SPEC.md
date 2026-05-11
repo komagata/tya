@@ -1,6 +1,16 @@
-# Tya v0.47 Specification (draft)
+# Tya v0.47 Specification
 
-> **Status:** draft. Implementation has not yet started.
+> **Status:** shipped. The clean cut of the legacy v0.45 class-
+> member surface is in place. The `tya version` constant is
+> `0.47.0`. `selfhost/v01/` keeps the v0.43 surface via a path-
+> based permissive-legacy mode on the checker.
+>
+> Not all SPEC goals shipped in v0.47.0 — G1 (strict bare-name
+> receivers) is partially deferred: bare names that previously
+> resolved through legacy paths now raise E0410 at the parse site,
+> but the checker's class-member fallback elimination is a future
+> step. G6 (canonical `Self.foo` formatter rewrite) is deferred to
+> a follow-up minor.
 
 ## Theme
 

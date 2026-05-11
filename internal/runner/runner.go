@@ -62,10 +62,25 @@ func ValidateAnyTyaFileName(path string) error {
 	return fmt.Errorf("invalid Tya file name: %s", base)
 }
 
+// IsLegacyV01Path reports whether the given path identifies a
+// source file under the selfhost/v01/ directory (which keeps the
+// v0.43 class-member surface per the v0.46 / v0.47 SPECs' Self-Host
+// Constraint). The runner enables permissive legacy mode on the
+// checker before processing such inputs.
+func IsLegacyV01Path(path string) bool {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		abs = path
+	}
+	cleaned := filepath.ToSlash(filepath.Clean(abs))
+	return strings.Contains(cleaned, "/selfhost/v01/")
+}
+
 func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 	if err := ValidateFileName(path); err != nil {
 		return err
 	}
+	defer checker.SetPermissiveLegacy(IsLegacyV01Path(path))()
 	source, modules, origins, err := LoadUserSourceWithOrigins(path)
 	if err != nil {
 		return err

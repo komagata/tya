@@ -38,7 +38,7 @@ stderr 'missing class variable or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.46.0\n'
+stdout '0.47.0\n'
 ! stderr .
 
 -- class_level.tya --
@@ -54,7 +54,7 @@ class User
     Self.label
 
   static build = name ->
-    self(name)
+    Self(name)
 
   static label_name = ->
     Self.label
@@ -98,7 +98,7 @@ module account
       Self.kind
 
     static build = name ->
-      self(name)
+      Self(name)
 
     static kind_name = ->
       Self.kind

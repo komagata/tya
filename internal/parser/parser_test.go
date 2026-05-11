@@ -104,7 +104,7 @@ func TestParseRejectsMixedDictAndSetLiteral(t *testing.T) {
 }
 
 func TestParseClassDeclaration(t *testing.T) {
-	src := "class User\n  init = name ->\n    @name = name\n\n  greeting = ->\n    \"Hello, {@name}\"\n"
+	src := "class User\n  initialize = name ->\n    self.name = name\n\n  greeting = ->\n    \"Hello, {@name}\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -221,7 +221,7 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 }
 
 func TestParseInstanceFieldSyntax(t *testing.T) {
-	toks, errs := lexer.Lex("class User\n  init = name ->\n    @name = name\n  name = ->\n    @name\n")
+	toks, errs := lexer.Lex("class User\n  initialize = name ->\n    self.name = name\n  name = ->\n    @name\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -229,7 +229,7 @@ func TestParseInstanceFieldSyntax(t *testing.T) {
 		t.Fatalf("parse instance fields: %v", err)
 	}
 
-	toks, errs = lexer.Lex("class User\n  name = \"\"\n  @@count = 0\n  init = ->\n    @@count = @@count + 1\n  @@count_users = ->\n    @@count\n")
+	toks, errs = lexer.Lex("class User\n  name = \"\"\n  @@count = 0\n  initialize = ->\n    @@count = @@count + 1\n  @@count_users = ->\n    @@count\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -415,7 +415,7 @@ func TestParseImportAlias(t *testing.T) {
 }
 
 func TestParseSuperCall(t *testing.T) {
-	toks, errs := lexer.Lex("class Admin extends User\n  init = name ->\n    super(name)\n")
+	toks, errs := lexer.Lex("class Admin extends User\n  initialize = name ->\n    super(name)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}

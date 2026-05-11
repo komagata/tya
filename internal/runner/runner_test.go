@@ -70,7 +70,7 @@ func TestRunFileLoadsImportedModuleAlias(t *testing.T) {
 
 func TestRunFileRejectsTopLevelClassInImportedModule(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init = name ->\n    name\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  initialize = name ->\n    name\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint(user.name)\n")
 
@@ -131,7 +131,7 @@ func TestLoadSourceRejectsModuleWithMultiplePublicBindings(t *testing.T) {
 
 func TestLoadSourceRejectsTopLevelClassInImportedModule(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init = name ->\n    name\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  initialize = name ->\n    name\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint(user.name)\n")
 
@@ -146,7 +146,7 @@ func TestLoadSourceRejectsTopLevelClassInImportedModule(t *testing.T) {
 
 func TestLoadSourceLoadsModuleClassDeclaration(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "user.tya"), "module user\n  class User\n    init = name ->\n      @name = name\n")
+	writeFile(t, filepath.Join(dir, "user.tya"), "module user\n  class User\n    initialize = name ->\n      self.name = name\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import user\nitem = user.User(\"komagata\")\n")
 
@@ -177,7 +177,7 @@ func TestLoadSourceRejectsTopLevelHelperInImportedFile(t *testing.T) {
 func TestLoadSourceAcceptsClassInEntryFile(t *testing.T) {
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "class User\n  init = name ->\n    @name = name\n")
+	writeFile(t, main, "class User\n  initialize = name ->\n    self.name = name\n")
 
 	source, err := LoadSource(main)
 	if err != nil {
@@ -371,8 +371,8 @@ func TestResolvePackageDirFindsClassFiles(t *testing.T) {
 	if err := os.MkdirAll(pkgDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(pkgDir, "Request.tya"), "class Request\n  init = ->\n    @url = nil\n")
-	writeFile(t, filepath.Join(pkgDir, "Response.tya"), "class Response\n  init = ->\n    @status = 200\n")
+	writeFile(t, filepath.Join(pkgDir, "Request.tya"), "class Request\n  initialize = ->\n    self.url = nil\n")
+	writeFile(t, filepath.Join(pkgDir, "Response.tya"), "class Response\n  initialize = ->\n    self.status = 200\n")
 	importer := filepath.Join(dir, "main.tya")
 	writeFile(t, importer, "")
 
@@ -408,7 +408,7 @@ func TestResolvePackageDirRejectsPackageWithScriptFile(t *testing.T) {
 	if err := os.MkdirAll(pkgDir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(pkgDir, "Helper.tya"), "class Helper\n  init = ->\n    @x = 1\n")
+	writeFile(t, filepath.Join(pkgDir, "Helper.tya"), "class Helper\n  initialize = ->\n    self.x = 1\n")
 	writeFile(t, filepath.Join(pkgDir, "script.tya"), "print(\"hi\")\n")
 	importer := filepath.Join(dir, "main.tya")
 	writeFile(t, importer, "")

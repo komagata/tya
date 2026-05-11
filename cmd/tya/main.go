@@ -23,7 +23,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.46.0"
+const version = "0.47.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -223,6 +223,7 @@ doneOptions:
 		usage()
 		os.Exit(2)
 	}
+	defer checker.SetPermissiveLegacy(runner.IsLegacyV01Path(path))()
 	src, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -496,6 +497,7 @@ func compileToC(path string) (string, error) {
 }
 
 func compileToCWithCover(path string, opt *codegen.CoverageOptions) (string, *codegen.CoverageRegistry, error) {
+	defer checker.SetPermissiveLegacy(runner.IsLegacyV01Path(path))()
 	source, modules, origins, err := runner.LoadSourceWithOrigins(path)
 	if err != nil {
 		return "", nil, err
@@ -792,6 +794,7 @@ func testFiles(root string) ([]string, error) {
 }
 
 func checkFile(path string) error {
+	defer checker.SetPermissiveLegacy(runner.IsLegacyV01Path(path))()
 	// v0.44: tya check on a PascalCase class file is allowed
 	// (read-only, no entry semantics). Skip the entry-only
 	// runner.LoadSourceWithModules path and validate the class

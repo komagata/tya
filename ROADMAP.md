@@ -148,6 +148,23 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.47** — Class-member surface clean cut. The legacy v0.45
+  syntax (`@`, `@@`, `_`-prefix, `init` / `_init`) is now rejected
+  with structured diagnostics (`docs/v0.47/SPEC.md`,
+  `docs/v0.47/RELEASE_NOTES.md`). Wired codes: `[TYA-E0407]`
+  (`_`-prefix on class members), `[TYA-E0410]` (`@`/`@@` sigils),
+  `[TYA-E0411]` (`self` inside `static` methods), `[TYA-E0414]`
+  (`init`/`_init` as constructor name). `selfhost/v01/` keeps the
+  v0.43 surface via a path-based permissive-legacy mode on the
+  checker (`checker.SetPermissiveLegacy` + `runner.IsLegacyV01Path`).
+  All of `examples/`, `stdlib/`, and `tests/testdata/v0[6-9]…v45/`
+  migrated to the new surface; the `v09/private_members` fixture
+  was retired (it pinned the v0.45-only `_`-prefix external-access
+  heuristic, which has no v0.46+ equivalent). Deferred to v0.48:
+  G1 full strict bare-name receivers (the diagnostics catch the
+  common legacy paths but a complete resolver walk is future
+  work) and G6 formatter rewrite of `<DeclaringClass>.foo` →
+  `Self.foo`.
 - **v0.46** — Sigil-free, keyword-based class-member surface
   (`docs/v0.46/SPEC.md`, `docs/v0.46/RELEASE_NOTES.md`). Transitional
   release: the new keywords (`private`, `static`, `self`, `Self`,
@@ -207,38 +224,19 @@ and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
 
-### v0.47 — Class-member surface clean cut
+### v0.48 — Strict bare-name receivers + formatter canonical rewrite
 
-v0.46 shipped the new keyword surface alongside the legacy v0.45
-sigil surface for a transition window. v0.47 closes the transition:
-removes the legacy syntax, lands G4 strict bare-name receivers, and
-moves any tests pinning legacy-only behavior into a dedicated
-`tests/testdata/legacy/` directory. See
-[`docs/v0.47/SPEC.md`](docs/v0.47/SPEC.md).
+The v0.47 clean cut catches the common legacy paths via E0407 /
+E0410 / E0411 / E0414, but two SPEC items deferred:
 
-- [ ] **G1 strict bare-name receivers** — bare identifiers in class
-  method bodies resolve to locals / parameters / imports only;
-  never to class members. To access a class member write `self.x`,
-  `Self.x`, or `<OtherClass>.x`.
-- [ ] **G2 reject `@field` / `@@field`** — parser emits
-  `[TYA-E0410]`.
-- [ ] **G3 reject `_`-prefix class privacy** — checker emits
-  `[TYA-E0407]`.
-- [ ] **G4 reject `init` / `_init` constructor names** — checker
-  emits `[TYA-E0414]`; only `initialize` is recognized.
-- [ ] **G5 reject `self` inside `static` methods** — checker emits
-  `[TYA-E0411]`.
+- [ ] **G1 strict bare-name receivers** — eliminate the bare-name
+  → class-member fallback in checker identifier resolution. Bare
+  names in class method bodies resolve only to locals / params /
+  imports.
 - [ ] **G6 canonical receiver rule** — formatter rewrites
-  `<DeclaringClass>.foo` → `Self.foo` inside the declaring class;
-  checker emits `[TYA-E0413]` under strict mode.
-- [ ] **G7 testdata migration** — migrate v06–v45 fixtures using
-  legacy class syntax to either v0.46 form or
-  `tests/testdata/legacy/` (for legacy-diagnostic regression).
-- [ ] **`selfhost/v01/` path exemption** — Go reference impl skips
-  the new diagnostics for files under `selfhost/v01/`.
-
-Open question: ship `tya format --migrate` subcommand for
-mechanical legacy → v0.46 rewrites (recommended as optional G8).
+  `<DeclaringClass>.foo` → `Self.foo` inside the declaring class
+  body; checker emits `[TYA-E0413]` under `--check-unused` strict
+  mode.
 
 ### v0.4x — Self-host v0.44 surface + `module` keyword retirement
 

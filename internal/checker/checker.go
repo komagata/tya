@@ -36,6 +36,30 @@ func validCallableName(name string) bool {
 	return valueNameRE.MatchString(name)
 }
 
+// permissiveLegacy controls whether the v0.47 clean-cut diagnostics
+// for the legacy v0.45 class-member surface (`@`, `@@`, `_`-prefix,
+// `init` / `_init`) are emitted. Set to true by the runner before
+// checking files under `selfhost/v01/`, which keep the v0.43 surface
+// per the v0.46 / v0.47 SPECs' Self-Host Constraint. Reset to false
+// for user code.
+//
+// Process-level global — safe because each `go run ./cmd/tya …`
+// process performs at most one check pass at a time, and testscript
+// fixtures spawn subprocesses so concurrent in-process tests do not
+// share this flag.
+var permissiveLegacy bool
+
+// SetPermissiveLegacy turns the legacy-permission flag on or off and
+// returns a function that restores the previous value when called.
+// Use with `defer`:
+//
+//	defer checker.SetPermissiveLegacy(isV01Path)()
+func SetPermissiveLegacy(value bool) func() {
+	prev := permissiveLegacy
+	permissiveLegacy = value
+	return func() { permissiveLegacy = prev }
+}
+
 func Check(prog *ast.Program) error {
 	return CheckWithModules(prog, nil)
 }
@@ -957,15 +981,26 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				return fmt.Errorf("%d:%d: [TYA-E0412] Self is only valid inside a class body", n.Tok.Line, n.Tok.Col)
 			}
 		} else {
-			// v0.46 G2: `self` (lowercase) refers to the instance.
-			// Valid in instance methods and constructors. Class
-			// methods also accept it during the transition (then it
-			// means the class — v0.45 semantics).
+			// v0.46 G2 / v0.47 G5: `self` (lowercase) refers to the
+			// instance. Valid in instance methods and constructors.
+			// v0.47 rejects `self` inside `static` methods with
+			// [TYA-E0411] (legacy v0.45 allowed it as "the class").
+			// Permissive legacy mode preserves the v0.45 acceptance
+			// for the selfhost/v01 surface.
+			if scope.inClassMethod && !scope.inInstanceMethod {
+				if !permissiveLegacy {
+					return fmt.Errorf("%d:%d: [TYA-E0411] self is not available in static methods (no instance receiver); use Self for the class", n.Tok.Line, n.Tok.Col)
+				}
+			}
 			if !scope.inInstanceMethod && !scope.inClassMethod {
 				return fmt.Errorf("%d:%d: self is only valid inside a class method or instance method", n.Tok.Line, n.Tok.Col)
 			}
 		}
 	case *ast.InstanceFieldExpr:
+		// v0.47 G2: reject `@field` outside permissive legacy mode.
+		if !permissiveLegacy {
+			return fmt.Errorf("%d:%d: [TYA-E0410] @%s is removed; use self.%s", n.NameTok.Line, n.NameTok.Col, n.Name, n.Name)
+		}
 		if !scope.inInstanceMethod {
 			return fmt.Errorf("%d:%d: @%s is only valid inside an instance method", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
@@ -1171,6 +1206,10 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		if !valueNameRE.MatchString(field.Name) {
 			return fmt.Errorf("%d:%d: invalid field name %s", field.Tok.Line, field.Tok.Col, field.Name)
 		}
+		// v0.47 G3: reject `_`-prefix instance field names.
+		if !permissiveLegacy && strings.HasPrefix(field.Name, "_") {
+			return fmt.Errorf("%d:%d: [TYA-E0407] %s is no longer a privacy marker on class members; rename to %s or add `private`", field.Tok.Line, field.Tok.Col, field.Name, strings.TrimPrefix(field.Name, "_"))
+		}
 		if instanceMembers[field.Name] {
 			return fmt.Errorf("%d:%d: duplicate instance member %s", field.Tok.Line, field.Tok.Col, field.Name)
 		}
@@ -1182,6 +1221,10 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 	for _, variable := range class.Vars {
 		if !valueNameRE.MatchString(variable.Name) {
 			return fmt.Errorf("%d:%d: invalid class variable name %s", variable.Tok.Line, variable.Tok.Col, variable.Name)
+		}
+		// v0.47 G3: reject `_`-prefix class variable names.
+		if !permissiveLegacy && strings.HasPrefix(variable.Name, "_") {
+			return fmt.Errorf("%d:%d: [TYA-E0407] %s is no longer a privacy marker on class members; rename to %s or add `private`", variable.Tok.Line, variable.Tok.Col, variable.Name, strings.TrimPrefix(variable.Name, "_"))
 		}
 		if classMembers[variable.Name] {
 			return fmt.Errorf("%d:%d: duplicate class member %s", variable.Tok.Line, variable.Tok.Col, variable.Name)
@@ -1200,6 +1243,18 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		}
 		if method.Abstract && method.Override {
 			return fmt.Errorf("%d:%d: method %s cannot be both abstract and override", method.Tok.Line, method.Tok.Col, method.Name)
+		}
+		// v0.47 G4: reject `init` / `_init` as constructor names outside
+		// permissive legacy mode. Only `initialize` is recognized.
+		if !permissiveLegacy && (method.Name == "init" || method.Name == "_init") {
+			return fmt.Errorf("%d:%d: [TYA-E0414] %s is removed as a constructor name; rename to initialize", method.Tok.Line, method.Tok.Col, method.Name)
+		}
+		// v0.47 G3: reject `_`-prefix class member names. Underscore is
+		// no longer a privacy marker on class members; use `private`.
+		// (Excluded: `_init` already caught above; `_` lone alone is
+		// not a valid member name and would fail validCallableName.)
+		if !permissiveLegacy && strings.HasPrefix(method.Name, "_") && method.Name != "_init" {
+			return fmt.Errorf("%d:%d: [TYA-E0407] %s is no longer a privacy marker on class members; rename to %s or add `private`", method.Tok.Line, method.Tok.Col, method.Name, strings.TrimPrefix(method.Name, "_"))
 		}
 		if method.Class {
 			if classMembers[method.Name] {
@@ -2021,6 +2076,9 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 		}
 		return nil
 	case *ast.InstanceFieldExpr:
+		if !permissiveLegacy {
+			return fmt.Errorf("%d:%d: [TYA-E0410] @%s is removed; use self.%s", n.NameTok.Line, n.NameTok.Col, n.Name, n.Name)
+		}
 		if !scope.inInstanceMethod {
 			return fmt.Errorf("%d:%d: @%s is only valid inside an instance method", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
@@ -2031,6 +2089,9 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 			return err
 		}
 	case *ast.ClassVarExpr:
+		if !permissiveLegacy {
+			return fmt.Errorf("%d:%d: [TYA-E0410] @@%s is removed; use Self.%s", n.NameTok.Line, n.NameTok.Col, n.Name, n.Name)
+		}
 		if !scope.inClassBody && !scope.inInstanceMethod && !scope.inClassMethod {
 			return fmt.Errorf("%d:%d: @@%s is only valid inside a class", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
