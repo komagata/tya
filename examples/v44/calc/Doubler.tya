@@ -1,7 +1,7 @@
 class Doubler
   init = ->
-    @count = 0
+    self.count = 0
 
   apply = n ->
-    @count = @count + 1
+    self.count = self.count + 1
     n * 2

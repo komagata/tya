@@ -1,5 +1,5 @@
 class Matrix
-  @@validate_data = data ->
+  static validate_data = data ->
     if kind(data) != "array"
       raise "matrix.new: data must be an array of arrays"
     rows = len(data)
@@ -21,11 +21,11 @@ class Matrix
       i = i + 1
     return cols
 
-  @@new = data ->
+  static new = data ->
     cols = Matrix.validate_data(data)
     return { rows: len(data), cols: cols, data: data }
 
-  @@zero = rows, cols ->
+  static zero = rows, cols ->
     data = []
     i = 0
     while i < rows
@@ -38,7 +38,7 @@ class Matrix
       i = i + 1
     return { rows: rows, cols: cols, data: data }
 
-  @@identity = n ->
+  static identity = n ->
     data = []
     i = 0
     while i < n
@@ -54,18 +54,18 @@ class Matrix
       i = i + 1
     return { rows: n, cols: n, data: data }
 
-  @@at = m, r, c ->
+  static at = m, r, c ->
     if r < 0 or r >= m["rows"] or c < 0 or c >= m["cols"]
       raise "matrix.at: index out of range"
     return m["data"][r][c]
 
-  @@put = m, r, c, value ->
+  static put = m, r, c, value ->
     if r < 0 or r >= m["rows"] or c < 0 or c >= m["cols"]
       raise "matrix.put: index out of range"
     m["data"][r][c] = value
     return nil
 
-  @@add = a, b ->
+  static add = a, b ->
     if a["rows"] != b["rows"] or a["cols"] != b["cols"]
       raise "matrix.add: dimension mismatch"
     out_data = []
@@ -80,7 +80,7 @@ class Matrix
       i = i + 1
     return { rows: a["rows"], cols: a["cols"], data: out_data }
 
-  @@sub = a, b ->
+  static sub = a, b ->
     if a["rows"] != b["rows"] or a["cols"] != b["cols"]
       raise "matrix.sub: dimension mismatch"
     out_data = []
@@ -95,7 +95,7 @@ class Matrix
       i = i + 1
     return { rows: a["rows"], cols: a["cols"], data: out_data }
 
-  @@scale = a, k ->
+  static scale = a, k ->
     out_data = []
     i = 0
     while i < a["rows"]
@@ -108,7 +108,7 @@ class Matrix
       i = i + 1
     return { rows: a["rows"], cols: a["cols"], data: out_data }
 
-  @@mul = a, b ->
+  static mul = a, b ->
     if a["cols"] != b["rows"]
       raise "matrix.mul: inner dimensions disagree"
     out_data = []
@@ -128,7 +128,7 @@ class Matrix
       i = i + 1
     return { rows: a["rows"], cols: b["cols"], data: out_data }
 
-  @@transpose = a ->
+  static transpose = a ->
     out_data = []
     j = 0
     while j < a["cols"]
@@ -141,7 +141,7 @@ class Matrix
       j = j + 1
     return { rows: a["cols"], cols: a["rows"], data: out_data }
 
-  @@det = a ->
+  static det = a ->
     if a["rows"] != a["cols"]
       raise "matrix.det: not square"
     n = a["rows"]
@@ -177,7 +177,7 @@ class Matrix
       j = j + 1
     return sum
 
-  @@equal? = a, b ->
+  static equal? = a, b ->
     if a["rows"] != b["rows"] or a["cols"] != b["cols"]
       return false
     return equal(a["data"], b["data"])

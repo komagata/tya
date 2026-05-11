@@ -1,8 +1,8 @@
 class Csv
-  @@default_options = () ->
+  static default_options = () ->
     return { separator: ",", header: false }
 
-  @@merge_options = options ->
+  static merge_options = options ->
     base = Csv.default_options()
     if options == nil
       return base
@@ -12,7 +12,7 @@ class Csv
       base["header"] = options["header"]
     return base
 
-  @@parse_rows = text, separator ->
+  static parse_rows = text, separator ->
     rows = []
     n = byte_len(text)
     i = 0
@@ -64,7 +64,7 @@ class Csv
       push(rows, row)
     return rows
 
-  @@parse = text, options ->
+  static parse = text, options ->
     opts = Csv.merge_options(options)
     rows = Csv.parse_rows(text, opts["separator"])
     if not opts["header"]
@@ -88,7 +88,7 @@ class Csv
       i = i + 1
     return out
 
-  @@escape_field = field, separator ->
+  static escape_field = field, separator ->
     needs_quote = false
     n = byte_len(field)
     cr = chr(13)
@@ -112,7 +112,7 @@ class Csv
       i = i + 1
     return out + "\""
 
-  @@dump_array_rows = rows, separator ->
+  static dump_array_rows = rows, separator ->
     out = ""
     i = 0
     while i < len(rows)
@@ -129,7 +129,7 @@ class Csv
       i = i + 1
     return out
 
-  @@dump = rows, options ->
+  static dump = rows, options ->
     opts = Csv.merge_options(options)
     sep = opts["separator"]
     if len(rows) == 0

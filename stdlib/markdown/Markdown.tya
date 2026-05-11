@@ -1,5 +1,5 @@
 class Markdown
-  @@to_html = text ->
+  static to_html = text ->
     lines = split(text, "\n")
     blocks = Markdown.parse_blocks(lines)
     parts = []
@@ -7,7 +7,7 @@ class Markdown
       push(parts, Markdown.render_block(block))
     return join(parts, "")
 
-  @@parse_blocks = lines ->
+  static parse_blocks = lines ->
     blocks = []
     para = []
     i = 0
@@ -88,14 +88,14 @@ class Markdown
     Markdown.flush_paragraph(blocks, para)
     return blocks
 
-  @@flush_paragraph = blocks, para ->
+  static flush_paragraph = blocks, para ->
     if len(para) == 0
       return nil
     text = join(para, "\n")
     push(blocks, { kind: "p", text: text })
     return nil
 
-  @@is_thematic_break = s ->
+  static is_thematic_break = s ->
     if s == "---"
       return true
     if s == "***"
@@ -104,7 +104,7 @@ class Markdown
       return true
     return false
 
-  @@heading_level = s ->
+  static heading_level = s ->
     n = byte_len(s)
     i = 0
     while i < n and i < 6 and s[i] == "#"
@@ -117,7 +117,7 @@ class Markdown
       return 0
     return i
 
-  @@heading_rest = s, level ->
+  static heading_rest = s, level ->
     n = byte_len(s)
     rest = ""
     i = level + 1
@@ -126,7 +126,7 @@ class Markdown
       i = i + 1
     return trim(rest)
 
-  @@is_unordered_item = s ->
+  static is_unordered_item = s ->
     if starts_with(s, "- ")
       return true
     if starts_with(s, "* ")
@@ -135,10 +135,10 @@ class Markdown
       return true
     return false
 
-  @@strip_list_marker = s ->
+  static strip_list_marker = s ->
     return Markdown.trim_left_n(s, 2)
 
-  @@is_ordered_item = s ->
+  static is_ordered_item = s ->
     n = byte_len(s)
     i = 0
     while i < n and contains("0123456789", s[i])
@@ -153,14 +153,14 @@ class Markdown
       return false
     return true
 
-  @@strip_ordered_marker = s ->
+  static strip_ordered_marker = s ->
     n = byte_len(s)
     i = 0
     while i < n and contains("0123456789", s[i])
       i = i + 1
     return Markdown.trim_left_n(s, i + 2)
 
-  @@trim_left_n = s, k ->
+  static trim_left_n = s, k ->
     n = byte_len(s)
     out = ""
     i = k
@@ -169,7 +169,7 @@ class Markdown
       i = i + 1
     return out
 
-  @@render_block = block ->
+  static render_block = block ->
     kind = block["kind"]
     if kind == "hr"
       return "<hr/>\n"
@@ -201,7 +201,7 @@ class Markdown
       return out
     return ""
 
-  @@escape_html = text ->
+  static escape_html = text ->
     text = replace(text, "&", "&amp;")
     text = replace(text, "<", "&lt;")
     text = replace(text, ">", "&gt;")
@@ -209,14 +209,14 @@ class Markdown
     text = replace(text, "'", "&#39;")
     return text
 
-  @@escape_attr = text ->
+  static escape_attr = text ->
     text = replace(text, "&", "&amp;")
     text = replace(text, "\"", "&quot;")
     text = replace(text, "<", "&lt;")
     text = replace(text, ">", "&gt;")
     return text
 
-  @@inline = text ->
+  static inline = text ->
     n = byte_len(text)
     out = ""
     i = 0
@@ -277,7 +277,7 @@ class Markdown
       i = i + 1
     return out
 
-  @@find_byte = text, b, start ->
+  static find_byte = text, b, start ->
     n = byte_len(text)
     i = start
     while i < n
@@ -286,7 +286,7 @@ class Markdown
       i = i + 1
     return -1
 
-  @@find_double = text, b, start ->
+  static find_double = text, b, start ->
     n = byte_len(text)
     i = start
     while i < n - 1
@@ -295,7 +295,7 @@ class Markdown
       i = i + 1
     return -1
 
-  @@slice_str = text, s, e ->
+  static slice_str = text, s, e ->
     out = ""
     i = s
     while i < e
@@ -303,7 +303,7 @@ class Markdown
       i = i + 1
     return out
 
-  @@try_link = text, start ->
+  static try_link = text, start ->
     n = byte_len(text)
     close_text = Markdown.find_byte(text, "]", start + 1)
     if close_text < 0
@@ -324,7 +324,7 @@ class Markdown
       + "</a>"
     return { html: html, end: close_url + 1 }
 
-  @@try_autolink = text, start ->
+  static try_autolink = text, start ->
     close = Markdown.find_byte(text, ">", start + 1)
     if close < 0
       return nil

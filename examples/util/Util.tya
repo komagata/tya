@@ -1,5 +1,5 @@
 class Util
-  @@foo = "foo"
+  static foo = "foo"
 
-  @@bar = () ->
+  static bar = () ->
     "bar"

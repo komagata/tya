@@ -1,5 +1,5 @@
 class Json
-  @@skip_ws = state ->
+  static skip_ws = state ->
     n = state["len"]
     p = state["pos"]
     src = state["src"]
@@ -11,14 +11,14 @@ class Json
       p = p + 1
     state["pos"] = p
 
-  @@expect = state, ch ->
+  static expect = state, ch ->
     Json.skip_ws(state)
     p = state["pos"]
     if p >= state["len"] or state["src"][p] != ch
       raise "json.parse: expected '{ch}'"
     state["pos"] = p + 1
 
-  @@hex_value = c ->
+  static hex_value = c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -28,7 +28,7 @@ class Json
       return code - 87
     raise "json.parse: invalid hex digit"
 
-  @@utf8_encode = code ->
+  static utf8_encode = code ->
     if code < 128
       return chr(code)
     if code < 2048
@@ -40,7 +40,7 @@ class Json
     b3 = 128 + code % 64
     return chr(b1) + chr(b2) + chr(b3)
 
-  @@parse_string = state ->
+  static parse_string = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -95,11 +95,11 @@ class Json
         p = p + 1
     raise "json.parse: unterminated string"
 
-  @@is_digit = c ->
+  static is_digit = c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
-  @@parse_number = state ->
+  static parse_number = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -131,7 +131,7 @@ class Json
       return to_float(text)
     return to_int(text)
 
-  @@parse_value = state ->
+  static parse_value = state ->
     Json.skip_ws(state)
     p = state["pos"]
     if p >= state["len"]
@@ -169,7 +169,7 @@ class Json
       return Json.parse_number(state)
     raise "json.parse: unexpected character"
 
-  @@parse_object = state ->
+  static parse_object = state ->
     Json.expect(state, "{{")
     out = {}
     Json.skip_ws(state)
@@ -193,7 +193,7 @@ class Json
         state["pos"] = p + 1
         return out
 
-  @@parse_array = state ->
+  static parse_array = state ->
     Json.expect(state, "[")
     out = []
     Json.skip_ws(state)
@@ -214,7 +214,7 @@ class Json
         state["pos"] = p + 1
         return out
 
-  @@parse = text ->
+  static parse = text ->
     state = { src: text, pos: 0, len: byte_len(text) }
     v = Json.parse_value(state)
     Json.skip_ws(state)
@@ -222,7 +222,7 @@ class Json
       raise "json.parse: trailing characters"
     return v
 
-  @@escape_string = text ->
+  static escape_string = text ->
     n = byte_len(text)
     out = "\""
     i = 0
@@ -261,7 +261,7 @@ class Json
       i = i + 1
     return out + "\""
 
-  @@pad = indent, level ->
+  static pad = indent, level ->
     if indent <= 0
       return ""
     out = "\n"
@@ -276,7 +276,7 @@ class Json
       k = k + 1
     return out
 
-  @@emit = value, indent, level ->
+  static emit = value, indent, level ->
     k = kind(value)
     if k == "nil"
       return "null"
@@ -323,5 +323,5 @@ class Json
       return out + "}}"
     raise "json.dump: unsupported value kind"
 
-  @@dump = value ->
+  static dump = value ->
     return Json.emit(value, 0, 0)

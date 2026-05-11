@@ -1,15 +1,15 @@
 class Os
-  @@args = ->
+  static args = ->
     args()
 
-  @@env = name ->
+  static env = name ->
     env(name)
 
-  @@exit = code ->
+  static exit = code ->
     exit(code)
 
-  @@cwd = ->
+  static cwd = ->
     cwd()
 
-  @@chdir = path ->
+  static chdir = path ->
     chdir(path)

@@ -2,8 +2,8 @@ counter =
   count: 0
 
   inc: ->
-    @count = @count + 1
-    @count
+    self.count = self.count + 1
+    self.count
 
 print counter.inc()
 print counter.inc()

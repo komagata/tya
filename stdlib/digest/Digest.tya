@@ -1,15 +1,15 @@
 class Digest
-  @@md5 = text ->
+  static md5 = text ->
     digest_md5(text)
 
-  @@sha1 = text ->
+  static sha1 = text ->
     digest_sha1(text)
 
-  @@sha256 = text ->
+  static sha256 = text ->
     digest_sha256(text)
 
-  @@sha384 = text ->
+  static sha384 = text ->
     digest_sha384(text)
 
-  @@sha512 = text ->
+  static sha512 = text ->
     digest_sha512(text)

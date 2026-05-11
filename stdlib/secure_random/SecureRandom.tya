@@ -1,13 +1,13 @@
 class SecureRandom
-  @@hex_digit = d ->
+  static hex_digit = d ->
     if d < 10
       return chr(48 + d)
     return chr(87 + d)
 
-  @@bytes = n ->
+  static bytes = n ->
     return secure_random_bytes(n)
 
-  @@hex = n ->
+  static hex = n ->
     out = ""
     i = 0
     while i < n
@@ -18,10 +18,10 @@ class SecureRandom
       i = i + 1
     return out
 
-  @@base64_alphabet = ->
+  static base64_alphabet = ->
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-  @@base64 = n ->
+  static base64 = n ->
     alphabet = SecureRandom.base64_alphabet()
     out = ""
     i = 0
@@ -50,11 +50,11 @@ class SecureRandom
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
     return out
 
-  @@hex_byte = ->
+  static hex_byte = ->
     b = secure_random_int(0, 255)
     return SecureRandom.hex_digit(to_int(b / 16)) + SecureRandom.hex_digit(b % 16)
 
-  @@uuid = ->
+  static uuid = ->
     bs = []
     i = 0
     while i < 16
@@ -74,5 +74,5 @@ class SecureRandom
       i = i + 1
     return parts
 
-  @@int = min, max ->
+  static int = min, max ->
     secure_random_int(min, max)

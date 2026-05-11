@@ -1,9 +1,9 @@
 class Toml
-  @@is_digit = c ->
+  static is_digit = c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
-  @@is_bare_key_char = c ->
+  static is_bare_key_char = c ->
     code = ord(c)
     if code >= 65 and code <= 90
       return true
@@ -13,7 +13,7 @@ class Toml
       return true
     return c == "_" or c == "-"
 
-  @@skip_ws_in_line = state ->
+  static skip_ws_in_line = state ->
     p = state["pos"]
     n = state["len"]
     src = state["src"]
@@ -30,7 +30,7 @@ class Toml
         return nil
     state["pos"] = p
 
-  @@skip_ws_and_newlines = state ->
+  static skip_ws_and_newlines = state ->
     p = state["pos"]
     n = state["len"]
     src = state["src"]
@@ -47,7 +47,7 @@ class Toml
         return nil
     state["pos"] = p
 
-  @@parse_basic_string = state ->
+  static parse_basic_string = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -91,7 +91,7 @@ class Toml
         p = p + 1
     raise "toml.parse: unterminated string"
 
-  @@parse_literal_string = state ->
+  static parse_literal_string = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -110,7 +110,7 @@ class Toml
       p = p + 1
     raise "toml.parse: unterminated literal string"
 
-  @@parse_key = state ->
+  static parse_key = state ->
     Toml.skip_ws_in_line(state)
     p = state["pos"]
     src = state["src"]
@@ -131,7 +131,7 @@ class Toml
     state["pos"] = p
     return out
 
-  @@parse_number_or_keyword = state ->
+  static parse_number_or_keyword = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -164,7 +164,7 @@ class Toml
       return to_float(raw)
     return to_int(raw)
 
-  @@starts_with_text = state, word ->
+  static starts_with_text = state, word ->
     src = state["src"]
     n = state["len"]
     p = state["pos"]
@@ -178,7 +178,7 @@ class Toml
       k = k + 1
     return true
 
-  @@parse_value = state ->
+  static parse_value = state ->
     Toml.skip_ws_in_line(state)
     p = state["pos"]
     src = state["src"]
@@ -200,7 +200,7 @@ class Toml
       return false
     return Toml.parse_number_or_keyword(state)
 
-  @@parse_array = state ->
+  static parse_array = state ->
     p = state["pos"]
     if state["src"][p] != "["
       raise "toml.parse: expected '['"
@@ -231,7 +231,7 @@ class Toml
       else
         raise "toml.parse: expected ',' or ']' in array"
 
-  @@parse_inline_table = state ->
+  static parse_inline_table = state ->
     p = state["pos"]
     if state["src"][p] != "{{"
       raise "toml.parse: expected inline table"
@@ -262,14 +262,14 @@ class Toml
       else
         raise "toml.parse: expected ',' or '}}' in inline table"
 
-  @@parse_value_with_inline = state ->
+  static parse_value_with_inline = state ->
     Toml.skip_ws_in_line(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "{{"
       return Toml.parse_inline_table(state)
     return Toml.parse_value(state)
 
-  @@ensure_path = root, segments ->
+  static ensure_path = root, segments ->
     cur = root
     i = 0
     while i < len(segments)
@@ -280,7 +280,7 @@ class Toml
       i = i + 1
     return cur
 
-  @@ensure_array_path = root, segments ->
+  static ensure_array_path = root, segments ->
     cur = root
     i = 0
     last = len(segments) - 1
@@ -298,7 +298,7 @@ class Toml
     push(arr, new_table)
     return new_table
 
-  @@parse_header_segments = state ->
+  static parse_header_segments = state ->
     segments = []
     while true
       Toml.skip_ws_in_line(state)
@@ -311,7 +311,7 @@ class Toml
       else
         return segments
 
-  @@parse = text ->
+  static parse = text ->
     state = { src: text, pos: 0, len: byte_len(text) }
     root = {}
     current = root
@@ -358,7 +358,7 @@ class Toml
             raise "toml.parse: unexpected trailing characters on line"
     return root
 
-  @@is_bare_key = text ->
+  static is_bare_key = text ->
     n = byte_len(text)
     if n == 0
       return false
@@ -369,7 +369,7 @@ class Toml
       i = i + 1
     return true
 
-  @@format_key = text ->
+  static format_key = text ->
     if Toml.is_bare_key(text)
       return text
     out = "\""
@@ -386,7 +386,7 @@ class Toml
       i = i + 1
     return out + "\""
 
-  @@format_string = text ->
+  static format_string = text ->
     out = "\""
     n = byte_len(text)
     i = 0
@@ -410,7 +410,7 @@ class Toml
       i = i + 1
     return out + "\""
 
-  @@format_inline_value = value ->
+  static format_inline_value = value ->
     k = kind(value)
     if k == "nil"
       raise "toml.dump: nil is not representable in TOML"
@@ -446,7 +446,7 @@ class Toml
       return out + "}}"
     raise "toml.dump: unsupported value kind"
 
-  @@is_array_of_dicts = value ->
+  static is_array_of_dicts = value ->
     if kind(value) != "array"
       return false
     if len(value) == 0
@@ -458,7 +458,7 @@ class Toml
       i = i + 1
     return true
 
-  @@emit_table = value, prefix ->
+  static emit_table = value, prefix ->
     primitives = ""
     sub_tables = ""
     ks = keys(value)
@@ -501,7 +501,7 @@ class Toml
       i = i + 1
     return primitives + sub_tables
 
-  @@dump = value ->
+  static dump = value ->
     if kind(value) != "dict"
       raise "toml.dump: top-level value must be a dict"
     return Toml.emit_table(value, "")

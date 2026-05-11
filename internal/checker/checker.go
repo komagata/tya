@@ -957,10 +957,12 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				return fmt.Errorf("%d:%d: [TYA-E0412] Self is only valid inside a class body", n.Tok.Line, n.Tok.Col)
 			}
 		} else {
-			// `self` (lowercase) — v0.45 semantics retained during
-			// transition: only valid in class methods.
-			if !scope.inClassMethod {
-				return fmt.Errorf("%d:%d: self is only valid inside a class method", n.Tok.Line, n.Tok.Col)
+			// v0.46 G2: `self` (lowercase) refers to the instance.
+			// Valid in instance methods and constructors. Class
+			// methods also accept it during the transition (then it
+			// means the class — v0.45 semantics).
+			if !scope.inInstanceMethod && !scope.inClassMethod {
+				return fmt.Errorf("%d:%d: self is only valid inside a class method or instance method", n.Tok.Line, n.Tok.Col)
 			}
 		}
 	case *ast.InstanceFieldExpr:

@@ -1,20 +1,20 @@
 class Base64
-  @@alphabet = ->
+  static alphabet = ->
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-  @@byte_at = value, i ->
+  static byte_at = value, i ->
     k = kind(value)
     if k == "bytes"
       return value[i]
     return ord(value[i])
 
-  @@byte_count = value ->
+  static byte_count = value ->
     k = kind(value)
     if k == "bytes"
       return len(value)
     return byte_len(value)
 
-  @@encode = value ->
+  static encode = value ->
     k = kind(value)
     if k != "bytes" and k != "string"
       raise "base64.encode: argument must be a string or bytes"
@@ -47,7 +47,7 @@ class Base64
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
     return out
 
-  @@index_of = c ->
+  static index_of = c ->
     code = ord(c)
     if code >= 65 and code <= 90
       return code - 65
@@ -61,7 +61,7 @@ class Base64
       return 63
     raise "base64.decode: invalid character"
 
-  @@decode = text ->
+  static decode = text ->
     cleaned = ""
     n = byte_len(text)
     cr = chr(13)

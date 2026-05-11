@@ -1,24 +1,24 @@
 class Math
-  @@pi = 3.141592653589793
+  static pi = 3.141592653589793
 
-  @@e = 2.718281828459045
+  static e = 2.718281828459045
 
-  @@abs = value ->
+  static abs = value ->
     if value < 0
       return 0 - value
     return value
 
-  @@min = left, right ->
+  static min = left, right ->
     if left < right
       return left
     return right
 
-  @@max = left, right ->
+  static max = left, right ->
     if left > right
       return left
     return right
 
-  @@clamp = value, lo, hi ->
+  static clamp = value, lo, hi ->
     if lo > hi
       raise "math.clamp: min must be less than or equal to max"
     if value < lo
@@ -27,53 +27,53 @@ class Math
       return hi
     return value
 
-  @@sqrt = x ->
+  static sqrt = x ->
     math_sqrt(x)
 
-  @@pow = x, y ->
+  static pow = x, y ->
     math_pow(x, y)
 
-  @@floor = x ->
+  static floor = x ->
     math_floor(x)
 
-  @@ceil = x ->
+  static ceil = x ->
     math_ceil(x)
 
-  @@round = x ->
+  static round = x ->
     math_round(x)
 
-  @@trunc = x ->
+  static trunc = x ->
     math_trunc(x)
 
-  @@log = x ->
+  static log = x ->
     math_log(x)
 
-  @@log2 = x ->
+  static log2 = x ->
     math_log2(x)
 
-  @@log10 = x ->
+  static log10 = x ->
     math_log10(x)
 
-  @@exp = x ->
+  static exp = x ->
     math_exp(x)
 
-  @@sin = x ->
+  static sin = x ->
     math_sin(x)
 
-  @@cos = x ->
+  static cos = x ->
     math_cos(x)
 
-  @@tan = x ->
+  static tan = x ->
     math_tan(x)
 
-  @@asin = x ->
+  static asin = x ->
     math_asin(x)
 
-  @@acos = x ->
+  static acos = x ->
     math_acos(x)
 
-  @@atan = x ->
+  static atan = x ->
     math_atan(x)
 
-  @@atan2 = y, x ->
+  static atan2 = y, x ->
     math_atan2(y, x)

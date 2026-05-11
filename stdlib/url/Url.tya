@@ -1,5 +1,5 @@
 class Url
-  @@is_unreserved = code ->
+  static is_unreserved = code ->
     if code >= 65 and code <= 90
       return true
     if code >= 97 and code <= 122
@@ -10,12 +10,12 @@ class Url
       return true
     return false
 
-  @@hex_digit = d ->
+  static hex_digit = d ->
     if d < 10
       return chr(48 + d)
     return chr(55 + d)
 
-  @@decode_hex = c ->
+  static decode_hex = c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -25,7 +25,7 @@ class Url
       return code - 87
     raise "url.decode: invalid percent-escape"
 
-  @@encode = text ->
+  static encode = text ->
     n = byte_len(text)
     out = ""
     i = 0
@@ -41,7 +41,7 @@ class Url
       i = i + 1
     return out
 
-  @@decode = text ->
+  static decode = text ->
     n = byte_len(text)
     out = ""
     i = 0
@@ -59,7 +59,7 @@ class Url
         i = i + 1
     return out
 
-  @@encode_query = pairs ->
+  static encode_query = pairs ->
     parts_a = []
     if has(pairs, "kind")
       raise "url.encode_query: pass a dict or array of [key, value] pairs"
@@ -72,7 +72,7 @@ class Url
         push(parts_a, "{encoded_k}={encoded_v}")
     return join(parts_a, "&")
 
-  @@encode_query_pairs = pairs ->
+  static encode_query_pairs = pairs ->
     parts_a = []
     for pair in pairs
       k = pair[0]
@@ -82,7 +82,7 @@ class Url
       push(parts_a, "{encoded_k}={encoded_v}")
     return join(parts_a, "&")
 
-  @@decode_query_value = text ->
+  static decode_query_value = text ->
     n = byte_len(text)
     out = ""
     i = 0
@@ -103,7 +103,7 @@ class Url
         i = i + 1
     return out
 
-  @@decode_query = text ->
+  static decode_query = text ->
     out = []
     if text == ""
       return out
@@ -137,7 +137,7 @@ class Url
           )
     return out
 
-  @@parse = text ->
+  static parse = text ->
     n = byte_len(text)
     out =
       scheme: ""
@@ -279,7 +279,7 @@ class Url
       out["fragment"] = frag_text
     return out
 
-  @@build = parts ->
+  static build = parts ->
     out = ""
     if has(parts, "scheme") and parts["scheme"] != ""
       out = out + parts["scheme"] + ":"

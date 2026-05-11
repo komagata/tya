@@ -1,5 +1,5 @@
 class Path
-  @@basename = value ->
+  static basename = value ->
     parts = split(value, "/")
     i = len(parts) - 1
     while i >= 0
@@ -8,7 +8,7 @@ class Path
       i = i - 1
     return ""
 
-  @@dirname = value ->
+  static dirname = value ->
     parts = split(value, "/")
     last = len(parts) - 1
     while last >= 0 and parts[last] == ""
@@ -27,7 +27,7 @@ class Path
       return "."
     return joined
 
-  @@extname = value ->
+  static extname = value ->
     bparts = split(value, "/")
     bi = len(bparts) - 1
     base = ""
@@ -43,7 +43,7 @@ class Path
       return ""
     return "." + parts[n - 1]
 
-  @@clean = value ->
+  static clean = value ->
     if value == ""
       return "."
     is_abs = starts_with(value, "/")
@@ -66,7 +66,7 @@ class Path
       return "."
     return joined
 
-  @@join = parts ->
+  static join = parts ->
     raw = join(parts, "/")
     if raw == ""
       return "."
@@ -90,5 +90,5 @@ class Path
       return "."
     return joined
 
-  @@expand_user = value ->
+  static expand_user = value ->
     path_expand_user(value)

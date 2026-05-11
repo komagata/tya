@@ -1,7 +1,7 @@
 class Adder
   init = ->
-    @total = 0
+    self.total = 0
 
   add = n ->
-    @total = @total + n
-    @total
+    self.total = self.total + n
+    self.total

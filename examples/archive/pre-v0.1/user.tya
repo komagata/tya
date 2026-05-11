@@ -1,9 +1,9 @@
 class User
   init: name ->
-    @name = name
+    self.name = name
 
   rename: name ->
-    @name = name
+    self.name = name
 
   greet: ->
-    "Hello, {@name}"
+    "Hello, {self.name}"

@@ -1,10 +1,10 @@
 class Hex
-  @@hex_digit = d ->
+  static hex_digit = d ->
     if d < 10
       return chr(48 + d)
     return chr(87 + d)
 
-  @@decode_digit = c ->
+  static decode_digit = c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -14,7 +14,7 @@ class Hex
       return code - 87
     raise "hex.decode: invalid hex digit"
 
-  @@encode = value ->
+  static encode = value ->
     k = kind(value)
     out = ""
     if k == "bytes"
@@ -35,7 +35,7 @@ class Hex
       return out
     raise "hex.encode: argument must be a string or bytes"
 
-  @@decode = text ->
+  static decode = text ->
     n = byte_len(text)
     if n % 2 != 0
       raise "hex.decode: odd-length input"
