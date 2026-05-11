@@ -1,0 +1,40 @@
+module ast
+  program = statements -> { kind: "program", statements: statements }
+
+  token = kind, text, line, col -> { kind: kind, text: text, line: line, col: col }
+
+  assign_stmt = name, value, line -> { kind: "assign", name: name, value: value, line: line }
+
+  expr_stmt = expr, line -> { kind: "expr_stmt", expr: expr, line: line }
+
+  if_stmt = cond, then_body, else_body, line -> { kind: "if", cond: cond, then: then_body, else: else_body, line: line }
+
+  while_stmt = cond, body, line -> { kind: "while", cond: cond, body: body, line: line }
+
+  for_stmt = value_name, index_name, loop_kind, iterable -> { kind: "for", value_name: value_name, index_name: index_name, loop_kind: loop_kind, iterable: iterable, body: [] }
+
+  call_expr = callee, args, line -> { kind: "call", callee: callee, args: args, line: line }
+
+  func_expr = param, body, line -> { kind: "func", param: param, body: body, line: line }
+
+  ident_expr = name, line -> { kind: "ident", name: name, line: line }
+
+  int_expr = value, line -> { kind: "int", value: value, line: line }
+
+  float_expr = value, line -> { kind: "float", value: value, line: line }
+
+  string_expr = value, line -> { kind: "string", value: value, line: line }
+
+  bool_expr = value, line -> { kind: "bool", value: value, line: line }
+
+  nil_expr = line -> { kind: "nil", line: line }
+
+  array_expr = items, line -> { kind: "array", items: items, line: line }
+
+  dict_expr = entries, line -> { kind: "dict", entries: entries, line: line }
+
+  dict_entry = key, value -> { key: key, value: value }
+
+  index_expr = target, index, line -> { kind: "index", target: target, index: index, line: line }
+
+  binary_expr = op, left, right, line -> { kind: "binary", op: op, left: left, right: right, line: line }

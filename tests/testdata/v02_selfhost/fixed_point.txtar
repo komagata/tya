@@ -1,0 +1,54 @@
+# v0.45 M8.0: scaffolding step.
+#
+# selfhost/v02/ is the future self-host compiler on the v0.44 surface
+# (M8.2–M8.7). For M8.0 it is a byte-equivalent copy of selfhost/v01/
+# and exercises the same v0.1-surface fixed-point gate as v01. Each
+# subsequent M8.x STEP lands a v0.44 surface feature in v02 while
+# keeping this gate green; once v02 reaches v0.44 parity the gate is
+# replaced with a v0.44-surface fixed-point program.
+cd $REPO
+
+exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+
+exec sh -c '"$WORK/stage1" selfhost/v02/compiler.tya > "$WORK/stage2.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" 2>/dev/null'
+
+exec sh -c '"$WORK/stage2" selfhost/v02/compiler.tya > "$WORK/stage3.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage3.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage3" 2>/dev/null'
+
+exec cmp $WORK/stage2.c $WORK/stage3.c
+
+exec sh -c '"$WORK/stage2" "$WORK/app.tya" > "$WORK/app.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/app.c" runtime/tya_runtime.c -I runtime -o "$WORK/app" 2>/dev/null'
+
+exec $WORK/app first second
+stdout 'Hello, stage2\n3\nx:y\nsecond\n'
+! stderr .
+
+-- app.tya --
+name = "stage2"
+print("Hello, {name}")
+
+items = [1, 2, 3]
+print(len(items))
+
+labels = { x: "X", y: "Y" }
+joined = ""
+for key, value of labels
+  if joined == ""
+    joined = key
+  else
+    joined = joined + ":" + key
+print(joined)
+
+argv = args()
+print(argv[1])
