@@ -180,59 +180,79 @@ and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
 
-### v0.45 — Class-oriented namespace and entry-file model: completion
+### v0.45 — Class-oriented namespace and entry-file model: user-facing completion
 
-The v0.44 release shipped the model (see Released above) but held
-back six M-series tasks because they require either an AST-merge
-refactor or working-tree coordination that did not fit the v0.44
-window. v0.45 lands them, retires the legacy `module` surface, and
-promotes the v0.44 SPEC content into `docs/SPEC.md`.
+The v0.44 release shipped the model (see Released above) and held
+back six M-series tasks. v0.45 lands the three that do not need a
+v02 self-host upgrade: examples migration, cross-file private class
+enforcement, and the user-facing slice of the stdlib migration.
 
-Implementation order respects the dependency chain
-**M7 → M5 → M8 → M6 → M9 → M10**:
+The remaining work — the v02 self-host on the v0.44 surface, the
+`string`/`array`/`dict` stdlib migration that depends on it, the
+`module` keyword removal, and the `docs/SPEC.md` promotion — moves
+to a dedicated pre-v1.0.0 Epic (below). v0.45 ships as a polish
+release rather than the full "completion" originally planned.
 
-- [ ] **M7 examples migration** *(independent; mechanical)*
-  - [ ] Convert each `examples/*.tya` to the new model: lowercase
-    script files for entries, PascalCase class files for libraries.
-  - [ ] Remove every `module` declaration from `examples/`.
-  - [ ] Update `scripts/go_emit_examples_check.sh` and example-driven
-    tests as the migration lands.
+- [x] **M7 examples migration** — `examples/util` and
+  `examples/greeting` converted to PascalCase class files; no
+  `module` declarations remain under `examples/`; consumers and
+  `scripts/go_emit_examples_check.sh` updated.
+- [x] **M5 cross-file private class enforcement** —
+  `ast.ClassDecl.OriginFile` + runner-side per-package origin map +
+  checker `[TYA-E0406]` on member access, bare-Ident class
+  reference, and `extends`; positive + 3 negative fixtures under
+  `tests/testdata/v45/`.
+- [x] **M6 (partial) stdlib migration to class form** — `runtime`,
+  `time`, `channel`, `sync`, `task` migrated to
+  `stdlib/<pkg>/<Pkg>.tya`; callers in `examples/`, `tests/`, and
+  `tests/testdata/` updated; `docs/STDLIB.md` updated. The
+  remaining `string`/`array`/`dict` packages move to the
+  self-host upgrade Epic below.
 
-- [ ] **M5 cross-file private class enforcement** *(independent; refactor)*
-  - [ ] Replace `synthesizePackageSource` source-concat with an
-    AST-merge pipeline that propagates `OriginFile` metadata onto
-    every `ClassDecl` parsed in the package.
-  - [ ] Checker rejects a reference to a private class whose
-    `OriginFile` differs from the reference site, with
-    `[TYA-E0406]` and a clear "private to <file>" hint.
-  - [ ] Add positive/negative testdata under
-    `tests/testdata/v44/cross_file_private/`.
+Diagnostic-code wiring:
 
-- [ ] **M8 self-host compiler v0.44 surface** *(critical path)*
-  - [ ] Add `selfhost/v02/compiler.tya` (or extend `v01`) so the
-    Tya-written compiler resolves directory packages and parses
-    class files.
-  - [ ] Keep the existing `v01` fixed point on the v0.43 surface
-    until v02 reaches parity; both compilers live side by side.
-  - [ ] Prove stage-2 == stage-3 fixed point for v02 on the v0.44
-    surface (`TestSelfhostV02Scripts`).
+- [x] `[TYA-E0406]` — wired by M5 cross-file private enforcement.
+
+### v0.4x — Self-host v0.44 surface + `module` keyword retirement
+
+The remainder of the v0.44 model-completion work, deferred to the
+v1.0.0 prep window because it requires landing a Tya-written
+compiler on the v0.44 surface (`selfhost/v02/`) before the `module`
+keyword can be retired (`v01` still consumes it). Held-back stdlib
+packages and docs promotion ride the same Epic for a coherent cut.
+
+- [ ] **M8 self-host v02 on v0.44 surface** *(critical path)*
+  - [ ] Add `selfhost/v02/compiler.tya` resolving directory
+    packages, parsing class files (`extends` / `implements` /
+    `interface` / `abstract` / `final` / `override` / `@@`).
+  - [ ] Keep the `v01` fixed point on the v0.43 surface until v02
+    reaches parity; both compilers live side by side.
+  - [ ] Prove stage-2 == stage-3 fixed point for v02 on a v0.44-
+    surface program (`TestSelfhostV02Scripts`).
   - [ ] Replace `TestSelfhostV01Scripts` with the v02 gate only
     after parity is proven and at a release boundary.
 
-- [ ] **M6 remaining stdlib (8 packages)** *(blocked on M8)*
-  - [ ] `string`, `array`, `dict` migrate together with M8 — the
-    v01 compiler currently resolves `import X` only as a single
-    file (see `docs/v0.44/SPEC.md` §"Self-Host Invariant Constraint").
-  - [ ] `runtime`, `time`, `channel`, `sync`, `task` migrate
-    alongside their M7 callers.
+  Landed scaffolding (M8.0 – M8.2d, in main): v02 directory
+  exists as a byte-equivalent copy of v01; `TestSelfhostV02Scripts`
+  gate is green; v02 lexer emits `@@` as a single SYMBOL with
+  parser-side consistency; v02 parser accepts `abstract`/`final`
+  class modifiers and the `override` method modifier (codegen
+  treats them as no-ops). Smoke tests cover `extends`/`super`,
+  `@@` class members, `abstract`/`final`, and `override`.
+
+- [ ] **M6 remaining stdlib (3 packages)** *(blocked on M8)*
+  - [ ] `string`, `array`, `dict` migrate to class form once v02
+    resolves directory-package imports — `v01` currently consumes
+    them as single-file modules (see `docs/v0.44/SPEC.md`
+    §"Self-Host Invariant Constraint").
   - [ ] Update `docs/STDLIB.md` per package as it lands.
 
-- [ ] **M9 `module` keyword removal** *(blocked on M8 + M6)*
+- [ ] **M9 `module` keyword removal** *(blocked on M8 + M6 remaining)*
   - [ ] Parser rejects `module` as a reserved-word error
     (`[TYA-E0200]`).
-  - [ ] Checker, formatter, and C emitter drop every `module`
-    code path.
-  - [ ] Delete any remaining `module`-only files.
+  - [ ] Checker, formatter, and C emitter drop every `module` code
+    path.
+  - [ ] Delete any remaining `module`-only files; retire `v01`.
 
 - [ ] **M10 docs promotion** *(final)*
   - [ ] Promote `docs/v0.44/SPEC.md` content into `docs/SPEC.md`.
@@ -242,12 +262,10 @@ Implementation order respects the dependency chain
     `docs/GUIDE.md`, `docs/API.md`, `docs/TERMINOLOGY.md`,
     `docs/LIBRARIES.md` to drop module-era language.
   - [ ] Rebuild HTML via `node scripts/build_docs_pages.js`.
-  - [ ] Freeze `docs/v0.45/` and add a Released entry to this file.
+  - [ ] Add a Released entry to this file when the Epic ships.
 
-**Diagnostic-code wiring follow-ups** (land alongside the M-tasks
-that produce them, not as a separate STEP):
+Diagnostic-code wiring:
 
-- [ ] `[TYA-E0406]` — emitted by M5 cross-file private enforcement.
 - [ ] `[TYA-E0200]` — emitted by M9 `module` keyword rejection.
 
 ## Future Work
