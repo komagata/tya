@@ -148,6 +148,24 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.52** — `tya lsp` Language Server MVP (`docs/v0.52/SPEC.md`,
+  `docs/v0.52/RELEASE_NOTES.md`). New toolchain subcommand
+  `tya lsp [--log <file>]` speaks LSP JSON-RPC 2.0 over stdio.
+  Advertised capabilities: `textDocumentSync` (Full), hover,
+  definition, completion, and document formatting. Diagnostics
+  fire on `didOpen` / `didChange` / `didSave` and reuse
+  `checker.CheckAll` + `parser.OrphanComments` + `CollectUnused` +
+  `CollectLintFindings`. Hover renders the function signature plus
+  the leading `#`-comment block. Definition is same-file only (cross-file
+  resolution queued for v0.53+). Completion lists same-file
+  top-level bindings + stdlib module names + builtins + keywords.
+  VS Code extension scaffold under `editors/vscode/` (manual
+  install via `npx vsce package`; Marketplace publication queued
+  for v0.53+). New diagnostic codes `TYA-E0930` (startup / argument
+  failure) and `TYA-E0931` (server I/O failure). `internal/checker`
+  gets a small public accessor `BuiltinNames()`; `internal/doc`'s
+  `funcSignature` is exported as `FuncSignature` for hover reuse.
+  Language surface unchanged from v0.51.
 - **v0.51** — `tya doc` source documentation generator
   (`docs/v0.51/SPEC.md`, `docs/v0.51/RELEASE_NOTES.md`). New
   toolchain subcommand `tya doc [paths...]` walks top-level
@@ -362,17 +380,29 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Add did-you-mean suggestions for unknown-name diagnostics.
   - [ ] Add multi-error parsing.
 
-- [ ] **Ship `tya lsp` Language Server**
-  - [ ] Define LSP scope; ship `tya lsp` as a subcommand of the same
+- [x] **Ship `tya lsp` Language Server** *(v0.52 shipped the MVP:
+  initialize / shutdown, document sync, diagnostics, formatting,
+  hover, same-file definition, completion. Remaining work below.)*
+  - [x] Define LSP scope; ship `tya lsp` as a subcommand of the same
     binary so compiler and language server cannot drift in version.
-  - [ ] Speak LSP over stdio (JSON-RPC) for VS Code, Zed, Helix, Neovim,
+  - [x] Speak LSP over stdio (JSON-RPC) for VS Code, Zed, Helix, Neovim,
     Emacs.
-  - [ ] Implement diagnostics on save / on change, hover, go-to-definition,
-    find-references, completion (in-scope names + module members + stdlib),
-    formatting (full + range, backed by `tya format`), rename, code
-    actions for common diagnostics.
-  - [ ] Publish a minimal VS Code extension and document Zed / Helix /
-    Neovim / Emacs setup.
+  - [x] Diagnostics on save / on change (TYA-E* / TYAL*).
+  - [x] Formatting (full document, backed by `formatter.Unparse`).
+  - [x] Hover (same-file functions with leading `#` comments).
+  - [x] Go-to-definition (same-file).
+  - [x] Completion (in-scope names + stdlib module names + builtins + keywords).
+  - [x] Ship a minimal VS Code extension scaffold at `editors/vscode/`
+    (manual install via `npx vsce package`).
+  - [ ] Cross-file definition resolution (follow `import`). *(v0.53+)*
+  - [ ] Find-references / rename. *(v0.53+)*
+  - [ ] Range formatting. *(v0.53+)*
+  - [ ] Code actions for common diagnostics (TYAL quick fixes). *(v0.53+)*
+  - [ ] Semantic tokens. *(v0.53+)*
+  - [ ] Incremental document sync. *(v0.53+)*
+  - [ ] Marketplace publication of the VS Code extension (publisher
+    ID, signed VSIX, icon). *(v0.53+)*
+  - [ ] Setup recipes for Zed / Helix / Neovim / Emacs. *(v0.53+)*
 
 - [x] **Ship `tya doc` source documentation generator** *(v0.51 shipped
   the minimal form: `tya doc` text + `tya doc --html <out>` static site

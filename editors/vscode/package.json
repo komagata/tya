@@ -1,0 +1,57 @@
+{
+  "name": "tya",
+  "displayName": "tya",
+  "description": "Language support for the tya programming language (compiler + LSP).",
+  "publisher": "komagata",
+  "version": "0.52.0",
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["Programming Languages"],
+  "main": "./out/extension.js",
+  "activationEvents": ["onLanguage:tya"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "tya",
+        "aliases": ["tya", "Tya"],
+        "extensions": [".tya"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "tya",
+        "scopeName": "source.tya",
+        "path": "./syntaxes/tya.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "tya",
+      "properties": {
+        "tya.executable": {
+          "type": "string",
+          "default": "tya",
+          "description": "Path to the tya executable used as the LSP server."
+        },
+        "tya.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "LSP communication trace verbosity."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^5.4.0",
+    "@vscode/vsce": "^2.24.0"
+  }
+}

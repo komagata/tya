@@ -48,13 +48,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.51.0, download the release source and build the `tya` command locally.
+For v0.52.0, download the release source and build the `tya` command locally.
 This currently requires Go because the v0.13 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.51.0.tar.gz | tar xz
-cd tya-0.51.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.52.0.tar.gz | tar xz
+cd tya-0.52.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -114,6 +114,29 @@ tya doc --html ./out  # write a multi-page HTML site
 appends them to the task command (mirrors `$@`). Array-form tasks
 run each entry under `/bin/sh -c` in order and stop on the first
 failure.
+
+### Editor integration (v0.52+)
+
+`tya lsp` runs the Language Server (LSP JSON-RPC 2.0 over stdio)
+from the same binary as the compiler. Supported features in v0.52:
+diagnostics on save / on change, `textDocument/formatting`, hover
+signatures, same-file goto-definition, and completion of top-level
+bindings + stdlib modules + builtins + keywords.
+
+A VS Code extension scaffold lives at `editors/vscode/`. Manual
+install (Marketplace publication queued for v0.53+):
+
+```sh
+cd editors/vscode
+npm install
+npm run compile
+npx vsce package
+code --install-extension tya-0.52.0.vsix
+```
+
+Other editors connect via their LSP integrations using the binary
+path `tya` with subcommand `lsp` (e.g. Neovim `nvim-lspconfig`,
+Helix `languages.toml`, Zed).
 
 ## Example
 

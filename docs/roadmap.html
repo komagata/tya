@@ -97,6 +97,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
 <ul>
+<li>**v0.51** — <code>tya doc</code> source documentation generator</li>
+</ul>
+<p>  (<code>docs/v0.51/SPEC.md</code>, <code>docs/v0.51/RELEASE_NOTES.md</code>). New   toolchain subcommand <code>tya doc [paths...]</code> walks top-level   declarations in <code>.tya</code> files, picks up the leading <code>#</code>-comment   block as a Markdown body, and prints a plain-text summary to   stdout. <code>tya doc --html &lt;out&gt;</code> writes a multi-page static site   (<code>&lt;out&gt;/index.html</code> + <code>&lt;out&gt;/items/&lt;kind&gt;_&lt;name&gt;.html</code> +   <code>&lt;out&gt;/style.css</code>). Extracted kinds: <code>class</code>, <code>module</code>,   <code>interface</code>, and <code>function</code> (= top-level <code>name = … -&gt; …</code> whose   RHS is a function literal). Top-level bindings whose name starts   with <code>_</code> are excluded. Self-contained Markdown subset: headings,   paragraphs, fenced code, <code>- </code> / <code>1. </code> lists, inline `<code> </code>code<code> </code><code>,   </code><a href="url">link</a><code>, </code>**bold**<code>, </code>*italic*<code>. New diagnostic codes   </code>TYA-E0920<code> (missing </code>--html<code> argument) and </code>TYA-E0923<code> (</code>src/`   not found with no explicit paths). Language surface unchanged   from v0.50.</p>
+<ul>
 <li>**v0.50** — Toolchain extension pack (<code>docs/v0.50/SPEC.md</code>,</li>
 </ul>
 <p>  <code>docs/v0.50/RELEASE_NOTES.md</code>). <code>tya lint</code> gains rules   <code>TYAL0003</code> (redundant <code>if true</code> / <code>if false</code>), <code>TYAL0004</code> (deep   nesting, threshold 5), and <code>TYAL0005</code> (long function body,   threshold 50), plus <code>--fix</code> for <code>TYAL0001</code> unused locals.   <code>tya new</code> gains <code>--here</code>, <code>--template app|lib</code>, <code>--force</code>,   <code>--no-git</code>, and runs <code>git init</code> by default. <code>tya task</code> accepts   a new TOML table form <code>[tasks.&lt;name&gt;] cmds = [...]; parallel =   true</code> that runs every entry concurrently and exits with the   first non-zero exit code after waiting for all children;   output is line-prefixed <code>[&lt;index&gt; &lt;truncated cmd&gt;] </code>. New   diagnostic codes <code>TYA-E0903</code> (parallel failure),   <code>TYA-E0912</code> / <code>TYA-E0913</code> (<code>tya new</code> flag misuse), <code>TYAL0003</code> /   <code>TYAL0004</code> / <code>TYAL0005</code>. Language surface unchanged from v0.49.</p>
@@ -229,22 +233,23 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 <p>    Neovim / Emacs setup.</p>
 <ul>
-<li>[ ] **Ship <code>tya doc</code> source documentation generator**</li>
-<ul>
-<li>[ ] Define doc comment syntax: contiguous comment lines immediately</li>
+<li>[x] **Ship <code>tya doc</code> source documentation generator** *(v0.51 shipped</li>
 </ul>
-</ul>
-<p>    preceding a top-level definition. Body is Markdown rendered with the     <code>markdown</code> stdlib module.</p>
+<p>  the minimal form: <code>tya doc</code> text + <code>tya doc --html &lt;out&gt;</code> static site   over <code>src/</code>. Remaining work below.)*</p>
 <ul>
-<li>[ ] Discover every top-level binding under <code>src/</code> plus stdlib re-exports.</li>
-<li>[ ] CLI surface: <code>tya doc</code> (text), <code>tya doc --html &lt;out&gt;</code> (static site),</li>
+<li>[x] Define doc comment syntax: contiguous comment lines immediately</li>
 </ul>
-<p>    <code>tya doc --serve</code> (HTTP), <code>tya doc --json</code> (machine-readable).</p>
+<p>    preceding a top-level definition. Body is Markdown rendered by the     self-contained <code>internal/doc</code> renderer.</p>
 <ul>
-<li>[ ] Reuse the public Tya self-introspection library.</li>
+<li>[x] Discover every top-level binding under <code>src/</code>.</li>
+<li>[x] CLI surface: <code>tya doc</code> (text), <code>tya doc --html &lt;out&gt;</code> (static site).</li>
+<li>[ ] Stdlib re-exports (follow <code>import</code> statements). *(v0.52+)*</li>
+<li>[ ] <code>tya doc --serve</code> (HTTP). *(v0.52+)*</li>
+<li>[ ] <code>tya doc --json</code> (machine-readable). *(v0.52+)*</li>
+<li>[ ] Reuse the public Tya self-introspection library. *(v0.52+)*</li>
 <li>[ ] Diagnose orphan doc comments, duplicate definitions, unparseable</li>
 </ul>
-<p>    Markdown bodies.</p>
+<p>    Markdown bodies. *(reserved as TYA-E0921 / TYA-E0922, v0.52+)*</p>
 <ul>
 <li>[ ] **Extend <code>tya new</code> project scaffolder** *(v0.49 shipped the</li>
 </ul>

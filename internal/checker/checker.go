@@ -254,6 +254,15 @@ var builtinNames = []string{
 	"sync_wait_group_new", "sync_wait_group_add", "sync_wait_group_done", "sync_wait_group_wait",
 }
 
+// BuiltinNames returns a copy of the registered builtin function
+// names. Tooling that needs to surface builtins (LSP completion,
+// for instance) can use this without touching the internal slice.
+func BuiltinNames() []string {
+	out := make([]string, len(builtinNames))
+	copy(out, builtinNames)
+	return out
+}
+
 type scope struct {
 	parent           *scope
 	names            map[string]bool

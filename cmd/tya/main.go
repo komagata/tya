@@ -23,7 +23,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.51.0"
+const version = "0.52.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -204,6 +204,9 @@ func main() {
 		return
 	case "doc":
 		os.Exit(docCommand(os.Args[2:]))
+		return
+	case "lsp":
+		os.Exit(lspCommand(os.Args[2:]))
 		return
 	}
 	dumpTokens := false
@@ -411,6 +414,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya task [name] [args...]")
 	fmt.Fprintln(os.Stderr, "       tya lint [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya doc [--html <out>] [paths...]")
+	fmt.Fprintln(os.Stderr, "       tya lsp [--log <file>]")
 	fmt.Fprintln(os.Stderr, "       tya version")
 }
 

@@ -169,7 +169,7 @@ func stmtToDocItem(stmt ast.Stmt, prog *ast.Program, path string) (DocItem, bool
 		return DocItem{
 			Name:      id.Name,
 			Kind:      "function",
-			Signature: funcSignature(id.Name, fn),
+			Signature: FuncSignature(id.Name, fn),
 			RawDoc:    leading,
 			FilePath:  path,
 			Line:      d.Tok.Line,
@@ -201,9 +201,9 @@ func stripLeading(lines []string) string {
 	return strings.Join(out, "\n")
 }
 
-// funcSignature renders a "name(p1, p2)" string from a FuncLit's
+// FuncSignature renders a "name(p1, p2)" string from a FuncLit's
 // parameter names. Type information is not available in the AST so
 // this is the maximum precision v0.51 ships.
-func funcSignature(name string, fn *ast.FuncLit) string {
+func FuncSignature(name string, fn *ast.FuncLit) string {
 	return name + "(" + strings.Join(fn.Params, ", ") + ")"
 }

@@ -1,7 +1,7 @@
 class Tya < Formula
   desc "Small indentation-based dynamic language"
   homepage "https://github.com/komagata/tya"
-  url "https://github.com/komagata/tya/archive/refs/tags/v0.51.0.tar.gz"
+  url "https://github.com/komagata/tya/archive/refs/tags/v0.52.0.tar.gz"
   sha256 "REPLACE_AFTER_TAG_PUSH"
   license "MIT"
   head "https://github.com/komagata/tya.git", branch: "main"
@@ -22,7 +22,7 @@ class Tya < Formula
       print(string.blank("  "))
     TYA
 
-    assert_equal "0.51.0\n", shell_output("#{bin}/tya version")
+    assert_equal "0.52.0\n", shell_output("#{bin}/tya version")
     assert_equal "Hello, Tya\ntrue\n", shell_output("#{bin}/tya run #{testpath}/hello.tya")
 
     # v0.49: `tya new` scaffolds a minimal project tree.
@@ -46,6 +46,9 @@ class Tya < Formula
       print(x)
     TYA
     assert_match "TYAL0001", shell_output("#{bin}/tya lint #{testpath}/dirty.tya", 1)
+
+    # v0.52: `tya lsp --help` prints usage and exits 0.
+    assert_match "tya lsp", shell_output("#{bin}/tya lsp --help")
 
     # v0.51: `tya doc` walks src/ and reports top-level bindings.
     (testpath/"docproj/src").mkpath
