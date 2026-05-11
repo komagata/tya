@@ -30,19 +30,19 @@ print(response.status())
 
 -- net/http/Request.tya --
 class Request
-  init = url ->
-    @url = url
+  initialize = url ->
+    self.url = url
 
   url = ->
-    @url
+    self.url
 
 -- net/http/Response.tya --
 class Response
-  init = ->
-    @status = 200
+  initialize = ->
+    self.status = 200
 
   status = ->
-    @status
+    self.status
 
 -- bad_pkg_main.tya --
 import bad_pkg
@@ -52,16 +52,16 @@ print(x)
 
 -- bad_pkg/Helper.tya --
 class Helper
-  init = ->
-    @x = 1
+  initialize = ->
+    self.x = 1
 
 -- bad_pkg/oops.tya --
 print("this is a script file inside a package; should be rejected")
 
 -- Hello.tya --
 class Hello
-  init = ->
-    @x = 1
+  initialize = ->
+    self.x = 1
 
 -- two_files/main.tya --
 g = Greeter("komagata")
@@ -69,8 +69,8 @@ print(g.greet())
 
 -- two_files/Greeter.tya --
 class Greeter
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
   greet = ->
-    "Hello, {@name}"
+    "Hello, {self.name}"

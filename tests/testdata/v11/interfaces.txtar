@@ -119,7 +119,7 @@ interface Named
 
 -- interface_class_method.tya --
 interface Model
-  @@table_name = ->
+  static table_name = ->
 
 -- interface_private_method.tya --
 interface Reader

@@ -16,10 +16,10 @@ print(v3.Client.get_info())
 
 -- api/v3/Helper.tya --
 class Helper
-  @@info = ->
+  static info = ->
     "helper-info"
 
 -- api/v3/Client.tya --
 class Client
-  @@get_info = ->
+  static get_info = ->
     Helper.info()

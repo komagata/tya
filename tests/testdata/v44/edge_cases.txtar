@@ -31,30 +31,30 @@ print(client.summary())
 
 -- x/y/z/Tag.tya --
 class Tag
-  @@label = ->
+  static label = ->
     "deep"
 
 -- solo/Solo.tya --
 class Solo
-  @@greet = ->
+  static greet = ->
     "solo"
 
 -- api/v2/Client.tya --
 class Client
-  init = ->
-    @method = "GET"
+  initialize = ->
+    self.method = "GET"
 
   summary = ->
-    req = Request(@method)
+    req = Request(self.method)
     "{req.method()} {req.url()}"
 
 -- api/v2/Request.tya --
 class Request
-  init = method ->
-    @method = method
+  initialize = method ->
+    self.method = method
 
   method = ->
-    @method
+    self.method
 
   url = ->
     "/"
@@ -66,7 +66,7 @@ print(mixed_pkg.Helper())
 
 -- bad/mixed_pkg/Helper.tya --
 class Helper
-  @@show = ->
+  static show = ->
     "ok"
 
 -- bad/mixed_pkg/oops.tya --

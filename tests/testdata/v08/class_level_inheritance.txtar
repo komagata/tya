@@ -43,29 +43,29 @@ stdout '0.46.0\n'
 
 -- class_level.tya --
 class User
-  @@count = 0
-  @@label = "user"
+  static count = 0
+  static label = "user"
 
-  init = name ->
-    @name = name
-    @@count = @@count + 1
+  initialize = name ->
+    self.name = name
+    Self.count = Self.count + 1
 
   label = ->
-    @@label
+    Self.label
 
-  @@build = name ->
+  static build = name ->
     self(name)
 
-  @@label_name = ->
-    @@label
+  static label_name = ->
+    Self.label
 
-  @@role = ->
+  static role = ->
     "user"
 
 class Admin extends User
-  @@label = "admin"
+  static label = "admin"
 
-  @@role = ->
+  static role = ->
     "{super()} admin"
 
 print(User.count)
@@ -89,22 +89,22 @@ print(admin.class.parent)
 -- account.tya --
 module account
   class Account
-    @@kind = "account"
+    static kind = "account"
 
-    init = name ->
-      @name = name
+    initialize = name ->
+      self.name = name
 
     kind = ->
-      @@kind
+      Self.kind
 
-    @@build = name ->
+    static build = name ->
       self(name)
 
-    @@kind_name = ->
-      @@kind
+    static kind_name = ->
+      Self.kind
 
   class Editor extends Account
-    @@kind = "editor"
+    static kind = "editor"
 
 -- main.tya --
 import account
@@ -124,22 +124,22 @@ print(self)
 
 -- super_no_parent_class_method.tya --
 class User
-  @@build = ->
+  static build = ->
     "user"
 
 class Admin extends User
-  @@make = ->
+  static make = ->
     super()
 
 print(Admin.make())
 
 -- bad_class_method_override_arity.tya --
 class User
-  @@role = ->
+  static role = ->
     "user"
 
 class Admin extends User
-  @@role = name ->
+  static role = name ->
     name
 
 -- assign_object_class.tya --

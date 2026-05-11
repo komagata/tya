@@ -2160,6 +2160,14 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return fmt.Sprintf("tya_index(%s, %s)", dict, index), "TyaValue", nil
 	case *ast.MemberExpr:
+		// v0.46/47 G2: `self.x` reads the "@x" key (where instance
+		// fields canonical-live) so that an instance field is not
+		// shadowed by a method of the same name on the bare key.
+		// This mirrors the InstanceFieldExpr read at line 1566 and
+		// keeps `self.x` and `@x` byte-identical at the codegen level.
+		if selfTarget, ok := n.Target.(*ast.SelfExpr); ok && !selfTarget.Class {
+			return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote("@"+n.Name)), "TyaValue", nil
+		}
 		dict, _, err := g.expr(n.Target)
 		if err != nil {
 			return "", "", err

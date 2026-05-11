@@ -16,17 +16,17 @@ print(d.describe())
 
 -- zoo/Animal.tya --
 class Animal
-  init = ->
-    @category = "animal"
+  initialize = ->
+    self.category = "animal"
 
   category = ->
-    @category
+    self.category
 
 -- zoo/Dog.tya --
 class Dog extends Animal
-  init = ->
+  initialize = ->
     super()
-    @kind = "dog"
+    self.kind = "dog"
 
   describe = ->
-    "{@category}:{@kind}"
+    "{self.category}:{self.kind}"

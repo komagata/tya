@@ -14,14 +14,14 @@ print(pkg.Internal.do_work())
 
 -- pkg/Util.tya --
 class Util
-  @@run = ->
+  static run = ->
     "ok"
 
 -- pkg/Helper.tya --
 class Helper
-  @@noop = ->
+  static noop = ->
     "noop"
 
 class Internal
-  @@do_work = ->
+  static do_work = ->
     "leak"

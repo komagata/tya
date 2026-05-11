@@ -26,10 +26,10 @@ print("unreachable")
 
 -- a/net/Request.tya --
 class Request
-  init = ->
-    @label = "a"
+  initialize = ->
+    self.label = "a"
 
 -- b/net/Request.tya --
 class Request
-  init = ->
-    @label = "b"
+  initialize = ->
+    self.label = "b"

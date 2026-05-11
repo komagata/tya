@@ -9,11 +9,8 @@ exec go run ./cmd/tya run $WORK/main.tya
 stdout 'module\n1\n1\n7\n'
 ! stderr .
 
-! exec go run ./cmd/tya run $WORK/at_in_class_method.tya
-stderr '@name is only valid inside an instance method'
-
 ! exec go run ./cmd/tya run $WORK/class_var_outside.tya
-stderr '@@count is only valid inside a class'
+stderr 'TYA-E0412'
 
 ! exec go run ./cmd/tya run $WORK/duplicate_class_member.tya
 stderr 'duplicate class member count'
@@ -33,30 +30,30 @@ stdout '0.46.0\n'
 class User
   name = ""
   active = true
-  @@count = 0
-  @@prefix = "on"
+  static count = 0
+  static prefix = "on"
 
-  init = name ->
-    @name = name
-    @@count = @@count + 1
+  initialize = name ->
+    self.name = name
+    Self.count = Self.count + 1
 
   greeting = ->
-    "Hello, {@name}"
+    "Hello, {self.name}"
 
   count = ->
-    @@count
+    Self.count
 
   label = ->
-    "{@@prefix}:{@name}"
+    "{Self.prefix}:{self.name}"
 
-  @@build = name ->
+  static build = name ->
     User(name)
 
-  @@count_users = ->
-    @@count
+  static count_users = ->
+    Self.count
 
-  @@reset = ->
-    @@count = 0
+  static reset = ->
+    Self.count = 0
 
 print(User.count)
 user = User.build("komagata")
@@ -73,17 +70,17 @@ print(User.count)
 -- user.tya --
 module user
   class User
-    @@count = 0
+    static count = 0
 
-    init = name ->
-      @name = name
-      @@count = @@count + 1
+    initialize = name ->
+      self.name = name
+      Self.count = Self.count + 1
 
     name = ->
-      @name
+      self.name
 
-    @@count_users = ->
-      @@count
+    static count_users = ->
+      Self.count
 
 -- main.tya --
 import user
@@ -95,28 +92,23 @@ print(user.User.count_users())
 user.User.count = 7
 print(user.User.count)
 
--- at_in_class_method.tya --
-class User
-  @@bad = ->
-    @name
-
 -- class_var_outside.tya --
-@@count = 0
+Self.count = 0
 
 -- duplicate_class_member.tya --
 class User
-  @@count = 0
-  @@count = ->
+  static count = 0
+  static count = ->
     1
 
 -- duplicate_instance_member.tya --
 class User
   name = ""
   name = ->
-    @name
+    self.name
 
 -- missing_class_member.tya --
 class User
-  @@count = 0
+  static count = 0
 
 print(User.missing)

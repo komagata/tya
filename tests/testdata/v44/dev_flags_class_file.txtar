@@ -37,18 +37,18 @@ stderr 'never used'
 
 -- Foo.tya --
 class Foo
-  init = ->
-    @x = 1
+  initialize = ->
+    self.x = 1
 
 -- BadName.tya --
 class WrongName
-  init = ->
-    @x = 1
+  initialize = ->
+    self.x = 1
 
 -- Unused.tya --
 class Unused
-  init = ->
-    @x = 1
+  initialize = ->
+    self.x = 1
 
   helper = unused_arg ->
-    @x
+    self.x

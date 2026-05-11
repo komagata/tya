@@ -14,10 +14,10 @@ print(pkg.Util.run())
 
 -- pkg/Util.tya --
 class Util
-  @@run = ->
+  static run = ->
     h = Helper.do_work()
     "helped:{h}"
 
 class Helper
-  @@do_work = ->
+  static do_work = ->
     "ok"

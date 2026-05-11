@@ -11,9 +11,6 @@ stdout 'true\nfalse\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n'
 ! exec go run ./cmd/tya run $WORK/non_callable_binding.tya
 stderr 'predicate binding active\? must be a function'
 
-! exec go run ./cmd/tya run $WORK/bad_field.tya
-stderr 'expected expression'
-
 ! exec go run ./cmd/tya run $WORK/bad_class_var.tya
 stderr 'invalid class variable name enabled\?'
 
@@ -46,17 +43,17 @@ print(dict.has?(user, "name"))
 print(value.Value.nil?(nil))
 
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
   named? = ->
-    @name != ""
+    self.name != ""
 
 class Feature
-  @@enabled = true
+  static enabled = true
 
-  @@enabled? = ->
-    @@enabled
+  static enabled? = ->
+    Self.enabled
 
 person = User("komagata")
 print(person.named?())
@@ -65,14 +62,9 @@ print(Feature.enabled?())
 -- non_callable_binding.tya --
 active? = true
 
--- bad_field.tya --
-class User
-  init = ->
-    @active? = true
-
 -- bad_class_var.tya --
 class Feature
-  @@enabled? = true
+  static enabled? = true
 
 -- non_bool_return.tya --
 name? = ->

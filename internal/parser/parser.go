@@ -631,6 +631,11 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 		if p.match(token.AT) {
 			return nil, p.err("interface bodies may only contain instance method requirements")
 		}
+		// v0.46/47: `static` modifier in an interface body is rejected
+		// with the canonical message (was: `@@name` via the AT path).
+		if p.at(token.IDENT) && p.peek().Lexeme == "static" {
+			return nil, p.err("interface bodies may only contain instance method requirements")
+		}
 		methodName, err := p.expectName("expected interface method name")
 		if err != nil {
 			return nil, err

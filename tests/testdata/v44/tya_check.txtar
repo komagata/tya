@@ -29,17 +29,17 @@ print(lib.Lib.greet())
 
 -- good_entry/lib/Lib.tya --
 class Lib
-  @@greet = ->
+  static greet = ->
     "hi"
 
 -- standalone/Good.tya --
 class Good
-  init = ->
-    @x = 1
+  initialize = ->
+    self.x = 1
 
 -- standalone/Hello.tya --
 class WrongName
-  @@noop = ->
+  static noop = ->
     nil
 
 -- missing/main.tya --

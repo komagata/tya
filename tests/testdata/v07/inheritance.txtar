@@ -49,26 +49,26 @@ stdout '0.46.0\n'
 class User
   name = ""
   role = "user"
-  @@count = 0
+  static count = 0
 
-  init = name ->
-    @name = name
-    @@count = @@count + 1
+  initialize = name ->
+    self.name = name
+    Self.count = Self.count + 1
 
   greeting = ->
-    "Hello, {@name}"
+    "Hello, {self.name}"
 
   rename = name ->
-    @name = name
+    self.name = name
 
 class Admin extends User
   role = "admin"
 
-  init = name ->
+  initialize = name ->
     super(name)
 
   greeting = ->
-    "{super()} ({@role})"
+    "{super()} ({self.role})"
 
 admin = Admin("komagata")
 print(admin.name)
@@ -85,11 +85,11 @@ module user
   class User
     name = ""
 
-    init = name ->
-      @name = name
+    initialize = name ->
+      self.name = name
 
     greeting = ->
-      "Hello, {@name}"
+      "Hello, {self.name}"
 
 -- main.tya --
 import user
@@ -107,17 +107,17 @@ module accounts
   class User
     name = ""
 
-    init = name ->
-      @name = name
+    initialize = name ->
+      self.name = name
 
     greeting = ->
-      "Hello, {@name}"
+      "Hello, {self.name}"
 
   class Admin extends User
     role = "admin"
 
     greeting = ->
-      "{super()} ({@role})"
+      "{super()} ({self.role})"
 
 -- accounts_main.tya --
 import accounts
@@ -150,7 +150,7 @@ class User
     "Hello"
 
 class Admin extends User
-  @@build = ->
+  static build = ->
     super()
 
 -- no_parent_method.tya --
@@ -163,25 +163,25 @@ class Admin extends User
 
 -- missing_super.tya --
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
 class Admin extends User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
 -- bad_override_arity.tya --
 class User
   rename = name ->
-    @name = name
+    self.name = name
 
 class Admin extends User
   rename = first_name, last_name ->
-    @name = first_name + " " + last_name
+    self.name = first_name + " " + last_name
 
 -- class_member_inheritance.tya --
 class User
-  @@count = 0
+  static count = 0
 
 class Admin extends User
   name = ""

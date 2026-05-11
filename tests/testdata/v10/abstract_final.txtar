@@ -57,10 +57,10 @@ class UserRepository extends Repository
     nil
 
 abstract class Model
-  abstract @@table_name = ->
+  static abstract table_name = ->
 
 class User extends Model
-  @@table_name = ->
+  static table_name = ->
     "users"
 
 final class FinalUser
@@ -116,17 +116,17 @@ class BadRepository extends Repository
 
 -- missing_class_method.tya --
 abstract class Model
-  abstract @@table_name = ->
+  static abstract table_name = ->
 
 class BrokenModel extends Model
   name = ""
 
 -- bad_class_arity.tya --
 abstract class Model
-  abstract @@table_name = ->
+  static abstract table_name = ->
 
 class BadModel extends Model
-  @@table_name = name ->
+  static table_name = name ->
     name
 
 -- super_abstract.tya --

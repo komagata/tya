@@ -13,22 +13,22 @@ print(pkg.Util.run())
 
 -- pkg/Util.tya --
 class Util
-  @@run = ->
+  static run = ->
     s = Sub()
     s.tag()
 
 class Sub extends Base
-  init = ->
+  initialize = ->
     super()
 
 -- pkg/Helper.tya --
 class Helper
-  @@noop = ->
+  static noop = ->
     "noop"
 
 class Base
-  init = ->
-    @t = "b"
+  initialize = ->
+    self.t = "b"
 
   tag = ->
-    @t
+    self.t

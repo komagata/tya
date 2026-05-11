@@ -15,14 +15,14 @@ print(pkg.Util.run())
 
 -- pkg/Util.tya --
 class Util
-  @@run = ->
+  static run = ->
     Internal.do_work()
 
 -- pkg/Helper.tya --
 class Helper
-  @@noop = ->
+  static noop = ->
     "noop"
 
 class Internal
-  @@do_work = ->
+  static do_work = ->
     "should not be reachable"

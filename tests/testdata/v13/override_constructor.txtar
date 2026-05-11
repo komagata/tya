@@ -52,25 +52,25 @@ stdout '0.46.0\n'
 import accounts
 
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
   label = ->
     "user"
 
-  @@table_name = ->
+  static table_name = ->
     "users"
 
 class Admin extends User
-  init = name, role ->
+  initialize = name, role ->
     normalized = name
     super(normalized)
-    @role = role
+    self.role = role
 
   override label = ->
     "admin"
 
-  @@table_name = ->
+  static table_name = ->
     "admins"
 
 abstract class Repository
@@ -81,11 +81,11 @@ class UserRepository extends Repository
     "found:{id}"
 
 class Model
-  @@table_name = prefix ->
+  static table_name = prefix ->
     "{prefix}s"
 
 class Post extends Model
-  override @@table_name = prefix ->
+  static override table_name = prefix ->
     "{prefix}s"
 
 admin = Admin("ada", "owner")
@@ -101,19 +101,19 @@ print(editor.label())
 -- accounts.tya --
 module accounts
   class User
-    init = name ->
-      @name = name
+    initialize = name ->
+      self.name = name
 
     label = ->
-      "module:{@name}"
+      "module:{self.name}"
 
   class Editor extends User
-    init = name, role ->
+    initialize = name, role ->
       super(name)
-      @role = role
+      self.role = role
 
     override label = ->
-      "module:{@role}"
+      "module:{self.role}"
 
 -- missing_override_target.tya --
 class User
@@ -143,11 +143,11 @@ class Admin extends User
 
 -- bad_class_override_arity.tya --
 class Model
-  @@table_name = prefix ->
+  static table_name = prefix ->
     "{prefix}s"
 
 class User extends Model
-  override @@table_name = ->
+  static override table_name = ->
     "users"
 
 -- class_override_instance_target.tya --
@@ -156,12 +156,12 @@ class Model
     "models"
 
 class User extends Model
-  override @@table_name = ->
+  static override table_name = ->
     "users"
 
 -- instance_override_class_target.tya --
 class Model
-  @@table_name = ->
+  static table_name = ->
     "models"
 
 class User extends Model
@@ -170,24 +170,24 @@ class User extends Model
 
 -- missing_constructor_super.tya --
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
 class Admin extends User
-  init = name, role ->
-    @name = name
-    @role = role
+  initialize = name, role ->
+    self.name = name
+    self.role = role
 
 -- double_constructor_super.tya --
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
 class Admin extends User
-  init = name, role ->
+  initialize = name, role ->
     super(name)
     super(name)
-    @role = role
+    self.role = role
 
 -- super_without_parent_init.tya --
 class User
@@ -195,45 +195,45 @@ class User
     "user"
 
 class Admin extends User
-  init = role ->
+  initialize = role ->
     super()
-    @role = role
+    self.role = role
 
 -- field_before_super.tya --
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
 class Admin extends User
-  init = name, role ->
-    @role = role
+  initialize = name, role ->
+    self.role = role
     super(name)
 
 -- return_before_super.tya --
 class User
-  init = name ->
-    @name = name
+  initialize = name ->
+    self.name = name
 
 class Admin extends User
-  init = name, role ->
+  initialize = name, role ->
     return nil
     super(name)
 
 -- bad_constructor_super_arity.tya --
 class User
-  init = first, last ->
-    @name = first + " " + last
+  initialize = first, last ->
+    self.name = first + " " + last
 
 class Admin extends User
-  init = name, role ->
+  initialize = name, role ->
     super(name)
-    @role = role
+    self.role = role
 
 -- private_parent_init_super.tya --
 class Token
-  _init = value ->
-    @value = value
+  private initialize = value ->
+    self.value = value
 
 class ApiToken extends Token
-  init = value ->
+  initialize = value ->
     super(value)

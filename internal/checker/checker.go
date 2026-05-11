@@ -1904,6 +1904,11 @@ func constructorSuperStats(fn *ast.FuncLit) (count int, firstSuper int, firstFie
 		case *ast.TryExpr:
 			return exprLine(n.Expr)
 		case *ast.MemberExpr:
+			// v0.46/47 G2: `self.field` is an instance-field access
+			// for the purposes of constructor-super ordering checks.
+			if self, ok := n.Target.(*ast.SelfExpr); ok && !self.Class {
+				return n.NameTok.Line
+			}
 			return exprLine(n.Target)
 		case *ast.IndexExpr:
 			if line := exprLine(n.Target); line != 0 {

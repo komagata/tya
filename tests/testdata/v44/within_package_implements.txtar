@@ -23,12 +23,12 @@ interface Encodable
   encode = ->
 
 class Encoder
-  @@noop = ->
+  static noop = ->
     nil
 
 -- codec/JsonEncoder.tya --
 class JsonEncoder implements Encodable
-  init = ->
+  initialize = ->
     nil
 
   encode = ->

@@ -18,11 +18,11 @@ stdout 'A->B->C\n'
 
 -- inline.tya --
 class Wrapper
-  init = msg ->
-    @msg = msg
+  initialize = msg ->
+    self.msg = msg
 
   show = ->
-    "inline:{@msg}"
+    "inline:{self.msg}"
 
 w = Wrapper("hello")
 print(w.show())
