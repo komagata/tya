@@ -1,0 +1,10 @@
+class Time
+  @@now = () -> time_now()
+
+  @@sleep = seconds -> time_sleep(seconds)
+
+  @@format = t, layout -> time_format(t, layout)
+
+  @@parse = text -> time_parse(text)
+
+  @@since = t -> time_since(t)

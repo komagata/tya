@@ -1,4 +1,4 @@
-# v0.43 STEP 1: task.cancel + task.cancelled? + task.current().
+# v0.43 STEP 1: task.Task.cancel + task.Task.cancelled? + task.Task.current().
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/sample.tya
@@ -10,17 +10,17 @@ import task
 import time
 
 worker = () ->
-  me = task.current()
+  me = task.Task.current()
   i = 0
-  while not task.cancelled?(me)
+  while not task.Task.cancelled?(me)
     i = i + 1
     if i % 100000 == 0
-      time.sleep(0.001)
+      time.Time.sleep(0.001)
   return i
 
 t = spawn worker()
-time.sleep(0.05)
-print("before cancel: " + to_string(task.cancelled?(t)))
-task.cancel(t)
+time.Time.sleep(0.05)
+print("before cancel: " + to_string(task.Task.cancelled?(t)))
+task.Task.cancel(t)
 n = await t
 print("iterations > 0: " + to_string(n > 0))

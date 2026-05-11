@@ -2,29 +2,29 @@
 # "inc" / "get" / "stop" messages over a channel.
 import channel
 
-inbox = channel.new(64)
+inbox = channel.Channel.new(64)
 
 run_counter = ic ->
   count = 0
   while true
-    msg = channel.receive(ic)
+    msg = channel.Channel.receive(ic)
     if msg == "stop"
       return count
     if msg == "inc"
       count = count + 1
     else
       reply = msg
-      channel.send(reply, count)
+      channel.Channel.send(reply, count)
 
 counter = spawn run_counter(inbox)
 
-channel.send(inbox, "inc")
-channel.send(inbox, "inc")
-channel.send(inbox, "inc")
+channel.Channel.send(inbox, "inc")
+channel.Channel.send(inbox, "inc")
+channel.Channel.send(inbox, "inc")
 
-reply_chan = channel.new(1)
-channel.send(inbox, reply_chan)
-print("count = " + to_string(channel.receive(reply_chan)))
+reply_chan = channel.Channel.new(1)
+channel.Channel.send(inbox, reply_chan)
+print("count = " + to_string(channel.Channel.receive(reply_chan)))
 
-channel.send(inbox, "stop")
+channel.Channel.send(inbox, "stop")
 print("final = " + to_string(await counter))

@@ -13,22 +13,22 @@ import task
 import time
 
 cooperative_worker = () ->
-  me = task.current()
+  me = task.Task.current()
   i = 0
-  while not task.cancelled?(me)
+  while not task.Task.cancelled?(me)
     i = i + 1
     if i % 1000 == 0
-      time.sleep(0.001)
+      time.Time.sleep(0.001)
   return i
 
-start = time.now()
+start = time.Time.now()
 try
   scope
     t = spawn cooperative_worker()
     raise "body raise"
   print("unreachable")
 catch e
-  elapsed = time.now() - start
+  elapsed = time.Time.now() - start
   print("caught: " + e)
   print("fast: " + to_string(elapsed < 1.0))
 print("after")

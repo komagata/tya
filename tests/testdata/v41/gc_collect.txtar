@@ -1,4 +1,4 @@
-# v0.41 STEPs 2-4: explicit runtime.gc() reclaims unreachable allocations.
+# v0.41 STEPs 2-4: explicit runtime.Runtime.gc() reclaims unreachable allocations.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/sample.tya
@@ -18,19 +18,19 @@ while i < 50
   push(root, [i, i + 1, i + 2])
   i = i + 1
 
-before = runtime.gc_stats()
+before = runtime.Runtime.gc_stats()
 print("before live: " + to_string(before["live_count"]))
 
 # Capture the peak live count, then drop the references by overwriting
 # root with a fresh empty array. The previous tree is now unreachable.
-peak = runtime.gc_stats()
+peak = runtime.Runtime.gc_stats()
 print("peak live: " + to_string(peak["live_count"]))
 root = []
 
 # Trigger a collection. The unreachable inner arrays must be reclaimed.
-runtime.gc()
+runtime.Runtime.gc()
 
-after = runtime.gc_stats()
+after = runtime.Runtime.gc_stats()
 print("after gc, live: " + to_string(after["live_count"]))
 print("collect_count: " + to_string(after["collect_count"]))
 shrunk = after["live_count"] < peak["live_count"]

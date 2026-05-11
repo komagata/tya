@@ -1,4 +1,4 @@
-module runtime
+class Runtime
   # Returns a snapshot of the current GC counters as a dict with the
   # following keys:
   #
@@ -10,7 +10,7 @@ module runtime
   #   live_bytes     alloc_bytes - freed_bytes
   #   collect_count  number of collections performed
   #   threshold      live_count threshold that triggers a collection
-  gc_stats = () -> runtime_gc_stats()
+  @@gc_stats = () -> runtime_gc_stats()
 
   # Triggers a full mark-and-sweep collection. The collector treats
   # module-level globals as roots, plus the active raise-frame chain.
@@ -19,4 +19,4 @@ module runtime
   # from a registered root (in practice: at the top level of the
   # program, between top-level statements). See docs/v0.41/SPEC.md for
   # the full safety contract and known limitations.
-  gc = () -> runtime_gc_collect()
+  @@gc = () -> runtime_gc_collect()

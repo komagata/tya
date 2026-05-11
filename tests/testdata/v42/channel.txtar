@@ -19,58 +19,58 @@ stdout 'after close, drained: 0'
 -- echo.tya --
 import channel
 
-c = channel.new(1)
-channel.send(c, "hi")
-print(channel.receive(c))
+c = channel.Channel.new(1)
+channel.Channel.send(c, "hi")
+print(channel.Channel.receive(c))
 
 -- concurrent.tya --
 import channel
 
-c = channel.new(1)
-worker = ic -> channel.send(ic, 42)
+c = channel.Channel.new(1)
+worker = ic -> channel.Channel.send(ic, 42)
 spawn worker(c)
-print("received: " + to_string(channel.receive(c)))
+print("received: " + to_string(channel.Channel.receive(c)))
 
 -- counter_actor.tya --
 import channel
 
-inbox = channel.new(100)
+inbox = channel.Channel.new(100)
 
 worker = ic ->
   count = 0
   while true
-    msg = channel.receive(ic)
+    msg = channel.Channel.receive(ic)
     if msg == "stop"
       return count
     if msg == "inc"
       count = count + 1
     else
       reply = msg
-      channel.send(reply, count)
+      channel.Channel.send(reply, count)
 
 t = spawn worker(inbox)
 
-channel.send(inbox, "inc")
-channel.send(inbox, "inc")
-channel.send(inbox, "inc")
+channel.Channel.send(inbox, "inc")
+channel.Channel.send(inbox, "inc")
+channel.Channel.send(inbox, "inc")
 
-reply_chan = channel.new(1)
-channel.send(inbox, reply_chan)
-print("count after three increments: " + to_string(channel.receive(reply_chan)))
+reply_chan = channel.Channel.new(1)
+channel.Channel.send(inbox, reply_chan)
+print("count after three increments: " + to_string(channel.Channel.receive(reply_chan)))
 
-channel.send(inbox, "stop")
+channel.Channel.send(inbox, "stop")
 print("final: " + to_string(await t))
 
 -- close_drains.tya --
 import channel
 
-c = channel.new(2)
-channel.send(c, 1)
-channel.send(c, 2)
-channel.close(c)
-print("first: " + to_string(channel.receive(c)))
-print("second: " + to_string(channel.receive(c)))
-nilv = channel.receive(c)
+c = channel.Channel.new(2)
+channel.Channel.send(c, 1)
+channel.Channel.send(c, 2)
+channel.Channel.close(c)
+print("first: " + to_string(channel.Channel.receive(c)))
+print("second: " + to_string(channel.Channel.receive(c)))
+nilv = channel.Channel.receive(c)
 if nilv == nil
   print("after close, drained: 0")
 else

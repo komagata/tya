@@ -3,19 +3,19 @@
 # until receive returns nil.
 import channel
 
-c = channel.new(4)
+c = channel.Channel.new(4)
 
 produce = ch ->
   i = 1
   while i <= 5
-    channel.send(ch, i)
+    channel.Channel.send(ch, i)
     i = i + 1
-  channel.close(ch)
+  channel.Channel.close(ch)
 
 producer = spawn produce(c)
 
 while true
-  v = channel.receive(c)
+  v = channel.Channel.receive(c)
   if v == nil
     break
   print("got " + to_string(v))

@@ -320,14 +320,14 @@ of primitives, arrays, and nested tables (including arrays of tables).
 ```tya
 import time
 
-now = time.now()
-println time.format(now, "iso")
-time.sleep(0.1)
-println time.since(now)
+now = time.Time.now()
+println(time.Time.format(now, "iso"))
+time.Time.sleep(0.1)
+println(time.Time.since(now))
 ```
 
-Functions: `now`, `sleep`, `format`, `parse`, `since`. Format layouts:
-`"iso"`, `"date"`, `"time"`, `"unix"`.
+Class members on `time.Time`: `now`, `sleep`, `format`, `parse`,
+`since`. Format layouts: `"iso"`, `"date"`, `"time"`, `"unix"`.
 
 ## `random`
 
@@ -504,28 +504,24 @@ GC introspection and explicit collection.
 ```tya
 import runtime
 
-stats = runtime.gc_stats()
-runtime.gc()
+stats = runtime.Runtime.gc_stats()
+runtime.Runtime.gc()
 ```
 
-Functions:
+Class members on `runtime.Runtime`: `gc_stats`, `gc`.
 
-```tya
-gc_stats ()
-gc       ()
-```
+`runtime.Runtime.gc_stats()` returns a dict snapshot of the GC
+counters with keys `alloc_count`, `alloc_bytes`, `freed_count`,
+`freed_bytes`, `live_count`, `live_bytes`, `collect_count`,
+`threshold`.
 
-`runtime.gc_stats()` returns a dict snapshot of the GC counters with
-keys `alloc_count`, `alloc_bytes`, `freed_count`, `freed_bytes`,
-`live_count`, `live_bytes`, `collect_count`, `threshold`.
-
-`runtime.gc()` runs a full mark-and-sweep collection. The collector
-treats module-level globals as roots (plus the active raise-frame
-chain). Locals inside user functions are not roots in v0.41, so
-`runtime.gc()` is safe to call only at points where every live local
-TyaValue is also reachable from a registered root — in practice, at
-the top level of the program. See the v0.41 SPEC for the full safety
-contract and known limitations.
+`runtime.Runtime.gc()` runs a full mark-and-sweep collection. The
+collector treats module-level globals as roots (plus the active
+raise-frame chain). Locals inside user functions are not roots in
+v0.41, so `runtime.Runtime.gc()` is safe to call only at points
+where every live local TyaValue is also reachable from a registered
+root — in practice, at the top level of the program. See the v0.41
+SPEC for the full safety contract and known limitations.
 
 ## `channel` (v0.42)
 
@@ -534,29 +530,22 @@ Bounded, FIFO buffered channels for inter-task communication.
 ```tya
 import channel
 
-c = channel.new(10)
-spawn (() -> channel.send(c, "hello"))
-print channel.receive(c)
-channel.close(c)
+c = channel.Channel.new(10)
+spawn (() -> channel.Channel.send(c, "hello"))
+print(channel.Channel.receive(c))
+channel.Channel.close(c)
 ```
 
-Functions:
+Class members on `channel.Channel`: `new`, `send`, `receive`,
+`receive_timeout`, `close`, `closed?`, `select`.
 
-```tya
-new(capacity)
-send(c, value)
-receive(c)
-receive_timeout(c, seconds)
-close(c)
-closed?(c)
-```
-
-`channel.send` blocks while the buffer is full and raises if the
-channel has been closed. `channel.receive` blocks while the buffer
-is empty; once closed, it drains the buffer and then returns `nil`
-for every later call. `channel.receive_timeout` returns `nil` when
-the deadline elapses without a value. v0.42 treats `capacity = 0`
-as `1`; true rendezvous channels arrive in a later minor.
+`channel.Channel.send` blocks while the buffer is full and raises
+if the channel has been closed. `channel.Channel.receive` blocks
+while the buffer is empty; once closed, it drains the buffer and
+then returns `nil` for every later call.
+`channel.Channel.receive_timeout` returns `nil` when the deadline
+elapses without a value. v0.42 treats `capacity = 0` as `1`; true
+rendezvous channels arrive in a later minor.
 
 ## `sync` (v0.42)
 
@@ -565,42 +554,30 @@ Mutex, atomic integer, and wait group primitives.
 ```tya
 import sync
 
-m = sync.mutex()
-sync.lock(m)
-sync.unlock(m)
+m = sync.Sync.mutex()
+sync.Sync.lock(m)
+sync.Sync.unlock(m)
 
-a = sync.atomic_integer(0)
-sync.atomic_add(a, 1)
-print sync.atomic_load(a)
+a = sync.Sync.atomic_integer(0)
+sync.Sync.atomic_add(a, 1)
+print(sync.Sync.atomic_load(a))
 
-wg = sync.wait_group()
-sync.wait_group_add(wg, 1)
-spawn (() -> sync.wait_group_done(wg))
-sync.wait_group_wait(wg)
+wg = sync.Sync.wait_group()
+sync.Sync.wait_group_add(wg, 1)
+spawn (() -> sync.Sync.wait_group_done(wg))
+sync.Sync.wait_group_wait(wg)
 ```
 
-Functions:
+Class members on `sync.Sync`: `mutex`, `lock`, `unlock`,
+`with_lock`, `atomic_integer`, `atomic_add`, `atomic_load`,
+`atomic_store`, `atomic_cas`, `wait_group`, `wait_group_add`,
+`wait_group_done`, `wait_group_wait`.
 
-```tya
-mutex ()
-lock m
-unlock m
-with_lock m, fn
-atomic_integer initial
-atomic_add a, n
-atomic_load a
-atomic_store a, n
-atomic_cas a, expected, new_value
-wait_group ()
-wait_group_add wg, n
-wait_group_done wg
-wait_group_wait wg
-```
-
-`sync.with_lock(m, fn)` runs `fn()` with the mutex held and releases
-the mutex even when `fn` raises. Tya closures cannot write back to
-outer variables, so to share mutable state across tasks pass a
-dict or array argument and mutate it through indexed assignment.
+`sync.Sync.with_lock(m, fn)` runs `fn()` with the mutex held and
+releases the mutex even when `fn` raises. Tya closures cannot write
+back to outer variables, so to share mutable state across tasks
+pass a dict or array argument and mutate it through indexed
+assignment.
 
 ## `task` (v0.43)
 
@@ -610,30 +587,24 @@ Cooperative cancellation for `spawn`-ed tasks.
 import task
 
 worker = () ->
-  me = task.current()
-  while not task.cancelled?(me)
+  me = task.Task.current()
+  while not task.Task.cancelled?(me)
     do_one_step()
 
 t = spawn worker()
-task.cancel(t)
+task.Task.cancel(t)
 await t
 ```
 
-Functions:
+Class members on `task.Task`: `cancel`, `cancelled?`, `current`.
 
-```tya
-cancel t
-cancelled? t
-current ()
-```
+`Task.cancel` sets the cancel flag on a task. `Task.cancelled?`
+reads it. Cancellation is cooperative: setting the flag does not
+stop a worker, only signals it. Long-running workers must poll
+`Task.cancelled?(Task.current())` at safe points and return early.
 
-`cancel` sets the cancel flag on a task. `cancelled?` reads it.
-Cancellation is cooperative: setting the flag does not stop a
-worker, only signals it. Long-running workers must poll
-`cancelled?(current())` at safe points and return early.
-
-`current()` returns the currently-running task value, or `nil`
-on the main thread. Workers use `task.cancelled?(task.current())`
+`Task.current()` returns the currently-running task value, or `nil`
+on the main thread. Workers use `task.Task.cancelled?(task.Task.current())`
 to check whether they have been asked to stop.
 
 A `scope` block also sets the cancel flag on every remaining
@@ -644,7 +615,7 @@ before the raise propagates.
 ## Updated for v0.43: `channel.select`
 
 ```tya
-result = channel.select([
+result = channel.Channel.select([
   [c1, "receive"],
   [c2, "send", value],
 ])

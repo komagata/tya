@@ -1,6 +1,6 @@
 import runtime
 
-before = runtime.gc_stats()
+before = runtime.Runtime.gc_stats()
 
 items = []
 i = 0
@@ -8,7 +8,7 @@ while i < 100
   push(items, [i, i + 1, i + 2])
   i = i + 1
 
-after = runtime.gc_stats()
+after = runtime.Runtime.gc_stats()
 
 print("before alloc_count: {before[\"alloc_count\"]}")
 print("after  alloc_count: {after[\"alloc_count\"]}")
