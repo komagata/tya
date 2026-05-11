@@ -1,0 +1,27 @@
+# v0.45 M5: a private class cannot be reached from outside the
+# package (the entry script tries to call pkg.Internal which is a
+# private sibling of pkg.Util).
+cd $REPO
+
+! exec go run ./cmd/tya run $WORK/main.tya
+stderr 'TYA-E0406'
+stderr 'private class'
+
+-- main.tya --
+import pkg
+
+print(pkg.Internal.do_work())
+
+-- pkg/Util.tya --
+class Util
+  @@run = ->
+    "ok"
+
+-- pkg/Helper.tya --
+class Helper
+  @@noop = ->
+    "noop"
+
+class Internal
+  @@do_work = ->
+    "leak"

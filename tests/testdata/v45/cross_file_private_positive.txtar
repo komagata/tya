@@ -1,0 +1,23 @@
+# v0.45 M5: a private class is reachable from its own file. The
+# package's public class (Util) and a private helper (Helper) live
+# in the same source file; references between them are allowed.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'helped:ok\n'
+! stderr .
+
+-- main.tya --
+import pkg
+
+print(pkg.Util.run())
+
+-- pkg/Util.tya --
+class Util
+  @@run = ->
+    h = Helper.do_work()
+    "helped:{h}"
+
+class Helper
+  @@do_work = ->
+    "ok"

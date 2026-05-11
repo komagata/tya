@@ -1,0 +1,34 @@
+# v0.45 M5: a sibling class file inside the same package cannot
+# extend a class that is private to another file (extends variant).
+cd $REPO
+
+! exec go run ./cmd/tya run $WORK/main.tya
+stderr 'TYA-E0406'
+stderr 'private class'
+
+-- main.tya --
+import pkg
+
+print(pkg.Util.run())
+
+-- pkg/Util.tya --
+class Util
+  @@run = ->
+    s = Sub()
+    s.tag()
+
+class Sub extends Base
+  init = ->
+    super()
+
+-- pkg/Helper.tya --
+class Helper
+  @@noop = ->
+    "noop"
+
+class Base
+  init = ->
+    @t = "b"
+
+  tag = ->
+    @t

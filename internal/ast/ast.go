@@ -171,6 +171,12 @@ type ClassDecl struct {
 	Fields     []ClassField
 	Vars       []ClassVar
 	Methods    []ClassMethod
+	// OriginFile is the source file (relative to the package root)
+	// that this class was parsed from. Stamped by the runner after
+	// per-file parsing inside a directory package; empty for classes
+	// declared in a single-file script. Used by the checker to enforce
+	// v0.45 cross-file private class visibility ([TYA-E0406]).
+	OriginFile string
 }
 
 func (*ClassDecl) stmt() {}

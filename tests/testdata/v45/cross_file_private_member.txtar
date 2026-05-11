@@ -1,0 +1,28 @@
+# v0.45 M5: a sibling class file inside the same package cannot
+# reference a class that is private to another file (member-access
+# variant: Util.tya tries to call Internal.do_work where Internal
+# lives in Helper.tya).
+cd $REPO
+
+! exec go run ./cmd/tya run $WORK/main.tya
+stderr 'TYA-E0406'
+stderr 'private class'
+
+-- main.tya --
+import pkg
+
+print(pkg.Util.run())
+
+-- pkg/Util.tya --
+class Util
+  @@run = ->
+    Internal.do_work()
+
+-- pkg/Helper.tya --
+class Helper
+  @@noop = ->
+    "noop"
+
+class Internal
+  @@do_work = ->
+    "should not be reachable"

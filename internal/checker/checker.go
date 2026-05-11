@@ -261,6 +261,16 @@ type classInfo struct {
 	privateClassMembers  map[string]bool
 	privateClassMethods  map[string]bool
 	privateFieldAssigned map[string]bool
+	// v0.45 cross-file private enforcement metadata. originFile is
+	// the basename of the source file (e.g. "Util.tya") that declared
+	// this class; populated from ClassDecl.OriginFile by
+	// predeclareModuleClass. A class is public iff its name plus
+	// ".tya" equals originFile (the v0.44 filename-matches-classname
+	// rule); otherwise it is private to originFile. An empty
+	// originFile means the class is not part of a synthesized
+	// directory package (single-file script, legacy `module` decl),
+	// and no cross-file check applies.
+	originFile string
 }
 
 type interfaceInfo struct {
@@ -651,6 +661,7 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 	}
 	key := classKey(module, class)
 	info := newClassInfo(key, class)
+	info.originFile = class.OriginFile
 	if class.Parent != nil {
 		info.parent = refKey(class.Parent, module, scope)
 	}
@@ -854,7 +865,15 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			// without an explicit module prefix.
 			if mod := currentModulePrefix(scope); mod != "" && classNameRE.MatchString(n.Name) {
 				key := mod + "." + n.Name
-				if scope.kind(key) == kindClass || scope.kind(key) == kindInterface {
+				if scope.kind(key) == kindClass {
+					if info, ok := scope.classes[key]; ok {
+						if err := checkCrossFilePrivate(info, n.Name, n.Tok.Line, n.Tok.Col, scope); err != nil {
+							return err
+						}
+					}
+					return nil
+				}
+				if scope.kind(key) == kindInterface {
 					return nil
 				}
 			}
@@ -958,6 +977,14 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		}
 		switch kindOf(n.Target, scope) {
 		case kindModule:
+			if classNameRE.MatchString(n.Name) {
+				key := memberKey(n)
+				if info, ok := scope.classes[key]; ok {
+					if err := checkCrossFilePrivate(info, n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+						return err
+					}
+				}
+			}
 			return nil
 		case kindClass:
 			return nil
@@ -1093,8 +1120,22 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		if _, ok := scope.interfaces[parentKey]; ok {
 			return fmt.Errorf("%d:%d: class %s extends interface %s", class.Parent.Tok.Line, class.Parent.Tok.Col, class.Name, parentName(class.Parent))
 		}
-		if _, ok := scope.classes[parentKey]; !ok {
+		parentInfo, ok := scope.classes[parentKey]
+		if !ok {
 			return fmt.Errorf("%d:%d: unknown parent class %s", class.Parent.Tok.Line, class.Parent.Tok.Col, parentName(class.Parent))
+		}
+		// v0.45: extends across files into a sibling-file private class
+		// is rejected with [TYA-E0406]. Use the class being defined as
+		// the reference site.
+		if parentInfo.originFile != "" && !isPublicClassInfo(parentInfo) {
+			if class.OriginFile != parentInfo.originFile {
+				site := class.OriginFile
+				if site == "" {
+					site = "outside the package"
+				}
+				return fmt.Errorf("%d:%d: [TYA-E0406] private class %s is not visible from %s (declared in %s)",
+					class.Parent.Tok.Line, class.Parent.Tok.Col, parentName(class.Parent), site, parentInfo.originFile)
+			}
 		}
 		if scope.classes[parentKey].final {
 			return fmt.Errorf("%d:%d: cannot extend final class %s", class.Parent.Tok.Line, class.Parent.Tok.Col, parentName(class.Parent))
@@ -1316,8 +1357,56 @@ func effectiveInit(info classInfo, scope *scope) (bool, int) {
 	return false, 0
 }
 
+// bareClassName strips the leading "module." prefix from a class
+// info key, returning just the class name segment.
+func bareClassName(key string) string {
+	if i := strings.LastIndexByte(key, '.'); i >= 0 {
+		return key[i+1:]
+	}
+	return key
+}
+
+// isPublicClassInfo reports whether a class is the public class of
+// its source file: its bare name plus ".tya" matches OriginFile. A
+// class without OriginFile is considered public (no cross-file
+// metadata to enforce against).
+func isPublicClassInfo(info classInfo) bool {
+	if info.originFile == "" {
+		return true
+	}
+	return bareClassName(info.name)+".tya" == info.originFile
+}
+
+// checkCrossFilePrivate enforces the v0.45 cross-file private class
+// rule. If target is a private class (filename does not match) and
+// the current reference site (scope.currentClass's origin) lives in
+// a different file, emit [TYA-E0406]. A site without an origin file
+// (entry script, non-package code) cannot reach any non-public class
+// in a package.
+func checkCrossFilePrivate(target classInfo, display string, line, col int, scope *scope) error {
+	if target.originFile == "" || isPublicClassInfo(target) {
+		return nil
+	}
+	siteOrigin := ""
+	if scope.currentClass != "" {
+		siteOrigin = scope.classes[scope.currentClass].originFile
+	}
+	if siteOrigin == target.originFile {
+		return nil
+	}
+	siteDisplay := siteOrigin
+	if siteDisplay == "" {
+		siteDisplay = "outside the package"
+	}
+	return fmt.Errorf("%d:%d: [TYA-E0406] private class %s is not visible from %s (declared in %s)",
+		line, col, display, siteDisplay, target.originFile)
+}
+
 func checkClassCall(key, display string, line, col, argc int, scope *scope) error {
 	info := scope.classes[key]
+	if err := checkCrossFilePrivate(info, display, line, col, scope); err != nil {
+		return err
+	}
 	if info.abstract {
 		return fmt.Errorf("%d:%d: cannot construct abstract class %s", line, col, display)
 	}

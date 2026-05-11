@@ -262,7 +262,8 @@ doneOptions:
 			fmt.Fprint(os.Stdout, csrc)
 			return
 		}
-		source, modules, err = runner.LoadSourceWithModules(path)
+		var origins map[string]map[string]string
+		source, modules, origins, err = runner.LoadSourceWithOrigins(path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -279,6 +280,7 @@ doneOptions:
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+		runner.StampOriginFiles(prog, origins)
 		if err := checker.CheckWithModules(prog, modules); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -291,6 +293,7 @@ doneOptions:
 		fmt.Fprint(os.Stdout, csrc)
 		return
 	}
+	var origins map[string]map[string]string
 	if checkUnused {
 		if isClassFile {
 			// v0.44: --check-unused on a class file uses the source
@@ -299,7 +302,7 @@ doneOptions:
 			// The strict pass downstream walks classes + methods
 			// the same way it does for entry programs.
 		} else {
-			source, modules, err = runner.LoadUserSourceWithModules(path)
+			source, modules, origins, err = runner.LoadSourceWithOrigins(path)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
@@ -324,6 +327,7 @@ doneOptions:
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	runner.StampOriginFiles(prog, origins)
 	if err := checker.CheckWithModules(prog, modules); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -338,7 +342,7 @@ doneOptions:
 		}
 	}
 	if emitC {
-		source, modules, err = runner.LoadSourceWithModules(path)
+		source, modules, origins, err = runner.LoadSourceWithOrigins(path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -355,6 +359,7 @@ doneOptions:
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+		runner.StampOriginFiles(prog, origins)
 		if err := checker.CheckWithModules(prog, modules); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -491,7 +496,7 @@ func compileToC(path string) (string, error) {
 }
 
 func compileToCWithCover(path string, opt *codegen.CoverageOptions) (string, *codegen.CoverageRegistry, error) {
-	source, modules, err := runner.LoadSourceWithModules(path)
+	source, modules, origins, err := runner.LoadSourceWithOrigins(path)
 	if err != nil {
 		return "", nil, err
 	}
@@ -503,6 +508,7 @@ func compileToCWithCover(path string, opt *codegen.CoverageOptions) (string, *co
 	if err != nil {
 		return "", nil, err
 	}
+	runner.StampOriginFiles(prog, origins)
 	if err := checker.CheckWithModules(prog, modules); err != nil {
 		return "", nil, err
 	}
@@ -805,7 +811,7 @@ func checkFile(path string) error {
 		}
 		return checker.CheckClassFile(prog, path)
 	}
-	source, modules, err := runner.LoadSourceWithModules(path)
+	source, modules, origins, err := runner.LoadSourceWithOrigins(path)
 	if err != nil {
 		return err
 	}
@@ -817,6 +823,7 @@ func checkFile(path string) error {
 	if err != nil {
 		return err
 	}
+	runner.StampOriginFiles(prog, origins)
 	diags, err := checker.CheckAll(prog, modules, path, true)
 	if err != nil {
 		return err

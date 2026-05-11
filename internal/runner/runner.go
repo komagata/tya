@@ -66,7 +66,7 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 	if err := ValidateFileName(path); err != nil {
 		return err
 	}
-	source, err := LoadSource(path)
+	source, modules, origins, err := LoadUserSourceWithOrigins(path)
 	if err != nil {
 		return err
 	}
@@ -78,14 +78,37 @@ func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
 	if err != nil {
 		return err
 	}
-	_, modules, err := LoadUserSourceWithModules(path)
-	if err != nil {
-		return err
-	}
+	StampOriginFiles(prog, origins)
 	if err := checker.CheckWithModules(prog, modules); err != nil {
 		return err
 	}
 	return eval.RunWithIO(prog, in, out, args)
+}
+
+// StampOriginFiles walks the program and, for each ModuleDecl whose
+// name appears in origins, stamps the per-class origin file path onto
+// every contained ClassDecl. Classes without a recorded origin are
+// left with OriginFile == "" (single-file scripts and legacy
+// `module` declarations do not need cross-file visibility tracking).
+func StampOriginFiles(prog *ast.Program, origins map[string]map[string]string) {
+	if prog == nil || len(origins) == 0 {
+		return
+	}
+	for _, stmt := range prog.Stmts {
+		mod, ok := stmt.(*ast.ModuleDecl)
+		if !ok {
+			continue
+		}
+		pkgOrigins, ok := origins[mod.Name]
+		if !ok {
+			continue
+		}
+		for _, class := range mod.Classes {
+			if origin, ok := pkgOrigins[class.Name]; ok {
+				class.OriginFile = origin
+			}
+		}
+	}
 }
 
 func LoadSource(path string) (string, error) {
@@ -104,16 +127,44 @@ func LoadSourceWithModules(path string) (string, []string, error) {
 	return src, modules, nil
 }
 
+// LoadSourceWithOrigins is the v0.45 variant of LoadSourceWithModules
+// that also returns the package class/interface origin map. Callers
+// that drive the checker should prefer this entry point and pass
+// origins through StampOriginFiles so the [TYA-E0406] cross-file
+// private check sees correct per-class origin metadata.
+func LoadSourceWithOrigins(path string) (string, []string, map[string]map[string]string, error) {
+	return LoadUserSourceWithOrigins(path)
+}
+
 func LoadUserSource(path string) (string, error) {
 	src, _, err := LoadUserSourceWithModules(path)
 	return src, err
+}
+
+// LoadUserSourceWithOrigins is the v0.45 entry point that also returns
+// the per-package class/interface origin map collected during package
+// synthesis. The outer key is the synthesized package module name; the
+// inner key is the class or interface name; the value is the source
+// file base name (e.g. "Util.tya") that declared it. The checker uses
+// this map to enforce cross-file private class visibility
+// ([TYA-E0406]).
+func LoadUserSourceWithOrigins(path string) (string, []string, map[string]map[string]string, error) {
+	if err := ValidateFileName(path); err != nil {
+		return "", nil, nil, err
+	}
+	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}, classOrigins: map[string]map[string]string{}}
+	src, modules, err := loadSource(path, state, false)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	return src, modules, state.classOrigins, nil
 }
 
 func LoadUserSourceWithModules(path string) (string, []string, error) {
 	if err := ValidateFileName(path); err != nil {
 		return "", nil, err
 	}
-	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}}
+	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}, classOrigins: map[string]map[string]string{}}
 	src, modules, err := loadSource(path, state, false)
 	if err != nil {
 		return "", nil, err
@@ -143,6 +194,13 @@ type loadState struct {
 	// load fails with a clear collision error rather than silently
 	// overwriting the first.
 	synthModules map[string]string
+	// classOrigins tracks per-package class/interface origin files.
+	// Outer key is the synthesized package module name; inner key is
+	// the class or interface name; value is the source file path
+	// (relative to the package root, e.g. "Util.tya") that declared
+	// the class. v0.45 [TYA-E0406] cross-file private enforcement
+	// reads this map after the merged AST is parsed.
+	classOrigins map[string]map[string]string
 }
 
 type loadFrame struct {
@@ -230,11 +288,12 @@ func loadSource(path string, state *loadState, module bool) (string, []string, e
 			return "", nil, fmt.Errorf("[TYA-E0855] package name conflict: both %s and %s would synthesize module %s; use distinct directory names or rename one", prev, abs, pkgName)
 		}
 		state.synthModules[pkgName] = abs
-		synth, err := synthesizePackageSource(classFiles, pkgName)
+		synth, origins, err := synthesizePackageSource(classFiles, pkgName)
 		if err != nil {
 			return "", nil, err
 		}
 		source = synth
+		state.classOrigins[pkgName] = origins
 	} else {
 		src, err := os.ReadFile(path)
 		if err != nil {
@@ -617,9 +676,9 @@ func stripTopLevelImports(src string) string {
 // content lines start at column zero will gain two leading spaces
 // after re-indentation. Class file authors should avoid placing
 // multi-line string content at column zero within a v0.44 package.
-func synthesizePackageSource(classFiles []string, pkgName string) (string, error) {
+func synthesizePackageSource(classFiles []string, pkgName string) (string, map[string]string, error) {
 	if !moduleNameRE.MatchString(pkgName) {
-		return "", fmt.Errorf("invalid package name: %s", pkgName)
+		return "", nil, fmt.Errorf("invalid package name: %s", pkgName)
 	}
 	type importKey struct {
 		path  string
@@ -628,31 +687,40 @@ func synthesizePackageSource(classFiles []string, pkgName string) (string, error
 	var orderedImports []*ast.ImportStmt
 	seenImports := map[importKey]bool{}
 	var bodies []string
+	origins := map[string]string{}
 
 	for _, file := range classFiles {
 		raw, err := os.ReadFile(file)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 		text := string(raw)
 		prog, err := parseSource(text)
 		if err != nil {
-			return "", fmt.Errorf("%s: %w", file, err)
+			return "", nil, fmt.Errorf("%s: %w", file, err)
 		}
 		if err := checker.CheckClassFileStructure(prog, file); err != nil {
-			return "", err
+			return "", nil, err
 		}
+		relName := filepath.Base(file)
 		for _, stmt := range prog.Stmts {
-			imp, ok := stmt.(*ast.ImportStmt)
-			if !ok {
-				continue
+			switch n := stmt.(type) {
+			case *ast.ImportStmt:
+				key := importKey{path: n.Name, alias: n.Alias}
+				if seenImports[key] {
+					continue
+				}
+				seenImports[key] = true
+				orderedImports = append(orderedImports, n)
+			case *ast.ClassDecl:
+				if _, dup := origins[n.Name]; !dup {
+					origins[n.Name] = relName
+				}
+			case *ast.InterfaceDecl:
+				if _, dup := origins[n.Name]; !dup {
+					origins[n.Name] = relName
+				}
 			}
-			key := importKey{path: imp.Name, alias: imp.Alias}
-			if seenImports[key] {
-				continue
-			}
-			seenImports[key] = true
-			orderedImports = append(orderedImports, imp)
 		}
 		// Strip top-level import lines from the source text and
 		// re-indent the rest by two spaces.
@@ -692,7 +760,7 @@ func synthesizePackageSource(classFiles []string, pkgName string) (string, error
 	for _, b := range bodies {
 		out.WriteString(b)
 	}
-	return out.String(), nil
+	return out.String(), origins, nil
 }
 
 // resolvePackageDir attempts to resolve an import path to a v0.44
