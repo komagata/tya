@@ -1,0 +1,16 @@
+# Top-level bindings with no leading doc comment are still listed,
+# but their body section is empty.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+mkdir src
+cp lone.tya src/lone.tya
+
+exec $WORK/tya doc
+stdout '## function lone'
+stdout 'lone\(x\)'
+! stderr .
+
+-- lone.tya --
+lone = x -> x

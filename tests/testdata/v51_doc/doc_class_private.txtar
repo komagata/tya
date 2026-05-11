@@ -1,0 +1,24 @@
+# Classes are listed; top-level bindings whose name starts with
+# `_` are excluded as conventional-private.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+mkdir src
+cp mix.tya src/mix.tya
+
+exec $WORK/tya doc
+stdout '## class Greeter'
+stdout '## function pub'
+! stdout '_priv'
+
+-- mix.tya --
+# Public surface
+pub = x -> x + 1
+
+# Hidden helper
+_priv = y -> y - 1
+
+# Greeter says hello.
+class Greeter
+  static hi = name -> "hi " + name

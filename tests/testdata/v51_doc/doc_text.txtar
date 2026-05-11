@@ -1,0 +1,19 @@
+# v0.51 `tya doc` (no flags) emits human-readable text to stdout
+# listing every documented top-level binding. Default scan target
+# is `src/`.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+mkdir src
+cp greet.tya src/greet.tya
+
+exec $WORK/tya doc
+stdout '## function greet'
+stdout 'greet\(name\)'
+stdout 'Returns a greeting for the given name'
+! stderr .
+
+-- greet.tya --
+# Returns a greeting for the given name.
+greet = name -> "Hello, " + name

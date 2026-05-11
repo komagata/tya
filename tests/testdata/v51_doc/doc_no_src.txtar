@@ -1,0 +1,8 @@
+# Without an explicit path and no src/ directory, `tya doc` exits 2
+# with TYA-E0923.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya doc
+stderr '\[TYA-E0923\] no src/ directory'

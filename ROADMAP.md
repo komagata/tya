@@ -148,6 +148,22 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.51** — `tya doc` source documentation generator
+  (`docs/v0.51/SPEC.md`, `docs/v0.51/RELEASE_NOTES.md`). New
+  toolchain subcommand `tya doc [paths...]` walks top-level
+  declarations in `.tya` files, picks up the leading `#`-comment
+  block as a Markdown body, and prints a plain-text summary to
+  stdout. `tya doc --html <out>` writes a multi-page static site
+  (`<out>/index.html` + `<out>/items/<kind>_<name>.html` +
+  `<out>/style.css`). Extracted kinds: `class`, `module`,
+  `interface`, and `function` (= top-level `name = … -> …` whose
+  RHS is a function literal). Top-level bindings whose name starts
+  with `_` are excluded. Self-contained Markdown subset: headings,
+  paragraphs, fenced code, `- ` / `1. ` lists, inline `` `code` ``,
+  `[link](url)`, `**bold**`, `*italic*`. New diagnostic codes
+  `TYA-E0920` (missing `--html` argument) and `TYA-E0923` (`src/`
+  not found with no explicit paths). Language surface unchanged
+  from v0.50.
 - **v0.50** — Toolchain extension pack (`docs/v0.50/SPEC.md`,
   `docs/v0.50/RELEASE_NOTES.md`). `tya lint` gains rules
   `TYAL0003` (redundant `if true` / `if false`), `TYAL0004` (deep
@@ -358,16 +374,20 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Publish a minimal VS Code extension and document Zed / Helix /
     Neovim / Emacs setup.
 
-- [ ] **Ship `tya doc` source documentation generator**
-  - [ ] Define doc comment syntax: contiguous comment lines immediately
-    preceding a top-level definition. Body is Markdown rendered with the
-    `markdown` stdlib module.
-  - [ ] Discover every top-level binding under `src/` plus stdlib re-exports.
-  - [ ] CLI surface: `tya doc` (text), `tya doc --html <out>` (static site),
-    `tya doc --serve` (HTTP), `tya doc --json` (machine-readable).
-  - [ ] Reuse the public Tya self-introspection library.
+- [x] **Ship `tya doc` source documentation generator** *(v0.51 shipped
+  the minimal form: `tya doc` text + `tya doc --html <out>` static site
+  over `src/`. Remaining work below.)*
+  - [x] Define doc comment syntax: contiguous comment lines immediately
+    preceding a top-level definition. Body is Markdown rendered by the
+    self-contained `internal/doc` renderer.
+  - [x] Discover every top-level binding under `src/`.
+  - [x] CLI surface: `tya doc` (text), `tya doc --html <out>` (static site).
+  - [ ] Stdlib re-exports (follow `import` statements). *(v0.52+)*
+  - [ ] `tya doc --serve` (HTTP). *(v0.52+)*
+  - [ ] `tya doc --json` (machine-readable). *(v0.52+)*
+  - [ ] Reuse the public Tya self-introspection library. *(v0.52+)*
   - [ ] Diagnose orphan doc comments, duplicate definitions, unparseable
-    Markdown bodies.
+    Markdown bodies. *(reserved as TYA-E0921 / TYA-E0922, v0.52+)*
 
 - [ ] **Extend `tya new` project scaffolder** *(v0.49 shipped the
   minimal form: `tya new <name>` → tya.toml + src/main.tya +
