@@ -8,11 +8,11 @@ read_user = text ->
   return user["name"], nil
 name, err = read_user("komagata")
 if err
-  print err["message"]
+  print(err["message"])
 else
-  print name
+  print(name)
 name, err = read_user("")
 if err
-  print err["message"]
+  print(err["message"])
 else
-  print name
+  print(name)

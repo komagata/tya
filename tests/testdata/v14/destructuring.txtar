@@ -24,25 +24,25 @@ stdout '0.44.0\n'
 -- destructuring.tya --
 user = {name: "ada", age: 31, email: "ada@example.test"}
 {"name": name, "age": age} = user
-print name
-print age
+print(name)
+print(age)
 
 [first, _, third] = ["x", "ignored", "left"]
-print first
-print third
+print(first)
+print(third)
 
 [outer, {"name": nested_name}] = [["nested"], user]
 [nested] = outer
-print nested
-print nested_name
+print(nested)
+print(nested_name)
 
 name = "changed"
-print name
+print(name)
 
 run = ->
   [local, value] = ["local", 7]
-  print value
-  print local
+  print(value)
+  print(local)
 
 run()
 

@@ -1,4 +1,4 @@
 path = "/tmp/tya_example.txt"
 write_file(path, "Hello from Tya")
-print file_exists(path)
-print read_file(path)
+print(file_exists(path))
+print(read_file(path))

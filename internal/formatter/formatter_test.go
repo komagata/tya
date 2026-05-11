@@ -3,8 +3,8 @@ package formatter
 import "testing"
 
 func TestFormatSourceIsIdempotent(t *testing.T) {
-	input := "name = \"Tya\"  \n\tprint name\t\n\n"
-	want := "name = \"Tya\"\n  print name\n"
+	input := "name = \"Tya\"  \n\tprint(name)\t\n\n"
+	want := "name = \"Tya\"\n  print(name)\n"
 	got := FormatSource(input)
 	if got != want {
 		t.Fatalf("unexpected format:\n%q", got)

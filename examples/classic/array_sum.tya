@@ -2,4 +2,4 @@ items = [1, 2, 3]
 sum = 0
 for item in items
   sum = sum + item
-print sum
+print(sum)

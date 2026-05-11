@@ -6,4 +6,4 @@ while d * d <= n
     is_prime = false
     break
   d = d + 1
-print is_prime
+print(is_prime)

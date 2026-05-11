@@ -1,12 +1,12 @@
 i = 1
 while i <= 15
   if i % 15 == 0
-    print "FizzBuzz"
+    print("FizzBuzz")
   elseif i % 3 == 0
-    print "Fizz"
+    print("Fizz")
   else
     if i % 5 == 0
-      print "Buzz"
+      print("Buzz")
     else
-      print i
+      print(i)
   i = i + 1

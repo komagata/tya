@@ -4,4 +4,4 @@ while b != 0
   next = a % b
   a = b
   b = next
-print a
+print(a)

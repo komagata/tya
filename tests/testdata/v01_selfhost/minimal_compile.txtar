@@ -50,7 +50,7 @@ stdout '1:11: unknown escape \\q'
 stdout '1:7: unterminated string'
 
 exec go run ./cmd/tya run selfhost/v01/compiler.tya --tokens $WORK/lexer_tokens.tya
-stdout 'IDENT\n=\nINT\n.\nNEWLINE\nIDENT\nSTRING\nNEWLINE\nEOF\n'
+stdout 'IDENT\n=\nINT\n.\nNEWLINE\nIDENT\n\(\nSTRING\n\)\nNEWLINE\nEOF\n'
 
 exec go run ./cmd/tya run selfhost/v01/compiler.tya --ast $WORK/parser_ast.tya
 stdout '1: import\n3: assign add = func 2 expr binary [+]\n4: assign zero = func 0 expr int\n5: assign mapped = call ident map 2\n6: assign zero_paren = func 0 expr int\n7: expr_stmt call ident print 1\n8: if elseif 0 else 0\n'
@@ -158,92 +158,92 @@ stdout '4: undefined variable: missing'
 import greeting
 
 name = "Tya"
-print "Hello, " + name
-print "Interpolated {name}"
-print greeting.hello(name)
+print("Hello, " + name)
+print("Interpolated {name}")
+print(greeting.hello(name))
 if true
-  print "ready"
+  print("ready")
 else
-  print "not ready"
+  print("not ready")
 if false
-  print "not ready"
+  print("not ready")
 elseif true
-  print "elseif ready"
+  print("elseif ready")
 else
-  print "still not ready"
+  print("still not ready")
 if false
-  print "not ready"
+  print("not ready")
 elseif false
-  print "first elseif not ready"
+  print("first elseif not ready")
 elseif true
-  print "second elseif ready"
+  print("second elseif ready")
 else
-  print "still not ready"
+  print("still not ready")
 count = 0
 while count < 2
-  print count
+  print(count)
   count = count + 1
 while true
-  print 2
+  print(2)
   break
 while count < 3
   count = count + 1
   continue
-  print "never"
+  print("never")
 items = [2, 4, 6]
-print items[0]
+print(items[0])
 items[1] = 9
-print items[1]
+print(items[1])
 for item in items
-  print item
+  print(item)
 for item, index in items
-  print index
-  print item
+  print(index)
+  print(item)
 push(items, 8)
-print pop(items)
-print len(items)
-print len(items)
+print(pop(items))
+print(len(items))
+print(len(items))
 user = { name: "Tya", role: "compiler" }
-print user["name"]
+print(user["name"])
 user["name"] = "compiler"
-print user["name"]
+print(user["name"])
 user["name"] = "Tya"
-print has(user, "name")
-print len(keys(user))
+print(has(user, "name"))
+print(len(keys(user)))
 delete(user, "role")
-print has(user, "role")
+print(has(user, "role"))
 for key, value of user
-  print key
-  print value
+  print(key)
+  print(value)
 left, right = ["left", "right"]
-print left
-print right
+print(left)
+print(right)
 double = value -> value + value
-print double(3)
+print(double(3))
 add = left -> left + 2
-print add(3)
+print(add(3))
 sum = left, right -> left + right
-print sum(3, 4)
-print sum(2 + 3, 4)
+print(sum(3, 4))
+print(sum(2 + 3, 4))
 pick4 = _a, _b, _c, d -> d
-print pick4(1, 2, 3, 4)
+print(pick4(1, 2, 3, 4))
 block_double = value ->
   return value + value
-print block_double(4)
+print(block_double(4))
 implicit_double = value ->
   value + value
-print implicit_double(5)
+print(implicit_double(5))
 constant = -> "constant"
-print constant()
+print(constant())
 block_constant = ->
   return "block constant"
-print block_constant()
+print(block_constant())
 block_sum3 = a, b, c ->
   return a + b + c
-print block_sum3(1, 2, 3)
+print(block_sum3(1, 2, 3))
 block_pick4 = _a, _b, _c, d ->
   return d
-print block_pick4(1, 2, 3, 4)
+print(block_pick4(1, 2, 3, 4))
 nested = value ->
   if value > 2
     while value < 5
@@ -251,73 +251,73 @@ nested = value ->
     return value
   else
     return 0
-print nested(3)
-print nested(1)
+print(nested(3))
+print(nested(1))
 loop = 0
 while loop < 3
   if loop == 1
-    print "inner"
+    print("inner")
   loop = loop + 1
 pair = value ->
   return value, "ok"
 tuple_value, tuple_status = pair("tuple")
-print tuple_value
-print tuple_status
+print(tuple_value)
+print(tuple_status)
 ok_pair = value ->
   return value, nil
 try_direct = fn -> try fn("direct")
-print try_direct(ok_pair)
+print(try_direct(ok_pair))
 try_block_last = fn ->
   try fn("last")
-print try_block_last(ok_pair)
+print(try_block_last(ok_pair))
 fail = _value ->
   return nil, error("try bad")
 try_load = fn ->
   result = try fn("x")
   return result, nil
 try_value, try_err = try_load(fail)
-print try_err["message"]
-print 3 * 4
-print 8 / 2
-print 8 % 3
-print 2 + 3 * 4
-print true and true
-print false or true
-print false and false or true
-print not false
-print -4
+print(try_err["message"])
+print(3 * 4)
+print(8 / 2)
+print(8 % 3)
+print(2 + 3 * 4)
+print(true and true)
+print(false or true)
+print(false and false or true)
+print(not false)
+print(-4)
 print (3 + 4)
 text = trim(" hello,Tya ")
 parts = split(text, ",")
-print join(parts, "-")
-print join(split(text, ","), ":")
-print replace(text, "Tya", "compiler")
-print contains(text, "hello")
-print starts_with(text, "hello")
-print ends_with(text, "Tya")
-print to_int("42")
-print to_float("2.5")
-print to_number("12.5")
-print to_string(join(["nested", "expr"], "-"))
+print(join(parts, "-"))
+print(join(split(text, ","), ":"))
+print(replace(text, "Tya", "compiler"))
+print(contains(text, "hello"))
+print(starts_with(text, "hello"))
+print(ends_with(text, "Tya"))
+print(to_int("42"))
+print(to_float("2.5"))
+print(to_number("12.5"))
+print(to_string(join(["nested", "expr"], "-")))
 path = "/tmp/tya_selfhost_v01.txt"
 write_file(path, "file text")
-print file_exists(path)
-print read_file(path)
+print(file_exists(path))
+print(read_file(path))
 path_expr = "/tmp/" + "tya_selfhost_v01_expr.txt"
 write_file(path_expr, join(["file", "expr"], " "))
-print read_file(path_expr)
+print(read_file(path_expr))
 side_items = []
 push(side_items, 2 + 3)
-print side_items[0]
+print(side_items[0])
 side_dict = { dynamic: 1 }
 side_key = join(["dyn", "amic"], "")
 delete(side_dict, side_key)
-print has(side_dict, "dynamic")
+print(has(side_dict, "dynamic"))
 err = error("bad")
-print err["message"]
+print(err["message"])
 
 -- undefined.tya --
-print missing
+print(missing)
 
 -- branch_scope.tya --
 choose = flag ->
@@ -327,32 +327,32 @@ choose = flag ->
   else
     value = "no"
   return value
-print choose(true)
+print(choose(true))
 top_value = ""
 if true
   top_value = "top"
-print top_value
+print(top_value)
 
 -- tab.tya --
-print "ok"
-	print "tab"
+print("ok")
+	print("tab")
 
 -- bad_indent.tya --
 if true
-    print "bad"
+    print("bad")
 
 -- bad_char.tya --
 x $ 1
 
 -- bad_escape.tya --
-print "bad\q"
+print("bad\q")
 
 -- unterminated.tya --
-print "bad
+print("bad)
 
 -- lexer_tokens.tya --
 value = 1.
-print "a\n\"b\""
+print("a\n\"b\"")
 
 -- parser_ast.tya --
 import greeting
@@ -361,9 +361,9 @@ add = left, right -> left + right
 zero = -> 0
 mapped = map(items, item -> item * 2)
 zero_paren = () -> 0
-print add(2 + 3, zero())
+print(add(2 + 3, zero()))
 if true
-  print greeting.hello("parser")
+  print(greeting.hello("parser"))
 
 -- import_alias.tya --
 import greeting as g
@@ -378,25 +378,25 @@ if true
     hello = name -> name
 
 -- no_paren_call.tya --
-print len keys user
+len keys user
 
 -- bad_elseif_header.tya --
 if false
-  print "no"
+  print("no")
 elseif ready true
-  print "bad"
+  print("bad")
 
 -- bad_if_header.tya --
 if ready true
-  print "bad"
+  print("bad")
 
 -- bad_while_header.tya --
 while ready true
-  print "bad"
+  print("bad")
 
 -- bad_for_header.tya --
 for item in items extra
-  print item
+  print(item)
 
 -- top_level_try.tya --
 value = try parse_user("x")
@@ -406,19 +406,19 @@ class User
   1
 
 -- self.tya --
-print self
+print(self)
 
 -- set_literal.tya --
 roles = { admin, writer }
 
 -- function_missing.tya --
 fn = _value ->
-  print missing
-print fn("x")
+  print(missing)
+print(fn("x"))
 
 -- param_scope.tya --
 fn = value -> value
-print value
+print(value)
 
 -- bad_name.tya --
 BadName = 1
@@ -438,11 +438,11 @@ true = 1
 
 -- member_access.tya --
 user = { name: "Tya" }
-print user.name
+print(user.name)
 
 -- array_member.tya --
 items = [1]
-print items.count
+print(items.count)
 
 -- member_assignment.tya --
 user.name = "Tya"
@@ -457,7 +457,7 @@ module greeting
 
 -- module_mismatch/main.tya --
 import greeting
-print greeting.hello("Tya")
+print(greeting.hello("Tya"))
 
 -- module_mismatch/greeting.tya --
 module message
@@ -465,7 +465,7 @@ module message
 
 -- module_multiple/main.tya --
 import greeting
-print greeting.hello("Tya")
+print(greeting.hello("Tya"))
 
 -- module_multiple/greeting.tya --
 module greeting
@@ -475,7 +475,7 @@ module greeting
 
 -- module_extra/main.tya --
 import greeting
-print greeting.hello("Tya")
+print(greeting.hello("Tya"))
 
 -- module_extra/greeting.tya --
 module greeting
@@ -503,8 +503,8 @@ fn = value, value -> value
 fn = items ->
   for item in items
     if item
-      print missing
-print fn([])
+      print(missing)
+print(fn([]))
 
 -- greeting.tya --
 module greeting

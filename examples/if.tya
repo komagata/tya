@@ -1,10 +1,10 @@
 user = { name: "komagata" }
 if user
-  print user["name"]
+  print(user["name"])
 else
-  print "no user"
+  print("no user")
 missing = nil
 if missing
-  print "unexpected"
+  print("unexpected")
 else
-  print "missing"
+  print("missing")

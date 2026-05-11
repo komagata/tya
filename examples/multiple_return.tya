@@ -4,11 +4,11 @@ parse_user = text ->
   return { name: text }, nil
 user, err = parse_user("komagata")
 if err
-  print err["message"]
+  print(err["message"])
 else
-  print user["name"]
+  print(user["name"])
 missing, err = parse_user("")
 if err
-  print err["message"]
+  print(err["message"])
 else
-  print missing["name"]
+  print(missing["name"])

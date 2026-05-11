@@ -1,6 +1,6 @@
 # Tya Development Guidelines
 
-Tya is a small indentation-based dynamic language implemented in Go. Tya v0.1 is defined as a compile-to-C language. Before editing, inspect the existing lexer, parser, AST, checker, C emitter, runner, tests, and examples that are closest to the requested behavior.
+Tya is a language without hesitation — an indentation-based, dynamically typed, compile-to-C language. The reference implementation is hand-written in Go. Tya commits to a Canonical Syntax (every program has exactly one source representation) and an all-in-one toolchain. Before editing, inspect the existing lexer, parser, AST, checker, C emitter, runner, tests, and examples that are closest to the requested behavior.
 
 ## Project Rules
 

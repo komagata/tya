@@ -9,7 +9,7 @@ stdout 'tya_print'
 ! stderr .
 
 exec go run ./cmd/tya format $WORK/messy.tya
-stdout 'name = "Tya"\nprint name\n'
+stdout 'name = "Tya"\nprint\(name\)\n'
 ! stderr .
 
 cp $WORK/messy.tya $WORK/write.tya
@@ -20,7 +20,7 @@ cmp $WORK/write.tya $WORK/formatted.tya
 
 ! exec go run ./cmd/tya check $WORK/bad.tya
 stderr 'bad.tya:1:7: undefined variable missing'
-stderr 'print missing'
+stderr 'print\(missing\)'
 stderr '^'
 
 exec go run ./cmd/tya version
@@ -29,15 +29,15 @@ stdout '0.44.0\n'
 
 -- good.tya --
 name = "Tya"
-print name
+print(name)
 
 -- bad.tya --
-print missing
+print(missing)
 
 -- messy.tya --
-name = "Tya"  
-print name	
+name = "Tya"
+print(name)
 
 -- formatted.tya --
 name = "Tya"
-print name
+print(name)

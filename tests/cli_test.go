@@ -26,7 +26,7 @@ func TestCLICheckUnusedRejectsUnusedBinding(t *testing.T) {
 
 func TestCLICheckUnusedAllowsUsedBinding(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "used.tya")
-	if err := os.WriteFile(path, []byte("name = \"Tya\"\nprint name\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("name = \"Tya\"\nprint(name)\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", "--check-unused", path)
@@ -42,7 +42,7 @@ func TestCLICheckUnusedAllowsUsedBinding(t *testing.T) {
 
 func TestCLIAllowsCombinedOptions(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "used.tya")
-	if err := os.WriteFile(path, []byte("name = \"Tya\"\nprint name\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("name = \"Tya\"\nprint(name)\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", "--check-unused", "--emit-c", path)
@@ -58,7 +58,7 @@ func TestCLIAllowsCombinedOptions(t *testing.T) {
 
 func TestCLITokensCanBeCombinedWithChecks(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "used.tya")
-	if err := os.WriteFile(path, []byte("name = \"Tya\"\nprint name\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("name = \"Tya\"\nprint(name)\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", "--check-unused", "--tokens", path)
@@ -74,7 +74,7 @@ func TestCLITokensCanBeCombinedWithChecks(t *testing.T) {
 
 func TestCLIRunCompilesAndRunsProgram(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "hello.tya")
-	if err := os.WriteFile(path, []byte("print \"Hello from run\"\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("print(\"Hello from run\")\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", "run", path)
@@ -90,7 +90,7 @@ func TestCLIRunCompilesAndRunsProgram(t *testing.T) {
 
 func TestCLIDirectFileDoesNotUseInterpreterPath(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "hello.tya")
-	if err := os.WriteFile(path, []byte("print \"direct\"\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("print(\"direct\")\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", path)
@@ -106,7 +106,7 @@ func TestCLIDirectFileDoesNotUseInterpreterPath(t *testing.T) {
 
 func TestCLIRunPassesArgs(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "args.tya")
-	if err := os.WriteFile(path, []byte("items = args()\nprint len(items)\nprint items[0]\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("items = args()\nprint(len(items))\nprint(items[0])\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", "run", path, "first")
@@ -127,7 +127,7 @@ func TestCLIRunLoadsImportedModule(t *testing.T) {
 		t.Fatal(err)
 	}
 	path := filepath.Join(dir, "main.tya")
-	if err := os.WriteFile(path, []byte("import greeting\nprint greeting.hello(\"komagata\")\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("import greeting\nprint(greeting.hello(\"komagata\"))\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", "run", path)
@@ -144,7 +144,7 @@ func TestCLIRunLoadsImportedModule(t *testing.T) {
 func TestCLIBuildWritesExecutable(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "hello.tya")
-	if err := os.WriteFile(path, []byte("print \"Hello from build\"\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("print(\"Hello from build\")\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(dir, "hello-bin")
@@ -167,7 +167,7 @@ func TestCLIBuildWritesExecutable(t *testing.T) {
 func TestCLIBuildUsesDefaultOutputPath(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "default_out.tya")
-	if err := os.WriteFile(path, []byte("print \"default output\"\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("print(\"default output\")\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", "build", path)

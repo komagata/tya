@@ -348,7 +348,7 @@ func TestParseRejectsLegacyModuleColonMember(t *testing.T) {
 }
 
 func TestParseImportStatement(t *testing.T) {
-	toks, errs := lexer.Lex("import http/server as http_server\nprint http_server.listen(8080)\n")
+	toks, errs := lexer.Lex("import http/server as http_server\nprint(http_server.listen(8080))\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -430,7 +430,7 @@ func TestParseSuperCall(t *testing.T) {
 }
 
 func TestParseMultipleFunctionParams(t *testing.T) {
-	toks, errs := lexer.Lex("add = a, b -> a + b\nprint add(2, 3)\n")
+	toks, errs := lexer.Lex("add = a, b -> a + b\nprint(add(2, 3))\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -479,7 +479,7 @@ func TestParseCallArgsDoNotBecomeFunctionParams(t *testing.T) {
 }
 
 func TestParseIfElse(t *testing.T) {
-	toks, errs := lexer.Lex("if true\n  print \"yes\"\nelse\n  print \"no\"\n")
+	toks, errs := lexer.Lex("if true\n  print(\"yes\")\nelse\n  print(\"no\")\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -493,7 +493,7 @@ func TestParseIfElse(t *testing.T) {
 }
 
 func TestParseIfElseifElse(t *testing.T) {
-	toks, errs := lexer.Lex("if score >= 90\n  print \"A\"\nelseif score >= 80\n  print \"B\"\nelse\n  print \"C\"\n")
+	toks, errs := lexer.Lex("if score >= 90\n  print(\"A\")\nelseif score >= 80\n  print(\"B\")\nelse\n  print(\"C\")\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -538,7 +538,7 @@ func TestParseZeroParamFunction(t *testing.T) {
 }
 
 func TestParseArrayLiteralAndIndex(t *testing.T) {
-	toks, errs := lexer.Lex("items = [1, 2, 3]\nprint items[0]\n")
+	toks, errs := lexer.Lex("items = [1, 2, 3]\nprint(items[0])\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -608,13 +608,13 @@ func TestParseRejectsNestedNoParenCall(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected no-paren call error")
 	}
-	if !strings.Contains(err.Error(), "no-paren calls are not in Tya v0.1") && !strings.Contains(err.Error(), "print expects one expression") {
+	if !strings.Contains(err.Error(), "no-paren calls are not in Tya") && !strings.Contains(err.Error(), "print expects one expression") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestParsePrintAllowsSingleExpressionWithParenCalls(t *testing.T) {
-	toks, errs := lexer.Lex("print len(keys(user))\nprint add(2, 3)\n")
+func TestParsePrintWithParenCalls(t *testing.T) {
+	toks, errs := lexer.Lex("print(len(keys(user)))\nprint(add(2, 3))\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -623,8 +623,8 @@ func TestParsePrintAllowsSingleExpressionWithParenCalls(t *testing.T) {
 	}
 }
 
-func TestParsePrintAllowsUnaryMinusExpression(t *testing.T) {
-	toks, errs := lexer.Lex("print -1\n")
+func TestParsePrintWithUnaryMinusExpression(t *testing.T) {
+	toks, errs := lexer.Lex("print(-1)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -665,7 +665,7 @@ func TestParseRejectsPrintSugarOutsideStatement(t *testing.T) {
 			if err == nil {
 				t.Fatal("expected print sugar error")
 			}
-			if !strings.Contains(err.Error(), "no-paren calls are not in Tya v0.1") {
+			if !strings.Contains(err.Error(), "no-paren calls are not in Tya") {
 				t.Fatalf("unexpected error: %v", err)
 			}
 		})
@@ -681,7 +681,7 @@ func TestParseRejectsNoParenCall(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected no-paren call error")
 	}
-	if !strings.Contains(err.Error(), "no-paren calls are not in Tya v0.1") {
+	if !strings.Contains(err.Error(), "no-paren calls are not in Tya") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -701,7 +701,7 @@ func TestParseWhile(t *testing.T) {
 }
 
 func TestParseReturnFunctionThenTopLevelPrint(t *testing.T) {
-	src := "find_first_over = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\n\nprint find_first_over(3)\n"
+	src := "find_first_over = limit ->\n  i = 0\n  while true\n    if i > limit\n      return i\n    i = i + 1\n\nprint(find_first_over(3))\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -722,7 +722,7 @@ func TestParseReturnFunctionThenTopLevelPrint(t *testing.T) {
 }
 
 func TestParseForIn(t *testing.T) {
-	toks, errs := lexer.Lex("for item, index in items\n  print item\n")
+	toks, errs := lexer.Lex("for item, index in items\n  print(item)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -777,7 +777,7 @@ func TestParseReturnMultipleValues(t *testing.T) {
 }
 
 func TestParseForOfDictionaryIteration(t *testing.T) {
-	toks, errs := lexer.Lex("for key, value of user\n  print value\n")
+	toks, errs := lexer.Lex("for key, value of user\n  print(value)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -918,22 +918,22 @@ func TestParseRejectsTrailingTokensInBlockHeaderExpressions(t *testing.T) {
 		{
 			name: "if",
 			src:  "if ready true\n  print \"bad\"\n",
-			want: "no-paren calls are not in Tya v0.1",
+			want: "no-paren calls are not in Tya",
 		},
 		{
 			name: "elseif",
 			src:  "if false\n  print \"no\"\nelseif ready true\n  print \"bad\"\n",
-			want: "no-paren calls are not in Tya v0.1",
+			want: "no-paren calls are not in Tya",
 		},
 		{
 			name: "while",
 			src:  "while ready true\n  print \"bad\"\n",
-			want: "no-paren calls are not in Tya v0.1",
+			want: "no-paren calls are not in Tya",
 		},
 		{
 			name: "for",
 			src:  "for item in items extra\n  print item\n",
-			want: "no-paren calls are not in Tya v0.1",
+			want: "no-paren calls are not in Tya",
 		},
 	}
 	for _, tt := range tests {
@@ -989,8 +989,8 @@ func TestParseTryExpressionInExpressionBodyFunction(t *testing.T) {
 func TestParseRejectsTryOutsideFunction(t *testing.T) {
 	tests := []string{
 		"value = try parse_user(text)\n",
-		"print try parse_user(text)\n",
-		"if try ready()\n  print \"ready\"\n",
+		"print(try parse_user(text))\n",
+		"if try ready()\n  print(\"ready\")\n",
 	}
 	for _, src := range tests {
 		t.Run(src, func(t *testing.T) {
@@ -1010,7 +1010,7 @@ func TestParseRejectsTryOutsideFunction(t *testing.T) {
 }
 
 func TestParseModuleMemberCall(t *testing.T) {
-	toks, errs := lexer.Lex("print greeting.hello(\"komagata\")\n")
+	toks, errs := lexer.Lex("print(greeting.hello(\"komagata\"))\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -1076,9 +1076,9 @@ func TestParseASTGoldenV01CoreProgram(t *testing.T) {
 		"    return \"C\"",
 		"",
 		"for key, value of user",
-		"  print value",
+		"  print(value)",
 		"",
-		"print greeting.hello(user[\"name\"])",
+		"print(greeting.hello(user[\"name\"]))",
 	}, "\n") + "\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {

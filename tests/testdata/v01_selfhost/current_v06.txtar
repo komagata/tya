@@ -38,7 +38,7 @@ class User
     @@count
 
 user = User.build("komagata")
-print user.greeting()
-print user.name
-print user.count()
-print User.count_users()
+print(user.greeting())
+print(user.name)
+print(user.count())
+print(User.count_users())

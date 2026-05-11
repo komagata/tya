@@ -31,7 +31,7 @@ t1 = spawn inc100(m, state)
 t2 = spawn inc100(m, state)
 await t1
 await t2
-print "count: " + to_string(state["count"])
+print("count: " + to_string(state["count"]))
 
 -- atomic.tya --
 import sync
@@ -39,11 +39,11 @@ import sync
 a = sync.atomic_integer(0)
 sync.atomic_add(a, 10)
 sync.atomic_add(a, 5)
-print "atomic: " + to_string(sync.atomic_load(a))
+print("atomic: " + to_string(sync.atomic_load(a)))
 
 ok = sync.atomic_cas(a, 15, 99)
-print "cas success: " + to_string(ok)
-print "cas value: " + to_string(sync.atomic_load(a))
+print("cas success: " + to_string(ok))
+print("cas value: " + to_string(sync.atomic_load(a)))
 
 -- waitgroup.tya --
 import sync
@@ -61,4 +61,4 @@ spawn worker(wg, ch)
 spawn worker(wg, ch)
 spawn worker(wg, ch)
 sync.wait_group_wait(wg)
-print "wait_group ok"
+print("wait_group ok")

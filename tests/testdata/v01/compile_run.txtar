@@ -16,4 +16,4 @@ stdout '0.44.0\n'
 ! stderr .
 
 -- hello.tya --
-print "Hello, v0.1"
+print("Hello, v0.1")

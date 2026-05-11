@@ -1,10 +1,10 @@
 text = "  hello,tya  "
 trimmed = trim(text)
 parts = split(trimmed, ",")
-print join(parts, "-")
-print replace(trimmed, "tya", "Tya")
-print contains(trimmed, "hello")
-print starts_with(trimmed, "hello")
-print ends_with(trimmed, "tya")
-print "quote: \"tya\""
-print "tya"[1]
+print(join(parts, "-"))
+print(replace(trimmed, "tya", "Tya"))
+print(contains(trimmed, "hello"))
+print(starts_with(trimmed, "hello"))
+print(ends_with(trimmed, "tya"))
+print("quote: \"tya\"")
+print("tya"[1])

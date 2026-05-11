@@ -3,8 +3,8 @@ sum = 0
 while i < 5
   sum = sum + i
   i = i + 1
-print sum
+print(sum)
 while true
   sum = sum + 1
   break
-print sum
+print(sum)

@@ -14,4 +14,4 @@ scope
   push(results, spawn fetch("https://c"))
 
 for r in results
-  print await r
+  print(await r)

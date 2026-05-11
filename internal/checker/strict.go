@@ -33,6 +33,7 @@ const (
 type strictScope struct {
 	parent   *strictScope
 	root     bool
+	funcBody bool // marks the parameter scope of a function body
 	bindings map[string]*strictBinding
 	order    []*strictBinding
 }
@@ -122,6 +123,35 @@ func (s *strictScope) use(name string) {
 func (s *strictScope) resolves(name string) bool {
 	for sc := s; sc != nil; sc = sc.parent {
 		if _, ok := sc.bindings[name]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// resolvesAboveFunction reports whether name is bound in a scope that
+// is *outside* the closest enclosing function body. Predeclared
+// builtins and module names are excluded — they exist on every scope
+// and are intentionally available to inner code without being treated
+// as shadow targets. Returns false when the current scope is not
+// inside a function body, or when the name only resolves at or below
+// that body.
+func (s *strictScope) resolvesAboveFunction(name string) bool {
+	var fnRoot *strictScope
+	for sc := s; sc != nil; sc = sc.parent {
+		if sc.funcBody {
+			fnRoot = sc
+			break
+		}
+	}
+	if fnRoot == nil {
+		return false
+	}
+	for sc := fnRoot.parent; sc != nil; sc = sc.parent {
+		if b, ok := sc.bindings[name]; ok {
+			if b.kind == strictPredeclared {
+				return false
+			}
 			return true
 		}
 	}
@@ -267,6 +297,29 @@ func strictWalkStmt(stmt ast.Stmt, scope *strictScope, atRoot bool, ctx *strictC
 				if id, ok := target.(*ast.Ident); ok {
 					if !scope.resolves(id.Name) {
 						scope.bindLocal(id.Name, strictLocal, id.Tok.Line, id.Tok.Col)
+					} else if scope.resolvesAboveFunction(id.Name) {
+						// v0.44: assignment to a name that lives in
+						// an enclosing scope outside this function
+						// body. The runtime would silently create a
+						// new local; surface that as an error so the
+						// user can route through a dict / array
+						// argument instead.
+						ctx.report(diag.Diagnostic{
+							Severity: diag.Error,
+							Code:     "TYA-E0307",
+							Title:    "Assignment to outer binding",
+							Message:  fmt.Sprintf("Cannot reassign `%s` from inside a function body; it lives in an enclosing scope.", id.Name),
+							Primary:  region(id.Tok.Line, id.Tok.Col, len(id.Name)),
+							Hints: []string{
+								"Tya function bodies cannot write to outer variables.",
+								"Pass a dict or array argument and update its contents (e.g. `state[\"" + id.Name + "\"] = ...`).",
+								"For a single integer counter, use sync.atomic_integer.",
+								"To shadow intentionally, rename the inner binding.",
+							},
+						})
+						if ctx.halted() {
+							return
+						}
 					} else {
 						scope.use(id.Name)
 					}
@@ -436,6 +489,7 @@ func strictWalkExpr(expr ast.Expr, scope *strictScope, ctx *strictCtx) {
 		}
 	case *ast.FuncLit:
 		fnScope := newStrictScope(scope)
+		fnScope.funcBody = true
 		for _, param := range n.Params {
 			if param == "_" {
 				continue

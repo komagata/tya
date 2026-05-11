@@ -9,22 +9,22 @@ import greeting
 
 score = 85
 if score >= 90
-  print "top"
+  print("top")
 elseif score >= 80
-  print "large"
+  print("large")
 else
-  print "small"
+  print("small")
 
 user = { name: "Tya", active: true }
-print greeting.hello(user["name"])
-print len(user)
-print has(user, "active")
+print(greeting.hello(user["name"]))
+print(len(user))
+print(has(user, "active"))
 delete(user, "active")
 user["kind"] = "lang"
-print user["name"] + "-" + user["kind"]
+print(user["name"] + "-" + user["kind"])
 
 items = [1, 2, 3]
-print len(items)
+print(len(items))
 
 labels = { x: "X", y: "Y" }
 joined = ""
@@ -33,19 +33,19 @@ for key, value of labels
     joined = key
   else
     joined = joined + ":" + key
-print joined
+print(joined)
 
 err = error("missing")
-print err["message"] == "other"
-print err["message"]
+print(err["message"] == "other")
+print(err["message"])
 
 text = trim(" hello,tya ")
 parts = split(text, ",")
-print contains(join(parts, "-"), "hello")
-print starts_with(replace(text, "tya", "Tya"), "hello")
+print(contains(join(parts, "-"), "hello"))
+print(starts_with(replace(text, "tya", "Tya"), "hello"))
 
 arguments = args()
-print arguments[0]
+print(arguments[0])
 
 -- greeting.tya --
 module greeting

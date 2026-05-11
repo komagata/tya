@@ -51,15 +51,15 @@ class Counter
     @value
 
 user = User("komagata")
-print user.greeting()
+print(user.greeting())
 user.rename("Tya")
-print user.name
+print(user.name)
 user.name = "Ty"
-print user.greeting()
+print(user.greeting())
 
 counter = Counter()
-print counter.increment()
-print counter.increment()
+print(counter.increment())
+print(counter.increment())
 
 -- user.tya --
 module user
@@ -74,4 +74,4 @@ module user
 import user
 
 item = user.User("module")
-print item.greeting()
+print(item.greeting())

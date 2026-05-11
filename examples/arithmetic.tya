@@ -1,12 +1,12 @@
 add = a, b -> a + b
-print add(2, 3)
-print 2 + 3 * 4
+print(add(2, 3))
+print(2 + 3 * 4)
 grouped = (2 + 3) * 4
-print grouped
-print 5 / 2
+print(grouped)
+print(5 / 2)
 negative = -5 + 2
-print negative
-print true
-print nil
+print(negative)
+print(true)
+print(nil)
 age = 20
-print "next year: {age + 1}"
+print("next year: {age + 1}")

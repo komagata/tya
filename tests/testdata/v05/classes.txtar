@@ -63,18 +63,18 @@ class Marker
     "marker"
 
 user = User("komagata")
-print user.greeting()
+print(user.greeting())
 user.rename("Tya")
-print user.name
+print(user.name)
 user.name = "Ty"
-print user.greeting()
+print(user.greeting())
 
 counter = Counter()
-print counter.increment()
-print counter.increment()
+print(counter.increment())
+print(counter.increment())
 
 marker = Marker()
-print marker.label()
+print(marker.label())
 
 -- user.tya --
 module user
@@ -89,7 +89,7 @@ module user
 import user
 
 item = user.User("module")
-print item.greeting()
+print(item.greeting())
 
 -- bad_class_name.tya --
 class user
@@ -125,7 +125,7 @@ marker = Marker("bad")
 
 -- dict_dot.tya --
 profile = {name: "komagata"}
-print profile.name
+print(profile.name)
 
 -- missing_field.tya --
 class User
@@ -133,4 +133,4 @@ class User
     @name = name
 
 user = User("komagata")
-print user.missing
+print(user.missing)

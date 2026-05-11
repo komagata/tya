@@ -58,19 +58,19 @@ func unparseSource(t *testing.T, src string) (string, error) {
 }
 
 func TestUnparseAssignAndPrint(t *testing.T) {
-	src := "x = 1\nprint x\n"
+	src := "x = 1\nprint(x)\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "x = 1\nprint x\n"
+	want := "x = 1\nprint(x)\n"
 	if got != want {
 		t.Errorf("got %q want %q", got, want)
 	}
 }
 
 func TestUnparseBinaryAndCall(t *testing.T) {
-	src := "y = 2 + 3 * 4\nprint y\n"
+	src := "y = 2 + 3 * 4\nprint(y)\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
@@ -81,18 +81,18 @@ func TestUnparseBinaryAndCall(t *testing.T) {
 }
 
 func TestUnparseIfElseifElse(t *testing.T) {
-	src := "x = 1\nif x == 0\n  print \"a\"\nelseif x == 1\n  print \"b\"\nelse\n  print \"c\"\n"
+	src := "x = 1\nif x == 0\n  print(\"a\")\nelseif x == 1\n  print(\"b\")\nelse\n  print(\"c\")\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
 		"if x == 0",
-		"  print \"a\"",
+		"  print(\"a\")",
 		"elseif x == 1",
-		"  print \"b\"",
+		"  print(\"b\")",
 		"else",
-		"  print \"c\"",
+		"  print(\"c\")",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
@@ -101,7 +101,7 @@ func TestUnparseIfElseifElse(t *testing.T) {
 }
 
 func TestUnparseLambdaSingleLine(t *testing.T) {
-	src := "add = a, b -> a + b\nprint add(2, 3)\n"
+	src := "add = a, b -> a + b\nprint(add(2, 3))\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
@@ -112,12 +112,12 @@ func TestUnparseLambdaSingleLine(t *testing.T) {
 }
 
 func TestUnparseLambdaBlock(t *testing.T) {
-	src := "f = x ->\n  y = x + 1\n  return y\nprint f(2)\n"
+	src := "f = x ->\n  y = x + 1\n  return y\nprint(f(2))\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"f = x ->", "  y = x + 1", "  return y", "print f(2)"} {
+	for _, want := range []string{"f = x ->", "  y = x + 1", "  return y", "print(f(2))"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}
@@ -141,12 +141,12 @@ func TestUnparseImports(t *testing.T) {
 func TestUnparseIdempotent(t *testing.T) {
 	cases := []string{
 		"x = 1\n",
-		"x = 1\nprint x\n",
-		"x = 1\ny = x + 2 * 3\nprint y\n",
-		"add = (a, b) -> a + b\nprint add(2, 3)\n",
-		"f = x ->\n  y = x + 1\n  return y\nprint f(2)\n",
-		"if x == 0\n  print \"a\"\nelseif x == 1\n  print \"b\"\nelse\n  print \"c\"\n",
-		"items = [1, 2, 3]\nfor item in items\n  print item\n",
+		"x = 1\nprint(x)\n",
+		"x = 1\ny = x + 2 * 3\nprint(y)\n",
+		"add = (a, b) -> a + b\nprint(add(2, 3))\n",
+		"f = x ->\n  y = x + 1\n  return y\nprint(f(2))\n",
+		"if x == 0\n  print(\"a\")\nelseif x == 1\n  print(\"b\")\nelse\n  print(\"c\")\n",
+		"items = [1, 2, 3]\nfor item in items\n  print(item)\n",
 		// Wrap forms now round-trip after lexer/parser learned
 		// to ignore newlines inside (...) and [...].
 		"result = compute_filtered_items(source_alpha, source_beta, source_gamma, source_delta)\n",
@@ -366,12 +366,12 @@ func TestUnparseClass(t *testing.T) {
 }
 
 func TestUnparseMatch(t *testing.T) {
-	src := "match x\n  case 1\n    print \"one\"\n  case _\n    print \"other\"\n"
+	src := "match x\n  case 1\n    print(\"one\")\n  case _\n    print(\"other\")\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"match x", "  case 1", "    print \"one\"", "  case _"} {
+	for _, want := range []string{"match x", "  case 1", "    print(\"one\")", "  case _"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}

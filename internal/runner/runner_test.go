@@ -27,7 +27,7 @@ func TestRunFileLoadsImportedModule(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  hello = name -> \"Hello, {name}\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import greeting\nprint greeting.hello(\"komagata\")\n")
+	writeFile(t, main, "import greeting\nprint(greeting.hello(\"komagata\"))\n")
 
 	var out strings.Builder
 	if err := RunFile(main, nil, &out, nil); err != nil {
@@ -42,7 +42,7 @@ func TestRunFileLoadsImportedModuleDeclaration(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo = \"foo\"\n  bar = -> \"bar\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import util\nprint util.foo\nprint util.bar()\n")
+	writeFile(t, main, "import util\nprint(util.foo)\nprint(util.bar())\n")
 
 	var out strings.Builder
 	if err := RunFile(main, nil, &out, nil); err != nil {
@@ -57,7 +57,7 @@ func TestRunFileLoadsImportedModuleAlias(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  foo = \"foo\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import util as u\nprint u.foo\n")
+	writeFile(t, main, "import util as u\nprint(u.foo)\n")
 
 	var out strings.Builder
 	if err := RunFile(main, nil, &out, nil); err != nil {
@@ -72,7 +72,7 @@ func TestRunFileRejectsTopLevelClassInImportedModule(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init = name ->\n    name\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint user.name\n")
+	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint(user.name)\n")
 
 	var out strings.Builder
 	err := RunFile(main, nil, &out, nil)
@@ -103,7 +103,7 @@ func TestLoadSourceRejectsModuleWithMismatchedPublicBinding(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "module message\n  text = \"hello\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import greeting\nprint message\n")
+	writeFile(t, main, "import greeting\nprint(message)\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
@@ -118,7 +118,7 @@ func TestLoadSourceRejectsModuleWithMultiplePublicBindings(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text = \"hello\"\nmodule greeting\n  extra = \"extra\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import greeting\nprint greeting\n")
+	writeFile(t, main, "import greeting\nprint(greeting)\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
@@ -133,7 +133,7 @@ func TestLoadSourceRejectsTopLevelClassInImportedModule(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "user.tya"), "class User\n  init = name ->\n    name\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint user.name\n")
+	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint(user.name)\n")
 
 	_, err := LoadSource(main)
 	if err == nil {
@@ -206,7 +206,7 @@ func TestRunFileBindsOnlyImportAlias(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text = \"hello\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import greeting as g\nprint greeting.text\n")
+	writeFile(t, main, "import greeting as g\nprint(greeting.text)\n")
 
 	var out strings.Builder
 	err := RunFile(main, nil, &out, nil)
@@ -226,7 +226,7 @@ func TestRunFileLoadsSlashModulePath(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(httpDir, "server.tya"), "module server\n  listen = port -> \"listening on {port}\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import http/server\nprint server.listen(8080)\n")
+	writeFile(t, main, "import http/server\nprint(server.listen(8080))\n")
 
 	var out strings.Builder
 	if err := RunFile(main, nil, &out, nil); err != nil {
@@ -245,7 +245,7 @@ func TestRunFileLoadsSlashModulePathAlias(t *testing.T) {
 	}
 	writeFile(t, filepath.Join(httpDir, "server.tya"), "module server\n  listen = port -> \"listening on {port}\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import http/server as http_server\nprint http_server.listen(8080)\n")
+	writeFile(t, main, "import http/server as http_server\nprint(http_server.listen(8080))\n")
 
 	var out strings.Builder
 	if err := RunFile(main, nil, &out, nil); err != nil {
@@ -276,7 +276,7 @@ func TestLoadSourceLoadsResolvedModuleOnce(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "util.tya"), "module util\n  text = \"hello\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import util\nimport util as u\nprint util.text\nprint u.text\n")
+	writeFile(t, main, "import util\nimport util as u\nprint(util.text)\nprint(u.text)\n")
 
 	source, modules, err := LoadSourceWithModules(main)
 	if err != nil {
@@ -310,7 +310,7 @@ func TestLoadSourceRejectsPrivateHelperInImportedModule(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  text = _message\n_message = \"hello\"\n")
 	main := filepath.Join(dir, "main.tya")
-	writeFile(t, main, "import greeting\nprint greeting\n")
+	writeFile(t, main, "import greeting\nprint(greeting)\n")
 
 	_, err := LoadUserSource(main)
 	if err == nil {

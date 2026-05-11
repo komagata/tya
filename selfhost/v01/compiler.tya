@@ -96,6 +96,14 @@ binary_expr = op, left, right, line ->
 unary_expr = op, expr, line -> { kind: "unary", op: op, expr: expr, line: line }
 
 try_expr = expr, line -> { kind: "try", expr: expr, line: line }
+
+# Clear an array in place. Used to reset top-level mutable lists from
+# inside function bodies, where direct reassignment is rejected by the
+# v0.44 strict outer-assign rule.
+clear_list = list ->
+  while len(list) > 0
+    pop(list)
+
 syntax_errors = []
 parse_state = { function_depth: 0, loop_depth: 0 }
 checker_modules = []
@@ -392,7 +400,7 @@ token_label = token ->
 
 print_tokens = tokens ->
   for token in tokens
-    print token_label(token)
+    print(token_label(token))
 
 expr_label = expr ->
   if expr["kind"] == "ident"
@@ -445,7 +453,7 @@ stmt_label = stmt ->
 
 print_ast = program ->
   for stmt in program["statements"]
-    print stmt_label(stmt)
+    print(stmt_label(stmt))
 
 is_v01_excluded_word = word ->
   word == "interface" or word == "object" or word == "set"
@@ -902,23 +910,8 @@ parse_simple_statement = tokens, index ->
         to_string(token_line(current)) + ": continue must be inside a loop",
       )
     return continue_stmt(token_line(current)), index + 1
-  if token_kind(current) == "IDENT" and token_text(current) == "print"
-    expr, next = parse_expr(tokens, index + 1)
-    return expr_stmt(call_expr(ident_expr("print", token_line(current)), [expr], token_line(current)), token_line(current)), next
-  if token_kind(current) == "IDENT" and token_text(current) == "assert"
-    expr, next = parse_expr(tokens, index + 1)
-    return expr_stmt(call_expr(ident_expr("assert", token_line(current)), [expr], token_line(current)), token_line(current)), next
-  if token_kind(current) == "IDENT" and token_text(current) == "assert_equal"
-    expected, after_expected = parse_expr(tokens, index + 1)
-    next = after_expected
-    if token_text(tokens[next]) == ","
-      actual, after_actual = parse_expr(tokens, next + 1)
-      return expr_stmt(call_expr(ident_expr("assert_equal", token_line(current)), [expected, actual], token_line(current)), token_line(current)), after_actual
-    push(
-      syntax_errors,
-      to_string(token_line(current)) + ": assert_equal expects two expressions",
-    )
-    return expr_stmt(call_expr(ident_expr("assert_equal", token_line(current)), [expected], token_line(current)), token_line(current)), next
+  # v0.44: print / assert / assert_equal no longer have no-paren
+  # statement sugar. They are parsed as normal function calls below.
   if token_kind(current) == "IDENT" and token_text(tokens[index + 1]) == "["
     target = ident_expr(token_text(current), token_line(current))
     index_value, after_index = parse_expr(tokens, index + 2)
@@ -3117,32 +3110,32 @@ load_imports = program, path ->
       module_source = read_file(module_path)
       module_tokens, module_errors = lex(module_source)
       for message in module_errors
-        print message
+        print(message)
         exit(1)
       module_parse_errors = parse_errors(module_tokens)
       for message in module_parse_errors
-        print message
+        print(message)
         exit(1)
-      syntax_errors = []
+      clear_list(syntax_errors)
       parse_state["function_depth"] = 0
       module_program = parse(module_tokens)
       if len(syntax_errors) > 0
         for message in syntax_errors
-          print message
+          print(message)
           exit(1)
       module_count = 0
       for module_stmt_value in module_program["statements"]
         if module_stmt_value["kind"] == "module"
           module_count = module_count + 1
           if module_stmt_value["name"] != stmt["name"]
-            print stmt["name"] + ".tya must define module " + stmt["name"]
+            print(stmt["name"] + ".tya must define module " + stmt["name"])
             exit(1)
           push(extra, module_stmt_value)
         elseif module_stmt_value["kind"] != "import"
-          print stmt["name"] + ".tya may only contain imports and one module declaration"
+          print(stmt["name"] + ".tya may only contain imports and one module declaration")
           exit(1)
       if module_count != 1
-        print stmt["name"] + ".tya must define exactly one module"
+        print(stmt["name"] + ".tya must define exactly one module")
         exit(1)
   combined = []
   for stmt in extra
@@ -3156,12 +3149,12 @@ if len(args()) > 1 and args()[0] == "--tokens"
   token_values, token_errors = lex(token_source)
   if len(token_errors) > 0
     for message in token_errors
-      print message
+      print(message)
     exit(1)
   token_parse_errors = parse_errors(token_values)
   if len(token_parse_errors) > 0
     for message in token_parse_errors
-      print message
+      print(message)
     exit(1)
   print_tokens(token_values)
   exit(0)
@@ -3170,48 +3163,48 @@ if len(args()) > 1 and args()[0] == "--ast"
   ast_tokens, ast_errors = lex(ast_source)
   if len(ast_errors) > 0
     for message in ast_errors
-      print message
+      print(message)
     exit(1)
   ast_parse_errors = parse_errors(ast_tokens)
   if len(ast_parse_errors) > 0
     for message in ast_parse_errors
-      print message
+      print(message)
     exit(1)
-  syntax_errors = []
+  clear_list(syntax_errors)
   parse_state["function_depth"] = 0
   parse_state["loop_depth"] = 0
   ast_program = parse(ast_tokens)
   if len(syntax_errors) > 0
     for message in syntax_errors
-      print message
+      print(message)
     exit(1)
   print_ast(ast_program)
   exit(0)
 path = args()[0]
 source = read_file(path)
-tokens, lex_errors = lex(source)
+program_tokens, lex_errors = lex(source)
 if len(lex_errors) > 0
   for message in lex_errors
-    print message
+    print(message)
   exit(1)
-parse_diagnostics = parse_errors(tokens)
+parse_diagnostics = parse_errors(program_tokens)
 if len(parse_diagnostics) > 0
   for message in parse_diagnostics
-    print message
+    print(message)
   exit(1)
 syntax_errors = []
 parse_state["function_depth"] = 0
 parse_state["loop_depth"] = 0
-program = parse(tokens)
+program = parse(program_tokens)
 if len(syntax_errors) > 0
   for message in syntax_errors
-    print message
+    print(message)
   exit(1)
 program = load_imports(program, path)
-errors = check(program)
-if len(errors) > 0
-  for message in errors
-    print message
+check_errors = check(program)
+if len(check_errors) > 0
+  for message in check_errors
+    print(message)
   exit(1)
 emitter_source_path = path
-print emit_c(program)
+print(emit_c(program))

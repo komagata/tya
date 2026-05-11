@@ -40,8 +40,8 @@ class Admin extends User
     "{super()} (admin)"
 
 admin = Admin("komagata")
-print admin.name
-print admin.role
-print admin.greeting()
+print(admin.name)
+print(admin.role)
+print(admin.greeting())
 admin.rename("Tya")
-print admin.name
+print(admin.name)

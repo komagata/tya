@@ -10,6 +10,6 @@ while i < 100
 
 after = runtime.gc_stats()
 
-print "before alloc_count: {before[\"alloc_count\"]}"
-print "after  alloc_count: {after[\"alloc_count\"]}"
-print "live_count after: {after[\"live_count\"]}"
+print("before alloc_count: {before[\"alloc_count\"]}")
+print("after  alloc_count: {after[\"alloc_count\"]}")
+print("live_count after: {after[\"live_count\"]}")

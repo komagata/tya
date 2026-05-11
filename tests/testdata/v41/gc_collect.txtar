@@ -19,19 +19,19 @@ while i < 50
   i = i + 1
 
 before = runtime.gc_stats()
-print "before live: " + to_string(before["live_count"])
+print("before live: " + to_string(before["live_count"]))
 
 # Capture the peak live count, then drop the references by overwriting
 # root with a fresh empty array. The previous tree is now unreachable.
 peak = runtime.gc_stats()
-print "peak live: " + to_string(peak["live_count"])
+print("peak live: " + to_string(peak["live_count"]))
 root = []
 
 # Trigger a collection. The unreachable inner arrays must be reclaimed.
 runtime.gc()
 
 after = runtime.gc_stats()
-print "after gc, live: " + to_string(after["live_count"])
-print "collect_count: " + to_string(after["collect_count"])
+print("after gc, live: " + to_string(after["live_count"]))
+print("collect_count: " + to_string(after["collect_count"]))
 shrunk = after["live_count"] < peak["live_count"]
-print "shrunk: " + to_string(shrunk)
+print("shrunk: " + to_string(shrunk))

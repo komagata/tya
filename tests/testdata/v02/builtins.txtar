@@ -15,21 +15,21 @@ stdout 'empty\n'
 -- builtins.tya --
 items = [1, 2, 3, 4]
 mapped = map(items, item -> item * 2)
-print join(map(mapped, item -> to_string(item)), ",")
+print(join(map(mapped, item -> to_string(item)), ","))
 filtered = filter(items, item -> item > 2)
 sum = total, item -> total + item
-print len(filtered)
-print find(items, item -> item == 3)
-print any(items, item -> item == 4)
-print all(items, item -> item > 0)
-print reduce(items, 0, sum)
-print [1] == [1]
-print equal([1, {name: "tya"}], [1, {name: "tya"}])
-print equal({nested: [1, 2]}, {nested: [1, 2]})
+print(len(filtered))
+print(find(items, item -> item == 3))
+print(any(items, item -> item == 4))
+print(all(items, item -> item > 0))
+print(reduce(items, 0, sum))
+print([1] == [1])
+print(equal([1, {name: "tya"}], [1, {name: "tya"}]))
+print(equal({nested: [1, 2]}, {nested: [1, 2]}))
 
 -- read.tya --
 line = read_line()
 if line == nil
-  print "empty"
+  print("empty")
 else
-  print line
+  print(line)

@@ -246,27 +246,6 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		// Render `print foo` and `assert ...` keyword forms
-		// faithfully. The parser accepts them; the AST stores them
-		// as ExprStmt with a CallExpr whose callee is the keyword
-		// ident. We emit the canonical keyword form.
-		if call, ok := n.Expr.(*ast.CallExpr); ok {
-			if id, ok := call.Callee.(*ast.Ident); ok {
-				switch id.Name {
-				case "print", "assert", "assert_equal":
-					args := make([]string, 0, len(call.Args))
-					for _, a := range call.Args {
-						s, err := u.expr(a)
-						if err != nil {
-							return err
-						}
-						args = append(args, s)
-					}
-					u.emitStmtLine(s, id.Name+" "+strings.Join(args, ", "))
-					return nil
-				}
-			}
-		}
 		// Wrap a top-level CallExpr if the single-line form
 		// exceeds the column limit.
 		if call, ok := n.Expr.(*ast.CallExpr); ok && !u.fitsInline(ex) {
@@ -488,7 +467,7 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 func (u *unparser) classMethod(m ast.ClassMethod) error {
 	prefix := ""
 	if m.Class {
-		prefix = "class."
+		prefix = "@@"
 	}
 	if m.Abstract {
 		head, err := u.funcHead(m.Func)

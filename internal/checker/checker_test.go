@@ -39,7 +39,7 @@ func TestCheckRejectsInvalidBindingName(t *testing.T) {
 }
 
 func TestCheckRejectsInvalidLoopBindingNameWithLocation(t *testing.T) {
-	prog := parse(t, "items = [1]\nfor User in items\n  print User\n")
+	prog := parse(t, "items = [1]\nfor User in items\n  print(User)\n")
 	err := Check(prog)
 	if err == nil {
 		t.Fatal("expected invalid loop binding name error")
@@ -94,14 +94,14 @@ func TestCheckRejectsInvalidDictKeyWithLocation(t *testing.T) {
 }
 
 func TestCheckAllowsDictionaryIndexAccess(t *testing.T) {
-	prog := parse(t, "user = { name: \"komagata\" }\nprint user[\"name\"]\n")
+	prog := parse(t, "user = { name: \"komagata\" }\nprint(user[\"name\"])\n")
 	if err := Check(prog); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckRejectsDictionaryMemberAccess(t *testing.T) {
-	prog := parse(t, "user = { name: \"komagata\" }\nprint user.name\n")
+	prog := parse(t, "user = { name: \"komagata\" }\nprint(user.name)\n")
 	err := Check(prog)
 	if err == nil {
 		t.Fatal("expected dictionary member access error")
@@ -113,7 +113,7 @@ func TestCheckRejectsDictionaryMemberAccess(t *testing.T) {
 
 func TestCheckRejectsArrayMemberAccess(t *testing.T) {
 	cases := map[string]string{
-		"items = [1]\nprint items.count\n": "cannot use . access on array",
+		"items = [1]\nprint(items.count)\n": "cannot use . access on array",
 	}
 	for src, want := range cases {
 		t.Run(want, func(t *testing.T) {
@@ -129,14 +129,14 @@ func TestCheckRejectsArrayMemberAccess(t *testing.T) {
 }
 
 func TestCheckAllowsKnownModuleMemberAccess(t *testing.T) {
-	prog := parse(t, "greeting = { text: \"hello\" }\nprint greeting.text\n")
+	prog := parse(t, "greeting = { text: \"hello\" }\nprint(greeting.text)\n")
 	if err := CheckWithModules(prog, []string{"greeting"}); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckModuleDeclaration(t *testing.T) {
-	src := "module util\n  foo = \"foo\"\n  bar = -> \"bar\"\n\nprint util.foo\nprint util.bar()\n"
+	src := "module util\n  foo = \"foo\"\n  bar = -> \"bar\"\n\nprint(util.foo)\nprint(util.bar())\n"
 	if err := Check(parse(t, src)); err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +200,7 @@ func TestCheckModuleFileRejectsTopLevelStatements(t *testing.T) {
 }
 
 func TestCheckRejectsUndefinedVariable(t *testing.T) {
-	prog := parse(t, "print user_nmae\n")
+	prog := parse(t, "print(user_nmae)\n")
 	err := Check(prog)
 	if err == nil {
 		t.Fatal("expected undefined variable error")
@@ -235,7 +235,7 @@ func TestCheckAllowsMemberAccessOnUnknownValue(t *testing.T) {
 }
 
 func TestCheckAllowsFunctionParameterAndLoopVariable(t *testing.T) {
-	prog := parse(t, "show = user -> user\nitems = [1]\nfor item in items\n  print item\nprint show(1)\n")
+	prog := parse(t, "show = user -> user\nitems = [1]\nfor item in items\n  print(item)\nprint(show(1))\n")
 	if err := Check(prog); err != nil {
 		t.Fatal(err)
 	}
@@ -253,7 +253,7 @@ func TestCheckUnusedRejectsUnusedVariable(t *testing.T) {
 }
 
 func TestCheckUnusedRejectsUnusedFunctionParameter(t *testing.T) {
-	prog := parse(t, "first = value, unused -> value\nprint first(1, 2)\n")
+	prog := parse(t, "first = value, unused -> value\nprint(first(1, 2))\n")
 	err := CheckUnused(prog)
 	if err == nil {
 		t.Fatal("expected unused parameter error")
@@ -264,7 +264,7 @@ func TestCheckUnusedRejectsUnusedFunctionParameter(t *testing.T) {
 }
 
 func TestCheckUnusedAllowsUsedBindings(t *testing.T) {
-	prog := parse(t, "items = [1]\nfor item in items\n  print item\nshow = value -> value\nprint show(1)\n")
+	prog := parse(t, "items = [1]\nfor item in items\n  print(item)\nshow = value -> value\nprint(show(1))\n")
 	if err := CheckUnused(prog); err != nil {
 		t.Fatal(err)
 	}
