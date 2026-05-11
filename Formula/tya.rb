@@ -18,11 +18,11 @@ class Tya < Formula
     (testpath/"hello.tya").write <<~TYA
       import string
 
-      print "Hello, Tya"
-      print string.blank("  ")
+      print("Hello, Tya")
+      print(string.blank("  "))
     TYA
     (testpath/"hello_test.tya").write <<~TYA
-      assert true
+      assert(true)
     TYA
 
     assert_equal "0.49.0\n", shell_output("#{bin}/tya version")
