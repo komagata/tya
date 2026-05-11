@@ -64,7 +64,7 @@ go build -o tya ./cmd/tya
 Create `hello.tya`.
 
 ```tya
-print "Hello, Tya"
+print("Hello, Tya")
 ```
 
 ```sh
@@ -97,6 +97,21 @@ tya emit-c hello.tya
 tya test
 tya test tests
 ```
+
+### Project workflow (v0.49+)
+
+```sh
+tya new app           # scaffold tya.toml + src/main.tya + .gitignore
+cd app
+tya task              # list tasks defined under [tasks] in tya.toml
+tya task run          # run the named task
+tya lint src          # report unused locals (TYAL0001) under a path
+```
+
+`tya task <name> [args...]` POSIX-quotes the trailing args and
+appends them to the task command (mirrors `$@`). Array-form tasks
+run each entry under `/bin/sh -c` in order and stop on the first
+failure.
 
 ## Example
 
