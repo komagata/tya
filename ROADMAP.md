@@ -237,21 +237,26 @@ and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
 
-### v0.4x — Self-host v0.44 surface + `module` keyword retirement
+### v0.4x — Self-host v0.46+ surface + `module` keyword retirement
 
-The remainder of the v0.44 model-completion work, deferred to the
-v1.0.0 prep window because it requires landing a Tya-written
-compiler on the v0.44 surface (`selfhost/v02/`) before the `module`
-keyword can be retired (`v01` still consumes it). Held-back stdlib
-packages and docs promotion ride the same Epic for a coherent cut.
+The remainder of the class-oriented namespace model-completion work,
+deferred to the v1.0.0 prep window because it requires landing a
+Tya-written compiler on the **v0.46+ keyword surface**
+(`selfhost/v02/`) before the `module` keyword can be retired (`v01`
+still consumes it). Held-back stdlib packages and docs promotion
+ride the same Epic for a coherent cut.
 
-- [ ] **M8 self-host v02 on v0.44 surface** *(critical path)*
-  - [ ] Add `selfhost/v02/compiler.tya` resolving directory
-    packages, parsing class files (`extends` / `implements` /
-    `interface` / `abstract` / `final` / `override` / `@@`).
+- [ ] **M8 self-host v02 on v0.46+ surface** *(critical path)*
+  - [ ] Grow `selfhost/v02/compiler.tya` to resolve directory
+    packages and parse class files on the v0.46/v0.47/v0.48
+    surface (`private` / `static` / `self.` / `Self.` /
+    `initialize` / `extends` / `implements` / `interface` /
+    `abstract` / `final` / `override`).
   - [ ] Keep the `v01` fixed point on the v0.43 surface until v02
-    reaches parity; both compilers live side by side.
-  - [ ] Prove stage-2 == stage-3 fixed point for v02 on a v0.44-
+    reaches parity; both compilers live side by side. The Go
+    reference impl already exempts `selfhost/v01/` from v0.47
+    diagnostics via `checker.SetPermissiveLegacy`.
+  - [ ] Prove stage-2 == stage-3 fixed point for v02 on a v0.48-
     surface program (`TestSelfhostV02Scripts`).
   - [ ] Replace `TestSelfhostV01Scripts` with the v02 gate only
     after parity is proven and at a release boundary.

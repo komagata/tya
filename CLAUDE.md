@@ -4,6 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
+When picking up Tya work after another session (or on a different
+machine), also read [`docs/HANDOFF.md`](docs/HANDOFF.md) — it
+summarizes the most recent release context, the selfhost/v01
+permissive-legacy exemption mechanism, and process notes captured
+from past corrections.
+
 ## Architecture
 
 Tya is a compile-to-C language. A `.tya` source file flows through:
