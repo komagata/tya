@@ -1,0 +1,5 @@
+class Util
+  @@foo = "foo"
+
+  @@bar = () ->
+    "bar"

@@ -1,5 +1,0 @@
-module util
-  foo = "foo"
-
-  bar = () ->
-    "bar"

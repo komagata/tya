@@ -38,8 +38,6 @@ func TestExamplesGolden(t *testing.T) {
 		"return.tya":            "4\n",
 		"string.tya":            "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\nquote: \"tya\"\ny\n",
 		"try.tya":               "komagata\nempty user\n",
-		"use_module.tya":        "Hello, komagata\n",
-		"use_module_decl.tya":   "foo\nbar\n",
 		"while.tya":             "10\n11\n",
 	}
 	for name, want := range cases {
