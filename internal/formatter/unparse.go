@@ -173,6 +173,10 @@ type unparser struct {
 	b        strings.Builder
 	indent   int
 	comments map[ast.Stmt]ast.StmtComments
+	// v0.48 G6: name of the class currently being unparsed, used to
+	// rewrite `<DeclaringClass>.foo` → `Self.foo` inside its own body.
+	// Empty outside class bodies.
+	currentClass string
 }
 
 // columnLimit is the canonical wrap target (CANONICAL §5.1).
@@ -409,6 +413,11 @@ func (u *unparser) moduleMember(m ast.ModuleMember) error {
 }
 
 func (u *unparser) classDecl(n *ast.ClassDecl) error {
+	// v0.48 G6: track the declaring class so MemberExpr unparse can
+	// rewrite `<n.Name>.foo` → `Self.foo` inside its own body.
+	prevClass := u.currentClass
+	u.currentClass = n.Name
+	defer func() { u.currentClass = prevClass }()
 	head := "class " + n.Name
 	if n.Abstract {
 		head = "abstract " + head
@@ -439,7 +448,12 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 		if err != nil {
 			return err
 		}
-		u.line(f.Name + " = " + val)
+		// v0.46+ canonical: `private` keyword instead of `_`-prefix.
+		fieldPrefix := ""
+		if f.Private {
+			fieldPrefix = "private "
+		}
+		u.line(fieldPrefix + f.Name + " = " + val)
 	}
 	for _, v := range n.Vars {
 		if !first {
@@ -450,7 +464,13 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 		if err != nil {
 			return err
 		}
-		u.line("@@" + v.Name + " = " + val)
+		// v0.46+ canonical: `static` keyword instead of `@@`; `private`
+		// keyword instead of `_`-prefix.
+		varPrefix := "static "
+		if v.Private {
+			varPrefix = "private static "
+		}
+		u.line(varPrefix + v.Name + " = " + val)
 	}
 	for _, m := range n.Methods {
 		if !first {
@@ -465,16 +485,31 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 }
 
 func (u *unparser) classMethod(m ast.ClassMethod) error {
-	prefix := ""
+	// v0.46+ canonical: keyword modifiers in canonical order
+	// (`private static abstract|override`). Legacy `@@` is removed.
+	parts := []string{}
+	if m.Private {
+		parts = append(parts, "private")
+	}
 	if m.Class {
-		prefix = "@@"
+		parts = append(parts, "static")
+	}
+	if m.Abstract {
+		parts = append(parts, "abstract")
+	}
+	if m.Override {
+		parts = append(parts, "override")
+	}
+	prefix := strings.Join(parts, " ")
+	if prefix != "" {
+		prefix += " "
 	}
 	if m.Abstract {
 		head, err := u.funcHead(m.Func)
 		if err != nil {
 			return err
 		}
-		u.line("abstract " + prefix + m.Name + " = " + head)
+		u.line(prefix + m.Name + " = " + head)
 		return nil
 	}
 	fn := m.Func
@@ -990,6 +1025,13 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		}
 		return callee + "(" + strings.Join(args, ", ") + ")", nil
 	case *ast.MemberExpr:
+		// v0.48 G6 canonical receiver: `<DeclaringClass>.foo` inside
+		// its own class body is rewritten to `Self.foo`.
+		if u.currentClass != "" {
+			if ident, ok := n.Target.(*ast.Ident); ok && ident.Name == u.currentClass {
+				return "Self." + n.Name, nil
+			}
+		}
 		target, err := u.expr(n.Target)
 		if err != nil {
 			return "", err

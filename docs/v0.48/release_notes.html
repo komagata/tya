@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.48 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-48-release-notes">Tya v0.48 Release Notes</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.48.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.48 lands the two items deferred from v0.47:</p>
+<ul>
+<li>**G1 strict bare-name receivers** (codified, no code change):</li>
+</ul>
+<p>  bare identifiers inside class method bodies resolve to locals /   params / imports only — never to class members. To access a   class member write <code>self.x</code>, <code>Self.x</code>, or <code>&lt;OtherClass&gt;.x</code>.</p>
+<ul>
+<li>**G6 canonical receiver rule** (new): <code>Self.foo</code> is the</li>
+</ul>
+<p>  canonical form for referencing the declaring class's own member   from inside its body. <code>&lt;DeclaringClass&gt;.foo</code> is non-canonical;   the formatter rewrites it, and the checker emits   <code>[TYA-E0413]</code> under <code>--check-unused</code> strict mode.</p>
+<p>In addition, the formatter now consistently emits the v0.46 keyword surface for every class shape: <code>private</code>, <code>static</code>, <code>self.</code>, <code>Self.</code>, <code>initialize</code>. The legacy sigils (<code>@</code>, <code>@@</code>, <code>_</code>-prefix on class members, <code>init</code>/<code>_init</code>) are rewritten to their v0.46 equivalents on output.</p>
+<h2 id="tya-format-example"><code>tya format</code> example</h2>
+<pre><code class="language-tya"># input
+class Counter
+  @@count = 0
+  _seed = 1
+
+  init = name -&gt;
+    @name = name
+    Counter.count = Counter.count + 1
+
+  @@bump = -&gt;
+    Counter.count = Counter.count + 1</code></pre>
+<pre><code class="language-tya"># output of `tya format` after v0.48
+class Counter
+  static count = 0
+  private seed = 1
+
+  initialize = name -&gt;
+    self.name = name
+    Self.count = Self.count + 1
+
+  static bump = () -&gt;
+    Self.count = Self.count + 1</code></pre>
+<h2 id="tya-e0413-strict-mode-warning">[TYA-E0413] strict-mode warning</h2>
+<pre><code class="language-sh">$ tya check --check-unused counter.tya
+4:5: [TYA-E0413] `Counter.count` inside its own class body is non-canonical;
+                  write `Self.count`.</code></pre>
+<p>The warning fires at WARNING severity so CI can detect drift without running the formatter.</p>
+<h2 id="self-host">Self-host</h2>
+<p><code>selfhost/v01/</code> continues to use its v0.43 surface. The permissive-legacy path exemption from v0.47 is unchanged. <code>TestSelfhostV01Scripts</code> remains green.</p>
+<h2 id="verification">Verification</h2>
+<pre><code class="language-sh">go test ./... -count=1
+go test ./tests -run TestSelfhostV01Scripts -count=1</code></pre>
+<p>All green at the v0.48.0 tag.</p>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="spec.html"><code>docs/v0.48/SPEC.md</code></a> — frozen v0.48 specification.</li>
+<li><a href="../v0.47/SPEC.md"><code>docs/v0.47/SPEC.md</code></a> — the clean-cut release.</li>
+<li><a href="../v0.46/SPEC.md"><code>docs/v0.46/SPEC.md</code></a> — the keyword surface.</li>
+<li><a href="../../ROADMAP.md"><code>ROADMAP.md</code></a> — <code>Released</code> § v0.48.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

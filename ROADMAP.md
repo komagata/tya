@@ -148,6 +148,19 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.48** — Canonical receiver rule + formatter v0.46 keyword
+  surface completion (`docs/v0.48/SPEC.md`,
+  `docs/v0.48/RELEASE_NOTES.md`). G1 (strict bare-name receivers)
+  is codified — bare identifiers inside class method bodies
+  resolve to locals / params / imports only, never to class
+  members; this was already enforced from v0.46 as a side effect
+  of G2/G4. G6 wires `[TYA-E0413]` as a strict-mode warning when
+  `<DeclaringClass>.foo` is written inside the declaring class
+  body, and `tya format` rewrites the same shape to the canonical
+  `Self.foo`. The formatter also now consistently emits the v0.46
+  keyword surface (`private`, `static`, `self.`, `Self.`,
+  `initialize`) for every class shape, rewriting any remaining
+  legacy sigils on output.
 - **v0.47** — Class-member surface clean cut. The legacy v0.45
   syntax (`@`, `@@`, `_`-prefix, `init` / `_init`) is now rejected
   with structured diagnostics (`docs/v0.47/SPEC.md`,
@@ -223,20 +236,6 @@ implemented in numbered STEPs. Every STEP must pass `go test ./... -count=1`
 and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
-
-### v0.48 — Strict bare-name receivers + formatter canonical rewrite
-
-The v0.47 clean cut catches the common legacy paths via E0407 /
-E0410 / E0411 / E0414, but two SPEC items deferred:
-
-- [ ] **G1 strict bare-name receivers** — eliminate the bare-name
-  → class-member fallback in checker identifier resolution. Bare
-  names in class method bodies resolve only to locals / params /
-  imports.
-- [ ] **G6 canonical receiver rule** — formatter rewrites
-  `<DeclaringClass>.foo` → `Self.foo` inside the declaring class
-  body; checker emits `[TYA-E0413]` under `--check-unused` strict
-  mode.
 
 ### v0.4x — Self-host v0.44 surface + `module` keyword retirement
 

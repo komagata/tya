@@ -97,6 +97,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
 <ul>
+<li>**v0.48** — Canonical receiver rule + formatter v0.46 keyword</li>
+</ul>
+<p>  surface completion (<code>docs/v0.48/SPEC.md</code>,   <code>docs/v0.48/RELEASE_NOTES.md</code>). G1 (strict bare-name receivers)   is codified — bare identifiers inside class method bodies   resolve to locals / params / imports only, never to class   members; this was already enforced from v0.46 as a side effect   of G2/G4. G6 wires <code>[TYA-E0413]</code> as a strict-mode warning when   <code>&lt;DeclaringClass&gt;.foo</code> is written inside the declaring class   body, and <code>tya format</code> rewrites the same shape to the canonical   <code>Self.foo</code>. The formatter also now consistently emits the v0.46   keyword surface (<code>private</code>, <code>static</code>, <code>self.</code>, <code>Self.</code>,   <code>initialize</code>) for every class shape, rewriting any remaining   legacy sigils on output.</p>
+<ul>
 <li>**v0.47** — Class-member surface clean cut. The legacy v0.45</li>
 </ul>
 <p>  syntax (<code>@</code>, <code>@@</code>, <code>_</code>-prefix, <code>init</code> / <code>_init</code>) is now rejected   with structured diagnostics (<code>docs/v0.47/SPEC.md</code>,   <code>docs/v0.47/RELEASE_NOTES.md</code>). Wired codes: <code>[TYA-E0407]</code>   (<code>_</code>-prefix on class members), <code>[TYA-E0410]</code> (<code>@</code>/<code>@@</code> sigils),   <code>[TYA-E0411]</code> (<code>self</code> inside <code>static</code> methods), <code>[TYA-E0414]</code>   (<code>init</code>/<code>_init</code> as constructor name). <code>selfhost/v01/</code> keeps the   v0.43 surface via a path-based permissive-legacy mode on the   checker (<code>checker.SetPermissiveLegacy</code> + <code>runner.IsLegacyV01Path</code>).   All of <code>examples/</code>, <code>stdlib/</code>, and <code>tests/testdata/v0[6-9]…v45/</code>   migrated to the new surface; the <code>v09/private_members</code> fixture   was retired (it pinned the v0.45-only <code>_</code>-prefix external-access   heuristic, which has no v0.46+ equivalent). Deferred to v0.48:   G1 full strict bare-name receivers (the diagnostics catch the   common legacy paths but a complete resolver walk is future   work) and G6 formatter rewrite of <code>&lt;DeclaringClass&gt;.foo</code> →   <code>Self.foo</code>.</p>
@@ -118,16 +122,6 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>  cancellation (<code>task.cancel</code> / <code>task.cancelled?</code> / <code>task.current</code>),   <code>scope</code> body raises run cleanup before unwinding,   <code>channel.select</code> multiplex.</p>
 <h2 id="scheduled">Scheduled</h2>
 <p>Epics with assigned minor versions, on the path to v1.0.0. Each Epic is implemented in numbered STEPs. Every STEP must pass <code>go test ./... -count=1</code> and <code>go test ./tests -run TestSelfhostV01Scripts -count=1</code> before the next STEP starts. The STEP also keeps <code>docs/vX.Y/SPEC.md</code> consistent with the implementation up to that STEP.</p>
-<h3 id="v0-48-strict-bare-name-receivers-formatter-canonical-rewrite">v0.48 — Strict bare-name receivers + formatter canonical rewrite</h3>
-<p>The v0.47 clean cut catches the common legacy paths via E0407 / E0410 / E0411 / E0414, but two SPEC items deferred:</p>
-<ul>
-<li>[ ] **G1 strict bare-name receivers** — eliminate the bare-name</li>
-</ul>
-<p>  → class-member fallback in checker identifier resolution. Bare   names in class method bodies resolve only to locals / params /   imports.</p>
-<ul>
-<li>[ ] **G6 canonical receiver rule** — formatter rewrites</li>
-</ul>
-<p>  <code>&lt;DeclaringClass&gt;.foo</code> → <code>Self.foo</code> inside the declaring class   body; checker emits <code>[TYA-E0413]</code> under <code>--check-unused</code> strict   mode.</p>
 <h3 id="v0-4x-self-host-v0-44-surface-module-keyword-retirement">v0.4x — Self-host v0.44 surface + <code>module</code> keyword retirement</h3>
 <p>The remainder of the v0.44 model-completion work, deferred to the v1.0.0 prep window because it requires landing a Tya-written compiler on the v0.44 surface (<code>selfhost/v02/</code>) before the <code>module</code> keyword can be retired (<code>v01</code> still consumes it). Held-back stdlib packages and docs promotion ride the same Epic for a coherent cut.</p>
 <ul>

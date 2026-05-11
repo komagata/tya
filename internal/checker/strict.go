@@ -54,6 +54,11 @@ type strictCtx struct {
 	// stop is set after the first diagnostic when collectAll=false.
 	collectAll bool
 	stop       bool
+	// v0.48 G6: name of the class currently being walked, used to
+	// emit [TYA-E0413] when its own member is referenced via the
+	// hardcoded class name instead of `Self`. Empty outside class
+	// bodies.
+	currentClass string
 }
 
 func (c *strictCtx) report(d diag.Diagnostic) {
@@ -440,6 +445,9 @@ func strictWalkModule(m *ast.ModuleDecl, scope *strictScope, ctx *strictCtx) {
 func strictWalkClass(c *ast.ClassDecl, scope *strictScope, ctx *strictCtx) {
 	body := newStrictScope(scope)
 	body.root = true
+	prevClass := ctx.currentClass
+	ctx.currentClass = c.Name
+	defer func() { ctx.currentClass = prevClass }()
 	for _, m := range c.Methods {
 		if m.Abstract {
 			continue
@@ -534,6 +542,7 @@ func strictWalkExpr(expr ast.Expr, scope *strictScope, ctx *strictCtx) {
 	case *ast.TryExpr:
 		strictWalkExpr(n.Expr, scope, ctx)
 	case *ast.MemberExpr:
+		strictCheckCanonicalSelf(n, ctx)
 		strictWalkExpr(n.Target, scope, ctx)
 	case *ast.IndexExpr:
 		strictWalkExpr(n.Target, scope, ctx)
@@ -559,6 +568,7 @@ func strictWalkAssignTarget(target ast.Expr, scope *strictScope, ctx *strictCtx)
 	switch n := target.(type) {
 	case *ast.Ident:
 	case *ast.MemberExpr:
+		strictCheckCanonicalSelf(n, ctx)
 		strictWalkExpr(n.Target, scope, ctx)
 	case *ast.IndexExpr:
 		strictWalkExpr(n.Target, scope, ctx)
@@ -686,4 +696,34 @@ func strictDiagnoseScope(scope *strictScope, ctx *strictCtx) {
 			})
 		}
 	}
+}
+
+// strictCheckCanonicalSelf emits [TYA-E0413] when a MemberExpr
+// inside a class body uses the hardcoded declaring-class name
+// (e.g. `User.count` inside `class User`) instead of the canonical
+// `Self.count`. The formatter pass at `tya format` rewrites the
+// non-canonical form automatically; this check surfaces it under
+// `tya check --check-unused` strict mode so CI can detect drift
+// without invoking the formatter.
+//
+// Gated by ctx.collectAll (set true only by CheckAll / CheckUnused)
+// so the warning does not break `tya run` on existing code that
+// still uses the hardcoded form — for example the stdlib's own
+// `Markdown.foo` calls inside `class Markdown`.
+func strictCheckCanonicalSelf(m *ast.MemberExpr, ctx *strictCtx) {
+	if !ctx.collectAll || ctx.currentClass == "" {
+		return
+	}
+	ident, ok := m.Target.(*ast.Ident)
+	if !ok || ident.Name != ctx.currentClass {
+		return
+	}
+	ctx.report(diag.Diagnostic{
+		Severity: diag.Warning,
+		Code:     "TYA-E0413",
+		Title:    "Non-canonical class member access",
+		Message:  fmt.Sprintf("`%s.%s` inside its own class body is non-canonical; write `Self.%s`.", ident.Name, m.Name, m.Name),
+		Primary:  region(ident.Tok.Line, ident.Tok.Col, len(ident.Name)),
+		Hints:    []string{"Run `tya format` to rewrite to the canonical `Self.` form."},
+	})
 }
