@@ -619,9 +619,10 @@ parse_primary = tokens, index ->
     if token_text(tokens[next]) == ")"
       next = next + 1
     return left, next
+  # v0.45 M8.1: `@@name` expression — `@@` is one SYMBOL, name at index+1.
+  if token_kind(tok) == "SYMBOL" and token_text(tok) == "@@"
+    return class_var_expr(token_text(tokens[index + 1]), token_line(tok)), index + 2
   if token_kind(tok) == "SYMBOL" and token_text(tok) == "@"
-    if token_text(tokens[index + 1]) == "@"
-      return class_var_expr(token_text(tokens[index + 2]), token_line(tok)), index + 3
     return field_expr(token_text(tokens[index + 1]), token_line(tok)), index + 2
   if token_kind(tok) == "IDENT"
     if token_text(tok) == "true"
@@ -871,11 +872,14 @@ parse_simple_statement = tokens, index ->
   )
     value, next = parse_expr(tokens, index + 4)
     return member_assign_stmt(ident_expr(token_text(current), token_line(current)), token_text(tokens[index + 2]), value, token_line(current)), next
+  # v0.45 M8.1: `@@` is a single SYMBOL token after the lexer change,
+  # so class-variable assignment `@@name = value` reads the name at
+  # index+1 and `=` at index+2 (was index+2 / index+3 with two `@`).
+  if token_text(current) == "@@"
+    if token_text(tokens[index + 2]) == "="
+      value, next = parse_expr(tokens, index + 3)
+      return class_var_assign_stmt(token_text(tokens[index + 1]), value, token_line(current)), next
   if token_text(current) == "@"
-    if token_text(tokens[index + 1]) == "@"
-      if token_text(tokens[index + 3]) == "="
-        value, next = parse_expr(tokens, index + 4)
-        return class_var_assign_stmt(token_text(tokens[index + 2]), value, token_line(current)), next
     if token_text(tokens[index + 2]) == "="
       value, next = parse_expr(tokens, index + 3)
       return field_assign_stmt(token_text(tokens[index + 1]), value, token_line(current)), next
@@ -1053,32 +1057,38 @@ parse_simple_block = tokens, index ->
       push(statements, cls)
       next = after_class
       continue
+    # v0.45 M8.1: `@@name = arg -> NEWLINE` (block function form with
+    # one parameter) — `@@` is one token, so name is at next+1, `=` at
+    # next+2, arg at next+3, `->` at next+4, NEWLINE at next+5.
     if (
-      token_text(current) == "@" and token_text(tokens[next + 1]) == "@" and token_text(tokens[next + 3]) == "=" and token_kind(tokens[next + 4]) == "IDENT" and token_text(tokens[next + 5]) == "->" and token_kind(tokens[next + 6]) == "NEWLINE"
+      token_text(current) == "@@" and token_text(tokens[next + 2]) == "=" and token_kind(tokens[next + 3]) == "IDENT" and token_text(tokens[next + 4]) == "->" and token_kind(tokens[next + 5]) == "NEWLINE"
     )
-      record_name_error(tokens[next + 4])
-      body, after_block_func = parse_function_body_block(tokens, next + 6)
+      record_name_error(tokens[next + 3])
+      body, after_block_func = parse_function_body_block(tokens, next + 5)
       fn = func_expr(
-        [token_text(tokens[next + 4])],
+        [token_text(tokens[next + 3])],
         nil_expr(token_line(current)),
         token_line(current),
       )
       fn["body_stmts"] = body
       push(
         statements,
-        class_var_assign_stmt(token_text(tokens[next + 2]), fn, token_line(current)),
+        class_var_assign_stmt(token_text(tokens[next + 1]), fn, token_line(current)),
       )
       next = after_block_func
       continue
+    # v0.45 M8.1: `@@name = -> NEWLINE` (block function form with no
+    # parameters) — name at next+1, `=` at next+2, `->` at next+3,
+    # NEWLINE at next+4.
     if (
-      token_text(current) == "@" and token_text(tokens[next + 1]) == "@" and token_text(tokens[next + 3]) == "=" and token_text(tokens[next + 4]) == "->" and token_kind(tokens[next + 5]) == "NEWLINE"
+      token_text(current) == "@@" and token_text(tokens[next + 2]) == "=" and token_text(tokens[next + 3]) == "->" and token_kind(tokens[next + 4]) == "NEWLINE"
     )
-      body, after_block_func = parse_function_body_block(tokens, next + 5)
+      body, after_block_func = parse_function_body_block(tokens, next + 4)
       fn = func_expr([], nil_expr(token_line(current)), token_line(current))
       fn["body_stmts"] = body
       push(
         statements,
-        class_var_assign_stmt(token_text(tokens[next + 2]), fn, token_line(current)),
+        class_var_assign_stmt(token_text(tokens[next + 1]), fn, token_line(current)),
       )
       next = after_block_func
       continue
