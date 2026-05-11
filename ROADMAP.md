@@ -64,21 +64,11 @@ self-introspection library, coverage extensions, markdown extensions,
 lint, multi-line string extensions) are valuable but not strictly
 required for v1.0.0. They may ship before or after v1.0.0.
 
-Scheduled minor versions on the path to v1.0.0:
-
-- **v0.41** — Ship a precise mark-and-sweep garbage collector for the C
-  runtime. Single-threaded, stop-the-world. Foundation for v0.42
-  Concurrency.
-- **v0.42** — Ship Tya Concurrency: `spawn` / `await` / `scope`
-  keywords, `channel` / `sync` stdlib modules, `task` value type. 1:1
-  OS-thread implementation; multi-thread GC extension. M:N scheduler
-  is deferred to a later minor.
-
 ## Current Direction
 
 Tya is implemented as a small compile-to-C language. The latest released
-specification is **v0.39**. Frozen release documents live under
-`docs/vX.Y.Z/` and `docs/vX.Y/`; the latest editable specification, API,
+specification is **v0.44**. Frozen release documents live under
+`docs/vX.Y/` and `docs/vX.Y.Z/`; the latest editable specification, API,
 stdlib, and naming documents live directly under `docs/`.
 
 Tya uses semantic versioning. Specification changes happen at the minor version
@@ -155,7 +145,8 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 ## Released
 
 Recent shipped minor versions, newest first. Frozen specs live under
-`docs/vX.Y/`.
+`docs/vX.Y/`. For older releases (v0.24 – v0.42) see
+[`docs/VERSIONS.md`](docs/VERSIONS.md).
 
 - **v0.44** — Class-oriented namespace and entry-file model
   (`docs/v0.44/SPEC.md`, `docs/v0.44/MIGRATION.md`,
@@ -169,48 +160,17 @@ Recent shipped minor versions, newest first. Frozen specs live under
   commands accept class files (check / format / --tokens /
   --emit-c / --check-unused), 19 of 27 stdlib packages migrated
   to the class form, `[TYA-EXXXX]` structured diagnostic codes
-  on every new runtime error. Held back to v0.45: M5 cross-file
-  private enforcement, M6 string/array/dict (paired with M8
-  self-host migration), M7 examples/* migration, M8 self-host
-  v0.44 surface, M9 `module` keyword removal, M10 docs/SPEC.md
-  promotion.
+  on every new runtime error, strict no-paren-call mode
+  (`print x` / `assert x` / `assert_equal a, b` are removed —
+  use parentheses), `[TYA-E0307]` outer-assign rejection inside
+  lambdas. Held back to v0.45: M5 cross-file private
+  enforcement, M6 remaining 8 stdlib packages, M7 examples/*
+  migration, M8 self-host v0.44 surface, M9 `module` keyword
+  removal, M10 docs/SPEC.md promotion.
 - **v0.43** — Concurrency known-gap close-out: cooperative
   cancellation (`task.cancel` / `task.cancelled?` / `task.current`),
   `scope` body raises run cleanup before unwinding,
   `channel.select` multiplex.
-- **v0.42** — Tya Concurrency: `spawn` / `await` / `scope` keywords;
-  `task` / `channel` / `mutex` / `atomic_integer` / `wait_group` value
-  kinds; `channel` and `sync` stdlib modules; multi-thread GC.
-- **v0.41** — precise mark-and-sweep garbage collector for the C runtime.
-  `runtime.gc()` and `runtime.gc_stats()`; auto-trigger between top-level
-  statements. Foundation for v0.42 Concurrency.
-- **v0.40** — raw and bytes string extensions: `r"..."`, `r"""..."""`,
-  `b"""..."""`.
-- **v0.39** — Canonical Syntax surface cleanup. `tya format` only spelling;
-  `--text` / `--ast` opt-outs removed.
-- **v0.38** — Canonical Syntax landing. AST-driven serializer is the default;
-  examples / stdlib / selfhost normalized; selfhost compiler extended for
-  canonical wrap forms.
-- **v0.37** — `formatter.Unparse` foundation for the common-case subset.
-- **v0.36** — comment attachment recurses into nested Stmt-list bodies.
-- **v0.35** — per-stmt `Comments` map at top level.
-- **v0.34** — lexer comment capture; `Program.HeaderComments`.
-- **v0.33** — parser accepts `(a, b) -> body` parenthesized multi-parameter
-  lambda.
-- **v0.32** — lexer diagnostics migration (`TYA-E0001`–`TYA-E0017`); pure-Tya
-  `markdown.to_html` foundation.
-- **v0.31** — multi-line `"""..."""` string literals.
-- **v0.30** — test coverage foundation: `tya test --cover`, `tya cover`,
-  `# tya-cover 1` profile format.
-- **v0.29** — diagnostics foundation: `internal/diag` model, human + JSON
-  renderers, color modes, `TYA-Xnnnn` code namespace.
-- **v0.28** — strict compile-time checks (shadowing, unused
-  imports/args/private definitions).
-- **v0.27** — hexadecimal and binary integer literals.
-- **v0.26** — external packages, `tya.toml`, version resolution.
-- **v0.25** — bitwise operators, byte sequences, binary file I/O.
-- **v0.24** — `time`, `random`, `process`, `hex`, `digest`, `secure_random`,
-  `matrix` modules; `math` expansion.
 
 ## Scheduled
 
@@ -222,186 +182,73 @@ implementation up to that STEP.
 
 ### v0.45 — Class-oriented namespace and entry-file model: completion
 
-The v0.44 release ships the model (see Released entry above) but
-holds back five M-series tasks because they require either an
-AST-merge refactor or working-tree coordination that did not fit
-the v0.44 window. v0.45 lands them.
+The v0.44 release shipped the model (see Released above) but held
+back six M-series tasks because they require either an AST-merge
+refactor or working-tree coordination that did not fit the v0.44
+window. v0.45 lands them, retires the legacy `module` surface, and
+promotes the v0.44 SPEC content into `docs/SPEC.md`.
 
-- [ ] **M5 cross-file private class enforcement**
-  - Replace the synthesizePackageSource source-concat pipeline
-    with an AST-merge that propagates `OriginFile` metadata onto
-    each `ClassDecl`. The checker then rejects a reference to a
-    private class whose origin file differs from the reference
-    site, with `[TYA-E0406]`.
-- [ ] **M6 remaining stdlib (8 packages)**
-  - `runtime`, `time`, `channel`, `sync`, `task` migrate as the
-    M7 examples migration lands their callers.
-  - `string`, `array`, `dict` migrate together with M8 (the v0.1
-    self-host compiler currently resolves `import X` only as a
-    single file).
-- [ ] **M7 examples/* migration**
-  - Convert every `examples/*.tya` to v0.44 form and delete the
-    old `module` declarations.
-- [ ] **M8 self-host compiler v0.44 surface**
-  - Bring `selfhost/v01/compiler.tya` (or a parallel
-    `selfhost/v02/compiler.tya`) up to the v0.44 surface so it
-    resolves directory packages.
-- [ ] **M9 module keyword removal**
-  - Parser rejects `module` after M8 retires the legacy
-    self-host fixed point.
-- [ ] **M10 docs/SPEC.md promotion**
-  - Promote v0.44 SPEC content into `docs/SPEC.md`, update
-    `docs/NAMING.md` and `docs/STDLIB.md` to remove the legacy
-    module rule.
-- [ ] **TYA-Exxxx code wiring follow-ups**
-  - Wire `[TYA-E0406]` from M5 enforcement.
-  - Wire `[TYA-E0200]` from M9 parser rejection.
+Implementation order respects the dependency chain
+**M7 → M5 → M8 → M6 → M9 → M10**:
 
-### v0.44 — Class-oriented namespace and entry-file model (shipped)
+- [ ] **M7 examples migration** *(independent; mechanical)*
+  - [ ] Convert each `examples/*.tya` to the new model: lowercase
+    script files for entries, PascalCase class files for libraries.
+  - [ ] Remove every `module` declaration from `examples/`.
+  - [ ] Update `scripts/go_emit_examples_check.sh` and example-driven
+    tests as the migration lands.
 
-Replace the snake_case `module name` namespace with directory-as-package,
-require every importable file to be a PascalCase class file, and define
-the entry file as a lowercase script file desugared to an unnamed class.
-This Epic is destructive: it removes the `module` keyword, renames every
-stdlib file, and rewrites the self-host compiler.
+- [ ] **M5 cross-file private class enforcement** *(independent; refactor)*
+  - [ ] Replace `synthesizePackageSource` source-concat with an
+    AST-merge pipeline that propagates `OriginFile` metadata onto
+    every `ClassDecl` parsed in the package.
+  - [ ] Checker rejects a reference to a private class whose
+    `OriginFile` differs from the reference site, with
+    `[TYA-E0406]` and a clear "private to <file>" hint.
+  - [ ] Add positive/negative testdata under
+    `tests/testdata/v44/cross_file_private/`.
 
-Spec: [`docs/v0.44/SPEC.md`](docs/v0.44/SPEC.md).
+- [ ] **M8 self-host compiler v0.44 surface** *(critical path)*
+  - [ ] Add `selfhost/v02/compiler.tya` (or extend `v01`) so the
+    Tya-written compiler resolves directory packages and parses
+    class files.
+  - [ ] Keep the existing `v01` fixed point on the v0.43 surface
+    until v02 reaches parity; both compilers live side by side.
+  - [ ] Prove stage-2 == stage-3 fixed point for v02 on the v0.44
+    surface (`TestSelfhostV02Scripts`).
+  - [ ] Replace `TestSelfhostV01Scripts` with the v02 gate only
+    after parity is proven and at a release boundary.
 
-The Epic ships in additive STEPs first so existing tests stay green, then
-in migration STEPs that move each consumer (stdlib, examples, selfhost)
-onto the new model, then in removal STEPs that delete the legacy
-`module` surface. The self-host fixed point gate must stay green at
-every STEP boundary.
+- [ ] **M6 remaining stdlib (8 packages)** *(blocked on M8)*
+  - [ ] `string`, `array`, `dict` migrate together with M8 — the
+    v01 compiler currently resolves `import X` only as a single
+    file (see `docs/v0.44/SPEC.md` §"Self-Host Invariant Constraint").
+  - [ ] `runtime`, `time`, `channel`, `sync`, `task` migrate
+    alongside their M7 callers.
+  - [ ] Update `docs/STDLIB.md` per package as it lands.
 
-- [ ] **Land class-oriented namespace and entry-file model**
-  - [x] **M1: Spec and design groundwork**
-    - [x] Land `docs/v0.44/SPEC.md` with the new model.
-    - [x] Add `docs/v0.44/spec.html` rendering and link it from
-      `docs/VERSIONS.md`.
-    - [x] Reserve diagnostic code ranges for the new errors (parser,
-      checker, runner) and document them in `docs/v0.44/SPEC.md`.
-    - [x] Wire the reserved codes as `[TYA-EXXXX]` inline prefixes
-      on the v0.44 runtime errors (commit 3ef398f7). `E0400`,
-      `E0402`–`E0405` (checker class file rules) and
-      `E0850`–`E0855` (runner package rules) are emitted; `E0406`
-      (cross-file private) and `E0200` (module keyword removal)
-      remain TBD.
-    - [x] Document the migration policy: `module` files keep working
-      until M8; class files coexist additively from M2 onward.
-  - [x] **M2: Parser and checker accept class files additively**
-    - [x] Parser allows a `.tya` file whose top level is one or more
-      `class` / `interface` declarations with no `module` wrapper.
-    - [x] Checker enforces "PascalCase filename → public class name
-      matches filename" only when the new shape is used.
-    - [x] Checker enforces "exactly one public class per class file"
-      and "additional classes are private to the file".
-    - [x] Add positive and negative parser/checker tests for class
-      files. Existing `module` files keep parsing.
-    - [x] No change to runner, resolver, stdlib, or selfhost yet.
-  - [x] **M3: Resolver gains directory-as-package import**
-    - [x] `import path/to/pkg` resolves to a directory.
-    - [x] Resolution roots: entry directory, `TYA_PATH`, `stdlib/`.
-    - [x] Reject `..`, absolute paths, and paths whose terminal segment
-      is not a valid `snake_case` package name.
-    - [x] Reject importing a directory that contains a script file at
-      its leaf (no script-file imports).
-    - [x] Same-directory class-file siblings are auto-visible without
-      prefix.
-    - [x] Cross-package access is `<terminal-segment>.<ClassName>`.
-    - [x] Existing single-file `module` imports keep working.
-    - [x] Add testdata under `tests/testdata/v44/` covering nested
-      packages, name-collision diagnostics, and rejected paths.
-    - [x] Within-package class-to-class bare references resolve
-      through the `<currentModule>.<Name>` fallback in checker and
-      codegen (commit f6d276b). Sibling classes inside the same
-      synthesized package call each other without prefix.
-    - [x] Same-segment package collision detection (commit c3bfa48e).
-      Two directory packages whose paths share the terminal segment
-      are caught at synthesis time with a "package name conflict"
-      diagnostic, both for unaliased and aliased imports. Pinned by
-      `tests/testdata/v44/import_collision.txtar`.
-  - [ ] **M4: Compact entry-file desugaring**
-    - [x] Runner accepts only lowercase script files for `tya run`.
-    - [x] PascalCase class files are rejected as runner targets with a
-      structured diagnostic.
-    - [ ] Lowercase script files desugar to an implicit unnamed class
-      with `main` containing the file's top-level statements.
-    - [ ] Top-level bindings become locals of `main`.
-    - [ ] Define and reserve the `_Anonymous` (or equivalent) implicit
-      class name and ensure it is unspeakable from user code.
-    - [ ] Update CLI tests for `tya run`.
-  - [ ] **M5: Private-class enforcement**
-    - [ ] Class files: every class beyond the public one is private.
-    - [ ] Script files: every class is private.
-    - [ ] Private classes are not visible to other files.
-    - [ ] Diagnostics for cross-file private references.
-    - [ ] Note: full enforcement requires AST-level `OriginFile`
-      tracking on every `ClassDecl` propagated through synthesis →
-      parse → check; the source-concat pipeline does not carry that
-      information today. Implementation is paired with M8 self-host
-      migration when AST-merge replaces source-concat.
-  - [ ] **M6: Stdlib migration**
-    - [x] Add `stdlib/<pkg>/<Class>.tya` form for each existing stdlib
-      module, in dependency order.
-    - [x] Per package: introduce class file, port functionality,
-      switch internal users, delete the old `module` file.
-    - [x] Add `os.Os.args()` (or finalized API) as part of the `os`
-      migration. The migrated `stdlib/os/Os.tya` exposes
-      `@@args` which delegates to the existing `args()` builtin;
-      callers spell it `os.Os.args()`. Existing call sites that
-      remain in the legacy `module` form continue to use `args()`
-      directly until M7 examples migration.
-    - [ ] Migrate, in order: `runtime`, `os`, `path`, `string`, `array`,
-      `dict`, `math`, `time`, `random`, `process`, `hex`, `digest`,
-      `secure_random`, `matrix`, `file`, `dir`, `csv`, `json`,
-      `markdown`, `base64`, `channel`, `sync`. Each item is its own
-      STEP that keeps tests green.
-      - [x] `path`, `random`, `hex`, `base64`, `digest`,
-        `secure_random` (commits dcf7cd9, 5763729)
-      - [x] `process`, `dir`, `file`, `os`, `math`, `csv`, `matrix`,
-        `json`, `toml`, `url` (commit 0cbf27e + revert 6138f80)
-      - [x] `unittest`, `value`, `markdown` (commits d8a8cd0, cb51b56,
-        0aa3a4c)
-      - [ ] `string`, `array`, `dict` — held back for v0.1 self-host
-        compatibility (the v0.1 compiler resolves `import X` only as
-        single-file modules; see `docs/v0.44/SPEC.md` §"Self-Host
-        Invariant Constraint"). Migrate alongside M8.
-      - [ ] `runtime`, `time`, `channel`, `sync`, `task` — held back
-        because their callers in `examples/` and `tests/testdata/`
-        carry pending working-tree edits unrelated to v0.44; migrate
-        when the working tree is clean.
-    - [ ] Update `docs/STDLIB.md` per package as it lands.
-  - [ ] **M7: Examples migration**
-    - [ ] Convert each `examples/*.tya` to the new model: lowercase
-      script files for entries, PascalCase class files for libraries.
-    - [ ] Remove obsolete `module` declarations from examples.
-    - [ ] Update example-driven tests and `scripts/go_emit_examples_check.sh`.
-  - [ ] **M8: Self-host compiler migration**
-    - [ ] Land a class-shaped `selfhost/v02/compiler.tya` (or
-      equivalent path; final naming TBD) targeting the v0.44 surface.
-    - [ ] Preserve the v01 fixed point on the v0.43 surface; both
-      live side by side until parity is proven.
-    - [ ] Stage-2 == stage-3 fixed point on the v0.44 surface.
-    - [ ] Replace `TestSelfhostV01Scripts` target only after parity
-      and a release boundary.
-  - [ ] **M9: Remove the `module` keyword**
-    - [ ] Parser rejects `module` as a reserved-word error.
-    - [ ] Checker, formatter, and emitter drop `module` paths.
-    - [ ] Delete remaining `module`-only files.
-    - [ ] Remove `module`-related diagnostics that no longer apply.
-  - [ ] **M10: Documentation cleanup**
-    - [ ] Promote `docs/v0.44/SPEC.md` content into `docs/SPEC.md`.
-    - [ ] Rewrite `docs/NAMING.md` for the new file-kind rules and
-      remove the Module Rule section.
-    - [ ] Update `docs/STDLIB.md` cross-references.
-    - [ ] Update `docs/CANONICAL_SYNTAX.md` for the file-kind rules.
-    - [ ] Update `docs/GUIDE.md`, `docs/API.md`, `docs/TERMINOLOGY.md`,
-      `docs/LIBRARIES.md` as needed.
-    - [ ] Rebuild HTML via `node scripts/build_docs_pages.js`.
-    - [ ] Add a release note entry under "Released" in this file.
+- [ ] **M9 `module` keyword removal** *(blocked on M8 + M6)*
+  - [ ] Parser rejects `module` as a reserved-word error
+    (`[TYA-E0200]`).
+  - [ ] Checker, formatter, and C emitter drop every `module`
+    code path.
+  - [ ] Delete any remaining `module`-only files.
 
-_v0.42 shipped — see Released above and `docs/v0.42/SPEC.md`._
-_v0.43 shipped — see Released above and `docs/v0.43/SPEC.md`._
+- [ ] **M10 docs promotion** *(final)*
+  - [ ] Promote `docs/v0.44/SPEC.md` content into `docs/SPEC.md`.
+  - [ ] Rewrite `docs/NAMING.md` for the new file-kind rules and
+    remove the legacy "Module Rule" section.
+  - [ ] Update `docs/STDLIB.md`, `docs/CANONICAL_SYNTAX.md`,
+    `docs/GUIDE.md`, `docs/API.md`, `docs/TERMINOLOGY.md`,
+    `docs/LIBRARIES.md` to drop module-era language.
+  - [ ] Rebuild HTML via `node scripts/build_docs_pages.js`.
+  - [ ] Freeze `docs/v0.45/` and add a Released entry to this file.
+
+**Diagnostic-code wiring follow-ups** (land alongside the M-tasks
+that produce them, not as a separate STEP):
+
+- [ ] `[TYA-E0406]` — emitted by M5 cross-file private enforcement.
+- [ ] `[TYA-E0200]` — emitted by M9 `module` keyword rejection.
 
 ## Future Work
 
@@ -614,36 +461,6 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - [ ] Do not introduce both `interface` and `trait` as separate
       kinds. One concept, one keyword, consistent with the
       "no hesitation" philosophy.
-
-- [ ] **Forbid closure write-back (strict shadowing extension)**
-  - [ ] Background: Tya function bodies can read outer-scope bindings
-    but plain `=` assignment to such a name silently creates a new
-    local instead of writing back to the enclosing scope. This is a
-    common source of bugs (counters that "don't update", caches that
-    "don't accumulate") and conflicts with the kind-diagnostics
-    commitment.
-  - [ ] Decision: forbid `=` reassignment of any name that resolves
-    above the current function body. Emit `TYA-E0307`
-    "Assignment to outer binding" with hints — pass a dict/array
-    argument and mutate its contents (`state["k"] = ...`), use
-    `sync.atomic_integer` for a single counter, or rename the inner
-    binding to shadow intentionally.
-  - [ ] Reading outer bindings stays allowed. Mutating an outer
-    container via `push` / index assignment / dict member assignment
-    stays allowed (the container itself is not reassigned).
-  - [ ] Checker: extend `internal/checker/strict.go` with a per-scope
-    `funcBody` flag and a `resolvesAboveFunction` walk that skips
-    `strictPredeclared` builtins; fire on `AssignStmt` targets whose
-    name resolves above the enclosing function body.
-  - [ ] Migrate `selfhost/v01/compiler.tya`, stdlib, and examples to
-    comply: rename top-level globals that collide with inner
-    function-local bindings (e.g. top-level `tokens` / `errors`),
-    and replace `xs = []` resets inside function bodies with
-    `while len(xs) > 0; pop(xs)` patterns.
-  - [ ] Add positive and negative checker tests; a doc page
-    describing the rule and the recommended workarounds.
-  - [ ] Schedule into a minor version after v0.44; do not bundle
-    with the class-oriented namespace work.
 
 - [ ] **Migrate selfhost compiler to latest spec and remove Go reference**
   - [ ] Bring `selfhost/` up from v0.1 surface to the v1.0.0 spec
