@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.45 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-45-release-notes">Tya v0.45 Release Notes</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.45.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.45 is a **user-facing polish release** on top of v0.44's class-oriented namespace and entry-file model. Three items land:</p>
+<ol>
+<li>Every <code>examples/*.tya</code> is on the new model (no <code>module</code></li>
+</ol>
+<p>   declarations remain). 2. **Cross-file private class enforcement** — <code>[TYA-E0406]</code>. 3. **Five stdlib packages migrated to class form**: <code>runtime</code>,    <code>time</code>, <code>channel</code>, <code>sync</code>, <code>task</code>.</p>
+<p>The remaining v0.44 follow-ups (self-host v02 on the v0.44 surface, <code>string</code> / <code>array</code> / <code>dict</code> migration, <code>module</code> keyword removal, <code>docs/SPEC.md</code> promotion) move to a dedicated pre-v1.0.0 Epic. See <code>ROADMAP.md</code> § v0.4x.</p>
+<h2 id="what-s-new">What's new</h2>
+<h3 id="cross-file-private-class-enforcement">Cross-file private class enforcement</h3>
+<p>In v0.44 a class file's non-public sibling classes already had &quot;private to the declaring file&quot; intent, but the source-concat package synthesis lost the file boundary by the time the checker ran. v0.45 propagates the origin file onto every <code>ClassDecl</code> and enforces the rule.</p>
+<pre><code class="language-tya"># pkg/Util.tya
+class Util
+  @@run = -&gt;
+    Internal.do_work()              # OK if Internal lives in Util.tya
+                                    # [TYA-E0406] if Internal lives in
+                                    # Helper.tya — private to that file</code></pre>
+<p>The check covers four reference shapes:</p>
+<ul>
+<li><code>Internal()</code> constructor calls inside another class body.</li>
+<li><code>Internal.member</code> static member access.</li>
+<li><code>class Sub extends Internal</code> inheritance.</li>
+<li><code>pkg.Internal()</code> reach-into from an entry script.</li>
+</ul>
+<p>Diagnostic format:</p>
+<pre><code>3:5: [TYA-E0406] private class Internal is not visible from Util.tya
+                 (declared in Helper.tya)</code></pre>
+<p>Single-file scripts and the legacy <code>module</code> shape leave the origin field empty and bypass the check.</p>
+<h3 id="examples-migration">Examples migration</h3>
+<pre><code class="language-text">examples/
+  greeting/Greeting.tya     # was: examples/greeting.tya (module)
+  util/Util.tya             # was: examples/util.tya     (module)
+  use_module.tya            # calls greeting.Greeting.hello(...)
+  use_module_decl.tya       # calls util.Util.foo / util.Util.bar()</code></pre>
+<p>No <code>module</code> declarations remain anywhere under <code>examples/</code>.</p>
+<h3 id="stdlib-migration-concurrency-tier">stdlib migration (concurrency tier)</h3>
+<p>Five packages move from <code>stdlib/&lt;pkg&gt;.tya</code> (single-file module) to <code>stdlib/&lt;pkg&gt;/&lt;Pkg&gt;.tya</code> (directory package, PascalCase public class). Their public surface is now reached via <code>&lt;pkg&gt;.&lt;Pkg&gt;.&lt;member&gt;</code>:</p>
+<pre><code class="language-tya">import runtime
+stats = runtime.Runtime.gc_stats()
+runtime.Runtime.gc()
+
+import time
+now = time.Time.now()
+time.Time.sleep(0.1)
+
+import channel
+c = channel.Channel.new(10)
+channel.Channel.send(c, &quot;hi&quot;)
+print(channel.Channel.receive(c))
+
+import sync
+m = sync.Sync.mutex()
+sync.Sync.lock(m)
+
+import task
+me = task.Task.current()
+while not task.Task.cancelled?(me)
+  do_one_step()</code></pre>
+<p>Callers in <code>examples/</code>, <code>tests/</code>, <code>tests/testdata/</code>, and <code>docs/STDLIB.md</code> are updated. The legacy single-file <code>stdlib/{runtime,time,channel,sync,task}.tya</code> are deleted.</p>
+<p><code>string</code>, <code>array</code>, <code>dict</code> stay on the single-file shape; v01's self-host still consumes them as single-file modules. The migration ships with the v0.4x self-host upgrade.</p>
+<h2 id="diagnostic-codes">Diagnostic codes</h2>
+<p>| Code           | Stage   | Wired in | Condition                                    | | -------------- | ------- | -------- | -------------------------------------------- | | <code>[TYA-E0406]</code>  | checker | v0.45    | Cross-file reference to a private class.     |</p>
+<p>All v0.44 codes (E0400, E0402–E0405, E0850–E0855) remain unchanged.</p>
+<h2 id="migration">Migration</h2>
+<p>User code that imported <code>runtime</code> / <code>time</code> / <code>channel</code> / <code>sync</code> / <code>task</code> and called the public surface needs a one-token rewrite:</p>
+<pre><code class="language-text">runtime.gc_stats()      → runtime.Runtime.gc_stats()
+time.now()              → time.Time.now()
+channel.new(10)         → channel.Channel.new(10)
+sync.mutex()            → sync.Sync.mutex()
+task.cancelled?(t)      → task.Task.cancelled?(t)</code></pre>
+<p>Importing the package itself is unchanged (<code>import runtime</code>); only the member access path gains the class segment.</p>
+<p>User code that relied on cross-file references into a non-public sibling class now needs to either (a) move the reference into the declaring file, (b) make the target class public by renaming it to match the file name, or (c) move the target class into its own file. The diagnostic points at the declaring file directly.</p>
+<h2 id="self-host">Self-host</h2>
+<p><code>TestSelfhostV01Scripts</code> remains the maintained self-host gate. <code>TestSelfhostV02Scripts</code> is added in v0.45 as scaffolding for the upcoming v02 self-host on the v0.44 surface; it currently mirrors v01 on the v0.1-surface fixed-point program and grows toward v0.44 parity in the v0.4x Epic.</p>
+<h2 id="verification">Verification</h2>
+<pre><code class="language-sh">go test ./... -count=1
+go test ./tests -run TestSelfhostV01Scripts -count=1
+go test ./tests -run TestSelfhostV02Scripts -count=1
+sh scripts/go_emit_examples_check.sh</code></pre>
+<p>All four are green at the v0.45.0 tag.</p>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="spec.html"><code>docs/v0.45/SPEC.md</code></a> — frozen v0.45 specification.</li>
+<li><a href="../v0.44/SPEC.md"><code>docs/v0.44/SPEC.md</code></a> — the model itself.</li>
+<li><a href="../v0.44/MIGRATION.md"><code>docs/v0.44/MIGRATION.md</code></a> — v0.44 user</li>
+</ul>
+<p>  migration matrix; the v0.45 changes are additive on top of it.</p>
+<ul>
+<li><a href="../../ROADMAP.md"><code>ROADMAP.md</code></a> — v0.45 under <code>Released</code>; v0.4x</li>
+</ul>
+<p>  under <code>Scheduled</code>.</p>
+    </article>
+  </main>
+</body>
+</html>

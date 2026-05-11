@@ -197,11 +197,11 @@ println toml.dump(config)</code></pre>
 <h2 id="time"><code>time</code></h2>
 <pre><code class="language-tya">import time
 
-now = time.now()
-println time.format(now, &quot;iso&quot;)
-time.sleep(0.1)
-println time.since(now)</code></pre>
-<p>Functions: <code>now</code>, <code>sleep</code>, <code>format</code>, <code>parse</code>, <code>since</code>. Format layouts: <code>&quot;iso&quot;</code>, <code>&quot;date&quot;</code>, <code>&quot;time&quot;</code>, <code>&quot;unix&quot;</code>.</p>
+now = time.Time.now()
+println(time.Time.format(now, &quot;iso&quot;))
+time.Time.sleep(0.1)
+println(time.Time.since(now))</code></pre>
+<p>Class members on <code>time.Time</code>: <code>now</code>, <code>sleep</code>, <code>format</code>, <code>parse</code>, <code>since</code>. Format layouts: <code>&quot;iso&quot;</code>, <code>&quot;date&quot;</code>, <code>&quot;time&quot;</code>, <code>&quot;unix&quot;</code>.</p>
 <h2 id="random"><code>random</code></h2>
 <pre><code class="language-tya">import random
 
@@ -305,81 +305,57 @@ run cases</code></pre>
 <p>GC introspection and explicit collection.</p>
 <pre><code class="language-tya">import runtime
 
-stats = runtime.gc_stats()
-runtime.gc()</code></pre>
-<p>Functions:</p>
-<pre><code class="language-tya">gc_stats ()
-gc       ()</code></pre>
-<p><code>runtime.gc_stats()</code> returns a dict snapshot of the GC counters with keys <code>alloc_count</code>, <code>alloc_bytes</code>, <code>freed_count</code>, <code>freed_bytes</code>, <code>live_count</code>, <code>live_bytes</code>, <code>collect_count</code>, <code>threshold</code>.</p>
-<p><code>runtime.gc()</code> runs a full mark-and-sweep collection. The collector treats module-level globals as roots (plus the active raise-frame chain). Locals inside user functions are not roots in v0.41, so <code>runtime.gc()</code> is safe to call only at points where every live local TyaValue is also reachable from a registered root — in practice, at the top level of the program. See the v0.41 SPEC for the full safety contract and known limitations.</p>
+stats = runtime.Runtime.gc_stats()
+runtime.Runtime.gc()</code></pre>
+<p>Class members on <code>runtime.Runtime</code>: <code>gc_stats</code>, <code>gc</code>.</p>
+<p><code>runtime.Runtime.gc_stats()</code> returns a dict snapshot of the GC counters with keys <code>alloc_count</code>, <code>alloc_bytes</code>, <code>freed_count</code>, <code>freed_bytes</code>, <code>live_count</code>, <code>live_bytes</code>, <code>collect_count</code>, <code>threshold</code>.</p>
+<p><code>runtime.Runtime.gc()</code> runs a full mark-and-sweep collection. The collector treats module-level globals as roots (plus the active raise-frame chain). Locals inside user functions are not roots in v0.41, so <code>runtime.Runtime.gc()</code> is safe to call only at points where every live local TyaValue is also reachable from a registered root — in practice, at the top level of the program. See the v0.41 SPEC for the full safety contract and known limitations.</p>
 <h2 id="channel-v0-42"><code>channel</code> (v0.42)</h2>
 <p>Bounded, FIFO buffered channels for inter-task communication.</p>
 <pre><code class="language-tya">import channel
 
-c = channel.new(10)
-spawn (() -&gt; channel.send(c, &quot;hello&quot;))
-print channel.receive(c)
-channel.close(c)</code></pre>
-<p>Functions:</p>
-<pre><code class="language-tya">new(capacity)
-send(c, value)
-receive(c)
-receive_timeout(c, seconds)
-close(c)
-closed?(c)</code></pre>
-<p><code>channel.send</code> blocks while the buffer is full and raises if the channel has been closed. <code>channel.receive</code> blocks while the buffer is empty; once closed, it drains the buffer and then returns <code>nil</code> for every later call. <code>channel.receive_timeout</code> returns <code>nil</code> when the deadline elapses without a value. v0.42 treats <code>capacity = 0</code> as <code>1</code>; true rendezvous channels arrive in a later minor.</p>
+c = channel.Channel.new(10)
+spawn (() -&gt; channel.Channel.send(c, &quot;hello&quot;))
+print(channel.Channel.receive(c))
+channel.Channel.close(c)</code></pre>
+<p>Class members on <code>channel.Channel</code>: <code>new</code>, <code>send</code>, <code>receive</code>, <code>receive_timeout</code>, <code>close</code>, <code>closed?</code>, <code>select</code>.</p>
+<p><code>channel.Channel.send</code> blocks while the buffer is full and raises if the channel has been closed. <code>channel.Channel.receive</code> blocks while the buffer is empty; once closed, it drains the buffer and then returns <code>nil</code> for every later call. <code>channel.Channel.receive_timeout</code> returns <code>nil</code> when the deadline elapses without a value. v0.42 treats <code>capacity = 0</code> as <code>1</code>; true rendezvous channels arrive in a later minor.</p>
 <h2 id="sync-v0-42"><code>sync</code> (v0.42)</h2>
 <p>Mutex, atomic integer, and wait group primitives.</p>
 <pre><code class="language-tya">import sync
 
-m = sync.mutex()
-sync.lock(m)
-sync.unlock(m)
+m = sync.Sync.mutex()
+sync.Sync.lock(m)
+sync.Sync.unlock(m)
 
-a = sync.atomic_integer(0)
-sync.atomic_add(a, 1)
-print sync.atomic_load(a)
+a = sync.Sync.atomic_integer(0)
+sync.Sync.atomic_add(a, 1)
+print(sync.Sync.atomic_load(a))
 
-wg = sync.wait_group()
-sync.wait_group_add(wg, 1)
-spawn (() -&gt; sync.wait_group_done(wg))
-sync.wait_group_wait(wg)</code></pre>
-<p>Functions:</p>
-<pre><code class="language-tya">mutex ()
-lock m
-unlock m
-with_lock m, fn
-atomic_integer initial
-atomic_add a, n
-atomic_load a
-atomic_store a, n
-atomic_cas a, expected, new_value
-wait_group ()
-wait_group_add wg, n
-wait_group_done wg
-wait_group_wait wg</code></pre>
-<p><code>sync.with_lock(m, fn)</code> runs <code>fn()</code> with the mutex held and releases the mutex even when <code>fn</code> raises. Tya closures cannot write back to outer variables, so to share mutable state across tasks pass a dict or array argument and mutate it through indexed assignment.</p>
+wg = sync.Sync.wait_group()
+sync.Sync.wait_group_add(wg, 1)
+spawn (() -&gt; sync.Sync.wait_group_done(wg))
+sync.Sync.wait_group_wait(wg)</code></pre>
+<p>Class members on <code>sync.Sync</code>: <code>mutex</code>, <code>lock</code>, <code>unlock</code>, <code>with_lock</code>, <code>atomic_integer</code>, <code>atomic_add</code>, <code>atomic_load</code>, <code>atomic_store</code>, <code>atomic_cas</code>, <code>wait_group</code>, <code>wait_group_add</code>, <code>wait_group_done</code>, <code>wait_group_wait</code>.</p>
+<p><code>sync.Sync.with_lock(m, fn)</code> runs <code>fn()</code> with the mutex held and releases the mutex even when <code>fn</code> raises. Tya closures cannot write back to outer variables, so to share mutable state across tasks pass a dict or array argument and mutate it through indexed assignment.</p>
 <h2 id="task-v0-43"><code>task</code> (v0.43)</h2>
 <p>Cooperative cancellation for <code>spawn</code>-ed tasks.</p>
 <pre><code class="language-tya">import task
 
 worker = () -&gt;
-  me = task.current()
-  while not task.cancelled?(me)
+  me = task.Task.current()
+  while not task.Task.cancelled?(me)
     do_one_step()
 
 t = spawn worker()
-task.cancel(t)
+task.Task.cancel(t)
 await t</code></pre>
-<p>Functions:</p>
-<pre><code class="language-tya">cancel t
-cancelled? t
-current ()</code></pre>
-<p><code>cancel</code> sets the cancel flag on a task. <code>cancelled?</code> reads it. Cancellation is cooperative: setting the flag does not stop a worker, only signals it. Long-running workers must poll <code>cancelled?(current())</code> at safe points and return early.</p>
-<p><code>current()</code> returns the currently-running task value, or <code>nil</code> on the main thread. Workers use <code>task.cancelled?(task.current())</code> to check whether they have been asked to stop.</p>
+<p>Class members on <code>task.Task</code>: <code>cancel</code>, <code>cancelled?</code>, <code>current</code>.</p>
+<p><code>Task.cancel</code> sets the cancel flag on a task. <code>Task.cancelled?</code> reads it. Cancellation is cooperative: setting the flag does not stop a worker, only signals it. Long-running workers must poll <code>Task.cancelled?(Task.current())</code> at safe points and return early.</p>
+<p><code>Task.current()</code> returns the currently-running task value, or <code>nil</code> on the main thread. Workers use <code>task.Task.cancelled?(task.Task.current())</code> to check whether they have been asked to stop.</p>
 <p>A <code>scope</code> block also sets the cancel flag on every remaining sibling once it observes the first task raise, and a synchronous raise from the body sets the cancel flag on every spawned sibling before the raise propagates.</p>
 <h2 id="updated-for-v0-43-channel-select">Updated for v0.43: <code>channel.select</code></h2>
-<pre><code class="language-tya">result = channel.select([
+<pre><code class="language-tya">result = channel.Channel.select([
   [c1, &quot;receive&quot;],
   [c2, &quot;send&quot;, value],
 ])</code></pre>

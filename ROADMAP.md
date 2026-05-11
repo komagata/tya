@@ -148,6 +148,23 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.45** — User-facing completion of the class-oriented
+  namespace and entry-file model (`docs/v0.45/SPEC.md`,
+  `docs/v0.45/RELEASE_NOTES.md`). Three v0.44 follow-ups land:
+  every `examples/*.tya` migrated to the new model (no `module`
+  declarations remain under `examples/`); cross-file private class
+  enforcement via `[TYA-E0406]` (origin-file metadata propagated
+  through the runner and checked at member access, bare-Ident
+  class reference, and `extends`); five concurrency-related stdlib
+  packages (`runtime`, `time`, `channel`, `sync`, `task`) migrated
+  to the v0.44 directory-package + PascalCase class form. The
+  remaining v0.44 follow-ups — Tya-written self-host on the v0.44
+  surface, the `string`/`array`/`dict` migration that depends on
+  it, the `module` keyword removal, and the `docs/SPEC.md`
+  promotion — ride together into the v0.4x pre-v1.0.0 Epic. v0.45
+  also scaffolds `selfhost/v02/` (CI gate green; lexer + parser
+  accept `@@` single token, `abstract`/`final` class modifiers, and
+  the `override` method modifier) as the foundation for that Epic.
 - **v0.44** — Class-oriented namespace and entry-file model
   (`docs/v0.44/SPEC.md`, `docs/v0.44/MIGRATION.md`,
   `docs/v0.44/RELEASE_NOTES.md`). Directory-as-package import,
@@ -179,39 +196,6 @@ implemented in numbered STEPs. Every STEP must pass `go test ./... -count=1`
 and `go test ./tests -run TestSelfhostV01Scripts -count=1` before the next
 STEP starts. The STEP also keeps `docs/vX.Y/SPEC.md` consistent with the
 implementation up to that STEP.
-
-### v0.45 — Class-oriented namespace and entry-file model: user-facing completion
-
-The v0.44 release shipped the model (see Released above) and held
-back six M-series tasks. v0.45 lands the three that do not need a
-v02 self-host upgrade: examples migration, cross-file private class
-enforcement, and the user-facing slice of the stdlib migration.
-
-The remaining work — the v02 self-host on the v0.44 surface, the
-`string`/`array`/`dict` stdlib migration that depends on it, the
-`module` keyword removal, and the `docs/SPEC.md` promotion — moves
-to a dedicated pre-v1.0.0 Epic (below). v0.45 ships as a polish
-release rather than the full "completion" originally planned.
-
-- [x] **M7 examples migration** — `examples/util` and
-  `examples/greeting` converted to PascalCase class files; no
-  `module` declarations remain under `examples/`; consumers and
-  `scripts/go_emit_examples_check.sh` updated.
-- [x] **M5 cross-file private class enforcement** —
-  `ast.ClassDecl.OriginFile` + runner-side per-package origin map +
-  checker `[TYA-E0406]` on member access, bare-Ident class
-  reference, and `extends`; positive + 3 negative fixtures under
-  `tests/testdata/v45/`.
-- [x] **M6 (partial) stdlib migration to class form** — `runtime`,
-  `time`, `channel`, `sync`, `task` migrated to
-  `stdlib/<pkg>/<Pkg>.tya`; callers in `examples/`, `tests/`, and
-  `tests/testdata/` updated; `docs/STDLIB.md` updated. The
-  remaining `string`/`array`/`dict` packages move to the
-  self-host upgrade Epic below.
-
-Diagnostic-code wiring:
-
-- [x] `[TYA-E0406]` — wired by M5 cross-file private enforcement.
 
 ### v0.4x — Self-host v0.44 surface + `module` keyword retirement
 
