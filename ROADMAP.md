@@ -148,6 +148,16 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.46** — Sigil-free, keyword-based class-member surface
+  (`docs/v0.46/SPEC.md`, `docs/v0.46/RELEASE_NOTES.md`). Transitional
+  release: the new keywords (`private`, `static`, `self`, `Self`,
+  `initialize`) are the canonical form for class members and replace
+  the v0.45 sigil-based surface (`@`, `@@`, `_`-prefix, `init`). The
+  legacy syntax still parses for backward compatibility; the
+  clean-cut removal of legacy syntax plus G4 (strict bare-name
+  receivers) is deferred to v0.47. stdlib and examples migrated to
+  the new surface; the v01 self-host keeps its v0.43 surface
+  unchanged.
 - **v0.45** — User-facing completion of the class-oriented
   namespace and entry-file model (`docs/v0.45/SPEC.md`,
   `docs/v0.45/RELEASE_NOTES.md`). Three v0.44 follow-ups land:

@@ -45,7 +45,7 @@ stderr 'super init expects 2 arguments'
 stderr 'super cannot call private parent constructor'
 
 exec go run ./cmd/tya version
-stdout '0.45.0\n'
+stdout '0.46.0\n'
 ! stderr .
 
 -- override_constructor.tya --

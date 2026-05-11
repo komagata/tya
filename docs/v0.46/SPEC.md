@@ -1,8 +1,13 @@
-# Tya v0.46 Specification (draft)
+# Tya v0.46 Specification
 
-> **Status:** draft, design settled. Implementation has not yet
-> started. This document is the spec the implementation must
-> conform to.
+> **Status:** shipped, transitional. The new keyword surface
+> (`private`, `static`, `self`, `Self`, `initialize`) is fully
+> implemented and is the canonical form for new code. The legacy
+> v0.45 surface (`@`, `@@`, `_`-prefix, `init`) still parses for
+> backward compatibility — the clean-cut removal of legacy syntax
+> is deferred to v0.47. G4 (strict bare-name receivers) is also
+> deferred: bare identifiers in method bodies continue to resolve
+> through the v0.45 rules during the transition.
 
 ## Theme
 

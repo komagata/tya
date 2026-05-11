@@ -10,10 +10,7 @@ stdout 'Ada\neditor\neditor\naccount\nEditor\nEditor\nAccount\nAccount\n'
 ! stderr .
 
 ! exec go run ./cmd/tya run $WORK/self_outside.tya
-stderr 'self is only valid inside a class method'
-
-! exec go run ./cmd/tya run $WORK/self_in_instance_method.tya
-stderr 'self is only valid inside a class method'
+stderr 'self is only valid inside a class method or instance method'
 
 ! exec go run ./cmd/tya run $WORK/super_no_parent_class_method.tya
 stderr 'super has no parent class method make'
@@ -41,7 +38,7 @@ stderr 'missing class variable or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.45.0\n'
+stdout '0.46.0\n'
 ! stderr .
 
 -- class_level.tya --
@@ -124,13 +121,6 @@ print(account.Account.name)
 
 -- self_outside.tya --
 print(self)
-
--- self_in_instance_method.tya --
-class User
-  name = ->
-    self.name
-
-print(User().name())
 
 -- super_no_parent_class_method.tya --
 class User
