@@ -14,7 +14,7 @@ module_stmt = name, members, line ->
 module_member = name, value, line -> { name: name, value: value, line: line }
 
 class_stmt = name, methods, line ->
-  { kind: "class", name: name, parent: "", methods: methods, fields: [], vars: [], line: line }
+  { kind: "class", name: name, parent: "", methods: methods, fields: [], vars: [], abstract: false, final: false, implements: [], line: line }
 
 class_method = name, value, line ->
   { name: name, value: value, line: line, class: false }
@@ -1021,6 +1021,29 @@ parse_simple_block = tokens, index ->
       next = next + 1
       continue
     current = tokens[next]
+    # v0.45 M8.2c: accept optional `abstract` / `final` class modifiers
+    # before the `class` keyword. Stored as boolean flags on the AST
+    # node; v02 codegen ignores them (the strict semantic checks live
+    # in the Go reference checker). Recognized in any order.
+    class_abstract = false
+    class_final = false
+    class_modifier_steps = 0
+    while (
+      token_kind(tokens[next + class_modifier_steps]) == "IDENT" and (token_text(tokens[next + class_modifier_steps]) == "abstract" or token_text(tokens[next + class_modifier_steps]) == "final")
+    )
+      if token_text(tokens[next + class_modifier_steps]) == "abstract"
+        class_abstract = true
+      if token_text(tokens[next + class_modifier_steps]) == "final"
+        class_final = true
+      class_modifier_steps = class_modifier_steps + 1
+    if class_modifier_steps > 0
+      if not (token_kind(tokens[next + class_modifier_steps]) == "IDENT" and token_text(tokens[next + class_modifier_steps]) == "class")
+        push(
+          syntax_errors,
+          to_string(token_line(current)) + ": abstract/final must precede a class declaration",
+        )
+      next = next + class_modifier_steps
+      current = tokens[next]
     if token_kind(current) == "IDENT" and token_text(current) == "class"
       parent, body_start = class_body_start(tokens, next)
       body, after_class = parse_simple_block(tokens, body_start)
@@ -1054,6 +1077,8 @@ parse_simple_block = tokens, index ->
       cls["parent"] = parent
       cls["fields"] = fields
       cls["vars"] = vars
+      cls["abstract"] = class_abstract
+      cls["final"] = class_final
       push(statements, cls)
       next = after_class
       continue
@@ -1265,6 +1290,27 @@ parse_statement = tokens, index ->
   if token_kind(current) == "IDENT" and token_text(current) == "import"
     record_name_error(tokens[index + 1])
     return import_stmt(token_text(tokens[index + 1]), token_line(current)), index + 2
+  # v0.45 M8.2c: same `abstract`/`final` prefix acceptance as the
+  # parse_block path above.
+  stmt_class_abstract = false
+  stmt_class_final = false
+  stmt_class_modifier_steps = 0
+  while (
+    token_kind(tokens[index + stmt_class_modifier_steps]) == "IDENT" and (token_text(tokens[index + stmt_class_modifier_steps]) == "abstract" or token_text(tokens[index + stmt_class_modifier_steps]) == "final")
+  )
+    if token_text(tokens[index + stmt_class_modifier_steps]) == "abstract"
+      stmt_class_abstract = true
+    if token_text(tokens[index + stmt_class_modifier_steps]) == "final"
+      stmt_class_final = true
+    stmt_class_modifier_steps = stmt_class_modifier_steps + 1
+  if stmt_class_modifier_steps > 0
+    if not (token_kind(tokens[index + stmt_class_modifier_steps]) == "IDENT" and token_text(tokens[index + stmt_class_modifier_steps]) == "class")
+      push(
+        syntax_errors,
+        to_string(token_line(current)) + ": abstract/final must precede a class declaration",
+      )
+    index = index + stmt_class_modifier_steps
+    current = tokens[index]
   if token_kind(current) == "IDENT" and token_text(current) == "class"
     parent, body_start = class_body_start(tokens, index)
     body, next = parse_simple_block(tokens, body_start)
@@ -1298,6 +1344,8 @@ parse_statement = tokens, index ->
     cls["parent"] = parent
     cls["fields"] = fields
     cls["vars"] = vars
+    cls["abstract"] = stmt_class_abstract
+    cls["final"] = stmt_class_final
     return cls, next
   if token_kind(current) == "IDENT" and token_text(current) == "module"
     record_name_error(tokens[index + 1])

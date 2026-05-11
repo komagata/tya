@@ -1,0 +1,38 @@
+# v0.45 M8.2c: v02 parser accepts `abstract` and `final` as class
+# modifiers in front of `class`. v02 codegen treats them as no-ops
+# (the strict semantic checks live in the Go reference checker), so a
+# class declared `final class X extends Y` still compiles, links, and
+# runs through the v02 self-host pipeline.
+cd $REPO
+
+exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+
+exec sh -c '"$WORK/stage1" "$WORK/abstract_final.tya" > "$WORK/abstract_final.c"'
+! stderr .
+
+exec cc $WORK/abstract_final.c runtime/tya_runtime.c -I runtime -o $WORK/abstract_final
+! stderr .
+
+exec $WORK/abstract_final
+stdout 'shape\ncircle\n'
+! stderr .
+
+-- abstract_final.tya --
+abstract class Shape
+  init = name ->
+    @name = name
+
+  describe = ->
+    @name
+
+final class Circle extends Shape
+  init = ->
+    super("circle")
+
+s = Shape("shape")
+print(s.describe())
+c = Circle()
+print(c.describe())
