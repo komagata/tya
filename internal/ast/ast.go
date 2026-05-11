@@ -319,6 +319,13 @@ func (*SuperExpr) expr() {}
 
 type SelfExpr struct {
 	Tok token.Token
+	// v0.46 G2: Class is true for the `Self` (capital S) form, which
+	// always denotes the lexically enclosing class (statically
+	// resolved). Class is false for the `self` (lowercase) form —
+	// in v0.45 / v0.46 transition this means "the class object" in
+	// class methods (legacy semantics retained until the final
+	// clean-cut flips it to "the instance" in instance methods).
+	Class bool
 }
 
 func (*SelfExpr) expr() {}

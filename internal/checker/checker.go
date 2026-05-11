@@ -689,7 +689,9 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 		// v0.46 G1: `init` + Private flag is the private constructor.
 		// Legacy `_init` (no keyword) also flows through Private from
 		// the parser's transitional `_`-prefix recognition.
-		if method.Name == "init" || method.Name == "_init" {
+		// v0.46 G5: `initialize` is the canonical constructor name;
+		// `init` and `_init` are recognized during the transition.
+		if method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			info.hasInit = true
 			info.initArity = len(method.Func.Params)
 			if method.Private {
@@ -734,7 +736,9 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 			info.privateMethods[method.Name] = true
 		}
 		// v0.46 G1: see predeclareModuleClass for the same logic.
-		if method.Name == "init" || method.Name == "_init" {
+		// v0.46 G5: `initialize` is the canonical constructor name;
+		// `init` and `_init` are recognized during the transition.
+		if method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			info.hasInit = true
 			info.initArity = len(method.Func.Params)
 			if method.Private {
@@ -947,8 +951,17 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.SuperExpr:
 		return fmt.Errorf("%d:%d: super must be called inside init, an instance method, or a class method", n.Tok.Line, n.Tok.Col)
 	case *ast.SelfExpr:
-		if !scope.inClassMethod {
-			return fmt.Errorf("%d:%d: self is only valid inside a class method", n.Tok.Line, n.Tok.Col)
+		if n.Class {
+			// v0.46 G2: `Self` is valid in any class-body context.
+			if scope.currentClass == "" {
+				return fmt.Errorf("%d:%d: [TYA-E0412] Self is only valid inside a class body", n.Tok.Line, n.Tok.Col)
+			}
+		} else {
+			// `self` (lowercase) — v0.45 semantics retained during
+			// transition: only valid in class methods.
+			if !scope.inClassMethod {
+				return fmt.Errorf("%d:%d: self is only valid inside a class method", n.Tok.Line, n.Tok.Col)
+			}
 		}
 	case *ast.InstanceFieldExpr:
 		if !scope.inInstanceMethod {
@@ -1021,7 +1034,7 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				if len(n.Args) != arity {
 					return fmt.Errorf("%d:%d: super class method %s expects %d arguments", super.Tok.Line, super.Tok.Col, scope.currentMethod, arity)
 				}
-			} else if scope.currentMethod == "init" || scope.currentMethod == "_init" {
+			} else if scope.currentMethod == "init" || scope.currentMethod == "_init" || scope.currentMethod == "initialize" {
 				if parentInfo := scope.classes[parent]; parentInfo.privateInit {
 					return fmt.Errorf("%d:%d: super cannot call private parent constructor", super.Tok.Line, super.Tok.Col)
 				}
@@ -1195,8 +1208,17 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			if instanceMembers[method.Name] {
 				return fmt.Errorf("%d:%d: duplicate instance member %s", method.Tok.Line, method.Tok.Col, method.Name)
 			}
-			if method.Name == "init" {
-				hasPublicInit = true
+			// v0.46 G1+G5: a constructor is `init` (legacy public),
+			// `_init` (legacy private), or `initialize` (canonical).
+			// The Private flag (from `private` keyword or `_`-prefix)
+			// distinguishes public vs private. A class may not declare
+			// both a public and private constructor.
+			if method.Name == "init" || method.Name == "initialize" {
+				if method.Private {
+					hasPrivateInit = true
+				} else {
+					hasPublicInit = true
+				}
 			}
 			if method.Name == "_init" {
 				hasPrivateInit = true
@@ -1224,7 +1246,7 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		if !method.Class {
 			parent := scope.classes[key].parent
 			if parent != "" {
-				if method.Name == "init" {
+				if method.Name == "init" || method.Name == "initialize" {
 					if err := checkConstructorSuper(class, method, parent, scope); err != nil {
 						return err
 					}

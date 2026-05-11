@@ -246,6 +246,34 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			return nil
 		}
 		if target, ok := n.Targets[0].(*ast.MemberExpr); ok {
+			// v0.46 G2: route `self.x` and `Self.x` assignments
+			// through the same lowering as `@x` / `@@x` so the v0.46
+			// surface and the v0.45 surface share the same runtime
+			// key layout (instance fields stored under both "@x" and
+			// "x"; class members under "x" on the class object).
+			if selfTarget, ok := target.Target.(*ast.SelfExpr); ok {
+				if selfTarget.Class {
+					// Self.x = ... → equivalent to ClassVarExpr assignment.
+					value, _, err := g.expr(n.Values[0])
+					if err != nil {
+						return err
+					}
+					receiver := g.classTarget()
+					g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", receiver, strconv.Quote(target.Name), value))
+					return nil
+				}
+				// self.x = ... → equivalent to InstanceFieldExpr assignment.
+				value, _, err := g.expr(n.Values[0])
+				if err != nil {
+					return err
+				}
+				tmp := fmt.Sprintf("__field%d", g.temp)
+				g.temp++
+				g.line(fmt.Sprintf("TyaValue %s = %s;", tmp, value))
+				g.line(fmt.Sprintf("tya_set_member(__this, %s, %s);", strconv.Quote("@"+target.Name), tmp))
+				g.line(fmt.Sprintf("tya_set_member(__this, %s, %s);", strconv.Quote(target.Name), tmp))
+				return nil
+			}
 			receiver, _, err := g.expr(target.Target)
 			if err != nil {
 				return err
@@ -1079,7 +1107,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		}
 		methodSyms[method.Name] = sym
 		g.classMethods[name+"."+method.Name] = sym
-		if (method.Name == "init" || method.Name == "_init") && !method.Class {
+		if (method.Name == "init" || method.Name == "_init" || method.Name == "initialize") && !method.Class {
 			initMethod = method
 		}
 	}
@@ -1107,7 +1135,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote(field.Name), value))
 	}
 	for _, method := range class.Methods {
-		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || !strings.HasPrefix(method.Name, "_") {
+		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" || !strings.HasPrefix(method.Name, "_") {
 			continue
 		}
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
@@ -1127,7 +1155,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		g.emitParentMethods(&out, parentKey, class)
 	}
 	for _, method := range class.Methods {
-		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" {
+		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			continue
 		}
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
@@ -1225,7 +1253,7 @@ func (g *cgen) emitParentMethods(out *strings.Builder, parentKey string, class *
 		}
 	}
 	for _, method := range parent.Methods {
-		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || strings.HasPrefix(method.Name, "_") || overrides[method.Name] {
+		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" || strings.HasPrefix(method.Name, "_") || overrides[method.Name] {
 			continue
 		}
 		sym := g.classMethods[g.cClassName(parentKey)+"."+method.Name]
@@ -1236,14 +1264,28 @@ func (g *cgen) emitParentMethods(out *strings.Builder, parentKey string, class *
 }
 
 func (g *cgen) inheritedMethodSym(parentKey string, method string) string {
+	// v0.46 G5: "init" and "initialize" are constructor aliases.
+	// When searching for the parent's constructor, accept either
+	// spelling.
+	wantAliases := []string{method}
+	if method == "init" {
+		wantAliases = []string{"init", "initialize", "_init"}
+	} else if method == "initialize" {
+		wantAliases = []string{"initialize", "init", "_init"}
+	}
 	for parentKey != "" {
 		parent := g.classDecls[parentKey]
 		if parent == nil {
 			return ""
 		}
 		for _, parentMethod := range parent.Methods {
-			if !parentMethod.Class && parentMethod.Name == method {
-				return g.classMethods[g.cClassName(parentKey)+"."+method]
+			if parentMethod.Class {
+				continue
+			}
+			for _, want := range wantAliases {
+				if parentMethod.Name == want {
+					return g.classMethods[g.cClassName(parentKey)+"."+parentMethod.Name]
+				}
 			}
 		}
 		parentKey = g.parentKey(g.cClassName(parentKey), parent)
@@ -1512,6 +1554,13 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return cName(n.Name), "TyaValue", nil
 	case *ast.SelfExpr:
+		if n.Class {
+			// v0.46 G2: `Self` resolves to the lexically enclosing
+			// class via classTarget(), which already handles both
+			// instance-method (`tya_member(__this, "class")`) and
+			// class-method (`__this`) contexts.
+			return g.classTarget(), "TyaValue", nil
+		}
 		return "__this", "TyaValue", nil
 	case *ast.InstanceFieldExpr:
 		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote("@"+n.Name)), "TyaValue", nil

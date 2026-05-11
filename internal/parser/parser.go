@@ -1428,6 +1428,11 @@ func (p *Parser) primary() (ast.Expr, error) {
 		if tok.Lexeme == "self" {
 			return &ast.SelfExpr{Tok: tok}, nil
 		}
+		// v0.46 G2: `Self` (capital S) refers to the declaring class
+		// in any class-body context. Statically resolved.
+		if tok.Lexeme == "Self" {
+			return &ast.SelfExpr{Tok: tok, Class: true}, nil
+		}
 		if err := p.rejectReservedName(tok); err != nil {
 			return nil, err
 		}
@@ -1606,6 +1611,14 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 			}
 			ex = &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}
 		}
+	} else if p.at(token.IDENT) && p.peek().Lexeme == "Self" {
+		// v0.46 G2: `Self.foo = ...` writes to a class-level member.
+		tok := p.next()
+		ex = &ast.SelfExpr{Tok: tok, Class: true}
+	} else if p.at(token.IDENT) && p.peek().Lexeme == "self" {
+		// v0.46 G2: `self.foo = ...` writes through the receiver.
+		tok := p.next()
+		ex = &ast.SelfExpr{Tok: tok}
 	} else {
 		tok, err := p.expectCallableName("expected assignment target")
 		if err != nil {
@@ -2007,7 +2020,7 @@ func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
 	case "object", "set":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
-	case "interface", "class", "self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not", "spawn", "await", "scope":
+	case "interface", "class", "self", "Self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not", "spawn", "await", "scope":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
 	default:
 		return nil
