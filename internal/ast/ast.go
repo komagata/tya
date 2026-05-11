@@ -201,12 +201,18 @@ type ClassField struct {
 	Name  string
 	Tok   token.Token
 	Value Expr
+	// v0.46 G1: explicit visibility marker. true when the field was
+	// declared with `private` keyword. The legacy `_`-prefix
+	// convention writes the same flag during parsing (transitional
+	// dual recognition; the checker reads only this flag).
+	Private bool
 }
 
 type ClassVar struct {
-	Name  string
-	Tok   token.Token
-	Value Expr
+	Name    string
+	Tok     token.Token
+	Value   Expr
+	Private bool // v0.46 G1; see ClassField.Private.
 }
 
 type ClassMethod struct {
@@ -216,6 +222,7 @@ type ClassMethod struct {
 	Class    bool
 	Abstract bool
 	Override bool
+	Private  bool // v0.46 G1; see ClassField.Private.
 }
 
 type ClassRef struct {

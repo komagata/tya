@@ -676,23 +676,25 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 		}
 		if method.Class {
 			info.classMethods[method.Name] = len(method.Func.Params)
-			if isPrivateName(method.Name) {
+			if method.Private {
 				info.privateClassMembers[method.Name] = true
 				info.privateClassMethods[method.Name] = true
 			}
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
-		if isPrivateName(method.Name) {
+		if method.Private {
 			info.privateMethods[method.Name] = true
 		}
-		if method.Name == "init" {
+		// v0.46 G1: `init` + Private flag is the private constructor.
+		// Legacy `_init` (no keyword) also flows through Private from
+		// the parser's transitional `_`-prefix recognition.
+		if method.Name == "init" || method.Name == "_init" {
 			info.hasInit = true
 			info.initArity = len(method.Func.Params)
-		} else if method.Name == "_init" {
-			info.hasInit = true
-			info.initArity = len(method.Func.Params)
-			info.privateInit = true
+			if method.Private {
+				info.privateInit = true
+			}
 		}
 	}
 	collectPrivateClassMembers(&info, class)
@@ -721,23 +723,23 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 		}
 		if method.Class {
 			info.classMethods[method.Name] = len(method.Func.Params)
-			if isPrivateName(method.Name) {
+			if method.Private {
 				info.privateClassMembers[method.Name] = true
 				info.privateClassMethods[method.Name] = true
 			}
 			continue
 		}
 		info.methods[method.Name] = len(method.Func.Params)
-		if isPrivateName(method.Name) {
+		if method.Private {
 			info.privateMethods[method.Name] = true
 		}
-		if method.Name == "init" {
+		// v0.46 G1: see predeclareModuleClass for the same logic.
+		if method.Name == "init" || method.Name == "_init" {
 			info.hasInit = true
 			info.initArity = len(method.Func.Params)
-		} else if method.Name == "_init" {
-			info.hasInit = true
-			info.initArity = len(method.Func.Params)
-			info.privateInit = true
+			if method.Private {
+				info.privateInit = true
+			}
 		}
 	}
 	collectPrivateClassMembers(&info, class)
@@ -766,12 +768,12 @@ func newClassInfo(key string, class *ast.ClassDecl) classInfo {
 
 func collectPrivateClassMembers(info *classInfo, class *ast.ClassDecl) {
 	for _, field := range class.Fields {
-		if isPrivateName(field.Name) {
+		if field.Private {
 			info.privateFields[field.Name] = true
 		}
 	}
 	for _, variable := range class.Vars {
-		if isPrivateName(variable.Name) {
+		if variable.Private {
 			info.privateClassMembers[variable.Name] = true
 		}
 	}
@@ -1424,7 +1426,7 @@ func checkClassCall(key, display string, line, col, argc int, scope *scope) erro
 }
 
 func checkPrivateInstanceAccess(name string, line, col int, scope *scope, assignment bool) error {
-	if !isPrivateName(name) || scope.currentClass == "" {
+	if scope.currentClass == "" {
 		return nil
 	}
 	info := scope.classes[scope.currentClass]
@@ -1434,6 +1436,10 @@ func checkPrivateInstanceAccess(name string, line, col int, scope *scope, assign
 	if assignment {
 		return nil
 	}
+	// v0.46 G1: walk the ancestor chain regardless of the name's
+	// underscore prefix. Privacy is recorded on classInfo from the
+	// AST's Private flag (which captures both `_`-prefix and the new
+	// `private` keyword).
 	for parent := info.parent; parent != ""; {
 		parentInfo := scope.classes[parent]
 		if parentInfo.privateFields[name] || parentInfo.privateMethods[name] {
@@ -1445,7 +1451,9 @@ func checkPrivateInstanceAccess(name string, line, col int, scope *scope, assign
 }
 
 func checkPrivateClassAccess(name string, line, col int, scope *scope) error {
-	if !isPrivateName(name) || scope.currentClass == "" {
+	// v0.46 G1: see checkPrivateInstanceAccess. Walk ancestors
+	// regardless of name shape; privacy is on classInfo.
+	if scope.currentClass == "" {
 		return nil
 	}
 	info := scope.classes[scope.currentClass]

@@ -517,6 +517,13 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, Implements: implements, Abstract: abstract, Final: final}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		// v0.46 G1: optional `private` keyword precedes the other
+		// member modifiers. Canonical order: private → abstract|override → @@name.
+		isPrivateMember := false
+		if p.at(token.IDENT) && p.peek().Lexeme == "private" {
+			isPrivateMember = true
+			p.next()
+		}
 		isAbstractMethod := false
 		isOverrideMethod := false
 		if p.at(token.IDENT) && p.peek().Lexeme == "abstract" {
@@ -543,12 +550,18 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		if !p.match(token.ASSIGN) {
 			return nil, p.err("expected '=' after class member name")
 		}
+		// v0.46 G1 transitional: combine the explicit `private`
+		// modifier with the legacy `_`-prefix convention. Both produce
+		// the same Private flag; the checker reads only the flag.
+		// `_init` private-constructor short-circuit is preserved by
+		// treating `_init` like `private init`.
+		memberPrivate := isPrivateMember || (strings.HasPrefix(memberName.Lexeme, "_") && memberName.Lexeme != "_")
 		if isAbstractMethod {
 			params, paramToks, err := p.abstractMethodParams()
 			if err != nil {
 				return nil, err
 			}
-			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: &ast.FuncLit{Params: params, ParamToks: paramToks}, Class: isClassMember, Abstract: true})
+			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: &ast.FuncLit{Params: params, ParamToks: paramToks}, Class: isClassMember, Abstract: true, Private: memberPrivate})
 			p.skipNewlines()
 			continue
 		}
@@ -557,13 +570,13 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 			return nil, err
 		}
 		if funcLit, ok := value.(*ast.FuncLit); ok {
-			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: funcLit, Class: isClassMember, Override: isOverrideMethod})
+			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: funcLit, Class: isClassMember, Override: isOverrideMethod, Private: memberPrivate})
 		} else if isOverrideMethod {
 			return nil, p.err("override can only be used on methods")
 		} else if isClassMember {
-			decl.Vars = append(decl.Vars, ast.ClassVar{Name: memberName.Lexeme, Tok: memberName, Value: value})
+			decl.Vars = append(decl.Vars, ast.ClassVar{Name: memberName.Lexeme, Tok: memberName, Value: value, Private: memberPrivate})
 		} else {
-			decl.Fields = append(decl.Fields, ast.ClassField{Name: memberName.Lexeme, Tok: memberName, Value: value})
+			decl.Fields = append(decl.Fields, ast.ClassField{Name: memberName.Lexeme, Tok: memberName, Value: value, Private: memberPrivate})
 		}
 		p.skipNewlines()
 	}
