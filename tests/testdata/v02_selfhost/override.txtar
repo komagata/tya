@@ -1,0 +1,38 @@
+# v0.45 M8.2d: v02 parser accepts `override` before a method name.
+# Codegen ignores the modifier (override correctness is the Go
+# reference checker's job). Verifies the generated C still calls the
+# subclass's method body, not the parent's.
+cd $REPO
+
+exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" 2>/dev/null'
+
+exec sh -c '"$WORK/stage1" "$WORK/override.tya" > "$WORK/override.c"'
+! stderr .
+
+exec cc $WORK/override.c runtime/tya_runtime.c -I runtime -o $WORK/override
+! stderr .
+
+exec $WORK/override
+stdout 'dog says woof\n'
+! stderr .
+
+-- override.tya --
+class Animal
+  init = name ->
+    @name = name
+
+  speak = ->
+    "{@name} says ???"
+
+class Dog extends Animal
+  init = ->
+    super("dog")
+
+  override speak = ->
+    "{@name} says woof"
+
+d = Dog()
+print(d.speak())

@@ -1020,6 +1020,14 @@ parse_simple_block = tokens, index ->
     if token_kind(tokens[next]) == "NEWLINE"
       next = next + 1
       continue
+    # v0.45 M8.2d: accept optional `override` keyword before a method
+    # name (`override foo = ...`). v02 codegen treats it as a no-op —
+    # the override-correctness check lives in the Go reference
+    # checker. Conservative: only consume when followed by IDENT `=`.
+    if (
+      token_kind(tokens[next]) == "IDENT" and token_text(tokens[next]) == "override" and token_kind(tokens[next + 1]) == "IDENT" and token_text(tokens[next + 2]) == "="
+    )
+      next = next + 1
     current = tokens[next]
     # v0.45 M8.2c: accept optional `abstract` / `final` class modifiers
     # before the `class` keyword. Stored as boolean flags on the AST
