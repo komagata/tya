@@ -306,7 +306,12 @@ lex = source ->
       continue
     if i + 1 < len(source)
       two = char + source[i + 1]
-      if two == "==" or two == "!=" or two == "<=" or two == ">=" or two == "->"
+      # v0.45 M8.1: `@@` is the v0.44 class-variable prefix and must
+      # tokenize as a single SYMBOL so the parser (M8.2) can dispatch
+      # on it. Keywords (`class`, `interface`, `extends`, `implements`,
+      # `super`, `abstract`, `final`, `override`) keep flowing through
+      # as IDENTs; the parser distinguishes them by lexeme.
+      if two == "==" or two == "!=" or two == "<=" or two == ">=" or two == "->" or two == "@@"
         push(tokens, token_node("SYMBOL", two, line, col))
         i = i + 2
         col = col + 2
