@@ -1,0 +1,27 @@
+# v0.50 `tya lint --fix` removes the source lines that introduce
+# unused local bindings. Other findings (TYAL0003/0004/0005) remain
+# untouched on stdout and the exit code reflects whatever did not get
+# autofixed.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+# Initial state: two unused locals.
+exec $WORK/tya lint --fix dirty.tya
+! stdout .
+! stderr .
+
+# After --fix the unused lines are gone; lint is clean.
+cmp dirty.tya expected.tya
+exec $WORK/tya lint dirty.tya
+! stdout .
+! stderr .
+
+-- dirty.tya --
+x = 1
+unused1 = 99
+print(x)
+unused2 = 42
+-- expected.tya --
+x = 1
+print(x)

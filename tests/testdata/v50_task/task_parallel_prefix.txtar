@@ -1,0 +1,19 @@
+# v0.50 parallel task prefixes every output line with
+# `[<index> <truncated-cmd>] `. Long commands are truncated to 16
+# characters (final char replaced with `…`). Index is 1-origin.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya task long_prefix
+stdout '\[1 echo task one w…\] hi1'
+stdout '\[2 short\(\) \{ echo …\] hi2'
+! stderr .
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks.long_prefix]
+cmds = ["echo task one with a really long name; echo hi1", "short() { echo hi2; }; short"]
+parallel = true

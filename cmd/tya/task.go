@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"tya/internal/pkg"
 )
@@ -54,6 +57,8 @@ func taskCommand(args []string) (int, error) {
 			}
 		}
 		return 0, nil
+	case "parallel":
+		return runParallel(root, name, task.Array, extra)
 	default:
 		return 1, fmt.Errorf("internal: task %q has unknown kind %q", name, task.Kind)
 	}
@@ -121,4 +126,103 @@ func joinShellArgs(args []string) string {
 
 func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+// runParallel runs every cmd concurrently under /bin/sh -c, waits
+// for all to finish, prefixes each line of their stdout/stderr with
+// `[<i> <truncated cmd>] `, and returns the first non-zero exit
+// code observed. Errors starting the children are propagated as
+// the second return value.
+func runParallel(cwd, taskName string, cmds, extraArgs []string) (int, error) {
+	if len(cmds) == 0 {
+		return 0, nil
+	}
+	type result struct {
+		index int
+		cmd   string
+		code  int
+		err   error
+	}
+	results := make([]result, len(cmds))
+	var wg sync.WaitGroup
+	wg.Add(len(cmds))
+	for i, cmd := range cmds {
+		i, cmd := i, cmd
+		go func() {
+			defer wg.Done()
+			code, err := runShellPrefixed(cwd, i+1, cmd, extraArgs)
+			results[i] = result{index: i + 1, cmd: cmd, code: code, err: err}
+		}()
+	}
+	wg.Wait()
+
+	firstFail := 0
+	failures := []string{}
+	for _, r := range results {
+		if r.err != nil {
+			return 1, r.err
+		}
+		if r.code != 0 {
+			if firstFail == 0 {
+				firstFail = r.code
+			}
+			failures = append(failures, fmt.Sprintf("#%d (%q) exit %d", r.index, r.cmd, r.code))
+		}
+	}
+	if firstFail != 0 {
+		return firstFail, fmt.Errorf("[TYA-E0903] task %q parallel: %s", taskName, strings.Join(failures, ", "))
+	}
+	return 0, nil
+}
+
+func runShellPrefixed(cwd string, index int, command string, extraArgs []string) (int, error) {
+	full := command
+	if len(extraArgs) > 0 {
+		full = command + " " + joinShellArgs(extraArgs)
+	}
+	cmd := exec.Command("/bin/sh", "-c", full)
+	cmd.Dir = cwd
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return 1, err
+	}
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return 1, err
+	}
+	if err := cmd.Start(); err != nil {
+		return 1, fmt.Errorf("failed to start /bin/sh: %v", err)
+	}
+	prefix := taskPrefix(index, command)
+	var pipeWg sync.WaitGroup
+	pipeWg.Add(2)
+	go pumpPrefixed(stdoutPipe, os.Stdout, prefix, &pipeWg)
+	go pumpPrefixed(stderrPipe, os.Stderr, prefix, &pipeWg)
+	pipeWg.Wait()
+	err = cmd.Wait()
+	if err == nil {
+		return 0, nil
+	}
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		return exitErr.ExitCode(), nil
+	}
+	return 1, err
+}
+
+func taskPrefix(index int, command string) string {
+	const maxLen = 16
+	c := command
+	if len(c) > maxLen {
+		c = c[:maxLen-1] + "…"
+	}
+	return fmt.Sprintf("[%d %s] ", index, c)
+}
+
+func pumpPrefixed(r io.Reader, w io.Writer, prefix string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 4096), 1024*1024)
+	for scanner.Scan() {
+		fmt.Fprintln(w, prefix+scanner.Text())
+	}
 }

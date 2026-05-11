@@ -1,0 +1,20 @@
+# v0.50 TYAL0003 detects `if true` / `if false` as a redundant
+# branch. v0.50 ships TYAL0003 as a warning-only rule (no autofix
+# yet — that's queued for v0.51+); the finding is reported and
+# exit code 1 is returned.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya lint sample.tya
+stdout 'TYAL0003 redundant `if true`'
+stdout 'TYAL0003 redundant `if false`'
+! stderr .
+
+-- sample.tya --
+x = 1
+if true
+  print(x)
+if false
+  print("never")
+print(x)

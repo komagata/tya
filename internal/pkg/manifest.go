@@ -54,14 +54,18 @@ type Dependency struct {
 	PathRef    string // for path source
 }
 
-// Task is a single entry under [tasks] in tya.toml. A task is either a
-// single shell command (Kind == "string") or a sequence of commands run
-// in order, stopping on the first failure (Kind == "array").
+// Task is a single entry under [tasks] in tya.toml. A task is one of:
+//
+//	Kind == "string"   single shell command (`name = "..."`)
+//	Kind == "array"    sequence of commands, sequential, stop on first failure
+//	Kind == "parallel" table form: `[tasks.name] cmds = [...]; parallel = true`
+//	                   runs every entry concurrently, waits for all, returns
+//	                   the first non-zero exit code
 type Task struct {
 	Name   string
-	Kind   string   // "string" or "array"
+	Kind   string   // "string" | "array" | "parallel"
 	String string   // populated when Kind == "string"
-	Array  []string // populated when Kind == "array"
+	Array  []string // populated when Kind == "array" or "parallel"
 }
 
 func ReadManifest(path string) (*Manifest, error) {
@@ -152,8 +156,27 @@ func readTask(name string, v TomlValue) (Task, error) {
 			t.Array = append(t.Array, item.Str)
 		}
 		return t, nil
+	case "table":
+		// table form: must carry `cmds = [...]`; `parallel = true`
+		// flips Kind to "parallel". Without `parallel = true`, the
+		// table form behaves like an array form.
+		cmds, ok := v.Table["cmds"]
+		if !ok || cmds.Kind != "array" {
+			return t, fmt.Errorf("expected `cmds = [...]` in table form")
+		}
+		for i, item := range cmds.Array {
+			if item.Kind != "string" {
+				return t, fmt.Errorf("cmds element #%d: expected string, got %s", i+1, item.Kind)
+			}
+			t.Array = append(t.Array, item.Str)
+		}
+		t.Kind = "array"
+		if p, ok := v.Table["parallel"]; ok && p.Kind == "bool" && p.Bool {
+			t.Kind = "parallel"
+		}
+		return t, nil
 	default:
-		return t, fmt.Errorf("expected string or array of strings, got %s", v.Kind)
+		return t, fmt.Errorf("expected string, array of strings, or table form, got %s", v.Kind)
 	}
 }
 
@@ -251,12 +274,22 @@ func WriteManifest(m *Manifest) error {
 }
 
 func taskToToml(t Task) TomlValue {
-	if t.Kind == "array" {
+	switch t.Kind {
+	case "array":
 		arr := NewTomlArray()
 		for _, cmd := range t.Array {
 			arr.Array = append(arr.Array, TomlString(cmd))
 		}
 		return arr
+	case "parallel":
+		tbl := NewTomlTable()
+		arr := NewTomlArray()
+		for _, cmd := range t.Array {
+			arr.Array = append(arr.Array, TomlString(cmd))
+		}
+		tbl.SetField("cmds", arr)
+		tbl.SetField("parallel", TomlBool(true))
+		return tbl
 	}
 	return TomlString(t.String)
 }

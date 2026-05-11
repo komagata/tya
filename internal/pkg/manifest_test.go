@@ -110,6 +110,60 @@ broken = 42
 	}
 }
 
+func TestReadManifestTasksParallelTable(t *testing.T) {
+	dir := t.TempDir()
+	src := `name = "x"
+version = "0.1.0"
+
+[tasks.watch]
+cmds = ["tya format --watch", "tya lsp"]
+parallel = true
+`
+	path := filepath.Join(dir, "tya.toml")
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	m, err := ReadManifest(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, ok := m.Tasks["watch"]
+	if !ok {
+		t.Fatalf("watch task missing: %+v", m.Tasks)
+	}
+	if got.Kind != "parallel" {
+		t.Errorf("kind: got %q, want parallel", got.Kind)
+	}
+	if len(got.Array) != 2 || got.Array[0] != "tya format --watch" || got.Array[1] != "tya lsp" {
+		t.Errorf("cmds: %+v", got.Array)
+	}
+}
+
+func TestReadManifestTasksTableWithoutParallel(t *testing.T) {
+	dir := t.TempDir()
+	src := `name = "x"
+version = "0.1.0"
+
+[tasks.build]
+cmds = ["echo step1", "echo step2"]
+`
+	path := filepath.Join(dir, "tya.toml")
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	m, err := ReadManifest(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := m.Tasks["build"]
+	if got.Kind != "array" {
+		t.Errorf("kind: got %q, want array", got.Kind)
+	}
+	if len(got.Array) != 2 {
+		t.Errorf("cmds: %+v", got.Array)
+	}
+}
+
 func TestReadManifestTasksArrayWithNonString(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "x"

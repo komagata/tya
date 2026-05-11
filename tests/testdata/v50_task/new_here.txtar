@@ -1,0 +1,19 @@
+# v0.50 `tya new --here` initialises the current directory instead
+# of creating a new <name>/ subtree. The project name is derived
+# from the basename of the current directory.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+
+mkdir $WORK/inside
+cd $WORK/inside
+
+exec $WORK/tya new --here
+stdout 'Initialised tya project in '
+! stderr .
+
+exists tya.toml
+exists src/main.tya
+exists tests/main_test.tya
+exists .gitignore
+exists README.md
+exists .git

@@ -1,0 +1,19 @@
+# v0.50 parallel task with at least one failing cmd waits for all
+# children to finish (case B), then reports TYA-E0903 with the
+# failing indices and exits with the first non-zero exit code.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya task fail
+stdout '\[1 echo first\] first'
+stdout '\[3 echo third\] third'
+stderr '\[TYA-E0903\] task "fail" parallel: #2 \("exit 7"\) exit 7'
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks.fail]
+cmds = ["echo first", "exit 7", "echo third"]
+parallel = true

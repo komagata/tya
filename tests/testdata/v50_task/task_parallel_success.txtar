@@ -1,0 +1,21 @@
+# v0.50 parallel task (table form, parallel = true) runs every cmd
+# concurrently and exits 0 when all succeed. Output is prefixed with
+# `[<index> <truncated cmd>] `. Output order is non-deterministic so
+# we check that every expected line appears at least once.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya task watch
+stdout '\[1 echo task1\] task1'
+stdout '\[2 echo task2\] task2'
+stdout '\[3 echo task3\] task3'
+! stderr .
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks.watch]
+cmds = ["echo task1", "echo task2", "echo task3"]
+parallel = true

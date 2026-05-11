@@ -1,0 +1,19 @@
+# v0.50 `tya new --force` overwrites an existing target directory
+# (without --force, the target must not exist).
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+# First, build the project once.
+exec $WORK/tya new myapp --no-git
+exists myapp/tya.toml
+
+# Without --force, recreating fails with TYA-E0911.
+! exec $WORK/tya new myapp --no-git
+stderr '\[TYA-E0911\] myapp already exists'
+
+# With --force, recreating succeeds (overwrites).
+exec $WORK/tya new --force myapp --no-git
+stdout 'Created myapp'
+! stderr .
+exists myapp/tya.toml

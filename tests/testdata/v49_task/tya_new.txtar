@@ -36,6 +36,7 @@ version = "0.1.0"
 
 [tasks]
 run = "tya run src/main.tya"
+test = "tya test tests"
 -- expected_main.tya --
 print("Hello, Tya!")
 -- expected_gitignore --

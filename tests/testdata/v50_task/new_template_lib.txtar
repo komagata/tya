@@ -1,0 +1,16 @@
+# v0.50 `tya new --template lib` scaffolds a class-form library
+# (src/<PascalName>.tya) instead of the default script-form app.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya new --template lib mylib --no-git
+stdout 'Created mylib'
+! stderr .
+
+exists mylib/src/Mylib.tya
+exists mylib/tests/mylib_test.tya
+! exists mylib/src/main.tya
+
+# Lib template should have a class declaration, not a script.
+grep 'class Mylib' mylib/src/Mylib.tya

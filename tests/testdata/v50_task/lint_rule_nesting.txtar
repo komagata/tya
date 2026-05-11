@@ -1,0 +1,30 @@
+# v0.50 TYAL0004 flags blocks nested 5 levels deep. The threshold
+# is a hardcoded constant (nestingThreshold = 5 in
+# internal/checker/lint_rules.go). Threshold tuning via tya.toml
+# is queued for v0.51+.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya lint deep.tya
+stdout 'TYAL0004 deeply nested block'
+! stderr .
+
+exec $WORK/tya lint shallow.tya
+! stdout .
+! stderr .
+
+-- deep.tya --
+x = 1
+if x > 0
+  while x < 100
+    for i in [1, 2]
+      if i > 0
+        while i < 10
+          print(i)
+          i = i + 1
+-- shallow.tya --
+x = 1
+if x > 0
+  print(x)
+print(x)

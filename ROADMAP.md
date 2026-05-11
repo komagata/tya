@@ -148,6 +148,20 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.50** — Toolchain extension pack (`docs/v0.50/SPEC.md`,
+  `docs/v0.50/RELEASE_NOTES.md`). `tya lint` gains rules
+  `TYAL0003` (redundant `if true` / `if false`), `TYAL0004` (deep
+  nesting, threshold 5), and `TYAL0005` (long function body,
+  threshold 50), plus `--fix` for `TYAL0001` unused locals.
+  `tya new` gains `--here`, `--template app|lib`, `--force`,
+  `--no-git`, and runs `git init` by default. `tya task` accepts
+  a new TOML table form `[tasks.<name>] cmds = [...]; parallel =
+  true` that runs every entry concurrently and exits with the
+  first non-zero exit code after waiting for all children;
+  output is line-prefixed `[<index> <truncated cmd>] `. New
+  diagnostic codes `TYA-E0903` (parallel failure),
+  `TYA-E0912` / `TYA-E0913` (`tya new` flag misuse), `TYAL0003` /
+  `TYAL0004` / `TYAL0005`. Language surface unchanged from v0.49.
 - **v0.49** — Toolchain track kickoff: three new CLI subcommands
   (`docs/v0.49/SPEC.md`, `docs/v0.49/RELEASE_NOTES.md`). `tya new
   <name>` scaffolds a minimal project (`tya.toml` + `src/main.tya`
