@@ -1,0 +1,56 @@
+# v0.46 G1+G2+G3+G5: end-to-end test of the sigil-free class
+# surface. Uses the new keywords (private, static, self, Self,
+# initialize) exclusively. Covers:
+#   - public + private instance fields
+#   - public + private static fields
+#   - public + private instance methods
+#   - public + private static methods
+#   - constructor via `initialize`
+#   - `super(...)` to a parent's `initialize`
+#   - `Self(args)` rename-safe instance construction
+#   - cross-class static access via `<ClassName>.member`
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/sigil_free.tya
+stdout 'Hello, komagata\n42\n1\nbuilt:Tya\n'
+! stderr .
+
+-- sigil_free.tya --
+class User
+  name = ""
+  private id = 0
+  static count = 0
+  private static seed = 41
+
+  initialize = name ->
+    self.name = name
+    self.id = Self.next_id()
+    Self.count = Self.count + 1
+
+  greeting = ->
+    "Hello, {self.name}"
+
+  show_id = ->
+    self.id
+
+  static build = name ->
+    Self(name)
+
+  private static next_id = ->
+    Self.seed = Self.seed + 1
+    Self.seed
+
+u = User("komagata")
+print(u.greeting())
+print(u.show_id())
+print(User.count)
+
+class Admin extends User
+  initialize = name ->
+    super(name)
+
+  greeting = ->
+    "built:{self.name}"
+
+a = Admin.build("Tya")
+print(a.greeting())

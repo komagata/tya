@@ -1,5 +1,5 @@
 class Doubler
-  init = ->
+  initialize = ->
     self.count = 0
 
   apply = n ->
