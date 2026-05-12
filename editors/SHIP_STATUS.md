@@ -30,7 +30,7 @@ from repository changes alone.
 | Publish VS Code support to Marketplace | Marketplace publisher access and `VSCE_PAT` / `vsce login` |
 | Publish VS Code support to Open VSX | Open VSX namespace access and `OVSX_PAT` / login |
 | Publish Emacs mode to MELPA | Pull request `melpa/melpa#10013` is open; maintainer review / merge pending |
-| Register Tree-sitter grammar with GitHub Linguist | Pull request to `github-linguist/linguist` and maintainer review |
+| Register Tree-sitter grammar with GitHub Linguist | Blocked before PR: Linguist requires a syntax grammar with an allowed license (`apache-2.0`, `bsd-2-clause`, `bsd-3-clause`, `cc0-1.0`, `isc`, `mit`, `mpl-2.0`, `ncsa`, `permissive`, `unlicense`, `wtfpl`, or `zlib`). The Tya repository currently has no project license, and the editor grammar metadata is `UNLICENSED`. |
 
 ## Last Local Verification
 
