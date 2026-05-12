@@ -178,12 +178,23 @@ type ServerInfo struct {
 }
 
 // ServerCapabilities advertises which LSP features tya supports.
+// v0.53 introduced the references / rename / range-formatting /
+// codeAction / semanticTokens / documentSymbol / workspaceSymbol
+// providers; older clients ignore unknown fields.
 type ServerCapabilities struct {
-	TextDocumentSync           TextDocumentSyncOptions `json:"textDocumentSync"`
-	HoverProvider              bool                    `json:"hoverProvider"`
-	DefinitionProvider         bool                    `json:"definitionProvider"`
-	CompletionProvider         *CompletionOptions      `json:"completionProvider,omitempty"`
-	DocumentFormattingProvider bool                    `json:"documentFormattingProvider"`
+	TextDocumentSync                TextDocumentSyncOptions `json:"textDocumentSync"`
+	HoverProvider                   bool                    `json:"hoverProvider"`
+	DefinitionProvider              bool                    `json:"definitionProvider"`
+	ReferencesProvider              bool                    `json:"referencesProvider"`
+	RenameProvider                  bool                    `json:"renameProvider"`
+	CompletionProvider              *CompletionOptions      `json:"completionProvider,omitempty"`
+	DocumentFormattingProvider      bool                    `json:"documentFormattingProvider"`
+	DocumentRangeFormattingProvider bool                    `json:"documentRangeFormattingProvider"`
+	CodeActionProvider              *CodeActionOptions      `json:"codeActionProvider,omitempty"`
+	SemanticTokensProvider          *SemanticTokensOptions  `json:"semanticTokensProvider,omitempty"`
+	DocumentSymbolProvider          bool                    `json:"documentSymbolProvider"`
+	WorkspaceSymbolProvider         bool                    `json:"workspaceSymbolProvider"`
+	PositionEncoding                string                  `json:"positionEncoding,omitempty"`
 }
 
 // TextDocumentSyncOptions tells the client which doc-sync mode to

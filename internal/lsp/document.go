@@ -48,6 +48,43 @@ func (s *Store) Change(uri string, version int, text string) {
 	d.Text = text
 }
 
+// ApplyChanges runs each Change in order against the stored
+// buffer, supporting both Full (Range == nil) and Incremental
+// edits. Returns the resulting text or false when the document
+// is unknown.
+func (s *Store) ApplyChanges(uri string, version int, changes []TextDocumentContentChangeEvent) (string, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	d, ok := s.docs[uri]
+	if !ok {
+		path, _ := URIToPath(uri)
+		text := ""
+		for _, c := range changes {
+			next, err := ApplyChange(text, c)
+			if err != nil {
+				next = c.Text
+			}
+			text = next
+		}
+		s.docs[uri] = &Document{URI: uri, Path: path, Version: version, Text: text}
+		return text, true
+	}
+	if version < d.Version {
+		return d.Text, true
+	}
+	text := d.Text
+	for _, c := range changes {
+		next, err := ApplyChange(text, c)
+		if err != nil {
+			next = c.Text
+		}
+		text = next
+	}
+	d.Version = version
+	d.Text = text
+	return text, true
+}
+
 // Save records the new text (if the client opted into IncludeText)
 // and otherwise updates nothing. Save also serves as a synthetic
 // trigger for re-diagnostics in callers; this layer just stores.

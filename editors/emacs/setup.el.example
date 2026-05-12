@@ -1,0 +1,24 @@
+;; tya support for Emacs. Pick lsp-mode OR eglot, not both.
+;; Tested against Emacs 29.
+
+(define-derived-mode tya-mode prog-mode "tya"
+  "Major mode for the tya programming language."
+  (setq-local comment-start "# "))
+(add-to-list 'auto-mode-alist '("\\.tya\\'" . tya-mode))
+
+;; --- eglot path (built-in since Emacs 29) ------------------------------
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs '(tya-mode . ("tya" "lsp"))))
+(add-hook 'tya-mode-hook
+          (lambda ()
+            (when (fboundp 'eglot-ensure)
+              (eglot-ensure))))
+
+;; --- lsp-mode path (uncomment to prefer lsp-mode) -----------------------
+;;
+;; (with-eval-after-load 'lsp-mode
+;;   (lsp-register-client
+;;    (make-lsp-client :new-connection (lsp-stdio-connection '("tya" "lsp"))
+;;                     :major-modes '(tya-mode)
+;;                     :server-id 'tya)))
+;; (add-hook 'tya-mode-hook #'lsp)

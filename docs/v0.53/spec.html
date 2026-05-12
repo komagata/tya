@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.53 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-53-specification">Tya v0.53 Specification</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.53.0</code>. &gt; v0.53 promotes the <code>tya lsp</code> MVP to a full LSP server. The &gt; language surface is unchanged from v0.49 — v0.52.</p>
+<h2 id="theme">Theme</h2>
+<p>v0.52 cut the LSP MVP. v0.53 unlocks the remaining IDE features that turn <code>tya lsp</code> into a viable daily-driver server: cross-file definition, references, rename, range formatting, code actions, semantic tokens, document and workspace symbols, and incremental document sync.</p>
+<p>Setup recipes for Neovim, Zed, and Emacs ship under <a href="../editors"><code>editors/</code></a>. Marketplace publication of the VS Code extension is queued for v0.54+.</p>
+<h2 id="tya-lsp-v2-added-methods"><code>tya lsp</code> v2 — added methods</h2>
+<p>| Method | Direction | Behaviour | |--------|-----------|-----------| | <code>textDocument/references</code> | request | Scope-aware: top-level → workspace scan; local / param → enclosing FuncLit | | <code>textDocument/rename</code> | request | Returns <code>WorkspaceEdit</code>. Conflicts produce <code>TYA-E0933</code> | | <code>textDocument/rangeFormatting</code> | request | Heuristic A: widen to smallest enclosing top-level Stmt(s), unparse, replace | | <code>textDocument/codeAction</code> | request | Quick fixes for <code>TYAL0001</code> (line-delete) and <code>TYAL0003</code> (if-unwrap) | | <code>textDocument/semanticTokens/full</code> | request | 9-type legend (keyword, variable, string, number, comment, operator, function, class, namespace) | | <code>textDocument/documentSymbol</code> | request | Hierarchical (class → methods, module → members) | | <code>workspace/symbol</code> | request | Case-insensitive substring match across <code>*.tya</code> under the workspace root |</p>
+<p><code>textDocument/definition</code> gains cross-file resolution when the identifier is an <code>ImportStmt</code> binding or a <code>mod.foo</code> member.</p>
+<h2 id="capabilities-v0-53">Capabilities (v0.53)</h2>
+<pre><code class="language-json">{
+  &quot;textDocumentSync&quot;: { &quot;openClose&quot;: true, &quot;change&quot;: 2, &quot;save&quot;: { &quot;includeText&quot;: false } },
+  &quot;hoverProvider&quot;: true,
+  &quot;definitionProvider&quot;: true,
+  &quot;referencesProvider&quot;: true,
+  &quot;renameProvider&quot;: true,
+  &quot;completionProvider&quot;: { &quot;resolveProvider&quot;: false },
+  &quot;documentFormattingProvider&quot;: true,
+  &quot;documentRangeFormattingProvider&quot;: true,
+  &quot;codeActionProvider&quot;: { &quot;codeActionKinds&quot;: [&quot;quickfix&quot;] },
+  &quot;semanticTokensProvider&quot;: {
+    &quot;legend&quot;: { &quot;tokenTypes&quot;: [...], &quot;tokenModifiers&quot;: [] },
+    &quot;range&quot;: false,
+    &quot;full&quot;: true
+  },
+  &quot;documentSymbolProvider&quot;: true,
+  &quot;workspaceSymbolProvider&quot;: true,
+  &quot;positionEncoding&quot;: &quot;utf-8&quot;
+}</code></pre>
+<p><code>change: 2</code> is <code>TextDocumentSyncKind.Incremental</code>. The server advertises <code>positionEncoding: &quot;utf-8&quot;</code> so byte offsets match LSP position offsets directly.</p>
+<h2 id="scope-rules">Scope rules</h2>
+<h3 id="rename-references">Rename / references</h3>
+<p>The identifier under the cursor is classified by <code>ScopeKindAt</code>:</p>
+<ul>
+<li>**top-level** — the binding appears in the file's top-level</li>
+</ul>
+<p>  symbol index. Rename / references span every <code>*.tya</code> file in the   workspace. Conflicts (e.g. the new name is already top-level in   another file) produce <code>TYA-E0933</code>.</p>
+<ul>
+<li>**param** — the identifier matches one of the enclosing</li>
+</ul>
+<p>  <code>FuncLit.Params</code>. Rename / references stay inside the function   body and its parameter list.</p>
+<ul>
+<li>**local** — the identifier appears as a target of an</li>
+</ul>
+<p>  <code>AssignStmt</code> inside the enclosing <code>FuncLit</code> body. Same   containment rule as **param**.</p>
+<ul>
+<li>**unknown** — no match. Rename / references return no edits /</li>
+</ul>
+<p>  no locations.</p>
+<h3 id="cross-file-definition">Cross-file definition</h3>
+<p><code>textDocument/definition</code> resolves cross-file in exactly two cases:</p>
+<ol>
+<li>The cursor is on an <code>ImportStmt</code> binding — the definition is</li>
+</ol>
+<p>   the imported module's source file (the first matching path    among <code>src/&lt;name&gt;.tya</code>, <code>&lt;name&gt;.tya</code>, <code>&lt;name&gt;/&lt;name&gt;.tya</code>,    <code>src/&lt;name&gt;/&lt;name&gt;.tya</code>). 2. The cursor is on the member of a <code>mod.foo</code> expression where    <code>mod</code> is itself an <code>ImportStmt</code> binding — the definition is    the same-name top-level binding inside the imported file.</p>
+<p>All other identifiers resolve same-file only.</p>
+<h3 id="range-formatting">Range formatting</h3>
+<p><code>textDocument/rangeFormatting</code> widens the requested range to the smallest set of contiguous top-level statements that fully overlap it, runs <code>formatter.Unparse</code> on the entire program, and replaces just the corresponding lines in the buffer. Ranges with no top-level statement match are no-ops.</p>
+<h2 id="code-actions">Code actions</h2>
+<ul>
+<li><code>TYAL0001 unused local</code> → kind: <code>quickfix</code>, edit: delete the</li>
+</ul>
+<p>  binding's line.</p>
+<ul>
+<li><code>TYAL0003 redundant if true/false</code> → kind: <code>quickfix</code>, edit:</li>
+</ul>
+<p>  drop the <code>if</code> header line and de-indent the chosen body by the   header's indent (two spaces in canonical syntax).</p>
+<p>The server only emits actions whose <code>code</code> is present in <code>CodeActionContext.Diagnostics</code> (when the client supplies one).</p>
+<h2 id="semantic-tokens">Semantic tokens</h2>
+<p>Legend (<code>tokenTypes</code>):</p>
+<pre><code>0: keyword       1: variable      2: string
+3: number        4: comment       5: operator
+6: function      7: class         8: namespace</code></pre>
+<p><code>tokenModifiers</code> is the empty list. Identifiers in call position are typed as <code>function</code>; identifiers that resolve to a top-level class are typed as <code>class</code>, module / interface as <code>namespace</code>. Unrecognised tokens are dropped.</p>
+<h2 id="position-encoding">Position encoding</h2>
+<p><code>positionEncoding</code> is advertised as <code>&quot;utf-8&quot;</code>. tya identifiers are ASCII and source files are stored as UTF-8 bytes, so LSP <code>Position.Character</code> is interpreted as a byte column inside the line. Clients that force UTF-16 see correct positions for ASCII code; non-ASCII characters in string literals may still skew by LSP fractions of a code unit, which is acceptable for v0.53 (no identifier resolution depends on string contents).</p>
+<h2 id="incremental-document-sync">Incremental document sync</h2>
+<p><code>TextDocumentSyncKind.Incremental = 2</code> is advertised. The server applies <code>TextDocumentContentChangeEvent.Range</code>-bounded edits in-order using a byte-offset position translator. Each change re-publishes diagnostics for that URI.</p>
+<h2 id="new-error-codes">New error codes</h2>
+<p>| Code | Subcommand | Meaning | |------|------------|---------| | <code>TYA-E0932</code> | <code>tya lsp</code> | Workspace scan failure (recoverable; logged) | | <code>TYA-E0933</code> | <code>tya lsp</code> | Rename conflict (shadow, duplicate, or invalid identifier) |</p>
+<h2 id="out-of-scope-v0-54">Out of scope (v0.54+)</h2>
+<ul>
+<li><code>prepareRename</code> (rename preview)</li>
+<li>Range formatting at AST slice precision (currently Heuristic A)</li>
+<li>Semantic token modifiers (<code>readonly</code>, <code>deprecated</code>, …)</li>
+<li>Inlay hints, call hierarchy, selection range, code lens,</li>
+</ul>
+<p>  folding range, document link</p>
+<ul>
+<li>VS Code Marketplace publication (publisher registration,</li>
+</ul>
+<p>  signed VSIX, icon, GH Actions release pipeline)</p>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>Language surface: unchanged from v0.49 — v0.52.</li>
+<li><code>tya.toml</code> schema: unchanged.</li>
+<li>CLI: every existing subcommand keeps its v0.52 behaviour. The</li>
+</ul>
+<p>  new LSP methods are additive.</p>
+<h2 id="tests">Tests</h2>
+<p><code>tests/lsp_v2_test.go</code> adds 11 cases (in addition to the 7 v0.52 tests in <code>tests/lsp_test.go</code>), covering cross-file definition, rename (top-level, local, conflict), references, range formatting, quick fixes, semantic tokens, incremental sync, document outline, and workspace symbol filtering.</p>
+    </article>
+  </main>
+</body>
+</html>

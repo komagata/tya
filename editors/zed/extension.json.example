@@ -1,0 +1,11 @@
+{
+  "languages": {
+    "tya": {
+      "language_server": {
+        "command": "tya",
+        "args": ["lsp"]
+      },
+      "file_types": ["tya"]
+    }
+  }
+}

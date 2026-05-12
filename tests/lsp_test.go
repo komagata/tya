@@ -48,7 +48,7 @@ func TestLSPInitialize(t *testing.T) {
 	if !got.Capabilities.DocumentFormattingProvider {
 		t.Error("formatting provider not advertised")
 	}
-	if !got.Capabilities.TextDocumentSync.OpenClose || got.Capabilities.TextDocumentSync.Change != 1 {
+	if !got.Capabilities.TextDocumentSync.OpenClose || got.Capabilities.TextDocumentSync.Change != 2 {
 		t.Errorf("bad textDocumentSync: %+v", got.Capabilities.TextDocumentSync)
 	}
 	if got.ServerInfo.Name != "tya" {

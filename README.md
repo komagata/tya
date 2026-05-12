@@ -48,13 +48,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.52.0, download the release source and build the `tya` command locally.
+For v0.53.0, download the release source and build the `tya` command locally.
 This currently requires Go because the v0.13 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.52.0.tar.gz | tar xz
-cd tya-0.52.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.53.0.tar.gz | tar xz
+cd tya-0.53.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -115,28 +115,38 @@ appends them to the task command (mirrors `$@`). Array-form tasks
 run each entry under `/bin/sh -c` in order and stop on the first
 failure.
 
-### Editor integration (v0.52+)
+### Editor integration (v0.53+)
 
 `tya lsp` runs the Language Server (LSP JSON-RPC 2.0 over stdio)
-from the same binary as the compiler. Supported features in v0.52:
-diagnostics on save / on change, `textDocument/formatting`, hover
-signatures, same-file goto-definition, and completion of top-level
-bindings + stdlib modules + builtins + keywords.
+from the same binary as the compiler. v0.53 supports the full IDE
+feature set:
 
-A VS Code extension scaffold lives at `editors/vscode/`. Manual
-install (Marketplace publication queued for v0.53+):
+- Diagnostics on save / on change
+- Formatting (full + range, backed by `tya format`)
+- Hover signatures + doc comments
+- Goto-definition (cross-file via `import`)
+- References, rename (top-level + local + param scope-aware)
+- Code actions (TYAL0001 / TYAL0003 quick fixes)
+- Document outline + workspace symbols
+- Semantic tokens, incremental document sync
+
+Setup recipes ship in [`editors/`](./editors):
+
+- [`editors/vscode/`](./editors/vscode) — TypeScript extension
+  (manual install; Marketplace publication queued for v0.54+)
+- [`editors/neovim/`](./editors/neovim) — nvim-lspconfig
+- [`editors/zed/`](./editors/zed) — Zed `settings.json`
+- [`editors/emacs/`](./editors/emacs) — eglot / lsp-mode
+
+VS Code manual install:
 
 ```sh
 cd editors/vscode
 npm install
 npm run compile
 npx vsce package
-code --install-extension tya-0.52.0.vsix
+code --install-extension tya-0.53.0.vsix
 ```
-
-Other editors connect via their LSP integrations using the binary
-path `tya` with subcommand `lsp` (e.g. Neovim `nvim-lspconfig`,
-Helix `languages.toml`, Zed).
 
 ## Example
 

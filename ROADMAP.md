@@ -148,6 +148,22 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.53** — `tya lsp` v2 full IDE feature set
+  (`docs/v0.53/SPEC.md`, `docs/v0.53/RELEASE_NOTES.md`). The
+  Language Server gains: cross-file `textDocument/definition` via
+  `import` and `mod.foo`; scope-aware `textDocument/references` and
+  `textDocument/rename` (top-level / local / param);
+  `textDocument/rangeFormatting` (heuristic A widening to the
+  smallest enclosing top-level Stmt); `textDocument/codeAction`
+  quick fixes for `TYAL0001` (line-delete) and `TYAL0003`
+  (if-unwrap); `textDocument/semanticTokens/full` over a 9-type
+  legend; `textDocument/documentSymbol` (hierarchical) and
+  `workspace/symbol` (substring filter); incremental document sync
+  (`TextDocumentSyncKind.Incremental`); `positionEncoding` advertised
+  as `utf-8`. Setup recipes ship under `editors/neovim/`,
+  `editors/zed/`, and `editors/emacs/`. New diagnostic codes
+  `TYA-E0932` (workspace scan, recoverable) and `TYA-E0933` (rename
+  conflict). Language surface unchanged from v0.52.
 - **v0.52** — `tya lsp` Language Server MVP (`docs/v0.52/SPEC.md`,
   `docs/v0.52/RELEASE_NOTES.md`). New toolchain subcommand
   `tya lsp [--log <file>]` speaks LSP JSON-RPC 2.0 over stdio.
@@ -380,29 +396,32 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Add did-you-mean suggestions for unknown-name diagnostics.
   - [ ] Add multi-error parsing.
 
-- [x] **Ship `tya lsp` Language Server** *(v0.52 shipped the MVP:
-  initialize / shutdown, document sync, diagnostics, formatting,
-  hover, same-file definition, completion. Remaining work below.)*
+- [x] **Ship `tya lsp` Language Server** *(v0.52 MVP + v0.53 full IDE
+  feature set delivered. Remaining items below are Marketplace
+  publication and post-MVP polish.)*
   - [x] Define LSP scope; ship `tya lsp` as a subcommand of the same
     binary so compiler and language server cannot drift in version.
-  - [x] Speak LSP over stdio (JSON-RPC) for VS Code, Zed, Helix, Neovim,
-    Emacs.
+  - [x] Speak LSP over stdio (JSON-RPC) for VS Code, Zed, Neovim, Emacs.
   - [x] Diagnostics on save / on change (TYA-E* / TYAL*).
-  - [x] Formatting (full document, backed by `formatter.Unparse`).
-  - [x] Hover (same-file functions with leading `#` comments).
-  - [x] Go-to-definition (same-file).
+  - [x] Formatting (full + range, backed by `formatter.Unparse`).
+  - [x] Hover (functions with leading `#` comments).
+  - [x] Go-to-definition (same-file + cross-file via `import`).
   - [x] Completion (in-scope names + stdlib module names + builtins + keywords).
+  - [x] References + rename (scope-aware: top-level / local / param).
+  - [x] Code actions for common diagnostics (TYAL0001 / TYAL0003 quick fixes).
+  - [x] Semantic tokens (`textDocument/semanticTokens/full`, 9 token types).
+  - [x] Incremental document sync (`TextDocumentSyncKind.Incremental`).
+  - [x] Document symbols + workspace symbols.
   - [x] Ship a minimal VS Code extension scaffold at `editors/vscode/`
     (manual install via `npx vsce package`).
-  - [ ] Cross-file definition resolution (follow `import`). *(v0.53+)*
-  - [ ] Find-references / rename. *(v0.53+)*
-  - [ ] Range formatting. *(v0.53+)*
-  - [ ] Code actions for common diagnostics (TYAL quick fixes). *(v0.53+)*
-  - [ ] Semantic tokens. *(v0.53+)*
-  - [ ] Incremental document sync. *(v0.53+)*
+  - [x] Setup recipes for Zed / Neovim / Emacs (`editors/<name>/`).
   - [ ] Marketplace publication of the VS Code extension (publisher
-    ID, signed VSIX, icon). *(v0.53+)*
-  - [ ] Setup recipes for Zed / Helix / Neovim / Emacs. *(v0.53+)*
+    ID, signed VSIX, icon, GH Actions release pipeline). *(v0.54+)*
+  - [ ] `prepareRename` (rename preview). *(v0.54+)*
+  - [ ] Semantic token modifiers (`readonly`, `deprecated`, …). *(v0.54+)*
+  - [ ] Range formatting at AST slice precision (current: heuristic A). *(v0.54+)*
+  - [ ] Inlay hints / call hierarchy / selection range / code lens /
+    folding range / document link. *(v0.54+)*
 
 - [x] **Ship `tya doc` source documentation generator** *(v0.51 shipped
   the minimal form: `tya doc` text + `tya doc --html <out>` static site
