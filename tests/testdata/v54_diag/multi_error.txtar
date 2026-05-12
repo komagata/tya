@@ -1,0 +1,18 @@
+# v0.54 multi-error parsing: tya emits every top-level
+# position-constraint violation in one pass, each prefixed with
+# its structured `TYA-E0120` code.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya check bad.tya
+stderr 'TYA-E0120'
+stderr 'return must be inside a function'
+stderr 'break must be inside a loop'
+stderr 'continue must be inside a loop'
+stderr 'Found 3 error\(s\)'
+
+-- bad.tya --
+return 42
+break
+continue

@@ -1,0 +1,14 @@
+# v0.54 did-you-mean: undefined variable gets a Levenshtein-based
+# suggestion appended to the diagnostic. Local same-file binding
+# avoids the stdlib resolution path so the fixture is hermetic.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya check typo.tya
+stderr 'undefined variable greting'
+stderr 'did you mean "greeting"'
+
+-- typo.tya --
+greeting = "hi"
+print(greting)

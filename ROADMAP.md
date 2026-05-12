@@ -148,6 +148,25 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.54** — Diagnostics pipeline migration (`docs/v0.54/SPEC.md`,
+  `docs/v0.54/RELEASE_NOTES.md`). Parser, Codegen, and Runner
+  errors now flow through the same `diag.Diagnostic` channel as
+  Lexer and Checker, each carrying a stable `[TYA-EXXXX]` code.
+  New code bands: `TYA-E0100-0199` (parser: expected token /
+  block / position constraint / reserved name / pattern / expression),
+  `TYA-E0601-0606` (codegen: unsupported AST shapes), `TYA-E0840`
+  / `E0856` / `E0857` / `E0858` (runner: filename, entry-module
+  conflict, import name conflict, undefined variable). Parser
+  gains statement-level recovery (`block()` and `program()`) so
+  one `tya check` run surfaces every top-level error at once
+  via `*parser.ParserError{Diags}`. Undefined-name errors gain
+  `did you mean "…"?` hints driven by a new
+  `internal/util/strdist.go::Suggest` Levenshtein helper. LSP
+  (`internal/lsp/diagnostics.go::DiagnosticsFor`) and CLI
+  (`cmd/tya/main.go::printDiagnostic`) both `errors.As`-unwrap
+  the new wrapper types and route every diagnostic into the
+  shared structured renderer. Language surface unchanged from
+  v0.53.
 - **v0.53** — `tya lsp` v2 full IDE feature set
   (`docs/v0.53/SPEC.md`, `docs/v0.53/RELEASE_NOTES.md`). The
   Language Server gains: cross-file `textDocument/definition` via
@@ -389,12 +408,23 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
 
 ### Toolchain
 
-- [ ] **Migrate remaining stages to the diagnostics pipeline**
-  - [ ] Parser → `TYA-E0100`–`E0299`.
-  - [ ] Codegen → `TYA-E0600`–`E0799`.
-  - [ ] Runner → `TYA-E0800`–`E0899`.
-  - [ ] Add did-you-mean suggestions for unknown-name diagnostics.
-  - [ ] Add multi-error parsing.
+- [x] **Migrate remaining stages to the diagnostics pipeline** *(v0.54
+  delivered the core: structured diagnostics for Parser /
+  Codegen / Runner, multi-error parsing, did-you-mean.
+  Remaining polish items below are scheduled for v0.55+.)*
+  - [x] Parser → `TYA-E0100`–`E0299` (E0100-E0180 buckets in use).
+  - [x] Codegen → `TYA-E0600`–`E0799` (E0601-E0606 in use).
+  - [x] Runner → `TYA-E0800`–`E0899` (E0840 / E0856-E0858 added on top
+    of v0.4x's E0850-E0855).
+  - [x] Add did-you-mean suggestions for unknown-name diagnostics
+    (Levenshtein-based `internal/util.Suggest`).
+  - [x] Add multi-error parsing (statement-level recovery in
+    `program()` and `block()`).
+  - [ ] Parser signature change to `Parse() → (*Program, []Diag, error)`
+    for symmetry with `lexer.LexWithComments`. *(v0.55+)*
+  - [ ] Expression-level recovery (currently statement-level). *(v0.55+)*
+  - [ ] Codegen / Runner signature change to also return `[]Diag`
+    slices. *(v0.55+)*
 
 - [x] **Ship `tya lsp` Language Server** *(v0.52 MVP + v0.53 full IDE
   feature set delivered. Remaining items below are Marketplace

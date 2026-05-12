@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/diag"
 	"tya/internal/token"
 )
 
@@ -16,11 +17,23 @@ type Parser struct {
 	loopDepth     int
 	functionDepth int
 	classDepth    int
+
+	// errs accumulates structured diagnostics during a multi-error
+	// parse run. Populated by newDiag (see diagnostic.go) and
+	// flushed into a *ParserError when Parse returns.
+	errs []diag.Diagnostic
 }
 
 func Parse(toks []token.Token) (*ast.Program, error) {
 	p := &Parser{toks: toks}
-	return p.program()
+	prog, err := p.program()
+	// Multi-error parsing (v0.54): when statement-level recovery
+	// accumulated additional diagnostics, surface them via the
+	// ParserError wrapper so CLI / LSP can render the full set.
+	if flushed := p.flushErrors(); flushed != nil {
+		return prog, flushed
+	}
+	return prog, err
 }
 
 // ParseWithComments runs Parse and additionally fills
@@ -278,7 +291,13 @@ func (p *Parser) program() (*ast.Program, error) {
 	for !p.at(token.EOF) {
 		s, err := p.stmt()
 		if err != nil {
-			return nil, err
+			// v0.54 multi-error parsing: the diagnostic is in
+			// p.errs already; skip to the next top-level
+			// statement so we can surface additional issues in
+			// the same pass.
+			p.skipToNextStmt()
+			p.skipNewlines()
+			continue
 		}
 		stmts = append(stmts, s)
 		p.skipNewlines()
@@ -922,13 +941,23 @@ func (p *Parser) block(owner string) ([]ast.Stmt, error) {
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
 		s, err := p.stmt()
 		if err != nil {
-			return nil, err
+			// Statement-level recovery (v0.54 multi-error parsing):
+			// the diagnostic is already recorded in p.errs by
+			// newDiag; skip to the next plausible statement and
+			// keep parsing so we surface more diagnostics in one
+			// pass.
+			p.skipToNextStmt()
+			p.skipNewlines()
+			continue
 		}
 		stmts = append(stmts, s)
 		p.skipNewlines()
 	}
 	if !p.match(token.DEDENT) {
-		return nil, p.err("expected dedent after " + owner)
+		// Don't compound — record the error and let the caller
+		// resume. If the loop already accumulated diagnostics this
+		// keeps them all visible.
+		_ = p.err("expected dedent after " + owner)
 	}
 	return stmts, nil
 }
@@ -2035,6 +2064,14 @@ func (p *Parser) err(msg string) error {
 	tok := p.peek()
 	return p.errAt(tok, msg)
 }
+
+// errAt is the v0.54 structured-diagnostic shim. It still returns
+// an `error` (so call sites stay unchanged) but the underlying
+// value is a *ParserError carrying a diag.Diagnostic, with the
+// flat `line:col: msg near "tok"` formatting preserved for
+// legacy callers via ParserError.Error().
 func (p *Parser) errAt(tok token.Token, msg string) error {
-	return fmt.Errorf("%d:%d: %s near %q", tok.Line, tok.Col, msg, tok.Lexeme)
+	full := fmt.Sprintf("%s near %q", msg, tok.Lexeme)
+	code := classifyParserCode(msg)
+	return p.newDiag(code, msg, full, tok.Line, tok.Col)
 }

@@ -28,7 +28,7 @@ cd editors/vscode
 npm install
 npm run compile
 npx vsce package
-code --install-extension tya-0.53.0.vsix
+code --install-extension tya-0.54.0.vsix
 ```
 
 ## Settings

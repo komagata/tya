@@ -97,6 +97,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
 <ul>
+<li>**v0.53** — <code>tya lsp</code> v2 full IDE feature set</li>
+</ul>
+<p>  (<code>docs/v0.53/SPEC.md</code>, <code>docs/v0.53/RELEASE_NOTES.md</code>). The   Language Server gains: cross-file <code>textDocument/definition</code> via   <code>import</code> and <code>mod.foo</code>; scope-aware <code>textDocument/references</code> and   <code>textDocument/rename</code> (top-level / local / param);   <code>textDocument/rangeFormatting</code> (heuristic A widening to the   smallest enclosing top-level Stmt); <code>textDocument/codeAction</code>   quick fixes for <code>TYAL0001</code> (line-delete) and <code>TYAL0003</code>   (if-unwrap); <code>textDocument/semanticTokens/full</code> over a 9-type   legend; <code>textDocument/documentSymbol</code> (hierarchical) and   <code>workspace/symbol</code> (substring filter); incremental document sync   (<code>TextDocumentSyncKind.Incremental</code>); <code>positionEncoding</code> advertised   as <code>utf-8</code>. Setup recipes ship under <code>editors/neovim/</code>,   <code>editors/zed/</code>, and <code>editors/emacs/</code>. New diagnostic codes   <code>TYA-E0932</code> (workspace scan, recoverable) and <code>TYA-E0933</code> (rename   conflict). Language surface unchanged from v0.52.</p>
+<ul>
 <li>**v0.52** — <code>tya lsp</code> Language Server MVP (<code>docs/v0.52/SPEC.md</code>,</li>
 </ul>
 <p>  <code>docs/v0.52/RELEASE_NOTES.md</code>). New toolchain subcommand   <code>tya lsp [--log &lt;file&gt;]</code> speaks LSP JSON-RPC 2.0 over stdio.   Advertised capabilities: <code>textDocumentSync</code> (Full), hover,   definition, completion, and document formatting. Diagnostics   fire on <code>didOpen</code> / <code>didChange</code> / <code>didSave</code> and reuse   <code>checker.CheckAll</code> + <code>parser.OrphanComments</code> + <code>CollectUnused</code> +   <code>CollectLintFindings</code>. Hover renders the function signature plus   the leading <code>#</code>-comment block. Definition is same-file only (cross-file   resolution queued for v0.53+). Completion lists same-file   top-level bindings + stdlib module names + builtins + keywords.   VS Code extension scaffold under <code>editors/vscode/</code> (manual   install via <code>npx vsce package</code>; Marketplace publication queued   for v0.53+). New diagnostic codes <code>TYA-E0930</code> (startup / argument   failure) and <code>TYA-E0931</code> (server I/O failure). <code>internal/checker</code>   gets a small public accessor <code>BuiltinNames()</code>; <code>internal/doc</code>'s   <code>funcSignature</code> is exported as <code>FuncSignature</code> for hover reuse.   Language surface unchanged from v0.51.</p>
@@ -218,39 +222,40 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 </ul>
 <ul>
-<li>[x] **Ship <code>tya lsp</code> Language Server** *(v0.52 shipped the MVP:</li>
+<li>[x] **Ship <code>tya lsp</code> Language Server** *(v0.52 MVP + v0.53 full IDE</li>
 </ul>
-<p>  initialize / shutdown, document sync, diagnostics, formatting,   hover, same-file definition, completion. Remaining work below.)*</p>
+<p>  feature set delivered. Remaining items below are Marketplace   publication and post-MVP polish.)*</p>
 <ul>
 <li>[x] Define LSP scope; ship <code>tya lsp</code> as a subcommand of the same</li>
 </ul>
 <p>    binary so compiler and language server cannot drift in version.</p>
 <ul>
-<li>[x] Speak LSP over stdio (JSON-RPC) for VS Code, Zed, Helix, Neovim,</li>
-</ul>
-<p>    Emacs.</p>
-<ul>
+<li>[x] Speak LSP over stdio (JSON-RPC) for VS Code, Zed, Neovim, Emacs.</li>
 <li>[x] Diagnostics on save / on change (TYA-E* / TYAL*).</li>
-<li>[x] Formatting (full document, backed by <code>formatter.Unparse</code>).</li>
-<li>[x] Hover (same-file functions with leading <code>#</code> comments).</li>
-<li>[x] Go-to-definition (same-file).</li>
+<li>[x] Formatting (full + range, backed by <code>formatter.Unparse</code>).</li>
+<li>[x] Hover (functions with leading <code>#</code> comments).</li>
+<li>[x] Go-to-definition (same-file + cross-file via <code>import</code>).</li>
 <li>[x] Completion (in-scope names + stdlib module names + builtins + keywords).</li>
+<li>[x] References + rename (scope-aware: top-level / local / param).</li>
+<li>[x] Code actions for common diagnostics (TYAL0001 / TYAL0003 quick fixes).</li>
+<li>[x] Semantic tokens (<code>textDocument/semanticTokens/full</code>, 9 token types).</li>
+<li>[x] Incremental document sync (<code>TextDocumentSyncKind.Incremental</code>).</li>
+<li>[x] Document symbols + workspace symbols.</li>
 <li>[x] Ship a minimal VS Code extension scaffold at <code>editors/vscode/</code></li>
 </ul>
 <p>    (manual install via <code>npx vsce package</code>).</p>
 <ul>
-<li>[ ] Cross-file definition resolution (follow <code>import</code>). *(v0.53+)*</li>
-<li>[ ] Find-references / rename. *(v0.53+)*</li>
-<li>[ ] Range formatting. *(v0.53+)*</li>
-<li>[ ] Code actions for common diagnostics (TYAL quick fixes). *(v0.53+)*</li>
-<li>[ ] Semantic tokens. *(v0.53+)*</li>
-<li>[ ] Incremental document sync. *(v0.53+)*</li>
+<li>[x] Setup recipes for Zed / Neovim / Emacs (<code>editors/&lt;name&gt;/</code>).</li>
 <li>[ ] Marketplace publication of the VS Code extension (publisher</li>
 </ul>
-<p>    ID, signed VSIX, icon). *(v0.53+)*</p>
+<p>    ID, signed VSIX, icon, GH Actions release pipeline). *(v0.54+)*</p>
 <ul>
-<li>[ ] Setup recipes for Zed / Helix / Neovim / Emacs. *(v0.53+)*</li>
+<li>[ ] <code>prepareRename</code> (rename preview). *(v0.54+)*</li>
+<li>[ ] Semantic token modifiers (<code>readonly</code>, <code>deprecated</code>, …). *(v0.54+)*</li>
+<li>[ ] Range formatting at AST slice precision (current: heuristic A). *(v0.54+)*</li>
+<li>[ ] Inlay hints / call hierarchy / selection range / code lens /</li>
 </ul>
+<p>    folding range / document link. *(v0.54+)*</p>
 <ul>
 <li>[x] **Ship <code>tya doc</code> source documentation generator** *(v0.51 shipped</li>
 </ul>

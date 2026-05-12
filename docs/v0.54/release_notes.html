@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.54 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-54-release-notes">Tya v0.54 Release Notes</h1>
+<p>&gt; **Status:** shipped. <code>tya version</code> reports <code>0.54.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.54 finishes the diagnostics pipeline migration:</p>
+<ul>
+<li>Parser, Codegen, and Runner errors now flow through the same</li>
+</ul>
+<p>  <code>diag.Diagnostic</code> channel as Lexer and Checker — every error   carries a stable <code>[TYA-EXXXX]</code> code.</p>
+<ul>
+<li>The parser keeps going past one error, so a single</li>
+</ul>
+<p>  <code>tya check</code> run surfaces every top-level statement violation.</p>
+<ul>
+<li>Undefined-name errors gain <code>did you mean &quot;…&quot;?</code> suggestions</li>
+</ul>
+<p>  driven by a tiny new <code>internal/util</code> Levenshtein helper.</p>
+<p>The language surface is unchanged from v0.53.</p>
+<h2 id="what-s-new">What's new</h2>
+<h3 id="structured-diagnostics-for-parser-codegen-runner">Structured diagnostics for Parser / Codegen / Runner</h3>
+<pre><code>$ tya check bad.tya
+-- RETURN MUST BE INSIDE A FUNCTION ---- bad.tya:1:1
+
+return must be inside a function near &quot;return&quot;
+
+   1 | return 42
+       ^
+
+(TYA-E0120)
+
+-- BREAK MUST BE INSIDE A LOOP -------- bad.tya:2:1
+…</code></pre>
+<p>New code bands:</p>
+<ul>
+<li><code>TYA-E0100-0199</code> Parser (expected token, indented block,</li>
+</ul>
+<p>  position constraint, reserved name, pattern syntax, expression).</p>
+<ul>
+<li><code>TYA-E0601-0606</code> Codegen (unsupported AST shapes).</li>
+<li><code>TYA-E0840-0858</code> Runner (filename, entry-module conflict,</li>
+</ul>
+<p>  import name conflict, undefined variable).</p>
+<h3 id="multi-error-parsing">Multi-error parsing</h3>
+<p><code>block()</code> and <code>program()</code> now run statement-level recovery: after recording a diagnostic, the parser skips to NEWLINE / DEDENT / EOF and resumes. Every diagnostic flows out as a <code>*parser.ParserError{Diags: []diag.Diagnostic}</code>.</p>
+<p>The LSP server (<code>internal/lsp/diagnostics.go</code>) and CLI (<code>cmd/tya/main.go</code>) both <code>errors.As</code>-unwrap the wrapper and emit the full list.</p>
+<h3 id="did-you-mean-hints">did-you-mean hints</h3>
+<pre><code>$ tya check typo.tya
+typo.tya:2:7: undefined variable strng; did you mean &quot;string&quot;?</code></pre>
+<p>The new <code>internal/util/strdist.go::Suggest</code> returns up to three candidates with Levenshtein distance ≤ 2, drawing from the builtin function list and the current scope's defined names.</p>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>Language surface: unchanged from v0.53.</li>
+<li><code>tya.toml</code> schema: unchanged.</li>
+<li>CLI: every existing subcommand keeps its v0.53 behaviour.</li>
+</ul>
+<p>  Stderr formatting changes are additive (banner + code) and   existing tests that grep substring like <code>&quot;undefined variable&quot;</code>   continue to match.</p>
+<h2 id="migration">Migration</h2>
+<p>Nothing required. Optional:</p>
+<ol>
+<li>Upgrade to v0.54 (<code>brew install komagata/tap/tya</code>).</li>
+</ol>
+<p>2. Re-run <code>tya check</code> on existing source — you'll see every    diagnostic in one pass instead of just the first. 3. Consume the new <code>[TYA-EXXXX]</code> codes in your editor / CI lint    rules.</p>
+<h2 id="implementation-notes">Implementation notes</h2>
+<ul>
+<li>New helpers:</li>
+<ul>
+<li><code>internal/util/strdist.go</code> — Levenshtein + <code>Suggest</code></li>
+<li><code>internal/parser/{codes,classify,diagnostic,recovery}.go</code> —</li>
+</ul>
+</ul>
+<p>    structured errors + multi-error scaffolding</p>
+<ul>
+<li><code>internal/codegen/errors.go</code> — <code>CodegenError</code> wrapper</li>
+<li><code>internal/runner/errors.go</code> — <code>RunnerError</code> + <code>undefinedNameHint</code></li>
+<li><code>internal/checker/suggest.go</code> — checker-side</li>
+</ul>
+<p>    undefined-name hint formatting</p>
+<ul>
+<li>The parser keeps the legacy <code>line:col: msg near &quot;tok&quot;</code> format</li>
+</ul>
+<p>  on <code>*ParserError.Error()</code> so existing string-grep tests stay   green; structured payload lifts out via <code>errors.As</code>.</p>
+<ul>
+<li>LSP and CLI both unwrap <code>*parser.ParserError</code>,</li>
+</ul>
+<p>  <code>*runner.RunnerError</code>, and <code>*codegen.CodegenError</code> into the   shared <code>emitDiagnostics</code> renderer.</p>
+<h2 id="tests">Tests</h2>
+<ul>
+<li><code>tests/testdata/v54_diag/multi_error.txtar</code> — three top-level</li>
+</ul>
+<p>  position constraint violations surface in one pass.</p>
+<ul>
+<li><code>tests/testdata/v54_diag/did_you_mean.txtar</code> — typo'd</li>
+</ul>
+<p>  identifier gets the <code>did you mean …?</code> hint.</p>
+<ul>
+<li>All pre-existing tests stay green.</li>
+</ul>
+<h2 id="looking-ahead-v0-55-candidates">Looking ahead (v0.55+ candidates)</h2>
+<p>From <code>ROADMAP.md</code> § Future Work:</p>
+<ul>
+<li>Parser signature change (<code>Parse() → (*Program, []Diag, error)</code>)</li>
+<li>Expression-level recovery</li>
+<li>Codegen / Runner signature change for <code>[]Diag</code> slices</li>
+<li>LSP code actions for did-you-mean quick fixes</li>
+<li>VS Code Marketplace publication (still queued from v0.53)</li>
+<li>Toolchain track other Epics (<code>tya lint</code> v3, <code>tya task</code> v2,</li>
+</ul>
+<p>  <code>tya doc</code> v2)</p>
+<ul>
+<li>Language Epics (raw <code>&quot;</code> in <code>{expr}</code> interpolation,</li>
+</ul>
+<p>  primitive class sugar, interface stackable trait, WASM target)</p>
+<p>Self-host work (<code>ROADMAP.md</code> § Scheduled M8 / M9 / M10) remains deferred until the v1.0.0 prep window.</p>
+    </article>
+  </main>
+</body>
+</html>

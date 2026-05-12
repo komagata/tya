@@ -23,7 +23,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.53.0"
+const version = "0.54.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -1079,6 +1079,33 @@ func printDiagnostic(path string, err error) {
 	var serr *checker.StrictError
 	if errors.As(err, &serr) && len(serr.Diags) > 0 {
 		emitDiagnostics(serr.Diags, path)
+		return
+	}
+	var perr *parser.ParserError
+	if errors.As(err, &perr) && len(perr.Diags) > 0 {
+		out := make([]diag.Diagnostic, len(perr.Diags))
+		for i, d := range perr.Diags {
+			d.Primary.File = path
+			out[i] = d
+		}
+		emitDiagnostics(out, path)
+		return
+	}
+	var rerr *runner.RunnerError
+	if errors.As(err, &rerr) {
+		d := rerr.Diag
+		d.Primary.File = path
+		emitDiagnostics([]diag.Diagnostic{d}, path)
+		return
+	}
+	var cerr *codegen.CodegenError
+	if errors.As(err, &cerr) && len(cerr.Diags) > 0 {
+		out := make([]diag.Diagnostic, len(cerr.Diags))
+		for i, d := range cerr.Diags {
+			d.Primary.File = path
+			out[i] = d
+		}
+		emitDiagnostics(out, path)
 		return
 	}
 	var ldiag *lexer.Diagnostic

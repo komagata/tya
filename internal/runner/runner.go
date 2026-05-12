@@ -30,7 +30,7 @@ var moduleNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
 func ValidateFileName(path string) error {
 	base := filepath.Base(path)
 	if filepath.Ext(path) != ".tya" {
-		return fmt.Errorf("invalid Tya file name: %s", base)
+		return runnerError(codeInvalidFileName, fmt.Sprintf("invalid Tya file name: %s", base), 0, 0)
 	}
 	if fileNameRE.MatchString(base) {
 		return nil
@@ -40,7 +40,7 @@ func ValidateFileName(path string) error {
 	if checker.IsClassFileName(base) {
 		return fmt.Errorf("[TYA-E0850] %s is a class file; tya run accepts only script files (lowercase filename)", base)
 	}
-	return fmt.Errorf("invalid Tya file name: %s", base)
+	return runnerError(codeInvalidFileName, fmt.Sprintf("invalid Tya file name: %s", base), 0, 0)
 }
 
 // ValidateAnyTyaFileName accepts any well-formed v0.44 .tya file:
@@ -51,7 +51,7 @@ func ValidateFileName(path string) error {
 func ValidateAnyTyaFileName(path string) error {
 	base := filepath.Base(path)
 	if filepath.Ext(path) != ".tya" {
-		return fmt.Errorf("invalid Tya file name: %s", base)
+		return runnerError(codeInvalidFileName, fmt.Sprintf("invalid Tya file name: %s", base), 0, 0)
 	}
 	if fileNameRE.MatchString(base) {
 		return nil
@@ -59,7 +59,7 @@ func ValidateAnyTyaFileName(path string) error {
 	if checker.IsClassFileName(base) {
 		return nil
 	}
-	return fmt.Errorf("invalid Tya file name: %s", base)
+	return runnerError(codeInvalidFileName, fmt.Sprintf("invalid Tya file name: %s", base), 0, 0)
 }
 
 // IsLegacyV01Path reports whether the given path identifies a
@@ -876,19 +876,19 @@ func validateEntry(path string, prog *ast.Program, imports map[string]bool) erro
 	for _, stmt := range prog.Stmts {
 		switch n := stmt.(type) {
 		case *ast.ModuleDecl:
-			return fmt.Errorf("%s entry file cannot define module %s directly", filepath.Base(path), n.Name)
+			return runnerError(codeEntryRedefinesModule, fmt.Sprintf("%s entry file cannot define module %s directly", filepath.Base(path), n.Name), 0, 0)
 		case *ast.ClassDecl:
 			if imports[n.Name] {
-				return fmt.Errorf("import name conflict: %s", n.Name)
+				return runnerError(codeImportNameConflict, fmt.Sprintf("import name conflict: %s", n.Name), 0, 0)
 			}
 		case *ast.InterfaceDecl:
 			if imports[n.Name] {
-				return fmt.Errorf("import name conflict: %s", n.Name)
+				return runnerError(codeImportNameConflict, fmt.Sprintf("import name conflict: %s", n.Name), 0, 0)
 			}
 		case *ast.AssignStmt:
 			for _, target := range n.Targets {
 				if id, ok := target.(*ast.Ident); ok && imports[id.Name] {
-					return fmt.Errorf("import name conflict: %s", id.Name)
+					return runnerError(codeImportNameConflict, fmt.Sprintf("import name conflict: %s", id.Name), 0, 0)
 				}
 			}
 		}
@@ -1045,7 +1045,16 @@ func rejectHiddenImportUseExpr(expr ast.Expr, hidden map[string]bool, bound map[
 	switch n := expr.(type) {
 	case *ast.Ident:
 		if hidden[n.Name] && !bound[n.Name] {
-			return fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
+			locals := make([]string, 0, len(bound))
+			for k := range bound {
+				locals = append(locals, k)
+			}
+			hint := undefinedNameHint(n.Name, locals)
+			msg := fmt.Sprintf("undefined variable %s", n.Name)
+			if hint != "" {
+				return runnerError(codeUndefinedVariable, msg, n.Tok.Line, n.Tok.Col, hint)
+			}
+			return runnerError(codeUndefinedVariable, msg, n.Tok.Line, n.Tok.Col)
 		}
 	case *ast.DictLit:
 		for _, prop := range n.Props {

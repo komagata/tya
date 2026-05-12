@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.54 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-54-specification">Tya v0.54 Specification</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.54.0</code>. &gt; v0.54 routes Parser / Codegen / Runner errors through the same &gt; structured <code>diag.Diagnostic</code> channel used by Lexer and Checker, &gt; adds multi-error parsing, and surfaces <code>did-you-mean</code> &gt; suggestions for undefined names. The language surface is &gt; unchanged from v0.53.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya's compiler stages have historically emitted diagnostics in two flavours: <code>diag.Diagnostic</code> for lexer + checker, and free-form <code>fmt.Errorf</code> strings for parser, codegen, and runner. v0.54 finishes the migration so every stage speaks the same structured shape. The visible payoff:</p>
+<ul>
+<li>Every error has a stable <code>[TYA-EXXXX]</code> code.</li>
+<li>The CLI renders rich blocks (banner, source pointer, code).</li>
+<li>The LSP receives every parse error in one pass (no more</li>
+</ul>
+<p>  one-error-and-stop on <code>didOpen</code> / <code>didChange</code>).</p>
+<ul>
+<li>Undefined names get a <code>did you mean &quot;…&quot;?</code> hint when a close</li>
+</ul>
+<p>  candidate exists.</p>
+<h2 id="new-diagnostic-codes">New diagnostic codes</h2>
+<p>Parser (<code>TYA-E0100-0299</code>):</p>
+<p>| Code | Bucket | |------|--------| | <code>TYA-E0100</code> | Expected token / syntax (open-of-block, bracket, keyword) | | <code>TYA-E0101</code> | Expected indented block | | <code>TYA-E0102</code> | Unexpected token | | <code>TYA-E0120</code> | Position constraint (return / break / continue / module / outside scope) | | <code>TYA-E0140</code> | Reserved name / keyword used as identifier | | <code>TYA-E0141</code> | Deprecated or unsupported syntax | | <code>TYA-E0160</code> | Pattern / multi-assignment syntax | | <code>TYA-E0180</code> | Expected expression |</p>
+<p>Codegen (<code>TYA-E0600-0699</code>):</p>
+<p>| Code | Meaning | |------|---------| | <code>TYA-E0601</code> | Unsupported assignment target | | <code>TYA-E0602</code> | Unsupported statement or expression | | <code>TYA-E0603</code> | Unsupported match pattern | | <code>TYA-E0604</code> | <code>try</code> outside function body | | <code>TYA-E0605</code> | Non-tuple multi-assignment | | <code>TYA-E0606</code> | Destructuring target is not an Ident |</p>
+<p>Runner (<code>TYA-E0800-0899</code>):</p>
+<p>| Code | Meaning | |------|---------| | <code>TYA-E0840</code> | Invalid Tya filename | | <code>TYA-E0850-0855</code> | (existing) module / package validation | | <code>TYA-E0856</code> | Entry file redefines its module | | <code>TYA-E0857</code> | Import name conflict | | <code>TYA-E0858</code> | Undefined variable (with optional did-you-mean) |</p>
+<h2 id="multi-error-parsing">Multi-error parsing</h2>
+<p>The parser now keeps parsing after a statement-level failure. When <code>block()</code> or <code>program()</code> encounters an error, the diagnostic is recorded on the parser's accumulator, <code>skipToNextStmt()</code> advances to the next plausible statement boundary (NEWLINE / DEDENT / EOF), and parsing resumes. When <code>Parse()</code> returns it flushes the accumulator into <code>*parser.ParserError{Diags: []diag.Diagnostic}</code>.</p>
+<pre><code>$ tya check three_top_level_returns.tya
+-- RETURN MUST BE INSIDE A FUNCTION ---- three_top_level_returns.tya:1:1
+…
+(TYA-E0120)
+
+-- BREAK MUST BE INSIDE A LOOP -------- three_top_level_returns.tya:2:1
+…
+(TYA-E0120)
+
+-- CONTINUE MUST BE INSIDE A LOOP ----- three_top_level_returns.tya:3:1
+…
+(TYA-E0120)
+
+Found 3 error(s), 0 warning(s).</code></pre>
+<p>Recovery is statement-level only — expression-level recovery is queued for v0.55+ (see &quot;Out of scope&quot;).</p>
+<h2 id="did-you-mean-suggestions">Did-you-mean suggestions</h2>
+<p>Undefined-name errors (<code>TYA-E0858</code> in runner, the same surface in checker) pass the offending name plus the candidate pool (builtin function names + the current scope's defined names) through <code>util.Suggest</code>. Suggestions whose Levenshtein distance to the queried name is ≤ 2 are appended to the diagnostic as a <code>hint</code>:</p>
+<pre><code>typo.tya:2:7: undefined variable strng; did you mean &quot;string&quot;?</code></pre>
+<p>At most three candidates are listed. When no candidate qualifies, no hint is emitted (the original error stands unchanged).</p>
+<p><code>util.Suggest</code> lives at <code>internal/util/strdist.go</code> and is reused by runner and checker; future stages can call the same helper.</p>
+<h2 id="lsp-and-cli-integration">LSP and CLI integration</h2>
+<ul>
+<li><code>internal/lsp/diagnostics.go::DiagnosticsFor</code> now <code>errors.As</code>-</li>
+</ul>
+<p>  unwraps <code>*parser.ParserError</code> and emits every contained   diagnostic via <code>publishDiagnostics</code>. Single-error fallback path   is preserved for non-parser errors.</p>
+<ul>
+<li><code>cmd/tya/main.go::printDiagnostic</code> adds parser / runner / codegen</li>
+</ul>
+<p>  unwrap branches so the same rich-render path is used for every   stage.</p>
+<h2 id="out-of-scope-v0-55">Out of scope (v0.55+)</h2>
+<ul>
+<li>Parser signature change (<code>Parse() → (*Program, []Diag, error)</code>)</li>
+</ul>
+<p>  for symmetry with <code>lexer.LexWithComments</code>.</p>
+<ul>
+<li>Expression-level recovery (currently statement-level only).</li>
+<li>LSP code actions for did-you-mean fixes (apply the suggestion</li>
+</ul>
+<p>  with a single click).</p>
+<ul>
+<li>Codegen / Runner signature change to also return <code>[]Diag</code> slices.</li>
+</ul>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>Language surface: unchanged from v0.53.</li>
+<li><code>tya.toml</code> schema: unchanged.</li>
+<li>CLI: every existing subcommand keeps its v0.53 behaviour.</li>
+</ul>
+<p>  Diagnostic output gains the <code>[TYA-EXXXX]</code> prefix and the   banner-style render for stages that previously emitted only   <code>line:col: msg</code>.</p>
+<ul>
+<li>Existing tests that grep substrings like <code>&quot;undefined variable&quot;</code></li>
+</ul>
+<p>  continue to match.</p>
+<h2 id="tests">Tests</h2>
+<p><code>tests/testdata/v54_diag/</code> adds two testscript fixtures — <code>multi_error.txtar</code> (three top-level position violations in one pass) and <code>did_you_mean.txtar</code> (typo with hint). All pre-existing tests stay green; the parser unit tests keep their legacy substring expectations because <code>*ParserError.Error()</code> preserves the <code>line:col: msg near &quot;tok&quot;</code> format on <code>Error()</code>.</p>
+    </article>
+  </main>
+</body>
+</html>

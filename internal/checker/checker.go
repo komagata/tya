@@ -916,7 +916,7 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 					return nil
 				}
 			}
-			return fmt.Errorf("%d:%d: undefined variable %s", n.Tok.Line, n.Tok.Col, n.Name)
+			return undefinedNameError(n.Name, n.Tok.Line, n.Tok.Col, scope)
 		}
 	case *ast.StringLit:
 		if err := checkInterpolation(n.Value, scope); err != nil {

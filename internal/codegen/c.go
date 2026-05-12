@@ -311,7 +311,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		}
 		id, ok := n.Targets[0].(*ast.Ident)
 		if !ok {
-			return fmt.Errorf("C emitter only supports variable assignment")
+			line, col, _ := stmtPos(n)
+			return codegenError(codeAssignTargetUnsupported, "C emitter only supports variable assignment", line, col)
 		}
 		if tryExpr, ok := n.Values[0].(*ast.TryExpr); ok {
 			return g.assignTry(id.Name, tryExpr)
@@ -504,7 +505,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		}
 		g.returnLine(value)
 	default:
-		return fmt.Errorf("C emitter does not support %T", stmt)
+		line, col, _ := stmtPos(stmt)
+		return codegenError(codeStmtUnsupported, fmt.Sprintf("C emitter does not support %T", stmt), line, col)
 	}
 	return nil
 }
@@ -718,7 +720,7 @@ func (g *cgen) matchCondition(pattern ast.Expr, value string) (string, error) {
 		}
 		return strings.Join(parts, " && "), nil
 	default:
-		return "", fmt.Errorf("C emitter does not support pattern %T", pattern)
+		return "", codegenError(codePatternUnsupported, fmt.Sprintf("C emitter does not support pattern %T", pattern), 0, 0)
 	}
 }
 
@@ -746,7 +748,8 @@ func (g *cgen) bindPattern(pattern ast.Expr, value string) error {
 
 func (g *cgen) assignTry(name string, tryExpr *ast.TryExpr) error {
 	if !g.inFunc {
-		return fmt.Errorf("C emitter only supports try inside functions")
+		line, col, _ := exprPos(tryExpr)
+		return codegenError(codeTryOutsideFunc, "C emitter only supports try inside functions", line, col)
 	}
 	value, _, err := g.expr(tryExpr.Expr)
 	if err != nil {
@@ -774,7 +777,8 @@ func (g *cgen) assignTry(name string, tryExpr *ast.TryExpr) error {
 
 func (g *cgen) multiAssign(n *ast.AssignStmt) error {
 	if len(n.Values) != 1 {
-		return fmt.Errorf("C emitter only supports tuple-style multiple assignment")
+		line, col, _ := stmtPos(n)
+		return codegenError(codeMultiAssignNonTuple, "C emitter only supports tuple-style multiple assignment", line, col)
 	}
 	value, _, err := g.expr(n.Values[0])
 	if err != nil {
@@ -786,7 +790,8 @@ func (g *cgen) multiAssign(n *ast.AssignStmt) error {
 	for i, target := range n.Targets {
 		id, ok := target.(*ast.Ident)
 		if !ok {
-			return fmt.Errorf("C emitter only supports identifier multiple assignment targets")
+			line, col, _ := exprPos(target)
+			return codegenError(codeDestructureNonIdent, "C emitter only supports identifier multiple assignment targets", line, col)
 		}
 		item := fmt.Sprintf("tya_index(%s, tya_number(%d))", temp, i)
 		if g.vars[id.Name] {
@@ -831,7 +836,7 @@ func (g *cgen) assignDestructuringValue(target ast.Expr, value string) error {
 		}
 		return nil
 	default:
-		return fmt.Errorf("C emitter only supports identifier destructuring targets")
+		return codegenError(codeDestructureNonIdent, "C emitter only supports identifier destructuring targets", 0, 0)
 	}
 }
 
@@ -2213,7 +2218,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return fmt.Sprintf("tya_task_await(%s)", target), "TyaValue", nil
 	}
-	return "", "", fmt.Errorf("C emitter does not support expression %T", expr)
+	line, col, _ := exprPos(expr)
+	return "", "", codegenError(codeStmtUnsupported, fmt.Sprintf("C emitter does not support expression %T", expr), line, col)
 }
 
 func (g *cgen) emitDynamicCall(callee string, args []string) string {
