@@ -30,7 +30,7 @@ func TestRunFileLoadsImportedModule(t *testing.T) {
 	writeFile(t, main, "import greeting\nprint(greeting.hello(\"komagata\"))\n")
 
 	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
+	if _, err := RunFile(main, nil, &out, nil); err != nil {
 		t.Fatal(err)
 	}
 	if out.String() != "Hello, komagata\n" {
@@ -45,7 +45,7 @@ func TestRunFileLoadsImportedModuleDeclaration(t *testing.T) {
 	writeFile(t, main, "import util\nprint(util.foo)\nprint(util.bar())\n")
 
 	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
+	if _, err := RunFile(main, nil, &out, nil); err != nil {
 		t.Fatal(err)
 	}
 	if out.String() != "foo\nbar\n" {
@@ -60,7 +60,7 @@ func TestRunFileLoadsImportedModuleAlias(t *testing.T) {
 	writeFile(t, main, "import util as u\nprint(u.foo)\n")
 
 	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
+	if _, err := RunFile(main, nil, &out, nil); err != nil {
 		t.Fatal(err)
 	}
 	if out.String() != "foo\n" {
@@ -75,7 +75,7 @@ func TestRunFileRejectsTopLevelClassInImportedModule(t *testing.T) {
 	writeFile(t, main, "import user\nuser = User(\"komagata\")\nprint(user.name)\n")
 
 	var out strings.Builder
-	err := RunFile(main, nil, &out, nil)
+	_, err := RunFile(main, nil, &out, nil)
 	if err == nil {
 		t.Fatal("expected module shape rejection")
 	}
@@ -209,7 +209,7 @@ func TestRunFileBindsOnlyImportAlias(t *testing.T) {
 	writeFile(t, main, "import greeting as g\nprint(greeting.text)\n")
 
 	var out strings.Builder
-	err := RunFile(main, nil, &out, nil)
+	_, err := RunFile(main, nil, &out, nil)
 	if err == nil {
 		t.Fatal("expected unbound original module name")
 	}
@@ -229,7 +229,7 @@ func TestRunFileLoadsSlashModulePath(t *testing.T) {
 	writeFile(t, main, "import http/server\nprint(server.listen(8080))\n")
 
 	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
+	if _, err := RunFile(main, nil, &out, nil); err != nil {
 		t.Fatal(err)
 	}
 	if out.String() != "listening on 8080\n" {
@@ -248,7 +248,7 @@ func TestRunFileLoadsSlashModulePathAlias(t *testing.T) {
 	writeFile(t, main, "import http/server as http_server\nprint(http_server.listen(8080))\n")
 
 	var out strings.Builder
-	if err := RunFile(main, nil, &out, nil); err != nil {
+	if _, err := RunFile(main, nil, &out, nil); err != nil {
 		t.Fatal(err)
 	}
 	if out.String() != "listening on 8080\n" {

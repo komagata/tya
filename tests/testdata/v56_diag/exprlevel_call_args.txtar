@@ -1,0 +1,16 @@
+# v0.56 expression-level recovery in CallExpr argument lists.
+# Each broken argument records a parser diagnostic and recovery
+# skips to the next comma so the remaining args are still parsed
+# — `tya check` surfaces every arg's error in one pass.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+# `@` (the instance-field prefix) is required to be followed by a
+# name; using it bare in each argument position triggers three
+# independent parser errors, all reported in one pass.
+! exec $WORK/tya check bad.tya
+stderr -count=3 'expected instance field name'
+
+-- bad.tya --
+print(@, @, @)

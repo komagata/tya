@@ -32,7 +32,7 @@ func DefinitionAt(ctx DefinitionContext, line, character int) ([]Location, error
 	if len(lerrs) > 0 {
 		return nil, nil
 	}
-	prog, err := parser.ParseWithComments(toks, toCommentInfos(lcomments))
+	prog, _, err := parser.ParseWithComments(toks, toCommentInfos(lcomments))
 	if err != nil || prog == nil {
 		return nil, nil
 	}

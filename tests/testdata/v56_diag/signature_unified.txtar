@@ -1,0 +1,22 @@
+# v0.56 signature unification: callers of `parser.Parse` /
+# `codegen.EmitC*` / `runner.RunFile` now use the
+# (X, []diag.Diagnostic, error) shape. End-to-end `tya check`
+# still surfaces parser diagnostics with the v0.54 banner.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+# Parser-level diagnostic survives the new signature: code stays
+# present, banner-style output preserved.
+! exec $WORK/tya check syntax_err.tya
+stderr 'TYA-E0100'
+stderr 'expected'
+
+# `tya run` propagates a structured ParserError when the source
+# fails to parse (the executable build path still threads diags
+# through codegen.EmitCWithPath's new 3-value return).
+! exec $WORK/tya run syntax_err.tya
+stderr 'TYA-E0100'
+
+-- syntax_err.tya --
+print(@,

@@ -19,7 +19,7 @@ func Format(src string) ([]TextEdit, error) {
 	if len(lerrs) > 0 {
 		return nil, lerrs[0]
 	}
-	prog, err := parser.ParseWithComments(toks, toCommentInfos(lcomments))
+	prog, _, err := parser.ParseWithComments(toks, toCommentInfos(lcomments))
 	if err != nil {
 		return nil, err
 	}

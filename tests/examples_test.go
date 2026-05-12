@@ -50,7 +50,7 @@ func TestExamplesGolden(t *testing.T) {
 			if name == "args.tya" {
 				args = []string{"a", "b"}
 			}
-			err := runner.RunFile(filepath.Join(root, "examples", name), strings.NewReader("komagata\n"), &out, args)
+			_, err := runner.RunFile(filepath.Join(root, "examples", name), strings.NewReader("komagata\n"), &out, args)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -63,7 +63,7 @@ func TestExamplesGolden(t *testing.T) {
 
 func TestFileExampleGolden(t *testing.T) {
 	var out bytes.Buffer
-	err := runner.RunFile(filepath.Join("..", "examples", "file.tya"), nil, &out, nil)
+	_, err := runner.RunFile(filepath.Join("..", "examples", "file.tya"), nil, &out, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

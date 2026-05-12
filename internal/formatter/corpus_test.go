@@ -53,7 +53,7 @@ func TestUnparseHandlesCorpus(t *testing.T) {
 			if len(errs) > 0 {
 				return nil
 			}
-			prog, err := parser.Parse(toks)
+			prog, _, err := parser.Parse(toks)
 			if err != nil {
 				return nil
 			}
@@ -70,7 +70,7 @@ func TestUnparseHandlesCorpus(t *testing.T) {
 				t.Errorf("Unparse output for %s does not re-lex: %v", rel, errs2[0])
 				return nil
 			}
-			if _, err := parser.Parse(toks2); err != nil {
+			if _, _, err := parser.Parse(toks2); err != nil {
 				rel, _ := filepath.Rel(repo, path)
 				t.Errorf("Unparse output for %s does not re-parse: %v", rel, err)
 			}

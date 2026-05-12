@@ -97,6 +97,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
 <ul>
+<li>**v0.55** — <code>tya lint</code> v3 extension (<code>docs/v0.55/SPEC.md</code>,</li>
+</ul>
+<p>  <code>docs/v0.55/RELEASE_NOTES.md</code>). <code>tya lint</code> becomes CI-ready:   per-line <code># tya-lint-ignore[: CODE[, CODE...]]</code> opt-out   comments (inline or full-line, wildcard or code-scoped);   <code>--format=json</code> machine-readable output with <code>version</code> /   <code>findings[{path,line,col,code,message,autofixable}]</code>; new   <code>TYAL0002</code> rule reports dead code after <code>return</code> / <code>raise</code>   in every block (function bodies, <code>if</code> arms, <code>while</code> / <code>for</code>   bodies, <code>try</code> / <code>catch</code>, <code>match</code> cases); and <code>--fix</code> gains   TYAL0003 <code>if true</code> / <code>if false</code> unwrap-if autofix that drops   the header line and de-indents the body by two spaces (runs   before the existing TYAL0001 line-delete so positions stay   stable). The <code>lint</code> subcommand owns its own <code>--format</code> flag;   other subcommands continue to read the global   <code>--format=human|json</code> for diagnostic rendering. Language   surface unchanged from v0.54.</p>
+<ul>
 <li>**v0.54** — Diagnostics pipeline migration (<code>docs/v0.54/SPEC.md</code>,</li>
 </ul>
 <p>  <code>docs/v0.54/RELEASE_NOTES.md</code>). Parser, Codegen, and Runner   errors now flow through the same <code>diag.Diagnostic</code> channel as   Lexer and Checker, each carrying a stable <code>[TYA-EXXXX]</code> code.   New code bands: <code>TYA-E0100-0199</code> (parser: expected token /   block / position constraint / reserved name / pattern / expression),   <code>TYA-E0601-0606</code> (codegen: unsupported AST shapes), <code>TYA-E0840</code>   / <code>E0856</code> / <code>E0857</code> / <code>E0858</code> (runner: filename, entry-module   conflict, import name conflict, undefined variable). Parser   gains statement-level recovery (<code>block()</code> and <code>program()</code>) so   one <code>tya check</code> run surfaces every top-level error at once   via <code>*parser.ParserError{Diags}</code>. Undefined-name errors gain   <code>did you mean &quot;…&quot;?</code> hints driven by a new   <code>internal/util/strdist.go::Suggest</code> Levenshtein helper. LSP   (<code>internal/lsp/diagnostics.go::DiagnosticsFor</code>) and CLI   (<code>cmd/tya/main.go::printDiagnostic</code>) both <code>errors.As</code>-unwrap   the new wrapper types and route every diagnostic into the   shared structured renderer. Language surface unchanged from   v0.53.</p>
@@ -323,15 +327,39 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <ul>
 <li>[ ] **Extend <code>tya lint</code> source linter** *(v0.49 shipped rule</li>
 </ul>
-<p>  <code>TYAL0001</code> unused local + CLI surface. Remaining work below.)*</p>
+<p>  <code>TYAL0001</code> unused local + CLI surface. v0.50 added <code>--fix</code>   line-delete + <code>TYAL0003 / 0004 / 0005</code> warnings. v0.55 added   per-line opt-out, <code>--format=json</code>, <code>TYAL0002</code> dead code, and   <code>TYAL0003</code> <code>--fix</code> unwrap-if autofix. Remaining work below.)*</p>
 <ul>
-<li>[ ] <code>--fix</code> autofix mode.</li>
-<li>[ ] <code>--format=json</code> machine-readable output.</li>
-<li>[ ] Additional rules: dead code after <code>return</code> / <code>raise</code>,</li>
+<li>[x] <code>--fix</code> autofix mode. *(v0.50: <code>TYAL0001</code> line-delete;</li>
 </ul>
-<p>    redundant <code>if true</code> / <code>if false</code>, suspicious <code>for</code> index     patterns, deeply nested blocks, very long functions.</p>
+<p>    v0.55: <code>TYAL0003</code> unwrap-if)*</p>
 <ul>
-<li>[ ] Per-line opt-out via <code># tya-lint-ignore: TYAL0001</code>.</li>
+<li>[x] <code>--format=json</code> machine-readable output. *(v0.55)*</li>
+<li>[x] Additional rules: dead code after <code>return</code> / <code>raise</code></li>
+</ul>
+<p>    *(<code>TYAL0002</code>, v0.55)*; redundant <code>if true</code> / <code>if false</code>     *(<code>TYAL0003</code>, v0.50)*; deeply nested blocks     *(<code>TYAL0004</code>, v0.50)*; very long functions     *(<code>TYAL0005</code>, v0.50)*.</p>
+<ul>
+<li>[ ] Additional rules: suspicious <code>for</code> index patterns,</li>
+</ul>
+<p>    unused function parameters, shadowed bindings.</p>
+<ul>
+<li>[ ] Extend <code>TYAL0001</code> <code>--fix</code> to also drop the body of</li>
+</ul>
+<p>    multi-line bindings (e.g. <code>name = -&gt;</code> followed by an     indented block) so <code>--fix</code> does not leave orphan indented     lines. *(carryover from v0.50; the current line-delete only     removes the binding's own line)*</p>
+<ul>
+<li>[x] Per-line opt-out via <code># tya-lint-ignore: TYAL0001</code>. *(v0.55)*</li>
+<li>[ ] File-scope opt-out (<code># tya-lint-ignore-file: TYAL0001</code>).</li>
+<li>[ ] <code>--format=sarif</code> (SARIF v2.1 standard) for ingest by</li>
+</ul>
+<p>    third-party CI tools.</p>
+<ul>
+<li>[ ] <code>TYAL0004</code> / <code>TYAL0005</code> AST autofix (deep-nesting</li>
+</ul>
+<p>    flattening / long-function split). Currently warning-only     because the right reshape is a human-judgement call.</p>
+<ul>
+<li>[ ] Unify the LSP <code>unwrap-if</code> code action helper</li>
+</ul>
+<p>    (<code>internal/lsp/code_actions.go</code>) with the CLI     <code>applyUnwrapIf</code> (<code>cmd/tya/lint_autofix.go</code>) so both call     the same rewriter.</p>
+<ul>
 <li>[ ] Each rule has a stable code (<code>TYAL00xx</code>), title, doc URL.</li>
 </ul>
 <ul>

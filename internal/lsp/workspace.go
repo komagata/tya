@@ -156,7 +156,7 @@ func parseOrNil(src string) *ast.Program {
 	if len(lerrs) > 0 {
 		return nil
 	}
-	prog, err := parser.ParseWithComments(toks, toCommentInfos(lcomments))
+	prog, _, err := parser.ParseWithComments(toks, toCommentInfos(lcomments))
 	if err != nil {
 		return nil
 	}

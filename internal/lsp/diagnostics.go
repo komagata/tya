@@ -22,18 +22,15 @@ func DiagnosticsFor(path, src string) []Diagnostic {
 		out = append(out, lexErrorToLSP(e))
 	}
 	infos := toCommentInfos(lcomments)
-	prog, err := parser.ParseWithComments(toks, infos)
+	prog, pdiags, err := parser.ParseWithComments(toks, infos)
+	for _, d := range pdiags {
+		out = append(out, diagToLSP(d))
+	}
 	if err != nil {
-		var perr *parser.ParserError
-		if errors.As(err, &perr) && len(perr.Diags) > 0 {
-			for _, d := range perr.Diags {
-				out = append(out, diagToLSP(d))
-			}
-			if prog == nil {
-				return out
-			}
-		} else {
+		if len(pdiags) == 0 {
 			out = append(out, parseErrorToLSP(err))
+		}
+		if prog == nil {
 			return out
 		}
 	}

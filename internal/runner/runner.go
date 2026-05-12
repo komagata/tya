@@ -10,6 +10,7 @@ import (
 
 	"tya/internal/ast"
 	"tya/internal/checker"
+	"tya/internal/diag"
 	"tya/internal/eval"
 	"tya/internal/lexer"
 	"tya/internal/parser"
@@ -76,28 +77,34 @@ func IsLegacyV01Path(path string) bool {
 	return strings.Contains(cleaned, "/selfhost/v01/")
 }
 
-func RunFile(path string, in io.Reader, out io.Writer, args []string) error {
+// RunFile loads and executes the program at path. Returns
+// (diags, err). v0.56: diags carries the recoverable parser
+// diagnostics collected during the run (typically empty); err is
+// the first fatal error encountered. Runner stays fail-fast for
+// downstream stages — the diags slice has 0..N entries from the
+// parser, but checker / eval stop on first error.
+func RunFile(path string, in io.Reader, out io.Writer, args []string) ([]diag.Diagnostic, error) {
 	if err := ValidateFileName(path); err != nil {
-		return err
+		return nil, err
 	}
 	defer checker.SetPermissiveLegacy(IsLegacyV01Path(path))()
 	source, modules, origins, err := LoadUserSourceWithOrigins(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	toks, errs := lexer.Lex(source)
 	if len(errs) > 0 {
-		return errs[0]
+		return nil, errs[0]
 	}
-	prog, err := parser.Parse(toks)
+	prog, pdiags, err := parser.Parse(toks)
 	if err != nil {
-		return err
+		return pdiags, err
 	}
 	StampOriginFiles(prog, origins)
 	if err := checker.CheckWithModules(prog, modules); err != nil {
-		return err
+		return pdiags, err
 	}
-	return eval.RunWithIO(prog, in, out, args)
+	return pdiags, eval.RunWithIO(prog, in, out, args)
 }
 
 // StampOriginFiles walks the program and, for each ModuleDecl whose
@@ -594,7 +601,8 @@ func parseSource(src string) (*ast.Program, error) {
 	if len(errs) > 0 {
 		return nil, errs[0]
 	}
-	return parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
+	return prog, err
 }
 
 func collectImports(prog *ast.Program) ([]importSpec, error) {

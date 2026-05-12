@@ -15,7 +15,7 @@ func TestRunArithmeticAndLiterals(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestRunIfElseTruthiness(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestRunComparisonAndLogic(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestRunArrays(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func TestRunWhile(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +113,7 @@ func TestRunRejectsBreakOutsideLoop(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := parser.Parse(toks); err == nil {
+	if _, _, err := parser.Parse(toks); err == nil {
 		t.Fatal("expected parser error")
 	}
 }
@@ -124,7 +124,7 @@ func TestRunReturn(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestRunConversions(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +163,7 @@ func TestRunStringBuiltins(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,7 +183,7 @@ func TestRunDictBuiltins(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func TestRunInlineDict(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +223,7 @@ func TestRunModuleDeclaration(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func TestRunDictionaryEquality(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -263,7 +263,7 @@ func TestRunForIn(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,7 +283,7 @@ func TestRunForOfObject(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,7 +304,7 @@ func TestRunFileBuiltins(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -325,7 +325,7 @@ func TestRunArgsAndEnvBuiltins(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -344,7 +344,7 @@ func TestRunExitBuiltin(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -364,7 +364,7 @@ func TestRunPanicBuiltin(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -379,7 +379,7 @@ func TestRunErrorBuiltin(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -399,7 +399,7 @@ func TestRunMultipleReturnAndAssignment(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -419,7 +419,7 @@ func TestRunTryPropagation(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -438,7 +438,7 @@ func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := parser.Parse(toks); err == nil {
+	if _, _, err := parser.Parse(toks); err == nil {
 		t.Fatal("expected parser error")
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/diag"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 )
@@ -31,13 +32,19 @@ func (g *cgen) currentModulePrefix() string {
 	return ""
 }
 
-func EmitC(prog *ast.Program) (string, error) {
+// EmitC compiles prog to a self-contained C translation unit.
+// Returns (csource, diags, err). Codegen is fail-fast in v0.56:
+// diags is nil on a clean emit, or carries a single entry copied
+// from err.(*CodegenError).Diags on failure. err continues to
+// satisfy errors.As(&CodegenError) for callers that prefer the
+// wrapper.
+func EmitC(prog *ast.Program) (string, []diag.Diagnostic, error) {
 	return EmitCWithPath(prog, "")
 }
 
-func EmitCWithPath(prog *ast.Program, sourcePath string) (string, error) {
-	src, _, err := EmitCWithCoverage(prog, sourcePath, nil)
-	return src, err
+func EmitCWithPath(prog *ast.Program, sourcePath string) (string, []diag.Diagnostic, error) {
+	src, _, diags, err := EmitCWithCoverage(prog, sourcePath, nil)
+	return src, diags, err
 }
 
 // CoverageOptions enables v0.30 coverage instrumentation. Stdlib,
@@ -66,7 +73,11 @@ type CoverageRegistry struct {
 // EmitCWithCoverage is like EmitCWithPath but emits per-statement
 // counter increments when opt is non-nil. When opt is nil, it is
 // identical to EmitCWithPath and returns a nil registry.
-func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, error) {
+//
+// Returns (csource, registry, diags, err). v0.56 keeps codegen
+// fail-fast — diags is nil on success, or a single-entry slice
+// (the same payload as err.(*CodegenError).Diags) on failure.
+func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, []diag.Diagnostic, error) {
 	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
 	if opt != nil {
 		g.coverEnabled = true
@@ -80,7 +91,7 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 	}
 	for i, stmt := range prog.Stmts {
 		if err := g.stmt(stmt); err != nil {
-			return "", nil, err
+			return "", nil, diagsFromErr(err), err
 		}
 		// v0.41: emit a safe-point GC trigger between top-level
 		// statements. After a top-level statement finishes, any heap
@@ -120,7 +131,25 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 	if g.coverEnabled {
 		reg = &CoverageRegistry{Entries: append([]CoverageEntry(nil), g.coverEntries...)}
 	}
-	return out.String(), reg, nil
+	return out.String(), reg, nil, nil
+}
+
+// diagsFromErr lifts the []diag.Diagnostic payload out of err
+// when err is a *CodegenError, falling back to a synthetic
+// single-entry slice for plain errors so callers still get a
+// non-nil diags slice on failure.
+func diagsFromErr(err error) []diag.Diagnostic {
+	if ce, ok := AsCodegenError(err); ok {
+		return append([]diag.Diagnostic{}, ce.Diags...)
+	}
+	if err == nil {
+		return nil
+	}
+	return []diag.Diagnostic{{
+		Severity: diag.Error,
+		Message:  err.Error(),
+		Source:   "tya",
+	}}
 }
 
 type cgen struct {
@@ -2325,7 +2354,7 @@ func (g *cgen) interpolationExpr(expr string) (string, error) {
 	if len(errs) > 0 {
 		return "", fmt.Errorf("invalid interpolation expression: %w", errs[0])
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		return "", fmt.Errorf("invalid interpolation expression: %w", err)
 	}

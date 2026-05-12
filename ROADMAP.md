@@ -148,6 +148,27 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.56** — Diagnostics signature unification + expression-
+  level recovery (`docs/v0.56/SPEC.md`,
+  `docs/v0.56/RELEASE_NOTES.md`). Public entry points now share
+  the `(X, []diag.Diagnostic, error)` shape:
+  `parser.Parse` / `ParseWithComments` →
+  `(*ast.Program, []Diag, error)`;
+  `codegen.EmitC` / `EmitCWithPath` →
+  `(string, []Diag, error)`;
+  `codegen.EmitCWithCoverage` →
+  `(string, *CoverageRegistry, []Diag, error)`;
+  `runner.RunFile` → `([]Diag, error)`. `RunnerError` widens
+  `Diag` → `Diags []diag.Diagnostic` (single-value `.Diag()`
+  helper kept for source compatibility). 65 caller sites
+  migrated. New `internal/parser/recovery.go::skipToCommaOrClose`
+  helper drives expression-level recovery in `CallExpr` /
+  `ArrayLit` / `DictLit` element lists — each bad element
+  records its diagnostic and the parser advances past the next
+  `,` (or close bracket) so siblings are still parsed.
+  `*ParserError` / `*CodegenError` / `*RunnerError` wrappers
+  continue to satisfy `errors.As` for callers that prefer
+  unwrapping. Language surface unchanged from v0.55.
 - **v0.55** — `tya lint` v3 extension (`docs/v0.55/SPEC.md`,
   `docs/v0.55/RELEASE_NOTES.md`). `tya lint` becomes CI-ready:
   per-line `# tya-lint-ignore[: CODE[, CODE...]]` opt-out
@@ -425,9 +446,7 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
 ### Toolchain
 
 - [x] **Migrate remaining stages to the diagnostics pipeline** *(v0.54
-  delivered the core: structured diagnostics for Parser /
-  Codegen / Runner, multi-error parsing, did-you-mean.
-  Remaining polish items below are scheduled for v0.55+.)*
+  delivered the core. v0.56 finished the API/recovery polish.)*
   - [x] Parser → `TYA-E0100`–`E0299` (E0100-E0180 buckets in use).
   - [x] Codegen → `TYA-E0600`–`E0799` (E0601-E0606 in use).
   - [x] Runner → `TYA-E0800`–`E0899` (E0840 / E0856-E0858 added on top
@@ -436,11 +455,16 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     (Levenshtein-based `internal/util.Suggest`).
   - [x] Add multi-error parsing (statement-level recovery in
     `program()` and `block()`).
-  - [ ] Parser signature change to `Parse() → (*Program, []Diag, error)`
-    for symmetry with `lexer.LexWithComments`. *(v0.55+)*
-  - [ ] Expression-level recovery (currently statement-level). *(v0.55+)*
-  - [ ] Codegen / Runner signature change to also return `[]Diag`
-    slices. *(v0.55+)*
+  - [x] Parser signature change to `Parse() → (*Program, []Diag, error)`
+    for symmetry with `lexer.LexWithComments`. *(v0.56)*
+  - [x] Expression-level recovery for `CallExpr` / `ArrayLit` /
+    `DictLit` element lists. *(v0.56)*
+  - [x] Codegen / Runner signature change to also return `[]Diag`
+    slices. *(v0.56)*
+  - [ ] Binary-chain and member-chain expression-level recovery
+    (`a + broken + c`, `a.broken.c`). *(v0.57+)*
+  - [ ] Codegen multi-error mode (collect every `unsupported AST shape`
+    instead of bailing on the first). *(v0.57+)*
 
 - [x] **Ship `tya lsp` Language Server** *(v0.52 MVP + v0.53 full IDE
   feature set delivered. Remaining items below are Marketplace

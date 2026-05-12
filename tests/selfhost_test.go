@@ -6727,7 +6727,7 @@ func summarizeGoProgram(t *testing.T, src string) []string {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -6744,7 +6744,7 @@ func normalizeGoCheckerError(t *testing.T, src string) string {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}

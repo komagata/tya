@@ -18,7 +18,7 @@ func unparseSourceWithComments(t *testing.T, src string) (string, error) {
 	for _, c := range lcomments {
 		comments = append(comments, parser.CommentInfo{Line: c.Line, Col: c.Col, Indent: c.Indent, Text: c.Text, IsFullLine: c.IsFullLine})
 	}
-	prog, err := parser.ParseWithComments(toks, comments)
+	prog, _, err := parser.ParseWithComments(toks, comments)
 	if err != nil {
 		t.Fatalf("parse err: %v", err)
 	}
@@ -50,7 +50,7 @@ func unparseSource(t *testing.T, src string) (string, error) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errs: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatalf("parse err: %v", err)
 	}

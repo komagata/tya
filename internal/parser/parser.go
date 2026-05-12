@@ -24,16 +24,24 @@ type Parser struct {
 	errs []diag.Diagnostic
 }
 
-func Parse(toks []token.Token) (*ast.Program, error) {
+// Parse runs the multi-error parser over toks. The convention
+// (since v0.56) is:
+//
+//   - diags is the structured list of every recoverable parser
+//     diagnostic collected via statement- and expression-level
+//     recovery. It is nil on a clean parse, non-nil otherwise.
+//   - err is a *ParserError wrapping the same diags. It is nil
+//     when diags is nil and non-nil otherwise. Existing callers
+//     using `errors.As(err, &perr)` continue to work; new
+//     callers can iterate diags directly.
+func Parse(toks []token.Token) (*ast.Program, []diag.Diagnostic, error) {
 	p := &Parser{toks: toks}
-	prog, err := p.program()
-	// Multi-error parsing (v0.54): when statement-level recovery
-	// accumulated additional diagnostics, surface them via the
-	// ParserError wrapper so CLI / LSP can render the full set.
+	prog, _ := p.program()
 	if flushed := p.flushErrors(); flushed != nil {
-		return prog, flushed
+		perr := flushed.(*ParserError)
+		return prog, perr.Diags, perr
 	}
-	return prog, err
+	return prog, nil, nil
 }
 
 // ParseWithComments runs Parse and additionally fills
@@ -47,13 +55,13 @@ func Parse(toks []token.Token) (*ast.Program, error) {
 //   - Header comments: contiguous full-line `#` lines starting at
 //     line 1 at indent 0, separated from the body by exactly one
 //     blank line.
-func ParseWithComments(toks []token.Token, comments []CommentInfo) (*ast.Program, error) {
-	prog, err := Parse(toks)
+func ParseWithComments(toks []token.Token, comments []CommentInfo) (*ast.Program, []diag.Diagnostic, error) {
+	prog, diags, err := Parse(toks)
 	if err != nil {
-		return nil, err
+		return nil, diags, err
 	}
 	if len(comments) == 0 {
-		return prog, nil
+		return prog, nil, nil
 	}
 	attachStmtComments(prog, comments)
 	firstStmtLine := 0
@@ -91,11 +99,11 @@ func ParseWithComments(toks []token.Token, comments []CommentInfo) (*ast.Program
 	if len(header) > 0 && firstStmtLine > 0 {
 		// Require a blank line between the header block and the body.
 		if firstStmtLine == lastHeaderLine+1 {
-			return prog, nil
+			return prog, diags, nil
 		}
 	}
 	prog.HeaderComments = header
-	return prog, nil
+	return prog, diags, nil
 }
 
 // CommentInfo mirrors lexer.Comment to avoid an import cycle. The
@@ -1388,9 +1396,15 @@ func (p *Parser) call() (ast.Expr, error) {
 				for {
 					arg, err := p.exprNoCommaFunc()
 					if err != nil {
-						return nil, err
+						// v0.56 expression-level recovery: the
+						// diagnostic is already recorded in
+						// p.errs by p.err/newDiag — skip to the
+						// next ',' or ')' and continue with the
+						// remaining args.
+						p.skipToCommaOrClose(token.RPAREN)
+					} else {
+						args = append(args, arg)
 					}
-					args = append(args, arg)
 					if !p.match(token.COMMA) {
 						break
 					}
@@ -1502,9 +1516,12 @@ func (p *Parser) primary() (ast.Expr, error) {
 			for {
 				elem, err := p.expr()
 				if err != nil {
-					return nil, err
+					// v0.56 expression-level recovery: diag already
+					// recorded; skip to next ',' or ']'.
+					p.skipToCommaOrClose(token.RBRACKET)
+				} else {
+					elems = append(elems, elem)
 				}
-				elems = append(elems, elem)
 				if !p.match(token.COMMA) {
 					break
 				}
@@ -1548,9 +1565,12 @@ func (p *Parser) dictLiteral() (ast.Expr, error) {
 		p.next()
 		value, err := p.expr()
 		if err != nil {
-			return nil, err
+			// v0.56 expression-level recovery: diag already
+			// recorded; skip to next ',' or '}' and continue.
+			p.skipToCommaOrClose(token.RBRACE)
+		} else {
+			dict.Props = append(dict.Props, ast.DictProp{Name: name.Lexeme, Tok: name, Value: value})
 		}
-		dict.Props = append(dict.Props, ast.DictProp{Name: name.Lexeme, Tok: name, Value: value})
 		if !p.match(token.COMMA) {
 			break
 		}

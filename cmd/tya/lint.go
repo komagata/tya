@@ -184,7 +184,7 @@ func lintOneFile(path string, fix bool) ([]lintFinding, error) {
 	if len(lexErrs) > 0 {
 		return nil, fmt.Errorf("%s: %v", path, lexErrs[0])
 	}
-	prog, err := parser.Parse(tokens)
+	prog, _, err := parser.Parse(tokens)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %v", path, err)
 	}
@@ -241,7 +241,7 @@ func lintApplyUnwrapIf(source string) (string, int, error) {
 	if len(lexErrs) > 0 {
 		return source, 0, lexErrs[0]
 	}
-	prog, err := parser.Parse(tokens)
+	prog, _, err := parser.Parse(tokens)
 	if err != nil {
 		return source, 0, err
 	}

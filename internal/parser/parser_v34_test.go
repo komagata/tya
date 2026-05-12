@@ -24,7 +24,7 @@ x = 1
 			Text: c.Text, IsFullLine: c.IsFullLine,
 		})
 	}
-	prog, err := ParseWithComments(toks, comments)
+	prog, _, err := ParseWithComments(toks, comments)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ x = 1
 	for _, c := range lcomments {
 		comments = append(comments, CommentInfo{Line: c.Line, Col: c.Col, Indent: c.Indent, Text: c.Text, IsFullLine: c.IsFullLine})
 	}
-	prog, err := ParseWithComments(toks, comments)
+	prog, _, err := ParseWithComments(toks, comments)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ x = 1  # initial value
 	for _, c := range lcomments {
 		comments = append(comments, CommentInfo{Line: c.Line, Col: c.Col, Indent: c.Indent, Text: c.Text, IsFullLine: c.IsFullLine})
 	}
-	prog, err := ParseWithComments(toks, comments)
+	prog, _, err := ParseWithComments(toks, comments)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func TestParseWithCommentsNested(t *testing.T) {
 	for _, c := range lcomments {
 		comments = append(comments, CommentInfo{Line: c.Line, Col: c.Col, Indent: c.Indent, Text: c.Text, IsFullLine: c.IsFullLine})
 	}
-	prog, err := ParseWithComments(toks, comments)
+	prog, _, err := ParseWithComments(toks, comments)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ y = 2
 	for _, c := range lcomments {
 		comments = append(comments, CommentInfo{Line: c.Line, Col: c.Col, Indent: c.Indent, Text: c.Text, IsFullLine: c.IsFullLine})
 	}
-	prog, err := ParseWithComments(toks, comments)
+	prog, _, err := ParseWithComments(toks, comments)
 	if err != nil {
 		t.Fatal(err)
 	}

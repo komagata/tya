@@ -50,7 +50,7 @@ func topLevelReferences(ctx DefinitionContext, doc *Document, prog any, name str
 		if len(lerrs) > 0 {
 			return
 		}
-		fileProg, err := parser.ParseWithComments(toks, toCommentInfos(lcomments))
+		fileProg, _, err := parser.ParseWithComments(toks, toCommentInfos(lcomments))
 		if err != nil || fileProg == nil {
 			return
 		}

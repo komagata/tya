@@ -23,7 +23,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.55.0"
+const version = "0.56.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -268,7 +268,7 @@ doneOptions:
 				}
 				os.Exit(1)
 			}
-			prog, err := parser.Parse(toks)
+			prog, _, err := parser.Parse(toks)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
@@ -277,7 +277,7 @@ doneOptions:
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
-			csrc, err := codegen.EmitCWithPath(prog, path)
+			csrc, _, err := codegen.EmitCWithPath(prog, path)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
@@ -298,7 +298,7 @@ doneOptions:
 			}
 			os.Exit(1)
 		}
-		prog, err := parser.Parse(toks)
+		prog, _, err := parser.Parse(toks)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -308,7 +308,7 @@ doneOptions:
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		csrc, err := codegen.EmitCWithPath(prog, path)
+		csrc, _, err := codegen.EmitCWithPath(prog, path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -345,7 +345,7 @@ doneOptions:
 		}
 		return
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -377,7 +377,7 @@ doneOptions:
 			}
 			os.Exit(1)
 		}
-		prog, err = parser.Parse(toks)
+		prog, _, err = parser.Parse(toks)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -387,7 +387,7 @@ doneOptions:
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		csrc, err := codegen.EmitCWithPath(prog, path)
+		csrc, _, err := codegen.EmitCWithPath(prog, path)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -537,7 +537,7 @@ func compileToCWithCover(path string, opt *codegen.CoverageOptions) (string, *co
 	if len(errs) > 0 {
 		return "", nil, errs[0]
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		return "", nil, err
 	}
@@ -545,7 +545,7 @@ func compileToCWithCover(path string, opt *codegen.CoverageOptions) (string, *co
 	if err := checker.CheckWithModules(prog, modules); err != nil {
 		return "", nil, err
 	}
-	csrc, reg, err := codegen.EmitCWithCoverage(prog, path, opt)
+	csrc, reg, _, err := codegen.EmitCWithCoverage(prog, path, opt)
 	if err != nil {
 		return "", nil, err
 	}
@@ -839,7 +839,7 @@ func checkFile(path string) error {
 		if len(errs) > 0 {
 			return errs[0]
 		}
-		prog, err := parser.Parse(toks)
+		prog, _, err := parser.Parse(toks)
 		if err != nil {
 			return err
 		}
@@ -853,7 +853,7 @@ func checkFile(path string) error {
 	if len(errs) > 0 {
 		return errs[0]
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		return err
 	}
@@ -894,7 +894,7 @@ func commentPositionDiagnostics(path string) ([]diag.Diagnostic, error) {
 			Text: c.Text, IsFullLine: c.IsFullLine,
 		})
 	}
-	prog, err := parser.ParseWithComments(toks, infos)
+	prog, _, err := parser.ParseWithComments(toks, infos)
 	if err != nil {
 		return nil, err
 	}
@@ -1082,7 +1082,7 @@ func formatSource(src string) string {
 			Text: c.Text, IsFullLine: c.IsFullLine,
 		})
 	}
-	prog, err := parser.ParseWithComments(toks, comments)
+	prog, _, err := parser.ParseWithComments(toks, comments)
 	if err != nil {
 		return formatter.FormatSource(src)
 	}
@@ -1110,10 +1110,13 @@ func printDiagnostic(path string, err error) {
 		return
 	}
 	var rerr *runner.RunnerError
-	if errors.As(err, &rerr) {
-		d := rerr.Diag
-		d.Primary.File = path
-		emitDiagnostics([]diag.Diagnostic{d}, path)
+	if errors.As(err, &rerr) && len(rerr.Diags) > 0 {
+		out := make([]diag.Diagnostic, len(rerr.Diags))
+		for i, d := range rerr.Diags {
+			d.Primary.File = path
+			out[i] = d
+		}
+		emitDiagnostics(out, path)
 		return
 	}
 	var cerr *codegen.CodegenError

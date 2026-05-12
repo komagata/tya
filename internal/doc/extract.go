@@ -48,7 +48,7 @@ func ExtractFile(path string) ([]DocItem, error) {
 			IsFullLine: c.IsFullLine,
 		})
 	}
-	prog, err := parser.ParseWithComments(toks, infos)
+	prog, _, err := parser.ParseWithComments(toks, infos)
 	if err != nil {
 		return nil, err
 	}

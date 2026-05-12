@@ -27,7 +27,7 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 
 func TestEmitCIncludesSourceLineComments(t *testing.T) {
 	prog := checkedProgram(t, "x = 1\nprint(x)\n")
-	csrc, err := EmitC(prog)
+	csrc, _, err := EmitC(prog)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -272,7 +272,7 @@ func compileAndRunArgsAllowExit(t *testing.T, src string, args ...string) ([]byt
 func compileAndRunArgsWithInputAllowExit(t *testing.T, src string, input string, args ...string) ([]byte, int) {
 	t.Helper()
 	prog := checkedProgram(t, src)
-	csrc, err := EmitC(prog)
+	csrc, _, err := EmitC(prog)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -289,14 +289,14 @@ func compileAndRunFile(t *testing.T, path string, args ...string) []byte {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := checker.CheckWithModules(prog, modules); err != nil {
 		t.Fatal(err)
 	}
-	csrc, err := EmitC(prog)
+	csrc, _, err := EmitC(prog)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -313,7 +313,7 @@ func checkedProgram(t *testing.T, src string) *ast.Program {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}

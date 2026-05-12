@@ -38,7 +38,7 @@ stderr 'missing class variable or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.55.0\n'
+stdout '0.56.0\n'
 ! stderr .
 
 -- class_level.tya --

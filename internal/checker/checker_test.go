@@ -403,7 +403,7 @@ func parse(t *testing.T, src string) *ast.Program {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}

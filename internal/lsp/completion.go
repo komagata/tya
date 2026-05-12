@@ -14,7 +14,7 @@ func Completion(doc *Document) (CompletionList, error) {
 	out := CompletionList{IsIncomplete: false, Items: []CompletionItem{}}
 	if doc != nil {
 		toks, lcomments, _ := lexer.LexWithComments(doc.Text)
-		if prog, err := parser.ParseWithComments(toks, toCommentInfos(lcomments)); err == nil && prog != nil {
+		if prog, _, err := parser.ParseWithComments(toks, toCommentInfos(lcomments)); err == nil && prog != nil {
 			idx := BuildSymbols(prog)
 			for _, s := range idx.All() {
 				out.Items = append(out.Items, CompletionItem{

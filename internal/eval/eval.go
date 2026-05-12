@@ -2357,7 +2357,7 @@ func evalInterpolationExpr(expr string, env *Env) (Value, error) {
 	if len(errs) > 0 {
 		return nil, fmt.Errorf("invalid interpolation expression: %w", errs[0])
 	}
-	prog, err := parser.Parse(toks)
+	prog, _, err := parser.Parse(toks)
 	if err != nil {
 		return nil, fmt.Errorf("invalid interpolation expression: %w", err)
 	}

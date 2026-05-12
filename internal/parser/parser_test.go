@@ -18,7 +18,7 @@ func TestParseIndentedDictAssignment(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +40,7 @@ func TestParseInlineDict(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestParseRejectsSetLiteral(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
+	_, _, err := Parse(toks)
 	if err == nil {
 		t.Fatal("expected set literal error")
 	}
@@ -73,7 +73,7 @@ func TestParseEmptyCurlyLiteralAsDict(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +92,7 @@ func TestParseRejectsMixedDictAndSetLiteral(t *testing.T) {
 		if len(errs) != 0 {
 			t.Fatalf("lex errors: %v", errs)
 		}
-		_, err := Parse(toks)
+		_, _, err := Parse(toks)
 		if err == nil {
 			t.Fatalf("expected mixed literal error for %q", src)
 		}
@@ -109,7 +109,7 @@ func TestParseClassDeclaration(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatalf("parse class: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestParseInterfaceDeclaration(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatalf("parse interface: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			_, err := Parse(toks)
+			_, _, err := Parse(toks)
 			if err == nil {
 				t.Fatalf("expected %q error", tt.want)
 			}
@@ -225,7 +225,7 @@ func TestParseInstanceFieldSyntax(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := Parse(toks); err != nil {
+	if _, _, err := Parse(toks); err != nil {
 		t.Fatalf("parse instance fields: %v", err)
 	}
 
@@ -233,7 +233,7 @@ func TestParseInstanceFieldSyntax(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatalf("parse class variables: %v", err)
 	}
@@ -296,7 +296,7 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			_, err := Parse(toks)
+			_, _, err := Parse(toks)
 			if err == nil {
 				t.Fatalf("expected %q error", tt.want)
 			}
@@ -313,7 +313,7 @@ func TestParseModuleDeclaration(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -338,7 +338,7 @@ func TestParseRejectsLegacyModuleColonMember(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
+	_, _, err := Parse(toks)
 	if err == nil {
 		t.Fatal("expected legacy module member error")
 	}
@@ -352,7 +352,7 @@ func TestParseImportStatement(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -373,7 +373,7 @@ func TestParseRejectsImportInsideBlock(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
+	_, _, err := Parse(toks)
 	if err == nil {
 		t.Fatal("expected nested import error")
 	}
@@ -387,7 +387,7 @@ func TestParseRejectsModuleInsideBlock(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
+	_, _, err := Parse(toks)
 	if err == nil {
 		t.Fatal("expected nested module error")
 	}
@@ -401,7 +401,7 @@ func TestParseImportAlias(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -419,7 +419,7 @@ func TestParseSuperCall(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatalf("parse super: %v", err)
 	}
@@ -434,7 +434,7 @@ func TestParseMultipleFunctionParams(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := Parse(toks); err != nil {
+	if _, _, err := Parse(toks); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -444,7 +444,7 @@ func TestParseFunctionLiteralInCallArgument(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -467,7 +467,7 @@ func TestParseCallArgsDoNotBecomeFunctionParams(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -483,7 +483,7 @@ func TestParseIfElse(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -497,7 +497,7 @@ func TestParseIfElseifElse(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -518,7 +518,7 @@ func TestParseZeroParamFunction(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -542,7 +542,7 @@ func TestParseArrayLiteralAndIndex(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := Parse(toks); err != nil {
+	if _, _, err := Parse(toks); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -552,7 +552,7 @@ func TestParseIndexAssignment(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := Parse(toks); err != nil {
+	if _, _, err := Parse(toks); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -568,7 +568,7 @@ func TestParseMemberAssignment(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			if _, err := Parse(toks); err != nil {
+			if _, _, err := Parse(toks); err != nil {
 				t.Fatalf("parse member assignment: %v", err)
 			}
 		})
@@ -580,7 +580,7 @@ func TestParseRejectsMultipleAssignmentToIndexTarget(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
+	_, _, err := Parse(toks)
 	if err == nil {
 		t.Fatal("expected multiple assignment target error")
 	}
@@ -594,7 +594,7 @@ func TestParseGroupedExpression(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := Parse(toks); err != nil {
+	if _, _, err := Parse(toks); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -604,7 +604,7 @@ func TestParseRejectsNestedNoParenCall(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
+	_, _, err := Parse(toks)
 	if err == nil {
 		t.Fatal("expected no-paren call error")
 	}
@@ -618,7 +618,7 @@ func TestParsePrintWithParenCalls(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := Parse(toks); err != nil {
+	if _, _, err := Parse(toks); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -628,7 +628,7 @@ func TestParsePrintWithUnaryMinusExpression(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -661,7 +661,7 @@ func TestParseRejectsPrintSugarOutsideStatement(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			_, err := Parse(toks)
+			_, _, err := Parse(toks)
 			if err == nil {
 				t.Fatal("expected print sugar error")
 			}
@@ -677,7 +677,7 @@ func TestParseRejectsNoParenCall(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, err := Parse(toks)
+	_, _, err := Parse(toks)
 	if err == nil {
 		t.Fatal("expected no-paren call error")
 	}
@@ -691,7 +691,7 @@ func TestParseWhile(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -706,7 +706,7 @@ func TestParseReturnFunctionThenTopLevelPrint(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -726,7 +726,7 @@ func TestParseForIn(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -740,7 +740,7 @@ func TestParseMultipleAssignment(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -761,7 +761,7 @@ func TestParseReturnMultipleValues(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -781,7 +781,7 @@ func TestParseForOfDictionaryIteration(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -802,7 +802,7 @@ func TestParseBreakAndContinue(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -853,7 +853,7 @@ func TestParseRejectsControlFlowOutsideAllowedContext(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			_, err := Parse(toks)
+			_, _, err := Parse(toks)
 			if err == nil {
 				t.Fatalf("expected %q error", tt.want)
 			}
@@ -870,7 +870,7 @@ func TestParseAllowsReturnAndLoopControlInFunctionLoop(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	if _, err := Parse(toks); err != nil {
+	if _, _, err := Parse(toks); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -898,7 +898,7 @@ func TestParseRejectsOuterLoopControlInsideNestedFunction(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			_, err := Parse(toks)
+			_, _, err := Parse(toks)
 			if err == nil {
 				t.Fatalf("expected %q error", tt.want)
 			}
@@ -942,7 +942,7 @@ func TestParseRejectsTrailingTokensInBlockHeaderExpressions(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			_, err := Parse(toks)
+			_, _, err := Parse(toks)
 			if err == nil {
 				t.Fatalf("expected %q error", tt.want)
 			}
@@ -958,7 +958,7 @@ func TestParseTryExpression(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -975,7 +975,7 @@ func TestParseTryExpressionInExpressionBodyFunction(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -998,7 +998,7 @@ func TestParseRejectsTryOutsideFunction(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			_, err := Parse(toks)
+			_, _, err := Parse(toks)
 			if err == nil {
 				t.Fatal("expected try context error")
 			}
@@ -1014,7 +1014,7 @@ func TestParseModuleMemberCall(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1050,7 +1050,7 @@ func TestParseV01Examples(t *testing.T) {
 			if len(errs) != 0 {
 				t.Fatalf("lex errors: %v", errs)
 			}
-			if _, err := Parse(toks); err != nil {
+			if _, _, err := Parse(toks); err != nil {
 				t.Fatal(err)
 			}
 		})
@@ -1084,7 +1084,7 @@ func TestParseASTGoldenV01CoreProgram(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1106,7 +1106,7 @@ func TestParseASTGoldenFunctionLiteralInCall(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1126,7 +1126,7 @@ func TestParseASTGoldenPostfixPrecedence(t *testing.T) {
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, err := Parse(toks)
+	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatal(err)
 	}
