@@ -29,7 +29,7 @@ from repository changes alone.
 |---|---|
 | Publish VS Code support to Marketplace | Marketplace publisher access and `VSCE_PAT` / `vsce login` |
 | Publish VS Code support to Open VSX | Open VSX namespace access and `OVSX_PAT` / login |
-| Publish Emacs mode to MELPA | Pull request to `melpa/melpa` and maintainer review |
+| Publish Emacs mode to MELPA | Pull request `melpa/melpa#10013` is open; maintainer review / merge pending |
 | Register Tree-sitter grammar with GitHub Linguist | Pull request to `github-linguist/linguist` and maintainer review |
 
 ## Last Local Verification
@@ -45,3 +45,4 @@ scripts/verify_editor_assets.sh
 - Main commit with Tree-sitter sample parse verification: `f2ffb11`
 - GitHub Actions `Editor assets` run for `f2ffb11`: `25769086945`, status:
   success.
+- MELPA pull request: https://github.com/melpa/melpa/pull/10013
