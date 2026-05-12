@@ -1,0 +1,19 @@
+# v0.55 `tya lint --format=json` emits a single JSON object with
+# a `findings` array. Each finding carries path/line/col/code/
+# message/autofixable. Exit code 1 still indicates findings.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya lint --format=json sample.tya
+stdout '"version":'
+stdout '"findings":'
+stdout '"code": "TYAL0001"'
+stdout '"code": "TYAL0003"'
+stdout '"autofixable": true'
+stdout '"message": "unused local'
+
+-- sample.tya --
+unused1 = 99
+if true
+  print("hi")

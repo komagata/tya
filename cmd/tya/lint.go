@@ -12,24 +12,27 @@ import (
 	"tya/internal/parser"
 )
 
-// lintCommand implements `tya lint [--fix] [paths...]`. Each path is
+// lintCommand implements
+// `tya lint [--fix] [--format=text|json] [paths...]`. Each path is
 // a single .tya source file or a directory; directories are walked
 // recursively for files ending in ".tya". With no paths, lint
 // defaults to the current directory.
 //
-// v0.50 rules:
+// v0.55 rules:
 //
-//	TYAL0001 unused local           (autofix: line removal)
-//	TYAL0003 redundant if true/false (warn only in v0.50)
-//	TYAL0004 deeply nested blocks    (warn only)
-//	TYAL0005 very long functions     (warn only)
+//	TYAL0001 unused local              (autofix: line removal)
+//	TYAL0002 dead code after return    (warn only)
+//	TYAL0003 redundant if true/false   (autofix: unwrap-if since v0.55)
+//	TYAL0004 deeply nested blocks       (warn only)
+//	TYAL0005 very long functions        (warn only)
 //
-// Findings stream to stdout sorted by path/line/col. tya exits 1
-// when any finding was reported, 0 when clean, and 2 on argument
-// or I/O errors. With --fix, autofixable findings are applied
-// in-place and only the non-fixed remainder counts toward exit 1.
+// `--format=text` (default) prints `path:line:col: CODE message` one
+// per line. `--format=json` emits a single JSON object with a
+// `findings` array. Findings on lines bearing
+// `# tya-lint-ignore[: CODE[, CODE...]]` are filtered before output.
+// Exit status: 0 clean / 1 findings remain / 2 arg or I/O error.
 func lintCommand(args []string) int {
-	fix, paths, err := parseLintArgs(args)
+	fix, format, paths, err := parseLintArgs(args)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
@@ -43,40 +46,75 @@ func lintCommand(args []string) int {
 		fmt.Fprintln(os.Stderr, "tya lint: no .tya files found")
 		return 2
 	}
-	remaining := []string{}
+	var all []lintFinding
 	for _, path := range files {
 		out, err := lintOneFile(path, fix)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
 		}
-		remaining = append(remaining, out...)
+		all = append(all, out...)
 	}
-	sort.Strings(remaining)
-	for _, line := range remaining {
-		fmt.Fprintln(os.Stdout, line)
+	sort.SliceStable(all, func(i, j int) bool {
+		if all[i].Path != all[j].Path {
+			return all[i].Path < all[j].Path
+		}
+		if all[i].Line != all[j].Line {
+			return all[i].Line < all[j].Line
+		}
+		if all[i].Col != all[j].Col {
+			return all[i].Col < all[j].Col
+		}
+		return all[i].Code < all[j].Code
+	})
+	switch format {
+	case "json":
+		report := lintReport{Version: version, Findings: all}
+		if report.Findings == nil {
+			report.Findings = []lintFinding{}
+		}
+		if err := writeLintJSON(os.Stdout, report); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 2
+		}
+	default:
+		for _, f := range all {
+			fmt.Fprintf(os.Stdout, "%s:%d:%d: %s %s\n", f.Path, f.Line, f.Col, f.Code, f.Message)
+		}
 	}
-	if len(remaining) > 0 {
+	if len(all) > 0 {
 		return 1
 	}
 	return 0
 }
 
-func parseLintArgs(args []string) (fix bool, paths []string, err error) {
-	for _, a := range args {
-		switch a {
-		case "--fix":
+func parseLintArgs(args []string) (fix bool, format string, paths []string, err error) {
+	format = "text"
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		switch {
+		case a == "--fix":
 			fix = true
-		case "-h", "--help":
-			return false, nil, fmt.Errorf("usage: tya lint [--fix] [paths...]")
-		default:
-			if strings.HasPrefix(a, "-") {
-				return false, nil, fmt.Errorf("unknown lint option: %s", a)
+		case a == "-h" || a == "--help":
+			return false, "", nil, fmt.Errorf("usage: tya lint [--fix] [--format=text|json] [paths...]")
+		case strings.HasPrefix(a, "--format="):
+			format = a[len("--format="):]
+		case a == "--format":
+			if i+1 >= len(args) {
+				return false, "", nil, fmt.Errorf("--format requires a value (text|json)")
 			}
+			i++
+			format = args[i]
+		case strings.HasPrefix(a, "-"):
+			return false, "", nil, fmt.Errorf("unknown lint option: %s", a)
+		default:
 			paths = append(paths, a)
 		}
 	}
-	return fix, paths, nil
+	if format != "text" && format != "json" {
+		return false, "", nil, fmt.Errorf("--format must be text or json (got %q)", format)
+	}
+	return fix, format, paths, nil
 }
 
 func lintCollectFiles(paths []string) ([]string, error) {
@@ -114,16 +152,35 @@ func lintCollectFiles(paths []string) ([]string, error) {
 }
 
 // lintOneFile collects findings for a single source. When fix is
-// true, autofixable findings are applied to the file in place and
-// removed from the returned slice; only non-autofixed findings
-// remain for stdout reporting.
-func lintOneFile(path string, fix bool) ([]string, error) {
+// true, TYAL0003 `if true/false` blocks are first unwrapped in
+// place, then TYAL0001 unused-local lines are dropped; both rounds
+// rewrite the file on disk and only the non-autofixed remainder
+// reaches the returned slice. Per-line opt-out comments suppress
+// matching findings before they are returned.
+func lintOneFile(path string, fix bool) ([]lintFinding, error) {
 	src, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 	source := string(src)
-	tokens, lexErrs := lexer.Lex(source)
+
+	if fix {
+		// Apply TYAL0003 unwrap-if first because it shifts line
+		// numbers; TYAL0001 line-delete is computed afterwards on
+		// the rewritten source.
+		newSrc, changed, ferr := lintApplyUnwrapIf(source)
+		if ferr != nil {
+			return nil, fmt.Errorf("%s: %v", path, ferr)
+		}
+		if changed > 0 {
+			if err := os.WriteFile(path, []byte(newSrc), 0644); err != nil {
+				return nil, err
+			}
+			source = newSrc
+		}
+	}
+
+	tokens, comments, lexErrs := lexer.LexWithComments(source)
 	if len(lexErrs) > 0 {
 		return nil, fmt.Errorf("%s: %v", path, lexErrs[0])
 	}
@@ -134,6 +191,7 @@ func lintOneFile(path string, fix bool) ([]string, error) {
 
 	unused := checker.CollectUnused(prog)
 	other := checker.CollectLintFindings(prog)
+	optouts := buildOptouts(comments)
 
 	if fix && len(unused) > 0 {
 		newSource, fixed := fixUnusedLines(source, unused)
@@ -142,18 +200,54 @@ func lintOneFile(path string, fix bool) ([]string, error) {
 				return nil, err
 			}
 		}
-		// every unused local is autofixable in v0.50
 		unused = nil
 	}
 
-	out := []string{}
+	out := []lintFinding{}
 	for _, b := range unused {
-		out = append(out, fmt.Sprintf("%s:%d:%d: TYAL0001 unused local %q", path, b.Line, b.Col, b.Name))
+		if optouts.suppressed(b.Line, "TYAL0001") {
+			continue
+		}
+		out = append(out, lintFinding{
+			Path:        path,
+			Line:        b.Line,
+			Col:         b.Col,
+			Code:        "TYAL0001",
+			Message:     fmt.Sprintf("unused local %q", b.Name),
+			Autofixable: true,
+		})
 	}
 	for _, f := range other {
-		out = append(out, fmt.Sprintf("%s:%d:%d: %s %s", path, f.Line, f.Col, f.Code, f.Message))
+		if optouts.suppressed(f.Line, f.Code) {
+			continue
+		}
+		out = append(out, lintFinding{
+			Path:        path,
+			Line:        f.Line,
+			Col:         f.Col,
+			Code:        f.Code,
+			Message:     f.Message,
+			Autofixable: f.Code == "TYAL0003",
+		})
 	}
 	return out, nil
+}
+
+// lintApplyUnwrapIf parses source, collects TYAL0003 unwrap-if hints,
+// and applies them via applyUnwrapIf. Returns the rewritten source
+// and the number of hints applied.
+func lintApplyUnwrapIf(source string) (string, int, error) {
+	tokens, lexErrs := lexer.Lex(source)
+	if len(lexErrs) > 0 {
+		return source, 0, lexErrs[0]
+	}
+	prog, err := parser.Parse(tokens)
+	if err != nil {
+		return source, 0, err
+	}
+	hints := checker.LintAutofixHints(prog)
+	newSrc, n := applyUnwrapIf(source, hints)
+	return newSrc, n, nil
 }
 
 // fixUnusedLines removes any source line that introduces one of the
@@ -170,7 +264,6 @@ func fixUnusedLines(source string, unused []checker.UnusedBinding) (string, int)
 		}
 		idx := b.Line - 1
 		trimmed := strings.TrimSpace(lines[idx])
-		// only drop if the line actually starts with the binding name
 		if !strings.HasPrefix(trimmed, b.Name) {
 			continue
 		}

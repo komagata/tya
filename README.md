@@ -48,13 +48,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.54.0, download the release source and build the `tya` command locally.
+For v0.55.0, download the release source and build the `tya` command locally.
 This currently requires Go because the v0.13 reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.54.0.tar.gz | tar xz
-cd tya-0.54.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.55.0.tar.gz | tar xz
+cd tya-0.55.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -105,7 +105,9 @@ tya new app           # scaffold tya.toml + src/main.tya + .gitignore
 cd app
 tya task              # list tasks defined under [tasks] in tya.toml
 tya task run          # run the named task
-tya lint src          # report unused locals (TYAL0001) under a path
+tya lint src                  # report unused locals (TYAL0001) under a path
+tya lint --fix src            # rewrite TYAL0001 line-deletes and TYAL0003 `if true` unwraps in place
+tya lint --format=json src    # machine-readable findings for CI consumers
 tya doc               # print top-level binding documentation
 tya doc --html ./out  # write a multi-page HTML site
 ```
@@ -145,7 +147,7 @@ cd editors/vscode
 npm install
 npm run compile
 npx vsce package
-code --install-extension tya-0.54.0.vsix
+code --install-extension tya-0.55.0.vsix
 ```
 
 ## Example

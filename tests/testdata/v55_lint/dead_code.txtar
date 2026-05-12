@@ -1,0 +1,20 @@
+# v0.55 TYAL0002 reports statements that follow a `return` or
+# `raise` in the same block.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya lint sample.tya
+stdout 'TYAL0002 dead code after return'
+stdout 'TYAL0002 dead code after raise'
+
+-- sample.tya --
+fnret = ->
+  return 1
+  print("after return")
+
+fnraise = ->
+  raise "boom"
+  print("after raise")
+
+print("done")

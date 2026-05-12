@@ -97,6 +97,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
 <ul>
+<li>**v0.54** — Diagnostics pipeline migration (<code>docs/v0.54/SPEC.md</code>,</li>
+</ul>
+<p>  <code>docs/v0.54/RELEASE_NOTES.md</code>). Parser, Codegen, and Runner   errors now flow through the same <code>diag.Diagnostic</code> channel as   Lexer and Checker, each carrying a stable <code>[TYA-EXXXX]</code> code.   New code bands: <code>TYA-E0100-0199</code> (parser: expected token /   block / position constraint / reserved name / pattern / expression),   <code>TYA-E0601-0606</code> (codegen: unsupported AST shapes), <code>TYA-E0840</code>   / <code>E0856</code> / <code>E0857</code> / <code>E0858</code> (runner: filename, entry-module   conflict, import name conflict, undefined variable). Parser   gains statement-level recovery (<code>block()</code> and <code>program()</code>) so   one <code>tya check</code> run surfaces every top-level error at once   via <code>*parser.ParserError{Diags}</code>. Undefined-name errors gain   <code>did you mean &quot;…&quot;?</code> hints driven by a new   <code>internal/util/strdist.go::Suggest</code> Levenshtein helper. LSP   (<code>internal/lsp/diagnostics.go::DiagnosticsFor</code>) and CLI   (<code>cmd/tya/main.go::printDiagnostic</code>) both <code>errors.As</code>-unwrap   the new wrapper types and route every diagnostic into the   shared structured renderer. Language surface unchanged from   v0.53.</p>
+<ul>
 <li>**v0.53** — <code>tya lsp</code> v2 full IDE feature set</li>
 </ul>
 <p>  (<code>docs/v0.53/SPEC.md</code>, <code>docs/v0.53/RELEASE_NOTES.md</code>). The   Language Server gains: cross-file <code>textDocument/definition</code> via   <code>import</code> and <code>mod.foo</code>; scope-aware <code>textDocument/references</code> and   <code>textDocument/rename</code> (top-level / local / param);   <code>textDocument/rangeFormatting</code> (heuristic A widening to the   smallest enclosing top-level Stmt); <code>textDocument/codeAction</code>   quick fixes for <code>TYAL0001</code> (line-delete) and <code>TYAL0003</code>   (if-unwrap); <code>textDocument/semanticTokens/full</code> over a 9-type   legend; <code>textDocument/documentSymbol</code> (hierarchical) and   <code>workspace/symbol</code> (substring filter); incremental document sync   (<code>TextDocumentSyncKind.Incremental</code>); <code>positionEncoding</code> advertised   as <code>utf-8</code>. Setup recipes ship under <code>editors/neovim/</code>,   <code>editors/zed/</code>, and <code>editors/emacs/</code>. New diagnostic codes   <code>TYA-E0932</code> (workspace scan, recoverable) and <code>TYA-E0933</code> (rename   conflict). Language surface unchanged from v0.52.</p>
@@ -212,15 +216,32 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Epics below are committed direction but not yet scheduled to a specific minor version. Each will be scoped into a <code>docs/vX.Y/SPEC.md</code> when picked up.</p>
 <h3 id="toolchain">Toolchain</h3>
 <ul>
-<li>[ ] **Migrate remaining stages to the diagnostics pipeline**</li>
+<li>[x] **Migrate remaining stages to the diagnostics pipeline** *(v0.54</li>
+</ul>
+<p>  delivered the core: structured diagnostics for Parser /   Codegen / Runner, multi-error parsing, did-you-mean.   Remaining polish items below are scheduled for v0.55+.)*</p>
 <ul>
-<li>[ ] Parser → <code>TYA-E0100</code>–<code>E0299</code>.</li>
-<li>[ ] Codegen → <code>TYA-E0600</code>–<code>E0799</code>.</li>
-<li>[ ] Runner → <code>TYA-E0800</code>–<code>E0899</code>.</li>
-<li>[ ] Add did-you-mean suggestions for unknown-name diagnostics.</li>
-<li>[ ] Add multi-error parsing.</li>
+<li>[x] Parser → <code>TYA-E0100</code>–<code>E0299</code> (E0100-E0180 buckets in use).</li>
+<li>[x] Codegen → <code>TYA-E0600</code>–<code>E0799</code> (E0601-E0606 in use).</li>
+<li>[x] Runner → <code>TYA-E0800</code>–<code>E0899</code> (E0840 / E0856-E0858 added on top</li>
 </ul>
+<p>    of v0.4x's E0850-E0855).</p>
+<ul>
+<li>[x] Add did-you-mean suggestions for unknown-name diagnostics</li>
 </ul>
+<p>    (Levenshtein-based <code>internal/util.Suggest</code>).</p>
+<ul>
+<li>[x] Add multi-error parsing (statement-level recovery in</li>
+</ul>
+<p>    <code>program()</code> and <code>block()</code>).</p>
+<ul>
+<li>[ ] Parser signature change to <code>Parse() → (*Program, []Diag, error)</code></li>
+</ul>
+<p>    for symmetry with <code>lexer.LexWithComments</code>. *(v0.55+)*</p>
+<ul>
+<li>[ ] Expression-level recovery (currently statement-level). *(v0.55+)*</li>
+<li>[ ] Codegen / Runner signature change to also return <code>[]Diag</code></li>
+</ul>
+<p>    slices. *(v0.55+)*</p>
 <ul>
 <li>[x] **Ship <code>tya lsp</code> Language Server** *(v0.52 MVP + v0.53 full IDE</li>
 </ul>

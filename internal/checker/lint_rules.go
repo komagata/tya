@@ -37,8 +37,30 @@ func CollectLintFindings(prog *ast.Program) []LintFinding {
 }
 
 func walkLintStmts(stmts []ast.Stmt, depth int, out *[]LintFinding) {
-	for _, stmt := range stmts {
+	deadAfter := -1
+	deadKind := ""
+	for i, stmt := range stmts {
+		if deadAfter >= 0 {
+			line, col := stmtFirstPos(stmt)
+			*out = append(*out, LintFinding{
+				Code:    "TYAL0002",
+				Message: "dead code after " + deadKind,
+				Line:    line,
+				Col:     col,
+			})
+			_ = i
+		}
 		walkLintStmt(stmt, depth, out)
+		if deadAfter < 0 {
+			switch stmt.(type) {
+			case *ast.ReturnStmt:
+				deadAfter = i
+				deadKind = "return"
+			case *ast.RaiseStmt:
+				deadAfter = i
+				deadKind = "raise"
+			}
+		}
 	}
 }
 
@@ -169,6 +191,8 @@ func stmtFirstPos(stmt ast.Stmt) (line, col int) {
 		return n.Tok.Line, n.Tok.Col
 	case *ast.ForInStmt:
 		return n.ValueTok.Line, n.ValueTok.Col
+	case *ast.ExprStmt:
+		return exprFirstPos(n.Expr)
 	case *ast.IfStmt:
 		if len(n.Then) > 0 {
 			l, c := stmtFirstPos(n.Then[0])
@@ -185,6 +209,28 @@ func stmtFirstPos(stmt ast.Stmt) (line, col int) {
 			}
 		}
 		return 0, 0
+	}
+	return 0, 0
+}
+
+// exprFirstPos returns a best-effort 1-origin (line, col) of the
+// leftmost token reachable from expr. Many literals carry no token
+// at all, in which case we return (0, 0) — callers must tolerate
+// that, as did the old behavior.
+func exprFirstPos(expr ast.Expr) (line, col int) {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		return n.Tok.Line, n.Tok.Col
+	case *ast.CallExpr:
+		return exprFirstPos(n.Callee)
+	case *ast.MemberExpr:
+		return exprFirstPos(n.Target)
+	case *ast.IndexExpr:
+		return exprFirstPos(n.Target)
+	case *ast.BinaryExpr:
+		return exprFirstPos(n.Left)
+	case *ast.UnaryExpr:
+		return exprFirstPos(n.Expr)
 	}
 	return 0, 0
 }

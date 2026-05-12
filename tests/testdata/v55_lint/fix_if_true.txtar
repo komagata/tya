@@ -1,0 +1,24 @@
+# v0.55 `tya lint --fix` unwraps `if true` blocks: the header
+# line is removed and the body is de-indented by two spaces.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya lint --fix dirty.tya
+! stdout .
+
+cmp dirty.tya expected.tya
+
+# Subsequent lint passes are clean.
+exec $WORK/tya lint dirty.tya
+! stdout .
+
+-- dirty.tya --
+x = 1
+if true
+  print(x)
+print("done")
+-- expected.tya --
+x = 1
+print(x)
+print("done")

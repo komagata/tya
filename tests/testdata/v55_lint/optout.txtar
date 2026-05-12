@@ -1,0 +1,22 @@
+# v0.55 per-line opt-out: `# tya-lint-ignore` (with or without a
+# CODE list) suppresses matching findings. Inline comments apply
+# to the same source line; full-line comments apply to the next
+# statement.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+# Three unused locals would normally fire TYAL0001 each; `quiet1`
+# is suppressed by an inline opt-out, `quiet2` by a leading
+# full-line opt-out, and `loud` reports normally.
+! exec $WORK/tya lint sample.tya
+stdout 'TYAL0001 unused local "loud"'
+! stdout 'quiet1'
+! stdout 'quiet2'
+
+-- sample.tya --
+quiet1 = 1  # tya-lint-ignore: TYAL0001
+# tya-lint-ignore: TYAL0001
+quiet2 = 2
+loud = 3
+print("ok")

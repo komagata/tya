@@ -148,6 +148,22 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.55** — `tya lint` v3 extension (`docs/v0.55/SPEC.md`,
+  `docs/v0.55/RELEASE_NOTES.md`). `tya lint` becomes CI-ready:
+  per-line `# tya-lint-ignore[: CODE[, CODE...]]` opt-out
+  comments (inline or full-line, wildcard or code-scoped);
+  `--format=json` machine-readable output with `version` /
+  `findings[{path,line,col,code,message,autofixable}]`; new
+  `TYAL0002` rule reports dead code after `return` / `raise`
+  in every block (function bodies, `if` arms, `while` / `for`
+  bodies, `try` / `catch`, `match` cases); and `--fix` gains
+  TYAL0003 `if true` / `if false` unwrap-if autofix that drops
+  the header line and de-indents the body by two spaces (runs
+  before the existing TYAL0001 line-delete so positions stay
+  stable). The `lint` subcommand owns its own `--format` flag;
+  other subcommands continue to read the global
+  `--format=human|json` for diagnostic rendering. Language
+  surface unchanged from v0.54.
 - **v0.54** — Diagnostics pipeline migration (`docs/v0.54/SPEC.md`,
   `docs/v0.54/RELEASE_NOTES.md`). Parser, Codegen, and Runner
   errors now flow through the same `diag.Diagnostic` channel as
@@ -490,13 +506,36 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Per-task environment variables.
 
 - [ ] **Extend `tya lint` source linter** *(v0.49 shipped rule
-  `TYAL0001` unused local + CLI surface. Remaining work below.)*
-  - [ ] `--fix` autofix mode.
-  - [ ] `--format=json` machine-readable output.
-  - [ ] Additional rules: dead code after `return` / `raise`,
-    redundant `if true` / `if false`, suspicious `for` index
-    patterns, deeply nested blocks, very long functions.
-  - [ ] Per-line opt-out via `# tya-lint-ignore: TYAL0001`.
+  `TYAL0001` unused local + CLI surface. v0.50 added `--fix`
+  line-delete + `TYAL0003 / 0004 / 0005` warnings. v0.55 added
+  per-line opt-out, `--format=json`, `TYAL0002` dead code, and
+  `TYAL0003` `--fix` unwrap-if autofix. Remaining work below.)*
+  - [x] `--fix` autofix mode. *(v0.50: `TYAL0001` line-delete;
+    v0.55: `TYAL0003` unwrap-if)*
+  - [x] `--format=json` machine-readable output. *(v0.55)*
+  - [x] Additional rules: dead code after `return` / `raise`
+    *(`TYAL0002`, v0.55)*; redundant `if true` / `if false`
+    *(`TYAL0003`, v0.50)*; deeply nested blocks
+    *(`TYAL0004`, v0.50)*; very long functions
+    *(`TYAL0005`, v0.50)*.
+  - [ ] Additional rules: suspicious `for` index patterns,
+    unused function parameters, shadowed bindings.
+  - [ ] Extend `TYAL0001` `--fix` to also drop the body of
+    multi-line bindings (e.g. `name = ->` followed by an
+    indented block) so `--fix` does not leave orphan indented
+    lines. *(carryover from v0.50; the current line-delete only
+    removes the binding's own line)*
+  - [x] Per-line opt-out via `# tya-lint-ignore: TYAL0001`. *(v0.55)*
+  - [ ] File-scope opt-out (`# tya-lint-ignore-file: TYAL0001`).
+  - [ ] `--format=sarif` (SARIF v2.1 standard) for ingest by
+    third-party CI tools.
+  - [ ] `TYAL0004` / `TYAL0005` AST autofix (deep-nesting
+    flattening / long-function split). Currently warning-only
+    because the right reshape is a human-judgement call.
+  - [ ] Unify the LSP `unwrap-if` code action helper
+    (`internal/lsp/code_actions.go`) with the CLI
+    `applyUnwrapIf` (`cmd/tya/lint_autofix.go`) so both call
+    the same rewriter.
   - [ ] Each rule has a stable code (`TYAL00xx`), title, doc URL.
 
 - [ ] **Ship a public Tya self-introspection library**

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.55 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-55-specification">Tya v0.55 Specification</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.55.0</code>. &gt; v0.55 extends <code>tya lint</code> with per-line opt-out comments, a &gt; machine-readable JSON output, a new <code>TYAL0002</code> dead-code rule, &gt; and an AST-level autofix for <code>TYAL0003</code>. The language surface &gt; is unchanged from v0.54.</p>
+<h2 id="theme">Theme</h2>
+<p>v0.49 shipped <code>tya lint</code> as a real subcommand. v0.50 added line- deleting <code>--fix</code> for <code>TYAL0001</code> and warned on <code>TYAL0003 / TYAL0004 / TYAL0005</code>. v0.55 turns the lint into a CI-ready tool: finer-grained suppression, structured output, more analysis, and more autofix coverage.</p>
+<h2 id="cli">CLI</h2>
+<pre><code>tya lint [--fix] [--format=text|json] [paths...]</code></pre>
+<ul>
+<li><code>--fix</code> rewrites the source in place. v0.55 applies two passes:</li>
+<ol>
+<li>**<code>TYAL0003</code> unwrap-if** — <code>if true</code> / <code>if false</code> blocks are</li>
+</ol>
+</ul>
+<p>     unwrapped: the header line is dropped and the body is      de-indented by two spaces.   2. **<code>TYAL0001</code> line-delete** (existing since v0.50) — lines      introducing unused locals are removed.</p>
+<ul>
+<li><code>--format=text</code> (default) prints <code>path:line:col: CODE message</code></li>
+</ul>
+<p>  one per line, matching v0.50.</p>
+<ul>
+<li><code>--format=json</code> emits a single JSON object with a <code>findings</code></li>
+</ul>
+<p>  array (schema below).</p>
+<ul>
+<li>Exit codes (unchanged): <code>0</code> clean / <code>1</code> findings remain / <code>2</code></li>
+</ul>
+<p>  argument or I/O error.</p>
+<p>The <code>lint</code> subcommand owns its own <code>--format</code> flag. Other subcommands continue to recognise the global <code>--format=human|json</code> for diagnostic rendering.</p>
+<h2 id="per-line-opt-out">Per-line opt-out</h2>
+<p>Comments of the form <code># tya-lint-ignore[: CODE[, CODE...]]</code> suppress matching findings.</p>
+<ul>
+<li><code># tya-lint-ignore</code> (no code list) suppresses every code on</li>
+</ul>
+<p>  the target line.</p>
+<ul>
+<li><code># tya-lint-ignore: TYAL0001</code> suppresses just the listed codes.</li>
+<li>Inline comments (<code>x = 1  # tya-lint-ignore: TYAL0001</code>) target</li>
+</ul>
+<p>  the line they sit on.</p>
+<ul>
+<li>Full-line comments target the **following** statement (the</li>
+</ul>
+<p>  next source line).</p>
+<ul>
+<li>Codes are case-sensitive. Surrounding whitespace is ignored.</li>
+</ul>
+<p>When <code>--fix</code> deletes a line, any opt-out comment on that line is removed with it (line-delete drops the whole line verbatim).</p>
+<h2 id="json-output-schema">JSON output schema</h2>
+<pre><code class="language-json">{
+  &quot;version&quot;: &quot;0.55.0&quot;,
+  &quot;findings&quot;: [
+    {
+      &quot;path&quot;: &quot;src/foo.tya&quot;,
+      &quot;line&quot;: 12,
+      &quot;col&quot;: 3,
+      &quot;code&quot;: &quot;TYAL0001&quot;,
+      &quot;message&quot;: &quot;unused local \&quot;tmp\&quot;&quot;,
+      &quot;autofixable&quot;: true
+    }
+  ]
+}</code></pre>
+<ul>
+<li><code>version</code> mirrors the <code>tya version</code> constant. Consumers that</li>
+</ul>
+<p>  parse the report should treat unknown fields as forward-   compatible additions.</p>
+<ul>
+<li><code>findings</code> is always an array (possibly empty). It is sorted</li>
+</ul>
+<p>  by <code>(path, line, col, code)</code>.</p>
+<ul>
+<li><code>autofixable</code> is <code>true</code> for <code>TYAL0001</code> and <code>TYAL0003</code>; <code>false</code></li>
+</ul>
+<p>  for <code>TYAL0002</code>, <code>TYAL0004</code>, and <code>TYAL0005</code>.</p>
+<h2 id="lint-rules">Lint rules</h2>
+<p>| Code      | Trigger                              | Autofix       | |-----------|--------------------------------------|---------------| | <code>TYAL0001</code>| unused local                          | line-delete   | | <code>TYAL0002</code>| **dead code after <code>return</code> / <code>raise</code>**| —             | | <code>TYAL0003</code>| redundant <code>if true</code> / <code>if false</code>     | **unwrap-if** | | <code>TYAL0004</code>| deeply nested block (depth ≥ 5)      | —             | | <code>TYAL0005</code>| function body &gt; 50 statements        | —             |</p>
+<h3 id="tyal0002-dead-code-after-return-raise">TYAL0002 dead code after <code>return</code> / <code>raise</code></h3>
+<p>Inside any block (function body, <code>if</code> arm, <code>while</code> body, <code>for</code> body, <code>try</code> / <code>catch</code>, <code>match</code> case), once a <code>return</code> or <code>raise</code> statement is reached every subsequent statement at the same nesting level emits <code>TYAL0002 dead code after &lt;return|raise&gt;</code> pointing at the unreachable statement.</p>
+<p>The first unreachable statement is reported; the rule then continues so consecutive dead statements each yield one finding.</p>
+<h3 id="tyal0003-ast-autofix">TYAL0003 AST autofix</h3>
+<p><code>tya lint --fix</code> rewrites the source so that:</p>
+<ul>
+<li><code>if true</code> with a non-empty <code>Then</code> body: the <code>if true</code> header</li>
+</ul>
+<p>  line is removed, and the body is de-indented by two spaces.</p>
+<ul>
+<li><code>if false</code> with a non-empty <code>Else</code> body: the <code>if false</code></li>
+</ul>
+<p>  header is removed and the <code>else:</code> body is de-indented.</p>
+<p>Lines outside the construct are left untouched. Edge cases (empty <code>Then</code>, empty <code>Else</code>, single-line bodies on the header line) fall back to no edit, matching the LSP code-action behaviour from v0.51.</p>
+<h2 id="scope-out-v0-56">Scope-out (v0.56+)</h2>
+<ul>
+<li><code>TYAL0004</code> / <code>TYAL0005</code> AST autofixes (deep-nesting flattening</li>
+</ul>
+<p>  and long-function splits are human-judgement calls).</p>
+<ul>
+<li><code>--format=sarif</code> (SARIF v2.1 standard).</li>
+<li>File-scope opt-out (<code># tya-lint-ignore-file: TYAL0001</code>).</li>
+<li>Unifying the LSP code-action <code>unwrap-if</code> helper with the CLI</li>
+</ul>
+<p>  <code>applyUnwrapIf</code> so both call the same rewriter.</p>
+<ul>
+<li>Additional rules (<code>suspicious for loop</code>, <code>unused param</code>, etc.).</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

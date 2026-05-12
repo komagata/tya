@@ -23,7 +23,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.54.0"
+const version = "0.55.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -412,7 +412,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya outdated")
 	fmt.Fprintln(os.Stderr, "       tya new <name>")
 	fmt.Fprintln(os.Stderr, "       tya task [name] [args...]")
-	fmt.Fprintln(os.Stderr, "       tya lint [paths...]")
+	fmt.Fprintln(os.Stderr, "       tya lint [--fix] [--format=text|json] [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya doc [--html <out>] [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya lsp [--log <file>]")
 	fmt.Fprintln(os.Stderr, "       tya version")
@@ -931,11 +931,29 @@ var errStrictReported = errors.New("__strict_reported__")
 // parseGlobalDiagFlags scans os.Args for --format=… and --color=…
 // (and the ` ` form) anywhere in the command line. Recognized flags
 // are removed from os.Args so the rest of the CLI parsing is unchanged.
+//
+// The `lint` subcommand owns its own --format namespace
+// (text|json output report) and is intentionally exempt — when the
+// first non-flag arg is "lint", everything after it is left untouched
+// so `tya lint --format=json` reaches lintCommand verbatim.
 func parseGlobalDiagFlags() error {
 	out := []string{os.Args[0]}
 	args := os.Args[1:]
+	exemptAfter := -1
+	for i, a := range args {
+		if !strings.HasPrefix(a, "-") {
+			if a == "lint" {
+				exemptAfter = i
+			}
+			break
+		}
+	}
 	for i := 0; i < len(args); i++ {
 		a := args[i]
+		if exemptAfter >= 0 && i > exemptAfter {
+			out = append(out, a)
+			continue
+		}
 		switch {
 		case strings.HasPrefix(a, "--format="):
 			f, err := diag.ParseFormat(strings.TrimPrefix(a, "--format="))
