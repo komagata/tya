@@ -3,6 +3,8 @@
 Tya's Language Server (`tya lsp`) speaks LSP JSON-RPC 2.0 over
 stdio from the same binary as the compiler. Neovim integrates it
 via [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig).
+Syntax coloring, filetype detection, and indentation are provided by
+the shared Vim runtime files in [`../vim/`](../vim).
 
 ## Requirements
 
@@ -12,7 +14,14 @@ via [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig).
 
 ## Setup
 
-Copy the contents of [`init.lua.example`](./init.lua.example) into
+Install the syntax files:
+
+```sh
+mkdir -p ~/.config/nvim
+cp -R editors/vim/ftdetect editors/vim/indent editors/vim/syntax ~/.config/nvim/
+```
+
+Then copy the contents of [`init.lua.example`](./init.lua.example) into
 your Neovim config (`~/.config/nvim/lua/tya.lua`, then `require
 "tya"` from `init.lua`):
 
@@ -40,6 +49,7 @@ vim.filetype.add({ extension = { tya = "tya" } })
 ## Features (v0.53)
 
 - Diagnostics on save / on change
+- Syntax coloring and indentation for `.tya` files
 - `textDocument/formatting` and `textDocument/rangeFormatting`
 - `textDocument/hover` — function signature + leading `#` comment
 - `textDocument/definition` (cross-file via `import`)

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "tya",
+      "camelcase": "Tya",
+      "scope": "source.tya",
+      "path": ".",
+      "file-types": ["tya"],
+      "highlights": "queries/highlights.scm"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "UNLICENSED",
+    "description": "Tree-sitter grammar for the Tya programming language.",
+    "authors": [
+      {
+        "name": "Masaki Komagata"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/komagata/tya"
+    }
+  }
+}

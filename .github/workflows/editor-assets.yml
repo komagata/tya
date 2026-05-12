@@ -1,0 +1,42 @@
+name: Editor assets
+
+on:
+  push:
+    paths:
+      - "editors/**"
+      - "scripts/verify_editor_assets.sh"
+      - "tests/editor_assets_test.go"
+      - ".github/workflows/editor-assets.yml"
+  pull_request:
+    paths:
+      - "editors/**"
+      - "scripts/verify_editor_assets.sh"
+      - "tests/editor_assets_test.go"
+      - ".github/workflows/editor-assets.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: editors/vscode/package-lock.json
+
+      - name: Install editor tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y neovim
+          npm install -g tree-sitter-cli
+          npm ci
+        working-directory: editors/vscode
+
+      - name: Verify editor syntax assets
+        run: scripts/verify_editor_assets.sh

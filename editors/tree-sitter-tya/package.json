@@ -1,0 +1,17 @@
+{
+  "name": "tree-sitter-tya",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for the Tya programming language.",
+  "license": "UNLICENSED",
+  "main": "grammar.js",
+  "tree-sitter": [
+    {
+      "scope": "source.tya",
+      "file-types": ["tya"],
+      "highlights": "queries/highlights.scm"
+    }
+  ],
+  "devDependencies": {
+    "tree-sitter-cli": "^0.22.6"
+  }
+}

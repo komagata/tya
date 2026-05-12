@@ -1,0 +1,52 @@
+# Syntax coloring sample for editor integrations.
+import time.Time as Time
+
+module demo
+  interface Named
+    name = ->
+
+    label = ->
+      "label:{self.name()}"
+
+  class User implements Named
+    active = true
+    count = 0x2a
+    mask = 0b1010
+    data = b"tya"
+
+    initialize = name ->
+      super()
+      self.name_value = name
+
+    name = ->
+      self.name_value
+
+    run = ->
+      scope
+        task = spawn -> Time.sleep(0.01)
+        await task
+
+      ch = channel.Channel(1)
+      select
+        value = receive ch
+          print(value)
+        send ch, "ready"
+          print("sent")
+        timeout 1
+          raise "timeout"
+        default
+          print(nil)
+
+      match self.count
+        case 42
+          "answer"
+        case _
+          "other"
+
+user = demo.User("komagata")
+if user.active and not false
+  print(user.label())
+elseif user.count > 0
+  print("count")
+else
+  print("inactive")

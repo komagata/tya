@@ -1,0 +1,68 @@
+# Publishing Editor Syntax Support
+
+This checklist records the external publishing work for Tya editor syntax
+coloring. The repository contains the distributable assets; the external steps
+require account credentials or upstream maintainer review.
+
+## VS Code Marketplace
+
+Artifact:
+
+```sh
+scripts/verify_editor_assets.sh
+```
+
+Publish:
+
+```sh
+cd editors/vscode
+npx vsce publish
+```
+
+Requirements:
+
+- Visual Studio Marketplace publisher: `komagata`
+- `VSCE_PAT` or an interactive `vsce login komagata`
+- Generated package: `editors/vscode/tya-0.61.0.vsix`
+
+## Open VSX
+
+Artifact:
+
+```sh
+scripts/verify_editor_assets.sh
+```
+
+Publish:
+
+```sh
+cd editors/vscode
+npx ovsx publish tya-0.61.0.vsix
+```
+
+Requirements:
+
+- Open VSX namespace: `komagata`
+- `OVSX_PAT` or an interactive login
+
+## MELPA
+
+Asset:
+
+- `editors/emacs/tya-mode.el`
+- `editors/emacs/melpa-recipe`
+
+Submit a pull request to `melpa/melpa` adding the recipe. MELPA's build should
+install `tya-mode.el` and expose `tya-mode` for `.tya` files.
+
+## GitHub Linguist
+
+Assets:
+
+- `editors/vscode/syntaxes/tya.tmLanguage.json`
+- `editors/tree-sitter-tya/`
+- `editors/syntax-sample.tya`
+- `editors/github-linguist/languages.yml.example`
+
+Submit a pull request to `github-linguist/linguist` adding the language entry
+and grammar wiring required by the current Linguist contribution process.

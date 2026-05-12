@@ -1,6 +1,7 @@
 -- ~/.config/nvim/lua/tya.lua  (or paste into init.lua)
 --
 -- Registers tya as a filetype and wires `tya lsp` to nvim-lspconfig.
+-- Install syntax coloring / indent files from editors/vim/ first.
 -- Tested with Neovim 0.10 + nvim-lspconfig HEAD.
 
 local lspconfig = require("lspconfig")

@@ -1,10 +1,9 @@
 ;; tya support for Emacs. Pick lsp-mode OR eglot, not both.
 ;; Tested against Emacs 29.
 
-(define-derived-mode tya-mode prog-mode "tya"
-  "Major mode for the tya programming language."
-  (setq-local comment-start "# "))
-(add-to-list 'auto-mode-alist '("\\.tya\\'" . tya-mode))
+;; Adjust this path to the repository checkout or installed package directory.
+(add-to-list 'load-path "/path/to/tya/editors/emacs")
+(require 'tya-mode)
 
 ;; --- eglot path (built-in since Emacs 29) ------------------------------
 (with-eval-after-load 'eglot

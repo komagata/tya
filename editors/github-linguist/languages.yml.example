@@ -1,0 +1,8 @@
+Tya:
+  type: programming
+  color: "#4f7cff"
+  extensions:
+    - ".tya"
+  tm_scope: source.tya
+  ace_mode: text
+  language_id: 998877

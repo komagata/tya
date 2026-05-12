@@ -1,7 +1,8 @@
 # tya — Emacs setup
 
-Tya's Language Server (`tya lsp`) speaks LSP JSON-RPC 2.0 over
-stdio. Emacs integrates it via either
+[`tya-mode.el`](./tya-mode.el) provides syntax coloring and `.tya`
+file association. Tya's Language Server (`tya lsp`) speaks LSP
+JSON-RPC 2.0 over stdio. Emacs integrates it via either
 [`lsp-mode`](https://emacs-lsp.github.io/lsp-mode/) or
 [`eglot`](https://github.com/joaotavora/eglot) (built into Emacs 29+).
 
@@ -12,8 +13,14 @@ stdio. Emacs integrates it via either
 
 ## Setup
 
-Either copy [`setup.el.example`](./setup.el.example) wholesale or
-pick the snippet for your LSP client.
+Load [`tya-mode.el`](./tya-mode.el), then copy
+[`setup.el.example`](./setup.el.example) wholesale or pick the snippet
+for your LSP client.
+
+```elisp
+(add-to-list 'load-path "/path/to/tya/editors/emacs")
+(require 'tya-mode)
+```
 
 ### eglot
 
@@ -41,6 +48,8 @@ pick the snippet for your LSP client.
 ## Features (v0.53)
 
 - Diagnostics on save / on change
+- Syntax coloring for Tya keywords, declarations, literals, numbers, comments,
+  strings, and function declarations
 - Formatting (full + range)
 - Hover, goto-definition (cross-file), references, rename
 - Code actions (TYAL0001 / TYAL0003 quick fixes)
