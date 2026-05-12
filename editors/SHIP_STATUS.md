@@ -37,3 +37,11 @@ from repository changes alone.
 ```sh
 scripts/verify_editor_assets.sh
 ```
+
+## Published Repository Evidence
+
+- Main commit with editor assets: `014d87f`
+- Main commit with Node 24 CI opt-in: `3102793`
+- Main commit with Tree-sitter sample parse verification: `f2ffb11`
+- GitHub Actions `Editor assets` run for `f2ffb11`: `25769086945`, status:
+  success.
