@@ -19,6 +19,7 @@ func TestEditorSyntaxAssets(t *testing.T) {
 		"editors/SHIP_STATUS.md",
 		"editors/syntax-sample.tya",
 		".github/workflows/editor-assets.yml",
+		".github/workflows/publish-vscode-extension.yml",
 		"editors/vscode/package.json",
 		"editors/vscode/LICENSE.md",
 		"editors/vscode/syntaxes/tya.tmLanguage.json",

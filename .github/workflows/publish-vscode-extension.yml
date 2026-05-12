@@ -1,0 +1,62 @@
+name: Publish VS Code extension
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Registry target"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - marketplace
+          - open-vsx
+          - both
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: editors/vscode/package-lock.json
+
+      - name: Install editor tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y neovim
+          npm install -g tree-sitter-cli
+          npm ci
+        working-directory: editors/vscode
+
+      - name: Verify and package extension
+        run: scripts/verify_editor_assets.sh
+
+      - name: Publish to Marketplace
+        if: ${{ inputs.target == 'marketplace' || inputs.target == 'both' }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          test -n "$VSCE_PAT"
+          npx vsce publish --pat "$VSCE_PAT"
+        working-directory: editors/vscode
+
+      - name: Publish to Open VSX
+        if: ${{ inputs.target == 'open-vsx' || inputs.target == 'both' }}
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          test -n "$OVSX_PAT"
+          npx ovsx publish tya-0.61.0.vsix --pat "$OVSX_PAT"
+        working-directory: editors/vscode

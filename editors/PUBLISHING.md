@@ -19,6 +19,9 @@ cd editors/vscode
 npx vsce publish
 ```
 
+Or run the GitHub Actions workflow `Publish VS Code extension` with
+`target=marketplace` after configuring the `VSCE_PAT` repository secret.
+
 Requirements:
 
 - Visual Studio Marketplace publisher: `komagata`
@@ -39,6 +42,9 @@ Publish:
 cd editors/vscode
 npx ovsx publish tya-0.61.0.vsix
 ```
+
+Or run the GitHub Actions workflow `Publish VS Code extension` with
+`target=open-vsx` after configuring the `OVSX_PAT` repository secret.
 
 Requirements:
 
