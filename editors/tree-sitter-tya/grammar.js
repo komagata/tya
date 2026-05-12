@@ -15,13 +15,15 @@ module.exports = grammar({
         $.class_declaration,
         $.interface_declaration,
         $.function_assignment,
-        $.control_keyword,
+        $.assignment,
+        $.control_statement,
         $.expression_statement,
+        $.line_statement,
         "\n",
       ),
 
     import_statement: ($) =>
-      seq("import", $.identifier, optional(seq("as", $.identifier))),
+      seq("import", $.qualified_identifier, optional(seq("as", $.identifier))),
 
     module_declaration: ($) => seq("module", field("name", $.identifier)),
 
@@ -42,14 +44,23 @@ module.exports = grammar({
       ),
 
     function_assignment: ($) =>
-      prec(1, seq(field("name", $.identifier), "=", $.lambda)),
+      prec.right(2, seq(field("name", $.identifier), "=", $.lambda, optional($.line_tail))),
 
-    lambda: ($) => seq(optional($.parameter_list), "->"),
+    assignment: ($) =>
+      prec.right(1, seq(field("target", choice($.identifier, $.member)), "=", $._expression, optional($.line_tail))),
+
+    lambda: ($) => prec(2, seq(optional($.parameter_list), "->")),
 
     parameter_list: ($) =>
-      choice($.identifier, seq("(", optional(commaSep1($.identifier)), ")")),
+      prec(2, choice($.identifier, seq("(", optional(commaSep1($.identifier)), ")"))),
 
-    expression_statement: ($) => $._expression,
+    control_statement: ($) => prec.right(seq($.control_keyword, optional($.line_tail))),
+
+    expression_statement: ($) => prec.right(seq($._expression, optional($.line_tail))),
+
+    line_statement: () => token(/[^\n]+/),
+
+    line_tail: () => token(/[^\n]+/),
 
     _expression: ($) =>
       choice(
@@ -61,14 +72,14 @@ module.exports = grammar({
         $.number,
         $.string,
         $.bytes,
-        $.call,
         $.member,
+        $.call,
         $.operator,
       ),
 
-    call: ($) => seq($.identifier, "(", optional(commaSep1($._expression)), ")"),
+    call: ($) => seq(choice($.identifier, $.member), "(", optional(commaSep1($._expression)), ")"),
 
-    member: ($) => seq($._expression, ".", $.identifier),
+    member: ($) => seq(choice($.identifier, $.self, $.super, $.call), repeat1(seq(".", $.identifier))),
 
     control_keyword: () =>
       choice(
@@ -145,6 +156,7 @@ module.exports = grammar({
         ),
       ),
 
+    qualified_identifier: ($) => seq($.identifier, repeat(seq(".", $.identifier))),
     identifier: () => /[A-Za-z_][A-Za-z0-9_?]*/,
     type_identifier: () => /[A-Z][A-Za-z0-9_]*/,
     comment: () => token(seq("#", /.*/)),

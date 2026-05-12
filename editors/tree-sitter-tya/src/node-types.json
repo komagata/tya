@@ -1,5 +1,79 @@
 [
   {
+    "type": "assignment",
+    "named": true,
+    "fields": {
+      "target": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "member",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "boolean",
+          "named": true
+        },
+        {
+          "type": "bytes",
+          "named": true
+        },
+        {
+          "type": "call",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "line_tail",
+          "named": true
+        },
+        {
+          "type": "member",
+          "named": true
+        },
+        {
+          "type": "nil",
+          "named": true
+        },
+        {
+          "type": "number",
+          "named": true
+        },
+        {
+          "type": "operator",
+          "named": true
+        },
+        {
+          "type": "self",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "super",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "boolean",
     "named": true,
     "fields": {}
@@ -96,11 +170,30 @@
     "fields": {}
   },
   {
+    "type": "control_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "control_keyword",
+          "named": true
+        },
+        {
+          "type": "line_tail",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "expression_statement",
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
@@ -117,6 +210,10 @@
         },
         {
           "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "line_tail",
           "named": true
         },
         {
@@ -166,11 +263,15 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
           "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "line_tail",
           "named": true
         }
       ]
@@ -186,6 +287,10 @@
       "types": [
         {
           "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "qualified_identifier",
           "named": true
         }
       ]
@@ -233,6 +338,16 @@
     }
   },
   {
+    "type": "line_statement",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "line_tail",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "member",
     "named": true,
     "fields": {},
@@ -240,14 +355,6 @@
       "multiple": true,
       "required": true,
       "types": [
-        {
-          "type": "boolean",
-          "named": true
-        },
-        {
-          "type": "bytes",
-          "named": true
-        },
         {
           "type": "call",
           "named": true
@@ -257,27 +364,7 @@
           "named": true
         },
         {
-          "type": "member",
-          "named": true
-        },
-        {
-          "type": "nil",
-          "named": true
-        },
-        {
-          "type": "number",
-          "named": true
-        },
-        {
-          "type": "operator",
-          "named": true
-        },
-        {
           "type": "self",
-          "named": true
-        },
-        {
-          "type": "string",
           "named": true
         },
         {
@@ -324,6 +411,21 @@
     }
   },
   {
+    "type": "qualified_identifier",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "self",
     "named": true,
     "fields": {}
@@ -338,11 +440,15 @@
       "required": false,
       "types": [
         {
+          "type": "assignment",
+          "named": true
+        },
+        {
           "type": "class_declaration",
           "named": true
         },
         {
-          "type": "control_keyword",
+          "type": "control_statement",
           "named": true
         },
         {
@@ -359,6 +465,10 @@
         },
         {
           "type": "interface_declaration",
+          "named": true
+        },
+        {
+          "type": "line_statement",
           "named": true
         },
         {

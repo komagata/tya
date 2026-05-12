@@ -10,6 +10,10 @@ node -e 'JSON.parse(require("fs").readFileSync("editors/vscode/syntaxes/tya.tmLa
 
 if command -v tree-sitter >/dev/null 2>&1; then
   (cd editors/tree-sitter-tya && tree-sitter generate)
+  if (cd editors/tree-sitter-tya && tree-sitter parse ../syntax-sample.tya | grep -q "ERROR"); then
+    echo "tree-sitter parse produced ERROR nodes for editors/syntax-sample.tya" >&2
+    exit 1
+  fi
 else
   echo "tree-sitter not found; skipping tree-sitter generate" >&2
 fi
