@@ -228,6 +228,8 @@ var builtinNames = []string{
 	// v0.25
 	"bytes", "bytes_of", "bytes_text", "bytes_array", "bytes_concat", "bytes_slice",
 	"file_read_bytes", "file_write_bytes",
+	// v0.58
+	"http_server_run",
 	// v0.24
 	"time_now", "time_sleep", "time_format", "time_parse", "time_since",
 	"random_seed", "random_int", "random_float",

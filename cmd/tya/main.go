@@ -23,7 +23,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.57.0"
+const version = "0.58.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -469,6 +469,10 @@ func buildExecutableWithCover(path string, output string, opt *codegen.CoverageO
 		return nil, err
 	}
 	args := []string{cfile, filepath.Join(runtimeDir, "tya_runtime.c")}
+	httpC := filepath.Join(runtimeDir, "tya_http_server.c")
+	if _, err := os.Stat(httpC); err == nil {
+		args = append(args, httpC)
+	}
 	if opt != nil {
 		coverC := filepath.Join(runtimeDir, "tya_cover.c")
 		if _, err := os.Stat(coverC); err == nil {

@@ -28,7 +28,10 @@ build_package() {
   if [ -f runtime/tya_cover.c ]; then
     cp runtime/tya_cover.c "$root/share/tya/runtime/"
   fi
-  cp stdlib/*.tya "$root/share/tya/stdlib/"
+  if [ -f runtime/tya_http_server.c ]; then
+    cp runtime/tya_http_server.c runtime/tya_http_server.h "$root/share/tya/runtime/"
+  fi
+  cp -R stdlib/. "$root/share/tya/stdlib/"
   cp README.md "$root/"
 
   cat > "$root/install.sh" <<'EOF'

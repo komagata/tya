@@ -97,6 +97,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
 <ul>
+<li>**v0.57** — Asset embedding (<code>docs/v0.57/SPEC.md</code>,</li>
+</ul>
+<p>  <code>docs/v0.57/RELEASE_NOTES.md</code>). New top-level   <code>embed &quot;pattern&quot; as name</code> statement bakes file contents into   the compiled binary at codegen time. Single-file patterns   produce a <code>bytes</code> value; <code>*</code> and <code>**</code> glob patterns produce   a <code>dict&lt;string, bytes&gt;</code> keyed by the path relative to the   source file. Glob keys are normalized to <code>/</code>-separated form   on all hosts and ordered alphabetically. New diagnostics   <code>TYA-E0610 embed source not found</code> and   <code>TYA-E0611 embed glob matched zero files</code> surface at codegen   through <code>tya run</code> / <code>tya build</code> / <code>tya emit-c</code>. <code>embed</code> is now   a reserved name. Implementation: new   <code>internal/codegen/embed.go</code> (path resolve, glob walk, bytes   reading), <code>ast.EmbedStmt</code>, parser top-level statement,   checker top-level binding registration, formatter   round-trip. Foundation for single-binary distribution — HTTP   server stdlib and SDL / raylib bindings to follow in later   Epics. Language surface unchanged from v0.56.</p>
+<ul>
 <li>**v0.56** — Diagnostics signature unification + expression-</li>
 </ul>
 <p>  level recovery (<code>docs/v0.56/SPEC.md</code>,   <code>docs/v0.56/RELEASE_NOTES.md</code>). Public entry points now share   the <code>(X, []diag.Diagnostic, error)</code> shape:   <code>parser.Parse</code> / <code>ParseWithComments</code> →   <code>(*ast.Program, []Diag, error)</code>;   <code>codegen.EmitC</code> / <code>EmitCWithPath</code> →   <code>(string, []Diag, error)</code>;   <code>codegen.EmitCWithCoverage</code> →   <code>(string, *CoverageRegistry, []Diag, error)</code>;   <code>runner.RunFile</code> → <code>([]Diag, error)</code>. <code>RunnerError</code> widens   <code>Diag</code> → <code>Diags []diag.Diagnostic</code> (single-value <code>.Diag()</code>   helper kept for source compatibility). 65 caller sites   migrated. New <code>internal/parser/recovery.go::skipToCommaOrClose</code>   helper drives expression-level recovery in <code>CallExpr</code> /   <code>ArrayLit</code> / <code>DictLit</code> element lists — each bad element   records its diagnostic and the parser advances past the next   <code>,</code> (or close bracket) so siblings are still parsed.   <code>*ParserError</code> / <code>*CodegenError</code> / <code>*RunnerError</code> wrappers   continue to satisfy <code>errors.As</code> for callers that prefer   unwrapping. Language surface unchanged from v0.55.</p>
@@ -416,20 +420,29 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 <p>    import time.</p>
 <ul>
-<li>[ ] **Ship asset embedding for single-binary distribution**</li>
+<li>[x] **Ship asset embedding for single-binary distribution** *(v0.57)*</li>
 <ul>
-<li>[ ] <code>embed &quot;assets/logo.png&quot; as logo</code> bakes file bytes into the compiled</li>
+<li>[x] <code>embed &quot;assets/logo.png&quot; as logo</code> bakes file bytes into the compiled</li>
 </ul>
 </ul>
 <p>    binary at build time.</p>
 <ul>
-<li>[ ] Directory / glob form (<code>embed &quot;static/**&quot; as static</code>) returns a dict</li>
+<li>[x] Directory / glob form (<code>embed &quot;static/**&quot; as static</code>) returns a dict</li>
 </ul>
 <p>    keyed by relative path.</p>
 <ul>
-<li>[ ] Text loads as <code>string</code>, binary as <code>bytes</code>; explicit <code>as bytes</code> /</li>
+<li>[x] Single-file form returns <code>bytes</code>; glob form returns</li>
 </ul>
-<p>    <code>as text</code> modifier supported.</p>
+<p>    <code>dict&lt;string, bytes&gt;</code>. v0.57 always loads as <code>bytes</code> — use     <code>bytes_text</code> to recover text. <code>as bytes</code> / <code>as text</code>     modifiers and extension-based auto-detection deferred to     v0.58+.</p>
+<ul>
+<li>[ ] HTTP server stdlib (the natural consumer of glob embeds) *(v0.58+)*</li>
+<li>[ ] SDL / raylib bindings (the natural consumer of game-asset</li>
+</ul>
+<p>    embeds) *(v0.58+)*</p>
+<ul>
+<li>[ ] Build-time asset transforms (minify / gzip / hash). *(v0.58+)*</li>
+<li>[ ] <code>tya embed --list</code> CLI introspection. *(v0.58+)*</li>
+</ul>
 <ul>
 <li>[ ] **Primitive literals as class-instance sugar**</li>
 <ul>

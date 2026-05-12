@@ -30,7 +30,7 @@ stdout 'passed, 0 failed'
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.57.0\n'
+stdout '0.58.0\n'
 ! stderr .
 
 -- pass/nested/one_test.tya --

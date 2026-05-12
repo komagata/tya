@@ -2840,6 +2840,8 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_file_read_bytes(%s)", 1)
 	case "file_write_bytes":
 		return emit("tya_file_write_bytes(%s, %s)", 2)
+	case "http_server_run":
+		return emit("tya_http_server_run(%s, %s)", 2)
 	}
 	return ""
 }

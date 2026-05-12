@@ -1,0 +1,18 @@
+# v0.58 POST with a Content-Length body: the request body bytes
+# are exposed via `req["body"]`; `bytes_text` recovers UTF-8.
+[!exec:curl] skip 'curl not on PATH'
+[!exec:sh] skip 'sh not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connrefused -X POST -d "hello v58" http://localhost:18082/echo; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+stdout 'got: hello v58'
+
+-- main.tya --
+import net/http
+
+handle = req -> { status: 201, body: "got: " + bytes_text(req["body"]) }
+
+app = http.Server()
+app.post("/echo", handle)
+app.run(18082)

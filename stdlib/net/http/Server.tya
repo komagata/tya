@@ -1,0 +1,31 @@
+# Server is a minimal Sinatra-style HTTP/1.1 server.
+#
+# Routes are registered with .get / .post / .put / .delete; each
+# handler is a function `request -> response_dict`. Call .run(port)
+# to start listening. The server is single-threaded in v0.58 — one
+# request is handled to completion before the next is accepted.
+class Server
+  initialize = ->
+    self.routes = []
+
+  get = path, handler ->
+    push(self.routes, { method: "GET", path: path, handler: handler })
+    self
+
+  post = path, handler ->
+    push(self.routes, { method: "POST", path: path, handler: handler })
+    self
+
+  put = path, handler ->
+    push(self.routes, { method: "PUT", path: path, handler: handler })
+    self
+
+  delete = path, handler ->
+    push(self.routes, { method: "DELETE", path: path, handler: handler })
+    self
+
+  # run binds `port` (0 = OS picks a free port) and enters the
+  # accept loop. Blocks forever; the only ways out are a fatal
+  # error or SIGINT.
+  run = port ->
+    http_server_run(self.routes, port)

@@ -1,0 +1,16 @@
+# v0.58: a small Sinatra-style API.
+# GET  /users/:id   → "User <id>"
+# POST /users       → "got: <body>"
+# Run: tya run examples/http_demo/api.tya
+import net/http
+
+show_user = req -> { status: 200, body: "User " + req["params"]["id"] }
+
+create_user = req ->
+  payload = bytes_text(req["body"])
+  return { status: 201, body: "got: " + payload }
+
+app = http.Server()
+app.get("/users/:id", show_user)
+app.post("/users", create_user)
+app.run(8080)

@@ -148,6 +148,29 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.58** — `net/http` stdlib with Sinatra-style HTTP/1.1
+  server (`docs/v0.58/SPEC.md`, `docs/v0.58/RELEASE_NOTES.md`).
+  New multi-segment module `import net/http`; `stdlib/net/http/
+  Server.tya` defines `class Server` with `.get` / `.post` /
+  `.put` / `.delete` route registration and `.run(port)` accept
+  loop. `:name` path segments capture into `req["params"]`;
+  query strings parse into `req["query"]`; header names are
+  lowercased on the way in. Handlers return a `{ status, body,
+  headers }` dict (string or bytes body). `app.run(0)` lets the
+  OS pick a free port and prints `listening on N` to stderr for
+  test harness latch-on. Single-threaded sequential connection
+  handling — slow handlers block other clients; concurrency is
+  deferred to v0.59+. Implementation: new
+  `runtime/tya_http_server.{h,c}` (POSIX sockets + handwritten
+  HTTP/1.1 parser + dispatcher via existing `tya_call1`),
+  `http_server_run` builtin wired through
+  `internal/codegen/c.go::callBuiltin` and
+  `internal/checker/checker.go::BuiltinNames`, first
+  multi-segment stdlib path (resolver side already worked via
+  v0.44 `resolvePackageDir`). Per-request string buffers
+  intentionally leak — per-request arena queued for v0.59+.
+  Windows is a build-time stub. Language surface unchanged from
+  v0.57.
 - **v0.57** — Asset embedding (`docs/v0.57/SPEC.md`,
   `docs/v0.57/RELEASE_NOTES.md`). New top-level
   `embed "pattern" as name` statement bakes file contents into
@@ -614,11 +637,37 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     `bytes_text` to recover text. `as bytes` / `as text`
     modifiers and extension-based auto-detection deferred to
     v0.58+.
-  - [ ] HTTP server stdlib (the natural consumer of glob embeds) *(v0.58+)*
+  - [x] HTTP server stdlib (the natural consumer of glob embeds) *(v0.58)*
   - [ ] SDL / raylib bindings (the natural consumer of game-asset
-    embeds) *(v0.58+)*
-  - [ ] Build-time asset transforms (minify / gzip / hash). *(v0.58+)*
-  - [ ] `tya embed --list` CLI introspection. *(v0.58+)*
+    embeds) *(v0.59+)*
+  - [ ] Build-time asset transforms (minify / gzip / hash). *(v0.59+)*
+  - [ ] `tya embed --list` CLI introspection. *(v0.59+)*
+  - [ ] `app.static("/assets", embedded_dict)` helper that
+    serves a v0.57 glob-embed dict through the v0.58 HTTP
+    server. *(v0.59+)*
+
+- [ ] **Ship `net/http` v2: client, templates, concurrency**
+  - [ ] Goal: complete the HTTP toolchain that v0.58 started so
+    tya can both serve and consume HTTP. v0.58 shipped a
+    single-threaded Sinatra-style server; v2 adds the missing
+    pieces.
+  - [ ] HTTP **client** — `import net/http`, `http.get(url)`,
+    `http.post(url, body)`, `http.request(method, url, opts)`.
+    `stdlib/net/http/Client.tya` is already reserved.
+  - [ ] **Template engine** — `net/http/Template` or
+    `net/http/template` module with `{{var}}` interpolation,
+    `{{#each}}` / `{{#if}}` blocks, and partials. Minimal
+    Mustache-style; full HTML escaping by default.
+  - [ ] **Concurrency** for the server — thread pool or
+    `tya_task_new` wiring so a slow handler does not block
+    other clients.
+  - [ ] **keep-alive**, **chunked transfer encoding**,
+    **multipart bodies**, **HTTPS/TLS**, **cookies**,
+    **middleware**, **HEAD/PATCH/OPTIONS**.
+  - [ ] **Windows** support via WinSock2 (v0.58 is a POSIX-only
+    build-time stub).
+  - [ ] Per-request arena to bound the v0.58 intentional
+    string-buffer leak.
 
 - [ ] **Primitive literals as class-instance sugar**
   - [ ] Follow-up to v0.44 class-oriented namespace. Extend

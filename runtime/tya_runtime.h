@@ -320,4 +320,8 @@ void tya_assert(TyaValue value, const char *path, int line);
 void tya_assert_equal(TyaValue expected, TyaValue actual, const char *path, int line);
 bool tya_truthy(TyaValue value);
 
+// v0.58 net/http server. Defined in runtime/tya_http_server.c.
+// `routes` is an array of dicts {method, path, handler}.
+TyaValue tya_http_server_run(TyaValue routes, TyaValue port);
+
 #endif

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.58 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-58-release-notes">Tya v0.58 Release Notes</h1>
+<p>&gt; **Status:** shipped. <code>tya version</code> reports <code>0.58.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.58 introduces the **<code>net/http</code> standard module** with a Sinatra-style HTTP/1.1 server:</p>
+<pre><code class="language-tya">import net/http
+
+app = http.Server()
+app.get(&quot;/&quot;, _req -&gt; { status: 200, body: &quot;Hello, World&quot; })
+app.get(&quot;/users/:id&quot;, req -&gt; { status: 200, body: req[&quot;params&quot;][&quot;id&quot;] })
+app.run(8080)</code></pre>
+<p>v0.57 made it possible to bake assets into a tya binary. v0.58 adds a way to serve them. The HTTP client and richer server features (keep-alive, middleware, multipart, cookies, threading) are queued for follow-up Epics along with a tya template engine.</p>
+<p>The language surface is unchanged from v0.57.</p>
+<h2 id="what-s-new">What's new</h2>
+<h3 id="import-net-http"><code>import net/http</code></h3>
+<p>The first multi-segment standard module. <code>stdlib/net/http/Server.tya</code> defines <code>class Server</code>; the unaliased binding follows tya's last-segment rule, so <code>http</code> becomes the namespace. <code>stdlib/net/http/Client.tya</code> is reserved for a future Epic.</p>
+<h3 id="sinatra-style-routes">Sinatra-style routes</h3>
+<pre><code class="language-tya">app = http.Server()
+app.get(&quot;/&quot;, show_home)
+app.get(&quot;/users/:id&quot;, show_user)
+app.post(&quot;/users&quot;, create_user)
+app.put(&quot;/users/:id&quot;, update_user)
+app.delete(&quot;/users/:id&quot;, destroy_user)</code></pre>
+<p><code>.get</code> / <code>.post</code> / <code>.put</code> / <code>.delete</code> register a route and return <code>self</code>, so calls can chain. <code>:name</code> segments capture a single path segment and surface as <code>req[&quot;params&quot;][name]</code>.</p>
+<h3 id="request-response-shape">Request / response shape</h3>
+<p>Every handler receives a single dict:</p>
+<pre><code class="language-tya">{
+  method: &quot;GET&quot;,                # always uppercase
+  path: &quot;/users/42&quot;,            # path without query string
+  params: { id: &quot;42&quot; },         # path-pattern captures
+  query: { limit: &quot;10&quot; },       # parsed query string
+  headers: { ... },             # header names are lowercased
+  body: &lt;bytes&gt;                 # request body bytes (empty for GET)
+}</code></pre>
+<p>and returns a dict:</p>
+<pre><code class="language-tya">{
+  status: 200,
+  headers: { &quot;content-type&quot;: &quot;application/json&quot; },
+  body: &quot;...&quot;   # string or bytes
+}</code></pre>
+<p><code>headers</code> is optional; when omitted the server adds <code>Content-Type: text/plain; charset=utf-8</code> and <code>Content-Length</code>.</p>
+<h3 id="app-run-0-for-os-picked-ports"><code>app.run(0)</code> for OS-picked ports</h3>
+<p><code>app.run(0)</code> lets the kernel assign a free port and prints <code>listening on N</code> to stderr so test harnesses can latch on.</p>
+<h3 id="diagnostics">Diagnostics</h3>
+<ul>
+<li><code>bind()</code> failure (port already in use, permission denied, etc.)</li>
+</ul>
+<p>  raises a tya panic with the OS error message.</p>
+<ul>
+<li>Returning anything other than a dict from a handler surfaces as</li>
+</ul>
+<p>  <code>500 Handler returned non-dict</code>.</p>
+<h2 id="http-1-1-support-matrix">HTTP/1.1 support matrix</h2>
+<p>| Feature | Status | |---------|--------| | GET / POST / PUT / DELETE | ✅ | | Content-Length request body | ✅ | | <code>Connection: close</code> (per-request) | ✅ default | | Case-insensitive header names | ✅ | | HEAD / PATCH / OPTIONS | ❌ scope-out | | keep-alive | ❌ scope-out | | Chunked transfer encoding | ❌ scope-out | | Multipart bodies | ❌ scope-out | | HTTPS / TLS | ❌ scope-out | | Cookies | ❌ scope-out | | Middleware | ❌ scope-out | | Static file helper | ❌ scope-out | | Windows (WinSock2) | ❌ scope-out |</p>
+<h2 id="concurrency">Concurrency</h2>
+<p>v0.58 is **single-threaded**: one connection is read, dispatched, and responded to before the next is accepted. A slow handler blocks every other client. This is deliberate — a personal site or low-traffic API runs fine, and the limitation is documented so users do not deploy it at scale. v0.59+ will introduce a thread pool (or wire the existing <code>tya_task_new</code> machinery in) so requests can run concurrently.</p>
+<p>Limits enforced inside the C runtime:</p>
+<p>| Limit | Value | |-------|-------| | Max header bytes per request | 16 KiB | | Max body bytes per request | 10 MiB |</p>
+<p>Exceeding either limit yields <code>400 Bad Request</code>.</p>
+<h2 id="examples">Examples</h2>
+<p><code>examples/http_demo/</code> has working samples:</p>
+<ul>
+<li><code>hello.tya</code> — single <code>GET /</code> route.</li>
+<li><code>api.tya</code> — path params + POST body echo.</li>
+</ul>
+<h2 id="migration">Migration</h2>
+<p><code>import net/http</code> is the first multi-segment stdlib module. The existing directory-as-package loader (v0.44) handles the resolver side with no new wiring. Programs that already use single-segment imports are unaffected.</p>
+<h2 id="tooling">Tooling</h2>
+<ul>
+<li>4 new fixtures under <code>tests/testdata/v58_http/</code> cover GET, path</li>
+</ul>
+<p>  params, POST + Content-Length, and 404.</p>
+<ul>
+<li><code>runtime/tya_http_server.c</code> (+ <code>.h</code>) ships as a runtime module,</li>
+</ul>
+<p>  copied into <code>share/tya/runtime/</code> by <code>scripts/build_release_packages.sh</code>.</p>
+<ul>
+<li><code>Formula/tya.rb</code> → <code>0.58.0</code>,</li>
+</ul>
+<p>  <code>editors/vscode/package.json</code> → <code>0.58.0</code>.</p>
+<h2 id="known-limitations">Known limitations</h2>
+<ul>
+<li>The C runtime intentionally leaks per-request string buffers</li>
+</ul>
+<p>  because <code>tya_string</code> stores the pointer by reference and the   dict GC does not own the underlying bytes. A per-request arena   or a GC-tracked string allocator is queued for v0.59+.</p>
+<ul>
+<li>The builtin's argument types are not statically checked —</li>
+</ul>
+<p>  passing a non-array or non-number to <code>http_server_run</code> will   panic at runtime.</p>
+<ul>
+<li>Windows is a build-time stub (<code>tya_panic</code> on entry).</li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+<li>HTTP **client** (<code>http.Client</code> — <code>http.get(url)</code>, <code>http.post</code>).</li>
+<li>**Template engine** with <code>{{var}}</code> interpolation, partials.</li>
+<li>**Concurrency** via thread pool or <code>tya_task_new</code>.</li>
+<li>**keep-alive**, **chunked transfer encoding**,</li>
+</ul>
+<p>  **multipart bodies**, **HTTPS/TLS**, **cookies**, **middleware**,   **HEAD/PATCH/OPTIONS**.</p>
+<ul>
+<li>**Static file helper** — <code>app.static(&quot;/assets&quot;, embedded_dict)</code></li>
+</ul>
+<p>  using the v0.57 <code>embed</code> mechanism.</p>
+<ul>
+<li>**Windows** support via WinSock2.</li>
+<li>A per-request arena to bound the v0.58 memory leak.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>
