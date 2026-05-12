@@ -1,0 +1,16 @@
+# v0.57 embed "static/**" as assets recursively reads files under
+# static/, returning a dict<string, bytes> keyed by paths relative
+# to the source file's directory.
+cd $REPO
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'static/css/main.css'
+stdout 'static/index.html'
+
+-- static/index.html --
+<h1>hi</h1>
+-- static/css/main.css --
+body{}
+-- main.tya --
+embed "static/**" as assets
+for path, _ of assets
+  print(path)

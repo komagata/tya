@@ -225,6 +225,9 @@ func (g *cgen) collectClasses(stmts []ast.Stmt) {
 func (g *cgen) stmt(stmt ast.Stmt) error {
 	g.instrument(stmt)
 	switch n := stmt.(type) {
+	case *ast.EmbedStmt:
+		g.sourceLine(n.NameTok.Line)
+		return g.emitEmbed(n)
 	case *ast.ImportStmt:
 		g.sourceLine(n.NameTok.Line)
 		if n.Alias != "" {
@@ -2380,6 +2383,11 @@ func assignedNames(stmts []ast.Stmt) []string {
 				if n.Alias != "" && !seen[n.Alias] {
 					seen[n.Alias] = true
 					names = append(names, n.Alias)
+				}
+			case *ast.EmbedStmt:
+				if !seen[n.Name] {
+					seen[n.Name] = true
+					names = append(names, n.Name)
 				}
 			case *ast.ModuleDecl:
 				if !seen[n.Name] {

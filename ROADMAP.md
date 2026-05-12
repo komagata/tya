@@ -148,6 +148,24 @@ Recent shipped minor versions, newest first. Frozen specs live under
 `docs/vX.Y/`. For older releases (v0.24 – v0.42) see
 [`docs/VERSIONS.md`](docs/VERSIONS.md).
 
+- **v0.57** — Asset embedding (`docs/v0.57/SPEC.md`,
+  `docs/v0.57/RELEASE_NOTES.md`). New top-level
+  `embed "pattern" as name` statement bakes file contents into
+  the compiled binary at codegen time. Single-file patterns
+  produce a `bytes` value; `*` and `**` glob patterns produce
+  a `dict<string, bytes>` keyed by the path relative to the
+  source file. Glob keys are normalized to `/`-separated form
+  on all hosts and ordered alphabetically. New diagnostics
+  `TYA-E0610 embed source not found` and
+  `TYA-E0611 embed glob matched zero files` surface at codegen
+  through `tya run` / `tya build` / `tya emit-c`. `embed` is now
+  a reserved name. Implementation: new
+  `internal/codegen/embed.go` (path resolve, glob walk, bytes
+  reading), `ast.EmbedStmt`, parser top-level statement,
+  checker top-level binding registration, formatter
+  round-trip. Foundation for single-binary distribution — HTTP
+  server stdlib and SDL / raylib bindings to follow in later
+  Epics. Language surface unchanged from v0.56.
 - **v0.56** — Diagnostics signature unification + expression-
   level recovery (`docs/v0.56/SPEC.md`,
   `docs/v0.56/RELEASE_NOTES.md`). Public entry points now share
@@ -586,13 +604,21 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Gate unavailable stdlib modules per target with structured errors at
     import time.
 
-- [ ] **Ship asset embedding for single-binary distribution**
-  - [ ] `embed "assets/logo.png" as logo` bakes file bytes into the compiled
+- [x] **Ship asset embedding for single-binary distribution** *(v0.57)*
+  - [x] `embed "assets/logo.png" as logo` bakes file bytes into the compiled
     binary at build time.
-  - [ ] Directory / glob form (`embed "static/**" as static`) returns a dict
+  - [x] Directory / glob form (`embed "static/**" as static`) returns a dict
     keyed by relative path.
-  - [ ] Text loads as `string`, binary as `bytes`; explicit `as bytes` /
-    `as text` modifier supported.
+  - [x] Single-file form returns `bytes`; glob form returns
+    `dict<string, bytes>`. v0.57 always loads as `bytes` — use
+    `bytes_text` to recover text. `as bytes` / `as text`
+    modifiers and extension-based auto-detection deferred to
+    v0.58+.
+  - [ ] HTTP server stdlib (the natural consumer of glob embeds) *(v0.58+)*
+  - [ ] SDL / raylib bindings (the natural consumer of game-asset
+    embeds) *(v0.58+)*
+  - [ ] Build-time asset transforms (minify / gzip / hash). *(v0.58+)*
+  - [ ] `tya embed --list` CLI introspection. *(v0.58+)*
 
 - [ ] **Primitive literals as class-instance sugar**
   - [ ] Follow-up to v0.44 class-oriented namespace. Extend

@@ -1,0 +1,6 @@
+# v0.57: a recursive glob produces a dict whose keys are paths
+# relative to this source file. Values are bytes; use bytes_text
+# to view text content.
+embed "static/**" as assets
+for path, _ of assets
+  print(path)

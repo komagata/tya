@@ -181,6 +181,8 @@ func stmtFirstPos(stmt ast.Stmt) (line, col int) {
 		return n.Tok.Line, n.Tok.Col
 	case *ast.ImportStmt:
 		return n.NameTok.Line, n.NameTok.Col
+	case *ast.EmbedStmt:
+		return n.NameTok.Line, n.NameTok.Col
 	case *ast.ReturnStmt:
 		return n.Tok.Line, n.Tok.Col
 	case *ast.RaiseStmt:

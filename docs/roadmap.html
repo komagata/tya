@@ -97,6 +97,10 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <h2 id="released">Released</h2>
 <p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
 <ul>
+<li>**v0.56** — Diagnostics signature unification + expression-</li>
+</ul>
+<p>  level recovery (<code>docs/v0.56/SPEC.md</code>,   <code>docs/v0.56/RELEASE_NOTES.md</code>). Public entry points now share   the <code>(X, []diag.Diagnostic, error)</code> shape:   <code>parser.Parse</code> / <code>ParseWithComments</code> →   <code>(*ast.Program, []Diag, error)</code>;   <code>codegen.EmitC</code> / <code>EmitCWithPath</code> →   <code>(string, []Diag, error)</code>;   <code>codegen.EmitCWithCoverage</code> →   <code>(string, *CoverageRegistry, []Diag, error)</code>;   <code>runner.RunFile</code> → <code>([]Diag, error)</code>. <code>RunnerError</code> widens   <code>Diag</code> → <code>Diags []diag.Diagnostic</code> (single-value <code>.Diag()</code>   helper kept for source compatibility). 65 caller sites   migrated. New <code>internal/parser/recovery.go::skipToCommaOrClose</code>   helper drives expression-level recovery in <code>CallExpr</code> /   <code>ArrayLit</code> / <code>DictLit</code> element lists — each bad element   records its diagnostic and the parser advances past the next   <code>,</code> (or close bracket) so siblings are still parsed.   <code>*ParserError</code> / <code>*CodegenError</code> / <code>*RunnerError</code> wrappers   continue to satisfy <code>errors.As</code> for callers that prefer   unwrapping. Language surface unchanged from v0.55.</p>
+<ul>
 <li>**v0.55** — <code>tya lint</code> v3 extension (<code>docs/v0.55/SPEC.md</code>,</li>
 </ul>
 <p>  <code>docs/v0.55/RELEASE_NOTES.md</code>). <code>tya lint</code> becomes CI-ready:   per-line <code># tya-lint-ignore[: CODE[, CODE...]]</code> opt-out   comments (inline or full-line, wildcard or code-scoped);   <code>--format=json</code> machine-readable output with <code>version</code> /   <code>findings[{path,line,col,code,message,autofixable}]</code>; new   <code>TYAL0002</code> rule reports dead code after <code>return</code> / <code>raise</code>   in every block (function bodies, <code>if</code> arms, <code>while</code> / <code>for</code>   bodies, <code>try</code> / <code>catch</code>, <code>match</code> cases); and <code>--fix</code> gains   TYAL0003 <code>if true</code> / <code>if false</code> unwrap-if autofix that drops   the header line and de-indents the body by two spaces (runs   before the existing TYAL0001 line-delete so positions stay   stable). The <code>lint</code> subcommand owns its own <code>--format</code> flag;   other subcommands continue to read the global   <code>--format=human|json</code> for diagnostic rendering. Language   surface unchanged from v0.54.</p>
@@ -222,7 +226,7 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <ul>
 <li>[x] **Migrate remaining stages to the diagnostics pipeline** *(v0.54</li>
 </ul>
-<p>  delivered the core: structured diagnostics for Parser /   Codegen / Runner, multi-error parsing, did-you-mean.   Remaining polish items below are scheduled for v0.55+.)*</p>
+<p>  delivered the core. v0.56 finished the API/recovery polish.)*</p>
 <ul>
 <li>[x] Parser → <code>TYA-E0100</code>–<code>E0299</code> (E0100-E0180 buckets in use).</li>
 <li>[x] Codegen → <code>TYA-E0600</code>–<code>E0799</code> (E0601-E0606 in use).</li>
@@ -238,14 +242,25 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 </ul>
 <p>    <code>program()</code> and <code>block()</code>).</p>
 <ul>
-<li>[ ] Parser signature change to <code>Parse() → (*Program, []Diag, error)</code></li>
+<li>[x] Parser signature change to <code>Parse() → (*Program, []Diag, error)</code></li>
 </ul>
-<p>    for symmetry with <code>lexer.LexWithComments</code>. *(v0.55+)*</p>
+<p>    for symmetry with <code>lexer.LexWithComments</code>. *(v0.56)*</p>
 <ul>
-<li>[ ] Expression-level recovery (currently statement-level). *(v0.55+)*</li>
-<li>[ ] Codegen / Runner signature change to also return <code>[]Diag</code></li>
+<li>[x] Expression-level recovery for <code>CallExpr</code> / <code>ArrayLit</code> /</li>
 </ul>
-<p>    slices. *(v0.55+)*</p>
+<p>    <code>DictLit</code> element lists. *(v0.56)*</p>
+<ul>
+<li>[x] Codegen / Runner signature change to also return <code>[]Diag</code></li>
+</ul>
+<p>    slices. *(v0.56)*</p>
+<ul>
+<li>[ ] Binary-chain and member-chain expression-level recovery</li>
+</ul>
+<p>    (<code>a + broken + c</code>, <code>a.broken.c</code>). *(v0.57+)*</p>
+<ul>
+<li>[ ] Codegen multi-error mode (collect every <code>unsupported AST shape</code></li>
+</ul>
+<p>    instead of bailing on the first). *(v0.57+)*</p>
 <ul>
 <li>[x] **Ship <code>tya lsp</code> Language Server** *(v0.52 MVP + v0.53 full IDE</li>
 </ul>

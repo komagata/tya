@@ -398,6 +398,11 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				return fmt.Errorf("%d:%d: invalid import binding %s", tok.Line, tok.Col, binding)
 			}
 			scope.define(binding, kindModule)
+		case *ast.EmbedStmt:
+			if !valueNameRE.MatchString(n.Name) || strings.HasPrefix(n.Name, "_") {
+				return fmt.Errorf("%d:%d: invalid embed binding %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+			}
+			scope.define(n.Name, kindUnknown)
 		case *ast.AssignStmt:
 			for _, value := range n.Values {
 				if err := checkExpr(value, scope); err != nil {

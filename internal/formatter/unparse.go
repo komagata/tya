@@ -243,6 +243,9 @@ func (u *unparser) stmt(s ast.Stmt) error {
 			u.emitStmtLine(s, fmt.Sprintf("import %s", n.Name))
 		}
 		return nil
+	case *ast.EmbedStmt:
+		u.emitStmtLine(s, fmt.Sprintf("embed %q as %s", n.Path, n.Name))
+		return nil
 	case *ast.AssignStmt:
 		return u.assignStmt(n)
 	case *ast.ExprStmt:

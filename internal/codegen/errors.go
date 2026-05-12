@@ -15,6 +15,8 @@ const (
 	codeTryOutsideFunc          = "TYA-E0604"
 	codeMultiAssignNonTuple     = "TYA-E0605"
 	codeDestructureNonIdent     = "TYA-E0606"
+	codeEmbedNotFound           = "TYA-E0610"
+	codeEmbedGlobEmpty          = "TYA-E0611"
 )
 
 // CodegenError wraps a list of structured diagnostics produced

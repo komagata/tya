@@ -14,7 +14,7 @@ stdout '<hr/>'
 stdout '<pre><code>line &lt;html&gt;'
 
 exec go run ./cmd/tya version
-stdout '0.56.0\n'
+stdout '0.57.0\n'
 
 -- sample.tya --
 import markdown

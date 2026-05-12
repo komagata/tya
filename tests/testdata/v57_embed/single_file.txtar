@@ -1,0 +1,12 @@
+# v0.57 embed "path" as name reads the file at codegen time and
+# binds the bytes to the given name. bytes_text recovers the
+# original text.
+cd $REPO
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'hello tya embed'
+
+-- data.txt --
+hello tya embed
+-- main.tya --
+embed "data.txt" as payload
+print(bytes_text(payload))

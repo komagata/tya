@@ -1,0 +1,9 @@
+# v0.57 embed of a non-existent file fires TYA-E0610 at codegen.
+cd $REPO
+! exec go run ./cmd/tya emit-c $WORK/main.tya
+stderr 'TYA-E0610'
+stderr 'nope.txt'
+
+-- main.tya --
+embed "nope.txt" as x
+print(x)

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.57 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-57-release-notes">Tya v0.57 Release Notes</h1>
+<p>&gt; **Status:** shipped. <code>tya version</code> reports <code>0.57.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.57 introduces **build-time asset embedding** so a tya program can bake files into the compiled binary:</p>
+<pre><code class="language-tya">embed &quot;assets/logo.png&quot; as logo      # → bytes
+embed &quot;static/**&quot; as assets          # → dict&lt;string, bytes&gt;</code></pre>
+<p>Single-binary distribution is a multi-Epic goal. v0.57 lays the foundation; a HTTP stdlib (for static sites) and SDL / raylib bindings (for games) follow in later Epics.</p>
+<p>The language surface is unchanged from v0.56.</p>
+<h2 id="what-s-new">What's new</h2>
+<h3 id="embed-path-as-name"><code>embed &quot;path&quot; as name</code></h3>
+<pre><code class="language-tya">embed &quot;data.txt&quot; as payload
+print(bytes_text(payload))</code></pre>
+<p>The file is read at codegen time, its bytes baked into the generated C, and the binding is exposed as a top-level <code>bytes</code> global.</p>
+<h3 id="embed-pattern-as-name"><code>embed &quot;pattern/**&quot; as name</code></h3>
+<pre><code class="language-tya">embed &quot;static/**&quot; as assets
+for path, content of assets
+  print(path)</code></pre>
+<p>Recursive globs produce a <code>dict&lt;string, bytes&gt;</code> keyed by the path relative to the source file. Single-level globs (<code>assets/*.png</code>) work the same way but only match the immediate directory. Glob keys are normalized to <code>/</code>-separated form on all hosts.</p>
+<h3 id="diagnostics">Diagnostics</h3>
+<ul>
+<li><code>TYA-E0610 embed source not found</code> — single-file pattern</li>
+</ul>
+<p>  points at a path that does not exist.</p>
+<ul>
+<li><code>TYA-E0611 embed glob matched zero files</code> — glob pattern</li>
+</ul>
+<p>  matched nothing.</p>
+<p>Both fire at codegen, so <code>tya run</code>, <code>tya build</code>, and <code>tya emit-c</code> surface them. <code>tya check</code> does not (it stops before codegen).</p>
+<h2 id="examples">Examples</h2>
+<p>The <code>examples/embed_demo/</code> directory has working samples:</p>
+<ul>
+<li><code>single.tya</code> — reads <code>data.txt</code> and prints its text content.</li>
+<li><code>dir.tya</code> — recursively embeds <code>static/**</code> and enumerates the</li>
+</ul>
+<p>  dict keys.</p>
+<h2 id="migration">Migration</h2>
+<p><code>embed</code> is a new reserved name. Existing programs that used <code>embed</code> as a variable or function name must rename it before upgrading to v0.57.</p>
+<h2 id="tooling">Tooling</h2>
+<ul>
+<li>5 new fixtures under <code>tests/testdata/v57_embed/</code> covering</li>
+</ul>
+<p>  single-file, recursive glob, single-level glob, missing file,   and empty glob.</p>
+<ul>
+<li><code>Formula/tya.rb</code> → <code>0.57.0</code>,</li>
+</ul>
+<p>  <code>editors/vscode/package.json</code> → <code>0.57.0</code>.</p>
+<h2 id="next">Next</h2>
+<ul>
+<li>HTTP server stdlib so embedded static sites can be served.</li>
+<li>SDL / raylib bindings so embedded game assets can be drawn /</li>
+</ul>
+<p>  played.</p>
+<ul>
+<li><code>as bytes</code> / <code>as text</code> modifiers (currently always bytes —</li>
+</ul>
+<p>  call <code>bytes_text</code> for string conversion).</p>
+<ul>
+<li><code>tya embed --list</code> CLI introspection.</li>
+<li>Build-time asset transforms (minify / gzip / hash).</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

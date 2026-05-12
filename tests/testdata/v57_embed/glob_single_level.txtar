@@ -1,0 +1,18 @@
+# v0.57 embed "assets/*.txt" matches the immediate children of
+# the directory, not subdirectories.
+cd $REPO
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'assets/a.txt'
+stdout 'assets/b.txt'
+! stdout 'sub/c.txt'
+
+-- assets/a.txt --
+A
+-- assets/b.txt --
+B
+-- assets/sub/c.txt --
+C
+-- main.tya --
+embed "assets/*.txt" as files
+for path, _ of files
+  print(path)

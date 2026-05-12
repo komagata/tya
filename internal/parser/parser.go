@@ -273,6 +273,8 @@ func stmtPos(stmt ast.Stmt) (line, indent int) {
 		return n.Tok.Line, n.Tok.Col - 1
 	case *ast.ImportStmt:
 		return n.NameTok.Line, n.NameTok.Col - 1
+	case *ast.EmbedStmt:
+		return n.NameTok.Line, n.NameTok.Col - 1
 	case *ast.ModuleDecl:
 		return n.NameTok.Line, n.NameTok.Col - 1
 	case *ast.ClassDecl:
@@ -340,6 +342,12 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 			return nil, p.err("import must be top-level")
 		}
 		return p.importStmt()
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "embed" {
+		if p.blockDepth != 0 {
+			return nil, p.err("embed must be top-level")
+		}
+		return p.embedStmt()
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "if" {
 		return p.ifStmt()
@@ -437,6 +445,26 @@ func (p *Parser) importStmt() (ast.Stmt, error) {
 		return nil, p.err("expected newline after import")
 	}
 	return &ast.ImportStmt{Name: strings.Join(parts, "/"), NameTok: name, Alias: alias, AliasTok: aliasTok}, nil
+}
+
+func (p *Parser) embedStmt() (ast.Stmt, error) {
+	p.next() // consume `embed`
+	if !p.at(token.STRING) {
+		return nil, p.err("expected string path after embed")
+	}
+	pathTok := p.next()
+	if !(p.at(token.IDENT) && p.peek().Lexeme == "as") {
+		return nil, p.err("expected 'as' after embed path")
+	}
+	p.next() // consume `as`
+	nameTok, err := p.expectName("expected binding name after embed ... as")
+	if err != nil {
+		return nil, err
+	}
+	if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+		return nil, p.err("expected newline after embed")
+	}
+	return &ast.EmbedStmt{Path: pathTok.Lexeme, PathTok: pathTok, Name: nameTok.Lexeme, NameTok: nameTok}, nil
 }
 
 func (p *Parser) moduleDecl() (ast.Stmt, error) {
@@ -2074,7 +2102,7 @@ func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
 	case "object", "set":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
-	case "interface", "class", "self", "Self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "and", "or", "not", "spawn", "await", "scope":
+	case "interface", "class", "self", "Self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "embed", "and", "or", "not", "spawn", "await", "scope":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
 	default:
 		return nil

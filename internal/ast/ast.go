@@ -72,6 +72,21 @@ func (s *ImportStmt) BindingName() string {
 	return s.ModuleName()
 }
 
+// EmbedStmt declares a top-level binding whose value is the
+// contents of one or more files read at build time. Single-file
+// paths produce a bytes value; paths containing `*` or `**`
+// produce a dict whose keys are paths relative to the source
+// file's directory and whose values are bytes. See
+// docs/v0.57/SPEC.md.
+type EmbedStmt struct {
+	Path    string // raw pattern, "/" separated
+	PathTok token.Token
+	Name    string // binding name
+	NameTok token.Token
+}
+
+func (*EmbedStmt) stmt() {}
+
 type IfStmt struct {
 	Cond Expr
 	Then []Stmt
