@@ -42,7 +42,7 @@ prefix="${PREFIX:-$HOME/.local}"
 mkdir -p "$prefix/bin" "$prefix/share/tya/runtime" "$prefix/share/tya/stdlib"
 cp bin/tya "$prefix/bin/tya"
 cp share/tya/runtime/* "$prefix/share/tya/runtime/"
-cp share/tya/stdlib/* "$prefix/share/tya/stdlib/"
+cp -R share/tya/stdlib/. "$prefix/share/tya/stdlib/"
 echo "installed tya to $prefix/bin/tya"
 echo "Add $prefix/bin to PATH if it is not already there."
 EOF
@@ -56,7 +56,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $prefix "share\tya\runtime"
 New-Item -ItemType Directory -Force -Path (Join-Path $prefix "share\tya\stdlib") | Out-Null
 Copy-Item "bin\tya.exe" (Join-Path $prefix "bin\tya.exe") -Force
 Copy-Item "share\tya\runtime\*" (Join-Path $prefix "share\tya\runtime") -Force
-Copy-Item "share\tya\stdlib\*" (Join-Path $prefix "share\tya\stdlib") -Force
+Copy-Item "share\tya\stdlib\*" (Join-Path $prefix "share\tya\stdlib") -Recurse -Force
 Write-Host "installed tya to $(Join-Path $prefix 'bin\tya.exe')"
 Write-Host "Add $(Join-Path $prefix 'bin') to PATH if it is not already there."
 EOF
