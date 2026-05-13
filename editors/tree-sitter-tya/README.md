@@ -4,6 +4,10 @@ Tree-sitter grammar scaffold for Tya syntax highlighting. This is intended for
 editor integrations that consume Tree-sitter queries and for a future GitHub
 Linguist registration.
 
+Manual-download bundle:
+
+https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
+
 The grammar focuses on highlighting-safe parsing rather than full compiler
 validation. The Tya compiler remains the source of truth for syntax errors.
 

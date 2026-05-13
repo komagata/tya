@@ -5,6 +5,13 @@ detection, and indentation. They work in Vim 8+ and Neovim.
 
 ## Install
 
+Download the editor asset bundle from:
+
+https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
+
+Then extract it and copy the Vim runtime directories, or copy them from a
+local checkout.
+
 Copy the runtime directories into your Vim config:
 
 ```sh

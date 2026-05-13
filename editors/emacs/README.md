@@ -13,6 +13,12 @@ JSON-RPC 2.0 over stdio. Emacs integrates it via either
 
 ## Setup
 
+Download the editor asset bundle from:
+
+https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
+
+Then extract it and load `editors/emacs/tya-mode.el`.
+
 Load [`tya-mode.el`](./tya-mode.el), then copy
 [`setup.el.example`](./setup.el.example) wholesale or pick the snippet
 for your LSP client.
@@ -45,7 +51,7 @@ for your LSP client.
 (add-hook 'tya-mode-hook #'lsp)
 ```
 
-## Features (v0.53)
+## Features (v0.61)
 
 - Diagnostics on save / on change
 - Syntax coloring for Tya keywords, declarations, literals, numbers, comments,

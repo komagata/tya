@@ -19,6 +19,7 @@ Objective: ship syntax coloring for major editors.
 | MELPA submission asset exists | `editors/emacs/melpa-recipe` |
 | GitHub Linguist submission assets exist | `editors/github-linguist/languages.yml.example`, `editors/tree-sitter-tya/` |
 | Tree-sitter grammar generates | `tree-sitter generate` in `editors/tree-sitter-tya` |
+| Manual editor asset bundle is published | GitHub Release `editors-assets-v0.61.0` with `tya-editor-assets-v0.61.0.tar.gz` |
 | Repository validation covers editor assets | `tests/editor_assets_test.go` |
 | CI validates editor assets | `.github/workflows/editor-assets.yml` |
 
@@ -57,5 +58,7 @@ Editor assets / main / 25769509633 / success / 2026-05-13T00:01:51Z
   success.
 - VS Code manual-install release:
   https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
+- Manual editor asset bundle:
+  https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`

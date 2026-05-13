@@ -4,6 +4,15 @@ This checklist records the external publishing work for Tya editor syntax
 coloring. The repository contains the distributable assets; the external steps
 require account credentials or upstream maintainer review.
 
+## Manual Editor Asset Bundle
+
+- https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
+
+The bundle contains Emacs, Vim/Neovim, Tree-sitter, Linguist helper files, the
+shared token taxonomy, and the shared syntax sample. This is a manual-install
+distribution path; Marketplace, Open VSX, MELPA, and Linguist publication are
+tracked separately below.
+
 ## VS Code Marketplace
 
 Artifact:
