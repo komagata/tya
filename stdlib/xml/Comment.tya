@@ -1,0 +1,6 @@
+class Comment
+  initialize = text ->
+    self.text = text
+
+  static new = text ->
+    return Comment(text)

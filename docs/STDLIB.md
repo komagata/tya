@@ -490,6 +490,32 @@ Options include `bytes: "base64"`, `bytes: "array"`, `include_class`,
 `class_key`, `fields`, `defaults`, and `strict_fields`. Cycles and unsupported
 runtime resources raise `serialization` errors.
 
+## `xml`
+
+```tya
+import xml as xml
+
+doc = xml.Xml.parse(text)
+root = doc.root()
+tests = root.find_all_recursive("testcase")
+```
+
+`xml.Xml` parses and dumps practical DOM-style XML without DTD, external
+entity, XPath, XSLT, or streaming support. Public node classes are `Document`,
+`Element`, `Text`, `Comment`, and `CData`.
+
+`Document` exposes `root`, `children`, `version`, `encoding`, and `to_s`.
+`Element` exposes public `name`, `attrs`, and `children` fields plus `attr`,
+`has_attr?`, `text`, `child_elements`, `find`, `find_all`, `find_recursive`,
+`find_all_recursive`, and `to_s`. Text and CDATA nodes expose `text`; comments
+are preserved as comment nodes but excluded from `Element.text()`.
+
+The parser supports XML declarations, start/end tags, self-closing tags,
+single- and double-quoted attributes, predefined entities, numeric character
+references, comments, CDATA, and namespace prefixes as raw names. It rejects
+DTD declarations, external entities, malformed nesting, duplicate attributes,
+unterminated comments/CDATA/tags, and invalid entity references.
+
 ## `csv`
 
 ```tya

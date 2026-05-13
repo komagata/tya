@@ -1,0 +1,28 @@
+class Document
+  initialize = children, version, encoding ->
+    self.nodes = children
+    self.doc_version = version
+    self.doc_encoding = encoding
+
+  static new = children, version, encoding ->
+    return Document(children, version, encoding)
+
+  root = ->
+    i = 0
+    while i < self.nodes.len()
+      if self.nodes[i].class == Element
+        return self.nodes[i]
+      i = i + 1
+    return nil
+
+  children = ->
+    return self.nodes
+
+  version = ->
+    return self.doc_version
+
+  encoding = ->
+    return self.doc_encoding
+
+  to_s = ->
+    return Xml.dump(self)

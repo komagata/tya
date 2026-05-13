@@ -1,0 +1,294 @@
+class Xml
+  static parse = text ->
+    state = { src: text, pos: 0, len: text.byte_len(), version: "1.0", encoding: nil }
+    children = []
+    Xml.skip_ws(state)
+    if Xml.starts_at(state, "<?xml")
+      Xml.parse_decl(state)
+    while true
+      Xml.skip_ws(state)
+      if state["pos"] >= state["len"]
+        return Document.new(children, state["version"], state["encoding"])
+      children.push(Xml.parse_node(state))
+
+  static dump = value ->
+    if value.class == Document
+      out = ""
+      children = value.children()
+      i = 0
+      while i < children.len()
+        out = out + Xml.dump(children[i])
+        i = i + 1
+      return out
+    if value.class == Element
+      out = "<" + value.name
+      keys = value.attrs.keys()
+      i = 0
+      while i < keys.len()
+        key = keys[i]
+        out = out + " " + key + "=\"" + Xml.escape_attr(value.attrs[key]) + "\""
+        i = i + 1
+      if value.children.len() == 0
+        return out + "/>"
+      out = out + ">"
+      i = 0
+      while i < value.children.len()
+        out = out + Xml.dump(value.children[i])
+        i = i + 1
+      return out + "</" + value.name + ">"
+    if value.class == Text
+      return Xml.escape_text(value.text)
+    if value.class == CData
+      return "<![CDATA[" + value.text + "]]>"
+    if value.class == Comment
+      return "<!--" + value.text + "-->"
+    raise "xml.dump: unsupported node"
+
+  static escape_text = text ->
+    out = ""
+    i = 0
+    while i < text.byte_len()
+      c = text[i]
+      if c == "&"
+        out = out + "&amp;"
+      elseif c == "<"
+        out = out + "&lt;"
+      elseif c == ">"
+        out = out + "&gt;"
+      else
+        out = out + c
+      i = i + 1
+    return out
+
+  static escape_attr = text ->
+    return Xml.escape_text(text).replace("\"", "&quot;").replace("'", "&apos;")
+
+  static collect_recursive = element, name, out ->
+    children = element.child_elements()
+    i = 0
+    while i < children.len()
+      child = children[i]
+      if child.name == name
+        out.push(child)
+      Xml.collect_recursive(child, name, out)
+      i = i + 1
+
+  static parse_decl = state ->
+    Xml.expect_text(state, "<?xml")
+    attrs = Xml.parse_attrs_until(state, "?>")
+    if attrs.has?("version")
+      state["version"] = attrs["version"]
+    if attrs.has?("encoding")
+      state["encoding"] = attrs["encoding"]
+
+  static parse_node = state ->
+    if Xml.starts_at(state, "<!--")
+      return Xml.parse_comment(state)
+    if Xml.starts_at(state, "<![CDATA[")
+      return Xml.parse_cdata(state)
+    if Xml.starts_at(state, "<!DOCTYPE") or Xml.starts_at(state, "<!ENTITY")
+      Xml.error(state, "DTD and external entities are not supported")
+    if Xml.starts_at(state, "<?")
+      Xml.skip_processing_instruction(state)
+      return Xml.parse_node(state)
+    if Xml.peek(state) == "<"
+      return Xml.parse_element(state)
+    return Xml.parse_text(state)
+
+  static parse_element = state ->
+    Xml.expect(state, "<")
+    name = Xml.parse_name(state)
+    attrs = Xml.parse_attrs_until(state, nil)
+    if Xml.starts_at(state, "/>")
+      state["pos"] = state["pos"] + 2
+      return Element.new(name, attrs, [])
+    Xml.expect(state, ">")
+    children = []
+    while true
+      if state["pos"] >= state["len"]
+        Xml.error(state, "unterminated element " + name)
+      if Xml.starts_at(state, "</")
+        state["pos"] = state["pos"] + 2
+        end_name = Xml.parse_name(state)
+        if end_name != name
+          Xml.error(state, "mismatched end tag " + end_name)
+        Xml.skip_ws(state)
+        Xml.expect(state, ">")
+        return Element.new(name, attrs, children)
+      children.push(Xml.parse_node(state))
+
+  static parse_attrs_until = state, terminator ->
+    attrs = {}
+    while true
+      Xml.skip_ws(state)
+      if terminator != nil and Xml.starts_at(state, terminator)
+        state["pos"] = state["pos"] + terminator.byte_len()
+        return attrs
+      c = Xml.peek(state)
+      if c == ">" or Xml.starts_at(state, "/>")
+        return attrs
+      name = Xml.parse_name(state)
+      if attrs.has?(name)
+        Xml.error(state, "duplicate attribute " + name)
+      Xml.skip_ws(state)
+      Xml.expect(state, "=")
+      Xml.skip_ws(state)
+      quote = Xml.peek(state)
+      if quote != "\"" and quote != "'"
+        Xml.error(state, "expected attribute quote")
+      state["pos"] = state["pos"] + 1
+      raw = ""
+      while state["pos"] < state["len"] and Xml.peek(state) != quote
+        raw = raw + Xml.peek(state)
+        state["pos"] = state["pos"] + 1
+      if state["pos"] >= state["len"]
+        Xml.error(state, "unterminated attribute")
+      state["pos"] = state["pos"] + 1
+      attrs[name] = Xml.decode_entities(raw, state)
+
+  static parse_text = state ->
+    raw = ""
+    while state["pos"] < state["len"] and Xml.peek(state) != "<"
+      raw = raw + Xml.peek(state)
+      state["pos"] = state["pos"] + 1
+    return Text.new(Xml.decode_entities(raw, state))
+
+  static parse_comment = state ->
+    Xml.expect_text(state, "<!--")
+    text = Xml.read_until(state, "-->", "unterminated comment")
+    return Comment.new(text)
+
+  static parse_cdata = state ->
+    Xml.expect_text(state, "<![CDATA[")
+    text = Xml.read_until(state, "]]>", "unterminated CDATA")
+    return CData.new(text)
+
+  static skip_processing_instruction = state ->
+    Xml.expect_text(state, "<?")
+    Xml.read_until(state, "?>", "unterminated processing instruction")
+
+  static read_until = state, terminator, message ->
+    out = ""
+    while state["pos"] < state["len"]
+      if Xml.starts_at(state, terminator)
+        state["pos"] = state["pos"] + terminator.byte_len()
+        return out
+      out = out + Xml.peek(state)
+      state["pos"] = state["pos"] + 1
+    Xml.error(state, message)
+
+  static decode_entities = text, state ->
+    out = ""
+    i = 0
+    while i < text.byte_len()
+      if text[i] == "&"
+        semi = Xml.index_of(text, ";", i + 1)
+        if semi < 0
+          Xml.error(state, "invalid entity reference")
+        entity = Xml.slice(text, i + 1, semi)
+        out = out + Xml.decode_entity(entity, state)
+        i = semi + 1
+      else
+        out = out + text[i]
+        i = i + 1
+    return out
+
+  static decode_entity = entity, state ->
+    if entity == "amp"
+      return "&"
+    if entity == "lt"
+      return "<"
+    if entity == "gt"
+      return ">"
+    if entity == "quot"
+      return "\""
+    if entity == "apos"
+      return "'"
+    if entity.starts_with("#x")
+      return chr(Xml.parse_hex(Xml.slice(entity, 2, entity.byte_len())))
+    if entity.starts_with("#")
+      return chr(Xml.slice(entity, 1, entity.byte_len()).to_i())
+    Xml.error(state, "invalid entity reference")
+
+  static parse_name = state ->
+    name = ""
+    while state["pos"] < state["len"]
+      c = Xml.peek(state)
+      if c == " " or c == "\t" or c == "\n" or c == chr(13) or c == "/" or c == ">" or c == "="
+        if name == ""
+          Xml.error(state, "expected name")
+        return name
+      name = name + c
+      state["pos"] = state["pos"] + 1
+    Xml.error(state, "expected name")
+
+  static skip_ws = state ->
+    while state["pos"] < state["len"]
+      c = Xml.peek(state)
+      if c == " " or c == "\t" or c == "\n" or c == chr(13)
+        state["pos"] = state["pos"] + 1
+      else
+        return nil
+
+  static expect = state, c ->
+    if Xml.peek(state) != c
+      Xml.error(state, "expected " + c)
+    state["pos"] = state["pos"] + 1
+
+  static expect_text = state, text ->
+    if not Xml.starts_at(state, text)
+      Xml.error(state, "expected " + text)
+    state["pos"] = state["pos"] + text.byte_len()
+
+  static starts_at = state, text ->
+    src = state["src"]
+    if state["pos"] + text.byte_len() > state["len"]
+      return false
+    i = 0
+    while i < text.byte_len()
+      if src[state["pos"] + i] != text[i]
+        return false
+      i = i + 1
+    return true
+
+  static peek = state ->
+    if state["pos"] >= state["len"]
+      return ""
+    return state["src"][state["pos"]]
+
+  static slice = text, start, finish ->
+    out = ""
+    i = start
+    while i < finish
+      out = out + text[i]
+      i = i + 1
+    return out
+
+  static index_of = text, needle, start ->
+    i = start
+    while i < text.byte_len()
+      if text[i] == needle
+        return i
+      i = i + 1
+    return -1
+
+  static parse_hex = text ->
+    value = 0
+    i = 0
+    while i < text.byte_len()
+      code = ord(text[i])
+      digit = -1
+      if code >= 48 and code <= 57
+        digit = code - 48
+      elseif code >= 65 and code <= 70
+        digit = code - 55
+      elseif code >= 97 and code <= 102
+        digit = code - 87
+      else
+        raise "xml.parse: invalid numeric character reference"
+      value = value * 16 + digit
+      i = i + 1
+    return value
+
+  static error = state, message ->
+    raise "xml.parse: " + message + " at byte " + state["pos"].to_s()

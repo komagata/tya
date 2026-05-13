@@ -1,0 +1,65 @@
+class Element
+  initialize = name, attrs, children ->
+    self.name = name
+    self.attrs = attrs
+    self.children = children
+
+  static new = name, attrs, children ->
+    return Element(name, attrs, children)
+
+  attr = name, default ->
+    return self.attrs.get(name, default)
+
+  has_attr? = name ->
+    return self.attrs.has?(name)
+
+  text = ->
+    out = ""
+    i = 0
+    while i < self.children.len()
+      child = self.children[i]
+      if child.class == Text or child.class == CData
+        out = out + child.text
+      elseif child.class == Element
+        out = out + child.text()
+      i = i + 1
+    return out
+
+  child_elements = ->
+    out = []
+    i = 0
+    while i < self.children.len()
+      if self.children[i].class == Element
+        out.push(self.children[i])
+      i = i + 1
+    return out
+
+  find = name ->
+    found = self.find_all(name)
+    if found.len() == 0
+      return nil
+    return found[0]
+
+  find_all = name ->
+    out = []
+    children = self.child_elements()
+    i = 0
+    while i < children.len()
+      if children[i].name == name
+        out.push(children[i])
+      i = i + 1
+    return out
+
+  find_recursive = name ->
+    found = self.find_all_recursive(name)
+    if found.len() == 0
+      return nil
+    return found[0]
+
+  find_all_recursive = name ->
+    out = []
+    Xml.collect_recursive(self, name, out)
+    return out
+
+  to_s = ->
+    return Xml.dump(self)

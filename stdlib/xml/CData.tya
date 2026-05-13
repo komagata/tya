@@ -1,0 +1,6 @@
+class CData
+  initialize = text ->
+    self.text = text
+
+  static new = text ->
+    return CData(text)

@@ -311,6 +311,32 @@ field mapping. Options include `include_class`, `class_key`, `fields`,
 `defaults`, and `strict_fields`. Cycles and unsupported runtime resources raise
 clear serialization errors.
 
+## XML Stdlib
+
+The standard library includes a small DOM-style `xml` package for practical XML
+documents and JUnit test-result ingestion.
+
+```tya
+import xml as xml
+
+doc = xml.Xml.parse(text)
+root = doc.root()
+tests = root.find_all_recursive("testcase")
+```
+
+Public node classes are `Xml`, `Document`, `Element`, `Text`, `Comment`, and
+`CData`. `Xml.parse(text)` returns a `Document`; `Xml.dump(node)` emits XML for
+a document or element subtree. `Xml.escape_text` and `Xml.escape_attr` expose
+the escaping rules used by dumping.
+
+The parser supports declarations, attributes with either quote style,
+self-closing tags, comments, CDATA, predefined entities, numeric character
+references, and raw namespace prefixes in element and attribute names.
+`Element` provides attribute lookup, immediate and recursive element search,
+and descendant text concatenation. DTDs, external entities, malformed nesting,
+duplicate attributes, unterminated comments/CDATA/tags, and invalid entity
+references raise `xml.parse` errors.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

@@ -1,0 +1,6 @@
+class Text
+  initialize = text ->
+    self.text = text
+
+  static new = text ->
+    return Text(text)

@@ -64,6 +64,8 @@ standard library or runtime.
   `shuffle_copy`, `sample`, `weighted_choice`, and `weighted_index` helpers.
 - New `serialization.Serializer` helpers convert primitives, dictionaries,
   bytes, and class instances to JSON-compatible data, JSON, and TOML.
+- New `xml` stdlib DOM classes parse, inspect, and dump practical XML,
+  including common JUnit XML output.
 
 ## Verification
 
@@ -75,5 +77,6 @@ renderer, Markdown parser/rendering extensions, compression round trips and
 file helpers, the `log.Logger` stdlib logger, `io.Io` stream tests, and
 `net/ip` address/network tests, plus localhost `net/socket` client/server,
 binary I/O, collections behavior, timeout, and connection-refused tests, and
-random helper coverage, and URL parser tests for IPv6, relative resolution,
-duplicate queries, serialization round trips, and malformed input.
+random helper coverage, XML/JUnit parser coverage, and URL parser tests for
+IPv6, relative resolution, duplicate queries, serialization round trips, and
+malformed input.
