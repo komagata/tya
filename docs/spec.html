@@ -207,7 +207,9 @@ print &quot;age: {age}&quot;</code></pre>
 <p>An interpolation must contain exactly one expression.</p>
 <pre><code class="language-tya">print &quot;next age: {age + 1}&quot;
 print &quot;ready: {enabled and ready}&quot;
-print &quot;name: {user[&quot;name&quot;]}&quot;</code></pre>
+print &quot;name: {user[&quot;name&quot;]}&quot;
+print &quot;kind: {{&quot;kind&quot;: &quot;ok&quot;}[&quot;kind&quot;]}&quot;</code></pre>
+<p>The interpolation scanner balances nested <code>{</code> and <code>}</code> while finding the closing brace. Braces and quotes inside string literals that appear in the expression do not end the interpolation body. The same rules apply in single-line and triple-quoted interpolating strings.</p>
 <p>Empty interpolation is invalid.</p>
 <pre><code class="language-tya">print &quot;Hello, {}&quot;</code></pre>
 <p>Unclosed interpolation is invalid.</p>

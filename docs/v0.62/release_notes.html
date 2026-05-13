@@ -56,8 +56,12 @@
 <li>New package tool declarations let packages expose Tya script commands through</li>
 </ul>
 <p>  <code>[tools]</code>, and <code>tya tool</code> runs locked dependency tools or pinned one-shot   git/path tools.</p>
+<ul>
+<li>String interpolation now balances nested braces and preserves quotes inside</li>
+</ul>
+<p>  interpolation expressions, so forms such as <code>{user[&quot;name&quot;]}</code> and dictionary   literals inside interpolation compile correctly.</p>
 <h2 id="verification">Verification</h2>
-<p>The release includes package-manager unit coverage and script coverage for path dependency native builds, native run/build/test behavior, diagnostics, the generated native library scaffold, the <code>cli.Cli</code> stdlib parser, and package tool execution.</p>
+<p>The release includes package-manager unit coverage and script coverage for path dependency native builds, native run/build/test behavior, diagnostics, the generated native library scaffold, the <code>cli.Cli</code> stdlib parser, package tool execution, and interpolation scanner edge cases.</p>
     </article>
   </main>
 </body>

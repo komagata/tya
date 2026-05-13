@@ -1577,7 +1577,7 @@ func (p *Parser) curlyLiteral() (ast.Expr, error) {
 	if p.match(token.RBRACE) {
 		return &ast.DictLit{}, nil
 	}
-	if p.at(token.IDENT) && p.peekN(1).Type == token.COLON {
+	if p.dictLiteralKeyAhead() {
 		return p.dictLiteral()
 	}
 	return nil, p.err("set literals are not in Tya v0.1")
@@ -1586,7 +1586,7 @@ func (p *Parser) curlyLiteral() (ast.Expr, error) {
 func (p *Parser) dictLiteral() (ast.Expr, error) {
 	dict := &ast.DictLit{}
 	for {
-		if !(p.at(token.IDENT) && p.peekN(1).Type == token.COLON) {
+		if !p.dictLiteralKeyAhead() {
 			return nil, p.err("cannot mix dict entries and set entries in one literal")
 		}
 		name := p.next()
@@ -1607,6 +1607,10 @@ func (p *Parser) dictLiteral() (ast.Expr, error) {
 		return nil, p.err("expected '}'")
 	}
 	return dict, nil
+}
+
+func (p *Parser) dictLiteralKeyAhead() bool {
+	return (p.at(token.IDENT) || p.at(token.STRING)) && p.peekN(1).Type == token.COLON
 }
 
 func (p *Parser) finishFunc(params []string, paramToks []token.Token) (*ast.FuncLit, error) {

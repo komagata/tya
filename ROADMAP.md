@@ -622,7 +622,7 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     `compiler.format`.
   - [ ] AST is the single canonical representation; node kinds, fields,
     spans documented.
-  - [ ] Round-trip tests over a representative corpus.
+  - [x] Round-trip tests over a representative corpus.
 
 ### Language
 
@@ -808,8 +808,8 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     against the `tya` binary.
   - [ ] This Epic ships at v1.0.0 and is tied to Commitment 6.
 
-- [ ] **Allow raw `"` inside `{expr}` interpolation body**
-  - [ ] Today the lexer reads a string literal as "until the next
+- [x] **Allow raw `"` inside `{expr}` interpolation body**
+  - [x] Today the lexer reads a string literal as "until the next
     unescaped `"`", so an interpolation `{user["name"]}` is cut at
     the inner `"`. The user has to write `{user[\"name\"]}` or hoist
     the expression into a local. Make the lexer balance `{` / `}`
@@ -817,12 +817,12 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     contain quoted sub-expressions verbatim.
   - [ ] Round-trip through the existing interpolation pipeline
     unchanged; only lexer scanning state needs to track depth.
-  - [ ] Update the `"""..."""` and raw `r"..."` lexer paths the same
+  - [x] Update the `"""..."""` and raw `r"..."` lexer paths the same
     way so the rule is uniform.
-  - [ ] Add positive lexer + script tests pinning
+  - [x] Add positive lexer + script tests pinning
     `"Hello, {user["name"]}!"` and the matching multi-line and raw
     cases.
-  - [ ] Reference: most modern interpolation languages already
+  - [x] Reference: most modern interpolation languages already
     allow this (JavaScript template literals, C# `$"..."`, Kotlin,
     Ruby `"#{...}"`, Scala, Dart, Elixir, Swift `\( )`). Python
     aligned in 3.12 via PEP 701; Tya should follow the same model.
@@ -830,6 +830,7 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     `"...{$x['k']}..."` and pre-3.12 Python f-strings — Tya's
     current behavior matches that older / minority position and
     should not stay there.
+    - Spec: `docs/prd/completed/raw-quotes-in-interpolation.md`
 
 ### Stdlib extensions
 

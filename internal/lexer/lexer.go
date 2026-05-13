@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"tya/internal/diag"
+	"tya/internal/interp"
 	"tya/internal/token"
 )
 
@@ -465,6 +466,24 @@ func interpretEscapes(s string, line, col int) (string, error) {
 	var b strings.Builder
 	for i := 0; i < len(s); i++ {
 		c := s[i]
+		if c == '{' && i+1 < len(s) && s[i+1] == '{' && !interp.LooksLikeDictExprStart(s, i) {
+			b.WriteString("{{")
+			i++
+			continue
+		}
+		if c == '{' {
+			if close := interp.FindExprEnd(s, i); close >= 0 {
+				if interp.LooksLikeDictExprStart(s, i) {
+					b.WriteString("{(")
+					b.WriteString(s[i+1 : close])
+					b.WriteString(")}")
+				} else {
+					b.WriteString(s[i : close+1])
+				}
+				i = close
+				continue
+			}
+		}
 		if c == '\\' {
 			if i+1 >= len(s) {
 				return "", &Diagnostic{Diag: diag.Diagnostic{
@@ -734,6 +753,24 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			var b strings.Builder
 			i++
 			for i < len(s) && s[i] != '"' {
+				if s[i] == '{' && i+1 < len(s) && s[i+1] == '{' && !interp.LooksLikeDictExprStart(s, i) {
+					b.WriteString("{{")
+					i += 2
+					continue
+				}
+				if s[i] == '{' {
+					if close := interp.FindExprEnd(s, i); close >= 0 {
+						if interp.LooksLikeDictExprStart(s, i) {
+							b.WriteString("{(")
+							b.WriteString(s[i+1 : close])
+							b.WriteString(")}")
+						} else {
+							b.WriteString(s[i : close+1])
+						}
+						i = close + 1
+						continue
+					}
+				}
 				if s[i] == '\\' {
 					if i+1 >= len(s) {
 						l.diagErr("TYA-E0007", "Unterminated escape",

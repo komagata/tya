@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"tya/internal/ast"
+	"tya/internal/interp"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 )
@@ -2323,11 +2324,11 @@ func interpolate(s string, env *Env) (string, error) {
 				i += 2
 				continue
 			}
-			close := strings.IndexByte(s[i+1:], '}')
+			close := interp.FindExprEnd(s, i)
 			if close < 0 {
 				return "", fmt.Errorf("unclosed interpolation")
 			}
-			expr := strings.TrimSpace(s[i+1 : i+1+close])
+			expr := strings.TrimSpace(s[i+1 : close])
 			if expr == "" {
 				return "", fmt.Errorf("empty interpolation")
 			}
@@ -2336,7 +2337,7 @@ func interpolate(s string, env *Env) (string, error) {
 				return "", err
 			}
 			out.WriteString(stringify(v))
-			i += close + 2
+			i = close + 1
 		case '}':
 			if i+1 < len(s) && s[i+1] == '}' {
 				out.WriteByte('}')

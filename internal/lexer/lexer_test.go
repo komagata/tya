@@ -210,6 +210,27 @@ func TestLexStringHashAfterEscapedQuote(t *testing.T) {
 	}
 }
 
+func TestLexStringInterpolationPreservesNestedQuotes(t *testing.T) {
+	toks, errs := Lex("print \"Hello, {user[\"name\"]}!\"\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	if toks[1].Lexeme != "Hello, {user[\"name\"]}!" {
+		t.Fatalf("got %q", toks[1].Lexeme)
+	}
+}
+
+func TestLexTripleQuoteInterpolationPreservesEscapedNestedQuotes(t *testing.T) {
+	src := "x = \"\"\"{user[\"\\\"quoted\\\"\"]}\"\"\"\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	if toks[2].Lexeme != "{user[\"\\\"quoted\\\"\"]}" {
+		t.Fatalf("got %q", toks[2].Lexeme)
+	}
+}
+
 func TestLexTripleQuoteSingleLine(t *testing.T) {
 	toks, errs := Lex("x = \"\"\"hello\"\"\"\n")
 	if len(errs) != 0 {

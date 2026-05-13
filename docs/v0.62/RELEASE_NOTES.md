@@ -22,10 +22,13 @@ standard library or runtime.
 - New package tool declarations let packages expose Tya script commands through
   `[tools]`, and `tya tool` runs locked dependency tools or pinned one-shot
   git/path tools.
+- String interpolation now balances nested braces and preserves quotes inside
+  interpolation expressions, so forms such as `{user["name"]}` and dictionary
+  literals inside interpolation compile correctly.
 
 ## Verification
 
 The release includes package-manager unit coverage and script coverage for path
 dependency native builds, native run/build/test behavior, diagnostics, the
-generated native library scaffold, the `cli.Cli` stdlib parser, and package
-tool execution.
+generated native library scaffold, the `cli.Cli` stdlib parser, package tool
+execution, and interpolation scanner edge cases.

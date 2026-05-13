@@ -2,7 +2,9 @@
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/match_interpolation.tya
-stdout 'first\nkomagata\nfallback\nerror:bad\nliteral { brace }\nnext age: 49\nready: true\n'
+stdout 'first\nkomagata\nfallback\nerror:bad\nliteral \{ brace \}\nnext age: 49\nready: true\n'
+stdout 'Hello, komagata!\nkomagata\nkind: ok\nbrace string: literal\n'
+stdout 'raw: \{user\["name"\]\}\n'
 ! stderr .
 
 ! exec go run ./cmd/tya check $WORK/case_outside.tya
@@ -66,6 +68,13 @@ ready = true
 print("literal {{ brace }}")
 print("next age: {current_age + 1}")
 print("ready: {enabled and ready}")
+print("Hello, {user["name"]}!")
+print("""{user["name"]}""")
+print("kind: {{"kind": "ok"}["kind"]}")
+literal = "literal"
+print("brace string: {"{literal}"}")
+raw = r"""{user["name"]}"""
+print("raw: " + raw)
 
 -- case_outside.tya --
 case _

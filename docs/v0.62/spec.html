@@ -78,6 +78,12 @@ format_docs = &quot;tools/format_docs.tya&quot;</code></pre>
 tya tool --git https://github.com/example/tya-tools --tag v1.2.0 format_docs
 tya tool --git https://github.com/example/tya-tools --rev &lt;commit&gt; format_docs</code></pre>
 <p>One-shot git tools are cached under <code>.tya/cache/exec/</code>. Branch execution is rejected; use <code>--tag</code> or <code>--rev</code> so remote code execution is pinned. <code>tya tool --offline</code> only uses already materialized project packages or cached one-shot git packages.</p>
+<h2 id="interpolation-expression-scanning">Interpolation Expression Scanning</h2>
+<p>Interpolated strings now balance nested braces while scanning <code>{expression}</code> bodies. Quotes and braces inside string literals that appear in the expression do not terminate the interpolation body, so dictionary indexing and dictionary literals work without escaping inner quotes:</p>
+<pre><code class="language-tya">user = {&quot;name&quot;: &quot;komagata&quot;}
+print(&quot;Hello, {user[&quot;name&quot;]}!&quot;)
+print(&quot;kind: {{&quot;kind&quot;: &quot;ok&quot;}[&quot;kind&quot;]}&quot;)</code></pre>
+<p>Triple-quoted interpolating strings use the same scanner. Raw strings and bytes literals remain non-interpolating.</p>
     </article>
   </main>
 </body>

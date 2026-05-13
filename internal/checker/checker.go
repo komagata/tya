@@ -8,6 +8,7 @@ import (
 
 	"tya/internal/ast"
 	"tya/internal/diag"
+	"tya/internal/interp"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 )
@@ -2190,33 +2191,18 @@ func checkInterpolation(value string, scope *scope) error {
 				i += 2
 				continue
 			}
-			close := strings.IndexByte(value[i+1:], '}')
+			close := interp.FindExprEnd(value, i)
 			if close < 0 {
 				return fmt.Errorf("unclosed interpolation")
 			}
-			expr := strings.TrimSpace(value[i+1 : i+1+close])
+			expr := strings.TrimSpace(value[i+1 : close])
 			if expr == "" {
 				return fmt.Errorf("empty interpolation")
 			}
-			toks, errs := lexer.Lex(expr)
-			if len(errs) > 0 {
-				return fmt.Errorf("invalid interpolation expression: %w", errs[0])
-			}
-			prog, _, err := parser.Parse(toks)
-			if err != nil {
-				return fmt.Errorf("invalid interpolation expression: %w", err)
-			}
-			if len(prog.Stmts) != 1 {
-				return fmt.Errorf("interpolation must contain one expression")
-			}
-			stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
-			if !ok {
-				return fmt.Errorf("interpolation must contain an expression")
-			}
-			if err := checkExpr(stmt.Expr, scope); err != nil {
+			if err := checkInterpolationExpr(expr, scope); err != nil {
 				return err
 			}
-			i += close + 2
+			i = close + 1
 		case '}':
 			if i+1 < len(value) && value[i+1] == '}' {
 				i += 2
@@ -2228,6 +2214,25 @@ func checkInterpolation(value string, scope *scope) error {
 		}
 	}
 	return nil
+}
+
+func checkInterpolationExpr(expr string, scope *scope) error {
+	toks, errs := lexer.Lex(expr)
+	if len(errs) > 0 {
+		return fmt.Errorf("invalid interpolation expression: %w", errs[0])
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		return fmt.Errorf("invalid interpolation expression: %w", err)
+	}
+	if len(prog.Stmts) != 1 {
+		return fmt.Errorf("interpolation must contain one expression")
+	}
+	stmt, ok := prog.Stmts[0].(*ast.ExprStmt)
+	if !ok {
+		return fmt.Errorf("interpolation must contain an expression")
+	}
+	return checkExpr(stmt.Expr, scope)
 }
 
 func exprKind(values []ast.Expr, scope *scope) valueKind {

@@ -323,7 +323,13 @@ An interpolation must contain exactly one expression.
 print "next age: {age + 1}"
 print "ready: {enabled and ready}"
 print "name: {user["name"]}"
+print "kind: {{"kind": "ok"}["kind"]}"
 ```
+
+The interpolation scanner balances nested `{` and `}` while finding the closing
+brace. Braces and quotes inside string literals that appear in the expression do
+not end the interpolation body. The same rules apply in single-line and
+triple-quoted interpolating strings.
 
 Empty interpolation is invalid.
 

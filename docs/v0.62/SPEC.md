@@ -115,3 +115,19 @@ One-shot git tools are cached under `.tya/cache/exec/`. Branch execution is
 rejected; use `--tag` or `--rev` so remote code execution is pinned.
 `tya tool --offline` only uses already materialized project packages or cached
 one-shot git packages.
+
+## Interpolation Expression Scanning
+
+Interpolated strings now balance nested braces while scanning `{expression}`
+bodies. Quotes and braces inside string literals that appear in the expression
+do not terminate the interpolation body, so dictionary indexing and dictionary
+literals work without escaping inner quotes:
+
+```tya
+user = {"name": "komagata"}
+print("Hello, {user["name"]}!")
+print("kind: {{"kind": "ok"}["kind"]}")
+```
+
+Triple-quoted interpolating strings use the same scanner. Raw strings and bytes
+literals remain non-interpolating.

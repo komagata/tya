@@ -9,6 +9,7 @@ import (
 
 	"tya/internal/ast"
 	"tya/internal/diag"
+	"tya/internal/interp"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 	"tya/internal/pkg"
@@ -2394,11 +2395,11 @@ func (g *cgen) interpolateString(value string) (string, error) {
 				i += 2
 				continue
 			}
-			close := strings.IndexByte(value[i+1:], '}')
+			close := interp.FindExprEnd(value, i)
 			if close < 0 {
 				return "", fmt.Errorf("unclosed interpolation")
 			}
-			expr := strings.TrimSpace(value[i+1 : i+1+close])
+			expr := strings.TrimSpace(value[i+1 : close])
 			if expr == "" {
 				return "", fmt.Errorf("empty interpolation")
 			}
@@ -2408,7 +2409,7 @@ func (g *cgen) interpolateString(value string) (string, error) {
 			}
 			flushText()
 			parts = append(parts, "tya_to_string("+compiled+")")
-			i += close + 2
+			i = close + 1
 		case '}':
 			if i+1 < len(value) && value[i+1] == '}' {
 				text.WriteByte('}')
