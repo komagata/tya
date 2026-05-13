@@ -29,37 +29,34 @@
 <h2 id="rules">Rules</h2>
 <pre><code class="language-text">variables/functions: snake_case
 private binding:     _snake_case
-modules/files:       snake_case
+import paths/files:  snake_case
 dictionary keys:     snake_case
-module members:      snake_case or PascalCase classes
+public members:      snake_case or PascalCase classes
 constants:           SCREAMING_SNAKE_CASE
 classes:             PascalCase</code></pre>
-<h2 id="module-rule">Module Rule</h2>
-<p>A module file defines exactly one top-level <code>module</code>, and its name must match the file name without <code>.tya</code>.</p>
+<h2 id="import-path-rule">Import Path Rule</h2>
+<p>Single-file imports use the source file name without <code>.tya</code> as their import path segment.</p>
 <pre><code class="language-text">file_system.tya -&gt; file_system
 http_client.tya -&gt; http_client
 json_parser.tya -&gt; json_parser</code></pre>
 <p>Allowed:</p>
-<pre><code class="language-tya">module file_system
-  read = path -&gt; read_file path
-  exists = path -&gt; file_exists path</code></pre>
+<pre><code class="language-tya"># file_system.tya
+read = path -&gt; read_file path
+exists = path -&gt; file_exists path</code></pre>
 <p>Forbidden:</p>
-<pre><code class="language-tya">module file_system
-  read = path -&gt; read_file path
-
-module path
-  join = left, right -&gt; left + &quot;/&quot; + right</code></pre>
-<p>The second example is invalid because <code>file_system.tya</code> would define two modules: <code>file_system</code> and <code>path</code>.</p>
-<p>Use a module from another file with <code>import</code>:</p>
+<pre><code class="language-tya"># file_system.tya
+read-file = path -&gt; read_file path</code></pre>
+<p>The second example is invalid because public binding names must follow the public member naming rule.</p>
+<p>Use source from another file with <code>import</code>:</p>
 <pre><code class="language-tya">import file_system
 
 print file_system.exists(&quot;memo.txt&quot;)</code></pre>
 <p><code>import file_system</code> loads <code>file_system.tya</code> from the same directory as the importing file.</p>
 <h2 id="accessibility">Accessibility</h2>
-<p>Module members beginning with <code>_</code> are private to the module.</p>
-<pre><code class="language-tya">module path
-  _normalize_path = path -&gt; path</code></pre>
-<p>Dictionary keys beginning with <code>_</code> are not module privacy. They may be reserved for a future visibility rule, but v0.1 privacy is enforced only for module members.</p>
+<p>Top-level bindings beginning with <code>_</code> are private to the source file.</p>
+<pre><code class="language-tya"># path.tya
+_normalize_path = path -&gt; path</code></pre>
+<p>Dictionary keys beginning with <code>_</code> are not source-file privacy. They may be reserved for a future visibility rule, but privacy is enforced only for bindings.</p>
 <h2 id="builtins">Builtins</h2>
 <p>Standard library APIs use snake_case names. CamelCase builtin spellings are not part of the language surface.</p>
     </article>

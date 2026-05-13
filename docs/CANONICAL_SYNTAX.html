@@ -60,17 +60,17 @@ greet = name -&gt; &quot;Hello, &quot; + name</code></pre>
 <pre><code class="language-tya"># This file is the dog entry point.
 # It coordinates dog-related top-level items.
 
-import string
+import json
 import file
 
 # ...</code></pre>
 <p>The blank line between the header and the body is mandatory and is what distinguishes a file header from a leading comment on the first node:</p>
 <pre><code class="language-tya"># This is a leading comment on the import below.
-import string</code></pre>
+import json</code></pre>
 <p>vs</p>
 <pre><code class="language-tya"># This is a file header comment.
 
-import string</code></pre>
+import json</code></pre>
 <p>If the file has only a header (no body), the header is still well-formed: the <code>file_header_comments</code> attribute is set, and the body is empty.</p>
 <h3 id="3-4-forbidden-comment-positions">3.4 Forbidden comment positions</h3>
 <p>All of the following are parse errors:</p>
@@ -97,15 +97,14 @@ import string</code></pre>
 </ol>
 <p>2. Exactly **one** blank line before any in-block statement that has a    leading comment block, **except** when that statement is the first    statement in its block. 3. Otherwise, no blank lines.</p>
 <p>Example:</p>
-<pre><code class="language-tya">module dog
-  bark = -&gt;
-    # initial voice
-    voice = &quot;bow!&quot;
+<pre><code class="language-tya">bark = -&gt;
+  # initial voice
+  voice = &quot;bow!&quot;
 
-    # add second voice
-    # it is cute!
-    voice = voice + &quot; wow!&quot;
-    voice = voice + &quot; wan!&quot;</code></pre>
+  # add second voice
+  # it is cute!
+  voice = voice + &quot; wow!&quot;
+  voice = voice + &quot; wan!&quot;</code></pre>
 <ul>
 <li><code># initial voice</code> is the first statement in the function body → no</li>
 </ul>
@@ -347,7 +346,7 @@ at {timestamp}</code></pre>
 <p><code>elseif</code> is canonical. <code>else if</code> is rejected by the parser as a syntax error.</p>
 <h3 id="8-4-import-ordering-and-grouping">8.4 Import ordering and grouping</h3>
 <ul>
-<li>Imports are sorted alphabetically by module path.</li>
+<li>Imports are sorted alphabetically by import path.</li>
 <li>Stdlib imports and user imports form **separate groups**, separated by</li>
 </ul>
 <p>  exactly one blank line. Stdlib imports come first.</p>

@@ -80,6 +80,17 @@
 <li>package manager</li>
 <li>native-backed stdlib</li>
 </ul>
+<h2 id="imports">Imports</h2>
+<p><code>import package/path</code> resolves script modules and directory packages through the standard import search path. Directory packages are directories of PascalCase class files.</p>
+<p>Unaliased directory-package imports bring public class and interface names into the importing file's scope:</p>
+<pre><code class="language-tya">import net/http
+
+server = Server.new()</code></pre>
+<p>Aliased directory-package imports keep a namespace binding and do not expose the package's public names bare:</p>
+<pre><code class="language-tya">import net/http as http
+
+server = http.Server.new()</code></pre>
+<p>Two unaliased package imports that export the same public class or interface name are rejected as import name conflicts. A top-level binding in the importing file with the same name is also rejected.</p>
 <h2 id="match-statement">Match Statement</h2>
 <p><code>match value</code> evaluates <code>value</code> once and compares it against each <code>case</code> pattern in order.</p>
 <pre><code class="language-tya">match value

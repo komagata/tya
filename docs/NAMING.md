@@ -8,17 +8,17 @@ Names outside these rules are language errors.
 ```text
 variables/functions: snake_case
 private binding:     _snake_case
-modules/files:       snake_case
+import paths/files:  snake_case
 dictionary keys:     snake_case
-module members:      snake_case or PascalCase classes
+public members:      snake_case or PascalCase classes
 constants:           SCREAMING_SNAKE_CASE
 classes:             PascalCase
 ```
 
-## Module Rule
+## Import Path Rule
 
-A module file defines exactly one top-level `module`, and its name must match
-the file name without `.tya`.
+Single-file imports use the source file name without `.tya` as their import
+path segment.
 
 ```text
 file_system.tya -> file_system
@@ -29,25 +29,22 @@ json_parser.tya -> json_parser
 Allowed:
 
 ```tya
-module file_system
-  read = path -> read_file path
-  exists = path -> file_exists path
+# file_system.tya
+read = path -> read_file path
+exists = path -> file_exists path
 ```
 
 Forbidden:
 
 ```tya
-module file_system
-  read = path -> read_file path
-
-module path
-  join = left, right -> left + "/" + right
+# file_system.tya
+read-file = path -> read_file path
 ```
 
-The second example is invalid because `file_system.tya` would define two
-modules: `file_system` and `path`.
+The second example is invalid because public binding names must follow the
+public member naming rule.
 
-Use a module from another file with `import`:
+Use source from another file with `import`:
 
 ```tya
 import file_system
@@ -60,16 +57,16 @@ importing file.
 
 ## Accessibility
 
-Module members beginning with `_` are private to the module.
+Top-level bindings beginning with `_` are private to the source file.
 
 ```tya
-module path
-  _normalize_path = path -> path
+# path.tya
+_normalize_path = path -> path
 ```
 
-Dictionary keys beginning with `_` are not module privacy. They may be reserved
-for a future visibility rule, but v0.1 privacy is enforced only for module
-members.
+Dictionary keys beginning with `_` are not source-file privacy. They may be
+reserved for a future visibility rule, but privacy is enforced only for
+bindings.
 
 ## Builtins
 

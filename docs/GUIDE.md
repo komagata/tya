@@ -50,8 +50,8 @@ print "Hello, {name}"
 
 ## Names
 
-Use `snake_case` for variables, functions, modules, dictionary keys, and module
-members.
+Use `snake_case` for variables, functions, import paths, dictionary keys, and
+public imported members.
 Use `SCREAMING_SNAKE_CASE` for constants.
 
 ```tya
@@ -179,13 +179,11 @@ import greeting
 print greeting.hello("komagata")
 ```
 
-Each module file defines exactly one top-level `module`. The module name must
-match the file name.
+Imported files export public top-level bindings through the import namespace.
 
 ```tya
 # greeting.tya
-module greeting
-  hello = name -> "Hello, {name}"
+hello = name -> "Hello, {name}"
 ```
 
 ## Standard Library

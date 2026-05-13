@@ -14,7 +14,7 @@ Tya uses several kinds of names that can look similar from user code:
 - user libraries
 - standard library modules
 - bundled libraries
-- future third-party packages
+- packages
 
 These terms should not be used interchangeably.
 
@@ -28,7 +28,6 @@ Examples:
 - `while`
 - `for`
 - `import`
-- `module`
 - `class`
 - `interface`
 - `try`
@@ -61,7 +60,7 @@ Built-in functions are part of the standard Tya API and are defined in
 
 Built-in functions are implemented by the compiler, runtime, or host
 implementation. User code calls them like normal functions, but they are not
-loaded from a `.tya` module file.
+loaded from a `.tya` importable source file.
 
 Built-in function names should use `snake_case`.
 
@@ -79,14 +78,14 @@ Built-in classes should use `PascalCase`, like user-defined classes.
 
 ## User Module
 
-A user module is a `.tya` module written by a program or application author.
+User module: `.tya` source, written by a program or application author, that can
+be loaded by `import`.
 
 Example:
 
 ```tya
 # greeting.tya
-module greeting
-  hello = name -> "Hello, {name}"
+hello = name -> "Hello, {name}"
 ```
 
 ```tya
@@ -98,12 +97,12 @@ print greeting.hello("komagata")
 
 User modules are loaded with `import`.
 
-The normal module file rule is:
+The normal import-file rule is:
 
-- one module per `.tya` file
-- the module name matches the file name without `.tya`
-- module names use `snake_case`
-- module members use `snake_case`, except exported classes use `PascalCase`
+- the import path matches a `.tya` file or a package directory
+- import path segments use `snake_case`
+- public top-level bindings use normal public names
+- package class files use `PascalCase`
 
 User modules have higher import precedence than standard library modules.
 
@@ -114,26 +113,17 @@ than one entry file or project.
 
 User libraries are documented in `docs/LIBRARIES.md`.
 
-A user library is not a package. It has no required manifest, version,
-registry, download step, or dependency solver.
+A user library is not necessarily a package. A raw library can be made
+available through `TYA_PATH` without a manifest, version, download step, or
+dependency solver.
 
-The current way to make a user library available is to put its library root on
-`TYA_PATH`.
+A reusable library can also be distributed as a package by adding `tya.toml` and
+placing importable source under `src/`.
 
 ## Standard Library Module
 
-A standard library module is a `.tya` module shipped with Tya and imported with
-the same `import` syntax as user modules.
-
-Examples:
-
-```tya
-import string
-import array
-
-print string.blank("  ")
-print array.first(["tya"])
-```
+Standard-library module: `.tya` source shipped with Tya and imported with the
+same `import` syntax as user modules.
 
 Standard library modules are defined in `docs/STDLIB.md`.
 
@@ -146,10 +136,10 @@ are not built-in functions and not language syntax.
 ## Attached Library
 
 Attached library is the historical term used for the first Tya standard library
-design: `.tya` modules shipped with Tya and resolved by the module loader after
+design: `.tya` sources shipped with Tya and resolved by the import loader after
 user-local modules and `TYA_PATH`.
 
-For current and future documentation, prefer the term standard library module.
+For current and future documentation, prefer the term standard-library module.
 
 When older documents say "standard attached library" or "attached standard
 library", they mean standard library modules shipped with Tya.
@@ -167,13 +157,14 @@ Bundled libraries may include:
 - future tool support files
 
 Do not use bundled library when the intended meaning is specifically standard
-library module. Use standard library module for importable `.tya` modules in
+library module. Prefer that terminology for importable `.tya`
+sources in
 the Tya standard library.
 
 ## Native-Backed Standard Library Module
 
-A native-backed standard library module is a future standard library module
-whose public API is imported like a normal module but whose implementation is
+Native-backed standard-library module: future standard-library source whose
+public API is imported like normal importable source but whose implementation is
 partly or entirely provided by the runtime or host implementation instead of
 plain `.tya` source.
 
@@ -239,39 +230,40 @@ bundled stdlib
 
 `print` is a built-in function because it is available without `import`.
 
-`string.blank` is a standard library function inside the `string` standard
-library module because user code must import `string` before using it.
+`json.Json.parse` is a standard library method inside the `json` standard
+library module; user code must import `json` before using it.
 
 ```tya
 print "hello"
 
-import string
-print string.blank("")
+import json
+data = json.Json.parse("{\"ok\": true}")
 ```
 
 ### Standard Library Module vs Bundled Library
 
-`stdlib/string.tya` is both a standard library module and a bundled library
-file.
+`stdlib/json/Json.tya` is part of the importable `json` standard library module
+and is also bundled with Tya.
 
-The module concept matters to language users:
+The import concept matters to language users:
 
 ```tya
-import string
+import json
 ```
 
 The bundled-library concept matters to installers and packagers:
 
 ```text
-share/tya/stdlib/string.tya
+share/tya/stdlib/json/Json.tya
 ```
 
 ### Standard Library Module vs Package
 
 The standard library ships with Tya.
 
-A package, if added later, would be separately distributed or versioned. A
-package manager is out of current scope.
+A package is separately distributed or versioned and is declared in
+`tya.toml`. The current package manager supports git and path dependencies
+without a central registry.
 
 ### Built-In Class vs User Class
 
@@ -290,8 +282,8 @@ Tya currently has no standard built-in classes.
 
 Avoid the term built-in module.
 
-If a module is imported from `stdlib/`, call it a standard library module.
+If code is imported from `stdlib/`, call it a standard-library module.
 
-If a future module is available without import, specify the feature directly
+If a future importable source is available without import, specify the feature directly
 instead of calling it a built-in module, because it would need separate rules
 for naming, shadowing, and member access.

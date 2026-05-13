@@ -24,55 +24,37 @@
       </div>
     </nav>
     <article class="doc-content">
-<h1 id="tya-v0-3-standard-attached-library">Tya v0.3 Standard Attached Library</h1>
-<p>This document defines the standard attached library for Tya v0.3.</p>
-<p>The standard attached library is a set of <code>.tya</code> modules shipped with Tya. It is not a package manager and it does not download third-party code.</p>
+<h1 id="tya-standard-library">Tya Standard Library</h1>
+<p>This document defines the current standard library shipped with Tya.</p>
+<p>The standard library is a set of <code>.tya</code> modules shipped with Tya. Third-party packages are managed separately through <code>tya.toml</code>, <code>tya.lock</code>, and <code>tya install</code>.</p>
 <h2 id="importing">Importing</h2>
-<p>Standard modules use the same import syntax as user modules.</p>
-<pre><code class="language-tya">import string
-import array</code></pre>
-<p>The module search order is:</p>
+<p>Standard modules use the same import syntax as user modules. Primitive string, array, and dict helpers are not imported modules in v0.59; they are methods on the values themselves.</p>
+<pre><code class="language-tya">import math
+import json</code></pre>
+<p>Directory packages expose public class and interface names directly when they are imported without an alias. Use an alias when a namespace binding is wanted:</p>
+<pre><code class="language-tya">import net/http
+
+server = Server.new()
+
+import net/http as http
+
+server = http.Server.new()</code></pre>
+<p>The import search order is:</p>
 <ol>
 <li>The importing file's directory.</li>
+<li>Manifest-declared dependencies from <code>tya.lock</code>.</li>
 <li>Directories listed in <code>TYA_PATH</code>, searched left to right.</li>
 <li>The <code>stdlib/</code> directory shipped with Tya.</li>
 </ol>
-<h2 id="initial-scope">Initial Scope</h2>
-<p>v0.3 starts with lightweight modules that prove the attached-library mechanism.</p>
-<p>Included in the initial scope:</p>
-<ul>
-<li><code>string</code></li>
-<li><code>array</code></li>
-</ul>
-<p>Deferred from v0.3:</p>
-<ul>
-<li>JSON parser</li>
-<li>CSV parser</li>
-<li>native-backed standard modules</li>
-<li>package manager</li>
-<li>remote module install</li>
-<li>versioned dependencies</li>
-</ul>
-<h2 id="string"><code>string</code></h2>
-<pre><code class="language-tya">import string
-
-print string.blank(&quot;  &quot;)
-print string.present(&quot;tya&quot;)</code></pre>
-<p>Functions:</p>
-<pre><code class="language-tya">blank text
-present text</code></pre>
-<p><code>blank(text)</code> returns <code>true</code> when <code>trim(text) == &quot;&quot;</code>.</p>
-<p><code>present(text)</code> returns <code>not blank(text)</code>.</p>
-<h2 id="array"><code>array</code></h2>
-<pre><code class="language-tya">import array
-
-print array.empty([])
-print array.first([&quot;tya&quot;])</code></pre>
-<p>Functions:</p>
-<pre><code class="language-tya">empty items
-first items</code></pre>
-<p><code>empty(items)</code> returns <code>len(items) == 0</code>.</p>
-<p><code>first(items)</code> returns <code>items[0]</code>.</p>
+<h2 id="primitive-methods">Primitive Methods</h2>
+<p>Primitive literals expose their core operations through wrapper classes:</p>
+<pre><code>&quot; tya &quot;.trim()
+&quot;tya&quot;.present?()
+[&quot;a&quot;, &quot;b&quot;].first()
+[&quot;a&quot;, &quot;b&quot;].join(&quot;,&quot;)
+{ name: &quot;tya&quot; }.keys()
+value.class</code></pre>
+<p>See the v0.59 specification for the exhaustive primitive method surface. Use <code>x.class</code> to inspect the runtime class wrapper for primitive and object values.</p>
 <h2 id="math"><code>math</code></h2>
 <pre><code class="language-tya">import math
 
@@ -108,7 +90,7 @@ extname value</code></pre>
 <p><code>basename(value)</code> returns the final path segment.</p>
 <p><code>dirname(value)</code> returns the path without the final segment, or <code>.</code> when no directory segment exists.</p>
 <p><code>extname(value)</code> returns the final file extension including the leading <code>.</code>, or <code>&quot;&quot;</code> when the basename has no extension.</p>
-<p>The <code>path</code> module uses <code>/</code> as the path separator and does not access the file system.</p>
+<p>The <code>path</code> standard-library API uses <code>/</code> as the path separator and does not access the file system.</p>
 <h2 id="file"><code>file</code></h2>
 <pre><code class="language-tya">import file
 
@@ -170,12 +152,16 @@ println info[&quot;size&quot;]</code></pre>
 println base64.encode(&quot;hello&quot;)
 println base64.decode(&quot;aGVsbG8=&quot;)</code></pre>
 <p><code>encode(text)</code> returns the standard-alphabet Base64 representation with <code>=</code> padding. <code>decode(text)</code> decodes standard Base64 (padding optional, whitespace ignored).</p>
-<h2 id="url"><code>url</code></h2>
-<pre><code class="language-tya">import url
+<h2 id="url-v0-62"><code>url</code> (v0.62)</h2>
+<pre><code class="language-tya">import url as url
 
-println url.encode(&quot;hello world&quot;)
-parts = url.parse(&quot;https://example.com:8080/path?x=1&quot;)</code></pre>
-<p>Functions: <code>encode</code>, <code>decode</code>, <code>encode_query</code>, <code>decode_query</code>, <code>parse</code>, <code>build</code>. See the v0.23 spec for full details.</p>
+println url.Url.encode(&quot;hello world&quot;)
+parts = url.Url.parse(&quot;https://example.com:8080/path?x=1&quot;)
+full = url.Url.resolve(&quot;https://example.com/a/b&quot;, &quot;../c?x=1&quot;)</code></pre>
+<p>Class members on <code>url.Url</code>: <code>encode</code>, <code>decode</code>, <code>encode_query</code>, <code>decode_query</code>, <code>query_dict</code>, <code>parse</code>, <code>build</code>, <code>resolve</code>, and <code>normalize</code>.</p>
+<p><code>Url.parse(text)</code> handles absolute URLs, relative references, host/port, username/password, bracketed IPv6 hosts, path, query, and fragment. It raises on malformed percent escapes and invalid ports. <code>Url.build(parts)</code> rebuilds a URL from parsed parts and brackets IPv6 hosts.</p>
+<p><code>Url.resolve(base, ref)</code> resolves relative references against a base URL. <code>Url.normalize(text)</code> lowercases scheme/host and removes <code>.</code> / <code>..</code> path segments.</p>
+<p><code>Url.decode_query(text)</code> returns ordered <code>[key, value]</code> pairs so duplicate keys are preserved. <code>Url.query_dict(query)</code> collapses decoded pairs into a dictionary, storing duplicate values as arrays.</p>
 <h2 id="json"><code>json</code></h2>
 <pre><code class="language-tya">import json
 
@@ -267,7 +253,7 @@ println matrix.det(a)</code></pre>
 b2 = b&quot;\x00\x01\xff&quot;
 b3 = bytes([72, 101, 108, 108, 111])
 
-println len(b1)              # 5
+println b1.len()             # 5
 println b1[0]                # 104
 println bytes_text(b1)       # hello
 println bytes_array(b1)      # [104, 101, 108, 108, 111]
@@ -293,26 +279,32 @@ file.write_bytes(&quot;/tmp/copy&quot;, raw)</code></pre>
 <p>  returns <code>bytes</code> (was <code>string</code> in v0.24 — breaking change).</p>
 <h2 id="unittest"><code>unittest</code></h2>
 <pre><code class="language-tya">import unittest
-import string
 
-module string_blank_test
+class StringBlankTest extends TestCase
+  setup = -&gt;
+    self.subject = &quot; &quot;
+
   test_blank_for_whitespace = -&gt;
-    unittest.assert(string.blank(&quot; &quot;), &quot;spaces&quot;)
+    self.assert(self.subject.blank?(), &quot;spaces&quot;)
+
   test_blank_returns_false_for_content = -&gt;
-    unittest.assert_equal(false, string.blank(&quot;tya&quot;), &quot;content&quot;)</code></pre>
-<p>A test case is an importable module containing <code>test_*</code> functions. Tests are run by <code>tya test</code> (which synthesizes a suite) or by a user-written entry program calling <code>unittest.run([cases...])</code>.</p>
-<p>Functions:</p>
-<pre><code class="language-tya">assert cond, desc
-assert_falsy cond, desc
-assert_equal expected, actual, desc
-assert_not_equal left, right, desc
-assert_nil value, desc
-assert_raises body
-fail message
-run cases</code></pre>
+    self.assert_equal(false, &quot;tya&quot;.blank?(), &quot;content&quot;)</code></pre>
+<p>Test cases are classes that extend <code>TestCase</code>. Instance methods whose names start with <code>test_</code> are run by <code>tya test</code>; optional <code>setup</code> and <code>teardown</code> methods run around each test method.</p>
+<p>Assertion methods:</p>
+<pre><code class="language-tya">self.assert(cond, desc)
+self.assert_falsy(cond, desc)
+self.assert_equal(expected, actual, desc)
+self.assert_not_equal(left, right, desc)
+self.assert_nil(value, desc)
+self.assert_raises(body)
+self.fail(message)</code></pre>
 <p>Each assertion raises a structured <code>{kind: &quot;unittest_fail&quot;, message}</code> value on failure; the test runner catches it so a single failed test does not stop the rest of the suite.</p>
-<p><code>unittest.run(cases)</code> iterates each module's <code>test_*</code> members in dictionary order, runs <code>setup</code> / <code>teardown</code> around each test, prints a summary line and exits non-zero when at least one test failed.</p>
-<p>See the v0.22 SPEC for the full surface.</p>
+<p><code>TestSuite</code> is an ordered collection of <code>TestCase</code> classes, instances, or nested suites. <code>TestRunner.default().run(suite)</code> returns a result dictionary with <code>tests</code>, <code>passes</code>, <code>failures</code>, and <code>errors</code>; <code>run_and_exit</code> exits non-zero when any failure or error occurred.</p>
+<pre><code class="language-tya">import unittest
+
+suite = TestSuite()
+suite.add(StringBlankTest)
+TestRunner.default().run_and_exit(suite)</code></pre>
 <h2 id="runtime-v0-41"><code>runtime</code> (v0.41)</h2>
 <p>GC introspection and explicit collection.</p>
 <pre><code class="language-tya">import runtime
@@ -322,56 +314,151 @@ runtime.Runtime.gc()</code></pre>
 <p>Class members on <code>runtime.Runtime</code>: <code>gc_stats</code>, <code>gc</code>.</p>
 <p><code>runtime.Runtime.gc_stats()</code> returns a dict snapshot of the GC counters with keys <code>alloc_count</code>, <code>alloc_bytes</code>, <code>freed_count</code>, <code>freed_bytes</code>, <code>live_count</code>, <code>live_bytes</code>, <code>collect_count</code>, <code>threshold</code>.</p>
 <p><code>runtime.Runtime.gc()</code> runs a full mark-and-sweep collection. The collector treats module-level globals as roots (plus the active raise-frame chain). Locals inside user functions are not roots in v0.41, so <code>runtime.Runtime.gc()</code> is safe to call only at points where every live local TyaValue is also reachable from a registered root — in practice, at the top level of the program. See the v0.41 SPEC for the full safety contract and known limitations.</p>
-<h2 id="channel-v0-42"><code>channel</code> (v0.42)</h2>
+<h2 id="channel-v0-60"><code>channel</code> (v0.60)</h2>
 <p>Bounded, FIFO buffered channels for inter-task communication.</p>
 <pre><code class="language-tya">import channel
 
-c = channel.Channel.new(10)
-spawn (() -&gt; channel.Channel.send(c, &quot;hello&quot;))
-print(channel.Channel.receive(c))
-channel.Channel.close(c)</code></pre>
-<p>Class members on <code>channel.Channel</code>: <code>new</code>, <code>send</code>, <code>receive</code>, <code>receive_timeout</code>, <code>close</code>, <code>closed?</code>, <code>select</code>.</p>
-<p><code>channel.Channel.send</code> blocks while the buffer is full and raises if the channel has been closed. <code>channel.Channel.receive</code> blocks while the buffer is empty; once closed, it drains the buffer and then returns <code>nil</code> for every later call. <code>channel.Channel.receive_timeout</code> returns <code>nil</code> when the deadline elapses without a value. v0.42 treats <code>capacity = 0</code> as <code>1</code>; true rendezvous channels arrive in a later minor.</p>
-<h2 id="sync-v0-42"><code>sync</code> (v0.42)</h2>
+c = channel.Channel(10)
+spawn (() -&gt; c.send(&quot;hello&quot;))
+print(c.receive())
+c.close()</code></pre>
+<p>Constructor: <code>channel.Channel(capacity)</code>.</p>
+<p>Instance methods: <code>send</code>, <code>receive</code>, <code>receive_timeout</code>, <code>close</code>, <code>closed?</code>.</p>
+<p><code>c.send(value)</code> blocks while the buffer is full and raises if the channel has been closed. <code>c.receive()</code> blocks while the buffer is empty; once closed, it drains the buffer and then returns <code>nil</code> for every later call. <code>c.receive_timeout(seconds)</code> returns <code>nil</code> when the deadline elapses without a value. v0.60 still treats <code>capacity = 0</code> as <code>1</code>; true rendezvous channels arrive in a later minor.</p>
+<h2 id="sync-v0-60"><code>sync</code> (v0.60)</h2>
 <p>Mutex, atomic integer, and wait group primitives.</p>
 <pre><code class="language-tya">import sync
 
-m = sync.Sync.mutex()
-sync.Sync.lock(m)
-sync.Sync.unlock(m)
+m = sync.Mutex()
+m.lock()
+m.unlock()
 
-a = sync.Sync.atomic_integer(0)
-sync.Sync.atomic_add(a, 1)
-print(sync.Sync.atomic_load(a))
+a = sync.AtomicInteger(0)
+a.add(1)
+print(a.load())
 
-wg = sync.Sync.wait_group()
-sync.Sync.wait_group_add(wg, 1)
-spawn (() -&gt; sync.Sync.wait_group_done(wg))
-sync.Sync.wait_group_wait(wg)</code></pre>
-<p>Class members on <code>sync.Sync</code>: <code>mutex</code>, <code>lock</code>, <code>unlock</code>, <code>with_lock</code>, <code>atomic_integer</code>, <code>atomic_add</code>, <code>atomic_load</code>, <code>atomic_store</code>, <code>atomic_cas</code>, <code>wait_group</code>, <code>wait_group_add</code>, <code>wait_group_done</code>, <code>wait_group_wait</code>.</p>
-<p><code>sync.Sync.with_lock(m, fn)</code> runs <code>fn()</code> with the mutex held and releases the mutex even when <code>fn</code> raises. Tya closures cannot write back to outer variables, so to share mutable state across tasks pass a dict or array argument and mutate it through indexed assignment.</p>
-<h2 id="task-v0-43"><code>task</code> (v0.43)</h2>
+wg = sync.WaitGroup()
+wg.add(1)
+spawn (() -&gt; wg.done())
+wg.wait()</code></pre>
+<p>Classes: <code>sync.Mutex</code>, <code>sync.AtomicInteger</code>, <code>sync.WaitGroup</code>.</p>
+<p><code>Mutex</code> methods: <code>lock</code>, <code>unlock</code>. <code>AtomicInteger</code> methods: <code>add</code>, <code>load</code>, <code>store</code>, <code>compare_and_swap</code>. <code>WaitGroup</code> methods: <code>add</code>, <code>done</code>, <code>wait</code>.</p>
+<h2 id="task-v0-60"><code>task</code> (v0.60)</h2>
 <p>Cooperative cancellation for <code>spawn</code>-ed tasks.</p>
 <pre><code class="language-tya">import task
 
 worker = () -&gt;
   me = task.Task.current()
-  while not task.Task.cancelled?(me)
+  while not me.cancelled?()
     do_one_step()
 
 t = spawn worker()
-task.Task.cancel(t)
+t.cancel()
 await t</code></pre>
-<p>Class members on <code>task.Task</code>: <code>cancel</code>, <code>cancelled?</code>, <code>current</code>.</p>
-<p><code>Task.cancel</code> sets the cancel flag on a task. <code>Task.cancelled?</code> reads it. Cancellation is cooperative: setting the flag does not stop a worker, only signals it. Long-running workers must poll <code>Task.cancelled?(Task.current())</code> at safe points and return early.</p>
-<p><code>Task.current()</code> returns the currently-running task value, or <code>nil</code> on the main thread. Workers use <code>task.Task.cancelled?(task.Task.current())</code> to check whether they have been asked to stop.</p>
+<p>Class member on <code>task.Task</code>: <code>current</code>.</p>
+<p>Task instance methods: <code>cancel</code>, <code>cancelled?</code>.</p>
+<p><code>t.cancel()</code> sets the cancel flag on a task. <code>t.cancelled?()</code> reads it. Cancellation is cooperative: setting the flag does not stop a worker, only signals it. Long-running workers must poll <code>task.Task.current().cancelled?()</code> at safe points and return early.</p>
+<p><code>task.Task.current()</code> returns the currently-running task value, or <code>nil</code> on the main thread.</p>
 <p>A <code>scope</code> block also sets the cancel flag on every remaining sibling once it observes the first task raise, and a synchronous raise from the body sets the cancel flag on every spawned sibling before the raise propagates.</p>
-<h2 id="updated-for-v0-43-channel-select">Updated for v0.43: <code>channel.select</code></h2>
-<pre><code class="language-tya">result = channel.Channel.select([
-  [c1, &quot;receive&quot;],
-  [c2, &quot;send&quot;, value],
-])</code></pre>
-<p>Returns a dict <code>{ index, kind, value }</code>. v0.43 polls each operation in a tight loop and sleeps briefly when nothing is ready; future minors will add a proper waiter-list mechanism.</p>
+<h2 id="select-v0-60"><code>select</code> (v0.60)</h2>
+<pre><code class="language-tya">select
+  value = receive c1
+    print(value)
+  send c2, value
+    print(&quot;sent&quot;)
+  timeout 1.0
+    raise &quot;timeout&quot;
+  default
+    print(&quot;idle&quot;)</code></pre>
+<p><code>select</code> waits for the first ready channel operation, timeout, or default arm and runs that arm's body. Receive bindings are scoped to their arm body.</p>
+<h2 id="markdown-v0-62"><code>markdown</code> (v0.62)</h2>
+<p>Markdown parsing and HTML rendering.</p>
+<pre><code class="language-tya">import markdown as markdown
+
+ast = markdown.Markdown.parse(&quot;# Hello&quot;)
+html = markdown.Markdown.render(markdown.Markdown.to_html_ast(ast))</code></pre>
+<p>Class members on <code>markdown.Markdown</code>: <code>parse</code>, <code>to_html_ast</code>, <code>render</code>, <code>to_html</code>.</p>
+<p><code>Markdown.parse(text)</code> returns a document dictionary with stable block <code>kind</code> fields. <code>Markdown.to_html_ast(ast)</code> prepares that document for rendering. <code>Markdown.render(ast)</code> renders a Markdown document or HTML-oriented document. <code>Markdown.to_html(text)</code> is equivalent to <code>Markdown.render(Markdown.to_html_ast(Markdown.parse(text)))</code>.</p>
+<p>Supported block syntax includes paragraphs, ATX and setext headings, thematic breaks, block quotes, ordered and unordered lists, one-level nested unordered lists, task lists, pipe tables, fenced code blocks with info strings, and a selected raw HTML block subset. Inline syntax includes emphasis, strong, strikethrough, code spans, links, reference links, images, and autolinks.</p>
+<p>HTML is escaped by default. Raw HTML blocks pass through only when rendering with <code>{ raw_html: true }</code>.</p>
+<h2 id="compress-v0-62"><code>compress</code> (v0.62)</h2>
+<p>Gzip and zlib compression helpers.</p>
+<pre><code class="language-tya">import compress as compress
+
+packed = compress.Compress.gzip(&quot;hello&quot;)
+text = bytes_text(compress.Compress.gunzip(packed))</code></pre>
+<p>Class members on <code>compress.Compress</code>: <code>gzip</code>, <code>gunzip</code>, <code>zlib</code>, <code>unzlib</code>, <code>gzip_file</code>, <code>gunzip_file</code>.</p>
+<p><code>Compress.gzip(value)</code> and <code>Compress.zlib(value)</code> accept strings or bytes and return compressed bytes. <code>Compress.gunzip(bytes)</code> and <code>Compress.unzlib(bytes)</code> return decompressed bytes; callers convert to text explicitly with <code>bytes_text</code> when needed. Invalid compressed data raises a clear error.</p>
+<p><code>Compress.gzip_file(src, dst)</code> and <code>Compress.gunzip_file(src, dst)</code> read and write files through the <code>io</code> stream package.</p>
+<h2 id="template-v0-62"><code>template</code> (v0.62)</h2>
+<p>Generic text template rendering.</p>
+<pre><code class="language-tya">import template as template
+
+html = template.Template.render_html(
+  &quot;Hello, {{ name }}&quot;,
+  { name: &quot;Tya&quot; }
+)</code></pre>
+<p>Class members on <code>template.Template</code>: <code>render</code>, <code>render_file</code>, <code>render_html</code>.</p>
+<p><code>Template.render(source, data)</code> renders a template string using values from <code>data</code>. <code>Template.render(source, data, options)</code> accepts options. <code>Template.render_file(path, data)</code> reads a template file and renders it with the same semantics.</p>
+<p>Template tags use <code>{{ name }}</code> for escaped or plain insertion depending on <code>options[&quot;escape&quot;]</code>. Dotted and indexed paths such as <code>{{ user.name }}</code> and <code>{{ items[0].name }}</code> are supported. Missing values render as an empty string unless <code>{ strict: true }</code> is passed.</p>
+<p>Blocks use <code>{{ if path }}</code> / <code>{{ else }}</code> / <code>{{ end }}</code> and <code>{{ for item in items }}</code> / <code>{{ end }}</code>. Explicit partials use <code>{{ partial &quot;name&quot; context }}</code> with <code>partials</code> supplied in options.</p>
+<p><code>Template.render_html(source, data)</code> is equivalent to <code>Template.render(source, data, { escape: &quot;html&quot; })</code> and escapes <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, and <code>'</code>. Triple-brace tags such as <code>{{{ trusted_html }}}</code> insert trusted content without escaping.</p>
+<h2 id="log-v0-62"><code>log</code> (v0.62)</h2>
+<p>Structured application logging.</p>
+<pre><code class="language-tya">import log as log
+
+logger = log.Logger.default()
+logger.info(&quot;started&quot;, { port: 8080 })
+logger.with({ request: &quot;42&quot; }).warn(&quot;slow&quot;, { ms: 120 })</code></pre>
+<p>Class members on <code>log.Logger</code>: <code>default</code>, <code>new</code>.</p>
+<p>Instance methods: <code>debug</code>, <code>info</code>, <code>warn</code>, <code>error</code>, <code>with</code>, <code>level</code>.</p>
+<p><code>Logger.default()</code> writes text logs to stderr at level <code>info</code>. The supported levels are <code>debug</code>, <code>info</code>, <code>warn</code>, and <code>error</code>; messages below the current level are suppressed. <code>logger.level(&quot;debug&quot;)</code> changes the minimum level and returns the logger.</p>
+<p><code>Logger.new(options)</code> accepts <code>level</code>, <code>format</code>, <code>file</code>, and <code>fields</code>. <code>format: &quot;json&quot;</code> emits deterministic JSON records. <code>file: &quot;path&quot;</code> appends log records to a file instead of stderr. <code>fields</code> are included on every record, and <code>logger.with(fields)</code> returns a child logger with merged base fields.</p>
+<p>Text logs use a deterministic field order:</p>
+<pre><code class="language-text">2026-05-13T12:00:00Z info started app=api port=8080</code></pre>
+<h2 id="io-v0-62"><code>io</code> (v0.62)</h2>
+<p>Line-oriented and chunk-oriented streams.</p>
+<pre><code class="language-tya">import io as io
+
+reader = io.Io.open(&quot;input.txt&quot;, &quot;r&quot;)
+writer = io.Io.open(&quot;output.txt&quot;, &quot;w&quot;)
+count = io.Io.copy(reader, writer)
+reader.close()
+writer.close()</code></pre>
+<p>Class members on <code>io.Io</code>: <code>stdin</code>, <code>stdout</code>, <code>stderr</code>, <code>open</code>, <code>copy</code>.</p>
+<p>Reader methods: <code>read</code>, <code>read_line</code>, <code>each_line</code>, <code>eof?</code>, <code>close</code>. Writer methods: <code>write</code>, <code>write_line</code>, <code>flush</code>, <code>close</code>.</p>
+<p><code>Io.stdin()</code>, <code>Io.stdout()</code>, and <code>Io.stderr()</code> wrap the process streams. Closing those borrowed streams is a no-op for the host process. <code>Io.open(path, mode)</code> accepts text modes such as <code>&quot;r&quot;</code> and <code>&quot;w&quot;</code> and binary modes <code>&quot;rb&quot;</code> and <code>&quot;wb&quot;</code>.</p>
+<p><code>reader.read(size)</code> returns a string in text mode and bytes in binary mode. It returns an empty value at EOF for chunk reads; <code>reader.read_line()</code> returns <code>nil</code> after the last line. <code>reader.each_line(fn)</code> calls <code>fn(line)</code> for each line, preserving trailing newlines.</p>
+<p><code>writer.write(value)</code> writes strings, bytes, or stringified values and returns the byte count. <code>writer.write_line(value)</code> appends a newline. <code>Io.copy(reader, writer)</code> copies chunks until EOF, flushes the writer, and returns the copied byte count.</p>
+<h2 id="net-ip-v0-62"><code>net/ip</code> (v0.62)</h2>
+<p>IP address and CIDR parsing.</p>
+<pre><code class="language-tya">import net/ip as ip
+
+addr = ip.Address.parse(&quot;2001:db8::1&quot;)
+print(ip.Address.to_s(addr))
+
+network = ip.Network.parse(&quot;2001:db8::/32&quot;)
+print(ip.Network.contains?(network, addr))</code></pre>
+<p>Class members on <code>net/ip.Address</code>: <code>parse</code>, <code>valid?</code>, <code>version</code>, <code>to_s</code>, <code>loopback?</code>, <code>private?</code>, and <code>unspecified?</code>.</p>
+<p>Class members on <code>net/ip.Network</code>: <code>parse</code> and <code>contains?</code>.</p>
+<p><code>Address.parse(text)</code> accepts IPv4 dotted decimal, full or compressed IPv6, and IPv4-mapped IPv6 addresses. It returns a dictionary representation with stable <code>version</code> and numeric parts. <code>Address.to_s(addr)</code> formats the normalized address. Invalid input raises; <code>Address.valid?(text)</code> returns <code>false</code>.</p>
+<p><code>Network.parse(cidr)</code> accepts IPv4 and IPv6 CIDR prefixes. <code>Network.contains?</code> checks whether an address is inside a parsed network.</p>
+<h2 id="net-socket-v0-62"><code>net/socket</code> (v0.62)</h2>
+<p>TCP client and server sockets.</p>
+<pre><code class="language-tya">import net/socket as socket
+
+server = socket.Server.listen(&quot;127.0.0.1&quot;, 9000, {})
+client = socket.Socket.connect(&quot;127.0.0.1&quot;, 9000, {})
+client.write_line(&quot;hello&quot;)
+client.close()
+server.close()</code></pre>
+<p>Class members on <code>net/socket.Socket</code>: <code>connect</code>.</p>
+<p>Class members on <code>net/socket.Server</code>: <code>listen</code>.</p>
+<p>Socket methods: <code>read</code>, <code>read_line</code>, <code>write</code>, <code>write_line</code>, <code>close</code>, <code>closed?</code>, <code>local_address</code>, and <code>remote_address</code>.</p>
+<p>Server methods: <code>accept</code>, <code>close</code>, and <code>local_address</code>.</p>
+<p><code>Socket.connect(host, port, options)</code> connects to a TCP server. <code>Server.listen</code> binds a TCP listener; pass <code>0</code> for the port to request an ephemeral port and read it back from <code>server.local_address()[&quot;port&quot;]</code>.</p>
+<p><code>read(size)</code> returns a string in text mode and bytes in binary mode. <code>read_line()</code> returns one line including the newline, or <code>nil</code> after EOF. <code>write(value)</code> accepts strings, bytes, or stringified values and returns the byte count. <code>write_line(value)</code> appends a newline.</p>
+<p>Options are dictionaries. <code>{ mode: &quot;binary&quot; }</code> makes reads return bytes. <code>{ timeout: seconds }</code> sets blocking read, write, and accept timeouts. DNS, connection-refused, timeout, and closed-socket failures raise.</p>
     </article>
   </main>
 </body>

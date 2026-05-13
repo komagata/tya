@@ -24,8 +24,8 @@
       </div>
     </nav>
     <article class="doc-content">
-<h1 id="tya-v0-5-api">Tya v0.5 API</h1>
-<p>This document defines the standard built-in functions for Tya v0.5.</p>
+<h1 id="tya-api">Tya API</h1>
+<p>This document defines the current standard built-in functions. Primitive string, array, dict, number, boolean, and nil operations live on their wrapper classes; use method syntax such as <code>&quot;hi&quot;.upper()</code>, <code>[1, 2].len()</code>, and <code>value.to_s()</code>.</p>
 <h2 id="core">Core</h2>
 <pre><code class="language-tya">print value
 assert value
@@ -36,51 +36,33 @@ exit 1</code></pre>
 <pre><code class="language-tya">err = error &quot;file not found&quot;
 print err[&quot;message&quot;]</code></pre>
 <p><code>error</code> returns an error value with a <code>message</code>.</p>
-<h2 id="conversion">Conversion</h2>
-<pre><code class="language-tya">to_string value
-to_int value
-to_float value
-to_number value</code></pre>
-<h2 id="strings">Strings</h2>
-<pre><code class="language-tya">split text, separator
-join items, separator
-trim text
-replace text, old, new
-contains text, search
-starts_with text, prefix
-ends_with text, suffix</code></pre>
-<h2 id="arrays-and-collections">Arrays And Collections</h2>
-<pre><code class="language-tya">len value
-push array, value
-pop array
-map array, function
-filter array, function
-find array, function
-any array, function
-all array, function
-reduce array, initial, function</code></pre>
-<pre><code class="language-tya">items = [1, 2, 3]
-print map(items, item -&gt; item * 2)
-print filter(items, item -&gt; item &gt; 1)
-print find(items, item -&gt; item == 2)
-print any(items, item -&gt; item == 3)
-print all(items, item -&gt; item &gt; 0)
+<h2 id="primitive-methods">Primitive Methods</h2>
+<pre><code class="language-tya">value.to_s()
+value.class
+&quot; tya &quot;.trim()
+&quot;tya&quot;.upper()
+&quot;a,b&quot;.split(&quot;,&quot;)
+[&quot;a&quot;, &quot;b&quot;].join(&quot;,&quot;)
+
+items = [1, 2, 3]
+print items.map(item -&gt; item * 2)
+print items.filter(item -&gt; item &gt; 1)
+print items.find(item -&gt; item == 2)
+print items.any(item -&gt; item == 3)
+print items.all(item -&gt; item &gt; 0)
 sum = total, item -&gt; total + item
-print reduce(items, 0, sum)</code></pre>
-<p><code>len</code> works with strings, arrays, and dictionaries.</p>
+print items.reduce(0, sum)</code></pre>
+<p>See the v0.59 specification for the exhaustive primitive method tables. Use <code>x.class</code> to inspect the runtime class wrapper for primitive and object values.</p>
 <h2 id="equality">Equality</h2>
 <pre><code class="language-tya">equal left, right</code></pre>
 <p><code>equal</code> performs deep equality for arrays and dictionaries. The <code>==</code> operator keeps the v0.1 runtime equality behavior.</p>
 <h2 id="dictionaries">Dictionaries</h2>
-<pre><code class="language-tya">keys dictionary
-values dictionary
-has dictionary, key
-delete dictionary, key</code></pre>
+<pre><code class="language-tya">delete dictionary, key</code></pre>
 <pre><code class="language-tya">user = { name: &quot;komagata&quot;, age: 20 }
 
-print keys user
-print values user
-print has user, &quot;name&quot;
+print user.keys()
+print user.values()
+print user.has(&quot;name&quot;)
 delete user, &quot;age&quot;</code></pre>
 <h2 id="files">Files</h2>
 <pre><code class="language-tya">read_file path
@@ -92,13 +74,6 @@ file_exists path</code></pre>
 <h2 id="process">Process</h2>
 <pre><code class="language-tya">args()
 env name</code></pre>
-<h2 id="not-in-v0-3">Not In v0.3</h2>
-<p>The following functions are not standard builtins in v0.3.</p>
-<pre><code class="language-text">each
-byte_len
-char_len
-div
-set</code></pre>
 <h2 id="naming">Naming</h2>
 <p>Standard built-in functions use <code>snake_case</code>. CamelCase builtin spellings are not part of the language spec.</p>
     </article>

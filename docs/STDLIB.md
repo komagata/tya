@@ -1,83 +1,58 @@
-# Tya v0.3 Standard Attached Library
+# Tya Standard Library
 
-This document defines the standard attached library for Tya v0.3.
+This document defines the current standard library shipped with Tya.
 
-The standard attached library is a set of `.tya` modules shipped with Tya. It is
-not a package manager and it does not download third-party code.
+The standard library is a set of `.tya` modules shipped with Tya. Third-party
+packages are managed separately through `tya.toml`, `tya.lock`, and
+`tya install`.
 
 ## Importing
 
-Standard modules use the same import syntax as user modules.
+Standard modules use the same import syntax as user modules. Primitive string,
+array, and dict helpers are not imported modules in v0.59; they are methods on
+the values themselves.
 
 ```tya
-import string
-import array
+import math
+import json
 ```
 
-The module search order is:
+Directory packages expose public class and interface names directly when they
+are imported without an alias. Use an alias when a namespace binding is wanted:
+
+```tya
+import net/http
+
+server = Server.new()
+
+import net/http as http
+
+server = http.Server.new()
+```
+
+The import search order is:
 
 1. The importing file's directory.
+1. Manifest-declared dependencies from `tya.lock`.
 1. Directories listed in `TYA_PATH`, searched left to right.
 1. The `stdlib/` directory shipped with Tya.
 
-## Initial Scope
+## Primitive Methods
 
-v0.3 starts with lightweight modules that prove the attached-library
-mechanism.
+Primitive literals expose their core operations through wrapper classes:
 
-Included in the initial scope:
-
-- `string`
-- `array`
-
-Deferred from v0.3:
-
-- JSON parser
-- CSV parser
-- native-backed standard modules
-- package manager
-- remote module install
-- versioned dependencies
-
-## `string`
-
-```tya
-import string
-
-print string.blank("  ")
-print string.present("tya")
+```
+" tya ".trim()
+"tya".present?()
+["a", "b"].first()
+["a", "b"].join(",")
+{ name: "tya" }.keys()
+value.class
 ```
 
-Functions:
-
-```tya
-blank text
-present text
-```
-
-`blank(text)` returns `true` when `trim(text) == ""`.
-
-`present(text)` returns `not blank(text)`.
-
-## `array`
-
-```tya
-import array
-
-print array.empty([])
-print array.first(["tya"])
-```
-
-Functions:
-
-```tya
-empty items
-first items
-```
-
-`empty(items)` returns `len(items) == 0`.
-
-`first(items)` returns `items[0]`.
+See the v0.59 specification for the exhaustive primitive method surface.
+Use `x.class` to inspect the runtime class wrapper for primitive and object
+values.
 
 ## `math`
 
@@ -143,7 +118,7 @@ directory segment exists.
 `extname(value)` returns the final file extension including the leading `.`,
 or `""` when the basename has no extension.
 
-The `path` module uses `/` as the path separator and does not access the file
+The `path` standard-library API uses `/` as the path separator and does not access the file
 system.
 
 ## `file`
@@ -464,7 +439,7 @@ b1 = b"hello"
 b2 = b"\x00\x01\xff"
 b3 = bytes([72, 101, 108, 108, 111])
 
-println len(b1)              # 5
+println b1.len()             # 5
 println b1[0]                # 104
 println bytes_text(b1)       # hello
 println bytes_array(b1)      # [104, 101, 108, 108, 111]
@@ -572,63 +547,60 @@ where every live local TyaValue is also reachable from a registered
 root — in practice, at the top level of the program. See the v0.41
 SPEC for the full safety contract and known limitations.
 
-## `channel` (v0.42)
+## `channel` (v0.60)
 
 Bounded, FIFO buffered channels for inter-task communication.
 
 ```tya
 import channel
 
-c = channel.Channel.new(10)
-spawn (() -> channel.Channel.send(c, "hello"))
-print(channel.Channel.receive(c))
-channel.Channel.close(c)
+c = channel.Channel(10)
+spawn (() -> c.send("hello"))
+print(c.receive())
+c.close()
 ```
 
-Class members on `channel.Channel`: `new`, `send`, `receive`,
-`receive_timeout`, `close`, `closed?`, `select`.
+Constructor: `channel.Channel(capacity)`.
 
-`channel.Channel.send` blocks while the buffer is full and raises
-if the channel has been closed. `channel.Channel.receive` blocks
-while the buffer is empty; once closed, it drains the buffer and
-then returns `nil` for every later call.
-`channel.Channel.receive_timeout` returns `nil` when the deadline
-elapses without a value. v0.42 treats `capacity = 0` as `1`; true
+Instance methods: `send`, `receive`, `receive_timeout`, `close`,
+`closed?`.
+
+`c.send(value)` blocks while the buffer is full and raises if the
+channel has been closed. `c.receive()` blocks while the buffer is
+empty; once closed, it drains the buffer and then returns `nil` for
+every later call. `c.receive_timeout(seconds)` returns `nil` when
+the deadline elapses without a value. v0.60 still treats
+`capacity = 0` as `1`; true
 rendezvous channels arrive in a later minor.
 
-## `sync` (v0.42)
+## `sync` (v0.60)
 
 Mutex, atomic integer, and wait group primitives.
 
 ```tya
 import sync
 
-m = sync.Sync.mutex()
-sync.Sync.lock(m)
-sync.Sync.unlock(m)
+m = sync.Mutex()
+m.lock()
+m.unlock()
 
-a = sync.Sync.atomic_integer(0)
-sync.Sync.atomic_add(a, 1)
-print(sync.Sync.atomic_load(a))
+a = sync.AtomicInteger(0)
+a.add(1)
+print(a.load())
 
-wg = sync.Sync.wait_group()
-sync.Sync.wait_group_add(wg, 1)
-spawn (() -> sync.Sync.wait_group_done(wg))
-sync.Sync.wait_group_wait(wg)
+wg = sync.WaitGroup()
+wg.add(1)
+spawn (() -> wg.done())
+wg.wait()
 ```
 
-Class members on `sync.Sync`: `mutex`, `lock`, `unlock`,
-`with_lock`, `atomic_integer`, `atomic_add`, `atomic_load`,
-`atomic_store`, `atomic_cas`, `wait_group`, `wait_group_add`,
-`wait_group_done`, `wait_group_wait`.
+Classes: `sync.Mutex`, `sync.AtomicInteger`, `sync.WaitGroup`.
 
-`sync.Sync.with_lock(m, fn)` runs `fn()` with the mutex held and
-releases the mutex even when `fn` raises. Tya closures cannot write
-back to outer variables, so to share mutable state across tasks
-pass a dict or array argument and mutate it through indexed
-assignment.
+`Mutex` methods: `lock`, `unlock`.
+`AtomicInteger` methods: `add`, `load`, `store`, `compare_and_swap`.
+`WaitGroup` methods: `add`, `done`, `wait`.
 
-## `task` (v0.43)
+## `task` (v0.60)
 
 Cooperative cancellation for `spawn`-ed tasks.
 
@@ -637,42 +609,48 @@ import task
 
 worker = () ->
   me = task.Task.current()
-  while not task.Task.cancelled?(me)
+  while not me.cancelled?()
     do_one_step()
 
 t = spawn worker()
-task.Task.cancel(t)
+t.cancel()
 await t
 ```
 
-Class members on `task.Task`: `cancel`, `cancelled?`, `current`.
+Class member on `task.Task`: `current`.
 
-`Task.cancel` sets the cancel flag on a task. `Task.cancelled?`
-reads it. Cancellation is cooperative: setting the flag does not
-stop a worker, only signals it. Long-running workers must poll
-`Task.cancelled?(Task.current())` at safe points and return early.
+Task instance methods: `cancel`, `cancelled?`.
 
-`Task.current()` returns the currently-running task value, or `nil`
-on the main thread. Workers use `task.Task.cancelled?(task.Task.current())`
-to check whether they have been asked to stop.
+`t.cancel()` sets the cancel flag on a task. `t.cancelled?()` reads
+it. Cancellation is cooperative: setting the flag does not stop a
+worker, only signals it. Long-running workers must poll
+`task.Task.current().cancelled?()` at safe points and return early.
+
+`task.Task.current()` returns the currently-running task value, or
+`nil` on the main thread.
 
 A `scope` block also sets the cancel flag on every remaining
 sibling once it observes the first task raise, and a synchronous
 raise from the body sets the cancel flag on every spawned sibling
 before the raise propagates.
 
-## Updated for v0.43: `channel.select`
+## `select` (v0.60)
 
 ```tya
-result = channel.Channel.select([
-  [c1, "receive"],
-  [c2, "send", value],
-])
+select
+  value = receive c1
+    print(value)
+  send c2, value
+    print("sent")
+  timeout 1.0
+    raise "timeout"
+  default
+    print("idle")
 ```
 
-Returns a dict `{ index, kind, value }`. v0.43 polls each
-operation in a tight loop and sleeps briefly when nothing is
-ready; future minors will add a proper waiter-list mechanism.
+`select` waits for the first ready channel operation, timeout, or
+default arm and runs that arm's body. Receive bindings are scoped to
+their arm body.
 
 ## `markdown` (v0.62)
 

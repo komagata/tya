@@ -89,7 +89,7 @@ one blank line. Attached to the file AST node as the
 # This file is the dog entry point.
 # It coordinates dog-related top-level items.
 
-import string
+import json
 import file
 
 # ...
@@ -100,7 +100,7 @@ distinguishes a file header from a leading comment on the first node:
 
 ```tya
 # This is a leading comment on the import below.
-import string
+import json
 ```
 
 vs
@@ -108,7 +108,7 @@ vs
 ```tya
 # This is a file header comment.
 
-import string
+import json
 ```
 
 If the file has only a header (no body), the header is still well-formed:
@@ -143,15 +143,14 @@ do not choose. The rules:
 Example:
 
 ```tya
-module dog
-  bark = ->
-    # initial voice
-    voice = "bow!"
+bark = ->
+  # initial voice
+  voice = "bow!"
 
-    # add second voice
-    # it is cute!
-    voice = voice + " wow!"
-    voice = voice + " wan!"
+  # add second voice
+  # it is cute!
+  voice = voice + " wow!"
+  voice = voice + " wan!"
 ```
 
 - `# initial voice` is the first statement in the function body → no
@@ -512,7 +511,7 @@ error.
 
 ### 8.4 Import ordering and grouping
 
-- Imports are sorted alphabetically by module path.
+- Imports are sorted alphabetically by import path.
 - Stdlib imports and user imports form **separate groups**, separated by
   exactly one blank line. Stdlib imports come first.
 - Within a group, imports are in alphabetical order with no blank lines.

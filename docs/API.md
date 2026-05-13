@@ -1,6 +1,9 @@
-# Tya v0.5 API
+# Tya API
 
-This document defines the standard built-in functions for Tya v0.5.
+This document defines the current standard built-in functions. Primitive
+string, array, dict, number, boolean, and nil operations live on their wrapper
+classes; use method syntax such as `"hi".upper()`, `[1, 2].len()`, and
+`value.to_s()`.
 
 ## Core
 
@@ -24,53 +27,29 @@ print err["message"]
 
 `error` returns an error value with a `message`.
 
-## Conversion
+## Primitive Methods
 
 ```tya
-to_string value
-to_int value
-to_float value
-to_number value
-```
+value.to_s()
+value.class
+" tya ".trim()
+"tya".upper()
+"a,b".split(",")
+["a", "b"].join(",")
 
-## Strings
-
-```tya
-split text, separator
-join items, separator
-trim text
-replace text, old, new
-contains text, search
-starts_with text, prefix
-ends_with text, suffix
-```
-
-## Arrays And Collections
-
-```tya
-len value
-push array, value
-pop array
-map array, function
-filter array, function
-find array, function
-any array, function
-all array, function
-reduce array, initial, function
-```
-
-```tya
 items = [1, 2, 3]
-print map(items, item -> item * 2)
-print filter(items, item -> item > 1)
-print find(items, item -> item == 2)
-print any(items, item -> item == 3)
-print all(items, item -> item > 0)
+print items.map(item -> item * 2)
+print items.filter(item -> item > 1)
+print items.find(item -> item == 2)
+print items.any(item -> item == 3)
+print items.all(item -> item > 0)
 sum = total, item -> total + item
-print reduce(items, 0, sum)
+print items.reduce(0, sum)
 ```
 
-`len` works with strings, arrays, and dictionaries.
+See the v0.59 specification for the exhaustive primitive method tables.
+Use `x.class` to inspect the runtime class wrapper for primitive and object
+values.
 
 ## Equality
 
@@ -84,18 +63,15 @@ keeps the v0.1 runtime equality behavior.
 ## Dictionaries
 
 ```tya
-keys dictionary
-values dictionary
-has dictionary, key
 delete dictionary, key
 ```
 
 ```tya
 user = { name: "komagata", age: 20 }
 
-print keys user
-print values user
-print has user, "name"
+print user.keys()
+print user.values()
+print user.has("name")
 delete user, "age"
 ```
 
@@ -121,18 +97,6 @@ returns `nil` at EOF.
 ```tya
 args()
 env name
-```
-
-## Not In v0.3
-
-The following functions are not standard builtins in v0.3.
-
-```text
-each
-byte_len
-char_len
-div
-set
 ```
 
 ## Naming

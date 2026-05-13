@@ -45,7 +45,7 @@ missing = nil</code></pre>
 <p>Strings can contain interpolated expressions.</p>
 <pre><code class="language-tya">print &quot;Hello, {name}&quot;</code></pre>
 <h2 id="names">Names</h2>
-<p>Use <code>snake_case</code> for variables, functions, modules, dictionary keys, and module members. Use <code>SCREAMING_SNAKE_CASE</code> for constants.</p>
+<p>Use <code>snake_case</code> for variables, functions, import paths, dictionary keys, and public imported members. Use <code>SCREAMING_SNAKE_CASE</code> for constants.</p>
 <pre><code class="language-tya">user_name = &quot;komagata&quot;
 MAX_COUNT = 10</code></pre>
 <p>See <code>docs/NAMING.md</code> for the full naming rules.</p>
@@ -112,10 +112,9 @@ if err
 <pre><code class="language-tya">import greeting
 
 print greeting.hello(&quot;komagata&quot;)</code></pre>
-<p>Each module file defines exactly one top-level <code>module</code>. The module name must match the file name.</p>
+<p>Imported files export public top-level bindings through the import namespace.</p>
 <pre><code class="language-tya"># greeting.tya
-module greeting
-  hello = name -&gt; &quot;Hello, {name}&quot;</code></pre>
+hello = name -&gt; &quot;Hello, {name}&quot;</code></pre>
 <h2 id="standard-library">Standard Library</h2>
 <p>See <code>docs/API.md</code> for v0.1 built-in functions such as <code>print</code>, <code>len</code>, <code>read_file</code>, and <code>to_string</code>.</p>
     </article>

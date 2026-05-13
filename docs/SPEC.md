@@ -67,7 +67,7 @@ v0.16 does not include:
 ## Imports
 
 `import package/path` resolves script modules and directory packages through the
-standard module search path. Directory packages are directories of PascalCase
+standard import search path. Directory packages are directories of PascalCase
 class files.
 
 Unaliased directory-package imports bring public class and interface names into
