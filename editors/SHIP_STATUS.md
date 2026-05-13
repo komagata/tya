@@ -11,6 +11,7 @@ Objective: ship syntax coloring for major editors.
 | Shared syntax fixture exists | `editors/syntax-sample.tya` |
 | VS Code syntax coloring exists | `editors/vscode/syntaxes/tya.tmLanguage.json`, registered from `editors/vscode/package.json` |
 | VS Code package builds | `npm run compile` and `npm run package` in `editors/vscode` |
+| VS Code manual-install package is published | GitHub Release `editors-vscode-v0.61.0` with `tya-0.61.0.vsix` |
 | VS Code publish workflow exists | `.github/workflows/publish-vscode-extension.yml` |
 | Vim / Neovim syntax coloring exists | `editors/vim/syntax/tya.vim` |
 | Vim / Neovim filetype and indent exist | `editors/vim/ftdetect/tya.vim`, `editors/vim/indent/tya.vim` |
@@ -54,5 +55,7 @@ Editor assets / main / 25769509633 / success / 2026-05-13T00:01:51Z
 - Main commit with publishing follow-up issues: `d8af793`
 - Latest observed GitHub Actions `Editor assets` run: `25769509633`, status:
   success.
+- VS Code manual-install release:
+  https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`

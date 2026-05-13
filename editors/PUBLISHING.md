@@ -12,6 +12,10 @@ Artifact:
 scripts/verify_editor_assets.sh
 ```
 
+Manual-install release:
+
+- https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
+
 Publish:
 
 ```sh

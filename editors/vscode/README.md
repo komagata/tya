@@ -25,6 +25,18 @@ TextMate syntax highlighting plus a LSP-based language client that talks to
 
 ## Manual install (until Marketplace publication)
 
+Download `tya-0.61.0.vsix` from:
+
+https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
+
+Then install it:
+
+```sh
+code --install-extension tya-0.61.0.vsix
+```
+
+Or build it locally:
+
 ```sh
 cd editors/vscode
 npm install
