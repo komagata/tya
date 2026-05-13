@@ -191,9 +191,10 @@ println csv.dump([[&quot;a&quot;, &quot;b&quot;], [&quot;1&quot;, &quot;2&quot;]
 <h2 id="toml"><code>toml</code></h2>
 <pre><code class="language-tya">import toml
 
-config = toml.parse(&quot;[server]\nhost = \&quot;localhost\&quot;\nport = 80\n&quot;)
-println toml.dump(config)</code></pre>
-<p><code>parse(text)</code> parses TOML 1.0 documents. <code>dump(value)</code> emits TOML for a dict of primitives, arrays, and nested tables (including arrays of tables).</p>
+config = toml.Toml.parse(&quot;[server]\nhost = \&quot;localhost\&quot;\nport = 80\n&quot;)
+println toml.Toml.dump(config)</code></pre>
+<p><code>toml.Toml.parse(text)</code> parses TOML 1.0 documents. <code>toml.Toml.dump(value)</code> emits TOML for a dict of primitives, arrays, and nested tables (including arrays of tables).</p>
+<p>The public <code>toml</code> stdlib package is separate from the toolchain's private TOML parser for <code>tya.toml</code> manifests and <code>tya.lock</code> lockfiles.</p>
 <h2 id="time"><code>time</code></h2>
 <pre><code class="language-tya">import time
 

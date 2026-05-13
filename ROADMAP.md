@@ -472,6 +472,9 @@ ride the same Epic for a coherent cut.
   - [ ] Update `docs/STDLIB.md`, `docs/CANONICAL_SYNTAX.md`,
     `docs/GUIDE.md`, `docs/API.md`, `docs/TERMINOLOGY.md`,
     `docs/LIBRARIES.md` to drop module-era language.
+  - [x] Document public `toml` as class-style `toml.Toml.parse` /
+    `toml.Toml.dump`, distinct from private toolchain TOML parsing.
+    - Spec: `docs/prd/completed/toml-stdlib-class-style-docs.md`
   - [ ] Rebuild HTML via `node scripts/build_docs_pages.js`.
   - [ ] Add a Released entry to this file when the Epic ships.
 

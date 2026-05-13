@@ -308,12 +308,16 @@ options)` quotes fields containing the separator, quote, CR, or LF.
 ```tya
 import toml
 
-config = toml.parse("[server]\nhost = \"localhost\"\nport = 80\n")
-println toml.dump(config)
+config = toml.Toml.parse("[server]\nhost = \"localhost\"\nport = 80\n")
+println toml.Toml.dump(config)
 ```
 
-`parse(text)` parses TOML 1.0 documents. `dump(value)` emits TOML for a dict
-of primitives, arrays, and nested tables (including arrays of tables).
+`toml.Toml.parse(text)` parses TOML 1.0 documents.
+`toml.Toml.dump(value)` emits TOML for a dict of primitives, arrays, and nested
+tables (including arrays of tables).
+
+The public `toml` stdlib package is separate from the toolchain's private TOML
+parser for `tya.toml` manifests and `tya.lock` lockfiles.
 
 ## `time`
 
