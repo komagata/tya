@@ -1,18 +1,19 @@
 import unittest
-import time
+import time as time
 
-module stdlib_time_test
+class StdlibTimeTest extends TestCase
+
   test_now_returns_positive = ->
-    unittest.Unittest.assert(time.Time.now() > 1700000000, "epoch is recent")
+    self.assert(time.Time.now() > 1700000000, "epoch is recent")
   test_format_iso = ->
-    unittest.Unittest.assert_equal("1970-01-01T00:00:00Z", time.Time.format(0, "iso"), "epoch iso")
+    self.assert_equal("1970-01-01T00:00:00Z", time.Time.format(0, "iso"), "epoch iso")
   test_format_date = ->
-    unittest.Unittest.assert_equal("1970-01-01", time.Time.format(0, "date"), "epoch date")
+    self.assert_equal("1970-01-01", time.Time.format(0, "date"), "epoch date")
   test_parse_iso = ->
-    unittest.Unittest.assert_equal(0, time.Time.parse("1970-01-01T00:00:00Z"), "parse epoch")
+    self.assert_equal(0, time.Time.parse("1970-01-01T00:00:00Z"), "parse epoch")
   test_parse_date = ->
-    unittest.Unittest.assert_equal(0, time.Time.parse("1970-01-01"), "parse date")
+    self.assert_equal(0, time.Time.parse("1970-01-01"), "parse date")
   test_since_zero = ->
     n = time.Time.now()
     elapsed = time.Time.since(n)
-    unittest.Unittest.assert(elapsed >= 0, "since non-negative")
+    self.assert(elapsed >= 0, "since non-negative")

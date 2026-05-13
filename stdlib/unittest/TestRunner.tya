@@ -1,0 +1,114 @@
+class TestRunner
+  static default = ->
+    TestRunner()
+
+  run = suite ->
+    result = { tests: 0, passes: 0, failures: 0, errors: 0 }
+    self.run_suite(suite, result)
+    self.print_summary(result)
+    result
+
+  run_and_exit = suite ->
+    result = self.run(suite)
+    if result["failures"] > 0 or result["errors"] > 0
+      exit(1)
+    result
+
+  run_suite = suite, result ->
+    for test in suite.tests
+      is_suite = false
+      try
+        is_suite = test.class == TestSuite
+      catch _
+        is_suite = false
+      if is_suite
+        self.run_suite(test, result)
+      else
+        self.run_case(test, result)
+
+  run_case = test, result ->
+    klass = test
+    methods = []
+    try
+      methods = test.unittest_test_methods
+    catch _
+      klass = test.class
+      methods = klass.unittest_test_methods
+    for method in methods
+      instance = test
+      try
+        instance = klass()
+      catch _
+        instance = test
+      self.run_method(instance, method, result)
+
+  run_method = instance, method, result ->
+    result["tests"] = result["tests"] + 1
+    label = "{instance.class.name}.{method}"
+    setup_ok = true
+    failed = false
+    errored = false
+    if instance.class.unittest_has_setup
+      try
+        instance["setup"]()
+      catch err
+        setup_ok = false
+        errored = true
+        self.print_error(label, err)
+    if setup_ok
+      try
+        instance[method]()
+      catch err
+        kind = ""
+        try
+          kind = err["kind"]
+        catch _
+          kind = ""
+        if kind == "unittest_fail"
+          failed = true
+          self.print_fail(label, err)
+        else
+          errored = true
+          self.print_error(label, err)
+      if instance.class.unittest_has_teardown
+        try
+          instance["teardown"]()
+        catch err
+          errored = true
+          self.print_error(label, err)
+    if failed
+      result["failures"] = result["failures"] + 1
+    else
+      if errored
+        result["errors"] = result["errors"] + 1
+      else
+        result["passes"] = result["passes"] + 1
+        println("  PASS  {label}")
+
+  print_fail = label, err ->
+    msg = self.error_message(err)
+    println("  FAIL  {label}")
+    println("        {msg}")
+
+  print_error = label, err ->
+    msg = self.error_message(err)
+    println("  ERROR {label}")
+    println("        {msg}")
+
+  print_summary = result ->
+    tests = result["tests"]
+    passes = result["passes"]
+    failures = result["failures"]
+    errors = result["errors"]
+    if errors > 0
+      println("{tests} tests, {passes} passed, {failures} failed, {errors} errors")
+    else
+      println("{tests} tests, {passes} passed, {failures} failed")
+
+  error_message = err ->
+    msg = err
+    try
+      msg = err["message"]
+    catch _
+      msg = err
+    msg

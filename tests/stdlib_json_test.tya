@@ -1,29 +1,30 @@
 import unittest
-import json
+import json as json
 
-module stdlib_json_test
+class StdlibJsonTest extends TestCase
+
   test_dump_object = ->
     out = json.Json.dump({ name: "tya", n: 23 })
-    unittest.Unittest.assert_equal("{{\"name\":\"tya\",\"n\":23}}", out, "object")
+    self.assert_equal("{{\"name\":\"tya\",\"n\":23}}", out, "object")
   test_dump_array = ->
-    unittest.Unittest.assert_equal("[1,2,3]", json.Json.dump([1, 2, 3]), "array")
+    self.assert_equal("[1,2,3]", json.Json.dump([1, 2, 3]), "array")
   test_dump_primitives = ->
-    unittest.Unittest.assert_equal("null", json.Json.dump(nil), "nil")
-    unittest.Unittest.assert_equal("true", json.Json.dump(true), "true")
-    unittest.Unittest.assert_equal("false", json.Json.dump(false), "false")
-    unittest.Unittest.assert_equal("42", json.Json.dump(42), "int")
+    self.assert_equal("null", json.Json.dump(nil), "nil")
+    self.assert_equal("true", json.Json.dump(true), "true")
+    self.assert_equal("false", json.Json.dump(false), "false")
+    self.assert_equal("42", json.Json.dump(42), "int")
   test_dump_string_escapes = ->
-    unittest.Unittest.assert_equal("\"a\\nb\"", json.Json.dump("a\nb"), "newline")
+    self.assert_equal("\"a\\nb\"", json.Json.dump("a\nb"), "newline")
   test_parse_object = ->
     src = "{{\"name\":\"tya\",\"n\":23}}"
     v = json.Json.parse(src)
-    unittest.Unittest.assert_equal("tya", v["name"], "name")
-    unittest.Unittest.assert_equal(23, v["n"], "n")
+    self.assert_equal("tya", v["name"], "name")
+    self.assert_equal(23, v["n"], "n")
   test_parse_array = ->
     v = json.Json.parse("[1, 2, 3]")
-    unittest.Unittest.assert_equal([1, 2, 3], v, "array")
+    self.assert_equal([1, 2, 3], v, "array")
   test_parse_primitives = ->
-    unittest.Unittest.assert_equal(nil, json.Json.parse("null"), "null")
-    unittest.Unittest.assert_equal(true, json.Json.parse("true"), "true")
-    unittest.Unittest.assert_equal(false, json.Json.parse("false"), "false")
-    unittest.Unittest.assert_equal(42, json.Json.parse("42"), "int")
+    self.assert_equal(nil, json.Json.parse("null"), "null")
+    self.assert_equal(true, json.Json.parse("true"), "true")
+    self.assert_equal(false, json.Json.parse("false"), "false")
+    self.assert_equal(42, json.Json.parse("42"), "int")

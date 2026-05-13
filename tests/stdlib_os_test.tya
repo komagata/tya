@@ -1,13 +1,14 @@
 import unittest
-import os
+import os as os
 
-module stdlib_os_test
+class StdlibOsTest extends TestCase
+
   test_args_returns_array = ->
     a = os.Os.args()
-    unittest.Unittest.assert_equal(0, len(a) - len(a), "args len roundtrip")
+    self.assert_equal(0, a.len() - a.len(), "args len roundtrip")
   test_env_home_present = ->
     home = os.Os.env("HOME")
-    unittest.Unittest.assert(home != nil, "HOME present")
+    self.assert(home != nil, "HOME present")
   test_env_missing_is_nil = ->
     missing = os.Os.env("__TYA_V022_NO_SUCH_ENV__")
-    unittest.Unittest.assert_nil(missing, "missing env nil")
+    self.assert_nil(missing, "missing env nil")

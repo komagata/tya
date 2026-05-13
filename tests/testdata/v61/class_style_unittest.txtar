@@ -1,0 +1,106 @@
+# v0.61 class-style unittest.
+cd $REPO
+
+exec go run ./cmd/tya test $WORK/class_case_test.tya
+stdout 'PASS  StringBlankTest.test_blank_for_whitespace'
+stdout 'PASS  StringBlankTest.test_blank_returns_false_for_content'
+stdout '2 tests, 2 passed, 0 failed'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/manual_suite.tya
+stdout 'PASS  AlphaTest.test_one'
+stdout 'PASS  BetaTest.test_two'
+stdout '2 tests, 2 passed, 0 failed'
+stdout 'returned:2/2/0/0'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/nested_suite.tya
+stdout 'PASS  AlphaTest.test_one'
+stdout 'PASS  BetaTest.test_two'
+stdout '2 tests, 2 passed, 0 failed'
+! stderr .
+
+! exec go run ./cmd/tya test $WORK/failing_test.tya
+stdout 'FAIL  BrokenTest.test_failure'
+stdout 'PASS  BrokenTest.test_later'
+stdout '2 tests, 1 passed, 1 failed'
+
+! exec go run ./cmd/tya test $WORK/setup_error_test.tya
+stdout 'ERROR SetupErrorTest.test_body'
+stdout '1 tests, 0 passed, 0 failed, 1 errors'
+
+-- class_case_test.tya --
+import unittest
+
+class StringBlankTest extends TestCase
+  setup = ->
+    self.subject = " "
+
+  teardown = ->
+    self.subject = nil
+
+  test_blank_for_whitespace = ->
+    self.assert(self.subject.blank?(), "spaces")
+
+  test_blank_returns_false_for_content = ->
+    self.subject = "tya"
+    self.assert_equal(false, self.subject.blank?(), "content")
+
+-- manual_suite.tya --
+import unittest
+
+class AlphaTest extends TestCase
+  test_one = ->
+    self.assert(true, "one")
+
+class BetaTest extends TestCase
+  test_two = ->
+    self.assert_equal(2, 1 + 1, "two")
+
+suite = TestSuite()
+suite.add(AlphaTest)
+suite.add(BetaTest)
+outcome = TestRunner.default().run(suite)
+total_count = outcome["tests"]
+pass_count = outcome["passes"]
+failure_count = outcome["failures"]
+error_count = outcome["errors"]
+print("returned:{total_count}/{pass_count}/{failure_count}/{error_count}")
+
+-- nested_suite.tya --
+import unittest
+
+class AlphaTest extends TestCase
+  test_one = ->
+    self.assert(true, "one")
+
+class BetaTest extends TestCase
+  test_two = ->
+    self.assert_equal(2, 1 + 1, "two")
+
+inner = TestSuite()
+inner.add(BetaTest)
+outer = TestSuite()
+outer.add(AlphaTest)
+outer.add(inner)
+TestRunner.default().run_and_exit(outer)
+
+-- failing_test.tya --
+import unittest
+
+class BrokenTest extends TestCase
+  test_failure = ->
+    self.assert_equal("expected", "actual", "mismatch")
+
+  test_later = ->
+    self.assert(true, "continues")
+
+-- setup_error_test.tya --
+import unittest
+
+class SetupErrorTest extends TestCase
+  setup = ->
+    raise "setup exploded"
+
+  test_body = ->
+    self.assert(true, "unreachable")

@@ -1,0 +1,45 @@
+class TestSuite
+  initialize = ->
+    self.tests = []
+
+  add = test ->
+    self.tests.push(test)
+    self
+
+  add_all = tests ->
+    for test in tests
+      self.add(test)
+    self
+
+  count = ->
+    total = 0
+    for test in self.tests
+      is_suite = false
+      try
+        is_suite = test.class == TestSuite
+      catch _
+        is_suite = false
+      if is_suite
+        total = total + test.count()
+      else
+        total = total + TestSuite.test_methods_for(test).len()
+    total
+
+  static discover = cases ->
+    found = TestSuite()
+    for c in cases
+      names = c.keys()
+      for name in names
+        value = c[name]
+        methods = TestSuite.test_methods_for(value)
+        if methods.len() > 0
+          found.add(value)
+    found
+
+  static test_methods_for = test ->
+    methods = []
+    try
+      methods = test.unittest_test_methods
+    catch _
+      methods = test.class.unittest_test_methods
+    methods

@@ -1204,6 +1204,42 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 }
 
 func (g *cgen) emitClassMembers(target string, name string, class *ast.ClassDecl) error {
+	testMethods := []string{}
+	hasSetup := false
+	hasTeardown := false
+	for _, method := range class.Methods {
+		if method.Class || method.Abstract {
+			continue
+		}
+		if strings.HasPrefix(method.Name, "test_") {
+			testMethods = append(testMethods, method.Name)
+		}
+		if method.Name == "setup" {
+			hasSetup = true
+		}
+		if method.Name == "teardown" {
+			hasTeardown = true
+		}
+	}
+	methodValues := make([]string, 0, len(testMethods))
+	for _, method := range testMethods {
+		methodValues = append(methodValues, fmt.Sprintf("tya_string(%s)", strconv.Quote(method)))
+	}
+	if len(methodValues) == 0 {
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_array((TyaValue*)0, 0));", target, strconv.Quote("unittest_test_methods")))
+	} else {
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_array((TyaValue[]){%s}, %d));", target, strconv.Quote("unittest_test_methods"), strings.Join(methodValues, ", "), len(methodValues)))
+	}
+	setupValue := "tya_bool(0)"
+	if hasSetup {
+		setupValue = "tya_bool(1)"
+	}
+	teardownValue := "tya_bool(0)"
+	if hasTeardown {
+		teardownValue = "tya_bool(1)"
+	}
+	g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote("unittest_has_setup"), setupValue))
+	g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote("unittest_has_teardown"), teardownValue))
 	for _, variable := range class.Vars {
 		value, _, err := g.expr(variable.Value)
 		if err != nil {

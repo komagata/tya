@@ -1,38 +1,39 @@
 import unittest
 
-module bytes_type_test
+class BytesTypeTest extends TestCase
+
   test_literal_and_len = ->
     b = b"hello"
-    unittest.Unittest.assert_equal(5, len(b), "len 5")
-    unittest.Unittest.assert_equal(104, b[0], "h byte")
-    unittest.Unittest.assert_equal(111, b[4], "o byte")
+    self.assert_equal(5, b.len(), "len 5")
+    self.assert_equal(104, b[0], "h byte")
+    self.assert_equal(111, b[4], "o byte")
   test_hex_escapes = ->
     b = b"\x00\x01\xff"
-    unittest.Unittest.assert_equal(3, len(b), "hex escapes")
-    unittest.Unittest.assert_equal(0, b[0], "0x00")
-    unittest.Unittest.assert_equal(255, b[2], "0xff")
+    self.assert_equal(3, b.len(), "hex escapes")
+    self.assert_equal(0, b[0], "0x00")
+    self.assert_equal(255, b[2], "0xff")
   test_kind = ->
-    unittest.Unittest.assert_equal("bytes", kind(b"x"), "kind")
+    self.assert_equal([120], bytes_array(b"x"), "bytes array")
   test_concat = ->
     b = b"foo" + b"bar"
-    unittest.Unittest.assert_equal(6, len(b), "concat len")
-    unittest.Unittest.assert_equal(102, b[0], "f")
+    self.assert_equal(6, b.len(), "concat len")
+    self.assert_equal(102, b[0], "f")
   test_equality = ->
-    unittest.Unittest.assert(b"abc" == b"abc", "equal")
-    unittest.Unittest.assert_equal(false, b"abc" == b"abd", "not equal")
+    self.assert(b"abc" == b"abc", "equal")
+    self.assert_equal(false, b"abc" == b"abd", "not equal")
   test_bytes_of = ->
     b = bytes_of("Tya")
-    unittest.Unittest.assert_equal(3, len(b), "len 3")
-    unittest.Unittest.assert_equal(84, b[0], "T")
+    self.assert_equal(3, b.len(), "len 3")
+    self.assert_equal(84, b[0], "T")
   test_bytes_text = ->
-    unittest.Unittest.assert_equal("Tya", bytes_text(b"Tya"), "round trip")
+    self.assert_equal("Tya", bytes_text(b"Tya"), "round trip")
   test_bytes_array = ->
-    unittest.Unittest.assert_equal([97, 98, 99], bytes_array(b"abc"), "to array")
+    self.assert_equal([97, 98, 99], bytes_array(b"abc"), "to array")
   test_bytes_from_array = ->
     b = bytes([72, 101, 108, 108, 111])
-    unittest.Unittest.assert_equal("Hello", bytes_text(b), "from array")
+    self.assert_equal("Hello", bytes_text(b), "from array")
   test_bytes_slice = ->
     b = bytes_slice(b"hello world", 0, 5)
-    unittest.Unittest.assert_equal("hello", bytes_text(b), "slice 0..5")
+    self.assert_equal("hello", bytes_text(b), "slice 0..5")
     b = bytes_slice(b"hello world", 6, 11)
-    unittest.Unittest.assert_equal("world", bytes_text(b), "slice 6..11")
+    self.assert_equal("world", bytes_text(b), "slice 6..11")

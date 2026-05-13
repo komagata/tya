@@ -1,12 +1,12 @@
 import unittest
-import string
 
-module stdlib_string_test
+class StdlibStringTest extends TestCase
+
   test_blank_for_whitespace = ->
-    unittest.Unittest.assert(string.blank(" "), "blank for spaces")
+    self.assert(" ".blank?(), "blank for spaces")
   test_present_for_content = ->
-    unittest.Unittest.assert(string.present("tya"), "present for content")
+    self.assert("tya".present?(), "present for content")
   test_blank_returns_false_for_content = ->
-    unittest.Unittest.assert_equal(false, string.blank("tya"), "blank false")
+    self.assert_equal(false, "tya".blank?(), "blank false")
   test_present_returns_true_for_content = ->
-    unittest.Unittest.assert_equal(true, string.present("tya"), "present true")
+    self.assert_equal(true, "tya".present?(), "present true")

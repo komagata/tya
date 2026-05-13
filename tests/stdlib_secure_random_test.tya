@@ -1,25 +1,26 @@
 import unittest
-import secure_random
+import secure_random as secure_random
 
-module stdlib_secure_random_test
+class StdlibSecureRandomTest extends TestCase
+
   test_hex_length = ->
     s = secure_random.SecureRandom.hex(16)
-    unittest.Unittest.assert_equal(32, byte_len(s), "32 hex chars for 16 bytes")
+    self.assert_equal(32, s.byte_len(), "32 hex chars for 16 bytes")
   test_uuid_format = ->
     u = secure_random.SecureRandom.uuid()
-    unittest.Unittest.assert_equal(36, byte_len(u), "uuid is 36 chars")
-    unittest.Unittest.assert_equal("-", u[8], "dash at 8")
-    unittest.Unittest.assert_equal("-", u[13], "dash at 13")
-    unittest.Unittest.assert_equal("-", u[18], "dash at 18")
-    unittest.Unittest.assert_equal("-", u[23], "dash at 23")
-    unittest.Unittest.assert_equal("4", u[14], "version 4")
+    self.assert_equal(36, u.byte_len(), "uuid is 36 chars")
+    self.assert_equal("-", u[8], "dash at 8")
+    self.assert_equal("-", u[13], "dash at 13")
+    self.assert_equal("-", u[18], "dash at 18")
+    self.assert_equal("-", u[23], "dash at 23")
+    self.assert_equal("4", u[14], "version 4")
   test_int_in_range = ->
     i = 0
     while i < 100
       v = secure_random.SecureRandom.int(0, 99)
-      unittest.Unittest.assert(v >= 0, "lower")
-      unittest.Unittest.assert(v <= 99, "upper")
+      self.assert(v >= 0, "lower")
+      self.assert(v <= 99, "upper")
       i = i + 1
   test_base64_length = ->
     s = secure_random.SecureRandom.base64(3)
-    unittest.Unittest.assert_equal(4, byte_len(s), "4 chars for 3 bytes")
+    self.assert_equal(4, s.byte_len(), "4 chars for 3 bytes")

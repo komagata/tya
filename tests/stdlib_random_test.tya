@@ -1,26 +1,27 @@
 import unittest
-import random
+import random as random
 
-module stdlib_random_test
+class StdlibRandomTest extends TestCase
+
   test_seed_reproducible = ->
     random.Random.seed(42)
     a = random.Random.int(1, 1000)
     random.Random.seed(42)
     b = random.Random.int(1, 1000)
-    unittest.Unittest.assert_equal(a, b, "seeded reproducibility")
+    self.assert_equal(a, b, "seeded reproducibility")
   test_int_range = ->
     random.Random.seed(1)
     i = 0
     while i < 50
       v = random.Random.int(0, 9)
-      unittest.Unittest.assert(v >= 0, "lower")
-      unittest.Unittest.assert(v <= 9, "upper")
+      self.assert(v >= 0, "lower")
+      self.assert(v <= 9, "upper")
       i = i + 1
   test_float_range = ->
     f = random.Random.float()
-    unittest.Unittest.assert(f >= 0, "f >= 0")
-    unittest.Unittest.assert(f < 1, "f < 1")
+    self.assert(f >= 0, "f >= 0")
+    self.assert(f < 1, "f < 1")
   test_choice_picks_member = ->
     items = ["a", "b", "c"]
     c = random.Random.choice(items)
-    unittest.Unittest.assert(c == "a" or c == "b" or c == "c", "valid choice")
+    self.assert(c == "a" or c == "b" or c == "c", "valid choice")

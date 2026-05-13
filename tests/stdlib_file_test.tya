@@ -1,14 +1,15 @@
 import unittest
-import file
+import file as file
 
-module stdlib_file_test
+class StdlibFileTest extends TestCase
+
   test_write_then_read = ->
     p = "/tmp/tya_v022_test.txt"
     file.File.write(p, "hello tya")
-    unittest.Unittest.assert_equal("hello tya", file.File.read(p), "round-trip")
+    self.assert_equal("hello tya", file.File.read(p), "round-trip")
   test_exists_true = ->
     p = "/tmp/tya_v022_test.txt"
     file.File.write(p, "hi")
-    unittest.Unittest.assert(file.File.exists?(p), "exists")
+    self.assert(file.File.exists?(p), "exists")
   test_exists_false = ->
-    unittest.Unittest.assert_equal(false, file.File.exists?("/tmp/__tya_v022_no_such__"), "missing")
+    self.assert_equal(false, file.File.exists?("/tmp/__tya_v022_no_such__"), "missing")

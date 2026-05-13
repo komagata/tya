@@ -1,19 +1,20 @@
 import unittest
-import hex
+import hex as hex
 
-module stdlib_hex_test
+class StdlibHexTest extends TestCase
+
   test_encode_string = ->
-    unittest.Unittest.assert_equal("547961", hex.Hex.encode("Tya"), "encode string")
-    unittest.Unittest.assert_equal("", hex.Hex.encode(""), "empty")
+    self.assert_equal("547961", hex.Hex.encode("Tya"), "encode string")
+    self.assert_equal("", hex.Hex.encode(""), "empty")
   test_encode_bytes = ->
-    unittest.Unittest.assert_equal("547961", hex.Hex.encode(b"Tya"), "encode bytes")
-    unittest.Unittest.assert_equal("0001ff", hex.Hex.encode(b"\x00\x01\xff"), "binary")
+    self.assert_equal("547961", hex.Hex.encode(b"Tya"), "encode bytes")
+    self.assert_equal("0001ff", hex.Hex.encode(b"\x00\x01\xff"), "binary")
   test_decode_returns_bytes = ->
     decoded = hex.Hex.decode("547961")
-    unittest.Unittest.assert_equal("bytes", kind(decoded), "decode returns bytes")
-    unittest.Unittest.assert_equal("Tya", bytes_text(decoded), "decoded value")
+    self.assert_equal([84, 121, 97], bytes_array(decoded), "decode returns bytes")
+    self.assert_equal("Tya", bytes_text(decoded), "decoded value")
   test_decode_uppercase = ->
-    unittest.Unittest.assert_equal("Tya", bytes_text(hex.Hex.decode("547961")), "lowercase")
+    self.assert_equal("Tya", bytes_text(hex.Hex.decode("547961")), "lowercase")
   test_round_trip = ->
     text = "hello world"
-    unittest.Unittest.assert_equal(text, bytes_text(hex.Hex.decode(hex.Hex.encode(text))), "round trip")
+    self.assert_equal(text, bytes_text(hex.Hex.decode(hex.Hex.encode(text))), "round trip")

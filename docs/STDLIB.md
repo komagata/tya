@@ -460,41 +460,50 @@ raw bytes.
 
 ```tya
 import unittest
-import string
 
-module string_blank_test
+class StringBlankTest extends TestCase
+  setup = ->
+    self.subject = " "
+
   test_blank_for_whitespace = ->
-    unittest.assert(string.blank(" "), "spaces")
+    self.assert(self.subject.blank?(), "spaces")
+
   test_blank_returns_false_for_content = ->
-    unittest.assert_equal(false, string.blank("tya"), "content")
+    self.assert_equal(false, "tya".blank?(), "content")
 ```
 
-A test case is an importable module containing `test_*` functions. Tests are
-run by `tya test` (which synthesizes a suite) or by a user-written entry
-program calling `unittest.run([cases...])`.
+Test cases are classes that extend `TestCase`. Instance methods whose names
+start with `test_` are run by `tya test`; optional `setup` and `teardown`
+methods run around each test method.
 
-Functions:
+Assertion methods:
 
 ```tya
-assert cond, desc
-assert_falsy cond, desc
-assert_equal expected, actual, desc
-assert_not_equal left, right, desc
-assert_nil value, desc
-assert_raises body
-fail message
-run cases
+self.assert(cond, desc)
+self.assert_falsy(cond, desc)
+self.assert_equal(expected, actual, desc)
+self.assert_not_equal(left, right, desc)
+self.assert_nil(value, desc)
+self.assert_raises(body)
+self.fail(message)
 ```
 
 Each assertion raises a structured `{kind: "unittest_fail", message}` value
 on failure; the test runner catches it so a single failed test does not stop
 the rest of the suite.
 
-`unittest.run(cases)` iterates each module's `test_*` members in dictionary
-order, runs `setup` / `teardown` around each test, prints a summary line and
-exits non-zero when at least one test failed.
+`TestSuite` is an ordered collection of `TestCase` classes, instances, or
+nested suites. `TestRunner.default().run(suite)` returns a result dictionary
+with `tests`, `passes`, `failures`, and `errors`; `run_and_exit` exits non-zero
+when any failure or error occurred.
 
-See the v0.22 SPEC for the full surface.
+```tya
+import unittest
+
+suite = TestSuite()
+suite.add(StringBlankTest)
+TestRunner.default().run_and_exit(suite)
+```
 
 
 ## `runtime` (v0.41)

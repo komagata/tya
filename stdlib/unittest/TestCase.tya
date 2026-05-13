@@ -1,0 +1,33 @@
+class TestCase
+  assert = cond, desc ->
+    if not cond
+      raise { kind: "unittest_fail", message: desc }
+
+  assert_falsy = cond, desc ->
+    if cond
+      raise { kind: "unittest_fail", message: desc }
+
+  assert_equal = expected, actual, desc ->
+    if not equal(expected, actual)
+      msg = "{desc}: expected {expected}, got {actual}"
+      raise { kind: "unittest_fail", message: msg }
+
+  assert_not_equal = left, right, desc ->
+    if equal(left, right)
+      raise { kind: "unittest_fail", message: "{desc}: expected not equal" }
+
+  assert_nil = value, desc ->
+    if value != nil
+      raise { kind: "unittest_fail", message: "{desc}: expected nil, got {value}" }
+
+  assert_raises = body ->
+    raised = false
+    try
+      body()
+    catch _
+      raised = true
+    if not raised
+      raise { kind: "unittest_fail", message: "expected raise but none" }
+
+  fail = msg ->
+    raise { kind: "unittest_fail", message: msg }

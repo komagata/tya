@@ -25,8 +25,8 @@ import (
 //	  .gitignore
 //	  README.md
 //
-// lib template: src/<PascalName>.tya (class) plus the corresponding
-// tests/<PascalName>_test.tya. Other files are identical.
+// lib template: src/<name>/<PascalName>.tya (directory package) plus the
+// corresponding tests/<name>_test.tya. Other files are identical.
 func newCommand(args []string) error {
 	opts, err := parseNewArgs(args)
 	if err != nil {
@@ -50,8 +50,12 @@ func newCommand(args []string) error {
 	if opts.here {
 		fmt.Fprintf(os.Stdout, "Initialised tya project in %s\n", target)
 	} else {
+		task := "run"
+		if opts.template == "lib" {
+			task = "test"
+		}
 		fmt.Fprintf(os.Stdout, "Created %s\n", target)
-		fmt.Fprintf(os.Stdout, "  cd %s && tya task run\n", name)
+		fmt.Fprintf(os.Stdout, "  cd %s && tya task %s\n", name, task)
 	}
 	return nil
 }
@@ -126,13 +130,18 @@ func writeScaffold(target, name, template string) error {
 	if err := os.MkdirAll(filepath.Join(target, "tests"), 0755); err != nil {
 		return err
 	}
+	tasks := `run = "tya run src/main.tya"
+test = "tya test tests"
+`
+	if template == "lib" {
+		tasks = `test = "TYA_PATH=src tya test tests"
+`
+	}
 	manifest := fmt.Sprintf(`name = "%s"
 version = "0.1.0"
 
 [tasks]
-run = "tya run src/main.tya"
-test = "tya test tests"
-`, name)
+%s`, name, tasks)
 	if err := os.WriteFile(filepath.Join(target, "tya.toml"), []byte(manifest), 0644); err != nil {
 		return err
 	}
@@ -140,6 +149,9 @@ test = "tya test tests"
 		return err
 	}
 	readme := fmt.Sprintf("# %s\n\nA Tya project. Run `tya task run` to execute, `tya task test` to run tests.\n", name)
+	if template == "lib" {
+		readme = fmt.Sprintf("# %s\n\nA Tya library package. Run `tya task test` to run tests.\n", name)
+	}
 	if err := os.WriteFile(filepath.Join(target, "README.md"), []byte(readme), 0644); err != nil {
 		return err
 	}
@@ -155,40 +167,41 @@ func writeAppTemplate(target, name string) error {
 	if err := os.WriteFile(filepath.Join(target, "src", "main.tya"), []byte(main), 0644); err != nil {
 		return err
 	}
-	mainTest := `module main_test
-  import unittest
+	mainTest := `import unittest
 
+class MainTest < TestCase
   test_main = ->
-    unittest.Unittest.assert(true)
-
-  unittest.Unittest.run([test_main])
+    self.assert(true, "main")
 `
 	return os.WriteFile(filepath.Join(target, "tests", "main_test.tya"), []byte(mainTest), 0644)
 }
 
 func writeLibTemplate(target, name string) error {
 	pascal := pascalCase(name)
+	pkgName := packageName(name)
+	pkgDir := filepath.Join(target, "src", pkgName)
+	if err := os.MkdirAll(pkgDir, 0755); err != nil {
+		return err
+	}
 	src := fmt.Sprintf(`class %s
   initialize = ->
     self.name = "%s"
 
-  greet = ->
-    print("Hello from " + self.name)
+  greet = target ->
+    return "Hello, " + target + " from " + self.name
 `, pascal, name)
-	if err := os.WriteFile(filepath.Join(target, "src", pascal+".tya"), []byte(src), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pkgDir, pascal+".tya"), []byte(src), 0644); err != nil {
 		return err
 	}
-	test := fmt.Sprintf(`module %s_test
-  import %s
-  import unittest
+	test := fmt.Sprintf(`import %s
+import unittest
 
+class %sTest extends TestCase
   test_greet = ->
-    inst = %s.%s()
-    unittest.Unittest.assert_equal(true, inst != nil)
-
-  unittest.Unittest.run([test_greet])
-`, strings.ToLower(pascal), strings.ToLower(pascal), strings.ToLower(pascal), pascal)
-	return os.WriteFile(filepath.Join(target, "tests", strings.ToLower(pascal)+"_test.tya"), []byte(test), 0644)
+    inst = %s()
+    self.assert_equal("Hello, Tya from %s", inst.greet("Tya"), "greeting")
+`, pkgName, pascal, pascal, name)
+	return os.WriteFile(filepath.Join(target, "tests", pkgName+"_test.tya"), []byte(test), 0644)
 }
 
 func pascalCase(name string) string {
@@ -202,6 +215,28 @@ func pascalCase(name string) string {
 		parts[i] = strings.ToUpper(p[:1]) + p[1:]
 	}
 	return strings.Join(parts, "")
+}
+
+func packageName(name string) string {
+	name = strings.ToLower(name)
+	var b strings.Builder
+	prevUnderscore := false
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+			prevUnderscore = false
+			continue
+		}
+		if !prevUnderscore {
+			b.WriteByte('_')
+			prevUnderscore = true
+		}
+	}
+	out := strings.Trim(b.String(), "_")
+	if out == "" {
+		return "project"
+	}
+	return out
 }
 
 func runGitInit(target string) {

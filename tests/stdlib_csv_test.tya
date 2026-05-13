@@ -1,22 +1,23 @@
 import unittest
-import csv
+import csv as csv
 
-module stdlib_csv_test
+class StdlibCsvTest extends TestCase
+
   test_parse_no_header = ->
     rows = csv.Csv.parse("a,b\n1,2\n", nil)
-    unittest.Unittest.assert_equal([["a", "b"], ["1", "2"]], rows, "raw rows")
+    self.assert_equal([["a", "b"], ["1", "2"]], rows, "raw rows")
   test_parse_with_header = ->
     rows = csv.Csv.parse("name,age\ntya,1\n", { header: true })
-    unittest.Unittest.assert_equal([{ name: "tya", age: "1" }], rows, "with header")
+    self.assert_equal([{ name: "tya", age: "1" }], rows, "with header")
   test_parse_quoted_field = ->
     rows = csv.Csv.parse("a,b\n\"hello, world\",x\n", nil)
-    unittest.Unittest.assert_equal([["a", "b"], ["hello, world", "x"]], rows, "quoted")
+    self.assert_equal([["a", "b"], ["hello, world", "x"]], rows, "quoted")
   test_dump_arrays = ->
     out = csv.Csv.dump([["a", "b"], ["1", "2"]], nil)
-    unittest.Unittest.assert_equal("a,b\n1,2\n", out, "dump arrays")
+    self.assert_equal("a,b\n1,2\n", out, "dump arrays")
   test_dump_quotes_special = ->
     out = csv.Csv.dump([["a, b", "c"]], nil)
-    unittest.Unittest.assert_equal("\"a, b\",c\n", out, "quotes comma")
+    self.assert_equal("\"a, b\",c\n", out, "quotes comma")
   test_dump_dicts_with_header = ->
     out = csv.Csv.dump([{ x: "1", y: "2" }], { header: true })
-    unittest.Unittest.assert_equal("x,y\n1,2\n", out, "dicts with header")
+    self.assert_equal("x,y\n1,2\n", out, "dicts with header")

@@ -1,17 +1,18 @@
 import unittest
-import file
+import file as file
 
-module binary_io_test
+class BinaryIoTest extends TestCase
+
   test_round_trip = ->
     p = "/tmp/tya_v25_test.bin"
     data = b"\x00\x01\x02\xff"
     file.File.write_bytes(p, data)
     back = file.File.read_bytes(p)
-    unittest.Unittest.assert_equal(4, len(back), "len")
-    unittest.Unittest.assert_equal(255, back[3], "byte 3")
-    unittest.Unittest.assert(data == back, "equal")
+    self.assert_equal(4, back.len(), "len")
+    self.assert_equal(255, back[3], "byte 3")
+    self.assert(data == back, "equal")
   test_text_to_bytes_roundtrip = ->
     p = "/tmp/tya_v25_text.bin"
     file.File.write_bytes(p, bytes_of("Tya"))
     back = file.File.read_bytes(p)
-    unittest.Unittest.assert_equal("Tya", bytes_text(back), "round trip")
+    self.assert_equal("Tya", bytes_text(back), "round trip")

@@ -7,7 +7,7 @@ cd $REPO
 env TYA_PATH=$WORK
 
 exec go run ./cmd/tya test $WORK/feature_test.tya
-stdout 'PASS  test_greet'
+stdout 'PASS  FeatureTest.test_greet'
 stdout '1 tests, 1 passed, 0 failed'
 ! stderr .
 
@@ -15,9 +15,9 @@ stdout '1 tests, 1 passed, 0 failed'
 import unittest
 import feature
 
-module feature_test
+class FeatureTest extends TestCase
   test_greet = ->
-    unittest.Unittest.assert_equal("hi", feature.Feature.greet(), "greet")
+    self.assert_equal("hi", Feature.greet(), "greet")
 
 -- feature/Feature.tya --
 class Feature

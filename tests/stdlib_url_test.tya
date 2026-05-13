@@ -1,30 +1,31 @@
 import unittest
-import url
+import url as url
 
-module stdlib_url_test
+class StdlibUrlTest extends TestCase
+
   test_encode_space = ->
-    unittest.Unittest.assert_equal("hello%20world", url.Url.encode("hello world"), "space")
+    self.assert_equal("hello%20world", url.Url.encode("hello world"), "space")
   test_encode_special = ->
-    unittest.Unittest.assert_equal("a%2Fb%3Fc%3Dd", url.Url.encode("a/b?c=d"), "special chars")
+    self.assert_equal("a%2Fb%3Fc%3Dd", url.Url.encode("a/b?c=d"), "special chars")
   test_decode_space = ->
-    unittest.Unittest.assert_equal("hello world", url.Url.decode("hello%20world"), "decode space")
+    self.assert_equal("hello world", url.Url.decode("hello%20world"), "decode space")
   test_decode_round_trip = ->
     text = "tya v0.23"
-    unittest.Unittest.assert_equal(text, url.Url.decode(url.Url.encode(text)), "round trip")
+    self.assert_equal(text, url.Url.decode(url.Url.encode(text)), "round trip")
   test_decode_query_plus = ->
     pairs = url.Url.decode_query("q=tya+lang&page=2")
-    unittest.Unittest.assert_equal([["q", "tya lang"], ["page", "2"]], pairs, "decode_query")
+    self.assert_equal([["q", "tya lang"], ["page", "2"]], pairs, "decode_query")
   test_parse_full_url = ->
     p = url.Url.parse("https://user:pw@example.com:8080/path?x=1#frag")
-    unittest.Unittest.assert_equal("https", p["scheme"], "scheme")
-    unittest.Unittest.assert_equal("user", p["user"], "user")
-    unittest.Unittest.assert_equal("pw", p["password"], "password")
-    unittest.Unittest.assert_equal("example.com", p["host"], "host")
-    unittest.Unittest.assert_equal("8080", p["port"], "port")
-    unittest.Unittest.assert_equal("/path", p["path"], "path")
-    unittest.Unittest.assert_equal("x=1", p["query"], "query")
-    unittest.Unittest.assert_equal("frag", p["fragment"], "fragment")
+    self.assert_equal("https", p["scheme"], "scheme")
+    self.assert_equal("user", p["user"], "user")
+    self.assert_equal("pw", p["password"], "password")
+    self.assert_equal("example.com", p["host"], "host")
+    self.assert_equal("8080", p["port"], "port")
+    self.assert_equal("/path", p["path"], "path")
+    self.assert_equal("x=1", p["query"], "query")
+    self.assert_equal("frag", p["fragment"], "fragment")
   test_build = ->
     expected = "https://example.com/search?q=tya"
     parts = { scheme: "https", host: "example.com", path: "/search", query: "q=tya" }
-    unittest.Unittest.assert_equal(expected, url.Url.build(parts), "build")
+    self.assert_equal(expected, url.Url.build(parts), "build")
