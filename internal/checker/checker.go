@@ -231,6 +231,9 @@ var builtinNames = []string{
 	"values", "write_file", "stderr_write", "file_append",
 	// v0.25
 	"bytes", "bytes_of", "bytes_text", "bytes_array", "bytes_concat", "bytes_slice",
+	"io_stdin", "io_stdout", "io_stderr", "io_open", "io_stream_read",
+	"io_stream_read_line", "io_stream_eof", "io_stream_write", "io_stream_flush",
+	"io_stream_close",
 	"file_read_bytes", "file_write_bytes",
 	// v0.58
 	"http_server_run",

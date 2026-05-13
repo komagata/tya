@@ -63,6 +63,14 @@ type Array struct {
 type Bytes struct {
 	data []byte
 }
+type IOStream struct {
+	file     *os.File
+	binary   bool
+	readable bool
+	writable bool
+	borrowed bool
+	closed   bool
+}
 type Tuple struct {
 	items []Value
 }
@@ -2957,6 +2965,178 @@ func registerV25Builtins(env *Env) {
 			return nil, &raisedSignal{value: err.Error()}
 		}
 		return nil, nil
+	}))
+	env.set("io_stdin", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("io_stdin expects 0 arguments")
+		}
+		return &IOStream{file: os.Stdin, readable: true, borrowed: true}, nil
+	}))
+	env.set("io_stdout", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("io_stdout expects 0 arguments")
+		}
+		return &IOStream{file: os.Stdout, writable: true, borrowed: true}, nil
+	}))
+	env.set("io_stderr", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("io_stderr expects 0 arguments")
+		}
+		return &IOStream{file: os.Stderr, writable: true, borrowed: true}, nil
+	}))
+	env.set("io_open", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("io_open expects 2 arguments")
+		}
+		path, ok := args[0].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "io.open: path must be a string"}
+		}
+		mode, ok := args[1].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "io.open: mode must be a string"}
+		}
+		readable := strings.Contains(mode, "r")
+		writable := strings.Contains(mode, "w") || strings.Contains(mode, "a")
+		if !readable && !writable {
+			return nil, &raisedSignal{value: "io.open: invalid mode"}
+		}
+		flag := 0
+		if readable && writable {
+			flag = os.O_RDWR | os.O_CREATE
+		} else if writable {
+			flag = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
+		} else {
+			flag = os.O_RDONLY
+		}
+		f, err := os.OpenFile(path, flag, 0644)
+		if err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return &IOStream{file: f, binary: strings.Contains(mode, "b"), readable: readable, writable: writable}, nil
+	}))
+	streamArg := func(name string, args []Value) (*IOStream, error) {
+		if len(args) < 1 {
+			return nil, fmt.Errorf("%s expects stream argument", name)
+		}
+		s, ok := args[0].(*IOStream)
+		if !ok || s == nil {
+			return nil, &raisedSignal{value: name + ": argument must be a stream"}
+		}
+		if s.closed {
+			return nil, &raisedSignal{value: name + ": stream is closed"}
+		}
+		return s, nil
+	}
+	env.set("io_stream_read", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("io_stream_read expects 2 arguments")
+		}
+		s, err := streamArg("io.read", args)
+		if err != nil {
+			return nil, err
+		}
+		if !s.readable {
+			return nil, &raisedSignal{value: "io.read: stream is not readable"}
+		}
+		size, ok := numberAsInt(args[1])
+		if !ok || size < 0 {
+			return nil, &raisedSignal{value: "io.read: size must be a non-negative number"}
+		}
+		buf := make([]byte, int(size))
+		n, err := s.file.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		buf = buf[:n]
+		if s.binary {
+			return &Bytes{data: buf}, nil
+		}
+		return string(buf), nil
+	}))
+	env.set("io_stream_read_line", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("io_stream_read_line expects 1 argument")
+		}
+		s, err := streamArg("io.read_line", args)
+		if err != nil {
+			return nil, err
+		}
+		if !s.readable {
+			return nil, &raisedSignal{value: "io.read_line: stream is not readable"}
+		}
+		var buf []byte
+		one := make([]byte, 1)
+		for {
+			n, err := s.file.Read(one)
+			if n > 0 {
+				buf = append(buf, one[0])
+				if one[0] == '\n' {
+					break
+				}
+			}
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return nil, &raisedSignal{value: err.Error()}
+			}
+		}
+		if len(buf) == 0 {
+			return nil, nil
+		}
+		if s.binary {
+			return &Bytes{data: buf}, nil
+		}
+		return string(buf), nil
+	}))
+	env.set("io_stream_eof", Builtin(func(args []Value) (Value, error) {
+		_, err := streamArg("io.eof?", args)
+		if err != nil {
+			return nil, err
+		}
+		return false, nil
+	}))
+	env.set("io_stream_write", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("io_stream_write expects 2 arguments")
+		}
+		s, err := streamArg("io.write", args)
+		if err != nil {
+			return nil, err
+		}
+		if !s.writable {
+			return nil, &raisedSignal{value: "io.write: stream is not writable"}
+		}
+		var data []byte
+		if b, ok := args[1].(*Bytes); ok {
+			data = b.data
+		} else {
+			data = []byte(stringify(args[1]))
+		}
+		n, werr := s.file.Write(data)
+		if werr != nil {
+			return nil, &raisedSignal{value: werr.Error()}
+		}
+		return int64(n), nil
+	}))
+	env.set("io_stream_flush", Builtin(func(args []Value) (Value, error) {
+		s, err := streamArg("io.flush", args)
+		if err != nil {
+			return nil, err
+		}
+		return nil, s.file.Sync()
+	}))
+	env.set("io_stream_close", Builtin(func(args []Value) (Value, error) {
+		s, err := streamArg("io.close", args)
+		if err != nil {
+			return nil, err
+		}
+		s.closed = true
+		if s.borrowed {
+			return nil, nil
+		}
+		return nil, s.file.Close()
 	}))
 }
 

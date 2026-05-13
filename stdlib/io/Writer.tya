@@ -1,0 +1,17 @@
+class Writer
+  initialize = handle, binary ->
+    self.handle = handle
+    self.binary = binary
+
+  write = value ->
+    io_stream_write(self.handle, value)
+
+  write_line = value ->
+    self.write(value)
+    self.write("\n")
+
+  flush = ->
+    io_stream_flush(self.handle)
+
+  close = ->
+    io_stream_close(self.handle)

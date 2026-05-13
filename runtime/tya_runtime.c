@@ -64,6 +64,7 @@ typedef enum {
   TYA_RES_MUTEX = 1,
   TYA_RES_ATOMIC_INTEGER = 2,
   TYA_RES_WAIT_GROUP = 3,
+  TYA_RES_STREAM = 4,
 } TyaResourceSubkind;
 
 typedef struct TyaGcHeader {
@@ -111,9 +112,18 @@ struct TyaResource {
   pthread_cond_t cv;        /* wait_group only */
   long counter;             /* wait_group counter */
   atomic_long atomic_value; /* atomic_integer only */
+  FILE *stream;             /* stream only */
+  bool stream_borrowed;     /* stdin/stdout/stderr are not closed */
+  bool stream_binary;
+  bool stream_readable;
+  bool stream_writable;
+  bool stream_closed;
   bool mu_initialized;
   bool cv_initialized;
 };
+
+static TyaResource *tya_resource_new(TyaResourceSubkind sub);
+static TyaResource *tya_resource_check(TyaValue v, TyaResourceSubkind want, const char *op);
 
 /* TyaChannel is the runtime representation of a channel value (v0.42).
  * Items are stored in a ring buffer protected by mu; sends wait on
@@ -948,6 +958,7 @@ TyaValue tya_kind(TyaValue value) {
       case TYA_RES_MUTEX: return tya_string("mutex");
       case TYA_RES_ATOMIC_INTEGER: return tya_string("atomic_integer");
       case TYA_RES_WAIT_GROUP: return tya_string("wait_group");
+      case TYA_RES_STREAM: return tya_string("stream");
     }
     return tya_string("resource");
   }
@@ -3168,6 +3179,184 @@ TyaValue tya_file_append(TyaValue path, TyaValue text) {
   return tya_nil();
 }
 
+
+static TyaValue tya_stream_value(FILE *fp, bool borrowed, bool binary, bool readable, bool writable) {
+  TyaResource *r = tya_resource_new(TYA_RES_STREAM);
+  r->stream = fp;
+  r->stream_borrowed = borrowed;
+  r->stream_binary = binary;
+  r->stream_readable = readable;
+  r->stream_writable = writable;
+  r->stream_closed = false;
+  return (TyaValue){.kind = TYA_RESOURCE, .resource = r};
+}
+
+TyaValue tya_io_stdin(void) {
+  return tya_stream_value(stdin, true, false, true, false);
+}
+
+TyaValue tya_io_stdout(void) {
+  return tya_stream_value(stdout, true, false, false, true);
+}
+
+TyaValue tya_io_stderr(void) {
+  return tya_stream_value(stderr, true, false, false, true);
+}
+
+TyaValue tya_io_open(TyaValue path, TyaValue mode) {
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    tya_raise(tya_string("io.open: path must be a string"));
+    return tya_nil();
+  }
+  if (mode.kind != TYA_STRING || mode.string == NULL) {
+    tya_raise(tya_string("io.open: mode must be a string"));
+    return tya_nil();
+  }
+  const char *m = mode.string;
+  bool readable = strchr(m, 'r') != NULL;
+  bool writable = strchr(m, 'w') != NULL || strchr(m, 'a') != NULL;
+  bool binary = strchr(m, 'b') != NULL;
+  if (!readable && !writable) {
+    tya_raise(tya_string("io.open: invalid mode"));
+    return tya_nil();
+  }
+  FILE *fp = fopen(path.string, m);
+  if (fp == NULL) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  return tya_stream_value(fp, false, binary, readable, writable);
+}
+
+static TyaResource *tya_stream_check(TyaValue stream, const char *op) {
+  TyaResource *r = tya_resource_check(stream, TYA_RES_STREAM, op);
+  if (r == NULL) return NULL;
+  if (r->stream_closed || r->stream == NULL) {
+    char buf[128];
+    snprintf(buf, sizeof(buf), "%s: stream is closed", op);
+    tya_raise(tya_string(buf));
+    return NULL;
+  }
+  return r;
+}
+
+static TyaValue tya_string_from_buffer(const char *buf, int len) {
+  char *out = malloc((size_t)len + 1);
+  if (out == NULL) {
+    tya_raise(tya_string("io.read: out of memory"));
+    return tya_nil();
+  }
+  memcpy(out, buf, (size_t)len);
+  out[len] = '\0';
+  return tya_string(out);
+}
+
+TyaValue tya_io_stream_read(TyaValue stream, TyaValue size_v) {
+  TyaResource *r = tya_stream_check(stream, "io.read");
+  if (r == NULL) return tya_nil();
+  if (!r->stream_readable) {
+    tya_raise(tya_string("io.read: stream is not readable"));
+    return tya_nil();
+  }
+  if (size_v.kind != TYA_NUMBER) {
+    tya_raise(tya_string("io.read: size must be a number"));
+    return tya_nil();
+  }
+  int size = (int)size_v.number;
+  if (size < 0) {
+    tya_raise(tya_string("io.read: size must be non-negative"));
+    return tya_nil();
+  }
+  char *buf = malloc((size_t)(size > 0 ? size : 1));
+  if (buf == NULL) {
+    tya_raise(tya_string("io.read: out of memory"));
+    return tya_nil();
+  }
+  size_t got = fread(buf, 1, (size_t)size, r->stream);
+  TyaValue out = r->stream_binary ? tya_bytes_lit(buf, (int)got) : tya_string_from_buffer(buf, (int)got);
+  free(buf);
+  return out;
+}
+
+TyaValue tya_io_stream_read_line(TyaValue stream) {
+  TyaResource *r = tya_stream_check(stream, "io.read_line");
+  if (r == NULL) return tya_nil();
+  if (!r->stream_readable) {
+    tya_raise(tya_string("io.read_line: stream is not readable"));
+    return tya_nil();
+  }
+  if (feof(r->stream)) return tya_nil();
+  size_t cap = 128;
+  size_t len = 0;
+  char *buf = malloc(cap);
+  if (buf == NULL) {
+    tya_raise(tya_string("io.read_line: out of memory"));
+    return tya_nil();
+  }
+  int ch;
+  while ((ch = fgetc(r->stream)) != EOF) {
+    if (len + 1 >= cap) {
+      cap *= 2;
+      char *next = realloc(buf, cap);
+      if (next == NULL) {
+        free(buf);
+        tya_raise(tya_string("io.read_line: out of memory"));
+        return tya_nil();
+      }
+      buf = next;
+    }
+    buf[len++] = (char)ch;
+    if (ch == '\n') break;
+  }
+  if (len == 0 && ch == EOF) {
+    free(buf);
+    return tya_nil();
+  }
+  TyaValue out = r->stream_binary ? tya_bytes_lit(buf, (int)len) : tya_string_from_buffer(buf, (int)len);
+  free(buf);
+  return out;
+}
+
+TyaValue tya_io_stream_eof(TyaValue stream) {
+  TyaResource *r = tya_stream_check(stream, "io.eof?");
+  if (r == NULL) return tya_bool(true);
+  return tya_bool(feof(r->stream));
+}
+
+TyaValue tya_io_stream_write(TyaValue stream, TyaValue value) {
+  TyaResource *r = tya_stream_check(stream, "io.write");
+  if (r == NULL) return tya_nil();
+  if (!r->stream_writable) {
+    tya_raise(tya_string("io.write: stream is not writable"));
+    return tya_nil();
+  }
+  if (value.kind == TYA_BYTES && value.bytes != NULL) {
+    if (value.bytes->len > 0) fwrite(value.bytes->data, 1, (size_t)value.bytes->len, r->stream);
+    return tya_number(value.bytes->len);
+  }
+  TyaValue s = tya_to_string(value);
+  if (s.string == NULL) return tya_number(0);
+  fputs(s.string, r->stream);
+  return tya_number(strlen(s.string));
+}
+
+TyaValue tya_io_stream_flush(TyaValue stream) {
+  TyaResource *r = tya_stream_check(stream, "io.flush");
+  if (r == NULL) return tya_nil();
+  fflush(r->stream);
+  return tya_nil();
+}
+
+TyaValue tya_io_stream_close(TyaValue stream) {
+  TyaResource *r = tya_resource_check(stream, TYA_RES_STREAM, "io.close");
+  if (r == NULL) return tya_nil();
+  if (r->stream_closed) return tya_nil();
+  if (!r->stream_borrowed && r->stream != NULL) fclose(r->stream);
+  r->stream_closed = true;
+  r->stream = NULL;
+  return tya_nil();
+}
+
 /* =========================================================================
  * v0.41 GC API
  * ========================================================================= */
@@ -3766,6 +3955,12 @@ static TyaResource *tya_resource_new(TyaResourceSubkind sub) {
   r->subkind = sub;
   r->counter = 0;
   atomic_store(&r->atomic_value, 0);
+  r->stream = NULL;
+  r->stream_borrowed = false;
+  r->stream_binary = false;
+  r->stream_readable = false;
+  r->stream_writable = false;
+  r->stream_closed = false;
   r->mu_initialized = false;
   r->cv_initialized = false;
   return r;
@@ -3779,6 +3974,7 @@ static TyaResource *tya_resource_check(TyaValue v, TyaResourceSubkind want, cons
       case TYA_RES_MUTEX: expected = "mutex"; break;
       case TYA_RES_ATOMIC_INTEGER: expected = "atomic_integer"; break;
       case TYA_RES_WAIT_GROUP: expected = "wait_group"; break;
+      case TYA_RES_STREAM: expected = "stream"; break;
     }
     snprintf(buf, sizeof(buf), "%s: argument must be a %s", op, expected);
     tya_raise(tya_string(buf));

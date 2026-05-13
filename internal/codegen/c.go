@@ -2936,6 +2936,26 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_stderr_write(%s)", 1)
 	case "file_append":
 		return emit("tya_file_append(%s, %s)", 2)
+	case "io_stdin":
+		return emit("tya_io_stdin()", 0)
+	case "io_stdout":
+		return emit("tya_io_stdout()", 0)
+	case "io_stderr":
+		return emit("tya_io_stderr()", 0)
+	case "io_open":
+		return emit("tya_io_open(%s, %s)", 2)
+	case "io_stream_read":
+		return emit("tya_io_stream_read(%s, %s)", 2)
+	case "io_stream_read_line":
+		return emit("tya_io_stream_read_line(%s)", 1)
+	case "io_stream_eof":
+		return emit("tya_io_stream_eof(%s)", 1)
+	case "io_stream_write":
+		return emit("tya_io_stream_write(%s, %s)", 2)
+	case "io_stream_flush":
+		return emit("tya_io_stream_flush(%s)", 1)
+	case "io_stream_close":
+		return emit("tya_io_stream_close(%s)", 1)
 	case "http_server_run":
 		return emit("tya_http_server_run(%s, %s)", 2)
 	}

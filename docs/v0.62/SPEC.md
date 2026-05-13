@@ -178,6 +178,26 @@ every record. `logger.level(value)` changes the minimum level and returns the
 logger. `file: "path"` appends records to a file; stderr remains the default
 destination.
 
+## IO Stdlib
+
+`import io` exposes `io.Io`, `io.Reader`, and `io.Writer` for process streams,
+file streams, line iteration, and chunk copying.
+
+`Io.stdin()`, `Io.stdout()`, and `Io.stderr()` return borrowed wrappers around
+the process streams. Closing those wrappers does not close the host process
+stream. `Io.open(path, mode)` opens text modes such as `"r"` and `"w"` and
+binary modes `"rb"` and `"wb"`.
+
+Reader instances provide `read(size)`, `read_line()`, `each_line(fn)`,
+`eof?()`, and `close()`. Text readers return strings; binary readers return
+bytes. `read_line()` returns `nil` after the last line.
+
+Writer instances provide `write(value)`, `write_line(value)`, `flush()`, and
+`close()`. `write` returns the number of bytes written.
+
+`Io.copy(reader, writer)` copies chunks until EOF, flushes the writer, and
+returns the copied byte count.
+
 ## Net IP Stdlib
 
 `import net/ip` exposes `Address` and `Network` classes for shared address

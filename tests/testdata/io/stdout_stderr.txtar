@@ -1,0 +1,15 @@
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/stdout_stderr.tya
+stdout 'out\n'
+stderr 'err\n'
+
+-- stdout_stderr.tya --
+import io as io
+
+out = io.Io.stdout()
+err = io.Io.stderr()
+out.write_line("out")
+out.flush()
+err.write_line("err")
+err.flush()

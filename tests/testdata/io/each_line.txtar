@@ -1,0 +1,19 @@
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/each_line.tya
+stdout 'alpha\nbeta\n'
+
+-- each_line.tya --
+import io as io
+import file as file
+
+out = io.Io.stdout()
+collect = line -> out.write(line)
+
+path = "each_line.txt"
+file.File.write(path, "alpha\nbeta\n")
+reader = io.Io.open(path, "r")
+reader.each_line(collect)
+reader.close()
+out.flush()
+file.File.remove(path)

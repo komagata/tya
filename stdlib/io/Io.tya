@@ -1,0 +1,27 @@
+class Io
+  static stdin = ->
+    Reader(io_stdin(), false)
+
+  static stdout = ->
+    Writer(io_stdout(), false)
+
+  static stderr = ->
+    Writer(io_stderr(), false)
+
+  static open = path, mode ->
+    if mode == nil
+      mode = "r"
+    handle = io_open(path, mode)
+    binary = mode.contains("b")
+    if mode.contains("r")
+      return Reader(handle, binary)
+    return Writer(handle, binary)
+
+  static copy = reader, writer ->
+    total = 0
+    chunk = reader.read(8192)
+    while chunk != nil and chunk.len() > 0
+      total = total + writer.write(chunk)
+      chunk = reader.read(8192)
+    writer.flush()
+    return total

@@ -1,0 +1,23 @@
+class Reader
+  initialize = handle, binary ->
+    self.handle = handle
+    self.binary = binary
+
+  read = size ->
+    io_stream_read(self.handle, size)
+
+  read_line = ->
+    io_stream_read_line(self.handle)
+
+  each_line = fn ->
+    line = self.read_line()
+    while line != nil
+      fn(line)
+      line = self.read_line()
+    nil
+
+  eof? = ->
+    io_stream_eof(self.handle)
+
+  close = ->
+    io_stream_close(self.handle)

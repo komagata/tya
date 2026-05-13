@@ -726,6 +726,40 @@ Text logs use a deterministic field order:
 2026-05-13T12:00:00Z info started app=api port=8080
 ```
 
+## `io` (v0.62)
+
+Line-oriented and chunk-oriented streams.
+
+```tya
+import io as io
+
+reader = io.Io.open("input.txt", "r")
+writer = io.Io.open("output.txt", "w")
+count = io.Io.copy(reader, writer)
+reader.close()
+writer.close()
+```
+
+Class members on `io.Io`: `stdin`, `stdout`, `stderr`, `open`, `copy`.
+
+Reader methods: `read`, `read_line`, `each_line`, `eof?`, `close`.
+Writer methods: `write`, `write_line`, `flush`, `close`.
+
+`Io.stdin()`, `Io.stdout()`, and `Io.stderr()` wrap the process streams.
+Closing those borrowed streams is a no-op for the host process. `Io.open(path,
+mode)` accepts text modes such as `"r"` and `"w"` and binary modes `"rb"` and
+`"wb"`.
+
+`reader.read(size)` returns a string in text mode and bytes in binary mode. It
+returns an empty value at EOF for chunk reads; `reader.read_line()` returns
+`nil` after the last line. `reader.each_line(fn)` calls `fn(line)` for each
+line, preserving trailing newlines.
+
+`writer.write(value)` writes strings, bytes, or stringified values and returns
+the byte count. `writer.write_line(value)` appends a newline. `Io.copy(reader,
+writer)` copies chunks until EOF, flushes the writer, and returns the copied
+byte count.
+
 ## `net/ip` (v0.62)
 
 IP address and CIDR parsing.
