@@ -17,6 +17,7 @@ import (
 	"io"
 	mathpkg "math"
 	mathrand "math/rand"
+	"net"
 	"os"
 	"os/exec"
 	"strconv"
@@ -71,6 +72,13 @@ type IOStream struct {
 	readable bool
 	writable bool
 	borrowed bool
+	closed   bool
+}
+type TCPSocket struct {
+	conn     net.Conn
+	listener net.Listener
+	binary   bool
+	timeout  time.Duration
 	closed   bool
 }
 type Tuple struct {
@@ -3201,6 +3209,247 @@ func registerV25Builtins(env *Env) {
 			return nil, nil
 		}
 		return nil, s.file.Close()
+	}))
+	socketOptions := func(options Value) (bool, time.Duration) {
+		opts, _ := options.(Dict)
+		binary := false
+		timeout := time.Duration(0)
+		if opts != nil {
+			if mode, ok := opts["mode"].(string); ok && mode == "binary" {
+				binary = true
+			}
+			if seconds, ok := numberAsFloat(opts["timeout"]); ok && seconds > 0 {
+				timeout = time.Duration(seconds * float64(time.Second))
+			}
+		}
+		return binary, timeout
+	}
+	socketArg := func(name string, args []Value) (*TCPSocket, error) {
+		if len(args) < 1 {
+			return nil, fmt.Errorf("%s expects socket argument", name)
+		}
+		s, ok := args[0].(*TCPSocket)
+		if !ok || s == nil || s.conn == nil {
+			return nil, &raisedSignal{value: name + ": argument must be a socket"}
+		}
+		if s.closed {
+			return nil, &raisedSignal{value: name + ": socket is closed"}
+		}
+		return s, nil
+	}
+	serverArg := func(name string, args []Value) (*TCPSocket, error) {
+		if len(args) < 1 {
+			return nil, fmt.Errorf("%s expects server argument", name)
+		}
+		s, ok := args[0].(*TCPSocket)
+		if !ok || s == nil || s.listener == nil {
+			return nil, &raisedSignal{value: name + ": argument must be a socket server"}
+		}
+		if s.closed {
+			return nil, &raisedSignal{value: name + ": socket is closed"}
+		}
+		return s, nil
+	}
+	socketAddress := func(addr net.Addr) Dict {
+		host := ""
+		port := int64(0)
+		if tcp, ok := addr.(*net.TCPAddr); ok {
+			host = tcp.IP.String()
+			port = int64(tcp.Port)
+		} else if addr != nil {
+			host, _, _ = net.SplitHostPort(addr.String())
+		}
+		return Dict{"host": host, "port": port}
+	}
+	env.set("socket_connect", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 3 {
+			return nil, fmt.Errorf("socket_connect expects 3 arguments")
+		}
+		host, ok := args[0].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "socket.connect: host must be a string"}
+		}
+		port, ok := numberAsInt(args[1])
+		if !ok || port < 0 || port > 65535 {
+			return nil, &raisedSignal{value: "socket.connect: invalid port"}
+		}
+		binary, timeout := socketOptions(args[2])
+		address := net.JoinHostPort(host, strconv.FormatInt(port, 10))
+		var conn net.Conn
+		var err error
+		if timeout > 0 {
+			conn, err = net.DialTimeout("tcp", address, timeout)
+		} else {
+			conn, err = net.Dial("tcp", address)
+		}
+		if err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return &TCPSocket{conn: conn, binary: binary, timeout: timeout}, nil
+	}))
+	env.set("socket_server_listen", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 3 {
+			return nil, fmt.Errorf("socket_server_listen expects 3 arguments")
+		}
+		host, ok := args[0].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "socket.listen: host must be a string"}
+		}
+		port, ok := numberAsInt(args[1])
+		if !ok || port < 0 || port > 65535 {
+			return nil, &raisedSignal{value: "socket.listen: invalid port"}
+		}
+		binary, timeout := socketOptions(args[2])
+		listener, err := net.Listen("tcp", net.JoinHostPort(host, strconv.FormatInt(port, 10)))
+		if err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return &TCPSocket{listener: listener, binary: binary, timeout: timeout}, nil
+	}))
+	env.set("socket_server_accept", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("socket_server_accept expects 1 argument")
+		}
+		s, err := serverArg("socket.accept", args)
+		if err != nil {
+			return nil, err
+		}
+		if s.timeout > 0 {
+			if tcp, ok := s.listener.(*net.TCPListener); ok {
+				_ = tcp.SetDeadline(time.Now().Add(s.timeout))
+			}
+		}
+		conn, err := s.listener.Accept()
+		if err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return &TCPSocket{conn: conn, binary: s.binary, timeout: s.timeout}, nil
+	}))
+	env.set("socket_read", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("socket_read expects 2 arguments")
+		}
+		s, err := socketArg("socket.read", args)
+		if err != nil {
+			return nil, err
+		}
+		size, ok := numberAsInt(args[1])
+		if !ok || size < 0 {
+			return nil, &raisedSignal{value: "socket.read: size must be non-negative"}
+		}
+		if s.timeout > 0 {
+			_ = s.conn.SetReadDeadline(time.Now().Add(s.timeout))
+		}
+		buf := make([]byte, int(size))
+		n, err := s.conn.Read(buf)
+		if err != nil && err != io.EOF {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		buf = buf[:n]
+		if s.binary {
+			return &Bytes{data: buf}, nil
+		}
+		return string(buf), nil
+	}))
+	env.set("socket_read_line", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("socket_read_line expects 1 argument")
+		}
+		s, err := socketArg("socket.read_line", args)
+		if err != nil {
+			return nil, err
+		}
+		if s.timeout > 0 {
+			_ = s.conn.SetReadDeadline(time.Now().Add(s.timeout))
+		}
+		var buf []byte
+		tmp := make([]byte, 1)
+		for {
+			n, rerr := s.conn.Read(tmp)
+			if n > 0 {
+				buf = append(buf, tmp[0])
+				if tmp[0] == '\n' {
+					break
+				}
+			}
+			if rerr == io.EOF {
+				break
+			}
+			if rerr != nil {
+				return nil, &raisedSignal{value: rerr.Error()}
+			}
+		}
+		if len(buf) == 0 {
+			return nil, nil
+		}
+		if s.binary {
+			return &Bytes{data: buf}, nil
+		}
+		return string(buf), nil
+	}))
+	env.set("socket_write", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("socket_write expects 2 arguments")
+		}
+		s, err := socketArg("socket.write", args)
+		if err != nil {
+			return nil, err
+		}
+		var data []byte
+		if b, ok := args[1].(*Bytes); ok {
+			data = b.data
+		} else {
+			data = []byte(stringify(args[1]))
+		}
+		if s.timeout > 0 {
+			_ = s.conn.SetWriteDeadline(time.Now().Add(s.timeout))
+		}
+		n, err := s.conn.Write(data)
+		if err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return int64(n), nil
+	}))
+	env.set("socket_close", Builtin(func(args []Value) (Value, error) {
+		s, ok := args[0].(*TCPSocket)
+		if !ok || s == nil || s.conn == nil || s.closed {
+			return nil, nil
+		}
+		s.closed = true
+		return nil, s.conn.Close()
+	}))
+	env.set("socket_closed", Builtin(func(args []Value) (Value, error) {
+		s, ok := args[0].(*TCPSocket)
+		return !ok || s == nil || s.closed, nil
+	}))
+	env.set("socket_local_address", Builtin(func(args []Value) (Value, error) {
+		s, err := socketArg("socket.local_address", args)
+		if err != nil {
+			return nil, err
+		}
+		return socketAddress(s.conn.LocalAddr()), nil
+	}))
+	env.set("socket_remote_address", Builtin(func(args []Value) (Value, error) {
+		s, err := socketArg("socket.remote_address", args)
+		if err != nil {
+			return nil, err
+		}
+		return socketAddress(s.conn.RemoteAddr()), nil
+	}))
+	env.set("socket_server_close", Builtin(func(args []Value) (Value, error) {
+		s, ok := args[0].(*TCPSocket)
+		if !ok || s == nil || s.listener == nil || s.closed {
+			return nil, nil
+		}
+		s.closed = true
+		return nil, s.listener.Close()
+	}))
+	env.set("socket_server_local_address", Builtin(func(args []Value) (Value, error) {
+		s, err := serverArg("socket.server.local_address", args)
+		if err != nil {
+			return nil, err
+		}
+		return socketAddress(s.listener.Addr()), nil
 	}))
 }
 

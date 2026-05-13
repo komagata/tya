@@ -31,6 +31,14 @@
 #include <unistd.h>
 #include <zlib.h>
 
+#ifndef _WIN32
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/syscall.h>
+#endif
+
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/random.h>
 #endif
@@ -66,6 +74,8 @@ typedef enum {
   TYA_RES_ATOMIC_INTEGER = 2,
   TYA_RES_WAIT_GROUP = 3,
   TYA_RES_STREAM = 4,
+  TYA_RES_SOCKET = 5,
+  TYA_RES_SOCKET_SERVER = 6,
 } TyaResourceSubkind;
 
 typedef struct TyaGcHeader {
@@ -119,6 +129,10 @@ struct TyaResource {
   bool stream_readable;
   bool stream_writable;
   bool stream_closed;
+  int socket_fd;             /* socket / socket_server only */
+  bool socket_binary;
+  bool socket_closed;
+  double socket_timeout;
   bool mu_initialized;
   bool cv_initialized;
 };
@@ -960,6 +974,8 @@ TyaValue tya_kind(TyaValue value) {
       case TYA_RES_ATOMIC_INTEGER: return tya_string("atomic_integer");
       case TYA_RES_WAIT_GROUP: return tya_string("wait_group");
       case TYA_RES_STREAM: return tya_string("stream");
+      case TYA_RES_SOCKET: return tya_string("socket");
+      case TYA_RES_SOCKET_SERVER: return tya_string("socket_server");
     }
     return tya_string("resource");
   }
@@ -3475,6 +3491,340 @@ TyaValue tya_io_stream_close(TyaValue stream) {
   return tya_nil();
 }
 
+#ifdef _WIN32
+TyaValue tya_socket_connect(TyaValue host, TyaValue port, TyaValue options) {
+  (void)host; (void)port; (void)options;
+  tya_raise(tya_string("net/socket: not supported on Windows"));
+  return tya_nil();
+}
+TyaValue tya_socket_server_listen(TyaValue host, TyaValue port, TyaValue options) { (void)host; (void)port; (void)options; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_server_accept(TyaValue server) { (void)server; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_read(TyaValue socket, TyaValue size) { (void)socket; (void)size; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_read_line(TyaValue socket) { (void)socket; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_write(TyaValue socket, TyaValue value) { (void)socket; (void)value; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_close(TyaValue socket) { (void)socket; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_closed(TyaValue socket) { (void)socket; return tya_bool(true); }
+TyaValue tya_socket_local_address(TyaValue socket) { (void)socket; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_remote_address(TyaValue socket) { (void)socket; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_server_close(TyaValue server) { (void)server; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+TyaValue tya_socket_server_local_address(TyaValue server) { (void)server; tya_raise(tya_string("net/socket: not supported on Windows")); return tya_nil(); }
+#else
+static TyaValue tya_socket_value(int fd, TyaResourceSubkind subkind, bool binary, double timeout) {
+  TyaResource *r = tya_resource_new(subkind);
+  r->socket_fd = fd;
+  r->socket_binary = binary;
+  r->socket_closed = false;
+  r->socket_timeout = timeout;
+  return (TyaValue){.kind = TYA_RESOURCE, .resource = r};
+}
+
+static bool tya_socket_binary_option(TyaValue options) {
+  if (options.kind != TYA_DICT && options.kind != TYA_OBJECT) return false;
+  TyaValue mode = tya_index(options, tya_string("mode"));
+  return mode.kind == TYA_STRING && mode.string != NULL && strcmp(mode.string, "binary") == 0;
+}
+
+static double tya_socket_timeout_option(TyaValue options) {
+  if (options.kind != TYA_DICT && options.kind != TYA_OBJECT) return 0.0;
+  TyaValue timeout = tya_index(options, tya_string("timeout"));
+  if (timeout.kind != TYA_NUMBER || timeout.number <= 0) return 0.0;
+  return timeout.number;
+}
+
+static void tya_socket_apply_timeout(int fd, double seconds) {
+  if (seconds <= 0) return;
+  struct timeval tv;
+  tv.tv_sec = (time_t)seconds;
+  tv.tv_usec = (suseconds_t)((seconds - (double)tv.tv_sec) * 1000000.0);
+  if (tv.tv_sec == 0 && tv.tv_usec == 0) tv.tv_usec = 1;
+  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+  setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+}
+
+static void tya_socket_raise_errno(const char *op) {
+  if (errno == EAGAIN || errno == EWOULDBLOCK) {
+    char buf[128];
+    snprintf(buf, sizeof(buf), "%s: timeout", op);
+    tya_raise(tya_string(buf));
+    return;
+  }
+  tya_raise(tya_string(strerror(errno)));
+}
+
+static int tya_socket_port(TyaValue port, const char *op) {
+  if (port.kind != TYA_NUMBER) {
+    char buf[96];
+    snprintf(buf, sizeof(buf), "%s: port must be a number", op);
+    tya_raise(tya_string(buf));
+    return -1;
+  }
+  int p = (int)port.number;
+  if (p < 0 || p > 65535) {
+    char buf[96];
+    snprintf(buf, sizeof(buf), "%s: invalid port", op);
+    tya_raise(tya_string(buf));
+    return -1;
+  }
+  return p;
+}
+
+static TyaResource *tya_socket_check(TyaValue socket, TyaResourceSubkind subkind, const char *op) {
+  TyaResource *r = tya_resource_check(socket, subkind, op);
+  if (r == NULL) return NULL;
+  if (r->socket_closed || r->socket_fd < 0) {
+    char buf[128];
+    snprintf(buf, sizeof(buf), "%s: socket is closed", op);
+    tya_raise(tya_string(buf));
+    return NULL;
+  }
+  return r;
+}
+
+static TyaValue tya_sockaddr_value(struct sockaddr_storage *addr, socklen_t len) {
+  char host[NI_MAXHOST];
+  char serv[NI_MAXSERV];
+  if (getnameinfo((struct sockaddr *)addr, len, host, sizeof(host), serv, sizeof(serv), NI_NUMERICHOST | NI_NUMERICSERV) != 0) {
+    return tya_dict((TyaDictEntry[]){{"host", tya_string("")}, {"port", tya_number(0)}}, 2);
+  }
+  return tya_dict((TyaDictEntry[]){{"host", tya_string(strdup(host))}, {"port", tya_number((double)atoi(serv))}}, 2);
+}
+
+TyaValue tya_socket_connect(TyaValue host, TyaValue port, TyaValue options) {
+  if (host.kind != TYA_STRING || host.string == NULL) {
+    tya_raise(tya_string("socket.connect: host must be a string"));
+    return tya_nil();
+  }
+  int p = tya_socket_port(port, "socket.connect");
+  if (p < 0) return tya_nil();
+  char port_s[16];
+  snprintf(port_s, sizeof(port_s), "%d", p);
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+  struct addrinfo *res = NULL;
+  int rc = getaddrinfo(host.string, port_s, &hints, &res);
+  if (rc != 0) {
+    tya_raise(tya_string(gai_strerror(rc)));
+    return tya_nil();
+  }
+  int fd = -1;
+  for (struct addrinfo *ai = res; ai != NULL; ai = ai->ai_next) {
+    fd = (int)syscall(SYS_socket, ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+    if (fd < 0) continue;
+    if (connect(fd, ai->ai_addr, ai->ai_addrlen) == 0) break;
+    close(fd);
+    fd = -1;
+  }
+  freeaddrinfo(res);
+  if (fd < 0) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  double timeout = tya_socket_timeout_option(options);
+  tya_socket_apply_timeout(fd, timeout);
+  return tya_socket_value(fd, TYA_RES_SOCKET, tya_socket_binary_option(options), timeout);
+}
+
+TyaValue tya_socket_server_listen(TyaValue host, TyaValue port, TyaValue options) {
+  if (host.kind != TYA_STRING || host.string == NULL) {
+    tya_raise(tya_string("socket.listen: host must be a string"));
+    return tya_nil();
+  }
+  int p = tya_socket_port(port, "socket.listen");
+  if (p < 0) return tya_nil();
+  int fd = (int)syscall(SYS_socket, AF_INET, SOCK_STREAM, 0);
+  if (fd < 0) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  int yes = 1;
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+  struct sockaddr_in addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons((uint16_t)p);
+  if (inet_pton(AF_INET, host.string, &addr.sin_addr) != 1) {
+    close(fd);
+    tya_raise(tya_string("socket.listen: host must be an IPv4 address"));
+    return tya_nil();
+  }
+  if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0 || listen(fd, 16) != 0) {
+    char *msg = strdup(strerror(errno));
+    close(fd);
+    tya_raise(tya_string(msg));
+    return tya_nil();
+  }
+  double timeout = tya_socket_timeout_option(options);
+  tya_socket_apply_timeout(fd, timeout);
+  return tya_socket_value(fd, TYA_RES_SOCKET_SERVER, tya_socket_binary_option(options), timeout);
+}
+
+TyaValue tya_socket_server_accept(TyaValue server) {
+  TyaResource *r = tya_socket_check(server, TYA_RES_SOCKET_SERVER, "socket.accept");
+  if (r == NULL) return tya_nil();
+  int fd = accept(r->socket_fd, NULL, NULL);
+  if (fd < 0) {
+    tya_socket_raise_errno("socket.accept");
+    return tya_nil();
+  }
+  tya_socket_apply_timeout(fd, r->socket_timeout);
+  return tya_socket_value(fd, TYA_RES_SOCKET, r->socket_binary, r->socket_timeout);
+}
+
+TyaValue tya_socket_read(TyaValue socket, TyaValue size_v) {
+  TyaResource *r = tya_socket_check(socket, TYA_RES_SOCKET, "socket.read");
+  if (r == NULL) return tya_nil();
+  if (size_v.kind != TYA_NUMBER || size_v.number < 0) {
+    tya_raise(tya_string("socket.read: size must be a non-negative number"));
+    return tya_nil();
+  }
+  int size = (int)size_v.number;
+  char *buf = malloc((size_t)(size > 0 ? size : 1));
+  if (buf == NULL) {
+    tya_raise(tya_string("socket.read: out of memory"));
+    return tya_nil();
+  }
+  ssize_t n = recv(r->socket_fd, buf, (size_t)size, 0);
+  if (n < 0) {
+    free(buf);
+    tya_socket_raise_errno("socket.read");
+    return tya_nil();
+  }
+  TyaValue out = r->socket_binary ? tya_bytes_lit(buf, (int)n) : tya_string_from_buffer(buf, (int)n);
+  free(buf);
+  return out;
+}
+
+TyaValue tya_socket_read_line(TyaValue socket) {
+  TyaResource *r = tya_socket_check(socket, TYA_RES_SOCKET, "socket.read_line");
+  if (r == NULL) return tya_nil();
+  size_t cap = 128;
+  size_t len = 0;
+  char *buf = malloc(cap);
+  if (buf == NULL) {
+    tya_raise(tya_string("socket.read_line: out of memory"));
+    return tya_nil();
+  }
+  char ch;
+  while (true) {
+    ssize_t n = recv(r->socket_fd, &ch, 1, 0);
+    if (n == 0) break;
+    if (n < 0) {
+      free(buf);
+      tya_socket_raise_errno("socket.read_line");
+      return tya_nil();
+    }
+    if (len + 1 >= cap) {
+      cap *= 2;
+      char *next = realloc(buf, cap);
+      if (next == NULL) {
+        free(buf);
+        tya_raise(tya_string("socket.read_line: out of memory"));
+        return tya_nil();
+      }
+      buf = next;
+    }
+    buf[len++] = ch;
+    if (ch == '\n') break;
+  }
+  if (len == 0) {
+    free(buf);
+    return tya_nil();
+  }
+  TyaValue out = r->socket_binary ? tya_bytes_lit(buf, (int)len) : tya_string_from_buffer(buf, (int)len);
+  free(buf);
+  return out;
+}
+
+TyaValue tya_socket_write(TyaValue socket, TyaValue value) {
+  TyaResource *r = tya_socket_check(socket, TYA_RES_SOCKET, "socket.write");
+  if (r == NULL) return tya_nil();
+  const unsigned char *data = NULL;
+  size_t len = 0;
+  TyaValue text = value;
+  if (value.kind == TYA_BYTES && value.bytes != NULL) {
+    data = value.bytes->data;
+    len = (size_t)value.bytes->len;
+  } else {
+    text = tya_to_string(value);
+    if (text.string == NULL) return tya_number(0);
+    data = (const unsigned char *)text.string;
+    len = strlen(text.string);
+  }
+  size_t sent = 0;
+  while (sent < len) {
+    ssize_t n = send(r->socket_fd, data + sent, len - sent, 0);
+    if (n < 0) {
+      tya_socket_raise_errno("socket.write");
+      return tya_nil();
+    }
+    sent += (size_t)n;
+  }
+  return tya_number((double)sent);
+}
+
+TyaValue tya_socket_close(TyaValue socket) {
+  TyaResource *r = tya_resource_check(socket, TYA_RES_SOCKET, "socket.close");
+  if (r == NULL || r->socket_closed) return tya_nil();
+  close(r->socket_fd);
+  r->socket_fd = -1;
+  r->socket_closed = true;
+  return tya_nil();
+}
+
+TyaValue tya_socket_server_close(TyaValue server) {
+  TyaResource *r = tya_resource_check(server, TYA_RES_SOCKET_SERVER, "socket.server.close");
+  if (r == NULL || r->socket_closed) return tya_nil();
+  close(r->socket_fd);
+  r->socket_fd = -1;
+  r->socket_closed = true;
+  return tya_nil();
+}
+
+TyaValue tya_socket_closed(TyaValue socket) {
+  TyaResource *r = tya_resource_check(socket, TYA_RES_SOCKET, "socket.closed?");
+  if (r == NULL) return tya_bool(true);
+  return tya_bool(r->socket_closed || r->socket_fd < 0);
+}
+
+TyaValue tya_socket_local_address(TyaValue socket) {
+  TyaResource *r = tya_socket_check(socket, TYA_RES_SOCKET, "socket.local_address");
+  if (r == NULL) return tya_nil();
+  struct sockaddr_storage addr;
+  socklen_t len = sizeof(addr);
+  if (getsockname(r->socket_fd, (struct sockaddr *)&addr, &len) != 0) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  return tya_sockaddr_value(&addr, len);
+}
+
+TyaValue tya_socket_remote_address(TyaValue socket) {
+  TyaResource *r = tya_socket_check(socket, TYA_RES_SOCKET, "socket.remote_address");
+  if (r == NULL) return tya_nil();
+  struct sockaddr_storage addr;
+  socklen_t len = sizeof(addr);
+  if (getpeername(r->socket_fd, (struct sockaddr *)&addr, &len) != 0) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  return tya_sockaddr_value(&addr, len);
+}
+
+TyaValue tya_socket_server_local_address(TyaValue server) {
+  TyaResource *r = tya_socket_check(server, TYA_RES_SOCKET_SERVER, "socket.server.local_address");
+  if (r == NULL) return tya_nil();
+  struct sockaddr_storage addr;
+  socklen_t len = sizeof(addr);
+  if (getsockname(r->socket_fd, (struct sockaddr *)&addr, &len) != 0) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  return tya_sockaddr_value(&addr, len);
+}
+#endif
+
 /* =========================================================================
  * v0.41 GC API
  * ========================================================================= */
@@ -4079,6 +4429,10 @@ static TyaResource *tya_resource_new(TyaResourceSubkind sub) {
   r->stream_readable = false;
   r->stream_writable = false;
   r->stream_closed = false;
+  r->socket_fd = -1;
+  r->socket_binary = false;
+  r->socket_closed = false;
+  r->socket_timeout = 0.0;
   r->mu_initialized = false;
   r->cv_initialized = false;
   return r;
@@ -4093,6 +4447,8 @@ static TyaResource *tya_resource_check(TyaValue v, TyaResourceSubkind want, cons
       case TYA_RES_ATOMIC_INTEGER: expected = "atomic_integer"; break;
       case TYA_RES_WAIT_GROUP: expected = "wait_group"; break;
       case TYA_RES_STREAM: expected = "stream"; break;
+      case TYA_RES_SOCKET: expected = "socket"; break;
+      case TYA_RES_SOCKET_SERVER: expected = "socket_server"; break;
     }
     snprintf(buf, sizeof(buf), "%s: argument must be a %s", op, expected);
     tya_raise(tya_string(buf));

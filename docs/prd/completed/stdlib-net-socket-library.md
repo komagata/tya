@@ -1,6 +1,6 @@
 ---
-status: approved
-goal_ready: true
+status: completed
+goal_ready: false
 ---
 
 # Feature: Net Socket Stdlib Library

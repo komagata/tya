@@ -838,3 +838,39 @@ address. Invalid input raises; `Address.valid?(text)` returns `false`.
 
 `Network.parse(cidr)` accepts IPv4 and IPv6 CIDR prefixes. `Network.contains?`
 checks whether an address is inside a parsed network.
+
+## `net/socket` (v0.62)
+
+TCP client and server sockets.
+
+```tya
+import net/socket as socket
+
+server = socket.Server.listen("127.0.0.1", 9000, {})
+client = socket.Socket.connect("127.0.0.1", 9000, {})
+client.write_line("hello")
+client.close()
+server.close()
+```
+
+Class members on `net/socket.Socket`: `connect`.
+
+Class members on `net/socket.Server`: `listen`.
+
+Socket methods: `read`, `read_line`, `write`, `write_line`, `close`,
+`closed?`, `local_address`, and `remote_address`.
+
+Server methods: `accept`, `close`, and `local_address`.
+
+`Socket.connect(host, port, options)` connects to a TCP server. `Server.listen`
+binds a TCP listener; pass `0` for the port to request an ephemeral port and
+read it back from `server.local_address()["port"]`.
+
+`read(size)` returns a string in text mode and bytes in binary mode.
+`read_line()` returns one line including the newline, or `nil` after EOF.
+`write(value)` accepts strings, bytes, or stringified values and returns the
+byte count. `write_line(value)` appends a newline.
+
+Options are dictionaries. `{ mode: "binary" }` makes reads return bytes.
+`{ timeout: seconds }` sets blocking read, write, and accept timeouts. DNS,
+connection-refused, timeout, and closed-socket failures raise.

@@ -1,0 +1,34 @@
+class Socket
+  static connect = host, port, options ->
+    if options == nil
+      options = {}
+    Socket(socket_connect(host, port, options), options["mode"] == "binary")
+
+  initialize = handle, binary ->
+    self.handle = handle
+    self.binary = binary
+
+  read = size ->
+    socket_read(self.handle, size)
+
+  read_line = ->
+    socket_read_line(self.handle)
+
+  write = value ->
+    socket_write(self.handle, value)
+
+  write_line = value ->
+    self.write(value)
+    self.write("\n")
+
+  close = ->
+    socket_close(self.handle)
+
+  closed? = ->
+    socket_closed(self.handle)
+
+  local_address = ->
+    socket_local_address(self.handle)
+
+  remote_address = ->
+    socket_remote_address(self.handle)

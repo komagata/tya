@@ -1,0 +1,90 @@
+[!exec:sh] skip 'sh not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/echo_server.tya -o $WORK/echo_server
+exec go run ./cmd/tya build $WORK/echo_client.tya -o $WORK/echo_client
+exec sh -c '$WORK/echo_server & pid=$!; sleep 0.2; $WORK/echo_client; client=$?; wait $pid; server=$?; exit $((client + server))'
+stdout 'echo:hello'
+stdout 'true'
+
+exec go run ./cmd/tya build $WORK/binary_server.tya -o $WORK/binary_server
+exec go run ./cmd/tya build $WORK/binary_client.tya -o $WORK/binary_client
+exec sh -c '$WORK/binary_server & pid=$!; sleep 0.2; $WORK/binary_client; client=$?; wait $pid; server=$?; exit $((client + server))'
+stdout '3'
+stdout 'abc'
+
+exec go run ./cmd/tya build $WORK/timeout_server.tya -o $WORK/timeout_server
+exec go run ./cmd/tya build $WORK/timeout_client.tya -o $WORK/timeout_client
+exec sh -c '$WORK/timeout_server & pid=$!; sleep 0.05; $WORK/timeout_client; client=$?; wait $pid; server=$?; exit $((client + server))'
+stdout 'timeout'
+
+exec go run ./cmd/tya run $WORK/refused.tya
+stdout 'refused'
+
+-- echo_server.tya --
+import net/socket as socket
+
+server = socket.Server.listen("127.0.0.1", 18180, {})
+conn = server.accept()
+line = conn.read_line()
+conn.write("echo:")
+conn.write(line)
+conn.close()
+server.close()
+
+-- echo_client.tya --
+import net/socket as socket
+
+client = socket.Socket.connect("127.0.0.1", 18180, {})
+client.write_line("hello")
+print(client.read_line().trim())
+print(client.remote_address()["port"] == 18180)
+client.close()
+
+-- binary_server.tya --
+import net/socket as socket
+
+server = socket.Server.listen("127.0.0.1", 18181, { mode: "binary" })
+conn = server.accept()
+data = conn.read(3)
+conn.write(data)
+conn.close()
+server.close()
+
+-- binary_client.tya --
+import net/socket as socket
+
+client = socket.Socket.connect("127.0.0.1", 18181, { mode: "binary" })
+client.write(b"abc")
+data = client.read(3)
+print(data.len())
+print(bytes_text(data))
+client.close()
+
+-- timeout_server.tya --
+import net/socket as socket
+
+server = socket.Server.listen("127.0.0.1", 18182, { timeout: 0.5 })
+conn = server.accept()
+try
+  conn.read_line()
+catch err
+  print("timeout")
+conn.close()
+server.close()
+
+-- timeout_client.tya --
+import net/socket as socket
+import time as time
+
+client = socket.Socket.connect("127.0.0.1", 18182, {})
+time.Time.sleep(0.7)
+client.close()
+
+-- refused.tya --
+import net/socket as socket
+
+try
+  socket.Socket.connect("127.0.0.1", 1, { timeout: 0.1 })
+catch err
+  print("refused")

@@ -90,16 +90,35 @@ print(&quot;kind: {{&quot;kind&quot;: &quot;ok&quot;}[&quot;kind&quot;]}&quot;)<
 <p><code>Template.render(source, data, options)</code> accepts options. <code>escape: &quot;html&quot;</code> escapes <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, and <code>'</code>; <code>escape</code> defaults to <code>&quot;none&quot;</code>. <code>Template.render_html(source, data)</code> is equivalent to HTML escaping mode. Triple-brace tags such as <code>{{{ trusted_html }}}</code> explicitly bypass escaping.</p>
 <p>Conditionals use <code>{{ if path }}</code> / <code>{{ else }}</code> / <code>{{ end }}</code>. Loops use <code>{{ for item in items }}</code> / <code>{{ end }}</code> and render the body once per item. Explicit partials use <code>{{ partial &quot;name&quot; context }}</code> with a <code>partials</code> dictionary supplied through options.</p>
 <p><code>Template.render_file(path, data)</code> and <code>Template.render_file(path, data, options)</code> read a template file and render it with the same semantics as <code>Template.render</code>.</p>
+<h2 id="markdown-stdlib">Markdown Stdlib</h2>
+<p><code>import markdown</code> exposes <code>markdown.Markdown</code> with class-style parsing and rendering APIs: <code>Markdown.parse(text)</code>, <code>Markdown.to_html_ast(ast)</code>, <code>Markdown.render(ast_or_html_ast)</code>, and <code>Markdown.to_html(text)</code>.</p>
+<p><code>Markdown.parse</code> returns a document dictionary with stable block <code>kind</code> fields. <code>Markdown.to_html(text)</code> remains the simple one-step API and is equivalent to <code>Markdown.render(Markdown.to_html_ast(Markdown.parse(text)))</code> for supported syntax.</p>
+<p>The supported subset includes tables, task lists, strikethrough, fenced-code info strings, reference links, images, nested unordered lists, setext headings, and selected HTML blocks. HTML remains escaped by default; raw HTML block pass-through is opt-in with <code>{ raw_html: true }</code> when calling <code>render</code>.</p>
+<h2 id="compress-stdlib">Compress Stdlib</h2>
+<p><code>import compress</code> exposes <code>compress.Compress</code> for gzip and zlib compression.</p>
+<p><code>Compress.gzip(value)</code> and <code>Compress.zlib(value)</code> accept strings or bytes and return compressed bytes. <code>Compress.gunzip(bytes)</code> and <code>Compress.unzlib(bytes)</code> return decompressed bytes and raise on invalid compressed input.</p>
+<p><code>Compress.gzip_file(src, dst)</code> and <code>Compress.gunzip_file(src, dst)</code> provide file helpers built on the <code>io</code> stream package.</p>
 <h2 id="log-stdlib">Log Stdlib</h2>
 <p><code>import log</code> exposes <code>log.Logger</code>, a small structured logger for CLI tools, servers, package tools, and long-running tasks.</p>
 <p><code>Logger.default()</code> creates a text logger that writes to stderr at level <code>info</code>. <code>Logger.new(options)</code> accepts <code>level</code>, <code>format</code>, <code>file</code>, and <code>fields</code>. Supported levels are <code>debug</code>, <code>info</code>, <code>warn</code>, and <code>error</code>; records below the current level are suppressed.</p>
 <p>Logger instances provide <code>debug(message, fields)</code>, <code>info(message, fields)</code>, <code>warn(message, fields)</code>, and <code>error(message, fields)</code>. <code>fields</code> may be omitted and defaults to <code>{}</code>. Text output uses deterministic sorted field order. <code>format: &quot;json&quot;</code> emits JSON records with stable keys.</p>
 <p><code>logger.with(fields)</code> returns a child logger that includes merged base fields on every record. <code>logger.level(value)</code> changes the minimum level and returns the logger. <code>file: &quot;path&quot;</code> appends records to a file; stderr remains the default destination.</p>
+<h2 id="io-stdlib">IO Stdlib</h2>
+<p><code>import io</code> exposes <code>io.Io</code>, <code>io.Reader</code>, and <code>io.Writer</code> for process streams, file streams, line iteration, and chunk copying.</p>
+<p><code>Io.stdin()</code>, <code>Io.stdout()</code>, and <code>Io.stderr()</code> return borrowed wrappers around the process streams. Closing those wrappers does not close the host process stream. <code>Io.open(path, mode)</code> opens text modes such as <code>&quot;r&quot;</code> and <code>&quot;w&quot;</code> and binary modes <code>&quot;rb&quot;</code> and <code>&quot;wb&quot;</code>.</p>
+<p>Reader instances provide <code>read(size)</code>, <code>read_line()</code>, <code>each_line(fn)</code>, <code>eof?()</code>, and <code>close()</code>. Text readers return strings; binary readers return bytes. <code>read_line()</code> returns <code>nil</code> after the last line.</p>
+<p>Writer instances provide <code>write(value)</code>, <code>write_line(value)</code>, <code>flush()</code>, and <code>close()</code>. <code>write</code> returns the number of bytes written.</p>
+<p><code>Io.copy(reader, writer)</code> copies chunks until EOF, flushes the writer, and returns the copied byte count.</p>
 <h2 id="net-ip-stdlib">Net IP Stdlib</h2>
 <p><code>import net/ip</code> exposes <code>Address</code> and <code>Network</code> classes for shared address handling across networking libraries.</p>
 <p><code>Address.parse(text)</code> accepts IPv4 dotted decimal, full or compressed IPv6, and IPv4-mapped IPv6 addresses. <code>Address.valid?(text)</code> returns <code>false</code> for invalid input instead of raising. <code>Address.version(addr)</code> returns <code>4</code> or <code>6</code>, and <code>Address.to_s(addr)</code> returns a normalized string representation.</p>
 <p><code>Address.loopback?(addr)</code>, <code>Address.private?(addr)</code>, and <code>Address.unspecified?(addr)</code> classify conventional IPv4 and IPv6 ranges.</p>
 <p><code>Network.parse(cidr)</code> accepts IPv4 and IPv6 CIDR prefixes. <code>Network.contains?(network, addr)</code> reports whether a parsed address is inside a parsed network.</p>
+<h2 id="net-socket-stdlib">Net Socket Stdlib</h2>
+<p><code>import net/socket</code> exposes <code>Socket</code> and <code>Server</code> classes for TCP sockets.</p>
+<p><code>Socket.connect(host, port, options)</code> connects to a TCP server. <code>Server.listen</code> binds a TCP listener; <code>server.accept()</code> returns a connected socket and <code>server.close()</code> closes the listener.</p>
+<p>Socket instances provide <code>read(size)</code>, <code>read_line()</code>, <code>write(value)</code>, <code>write_line(value)</code>, <code>close()</code>, <code>closed?()</code>, <code>local_address()</code>, and <code>remote_address()</code>. Address values are dictionaries with <code>host</code> and <code>port</code>.</p>
+<p><code>read(size)</code> returns a string in text mode and bytes when opened with <code>{ mode: &quot;binary&quot; }</code>. <code>write(value)</code> accepts strings and bytes. <code>{ timeout: seconds }</code> sets blocking read, write, and accept timeouts. DNS, connection-refused, timeout, and closed-socket failures raise.</p>
     </article>
   </main>
 </body>

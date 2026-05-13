@@ -242,3 +242,20 @@ input instead of raising. `Address.version(addr)` returns `4` or `6`, and
 `Network.parse(cidr)` accepts IPv4 and IPv6 CIDR prefixes.
 `Network.contains?(network, addr)` reports whether a parsed address is inside a
 parsed network.
+
+## Net Socket Stdlib
+
+`import net/socket` exposes `Socket` and `Server` classes for TCP sockets.
+
+`Socket.connect(host, port, options)` connects to a TCP server. `Server.listen`
+binds a TCP listener; `server.accept()` returns a connected socket and
+`server.close()` closes the listener.
+
+Socket instances provide `read(size)`, `read_line()`, `write(value)`,
+`write_line(value)`, `close()`, `closed?()`, `local_address()`, and
+`remote_address()`. Address values are dictionaries with `host` and `port`.
+
+`read(size)` returns a string in text mode and bytes when opened with
+`{ mode: "binary" }`. `write(value)` accepts strings and bytes. `{ timeout:
+seconds }` sets blocking read, write, and accept timeouts. DNS,
+connection-refused, timeout, and closed-socket failures raise.

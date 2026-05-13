@@ -2964,6 +2964,30 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_io_stream_flush(%s)", 1)
 	case "io_stream_close":
 		return emit("tya_io_stream_close(%s)", 1)
+	case "socket_connect":
+		return emit("tya_socket_connect(%s, %s, %s)", 3)
+	case "socket_server_listen":
+		return emit("tya_socket_server_listen(%s, %s, %s)", 3)
+	case "socket_server_accept":
+		return emit("tya_socket_server_accept(%s)", 1)
+	case "socket_read":
+		return emit("tya_socket_read(%s, %s)", 2)
+	case "socket_read_line":
+		return emit("tya_socket_read_line(%s)", 1)
+	case "socket_write":
+		return emit("tya_socket_write(%s, %s)", 2)
+	case "socket_close":
+		return emit("tya_socket_close(%s)", 1)
+	case "socket_closed":
+		return emit("tya_socket_closed(%s)", 1)
+	case "socket_local_address":
+		return emit("tya_socket_local_address(%s)", 1)
+	case "socket_remote_address":
+		return emit("tya_socket_remote_address(%s)", 1)
+	case "socket_server_close":
+		return emit("tya_socket_server_close(%s)", 1)
+	case "socket_server_local_address":
+		return emit("tya_socket_server_local_address(%s)", 1)
 	case "http_server_run":
 		return emit("tya_http_server_run(%s, %s)", 2)
 	}

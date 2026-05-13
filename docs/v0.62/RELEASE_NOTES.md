@@ -39,6 +39,9 @@ standard library or runtime.
   with line iteration, chunk reads, binary modes, and stream copying.
 - New `net/ip` stdlib package parses and classifies IPv4, IPv6, IPv4-mapped
   IPv6, and CIDR networks.
+- New `net/socket` stdlib package exposes TCP client/server sockets with text
+  and binary reads, line helpers, address inspection, timeouts, and structured
+  connection failures.
 
 ## Verification
 
@@ -48,4 +51,5 @@ generated native library scaffold, the `cli.Cli` stdlib parser, package tool
 execution, interpolation scanner edge cases, the `template.Template` stdlib
 renderer, Markdown parser/rendering extensions, compression round trips and
 file helpers, the `log.Logger` stdlib logger, `io.Io` stream tests, and
-`net/ip` address/network tests.
+`net/ip` address/network tests, plus localhost `net/socket` client/server,
+binary I/O, timeout, and connection-refused tests.

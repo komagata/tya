@@ -1,0 +1,17 @@
+class Server
+  static listen = host, port, options ->
+    if options == nil
+      options = {}
+    Server(socket_server_listen(host, port, options))
+
+  initialize = handle ->
+    self.handle = handle
+
+  accept = ->
+    Socket(socket_server_accept(self.handle), false)
+
+  close = ->
+    socket_server_close(self.handle)
+
+  local_address = ->
+    socket_server_local_address(self.handle)

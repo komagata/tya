@@ -235,6 +235,10 @@ var builtinNames = []string{
 	"io_stdin", "io_stdout", "io_stderr", "io_open", "io_stream_read",
 	"io_stream_read_line", "io_stream_eof", "io_stream_write", "io_stream_flush",
 	"io_stream_close",
+	"socket_connect", "socket_server_listen", "socket_server_accept",
+	"socket_read", "socket_read_line", "socket_write", "socket_close",
+	"socket_closed", "socket_local_address", "socket_remote_address",
+	"socket_server_close", "socket_server_local_address",
 	"file_read_bytes", "file_write_bytes",
 	// v0.58
 	"http_server_run",
