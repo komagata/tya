@@ -177,3 +177,20 @@ and defaults to `{}`. Text output uses deterministic sorted field order.
 every record. `logger.level(value)` changes the minimum level and returns the
 logger. `file: "path"` appends records to a file; stderr remains the default
 destination.
+
+## Net IP Stdlib
+
+`import net/ip` exposes `Address` and `Network` classes for shared address
+handling across networking libraries.
+
+`Address.parse(text)` accepts IPv4 dotted decimal, full or compressed IPv6, and
+IPv4-mapped IPv6 addresses. `Address.valid?(text)` returns `false` for invalid
+input instead of raising. `Address.version(addr)` returns `4` or `6`, and
+`Address.to_s(addr)` returns a normalized string representation.
+
+`Address.loopback?(addr)`, `Address.private?(addr)`, and
+`Address.unspecified?(addr)` classify conventional IPv4 and IPv6 ranges.
+
+`Network.parse(cidr)` accepts IPv4 and IPv6 CIDR prefixes.
+`Network.contains?(network, addr)` reports whether a parsed address is inside a
+parsed network.

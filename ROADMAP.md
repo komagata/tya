@@ -841,6 +841,11 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [x] `log.Logger` provides level-filtered text/JSON logs to stderr or files.
     - Spec: `docs/prd/completed/stdlib-log-library.md`
 
+- [x] **IP address library**
+  - [x] `net/ip` parses, formats, classifies, and checks CIDR containment for
+    IPv4 and IPv6 addresses.
+    - Spec: `docs/prd/completed/stdlib-net-ip-library.md`
+
 - [x] **CLI helper library**
   - [x] `cli.Cli` parses flags, positional args, defaults, required options,
     `--`, and deterministic usage text.

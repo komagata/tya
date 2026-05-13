@@ -1,0 +1,36 @@
+import unittest
+import net/ip as ip
+
+class StdlibNetIpTest extends TestCase
+
+  test_ipv4_parse_format_and_classify = ->
+    addr = ip.Address.parse("192.168.1.10")
+    self.assert_equal(4, ip.Address.version(addr), "version")
+    self.assert_equal("192.168.1.10", ip.Address.to_s(addr), "format")
+    self.assert(ip.Address.private?(addr), "private")
+    self.assert(ip.Address.loopback?(ip.Address.parse("127.0.0.1")), "loopback")
+    self.assert(ip.Address.unspecified?(ip.Address.parse("0.0.0.0")), "unspecified")
+
+  test_ipv6_parse_format_and_classify = ->
+    addr = ip.Address.parse("2001:0db8:0000:0000:0000:0000:0000:0001")
+    self.assert_equal(6, ip.Address.version(addr), "version")
+    self.assert_equal("2001:db8::1", ip.Address.to_s(addr), "format")
+    self.assert(ip.Address.loopback?(ip.Address.parse("::1")), "loopback")
+    self.assert(ip.Address.unspecified?(ip.Address.parse("::")), "unspecified")
+    self.assert(ip.Address.private?(ip.Address.parse("fd00::1")), "private")
+
+  test_ipv4_mapped_ipv6 = ->
+    addr = ip.Address.parse("::ffff:192.0.2.1")
+    self.assert_equal("::ffff:192.0.2.1", ip.Address.to_s(addr), "mapped")
+
+  test_cidr_contains = ->
+    net4 = ip.Network.parse("192.168.1.0/24")
+    self.assert(ip.Network.contains?(net4, ip.Address.parse("192.168.1.99")), "ipv4 contains")
+    self.assert_falsy(ip.Network.contains?(net4, ip.Address.parse("192.168.2.1")), "ipv4 misses")
+    net6 = ip.Network.parse("2001:db8::/32")
+    self.assert(ip.Network.contains?(net6, ip.Address.parse("2001:db8::1")), "ipv6 contains")
+    self.assert_falsy(ip.Network.contains?(net6, ip.Address.parse("2001:db9::1")), "ipv6 misses")
+
+  test_invalid = ->
+    self.assert_falsy(ip.Address.valid?("999.1.1.1"), "invalid v4")
+    self.assert_falsy(ip.Address.valid?("2001:::1"), "invalid v6")

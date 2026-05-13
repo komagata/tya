@@ -30,6 +30,8 @@ standard library or runtime.
   file rendering, strict missing-value errors, and optional HTML escaping.
 - New `log.Logger` stdlib logger writes level-filtered text or JSON records to
   stderr by default or appends them to a configured file path.
+- New `net/ip` stdlib package parses and classifies IPv4, IPv6, IPv4-mapped
+  IPv6, and CIDR networks.
 
 ## Verification
 
@@ -37,4 +39,4 @@ The release includes package-manager unit coverage and script coverage for path
 dependency native builds, native run/build/test behavior, diagnostics, the
 generated native library scaffold, the `cli.Cli` stdlib parser, package tool
 execution, interpolation scanner edge cases, the `template.Template` stdlib
-renderer, and the `log.Logger` stdlib logger.
+renderer, the `log.Logger` stdlib logger, and `net/ip` address/network tests.

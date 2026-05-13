@@ -1,0 +1,49 @@
+class Network
+  static parse = cidr ->
+    slash = Address.last_index(cidr, "/")
+    if slash < 0
+      raise "ip.Network.parse: missing prefix"
+    addr = Address.parse(Address.slice(cidr, 0, slash))
+    prefix_text = Address.slice(cidr, slash + 1, cidr.byte_len())
+    if prefix_text == "" or not Address.decimal?(prefix_text)
+      raise "ip.Network.parse: invalid prefix"
+    prefix = prefix_text.to_i()
+    max = 32
+    if addr["version"] == 6
+      max = 128
+    if prefix < 0 or prefix > max
+      raise "ip.Network.parse: invalid prefix"
+    return { address: addr, prefix: prefix, version: addr["version"] }
+
+  static contains? = network, addr ->
+    if addr["version"] != network["version"]
+      return false
+    if addr["version"] == 4
+      return Network.contains_parts?(network["address"]["bytes"], addr["bytes"], network["prefix"], 8)
+    return Network.contains_parts?(network["address"]["groups"], addr["groups"], network["prefix"], 16)
+
+  static contains_parts? = base, value, prefix, width ->
+    remain = prefix
+    i = 0
+    while i < base.len()
+      if remain <= 0
+        return true
+      if remain >= width
+        if base[i] != value[i]
+          return false
+        remain = remain - width
+      else
+        div = Network.pow2(width - remain)
+        if (base[i] / div).to_i() != (value[i] / div).to_i()
+          return false
+        return true
+      i = i + 1
+    return true
+
+  static pow2 = n ->
+    out = 1
+    i = 0
+    while i < n
+      out = out * 2
+      i = i + 1
+    return out

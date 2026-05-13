@@ -725,3 +725,30 @@ Text logs use a deterministic field order:
 ```text
 2026-05-13T12:00:00Z info started app=api port=8080
 ```
+
+## `net/ip` (v0.62)
+
+IP address and CIDR parsing.
+
+```tya
+import net/ip as ip
+
+addr = ip.Address.parse("2001:db8::1")
+print(ip.Address.to_s(addr))
+
+network = ip.Network.parse("2001:db8::/32")
+print(ip.Network.contains?(network, addr))
+```
+
+Class members on `net/ip.Address`: `parse`, `valid?`, `version`, `to_s`,
+`loopback?`, `private?`, and `unspecified?`.
+
+Class members on `net/ip.Network`: `parse` and `contains?`.
+
+`Address.parse(text)` accepts IPv4 dotted decimal, full or compressed IPv6, and
+IPv4-mapped IPv6 addresses. It returns a dictionary representation with stable
+`version` and numeric parts. `Address.to_s(addr)` formats the normalized
+address. Invalid input raises; `Address.valid?(text)` returns `false`.
+
+`Network.parse(cidr)` accepts IPv4 and IPv6 CIDR prefixes. `Network.contains?`
+checks whether an address is inside a parsed network.
