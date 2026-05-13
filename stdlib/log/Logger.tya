@@ -1,0 +1,130 @@
+import time as time
+
+class Logger
+  static default = ->
+    Logger({})
+
+  static new = options ->
+    Logger(options)
+
+  initialize = options ->
+    if options == nil
+      options = {}
+    self.min_level = Logger.level_number(Logger.option(options, "level", "info"))
+    self.format = Logger.option(options, "format", "text")
+    self.file = Logger.option(options, "file", "")
+    self.fields = Logger.option(options, "fields", {})
+
+  debug = message, fields ->
+    self.write("debug", message, fields)
+
+  info = message, fields ->
+    self.write("info", message, fields)
+
+  warn = message, fields ->
+    self.write("warn", message, fields)
+
+  error = message, fields ->
+    self.write("error", message, fields)
+
+  with = fields ->
+    merged = Logger.merge_fields(self.fields, fields)
+    return Logger({
+      level: Logger.level_name(self.min_level),
+      format: self.format,
+      file: self.file,
+      fields: merged
+    })
+
+  level = value ->
+    self.min_level = Logger.level_number(value)
+    self
+
+  write = level, message, fields ->
+    if fields == nil
+      fields = {}
+    if Logger.level_number(level) < self.min_level
+      return nil
+    merged = Logger.merge_fields(self.fields, fields)
+    ts = time.Time.format(time.Time.now(), "iso")
+    line = ""
+    if self.format == "json"
+      line = Logger.json_record(ts, level, message, merged)
+    else
+      line = Logger.text_record(ts, level, message, merged)
+    if self.file != ""
+      file_append(self.file, line + "\n")
+    else
+      stderr_write(line + "\n")
+    return nil
+
+  static option = options, name, fallback ->
+    if options.has(name)
+      return options[name]
+    return fallback
+
+  static level_number = level ->
+    if level == "debug"
+      return 10
+    if level == "info"
+      return 20
+    if level == "warn"
+      return 30
+    if level == "error"
+      return 40
+    raise "log.Logger: unknown level " + level
+
+  static level_name = n ->
+    if n <= 10
+      return "debug"
+    if n <= 20
+      return "info"
+    if n <= 30
+      return "warn"
+    return "error"
+
+  static merge_fields = base, extra ->
+    out = {}
+    if base != nil
+      for key in base.keys()
+        out[key] = base[key]
+    if extra != nil
+      for key in extra.keys()
+        out[key] = extra[key]
+    return out
+
+  static text_record = ts, level, message, fields ->
+    out = ts + " " + level + " " + message
+    names = fields.keys().sort()
+    for name in names
+      out = out + " " + name + "=" + fields[name].to_s()
+    return out
+
+  static json_record = ts, level, message, fields ->
+    out = chr(123)
+    out = out + "\"timestamp\":\"" + Logger.escape_json(ts) + "\""
+    out = out + ",\"level\":\"" + Logger.escape_json(level) + "\""
+    out = out + ",\"message\":\"" + Logger.escape_json(message) + "\""
+    names = fields.keys().sort()
+    for name in names
+      out = out + ",\"" + Logger.escape_json(name) + "\":\"" + Logger.escape_json(fields[name].to_s()) + "\""
+    out = out + chr(125)
+    return out
+
+  static escape_json = text ->
+    out = ""
+    i = 0
+    while i < text.byte_len()
+      c = text[i]
+      if c == "\\"
+        out = out + "\\\\"
+      elseif c == "\""
+        out = out + "\\\""
+      elseif c == "\n"
+        out = out + "\\n"
+      elseif c == "\t"
+        out = out + "\\t"
+      else
+        out = out + c
+      i = i + 1
+    return out

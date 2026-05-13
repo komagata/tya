@@ -294,6 +294,8 @@ TyaValue tya_bytes_concat(TyaValue a, TyaValue b);
 TyaValue tya_bytes_slice(TyaValue b, TyaValue start, TyaValue end);
 TyaValue tya_file_read_bytes(TyaValue path);
 TyaValue tya_file_write_bytes(TyaValue path, TyaValue b);
+TyaValue tya_stderr_write(TyaValue text);
+TyaValue tya_file_append(TyaValue path, TyaValue text);
 TyaValue tya_read_line(void);
 TyaValue tya_map(TyaValue array, TyaValue fn);
 TyaValue tya_filter(TyaValue array, TyaValue fn);

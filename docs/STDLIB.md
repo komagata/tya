@@ -693,3 +693,35 @@ Blocks use `{{ if path }}` / `{{ else }}` / `{{ end }}` and
 `Template.render(source, data, { escape: "html" })` and escapes `&`, `<`, `>`,
 `"`, and `'`. Triple-brace tags such as `{{{ trusted_html }}}` insert trusted
 content without escaping.
+
+## `log` (v0.62)
+
+Structured application logging.
+
+```tya
+import log as log
+
+logger = log.Logger.default()
+logger.info("started", { port: 8080 })
+logger.with({ request: "42" }).warn("slow", { ms: 120 })
+```
+
+Class members on `log.Logger`: `default`, `new`.
+
+Instance methods: `debug`, `info`, `warn`, `error`, `with`, `level`.
+
+`Logger.default()` writes text logs to stderr at level `info`. The supported
+levels are `debug`, `info`, `warn`, and `error`; messages below the current
+level are suppressed. `logger.level("debug")` changes the minimum level and
+returns the logger.
+
+`Logger.new(options)` accepts `level`, `format`, `file`, and `fields`.
+`format: "json"` emits deterministic JSON records. `file: "path"` appends log
+records to a file instead of stderr. `fields` are included on every record, and
+`logger.with(fields)` returns a child logger with merged base fields.
+
+Text logs use a deterministic field order:
+
+```text
+2026-05-13T12:00:00Z info started app=api port=8080
+```

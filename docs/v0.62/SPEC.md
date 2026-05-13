@@ -157,3 +157,23 @@ dictionary supplied through options.
 `Template.render_file(path, data)` and `Template.render_file(path, data,
 options)` read a template file and render it with the same semantics as
 `Template.render`.
+
+## Log Stdlib
+
+`import log` exposes `log.Logger`, a small structured logger for CLI tools,
+servers, package tools, and long-running tasks.
+
+`Logger.default()` creates a text logger that writes to stderr at level `info`.
+`Logger.new(options)` accepts `level`, `format`, `file`, and `fields`.
+Supported levels are `debug`, `info`, `warn`, and `error`; records below the
+current level are suppressed.
+
+Logger instances provide `debug(message, fields)`, `info(message, fields)`,
+`warn(message, fields)`, and `error(message, fields)`. `fields` may be omitted
+and defaults to `{}`. Text output uses deterministic sorted field order.
+`format: "json"` emits JSON records with stable keys.
+
+`logger.with(fields)` returns a child logger that includes merged base fields on
+every record. `logger.level(value)` changes the minimum level and returns the
+logger. `file: "path"` appends records to a file; stderr remains the default
+destination.

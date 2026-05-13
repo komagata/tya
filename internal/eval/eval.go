@@ -2925,6 +2925,39 @@ func registerV25Builtins(env *Env) {
 		}
 		return nil, nil
 	}))
+	env.set("stderr_write", Builtin(func(args []Value) (Value, error) {
+		text, err := oneString("stderr_write", args)
+		if err != nil {
+			return nil, err
+		}
+		_, _ = fmt.Fprint(os.Stderr, text)
+		return nil, nil
+	}))
+	env.set("file_append", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("file_append expects 2 arguments")
+		}
+		path, ok := args[0].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "file.append: path must be a string"}
+		}
+		text, ok := args[1].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "file.append: text must be a string"}
+		}
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		if _, err := f.WriteString(text); err != nil {
+			_ = f.Close()
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		if err := f.Close(); err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return nil, nil
+	}))
 }
 
 func numberAsFloat(v Value) (float64, bool) {

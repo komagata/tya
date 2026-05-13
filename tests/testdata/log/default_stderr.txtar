@@ -1,0 +1,17 @@
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/default_stderr.tya
+! stdout .
+stderr ' info hello app=tya\n'
+stderr ' warn careful\n'
+stderr ' error bad\n'
+! stderr 'debug'
+
+-- default_stderr.tya --
+import log as log
+
+logger = log.Logger.default()
+logger.debug("debug", {})
+logger.info("hello", { app: "tya" })
+logger.warn("careful", {})
+logger.error("bad", {})

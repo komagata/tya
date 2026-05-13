@@ -837,6 +837,10 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     conditionals, loops, partials, file rendering, and optional HTML escaping.
     - Spec: `docs/prd/completed/stdlib-template-library.md`
 
+- [x] **Logging library**
+  - [x] `log.Logger` provides level-filtered text/JSON logs to stderr or files.
+    - Spec: `docs/prd/completed/stdlib-log-library.md`
+
 - [x] **CLI helper library**
   - [x] `cli.Cli` parses flags, positional args, defaults, required options,
     `--`, and deterministic usage text.

@@ -1,0 +1,42 @@
+import unittest
+import log as log
+
+class StdlibLogTest extends TestCase
+
+  test_file_text_logs_are_filtered_and_sorted = ->
+    path = "logger_text.log"
+    if file_exists(path)
+      file_remove(path)
+    logger = log.Logger.new({ file: path })
+    logger.debug("skip", { z: 1 })
+    logger.info("hello", { z: 1, a: "first" })
+    text = read_file(path)
+    file_remove(path)
+    self.assert(text.contains(" info hello a=first z=1\n"), "text line")
+    self.assert_falsy(text.contains("skip"), "debug filtered")
+
+  test_level_enables_debug = ->
+    path = "logger_debug.log"
+    if file_exists(path)
+      file_remove(path)
+    logger = log.Logger.new({ file: path })
+    logger.level("debug")
+    logger.debug("debugging", {})
+    text = read_file(path)
+    file_remove(path)
+    self.assert(text.contains(" debug debugging\n"), "debug line")
+
+  test_json_and_with_fields = ->
+    path = "logger_json.log"
+    if file_exists(path)
+      file_remove(path)
+    logger = log.Logger.new({ file: path, format: "json", fields: { app: "tya" } })
+    child = logger.with({ request: "42" })
+    child.error("bad", { user: "ada" })
+    text = read_file(path)
+    file_remove(path)
+    self.assert(text.contains("\"level\":\"error\""), "json level")
+    self.assert(text.contains("\"message\":\"bad\""), "json message")
+    self.assert(text.contains("\"app\":\"tya\""), "base field")
+    self.assert(text.contains("\"request\":\"42\""), "child field")
+    self.assert(text.contains("\"user\":\"ada\""), "message field")

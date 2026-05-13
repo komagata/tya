@@ -228,7 +228,7 @@ var builtinNames = []string{
 	"pop", "print", "println",
 	"push", "read_file", "read_line", "reduce", "replace", "split",
 	"starts_with", "to_float", "to_int", "to_number", "to_string", "trim",
-	"values", "write_file",
+	"values", "write_file", "stderr_write", "file_append",
 	// v0.25
 	"bytes", "bytes_of", "bytes_text", "bytes_array", "bytes_concat", "bytes_slice",
 	"file_read_bytes", "file_write_bytes",

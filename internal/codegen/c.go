@@ -2366,7 +2366,7 @@ func cName(name string) string {
 	switch name {
 	case "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
 		"else", "enum", "extern", "float", "for", "goto", "if", "index", "inline", "int",
-		"long", "register", "restrict", "return", "short", "signed", "sizeof",
+		"log", "long", "register", "restrict", "return", "short", "signed", "sizeof",
 		"static", "struct", "switch", "typedef", "union", "unsigned", "void",
 		"volatile", "while":
 		return "tya_var_" + name
@@ -2932,6 +2932,10 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_file_read_bytes(%s)", 1)
 	case "file_write_bytes":
 		return emit("tya_file_write_bytes(%s, %s)", 2)
+	case "stderr_write":
+		return emit("tya_stderr_write(%s)", 1)
+	case "file_append":
+		return emit("tya_file_append(%s, %s)", 2)
 	case "http_server_run":
 		return emit("tya_http_server_run(%s, %s)", 2)
 	}

@@ -3139,6 +3139,35 @@ TyaValue tya_file_write_bytes(TyaValue path, TyaValue b) {
   return tya_nil();
 }
 
+TyaValue tya_stderr_write(TyaValue text) {
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("stderr.write: text must be a string"));
+    return tya_nil();
+  }
+  fputs(text.string, stderr);
+  fflush(stderr);
+  return tya_nil();
+}
+
+TyaValue tya_file_append(TyaValue path, TyaValue text) {
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    tya_raise(tya_string("file.append: path must be a string"));
+    return tya_nil();
+  }
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_raise(tya_string("file.append: text must be a string"));
+    return tya_nil();
+  }
+  FILE *fp = fopen(path.string, "ab");
+  if (fp == NULL) {
+    tya_raise(tya_string(strerror(errno)));
+    return tya_nil();
+  }
+  fputs(text.string, fp);
+  fclose(fp);
+  return tya_nil();
+}
+
 /* =========================================================================
  * v0.41 GC API
  * ========================================================================= */
