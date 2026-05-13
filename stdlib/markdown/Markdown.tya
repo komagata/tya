@@ -1,98 +1,163 @@
 class Markdown
   static to_html = text ->
-    lines = split(text, "\n")
-    blocks = Markdown.parse_blocks(lines)
+    return Markdown.render(Markdown.to_html_ast(Markdown.parse(text)))
+
+  static parse = text ->
+    lines = text.split("\n")
+    refs = Markdown.reference_defs(lines)
+    return { kind: "document", blocks: Markdown.parse_blocks(lines), references: refs }
+
+  static to_html_ast = ast ->
+    return { kind: "html_document", blocks: ast["blocks"], references: ast["references"] }
+
+  static render = ast, options ->
+    if options == nil
+      options = {}
+    refs = {}
+    blocks = ast
+    if ast["kind"] == "document" or ast["kind"] == "html_document"
+      blocks = ast["blocks"]
+      refs = ast["references"]
     parts = []
     for block in blocks
-      push(parts, Markdown.render_block(block))
-    return join(parts, "")
+      parts.push(Markdown.render_block(block, refs, options))
+    return parts.join("")
 
   static parse_blocks = lines ->
     blocks = []
     para = []
     i = 0
-    n = len(lines)
+    n = lines.len()
     while i < n
       line = lines[i]
-      stripped = trim(line)
+      stripped = line.trim()
+      if Markdown.is_reference_def(stripped)
+        Markdown.flush_paragraph(blocks, para)
+        para = []
+        i = i + 1
+        continue
       if stripped == ""
         Markdown.flush_paragraph(blocks, para)
         para = []
         i = i + 1
         continue
+      if i + 1 < n and Markdown.is_setext_underline(lines[i + 1].trim())
+        Markdown.flush_paragraph(blocks, para)
+        para = []
+        level = 2
+        if lines[i + 1].trim().starts_with("=")
+          level = 1
+        blocks.push({ kind: "h", level: level, text: stripped })
+        i = i + 2
+        continue
       if Markdown.is_thematic_break(stripped)
         Markdown.flush_paragraph(blocks, para)
         para = []
-        push(blocks, { kind: "hr" })
+        blocks.push({ kind: "hr" })
         i = i + 1
+        continue
+      if Markdown.is_html_block_start(stripped)
+        Markdown.flush_paragraph(blocks, para)
+        para = []
+        html_lines = []
+        while i < n and lines[i].trim() != ""
+          html_lines.push(lines[i])
+          i = i + 1
+        blocks.push({ kind: "html", text: html_lines.join("\n") })
         continue
       heading_level = Markdown.heading_level(stripped)
       if heading_level > 0
         Markdown.flush_paragraph(blocks, para)
         para = []
         rest = Markdown.heading_rest(stripped, heading_level)
-        push(blocks, { kind: "h", level: heading_level, text: rest })
+        blocks.push({ kind: "h", level: heading_level, text: rest })
         i = i + 1
         continue
-      if starts_with(stripped, "```")
+      if stripped.starts_with("```")
         Markdown.flush_paragraph(blocks, para)
         para = []
         i = i + 1
         code_lines = []
-        while i < n and not starts_with(trim(lines[i]), "```")
-          push(code_lines, lines[i])
+        info = Markdown.trim_left_n(stripped, 3).trim()
+        while i < n and not lines[i].trim().starts_with("```")
+          code_lines.push(lines[i])
           i = i + 1
         if i < n
           i = i + 1
-        push(blocks, { kind: "code", lines: code_lines })
+        blocks.push({ kind: "code", lines: code_lines, info: info })
         continue
-      if starts_with(stripped, "> ") or stripped == ">"
+      if stripped.starts_with("> ") or stripped == ">"
         Markdown.flush_paragraph(blocks, para)
         para = []
         quote_lines = []
         while i < n
-          q = trim(lines[i])
+          q = lines[i].trim()
           if q == ""
             break
-          if not (starts_with(q, "> ") or q == ">")
+          if not (q.starts_with("> ") or q == ">")
             break
           if q == ">"
-            push(quote_lines, "")
+            quote_lines.push("")
           else
-            push(quote_lines, Markdown.trim_left_n(q, 2))
+            quote_lines.push(Markdown.trim_left_n(q, 2))
           i = i + 1
-        push(blocks, { kind: "quote", lines: quote_lines })
+        blocks.push({ kind: "quote", lines: quote_lines })
+        continue
+      if Markdown.is_task_item(stripped)
+        Markdown.flush_paragraph(blocks, para)
+        para = []
+        items = []
+        while i < n and Markdown.is_task_item(lines[i].trim())
+          task = Markdown.parse_task_item(lines[i].trim())
+          items.push(task)
+          i = i + 1
+        blocks.push({ kind: "task_list", items: items })
+        continue
+      if Markdown.is_table_start(lines, i)
+        Markdown.flush_paragraph(blocks, para)
+        para = []
+        headers = Markdown.table_cells(stripped)
+        i = i + 2
+        rows = []
+        while i < n and lines[i].trim().contains("|") and lines[i].trim() != ""
+          rows.push(Markdown.table_cells(lines[i].trim()))
+          i = i + 1
+        blocks.push({ kind: "table", headers: headers, rows: rows })
         continue
       if Markdown.is_unordered_item(stripped)
         Markdown.flush_paragraph(blocks, para)
         para = []
         items = []
-        while i < n and Markdown.is_unordered_item(trim(lines[i]))
-          item_text = Markdown.strip_list_marker(trim(lines[i]))
-          push(items, item_text)
+        while i < n and Markdown.is_unordered_item(lines[i].trim())
+          item_text = Markdown.strip_list_marker(lines[i].trim())
+          children = []
           i = i + 1
-        push(blocks, { kind: "ul", items: items })
+          while i < n and Markdown.is_nested_unordered_item(lines[i])
+            children.push(Markdown.strip_list_marker(lines[i].trim()))
+            i = i + 1
+          items.push({ text: item_text, children: children })
+        blocks.push({ kind: "ul", items: items })
         continue
       if Markdown.is_ordered_item(stripped)
         Markdown.flush_paragraph(blocks, para)
         para = []
         items = []
-        while i < n and Markdown.is_ordered_item(trim(lines[i]))
-          item_text = Markdown.strip_ordered_marker(trim(lines[i]))
-          push(items, item_text)
+        while i < n and Markdown.is_ordered_item(lines[i].trim())
+          item_text = Markdown.strip_ordered_marker(lines[i].trim())
+          items.push(item_text)
           i = i + 1
-        push(blocks, { kind: "ol", items: items })
+        blocks.push({ kind: "ol", items: items })
         continue
-      push(para, stripped)
+      para.push(stripped)
       i = i + 1
     Markdown.flush_paragraph(blocks, para)
     return blocks
 
   static flush_paragraph = blocks, para ->
-    if len(para) == 0
+    if para.len() == 0
       return nil
-    text = join(para, "\n")
-    push(blocks, { kind: "p", text: text })
+    text = para.join("\n")
+    blocks.push({ kind: "p", text: text })
     return nil
 
   static is_thematic_break = s ->
@@ -104,8 +169,45 @@ class Markdown
       return true
     return false
 
+  static is_setext_underline = s ->
+    if s == ""
+      return false
+    marker = s[0]
+    if marker != "=" and marker != "-"
+      return false
+    i = 0
+    while i < s.byte_len()
+      if s[i] != marker
+        return false
+      i = i + 1
+    return true
+
+  static is_html_block_start = s ->
+    return s.starts_with("<div") or s.starts_with("<section") or s.starts_with("<article") or s.starts_with("<p") or s.starts_with("<table") or s.starts_with("<h1") or s.starts_with("<h2") or s.starts_with("<h3") or s.starts_with("<ul") or s.starts_with("<ol")
+
+  static is_reference_def = s ->
+    if not s.starts_with("[")
+      return false
+    close = Markdown.find_byte(s, "]", 1)
+    if close <= 1
+      return false
+    if close + 1 >= s.byte_len()
+      return false
+    return s[close + 1] == ":"
+
+  static reference_defs = lines ->
+    refs = {}
+    for line in lines
+      s = line.trim()
+      if Markdown.is_reference_def(s)
+        close = Markdown.find_byte(s, "]", 1)
+        label = Markdown.slice_str(s, 1, close).trim().lower()
+        url = Markdown.slice_str(s, close + 2, s.byte_len()).trim()
+        refs[label] = url
+    return refs
+
   static heading_level = s ->
-    n = byte_len(s)
+    n = s.byte_len()
     i = 0
     while i < n and i < 6 and s[i] == "#"
       i = i + 1
@@ -118,30 +220,81 @@ class Markdown
     return i
 
   static heading_rest = s, level ->
-    n = byte_len(s)
+    n = s.byte_len()
     rest = ""
     i = level + 1
     while i < n
       rest = rest + s[i]
       i = i + 1
-    return trim(rest)
+    return rest.trim()
 
   static is_unordered_item = s ->
-    if starts_with(s, "- ")
+    if s.starts_with("- ")
       return true
-    if starts_with(s, "* ")
+    if s.starts_with("* ")
       return true
-    if starts_with(s, "+ ")
+    if s.starts_with("+ ")
       return true
     return false
 
   static strip_list_marker = s ->
     return Markdown.trim_left_n(s, 2)
 
+  static is_nested_unordered_item = s ->
+    return (s.starts_with("  - ") or s.starts_with("  * ") or s.starts_with("  + ")) and Markdown.is_unordered_item(s.trim())
+
+  static is_task_item = s ->
+    return s.starts_with("- [ ] ") or s.starts_with("- [x] ") or s.starts_with("- [X] ")
+
+  static parse_task_item = s ->
+    checked = s.starts_with("- [x] ") or s.starts_with("- [X] ")
+    return { checked: checked, text: Markdown.trim_left_n(s, 6) }
+
+  static is_table_start = lines, i ->
+    if i + 1 >= lines.len()
+      return false
+    head = lines[i].trim()
+    sep = lines[i + 1].trim()
+    return head.contains("|") and Markdown.is_table_separator(sep)
+
+  static is_table_separator = s ->
+    if not s.contains("|")
+      return false
+    cells = Markdown.table_cells(s)
+    if cells.len() == 0
+      return false
+    for cell in cells
+      c = cell.trim()
+      if c == ""
+        return false
+      i = 0
+      seen_dash = false
+      while i < c.byte_len()
+        if c[i] == "-"
+          seen_dash = true
+        elseif c[i] != ":"
+          return false
+        i = i + 1
+      if not seen_dash
+        return false
+    return true
+
+  static table_cells = s ->
+    text = s
+    if text.starts_with("|")
+      text = Markdown.slice_str(text, 1, text.byte_len())
+    if text.ends_with("|")
+      text = Markdown.slice_str(text, 0, text.byte_len() - 1)
+    raw = text.split("|")
+    cells = []
+    for cell in raw
+      cells.push(cell.trim())
+    return cells
+
   static is_ordered_item = s ->
-    n = byte_len(s)
+    n = s.byte_len()
     i = 0
-    while i < n and contains("0123456789", s[i])
+    while i < n and "0123456789".contains(s[i])
       i = i + 1
     if i == 0
       return false
@@ -154,14 +307,14 @@ class Markdown
     return true
 
   static strip_ordered_marker = s ->
-    n = byte_len(s)
+    n = s.byte_len()
     i = 0
-    while i < n and contains("0123456789", s[i])
+    while i < n and "0123456789".contains(s[i])
       i = i + 1
     return Markdown.trim_left_n(s, i + 2)
 
   static trim_left_n = s, k ->
-    n = byte_len(s)
+    n = s.byte_len()
     out = ""
     i = k
     while i < n
@@ -169,55 +322,97 @@ class Markdown
       i = i + 1
     return out
 
-  static render_block = block ->
+  static render_block = block, refs, options ->
     kind = block["kind"]
     if kind == "hr"
       return "<hr/>\n"
     if kind == "h"
-      level = to_string(block["level"])
-      inner = Markdown.inline(block["text"])
+      level = block["level"].to_s()
+      inner = Markdown.inline_with_refs(block["text"], refs)
       return "<h" + level + ">" + inner + "</h" + level + ">\n"
     if kind == "p"
-      return "<p>" + Markdown.inline(block["text"]) + "</p>\n"
+      return "<p>" + Markdown.inline_with_refs(block["text"], refs) + "</p>\n"
     if kind == "code"
       body = ""
       for line in block["lines"]
         body = body + Markdown.escape_html(line) + "\n"
+      info = block["info"]
+      if info != nil and info != ""
+        return "<pre><code class=\"language-" + Markdown.escape_attr(info) + "\">" + body + "</code></pre>\n"
       return "<pre><code>" + body + "</code></pre>\n"
     if kind == "quote"
-      inner_text = join(block["lines"], "\n")
-      return "<blockquote>\n<p>" + Markdown.inline(inner_text) + "</p>\n</blockquote>\n"
+      inner_text = block["lines"].join("\n")
+      return "<blockquote>\n<p>" + Markdown.inline_with_refs(inner_text, refs) + "</p>\n</blockquote>\n"
     if kind == "ul"
       out = "<ul>\n"
       for item in block["items"]
-        out = out + "<li>" + Markdown.inline(item) + "</li>\n"
+        text = item
+        children = []
+        if item["text"] != nil
+          text = item["text"]
+          children = item["children"]
+        out = out + "<li>" + Markdown.inline_with_refs(text, refs)
+        if children.len() > 0
+          out = out + "\n<ul>\n"
+          for child in children
+            out = out + "<li>" + Markdown.inline_with_refs(child, refs) + "</li>\n"
+          out = out + "</ul>\n"
+        out = out + "</li>\n"
       out = out + "</ul>\n"
       return out
     if kind == "ol"
       out = "<ol>\n"
       for item in block["items"]
-        out = out + "<li>" + Markdown.inline(item) + "</li>\n"
+        out = out + "<li>" + Markdown.inline_with_refs(item, refs) + "</li>\n"
       out = out + "</ol>\n"
       return out
+    if kind == "task_list"
+      out = "<ul class=\"task-list\">\n"
+      for item in block["items"]
+        checked = ""
+        if item["checked"]
+          checked = " checked"
+        out = out + "<li><input type=\"checkbox\" disabled" + checked + "/> " + Markdown.inline_with_refs(item["text"], refs) + "</li>\n"
+      out = out + "</ul>\n"
+      return out
+    if kind == "table"
+      out = "<table>\n<thead><tr>"
+      for cell in block["headers"]
+        out = out + "<th>" + Markdown.inline_with_refs(cell, refs) + "</th>"
+      out = out + "</tr></thead>\n<tbody>\n"
+      for row in block["rows"]
+        out = out + "<tr>"
+        for cell in row
+          out = out + "<td>" + Markdown.inline_with_refs(cell, refs) + "</td>"
+        out = out + "</tr>\n"
+      out = out + "</tbody>\n</table>\n"
+      return out
+    if kind == "html"
+      if options["raw_html"] == true
+        return block["text"] + "\n"
+      return "<p>" + Markdown.escape_html(block["text"]) + "</p>\n"
     return ""
 
   static escape_html = text ->
-    text = replace(text, "&", "&amp;")
-    text = replace(text, "<", "&lt;")
-    text = replace(text, ">", "&gt;")
-    text = replace(text, "\"", "&quot;")
-    text = replace(text, "'", "&#39;")
+    text = text.replace("&", "&amp;")
+    text = text.replace("<", "&lt;")
+    text = text.replace(">", "&gt;")
+    text = text.replace("\"", "&quot;")
+    text = text.replace("'", "&#39;")
     return text
 
   static escape_attr = text ->
-    text = replace(text, "&", "&amp;")
-    text = replace(text, "\"", "&quot;")
-    text = replace(text, "<", "&lt;")
-    text = replace(text, ">", "&gt;")
+    text = text.replace("&", "&amp;")
+    text = text.replace("\"", "&quot;")
+    text = text.replace("<", "&lt;")
+    text = text.replace(">", "&gt;")
     return text
 
   static inline = text ->
-    n = byte_len(text)
+    return Markdown.inline_with_refs(text, {})
+
+  static inline_with_refs = text, refs ->
+    n = text.byte_len()
     out = ""
     i = 0
     while i < n
@@ -233,36 +428,49 @@ class Markdown
           out = out + "<code>" + Markdown.escape_html(inner) + "</code>"
           i = end + 1
           continue
+      if c == "~" and i + 1 < n and text[i + 1] == "~"
+        end = Markdown.find_double(text, "~", i + 2)
+        if end >= 0
+          inner = Markdown.slice_str(text, i + 2, end)
+          out = out + "<del>" + Markdown.inline_with_refs(inner, refs) + "</del>"
+          i = end + 2
+          continue
       if c == "*" and i + 1 < n and text[i + 1] == "*"
         end = Markdown.find_double(text, "*", i + 2)
         if end >= 0
           inner = Markdown.slice_str(text, i + 2, end)
-          out = out + "<strong>" + Markdown.inline(inner) + "</strong>"
+          out = out + "<strong>" + Markdown.inline_with_refs(inner, refs) + "</strong>"
           i = end + 2
           continue
       if c == "_" and i + 1 < n and text[i + 1] == "_"
         end = Markdown.find_double(text, "_", i + 2)
         if end >= 0
           inner = Markdown.slice_str(text, i + 2, end)
-          out = out + "<strong>" + Markdown.inline(inner) + "</strong>"
+          out = out + "<strong>" + Markdown.inline_with_refs(inner, refs) + "</strong>"
           i = end + 2
           continue
       if c == "*"
         end = Markdown.find_byte(text, "*", i + 1)
         if end >= 0
           inner = Markdown.slice_str(text, i + 1, end)
-          out = out + "<em>" + Markdown.inline(inner) + "</em>"
+          out = out + "<em>" + Markdown.inline_with_refs(inner, refs) + "</em>"
           i = end + 1
           continue
       if c == "_"
         end = Markdown.find_byte(text, "_", i + 1)
         if end >= 0
           inner = Markdown.slice_str(text, i + 1, end)
-          out = out + "<em>" + Markdown.inline(inner) + "</em>"
+          out = out + "<em>" + Markdown.inline_with_refs(inner, refs) + "</em>"
           i = end + 1
           continue
+      if c == "!" and i + 1 < n and text[i + 1] == "["
+        image = Markdown.try_image(text, i, refs)
+        if image != nil
+          out = out + image["html"]
+          i = image["end"]
+          continue
       if c == "["
-        link = Markdown.try_link(text, i)
+        link = Markdown.try_link(text, i, refs)
         if link != nil
           out = out + link["html"]
           i = link["end"]
@@ -278,7 +486,7 @@ class Markdown
     return out
 
   static find_byte = text, b, start ->
-    n = byte_len(text)
+    n = text.byte_len()
     i = start
     while i < n
       if text[i] == b
@@ -287,7 +495,7 @@ class Markdown
     return -1
 
   static find_double = text, b, start ->
-    n = byte_len(text)
+    n = text.byte_len()
     i = start
     while i < n - 1
       if text[i] == b and text[i + 1] == b
@@ -303,33 +511,80 @@ class Markdown
       i = i + 1
     return out
 
-  static try_link = text, start ->
-    n = byte_len(text)
+  static try_link = text, start, refs ->
+    n = text.byte_len()
     close_text = Markdown.find_byte(text, "]", start + 1)
     if close_text < 0
       return nil
     if close_text + 1 >= n
       return nil
-    if text[close_text + 1] != "("
-      return nil
-    close_url = Markdown.find_byte(text, ")", close_text + 2)
-    if close_url < 0
-      return nil
     inner = Markdown.slice_str(text, start + 1, close_text)
-    url = Markdown.slice_str(text, close_text + 2, close_url)
+    url = nil
+    end = close_text + 1
+    if text[close_text + 1] == "("
+      close_url = Markdown.find_byte(text, ")", close_text + 2)
+      if close_url < 0
+        return nil
+      url = Markdown.slice_str(text, close_text + 2, close_url)
+      end = close_url + 1
+    elseif text[close_text + 1] == "["
+      close_ref = Markdown.find_byte(text, "]", close_text + 2)
+      if close_ref < 0
+        return nil
+      label = Markdown.slice_str(text, close_text + 2, close_ref).trim().lower()
+      if label == ""
+        label = inner.trim().lower()
+      if not refs.has(label)
+        return nil
+      url = refs[label]
+      end = close_ref + 1
+    else
+      return nil
     html = "<a href=\""
       + Markdown.escape_attr(url)
       + "\">"
-      + Markdown.inline(inner)
+      + Markdown.inline_with_refs(inner, refs)
       + "</a>"
-    return { html: html, end: close_url + 1 }
+    return { html: html, end: end }
+
+  static try_image = text, start, refs ->
+    n = text.byte_len()
+    if start + 1 >= n or text[start + 1] != "["
+      return nil
+    close_text = Markdown.find_byte(text, "]", start + 2)
+    if close_text < 0 or close_text + 1 >= n
+      return nil
+    alt = Markdown.slice_str(text, start + 2, close_text)
+    url = nil
+    end = close_text + 1
+    if text[close_text + 1] == "("
+      close_url = Markdown.find_byte(text, ")", close_text + 2)
+      if close_url < 0
+        return nil
+      url = Markdown.slice_str(text, close_text + 2, close_url)
+      end = close_url + 1
+    elseif text[close_text + 1] == "["
+      close_ref = Markdown.find_byte(text, "]", close_text + 2)
+      if close_ref < 0
+        return nil
+      label = Markdown.slice_str(text, close_text + 2, close_ref).trim().lower()
+      if label == ""
+        label = alt.trim().lower()
+      if not refs.has(label)
+        return nil
+      url = refs[label]
+      end = close_ref + 1
+    else
+      return nil
+    html = "<img src=\"" + Markdown.escape_attr(url) + "\" alt=\"" + Markdown.escape_attr(alt) + "\"/>"
+    return { html: html, end: end }
 
   static try_autolink = text, start ->
     close = Markdown.find_byte(text, ">", start + 1)
     if close < 0
       return nil
     inner = Markdown.slice_str(text, start + 1, close)
-    if not (starts_with(inner, "http://") or starts_with(inner, "https://"))
+    if not (inner.starts_with("http://") or inner.starts_with("https://"))
       return nil
     html = "<a href=\""
       + Markdown.escape_attr(inner)

@@ -158,6 +158,22 @@ dictionary supplied through options.
 options)` read a template file and render it with the same semantics as
 `Template.render`.
 
+## Markdown Stdlib
+
+`import markdown` exposes `markdown.Markdown` with class-style parsing and
+rendering APIs: `Markdown.parse(text)`, `Markdown.to_html_ast(ast)`,
+`Markdown.render(ast_or_html_ast)`, and `Markdown.to_html(text)`.
+
+`Markdown.parse` returns a document dictionary with stable block `kind` fields.
+`Markdown.to_html(text)` remains the simple one-step API and is equivalent to
+`Markdown.render(Markdown.to_html_ast(Markdown.parse(text)))` for supported
+syntax.
+
+The supported subset includes tables, task lists, strikethrough, fenced-code
+info strings, reference links, images, nested unordered lists, setext headings,
+and selected HTML blocks. HTML remains escaped by default; raw HTML block
+pass-through is opt-in with `{ raw_html: true }` when calling `render`.
+
 ## Log Stdlib
 
 `import log` exposes `log.Logger`, a small structured logger for CLI tools,

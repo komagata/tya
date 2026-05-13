@@ -28,6 +28,9 @@ standard library or runtime.
 - New `template.Template` stdlib renderer handles generic text templates with
   variables, dotted/indexed paths, conditionals, loops, explicit partials,
   file rendering, strict missing-value errors, and optional HTML escaping.
+- `markdown.Markdown` now has class-style `parse`, `to_html_ast`, and `render`
+  APIs, plus tables, task lists, strikethrough, fenced-code info strings,
+  reference links, images, nested lists, setext headings, and opt-in raw HTML.
 - New `log.Logger` stdlib logger writes level-filtered text or JSON records to
   stderr by default or appends them to a configured file path.
 - New `io.Io` stdlib streams wrap stdin/stdout/stderr and file readers/writers
@@ -41,5 +44,5 @@ The release includes package-manager unit coverage and script coverage for path
 dependency native builds, native run/build/test behavior, diagnostics, the
 generated native library scaffold, the `cli.Cli` stdlib parser, package tool
 execution, interpolation scanner edge cases, the `template.Template` stdlib
-renderer, the `log.Logger` stdlib logger, `io.Io` stream tests, and `net/ip`
-address/network tests.
+renderer, Markdown parser/rendering extensions, the `log.Logger` stdlib logger,
+`io.Io` stream tests, and `net/ip` address/network tests.

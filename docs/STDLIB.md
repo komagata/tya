@@ -660,6 +660,35 @@ Returns a dict `{ index, kind, value }`. v0.43 polls each
 operation in a tight loop and sleeps briefly when nothing is
 ready; future minors will add a proper waiter-list mechanism.
 
+## `markdown` (v0.62)
+
+Markdown parsing and HTML rendering.
+
+```tya
+import markdown as markdown
+
+ast = markdown.Markdown.parse("# Hello")
+html = markdown.Markdown.render(markdown.Markdown.to_html_ast(ast))
+```
+
+Class members on `markdown.Markdown`: `parse`, `to_html_ast`, `render`,
+`to_html`.
+
+`Markdown.parse(text)` returns a document dictionary with stable block `kind`
+fields. `Markdown.to_html_ast(ast)` prepares that document for rendering.
+`Markdown.render(ast)` renders a Markdown document or HTML-oriented document.
+`Markdown.to_html(text)` is equivalent to
+`Markdown.render(Markdown.to_html_ast(Markdown.parse(text)))`.
+
+Supported block syntax includes paragraphs, ATX and setext headings, thematic
+breaks, block quotes, ordered and unordered lists, one-level nested unordered
+lists, task lists, pipe tables, fenced code blocks with info strings, and a
+selected raw HTML block subset. Inline syntax includes emphasis, strong,
+strikethrough, code spans, links, reference links, images, and autolinks.
+
+HTML is escaped by default. Raw HTML blocks pass through only when rendering
+with `{ raw_html: true }`.
+
 ## `template` (v0.62)
 
 Generic text template rendering.

@@ -14,10 +14,24 @@ stdout '<hr/>'
 stdout '<pre><code>line &lt;html&gt;'
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
+
+exec go run ./cmd/tya run $WORK/extended.tya
+stdout '<h1>Setext</h1>'
+stdout '<th>Name</th><th>Done</th>'
+stdout '<td>Build</td><td><del>no</del></td>'
+stdout '<input type="checkbox" disabled checked/> shipped'
+stdout '<pre><code class="language-tya">print'
+stdout '<a href="https://example.com/ref">reference</a>'
+stdout '<img src="logo.png" alt="logo"/>'
+stdout '<ul>'
+stdout '<li>parent'
+stdout '<li>child</li>'
+stdout '<p>&lt;div&gt;escaped&lt;/div&gt;</p>'
+stdout '<div>escaped</div>'
 
 -- sample.tya --
-import markdown
+import markdown as markdown
 
 src = """
 # Hello
@@ -39,3 +53,36 @@ line <html>
 ---
 """
 print(markdown.Markdown.to_html(src))
+
+-- extended.tya --
+import markdown as markdown
+
+src = """
+Setext
+======
+
+| Name | Done |
+| ---- | ---- |
+| Build | ~~no~~ |
+
+- [x] shipped
+- [ ] pending
+
+```tya
+print("hi")
+```
+
+[reference][ref] and ![logo](logo.png)
+
+- parent
+  - child
+
+<div>escaped</div>
+
+[ref]: https://example.com/ref
+"""
+
+ast = markdown.Markdown.parse(src)
+html_ast = markdown.Markdown.to_html_ast(ast)
+print(markdown.Markdown.render(html_ast))
+print(markdown.Markdown.render(html_ast, { raw_html: true }))

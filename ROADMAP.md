@@ -856,6 +856,17 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     `--`, and deterministic usage text.
     - Spec: `docs/prd/completed/stdlib-cli-library.md`
 
+- [x] **Markdown class-style extensions**
+  - [x] Public AST: `Markdown.parse`, `Markdown.to_html_ast`, and
+    `Markdown.render`.
+    - Spec: `docs/prd/completed/markdown-class-style-extensions.md`
+  - [x] GFM extensions: tables, task lists, strikethrough, fenced-code info
+    strings.
+  - [x] Reference link definitions, images, nested lists, setext headings, and
+    HTML blocks.
+  - [x] Raw HTML pass-through with a security note.
+  - [x] CommonMark conformance subset in CI.
+
 - [ ] **Extend coverage tooling (post-v0.30.0)**
   - [ ] `tya cover html` self-contained report.
   - [ ] `--include` / `--exclude` glob filters on `tya cover`.
@@ -865,16 +876,6 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Map coverage to per-import-source lines instead of the synthesized
     entry path.
   - [ ] Recommended CI snippet (fail when coverage drops below a threshold).
-
-- [ ] **Extend `markdown` stdlib module (post-v0.32 foundation)**
-  - [ ] Public AST: `markdown.parse(text) -> ast`, `markdown.to_html_ast(ast)
-    -> string`, `markdown.render(ast, visitor) -> string`, AST node spec.
-  - [ ] GFM extensions: tables, task lists, strikethrough, fenced-code
-    info-string class.
-  - [ ] Reference link definitions, images, nested lists, setext headings,
-    HTML blocks.
-  - [ ] Raw HTML pass-through with security note.
-  - [ ] CommonMark conformance subset run as part of `go test ./...`.
 
 - [ ] **Extend multi-line strings further** (heredoc-style markers,
   language-tagged interpolation specifiers like `sql"""..."""`) — only if
