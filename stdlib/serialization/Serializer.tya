@@ -1,0 +1,136 @@
+import json as json
+import toml as toml
+import base64 as base64
+
+class Serializer
+  static to_data = value, options ->
+    opts = Serializer.options(options)
+    return Serializer.to_data_seen(value, opts, [])
+
+  static from_data = data, klass, options ->
+    opts = Serializer.options(options)
+    if klass == nil
+      return data
+    if serialization_has_member(klass, "from_serialized")
+      return klass.from_serialized(data)
+    if serialization_kind(data) != "dict"
+      raise "serialization.from_data: class data must be a dict"
+    obj = klass(nil, nil, nil, nil, nil, nil)
+    defaults = opts.get("defaults", {})
+    fields = opts.get("fields", nil)
+    strict = opts.get("strict_fields", false)
+    existing = serialization_public_fields(obj)
+
+    keys = defaults.keys()
+    i = 0
+    while i < keys.len()
+      key = keys[i]
+      if fields == nil or Serializer.array_has?(fields, key)
+        obj[key] = Serializer.from_data(defaults[key], nil, opts)
+      i = i + 1
+
+    keys = data.keys()
+    i = 0
+    while i < keys.len()
+      key = keys[i]
+      if key != opts["class_key"]
+        if fields == nil or Serializer.array_has?(fields, key)
+          if strict and not existing.has?(key) and not defaults.has?(key)
+            raise "serialization.from_data: unknown field " + key
+          obj[key] = Serializer.from_data(data[key], nil, opts)
+      i = i + 1
+    return obj
+
+  static to_json = value, options ->
+    return json.Json.dump(Serializer.to_data(value, options))
+
+  static from_json = text, klass, options ->
+    return Serializer.from_data(json.Json.parse(text), klass, options)
+
+  static to_toml = value, options ->
+    data = Serializer.to_data(value, options)
+    if serialization_kind(data) != "dict"
+      raise "serialization.to_toml: top-level value must serialize to a dict"
+    return toml.Toml.dump(data)
+
+  static from_toml = text, klass, options ->
+    return Serializer.from_data(toml.Toml.parse(text), klass, options)
+
+  static to_data_seen = value, opts, seen ->
+    kind = serialization_kind(value)
+    if kind == "nil" or kind == "bool" or kind == "number" or kind == "string"
+      return value
+    if kind == "bytes"
+      mode = opts.get("bytes", nil)
+      if mode == "base64"
+        return base64.Base64.encode(value)
+      if mode == "array"
+        return bytes_array(value)
+      raise "serialization.to_data: bytes require bytes option"
+    if kind == "array" or kind == "dict" or kind == "object"
+      Serializer.enter_seen(value, seen)
+      if kind == "array"
+        out = []
+        i = 0
+        while i < value.len()
+          out.push(Serializer.to_data_seen(value[i], opts, seen))
+          i = i + 1
+        seen.pop()
+        return out
+      data = value
+      if kind == "object"
+        if serialization_has_member(value, "to_serialized")
+          data = value.to_serialized()
+          seen.pop()
+          return Serializer.to_data_seen(data, opts, seen)
+        data = serialization_public_fields(value)
+      out = {}
+      if kind == "object" and opts["include_class"]
+        out[opts["class_key"]] = value.class.name
+      keys = data.keys()
+      fields = opts.get("fields", nil)
+      i = 0
+      while i < keys.len()
+        key = keys[i]
+        if key.class != String
+          raise "serialization.to_data: dictionary keys must be strings"
+        if fields == nil or Serializer.array_has?(fields, key)
+          out[key] = Serializer.to_data_seen(data[key], opts, seen)
+        i = i + 1
+      seen.pop()
+      return out
+    raise "serialization.to_data: unsupported " + kind
+
+  static enter_seen = value, seen ->
+    id = serialization_id(value)
+    i = 0
+    while i < seen.len()
+      if seen[i] == id
+        raise "serialization: cycle detected"
+      i = i + 1
+    seen.push(id)
+
+  static options = options ->
+    opts = { "bytes": nil, "include_class": false, "class_key": "$class", "fields": nil, "defaults": {}, "strict_fields": false }
+    if options == nil
+      return opts
+    allowed = opts.keys()
+    keys = options.keys()
+    i = 0
+    while i < keys.len()
+      key = keys[i]
+      if not Serializer.array_has?(allowed, key)
+        raise "serialization.options: unknown option " + key
+      opts[key] = options[key]
+      i = i + 1
+    if opts["bytes"] != nil and opts["bytes"] != "base64" and opts["bytes"] != "array"
+      raise "serialization.options: bytes must be base64 or array"
+    return opts
+
+  static array_has? = values, value ->
+    i = 0
+    while i < values.len()
+      if values[i] == value
+        return true
+      i = i + 1
+    return false

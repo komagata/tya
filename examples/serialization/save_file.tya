@@ -1,0 +1,14 @@
+import serialization as serialization
+
+class Player
+  initialize = name, score ->
+    self.name = name
+    self.score = score
+
+player = Player("Ada", 42)
+saved_json = serialization.Serializer.to_json(player, { include_class: true })
+println(saved_json)
+
+loaded = serialization.Serializer.from_json(saved_json, Player)
+println(loaded.name)
+println(loaded.score)

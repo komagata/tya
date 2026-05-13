@@ -3351,6 +3351,14 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_random_int(%s, %s)", 2)
 	case "random_float":
 		return emit("tya_random_float()", 0)
+	case "serialization_kind":
+		return emit("tya_serialization_kind(%s)", 1)
+	case "serialization_id":
+		return emit("tya_serialization_id(%s)", 1)
+	case "serialization_public_fields":
+		return emit("tya_serialization_public_fields(%s)", 1)
+	case "serialization_has_member":
+		return emit("tya_serialization_has_member(%s, %s)", 2)
 	case "compiler_lexer_lex":
 		return emit("tya_compiler_lexer_lex(%s)", 1)
 	case "compiler_lexer_lex_with_comments":

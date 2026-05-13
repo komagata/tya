@@ -466,6 +466,30 @@ Numbers without fractional parts decode to ints; with fractional parts to
 floats. Parsed JSON values are data-exchange dictionaries and arrays, not
 stdlib domain instances.
 
+## `serialization`
+
+```tya
+import serialization as serialization
+
+data = serialization.Serializer.to_data(player)
+text = serialization.Serializer.to_json(player, { include_class: true })
+loaded = serialization.Serializer.from_json(text, Player)
+```
+
+`serialization.Serializer` maps primitive values, arrays, dictionaries with
+string keys, bytes with an explicit encoding option, and class instances with
+public fields to JSON-compatible data trees. It can emit JSON through
+`to_json` and TOML for dictionary-like top-level values through `to_toml`.
+
+Class instances serialize from public fields. `to_serialized()` and
+`Class.from_serialized(data)` hooks override the default field mapping.
+`from_data(data, Class)` constructs a class instance and assigns fields from
+the data tree.
+
+Options include `bytes: "base64"`, `bytes: "array"`, `include_class`,
+`class_key`, `fields`, `defaults`, and `strict_fields`. Cycles and unsupported
+runtime resources raise `serialization` errors.
+
 ## `csv`
 
 ```tya

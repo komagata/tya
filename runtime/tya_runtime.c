@@ -2458,6 +2458,82 @@ TyaValue tya_random_float(void) {
   return tya_number(v);
 }
 
+TyaValue tya_serialization_kind(TyaValue value) {
+  switch (value.kind) {
+  case TYA_NIL: return tya_string("nil");
+  case TYA_BOOL: return tya_string("bool");
+  case TYA_NUMBER: return tya_string("number");
+  case TYA_STRING: return tya_string("string");
+  case TYA_ARRAY: return tya_string("array");
+  case TYA_DICT: return tya_string("dict");
+  case TYA_OBJECT: return tya_string("object");
+  case TYA_FUNCTION: return tya_string(value.function != NULL && value.function->is_class ? "class" : "function");
+  case TYA_ERROR: return tya_string("error");
+  case TYA_BYTES: return tya_string("bytes");
+  case TYA_TASK: return tya_string("task");
+  case TYA_CHANNEL: return tya_string("channel");
+  case TYA_RESOURCE: return tya_string("resource");
+  }
+  return tya_string("unknown");
+}
+
+TyaValue tya_serialization_id(TyaValue value) {
+  uintptr_t p = 0;
+  switch (value.kind) {
+  case TYA_ARRAY: p = (uintptr_t)value.array; break;
+  case TYA_DICT:
+  case TYA_OBJECT: p = (uintptr_t)value.dict; break;
+  case TYA_FUNCTION: p = (uintptr_t)value.function; break;
+  case TYA_BYTES: p = (uintptr_t)value.bytes; break;
+  case TYA_TASK: p = (uintptr_t)value.task; break;
+  case TYA_CHANNEL: p = (uintptr_t)value.channel; break;
+  case TYA_RESOURCE: p = (uintptr_t)value.resource; break;
+  default: p = 0; break;
+  }
+  return tya_number((double)p);
+}
+
+TyaValue tya_serialization_public_fields(TyaValue value) {
+  TyaValue out = tya_dict(NULL, 0);
+  if (value.kind != TYA_OBJECT || value.dict == NULL) {
+    return out;
+  }
+  for (int i = 0; i < value.dict->len; i++) {
+    const char *key = value.dict->entries[i].key;
+    TyaValue field = value.dict->entries[i].value;
+    if (key == NULL || key[0] == '@' || strcmp(key, "class") == 0 || strcmp(key, "class_name") == 0 || field.kind == TYA_FUNCTION) {
+      continue;
+    }
+    tya_set_member(out, key, field);
+  }
+  return out;
+}
+
+TyaValue tya_serialization_has_member(TyaValue value, TyaValue key_value) {
+  if (key_value.kind != TYA_STRING || key_value.string == NULL) {
+    return tya_bool(false);
+  }
+  const char *key = key_value.string;
+  if (value.kind == TYA_OBJECT && value.dict != NULL) {
+    for (int i = 0; i < value.dict->len; i++) {
+      if (value.dict->entries[i].key != NULL && strcmp(value.dict->entries[i].key, key) == 0) {
+        return tya_bool(true);
+      }
+    }
+  }
+  if (value.kind == TYA_FUNCTION && value.function != NULL && value.function->members != NULL) {
+    if (value.function->is_class && (strcmp(key, "name") == 0 || strcmp(key, "parent") == 0)) {
+      return tya_bool(true);
+    }
+    for (int i = 0; i < value.function->members->len; i++) {
+      if (value.function->members->entries[i].key != NULL && strcmp(value.function->members->entries[i].key, key) == 0) {
+        return tya_bool(true);
+      }
+    }
+  }
+  return tya_bool(false);
+}
+
 static TyaValue tya_compiler_empty_diags(void) {
   return tya_array(NULL, 0);
 }

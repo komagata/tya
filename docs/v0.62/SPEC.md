@@ -286,6 +286,31 @@ not mutate its input. `sample` samples without replacement and rejects negative
 or oversized counts. Weighted helpers reject mismatched lengths, non-numeric or
 negative weights, and all-zero weights.
 
+## Serialization Stdlib
+
+The standard library includes a `serialization.Serializer` class for converting
+Tya values and class instances to stable data trees and back.
+
+```tya
+import serialization as serialization
+
+data = serialization.Serializer.to_data(player)
+text = serialization.Serializer.to_json(player, { include_class: true })
+loaded = serialization.Serializer.from_json(text, Player)
+```
+
+`to_data` accepts primitives, arrays, dictionaries with string keys, bytes when
+`bytes: "base64"` or `bytes: "array"` is provided, and class instances with
+public fields. `to_json` delegates to `json.Json.dump`; `to_toml` emits TOML
+for dictionary-like top-level values.
+
+`from_data`, `from_json`, and `from_toml` accept `nil` as the class target for
+plain data or a class target for instance construction. Custom
+`to_serialized()` and `Class.from_serialized(data)` hooks override the default
+field mapping. Options include `include_class`, `class_key`, `fields`,
+`defaults`, and `strict_fields`. Cycles and unsupported runtime resources raise
+clear serialization errors.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

@@ -148,6 +148,10 @@ TyaValue tya_time_since(TyaValue t);
 TyaValue tya_random_seed(TyaValue value);
 TyaValue tya_random_int(TyaValue min, TyaValue max);
 TyaValue tya_random_float(void);
+TyaValue tya_serialization_kind(TyaValue value);
+TyaValue tya_serialization_id(TyaValue value);
+TyaValue tya_serialization_public_fields(TyaValue value);
+TyaValue tya_serialization_has_member(TyaValue value, TyaValue key);
 
 TyaValue tya_compiler_lexer_lex(TyaValue source);
 TyaValue tya_compiler_lexer_lex_with_comments(TyaValue source);

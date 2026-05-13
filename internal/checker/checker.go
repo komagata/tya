@@ -249,6 +249,7 @@ var builtinNames = []string{
 	// v0.24
 	"time_now", "time_sleep", "time_format", "time_parse", "time_since",
 	"random_seed", "random_int", "random_float",
+	"serialization_kind", "serialization_id", "serialization_public_fields", "serialization_has_member",
 	"compiler_lexer_lex", "compiler_lexer_lex_with_comments",
 	"compiler_parser_parse", "compiler_parser_parse_tokens",
 	"compiler_ast_children", "compiler_ast_kind", "compiler_ast_span",
