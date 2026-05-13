@@ -186,7 +186,7 @@ type ServerCapabilities struct {
 	HoverProvider                   bool                    `json:"hoverProvider"`
 	DefinitionProvider              bool                    `json:"definitionProvider"`
 	ReferencesProvider              bool                    `json:"referencesProvider"`
-	RenameProvider                  bool                    `json:"renameProvider"`
+	RenameProvider                  any                     `json:"renameProvider"`
 	CompletionProvider              *CompletionOptions      `json:"completionProvider,omitempty"`
 	DocumentFormattingProvider      bool                    `json:"documentFormattingProvider"`
 	DocumentRangeFormattingProvider bool                    `json:"documentRangeFormattingProvider"`
@@ -194,6 +194,12 @@ type ServerCapabilities struct {
 	SemanticTokensProvider          *SemanticTokensOptions  `json:"semanticTokensProvider,omitempty"`
 	DocumentSymbolProvider          bool                    `json:"documentSymbolProvider"`
 	WorkspaceSymbolProvider         bool                    `json:"workspaceSymbolProvider"`
+	InlayHintProvider               bool                    `json:"inlayHintProvider,omitempty"`
+	CallHierarchyProvider           bool                    `json:"callHierarchyProvider,omitempty"`
+	SelectionRangeProvider          bool                    `json:"selectionRangeProvider,omitempty"`
+	CodeLensProvider                *CodeLensOptions        `json:"codeLensProvider,omitempty"`
+	FoldingRangeProvider            bool                    `json:"foldingRangeProvider,omitempty"`
+	DocumentLinkProvider            *DocumentLinkOptions    `json:"documentLinkProvider,omitempty"`
 	PositionEncoding                string                  `json:"positionEncoding,omitempty"`
 }
 
@@ -215,4 +221,8 @@ type SaveOptions struct {
 type CompletionOptions struct {
 	TriggerCharacters []string `json:"triggerCharacters,omitempty"`
 	ResolveProvider   bool     `json:"resolveProvider"`
+}
+
+type RenameOptions struct {
+	PrepareProvider bool `json:"prepareProvider"`
 }

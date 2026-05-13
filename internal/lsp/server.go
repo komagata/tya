@@ -79,6 +79,8 @@ func (s *Server) handle(m *Message) error {
 		return s.onReferences(m)
 	case "textDocument/rename":
 		return s.onRename(m)
+	case "textDocument/prepareRename":
+		return s.onPrepareRename(m)
 	case "textDocument/rangeFormatting":
 		return s.onRangeFormatting(m)
 	case "textDocument/codeAction":
@@ -87,6 +89,22 @@ func (s *Server) handle(m *Message) error {
 		return s.onSemanticTokens(m)
 	case "textDocument/documentSymbol":
 		return s.onDocumentSymbol(m)
+	case "textDocument/inlayHint":
+		return s.onInlayHint(m)
+	case "textDocument/selectionRange":
+		return s.onSelectionRange(m)
+	case "textDocument/codeLens":
+		return s.onCodeLens(m)
+	case "textDocument/foldingRange":
+		return s.onFoldingRange(m)
+	case "textDocument/documentLink":
+		return s.onDocumentLink(m)
+	case "textDocument/prepareCallHierarchy":
+		return s.onPrepareCallHierarchy(m)
+	case "callHierarchy/incomingCalls":
+		return s.conn.WriteResponse(m.ID, EmptyIncomingCalls())
+	case "callHierarchy/outgoingCalls":
+		return s.conn.WriteResponse(m.ID, EmptyOutgoingCalls())
 	case "workspace/symbol":
 		return s.onWorkspaceSymbol(m)
 	default:
@@ -108,7 +126,7 @@ func (s *Server) onInitialize(m *Message) error {
 			HoverProvider:                   true,
 			DefinitionProvider:              true,
 			ReferencesProvider:              true,
-			RenameProvider:                  true,
+			RenameProvider:                  RenameOptions{PrepareProvider: true},
 			CompletionProvider:              &CompletionOptions{ResolveProvider: false},
 			DocumentFormattingProvider:      true,
 			DocumentRangeFormattingProvider: true,
@@ -120,6 +138,12 @@ func (s *Server) onInitialize(m *Message) error {
 			},
 			DocumentSymbolProvider:  true,
 			WorkspaceSymbolProvider: true,
+			InlayHintProvider:       true,
+			CallHierarchyProvider:   true,
+			SelectionRangeProvider:  true,
+			CodeLensProvider:        &CodeLensOptions{ResolveProvider: false},
+			FoldingRangeProvider:    true,
+			DocumentLinkProvider:    &DocumentLinkOptions{ResolveProvider: false},
 			PositionEncoding:        "utf-8",
 		},
 		ServerInfo: ServerInfo{Name: "tya", Version: Version},
@@ -287,6 +311,22 @@ func (s *Server) onRename(m *Message) error {
 	return s.conn.WriteResponse(m.ID, edit)
 }
 
+func (s *Server) onPrepareRename(m *Message) error {
+	var p PrepareRenameParams
+	if err := json.Unmarshal(m.Params, &p); err != nil {
+		return s.conn.WriteError(m.ID, codeInvalidParams, err.Error())
+	}
+	d, ok := s.store.Get(p.TextDocument.URI)
+	if !ok {
+		return s.conn.WriteError(m.ID, codeInvalidRequest, "[TYA-E0933] no open document")
+	}
+	res, err := PrepareRename(d, p.Position.Line, p.Position.Character)
+	if err != nil {
+		return s.conn.WriteError(m.ID, codeInvalidRequest, err.Error())
+	}
+	return s.conn.WriteResponse(m.ID, res)
+}
+
 func (s *Server) onRangeFormatting(m *Message) error {
 	var p DocumentRangeFormattingParams
 	if err := json.Unmarshal(m.Params, &p); err != nil {
@@ -358,6 +398,78 @@ func (s *Server) onWorkspaceSymbol(m *Message) error {
 		syms = []SymbolInformation{}
 	}
 	return s.conn.WriteResponse(m.ID, syms)
+}
+
+func (s *Server) onInlayHint(m *Message) error {
+	var p InlayHintParams
+	if err := json.Unmarshal(m.Params, &p); err != nil {
+		return s.conn.WriteError(m.ID, codeInvalidParams, err.Error())
+	}
+	d, ok := s.store.Get(p.TextDocument.URI)
+	if !ok {
+		return s.conn.WriteResponse(m.ID, []InlayHint{})
+	}
+	return s.conn.WriteResponse(m.ID, InlayHintsFor(d, p.Range))
+}
+
+func (s *Server) onSelectionRange(m *Message) error {
+	var p SelectionRangeParams
+	if err := json.Unmarshal(m.Params, &p); err != nil {
+		return s.conn.WriteError(m.ID, codeInvalidParams, err.Error())
+	}
+	d, ok := s.store.Get(p.TextDocument.URI)
+	if !ok {
+		return s.conn.WriteResponse(m.ID, []SelectionRange{})
+	}
+	return s.conn.WriteResponse(m.ID, SelectionRangesFor(d, p.Positions))
+}
+
+func (s *Server) onCodeLens(m *Message) error {
+	var p CodeLensParams
+	if err := json.Unmarshal(m.Params, &p); err != nil {
+		return s.conn.WriteError(m.ID, codeInvalidParams, err.Error())
+	}
+	d, ok := s.store.Get(p.TextDocument.URI)
+	if !ok {
+		return s.conn.WriteResponse(m.ID, []CodeLens{})
+	}
+	return s.conn.WriteResponse(m.ID, CodeLensesFor(d))
+}
+
+func (s *Server) onFoldingRange(m *Message) error {
+	var p FoldingRangeParams
+	if err := json.Unmarshal(m.Params, &p); err != nil {
+		return s.conn.WriteError(m.ID, codeInvalidParams, err.Error())
+	}
+	d, ok := s.store.Get(p.TextDocument.URI)
+	if !ok {
+		return s.conn.WriteResponse(m.ID, []FoldingRange{})
+	}
+	return s.conn.WriteResponse(m.ID, FoldingRangesFor(d.Text))
+}
+
+func (s *Server) onDocumentLink(m *Message) error {
+	var p DocumentLinkParams
+	if err := json.Unmarshal(m.Params, &p); err != nil {
+		return s.conn.WriteError(m.ID, codeInvalidParams, err.Error())
+	}
+	d, ok := s.store.Get(p.TextDocument.URI)
+	if !ok {
+		return s.conn.WriteResponse(m.ID, []DocumentLink{})
+	}
+	return s.conn.WriteResponse(m.ID, DocumentLinksFor(d))
+}
+
+func (s *Server) onPrepareCallHierarchy(m *Message) error {
+	var p CallHierarchyPrepareParams
+	if err := json.Unmarshal(m.Params, &p); err != nil {
+		return s.conn.WriteError(m.ID, codeInvalidParams, err.Error())
+	}
+	d, ok := s.store.Get(p.TextDocument.URI)
+	if !ok {
+		return s.conn.WriteResponse(m.ID, []CallHierarchyItem{})
+	}
+	return s.conn.WriteResponse(m.ID, PrepareCallHierarchy(d, p.Position))
 }
 
 func (s *Server) onCompletion(m *Message) error {

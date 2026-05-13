@@ -30,6 +30,19 @@ func TestLSPInitialize(t *testing.T) {
 				OpenClose bool `json:"openClose"`
 				Change    int  `json:"change"`
 			} `json:"textDocumentSync"`
+			RenameProvider struct {
+				PrepareProvider bool `json:"prepareProvider"`
+			} `json:"renameProvider"`
+			InlayHintProvider      bool `json:"inlayHintProvider"`
+			CallHierarchyProvider  bool `json:"callHierarchyProvider"`
+			SelectionRangeProvider bool `json:"selectionRangeProvider"`
+			CodeLensProvider       struct {
+				ResolveProvider bool `json:"resolveProvider"`
+			} `json:"codeLensProvider"`
+			FoldingRangeProvider bool `json:"foldingRangeProvider"`
+			DocumentLinkProvider struct {
+				ResolveProvider bool `json:"resolveProvider"`
+			} `json:"documentLinkProvider"`
 		} `json:"capabilities"`
 		ServerInfo struct {
 			Name    string `json:"name"`
@@ -50,6 +63,12 @@ func TestLSPInitialize(t *testing.T) {
 	}
 	if !got.Capabilities.TextDocumentSync.OpenClose || got.Capabilities.TextDocumentSync.Change != 2 {
 		t.Errorf("bad textDocumentSync: %+v", got.Capabilities.TextDocumentSync)
+	}
+	if !got.Capabilities.RenameProvider.PrepareProvider {
+		t.Error("prepareRename not advertised")
+	}
+	if !got.Capabilities.InlayHintProvider || !got.Capabilities.CallHierarchyProvider || !got.Capabilities.SelectionRangeProvider || !got.Capabilities.FoldingRangeProvider {
+		t.Errorf("missing polish providers: %+v", got.Capabilities)
 	}
 	if got.ServerInfo.Name != "tya" {
 		t.Errorf("server name = %q", got.ServerInfo.Name)

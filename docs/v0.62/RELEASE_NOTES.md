@@ -53,6 +53,9 @@ standard library or runtime.
   geometry application helpers, inversion, composition, and matrix interop.
 - New `compiler/*` introspection packages expose lexer, parser, AST, checker,
   and formatter results as stable public Tya dictionaries.
+- `tya lsp` now advertises and handles prepare-rename, inlay-hint, call
+  hierarchy, selection range, code lens, folding range, and document-link
+  provider requests, and semantic tokens include a stable modifier legend.
 
 ## Verification
 

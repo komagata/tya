@@ -18,6 +18,16 @@ type RenameParams struct {
 	NewName      string                 `json:"newName"`
 }
 
+type PrepareRenameParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Position     Position               `json:"position"`
+}
+
+type PrepareRenameResult struct {
+	Range       Range  `json:"range"`
+	Placeholder string `json:"placeholder"`
+}
+
 // ReferenceContext is the LSP textDocument/references options.
 type ReferenceContext struct {
 	IncludeDeclaration bool `json:"includeDeclaration"`
@@ -129,4 +139,94 @@ type SymbolInformation struct {
 // WorkspaceSymbolParams matches LSP workspace/symbol.
 type WorkspaceSymbolParams struct {
 	Query string `json:"query"`
+}
+
+type InlayHintParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Range        Range                  `json:"range"`
+}
+
+type InlayHint struct {
+	Position Position `json:"position"`
+	Label    string   `json:"label"`
+	Kind     int      `json:"kind,omitempty"`
+}
+
+const InlayHintKindParameter = 2
+
+type CallHierarchyPrepareParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Position     Position               `json:"position"`
+}
+
+type CallHierarchyItem struct {
+	Name           string `json:"name"`
+	Kind           int    `json:"kind"`
+	URI            string `json:"uri"`
+	Range          Range  `json:"range"`
+	SelectionRange Range  `json:"selectionRange"`
+}
+
+type CallHierarchyIncomingCall struct {
+	From       CallHierarchyItem `json:"from"`
+	FromRanges []Range           `json:"fromRanges"`
+}
+
+type CallHierarchyOutgoingCall struct {
+	To         CallHierarchyItem `json:"to"`
+	FromRanges []Range           `json:"fromRanges"`
+}
+
+type SelectionRangeParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Positions    []Position             `json:"positions"`
+}
+
+type SelectionRange struct {
+	Range  Range           `json:"range"`
+	Parent *SelectionRange `json:"parent,omitempty"`
+}
+
+type CodeLensParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+}
+
+type CodeLensOptions struct {
+	ResolveProvider bool `json:"resolveProvider"`
+}
+
+type Command struct {
+	Title     string `json:"title"`
+	Command   string `json:"command"`
+	Arguments []any  `json:"arguments,omitempty"`
+}
+
+type CodeLens struct {
+	Range   Range   `json:"range"`
+	Command Command `json:"command,omitempty"`
+}
+
+type FoldingRangeParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+}
+
+type FoldingRange struct {
+	StartLine      int    `json:"startLine"`
+	StartCharacter int    `json:"startCharacter,omitempty"`
+	EndLine        int    `json:"endLine"`
+	EndCharacter   int    `json:"endCharacter,omitempty"`
+	Kind           string `json:"kind,omitempty"`
+}
+
+type DocumentLinkParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+}
+
+type DocumentLinkOptions struct {
+	ResolveProvider bool `json:"resolveProvider"`
+}
+
+type DocumentLink struct {
+	Range  Range  `json:"range"`
+	Target string `json:"target,omitempty"`
 }

@@ -31,7 +31,7 @@ func writeWorkspace(t *testing.T, files map[string]string) string {
 
 func TestLSPCrossFileDefinition(t *testing.T) {
 	dir := writeWorkspace(t, map[string]string{
-		"tya.toml":   "name = \"demo\"\nversion = \"0.1.0\"\n",
+		"tya.toml":        "name = \"demo\"\nversion = \"0.1.0\"\n",
 		"src/helpers.tya": "# add two numbers\nadd = a, b -> a + b\n",
 		"src/main.tya":    "import helpers\n\nhelpers.add(1, 2)\n",
 	})
@@ -95,6 +95,35 @@ func TestLSPRenameSameFileTopLevel(t *testing.T) {
 		if e.NewText != "salute" {
 			t.Errorf("edit newText = %q", e.NewText)
 		}
+	}
+}
+
+func TestLSPPrepareRename(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	uri := fileURI("/tmp/lsp_prepare_rename.tya")
+	src := "greet = name ->\n  println(name)\n"
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+	res := p.request("textDocument/prepareRename", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"position":     map[string]any{"line": 0, "character": 1},
+	})
+	var got struct {
+		Placeholder string `json:"placeholder"`
+		Range       struct {
+			Start struct {
+				Line int `json:"line"`
+			} `json:"start"`
+		} `json:"range"`
+	}
+	if err := json.Unmarshal(res, &got); err != nil {
+		t.Fatalf("decode: %v\n%s", err, res)
+	}
+	if got.Placeholder != "greet" || got.Range.Start.Line != 0 {
+		t.Fatalf("bad prepareRename: %+v", got)
 	}
 }
 
@@ -276,6 +305,55 @@ func TestLSPSemanticTokens(t *testing.T) {
 	}
 }
 
+func TestLSPPolishProviders(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	uri := fileURI("/tmp/lsp_polish.tya")
+	src := "# [docs](https://example.com)\nimport unittest\n\nclass SampleTest extends TestCase\n\n  test_one = ->\n    println(\"ok\")\n"
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+
+	folds := p.request("textDocument/foldingRange", map[string]any{"textDocument": map[string]any{"uri": uri}})
+	var folding []any
+	if err := json.Unmarshal(folds, &folding); err != nil || len(folding) == 0 {
+		t.Fatalf("foldingRange = %s err=%v", folds, err)
+	}
+
+	lenses := p.request("textDocument/codeLens", map[string]any{"textDocument": map[string]any{"uri": uri}})
+	var codeLens []any
+	if err := json.Unmarshal(lenses, &codeLens); err != nil || len(codeLens) == 0 {
+		t.Fatalf("codeLens = %s err=%v", lenses, err)
+	}
+
+	links := p.request("textDocument/documentLink", map[string]any{"textDocument": map[string]any{"uri": uri}})
+	var docLinks []any
+	if err := json.Unmarshal(links, &docLinks); err != nil || len(docLinks) == 0 {
+		t.Fatalf("documentLink = %s err=%v", links, err)
+	}
+
+	selections := p.request("textDocument/selectionRange", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"positions":    []any{map[string]any{"line": 1, "character": 2}},
+	})
+	var ranges []struct {
+		Parent any `json:"parent"`
+	}
+	if err := json.Unmarshal(selections, &ranges); err != nil || len(ranges) != 1 || ranges[0].Parent == nil {
+		t.Fatalf("selectionRange = %s err=%v", selections, err)
+	}
+
+	hints := p.request("textDocument/inlayHint", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"range":        map[string]any{"start": map[string]any{"line": 0, "character": 0}, "end": map[string]any{"line": 3, "character": 0}},
+	})
+	var inlay []any
+	if err := json.Unmarshal(hints, &inlay); err != nil {
+		t.Fatalf("inlayHint = %s err=%v", hints, err)
+	}
+}
+
 func TestLSPIncrementalSync(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
@@ -341,7 +419,7 @@ func TestLSPDocumentSymbols(t *testing.T) {
 
 func TestLSPWorkspaceSymbols(t *testing.T) {
 	dir := writeWorkspace(t, map[string]string{
-		"tya.toml":   "name = \"demo\"\nversion = \"0.1.0\"\n",
+		"tya.toml":  "name = \"demo\"\nversion = \"0.1.0\"\n",
 		"src/a.tya": "greet = -> 1\n",
 		"src/b.tya": "class Greeter\n  static hi = -> 1\n",
 	})

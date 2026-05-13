@@ -4,6 +4,7 @@
   "description": "Language support for the tya programming language (compiler + LSP).",
   "publisher": "komagata",
   "version": "0.61.0",
+  "icon": "icon.png",
   "license": "UNLICENSED",
   "repository": {
     "type": "git",

@@ -26,7 +26,7 @@ var semanticTokenTypes = []string{
 // SemanticTokensLegendValue is the constant legend returned in
 // initialize results.
 func SemanticTokensLegendValue() SemanticTokensLegend {
-	return SemanticTokensLegend{TokenTypes: semanticTokenTypes, TokenModifiers: []string{}}
+	return SemanticTokensLegend{TokenTypes: semanticTokenTypes, TokenModifiers: []string{"readonly", "deprecated", "definition", "defaultLibrary"}}
 }
 
 const (
@@ -56,6 +56,7 @@ type semanticEvent struct {
 	col    int // 0-origin
 	length int
 	kind   int
+	mods   uint32
 }
 
 // SemanticTokensFor returns the v0.53 semantic token payload for
@@ -79,6 +80,7 @@ func SemanticTokensFor(src string) SemanticTokens {
 			col:    t.Col - 1,
 			length: length,
 			kind:   kind,
+			mods:   semanticModifiers(t, idx),
 		})
 	}
 	for _, c := range comments {
@@ -176,9 +178,18 @@ func deltaEncode(events []semanticEvent) []uint32 {
 		if dLine == 0 {
 			dCol = e.col - prevCol
 		}
-		out = append(out, uint32(dLine), uint32(dCol), uint32(e.length), uint32(e.kind), 0)
+		out = append(out, uint32(dLine), uint32(dCol), uint32(e.length), uint32(e.kind), e.mods)
 		prevLine = e.line
 		prevCol = e.col
 	}
 	return out
+}
+
+func semanticModifiers(t token.Token, idx *SymbolIndex) uint32 {
+	if idx != nil {
+		if sym, ok := idx.Lookup(t.Lexeme); ok && sym.NameTok.Line == t.Line && sym.NameTok.Col == t.Col {
+			return 1 << 2 // definition
+		}
+	}
+	return 0
 }
