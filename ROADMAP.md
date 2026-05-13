@@ -828,6 +828,11 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
 
 ### Stdlib extensions
 
+- [x] **CLI helper library**
+  - [x] `cli.Cli` parses flags, positional args, defaults, required options,
+    `--`, and deterministic usage text.
+    - Spec: `docs/prd/completed/stdlib-cli-library.md`
+
 - [ ] **Extend coverage tooling (post-v0.30.0)**
   - [ ] `tya cover html` self-contained report.
   - [ ] `--include` / `--exclude` glob filters on `tya cover`.

@@ -17,9 +17,11 @@ standard library or runtime.
   scaffold.
 - `tya doctor native` reports the current native build environment and
   effective flags.
+- New `cli.Cli` stdlib helpers parse command-line options, positional
+  arguments, defaults, required options, `--`, and deterministic usage text.
 
 ## Verification
 
 The release includes package-manager unit coverage and script coverage for path
-dependency native builds, native run/build/test behavior, diagnostics, and the
-generated native library scaffold.
+dependency native builds, native run/build/test behavior, diagnostics, the
+generated native library scaffold, and the `cli.Cli` stdlib parser.

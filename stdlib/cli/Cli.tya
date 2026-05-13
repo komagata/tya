@@ -1,0 +1,263 @@
+class Cli
+  static parse = args, spec ->
+    state =
+      args: args
+      spec: spec
+      options: {}
+      positionals: []
+      rest: []
+      errors: []
+      stop_options: false
+    Cli.apply_defaults(state)
+    i = 0
+    while i < args.len()
+      arg = args[i]
+      if state["stop_options"]
+        state["rest"].push(arg)
+      elseif arg == "--"
+        state["stop_options"] = true
+        if Cli.spec_bool(spec, "stop_at_double_dash", true)
+          j = i + 1
+          while j < args.len()
+            state["rest"].push(args[j])
+            j = j + 1
+          i = args.len()
+      elseif arg.starts_with("--") and arg.byte_len() > 2
+        i = Cli.parse_long(state, i)
+      elseif arg.starts_with("-") and arg != "-"
+        i = Cli.parse_short(state, i)
+      else
+        state["positionals"].push(arg)
+      i = i + 1
+    Cli.check_required(state)
+    result =
+      options: state["options"]
+      positionals: state["positionals"]
+      rest: state["rest"]
+      errors: state["errors"]
+    return result
+
+  static parse_or_exit = args, spec ->
+    result = Cli.parse(args, spec)
+    if result["errors"].len() > 0
+      command = Cli.spec_string(spec, "command", "usage")
+      println(Cli.usage(command, spec))
+      for err in result["errors"]
+        println(err["message"])
+      exit(1)
+    return result
+
+  static usage = command, spec ->
+    parts = ["Usage: {command}"]
+    options = Cli.spec_options(spec)
+    names = options.keys().sort()
+    if names.len() > 0
+      parts.push("[options]")
+    if spec.has("positionals")
+      for pos in spec["positionals"]
+        if pos.class == String
+          parts.push("<{pos}>")
+        else
+          name = Cli.spec_string(pos, "name", "arg")
+          required = Cli.spec_bool(pos, "required", true)
+          if required
+            parts.push("<{name}>")
+          else
+            parts.push("[{name}]")
+    out = parts.join(" ")
+    if names.len() > 0
+      out = out + "\nOptions:"
+      for name in names
+        opt = options[name]
+        line = "  --{name}"
+        alias = Cli.spec_string(opt, "alias", "")
+        if alias != ""
+          line = "  -{alias}, --{name}"
+        typ = Cli.option_type(opt)
+        if typ != "bool"
+          line = line + " <{typ}>"
+        markers = []
+        if Cli.spec_bool(opt, "required", false)
+          markers.push("required")
+        if opt.has("default")
+          default_value = opt["default"]
+          markers.push("default: {default_value}")
+        if markers.len() > 0
+          line = line + " (" + markers.join(", ") + ")"
+        if opt.has("help")
+          line = line + "  " + opt["help"]
+        out = out + "\n" + line
+    return out
+
+  static parse_long = state, i ->
+    arg = state["args"][i]
+    raw = Cli.slice(arg, 2, arg.byte_len())
+    eq = Cli.index_of(raw, "=")
+    name = raw
+    value = nil
+    has_value = false
+    if eq >= 0
+      name = Cli.slice(raw, 0, eq)
+      value = Cli.slice(raw, eq + 1, raw.byte_len())
+      has_value = true
+    negated = false
+    if name.starts_with("no-")
+      negated = true
+      name = Cli.slice(name, 3, name.byte_len())
+    options = Cli.spec_options(state["spec"])
+    if not options.has(name)
+      Cli.unknown(state, arg)
+      return i
+    opt = options[name]
+    typ = Cli.option_type(opt)
+    if typ == "bool"
+      if negated
+        state["options"][name] = false
+      elseif has_value
+        state["options"][name] = Cli.parse_bool_value(state, name, value)
+      else
+        state["options"][name] = true
+      return i
+    if negated
+      Cli.error(state, "invalid_option", name, "--no-{name} is only valid for bool options")
+      return i
+    if not has_value
+      if i + 1 >= state["args"].len()
+        Cli.error(state, "missing_value", name, "--{name} requires a value")
+        return i
+      i = i + 1
+      value = state["args"][i]
+    Cli.assign_value(state, name, opt, value)
+    return i
+
+  static parse_short = state, i ->
+    arg = state["args"][i]
+    raw = Cli.slice(arg, 1, arg.byte_len())
+    j = 0
+    while j < raw.byte_len()
+      alias = raw[j]
+      name = Cli.name_for_alias(state["spec"], alias)
+      if name == ""
+        Cli.unknown(state, "-{alias}")
+        j = j + 1
+      else
+        opt = Cli.spec_options(state["spec"])[name]
+        typ = Cli.option_type(opt)
+        if typ == "bool"
+          state["options"][name] = true
+          j = j + 1
+        else
+          if j + 1 < raw.byte_len()
+            value = Cli.slice(raw, j + 1, raw.byte_len())
+            Cli.assign_value(state, name, opt, value)
+            return i
+          if i + 1 >= state["args"].len()
+            Cli.error(state, "missing_value", name, "-{alias} requires a value")
+            return i
+          i = i + 1
+          Cli.assign_value(state, name, opt, state["args"][i])
+          return i
+    return i
+
+  static apply_defaults = state ->
+    options = Cli.spec_options(state["spec"])
+    names = options.keys()
+    for name in names
+      opt = options[name]
+      if opt.has("default")
+        state["options"][name] = opt["default"]
+      else
+        typ = Cli.option_type(opt)
+        if typ == "bool"
+          state["options"][name] = false
+        elseif typ == "array"
+          state["options"][name] = []
+
+  static check_required = state ->
+    options = Cli.spec_options(state["spec"])
+    names = options.keys().sort()
+    for name in names
+      opt = options[name]
+      if Cli.spec_bool(opt, "required", false) and not state["options"].has(name)
+        Cli.error(state, "required", name, "--{name} is required")
+
+  static assign_value = state, name, opt, value ->
+    typ = Cli.option_type(opt)
+    if typ == "string"
+      state["options"][name] = value
+    elseif typ == "int"
+      try
+        state["options"][name] = value.to_i()
+      catch _
+        Cli.error(state, "invalid_value", name, "--{name} expects int")
+    elseif typ == "float"
+      try
+        state["options"][name] = value.to_f()
+      catch _
+        Cli.error(state, "invalid_value", name, "--{name} expects float")
+    elseif typ == "array"
+      if not state["options"].has(name)
+        state["options"][name] = []
+      state["options"][name].push(value)
+    else
+      Cli.error(state, "invalid_type", name, "unsupported option type {typ}")
+
+  static parse_bool_value = state, name, value ->
+    if value == "true" or value == "1" or value == "yes"
+      return true
+    if value == "false" or value == "0" or value == "no"
+      return false
+    Cli.error(state, "invalid_value", name, "--{name} expects bool")
+    return false
+
+  static unknown = state, raw ->
+    if Cli.spec_bool(state["spec"], "allow_unknown", false)
+      state["rest"].push(raw)
+    else
+      Cli.error(state, "unknown_option", raw, "unknown option {raw}")
+
+  static error = state, kind, name, message ->
+    state["errors"].push({ kind: kind, option: name, message: message })
+
+  static option_type = opt ->
+    Cli.spec_string(opt, "type", "string")
+
+  static spec_options = spec ->
+    if spec.has("options")
+      return spec["options"]
+    return {}
+
+  static spec_bool = spec, name, fallback ->
+    if spec.has(name)
+      return spec[name]
+    return fallback
+
+  static spec_string = spec, name, fallback ->
+    if spec.has(name)
+      return spec[name]
+    return fallback
+
+  static name_for_alias = spec, alias ->
+    options = Cli.spec_options(spec)
+    names = options.keys()
+    for name in names
+      opt = options[name]
+      if Cli.spec_string(opt, "alias", "") == alias
+        return name
+    return ""
+
+  static index_of = text, needle ->
+    i = 0
+    while i < text.byte_len()
+      if text[i] == needle
+        return i
+      i = i + 1
+    return -1
+
+  static slice = text, start, finish ->
+    out = ""
+    i = start
+    while i < finish
+      out = out + text[i]
+      i = i + 1
+    return out

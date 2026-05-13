@@ -618,6 +618,16 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>    allow this (JavaScript template literals, C# <code>$&quot;...&quot;</code>, Kotlin,     Ruby <code>&quot;#{...}&quot;</code>, Scala, Dart, Elixir, Swift <code>\( )</code>). Python     aligned in 3.12 via PEP 701; Tya should follow the same model.     The minority that still forbids nested same-quote is PHP     <code>&quot;...{$x['k']}...&quot;</code> and pre-3.12 Python f-strings — Tya's     current behavior matches that older / minority position and     should not stay there.</p>
 <h3 id="stdlib-extensions">Stdlib extensions</h3>
 <ul>
+<li>[x] **CLI helper library**</li>
+<ul>
+<li>[x] <code>cli.Cli</code> parses flags, positional args, defaults, required options,</li>
+</ul>
+</ul>
+<p>    <code>--</code>, and deterministic usage text.</p>
+<ul>
+<li>Spec: <code>docs/prd/completed/stdlib-cli-library.md</code></li>
+</ul>
+<ul>
 <li>[ ] **Extend coverage tooling (post-v0.30.0)**</li>
 <ul>
 <li>[ ] <code>tya cover html</code> self-contained report.</li>

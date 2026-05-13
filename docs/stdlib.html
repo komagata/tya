@@ -188,6 +188,17 @@ data = json.parse(&quot;[1, 2, 3]&quot;)</code></pre>
 rows = csv.parse(&quot;name,age\ntya,1\n&quot;, { header: true })
 println csv.dump([[&quot;a&quot;, &quot;b&quot;], [&quot;1&quot;, &quot;2&quot;]], nil)</code></pre>
 <p><code>parse(text, options)</code> accepts <code>{ separator, header }</code> options. <code>dump(rows, options)</code> quotes fields containing the separator, quote, CR, or LF.</p>
+<h2 id="cli"><code>cli</code></h2>
+<pre><code class="language-tya">import cli
+
+spec =
+  options:
+    verbose: { type: &quot;bool&quot;, alias: &quot;v&quot; }
+    output: { type: &quot;string&quot;, alias: &quot;o&quot;, required: true }
+
+result = cli.Cli.parse(args(), spec)</code></pre>
+<p><code>cli.Cli.parse(args, spec)</code> returns <code>{options, positionals, rest, errors}</code>. Option specs support <code>bool</code>, <code>string</code>, <code>int</code>, <code>float</code>, and <code>array</code> types, long flags, short aliases, grouped boolean aliases, defaults, required markers, unknown-option handling, and <code>--</code> rest handling.</p>
+<p><code>cli.Cli.usage(command, spec)</code> returns deterministic usage text. <code>cli.Cli.parse_or_exit(args, spec)</code> prints usage and errors, then exits non-zero when parsing fails.</p>
 <h2 id="toml"><code>toml</code></h2>
 <pre><code class="language-tya">import toml
 

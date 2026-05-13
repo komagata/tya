@@ -39,3 +39,39 @@ program and runtime.
 `tya new --template lib --native <name>` creates a native library scaffold.
 `tya doctor native` reports the detected C compiler, `pkg-config`, native
 packages, sources, include directories, and effective flags.
+
+## CLI Stdlib
+
+The standard library includes a class-style `cli` package for predictable
+command-line option parsing:
+
+```tya
+import cli
+
+spec =
+  options:
+    verbose: { type: "bool", alias: "v" }
+    output: { type: "string", alias: "o", required: true }
+
+result = cli.Cli.parse(args(), spec)
+```
+
+`cli.Cli.parse(args, spec)` returns a dictionary with `options`,
+`positionals`, `rest`, and `errors`.
+
+Option specs live under `spec["options"]`. Each option can declare `type`,
+`alias`, `default`, `required`, and `help`. Supported types are `bool`,
+`string`, `int`, `float`, and `array`.
+
+Supported forms:
+
+- `--name value`
+- `--name=value`
+- `--flag` and `--no-flag` for boolean options
+- `-v`, `-o value`, and grouped boolean aliases such as `-abc`
+- `--` to stop option parsing and preserve the remaining arguments in `rest`
+
+Unknown options produce structured parse errors unless `allow_unknown` is true.
+Required options produce structured parse errors. `cli.Cli.usage(command, spec)`
+returns deterministic usage text, and `cli.Cli.parse_or_exit(args, spec)` prints
+usage/errors and exits non-zero on parse failure.

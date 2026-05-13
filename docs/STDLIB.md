@@ -303,6 +303,28 @@ println csv.dump([["a", "b"], ["1", "2"]], nil)
 `parse(text, options)` accepts `{ separator, header }` options. `dump(rows,
 options)` quotes fields containing the separator, quote, CR, or LF.
 
+## `cli`
+
+```tya
+import cli
+
+spec =
+  options:
+    verbose: { type: "bool", alias: "v" }
+    output: { type: "string", alias: "o", required: true }
+
+result = cli.Cli.parse(args(), spec)
+```
+
+`cli.Cli.parse(args, spec)` returns `{options, positionals, rest, errors}`.
+Option specs support `bool`, `string`, `int`, `float`, and `array` types, long
+flags, short aliases, grouped boolean aliases, defaults, required markers,
+unknown-option handling, and `--` rest handling.
+
+`cli.Cli.usage(command, spec)` returns deterministic usage text.
+`cli.Cli.parse_or_exit(args, spec)` prints usage and errors, then exits non-zero
+when parsing fails.
+
 ## `toml`
 
 ```tya
