@@ -168,6 +168,31 @@ and exact/nearly-equal comparison. `Vector3` also provides `cross`.
 helpers, including rectangle containment/intersection/union and circle
 containment/intersection/bounding-rect operations.
 
+## Transform2D Stdlib
+
+The standard library includes `transform2d.Transform2D`, a class-style affine
+2D transform value for translation, rotation, scaling, skewing, composition,
+and coordinate conversion.
+
+```tya
+import geometry as geo
+import transform2d as transform2d
+
+move = transform2d.Transform2D.translation(10, 20)
+scale = transform2d.Transform2D.uniform_scale(2)
+world = transform2d.Transform2D.compose(move, scale)
+point = transform2d.Transform2D.apply_point(world, geo.Point.new(3, 4))
+```
+
+`Transform2D` exposes `a`, `b`, `c`, `d`, `tx`, and `ty`, representing the
+affine matrix `[a c tx; b d ty; 0 0 1]`. `compose(a, b)` applies `b` first and
+then `a`.
+
+The API includes constructors for identity, translation, scale, uniform scale,
+rotation, rotation around a point, skew, and array conversion. It can apply
+transforms to `geometry.Point`, `geometry.Vector2`, `geometry.Rect`, and
+`geometry.Size`, and it converts to/from class-style `matrix.Matrix` values.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

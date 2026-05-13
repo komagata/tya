@@ -46,7 +46,7 @@ typedef struct {
   TyaResource *resource;
 } TyaValue;
 
-typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
+typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
 
 struct TyaDictEntry {
   const char *key;
@@ -66,16 +66,21 @@ TyaValue tya_string(const char *value);
 TyaValue tya_array(const TyaValue *items, int count);
 TyaValue tya_dict(const TyaDictEntry *entries, int count);
 TyaValue tya_object(void);
-TyaValue tya_function(TyaFunctionPtr fn);
-TyaValue tya_class(TyaFunctionPtr fn, const char *name, TyaValue parent);
+TyaValue tya_function_raw(TyaFunctionPtr fn);
+TyaValue tya_class_raw(TyaFunctionPtr fn, const char *name, TyaValue parent);
 TyaValue tya_primitive_class(const char *name);
 TyaValue tya_class_of(TyaValue value);
-TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn);
+TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn);
+#define tya_function(fn) tya_function_raw((TyaFunctionPtr)(fn))
+#define tya_class(fn, name, parent) tya_class_raw((TyaFunctionPtr)(fn), name, parent)
+#define tya_bind_method(receiver, fn) tya_bind_method_raw(receiver, (TyaFunctionPtr)(fn))
 TyaValue tya_error(TyaValue message);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third);
 TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth);
+TyaValue tya_call5(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth, TyaValue fifth);
+TyaValue tya_call6(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth, TyaValue fifth, TyaValue sixth);
 TyaValue tya_len(TyaValue value);
 TyaValue tya_index(TyaValue value, TyaValue index);
 TyaValue tya_destructure_array(TyaValue value, int expected, int index);

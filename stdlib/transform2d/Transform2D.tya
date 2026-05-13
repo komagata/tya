@@ -1,0 +1,189 @@
+import geometry as geo
+import matrix as matrix
+
+class Transform2D
+  initialize = a, b, c, d, tx, ty ->
+    self.a = Transform2D.number(a, "a")
+    self.b = Transform2D.number(b, "b")
+    self.c = Transform2D.number(c, "c")
+    self.d = Transform2D.number(d, "d")
+    self.tx = Transform2D.number(tx, "tx")
+    self.ty = Transform2D.number(ty, "ty")
+
+  static new = a, b, c, d, tx, ty ->
+    return Transform2D(a, b, c, d, tx, ty)
+
+  static identity = ->
+    return Transform2D(1, 0, 0, 1, 0, 0)
+
+  static translation = x, y ->
+    Transform2D.number(x, "x")
+    Transform2D.number(y, "y")
+    return Transform2D(1, 0, 0, 1, x, y)
+
+  static scale = sx, sy ->
+    Transform2D.number(sx, "sx")
+    Transform2D.number(sy, "sy")
+    return Transform2D(sx, 0, 0, sy, 0, 0)
+
+  static uniform_scale = s ->
+    Transform2D.number(s, "s")
+    return Transform2D.scale(s, s)
+
+  static rotation = radians ->
+    Transform2D.number(radians, "radians")
+    geometry_cos = math_cos(radians)
+    geometry_sin = math_sin(radians)
+    return Transform2D(geometry_cos, geometry_sin, 0 - geometry_sin, geometry_cos, 0, 0)
+
+  static rotation_around = radians, point ->
+    Transform2D.expect_point(point, "point")
+    geometry_to_origin = Transform2D.translation(0 - point.x, 0 - point.y)
+    geometry_back = Transform2D.translation(point.x, point.y)
+    return Transform2D.compose(geometry_back, Transform2D.compose(Transform2D.rotation(radians), geometry_to_origin))
+
+  static skew = x_radians, y_radians ->
+    Transform2D.number(x_radians, "x_radians")
+    Transform2D.number(y_radians, "y_radians")
+    return Transform2D(1, math_tan(y_radians), math_tan(x_radians), 1, 0, 0)
+
+  static from_array = values ->
+    if values.class != Array or values.len() != 6
+      raise "transform2d.from_array: expected six-number array"
+    return Transform2D(values[0], values[1], values[2], values[3], values[4], values[5])
+
+  static to_array = transform ->
+    Transform2D.expect(transform, "transform")
+    return [transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty]
+
+  static compose = a, b ->
+    Transform2D.expect(a, "a")
+    Transform2D.expect(b, "b")
+    return Transform2D(
+      a.a * b.a + a.c * b.b,
+      a.b * b.a + a.d * b.b,
+      a.a * b.c + a.c * b.d,
+      a.b * b.c + a.d * b.d,
+      a.a * b.tx + a.c * b.ty + a.tx,
+      a.b * b.tx + a.d * b.ty + a.ty
+    )
+
+  static translate = transform, x, y ->
+    return Transform2D.compose(Transform2D.translation(x, y), transform)
+
+  static scale_by = transform, sx, sy ->
+    return Transform2D.compose(Transform2D.scale(sx, sy), transform)
+
+  static rotate = transform, radians ->
+    return Transform2D.compose(Transform2D.rotation(radians), transform)
+
+  static determinant = transform ->
+    Transform2D.expect(transform, "transform")
+    return transform.a * transform.d - transform.b * transform.c
+
+  static invertible? = transform ->
+    return Transform2D.abs(Transform2D.determinant(transform)) > 0.000000001
+
+  static inverse = transform ->
+    Transform2D.expect(transform, "transform")
+    geometry_det = Transform2D.determinant(transform)
+    if Transform2D.abs(geometry_det) <= 0.000000001
+      raise "transform2d.inverse: transform is not invertible"
+    geometry_a = transform.d / geometry_det
+    geometry_b = (0 - transform.b) / geometry_det
+    geometry_c = (0 - transform.c) / geometry_det
+    geometry_d = transform.a / geometry_det
+    geometry_tx = (transform.c * transform.ty - transform.d * transform.tx) / geometry_det
+    geometry_ty = (transform.b * transform.tx - transform.a * transform.ty) / geometry_det
+    return Transform2D(geometry_a, geometry_b, geometry_c, geometry_d, geometry_tx, geometry_ty)
+
+  static equal? = a, b ->
+    return a.class == Transform2D and b.class == Transform2D and a.a == b.a and a.b == b.b and a.c == b.c and a.d == b.d and a.tx == b.tx and a.ty == b.ty
+
+  static nearly_equal? = a, b, epsilon ->
+    Transform2D.expect(a, "a")
+    Transform2D.expect(b, "b")
+    if epsilon < 0
+      raise "transform2d.nearly_equal?: epsilon must be non-negative"
+    return Transform2D.abs(a.a - b.a) <= epsilon and Transform2D.abs(a.b - b.b) <= epsilon and Transform2D.abs(a.c - b.c) <= epsilon and Transform2D.abs(a.d - b.d) <= epsilon and Transform2D.abs(a.tx - b.tx) <= epsilon and Transform2D.abs(a.ty - b.ty) <= epsilon
+
+  static apply_point = transform, point ->
+    Transform2D.expect(transform, "transform")
+    Transform2D.expect_point(point, "point")
+    return geo.Point.new(transform.a * point.x + transform.c * point.y + transform.tx, transform.b * point.x + transform.d * point.y + transform.ty)
+
+  static apply_vector2 = transform, vector ->
+    Transform2D.expect(transform, "transform")
+    Transform2D.expect_vector2(vector, "vector")
+    return geo.Vector2.new(transform.a * vector.x + transform.c * vector.y, transform.b * vector.x + transform.d * vector.y)
+
+  static apply_rect = transform, rect ->
+    Transform2D.expect(transform, "transform")
+    Transform2D.expect_rect(rect, "rect")
+    geometry_p1 = Transform2D.apply_point(transform, geo.Point.new(rect.x, rect.y))
+    geometry_p2 = Transform2D.apply_point(transform, geo.Point.new(rect.x + rect.width, rect.y))
+    geometry_p3 = Transform2D.apply_point(transform, geo.Point.new(rect.x, rect.y + rect.height))
+    geometry_p4 = Transform2D.apply_point(transform, geo.Point.new(rect.x + rect.width, rect.y + rect.height))
+    geometry_left = Transform2D.min(Transform2D.min(geometry_p1.x, geometry_p2.x), Transform2D.min(geometry_p3.x, geometry_p4.x))
+    geometry_top = Transform2D.min(Transform2D.min(geometry_p1.y, geometry_p2.y), Transform2D.min(geometry_p3.y, geometry_p4.y))
+    geometry_right = Transform2D.max(Transform2D.max(geometry_p1.x, geometry_p2.x), Transform2D.max(geometry_p3.x, geometry_p4.x))
+    geometry_bottom = Transform2D.max(Transform2D.max(geometry_p1.y, geometry_p2.y), Transform2D.max(geometry_p3.y, geometry_p4.y))
+    return geo.Rect.new(geometry_left, geometry_top, geometry_right - geometry_left, geometry_bottom - geometry_top)
+
+  static apply_size = transform, size ->
+    Transform2D.expect_size(size, "size")
+    geometry_rect = Transform2D.apply_rect(transform, geo.Rect.new(0, 0, size.width, size.height))
+    return geo.Size.new(geometry_rect.width, geometry_rect.height)
+
+  static to_matrix = transform ->
+    Transform2D.expect(transform, "transform")
+    return matrix.Matrix.new([[transform.a, transform.c, transform.tx], [transform.b, transform.d, transform.ty], [0, 0, 1]])
+
+  static from_matrix = value ->
+    if value.class != matrix.Matrix
+      raise "transform2d.from_matrix: value must be a matrix.Matrix"
+    if value.rows != 3 or value.cols != 3
+      raise "transform2d.from_matrix: matrix must be 3x3"
+    if value.data[2][0] != 0 or value.data[2][1] != 0 or value.data[2][2] != 1
+      raise "transform2d.from_matrix: matrix must be affine"
+    return Transform2D(value.data[0][0], value.data[1][0], value.data[0][1], value.data[1][1], value.data[0][2], value.data[1][2])
+
+  static expect = value, name ->
+    if value.class != Transform2D
+      raise "transform2d: " + name + " must be a Transform2D"
+
+  static expect_point = value, name ->
+    if value.class != geo.Point
+      raise "transform2d: " + name + " must be a geometry.Point"
+
+  static expect_vector2 = value, name ->
+    if value.class != geo.Vector2
+      raise "transform2d: " + name + " must be a geometry.Vector2"
+
+  static expect_rect = value, name ->
+    if value.class != geo.Rect
+      raise "transform2d: " + name + " must be a geometry.Rect"
+
+  static expect_size = value, name ->
+    if value.class != geo.Size
+      raise "transform2d: " + name + " must be a geometry.Size"
+
+  static number = value, name ->
+    if value.class != Number
+      raise "transform2d: " + name + " must be a number"
+    return value
+
+  static abs = value ->
+    if value < 0
+      return 0 - value
+    return value
+
+  static min = a, b ->
+    if a < b
+      return a
+    return b
+
+  static max = a, b ->
+    if a > b
+      return a
+    return b

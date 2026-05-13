@@ -120,6 +120,31 @@ exact/nearly-equal comparison. Shape helpers include point containment,
 intersection, union, expansion, translation, bounding rectangles, and area
 calculations.
 
+## `transform2d`
+
+```tya
+import geometry as geo
+import transform2d as transform2d
+
+move = transform2d.Transform2D.translation(10, 20)
+scale = transform2d.Transform2D.uniform_scale(2)
+world = transform2d.Transform2D.compose(move, scale)
+
+point = transform2d.Transform2D.apply_point(world, geo.Point.new(3, 4))
+print geo.Vector2.to_array(geo.Point.to_vector(point))
+```
+
+`Transform2D` instances expose numeric `a`, `b`, `c`, `d`, `tx`, and `ty`
+fields representing `[a c tx; b d ty; 0 0 1]`.
+
+Constructors include `identity`, `translation`, `scale`, `uniform_scale`,
+`rotation`, `rotation_around`, `skew`, `from_array`, and `new`.
+
+Operations include `compose`, `translate`, `scale_by`, `rotate`,
+`determinant`, `invertible?`, `inverse`, `equal?`, `nearly_equal?`,
+`apply_point`, `apply_vector2`, `apply_rect`, `apply_size`, `to_matrix`, and
+`from_matrix`.
+
 ## `math`
 
 ```tya

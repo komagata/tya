@@ -49,6 +49,8 @@ standard library or runtime.
   colors, conversion helpers, and deterministic color operations.
 - New `geometry` stdlib values provide `Vector2`, `Vector3`, `Point`, `Size`,
   `Rect`, and `Circle` helpers for reusable spatial calculations.
+- New `transform2d.Transform2D` stdlib values provide 2D affine transforms,
+  geometry application helpers, inversion, composition, and matrix interop.
 
 ## Verification
 

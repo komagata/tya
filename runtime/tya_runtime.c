@@ -124,86 +124,86 @@ static TyaValue tya_class_nil;
 static bool tya_primitive_classes_initialized = false;
 
 static TyaValue tya_primitive_member(TyaValue receiver, const char *key);
-static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_abs(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_floor(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_ceil(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_round(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_trunc(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_sqrt(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_pow(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_log(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_log2(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_log10(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_exp(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_sin(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_cos(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_tan(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_asin(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_acos(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_atan(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_atan2(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_integer_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_finite_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_nan_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_byte_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_trim(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_contains(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_starts_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_ends_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_replace(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_split(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_lines(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_chars(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_bytes(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_upper(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_lower(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_blank_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_present_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_first(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_last(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_push(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_pop(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_slice(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_reverse(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_sort(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_sort_by(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_join(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_map(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_filter(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_find(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_any(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_all(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_reduce(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_has(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_get(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_set(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_delete(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_keys(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_values(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_entries(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_merge(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_channel_send(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_channel_receive(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_channel_receive_timeout(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_channel_close(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_channel_closed_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_task_cancel(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_task_cancelled_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_mutex_lock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_mutex_unlock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_mutex_with_lock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_atomic_integer_add(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_atomic_integer_load(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_atomic_integer_store(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_atomic_integer_compare_and_swap(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_wait_group_add(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_wait_group_done(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
-static TyaValue tya_method_wait_group_wait(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
+static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_abs(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_floor(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_ceil(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_round(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_trunc(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_sqrt(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_pow(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_log(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_log2(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_log10(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_exp(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_sin(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_cos(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_tan(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_asin(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_acos(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_atan(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_atan2(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_integer_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_finite_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_nan_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_byte_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_trim(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_contains(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_starts_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_ends_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_replace(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_split(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_lines(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_chars(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_bytes(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_upper(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_lower(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_blank_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_present_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_first(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_last(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_push(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_pop(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_slice(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_reverse(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_sort(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_sort_by(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_join(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_map(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_filter(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_find(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_any(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_all(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_reduce(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_has(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_get(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_set(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_delete(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_keys(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_values(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_entries(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_merge(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_channel_send(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_channel_receive(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_channel_receive_timeout(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_channel_close(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_channel_closed_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_task_cancel(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_task_cancelled_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_mutex_lock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_mutex_unlock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_mutex_with_lock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_atomic_integer_add(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_atomic_integer_load(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_atomic_integer_store(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_atomic_integer_compare_and_swap(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_wait_group_add(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_wait_group_done(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_wait_group_wait(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 
 /* TyaResource owns a sync primitive (mutex / atomic / wait group).
  * The subkind drives which fields are valid. */
@@ -584,7 +584,7 @@ TyaValue tya_object(void) {
   return (TyaValue){.kind = TYA_OBJECT, .dict = dict};
 }
 
-TyaValue tya_function(TyaFunctionPtr fn) {
+TyaValue tya_function_raw(TyaFunctionPtr fn) {
   TyaFunction *function = tya_gc_alloc(sizeof(TyaFunction), TYA_GC_FUNCTION);
   function->fn = fn;
   function->receiver = tya_nil();
@@ -597,7 +597,7 @@ TyaValue tya_function(TyaFunctionPtr fn) {
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
-TyaValue tya_class(TyaFunctionPtr fn, const char *name, TyaValue parent) {
+TyaValue tya_class_raw(TyaFunctionPtr fn, const char *name, TyaValue parent) {
   TyaValue value = tya_function(fn);
   value.function->class_name = name;
   value.function->parent = parent;
@@ -651,7 +651,7 @@ TyaValue tya_class_of(TyaValue value) {
   }
 }
 
-TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn) {
+TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn) {
   TyaFunction *function = tya_gc_alloc(sizeof(TyaFunction), TYA_GC_FUNCTION);
   function->fn = fn;
   function->receiver = receiver;
@@ -675,28 +675,42 @@ TyaValue tya_call1(TyaValue fn, TyaValue arg) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(fn.function->receiver, arg, tya_nil(), tya_nil(), tya_nil());
+  return fn.function->fn(fn.function->receiver, arg, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());
 }
 
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(fn.function->receiver, first, second, tya_nil(), tya_nil());
+  return fn.function->fn(fn.function->receiver, first, second, tya_nil(), tya_nil(), tya_nil(), tya_nil());
 }
 
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(fn.function->receiver, first, second, third, tya_nil());
+  return fn.function->fn(fn.function->receiver, first, second, third, tya_nil(), tya_nil(), tya_nil());
 }
 
 TyaValue tya_call4(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
   }
-  return fn.function->fn(fn.function->receiver, first, second, third, fourth);
+  return fn.function->fn(fn.function->receiver, first, second, third, fourth, tya_nil(), tya_nil());
+}
+
+TyaValue tya_call5(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth, TyaValue fifth) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+    return tya_nil();
+  }
+  return fn.function->fn(fn.function->receiver, first, second, third, fourth, fifth, tya_nil());
+}
+
+TyaValue tya_call6(TyaValue fn, TyaValue first, TyaValue second, TyaValue third, TyaValue fourth, TyaValue fifth, TyaValue sixth) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+    return tya_nil();
+  }
+  return fn.function->fn(fn.function->receiver, first, second, third, fourth, fifth, sixth);
 }
 
 TyaValue tya_len(TyaValue value) {
@@ -2668,79 +2682,79 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
   }
 }
 
-static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_len(receiver); }
-static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_bool((int)tya_len(receiver).number == 0); }
-static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_to_string(receiver); }
-static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_to_int(receiver); }
-static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_to_number(receiver); }
-static TyaValue tya_method_abs(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_number(fabs(receiver.number)); }
-static TyaValue tya_method_floor(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_floor(receiver); }
-static TyaValue tya_method_ceil(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_ceil(receiver); }
-static TyaValue tya_method_round(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_round(receiver); }
-static TyaValue tya_method_trunc(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_trunc(receiver); }
-static TyaValue tya_method_sqrt(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_sqrt(receiver); }
-static TyaValue tya_method_pow(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_math_pow(receiver, a); }
-static TyaValue tya_method_log(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_log(receiver); }
-static TyaValue tya_method_log2(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_log2(receiver); }
-static TyaValue tya_method_log10(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_log10(receiver); }
-static TyaValue tya_method_exp(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_exp(receiver); }
-static TyaValue tya_method_sin(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_sin(receiver); }
-static TyaValue tya_method_cos(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_cos(receiver); }
-static TyaValue tya_method_tan(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_tan(receiver); }
-static TyaValue tya_method_asin(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_asin(receiver); }
-static TyaValue tya_method_acos(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_acos(receiver); }
-static TyaValue tya_method_atan(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_math_atan(receiver); }
-static TyaValue tya_method_atan2(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_math_atan2(receiver, a); }
-static TyaValue tya_method_integer_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_number_integer_p(receiver); }
-static TyaValue tya_method_finite_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_number_finite_p(receiver); }
-static TyaValue tya_method_nan_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_number_nan_p(receiver); }
-static TyaValue tya_method_byte_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_byte_len(receiver); }
-static TyaValue tya_method_trim(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_trim(receiver); }
-static TyaValue tya_method_contains(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_contains_method(receiver, a); }
-static TyaValue tya_method_starts_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_starts_with(receiver, a); }
-static TyaValue tya_method_ends_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_ends_with(receiver, a); }
-static TyaValue tya_method_replace(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)c; (void)d; return tya_replace(receiver, a, b); }
-static TyaValue tya_method_split(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_split(receiver, a); }
-static TyaValue tya_method_lines(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_lines(receiver); }
-static TyaValue tya_method_chars(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_chars(receiver); }
-static TyaValue tya_method_bytes(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_bytes_of(receiver); }
-static TyaValue tya_method_upper(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_upcase(receiver); }
-static TyaValue tya_method_lower(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_downcase(receiver); }
-static TyaValue tya_method_blank_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_bool(tya_equal(tya_trim(receiver), tya_string(""))); }
-static TyaValue tya_method_present_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_bool(!tya_equal(tya_trim(receiver), tya_string(""))); }
-static TyaValue tya_method_first(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_first(receiver); }
-static TyaValue tya_method_last(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_last(receiver); }
-static TyaValue tya_method_push(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_array_push(receiver, a); }
-static TyaValue tya_method_pop(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_pop(receiver); }
-static TyaValue tya_method_slice(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)c; (void)d; return tya_slice(receiver, a, b); }
-static TyaValue tya_method_reverse(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_reverse(receiver); }
-static TyaValue tya_method_sort(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_array_sort(receiver); }
-static TyaValue tya_method_sort_by(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_array_sort_by(receiver, a); }
-static TyaValue tya_method_join(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_join(receiver, a); }
-static TyaValue tya_method_map(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_map(receiver, a); }
-static TyaValue tya_method_filter(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_filter(receiver, a); }
-static TyaValue tya_method_find(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_find(receiver, a); }
-static TyaValue tya_method_any(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_any(receiver, a); }
-static TyaValue tya_method_all(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_all(receiver, a); }
-static TyaValue tya_method_reduce(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)c; (void)d; return tya_reduce(receiver, a, b); }
-static TyaValue tya_method_has(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_has(receiver, a); }
-static TyaValue tya_method_get(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)c; (void)d; return b.kind == TYA_NIL ? tya_dict_get(receiver, a, tya_nil(), false) : tya_dict_get(receiver, a, b, true); }
-static TyaValue tya_method_set(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)c; (void)d; return tya_dict_set(receiver, a, b); }
-static TyaValue tya_method_delete(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_dict_delete(receiver, a); }
-static TyaValue tya_method_keys(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_keys(receiver); }
-static TyaValue tya_method_values(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_values(receiver); }
-static TyaValue tya_method_entries(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_dict_entries(receiver); }
-static TyaValue tya_method_merge(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_dict_merge(receiver, a); }
-static TyaValue tya_method_channel_send(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_channel_send(receiver, a); }
-static TyaValue tya_method_channel_receive(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_channel_receive(receiver); }
-static TyaValue tya_method_channel_receive_timeout(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_channel_receive_timeout(receiver, a); }
-static TyaValue tya_method_channel_close(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_channel_close(receiver); }
-static TyaValue tya_method_channel_closed_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_channel_closed(receiver); }
-static TyaValue tya_method_task_cancel(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_task_cancel(receiver); }
-static TyaValue tya_method_task_cancelled_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_task_is_cancelled(receiver); }
-static TyaValue tya_method_mutex_lock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_sync_lock(receiver); }
-static TyaValue tya_method_mutex_unlock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_sync_unlock(receiver); }
-static TyaValue tya_method_mutex_with_lock(TyaValue receiver, TyaValue fn, TyaValue b, TyaValue c, TyaValue d) {
+static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_len(receiver); }
+static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_bool((int)tya_len(receiver).number == 0); }
+static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_string(receiver); }
+static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_int(receiver); }
+static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_number(receiver); }
+static TyaValue tya_method_abs(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_number(fabs(receiver.number)); }
+static TyaValue tya_method_floor(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_floor(receiver); }
+static TyaValue tya_method_ceil(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_ceil(receiver); }
+static TyaValue tya_method_round(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_round(receiver); }
+static TyaValue tya_method_trunc(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_trunc(receiver); }
+static TyaValue tya_method_sqrt(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_sqrt(receiver); }
+static TyaValue tya_method_pow(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_math_pow(receiver, a); }
+static TyaValue tya_method_log(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_log(receiver); }
+static TyaValue tya_method_log2(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_log2(receiver); }
+static TyaValue tya_method_log10(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_log10(receiver); }
+static TyaValue tya_method_exp(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_exp(receiver); }
+static TyaValue tya_method_sin(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_sin(receiver); }
+static TyaValue tya_method_cos(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_cos(receiver); }
+static TyaValue tya_method_tan(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_tan(receiver); }
+static TyaValue tya_method_asin(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_asin(receiver); }
+static TyaValue tya_method_acos(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_acos(receiver); }
+static TyaValue tya_method_atan(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_atan(receiver); }
+static TyaValue tya_method_atan2(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_math_atan2(receiver, a); }
+static TyaValue tya_method_integer_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_number_integer_p(receiver); }
+static TyaValue tya_method_finite_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_number_finite_p(receiver); }
+static TyaValue tya_method_nan_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_number_nan_p(receiver); }
+static TyaValue tya_method_byte_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_byte_len(receiver); }
+static TyaValue tya_method_trim(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_trim(receiver); }
+static TyaValue tya_method_contains(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_contains_method(receiver, a); }
+static TyaValue tya_method_starts_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_starts_with(receiver, a); }
+static TyaValue tya_method_ends_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_ends_with(receiver, a); }
+static TyaValue tya_method_replace(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_replace(receiver, a, b); }
+static TyaValue tya_method_split(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_split(receiver, a); }
+static TyaValue tya_method_lines(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_lines(receiver); }
+static TyaValue tya_method_chars(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_chars(receiver); }
+static TyaValue tya_method_bytes(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_bytes_of(receiver); }
+static TyaValue tya_method_upper(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_upcase(receiver); }
+static TyaValue tya_method_lower(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_downcase(receiver); }
+static TyaValue tya_method_blank_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_bool(tya_equal(tya_trim(receiver), tya_string(""))); }
+static TyaValue tya_method_present_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_bool(!tya_equal(tya_trim(receiver), tya_string(""))); }
+static TyaValue tya_method_first(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_first(receiver); }
+static TyaValue tya_method_last(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_last(receiver); }
+static TyaValue tya_method_push(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_array_push(receiver, a); }
+static TyaValue tya_method_pop(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_pop(receiver); }
+static TyaValue tya_method_slice(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_slice(receiver, a, b); }
+static TyaValue tya_method_reverse(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_reverse(receiver); }
+static TyaValue tya_method_sort(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_array_sort(receiver); }
+static TyaValue tya_method_sort_by(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_array_sort_by(receiver, a); }
+static TyaValue tya_method_join(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_join(receiver, a); }
+static TyaValue tya_method_map(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_map(receiver, a); }
+static TyaValue tya_method_filter(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_filter(receiver, a); }
+static TyaValue tya_method_find(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_find(receiver, a); }
+static TyaValue tya_method_any(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_any(receiver, a); }
+static TyaValue tya_method_all(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_all(receiver, a); }
+static TyaValue tya_method_reduce(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_reduce(receiver, a, b); }
+static TyaValue tya_method_has(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_has(receiver, a); }
+static TyaValue tya_method_get(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return b.kind == TYA_NIL ? tya_dict_get(receiver, a, tya_nil(), false) : tya_dict_get(receiver, a, b, true); }
+static TyaValue tya_method_set(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_dict_set(receiver, a, b); }
+static TyaValue tya_method_delete(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_dict_delete(receiver, a); }
+static TyaValue tya_method_keys(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_keys(receiver); }
+static TyaValue tya_method_values(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_values(receiver); }
+static TyaValue tya_method_entries(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_dict_entries(receiver); }
+static TyaValue tya_method_merge(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_dict_merge(receiver, a); }
+static TyaValue tya_method_channel_send(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_channel_send(receiver, a); }
+static TyaValue tya_method_channel_receive(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_channel_receive(receiver); }
+static TyaValue tya_method_channel_receive_timeout(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_channel_receive_timeout(receiver, a); }
+static TyaValue tya_method_channel_close(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_channel_close(receiver); }
+static TyaValue tya_method_channel_closed_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_channel_closed(receiver); }
+static TyaValue tya_method_task_cancel(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_task_cancel(receiver); }
+static TyaValue tya_method_task_cancelled_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_task_is_cancelled(receiver); }
+static TyaValue tya_method_mutex_lock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_sync_lock(receiver); }
+static TyaValue tya_method_mutex_unlock(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_sync_unlock(receiver); }
+static TyaValue tya_method_mutex_with_lock(TyaValue receiver, TyaValue fn, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
   (void)b; (void)c; (void)d;
   TyaResource *r = tya_resource_check(receiver, TYA_RES_MUTEX, "sync.mutex.with_lock");
   if (r == NULL) return tya_nil();
@@ -2762,13 +2776,13 @@ static TyaValue tya_method_mutex_with_lock(TyaValue receiver, TyaValue fn, TyaVa
   tya_raise(frame.value);
   return tya_nil();
 }
-static TyaValue tya_method_atomic_integer_add(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_sync_atomic_integer_add(receiver, a); }
-static TyaValue tya_method_atomic_integer_load(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_sync_atomic_integer_load(receiver); }
-static TyaValue tya_method_atomic_integer_store(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_sync_atomic_integer_store(receiver, a); }
-static TyaValue tya_method_atomic_integer_compare_and_swap(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)c; (void)d; return tya_sync_atomic_integer_cas(receiver, a, b); }
-static TyaValue tya_method_wait_group_add(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)b; (void)c; (void)d; return tya_sync_wait_group_add(receiver, a); }
-static TyaValue tya_method_wait_group_done(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_sync_wait_group_done(receiver); }
-static TyaValue tya_method_wait_group_wait(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d) { (void)a; (void)b; (void)c; (void)d; return tya_sync_wait_group_wait(receiver); }
+static TyaValue tya_method_atomic_integer_add(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_sync_atomic_integer_add(receiver, a); }
+static TyaValue tya_method_atomic_integer_load(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_sync_atomic_integer_load(receiver); }
+static TyaValue tya_method_atomic_integer_store(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_sync_atomic_integer_store(receiver, a); }
+static TyaValue tya_method_atomic_integer_compare_and_swap(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_sync_atomic_integer_cas(receiver, a, b); }
+static TyaValue tya_method_wait_group_add(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_sync_wait_group_add(receiver, a); }
+static TyaValue tya_method_wait_group_done(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_sync_wait_group_done(receiver); }
+static TyaValue tya_method_wait_group_wait(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_sync_wait_group_wait(receiver); }
 
 /* =========================================================================
  * v0.24: process

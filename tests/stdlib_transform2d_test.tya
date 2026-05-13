@@ -1,0 +1,64 @@
+import unittest
+import geometry as geo
+import matrix as matrix
+import transform2d as transform2d
+
+class StdlibTransform2DTest extends TestCase
+
+  test_constructors_and_fields = ->
+    t = transform2d.Transform2D.new(1, 2, 3, 4, 5, 6)
+    self.assert_equal(transform2d.Transform2D, t.class, "class")
+    self.assert_equal([1, 2, 3, 4, 5, 6], transform2d.Transform2D.to_array(t), "array")
+    self.assert(transform2d.Transform2D.equal?(t, transform2d.Transform2D.from_array([1, 2, 3, 4, 5, 6])), "equal")
+
+  test_basic_transforms = ->
+    identity = transform2d.Transform2D.identity()
+    translation = transform2d.Transform2D.translation(10, 20)
+    scale = transform2d.Transform2D.scale(2, 3)
+    uniform = transform2d.Transform2D.uniform_scale(4)
+    self.assert_equal([1, 0, 0, 1, 0, 0], transform2d.Transform2D.to_array(identity), "identity")
+    self.assert_equal([1, 0, 0, 1, 10, 20], transform2d.Transform2D.to_array(translation), "translation")
+    self.assert_equal([2, 0, 0, 3, 0, 0], transform2d.Transform2D.to_array(scale), "scale")
+    self.assert_equal([4, 0, 0, 4, 0, 0], transform2d.Transform2D.to_array(uniform), "uniform")
+    self.assert(transform2d.Transform2D.nearly_equal?(transform2d.Transform2D.rotation(3.141592653589793 / 2), transform2d.Transform2D.new(0, 1, -1, 0, 0, 0), 0.0000001), "rotation")
+
+  test_compose_order_and_apply = ->
+    translation = transform2d.Transform2D.translation(10, 0)
+    scale = transform2d.Transform2D.scale(2, 2)
+    world = transform2d.Transform2D.compose(translation, scale)
+    moved = transform2d.Transform2D.apply_point(world, geo.Point.new(3, 4))
+    vector = transform2d.Transform2D.apply_vector2(world, geo.Vector2.new(3, 4))
+    self.assert_equal([16, 8], geo.Vector2.to_array(geo.Point.to_vector(moved)), "point applies b then a")
+    self.assert_equal([6, 8], geo.Vector2.to_array(vector), "vector ignores translation")
+
+  test_rotation_around_and_skew = ->
+    center = geo.Point.new(10, 10)
+    around = transform2d.Transform2D.rotation_around(3.141592653589793 / 2, center)
+    moved = transform2d.Transform2D.apply_point(around, geo.Point.new(11, 10))
+    self.assert(transform2d.Transform2D.nearly_equal?(transform2d.Transform2D.skew(0, 0), transform2d.Transform2D.identity(), 0.0000001), "zero skew")
+    self.assert_equal([10, 11], [moved.x.round(), moved.y.round()], "rotate around")
+
+  test_rect_size_and_matrix = ->
+    t = transform2d.Transform2D.compose(transform2d.Transform2D.translation(5, 6), transform2d.Transform2D.scale(2, 3))
+    rect = transform2d.Transform2D.apply_rect(t, geo.Rect.new(0, 0, 10, 4))
+    size = transform2d.Transform2D.apply_size(t, geo.Size.new(10, 4))
+    m = transform2d.Transform2D.to_matrix(t)
+    roundtrip = transform2d.Transform2D.from_matrix(m)
+    self.assert_equal([5, 6, 20, 12], [rect.x, rect.y, rect.width, rect.height], "rect")
+    self.assert_equal([20, 12], [size.width, size.height], "size")
+    self.assert_equal(matrix.Matrix, m.class, "matrix")
+    self.assert(transform2d.Transform2D.equal?(t, roundtrip), "matrix roundtrip")
+
+  test_inverse = ->
+    t = transform2d.Transform2D.compose(transform2d.Transform2D.translation(10, 20), transform2d.Transform2D.scale(2, 4))
+    inv = transform2d.Transform2D.inverse(t)
+    p = geo.Point.new(7, 8)
+    restored = transform2d.Transform2D.apply_point(inv, transform2d.Transform2D.apply_point(t, p))
+    self.assert(transform2d.Transform2D.invertible?(t), "invertible")
+    self.assert_equal([7, 8], [restored.x, restored.y], "inverse")
+    self.assert_raises(-> transform2d.Transform2D.inverse(transform2d.Transform2D.scale(0, 1)), "non-invertible")
+
+  test_errors = ->
+    self.assert_raises(-> transform2d.Transform2D.new("x", 0, 0, 1, 0, 0), "non-number")
+    self.assert_raises(-> transform2d.Transform2D.from_array([1, 2]), "array")
+    self.assert_raises(-> transform2d.Transform2D.from_matrix(matrix.Matrix.identity(2)), "matrix")

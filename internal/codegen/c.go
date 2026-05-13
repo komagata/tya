@@ -1013,7 +1013,7 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string
 	var out strings.Builder
 	out.WriteString("TyaValue ")
 	out.WriteString(sym)
-	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3, TyaValue __arg4, TyaValue __arg5) {\n")
 	child := &cgen{
 		vars:              map[string]bool{},
 		funcs:             g.funcs,
@@ -1037,7 +1037,7 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string
 	}
 	for i, param := range fn.Params {
 		child.vars[param] = true
-		if i < 4 {
+		if i < 6 {
 			child.line(fmt.Sprintf("TyaValue %s = __arg%d;", cName(param), i))
 		}
 	}
@@ -1264,7 +1264,7 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 	var out strings.Builder
 	out.WriteString("TyaValue ")
 	out.WriteString(sym)
-	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3, TyaValue __arg4, TyaValue __arg5) {\n")
 	out.WriteString("  (void)__this;\n")
 	out.WriteString("  TyaValue __obj = tya_object();\n")
 	out.WriteString(fmt.Sprintf("  tya_set_member(__obj, \"class\", %s);\n", classRef))
@@ -1292,10 +1292,10 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
 	}
 	if initMethod != nil {
-		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", methodSyms[initMethod.Name]))
+		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5);\n", methodSyms[initMethod.Name]))
 	} else if parentKey != "" {
 		if parentInit := g.inheritedMethodSym(parentKey, "init"); parentInit != "" {
-			out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", parentInit))
+			out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5);\n", parentInit))
 		} else {
 			if err := g.emitInterfaceInitializers(&out, name, class); err != nil {
 				return "", err
@@ -1605,7 +1605,7 @@ func (g *cgen) emitInterfaceInitializers(out *strings.Builder, className string,
 			if err != nil {
 				return err
 			}
-			out.WriteString(fmt.Sprintf("  (void)%s(__obj, tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", sym))
+			out.WriteString(fmt.Sprintf("  (void)%s(__obj, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", sym))
 		}
 	}
 	return nil
@@ -1661,8 +1661,8 @@ func (g *cgen) interfaceInitializerRunnerForCurrentClass() (string, error) {
 	var out strings.Builder
 	out.WriteString("TyaValue ")
 	out.WriteString(sym)
-	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
-	out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3, TyaValue __arg4, TyaValue __arg5) {\n")
+	out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n  (void)__arg4;\n  (void)__arg5;\n")
 	for _, iface := range g.effectiveInterfaces(className, class) {
 		key := g.interfaceDeclKey(iface)
 		for _, method := range iface.Methods {
@@ -1673,7 +1673,7 @@ func (g *cgen) interfaceInitializerRunnerForCurrentClass() (string, error) {
 			if err != nil {
 				return "", err
 			}
-			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", initSym))
+			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", initSym))
 		}
 	}
 	out.WriteString("  return tya_nil();\n")
@@ -1705,11 +1705,11 @@ func (g *cgen) constructorSuperRunnerForCurrentClass(parentSym string) (string, 
 	var out strings.Builder
 	out.WriteString("TyaValue ")
 	out.WriteString(sym)
-	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3, TyaValue __arg4, TyaValue __arg5) {\n")
 	if parentSym != "" {
-		out.WriteString(fmt.Sprintf("  (void)%s(__this, __arg0, __arg1, __arg2, __arg3);\n", parentSym))
+		out.WriteString(fmt.Sprintf("  (void)%s(__this, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5);\n", parentSym))
 	} else {
-		out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
+		out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n  (void)__arg4;\n  (void)__arg5;\n")
 	}
 	for _, iface := range g.effectiveInterfaces(className, class) {
 		key := g.interfaceDeclKey(iface)
@@ -1721,7 +1721,7 @@ func (g *cgen) constructorSuperRunnerForCurrentClass(parentSym string) (string, 
 			if err != nil {
 				return "", err
 			}
-			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", initSym))
+			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", initSym))
 		}
 	}
 	out.WriteString("  return tya_nil();\n")
@@ -2143,10 +2143,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				}
 				args = append(args, ex)
 			}
-			for len(args) < 4 {
+			for len(args) < 6 {
 				args = append(args, "tya_nil()")
 			}
-			return fmt.Sprintf("%s(__this, %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
+			return fmt.Sprintf("%s(__this, %s)", sym, strings.Join(args[:6], ", ")), "TyaValue", nil
 		}
 		id, ok := n.Callee.(*ast.Ident)
 		if ok {
@@ -2170,10 +2170,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 					}
 					args = append(args, ex)
 				}
-				for len(args) < 4 {
+				for len(args) < 6 {
 					args = append(args, "tya_nil()")
 				}
-				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
+				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:6], ", ")), "TyaValue", nil
 			}
 		}
 		if ok && id.Name == "len" && len(n.Args) == 1 {
@@ -2584,10 +2584,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 					}
 					args = append(args, ex)
 				}
-				for len(args) < 4 {
+				for len(args) < 6 {
 					args = append(args, "tya_nil()")
 				}
-				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
+				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:6], ", ")), "TyaValue", nil
 			}
 			if fn, found := nativeFunctions[id.Name]; found {
 				if len(n.Args) != fn.Arity {
@@ -2639,6 +2639,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return fmt.Sprintf("tya_call3(tya_member(%s, %s), %s, %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1], args[2]), "TyaValue", nil
 			case 4:
 				return fmt.Sprintf("tya_call4(tya_member(%s, %s), %s, %s, %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1], args[2], args[3]), "TyaValue", nil
+			case 5:
+				return fmt.Sprintf("tya_call5(tya_member(%s, %s), %s, %s, %s, %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1], args[2], args[3], args[4]), "TyaValue", nil
+			case 6:
+				return fmt.Sprintf("tya_call6(tya_member(%s, %s), %s, %s, %s, %s, %s, %s)", receiver, strconv.Quote(member.Name), args[0], args[1], args[2], args[3], args[4], args[5]), "TyaValue", nil
 			}
 		}
 		callee, _, err := g.expr(n.Callee)
@@ -2664,6 +2668,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			return fmt.Sprintf("tya_call3(%s, %s, %s, %s)", callee, args[0], args[1], args[2]), "TyaValue", nil
 		case 4:
 			return fmt.Sprintf("tya_call4(%s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3]), "TyaValue", nil
+		case 5:
+			return fmt.Sprintf("tya_call5(%s, %s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3], args[4]), "TyaValue", nil
+		case 6:
+			return fmt.Sprintf("tya_call6(%s, %s, %s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3], args[4], args[5]), "TyaValue", nil
 		}
 		return "tya_nil()", "TyaValue", nil
 	case *ast.IndexExpr:
@@ -2781,8 +2789,12 @@ func (g *cgen) emitDynamicCall(callee string, args []string) string {
 		return fmt.Sprintf("tya_call2(%s, %s, %s)", callee, args[0], args[1])
 	case 3:
 		return fmt.Sprintf("tya_call3(%s, %s, %s, %s)", callee, args[0], args[1], args[2])
-	default:
+	case 4:
 		return fmt.Sprintf("tya_call4(%s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3])
+	case 5:
+		return fmt.Sprintf("tya_call5(%s, %s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3], args[4])
+	default:
+		return fmt.Sprintf("tya_call6(%s, %s, %s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3], args[4], args[5])
 	}
 }
 
@@ -2957,7 +2969,7 @@ func (g *cgen) interpolationExpr(expr string) (string, error) {
 		if sym == "" {
 			return "tya_nil()", nil
 		}
-		return fmt.Sprintf("%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil())", sym), nil
+		return fmt.Sprintf("%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil())", sym), nil
 	}
 	toks, errs := lexer.Lex(expr)
 	if len(errs) > 0 {
