@@ -29,6 +29,7 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <sys/random.h>
@@ -3179,6 +3180,123 @@ TyaValue tya_file_append(TyaValue path, TyaValue text) {
   return tya_nil();
 }
 
+
+static bool tya_value_bytes(TyaValue value, const unsigned char **data, size_t *len, const char *op) {
+  if (value.kind == TYA_BYTES && value.bytes != NULL) {
+    *data = value.bytes->data;
+    *len = (size_t)value.bytes->len;
+    return true;
+  }
+  if (value.kind == TYA_STRING && value.string != NULL) {
+    *data = (const unsigned char *)value.string;
+    *len = strlen(value.string);
+    return true;
+  }
+  char buf[128];
+  snprintf(buf, sizeof(buf), "%s: value must be a string or bytes", op);
+  tya_raise(tya_string(buf));
+  return false;
+}
+
+static TyaValue tya_deflate_bytes(TyaValue value, int window_bits, const char *op) {
+  const unsigned char *input = NULL;
+  size_t input_len = 0;
+  if (!tya_value_bytes(value, &input, &input_len, op)) return tya_nil();
+  z_stream zs;
+  memset(&zs, 0, sizeof(zs));
+  if (deflateInit2(&zs, Z_DEFAULT_COMPRESSION, Z_DEFLATED, window_bits, 8, Z_DEFAULT_STRATEGY) != Z_OK) {
+    tya_raise(tya_string("compress: deflate init failed"));
+    return tya_nil();
+  }
+  size_t cap = deflateBound(&zs, input_len);
+  unsigned char *out = malloc(cap > 0 ? cap : 1);
+  if (out == NULL) {
+    deflateEnd(&zs);
+    tya_raise(tya_string("compress: out of memory"));
+    return tya_nil();
+  }
+  zs.next_in = (Bytef *)input;
+  zs.avail_in = (uInt)input_len;
+  zs.next_out = out;
+  zs.avail_out = (uInt)cap;
+  int rc = deflate(&zs, Z_FINISH);
+  if (rc != Z_STREAM_END) {
+    free(out);
+    deflateEnd(&zs);
+    tya_raise(tya_string("compress: deflate failed"));
+    return tya_nil();
+  }
+  TyaValue result = tya_bytes_lit((const char *)out, (int)zs.total_out);
+  free(out);
+  deflateEnd(&zs);
+  return result;
+}
+
+static TyaValue tya_inflate_bytes(TyaValue value, int window_bits, const char *op) {
+  const unsigned char *input = NULL;
+  size_t input_len = 0;
+  if (!tya_value_bytes(value, &input, &input_len, op)) return tya_nil();
+  z_stream zs;
+  memset(&zs, 0, sizeof(zs));
+  if (inflateInit2(&zs, window_bits) != Z_OK) {
+    tya_raise(tya_string("compress: inflate init failed"));
+    return tya_nil();
+  }
+  size_t cap = input_len * 3 + 1024;
+  if (cap < 1024) cap = 1024;
+  unsigned char *out = malloc(cap);
+  if (out == NULL) {
+    inflateEnd(&zs);
+    tya_raise(tya_string("compress: out of memory"));
+    return tya_nil();
+  }
+  zs.next_in = (Bytef *)input;
+  zs.avail_in = (uInt)input_len;
+  while (true) {
+    zs.next_out = out + zs.total_out;
+    zs.avail_out = (uInt)(cap - zs.total_out);
+    int rc = inflate(&zs, Z_NO_FLUSH);
+    if (rc == Z_STREAM_END) {
+      TyaValue result = tya_bytes_lit((const char *)out, (int)zs.total_out);
+      free(out);
+      inflateEnd(&zs);
+      return result;
+    }
+    if (rc != Z_OK) {
+      free(out);
+      inflateEnd(&zs);
+      tya_raise(tya_string("compress: invalid compressed data"));
+      return tya_nil();
+    }
+    if (zs.total_out == cap) {
+      cap *= 2;
+      unsigned char *next = realloc(out, cap);
+      if (next == NULL) {
+        free(out);
+        inflateEnd(&zs);
+        tya_raise(tya_string("compress: out of memory"));
+        return tya_nil();
+      }
+      out = next;
+    }
+  }
+}
+
+TyaValue tya_compress_gzip(TyaValue value) {
+  return tya_deflate_bytes(value, 15 + 16, "compress.gzip");
+}
+
+TyaValue tya_compress_gunzip(TyaValue value) {
+  return tya_inflate_bytes(value, 15 + 32, "compress.gunzip");
+}
+
+TyaValue tya_compress_zlib(TyaValue value) {
+  return tya_deflate_bytes(value, 15, "compress.zlib");
+}
+
+TyaValue tya_compress_unzlib(TyaValue value) {
+  return tya_inflate_bytes(value, 15, "compress.unzlib");
+}
 
 static TyaValue tya_stream_value(FILE *fp, bool borrowed, bool binary, bool readable, bool writable) {
   TyaResource *r = tya_resource_new(TYA_RES_STREAM);

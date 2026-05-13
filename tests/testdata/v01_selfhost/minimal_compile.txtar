@@ -10,7 +10,7 @@ exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/main.tya" > "$
 exec grep 'tya_user_name' $WORK/main.c
 stdout 'tya_user_name'
 
-exec cc $WORK/main.c runtime/tya_runtime.c -I runtime -o $WORK/main -lpthread -lm
+exec cc $WORK/main.c runtime/tya_runtime.c -I runtime -o $WORK/main -lpthread -lm -lz
 ! stderr .
 
 exec $WORK/main
@@ -24,7 +24,7 @@ stdout 'yes\ntop\n'
 exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/branch_scope.tya" > "$WORK/branch_scope.c"'
 ! stderr .
 
-exec cc $WORK/branch_scope.c runtime/tya_runtime.c -I runtime -o $WORK/branch_scope -lpthread -lm
+exec cc $WORK/branch_scope.c runtime/tya_runtime.c -I runtime -o $WORK/branch_scope -lpthread -lm -lz
 ! stderr .
 
 exec $WORK/branch_scope

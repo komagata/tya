@@ -11,24 +11,24 @@ cd $REPO
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm 2>/dev/null'
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm -lz 2>/dev/null'
 
 exec sh -c '"$WORK/stage1" selfhost/v02/compiler.tya > "$WORK/stage2.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" -lpthread -lm 2>/dev/null'
+exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" -lpthread -lm -lz 2>/dev/null'
 
 exec sh -c '"$WORK/stage2" selfhost/v02/compiler.tya > "$WORK/stage3.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage3.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage3" -lpthread -lm 2>/dev/null'
+exec sh -c 'cc "$WORK/stage3.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage3" -lpthread -lm -lz 2>/dev/null'
 
 exec cmp $WORK/stage2.c $WORK/stage3.c
 
 exec sh -c '"$WORK/stage2" "$WORK/app.tya" > "$WORK/app.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/app.c" runtime/tya_runtime.c -I runtime -o "$WORK/app" -lpthread -lm 2>/dev/null'
+exec sh -c 'cc "$WORK/app.c" runtime/tya_runtime.c -I runtime -o "$WORK/app" -lpthread -lm -lz 2>/dev/null'
 
 exec $WORK/app first second
 stdout 'Hello, stage2\n3\nx:y\nsecond\n'

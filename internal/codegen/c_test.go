@@ -366,9 +366,9 @@ func compileAndRunC(t *testing.T, csrc string, input string, args ...string) ([]
 	include := filepath.Join("..", "..", "runtime")
 	gccArgs := []string{cfile, runtime, "-I", include, "-o", bin}
 	if runtimeOS == "linux" {
-		gccArgs = append(gccArgs, "-lpthread", "-lm")
+		gccArgs = append(gccArgs, "-lpthread", "-lm", "-lz", "-lz")
 	} else if runtimeOS != "windows" {
-		gccArgs = append(gccArgs, "-lm")
+		gccArgs = append(gccArgs, "-lm", "-lz")
 	}
 	if out, err := exec.Command("gcc", gccArgs...).CombinedOutput(); err != nil {
 		t.Fatalf("gcc: %v\n%s\n%s", err, out, csrc)

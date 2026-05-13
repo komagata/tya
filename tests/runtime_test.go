@@ -118,11 +118,11 @@ func compileAndRunRuntimeAllowExit(t *testing.T, src string, args ...string) ([]
 	gccArgs := []string{cfile, runtime, "-I", include, "-o", bin}
 	switch goruntime.GOOS {
 	case "linux":
-		gccArgs = append(gccArgs, "-lpthread", "-lm")
+		gccArgs = append(gccArgs, "-lpthread", "-lm", "-lz", "-lz")
 	case "windows":
 		// no extra flags
 	default:
-		gccArgs = append(gccArgs, "-lm")
+		gccArgs = append(gccArgs, "-lm", "-lz")
 	}
 	if out, err := exec.Command("gcc", gccArgs...).CombinedOutput(); err != nil {
 		t.Fatalf("gcc: %v\n%s", err, out)

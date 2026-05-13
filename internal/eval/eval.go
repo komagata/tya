@@ -3,6 +3,8 @@ package eval
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
+	"compress/zlib"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
@@ -2966,6 +2968,68 @@ func registerV25Builtins(env *Env) {
 		}
 		return nil, nil
 	}))
+	env.set("compress_gzip", Builtin(func(args []Value) (Value, error) {
+		data, err := valueBytes("compress.gzip", args)
+		if err != nil {
+			return nil, err
+		}
+		var out bytes.Buffer
+		w := gzip.NewWriter(&out)
+		if _, err := w.Write(data); err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		if err := w.Close(); err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return &Bytes{data: out.Bytes()}, nil
+	}))
+	env.set("compress_gunzip", Builtin(func(args []Value) (Value, error) {
+		data, err := valueBytes("compress.gunzip", args)
+		if err != nil {
+			return nil, err
+		}
+		r, err := gzip.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, &raisedSignal{value: "compress: invalid compressed data"}
+		}
+		out, err := io.ReadAll(r)
+		_ = r.Close()
+		if err != nil {
+			return nil, &raisedSignal{value: "compress: invalid compressed data"}
+		}
+		return &Bytes{data: out}, nil
+	}))
+	env.set("compress_zlib", Builtin(func(args []Value) (Value, error) {
+		data, err := valueBytes("compress.zlib", args)
+		if err != nil {
+			return nil, err
+		}
+		var out bytes.Buffer
+		w := zlib.NewWriter(&out)
+		if _, err := w.Write(data); err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		if err := w.Close(); err != nil {
+			return nil, &raisedSignal{value: err.Error()}
+		}
+		return &Bytes{data: out.Bytes()}, nil
+	}))
+	env.set("compress_unzlib", Builtin(func(args []Value) (Value, error) {
+		data, err := valueBytes("compress.unzlib", args)
+		if err != nil {
+			return nil, err
+		}
+		r, err := zlib.NewReader(bytes.NewReader(data))
+		if err != nil {
+			return nil, &raisedSignal{value: "compress: invalid compressed data"}
+		}
+		out, err := io.ReadAll(r)
+		_ = r.Close()
+		if err != nil {
+			return nil, &raisedSignal{value: "compress: invalid compressed data"}
+		}
+		return &Bytes{data: out}, nil
+	}))
 	env.set("io_stdin", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 0 {
 			return nil, fmt.Errorf("io_stdin expects 0 arguments")
@@ -3148,6 +3212,20 @@ func numberAsFloat(v Value) (float64, bool) {
 		return x, true
 	}
 	return 0, false
+}
+
+func valueBytes(name string, args []Value) ([]byte, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("%s expects 1 argument", name)
+	}
+	switch v := args[0].(type) {
+	case string:
+		return []byte(v), nil
+	case *Bytes:
+		return v.data, nil
+	default:
+		return nil, &raisedSignal{value: name + ": value must be a string or bytes"}
+	}
 }
 
 func numberAsInt(v Value) (int64, bool) {

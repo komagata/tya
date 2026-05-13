@@ -521,9 +521,9 @@ func buildExecutableWithCover(path string, output string, opt *codegen.CoverageO
 	// libm provides log2 / exp / sin / cos / atan2 etc. — glibc requires
 	// explicit -lm, macOS rolls it into libSystem so the flag is harmless.
 	if runtime.GOOS == "linux" {
-		args = append(args, "-lpthread", "-lm")
+		args = append(args, "-lpthread", "-lm", "-lz", "-lz")
 	} else if runtime.GOOS != "windows" {
-		args = append(args, "-lm")
+		args = append(args, "-lm", "-lz")
 	}
 	if nativePlan != nil {
 		args = append(args, nativePlan.LDFlags...)

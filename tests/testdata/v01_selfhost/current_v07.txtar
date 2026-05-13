@@ -4,12 +4,12 @@ cd $REPO
 exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya selfhost/v01/compiler.tya > "$WORK/stage1.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm 2>/dev/null'
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm -lz 2>/dev/null'
 
 exec sh -c '"$WORK/stage1" "$WORK/current_v07.tya" > "$WORK/current_v07.c"'
 ! stderr .
 
-exec cc $WORK/current_v07.c runtime/tya_runtime.c -I runtime -o $WORK/current_v07 -lpthread -lm
+exec cc $WORK/current_v07.c runtime/tya_runtime.c -I runtime -o $WORK/current_v07 -lpthread -lm -lz
 ! stderr .
 
 exec $WORK/current_v07

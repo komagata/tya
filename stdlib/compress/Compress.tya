@@ -1,0 +1,40 @@
+import io as io
+
+class Compress
+  static gzip = value ->
+    compress_gzip(value)
+
+  static gunzip = value ->
+    compress_gunzip(value)
+
+  static zlib = value ->
+    compress_zlib(value)
+
+  static unzlib = value ->
+    compress_unzlib(value)
+
+  static gzip_file = src, dst ->
+    reader = io.Io.open(src, "rb")
+    writer = io.Io.open(dst, "wb")
+    data = reader.read(1048576)
+    all = b""
+    while data.len() > 0
+      all = all + data
+      data = reader.read(1048576)
+    writer.write(Compress.gzip(all))
+    writer.close()
+    reader.close()
+    nil
+
+  static gunzip_file = src, dst ->
+    reader = io.Io.open(src, "rb")
+    writer = io.Io.open(dst, "wb")
+    data = reader.read(1048576)
+    all = b""
+    while data.len() > 0
+      all = all + data
+      data = reader.read(1048576)
+    writer.write(Compress.gunzip(all))
+    writer.close()
+    reader.close()
+    nil

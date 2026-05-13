@@ -4,7 +4,7 @@ cd $REPO
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya "$WORK/current_v04.tya" > "$WORK/current_v04.c"'
 ! stderr .
 
-exec cc $WORK/current_v04.c runtime/tya_runtime.c -I runtime -o $WORK/current_v04 -lpthread -lm
+exec cc $WORK/current_v04.c runtime/tya_runtime.c -I runtime -o $WORK/current_v04 -lpthread -lm -lz
 ! stderr .
 
 exec $WORK/current_v04
@@ -14,17 +14,17 @@ stdout 'ok\n'
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm 2>/dev/null'
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm -lz 2>/dev/null'
 
 exec sh -c '"$WORK/stage1" selfhost/v02/compiler.tya > "$WORK/stage2.c"'
 ! stderr .
 
-exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" -lpthread -lm 2>/dev/null'
+exec sh -c 'cc "$WORK/stage2.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage2" -lpthread -lm -lz 2>/dev/null'
 
 exec sh -c '"$WORK/stage2" "$WORK/current_v04.tya" > "$WORK/current_v04_stage2.c"'
 ! stderr .
 
-exec cc $WORK/current_v04_stage2.c runtime/tya_runtime.c -I runtime -o $WORK/current_v04_stage2 -lpthread -lm
+exec cc $WORK/current_v04_stage2.c runtime/tya_runtime.c -I runtime -o $WORK/current_v04_stage2 -lpthread -lm -lz
 ! stderr .
 
 exec $WORK/current_v04_stage2
@@ -34,7 +34,7 @@ stdout 'ok\n'
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya "$WORK/fail_assert.tya" > "$WORK/fail_assert.c"'
 ! stderr .
 
-exec cc $WORK/fail_assert.c runtime/tya_runtime.c -I runtime -o $WORK/fail_assert -lpthread -lm
+exec cc $WORK/fail_assert.c runtime/tya_runtime.c -I runtime -o $WORK/fail_assert -lpthread -lm -lz
 ! stderr .
 
 ! exec $WORK/fail_assert
@@ -44,7 +44,7 @@ stderr 'fail_assert.tya:1:1: assertion failed'
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya "$WORK/fail_equal.tya" > "$WORK/fail_equal.c"'
 ! stderr .
 
-exec cc $WORK/fail_equal.c runtime/tya_runtime.c -I runtime -o $WORK/fail_equal -lpthread -lm
+exec cc $WORK/fail_equal.c runtime/tya_runtime.c -I runtime -o $WORK/fail_equal -lpthread -lm -lz
 ! stderr .
 
 ! exec $WORK/fail_equal
@@ -58,7 +58,7 @@ stderr 'name: Tya'
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya "$WORK/v04_string.tya" > "$WORK/v04_string.c"'
 ! stderr .
 
-exec cc $WORK/v04_string.c runtime/tya_runtime.c -I runtime -o $WORK/v04_string -lpthread -lm
+exec cc $WORK/v04_string.c runtime/tya_runtime.c -I runtime -o $WORK/v04_string -lpthread -lm -lz
 ! stderr .
 
 exec $WORK/v04_string
@@ -68,7 +68,7 @@ exec $WORK/v04_string
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya "$WORK/v04_array.tya" > "$WORK/v04_array.c"'
 ! stderr .
 
-exec cc $WORK/v04_array.c runtime/tya_runtime.c -I runtime -o $WORK/v04_array -lpthread -lm
+exec cc $WORK/v04_array.c runtime/tya_runtime.c -I runtime -o $WORK/v04_array -lpthread -lm -lz
 ! stderr .
 
 exec $WORK/v04_array

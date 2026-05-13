@@ -174,6 +174,18 @@ info strings, reference links, images, nested unordered lists, setext headings,
 and selected HTML blocks. HTML remains escaped by default; raw HTML block
 pass-through is opt-in with `{ raw_html: true }` when calling `render`.
 
+## Compress Stdlib
+
+`import compress` exposes `compress.Compress` for gzip and zlib compression.
+
+`Compress.gzip(value)` and `Compress.zlib(value)` accept strings or bytes and
+return compressed bytes. `Compress.gunzip(bytes)` and
+`Compress.unzlib(bytes)` return decompressed bytes and raise on invalid
+compressed input.
+
+`Compress.gzip_file(src, dst)` and `Compress.gunzip_file(src, dst)` provide
+file helpers built on the `io` stream package.
+
 ## Log Stdlib
 
 `import log` exposes `log.Logger`, a small structured logger for CLI tools,

@@ -689,6 +689,29 @@ strikethrough, code spans, links, reference links, images, and autolinks.
 HTML is escaped by default. Raw HTML blocks pass through only when rendering
 with `{ raw_html: true }`.
 
+## `compress` (v0.62)
+
+Gzip and zlib compression helpers.
+
+```tya
+import compress as compress
+
+packed = compress.Compress.gzip("hello")
+text = bytes_text(compress.Compress.gunzip(packed))
+```
+
+Class members on `compress.Compress`: `gzip`, `gunzip`, `zlib`, `unzlib`,
+`gzip_file`, `gunzip_file`.
+
+`Compress.gzip(value)` and `Compress.zlib(value)` accept strings or bytes and
+return compressed bytes. `Compress.gunzip(bytes)` and
+`Compress.unzlib(bytes)` return decompressed bytes; callers convert to text
+explicitly with `bytes_text` when needed. Invalid compressed data raises a
+clear error.
+
+`Compress.gzip_file(src, dst)` and `Compress.gunzip_file(src, dst)` read and
+write files through the `io` stream package.
+
 ## `template` (v0.62)
 
 Generic text template rendering.

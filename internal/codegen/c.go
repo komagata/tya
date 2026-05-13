@@ -2936,6 +2936,14 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_stderr_write(%s)", 1)
 	case "file_append":
 		return emit("tya_file_append(%s, %s)", 2)
+	case "compress_gzip":
+		return emit("tya_compress_gzip(%s)", 1)
+	case "compress_gunzip":
+		return emit("tya_compress_gunzip(%s)", 1)
+	case "compress_zlib":
+		return emit("tya_compress_zlib(%s)", 1)
+	case "compress_unzlib":
+		return emit("tya_compress_unzlib(%s)", 1)
 	case "io_stdin":
 		return emit("tya_io_stdin()", 0)
 	case "io_stdout":

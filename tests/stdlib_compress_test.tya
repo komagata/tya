@@ -1,0 +1,34 @@
+import unittest
+import compress as compress
+import file as file
+
+class StdlibCompressTest extends TestCase
+
+  test_gzip_round_trip_string = ->
+    data = compress.Compress.gzip("hello gzip")
+    self.assert(data.len() > 0, "gzip returns bytes")
+    self.assert_equal("hello gzip", bytes_text(compress.Compress.gunzip(data)), "gzip round trip")
+
+  test_gzip_round_trip_bytes = ->
+    data = compress.Compress.gzip(b"\x00\x01data")
+    self.assert_equal([0, 1, 100, 97, 116, 97], bytes_array(compress.Compress.gunzip(data)), "bytes round trip")
+
+  test_zlib_round_trip = ->
+    data = compress.Compress.zlib("hello zlib")
+    self.assert_equal("hello zlib", bytes_text(compress.Compress.unzlib(data)), "zlib round trip")
+
+  test_invalid_input_raises = ->
+    self.assert_raises(() -> compress.Compress.gunzip(b"not gzip"))
+    self.assert_raises(() -> compress.Compress.unzlib(b"not zlib"))
+
+  test_file_helpers = ->
+    src = "compress_src.txt"
+    gz = "compress_src.txt.gz"
+    dst = "compress_dst.txt"
+    file.File.write(src, "file contents")
+    compress.Compress.gzip_file(src, gz)
+    compress.Compress.gunzip_file(gz, dst)
+    self.assert_equal("file contents", file.File.read(dst), "file round trip")
+    file.File.remove(src)
+    file.File.remove(gz)
+    file.File.remove(dst)
