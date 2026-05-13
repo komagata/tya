@@ -1,0 +1,15 @@
+class Next
+  initialize = middlewares, index, handler ->
+    self.middlewares = middlewares
+    self.index = index
+    self.handler = handler
+
+  static new = middlewares, index, handler ->
+    return Next(middlewares, index, handler)
+
+  call = req ->
+    if self.index >= self.middlewares.len()
+      return self.handler(req)
+    middleware = self.middlewares[self.index]
+    next = Next.new(self.middlewares, self.index + 1, self.handler)
+    return middleware(req, next)

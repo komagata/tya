@@ -153,6 +153,12 @@ static int segment_match(const char *pat, int pat_len,
   return 1;
 }
 
+static char *strip_trailing_slash_copy(const char *s) {
+  int n = (int)strlen(s == NULL ? "" : s);
+  while (n > 1 && s[n - 1] == '/') n--;
+  return dup_bytes(s, n);
+}
+
 // path_match compares a route pattern against a request path,
 // optionally collecting :name captures into `params`. Returns 1 on
 // match (and writes params into the dict via tya_dict_set).
@@ -173,6 +179,17 @@ static int path_match(const char *pat, const char *req, TyaValue params) {
     int r_done = (r_len == 0 && *r_end == '\0');
     if (p_done && r_done) return 1;
     if (p_done != r_done) return 0;
+
+    if (p_len > 0 && p[0] == '*') {
+      char *name = dup_bytes(p + 1, p_len - 1);
+      const char *value_start = r;
+      int value_len = (int)strlen(r);
+      char *value = dup_bytes(value_start, value_len);
+      if (name != NULL && value != NULL) {
+        tya_dict_set(params, tya_string(name), tya_string(value));
+      }
+      return 1;
+    }
 
     const char *param_name = NULL;
     int param_name_len = 0;
@@ -196,6 +213,66 @@ static int path_match(const char *pat, const char *req, TyaValue params) {
     while (*p == '/') p++;
     while (*r == '/') r++;
   }
+}
+
+static int route_path_match(TyaValue route, const char *path, TyaValue params) {
+  TyaValue r_path = tya_dict_get(route, tya_string("path"), tya_nil(), true);
+  if (r_path.kind != TYA_STRING || r_path.string == NULL || path == NULL) return 0;
+  TyaValue slash = tya_dict_get(route, tya_string("trailing_slash"), tya_string("strict"), true);
+  if (slash.kind == TYA_STRING && slash.string != NULL && strcmp(slash.string, "ignore") == 0) {
+    char *rp = strip_trailing_slash_copy(r_path.string);
+    char *pp = strip_trailing_slash_copy(path);
+    int ok = path_match(rp, pp, params);
+    free(rp);
+    free(pp);
+    return ok;
+  }
+  return path_match(r_path.string, path, params);
+}
+
+static int route_method_match(const char *route_method, const char *request_method, int allow_head_fallback) {
+  if (route_method == NULL || request_method == NULL) return 0;
+  if (strcmp(route_method, "ANY") == 0) return 1;
+  if (strcmp(route_method, request_method) == 0) return 1;
+  if (allow_head_fallback && strcmp(request_method, "HEAD") == 0 && strcmp(route_method, "GET") == 0) return 1;
+  return 0;
+}
+
+static TyaValue find_special_handler(TyaValue routes, const char *method) {
+  if (routes.kind != TYA_ARRAY || routes.array == NULL) return tya_nil();
+  for (int i = 0; i < routes.array->len; i++) {
+    TyaValue r = routes.array->items[i];
+    if (r.kind != TYA_DICT || r.dict == NULL) continue;
+    TyaValue r_method = tya_dict_get(r, tya_string("method"), tya_nil(), true);
+    if (r_method.kind == TYA_STRING && r_method.string != NULL && strcmp(r_method.string, method) == 0) {
+      return tya_dict_get(r, tya_string("handler"), tya_nil(), true);
+    }
+  }
+  return tya_nil();
+}
+
+static char *allow_header_for(TyaValue routes, const char *path) {
+  char buf[256];
+  buf[0] = '\0';
+  if (routes.kind != TYA_ARRAY || routes.array == NULL) return strdup("");
+  for (int i = 0; i < routes.array->len; i++) {
+    TyaValue r = routes.array->items[i];
+    if (r.kind != TYA_DICT || r.dict == NULL) continue;
+    TyaValue r_method = tya_dict_get(r, tya_string("method"), tya_nil(), true);
+    if (r_method.kind != TYA_STRING || r_method.string == NULL || r_method.string[0] == '_') continue;
+    TyaValue params = tya_dict(NULL, 0);
+    if (!route_path_match(r, path, params)) continue;
+    const char *method = strcmp(r_method.string, "ANY") == 0 ? "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD" : r_method.string;
+    if (strstr(buf, method) == NULL) {
+      if (buf[0] != '\0') strncat(buf, ", ", sizeof(buf) - strlen(buf) - 1);
+      strncat(buf, method, sizeof(buf) - strlen(buf) - 1);
+    }
+    if (strcmp(r_method.string, "GET") == 0 && strstr(buf, "HEAD") == NULL) {
+      if (buf[0] != '\0') strncat(buf, ", ", sizeof(buf) - strlen(buf) - 1);
+      strncat(buf, "HEAD", sizeof(buf) - strlen(buf) - 1);
+    }
+  }
+  return strdup(buf);
 }
 
 // parse_query splits "?a=1&b=2" style content (without the leading
@@ -331,6 +408,7 @@ static TyaValue build_request_dict(const char *method, int method_len,
     }
   }
   tya_dict_set(req, tya_string("params"), params);
+  tya_dict_set(req, tya_string("path_params"), params);
 
   TyaValue query = tya_dict(NULL, 0);
   if (query_len > 0) {
@@ -615,29 +693,79 @@ static void handle_connection(int fd, TyaValue routes) {
   TyaValue matched_route = tya_nil();
   char *path_cstr = dup_bytes(path_start, path_only_len);
   char *method_cstr = dup_bytes(method, method_len);
+  int head_fallback = 0;
   for (int i = 0; i < routes.array->len; i++) {
     TyaValue r = routes.array->items[i];
     if (r.kind != TYA_DICT || r.dict == NULL) continue;
     TyaValue r_method = tya_dict_get(r, tya_string("method"), tya_nil(), true);
-    TyaValue r_path = tya_dict_get(r, tya_string("path"), tya_nil(), true);
     TyaValue r_handler = tya_dict_get(r, tya_string("handler"), tya_nil(), true);
-    if (r_method.kind != TYA_STRING || r_path.kind != TYA_STRING) continue;
+    if (r_method.kind != TYA_STRING || r_method.string == NULL || r_method.string[0] == '_') continue;
     if (method_cstr == NULL) continue;
-    if (strcmp(r_method.string, method_cstr) != 0) continue;
+    if (!route_method_match(r_method.string, method_cstr, 0)) continue;
     TyaValue params = tya_dict(NULL, 0);
-    if (path_match(r_path.string, path_cstr, params)) {
+    if (route_path_match(r, path_cstr, params)) {
       matched_handler = r_handler;
       matched_params = params;
       matched_route = r;
       break;
     }
   }
+  if (matched_route.kind == TYA_NIL && method_cstr != NULL && strcmp(method_cstr, "HEAD") == 0) {
+    for (int i = 0; i < routes.array->len; i++) {
+      TyaValue r = routes.array->items[i];
+      if (r.kind != TYA_DICT || r.dict == NULL) continue;
+      TyaValue r_method = tya_dict_get(r, tya_string("method"), tya_nil(), true);
+      TyaValue r_handler = tya_dict_get(r, tya_string("handler"), tya_nil(), true);
+      if (r_method.kind != TYA_STRING || r_method.string == NULL) continue;
+      if (!route_method_match(r_method.string, method_cstr, 1)) continue;
+      TyaValue params = tya_dict(NULL, 0);
+      if (route_path_match(r, path_cstr, params)) {
+        matched_handler = r_handler;
+        matched_params = params;
+        matched_route = r;
+        head_fallback = 1;
+        break;
+      }
+    }
+  }
+  if (matched_route.kind == TYA_NIL && method_cstr != NULL && strcmp(method_cstr, "OPTIONS") == 0) {
+    char *allow = allow_header_for(routes, path_cstr);
+    if (allow != NULL && allow[0] != '\0') {
+      TyaValue headers = tya_dict(NULL, 0);
+      tya_dict_set(headers, tya_string("Allow"), tya_string(allow));
+      TyaValue resp = tya_dict(NULL, 0);
+      tya_dict_set(resp, tya_string("status"), tya_number(204));
+      tya_dict_set(resp, tya_string("headers"), headers);
+      tya_dict_set(resp, tya_string("body"), tya_string(""));
+      write_response(fd, resp);
+      free(method_cstr);
+      free(path_cstr);
+      buf_free(&headers_buf);
+      buf_free(&body_buf);
+      close(fd);
+      return;
+    }
+    free(allow);
+  }
   free(method_cstr);
   free(path_cstr);
 
   TyaValue static_asset = tya_dict_get(matched_route, tya_string("static_asset"), tya_nil(), true);
   if (matched_handler.kind != TYA_FUNCTION && static_asset.kind == TYA_NIL) {
-    write_simple_response(fd, 404, "Not Found");
+    TyaValue not_found = find_special_handler(routes, "__NOT_FOUND__");
+    if (not_found.kind == TYA_FUNCTION) {
+      TyaValue req = build_request_dict(method, method_len,
+                                        path_start, path_only_len,
+                                        query_str, query_len,
+                                        (const char *)(headers_buf.buf), headers_buf.len,
+                                        (const uint8_t *)body_buf.buf, body_buf.len,
+                                        tya_dict(NULL, 0));
+      TyaValue resp = tya_call1(not_found, req);
+      if (resp.kind == TYA_DICT) write_response(fd, resp);
+      else write_simple_response(fd, 404, "Not Found");
+    } else {
+      write_simple_response(fd, 404, "Not Found");
+    }
     buf_free(&headers_buf);
     buf_free(&body_buf);
     close(fd);
@@ -654,7 +782,31 @@ static void handle_connection(int fd, TyaValue routes) {
                                     headers_text, headers_text_len,
                                     (const uint8_t *)body_buf.buf, body_buf.len,
                                     matched_params);
-  TyaValue resp = matched_handler.kind == TYA_FUNCTION ? tya_call1(matched_handler, req) : build_static_response(matched_route, req);
+  tya_dict_set(req, tya_string("route"), matched_route);
+  TyaValue resp = tya_nil();
+  if (matched_handler.kind == TYA_FUNCTION) {
+    TyaRaiseFrame frame;
+    if (setjmp(frame.env) == 0) {
+      tya_push_raise_frame(&frame);
+      resp = tya_call1(matched_handler, req);
+      tya_pop_raise_frame();
+    } else {
+      tya_pop_raise_frame();
+      TyaValue error_handler = find_special_handler(routes, "__ERROR__");
+      if (error_handler.kind == TYA_FUNCTION) {
+        resp = tya_call2(error_handler, frame.value, req);
+      } else {
+        resp = tya_dict(NULL, 0);
+        tya_dict_set(resp, tya_string("status"), tya_number(500));
+        tya_dict_set(resp, tya_string("body"), tya_string("Internal Server Error"));
+      }
+    }
+  } else {
+    resp = build_static_response(matched_route, req);
+  }
+  if (head_fallback && resp.kind == TYA_DICT) {
+    tya_dict_set(resp, tya_string("body"), tya_string(""));
+  }
   if (resp.kind != TYA_DICT) {
     write_simple_response(fd, 500, "Handler returned non-dict");
   } else {

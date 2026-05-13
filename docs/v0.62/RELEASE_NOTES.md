@@ -17,6 +17,9 @@ standard library or runtime.
   scaffold.
 - `tya doctor native` reports the current native build environment and
   effective flags.
+- `net/http.Server` now supports route groups, middleware, custom 404/500
+  handlers, named paths, redirects, PATCH/HEAD/OPTIONS/ANY routing, wildcard
+  tail captures, and optional trailing-slash matching.
 - New `cli.Cli` stdlib helpers parse command-line options, positional
   arguments, defaults, required options, `--`, and deterministic usage text.
 - New package tool declarations let packages expose Tya script commands through
@@ -78,7 +81,8 @@ execution, interpolation scanner edge cases, the `template.Template` stdlib
 renderer, Markdown parser/rendering extensions, compression round trips and
 file helpers, the `log.Logger` stdlib logger, `io.Io` stream tests, and
 `net/ip` address/network tests, plus localhost `net/socket` client/server,
-binary I/O, collections behavior, timeout, and connection-refused tests, and
-random helper coverage, XML/JUnit parser coverage, image operation coverage,
-and URL parser tests for IPv6, relative resolution, duplicate queries,
-serialization round trips, and malformed input.
+binary I/O, collections behavior, timeout, and connection-refused tests, HTTP
+routing and compiled runtime coverage, and random helper coverage, XML/JUnit
+parser coverage, image operation coverage, and URL parser tests for IPv6,
+relative resolution, duplicate queries, serialization round trips, and
+malformed input.

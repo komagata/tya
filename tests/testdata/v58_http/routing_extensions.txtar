@@ -1,0 +1,31 @@
+# v0.58 net/http routing extensions are honored by the compiled C runtime.
+[!exec:curl] skip 'curl not on PATH'
+[!exec:sh] skip 'sh not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connrefused -X PATCH http://localhost:18086/users/42; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+stdout '42'
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connrefused http://localhost:18086/assets/css/app.css; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+stdout 'css/app.css'
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connrefused -X HEAD -D $WORK/head_headers -o $WORK/head_body http://localhost:18086/hello; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; test $ret -eq 0 && grep -q "HTTP/1.1 200" $WORK/head_headers && test ! -s $WORK/head_body'
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connrefused -X OPTIONS -D $WORK/options_headers -o /dev/null http://localhost:18086/hello; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; test $ret -eq 0 && grep -q "Allow: .*GET" $WORK/options_headers && grep -q "Allow: .*HEAD" $WORK/options_headers'
+
+-- main.tya --
+import net/http as http
+
+class App
+  static hello = req ->
+    return { status: 200, body: "hello " + req["path"] }
+
+  static user = req ->
+    return { status: 200, body: req["path_params"]["id"] }
+
+  static asset = req ->
+    return { status: 200, body: req["params"]["path"] }
+
+app = http.Server()
+app.get("/hello", App.hello)
+app.patch("/users/:id", App.user)
+app.get("/assets/*path", App.asset)
+app.run(18086)

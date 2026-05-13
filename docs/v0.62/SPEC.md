@@ -40,6 +40,40 @@ program and runtime.
 `tya doctor native` reports the detected C compiler, `pkg-config`, native
 packages, sources, include directories, and effective flags.
 
+## HTTP Routing Extensions
+
+`net/http.Server` now supports richer routing while preserving the v0.58
+request and response dictionary model.
+
+```tya
+import net/http as http
+
+app = http.Server()
+app.use(logger)
+app.group("/admin", group ->
+  group.get("/users/:id", show_user, { name: "admin_user" })
+)
+app.run(8080)
+```
+
+Route helpers include `patch`, `options`, `head`, `any`, and generic
+`route(method, path, handler, options)` in addition to the existing `get`,
+`post`, `put`, and `delete` helpers. HEAD falls back to matching GET routes and
+suppresses the response body. OPTIONS synthesizes an `Allow` header when no
+explicit OPTIONS route matches.
+
+Patterns support `:name` parameters and final wildcard tails such as
+`/assets/*path`. Captures are exposed through both `req["params"]` and
+`req["path_params"]`; matched requests also include `req["route"]`. Route
+options support `{ trailing_slash: "ignore" }` and `{ name: "..." }` for named
+path generation through `app.path(name, params)`.
+
+`app.use(middleware)` composes middleware in registration order, with
+middleware receiving `(req, next)` and invoking `next.call(req)`.
+`app.group(prefix, fn)` prefixes nested routes and scopes group middleware.
+`app.not_found(handler)`, `app.error(handler)`, and `app.redirect(path, status)`
+provide fallback and redirect helpers.
+
 ## CLI Stdlib
 
 The standard library includes a class-style `cli` package for predictable

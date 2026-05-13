@@ -54,6 +54,37 @@ See the v0.59 specification for the exhaustive primitive method surface.
 Use `x.class` to inspect the runtime class wrapper for primitive and object
 values.
 
+## `net/http`
+
+```tya
+import net/http as http
+
+app = http.Server()
+app.use(logger)
+app.group("/admin", group ->
+  group.get("/users/:id", show_user, { name: "admin_user" })
+)
+app.run(8080)
+```
+
+`http.Server` provides Sinatra-style HTTP/1.1 routing. Route helpers include
+`get`, `post`, `put`, `delete`, `patch`, `options`, `head`, `any`, and generic
+`route(method, path, handler, options)`. Routes are chainable, method names are
+stored uppercase, `any` matches every method, HEAD falls back to GET with an
+empty body, and OPTIONS can synthesize an `Allow` header for matching paths.
+
+Path patterns support exact segments, `:name` parameters, and final wildcard
+segments such as `/assets/*path`. Captures are available through both
+`req["params"]` and `req["path_params"]`. Use `{ trailing_slash: "ignore" }`
+to match a route with or without one trailing slash.
+
+Middleware registered with `use` receives `(req, next)` and calls
+`next.call(req)`. `group(prefix, fn)` prefixes nested routes and composes group
+middleware after global middleware. `not_found(handler)` and `error(handler)`
+override the default 404 and 500 responses. Named routes use
+`{ name: "route_name" }` and `app.path(name, params)`. `app.redirect(path)` and
+`app.redirect(path, status)` return redirect response dictionaries.
+
 ## `color`
 
 ```tya

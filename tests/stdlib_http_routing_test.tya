@@ -1,0 +1,84 @@
+import unittest
+import net/http as http
+
+class StdlibHttpRoutingTest extends TestCase
+
+  test_methods_wildcard_and_named_path = ->
+    app = http.Server()
+    app.patch("/users/:id", req -> { status: 200, body: req["path_params"]["id"] }, { name: "user" })
+    app.any("/assets/*path", req -> { status: 200, body: req["params"]["path"] })
+    self.assert_equal("42", app.dispatch("patch", "/users/42")["body"], "patch")
+    self.assert_equal("css/app.css", app.dispatch("GET", "/assets/css/app.css")["body"], "wildcard")
+    self.assert_equal("/users/7", app.path("user", { id: "7" }), "path")
+    self.assert_raises(-> StdlibHttpRoutingTest.missing_path(), "missing param")
+
+  test_head_options_redirect_and_not_found = ->
+    app = http.Server()
+    app.get("/hello", StdlibHttpRoutingTest.hello)
+    app.not_found(req -> { status: 404, body: "missing " + req["path"] })
+    head = app.dispatch("HEAD", "/hello")
+    self.assert_equal(200, head["status"], "head status")
+    self.assert_equal("", head["body"], "head body")
+    options = app.dispatch("OPTIONS", "/hello")
+    self.assert_equal(204, options["status"], "options status")
+    self.assert(options["headers"]["Allow"].contains("GET"), "allow get")
+    self.assert(options["headers"]["Allow"].contains("HEAD"), "allow head")
+    self.assert_equal("missing /nope", app.dispatch("GET", "/nope")["body"], "not found")
+    redirect = app.redirect("/next", 303)
+    self.assert_equal(303, redirect["status"], "redirect status")
+    self.assert_equal("/next", redirect["headers"]["Location"], "location")
+
+  test_groups_middleware_and_errors = ->
+    app = http.Server()
+    app.use(StdlibHttpRoutingTest.global_middleware)
+    app.group("/admin", StdlibHttpRoutingTest.admin_group)
+    resp = app.dispatch("GET", "/admin/users/9")
+    self.assert_equal("global-admin:9", resp["body"], "middleware")
+    self.assert_equal("global-admin", resp["headers"]["XSeen"], "post process")
+
+    app.error(StdlibHttpRoutingTest.error_handler)
+    app.get("/boom", StdlibHttpRoutingTest.boom)
+    self.assert_equal("caught boom", app.dispatch("GET", "/boom")["body"], "error")
+
+  test_trailing_slash_and_invalid_patterns = ->
+    app = http.Server()
+    app.get("/users", StdlibHttpRoutingTest.ok, { trailing_slash: "ignore" })
+    self.assert_equal("ok", app.dispatch("GET", "/users/")["body"], "trailing")
+    self.assert_raises(-> http.Server().get("bad", StdlibHttpRoutingTest.ok), "path must start")
+    self.assert_raises(-> http.Server().get("/a/:id/:id", StdlibHttpRoutingTest.ok), "duplicate")
+    self.assert_raises(-> http.Server().get("/a/*path/more", StdlibHttpRoutingTest.ok), "wildcard")
+
+  static global_middleware = req, next ->
+    req["seen"] = "global"
+    res = next.call(req)
+    headers = {}
+    headers["XSeen"] = req["seen"]
+    res["headers"] = headers
+    return res
+
+  static admin_middleware = req, next ->
+    req["seen"] = req["seen"] + "-admin"
+    return next.call(req)
+
+  static admin_group = group ->
+    group.use(StdlibHttpRoutingTest.admin_middleware)
+    group.get("/users/:id", req -> { status: 200, body: req["seen"] + ":" + req["params"]["id"] })
+
+  static error_handler = err, req ->
+    req["handled"] = true
+    return { status: 500, body: "caught " + err }
+
+  static boom = req ->
+    req["boom"] = true
+    raise "boom"
+
+  static hello = req ->
+    return { status: 200, body: "hello " + req["path"] }
+
+  static ok = req ->
+    return { status: 200, body: "ok" + req["path"].replace(req["path"], "") }
+
+  static missing_path = ->
+    app = http.Server()
+    app.patch("/users/:id", StdlibHttpRoutingTest.ok, { name: "user" })
+    return app.path("user", {})

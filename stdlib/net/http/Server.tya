@@ -7,22 +7,148 @@
 class Server
   initialize = ->
     self.routes = []
+    self.prefix = ""
+    self.middlewares = []
+    self.named_routes = {}
+    self.not_found_handler = nil
+    self.error_handler = nil
 
-  get = path, handler ->
-    push(self.routes, { method: "GET", path: path, handler: handler })
-    self
+  static child = parent, prefix ->
+    child = Server()
+    child.routes = parent.routes
+    child.prefix = Server.join_paths(parent.prefix, prefix)
+    child.middlewares = Server.copy_array(parent.middlewares)
+    child.named_routes = parent.named_routes
+    child.not_found_handler = parent.not_found_handler
+    child.error_handler = parent.error_handler
+    return child
 
-  post = path, handler ->
-    push(self.routes, { method: "POST", path: path, handler: handler })
-    self
+  get = path, handler, options ->
+    return self.route("GET", path, handler, options)
 
-  put = path, handler ->
-    push(self.routes, { method: "PUT", path: path, handler: handler })
-    self
+  post = path, handler, options ->
+    return self.route("POST", path, handler, options)
 
-  delete = path, handler ->
-    push(self.routes, { method: "DELETE", path: path, handler: handler })
-    self
+  put = path, handler, options ->
+    return self.route("PUT", path, handler, options)
+
+  delete = path, handler, options ->
+    return self.route("DELETE", path, handler, options)
+
+  patch = path, handler, options ->
+    return self.route("PATCH", path, handler, options)
+
+  options = path, handler, options ->
+    return self.route("OPTIONS", path, handler, options)
+
+  head = path, handler, options ->
+    return self.route("HEAD", path, handler, options)
+
+  any = path, handler, options ->
+    return self.route("ANY", path, handler, options)
+
+  route = method, path, handler, options ->
+    opts = Server.route_options(options)
+    full_path = Server.join_paths(self.prefix, path)
+    Server.validate_pattern(full_path)
+    route = { method: method.upper(), path: full_path, handler: handler, middlewares: Server.copy_array(self.middlewares), trailing_slash: opts["trailing_slash"], name: opts["name"] }
+    self.routes.push(route)
+    if opts["name"] != nil
+      self.named_routes[opts["name"]] = route
+    return self
+
+  use = middleware ->
+    self.middlewares.push(middleware)
+    return self
+
+  group = prefix, fn ->
+    child = Server.child(self, prefix)
+    fn(child)
+    return self
+
+  not_found = handler ->
+    self.not_found_handler = handler
+    self.routes.push({ method: "__NOT_FOUND__", path: "*", handler: handler })
+    return self
+
+  error = handler ->
+    self.error_handler = handler
+    self.routes.push({ method: "__ERROR__", path: "*", handler: handler })
+    return self
+
+  path = name, params ->
+    route = self.named_routes.get(name, nil)
+    if route == nil
+      raise "http.path: unknown route " + name
+    return Server.build_path(route["path"], params)
+
+  redirect = path, status ->
+    if status == nil
+      status = 302
+    if status != 301 and status != 302 and status != 303 and status != 307 and status != 308
+      raise "http.redirect: unsupported redirect status"
+    headers = {}
+    headers["Location"] = path
+    return { status: status, headers: headers, body: "" }
+
+  dispatch = method, path ->
+    method = method.upper()
+    route = self.find_route(method, path)
+    if route == nil and method == "HEAD"
+      route = self.find_route("GET", path)
+      if route != nil
+        resp = self.call_route(route, method, path)
+        resp["body"] = ""
+        return resp
+    if route == nil and method == "OPTIONS"
+      allow = self.allow_for(path)
+      if allow != ""
+        headers = {}
+        headers["Allow"] = allow
+        return { status: 204, headers: headers, body: "" }
+    if route == nil
+      if self.not_found_handler != nil
+        return self.not_found_handler({ method: method, path: path, params: {}, path_params: {}, query: {}, headers: {}, body: b"" })
+      return { status: 404, body: "Not Found" }
+    return self.call_route(route, method, path)
+
+  call_route = route, method, path ->
+    params = Server.match_params(route, path)
+    req = { method: method, path: path, params: params, path_params: params, query: {}, headers: {}, body: b"", route: route }
+    next = Next.new(route["middlewares"], 0, route["handler"])
+    result = nil
+    try
+      result = next.call(req)
+    catch err
+      if self.error_handler != nil
+        return self.error_handler(err, req)
+      return { status: 500, body: "Internal Server Error" }
+    return result
+
+  find_route = method, path ->
+    i = 0
+    while i < self.routes.len()
+      route = self.routes[i]
+      if (route["method"] == method or route["method"] == "ANY") and Server.match_params(route, path) != nil
+        return route
+      i = i + 1
+    return nil
+
+  allow_for = path ->
+    methods = []
+    i = 0
+    while i < self.routes.len()
+      route = self.routes[i]
+      if route["method"] != "__NOT_FOUND__" and route["method"] != "__ERROR__" and Server.match_params(route, path) != nil
+        method = route["method"]
+        if method == "ANY"
+          method = "GET,POST,PUT,DELETE,PATCH,OPTIONS,HEAD"
+        if not Server.array_has?(methods, method)
+          methods.push(method)
+        if method == "GET" and not Server.array_has?(methods, "HEAD")
+          methods.push("HEAD")
+      i = i + 1
+    return methods.join(", ")
 
   static = prefix, assets ->
     for entry in assets.entries()
@@ -42,19 +168,21 @@ class Server
       method: "GET",
       path: prefix + "/" + path,
       static_asset: asset,
-      static_hashed: hashed_route
+      static_hashed: hashed_route,
+      middlewares: [],
+      trailing_slash: "strict"
     })
 
   content_type = path ->
-    if path.ends_with?(".html")
+    if path.ends_with(".html")
       return "text/html; charset=utf-8"
-    if path.ends_with?(".css")
+    if path.ends_with(".css")
       return "text/css; charset=utf-8"
-    if path.ends_with?(".js")
+    if path.ends_with(".js")
       return "application/javascript; charset=utf-8"
-    if path.ends_with?(".json")
+    if path.ends_with(".json")
       return "application/json"
-    if path.ends_with?(".svg")
+    if path.ends_with(".svg")
       return "image/svg+xml"
     return "application/octet-stream"
 
@@ -63,3 +191,129 @@ class Server
   # error or SIGINT.
   run = port ->
     http_server_run(self.routes, port)
+
+  static route_options = options ->
+    opts = { trailing_slash: "strict", name: nil }
+    if options == nil
+      return opts
+    keys = options.keys()
+    i = 0
+    while i < keys.len()
+      key = keys[i]
+      if key != "trailing_slash" and key != "name"
+        raise "http.route: unknown option " + key
+      opts[key] = options[key]
+      i = i + 1
+    if opts["trailing_slash"] != "strict" and opts["trailing_slash"] != "ignore"
+      raise "http.route: invalid trailing_slash option"
+    return opts
+
+  static validate_pattern = path ->
+    if not path.starts_with("/")
+      raise "http.route: path must start with /"
+    names = []
+    parts = path.split("/")
+    i = 0
+    while i < parts.len()
+      part = parts[i]
+      if part.starts_with("*") and i != parts.len() - 1
+        raise "http.route: wildcard must be final segment"
+      if part.starts_with(":") or part.starts_with("*")
+        name = Server.slice(part, 1, part.byte_len())
+        if name == "" or Server.array_has?(names, name)
+          raise "http.route: duplicate or empty parameter " + name
+        names.push(name)
+      i = i + 1
+
+  static match_params = route, path ->
+    pattern = route["path"]
+    if route.get("trailing_slash", "strict") == "ignore"
+      pattern = Server.strip_trailing(pattern)
+      path = Server.strip_trailing(path)
+    p = pattern.split("/")
+    r = path.split("/")
+    params = {}
+    i = 0
+    while i < p.len()
+      part = p[i]
+      if part.starts_with("*")
+        name = Server.slice(part, 1, part.byte_len())
+        rest = []
+        j = i
+        while j < r.len()
+          rest.push(r[j])
+          j = j + 1
+        params[name] = rest.join("/")
+        return params
+      if i >= r.len()
+        return nil
+      if part.starts_with(":")
+        params[Server.slice(part, 1, part.byte_len())] = r[i]
+      elseif part != r[i]
+        return nil
+      i = i + 1
+    if i != r.len()
+      return nil
+    return params
+
+  static build_path = pattern, params ->
+    out = []
+    parts = pattern.split("/")
+    i = 0
+    while i < parts.len()
+      part = parts[i]
+      if part.starts_with(":") or part.starts_with("*")
+        name = Server.slice(part, 1, part.byte_len())
+        if params == nil or not params.has?(name)
+          raise "http.path: missing param " + name
+        out.push(params[name])
+      else
+        out.push(part)
+      i = i + 1
+    result = out.join("/")
+    if result == ""
+      return "/"
+    return result
+
+  static join_paths = prefix, path ->
+    if prefix == nil or prefix == ""
+      if path == ""
+        return "/"
+      return path
+    if path == nil or path == "" or path == "/"
+      return prefix
+    return Server.strip_trailing(prefix) + "/" + Server.strip_leading(path)
+
+  static strip_trailing = path ->
+    while path.byte_len() > 1 and path.ends_with("/")
+      path = Server.slice(path, 0, path.byte_len() - 1)
+    return path
+
+  static strip_leading = path ->
+    while path.byte_len() > 0 and path.starts_with("/")
+      path = Server.slice(path, 1, path.byte_len())
+    return path
+
+  static slice = text, start, finish ->
+    out = ""
+    i = start
+    while i < finish
+      out = out + text[i]
+      i = i + 1
+    return out
+
+  static copy_array = values ->
+    out = []
+    i = 0
+    while i < values.len()
+      out.push(values[i])
+      i = i + 1
+    return out
+
+  static array_has? = values, value ->
+    i = 0
+    while i < values.len()
+      if values[i] == value
+        return true
+      i = i + 1
+    return false
