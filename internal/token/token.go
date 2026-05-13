@@ -50,8 +50,11 @@ const (
 )
 
 type Token struct {
-	Type   Type
-	Lexeme string
-	Line   int
-	Col    int
+	Type       Type
+	Lexeme     string
+	Line       int
+	Col        int
+	StringForm string
+	Lang       string
+	Marker     string
 }

@@ -647,6 +647,15 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			u.line(strings.Join(targets, ", ") + " = " + head + " ->")
 			return u.block(fn.Body)
 		}
+		if lit, ok := n.Values[0].(*ast.StringLit); ok && strings.Contains(lit.Form, "heredoc") {
+			return u.emitHeredoc(n, strings.Join(targets, ", ")+" = ", lit)
+		}
+		if lit, ok := n.Values[0].(*ast.BytesLit); ok && strings.Contains(lit.Form, "heredoc") {
+			return u.emitBytesHeredoc(n, strings.Join(targets, ", ")+" = ", lit)
+		}
+		if lit, ok := n.Values[0].(*ast.StringLit); ok && lit.Lang != "" && lit.Form == "triple" {
+			return u.emitTripleQuoted(n, strings.Join(targets, ", ")+" = ", lit)
+		}
 	}
 	values := make([]string, 0, len(n.Values))
 	for _, v := range n.Values {
@@ -859,7 +868,7 @@ func opPrecedence(op string) int {
 //	  second line
 //	  """
 func (u *unparser) emitTripleQuoted(stmt ast.Stmt, prefix string, lit *ast.StringLit) error {
-	u.line(prefix + `"""`)
+	u.line(prefix + lit.Lang + `"""`)
 	u.indent++
 	defer func() { u.indent-- }()
 	// The triple-quoted body ends with a newline by virtue of
@@ -876,6 +885,52 @@ func (u *unparser) emitTripleQuoted(stmt ast.Stmt, prefix string, lit *ast.Strin
 		u.line(encoded)
 	}
 	u.line(`"""`)
+	return nil
+}
+
+func (u *unparser) emitHeredoc(stmt ast.Stmt, prefix string, lit *ast.StringLit) error {
+	_ = stmt
+	marker := lit.Marker
+	if marker == "" {
+		marker = "TXT"
+	}
+	head := prefix
+	if lit.Form == "raw_heredoc" {
+		head += "r"
+	} else {
+		head += lit.Lang
+	}
+	u.line(head + "<<<" + marker)
+	u.indent++
+	body := lit.Value
+	if strings.HasSuffix(body, "\n") {
+		body = strings.TrimSuffix(body, "\n")
+	}
+	for _, line := range strings.Split(body, "\n") {
+		u.line(line)
+	}
+	u.line(marker)
+	u.indent--
+	return nil
+}
+
+func (u *unparser) emitBytesHeredoc(stmt ast.Stmt, prefix string, lit *ast.BytesLit) error {
+	_ = stmt
+	marker := lit.Marker
+	if marker == "" {
+		marker = "BYTES"
+	}
+	u.line(prefix + "b<<<" + marker)
+	u.indent++
+	body := lit.Value
+	if strings.HasSuffix(body, "\n") {
+		body = strings.TrimSuffix(body, "\n")
+	}
+	for _, line := range strings.Split(body, "\n") {
+		u.line(line)
+	}
+	u.line(marker)
+	u.indent--
 	return nil
 }
 
@@ -1028,6 +1083,9 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 	case *ast.FloatLit:
 		return strconv.FormatFloat(n.Value, 'f', -1, 64), nil
 	case *ast.StringLit:
+		if n.Lang != "" && n.Form == "triple" && !strings.Contains(n.Value, `"""`) {
+			return n.Lang + `"""` + n.Value + `"""`, nil
+		}
 		return strconv.Quote(n.Value), nil
 	case *ast.BoolLit:
 		if n.Value {

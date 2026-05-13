@@ -9,9 +9,23 @@ stdout 'Multi'
 stdout 'line'
 stdout 'one shot'
 stdout '"x": 1'
+stdout 'select *'
+stdout 'where name = Tya'
+stdout 'literal triple: """'
+stdout 'tag same: true'
+
+exec go run ./cmd/tya format $WORK/heredoc_format.tya
+stdout 'query = sql<<<SQL'
+stdout 'SQL'
+
+! exec go run ./cmd/tya check $WORK/bad_marker.tya
+stderr 'TYA-E0019'
+
+! exec go run ./cmd/tya check $WORK/bad_tag.tya
+stderr 'TYA-E0018'
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 
 -- m.tya --
 name = "Tya"
@@ -29,3 +43,35 @@ nested = """
   }}
   """
 print(nested)
+
+query = <<<SQL
+  select *
+  where name = {name}
+  SQL
+print(query)
+
+literal = <<<TEXT
+  literal triple: """
+  TEXT
+print(literal)
+
+tagged = sql"""
+  select 1
+  """
+plain = """
+  select 1
+  """
+print("tag same: " + (tagged == plain).to_s())
+
+-- heredoc_format.tya --
+query = sql<<<SQL
+  select *
+  SQL
+
+-- bad_marker.tya --
+bad = <<<sql
+  nope
+  sql
+
+-- bad_tag.tya --
+bad = Sql"""select 1"""

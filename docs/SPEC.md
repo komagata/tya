@@ -331,6 +331,25 @@ brace. Braces and quotes inside string literals that appear in the expression do
 not end the interpolation body. The same rules apply in single-line and
 triple-quoted interpolating strings.
 
+Multi-line strings may also use heredoc markers when the body contains `"""`
+or when a language tag helps tooling:
+
+```tya
+query = sql<<<SQL
+  select *
+  from users
+  where name = {name}
+  SQL
+
+raw = r<<<REGEX
+  \d+ files in {dir}
+  REGEX
+```
+
+Heredoc markers must match `[A-Z][A-Z0-9_]*`. Language tags such as
+`sql"""..."""` and `html<<<HTML ... HTML` must match `[a-z][a-z0-9_]*` and do
+not change the runtime string value.
+
 Empty interpolation is invalid.
 
 ```tya

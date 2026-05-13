@@ -7,9 +7,11 @@ stdout '\\d\+ files in \{dir\}'
 stdout 'Use \{name\} with care:'
 stdout '  \\n is two characters here.'
 stdout 'bytes len: 12'
+stdout 'raw heredoc: \\d\+ files in \{dir\}'
+stdout 'bytes heredoc len: 5'
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 
 -- sample.tya --
 re = r"\d+ files in {dir}"
@@ -25,4 +27,14 @@ multi = b"""
   hello
   world
   """
-print("bytes len: " + to_string(len(multi)))
+print("bytes len: " + (multi.len()).to_s())
+
+rawh = r<<<REGEX
+  \d+ files in {dir}
+  REGEX
+print("raw heredoc: " + rawh)
+
+payload = b<<<BYTES
+  hi\x0a!
+  BYTES
+print("bytes heredoc len: " + (payload.len()).to_s())

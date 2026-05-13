@@ -263,11 +263,20 @@ type FloatLit struct{ Value float64 }
 
 func (*FloatLit) expr() {}
 
-type StringLit struct{ Value string }
+type StringLit struct {
+	Value  string
+	Form   string
+	Lang   string
+	Marker string
+}
 
 func (*StringLit) expr() {}
 
-type BytesLit struct{ Value string }
+type BytesLit struct {
+	Value  string
+	Form   string
+	Marker string
+}
 
 func (*BytesLit) expr() {}
 

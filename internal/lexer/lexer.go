@@ -165,6 +165,10 @@ func (l *Lexer) add(t token.Type, s string, line, col int) {
 	l.tokens = append(l.tokens, token.Token{Type: t, Lexeme: s, Line: line, Col: col})
 }
 
+func (l *Lexer) addString(t token.Type, s string, line, col int, form, lang, marker string) {
+	l.tokens = append(l.tokens, token.Token{Type: t, Lexeme: s, Line: line, Col: col, StringForm: form, Lang: lang, Marker: marker})
+}
+
 func (l *Lexer) lex() {
 	lines := strings.Split(l.src, "\n")
 	for i := 0; i < len(lines); i++ {
@@ -229,45 +233,49 @@ func (l *Lexer) lex() {
 // from `lines` starting after `lineIdx`. Returns the number of extra
 // lines consumed (0 if none).
 func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, lineIdx int) int {
-	tq, prefix := findTripleQuote(s)
-	if tq < 0 {
+	tq := findStringOpen(s)
+	if tq.kind == "" {
 		l.lexLine(s, line, baseCol)
 		return 0
 	}
-	// Lex everything before the (optional prefix +) triple-quote normally.
-	preEnd := tq
-	if prefix != 0 {
-		preEnd = tq - 1
+	if tq.invalidTag != "" {
+		l.diagErr("TYA-E0018", "Invalid string tag", "Language tags must match [a-z][a-z0-9_]*.", "Use a lowercase tag such as sql or html.", line, baseCol+tq.start, len(tq.invalidTag))
+		return 0
 	}
+	if tq.kind == "heredoc" {
+		return l.lexHeredoc(s, line, baseCol, lines, lineIdx, tq)
+	}
+	// Lex everything before the (optional prefix +) triple-quote normally.
+	preEnd := tq.start
 	if preEnd > 0 {
 		l.lexLine(s[:preEnd], line, baseCol)
 	}
 	// Single-line triple quote? Look for a closing """ on the same line.
-	body := s[tq+3:]
+	body := s[tq.delim+3:]
 	if close := strings.Index(body, `"""`); close >= 0 {
 		raw := body[:close]
-		switch prefix {
+		switch tq.prefix {
 		case 'r':
-			l.add(token.STRING, encodeRawString(raw), line, baseCol+preEnd)
+			l.addString(token.STRING, encodeRawString(raw), line, baseCol+preEnd, "raw_triple", "", "")
 		case 'b':
-			value, err := interpretBytesEscapes(raw, line, baseCol+tq)
+			value, err := interpretBytesEscapes(raw, line, baseCol+tq.delim)
 			if err != nil {
 				l.errs = append(l.errs, err)
 				return 0
 			}
-			l.add(token.BYTES, value, line, baseCol+preEnd)
+			l.addString(token.BYTES, value, line, baseCol+preEnd, "bytes_triple", "", "")
 		default:
-			value, err := interpretEscapes(raw, line, baseCol+tq)
+			value, err := interpretEscapes(raw, line, baseCol+tq.delim)
 			if err != nil {
 				l.errs = append(l.errs, err)
 				return 0
 			}
-			l.add(token.STRING, value, line, baseCol+tq)
+			l.addString(token.STRING, value, line, baseCol+preEnd, "triple", tq.lang, "")
 		}
 		// Lex the remainder after the closing """.
 		rest := body[close+3:]
 		if rest != "" {
-			l.lexLine(rest, line, baseCol+tq+3+close+3)
+			l.lexLine(rest, line, baseCol+tq.delim+3+close+3)
 		}
 		return 0
 	}
@@ -292,7 +300,7 @@ func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, li
 		l.diagErr("TYA-E0016", "Unterminated triple-quoted string",
 			`This """ literal is not closed.`,
 			`Add a matching """ on a later line.`,
-			line, baseCol+tq, 3)
+			line, baseCol+tq.delim, 3)
 		return 0
 	}
 	var b strings.Builder
@@ -333,27 +341,23 @@ func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, li
 		b.WriteString(bodyLine[closingIndent:])
 		b.WriteByte('\n')
 	}
-	preEndCol := tq
-	if prefix != 0 {
-		preEndCol = tq - 1
-	}
-	switch prefix {
+	switch tq.prefix {
 	case 'r':
-		l.add(token.STRING, encodeRawString(b.String()), line, baseCol+preEndCol)
+		l.addString(token.STRING, encodeRawString(b.String()), line, baseCol+preEnd, "raw_triple", "", "")
 	case 'b':
-		value, err := interpretBytesEscapes(b.String(), line, baseCol+tq)
+		value, err := interpretBytesEscapes(b.String(), line, baseCol+tq.delim)
 		if err != nil {
 			l.errs = append(l.errs, err)
 			return closingIdx - lineIdx
 		}
-		l.add(token.BYTES, value, line, baseCol+preEndCol)
+		l.addString(token.BYTES, value, line, baseCol+preEnd, "bytes_triple", "", "")
 	default:
-		value, err := interpretEscapes(b.String(), line, baseCol+tq)
+		value, err := interpretEscapes(b.String(), line, baseCol+tq.delim)
 		if err != nil {
 			l.errs = append(l.errs, err)
 			return closingIdx - lineIdx
 		}
-		l.add(token.STRING, value, line, baseCol+tq)
+		l.addString(token.STRING, value, line, baseCol+preEnd, "triple", tq.lang, "")
 	}
 	// Lex any content after the closing """ on its line.
 	closingLine := lines[closingIdx]
@@ -361,6 +365,178 @@ func (l *Lexer) lexLineWithLines(s string, line, baseCol int, lines []string, li
 	tail := closingTrimmed[3:]
 	if tail != "" {
 		l.lexLine(tail, closingIdx+1, closingIndent+4)
+	}
+	return closingIdx - lineIdx
+}
+
+type stringOpen struct {
+	kind       string
+	start      int
+	delim      int
+	prefix     byte
+	lang       string
+	marker     string
+	invalidTag string
+}
+
+func findStringOpen(s string) stringOpen {
+	best := stringOpen{}
+	for i := 0; i < len(s); i++ {
+		if i+2 < len(s) && s[i] == '"' && s[i+1] == '"' && s[i+2] == '"' {
+			open := classifyStringPrefix(s, i)
+			open.kind = "triple"
+			open.delim = i
+			if best.kind == "" || open.start < best.start {
+				best = open
+			}
+		}
+		if i+2 < len(s) && s[i] == '<' && s[i+1] == '<' && s[i+2] == '<' {
+			open := classifyStringPrefix(s, i)
+			open.kind = "heredoc"
+			open.delim = i
+			rest := s[i+3:]
+			markerEnd := 0
+			for markerEnd < len(rest) && isIdentChar(rest[markerEnd]) {
+				markerEnd++
+			}
+			open.marker = rest[:markerEnd]
+			if best.kind == "" || open.start < best.start {
+				best = open
+			}
+		}
+	}
+	return best
+}
+
+func classifyStringPrefix(s string, delim int) stringOpen {
+	open := stringOpen{start: delim}
+	if delim == 0 {
+		return open
+	}
+	j := delim - 1
+	for j >= 0 && isIdentChar(s[j]) {
+		j--
+	}
+	if j == delim-1 {
+		return open
+	}
+	word := s[j+1 : delim]
+	if j >= 0 && isIdentChar(s[j]) {
+		return open
+	}
+	if word == "r" || word == "b" {
+		open.start = delim - 1
+		open.prefix = word[0]
+		return open
+	}
+	if isLanguageTag(word) {
+		open.start = j + 1
+		open.lang = word
+	} else if word != "" {
+		open.start = j + 1
+		open.invalidTag = word
+	}
+	return open
+}
+
+func isLanguageTag(s string) bool {
+	if s == "" || s[0] < 'a' || s[0] > 'z' {
+		return false
+	}
+	for i := 1; i < len(s); i++ {
+		if !((s[i] >= 'a' && s[i] <= 'z') || (s[i] >= '0' && s[i] <= '9') || s[i] == '_') {
+			return false
+		}
+	}
+	return true
+}
+
+func isHeredocMarker(s string) bool {
+	if s == "" || s[0] < 'A' || s[0] > 'Z' {
+		return false
+	}
+	for i := 1; i < len(s); i++ {
+		if !((s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= '0' && s[i] <= '9') || s[i] == '_') {
+			return false
+		}
+	}
+	return true
+}
+
+func (l *Lexer) lexHeredoc(s string, line, baseCol int, lines []string, lineIdx int, open stringOpen) int {
+	if open.start > 0 {
+		l.lexLine(s[:open.start], line, baseCol)
+	}
+	if open.prefix == 'r' && open.lang != "" {
+		l.diagErr("TYA-E0018", "Invalid string tag", "Raw language-tagged strings are not supported.", "Use r<<<MARKER without a language tag.", line, baseCol+open.start, open.delim-open.start+3)
+		return 0
+	}
+	rest := s[open.delim+3:]
+	if open.marker == "" || !isHeredocMarker(open.marker) {
+		l.diagErr("TYA-E0019", "Invalid heredoc marker", "Heredoc markers must match [A-Z][A-Z0-9_]*.", "Use an uppercase marker such as SQL or HTML.", line, baseCol+open.delim, len(rest)+3)
+		return 0
+	}
+	if strings.TrimSpace(rest[len(open.marker):]) != "" {
+		l.diagErr("TYA-E0020", "Invalid heredoc opening", "Only the heredoc marker may follow <<< on the opening line.", "Move content to the next line.", line, baseCol+open.delim, len(rest)+3)
+		return 0
+	}
+	closingFound := false
+	closingIdx := -1
+	closingIndent := 0
+	for j := lineIdx + 1; j < len(lines); j++ {
+		ln := lines[j]
+		trimmed := strings.TrimLeft(ln, " ")
+		if trimmed == open.marker {
+			closingFound = true
+			closingIdx = j
+			closingIndent = len(ln) - len(trimmed)
+			break
+		}
+	}
+	if !closingFound {
+		l.diagErr("TYA-E0021", "Unterminated heredoc string", "This heredoc literal is not closed.", "Add a closing marker line that matches "+open.marker+".", line, baseCol+open.delim, len(open.marker)+3)
+		return 0
+	}
+	var b strings.Builder
+	for j := lineIdx + 1; j < closingIdx; j++ {
+		bodyLine := lines[j]
+		if strings.Contains(bodyLine, "\t") {
+			l.diagErr("TYA-E0001", "Tabs are forbidden", "This line of the heredoc string contains a tab character.", "Replace the tab with spaces.", j+1, 1, 1)
+			return closingIdx - lineIdx
+		}
+		if bodyLine == "" {
+			b.WriteByte('\n')
+			continue
+		}
+		if len(bodyLine) < closingIndent || bodyLine[:closingIndent] != strings.Repeat(" ", closingIndent) {
+			leading := len(bodyLine) - len(strings.TrimLeft(bodyLine, " "))
+			if leading == len(bodyLine) {
+				b.WriteByte('\n')
+				continue
+			}
+			l.diagErr("TYA-E0017", "Mixed indentation in heredoc string", "This line is shallower than the closing marker indent baseline.", "Indent every body line at least as far as the closing marker.", j+1, 1, 1)
+			return closingIdx - lineIdx
+		}
+		b.WriteString(bodyLine[closingIndent:])
+		b.WriteByte('\n')
+	}
+	switch open.prefix {
+	case 'r':
+		l.addString(token.STRING, encodeRawString(b.String()), line, baseCol+open.start, "raw_heredoc", "", open.marker)
+	case 'b':
+		value, err := interpretBytesEscapes(b.String(), line, baseCol+open.delim)
+		if err != nil {
+			l.errs = append(l.errs, err)
+			return closingIdx - lineIdx
+		}
+		l.addString(token.BYTES, value, line, baseCol+open.start, "bytes_heredoc", "", open.marker)
+	default:
+		value, err := interpretEscapes(b.String(), line, baseCol+open.delim)
+		if err != nil {
+			l.errs = append(l.errs, err)
+			return closingIdx - lineIdx
+		}
+		l.addString(token.STRING, value, line, baseCol+open.start, "heredoc", open.lang, open.marker)
 	}
 	return closingIdx - lineIdx
 }

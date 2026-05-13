@@ -142,10 +142,17 @@ module.exports = grammar({
     string: () =>
       choice(
         seq('"', repeat(choice(token.immediate(/[^"\\{}]+/), /\\./, /\{[^}]*\}/)), '"'),
+        seq(/[a-z][a-z0-9_]*/, '"""', repeat(/[^"]|("[^"])|(""[^"])/), '"""'),
         seq('"""', repeat(/[^"]|("[^"])|(""[^"])/), '"""'),
+        seq(/[a-z][a-z0-9_]*/, /<<<[A-Z][A-Z0-9_]*/, repeat(/[^\n]|\n/), /[ \t]*[A-Z][A-Z0-9_]*/),
+        seq(/r<<<[A-Z][A-Z0-9_]*/, repeat(/[^\n]|\n/), /[ \t]*[A-Z][A-Z0-9_]*/),
       ),
 
-    bytes: () => seq('b"', repeat(choice(token.immediate(/[^"\\]+/), /\\./)), '"'),
+    bytes: () =>
+      choice(
+        seq('b"', repeat(choice(token.immediate(/[^"\\]+/), /\\./)), '"'),
+        seq(/b<<<[A-Z][A-Z0-9_]*/, repeat(/[^\n]|\n/), /[ \t]*[A-Z][A-Z0-9_]*/),
+      ),
 
     number: () =>
       token(

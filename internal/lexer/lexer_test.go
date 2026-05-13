@@ -311,6 +311,37 @@ func TestLexBytesTriple(t *testing.T) {
 	}
 }
 
+func TestLexTaggedTripleAndHeredocMetadata(t *testing.T) {
+	src := "a = sql\"\"\"select\"\"\"\nb = html<<<HTML\n  <h1>{title}</h1>\n  HTML\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("errs: %v", errs)
+	}
+	if toks[2].Type != "STRING" || toks[2].StringForm != "triple" || toks[2].Lang != "sql" {
+		t.Fatalf("tagged triple token: %#v", toks[2])
+	}
+	if toks[6].Type != "STRING" || toks[6].StringForm != "heredoc" || toks[6].Lang != "html" || toks[6].Marker != "HTML" {
+		t.Fatalf("tagged heredoc token: %#v", toks[6])
+	}
+	if toks[6].Lexeme != "<h1>{title}</h1>\n" {
+		t.Fatalf("heredoc lexeme: %q", toks[6].Lexeme)
+	}
+}
+
+func TestLexRawAndBytesHeredoc(t *testing.T) {
+	src := "a = r<<<REGEX\n  {name}\\d+\n  REGEX\nb = b<<<BYTES\n  hi\\x0a\n  BYTES\n"
+	toks, errs := Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("errs: %v", errs)
+	}
+	if toks[2].StringForm != "raw_heredoc" || toks[2].Lexeme != "{{name}}\\d+\n" {
+		t.Fatalf("raw heredoc token: %#v", toks[2])
+	}
+	if toks[6].Type != "BYTES" || toks[6].StringForm != "bytes_heredoc" || toks[6].Lexeme != "hi\n\n" {
+		t.Fatalf("bytes heredoc token: %#v", toks[6])
+	}
+}
+
 func TestLexTripleQuoteUnterminated(t *testing.T) {
 	_, errs := Lex("x = \"\"\"\n  hello\n")
 	if len(errs) == 0 {

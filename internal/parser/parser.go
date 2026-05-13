@@ -1703,9 +1703,9 @@ func (p *Parser) primary() (ast.Expr, error) {
 		v, _ := strconv.ParseFloat(tok.Lexeme, 64)
 		return &ast.FloatLit{Value: v}, nil
 	case token.STRING:
-		return &ast.StringLit{Value: tok.Lexeme}, nil
+		return &ast.StringLit{Value: tok.Lexeme, Form: tok.StringForm, Lang: tok.Lang, Marker: tok.Marker}, nil
 	case token.BYTES:
-		return &ast.BytesLit{Value: tok.Lexeme}, nil
+		return &ast.BytesLit{Value: tok.Lexeme, Form: tok.StringForm, Marker: tok.Marker}, nil
 	case token.LPAREN:
 		if p.match(token.RPAREN) {
 			if p.match(token.ARROW) {
@@ -2017,7 +2017,7 @@ func (p *Parser) patternValue(bindings map[string]bool) (ast.Expr, error) {
 		return &ast.FloatLit{Value: v}, nil
 	case token.STRING:
 		tok := p.next()
-		return &ast.StringLit{Value: tok.Lexeme}, nil
+		return &ast.StringLit{Value: tok.Lexeme, Form: tok.StringForm, Lang: tok.Lang, Marker: tok.Marker}, nil
 	case token.LBRACKET:
 		return p.arrayPatternValue(bindings)
 	case token.LBRACE:
