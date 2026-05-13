@@ -1,0 +1,104 @@
+class Vector3
+  initialize = x, y, z ->
+    self.x = Vector3.number(x, "x")
+    self.y = Vector3.number(y, "y")
+    self.z = Vector3.number(z, "z")
+
+  static new = x, y, z ->
+    return Vector3(x, y, z)
+
+  static zero = ->
+    return Vector3(0, 0, 0)
+
+  static one = ->
+    return Vector3(1, 1, 1)
+
+  static add = a, b ->
+    Vector3.expect(a, "a")
+    Vector3.expect(b, "b")
+    return Vector3(a.x + b.x, a.y + b.y, a.z + b.z)
+
+  static sub = a, b ->
+    Vector3.expect(a, "a")
+    Vector3.expect(b, "b")
+    return Vector3(a.x - b.x, a.y - b.y, a.z - b.z)
+
+  static scale = v, k ->
+    Vector3.expect(v, "v")
+    Vector3.number(k, "k")
+    return Vector3(v.x * k, v.y * k, v.z * k)
+
+  static div = v, k ->
+    Vector3.expect(v, "v")
+    Vector3.number(k, "k")
+    if k == 0
+      raise "geometry.Vector3.div: divide by zero"
+    return Vector3(v.x / k, v.y / k, v.z / k)
+
+  static dot = a, b ->
+    Vector3.expect(a, "a")
+    Vector3.expect(b, "b")
+    return a.x * b.x + a.y * b.y + a.z * b.z
+
+  static cross = a, b ->
+    Vector3.expect(a, "a")
+    Vector3.expect(b, "b")
+    return Vector3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x)
+
+  static length_squared = v ->
+    Vector3.expect(v, "v")
+    return Vector3.dot(v, v)
+
+  static length = v ->
+    return math_sqrt(Vector3.length_squared(v))
+
+  static distance_squared = a, b ->
+    return Vector3.length_squared(Vector3.sub(a, b))
+
+  static distance = a, b ->
+    return math_sqrt(Vector3.distance_squared(a, b))
+
+  static normalize = v ->
+    geometry_len = Vector3.length(v)
+    if geometry_len == 0
+      return Vector3.zero()
+    return Vector3.div(v, geometry_len)
+
+  static lerp = a, b, t ->
+    Vector3.expect(a, "a")
+    Vector3.expect(b, "b")
+    Vector3.number(t, "t")
+    return Vector3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t)
+
+  static equal? = a, b ->
+    return a.class == Vector3 and b.class == Vector3 and a.x == b.x and a.y == b.y and a.z == b.z
+
+  static nearly_equal? = a, b, epsilon ->
+    Vector3.expect(a, "a")
+    Vector3.expect(b, "b")
+    if epsilon < 0
+      raise "geometry.Vector3.nearly_equal?: epsilon must be non-negative"
+    return Vector3.abs(a.x - b.x) <= epsilon and Vector3.abs(a.y - b.y) <= epsilon and Vector3.abs(a.z - b.z) <= epsilon
+
+  static to_array = v ->
+    Vector3.expect(v, "v")
+    return [v.x, v.y, v.z]
+
+  static from_array = values ->
+    if values.class != Array or values.len() != 3
+      raise "geometry.Vector3.from_array: expected three-number array"
+    return Vector3(values[0], values[1], values[2])
+
+  static expect = value, name ->
+    if value.class != Vector3
+      raise "geometry.Vector3: " + name + " must be a Vector3"
+
+  static number = value, name ->
+    if value.class != Number
+      raise "geometry.Vector3: " + name + " must be a number"
+    return value
+
+  static abs = value ->
+    if value < 0
+      return 0 - value
+    return value

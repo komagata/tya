@@ -1,0 +1,68 @@
+class Circle
+  initialize = x, y, radius ->
+    self.x = Circle.number(x, "x")
+    self.y = Circle.number(y, "y")
+    self.radius = Circle.radius_value(radius)
+
+  static new = x, y, radius ->
+    return Circle(x, y, radius)
+
+  static from_center = center, radius ->
+    Point.expect(center, "center")
+    return Circle(center.x, center.y, radius)
+
+  static center = circle ->
+    Circle.expect(circle, "circle")
+    return Point(circle.x, circle.y)
+
+  static area = circle ->
+    Circle.expect(circle, "circle")
+    return 3.141592653589793 * circle.radius * circle.radius
+
+  static circumference = circle ->
+    Circle.expect(circle, "circle")
+    return 2 * 3.141592653589793 * circle.radius
+
+  static contains_point? = circle, point ->
+    Circle.expect(circle, "circle")
+    Point.expect(point, "point")
+    return Point.distance(Circle.center(circle), point) <= circle.radius
+
+  static intersects_circle? = a, b ->
+    Circle.expect(a, "a")
+    Circle.expect(b, "b")
+    return Point.distance(Circle.center(a), Circle.center(b)) <= a.radius + b.radius
+
+  static intersects_rect? = circle, rect ->
+    Circle.expect(circle, "circle")
+    Rect.expect(rect, "rect")
+    geometry_clamped = Rect.clamp_point(rect, Circle.center(circle))
+    return Circle.contains_point?(circle, geometry_clamped)
+
+  static bounding_rect = circle ->
+    Circle.expect(circle, "circle")
+    return Rect(circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2)
+
+  static translate = circle, vector ->
+    Circle.expect(circle, "circle")
+    if vector.class != Vector2
+      raise "geometry.Circle.translate: vector must be a Vector2"
+    return Circle(circle.x + vector.x, circle.y + vector.y, circle.radius)
+
+  static equal? = a, b ->
+    return a.class == Circle and b.class == Circle and a.x == b.x and a.y == b.y and a.radius == b.radius
+
+  static expect = value, name ->
+    if value.class != Circle
+      raise "geometry.Circle: " + name + " must be a Circle"
+
+  static number = value, name ->
+    if value.class != Number
+      raise "geometry.Circle: " + name + " must be a number"
+    return value
+
+  static radius_value = value ->
+    Circle.number(value, "radius")
+    if value < 0
+      raise "geometry.Circle: radius must be non-negative"
+    return value

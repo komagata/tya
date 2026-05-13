@@ -143,6 +143,31 @@ Operations include `to_hex`, `to_array`, `equal?`, `nearly_equal?`,
 `luminance`, `contrast_ratio`, `with_alpha`, `invert`, `grayscale`, `blend`,
 `over`, `lighten`, and `darken`.
 
+## Geometry Stdlib
+
+The standard library includes a pure Tya `geometry` package for deterministic
+vector and shape calculations.
+
+```tya
+import geometry as geo
+
+p = geo.Point.new(10, 20)
+v = geo.Vector2.normalize(geo.Vector2.new(3, 4))
+r = geo.Rect.new(0, 0, 100, 50)
+```
+
+Public classes are `Vector2`, `Vector3`, `Point`, `Size`, `Rect`, and
+`Circle`. Values are class instances exposing numeric public fields and helpers
+return new instances rather than mutating inputs.
+
+`Vector2` and `Vector3` provide arithmetic, scaling, division, dot products,
+length/distance helpers, normalization, linear interpolation, array conversion,
+and exact/nearly-equal comparison. `Vector3` also provides `cross`.
+
+`Point`, `Size`, `Rect`, and `Circle` provide common layout and collision
+helpers, including rectangle containment/intersection/union and circle
+containment/intersection/bounding-rect operations.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

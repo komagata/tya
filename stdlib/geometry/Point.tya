@@ -1,0 +1,37 @@
+class Point
+  initialize = x, y ->
+    self.x = Point.number(x, "x")
+    self.y = Point.number(y, "y")
+
+  static new = x, y ->
+    return Point(x, y)
+
+  static from_vector = v ->
+    if v.class != Vector2
+      raise "geometry.Point.from_vector: v must be a Vector2"
+    return Point(v.x, v.y)
+
+  static to_vector = p ->
+    Point.expect(p, "p")
+    return Vector2(p.x, p.y)
+
+  static translate = p, v ->
+    Point.expect(p, "p")
+    if v.class != Vector2
+      raise "geometry.Point.translate: v must be a Vector2"
+    return Point(p.x + v.x, p.y + v.y)
+
+  static distance = a, b ->
+    return Vector2.distance(Point.to_vector(a), Point.to_vector(b))
+
+  static equal? = a, b ->
+    return a.class == Point and b.class == Point and a.x == b.x and a.y == b.y
+
+  static expect = value, name ->
+    if value.class != Point
+      raise "geometry.Point: " + name + " must be a Point"
+
+  static number = value, name ->
+    if value.class != Number
+      raise "geometry.Point: " + name + " must be a number"
+    return value

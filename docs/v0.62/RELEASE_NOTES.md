@@ -47,6 +47,8 @@ standard library or runtime.
   duplicate query keys.
 - New `color.Color` stdlib values provide RGBA channels, hex/CSS parsing, named
   colors, conversion helpers, and deterministic color operations.
+- New `geometry` stdlib values provide `Vector2`, `Vector3`, `Point`, `Size`,
+  `Rect`, and `Circle` helpers for reusable spatial calculations.
 
 ## Verification
 

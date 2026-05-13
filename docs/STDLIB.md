@@ -87,6 +87,39 @@ color.to_hex(true)
 color.to_array()
 ```
 
+## `geometry`
+
+```tya
+import geometry as geo
+
+p = geo.Point.new(10, 20)
+v = geo.Vector2.normalize(geo.Vector2.new(3, 4))
+r = geo.Rect.new(0, 0, 100, 50)
+
+if geo.Rect.contains_point?(r, p)
+  print "inside"
+```
+
+The `geometry` package provides class-style values for vectors and simple
+shapes:
+
+- `Vector2` with `x`, `y`
+- `Vector3` with `x`, `y`, `z`
+- `Point` with `x`, `y`
+- `Size` with `width`, `height`
+- `Rect` with `x`, `y`, `width`, `height`
+- `Circle` with `x`, `y`, `radius`
+
+Constructors validate numeric fields. `Size`, `Rect`, and `Circle` reject
+negative dimensions where applicable. Geometry helpers return new instances and
+do not mutate inputs.
+
+Vector helpers include arithmetic, scale/divide, dot/cross products,
+length/distance, normalization, linear interpolation, array conversion, and
+exact/nearly-equal comparison. Shape helpers include point containment,
+intersection, union, expansion, translation, bounding rectangles, and area
+calculations.
+
 ## `math`
 
 ```tya

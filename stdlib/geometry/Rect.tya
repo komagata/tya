@@ -1,0 +1,151 @@
+class Rect
+  initialize = x, y, width, height ->
+    self.x = Rect.number(x, "x")
+    self.y = Rect.number(y, "y")
+    self.width = Rect.dimension(width, "width")
+    self.height = Rect.dimension(height, "height")
+
+  static new = x, y, width, height ->
+    return Rect(x, y, width, height)
+
+  static from_points = a, b ->
+    Point.expect(a, "a")
+    Point.expect(b, "b")
+    geometry_left = Rect.min(a.x, b.x)
+    geometry_top = Rect.min(a.y, b.y)
+    geometry_right = Rect.max(a.x, b.x)
+    geometry_bottom = Rect.max(a.y, b.y)
+    return Rect(geometry_left, geometry_top, geometry_right - geometry_left, geometry_bottom - geometry_top)
+
+  static from_center = center, size ->
+    Point.expect(center, "center")
+    Size.expect(size, "size")
+    return Rect(center.x - size.width / 2, center.y - size.height / 2, size.width, size.height)
+
+  static left = rect ->
+    Rect.expect(rect, "rect")
+    return rect.x
+
+  static right = rect ->
+    Rect.expect(rect, "rect")
+    return rect.x + rect.width
+
+  static top = rect ->
+    Rect.expect(rect, "rect")
+    return rect.y
+
+  static bottom = rect ->
+    Rect.expect(rect, "rect")
+    return rect.y + rect.height
+
+  static center = rect ->
+    Rect.expect(rect, "rect")
+    return Point(rect.x + rect.width / 2, rect.y + rect.height / 2)
+
+  static size = rect ->
+    Rect.expect(rect, "rect")
+    return Size(rect.width, rect.height)
+
+  static area = rect ->
+    Rect.expect(rect, "rect")
+    return rect.width * rect.height
+
+  static empty? = rect ->
+    Rect.expect(rect, "rect")
+    return rect.width == 0 or rect.height == 0
+
+  static contains_point? = rect, point ->
+    Rect.expect(rect, "rect")
+    Point.expect(point, "point")
+    return point.x >= Rect.left(rect) and point.x < Rect.right(rect) and point.y >= Rect.top(rect) and point.y < Rect.bottom(rect)
+
+  static contains_rect? = outer, inner ->
+    Rect.expect(outer, "outer")
+    Rect.expect(inner, "inner")
+    return Rect.left(inner) >= Rect.left(outer) and Rect.right(inner) <= Rect.right(outer) and Rect.top(inner) >= Rect.top(outer) and Rect.bottom(inner) <= Rect.bottom(outer)
+
+  static intersects? = a, b ->
+    Rect.expect(a, "a")
+    Rect.expect(b, "b")
+    return Rect.left(a) < Rect.right(b) and Rect.right(a) > Rect.left(b) and Rect.top(a) < Rect.bottom(b) and Rect.bottom(a) > Rect.top(b)
+
+  static intersection = a, b ->
+    Rect.expect(a, "a")
+    Rect.expect(b, "b")
+    geometry_left = Rect.max(Rect.left(a), Rect.left(b))
+    geometry_top = Rect.max(Rect.top(a), Rect.top(b))
+    geometry_right = Rect.min(Rect.right(a), Rect.right(b))
+    geometry_bottom = Rect.min(Rect.bottom(a), Rect.bottom(b))
+    if geometry_right <= geometry_left or geometry_bottom <= geometry_top
+      return Rect(geometry_left, geometry_top, 0, 0)
+    return Rect(geometry_left, geometry_top, geometry_right - geometry_left, geometry_bottom - geometry_top)
+
+  static union = a, b ->
+    Rect.expect(a, "a")
+    Rect.expect(b, "b")
+    geometry_left = Rect.min(Rect.left(a), Rect.left(b))
+    geometry_top = Rect.min(Rect.top(a), Rect.top(b))
+    geometry_right = Rect.max(Rect.right(a), Rect.right(b))
+    geometry_bottom = Rect.max(Rect.bottom(a), Rect.bottom(b))
+    return Rect(geometry_left, geometry_top, geometry_right - geometry_left, geometry_bottom - geometry_top)
+
+  static expand = rect, amount ->
+    Rect.expect(rect, "rect")
+    Rect.number(amount, "amount")
+    return Rect.inflate(rect, amount, amount)
+
+  static translate = rect, vector ->
+    Rect.expect(rect, "rect")
+    if vector.class != Vector2
+      raise "geometry.Rect.translate: vector must be a Vector2"
+    return Rect(rect.x + vector.x, rect.y + vector.y, rect.width, rect.height)
+
+  static inflate = rect, dx, dy ->
+    Rect.expect(rect, "rect")
+    Rect.number(dx, "dx")
+    Rect.number(dy, "dy")
+    geometry_width = rect.width + dx * 2
+    geometry_height = rect.height + dy * 2
+    if geometry_width < 0 or geometry_height < 0
+      raise "geometry.Rect.inflate: resulting size is negative"
+    return Rect(rect.x - dx, rect.y - dy, geometry_width, geometry_height)
+
+  static clamp_point = rect, point ->
+    Rect.expect(rect, "rect")
+    Point.expect(point, "point")
+    return Point(Rect.clamp_number(point.x, Rect.left(rect), Rect.right(rect)), Rect.clamp_number(point.y, Rect.top(rect), Rect.bottom(rect)))
+
+  static equal? = a, b ->
+    return a.class == Rect and b.class == Rect and a.x == b.x and a.y == b.y and a.width == b.width and a.height == b.height
+
+  static expect = value, name ->
+    if value.class != Rect
+      raise "geometry.Rect: " + name + " must be a Rect"
+
+  static number = value, name ->
+    if value.class != Number
+      raise "geometry.Rect: " + name + " must be a number"
+    return value
+
+  static dimension = value, name ->
+    Rect.number(value, name)
+    if value < 0
+      raise "geometry.Rect: " + name + " must be non-negative"
+    return value
+
+  static min = a, b ->
+    if a < b
+      return a
+    return b
+
+  static max = a, b ->
+    if a > b
+      return a
+    return b
+
+  static clamp_number = value, lo, hi ->
+    if value < lo
+      return lo
+    if value > hi
+      return hi
+    return value

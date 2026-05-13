@@ -1,0 +1,111 @@
+class Vector2
+  initialize = x, y ->
+    self.x = Vector2.number(x, "x")
+    self.y = Vector2.number(y, "y")
+
+  static new = x, y ->
+    return Vector2(x, y)
+
+  static zero = ->
+    return Vector2(0, 0)
+
+  static one = ->
+    return Vector2(1, 1)
+
+  static add = a, b ->
+    Vector2.expect(a, "a")
+    Vector2.expect(b, "b")
+    return Vector2(a.x + b.x, a.y + b.y)
+
+  static sub = a, b ->
+    Vector2.expect(a, "a")
+    Vector2.expect(b, "b")
+    return Vector2(a.x - b.x, a.y - b.y)
+
+  static scale = v, k ->
+    Vector2.expect(v, "v")
+    Vector2.number(k, "k")
+    return Vector2(v.x * k, v.y * k)
+
+  static div = v, k ->
+    Vector2.expect(v, "v")
+    Vector2.number(k, "k")
+    if k == 0
+      raise "geometry.Vector2.div: divide by zero"
+    return Vector2(v.x / k, v.y / k)
+
+  static dot = a, b ->
+    Vector2.expect(a, "a")
+    Vector2.expect(b, "b")
+    return a.x * b.x + a.y * b.y
+
+  static length_squared = v ->
+    Vector2.expect(v, "v")
+    return Vector2.dot(v, v)
+
+  static length = v ->
+    return math_sqrt(Vector2.length_squared(v))
+
+  static distance_squared = a, b ->
+    return Vector2.length_squared(Vector2.sub(a, b))
+
+  static distance = a, b ->
+    return math_sqrt(Vector2.distance_squared(a, b))
+
+  static normalize = v ->
+    geometry_len = Vector2.length(v)
+    if geometry_len == 0
+      return Vector2.zero()
+    return Vector2.div(v, geometry_len)
+
+  static lerp = a, b, t ->
+    Vector2.expect(a, "a")
+    Vector2.expect(b, "b")
+    Vector2.number(t, "t")
+    return Vector2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+
+  static clamp = v, min_v, max_v ->
+    Vector2.expect(v, "v")
+    Vector2.expect(min_v, "min_v")
+    Vector2.expect(max_v, "max_v")
+    return Vector2(Vector2.clamp_number(v.x, min_v.x, max_v.x), Vector2.clamp_number(v.y, min_v.y, max_v.y))
+
+  static equal? = a, b ->
+    return a.class == Vector2 and b.class == Vector2 and a.x == b.x and a.y == b.y
+
+  static nearly_equal? = a, b, epsilon ->
+    Vector2.expect(a, "a")
+    Vector2.expect(b, "b")
+    if epsilon < 0
+      raise "geometry.Vector2.nearly_equal?: epsilon must be non-negative"
+    return Vector2.abs(a.x - b.x) <= epsilon and Vector2.abs(a.y - b.y) <= epsilon
+
+  static to_array = v ->
+    Vector2.expect(v, "v")
+    return [v.x, v.y]
+
+  static from_array = values ->
+    if values.class != Array or values.len() != 2
+      raise "geometry.Vector2.from_array: expected two-number array"
+    return Vector2(values[0], values[1])
+
+  static expect = value, name ->
+    if value.class != Vector2
+      raise "geometry.Vector2: " + name + " must be a Vector2"
+
+  static number = value, name ->
+    if value.class != Number
+      raise "geometry.Vector2: " + name + " must be a number"
+    return value
+
+  static clamp_number = value, lo, hi ->
+    if value < lo
+      return lo
+    if value > hi
+      return hi
+    return value
+
+  static abs = value ->
+    if value < 0
+      return 0 - value
+    return value

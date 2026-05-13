@@ -1,0 +1,34 @@
+class Size
+  initialize = width, height ->
+    self.width = Size.dimension(width, "width")
+    self.height = Size.dimension(height, "height")
+
+  static new = width, height ->
+    return Size(width, height)
+
+  static zero = ->
+    return Size(0, 0)
+
+  static area = size ->
+    Size.expect(size, "size")
+    return size.width * size.height
+
+  static aspect_ratio = size ->
+    Size.expect(size, "size")
+    if size.height == 0
+      raise "geometry.Size.aspect_ratio: height is zero"
+    return size.width / size.height
+
+  static equal? = a, b ->
+    return a.class == Size and b.class == Size and a.width == b.width and a.height == b.height
+
+  static expect = value, name ->
+    if value.class != Size
+      raise "geometry.Size: " + name + " must be a Size"
+
+  static dimension = value, name ->
+    if value.class != Number
+      raise "geometry.Size: " + name + " must be a number"
+    if value < 0
+      raise "geometry.Size: " + name + " must be non-negative"
+    return value
