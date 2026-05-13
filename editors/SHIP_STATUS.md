@@ -39,12 +39,20 @@ from repository changes alone.
 scripts/verify_editor_assets.sh
 ```
 
+Last observed GitHub Actions verification:
+
+```text
+Editor assets / main / 25769509633 / success / 2026-05-13T00:01:51Z
+```
+
 ## Published Repository Evidence
 
 - Main commit with editor assets: `014d87f`
 - Main commit with Node 24 CI opt-in: `3102793`
 - Main commit with Tree-sitter sample parse verification: `f2ffb11`
-- GitHub Actions `Editor assets` run for `f2ffb11`: `25769086945`, status:
+- Main commit with manual VS Code publish workflow: `94ecbdb`
+- Main commit with publishing follow-up issues: `d8af793`
+- Latest observed GitHub Actions `Editor assets` run: `25769509633`, status:
   success.
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`
