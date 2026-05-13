@@ -4,9 +4,17 @@
 cd $REPO
 exec go run ./cmd/tya run $WORK/main.tya
 stdout 'hello tya embed'
+stdout 'data.txt'
+stdout 'text/plain; charset=utf-8'
+stdout 'hash len: 64'
 
 -- data.txt --
 hello tya embed
 -- main.tya --
 embed "data.txt" as payload
 print(bytes_text(payload))
+
+embed "data.txt" as meta with { hash: true, gzip: true }
+print(meta["path"])
+print(meta["content_type"])
+print("hash len: " + meta["hash"].len().to_s())

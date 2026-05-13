@@ -484,6 +484,11 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			if !valueNameRE.MatchString(n.Name) || strings.HasPrefix(n.Name, "_") {
 				return fmt.Errorf("%d:%d: invalid embed binding %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 			}
+			for key := range n.Transforms {
+				if key != "gzip" && key != "hash" && key != "minify" {
+					return fmt.Errorf("%d:%d: [TYA-E0612] unknown embed transform %s", n.PathTok.Line, n.PathTok.Col, key)
+				}
+			}
 			scope.define(n.Name, kindUnknown)
 		case *ast.AssignStmt:
 			for _, value := range n.Values {

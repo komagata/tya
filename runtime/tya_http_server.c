@@ -491,6 +491,62 @@ static void write_simple_response(int fd, int status, const char *body) {
   write_response(fd, resp);
 }
 
+static const char *static_content_type_for_path(const char *path) {
+  if (path == NULL) return "application/octet-stream";
+  int n = (int)strlen(path);
+  if (n >= 5 && strcmp(path + n - 5, ".html") == 0) return "text/html; charset=utf-8";
+  if (n >= 4 && strcmp(path + n - 4, ".css") == 0) return "text/css; charset=utf-8";
+  if (n >= 3 && strcmp(path + n - 3, ".js") == 0) return "application/javascript; charset=utf-8";
+  if (n >= 5 && strcmp(path + n - 5, ".json") == 0) return "application/json";
+  if (n >= 4 && strcmp(path + n - 4, ".svg") == 0) return "image/svg+xml";
+  return "application/octet-stream";
+}
+
+static TyaValue build_static_response(TyaValue route, TyaValue req) {
+  TyaValue asset = tya_dict_get(route, tya_string("static_asset"), tya_nil(), true);
+  TyaValue route_path = tya_dict_get(route, tya_string("path"), tya_nil(), true);
+  TyaValue content_type = route_path.kind == TYA_STRING ? tya_string(static_content_type_for_path(route_path.string)) : tya_string("application/octet-stream");
+  TyaValue hashed = tya_dict_get(route, tya_string("static_hashed"), tya_bool(false), true);
+
+  TyaValue body = asset;
+  TyaValue headers = tya_dict(NULL, 0);
+  if (content_type.kind == TYA_STRING) {
+    tya_dict_set(headers, tya_string("Content-Type"), content_type);
+  }
+
+  if (asset.kind == TYA_DICT && asset.dict != NULL) {
+    body = tya_dict_get(asset, tya_string("content"), tya_nil(), true);
+    TyaValue hash = tya_dict_get(asset, tya_string("hash"), tya_nil(), true);
+    if (hash.kind == TYA_STRING) {
+      tya_dict_set(headers, tya_string("ETag"), hash);
+    }
+    TyaValue asset_ct = tya_dict_get(asset, tya_string("content_type"), tya_nil(), true);
+    if (asset_ct.kind == TYA_STRING) {
+      tya_dict_set(headers, tya_string("Content-Type"), asset_ct);
+    }
+    TyaValue req_headers = tya_dict_get(req, tya_string("headers"), tya_nil(), true);
+    TyaValue accept = tya_dict_get(req_headers, tya_string("accept-encoding"), tya_nil(), true);
+    TyaValue gzip_body = tya_dict_get(asset, tya_string("gzip"), tya_nil(), true);
+    if (accept.kind == TYA_STRING && gzip_body.kind == TYA_BYTES &&
+        strstr(accept.string, "gzip") != NULL) {
+      body = gzip_body;
+      tya_dict_set(headers, tya_string("Content-Encoding"), tya_string("gzip"));
+    }
+  }
+
+  if (hashed.kind == TYA_BOOL && hashed.boolean) {
+    tya_dict_set(headers, tya_string("Cache-Control"), tya_string("public, max-age=31536000, immutable"));
+  } else {
+    tya_dict_set(headers, tya_string("Cache-Control"), tya_string("no-cache"));
+  }
+
+  TyaValue resp = tya_dict(NULL, 0);
+  tya_dict_set(resp, tya_string("status"), tya_number(200));
+  tya_dict_set(resp, tya_string("headers"), headers);
+  tya_dict_set(resp, tya_string("body"), body);
+  return resp;
+}
+
 // handle_connection reads one HTTP/1.1 request, dispatches it to
 // the matching route, and writes the response. Closes fd on exit.
 static void handle_connection(int fd, TyaValue routes) {
@@ -556,6 +612,7 @@ static void handle_connection(int fd, TyaValue routes) {
   }
   TyaValue matched_handler = tya_nil();
   TyaValue matched_params = tya_nil();
+  TyaValue matched_route = tya_nil();
   char *path_cstr = dup_bytes(path_start, path_only_len);
   char *method_cstr = dup_bytes(method, method_len);
   for (int i = 0; i < routes.array->len; i++) {
@@ -571,13 +628,15 @@ static void handle_connection(int fd, TyaValue routes) {
     if (path_match(r_path.string, path_cstr, params)) {
       matched_handler = r_handler;
       matched_params = params;
+      matched_route = r;
       break;
     }
   }
   free(method_cstr);
   free(path_cstr);
 
-  if (matched_handler.kind != TYA_FUNCTION) {
+  TyaValue static_asset = tya_dict_get(matched_route, tya_string("static_asset"), tya_nil(), true);
+  if (matched_handler.kind != TYA_FUNCTION && static_asset.kind == TYA_NIL) {
     write_simple_response(fd, 404, "Not Found");
     buf_free(&headers_buf);
     buf_free(&body_buf);
@@ -595,7 +654,7 @@ static void handle_connection(int fd, TyaValue routes) {
                                     headers_text, headers_text_len,
                                     (const uint8_t *)body_buf.buf, body_buf.len,
                                     matched_params);
-  TyaValue resp = tya_call1(matched_handler, req);
+  TyaValue resp = matched_handler.kind == TYA_FUNCTION ? tya_call1(matched_handler, req) : build_static_response(matched_route, req);
   if (resp.kind != TYA_DICT) {
     write_simple_response(fd, 500, "Handler returned non-dict");
   } else {

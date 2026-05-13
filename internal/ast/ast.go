@@ -79,10 +79,11 @@ func (s *ImportStmt) BindingName() string {
 // file's directory and whose values are bytes. See
 // docs/v0.57/SPEC.md.
 type EmbedStmt struct {
-	Path    string // raw pattern, "/" separated
-	PathTok token.Token
-	Name    string // binding name
-	NameTok token.Token
+	Path       string // raw pattern, "/" separated
+	PathTok    token.Token
+	Name       string // binding name
+	NameTok    token.Token
+	Transforms map[string]bool
 }
 
 func (*EmbedStmt) stmt() {}

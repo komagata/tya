@@ -244,7 +244,20 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		}
 		return nil
 	case *ast.EmbedStmt:
-		u.emitStmtLine(s, fmt.Sprintf("embed %q as %s", n.Path, n.Name))
+		body := fmt.Sprintf("embed %q as %s", n.Path, n.Name)
+		if len(n.Transforms) > 0 {
+			keys := make([]string, 0, len(n.Transforms))
+			for k := range n.Transforms {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			parts := make([]string, 0, len(keys))
+			for _, k := range keys {
+				parts = append(parts, fmt.Sprintf("%s: %v", k, n.Transforms[k]))
+			}
+			body += " with { " + strings.Join(parts, ", ") + " }"
+		}
+		u.emitStmtLine(s, body)
 		return nil
 	case *ast.AssignStmt:
 		return u.assignStmt(n)

@@ -1,7 +1,12 @@
 package codegen
 
 import (
+	"bytes"
+	"compress/gzip"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"mime"
 	"os"
 	"path"
 	"path/filepath"
@@ -51,6 +56,10 @@ func (g *cgen) emitEmbedSingle(stmt *ast.EmbedStmt, baseDir string) error {
 			stmt.PathTok.Line, stmt.PathTok.Col)
 	}
 	target := cName(stmt.Name)
+	if len(stmt.Transforms) > 0 {
+		g.line(fmt.Sprintf("%s = %s;", target, embedMetadataC(stmt.Path, data, stmt.Transforms)))
+		return nil
+	}
 	g.line(fmt.Sprintf("%s = %s;", target, bytesLitC(data)))
 	return nil
 }
@@ -69,6 +78,7 @@ func (g *cgen) emitEmbedGlob(stmt *ast.EmbedStmt, baseDir string) error {
 	}
 	sort.Strings(matches)
 	var entries []string
+	hashedPaths := map[string]string{}
 	for _, rel := range matches {
 		full := filepath.Join(baseDir, filepath.FromSlash(rel))
 		data, rerr := os.ReadFile(full)
@@ -77,12 +87,96 @@ func (g *cgen) emitEmbedGlob(stmt *ast.EmbedStmt, baseDir string) error {
 				fmt.Sprintf("embed read failed for %s: %v", rel, rerr),
 				stmt.PathTok.Line, stmt.PathTok.Col)
 		}
-		entries = append(entries, fmt.Sprintf("{%q, %s}", rel, bytesLitC(data)))
+		value := bytesLitC(data)
+		if len(stmt.Transforms) > 0 {
+			if stmt.Transforms["hash"] {
+				hashedPath := embedHashedPath(rel, data, stmt.Transforms)
+				if other, ok := hashedPaths[hashedPath]; ok {
+					return codegenError("TYA-E0613",
+						fmt.Sprintf("embed hashed path collision: %s and %s both produce %s", other, rel, hashedPath),
+						stmt.PathTok.Line, stmt.PathTok.Col)
+				}
+				hashedPaths[hashedPath] = rel
+			}
+			value = embedMetadataC(rel, data, stmt.Transforms)
+		}
+		entries = append(entries, fmt.Sprintf("{%q, %s}", rel, value))
 	}
 	target := cName(stmt.Name)
 	g.line(fmt.Sprintf("%s = tya_dict((TyaDictEntry[]){%s}, %d);",
 		target, strings.Join(entries, ", "), len(entries)))
 	return nil
+}
+
+func embedMetadataC(rel string, data []byte, transforms map[string]bool) string {
+	content := data
+	if transforms["minify"] {
+		content = minifyAsset(rel, content)
+	}
+	hash := ""
+	hashedPath := rel
+	if transforms["hash"] {
+		sum := sha256.Sum256(content)
+		hash = hex.EncodeToString(sum[:])
+		hashedPath = fingerprintPath(rel, hash[:16])
+	}
+	gzipExpr := "tya_nil()"
+	gzipSize := "tya_nil()"
+	if transforms["gzip"] {
+		var buf bytes.Buffer
+		zw := gzip.NewWriter(&buf)
+		_, _ = zw.Write(content)
+		_ = zw.Close()
+		gzipExpr = bytesLitC(buf.Bytes())
+		gzipSize = fmt.Sprintf("tya_number(%d)", buf.Len())
+	}
+	hashExpr := "tya_nil()"
+	if hash != "" {
+		hashExpr = fmt.Sprintf("tya_string(%q)", hash)
+	}
+	ct := mime.TypeByExtension(strings.ToLower(filepath.Ext(rel)))
+	if ct == "" {
+		ct = "application/octet-stream"
+	}
+	entries := []string{
+		fmt.Sprintf("{%q, tya_string(%q)}", "path", rel),
+		fmt.Sprintf("{%q, %s}", "content", bytesLitC(content)),
+		fmt.Sprintf("{%q, tya_number(%d)}", "size", len(data)),
+		fmt.Sprintf("{%q, %s}", "hash", hashExpr),
+		fmt.Sprintf("{%q, tya_string(%q)}", "hashed_path", hashedPath),
+		fmt.Sprintf("{%q, %s}", "gzip", gzipExpr),
+		fmt.Sprintf("{%q, %s}", "gzip_size", gzipSize),
+		fmt.Sprintf("{%q, tya_string(%q)}", "content_type", ct),
+		fmt.Sprintf("{%q, tya_nil()}", "encoding"),
+	}
+	return fmt.Sprintf("tya_dict((TyaDictEntry[]){%s}, %d)", strings.Join(entries, ", "), len(entries))
+}
+
+func embedHashedPath(rel string, data []byte, transforms map[string]bool) string {
+	content := data
+	if transforms["minify"] {
+		content = minifyAsset(rel, content)
+	}
+	sum := sha256.Sum256(content)
+	hash := hex.EncodeToString(sum[:])
+	return fingerprintPath(rel, hash[:16])
+}
+
+func fingerprintPath(rel, prefix string) string {
+	ext := path.Ext(rel)
+	base := strings.TrimSuffix(rel, ext)
+	return base + "." + prefix + ext
+}
+
+func minifyAsset(rel string, data []byte) []byte {
+	ext := strings.ToLower(path.Ext(rel))
+	switch ext {
+	case ".html", ".css", ".js", ".json", ".svg":
+		fields := strings.Fields(string(data))
+		return []byte(strings.Join(fields, " "))
+	default:
+		return data
+	}
 }
 
 // bytesLitC renders data as a C expression returning a TyaValue
@@ -148,8 +242,8 @@ func embedGlob(baseDir, pattern string) ([]string, error) {
 // rule: split on `**`, walk from the prefix root, and apply the
 // remaining suffix as a glob against each candidate file.
 //
-//   "static/**"        → walk static/, accept every file.
-//   "assets/**/*.png"  → walk assets/, accept files matching *.png.
+//	"static/**"        → walk static/, accept every file.
+//	"assets/**/*.png"  → walk assets/, accept files matching *.png.
 func embedGlobRecursive(baseDir, pattern string) ([]string, error) {
 	idx := strings.Index(pattern, "**")
 	prefix := strings.TrimRight(pattern[:idx], "/")

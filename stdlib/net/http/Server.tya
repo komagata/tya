@@ -24,6 +24,40 @@ class Server
     push(self.routes, { method: "DELETE", path: path, handler: handler })
     self
 
+  static = prefix, assets ->
+    for entry in assets.entries()
+      path = entry[0]
+      asset = entry[1]
+      if asset.class == Dict
+        self.static_one(prefix, path, asset, false)
+        hashed = asset["hashed_path"]
+        if hashed != nil and hashed != path
+          self.static_one(prefix, hashed, asset, true)
+      else
+        self.static_one(prefix, path, asset, false)
+    self
+
+  static_one = prefix, path, asset, hashed_route ->
+    self.routes.push({
+      method: "GET",
+      path: prefix + "/" + path,
+      static_asset: asset,
+      static_hashed: hashed_route
+    })
+
+  content_type = path ->
+    if path.ends_with?(".html")
+      return "text/html; charset=utf-8"
+    if path.ends_with?(".css")
+      return "text/css; charset=utf-8"
+    if path.ends_with?(".js")
+      return "application/javascript; charset=utf-8"
+    if path.ends_with?(".json")
+      return "application/json"
+    if path.ends_with?(".svg")
+      return "image/svg+xml"
+    return "application/octet-stream"
+
   # run binds `port` (0 = OS picks a free port) and enters the
   # accept loop. Blocks forever; the only ways out are a fatal
   # error or SIGINT.

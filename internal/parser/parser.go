@@ -505,10 +505,37 @@ func (p *Parser) embedStmt() (ast.Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
+	transforms := map[string]bool{}
+	if p.at(token.IDENT) && p.peek().Lexeme == "with" {
+		p.next()
+		if !p.match(token.LBRACE) {
+			return nil, p.err("expected transform dictionary after embed with")
+		}
+		for !p.at(token.RBRACE) && !p.at(token.EOF) {
+			keyTok, err := p.expectName("expected embed transform key")
+			if err != nil {
+				return nil, err
+			}
+			if !p.match(token.COLON) {
+				return nil, p.err("expected ':' after embed transform key")
+			}
+			if !p.at(token.IDENT) || (p.peek().Lexeme != "true" && p.peek().Lexeme != "false") {
+				return nil, p.err("embed transform values must be boolean literals")
+			}
+			valueTok := p.next()
+			transforms[keyTok.Lexeme] = valueTok.Lexeme == "true"
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+		if !p.match(token.RBRACE) {
+			return nil, p.err("expected '}' after embed transform dictionary")
+		}
+	}
 	if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
 		return nil, p.err("expected newline after embed")
 	}
-	return &ast.EmbedStmt{Path: pathTok.Lexeme, PathTok: pathTok, Name: nameTok.Lexeme, NameTok: nameTok}, nil
+	return &ast.EmbedStmt{Path: pathTok.Lexeme, PathTok: pathTok, Name: nameTok.Lexeme, NameTok: nameTok, Transforms: transforms}, nil
 }
 
 func (p *Parser) moduleDecl() (ast.Stmt, error) {
@@ -627,7 +654,7 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		// as the legacy `@@` prefix; both forms coexist during the
 		// transition.
 		isStaticMember := false
-		if p.at(token.IDENT) && p.peek().Lexeme == "static" {
+		if p.at(token.IDENT) && p.peek().Lexeme == "static" && p.peekN(1).Type != token.ASSIGN {
 			isStaticMember = true
 			p.next()
 		}

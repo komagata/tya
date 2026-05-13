@@ -5,6 +5,12 @@ cd $REPO
 exec go run ./cmd/tya run $WORK/main.tya
 stdout 'static/css/main.css'
 stdout 'static/index.html'
+stdout 'static/css/main\.[0-9a-f]{16}\.css'
+stdout 'text/html; charset=utf-8'
+
+exec go run ./cmd/tya embed --list --format=json $WORK/main.tya
+stdout '"binding": "packed"'
+stdout '"source_path": "static/index.html"'
 
 -- static/index.html --
 <h1>hi</h1>
@@ -14,3 +20,10 @@ body{}
 embed "static/**" as assets
 for path, _ of assets
   print(path)
+
+embed "static/**" as packed with { gzip: true, hash: true, minify: true }
+for path, asset of packed
+  if path == "static/css/main.css"
+    print(asset["hashed_path"])
+  if path == "static/index.html"
+    print(asset["content_type"])

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"tya/internal/ast"
 	"tya/internal/checker"
 	"tya/internal/codegen"
 	"tya/internal/cover"
@@ -164,6 +166,12 @@ func main() {
 		return
 	case "cover":
 		if err := coverCommand(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "embed":
+		if err := embedCommand(os.Args[2:]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -1044,6 +1052,162 @@ func coverCommand(args []string) error {
 		return cover.RenderJSON(os.Stdout, prof, profilePath, version)
 	}
 	return cover.RenderText(os.Stdout, summaries)
+}
+
+func embedCommand(args []string) error {
+	format := cliFormat
+	list := false
+	file := ""
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		switch {
+		case a == "--list":
+			list = true
+		case a == "--format":
+			if i+1 >= len(args) {
+				return fmt.Errorf("missing value for --format")
+			}
+			f, err := diag.ParseFormat(args[i+1])
+			if err != nil {
+				return err
+			}
+			format = f
+			i++
+		case strings.HasPrefix(a, "--format="):
+			f, err := diag.ParseFormat(strings.TrimPrefix(a, "--format="))
+			if err != nil {
+				return err
+			}
+			format = f
+		default:
+			file = a
+		}
+	}
+	if !list {
+		return fmt.Errorf("usage: tya embed --list [--format=json] <file.tya>")
+	}
+	if file == "" {
+		return fmt.Errorf("missing file for tya embed --list")
+	}
+	items, err := collectEmbedList(file)
+	if err != nil {
+		return err
+	}
+	if format == diag.FormatJSON {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		return enc.Encode(items)
+	}
+	fmt.Fprintf(os.Stdout, "%-16s %-30s %-30s %8s %-20s\n", "Binding", "Source", "Output", "Size", "Transforms")
+	for _, item := range items {
+		fmt.Fprintf(os.Stdout, "%-16s %-30s %-30s %8d %-20s\n", item.Binding, item.SourcePath, item.OutputPath, item.Size, strings.Join(item.Transforms, ","))
+	}
+	return nil
+}
+
+type embedListItem struct {
+	Binding    string   `json:"binding"`
+	SourcePath string   `json:"source_path"`
+	OutputPath string   `json:"output_path"`
+	Size       int64    `json:"size"`
+	Transforms []string `json:"transforms"`
+}
+
+func collectEmbedList(file string) ([]embedListItem, error) {
+	raw, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	toks, errs := lexer.Lex(string(raw))
+	if len(errs) > 0 {
+		return nil, errs[0]
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		return nil, err
+	}
+	base := filepath.Dir(file)
+	var out []embedListItem
+	for _, stmt := range prog.Stmts {
+		embed, ok := stmt.(*ast.EmbedStmt)
+		if !ok {
+			continue
+		}
+		matches := []string{embed.Path}
+		if strings.ContainsAny(embed.Path, "*?") {
+			hits, err := embedListMatches(base, embed.Path)
+			if err != nil {
+				return nil, err
+			}
+			matches = hits
+		}
+		transforms := embedTransforms(embed.Transforms)
+		for _, rel := range matches {
+			info, _ := os.Stat(filepath.Join(base, filepath.FromSlash(rel)))
+			size := int64(0)
+			if info != nil {
+				size = info.Size()
+			}
+			out = append(out, embedListItem{Binding: embed.Name, SourcePath: rel, OutputPath: rel, Size: size, Transforms: transforms})
+		}
+	}
+	return out, nil
+}
+
+func embedListMatches(base, pattern string) ([]string, error) {
+	if !strings.Contains(pattern, "**") {
+		full := filepath.Join(base, filepath.FromSlash(pattern))
+		hits, err := filepath.Glob(full)
+		if err != nil {
+			return nil, err
+		}
+		out := []string{}
+		for _, hit := range hits {
+			if info, err := os.Stat(hit); err == nil && !info.IsDir() {
+				if rel, err := filepath.Rel(base, hit); err == nil {
+					out = append(out, filepath.ToSlash(rel))
+				}
+			}
+		}
+		sort.Strings(out)
+		return out, nil
+	}
+
+	prefix := strings.TrimSuffix(pattern[:strings.Index(pattern, "**")], "/")
+	root := filepath.Join(base, filepath.FromSlash(prefix))
+	out := []string{}
+	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(base, path)
+		if err != nil {
+			return err
+		}
+		out = append(out, filepath.ToSlash(rel))
+		return nil
+	})
+	if os.IsNotExist(err) {
+		return []string{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(out)
+	return out, nil
+}
+
+func embedTransforms(m map[string]bool) []string {
+	out := []string{}
+	for _, k := range []string{"minify", "hash", "gzip"} {
+		if m[k] {
+			out = append(out, k)
+		}
+	}
+	return out
 }
 
 func synthesizeTestSuite(files []string) (string, error) {
