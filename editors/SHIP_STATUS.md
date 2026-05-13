@@ -18,6 +18,8 @@ Objective: ship syntax coloring for major editors.
 | Emacs syntax coloring exists | `editors/emacs/tya-mode.el` |
 | MELPA submission asset exists | `editors/emacs/melpa-recipe` |
 | GitHub Linguist submission assets exist | `editors/github-linguist/languages.yml.example`, `editors/tree-sitter-tya/` |
+| Standalone Tree-sitter grammar repository exists | https://github.com/komagata/tree-sitter-tya |
+| Tree-sitter grammar has an allowed Linguist license | `editors/tree-sitter-tya/LICENSE`, `editors/tree-sitter-tya/package.json`, `editors/tree-sitter-tya/tree-sitter.json` use MIT |
 | Tree-sitter grammar generates | `tree-sitter generate` in `editors/tree-sitter-tya` |
 | Manual editor asset bundle is published | GitHub Release `editors-assets-v0.61.0` with `tya-editor-assets-v0.61.0.tar.gz` |
 | Repository validation covers editor assets | `tests/editor_assets_test.go` |
@@ -33,7 +35,7 @@ from repository changes alone.
 | Publish VS Code support to Marketplace | Marketplace publisher access and `VSCE_PAT` / `vsce login`; tracked by `komagata/tya#1` |
 | Publish VS Code support to Open VSX | Open VSX namespace access and `OVSX_PAT` / login; tracked by `komagata/tya#1` |
 | Publish Emacs mode to MELPA | Pull request `melpa/melpa#10013` is open; maintainer review / merge pending; tracked by `komagata/tya#2` |
-| Register Tree-sitter grammar with GitHub Linguist | Blocked before PR: Linguist requires a syntax grammar with an allowed license (`apache-2.0`, `bsd-2-clause`, `bsd-3-clause`, `cc0-1.0`, `isc`, `mit`, `mpl-2.0`, `ncsa`, `permissive`, `unlicense`, `wtfpl`, or `zlib`). The Tya repository currently has no project license, and the editor grammar metadata is `UNLICENSED`; tracked by `komagata/tya#3`. |
+| Register Tree-sitter grammar with GitHub Linguist | Blocked before PR: GitHub code search for `extension:tya -is:fork` reports 124 results, below Linguist's new-language usage threshold; tracked by `komagata/tya#3`. |
 
 ## Last Local Verification
 
@@ -56,6 +58,7 @@ Editor assets / main / 25769943202 / success / 2026-05-13T00:14:24Z
 - Main commit with publishing follow-up issues: `d8af793`
 - Main commit with VS Code manual-install release docs: `fe93c82`
 - Main commit with manual editor asset bundle docs: `3aad8f2`
+- Main commit licensing the Tree-sitter grammar as MIT: `018f8a6`
 - Latest observed GitHub Actions `Editor assets` run: `25769943202`, status:
   success.
 - VS Code manual-install release:
@@ -67,4 +70,5 @@ Editor assets / main / 25769943202 / success / 2026-05-13T00:14:24Z
   (`tya-editor-assets-v0.61.0.tar.gz`, sha256
   `87e2c78cf2d5a1fc224780d1f0db1dc2870ae008fcd85e584bd0159af49c8f8f`)
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
+- Standalone Tree-sitter grammar repository: https://github.com/komagata/tree-sitter-tya
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`

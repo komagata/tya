@@ -82,13 +82,13 @@ Assets:
 - `editors/tree-sitter-tya/`
 - `editors/syntax-sample.tya`
 - `editors/github-linguist/languages.yml.example`
+- https://github.com/komagata/tree-sitter-tya
 
 Submit a pull request to `github-linguist/linguist` adding the language entry
 and grammar wiring required by the current Linguist contribution process.
 
-Blocking decision: Linguist only accepts grammars with an allowed license
-(`apache-2.0`, `bsd-2-clause`, `bsd-3-clause`, `cc0-1.0`, `isc`, `mit`,
-`mpl-2.0`, `ncsa`, `permissive`, `unlicense`, `wtfpl`, or `zlib`). The Tya
-repository currently has no project license and the editor grammar is marked
-`UNLICENSED`, so the Linguist PR should wait until the grammar license is
-explicitly decided.
+Current blocker: Linguist requires sufficient in-the-wild usage for new
+languages. GitHub code search for `extension:tya -is:fork` reported 124 results
+on 2026-05-13, below Linguist's threshold for a new language PR. The
+Tree-sitter grammar itself is MIT licensed and available as a standalone public
+repository.
