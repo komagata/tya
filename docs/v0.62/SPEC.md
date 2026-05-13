@@ -215,6 +215,28 @@ Diagnostics use structured dictionaries with `severity`, `code`, `title`,
 instead of panicking. `Format.unparse(Parser.parse(source)["program"])`
 provides deterministic canonical output for supported ASTs.
 
+## Binary Stdlib
+
+The standard library includes `binary.Reader` and `binary.Writer` for
+endian-aware structured access to `bytes` values.
+
+```tya
+import binary as binary
+
+reader = binary.Reader.new(b"\x34\x12", { endian: "little" })
+value = reader.read_u16()
+
+writer = binary.Writer.new(nil)
+writer.write_u16(value)
+out = writer.bytes()
+```
+
+The default endian is big-endian. `{ endian: "little" }` switches an instance
+default, and `_le` / `_be` method suffixes override the default for a single
+operation. Readers support cursor movement, remaining/eof checks, byte slices,
+u8/i8/u16/i16/u32/i32, and f32/f64. Writers support the same numeric widths and
+return `self` from write methods.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

@@ -3496,6 +3496,14 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_file_read_bytes(%s)", 1)
 	case "file_write_bytes":
 		return emit("tya_file_write_bytes(%s, %s)", 2)
+	case "binary_read_f32":
+		return emit("tya_binary_read_f32(%s, %s, %s)", 3)
+	case "binary_read_f64":
+		return emit("tya_binary_read_f64(%s, %s, %s)", 3)
+	case "binary_write_f32":
+		return emit("tya_binary_write_f32(%s, %s)", 2)
+	case "binary_write_f64":
+		return emit("tya_binary_write_f64(%s, %s)", 2)
 	case "stderr_write":
 		return emit("tya_stderr_write(%s)", 1)
 	case "file_append":

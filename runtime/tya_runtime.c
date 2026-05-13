@@ -4006,6 +4006,89 @@ TyaValue tya_file_write_bytes(TyaValue path, TyaValue b) {
   return tya_nil();
 }
 
+static bool tya_binary_little(TyaValue endian) {
+  return endian.kind == TYA_STRING && endian.string != NULL && strcmp(endian.string, "little") == 0;
+}
+
+static uint32_t tya_binary_u32(TyaValue b, int offset, bool little) {
+  uint8_t *p = b.bytes->data + offset;
+  if (little) {
+    return ((uint32_t)p[0]) | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+  }
+  return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) | ((uint32_t)p[2] << 8) | ((uint32_t)p[3]);
+}
+
+static uint64_t tya_binary_u64(TyaValue b, int offset, bool little) {
+  uint8_t *p = b.bytes->data + offset;
+  uint64_t out = 0;
+  for (int i = 0; i < 8; i++) {
+    int j = little ? 7 - i : i;
+    out = (out << 8) | (uint64_t)p[j];
+  }
+  return out;
+}
+
+static void tya_binary_require(TyaValue b, TyaValue offset, int width, const char *name) {
+  if (b.kind != TYA_BYTES || b.bytes == NULL) {
+    tya_raise(tya_string("binary: data must be bytes"));
+    return;
+  }
+  if (offset.kind != TYA_NUMBER) {
+    tya_raise(tya_string("binary: offset must be a number"));
+    return;
+  }
+  int pos = (int)offset.number;
+  if (pos < 0 || pos + width > b.bytes->len) {
+    tya_raise(tya_string(name));
+  }
+}
+
+TyaValue tya_binary_read_f32(TyaValue b, TyaValue offset, TyaValue endian) {
+  tya_binary_require(b, offset, 4, "binary.read_f32: read past end");
+  uint32_t bits = tya_binary_u32(b, (int)offset.number, tya_binary_little(endian));
+  float f;
+  memcpy(&f, &bits, sizeof(float));
+  return tya_number((double)f);
+}
+
+TyaValue tya_binary_read_f64(TyaValue b, TyaValue offset, TyaValue endian) {
+  tya_binary_require(b, offset, 8, "binary.read_f64: read past end");
+  uint64_t bits = tya_binary_u64(b, (int)offset.number, tya_binary_little(endian));
+  double f;
+  memcpy(&f, &bits, sizeof(double));
+  return tya_number(f);
+}
+
+static TyaValue tya_binary_write_bits(uint64_t bits, int width, bool little) {
+  uint8_t out[8];
+  for (int i = 0; i < width; i++) {
+    int shift = little ? i * 8 : (width - i - 1) * 8;
+    out[i] = (uint8_t)((bits >> shift) & 0xff);
+  }
+  return tya_bytes_lit((const char *)out, width);
+}
+
+TyaValue tya_binary_write_f32(TyaValue value, TyaValue endian) {
+  if (value.kind != TYA_NUMBER) {
+    tya_raise(tya_string("binary.write_f32: value must be a number"));
+    return tya_nil();
+  }
+  float f = (float)value.number;
+  uint32_t bits;
+  memcpy(&bits, &f, sizeof(float));
+  return tya_binary_write_bits(bits, 4, tya_binary_little(endian));
+}
+
+TyaValue tya_binary_write_f64(TyaValue value, TyaValue endian) {
+  if (value.kind != TYA_NUMBER) {
+    tya_raise(tya_string("binary.write_f64: value must be a number"));
+    return tya_nil();
+  }
+  uint64_t bits;
+  memcpy(&bits, &value.number, sizeof(double));
+  return tya_binary_write_bits(bits, 8, tya_binary_little(endian));
+}
+
 TyaValue tya_stderr_write(TyaValue text) {
   if (text.kind != TYA_STRING || text.string == NULL) {
     tya_raise(tya_string("stderr.write: text must be a string"));

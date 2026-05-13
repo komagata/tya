@@ -1,0 +1,126 @@
+class Writer
+  initialize = options, _unused ->
+    self.parts = []
+    self.endian = Writer.option_endian(options)
+
+  static new = options ->
+    return Writer(options, nil)
+
+  static option_endian = options ->
+    if options == nil
+      return "big"
+    if options.class != Dict
+      raise "binary.Writer: options must be a dict"
+    if not options.has("endian")
+      return "big"
+    endian = options["endian"]
+    if endian != "big" and endian != "little"
+      raise "binary.Writer: invalid endian"
+    return endian
+
+  position = ->
+    return self.parts.len()
+
+  bytes = ->
+    return bytes(self.parts)
+
+  write_bytes = data ->
+    arr = bytes_array(data)
+    i = 0
+    while i < arr.len()
+      self.parts.push(arr[i])
+      i = i + 1
+    return self
+
+  write_u8 = value ->
+    return self.write_int(value, 1, 0, 255, self.endian)
+
+  write_i8 = value ->
+    return self.write_int(value, 1, -128, 127, self.endian)
+
+  write_u16 = value ->
+    return self.write_int(value, 2, 0, 65535, self.endian)
+
+  write_i16 = value ->
+    return self.write_int(value, 2, -32768, 32767, self.endian)
+
+  write_u32 = value ->
+    return self.write_int(value, 4, 0, 4294967295, self.endian)
+
+  write_i32 = value ->
+    return self.write_int(value, 4, -2147483648, 2147483647, self.endian)
+
+  write_u16_le = value ->
+    return self.write_int(value, 2, 0, 65535, "little")
+
+  write_i16_le = value ->
+    return self.write_int(value, 2, -32768, 32767, "little")
+
+  write_u32_le = value ->
+    return self.write_int(value, 4, 0, 4294967295, "little")
+
+  write_i32_le = value ->
+    return self.write_int(value, 4, -2147483648, 2147483647, "little")
+
+  write_u16_be = value ->
+    return self.write_int(value, 2, 0, 65535, "big")
+
+  write_i16_be = value ->
+    return self.write_int(value, 2, -32768, 32767, "big")
+
+  write_u32_be = value ->
+    return self.write_int(value, 4, 0, 4294967295, "big")
+
+  write_i32_be = value ->
+    return self.write_int(value, 4, -2147483648, 2147483647, "big")
+
+  write_f32 = value ->
+    return self.write_bytes(binary_write_f32(value, self.endian))
+
+  write_f64 = value ->
+    return self.write_bytes(binary_write_f64(value, self.endian))
+
+  write_f32_le = value ->
+    return self.write_bytes(binary_write_f32(value, "little"))
+
+  write_f64_le = value ->
+    return self.write_bytes(binary_write_f64(value, "little"))
+
+  write_f32_be = value ->
+    return self.write_bytes(binary_write_f32(value, "big"))
+
+  write_f64_be = value ->
+    return self.write_bytes(binary_write_f64(value, "big"))
+
+  write_int = value, width, min, max, endian ->
+    if value.class != Number or value < min or value > max
+      raise "binary.Writer: integer out of range"
+    if value < 0
+      value = value + Writer.pow2(width * 8)
+    arr = []
+    i = 0
+    while i < width
+      shift = i
+      if endian == "big"
+        shift = width - i - 1
+      div = Writer.pow256(shift)
+      byte = (value / div) % 256
+      arr.push(byte)
+      i = i + 1
+    return self.write_bytes(bytes(arr))
+
+  static pow256 = n ->
+    out = 1
+    i = 0
+    while i < n
+      out = out * 256
+      i = i + 1
+    return out
+
+  static pow2 = n ->
+    out = 1
+    i = 0
+    while i < n
+      out = out * 2
+      i = i + 1
+    return out

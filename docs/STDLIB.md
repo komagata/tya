@@ -184,6 +184,32 @@ node, and node-specific fields such as `body`, `targets`, `values`, and
 `expr`. Diagnostics use dictionaries with `severity`, `code`, `title`,
 `message`, `primary`, `hints`, and `url`.
 
+## `binary`
+
+```tya
+import binary as binary
+
+reader = binary.Reader.new(b"\x34\x12", { endian: "little" })
+print(reader.read_u16())
+
+writer = binary.Writer.new({ endian: "big" })
+writer.write_u16(0x1234).write_i16_le(-2)
+print(bytes_array(writer.bytes()))
+```
+
+`binary.Reader` reads structured values from an existing `bytes` value and
+tracks a cursor. It supports `position`, `seek`, `skip`, `remaining`, `eof?`,
+`read_bytes`, unsigned/signed 8/16/32-bit integers, and IEEE 754 `f32`/`f64`
+methods. Multi-byte methods use the instance default endian unless the method
+name ends in `_le` or `_be`.
+
+`binary.Writer` appends structured values to an internal byte buffer. It
+supports `position`, `bytes`, `write_bytes`, unsigned/signed 8/16/32-bit
+integers, and IEEE 754 `f32`/`f64` methods. Write methods return the writer so
+calls can be chained. Invalid endian names, invalid cursor movement, reads past
+EOF, negative byte counts, and out-of-range integer writes raise `binary`
+errors.
+
 ## `math`
 
 ```tya

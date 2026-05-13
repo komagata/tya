@@ -1,0 +1,163 @@
+class Reader
+  initialize = data, options ->
+    self.data = data
+    self.offset = 0
+    self.endian = Reader.option_endian(options)
+
+  static new = data, options ->
+    return Reader(data, options)
+
+  static option_endian = options ->
+    if options == nil
+      return "big"
+    if options.class != Dict
+      raise "binary.Reader: options must be a dict"
+    if not options.has("endian")
+      return "big"
+    endian = options["endian"]
+    if endian != "big" and endian != "little"
+      raise "binary.Reader: invalid endian"
+    return endian
+
+  position = ->
+    return self.offset
+
+  seek = offset ->
+    if offset.class != Number or offset < 0 or offset > self.data.len()
+      raise "binary.Reader.seek: invalid offset"
+    self.offset = offset
+    return self
+
+  skip = count ->
+    if count.class != Number or count < 0
+      raise "binary.Reader.skip: invalid count"
+    return self.seek(self.offset + count)
+
+  remaining = ->
+    return self.data.len() - self.offset
+
+  eof? = ->
+    return self.remaining() == 0
+
+  read_bytes = count ->
+    if count.class != Number or count < 0
+      raise "binary.Reader.read_bytes: invalid count"
+    self.require(count)
+    start = self.offset
+    self.offset = self.offset + count
+    return bytes_slice(self.data, start, self.offset)
+
+  read_u8 = ->
+    self.require(1)
+    value = self.data[self.offset]
+    self.offset = self.offset + 1
+    return value
+
+  read_i8 = ->
+    value = self.read_u8()
+    if value >= 128
+      return value - 256
+    return value
+
+  read_u16 = ->
+    return self.read_uint(2, self.endian)
+
+  read_i16 = ->
+    return Reader.signed(self.read_u16(), 16)
+
+  read_u32 = ->
+    return self.read_uint(4, self.endian)
+
+  read_i32 = ->
+    return Reader.signed(self.read_u32(), 32)
+
+  read_u16_le = ->
+    return self.read_uint(2, "little")
+
+  read_i16_le = ->
+    return Reader.signed(self.read_u16_le(), 16)
+
+  read_u32_le = ->
+    return self.read_uint(4, "little")
+
+  read_i32_le = ->
+    return Reader.signed(self.read_u32_le(), 32)
+
+  read_u16_be = ->
+    return self.read_uint(2, "big")
+
+  read_i16_be = ->
+    return Reader.signed(self.read_u16_be(), 16)
+
+  read_u32_be = ->
+    return self.read_uint(4, "big")
+
+  read_i32_be = ->
+    return Reader.signed(self.read_u32_be(), 32)
+
+  read_f32 = ->
+    return self.read_float(4, self.endian)
+
+  read_f64 = ->
+    return self.read_float(8, self.endian)
+
+  read_f32_le = ->
+    return self.read_float(4, "little")
+
+  read_f64_le = ->
+    return self.read_float(8, "little")
+
+  read_f32_be = ->
+    return self.read_float(4, "big")
+
+  read_f64_be = ->
+    return self.read_float(8, "big")
+
+  read_uint = width, endian ->
+    self.require(width)
+    value = 0
+    i = 0
+    while i < width
+      b = self.data[self.offset + i]
+      if endian == "big"
+        value = value * 256 + b
+      else
+        value = value + b * Reader.pow256(i)
+      i = i + 1
+    self.offset = self.offset + width
+    return value
+
+  read_float = width, endian ->
+    self.require(width)
+    start = self.offset
+    self.offset = self.offset + width
+    if width == 4
+      return binary_read_f32(self.data, start, endian)
+    return binary_read_f64(self.data, start, endian)
+
+  require = count ->
+    if self.offset + count > self.data.len()
+      raise "binary.Reader: read past end"
+
+  static signed = value, bits ->
+    limit = Reader.pow2(bits - 1)
+    mod = Reader.pow2(bits)
+    if value >= limit
+      return value - mod
+    return value
+
+  static pow256 = n ->
+    out = 1
+    i = 0
+    while i < n
+      out = out * 256
+      i = i + 1
+    return out
+
+  static pow2 = n ->
+    out = 1
+    i = 0
+    while i < n
+      out = out * 2
+      i = i + 1
+    return out

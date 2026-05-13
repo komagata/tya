@@ -56,6 +56,8 @@ standard library or runtime.
 - `tya lsp` now advertises and handles prepare-rename, inlay-hint, call
   hierarchy, selection range, code lens, folding range, and document-link
   provider requests, and semantic tokens include a stable modifier legend.
+- New `binary.Reader` and `binary.Writer` stdlib values provide endian-aware
+  integer and IEEE 754 float reads/writes over `bytes`.
 
 ## Verification
 

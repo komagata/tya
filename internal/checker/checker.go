@@ -243,6 +243,7 @@ var builtinNames = []string{
 	// v0.25
 	"bytes", "bytes_of", "bytes_text", "bytes_array", "bytes_concat", "bytes_slice",
 	"file_read_bytes", "file_write_bytes",
+	"binary_read_f32", "binary_read_f64", "binary_write_f32", "binary_write_f64",
 	// v0.58
 	"http_server_run",
 	// v0.24
