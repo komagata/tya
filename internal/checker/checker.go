@@ -1473,7 +1473,7 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		}
 		// v0.47 G4: reject `init` / `_init` as constructor names outside
 		// permissive legacy mode. Only `initialize` is recognized.
-		if !permissiveLegacy && (method.Name == "init" || method.Name == "_init") {
+		if !permissiveLegacy && !method.Class && (method.Name == "init" || method.Name == "_init") {
 			return fmt.Errorf("%d:%d: [TYA-E0414] %s is removed as a constructor name; rename to initialize", method.Tok.Line, method.Tok.Col, method.Name)
 		}
 		// v0.47 G3: reject `_`-prefix class member names. Underscore is
