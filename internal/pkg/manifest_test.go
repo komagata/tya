@@ -93,6 +93,49 @@ greet = "echo hello"
 	}
 }
 
+func TestReadManifestNative(t *testing.T) {
+	dir := t.TempDir()
+	src := `name = "native-demo"
+version = "0.1.0"
+
+[native]
+sources = ["native/demo.c"]
+headers = ["include/demo.h"]
+include_dirs = ["include"]
+pkg_config = ["demo"]
+cflags = ["-DDEMO=1"]
+ldflags = ["-ldemo"]
+
+[native.functions]
+demo_init = { symbol = "tya_demo_init", arity = 0 }
+demo_poll = { symbol = "tya_demo_poll", arity = 1 }
+`
+	path := filepath.Join(dir, "tya.toml")
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	m, err := ReadManifest(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := m.Native.Sources; len(got) != 1 || got[0] != "native/demo.c" {
+		t.Errorf("sources: %+v", got)
+	}
+	if got := m.Native.IncludeDirs; len(got) != 1 || got[0] != "include" {
+		t.Errorf("include dirs: %+v", got)
+	}
+	if got := m.Native.PkgConfig; len(got) != 1 || got[0] != "demo" {
+		t.Errorf("pkg_config: %+v", got)
+	}
+	fn := m.Native.Functions["demo_poll"]
+	if fn.Symbol != "tya_demo_poll" || fn.Arity != 1 {
+		t.Errorf("demo_poll: %+v", fn)
+	}
+	if got := m.Native.FuncOrder; len(got) != 2 || got[0] != "demo_init" || got[1] != "demo_poll" {
+		t.Errorf("function order: %+v", got)
+	}
+}
+
 func TestReadManifestTasksInvalidType(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "x"

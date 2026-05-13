@@ -96,6 +96,9 @@ func checkStructure(prog *ast.Program, modules []string) error {
 	for _, name := range builtinNames {
 		scope.define(name, kindUnknown)
 	}
+	for _, name := range extraBuiltinNames {
+		scope.define(name, kindUnknown)
+	}
 	for _, name := range modules {
 		scope.define(name, kindModule)
 	}
@@ -256,12 +259,21 @@ var builtinNames = []string{
 	"sync_wait_group_new", "sync_wait_group_add", "sync_wait_group_done", "sync_wait_group_wait",
 }
 
+var extraBuiltinNames []string
+
+func SetExtraBuiltinNames(names []string) func() {
+	prev := append([]string(nil), extraBuiltinNames...)
+	extraBuiltinNames = append([]string(nil), names...)
+	return func() { extraBuiltinNames = prev }
+}
+
 // BuiltinNames returns a copy of the registered builtin function
 // names. Tooling that needs to surface builtins (LSP completion,
 // for instance) can use this without touching the internal slice.
 func BuiltinNames() []string {
-	out := make([]string, len(builtinNames))
-	copy(out, builtinNames)
+	out := make([]string, 0, len(builtinNames)+len(extraBuiltinNames))
+	out = append(out, builtinNames...)
+	out = append(out, extraBuiltinNames...)
 	return out
 }
 

@@ -1,0 +1,158 @@
+# Build the CLI once so commands can run from fixture project roots.
+exec env -u GOROOT go -C $REPO build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+
+# Native metadata from a path dependency is used by run, build, and test.
+cd app
+exec $WORK/tya install
+stdout 'Resolved 1 packages for app'
+stdout 'native_dep 0.1.0'
+! stderr .
+
+exec $WORK/tya run src/main.tya
+stdout 'native-ok\n'
+! stderr .
+
+exec $WORK/tya build src/main.tya -o app-bin
+! stderr .
+exec ./app-bin
+stdout 'native-ok\n'
+! stderr .
+
+exec $WORK/tya test tests
+stdout '1 tests, 1 passed, 0 failed'
+! stderr .
+
+exec $WORK/tya doctor native
+stdout 'C compiler:'
+stdout 'pkg-config:'
+stdout 'native_dep'
+
+# Git dependencies use materialized native metadata after install.
+cd ../git_dep
+exec git init
+exec git add .
+exec git -c user.name='Tya Test' -c user.email='tya@example.invalid' commit -m init
+exec git tag v0.1.0
+cd ../git_app
+exec $WORK/tya install
+stdout 'git_dep 0.1.0'
+! stderr .
+exec $WORK/tya run src/main.tya
+stdout 'git-ok\n'
+! stderr .
+
+-- app/tya.toml --
+name = "app"
+version = "0.1.0"
+
+[dependencies]
+native_dep = { path = "../native_dep" }
+
+-- app/src/main.tya --
+import native_dep
+
+print(NativeDep.version())
+
+-- app/tests/native_dep_test.tya --
+import native_dep
+import unittest
+
+class NativeDepTest extends TestCase
+  test_version = ->
+    self.assert_equal("native-ok", NativeDep.version(), "native wrapper")
+
+-- native_dep/tya.toml --
+name = "native_dep"
+version = "0.1.0"
+
+[native]
+sources = ["native/native_dep.c"]
+headers = ["include/native_dep.h"]
+include_dirs = ["include"]
+cflags = []
+ldflags = []
+
+[native.functions]
+native_dep_version = { symbol = "tya_native_dep_version", arity = 0 }
+
+-- native_dep/src/native_dep/NativeDep.tya --
+class NativeDep
+  static version = ->
+    return native_dep_version()
+
+-- native_dep/include/native_dep.h --
+#ifndef NATIVE_DEP_H
+#define NATIVE_DEP_H
+
+#include "tya_runtime.h"
+
+TyaValue tya_native_dep_version(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3);
+
+#endif
+
+-- native_dep/native/native_dep.c --
+#include "native_dep.h"
+
+TyaValue tya_native_dep_version(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3) {
+  (void)__this;
+  (void)a0;
+  (void)a1;
+  (void)a2;
+  (void)a3;
+  return tya_string("native-ok");
+}
+
+-- git_app/tya.toml --
+name = "git_app"
+version = "0.1.0"
+
+[dependencies]
+git_dep = { git = "../git_dep", tag = "v0.1.0" }
+
+-- git_app/src/main.tya --
+import git_dep
+
+print(GitDep.version())
+
+-- git_dep/tya.toml --
+name = "git_dep"
+version = "0.1.0"
+
+[native]
+sources = ["native/git_dep.c"]
+headers = ["include/git_dep.h"]
+include_dirs = ["include"]
+cflags = []
+ldflags = []
+
+[native.functions]
+git_dep_version = { symbol = "tya_git_dep_version", arity = 0 }
+
+-- git_dep/src/git_dep/GitDep.tya --
+class GitDep
+  static version = ->
+    return git_dep_version()
+
+-- git_dep/include/git_dep.h --
+#ifndef GIT_DEP_H
+#define GIT_DEP_H
+
+#include "tya_runtime.h"
+
+TyaValue tya_git_dep_version(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3);
+
+#endif
+
+-- git_dep/native/git_dep.c --
+#include "git_dep.h"
+
+TyaValue tya_git_dep_version(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3) {
+  (void)__this;
+  (void)a0;
+  (void)a1;
+  (void)a2;
+  (void)a3;
+  return tya_string("git-ok");
+}

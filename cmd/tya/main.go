@@ -199,6 +199,12 @@ func main() {
 			os.Exit(1)
 		}
 		return
+	case "doctor":
+		if err := doctorCommand(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
 	case "lint":
 		os.Exit(lintCommand(os.Args[2:]))
 		return
@@ -411,6 +417,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya remove <name>")
 	fmt.Fprintln(os.Stderr, "       tya outdated")
 	fmt.Fprintln(os.Stderr, "       tya new <name>")
+	fmt.Fprintln(os.Stderr, "       tya doctor native")
 	fmt.Fprintln(os.Stderr, "       tya task [name] [args...]")
 	fmt.Fprintln(os.Stderr, "       tya lint [--fix] [--format=text|json] [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya doc [--html <out>] [paths...]")
@@ -441,7 +448,7 @@ func buildExecutable(path string, output string) error {
 }
 
 func buildExecutableWithCover(path string, output string, opt *codegen.CoverageOptions) (*codegen.CoverageRegistry, error) {
-	csrc, reg, err := compileToCWithCover(path, opt)
+	csrc, reg, nativePlan, err := compileToCWithCoverNative(path, opt)
 	if err != nil {
 		return nil, err
 	}
@@ -473,6 +480,13 @@ func buildExecutableWithCover(path string, output string, opt *codegen.CoverageO
 	if _, err := os.Stat(httpC); err == nil {
 		args = append(args, httpC)
 	}
+	if nativePlan != nil {
+		args = append(args, nativePlan.Sources...)
+		for _, dir := range nativePlan.IncludeDirs {
+			args = append(args, "-I", dir)
+		}
+		args = append(args, nativePlan.CFlags...)
+	}
 	if opt != nil {
 		coverC := filepath.Join(runtimeDir, "tya_cover.c")
 		if _, err := os.Stat(coverC); err == nil {
@@ -488,6 +502,9 @@ func buildExecutableWithCover(path string, output string, opt *codegen.CoverageO
 		args = append(args, "-lpthread", "-lm")
 	} else if runtime.GOOS != "windows" {
 		args = append(args, "-lm")
+	}
+	if nativePlan != nil {
+		args = append(args, nativePlan.LDFlags...)
 	}
 	compile := exec.Command(cc, args...)
 	compile.Stderr = os.Stderr
@@ -532,28 +549,76 @@ func compileToC(path string) (string, error) {
 }
 
 func compileToCWithCover(path string, opt *codegen.CoverageOptions) (string, *codegen.CoverageRegistry, error) {
+	csrc, reg, _, err := compileToCWithCoverNative(path, opt)
+	return csrc, reg, err
+}
+
+func compileToCWithCoverNative(path string, opt *codegen.CoverageOptions) (string, *codegen.CoverageRegistry, *pkg.NativePlan, error) {
 	defer checker.SetPermissiveLegacy(runner.IsLegacyV01Path(path))()
 	source, modules, origins, err := runner.LoadSourceWithOrigins(path)
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
+	}
+	nativePlan, err := nativePlanForPath(path)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	nativeNames := []string{}
+	if nativePlan != nil {
+		nativeNames = append(nativeNames, nativePlan.FuncOrder...)
+	}
+	defer checker.SetExtraBuiltinNames(nativeNames)()
+	if nativePlan != nil {
+		defer codegen.SetNativeFunctions(nativePlan.Functions)()
+	} else {
+		defer codegen.SetNativeFunctions(nil)()
 	}
 	toks, errs := lexer.Lex(source)
 	if len(errs) > 0 {
-		return "", nil, errs[0]
+		return "", nil, nil, errs[0]
 	}
 	prog, _, err := parser.Parse(toks)
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
 	runner.StampOriginFiles(prog, origins)
 	if err := checker.CheckWithModules(prog, modules); err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
 	csrc, reg, _, err := codegen.EmitCWithCoverage(prog, path, opt)
 	if err != nil {
-		return "", nil, err
+		return "", nil, nil, err
 	}
-	return csrc, reg, nil
+	return csrc, reg, nativePlan, nil
+}
+
+func nativePlanForPath(path string) (*pkg.NativePlan, error) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+	root, _, err := pkg.FindManifest(filepath.Dir(abs))
+	if err != nil {
+		if envRoot := os.Getenv("TYA_PROJECT_ROOT"); envRoot != "" {
+			root = envRoot
+		} else if cwd, cwdErr := os.Getwd(); cwdErr == nil {
+			if found, _, findErr := pkg.FindManifest(cwd); findErr == nil {
+				root = found
+			} else {
+				return nil, nil
+			}
+		} else {
+			return nil, nil
+		}
+	}
+	plan, err := pkg.CollectNative(root)
+	if err != nil {
+		return nil, err
+	}
+	if len(plan.Packages) == 0 {
+		return nil, nil
+	}
+	return plan, nil
 }
 
 func testCommand(root string, coverEnabled bool, profilePath string) error {
@@ -589,6 +654,7 @@ func testCommand(root string, coverEnabled bool, profilePath string) error {
 	}
 
 	prevPath := os.Getenv("TYA_PATH")
+	prevProjectRoot := os.Getenv("TYA_PROJECT_ROOT")
 	combined := strings.Join(pathDirs, string(os.PathListSeparator))
 	if prevPath != "" {
 		combined = combined + string(os.PathListSeparator) + prevPath
@@ -597,6 +663,14 @@ func testCommand(root string, coverEnabled bool, profilePath string) error {
 		return err
 	}
 	defer os.Setenv("TYA_PATH", prevPath)
+	if cwd, err := os.Getwd(); err == nil {
+		if project, _, err := pkg.FindManifest(cwd); err == nil {
+			if err := os.Setenv("TYA_PROJECT_ROOT", project); err != nil {
+				return err
+			}
+			defer os.Setenv("TYA_PROJECT_ROOT", prevProjectRoot)
+		}
+	}
 
 	if !coverEnabled {
 		if err := compileAndRun(suitePath, nil); err != nil {
@@ -831,6 +905,15 @@ func testFiles(root string) ([]string, error) {
 
 func checkFile(path string) error {
 	defer checker.SetPermissiveLegacy(runner.IsLegacyV01Path(path))()
+	nativePlan, err := nativePlanForPath(path)
+	if err != nil {
+		return err
+	}
+	nativeNames := []string{}
+	if nativePlan != nil {
+		nativeNames = append(nativeNames, nativePlan.FuncOrder...)
+	}
+	defer checker.SetExtraBuiltinNames(nativeNames)()
 	// v0.44: tya check on a PascalCase class file is allowed
 	// (read-only, no entry semantics). Skip the entry-only
 	// runner.LoadSourceWithModules path and validate the class

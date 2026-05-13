@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.62 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-62-release-notes">Tya v0.62 Release Notes</h1>
+<p>v0.62 lets ordinary packages ship native C wrapper code without changing Tya's standard library or runtime.</p>
+<h2 id="highlights">Highlights</h2>
+<ul>
+<li><code>tya.toml</code> supports an optional <code>[native]</code> table with C sources, headers,</li>
+</ul>
+<p>  include directories, <code>pkg-config</code> dependencies, <code>cflags</code>, <code>ldflags</code>, and   declared native functions.</p>
+<ul>
+<li><code>tya build</code>, <code>tya run</code>, and <code>tya test</code> use the same native metadata</li>
+</ul>
+<p>  collection path.</p>
+<ul>
+<li>Native wrappers are called through the existing <code>TyaValue</code> runtime ABI.</li>
+<li>Missing native files, missing <code>pkg-config</code>, missing host dependencies, and</li>
+</ul>
+<p>  duplicate native function names produce clear diagnostics.</p>
+<ul>
+<li><code>tya new --template lib --native &lt;name&gt;</code> creates a buildable native package</li>
+</ul>
+<p>  scaffold.</p>
+<ul>
+<li><code>tya doctor native</code> reports the current native build environment and</li>
+</ul>
+<p>  effective flags.</p>
+<h2 id="verification">Verification</h2>
+<p>The release includes package-manager unit coverage and script coverage for path dependency native builds, native run/build/test behavior, diagnostics, and the generated native library scaffold.</p>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,111 @@
+# Build the CLI once so commands can run from fixture project roots.
+exec env -u GOROOT go -C $REPO build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+
+# Missing native sources name the package and path.
+cd missing_app
+exec $WORK/tya install
+! stderr .
+! exec $WORK/tya run src/main.tya
+stderr 'native package broken_native: missing source native/missing.c'
+
+# Duplicate native function names across packages are rejected.
+cd ../dup_app
+exec $WORK/tya install
+! stderr .
+! exec $WORK/tya run src/main.tya
+stderr 'native function shared_native declared by multiple packages'
+
+# The native library scaffold builds and tests without external host libraries.
+cd ..
+exec $WORK/tya new --template lib --native my_binding --no-git
+stdout 'Created my_binding'
+cd my_binding
+exec $WORK/tya test tests
+stdout '1 tests, 1 passed, 0 failed'
+! stderr .
+
+-- missing_app/tya.toml --
+name = "missing_app"
+version = "0.1.0"
+
+[dependencies]
+broken_native = { path = "../broken_native" }
+
+-- missing_app/src/main.tya --
+import broken_native
+
+print(BrokenNative.value())
+
+-- broken_native/tya.toml --
+name = "broken_native"
+version = "0.1.0"
+
+[native]
+sources = ["native/missing.c"]
+
+[native.functions]
+broken_value = { symbol = "tya_broken_value", arity = 0 }
+
+-- broken_native/src/broken_native/BrokenNative.tya --
+class BrokenNative
+  static value = ->
+    return broken_value()
+
+-- dup_app/tya.toml --
+name = "dup_app"
+version = "0.1.0"
+
+[dependencies]
+dep_one = { path = "../dep_one" }
+dep_two = { path = "../dep_two" }
+
+-- dup_app/src/main.tya --
+import dep_one
+
+print(DepOne.value())
+
+-- dep_one/tya.toml --
+name = "dep_one"
+version = "0.1.0"
+
+[native]
+sources = ["native/dep_one.c"]
+
+[native.functions]
+shared_native = { symbol = "tya_dep_one_value", arity = 0 }
+
+-- dep_one/src/dep_one/DepOne.tya --
+class DepOne
+  static value = ->
+    return shared_native()
+
+-- dep_one/native/dep_one.c --
+#include "tya_runtime.h"
+
+TyaValue tya_dep_one_value(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3) {
+  return tya_string("one");
+}
+
+-- dep_two/tya.toml --
+name = "dep_two"
+version = "0.1.0"
+
+[native]
+sources = ["native/dep_two.c"]
+
+[native.functions]
+shared_native = { symbol = "tya_dep_two_value", arity = 0 }
+
+-- dep_two/src/dep_two/DepTwo.tya --
+class DepTwo
+  static value = ->
+    return shared_native()
+
+-- dep_two/native/dep_two.c --
+#include "tya_runtime.h"
+
+TyaValue tya_dep_two_value(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3) {
+  return tya_string("two");
+}

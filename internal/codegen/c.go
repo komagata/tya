@@ -3,6 +3,7 @@ package codegen
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -10,9 +11,25 @@ import (
 	"tya/internal/diag"
 	"tya/internal/lexer"
 	"tya/internal/parser"
+	"tya/internal/pkg"
 )
 
 var classNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
+
+var nativeFunctions map[string]pkg.NativeFunction
+
+func SetNativeFunctions(functions map[string]pkg.NativeFunction) func() {
+	prev := nativeFunctions
+	if len(functions) == 0 {
+		nativeFunctions = nil
+	} else {
+		nativeFunctions = map[string]pkg.NativeFunction{}
+		for name, fn := range functions {
+			nativeFunctions[name] = fn
+		}
+	}
+	return func() { nativeFunctions = prev }
+}
 
 // currentModulePrefix returns the module prefix for the class
 // currently being emitted, or "" when at top level. cgen.className
@@ -111,6 +128,10 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 		fmt.Fprintf(&out, "static int tya_cov_n = %d;\n", len(g.coverEntries))
 	}
 	out.WriteString("static int g_tya_argc = 0;\nstatic char **g_tya_argv = (char **)0;\n\n")
+	for _, name := range sortedNativeFunctionNames() {
+		fn := nativeFunctions[name]
+		fmt.Fprintf(&out, "extern TyaValue %s(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3);\n", fn.Symbol)
+	}
 	out.WriteString(g.globalOut.String())
 	if g.globalOut.Len() > 0 {
 		out.WriteByte('\n')
@@ -135,6 +156,15 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 }
 
 // diagsFromErr lifts the []diag.Diagnostic payload out of err
+func sortedNativeFunctionNames() []string {
+	names := make([]string, 0, len(nativeFunctions))
+	for name := range nativeFunctions {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
+}
+
 // when err is a *CodegenError, falling back to a synthetic
 // single-entry slice for plain errors so callers still get a
 // non-nil diags slice on failure.
@@ -2166,6 +2196,23 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
 			}
 		}
+			if fn, found := nativeFunctions[id.Name]; found {
+				if len(n.Args) != fn.Arity {
+					return "", "", fmt.Errorf("native function %s expects %d arguments", id.Name, fn.Arity)
+				}
+				args := make([]string, 0, len(n.Args))
+				for _, arg := range n.Args {
+					ex, _, err := g.expr(arg)
+					if err != nil {
+						return "", "", err
+					}
+					args = append(args, ex)
+				}
+				for len(args) < 4 {
+					args = append(args, "tya_nil()")
+				}
+				return fmt.Sprintf("%s(tya_nil(), %s)", fn.Symbol, strings.Join(args[:4], ", ")), "TyaValue", nil
+			}
 		if member, ok := n.Callee.(*ast.MemberExpr); ok {
 			if target, ok := member.Target.(*ast.Ident); ok {
 				if call, err := g.standardModuleCall(target.Name, member.Name, n.Args); call != "" || err != nil {

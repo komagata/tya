@@ -13,6 +13,7 @@ import (
 //	flags:
 //	  --here              initialise the current directory (no <name>)
 //	  --template app|lib  template (default: app)
+//	  --native            add native C wrapper scaffold (lib template only)
 //	  --force             overwrite an existing target
 //	  --no-git            skip the default `git init` step
 //
@@ -41,7 +42,7 @@ func newCommand(args []string) error {
 			return fmt.Errorf("[TYA-E0911] %s already exists", target)
 		}
 	}
-	if err := writeScaffold(target, name, opts.template); err != nil {
+	if err := writeScaffold(target, name, opts.template, opts.native); err != nil {
 		return err
 	}
 	if !opts.noGit {
@@ -66,6 +67,7 @@ type newOpts struct {
 	template string
 	force    bool
 	noGit    bool
+	native   bool
 }
 
 func parseNewArgs(args []string) (newOpts, error) {
@@ -79,6 +81,8 @@ func parseNewArgs(args []string) (newOpts, error) {
 			opts.force = true
 		case "--no-git":
 			opts.noGit = true
+		case "--native":
+			opts.native = true
 		case "--template":
 			if i+1 >= len(args) {
 				return opts, fmt.Errorf("missing value for --template")
@@ -99,6 +103,9 @@ func parseNewArgs(args []string) (newOpts, error) {
 	}
 	if opts.template != "app" && opts.template != "lib" {
 		return opts, fmt.Errorf("[TYA-E0912] invalid --template %q (must be app or lib)", opts.template)
+	}
+	if opts.native && opts.template != "lib" {
+		return opts, fmt.Errorf("[TYA-E0914] --native requires --template lib")
 	}
 	if opts.here && opts.target != "" {
 		return opts, fmt.Errorf("[TYA-E0913] --here cannot be combined with a target name")
@@ -123,7 +130,7 @@ func resolveTarget(opts newOpts) (target, name string, err error) {
 	return filepath.Join(".", opts.target), opts.target, nil
 }
 
-func writeScaffold(target, name, template string) error {
+func writeScaffold(target, name, template string, native bool) error {
 	if err := os.MkdirAll(filepath.Join(target, "src"), 0755); err != nil {
 		return err
 	}
@@ -156,9 +163,87 @@ version = "0.1.0"
 		return err
 	}
 	if template == "lib" {
+		if native {
+			return writeNativeLibTemplate(target, name)
+		}
 		return writeLibTemplate(target, name)
 	}
 	return writeAppTemplate(target, name)
+}
+
+func writeNativeLibTemplate(target, name string) error {
+	pascal := pascalCase(name)
+	pkgName := packageName(name)
+	pkgDir := filepath.Join(target, "src", pkgName)
+	if err := os.MkdirAll(pkgDir, 0755); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Join(target, "native"), 0755); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Join(target, "include"), 0755); err != nil {
+		return err
+	}
+	manifest := fmt.Sprintf(`name = "%s"
+version = "0.1.0"
+
+[native]
+sources = ["native/%s.c"]
+headers = ["include/%s.h"]
+include_dirs = ["include"]
+cflags = []
+ldflags = []
+
+[native.functions]
+%s_version = { symbol = "tya_%s_version", arity = 0 }
+
+[tasks]
+test = "TYA_PATH=src tya test tests"
+`, name, pkgName, pkgName, pkgName, pkgName)
+	if err := os.WriteFile(filepath.Join(target, "tya.toml"), []byte(manifest), 0644); err != nil {
+		return err
+	}
+	src := fmt.Sprintf(`class %s
+  static version = ->
+    return %s_version()
+`, pascal, pkgName)
+	if err := os.WriteFile(filepath.Join(pkgDir, pascal+".tya"), []byte(src), 0644); err != nil {
+		return err
+	}
+	header := fmt.Sprintf(`#ifndef TYA_%s_H
+#define TYA_%s_H
+
+#include "tya_runtime.h"
+
+TyaValue tya_%s_version(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3);
+
+#endif
+`, strings.ToUpper(pkgName), strings.ToUpper(pkgName), pkgName)
+	if err := os.WriteFile(filepath.Join(target, "include", pkgName+".h"), []byte(header), 0644); err != nil {
+		return err
+	}
+	csrc := fmt.Sprintf(`#include "%s.h"
+
+TyaValue tya_%s_version(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3) {
+  (void)__this;
+  (void)a0;
+  (void)a1;
+  (void)a2;
+  (void)a3;
+  return tya_string("0.1.0");
+}
+`, pkgName, pkgName)
+	if err := os.WriteFile(filepath.Join(target, "native", pkgName+".c"), []byte(csrc), 0644); err != nil {
+		return err
+	}
+	test := fmt.Sprintf(`import %s
+import unittest
+
+class %sTest extends TestCase
+  test_version = ->
+    self.assert_equal("0.1.0", %s.version(), "native version")
+`, pkgName, pascal, pascal)
+	return os.WriteFile(filepath.Join(target, "tests", pkgName+"_test.tya"), []byte(test), 0644)
 }
 
 func writeAppTemplate(target, name string) error {

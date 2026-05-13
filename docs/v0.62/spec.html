@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.62 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-62-specification">Tya v0.62 Specification</h1>
+<p>&gt; **Status:** draft. v0.62 adds native package support for ordinary Tya &gt; packages.</p>
+<h2 id="native-packages">Native Packages</h2>
+<p>Packages may declare native C sources and link metadata in <code>tya.toml</code>:</p>
+<pre><code class="language-toml">[native]
+sources = [&quot;native/binding.c&quot;]
+headers = [&quot;include/binding.h&quot;]
+include_dirs = [&quot;include&quot;]
+pkg_config = []
+cflags = []
+ldflags = []
+
+[native.functions]
+binding_init = { symbol = &quot;tya_binding_init&quot;, arity = 0 }</code></pre>
+<p>All paths are relative to the package root. <code>pkg_config</code> names are passed to <code>pkg-config --cflags --libs</code>. Flags are de-duplicated while preserving first occurrence.</p>
+<p>Native wrapper functions use the runtime ABI:</p>
+<pre><code class="language-c">TyaValue tya_binding_init(TyaValue __this, TyaValue a0, TyaValue a1,
+                          TyaValue a2, TyaValue a3);</code></pre>
+<p>Declared native functions are available as predeclared function names to package Tya code loaded through the current project or locked dependencies. <code>tya build</code>, <code>tya run</code>, and <code>tya test</code> compile declared native sources with the generated C program and runtime.</p>
+<p><code>tya new --template lib --native &lt;name&gt;</code> creates a native library scaffold. <code>tya doctor native</code> reports the detected C compiler, <code>pkg-config</code>, native packages, sources, include directories, and effective flags.</p>
+    </article>
+  </main>
+</body>
+</html>

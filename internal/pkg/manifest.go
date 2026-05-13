@@ -33,6 +33,7 @@ type Manifest struct {
 	Description string
 	Authors     []string
 	License     string
+	Native      Native
 	Deps        map[string]Dependency // name -> dependency entry
 	DevDeps     map[string]Dependency
 	DepOrder    []string // insertion order for Deps
@@ -41,6 +42,23 @@ type Manifest struct {
 	TaskOrder   []string        // insertion order for Tasks
 
 	Path string // path to the manifest file (for relative path deps)
+}
+
+type Native struct {
+	Sources     []string
+	Headers     []string
+	IncludeDirs []string
+	PkgConfig   []string
+	CFlags      []string
+	LDFlags     []string
+	Functions   map[string]NativeFunction
+	FuncOrder   []string
+}
+
+type NativeFunction struct {
+	Name   string
+	Symbol string
+	Arity  int
 }
 
 type Dependency struct {
@@ -131,6 +149,13 @@ func ReadManifest(path string) (*Manifest, error) {
 			m.TaskOrder = append(m.TaskOrder, name)
 		}
 	}
+	if native, ok := tv.Table["native"]; ok && native.Kind == "table" {
+		n, err := readNative(native)
+		if err != nil {
+			return nil, fmt.Errorf("native: %v", err)
+		}
+		m.Native = n
+	}
 	if m.Name == "" {
 		return nil, fmt.Errorf("tya.toml: missing name")
 	}
@@ -138,6 +163,72 @@ func ReadManifest(path string) (*Manifest, error) {
 		return nil, fmt.Errorf("tya.toml: missing version")
 	}
 	return m, nil
+}
+
+func readNative(v TomlValue) (Native, error) {
+	n := Native{Functions: map[string]NativeFunction{}}
+	var err error
+	if n.Sources, err = readStringArrayField(v, "sources"); err != nil {
+		return n, err
+	}
+	if n.Headers, err = readStringArrayField(v, "headers"); err != nil {
+		return n, err
+	}
+	if n.IncludeDirs, err = readStringArrayField(v, "include_dirs"); err != nil {
+		return n, err
+	}
+	if n.PkgConfig, err = readStringArrayField(v, "pkg_config"); err != nil {
+		return n, err
+	}
+	if n.CFlags, err = readStringArrayField(v, "cflags"); err != nil {
+		return n, err
+	}
+	if n.LDFlags, err = readStringArrayField(v, "ldflags"); err != nil {
+		return n, err
+	}
+	if funcs, ok := v.Table["functions"]; ok {
+		if funcs.Kind != "table" {
+			return n, fmt.Errorf("functions: expected table")
+		}
+		for _, name := range funcs.Order {
+			fv := funcs.Table[name]
+			if fv.Kind != "table" {
+				return n, fmt.Errorf("functions.%s: expected table", name)
+			}
+			sym, ok := fv.Table["symbol"]
+			if !ok || sym.Kind != "string" || sym.Str == "" {
+				return n, fmt.Errorf("functions.%s.symbol: expected string", name)
+			}
+			arity, ok := fv.Table["arity"]
+			if !ok || arity.Kind != "int" {
+				return n, fmt.Errorf("functions.%s.arity: expected int", name)
+			}
+			if arity.Int < 0 || arity.Int > 4 {
+				return n, fmt.Errorf("functions.%s.arity: expected 0..4", name)
+			}
+			n.Functions[name] = NativeFunction{Name: name, Symbol: sym.Str, Arity: int(arity.Int)}
+			n.FuncOrder = append(n.FuncOrder, name)
+		}
+	}
+	return n, nil
+}
+
+func readStringArrayField(v TomlValue, name string) ([]string, error) {
+	field, ok := v.Table[name]
+	if !ok {
+		return nil, nil
+	}
+	if field.Kind != "array" {
+		return nil, fmt.Errorf("%s: expected array of strings", name)
+	}
+	out := []string{}
+	for i, item := range field.Array {
+		if item.Kind != "string" {
+			return nil, fmt.Errorf("%s[%d]: expected string", name, i)
+		}
+		out = append(out, item.Str)
+	}
+	return out, nil
 }
 
 func readTask(name string, v TomlValue) (Task, error) {
@@ -270,7 +361,47 @@ func WriteManifest(m *Manifest) error {
 		}
 		t.SetField("tasks", tasks)
 	}
+	if nativeHasFields(m.Native) {
+		t.SetField("native", nativeToToml(m.Native))
+	}
 	return os.WriteFile(m.Path, []byte(EmitToml(t)), 0644)
+}
+
+func nativeHasFields(n Native) bool {
+	return len(n.Sources) > 0 || len(n.Headers) > 0 || len(n.IncludeDirs) > 0 ||
+		len(n.PkgConfig) > 0 || len(n.CFlags) > 0 || len(n.LDFlags) > 0 || len(n.FuncOrder) > 0
+}
+
+func nativeToToml(n Native) TomlValue {
+	t := NewTomlTable()
+	setStringArray := func(name string, values []string) {
+		if len(values) == 0 {
+			return
+		}
+		arr := NewTomlArray()
+		for _, value := range values {
+			arr.Array = append(arr.Array, TomlString(value))
+		}
+		t.SetField(name, arr)
+	}
+	setStringArray("sources", n.Sources)
+	setStringArray("headers", n.Headers)
+	setStringArray("include_dirs", n.IncludeDirs)
+	setStringArray("pkg_config", n.PkgConfig)
+	setStringArray("cflags", n.CFlags)
+	setStringArray("ldflags", n.LDFlags)
+	if len(n.FuncOrder) > 0 {
+		funcs := NewTomlTable()
+		for _, name := range n.FuncOrder {
+			fn := n.Functions[name]
+			ft := NewTomlTable()
+			ft.SetField("symbol", TomlString(fn.Symbol))
+			ft.SetField("arity", TomlInt(int64(fn.Arity)))
+			funcs.SetField(name, ft)
+		}
+		t.SetField("functions", funcs)
+	}
+	return t
 }
 
 func taskToToml(t Task) TomlValue {

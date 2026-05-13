@@ -549,33 +549,14 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 // directly from the path recorded in the lockfile.
 func packageSrcDirs(importerPath, leadingName string) []string {
 	dir := filepath.Dir(importerPath)
+	if root := os.Getenv("TYA_PROJECT_ROOT"); root != "" {
+		if out := packageSrcDirsFromRoot(root, leadingName); len(out) > 0 {
+			return out
+		}
+	}
 	for i := 0; i < 8; i++ {
 		if _, err := os.Stat(filepath.Join(dir, "tya.toml")); err == nil {
-			out := []string{filepath.Join(dir, "src")}
-			lockPath := filepath.Join(dir, "tya.lock")
-			if lf, err := pkg.ReadLockfile(lockPath); err == nil {
-				for i := range lf.Packages {
-					p := &lf.Packages[i]
-					if p.Name != leadingName {
-						continue
-					}
-					out = append(out, filepath.Join(pkg.PackageDir(dir, p), "src"))
-				}
-			}
-			pkgs := filepath.Join(dir, ".tya", "packages")
-			entries, err := os.ReadDir(pkgs)
-			if err == nil {
-				prefix := leadingName + "-"
-				for _, e := range entries {
-					if !e.IsDir() {
-						continue
-					}
-					if e.Name() == leadingName || strings.HasPrefix(e.Name(), prefix) {
-						out = append(out, filepath.Join(pkgs, e.Name(), "src"))
-					}
-				}
-			}
-			return out
+			return packageSrcDirsFromRoot(dir, leadingName)
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
@@ -584,6 +565,34 @@ func packageSrcDirs(importerPath, leadingName string) []string {
 		dir = parent
 	}
 	return nil
+}
+
+func packageSrcDirsFromRoot(root, leadingName string) []string {
+	out := []string{filepath.Join(root, "src")}
+	lockPath := filepath.Join(root, "tya.lock")
+	if lf, err := pkg.ReadLockfile(lockPath); err == nil {
+		for i := range lf.Packages {
+			p := &lf.Packages[i]
+			if p.Name != leadingName {
+				continue
+			}
+			out = append(out, filepath.Join(pkg.PackageDir(root, p), "src"))
+		}
+	}
+	pkgs := filepath.Join(root, ".tya", "packages")
+	entries, err := os.ReadDir(pkgs)
+	if err == nil {
+		prefix := leadingName + "-"
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
+			}
+			if e.Name() == leadingName || strings.HasPrefix(e.Name(), prefix) {
+				out = append(out, filepath.Join(pkgs, e.Name(), "src"))
+			}
+		}
+	}
+	return out
 }
 
 func stdlibDirs() []string {
