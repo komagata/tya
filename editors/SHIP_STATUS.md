@@ -28,10 +28,10 @@ from repository changes alone.
 
 | Requirement | Blocking dependency |
 |---|---|
-| Publish VS Code support to Marketplace | Marketplace publisher access and `VSCE_PAT` / `vsce login` |
-| Publish VS Code support to Open VSX | Open VSX namespace access and `OVSX_PAT` / login |
-| Publish Emacs mode to MELPA | Pull request `melpa/melpa#10013` is open; maintainer review / merge pending |
-| Register Tree-sitter grammar with GitHub Linguist | Blocked before PR: Linguist requires a syntax grammar with an allowed license (`apache-2.0`, `bsd-2-clause`, `bsd-3-clause`, `cc0-1.0`, `isc`, `mit`, `mpl-2.0`, `ncsa`, `permissive`, `unlicense`, `wtfpl`, or `zlib`). The Tya repository currently has no project license, and the editor grammar metadata is `UNLICENSED`. |
+| Publish VS Code support to Marketplace | Marketplace publisher access and `VSCE_PAT` / `vsce login`; tracked by `komagata/tya#1` |
+| Publish VS Code support to Open VSX | Open VSX namespace access and `OVSX_PAT` / login; tracked by `komagata/tya#1` |
+| Publish Emacs mode to MELPA | Pull request `melpa/melpa#10013` is open; maintainer review / merge pending; tracked by `komagata/tya#2` |
+| Register Tree-sitter grammar with GitHub Linguist | Blocked before PR: Linguist requires a syntax grammar with an allowed license (`apache-2.0`, `bsd-2-clause`, `bsd-3-clause`, `cc0-1.0`, `isc`, `mit`, `mpl-2.0`, `ncsa`, `permissive`, `unlicense`, `wtfpl`, or `zlib`). The Tya repository currently has no project license, and the editor grammar metadata is `UNLICENSED`; tracked by `komagata/tya#3`. |
 
 ## Last Local Verification
 
@@ -47,3 +47,4 @@ scripts/verify_editor_assets.sh
 - GitHub Actions `Editor assets` run for `f2ffb11`: `25769086945`, status:
   success.
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
+- Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`
