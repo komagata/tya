@@ -44,7 +44,7 @@ scripts/verify_editor_assets.sh
 Last observed GitHub Actions verification:
 
 ```text
-Editor assets / main / 25769509633 / success / 2026-05-13T00:01:51Z
+Editor assets / main / 25769876586 / success / 2026-05-13T00:12:24Z
 ```
 
 ## Published Repository Evidence
@@ -54,11 +54,17 @@ Editor assets / main / 25769509633 / success / 2026-05-13T00:01:51Z
 - Main commit with Tree-sitter sample parse verification: `f2ffb11`
 - Main commit with manual VS Code publish workflow: `94ecbdb`
 - Main commit with publishing follow-up issues: `d8af793`
-- Latest observed GitHub Actions `Editor assets` run: `25769509633`, status:
+- Main commit with VS Code manual-install release docs: `fe93c82`
+- Main commit with manual editor asset bundle docs: `3aad8f2`
+- Latest observed GitHub Actions `Editor assets` run: `25769876586`, status:
   success.
 - VS Code manual-install release:
   https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
+  (`tya-0.61.0.vsix`, sha256
+  `305322bcae342e81db145297329a9941e89eb6ed52c23afbe5812e59b4d3b67d`)
 - Manual editor asset bundle:
   https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
+  (`tya-editor-assets-v0.61.0.tar.gz`, sha256
+  `87e2c78cf2d5a1fc224780d1f0db1dc2870ae008fcd85e584bd0159af49c8f8f`)
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`
