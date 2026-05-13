@@ -44,7 +44,7 @@ scripts/verify_editor_assets.sh
 Last observed GitHub Actions verification:
 
 ```text
-Editor assets / main / 25769876586 / success / 2026-05-13T00:12:24Z
+Editor assets / main / 25769943202 / success / 2026-05-13T00:14:24Z
 ```
 
 ## Published Repository Evidence
@@ -56,7 +56,7 @@ Editor assets / main / 25769876586 / success / 2026-05-13T00:12:24Z
 - Main commit with publishing follow-up issues: `d8af793`
 - Main commit with VS Code manual-install release docs: `fe93c82`
 - Main commit with manual editor asset bundle docs: `3aad8f2`
-- Latest observed GitHub Actions `Editor assets` run: `25769876586`, status:
+- Latest observed GitHub Actions `Editor assets` run: `25769943202`, status:
   success.
 - VS Code manual-install release:
   https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
