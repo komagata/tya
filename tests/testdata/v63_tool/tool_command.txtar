@@ -1,0 +1,153 @@
+# Build the CLI once so commands can run from fixture project roots.
+exec env -u GOROOT go -C $REPO build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+
+# Missing lockfiles tell users to install first.
+cd app_single
+! exec $WORK/tya tool hello
+stderr 'tya.lock is missing or unreadable; run `tya install`'
+
+# Path dependency tools run from the invoking project root and preserve args,
+# stdin, stdout, and exit status.
+exec $WORK/tya install
+stdout 'tool_pkg 0.1.0'
+! stderr .
+
+exec $WORK/tya tool --list
+stdout 'fail	tool_pkg'
+stdout 'hello	tool_pkg'
+stdout 'stdin	tool_pkg'
+
+exec $WORK/tya tool hello --name komagata
+stdout 'pkg:tool_pkg\n'
+stdout 'cwd:.*/app_single\n'
+stdout 'arg:--name\n'
+stdout 'arg:komagata\n'
+! stderr .
+
+exec sh -c 'printf tya-input | "$WORK/tya" tool stdin'
+stdout 'stdin:tya-input\n'
+! stderr .
+
+! exec $WORK/tya tool fail
+stdout 'before-exit\n'
+! stderr .
+
+# Conflicting tool names require the fully qualified form.
+cd ../app_conflict
+exec $WORK/tya install
+! stderr .
+! exec $WORK/tya tool hello
+stderr 'tool "hello" is declared by multiple packages: other_pkg, tool_pkg; use package:tool'
+exec $WORK/tya tool tool_pkg:hello ok
+stdout 'pkg:tool_pkg\n'
+stdout 'arg:ok\n'
+! stderr .
+
+# One-shot path execution does not edit the manifest or create a lockfile.
+cd ../oneshot_app
+exec $WORK/tya tool --path ../tool_pkg hello once
+stdout 'pkg:tool_pkg\n'
+stdout 'arg:once\n'
+! stderr .
+! grep tool_pkg tya.toml
+! exists tya.lock
+
+# Locked git tools and one-shot git tools both require pinned refs.
+cd ../git_tool
+exec git init
+exec git add .
+exec git -c user.name='Tya Test' -c user.email='tya@example.invalid' commit -m init
+exec git tag v0.1.0
+
+cd ../git_app
+exec $WORK/tya install
+stdout 'git_tool 0.1.0'
+! stderr .
+exec $WORK/tya tool git_hello locked
+stdout 'git-tool\n'
+stdout 'arg:locked\n'
+! stderr .
+
+cd ../oneshot_app
+exec $WORK/tya tool --git ../git_tool --tag v0.1.0 git_hello oneshot
+stdout 'git-tool\n'
+stdout 'arg:oneshot\n'
+! stderr .
+
+! exec $WORK/tya tool --git ../git_tool --branch main git_hello
+stderr 'rejects branches'
+
+-- app_single/tya.toml --
+name = "app_single"
+version = "0.1.0"
+
+[dependencies]
+tool_pkg = { path = "../tool_pkg" }
+
+-- app_conflict/tya.toml --
+name = "app_conflict"
+version = "0.1.0"
+
+[dependencies]
+tool_pkg = { path = "../tool_pkg" }
+other_pkg = { path = "../other_pkg" }
+
+-- oneshot_app/tya.toml --
+name = "oneshot_app"
+version = "0.1.0"
+
+-- git_app/tya.toml --
+name = "git_app"
+version = "0.1.0"
+
+[dependencies]
+git_tool = { git = "../git_tool", tag = "v0.1.0" }
+
+-- tool_pkg/tya.toml --
+name = "tool_pkg"
+version = "0.1.0"
+
+[tools]
+hello = "tools/hello.tya"
+stdin = "tools/stdin.tya"
+fail = "tools/fail.tya"
+
+-- tool_pkg/tools/hello.tya --
+import os as os
+
+println("pkg:tool_pkg")
+println("cwd:" + os.Os.cwd())
+for arg in args()
+  println("arg:{arg}")
+
+-- tool_pkg/tools/stdin.tya --
+line = read_line()
+println("stdin:{line}")
+
+-- tool_pkg/tools/fail.tya --
+println("before-exit")
+exit(7)
+
+-- other_pkg/tya.toml --
+name = "other_pkg"
+version = "0.1.0"
+
+[tools]
+hello = "tools/hello.tya"
+
+-- other_pkg/tools/hello.tya --
+println("other")
+
+-- git_tool/tya.toml --
+name = "git_tool"
+version = "0.1.0"
+
+[tools]
+git_hello = "tools/git_hello.tya"
+
+-- git_tool/tools/git_hello.tya --
+println("git-tool")
+for arg in args()
+  println("arg:{arg}")

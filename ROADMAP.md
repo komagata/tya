@@ -574,6 +574,11 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] Task dependency graphs (depend-on declaration).
   - [ ] Per-task environment variables.
 
+- [x] **Package command runner**
+  - [x] `tya tool <command> [args...]` runs package-declared Tya tools from
+    locked dependencies or explicit one-shot git/path sources.
+    - Spec: `docs/prd/completed/tya-tool-package-command.md`
+
 - [ ] **Extend `tya lint` source linter** *(v0.49 shipped rule
   `TYAL0001` unused local + CLI surface. v0.50 added `--fix`
   line-delete + `TYAL0003 / 0004 / 0005` warnings. v0.55 added

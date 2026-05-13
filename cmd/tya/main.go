@@ -193,6 +193,13 @@ func main() {
 		}
 		os.Exit(code)
 		return
+	case "tool":
+		code, err := toolCommand(os.Args[2:])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+		os.Exit(code)
+		return
 	case "new":
 		if err := newCommand(os.Args[2:]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -419,6 +426,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya new <name>")
 	fmt.Fprintln(os.Stderr, "       tya doctor native")
 	fmt.Fprintln(os.Stderr, "       tya task [name] [args...]")
+	fmt.Fprintln(os.Stderr, "       tya tool [--list] [--offline] [--path P | --git URL (--tag T|--rev R)] <command> [args...]")
 	fmt.Fprintln(os.Stderr, "       tya lint [--fix] [--format=text|json] [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya doc [--html <out>] [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya lsp [--log <file>]")
@@ -426,6 +434,17 @@ func usage() {
 }
 
 func compileAndRun(path string, args []string) error {
+	return compileAndRunInDir(path, args, "")
+}
+
+func compileAndRunInDir(path string, args []string, cwd string) error {
+	prevProjectRoot := os.Getenv("TYA_PROJECT_ROOT")
+	if cwd != "" {
+		if err := os.Setenv("TYA_PROJECT_ROOT", cwd); err != nil {
+			return err
+		}
+		defer os.Setenv("TYA_PROJECT_ROOT", prevProjectRoot)
+	}
 	outDir, err := os.MkdirTemp("", "tya-run-*")
 	if err != nil {
 		return err
@@ -439,6 +458,9 @@ func compileAndRun(path string, args []string) error {
 	run.Stdin = os.Stdin
 	run.Stdout = os.Stdout
 	run.Stderr = os.Stderr
+	if cwd != "" {
+		run.Dir = cwd
+	}
 	return run.Run()
 }
 

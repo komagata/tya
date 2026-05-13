@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -126,26 +125,36 @@ func (lf *Lockfile) FindPackage(name string) *LockedPackage {
 // constraint.
 func (lf *Lockfile) SatisfiesManifest(m *Manifest) bool {
 	for _, name := range m.DepOrder {
-		d := m.Deps[name]
-		lp := lf.FindPackage(name)
-		if lp == nil {
+		if !lf.satisfiesDependency(name, m.Deps[name]) {
 			return false
 		}
-		switch d.Source {
-		case "version":
-			if !d.Constraint.Satisfies(lp.Version) {
-				return false
-			}
-		case "git":
-			if lp.Source != "git" || lp.Git != d.Git {
-				return false
-			}
-		case "path":
-			if lp.Source != "path" || lp.PathRef != d.PathRef {
-				return false
-			}
+	}
+	for _, name := range m.DevOrder {
+		if !lf.satisfiesDependency(name, m.DevDeps[name]) {
+			return false
 		}
-		_ = fmt.Sprintf
+	}
+	return true
+}
+
+func (lf *Lockfile) satisfiesDependency(name string, d Dependency) bool {
+	lp := lf.FindPackage(name)
+	if lp == nil {
+		return false
+	}
+	switch d.Source {
+	case "version":
+		if !d.Constraint.Satisfies(lp.Version) {
+			return false
+		}
+	case "git":
+		if lp.Source != "git" || lp.Git != d.Git {
+			return false
+		}
+	case "path":
+		if lp.Source != "path" || lp.PathRef != d.PathRef {
+			return false
+		}
 	}
 	return true
 }

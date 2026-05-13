@@ -65,6 +65,19 @@ result = cli.Cli.parse(args(), spec)</code></pre>
 <li><code>--</code> to stop option parsing and preserve the remaining arguments in <code>rest</code></li>
 </ul>
 <p>Unknown options produce structured parse errors unless <code>allow_unknown</code> is true. Required options produce structured parse errors. <code>cli.Cli.usage(command, spec)</code> returns deterministic usage text, and <code>cli.Cli.parse_or_exit(args, spec)</code> prints usage/errors and exits non-zero on parse failure.</p>
+<h2 id="package-tools">Package Tools</h2>
+<p>Packages may declare Tya script tools in <code>tya.toml</code>:</p>
+<pre><code class="language-toml">[tools]
+format_docs = &quot;tools/format_docs.tya&quot;</code></pre>
+<p>Tool paths are relative to the package root and must point to lowercase entry-script <code>.tya</code> files, not PascalCase class files.</p>
+<p><code>tya tool &lt;command&gt; [args...]</code> discovers tools from the current project's locked dependencies and runs the selected script with the same execution path as <code>tya run</code>. The tool process receives forwarded stdin, stdout, stderr, arguments, and exit status, and it runs with the invoking project root as its current working directory.</p>
+<p><code>tya tool --list</code> prints available locked dependency tools in deterministic order. If more than one locked package declares the same command name, unqualified execution fails and reports the conflicting packages. Use <code>tya tool package_name:command</code> to select one package explicitly.</p>
+<p><code>tya tool</code> requires a current <code>tya.lock</code>. Missing or stale lockfiles fail with a diagnostic telling the user to run <code>tya install</code>.</p>
+<p>One-shot execution runs tools from explicit sources without editing <code>tya.toml</code> or <code>tya.lock</code>:</p>
+<pre><code class="language-sh">tya tool --path ../tools format_docs --check
+tya tool --git https://github.com/example/tya-tools --tag v1.2.0 format_docs
+tya tool --git https://github.com/example/tya-tools --rev &lt;commit&gt; format_docs</code></pre>
+<p>One-shot git tools are cached under <code>.tya/cache/exec/</code>. Branch execution is rejected; use <code>--tag</code> or <code>--rev</code> so remote code execution is pinned. <code>tya tool --offline</code> only uses already materialized project packages or cached one-shot git packages.</p>
     </article>
   </main>
 </body>

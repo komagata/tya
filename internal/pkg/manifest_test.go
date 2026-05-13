@@ -20,6 +20,9 @@ baz = { git = "https://example.com/baz", tag = "v2.0.0" }
 
 [dev-dependencies]
 mock = "^0.3.0"
+
+[tools]
+format_docs = "tools/format_docs.tya"
 `
 	path := filepath.Join(dir, "tya.toml")
 	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
@@ -55,6 +58,12 @@ mock = "^0.3.0"
 	}
 	if _, ok := m.DevDeps["mock"]; !ok {
 		t.Errorf("mock missing")
+	}
+	if got := m.Tools["format_docs"]; got != "tools/format_docs.tya" {
+		t.Errorf("format_docs tool: %q", got)
+	}
+	if got := m.ToolOrder; len(got) != 1 || got[0] != "format_docs" {
+		t.Errorf("tool order: %v", got)
 	}
 }
 
@@ -253,6 +262,31 @@ func TestWriteManifestTasksRoundTrip(t *testing.T) {
 	}
 	if order := got.TaskOrder; len(order) != 2 || order[0] != "ci" || order[1] != "release" {
 		t.Errorf("task order: %v", order)
+	}
+}
+
+func TestWriteManifestToolsRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tya.toml")
+	m := &Manifest{
+		Path:      path,
+		Name:      "x",
+		Version:   Version{Major: 1, Minor: 0, Patch: 0, Raw: "1.0.0"},
+		Tools:     map[string]string{"hello": "tools/hello.tya"},
+		ToolOrder: []string{"hello"},
+	}
+	if err := WriteManifest(m); err != nil {
+		t.Fatal(err)
+	}
+	got, err := ReadManifest(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Tools["hello"] != "tools/hello.tya" {
+		t.Errorf("hello tool: %+v", got.Tools)
+	}
+	if order := got.ToolOrder; len(order) != 1 || order[0] != "hello" {
+		t.Errorf("tool order: %v", order)
 	}
 }
 

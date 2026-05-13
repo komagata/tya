@@ -345,6 +345,16 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <li>[ ] Per-task environment variables.</li>
 </ul>
 <ul>
+<li>[x] **Package command runner**</li>
+<ul>
+<li>[x] <code>tya tool &lt;command&gt; [args...]</code> runs package-declared Tya tools from</li>
+</ul>
+</ul>
+<p>    locked dependencies or explicit one-shot git/path sources.</p>
+<ul>
+<li>Spec: <code>docs/prd/completed/tya-tool-package-command.md</code></li>
+</ul>
+<ul>
 <li>[ ] **Extend <code>tya lint</code> source linter** *(v0.49 shipped rule</li>
 </ul>
 <p>  <code>TYAL0001</code> unused local + CLI surface. v0.50 added <code>--fix</code>   line-delete + <code>TYAL0003 / 0004 / 0005</code> warnings. v0.55 added   per-line opt-out, <code>--format=json</code>, <code>TYAL0002</code> dead code, and   <code>TYAL0003</code> <code>--fix</code> unwrap-if autofix. Remaining work below.)*</p>

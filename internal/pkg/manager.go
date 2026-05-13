@@ -197,6 +197,11 @@ func resolve(projectRoot string, m *Manifest) (*Lockfile, error) {
 			return nil, err
 		}
 	}
+	for _, name := range m.DevOrder {
+		if err := visit(name, m.DevDeps[name]); err != nil {
+			return nil, err
+		}
+	}
 	sort.SliceStable(lf.Packages, func(i, j int) bool { return lf.Packages[i].Name < lf.Packages[j].Name })
 	return lf, nil
 }

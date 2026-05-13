@@ -40,6 +40,8 @@ type Manifest struct {
 	DevOrder    []string
 	Tasks       map[string]Task // task name -> task definition
 	TaskOrder   []string        // insertion order for Tasks
+	Tools       map[string]string
+	ToolOrder   []string
 
 	Path string // path to the manifest file (for relative path deps)
 }
@@ -95,7 +97,7 @@ func ReadManifest(path string) (*Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
-	m := &Manifest{Path: path, Deps: map[string]Dependency{}, DevDeps: map[string]Dependency{}, Tasks: map[string]Task{}}
+	m := &Manifest{Path: path, Deps: map[string]Dependency{}, DevDeps: map[string]Dependency{}, Tasks: map[string]Task{}, Tools: map[string]string{}}
 	if v, ok := tv.Table["name"]; ok && v.Kind == "string" {
 		m.Name = v.Str
 	}
@@ -147,6 +149,16 @@ func ReadManifest(path string) (*Manifest, error) {
 			}
 			m.Tasks[name] = t
 			m.TaskOrder = append(m.TaskOrder, name)
+		}
+	}
+	if tools, ok := tv.Table["tools"]; ok && tools.Kind == "table" {
+		for _, name := range tools.Order {
+			v := tools.Table[name]
+			if v.Kind != "string" {
+				return nil, fmt.Errorf("tools.%s: expected string", name)
+			}
+			m.Tools[name] = v.Str
+			m.ToolOrder = append(m.ToolOrder, name)
 		}
 	}
 	if native, ok := tv.Table["native"]; ok && native.Kind == "table" {
@@ -360,6 +372,13 @@ func WriteManifest(m *Manifest) error {
 			tasks.SetField(k, taskToToml(m.Tasks[k]))
 		}
 		t.SetField("tasks", tasks)
+	}
+	if len(m.ToolOrder) > 0 {
+		tools := NewTomlTable()
+		for _, k := range m.ToolOrder {
+			tools.SetField(k, TomlString(m.Tools[k]))
+		}
+		t.SetField("tools", tools)
 	}
 	if nativeHasFields(m.Native) {
 		t.SetField("native", nativeToToml(m.Native))

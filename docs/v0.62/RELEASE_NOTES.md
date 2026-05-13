@@ -19,9 +19,13 @@ standard library or runtime.
   effective flags.
 - New `cli.Cli` stdlib helpers parse command-line options, positional
   arguments, defaults, required options, `--`, and deterministic usage text.
+- New package tool declarations let packages expose Tya script commands through
+  `[tools]`, and `tya tool` runs locked dependency tools or pinned one-shot
+  git/path tools.
 
 ## Verification
 
 The release includes package-manager unit coverage and script coverage for path
 dependency native builds, native run/build/test behavior, diagnostics, the
-generated native library scaffold, and the `cli.Cli` stdlib parser.
+generated native library scaffold, the `cli.Cli` stdlib parser, and package
+tool execution.

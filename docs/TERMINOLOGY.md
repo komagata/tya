@@ -184,11 +184,24 @@ because user code accesses them through `import`.
 
 ## Package
 
-A package is a future distribution unit for third-party or separately versioned
-Tya code.
+A package is a versioned distribution unit for third-party or separately
+versioned Tya code.
 
-Tya does not currently define package management, package resolution, remote
-module installation, or versioned dependencies.
+Packages are declared with `tya.toml`, resolved into `tya.lock`, and loaded by
+the import resolver from manifest-declared dependencies. Tya currently supports
+git and path dependency sources, optional `[native]` C wrapper metadata, and
+optional `[tools]` Tya script command declarations. It does not currently define
+a central package registry, `tya publish`, binary package distribution, or
+workspaces.
+
+## Package Tool
+
+A package tool is a lowercase Tya entry script declared by a package under
+`[tools]` in `tya.toml` and run by consumers with `tya tool`.
+
+Package tools are not global installs and are not shell tasks. A package tool
+belongs to the package that declares it; a project runs it from locked
+dependencies or an explicit one-shot git/path source.
 
 Do not use package to describe the current standard library.
 
@@ -206,6 +219,7 @@ standard library module
 bundled library
 native-backed standard library module
 package
+package tool
 ```
 
 Avoid these terms in new documentation unless quoting older material:
