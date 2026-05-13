@@ -16,11 +16,6 @@ Objective: ship syntax coloring for major editors.
 | Vim / Neovim syntax coloring exists | `editors/vim/syntax/tya.vim` |
 | Vim / Neovim filetype and indent exist | `editors/vim/ftdetect/tya.vim`, `editors/vim/indent/tya.vim` |
 | Emacs syntax coloring exists | `editors/emacs/tya-mode.el` |
-| MELPA submission asset exists | `editors/emacs/melpa-recipe` |
-| GitHub Linguist submission assets exist | `editors/github-linguist/languages.yml.example`, `editors/tree-sitter-tya/` |
-| Standalone Tree-sitter grammar repository exists | https://github.com/komagata/tree-sitter-tya |
-| Tree-sitter grammar has an allowed Linguist license | `editors/tree-sitter-tya/LICENSE`, `editors/tree-sitter-tya/package.json`, `editors/tree-sitter-tya/tree-sitter.json` use MIT |
-| Tree-sitter grammar generates | `tree-sitter generate` in `editors/tree-sitter-tya` |
 | Manual editor asset bundle is published | GitHub Release `editors-assets-v0.61.0` with `tya-editor-assets-v0.61.0.tar.gz` |
 | Repository validation covers editor assets | `tests/editor_assets_test.go` |
 | CI validates editor assets | `.github/workflows/editor-assets.yml` |
@@ -34,8 +29,16 @@ from repository changes alone.
 |---|---|
 | Publish VS Code support to Marketplace | Marketplace publisher access and `VSCE_PAT` / `vsce login`; tracked by `komagata/tya#1` |
 | Publish VS Code support to Open VSX | Open VSX namespace access and `OVSX_PAT` / login; tracked by `komagata/tya#1` |
+
+## Deferred Follow-up
+
+These publishing integrations are intentionally outside the current syntax
+coloring ship scope.
+
+| Requirement | Status |
+|---|---|
 | Publish Emacs mode to MELPA | Pull request `melpa/melpa#10013` is open; maintainer review / merge pending; tracked by `komagata/tya#2` |
-| Register Tree-sitter grammar with GitHub Linguist | Blocked before PR: GitHub code search for `extension:tya -is:fork` reports 124 results, below Linguist's new-language usage threshold; tracked by `komagata/tya#3`. |
+| Register Tree-sitter grammar with GitHub Linguist | GitHub code search for `extension:tya -is:fork` reports 124 results, below Linguist's new-language usage threshold; tracked by `komagata/tya#3`. |
 
 ## Last Local Verification
 

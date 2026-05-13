@@ -66,6 +66,9 @@ Requirements:
 
 ## MELPA
 
+Deferred follow-up: MELPA publication is outside the current syntax coloring
+ship scope.
+
 Asset:
 
 - `editors/emacs/tya-mode.el`
@@ -75,6 +78,9 @@ Submit a pull request to `melpa/melpa` adding the recipe. MELPA's build should
 install `tya-mode.el` and expose `tya-mode` for `.tya` files.
 
 ## GitHub Linguist
+
+Deferred follow-up: GitHub Linguist registration is outside the current syntax
+coloring ship scope.
 
 Assets:
 
