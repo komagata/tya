@@ -1,0 +1,13 @@
+# Binary-chain recovery keeps a bad right operand from cascading
+# into extra parser diagnostics for the rest of the chain.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya check bad.tya
+stderr -count=1 'expected instance field name'
+
+-- bad.tya --
+a = 1
+c = 3
+x = a + @ + c

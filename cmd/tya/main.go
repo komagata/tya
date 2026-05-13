@@ -914,6 +914,11 @@ func checkFile(path string) error {
 		nativeNames = append(nativeNames, nativePlan.FuncOrder...)
 	}
 	defer checker.SetExtraBuiltinNames(nativeNames)()
+	if nativePlan != nil {
+		defer codegen.SetNativeFunctions(nativePlan.Functions)()
+	} else {
+		defer codegen.SetNativeFunctions(nil)()
+	}
 	// v0.44: tya check on a PascalCase class file is allowed
 	// (read-only, no entry semantics). Skip the entry-only
 	// runner.LoadSourceWithModules path and validate the class
@@ -955,7 +960,8 @@ func checkFile(path string) error {
 		diags = append(diags, commentDiags...)
 	}
 	if len(diags) == 0 {
-		return nil
+		_, _, err := codegen.EmitCWithPath(prog, path)
+		return err
 	}
 	emitDiagnostics(diags, path)
 	return errStrictReported

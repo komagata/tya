@@ -1,0 +1,12 @@
+# Member-chain recovery keeps a bad property segment from cascading
+# into extra parser diagnostics for the rest of the chain.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya check bad.tya
+stderr -count=1 'expected property name'
+
+-- bad.tya --
+user = {name: "Tya"}
+x = user.@.name

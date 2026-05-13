@@ -1,0 +1,36 @@
+# Codegen now collects independent diagnostics in source order
+# instead of stopping at the first unsupported shape. Missing embeds
+# are codegen diagnostics, and the valid print between them proves the
+# pass continues across an otherwise valid statement.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya check main.tya
+stderr -count=2 'CODEGEN'
+stderr 'Found 2 error'
+stderr 'missing-one.txt'
+stderr 'missing-two.txt'
+
+! exec $WORK/tya emit-c main.tya
+stderr -count=2 'CODEGEN'
+stderr 'Found 2 error'
+stderr 'missing-one.txt'
+stderr 'missing-two.txt'
+
+! exec $WORK/tya build main.tya -o app
+stderr -count=2 'CODEGEN'
+stderr 'Found 2 error'
+stderr 'missing-one.txt'
+stderr 'missing-two.txt'
+
+! exec $WORK/tya run main.tya
+stderr -count=2 'CODEGEN'
+stderr 'Found 2 error'
+stderr 'missing-one.txt'
+stderr 'missing-two.txt'
+
+-- main.tya --
+embed "missing-one.txt" as one
+print("between")
+embed "missing-two.txt" as two

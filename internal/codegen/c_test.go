@@ -36,6 +36,37 @@ func TestEmitCIncludesSourceLineComments(t *testing.T) {
 	}
 }
 
+func TestEmitCWithCoverageCollectsCodegenDiagnostics(t *testing.T) {
+	prog := checkedProgram(t, "embed \"missing-one.txt\" as one\nprint(\"ok\")\nembed \"missing-two.txt\" as two\n")
+	sourcePath := filepath.Join(t.TempDir(), "main.tya")
+	csrc, reg, diags, err := EmitCWithCoverage(prog, sourcePath, &CoverageOptions{})
+	if err == nil {
+		t.Fatal("expected codegen error")
+	}
+	if csrc != "" {
+		t.Fatalf("expected empty C source, got %q", csrc)
+	}
+	if reg != nil {
+		t.Fatalf("expected nil coverage registry, got %#v", reg)
+	}
+	if len(diags) != 2 {
+		t.Fatalf("expected 2 diagnostics, got %d: %#v", len(diags), diags)
+	}
+	ce, ok := AsCodegenError(err)
+	if !ok {
+		t.Fatalf("expected CodegenError, got %T", err)
+	}
+	if len(ce.Diags) != len(diags) {
+		t.Fatalf("error diagnostics length mismatch: %d != %d", len(ce.Diags), len(diags))
+	}
+	if ce.Diags[0].Code != codeEmbedNotFound || ce.Diags[1].Code != codeEmbedNotFound {
+		t.Fatalf("unexpected codes: %#v", ce.Diags)
+	}
+	if !strings.Contains(err.Error(), "embed source not found: missing-one.txt") {
+		t.Fatalf("legacy error string missing first diagnostic: %q", err.Error())
+	}
+}
+
 func TestEmitCCompilesArrayProgram(t *testing.T) {
 	src := "items = [1, 2]\npush(items, 3)\nprint(len(items))\nprint(items[2])\nitems[1] = 20\nprint(items[1])\nprint(pop(items))\nprint(len(items))\n"
 	out := compileAndRun(t, src)

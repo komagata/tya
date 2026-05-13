@@ -91,9 +91,8 @@ type CoverageRegistry struct {
 // counter increments when opt is non-nil. When opt is nil, it is
 // identical to EmitCWithPath and returns a nil registry.
 //
-// Returns (csource, registry, diags, err). v0.56 keeps codegen
-// fail-fast — diags is nil on success, or a single-entry slice
-// (the same payload as err.(*CodegenError).Diags) on failure.
+// Returns (csource, registry, diags, err). diags is nil on success,
+// or the same payload as err.(*CodegenError).Diags on failure.
 func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, []diag.Diagnostic, error) {
 	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
 	if opt != nil {
@@ -106,9 +105,14 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 		g.vars[name] = true
 		g.globalLine(fmt.Sprintf("TyaValue %s;", cName(name)))
 	}
+	var collected []diag.Diagnostic
 	for i, stmt := range prog.Stmts {
 		if err := g.stmt(stmt); err != nil {
-			return "", nil, diagsFromErr(err), err
+			if ce, ok := AsCodegenError(err); ok {
+				collected = append(collected, ce.Diags...)
+			} else {
+				return "", nil, diagsFromErr(err), err
+			}
 		}
 		// v0.41: emit a safe-point GC trigger between top-level
 		// statements. After a top-level statement finishes, any heap
@@ -119,6 +123,10 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 		if i < len(prog.Stmts)-1 {
 			g.line("tya_gc_maybe_collect();")
 		}
+	}
+	if len(collected) > 0 {
+		diags := append([]diag.Diagnostic(nil), collected...)
+		return "", nil, diags, &CodegenError{Diags: diags}
 	}
 	var out strings.Builder
 	out.WriteString("#include \"tya_runtime.h\"\n\n")

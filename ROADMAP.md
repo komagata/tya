@@ -505,10 +505,11 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     `DictLit` element lists. *(v0.56)*
   - [x] Codegen / Runner signature change to also return `[]Diag`
     slices. *(v0.56)*
-  - [ ] Binary-chain and member-chain expression-level recovery
-    (`a + broken + c`, `a.broken.c`). *(v0.57+)*
-  - [ ] Codegen multi-error mode (collect every `unsupported AST shape`
-    instead of bailing on the first). *(v0.57+)*
+  - [x] Binary-chain and member-chain expression-level recovery
+    (`a + broken + c`, `a.broken.c`).
+  - [x] Codegen multi-error mode (collect every `unsupported AST shape`
+    instead of bailing on the first).
+    - Spec: `docs/prd/completed/diagnostics-polish.md`
 
 - [x] **Ship `tya lsp` Language Server** *(v0.52 MVP + v0.53 full IDE
   feature set delivered. Remaining items below are Marketplace
