@@ -1,8 +1,8 @@
 # Publishing Editor Syntax Support
 
 This checklist records the external publishing work for Tya editor syntax
-coloring. The repository contains the distributable assets; the external steps
-require account credentials or upstream maintainer review.
+coloring. Marketplace and Open VSX publication are complete; MELPA and GitHub
+Linguist are tracked as deferred follow-up work.
 
 ## Manual Editor Asset Bundle
 
@@ -35,6 +35,10 @@ npx vsce publish
 Or run the GitHub Actions workflow `Publish VS Code extension` with
 `target=marketplace` after configuring the `VSCE_PAT` repository secret.
 
+Published package:
+
+- `komagata.tya` version `0.61.0`
+
 Requirements:
 
 - Visual Studio Marketplace publisher: `komagata`
@@ -58,6 +62,10 @@ npx ovsx publish tya-0.61.0.vsix
 
 Or run the GitHub Actions workflow `Publish VS Code extension` with
 `target=open-vsx` after configuring the `OVSX_PAT` repository secret.
+
+Published package:
+
+- `komagata.tya` version `0.61.0`
 
 Requirements:
 

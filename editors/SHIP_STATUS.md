@@ -12,6 +12,8 @@ Objective: ship syntax coloring for major editors.
 | VS Code syntax coloring exists | `editors/vscode/syntaxes/tya.tmLanguage.json`, registered from `editors/vscode/package.json` |
 | VS Code package builds | `npm run compile` and `npm run package` in `editors/vscode` |
 | VS Code manual-install package is published | GitHub Release `editors-vscode-v0.61.0` with `tya-0.61.0.vsix` |
+| VS Code Marketplace package is published | `komagata.tya` version `0.61.0` on Visual Studio Marketplace |
+| Open VSX package is published | `komagata.tya` version `0.61.0` on Open VSX |
 | VS Code publish workflow exists | `.github/workflows/publish-vscode-extension.yml` |
 | Vim / Neovim syntax coloring exists | `editors/vim/syntax/tya.vim` |
 | Vim / Neovim filetype and indent exist | `editors/vim/ftdetect/tya.vim`, `editors/vim/indent/tya.vim` |
@@ -19,16 +21,6 @@ Objective: ship syntax coloring for major editors.
 | Manual editor asset bundle is published | GitHub Release `editors-assets-v0.61.0` with `tya-editor-assets-v0.61.0.tar.gz` |
 | Repository validation covers editor assets | `tests/editor_assets_test.go` |
 | CI validates editor assets | `.github/workflows/editor-assets.yml` |
-
-## External Work Still Required
-
-These steps require account credentials or upstream review and are not complete
-from repository changes alone.
-
-| Requirement | Blocking dependency |
-|---|---|
-| Publish VS Code support to Marketplace | Marketplace publisher access and `VSCE_PAT` / `vsce login`; tracked by `komagata/tya#1` |
-| Publish VS Code support to Open VSX | Open VSX namespace access and `OVSX_PAT` / login; tracked by `komagata/tya#1` |
 
 ## Deferred Follow-up
 
@@ -49,7 +41,8 @@ scripts/verify_editor_assets.sh
 Last observed GitHub Actions verification:
 
 ```text
-Editor assets / main / 25769943202 / success / 2026-05-13T00:14:24Z
+Publish VS Code extension / main / 25778959381 / success / 2026-05-13T04:48:26Z
+Publish VS Code extension / main / 25779551179 / success / 2026-05-13T05:07:03Z
 ```
 
 ## Published Repository Evidence
@@ -62,8 +55,10 @@ Editor assets / main / 25769943202 / success / 2026-05-13T00:14:24Z
 - Main commit with VS Code manual-install release docs: `fe93c82`
 - Main commit with manual editor asset bundle docs: `3aad8f2`
 - Main commit licensing the Tree-sitter grammar as MIT: `018f8a6`
-- Latest observed GitHub Actions `Editor assets` run: `25769943202`, status:
-  success.
+- Latest observed GitHub Actions `Publish VS Code extension` Marketplace run:
+  `25778959381`, status: success.
+- Latest observed GitHub Actions `Publish VS Code extension` Open VSX run:
+  `25779551179`, status: success.
 - VS Code manual-install release:
   https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
   (`tya-0.61.0.vsix`, sha256
@@ -72,6 +67,8 @@ Editor assets / main / 25769943202 / success / 2026-05-13T00:14:24Z
   https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
   (`tya-editor-assets-v0.61.0.tar.gz`, sha256
   `87e2c78cf2d5a1fc224780d1f0db1dc2870ae008fcd85e584bd0159af49c8f8f`)
+- Visual Studio Marketplace extension: `komagata.tya` version `0.61.0`
+- Open VSX extension: `komagata.tya` version `0.61.0`
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Standalone Tree-sitter grammar repository: https://github.com/komagata/tree-sitter-tya
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`
