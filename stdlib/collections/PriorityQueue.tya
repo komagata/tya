@@ -1,0 +1,88 @@
+class PriorityQueue
+  initialize = items ->
+    self.items = []
+    self.seq = 0
+    if items != nil
+      i = 0
+      while i < items.len()
+        priority = items[i][0]
+        if priority.class != Number
+          raise "collections.PriorityQueue.from_array: priority must be a number"
+        self.items.push([priority, self.seq, items[i][1]])
+        self.seq = self.seq + 1
+        i = i + 1
+
+  static new = ->
+    return PriorityQueue(nil)
+
+  static from_array = items ->
+    return PriorityQueue(items)
+
+  push = value, priority ->
+    if priority.class != Number
+      raise "collections.PriorityQueue.push: priority must be a number"
+    self.items.push([priority, self.seq, value])
+    self.seq = self.seq + 1
+    return self
+
+  pop = ->
+    if self.empty?()
+      raise "collections.PriorityQueue.pop: empty priority queue"
+    index = self.best_index()
+    entry = self.items[index]
+    self.remove_at(index)
+    return entry[2]
+
+  peek = ->
+    if self.empty?()
+      raise "collections.PriorityQueue.peek: empty priority queue"
+    return self.items[self.best_index()][2]
+
+  peek_priority = ->
+    if self.empty?()
+      raise "collections.PriorityQueue.peek_priority: empty priority queue"
+    return self.items[self.best_index()][0]
+
+  len = ->
+    return self.items.len()
+
+  empty? = ->
+    return self.items.empty?()
+
+  clear = ->
+    self.items = []
+    return self
+
+  to_array = ->
+    clone = PriorityQueue.new()
+    i = 0
+    while i < self.items.len()
+      clone.items.push(self.items[i])
+      i = i + 1
+    out = []
+    while not clone.empty?()
+      idx = clone.best_index()
+      entry = clone.items[idx]
+      out.push([entry[0], entry[2]])
+      clone.remove_at(idx)
+    return out
+
+  best_index = ->
+    best = 0
+    i = 1
+    while i < self.items.len()
+      a = self.items[i]
+      b = self.items[best]
+      if a[0] < b[0] or (a[0] == b[0] and a[1] < b[1])
+        best = i
+      i = i + 1
+    return best
+
+  remove_at = index ->
+    next = []
+    i = 0
+    while i < self.items.len()
+      if i != index
+        next.push(self.items[i])
+      i = i + 1
+    self.items = next

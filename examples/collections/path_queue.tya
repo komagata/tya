@@ -1,0 +1,14 @@
+import collections as collections
+
+queue = collections.Queue.new()
+queue.push("assets")
+queue.push("assets/sprites")
+queue.push("assets/audio")
+
+visited = collections.Set.new()
+
+while not queue.empty?()
+  path = queue.pop()
+  if not visited.has?(path)
+    visited.add(path)
+    print(path)

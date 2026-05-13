@@ -210,6 +210,35 @@ calls can be chained. Invalid endian names, invalid cursor movement, reads past
 EOF, negative byte counts, and out-of-range integer writes raise `binary`
 errors.
 
+## `collections`
+
+```tya
+import collections as collections
+
+queue = collections.Queue.new()
+queue.push("job")
+next = queue.pop()
+
+seen = collections.Set.from_array(["asset.png", "asset.png"])
+print(seen.has?("asset.png"))
+```
+
+The `collections` package provides mutable class-style containers for common
+data-structure behavior:
+
+- `Stack` is a LIFO stack with `push`, `pop`, and `peek`.
+- `Queue` is a FIFO queue with `push`, `pop`, and `peek`.
+- `Deque` supports `push_front`, `push_back`, `pop_front`, `pop_back`,
+  `peek_front`, and `peek_back`.
+- `Set` stores unique values in insertion order and provides `union`,
+  `intersection`, `difference`, and `subset?`.
+- `PriorityQueue` is a stable min-priority queue. Equal priorities pop in
+  insertion order.
+
+All collections support `new`, `from_array`, `len`, `empty?`, `clear`, and
+`to_array`. Empty pop and peek operations raise collection-specific errors
+instead of returning `nil`.
+
 ## `math`
 
 ```tya

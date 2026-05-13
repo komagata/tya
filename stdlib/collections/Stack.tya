@@ -1,0 +1,39 @@
+class Stack
+  initialize = values ->
+    if values == nil
+      self.items = []
+    else
+      self.items = values.slice(0, values.len())
+
+  static new = ->
+    return Stack(nil)
+
+  static from_array = values ->
+    return Stack(values)
+
+  push = value ->
+    self.items.push(value)
+    return self
+
+  pop = ->
+    if self.empty?()
+      raise "collections.Stack.pop: empty stack"
+    return self.items.pop()
+
+  peek = ->
+    if self.empty?()
+      raise "collections.Stack.peek: empty stack"
+    return self.items[self.items.len() - 1]
+
+  len = ->
+    return self.items.len()
+
+  empty? = ->
+    return self.items.empty?()
+
+  clear = ->
+    self.items = []
+    return self
+
+  to_array = ->
+    return self.items.slice(0, self.items.len())

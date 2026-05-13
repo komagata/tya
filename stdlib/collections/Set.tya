@@ -1,0 +1,98 @@
+class Set
+  initialize = values ->
+    self.items = []
+    if values != nil
+      i = 0
+      while i < values.len()
+        found = false
+        j = 0
+        while j < self.items.len()
+          if self.items[j] == values[i]
+            found = true
+          j = j + 1
+        if not found
+          self.items.push(values[i])
+        i = i + 1
+
+  static new = ->
+    return Set(nil)
+
+  static from_array = values ->
+    return Set(values)
+
+  add = value ->
+    if not self.has?(value)
+      self.items.push(value)
+    return self
+
+  delete = value ->
+    next = []
+    removed = false
+    i = 0
+    while i < self.items.len()
+      if not removed and self.items[i] == value
+        removed = true
+      else
+        next.push(self.items[i])
+      i = i + 1
+    self.items = next
+    return removed
+
+  has? = value ->
+    i = 0
+    while i < self.items.len()
+      if self.items[i] == value
+        return true
+      i = i + 1
+    return false
+
+  len = ->
+    return self.items.len()
+
+  empty? = ->
+    return self.items.empty?()
+
+  clear = ->
+    self.items = []
+    return self
+
+  to_array = ->
+    return self.items.slice(0, self.items.len())
+
+  static union = a, b ->
+    out = Set.from_array(a.to_array())
+    i = 0
+    values = b.to_array()
+    while i < values.len()
+      out.add(values[i])
+      i = i + 1
+    return out
+
+  static intersection = a, b ->
+    out = Set.new()
+    values = a.to_array()
+    i = 0
+    while i < values.len()
+      if b.has?(values[i])
+        out.add(values[i])
+      i = i + 1
+    return out
+
+  static difference = a, b ->
+    out = Set.new()
+    values = a.to_array()
+    i = 0
+    while i < values.len()
+      if not b.has?(values[i])
+        out.add(values[i])
+      i = i + 1
+    return out
+
+  static subset? = a, b ->
+    values = a.to_array()
+    i = 0
+    while i < values.len()
+      if not b.has?(values[i])
+        return false
+      i = i + 1
+    return true

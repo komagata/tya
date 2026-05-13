@@ -1,0 +1,60 @@
+class Deque
+  initialize = values ->
+    if values == nil
+      self.items = []
+    else
+      self.items = values.slice(0, values.len())
+
+  static new = ->
+    return Deque(nil)
+
+  static from_array = values ->
+    return Deque(values)
+
+  push_front = value ->
+    next = [value]
+    i = 0
+    while i < self.items.len()
+      next.push(self.items[i])
+      i = i + 1
+    self.items = next
+    return self
+
+  push_back = value ->
+    self.items.push(value)
+    return self
+
+  pop_front = ->
+    if self.empty?()
+      raise "collections.Deque.pop_front: empty deque"
+    value = self.items[0]
+    self.items = self.items.slice(1, self.items.len())
+    return value
+
+  pop_back = ->
+    if self.empty?()
+      raise "collections.Deque.pop_back: empty deque"
+    return self.items.pop()
+
+  peek_front = ->
+    if self.empty?()
+      raise "collections.Deque.peek_front: empty deque"
+    return self.items[0]
+
+  peek_back = ->
+    if self.empty?()
+      raise "collections.Deque.peek_back: empty deque"
+    return self.items[self.items.len() - 1]
+
+  len = ->
+    return self.items.len()
+
+  empty? = ->
+    return self.items.empty?()
+
+  clear = ->
+    self.items = []
+    return self
+
+  to_array = ->
+    return self.items.slice(0, self.items.len())

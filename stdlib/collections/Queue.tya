@@ -1,0 +1,54 @@
+class Queue
+  initialize = values ->
+    if values == nil
+      self.items = []
+    else
+      self.items = values.slice(0, values.len())
+    self.head = 0
+
+  static new = ->
+    return Queue(nil)
+
+  static from_array = values ->
+    return Queue(values)
+
+  push = value ->
+    self.items.push(value)
+    return self
+
+  pop = ->
+    if self.empty?()
+      raise "collections.Queue.pop: empty queue"
+    value = self.items[self.head]
+    self.head = self.head + 1
+    self.compact()
+    return value
+
+  peek = ->
+    if self.empty?()
+      raise "collections.Queue.peek: empty queue"
+    return self.items[self.head]
+
+  len = ->
+    return self.items.len() - self.head
+
+  empty? = ->
+    return self.len() == 0
+
+  clear = ->
+    self.items = []
+    self.head = 0
+    return self
+
+  to_array = ->
+    out = []
+    i = self.head
+    while i < self.items.len()
+      out.push(self.items[i])
+      i = i + 1
+    return out
+
+  compact = ->
+    if self.head > 32 and self.head * 2 >= self.items.len()
+      self.items = self.to_array()
+      self.head = 0

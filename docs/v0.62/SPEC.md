@@ -237,6 +237,32 @@ operation. Readers support cursor movement, remaining/eof checks, byte slices,
 u8/i8/u16/i16/u32/i32, and f32/f64. Writers support the same numeric widths and
 return `self` from write methods.
 
+## Collections Stdlib
+
+The standard library includes a pure Tya `collections` package with mutable
+class-style container instances.
+
+```tya
+import collections as collections
+
+queue = collections.Queue.new()
+queue.push("job")
+next = queue.pop()
+
+seen = collections.Set.from_array(["asset.png", "asset.png"])
+print(seen.has?("asset.png"))
+```
+
+Public classes are `Stack`, `Queue`, `Deque`, `Set`, and `PriorityQueue`.
+Every collection supports `new`, `from_array`, `len`, `empty?`, `clear`, and
+`to_array`. Empty pop and peek methods raise collection-specific errors because
+`nil` is a valid stored value.
+
+`Set` uses Tya value equality, preserves first-insertion order, and provides
+`union`, `intersection`, `difference`, and `subset?`. `PriorityQueue` is a
+stable min-priority queue whose `to_array()` returns pop order without mutating
+the queue.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

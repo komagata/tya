@@ -58,6 +58,8 @@ standard library or runtime.
   provider requests, and semantic tokens include a stable modifier legend.
 - New `binary.Reader` and `binary.Writer` stdlib values provide endian-aware
   integer and IEEE 754 float reads/writes over `bytes`.
+- New `collections` stdlib values provide `Stack`, `Queue`, `Deque`, `Set`,
+  and stable min-priority queue containers.
 
 ## Verification
 
@@ -68,5 +70,6 @@ execution, interpolation scanner edge cases, the `template.Template` stdlib
 renderer, Markdown parser/rendering extensions, compression round trips and
 file helpers, the `log.Logger` stdlib logger, `io.Io` stream tests, and
 `net/ip` address/network tests, plus localhost `net/socket` client/server,
-binary I/O, timeout, and connection-refused tests, and URL parser tests for
-IPv6, relative resolution, duplicate queries, and malformed input.
+binary I/O, collections behavior, timeout, and connection-refused tests, and
+URL parser tests for IPv6, relative resolution, duplicate queries, and
+malformed input.
