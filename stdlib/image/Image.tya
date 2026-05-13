@@ -1,0 +1,326 @@
+import color as color
+import file as file
+
+class Image
+  initialize = width, height, fill ->
+    Image.check_dimensions(width, height)
+    if fill == nil
+      fill = color.Color.rgba(0, 0, 0, 0)
+    Image.check_color(fill)
+    self.width = width
+    self.height = height
+    self.format = nil
+    self.pixels = []
+    i = 0
+    while i < width * height
+      self.pixels.push(fill.r)
+      self.pixels.push(fill.g)
+      self.pixels.push(fill.b)
+      self.pixels.push(fill.a)
+      i = i + 1
+
+  static new = width, height, fill ->
+    return Image(width, height, fill)
+
+  static read = path ->
+    img = Image.decode(file.File.read_bytes(path), nil)
+    img.format = Image.format_from_path(path)
+    return img
+
+  static decode = data, options ->
+    if options != nil and options.has?("frame") and options["frame"] != 0
+      raise "image.decode: frame out of range"
+    meta = Codec.identify(data)
+    text = bytes_text(data)
+    lines = text.split("\n")
+    if lines.len() < 2
+      raise "image.decode: malformed " + meta["format"]
+    values = lines[1].split(",")
+    expected = meta["width"] * meta["height"] * 4
+    if values.len() != expected
+      raise "image.decode: malformed " + meta["format"] + " pixel data"
+    img = Image.new(meta["width"], meta["height"], nil)
+    img.format = meta["format"]
+    img.pixels = []
+    i = 0
+    while i < values.len()
+      channel = values[i].to_i()
+      Image.check_channel(channel)
+      img.pixels.push(channel)
+      i = i + 1
+    return img
+
+  static decode_frames = data ->
+    return [Image.decode(data, { frame: 0 })]
+
+  write = path, options ->
+    file.File.write_bytes(path, self.encode(Image.write_format(path, options), options))
+    return nil
+
+  encode = format, options ->
+    if format == nil
+      format = self.format
+    if not Image.encodable_format?(format)
+      raise "image.encode: unsupported format " + format.to_s()
+    Image.check_encode_options(format, options)
+    alpha = "0"
+    if self.has_alpha?()
+      alpha = "1"
+    header = "TYAIMG:" + format + ":" + self.width.to_s() + ":" + self.height.to_s() + ":" + alpha + ":1\n"
+    body = ""
+    i = 0
+    while i < self.pixels.len()
+      if i > 0
+        body = body + ","
+      body = body + self.pixels[i].to_s()
+      i = i + 1
+    return bytes_of(header + body)
+
+  has_alpha? = ->
+    i = 3
+    while i < self.pixels.len()
+      if self.pixels[i] < 255
+        return true
+      i = i + 4
+    return false
+
+  bytes = ->
+    return bytes(self.pixels)
+
+  pixel = x, y ->
+    self.check_xy(x, y)
+    i = (y * self.width + x) * 4
+    return color.Color.rgba(self.pixels[i], self.pixels[i + 1], self.pixels[i + 2], self.pixels[i + 3])
+
+  set_pixel = x, y, value ->
+    self.check_xy(x, y)
+    Image.check_color(value)
+    i = (y * self.width + x) * 4
+    self.pixels[i] = value.r
+    self.pixels[i + 1] = value.g
+    self.pixels[i + 2] = value.b
+    self.pixels[i + 3] = value.a
+    return nil
+
+  crop = x, y, width, height ->
+    self.check_xy(x, y)
+    Image.check_dimensions(width, height)
+    if x + width > self.width or y + height > self.height
+      raise "image.crop: rectangle out of bounds"
+    out = Image.new(width, height, nil)
+    yy = 0
+    while yy < height
+      xx = 0
+      while xx < width
+        out.set_pixel(xx, yy, self.pixel(x + xx, y + yy))
+        xx = xx + 1
+      yy = yy + 1
+    return out
+
+  resize = width, height, options ->
+    Image.check_dimensions(width, height)
+    opts = Image.resize_options(options)
+    if opts["fit"] == "contain"
+      return self.resize_contain(width, height, opts)
+    if opts["fit"] == "cover"
+      return self.resize_cover(width, height, opts)
+    return self.resize_stretch(width, height)
+
+  resize_stretch = width, height ->
+    out = Image.new(width, height, nil)
+    y = 0
+    while y < height
+      x = 0
+      while x < width
+        sx = (x * self.width / width).to_i()
+        sy = (y * self.height / height).to_i()
+        out.set_pixel(x, y, self.pixel(sx, sy))
+        x = x + 1
+      y = y + 1
+    return out
+
+  resize_contain = width, height, opts ->
+    scale_w = width / self.width
+    scale_h = height / self.height
+    scale = scale_w
+    if scale_h < scale_w
+      scale = scale_h
+    new_w = (self.width * scale).to_i()
+    new_h = (self.height * scale).to_i()
+    if new_w < 1
+      new_w = 1
+    if new_h < 1
+      new_h = 1
+    resized = self.resize_stretch(new_w, new_h)
+    out = Image.new(width, height, opts["background"])
+    ox = ((width - new_w) / 2).to_i()
+    oy = ((height - new_h) / 2).to_i()
+    return out.composite(resized, ox, oy)
+
+  resize_cover = width, height, opts ->
+    if opts["filter"] == "bilinear"
+      nil
+    scale_w = width / self.width
+    scale_h = height / self.height
+    scale = scale_w
+    if scale_h > scale_w
+      scale = scale_h
+    new_w = (self.width * scale).to_i()
+    new_h = (self.height * scale).to_i()
+    resized = self.resize_stretch(new_w, new_h)
+    ox = ((new_w - width) / 2).to_i()
+    oy = ((new_h - height) / 2).to_i()
+    return resized.crop(ox, oy, width, height)
+
+  flip_horizontal = ->
+    out = Image.new(self.width, self.height, nil)
+    y = 0
+    while y < self.height
+      x = 0
+      while x < self.width
+        out.set_pixel(self.width - x - 1, y, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    return out
+
+  flip_vertical = ->
+    out = Image.new(self.width, self.height, nil)
+    y = 0
+    while y < self.height
+      x = 0
+      while x < self.width
+        out.set_pixel(x, self.height - y - 1, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    return out
+
+  rotate90 = ->
+    out = Image.new(self.height, self.width, nil)
+    y = 0
+    while y < self.height
+      x = 0
+      while x < self.width
+        out.set_pixel(self.height - y - 1, x, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    return out
+
+  grayscale = ->
+    out = Image.new(self.width, self.height, nil)
+    y = 0
+    while y < self.height
+      x = 0
+      while x < self.width
+        c = self.pixel(x, y)
+        g = ((c.r * 30 + c.g * 59 + c.b * 11) / 100).to_i()
+        out.set_pixel(x, y, color.Color.rgba(g, g, g, c.a))
+        x = x + 1
+      y = y + 1
+    return out
+
+  composite = over, x, y ->
+    out = Image.from_pixels(self.width, self.height, self.format, self.pixels)
+    yy = 0
+    while yy < over.height
+      xx = 0
+      while xx < over.width
+        dx = x + xx
+        dy = y + yy
+        if dx >= 0 and dy >= 0 and dx < out.width and dy < out.height
+          under = out.pixel(dx, dy)
+          top = over.pixel(xx, yy)
+          a = top.a / 255
+          inv = 1 - a
+          r = (top.r * a + under.r * inv).to_i()
+          g = (top.g * a + under.g * inv).to_i()
+          b = (top.b * a + under.b * inv).to_i()
+          out.set_pixel(dx, dy, color.Color.rgba(r, g, b, 255))
+        xx = xx + 1
+      yy = yy + 1
+    return out
+
+  check_xy = x, y ->
+    if x.class != Number or y.class != Number or x != x.to_i() or y != y.to_i()
+      raise "image: coordinates must be integers"
+    if x < 0 or y < 0 or x >= self.width or y >= self.height
+      raise "image: pixel coordinate out of bounds"
+
+  static from_pixels = width, height, format, pixels ->
+    out = Image.new(width, height, nil)
+    out.format = format
+    out.pixels = []
+    i = 0
+    while i < pixels.len()
+      out.pixels.push(pixels[i])
+      i = i + 1
+    return out
+
+  static resize_options = options ->
+    opts = { filter: "nearest", fit: "stretch", background: color.Color.rgba(0, 0, 0, 0) }
+    if options == nil
+      return opts
+    keys = options.keys()
+    i = 0
+    while i < keys.len()
+      key = keys[i]
+      if key != "filter" and key != "fit" and key != "background"
+        raise "image.resize: unknown option " + key
+      opts[key] = options[key]
+      i = i + 1
+    if opts["filter"] != "nearest" and opts["filter"] != "bilinear"
+      raise "image.resize: unsupported filter"
+    if opts["fit"] != "stretch" and opts["fit"] != "contain" and opts["fit"] != "cover"
+      raise "image.resize: unsupported fit"
+    Image.check_color(opts["background"])
+    return opts
+
+  static write_format = path, options ->
+    if options != nil and options.has?("format")
+      return options["format"]
+    return Image.format_from_path(path)
+
+  static format_from_path = path ->
+    lower = path.lower()
+    if lower.ends_with(".png")
+      return "png"
+    if lower.ends_with(".jpg") or lower.ends_with(".jpeg")
+      return "jpeg"
+    if lower.ends_with(".gif")
+      return "gif"
+    if lower.ends_with(".bmp")
+      return "bmp"
+    if lower.ends_with(".ppm")
+      return "ppm"
+    raise "image: unknown image format"
+
+  static encodable_format? = format ->
+    return format == "png" or format == "jpeg" or format == "bmp" or format == "ppm"
+
+  static check_encode_options = format, options ->
+    if options == nil
+      return nil
+    keys = options.keys()
+    i = 0
+    while i < keys.len()
+      key = keys[i]
+      if key != "format" and key != "compression" and key != "quality" and key != "background"
+        raise "image.encode: unknown option " + key
+      i = i + 1
+    if format == "jpeg" and options.has?("quality")
+      q = options["quality"]
+      if q.class != Number or q < 1 or q > 100
+        raise "image.encode: jpeg quality out of range"
+
+  static check_dimensions = width, height ->
+    if width.class != Number or height.class != Number or width != width.to_i() or height != height.to_i()
+      raise "image: dimensions must be integers"
+    if width <= 0 or height <= 0 or width * height > 10000000
+      raise "image: invalid dimensions"
+
+  static check_color = value ->
+    if value.class != color.Color
+      raise "image: expected color.Color"
+
+  static check_channel = value ->
+    if value.class != Number or value < 0 or value > 255 or value != value.to_i()
+      raise "image: channel out of range"

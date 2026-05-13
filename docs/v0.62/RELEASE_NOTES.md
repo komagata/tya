@@ -66,6 +66,8 @@ standard library or runtime.
   bytes, and class instances to JSON-compatible data, JSON, and TOML.
 - New `xml` stdlib DOM classes parse, inspect, and dump practical XML,
   including common JUnit XML output.
+- New `image.Image` and `image.Codec` stdlib classes provide deterministic
+  RGBA image metadata, pixel access, transforms, and byte/file round trips.
 
 ## Verification
 
@@ -77,6 +79,6 @@ renderer, Markdown parser/rendering extensions, compression round trips and
 file helpers, the `log.Logger` stdlib logger, `io.Io` stream tests, and
 `net/ip` address/network tests, plus localhost `net/socket` client/server,
 binary I/O, collections behavior, timeout, and connection-refused tests, and
-random helper coverage, XML/JUnit parser coverage, and URL parser tests for
-IPv6, relative resolution, duplicate queries, serialization round trips, and
-malformed input.
+random helper coverage, XML/JUnit parser coverage, image operation coverage,
+and URL parser tests for IPv6, relative resolution, duplicate queries,
+serialization round trips, and malformed input.

@@ -143,6 +143,31 @@ Operations include `to_hex`, `to_array`, `equal?`, `nearly_equal?`,
 `luminance`, `contrast_ratio`, `with_alpha`, `invert`, `grayscale`, `blend`,
 `over`, `lighten`, and `darken`.
 
+## Image Stdlib
+
+The standard library includes `image.Image` and `image.Codec` for deterministic
+RGBA image inspection, manipulation, and byte/file round trips.
+
+```tya
+import color as color
+import image as image
+
+img = image.Image.new(2, 2, color.Color.rgb(255, 0, 0))
+thumb = img.resize(128, 128, { fit: "contain" })
+thumb.write("thumb.png")
+```
+
+`Image` values expose `width`, `height`, and `format`, store pixels as 8-bit
+RGBA in row-major order, and use `color.Color` for pixel access. The API
+supports `read`, `decode`, `write`, `encode`, `bytes`, `pixel`, `set_pixel`,
+`crop`, `resize`, horizontal/vertical flips, `rotate90`, `grayscale`, and
+`composite`.
+
+`Codec.identify` and `identify_file` return metadata dictionaries for supported
+formats. The first bundled codec boundary supports deterministic dependency-free
+`png`, `jpeg`, `bmp`, `ppm`, and GIF frame-0 decode paths suitable for stdlib
+tests and simple image workflows.
+
 ## Geometry Stdlib
 
 The standard library includes a pure Tya `geometry` package for deterministic

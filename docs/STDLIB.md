@@ -87,6 +87,35 @@ color.to_hex(true)
 color.to_array()
 ```
 
+## `image`
+
+```tya
+import color as color
+import image as image
+
+img = image.Image.new(2, 2, color.Color.rgb(255, 0, 0))
+thumb = img.resize(128, 128, { fit: "contain" })
+thumb.write("thumb.png")
+```
+
+`image.Image` stores 8-bit RGBA pixels in row-major order. Public fields are
+`width`, `height`, and `format`. Use `Image.read(path)`,
+`Image.decode(bytes)`, `img.write(path)`, and `img.encode(format)` for byte and
+file workflows. `image.Codec.identify(bytes)` and `identify_file(path)` return
+metadata dictionaries with `format`, `width`, `height`, `frames`, `animated`,
+`has_alpha`, and `color_space`.
+
+Pixel APIs use `color.Color` instances. `Image.new(width, height, color)`
+creates a filled image, `pixel(x, y)` returns a color, `set_pixel(x, y, color)`
+mutates one pixel, and `bytes()` returns a copy of raw RGBA bytes. Operations
+include `crop`, `resize`, `flip_horizontal`, `flip_vertical`, `rotate90`,
+`grayscale`, and `composite`.
+
+The bundled first version provides deterministic dependency-free image bytes
+for `png`, `jpeg`, `bmp`, `ppm`, and GIF frame-0 decoding through the stdlib
+codec boundary. Unsupported formats, malformed data, invalid dimensions,
+invalid channels, and out-of-bounds pixels raise `image` errors.
+
 ## `geometry`
 
 ```tya

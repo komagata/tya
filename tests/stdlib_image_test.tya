@@ -1,0 +1,91 @@
+import unittest
+import color as color
+import file as file
+import image as image
+
+class StdlibImageTest extends TestCase
+
+  test_new_pixels_and_raw_bytes = ->
+    red = color.Color.rgb(255, 0, 0)
+    img = image.Image.new(2, 2, red)
+    self.assert_equal(image.Image, img.class, "class")
+    self.assert_equal(2, img.width, "width")
+    self.assert_equal(2, img.height, "height")
+    self.assert_equal([255, 0, 0, 255], img.pixel(0, 0).to_array(), "pixel")
+    img.set_pixel(1, 0, color.Color.rgba(0, 0, 255, 128))
+    self.assert_equal([0, 0, 255, 128], img.pixel(1, 0).to_array(), "set")
+    self.assert(img.has_alpha?(), "alpha")
+    self.assert_equal(16, bytes_array(img.bytes()).len(), "raw bytes")
+
+  test_encode_decode_and_identify_formats = ->
+    img = StdlibImageTest.sample_image()
+    png = img.encode("png")
+    meta = image.Codec.identify(png)
+    self.assert_equal("png", meta["format"], "format")
+    self.assert_equal(2, meta["width"], "width")
+    self.assert_equal(2, meta["height"], "height")
+    decoded = image.Image.decode(png)
+    self.assert_equal([255, 0, 0, 255], decoded.pixel(0, 0).to_array(), "png pixel")
+    self.assert_equal([0, 0, 255, 128], decoded.pixel(1, 0).to_array(), "png alpha")
+
+    jpeg = image.Image.decode(img.encode("jpeg", { quality: 80 }))
+    self.assert_equal([0, 255, 0, 255], jpeg.pixel(0, 1).to_array(), "jpeg pixel")
+    bmp = image.Image.decode(img.encode("bmp"))
+    self.assert_equal([255, 255, 255, 255], bmp.pixel(1, 1).to_array(), "bmp pixel")
+    ppm = image.Image.decode(img.encode("ppm"))
+    self.assert_equal([255, 0, 0, 255], ppm.pixel(0, 0).to_array(), "ppm pixel")
+
+    gif = image.Image.decode(StdlibImageTest.fixture_bytes("gif"))
+    gif_meta = image.Codec.identify(StdlibImageTest.fixture_bytes("gif"))
+    self.assert_equal("gif", gif.format, "gif format")
+    self.assert_equal(1, gif_meta["frames"], "gif frames")
+    self.assert(not gif_meta["animated"], "gif animated")
+
+  test_read_write = ->
+    img = StdlibImageTest.sample_image()
+    path = "/tmp/tya_image_test.png"
+    img.write(path)
+    meta = image.Codec.identify_file(path)
+    self.assert_equal("png", meta["format"], "identify file")
+    read = image.Image.read(path)
+    self.assert_equal("png", read.format, "read format")
+    self.assert_equal([0, 255, 0, 255], read.pixel(0, 1).to_array(), "read pixel")
+
+  test_operations = ->
+    img = StdlibImageTest.sample_image()
+    crop = img.crop(1, 0, 1, 2)
+    self.assert_equal([0, 0, 255, 128], crop.pixel(0, 0).to_array(), "crop")
+    resized = img.resize(4, 4)
+    self.assert_equal([255, 0, 0, 255], resized.pixel(0, 0).to_array(), "resize")
+    contained = img.resize(4, 2, { fit: "contain", background: color.Color.rgb(9, 9, 9) })
+    self.assert_equal(4, contained.width, "contain width")
+    covered = img.resize(1, 1, { fit: "cover" })
+    self.assert_equal(1, covered.height, "cover")
+    self.assert_equal([0, 0, 255, 128], img.flip_horizontal().pixel(0, 0).to_array(), "flip h")
+    self.assert_equal([0, 255, 0, 255], img.flip_vertical().pixel(0, 0).to_array(), "flip v")
+    self.assert_equal(2, img.rotate90().height, "rotate")
+    gray = img.grayscale().pixel(0, 0)
+    self.assert_equal(gray.r, gray.g, "gray rg")
+    base = image.Image.new(1, 1, color.Color.rgb(0, 0, 0))
+    over = image.Image.new(1, 1, color.Color.rgba(100, 100, 100, 128))
+    self.assert_equal([50, 50, 50, 255], base.composite(over, 0, 0).pixel(0, 0).to_array(), "composite")
+
+  test_errors = ->
+    self.assert_raises(-> image.Image.new(0, 1), "dimensions")
+    self.assert_raises(-> image.Image.new(1, 1, "red"), "color.Color")
+    self.assert_raises(-> image.Image.new(1, 1).pixel(1, 0), "out of bounds")
+    self.assert_raises(-> image.Image.decode(bytes_of("not an image")), "unsupported")
+    self.assert_raises(-> StdlibImageTest.sample_image().encode("gif"), "unsupported")
+    self.assert_raises(-> StdlibImageTest.sample_image().encode("jpeg", { quality: 101 }), "quality")
+    self.assert_raises(-> StdlibImageTest.sample_image().resize(1, 1, { nope: true }), "unknown option")
+
+  static sample_image = ->
+    img = image.Image.new(2, 2, color.Color.rgba(0, 0, 0, 0))
+    img.set_pixel(0, 0, color.Color.rgb(255, 0, 0))
+    img.set_pixel(1, 0, color.Color.rgba(0, 0, 255, 128))
+    img.set_pixel(0, 1, color.Color.rgb(0, 255, 0))
+    img.set_pixel(1, 1, color.Color.rgb(255, 255, 255))
+    return img
+
+  static fixture_bytes = format ->
+    return bytes_of("TYAIMG:" + format + ":1:1:0:1\n1,2,3,255")
