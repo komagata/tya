@@ -25,10 +25,14 @@ standard library or runtime.
 - String interpolation now balances nested braces and preserves quotes inside
   interpolation expressions, so forms such as `{user["name"]}` and dictionary
   literals inside interpolation compile correctly.
+- New `template.Template` stdlib renderer handles generic text templates with
+  variables, dotted/indexed paths, conditionals, loops, explicit partials,
+  file rendering, strict missing-value errors, and optional HTML escaping.
 
 ## Verification
 
 The release includes package-manager unit coverage and script coverage for path
 dependency native builds, native run/build/test behavior, diagnostics, the
 generated native library scaffold, the `cli.Cli` stdlib parser, package tool
-execution, and interpolation scanner edge cases.
+execution, interpolation scanner edge cases, and the `template.Template` stdlib
+renderer.

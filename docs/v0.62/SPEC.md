@@ -131,3 +131,29 @@ print("kind: {{"kind": "ok"}["kind"]}")
 
 Triple-quoted interpolating strings use the same scanner. Raw strings and bytes
 literals remain non-interpolating.
+
+## Template Stdlib
+
+`import template` exposes `template.Template`, a generic text template renderer
+for application output, HTML, configuration files, generated code, emails, and
+documentation.
+
+`Template.render(source, data)` renders a template string. Tags use
+`{{ name }}` for value insertion and support dotted/indexed paths such as
+`{{ user.name }}` and `{{ items[0].name }}`. Missing values render as an empty
+string by default; `{ strict: true }` reports missing values as template
+errors.
+
+`Template.render(source, data, options)` accepts options. `escape: "html"`
+escapes `&`, `<`, `>`, `"`, and `'`; `escape` defaults to `"none"`.
+`Template.render_html(source, data)` is equivalent to HTML escaping mode.
+Triple-brace tags such as `{{{ trusted_html }}}` explicitly bypass escaping.
+
+Conditionals use `{{ if path }}` / `{{ else }}` / `{{ end }}`. Loops use
+`{{ for item in items }}` / `{{ end }}` and render the body once per item.
+Explicit partials use `{{ partial "name" context }}` with a `partials`
+dictionary supplied through options.
+
+`Template.render_file(path, data)` and `Template.render_file(path, data,
+options)` read a template file and render it with the same semantics as
+`Template.render`.

@@ -1,0 +1,357 @@
+class Template
+  static render = source, data, options ->
+    if options == nil
+      options = {}
+    return Template.render_with_options(source, data, options)
+
+  static render_html = source, data ->
+    return Template.render_with_options(source, data, { escape: "html" })
+
+  static render_file = path, data, options ->
+    if options == nil
+      options = {}
+    return Template.render_with_options(read_file(path), data, options)
+
+  static render_with_options = source, data, options ->
+    state = { source: source, pos: 0, len: source.byte_len() }
+    env = { data: data, locals: {}, options: options }
+    return Template.render_until(state, env, "")
+
+  static render_until = state, env, stop ->
+    out = ""
+    src = state["source"]
+    while state["pos"] < state["len"]
+      if stop != "" and Template.starts_tag(state, stop)
+        return out
+      if Template.starts(state, Template.raw_open())
+        out = out + Template.render_raw_tag(state, env)
+      elseif Template.starts(state, Template.open())
+        tag = Template.read_tag(state)
+        if Template.starts_text(tag, "if ")
+          out = out + Template.render_if(state, tag, env)
+        elseif Template.starts_text(tag, "for ")
+          out = out + Template.render_for(state, tag, env)
+        elseif Template.starts_text(tag, "partial ")
+          out = out + Template.render_partial(tag, env)
+        elseif tag == "else" or tag == "end"
+          raise Template.error(state, "unexpected " + tag)
+        else
+          out = out + Template.render_value(tag, env, true)
+      else
+        out = out + src[state["pos"]]
+        state["pos"] = state["pos"] + 1
+    if stop != ""
+      raise Template.error(state, "missing " + stop)
+    return out
+
+  static render_raw_tag = state, env ->
+    state["pos"] = state["pos"] + 3
+    tag = Template.read_until(state, Template.raw_close())
+    return Template.render_value(tag.trim(), env, false)
+
+  static render_value = path, env, escaped ->
+    found = Template.lookup(path, env)
+    if not found["ok"]
+      return ""
+    text = found["value"].to_s()
+    if escaped and Template.option(env["options"], "escape", "none") == "html"
+      return Template.escape_html(text)
+    return text
+
+  static render_if = state, tag, env ->
+    cond = Template.slice(tag, 3, tag.byte_len())
+    truth = false
+    found = Template.lookup(cond.trim(), env)
+    if found["ok"] and found["value"]
+      truth = true
+    then_start = state["pos"]
+    split = Template.find_block_split(state["source"], then_start)
+    state["pos"] = split["end_end"]
+    if split["else"] >= 0
+      if truth
+        return Template.render_range(state["source"], then_start, split["else"], env)
+      return Template.render_range(state["source"], split["else_end"], split["end"], env)
+    if truth
+      return Template.render_range(state["source"], then_start, split["end"], env)
+    return ""
+
+  static render_for = state, tag, env ->
+    parts = tag.split(" ")
+    if parts.len() != 4 or parts[2] != "in"
+      raise Template.error(state, "invalid for")
+    name = parts[1]
+    path = parts[3]
+    body_start = state["pos"]
+    split = Template.find_block_split(state["source"], body_start)
+    state["pos"] = split["end_end"]
+    found = Template.lookup(path, env)
+    if not found["ok"]
+      return ""
+    out = ""
+    for item in found["value"]
+      child = Template.copy_dict(env["locals"])
+      child[name] = item
+      child_env = { data: env["data"], locals: child, options: env["options"] }
+      out = out + Template.render_range(state["source"], body_start, split["end"], child_env)
+    return out
+
+  static render_partial = tag, env ->
+    rest = Template.slice(tag, 8, tag.byte_len()).trim()
+    if rest.byte_len() < 2 or rest[0] != "\""
+      raise "template.render: invalid partial"
+    i = 1
+    name = ""
+    while i < rest.byte_len() and rest[i] != "\""
+      name = name + rest[i]
+      i = i + 1
+    if i >= rest.byte_len()
+      raise "template.render: invalid partial"
+    ctx_path = Template.slice(rest, i + 1, rest.byte_len()).trim()
+    options = env["options"]
+    if not options.has("partials")
+      raise "template.render: missing partials"
+    partials = options["partials"]
+    if not partials.has(name)
+      raise "template.render: missing partial " + name
+    ctx = env["data"]
+    if ctx_path != ""
+      found = Template.lookup(ctx_path, env)
+      if found["ok"]
+        ctx = found["value"]
+      else
+        ctx = {}
+    return Template.render_with_options(partials[name], ctx, options)
+
+  static find_block_split = source, start ->
+    pos = start
+    depth = 0
+    else_pos = -1
+    else_end = -1
+    n = source.byte_len()
+    while pos < n
+      open = Template.find_next_tag(source, pos)
+      if open < 0
+        raise "template.render: missing end"
+      close = Template.find_close(source, open + 2, Template.close())
+      tag = Template.slice(source, open + 2, close).trim()
+      if Template.starts_text(tag, "if ") or Template.starts_text(tag, "for ")
+        depth = depth + 1
+      elseif tag == "end"
+        if depth == 0
+          return { else: else_pos, else_end: else_end, end: open, end_end: close + 2 }
+        depth = depth - 1
+      elseif tag == "else" and depth == 0
+        else_pos = open
+        else_end = close + 2
+      pos = close + 2
+    raise "template.render: missing end"
+
+  static render_range = source, start, finish, env ->
+    part = Template.slice(source, start, finish)
+    state = { source: part, pos: 0, len: part.byte_len() }
+    return Template.render_until(state, env, "")
+
+  static lookup = path, env ->
+    p = path.trim()
+    parts = Template.path_parts(p)
+    if parts.len() == 0
+      return { ok: false, value: "" }
+    first = parts[0]
+    ok = false
+    value = nil
+    locals = env["locals"]
+    data = env["data"]
+    options = env["options"]
+    if locals.has(first)
+      ok = true
+      value = locals[first]
+    elseif data.has(first)
+      ok = true
+      value = data[first]
+    if not ok
+      if Template.strict(options)
+        raise "template.render: missing " + p
+      return { ok: false, value: "" }
+    i = 1
+    while i < parts.len()
+      key = parts[i]
+      if key == ""
+        return { ok: true, value: value }
+      if Template.is_number(key)
+        value = value[key.to_i()]
+      else
+        if value.has(key)
+          value = value[key]
+        else
+          if Template.strict(options)
+            raise "template.render: missing " + p
+          return { ok: false, value: "" }
+      i = i + 1
+    return { ok: true, value: value }
+
+  static path_parts = path ->
+    parts = []
+    cur = ""
+    i = 0
+    while i < path.byte_len()
+      c = path[i]
+      if c == "."
+        if cur != ""
+          parts.push(cur)
+        cur = ""
+      elseif c == "["
+        if cur != ""
+          parts.push(cur)
+          cur = ""
+        i = i + 1
+        idx = ""
+        while i < path.byte_len() and path[i] != "]"
+          idx = idx + path[i]
+          i = i + 1
+        parts.push(idx)
+      else
+        cur = cur + c
+      i = i + 1
+    if cur != ""
+      parts.push(cur)
+    return parts
+
+  static starts = state, text ->
+    src = state["source"]
+    pos = state["pos"]
+    if pos + text.byte_len() > state["len"]
+      return false
+    i = 0
+    while i < text.byte_len()
+      if src[pos + i] != text[i]
+        return false
+      i = i + 1
+    return true
+
+  static starts_tag = state, tag ->
+    if not Template.starts(state, Template.open())
+      return false
+    close = Template.find_close(state["source"], state["pos"] + 2, Template.close())
+    if close < 0
+      return false
+    text = Template.slice(state["source"], state["pos"] + 2, close).trim()
+    return text == tag
+
+  static starts_text = text, prefix ->
+    if prefix.byte_len() > text.byte_len()
+      return false
+    return Template.slice(text, 0, prefix.byte_len()) == prefix
+
+  static read_tag = state ->
+    state["pos"] = state["pos"] + 2
+    tag = Template.read_until(state, Template.close())
+    return tag.trim()
+
+  static read_until = state, marker ->
+    src = state["source"]
+    start = state["pos"]
+    close = Template.find_close(src, start, marker)
+    if close < 0
+      raise Template.error(state, "unclosed tag")
+    state["pos"] = close + marker.byte_len()
+    return Template.slice(src, start, close)
+
+  static find_next_tag = source, start ->
+    i = start
+    while i + 1 < source.byte_len()
+      if source[i] == Template.lbrace() and source[i + 1] == Template.lbrace()
+        return i
+      i = i + 1
+    return -1
+
+  static find_close = source, start, marker ->
+    i = start
+    while i + marker.byte_len() <= source.byte_len()
+      if Template.slice(source, i, i + marker.byte_len()) == marker
+        return i
+      i = i + 1
+    return -1
+
+  static slice = text, start, finish ->
+    out = ""
+    i = start
+    while i < finish
+      out = out + text[i]
+      i = i + 1
+    return out
+
+  static copy_dict = dict ->
+    out = {}
+    for key in dict.keys()
+      out[key] = dict[key]
+    return out
+
+  static lbrace = ->
+    return chr(123)
+
+  static rbrace = ->
+    return chr(125)
+
+  static open = ->
+    return Template.lbrace() + Template.lbrace()
+
+  static close = ->
+    return Template.rbrace() + Template.rbrace()
+
+  static raw_open = ->
+    return Template.open() + Template.lbrace()
+
+  static raw_close = ->
+    return Template.rbrace() + Template.close()
+
+  static option = options, name, default ->
+    if options.has(name)
+      return options[name]
+    return default
+
+  static strict = options ->
+    return options.has("strict") and options["strict"]
+
+  static is_number = text ->
+    if text == ""
+      return false
+    i = 0
+    while i < text.byte_len()
+      c = ord(text[i])
+      if c < 48 or c > 57
+        return false
+      i = i + 1
+    return true
+
+  static escape_html = text ->
+    out = ""
+    i = 0
+    while i < text.byte_len()
+      c = text[i]
+      if c == "&"
+        out = out + "&amp;"
+      elseif c == "<"
+        out = out + "&lt;"
+      elseif c == ">"
+        out = out + "&gt;"
+      elseif c == "\""
+        out = out + "&quot;"
+      elseif c == "'"
+        out = out + "&#39;"
+      else
+        out = out + c
+      i = i + 1
+    return out
+
+  static error = state, message ->
+    line = 1
+    col = 1
+    i = 0
+    while i < state["pos"]
+      if state["source"][i] == "\n"
+        line = line + 1
+        col = 1
+      else
+        col = col + 1
+      i = i + 1
+    return "template.render:{line}:{col}: {message}"

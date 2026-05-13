@@ -663,10 +663,8 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
   - [ ] HTTP **client** — `import net/http`, `http.get(url)`,
     `http.post(url, body)`, `http.request(method, url, opts)`.
     `stdlib/net/http/Client.tya` is already reserved.
-  - [ ] **Template engine** — `net/http/Template` or
-    `net/http/template` module with `{{var}}` interpolation,
-    `{{#each}}` / `{{#if}}` blocks, and partials. Minimal
-    Mustache-style; full HTML escaping by default.
+  - [x] **Template engine** — integrate the generic `template.Template`
+    stdlib renderer for HTTP response templates.
   - [ ] **Concurrency** for the server — thread pool or
     `tya_task_new` wiring so a slow handler does not block
     other clients.
@@ -833,6 +831,11 @@ minor version. Each will be scoped into a `docs/vX.Y/SPEC.md` when picked up.
     - Spec: `docs/prd/completed/raw-quotes-in-interpolation.md`
 
 ### Stdlib extensions
+
+- [x] **Generic template library**
+  - [x] `template.Template` renders text templates with interpolation,
+    conditionals, loops, partials, file rendering, and optional HTML escaping.
+    - Spec: `docs/prd/completed/stdlib-template-library.md`
 
 - [x] **CLI helper library**
   - [x] `cli.Cli` parses flags, positional args, defaults, required options,

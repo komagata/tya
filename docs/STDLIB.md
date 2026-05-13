@@ -659,3 +659,37 @@ result = channel.Channel.select([
 Returns a dict `{ index, kind, value }`. v0.43 polls each
 operation in a tight loop and sleeps briefly when nothing is
 ready; future minors will add a proper waiter-list mechanism.
+
+## `template` (v0.62)
+
+Generic text template rendering.
+
+```tya
+import template as template
+
+html = template.Template.render_html(
+  "Hello, {{ name }}",
+  { name: "Tya" }
+)
+```
+
+Class members on `template.Template`: `render`, `render_file`, `render_html`.
+
+`Template.render(source, data)` renders a template string using values from
+`data`. `Template.render(source, data, options)` accepts options.
+`Template.render_file(path, data)` reads a template file and renders it with
+the same semantics.
+
+Template tags use `{{ name }}` for escaped or plain insertion depending on
+`options["escape"]`. Dotted and indexed paths such as `{{ user.name }}` and
+`{{ items[0].name }}` are supported. Missing values render as an empty string
+unless `{ strict: true }` is passed.
+
+Blocks use `{{ if path }}` / `{{ else }}` / `{{ end }}` and
+`{{ for item in items }}` / `{{ end }}`. Explicit partials use
+`{{ partial "name" context }}` with `partials` supplied in options.
+
+`Template.render_html(source, data)` is equivalent to
+`Template.render(source, data, { escape: "html" })` and escapes `&`, `<`, `>`,
+`"`, and `'`. Triple-brace tags such as `{{{ trusted_html }}}` insert trusted
+content without escaping.

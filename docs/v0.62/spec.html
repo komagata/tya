@@ -84,6 +84,12 @@ tya tool --git https://github.com/example/tya-tools --rev &lt;commit&gt; format_
 print(&quot;Hello, {user[&quot;name&quot;]}!&quot;)
 print(&quot;kind: {{&quot;kind&quot;: &quot;ok&quot;}[&quot;kind&quot;]}&quot;)</code></pre>
 <p>Triple-quoted interpolating strings use the same scanner. Raw strings and bytes literals remain non-interpolating.</p>
+<h2 id="template-stdlib">Template Stdlib</h2>
+<p><code>import template</code> exposes <code>template.Template</code>, a generic text template renderer for application output, HTML, configuration files, generated code, emails, and documentation.</p>
+<p><code>Template.render(source, data)</code> renders a template string. Tags use <code>{{ name }}</code> for value insertion and support dotted/indexed paths such as <code>{{ user.name }}</code> and <code>{{ items[0].name }}</code>. Missing values render as an empty string by default; <code>{ strict: true }</code> reports missing values as template errors.</p>
+<p><code>Template.render(source, data, options)</code> accepts options. <code>escape: &quot;html&quot;</code> escapes <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, and <code>'</code>; <code>escape</code> defaults to <code>&quot;none&quot;</code>. <code>Template.render_html(source, data)</code> is equivalent to HTML escaping mode. Triple-brace tags such as <code>{{{ trusted_html }}}</code> explicitly bypass escaping.</p>
+<p>Conditionals use <code>{{ if path }}</code> / <code>{{ else }}</code> / <code>{{ end }}</code>. Loops use <code>{{ for item in items }}</code> / <code>{{ end }}</code> and render the body once per item. Explicit partials use <code>{{ partial &quot;name&quot; context }}</code> with a <code>partials</code> dictionary supplied through options.</p>
+<p><code>Template.render_file(path, data)</code> and <code>Template.render_file(path, data, options)</code> read a template file and render it with the same semantics as <code>Template.render</code>.</p>
     </article>
   </main>
 </body>
