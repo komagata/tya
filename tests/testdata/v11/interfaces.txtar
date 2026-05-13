@@ -8,8 +8,8 @@ stdout 'data\nsaved:record\nuser\nmemory\nmodule\nqualified\nfinal\n'
 ! exec go run ./cmd/tya run $WORK/construct_interface.tya
 stderr 'cannot construct interface Reader'
 
-! exec go run ./cmd/tya run $WORK/interface_field.tya
-stderr 'interface bodies may only contain instance method requirements'
+exec go run ./cmd/tya run $WORK/interface_field.tya
+stdout 'named'
 
 ! exec go run ./cmd/tya run $WORK/interface_class_method.tya
 stderr 'interface bodies may only contain instance method requirements'
@@ -39,7 +39,7 @@ stderr 'duplicate interface Reader'
 stderr 'abstract interface method read expects 0 parameters'
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 ! stderr .
 
 -- interfaces.tya --
@@ -79,7 +79,7 @@ final class FinalReader implements Reader
 
 import io
 
-class QualifiedMemoryReader implements io.Reader
+class QualifiedMemoryReader implements Reader
   read = ->
     "qualified"
 
@@ -99,13 +99,12 @@ final_reader = FinalReader()
 print(final_reader.read())
 
 -- io.tya --
-module io
-  interface Reader
-    read = ->
+interface IOReader
+  read = ->
 
-  class MemoryReader implements Reader
-    read = ->
-      "module"
+class MemoryReader implements IOReader
+  read = ->
+    "module"
 
 -- construct_interface.tya --
 interface Reader
@@ -115,7 +114,12 @@ reader = Reader()
 
 -- interface_field.tya --
 interface Named
-  name = ""
+  name = "named"
+
+class User implements Named
+  id = 1
+
+print(User().name)
 
 -- interface_class_method.tya --
 interface Model

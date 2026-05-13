@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.61 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-61-release-notes">Tya v0.61 Release Notes</h1>
+<p>v0.61 grows <code>interface</code> from a requirement-only contract into Tya's stackable behavior mechanism.</p>
+<h2 id="highlights">Highlights</h2>
+<ul>
+<li>Interfaces may define default instance methods.</li>
+<li>Interface defaults can satisfy body-free requirements from other interfaces.</li>
+<li>Interfaces may contribute instance fields.</li>
+<li>Interfaces may define zero-argument <code>initialize</code> hooks.</li>
+<li>Interface initializer hooks run at a class constructor's <code>super()</code> point.</li>
+<li>Class overrides can call <code>super()</code> into the interface default stack.</li>
+<li>Interface default methods can call <code>super()</code> through stacked defaults.</li>
+<li>Same-name interface fields and unrelated default methods require explicit</li>
+</ul>
+<p>  class resolution.</p>
+<h2 id="non-goals-kept">Non-Goals Kept</h2>
+<ul>
+<li>No <code>trait</code> keyword was added.</li>
+<li>Static interface members remain invalid.</li>
+<li>Private interface members remain invalid.</li>
+<li><code>Self</code> remains invalid inside interface methods.</li>
+</ul>
+<h2 id="verification">Verification</h2>
+<p>The release includes script coverage for:</p>
+<ul>
+<li>default methods and default-method requirements;</li>
+<li>interface-contributed fields;</li>
+<li>interface initializer hooks and constructor <code>super()</code> placement;</li>
+<li>class <code>super()</code> into interface defaults;</li>
+<li>stacked interface <code>super()</code> with rightmost-wraps-leftmost order;</li>
+<li>default-method and field conflict diagnostics.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

@@ -100,31 +100,17 @@ func TestCheckAllowsDictionaryIndexAccess(t *testing.T) {
 	}
 }
 
-func TestCheckRejectsDictionaryMemberAccess(t *testing.T) {
+func TestCheckAllowsDictionaryMemberAccess(t *testing.T) {
 	prog := parse(t, "user = { name: \"komagata\" }\nprint(user.name)\n")
-	err := Check(prog)
-	if err == nil {
-		t.Fatal("expected dictionary member access error")
-	}
-	if !strings.Contains(err.Error(), "cannot use . access on dictionary; use index access") {
-		t.Fatalf("unexpected error: %v", err)
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
 	}
 }
 
-func TestCheckRejectsArrayMemberAccess(t *testing.T) {
-	cases := map[string]string{
-		"items = [1]\nprint(items.count)\n": "cannot use . access on array",
-	}
-	for src, want := range cases {
-		t.Run(want, func(t *testing.T) {
-			err := Check(parse(t, src))
-			if err == nil {
-				t.Fatal("expected member access error")
-			}
-			if !strings.Contains(err.Error(), want) {
-				t.Fatalf("unexpected error: %v", err)
-			}
-		})
+func TestCheckAllowsArrayMemberAccess(t *testing.T) {
+	prog := parse(t, "items = [1]\nprint(items.len())\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -135,67 +121,10 @@ func TestCheckAllowsKnownModuleMemberAccess(t *testing.T) {
 	}
 }
 
-func TestCheckModuleDeclaration(t *testing.T) {
-	src := "module util\n  foo = \"foo\"\n  bar = -> \"bar\"\n\nprint(util.foo)\nprint(util.bar())\n"
+func TestCheckNamespaceDictionary(t *testing.T) {
+	src := "foo = \"foo\"\nbar = -> \"bar\"\nutil = { foo: foo, bar: bar }\nprint(util.foo)\nprint(util.bar())\n"
 	if err := Check(parse(t, src)); err != nil {
 		t.Fatal(err)
-	}
-}
-
-func TestCheckRejectsInvalidModuleName(t *testing.T) {
-	err := Check(parse(t, "module Util\n  foo = \"foo\"\n"))
-	if err == nil {
-		t.Fatal("expected invalid module name error")
-	}
-	if !strings.Contains(err.Error(), "invalid module name Util") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestCheckRejectsDuplicateModuleMember(t *testing.T) {
-	err := Check(parse(t, "module util\n  foo = \"a\"\n  foo = \"b\"\n"))
-	if err == nil {
-		t.Fatal("expected duplicate module member error")
-	}
-	if !strings.Contains(err.Error(), "duplicate module member foo") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestCheckModuleFileAllowsImportsAndMatchingModule(t *testing.T) {
-	src := "import dependency\nmodule greeting\n  hello = name -> dependency.wrap(name)\n"
-	if err := CheckModuleFile(parse(t, src), "greeting.tya"); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestCheckModuleFileRejectsMismatchedModuleName(t *testing.T) {
-	err := CheckModuleFile(parse(t, "module message\n  text = \"hello\"\n"), "greeting.tya")
-	if err == nil {
-		t.Fatal("expected module name mismatch error")
-	}
-	if !strings.Contains(err.Error(), "greeting.tya must define module greeting") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestCheckModuleFileRejectsMultipleModules(t *testing.T) {
-	err := CheckModuleFile(parse(t, "module greeting\n  text = \"hello\"\nmodule greeting\n  extra = \"extra\"\n"), "greeting.tya")
-	if err == nil {
-		t.Fatal("expected multiple module error")
-	}
-	if !strings.Contains(err.Error(), "greeting.tya must define exactly one module") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestCheckModuleFileRejectsTopLevelStatements(t *testing.T) {
-	err := CheckModuleFile(parse(t, "module greeting\n  text = \"hello\"\n_helper = \"bad\"\n"), "greeting.tya")
-	if err == nil {
-		t.Fatal("expected top-level helper error")
-	}
-	if !strings.Contains(err.Error(), "greeting.tya may only contain imports and one module declaration") {
-		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

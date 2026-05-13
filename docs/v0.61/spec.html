@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.61 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-61-specification">Tya v0.61 Specification</h1>
+<p>&gt; **Status:** released. v0.61 grows <code>interface</code> into Tya's stackable-trait &gt; mechanism. This is intentionally a large <code>/goal</code> scope: default method bodies, &gt; interface-contributed state, deterministic initialization, conflict &gt; resolution, and <code>super</code> across stacked interfaces are all part of the target. &gt; The keyword remains <code>interface</code>; Tya does not support both <code>interface</code> and &gt; <code>trait</code>.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya currently has explicit interfaces:</p>
+<pre><code class="language-tya">interface Reader
+  read = -&gt;
+
+class File implements Reader
+  read = -&gt;
+    &quot;data&quot;</code></pre>
+<p>That is useful for contracts, but not enough for stackable behavior. v0.61 turns <code>interface</code> into the single composition mechanism for reusable behavior that does not require class inheritance.</p>
+<p>The target is:</p>
+<pre><code class="language-tya">interface Named
+  name = -&gt;
+
+  label = -&gt;
+    self.name()
+
+interface Timestamped
+  created_at = nil
+
+  initialize = -&gt;
+    self.created_at = Time.now()
+
+  age = -&gt;
+    Time.since(self.created_at)
+
+class User implements Named, Timestamped
+  initialize = name -&gt;
+    self.name_value = name
+    super()
+
+  name = -&gt;
+    self.name_value</code></pre>
+<p><code>User</code> receives the <code>label</code>, <code>created_at</code>, and <code>age</code> behavior while still using ordinary single class inheritance for <code>extends</code>.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Keep <code>interface</code> as the single user-facing concept.</li>
+<li>Add interface default instance methods.</li>
+<li>Add interface fields as state requirements / contributions.</li>
+<li>Add interface initialization hooks with deterministic ordering.</li>
+<li>Define <code>super</code> across class inheritance and stacked interfaces.</li>
+<li>Define conflict rules for methods, fields, and initialization.</li>
+<li>Preserve explicit <code>implements</code>; no implicit conformance.</li>
+<li>Preserve single class inheritance.</li>
+<li>Keep method overloading out of Tya.</li>
+<li>Keep the implementation plan large enough for <code>/goal</code> long-running work.</li>
+</ul>
+<h2 id="non-goals">Non-goals</h2>
+<ul>
+<li>No separate <code>trait</code> keyword in v0.61.</li>
+<li>No support for both <code>interface</code> and <code>trait</code> as synonyms.</li>
+<li>No implicit interfaces generated from classes.</li>
+<li>No implementing a class as if it were an interface.</li>
+<li>No method overloading.</li>
+<li>No generics.</li>
+<li>No operator-overload traits.</li>
+<li>No sealed / base / open class hierarchy system.</li>
+</ul>
+<h2 id="naming-decision">Naming Decision</h2>
+<p>v0.61 keeps <code>interface</code>.</p>
+<p>The concept becomes trait-like, but Tya should not have two spellings for the same abstraction. Canonical Syntax requires one source representation. If Tya renames the concept to <code>trait</code> later, that must be a clean migration, not a long-term alias.</p>
+<p>Documentation should use:</p>
+<pre><code class="language-text">interface
+interface default method
+interface field
+interface initializer
+stacked interface</code></pre>
+<p>Avoid using <code>trait</code> as syntax in examples.</p>
+<h2 id="interface-members">Interface Members</h2>
+<p>An interface may contain:</p>
+<ul>
+<li>body-free instance method requirements;</li>
+<li>default instance methods;</li>
+<li>field declarations;</li>
+<li><code>initialize</code> hooks.</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-tya">interface Audited
+  created_at = nil
+
+  initialize = -&gt;
+    self.created_at = Time.now()
+
+  touch = -&gt;
+    self.created_at = Time.now()
+
+  label = -&gt;</code></pre>
+<p>An interface may not contain:</p>
+<ul>
+<li>static fields;</li>
+<li>static methods;</li>
+<li>private members;</li>
+<li>class constructors other than the interface <code>initialize</code> hook;</li>
+<li>nested class declarations;</li>
+<li>nested interface declarations.</li>
+</ul>
+<h2 id="default-methods">Default Methods</h2>
+<p>A body-free method remains a requirement:</p>
+<pre><code class="language-tya">interface Reader
+  read = -&gt;</code></pre>
+<p>A method with a body is a default:</p>
+<pre><code class="language-tya">interface Reader
+  read_twice = -&gt;
+    self.read() + self.read()</code></pre>
+<p>Default methods are inherited by implementing classes when no class method with the same name exists.</p>
+<pre><code class="language-tya">interface Named
+  name = -&gt;
+
+  label = -&gt;
+    self.name()
+
+class User implements Named
+  name = -&gt;
+    &quot;user&quot;
+
+print(User().label())  # &quot;user&quot;</code></pre>
+<p>A class method wins over an interface default:</p>
+<pre><code class="language-tya">class Admin implements Named
+  name = -&gt;
+    &quot;admin&quot;
+
+  label = -&gt;
+    &quot;admin:{self.name()}&quot;</code></pre>
+<p><code>Admin().label()</code> uses the class body.</p>
+<h2 id="default-methods-satisfy-requirements">Default Methods Satisfy Requirements</h2>
+<p>A default method can satisfy a compatible body-free requirement from another interface.</p>
+<pre><code class="language-tya">interface RequiresLabel
+  label = -&gt;
+
+interface DefaultLabel
+  label = -&gt;
+    &quot;default&quot;
+
+class Item implements RequiresLabel, DefaultLabel</code></pre>
+<p><code>Item</code> is concrete because <code>DefaultLabel.label</code> supplies the implementation.</p>
+<p>If the arity differs, it is a conflict.</p>
+<h2 id="interface-fields">Interface Fields</h2>
+<p>An interface field contributes instance state to implementing classes.</p>
+<pre><code class="language-tya">interface Timestamped
+  created_at = nil
+
+  age = -&gt;
+    Time.since(self.created_at)</code></pre>
+<p>A class implementing <code>Timestamped</code> has a <code>created_at</code> instance field unless it declares that field itself.</p>
+<pre><code class="language-tya">class Post implements Timestamped</code></pre>
+<p>is equivalent, observably, to a class with a <code>created_at = nil</code> instance field and the default <code>age</code> method, after conflict resolution.</p>
+<p>Field initializers are evaluated for each instance during construction. They may reference imported modules and constants. They should not reference <code>self</code> unless the implementation can guarantee a deterministic point where <code>self</code> exists and earlier fields are initialized. The v0.61 rule is:</p>
+<ul>
+<li>interface field initializers may not reference <code>self</code>;</li>
+<li>interface initializer hooks may reference <code>self</code>.</li>
+</ul>
+<p>Invalid:</p>
+<pre><code class="language-tya">interface Bad
+  name = self.default_name()</code></pre>
+<p>Valid:</p>
+<pre><code class="language-tya">interface Good
+  name = nil
+
+  initialize = -&gt;
+    self.name = self.default_name()</code></pre>
+<h2 id="field-conflict-rules">Field Conflict Rules</h2>
+<p>Tya has one field per name on an instance. Interfaces must not silently define two different fields with the same name.</p>
+<p>Conflict:</p>
+<pre><code class="language-tya">interface A
+  enabled = false
+
+interface B
+  enabled = false
+
+class User implements A, B</code></pre>
+<p>Even though the initializer source is the same, v0.61 requires the class or a child interface to resolve same-name interface fields explicitly. This keeps state composition visible and avoids subtle changes when two interfaces evolve independently.</p>
+<p>Also conflicting:</p>
+<pre><code class="language-tya">interface A
+  enabled = false
+
+interface B
+  enabled = true
+
+class User implements A, B</code></pre>
+<p>The class must resolve the conflict explicitly:</p>
+<pre><code class="language-tya">class User implements A, B
+  enabled = false</code></pre>
+<p>A class field declaration wins over interface fields with the same name.</p>
+<p>Any same-name interface field conflict is resolved by a class field declaration or by a child interface field declaration. Initializer equality does not make two interface fields compatible in v0.61.</p>
+<h2 id="interface-initialization">Interface Initialization</h2>
+<p>An interface may declare an <code>initialize</code> hook:</p>
+<pre><code class="language-tya">interface Timestamped
+  created_at = nil
+
+  initialize = -&gt;
+    self.created_at = Time.now()</code></pre>
+<p>Interface initializers are not constructors. They do not receive the class constructor arguments unless the class passes state through fields or calls ordinary methods. The signature must be zero-arity in v0.61:</p>
+<pre><code class="language-tya">initialize = -&gt;</code></pre>
+<p>This keeps construction deterministic and avoids argument routing across multiple stacked interfaces.</p>
+<p>When constructing an instance:</p>
+<ol>
+<li>parent class construction runs according to existing <code>super(...)</code> rules;</li>
+</ol>
+<p>2. class and interface fields are initialized in deterministic order; 3. interface initializer hooks run in deterministic order; 4. the class constructor body continues after its <code>super()</code> point, or starts    after implicit parent/interface initialization when no parent constructor is    required.</p>
+<h2 id="initialization-order">Initialization Order</h2>
+<p>Interface order is source order.</p>
+<pre><code class="language-tya">class User implements A, B, C</code></pre>
+<p>The effective interface order is:</p>
+<ol>
+<li>parents of <code>A</code>, then <code>A</code>;</li>
+</ol>
+<p>2. parents of <code>B</code>, then <code>B</code>; 3. parents of <code>C</code>, then <code>C</code>; 4. duplicates removed by interface identity, keeping the first occurrence.</p>
+<p>This is depth-first, left-to-right, postorder, with de-duplication.</p>
+<p>Example:</p>
+<pre><code class="language-tya">interface Root
+  initialize = -&gt; log(&quot;Root&quot;)
+
+interface A extends Root
+  initialize = -&gt; log(&quot;A&quot;)
+
+interface B extends Root
+  initialize = -&gt; log(&quot;B&quot;)
+
+class User implements A, B</code></pre>
+<p>Initialization order:</p>
+<pre><code class="language-text">Root
+A
+B</code></pre>
+<p><code>Root</code> runs once.</p>
+<h2 id="class-constructor-interaction">Class Constructor Interaction</h2>
+<p>If a class has no <code>initialize</code>, interface fields and initializers still run.</p>
+<pre><code class="language-tya">interface Timestamped
+  created_at = nil
+  initialize = -&gt; self.created_at = Time.now()
+
+class Post implements Timestamped
+
+post = Post()</code></pre>
+<p>If a class has <code>initialize</code>, interface initialization happens at the class's <code>super()</code> point. This is true even for root classes that do not extend another class.</p>
+<p>Recommended canonical form when implementing interfaces with initialization:</p>
+<pre><code class="language-tya">class Post implements Timestamped
+  initialize = title -&gt;
+    super()
+    self.title = title</code></pre>
+<p>In a root class, <code>super()</code> means &quot;run interface initialization chain&quot;. This is a v0.61 extension. In a subclass, <code>super(args...)</code> first calls the parent constructor; the parent constructor is responsible for its own interface chain. After parent construction, the subclass's newly implemented interfaces run.</p>
+<p>If a class implements interfaces with initializer hooks and declares <code>initialize</code> without calling <code>super()</code>, the checker rejects it. This mirrors the existing parent-constructor rule and prevents skipped interface initialization.</p>
+<p>This keeps the class-constructor spelling <code>initialize</code> but avoids treating an interface initializer as a second constructor. Interface <code>initialize</code> hooks are zero-arity lifecycle hooks; class <code>initialize</code> methods remain the only constructors that receive construction arguments.</p>
+<h2 id="super-in-interface-methods"><code>super</code> in Interface Methods</h2>
+<p><code>super()</code> participates in stacked interface default methods.</p>
+<p>Within an interface default method, <code>super()</code> calls the next implementation of the same method in the stack.</p>
+<p>Order for method lookup inside a class:</p>
+<ol>
+<li>class method;</li>
+</ol>
+<p>2. parent class method chain; 3. effective interface defaults in stack order; 4. missing method.</p>
+<p>Stack order is Scala-like: in <code>implements A, B</code>, the rightmost interface wraps the interfaces to its left. A class method is always before interface defaults.</p>
+<p>When an interface default calls <code>super()</code>, lookup resumes after that interface in the effective interface method chain.</p>
+<p>Example:</p>
+<pre><code class="language-tya">interface BaseLabel
+  label = -&gt;
+    &quot;base&quot;
+
+interface BracketLabel extends BaseLabel
+  label = -&gt;
+    &quot;[&quot; + super() + &quot;]&quot;
+
+interface StarLabel
+  label = -&gt;
+    &quot;*&quot; + super() + &quot;*&quot;
+
+class User implements BracketLabel, StarLabel</code></pre>
+<p>Effective method stack for <code>label</code>:</p>
+<pre><code class="language-text">StarLabel.label
+BracketLabel.label
+BaseLabel.label</code></pre>
+<p><code>User().label()</code> returns <code>&quot;*[base]*&quot;</code> if <code>StarLabel</code> wraps <code>BracketLabel</code>. The exact order must follow the effective interface order rule above and be covered by tests.</p>
+<p>If there is no next implementation, <code>super()</code> is an error. The checker should detect this when possible.</p>
+<h2 id="class-overrides-and-super">Class Overrides and <code>super</code></h2>
+<p>When a class overrides a method provided by interfaces, <code>super()</code> in the class method calls the next implementation after the class method.</p>
+<pre><code class="language-tya">interface Label
+  label = -&gt;
+    &quot;interface&quot;
+
+class User implements Label
+  label = -&gt;
+    &quot;class:&quot; + super()</code></pre>
+<p><code>User().label()</code> returns <code>&quot;class:interface&quot;</code>.</p>
+<p>If a parent class provides the method, class inheritance remains first:</p>
+<pre><code class="language-tya">class Base
+  label = -&gt;
+    &quot;base&quot;
+
+interface Label
+  label = -&gt;
+    &quot;interface&quot;
+
+class User extends Base implements Label
+  label = -&gt;
+    &quot;class:&quot; + super()</code></pre>
+<p><code>super()</code> calls <code>Base.label</code>, not <code>Label.label</code>. Class inheritance wins over interface defaults. Interface defaults only fill gaps after the class chain.</p>
+<h2 id="conflict-rules">Conflict Rules</h2>
+<p>Tya does not support overloading. A method name has one effective arity.</p>
+<h3 id="duplicate-requirements">Duplicate Requirements</h3>
+<p>Two body-free requirements with the same arity are compatible.</p>
+<h3 id="default-vs-requirement">Default vs Requirement</h3>
+<p>A default method with the same arity satisfies a body-free requirement.</p>
+<h3 id="class-method-wins">Class Method Wins</h3>
+<p>A class method with the same name overrides all interface defaults for that method.</p>
+<h3 id="stackable-defaults">Stackable Defaults</h3>
+<p>Two unrelated defaults with the same name and arity are not silently accepted. The implementing class, or the child interface that combines them, must declare the method explicitly. That explicit method resolves the conflict and may call <code>super()</code> to enter the ordered stack.</p>
+<pre><code class="language-tya">interface A
+  label = -&gt; &quot;a&quot;
+
+interface B
+  label = -&gt; &quot;b:&quot; + super()
+
+class User implements A, B
+  label = -&gt;
+    super()</code></pre>
+<p>This is valid because <code>User.label</code> explicitly resolves the conflict. Since <code>implements A, B</code> uses rightmost-wraps-leftmost order, <code>super()</code> calls <code>B.label</code>, and <code>B.label</code> may call <code>A.label</code>.</p>
+<p>Without the explicit <code>User.label</code>, this is an error:</p>
+<pre><code class="language-tya">class User implements A, B</code></pre>
+<p>The diagnostic should tell the author to declare <code>label</code> and choose the desired composition.</p>
+<h3 id="ambiguous-diamond">Ambiguous Diamond</h3>
+<p>Duplicate inheritance of the same source default is compatible and runs once.</p>
+<pre><code class="language-tya">interface Root
+  label = -&gt; &quot;root&quot;
+
+interface A extends Root
+interface B extends Root
+
+class User implements A, B</code></pre>
+<p>There is one <code>Root.label</code>.</p>
+<p>If two unrelated parent interfaces contribute same-name defaults and a child interface extends both without overriding, the child interface is invalid:</p>
+<pre><code class="language-tya">interface C extends A, B</code></pre>
+<p>It must resolve the conflict locally:</p>
+<pre><code class="language-tya">interface C extends A, B
+  label = -&gt;
+    super()</code></pre>
+<p>Inside that explicit method, <code>super()</code> follows rightmost-wraps-leftmost order: <code>B.label</code>, then <code>A.label</code>.</p>
+<h3 id="arity-conflict">Arity Conflict</h3>
+<p>Same method name with different arity is always an error unless the class or child interface declares a method that makes the intended arity explicit and all other requirements are compatible with it. Since Tya has no overloading, incompatible arities usually require renaming one method.</p>
+<h2 id="static-and-private-members">Static and Private Members</h2>
+<p>Interface static members remain invalid in v0.61. Stackable behavior is instance behavior.</p>
+<p>Private interface members are invalid. Interface methods and fields are public because they are composed into implementing classes.</p>
+<h2 id="runtime-codegen-model">Runtime / Codegen Model</h2>
+<p>The implementation should lower effective interface contributions into class metadata before C emission.</p>
+<p>Observable requirements:</p>
+<ul>
+<li>interface fields become instance fields;</li>
+<li>interface field initialization runs per instance;</li>
+<li>interface initializer hooks run once per interface identity;</li>
+<li>default methods are callable through ordinary method dispatch;</li>
+<li>class methods override interface defaults;</li>
+<li><code>super()</code> traverses class chain first, then interface method stack;</li>
+<li>conflicts are diagnosed before C is emitted.</li>
+</ul>
+<p>Preferred lowering:</p>
+<ol>
+<li>compute effective interfaces for each class;</li>
+</ol>
+<p>2. compute effective fields and detect field conflicts; 3. compute effective initializer order; 4. compute method stacks per method name; 5. emit wrapper methods for interface defaults where needed; 6. make <code>super()</code> in generated methods carry an explicit next-method target.</p>
+<p>This may require extending the current <code>super</code> representation in codegen. Runtime dynamic search alone is not enough unless it can resume lookup from a specific point in the interface stack.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>New diagnostics should be stable and actionable:</p>
+<p>| Code | Meaning | |---|---| | <code>TYA-E0830</code> | conflicting interface method arity | | <code>TYA-E0831</code> | conflicting interface field initializer | | <code>TYA-E0832</code> | invalid member in interface body | | <code>TYA-E0833</code> | interface initializer must be zero-arity | | <code>TYA-E0834</code> | class constructor must call <code>super()</code> to run interface initialization | | <code>TYA-E0835</code> | <code>super()</code> has no next method in interface stack | | <code>TYA-E0836</code> | interface static members are not supported | | <code>TYA-E0837</code> | private interface members are not supported |</p>
+<p>Existing diagnostics for unknown interfaces, duplicate implements entries, inheritance cycles, classes extending interfaces, and interfaces extending classes still apply.</p>
+<h2 id="implementation-plan">Implementation Plan</h2>
+<p>This is intentionally a long-running <code>/goal</code> implementation.</p>
+<ol>
+<li>**Parser / AST**</li>
+<ul>
+<li>Allow interface method bodies.</li>
+<li>Allow interface field declarations.</li>
+<li>Allow interface <code>initialize = -&gt;</code> hook.</li>
+<li>Reject static/private interface members.</li>
+</ul>
+</ol>
+<p>2. **Formatter**</p>
+<ul>
+<li>Format body-free requirements, default methods, fields, and initializers.</li>
+<li>Preserve canonical member ordering rules once decided.</li>
+</ul>
+<p>3. **Checker interface model**</p>
+<ul>
+<li>Replace simple <code>method -&gt; arity</code> interface info with records for</li>
+</ul>
+<p>     requirements, defaults, fields, and initializers.</p>
+<ul>
+<li>Track source interface identity for diamonds.</li>
+</ul>
+<p>4. **Effective interface graph**</p>
+<ul>
+<li>Compute depth-first left-to-right postorder.</li>
+<li>Remove duplicate interface identities.</li>
+<li>Preserve enough source order for method stacks and initialization.</li>
+</ul>
+<p>5. **Conflict resolver**</p>
+<ul>
+<li>Resolve method arity conflicts.</li>
+<li>Resolve field initializer conflicts.</li>
+<li>Build method stacks.</li>
+<li>Verify <code>super()</code> has a next target when required.</li>
+</ul>
+<p>6. **Class integration**</p>
+<ul>
+<li>Merge interface fields into classes.</li>
+<li>Require <code>super()</code> in constructors when interface initialization must run.</li>
+<li>Let class declarations override fields and methods explicitly.</li>
+</ul>
+<p>7. **Codegen**</p>
+<ul>
+<li>Emit interface default methods as class-callable methods.</li>
+<li>Emit interface field initialization.</li>
+<li>Emit interface initializer calls in deterministic order.</li>
+<li>Extend <code>super()</code> lowering for interface stacks.</li>
+</ul>
+<p>8. **Runtime**</p>
+<ul>
+<li>Prefer no new value kind.</li>
+<li>Add helper support only if codegen cannot encode next-method targets</li>
+</ul>
+<p>     statically.</p>
+<p>9. **Self-host**</p>
+<ul>
+<li>Teach the self-host parser/checker/codegen the new interface body shapes</li>
+</ul>
+<p>     once the Go implementation is stable.</p>
+<ul>
+<li>Preserve the fixed point.</li>
+</ul>
+<p>10. **Docs and examples**</p>
+<ul>
+<li>Add examples for default methods, stateful interfaces, initializer order,</li>
+</ul>
+<p>     and stackable <code>super</code>.</p>
+<ul>
+<li>Document when abstract classes are still the right tool.</li>
+</ul>
+<p>11. **Verification**</p>
+<ul>
+<li>Existing v0.11 / v0.12 interface tests pass.</li>
+<li>New tests cover defaults, fields, initialization order, class override,</li>
+</ul>
+<p>     interface <code>super</code>, class <code>super</code> into interface stack, diamonds, and      conflicts.</p>
+<ul>
+<li><code>go test ./... -count=1</code> passes, including self-host.</li>
+</ul>
+<h2 id="migration-guidance">Migration Guidance</h2>
+<p>Use abstract classes when shared behavior needs one implementation base:</p>
+<pre><code class="language-tya">abstract class Repository
+  abstract find = id -&gt;
+
+  first = -&gt;
+    self.find(1)</code></pre>
+<p>Use interfaces when behavior should be stacked with other behavior:</p>
+<pre><code class="language-tya">interface FindFirst
+  find = id -&gt;
+
+  first = -&gt;
+    self.find(1)</code></pre>
+<p>Use interface fields and initializers when the behavior owns a small, self-contained state slot:</p>
+<pre><code class="language-tya">interface Counted
+  count = 0
+
+  increment = -&gt;
+    self.count = self.count + 1</code></pre>
+<p>If the behavior requires complex construction arguments or strong invariants, prefer an ordinary class until the interface model proves itself in practice.</p>
+<h2 id="success-criteria">Success Criteria</h2>
+<p>v0.61 is complete when:</p>
+<ul>
+<li>interface methods may be body-free requirements or default methods;</li>
+<li>interface fields are composed into implementing classes;</li>
+<li>interface initializers run in deterministic order;</li>
+<li><code>super()</code> works through class inheritance and stacked interface defaults;</li>
+<li>class members can explicitly override interface contributions;</li>
+<li>interface inheritance diamonds are deterministic and de-duplicated;</li>
+<li>method and field conflicts produce structured diagnostics;</li>
+<li>old v0.11 and v0.12 interface behavior is preserved;</li>
+<li><code>go test ./... -count=1</code> passes, including the self-host fixed point.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

@@ -17,6 +17,15 @@ import (
 
 var classNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
 
+var primitiveClassNames = map[string]bool{
+	"Number":  true,
+	"String":  true,
+	"Array":   true,
+	"Dict":    true,
+	"Boolean": true,
+	"Nil":     true,
+}
+
 var nativeFunctions map[string]pkg.NativeFunction
 
 func SetNativeFunctions(functions map[string]pkg.NativeFunction) func() {
@@ -95,7 +104,7 @@ type CoverageRegistry struct {
 // Returns (csource, registry, diags, err). diags is nil on success,
 // or the same payload as err.(*CodegenError).Diags on failure.
 func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOptions) (string, *CoverageRegistry, []diag.Diagnostic, error) {
-	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
+	g := &cgen{vars: map[string]bool{}, funcs: map[string]string{}, classes: map[string]string{}, classMethods: map[string]string{}, classDecls: map[string]*ast.ClassDecl{}, interfaceDecls: map[string]*ast.InterfaceDecl{}, moduleClasses: map[string]string{}, sourcePath: sourcePath}
 	if opt != nil {
 		g.coverEnabled = true
 		g.coverOpt = opt
@@ -136,11 +145,11 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 		out.WriteString("extern void tya_cov_inc(int id);\n")
 		fmt.Fprintf(&out, "static int tya_cov_n = %d;\n", len(g.coverEntries))
 	}
-	out.WriteString("static int g_tya_argc = 0;\nstatic char **g_tya_argv = (char **)0;\n\n")
 	for _, name := range sortedNativeFunctionNames() {
 		fn := nativeFunctions[name]
 		fmt.Fprintf(&out, "extern TyaValue %s(TyaValue __this, TyaValue a0, TyaValue a1, TyaValue a2, TyaValue a3);\n", fn.Symbol)
 	}
+	out.WriteString("static int g_tya_argc = 0;\nstatic char **g_tya_argv = (char **)0;\n\n")
 	out.WriteString(g.globalOut.String())
 	if g.globalOut.Len() > 0 {
 		out.WriteByte('\n')
@@ -164,7 +173,6 @@ func EmitCWithCoverage(prog *ast.Program, sourcePath string, opt *CoverageOption
 	return out.String(), reg, nil, nil
 }
 
-// diagsFromErr lifts the []diag.Diagnostic payload out of err
 func sortedNativeFunctionNames() []string {
 	names := make([]string, 0, len(nativeFunctions))
 	for name := range nativeFunctions {
@@ -174,6 +182,7 @@ func sortedNativeFunctionNames() []string {
 	return names
 }
 
+// diagsFromErr lifts the []diag.Diagnostic payload out of err
 // when err is a *CodegenError, falling back to a synthetic
 // single-entry slice for plain errors so callers still get a
 // non-nil diags slice on failure.
@@ -192,36 +201,38 @@ func diagsFromErr(err error) []diag.Diagnostic {
 }
 
 type cgen struct {
-	out              strings.Builder
-	globalOut        strings.Builder
-	funcOut          strings.Builder
-	sourcePath       string
-	indent           int
-	vars             map[string]bool
-	funcs            map[string]string
-	classes          map[string]string
-	classMethods     map[string]string
-	classDecls       map[string]*ast.ClassDecl
+	out            strings.Builder
+	globalOut      strings.Builder
+	funcOut        strings.Builder
+	sourcePath     string
+	indent         int
+	vars           map[string]bool
+	funcs          map[string]string
+	classes        map[string]string
+	classMethods   map[string]string
+	classDecls     map[string]*ast.ClassDecl
+	interfaceDecls map[string]*ast.InterfaceDecl
 	// moduleClasses maps a module-class key ("module_ClassName") to
 	// its module name. Populated for every v0.44 module class so the
 	// within-package fallback in currentModulePrefix and the call
 	// emission can resolve unqualified PascalCase references inside
 	// sibling method bodies before the constructor sym is filled in
 	// to g.classes. Shared across child cgens.
-	moduleClasses map[string]string
-	temp             int
-	inFunc           bool
-	inClassMethod    bool
-	inInstanceMethod bool
-	classRef         string
-	className        string
-	methodName       string
-	superClass       string
-	predicateName    string
-	raiseDepth       int
-	coverEnabled     bool
-	coverOpt         *CoverageOptions
-	coverEntries     []CoverageEntry
+	moduleClasses     map[string]string
+	temp              int
+	inFunc            bool
+	inClassMethod     bool
+	inInstanceMethod  bool
+	classRef          string
+	className         string
+	methodName        string
+	superClass        string
+	interfaceSuperSym string
+	predicateName     string
+	raiseDepth        int
+	coverEnabled      bool
+	coverOpt          *CoverageOptions
+	coverEntries      []CoverageEntry
 }
 
 func (g *cgen) globalLine(s string) {
@@ -253,7 +264,12 @@ func (g *cgen) collectClasses(stmts []ast.Stmt) {
 		switch n := stmt.(type) {
 		case *ast.ClassDecl:
 			g.classDecls[n.Name] = n
+		case *ast.InterfaceDecl:
+			g.interfaceDecls[n.Name] = n
 		case *ast.ModuleDecl:
+			for _, iface := range n.Interfaces {
+				g.interfaceDecls[n.Name+"."+iface.Name] = iface
+			}
 			for _, class := range n.Classes {
 				g.classDecls[n.Name+"."+class.Name] = class
 			}
@@ -500,6 +516,8 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		g.indent--
 		g.line("} }")
 		return nil
+	case *ast.SelectStmt:
+		return g.selectStmt(n)
 	case *ast.ForInStmt:
 		iterable, _, err := g.expr(n.Iterable)
 		if err != nil {
@@ -945,23 +963,25 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string
 	out.WriteString(sym)
 	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
 	child := &cgen{
-		vars:             map[string]bool{},
-		funcs:            g.funcs,
-		classes:          g.classes,
-		classMethods:     g.classMethods,
-		classDecls:       g.classDecls,
-		moduleClasses:    g.moduleClasses,
-		sourcePath:       g.sourcePath,
-		temp:             g.temp,
-		indent:           1,
-		inFunc:           true,
-		inClassMethod:    methodKind == "class",
-		inInstanceMethod: methodKind == "instance",
-		classRef:         classRef,
-		className:        g.className,
-		methodName:       g.methodName,
-		superClass:       g.superClass,
-		predicateName:    predicateName(name),
+		vars:              map[string]bool{},
+		funcs:             g.funcs,
+		classes:           g.classes,
+		classMethods:      g.classMethods,
+		classDecls:        g.classDecls,
+		interfaceDecls:    g.interfaceDecls,
+		moduleClasses:     g.moduleClasses,
+		sourcePath:        g.sourcePath,
+		temp:              g.temp,
+		indent:            1,
+		inFunc:            true,
+		inClassMethod:     methodKind == "class",
+		inInstanceMethod:  methodKind == "instance",
+		classRef:          classRef,
+		className:         g.className,
+		methodName:        g.methodName,
+		superClass:        g.superClass,
+		interfaceSuperSym: g.interfaceSuperSym,
+		predicateName:     predicateName(name),
 	}
 	for i, param := range fn.Params {
 		child.vars[param] = true
@@ -1202,6 +1222,9 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 			return "", err
 		}
 	}
+	if err := g.emitInterfaceFields(&out, name, class); err != nil {
+		return "", err
+	}
 	for _, field := range class.Fields {
 		value, _, err := g.expr(field.Value)
 		if err != nil {
@@ -1222,13 +1245,22 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		if parentInit := g.inheritedMethodSym(parentKey, "init"); parentInit != "" {
 			out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3);\n", parentInit))
 		} else {
+			if err := g.emitInterfaceInitializers(&out, name, class); err != nil {
+				return "", err
+			}
 			out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
 		}
 	} else {
+		if err := g.emitInterfaceInitializers(&out, name, class); err != nil {
+			return "", err
+		}
 		out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
 	}
 	if parentKey != "" {
 		g.emitParentMethods(&out, parentKey, class)
+	}
+	if err := g.emitInterfaceMethods(&out, name, class); err != nil {
+		return "", err
 	}
 	for _, method := range class.Methods {
 		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
@@ -1373,6 +1405,278 @@ func (g *cgen) emitParentMethods(out *strings.Builder, parentKey string, class *
 			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), sym))
 		}
 	}
+}
+
+func (g *cgen) interfaceKey(className string, ref ast.ClassRef) string {
+	if ref.Module != "" {
+		return ref.Module + "." + ref.Name
+	}
+	if strings.Contains(className, "_") {
+		module := strings.SplitN(className, "_", 2)[0]
+		if _, ok := g.interfaceDecls[module+"."+ref.Name]; ok {
+			return module + "." + ref.Name
+		}
+	}
+	return ref.Name
+}
+
+func (g *cgen) effectiveInterfaces(className string, class *ast.ClassDecl) []*ast.InterfaceDecl {
+	var out []*ast.InterfaceDecl
+	seen := map[string]bool{}
+	var visit func(string)
+	visit = func(key string) {
+		if seen[key] {
+			return
+		}
+		iface := g.interfaceDecls[key]
+		if iface == nil {
+			return
+		}
+		for _, parent := range iface.Parents {
+			visit(g.interfaceKey(strings.ReplaceAll(key, ".", "_"), parent))
+		}
+		seen[key] = true
+		out = append(out, iface)
+	}
+	for _, ref := range class.Implements {
+		visit(g.interfaceKey(className, ref))
+	}
+	return out
+}
+
+func (g *cgen) emitInterfaceFields(out *strings.Builder, className string, class *ast.ClassDecl) error {
+	classFields := map[string]bool{}
+	for _, field := range class.Fields {
+		classFields[field.Name] = true
+	}
+	for _, iface := range g.effectiveInterfaces(className, class) {
+		for _, field := range iface.Fields {
+			if classFields[field.Name] {
+				continue
+			}
+			value, _, err := g.expr(field.Value)
+			if err != nil {
+				return err
+			}
+			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote("@"+field.Name), value))
+			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote(field.Name), value))
+		}
+	}
+	return nil
+}
+
+func (g *cgen) interfaceMethodSym(key string, iface *ast.InterfaceDecl, method ast.InterfaceMethod) (string, error) {
+	return g.interfaceMethodSymWithNext(key, iface, method, "")
+}
+
+func (g *cgen) interfaceMethodSymWithNext(key string, iface *ast.InterfaceDecl, method ast.InterfaceMethod, nextSym string) (string, error) {
+	cacheKey := "interface:" + key + "." + method.Name + ":" + nextSym
+	if sym := g.classMethods[cacheKey]; sym != "" {
+		return sym, nil
+	}
+	prevClass, prevMethod, prevSuper, prevInterfaceSuper := g.className, g.methodName, g.superClass, g.interfaceSuperSym
+	g.className, g.methodName, g.superClass, g.interfaceSuperSym = key, method.Name, "", nextSym
+	sym, err := g.emitFuncWithContext(strings.ReplaceAll(key, ".", "_")+"_"+method.Name, method.Func, "", "instance")
+	g.className, g.methodName, g.superClass, g.interfaceSuperSym = prevClass, prevMethod, prevSuper, prevInterfaceSuper
+	if err != nil {
+		return "", err
+	}
+	g.classMethods[cacheKey] = sym
+	return sym, nil
+}
+
+func (g *cgen) emitInterfaceMethods(out *strings.Builder, className string, class *ast.ClassDecl) error {
+	overrides := map[string]bool{}
+	for _, method := range class.Methods {
+		if !method.Class {
+			overrides[method.Name] = true
+		}
+	}
+	ifaces := g.effectiveInterfaces(className, class)
+	for i, iface := range ifaces {
+		key := g.interfaceDeclKey(iface)
+		for _, method := range iface.Methods {
+			if method.Func == nil || method.Name == "initialize" || overrides[method.Name] {
+				continue
+			}
+			nextSym, err := g.interfaceDefaultSymInStack(ifaces, i-1, method.Name)
+			if err != nil {
+				return err
+			}
+			sym, err := g.interfaceMethodSymWithNext(key, iface, method, nextSym)
+			if err != nil {
+				return err
+			}
+			out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), sym))
+		}
+	}
+	return nil
+}
+
+func (g *cgen) interfaceDeclKey(iface *ast.InterfaceDecl) string {
+	key := iface.Name
+	for k, v := range g.interfaceDecls {
+		if v == iface {
+			key = k
+			break
+		}
+	}
+	return key
+}
+
+func (g *cgen) interfaceDefaultSymInStack(ifaces []*ast.InterfaceDecl, maxIndex int, methodName string) (string, error) {
+	for i := maxIndex; i >= 0; i-- {
+		iface := ifaces[i]
+		key := g.interfaceDeclKey(iface)
+		for _, method := range iface.Methods {
+			if method.Name != methodName || method.Func == nil || method.Name == "initialize" {
+				continue
+			}
+			nextSym, err := g.interfaceDefaultSymInStack(ifaces, i-1, methodName)
+			if err != nil {
+				return "", err
+			}
+			return g.interfaceMethodSymWithNext(key, iface, method, nextSym)
+		}
+	}
+	return "", nil
+}
+
+func (g *cgen) emitInterfaceInitializers(out *strings.Builder, className string, class *ast.ClassDecl) error {
+	for _, iface := range g.effectiveInterfaces(className, class) {
+		key := g.interfaceDeclKey(iface)
+		for _, method := range iface.Methods {
+			if method.Name != "initialize" || method.Func == nil {
+				continue
+			}
+			sym, err := g.interfaceMethodSym(key, iface, method)
+			if err != nil {
+				return err
+			}
+			out.WriteString(fmt.Sprintf("  (void)%s(__obj, tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", sym))
+		}
+	}
+	return nil
+}
+
+func (g *cgen) classHasInterfaceInitializers(className string, class *ast.ClassDecl) bool {
+	for _, iface := range g.effectiveInterfaces(className, class) {
+		for _, method := range iface.Methods {
+			if method.Name == "initialize" && method.Func != nil {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (g *cgen) interfaceDefaultSymForCurrentClass(methodName string) (string, error) {
+	class := g.classDecls[g.className]
+	className := g.className
+	if class == nil {
+		if mod := g.currentModulePrefix(); mod != "" {
+			key := mod + "." + strings.TrimPrefix(g.className, mod+"_")
+			class = g.classDecls[key]
+			className = key
+		}
+	}
+	if class == nil {
+		return "", nil
+	}
+	ifaces := g.effectiveInterfaces(className, class)
+	return g.interfaceDefaultSymInStack(ifaces, len(ifaces)-1, methodName)
+}
+
+func (g *cgen) interfaceInitializerRunnerForCurrentClass() (string, error) {
+	class := g.classDecls[g.className]
+	className := g.className
+	if class == nil {
+		if mod := g.currentModulePrefix(); mod != "" {
+			key := mod + "." + strings.TrimPrefix(g.className, mod+"_")
+			class = g.classDecls[key]
+			className = key
+		}
+	}
+	if class == nil {
+		return "", nil
+	}
+	cacheKey := "interface-init:" + className
+	if sym := g.classMethods[cacheKey]; sym != "" {
+		return sym, nil
+	}
+	sym := cFuncName(strings.ReplaceAll(className, ".", "_")+"_interface_initialize", g.temp)
+	g.temp++
+	var out strings.Builder
+	out.WriteString("TyaValue ")
+	out.WriteString(sym)
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
+	out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
+	for _, iface := range g.effectiveInterfaces(className, class) {
+		key := g.interfaceDeclKey(iface)
+		for _, method := range iface.Methods {
+			if method.Name != "initialize" || method.Func == nil {
+				continue
+			}
+			initSym, err := g.interfaceMethodSym(key, iface, method)
+			if err != nil {
+				return "", err
+			}
+			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", initSym))
+		}
+	}
+	out.WriteString("  return tya_nil();\n")
+	out.WriteString("}\n\n")
+	g.funcOut.WriteString(out.String())
+	g.classMethods[cacheKey] = sym
+	return sym, nil
+}
+
+func (g *cgen) constructorSuperRunnerForCurrentClass(parentSym string) (string, error) {
+	class := g.classDecls[g.className]
+	className := g.className
+	if class == nil {
+		if mod := g.currentModulePrefix(); mod != "" {
+			key := mod + "." + strings.TrimPrefix(g.className, mod+"_")
+			class = g.classDecls[key]
+			className = key
+		}
+	}
+	if class == nil || !g.classHasInterfaceInitializers(className, class) {
+		return parentSym, nil
+	}
+	cacheKey := "constructor-super:" + className + ":" + parentSym
+	if sym := g.classMethods[cacheKey]; sym != "" {
+		return sym, nil
+	}
+	sym := cFuncName(strings.ReplaceAll(className, ".", "_")+"_constructor_super", g.temp)
+	g.temp++
+	var out strings.Builder
+	out.WriteString("TyaValue ")
+	out.WriteString(sym)
+	out.WriteString("(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {\n")
+	if parentSym != "" {
+		out.WriteString(fmt.Sprintf("  (void)%s(__this, __arg0, __arg1, __arg2, __arg3);\n", parentSym))
+	} else {
+		out.WriteString("  (void)__arg0;\n  (void)__arg1;\n  (void)__arg2;\n  (void)__arg3;\n")
+	}
+	for _, iface := range g.effectiveInterfaces(className, class) {
+		key := g.interfaceDeclKey(iface)
+		for _, method := range iface.Methods {
+			if method.Name != "initialize" || method.Func == nil {
+				continue
+			}
+			initSym, err := g.interfaceMethodSym(key, iface, method)
+			if err != nil {
+				return "", err
+			}
+			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", initSym))
+		}
+	}
+	out.WriteString("  return tya_nil();\n")
+	out.WriteString("}\n\n")
+	g.funcOut.WriteString(out.String())
+	g.classMethods[cacheKey] = sym
+	return sym, nil
 }
 
 func (g *cgen) inheritedMethodSym(parentKey string, method string) string {
@@ -1653,6 +1957,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		return fmt.Sprintf("tya_function(%s)", sym), "TyaValue", nil
 	case *ast.Ident:
+		if primitiveClassNames[n.Name] {
+			return fmt.Sprintf("tya_primitive_class(%s)", strconv.Quote(n.Name)), "TyaValue", nil
+		}
 		// v0.44 within-package fallback: inside a module class
 		// method, an unqualified PascalCase identifier that names a
 		// sibling module class resolves to the module-prefixed C
@@ -1746,6 +2053,32 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			sym := g.inheritedMethodSym(g.superClass, g.methodName)
 			if g.inClassMethod {
 				sym = g.inheritedClassMethodSym(g.superClass, g.methodName)
+			}
+			if !g.inClassMethod && (g.methodName == "init" || g.methodName == "_init" || g.methodName == "initialize") && g.superClass != "" {
+				if initSym, err := g.constructorSuperRunnerForCurrentClass(sym); err != nil {
+					return "", "", err
+				} else {
+					sym = initSym
+				}
+			}
+			if sym == "" && !g.inClassMethod {
+				if (g.methodName == "init" || g.methodName == "_init" || g.methodName == "initialize") && g.superClass == "" {
+					if initSym, err := g.interfaceInitializerRunnerForCurrentClass(); err != nil {
+						return "", "", err
+					} else {
+						sym = initSym
+					}
+				}
+			}
+			if sym == "" && !g.inClassMethod {
+				if ifaceSym, err := g.interfaceDefaultSymForCurrentClass(g.methodName); err != nil {
+					return "", "", err
+				} else {
+					sym = ifaceSym
+				}
+			}
+			if sym == "" && g.interfaceSuperSym != "" {
+				sym = g.interfaceSuperSym
 			}
 			if sym == "" {
 				return "tya_nil()", "TyaValue", nil
@@ -2204,7 +2537,6 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				}
 				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:4], ", ")), "TyaValue", nil
 			}
-		}
 			if fn, found := nativeFunctions[id.Name]; found {
 				if len(n.Args) != fn.Arity {
 					return "", "", fmt.Errorf("native function %s expects %d arguments", id.Name, fn.Arity)
@@ -2222,7 +2554,11 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				}
 				return fmt.Sprintf("%s(tya_nil(), %s)", fn.Symbol, strings.Join(args[:4], ", ")), "TyaValue", nil
 			}
+		}
 		if member, ok := n.Callee.(*ast.MemberExpr); ok {
+			if call, err := g.concurrencyConstructorCall(member, n.Args); call != "" || err != nil {
+				return call, "TyaValue", err
+			}
 			if target, ok := member.Target.(*ast.Ident); ok {
 				if call, err := g.standardModuleCall(target.Name, member.Name, n.Args); call != "" || err != nil {
 					return call, "TyaValue", err
@@ -2301,6 +2637,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
+		if n.Name == "class" {
+			return fmt.Sprintf("tya_class_of(%s)", dict), "TyaValue", nil
+		}
 		return fmt.Sprintf("tya_member(%s, %s)", dict, strconv.Quote(n.Name)), "TyaValue", nil
 	case *ast.TryExpr:
 		return g.expr(n.Expr)
@@ -2346,6 +2685,40 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	return "", "", codegenError(codeStmtUnsupported, fmt.Sprintf("C emitter does not support expression %T", expr), line, col)
 }
 
+func (g *cgen) concurrencyConstructorCall(member *ast.MemberExpr, argExprs []ast.Expr) (string, error) {
+	target, ok := member.Target.(*ast.Ident)
+	if !ok {
+		return "", nil
+	}
+	args := make([]string, 0, len(argExprs))
+	for _, arg := range argExprs {
+		ex, _, err := g.expr(arg)
+		if err != nil {
+			return "", err
+		}
+		args = append(args, ex)
+	}
+	switch target.Name + "." + member.Name {
+	case "channel.Channel":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_channel_new(%s)", args[0]), nil
+		}
+	case "sync.Mutex":
+		if len(args) == 0 {
+			return "tya_sync_mutex_new()", nil
+		}
+	case "sync.AtomicInteger":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_sync_atomic_integer_new(%s)", args[0]), nil
+		}
+	case "sync.WaitGroup":
+		if len(args) == 0 {
+			return "tya_sync_wait_group_new()", nil
+		}
+	}
+	return "", nil
+}
+
 func (g *cgen) emitDynamicCall(callee string, args []string) string {
 	switch len(args) {
 	case 0:
@@ -2359,6 +2732,69 @@ func (g *cgen) emitDynamicCall(callee string, args []string) string {
 	default:
 		return fmt.Sprintf("tya_call4(%s, %s, %s, %s, %s)", callee, args[0], args[1], args[2], args[3])
 	}
+}
+
+func (g *cgen) selectStmt(n *ast.SelectStmt) error {
+	ops := make([]string, 0, len(n.Arms))
+	for _, arm := range n.Arms {
+		switch arm.Kind {
+		case "receive":
+			ch, _, err := g.expr(arm.Channel)
+			if err != nil {
+				return err
+			}
+			ops = append(ops, fmt.Sprintf("tya_array((TyaValue[]){%s, tya_string(\"receive\")}, 2)", ch))
+		case "send":
+			ch, _, err := g.expr(arm.Channel)
+			if err != nil {
+				return err
+			}
+			value, _, err := g.expr(arm.Value)
+			if err != nil {
+				return err
+			}
+			ops = append(ops, fmt.Sprintf("tya_array((TyaValue[]){%s, tya_string(\"send\"), %s}, 3)", ch, value))
+		case "timeout":
+			seconds, _, err := g.expr(arm.Seconds)
+			if err != nil {
+				return err
+			}
+			ops = append(ops, fmt.Sprintf("tya_array((TyaValue[]){tya_nil(), tya_string(\"timeout\"), %s}, 3)", seconds))
+		case "default":
+			ops = append(ops, "tya_array((TyaValue[]){tya_nil(), tya_string(\"default\")}, 2)")
+		}
+	}
+	id := g.temp
+	g.temp++
+	opsName := fmt.Sprintf("__select_ops%d", id)
+	resultName := fmt.Sprintf("__select_result%d", id)
+	indexName := fmt.Sprintf("__select_index%d", id)
+	g.line("{")
+	g.indent++
+	g.line(fmt.Sprintf("TyaValue %s = tya_array((TyaValue[]){%s}, %d);", opsName, strings.Join(ops, ", "), len(ops)))
+	g.line(fmt.Sprintf("TyaValue %s = tya_channel_select(%s);", resultName, opsName))
+	g.line(fmt.Sprintf("TyaValue %s = tya_member(%s, \"index\");", indexName, resultName))
+	for i, arm := range n.Arms {
+		if i == 0 {
+			g.line(fmt.Sprintf("if ((int)%s.number == %d) {", indexName, i))
+		} else {
+			g.line(fmt.Sprintf("else if ((int)%s.number == %d) {", indexName, i))
+		}
+		g.indent++
+		if arm.Kind == "receive" && arm.BindName != "" {
+			g.line(fmt.Sprintf("TyaValue %s = tya_member(%s, \"value\");", cName(arm.BindName), resultName))
+		}
+		for _, st := range arm.Body {
+			if err := g.stmt(st); err != nil {
+				return err
+			}
+		}
+		g.indent--
+		g.line("}")
+	}
+	g.indent--
+	g.line("}")
+	return nil
 }
 
 func cName(name string) string {
@@ -2439,6 +2875,32 @@ func (g *cgen) interpolationExpr(expr string) (string, error) {
 		sym := g.inheritedMethodSym(g.superClass, g.methodName)
 		if g.inClassMethod {
 			sym = g.inheritedClassMethodSym(g.superClass, g.methodName)
+		}
+		if !g.inClassMethod && (g.methodName == "init" || g.methodName == "_init" || g.methodName == "initialize") && g.superClass != "" {
+			if initSym, err := g.constructorSuperRunnerForCurrentClass(sym); err != nil {
+				return "", err
+			} else {
+				sym = initSym
+			}
+		}
+		if sym == "" && !g.inClassMethod {
+			if (g.methodName == "init" || g.methodName == "_init" || g.methodName == "initialize") && g.superClass == "" {
+				if initSym, err := g.interfaceInitializerRunnerForCurrentClass(); err != nil {
+					return "", err
+				} else {
+					sym = initSym
+				}
+			}
+		}
+		if sym == "" && !g.inClassMethod {
+			if ifaceSym, err := g.interfaceDefaultSymForCurrentClass(g.methodName); err != nil {
+				return "", err
+			} else {
+				sym = ifaceSym
+			}
+		}
+		if sym == "" && g.interfaceSuperSym != "" {
+			sym = g.interfaceSuperSym
 		}
 		if sym == "" {
 			return "tya_nil()", nil
@@ -2605,6 +3067,14 @@ func standardStringCall(name string, args []string) string {
 		if len(args) == 1 {
 			return fmt.Sprintf("tya_lines(%s)", args[0])
 		}
+	case "chars":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_chars(%s)", args[0])
+		}
+	case "bytes":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_bytes_of(%s)", args[0])
+		}
 	case "upcase":
 		if len(args) == 1 {
 			return fmt.Sprintf("tya_upcase(%s)", args[0])
@@ -2650,6 +3120,10 @@ func standardArrayCall(name string, args []string) string {
 	case "reverse":
 		if len(args) == 1 {
 			return fmt.Sprintf("tya_reverse(%s)", args[0])
+		}
+	case "contains":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_array_contains(%s, %s)", args[0], args[1])
 		}
 	case "join":
 		if len(args) == 2 {
@@ -2723,6 +3197,10 @@ func standardDictCall(name string, args []string) string {
 	case "merge":
 		if len(args) == 2 {
 			return fmt.Sprintf("tya_dict_merge(%s, %s)", args[0], args[1])
+		}
+	case "entries":
+		if len(args) == 1 {
+			return fmt.Sprintf("tya_dict_entries(%s)", args[0])
 		}
 	}
 	return ""

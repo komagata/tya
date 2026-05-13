@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -246,6 +247,10 @@ func recurseStmtBodies(out map[ast.Stmt]ast.StmtComments, stmt ast.Stmt, indent 
 		for _, c := range n.Cases {
 			attachStmtBlock(out, c.Body, inner, comments, used)
 		}
+	case *ast.SelectStmt:
+		for _, arm := range n.Arms {
+			attachStmtBlock(out, arm.Body, inner, comments, used)
+		}
 	case *ast.AssignStmt:
 		// Walk function-literal bodies on the rhs so nested stmts
 		// inside `f = x -> ...` are visited.
@@ -291,6 +296,8 @@ func stmtPos(stmt ast.Stmt) (line, indent int) {
 		return n.Tok.Line, n.Tok.Col - 1
 	case *ast.ForInStmt:
 		return n.ValueTok.Line, n.ValueTok.Col - 1
+	case *ast.SelectStmt:
+		return n.Tok.Line, n.Tok.Col - 1
 	}
 	return 0, 0
 }
@@ -317,10 +324,22 @@ func (p *Parser) program() (*ast.Program, error) {
 
 func (p *Parser) stmt() (ast.Stmt, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "module" {
-		if p.blockDepth != 0 {
-			return nil, p.err("module must be top-level")
+		if os.Getenv("TYA_LEGACY_MODULES") == "1" {
+			if p.blockDepth != 0 {
+				return nil, p.err("module must be top-level")
+			}
+			return p.moduleDecl()
 		}
-		return p.moduleDecl()
+		tok := p.peek()
+		p.skipRemovedModuleDecl()
+		return nil, p.newDiag(
+			CodeModuleRemoved,
+			"module keyword removed",
+			"module declarations were removed; use top-level bindings or class package files instead",
+			tok.Line,
+			tok.Col,
+			"delete the module line and move its members to top level",
+		)
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "interface" {
 		if p.blockDepth != 0 {
@@ -363,6 +382,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "scope" && p.peekN(1).Type == token.NEWLINE {
 		return p.scopeBlock()
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "select" && p.peekN(1).Type == token.NEWLINE {
+		return p.selectStmt()
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "case" {
 		return nil, p.err("case outside match")
@@ -414,6 +436,28 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.ExprStmt{Expr: ex}, nil
+}
+
+func (p *Parser) skipRemovedModuleDecl() {
+	p.next() // module
+	for !p.at(token.NEWLINE) && !p.at(token.EOF) {
+		p.next()
+	}
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return
+	}
+	depth := 1
+	for depth > 0 && !p.at(token.EOF) {
+		if p.match(token.INDENT) {
+			depth++
+			continue
+		}
+		if p.match(token.DEDENT) {
+			depth--
+			continue
+		}
+		p.next()
+	}
 }
 
 func (p *Parser) importStmt() (ast.Stmt, error) {
@@ -701,20 +745,71 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 		if !p.match(token.ASSIGN) {
 			return nil, p.err("expected '=' after interface method name")
 		}
-		if !p.at(token.IDENT) && !p.at(token.ARROW) {
-			return nil, p.err("interface bodies may only contain instance method requirements")
+		if p.startsInterfaceMethodValue() {
+			params, paramToks, fn, err := p.interfaceMethodValue()
+			if err != nil {
+				return nil, err
+			}
+			decl.Methods = append(decl.Methods, ast.InterfaceMethod{Name: methodName.Lexeme, Tok: methodName, Params: params, ParamToks: paramToks, Func: fn})
+		} else {
+			value, err := p.exprLine()
+			if err != nil {
+				return nil, err
+			}
+			decl.Fields = append(decl.Fields, ast.ClassField{Name: methodName.Lexeme, Tok: methodName, Value: value})
 		}
-		params, paramToks, err := p.abstractMethodParams()
-		if err != nil {
-			return nil, err
-		}
-		decl.Methods = append(decl.Methods, ast.InterfaceMethod{Name: methodName.Lexeme, Tok: methodName, Params: params, ParamToks: paramToks})
 		p.skipNewlines()
 	}
 	if !p.match(token.DEDENT) {
 		return nil, p.err("expected dedent after interface")
 	}
 	return decl, nil
+}
+
+func (p *Parser) startsInterfaceMethodValue() bool {
+	if p.at(token.ARROW) {
+		return true
+	}
+	if !p.at(token.IDENT) {
+		return false
+	}
+	i := 1
+	for {
+		if p.peekN(i).Type == token.ARROW {
+			return true
+		}
+		if p.peekN(i).Type == token.COMMA && p.peekN(i+1).Type == token.IDENT {
+			i += 2
+			continue
+		}
+		return false
+	}
+}
+
+func (p *Parser) interfaceMethodValue() ([]string, []token.Token, *ast.FuncLit, error) {
+	var params []string
+	var paramToks []token.Token
+	if !p.at(token.ARROW) {
+		for {
+			param, err := p.expectName("expected interface method parameter")
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			params = append(params, param.Lexeme)
+			paramToks = append(paramToks, param)
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+	if !p.match(token.ARROW) {
+		return nil, nil, nil, p.err("expected '->' after interface method parameters")
+	}
+	if !p.startsExpr() && !(p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT) {
+		return params, paramToks, nil, nil
+	}
+	fn, err := p.finishFunc(params, paramToks)
+	return params, paramToks, fn, err
 }
 
 func (p *Parser) startsClassDecl() bool {
@@ -839,6 +934,94 @@ func (p *Parser) scopeBlock() (ast.Stmt, error) {
 		return nil, err
 	}
 	return &ast.ScopeBlock{Body: body, Tok: tok}, nil
+}
+
+func (p *Parser) selectStmt() (ast.Stmt, error) {
+	tok := p.next()
+	if !p.match(token.NEWLINE) || !p.match(token.INDENT) {
+		return nil, p.err("expected indented block after select")
+	}
+	p.blockDepth++
+	defer func() { p.blockDepth-- }()
+	var arms []ast.SelectArm
+	seenDefault := false
+	p.skipNewlines()
+	for !p.at(token.DEDENT) && !p.at(token.EOF) {
+		arm, err := p.selectArm()
+		if err != nil {
+			return nil, err
+		}
+		if arm.Kind == "default" {
+			if seenDefault {
+				return nil, p.err("select may have at most one default arm")
+			}
+			seenDefault = true
+		}
+		arms = append(arms, arm)
+		p.skipNewlines()
+	}
+	if !p.match(token.DEDENT) {
+		return nil, p.err("expected dedent after select")
+	}
+	if len(arms) == 0 {
+		return nil, p.err("select requires at least one arm")
+	}
+	return &ast.SelectStmt{Arms: arms, Tok: tok}, nil
+}
+
+func (p *Parser) selectArm() (ast.SelectArm, error) {
+	tok := p.peek()
+	if p.at(token.IDENT) && p.peek().Lexeme == "default" {
+		tok = p.next()
+		body, err := p.block("default")
+		return ast.SelectArm{Kind: "default", Tok: tok, Body: body}, err
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "timeout" {
+		tok = p.next()
+		seconds, err := p.exprLine()
+		if err != nil {
+			return ast.SelectArm{}, err
+		}
+		body, err := p.block("timeout")
+		return ast.SelectArm{Kind: "timeout", Tok: tok, Seconds: seconds, Body: body}, err
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "send" {
+		tok = p.next()
+		ch, err := p.exprNoCommaFunc()
+		if err != nil {
+			return ast.SelectArm{}, err
+		}
+		if !p.match(token.COMMA) {
+			return ast.SelectArm{}, p.err("expected ',' after select send channel")
+		}
+		value, err := p.exprLine()
+		if err != nil {
+			return ast.SelectArm{}, err
+		}
+		body, err := p.block("send")
+		return ast.SelectArm{Kind: "send", Tok: tok, Channel: ch, Value: value, Body: body}, err
+	}
+	if p.at(token.IDENT) && p.peekN(1).Type == token.ASSIGN && p.peekN(2).Type == token.IDENT && p.peekN(2).Lexeme == "receive" {
+		bind := p.next()
+		p.next()
+		tok = p.next()
+		ch, err := p.exprLine()
+		if err != nil {
+			return ast.SelectArm{}, err
+		}
+		body, err := p.block("receive")
+		return ast.SelectArm{Kind: "receive", Tok: tok, BindName: bind.Lexeme, BindTok: bind, Channel: ch, Body: body}, err
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "receive" {
+		tok = p.next()
+		ch, err := p.exprLine()
+		if err != nil {
+			return ast.SelectArm{}, err
+		}
+		body, err := p.block("receive")
+		return ast.SelectArm{Kind: "receive", Tok: tok, Channel: ch, Body: body}, err
+	}
+	return ast.SelectArm{}, p.err("expected select arm")
 }
 
 func (p *Parser) forStmt() (ast.Stmt, error) {

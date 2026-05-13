@@ -175,7 +175,7 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 		{
 			name: "nested module in function",
 			src:  "load = ->\n  module greeting\n    hello = -> \"hello\"\n",
-			want: "module must be top-level",
+			want: "module declarations were removed",
 		},
 		{
 			name: "identifier set literal",
@@ -275,16 +275,6 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 			want: "class cannot be used as a name",
 		},
 		{
-			name: "module name",
-			src:  "module class\n  name = \"bad\"\n",
-			want: "class cannot be used as a name",
-		},
-		{
-			name: "module member",
-			src:  "module util\n  return = \"bad\"\n",
-			want: "return cannot be used as a name",
-		},
-		{
 			name: "import name",
 			src:  "import object\n",
 			want: "object is not in Tya v0.1",
@@ -307,32 +297,22 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 	}
 }
 
-func TestParseModuleDeclaration(t *testing.T) {
+func TestParseRejectsModuleDeclaration(t *testing.T) {
 	src := "module util\n  foo = \"foo\"\n\n  bar = name ->\n    name\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, _, err := Parse(toks)
-	if err != nil {
-		t.Fatal(err)
+	_, diags, err := Parse(toks)
+	if err == nil {
+		t.Fatal("expected module removal error")
 	}
-	decl, ok := prog.Stmts[0].(*ast.ModuleDecl)
-	if !ok {
-		t.Fatalf("got %T", prog.Stmts[0])
-	}
-	if decl.Name != "util" {
-		t.Fatalf("got module %q", decl.Name)
-	}
-	if len(decl.Members) != 2 {
-		t.Fatalf("got %d members", len(decl.Members))
-	}
-	if decl.Members[1].Name != "bar" {
-		t.Fatalf("got member %#v", decl.Members[1])
+	if len(diags) == 0 || diags[0].Code != CodeModuleRemoved {
+		t.Fatalf("expected %s, got %#v / %v", CodeModuleRemoved, diags, err)
 	}
 }
 
-func TestParseRejectsLegacyModuleColonMember(t *testing.T) {
+func TestParseRejectsLegacyModuleColonMemberAsRemovedModule(t *testing.T) {
 	src := "module util\n  foo: \"foo\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
@@ -342,7 +322,7 @@ func TestParseRejectsLegacyModuleColonMember(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected legacy module member error")
 	}
-	if !strings.Contains(err.Error(), "expected '=' after module member name") {
+	if !strings.Contains(err.Error(), "module declarations were removed") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -391,7 +371,7 @@ func TestParseRejectsModuleInsideBlock(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected nested module error")
 	}
-	if !strings.Contains(err.Error(), "module must be top-level") {
+	if !strings.Contains(err.Error(), "module declarations were removed") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -653,7 +633,6 @@ func TestParseRejectsPrintSugarOutsideStatement(t *testing.T) {
 		"value = print \"hello\"\n",
 		"message = -> print \"hello\"\n",
 		"user =\n  name: print \"hello\"\n",
-		"module util\n  value = print \"hello\"\n",
 	}
 	for _, src := range tests {
 		t.Run(src, func(t *testing.T) {

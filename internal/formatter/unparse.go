@@ -319,6 +319,16 @@ func (u *unparser) stmt(s ast.Stmt) error {
 	case *ast.ScopeBlock:
 		u.line("scope")
 		return u.block(n.Body)
+	case *ast.SelectStmt:
+		u.line("select")
+		u.indent++
+		for _, arm := range n.Arms {
+			if err := u.selectArm(arm); err != nil {
+				return err
+			}
+		}
+		u.indent--
+		return nil
 	case *ast.ModuleDecl:
 		return u.moduleDecl(n)
 	case *ast.ClassDecl:
@@ -327,6 +337,40 @@ func (u *unparser) stmt(s ast.Stmt) error {
 		return u.interfaceDecl(n)
 	}
 	return fmt.Errorf("formatter.Unparse: stmt %T not supported", s)
+}
+
+func (u *unparser) selectArm(arm ast.SelectArm) error {
+	switch arm.Kind {
+	case "receive":
+		ch, err := u.expr(arm.Channel)
+		if err != nil {
+			return err
+		}
+		if arm.BindName != "" {
+			u.line(arm.BindName + " = receive " + ch)
+		} else {
+			u.line("receive " + ch)
+		}
+	case "send":
+		ch, err := u.expr(arm.Channel)
+		if err != nil {
+			return err
+		}
+		value, err := u.expr(arm.Value)
+		if err != nil {
+			return err
+		}
+		u.line("send " + ch + ", " + value)
+	case "timeout":
+		seconds, err := u.expr(arm.Seconds)
+		if err != nil {
+			return err
+		}
+		u.line("timeout " + seconds)
+	case "default":
+		u.line("default")
+	}
+	return u.block(arm.Body)
 }
 
 func (u *unparser) matchStmt(n *ast.MatchStmt) error {
@@ -539,14 +583,36 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 		for _, r := range n.Parents {
 			parents = append(parents, classRefString(r))
 		}
-		head += " < " + strings.Join(parents, ", ")
+		head += " extends " + strings.Join(parents, ", ")
 	}
 	u.line(head)
 	u.indent++
 	defer func() { u.indent-- }()
+	for _, f := range n.Fields {
+		value, err := u.expr(f.Value)
+		if err != nil {
+			return err
+		}
+		u.line(f.Name + " = " + value)
+	}
 	for _, m := range n.Methods {
-		params := strings.Join(m.Params, ", ")
-		u.line(m.Name + " = " + params)
+		head := m.Name + " = " + strings.Join(m.Params, ", ") + " ->"
+		if m.Func == nil {
+			u.line(head)
+			continue
+		}
+		if m.Func.Expr != nil {
+			body, err := u.expr(m.Func.Expr)
+			if err != nil {
+				return err
+			}
+			u.line(head + " " + body)
+			continue
+		}
+		u.line(head)
+		if err := u.block(m.Func.Body); err != nil {
+			return err
+		}
 	}
 	return nil
 }

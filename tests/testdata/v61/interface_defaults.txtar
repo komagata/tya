@@ -1,0 +1,304 @@
+# v0.61: interface default methods and fields are contributed to classes.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/default_method.tya
+stdout 'user'
+stdout 'label:user'
+
+exec go run ./cmd/tya run $WORK/field.tya
+stdout 'created: false'
+stdout 'created: true'
+
+exec go run ./cmd/tya run $WORK/initializer.tya
+stdout 'ready: true'
+
+exec go run ./cmd/tya run $WORK/initializer_super_point.tya
+stdout 'before:false'
+stdout 'after:true'
+
+exec go run ./cmd/tya run $WORK/subclass_initializer.tya
+stdout 'base:true'
+stdout 'ready:true'
+
+exec go run ./cmd/tya run $WORK/default_satisfies_requirement.tya
+stdout 'default'
+
+exec go run ./cmd/tya run $WORK/class_super_to_interface.tya
+stdout 'class:interface'
+
+exec go run ./cmd/tya run $WORK/stackable_super.tya
+stdout '\*\[base\]\*'
+
+exec go run ./cmd/tya run $WORK/diamond_dedup.tya
+stdout 'root'
+
+! exec go run ./cmd/tya run $WORK/default_conflict.tya
+stderr 'conflicting interface default method label'
+
+! exec go run ./cmd/tya run $WORK/field_conflict.tya
+stderr 'conflicting interface field enabled'
+
+! exec go run ./cmd/tya run $WORK/missing_initializer_super.tya
+stderr 'class constructor must call super to run interface initialization'
+
+! exec go run ./cmd/tya run $WORK/super_without_next.tya
+stderr 'super has no next method in interface stack'
+
+! exec go run ./cmd/tya run $WORK/interface_self.tya
+stderr 'Self is not allowed in interface methods'
+
+! exec go run ./cmd/tya run $WORK/interface_static.tya
+stderr 'TYA-E0102'
+
+! exec go run ./cmd/tya run $WORK/interface_private.tya
+stderr 'TYA-E0141'
+
+! exec go run ./cmd/tya run $WORK/interface_nested_class.tya
+stderr 'TYA-E0140'
+
+! exec go run ./cmd/tya run $WORK/interface_nested_interface.tya
+stderr 'TYA-E0140'
+
+! exec go run ./cmd/tya run $WORK/interface_initializer_arity.tya
+stderr 'interface initialize must not take arguments'
+
+! exec go run ./cmd/tya run $WORK/interface_field_self.tya
+stderr 'interface field initializers cannot reference self'
+
+-- default_method.tya --
+interface Named
+  name = ->
+
+  label = ->
+    "label:" + self.name()
+
+class User implements Named
+  name = ->
+    "user"
+
+user = User()
+print(user.name())
+print(user.label())
+
+-- field.tya --
+interface Timestamped
+  created = false
+
+  touch = ->
+    self.created = true
+
+class Post implements Timestamped
+  title = nil
+
+post = Post()
+print("created: " + post.created.to_s())
+post.touch()
+print("created: " + post.created.to_s())
+
+-- initializer.tya --
+interface Ready
+  ready = false
+
+  initialize = ->
+    self.ready = true
+
+class Job implements Ready
+  title = nil
+
+job = Job()
+print("ready: " + job.ready.to_s())
+
+-- initializer_super_point.tya --
+interface Ready
+  ready = false
+
+  initialize = ->
+    self.ready = true
+
+class Job implements Ready
+  initialize = ->
+    print("before:" + self.ready.to_s())
+    super()
+    print("after:" + self.ready.to_s())
+
+Job()
+
+-- subclass_initializer.tya --
+interface Ready
+  ready = false
+
+  initialize = ->
+    self.ready = true
+
+class Base
+  initialize = ->
+    self.base_ready = true
+
+class Job extends Base implements Ready
+  initialize = ->
+    super()
+    print("base:" + self.base_ready.to_s())
+    print("ready:" + self.ready.to_s())
+
+Job()
+
+-- default_satisfies_requirement.tya --
+interface RequiresLabel
+  label = ->
+
+interface DefaultLabel
+  label = ->
+    "default"
+
+class Item implements RequiresLabel, DefaultLabel
+  name = nil
+
+print(Item().label())
+
+-- class_super_to_interface.tya --
+interface Label
+  label = ->
+    "interface"
+
+class User implements Label
+  label = ->
+    "class:" + super()
+
+print(User().label())
+
+-- stackable_super.tya --
+interface BaseLabel
+  label = ->
+    "base"
+
+interface BracketLabel extends BaseLabel
+  label = ->
+    "[" + super() + "]"
+
+interface StarLabel
+  label = ->
+    "*" + super() + "*"
+
+class User implements BracketLabel, StarLabel
+  label = ->
+    super()
+
+print(User().label())
+
+-- diamond_dedup.tya --
+interface Root
+  label = ->
+    "root"
+
+interface Left extends Root
+
+interface Right extends Root
+
+class User implements Left, Right
+  name = nil
+
+print(User().label())
+
+-- default_conflict.tya --
+interface A
+  label = ->
+    "a"
+
+interface B
+  label = ->
+    "b"
+
+class Item implements A, B
+  name = nil
+
+-- super_without_next.tya --
+interface Label
+  label = ->
+    super()
+
+class User implements Label
+  name = nil
+
+print(User().label())
+
+-- interface_self.tya --
+interface Bad
+  klass = ->
+    Self
+
+class User implements Bad
+  name = nil
+
+-- interface_static.tya --
+interface Bad
+  static label = ->
+    "bad"
+
+class User implements Bad
+  name = nil
+
+-- interface_private.tya --
+interface Bad
+  _hidden = ->
+    "bad"
+
+class User implements Bad
+  name = nil
+
+-- interface_nested_class.tya --
+interface Bad
+  class Nested
+    initialize = ->
+      nil
+
+class User implements Bad
+  name = nil
+
+-- interface_nested_interface.tya --
+interface Bad
+  interface Nested
+    label = ->
+
+class User implements Bad
+  name = nil
+
+-- interface_initializer_arity.tya --
+interface Bad
+  initialize = value ->
+    self.value = value
+
+class User implements Bad
+  initialize = ->
+    super()
+
+User()
+
+-- interface_field_self.tya --
+interface Bad
+  value = self.name
+
+class User implements Bad
+  name = "user"
+
+-- missing_initializer_super.tya --
+interface Ready
+  ready = false
+
+  initialize = ->
+    self.ready = true
+
+class Job implements Ready
+  initialize = ->
+    self.ready = false
+
+Job()
+
+-- field_conflict.tya --
+interface A
+  enabled = false
+
+interface B
+  enabled = false
+
+class Item implements A, B
+  name = nil

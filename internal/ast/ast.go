@@ -201,6 +201,7 @@ type InterfaceDecl struct {
 	NameTok token.Token
 	Parents []ClassRef
 	Methods []InterfaceMethod
+	Fields  []ClassField
 }
 
 func (*InterfaceDecl) stmt() {}
@@ -210,6 +211,7 @@ type InterfaceMethod struct {
 	Tok       token.Token
 	Params    []string
 	ParamToks []token.Token
+	Func      *FuncLit
 }
 
 type ClassField struct {
@@ -412,3 +414,21 @@ type ScopeBlock struct {
 }
 
 func (*ScopeBlock) stmt() {}
+
+type SelectStmt struct {
+	Arms []SelectArm
+	Tok  token.Token
+}
+
+func (*SelectStmt) stmt() {}
+
+type SelectArm struct {
+	Kind     string
+	BindName string
+	BindTok  token.Token
+	Channel  Expr
+	Value    Expr
+	Seconds  Expr
+	Body     []Stmt
+	Tok      token.Token
+}

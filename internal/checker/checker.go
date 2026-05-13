@@ -100,6 +100,10 @@ func checkStructure(prog *ast.Program, modules []string) error {
 	for _, name := range extraBuiltinNames {
 		scope.define(name, kindUnknown)
 	}
+	for _, name := range primitiveClassNames {
+		scope.define(name, kindClass)
+		constants[name] = true
+	}
 	for _, name := range modules {
 		scope.define(name, kindModule)
 	}
@@ -219,18 +223,15 @@ func CheckModuleFile(prog *ast.Program, path string) error {
 }
 
 var builtinNames = []string{
-	"all", "any", "args", "assert", "assert_equal", "byte_len", "chdir", "char_len", "chr", "contains",
+	"args", "assert", "assert_equal", "chdir", "chr",
 	"cwd", "delete", "dir_list", "dir_mkdir", "dir_rmdir",
-	"ends_with", "env", "equal", "error", "exit", "file_exists", "file_remove",
-	"file_rename", "file_stat", "filter",
-	"find", "has", "join", "keys", "kind", "len", "map", "ord", "panic",
+	"env", "equal", "error", "exit", "file_exists", "file_remove",
+	"file_rename", "file_stat",
+	"ord", "panic",
 	"path_expand_user",
-	"pop", "print", "println",
-	"push", "read_file", "read_line", "reduce", "replace", "split",
-	"starts_with", "to_float", "to_int", "to_number", "to_string", "trim",
-	"values", "write_file", "stderr_write", "file_append",
-	// v0.25
-	"bytes", "bytes_of", "bytes_text", "bytes_array", "bytes_concat", "bytes_slice",
+	"print", "println",
+	"read_file", "read_line",
+	"write_file", "stderr_write", "file_append",
 	"compress_gzip", "compress_gunzip", "compress_zlib", "compress_unzlib",
 	"io_stdin", "io_stdout", "io_stderr", "io_open", "io_stream_read",
 	"io_stream_read_line", "io_stream_eof", "io_stream_write", "io_stream_flush",
@@ -239,6 +240,8 @@ var builtinNames = []string{
 	"socket_read", "socket_read_line", "socket_write", "socket_close",
 	"socket_closed", "socket_local_address", "socket_remote_address",
 	"socket_server_close", "socket_server_local_address",
+	// v0.25
+	"bytes", "bytes_of", "bytes_text", "bytes_array", "bytes_concat", "bytes_slice",
 	"file_read_bytes", "file_write_bytes",
 	// v0.58
 	"http_server_run",
@@ -276,6 +279,57 @@ func SetExtraBuiltinNames(names []string) func() {
 	return func() { extraBuiltinNames = prev }
 }
 
+var primitiveClassNames = []string{"Number", "String", "Array", "Dict", "Boolean", "Nil"}
+
+func isPrimitiveClassName(name string) bool {
+	for _, className := range primitiveClassNames {
+		if name == className {
+			return true
+		}
+	}
+	return false
+}
+
+var removedTopLevelPrimitiveBuiltins = map[string]string{
+	"kind":        "TYA-E0810",
+	"len":         "TYA-E0812",
+	"byte_len":    "TYA-E0812",
+	"char_len":    "TYA-E0812",
+	"trim":        "TYA-E0812",
+	"contains":    "TYA-E0812",
+	"starts_with": "TYA-E0812",
+	"ends_with":   "TYA-E0812",
+	"replace":     "TYA-E0812",
+	"split":       "TYA-E0812",
+	"join":        "TYA-E0812",
+	"keys":        "TYA-E0812",
+	"values":      "TYA-E0812",
+	"has":         "TYA-E0812",
+	"push":        "TYA-E0812",
+	"pop":         "TYA-E0812",
+	"map":         "TYA-E0812",
+	"filter":      "TYA-E0812",
+	"find":        "TYA-E0812",
+	"any":         "TYA-E0812",
+	"all":         "TYA-E0812",
+	"reduce":      "TYA-E0812",
+	"to_string":   "TYA-E0812",
+	"to_int":      "TYA-E0812",
+	"to_float":    "TYA-E0812",
+	"to_number":   "TYA-E0812",
+}
+
+func removedTopLevelPrimitiveBuiltinError(name string, line, col int) error {
+	code, ok := removedTopLevelPrimitiveBuiltins[name]
+	if !ok {
+		return nil
+	}
+	if code == "TYA-E0810" {
+		return fmt.Errorf("%d:%d: [TYA-E0810] kind builtin removed in v0.59; use x.class or x.class.name", line, col)
+	}
+	return fmt.Errorf("%d:%d: [TYA-E0812] top-level builtin %s was removed in v0.59; method now lives on the wrapper class", line, col, name)
+}
+
 // BuiltinNames returns a copy of the registered builtin function
 // names. Tooling that needs to surface builtins (LSP completion,
 // for instance) can use this without touching the internal slice.
@@ -300,23 +354,24 @@ type scope struct {
 }
 
 type classInfo struct {
-	name                 string
-	parent               string
-	abstract             bool
-	final                bool
-	hasInit              bool
-	initArity            int
-	privateInit          bool
-	methods              map[string]int
-	classMethods         map[string]int
-	abstractMethods      map[string]int
-	abstractClassMethods map[string]int
-	interfaceMethods     map[string]int
-	privateFields        map[string]bool
-	privateMethods       map[string]bool
-	privateClassMembers  map[string]bool
-	privateClassMethods  map[string]bool
-	privateFieldAssigned map[string]bool
+	name                  string
+	parent                string
+	abstract              bool
+	final                 bool
+	hasInit               bool
+	initArity             int
+	privateInit           bool
+	methods               map[string]int
+	classMethods          map[string]int
+	abstractMethods       map[string]int
+	abstractClassMethods  map[string]int
+	interfaceMethods      map[string]int
+	interfaceInitializers bool
+	privateFields         map[string]bool
+	privateMethods        map[string]bool
+	privateClassMembers   map[string]bool
+	privateClassMethods   map[string]bool
+	privateFieldAssigned  map[string]bool
 	// v0.45 cross-file private enforcement metadata. originFile is
 	// the basename of the source file (e.g. "Util.tya") that declared
 	// this class; populated from ClassDecl.OriginFile by
@@ -330,11 +385,15 @@ type classInfo struct {
 }
 
 type interfaceInfo struct {
-	name    string
-	parents []string
-	methods map[string]int
-	tokLine int
-	tokCol  int
+	name              string
+	parents           []string
+	methods           map[string]int
+	defaults          map[string]int
+	defaultsCallSuper map[string]bool
+	fields            map[string]bool
+	initializer       bool
+	tokLine           int
+	tokCol            int
 }
 
 type interfaceRequirement struct {
@@ -602,6 +661,34 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			if err := checkStmts(n.Body, constants, newScope(scope)); err != nil {
 				return err
 			}
+		case *ast.SelectStmt:
+			for _, arm := range n.Arms {
+				if arm.Channel != nil {
+					if err := checkExpr(arm.Channel, scope); err != nil {
+						return err
+					}
+				}
+				if arm.Value != nil {
+					if err := checkExpr(arm.Value, scope); err != nil {
+						return err
+					}
+				}
+				if arm.Seconds != nil {
+					if err := checkExpr(arm.Seconds, scope); err != nil {
+						return err
+					}
+				}
+				child := newScope(scope)
+				if arm.BindName != "" {
+					if err := checkBindingName(arm.BindName, arm.BindTok.Line, arm.BindTok.Col); err != nil {
+						return err
+					}
+					child.define(arm.BindName, kindUnknown)
+				}
+				if err := checkStmts(arm.Body, constants, child); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
@@ -704,12 +791,24 @@ func predeclareInterface(module string, iface *ast.InterfaceDecl, scope *scope) 
 	if scope.kind(key) == kindInterface {
 		return fmt.Errorf("%d:%d: duplicate interface %s", iface.NameTok.Line, iface.NameTok.Col, iface.Name)
 	}
-	info := interfaceInfo{name: key, methods: map[string]int{}, tokLine: iface.NameTok.Line, tokCol: iface.NameTok.Col}
+	info := interfaceInfo{name: key, methods: map[string]int{}, defaults: map[string]int{}, defaultsCallSuper: map[string]bool{}, fields: map[string]bool{}, tokLine: iface.NameTok.Line, tokCol: iface.NameTok.Col}
 	for _, parent := range iface.Parents {
 		info.parents = append(info.parents, refKey(&parent, module, scope))
 	}
 	for _, method := range iface.Methods {
-		info.methods[method.Name] = len(method.Params)
+		if method.Func == nil {
+			info.methods[method.Name] = len(method.Params)
+		} else if method.Name != "initialize" {
+			info.defaults[method.Name] = len(method.Params)
+			if funcCallsSuper(method.Func) {
+				info.defaultsCallSuper[method.Name] = true
+			}
+		} else {
+			info.initializer = true
+		}
+	}
+	for _, field := range iface.Fields {
+		info.fields[field.Name] = true
 	}
 	scope.define(key, kindInterface)
 	scope.interfaces[key] = info
@@ -772,6 +871,7 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 	}
 	key := classKey("", class)
 	info := newClassInfo(key, class)
+	info.originFile = class.OriginFile
 	if class.Parent != nil {
 		info.parent = refKey(class.Parent, "", scope)
 	}
@@ -946,6 +1046,13 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 			return undefinedNameError(n.Name, n.Tok.Line, n.Tok.Col, scope)
 		}
+		if scope.kind(n.Name) == kindClass {
+			if info, ok := scope.classes[n.Name]; ok {
+				if err := checkCrossFilePrivate(info, n.Name, n.Tok.Line, n.Tok.Col, scope); err != nil {
+					return err
+				}
+			}
+		}
 	case *ast.StringLit:
 		if err := checkInterpolation(n.Value, scope); err != nil {
 			return err
@@ -967,6 +1074,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.FuncLit:
 		seen := map[string]bool{}
 		child := newScope(scope)
+		child.currentClass = scope.currentClass
+		child.currentMethod = scope.currentMethod
+		child.inClassMethod = scope.inClassMethod
+		child.inInstanceMethod = scope.inInstanceMethod
 		for i, param := range n.Params {
 			line := 0
 			col := 0
@@ -1072,6 +1183,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 					if err := checkCrossFilePrivate(info, n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
 						return err
 					}
+				} else if info, ok := scope.classes[n.Name]; ok {
+					if err := checkCrossFilePrivate(info, n.Name, n.NameTok.Line, n.NameTok.Col, scope); err != nil {
+						return err
+					}
 				}
 			}
 			return nil
@@ -1079,10 +1194,6 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			return nil
 		case kindObject:
 			return nil
-		case kindDict:
-			return memberAccessError(n, "dictionary")
-		case kindArray:
-			return memberAccessError(n, "array")
 		default:
 			return nil
 		}
@@ -1093,12 +1204,28 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		return checkExpr(n.Index, scope)
 	case *ast.CallExpr:
 		if super, ok := n.Callee.(*ast.SuperExpr); ok {
+			if scope.inInstanceMethod && scope.currentClass == "" {
+				for _, arg := range n.Args {
+					if err := checkExpr(arg, scope); err != nil {
+						return err
+					}
+				}
+				return nil
+			}
 			if (!scope.inInstanceMethod && !scope.inClassMethod) || scope.currentMethod == "" || scope.currentClass == "" {
 				return fmt.Errorf("%d:%d: super must be called inside init, an instance method, or a class method", super.Tok.Line, super.Tok.Col)
 			}
 			parent := scope.classes[scope.currentClass].parent
 			if parent == "" {
-				return fmt.Errorf("%d:%d: super has no parent method", super.Tok.Line, super.Tok.Col)
+				if scope.inClassMethod {
+					return fmt.Errorf("%d:%d: super has no parent class method %s", super.Tok.Line, super.Tok.Col, scope.currentMethod)
+				}
+				for _, arg := range n.Args {
+					if err := checkExpr(arg, scope); err != nil {
+						return err
+					}
+				}
+				return nil
 			}
 			if scope.inClassMethod {
 				arity, ok := inheritedClassMethodArity(parent, scope.currentMethod, scope)
@@ -1114,7 +1241,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				}
 				arity, ok := inheritedInitArity(parent, scope)
 				if !ok {
-					return fmt.Errorf("%d:%d: constructor super has no parent init", super.Tok.Line, super.Tok.Col)
+					if !scope.classes[scope.currentClass].interfaceInitializers {
+						return fmt.Errorf("%d:%d: constructor super has no parent init", super.Tok.Line, super.Tok.Col)
+					}
+					arity = 0
 				}
 				if len(n.Args) != arity {
 					return fmt.Errorf("%d:%d: super init expects %d arguments", super.Tok.Line, super.Tok.Col, arity)
@@ -1149,6 +1279,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 			return nil
 		}
+		if id, ok := n.Callee.(*ast.Ident); ok {
+			if err := removedTopLevelPrimitiveBuiltinError(id.Name, id.Tok.Line, id.Tok.Col); err != nil {
+				return err
+			}
+		}
 		if err := checkExpr(n.Callee, scope); err != nil {
 			return err
 		}
@@ -1182,9 +1317,20 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				if err := checkClassCall(key, member.Name, member.NameTok.Line, member.NameTok.Col, len(n.Args), scope); err != nil {
 					return err
 				}
+			} else if scope.kind(member.Name) == kindClass {
+				if err := checkClassCall(member.Name, member.Name, member.NameTok.Line, member.NameTok.Col, len(n.Args), scope); err != nil {
+					return err
+				}
 			}
 			if scope.kind(key) == kindInterface {
 				return fmt.Errorf("%d:%d: cannot construct interface %s", member.NameTok.Line, member.NameTok.Col, member.Name)
+			} else if scope.kind(member.Name) == kindInterface {
+				return fmt.Errorf("%d:%d: cannot construct interface %s", member.NameTok.Line, member.NameTok.Col, member.Name)
+			}
+		}
+		if member, ok := n.Callee.(*ast.MemberExpr); ok {
+			if err := removedConcurrencyHelperError(member); err != nil {
+				return err
 			}
 		}
 		for _, arg := range n.Args {
@@ -1196,14 +1342,46 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	return nil
 }
 
+func removedConcurrencyHelperError(member *ast.MemberExpr) error {
+	target, ok := member.Target.(*ast.MemberExpr)
+	if !ok {
+		return nil
+	}
+	classKey := memberKey(target)
+	switch classKey {
+	case "channel.Channel":
+		switch member.Name {
+		case "new", "send", "receive", "receive_timeout", "close", "closed?", "select":
+			return fmt.Errorf("%d:%d: [TYA-E0820] removed concurrency helper API; use instance method style", member.NameTok.Line, member.NameTok.Col)
+		}
+	case "task.Task":
+		switch member.Name {
+		case "cancel", "cancelled?":
+			return fmt.Errorf("%d:%d: [TYA-E0820] removed concurrency helper API; use instance method style", member.NameTok.Line, member.NameTok.Col)
+		}
+	case "sync.Sync":
+		return fmt.Errorf("%d:%d: [TYA-E0820] removed concurrency helper API; use instance method style", member.NameTok.Line, member.NameTok.Col)
+	}
+	return nil
+}
+
 func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 	if !classNameRE.MatchString(class.Name) {
 		return fmt.Errorf("%d:%d: invalid class name %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+	}
+	if isPrimitiveClassName(class.Name) {
+		return fmt.Errorf("%d:%d: [TYA-E0815] cannot rebind reserved class identifier %s", class.NameTok.Line, class.NameTok.Col, class.Name)
+	}
+	if class.Parent != nil && class.Parent.Module == "" && isPrimitiveClassName(class.Parent.Name) {
+		return fmt.Errorf("%d:%d: [TYA-E0813] cannot inherit from built-in primitive class %s", class.Parent.Tok.Line, class.Parent.Tok.Col, class.Parent.Name)
 	}
 	if class.Abstract && class.Final {
 		return fmt.Errorf("%d:%d: class cannot be both abstract and final", class.NameTok.Line, class.NameTok.Col)
 	}
 	key := classKey(module, class)
+	info := scope.classes[key]
+	info.interfaceInitializers = classHasInterfaceInitializers(class, module, scope)
+	scope.classes[key] = info
 	if class.Parent != nil {
 		parentKey := refKey(class.Parent, module, scope)
 		if _, ok := scope.interfaces[parentKey]; ok {
@@ -1341,11 +1519,14 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			parent := scope.classes[key].parent
 			if parent != "" {
 				if method.Name == "init" || method.Name == "initialize" {
-					if err := checkConstructorSuper(class, method, parent, scope); err != nil {
+					if err := checkConstructorSuper(class, method, parent, scope, module); err != nil {
 						return err
 					}
 					if _, ok := inheritedInitArity(parent, scope); ok && !funcCallsSuper(method.Func) {
 						return fmt.Errorf("%d:%d: subclass init must call super", method.Tok.Line, method.Tok.Col)
+					}
+					if classHasInterfaceInitializers(class, module, scope) && !funcCallsSuper(method.Func) {
+						return fmt.Errorf("%d:%d: class constructor must call super to run interface initialization", method.Tok.Line, method.Tok.Col)
 					}
 				} else {
 					if err := checkOverrideMethod(class, method, parent, scope); err != nil {
@@ -1359,6 +1540,9 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 				}
 			} else if method.Override {
 				return fmt.Errorf("%d:%d: override method %s has no inherited method target", method.Tok.Line, method.Tok.Col, method.Name)
+			}
+			if parent == "" && (method.Name == "init" || method.Name == "initialize") && classHasInterfaceInitializers(class, module, scope) && !funcCallsSuper(method.Func) {
+				return fmt.Errorf("%d:%d: class constructor must call super to run interface initialization", method.Tok.Line, method.Tok.Col)
 			}
 		} else {
 			parent := scope.classes[key].parent
@@ -1399,6 +1583,34 @@ func checkInterface(iface *ast.InterfaceDecl, scope *scope, module string) error
 			return fmt.Errorf("%d:%d: duplicate interface method %s", method.Tok.Line, method.Tok.Col, method.Name)
 		}
 		seen[method.Name] = true
+		if method.Func != nil {
+			if method.Name == "initialize" && len(method.Params) != 0 {
+				return fmt.Errorf("%d:%d: interface initialize must not take arguments", method.Tok.Line, method.Tok.Col)
+			}
+			if containsClassSelfRef(method.Func) {
+				return fmt.Errorf("%d:%d: Self is not allowed in interface methods", method.Tok.Line, method.Tok.Col)
+			}
+			child := newScope(scope)
+			child.inInstanceMethod = true
+			if err := checkExpr(method.Func, child); err != nil {
+				return err
+			}
+		}
+	}
+	for _, field := range iface.Fields {
+		if !valueNameRE.MatchString(field.Name) || isPrivateName(field.Name) {
+			return fmt.Errorf("%d:%d: invalid interface field %s", field.Tok.Line, field.Tok.Col, field.Name)
+		}
+		if seen[field.Name] {
+			return fmt.Errorf("%d:%d: duplicate interface member %s", field.Tok.Line, field.Tok.Col, field.Name)
+		}
+		seen[field.Name] = true
+		if containsSelfRef(field.Value) {
+			return fmt.Errorf("%d:%d: interface field initializers cannot reference self", field.Tok.Line, field.Tok.Col)
+		}
+		if err := checkExpr(field.Value, scope); err != nil {
+			return err
+		}
 	}
 	if _, err := effectiveInterfaceRequirements(key, scope, nil); err != nil {
 		return err
@@ -1411,6 +1623,109 @@ func classKey(module string, class *ast.ClassDecl) string {
 		return module + "." + class.Name
 	}
 	return class.Name
+}
+
+func containsSelfRef(expr ast.Expr) bool {
+	switch n := expr.(type) {
+	case *ast.SelfExpr:
+		return true
+	case *ast.MemberExpr:
+		return containsSelfRef(n.Target)
+	case *ast.IndexExpr:
+		return containsSelfRef(n.Target) || containsSelfRef(n.Index)
+	case *ast.CallExpr:
+		if containsSelfRef(n.Callee) {
+			return true
+		}
+		for _, arg := range n.Args {
+			if containsSelfRef(arg) {
+				return true
+			}
+		}
+	case *ast.BinaryExpr:
+		return containsSelfRef(n.Left) || containsSelfRef(n.Right)
+	case *ast.UnaryExpr:
+		return containsSelfRef(n.Expr)
+	case *ast.ArrayLit:
+		for _, elem := range n.Elems {
+			if containsSelfRef(elem) {
+				return true
+			}
+		}
+	case *ast.DictLit:
+		for _, prop := range n.Props {
+			if containsSelfRef(prop.Value) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func containsClassSelfRef(expr ast.Expr) bool {
+	switch n := expr.(type) {
+	case *ast.SelfExpr:
+		return n.Class
+	case *ast.FuncLit:
+		if n.Expr != nil && containsClassSelfRef(n.Expr) {
+			return true
+		}
+		for _, stmt := range n.Body {
+			if stmtContainsClassSelfRef(stmt) {
+				return true
+			}
+		}
+	case *ast.MemberExpr:
+		return containsClassSelfRef(n.Target)
+	case *ast.CallExpr:
+		if containsClassSelfRef(n.Callee) {
+			return true
+		}
+		for _, arg := range n.Args {
+			if containsClassSelfRef(arg) {
+				return true
+			}
+		}
+	case *ast.BinaryExpr:
+		return containsClassSelfRef(n.Left) || containsClassSelfRef(n.Right)
+	case *ast.UnaryExpr:
+		return containsClassSelfRef(n.Expr)
+	}
+	return false
+}
+
+func stmtContainsClassSelfRef(stmt ast.Stmt) bool {
+	switch n := stmt.(type) {
+	case *ast.ExprStmt:
+		return containsClassSelfRef(n.Expr)
+	case *ast.AssignStmt:
+		for _, target := range n.Targets {
+			if containsClassSelfRef(target) {
+				return true
+			}
+		}
+		for _, value := range n.Values {
+			if containsClassSelfRef(value) {
+				return true
+			}
+		}
+	case *ast.ReturnStmt:
+		for _, value := range n.Values {
+			if containsClassSelfRef(value) {
+				return true
+			}
+		}
+	case *ast.IfStmt:
+		if containsClassSelfRef(n.Cond) {
+			return true
+		}
+		for _, st := range append(n.Then, n.Else...) {
+			if stmtContainsClassSelfRef(st) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // currentModulePrefix returns the module prefix when the scope is
@@ -1525,6 +1840,12 @@ func checkClassCall(key, display string, line, col, argc int, scope *scope) erro
 	if err := checkCrossFilePrivate(info, display, line, col, scope); err != nil {
 		return err
 	}
+	if arity, ok := nativeConcurrencyConstructorArity(key); ok {
+		if argc != arity {
+			return fmt.Errorf("%d:%d: class %s constructor expects %d arguments", line, col, display, arity)
+		}
+		return nil
+	}
 	if info.abstract {
 		return fmt.Errorf("%d:%d: cannot construct abstract class %s", line, col, display)
 	}
@@ -1539,6 +1860,21 @@ func checkClassCall(key, display string, line, col, argc int, scope *scope) erro
 		return fmt.Errorf("%d:%d: class %s constructor expects %d arguments", line, col, display, arity)
 	}
 	return nil
+}
+
+func nativeConcurrencyConstructorArity(key string) (int, bool) {
+	switch key {
+	case "channel.Channel", "Channel":
+		return 1, true
+	case "sync.Mutex", "Mutex":
+		return 0, true
+	case "sync.AtomicInteger", "AtomicInteger":
+		return 1, true
+	case "sync.WaitGroup", "WaitGroup":
+		return 0, true
+	default:
+		return 0, false
+	}
 }
 
 func checkPrivateInstanceAccess(name string, line, col int, scope *scope, assignment bool) error {
@@ -1708,7 +2044,7 @@ func checkOverrideMethod(class *ast.ClassDecl, method ast.ClassMethod, parent st
 	return fmt.Errorf("%d:%d: override method %s has no inherited method target", method.Tok.Line, method.Tok.Col, method.Name)
 }
 
-func checkConstructorSuper(class *ast.ClassDecl, method ast.ClassMethod, parent string, scope *scope) error {
+func checkConstructorSuper(class *ast.ClassDecl, method ast.ClassMethod, parent string, scope *scope, module string) error {
 	count, firstSuper, firstField, firstReturn := constructorSuperStats(method.Func)
 	if count > 1 {
 		return fmt.Errorf("%d:%d: constructor super called more than once", method.Tok.Line, method.Tok.Col)
@@ -1719,7 +2055,8 @@ func checkConstructorSuper(class *ast.ClassDecl, method ast.ClassMethod, parent 
 		parentHasInit = true
 		parentInitArity = arity
 	}
-	if count > 0 && !parentHasInit {
+	hasInterfaceInit := classHasInterfaceInitializers(class, module, scope)
+	if count > 0 && !parentHasInit && !hasInterfaceInit {
 		return fmt.Errorf("%d:%d: constructor super has no parent init", method.Tok.Line, method.Tok.Col)
 	}
 	if parentHasInit && count == 0 {
@@ -1762,6 +2099,10 @@ func checkAbstractImplementations(class *ast.ClassDecl, scope *scope, key string
 
 func checkInterfaceImplementations(class *ast.ClassDecl, scope *scope, key string, module string) error {
 	reqs := map[string]int{}
+	defaults := map[string]int{}
+	defaultSources := map[string]string{}
+	interfaceFields := map[string]string{}
+	var interfaceOrder []string
 	if parent := scope.classes[key].parent; parent != "" {
 		for name, arity := range scope.classes[parent].interfaceMethods {
 			reqs[name] = arity
@@ -1777,6 +2118,7 @@ func checkInterfaceImplementations(class *ast.ClassDecl, scope *scope, key strin
 		if scope.kind(ifaceKey) != kindInterface {
 			return fmt.Errorf("%d:%d: implements target %s is not an interface", ref.Tok.Line, ref.Tok.Col, parentName(&ref))
 		}
+		interfaceOrder = append(interfaceOrder, effectiveInterfaceOrder(ifaceKey, scope, nil)...)
 		ifaceReqs, err := effectiveInterfaceRequirements(ifaceKey, scope, nil)
 		if err != nil {
 			return err
@@ -1786,6 +2128,38 @@ func checkInterfaceImplementations(class *ast.ClassDecl, scope *scope, key strin
 				return fmt.Errorf("%d:%d: conflicting interface method %s arity requirements", ref.Tok.Line, ref.Tok.Col, name)
 			}
 			reqs[name] = req.arity
+		}
+		for name, arity := range effectiveInterfaceDefaults(ifaceKey, scope, nil) {
+			defaults[name] = arity
+		}
+		for name, source := range effectiveInterfaceDefaultSources(ifaceKey, scope, nil) {
+			if existing, ok := defaultSources[name]; ok && existing != source && !classDeclaresMethod(class, name) {
+				return fmt.Errorf("%d:%d: conflicting interface default method %s", ref.Tok.Line, ref.Tok.Col, name)
+			}
+			defaultSources[name] = source
+		}
+		for name, source := range effectiveInterfaceFields(ifaceKey, scope, nil) {
+			if existing, ok := interfaceFields[name]; ok && existing != source && !classDeclaresField(class, name) {
+				return fmt.Errorf("%d:%d: conflicting interface field %s", ref.Tok.Line, ref.Tok.Col, name)
+			}
+			interfaceFields[name] = source
+		}
+	}
+	seenDefaultInOrder := map[string]bool{}
+	for _, ifaceKey := range interfaceOrder {
+		info := scope.interfaces[ifaceKey]
+		for name := range info.defaultsCallSuper {
+			if !seenDefaultInOrder[name] && !classDeclaresMethod(class, name) {
+				return fmt.Errorf("%d:%d: super has no next method in interface stack", class.NameTok.Line, class.NameTok.Col)
+			}
+		}
+		for name := range info.defaults {
+			seenDefaultInOrder[name] = true
+		}
+	}
+	for name, arity := range defaults {
+		if reqArity, ok := reqs[name]; ok && reqArity == arity {
+			delete(reqs, name)
 		}
 	}
 	info := scope.classes[key]
@@ -1813,6 +2187,143 @@ func checkInterfaceImplementations(class *ast.ClassDecl, scope *scope, key strin
 		}
 	}
 	return nil
+}
+
+func classDeclaresField(class *ast.ClassDecl, name string) bool {
+	for _, field := range class.Fields {
+		if field.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func classDeclaresMethod(class *ast.ClassDecl, name string) bool {
+	for _, method := range class.Methods {
+		if !method.Class && method.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func classHasInterfaceInitializers(class *ast.ClassDecl, module string, scope *scope) bool {
+	for _, ref := range class.Implements {
+		if hasInterfaceInitializer(refKey(&ref, module, scope), scope, nil) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasInterfaceInitializer(key string, scope *scope, stack []string) bool {
+	info, ok := scope.interfaces[key]
+	if !ok {
+		return false
+	}
+	for _, active := range stack {
+		if active == key {
+			return false
+		}
+	}
+	stack = append(stack, key)
+	if info.initializer {
+		return true
+	}
+	for _, parent := range info.parents {
+		if hasInterfaceInitializer(parent, scope, stack) {
+			return true
+		}
+	}
+	return false
+}
+
+func effectiveInterfaceOrder(key string, scope *scope, stack []string) []string {
+	info, ok := scope.interfaces[key]
+	if !ok {
+		return nil
+	}
+	for _, active := range stack {
+		if active == key {
+			return nil
+		}
+	}
+	stack = append(stack, key)
+	var out []string
+	for _, parent := range info.parents {
+		out = append(out, effectiveInterfaceOrder(parent, scope, stack)...)
+	}
+	out = append(out, key)
+	return out
+}
+
+func effectiveInterfaceDefaults(key string, scope *scope, stack []string) map[string]int {
+	info, ok := scope.interfaces[key]
+	if !ok {
+		return nil
+	}
+	for _, active := range stack {
+		if active == key {
+			return nil
+		}
+	}
+	stack = append(stack, key)
+	defaults := map[string]int{}
+	for _, parent := range info.parents {
+		for name, arity := range effectiveInterfaceDefaults(parent, scope, stack) {
+			defaults[name] = arity
+		}
+	}
+	for name, arity := range info.defaults {
+		defaults[name] = arity
+	}
+	return defaults
+}
+
+func effectiveInterfaceFields(key string, scope *scope, stack []string) map[string]string {
+	info, ok := scope.interfaces[key]
+	if !ok {
+		return nil
+	}
+	for _, active := range stack {
+		if active == key {
+			return nil
+		}
+	}
+	stack = append(stack, key)
+	fields := map[string]string{}
+	for _, parent := range info.parents {
+		for name, source := range effectiveInterfaceFields(parent, scope, stack) {
+			fields[name] = source
+		}
+	}
+	for name := range info.fields {
+		fields[name] = key
+	}
+	return fields
+}
+
+func effectiveInterfaceDefaultSources(key string, scope *scope, stack []string) map[string]string {
+	info, ok := scope.interfaces[key]
+	if !ok {
+		return nil
+	}
+	for _, active := range stack {
+		if active == key {
+			return nil
+		}
+	}
+	stack = append(stack, key)
+	defaults := map[string]string{}
+	for _, parent := range info.parents {
+		for name, source := range effectiveInterfaceDefaultSources(parent, scope, stack) {
+			defaults[name] = source
+		}
+	}
+	for name := range info.defaults {
+		defaults[name] = key
+	}
+	return defaults
 }
 
 func effectiveInterfaceRequirements(key string, scope *scope, stack []string) (map[string]interfaceRequirement, error) {
@@ -2099,17 +2610,14 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 		if n.Name == "class" || n.Name == "class_name" || ((n.Name == "name" || n.Name == "parent") && kindOf(n.Target, scope) == kindClass) {
 			return fmt.Errorf("%d:%d: cannot assign to read-only introspection member %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
+		if id, ok := n.Target.(*ast.Ident); ok && isPrimitiveClassName(id.Name) {
+			return fmt.Errorf("%d:%d: [TYA-E0814] cannot add or redefine method %s on built-in primitive class %s", n.NameTok.Line, n.NameTok.Col, n.Name, id.Name)
+		}
 		if isPrivateName(n.Name) {
 			return fmt.Errorf("%d:%d: private member %s is not accessible here", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
-		}
-		switch kindOf(n.Target, scope) {
-		case kindDict:
-			return memberAccessError(n, "dictionary")
-		case kindArray:
-			return memberAccessError(n, "array")
 		}
 		return nil
 	case *ast.InstanceFieldExpr:
@@ -2266,6 +2774,9 @@ func kindOf(expr ast.Expr, scope *scope) valueKind {
 		if scope.kind(memberKey(member)) == kindClass {
 			return kindClass
 		}
+		if scope.kind(member.Name) == kindClass {
+			return kindClass
+		}
 	}
 	return literalKind(expr)
 }
@@ -2330,6 +2841,9 @@ func memberAccessError(expr *ast.MemberExpr, receiver string) error {
 }
 
 func checkBindingName(name string, line, col int) error {
+	if isPrimitiveClassName(name) {
+		return fmt.Errorf("%d:%d: [TYA-E0815] cannot rebind reserved class identifier %s", line, col, name)
+	}
 	if constNameRE.MatchString(name) || valueNameRE.MatchString(name) {
 		return nil
 	}

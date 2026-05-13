@@ -68,7 +68,7 @@ func TestEmitCWithCoverageCollectsCodegenDiagnostics(t *testing.T) {
 }
 
 func TestEmitCCompilesArrayProgram(t *testing.T) {
-	src := "items = [1, 2]\npush(items, 3)\nprint(len(items))\nprint(items[2])\nitems[1] = 20\nprint(items[1])\nprint(pop(items))\nprint(len(items))\n"
+	src := "items = [1, 2]\nitems.push(3)\nprint(items.len())\nprint(items[2])\nitems[1] = 20\nprint(items[1])\nprint(items.pop())\nprint(items.len())\n"
 	out := compileAndRun(t, src)
 	if string(out) != "3\n3\n20\n3\n2\n" {
 		t.Fatalf("got %q", out)
@@ -76,7 +76,7 @@ func TestEmitCCompilesArrayProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesStringProgram(t *testing.T) {
-	src := "text = \"  hello,tya  \"\ntrimmed = trim(text)\nparts = split(trimmed, \",\")\nprint(join(parts, \"-\"))\nprint(replace(trimmed, \"tya\", \"Tya\"))\nprint(contains(trimmed, \"hello\"))\nprint(starts_with(trimmed, \"hello\"))\nprint(ends_with(trimmed, \"tya\"))\nprint(\"quote: \\\"tya\\\"\")\nprint(\"tya\"[1])\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = text.trim()\nparts = trimmed.split(\",\")\nprint(parts.join(\"-\"))\nprint(trimmed.replace(\"tya\", \"Tya\"))\nprint(trimmed.contains(\"hello\"))\nprint(trimmed.starts_with(\"hello\"))\nprint(trimmed.ends_with(\"tya\"))\nprint(\"quote: \\\"tya\\\"\")\nprint(\"tya\"[1])\n"
 	out := compileAndRun(t, src)
 	if string(out) != "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\nquote: \"tya\"\ny\n" {
 		t.Fatalf("got %q", out)
@@ -116,7 +116,7 @@ func TestEmitCCompilesFunctionValueCalls(t *testing.T) {
 }
 
 func TestEmitCCompilesUserFunctionCallStatements(t *testing.T) {
-	src := "append = items, item ->\n  push(items, item)\nitems = []\nappend(items, \"Tya\")\nprint(len(items))\n"
+	src := "append = items, item ->\n  items.push(item)\nitems = []\nappend(items, \"Tya\")\nprint(items.len())\n"
 	out := compileAndRun(t, src)
 	if string(out) != "1\n" {
 		t.Fatalf("got %q", out)
@@ -137,7 +137,7 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 	if err := os.WriteFile(path, []byte("12\na\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	src := "path = args()[0]\ntext = read_file(path)\nparts = split(text, \"\\n\")\nfirst = to_int(parts[0])\nprint(first + 8)\nprint(to_string(true))\nprint(join(parts, \":\"))\n"
+	src := "path = args()[0]\ntext = read_file(path)\nparts = text.split(\"\\n\")\nfirst = parts[0].to_i()\nprint(first + 8)\nprint(true.to_s())\nprint(parts.join(\":\"))\n"
 	out := compileAndRunArgs(t, src, path)
 	if string(out) != "20\ntrue\n12:a:\n" {
 		t.Fatalf("got %q", out)
@@ -163,7 +163,7 @@ func TestEmitCCompilesErrorProgram(t *testing.T) {
 
 func TestEmitCCompilesArgsAndEnvProgram(t *testing.T) {
 	t.Setenv("TYA_EXAMPLE", "hello")
-	src := "items = args()\nprint(len(items))\nprint(env(\"TYA_EXAMPLE\"))\n"
+	src := "items = args()\nprint(items.len())\nprint(env(\"TYA_EXAMPLE\"))\n"
 	out := compileAndRunArgs(t, src, "foo")
 	if string(out) != "1\nhello\n" {
 		t.Fatalf("got %q", out)
@@ -171,7 +171,7 @@ func TestEmitCCompilesArgsAndEnvProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesExitProgram(t *testing.T) {
-	src := "items = args()\nif len(items) > 0\n  exit(to_int(items[0]))\nprint(\"no exit\")\n"
+	src := "items = args()\nif items.len() > 0\n  exit(items[0].to_i())\nprint(\"no exit\")\n"
 	out, code := compileAndRunArgsAllowExit(t, src, "7")
 	if string(out) != "" || code != 7 {
 		t.Fatalf("got output %q and code %d", out, code)
@@ -226,7 +226,7 @@ func TestEmitCCompilesStringInterpolationProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesDictProgram(t *testing.T) {
-	src := "user =\n  name: \"komagata\"\n  age: 20\nprint(user[\"name\"])\nprint(len(user))\nuser[\"city\"] = \"Tokyo\"\nprint(user[\"city\"])\n"
+	src := "user =\n  name: \"komagata\"\n  age: 20\nprint(user[\"name\"])\nprint(user.len())\nuser[\"city\"] = \"Tokyo\"\nprint(user[\"city\"])\n"
 	out := compileAndRun(t, src)
 	if string(out) != "komagata\n2\nTokyo\n" {
 		t.Fatalf("got %q", out)
@@ -241,8 +241,8 @@ func TestEmitCCompilesMemberInterpolationProgram(t *testing.T) {
 	}
 }
 
-func TestEmitCCompilesModuleDeclarations(t *testing.T) {
-	src := "module util\n  foo = \"foo\"\n  bar = -> \"bar\"\nprint(util.foo)\nprint(util.bar())\n"
+func TestEmitCCompilesNamespaceDictionary(t *testing.T) {
+	src := "foo = \"foo\"\nbar = -> \"bar\"\nutil = { foo: foo, bar: bar }\nprint(util.foo)\nprint(util.bar())\n"
 	out := compileAndRun(t, src)
 	if string(out) != "foo\nbar\n" {
 		t.Fatalf("got %q", out)
@@ -251,7 +251,7 @@ func TestEmitCCompilesModuleDeclarations(t *testing.T) {
 
 func TestEmitCCompilesImportedModuleMemberCalls(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  hello = name -> \"Hello, {name}\"\n")
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "hello = name -> \"Hello, {name}\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting\nprint(greeting.hello(\"komagata\"))\n")
 	out := compileAndRunFile(t, main)
@@ -262,7 +262,7 @@ func TestEmitCCompilesImportedModuleMemberCalls(t *testing.T) {
 
 func TestEmitCCompilesImportedModuleAlias(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, filepath.Join(dir, "greeting.tya"), "module greeting\n  hello = name -> \"Hello, {name}\"\n")
+	writeFile(t, filepath.Join(dir, "greeting.tya"), "hello = name -> \"Hello, {name}\"\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "import greeting as g\nsay = name -> g.hello(name)\nprint(say(\"komagata\"))\n")
 	out := compileAndRunFile(t, main)
@@ -366,7 +366,7 @@ func compileAndRunC(t *testing.T, csrc string, input string, args ...string) ([]
 	include := filepath.Join("..", "..", "runtime")
 	gccArgs := []string{cfile, runtime, "-I", include, "-o", bin}
 	if runtimeOS == "linux" {
-		gccArgs = append(gccArgs, "-lpthread", "-lm", "-lz", "-lz")
+		gccArgs = append(gccArgs, "-lpthread", "-lm", "-lz")
 	} else if runtimeOS != "windows" {
 		gccArgs = append(gccArgs, "-lm", "-lz")
 	}
