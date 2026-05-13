@@ -51,6 +51,8 @@ standard library or runtime.
   `Rect`, and `Circle` helpers for reusable spatial calculations.
 - New `transform2d.Transform2D` stdlib values provide 2D affine transforms,
   geometry application helpers, inversion, composition, and matrix interop.
+- New `compiler/*` introspection packages expose lexer, parser, AST, checker,
+  and formatter results as stable public Tya dictionaries.
 
 ## Verification
 

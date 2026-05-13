@@ -248,6 +248,11 @@ var builtinNames = []string{
 	// v0.24
 	"time_now", "time_sleep", "time_format", "time_parse", "time_since",
 	"random_seed", "random_int", "random_float",
+	"compiler_lexer_lex", "compiler_lexer_lex_with_comments",
+	"compiler_parser_parse", "compiler_parser_parse_tokens",
+	"compiler_ast_children", "compiler_ast_kind", "compiler_ast_span",
+	"compiler_checker_check", "compiler_checker_check_ast",
+	"compiler_format_format", "compiler_format_unparse",
 	"math_sqrt", "math_pow", "math_floor", "math_ceil", "math_round",
 	"math_trunc", "math_log", "math_log2", "math_log10", "math_exp",
 	"math_sin", "math_cos", "math_tan", "math_asin", "math_acos", "math_atan",

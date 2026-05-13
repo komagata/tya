@@ -1,0 +1,6 @@
+class Parser
+  static parse = source ->
+    return compiler_parser_parse(source)
+
+  static parse_tokens = tokens ->
+    return compiler_parser_parse_tokens(tokens)

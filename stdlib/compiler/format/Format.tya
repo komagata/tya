@@ -1,0 +1,6 @@
+class Format
+  static format = source ->
+    return compiler_format_format(source)
+
+  static unparse = program ->
+    return compiler_format_unparse(program)

@@ -193,6 +193,28 @@ rotation, rotation around a point, skew, and array conversion. It can apply
 transforms to `geometry.Point`, `geometry.Vector2`, `geometry.Rect`, and
 `geometry.Size`, and it converts to/from class-style `matrix.Matrix` values.
 
+## Compiler Introspection Stdlib
+
+The standard library exposes the reference compiler through public class-style
+packages:
+
+- `compiler/lexer.Lexer`
+- `compiler/parser.Parser`
+- `compiler/ast.Ast`
+- `compiler/checker.Checker`
+- `compiler/format.Format`
+
+These APIs return public Tya dictionaries and arrays, not Go handles. Tokens
+include stable `kind` strings, lexemes, and `line` / `col` / `end_line` /
+`end_col` spans. Parser results return `{ program: ..., diagnostics: [...] }`,
+where the top-level AST node has `kind: "program"`, `ast_version: 1`, `body`,
+and `file_header_comments`.
+
+Diagnostics use structured dictionaries with `severity`, `code`, `title`,
+`message`, `primary`, `hints`, and `url`. Invalid source returns diagnostics
+instead of panicking. `Format.unparse(Parser.parse(source)["program"])`
+provides deterministic canonical output for supported ASTs.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

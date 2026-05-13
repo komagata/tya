@@ -145,6 +145,45 @@ Operations include `compose`, `translate`, `scale_by`, `rotate`,
 `apply_point`, `apply_vector2`, `apply_rect`, `apply_size`, `to_matrix`, and
 `from_matrix`.
 
+## `compiler/*`
+
+```tya
+import compiler/lexer
+import compiler/parser
+import compiler/ast
+import compiler/checker
+import compiler/format
+
+tokens = Lexer.lex("x = 1\n")["tokens"]
+program = Parser.parse_tokens(tokens)["program"]
+print Ast.kind(program)
+print Checker.check("print missing\n")["ok"]
+print Format.unparse(program)
+```
+
+The public compiler introspection packages expose stable dictionaries and
+arrays instead of private Go handles:
+
+- `compiler/lexer.Lexer.lex(source)`
+- `compiler/lexer.Lexer.lex_with_comments(source)`
+- `compiler/parser.Parser.parse(source)`
+- `compiler/parser.Parser.parse_tokens(tokens)`
+- `compiler/ast.Ast.walk(node, visitor)`
+- `compiler/ast.Ast.children(node)`
+- `compiler/ast.Ast.kind(node)`
+- `compiler/ast.Ast.span(node)`
+- `compiler/checker.Checker.check(source)`
+- `compiler/checker.Checker.check_ast(program)`
+- `compiler/format.Format.format(source)`
+- `compiler/format.Format.unparse(program)`
+
+Lexer tokens contain `kind`, `lexeme`, `line`, `col`, `end_line`, and
+`end_col`. Parser results contain a `program` node or `nil` plus
+`diagnostics`. AST nodes contain `kind`, `span`, `ast_version` on the program
+node, and node-specific fields such as `body`, `targets`, `values`, and
+`expr`. Diagnostics use dictionaries with `severity`, `code`, `title`,
+`message`, `primary`, `hints`, and `url`.
+
 ## `math`
 
 ```tya

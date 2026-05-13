@@ -149,6 +149,18 @@ TyaValue tya_random_seed(TyaValue value);
 TyaValue tya_random_int(TyaValue min, TyaValue max);
 TyaValue tya_random_float(void);
 
+TyaValue tya_compiler_lexer_lex(TyaValue source);
+TyaValue tya_compiler_lexer_lex_with_comments(TyaValue source);
+TyaValue tya_compiler_parser_parse(TyaValue source);
+TyaValue tya_compiler_parser_parse_tokens(TyaValue tokens);
+TyaValue tya_compiler_ast_children(TyaValue node);
+TyaValue tya_compiler_ast_kind(TyaValue node);
+TyaValue tya_compiler_ast_span(TyaValue node);
+TyaValue tya_compiler_checker_check(TyaValue source);
+TyaValue tya_compiler_checker_check_ast(TyaValue program);
+TyaValue tya_compiler_format_format(TyaValue source);
+TyaValue tya_compiler_format_unparse(TyaValue program);
+
 TyaValue tya_math_sqrt(TyaValue x);
 TyaValue tya_math_pow(TyaValue x, TyaValue y);
 TyaValue tya_math_floor(TyaValue x);

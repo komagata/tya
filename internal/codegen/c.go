@@ -3351,6 +3351,28 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_random_int(%s, %s)", 2)
 	case "random_float":
 		return emit("tya_random_float()", 0)
+	case "compiler_lexer_lex":
+		return emit("tya_compiler_lexer_lex(%s)", 1)
+	case "compiler_lexer_lex_with_comments":
+		return emit("tya_compiler_lexer_lex_with_comments(%s)", 1)
+	case "compiler_parser_parse":
+		return emit("tya_compiler_parser_parse(%s)", 1)
+	case "compiler_parser_parse_tokens":
+		return emit("tya_compiler_parser_parse_tokens(%s)", 1)
+	case "compiler_ast_children":
+		return emit("tya_compiler_ast_children(%s)", 1)
+	case "compiler_ast_kind":
+		return emit("tya_compiler_ast_kind(%s)", 1)
+	case "compiler_ast_span":
+		return emit("tya_compiler_ast_span(%s)", 1)
+	case "compiler_checker_check":
+		return emit("tya_compiler_checker_check(%s)", 1)
+	case "compiler_checker_check_ast":
+		return emit("tya_compiler_checker_check_ast(%s)", 1)
+	case "compiler_format_format":
+		return emit("tya_compiler_format_format(%s)", 1)
+	case "compiler_format_unparse":
+		return emit("tya_compiler_format_unparse(%s)", 1)
 	case "math_sqrt":
 		return emit("tya_math_sqrt(%s)", 1)
 	case "math_pow":

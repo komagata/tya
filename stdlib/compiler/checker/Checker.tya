@@ -1,0 +1,6 @@
+class Checker
+  static check = source ->
+    return compiler_checker_check(source)
+
+  static check_ast = program ->
+    return compiler_checker_check_ast(program)

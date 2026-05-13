@@ -1,0 +1,6 @@
+class Lexer
+  static lex = source ->
+    return compiler_lexer_lex(source)
+
+  static lex_with_comments = source ->
+    return compiler_lexer_lex_with_comments(source)

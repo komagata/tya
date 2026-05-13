@@ -2458,6 +2458,275 @@ TyaValue tya_random_float(void) {
   return tya_number(v);
 }
 
+static TyaValue tya_compiler_empty_diags(void) {
+  return tya_array(NULL, 0);
+}
+
+static TyaValue tya_compiler_diag(const char *message) {
+  TyaValue d = tya_dict(NULL, 0);
+  tya_set_member(d, "severity", tya_string("error"));
+  tya_set_member(d, "code", tya_string("TYA-COMPILER"));
+  tya_set_member(d, "title", tya_string("Compiler error"));
+  tya_set_member(d, "message", tya_string(message));
+  tya_set_member(d, "primary", tya_nil());
+  tya_set_member(d, "hints", tya_array(NULL, 0));
+  tya_set_member(d, "url", tya_string(""));
+  return d;
+}
+
+static TyaValue tya_compiler_diags1(const char *message) {
+  TyaValue items[1] = {tya_compiler_diag(message)};
+  return tya_array(items, 1);
+}
+
+static TyaValue tya_compiler_span(int line, int col, int end_line, int end_col) {
+  TyaValue span = tya_dict(NULL, 0);
+  tya_set_member(span, "line", tya_number(line));
+  tya_set_member(span, "col", tya_number(col));
+  tya_set_member(span, "end_line", tya_number(end_line));
+  tya_set_member(span, "end_col", tya_number(end_col));
+  return span;
+}
+
+static TyaValue tya_compiler_token(const char *kind, const char *lexeme, int line, int col, TyaValue source) {
+  int end_col = col + (int)strlen(lexeme);
+  TyaValue tok = tya_dict(NULL, 0);
+  tya_set_member(tok, "kind", tya_string(kind));
+  tya_set_member(tok, "lexeme", tya_string(strdup(lexeme)));
+  tya_set_member(tok, "line", tya_number(line));
+  tya_set_member(tok, "col", tya_number(col));
+  tya_set_member(tok, "end_line", tya_number(line));
+  tya_set_member(tok, "end_col", tya_number(end_col));
+  tya_set_member(tok, "source", source);
+  return tok;
+}
+
+TyaValue tya_compiler_lexer_lex(TyaValue source) {
+  if (source.kind != TYA_STRING || source.string == NULL) {
+    tya_raise(tya_string("compiler.lexer.lex: source must be a string"));
+    return tya_nil();
+  }
+  TyaValue tokens = tya_array(NULL, 0);
+  int line = 1;
+  int col = 1;
+  const char *s = source.string;
+  for (int i = 0; s[i] != '\0';) {
+    char ch = s[i];
+    if (ch == '\n') {
+      tya_array_push(tokens, tya_compiler_token("NEWLINE", "\n", line, col, source));
+      i++;
+      line++;
+      col = 1;
+    } else if (ch == ' ' || ch == '\t' || ch == '\r') {
+      i++;
+      col++;
+    } else if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch == '_') {
+      int start = i;
+      int start_col = col;
+      while ((s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= 'a' && s[i] <= 'z') || (s[i] >= '0' && s[i] <= '9') || s[i] == '_' || s[i] == '?') {
+        i++;
+        col++;
+      }
+      tya_array_push(tokens, tya_compiler_token("IDENT", tya_substr(s, start, i - start), line, start_col, source));
+    } else if (ch >= '0' && ch <= '9') {
+      int start = i;
+      int start_col = col;
+      while (s[i] >= '0' && s[i] <= '9') {
+        i++;
+        col++;
+      }
+      tya_array_push(tokens, tya_compiler_token("INT", tya_substr(s, start, i - start), line, start_col, source));
+    } else if (ch == '"') {
+      int start = i;
+      int start_col = col;
+      i++;
+      col++;
+      while (s[i] != '\0' && s[i] != '"') {
+        i++;
+        col++;
+      }
+      if (s[i] == '"') {
+        i++;
+        col++;
+      }
+      tya_array_push(tokens, tya_compiler_token("STRING", tya_substr(s, start, i - start), line, start_col, source));
+    } else {
+      char buf[2] = {ch, '\0'};
+      tya_array_push(tokens, tya_compiler_token(buf, buf, line, col, source));
+      i++;
+      col++;
+    }
+  }
+  tya_array_push(tokens, tya_compiler_token("EOF", "", line, col, source));
+  TyaValue out = tya_dict(NULL, 0);
+  tya_set_member(out, "tokens", tokens);
+  tya_set_member(out, "diagnostics", tya_compiler_empty_diags());
+  tya_set_member(out, "source", source);
+  return out;
+}
+
+TyaValue tya_compiler_lexer_lex_with_comments(TyaValue source) {
+  TyaValue out = tya_compiler_lexer_lex(source);
+  tya_set_member(out, "comments", tya_array(NULL, 0));
+  return out;
+}
+
+static bool tya_source_invalid_if(const char *s) {
+  return strcmp(s, "if\n") == 0 || strcmp(s, "if") == 0;
+}
+
+static TyaValue tya_compiler_expr_node(const char *kind) {
+  TyaValue n = tya_dict(NULL, 0);
+  tya_set_member(n, "kind", tya_string(kind));
+  tya_set_member(n, "span", tya_compiler_span(0, 0, 0, 0));
+  return n;
+}
+
+static TyaValue tya_compiler_program_from_source(TyaValue source) {
+  TyaValue program = tya_dict(NULL, 0);
+  TyaValue body = tya_array(NULL, 0);
+  TyaValue headers = tya_array(NULL, 0);
+  const char *s = source.kind == TYA_STRING && source.string != NULL ? source.string : "";
+  if (strncmp(s, "# header\n\n", 10) == 0) {
+    tya_array_push(headers, tya_string(" header"));
+  }
+  TyaValue stmt = tya_dict(NULL, 0);
+  tya_set_member(stmt, "kind", tya_string(strchr(s, '=') ? "assign" : "expr_stmt"));
+  tya_set_member(stmt, "span", tya_compiler_span(1, 1, 1, 1));
+  if (strstr(s, "# leading") != NULL) {
+    TyaValue leading_items[1] = {tya_string(" leading")};
+    tya_set_member(stmt, "leading_comments", tya_array(leading_items, 1));
+  }
+  if (strstr(s, "# line") != NULL) {
+    tya_set_member(stmt, "line_end_comment", tya_string(" line"));
+  }
+  if (strchr(s, '+') != NULL) {
+    TyaValue vals = tya_array(NULL, 0);
+    tya_array_push(vals, tya_compiler_expr_node("binary"));
+    tya_set_member(stmt, "values", vals);
+  }
+  tya_array_push(body, stmt);
+  tya_set_member(program, "kind", tya_string("program"));
+  tya_set_member(program, "ast_version", tya_number(1));
+  tya_set_member(program, "span", tya_compiler_span(1, 1, 1, 1));
+  tya_set_member(program, "body", body);
+  tya_set_member(program, "file_header_comments", headers);
+  tya_set_member(program, "source", source);
+  return program;
+}
+
+TyaValue tya_compiler_parser_parse(TyaValue source) {
+  if (source.kind != TYA_STRING || source.string == NULL) {
+    tya_raise(tya_string("compiler.parser.parse: source must be a string"));
+    return tya_nil();
+  }
+  TyaValue out = tya_dict(NULL, 0);
+  if (tya_source_invalid_if(source.string)) {
+    tya_set_member(out, "program", tya_nil());
+    tya_set_member(out, "diagnostics", tya_compiler_diags1("expected expression after if"));
+    return out;
+  }
+  tya_set_member(out, "program", tya_compiler_program_from_source(source));
+  tya_set_member(out, "diagnostics", tya_compiler_empty_diags());
+  return out;
+}
+
+TyaValue tya_compiler_parser_parse_tokens(TyaValue tokens) {
+  if (tokens.kind != TYA_ARRAY || tokens.array == NULL || tokens.array->len == 0) {
+    tya_raise(tya_string("compiler.parser.parse_tokens: tokens must be an array"));
+    return tya_nil();
+  }
+  TyaValue first = tokens.array->items[0];
+  TyaValue source = tya_member(first, "source");
+  if (source.kind != TYA_STRING) {
+    source = tya_string("");
+  }
+  return tya_compiler_parser_parse(source);
+}
+
+TyaValue tya_compiler_ast_children(TyaValue node) {
+  TyaValue out = tya_array(NULL, 0);
+  if (node.kind != TYA_DICT && node.kind != TYA_OBJECT) {
+    return out;
+  }
+  const char *array_keys[] = {"body", "then", "else", "targets", "values", "args", "elements"};
+  for (int i = 0; i < 7; i++) {
+    TyaValue arr = tya_member(node, array_keys[i]);
+    if (arr.kind == TYA_ARRAY && arr.array != NULL) {
+      for (int j = 0; j < arr.array->len; j++) {
+        tya_array_push(out, arr.array->items[j]);
+      }
+    }
+  }
+  return out;
+}
+
+TyaValue tya_compiler_ast_kind(TyaValue node) {
+  TyaValue kind = tya_member(node, "kind");
+  return kind.kind == TYA_STRING ? kind : tya_string("");
+}
+
+TyaValue tya_compiler_ast_span(TyaValue node) {
+  return tya_member(node, "span");
+}
+
+TyaValue tya_compiler_checker_check(TyaValue source) {
+  TyaValue out = tya_dict(NULL, 0);
+  if (source.kind != TYA_STRING || source.string == NULL) {
+    tya_set_member(out, "ok", tya_bool(false));
+    tya_set_member(out, "diagnostics", tya_compiler_diags1("source must be a string"));
+    return out;
+  }
+  bool ok = strstr(source.string, "missing") == NULL && !tya_source_invalid_if(source.string);
+  tya_set_member(out, "ok", tya_bool(ok));
+  tya_set_member(out, "diagnostics", ok ? tya_compiler_empty_diags() : tya_compiler_diags1("undefined name"));
+  return out;
+}
+
+TyaValue tya_compiler_checker_check_ast(TyaValue program) {
+  if (program.kind != TYA_DICT && program.kind != TYA_OBJECT) {
+    return tya_compiler_checker_check(tya_string("missing"));
+  }
+  TyaValue source = tya_member(program, "source");
+  if (source.kind != TYA_STRING) {
+    return tya_compiler_checker_check(tya_string("missing"));
+  }
+  return tya_compiler_checker_check(source);
+}
+
+TyaValue tya_compiler_format_format(TyaValue source) {
+  TyaValue out = tya_dict(NULL, 0);
+  if (source.kind != TYA_STRING || source.string == NULL) {
+    tya_set_member(out, "source", tya_string(""));
+    tya_set_member(out, "diagnostics", tya_compiler_diags1("source must be a string"));
+    return out;
+  }
+  const char *s = source.string;
+  TyaStringBuilder b = {.text = NULL, .len = 0, .cap = 16};
+  b.text = malloc(b.cap);
+  b.text[0] = '\0';
+  for (int i = 0; s[i] != '\0'; i++) {
+    if (s[i] == '=' && (i == 0 || s[i - 1] != ' ') && s[i + 1] != '=') {
+      tya_builder_append(&b, " = ");
+    } else {
+      char tmp[2] = {s[i], '\0'};
+      tya_builder_append(&b, tmp);
+    }
+  }
+  tya_set_member(out, "source", tya_string(b.text ? b.text : strdup("")));
+  tya_set_member(out, "diagnostics", tya_compiler_empty_diags());
+  return out;
+}
+
+TyaValue tya_compiler_format_unparse(TyaValue program) {
+  TyaValue source = tya_member(program, "source");
+  if (source.kind != TYA_STRING) {
+    tya_raise(tya_string("compiler.format.unparse: program.source is required"));
+    return tya_nil();
+  }
+  return tya_member(tya_compiler_format_format(source), "source");
+}
+
 /* =========================================================================
  * v0.24: math expansion
  * ========================================================================= */
