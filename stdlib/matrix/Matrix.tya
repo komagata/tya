@@ -1,29 +1,33 @@
 class Matrix
+  initialize = data ->
+    cols = Matrix.validate_data(data)
+    self.rows = data.len()
+    self.cols = cols
+    self.data = data
+
   static validate_data = data ->
-    if kind(data) != "array"
+    if data.class != Array
       raise "matrix.new: data must be an array of arrays"
-    rows = len(data)
+    rows = data.len()
     if rows == 0
       raise "matrix.new: empty matrix"
-    if kind(data[0]) != "array"
+    if data[0].class != Array
       raise "matrix.new: rows must be arrays"
-    cols = len(data[0])
+    cols = data[0].len()
     i = 0
     while i < rows
-      if kind(data[i]) != "array" or len(data[i]) != cols
+      if data[i].class != Array or data[i].len() != cols
         raise "matrix.new: inconsistent row lengths"
       j = 0
       while j < cols
-        k = kind(data[i][j])
-        if k != "int" and k != "float"
+        if data[i][j].class != Number
           raise "matrix.new: elements must be numbers"
         j = j + 1
       i = i + 1
     return cols
 
   static new = data ->
-    cols = Matrix.validate_data(data)
-    return { rows: len(data), cols: cols, data: data }
+    return Matrix(data)
 
   static zero = rows, cols ->
     data = []
@@ -32,11 +36,11 @@ class Matrix
       row = []
       j = 0
       while j < cols
-        push(row, 0)
+        row.push(0)
         j = j + 1
-      push(data, row)
+      data.push(row)
       i = i + 1
-    return { rows: rows, cols: cols, data: data }
+    return Matrix(data)
 
   static identity = n ->
     data = []
@@ -46,108 +50,108 @@ class Matrix
       j = 0
       while j < n
         if i == j
-          push(row, 1)
+          row.push(1)
         else
-          push(row, 0)
+          row.push(0)
         j = j + 1
-      push(data, row)
+      data.push(row)
       i = i + 1
-    return { rows: n, cols: n, data: data }
+    return Matrix(data)
 
   static at = m, r, c ->
-    if r < 0 or r >= m["rows"] or c < 0 or c >= m["cols"]
+    if r < 0 or r >= m.rows or c < 0 or c >= m.cols
       raise "matrix.at: index out of range"
-    return m["data"][r][c]
+    return m.data[r][c]
 
   static put = m, r, c, value ->
-    if r < 0 or r >= m["rows"] or c < 0 or c >= m["cols"]
+    if r < 0 or r >= m.rows or c < 0 or c >= m.cols
       raise "matrix.put: index out of range"
-    m["data"][r][c] = value
+    m.data[r][c] = value
     return nil
 
   static add = a, b ->
-    if a["rows"] != b["rows"] or a["cols"] != b["cols"]
+    if a.rows != b.rows or a.cols != b.cols
       raise "matrix.add: dimension mismatch"
     out_data = []
     i = 0
-    while i < a["rows"]
+    while i < a.rows
       row = []
       j = 0
-      while j < a["cols"]
-        push(row, a["data"][i][j] + b["data"][i][j])
+      while j < a.cols
+        row.push(a.data[i][j] + b.data[i][j])
         j = j + 1
-      push(out_data, row)
+      out_data.push(row)
       i = i + 1
-    return { rows: a["rows"], cols: a["cols"], data: out_data }
+    return Matrix(out_data)
 
   static sub = a, b ->
-    if a["rows"] != b["rows"] or a["cols"] != b["cols"]
+    if a.rows != b.rows or a.cols != b.cols
       raise "matrix.sub: dimension mismatch"
     out_data = []
     i = 0
-    while i < a["rows"]
+    while i < a.rows
       row = []
       j = 0
-      while j < a["cols"]
-        push(row, a["data"][i][j] - b["data"][i][j])
+      while j < a.cols
+        row.push(a.data[i][j] - b.data[i][j])
         j = j + 1
-      push(out_data, row)
+      out_data.push(row)
       i = i + 1
-    return { rows: a["rows"], cols: a["cols"], data: out_data }
+    return Matrix(out_data)
 
   static scale = a, k ->
     out_data = []
     i = 0
-    while i < a["rows"]
+    while i < a.rows
       row = []
       j = 0
-      while j < a["cols"]
-        push(row, a["data"][i][j] * k)
+      while j < a.cols
+        row.push(a.data[i][j] * k)
         j = j + 1
-      push(out_data, row)
+      out_data.push(row)
       i = i + 1
-    return { rows: a["rows"], cols: a["cols"], data: out_data }
+    return Matrix(out_data)
 
   static mul = a, b ->
-    if a["cols"] != b["rows"]
+    if a.cols != b.rows
       raise "matrix.mul: inner dimensions disagree"
     out_data = []
     i = 0
-    while i < a["rows"]
+    while i < a.rows
       row = []
       j = 0
-      while j < b["cols"]
+      while j < b.cols
         sum = 0
         k = 0
-        while k < a["cols"]
-          sum = sum + a["data"][i][k] * b["data"][k][j]
+        while k < a.cols
+          sum = sum + a.data[i][k] * b.data[k][j]
           k = k + 1
-        push(row, sum)
+        row.push(sum)
         j = j + 1
-      push(out_data, row)
+      out_data.push(row)
       i = i + 1
-    return { rows: a["rows"], cols: b["cols"], data: out_data }
+    return Matrix(out_data)
 
   static transpose = a ->
     out_data = []
     j = 0
-    while j < a["cols"]
+    while j < a.cols
       row = []
       i = 0
-      while i < a["rows"]
-        push(row, a["data"][i][j])
+      while i < a.rows
+        row.push(a.data[i][j])
         i = i + 1
-      push(out_data, row)
+      out_data.push(row)
       j = j + 1
-    return { rows: a["cols"], cols: a["rows"], data: out_data }
+    return Matrix(out_data)
 
   static det = a ->
-    if a["rows"] != a["cols"]
+    if a.rows != a.cols
       raise "matrix.det: not square"
-    n = a["rows"]
+    n = a.rows
     if n > 4
       raise "matrix.det: size > 4 not supported in v0.24"
-    d = a["data"]
+    d = a.data
     if n == 1
       return d[0][0]
     if n == 2
@@ -164,11 +168,11 @@ class Matrix
         c = 0
         while c < 4
           if c != j
-            push(row, d[r][c])
+            row.push(d[r][c])
           c = c + 1
-        push(minor_data, row)
+        minor_data.push(row)
         r = r + 1
-      sub_m = { rows: 3, cols: 3, data: minor_data }
+      sub_m = Matrix(minor_data)
       cofactor = Matrix.det(sub_m) * d[0][j]
       if j % 2 == 0
         sum = sum + cofactor
@@ -178,6 +182,6 @@ class Matrix
     return sum
 
   static equal? = a, b ->
-    if a["rows"] != b["rows"] or a["cols"] != b["cols"]
+    if a.rows != b.rows or a.cols != b.cols
       return false
-    return equal(a["data"], b["data"])
+    return equal(a.data, b.data)

@@ -1,4 +1,9 @@
 class Network
+  initialize = address, prefix ->
+    self.address = address
+    self.prefix = prefix
+    self.version = address.version
+
   static parse = cidr ->
     slash = Address.last_index(cidr, "/")
     if slash < 0
@@ -9,18 +14,18 @@ class Network
       raise "ip.Network.parse: invalid prefix"
     prefix = prefix_text.to_i()
     max = 32
-    if addr["version"] == 6
+    if addr.version == 6
       max = 128
     if prefix < 0 or prefix > max
       raise "ip.Network.parse: invalid prefix"
-    return { address: addr, prefix: prefix, version: addr["version"] }
+    return Network(addr, prefix)
 
   static contains? = network, addr ->
-    if addr["version"] != network["version"]
+    if addr.version != network.version
       return false
-    if addr["version"] == 4
-      return Network.contains_parts?(network["address"]["bytes"], addr["bytes"], network["prefix"], 8)
-    return Network.contains_parts?(network["address"]["groups"], addr["groups"], network["prefix"], 16)
+    if addr.version == 4
+      return Network.contains_parts?(network.address.bytes, addr.bytes, network.prefix, 8)
+    return Network.contains_parts?(network.address.groups, addr.groups, network.prefix, 16)
 
   static contains_parts? = base, value, prefix, width ->
     remain = prefix

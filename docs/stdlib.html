@@ -29,8 +29,8 @@
 <p>The standard library is a set of <code>.tya</code> modules shipped with Tya. Third-party packages are managed separately through <code>tya.toml</code>, <code>tya.lock</code>, and <code>tya install</code>.</p>
 <h2 id="importing">Importing</h2>
 <p>Standard modules use the same import syntax as user modules. Primitive string, array, and dict helpers are not imported modules in v0.59; they are methods on the values themselves.</p>
-<pre><code class="language-tya">import math
-import json</code></pre>
+<pre><code class="language-tya">import math as math
+import json as json</code></pre>
 <p>Directory packages expose public class and interface names directly when they are imported without an alias. Use an alias when a namespace binding is wanted:</p>
 <pre><code class="language-tya">import net/http
 
@@ -56,13 +56,13 @@ server = http.Server.new()</code></pre>
 value.class</code></pre>
 <p>See the v0.59 specification for the exhaustive primitive method surface. Use <code>x.class</code> to inspect the runtime class wrapper for primitive and object values.</p>
 <h2 id="math"><code>math</code></h2>
-<pre><code class="language-tya">import math
+<pre><code class="language-tya">import math as math
 
-print math.abs(-3)
-print math.min(2, 5)
-print math.max(2, 5)
-print math.clamp(12, 0, 10)</code></pre>
-<p>Functions:</p>
+print math.Math.abs(-3)
+print math.Math.min(2, 5)
+print math.Math.max(2, 5)
+print math.Math.clamp(12, 0, 10)</code></pre>
+<p>Class members on <code>math.Math</code>:</p>
 <pre><code class="language-tya">abs value
 min left, right
 max left, right
@@ -72,14 +72,14 @@ clamp value, min, max</code></pre>
 <p><code>max(left, right)</code> returns the larger number.</p>
 <p><code>clamp(value, min, max)</code> returns <code>min</code> when <code>value &lt; min</code>, <code>max</code> when <code>value &gt; max</code>, and <code>value</code> otherwise. It raises an error when <code>min &gt; max</code>.</p>
 <h2 id="path"><code>path</code></h2>
-<pre><code class="language-tya">import path
+<pre><code class="language-tya">import path as path
 
-print path.join([&quot;tmp&quot;, &quot;tya&quot;, &quot;memo.txt&quot;])
-print path.clean(&quot;tmp/./tya/../memo.txt&quot;)
-print path.basename(&quot;/tmp/tya/memo.txt&quot;)
-print path.dirname(&quot;/tmp/tya/memo.txt&quot;)
-print path.extname(&quot;/tmp/tya/memo.txt&quot;)</code></pre>
-<p>Functions:</p>
+print path.Path.join([&quot;tmp&quot;, &quot;tya&quot;, &quot;memo.txt&quot;])
+print path.Path.clean(&quot;tmp/./tya/../memo.txt&quot;)
+print path.Path.basename(&quot;/tmp/tya/memo.txt&quot;)
+print path.Path.dirname(&quot;/tmp/tya/memo.txt&quot;)
+print path.Path.extname(&quot;/tmp/tya/memo.txt&quot;)</code></pre>
+<p>Class members on <code>path.Path</code>:</p>
 <pre><code class="language-tya">join parts
 clean value
 basename value
@@ -92,14 +92,14 @@ extname value</code></pre>
 <p><code>extname(value)</code> returns the final file extension including the leading <code>.</code>, or <code>&quot;&quot;</code> when the basename has no extension.</p>
 <p>The <code>path</code> standard-library API uses <code>/</code> as the path separator and does not access the file system.</p>
 <h2 id="file"><code>file</code></h2>
-<pre><code class="language-tya">import file
+<pre><code class="language-tya">import file as file
 
-if file.exists?(&quot;memo.txt&quot;)
-  text = file.read(&quot;memo.txt&quot;)
+if file.File.exists?(&quot;memo.txt&quot;)
+  text = file.File.read(&quot;memo.txt&quot;)
   println text
 
-file.write(&quot;out.txt&quot;, &quot;hello&quot;)</code></pre>
-<p>Functions:</p>
+file.File.write(&quot;out.txt&quot;, &quot;hello&quot;)</code></pre>
+<p>Class members on <code>file.File</code>:</p>
 <pre><code class="language-tya">read path
 write path, text
 exists? path</code></pre>
@@ -107,11 +107,11 @@ exists? path</code></pre>
 <p><code>write(path, text)</code> writes <code>text</code> to <code>path</code> and returns <code>nil</code> on success.</p>
 <p><code>exists?(path)</code> returns <code>true</code> when the path exists, <code>false</code> when it does not.</p>
 <h2 id="os"><code>os</code></h2>
-<pre><code class="language-tya">import os
+<pre><code class="language-tya">import os as os
 
-args = os.args()
-home = os.env(&quot;HOME&quot;)</code></pre>
-<p>Functions:</p>
+args = os.Os.args()
+home = os.Os.env(&quot;HOME&quot;)</code></pre>
+<p>Class members on <code>os.Os</code>:</p>
 <pre><code class="language-tya">args
 env name
 exit code</code></pre>
@@ -121,12 +121,12 @@ exit code</code></pre>
 <p><code>cwd()</code> returns the current working directory as a string.</p>
 <p><code>chdir(path)</code> changes the process working directory and raises an error on failure.</p>
 <h2 id="dir"><code>dir</code></h2>
-<pre><code class="language-tya">import dir
+<pre><code class="language-tya">import dir as dir
 
-names = dir.list(&quot;.&quot;)
-dir.mkdir(&quot;tmp&quot;)
-dir.rmdir(&quot;tmp&quot;)</code></pre>
-<p>Functions:</p>
+names = dir.Dir.list(&quot;.&quot;)
+dir.Dir.mkdir(&quot;tmp&quot;)
+dir.Dir.rmdir(&quot;tmp&quot;)</code></pre>
+<p>Class members on <code>dir.Dir</code>:</p>
 <pre><code class="language-tya">list path
 mkdir path
 rmdir path</code></pre>
@@ -134,11 +134,11 @@ rmdir path</code></pre>
 <p><code>mkdir(path)</code> creates one directory level. It raises an error when the parent directory does not exist or when <code>path</code> already exists.</p>
 <p><code>rmdir(path)</code> removes an empty directory. It raises an error when the directory is not empty.</p>
 <h2 id="file-additional-functions"><code>file</code> (additional functions)</h2>
-<pre><code class="language-tya">import file
+<pre><code class="language-tya">import file as file
 
-file.remove(&quot;memo.txt&quot;)
-file.rename(&quot;a.txt&quot;, &quot;b.txt&quot;)
-info = file.stat(&quot;b.txt&quot;)
+file.File.remove(&quot;memo.txt&quot;)
+file.File.rename(&quot;a.txt&quot;, &quot;b.txt&quot;)
+info = file.File.stat(&quot;b.txt&quot;)
 println info[&quot;kind&quot;]
 println info[&quot;size&quot;]</code></pre>
 <p><code>remove(path)</code> removes a file. It raises an error when <code>path</code> is a directory.</p>
@@ -147,10 +147,10 @@ println info[&quot;size&quot;]</code></pre>
 <h2 id="path-additional-functions"><code>path</code> (additional functions)</h2>
 <p><code>expand_user(value)</code> expands <code>~</code> and <code>~/...</code> to the current user's home directory. Other strings are returned unchanged.</p>
 <h2 id="base64"><code>base64</code></h2>
-<pre><code class="language-tya">import base64
+<pre><code class="language-tya">import base64 as base64
 
-println base64.encode(&quot;hello&quot;)
-println base64.decode(&quot;aGVsbG8=&quot;)</code></pre>
+println base64.Base64.encode(&quot;hello&quot;)
+println base64.Base64.decode(&quot;aGVsbG8=&quot;)</code></pre>
 <p><code>encode(text)</code> returns the standard-alphabet Base64 representation with <code>=</code> padding. <code>decode(text)</code> decodes standard Base64 (padding optional, whitespace ignored).</p>
 <h2 id="url-v0-62"><code>url</code> (v0.62)</h2>
 <pre><code class="language-tya">import url as url
@@ -163,17 +163,17 @@ full = url.Url.resolve(&quot;https://example.com/a/b&quot;, &quot;../c?x=1&quot;
 <p><code>Url.resolve(base, ref)</code> resolves relative references against a base URL. <code>Url.normalize(text)</code> lowercases scheme/host and removes <code>.</code> / <code>..</code> path segments.</p>
 <p><code>Url.decode_query(text)</code> returns ordered <code>[key, value]</code> pairs so duplicate keys are preserved. <code>Url.query_dict(query)</code> collapses decoded pairs into a dictionary, storing duplicate values as arrays.</p>
 <h2 id="json"><code>json</code></h2>
-<pre><code class="language-tya">import json
+<pre><code class="language-tya">import json as json
 
-println json.dump({ name: &quot;tya&quot;, version: 23 })
-data = json.parse(&quot;[1, 2, 3]&quot;)</code></pre>
-<p><code>parse(text)</code> parses RFC 8259 JSON; <code>dump(value)</code> emits compact JSON. Numbers without fractional parts decode to ints; with fractional parts to floats.</p>
+println json.Json.dump({ name: &quot;tya&quot;, version: 23 })
+data = json.Json.parse(&quot;[1, 2, 3]&quot;)</code></pre>
+<p><code>Json.parse(text)</code> parses RFC 8259 JSON; <code>Json.dump(value)</code> emits compact JSON. Numbers without fractional parts decode to ints; with fractional parts to floats. Parsed JSON values are data-exchange dictionaries and arrays, not stdlib domain instances.</p>
 <h2 id="csv"><code>csv</code></h2>
-<pre><code class="language-tya">import csv
+<pre><code class="language-tya">import csv as csv
 
-rows = csv.parse(&quot;name,age\ntya,1\n&quot;, { header: true })
-println csv.dump([[&quot;a&quot;, &quot;b&quot;], [&quot;1&quot;, &quot;2&quot;]], nil)</code></pre>
-<p><code>parse(text, options)</code> accepts <code>{ separator, header }</code> options. <code>dump(rows, options)</code> quotes fields containing the separator, quote, CR, or LF.</p>
+rows = csv.Csv.parse(&quot;name,age\ntya,1\n&quot;, { header: true })
+println csv.Csv.dump([[&quot;a&quot;, &quot;b&quot;], [&quot;1&quot;, &quot;2&quot;]], nil)</code></pre>
+<p><code>Csv.parse(text, options)</code> accepts <code>{ separator, header }</code> options. <code>Csv.dump(rows, options)</code> quotes fields containing the separator, quote, CR, or LF.</p>
 <h2 id="cli"><code>cli</code></h2>
 <pre><code class="language-tya">import cli
 
@@ -201,12 +201,12 @@ time.Time.sleep(0.1)
 println(time.Time.since(now))</code></pre>
 <p>Class members on <code>time.Time</code>: <code>now</code>, <code>sleep</code>, <code>format</code>, <code>parse</code>, <code>since</code>. Format layouts: <code>&quot;iso&quot;</code>, <code>&quot;date&quot;</code>, <code>&quot;time&quot;</code>, <code>&quot;unix&quot;</code>.</p>
 <h2 id="random"><code>random</code></h2>
-<pre><code class="language-tya">import random
+<pre><code class="language-tya">import random as random
 
-random.seed(42)
-println random.int(1, 100)
-println random.float()
-println random.choice([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])</code></pre>
+random.Random.seed(42)
+println random.Random.int(1, 100)
+println random.Random.float()
+println random.Random.choice([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])</code></pre>
 <p>Seedable PRNG. **Not** cryptographically secure — use <code>secure_random</code> for tokens.</p>
 <h2 id="math-additional-functions"><code>math</code> (additional functions)</h2>
 <p><code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, <code>atan2</code>, plus the constants <code>pi</code> and <code>e</code>.</p>
@@ -225,28 +225,29 @@ process.run([&quot;sh&quot;, &quot;-c&quot;, &quot;echo $X&quot;], { env: { X: &
 println hex.encode(&quot;Tya&quot;)     # 547961
 println hex.decode(&quot;547961&quot;)  # Tya</code></pre>
 <h2 id="digest"><code>digest</code></h2>
-<pre><code class="language-tya">import digest
+<pre><code class="language-tya">import digest as digest
 
-println digest.md5(&quot;hello&quot;)
-println digest.sha256(&quot;hello&quot;)</code></pre>
-<p>Functions: <code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code>. Each takes a text and returns a lowercase hex digest string.</p>
+println digest.Digest.md5(&quot;hello&quot;)
+println digest.Digest.sha256(&quot;hello&quot;)</code></pre>
+<p>Class members on <code>digest.Digest</code>: <code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code>. Each takes a text and returns a lowercase hex digest string.</p>
 <h2 id="secure-random"><code>secure_random</code></h2>
-<pre><code class="language-tya">import secure_random
+<pre><code class="language-tya">import secure_random as secure_random
 
-println secure_random.hex(16)     # 32 hex chars
-println secure_random.uuid()      # RFC 4122 v4
-println secure_random.int(0, 99)</code></pre>
-<p>Cryptographically secure. Functions: <code>bytes</code>, <code>hex</code>, <code>base64</code>, <code>uuid</code>, <code>int</code>.</p>
+println secure_random.SecureRandom.hex(16)     # 32 hex chars
+println secure_random.SecureRandom.uuid()      # RFC 4122 v4
+println secure_random.SecureRandom.int(0, 99)</code></pre>
+<p>Cryptographically secure. Class members on <code>secure_random.SecureRandom</code>: <code>bytes</code>, <code>hex</code>, <code>base64</code>, <code>uuid</code>, <code>int</code>.</p>
 <h2 id="matrix"><code>matrix</code></h2>
-<pre><code class="language-tya">import matrix
+<pre><code class="language-tya">import matrix as matrix
 
-a = matrix.new([[1, 2], [3, 4]])
-b = matrix.identity(2)
+a = matrix.Matrix.new([[1, 2], [3, 4]])
+b = matrix.Matrix.identity(2)
 
-println matrix.add(a, b)[&quot;data&quot;]
-println matrix.mul(a, a)[&quot;data&quot;]
-println matrix.det(a)</code></pre>
-<p>Functions: <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>put</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code> (≤ 4×4), <code>equal?</code>.</p>
+println matrix.Matrix.add(a, b).data
+println matrix.Matrix.mul(a, a).data
+println matrix.Matrix.det(a)</code></pre>
+<p>Class members on <code>matrix.Matrix</code>: <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>put</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code> (&lt;= 4x4), <code>equal?</code>.</p>
+<p><code>Matrix.new</code>, <code>Matrix.zero</code>, <code>Matrix.identity</code>, <code>Matrix.add</code>, <code>Matrix.sub</code>, <code>Matrix.scale</code>, <code>Matrix.mul</code>, and <code>Matrix.transpose</code> return a Matrix instance with public <code>data</code>, <code>rows</code>, and <code>cols</code> fields.</p>
 <h2 id="bytes-v0-25"><code>bytes</code> (v0.25)</h2>
 <p><code>bytes</code> is a built-in value type for raw byte sequences (each element is an int 0..255). Construct with the <code>b&quot;...&quot;</code> literal or builtins:</p>
 <pre><code class="language-tya">b1 = b&quot;hello&quot;
@@ -261,20 +262,20 @@ println bytes_slice(b1, 0, 3)
 println b1 + b2              # concat</code></pre>
 <p>Builtins: <code>bytes(int_array)</code>, <code>bytes_of(text)</code>, <code>bytes_text(b)</code>, <code>bytes_array(b)</code>, <code>bytes_concat(a, b)</code>, <code>bytes_slice(b, start, end)</code>.</p>
 <h2 id="file-v0-25-binary-i-o"><code>file</code> (v0.25 binary I/O)</h2>
-<pre><code class="language-tya">import file
+<pre><code class="language-tya">import file as file
 
-raw = file.read_bytes(&quot;/path/to/file&quot;)
-file.write_bytes(&quot;/tmp/copy&quot;, raw)</code></pre>
+raw = file.File.read_bytes(&quot;/path/to/file&quot;)
+file.File.write_bytes(&quot;/tmp/copy&quot;, raw)</code></pre>
 <p><code>read_bytes(path)</code> returns a <code>bytes</code> value. <code>write_bytes(path, b)</code> writes raw bytes.</p>
 <h2 id="updated-for-bytes-v0-25">Updated for bytes (v0.25)</h2>
 <ul>
-<li><code>digest.md5/sha1/sha256/sha384/sha512</code> accept either <code>string</code> or <code>bytes</code>.</li>
-<li><code>secure_random.bytes(n)</code> returns <code>bytes</code>.</li>
-<li><code>hex.encode(value)</code> accepts <code>string</code> or <code>bytes</code>. <code>hex.decode(text)</code> returns</li>
+<li><code>digest.Digest.md5/sha1/sha256/sha384/sha512</code> accept either <code>string</code> or <code>bytes</code>.</li>
+<li><code>secure_random.SecureRandom.bytes(n)</code> returns <code>bytes</code>.</li>
+<li><code>hex.Hex.encode(value)</code> accepts <code>string</code> or <code>bytes</code>. <code>hex.Hex.decode(text)</code> returns</li>
 </ul>
 <p>  <code>bytes</code> (was <code>string</code> in v0.24 — breaking change).</p>
 <ul>
-<li><code>base64.encode(value)</code> accepts <code>string</code> or <code>bytes</code>. <code>base64.decode(text)</code></li>
+<li><code>base64.Base64.encode(value)</code> accepts <code>string</code> or <code>bytes</code>. <code>base64.Base64.decode(text)</code></li>
 </ul>
 <p>  returns <code>bytes</code> (was <code>string</code> in v0.24 — breaking change).</p>
 <h2 id="unittest"><code>unittest</code></h2>
@@ -441,8 +442,8 @@ network = ip.Network.parse(&quot;2001:db8::/32&quot;)
 print(ip.Network.contains?(network, addr))</code></pre>
 <p>Class members on <code>net/ip.Address</code>: <code>parse</code>, <code>valid?</code>, <code>version</code>, <code>to_s</code>, <code>loopback?</code>, <code>private?</code>, and <code>unspecified?</code>.</p>
 <p>Class members on <code>net/ip.Network</code>: <code>parse</code> and <code>contains?</code>.</p>
-<p><code>Address.parse(text)</code> accepts IPv4 dotted decimal, full or compressed IPv6, and IPv4-mapped IPv6 addresses. It returns a dictionary representation with stable <code>version</code> and numeric parts. <code>Address.to_s(addr)</code> formats the normalized address. Invalid input raises; <code>Address.valid?(text)</code> returns <code>false</code>.</p>
-<p><code>Network.parse(cidr)</code> accepts IPv4 and IPv6 CIDR prefixes. <code>Network.contains?</code> checks whether an address is inside a parsed network.</p>
+<p><code>Address.parse(text)</code> accepts IPv4 dotted decimal, full or compressed IPv6, and IPv4-mapped IPv6 addresses. It returns an Address instance with stable public <code>version</code> and numeric-part fields. <code>Address.to_s(addr)</code> formats the normalized address. Invalid input raises; <code>Address.valid?(text)</code> returns <code>false</code>.</p>
+<p><code>Network.parse(cidr)</code> accepts IPv4 and IPv6 CIDR prefixes. <code>Network.contains?</code> checks whether an address is inside a parsed network. <code>Network.parse</code> returns a Network instance.</p>
 <h2 id="net-socket-v0-62"><code>net/socket</code> (v0.62)</h2>
 <p>TCP client and server sockets.</p>
 <pre><code class="language-tya">import net/socket as socket

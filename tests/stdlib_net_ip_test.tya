@@ -5,6 +5,7 @@ class StdlibNetIpTest extends TestCase
 
   test_ipv4_parse_format_and_classify = ->
     addr = ip.Address.parse("192.168.1.10")
+    self.assert_equal(ip.Address, addr.class, "class")
     self.assert_equal(4, ip.Address.version(addr), "version")
     self.assert_equal("192.168.1.10", ip.Address.to_s(addr), "format")
     self.assert(ip.Address.private?(addr), "private")
@@ -25,6 +26,7 @@ class StdlibNetIpTest extends TestCase
 
   test_cidr_contains = ->
     net4 = ip.Network.parse("192.168.1.0/24")
+    self.assert_equal(ip.Network, net4.class, "class")
     self.assert(ip.Network.contains?(net4, ip.Address.parse("192.168.1.99")), "ipv4 contains")
     self.assert_falsy(ip.Network.contains?(net4, ip.Address.parse("192.168.2.1")), "ipv4 misses")
     net6 = ip.Network.parse("2001:db8::/32")

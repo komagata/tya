@@ -13,8 +13,8 @@ array, and dict helpers are not imported modules in v0.59; they are methods on
 the values themselves.
 
 ```tya
-import math
-import json
+import math as math
+import json as json
 ```
 
 Directory packages expose public class and interface names directly when they
@@ -57,15 +57,15 @@ values.
 ## `math`
 
 ```tya
-import math
+import math as math
 
-print math.abs(-3)
-print math.min(2, 5)
-print math.max(2, 5)
-print math.clamp(12, 0, 10)
+print math.Math.abs(-3)
+print math.Math.min(2, 5)
+print math.Math.max(2, 5)
+print math.Math.clamp(12, 0, 10)
 ```
 
-Functions:
+Class members on `math.Math`:
 
 ```tya
 abs value
@@ -86,16 +86,16 @@ clamp value, min, max
 ## `path`
 
 ```tya
-import path
+import path as path
 
-print path.join(["tmp", "tya", "memo.txt"])
-print path.clean("tmp/./tya/../memo.txt")
-print path.basename("/tmp/tya/memo.txt")
-print path.dirname("/tmp/tya/memo.txt")
-print path.extname("/tmp/tya/memo.txt")
+print path.Path.join(["tmp", "tya", "memo.txt"])
+print path.Path.clean("tmp/./tya/../memo.txt")
+print path.Path.basename("/tmp/tya/memo.txt")
+print path.Path.dirname("/tmp/tya/memo.txt")
+print path.Path.extname("/tmp/tya/memo.txt")
 ```
 
-Functions:
+Class members on `path.Path`:
 
 ```tya
 join parts
@@ -124,16 +124,16 @@ system.
 ## `file`
 
 ```tya
-import file
+import file as file
 
-if file.exists?("memo.txt")
-  text = file.read("memo.txt")
+if file.File.exists?("memo.txt")
+  text = file.File.read("memo.txt")
   println text
 
-file.write("out.txt", "hello")
+file.File.write("out.txt", "hello")
 ```
 
-Functions:
+Class members on `file.File`:
 
 ```tya
 read path
@@ -150,13 +150,13 @@ exists? path
 ## `os`
 
 ```tya
-import os
+import os as os
 
-args = os.args()
-home = os.env("HOME")
+args = os.Os.args()
+home = os.Os.env("HOME")
 ```
 
-Functions:
+Class members on `os.Os`:
 
 ```tya
 args
@@ -178,14 +178,14 @@ failure.
 ## `dir`
 
 ```tya
-import dir
+import dir as dir
 
-names = dir.list(".")
-dir.mkdir("tmp")
-dir.rmdir("tmp")
+names = dir.Dir.list(".")
+dir.Dir.mkdir("tmp")
+dir.Dir.rmdir("tmp")
 ```
 
-Functions:
+Class members on `dir.Dir`:
 
 ```tya
 list path
@@ -205,11 +205,11 @@ directory is not empty.
 ## `file` (additional functions)
 
 ```tya
-import file
+import file as file
 
-file.remove("memo.txt")
-file.rename("a.txt", "b.txt")
-info = file.stat("b.txt")
+file.File.remove("memo.txt")
+file.File.rename("a.txt", "b.txt")
+info = file.File.stat("b.txt")
 println info["kind"]
 println info["size"]
 ```
@@ -231,10 +231,10 @@ directory. Other strings are returned unchanged.
 ## `base64`
 
 ```tya
-import base64
+import base64 as base64
 
-println base64.encode("hello")
-println base64.decode("aGVsbG8=")
+println base64.Base64.encode("hello")
+println base64.Base64.decode("aGVsbG8=")
 ```
 
 `encode(text)` returns the standard-alphabet Base64 representation with `=`
@@ -270,26 +270,27 @@ dictionary, storing duplicate values as arrays.
 ## `json`
 
 ```tya
-import json
+import json as json
 
-println json.dump({ name: "tya", version: 23 })
-data = json.parse("[1, 2, 3]")
+println json.Json.dump({ name: "tya", version: 23 })
+data = json.Json.parse("[1, 2, 3]")
 ```
 
-`parse(text)` parses RFC 8259 JSON; `dump(value)` emits compact JSON.
+`Json.parse(text)` parses RFC 8259 JSON; `Json.dump(value)` emits compact JSON.
 Numbers without fractional parts decode to ints; with fractional parts to
-floats.
+floats. Parsed JSON values are data-exchange dictionaries and arrays, not
+stdlib domain instances.
 
 ## `csv`
 
 ```tya
-import csv
+import csv as csv
 
-rows = csv.parse("name,age\ntya,1\n", { header: true })
-println csv.dump([["a", "b"], ["1", "2"]], nil)
+rows = csv.Csv.parse("name,age\ntya,1\n", { header: true })
+println csv.Csv.dump([["a", "b"], ["1", "2"]], nil)
 ```
 
-`parse(text, options)` accepts `{ separator, header }` options. `dump(rows,
+`Csv.parse(text, options)` accepts `{ separator, header }` options. `Csv.dump(rows,
 options)` quotes fields containing the separator, quote, CR, or LF.
 
 ## `cli`
@@ -347,12 +348,12 @@ Class members on `time.Time`: `now`, `sleep`, `format`, `parse`,
 ## `random`
 
 ```tya
-import random
+import random as random
 
-random.seed(42)
-println random.int(1, 100)
-println random.float()
-println random.choice(["a", "b", "c"])
+random.Random.seed(42)
+println random.Random.int(1, 100)
+println random.Random.float()
+println random.Random.choice(["a", "b", "c"])
 ```
 
 Seedable PRNG. **Not** cryptographically secure — use `secure_random` for
@@ -391,43 +392,47 @@ println hex.decode("547961")  # Tya
 ## `digest`
 
 ```tya
-import digest
+import digest as digest
 
-println digest.md5("hello")
-println digest.sha256("hello")
+println digest.Digest.md5("hello")
+println digest.Digest.sha256("hello")
 ```
 
-Functions: `md5`, `sha1`, `sha256`, `sha384`, `sha512`. Each takes a text
-and returns a lowercase hex digest string.
+Class members on `digest.Digest`: `md5`, `sha1`, `sha256`, `sha384`,
+`sha512`. Each takes a text and returns a lowercase hex digest string.
 
 ## `secure_random`
 
 ```tya
-import secure_random
+import secure_random as secure_random
 
-println secure_random.hex(16)     # 32 hex chars
-println secure_random.uuid()      # RFC 4122 v4
-println secure_random.int(0, 99)
+println secure_random.SecureRandom.hex(16)     # 32 hex chars
+println secure_random.SecureRandom.uuid()      # RFC 4122 v4
+println secure_random.SecureRandom.int(0, 99)
 ```
 
-Cryptographically secure. Functions: `bytes`, `hex`, `base64`, `uuid`,
-`int`.
+Cryptographically secure. Class members on `secure_random.SecureRandom`:
+`bytes`, `hex`, `base64`, `uuid`, `int`.
 
 ## `matrix`
 
 ```tya
-import matrix
+import matrix as matrix
 
-a = matrix.new([[1, 2], [3, 4]])
-b = matrix.identity(2)
+a = matrix.Matrix.new([[1, 2], [3, 4]])
+b = matrix.Matrix.identity(2)
 
-println matrix.add(a, b)["data"]
-println matrix.mul(a, a)["data"]
-println matrix.det(a)
+println matrix.Matrix.add(a, b).data
+println matrix.Matrix.mul(a, a).data
+println matrix.Matrix.det(a)
 ```
 
-Functions: `new`, `zero`, `identity`, `at`, `put`, `add`, `sub`, `scale`,
-`mul`, `transpose`, `det` (≤ 4×4), `equal?`.
+Class members on `matrix.Matrix`: `new`, `zero`, `identity`, `at`, `put`,
+`add`, `sub`, `scale`, `mul`, `transpose`, `det` (<= 4x4), `equal?`.
+
+`Matrix.new`, `Matrix.zero`, `Matrix.identity`, `Matrix.add`, `Matrix.sub`,
+`Matrix.scale`, `Matrix.mul`, and `Matrix.transpose` return a Matrix instance
+with public `data`, `rows`, and `cols` fields.
 
 ## `bytes` (v0.25)
 
@@ -453,10 +458,10 @@ Builtins: `bytes(int_array)`, `bytes_of(text)`, `bytes_text(b)`,
 ## `file` (v0.25 binary I/O)
 
 ```tya
-import file
+import file as file
 
-raw = file.read_bytes("/path/to/file")
-file.write_bytes("/tmp/copy", raw)
+raw = file.File.read_bytes("/path/to/file")
+file.File.write_bytes("/tmp/copy", raw)
 ```
 
 `read_bytes(path)` returns a `bytes` value. `write_bytes(path, b)` writes
@@ -464,11 +469,11 @@ raw bytes.
 
 ## Updated for bytes (v0.25)
 
-- `digest.md5/sha1/sha256/sha384/sha512` accept either `string` or `bytes`.
-- `secure_random.bytes(n)` returns `bytes`.
-- `hex.encode(value)` accepts `string` or `bytes`. `hex.decode(text)` returns
+- `digest.Digest.md5/sha1/sha256/sha384/sha512` accept either `string` or `bytes`.
+- `secure_random.SecureRandom.bytes(n)` returns `bytes`.
+- `hex.Hex.encode(value)` accepts `string` or `bytes`. `hex.Hex.decode(text)` returns
   `bytes` (was `string` in v0.24 — breaking change).
-- `base64.encode(value)` accepts `string` or `bytes`. `base64.decode(text)`
+- `base64.Base64.encode(value)` accepts `string` or `bytes`. `base64.Base64.decode(text)`
   returns `bytes` (was `string` in v0.24 — breaking change).
 
 ## `unittest`
@@ -824,12 +829,13 @@ Class members on `net/ip.Address`: `parse`, `valid?`, `version`, `to_s`,
 Class members on `net/ip.Network`: `parse` and `contains?`.
 
 `Address.parse(text)` accepts IPv4 dotted decimal, full or compressed IPv6, and
-IPv4-mapped IPv6 addresses. It returns a dictionary representation with stable
-`version` and numeric parts. `Address.to_s(addr)` formats the normalized
+IPv4-mapped IPv6 addresses. It returns an Address instance with stable public
+`version` and numeric-part fields. `Address.to_s(addr)` formats the normalized
 address. Invalid input raises; `Address.valid?(text)` returns `false`.
 
 `Network.parse(cidr)` accepts IPv4 and IPv6 CIDR prefixes. `Network.contains?`
-checks whether an address is inside a parsed network.
+checks whether an address is inside a parsed network. `Network.parse` returns a
+Network instance.
 
 ## `net/socket` (v0.62)
 
