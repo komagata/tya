@@ -1,2 +1,2 @@
-class Channel
+class WaitGroup
   native = true

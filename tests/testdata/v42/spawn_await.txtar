@@ -1,4 +1,4 @@
-# v0.42 STEP 3: spawn / await run a callable on a fresh pthread, then
+# v0.42 STEP 3: spawn / await run a callable on a runtime task, then
 # the awaiter blocks for the return value (or re-raises).
 cd $REPO
 
@@ -40,7 +40,7 @@ t = spawn boom(1)
 print("spawned")
 try
   v = await t
-  print("got: " + to_string(v))
+  print("got: " + v.to_s())
 catch e
   print("caught: " + e)
 

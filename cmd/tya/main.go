@@ -516,14 +516,15 @@ func buildExecutableWithCover(path string, output string, opt *codegen.CoverageO
 		}
 	}
 	args = append(args, "-I", runtimeDir, "-o", output)
-	// v0.42 runtime uses pthread for spawn / await / channels / sync.
-	// On macOS/BSD pthread is in libc; on Linux/glibc it lives in -lpthread.
+	// The runtime uses pthread primitives for GC and sync resources. v0.60 tasks
+	// run on runtime-managed fibers, and libuv is linked for the private event
+	// loop backend used by timers and future I/O readiness.
 	// libm provides log2 / exp / sin / cos / atan2 etc. — glibc requires
 	// explicit -lm, macOS rolls it into libSystem so the flag is harmless.
 	if runtime.GOOS == "linux" {
-		args = append(args, "-lpthread", "-lm", "-lz", "-lz")
+		args = append(args, "-lpthread", "-lm", "-lz", "-luv")
 	} else if runtime.GOOS != "windows" {
-		args = append(args, "-lm", "-lz")
+		args = append(args, "-lm", "-lz", "-luv")
 	}
 	if nativePlan != nil {
 		args = append(args, nativePlan.LDFlags...)

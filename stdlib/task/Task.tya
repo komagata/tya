@@ -1,12 +1,2 @@
 class Task
-  # Task.cancel(t) sets the cancel flag on a task. The task body must
-  # poll Task.cancelled?(t) at safe points to honor the request.
-  static cancel = t -> task_cancel(t)
-
-  # Task.cancelled?(t) returns true once cancel has been requested.
-  static cancelled? = t -> task_is_cancelled_p(t)
-
-  # Task.current() returns the currently-running task value, or nil
-  # when called from the main thread. Workers poll
-  # Task.cancelled?(Task.current()) to check for cancel.
   static current = () -> task_current()

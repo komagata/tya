@@ -586,8 +586,7 @@ Mutex, atomic integer, and wait group primitives.
 import sync
 
 m = sync.Mutex()
-m.lock()
-m.unlock()
+m.with_lock(() -> nil)
 
 a = sync.AtomicInteger(0)
 a.add(1)
@@ -601,8 +600,8 @@ wg.wait()
 
 Classes: `sync.Mutex`, `sync.AtomicInteger`, `sync.WaitGroup`.
 
-`Mutex` methods: `lock`, `unlock`.
-`AtomicInteger` methods: `add`, `load`, `store`, `compare_and_swap`.
+`Mutex` methods: `lock`, `unlock`, `with_lock`.
+`AtomicInteger` methods: `add`, `load`, `store`, `cas`.
 `WaitGroup` methods: `add`, `done`, `wait`.
 
 ## `task` (v0.60)

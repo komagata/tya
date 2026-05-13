@@ -1,2 +1,2 @@
-class Channel
+class Mutex
   native = true

@@ -4,61 +4,84 @@ cd $REPO
 exec go run ./cmd/tya run $WORK/mutex.tya
 stdout 'count: 200'
 
+exec go run ./cmd/tya run $WORK/with_lock_raise.tya
+stdout 'unlocked'
+stdout 'same: boom'
+
 exec go run ./cmd/tya run $WORK/atomic.tya
 stdout 'atomic: 15'
 stdout 'cas success: true'
 stdout 'cas value: 99'
+stdout 'cas alias: true'
 
 exec go run ./cmd/tya run $WORK/waitgroup.tya
 stdout 'wait_group ok'
 
 -- mutex.tya --
-import sync
+import sync as sync
 
 state = {}
 state["count"] = 0
-m = sync.Sync.mutex()
+m = sync.Mutex()
 
 inc100 = mref, sref ->
   i = 0
   while i < 100
-    sync.Sync.lock(mref)
+    mref.lock()
     sref["count"] = sref["count"] + 1
-    sync.Sync.unlock(mref)
+    mref.unlock()
     i = i + 1
 
 t1 = spawn inc100(m, state)
 t2 = spawn inc100(m, state)
 await t1
 await t2
-print("count: " + to_string(state["count"]))
+print("count: " + state["count"].to_s())
 
 -- atomic.tya --
-import sync
+import sync as sync
 
-a = sync.Sync.atomic_integer(0)
-sync.Sync.atomic_add(a, 10)
-sync.Sync.atomic_add(a, 5)
-print("atomic: " + to_string(sync.Sync.atomic_load(a)))
+a = sync.AtomicInteger(0)
+a.add(10)
+a.add(5)
+print("atomic: " + (a.load()).to_s())
 
-ok = sync.Sync.atomic_cas(a, 15, 99)
-print("cas success: " + to_string(ok))
-print("cas value: " + to_string(sync.Sync.atomic_load(a)))
+ok = a.compare_and_swap(15, 99)
+print("cas success: " + ok.to_s())
+print("cas value: " + (a.load()).to_s())
+
+ok2 = a.cas(99, 100)
+print("cas alias: " + ok2.to_s())
+
+-- with_lock_raise.tya --
+import sync as sync
+
+m = sync.Mutex()
+boom = ->
+  raise "boom"
+
+try
+  m.with_lock(boom)
+catch e
+  m.lock()
+  print("unlocked")
+  m.unlock()
+  print("same: " + e)
 
 -- waitgroup.tya --
-import sync
-import channel
+import sync as sync
+import channel as channel
 
-wg = sync.Sync.wait_group()
-sync.Sync.wait_group_add(wg, 3)
+wg = sync.WaitGroup()
+wg.add(3)
 
-ch = channel.Channel.new(3)
+ch = channel.Channel(3)
 worker = wgr, chr ->
-  channel.Channel.send(chr, "ok")
-  sync.Sync.wait_group_done(wgr)
+  chr.send("ok")
+  wgr.done()
 
 spawn worker(wg, ch)
 spawn worker(wg, ch)
 spawn worker(wg, ch)
-sync.Sync.wait_group_wait(wg)
+wg.wait()
 print("wait_group ok")

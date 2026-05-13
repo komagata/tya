@@ -9,13 +9,13 @@ stdout 'fast: true'
 stdout 'after'
 
 -- sample.tya --
-import task
-import time
+import task as task
+import time as time
 
 cooperative_worker = () ->
   me = task.Task.current()
   i = 0
-  while not task.Task.cancelled?(me)
+  while not me.cancelled?()
     i = i + 1
     if i % 1000 == 0
       time.Time.sleep(0.001)
@@ -30,5 +30,5 @@ try
 catch e
   elapsed = time.Time.now() - start
   print("caught: " + e)
-  print("fast: " + to_string(elapsed < 1.0))
+  print("fast: " + (elapsed < 1.0).to_s())
 print("after")

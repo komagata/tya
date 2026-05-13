@@ -1,0 +1,94 @@
+# v0.60: blocked channel receivers are lightweight tasks, not pthreads.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/c10k_receive.tya
+stdout 'done: 10000'
+
+exec go run ./cmd/tya run $WORK/c10k_await.tya
+stdout 'done: 10000'
+
+exec go run ./cmd/tya run $WORK/c10k_timer.tya
+stdout 'done: 10000'
+
+exec go run ./cmd/tya run $WORK/fairness.tya
+stdout 'ready'
+
+-- c10k_receive.tya --
+import channel as channel
+
+ch = channel.Channel(1)
+tasks = []
+
+worker = c -> c.receive()
+
+i = 0
+while i < 10000
+  tasks.push(spawn worker(ch))
+  i = i + 1
+
+ch.close()
+
+done = 0
+for task in tasks
+  if await task == nil
+    done = done + 1
+
+print("done: " + done.to_s())
+
+-- c10k_await.tya --
+tasks = []
+
+worker = value -> value
+
+i = 0
+while i < 10000
+  tasks.push(spawn worker(i))
+  i = i + 1
+
+done = 0
+for task in tasks
+  if await task >= 0
+    done = done + 1
+
+print("done: " + done.to_s())
+
+-- c10k_timer.tya --
+import time as time
+
+tasks = []
+
+worker = ->
+  time.Time.sleep(0)
+  1
+
+i = 0
+while i < 10000
+  tasks.push(spawn worker())
+  i = i + 1
+
+done = 0
+for task in tasks
+  done = done + await task
+
+print("done: " + done.to_s())
+
+-- fairness.tya --
+import channel as channel
+
+ch = channel.Channel(1)
+
+busy = ->
+  i = 0
+  while i < 20000
+    i = i + 1
+  "busy"
+
+ready = c ->
+  c.send("ready")
+
+t1 = spawn busy()
+t2 = spawn ready(ch)
+
+print(ch.receive())
+await t1
+await t2

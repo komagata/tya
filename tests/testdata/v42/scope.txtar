@@ -25,9 +25,9 @@ print("after scope")
 double = x -> x * 2
 results = []
 scope
-  push(results, spawn double(10))
-  push(results, spawn double(20))
-  push(results, spawn double(30))
+  results.push(spawn double(10))
+  results.push(spawn double(20))
+  results.push(spawn double(30))
 for r in results
   print(await r)
 

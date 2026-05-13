@@ -1,32 +1,87 @@
-# v0.43 STEP 3: channel.Channel.select multiplexes a list of channel ops
-# and returns the first ready one.
+# v0.60: select multiplexes channel ops and runs the first ready arm.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/receive.tya
-stdout 'index: 1'
 stdout 'value: from c2'
 
 exec go run ./cmd/tya run $WORK/send.tya
-stdout 'sent index: 0'
+stdout 'sent'
+
+exec go run ./cmd/tya run $WORK/default.tya
+stdout 'idle'
+
+exec go run ./cmd/tya run $WORK/timeout_zero.tya
+stdout 'timeout'
+
+! exec go run ./cmd/tya run $WORK/binding_scope.tya
+stderr 'undefined variable value'
+
+! exec go run ./cmd/tya run $WORK/removed_helper.tya
+stderr 'TYA-E0820'
 
 -- receive.tya --
-import channel
+import channel as channel
 
-c1 = channel.Channel.new(1)
-c2 = channel.Channel.new(1)
+c1 = channel.Channel(1)
+c2 = channel.Channel(1)
 
-worker = c, val -> channel.Channel.send(c, val)
+worker = c, val -> c.send(val)
 spawn worker(c2, "from c2")
 
-result = channel.Channel.select([[c1, "receive"], [c2, "receive"]])
-print("index: " + to_string(result["index"]))
-print("value: " + result["value"])
+select
+  value = receive c1
+    print("value: " + value)
+  value = receive c2
+    print("value: " + value)
 
 -- send.tya --
-import channel
+import channel as channel
 
-c1 = channel.Channel.new(1)
-c2 = channel.Channel.new(1)
+c1 = channel.Channel(1)
+c2 = channel.Channel(1)
 
-result = channel.Channel.select([[c1, "send", "to c1"], [c2, "send", "to c2"]])
-print("sent index: " + to_string(result["index"]))
+select
+  send c1, "to c1"
+    print("sent")
+  send c2, "to c2"
+    print("sent")
+
+-- default.tya --
+import channel as channel
+
+c = channel.Channel(1)
+
+select
+  receive c
+    print("received")
+  default
+    print("idle")
+
+-- timeout_zero.tya --
+import channel as channel
+
+c = channel.Channel(1)
+
+select
+  receive c
+    print("received")
+  timeout 0
+    print("timeout")
+
+-- binding_scope.tya --
+import channel as channel
+
+c = channel.Channel(1)
+c.send("inner")
+
+select
+  value = receive c
+    print(value)
+
+print(value)
+
+-- removed_helper.tya --
+import channel as channel
+
+c = channel.Channel(1)
+channel.Channel.select([[c, "receive"]])

@@ -68,6 +68,8 @@ TyaValue tya_dict(const TyaDictEntry *entries, int count);
 TyaValue tya_object(void);
 TyaValue tya_function(TyaFunctionPtr fn);
 TyaValue tya_class(TyaFunctionPtr fn, const char *name, TyaValue parent);
+TyaValue tya_primitive_class(const char *name);
+TyaValue tya_class_of(TyaValue value);
 TyaValue tya_bind_method(TyaValue receiver, TyaFunctionPtr fn);
 TyaValue tya_error(TyaValue message);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
@@ -91,7 +93,9 @@ TyaValue tya_dict_get(TyaValue dict, TyaValue key, TyaValue fallback, bool has_f
 TyaValue tya_dict_set(TyaValue dict, TyaValue key, TyaValue value);
 TyaValue tya_dict_delete(TyaValue dict, TyaValue key);
 TyaValue tya_dict_merge(TyaValue left, TyaValue right);
+TyaValue tya_dict_entries(TyaValue dict);
 TyaValue tya_contains(TyaValue text, TyaValue part);
+TyaValue tya_contains_method(TyaValue receiver, TyaValue value);
 TyaValue tya_starts_with(TyaValue text, TyaValue prefix);
 TyaValue tya_ends_with(TyaValue text, TyaValue suffix);
 TyaValue tya_trim(TyaValue text);
@@ -101,6 +105,7 @@ TyaValue tya_ord(TyaValue text);
 TyaValue tya_chr(TyaValue code);
 TyaValue tya_kind(TyaValue value);
 TyaValue tya_lines(TyaValue text);
+TyaValue tya_chars(TyaValue text);
 TyaValue tya_upcase(TyaValue text);
 TyaValue tya_downcase(TyaValue text);
 bool tya_equal(TyaValue left, TyaValue right);
@@ -156,6 +161,9 @@ TyaValue tya_math_asin(TyaValue x);
 TyaValue tya_math_acos(TyaValue x);
 TyaValue tya_math_atan(TyaValue x);
 TyaValue tya_math_atan2(TyaValue y, TyaValue x);
+TyaValue tya_number_integer_p(TyaValue x);
+TyaValue tya_number_finite_p(TyaValue x);
+TyaValue tya_number_nan_p(TyaValue x);
 
 TyaValue tya_process_run(TyaValue command, TyaValue options);
 
@@ -237,9 +245,9 @@ TyaValue tya_channel_closed(TyaValue ch);
 /* tya_channel_select runs a multi-channel wait. ops is an array of
  * arrays: each inner array is [channel, "receive"] or
  * [channel, "send", value]. Returns a dict {index, kind, value} for
- * the first ready operation. v0.43 polls every operation in a tight
- * loop with a short sleep when nothing is ready; this is functional
- * but not the most efficient implementation. */
+ * the first ready operation. The runtime scheduler runs ready tasks
+ * while a select is waiting so channel wakeups can make progress
+ * without creating one OS thread per waiting task. */
 TyaValue tya_channel_select(TyaValue ops);
 
 /* Synchronization primitives (v0.42 STEP 7).
@@ -296,7 +304,6 @@ TyaValue tya_file_read_bytes(TyaValue path);
 TyaValue tya_file_write_bytes(TyaValue path, TyaValue b);
 TyaValue tya_stderr_write(TyaValue text);
 TyaValue tya_file_append(TyaValue path, TyaValue text);
-TyaValue tya_read_line(void);
 TyaValue tya_compress_gzip(TyaValue value);
 TyaValue tya_compress_gunzip(TyaValue value);
 TyaValue tya_compress_zlib(TyaValue value);
@@ -323,6 +330,7 @@ TyaValue tya_socket_local_address(TyaValue socket);
 TyaValue tya_socket_remote_address(TyaValue socket);
 TyaValue tya_socket_server_close(TyaValue server);
 TyaValue tya_socket_server_local_address(TyaValue server);
+TyaValue tya_read_line(void);
 TyaValue tya_map(TyaValue array, TyaValue fn);
 TyaValue tya_filter(TyaValue array, TyaValue fn);
 TyaValue tya_find(TyaValue array, TyaValue fn);
@@ -330,6 +338,9 @@ TyaValue tya_any(TyaValue array, TyaValue fn);
 TyaValue tya_all(TyaValue array, TyaValue fn);
 TyaValue tya_each(TyaValue array, TyaValue fn);
 TyaValue tya_reduce(TyaValue array, TyaValue initial, TyaValue fn);
+TyaValue tya_array_contains(TyaValue array, TyaValue value);
+TyaValue tya_array_sort(TyaValue array);
+TyaValue tya_array_sort_by(TyaValue array, TyaValue fn);
 void tya_push(TyaValue array, TyaValue value);
 TyaValue tya_array_push(TyaValue array, TyaValue value);
 TyaValue tya_pop(TyaValue array);

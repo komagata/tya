@@ -16,62 +16,72 @@ stdout 'first: 1'
 stdout 'second: 2'
 stdout 'after close, drained: 0'
 
--- echo.tya --
-import channel
+! exec go run ./cmd/tya run $WORK/send_closed.tya
+stderr 'channel.send: channel is closed'
 
-c = channel.Channel.new(1)
-channel.Channel.send(c, "hi")
-print(channel.Channel.receive(c))
+-- echo.tya --
+import channel as channel
+
+c = channel.Channel(1)
+c.send("hi")
+print(c.receive())
 
 -- concurrent.tya --
-import channel
+import channel as channel
 
-c = channel.Channel.new(1)
-worker = ic -> channel.Channel.send(ic, 42)
+c = channel.Channel(1)
+worker = ic -> ic.send(42)
 spawn worker(c)
-print("received: " + to_string(channel.Channel.receive(c)))
+print("received: " + (c.receive()).to_s())
 
 -- counter_actor.tya --
-import channel
+import channel as channel
 
-inbox = channel.Channel.new(100)
+inbox = channel.Channel(100)
 
 worker = ic ->
   count = 0
   while true
-    msg = channel.Channel.receive(ic)
+    msg = ic.receive()
     if msg == "stop"
       return count
     if msg == "inc"
       count = count + 1
     else
       reply = msg
-      channel.Channel.send(reply, count)
+      reply.send(count)
 
 t = spawn worker(inbox)
 
-channel.Channel.send(inbox, "inc")
-channel.Channel.send(inbox, "inc")
-channel.Channel.send(inbox, "inc")
+inbox.send("inc")
+inbox.send("inc")
+inbox.send("inc")
 
-reply_chan = channel.Channel.new(1)
-channel.Channel.send(inbox, reply_chan)
-print("count after three increments: " + to_string(channel.Channel.receive(reply_chan)))
+reply_chan = channel.Channel(1)
+inbox.send(reply_chan)
+print("count after three increments: " + (reply_chan.receive()).to_s())
 
-channel.Channel.send(inbox, "stop")
-print("final: " + to_string(await t))
+inbox.send("stop")
+print("final: " + (await t).to_s())
 
 -- close_drains.tya --
-import channel
+import channel as channel
 
-c = channel.Channel.new(2)
-channel.Channel.send(c, 1)
-channel.Channel.send(c, 2)
-channel.Channel.close(c)
-print("first: " + to_string(channel.Channel.receive(c)))
-print("second: " + to_string(channel.Channel.receive(c)))
-nilv = channel.Channel.receive(c)
+c = channel.Channel(2)
+c.send(1)
+c.send(2)
+c.close()
+print("first: " + (c.receive()).to_s())
+print("second: " + (c.receive()).to_s())
+nilv = c.receive()
 if nilv == nil
   print("after close, drained: 0")
 else
   print("after close, drained: 1")
+
+-- send_closed.tya --
+import channel as channel
+
+c = channel.Channel(1)
+c.close()
+c.send("bad")
