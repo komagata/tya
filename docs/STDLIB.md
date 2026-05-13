@@ -266,17 +266,31 @@ println base64.decode("aGVsbG8=")
 padding. `decode(text)` decodes standard Base64 (padding optional, whitespace
 ignored).
 
-## `url`
+## `url` (v0.62)
 
 ```tya
-import url
+import url as url
 
-println url.encode("hello world")
-parts = url.parse("https://example.com:8080/path?x=1")
+println url.Url.encode("hello world")
+parts = url.Url.parse("https://example.com:8080/path?x=1")
+full = url.Url.resolve("https://example.com/a/b", "../c?x=1")
 ```
 
-Functions: `encode`, `decode`, `encode_query`, `decode_query`, `parse`,
-`build`. See the v0.23 spec for full details.
+Class members on `url.Url`: `encode`, `decode`, `encode_query`,
+`decode_query`, `query_dict`, `parse`, `build`, `resolve`, and `normalize`.
+
+`Url.parse(text)` handles absolute URLs, relative references, host/port,
+username/password, bracketed IPv6 hosts, path, query, and fragment. It raises
+on malformed percent escapes and invalid ports. `Url.build(parts)` rebuilds a
+URL from parsed parts and brackets IPv6 hosts.
+
+`Url.resolve(base, ref)` resolves relative references against a base URL.
+`Url.normalize(text)` lowercases scheme/host and removes `.` / `..` path
+segments.
+
+`Url.decode_query(text)` returns ordered `[key, value]` pairs so duplicate keys
+are preserved. `Url.query_dict(query)` collapses decoded pairs into a
+dictionary, storing duplicate values as arrays.
 
 ## `json`
 

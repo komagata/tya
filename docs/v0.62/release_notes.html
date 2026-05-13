@@ -88,8 +88,12 @@
 <li>New <code>net/socket</code> stdlib package exposes TCP client/server sockets with text</li>
 </ul>
 <p>  and binary reads, line helpers, address inspection, timeouts, and structured   connection failures.</p>
+<ul>
+<li><code>url.Url</code> now parses bracketed IPv6 hosts, validates percent escapes and</li>
+</ul>
+<p>  ports, resolves relative references, normalizes paths, and preserves   duplicate query keys.</p>
 <h2 id="verification">Verification</h2>
-<p>The release includes package-manager unit coverage and script coverage for path dependency native builds, native run/build/test behavior, diagnostics, the generated native library scaffold, the <code>cli.Cli</code> stdlib parser, package tool execution, interpolation scanner edge cases, the <code>template.Template</code> stdlib renderer, Markdown parser/rendering extensions, compression round trips and file helpers, the <code>log.Logger</code> stdlib logger, <code>io.Io</code> stream tests, and <code>net/ip</code> address/network tests, plus localhost <code>net/socket</code> client/server, binary I/O, timeout, and connection-refused tests.</p>
+<p>The release includes package-manager unit coverage and script coverage for path dependency native builds, native run/build/test behavior, diagnostics, the generated native library scaffold, the <code>cli.Cli</code> stdlib parser, package tool execution, interpolation scanner edge cases, the <code>template.Template</code> stdlib renderer, Markdown parser/rendering extensions, compression round trips and file helpers, the <code>log.Logger</code> stdlib logger, <code>io.Io</code> stream tests, and <code>net/ip</code> address/network tests, plus localhost <code>net/socket</code> client/server, binary I/O, timeout, and connection-refused tests, and URL parser tests for IPv6, relative resolution, duplicate queries, and malformed input.</p>
     </article>
   </main>
 </body>

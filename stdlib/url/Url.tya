@@ -26,7 +26,7 @@ class Url
     raise "url.decode: invalid percent-escape"
 
   static encode = text ->
-    n = byte_len(text)
+    n = text.byte_len()
     out = ""
     i = 0
     while i < n
@@ -35,14 +35,14 @@ class Url
       if Url.is_unreserved(code)
         out = out + c
       else
-        hi = Url.hex_digit(to_int(code / 16))
+        hi = Url.hex_digit(code / 16.to_i())
         lo = Url.hex_digit(code % 16)
         out = out + "%" + hi + lo
       i = i + 1
     return out
 
   static decode = text ->
-    n = byte_len(text)
+    n = text.byte_len()
     out = ""
     i = 0
     while i < n
@@ -59,18 +59,59 @@ class Url
         i = i + 1
     return out
 
+  static validate_percent = text ->
+    n = text.byte_len()
+    i = 0
+    while i < n
+      if text[i] == "%"
+        if i + 2 >= n
+          raise "url.decode: truncated percent-escape"
+        Url.decode_hex(text[i + 1])
+        Url.decode_hex(text[i + 2])
+        i = i + 3
+      else
+        i = i + 1
+    nil
+
+  static decimal? = text ->
+    if text == ""
+      return false
+    i = 0
+    while i < text.byte_len()
+      c = ord(text[i])
+      if c < 48 or c > 57
+        return false
+      i = i + 1
+    true
+
+  static slice = text, start, finish ->
+    out = ""
+    i = start
+    while i < finish
+      out = out + text[i]
+      i = i + 1
+    out
+
+  static contains_colon? = text ->
+    i = 0
+    while i < text.byte_len()
+      if text[i] == ":"
+        return true
+      i = i + 1
+    false
+
   static encode_query = pairs ->
     parts_a = []
-    if has(pairs, "kind")
+    if pairs.has("kind")
       raise "url.encode_query: pass a dict or array of [key, value] pairs"
-    names = keys(pairs)
-    if len(names) > 0
+    names = pairs.keys()
+    if names.len() > 0
       for k in names
         v = pairs[k]
         encoded_k = Url.encode(k)
         encoded_v = Url.encode(v)
-        push(parts_a, "{encoded_k}={encoded_v}")
-    return join(parts_a, "&")
+        parts_a.push("{encoded_k}={encoded_v}")
+    return parts_a.join("&")
 
   static encode_query_pairs = pairs ->
     parts_a = []
@@ -79,11 +120,11 @@ class Url
       v = pair[1]
       encoded_k = Url.encode(k)
       encoded_v = Url.encode(v)
-      push(parts_a, "{encoded_k}={encoded_v}")
-    return join(parts_a, "&")
+      parts_a.push("{encoded_k}={encoded_v}")
+    return parts_a.join("&")
 
   static decode_query_value = text ->
-    n = byte_len(text)
+    n = text.byte_len()
     out = ""
     i = 0
     while i < n
@@ -107,11 +148,11 @@ class Url
     out = []
     if text == ""
       return out
-    raw_pairs = split(text, "&")
+    raw_pairs = text.split("&")
     for raw in raw_pairs
       if raw != ""
         eq_idx = -1
-        n = byte_len(raw)
+        n = raw.byte_len()
         i = 0
         while i < n and eq_idx < 0
           if raw[i] == "="
@@ -119,7 +160,7 @@ class Url
           i = i + 1
         if eq_idx < 0
           k = Url.decode_query_value(raw)
-          push(out, [k, ""])
+          out.push([k, ""])
         else
           k_raw = ""
           v_raw = ""
@@ -131,14 +172,29 @@ class Url
           while i < n
             v_raw = v_raw + raw[i]
             i = i + 1
-          push(
-            out,
-            [Url.decode_query_value(k_raw), Url.decode_query_value(v_raw)],
-          )
+          out.push([Url.decode_query_value(k_raw), Url.decode_query_value(v_raw)])
     return out
 
+  static query_dict = query ->
+    pairs = query
+    if query.class == String
+      pairs = Url.decode_query(query)
+    out = {}
+    for pair in pairs
+      k = pair[0]
+      v = pair[1]
+      if out.has(k)
+        old = out[k]
+        if old.class == Array
+          old.push(v)
+        else
+          out[k] = [old, v]
+      else
+        out[k] = v
+    out
+
   static parse = text ->
-    n = byte_len(text)
+    n = text.byte_len()
     out =
       scheme: ""
       user: ""
@@ -148,6 +204,8 @@ class Url
       path: ""
       query: ""
       fragment: ""
+      has_query: false
+      has_authority: false
     i = 0
     scheme_end = -1
     j = 0
@@ -171,6 +229,7 @@ class Url
       has_authority = true
       i = i + 2
     if has_authority
+      out["has_authority"] = true
       auth_end = i
       while (
         auth_end < n and text[auth_end] != "/" and text[auth_end] != "?" and text[auth_end] != "#"
@@ -184,7 +243,7 @@ class Url
       i = auth_end
       at_idx = -1
       ai = 0
-      auth_n = byte_len(auth_text)
+      auth_n = auth_text.byte_len()
       while ai < auth_n
         if auth_text[ai] == "@"
           at_idx = ai
@@ -204,7 +263,7 @@ class Url
       if userinfo != ""
         colon_idx = -1
         ci = 0
-        ui_n = byte_len(userinfo)
+        ui_n = userinfo.byte_len()
         while ci < ui_n
           if userinfo[ci] == ":"
             colon_idx = ci
@@ -225,29 +284,41 @@ class Url
             k = k + 1
           out["user"] = user_part
           out["password"] = pass_part
-      colon_idx = -1
-      ci = 0
-      hp_n = byte_len(hostport)
-      while ci < hp_n
-        if hostport[ci] == ":"
-          colon_idx = ci
-          ci = hp_n
-        ci = ci + 1
-      if colon_idx < 0
-        out["host"] = hostport
+      hp_n = hostport.byte_len()
+      if hp_n > 0 and hostport[0] == "["
+        close_idx = -1
+        ci = 1
+        while ci < hp_n and close_idx < 0
+          if hostport[ci] == "]"
+            close_idx = ci
+          ci = ci + 1
+        if close_idx < 0
+          raise "url.parse: invalid IPv6 host"
+        out["host"] = Url.slice(hostport, 1, close_idx)
+        if close_idx + 1 < hp_n
+          if hostport[close_idx + 1] != ":"
+            raise "url.parse: invalid host"
+          port_part = Url.slice(hostport, close_idx + 2, hp_n)
+          if not Url.decimal?(port_part)
+            raise "url.parse: invalid port"
+          out["port"] = port_part
       else
-        host_part = ""
-        port_part = ""
-        k = 0
-        while k < colon_idx
-          host_part = host_part + hostport[k]
-          k = k + 1
-        k = colon_idx + 1
-        while k < hp_n
-          port_part = port_part + hostport[k]
-          k = k + 1
-        out["host"] = host_part
-        out["port"] = port_part
+        colon_idx = -1
+        ci = 0
+        while ci < hp_n
+          if hostport[ci] == ":"
+            colon_idx = ci
+            ci = hp_n
+          ci = ci + 1
+        if colon_idx < 0
+          out["host"] = hostport
+        else
+          host_part = Url.slice(hostport, 0, colon_idx)
+          port_part = Url.slice(hostport, colon_idx + 1, hp_n)
+          if not Url.decimal?(port_part)
+            raise "url.parse: invalid port"
+          out["host"] = host_part
+          out["port"] = port_part
     path_end = i
     while path_end < n and text[path_end] != "?" and text[path_end] != "#"
       path_end = path_end + 1
@@ -257,8 +328,10 @@ class Url
       path_text = path_text + text[k]
       k = k + 1
     out["path"] = path_text
+    Url.validate_percent(path_text)
     i = path_end
     if i < n and text[i] == "?"
+      out["has_query"] = true
       i = i + 1
       query_end = i
       while query_end < n and text[query_end] != "#"
@@ -269,6 +342,7 @@ class Url
         query_text = query_text + text[k]
         k = k + 1
       out["query"] = query_text
+      Url.validate_percent(query_text)
       i = query_end
     if i < n and text[i] == "#"
       i = i + 1
@@ -277,29 +351,113 @@ class Url
         frag_text = frag_text + text[i]
         i = i + 1
       out["fragment"] = frag_text
+      Url.validate_percent(frag_text)
     return out
+
+  static normalize_path = path ->
+    absolute = path.starts_with("/")
+    trailing = path.ends_with("/") and path != "/"
+    parts = path.split("/")
+    stack = []
+    for part in parts
+      if part == "" or part == "."
+        nil
+      elseif part == ".."
+        if stack.len() > 0
+          stack.pop()
+      else
+        stack.push(part)
+    out = stack.join("/")
+    if absolute
+      out = "/" + out
+    if out == "" and absolute
+      out = "/"
+    if trailing and not out.ends_with("/")
+      out = out + "/"
+    out
+
+  static merge_path = base_path, ref_path ->
+    idx = -1
+    i = 0
+    while i < base_path.byte_len()
+      if base_path[i] == "/"
+        idx = i
+      i = i + 1
+    if idx < 0
+      return ref_path
+    return Url.slice(base_path, 0, idx + 1) + ref_path
+
+  static resolve = base, ref ->
+    b = Url.parse(base)
+    r = Url.parse(ref)
+    if r["scheme"] != ""
+      return Url.normalize(Url.build(r))
+    out =
+      scheme: b["scheme"]
+      user: ""
+      password: ""
+      host: ""
+      port: ""
+      path: ""
+      query: ""
+      fragment: r["fragment"]
+    if r["has_authority"]
+      out["user"] = r["user"]
+      out["password"] = r["password"]
+      out["host"] = r["host"]
+      out["port"] = r["port"]
+      out["path"] = Url.normalize_path(r["path"])
+      out["query"] = r["query"]
+    else
+      out["user"] = b["user"]
+      out["password"] = b["password"]
+      out["host"] = b["host"]
+      out["port"] = b["port"]
+      if r["path"] == ""
+        out["path"] = b["path"]
+        if r["has_query"]
+          out["query"] = r["query"]
+        else
+          out["query"] = b["query"]
+      elseif r["path"].starts_with("/")
+        out["path"] = Url.normalize_path(r["path"])
+        out["query"] = r["query"]
+      else
+        out["path"] = Url.normalize_path(Url.merge_path(b["path"], r["path"]))
+        out["query"] = r["query"]
+    Url.build(out)
+
+  static normalize = text ->
+    p = Url.parse(text)
+    p["scheme"] = p["scheme"].lower()
+    p["host"] = p["host"].lower()
+    p["path"] = Url.normalize_path(p["path"])
+    Url.build(p)
 
   static build = parts ->
     out = ""
-    if has(parts, "scheme") and parts["scheme"] != ""
+    if parts.has("scheme") and parts["scheme"] != ""
       out = out + parts["scheme"] + ":"
-    has_host = has(parts, "host") and parts["host"] != ""
-    has_user = has(parts, "user") and parts["user"] != ""
+    has_host = parts.has("host") and parts["host"] != ""
+    has_user = parts.has("user") and parts["user"] != ""
     if has_host or has_user
       out = out + "//"
       if has_user
         out = out + parts["user"]
-        if has(parts, "password") and parts["password"] != ""
+        if parts.has("password") and parts["password"] != ""
           out = out + ":" + parts["password"]
         out = out + "@"
       if has_host
-        out = out + parts["host"]
-      if has(parts, "port") and parts["port"] != ""
+        if Url.contains_colon?(parts["host"]) and not parts["host"].starts_with("[")
+          out = out + "[" + parts["host"] + "]"
+        else
+          out = out + parts["host"]
+      if parts.has("port") and parts["port"] != ""
         out = out + ":" + parts["port"]
-    if has(parts, "path") and parts["path"] != ""
+    if parts.has("path") and parts["path"] != ""
       out = out + parts["path"]
-    if has(parts, "query") and parts["query"] != ""
+    if parts.has("query") and parts["query"] != ""
       out = out + "?" + parts["query"]
-    if has(parts, "fragment") and parts["fragment"] != ""
+    if parts.has("fragment") and parts["fragment"] != ""
       out = out + "#" + parts["fragment"]
     return out

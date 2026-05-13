@@ -259,3 +259,21 @@ Socket instances provide `read(size)`, `read_line()`, `write(value)`,
 `{ mode: "binary" }`. `write(value)` accepts strings and bytes. `{ timeout:
 seconds }` sets blocking read, write, and accept timeouts. DNS,
 connection-refused, timeout, and closed-socket failures raise.
+
+## URL Stdlib Extensions
+
+`import url` exposes `url.Url` for URL encoding, parsing, building,
+normalization, and relative resolution.
+
+`Url.parse(text)` handles absolute URLs, relative references, host/port,
+username/password, bracketed IPv6 hosts, path, query, and fragment. Malformed
+percent escapes and invalid ports raise.
+
+`Url.build(parts)` rebuilds a URL from parsed parts and brackets IPv6 hosts.
+`Url.resolve(base, ref)` resolves relative references against a base URL.
+`Url.normalize(text)` lowercases scheme/host and removes dot segments from the
+path.
+
+`Url.decode_query(text)` returns ordered `[key, value]` pairs so duplicate keys
+are preserved. `Url.query_dict(query)` collapses decoded pairs into a
+dictionary, storing duplicate values as arrays.

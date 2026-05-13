@@ -119,6 +119,11 @@ print(&quot;kind: {{&quot;kind&quot;: &quot;ok&quot;}[&quot;kind&quot;]}&quot;)<
 <p><code>Socket.connect(host, port, options)</code> connects to a TCP server. <code>Server.listen</code> binds a TCP listener; <code>server.accept()</code> returns a connected socket and <code>server.close()</code> closes the listener.</p>
 <p>Socket instances provide <code>read(size)</code>, <code>read_line()</code>, <code>write(value)</code>, <code>write_line(value)</code>, <code>close()</code>, <code>closed?()</code>, <code>local_address()</code>, and <code>remote_address()</code>. Address values are dictionaries with <code>host</code> and <code>port</code>.</p>
 <p><code>read(size)</code> returns a string in text mode and bytes when opened with <code>{ mode: &quot;binary&quot; }</code>. <code>write(value)</code> accepts strings and bytes. <code>{ timeout: seconds }</code> sets blocking read, write, and accept timeouts. DNS, connection-refused, timeout, and closed-socket failures raise.</p>
+<h2 id="url-stdlib-extensions">URL Stdlib Extensions</h2>
+<p><code>import url</code> exposes <code>url.Url</code> for URL encoding, parsing, building, normalization, and relative resolution.</p>
+<p><code>Url.parse(text)</code> handles absolute URLs, relative references, host/port, username/password, bracketed IPv6 hosts, path, query, and fragment. Malformed percent escapes and invalid ports raise.</p>
+<p><code>Url.build(parts)</code> rebuilds a URL from parsed parts and brackets IPv6 hosts. <code>Url.resolve(base, ref)</code> resolves relative references against a base URL. <code>Url.normalize(text)</code> lowercases scheme/host and removes dot segments from the path.</p>
+<p><code>Url.decode_query(text)</code> returns ordered <code>[key, value]</code> pairs so duplicate keys are preserved. <code>Url.query_dict(query)</code> collapses decoded pairs into a dictionary, storing duplicate values as arrays.</p>
     </article>
   </main>
 </body>

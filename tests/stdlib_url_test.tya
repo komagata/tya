@@ -29,3 +29,27 @@ class StdlibUrlTest extends TestCase
     expected = "https://example.com/search?q=tya"
     parts = { scheme: "https", host: "example.com", path: "/search", query: "q=tya" }
     self.assert_equal(expected, url.Url.build(parts), "build")
+  test_ipv6_parse_and_build = ->
+    p = url.Url.parse("http://[2001:db8::1]:8080/a")
+    self.assert_equal("2001:db8::1", p["host"], "ipv6 host")
+    self.assert_equal("8080", p["port"], "ipv6 port")
+    self.assert_equal("http://[2001:db8::1]:8080/a", url.Url.build(p), "ipv6 build")
+  test_resolve_relative = ->
+    self.assert_equal("https://example.com/a/c?x=1#top", url.Url.resolve("https://example.com/a/b/index.html", "../c?x=1#top"), "resolve")
+  test_query_dict_duplicates = ->
+    q = url.Url.decode_query("a=1&a=2&b=3")
+    d = url.Url.query_dict(q)
+    self.assert_equal(["1", "2"], d["a"], "duplicates")
+    self.assert_equal("3", d["b"], "single")
+  test_invalid_percent_escape = ->
+    try
+      url.Url.parse("https://example.com/%zz")
+      self.fail("expected invalid percent escape")
+    catch err
+      self.assert_equal("url.decode: invalid percent-escape", err, "invalid escape")
+  test_invalid_port = ->
+    try
+      url.Url.parse("https://example.com:abc/")
+      self.fail("expected invalid port")
+    catch err
+      self.assert_equal("url.parse: invalid port", err, "invalid port")
