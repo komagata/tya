@@ -67,6 +67,22 @@ func TestEmitCWithCoverageCollectsCodegenDiagnostics(t *testing.T) {
 	}
 }
 
+func TestEmitCWithCoverageIncludesBreakAndContinue(t *testing.T) {
+	prog := checkedProgram(t, "i = 0\nwhile i < 3\n  i = i + 1\n  if i == 1\n    continue\n  break\n")
+	sourcePath := filepath.Join(t.TempDir(), "main.tya")
+	_, reg, diags, err := EmitCWithCoverage(prog, sourcePath, &CoverageOptions{})
+	if err != nil {
+		t.Fatalf("EmitCWithCoverage: %v %#v", err, diags)
+	}
+	lines := map[int]bool{}
+	for _, e := range reg.Entries {
+		lines[e.Line] = true
+	}
+	if !lines[5] || !lines[6] {
+		t.Fatalf("missing break/continue coverage entries: %+v", reg.Entries)
+	}
+}
+
 func TestEmitCCompilesArrayProgram(t *testing.T) {
 	src := "items = [1, 2]\nitems.push(3)\nprint(items.len())\nprint(items[2])\nitems[1] = 20\nprint(items[1])\nprint(items.pop())\nprint(items.len())\n"
 	out := compileAndRun(t, src)

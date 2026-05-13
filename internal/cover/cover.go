@@ -7,8 +7,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"os"
+	"path"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,6 +39,24 @@ type Profile struct {
 	Files []File
 	Stmts []Stmt
 	Hits  map[int]int // stmt id -> count
+}
+
+type FilterOptions struct {
+	Include []string
+	Exclude []string
+}
+
+type Totals struct {
+	Statements int
+	Hits       int
+	Missed     int
+}
+
+func (t Totals) Coverage() float64 {
+	if t.Statements == 0 {
+		return 0
+	}
+	return float64(t.Hits) / float64(t.Statements) * 100
 }
 
 // New returns an empty profile with an initialized hits map.
@@ -168,6 +189,94 @@ func Merge(a, b *Profile) {
 	}
 }
 
+func Filter(p *Profile, opt FilterOptions) *Profile {
+	out := New()
+	if p == nil {
+		return out
+	}
+	includeFile := map[int]int{}
+	for _, f := range p.Files {
+		if !filterPath(f.Path, opt) {
+			continue
+		}
+		id := len(out.Files)
+		includeFile[f.ID] = id
+		out.Files = append(out.Files, File{ID: id, Path: normalizePath(f.Path)})
+	}
+	stmtID := map[int]int{}
+	for _, s := range p.Stmts {
+		fid, ok := includeFile[s.FileID]
+		if !ok {
+			continue
+		}
+		id := len(out.Stmts)
+		stmtID[s.ID] = id
+		out.Stmts = append(out.Stmts, Stmt{ID: id, FileID: fid, Line: s.Line, Col: s.Col})
+	}
+	for oldID, hits := range p.Hits {
+		if id, ok := stmtID[oldID]; ok {
+			out.Hits[id] += hits
+		}
+	}
+	return out
+}
+
+func filterPath(p string, opt FilterOptions) bool {
+	p = normalizePath(p)
+	if len(opt.Include) > 0 {
+		matched := false
+		for _, pat := range opt.Include {
+			if globMatch(pat, p) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return false
+		}
+	}
+	for _, pat := range opt.Exclude {
+		if globMatch(pat, p) {
+			return false
+		}
+	}
+	return true
+}
+
+func normalizePath(p string) string {
+	if p == "" {
+		return p
+	}
+	return filepath.ToSlash(filepath.Clean(p))
+}
+
+func globMatch(pattern, name string) bool {
+	pattern = normalizePath(pattern)
+	name = normalizePath(name)
+	if ok, _ := path.Match(pattern, name); ok {
+		return true
+	}
+	if !path.IsAbs(pattern) {
+		for i := 0; i < len(name); i++ {
+			if i > 0 && name[i-1] != '/' {
+				continue
+			}
+			if ok, _ := path.Match(pattern, name[i:]); ok {
+				return true
+			}
+		}
+	}
+	if strings.Contains(pattern, "**") {
+		parts := strings.Split(pattern, "**")
+		if len(parts) == 2 {
+			prefix := strings.TrimSuffix(parts[0], "/")
+			suffix := strings.TrimPrefix(parts[1], "/")
+			return (strings.HasPrefix(name, prefix) || strings.Contains(name, "/"+prefix+"/")) && strings.HasSuffix(name, suffix)
+		}
+	}
+	return false
+}
+
 func encodePath(p string) string {
 	var b strings.Builder
 	for i := 0; i < len(p); i++ {
@@ -275,6 +384,27 @@ func Summarize(p *Profile) []FileSummary {
 	return out
 }
 
+func Total(summaries []FileSummary) Totals {
+	var t Totals
+	for _, s := range summaries {
+		t.Statements += s.Statements
+		t.Hits += s.Hits
+		t.Missed += s.Missed
+	}
+	return t
+}
+
+func CheckMinimum(summaries []FileSummary, min float64) error {
+	if min <= 0 {
+		return nil
+	}
+	total := Total(summaries)
+	if total.Coverage()+1e-9 < min {
+		return fmt.Errorf("coverage %.1f%% is below minimum %.1f%%", total.Coverage(), min)
+	}
+	return nil
+}
+
 // RenderText writes the table format to w.
 func RenderText(w io.Writer, summaries []FileSummary) error {
 	bw := bufio.NewWriter(w)
@@ -345,6 +475,63 @@ func RenderJSON(w io.Writer, p *Profile, profilePath, toolVersion string) error 
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(out)
+}
+
+func RenderHTML(w io.Writer, p *Profile, profilePath string) error {
+	summaries := Summarize(p)
+	total := Total(summaries)
+	bw := bufio.NewWriter(w)
+	fmt.Fprint(bw, `<!doctype html><html><head><meta charset="utf-8"><title>Tya Coverage</title><style>
+body{font-family:system-ui,sans-serif;margin:24px;color:#1f2933}table{border-collapse:collapse;width:100%;margin:16px 0}th,td{border-bottom:1px solid #d9e2ec;padding:6px 8px;text-align:left}pre{margin:0;font-family:ui-monospace,monospace}.covered{background:#e3f8e8}.missed{background:#ffe8e8}.plain{background:#f7f9fb;color:#52606d}.line{display:grid;grid-template-columns:4rem 4rem 1fr;gap:8px;padding:1px 6px}.pct{font-weight:700}
+</style></head><body>`)
+	fmt.Fprintf(bw, "<h1>Tya Coverage</h1><p>Profile: %s</p><p class=\"pct\">Total: %.1f%% (%d/%d statements)</p>", html.EscapeString(profilePath), total.Coverage(), total.Hits, total.Statements)
+	fmt.Fprint(bw, "<table><thead><tr><th>File</th><th>Statements</th><th>Hit</th><th>Missed</th><th>Coverage</th></tr></thead><tbody>")
+	for _, s := range summaries {
+		fmt.Fprintf(bw, "<tr><td><a href=\"#file-%s\">%s</a></td><td>%d</td><td>%d</td><td>%d</td><td>%.1f%%</td></tr>", htmlID(s.Path), html.EscapeString(s.Path), s.Statements, s.Hits, s.Missed, s.Coverage())
+	}
+	fmt.Fprint(bw, "</tbody></table>")
+	for _, s := range summaries {
+		raw, err := os.ReadFile(s.Path)
+		if err != nil {
+			return err
+		}
+		lineHits := map[int]LineHit{}
+		for _, l := range s.Lines {
+			lineHits[l.Line] = l
+		}
+		fmt.Fprintf(bw, "<h2 id=\"file-%s\">%s</h2><pre>", htmlID(s.Path), html.EscapeString(s.Path))
+		lines := strings.Split(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\n")
+		for i, text := range lines {
+			lineNo := i + 1
+			lh, coverable := lineHits[lineNo]
+			class := "plain"
+			hits := ""
+			if coverable {
+				hits = strconv.Itoa(lh.Hits)
+				if lh.Hits > 0 {
+					class = "covered"
+				} else {
+					class = "missed"
+				}
+			}
+			fmt.Fprintf(bw, "<span class=\"line %s\"><span>%d</span><span>%s</span><code>%s</code></span>\n", class, lineNo, html.EscapeString(hits), html.EscapeString(text))
+		}
+		fmt.Fprint(bw, "</pre>")
+	}
+	fmt.Fprint(bw, "</body></html>")
+	return bw.Flush()
+}
+
+func htmlID(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte('-')
+		}
+	}
+	return b.String()
 }
 
 // ReadProfile is a convenience that opens path and parses it.

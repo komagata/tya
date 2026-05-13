@@ -362,6 +362,24 @@ Unclosed interpolation is invalid.
 print "Hello, {name"
 ```
 
+## Coverage
+
+`tya test --cover [--profile FILE]` instruments test suites and writes a
+coverage profile. `tya cover`, `tya cover --format=json`, and `tya cover html`
+render text, JSON, and self-contained HTML reports.
+
+Coverage commands accept repeatable `--include GLOB` and `--exclude GLOB`
+filters. `--min PERCENT` fails the command when filtered total statement
+coverage is below the threshold. The same settings may be configured in
+`tya.toml`:
+
+```toml
+[coverage]
+include = ["src/**", "tests/**"]
+exclude = ["tests/fixtures/**"]
+minimum = 80.0
+```
+
 Interpolation expressions may read values and call functions. They are not
 assignment targets and must not contain statements.
 

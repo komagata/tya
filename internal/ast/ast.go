@@ -114,11 +114,11 @@ type ForInStmt struct {
 
 func (*ForInStmt) stmt() {}
 
-type BreakStmt struct{}
+type BreakStmt struct{ Tok token.Token }
 
 func (*BreakStmt) stmt() {}
 
-type ContinueStmt struct{}
+type ContinueStmt struct{ Tok token.Token }
 
 func (*ContinueStmt) stmt() {}
 

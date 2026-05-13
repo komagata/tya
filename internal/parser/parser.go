@@ -402,15 +402,15 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 		if p.loopDepth == 0 {
 			return nil, p.err("break must be inside a loop")
 		}
-		p.next()
-		return &ast.BreakStmt{}, nil
+		tok := p.next()
+		return &ast.BreakStmt{Tok: tok}, nil
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "continue" {
 		if p.loopDepth == 0 {
 			return nil, p.err("continue must be inside a loop")
 		}
-		p.next()
-		return &ast.ContinueStmt{}, nil
+		tok := p.next()
+		return &ast.ContinueStmt{Tok: tok}, nil
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "return" {
 		if p.functionDepth == 0 {

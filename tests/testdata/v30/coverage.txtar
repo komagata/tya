@@ -36,6 +36,21 @@ stdout '"version": "0.61.0"'
 stdout '"format": 1'
 stdout '"totals":'
 
+# HTML, filters, and minimum threshold work on existing profiles.
+cd $REPO
+exec sh -c 'printf "# tya-cover 1\nF 0 %s/src/app.tya\nF 1 %s/src/skip/ignored.tya\nS 0 0 1 1\nS 1 0 2 1\nS 2 1 1 1\nH 0 1\n" "$WORK" "$WORK" > "$WORK/manual_abs.cov"'
+exec go run ./cmd/tya cover html --profile $WORK/manual_abs.cov -o $WORK/report.html --include 'src/**' --exclude 'src/skip/**' --min 50
+exists $WORK/report.html
+exec cat $WORK/report.html
+stdout 'Tya Coverage'
+stdout 'src/app.tya'
+stdout 'covered'
+stdout 'missed'
+! stdout 'src/skip/ignored.tya'
+
+! exec go run ./cmd/tya cover --profile $WORK/manual_abs.cov --min 90
+stderr 'below minimum'
+
 -- probe_test.tya --
 import unittest
 
@@ -44,3 +59,10 @@ class ProbeTest extends TestCase
     self.assert(1 == 1, "one")
   test_two = ->
     self.assert_equal(2, 1 + 1, "two")
+
+-- src/app.tya --
+x = 1
+print(x)
+
+-- src/skip/ignored.tya --
+ignored = true

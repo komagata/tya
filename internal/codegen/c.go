@@ -2,6 +2,8 @@ package codegen
 
 import (
 	"fmt"
+	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -81,6 +83,8 @@ type CoverageOptions struct {
 	StdlibDir    string
 	PackagesDir  string
 	ExcludePaths []string
+	Include      []string
+	Exclude      []string
 }
 
 // CoverageEntry describes one registered statement counter.
@@ -625,6 +629,10 @@ func stmtPos(stmt ast.Stmt) (line, col int, ok bool) {
 		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
 	case *ast.RaiseStmt:
 		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.BreakStmt:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
+	case *ast.ContinueStmt:
+		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
 	case *ast.MatchStmt:
 		return n.Tok.Line, n.Tok.Col, n.Tok.Line > 0
 	case *ast.TryCatchStmt:
@@ -692,6 +700,50 @@ func (g *cgen) excludedSource(path string) bool {
 	for _, p := range g.coverOpt.ExcludePaths {
 		if path == p || strings.HasPrefix(path, p) {
 			return true
+		}
+	}
+	if len(g.coverOpt.Include) > 0 {
+		matched := false
+		for _, p := range g.coverOpt.Include {
+			if coverageGlobMatch(p, path) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return true
+		}
+	}
+	for _, p := range g.coverOpt.Exclude {
+		if coverageGlobMatch(p, path) {
+			return true
+		}
+	}
+	return false
+}
+
+func coverageGlobMatch(pattern, name string) bool {
+	pattern = filepath.ToSlash(filepath.Clean(pattern))
+	name = filepath.ToSlash(filepath.Clean(name))
+	if ok, _ := path.Match(pattern, name); ok {
+		return true
+	}
+	if !path.IsAbs(pattern) {
+		for i := 0; i < len(name); i++ {
+			if i > 0 && name[i-1] != '/' {
+				continue
+			}
+			if ok, _ := path.Match(pattern, name[i:]); ok {
+				return true
+			}
+		}
+	}
+	if strings.Contains(pattern, "**") {
+		parts := strings.Split(pattern, "**")
+		if len(parts) == 2 {
+			prefix := strings.TrimSuffix(parts[0], "/")
+			suffix := strings.TrimPrefix(parts[1], "/")
+			return (strings.HasPrefix(name, prefix) || strings.Contains(name, "/"+prefix+"/")) && strings.HasSuffix(name, suffix)
 		}
 	}
 	return false

@@ -2,6 +2,8 @@ package cover
 
 import (
 	"bytes"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -93,5 +95,46 @@ func TestParseEmpty(t *testing.T) {
 	}
 	if _, err := Parse(strings.NewReader("not a header\n")); err == nil {
 		t.Error("invalid header should error")
+	}
+}
+
+func TestFilterAndMinimum(t *testing.T) {
+	p := New()
+	p.Files = []File{{ID: 0, Path: "src/app.tya"}, {ID: 1, Path: "tests/fixture.tya"}}
+	p.Stmts = []Stmt{{ID: 0, FileID: 0, Line: 1}, {ID: 1, FileID: 1, Line: 1}}
+	p.Hits[0] = 1
+	p.Hits[1] = 0
+	filtered := Filter(p, FilterOptions{Include: []string{"src/**"}, Exclude: []string{"tests/**"}})
+	summaries := Summarize(filtered)
+	if len(summaries) != 1 || summaries[0].Path != "src/app.tya" {
+		t.Fatalf("filtered summaries: %+v", summaries)
+	}
+	if err := CheckMinimum(summaries, 100); err != nil {
+		t.Fatalf("minimum should pass: %v", err)
+	}
+	if err := CheckMinimum(Summarize(p), 80); err == nil {
+		t.Fatal("minimum should fail")
+	}
+}
+
+func TestRenderHTML(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "app.tya")
+	if err := os.WriteFile(src, []byte("x = 1\nprint(x)\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	p := New()
+	p.Files = []File{{ID: 0, Path: src}}
+	p.Stmts = []Stmt{{ID: 0, FileID: 0, Line: 1}, {ID: 1, FileID: 0, Line: 2}}
+	p.Hits[0] = 1
+	var buf bytes.Buffer
+	if err := RenderHTML(&buf, p, "profile"); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"<!doctype html>", "Tya Coverage", "covered", "missed", "print(x)"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %q in:\n%s", want, out)
+		}
 	}
 }

@@ -111,12 +111,32 @@ func main() {
 		root := "."
 		coverEnabled := false
 		profilePath := ""
+		coverOpt := coverageCLIOptions{}
 		args := os.Args[2:]
 		for i := 0; i < len(args); i++ {
 			a := args[i]
 			switch {
 			case a == "--cover":
 				coverEnabled = true
+			case a == "--include" || a == "--exclude" || a == "--min":
+				if i+1 >= len(args) {
+					fmt.Fprintf(os.Stderr, "missing value for %s\n", a)
+					os.Exit(2)
+				}
+				if err := coverOpt.add(a, args[i+1]); err != nil {
+					fmt.Fprintln(os.Stderr, err)
+					os.Exit(2)
+				}
+				i++
+			case strings.HasPrefix(a, "--include="):
+				coverOpt.include = append(coverOpt.include, strings.TrimPrefix(a, "--include="))
+			case strings.HasPrefix(a, "--exclude="):
+				coverOpt.exclude = append(coverOpt.exclude, strings.TrimPrefix(a, "--exclude="))
+			case strings.HasPrefix(a, "--min="):
+				if err := coverOpt.add("--min", strings.TrimPrefix(a, "--min=")); err != nil {
+					fmt.Fprintln(os.Stderr, err)
+					os.Exit(2)
+				}
 			case strings.HasPrefix(a, "--profile="):
 				profilePath = strings.TrimPrefix(a, "--profile=")
 			case a == "--profile":
@@ -134,7 +154,7 @@ func main() {
 				root = a
 			}
 		}
-		if err := testCommand(root, coverEnabled, profilePath); err != nil {
+		if err := testCommand(root, coverEnabled, profilePath, coverOpt); err != nil {
 			if errors.Is(err, errTestsFailed) {
 				os.Exit(1)
 			}
@@ -644,7 +664,89 @@ func nativePlanForPath(path string) (*pkg.NativePlan, error) {
 	return plan, nil
 }
 
-func testCommand(root string, coverEnabled bool, profilePath string) error {
+type coverageCLIOptions struct {
+	include []string
+	exclude []string
+	min     *float64
+}
+
+func (o *coverageCLIOptions) add(flag, value string) error {
+	switch flag {
+	case "--include":
+		o.include = append(o.include, value)
+	case "--exclude":
+		o.exclude = append(o.exclude, value)
+	case "--min":
+		v, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return fmt.Errorf("invalid --min value: %s", value)
+		}
+		o.min = &v
+	}
+	return nil
+}
+
+func readCoverageConfig(root string) coverageCLIOptions {
+	raw, err := os.ReadFile(filepath.Join(root, "tya.toml"))
+	if err != nil {
+		return coverageCLIOptions{}
+	}
+	var out coverageCLIOptions
+	inCoverage := false
+	for _, line := range strings.Split(string(raw), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			inCoverage = line == "[coverage]"
+			continue
+		}
+		if !inCoverage {
+			continue
+		}
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+		switch key {
+		case "include":
+			out.include = append(out.include, parseTomlStringArray(value)...)
+		case "exclude":
+			out.exclude = append(out.exclude, parseTomlStringArray(value)...)
+		case "minimum":
+			if v, err := strconv.ParseFloat(strings.Trim(value, `"`), 64); err == nil {
+				out.min = &v
+			}
+		}
+	}
+	return out
+}
+
+func parseTomlStringArray(value string) []string {
+	value = strings.TrimSpace(value)
+	if !strings.HasPrefix(value, "[") || !strings.HasSuffix(value, "]") {
+		return nil
+	}
+	value = strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(value, "["), "]"))
+	if value == "" {
+		return nil
+	}
+	parts := strings.Split(value, ",")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		part = strings.Trim(part, `"`)
+		if part != "" {
+			out = append(out, part)
+		}
+	}
+	return out
+}
+
+func testCommand(root string, coverEnabled bool, profilePath string, cli coverageCLIOptions) error {
 	files, err := testFiles(root)
 	if err != nil {
 		return err
@@ -704,6 +806,15 @@ func testCommand(root string, coverEnabled bool, profilePath string) error {
 		}
 		return nil
 	}
+	cfg := readCoverageConfig(".")
+	include := append([]string{}, cfg.include...)
+	include = append(include, cli.include...)
+	exclude := append([]string{}, cfg.exclude...)
+	exclude = append(exclude, cli.exclude...)
+	min := cfg.min
+	if cli.min != nil {
+		min = cli.min
+	}
 
 	// Coverage path: build with instrumentation, run with
 	// TYA_COVERAGE_FRAGMENT, then merge fragment with registry.
@@ -731,6 +842,8 @@ func testCommand(root string, coverEnabled bool, profilePath string) error {
 	opt := &codegen.CoverageOptions{
 		StdlibDir:   firstStdlibDir(),
 		PackagesDir: firstPackagesDir(),
+		Include:     include,
+		Exclude:     exclude,
 	}
 	reg, err := buildExecutableWithCover(suitePath, bin, opt)
 	if err != nil {
@@ -746,6 +859,21 @@ func testCommand(root string, coverEnabled bool, profilePath string) error {
 
 	if err := mergeCoverageFragments(profilePath, fragDir, reg); err != nil {
 		return err
+	}
+	if len(include) > 0 || len(exclude) > 0 || min != nil {
+		prof, err := cover.ReadProfile(profilePath)
+		if err != nil {
+			return err
+		}
+		filtered := cover.Filter(prof, cover.FilterOptions{Include: include, Exclude: exclude})
+		if err := cover.WriteProfile(profilePath, filtered); err != nil {
+			return err
+		}
+		if min != nil {
+			if err := cover.CheckMinimum(cover.Summarize(filtered), *min); err != nil {
+				return err
+			}
+		}
 	}
 	_ = os.RemoveAll(fragDir)
 
@@ -819,12 +947,40 @@ func mergeCoverageFragments(profilePath, fragDir string, reg *codegen.CoverageRe
 func coverCommand(args []string) error {
 	format := cliFormat
 	profilePath := filepath.Join(".tya", "coverage", "profile")
+	outputPath := filepath.Join(".tya", "coverage", "index.html")
+	cli := coverageCLIOptions{}
 	sub := ""
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		switch {
 		case a == "report" || a == "html":
 			sub = a
+		case a == "-o" || a == "--output":
+			if i+1 >= len(args) {
+				return fmt.Errorf("missing value for %s", a)
+			}
+			outputPath = args[i+1]
+			i++
+		case strings.HasPrefix(a, "-o="):
+			outputPath = strings.TrimPrefix(a, "-o=")
+		case strings.HasPrefix(a, "--output="):
+			outputPath = strings.TrimPrefix(a, "--output=")
+		case a == "--include" || a == "--exclude" || a == "--min":
+			if i+1 >= len(args) {
+				return fmt.Errorf("missing value for %s", a)
+			}
+			if err := cli.add(a, args[i+1]); err != nil {
+				return err
+			}
+			i++
+		case strings.HasPrefix(a, "--include="):
+			cli.include = append(cli.include, strings.TrimPrefix(a, "--include="))
+		case strings.HasPrefix(a, "--exclude="):
+			cli.exclude = append(cli.exclude, strings.TrimPrefix(a, "--exclude="))
+		case strings.HasPrefix(a, "--min="):
+			if err := cli.add("--min", strings.TrimPrefix(a, "--min=")); err != nil {
+				return err
+			}
 		case a == "--format":
 			if i+1 >= len(args) {
 				return fmt.Errorf("missing value for --format")
@@ -853,17 +1009,41 @@ func coverCommand(args []string) error {
 			return fmt.Errorf("unknown cover option: %s", a)
 		}
 	}
-	if sub == "html" {
-		return fmt.Errorf("tya cover html is deferred to a later release")
-	}
 	prof, err := cover.ReadProfile(profilePath)
 	if err != nil {
 		return err
 	}
+	cfg := readCoverageConfig(".")
+	include := append([]string{}, cfg.include...)
+	include = append(include, cli.include...)
+	exclude := append([]string{}, cfg.exclude...)
+	exclude = append(exclude, cli.exclude...)
+	prof = cover.Filter(prof, cover.FilterOptions{Include: include, Exclude: exclude})
+	summaries := cover.Summarize(prof)
+	min := cfg.min
+	if cli.min != nil {
+		min = cli.min
+	}
+	if min != nil {
+		if err := cover.CheckMinimum(summaries, *min); err != nil {
+			return err
+		}
+	}
+	if sub == "html" {
+		if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {
+			return err
+		}
+		f, err := os.Create(outputPath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		return cover.RenderHTML(f, prof, profilePath)
+	}
 	if format == diag.FormatJSON {
 		return cover.RenderJSON(os.Stdout, prof, profilePath, version)
 	}
-	return cover.RenderText(os.Stdout, cover.Summarize(prof))
+	return cover.RenderText(os.Stdout, summaries)
 }
 
 func synthesizeTestSuite(files []string) (string, error) {
