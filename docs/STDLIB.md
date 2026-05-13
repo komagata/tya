@@ -536,13 +536,29 @@ Class members on `time.Time`: `now`, `sleep`, `format`, `parse`,
 import random as random
 
 random.Random.seed(42)
-println random.Random.int(1, 100)
-println random.Random.float()
-println random.Random.choice(["a", "b", "c"])
+println(random.Random.int(1, 100))
+println(random.Random.float())
+println(random.Random.choice(["a", "b", "c"]))
+
+rng = random.Rng.new(42)
+loot = rng.weighted_choice(["common", "rare"], [90, 10])
+hand = rng.sample(deck, 5)
 ```
 
-Seedable PRNG. **Not** cryptographically secure — use `secure_random` for
-tokens.
+Seedable PRNG. **Not** cryptographically secure; use `secure_random` for
+tokens. `Random` class methods use the process-global generator. `Rng`
+instances keep independent deterministic state and can be reseeded with
+`rng.seed(value)`.
+
+Class members on `random.Random`: `seed`, `int`, `float`, `bool`, `choice`,
+`shuffle`, `shuffle_copy`, `sample`, `weighted_choice`, and `weighted_index`.
+`shuffle(items)` mutates the input and returns `nil`; `shuffle_copy(items)`
+returns a shuffled copy.
+
+Instance members on `random.Rng`: `seed`, `int`, `float`, `bool`, `choice`,
+`shuffle`, `shuffle_copy`, `sample`, `weighted_choice`, and `weighted_index`.
+`sample(items, count)` samples without replacement. Weighted helpers require
+non-negative numeric weights and at least one positive weight.
 
 ## `math` (additional functions)
 

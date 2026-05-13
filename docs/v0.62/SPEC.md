@@ -263,6 +263,29 @@ Every collection supports `new`, `from_array`, `len`, `empty?`, `clear`, and
 stable min-priority queue whose `to_array()` returns pop order without mutating
 the queue.
 
+## Random Stdlib Extensions
+
+The `random` package keeps the existing process-global `Random` API and adds
+helpers for common non-cryptographic selection tasks.
+
+```tya
+import random as random
+
+rng = random.Rng.new(42)
+loot = rng.weighted_choice(["common", "rare"], [90, 10])
+hand = rng.sample(deck, 5)
+```
+
+`Random.bool`, `shuffle_copy`, `sample`, `weighted_choice`, and
+`weighted_index` use the global PRNG. `Rng` instances provide the same
+selection API plus independent `seed`, `int`, `float`, `bool`, `choice`, and
+`shuffle` methods backed by instance-local deterministic state.
+
+`shuffle(items)` remains in-place and returns `nil`; `shuffle_copy(items)` does
+not mutate its input. `sample` samples without replacement and rejects negative
+or oversized counts. Weighted helpers reject mismatched lengths, non-numeric or
+negative weights, and all-zero weights.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

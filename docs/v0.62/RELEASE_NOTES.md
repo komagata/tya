@@ -60,6 +60,8 @@ standard library or runtime.
   integer and IEEE 754 float reads/writes over `bytes`.
 - New `collections` stdlib values provide `Stack`, `Queue`, `Deque`, `Set`,
   and stable min-priority queue containers.
+- `random` now includes independent `Rng` instances plus `bool`,
+  `shuffle_copy`, `sample`, `weighted_choice`, and `weighted_index` helpers.
 
 ## Verification
 
@@ -71,5 +73,5 @@ renderer, Markdown parser/rendering extensions, compression round trips and
 file helpers, the `log.Logger` stdlib logger, `io.Io` stream tests, and
 `net/ip` address/network tests, plus localhost `net/socket` client/server,
 binary I/O, collections behavior, timeout, and connection-refused tests, and
-URL parser tests for IPv6, relative resolution, duplicate queries, and
-malformed input.
+random helper coverage, and URL parser tests for IPv6, relative resolution,
+duplicate queries, and malformed input.

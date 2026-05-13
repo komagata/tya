@@ -1,0 +1,11 @@
+import random as random
+
+rng = random.Rng.new(42)
+loot = ["common", "rare", "legendary"]
+weights = [90, 9, 1]
+
+println(rng.weighted_choice(loot, weights))
+println(rng.weighted_choice(loot, weights))
+println(rng.weighted_choice(loot, weights))
+println(rng.weighted_choice(loot, weights))
+println(rng.weighted_choice(loot, weights))

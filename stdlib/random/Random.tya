@@ -24,3 +24,74 @@ class Random
       items[j] = tmp
       i = i - 1
     return nil
+
+  static bool = probability ->
+    if probability == nil
+      probability = 0.5
+    Random.check_probability(probability)
+    return random_float() < probability
+
+  static shuffle_copy = items ->
+    copy = Random.copy_array(items)
+    Random.shuffle(copy)
+    return copy
+
+  static sample = items, count ->
+    Random.check_sample_count(items, count)
+    shuffled = Random.shuffle_copy(items)
+    out = []
+    i = 0
+    while i < count
+      out.push(shuffled[i])
+      i = i + 1
+    return out
+
+  static weighted_choice = items, weights ->
+    if items.len() != weights.len()
+      raise "random.weighted_choice: items and weights length mismatch"
+    return items[Random.weighted_index(weights)]
+
+  static weighted_index = weights ->
+    total = Random.weight_total(weights, "random.weighted_index")
+    pick = random_float() * total
+    sum = 0
+    i = 0
+    while i < weights.len()
+      sum = sum + weights[i]
+      if pick < sum
+        return i
+      i = i + 1
+    return weights.len() - 1
+
+  static copy_array = items ->
+    out = []
+    i = 0
+    while i < items.len()
+      out.push(items[i])
+      i = i + 1
+    return out
+
+  static check_probability = probability ->
+    if probability.class != Number or probability != probability or probability < 0 or probability > 1
+      raise "random.bool: probability must be between 0.0 and 1.0"
+
+  static check_sample_count = items, count ->
+    if count.class != Number or count != count or count != count.to_i()
+      raise "random.sample: count must be an integer"
+    if count < 0 or count > items.len()
+      raise "random.sample: count out of range"
+
+  static weight_total = weights, label ->
+    if weights.len() == 0
+      raise label + ": empty weights"
+    total = 0
+    i = 0
+    while i < weights.len()
+      weight = weights[i]
+      if weight.class != Number or weight != weight or weight < 0
+        raise label + ": weights must be finite non-negative numbers"
+      total = total + weight
+      i = i + 1
+    if total <= 0
+      raise label + ": at least one weight must be positive"
+    return total
