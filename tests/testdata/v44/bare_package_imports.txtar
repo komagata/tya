@@ -1,0 +1,84 @@
+# Bare package imports expose public class names directly. Aliased
+# package imports keep the package namespace and do not expose bare
+# class names.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/bare.tya
+stdout 'bare\n'
+! stderr .
+
+exec go run ./cmd/tya run $WORK/aliased.tya
+stdout 'aliased\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/bare_namespace.tya
+stderr 'undefined variable http'
+
+! exec go run ./cmd/tya run $WORK/aliased_bare.tya
+stderr 'undefined variable Request'
+
+! exec go run ./cmd/tya run $WORK/conflict_imports.tya
+stderr 'import name conflict: Request'
+
+! exec go run ./cmd/tya run $WORK/conflict_local.tya
+stderr 'import name conflict: Request'
+
+-- bare.tya --
+import net/http
+
+request = Request("bare")
+print(request.label())
+
+-- aliased.tya --
+import net/http as http
+
+request = http.Request("aliased")
+print(request.label())
+
+-- bare_namespace.tya --
+import net/http
+
+request = http.Request("hidden")
+print(request.label())
+
+-- aliased_bare.tya --
+import net/http as http
+
+request = Request("hidden")
+print(request.label())
+
+-- conflict_imports.tya --
+import api
+import web
+
+print("unreachable")
+
+-- conflict_local.tya --
+import net/http
+
+Request = -> "local"
+print(Request())
+
+-- net/http/Request.tya --
+class Request
+  initialize = label ->
+    self.text = label
+
+  label = ->
+    self.text
+
+-- api/Request.tya --
+class Request
+  initialize = label ->
+    self.text = label
+
+  label = ->
+    self.text
+
+-- web/Request.tya --
+class Request
+  initialize = label ->
+    self.text = label
+
+  label = ->
+    self.text

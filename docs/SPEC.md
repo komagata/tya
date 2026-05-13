@@ -64,6 +64,34 @@ v0.16 does not include:
 - package manager
 - native-backed stdlib
 
+## Imports
+
+`import package/path` resolves script modules and directory packages through the
+standard module search path. Directory packages are directories of PascalCase
+class files.
+
+Unaliased directory-package imports bring public class and interface names into
+the importing file's scope:
+
+```tya
+import net/http
+
+server = Server.new()
+```
+
+Aliased directory-package imports keep a namespace binding and do not expose
+the package's public names bare:
+
+```tya
+import net/http as http
+
+server = http.Server.new()
+```
+
+Two unaliased package imports that export the same public class or interface
+name are rejected as import name conflicts. A top-level binding in the
+importing file with the same name is also rejected.
+
 ## Match Statement
 
 `match value` evaluates `value` once and compares it against each `case` pattern

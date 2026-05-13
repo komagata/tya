@@ -2,12 +2,15 @@ package lsp
 
 import (
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"tya/internal/ast"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 )
+
+var definitionClassNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
 
 // DefinitionContext is the input shape DefinitionAt needs to do
 // both same-file and cross-file resolution. A nil Workspace is
@@ -56,6 +59,13 @@ func DefinitionAt(ctx DefinitionContext, line, character int) ([]Location, error
 			imp, ok := stmt.(*ast.ImportStmt)
 			if !ok {
 				continue
+			}
+			if imp.Alias == "" && definitionClassNameRE.MatchString(id.Name) {
+				if path := resolvePackageClassFile(ctx.Workspace, imp.Name, id.Name); path != "" {
+					if loc := symbolLocation(ctx.Workspace, path, id.Name); loc != nil {
+						return []Location{*loc}, nil
+					}
+				}
 			}
 			if imp.BindingName() != id.Name {
 				continue
@@ -137,12 +147,17 @@ func resolveCrossFileMember(ws *Workspace, prog *ast.Program, id *ast.Ident, lin
 			continue
 		}
 		if imp.BindingName() == recv.Name {
-			importName = imp.ModuleName()
+			importName = imp.Name
 			break
 		}
 	}
 	if importName == "" {
 		return nil
+	}
+	if definitionClassNameRE.MatchString(id.Name) {
+		if path := resolvePackageClassFile(ws, importName, id.Name); path != "" {
+			return symbolLocation(ws, path, id.Name)
+		}
 	}
 	path := resolveModuleFile(ws, importName)
 	if path == "" {
@@ -162,6 +177,37 @@ func resolveCrossFileMember(ws *Workspace, prog *ast.Program, id *ast.Ident, lin
 		URI:   uri,
 		Range: rangeAt(sym.NameTok.Line, sym.NameTok.Col, len(sym.Name)),
 	}
+}
+
+func symbolLocation(ws *Workspace, path string, name string) *Location {
+	pf := ws.LoadFromDisk(path)
+	if pf == nil || pf.Prog == nil {
+		return nil
+	}
+	idx := BuildSymbols(pf.Prog)
+	sym, ok := idx.Lookup(name)
+	if !ok {
+		return nil
+	}
+	uri, _ := PathToURI(path)
+	return &Location{URI: uri, Range: rangeAt(sym.NameTok.Line, sym.NameTok.Col, len(sym.Name))}
+}
+
+func resolvePackageClassFile(ws *Workspace, name string, className string) string {
+	if ws == nil || ws.Root == "" || className == "" {
+		return ""
+	}
+	rel := filepath.Join(filepath.FromSlash(name), className+".tya")
+	candidates := []string{
+		filepath.Join(ws.Root, "src", rel),
+		filepath.Join(ws.Root, rel),
+	}
+	for _, c := range candidates {
+		if pf := ws.LoadFromDisk(c); pf != nil {
+			return c
+		}
+	}
+	return ""
 }
 
 // modulePathOf yields the canonical relative slash-separated path
