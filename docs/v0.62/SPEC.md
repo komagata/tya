@@ -116,6 +116,33 @@ rejected; use `--tag` or `--rev` so remote code execution is pinned.
 `tya tool --offline` only uses already materialized project packages or cached
 one-shot git packages.
 
+## Color Stdlib
+
+The standard library includes `color.Color`, a class-style RGBA value shared by
+graphics, image, terminal, and web tooling.
+
+```tya
+import color as color
+
+red = color.Color.rgb(255, 0, 0)
+blue = color.Color.hex("#0066ff")
+mixed = color.Color.blend(red, blue, 0.5)
+
+print mixed.to_hex()
+```
+
+`Color` instances expose integer `r`, `g`, `b`, and `a` fields in `0..255`.
+Constructors include `rgb`, `rgba`, `gray`, `hex`, `css`, `from_array`, and
+named color helpers such as `red`, `blue`, `white`, and `transparent`.
+
+`Color.hex` supports short and long RGB/RGBA forms with or without `#`.
+`Color.css` supports those hex forms, `rgb(...)`, `rgba(...)`, and the common
+lowercase names documented in `docs/STDLIB.md`.
+
+Operations include `to_hex`, `to_array`, `equal?`, `nearly_equal?`,
+`luminance`, `contrast_ratio`, `with_alpha`, `invert`, `grayscale`, `blend`,
+`over`, `lighten`, and `darken`.
+
 ## Interpolation Expression Scanning
 
 Interpolated strings now balance nested braces while scanning `{expression}`

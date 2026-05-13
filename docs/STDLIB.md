@@ -54,6 +54,39 @@ See the v0.59 specification for the exhaustive primitive method surface.
 Use `x.class` to inspect the runtime class wrapper for primitive and object
 values.
 
+## `color`
+
+```tya
+import color as color
+
+red = color.Color.rgb(255, 0, 0)
+blue = color.Color.hex("#0066ff")
+mixed = color.Color.blend(red, blue, 0.5)
+
+print mixed.to_hex()
+```
+
+`Color` instances expose numeric `r`, `g`, `b`, and `a` fields in the range
+`0..255`. Constructors validate channels and raise `color.*` errors for invalid
+input.
+
+Class members on `color.Color` include `rgb`, `rgba`, `gray`, `hex`, `css`,
+`from_array`, named color constructors, `equal?`, `nearly_equal?`, `luminance`,
+`contrast_ratio`, `with_alpha`, `invert`, `grayscale`, `blend`, `over`,
+`lighten`, and `darken`.
+
+`hex(text)` accepts `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, and the same forms
+without `#`. `css(text)` accepts those hex forms, `rgb(...)`, `rgba(...)`, and
+the documented lowercase named colors.
+
+Instance methods:
+
+```tya
+color.to_hex()
+color.to_hex(true)
+color.to_array()
+```
+
 ## `math`
 
 ```tya

@@ -45,6 +45,8 @@ standard library or runtime.
 - `url.Url` now parses bracketed IPv6 hosts, validates percent escapes and
   ports, resolves relative references, normalizes paths, and preserves
   duplicate query keys.
+- New `color.Color` stdlib values provide RGBA channels, hex/CSS parsing, named
+  colors, conversion helpers, and deterministic color operations.
 
 ## Verification
 

@@ -1,0 +1,261 @@
+class Color
+  initialize = r, g, b, a ->
+    self.r = Color.channel(r, "r")
+    self.g = Color.channel(g, "g")
+    self.b = Color.channel(b, "b")
+    self.a = Color.channel(a, "a")
+
+  static new = r, g, b, a ->
+    return Color(r, g, b, a)
+
+  static rgb = r, g, b ->
+    return Color(r, g, b, 255)
+
+  static rgba = r, g, b, a ->
+    return Color(r, g, b, a)
+
+  static gray = value, alpha ->
+    if alpha == nil
+      alpha = 255
+    return Color(value, value, value, alpha)
+
+  static transparent = ->
+    return Color(0, 0, 0, 0)
+
+  static black = ->
+    return Color.rgb(0, 0, 0)
+
+  static white = ->
+    return Color.rgb(255, 255, 255)
+
+  static red = ->
+    return Color.rgb(255, 0, 0)
+
+  static green = ->
+    return Color.rgb(0, 128, 0)
+
+  static blue = ->
+    return Color.rgb(0, 0, 255)
+
+  static yellow = ->
+    return Color.rgb(255, 255, 0)
+
+  static cyan = ->
+    return Color.rgb(0, 255, 255)
+
+  static magenta = ->
+    return Color.rgb(255, 0, 255)
+
+  static gray50 = ->
+    return Color.rgb(128, 128, 128)
+
+  static from_array = values ->
+    if values.class != Array
+      raise "color.from_array: values must be an array"
+    if values.len() == 3
+      return Color.rgb(values[0], values[1], values[2])
+    if values.len() == 4
+      return Color.rgba(values[0], values[1], values[2], values[3])
+    raise "color.from_array: expected 3 or 4 channels"
+
+  static hex = text ->
+    if text.class != String
+      raise "color.hex: text must be a string"
+    color_raw = text
+    if color_raw.starts_with("#")
+      color_raw = Color.slice(color_raw, 1, color_raw.byte_len())
+    color_len = color_raw.byte_len()
+    if color_len == 3 or color_len == 4
+      color_r = Color.hex_pair(color_raw[0], color_raw[0])
+      color_g = Color.hex_pair(color_raw[1], color_raw[1])
+      color_b = Color.hex_pair(color_raw[2], color_raw[2])
+      color_a = 255
+      if color_len == 4
+        color_a = Color.hex_pair(color_raw[3], color_raw[3])
+      return Color.rgba(color_r, color_g, color_b, color_a)
+    if color_len == 6 or color_len == 8
+      color_r = Color.hex_pair(color_raw[0], color_raw[1])
+      color_g = Color.hex_pair(color_raw[2], color_raw[3])
+      color_b = Color.hex_pair(color_raw[4], color_raw[5])
+      color_a = 255
+      if color_len == 8
+        color_a = Color.hex_pair(color_raw[6], color_raw[7])
+      return Color.rgba(color_r, color_g, color_b, color_a)
+    raise "color.hex: invalid hex color"
+
+  static css = text ->
+    if text.class != String
+      raise "color.css: text must be a string"
+    color_raw = text.trim().lower()
+    if color_raw == "black"
+      return Color.black()
+    if color_raw == "white"
+      return Color.white()
+    if color_raw == "red"
+      return Color.red()
+    if color_raw == "green"
+      return Color.green()
+    if color_raw == "blue"
+      return Color.blue()
+    if color_raw == "yellow"
+      return Color.yellow()
+    if color_raw == "cyan"
+      return Color.cyan()
+    if color_raw == "magenta"
+      return Color.magenta()
+    if color_raw == "transparent"
+      return Color.transparent()
+    if color_raw.starts_with("#")
+      return Color.hex(color_raw)
+    if color_raw.starts_with("rgb(") and color_raw.ends_with(")")
+      return Color.css_rgb(color_raw, 4, false)
+    if color_raw.starts_with("rgba(") and color_raw.ends_with(")")
+      return Color.css_rgb(color_raw, 5, true)
+    return Color.hex(color_raw)
+
+  static css_rgb = text, start, has_alpha ->
+    color_body = Color.slice(text, start, text.byte_len() - 1)
+    color_parts = color_body.split(",")
+    if has_alpha
+      if color_parts.len() != 4
+        raise "color.css: rgba() expects 4 channels"
+      return Color.rgba(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i(), color_parts[3].trim().to_i())
+    if color_parts.len() != 3
+      raise "color.css: rgb() expects 3 channels"
+    return Color.rgb(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i())
+
+  to_hex = include_alpha ->
+    if include_alpha == nil
+      include_alpha = false
+    color_out = "#" + Color.hex_byte(self.r) + Color.hex_byte(self.g) + Color.hex_byte(self.b)
+    if include_alpha or self.a != 255
+      color_out = color_out + Color.hex_byte(self.a)
+    return color_out
+
+  to_array = ->
+    return [self.r, self.g, self.b, self.a]
+
+  static equal? = a, b ->
+    return a.r == b.r and a.g == b.g and a.b == b.b and a.a == b.a
+
+  static nearly_equal? = a, b, tolerance ->
+    if tolerance < 0
+      raise "color.nearly_equal?: tolerance must be non-negative"
+    return Color.abs(a.r - b.r) <= tolerance and Color.abs(a.g - b.g) <= tolerance and Color.abs(a.b - b.b) <= tolerance and Color.abs(a.a - b.a) <= tolerance
+
+  static luminance = color ->
+    color_r = Color.linear(color.r)
+    color_g = Color.linear(color.g)
+    color_b = Color.linear(color.b)
+    return 0.2126 * color_r + 0.7152 * color_g + 0.0722 * color_b
+
+  static contrast_ratio = a, b ->
+    color_la = Color.luminance(a)
+    color_lb = Color.luminance(b)
+    if color_la < color_lb
+      color_tmp = color_la
+      color_la = color_lb
+      color_lb = color_tmp
+    return (color_la + 0.05) / (color_lb + 0.05)
+
+  static with_alpha = color, alpha ->
+    return Color.rgba(color.r, color.g, color.b, alpha)
+
+  static invert = color ->
+    return Color.rgba(255 - color.r, 255 - color.g, 255 - color.b, color.a)
+
+  static grayscale = color ->
+    color_value = Color.round(0.299 * color.r + 0.587 * color.g + 0.114 * color.b)
+    return Color.rgba(color_value, color_value, color_value, color.a)
+
+  static blend = a, b, t ->
+    Color.ratio(t, "color.blend")
+    return Color.rgba(
+      Color.mix_channel(a.r, b.r, t),
+      Color.mix_channel(a.g, b.g, t),
+      Color.mix_channel(a.b, b.b, t),
+      Color.mix_channel(a.a, b.a, t)
+    )
+
+  static over = foreground, background ->
+    color_fa = foreground.a / 255.0
+    color_ba = background.a / 255.0
+    color_out_a = color_fa + color_ba * (1.0 - color_fa)
+    if color_out_a == 0
+      return Color.transparent()
+    color_r = ((foreground.r * color_fa) + (background.r * color_ba * (1.0 - color_fa))) / color_out_a
+    color_g = ((foreground.g * color_fa) + (background.g * color_ba * (1.0 - color_fa))) / color_out_a
+    color_b = ((foreground.b * color_fa) + (background.b * color_ba * (1.0 - color_fa))) / color_out_a
+    return Color.rgba(Color.round(color_r), Color.round(color_g), Color.round(color_b), Color.round(color_out_a * 255.0))
+
+  static lighten = color, amount ->
+    Color.ratio(amount, "color.lighten")
+    return Color.blend(color, Color.white(), amount)
+
+  static darken = color, amount ->
+    Color.ratio(amount, "color.darken")
+    return Color.blend(color, Color.black(), amount)
+
+  static channel = value, name ->
+    if value.class != Number
+      raise "color.channel: " + name + " must be a number"
+    if value < 0 or value > 255
+      raise "color.channel: " + name + " out of range"
+    if value != value.to_i()
+      raise "color.channel: " + name + " must be an integer"
+    return value.to_i()
+
+  static ratio = value, name ->
+    if value.class != Number
+      raise name + ": amount must be a number"
+    if value < 0.0 or value > 1.0
+      raise name + ": amount out of range"
+    return value
+
+  static mix_channel = a, b, t ->
+    return Color.round(a + (b - a) * t)
+
+  static round = value ->
+    return math_round(value).to_i()
+
+  static linear = value ->
+    color_component = value / 255.0
+    if color_component <= 0.03928
+      return color_component / 12.92
+    return math_pow((color_component + 0.055) / 1.055, 2.4)
+
+  static hex_digit = c ->
+    color_code = ord(c)
+    if color_code >= 48 and color_code <= 57
+      return color_code - 48
+    if color_code >= 65 and color_code <= 70
+      return color_code - 55
+    if color_code >= 97 and color_code <= 102
+      return color_code - 87
+    raise "color.hex: invalid hex digit"
+
+  static hex_pair = hi, lo ->
+    return Color.hex_digit(hi) * 16 + Color.hex_digit(lo)
+
+  static hex_byte = value ->
+    color_hi = (value / 16).to_i()
+    color_lo = value % 16
+    return Color.digit_char(color_hi) + Color.digit_char(color_lo)
+
+  static digit_char = value ->
+    if value < 10
+      return chr(48 + value)
+    return chr(87 + value)
+
+  static abs = value ->
+    if value < 0
+      return 0 - value
+    return value
+
+  static slice = text, start, finish ->
+    color_out = ""
+    color_i = start
+    while color_i < finish
+      color_out = color_out + text[color_i]
+      color_i = color_i + 1
+    return color_out
