@@ -6,7 +6,9 @@ token_node = kind, text, line, col ->
 assign_stmt = name, value, line ->
   { kind: "assign", name: name, value: value, line: line }
 
-import_stmt = name, line -> { kind: "import", name: name, line: line }
+import_stmt = name, alias, line -> { kind: "import", name: name, alias: alias, line: line }
+
+embed_stmt = path, name, line -> { kind: "embed", path: path, name: name, line: line }
 
 module_stmt = name, members, line ->
   { kind: "module", name: name, members: members, classes: [], line: line }
@@ -15,6 +17,9 @@ module_member = name, value, line -> { name: name, value: value, line: line }
 
 class_stmt = name, methods, line ->
   { kind: "class", name: name, parent: "", methods: methods, fields: [], vars: [], abstract: false, final: false, implements: [], line: line }
+
+interface_stmt = name, parents, line ->
+  { kind: "interface", name: name, parents: parents, methods: [], fields: [], line: line }
 
 class_method = name, value, line ->
   { name: name, value: value, line: line, class: false }
@@ -37,6 +42,17 @@ return_stmt = value, line -> { kind: "return", value: value, line: line }
 break_stmt = line -> { kind: "break", line: line }
 
 continue_stmt = line -> { kind: "continue", line: line }
+
+raise_stmt = value, line -> { kind: "raise", value: value, line: line }
+
+scope_stmt = body, line -> { kind: "scope", body: body, line: line }
+
+try_stmt = body, catch_name, catch_body, line ->
+  { kind: "try_stmt", body: body, catch_name: catch_name, catch_body: catch_body, line: line }
+
+match_stmt = value, arms, line -> { kind: "match", value: value, arms: arms, line: line }
+
+select_stmt = arms, line -> { kind: "select", arms: arms, line: line }
 
 if_stmt = cond, then_body, else_body, line ->
   { kind: "if", cond: cond, then: then_body, else: else_body, elseif_cond: nil, elseif_then: [], elseif_conds: [], elseif_bodies: [], line: line }
@@ -97,6 +113,10 @@ unary_expr = op, expr, line -> { kind: "unary", op: op, expr: expr, line: line }
 
 try_expr = expr, line -> { kind: "try", expr: expr, line: line }
 
+spawn_expr = expr, line -> { kind: "spawn", expr: expr, line: line }
+
+await_expr = expr, line -> { kind: "await", expr: expr, line: line }
+
 # Clear an array in place. Used to reset top-level mutable lists from
 # inside function bodies, where direct reassignment is rejected by the
 # v0.44 strict outer-assign rule.
@@ -153,6 +173,55 @@ escape_char = char ->
   if char == "t"
     return "\t"
   char
+
+starts_at = source, index, text ->
+  j = 0
+  while j < text.len()
+    if index + j >= source.len()
+      return false
+    if source[index + j] != text[j]
+      return false
+    j = j + 1
+  true
+
+read_heredoc = source, index, line, col ->
+  marker = ""
+  i = index + 3
+  c = col + 3
+  while i < source.len() and source[i] != "\n"
+    marker = marker + source[i]
+    i = i + 1
+    c = c + 1
+  if i < source.len() and source[i] == "\n"
+    i = i + 1
+    line = line + 1
+    c = 1
+  text = ""
+  done = false
+  while i < source.len() and not done
+    line_start = i
+    while line_start < source.len() and source[line_start] == " "
+      line_start = line_start + 1
+    if marker != "" and starts_at(source, line_start, marker)
+      i = line_start + marker.len()
+      c = 1 + marker.len()
+      while i < source.len() and source[i] != "\n"
+        i = i + 1
+        c = c + 1
+      if i < source.len() and source[i] == "\n"
+        i = i + 1
+        line = line + 1
+        c = 1
+      done = true
+      continue
+    text = text + source[i]
+    if source[i] == "\n"
+      line = line + 1
+      c = 1
+    else
+      c = c + 1
+    i = i + 1
+  return { text: text, index: i, line: line, col: c }
 
 lex = source ->
   tokens = []
@@ -238,6 +307,92 @@ lex = source ->
         i = i + 1
         col = col + 1
       continue
+    if i + 2 < source.len() and char == "<" and source[i + 1] == "<" and source[i + 2] == "<"
+      start_col = col
+      heredoc = read_heredoc(source, i, line, col)
+      i = heredoc["index"]
+      line = heredoc["line"]
+      col = heredoc["col"]
+      tokens.push(token_node("STRING", heredoc["text"], line, start_col))
+      continue
+    if i + 2 < source.len() and char == "\"" and source[i + 1] == "\"" and source[i + 2] == "\""
+      start_col = col
+      i = i + 3
+      col = col + 3
+      text = ""
+      while i + 2 < source.len() and not (source[i] == "\"" and source[i + 1] == "\"" and source[i + 2] == "\"")
+        text = text + source[i]
+        if source[i] == "\n"
+          line = line + 1
+          col = 1
+        else
+          col = col + 1
+        i = i + 1
+      if i + 2 >= source.len()
+        errors.push(
+          line.to_s() + ":" + start_col.to_s() + ": unterminated string",
+
+        )
+        tokens.push(token_node("STRING", text, line, start_col))
+        continue
+      i = i + 3
+      col = col + 3
+      tokens.push(token_node("STRING", text, line, start_col))
+      continue
+    if is_alpha(char) and i + 1 < source.len() and source[i + 1] == "\""
+      start_col = col
+      prefix = char
+      i = i + 1
+      col = col + 1
+      if i + 2 < source.len() and source[i] == "\"" and source[i + 1] == "\"" and source[i + 2] == "\""
+        i = i + 3
+        col = col + 3
+        text = ""
+        while i + 2 < source.len() and not (source[i] == "\"" and source[i + 1] == "\"" and source[i + 2] == "\"")
+          text = text + source[i]
+          if source[i] == "\n"
+            line = line + 1
+            col = 1
+          else
+            col = col + 1
+          i = i + 1
+        if i + 2 >= source.len()
+          errors.push(
+            line.to_s() + ":" + start_col.to_s() + ": unterminated string",
+
+          )
+          tokens.push(token_node("STRING", text, line, start_col))
+          continue
+        i = i + 3
+        col = col + 3
+        tokens.push(token_node("STRING", text, line, start_col))
+        continue
+      if i + 2 < source.len() and source[i] == "<" and source[i + 1] == "<" and source[i + 2] == "<"
+        heredoc = read_heredoc(source, i, line, col)
+        i = heredoc["index"]
+        line = heredoc["line"]
+        col = heredoc["col"]
+        tokens.push(token_node("STRING", heredoc["text"], line, start_col))
+        continue
+      if prefix == "b" or prefix == "r"
+        i = i + 1
+        col = col + 1
+        text = ""
+        while i < source.len() and source[i] != "\""
+          text = text + source[i]
+          i = i + 1
+          col = col + 1
+        if i >= source.len()
+          errors.push(
+            line.to_s() + ":" + start_col.to_s() + ": unterminated string",
+
+          )
+          tokens.push(token_node("STRING", text, line, start_col))
+          continue
+        i = i + 1
+        col = col + 1
+        tokens.push(token_node("STRING", text, line, start_col))
+        continue
     if is_alpha(char)
       start_col = col
       text = ""
@@ -245,6 +400,40 @@ lex = source ->
         text = text + source[i]
         i = i + 1
         col = col + 1
+      if i < source.len() and source[i] == "?"
+        text = text + "?"
+        i = i + 1
+        col = col + 1
+      if i + 2 < source.len() and source[i] == "\"" and source[i + 1] == "\"" and source[i + 2] == "\""
+        i = i + 3
+        col = col + 3
+        literal = ""
+        while i + 2 < source.len() and not (source[i] == "\"" and source[i + 1] == "\"" and source[i + 2] == "\"")
+          literal = literal + source[i]
+          if source[i] == "\n"
+            line = line + 1
+            col = 1
+          else
+            col = col + 1
+          i = i + 1
+        if i + 2 >= source.len()
+          errors.push(
+            line.to_s() + ":" + start_col.to_s() + ": unterminated string",
+
+          )
+          tokens.push(token_node("STRING", literal, line, start_col))
+          continue
+        i = i + 3
+        col = col + 3
+        tokens.push(token_node("STRING", literal, line, start_col))
+        continue
+      if i + 2 < source.len() and source[i] == "<" and source[i + 1] == "<" and source[i + 2] == "<"
+        heredoc = read_heredoc(source, i, line, col)
+        i = heredoc["index"]
+        line = heredoc["line"]
+        col = heredoc["col"]
+        tokens.push(token_node("STRING", heredoc["text"], line, start_col))
+        continue
       tokens.push(token_node("IDENT", text, line, start_col))
       continue
     if is_digit(char)
@@ -311,12 +500,12 @@ lex = source ->
       # on it. Keywords (`class`, `interface`, `extends`, `implements`,
       # `super`, `abstract`, `final`, `override`) keep flowing through
       # as IDENTs; the parser distinguishes them by lexeme.
-      if two == "==" or two == "!=" or two == "<=" or two == ">=" or two == "->" or two == "@@"
+      if two == "==" or two == "!=" or two == "<=" or two == ">=" or two == "->" or two == "@@" or two == "<<" or two == ">>"
         tokens.push(token_node("SYMBOL", two, line, col))
         i = i + 2
         col = col + 2
         continue
-    if "=<>:,.@+-*/%()[]{{}}".contains(char)
+    if "=<>:,.?@+-*/%()[]{{}}&|^~".contains(char)
       tokens.push(token_node("SYMBOL", char, line, col))
       i = i + 1
       col = col + 1
@@ -440,6 +629,10 @@ expr_label = expr ->
     return "unary " + expr["op"]
   if expr["kind"] == "try"
     return "try " + expr_label(expr["expr"])
+  if expr["kind"] == "spawn"
+    return "spawn " + expr_label(expr["expr"])
+  if expr["kind"] == "await"
+    return "await " + expr_label(expr["expr"])
   expr["kind"]
 
 stmt_label = stmt ->
@@ -454,17 +647,39 @@ stmt_label = stmt ->
     return prefix + "if elseif " + (stmt["elseif_conds"].len()).to_s() + " else " + (stmt["else"].len()).to_s()
   if stmt["kind"] == "module"
     return prefix + "module " + stmt["name"] + " " + (stmt["members"].len()).to_s()
+  if stmt["kind"] == "import"
+    if stmt["alias"] != ""
+      return prefix + "import " + stmt["name"] + " as " + stmt["alias"]
+    return prefix + "import " + stmt["name"]
+  if stmt["kind"] == "embed"
+    return prefix + "embed " + stmt["name"]
+  if stmt["kind"] == "class"
+    return prefix + "class " + stmt["name"] + " implements " + (stmt["implements"].len()).to_s()
+  if stmt["kind"] == "interface"
+    return prefix + "interface " + stmt["name"] + " methods " + (stmt["methods"].len()).to_s() + " fields " + (stmt["fields"].len()).to_s()
+  if stmt["kind"] == "scope"
+    return prefix + "scope " + (stmt["body"].len()).to_s()
+  if stmt["kind"] == "try_stmt"
+    return prefix + "try catch " + stmt["catch_name"]
+  if stmt["kind"] == "raise"
+    return prefix + "raise " + expr_label(stmt["value"])
+  if stmt["kind"] == "match"
+    return prefix + "match " + (stmt["arms"].len()).to_s()
+  if stmt["kind"] == "select"
+    return prefix + "select " + (stmt["arms"].len()).to_s()
   prefix + stmt["kind"]
 
 print_ast = program ->
   for stmt in program["statements"]
     print(stmt_label(stmt))
 
-is_v01_excluded_word = word ->
-  word == "interface" or word == "object" or word == "set"
+is_v01_excluded_word = _word -> false
 
 is_v01_reserved_name = word ->
-  word == "self" or word == "true" or word == "false" or word == "nil" or word == "if" or word == "elseif" or word == "else" or word == "while" or word == "for" or word == "in" or word == "of" or word == "break" or word == "continue" or word == "return" or word == "import" or word == "module" or word == "and" or word == "or" or word == "not" or word == "try"
+  word == "abstract" or word == "and" or word == "as" or word == "await" or word == "break" or word == "case" or word == "catch" or word == "class" or word == "continue" or word == "default" or word == "else" or word == "elseif" or word == "embed" or word == "extends" or word == "false" or word == "final" or word == "for" or word == "if" or word == "implements" or word == "import" or word == "in" or word == "interface" or word == "module" or word == "nil" or word == "not" or word == "of" or word == "or" or word == "override" or word == "private" or word == "raise" or word == "return" or word == "scope" or word == "select" or word == "self" or word == "Self" or word == "spawn" or word == "static" or word == "super" or word == "true" or word == "try" or word == "while" or word == "with"
+
+is_member_modifier = word ->
+  word == "abstract" or word == "final" or word == "override" or word == "private" or word == "static"
 
 record_name_error = tok ->
   if token_kind(tok) == "IDENT" and is_v01_reserved_name(token_text(tok))
@@ -485,13 +700,6 @@ parse_errors = tokens ->
     if token_kind(tokens[i]) == "NEWLINE"
       i = i + 1
       continue
-    if (
-      token_kind(tokens[i]) == "IDENT" and token_text(tokens[i]) == "import" and token_text(tokens[i + 2]) == "as"
-    )
-      errors.push(
-        (token_line(tokens[i + 2])).to_s() + ": import aliases are not in Tya v0.1",
-
-      )
     if (
       token_kind(tokens[i]) == "IDENT" and token_text(tokens[i]) == "import" and depth > 0
     )
@@ -612,6 +820,33 @@ is_empty_param_arrow = tokens, index ->
     return false
   token_kind(tokens[index + 2]) == "SYMBOL" and token_text(tokens[index + 2]) == "->"
 
+is_paren_param_arrow = tokens, index ->
+  if token_kind(tokens[index]) != "SYMBOL" or token_text(tokens[index]) != "("
+    return false
+  next = index + 1
+  if token_kind(tokens[next]) != "IDENT"
+    return false
+  while token_kind(tokens[next]) == "IDENT"
+    next = next + 1
+    if token_text(tokens[next]) == ","
+      next = next + 1
+    else
+      break
+  token_text(tokens[next]) == ")" and token_text(tokens[next + 1]) == "->"
+
+parse_paren_params = tokens, index ->
+  params = []
+  next = index + 1
+  while token_kind(tokens[next]) == "IDENT"
+    record_name_error(tokens[next])
+    params.push(token_text(tokens[next]))
+    next = next + 1
+    if token_text(tokens[next]) == ","
+      next = next + 1
+    else
+      break
+  return params, next + 2
+
 parse_primary = tokens, index ->
   tok = tokens[index]
   if token_kind(tok) == "SYMBOL" and token_text(tok) == "("
@@ -714,6 +949,12 @@ parse_unary = tokens, index ->
       )
     expr, next = parse_postfix(tokens, index + 1)
     return try_expr(expr, token_line(tokens[index])), next
+  if token_kind(tokens[index]) == "IDENT" and token_text(tokens[index]) == "spawn"
+    expr, next = parse_postfix(tokens, index + 1)
+    return spawn_expr(expr, token_line(tokens[index])), next
+  if token_kind(tokens[index]) == "IDENT" and token_text(tokens[index]) == "await"
+    expr, next = parse_postfix(tokens, index + 1)
+    return await_expr(expr, token_line(tokens[index])), next
   if token_kind(tokens[index]) == "IDENT" and token_text(tokens[index]) == "not"
     expr, next = parse_postfix(tokens, index + 1)
     return unary_expr(token_text(tokens[index]), expr, token_line(tokens[index])), next
@@ -740,11 +981,29 @@ parse_add = tokens, index ->
     next = after
   return left, next
 
-parse_compare = tokens, index ->
+parse_shift = tokens, index ->
   left, next = parse_add(tokens, index)
-  while is_compare_op(token_text(tokens[next]))
+  while token_text(tokens[next]) == "<<" or token_text(tokens[next]) == ">>"
     op = tokens[next]
     right, after = parse_add(tokens, next + 1)
+    left = binary_expr(token_text(op), left, right, token_line(op))
+    next = after
+  return left, next
+
+parse_bitwise = tokens, index ->
+  left, next = parse_shift(tokens, index)
+  while token_text(tokens[next]) == "|" or token_text(tokens[next]) == "^" or token_text(tokens[next]) == "&"
+    op = tokens[next]
+    right, after = parse_shift(tokens, next + 1)
+    left = binary_expr(token_text(op), left, right, token_line(op))
+    next = after
+  return left, next
+
+parse_compare = tokens, index ->
+  left, next = parse_bitwise(tokens, index)
+  while is_compare_op(token_text(tokens[next]))
+    op = tokens[next]
+    right, after = parse_bitwise(tokens, next + 1)
     left = binary_expr(token_text(op), left, right, token_line(op))
     next = after
   return left, next
@@ -773,6 +1032,12 @@ parse_expr = tokens, index ->
     body, after_body = parse_or(tokens, index + 3)
     parse_state["function_depth"] = parse_state["function_depth"] - 1
     return func_expr([], body, token_line(tokens[index])), after_body
+  if is_paren_param_arrow(tokens, index)
+    params, body_start = parse_paren_params(tokens, index)
+    parse_state["function_depth"] = parse_state["function_depth"] + 1
+    body, after_body = parse_or(tokens, body_start)
+    parse_state["function_depth"] = parse_state["function_depth"] - 1
+    return func_expr(params, body, token_line(tokens[index])), after_body
   if token_text(tokens[index]) == "->"
     parse_state["function_depth"] = parse_state["function_depth"] + 1
     body, after_body = parse_or(tokens, index + 1)
@@ -860,10 +1125,55 @@ record_block_header_error = tokens, index ->
 class_body_start = tokens, index ->
   next = index + 2
   parent = ""
+  interface_names = []
   if token_text(tokens[next]) == "extends"
     parent = token_text(tokens[next + 1])
     next = next + 2
-  return parent, next
+  if token_text(tokens[next]) == "implements"
+    next = next + 1
+    while token_kind(tokens[next]) == "IDENT"
+      interface_names.push(token_text(tokens[next]))
+      next = next + 1
+      if token_text(tokens[next]) == ","
+        next = next + 1
+      else
+        break
+  return { parent: parent, interface_names: interface_names, next: next }
+
+interface_body_start = tokens, index ->
+  next = index + 2
+  parents = []
+  if token_text(tokens[next]) == "extends"
+    next = next + 1
+    while token_kind(tokens[next]) == "IDENT"
+      parents.push(token_text(tokens[next]))
+      next = next + 1
+      if token_text(tokens[next]) == ","
+        next = next + 1
+      else
+        break
+  return parents, next
+
+parse_arm_blocks = tokens, index ->
+  arms = []
+  next = index
+  if token_kind(tokens[next]) == "NEWLINE"
+    next = next + 1
+  if token_kind(tokens[next]) == "INDENT"
+    next = next + 1
+  while token_kind(tokens[next]) != "DEDENT" and token_kind(tokens[next]) != "EOF"
+    if token_kind(tokens[next]) == "NEWLINE"
+      next = next + 1
+      continue
+    arm_line = token_line(tokens[next])
+    while token_kind(tokens[next]) != "NEWLINE" and token_kind(tokens[next]) != "EOF"
+      next = next + 1
+    body, after_body = parse_simple_block(tokens, next)
+    arms.push({ line: arm_line, body: body })
+    next = after_body
+  if token_kind(tokens[next]) == "DEDENT"
+    next = next + 1
+  return arms, next
 
 parse_simple_statement = tokens, index ->
   current = tokens[index]
@@ -1020,14 +1330,6 @@ parse_simple_block = tokens, index ->
     if token_kind(tokens[next]) == "NEWLINE"
       next = next + 1
       continue
-    # v0.45 M8.2d: accept optional `override` keyword before a method
-    # name (`override foo = ...`). v02 codegen treats it as a no-op —
-    # the override-correctness check lives in the Go reference
-    # checker. Conservative: only consume when followed by IDENT `=`.
-    if (
-      token_kind(tokens[next]) == "IDENT" and token_text(tokens[next]) == "override" and token_kind(tokens[next + 1]) == "IDENT" and token_text(tokens[next + 2]) == "="
-    )
-      next = next + 1
     current = tokens[next]
     # v0.45 M8.2c: accept optional `abstract` / `final` class modifiers
     # before the `class` keyword. Stored as boolean flags on the AST
@@ -1044,17 +1346,12 @@ parse_simple_block = tokens, index ->
       if token_text(tokens[next + class_modifier_steps]) == "final"
         class_final = true
       class_modifier_steps = class_modifier_steps + 1
-    if class_modifier_steps > 0
-      if not (token_kind(tokens[next + class_modifier_steps]) == "IDENT" and token_text(tokens[next + class_modifier_steps]) == "class")
-        syntax_errors.push(
-          (token_line(current)).to_s() + ": abstract/final must precede a class declaration",
-
-        )
+    if class_modifier_steps > 0 and token_kind(tokens[next + class_modifier_steps]) == "IDENT" and token_text(tokens[next + class_modifier_steps]) == "class"
       next = next + class_modifier_steps
       current = tokens[next]
     if token_kind(current) == "IDENT" and token_text(current) == "class"
-      parent, body_start = class_body_start(tokens, next)
-      body, after_class = parse_simple_block(tokens, body_start)
+      class_header = class_body_start(tokens, next)
+      body, after_class = parse_simple_block(tokens, class_header["next"])
       methods = []
       fields = []
       vars = []
@@ -1082,14 +1379,39 @@ parse_simple_block = tokens, index ->
         methods,
         token_line(current),
       )
-      cls["parent"] = parent
+      cls["parent"] = class_header["parent"]
       cls["fields"] = fields
       cls["vars"] = vars
       cls["abstract"] = class_abstract
       cls["final"] = class_final
+      cls["implements"] = class_header["interface_names"]
       statements.push(cls)
       next = after_class
       continue
+    if token_kind(current) == "IDENT" and token_text(current) == "interface"
+      parents, body_start = interface_body_start(tokens, next)
+      body, after_interface = parse_simple_block(tokens, body_start)
+      methods = []
+      fields = []
+      for stmt in body
+        if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
+          methods.push(class_method(stmt["name"], stmt["value"], stmt["line"]))
+        elseif stmt["kind"] == "assign"
+          fields.push(class_field(stmt["name"], stmt["value"], stmt["line"]))
+        else
+          syntax_errors.push(
+            stmt["line"].to_s() + ": interface body may only contain member definitions",
+
+          )
+      iface = interface_stmt(token_text(tokens[next + 1]), parents, token_line(current))
+      iface["methods"] = methods
+      iface["fields"] = fields
+      statements.push(iface)
+      next = after_interface
+      continue
+    while token_kind(tokens[next]) == "IDENT" and is_member_modifier(token_text(tokens[next]))
+      next = next + 1
+    current = tokens[next]
     # v0.45 M8.1: `@@name = arg -> NEWLINE` (block function form with
     # one parameter) — `@@` is one token, so name is at next+1, `=` at
     # next+2, arg at next+3, `->` at next+4, NEWLINE at next+5.
@@ -1129,6 +1451,15 @@ parse_simple_block = tokens, index ->
       token_kind(current) == "IDENT" and token_text(tokens[next + 1]) == "=" and token_text(tokens[next + 2]) == "->" and token_kind(tokens[next + 3]) == "NEWLINE"
     )
       record_name_error(current)
+      if token_kind(tokens[next + 4]) != "INDENT"
+        fn = func_expr([], nil_expr(token_line(current)), token_line(current))
+        fn["body_stmts"] = []
+        statements.push(
+          assign_stmt(token_text(current), fn, token_line(current)),
+
+        )
+        next = next + 4
+        continue
       body, after_block_func = parse_function_body_block(tokens, next + 3)
       fn = func_expr([], nil_expr(token_line(current)), token_line(current))
       fn["body_stmts"] = body
@@ -1250,6 +1581,43 @@ parse_simple_block = tokens, index ->
       statements.push(while_stmt(cond, body, token_line(current)))
       next = after_stmt
       continue
+    if token_kind(current) == "IDENT" and token_text(current) == "scope"
+      after_header = record_block_header_error(tokens, next + 1)
+      body, after_stmt = parse_simple_block(tokens, after_header)
+      statements.push(scope_stmt(body, token_line(current)))
+      next = after_stmt
+      continue
+    if token_kind(current) == "IDENT" and token_text(current) == "try"
+      after_header = record_block_header_error(tokens, next + 1)
+      body, after_stmt = parse_simple_block(tokens, after_header)
+      catch_name = ""
+      catch_body = []
+      if token_kind(tokens[after_stmt]) == "IDENT" and token_text(tokens[after_stmt]) == "catch"
+        catch_name = token_text(tokens[after_stmt + 1])
+        record_name_error(tokens[after_stmt + 1])
+        after_catch_header = record_block_header_error(tokens, after_stmt + 2)
+        catch_body, after_stmt = parse_simple_block(tokens, after_catch_header)
+      statements.push(try_stmt(body, catch_name, catch_body, token_line(current)))
+      next = after_stmt
+      continue
+    if token_kind(current) == "IDENT" and token_text(current) == "raise"
+      value, after_value = parse_expr(tokens, next + 1)
+      statements.push(raise_stmt(value, token_line(current)))
+      next = after_value
+      continue
+    if token_kind(current) == "IDENT" and token_text(current) == "match"
+      value, after_value = parse_expr(tokens, next + 1)
+      after_value = record_block_header_error(tokens, after_value)
+      arms, after_stmt = parse_arm_blocks(tokens, after_value)
+      statements.push(match_stmt(value, arms, token_line(current)))
+      next = after_stmt
+      continue
+    if token_kind(current) == "IDENT" and token_text(current) == "select"
+      after_header = record_block_header_error(tokens, next + 1)
+      arms, after_stmt = parse_arm_blocks(tokens, after_header)
+      statements.push(select_stmt(arms, token_line(current)))
+      next = after_stmt
+      continue
     if token_kind(current) == "IDENT" and token_text(current) == "for"
       value_name = token_text(tokens[next + 1])
       record_name_error(tokens[next + 1])
@@ -1293,11 +1661,37 @@ parse_loop_body_block = tokens, index ->
   parse_state["loop_depth"] = parse_state["loop_depth"] - 1
   return body, next
 
+parse_import_statement = tokens, index ->
+  current = tokens[index]
+  name = ""
+  next = index + 1
+  while token_kind(tokens[next]) == "IDENT"
+    if name != ""
+      name = name + "/"
+    name = name + token_text(tokens[next])
+    next = next + 1
+    if token_text(tokens[next]) == "/"
+      next = next + 1
+    else
+      break
+  alias = ""
+  if token_kind(tokens[next]) == "IDENT" and token_text(tokens[next]) == "as"
+    alias = token_text(tokens[next + 1])
+    record_name_error(tokens[next + 1])
+    next = next + 2
+  return import_stmt(name, alias, token_line(current)), next
+
 parse_statement = tokens, index ->
   current = tokens[index]
   if token_kind(current) == "IDENT" and token_text(current) == "import"
-    record_name_error(tokens[index + 1])
-    return import_stmt(token_text(tokens[index + 1]), token_line(current)), index + 2
+    return parse_import_statement(tokens, index)
+  if token_kind(current) == "IDENT" and token_text(current) == "embed"
+    name = token_text(tokens[index + 3])
+    record_name_error(tokens[index + 3])
+    next = index + 4
+    if token_kind(tokens[next]) == "IDENT" and token_text(tokens[next]) == "with"
+      _options, next = parse_expr(tokens, next + 1)
+    return embed_stmt(token_text(tokens[index + 1]), name, token_line(current)), next
   # v0.45 M8.2c: same `abstract`/`final` prefix acceptance as the
   # parse_block path above.
   stmt_class_abstract = false
@@ -1320,8 +1714,8 @@ parse_statement = tokens, index ->
     index = index + stmt_class_modifier_steps
     current = tokens[index]
   if token_kind(current) == "IDENT" and token_text(current) == "class"
-    parent, body_start = class_body_start(tokens, index)
-    body, next = parse_simple_block(tokens, body_start)
+    class_header = class_body_start(tokens, index)
+    body, next = parse_simple_block(tokens, class_header["next"])
     methods = []
     fields = []
     vars = []
@@ -1349,12 +1743,32 @@ parse_statement = tokens, index ->
       methods,
       token_line(current),
     )
-    cls["parent"] = parent
+    cls["parent"] = class_header["parent"]
     cls["fields"] = fields
     cls["vars"] = vars
     cls["abstract"] = stmt_class_abstract
     cls["final"] = stmt_class_final
+    cls["implements"] = class_header["interface_names"]
     return cls, next
+  if token_kind(current) == "IDENT" and token_text(current) == "interface"
+    parents, body_start = interface_body_start(tokens, index)
+    body, next = parse_simple_block(tokens, body_start)
+    methods = []
+    fields = []
+    for stmt in body
+      if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
+        methods.push(class_method(stmt["name"], stmt["value"], stmt["line"]))
+      elseif stmt["kind"] == "assign"
+        fields.push(class_field(stmt["name"], stmt["value"], stmt["line"]))
+      else
+        syntax_errors.push(
+          stmt["line"].to_s() + ": interface body may only contain member definitions",
+
+        )
+    iface = interface_stmt(token_text(tokens[index + 1]), parents, token_line(current))
+    iface["methods"] = methods
+    iface["fields"] = fields
+    return iface, next
   if token_kind(current) == "IDENT" and token_text(current) == "module"
     record_name_error(tokens[index + 1])
     body, next = parse_simple_block(tokens, index + 2)
@@ -1377,6 +1791,10 @@ parse_statement = tokens, index ->
       token_text(tokens[index + 2]) == "->" and token_kind(tokens[index + 3]) == "NEWLINE"
     )
       record_name_error(current)
+      if token_kind(tokens[index + 4]) != "INDENT"
+        fn = func_expr([], nil_expr(token_line(current)), token_line(current))
+        fn["body_stmts"] = []
+        return assign_stmt(token_text(current), fn, token_line(current)), index + 4
       body, next = parse_function_body_block(tokens, index + 3)
       fn = func_expr([], nil_expr(token_line(current)), token_line(current))
       fn["body_stmts"] = body
@@ -1469,6 +1887,33 @@ parse_statement = tokens, index ->
     after_cond = record_block_header_error(tokens, after_cond)
     body, next = parse_loop_body_block(tokens, after_cond)
     return while_stmt(cond, body, token_line(current)), next
+  if token_kind(current) == "IDENT" and token_text(current) == "scope"
+    after_header = record_block_header_error(tokens, index + 1)
+    body, next = parse_simple_block(tokens, after_header)
+    return scope_stmt(body, token_line(current)), next
+  if token_kind(current) == "IDENT" and token_text(current) == "try"
+    after_header = record_block_header_error(tokens, index + 1)
+    body, next = parse_simple_block(tokens, after_header)
+    catch_name = ""
+    catch_body = []
+    if token_kind(tokens[next]) == "IDENT" and token_text(tokens[next]) == "catch"
+      catch_name = token_text(tokens[next + 1])
+      record_name_error(tokens[next + 1])
+      after_catch_header = record_block_header_error(tokens, next + 2)
+      catch_body, next = parse_simple_block(tokens, after_catch_header)
+    return try_stmt(body, catch_name, catch_body, token_line(current)), next
+  if token_kind(current) == "IDENT" and token_text(current) == "raise"
+    value, next = parse_expr(tokens, index + 1)
+    return raise_stmt(value, token_line(current)), next
+  if token_kind(current) == "IDENT" and token_text(current) == "match"
+    value, after_value = parse_expr(tokens, index + 1)
+    after_value = record_block_header_error(tokens, after_value)
+    arms, next = parse_arm_blocks(tokens, after_value)
+    return match_stmt(value, arms, token_line(current)), next
+  if token_kind(current) == "IDENT" and token_text(current) == "select"
+    after_header = record_block_header_error(tokens, index + 1)
+    arms, next = parse_arm_blocks(tokens, after_header)
+    return select_stmt(arms, token_line(current)), next
   if token_kind(current) == "IDENT" and token_text(current) == "for"
     value_name = token_text(tokens[index + 1])
     record_name_error(tokens[index + 1])

@@ -1,0 +1,163 @@
+# v02 parser accepts current-spec lexer/parser surface families. This fixture
+# builds the self-host stage once, then runs parser-only AST checks for each
+# syntax family so the full suite stays within the default Go test timeout.
+cd $REPO
+env TYA_LEGACY_MODULES=1
+
+exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm -lz 2>/dev/null'
+
+exec $WORK/stage1 --ast $WORK/imports.tya
+stdout '1: import greeting\n2: import net/http\n3: import net/http as http\n4: assign name = string\n'
+! stderr .
+
+! exec $WORK/stage1 --ast $WORK/reserved.tya
+stdout '1: spawn cannot be used as a name'
+stdout '2: await cannot be used as a name'
+stdout '3: with cannot be used as a name'
+stdout '4: private cannot be used as a name'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/interfaces.tya
+stdout '1: interface Named methods 2 fields 0\n7: interface Timestamped methods 1 fields 1\n13: class Account implements 2\n'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/control.tya
+stdout '1: assign run = func 0 block 2\n'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/match_select.tya
+stdout '1: match 2\n6: select 4\n'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/embed.tya
+stdout '1: embed index_html\n2: embed assets\n3: assign name = string\n'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/strings.tya
+stdout '1: assign plain = string\n2: assign bytes = string\n3: assign raw = string\n4: assign multi = string\n7: assign tagged = string\n'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/lambda.tya
+stdout '1: assign add = func 2 expr binary \+\n2: assign square = func 1 expr binary \*\n'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/predicate_bitwise.tya
+stdout '1: assign empty? = func 1 expr binary ==\n2: expr_stmt call ident print 1\n3: assign mask = binary \\|\n4: assign shifted = binary >>\n'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/heredoc.tya
+stdout '1: assign plain = string\n4: assign raw = string\n7: assign bytes = string\n10: assign tagged = string\n'
+! stderr .
+
+exec $WORK/stage1 --ast $WORK/member_modifiers.tya
+stdout '1: class Account implements 1\n10: interface Named methods 1 fields 0\n'
+! stderr .
+
+-- imports.tya --
+import greeting
+import net/http
+import net/http as http
+name = "imports parsed"
+
+-- reserved.tya --
+spawn = 1
+await = 2
+with = 3
+private = 4
+
+-- interfaces.tya --
+interface Named
+  name = ->
+
+  label = ->
+    "label:" + self.name()
+
+interface Timestamped extends Named
+  created_at = nil
+
+  initialize = ->
+    self.created_at = Time.now()
+
+class Account implements Named, Timestamped
+  initialize = name ->
+    self.name_value = name
+
+-- control.tya --
+run = ->
+  scope
+    task = spawn work()
+    print(await task)
+  try
+    raise "boom"
+  catch err
+    print(err)
+
+-- match_select.tya --
+match status
+  case "ok"
+    print("ok")
+  case _
+    print("other")
+select
+  value = receive inbox
+    print(value)
+  send outbox, "next"
+    print("sent")
+  timeout 1
+    print("timeout")
+  default
+    print("idle")
+
+-- embed.tya --
+embed "templates/index.html" as index_html
+embed "static/**" as assets with { hash: true, gzip: true }
+name = "embed parsed"
+
+-- strings.tya --
+plain = "Hello, {name}"
+bytes = b"abc"
+raw = r"""{name}"""
+multi = """
+hello
+"""
+tagged = sql"""select 1"""
+
+-- lambda.tya --
+add = (a, b) -> a + b
+square = (x) -> x * x
+
+-- predicate_bitwise.tya --
+empty? = values -> values.len() == 0
+print(empty?([]))
+mask = 1 | 2 ^ 3 & 4
+shifted = mask << 1 >> 1
+
+-- heredoc.tya --
+plain = <<<TEXT
+hello
+TEXT
+raw = r<<<RAW
+\d+
+RAW
+bytes = b<<<BYTES
+abc
+BYTES
+tagged = sql<<<SQL
+select 1
+SQL
+
+-- member_modifiers.tya --
+class Account implements Named
+  private token = ""
+
+  static build = name ->
+    Account(name)
+
+  override label = ->
+    "account"
+
+interface Named
+  abstract label = ->
