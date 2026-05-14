@@ -33,8 +33,8 @@ the generated public website.
 ## Documentation and Website
 
 - The editable Markdown documentation remains under `docs/`.
-- The generated GitHub Pages website now lives under `docs_site/`.
-- GitHub Pages deploys from the `docs_site/` artifact built by the
+- The generated GitHub Pages website now lives under `site/`.
+- GitHub Pages deploys from the `site/` artifact built by the
   `GitHub Pages` workflow.
 - The generated website includes the new Lint reference page at
   `https://tya-lang.org/lint.html`.

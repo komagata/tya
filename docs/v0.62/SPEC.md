@@ -2,7 +2,7 @@
 
 > **Status:** released. v0.62 is the current released implementation. It
 > includes the v0.61 language, package, and stdlib surface plus `net/http` v2,
-> linter extensions, and the `docs_site/` GitHub Pages split that shipped in
+> linter extensions, and the `site/` GitHub Pages split that shipped in
 > the v0.62.0 tag.
 
 ## Language Overview

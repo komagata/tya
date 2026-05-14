@@ -5,7 +5,7 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const docsDir = path.join(root, "docs");
-const siteDir = path.join(root, "docs_site");
+const siteDir = path.join(root, "site");
 
 const pages = [
   { source: path.join(docsDir, "GUIDE.md"), output: path.join(siteDir, "guide.html"), title: "Guide" },

@@ -151,7 +151,6 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 - [ ] **Documentation generator extensions**
   - [ ] Stdlib re-exports by following imports.
-  - [ ] `tya doc --serve`.
   - [ ] `tya doc --json`.
   - [ ] Reuse the public Tya self-introspection library when it exists.
   - [ ] Diagnose orphan doc comments, duplicate definitions, and unparseable

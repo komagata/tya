@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://tya-lang.org/">
-    <img src="docs_site/assets/tya-logo.png" alt="Tya logo" width="220">
+    <img src="site/assets/tya-logo.png" alt="Tya logo" width="220">
   </a>
 </p>
 
@@ -223,7 +223,7 @@ print(["tya"].first())
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
 Markdown source files are kept in `docs/` for editing. The public website uses
-the generated HTML pages under `docs_site/`.
+the generated HTML pages under `site/`.
 
 ## Language Scope
 
@@ -330,7 +330,7 @@ sh scripts/go_emit_examples_check.sh
 sh scripts/go_emit_args_check.sh
 ```
 
-The website is served from `docs_site/` by GitHub Pages. Markdown source files
+The website is served from `site/` by GitHub Pages. Markdown source files
 are converted to static HTML pages with:
 
 ```sh
