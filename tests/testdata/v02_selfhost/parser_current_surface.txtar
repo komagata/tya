@@ -66,6 +66,22 @@ stdout '15: self is only valid inside a class method'
 stdout '17: missing embed file: missing.txt'
 ! stderr .
 
+exec sh -c '"$WORK/stage1" "$WORK/current_runtime.tya" > "$WORK/current_runtime.c"'
+! stderr .
+
+exec cc $WORK/current_runtime.c runtime/tya_runtime.c -I runtime -o $WORK/current_runtime -lpthread -lm -lz
+! stderr .
+
+exec $WORK/current_runtime
+stdout 'Hello, Tya\nasset-body\nA,B\n'
+! stderr .
+
+! exec $WORK/stage1 $WORK/unsupported_runtime.tya
+stdout '1: unsupported codegen: scope'
+stdout '2: unsupported codegen: spawn'
+stdout '3: unsupported codegen: await'
+! stderr .
+
 -- imports.tya --
 import greeting
 import net/http
@@ -231,6 +247,38 @@ outside = ->
   self
 
 embed "missing.txt" as missing
+
+-- current_runtime.tya --
+embed "asset.txt" as asset_text
+
+interface RuntimeNamed
+  name = ->
+
+class RuntimeAccount implements RuntimeNamed
+  init = name ->
+    @name = name
+
+  name = ->
+    @name
+
+  greeting = ->
+    "Hello, {@name}"
+
+account = RuntimeAccount("Tya")
+print(account.greeting())
+print(trim(asset_text))
+print(join(["A", "B"], ","))
+
+-- unsupported_runtime.tya --
+scope
+  task = spawn work()
+  print(await task)
+
+work = ->
+  "done"
+
+-- asset.txt --
+asset-body
 
 -- templates/index.html --
 <h1>ok</h1>

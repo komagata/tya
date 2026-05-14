@@ -2647,6 +2647,131 @@ register_anon_stmt = stmt ->
     for child in stmt["body"]
       register_anon_stmt(child)
 
+codegen_check_expr = errors, expr ->
+  work = [expr]
+  while work.len() > 0
+    current = work.pop()
+    if current["kind"] == "spawn" or current["kind"] == "await"
+      errors.push(current["line"].to_s() + ": unsupported codegen: " + current["kind"])
+      work.push(current["expr"])
+    if current["kind"] == "binary"
+      if not (
+        current["op"] == "+" or current["op"] == "-" or current["op"] == "*" or current["op"] == "/" or current["op"] == "%" or current["op"] == "and" or current["op"] == "or" or current["op"] == "==" or current["op"] == "!=" or current["op"] == "<" or current["op"] == "<=" or current["op"] == ">" or current["op"] == ">="
+      )
+        errors.push(current["line"].to_s() + ": unsupported codegen: operator " + current["op"])
+      work.push(current["left"])
+      work.push(current["right"])
+    if current["kind"] == "unary" or current["kind"] == "try"
+      work.push(current["expr"])
+    if current["kind"] == "array"
+      for item in current["items"]
+        work.push(item)
+    if current["kind"] == "dict"
+      for entry in current["entries"]
+        work.push(entry["value"])
+    if current["kind"] == "index"
+      work.push(current["target"])
+      work.push(current["index"])
+    if current["kind"] == "member"
+      work.push(current["target"])
+    if current["kind"] == "call"
+      work.push(current["callee"])
+      for arg in current["args"]
+        work.push(arg)
+    if current["kind"] == "func"
+      if current["body_stmts"].len() > 0
+        for child in current["body_stmts"]
+          codegen_check_stmt(errors, child)
+      else
+        work.push(current["body"])
+
+codegen_check_stmt = errors, stmt ->
+  if stmt["kind"] == "embed"
+    if stmt["path"].contains("*")
+      errors.push(stmt["line"].to_s() + ": unsupported codegen: glob embed")
+  if stmt["kind"] == "scope" or stmt["kind"] == "try_stmt" or stmt["kind"] == "raise" or stmt["kind"] == "match" or stmt["kind"] == "select"
+    errors.push(stmt["line"].to_s() + ": unsupported codegen: " + stmt["kind"])
+  if stmt["kind"] == "scope"
+    for child in stmt["body"]
+      codegen_check_stmt(errors, child)
+  if stmt["kind"] == "try_stmt"
+    for child in stmt["body"]
+      codegen_check_stmt(errors, child)
+    for child in stmt["catch_body"]
+      codegen_check_stmt(errors, child)
+  if stmt["kind"] == "raise"
+    codegen_check_expr(errors, stmt["value"])
+  if stmt["kind"] == "match"
+    codegen_check_expr(errors, stmt["value"])
+    for arm in stmt["arms"]
+      for child in arm["body"]
+        codegen_check_stmt(errors, child)
+  if stmt["kind"] == "select"
+    for arm in stmt["arms"]
+      for child in arm["body"]
+        codegen_check_stmt(errors, child)
+  if stmt["kind"] == "assign" or stmt["kind"] == "return" or stmt["kind"] == "multi_assign"
+    codegen_check_expr(errors, stmt["value"])
+  if stmt["kind"] == "index_assign"
+    codegen_check_expr(errors, stmt["target"])
+    codegen_check_expr(errors, stmt["index"])
+    codegen_check_expr(errors, stmt["value"])
+  if stmt["kind"] == "member_assign"
+    codegen_check_expr(errors, stmt["target"])
+    codegen_check_expr(errors, stmt["value"])
+  if stmt["kind"] == "field_assign" or stmt["kind"] == "class_var_assign"
+    codegen_check_expr(errors, stmt["value"])
+  if stmt["kind"] == "expr_stmt"
+    codegen_check_expr(errors, stmt["expr"])
+  if stmt["kind"] == "module"
+    for member in stmt["members"]
+      codegen_check_expr(errors, member["value"])
+    for class_value in stmt["classes"]
+      for field in class_value["fields"]
+        codegen_check_expr(errors, field["value"])
+      for variable in class_value["vars"]
+        codegen_check_expr(errors, variable["value"])
+      for method in class_value["methods"]
+        codegen_check_expr(errors, method["value"])
+  if stmt["kind"] == "class"
+    for field in stmt["fields"]
+      codegen_check_expr(errors, field["value"])
+    for variable in stmt["vars"]
+      codegen_check_expr(errors, variable["value"])
+    for method in stmt["methods"]
+      codegen_check_expr(errors, method["value"])
+  if stmt["kind"] == "interface"
+    for field in stmt["fields"]
+      codegen_check_expr(errors, field["value"])
+    for method in stmt["methods"]
+      codegen_check_expr(errors, method["value"])
+  if stmt["kind"] == "if"
+    codegen_check_expr(errors, stmt["cond"])
+    for child in stmt["then"]
+      codegen_check_stmt(errors, child)
+    for child in stmt["else"]
+      codegen_check_stmt(errors, child)
+    elseif_index = 0
+    while elseif_index < stmt["elseif_conds"].len()
+      codegen_check_expr(errors, stmt["elseif_conds"][elseif_index])
+      for child in stmt["elseif_bodies"][elseif_index]
+        codegen_check_stmt(errors, child)
+      elseif_index = elseif_index + 1
+  if stmt["kind"] == "while"
+    codegen_check_expr(errors, stmt["cond"])
+    for child in stmt["body"]
+      codegen_check_stmt(errors, child)
+  if stmt["kind"] == "for"
+    codegen_check_expr(errors, stmt["iterable"])
+    for child in stmt["body"]
+      codegen_check_stmt(errors, child)
+
+codegen_errors = program ->
+  errors = []
+  for stmt in program["statements"]
+    codegen_check_stmt(errors, stmt)
+  errors
+
 emit_direct_call = name, args ->
   parts = []
   for arg in args
@@ -3165,6 +3290,14 @@ emit_simple_stmt = lines, names, stmt ->
 
 emit_stmt = lines, names, stmt ->
   emit_simple_stmt(lines, names, stmt)
+  if stmt["kind"] == "embed"
+    content = read_file(join_path(dir_name(emitter_source_path), stmt["path"]))
+    value = "tya_string(" + c_string(content) + ")"
+    if has_name(names, stmt["name"])
+      lines.push("  " + c_name(stmt["name"]) + " = " + value + ";")
+    else
+      names.push(stmt["name"])
+      lines.push("  TyaValue " + c_name(stmt["name"]) + " = " + value + ";")
   if stmt["kind"] == "import"
     lines.push("  /* import resolved by compiler */")
   if stmt["kind"] == "module"
@@ -3307,6 +3440,8 @@ collect_assigned_names = statements ->
     if stmt["kind"] == "multi_assign"
       for name in stmt["names"]
         remember(names, name)
+    if stmt["kind"] == "embed"
+      remember(names, stmt["name"])
     if stmt["kind"] == "if"
       for child in stmt["then"]
         work.push(child)
@@ -3894,4 +4029,9 @@ if check_errors.len() > 0
     print(message)
   exit(1)
 emitter_source_path = path
+emit_errors = codegen_errors(program)
+if emit_errors.len() > 0
+  for message in emit_errors
+    print(message)
+  exit(1)
 print(emit_c(program))
