@@ -127,6 +127,7 @@ clear_list = list ->
 syntax_errors = []
 parse_state = { function_depth: 0, loop_depth: 0 }
 checker_modules = []
+checker_source_path = ""
 emitter_state =
   class_ref: ""
   super_class: ""
@@ -1166,10 +1167,14 @@ parse_arm_blocks = tokens, index ->
       next = next + 1
       continue
     arm_line = token_line(tokens[next])
+    bind_name = ""
+    if token_kind(tokens[next]) == "IDENT" and token_text(tokens[next + 1]) == "="
+      bind_name = token_text(tokens[next])
+      record_name_error(tokens[next])
     while token_kind(tokens[next]) != "NEWLINE" and token_kind(tokens[next]) != "EOF"
       next = next + 1
     body, after_body = parse_simple_block(tokens, next)
-    arms.push({ line: arm_line, body: body })
+    arms.push({ line: arm_line, body: body, bind_name: bind_name })
     next = after_body
   if token_kind(tokens[next]) == "DEDENT"
     next = next + 1
@@ -1997,6 +2002,21 @@ is_screaming_name = name ->
 is_binding_name = name ->
   is_snake_name(name) or is_screaming_name(name)
 
+import_binding_name = stmt ->
+  if stmt["alias"] != ""
+    return stmt["alias"]
+  parts = (stmt["name"]).split("/")
+  parts[parts.len() - 1]
+
+is_import_path_name = name ->
+  if name.len() == 0
+    return false
+  parts = name.split("/")
+  for part in parts
+    if not is_snake_name(part)
+      return false
+  true
+
 is_pure_builtin_name = name ->
   if name == "len"
     return true
@@ -2096,6 +2116,68 @@ predeclare_function_bindings = ctx, statements ->
         remember(ctx["names"], stmt["name"])
         ctx["kinds"][stmt["name"]] = "func"
 
+predeclare_type_bindings = ctx, statements ->
+  for stmt in statements
+    if stmt["kind"] == "class" or stmt["kind"] == "interface"
+      remember(ctx["names"], stmt["name"])
+      ctx["kinds"][stmt["name"]] = stmt["kind"]
+
+find_top_level_type = statements, name ->
+  for stmt in statements
+    if (stmt["kind"] == "class" or stmt["kind"] == "interface") and stmt["name"] == name
+      return stmt
+  nil
+
+method_arity = method -> method["value"]["params"].len()
+
+is_interface_requirement = method ->
+  method["value"]["body_stmts"].len() == 0 and method["value"]["body"]["kind"] == "nil"
+
+class_has_method = class_value, name, arity ->
+  for method in class_value["methods"]
+    if method["name"] == name and method_arity(method) == arity
+      return true
+  false
+
+check_type_contracts = errors, statements ->
+  seen_interfaces = []
+  seen_classes = []
+  for stmt in statements
+    if stmt["kind"] == "interface"
+      if has_name(seen_interfaces, stmt["name"])
+        errors.push(stmt["line"].to_s() + ": duplicate interface " + stmt["name"])
+      remember(seen_interfaces, stmt["name"])
+      method_names = []
+      for method in stmt["methods"]
+        key = method["name"] + "/" + (method_arity(method)).to_s()
+        if has_name(method_names, key)
+          errors.push(stmt["line"].to_s() + ": duplicate interface method " + method["name"])
+        remember(method_names, key)
+    if stmt["kind"] == "class"
+      if has_name(seen_classes, stmt["name"])
+        errors.push(stmt["line"].to_s() + ": duplicate class " + stmt["name"])
+      remember(seen_classes, stmt["name"])
+      member_names = []
+      for method in stmt["methods"]
+        if has_name(member_names, method["name"])
+          errors.push(stmt["line"].to_s() + ": duplicate class member " + method["name"])
+        remember(member_names, method["name"])
+      for field in stmt["fields"]
+        if has_name(member_names, field["name"])
+          errors.push(stmt["line"].to_s() + ": duplicate instance member " + field["name"])
+        remember(member_names, field["name"])
+      for interface_name in stmt["implements"]
+        target = find_top_level_type(statements, interface_name)
+        if target == nil
+          errors.push(stmt["line"].to_s() + ": unknown interface " + interface_name)
+        else
+          if target["kind"] != "interface"
+            errors.push(stmt["line"].to_s() + ": implements target " + interface_name + " is not an interface")
+          else
+            for method in target["methods"]
+              if is_interface_requirement(method) and not class_has_method(stmt, method["name"], method_arity(method))
+                errors.push(stmt["line"].to_s() + ": class " + stmt["name"] + " must implement interface method " + method["name"])
+
 check_expr = ctx, expr ->
   errors = ctx["errors"]
   names = ctx["names"]
@@ -2106,9 +2188,19 @@ check_expr = ctx, expr ->
     current = work.pop()
     if current["kind"] == "ident"
       if current["name"] == "super"
-        names = names
+        if not (ctx.has("in_method") or ctx.has("in_class_method"))
+          errors.push(
+            current["line"].to_s() + ": super must be called inside init, an instance method, or a class method",
+
+          )
+      elseif current["name"] == "Self"
+        if not ctx.has("in_class")
+          errors.push(
+            current["line"].to_s() + ": Self is only valid inside a class",
+
+          )
       elseif current["name"] == "self"
-        if not ctx.has("in_class_method")
+        if not (ctx.has("in_method") or ctx.has("in_class_method"))
           errors.push(
             current["line"].to_s() + ": self is only valid inside a class method",
 
@@ -2125,6 +2217,8 @@ check_expr = ctx, expr ->
     if current["kind"] == "unary"
       work.push(current["expr"])
     if current["kind"] == "try"
+      work.push(current["expr"])
+    if current["kind"] == "spawn" or current["kind"] == "await"
       work.push(current["expr"])
     if current["kind"] == "array"
       for item in current["items"]
@@ -2200,10 +2294,13 @@ check_simple_stmt = ctx, stmt ->
   kinds = ctx["kinds"]
   constants = ctx["constants"]
   if stmt["kind"] == "import"
-    check_name(errors, stmt["line"], "module", stmt["name"])
-    remember(names, stmt["name"])
+    if not is_import_path_name(stmt["name"])
+      errors.push(stmt["line"].to_s() + ": invalid import path: " + stmt["name"])
+    binding_name = import_binding_name(stmt)
+    check_name(errors, stmt["line"], "module", binding_name)
+    remember(names, binding_name)
     remember(checker_modules, stmt["name"])
-    kinds[stmt["name"]] = "module"
+    kinds[binding_name] = "module"
   if stmt["kind"] == "module"
     check_name(errors, stmt["line"], "module", stmt["name"])
     remember(names, stmt["name"])
@@ -2245,6 +2342,23 @@ check_simple_stmt = ctx, stmt ->
       else
         method_ctx["in_class_method"] = true
       check_expr(method_ctx, method["value"])
+  if stmt["kind"] == "interface"
+    remember(names, stmt["name"])
+    kinds[stmt["name"]] = "interface"
+    for method in stmt["methods"]
+      method_ctx = checker_context(errors, names, kinds, constants)
+      method_ctx["in_method"] = true
+      check_expr(method_ctx, method["value"])
+    for field in stmt["fields"]
+      check_expr(ctx, field["value"])
+  if stmt["kind"] == "embed"
+    check_name(errors, stmt["line"], "variable", stmt["name"])
+    if not stmt["path"].contains("*")
+      embed_path = join_path(dir_name(checker_source_path), stmt["path"])
+      if not file_exists(embed_path)
+        errors.push(stmt["line"].to_s() + ": missing embed file: " + stmt["path"])
+    remember(names, stmt["name"])
+    kinds[stmt["name"]] = "unknown"
   if stmt["kind"] == "assign"
     check_name(errors, stmt["line"], "variable", stmt["name"])
     check_expr(ctx, stmt["value"])
@@ -2342,6 +2456,43 @@ check_stmt = ctx, stmt ->
     predeclare_function_bindings(body_ctx, stmt["body"])
     for child in stmt["body"]
       check_stmt(body_ctx, child)
+  if stmt["kind"] == "scope"
+    body_ctx = clone_checker_context(ctx)
+    predeclare_function_bindings(body_ctx, stmt["body"])
+    for child in stmt["body"]
+      check_stmt(body_ctx, child)
+  if stmt["kind"] == "try_stmt"
+    body_ctx = clone_checker_context(ctx)
+    predeclare_function_bindings(body_ctx, stmt["body"])
+    for child in stmt["body"]
+      check_stmt(body_ctx, child)
+    catch_ctx = clone_checker_context(ctx)
+    if stmt["catch_name"] != ""
+      check_name(errors, stmt["line"], "variable", stmt["catch_name"])
+      remember(catch_ctx["names"], stmt["catch_name"])
+      catch_ctx["kinds"][stmt["catch_name"]] = "unknown"
+    predeclare_function_bindings(catch_ctx, stmt["catch_body"])
+    for child in stmt["catch_body"]
+      check_stmt(catch_ctx, child)
+  if stmt["kind"] == "raise"
+    check_expr(ctx, stmt["value"])
+  if stmt["kind"] == "match"
+    check_expr(ctx, stmt["value"])
+    for arm in stmt["arms"]
+      arm_ctx = clone_checker_context(ctx)
+      predeclare_function_bindings(arm_ctx, arm["body"])
+      for child in arm["body"]
+        check_stmt(arm_ctx, child)
+  if stmt["kind"] == "select"
+    for arm in stmt["arms"]
+      arm_ctx = clone_checker_context(ctx)
+      if arm["bind_name"] != ""
+        check_name(errors, arm["line"], "variable", arm["bind_name"])
+        remember(arm_ctx["names"], arm["bind_name"])
+        arm_ctx["kinds"][arm["bind_name"]] = "unknown"
+      predeclare_function_bindings(arm_ctx, arm["body"])
+      for child in arm["body"]
+        check_stmt(arm_ctx, child)
 
 check = program ->
   names = []
@@ -2386,9 +2537,11 @@ check = program ->
   remember(names, "assert")
   remember(names, "assert_equal")
   ctx = checker_context(errors, names, kinds, constants)
+  predeclare_type_bindings(ctx, program["statements"])
   predeclare_function_bindings(ctx, program["statements"])
   for stmt in program["statements"]
     check_stmt(ctx, stmt)
+  check_type_contracts(errors, program["statements"])
   errors
 
 c_string = text ->
@@ -3685,6 +3838,34 @@ if (args()).len() > 1 and args()[0] == "--ast"
     exit(1)
   print_ast(ast_program)
   exit(0)
+if (args()).len() > 1 and args()[0] == "--check"
+  check_path = args()[1]
+  check_source = read_file(check_path)
+  check_tokens, check_lex_errors = lex(check_source)
+  if check_lex_errors.len() > 0
+    for message in check_lex_errors
+      print(message)
+    exit(1)
+  check_parse_errors = parse_errors(check_tokens)
+  if check_parse_errors.len() > 0
+    for message in check_parse_errors
+      print(message)
+    exit(1)
+  clear_list(syntax_errors)
+  parse_state["function_depth"] = 0
+  parse_state["loop_depth"] = 0
+  check_program = parse(check_tokens)
+  if syntax_errors.len() > 0
+    for message in syntax_errors
+      print(message)
+    exit(1)
+  checker_source_path = check_path
+  check_errors = check(check_program)
+  if check_errors.len() > 0
+    for message in check_errors
+      print(message)
+    exit(1)
+  exit(0)
 path = args()[0]
 source = read_file(path)
 program_tokens, lex_errors = lex(source)
@@ -3706,6 +3887,7 @@ if syntax_errors.len() > 0
     print(message)
   exit(1)
 program = load_imports(program, path)
+checker_source_path = path
 check_errors = check(program)
 if check_errors.len() > 0
   for message in check_errors

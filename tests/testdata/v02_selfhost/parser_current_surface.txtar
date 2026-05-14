@@ -56,6 +56,16 @@ exec $WORK/stage1 --ast $WORK/member_modifiers.tya
 stdout '1: class Account implements 1\n10: interface Named methods 1 fields 0\n'
 ! stderr .
 
+exec $WORK/stage1 --check $WORK/valid_semantics.tya
+! stderr .
+
+! exec $WORK/stage1 --check $WORK/invalid_semantics.tya
+stdout '1: class Broken must implement interface method name'
+stdout '7: duplicate class member value'
+stdout '15: self is only valid inside a class method'
+stdout '17: missing embed file: missing.txt'
+! stderr .
+
 -- imports.tya --
 import greeting
 import net/http
@@ -161,3 +171,66 @@ class Account implements Named
 
 interface Named
   abstract label = ->
+
+-- valid_semantics.tya --
+import net/http as http
+
+embed "templates/index.html" as index_html
+
+interface Named
+  name = ->
+
+class Account implements Named
+  initialize = name ->
+    self.name_value = name
+
+  name = ->
+    self.name_value
+
+  static build = name ->
+    Self(name)
+
+run = ->
+  status = "ok"
+  scope
+    task = spawn work()
+    print(await task)
+  try
+    raise "boom"
+  catch err
+    print(err)
+  match status
+    case "ok"
+      print("ok")
+    case _
+      print("other")
+  select
+    value = receive inbox
+      print(value)
+    default
+      print("idle")
+
+work = ->
+  "done"
+
+-- invalid_semantics.tya --
+class Broken implements Named
+  value = 1
+
+interface Named
+  name = ->
+
+class Duplicate
+  value = ->
+    1
+
+  value = ->
+    2
+
+outside = ->
+  self
+
+embed "missing.txt" as missing
+
+-- templates/index.html --
+<h1>ok</h1>

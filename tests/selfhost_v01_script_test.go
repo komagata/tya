@@ -15,11 +15,12 @@ func TestSelfhostV01Scripts(t *testing.T) {
 		t.Fatal(err)
 	}
 	modCache := goEnvForSelfhostV01(t, "GOMODCACHE")
+	goCache := goEnvForSelfhostV01(t, "GOCACHE")
 	testscript.Run(t, testscript.Params{
 		Dir: "testdata/v01_selfhost",
 		Setup: func(env *testscript.Env) error {
 			env.Setenv("REPO", repo)
-			env.Setenv("GOCACHE", filepath.Join(env.WorkDir, ".gocache"))
+			env.Setenv("GOCACHE", goCache)
 			env.Setenv("GOMODCACHE", modCache)
 			return nil
 		},
