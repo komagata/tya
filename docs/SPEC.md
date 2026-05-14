@@ -1,101 +1,761 @@
-# Tya Current Specification
+# Tya Language Specification
 
-> **Status:** current repository specification. Historical release snapshots
-> live under `docs/vX.Y/`. This page describes the language and standard
-> library surface maintained on `main`, including the v0.62 `net/http` v2 and
-> linter additions.
+Status: current repository specification. Historical release snapshots live
+under `docs/vX.Y/`. This page describes the language surface maintained on
+`main`, including the current package, tooling, concurrency, interface, and
+standard-library integration rules.
 
-## Language Overview
+## Introduction
 
-Tya source files use indentation for blocks and parentheses for calls:
+Tya is an indentation-based, dynamically typed language that compiles to C.
+The implementation is intentionally small and explicit: source is tokenized,
+parsed into an AST, checked, emitted as C, and linked with the Tya runtime.
+
+Tya's user-facing commitments are:
+
+- canonical source formatting through `tya format`;
+- strict dynamic semantics with no implicit conversions;
+- a compile-to-C runtime model;
+- one all-in-one `tya` command for running, building, checking, formatting, testing, linting, documenting, packaging, and editor support;
+- structured diagnostics with stable codes;
+- a maintained self-hosting path.
+
+This document specifies the language. Built-in functions are listed in
+`docs/API.md`. Standard-library modules are listed in `docs/STDLIB.md`.
+Reusable user libraries and packages are described in `docs/LIBRARIES.md`.
+Canonical formatting details are described in `docs/CANONICAL_SYNTAX.md`.
+
+## Notation
+
+Examples use ordinary Tya source. Grammar fragments are illustrative rather
+than a complete parser grammar. Names in examples follow `docs/NAMING.md`.
+
+```text
+snake_case            variable, function, method, import path segment
+_snake_case           private source binding
+SCREAMING_SNAKE_CASE  constant
+PascalCase            class and interface
+```
+
+The words "must", "must not", "may", and "should" are normative when they
+describe program validity or implementation behavior.
+
+## Source Code Representation
+
+Tya source is UTF-8 text. The compiler normalizes CRLF line endings to LF before
+lexing. Source files use `.tya`.
+
+Indentation defines blocks. Spaces are the indentation unit. Tabs are forbidden
+in source indentation and in heredoc body indentation.
+
+```tya
+if ready
+  print("ready")
+else
+  print("not ready")
+```
+
+Each physical line is part of one logical line except when it is inside a
+parenthesized call, an array literal, a string literal, or a canonical
+continuation form accepted by the parser and formatter.
+
+## Lexical Elements
+
+### Comments
+
+Line comments begin with `#` and continue to the end of the line.
+
+```tya
+# file header comment
+name = "tya" # line-end comment
+```
+
+Comments may attach to declarations and statements for formatting, LSP hover,
+and `tya doc`. Comment placement rules are part of canonical syntax.
+
+### Tokens
+
+The token vocabulary includes identifiers, literals, indentation tokens,
+operators, and punctuation.
+
+```text
+= == != < <= > >= : , . ? @ + - * / % ->
+( ) [ ] { }
+& | ^ ~ << >>
+```
+
+Whitespace separates tokens. Newlines are significant because they terminate
+statements and define indentation blocks.
+
+### Identifiers
+
+Identifiers are ASCII-oriented by convention and by the current naming rules.
+Public variable, function, method, file, and import path names use
+`snake_case`. Class and interface names use `PascalCase`. Constants use
+`SCREAMING_SNAKE_CASE`.
+
+The following words are reserved in positions where ordinary names are parsed:
+
+```text
+abstract and as await break case catch class continue default else elseif embed
+extends false final for if implements import in interface module nil not of or
+override private raise return scope select self Self spawn static super true try
+while with
+```
+
+Some words are context-sensitive. For example, `as` is meaningful in imports,
+`extends` and `implements` are meaningful in class and interface headers, and
+`case`, `default`, `send`, `receive`, and `timeout` are meaningful inside
+`select`.
+
+### Literals
+
+Tya has literals for `nil`, booleans, numbers, strings, bytes, arrays, and
+dictionaries.
+
+```tya
+missing = nil
+ready = true
+count = 42
+ratio = 3.14
+name = "Tya"
+data = b"abc"
+items = [1, 2, 3]
+user = { name: "komagata", age: 20 }
+```
+
+String literals use double quotes. Strings support interpolation with `{...}`.
+
+```tya
+print("Hello, {user["name"]}")
+```
+
+Triple-quoted strings and heredoc forms are available for multi-line text.
+Raw and byte heredoc forms preserve their documented escaping behavior. The
+formatter treats multi-line strings as atomic except where canonical syntax
+defines a rewrite.
+
+Byte literals use `b"..."` or byte heredoc forms and produce byte values rather
+than strings.
+
+## Values And Kinds
+
+Tya is dynamically typed. Values carry a runtime kind. The core runtime kinds
+are:
+
+```text
+nil
+bool
+number
+string
+bytes
+array
+dict
+function
+class
+object
+error
+task
+channel
+resource
+```
+
+Arrays and dictionaries are mutable. Strings and bytes are separate value
+kinds. Classes are runtime values; object values are instances of classes.
+
+Primitive values expose methods through runtime wrapper classes and standard
+builtins.
+
+```tya
+print(" tya ".trim().upper())
+print([1, 2, 3].len())
+print({ name: "tya" }.keys())
+print(value.class)
+```
+
+Tya does not perform implicit conversions. Operations that require a number,
+string, array, dictionary, function, class, task, channel, or resource must
+receive a value of the required kind or raise a runtime error.
+
+## Blocks
+
+A block is a non-empty or empty sequence of statements introduced by a header
+line and an increased indentation level.
+
+```tya
+while count < 3
+  print(count)
+  count = count + 1
+```
+
+Blocks appear in control-flow statements, function bodies, class bodies,
+interface bodies, `try` / `catch`, `scope`, `select`, and similar constructs.
+
+Top-level source consists of imports, declarations, assignments, and statements
+allowed by the file kind. Class files are more restrictive than script files.
+
+## Declarations And Scope
+
+### Bindings
+
+Assignment creates or updates bindings.
+
+```tya
+name = "Tya"
+count = count + 1
+```
+
+Multiple assignment is supported.
+
+```tya
+value, err = parse_user(text)
+```
+
+Names beginning with `_` are private when they are top-level bindings in an
+importable source file. Private top-level bindings are not exported through a
+single-file module namespace.
+
+Constants use `SCREAMING_SNAKE_CASE` and are checked as constants by naming
+and assignment rules.
+
+### Functions
+
+Functions are values. Function literals use `->`.
 
 ```tya
 greet = name -> "Hello, {name}"
 
-if args().len() > 0
-  print(greet(args()[0]))
+double = value ->
+  result = value * 2
+  result
 ```
 
-The core value types are `nil`, booleans, numbers, strings, bytes, arrays,
-dictionaries, functions, classes, objects, tasks, channels, and resources.
-Strings support interpolation. Arrays and dictionaries are mutable. Primitive
-operations are methods on the values themselves:
+Calls always use parentheses.
 
 ```tya
-print(" tya ".trim().upper())
-print([1, 2, 3].map(n -> n * 2))
-print({ name: "tya" }.keys())
+print(greet("Tya"))
 ```
 
-Control flow includes `if` / `elseif` / `else`, `while`, `for`, `break`,
-`continue`, `return`, `raise`, `try`, and `catch`. Functions use `->` and
-return the final expression implicitly unless an explicit `return` is used.
+The final expression in a function body is returned implicitly. Use `return`
+for early return or multiple return values.
 
-Imports load same-directory files, manifest dependencies from `tya.lock`,
-directories listed in `TYA_PATH`, and the bundled `stdlib/` directory.
-Directory packages expose public classes and interfaces directly unless an
-alias is used:
+```tya
+parse_user = text ->
+  if text == ""
+    return nil, error("empty user")
+  return { name: text }, nil
+```
+
+Parameters are local bindings. `_` may be used for intentionally ignored
+parameters.
+
+### Classes
+
+A class declares a runtime class value.
+
+```tya
+class User
+  initialize = name ->
+    self.name = name
+
+  label = ->
+    "user:{self.name}"
+```
+
+Instances are constructed by calling the class.
+
+```tya
+user = User("komagata")
+print(user.label())
+```
+
+`initialize` is the constructor hook. Instance methods receive `self`.
+Instance fields are created by assignment to `self.<name>`.
+
+Tya supports:
+
+- single class inheritance with `extends`;
+- constructor and method delegation with `super(...)`;
+- `private` members;
+- `static` class methods and class variables;
+- `abstract class` and abstract methods;
+- `final class`;
+- `override` for explicit method override checks;
+- runtime class inspection through `.class`.
+
+```tya
+class Admin extends User
+  initialize = name ->
+    super(name)
+
+  override label = ->
+    "admin:{self.name}"
+```
+
+A class file is a PascalCase `.tya` file. It must declare exactly one public
+class whose name matches the filename. It may also declare private helper
+classes and interfaces. Class files are library files and cannot be run as
+entry scripts.
+
+### Interfaces
+
+Interfaces are explicit contracts and stackable behavior units.
+
+```tya
+interface Named
+  name = ->
+
+  label = ->
+    self.name()
+```
+
+An interface may contain:
+
+- body-free instance method requirements;
+- default instance methods;
+- field declarations;
+- a zero-argument `initialize` hook.
+
+An interface may not contain static members, private members, nested classes,
+or nested interfaces. `Self` is invalid inside interface methods.
+
+Classes list implemented interfaces with `implements`.
+
+```tya
+interface Timestamped
+  created_at = nil
+
+  initialize = ->
+    self.created_at = Time.now()
+
+class Account implements Named, Timestamped
+  initialize = name ->
+    self.name_value = name
+    super()
+
+  name = ->
+    self.name_value
+```
+
+Default methods are inherited when the class does not define a method with the
+same name. A class method wins over an interface default. Interface defaults
+stack in the declared `implements` order and may call `super()`.
+
+Interface fields contribute instance state. A class that implements multiple
+interfaces must not receive conflicting field definitions. If a class
+constructor implements interfaces with initializer hooks, it must call
+`super()` exactly where it wants the interface initialization chain to run.
+
+Interface conflict rules are strict:
+
+- duplicate requirements collapse to one requirement;
+- a default method can satisfy a requirement;
+- unrelated defaults for the same method are ambiguous unless the class overrides the method;
+- arity conflicts are errors;
+- initializer order is deterministic and follows class inheritance before newly implemented interfaces.
+
+## Expressions
+
+Expressions compute values.
+
+### Primary Expressions
+
+Primary expressions include identifiers, literals, parenthesized expressions,
+function literals, indexing, member access, calls, `self`, `Self`, and
+`super`.
+
+```tya
+user["name"]
+items[0]
+user.label()
+User("komagata")
+self.name
+super(name)
+```
+
+`self` is available inside instance methods and constructors. `Self` refers to
+the current class in class contexts where it is valid. `super(...)` delegates
+to the parent constructor, parent method, or next stacked interface method
+depending on context.
+
+### Operators
+
+Tya supports arithmetic, comparison, logical, and bitwise operators.
+
+```text
+or
+and
+not
+== != < <= > >=
+| ^ &
+<< >>
++ -
+* / %
+```
+
+Logical operators use words: `and`, `or`, and `not`.
+
+```tya
+if ready and not disabled
+  print("ok")
+```
+
+Arithmetic operations require numbers unless a documented primitive method or
+operator case says otherwise. `nil` arithmetic is invalid.
+
+### Collections
+
+Arrays use bracket literals and integer indexing.
+
+```tya
+items = ["a", "b"]
+items.push("c")
+print(items[0])
+```
+
+Dictionaries use brace literals. Identifier keys in dictionary literals are
+stored as string keys.
+
+```tya
+user = { name: "komagata", age: 20 }
+print(user["name"])
+user["admin"] = true
+```
+
+Dictionary block forms and empty collection forms are canonicalized by the
+formatter.
+
+### Error Expressions
+
+`try` may be used as an expression inside a function body. A `catch` branch
+receives the raised value.
+
+```tya
+load_name = path ->
+  try
+    read_file(path).trim()
+  catch err
+    "guest"
+```
+
+### Concurrency Expressions
+
+`spawn` starts a task and returns a task value. `await` waits for a task and
+returns or re-raises its result.
+
+```tya
+task = spawn work(21)
+print(await task)
+```
+
+Channels and sync resources are standard-library-backed runtime values with
+documented methods in `docs/STDLIB.md`.
+
+## Statements
+
+### Expression Statements
+
+Calls and other useful expressions may appear as statements.
+
+```tya
+print("hello")
+logger.info("started")
+```
+
+### Assignment Statements
+
+Assignment updates a binding, field, or indexed collection entry.
+
+```tya
+name = "Tya"
+self.name = name
+items[0] = "first"
+user["admin"] = true
+```
+
+Multiple assignment evaluates the right-hand side and binds the corresponding
+left-hand names.
+
+### If Statements
+
+`if`, `elseif`, and `else` select among blocks.
+
+```tya
+if age >= 20
+  print("adult")
+elseif age >= 13
+  print("teen")
+else
+  print("young")
+```
+
+`elseif` is the canonical spelling. `else if` is not canonical Tya.
+
+### While Statements
+
+`while` repeats while its condition is truthy.
+
+```tya
+while count < 3
+  print(count)
+  count = count + 1
+```
+
+### For Statements
+
+`for ... in` iterates arrays and other iterable values. For arrays, the second
+binding receives the index when present.
+
+```tya
+for item in items
+  print(item)
+
+for item, index in items
+  print("{index}: {item}")
+```
+
+`for ... of` iterates dictionary keys and values.
+
+```tya
+for key, value of user
+  print("{key}: {value}")
+```
+
+`break` exits the nearest loop. `continue` skips to the next iteration.
+
+### Match Statements
+
+`match` selects one `case` block by comparing an expression to case patterns.
+`case _` is the wildcard case and is canonical only as the final case.
+
+### Return Statements
+
+`return` exits the current function or method. It may return zero, one, or
+multiple values.
+
+```tya
+return
+return value
+return value, err
+```
+
+### Raise, Try, And Catch Statements
+
+`raise` raises a value. `try` executes a block and handles raised values with
+`catch`.
+
+```tya
+try
+  save_user(user)
+catch err
+  print("save failed: {err}")
+```
+
+### Scope Statements
+
+`scope` defines a structured concurrency region. Tasks spawned inside the
+scope are joined according to the runtime scope rules before the scope exits.
+
+```tya
+scope
+  task = spawn work()
+  print(await task)
+```
+
+### Select Statements
+
+`select` waits on channel operations, timeouts, and default branches.
+
+```tya
+select
+case value = receive ch
+  print(value)
+case send ch, next
+  print("sent")
+timeout 1
+  print("timeout")
+default
+  print("none")
+```
+
+The exact channel methods and sync primitives are defined in `docs/STDLIB.md`.
+
+## Built-In Functions
+
+Tya has predeclared builtins for core runtime operations, I/O, conversion,
+errors, process access, files, collections, and compiler introspection.
+The normative list is `docs/API.md`.
+
+Common examples:
+
+```tya
+print("hello")
+args()
+type(value)
+error("message")
+read_file("memo.txt")
+write_file("memo.txt", "text")
+```
+
+Standard library APIs are imported as ordinary modules.
+
+## Imports And Packages
+
+### Import Syntax
+
+Imports appear at top level before other declarations and statements.
+
+```tya
+import greeting
+import net/http
+import net/http as http
+```
+
+Import paths are slash-separated `snake_case` segments. Relative filesystem
+paths, absolute paths, empty segments, and PascalCase terminal segments are
+invalid.
+
+### Single-File Modules
+
+A single-file module is a lowercase `.tya` file resolved by import path.
+
+```text
+import greeting          -> greeting.tya
+import http/server       -> http/server.tya
+```
+
+It exports public top-level bindings through the import binding.
+
+```tya
+import greeting
+
+print(greeting.hello("komagata"))
+```
+
+### Directory Packages
+
+A directory package is a directory resolved by import path containing
+PascalCase class files. It must contain at least one class file and must not
+contain lowercase script files at the package leaf.
+
+Unaliased directory imports expose public class and interface names directly.
+
+```tya
+import net/http
+
+server = Server()
+```
+
+Aliased directory imports expose a namespace binding and do not import public
+names bare.
 
 ```tya
 import net/http as http
 
-app = http.Server()
+server = http.Server()
 ```
 
-Classes support `initialize`, instance fields and methods, class variables and
-methods, single inheritance, `super(args...)`, private members, abstract
-classes, final classes, and explicit `implements` clauses.
+Within the same directory package, sibling public classes are visible by bare
+PascalCase name without import.
 
-## Interface Stackable Behavior
+### Resolution Order
 
-v0.61 grows `interface` from a requirement-only contract into Tya's
-stackable behavior mechanism. Interfaces may define default instance methods,
-contribute instance fields, define zero-argument initializer hooks, and
-participate in deterministic `super()` chains across stacked interfaces.
+Imports are resolved in this order:
 
-The keyword remains `interface`; Tya does not add a separate `trait` keyword.
-Static interface members, private interface members, and `Self` inside
-interface methods remain invalid.
+1. the importing file's directory;
+2. manifest-declared dependencies from `tya.lock`;
+3. directories listed in `TYA_PATH`, from left to right;
+4. the bundled `stdlib/` directory.
 
-See the detailed interface rules below in this document.
+The first matching file or package directory wins. Local application modules
+may shadow package, `TYA_PATH`, and standard-library modules. Package
+dependencies may shadow `TYA_PATH` and standard-library modules.
 
-## Package and Tooling Additions
+### Package Manifests
 
-v0.61 also includes the package/tooling surface described below:
+`tya.toml` declares package metadata, dependencies, native wrappers, and
+package-provided tools. `tya install` resolves dependencies and writes
+`tya.lock`. Git and local path dependencies are supported. There is currently
+no central package registry and no `tya publish` command.
 
-- Native package support through `[native]` in `tya.toml`.
-- `tya new --template lib --native <name>` native package scaffolding.
-- `tya doctor native` environment and flag reporting.
-- Package-provided tools through `[tools]` and `tya tool`.
-- Git/path one-shot tool execution with pinned `--tag` or `--rev` sources.
-- WASM build targets with native package rejection for unsupported targets.
+Native package metadata lives under `[native]`. Package-provided tools live
+under `[tools]` and run through `tya tool`.
 
-## Standard Library Additions
+## Program Execution
 
-v0.61 includes the class-style stdlib additions and extensions documented in
-`docs/STDLIB.md`, including:
+A script file is a lowercase `.tya` file and may be used as an entry file for
+`tya run`, `tya build`, and `tya emit-c`.
 
-- `cli.Cli`
-- `template.Template`
-- `markdown.Markdown` class-style parsing/rendering
-- `compress.Compress`
-- `log.Logger`
-- `io.Io`
-- `net/ip`
-- `net/socket`
-- `color.Color`
-- `geometry`
-- `transform2d`
-- `compiler/*` introspection packages
-- `binary`, `collections`, random extensions, serialization, XML, and image
-  packages
-- extended `url.Url` parsing and resolution
-- `net/http.Client` helpers and cooperative `net/http.Server` connection tasks
+```sh
+tya run hello.tya
+tya build hello.tya -o hello
+tya emit-c hello.tya
+```
+
+Class files are library-only and cannot be entry files.
+
+`tya check` validates source without running it. `tya format` rewrites source
+to canonical syntax. `tya test` discovers and runs tests using the standard
+`unittest` surface. `tya lint` reports style and safety diagnostics.
+`tya doc` extracts source documentation and may generate static HTML.
+
+WASM build targets are available where supported. Native packages are rejected
+for unsupported WASM targets.
+
+## Errors And Diagnostics
+
+Tya has two related error systems:
+
+- language-level `raise`, `try`, and `catch` for program errors;
+- compiler and tool diagnostics for invalid source and tooling failures.
+
+Compiler diagnostics use stable codes such as `TYA-E0015` and linter
+diagnostics use stable codes such as `TYAL0001`. Diagnostics should include
+an actionable message and, where practical, a hint and documentation URL.
+
+Runtime kind errors, invalid operations, failed assertions, failed I/O, and
+native wrapper errors are represented as Tya error values or raised runtime
+errors according to the API being used.
+
+## Standard Library
+
+The standard library is shipped with Tya under `stdlib/` and is imported using
+the same import syntax as user modules and packages.
+
+Examples include:
+
+```text
+math
+path
+file
+json
+toml
+csv
+url
+time
+random
+unittest
+template
+markdown
+compress
+log
+io
+net/ip
+net/socket
+net/http
+channel
+sync
+task
+```
+
+The normative standard-library API reference is `docs/STDLIB.md`.
 
 ## External Packages
 
-The first external packages and tools are separate repositories, not part of
-this repository's standard library:
+External packages and tools are distributed outside this repository and are
+consumed by git URL plus tag, branch, or revision through `tya.toml`.
+
+Known public packages and tools include:
 
 - `https://github.com/komagata/tya-sqlite`
 - `https://github.com/komagata/tya-sdl2`
@@ -105,753 +765,15 @@ this repository's standard library:
 - `https://github.com/komagata/flakewatch`
 - `https://github.com/komagata/magvideo`
 
-The language package mechanism uses git URLs and tags today. There is still no
-central package registry or `tya publish` command.
+## System Considerations
 
-## Theme
+Tya programs compile to C and link against the Tya runtime. The runtime
+provides value representation, garbage collection, primitive methods, class
+dispatch, task and channel support, resources, and native wrapper integration.
 
-Tya currently has explicit interfaces:
+The implementation must preserve the self-host fixed-point invariant documented
+in `ROADMAP.md`: the maintained Tya-written compiler under `selfhost/v01/`
+must continue to compile itself to stable stage-2 and stage-3 output.
 
-```tya
-interface Reader
-  read = ->
-
-class File implements Reader
-  read = ->
-    "data"
-```
-
-That is useful for contracts, but not enough for stackable behavior. v0.61
-turns `interface` into the single composition mechanism for reusable behavior
-that does not require class inheritance.
-
-The target is:
-
-```tya
-interface Named
-  name = ->
-
-  label = ->
-    self.name()
-
-interface Timestamped
-  created_at = nil
-
-  initialize = ->
-    self.created_at = Time.now()
-
-  age = ->
-    Time.since(self.created_at)
-
-class User implements Named, Timestamped
-  initialize = name ->
-    self.name_value = name
-    super()
-
-  name = ->
-    self.name_value
-```
-
-`User` receives the `label`, `created_at`, and `age` behavior while still using
-ordinary single class inheritance for `extends`.
-
-## Goals
-
-- Keep `interface` as the single user-facing concept.
-- Add interface default instance methods.
-- Add interface fields as state requirements / contributions.
-- Add interface initialization hooks with deterministic ordering.
-- Define `super` across class inheritance and stacked interfaces.
-- Define conflict rules for methods, fields, and initialization.
-- Preserve explicit `implements`; no implicit conformance.
-- Preserve single class inheritance.
-- Keep method overloading out of Tya.
-- Keep the implementation plan large enough for `/goal` long-running work.
-
-## Non-goals
-
-- No separate `trait` keyword in v0.61.
-- No support for both `interface` and `trait` as synonyms.
-- No implicit interfaces generated from classes.
-- No implementing a class as if it were an interface.
-- No method overloading.
-- No generics.
-- No operator-overload traits.
-- No sealed / base / open class hierarchy system.
-
-## Naming Decision
-
-v0.61 keeps `interface`.
-
-The concept becomes trait-like, but Tya should not have two spellings for the
-same abstraction. Canonical Syntax requires one source representation. If Tya
-renames the concept to `trait` later, that must be a clean migration, not a
-long-term alias.
-
-Documentation should use:
-
-```text
-interface
-interface default method
-interface field
-interface initializer
-stacked interface
-```
-
-Avoid using `trait` as syntax in examples.
-
-## Interface Members
-
-An interface may contain:
-
-- body-free instance method requirements;
-- default instance methods;
-- field declarations;
-- `initialize` hooks.
-
-Example:
-
-```tya
-interface Audited
-  created_at = nil
-
-  initialize = ->
-    self.created_at = Time.now()
-
-  touch = ->
-    self.created_at = Time.now()
-
-  label = ->
-```
-
-An interface may not contain:
-
-- static fields;
-- static methods;
-- private members;
-- class constructors other than the interface `initialize` hook;
-- nested class declarations;
-- nested interface declarations.
-
-## Default Methods
-
-A body-free method remains a requirement:
-
-```tya
-interface Reader
-  read = ->
-```
-
-A method with a body is a default:
-
-```tya
-interface Reader
-  read_twice = ->
-    self.read() + self.read()
-```
-
-Default methods are inherited by implementing classes when no class method with
-the same name exists.
-
-```tya
-interface Named
-  name = ->
-
-  label = ->
-    self.name()
-
-class User implements Named
-  name = ->
-    "user"
-
-print(User().label())  # "user"
-```
-
-A class method wins over an interface default:
-
-```tya
-class Admin implements Named
-  name = ->
-    "admin"
-
-  label = ->
-    "admin:{self.name()}"
-```
-
-`Admin().label()` uses the class body.
-
-## Default Methods Satisfy Requirements
-
-A default method can satisfy a compatible body-free requirement from another
-interface.
-
-```tya
-interface RequiresLabel
-  label = ->
-
-interface DefaultLabel
-  label = ->
-    "default"
-
-class Item implements RequiresLabel, DefaultLabel
-```
-
-`Item` is concrete because `DefaultLabel.label` supplies the implementation.
-
-If the arity differs, it is a conflict.
-
-## Interface Fields
-
-An interface field contributes instance state to implementing classes.
-
-```tya
-interface Timestamped
-  created_at = nil
-
-  age = ->
-    Time.since(self.created_at)
-```
-
-A class implementing `Timestamped` has a `created_at` instance field unless it
-declares that field itself.
-
-```tya
-class Post implements Timestamped
-```
-
-is equivalent, observably, to a class with a `created_at = nil` instance field
-and the default `age` method, after conflict resolution.
-
-Field initializers are evaluated for each instance during construction. They
-may reference imported modules and constants. They should not reference `self`
-unless the implementation can guarantee a deterministic point where `self`
-exists and earlier fields are initialized. The v0.61 rule is:
-
-- interface field initializers may not reference `self`;
-- interface initializer hooks may reference `self`.
-
-Invalid:
-
-```tya
-interface Bad
-  name = self.default_name()
-```
-
-Valid:
-
-```tya
-interface Good
-  name = nil
-
-  initialize = ->
-    self.name = self.default_name()
-```
-
-## Field Conflict Rules
-
-Tya has one field per name on an instance. Interfaces must not silently define
-two different fields with the same name.
-
-Conflict:
-
-```tya
-interface A
-  enabled = false
-
-interface B
-  enabled = false
-
-class User implements A, B
-```
-
-Even though the initializer source is the same, v0.61 requires the class or a
-child interface to resolve same-name interface fields explicitly. This keeps
-state composition visible and avoids subtle changes when two interfaces evolve
-independently.
-
-Also conflicting:
-
-```tya
-interface A
-  enabled = false
-
-interface B
-  enabled = true
-
-class User implements A, B
-```
-
-The class must resolve the conflict explicitly:
-
-```tya
-class User implements A, B
-  enabled = false
-```
-
-A class field declaration wins over interface fields with the same name.
-
-Any same-name interface field conflict is resolved by a class field declaration
-or by a child interface field declaration. Initializer equality does not make
-two interface fields compatible in v0.61.
-
-## Interface Initialization
-
-An interface may declare an `initialize` hook:
-
-```tya
-interface Timestamped
-  created_at = nil
-
-  initialize = ->
-    self.created_at = Time.now()
-```
-
-Interface initializers are not constructors. They do not receive the class
-constructor arguments unless the class passes state through fields or calls
-ordinary methods. The signature must be zero-arity in v0.61:
-
-```tya
-initialize = ->
-```
-
-This keeps construction deterministic and avoids argument routing across
-multiple stacked interfaces.
-
-When constructing an instance:
-
-1. parent class construction runs according to existing `super(...)` rules;
-2. class and interface fields are initialized in deterministic order;
-3. interface initializer hooks run in deterministic order;
-4. the class constructor body continues after its `super()` point, or starts
-   after implicit parent/interface initialization when no parent constructor is
-   required.
-
-## Initialization Order
-
-Interface order is source order.
-
-```tya
-class User implements A, B, C
-```
-
-The effective interface order is:
-
-1. parents of `A`, then `A`;
-2. parents of `B`, then `B`;
-3. parents of `C`, then `C`;
-4. duplicates removed by interface identity, keeping the first occurrence.
-
-This is depth-first, left-to-right, postorder, with de-duplication.
-
-Example:
-
-```tya
-interface Root
-  initialize = -> log("Root")
-
-interface A extends Root
-  initialize = -> log("A")
-
-interface B extends Root
-  initialize = -> log("B")
-
-class User implements A, B
-```
-
-Initialization order:
-
-```text
-Root
-A
-B
-```
-
-`Root` runs once.
-
-## Class Constructor Interaction
-
-If a class has no `initialize`, interface fields and initializers still run.
-
-```tya
-interface Timestamped
-  created_at = nil
-  initialize = -> self.created_at = Time.now()
-
-class Post implements Timestamped
-
-post = Post()
-```
-
-If a class has `initialize`, interface initialization happens at the class's
-`super()` point. This is true even for root classes that do not extend another
-class.
-
-Recommended canonical form when implementing interfaces with initialization:
-
-```tya
-class Post implements Timestamped
-  initialize = title ->
-    super()
-    self.title = title
-```
-
-In a root class, `super()` means "run interface initialization chain". This is a
-v0.61 extension. In a subclass, `super(args...)` first calls the parent
-constructor; the parent constructor is responsible for its own interface chain.
-After parent construction, the subclass's newly implemented interfaces run.
-
-If a class implements interfaces with initializer hooks and declares
-`initialize` without calling `super()`, the checker rejects it. This mirrors the
-existing parent-constructor rule and prevents skipped interface initialization.
-
-This keeps the class-constructor spelling `initialize` but avoids treating an
-interface initializer as a second constructor. Interface `initialize` hooks are
-zero-arity lifecycle hooks; class `initialize` methods remain the only
-constructors that receive construction arguments.
-
-## `super` in Interface Methods
-
-`super()` participates in stacked interface default methods.
-
-Within an interface default method, `super()` calls the next implementation of
-the same method in the stack.
-
-Order for method lookup inside a class:
-
-1. class method;
-2. parent class method chain;
-3. effective interface defaults in stack order;
-4. missing method.
-
-Stack order is Scala-like: in `implements A, B`, the rightmost interface wraps
-the interfaces to its left. A class method is always before interface defaults.
-
-When an interface default calls `super()`, lookup resumes after that interface
-in the effective interface method chain.
-
-Example:
-
-```tya
-interface BaseLabel
-  label = ->
-    "base"
-
-interface BracketLabel extends BaseLabel
-  label = ->
-    "[" + super() + "]"
-
-interface StarLabel
-  label = ->
-    "*" + super() + "*"
-
-class User implements BracketLabel, StarLabel
-```
-
-Effective method stack for `label`:
-
-```text
-StarLabel.label
-BracketLabel.label
-BaseLabel.label
-```
-
-`User().label()` returns `"*[base]*"` if `StarLabel` wraps
-`BracketLabel`. The exact order must follow the effective interface order rule
-above and be covered by tests.
-
-If there is no next implementation, `super()` is an error. The checker should
-detect this when possible.
-
-## Class Overrides and `super`
-
-When a class overrides a method provided by interfaces, `super()` in the class
-method calls the next implementation after the class method.
-
-```tya
-interface Label
-  label = ->
-    "interface"
-
-class User implements Label
-  label = ->
-    "class:" + super()
-```
-
-`User().label()` returns `"class:interface"`.
-
-If a parent class provides the method, class inheritance remains first:
-
-```tya
-class Base
-  label = ->
-    "base"
-
-interface Label
-  label = ->
-    "interface"
-
-class User extends Base implements Label
-  label = ->
-    "class:" + super()
-```
-
-`super()` calls `Base.label`, not `Label.label`. Class inheritance wins over
-interface defaults. Interface defaults only fill gaps after the class chain.
-
-## Conflict Rules
-
-Tya does not support overloading. A method name has one effective arity.
-
-### Duplicate Requirements
-
-Two body-free requirements with the same arity are compatible.
-
-### Default vs Requirement
-
-A default method with the same arity satisfies a body-free requirement.
-
-### Class Method Wins
-
-A class method with the same name overrides all interface defaults for that
-method.
-
-### Stackable Defaults
-
-Two unrelated defaults with the same name and arity are not silently accepted.
-The implementing class, or the child interface that combines them, must declare
-the method explicitly. That explicit method resolves the conflict and may call
-`super()` to enter the ordered stack.
-
-```tya
-interface A
-  label = -> "a"
-
-interface B
-  label = -> "b:" + super()
-
-class User implements A, B
-  label = ->
-    super()
-```
-
-This is valid because `User.label` explicitly resolves the conflict. Since
-`implements A, B` uses rightmost-wraps-leftmost order, `super()` calls
-`B.label`, and `B.label` may call `A.label`.
-
-Without the explicit `User.label`, this is an error:
-
-```tya
-class User implements A, B
-```
-
-The diagnostic should tell the author to declare `label` and choose the desired
-composition.
-
-### Ambiguous Diamond
-
-Duplicate inheritance of the same source default is compatible and runs once.
-
-```tya
-interface Root
-  label = -> "root"
-
-interface A extends Root
-interface B extends Root
-
-class User implements A, B
-```
-
-There is one `Root.label`.
-
-If two unrelated parent interfaces contribute same-name defaults and a child
-interface extends both without overriding, the child interface is invalid:
-
-```tya
-interface C extends A, B
-```
-
-It must resolve the conflict locally:
-
-```tya
-interface C extends A, B
-  label = ->
-    super()
-```
-
-Inside that explicit method, `super()` follows rightmost-wraps-leftmost order:
-`B.label`, then `A.label`.
-
-### Arity Conflict
-
-Same method name with different arity is always an error unless the class or
-child interface declares a method that makes the intended arity explicit and all
-other requirements are compatible with it. Since Tya has no overloading,
-incompatible arities usually require renaming one method.
-
-## Static and Private Members
-
-Interface static members remain invalid in v0.61. Stackable behavior is
-instance behavior.
-
-Private interface members are invalid. Interface methods and fields are public
-because they are composed into implementing classes.
-
-## Runtime / Codegen Model
-
-The implementation should lower effective interface contributions into class
-metadata before C emission.
-
-Observable requirements:
-
-- interface fields become instance fields;
-- interface field initialization runs per instance;
-- interface initializer hooks run once per interface identity;
-- default methods are callable through ordinary method dispatch;
-- class methods override interface defaults;
-- `super()` traverses class chain first, then interface method stack;
-- conflicts are diagnosed before C is emitted.
-
-Preferred lowering:
-
-1. compute effective interfaces for each class;
-2. compute effective fields and detect field conflicts;
-3. compute effective initializer order;
-4. compute method stacks per method name;
-5. emit wrapper methods for interface defaults where needed;
-6. make `super()` in generated methods carry an explicit next-method target.
-
-This may require extending the current `super` representation in codegen.
-Runtime dynamic search alone is not enough unless it can resume lookup from a
-specific point in the interface stack.
-
-## Diagnostics
-
-New diagnostics should be stable and actionable:
-
-| Code | Meaning |
-|---|---|
-| `TYA-E0830` | conflicting interface method arity |
-| `TYA-E0831` | conflicting interface field initializer |
-| `TYA-E0832` | invalid member in interface body |
-| `TYA-E0833` | interface initializer must be zero-arity |
-| `TYA-E0834` | class constructor must call `super()` to run interface initialization |
-| `TYA-E0835` | `super()` has no next method in interface stack |
-| `TYA-E0836` | interface static members are not supported |
-| `TYA-E0837` | private interface members are not supported |
-
-Existing diagnostics for unknown interfaces, duplicate implements entries,
-inheritance cycles, classes extending interfaces, and interfaces extending
-classes still apply.
-
-## Implementation Plan
-
-This is intentionally a long-running `/goal` implementation.
-
-1. **Parser / AST**
-   - Allow interface method bodies.
-   - Allow interface field declarations.
-   - Allow interface `initialize = ->` hook.
-   - Reject static/private interface members.
-
-2. **Formatter**
-   - Format body-free requirements, default methods, fields, and initializers.
-   - Preserve canonical member ordering rules once decided.
-
-3. **Checker interface model**
-   - Replace simple `method -> arity` interface info with records for
-     requirements, defaults, fields, and initializers.
-   - Track source interface identity for diamonds.
-
-4. **Effective interface graph**
-   - Compute depth-first left-to-right postorder.
-   - Remove duplicate interface identities.
-   - Preserve enough source order for method stacks and initialization.
-
-5. **Conflict resolver**
-   - Resolve method arity conflicts.
-   - Resolve field initializer conflicts.
-   - Build method stacks.
-   - Verify `super()` has a next target when required.
-
-6. **Class integration**
-   - Merge interface fields into classes.
-   - Require `super()` in constructors when interface initialization must run.
-   - Let class declarations override fields and methods explicitly.
-
-7. **Codegen**
-   - Emit interface default methods as class-callable methods.
-   - Emit interface field initialization.
-   - Emit interface initializer calls in deterministic order.
-   - Extend `super()` lowering for interface stacks.
-
-8. **Runtime**
-   - Prefer no new value kind.
-   - Add helper support only if codegen cannot encode next-method targets
-     statically.
-
-9. **Self-host**
-   - Teach the self-host parser/checker/codegen the new interface body shapes
-     once the Go implementation is stable.
-   - Preserve the fixed point.
-
-10. **Docs and examples**
-   - Add examples for default methods, stateful interfaces, initializer order,
-     and stackable `super`.
-   - Document when abstract classes are still the right tool.
-
-11. **Verification**
-   - Existing v0.11 / v0.12 interface tests pass.
-   - New tests cover defaults, fields, initialization order, class override,
-     interface `super`, class `super` into interface stack, diamonds, and
-     conflicts.
-   - `go test ./... -count=1` passes, including self-host.
-
-## Migration Guidance
-
-Use abstract classes when shared behavior needs one implementation base:
-
-```tya
-abstract class Repository
-  abstract find = id ->
-
-  first = ->
-    self.find(1)
-```
-
-Use interfaces when behavior should be stacked with other behavior:
-
-```tya
-interface FindFirst
-  find = id ->
-
-  first = ->
-    self.find(1)
-```
-
-Use interface fields and initializers when the behavior owns a small,
-self-contained state slot:
-
-```tya
-interface Counted
-  count = 0
-
-  increment = ->
-    self.count = self.count + 1
-```
-
-If the behavior requires complex construction arguments or strong invariants,
-prefer an ordinary class until the interface model proves itself in practice.
-
-## Success Criteria
-
-The stackable interface work is complete when:
-
-- interface methods may be body-free requirements or default methods;
-- interface fields are composed into implementing classes;
-- interface initializers run in deterministic order;
-- `super()` works through class inheritance and stacked interface defaults;
-- class members can explicitly override interface contributions;
-- interface inheritance diamonds are deterministic and de-duplicated;
-- method and field conflicts produce structured diagnostics;
-- historical v0.11 and v0.12 interface behavior is preserved;
-- `go test ./... -count=1` passes, including the self-host fixed point.
+The compiler front end is hand-written. Parser generators and large grammar
+frameworks are not language authority for the active compiler path.
