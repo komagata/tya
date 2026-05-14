@@ -18,6 +18,7 @@
         <a href="spec.html">Spec</a>
         <a href="api.html">API</a>
         <a href="stdlib.html">Stdlib</a>
+        <a href="libraries.html">Libraries</a>
         <a href="naming.html">Naming</a>
         <a href="versions.html">Versions</a>
         <a href="roadmap.html">Roadmap</a>
@@ -55,6 +56,140 @@ server = http.Server.new()</code></pre>
 { name: &quot;tya&quot; }.keys()
 value.class</code></pre>
 <p>See the v0.59 specification for the exhaustive primitive method surface. Use <code>x.class</code> to inspect the runtime class wrapper for primitive and object values.</p>
+<h2 id="net-http"><code>net/http</code></h2>
+<pre><code class="language-tya">import net/http as http
+
+app = http.Server()
+app.use(logger)
+app.group(&quot;/admin&quot;, group -&gt;
+  group.get(&quot;/users/:id&quot;, show_user, { name: &quot;admin_user&quot; })
+)
+app.run(8080)</code></pre>
+<p><code>http.Server</code> provides Sinatra-style HTTP/1.1 routing. Route helpers include <code>get</code>, <code>post</code>, <code>put</code>, <code>delete</code>, <code>patch</code>, <code>options</code>, <code>head</code>, <code>any</code>, and generic <code>route(method, path, handler, options)</code>. Routes are chainable, method names are stored uppercase, <code>any</code> matches every method, HEAD falls back to GET with an empty body, and OPTIONS can synthesize an <code>Allow</code> header for matching paths.</p>
+<p>Path patterns support exact segments, <code>:name</code> parameters, and final wildcard segments such as <code>/assets/*path</code>. Captures are available through both <code>req[&quot;params&quot;]</code> and <code>req[&quot;path_params&quot;]</code>. Use <code>{ trailing_slash: &quot;ignore&quot; }</code> to match a route with or without one trailing slash.</p>
+<p>Middleware registered with <code>use</code> receives <code>(req, next)</code> and calls <code>next.call(req)</code>. <code>group(prefix, fn)</code> prefixes nested routes and composes group middleware after global middleware. <code>not_found(handler)</code> and <code>error(handler)</code> override the default 404 and 500 responses. Named routes use <code>{ name: &quot;route_name&quot; }</code> and <code>app.path(name, params)</code>. <code>app.redirect(path)</code> and <code>app.redirect(path, status)</code> return redirect response dictionaries.</p>
+<h2 id="color"><code>color</code></h2>
+<pre><code class="language-tya">import color as color
+
+red = color.Color.rgb(255, 0, 0)
+blue = color.Color.hex(&quot;#0066ff&quot;)
+mixed = color.Color.blend(red, blue, 0.5)
+
+print mixed.to_hex()</code></pre>
+<p><code>Color</code> instances expose numeric <code>r</code>, <code>g</code>, <code>b</code>, and <code>a</code> fields in the range <code>0..255</code>. Constructors validate channels and raise <code>color.*</code> errors for invalid input.</p>
+<p>Class members on <code>color.Color</code> include <code>rgb</code>, <code>rgba</code>, <code>gray</code>, <code>hex</code>, <code>css</code>, <code>from_array</code>, named color constructors, <code>equal?</code>, <code>nearly_equal?</code>, <code>luminance</code>, <code>contrast_ratio</code>, <code>with_alpha</code>, <code>invert</code>, <code>grayscale</code>, <code>blend</code>, <code>over</code>, <code>lighten</code>, and <code>darken</code>.</p>
+<p><code>hex(text)</code> accepts <code>#rgb</code>, <code>#rgba</code>, <code>#rrggbb</code>, <code>#rrggbbaa</code>, and the same forms without <code>#</code>. <code>css(text)</code> accepts those hex forms, <code>rgb(...)</code>, <code>rgba(...)</code>, and the documented lowercase named colors.</p>
+<p>Instance methods:</p>
+<pre><code class="language-tya">color.to_hex()
+color.to_hex(true)
+color.to_array()</code></pre>
+<h2 id="image"><code>image</code></h2>
+<pre><code class="language-tya">import color as color
+import image as image
+
+img = image.Image.new(2, 2, color.Color.rgb(255, 0, 0))
+thumb = img.resize(128, 128, { fit: &quot;contain&quot; })
+thumb.write(&quot;thumb.png&quot;)</code></pre>
+<p><code>image.Image</code> stores 8-bit RGBA pixels in row-major order. Public fields are <code>width</code>, <code>height</code>, and <code>format</code>. Use <code>Image.read(path)</code>, <code>Image.decode(bytes)</code>, <code>img.write(path)</code>, and <code>img.encode(format)</code> for byte and file workflows. <code>image.Codec.identify(bytes)</code> and <code>identify_file(path)</code> return metadata dictionaries with <code>format</code>, <code>width</code>, <code>height</code>, <code>frames</code>, <code>animated</code>, <code>has_alpha</code>, and <code>color_space</code>.</p>
+<p>Pixel APIs use <code>color.Color</code> instances. <code>Image.new(width, height, color)</code> creates a filled image, <code>pixel(x, y)</code> returns a color, <code>set_pixel(x, y, color)</code> mutates one pixel, and <code>bytes()</code> returns a copy of raw RGBA bytes. Operations include <code>crop</code>, <code>resize</code>, <code>flip_horizontal</code>, <code>flip_vertical</code>, <code>rotate90</code>, <code>grayscale</code>, and <code>composite</code>.</p>
+<p>The bundled first version provides deterministic dependency-free image bytes for <code>png</code>, <code>jpeg</code>, <code>bmp</code>, <code>ppm</code>, and GIF frame-0 decoding through the stdlib codec boundary. Unsupported formats, malformed data, invalid dimensions, invalid channels, and out-of-bounds pixels raise <code>image</code> errors.</p>
+<h2 id="geometry"><code>geometry</code></h2>
+<pre><code class="language-tya">import geometry as geo
+
+p = geo.Point.new(10, 20)
+v = geo.Vector2.normalize(geo.Vector2.new(3, 4))
+r = geo.Rect.new(0, 0, 100, 50)
+
+if geo.Rect.contains_point?(r, p)
+  print &quot;inside&quot;</code></pre>
+<p>The <code>geometry</code> package provides class-style values for vectors and simple shapes:</p>
+<ul>
+<li><code>Vector2</code> with <code>x</code>, <code>y</code></li>
+<li><code>Vector3</code> with <code>x</code>, <code>y</code>, <code>z</code></li>
+<li><code>Point</code> with <code>x</code>, <code>y</code></li>
+<li><code>Size</code> with <code>width</code>, <code>height</code></li>
+<li><code>Rect</code> with <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code></li>
+<li><code>Circle</code> with <code>x</code>, <code>y</code>, <code>radius</code></li>
+</ul>
+<p>Constructors validate numeric fields. <code>Size</code>, <code>Rect</code>, and <code>Circle</code> reject negative dimensions where applicable. Geometry helpers return new instances and do not mutate inputs.</p>
+<p>Vector helpers include arithmetic, scale/divide, dot/cross products, length/distance, normalization, linear interpolation, array conversion, and exact/nearly-equal comparison. Shape helpers include point containment, intersection, union, expansion, translation, bounding rectangles, and area calculations.</p>
+<h2 id="transform2d"><code>transform2d</code></h2>
+<pre><code class="language-tya">import geometry as geo
+import transform2d as transform2d
+
+move = transform2d.Transform2D.translation(10, 20)
+scale = transform2d.Transform2D.uniform_scale(2)
+world = transform2d.Transform2D.compose(move, scale)
+
+point = transform2d.Transform2D.apply_point(world, geo.Point.new(3, 4))
+print geo.Vector2.to_array(geo.Point.to_vector(point))</code></pre>
+<p><code>Transform2D</code> instances expose numeric <code>a</code>, <code>b</code>, <code>c</code>, <code>d</code>, <code>tx</code>, and <code>ty</code> fields representing <code>[a c tx; b d ty; 0 0 1]</code>.</p>
+<p>Constructors include <code>identity</code>, <code>translation</code>, <code>scale</code>, <code>uniform_scale</code>, <code>rotation</code>, <code>rotation_around</code>, <code>skew</code>, <code>from_array</code>, and <code>new</code>.</p>
+<p>Operations include <code>compose</code>, <code>translate</code>, <code>scale_by</code>, <code>rotate</code>, <code>determinant</code>, <code>invertible?</code>, <code>inverse</code>, <code>equal?</code>, <code>nearly_equal?</code>, <code>apply_point</code>, <code>apply_vector2</code>, <code>apply_rect</code>, <code>apply_size</code>, <code>to_matrix</code>, and <code>from_matrix</code>.</p>
+<h2 id="compiler"><code>compiler/*</code></h2>
+<pre><code class="language-tya">import compiler/lexer
+import compiler/parser
+import compiler/ast
+import compiler/checker
+import compiler/format
+
+tokens = Lexer.lex(&quot;x = 1\n&quot;)[&quot;tokens&quot;]
+program = Parser.parse_tokens(tokens)[&quot;program&quot;]
+print Ast.kind(program)
+print Checker.check(&quot;print missing\n&quot;)[&quot;ok&quot;]
+print Format.unparse(program)</code></pre>
+<p>The public compiler introspection packages expose stable dictionaries and arrays instead of private Go handles:</p>
+<ul>
+<li><code>compiler/lexer.Lexer.lex(source)</code></li>
+<li><code>compiler/lexer.Lexer.lex_with_comments(source)</code></li>
+<li><code>compiler/parser.Parser.parse(source)</code></li>
+<li><code>compiler/parser.Parser.parse_tokens(tokens)</code></li>
+<li><code>compiler/ast.Ast.walk(node, visitor)</code></li>
+<li><code>compiler/ast.Ast.children(node)</code></li>
+<li><code>compiler/ast.Ast.kind(node)</code></li>
+<li><code>compiler/ast.Ast.span(node)</code></li>
+<li><code>compiler/checker.Checker.check(source)</code></li>
+<li><code>compiler/checker.Checker.check_ast(program)</code></li>
+<li><code>compiler/format.Format.format(source)</code></li>
+<li><code>compiler/format.Format.unparse(program)</code></li>
+</ul>
+<p>Lexer tokens contain <code>kind</code>, <code>lexeme</code>, <code>line</code>, <code>col</code>, <code>end_line</code>, and <code>end_col</code>. Parser results contain a <code>program</code> node or <code>nil</code> plus <code>diagnostics</code>. AST nodes contain <code>kind</code>, <code>span</code>, <code>ast_version</code> on the program node, and node-specific fields such as <code>body</code>, <code>targets</code>, <code>values</code>, and <code>expr</code>. Diagnostics use dictionaries with <code>severity</code>, <code>code</code>, <code>title</code>, <code>message</code>, <code>primary</code>, <code>hints</code>, and <code>url</code>.</p>
+<h2 id="binary"><code>binary</code></h2>
+<pre><code class="language-tya">import binary as binary
+
+reader = binary.Reader.new(b&quot;\x34\x12&quot;, { endian: &quot;little&quot; })
+print(reader.read_u16())
+
+writer = binary.Writer.new({ endian: &quot;big&quot; })
+writer.write_u16(0x1234).write_i16_le(-2)
+print(bytes_array(writer.bytes()))</code></pre>
+<p><code>binary.Reader</code> reads structured values from an existing <code>bytes</code> value and tracks a cursor. It supports <code>position</code>, <code>seek</code>, <code>skip</code>, <code>remaining</code>, <code>eof?</code>, <code>read_bytes</code>, unsigned/signed 8/16/32-bit integers, and IEEE 754 <code>f32</code>/<code>f64</code> methods. Multi-byte methods use the instance default endian unless the method name ends in <code>_le</code> or <code>_be</code>.</p>
+<p><code>binary.Writer</code> appends structured values to an internal byte buffer. It supports <code>position</code>, <code>bytes</code>, <code>write_bytes</code>, unsigned/signed 8/16/32-bit integers, and IEEE 754 <code>f32</code>/<code>f64</code> methods. Write methods return the writer so calls can be chained. Invalid endian names, invalid cursor movement, reads past EOF, negative byte counts, and out-of-range integer writes raise <code>binary</code> errors.</p>
+<h2 id="collections"><code>collections</code></h2>
+<pre><code class="language-tya">import collections as collections
+
+queue = collections.Queue.new()
+queue.push(&quot;job&quot;)
+next = queue.pop()
+
+seen = collections.Set.from_array([&quot;asset.png&quot;, &quot;asset.png&quot;])
+print(seen.has?(&quot;asset.png&quot;))</code></pre>
+<p>The <code>collections</code> package provides mutable class-style containers for common data-structure behavior:</p>
+<ul>
+<li><code>Stack</code> is a LIFO stack with <code>push</code>, <code>pop</code>, and <code>peek</code>.</li>
+<li><code>Queue</code> is a FIFO queue with <code>push</code>, <code>pop</code>, and <code>peek</code>.</li>
+<li><code>Deque</code> supports <code>push_front</code>, <code>push_back</code>, <code>pop_front</code>, <code>pop_back</code>,</li>
+</ul>
+<p>  <code>peek_front</code>, and <code>peek_back</code>.</p>
+<ul>
+<li><code>Set</code> stores unique values in insertion order and provides <code>union</code>,</li>
+</ul>
+<p>  <code>intersection</code>, <code>difference</code>, and <code>subset?</code>.</p>
+<ul>
+<li><code>PriorityQueue</code> is a stable min-priority queue. Equal priorities pop in</li>
+</ul>
+<p>  insertion order.</p>
+<p>All collections support <code>new</code>, <code>from_array</code>, <code>len</code>, <code>empty?</code>, <code>clear</code>, and <code>to_array</code>. Empty pop and peek operations raise collection-specific errors instead of returning <code>nil</code>.</p>
 <h2 id="math"><code>math</code></h2>
 <pre><code class="language-tya">import math as math
 
@@ -152,7 +287,7 @@ println info[&quot;size&quot;]</code></pre>
 println base64.Base64.encode(&quot;hello&quot;)
 println base64.Base64.decode(&quot;aGVsbG8=&quot;)</code></pre>
 <p><code>encode(text)</code> returns the standard-alphabet Base64 representation with <code>=</code> padding. <code>decode(text)</code> decodes standard Base64 (padding optional, whitespace ignored).</p>
-<h2 id="url-v0-62"><code>url</code> (v0.62)</h2>
+<h2 id="url-v0-61"><code>url</code> (v0.61)</h2>
 <pre><code class="language-tya">import url as url
 
 println url.Url.encode(&quot;hello world&quot;)
@@ -168,6 +303,24 @@ full = url.Url.resolve(&quot;https://example.com/a/b&quot;, &quot;../c?x=1&quot;
 println json.Json.dump({ name: &quot;tya&quot;, version: 23 })
 data = json.Json.parse(&quot;[1, 2, 3]&quot;)</code></pre>
 <p><code>Json.parse(text)</code> parses RFC 8259 JSON; <code>Json.dump(value)</code> emits compact JSON. Numbers without fractional parts decode to ints; with fractional parts to floats. Parsed JSON values are data-exchange dictionaries and arrays, not stdlib domain instances.</p>
+<h2 id="serialization"><code>serialization</code></h2>
+<pre><code class="language-tya">import serialization as serialization
+
+data = serialization.Serializer.to_data(player)
+text = serialization.Serializer.to_json(player, { include_class: true })
+loaded = serialization.Serializer.from_json(text, Player)</code></pre>
+<p><code>serialization.Serializer</code> maps primitive values, arrays, dictionaries with string keys, bytes with an explicit encoding option, and class instances with public fields to JSON-compatible data trees. It can emit JSON through <code>to_json</code> and TOML for dictionary-like top-level values through <code>to_toml</code>.</p>
+<p>Class instances serialize from public fields. <code>to_serialized()</code> and <code>Class.from_serialized(data)</code> hooks override the default field mapping. <code>from_data(data, Class)</code> constructs a class instance and assigns fields from the data tree.</p>
+<p>Options include <code>bytes: &quot;base64&quot;</code>, <code>bytes: &quot;array&quot;</code>, <code>include_class</code>, <code>class_key</code>, <code>fields</code>, <code>defaults</code>, and <code>strict_fields</code>. Cycles and unsupported runtime resources raise <code>serialization</code> errors.</p>
+<h2 id="xml"><code>xml</code></h2>
+<pre><code class="language-tya">import xml as xml
+
+doc = xml.Xml.parse(text)
+root = doc.root()
+tests = root.find_all_recursive(&quot;testcase&quot;)</code></pre>
+<p><code>xml.Xml</code> parses and dumps practical DOM-style XML without DTD, external entity, XPath, XSLT, or streaming support. Public node classes are <code>Document</code>, <code>Element</code>, <code>Text</code>, <code>Comment</code>, and <code>CData</code>.</p>
+<p><code>Document</code> exposes <code>root</code>, <code>children</code>, <code>version</code>, <code>encoding</code>, and <code>to_s</code>. <code>Element</code> exposes public <code>name</code>, <code>attrs</code>, and <code>children</code> fields plus <code>attr</code>, <code>has_attr?</code>, <code>text</code>, <code>child_elements</code>, <code>find</code>, <code>find_all</code>, <code>find_recursive</code>, <code>find_all_recursive</code>, and <code>to_s</code>. Text and CDATA nodes expose <code>text</code>; comments are preserved as comment nodes but excluded from <code>Element.text()</code>.</p>
+<p>The parser supports XML declarations, start/end tags, self-closing tags, single- and double-quoted attributes, predefined entities, numeric character references, comments, CDATA, and namespace prefixes as raw names. It rejects DTD declarations, external entities, malformed nesting, duplicate attributes, unterminated comments/CDATA/tags, and invalid entity references.</p>
 <h2 id="csv"><code>csv</code></h2>
 <pre><code class="language-tya">import csv as csv
 
@@ -204,10 +357,16 @@ println(time.Time.since(now))</code></pre>
 <pre><code class="language-tya">import random as random
 
 random.Random.seed(42)
-println random.Random.int(1, 100)
-println random.Random.float()
-println random.Random.choice([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;])</code></pre>
-<p>Seedable PRNG. **Not** cryptographically secure — use <code>secure_random</code> for tokens.</p>
+println(random.Random.int(1, 100))
+println(random.Random.float())
+println(random.Random.choice([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]))
+
+rng = random.Rng.new(42)
+loot = rng.weighted_choice([&quot;common&quot;, &quot;rare&quot;], [90, 10])
+hand = rng.sample(deck, 5)</code></pre>
+<p>Seedable PRNG. **Not** cryptographically secure; use <code>secure_random</code> for tokens. <code>Random</code> class methods use the process-global generator. <code>Rng</code> instances keep independent deterministic state and can be reseeded with <code>rng.seed(value)</code>.</p>
+<p>Class members on <code>random.Random</code>: <code>seed</code>, <code>int</code>, <code>float</code>, <code>bool</code>, <code>choice</code>, <code>shuffle</code>, <code>shuffle_copy</code>, <code>sample</code>, <code>weighted_choice</code>, and <code>weighted_index</code>. <code>shuffle(items)</code> mutates the input and returns <code>nil</code>; <code>shuffle_copy(items)</code> returns a shuffled copy.</p>
+<p>Instance members on <code>random.Rng</code>: <code>seed</code>, <code>int</code>, <code>float</code>, <code>bool</code>, <code>choice</code>, <code>shuffle</code>, <code>shuffle_copy</code>, <code>sample</code>, <code>weighted_choice</code>, and <code>weighted_index</code>. <code>sample(items, count)</code> samples without replacement. Weighted helpers require non-negative numeric weights and at least one positive weight.</p>
 <h2 id="math-additional-functions"><code>math</code> (additional functions)</h2>
 <p><code>sqrt</code>, <code>pow</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>trunc</code>, <code>log</code>, <code>log2</code>, <code>log10</code>, <code>exp</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, <code>atan2</code>, plus the constants <code>pi</code> and <code>e</code>.</p>
 <h2 id="process"><code>process</code></h2>
@@ -331,8 +490,7 @@ c.close()</code></pre>
 <pre><code class="language-tya">import sync
 
 m = sync.Mutex()
-m.lock()
-m.unlock()
+m.with_lock(() -&gt; nil)
 
 a = sync.AtomicInteger(0)
 a.add(1)
@@ -343,7 +501,7 @@ wg.add(1)
 spawn (() -&gt; wg.done())
 wg.wait()</code></pre>
 <p>Classes: <code>sync.Mutex</code>, <code>sync.AtomicInteger</code>, <code>sync.WaitGroup</code>.</p>
-<p><code>Mutex</code> methods: <code>lock</code>, <code>unlock</code>. <code>AtomicInteger</code> methods: <code>add</code>, <code>load</code>, <code>store</code>, <code>compare_and_swap</code>. <code>WaitGroup</code> methods: <code>add</code>, <code>done</code>, <code>wait</code>.</p>
+<p><code>Mutex</code> methods: <code>lock</code>, <code>unlock</code>, <code>with_lock</code>. <code>AtomicInteger</code> methods: <code>add</code>, <code>load</code>, <code>store</code>, <code>cas</code>. <code>WaitGroup</code> methods: <code>add</code>, <code>done</code>, <code>wait</code>.</p>
 <h2 id="task-v0-60"><code>task</code> (v0.60)</h2>
 <p>Cooperative cancellation for <code>spawn</code>-ed tasks.</p>
 <pre><code class="language-tya">import task
@@ -372,7 +530,7 @@ await t</code></pre>
   default
     print(&quot;idle&quot;)</code></pre>
 <p><code>select</code> waits for the first ready channel operation, timeout, or default arm and runs that arm's body. Receive bindings are scoped to their arm body.</p>
-<h2 id="markdown-v0-62"><code>markdown</code> (v0.62)</h2>
+<h2 id="markdown-v0-61"><code>markdown</code> (v0.61)</h2>
 <p>Markdown parsing and HTML rendering.</p>
 <pre><code class="language-tya">import markdown as markdown
 
@@ -382,7 +540,7 @@ html = markdown.Markdown.render(markdown.Markdown.to_html_ast(ast))</code></pre>
 <p><code>Markdown.parse(text)</code> returns a document dictionary with stable block <code>kind</code> fields. <code>Markdown.to_html_ast(ast)</code> prepares that document for rendering. <code>Markdown.render(ast)</code> renders a Markdown document or HTML-oriented document. <code>Markdown.to_html(text)</code> is equivalent to <code>Markdown.render(Markdown.to_html_ast(Markdown.parse(text)))</code>.</p>
 <p>Supported block syntax includes paragraphs, ATX and setext headings, thematic breaks, block quotes, ordered and unordered lists, one-level nested unordered lists, task lists, pipe tables, fenced code blocks with info strings, and a selected raw HTML block subset. Inline syntax includes emphasis, strong, strikethrough, code spans, links, reference links, images, and autolinks.</p>
 <p>HTML is escaped by default. Raw HTML blocks pass through only when rendering with <code>{ raw_html: true }</code>.</p>
-<h2 id="compress-v0-62"><code>compress</code> (v0.62)</h2>
+<h2 id="compress-v0-61"><code>compress</code> (v0.61)</h2>
 <p>Gzip and zlib compression helpers.</p>
 <pre><code class="language-tya">import compress as compress
 
@@ -391,7 +549,7 @@ text = bytes_text(compress.Compress.gunzip(packed))</code></pre>
 <p>Class members on <code>compress.Compress</code>: <code>gzip</code>, <code>gunzip</code>, <code>zlib</code>, <code>unzlib</code>, <code>gzip_file</code>, <code>gunzip_file</code>.</p>
 <p><code>Compress.gzip(value)</code> and <code>Compress.zlib(value)</code> accept strings or bytes and return compressed bytes. <code>Compress.gunzip(bytes)</code> and <code>Compress.unzlib(bytes)</code> return decompressed bytes; callers convert to text explicitly with <code>bytes_text</code> when needed. Invalid compressed data raises a clear error.</p>
 <p><code>Compress.gzip_file(src, dst)</code> and <code>Compress.gunzip_file(src, dst)</code> read and write files through the <code>io</code> stream package.</p>
-<h2 id="template-v0-62"><code>template</code> (v0.62)</h2>
+<h2 id="template-v0-61"><code>template</code> (v0.61)</h2>
 <p>Generic text template rendering.</p>
 <pre><code class="language-tya">import template as template
 
@@ -404,7 +562,7 @@ html = template.Template.render_html(
 <p>Template tags use <code>{{ name }}</code> for escaped or plain insertion depending on <code>options[&quot;escape&quot;]</code>. Dotted and indexed paths such as <code>{{ user.name }}</code> and <code>{{ items[0].name }}</code> are supported. Missing values render as an empty string unless <code>{ strict: true }</code> is passed.</p>
 <p>Blocks use <code>{{ if path }}</code> / <code>{{ else }}</code> / <code>{{ end }}</code> and <code>{{ for item in items }}</code> / <code>{{ end }}</code>. Explicit partials use <code>{{ partial &quot;name&quot; context }}</code> with <code>partials</code> supplied in options.</p>
 <p><code>Template.render_html(source, data)</code> is equivalent to <code>Template.render(source, data, { escape: &quot;html&quot; })</code> and escapes <code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&quot;</code>, and <code>'</code>. Triple-brace tags such as <code>{{{ trusted_html }}}</code> insert trusted content without escaping.</p>
-<h2 id="log-v0-62"><code>log</code> (v0.62)</h2>
+<h2 id="log-v0-61"><code>log</code> (v0.61)</h2>
 <p>Structured application logging.</p>
 <pre><code class="language-tya">import log as log
 
@@ -417,7 +575,7 @@ logger.with({ request: &quot;42&quot; }).warn(&quot;slow&quot;, { ms: 120 })</co
 <p><code>Logger.new(options)</code> accepts <code>level</code>, <code>format</code>, <code>file</code>, and <code>fields</code>. <code>format: &quot;json&quot;</code> emits deterministic JSON records. <code>file: &quot;path&quot;</code> appends log records to a file instead of stderr. <code>fields</code> are included on every record, and <code>logger.with(fields)</code> returns a child logger with merged base fields.</p>
 <p>Text logs use a deterministic field order:</p>
 <pre><code class="language-text">2026-05-13T12:00:00Z info started app=api port=8080</code></pre>
-<h2 id="io-v0-62"><code>io</code> (v0.62)</h2>
+<h2 id="io-v0-61"><code>io</code> (v0.61)</h2>
 <p>Line-oriented and chunk-oriented streams.</p>
 <pre><code class="language-tya">import io as io
 
@@ -431,7 +589,7 @@ writer.close()</code></pre>
 <p><code>Io.stdin()</code>, <code>Io.stdout()</code>, and <code>Io.stderr()</code> wrap the process streams. Closing those borrowed streams is a no-op for the host process. <code>Io.open(path, mode)</code> accepts text modes such as <code>&quot;r&quot;</code> and <code>&quot;w&quot;</code> and binary modes <code>&quot;rb&quot;</code> and <code>&quot;wb&quot;</code>.</p>
 <p><code>reader.read(size)</code> returns a string in text mode and bytes in binary mode. It returns an empty value at EOF for chunk reads; <code>reader.read_line()</code> returns <code>nil</code> after the last line. <code>reader.each_line(fn)</code> calls <code>fn(line)</code> for each line, preserving trailing newlines.</p>
 <p><code>writer.write(value)</code> writes strings, bytes, or stringified values and returns the byte count. <code>writer.write_line(value)</code> appends a newline. <code>Io.copy(reader, writer)</code> copies chunks until EOF, flushes the writer, and returns the copied byte count.</p>
-<h2 id="net-ip-v0-62"><code>net/ip</code> (v0.62)</h2>
+<h2 id="net-ip-v0-61"><code>net/ip</code> (v0.61)</h2>
 <p>IP address and CIDR parsing.</p>
 <pre><code class="language-tya">import net/ip as ip
 
@@ -444,7 +602,7 @@ print(ip.Network.contains?(network, addr))</code></pre>
 <p>Class members on <code>net/ip.Network</code>: <code>parse</code> and <code>contains?</code>.</p>
 <p><code>Address.parse(text)</code> accepts IPv4 dotted decimal, full or compressed IPv6, and IPv4-mapped IPv6 addresses. It returns an Address instance with stable public <code>version</code> and numeric-part fields. <code>Address.to_s(addr)</code> formats the normalized address. Invalid input raises; <code>Address.valid?(text)</code> returns <code>false</code>.</p>
 <p><code>Network.parse(cidr)</code> accepts IPv4 and IPv6 CIDR prefixes. <code>Network.contains?</code> checks whether an address is inside a parsed network. <code>Network.parse</code> returns a Network instance.</p>
-<h2 id="net-socket-v0-62"><code>net/socket</code> (v0.62)</h2>
+<h2 id="net-socket-v0-61"><code>net/socket</code> (v0.61)</h2>
 <p>TCP client and server sockets.</p>
 <pre><code class="language-tya">import net/socket as socket
 

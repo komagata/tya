@@ -225,7 +225,7 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-The current released implementation, Tya v0.59, includes:
+The current released implementation, Tya v0.61, includes:
 
 - `.tya` files
 - indentation-based blocks
@@ -244,23 +244,32 @@ The current released implementation, Tya v0.59, includes:
   lookup with namespace member access
 - git and path package dependencies through `tya.toml`, `tya.lock`, and
   `tya install`
+- native package metadata through `[native]`, `tya doctor native`, and
+  `tya new --template lib --native`
+- package-provided tools through `[tools]` and `tya tool`
 - standard library modules loaded from `stdlib/`
 - standard builtins listed in the API document
 - compile-to-C execution through `tya run`, `tya build`, and `tya emit-c`
 - source checking through `tya check`
 - test discovery and assertions through `tya test`
 - conservative source formatting through `tya format`
+- WebAssembly build targets with unsupported native packages rejected for WASM
+  builds
 - minimal classes, constructor calls, `init`, public instance fields,
   instance methods, instance field defaults, class variables, class methods,
   single inheritance, class-level inheritance, class introspection, private
   members, private constructors, abstract classes, abstract methods, final
-  classes, explicit interfaces, interface inheritance, method overrides,
+  classes, explicit interfaces, interface inheritance, stackable interface
+  defaults, interface fields, interface initializer hooks, method overrides,
   class-method `self`, and `super(args...)`
 
-Tya v0.59 does not include implicit interfaces, multiple inheritance, protected
-members, async, macros, a central package registry, `tya publish`, native
-dependency declarations, mocking, benchmark, watch mode, parallel test
-execution, or set literals.
+External packages and tools such as SQLite, SDL2, GTK4, raylib, Slim,
+Flakewatch, and Magvideo live in separate `komagata/*` repositories and are
+consumed by git URL plus tag.
+
+Tya v0.61 does not include multiple inheritance, protected members, async,
+macros, a central package registry, `tya publish`, mocking, benchmark, watch
+mode, parallel test execution, or set literals.
 
 ## Test
 

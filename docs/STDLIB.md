@@ -486,7 +486,7 @@ println base64.Base64.decode("aGVsbG8=")
 padding. `decode(text)` decodes standard Base64 (padding optional, whitespace
 ignored).
 
-## `url` (v0.62)
+## `url` (v0.61)
 
 ```tya
 import url as url
@@ -967,7 +967,7 @@ select
 default arm and runs that arm's body. Receive bindings are scoped to
 their arm body.
 
-## `markdown` (v0.62)
+## `markdown` (v0.61)
 
 Markdown parsing and HTML rendering.
 
@@ -996,7 +996,7 @@ strikethrough, code spans, links, reference links, images, and autolinks.
 HTML is escaped by default. Raw HTML blocks pass through only when rendering
 with `{ raw_html: true }`.
 
-## `compress` (v0.62)
+## `compress` (v0.61)
 
 Gzip and zlib compression helpers.
 
@@ -1019,7 +1019,7 @@ clear error.
 `Compress.gzip_file(src, dst)` and `Compress.gunzip_file(src, dst)` read and
 write files through the `io` stream package.
 
-## `template` (v0.62)
+## `template` (v0.61)
 
 Generic text template rendering.
 
@@ -1053,7 +1053,7 @@ Blocks use `{{ if path }}` / `{{ else }}` / `{{ end }}` and
 `"`, and `'`. Triple-brace tags such as `{{{ trusted_html }}}` insert trusted
 content without escaping.
 
-## `log` (v0.62)
+## `log` (v0.61)
 
 Structured application logging.
 
@@ -1085,7 +1085,7 @@ Text logs use a deterministic field order:
 2026-05-13T12:00:00Z info started app=api port=8080
 ```
 
-## `io` (v0.62)
+## `io` (v0.61)
 
 Line-oriented and chunk-oriented streams.
 
@@ -1119,7 +1119,7 @@ the byte count. `writer.write_line(value)` appends a newline. `Io.copy(reader,
 writer)` copies chunks until EOF, flushes the writer, and returns the copied
 byte count.
 
-## `net/ip` (v0.62)
+## `net/ip` (v0.61)
 
 IP address and CIDR parsing.
 
@@ -1147,7 +1147,7 @@ address. Invalid input raises; `Address.valid?(text)` returns `false`.
 checks whether an address is inside a parsed network. `Network.parse` returns a
 Network instance.
 
-## `net/socket` (v0.62)
+## `net/socket` (v0.61)
 
 TCP client and server sockets.
 

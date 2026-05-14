@@ -11,12 +11,11 @@ const pages = [
   { source: path.join(docsDir, "SPEC.md"), output: path.join(docsDir, "spec.html"), title: "Spec" },
   { source: path.join(docsDir, "API.md"), output: path.join(docsDir, "api.html"), title: "API" },
   { source: path.join(docsDir, "STDLIB.md"), output: path.join(docsDir, "stdlib.html"), title: "Stdlib" },
+  { source: path.join(docsDir, "LIBRARIES.md"), output: path.join(docsDir, "libraries.html"), title: "Libraries" },
   { source: path.join(docsDir, "NAMING.md"), output: path.join(docsDir, "naming.html"), title: "Naming" },
   { source: path.join(docsDir, "VERSIONS.md"), output: path.join(docsDir, "versions.html"), title: "Versions" },
   { source: path.join(docsDir, "CANONICAL_SYNTAX.md"), output: path.join(docsDir, "CANONICAL_SYNTAX.html"), title: "Canonical Syntax" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(docsDir, "roadmap.html"), title: "Roadmap" },
-  { source: path.join(docsDir, "v0.62", "SPEC.md"), output: path.join(docsDir, "v0.62", "spec.html"), title: "Spec v0.62", versioned: true },
-  { source: path.join(docsDir, "v0.62", "RELEASE_NOTES.md"), output: path.join(docsDir, "v0.62", "release_notes.html"), title: "Release Notes v0.62", versioned: true },
   { source: path.join(docsDir, "v0.61", "SPEC.md"), output: path.join(docsDir, "v0.61", "spec.html"), title: "Spec v0.61", versioned: true },
   { source: path.join(docsDir, "v0.61", "RELEASE_NOTES.md"), output: path.join(docsDir, "v0.61", "release_notes.html"), title: "Release Notes v0.61", versioned: true },
   { source: path.join(docsDir, "v0.60", "SPEC.md"), output: path.join(docsDir, "v0.60", "spec.html"), title: "Spec v0.60", versioned: true },
@@ -138,9 +137,11 @@ function rewriteHref(href, page) {
       "SPEC.md": "spec.html",
       "API.md": "api.html",
       "STDLIB.md": "stdlib.html",
+      "LIBRARIES.md": "libraries.html",
       "docs/SPEC.md": "spec.html",
       "docs/API.md": "api.html",
       "docs/STDLIB.md": "stdlib.html",
+      "docs/LIBRARIES.md": "libraries.html",
       "NAMING.md": "../naming.html",
       "docs/NAMING.md": "../naming.html",
     };
@@ -153,6 +154,7 @@ function rewriteHref(href, page) {
     "SPEC.md": "spec.html",
     "API.md": "api.html",
     "STDLIB.md": "stdlib.html",
+    "LIBRARIES.md": "libraries.html",
     "NAMING.md": "naming.html",
     "VERSIONS.md": "versions.html",
     "v0.4.md": "v0.4/spec.html",
@@ -293,6 +295,7 @@ function renderPage(page, body) {
         <a href="${prefix}spec.html">Spec</a>
         <a href="${prefix}api.html">API</a>
         <a href="${prefix}stdlib.html">Stdlib</a>
+        <a href="${prefix}libraries.html">Libraries</a>
         <a href="${prefix}naming.html">Naming</a>
         <a href="${prefix}versions.html">Versions</a>
         <a href="${prefix}roadmap.html">Roadmap</a>

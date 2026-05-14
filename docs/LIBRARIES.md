@@ -21,7 +21,6 @@ This document does not define:
 - standard library modules
 - built-in functions
 - package registries
-- native dependency declarations
 - workspaces
 - publishing workflows
 
@@ -165,6 +164,17 @@ path. `tya.lock` should be committed by applications.
 
 There is currently no central package registry or `tya publish` command. Public
 packages are distributed by git URL plus tag, branch, or revision.
+
+The first public external packages and tools are maintained in separate
+repositories:
+
+- `https://github.com/komagata/tya-sqlite`
+- `https://github.com/komagata/tya-sdl2`
+- `https://github.com/komagata/tya-gtk4`
+- `https://github.com/komagata/tya-raylib`
+- `https://github.com/komagata/tya-slim`
+- `https://github.com/komagata/flakewatch`
+- `https://github.com/komagata/magvideo`
 
 ### Native Package Support
 

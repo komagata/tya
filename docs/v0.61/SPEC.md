@@ -1,11 +1,71 @@
 # Tya v0.61 Specification
 
-> **Status:** released. v0.61 grows `interface` into Tya's stackable-trait
-> mechanism. This is intentionally a large `/goal` scope: default method bodies,
-> interface-contributed state, deterministic initialization, conflict
-> resolution, and `super` across stacked interfaces are all part of the target.
-> The keyword remains `interface`; Tya does not support both `interface` and
-> `trait`.
+> **Status:** released. v0.61 is the current released implementation. It
+> includes stackable interface behavior plus the post-v0.60 toolchain,
+> package, stdlib, and external-package support that shipped in the v0.61.0
+> tag.
+
+## Interface Stackable Behavior
+
+v0.61 grows `interface` from a requirement-only contract into Tya's
+stackable behavior mechanism. Interfaces may define default instance methods,
+contribute instance fields, define zero-argument initializer hooks, and
+participate in deterministic `super()` chains across stacked interfaces.
+
+The keyword remains `interface`; Tya does not add a separate `trait` keyword.
+Static interface members, private interface members, and `Self` inside
+interface methods remain invalid.
+
+See the detailed interface rules below in this document.
+
+## Package and Tooling Additions
+
+v0.61 also includes the package/tooling surface described below:
+
+- Native package support through `[native]` in `tya.toml`.
+- `tya new --template lib --native <name>` native package scaffolding.
+- `tya doctor native` environment and flag reporting.
+- Package-provided tools through `[tools]` and `tya tool`.
+- Git/path one-shot tool execution with pinned `--tag` or `--rev` sources.
+- WASM build targets with native package rejection for unsupported targets.
+
+## Standard Library Additions
+
+v0.61 includes the class-style stdlib additions and extensions documented in
+`docs/STDLIB.md`, including:
+
+- `cli.Cli`
+- `template.Template`
+- `markdown.Markdown` class-style parsing/rendering
+- `compress.Compress`
+- `log.Logger`
+- `io.Io`
+- `net/ip`
+- `net/socket`
+- `color.Color`
+- `geometry`
+- `transform2d`
+- `compiler/*` introspection packages
+- `binary`, `collections`, random extensions, serialization, XML, and image
+  packages
+- extended `url.Url` parsing and resolution
+- extended `net/http.Server` routing helpers
+
+## External Packages
+
+The first external packages and tools are separate repositories, not part of
+this repository's standard library:
+
+- `https://github.com/komagata/tya-sqlite`
+- `https://github.com/komagata/tya-sdl2`
+- `https://github.com/komagata/tya-gtk4`
+- `https://github.com/komagata/tya-raylib`
+- `https://github.com/komagata/tya-slim`
+- `https://github.com/komagata/flakewatch`
+- `https://github.com/komagata/magvideo`
+
+The language package mechanism uses git URLs and tags today. There is still no
+central package registry or `tya publish` command.
 
 ## Theme
 

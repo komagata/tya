@@ -1,418 +1,816 @@
-# Tya v0.16 Specification
+# Tya v0.61 Specification
 
-This document is the specification for Tya v0.16 after v0.15 structured error
-handling.
+> **Status:** released. v0.61 is the current released implementation. It
+> includes stackable interface behavior plus the post-v0.60 toolchain,
+> package, stdlib, and external-package support that shipped in the v0.61.0
+> tag.
+
+## Interface Stackable Behavior
+
+v0.61 grows `interface` from a requirement-only contract into Tya's
+stackable behavior mechanism. Interfaces may define default instance methods,
+contribute instance fields, define zero-argument initializer hooks, and
+participate in deterministic `super()` chains across stacked interfaces.
+
+The keyword remains `interface`; Tya does not add a separate `trait` keyword.
+Static interface members, private interface members, and `Self` inside
+interface methods remain invalid.
+
+See the detailed interface rules below in this document.
+
+## Package and Tooling Additions
+
+v0.61 also includes the package/tooling surface described below:
+
+- Native package support through `[native]` in `tya.toml`.
+- `tya new --template lib --native <name>` native package scaffolding.
+- `tya doctor native` environment and flag reporting.
+- Package-provided tools through `[tools]` and `tya tool`.
+- Git/path one-shot tool execution with pinned `--tag` or `--rev` sources.
+- WASM build targets with native package rejection for unsupported targets.
+
+## Standard Library Additions
+
+v0.61 includes the class-style stdlib additions and extensions documented in
+`docs/STDLIB.md`, including:
+
+- `cli.Cli`
+- `template.Template`
+- `markdown.Markdown` class-style parsing/rendering
+- `compress.Compress`
+- `log.Logger`
+- `io.Io`
+- `net/ip`
+- `net/socket`
+- `color.Color`
+- `geometry`
+- `transform2d`
+- `compiler/*` introspection packages
+- `binary`, `collections`, random extensions, serialization, XML, and image
+  packages
+- extended `url.Url` parsing and resolution
+- extended `net/http.Server` routing helpers
+
+## External Packages
+
+The first external packages and tools are separate repositories, not part of
+this repository's standard library:
+
+- `https://github.com/komagata/tya-sqlite`
+- `https://github.com/komagata/tya-sdl2`
+- `https://github.com/komagata/tya-gtk4`
+- `https://github.com/komagata/tya-raylib`
+- `https://github.com/komagata/tya-slim`
+- `https://github.com/komagata/flakewatch`
+- `https://github.com/komagata/magvideo`
+
+The language package mechanism uses git URLs and tags today. There is still no
+central package registry or `tya publish` command.
 
 ## Theme
 
-Tya v0.16 is about pattern matching and string interpolation polish.
+Tya currently has explicit interfaces:
 
-v0.14 adds destructuring assignment. v0.16 reuses that small pattern vocabulary
-for `match` statements. Tya already has string interpolation; v0.16 makes the
-interpolation rules explicit and adds brace escaping.
+```tya
+interface Reader
+  read = ->
+
+class File implements Reader
+  read = ->
+    "data"
+```
+
+That is useful for contracts, but not enough for stackable behavior. v0.61
+turns `interface` into the single composition mechanism for reusable behavior
+that does not require class inheritance.
+
+The target is:
+
+```tya
+interface Named
+  name = ->
+
+  label = ->
+    self.name()
+
+interface Timestamped
+  created_at = nil
+
+  initialize = ->
+    self.created_at = Time.now()
+
+  age = ->
+    Time.since(self.created_at)
+
+class User implements Named, Timestamped
+  initialize = name ->
+    self.name_value = name
+    super()
+
+  name = ->
+    self.name_value
+```
+
+`User` receives the `label`, `created_at`, and `age` behavior while still using
+ordinary single class inheritance for `extends`.
 
 ## Goals
 
-- Add block `match value`.
-- Add `case pattern` branches.
-- Support literal, wildcard, binding, array, dictionary, and nested patterns.
-- Keep `match` as a statement, not an expression.
-- Run only the first matching case.
-- Keep pattern matching small by excluding guards, OR patterns, rest patterns, and exhaustiveness checks.
-- Formalize string interpolation behavior.
-- Add `{{` and `}}` brace escaping in interpolated strings.
+- Keep `interface` as the single user-facing concept.
+- Add interface default instance methods.
+- Add interface fields as state requirements / contributions.
+- Add interface initialization hooks with deterministic ordering.
+- Define `super` across class inheritance and stacked interfaces.
+- Define conflict rules for methods, fields, and initialization.
+- Preserve explicit `implements`; no implicit conformance.
+- Preserve single class inheritance.
+- Keep method overloading out of Tya.
+- Keep the implementation plan large enough for `/goal` long-running work.
 
-## Included in v0.16
+## Non-goals
 
-v0.16 includes all v0.15 behavior and adds:
+- No separate `trait` keyword in v0.61.
+- No support for both `interface` and `trait` as synonyms.
+- No implicit interfaces generated from classes.
+- No implementing a class as if it were an interface.
+- No method overloading.
+- No generics.
+- No operator-overload traits.
+- No sealed / base / open class hierarchy system.
 
-- `match value`
-- `case pattern`
-- literal patterns
-- `_` wildcard pattern
-- binding patterns
-- array patterns
-- dictionary patterns with explicit string keys
-- nested patterns
-- first-match-only execution
-- no fallthrough
-- formal string interpolation rules
-- interpolation expression diagnostics
-- `{{` and `}}` literal brace escapes
+## Naming Decision
 
-## Not Included in v0.16
+v0.61 keeps `interface`.
 
-v0.16 does not include:
+The concept becomes trait-like, but Tya should not have two spellings for the
+same abstraction. Canonical Syntax requires one source representation. If Tya
+renames the concept to `trait` later, that must be a clean migration, not a
+long-term alias.
 
-- match expressions
-- `else` branches in `match`
-- pattern guards
-- OR patterns
-- rest patterns
-- class object patterns
-- typed patterns
-- regex patterns
-- exhaustiveness checks
-- destructuring in function parameters
-- destructuring in `for`
-- destructuring catch bindings
-- interpolation format specifiers
-- interpolation statement blocks
-- interpolation assignment targets
-- type annotations
-- generics
-- package manager
-- native-backed stdlib
+Documentation should use:
 
-## Imports
+```text
+interface
+interface default method
+interface field
+interface initializer
+stacked interface
+```
 
-`import package/path` resolves script modules and directory packages through the
-standard import search path. Directory packages are directories of PascalCase
-class files.
+Avoid using `trait` as syntax in examples.
 
-Unaliased directory-package imports bring public class and interface names into
-the importing file's scope:
+## Interface Members
+
+An interface may contain:
+
+- body-free instance method requirements;
+- default instance methods;
+- field declarations;
+- `initialize` hooks.
+
+Example:
 
 ```tya
-import net/http
+interface Audited
+  created_at = nil
 
-server = Server.new()
+  initialize = ->
+    self.created_at = Time.now()
+
+  touch = ->
+    self.created_at = Time.now()
+
+  label = ->
 ```
 
-Aliased directory-package imports keep a namespace binding and do not expose
-the package's public names bare:
+An interface may not contain:
+
+- static fields;
+- static methods;
+- private members;
+- class constructors other than the interface `initialize` hook;
+- nested class declarations;
+- nested interface declarations.
+
+## Default Methods
+
+A body-free method remains a requirement:
 
 ```tya
-import net/http as http
-
-server = http.Server.new()
+interface Reader
+  read = ->
 ```
 
-Two unaliased package imports that export the same public class or interface
-name are rejected as import name conflicts. A top-level binding in the
-importing file with the same name is also rejected.
-
-## Match Statement
-
-`match value` evaluates `value` once and compares it against each `case` pattern
-in order.
+A method with a body is a default:
 
 ```tya
-match value
-  case nil
-    print "nil"
-  case true
-    print "true"
-  case _
-    print "other"
+interface Reader
+  read_twice = ->
+    self.read() + self.read()
 ```
 
-Only the first matching case runs. There is no fallthrough.
+Default methods are inherited by implementing classes when no class method with
+the same name exists.
 
 ```tya
-match "ok"
-  case "ok"
-    print "first"
-  case "ok"
-    print "second"
+interface Named
+  name = ->
+
+  label = ->
+    self.name()
+
+class User implements Named
+  name = ->
+    "user"
+
+print(User().label())  # "user"
 ```
 
-This prints `first`.
-
-If no case matches, the `match` statement does nothing.
+A class method wins over an interface default:
 
 ```tya
-match "ok"
-  case "error"
-    print "error"
+class Admin implements Named
+  name = ->
+    "admin"
+
+  label = ->
+    "admin:{self.name()}"
 ```
 
-This prints nothing.
+`Admin().label()` uses the class body.
 
-## Literal Patterns
+## Default Methods Satisfy Requirements
 
-Literal patterns match by value.
+A default method can satisfy a compatible body-free requirement from another
+interface.
 
 ```tya
-match status
-  case "ok"
-    print "ok"
-  case "error"
-    print "error"
+interface RequiresLabel
+  label = ->
+
+interface DefaultLabel
+  label = ->
+    "default"
+
+class Item implements RequiresLabel, DefaultLabel
 ```
 
-v0.16 literal patterns include:
+`Item` is concrete because `DefaultLabel.label` supplies the implementation.
 
-- `nil`
-- `true`
-- `false`
-- numbers
-- strings
+If the arity differs, it is a conflict.
 
-Literal equality uses the same value equality as normal `==`.
+## Interface Fields
 
-## Wildcard Pattern
-
-`_` matches any value and does not bind it.
+An interface field contributes instance state to implementing classes.
 
 ```tya
-match value
-  case _
-    print "anything"
+interface Timestamped
+  created_at = nil
+
+  age = ->
+    Time.since(self.created_at)
 ```
 
-`_` is the normal way to write a default case in v0.16.
-
-## Binding Pattern
-
-A bare name pattern matches any value and binds that value for the case block.
+A class implementing `Timestamped` has a `created_at` instance field unless it
+declares that field itself.
 
 ```tya
-match value
-  case name
-    print name
+class Post implements Timestamped
 ```
 
-The binding is local to the case block.
+is equivalent, observably, to a class with a `created_at = nil` instance field
+and the default `age` method, after conflict resolution.
+
+Field initializers are evaluated for each instance during construction. They
+may reference imported modules and constants. They should not reference `self`
+unless the implementation can guarantee a deterministic point where `self`
+exists and earlier fields are initialized. The v0.61 rule is:
+
+- interface field initializers may not reference `self`;
+- interface initializer hooks may reference `self`.
+
+Invalid:
 
 ```tya
-match value
-  case name
-    print name
-
-print name
+interface Bad
+  name = self.default_name()
 ```
 
-The final `print name` is invalid unless `name` was already defined outside the
-match statement.
-
-If an outer variable has the same name, the case binding shadows it inside the
-case block.
-
-## Array Patterns
-
-Array patterns match arrays with exactly the same number of elements.
+Valid:
 
 ```tya
-match value
-  case [name, age]
-    print name
-  case _
-    print "not a user tuple"
+interface Good
+  name = nil
+
+  initialize = ->
+    self.name = self.default_name()
 ```
 
-`[name, age]` matches arrays of length 2 and binds the first element to `name`
-and the second element to `age`.
+## Field Conflict Rules
 
-Array length mismatch means the case does not match. It is not a runtime error.
+Tya has one field per name on an instance. Interfaces must not silently define
+two different fields with the same name.
+
+Conflict:
 
 ```tya
-match ["komagata"]
-  case [name, age]
-    print name
-  case _
-    print "fallback"
+interface A
+  enabled = false
+
+interface B
+  enabled = false
+
+class User implements A, B
 ```
 
-This prints `fallback`.
+Even though the initializer source is the same, v0.61 requires the class or a
+child interface to resolve same-name interface fields explicitly. This keeps
+state composition visible and avoids subtle changes when two interfaces evolve
+independently.
 
-## Dictionary Patterns
-
-Dictionary patterns match dictionaries that contain the listed explicit string
-keys.
+Also conflicting:
 
 ```tya
-match user
-  case {"name": name, "email": email}
-    print name + " <" + email + ">"
-  case _
-    print "unknown"
+interface A
+  enabled = false
+
+interface B
+  enabled = true
+
+class User implements A, B
 ```
 
-Extra dictionary keys are ignored.
+The class must resolve the conflict explicitly:
 
 ```tya
-match {"name": "komagata", "age": 48}
-  case {"name": name}
-    print name
+class User implements A, B
+  enabled = false
 ```
 
-This matches and prints `komagata`.
+A class field declaration wins over interface fields with the same name.
 
-Missing keys mean the case does not match. They are not runtime errors.
+Any same-name interface field conflict is resolved by a class field declaration
+or by a child interface field declaration. Initializer equality does not make
+two interface fields compatible in v0.61.
 
-Dictionary pattern keys must be string literals.
+## Interface Initialization
+
+An interface may declare an `initialize` hook:
 
 ```tya
-match user
-  case {name: value}
-    print value
+interface Timestamped
+  created_at = nil
+
+  initialize = ->
+    self.created_at = Time.now()
 ```
 
-This is invalid because v0.16 does not include dictionary key shorthand.
-
-## Nested Patterns
-
-Array and dictionary patterns may be nested.
+Interface initializers are not constructors. They do not receive the class
+constructor arguments unless the class passes state through fields or calls
+ordinary methods. The signature must be zero-arity in v0.61:
 
 ```tya
-match response
-  case {"type": "ok", "value": [name, email]}
-    print name + " <" + email + ">"
-  case {"type": "error", "message": message}
-    print message
-  case _
-    print "unknown"
+initialize = ->
 ```
 
-Nested mismatch means the case does not match.
+This keeps construction deterministic and avoids argument routing across
+multiple stacked interfaces.
 
-## Match Statement Semantics
+When constructing an instance:
 
-`match` is a statement, not an expression.
+1. parent class construction runs according to existing `super(...)` rules;
+2. class and interface fields are initialized in deterministic order;
+3. interface initializer hooks run in deterministic order;
+4. the class constructor body continues after its `super()` point, or starts
+   after implicit parent/interface initialization when no parent constructor is
+   required.
+
+## Initialization Order
+
+Interface order is source order.
 
 ```tya
-result = match value
-  case "ok"
-    1
+class User implements A, B, C
 ```
 
-This is invalid in v0.16.
+The effective interface order is:
 
-Use assignment inside case blocks instead.
+1. parents of `A`, then `A`;
+2. parents of `B`, then `B`;
+3. parents of `C`, then `C`;
+4. duplicates removed by interface identity, keeping the first occurrence.
+
+This is depth-first, left-to-right, postorder, with de-duplication.
+
+Example:
 
 ```tya
-result = nil
+interface Root
+  initialize = -> log("Root")
 
-match value
-  case "ok"
-    result = 1
-  case _
-    result = 0
+interface A extends Root
+  initialize = -> log("A")
+
+interface B extends Root
+  initialize = -> log("B")
+
+class User implements A, B
 ```
 
-Case bindings are local to the matched case block. Bindings from a case that
-does not match are not created.
+Initialization order:
 
-## String Interpolation
+```text
+Root
+A
+B
+```
 
-String interpolation evaluates `{expression}` inside a string and inserts the
-string representation of the expression value.
+`Root` runs once.
+
+## Class Constructor Interaction
+
+If a class has no `initialize`, interface fields and initializers still run.
 
 ```tya
-name = "komagata"
-print "Hello, {name}"
+interface Timestamped
+  created_at = nil
+  initialize = -> self.created_at = Time.now()
+
+class Post implements Timestamped
+
+post = Post()
 ```
 
-This prints `Hello, komagata`.
+If a class has `initialize`, interface initialization happens at the class's
+`super()` point. This is true even for root classes that do not extend another
+class.
 
-Interpolation uses the same conversion behavior as `to_string`.
+Recommended canonical form when implementing interfaces with initialization:
 
 ```tya
-age = 48
-print "age: {age}"
+class Post implements Timestamped
+  initialize = title ->
+    super()
+    self.title = title
 ```
 
-This prints `age: 48`.
+In a root class, `super()` means "run interface initialization chain". This is a
+v0.61 extension. In a subclass, `super(args...)` first calls the parent
+constructor; the parent constructor is responsible for its own interface chain.
+After parent construction, the subclass's newly implemented interfaces run.
 
-## Interpolation Expressions
+If a class implements interfaces with initializer hooks and declares
+`initialize` without calling `super()`, the checker rejects it. This mirrors the
+existing parent-constructor rule and prevents skipped interface initialization.
 
-An interpolation must contain exactly one expression.
+This keeps the class-constructor spelling `initialize` but avoids treating an
+interface initializer as a second constructor. Interface `initialize` hooks are
+zero-arity lifecycle hooks; class `initialize` methods remain the only
+constructors that receive construction arguments.
+
+## `super` in Interface Methods
+
+`super()` participates in stacked interface default methods.
+
+Within an interface default method, `super()` calls the next implementation of
+the same method in the stack.
+
+Order for method lookup inside a class:
+
+1. class method;
+2. parent class method chain;
+3. effective interface defaults in stack order;
+4. missing method.
+
+Stack order is Scala-like: in `implements A, B`, the rightmost interface wraps
+the interfaces to its left. A class method is always before interface defaults.
+
+When an interface default calls `super()`, lookup resumes after that interface
+in the effective interface method chain.
+
+Example:
 
 ```tya
-print "next age: {age + 1}"
-print "ready: {enabled and ready}"
-print "name: {user["name"]}"
-print "kind: {{"kind": "ok"}["kind"]}"
+interface BaseLabel
+  label = ->
+    "base"
+
+interface BracketLabel extends BaseLabel
+  label = ->
+    "[" + super() + "]"
+
+interface StarLabel
+  label = ->
+    "*" + super() + "*"
+
+class User implements BracketLabel, StarLabel
 ```
 
-The interpolation scanner balances nested `{` and `}` while finding the closing
-brace. Braces and quotes inside string literals that appear in the expression do
-not end the interpolation body. The same rules apply in single-line and
-triple-quoted interpolating strings.
+Effective method stack for `label`:
 
-Multi-line strings may also use heredoc markers when the body contains `"""`
-or when a language tag helps tooling:
+```text
+StarLabel.label
+BracketLabel.label
+BaseLabel.label
+```
+
+`User().label()` returns `"*[base]*"` if `StarLabel` wraps
+`BracketLabel`. The exact order must follow the effective interface order rule
+above and be covered by tests.
+
+If there is no next implementation, `super()` is an error. The checker should
+detect this when possible.
+
+## Class Overrides and `super`
+
+When a class overrides a method provided by interfaces, `super()` in the class
+method calls the next implementation after the class method.
 
 ```tya
-query = sql<<<SQL
-  select *
-  from users
-  where name = {name}
-  SQL
+interface Label
+  label = ->
+    "interface"
 
-raw = r<<<REGEX
-  \d+ files in {dir}
-  REGEX
+class User implements Label
+  label = ->
+    "class:" + super()
 ```
 
-Heredoc markers must match `[A-Z][A-Z0-9_]*`. Language tags such as
-`sql"""..."""` and `html<<<HTML ... HTML` must match `[a-z][a-z0-9_]*` and do
-not change the runtime string value.
+`User().label()` returns `"class:interface"`.
 
-Empty interpolation is invalid.
+If a parent class provides the method, class inheritance remains first:
 
 ```tya
-print "Hello, {}"
+class Base
+  label = ->
+    "base"
+
+interface Label
+  label = ->
+    "interface"
+
+class User extends Base implements Label
+  label = ->
+    "class:" + super()
 ```
 
-Unclosed interpolation is invalid.
+`super()` calls `Base.label`, not `Label.label`. Class inheritance wins over
+interface defaults. Interface defaults only fill gaps after the class chain.
+
+## Conflict Rules
+
+Tya does not support overloading. A method name has one effective arity.
+
+### Duplicate Requirements
+
+Two body-free requirements with the same arity are compatible.
+
+### Default vs Requirement
+
+A default method with the same arity satisfies a body-free requirement.
+
+### Class Method Wins
+
+A class method with the same name overrides all interface defaults for that
+method.
+
+### Stackable Defaults
+
+Two unrelated defaults with the same name and arity are not silently accepted.
+The implementing class, or the child interface that combines them, must declare
+the method explicitly. That explicit method resolves the conflict and may call
+`super()` to enter the ordered stack.
 
 ```tya
-print "Hello, {name"
+interface A
+  label = -> "a"
+
+interface B
+  label = -> "b:" + super()
+
+class User implements A, B
+  label = ->
+    super()
 ```
 
-## Coverage
+This is valid because `User.label` explicitly resolves the conflict. Since
+`implements A, B` uses rightmost-wraps-leftmost order, `super()` calls
+`B.label`, and `B.label` may call `A.label`.
 
-`tya test --cover [--profile FILE]` instruments test suites and writes a
-coverage profile. `tya cover`, `tya cover --format=json`, and `tya cover html`
-render text, JSON, and self-contained HTML reports.
-
-Coverage commands accept repeatable `--include GLOB` and `--exclude GLOB`
-filters. `--min PERCENT` fails the command when filtered total statement
-coverage is below the threshold. The same settings may be configured in
-`tya.toml`:
-
-```toml
-[coverage]
-include = ["src/**", "tests/**"]
-exclude = ["tests/fixtures/**"]
-minimum = 80.0
-```
-
-Interpolation expressions may read values and call functions. They are not
-assignment targets and must not contain statements.
-
-## Brace Escaping
-
-`{{` inserts a literal `{` and `}}` inserts a literal `}`.
+Without the explicit `User.label`, this is an error:
 
 ```tya
-print "literal {{ brace }}"
+class User implements A, B
 ```
 
-This prints `literal { brace }`.
+The diagnostic should tell the author to declare `label` and choose the desired
+composition.
 
-A single unmatched `}` is invalid.
+### Ambiguous Diamond
+
+Duplicate inheritance of the same source default is compatible and runs once.
 
 ```tya
-print "bad } brace"
+interface Root
+  label = -> "root"
+
+interface A extends Root
+interface B extends Root
+
+class User implements A, B
 ```
+
+There is one `Root.label`.
+
+If two unrelated parent interfaces contribute same-name defaults and a child
+interface extends both without overriding, the child interface is invalid:
+
+```tya
+interface C extends A, B
+```
+
+It must resolve the conflict locally:
+
+```tya
+interface C extends A, B
+  label = ->
+    super()
+```
+
+Inside that explicit method, `super()` follows rightmost-wraps-leftmost order:
+`B.label`, then `A.label`.
+
+### Arity Conflict
+
+Same method name with different arity is always an error unless the class or
+child interface declares a method that makes the intended arity explicit and all
+other requirements are compatible with it. Since Tya has no overloading,
+incompatible arities usually require renaming one method.
+
+## Static and Private Members
+
+Interface static members remain invalid in v0.61. Stackable behavior is
+instance behavior.
+
+Private interface members are invalid. Interface methods and fields are public
+because they are composed into implementing classes.
+
+## Runtime / Codegen Model
+
+The implementation should lower effective interface contributions into class
+metadata before C emission.
+
+Observable requirements:
+
+- interface fields become instance fields;
+- interface field initialization runs per instance;
+- interface initializer hooks run once per interface identity;
+- default methods are callable through ordinary method dispatch;
+- class methods override interface defaults;
+- `super()` traverses class chain first, then interface method stack;
+- conflicts are diagnosed before C is emitted.
+
+Preferred lowering:
+
+1. compute effective interfaces for each class;
+2. compute effective fields and detect field conflicts;
+3. compute effective initializer order;
+4. compute method stacks per method name;
+5. emit wrapper methods for interface defaults where needed;
+6. make `super()` in generated methods carry an explicit next-method target.
+
+This may require extending the current `super` representation in codegen.
+Runtime dynamic search alone is not enough unless it can resume lookup from a
+specific point in the interface stack.
 
 ## Diagnostics
 
-v0.16 implementations should report source-oriented errors for:
+New diagnostics should be stable and actionable:
 
-- `match` without a value expression
-- `case` outside `match`
-- invalid pattern syntax
-- non-string dictionary keys in patterns
-- match statement used as an expression
-- duplicate binding names inside one pattern
-- empty interpolation
-- unclosed interpolation
-- unmatched `}` in strings
-- invalid interpolation expression
+| Code | Meaning |
+|---|---|
+| `TYA-E0830` | conflicting interface method arity |
+| `TYA-E0831` | conflicting interface field initializer |
+| `TYA-E0832` | invalid member in interface body |
+| `TYA-E0833` | interface initializer must be zero-arity |
+| `TYA-E0834` | class constructor must call `super()` to run interface initialization |
+| `TYA-E0835` | `super()` has no next method in interface stack |
+| `TYA-E0836` | interface static members are not supported |
+| `TYA-E0837` | private interface members are not supported |
 
-Diagnostics should mention whether the error is in a match pattern or string
-interpolation when that distinction is relevant.
+Existing diagnostics for unknown interfaces, duplicate implements entries,
+inheritance cycles, classes extending interfaces, and interfaces extending
+classes still apply.
+
+## Implementation Plan
+
+This is intentionally a long-running `/goal` implementation.
+
+1. **Parser / AST**
+   - Allow interface method bodies.
+   - Allow interface field declarations.
+   - Allow interface `initialize = ->` hook.
+   - Reject static/private interface members.
+
+2. **Formatter**
+   - Format body-free requirements, default methods, fields, and initializers.
+   - Preserve canonical member ordering rules once decided.
+
+3. **Checker interface model**
+   - Replace simple `method -> arity` interface info with records for
+     requirements, defaults, fields, and initializers.
+   - Track source interface identity for diamonds.
+
+4. **Effective interface graph**
+   - Compute depth-first left-to-right postorder.
+   - Remove duplicate interface identities.
+   - Preserve enough source order for method stacks and initialization.
+
+5. **Conflict resolver**
+   - Resolve method arity conflicts.
+   - Resolve field initializer conflicts.
+   - Build method stacks.
+   - Verify `super()` has a next target when required.
+
+6. **Class integration**
+   - Merge interface fields into classes.
+   - Require `super()` in constructors when interface initialization must run.
+   - Let class declarations override fields and methods explicitly.
+
+7. **Codegen**
+   - Emit interface default methods as class-callable methods.
+   - Emit interface field initialization.
+   - Emit interface initializer calls in deterministic order.
+   - Extend `super()` lowering for interface stacks.
+
+8. **Runtime**
+   - Prefer no new value kind.
+   - Add helper support only if codegen cannot encode next-method targets
+     statically.
+
+9. **Self-host**
+   - Teach the self-host parser/checker/codegen the new interface body shapes
+     once the Go implementation is stable.
+   - Preserve the fixed point.
+
+10. **Docs and examples**
+   - Add examples for default methods, stateful interfaces, initializer order,
+     and stackable `super`.
+   - Document when abstract classes are still the right tool.
+
+11. **Verification**
+   - Existing v0.11 / v0.12 interface tests pass.
+   - New tests cover defaults, fields, initialization order, class override,
+     interface `super`, class `super` into interface stack, diamonds, and
+     conflicts.
+   - `go test ./... -count=1` passes, including self-host.
+
+## Migration Guidance
+
+Use abstract classes when shared behavior needs one implementation base:
+
+```tya
+abstract class Repository
+  abstract find = id ->
+
+  first = ->
+    self.find(1)
+```
+
+Use interfaces when behavior should be stacked with other behavior:
+
+```tya
+interface FindFirst
+  find = id ->
+
+  first = ->
+    self.find(1)
+```
+
+Use interface fields and initializers when the behavior owns a small,
+self-contained state slot:
+
+```tya
+interface Counted
+  count = 0
+
+  increment = ->
+    self.count = self.count + 1
+```
+
+If the behavior requires complex construction arguments or strong invariants,
+prefer an ordinary class until the interface model proves itself in practice.
+
+## Success Criteria
+
+v0.61 is complete when:
+
+- interface methods may be body-free requirements or default methods;
+- interface fields are composed into implementing classes;
+- interface initializers run in deterministic order;
+- `super()` works through class inheritance and stacked interface defaults;
+- class members can explicitly override interface contributions;
+- interface inheritance diamonds are deterministic and de-duplicated;
+- method and field conflicts produce structured diagnostics;
+- old v0.11 and v0.12 interface behavior is preserved;
+- `go test ./... -count=1` passes, including the self-host fixed point.

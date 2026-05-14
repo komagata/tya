@@ -18,6 +18,7 @@
         <a href="../spec.html">Spec</a>
         <a href="../api.html">API</a>
         <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
         <a href="../naming.html">Naming</a>
         <a href="../versions.html">Versions</a>
         <a href="../roadmap.html">Roadmap</a>
@@ -25,7 +26,55 @@
     </nav>
     <article class="doc-content">
 <h1 id="tya-v0-61-specification">Tya v0.61 Specification</h1>
-<p>&gt; **Status:** released. v0.61 grows <code>interface</code> into Tya's stackable-trait &gt; mechanism. This is intentionally a large <code>/goal</code> scope: default method bodies, &gt; interface-contributed state, deterministic initialization, conflict &gt; resolution, and <code>super</code> across stacked interfaces are all part of the target. &gt; The keyword remains <code>interface</code>; Tya does not support both <code>interface</code> and &gt; <code>trait</code>.</p>
+<p>&gt; **Status:** released. v0.61 is the current released implementation. It &gt; includes stackable interface behavior plus the post-v0.60 toolchain, &gt; package, stdlib, and external-package support that shipped in the v0.61.0 &gt; tag.</p>
+<h2 id="interface-stackable-behavior">Interface Stackable Behavior</h2>
+<p>v0.61 grows <code>interface</code> from a requirement-only contract into Tya's stackable behavior mechanism. Interfaces may define default instance methods, contribute instance fields, define zero-argument initializer hooks, and participate in deterministic <code>super()</code> chains across stacked interfaces.</p>
+<p>The keyword remains <code>interface</code>; Tya does not add a separate <code>trait</code> keyword. Static interface members, private interface members, and <code>Self</code> inside interface methods remain invalid.</p>
+<p>See the detailed interface rules below in this document.</p>
+<h2 id="package-and-tooling-additions">Package and Tooling Additions</h2>
+<p>v0.61 also includes the package/tooling surface described below:</p>
+<ul>
+<li>Native package support through <code>[native]</code> in <code>tya.toml</code>.</li>
+<li><code>tya new --template lib --native &lt;name&gt;</code> native package scaffolding.</li>
+<li><code>tya doctor native</code> environment and flag reporting.</li>
+<li>Package-provided tools through <code>[tools]</code> and <code>tya tool</code>.</li>
+<li>Git/path one-shot tool execution with pinned <code>--tag</code> or <code>--rev</code> sources.</li>
+<li>WASM build targets with native package rejection for unsupported targets.</li>
+</ul>
+<h2 id="standard-library-additions">Standard Library Additions</h2>
+<p>v0.61 includes the class-style stdlib additions and extensions documented in <code>docs/STDLIB.md</code>, including:</p>
+<ul>
+<li><code>cli.Cli</code></li>
+<li><code>template.Template</code></li>
+<li><code>markdown.Markdown</code> class-style parsing/rendering</li>
+<li><code>compress.Compress</code></li>
+<li><code>log.Logger</code></li>
+<li><code>io.Io</code></li>
+<li><code>net/ip</code></li>
+<li><code>net/socket</code></li>
+<li><code>color.Color</code></li>
+<li><code>geometry</code></li>
+<li><code>transform2d</code></li>
+<li><code>compiler/*</code> introspection packages</li>
+<li><code>binary</code>, <code>collections</code>, random extensions, serialization, XML, and image</li>
+</ul>
+<p>  packages</p>
+<ul>
+<li>extended <code>url.Url</code> parsing and resolution</li>
+<li>extended <code>net/http.Server</code> routing helpers</li>
+</ul>
+<h2 id="external-packages">External Packages</h2>
+<p>The first external packages and tools are separate repositories, not part of this repository's standard library:</p>
+<ul>
+<li><code>https://github.com/komagata/tya-sqlite</code></li>
+<li><code>https://github.com/komagata/tya-sdl2</code></li>
+<li><code>https://github.com/komagata/tya-gtk4</code></li>
+<li><code>https://github.com/komagata/tya-raylib</code></li>
+<li><code>https://github.com/komagata/tya-slim</code></li>
+<li><code>https://github.com/komagata/flakewatch</code></li>
+<li><code>https://github.com/komagata/magvideo</code></li>
+</ul>
+<p>The language package mechanism uses git URLs and tags today. There is still no central package registry or <code>tya publish</code> command.</p>
 <h2 id="theme">Theme</h2>
 <p>Tya currently has explicit interfaces:</p>
 <pre><code class="language-tya">interface Reader

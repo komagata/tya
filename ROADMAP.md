@@ -66,7 +66,7 @@ required for v1.0.0. They may ship before or after v1.0.0.
 ## Current Direction
 
 Tya is implemented as a small, hand-written compile-to-C language. The latest
-released specification is **v0.62**. Frozen release documents live under
+released specification is **v0.61**. Frozen release documents live under
 `docs/vX.Y/`; release history is tracked in [`docs/VERSIONS.md`](docs/VERSIONS.md)
 and the per-version release notes, not in this roadmap.
 
