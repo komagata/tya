@@ -48,13 +48,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.61.0, download the release source and build the `tya` command locally.
+For v0.62.0, download the release source and build the `tya` command locally.
 This currently requires Go because the reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.61.0.tar.gz | tar xz
-cd tya-0.61.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.62.0.tar.gz | tar xz
+cd tya-0.62.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -269,7 +269,7 @@ External packages and tools such as SQLite, SDL2, GTK4, raylib, Slim,
 Flakewatch, and Magvideo live in separate `komagata/*` repositories and are
 consumed by git URL plus tag.
 
-Tya v0.61 does not include multiple inheritance, protected members, async,
+Tya v0.62 does not include multiple inheritance, protected members, async,
 macros, a central package registry, `tya publish`, mocking, benchmark, watch
 mode, parallel test execution, or set literals.
 

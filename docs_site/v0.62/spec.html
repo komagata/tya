@@ -3,31 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Spec - Tya</title>
-  <link rel="stylesheet" href="document.css">
+  <title>Spec v0.62 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
 </head>
 <body>
   <main class="doc-shell">
     <nav class="doc-nav" aria-label="Documentation">
-      <a class="brand" href="index.html">
-        <img src="assets/tya-logo.png" alt="Tya">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
         <span>Tya</span>
       </a>
       <div class="links">
-        <a href="guide.html">Guide</a>
-        <a href="spec.html">Spec</a>
-        <a href="api.html">API</a>
-        <a href="stdlib.html">Stdlib</a>
-        <a href="libraries.html">Libraries</a>
-        <a href="lint.html">Lint</a>
-        <a href="naming.html">Naming</a>
-        <a href="versions.html">Versions</a>
-        <a href="roadmap.html">Roadmap</a>
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
       </div>
     </nav>
     <article class="doc-content">
-<h1 id="tya-current-specification">Tya Current Specification</h1>
-<p>&gt; **Status:** current repository specification. Historical release snapshots &gt; live under <code>docs/vX.Y/</code>. This page describes the language and standard &gt; library surface maintained on <code>main</code>, including the v0.62 <code>net/http</code> v2 and &gt; linter additions.</p>
+<h1 id="tya-v0-62-specification">Tya v0.62 Specification</h1>
+<p>&gt; **Status:** released. v0.62 is the current released implementation. It &gt; includes the v0.61 language, package, and stdlib surface plus <code>net/http</code> v2, &gt; linter extensions, and the <code>docs_site/</code> GitHub Pages split that shipped in &gt; the v0.62.0 tag.</p>
 <h2 id="language-overview">Language Overview</h2>
 <p>Tya source files use indentation for blocks and parentheses for calls:</p>
 <pre><code class="language-tya">greet = name -&gt; &quot;Hello, {name}&quot;
