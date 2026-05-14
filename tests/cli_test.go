@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -106,7 +107,7 @@ func TestCLIDirectFileDoesNotUseInterpreterPath(t *testing.T) {
 
 func TestCLIRunPassesArgs(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "args.tya")
-	if err := os.WriteFile(path, []byte("items = args()\nprint(len(items))\nprint(items[0])\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("items = args()\nprint(items.len())\nprint(items[0])\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command("go", "run", "./cmd/tya", "run", path, "first")
@@ -123,7 +124,7 @@ func TestCLIRunPassesArgs(t *testing.T) {
 func TestCLIRunLoadsImportedModule(t *testing.T) {
 	dir := t.TempDir()
 	module := filepath.Join(dir, "greeting.tya")
-	if err := os.WriteFile(module, []byte("module greeting\n  hello = name -> \"Hello, {name}\"\n"), 0644); err != nil {
+	if err := os.WriteFile(module, []byte("hello = name -> \"Hello, {name}\"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	path := filepath.Join(dir, "main.tya")
@@ -190,6 +191,208 @@ func TestCLIBuildUsesDefaultOutputPath(t *testing.T) {
 	}
 }
 
+func TestCLIBuildNativeTargetWritesExecutable(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "hello.tya")
+	if err := os.WriteFile(path, []byte("print(\"native target\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	bin := filepath.Join(dir, "hello-native")
+	cmd := exec.Command("go", "run", "./cmd/tya", "build", "--target", "native", path, "-o", bin)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	run := exec.Command(bin)
+	out, err = run.CombinedOutput()
+	if err != nil {
+		t.Fatalf("built executable failed: %v\n%s", err, out)
+	}
+	if string(out) != "native target\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestCLIBuildWasmTargets(t *testing.T) {
+	if _, err := exec.LookPath("zig"); err != nil {
+		t.Skip("zig not installed")
+	}
+	dir := t.TempDir()
+	path := filepath.Join(dir, "hello.tya")
+	if err := os.WriteFile(path, []byte("print(\"hello wasm\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	wasiOut := filepath.Join(dir, "hello.wasm")
+	cmd := exec.Command("go", "run", "./cmd/tya", "build", "--target", "wasm32-wasi", path, "-o", wasiOut)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("wasi build failed: %v\n%s", err, out)
+	}
+	if info, err := os.Stat(wasiOut); err != nil || info.Size() == 0 {
+		t.Fatalf("missing wasi wasm: %v", err)
+	}
+	browserOut := filepath.Join(dir, "browser", "hello.wasm")
+	cmd = exec.Command("go", "run", "./cmd/tya", "build", "--target", "wasm32-browser", path, "-o", browserOut)
+	cmd.Dir = ".."
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("browser build failed: %v\n%s", err, out)
+	}
+	if info, err := os.Stat(browserOut); err != nil || info.Size() == 0 {
+		t.Fatalf("missing browser wasm: %v", err)
+	}
+	if info, err := os.Stat(filepath.Join(dir, "browser", "hello.js")); err != nil || info.Size() == 0 {
+		t.Fatalf("missing browser loader: %v", err)
+	}
+}
+
+func TestCLIBuildBrowserWasmSupportsBasicRuntimeValues(t *testing.T) {
+	if _, err := exec.LookPath("zig"); err != nil {
+		t.Skip("zig not installed")
+	}
+	if _, err := exec.LookPath("node"); err != nil {
+		t.Skip("node not installed")
+	}
+	dir := t.TempDir()
+	path := filepath.Join(dir, "basic.tya")
+	source := strings.Join([]string{
+		"class Box",
+		"  initialize = value ->",
+		"    self.value = value",
+		"",
+		"items = [1, 2]",
+		"data = { name: \"tya\" }",
+		"box = Box(\"ok\")",
+		"print(items.len())",
+		"print(data[\"name\"])",
+		"print(box.value)",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(source), 0644); err != nil {
+		t.Fatal(err)
+	}
+	wasm := filepath.Join(dir, "basic.wasm")
+	cmd := exec.Command("go", "run", "./cmd/tya", "build", "--target", "wasm32-browser", path, "-o", wasm)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("browser build failed: %v\n%s", err, out)
+	}
+	script := fmt.Sprintf(`
+const fs = require('fs');
+(async () => {
+  const { instance } = await WebAssembly.instantiate(fs.readFileSync(%q), {});
+  instance.exports.tya_output_reset();
+  instance.exports.main(0, 0);
+  const ptr = instance.exports.tya_output_ptr();
+  const len = instance.exports.tya_output_len();
+  process.stdout.write(new TextDecoder().decode(new Uint8Array(instance.exports.memory.buffer, ptr, len)));
+})();
+`, wasm)
+	cmd = exec.Command("node", "-e", script)
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("node wasm failed: %v\n%s", err, out)
+	}
+	if string(out) != "2\ntya\nok\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestCLIBuildWasiSupportsArgsAndBasicFiles(t *testing.T) {
+	if _, err := exec.LookPath("zig"); err != nil {
+		t.Skip("zig not installed")
+	}
+	if _, err := exec.LookPath("node"); err != nil {
+		t.Skip("node not installed")
+	}
+	dir := t.TempDir()
+	path := filepath.Join(dir, "wasi_file.tya")
+	source := strings.Join([]string{
+		"import file as file",
+		"print(args().len())",
+		"file.File.write(\"tya-wasi-check.txt\", \"ok\")",
+		"print(file.File.read(\"tya-wasi-check.txt\"))",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(source), 0644); err != nil {
+		t.Fatal(err)
+	}
+	wasm := filepath.Join(dir, "wasi_file.wasm")
+	cmd := exec.Command("go", "run", "./cmd/tya", "build", "--target", "wasm32-wasi", path, "-o", wasm)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("wasi build failed: %v\n%s", err, out)
+	}
+	script := fmt.Sprintf(`
+const { WASI } = require('wasi');
+const fs = require('fs');
+(async () => {
+  const wasi = new WASI({ version: 'preview1', args: ['wasi_file.wasm', 'arg1'], preopens: {'.': %q} });
+  const { instance } = await WebAssembly.instantiate(fs.readFileSync(%q), wasi.getImportObject());
+  wasi.start(instance);
+})();
+`, dir, wasm)
+	cmd = exec.Command("node", "-e", script)
+	cmd.Dir = dir
+	out, err = cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("node wasi failed: %v\n%s", err, out)
+	}
+	text := string(out)
+	if !strings.Contains(text, "2\nok\n") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestCLIBuildRejectsBadWasmInputs(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "hello.tya")
+	if err := os.WriteFile(path, []byte("print(\"bad\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "build", "--target", "plan9", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected unsupported target to fail")
+	}
+	if !strings.Contains(string(out), "unsupported build target: plan9") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+	fileImport := filepath.Join(dir, "file_import.tya")
+	if err := os.WriteFile(fileImport, []byte("import file as file\nprint(\"x\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd = exec.Command("go", "run", "./cmd/tya", "build", "--target", "wasm32-browser", fileImport, "-o", filepath.Join(dir, "bad.wasm"))
+	cmd.Dir = ".."
+	out, err = cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected browser file import to fail")
+	}
+	if !strings.Contains(string(out), "not supported for target wasm32-browser") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestCLIDoctorWasm(t *testing.T) {
+	if _, err := exec.LookPath("zig"); err != nil {
+		t.Skip("zig not installed")
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "doctor", "wasm")
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("doctor wasm failed: %v\n%s", err, out)
+	}
+	if !strings.Contains(string(out), "wasm32-wasi") || !strings.Contains(string(out), "wasm32-browser") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
 func TestCLIVersionCommand(t *testing.T) {
 	cmd := exec.Command("go", "run", "./cmd/tya", "version")
 	cmd.Dir = ".."
@@ -197,7 +400,7 @@ func TestCLIVersionCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
-	if string(out) != "0.58.0\n" {
+	if string(out) != "0.61.0\n" {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }

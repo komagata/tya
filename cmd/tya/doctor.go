@@ -10,8 +10,11 @@ import (
 )
 
 func doctorCommand(args []string) error {
-	if len(args) != 1 || args[0] != "native" {
-		return fmt.Errorf("usage: tya doctor native")
+	if len(args) != 1 || (args[0] != "native" && args[0] != "wasm") {
+		return fmt.Errorf("usage: tya doctor native|wasm")
+	}
+	if args[0] == "wasm" {
+		return doctorWasm()
 	}
 	root, err := projectRoot()
 	if err != nil {
@@ -47,5 +50,23 @@ func doctorCommand(args []string) error {
 	fmt.Fprintf(os.Stdout, "Include dirs: %s\n", strings.Join(plan.IncludeDirs, " "))
 	fmt.Fprintf(os.Stdout, "C flags: %s\n", strings.Join(plan.CFlags, " "))
 	fmt.Fprintf(os.Stdout, "LD flags: %s\n", strings.Join(plan.LDFlags, " "))
+	return nil
+}
+
+func doctorWasm() error {
+	path, err := exec.LookPath("zig")
+	if err != nil {
+		fmt.Fprintln(os.Stdout, "Zig: not found")
+		return fmt.Errorf("tya doctor wasm: Zig is required for wasm targets")
+	}
+	fmt.Fprintf(os.Stdout, "Zig: %s\n", path)
+	out, err := exec.Command(path, "version").Output()
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(os.Stdout, "Zig version: %s", string(out))
+	fmt.Fprintln(os.Stdout, "Supported Tya wasm targets:")
+	fmt.Fprintln(os.Stdout, "  wasm32-wasi")
+	fmt.Fprintln(os.Stdout, "  wasm32-browser")
 	return nil
 }

@@ -25,7 +25,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.58.0"
+const version = "0.61.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
@@ -65,13 +65,13 @@ func main() {
 			usage()
 			os.Exit(2)
 		}
-		path, output, err := parseBuildArgs(os.Args[2:])
+		buildOpts, err := parseBuildArgs(os.Args[2:])
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(2)
 		}
-		if err := buildExecutable(path, output); err != nil {
-			printDiagnostic(path, err)
+		if err := buildExecutableTarget(buildOpts.Path, buildOpts.Output, buildOpts.Target); err != nil {
+			printDiagnostic(buildOpts.Path, err)
 			os.Exit(1)
 		}
 		return
@@ -493,11 +493,26 @@ func compileAndRunInDir(path string, args []string, cwd string) error {
 }
 
 func buildExecutable(path string, output string) error {
-	_, err := buildExecutableWithCover(path, output, nil)
+	_, err := buildExecutableWithCoverTarget(path, output, nil, "native")
 	return err
 }
 
 func buildExecutableWithCover(path string, output string, opt *codegen.CoverageOptions) (*codegen.CoverageRegistry, error) {
+	return buildExecutableWithCoverTarget(path, output, opt, "native")
+}
+
+func buildExecutableTarget(path string, output string, target string) error {
+	_, err := buildExecutableWithCoverTarget(path, output, nil, target)
+	return err
+}
+
+func buildExecutableWithCoverTarget(path string, output string, opt *codegen.CoverageOptions, target string) (*codegen.CoverageRegistry, error) {
+	if target == "" {
+		target = "native"
+	}
+	if target != "native" {
+		return buildWasmExecutable(path, output, target)
+	}
 	csrc, reg, nativePlan, err := compileToCWithCoverNative(path, opt)
 	if err != nil {
 		return nil, err
@@ -1636,30 +1651,50 @@ func parseLineColError(value string) (int, int, string, bool) {
 	return line, col, msg, true
 }
 
-func parseBuildArgs(args []string) (string, string, error) {
-	path := ""
-	output := ""
+type buildCLIOptions struct {
+	Path   string
+	Output string
+	Target string
+}
+
+func parseBuildArgs(args []string) (buildCLIOptions, error) {
+	opts := buildCLIOptions{Target: "native"}
 	for i := 0; i < len(args); i++ {
 		if args[i] == "-o" {
 			if i+1 >= len(args) {
-				return "", "", fmt.Errorf("missing output after -o")
+				return opts, fmt.Errorf("missing output after -o")
 			}
-			output = args[i+1]
+			opts.Output = args[i+1]
 			i++
 			continue
 		}
+		if args[i] == "--target" {
+			if i+1 >= len(args) {
+				return opts, fmt.Errorf("missing output after --target")
+			}
+			opts.Target = args[i+1]
+			i++
+			continue
+		}
+		if strings.HasPrefix(args[i], "--target=") {
+			opts.Target = strings.TrimPrefix(args[i], "--target=")
+			continue
+		}
 		if strings.HasPrefix(args[i], "-") {
-			return "", "", fmt.Errorf("unknown build option: %s", args[i])
+			return opts, fmt.Errorf("unknown build option: %s", args[i])
 		}
-		if path != "" {
-			return "", "", fmt.Errorf("unexpected build argument: %s", args[i])
+		if opts.Path != "" {
+			return opts, fmt.Errorf("unexpected build argument: %s", args[i])
 		}
-		path = args[i]
+		opts.Path = args[i]
 	}
-	if path == "" {
-		return "", "", fmt.Errorf("missing input file")
+	if opts.Path == "" {
+		return opts, fmt.Errorf("missing input file")
 	}
-	return path, output, nil
+	if opts.Target != "native" && opts.Target != "wasm32-wasi" && opts.Target != "wasm32-browser" {
+		return opts, fmt.Errorf("unsupported build target: %s", opts.Target)
+	}
+	return opts, nil
 }
 
 func defaultOutputPath(path string) string {
