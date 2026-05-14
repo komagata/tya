@@ -27,7 +27,9 @@ This document does not define:
 ## User Module
 
 User module: importable Tya source outside the standard library. It is loaded
-with `import` and exposed through the import binding.
+with `import`. Single-file modules are exposed through the import binding.
+Unaliased directory packages expose their public class and interface names
+directly; aliased directory packages are exposed through the alias binding.
 
 Single-file modules export public top-level bindings:
 
@@ -40,14 +42,15 @@ hello = name -> "Hello, {name}"
 # main.tya
 import greeting
 
-print greeting.hello("komagata")
+print(greeting.hello("komagata"))
 ```
 
 A single-file source may contain top-level imports, assignments, functions,
 classes, and embeds. Public top-level names become members of the imported
 namespace. Names starting with `_` are not exported.
 
-Directory packages export public class files:
+Directory packages export public class and interface names from PascalCase
+files:
 
 ```text
 pkg/
@@ -65,11 +68,21 @@ class User
 ```tya
 import pkg
 
-user = pkg.User("komagata")
+user = User("komagata")
 ```
 
-A directory package may contain PascalCase `.tya` class files. Lowercase script
-files are rejected inside package directories.
+A directory package may contain PascalCase `.tya` class files. Class files may
+also declare interfaces. Lowercase script files are rejected inside package
+directories.
+
+Use an alias when the directory name is useful at the call site or conflicts
+with another import:
+
+```tya
+import pkg as pkg
+
+user = pkg.User("komagata")
+```
 
 ## User Library
 
@@ -136,6 +149,14 @@ Applications import the package directory and use its public classes:
 import my_lib
 
 lib = MyLib()
+```
+
+Use an alias for namespace access:
+
+```tya
+import my_lib as my_lib
+
+lib = my_lib.MyLib()
 ```
 
 A package can be used through a local path dependency:
@@ -265,8 +286,7 @@ PascalCase class files:
 import lib -> lib/User.tya, lib/Client.tya, ...
 ```
 
-The visible namespace is the import binding. Use an alias when the final segment
-is too generic or conflicts with another import:
+For single-file modules, the visible namespace is the import binding:
 
 ```tya
 import data/json/parser as json_parser
@@ -274,6 +294,23 @@ import html/parser as html_parser
 
 json_parser.parse("{}")
 html_parser.parse("<p>hi</p>")
+```
+
+For directory packages, an unaliased import exposes public class and interface
+names directly:
+
+```tya
+import net/http
+
+server = Server()
+```
+
+Use an alias when a namespace binding is wanted:
+
+```tya
+import net/http as http
+
+server = http.Server()
 ```
 
 ## Import Resolution
@@ -304,23 +341,25 @@ _normalize = value -> value
 ```tya
 import path
 
-print path.join("a", "b")
+print(path.join("a", "b"))
 ```
 
-The public API of a directory package is the set of public class files. A class
-is public when its class name matches its file name:
+The public API of a directory package is the set of public classes and
+interfaces in its PascalCase class files. A class is public when its class name
+matches its file name:
 
 ```text
 User.tya   -> public User
 Helper.tya -> public Helper
 ```
 
-Additional classes in a class file are private to that file.
+Additional classes in a class file are private to that file. Interfaces declared
+in a class file are public unless their names start with `_`.
 
 ## Internal Imports
 
-Modules inside a library or package should import each other with the same
-public import paths that applications use.
+Single-file modules inside a library or package should import each other with
+the same public import paths that applications use.
 
 Recommended:
 
@@ -334,6 +373,9 @@ handle = raw ->
 
 Avoid depending on relative filesystem imports. They are not part of the module
 path model.
+
+Class files in the same directory package do not need to import each other.
+They can refer to sibling public classes directly by PascalCase name.
 
 ## Naming Guidance
 
@@ -408,7 +450,7 @@ hello = name -> "Hello, {name}"
 # app.tya
 import greeting
 
-print greeting.hello("komagata")
+print(greeting.hello("komagata"))
 ```
 
 Reusable package:
@@ -435,5 +477,5 @@ text_tools = { path = "../text_tools" }
 # app.tya
 import text/slug
 
-print slug.make("Hello Tya")
+print(slug.make("Hello Tya"))
 ```

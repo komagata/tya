@@ -48,16 +48,16 @@
 <li>publishing workflows</li>
 </ul>
 <h2 id="user-module">User Module</h2>
-<p>User module: importable Tya source outside the standard library. It is loaded with <code>import</code> and exposed through the import binding.</p>
+<p>User module: importable Tya source outside the standard library. It is loaded with <code>import</code>. Single-file modules are exposed through the import binding. Unaliased directory packages expose their public class and interface names directly; aliased directory packages are exposed through the alias binding.</p>
 <p>Single-file modules export public top-level bindings:</p>
 <pre><code class="language-tya"># greeting.tya
 hello = name -&gt; &quot;Hello, {name}&quot;</code></pre>
 <pre><code class="language-tya"># main.tya
 import greeting
 
-print greeting.hello(&quot;komagata&quot;)</code></pre>
+print(greeting.hello(&quot;komagata&quot;))</code></pre>
 <p>A single-file source may contain top-level imports, assignments, functions, classes, and embeds. Public top-level names become members of the imported namespace. Names starting with <code>_</code> are not exported.</p>
-<p>Directory packages export public class files:</p>
+<p>Directory packages export public class and interface names from PascalCase files:</p>
 <pre><code class="language-text">pkg/
   User.tya
   Helper.tya</code></pre>
@@ -67,8 +67,12 @@ class User
     self.name = name</code></pre>
 <pre><code class="language-tya">import pkg
 
+user = User(&quot;komagata&quot;)</code></pre>
+<p>A directory package may contain PascalCase <code>.tya</code> class files. Class files may also declare interfaces. Lowercase script files are rejected inside package directories.</p>
+<p>Use an alias when the directory name is useful at the call site or conflicts with another import:</p>
+<pre><code class="language-tya">import pkg as pkg
+
 user = pkg.User(&quot;komagata&quot;)</code></pre>
-<p>A directory package may contain PascalCase <code>.tya</code> class files. Lowercase script files are rejected inside package directories.</p>
 <h2 id="user-library">User Library</h2>
 <p>A user library is a directory tree of modules intended to be reused by more than one entry file or project.</p>
 <p>A user library does not require a manifest. The direct way to make one available is to put its library root on <code>TYA_PATH</code>.</p>
@@ -103,6 +107,10 @@ class MyLib
 <pre><code class="language-tya">import my_lib
 
 lib = MyLib()</code></pre>
+<p>Use an alias for namespace access:</p>
+<pre><code class="language-tya">import my_lib as my_lib
+
+lib = my_lib.MyLib()</code></pre>
 <p>A package can be used through a local path dependency:</p>
 <pre><code class="language-toml">[dependencies]
 my_lib = { path = &quot;../my_lib&quot; }</code></pre>
@@ -165,12 +173,20 @@ import http/server       -&gt; http/server.tya
 import data/json/parser  -&gt; data/json/parser.tya</code></pre>
 <p>For directory packages, the import path can resolve to a directory containing PascalCase class files:</p>
 <pre><code class="language-text">import lib -&gt; lib/User.tya, lib/Client.tya, ...</code></pre>
-<p>The visible namespace is the import binding. Use an alias when the final segment is too generic or conflicts with another import:</p>
+<p>For single-file modules, the visible namespace is the import binding:</p>
 <pre><code class="language-tya">import data/json/parser as json_parser
 import html/parser as html_parser
 
 json_parser.parse(&quot;{}&quot;)
 html_parser.parse(&quot;&lt;p&gt;hi&lt;/p&gt;&quot;)</code></pre>
+<p>For directory packages, an unaliased import exposes public class and interface names directly:</p>
+<pre><code class="language-tya">import net/http
+
+server = Server()</code></pre>
+<p>Use an alias when a namespace binding is wanted:</p>
+<pre><code class="language-tya">import net/http as http
+
+server = http.Server()</code></pre>
 <h2 id="import-resolution">Import Resolution</h2>
 <p>Imports are resolved in this order:</p>
 <ol>
@@ -186,13 +202,13 @@ join = left, right -&gt; left + &quot;/&quot; + right
 _normalize = value -&gt; value</code></pre>
 <pre><code class="language-tya">import path
 
-print path.join(&quot;a&quot;, &quot;b&quot;)</code></pre>
-<p>The public API of a directory package is the set of public class files. A class is public when its class name matches its file name:</p>
+print(path.join(&quot;a&quot;, &quot;b&quot;))</code></pre>
+<p>The public API of a directory package is the set of public classes and interfaces in its PascalCase class files. A class is public when its class name matches its file name:</p>
 <pre><code class="language-text">User.tya   -&gt; public User
 Helper.tya -&gt; public Helper</code></pre>
-<p>Additional classes in a class file are private to that file.</p>
+<p>Additional classes in a class file are private to that file. Interfaces declared in a class file are public unless their names start with <code>_</code>.</p>
 <h2 id="internal-imports">Internal Imports</h2>
-<p>Modules inside a library or package should import each other with the same public import paths that applications use.</p>
+<p>Single-file modules inside a library or package should import each other with the same public import paths that applications use.</p>
 <p>Recommended:</p>
 <pre><code class="language-tya"># libs/web/http/server.tya
 import http/request
@@ -200,6 +216,7 @@ import http/request
 handle = raw -&gt;
   request.parse(raw)</code></pre>
 <p>Avoid depending on relative filesystem imports. They are not part of the module path model.</p>
+<p>Class files in the same directory package do not need to import each other. They can refer to sibling public classes directly by PascalCase name.</p>
 <h2 id="naming-guidance">Naming Guidance</h2>
 <p>Use directory names to group related modules.</p>
 <p>Good:</p>
@@ -239,7 +256,7 @@ hello = name -&gt; &quot;Hello, {name}&quot;</code></pre>
 <pre><code class="language-tya"># app.tya
 import greeting
 
-print greeting.hello(&quot;komagata&quot;)</code></pre>
+print(greeting.hello(&quot;komagata&quot;))</code></pre>
 <p>Reusable package:</p>
 <pre><code class="language-text">text_tools/
   tya.toml
@@ -253,7 +270,7 @@ text_tools = { path = &quot;../text_tools&quot; }</code></pre>
 <pre><code class="language-tya"># app.tya
 import text/slug
 
-print slug.make(&quot;Hello Tya&quot;)</code></pre>
+print(slug.make(&quot;Hello Tya&quot;))</code></pre>
     </article>
   </main>
 </body>
