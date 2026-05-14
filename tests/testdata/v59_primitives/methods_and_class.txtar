@@ -1,0 +1,45 @@
+# v0.59 primitive literals expose wrapper-class methods and class
+# identity without changing their runtime representation.
+cd $REPO
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'Number\ntrue\nString\ntrue\nNil\ntrue\nHI\ntrue\na-b\ntrue\n42\n1\n3\ntrue\n2\ntrue\n3\n4\n1-2-3\na\n1\ntrue\n1\na\nPoint\ntrue\nfalse\nfalse\nfalse\ntrue\n'
+
+-- main.tya --
+print(42.class.name)
+print(42.class == Number)
+print("hi".class.name)
+print(nil.class == Nil)
+print(nil.class.name)
+print(true.class == Boolean)
+print("hi".upper())
+print(" ".blank?())
+print("ab".chars().join("-"))
+print("hi".contains("h"))
+print(42.to_s())
+print(1.5.floor())
+print(9.sqrt())
+print(1.integer?())
+items = [1, 2]
+print(items.len())
+print(items.contains(2))
+items.push(4)
+print(items.len())
+print(items.pop())
+print([3, 1, 2].sort().join("-"))
+print([{name: "bb"}, {name: "a"}].sort_by(item -> item.name.len())[0].name)
+user = {a: 1}
+print(user.len())
+print(user.has("a"))
+print(user.get("a"))
+print(user.entries()[0][0])
+class Point
+  initialize = x ->
+    self.x = x
+
+p = Point(1)
+print(p.class.name)
+print(p.class == Point)
+print("42" == 42)
+print([1] == "1")
+print(nil == false)
+print(1 == 1.0)

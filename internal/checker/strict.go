@@ -414,6 +414,38 @@ func strictWalkStmt(stmt ast.Stmt, scope *strictScope, atRoot bool, ctx *strictC
 				return
 			}
 		}
+	case *ast.SelectStmt:
+		for _, arm := range n.Arms {
+			if arm.Channel != nil {
+				strictWalkExpr(arm.Channel, scope, ctx)
+				if ctx.halted() {
+					return
+				}
+			}
+			if arm.Value != nil {
+				strictWalkExpr(arm.Value, scope, ctx)
+				if ctx.halted() {
+					return
+				}
+			}
+			if arm.Seconds != nil {
+				strictWalkExpr(arm.Seconds, scope, ctx)
+				if ctx.halted() {
+					return
+				}
+			}
+			child := newStrictScope(scope)
+			if arm.BindName != "" {
+				child.define(arm.BindName, strictLocal, arm.BindTok.Line, arm.BindTok.Col, ctx, len(arm.BindName))
+				if b, ok := child.bindings[arm.BindName]; ok {
+					b.used = true
+				}
+			}
+			strictWalkStmts(arm.Body, child, false, ctx)
+			if ctx.halted() {
+				return
+			}
+		}
 	case *ast.ModuleDecl:
 		strictWalkModule(n, scope, ctx)
 	case *ast.ClassDecl:

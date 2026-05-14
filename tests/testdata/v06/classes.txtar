@@ -23,7 +23,7 @@ stderr 'missing class variable or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 ! stderr .
 
 -- classes.tya --
@@ -68,19 +68,18 @@ User.reset()
 print(User.count)
 
 -- user.tya --
-module user
-  class User
-    static count = 0
+class User
+  static count = 0
 
-    initialize = name ->
-      self.name = name
-      Self.count = Self.count + 1
+  initialize = name ->
+    self.name = name
+    Self.count = Self.count + 1
 
-    name = ->
-      self.name
+  name = ->
+    self.name
 
-    static count_users = ->
-      Self.count
+  static count_users = ->
+    Self.count
 
 -- main.tya --
 import user

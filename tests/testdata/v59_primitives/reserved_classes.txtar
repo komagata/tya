@@ -1,0 +1,38 @@
+# v0.59 reserves primitive wrapper class names and forbids changing
+# their method tables.
+cd $REPO
+
+! exec go run ./cmd/tya check $WORK/rebind.tya
+stderr 'TYA-E0815'
+
+! exec go run ./cmd/tya check $WORK/subclass.tya
+stderr 'TYA-E0813'
+
+! exec go run ./cmd/tya check $WORK/monkey_patch.tya
+stderr 'TYA-E0814'
+
+! exec go run ./cmd/tya check $WORK/kind_removed.tya
+stderr 'TYA-E0810'
+
+! exec go run ./cmd/tya check $WORK/len_removed.tya
+stderr 'TYA-E0812'
+
+! exec go run ./cmd/tya run $WORK/import_removed.tya
+stderr 'TYA-E0811'
+
+-- rebind.tya --
+Number = 1
+-- subclass.tya --
+class MyNumber extends Number
+  initialize = ->
+    nil
+-- monkey_patch.tya --
+Number.foo = -> 1
+-- kind_removed.tya --
+print(kind(1))
+-- len_removed.tya --
+print(len([1]))
+-- import_removed.tya --
+import string
+
+print("unreachable")

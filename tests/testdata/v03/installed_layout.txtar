@@ -5,11 +5,8 @@ mkdir $WORK/install/bin
 mkdir $WORK/install/share
 mkdir $WORK/install/share/tya
 mkdir $WORK/install/share/tya/runtime
-mkdir $WORK/install/share/tya/stdlib
 cp runtime/tya_runtime.c $WORK/install/share/tya/runtime/tya_runtime.c
 cp runtime/tya_runtime.h $WORK/install/share/tya/runtime/tya_runtime.h
-cp stdlib/string.tya $WORK/install/share/tya/stdlib/string.tya
-cp stdlib/array.tya $WORK/install/share/tya/stdlib/array.tya
 exec go build -o $WORK/install/bin/tya ./cmd/tya
 mkdir $WORK/outside
 cd $WORK/outside
@@ -18,8 +15,5 @@ stdout 'true\ntya\n'
 ! stderr .
 
 -- app/main.tya --
-import string
-import array
-
-print(string.blank(""))
-print(array.first(["tya"]))
+print("".blank?())
+print(["tya"].first())

@@ -1,11 +1,12 @@
-# imported module files must declare exactly one matching v0.1 module
+# `module` declarations are retired; imported script files synthesize a
+# namespace from public top-level bindings.
 cd $REPO
 
-! exec go run ./cmd/tya --emit-c $WORK/mismatch/main.tya
-stderr 'greeting.tya must define module greeting'
+exec go run ./cmd/tya --emit-c $WORK/mismatch/main.tya
+stdout 'tya_set_index\(greeting, tya_string\("text"\), text\)'
 
-! exec go run ./cmd/tya --emit-c $WORK/two_modules/main.tya
-stderr 'greeting.tya must define exactly one module'
+exec go run ./cmd/tya --emit-c $WORK/two_modules/main.tya
+stdout 'tya_set_index\(greeting, tya_string\("extra"\), extra\)'
 
 exec go run ./cmd/tya --emit-c $WORK/alias/main.tya
 
@@ -14,23 +15,19 @@ import greeting
 print(greeting.text)
 
 -- mismatch/greeting.tya --
-module message
-  text = "hello"
+text = "hello"
 
 -- two_modules/main.tya --
 import greeting
 print(greeting.text)
 
 -- two_modules/greeting.tya --
-module greeting
-  text = "hello"
-module greeting
-  extra = "bad"
+text = "hello"
+extra = "bad"
 
 -- alias/main.tya --
 import greeting as message
 print(message.text)
 
 -- alias/greeting.tya --
-module greeting
-  text = "hello"
+text = "hello"

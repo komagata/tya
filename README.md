@@ -48,13 +48,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.58.0, download the release source and build the `tya` command locally.
-This currently requires Go because the v0.13 reference implementation is written
+For v0.61.0, download the release source and build the `tya` command locally.
+This currently requires Go because the reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.58.0.tar.gz | tar xz
-cd tya-0.58.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.61.0.tar.gz | tar xz
+cd tya-0.61.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -134,11 +134,13 @@ feature set:
 
 Setup recipes ship in [`editors/`](./editors):
 
-- [`editors/vscode/`](./editors/vscode) — TypeScript extension
-  (manual install; Marketplace publication queued for v0.54+)
+- [`editors/vscode/`](./editors/vscode) — TextMate grammar + TypeScript extension
+- [`editors/vim/`](./editors/vim) — Vim / Neovim syntax, filetype, and indent files
 - [`editors/neovim/`](./editors/neovim) — nvim-lspconfig
 - [`editors/zed/`](./editors/zed) — Zed `settings.json`
-- [`editors/emacs/`](./editors/emacs) — eglot / lsp-mode
+- [`editors/emacs/`](./editors/emacs) — syntax coloring plus eglot / lsp-mode
+- [`editors/github-linguist/`](./editors/github-linguist) — GitHub Linguist registration notes
+- [`editors/TOKENS.md`](./editors/TOKENS.md) — shared syntax-color token taxonomy
 
 VS Code manual install:
 
@@ -147,7 +149,7 @@ cd editors/vscode
 npm install
 npm run compile
 npx vsce package
-code --install-extension tya-0.58.0.vsix
+code --install-extension tya-0.61.0.vsix
 ```
 
 ## Example
@@ -161,12 +163,11 @@ if user["age"] >= 20
   print greet(user)
 ```
 
-Modules live in separate files.
+Imports expose public top-level bindings from separate files.
 
 ```tya
 # greeting.tya
-module greeting
-  hello = name -> "Hello, {name}"
+hello = name -> "Hello, {name}"
 ```
 
 ```tya
@@ -176,14 +177,11 @@ import greeting
 print greeting.hello("komagata")
 ```
 
-Standard attached libraries ship with Tya and use the same import syntax.
+Primitive values expose their standard operations as methods.
 
 ```tya
-import string
-import array
-
-print string.blank("  ")
-print array.first(["tya"])
+print "  ".blank?()
+print ["tya"].first()
 ```
 
 ## Documentation
@@ -191,7 +189,7 @@ print array.first(["tya"])
 - [Guide](https://tya-lang.org/guide.html): read this first to learn Tya.
 - [Spec](https://tya-lang.org/spec.html): latest Tya language specification.
 - [API](https://tya-lang.org/api.html): latest built-in function reference.
-- [Stdlib](https://tya-lang.org/stdlib.html): standard attached library reference.
+- [Stdlib](https://tya-lang.org/stdlib.html): standard library reference.
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
@@ -227,13 +225,13 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-The current released implementation, Tya v0.13, includes:
+The current released implementation, Tya v0.59, includes:
 
 - `.tya` files
 - indentation-based blocks
 - comments, assignments, multiple assignment, and constants
-- `nil`, booleans, numbers, strings, arrays, dictionaries, functions, errors,
-  and modules
+- `nil`, booleans, numbers, strings, arrays, dictionaries, functions, and
+  errors
 - string interpolation
 - dictionary index access with `dictionary["name"]`
 - function literals and function calls
@@ -242,9 +240,11 @@ The current released implementation, Tya v0.13, includes:
 - implicit final-expression returns, explicit `return`, and multiple return
   values
 - `try` error propagation
-- same-directory and `TYA_PATH` `import module_name` lookup with
-  `module.member` access
-- attached standard library modules loaded from `stdlib/`
+- same-directory, package dependency, `TYA_PATH`, and standard library import
+  lookup with namespace member access
+- git and path package dependencies through `tya.toml`, `tya.lock`, and
+  `tya install`
+- standard library modules loaded from `stdlib/`
 - standard builtins listed in the API document
 - compile-to-C execution through `tya run`, `tya build`, and `tya emit-c`
 - source checking through `tya check`
@@ -257,11 +257,10 @@ The current released implementation, Tya v0.13, includes:
   classes, explicit interfaces, interface inheritance, method overrides,
   class-method `self`, and `super(args...)`
 
-Tya v0.13 does not include implicit interfaces, multiple inheritance,
-visibility keywords, protected members, async, macros, package management, remote
-module install, JSON or CSV parsers, native standard modules, mocking,
-coverage, benchmark, watch mode, parallel test execution, set literals, import
-aliases, or dictionary member access.
+Tya v0.59 does not include implicit interfaces, multiple inheritance, protected
+members, async, macros, a central package registry, `tya publish`, native
+dependency declarations, mocking, benchmark, watch mode, parallel test
+execution, or set literals.
 
 ## Test
 

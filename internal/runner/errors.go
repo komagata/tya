@@ -14,10 +14,11 @@ import (
 // already in use). New codes target the file / module / import
 // edges that previously returned bare fmt.Errorf strings.
 const (
-	codeInvalidFileName       = "TYA-E0840"
-	codeEntryRedefinesModule  = "TYA-E0856"
-	codeImportNameConflict    = "TYA-E0857"
-	codeUndefinedVariable     = "TYA-E0858"
+	codeInvalidFileName        = "TYA-E0840"
+	codeEntryRedefinesModule   = "TYA-E0856"
+	codeImportNameConflict     = "TYA-E0857"
+	codeUndefinedVariable      = "TYA-E0858"
+	codeRemovedPrimitiveModule = "TYA-E0811"
 )
 
 // RunnerError is the structured wrapper around the diag.Diagnostic

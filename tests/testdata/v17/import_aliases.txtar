@@ -24,24 +24,21 @@ import greeting as g
 print(g.hello("komagata"))
 
 -- alias/greeting.tya --
-module greeting
-  hello = name -> "Hello, {name}"
+hello = name -> "Hello, {name}"
 
 -- alias_only/main.tya --
 import greeting as g
 print(greeting.hello("komagata"))
 
 -- alias_only/greeting.tya --
-module greeting
-  hello = name -> "Hello, {name}"
+hello = name -> "Hello, {name}"
 
 -- path/main.tya --
 import http/server as http_server
 print(http_server.listen(8080))
 
 -- path/http/server.tya --
-module server
-  listen = port -> "listening on {port}"
+listen = port -> "listening on {port}"
 
 -- load_once/main.tya --
 import util
@@ -50,30 +47,25 @@ print(util.name)
 print(u.name)
 
 -- load_once/util.tya --
-module util
-  name = "util"
+name = "util"
 
 -- conflict/main.tya --
-import string as util
-import array as util
+import alpha as util
+import beta as util
 
--- conflict/string.tya --
-module string
-  name = "string"
+-- conflict/alpha.tya --
+name = "alpha"
 
--- conflict/array.tya --
-module array
-  name = "array"
+-- conflict/beta.tya --
+name = "beta"
 
 -- cycle/main.tya --
 import a
 
 -- cycle/a.tya --
 import b
-module a
-  name = "a"
+name = "a"
 
 -- cycle/b.tya --
 import a
-module b
-  name = "b"
+name = "b"

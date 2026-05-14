@@ -1,5 +1,6 @@
 # Tya-written compiler supports the current v0.4 surface while preserving self-host.
 cd $REPO
+env TYA_LEGACY_MODULES=1
 
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya "$WORK/current_v04.tya" > "$WORK/current_v04.c"'
 ! stderr .
@@ -76,22 +77,19 @@ exec $WORK/v04_array
 ! stderr .
 
 -- current_v04.tya --
-import string
-import array
-
 items = [1, 2, 3]
-doubled = map(items, item -> item * 2)
+doubled = items.map(item -> item * 2)
 sum = total, item -> total + item
 
-assert(string.blank("  "))
-assert(array.empty([]))
+assert("  ".trim() == "")
+assert([].len() == 0)
 assert_equal([2, 4, 6], doubled)
-assert_equal(6, reduce(items, 0, sum))
-assert_equal(true, any(items, item -> item == 2))
-assert_equal(true, all(items, item -> item > 0))
-assert_equal(2, find(items, item -> item == 2))
+assert_equal(6, items.reduce(0, sum))
+assert_equal(true, items.any(item -> item == 2))
+assert_equal(true, items.all(item -> item > 0))
+assert_equal(2, items.find(item -> item == 2))
 assert_equal(true, equal([1, {name: "tya"}], [1, {name: "tya"}]))
-print(array.first(["ok"]))
+print(["ok"][0])
 
 -- fail_assert.tya --
 assert(false)
@@ -100,17 +98,13 @@ assert(false)
 assert_equal([1, {name: "tya"}], [1, {name: "Tya"}])
 
 -- v04_string.tya --
-import string
-
-assert(string.blank(" "))
-assert(string.present("tya"))
-assert_equal(false, string.blank("tya"))
-assert_equal(true, string.present("tya"))
+assert(" ".trim() == "")
+assert("tya".trim() != "")
+assert_equal(false, "tya".trim() == "")
+assert_equal(true, "tya".trim() != "")
 
 -- v04_array.tya --
-import array
-
-assert(array.empty([]))
-assert_equal(false, array.empty(["tya"]))
-assert_equal("tya", array.first(["tya"]))
+assert([].len() == 0)
+assert_equal(false, ["tya"].len() == 0)
+assert_equal("tya", ["tya"][0])
 assert_equal([1, {name: "tya"}], [1, {name: "tya"}])

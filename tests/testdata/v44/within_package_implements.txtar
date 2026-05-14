@@ -12,7 +12,7 @@ stdout 'json-encoded\n'
 -- main.tya --
 import codec
 
-print(codec.JsonEncoder().encode())
+print(JsonEncoder().encode())
 
 -- codec/Encoder.tya --
 # The companion public class is needed because v0.44 requires every

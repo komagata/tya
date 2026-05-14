@@ -161,14 +161,14 @@ class Toml
       k = k + 1
     state["pos"] = p
     if is_float
-      return to_float(raw)
-    return to_int(raw)
+      return raw.to_f()
+    return raw.to_i()
 
   static starts_with_text = state, word ->
     src = state["src"]
     n = state["len"]
     p = state["pos"]
-    wn = byte_len(word)
+    wn = word.byte_len()
     if p + wn > n
       return false
     k = 0
@@ -213,7 +213,7 @@ class Toml
       return out
     while true
       v = Toml.parse_value(state)
-      push(out, v)
+      out.push(v)
       Toml.skip_ws_and_newlines(state)
       p = state["pos"]
       if p >= state["len"]
@@ -272,9 +272,9 @@ class Toml
   static ensure_path = root, segments ->
     cur = root
     i = 0
-    while i < len(segments)
+    while i < segments.len()
       seg = segments[i]
-      if not has(cur, seg)
+      if not cur.has(seg)
         cur[seg] = {}
       cur = cur[seg]
       i = i + 1
@@ -283,19 +283,19 @@ class Toml
   static ensure_array_path = root, segments ->
     cur = root
     i = 0
-    last = len(segments) - 1
+    last = segments.len() - 1
     while i < last
       seg = segments[i]
-      if not has(cur, seg)
+      if not cur.has(seg)
         cur[seg] = {}
       cur = cur[seg]
       i = i + 1
     final = segments[last]
-    if not has(cur, final)
+    if not cur.has(final)
       cur[final] = []
     arr = cur[final]
     new_table = {}
-    push(arr, new_table)
+    arr.push(new_table)
     return new_table
 
   static parse_header_segments = state ->
@@ -303,7 +303,7 @@ class Toml
     while true
       Toml.skip_ws_in_line(state)
       key = Toml.parse_key(state)
-      push(segments, key)
+      segments.push(key)
       Toml.skip_ws_in_line(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == "."
@@ -312,7 +312,7 @@ class Toml
         return segments
 
   static parse = text ->
-    state = { src: text, pos: 0, len: byte_len(text) }
+    state = { src: text, pos: 0, len: text.byte_len() }
     root = {}
     current = root
     while state["pos"] < state["len"]
@@ -359,7 +359,7 @@ class Toml
     return root
 
   static is_bare_key = text ->
-    n = byte_len(text)
+    n = text.byte_len()
     if n == 0
       return false
     i = 0
@@ -373,7 +373,7 @@ class Toml
     if Toml.is_bare_key(text)
       return text
     out = "\""
-    n = byte_len(text)
+    n = text.byte_len()
     i = 0
     while i < n
       c = text[i]
@@ -388,7 +388,7 @@ class Toml
 
   static format_string = text ->
     out = "\""
-    n = byte_len(text)
+    n = text.byte_len()
     i = 0
     while i < n
       c = text[i]
@@ -411,31 +411,30 @@ class Toml
     return out + "\""
 
   static format_inline_value = value ->
-    k = kind(value)
-    if k == "nil"
+    if value.class == Nil
       raise "toml.dump: nil is not representable in TOML"
-    if k == "bool"
+    if value.class == Boolean
       if value
         return "true"
       return "false"
-    if k == "int" or k == "float"
-      return to_string(value)
-    if k == "string"
+    if value.class == Number
+      return value.to_s()
+    if value.class == String
       return Toml.format_string(value)
-    if k == "array"
+    if value.class == Array
       out = "["
       i = 0
-      while i < len(value)
+      while i < value.len()
         if i > 0
           out = out + ", "
         out = out + Toml.format_inline_value(value[i])
         i = i + 1
       return out + "]"
-    if k == "dict"
+    if value.class == Dict
       out = "{{"
-      ks = keys(value)
+      ks = value.keys()
       i = 0
-      while i < len(ks)
+      while i < ks.len()
         if i > 0
           out = out + ", "
         out = out
@@ -447,13 +446,13 @@ class Toml
     raise "toml.dump: unsupported value kind"
 
   static is_array_of_dicts = value ->
-    if kind(value) != "array"
+    if value.class != Array
       return false
-    if len(value) == 0
+    if value.len() == 0
       return false
     i = 0
-    while i < len(value)
-      if kind(value[i]) != "dict"
+    while i < value.len()
+      if value[i].class != Dict
         return false
       i = i + 1
     return true
@@ -461,13 +460,12 @@ class Toml
   static emit_table = value, prefix ->
     primitives = ""
     sub_tables = ""
-    ks = keys(value)
+    ks = value.keys()
     i = 0
-    while i < len(ks)
+    while i < ks.len()
       k = ks[i]
       v = value[k]
-      vk = kind(v)
-      if vk == "dict"
+      if v.class == Dict
         new_prefix = ""
         if prefix == ""
           new_prefix = Toml.format_key(k)
@@ -485,7 +483,7 @@ class Toml
         else
           new_prefix = prefix + "." + Toml.format_key(k)
         j = 0
-        while j < len(v)
+        while j < v.len()
           sub_tables = sub_tables
             + "\n[["
             + new_prefix
@@ -502,6 +500,6 @@ class Toml
     return primitives + sub_tables
 
   static dump = value ->
-    if kind(value) != "dict"
+    if value.class != Dict
       raise "toml.dump: top-level value must be a dict"
     return Toml.emit_table(value, "")

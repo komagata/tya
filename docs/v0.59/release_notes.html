@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.59 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-59-release-notes">Tya v0.59 Release Notes</h1>
+<p>&gt; **Status:** shipped. <code>tya version</code> reports <code>0.59.0</code>.</p>
+<p>v0.59 makes primitive values behave like class instances. Numbers, strings, arrays, dicts, booleans, and nil now expose their standard behavior through method calls:</p>
+<pre><code class="language-tya">42.to_s()
+&quot;hi&quot;.upper()
+[1, 2, 3].len()
+{ name: &quot;tya&quot; }.keys()
+true.to_s()
+nil.class.name</code></pre>
+<p>The six primitive class identifiers are reserved at top level: <code>Number</code>, <code>String</code>, <code>Array</code>, <code>Dict</code>, <code>Boolean</code>, and <code>Nil</code>. <code>x.class</code> returns the wrapper class singleton for both primitive values and user-defined instances.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><code>kind(x)</code> is removed. Use <code>x.class</code> for identity checks or <code>x.class.name</code></li>
+</ul>
+<p>  for a string label.</p>
+<ul>
+<li>The <code>string</code>, <code>array</code>, and <code>dict</code> stdlib modules are removed. Use methods on</li>
+</ul>
+<p>  the value: <code>s.trim()</code>, <code>items.map(fn)</code>, <code>data.keys()</code>.</p>
+<ul>
+<li>Top-level primitive helper builtins such as <code>len</code>, <code>trim</code>, <code>contains</code>,</li>
+</ul>
+<p>  <code>push</code>, <code>pop</code>, <code>keys</code>, <code>values</code>, <code>map</code>, <code>filter</code>, <code>reduce</code>, <code>to_string</code>,   <code>to_int</code>, <code>to_float</code>, and <code>to_number</code> are removed.</p>
+<ul>
+<li>The primitive class identifiers cannot be rebound, subclassed, or</li>
+</ul>
+<p>  monkey-patched.</p>
+<h2 id="migration-examples">Migration Examples</h2>
+<p>| Before | After | |---|---| | <code>kind(x)</code> | <code>x.class.name</code> | | <code>kind(x) == &quot;string&quot;</code> | <code>x.class == String</code> | | <code>len(items)</code> | <code>items.len()</code> | | <code>string.blank(s)</code> | <code>s.blank?()</code> | | <code>string.split(s, &quot;,&quot;)</code> | <code>s.split(&quot;,&quot;)</code> | | <code>array.map(items, fn)</code> | <code>items.map(fn)</code> | | <code>dict.has(data, &quot;name&quot;)</code> | <code>data.has(&quot;name&quot;)</code> | | <code>to_string(value)</code> | <code>value.to_s()</code> |</p>
+<h2 id="verification">Verification</h2>
+<p>This release updates the Go compiler, C runtime, interpreter, self-hosted compiler sources, examples, stdlib modules, and test fixtures to the new method surface. The release gate is:</p>
+<pre><code class="language-sh">go test ./... -count=1</code></pre>
+    </article>
+  </main>
+</body>
+</html>

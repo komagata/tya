@@ -96,6 +96,19 @@ func walkLintStmt(stmt ast.Stmt, depth int, out *[]LintFinding) {
 		for _, c := range n.Cases {
 			walkBlock(c.Body, depth+1, out)
 		}
+	case *ast.SelectStmt:
+		for _, arm := range n.Arms {
+			if arm.Channel != nil {
+				walkLintExpr(arm.Channel, out)
+			}
+			if arm.Value != nil {
+				walkLintExpr(arm.Value, out)
+			}
+			if arm.Seconds != nil {
+				walkLintExpr(arm.Seconds, out)
+			}
+			walkBlock(arm.Body, depth+1, out)
+		}
 	case *ast.AssignStmt:
 		for _, v := range n.Values {
 			walkLintExpr(v, out)
@@ -193,6 +206,8 @@ func stmtFirstPos(stmt ast.Stmt) (line, col int) {
 		return n.Tok.Line, n.Tok.Col
 	case *ast.ForInStmt:
 		return n.ValueTok.Line, n.ValueTok.Col
+	case *ast.SelectStmt:
+		return n.Tok.Line, n.Tok.Col
 	case *ast.ExprStmt:
 		return exprFirstPos(n.Expr)
 	case *ast.IfStmt:
@@ -236,4 +251,3 @@ func exprFirstPos(expr ast.Expr) (line, col int) {
 	}
 	return 0, 0
 }
-

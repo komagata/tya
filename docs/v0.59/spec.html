@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.59 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-59-specification">Tya v0.59 Specification</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.59.0</code>. &gt; v0.59 makes every primitive literal a class instance: &gt; <code>42.to_s()</code>, <code>&quot;hi&quot;.upper()</code>, <code>[1,2].len()</code> all dispatch through &gt; the wrapper class. The <code>kind(x)</code> builtin is removed in favor of &gt; <code>x.class</code> / <code>x.class.name</code>. The module-style <code>string.upper(s)</code>, &gt; <code>array.len(a)</code>, <code>dict.keys(d)</code> etc. are removed in favor of the &gt; method-style. No new keywords are added.</p>
+<h2 id="theme">Theme</h2>
+<p>v0.5 introduced <code>class</code>. v0.44 made everything a class (class-oriented namespace). v0.59 extends &quot;everything is a class&quot; to the last remaining holdouts — the literal values themselves.</p>
+<p>After v0.59, <code>42</code> is a <code>Number</code> instance, <code>&quot;hi&quot;</code> is a <code>String</code> instance, <code>[1, 2]</code> is an <code>Array</code> instance, <code>{a: 1}</code> is a <code>Dict</code> instance, <code>true</code> / <code>false</code> are <code>Boolean</code> instances, and <code>nil</code> is the unique <code>Nil</code> instance. Method calls on literals work naturally (<code>42.to_s()</code>, <code>&quot;hi&quot;.len()</code>), operators desugar to double-underscore method names (<code>a + b</code> → <code>a.__add__(b)</code>), and type introspection happens through <code>x.class</code>.</p>
+<p>The runtime representation is unchanged — <code>TyaValue</code> stays a tagged union (<code>runtime/tya_runtime.h</code>), <code>kind</code> enum and payload fields are the same, no boxing of primitives. The wrapper classes are process-global singletons created once at startup; <code>x.class</code> returns the appropriate singleton with no allocation.</p>
+<h2 id="the-six-primitive-classes">The six primitive classes</h2>
+<p>| Literal form | Class | Runtime <code>kind</code> | |---|---|---| | <code>42</code>, <code>1.0</code>, <code>-3.14</code>, <code>0x2a</code>, <code>0b101010</code>, <code>1e9</code> | <code>Number</code> | <code>TYA_NUMBER</code> | | <code>&quot;hi&quot;</code>, <code>r&quot;raw&quot;</code>, <code>&quot;interp {x}&quot;</code> | <code>String</code> | <code>TYA_STRING</code> | | <code>[1, 2, 3]</code>, <code>[]</code> | <code>Array</code> | <code>TYA_ARRAY</code> | | <code>{a: 1}</code>, <code>{}</code> | <code>Dict</code> | <code>TYA_DICT</code> | | <code>true</code>, <code>false</code> | <code>Boolean</code> | <code>TYA_BOOL</code> | | <code>nil</code> | <code>Nil</code> | <code>TYA_NIL</code> |</p>
+<p>The six class identifiers (<code>Number</code>, <code>String</code>, <code>Array</code>, <code>Dict</code>, <code>Boolean</code>, <code>Nil</code>) are **reserved** at the top level. User code cannot rebind them.</p>
+<p>Integer and float are not distinguished — <code>1</code> and <code>1.0</code> are both <code>Number</code> instances and <code>1 == 1.0</code> is <code>true</code>. The runtime stores all numeric values as <code>double</code>. A future Epic may introduce a separate big-integer or fixed-precision class; the promotion rules between them will be defined at that time.</p>
+<p>Byte-sequence literals (<code>b&quot;...&quot;</code>, v0.25) remain a separate value kind backed by <code>TYA_BYTES</code>. v0.59 does **not** introduce a <code>Bytes</code> primitive class — bytes are still handled by the <code>bytes</code> module surface and by indexing. A future Epic may add a <code>Bytes</code> wrapper class on the same pattern as the six classes here.</p>
+<p>The set literal <code>{1, 2, 3}</code> and a <code>Set</code> class are out of scope. For v0.59 the curly-brace literal continues to mean &quot;dict only&quot; (<code>{}</code> is the empty dict, <code>{a: 1}</code> is a single-entry dict; an unkeyed <code>{1, 2, 3}</code> is a syntax error).</p>
+<h2 id="x-class"><code>x.class</code></h2>
+<p><code>x.class</code> returns the wrapper class for <code>x</code> as a process-global singleton. No allocation, no method dispatch — the C emitter inlines it to a static lookup keyed on <code>x.kind</code>.</p>
+<pre><code class="language-tya">42.class             # → Number
+&quot;hi&quot;.class           # → String
+[1, 2].class         # → Array
+{a: 1}.class         # → Dict
+true.class           # → Boolean
+nil.class            # → Nil
+
+42.class == Number       # → true (identity comparison)
+42.class == &quot;Number&quot;     # → false (Class is not a String)
+42.class.name            # → &quot;Number&quot;  (String)</code></pre>
+<p>Six class identifiers (<code>Number</code>, <code>String</code>, <code>Array</code>, <code>Dict</code>, <code>Boolean</code>, <code>Nil</code>) at the top level evaluate to the corresponding singleton, so <code>42.class == Number</code> is the idiomatic type check.</p>
+<p>For user-defined classes the same applies:</p>
+<pre><code class="language-tya">class Point
+  initialize = x, y -&gt;
+    self.x = x
+    self.y = y
+
+p = Point(1, 2)
+p.class             # → Point (the class object)
+p.class.name        # → &quot;Point&quot;
+p.class == Point    # → true</code></pre>
+<p><code>x.class.name</code> returns a <code>String</code> whose value is the class name. For primitive classes this is exactly one of <code>&quot;Number&quot;</code>, <code>&quot;String&quot;</code>, <code>&quot;Array&quot;</code>, <code>&quot;Dict&quot;</code>, <code>&quot;Boolean&quot;</code>, <code>&quot;Nil&quot;</code>. For user classes it is the declared name.</p>
+<p><code>Number.class</code> and the analogous queries on the wrapper classes themselves are deliberately undefined for v0.59 — a <code>Class</code> / metaclass tower is out of scope. Implementations may either return a placeholder, raise, or refuse at compile time; tooling should not rely on the result.</p>
+<h2 id="method-call-syntax-on-literals">Method-call syntax on literals</h2>
+<pre><code class="language-tya">42.to_s()                # &quot;42&quot;
+1.5.floor()              # 1
+&quot;hi&quot;.upper()             # &quot;HI&quot;
+&quot;hi,there&quot;.split(&quot;,&quot;)    # [&quot;hi&quot;, &quot;there&quot;]
+[1, 2, 3].len()          # 3
+[1, 2, 3].push(4)        # [1, 2, 3, 4]
+{a: 1, b: 2}.keys()      # [&quot;a&quot;, &quot;b&quot;]
+true.to_s()              # &quot;true&quot;
+nil.to_s()               # &quot;nil&quot;</code></pre>
+<p>Method-call syntax was already available for variables in v0.16+ (via dynamic <code>tya_member</code> dispatch); v0.59 makes it work on raw literals as well by giving each literal a fixed wrapper class.</p>
+<h3 id="lexer-disambiguation-42-0-vs-42-foo">Lexer disambiguation: <code>42.0</code> vs <code>42.foo</code></h3>
+<p>The lexer treats a <code>.</code> that immediately follows a numeric literal as either the decimal point of a float literal or as the member-access dot, based on the next character:</p>
+<p>| Source | Tokens | Notes | |---|---|---| | <code>42</code> | <code>NUMBER(42)</code> | integer-valued Number | | <code>42.0</code> | <code>NUMBER(42.0)</code> | float-valued Number | | <code>42.5e2</code> | <code>NUMBER(4250.0)</code> | scientific notation | | <code>42.foo()</code> | <code>NUMBER(42) DOT IDENT(foo) ...</code> | method call on <code>42</code> | | <code>42.to_s()</code> | <code>NUMBER(42) DOT IDENT(to_s) ...</code> | method call on <code>42</code> | | <code>42.</code> (EOF) | error | trailing <code>.</code> without digit or ident | | <code>42 .foo()</code> | <code>NUMBER(42) DOT IDENT(foo) ...</code> | whitespace makes the dot a method dot |</p>
+<p>The rule is **Ruby's**: a digit (<code>0-9</code>) immediately after <code>.</code> makes the dot part of the float literal; an alphabetic character or <code>_</code> makes it a method-access dot. The current lexer already implements this rule (since pre-v0.16); v0.59 just locks it in.</p>
+<h2 id="operator-desugaring">Operator desugaring</h2>
+<p>Every built-in operator desugars to a fixed double-underscore method name on the receiver class. Operators are **not user-redefinable** on the built-in primitive classes (monkey-patching is forbidden — see *Rules* below); user classes may *define* these methods to participate in operator syntax.</p>
+<p>| Operator | Arity | Desugars to | Notes | |---|---|---|---| | <code>a + b</code> | binary | <code>a.__add__(b)</code> | Number: add; String/Array: concat | | <code>a - b</code> | binary | <code>a.__sub__(b)</code> | Number only on built-ins | | <code>a * b</code> | binary | <code>a.__mul__(b)</code> | Number only on built-ins | | <code>a / b</code> | binary | <code>a.__div__(b)</code> | Number only on built-ins; IEEE 754 | | <code>a % b</code> | binary | <code>a.__mod__(b)</code> | Number only on built-ins; <code>fmod</code> | | <code>-a</code> | unary | <code>a.__neg__()</code> | Number only on built-ins | | <code>a == b</code> | binary | <code>a.__eq__(b)</code> | type-strict on built-ins | | <code>a != b</code> | binary | <code>!(a.__eq__(b))</code> | derived | | <code>a &lt; b</code> | binary | <code>a.__lt__(b)</code> | Number and String | | <code>a &lt;= b</code> | binary | <code>a.__le__(b)</code> | derived from <code>__lt__</code> and <code>__eq__</code> | | <code>a &gt; b</code> | binary | <code>b.__lt__(a)</code> | derived | | <code>a &gt;= b</code> | binary | <code>b.__le__(a)</code> | derived | | <code>a &amp; b</code> | binary | <code>a.__bitand__(b)</code> | Number (truncated to int64) | | <code>a \| b</code> | binary | <code>a.__bitor__(b)</code> | Number (truncated to int64) | | <code>a ^ b</code> | binary | <code>a.__bitxor__(b)</code> | Number (truncated to int64) | | <code>a &lt;&lt; b</code> | binary | <code>a.__shl__(b)</code> | Number (truncated to int64) | | <code>a &gt;&gt; b</code> | binary | <code>a.__shr__(b)</code> | Number (truncated to int64) | | <code>~a</code> | unary | <code>a.__bitnot__()</code> | Number (truncated to int64) | | <code>a[k]</code> | binary | <code>a.__index__(k)</code> | Array/Dict/String read | | <code>a[k] = v</code> | ternary | <code>a.__index_set__(k, v)</code> | Array/Dict write |</p>
+<p>Short-circuiting logical operators (<code>&amp;&amp;</code>, <code>\|\|</code>, <code>!</code>) are **not** desugared. They retain their evaluation semantics (<code>a &amp;&amp; b</code> does not evaluate <code>b</code> if <code>a</code> is falsy) and dispatch through truthiness, not through a method on the receiver. There is therefore no <code>__and__</code> / <code>__or__</code> / <code>__not__</code> on the wrapper classes for these.</p>
+<h2 id="method-tables-for-the-six-classes">Method tables for the six classes</h2>
+<p>The following lists are exhaustive — these are the methods guaranteed to exist on every instance of each class. The actual implementation comes from the existing builtins / runtime helpers; v0.59 changes the **surface**, not the semantics.</p>
+<h3 id="number"><code>Number</code></h3>
+<pre><code>to_s() -&gt; String                      &quot;42&quot;, &quot;1.5&quot;
+to_i() -&gt; Number                      truncate to integer-valued Number
+to_f() -&gt; Number                      identity (kept for symmetry / clarity)
+abs() -&gt; Number
+floor() -&gt; Number
+ceil() -&gt; Number
+round() -&gt; Number
+trunc() -&gt; Number
+sqrt() -&gt; Number
+pow(other: Number) -&gt; Number
+log() -&gt; Number                       natural log
+log2() -&gt; Number
+log10() -&gt; Number
+exp() -&gt; Number
+sin() / cos() / tan() -&gt; Number
+asin() / acos() / atan() -&gt; Number
+atan2(other: Number) -&gt; Number
+integer?() -&gt; Boolean                 true when value has no fractional part
+finite?() -&gt; Boolean
+nan?() -&gt; Boolean
+
+__add__(b) __sub__(b) __mul__(b) __div__(b) __mod__(b)
+__neg__()
+__eq__(b) __lt__(b) __le__(b)
+__bitand__(b) __bitor__(b) __bitxor__(b) __shl__(b) __shr__(b) __bitnot__()
+class -&gt; Class</code></pre>
+<h3 id="string"><code>String</code></h3>
+<pre><code>len() -&gt; Number                       character count (UTF-8 aware)
+byte_len() -&gt; Number                  raw byte length
+char_len() -&gt; Number                  alias of len()
+upper() -&gt; String
+lower() -&gt; String
+trim() -&gt; String
+contains(needle: String) -&gt; Boolean
+starts_with(prefix: String) -&gt; Boolean
+ends_with(suffix: String) -&gt; Boolean
+replace(old: String, new: String) -&gt; String
+split(sep: String) -&gt; Array
+chars() -&gt; Array                      array of single-char Strings
+bytes() -&gt; Bytes                      UTF-8 byte representation
+to_s() -&gt; String                      identity
+to_i() -&gt; Number                      parse; raises on garbage
+to_f() -&gt; Number                      parse; raises on garbage
+to_number() -&gt; Number                 parse; raises on garbage
+blank?() -&gt; Boolean                   trim() == &quot;&quot;
+present?() -&gt; Boolean                 trim() != &quot;&quot;
+
+__add__(b: String) -&gt; String          concatenation
+__eq__(b) -&gt; Boolean                  byte-equal, type-strict
+__lt__(b: String) -&gt; Boolean          lexicographic by bytes
+__le__(b: String) -&gt; Boolean
+__index__(i: Number) -&gt; String        single-char substring; raises on OOB
+class -&gt; Class</code></pre>
+<p><code>split(&quot;&quot;)</code> returns the character array (same as <code>chars()</code>).</p>
+<h3 id="array"><code>Array</code></h3>
+<pre><code>len() -&gt; Number
+empty?() -&gt; Boolean
+first() -&gt; any                        nil when empty
+last() -&gt; any                         nil when empty
+push(v: any) -&gt; Array                 returns self, mutates
+pop() -&gt; any                          removes and returns last
+join(sep: String) -&gt; String
+map(fn) -&gt; Array
+filter(fn) -&gt; Array
+find(fn) -&gt; any                       nil when no match
+any(fn) -&gt; Boolean
+all(fn) -&gt; Boolean
+reduce(initial, fn) -&gt; any
+contains(v: any) -&gt; Boolean
+slice(start: Number, end: Number) -&gt; Array
+reverse() -&gt; Array                    new array
+sort() -&gt; Array                       new array, ascending
+sort_by(fn) -&gt; Array                  new array
+to_s() -&gt; String                      &quot;[1, 2, 3]&quot;
+
+__add__(b: Array) -&gt; Array            concatenation, new array
+__eq__(b) -&gt; Boolean                  element-wise equal, type-strict
+__index__(i: Number) -&gt; any           raises on OOB
+__index_set__(i: Number, v: any)
+class -&gt; Class</code></pre>
+<h3 id="dict"><code>Dict</code></h3>
+<pre><code>len() -&gt; Number
+empty?() -&gt; Boolean
+has(k: String) -&gt; Boolean
+get(k: String) -&gt; any                 nil when missing
+get(k: String, default: any) -&gt; any
+set(k: String, v: any) -&gt; Dict        returns self, mutates
+delete(k: String) -&gt; any              returns removed value or nil
+keys() -&gt; Array
+values() -&gt; Array
+entries() -&gt; Array                    array of [k, v] pairs
+merge(other: Dict) -&gt; Dict            new dict; later wins
+to_s() -&gt; String                      &quot;{a: 1, b: 2}&quot;
+
+__eq__(b) -&gt; Boolean                  same keys + equal values, type-strict
+__index__(k: String) -&gt; any           nil when missing
+__index_set__(k: String, v: any)
+class -&gt; Class</code></pre>
+<h3 id="boolean"><code>Boolean</code></h3>
+<pre><code>to_s() -&gt; String                      &quot;true&quot; or &quot;false&quot;
+__eq__(b) -&gt; Boolean
+class -&gt; Class</code></pre>
+<h3 id="nil"><code>Nil</code></h3>
+<pre><code>to_s() -&gt; String                      &quot;nil&quot;
+__eq__(b) -&gt; Boolean                  true only for nil itself
+class -&gt; Class</code></pre>
+<h2 id="kind-removal"><code>kind</code> removal</h2>
+<p>The <code>kind(x)</code> builtin is **removed**. v0.58 returned one of the strings <code>&quot;nil&quot;</code>, <code>&quot;bool&quot;</code>, <code>&quot;int&quot;</code>, <code>&quot;float&quot;</code>, <code>&quot;string&quot;</code>, <code>&quot;array&quot;</code>, <code>&quot;dict&quot;</code>; v0.59 has no equivalent string builtin. Use <code>x.class</code> (class identity comparison) or <code>x.class.name</code> (string).</p>
+<h3 id="migration">Migration</h3>
+<p>| v0.58 | v0.59 | |---|---| | <code>kind(x) == &quot;int&quot;</code> or <code>kind(x) == &quot;float&quot;</code> | <code>x.class == Number</code> | | <code>kind(x) == &quot;string&quot;</code> | <code>x.class == String</code> | | <code>kind(x) == &quot;array&quot;</code> | <code>x.class == Array</code> | | <code>kind(x) == &quot;dict&quot;</code> | <code>x.class == Dict</code> | | <code>kind(x) == &quot;bool&quot;</code> | <code>x.class == Boolean</code> | | <code>kind(x) == &quot;nil&quot;</code> | <code>x.class == Nil</code> | | Need a string label? | <code>x.class.name</code> |</p>
+<p>Calling <code>kind(...)</code> in v0.59 raises <code>TYA-E0810 kind builtin removed in v0.59; use x.class or x.class.name</code>.</p>
+<h2 id="stdlib-api-consolidation">stdlib API consolidation</h2>
+<p>The module-style facade over the same operations is **removed**.</p>
+<p>| v0.58 (<code>module X</code> function-style) | v0.59 (method on the wrapper class) | |---|---| | <code>string.len(s)</code> | <code>s.len()</code> | | <code>string.trim(s)</code> | <code>s.trim()</code> | | <code>string.contains(s, n)</code> | <code>s.contains(n)</code> | | <code>string.starts_with(s, p)</code> | <code>s.starts_with(p)</code> | | <code>string.ends_with(s, p)</code> | <code>s.ends_with(p)</code> | | <code>string.replace(s, old, new)</code> | <code>s.replace(old, new)</code> | | <code>string.split(s, sep)</code> | <code>s.split(sep)</code> | | <code>string.join(values, sep)</code> | <code>values.join(sep)</code> | | <code>string.blank(s)</code> | <code>s.blank?()</code> | | <code>string.present(s)</code> | <code>s.present?()</code> | | <code>array.len(a)</code> | <code>a.len()</code> | | <code>array.empty(a)</code> | <code>a.empty?()</code> | | <code>array.first(a)</code> | <code>a.first()</code> | | <code>array.pop(a)</code> | <code>a.pop()</code> | | <code>array.join(a, sep)</code> | <code>a.join(sep)</code> | | <code>array.map(a, fn)</code> | <code>a.map(fn)</code> | | <code>array.filter(a, fn)</code> | <code>a.filter(fn)</code> | | <code>array.find(a, fn)</code> | <code>a.find(fn)</code> | | <code>array.any(a, fn)</code> | <code>a.any(fn)</code> | | <code>array.all(a, fn)</code> | <code>a.all(fn)</code> | | <code>array.reduce(a, init, fn)</code> | <code>a.reduce(init, fn)</code> | | <code>dict.len(d)</code> | <code>d.len()</code> | | <code>dict.has(d, k)</code> | <code>d.has(k)</code> | | <code>dict.keys(d)</code> | <code>d.keys()</code> | | <code>dict.values(d)</code> | <code>d.values()</code> |</p>
+<p>The free-function builtins that did the underlying work (<code>len(...)</code>, <code>trim(...)</code>, <code>contains(...)</code>, <code>keys(...)</code>, <code>values(...)</code>, <code>has(...)</code>, <code>push(...)</code>, <code>pop(...)</code>, <code>map(...)</code>, <code>filter(...)</code>, <code>find(...)</code>, <code>any(...)</code>, <code>all(...)</code>, <code>reduce(...)</code>, <code>join(...)</code>, <code>split(...)</code>, <code>replace(...)</code>, <code>starts_with(...)</code>, <code>ends_with(...)</code>) are **also removed** at the top level. Their behaviour is reachable only as methods on the wrapper classes. <code>to_s(x)</code> / <code>to_string(x)</code> / <code>to_int(x)</code> / <code>to_float(x)</code> / <code>to_number(x)</code> survive *only* as methods (<code>x.to_s()</code>, <code>x.to_i()</code>, etc.) — the top-level builtin forms are removed.</p>
+<p><code>print</code> and <code>println</code> remain as top-level builtins (they are not methods on a class, by design; the receiver is implicit). <code>args</code>, <code>exit</code>, <code>panic</code>, <code>assert</code>, <code>assert_equal</code>, <code>equal</code>, <code>error</code>, <code>chr</code>, <code>ord</code> remain as top-level builtins.</p>
+<p><code>stdlib/string.tya</code>, <code>stdlib/array.tya</code>, <code>stdlib/dict.tya</code> are **deleted**. Any program importing them via <code>import string</code> / <code>import array</code> / <code>import dict</code> raises a load-time error <code>TYA-E0811 module string|array|dict was removed in v0.59; methods now live on the wrapper class</code>.</p>
+<p>The module-style <code>math.*</code> (<code>math.sqrt</code>, <code>math.floor</code>, ...) remains but the same methods are also exposed on <code>Number</code>. Both are first-class. Module-style is retained because <code>math</code> is operated on by the **second** argument (<code>math.atan2(y, x)</code>) and the natural-language form <code>y.atan2(x)</code> reads less obviously than <code>math.atan2(y, x)</code> for some callers — both surfaces are kept for v0.59. Future Epics may revisit. Modules unrelated to the six primitive classes (<code>time</code>, <code>random</code>, <code>digest</code>, <code>file</code>, <code>os</code>, <code>path</code>, <code>process</code>, <code>json</code>, <code>toml</code>, <code>csv</code>, <code>base64</code>, <code>hex</code>, <code>url</code>, <code>secure_random</code>, <code>matrix</code>, <code>markdown</code>, <code>net</code>, <code>channel</code>, <code>sync</code>, <code>task</code>, <code>runtime</code>, <code>value</code>, <code>unittest</code>) are unaffected.</p>
+<h2 id="subclassing-rule">Subclassing rule</h2>
+<p>The six built-in primitive classes are **final**. Declaring a class that inherits from any of them is a compile-time error.</p>
+<pre><code class="language-tya">class MyNumber &lt; Number     # ✗ TYA-EXXXX
+class MyString &lt; String     # ✗ TYA-EXXXX
+class MyArray  &lt; Array      # ✗ TYA-EXXXX
+class MyDict   &lt; Dict       # ✗ TYA-EXXXX
+class MyBool   &lt; Boolean    # ✗ TYA-EXXXX
+class MyNil    &lt; Nil        # ✗ TYA-EXXXX</code></pre>
+<p>Reasons: the optimizer relies on the wrapper classes' method tables being fixed at compile time so that the fast path (operator desugaring lowered directly to C helpers, no method dispatch) is unconditional. Subclassing would require a &quot;redefinition check&quot; similar to CRuby's redefined-method flags, which we are choosing to avoid.</p>
+<p>User code that wants Number-like behaviour declares its own class and defines the operator methods (<code>__add__</code>, <code>__eq__</code>, etc.); operator syntax then dispatches normally.</p>
+<h2 id="monkey-patching-rule">Monkey-patching rule</h2>
+<p>The method tables of the six built-in primitive classes are **fixed at compile time**. Adding, replacing, or removing a method on <code>Number</code> / <code>String</code> / <code>Array</code> / <code>Dict</code> / <code>Boolean</code> / <code>Nil</code> is a compile-time error.</p>
+<pre><code class="language-tya">Number.banana = -&gt; &quot;yellow&quot;    # ✗ TYA-EXXXX
+String.upper = -&gt; &quot;no&quot;         # ✗ TYA-EXXXX (redefine)</code></pre>
+<p>The same restriction applies to operator methods (<code>__add__</code>, <code>__eq__</code>, etc.) on the built-in classes. User-defined classes have no such restriction — they can be re-opened and extended through the normal <code>class</code> declaration shape.</p>
+<h2 id="cross-type-equality">Cross-type equality</h2>
+<p>Equality is **method-level**. The built-in <code>__eq__</code> implementations are **type-strict**:</p>
+<pre><code class="language-tya">&quot;42&quot; == 42                # → false   (String#__eq__ rejects non-String)
+[1] == &quot;1&quot;                # → false   (Array#__eq__ rejects non-Array)
+nil == false              # → false   (Nil#__eq__ accepts only nil)
+1 == 1.0                  # → true    (both are Number)</code></pre>
+<p>User classes are free to implement lenient comparison by returning <code>true</code> for cross-type cases inside their own <code>__eq__</code>. The built-in classes will never silently coerce.</p>
+<p>Ordering (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>) on cross-type operands is a type error. The built-in <code>__lt__</code> on <code>Number</code> and <code>String</code> rejects non-matching argument types with <code>TYA-EXXXX type error: cannot compare Number with String</code>.</p>
+<h2 id="runtime-representation">Runtime representation</h2>
+<p>Unchanged from v0.58:</p>
+<ul>
+<li><code>TyaValue</code> is the same tagged union (<code>runtime/tya_runtime.h</code>):</li>
+</ul>
+<p>  <code>kind</code> enum + payload union. <code>TYA_NUMBER</code> stores <code>double</code>,   <code>TYA_STRING</code> stores <code>const char *</code>, etc.</p>
+<ul>
+<li>No boxing of primitives into heap objects. <code>42</code> is the same</li>
+</ul>
+<p>  in-memory value as it was in v0.58.</p>
+<ul>
+<li>The six wrapper classes are process-global singleton class</li>
+</ul>
+<p>  objects, allocated once during runtime startup. They live for   the entire process lifetime.</p>
+<ul>
+<li><code>x.class</code> reads <code>x.kind</code> and returns the matching singleton.</li>
+</ul>
+<p>  Zero allocation, no method dispatch.</p>
+<ul>
+<li>The wrapper class's method table is laid out as a flat</li>
+</ul>
+<p>  C-level dispatch (a <code>switch</code> on method name hash or a small   perfect-hashed array), built once at startup.</p>
+<h2 id="hidden-fast-path">Hidden fast path</h2>
+<p>The C emitter applies the following lowering rules:</p>
+<ol>
+<li>When *both* operands of a binary operator have statically</li>
+</ol>
+<p>   known primitive types — for example <code>Number + Number</code>,    <code>String + String</code>, comparisons between <code>Number</code> and <code>Number</code>,    etc. — the operator desugars directly to the existing    runtime helper (<code>tya_add_number</code>, <code>tya_concat_string</code>,    <code>tya_lt_number</code>, ...). No method dispatch, no allocation of    a method-call frame, no <code>x.__add__(y)</code> lookup.</p>
+<p>2. When one operand is statically known to be a user class with    the relevant method — <code>Foo.__add__</code> declared in the source —    the emitter generates a direct call to that method.</p>
+<p>3. When the types are dynamic (variable of unknown type), the    emitter generates a <code>tya_dispatch_method(receiver, &quot;__add__&quot;,    args, count)</code> call. The dispatcher inspects the receiver's    <code>kind</code> field at runtime, looks up the method on the wrapper    class (or user class), and invokes it.</p>
+<p>Because monkey-patching and operator redefinition on built-in classes are forbidden, the static fast path is **unconditional** when both operands are known primitives. There is no redefinition-check flag of the kind CRuby maintains for optimised arithmetic.</p>
+<h2 id="diagnostic-codes">Diagnostic codes</h2>
+<p>Newly minted in v0.59:</p>
+<p>| Code | Meaning | |---|---| | <code>TYA-E0810</code> | <code>kind</code> builtin removed in v0.59; use <code>x.class</code> or <code>x.class.name</code> | | <code>TYA-E0811</code> | module <code>string</code> / <code>array</code> / <code>dict</code> was removed in v0.59; methods now live on the wrapper class | | <code>TYA-E0812</code> | top-level builtin <code>len</code> / <code>trim</code> / <code>keys</code> / <code>push</code> / ... was removed in v0.59; method now lives on the wrapper class | | <code>TYA-E0813</code> | cannot inherit from built-in primitive class <code>Number</code> / <code>String</code> / <code>Array</code> / <code>Dict</code> / <code>Boolean</code> / <code>Nil</code> | | <code>TYA-E0814</code> | cannot add or redefine method <code>X</code> on built-in primitive class <code>Y</code> | | <code>TYA-E0815</code> | cannot rebind reserved class identifier <code>Number</code> / <code>String</code> / <code>Array</code> / <code>Dict</code> / <code>Boolean</code> / <code>Nil</code> | | <code>TYA-E0816</code> | type error: cannot compare or operate on <code>T1</code> with <code>T2</code> | | <code>TYA-E0817</code> | no method <code>name</code> on class <code>C</code> |</p>
+<p>The exact final-digit assignments may shift during implementation; the table is locked at SPEC-freeze time but the implementing PRs are authoritative once merged.</p>
+<h2 id="migration-guide">Migration guide</h2>
+<p>Required edits to upgrade a v0.58 program to v0.59:</p>
+<p>| Pattern | Before | After | |---|---|---| | Type test | <code>kind(x) == &quot;int&quot;</code> | <code>x.class == Number</code> | | Type label | <code>kind(x)</code> | <code>x.class.name</code> (drop the <code>&quot;int&quot;</code>/<code>&quot;float&quot;</code> distinction; both yield <code>&quot;Number&quot;</code>) | | String op | <code>string.upper(s)</code> | <code>s.upper()</code> | | String op | <code>string.trim(s)</code> | <code>s.trim()</code> | | Array op | <code>array.len(a)</code> | <code>a.len()</code> | | Array op | <code>array.map(a, fn)</code> | <code>a.map(fn)</code> | | Dict op | <code>dict.keys(d)</code> | <code>d.keys()</code> | | Builtin | <code>len(x)</code> | <code>x.len()</code> | | Builtin | <code>to_string(x)</code> | <code>x.to_s()</code> | | Builtin | <code>to_int(x)</code> | <code>x.to_i()</code> | | Builtin | <code>push(a, v)</code> | <code>a.push(v)</code> | | Builtin | <code>pop(a)</code> | <code>a.pop()</code> | | Builtin | <code>keys(d)</code> | <code>d.keys()</code> | | Builtin | <code>map(a, fn)</code> | <code>a.map(fn)</code> | | Import | <code>import string</code> | (delete; methods move to <code>String</code>) | | Import | <code>import array</code> | (delete) | | Import | <code>import dict</code> | (delete) |</p>
+<p><code>tya fmt</code> does **not** rewrite literals — <code>42</code> stays <code>42</code> in source, not <code>Number(42)</code>. The class identity is metadata about the literal, not part of its written form.</p>
+<p><code>tya lint</code> will gain a rule (TYAL000X) that detects the v0.58 patterns above and offers <code>--fix</code> autocorrect. The lint rule is informational for one release after v0.59 ships, after which the diagnostics in the table above (compile-time errors) take over.</p>
+<h2 id="scope-out-v0-60">Scope-out (v0.60+)</h2>
+<ul>
+<li>**<code>Set</code> literal and <code>Set</code> class** — <code>{1, 2, 3}</code> and a <code>Set</code></li>
+</ul>
+<p>  wrapper. Requires lexer rule for <code>{...}</code> to distinguish dict   literal (<code>{a: 1}</code>, <code>{}</code>) from set literal (<code>{1, 2, 3}</code>).</p>
+<ul>
+<li>**<code>Bytes</code> wrapper class** — bring the existing <code>bytes</code></li>
+</ul>
+<p>  module under the <code>b&quot;...&quot;</code> literal as a class.</p>
+<ul>
+<li>**Integer / Float split** — introduce a separate big-integer</li>
+</ul>
+<p>  or fixed-precision class. Requires promotion rules.</p>
+<ul>
+<li>**<code>Class</code> / metaclass tower** — <code>Number.class</code>, methods on</li>
+</ul>
+<p>  class objects themselves (<code>Number.methods()</code>), arbitrary   class instantiation.</p>
+<ul>
+<li>**<code>respond_to?</code> / <code>method_missing</code> / <code>define_method</code>** —</li>
+</ul>
+<p>  dynamic introspection and reflection.</p>
+<ul>
+<li>**Operator overloading on built-in classes** — currently</li>
+</ul>
+<p>  forbidden by the monkey-patching rule. A future Epic could   allow <code>import_op_override &quot;Number&quot; as MyNumber</code> style scoped   override but is explicitly not in v0.59.</p>
+<ul>
+<li>**<code>tya lsp</code> rename-across-files** for the kind / module-style</li>
+</ul>
+<p>  migration. v0.59 will hand-edit and rely on the autofix in   <code>tya lint</code>.</p>
+<h2 id="implementation-notes-informative">Implementation notes (informative)</h2>
+<p>The work to ship v0.59 is split into long-running phases driven by the <code>/goal</code> skill, not a single one-release sprint. Rough ordering:</p>
+<ol>
+<li>**lexer**: verify <code>.</code> disambiguation (already in place), add</li>
+</ol>
+<p>   a regression test bank. 2. **parser / AST**: no new node kinds — literals remain    <code>IntLit</code> / <code>FloatLit</code> / <code>StringLit</code> / <code>ArrayLit</code> / <code>DictLit</code> /    <code>BoolLit</code> / <code>NilLit</code>. The class-instance semantics is added    in the checker / codegen, not the AST. 3. **checker**: reserve the six identifiers, reject    subclass-of-primitive, reject monkey-patch-of-primitive,    reject <code>kind(...)</code>, reject module-style removed APIs.    Emit <code>TYA-E08XX</code> diagnostics. 4. **codegen**: emit operator desugaring with the static    fast-path for known primitives; emit <code>tya_dispatch_method</code>    for the dynamic path; emit <code>x.class</code> as a static lookup. 5. **runtime**: build the six singleton class objects at    startup. Add a small dispatch table per wrapper class.    Helpers: <code>tya_class_of(value) -&gt; TyaClass *</code>, with all    primitive cases lowered from the <code>kind</code> switch. 6. **stdlib**: delete <code>stdlib/string.tya</code>, <code>stdlib/array.tya</code>,    <code>stdlib/dict.tya</code>. The wrapper-class method bodies are    provided directly by the runtime (via the dispatch table)    — the operations themselves remain the existing C helpers,    only the surface (method instead of free function) changes. 7. **selfhost**: update <code>selfhost/v01/compiler.tya</code> to use the    new method-style surface and re-prove the v01 stage-2 ==    stage-3 fixed point. 8. **examples / tests**: hand-edit <code>examples/</code>,    <code>tests/testdata/v01-v40/*.txtar</code> and similar to use    <code>s.upper()</code> instead of <code>string.upper(s)</code>, <code>x.class.name</code>    instead of <code>kind(x)</code>, etc. 9. **docs**: rewrite <code>docs/SPEC.md</code>, <code>docs/STDLIB.md</code>,    <code>docs/API.md</code>, <code>docs/NAMING.md</code> for the new surface. Add    <code>docs/v0.59/RELEASE_NOTES.md</code> summarising the migration. 10. **release flow**: version bump, Formula, VERSIONS, docs     HTML, ROADMAP entry, brew tap sync.</p>
+<p>Reverse-compatibility for an older <code>tya</code> toolchain (running a v0.59-syntax <code>.tya</code> source through a v0.58 compiler) is **not** provided. v0.59 is a breaking minor; users on v0.58 must update both toolchain and sources together. The <code>tya lint --fix</code> autocorrect is the recommended migration path.</p>
+    </article>
+  </main>
+</body>
+</html>

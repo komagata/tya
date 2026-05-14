@@ -335,23 +335,6 @@ func TestUnparseImportSortAndBlankLines(t *testing.T) {
 	}
 }
 
-func TestUnparseModule(t *testing.T) {
-	src := "module greet\n  hello = name -> \"Hello, \" + name\n  bye = -> \"bye\"\n"
-	got, err := unparseSource(t, src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, want := range []string{
-		"module greet",
-		"  hello = name -> \"Hello, \" + name",
-		"  bye = () -> \"bye\"",
-	} {
-		if !strings.Contains(got, want) {
-			t.Errorf("missing %q in:\n%s", want, got)
-		}
-	}
-}
-
 func TestUnparseClass(t *testing.T) {
 	src := "class Dog\n  bark = ->\n    return \"woof\"\n"
 	got, err := unparseSource(t, src)

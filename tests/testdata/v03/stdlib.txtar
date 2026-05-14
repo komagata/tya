@@ -10,29 +10,24 @@ stdout 'local string\npath array\n'
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 ! stderr .
 
 -- std/main.tya --
-import string
-import array
-
-print(string.blank("  "))
-print(string.present("  "))
-print(array.empty([]))
-print(array.first(["tya"]))
+print("  ".blank?())
+print("  ".present?())
+print([].empty?())
+print(["tya"].first())
 
 -- precedence/main.tya --
-import string
-import array
+import local_string
+import path_array
 
-print(string.blank("ignored"))
-print(array.empty([]))
+print(local_string.blank("ignored"))
+print(path_array.empty([]))
 
--- precedence/string.tya --
-module string
-  blank = _text -> "local string"
+-- precedence/local_string.tya --
+blank = _text -> "local string"
 
--- lib/array.tya --
-module array
-  empty = _items -> "path array"
+-- lib/path_array.tya --
+empty = _items -> "path array"

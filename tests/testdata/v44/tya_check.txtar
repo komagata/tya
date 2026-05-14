@@ -25,7 +25,7 @@ stderr 'module not found: never_exists'
 -- good_entry/main.tya --
 import lib
 
-print(lib.Lib.greet())
+print(Lib.greet())
 
 -- good_entry/lib/Lib.tya --
 class Lib

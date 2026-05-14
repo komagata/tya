@@ -2,11 +2,11 @@ user = { name: "komagata", age: 20 }
 print user["name"]
 
 empty = {}
-print len(empty)
+print empty.len()
 
 roles = { "admin", "owner", "admin" }
-print len(roles)
-print has(roles, "owner")
+print roles.len()
+print roles.has("owner")
 
 empty_roles = set()
-print len(empty_roles)
+print empty_roles.len()

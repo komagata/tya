@@ -1,6 +1,6 @@
 ---
-status: approved
-goal_ready: true
+status: completed
+goal_ready: false
 ---
 
 # Feature: Class-Style Unittest Framework
@@ -119,8 +119,8 @@ class StringBlankTest < TestCase
 ## Scope
 
 - `stdlib/unittest/Unittest.tya`
-- `docs/prd/bare-package-imports.md` must land first or in the same long-running
-  implementation batch.
+- `docs/prd/completed/bare-package-imports.md` landed first in the same
+  long-running implementation batch.
 - `cmd/tya/main.go` test-suite synthesis
 - `cmd/tya/new.go` test templates
 - `docs/STDLIB.md`

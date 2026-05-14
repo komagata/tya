@@ -4,6 +4,7 @@
 # class declared `final class X extends Y` still compiles, links, and
 # runs through the v02 self-host pipeline.
 cd $REPO
+env TYA_LEGACY_MODULES=1
 
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
 ! stderr .

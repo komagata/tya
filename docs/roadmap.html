@@ -33,7 +33,7 @@
 <pre><code class="language-sh">go test ./tests -run TestSelfhostV01Scripts -count=1</code></pre>
 <p>This gate proves that the Tya-written compiler can compile itself to stable stage-2/stage-3 C output, and that the self-hosted stage-2 compiler can compile and run representative programs through the maintained surface.</p>
 <h2 id="v1-0-0-goal">v1.0.0 Goal</h2>
-<p>Tya v1.0.0 is the version at which all five language commitments hold and are publicly defensible. These commitments are also Tya's external &quot;at a glance&quot; feature list:</p>
+<p>Tya v1.0.0 is the version at which all six language commitments hold and are publicly defensible. These commitments are also Tya's external &quot;at a glance&quot; feature list:</p>
 <ol>
 <li>**Canonical Syntax** — every program has exactly one source representation.</li>
 </ol>
@@ -46,18 +46,17 @@
 <p>  an explicit Epic).</p>
 <ul>
 <li>Commitment 3 → already shipped; maintained.</li>
-<li>Commitment 4 → *Ship <code>tya lsp</code> Language Server*, *Ship <code>tya doc</code> source</li>
+<li>Commitment 4 → maintain and polish the all-in-one toolchain: <code>tya check</code>,</li>
 </ul>
-<p>  documentation generator*, *Ship <code>tya new</code> project scaffolder*, *Ship   <code>tya task</code> project task runner*, plus existing <code>tya check</code> /   <code>tya test</code> / <code>tya format</code> / package manager.</p>
+<p>  <code>tya test</code>, <code>tya format</code>, <code>tya lsp</code>, <code>tya doc</code>, <code>tya new</code>, <code>tya task</code>,   <code>tya lint</code>, and package tooling.</p>
 <ul>
-<li>Commitment 5 → *Migrate remaining stages to the diagnostics pipeline*.</li>
+<li>Commitment 5 → diagnostics polish and remaining structured-error coverage.</li>
 <li>Commitment 6 → *Migrate selfhost compiler to latest spec and remove</li>
 </ul>
 <p>  the Go reference implementation* (see Future Work / Self-host).</p>
 <p>Other Epics (WASM target, syntax coloring, embedding, self-introspection library, coverage extensions, markdown extensions, lint, multi-line string extensions) are valuable but not strictly required for v1.0.0. They may ship before or after v1.0.0.</p>
 <h2 id="current-direction">Current Direction</h2>
-<p>Tya is implemented as a small compile-to-C language. The latest released specification is **v0.44**. Frozen release documents live under <code>docs/vX.Y/</code> and <code>docs/vX.Y.Z/</code>; the latest editable specification, API, stdlib, and naming documents live directly under <code>docs/</code>.</p>
-<p>Tya uses semantic versioning. Specification changes happen at the minor version level. Patch releases must not change language or standard-library semantics.</p>
+<p>Tya is implemented as a small, hand-written compile-to-C language. The latest released specification is **v0.62**. Frozen release documents live under <code>docs/vX.Y/</code>; release history is tracked in <a href="versions.html"><code>docs/VERSIONS.md</code></a> and the per-version release notes, not in this roadmap.</p>
 <p>Latest editable documentation:</p>
 <ol>
 <li><a href="spec.html"><code>docs/SPEC.md</code></a></li>
@@ -66,23 +65,18 @@
 <li><a href="naming.html"><code>docs/NAMING.md</code></a></li>
 <li><a href="docs/CANONICAL_SYNTAX.md"><code>docs/CANONICAL_SYNTAX.md</code></a></li>
 </ol>
-<p>The reference implementation is:</p>
+<p>Active implementation authority remains:</p>
 <pre><code class="language-text">Go lexer
 Go parser
 Go AST
 Go checker
 Go C emitter
 C runtime
-specification tests</code></pre>
-<p>Go interpreter behavior, ASTMODE, and legacy archived node-string experiments are not specification authority. The maintained <code>selfhost/v01/compiler.tya</code> fixed point must not regress.</p>
+specification tests
+selfhost/v01 fixed point</code></pre>
+<p>Go interpreter behavior, ASTMODE, archived node-string experiments, and <code>docs/archive/pre-v0.1/</code> are not specification authority.</p>
 <h2 id="implementation-tooling-policy">Implementation Tooling Policy</h2>
-<p>The compiler implementation should stay hand-written:</p>
-<pre><code class="language-text">Go lexer
-Go parser
-Go AST
-Go checker
-Go C emitter</code></pre>
-<p>Do not add a parser generator or large grammar framework. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler front-end authority. They may be useful references or future editor tooling, but the active compiler path should remain explicit Go code.</p>
+<p>The compiler implementation should stay hand-written. Do not add a parser generator or large grammar framework. In particular, avoid introducing Participle, goyacc, Pigeon, ANTLR, or Tree-sitter as compiler front-end authority. They may be useful references or editor tooling later, but the active compiler path should remain explicit Go code.</p>
 <p>After the Go implementation reaches a complete lexer, parser, AST, checker, and C emitter for the current specification, continue self-host work in the same component order:</p>
 <pre><code class="language-text">Tya lexer
 Tya parser
@@ -94,616 +88,98 @@ Tya C emitter</code></pre>
 <pre><code class="language-text">github.com/google/go-cmp/cmp
 github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
-<h2 id="released">Released</h2>
-<p>Recent shipped minor versions, newest first. Frozen specs live under <code>docs/vX.Y/</code>. For older releases (v0.24 – v0.42) see <a href="versions.html"><code>docs/VERSIONS.md</code></a>.</p>
+<h2 id="near-term">Near Term</h2>
 <ul>
-<li>**v0.57** — Asset embedding (<code>docs/v0.57/SPEC.md</code>,</li>
-</ul>
-<p>  <code>docs/v0.57/RELEASE_NOTES.md</code>). New top-level   <code>embed &quot;pattern&quot; as name</code> statement bakes file contents into   the compiled binary at codegen time. Single-file patterns   produce a <code>bytes</code> value; <code>*</code> and <code>**</code> glob patterns produce   a <code>dict&lt;string, bytes&gt;</code> keyed by the path relative to the   source file. Glob keys are normalized to <code>/</code>-separated form   on all hosts and ordered alphabetically. New diagnostics   <code>TYA-E0610 embed source not found</code> and   <code>TYA-E0611 embed glob matched zero files</code> surface at codegen   through <code>tya run</code> / <code>tya build</code> / <code>tya emit-c</code>. <code>embed</code> is now   a reserved name. Implementation: new   <code>internal/codegen/embed.go</code> (path resolve, glob walk, bytes   reading), <code>ast.EmbedStmt</code>, parser top-level statement,   checker top-level binding registration, formatter   round-trip. Foundation for single-binary distribution — HTTP   server stdlib and SDL / raylib bindings to follow in later   Epics. Language surface unchanged from v0.56.</p>
+<li>[ ] **Finish <code>net/http</code> v2**</li>
 <ul>
-<li>**v0.56** — Diagnostics signature unification + expression-</li>
-</ul>
-<p>  level recovery (<code>docs/v0.56/SPEC.md</code>,   <code>docs/v0.56/RELEASE_NOTES.md</code>). Public entry points now share   the <code>(X, []diag.Diagnostic, error)</code> shape:   <code>parser.Parse</code> / <code>ParseWithComments</code> →   <code>(*ast.Program, []Diag, error)</code>;   <code>codegen.EmitC</code> / <code>EmitCWithPath</code> →   <code>(string, []Diag, error)</code>;   <code>codegen.EmitCWithCoverage</code> →   <code>(string, *CoverageRegistry, []Diag, error)</code>;   <code>runner.RunFile</code> → <code>([]Diag, error)</code>. <code>RunnerError</code> widens   <code>Diag</code> → <code>Diags []diag.Diagnostic</code> (single-value <code>.Diag()</code>   helper kept for source compatibility). 65 caller sites   migrated. New <code>internal/parser/recovery.go::skipToCommaOrClose</code>   helper drives expression-level recovery in <code>CallExpr</code> /   <code>ArrayLit</code> / <code>DictLit</code> element lists — each bad element   records its diagnostic and the parser advances past the next   <code>,</code> (or close bracket) so siblings are still parsed.   <code>*ParserError</code> / <code>*CodegenError</code> / <code>*RunnerError</code> wrappers   continue to satisfy <code>errors.As</code> for callers that prefer   unwrapping. Language surface unchanged from v0.55.</p>
-<ul>
-<li>**v0.55** — <code>tya lint</code> v3 extension (<code>docs/v0.55/SPEC.md</code>,</li>
-</ul>
-<p>  <code>docs/v0.55/RELEASE_NOTES.md</code>). <code>tya lint</code> becomes CI-ready:   per-line <code># tya-lint-ignore[: CODE[, CODE...]]</code> opt-out   comments (inline or full-line, wildcard or code-scoped);   <code>--format=json</code> machine-readable output with <code>version</code> /   <code>findings[{path,line,col,code,message,autofixable}]</code>; new   <code>TYAL0002</code> rule reports dead code after <code>return</code> / <code>raise</code>   in every block (function bodies, <code>if</code> arms, <code>while</code> / <code>for</code>   bodies, <code>try</code> / <code>catch</code>, <code>match</code> cases); and <code>--fix</code> gains   TYAL0003 <code>if true</code> / <code>if false</code> unwrap-if autofix that drops   the header line and de-indents the body by two spaces (runs   before the existing TYAL0001 line-delete so positions stay   stable). The <code>lint</code> subcommand owns its own <code>--format</code> flag;   other subcommands continue to read the global   <code>--format=human|json</code> for diagnostic rendering. Language   surface unchanged from v0.54.</p>
-<ul>
-<li>**v0.54** — Diagnostics pipeline migration (<code>docs/v0.54/SPEC.md</code>,</li>
-</ul>
-<p>  <code>docs/v0.54/RELEASE_NOTES.md</code>). Parser, Codegen, and Runner   errors now flow through the same <code>diag.Diagnostic</code> channel as   Lexer and Checker, each carrying a stable <code>[TYA-EXXXX]</code> code.   New code bands: <code>TYA-E0100-0199</code> (parser: expected token /   block / position constraint / reserved name / pattern / expression),   <code>TYA-E0601-0606</code> (codegen: unsupported AST shapes), <code>TYA-E0840</code>   / <code>E0856</code> / <code>E0857</code> / <code>E0858</code> (runner: filename, entry-module   conflict, import name conflict, undefined variable). Parser   gains statement-level recovery (<code>block()</code> and <code>program()</code>) so   one <code>tya check</code> run surfaces every top-level error at once   via <code>*parser.ParserError{Diags}</code>. Undefined-name errors gain   <code>did you mean &quot;…&quot;?</code> hints driven by a new   <code>internal/util/strdist.go::Suggest</code> Levenshtein helper. LSP   (<code>internal/lsp/diagnostics.go::DiagnosticsFor</code>) and CLI   (<code>cmd/tya/main.go::printDiagnostic</code>) both <code>errors.As</code>-unwrap   the new wrapper types and route every diagnostic into the   shared structured renderer. Language surface unchanged from   v0.53.</p>
-<ul>
-<li>**v0.53** — <code>tya lsp</code> v2 full IDE feature set</li>
-</ul>
-<p>  (<code>docs/v0.53/SPEC.md</code>, <code>docs/v0.53/RELEASE_NOTES.md</code>). The   Language Server gains: cross-file <code>textDocument/definition</code> via   <code>import</code> and <code>mod.foo</code>; scope-aware <code>textDocument/references</code> and   <code>textDocument/rename</code> (top-level / local / param);   <code>textDocument/rangeFormatting</code> (heuristic A widening to the   smallest enclosing top-level Stmt); <code>textDocument/codeAction</code>   quick fixes for <code>TYAL0001</code> (line-delete) and <code>TYAL0003</code>   (if-unwrap); <code>textDocument/semanticTokens/full</code> over a 9-type   legend; <code>textDocument/documentSymbol</code> (hierarchical) and   <code>workspace/symbol</code> (substring filter); incremental document sync   (<code>TextDocumentSyncKind.Incremental</code>); <code>positionEncoding</code> advertised   as <code>utf-8</code>. Setup recipes ship under <code>editors/neovim/</code>,   <code>editors/zed/</code>, and <code>editors/emacs/</code>. New diagnostic codes   <code>TYA-E0932</code> (workspace scan, recoverable) and <code>TYA-E0933</code> (rename   conflict). Language surface unchanged from v0.52.</p>
-<ul>
-<li>**v0.52** — <code>tya lsp</code> Language Server MVP (<code>docs/v0.52/SPEC.md</code>,</li>
-</ul>
-<p>  <code>docs/v0.52/RELEASE_NOTES.md</code>). New toolchain subcommand   <code>tya lsp [--log &lt;file&gt;]</code> speaks LSP JSON-RPC 2.0 over stdio.   Advertised capabilities: <code>textDocumentSync</code> (Full), hover,   definition, completion, and document formatting. Diagnostics   fire on <code>didOpen</code> / <code>didChange</code> / <code>didSave</code> and reuse   <code>checker.CheckAll</code> + <code>parser.OrphanComments</code> + <code>CollectUnused</code> +   <code>CollectLintFindings</code>. Hover renders the function signature plus   the leading <code>#</code>-comment block. Definition is same-file only (cross-file   resolution queued for v0.53+). Completion lists same-file   top-level bindings + stdlib module names + builtins + keywords.   VS Code extension scaffold under <code>editors/vscode/</code> (manual   install via <code>npx vsce package</code>; Marketplace publication queued   for v0.53+). New diagnostic codes <code>TYA-E0930</code> (startup / argument   failure) and <code>TYA-E0931</code> (server I/O failure). <code>internal/checker</code>   gets a small public accessor <code>BuiltinNames()</code>; <code>internal/doc</code>'s   <code>funcSignature</code> is exported as <code>FuncSignature</code> for hover reuse.   Language surface unchanged from v0.51.</p>
-<ul>
-<li>**v0.51** — <code>tya doc</code> source documentation generator</li>
-</ul>
-<p>  (<code>docs/v0.51/SPEC.md</code>, <code>docs/v0.51/RELEASE_NOTES.md</code>). New   toolchain subcommand <code>tya doc [paths...]</code> walks top-level   declarations in <code>.tya</code> files, picks up the leading <code>#</code>-comment   block as a Markdown body, and prints a plain-text summary to   stdout. <code>tya doc --html &lt;out&gt;</code> writes a multi-page static site   (<code>&lt;out&gt;/index.html</code> + <code>&lt;out&gt;/items/&lt;kind&gt;_&lt;name&gt;.html</code> +   <code>&lt;out&gt;/style.css</code>). Extracted kinds: <code>class</code>, <code>module</code>,   <code>interface</code>, and <code>function</code> (= top-level <code>name = … -&gt; …</code> whose   RHS is a function literal). Top-level bindings whose name starts   with <code>_</code> are excluded. Self-contained Markdown subset: headings,   paragraphs, fenced code, <code>- </code> / <code>1. </code> lists, inline `<code> </code>code<code> </code><code>,   </code><a href="url">link</a><code>, </code>**bold**<code>, </code>*italic*<code>. New diagnostic codes   </code>TYA-E0920<code> (missing </code>--html<code> argument) and </code>TYA-E0923<code> (</code>src/`   not found with no explicit paths). Language surface unchanged   from v0.50.</p>
-<ul>
-<li>**v0.50** — Toolchain extension pack (<code>docs/v0.50/SPEC.md</code>,</li>
-</ul>
-<p>  <code>docs/v0.50/RELEASE_NOTES.md</code>). <code>tya lint</code> gains rules   <code>TYAL0003</code> (redundant <code>if true</code> / <code>if false</code>), <code>TYAL0004</code> (deep   nesting, threshold 5), and <code>TYAL0005</code> (long function body,   threshold 50), plus <code>--fix</code> for <code>TYAL0001</code> unused locals.   <code>tya new</code> gains <code>--here</code>, <code>--template app|lib</code>, <code>--force</code>,   <code>--no-git</code>, and runs <code>git init</code> by default. <code>tya task</code> accepts   a new TOML table form <code>[tasks.&lt;name&gt;] cmds = [...]; parallel =   true</code> that runs every entry concurrently and exits with the   first non-zero exit code after waiting for all children;   output is line-prefixed <code>[&lt;index&gt; &lt;truncated cmd&gt;] </code>. New   diagnostic codes <code>TYA-E0903</code> (parallel failure),   <code>TYA-E0912</code> / <code>TYA-E0913</code> (<code>tya new</code> flag misuse), <code>TYAL0003</code> /   <code>TYAL0004</code> / <code>TYAL0005</code>. Language surface unchanged from v0.49.</p>
-<ul>
-<li>**v0.49** — Toolchain track kickoff: three new CLI subcommands</li>
-</ul>
-<p>  (<code>docs/v0.49/SPEC.md</code>, <code>docs/v0.49/RELEASE_NOTES.md</code>). <code>tya new   &lt;name&gt;</code> scaffolds a minimal project (<code>tya.toml</code> + <code>src/main.tya</code>   + <code>.gitignore</code>) with a sample <code>[tasks]</code> entry. <code>tya task [name]   [args...]</code> lists and runs tasks defined under a new <code>[tasks]</code>   table in <code>tya.toml</code>; commands run under <code>/bin/sh -c</code> from the   project root, trailing arguments are POSIX-quoted and appended   to the command (<code>$@</code> style), and array-form tasks run each   entry in order stopping on the first failure. <code>tya lint   [paths...]</code> ships rule <code>TYAL0001</code> — unused local — as the first   member of a planned rule set; findings print   <code>path:line:col: TYAL0001 unused local &quot;name&quot;</code>, exit 1 when any   finding is reported. New diagnostic code range <code>TYA-E090x</code>   reserved for these subcommands (<code>E0900</code> unknown task, <code>E0901</code>   array-form failure, <code>E0902</code> no tya.toml, <code>E0910</code> invalid project   name, <code>E0911</code> project dir exists). Manifest-discovery helper   extracted to <code>pkg.FindManifest</code> and shared with the existing   <code>projectRoot</code>. Language surface unchanged from v0.48. Build   driver now links <code>-lm</code> on non-Windows hosts and the runtime   defines <code>_XOPEN_SOURCE</code>/<code>_DEFAULT_SOURCE</code> so strict glibc   defaults (Arch Linux) accept the compiled programs.</p>
-<ul>
-<li>**v0.48** — Canonical receiver rule + formatter v0.46 keyword</li>
-</ul>
-<p>  surface completion (<code>docs/v0.48/SPEC.md</code>,   <code>docs/v0.48/RELEASE_NOTES.md</code>). G1 (strict bare-name receivers)   is codified — bare identifiers inside class method bodies   resolve to locals / params / imports only, never to class   members; this was already enforced from v0.46 as a side effect   of G2/G4. G6 wires <code>[TYA-E0413]</code> as a strict-mode warning when   <code>&lt;DeclaringClass&gt;.foo</code> is written inside the declaring class   body, and <code>tya format</code> rewrites the same shape to the canonical   <code>Self.foo</code>. The formatter also now consistently emits the v0.46   keyword surface (<code>private</code>, <code>static</code>, <code>self.</code>, <code>Self.</code>,   <code>initialize</code>) for every class shape, rewriting any remaining   legacy sigils on output.</p>
-<ul>
-<li>**v0.47** — Class-member surface clean cut. The legacy v0.45</li>
-</ul>
-<p>  syntax (<code>@</code>, <code>@@</code>, <code>_</code>-prefix, <code>init</code> / <code>_init</code>) is now rejected   with structured diagnostics (<code>docs/v0.47/SPEC.md</code>,   <code>docs/v0.47/RELEASE_NOTES.md</code>). Wired codes: <code>[TYA-E0407]</code>   (<code>_</code>-prefix on class members), <code>[TYA-E0410]</code> (<code>@</code>/<code>@@</code> sigils),   <code>[TYA-E0411]</code> (<code>self</code> inside <code>static</code> methods), <code>[TYA-E0414]</code>   (<code>init</code>/<code>_init</code> as constructor name). <code>selfhost/v01/</code> keeps the   v0.43 surface via a path-based permissive-legacy mode on the   checker (<code>checker.SetPermissiveLegacy</code> + <code>runner.IsLegacyV01Path</code>).   All of <code>examples/</code>, <code>stdlib/</code>, and <code>tests/testdata/v0[6-9]…v45/</code>   migrated to the new surface; the <code>v09/private_members</code> fixture   was retired (it pinned the v0.45-only <code>_</code>-prefix external-access   heuristic, which has no v0.46+ equivalent). Deferred to v0.48:   G1 full strict bare-name receivers (the diagnostics catch the   common legacy paths but a complete resolver walk is future   work) and G6 formatter rewrite of <code>&lt;DeclaringClass&gt;.foo</code> →   <code>Self.foo</code>.</p>
-<ul>
-<li>**v0.46** — Sigil-free, keyword-based class-member surface</li>
-</ul>
-<p>  (<code>docs/v0.46/SPEC.md</code>, <code>docs/v0.46/RELEASE_NOTES.md</code>). Transitional   release: the new keywords (<code>private</code>, <code>static</code>, <code>self</code>, <code>Self</code>,   <code>initialize</code>) are the canonical form for class members and replace   the v0.45 sigil-based surface (<code>@</code>, <code>@@</code>, <code>_</code>-prefix, <code>init</code>). The   legacy syntax still parses for backward compatibility; the   clean-cut removal of legacy syntax plus G4 (strict bare-name   receivers) is deferred to v0.47. stdlib and examples migrated to   the new surface; the v01 self-host keeps its v0.43 surface   unchanged.</p>
-<ul>
-<li>**v0.45** — User-facing completion of the class-oriented</li>
-</ul>
-<p>  namespace and entry-file model (<code>docs/v0.45/SPEC.md</code>,   <code>docs/v0.45/RELEASE_NOTES.md</code>). Three v0.44 follow-ups land:   every <code>examples/*.tya</code> migrated to the new model (no <code>module</code>   declarations remain under <code>examples/</code>); cross-file private class   enforcement via <code>[TYA-E0406]</code> (origin-file metadata propagated   through the runner and checked at member access, bare-Ident   class reference, and <code>extends</code>); five concurrency-related stdlib   packages (<code>runtime</code>, <code>time</code>, <code>channel</code>, <code>sync</code>, <code>task</code>) migrated   to the v0.44 directory-package + PascalCase class form. The   remaining v0.44 follow-ups — Tya-written self-host on the v0.44   surface, the <code>string</code>/<code>array</code>/<code>dict</code> migration that depends on   it, the <code>module</code> keyword removal, and the <code>docs/SPEC.md</code>   promotion — ride together into the v0.4x pre-v1.0.0 Epic. v0.45   also scaffolds <code>selfhost/v02/</code> (CI gate green; lexer + parser   accept <code>@@</code> single token, <code>abstract</code>/<code>final</code> class modifiers, and   the <code>override</code> method modifier) as the foundation for that Epic.</p>
-<ul>
-<li>**v0.44** — Class-oriented namespace and entry-file model</li>
-</ul>
-<p>  (<code>docs/v0.44/SPEC.md</code>, <code>docs/v0.44/MIGRATION.md</code>,   <code>docs/v0.44/RELEASE_NOTES.md</code>). Directory-as-package import,   PascalCase class files, lowercase script files, within-package   bare class references (calls / member / extends / implements /   super), same-directory sibling auto-visibility, same-segment   package collision detection, full import path validation,   cycle detection through directory packages, TYA_PATH search,   aliased imports, interface-in-package, all read-only CLI   commands accept class files (check / format / --tokens /   --emit-c / --check-unused), 19 of 27 stdlib packages migrated   to the class form, <code>[TYA-EXXXX]</code> structured diagnostic codes   on every new runtime error, strict no-paren-call mode   (<code>print x</code> / <code>assert x</code> / <code>assert_equal a, b</code> are removed —   use parentheses), <code>[TYA-E0307]</code> outer-assign rejection inside   lambdas. Held back to v0.45: M5 cross-file private   enforcement, M6 remaining 8 stdlib packages, M7 examples/*   migration, M8 self-host v0.44 surface, M9 <code>module</code> keyword   removal, M10 docs/SPEC.md promotion.</p>
-<ul>
-<li>**v0.43** — Concurrency known-gap close-out: cooperative</li>
-</ul>
-<p>  cancellation (<code>task.cancel</code> / <code>task.cancelled?</code> / <code>task.current</code>),   <code>scope</code> body raises run cleanup before unwinding,   <code>channel.select</code> multiplex.</p>
-<h2 id="scheduled">Scheduled</h2>
-<p>Epics with assigned minor versions, on the path to v1.0.0. Each Epic is implemented in numbered STEPs. Every STEP must pass <code>go test ./... -count=1</code> and <code>go test ./tests -run TestSelfhostV01Scripts -count=1</code> before the next STEP starts. The STEP also keeps <code>docs/vX.Y/SPEC.md</code> consistent with the implementation up to that STEP.</p>
-<h3 id="v0-4x-self-host-v0-46-surface-module-keyword-retirement">v0.4x — Self-host v0.46+ surface + <code>module</code> keyword retirement</h3>
-<p>The remainder of the class-oriented namespace model-completion work, deferred to the v1.0.0 prep window because it requires landing a Tya-written compiler on the **v0.46+ keyword surface** (<code>selfhost/v02/</code>) before the <code>module</code> keyword can be retired (<code>v01</code> still consumes it). Held-back stdlib packages and docs promotion ride the same Epic for a coherent cut.</p>
-<ul>
-<li>[ ] **M8 self-host v02 on v0.46+ surface** *(critical path)*</li>
-<ul>
-<li>[ ] Grow <code>selfhost/v02/compiler.tya</code> to resolve directory</li>
+<li>[ ] HTTP client: <code>http.get(url)</code>, <code>http.post(url, body)</code>, and</li>
 </ul>
 </ul>
-<p>    packages and parse class files on the v0.46/v0.47/v0.48     surface (<code>private</code> / <code>static</code> / <code>self.</code> / <code>Self.</code> /     <code>initialize</code> / <code>extends</code> / <code>implements</code> / <code>interface</code> /     <code>abstract</code> / <code>final</code> / <code>override</code>).</p>
+<p>    <code>http.request(method, url, opts)</code>.</p>
 <ul>
-<li>[ ] Keep the <code>v01</code> fixed point on the v0.43 surface until v02</li>
+<li>[x] Integrate the generic <code>template.Template</code> stdlib renderer for HTTP</li>
 </ul>
-<p>    reaches parity; both compilers live side by side. The Go     reference impl already exempts <code>selfhost/v01/</code> from v0.47     diagnostics via <code>checker.SetPermissiveLegacy</code>.</p>
+<p>    response templates.</p>
 <ul>
-<li>[ ] Prove stage-2 == stage-3 fixed point for v02 on a v0.48-</li>
+<li>[ ] Server concurrency so slow handlers do not block other clients.</li>
+<li>[ ] keep-alive, chunked transfer encoding, multipart bodies, HTTPS/TLS,</li>
 </ul>
-<p>    surface program (<code>TestSelfhostV02Scripts</code>).</p>
+<p>    cookies, middleware, and HEAD/PATCH/OPTIONS.</p>
 <ul>
-<li>[ ] Replace <code>TestSelfhostV01Scripts</code> with the v02 gate only</li>
+<li>[ ] Windows support via WinSock2.</li>
+<li>[ ] Per-request arena to bound the v0.58 string-buffer leak.</li>
 </ul>
-<p>    after parity is proven and at a release boundary.</p>
-<p>  Landed scaffolding (M8.0 – M8.2d, in main): v02 directory   exists as a byte-equivalent copy of v01; <code>TestSelfhostV02Scripts</code>   gate is green; v02 lexer emits <code>@@</code> as a single SYMBOL with   parser-side consistency; v02 parser accepts <code>abstract</code>/<code>final</code>   class modifiers and the <code>override</code> method modifier (codegen   treats them as no-ops). Smoke tests cover <code>extends</code>/<code>super</code>,   <code>@@</code> class members, <code>abstract</code>/<code>final</code>, and <code>override</code>.</p>
+<h2 id="toolchain">Toolchain</h2>
 <ul>
-<li>[ ] **M6 remaining stdlib (3 packages)** *(blocked on M8)*</li>
+<li>[ ] **Documentation generator extensions**</li>
 <ul>
-<li>[ ] <code>string</code>, <code>array</code>, <code>dict</code> migrate to class form once v02</li>
-</ul>
-</ul>
-<p>    resolves directory-package imports — <code>v01</code> currently consumes     them as single-file modules (see <code>docs/v0.44/SPEC.md</code>     §&quot;Self-Host Invariant Constraint&quot;).</p>
-<ul>
-<li>[ ] Update <code>docs/STDLIB.md</code> per package as it lands.</li>
-</ul>
-<ul>
-<li>[ ] **M9 <code>module</code> keyword removal** *(blocked on M8 + M6 remaining)*</li>
-<ul>
-<li>[ ] Parser rejects <code>module</code> as a reserved-word error</li>
+<li>[ ] Stdlib re-exports by following imports.</li>
+<li>[ ] <code>tya doc --serve</code>.</li>
+<li>[ ] <code>tya doc --json</code>.</li>
+<li>[ ] Reuse the public Tya self-introspection library when it exists.</li>
+<li>[ ] Diagnose orphan doc comments, duplicate definitions, and unparseable</li>
 </ul>
 </ul>
-<p>    (<code>[TYA-E0200]</code>).</p>
+<p>    Markdown bodies.</p>
 <ul>
-<li>[ ] Checker, formatter, and C emitter drop every <code>module</code> code</li>
-</ul>
-<p>    path.</p>
+<li>[ ] **Task runner extensions**</li>
 <ul>
-<li>[ ] Delete any remaining <code>module</code>-only files; retire <code>v01</code>.</li>
-</ul>
-<ul>
-<li>[ ] **M10 docs promotion** *(final)*</li>
-<ul>
-<li>[ ] Promote <code>docs/v0.44/SPEC.md</code> content into <code>docs/SPEC.md</code>.</li>
-<li>[ ] Rewrite <code>docs/NAMING.md</code> for the new file-kind rules and</li>
-</ul>
-</ul>
-<p>    remove the legacy &quot;Module Rule&quot; section.</p>
-<ul>
-<li>[ ] Update <code>docs/STDLIB.md</code>, <code>docs/CANONICAL_SYNTAX.md</code>,</li>
-</ul>
-<p>    <code>docs/GUIDE.md</code>, <code>docs/API.md</code>, <code>docs/TERMINOLOGY.md</code>,     <code>docs/LIBRARIES.md</code> to drop module-era language.</p>
-<ul>
-<li>[ ] Rebuild HTML via <code>node scripts/build_docs_pages.js</code>.</li>
-<li>[ ] Add a Released entry to this file when the Epic ships.</li>
-</ul>
-<p>Diagnostic-code wiring:</p>
-<ul>
-<li>[ ] <code>[TYA-E0200]</code> — emitted by M9 <code>module</code> keyword rejection.</li>
-</ul>
-<h2 id="future-work">Future Work</h2>
-<p>Epics below are committed direction but not yet scheduled to a specific minor version. Each will be scoped into a <code>docs/vX.Y/SPEC.md</code> when picked up.</p>
-<h3 id="toolchain">Toolchain</h3>
-<ul>
-<li>[x] **Migrate remaining stages to the diagnostics pipeline** *(v0.54</li>
-</ul>
-<p>  delivered the core. v0.56 finished the API/recovery polish.)*</p>
-<ul>
-<li>[x] Parser → <code>TYA-E0100</code>–<code>E0299</code> (E0100-E0180 buckets in use).</li>
-<li>[x] Codegen → <code>TYA-E0600</code>–<code>E0799</code> (E0601-E0606 in use).</li>
-<li>[x] Runner → <code>TYA-E0800</code>–<code>E0899</code> (E0840 / E0856-E0858 added on top</li>
-</ul>
-<p>    of v0.4x's E0850-E0855).</p>
-<ul>
-<li>[x] Add did-you-mean suggestions for unknown-name diagnostics</li>
-</ul>
-<p>    (Levenshtein-based <code>internal/util.Suggest</code>).</p>
-<ul>
-<li>[x] Add multi-error parsing (statement-level recovery in</li>
-</ul>
-<p>    <code>program()</code> and <code>block()</code>).</p>
-<ul>
-<li>[x] Parser signature change to <code>Parse() → (*Program, []Diag, error)</code></li>
-</ul>
-<p>    for symmetry with <code>lexer.LexWithComments</code>. *(v0.56)*</p>
-<ul>
-<li>[x] Expression-level recovery for <code>CallExpr</code> / <code>ArrayLit</code> /</li>
-</ul>
-<p>    <code>DictLit</code> element lists. *(v0.56)*</p>
-<ul>
-<li>[x] Codegen / Runner signature change to also return <code>[]Diag</code></li>
-</ul>
-<p>    slices. *(v0.56)*</p>
-<ul>
-<li>[x] Binary-chain and member-chain expression-level recovery</li>
-</ul>
-<p>    (<code>a + broken + c</code>, <code>a.broken.c</code>).</p>
-<ul>
-<li>[x] Codegen multi-error mode (collect every <code>unsupported AST shape</code></li>
-</ul>
-<p>    instead of bailing on the first).</p>
-<p>    - Spec: <code>docs/prd/completed/diagnostics-polish.md</code></p>
-<ul>
-<li>[x] **Ship <code>tya lsp</code> Language Server** *(v0.52 MVP + v0.53 full IDE</li>
-</ul>
-<p>  feature set delivered. Remaining items below are Marketplace   publication and post-MVP polish.)*</p>
-<ul>
-<li>[x] Define LSP scope; ship <code>tya lsp</code> as a subcommand of the same</li>
-</ul>
-<p>    binary so compiler and language server cannot drift in version.</p>
-<ul>
-<li>[x] Speak LSP over stdio (JSON-RPC) for VS Code, Zed, Neovim, Emacs.</li>
-<li>[x] Diagnostics on save / on change (TYA-E* / TYAL*).</li>
-<li>[x] Formatting (full + range, backed by <code>formatter.Unparse</code>).</li>
-<li>[x] Hover (functions with leading <code>#</code> comments).</li>
-<li>[x] Go-to-definition (same-file + cross-file via <code>import</code>).</li>
-<li>[x] Completion (in-scope names + stdlib module names + builtins + keywords).</li>
-<li>[x] References + rename (scope-aware: top-level / local / param).</li>
-<li>[x] Code actions for common diagnostics (TYAL0001 / TYAL0003 quick fixes).</li>
-<li>[x] Semantic tokens (<code>textDocument/semanticTokens/full</code>, 9 token types).</li>
-<li>[x] Incremental document sync (<code>TextDocumentSyncKind.Incremental</code>).</li>
-<li>[x] Document symbols + workspace symbols.</li>
-<li>[x] Ship a minimal VS Code extension scaffold at <code>editors/vscode/</code></li>
-</ul>
-<p>    (manual install via <code>npx vsce package</code>).</p>
-<ul>
-<li>[x] Setup recipes for Zed / Neovim / Emacs (<code>editors/&lt;name&gt;/</code>).</li>
-<li>[ ] Marketplace publication of the VS Code extension (publisher</li>
-</ul>
-<p>    ID, signed VSIX, icon, GH Actions release pipeline). *(v0.54+)*</p>
-<ul>
-<li>[ ] <code>prepareRename</code> (rename preview). *(v0.54+)*</li>
-<li>[ ] Semantic token modifiers (<code>readonly</code>, <code>deprecated</code>, …). *(v0.54+)*</li>
-<li>[ ] Range formatting at AST slice precision (current: heuristic A). *(v0.54+)*</li>
-<li>[ ] Inlay hints / call hierarchy / selection range / code lens /</li>
-</ul>
-<p>    folding range / document link. *(v0.54+)*</p>
-<ul>
-<li>[x] **Ship <code>tya doc</code> source documentation generator** *(v0.51 shipped</li>
-</ul>
-<p>  the minimal form: <code>tya doc</code> text + <code>tya doc --html &lt;out&gt;</code> static site   over <code>src/</code>. Remaining work below.)*</p>
-<ul>
-<li>[x] Define doc comment syntax: contiguous comment lines immediately</li>
-</ul>
-<p>    preceding a top-level definition. Body is Markdown rendered by the     self-contained <code>internal/doc</code> renderer.</p>
-<ul>
-<li>[x] Discover every top-level binding under <code>src/</code>.</li>
-<li>[x] CLI surface: <code>tya doc</code> (text), <code>tya doc --html &lt;out&gt;</code> (static site).</li>
-<li>[ ] Stdlib re-exports (follow <code>import</code> statements). *(v0.52+)*</li>
-<li>[ ] <code>tya doc --serve</code> (HTTP). *(v0.52+)*</li>
-<li>[ ] <code>tya doc --json</code> (machine-readable). *(v0.52+)*</li>
-<li>[ ] Reuse the public Tya self-introspection library. *(v0.52+)*</li>
-<li>[ ] Diagnose orphan doc comments, duplicate definitions, unparseable</li>
-</ul>
-<p>    Markdown bodies. *(reserved as TYA-E0921 / TYA-E0922, v0.52+)*</p>
-<ul>
-<li>[ ] **Extend <code>tya new</code> project scaffolder** *(v0.49 shipped the</li>
-</ul>
-<p>  minimal form: <code>tya new &lt;name&gt;</code> → tya.toml + src/main.tya +   .gitignore. Remaining work below.)*</p>
-<ul>
-<li>[ ] <code>tya new --here</code> initialize current directory.</li>
-<li>[ ] <code>--template app|lib</code> (built-in fixed templates).</li>
-<li>[ ] <code>--force</code> to overwrite existing target.</li>
-<li>[ ] Initialize git by default; <code>--no-git</code> to skip.</li>
-<li>[ ] Default template includes <code>tests/</code> with one passing</li>
-</ul>
-<p>    unittest and a minimal <code>README.md</code>.</p>
-<ul>
-<li>[ ] **Extend <code>tya task</code> project task runner** *(v0.49 shipped the</li>
-</ul>
-<p>  minimal form: <code>[tasks]</code> table with string + array forms,   <code>/bin/sh -c</code> execution, project-root CWD, POSIX-quoted argument   passthrough, structured failure diagnostic. Remaining work   below.)*</p>
-<ul>
-<li>[ ] Parallel execution syntax (decide between <code>parallel = [...]</code></li>
-</ul>
-<p>    table form and a dedicated keyword).</p>
-<ul>
-<li>[ ] File-watching mode (<code>tya task &lt;name&gt; --watch</code>).</li>
-<li>[ ] Task dependency graphs (depend-on declaration).</li>
+<li>[ ] Parallel execution syntax.</li>
+<li>[ ] File-watching mode: <code>tya task &lt;name&gt; --watch</code>.</li>
+<li>[ ] Task dependency graphs.</li>
 <li>[ ] Per-task environment variables.</li>
 </ul>
-<ul>
-<li>[x] **Package command runner**</li>
-<ul>
-<li>[x] <code>tya tool &lt;command&gt; [args...]</code> runs package-declared Tya tools from</li>
-</ul>
-</ul>
-<p>    locked dependencies or explicit one-shot git/path sources.</p>
-<ul>
-<li>Spec: <code>docs/prd/completed/tya-tool-package-command.md</code></li>
-</ul>
-<ul>
-<li>[ ] **Extend <code>tya lint</code> source linter** *(v0.49 shipped rule</li>
-</ul>
-<p>  <code>TYAL0001</code> unused local + CLI surface. v0.50 added <code>--fix</code>   line-delete + <code>TYAL0003 / 0004 / 0005</code> warnings. v0.55 added   per-line opt-out, <code>--format=json</code>, <code>TYAL0002</code> dead code, and   <code>TYAL0003</code> <code>--fix</code> unwrap-if autofix. Remaining work below.)*</p>
-<ul>
-<li>[x] <code>--fix</code> autofix mode. *(v0.50: <code>TYAL0001</code> line-delete;</li>
-</ul>
-<p>    v0.55: <code>TYAL0003</code> unwrap-if)*</p>
-<ul>
-<li>[x] <code>--format=json</code> machine-readable output. *(v0.55)*</li>
-<li>[x] Additional rules: dead code after <code>return</code> / <code>raise</code></li>
-</ul>
-<p>    *(<code>TYAL0002</code>, v0.55)*; redundant <code>if true</code> / <code>if false</code>     *(<code>TYAL0003</code>, v0.50)*; deeply nested blocks     *(<code>TYAL0004</code>, v0.50)*; very long functions     *(<code>TYAL0005</code>, v0.50)*.</p>
-<ul>
-<li>[ ] Additional rules: suspicious <code>for</code> index patterns,</li>
-</ul>
-<p>    unused function parameters, shadowed bindings.</p>
-<ul>
-<li>[ ] Extend <code>TYAL0001</code> <code>--fix</code> to also drop the body of</li>
-</ul>
-<p>    multi-line bindings (e.g. <code>name = -&gt;</code> followed by an     indented block) so <code>--fix</code> does not leave orphan indented     lines. *(carryover from v0.50; the current line-delete only     removes the binding's own line)*</p>
-<ul>
-<li>[x] Per-line opt-out via <code># tya-lint-ignore: TYAL0001</code>. *(v0.55)*</li>
-<li>[ ] File-scope opt-out (<code># tya-lint-ignore-file: TYAL0001</code>).</li>
-<li>[ ] <code>--format=sarif</code> (SARIF v2.1 standard) for ingest by</li>
-</ul>
-<p>    third-party CI tools.</p>
-<ul>
-<li>[ ] <code>TYAL0004</code> / <code>TYAL0005</code> AST autofix (deep-nesting</li>
-</ul>
-<p>    flattening / long-function split). Currently warning-only     because the right reshape is a human-judgement call.</p>
-<ul>
-<li>[ ] Unify the LSP <code>unwrap-if</code> code action helper</li>
-</ul>
-<p>    (<code>internal/lsp/code_actions.go</code>) with the CLI     <code>applyUnwrapIf</code> (<code>cmd/tya/lint_autofix.go</code>) so both call     the same rewriter.</p>
-<ul>
-<li>[ ] Each rule has a stable code (<code>TYAL00xx</code>), title, doc URL.</li>
-</ul>
-<ul>
-<li>[ ] **Ship a public Tya self-introspection library**</li>
-<ul>
-<li>[ ] Goal: Tya programs and external tools can lex, parse, walk, and</li>
-</ul>
-</ul>
-<p>    re-emit Tya source through a stable, documented API. Unlocks     codemods, linters, doc extractors, refactoring, AI-agent edits, and     <code>tya lsp</code>.</p>
-<ul>
-<li>[ ] Surface as Tya stdlib modules built on the self-host components:</li>
-</ul>
-<p>    <code>compiler.lexer</code>, <code>compiler.parser</code>, <code>compiler.ast</code>, <code>compiler.checker</code>,     <code>compiler.format</code>.</p>
-<ul>
-<li>[ ] AST is the single canonical representation; node kinds, fields,</li>
-</ul>
-<p>    spans documented.</p>
-<ul>
-<li>[x] Round-trip tests over a representative corpus.</li>
-</ul>
-<h3 id="language">Language</h3>
-<ul>
-<li>[ ] **Ship WebAssembly compilation target**</li>
-<ul>
-<li>[ ] Use Zig (<code>zig cc --target=wasm32-wasi</code> and</li>
-</ul>
-</ul>
-<p>    <code>zig cc --target=wasm32-freestanding</code>) as the WASM toolchain.</p>
-<ul>
-<li>[ ] CLI: <code>tya build --target wasm32-wasi</code>,</li>
-</ul>
-<p>    <code>tya build --target wasm32-browser</code>.</p>
-<ul>
-<li>[ ] Decide system interface: WASI for CLI-style programs, browser-friendly</li>
-</ul>
-<p>    subset omits filesystem and process APIs.</p>
-<ul>
-<li>[ ] Gate unavailable stdlib modules per target with structured errors at</li>
-</ul>
-<p>    import time.</p>
-<ul>
-<li>[x] **Ship asset embedding for single-binary distribution** *(v0.57)*</li>
-<ul>
-<li>[x] <code>embed &quot;assets/logo.png&quot; as logo</code> bakes file bytes into the compiled</li>
-</ul>
-</ul>
-<p>    binary at build time.</p>
-<ul>
-<li>[x] Directory / glob form (<code>embed &quot;static/**&quot; as static</code>) returns a dict</li>
-</ul>
-<p>    keyed by relative path.</p>
-<ul>
-<li>[x] Single-file form returns <code>bytes</code>; glob form returns</li>
-</ul>
-<p>    <code>dict&lt;string, bytes&gt;</code>. v0.57 always loads as <code>bytes</code> — use     <code>bytes_text</code> to recover text. <code>as bytes</code> / <code>as text</code>     modifiers and extension-based auto-detection deferred to     v0.58+.</p>
-<ul>
-<li>[ ] HTTP server stdlib (the natural consumer of glob embeds) *(v0.58+)*</li>
-<li>[ ] SDL / raylib bindings (the natural consumer of game-asset</li>
-</ul>
-<p>    embeds) *(v0.58+)*</p>
-<ul>
-<li>[ ] Build-time asset transforms (minify / gzip / hash). *(v0.58+)*</li>
-<li>[ ] <code>tya embed --list</code> CLI introspection. *(v0.58+)*</li>
-</ul>
-<ul>
-<li>[ ] **Primitive literals as class-instance sugar**</li>
-<ul>
-<li>[ ] Follow-up to v0.44 class-oriented namespace. Extend</li>
-</ul>
-</ul>
-<p>    &quot;everything is a class&quot; to literal values: <code>1</code> and <code>1.0</code> are     both sugar for <code>Number(...)</code> (a single numeric class — no     Integer/Float split, matching the current <code>TyaValue.number</code>     <code>double</code> representation in <code>runtime/tya_runtime.h</code>),     <code>&quot;hello&quot;</code> for <code>String(&quot;hello&quot;)</code>, <code>[1, 2]</code> for <code>Array(1, 2)</code>,     <code>{a: 1}</code> for <code>Dict(&quot;a&quot;, 1)</code>, <code>true</code> / <code>false</code> for     <code>Boolean(true)</code> / <code>Boolean(false)</code>, <code>nil</code> for the unique     <code>Nil</code> instance.</p>
-<ul>
-<li>[ ] Method-call syntax on literals is required: <code>42.to_s()</code>,</li>
-</ul>
-<p>    <code>&quot;hi&quot;.len()</code>, <code>true.to_s()</code>, <code>[1,2].len()</code> all dispatch through     the wrapper class. Lexer must keep <code>42.0</code> (float literal) and     <code>42.foo</code> (method call) unambiguous (Ruby rule: a digit     immediately after <code>.</code> means the dot is part of a float literal;     otherwise it is a method call).</p>
-<ul>
-<li>[ ] Operators (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>&lt;</code>, <code>==</code>, <code>[]</code>, ...) are</li>
-</ul>
-<p>    **not user-redefinable**. They desugar to fixed method names     on the wrapper class (e.g. <code>a + b</code> → <code>a.__add__(b)</code>,     <code>a == b</code> → <code>a.__eq__(b)</code>). User classes may **define** these     methods to participate, but cannot **override** them on the     built-in primitive classes.</p>
-<ul>
-<li>[ ] Monkey-patching primitive classes (<code>Number</code>, <code>String</code>,</li>
-</ul>
-<p>    <code>Boolean</code>, <code>Nil</code>, <code>Array</code>, <code>Dict</code>) is forbidden. The method     table of each built-in wrapper is fixed at compile time so the     optimizer can keep the fast path always live.</p>
-<ul>
-<li>[ ] Cross-type equality is a method-level decision, not a</li>
-</ul>
-<p>    language-level one. Standard built-in <code>__eq__</code> implementations     are type-strict: <code>String#__eq__</code> returns <code>false</code> for     non-<code>String</code> arguments, etc. Because numbers are a single     <code>Number</code> class, <code>1 == 1.0</code> is naturally <code>true</code> (no cross-type     case to resolve). Users who want lenient comparison write it     in their own class's <code>__eq__</code>.</p>
-<ul>
-<li>[ ] No automatic type coercion. There is no Integer/Float</li>
-</ul>
-<p>    split today, so the question of fixnum→float or float→bignum     promotion does not arise. If a future Epic introduces a     distinct integer type, promotion semantics are decided then.</p>
-<ul>
-<li>[ ] Runtime representation: keep the current <code>TyaValue</code></li>
-</ul>
-<p>    tagged-union (<code>runtime/tya_runtime.h</code>, <code>kind</code> enum + payload     fields; <code>TYA_NUMBER</code> already stores both integer- and     fractional-valued numbers as <code>double</code>). Wrapper classes     (<code>Number</code>, <code>Boolean</code>, <code>Nil</code>, <code>String</code>, <code>Array</code>, <code>Dict</code>) are     process-global singleton class objects created once at     runtime startup; <code>x.class</code> returns the appropriate singleton     based on the value's <code>kind</code> with no allocation. No boxing     of primitives into heap objects.</p>
-<ul>
-<li>[ ] Hidden-from-user fast path: the C emitter lowers operator</li>
-</ul>
-<p>    desugaring on known-primitive operands directly to the     existing C arithmetic / comparison helpers, bypassing method     dispatch. Because monkey-patching and operator redefinition     are forbidden, this fast path is unconditional — there is no     &quot;redefinition check&quot; of the kind CRuby needs. Method dispatch     is only used when the static type is unknown or the receiver     is a user class.</p>
-<ul>
-<li>[ ] Migrate stdlib and examples once the wrapper classes land.</li>
-<li>[ ] Land a separate <code>docs/vX.Y/SPEC.md</code> when scheduled.</li>
-</ul>
-<ul>
-<li>[ ] **Grow <code>interface</code> toward stackable-trait capability**</li>
-<ul>
-<li>[ ] **Phase 1: default methods on <code>interface</code>**</li>
-<ul>
-<li>[ ] Allow <code>interface</code> declarations to provide method bodies as</li>
-</ul>
-</ul>
-</ul>
-<p>      default implementations, in the spirit of Java 8 default methods.</p>
-<ul>
-<li>[ ] An implementing class inherits the default body unless it</li>
-</ul>
-<p>      provides its own override.</p>
-<ul>
-<li>[ ] Multiple interfaces declaring the same default-method name</li>
-</ul>
-<p>      and signature is a compile-time conflict; the implementing       class must resolve it explicitly. No implicit &quot;first wins&quot;       rule.</p>
-<ul>
-<li>[ ] No state, no initialization, no <code>super</code> chaining at this</li>
-</ul>
-<p>      phase. Defaults may call <code>self.&lt;other_method&gt;()</code> only.</p>
-<ul>
-<li>[ ] Extend checker, C emitter, formatter, and diagnostics for</li>
-</ul>
-<p>      the new shape. Reserve a diagnostic code range for default-method       conflicts and missing required methods.</p>
-<ul>
-<li>[ ] Keep <code>selfhost/v01/compiler.tya</code> (or its v0.44 successor)</li>
-</ul>
-<p>      compiling itself to a stable stage-2/stage-3 fixed point.</p>
-<ul>
-<li>[ ] **Phase 2: state and initialization on <code>interface</code>**</li>
-<ul>
-<li>[ ] Allow <code>interface</code> to declare instance fields and an</li>
-</ul>
-</ul>
-<p>      initialization block that runs as part of the implementing       class's construction.</p>
-<ul>
-<li>[ ] Define a single rule for diamond inheritance of state. The</li>
-</ul>
-<p>      starting position is &quot;explicit resolution required&quot;: if the       same ancestor interface contributes the same field via two       paths, the implementing class must resolve it. Do not silently       duplicate or silently merge.</p>
-<ul>
-<li>[ ] Define and document the order in which interface init</li>
-</ul>
-<p>      blocks run relative to each other and to the class body. The       order must be deterministic and stable across recompiles.</p>
-<ul>
-<li>[ ] Define <code>self.&lt;field&gt;</code> scoping inside default methods and</li>
-</ul>
-<p>      init blocks: which interface's field is being referenced and       how name collisions are reported.</p>
-<ul>
-<li>[ ] C emitter: lay out interface-contributed fields in the</li>
-</ul>
-<p>      implementing struct without duplication for the diamond-resolved       cases; document the layout rule.</p>
-<ul>
-<li>[ ] Self-host implications: either keep the self-host compiler</li>
-</ul>
-<p>      written without using interface state, or migrate it to the       new shape and re-prove stage-2 == stage-3.</p>
-<ul>
-<li>[ ] **Phase 3 (optional): linearization and stackable trait**</li>
-<ul>
-<li>[ ] Decide whether <code>super</code> inside an <code>interface</code> default method</li>
-</ul>
 </ul>
-<p>      means &quot;the parent&quot; (simple) or &quot;the next interface in a       linearization order&quot; (Scala-style stackable). Until this Epic       reaches Phase 3, <code>super</code> keeps its parent-class meaning only.</p>
 <ul>
-<li>[ ] If adopted: implement C3 linearization in the checker;</li>
-</ul>
-<p>      route <code>super.method(...)</code> through the linearized order;       document the rule in <code>docs/SPEC.md</code>.</p>
+<li>[ ] **Linter extensions**</li>
 <ul>
-<li>[ ] Re-evaluate vtable / dispatch design in the C emitter for</li>
+<li>[ ] Additional rules: suspicious <code>for</code> index patterns, unused function</li>
 </ul>
-<p>      stackable dispatch.</p>
-<ul>
-<li>[ ] Re-prove the self-host fixed point on the new surface.</li>
 </ul>
+<p>    parameters, and shadowed bindings.</p>
 <ul>
-<li>[ ] **Naming decision: keep <code>interface</code>, or rename to <code>trait</code>**</li>
-<ul>
-<li>[ ] Defer the rename until at least Phase 2 has shipped and</li>
-</ul>
+<li>[ ] Extend <code>TYAL0001 --fix</code> to remove full multi-line bindings without</li>
 </ul>
-<p>      real Tya code uses interface state. The choice is editorial,       not technical: if the strengthened <code>interface</code> clearly behaves       like a Scala trait in stdlib usage, consider a rename in a       single dedicated Epic with a destructive migration plan.</p>
+<p>    leaving orphan indented lines.</p>
 <ul>
-<li>[ ] Do not introduce both <code>interface</code> and <code>trait</code> as separate</li>
+<li>[ ] File-scope opt-out: <code># tya-lint-ignore-file: TYAL0001</code>.</li>
+<li>[ ] <code>--format=sarif</code>.</li>
+<li>[ ] Share the LSP unwrap-if code action and CLI autofix rewriter.</li>
+<li>[ ] Each rule has a stable code, title, and doc URL.</li>
 </ul>
-<p>      kinds. One concept, one keyword, consistent with the       &quot;no hesitation&quot; philosophy.</p>
+<h2 id="language">Language</h2>
 <ul>
-<li>[ ] **Migrate selfhost compiler to latest spec and remove Go reference**</li>
+<li>[ ] **Migrate selfhost compiler to the latest spec and remove Go reference**</li>
 <ul>
-<li>[ ] Bring <code>selfhost/</code> up from v0.1 surface to the v1.0.0 spec</li>
+<li>[ ] Bring <code>selfhost/</code> up to the v1.0.0 spec: lexer, parser, AST, checker,</li>
 </ul>
-</ul>
-<p>    (lexer, parser, AST, checker, C emitter, runner).</p>
-<ul>
-<li>[ ] Implement all language features (including v0.41 GC interface and</li>
 </ul>
-<p>    v0.42 Concurrency) in the self-hosted compiler.</p>
+<p>    C emitter, and runner.</p>
 <ul>
+<li>[ ] Implement all language features in the self-hosted compiler.</li>
 <li>[ ] Verify stage-2 == stage-3 fixed point at the latest spec.</li>
-<li>[ ] Distribute pre-built <code>tya</code> binaries via Homebrew, curl install</li>
+<li>[ ] Distribute pre-built <code>tya</code> binaries via Homebrew, curl install scripts,</li>
 </ul>
-<p>    scripts, and GitHub Releases as the bootstrap source.</p>
+<p>    and GitHub Releases as the bootstrap source.</p>
 <ul>
 <li>[ ] Remove <code>cmd/tya</code> and <code>internal/*</code> Go sources.</li>
-<li>[ ] Migrate Go-based tests to Tya-based tests where practical;</li>
+<li>[ ] Migrate Go-based tests to Tya-based tests where practical; keep</li>
 </ul>
-<p>    keep specification-driven black-box tests in any language that runs     against the <code>tya</code> binary.</p>
+<p>    specification-driven black-box tests in any language that runs against the     <code>tya</code> binary.</p>
+<h2 id="stdlib-extensions">Stdlib Extensions</h2>
+<h2 id="editor-and-ecosystem">Editor and Ecosystem</h2>
 <ul>
-<li>[ ] This Epic ships at v1.0.0 and is tied to Commitment 6.</li>
+<li>[ ] **Ship syntax coloring for major editors**</li>
+<ul>
+<li>[x] Define required editor targets: VS Code, Emacs, Vim, and GitHub.</li>
+<li>[x] Document canonical token taxonomy.</li>
+<li>[x] House editor assets under <code>editors/</code>.</li>
+<li>[ ] Publish VS Code support to Marketplace and Open VSX.</li>
+<li>[ ] Publish Emacs mode to MELPA.</li>
+<li>[x] Add Vim / Neovim syntax, filetype, and indent files.</li>
+<li>[x] Add Tree-sitter grammar assets and highlight queries for GitHub Linguist.</li>
+<li>[ ] Register a Tree-sitter grammar with GitHub Linguist.</li>
 </ul>
-<ul>
-<li>[x] **Allow raw <code>&quot;</code> inside <code>{expr}</code> interpolation body**</li>
-<ul>
-<li>[x] Today the lexer reads a string literal as &quot;until the next</li>
-</ul>
-</ul>
-<p>    unescaped <code>&quot;</code>&quot;, so an interpolation <code>{user[&quot;name&quot;]}</code> is cut at     the inner <code>&quot;</code>. The user has to write <code>{user[\&quot;name\&quot;]}</code> or hoist     the expression into a local. Make the lexer balance <code>{</code> / <code>}</code>     while inside an interpolation expression so the body can     contain quoted sub-expressions verbatim.</p>
-<ul>
-<li>[ ] Round-trip through the existing interpolation pipeline</li>
-</ul>
-<p>    unchanged; only lexer scanning state needs to track depth.</p>
-<ul>
-<li>[x] Update the <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> and raw <code>r&quot;...&quot;</code> lexer paths the same</li>
-</ul>
-<p>    way so the rule is uniform.</p>
-<ul>
-<li>[x] Add positive lexer + script tests pinning</li>
-</ul>
-<p>    <code>&quot;Hello, {user[&quot;name&quot;]}!&quot;</code> and the matching multi-line and raw     cases.</p>
-<ul>
-<li>[x] Reference: most modern interpolation languages already</li>
-</ul>
-<p>    allow this (JavaScript template literals, C# <code>$&quot;...&quot;</code>, Kotlin,     Ruby <code>&quot;#{...}&quot;</code>, Scala, Dart, Elixir, Swift <code>\( )</code>). Python     aligned in 3.12 via PEP 701; Tya should follow the same model.     The minority that still forbids nested same-quote is PHP     <code>&quot;...{$x['k']}...&quot;</code> and pre-3.12 Python f-strings — Tya's     current behavior matches that older / minority position and     should not stay there.</p>
-<ul>
-<li>Spec: <code>docs/prd/completed/raw-quotes-in-interpolation.md</code></li>
-</ul>
-<h3 id="stdlib-extensions">Stdlib extensions</h3>
-<ul>
-<li>[x] **CLI helper library**</li>
-<ul>
-<li>[x] <code>cli.Cli</code> parses flags, positional args, defaults, required options,</li>
-</ul>
-</ul>
-<p>    <code>--</code>, and deterministic usage text.</p>
-<ul>
-<li>Spec: <code>docs/prd/completed/stdlib-cli-library.md</code></li>
-</ul>
-<ul>
-<li>[ ] **Extend coverage tooling (post-v0.30.0)**</li>
-<ul>
-<li>[ ] <code>tya cover html</code> self-contained report.</li>
-<li>[ ] <code>--include</code> / <code>--exclude</code> glob filters on <code>tya cover</code>.</li>
-<li>[ ] Read <code>coverage.include</code> / <code>coverage.exclude</code> from <code>Tyafile</code>.</li>
-<li>[ ] Give <code>BreakStmt</code> / <code>ContinueStmt</code> source positions and instrument</li>
-</ul>
-</ul>
-<p>    them.</p>
-<ul>
-<li>[ ] Map coverage to per-import-source lines instead of the synthesized</li>
-</ul>
-<p>    entry path.</p>
-<ul>
-<li>[ ] Recommended CI snippet (fail when coverage drops below a threshold).</li>
-</ul>
-<ul>
-<li>[ ] **Extend <code>markdown</code> stdlib module (post-v0.32 foundation)**</li>
-<ul>
-<li>[ ] Public AST: <code>markdown.parse(text) -&gt; ast</code>, `markdown.to_html_ast(ast)</li>
-</ul>
-</ul>
-<p>    -&gt; string<code>, </code>markdown.render(ast, visitor) -&gt; string`, AST node spec.</p>
-<ul>
-<li>[ ] GFM extensions: tables, task lists, strikethrough, fenced-code</li>
-</ul>
-<p>    info-string class.</p>
-<ul>
-<li>[ ] Reference link definitions, images, nested lists, setext headings,</li>
-</ul>
-<p>    HTML blocks.</p>
-<ul>
-<li>[ ] Raw HTML pass-through with security note.</li>
-<li>[ ] CommonMark conformance subset run as part of <code>go test ./...</code>.</li>
-</ul>
-<ul>
-<li>[ ] **Extend multi-line strings further** (heredoc-style markers,</li>
-</ul>
-<p>  language-tagged interpolation specifiers like <code>sql&quot;&quot;&quot;...&quot;&quot;&quot;</code>) — only if   demand emerges.</p>
-<h3 id="editor-and-ecosystem">Editor and ecosystem</h3>
-<ul>
-<li>[ ] **Ship syntax coloring for the major editors**</li>
-<ul>
-<li>[ ] Define **major editors**: VS Code, Emacs, Vim, GitHub. Others (Zed,</li>
-</ul>
-</ul>
-<p>    Helix, Neovim, JetBrains) welcome but not required for &quot;major editor&quot;     coverage.</p>
-<ul>
-<li>[ ] Canonical token taxonomy (keyword, builtin, type, string,</li>
-</ul>
-<p>    interpolated expression, number, operator, comment, function name,     parameter, module name) documented in <code>docs/</code>.</p>
-<ul>
-<li>[ ] House all editor assets under <code>editors/</code>: <code>editors/vscode/</code>,</li>
-</ul>
-<p>    <code>editors/emacs/</code>, <code>editors/vim/</code>, <code>editors/tree-sitter-tya/</code>.</p>
-<ul>
-<li>[ ] VS Code: TextMate grammar + minimal extension; publish to</li>
-</ul>
-<p>    Marketplace and Open VSX.</p>
-<ul>
-<li>[ ] Emacs: <code>tya-mode.el</code> derived mode; publish to MELPA.</li>
-<li>[ ] Vim: <code>syntax/</code>, <code>ftdetect/</code>, <code>indent/</code> files (also covers Neovim).</li>
-<li>[ ] GitHub: Tree-sitter grammar registered with <code>github-linguist/linguist</code>.</li>
 </ul>
 <h2 id="verification-reference">Verification Reference</h2>
 <p>Default verification:</p>

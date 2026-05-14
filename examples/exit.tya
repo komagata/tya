@@ -1,5 +1,5 @@
 items = args()
-if len(items) > 0
-  code = to_int(items[0])
+if items.len() > 0
+  code = items[0].to_i()
   exit(code)
 print("no exit")

@@ -158,6 +158,25 @@ func checkUnusedStmts(stmts []ast.Stmt, scope *useScope) error {
 					return err
 				}
 			}
+		case *ast.SelectStmt:
+			for _, arm := range n.Arms {
+				if arm.Channel != nil {
+					checkUnusedExpr(arm.Channel, scope)
+				}
+				if arm.Value != nil {
+					checkUnusedExpr(arm.Value, scope)
+				}
+				if arm.Seconds != nil {
+					checkUnusedExpr(arm.Seconds, scope)
+				}
+				child := newUseScope(scope)
+				if arm.BindName != "" {
+					child.define(arm.BindName, arm.BindTok.Line, arm.BindTok.Col)
+				}
+				if err := checkUnusedStmts(arm.Body, child); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil

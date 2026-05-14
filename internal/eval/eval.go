@@ -1758,8 +1758,10 @@ func evalLen(name string, args []Value, env *Env) (Value, error) {
 		return int64(len(v.items)), nil
 	case Dict:
 		return int64(len(v)), nil
+	case Bytes:
+		return int64(len(v.data)), nil
 	default:
-		return nil, fmt.Errorf("%s expects string, array, or dictionary", name)
+		return nil, fmt.Errorf("%s expects string, array, dictionary, or bytes", name)
 	}
 }
 
@@ -1992,9 +1994,177 @@ func evalCallee(e ast.Expr, env *Env) (Value, error) {
 		if module, ok := obj.(*Module); ok {
 			return module.Members[m.Name], nil
 		}
+		if dict, ok := obj.(Dict); ok {
+			if value, ok := dict[m.Name]; ok {
+				return value, nil
+			}
+		}
+		if method := primitiveMethodValue(obj, m.Name, env); method != nil {
+			return method, nil
+		}
 		return nil, fmt.Errorf("member calls require module receiver")
 	}
 	return evalExpr(e, env)
+}
+
+func primitiveMethodValue(receiver Value, name string, env *Env) Value {
+	call := func(fn func([]Value) (Value, error)) Builtin {
+		return Builtin(func(args []Value) (Value, error) {
+			return fn(append([]Value{receiver}, args...))
+		})
+	}
+	switch receiver.(type) {
+	case string:
+		switch name {
+		case "upper":
+			return call(func(args []Value) (Value, error) { return evalStringModuleCall("upcase", args, env) })
+		case "lower":
+			return call(func(args []Value) (Value, error) { return evalStringModuleCall("downcase", args, env) })
+		case "blank?":
+			return call(func(args []Value) (Value, error) {
+				if len(args) != 1 {
+					return nil, fmt.Errorf("string.blank? expects 0 arguments")
+				}
+				text, ok := args[0].(string)
+				if !ok {
+					return nil, fmt.Errorf("string.blank? expects string")
+				}
+				return strings.TrimSpace(text) == "", nil
+			})
+		case "present?":
+			return call(func(args []Value) (Value, error) {
+				if len(args) != 1 {
+					return nil, fmt.Errorf("string.present? expects 0 arguments")
+				}
+				text, ok := args[0].(string)
+				if !ok {
+					return nil, fmt.Errorf("string.present? expects string")
+				}
+				return strings.TrimSpace(text) != "", nil
+			})
+		case "to_s":
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("to_s expects 0 arguments")
+				}
+				return stringify(receiver), nil
+			})
+		case "to_i":
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("to_i expects 0 arguments")
+				}
+				return toIntValue(receiver)
+			})
+		case "to_f", "to_number":
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("%s expects 0 arguments", name)
+				}
+				return toNumberValue(receiver)
+			})
+		default:
+			if isStandardStringCall(name) {
+				return call(func(args []Value) (Value, error) { return evalStringModuleCall(name, args, env) })
+			}
+		}
+	case *Array:
+		if name == "to_s" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("to_s expects 0 arguments")
+				}
+				return stringify(receiver), nil
+			})
+		}
+		if isStandardArrayCall(name) {
+			return call(func(args []Value) (Value, error) { return evalArrayModuleCall(name, args, env) })
+		}
+	case Dict:
+		if name == "to_s" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("to_s expects 0 arguments")
+				}
+				return stringify(receiver), nil
+			})
+		}
+		if isStandardDictCall(name) {
+			return call(func(args []Value) (Value, error) { return evalDictModuleCall(name, args, env) })
+		}
+	case Bytes:
+		if name == "len" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("bytes.len expects 0 arguments")
+				}
+				return int64(len(receiver.(Bytes).data)), nil
+			})
+		}
+	case int64, float64, bool, nil:
+		if name == "to_s" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("to_s expects 0 arguments")
+				}
+				return stringify(receiver), nil
+			})
+		}
+		if name == "to_i" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("to_i expects 0 arguments")
+				}
+				return toIntValue(receiver)
+			})
+		}
+		if name == "to_f" || name == "to_number" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("%s expects 0 arguments", name)
+				}
+				return toNumberValue(receiver)
+			})
+		}
+	}
+	return nil
+}
+
+func toIntValue(value Value) (Value, error) {
+	switch v := value.(type) {
+	case int64:
+		return v, nil
+	case float64:
+		return int64(v), nil
+	case string:
+		i, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("to_i: invalid integer")
+		}
+		return i, nil
+	default:
+		return nil, fmt.Errorf("to_i expects number or string")
+	}
+}
+
+func toNumberValue(value Value) (Value, error) {
+	switch v := value.(type) {
+	case int64:
+		return v, nil
+	case float64:
+		return v, nil
+	case string:
+		f, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			return nil, fmt.Errorf("to_number: invalid number")
+		}
+		if mathpkg.Trunc(f) == f {
+			return int64(f), nil
+		}
+		return f, nil
+	default:
+		return nil, fmt.Errorf("to_number expects number or string")
+	}
 }
 
 func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
@@ -3068,18 +3238,18 @@ func registerV25Builtins(env *Env) {
 		if !ok {
 			return nil, &raisedSignal{value: "io.open: mode must be a string"}
 		}
+		flag := 0
 		readable := strings.Contains(mode, "r")
 		writable := strings.Contains(mode, "w") || strings.Contains(mode, "a")
-		if !readable && !writable {
-			return nil, &raisedSignal{value: "io.open: invalid mode"}
-		}
-		flag := 0
-		if readable && writable {
-			flag = os.O_RDWR | os.O_CREATE
-		} else if writable {
+		switch {
+		case strings.Contains(mode, "a"):
+			flag = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+		case strings.Contains(mode, "w"):
 			flag = os.O_CREATE | os.O_WRONLY | os.O_TRUNC
-		} else {
+		case strings.Contains(mode, "r"):
 			flag = os.O_RDONLY
+		default:
+			return nil, &raisedSignal{value: "io.open: invalid mode"}
 		}
 		f, err := os.OpenFile(path, flag, 0644)
 		if err != nil {
@@ -3113,12 +3283,12 @@ func registerV25Builtins(env *Env) {
 		}
 		size, ok := numberAsInt(args[1])
 		if !ok || size < 0 {
-			return nil, &raisedSignal{value: "io.read: size must be a non-negative number"}
+			return nil, &raisedSignal{value: "io.read: size must be non-negative"}
 		}
 		buf := make([]byte, int(size))
-		n, err := s.file.Read(buf)
-		if err != nil && err != io.EOF {
-			return nil, &raisedSignal{value: err.Error()}
+		n, rerr := s.file.Read(buf)
+		if rerr != nil && rerr != io.EOF {
+			return nil, &raisedSignal{value: rerr.Error()}
 		}
 		buf = buf[:n]
 		if s.binary {
@@ -3138,20 +3308,20 @@ func registerV25Builtins(env *Env) {
 			return nil, &raisedSignal{value: "io.read_line: stream is not readable"}
 		}
 		var buf []byte
-		one := make([]byte, 1)
+		tmp := make([]byte, 1)
 		for {
-			n, err := s.file.Read(one)
+			n, rerr := s.file.Read(tmp)
 			if n > 0 {
-				buf = append(buf, one[0])
-				if one[0] == '\n' {
+				buf = append(buf, tmp[0])
+				if tmp[0] == '\n' {
 					break
 				}
 			}
-			if err == io.EOF {
+			if rerr == io.EOF {
 				break
 			}
-			if err != nil {
-				return nil, &raisedSignal{value: err.Error()}
+			if rerr != nil {
+				return nil, &raisedSignal{value: rerr.Error()}
 			}
 		}
 		if len(buf) == 0 {

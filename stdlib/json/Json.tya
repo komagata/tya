@@ -32,11 +32,11 @@ class Json
     if code < 128
       return chr(code)
     if code < 2048
-      b1 = 192 + to_int(code / 64)
+      b1 = 192 + (code / 64).to_i()
       b2 = 128 + code % 64
       return chr(b1) + chr(b2)
-    b1 = 224 + to_int(code / 4096)
-    b2 = 128 + to_int(code % 4096 / 64)
+    b1 = 224 + (code / 4096).to_i()
+    b2 = 128 + (code % 4096 / 64).to_i()
     b3 = 128 + code % 64
     return chr(b1) + chr(b2) + chr(b3)
 
@@ -128,8 +128,8 @@ class Json
       k = k + 1
     state["pos"] = p
     if is_float
-      return to_float(text)
-    return to_int(text)
+      return text.to_f()
+    return text.to_i()
 
   static parse_value = state ->
     Json.skip_ws(state)
@@ -207,7 +207,7 @@ class Json
         Json.expect(state, ",")
       first = false
       v = Json.parse_value(state)
-      push(out, v)
+      out.push(v)
       Json.skip_ws(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == "]"
@@ -215,7 +215,7 @@ class Json
         return out
 
   static parse = text ->
-    state = { src: text, pos: 0, len: byte_len(text) }
+    state = { src: text, pos: 0, len: text.byte_len() }
     v = Json.parse_value(state)
     Json.skip_ws(state)
     if state["pos"] < state["len"]
@@ -223,7 +223,7 @@ class Json
     return v
 
   static escape_string = text ->
-    n = byte_len(text)
+    n = text.byte_len()
     out = "\""
     i = 0
     while i < n
@@ -247,7 +247,7 @@ class Json
             if code == 12
               out = out + "\\f"
             elseif code < 32
-              hi_d = to_int(code / 16)
+              hi_d = (code / 16).to_i()
               lo_d = code % 16
               hi = chr(48 + hi_d)
               if hi_d >= 10
@@ -277,19 +277,18 @@ class Json
     return out
 
   static emit = value, indent, level ->
-    k = kind(value)
-    if k == "nil"
+    if value.class == Nil
       return "null"
-    if k == "bool"
+    if value.class == Boolean
       if value
         return "true"
       return "false"
-    if k == "int" or k == "float"
-      return to_string(value)
-    if k == "string"
+    if value.class == Number
+      return value.to_s()
+    if value.class == String
       return Json.escape_string(value)
-    if k == "array"
-      n = len(value)
+    if value.class == Array
+      n = value.len()
       if n == 0
         return "[]"
       out = "["
@@ -302,9 +301,9 @@ class Json
         i = i + 1
       out = out + Json.pad(indent, level)
       return out + "]"
-    if k == "dict"
-      names = keys(value)
-      n = len(names)
+    if value.class == Dict
+      names = value.keys()
+      n = names.len()
       if n == 0
         return "{{}}"
       out = "{{"

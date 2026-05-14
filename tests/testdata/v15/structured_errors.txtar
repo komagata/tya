@@ -24,7 +24,7 @@ stderr 'block try requires catch'
 stderr 'invalid binding name User'
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 ! stderr .
 
 -- structured_errors.tya --
@@ -77,9 +77,8 @@ catch err
   print(err["message"])
 
 -- config.tya --
-module config
-  load = ->
-    raise error("missing config")
+load = ->
+  raise error("missing config")
 
 -- uncaught.tya --
 raise "boom"

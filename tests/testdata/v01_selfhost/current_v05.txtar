@@ -1,5 +1,6 @@
 # Tya-written compiler supports the current v0.5 class surface while preserving self-host.
 cd $REPO
+env TYA_LEGACY_MODULES=1
 
 exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya selfhost/v01/compiler.tya > "$WORK/stage1.c"'
 ! stderr .

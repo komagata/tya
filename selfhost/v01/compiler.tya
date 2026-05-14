@@ -101,8 +101,8 @@ try_expr = expr, line -> { kind: "try", expr: expr, line: line }
 # inside function bodies, where direct reassignment is rejected by the
 # v0.44 strict outer-assign rule.
 clear_list = list ->
-  while len(list) > 0
-    pop(list)
+  while list.len() > 0
+    list.pop()
 
 syntax_errors = []
 parse_state = { function_depth: 0, loop_depth: 0 }
@@ -120,15 +120,15 @@ has_name = names, name ->
   found
 
 is_digit = char ->
-  result = contains("0123456789", char)
+  result = "0123456789".contains(char)
   return result
 
 is_lower = char ->
-  result = contains("abcdefghijklmnopqrstuvwxyz", char)
+  result = "abcdefghijklmnopqrstuvwxyz".contains(char)
   return result
 
 is_upper = char ->
-  result = contains("ABCDEFGHIJKLMNOPQRSTUVWXYZ", char)
+  result = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".contains(char)
   return result
 
 is_alpha = char ->
@@ -162,7 +162,7 @@ lex = source ->
   line = 1
   col = 1
   at_line_start = true
-  while i < len(source)
+  while i < source.len()
     char = source[i]
     if at_line_start and char == "\n"
       line = line + 1
@@ -170,7 +170,7 @@ lex = source ->
       i = i + 1
       continue
     if char == "\n"
-      push(tokens, token_node("NEWLINE", "\n", line, col))
+      tokens.push(token_node("NEWLINE", "\n", line, col))
       line = line + 1
       col = 1
       at_line_start = true
@@ -178,54 +178,54 @@ lex = source ->
       continue
     if at_line_start
       spaces = 0
-      while i < len(source) and source[i] == " "
+      while i < source.len() and source[i] == " "
         spaces = spaces + 1
         i = i + 1
         col = col + 1
-      if i < len(source) and source[i] == "\t"
-        push(errors, to_string(line) + ": tabs are forbidden")
-        while i < len(source) and source[i] != "\n"
+      if i < source.len() and source[i] == "\t"
+        errors.push(line.to_s() + ": tabs are forbidden")
+        while i < source.len() and source[i] != "\n"
           i = i + 1
           col = col + 1
         continue
-      if i < len(source) and source[i] == "#"
-        while i < len(source) and source[i] != "\n"
+      if i < source.len() and source[i] == "#"
+        while i < source.len() and source[i] != "\n"
           i = i + 1
           col = col + 1
         continue
-      if i < len(source) and source[i] == "\n"
+      if i < source.len() and source[i] == "\n"
         continue
       if spaces % 2 != 0
-        push(
-          errors,
-          to_string(line) + ": indentation must use exactly 2 spaces",
+        errors.push(
+          line.to_s() + ": indentation must use exactly 2 spaces",
+
         )
-        while i < len(source) and source[i] != "\n"
+        while i < source.len() and source[i] != "\n"
           i = i + 1
           col = col + 1
         continue
-      current_indent = indents[len(indents) - 1]
+      current_indent = indents[indents.len() - 1]
       if spaces > current_indent
         if spaces != current_indent + 2
-          push(
-            errors,
-            to_string(line) + ": indentation may only increase by 2 spaces",
+          errors.push(
+            line.to_s() + ": indentation may only increase by 2 spaces",
+
           )
-        push(indents, spaces)
-        push(tokens, token_node("INDENT", "", line, 1))
+        indents.push(spaces)
+        tokens.push(token_node("INDENT", "", line, 1))
       else
-        while spaces < indents[len(indents) - 1]
-          pop(indents)
-          push(tokens, token_node("DEDENT", "", line, 1))
-        if spaces != indents[len(indents) - 1]
-          push(errors, to_string(line) + ": inconsistent indentation")
+        while spaces < indents[indents.len() - 1]
+          indents.pop()
+          tokens.push(token_node("DEDENT", "", line, 1))
+        if spaces != indents[indents.len() - 1]
+          errors.push(line.to_s() + ": inconsistent indentation")
       at_line_start = false
-      if i >= len(source)
+      if i >= source.len()
         continue
       char = source[i]
     if char == "\t"
-      push(errors, to_string(line) + ": tabs are forbidden")
-      while i < len(source) and source[i] != "\n"
+      errors.push(line.to_s() + ": tabs are forbidden")
+      while i < source.len() and source[i] != "\n"
         i = i + 1
         col = col + 1
       continue
@@ -234,98 +234,98 @@ lex = source ->
       col = col + 1
       continue
     if char == "#"
-      while i < len(source) and source[i] != "\n"
+      while i < source.len() and source[i] != "\n"
         i = i + 1
         col = col + 1
       continue
     if is_alpha(char)
       start_col = col
       text = ""
-      while i < len(source) and is_alpha_num(source[i])
+      while i < source.len() and is_alpha_num(source[i])
         text = text + source[i]
         i = i + 1
         col = col + 1
-      push(tokens, token_node("IDENT", text, line, start_col))
+      tokens.push(token_node("IDENT", text, line, start_col))
       continue
     if is_digit(char)
       start_col = col
       text = ""
-      while i < len(source) and is_digit(source[i])
+      while i < source.len() and is_digit(source[i])
         text = text + source[i]
         i = i + 1
         col = col + 1
       kind = "INT"
-      if i + 1 < len(source) and source[i] == "." and is_digit(source[i + 1])
+      if i + 1 < source.len() and source[i] == "." and is_digit(source[i + 1])
         kind = "FLOAT"
         text = text + "."
         i = i + 1
         col = col + 1
-        while i < len(source) and is_digit(source[i])
+        while i < source.len() and is_digit(source[i])
           text = text + source[i]
           i = i + 1
           col = col + 1
-      push(tokens, token_node(kind, text, line, start_col))
+      tokens.push(token_node(kind, text, line, start_col))
       continue
     if char == "\""
       start_col = col
       i = i + 1
       col = col + 1
       text = ""
-      while i < len(source) and source[i] != "\""
-        if source[i] == "\\" and i + 1 < len(source)
+      while i < source.len() and source[i] != "\""
+        if source[i] == "\\" and i + 1 < source.len()
           esc = source[i + 1]
           if esc == "n" or esc == "t" or esc == "\"" or esc == "\\"
             text = text + escape_char(esc)
           else
-            push(
-              errors,
-              to_string(line) + ":" + to_string(col) + ": unknown escape \\" + esc,
+            errors.push(
+              line.to_s() + ":" + col.to_s() + ": unknown escape \\" + esc,
+
             )
           i = i + 2
           col = col + 2
         else
           if source[i] == "\n"
-            push(
-              errors,
-              to_string(line) + ":" + to_string(start_col) + ": unterminated string",
+            errors.push(
+              line.to_s() + ":" + start_col.to_s() + ": unterminated string",
+
             )
             break
           text = text + source[i]
           i = i + 1
           col = col + 1
-      if i >= len(source)
-        push(
-          errors,
-          to_string(line) + ":" + to_string(start_col) + ": unterminated string",
+      if i >= source.len()
+        errors.push(
+          line.to_s() + ":" + start_col.to_s() + ": unterminated string",
+
         )
-        push(tokens, token_node("STRING", text, line, start_col))
+        tokens.push(token_node("STRING", text, line, start_col))
         continue
       i = i + 1
       col = col + 1
-      push(tokens, token_node("STRING", text, line, start_col))
+      tokens.push(token_node("STRING", text, line, start_col))
       continue
-    if i + 1 < len(source)
+    if i + 1 < source.len()
       two = char + source[i + 1]
       if two == "==" or two == "!=" or two == "<=" or two == ">=" or two == "->"
-        push(tokens, token_node("SYMBOL", two, line, col))
+        tokens.push(token_node("SYMBOL", two, line, col))
         i = i + 2
         col = col + 2
         continue
-    if contains("=<>:,.@+-*/%()[]{{}}", char)
-      push(tokens, token_node("SYMBOL", char, line, col))
+    if "=<>:,.@+-*/%()[]{{}}".contains(char)
+      tokens.push(token_node("SYMBOL", char, line, col))
       i = i + 1
       col = col + 1
       continue
-    push(
-      errors,
-      to_string(line) + ":" + to_string(col) + ": unexpected character " + char,
+    errors.push(
+      line.to_s() + ":" + col.to_s() + ": unexpected character " + char,
+
     )
     i = i + 1
     col = col + 1
-  while len(indents) > 1
-    pop(indents)
-    push(tokens, token_node("DEDENT", "", line, col))
-  push(tokens, token_node("EOF", "", line, col))
+  while indents.len() > 1
+    indents.pop()
+    tokens.push(token_node("DEDENT", "", line, col))
+  tokens.push(token_node("EOF", "", line, col))
   return suppress_bracket_newlines(tokens), errors
 
 token_text = token -> token["text"]
@@ -341,7 +341,7 @@ suppress_bracket_newlines = tokens ->
   depth = 0
   pending_dedent = 0
   i = 0
-  n = len(tokens)
+  n = tokens.len()
   while i < n
     t = tokens[i]
     kind = token_kind(t)
@@ -372,7 +372,7 @@ suppress_bracket_newlines = tokens ->
       pending_dedent = pending_dedent - 1
       i = i + 1
       continue
-    push(out, t)
+    out.push(t)
     i = i + 1
   return out
 
@@ -416,19 +416,19 @@ expr_label = expr ->
   if expr["kind"] == "nil"
     return "nil"
   if expr["kind"] == "array"
-    return "array " + to_string(len(expr["items"]))
+    return "array " + (expr["items"].len()).to_s()
   if expr["kind"] == "dict"
-    return "dict " + to_string(len(expr["entries"]))
+    return "dict " + (expr["entries"].len()).to_s()
   if expr["kind"] == "index"
     return "index"
   if expr["kind"] == "member"
     return "member " + expr["name"]
   if expr["kind"] == "call"
-    return "call " + expr_label(expr["callee"]) + " " + to_string(len(expr["args"]))
+    return "call " + expr_label(expr["callee"]) + " " + (expr["args"].len()).to_s()
   if expr["kind"] == "func"
-    if len(expr["body_stmts"]) > 0
-      return "func " + to_string(len(expr["params"])) + " block " + to_string(len(expr["body_stmts"]))
-    return "func " + to_string(len(expr["params"])) + " expr " + expr_label(expr["body"])
+    if expr["body_stmts"].len() > 0
+      return "func " + (expr["params"].len()).to_s() + " block " + (expr["body_stmts"].len()).to_s()
+    return "func " + (expr["params"].len()).to_s() + " expr " + expr_label(expr["body"])
   if expr["kind"] == "binary"
     return "binary " + expr["op"]
   if expr["kind"] == "unary"
@@ -438,17 +438,17 @@ expr_label = expr ->
   expr["kind"]
 
 stmt_label = stmt ->
-  prefix = to_string(stmt["line"]) + ": "
+  prefix = stmt["line"].to_s() + ": "
   if stmt["kind"] == "assign"
     return prefix + "assign " + stmt["name"] + " = " + expr_label(stmt["value"])
   if stmt["kind"] == "multi_assign"
-    return prefix + "multi_assign " + to_string(len(stmt["names"]))
+    return prefix + "multi_assign " + (stmt["names"].len()).to_s()
   if stmt["kind"] == "expr_stmt"
     return prefix + "expr_stmt " + expr_label(stmt["expr"])
   if stmt["kind"] == "if"
-    return prefix + "if elseif " + to_string(len(stmt["elseif_conds"])) + " else " + to_string(len(stmt["else"]))
+    return prefix + "if elseif " + (stmt["elseif_conds"].len()).to_s() + " else " + (stmt["else"].len()).to_s()
   if stmt["kind"] == "module"
-    return prefix + "module " + stmt["name"] + " " + to_string(len(stmt["members"]))
+    return prefix + "module " + stmt["name"] + " " + (stmt["members"].len()).to_s()
   prefix + stmt["kind"]
 
 print_ast = program ->
@@ -463,9 +463,9 @@ is_v01_reserved_name = word ->
 
 record_name_error = tok ->
   if token_kind(tok) == "IDENT" and is_v01_reserved_name(token_text(tok))
-    push(
-      syntax_errors,
-      to_string(token_line(tok)) + ": " + token_text(tok) + " cannot be used as a name",
+    syntax_errors.push(
+      (token_line(tok)).to_s() + ": " + token_text(tok) + " cannot be used as a name",
+
     )
 
 parse_errors = tokens ->
@@ -483,30 +483,30 @@ parse_errors = tokens ->
     if (
       token_kind(tokens[i]) == "IDENT" and token_text(tokens[i]) == "import" and token_text(tokens[i + 2]) == "as"
     )
-      push(
-        errors,
-        to_string(token_line(tokens[i + 2])) + ": import aliases are not in Tya v0.1",
+      errors.push(
+        (token_line(tokens[i + 2])).to_s() + ": import aliases are not in Tya v0.1",
+
       )
     if (
       token_kind(tokens[i]) == "IDENT" and token_text(tokens[i]) == "import" and depth > 0
     )
-      push(
-        errors,
-        to_string(token_line(tokens[i])) + ": import must be top-level",
+      errors.push(
+        (token_line(tokens[i])).to_s() + ": import must be top-level",
+
       )
     if (
       token_kind(tokens[i]) == "IDENT" and token_text(tokens[i]) == "module" and depth > 0
     )
-      push(
-        errors,
-        to_string(token_line(tokens[i])) + ": module must be top-level",
+      errors.push(
+        (token_line(tokens[i])).to_s() + ": module must be top-level",
+
       )
     if (
       token_kind(tokens[i]) == "IDENT" and is_v01_excluded_word(token_text(tokens[i]))
     )
-      push(
-        errors,
-        to_string(token_line(tokens[i])) + ": " + token_text(tokens[i]) + " is not in Tya v0.1",
+      errors.push(
+        (token_line(tokens[i])).to_s() + ": " + token_text(tokens[i]) + " is not in Tya v0.1",
+
       )
     i = i + 1
   errors
@@ -522,9 +522,9 @@ parse_scalar = tokens, index ->
       return nil_expr(token_line(tok)), index + 1
     return ident_expr(token_text(tok), token_line(tok)), index + 1
   if token_kind(tok) == "INT"
-    return int_expr(to_int(token_text(tok)), token_line(tok)), index + 1
+    return int_expr((token_text(tok)).to_i(), token_line(tok)), index + 1
   if token_kind(tok) == "FLOAT"
-    return float_expr(to_float(token_text(tok)), token_line(tok)), index + 1
+    return float_expr((token_text(tok)).to_f(), token_line(tok)), index + 1
   if token_kind(tok) == "STRING"
     return string_expr(token_text(tok), token_line(tok)), index + 1
   return nil_expr(token_line(tok)), index + 1
@@ -553,7 +553,7 @@ parse_nested = tokens, index ->
         token_text(tokens[next]) != ")" and token_kind(tokens[next]) != "EOF"
       )
         arg, after_arg = parse_call_arg(tokens, next)
-        push(args, arg)
+        args.push(arg)
         next = after_arg
         if token_text(tokens[next]) == ","
           next = next + 1
@@ -627,9 +627,9 @@ parse_primary = tokens, index ->
       return nil_expr(token_line(tok)), index + 1
     return ident_expr(token_text(tok), token_line(tok)), index + 1
   if token_kind(tok) == "INT"
-    return int_expr(to_int(token_text(tok)), token_line(tok)), index + 1
+    return int_expr((token_text(tok)).to_i(), token_line(tok)), index + 1
   if token_kind(tok) == "FLOAT"
-    return float_expr(to_float(token_text(tok)), token_line(tok)), index + 1
+    return float_expr((token_text(tok)).to_f(), token_line(tok)), index + 1
   if token_kind(tok) == "STRING"
     return string_expr(token_text(tok), token_line(tok)), index + 1
   if token_kind(tok) == "SYMBOL" and token_text(tok) == "["
@@ -637,7 +637,7 @@ parse_primary = tokens, index ->
     next = index + 1
     while token_text(tokens[next]) != "]" and token_kind(tokens[next]) != "EOF"
       item, after = parse_expr(tokens, next)
-      push(items, item)
+      items.push(item)
       next = after
       if token_text(tokens[next]) == ","
         next = next + 1
@@ -648,9 +648,9 @@ parse_primary = tokens, index ->
     while token_text(tokens[next]) != "}}" and token_kind(tokens[next]) != "EOF"
       key = token_text(tokens[next])
       if token_text(tokens[next + 1]) != ":"
-        push(
-          syntax_errors,
-          to_string(token_line(tokens[next])) + ": set literals are not in Tya v0.1",
+        syntax_errors.push(
+          (token_line(tokens[next])).to_s() + ": set literals are not in Tya v0.1",
+
         )
         while (
           token_text(tokens[next]) != "}}" and token_kind(tokens[next]) != "EOF"
@@ -659,7 +659,7 @@ parse_primary = tokens, index ->
         return dict_expr(entries, token_line(tok)), next + 1
       next = next + 2
       value, after_value = parse_expr(tokens, next)
-      push(entries, dict_entry(key, value))
+      entries.push(dict_entry(key, value))
       next = after_value
       if token_text(tokens[next]) == ","
         next = next + 1
@@ -690,7 +690,7 @@ parse_postfix = tokens, index ->
         token_text(tokens[next]) != ")" and token_kind(tokens[next]) != "EOF"
       )
         arg, after_arg = parse_call_arg(tokens, next)
-        push(args, arg)
+        args.push(arg)
         next = after_arg
         if token_text(tokens[next]) == ","
           next = next + 1
@@ -702,9 +702,9 @@ parse_postfix = tokens, index ->
 parse_unary = tokens, index ->
   if token_kind(tokens[index]) == "IDENT" and token_text(tokens[index]) == "try"
     if parse_state["function_depth"] == 0
-      push(
-        syntax_errors,
-        to_string(token_line(tokens[index])) + ": try must be inside a function",
+      syntax_errors.push(
+        (token_line(tokens[index])).to_s() + ": try must be inside a function",
+
       )
     expr, next = parse_postfix(tokens, index + 1)
     return try_expr(expr, token_line(tokens[index])), next
@@ -827,9 +827,9 @@ record_trailing_statement_error = tokens, start, index ->
   if (
     token_line(tokens[index]) == token_line(tokens[start]) and token_kind(tokens[index]) != "NEWLINE" and token_kind(tokens[index]) != "DEDENT" and token_kind(tokens[index]) != "EOF"
   )
-    push(
-      syntax_errors,
-      to_string(token_line(tokens[index])) + ": function calls require parentheses in Tya v0.1",
+    syntax_errors.push(
+      (token_line(tokens[index])).to_s() + ": function calls require parentheses in Tya v0.1",
+
     )
     while (
       token_kind(tokens[index]) != "NEWLINE" and token_kind(tokens[index]) != "DEDENT" and token_kind(tokens[index]) != "EOF"
@@ -841,9 +841,9 @@ record_block_header_error = tokens, index ->
   if (
     token_kind(tokens[index]) != "NEWLINE" and token_kind(tokens[index]) != "INDENT" and token_kind(tokens[index]) != "EOF"
   )
-    push(
-      syntax_errors,
-      to_string(token_line(tokens[index])) + ": unexpected token before block",
+    syntax_errors.push(
+      (token_line(tokens[index])).to_s() + ": unexpected token before block",
+
     )
     while (
       token_kind(tokens[index]) != "NEWLINE" and token_kind(tokens[index]) != "EOF"
@@ -882,9 +882,9 @@ parse_simple_statement = tokens, index ->
     return assign_stmt(token_text(current), expr, token_line(current)), next
   if token_kind(current) == "IDENT" and token_text(current) == "return"
     if parse_state["function_depth"] == 0
-      push(
-        syntax_errors,
-        to_string(token_line(current)) + ": return must be inside a function",
+      syntax_errors.push(
+        (token_line(current)).to_s() + ": return must be inside a function",
+
       )
     if (
       token_kind(tokens[index + 1]) == "NEWLINE" or token_kind(tokens[index + 1]) == "DEDENT" or token_kind(tokens[index + 1]) == "EOF"
@@ -898,16 +898,16 @@ parse_simple_statement = tokens, index ->
     return return_stmt(expr, token_line(current)), next
   if token_kind(current) == "IDENT" and token_text(current) == "break"
     if parse_state["loop_depth"] == 0
-      push(
-        syntax_errors,
-        to_string(token_line(current)) + ": break must be inside a loop",
+      syntax_errors.push(
+        (token_line(current)).to_s() + ": break must be inside a loop",
+
       )
     return break_stmt(token_line(current)), index + 1
   if token_kind(current) == "IDENT" and token_text(current) == "continue"
     if parse_state["loop_depth"] == 0
-      push(
-        syntax_errors,
-        to_string(token_line(current)) + ": continue must be inside a loop",
+      syntax_errors.push(
+        (token_line(current)).to_s() + ": continue must be inside a loop",
+
       )
     return continue_stmt(token_line(current)), index + 1
   # v0.44: print / assert / assert_equal no longer have no-paren
@@ -925,9 +925,9 @@ parse_simple_statement = tokens, index ->
       if token_text(tokens[next]) == "]"
         next = next + 1
     if token_text(tokens[next]) == ","
-      push(
-        syntax_errors,
-        to_string(token_line(tokens[next])) + ": multiple assignment targets must be identifiers",
+      syntax_errors.push(
+        (token_line(tokens[next])).to_s() + ": multiple assignment targets must be identifiers",
+
       )
       while (
         token_text(tokens[next]) != "=" and token_kind(tokens[next]) != "NEWLINE" and token_kind(tokens[next]) != "EOF"
@@ -971,9 +971,9 @@ parse_dict_block_body = tokens, index, line ->
       index = index + 1
       continue
     if token_kind(tokens[index]) != "IDENT"
-      push(
-        syntax_errors,
-        to_string(token_line(tokens[index])) + ": dict block entry must start with a key",
+      syntax_errors.push(
+        (token_line(tokens[index])).to_s() + ": dict block entry must start with a key",
+
       )
       while (
         token_kind(tokens[index]) != "NEWLINE" and token_kind(tokens[index]) != "DEDENT" and token_kind(tokens[index]) != "EOF"
@@ -982,9 +982,9 @@ parse_dict_block_body = tokens, index, line ->
       continue
     key = token_text(tokens[index])
     if token_text(tokens[index + 1]) != ":"
-      push(
-        syntax_errors,
-        to_string(token_line(tokens[index])) + ": dict block entry expects ':' after key",
+      syntax_errors.push(
+        (token_line(tokens[index])).to_s() + ": dict block entry expects ':' after key",
+
       )
       while (
         token_kind(tokens[index]) != "NEWLINE" and token_kind(tokens[index]) != "DEDENT" and token_kind(tokens[index]) != "EOF"
@@ -992,7 +992,7 @@ parse_dict_block_body = tokens, index, line ->
         index = index + 1
       continue
     value, after_value = parse_expr(tokens, index + 2)
-    push(entries, dict_entry(key, value))
+    entries.push(dict_entry(key, value))
     index = after_value
   if token_kind(tokens[index]) == "DEDENT"
     index = index + 1
@@ -1020,22 +1020,22 @@ parse_simple_block = tokens, index ->
       vars = []
       for stmt in body
         if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
-          push(methods, class_method(stmt["name"], stmt["value"], stmt["line"]))
+          methods.push(class_method(stmt["name"], stmt["value"], stmt["line"]))
         elseif stmt["kind"] == "assign"
-          push(fields, class_field(stmt["name"], stmt["value"], stmt["line"]))
+          fields.push(class_field(stmt["name"], stmt["value"], stmt["line"]))
         else
           if stmt["kind"] == "class_var_assign"
             if stmt["value"]["kind"] == "func"
-              push(
-                methods,
+              methods.push(
                 class_member_method(stmt["name"], stmt["value"], stmt["line"]),
+
               )
             else
-              push(vars, class_field(stmt["name"], stmt["value"], stmt["line"]))
+              vars.push(class_field(stmt["name"], stmt["value"], stmt["line"]))
           else
-            push(
-              syntax_errors,
-              to_string(stmt["line"]) + ": class body may only contain member definitions",
+            syntax_errors.push(
+              stmt["line"].to_s() + ": class body may only contain member definitions",
+
             )
       cls = class_stmt(
         token_text(tokens[next + 1]),
@@ -1045,7 +1045,7 @@ parse_simple_block = tokens, index ->
       cls["parent"] = parent
       cls["fields"] = fields
       cls["vars"] = vars
-      push(statements, cls)
+      statements.push(cls)
       next = after_class
       continue
     if (
@@ -1059,9 +1059,9 @@ parse_simple_block = tokens, index ->
         token_line(current),
       )
       fn["body_stmts"] = body
-      push(
-        statements,
+      statements.push(
         class_var_assign_stmt(token_text(tokens[next + 2]), fn, token_line(current)),
+
       )
       next = after_block_func
       continue
@@ -1071,9 +1071,9 @@ parse_simple_block = tokens, index ->
       body, after_block_func = parse_function_body_block(tokens, next + 5)
       fn = func_expr([], nil_expr(token_line(current)), token_line(current))
       fn["body_stmts"] = body
-      push(
-        statements,
+      statements.push(
         class_var_assign_stmt(token_text(tokens[next + 2]), fn, token_line(current)),
+
       )
       next = after_block_func
       continue
@@ -1084,9 +1084,9 @@ parse_simple_block = tokens, index ->
       body, after_block_func = parse_function_body_block(tokens, next + 3)
       fn = func_expr([], nil_expr(token_line(current)), token_line(current))
       fn["body_stmts"] = body
-      push(
-        statements,
+      statements.push(
         assign_stmt(token_text(current), fn, token_line(current)),
+
       )
       next = after_block_func
       continue
@@ -1102,9 +1102,9 @@ parse_simple_block = tokens, index ->
         token_line(current),
       )
       fn["body_stmts"] = body
-      push(
-        statements,
+      statements.push(
         assign_stmt(token_text(current), fn, token_line(current)),
+
       )
       next = after_block_func
       continue
@@ -1121,9 +1121,9 @@ parse_simple_block = tokens, index ->
         token_line(current),
       )
       fn["body_stmts"] = body
-      push(
-        statements,
+      statements.push(
         assign_stmt(token_text(current), fn, token_line(current)),
+
       )
       next = after_block_func
       continue
@@ -1141,9 +1141,9 @@ parse_simple_block = tokens, index ->
         token_line(current),
       )
       fn["body_stmts"] = body
-      push(
-        statements,
+      statements.push(
         assign_stmt(token_text(current), fn, token_line(current)),
+
       )
       next = after_block_func
       continue
@@ -1162,9 +1162,9 @@ parse_simple_block = tokens, index ->
         token_line(current),
       )
       fn["body_stmts"] = body
-      push(
-        statements,
+      statements.push(
         assign_stmt(token_text(current), fn, token_line(current)),
+
       )
       next = after_block_func
       continue
@@ -1184,22 +1184,22 @@ parse_simple_block = tokens, index ->
         if stmt["elseif_cond"] == nil
           stmt["elseif_cond"] = else_cond
           stmt["elseif_then"] = else_then
-        push(stmt["elseif_conds"], else_cond)
-        push(stmt["elseif_bodies"], else_then)
+        stmt["elseif_conds"].push(else_cond)
+        stmt["elseif_bodies"].push(else_then)
         after_stmt = after_else_then
       if (
         token_kind(tokens[after_stmt]) == "IDENT" and token_text(tokens[after_stmt]) == "else"
       )
         else_body, after_stmt = parse_simple_block(tokens, after_stmt + 1)
         stmt["else"] = else_body
-      push(statements, stmt)
+      statements.push(stmt)
       next = after_stmt
       continue
     if token_kind(current) == "IDENT" and token_text(current) == "while"
       cond, after_cond = parse_expr(tokens, next + 1)
       after_cond = record_block_header_error(tokens, after_cond)
       body, after_stmt = parse_loop_body_block(tokens, after_cond)
-      push(statements, while_stmt(cond, body, token_line(current)))
+      statements.push(while_stmt(cond, body, token_line(current)))
       next = after_stmt
       continue
     if token_kind(current) == "IDENT" and token_text(current) == "for"
@@ -1218,11 +1218,11 @@ parse_simple_block = tokens, index ->
       body, after_stmt = parse_loop_body_block(tokens, after_iterable)
       stmt = for_stmt(value_name, index_name, loop_kind, iterable)
       stmt["body"] = body
-      push(statements, stmt)
+      statements.push(stmt)
       next = after_stmt
       continue
     stmt, after = parse_simple_statement(tokens, next)
-    push(statements, stmt)
+    statements.push(stmt)
     next = record_trailing_statement_error(tokens, next, after)
     if token_kind(tokens[next]) == "NEWLINE"
       next = next + 1
@@ -1258,22 +1258,22 @@ parse_statement = tokens, index ->
     vars = []
     for stmt in body
       if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
-        push(methods, class_method(stmt["name"], stmt["value"], stmt["line"]))
+        methods.push(class_method(stmt["name"], stmt["value"], stmt["line"]))
       elseif stmt["kind"] == "assign"
-        push(fields, class_field(stmt["name"], stmt["value"], stmt["line"]))
+        fields.push(class_field(stmt["name"], stmt["value"], stmt["line"]))
       else
         if stmt["kind"] == "class_var_assign"
           if stmt["value"]["kind"] == "func"
-            push(
-              methods,
+            methods.push(
               class_member_method(stmt["name"], stmt["value"], stmt["line"]),
+
             )
           else
-            push(vars, class_field(stmt["name"], stmt["value"], stmt["line"]))
+            vars.push(class_field(stmt["name"], stmt["value"], stmt["line"]))
         else
-          push(
-            syntax_errors,
-            to_string(stmt["line"]) + ": class body may only contain member definitions",
+          syntax_errors.push(
+            stmt["line"].to_s() + ": class body may only contain member definitions",
+
           )
     cls = class_stmt(
       token_text(tokens[index + 1]),
@@ -1291,9 +1291,9 @@ parse_statement = tokens, index ->
     classes = []
     for stmt in body
       if stmt["kind"] == "assign"
-        push(members, module_member(stmt["name"], stmt["value"], stmt["line"]))
+        members.push(module_member(stmt["name"], stmt["value"], stmt["line"]))
       if stmt["kind"] == "class"
-        push(classes, stmt)
+        classes.push(stmt)
     mod = module_stmt(
       token_text(tokens[index + 1]),
       members,
@@ -1384,8 +1384,8 @@ parse_statement = tokens, index ->
       if stmt["elseif_cond"] == nil
         stmt["elseif_cond"] = else_cond
         stmt["elseif_then"] = else_then
-      push(stmt["elseif_conds"], else_cond)
-      push(stmt["elseif_bodies"], else_then)
+      stmt["elseif_conds"].push(else_cond)
+      stmt["elseif_bodies"].push(else_then)
       next = after_else_then
     if (
       token_kind(tokens[next]) == "IDENT" and token_text(tokens[next]) == "else"
@@ -1425,7 +1425,7 @@ parse = tokens ->
       index = index + 1
       continue
     stmt, next = parse_statement(tokens, index)
-    push(statements, stmt)
+    statements.push(stmt)
     index = record_trailing_statement_error(tokens, index, next)
     if token_kind(tokens[index]) == "NEWLINE"
       index = index + 1
@@ -1433,12 +1433,12 @@ parse = tokens ->
 
 remember = names, name ->
   if not has_name(names, name)
-    push(names, name)
+    names.push(name)
 
 clone_names = names ->
   out = []
   for name in names
-    push(out, name)
+    out.push(name)
   out
 
 clone_dict = dict ->
@@ -1448,13 +1448,13 @@ clone_dict = dict ->
   out
 
 is_snake_name = name ->
-  if len(name) == 0
+  if name.len() == 0
     return false
   first = name[0]
   if not (is_lower(first) or first == "_")
     return false
   i = 0
-  while i < len(name)
+  while i < name.len()
     char = name[i]
     if not (is_lower(char) or is_digit(char) or char == "_")
       return false
@@ -1462,14 +1462,14 @@ is_snake_name = name ->
   true
 
 is_screaming_name = name ->
-  if len(name) == 0
+  if name.len() == 0
     return false
   first = name[0]
   if not (is_upper(first) or first == "_")
     return false
   i = 0
   has_upper = false
-  while i < len(name)
+  while i < name.len()
     char = name[i]
     if is_upper(char)
       has_upper = true
@@ -1545,14 +1545,14 @@ is_pure_builtin_name = name ->
 check_name = errors, line, kind, name ->
   if kind == "variable"
     if not is_binding_name(name)
-      push(errors, to_string(line) + ": invalid " + kind + " name: " + name)
+      errors.push(line.to_s() + ": invalid " + kind + " name: " + name)
     return nil
   if not is_snake_name(name) or name[0] == "_"
-    push(errors, to_string(line) + ": invalid " + kind + " name: " + name)
+    errors.push(line.to_s() + ": invalid " + kind + " name: " + name)
 
 expr_kind = kinds, expr ->
   if expr["kind"] == "ident"
-    if has(kinds, expr["name"])
+    if kinds.has(expr["name"])
       return kinds[expr["name"]]
   if expr["kind"] == "array"
     return "array"
@@ -1586,103 +1586,92 @@ check_expr = ctx, expr ->
   kinds = ctx["kinds"]
   constants = ctx["constants"]
   work = [expr]
-  while len(work) > 0
-    current = pop(work)
+  while work.len() > 0
+    current = work.pop()
     if current["kind"] == "ident"
       if current["name"] == "super"
         names = names
       elseif current["name"] == "self"
-        if not has(ctx, "in_class_method")
-          push(
-            errors,
-            to_string(current["line"]) + ": self is only valid inside a class method",
+        if not ctx.has("in_class_method")
+          errors.push(
+            current["line"].to_s() + ": self is only valid inside a class method",
+
           )
       else
         if not has_name(names, current["name"])
-          push(
-            errors,
-            to_string(current["line"]) + ": undefined variable: " + current["name"],
+          errors.push(
+            current["line"].to_s() + ": undefined variable: " + current["name"],
+
           )
     if current["kind"] == "binary"
-      push(work, current["left"])
-      push(work, current["right"])
+      work.push(current["left"])
+      work.push(current["right"])
     if current["kind"] == "unary"
-      push(work, current["expr"])
+      work.push(current["expr"])
     if current["kind"] == "try"
-      push(work, current["expr"])
+      work.push(current["expr"])
     if current["kind"] == "array"
       for item in current["items"]
-        push(work, item)
+        work.push(item)
     if current["kind"] == "dict"
       seen_keys = []
       for entry in current["entries"]
         if not is_snake_name(entry["key"])
-          push(
-            errors,
-            to_string(current["line"]) + ": invalid dictionary key: " + entry["key"],
+          errors.push(
+            current["line"].to_s() + ": invalid dictionary key: " + entry["key"],
+
           )
         if has_name(seen_keys, entry["key"])
-          push(
-            errors,
-            to_string(current["line"]) + ": duplicate dictionary key: " + entry["key"],
+          errors.push(
+            current["line"].to_s() + ": duplicate dictionary key: " + entry["key"],
+
           )
         remember(seen_keys, entry["key"])
-        push(work, entry["value"])
+        work.push(entry["value"])
     if current["kind"] == "index"
-      push(work, current["target"])
-      push(work, current["index"])
+      work.push(current["target"])
+      work.push(current["index"])
     if current["kind"] == "member"
-      push(work, current["target"])
-      target_kind = expr_kind(kinds, current["target"])
-      if target_kind == "dict"
-        push(
-          errors,
-          to_string(current["line"]) + ": cannot use . access on dictionary; use index access",
-        )
-      elseif target_kind == "array"
-        push(
-          errors,
-          to_string(current["line"]) + ": cannot use . access on array",
-        )
+      work.push(current["target"])
     if current["kind"] == "field"
-      if not has(ctx, "in_method")
-        push(
-          errors,
-          to_string(current["line"]) + ": @" + current["name"] + " is only valid inside an instance method",
+      if not ctx.has("in_method")
+        errors.push(
+          current["line"].to_s() + ": @" + current["name"] + " is only valid inside an instance method",
+
         )
     if current["kind"] == "class_var"
-      if not has(ctx, "in_class")
-        push(
-          errors,
-          to_string(current["line"]) + ": @@" + current["name"] + " is only valid inside a class",
+      if not ctx.has("in_class")
+        errors.push(
+          current["line"].to_s() + ": @@" + current["name"] + " is only valid inside a class",
+
         )
     if current["kind"] == "call"
-      push(work, current["callee"])
+      work.push(current["callee"])
       for arg in current["args"]
-        push(work, arg)
+        work.push(arg)
     if current["kind"] == "func"
       fn_names = clone_names(names)
       fn_kinds = clone_dict(kinds)
       fn_constants = clone_dict(constants)
       fn_ctx = checker_context(errors, fn_names, fn_kinds, fn_constants)
-      if has(ctx, "in_method")
+      if ctx.has("in_method")
         fn_ctx["in_method"] = true
-      if has(ctx, "in_class")
+      if ctx.has("in_class")
         fn_ctx["in_class"] = true
-      if has(ctx, "in_class_method")
+      if ctx.has("in_class_method")
         fn_ctx["in_class_method"] = true
       param_names = []
       for param in current["params"]
         if has_name(param_names, param)
-          push(
-            errors,
-            to_string(current["line"]) + ": duplicate function parameter: " + param,
+          errors.push(
+            current["line"].to_s() + ": duplicate function parameter: " + param,
+
           )
         remember(param_names, param)
         check_name(errors, current["line"], "variable", param)
         remember(fn_names, param)
         fn_kinds[param] = "unknown"
-      if len(current["body_stmts"]) > 0
+      if current["body_stmts"].len() > 0
         predeclare_function_bindings(fn_ctx, current["body_stmts"])
         for child in current["body_stmts"]
           check_stmt(fn_ctx, child)
@@ -1708,17 +1697,17 @@ check_simple_stmt = ctx, stmt ->
     for member in stmt["members"]
       check_name(errors, member["line"], "module member", member["name"])
       if has_name(member_names, member["name"])
-        push(
-          errors,
-          to_string(member["line"]) + ": duplicate module member: " + member["name"],
+        errors.push(
+          member["line"].to_s() + ": duplicate module member: " + member["name"],
+
         )
       remember(member_names, member["name"])
       check_expr(ctx, member["value"])
     for class_value in stmt["classes"]
       if has_name(member_names, class_value["name"])
-        push(
-          errors,
-          to_string(class_value["line"]) + ": duplicate module member: " + class_value["name"],
+        errors.push(
+          class_value["line"].to_s() + ": duplicate module member: " + class_value["name"],
+
         )
       remember(member_names, class_value["name"])
       for method in class_value["methods"]
@@ -1743,10 +1732,10 @@ check_simple_stmt = ctx, stmt ->
   if stmt["kind"] == "assign"
     check_name(errors, stmt["line"], "variable", stmt["name"])
     check_expr(ctx, stmt["value"])
-    if has(constants, stmt["name"]) and constants[stmt["name"]]
-      push(
-        errors,
-        to_string(stmt["line"]) + ": cannot reassign constant: " + stmt["name"],
+    if constants.has(stmt["name"]) and constants[stmt["name"]]
+      errors.push(
+        stmt["line"].to_s() + ": cannot reassign constant: " + stmt["name"],
+
       )
     remember(names, stmt["name"])
     kinds[stmt["name"]] = expr_kind(kinds, stmt["value"])
@@ -1756,10 +1745,10 @@ check_simple_stmt = ctx, stmt ->
     check_expr(ctx, stmt["value"])
     for name in stmt["names"]
       check_name(errors, stmt["line"], "variable", name)
-      if has(constants, name) and constants[name]
-        push(
-          errors,
-          to_string(stmt["line"]) + ": cannot reassign constant: " + name,
+      if constants.has(name) and constants[name]
+        errors.push(
+          stmt["line"].to_s() + ": cannot reassign constant: " + name,
+
         )
       remember(names, name)
       kinds[name] = "unknown"
@@ -1773,17 +1762,17 @@ check_simple_stmt = ctx, stmt ->
     check_expr(ctx, stmt["target"])
     check_expr(ctx, stmt["value"])
   if stmt["kind"] == "field_assign"
-    if not has(ctx, "in_method")
-      push(
-        errors,
-        to_string(stmt["line"]) + ": @" + stmt["name"] + " is only valid inside an instance method",
+    if not ctx.has("in_method")
+      errors.push(
+        stmt["line"].to_s() + ": @" + stmt["name"] + " is only valid inside an instance method",
+
       )
     check_expr(ctx, stmt["value"])
   if stmt["kind"] == "class_var_assign"
-    if not has(ctx, "in_class")
-      push(
-        errors,
-        to_string(stmt["line"]) + ": @@" + stmt["name"] + " is only valid inside a class",
+    if not ctx.has("in_class")
+      errors.push(
+        stmt["line"].to_s() + ": @@" + stmt["name"] + " is only valid inside a class",
+
       )
     check_expr(ctx, stmt["value"])
   if stmt["kind"] == "return"
@@ -1804,7 +1793,7 @@ check_stmt = ctx, stmt ->
     for child in stmt["then"]
       check_stmt(then_ctx, child)
     elseif_index = 0
-    while elseif_index < len(stmt["elseif_conds"])
+    while elseif_index < stmt["elseif_conds"].len()
       check_expr(ctx, stmt["elseif_conds"][elseif_index])
       elseif_ctx = clone_checker_context(ctx)
       predeclare_function_bindings(
@@ -1889,7 +1878,7 @@ check = program ->
 c_string = text ->
   out = "\""
   i = 0
-  while i < len(text)
+  while i < text.len()
     char = text[i]
     if char == "\""
       out = out + "\\\""
@@ -1912,10 +1901,10 @@ emitter_anon_functions = []
 emitter_source_path = ""
 register_anon_expr = expr ->
   if expr["kind"] == "func"
-    if not has(expr, "anon_name")
-      name = "__anon" + to_string(len(emitter_anon_functions))
+    if not expr.has("anon_name")
+      name = "__anon" + (emitter_anon_functions.len()).to_s()
       expr["anon_name"] = name
-      push(emitter_anon_functions, expr)
+      emitter_anon_functions.push(expr)
   if expr["kind"] == "binary"
     register_anon_expr(expr["left"])
     register_anon_expr(expr["right"])
@@ -1975,7 +1964,7 @@ register_anon_stmt = stmt ->
     for child in stmt["else"]
       register_anon_stmt(child)
     elseif_index = 0
-    while elseif_index < len(stmt["elseif_conds"])
+    while elseif_index < stmt["elseif_conds"].len()
       register_anon_expr(stmt["elseif_conds"][elseif_index])
       for child in stmt["elseif_bodies"][elseif_index]
         register_anon_stmt(child)
@@ -1992,76 +1981,76 @@ register_anon_stmt = stmt ->
 emit_direct_call = name, args ->
   parts = []
   for arg in args
-    push(parts, emit_nested(arg))
-  while len(parts) < 4
-    push(parts, "tya_nil()")
+    parts.push(emit_nested(arg))
+  while parts.len() < 4
+    parts.push("tya_nil()")
   c_func_name(name) + "(tya_nil(), " + parts[0] + ", " + parts[1] + ", " + parts[2] + ", " + parts[3] + ")"
 
 emit_string_value = text ->
   parts = []
   literal = ""
   i = 0
-  while i < len(text)
+  while i < text.len()
     char = text[i]
     if char == "{{"
-      if i + 1 < len(text) and text[i + 1] == "{{"
+      if i + 1 < text.len() and text[i + 1] == "{{"
         literal = literal + "{{"
         i = i + 2
       else
         name = ""
         j = i + 1
-        while j < len(text) and text[j] != "}}"
+        while j < text.len() and text[j] != "}}"
           name = name + text[j]
           j = j + 1
-        if j < len(text) and text[j] == "}}" and name != ""
+        if j < text.len() and text[j] == "}}" and name != ""
           if literal != ""
-            push(parts, "tya_string(" + c_string(literal) + ")")
+            parts.push("tya_string(" + c_string(literal) + ")")
             literal = ""
-          if len(name) > 1 and name[0] == "@" and name[1] == "@"
+          if name.len() > 1 and name[0] == "@" and name[1] == "@"
             field_name = ""
             field_index = 2
-            while field_index < len(name)
+            while field_index < name.len()
               field_name = field_name + name[field_index]
               field_index = field_index + 1
-            push(
-              parts,
+            parts.push(
               "tya_to_string(tya_member(" + emitter_state["class_ref"] + ", " + c_string(field_name) + "))",
+
             )
           elseif name == "super()"
-            push(
-              parts,
+            parts.push(
               "tya_to_string(" + c_func_name(emitter_state["super_class"] + "_" + emitter_state["method_name"]) + "(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil()))",
+
             )
           else
-            if len(name) > 0 and name[0] == "@"
+            if name.len() > 0 and name[0] == "@"
               field_name = ""
               field_index = 1
-              while field_index < len(name)
+              while field_index < name.len()
                 field_name = field_name + name[field_index]
                 field_index = field_index + 1
-              push(
-                parts,
+              parts.push(
                 "tya_to_string(tya_member(__this, " + c_string("@" + field_name) + "))",
+
               )
             else
-              push(parts, "tya_to_string(" + c_name(name) + ")")
+              parts.push("tya_to_string(" + c_name(name) + ")")
           i = j + 1
         else
           literal = literal + char
           i = i + 1
-    elseif char == "}}" and i + 1 < len(text) and text[i + 1] == "}}"
+    elseif char == "}}" and i + 1 < text.len() and text[i + 1] == "}}"
       literal = literal + "}}"
       i = i + 2
     else
       literal = literal + char
       i = i + 1
   if literal != ""
-    push(parts, "tya_string(" + c_string(literal) + ")")
-  if len(parts) == 0
+    parts.push("tya_string(" + c_string(literal) + ")")
+  if parts.len() == 0
     return "tya_string(\"\")"
   expr = parts[0]
   index = 1
-  while index < len(parts)
+  while index < parts.len()
     expr = "tya_add(" + expr + ", " + parts[index] + ")"
     index = index + 1
   expr
@@ -2076,9 +2065,9 @@ emit_atom = expr ->
       return "tya_function(" + c_func_name(expr["name"]) + ")"
     return c_name(expr["name"])
   if expr["kind"] == "int"
-    return "tya_number(" + to_string(expr["value"]) + ")"
+    return "tya_number(" + expr["value"].to_s() + ")"
   if expr["kind"] == "float"
-    return "tya_number(" + to_string(expr["value"]) + ")"
+    return "tya_number(" + expr["value"].to_s() + ")"
   if expr["kind"] == "string"
     return emit_string_value(expr["value"])
   if expr["kind"] == "bool"
@@ -2114,9 +2103,9 @@ emit_nested = expr ->
         method_name = emitter_state["method_name"]
         parts = []
         for arg in expr["args"]
-          push(parts, emit_expr(arg))
-        while len(parts) < 4
-          push(parts, "tya_nil()")
+          parts.push(emit_expr(arg))
+        while parts.len() < 4
+          parts.push("tya_nil()")
         return c_func_name(parent_name + "_" + method_name) + "(__this, " + parts[0] + ", " + parts[1] + ", " + parts[2] + ", " + parts[3] + ")"
       if has_name(emitter_functions, name)
         return emit_direct_call(name, expr["args"])
@@ -2152,13 +2141,13 @@ emit_nested = expr ->
         return "tya_read_line()"
       if is_pure_builtin_name(name)
         return emit_scalar(expr)
-    if len(expr["args"]) == 0
+    if expr["args"].len() == 0
       return "tya_call1(" + emit_nested(expr["callee"]) + ", tya_nil())"
-    if len(expr["args"]) == 2
+    if expr["args"].len() == 2
       return "tya_call2(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
-    if len(expr["args"]) == 3
+    if expr["args"].len() == 3
       return "tya_call3(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ", " + emit_nested(expr["args"][2]) + ")"
-    if len(expr["args"]) == 4
+    if expr["args"].len() == 4
       return "tya_call4(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ", " + emit_nested(expr["args"][2]) + ", " + emit_nested(expr["args"][3]) + ")"
     return "tya_call1(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ")"
   return emit_scalar(expr)
@@ -2173,9 +2162,9 @@ emit_scalar = expr ->
       return "tya_function(" + c_func_name(expr["name"]) + ")"
     return c_name(expr["name"])
   if expr["kind"] == "int"
-    return "tya_number(" + to_string(expr["value"]) + ")"
+    return "tya_number(" + expr["value"].to_s() + ")"
   if expr["kind"] == "float"
-    return "tya_number(" + to_string(expr["value"]) + ")"
+    return "tya_number(" + expr["value"].to_s() + ")"
   if expr["kind"] == "string"
     return emit_string_value(expr["value"])
   if expr["kind"] == "bool"
@@ -2193,20 +2182,20 @@ emit_scalar = expr ->
   if expr["kind"] == "array"
     parts = []
     for item in expr["items"]
-      push(parts, emit_nested(item))
-    if len(parts) == 0
+      parts.push(emit_nested(item))
+    if parts.len() == 0
       return "tya_array(0, 0)"
-    return "tya_array((TyaValue[]){{" + join(parts, ", ") + "}}, " + to_string(len(parts)) + ")"
+    return "tya_array((TyaValue[]){{" + parts.join(", ") + "}}, " + (parts.len()).to_s() + ")"
   if expr["kind"] == "dict"
     parts = []
     for entry in expr["entries"]
-      push(
-        parts,
+      parts.push(
         "{{" + c_string(entry["key"]) + ", " + emit_nested(entry["value"]) + "}}",
+
       )
-    if len(parts) == 0
+    if parts.len() == 0
       return "tya_dict(0, 0)"
-    return "tya_dict((TyaDictEntry[]){{" + join(parts, ", ") + "}}, " + to_string(len(parts)) + ")"
+    return "tya_dict((TyaDictEntry[]){{" + parts.join(", ") + "}}, " + (parts.len()).to_s() + ")"
   if expr["kind"] == "index"
     return "tya_index(" + emit_nested(expr["target"]) + ", " + emit_nested(expr["index"]) + ")"
   if expr["kind"] == "member"
@@ -2219,9 +2208,9 @@ emit_scalar = expr ->
         method_name = emitter_state["method_name"]
         parts = []
         for arg in expr["args"]
-          push(parts, emit_expr(arg))
-        while len(parts) < 4
-          push(parts, "tya_nil()")
+          parts.push(emit_expr(arg))
+        while parts.len() < 4
+          parts.push("tya_nil()")
         return c_func_name(parent_name + "_" + method_name) + "(__this, " + parts[0] + ", " + parts[1] + ", " + parts[2] + ", " + parts[3] + ")"
       if has_name(emitter_functions, name)
         return emit_direct_call(name, expr["args"])
@@ -2283,13 +2272,13 @@ emit_scalar = expr ->
         return "tya_deep_equal(" + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
       if name == "read_line"
         return "tya_read_line()"
-    if len(expr["args"]) == 0
+    if expr["args"].len() == 0
       return "tya_call1(" + emit_nested(expr["callee"]) + ", tya_nil())"
-    if len(expr["args"]) == 2
+    if expr["args"].len() == 2
       return "tya_call2(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
-    if len(expr["args"]) == 3
+    if expr["args"].len() == 3
       return "tya_call3(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ", " + emit_nested(expr["args"][2]) + ")"
-    if len(expr["args"]) == 4
+    if expr["args"].len() == 4
       return "tya_call4(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ", " + emit_nested(expr["args"][2]) + ", " + emit_nested(expr["args"][3]) + ")"
     return "tya_call1(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ")"
   "tya_nil()"
@@ -2364,251 +2353,251 @@ emit_expr = expr ->
 
 emit_simple_stmt = lines, names, stmt ->
   if stmt["kind"] == "return"
-    push(lines, "  return " + emit_expr(stmt["value"]) + ";")
+    lines.push("  return " + emit_expr(stmt["value"]) + ";")
   if stmt["kind"] == "break"
-    push(lines, "  break;")
+    lines.push("  break;")
   if stmt["kind"] == "continue"
-    push(lines, "  continue;")
+    lines.push("  continue;")
   if stmt["kind"] == "index_assign"
-    push(
-      lines,
+    lines.push(
       "  tya_set_index(" + emit_expr(stmt["target"]) + ", " + emit_expr(stmt["index"]) + ", " + emit_expr(stmt["value"]) + ");",
+
     )
   if stmt["kind"] == "member_assign"
-    push(
-      lines,
+    lines.push(
       "  tya_set_member(" + emit_expr(stmt["target"]) + ", " + c_string(stmt["name"]) + ", " + emit_expr(stmt["value"]) + ");",
+
     )
   if stmt["kind"] == "field_assign"
-    tmp_name = "__field" + to_string(len(lines))
-    push(
-      lines,
+    tmp_name = "__field" + (lines.len()).to_s()
+    lines.push(
       "  TyaValue " + tmp_name + " = " + emit_expr(stmt["value"]) + ";",
+
     )
-    push(
-      lines,
+    lines.push(
       "  tya_set_member(__this, " + c_string("@" + stmt["name"]) + ", " + tmp_name + ");",
+
     )
-    push(
-      lines,
+    lines.push(
       "  tya_set_member(__this, " + c_string(stmt["name"]) + ", " + tmp_name + ");",
+
     )
   if stmt["kind"] == "class_var_assign"
-    push(
-      lines,
+    lines.push(
       "  tya_set_member(" + emitter_state["class_ref"] + ", " + c_string(stmt["name"]) + ", " + emit_expr(stmt["value"]) + ");",
+
     )
   if stmt["kind"] == "multi_assign"
-    tuple_name = "__tuple" + to_string(len(lines))
-    push(
-      lines,
+    tuple_name = "__tuple" + (lines.len()).to_s()
+    lines.push(
       "  TyaValue " + tuple_name + " = " + emit_expr(stmt["value"]) + ";",
+
     )
     name_index = 0
     for name in stmt["names"]
       item = "tya_index("
         + tuple_name
         + ", tya_number("
-        + to_string(name_index)
+        + name_index.to_s()
         + "))"
       if has_name(names, name)
-        push(lines, "  " + c_name(name) + " = " + item + ";")
+        lines.push("  " + c_name(name) + " = " + item + ";")
       else
-        push(names, name)
-        push(lines, "  TyaValue " + c_name(name) + " = " + item + ";")
+        names.push(name)
+        lines.push("  TyaValue " + c_name(name) + " = " + item + ";")
       name_index = name_index + 1
   if stmt["kind"] == "assign"
     if stmt["value"]["kind"] == "try"
-      tuple_name = "__try" + to_string(len(lines))
-      err_name = "__tryErr" + to_string(len(lines))
-      push(
-        lines,
+      tuple_name = "__try" + (lines.len()).to_s()
+      err_name = "__tryErr" + (lines.len()).to_s()
+      lines.push(
         "  TyaValue " + tuple_name + " = " + emit_expr(stmt["value"]["expr"]) + ";",
+
       )
-      push(
-        lines,
+      lines.push(
         "  TyaValue " + err_name + " = tya_index(" + tuple_name + ", tya_number(1));",
+
       )
-      push(lines, "  if (tya_truthy(" + err_name + ")) {{")
-      push(
-        lines,
+      lines.push("  if (tya_truthy(" + err_name + ")) {{")
+      lines.push(
         "    return tya_array((TyaValue[]){{tya_nil(), " + err_name + "}}, 2);",
+
       )
-      push(lines, "  }}")
+      lines.push("  }}")
       item = "tya_index(" + tuple_name + ", tya_number(0))"
       if has_name(names, stmt["name"])
-        push(lines, "  " + c_name(stmt["name"]) + " = " + item + ";")
+        lines.push("  " + c_name(stmt["name"]) + " = " + item + ";")
       else
-        push(names, stmt["name"])
-        push(lines, "  TyaValue " + c_name(stmt["name"]) + " = " + item + ";")
+        names.push(stmt["name"])
+        lines.push("  TyaValue " + c_name(stmt["name"]) + " = " + item + ";")
     else
       value = emit_expr(stmt["value"])
       if stmt["value"]["kind"] == "func"
         value = "tya_function(" + c_func_name(stmt["name"]) + ")"
       if has_name(names, stmt["name"])
-        push(lines, "  " + c_name(stmt["name"]) + " = " + value + ";")
+        lines.push("  " + c_name(stmt["name"]) + " = " + value + ";")
       else
-        push(names, stmt["name"])
-        push(lines, "  TyaValue " + c_name(stmt["name"]) + " = " + value + ";")
+        names.push(stmt["name"])
+        lines.push("  TyaValue " + c_name(stmt["name"]) + " = " + value + ";")
   if stmt["kind"] == "expr_stmt"
     expr = stmt["expr"]
     if (
       expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "print"
     )
-      push(lines, "  tya_print(" + emit_expr(expr["args"][0]) + ");")
+      lines.push("  tya_print(" + emit_expr(expr["args"][0]) + ");")
     elseif (
       expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "push"
     )
-      push(
-        lines,
+      lines.push(
         "  tya_push(" + emit_expr(expr["args"][0]) + ", " + emit_expr(expr["args"][1]) + ");",
+
       )
     else
       if (
         expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "delete"
       )
-        push(
-          lines,
+        lines.push(
           "  tya_delete(" + emit_expr(expr["args"][0]) + ", " + emit_expr(expr["args"][1]) + ");",
+
         )
       elseif (
         expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "write_file"
       )
-        push(
-          lines,
+        lines.push(
           "  tya_write_file(" + emit_expr(expr["args"][0]) + ", " + emit_expr(expr["args"][1]) + ");",
+
         )
       else
         if (
           expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "panic"
         )
-          push(lines, "  tya_panic(" + emit_expr(expr["args"][0]) + ");")
+          lines.push("  tya_panic(" + emit_expr(expr["args"][0]) + ");")
         elseif (
           expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "exit"
         )
-          push(lines, "  tya_exit(" + emit_expr(expr["args"][0]) + ");")
+          lines.push("  tya_exit(" + emit_expr(expr["args"][0]) + ");")
         else
           if (
             expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "assert"
           )
-            push(
-              lines,
-              "  tya_assert(" + emit_expr(expr["args"][0]) + ", " + c_string(emitter_source_path) + ", " + to_string(stmt["line"]) + ");",
+            lines.push(
+              "  tya_assert(" + emit_expr(expr["args"][0]) + ", " + c_string(emitter_source_path) + ", " + stmt["line"].to_s() + ");",
+
             )
           elseif (
             expr["kind"] == "call" and expr["callee"]["kind"] == "ident" and expr["callee"]["name"] == "assert_equal"
           )
-            push(
-              lines,
-              "  tya_assert_equal(" + emit_expr(expr["args"][0]) + ", " + emit_expr(expr["args"][1]) + ", " + c_string(emitter_source_path) + ", " + to_string(stmt["line"]) + ");",
+            lines.push(
+              "  tya_assert_equal(" + emit_expr(expr["args"][0]) + ", " + emit_expr(expr["args"][1]) + ", " + c_string(emitter_source_path) + ", " + stmt["line"].to_s() + ");",
+
             )
           else
-            push(lines, "  (void)" + emit_expr(expr) + ";")
+            lines.push("  (void)" + emit_expr(expr) + ";")
 
 emit_stmt = lines, names, stmt ->
   emit_simple_stmt(lines, names, stmt)
   if stmt["kind"] == "import"
-    push(lines, "  /* import resolved by compiler */")
+    lines.push("  /* import resolved by compiler */")
   if stmt["kind"] == "module"
     entries = []
     for member in stmt["members"]
       if member["value"]["kind"] != "func"
-        push(
-          entries,
+        entries.push(
           "{{" + c_string(member["name"]) + ", " + emit_expr(member["value"]) + "}}",
+
         )
     prefix = "TyaValue " + c_name(stmt["name"]) + " = "
     if has_name(names, stmt["name"])
       prefix = c_name(stmt["name"]) + " = "
     else
-      push(names, stmt["name"])
-    if len(entries) == 0
-      push(lines, "  " + prefix + "tya_dict(0, 0);")
+      names.push(stmt["name"])
+    if entries.len() == 0
+      lines.push("  " + prefix + "tya_dict(0, 0);")
     else
-      push(
-        lines,
-        "  " + prefix + "tya_dict((TyaDictEntry[]){{" + join(entries, ", ") + "}}, " + to_string(len(entries)) + ");",
+      lines.push(
+        "  " + prefix + "tya_dict((TyaDictEntry[]){{" + entries.join(", ") + "}}, " + (entries.len()).to_s() + ");",
+
       )
     for member in stmt["members"]
       if member["value"]["kind"] == "func"
-        push(
-          lines,
+        lines.push(
           "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(member["name"]) + ", tya_function(" + c_func_name(stmt["name"] + "_" + member["name"]) + "));",
+
         )
     for class_value in stmt["classes"]
       class_parent = "tya_nil()"
       if class_value["parent"] != ""
         class_parent = c_name(stmt["name"] + "_" + class_value["parent"])
-      push(
-        lines,
+      lines.push(
         "  " + c_name(stmt["name"] + "_" + class_value["name"]) + " = tya_class(" + c_func_name(stmt["name"] + "_" + class_value["name"]) + ", " + c_string(class_value["name"]) + ", " + class_parent + ");",
+
       )
-      push(
-        lines,
+      lines.push(
         "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(class_value["name"]) + ", " + c_name(stmt["name"] + "_" + class_value["name"]) + ");",
+
       )
   if stmt["kind"] == "class"
     class_parent = "tya_nil()"
     if stmt["parent"] != ""
       class_parent = c_name(stmt["parent"])
     if has_name(names, stmt["name"])
-      push(
-        lines,
+      lines.push(
         "  " + c_name(stmt["name"]) + " = tya_class(" + c_func_name(stmt["name"]) + ", " + c_string(stmt["name"]) + ", " + class_parent + ");",
+
       )
     else
-      push(names, stmt["name"])
-      push(
-        lines,
+      names.push(stmt["name"])
+      lines.push(
         "  " + c_name(stmt["name"]) + " = tya_class(" + c_func_name(stmt["name"]) + ", " + c_string(stmt["name"]) + ", " + class_parent + ");",
+
       )
     saved_class_ref = emitter_state["class_ref"]
     emitter_state["class_ref"] = c_name(stmt["name"])
     for variable in stmt["vars"]
-      push(
-        lines,
+      lines.push(
         "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(variable["name"]) + ", " + emit_expr(variable["value"]) + ");",
+
       )
     for method in stmt["methods"]
       if method["class"]
-        push(
-          lines,
+        lines.push(
           "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string(method["name"]) + ", tya_bind_method(" + c_name(stmt["name"]) + ", " + c_func_name(stmt["name"] + "_" + method["name"]) + "));",
+
         )
     emitter_state["class_ref"] = saved_class_ref
   if stmt["kind"] == "if"
-    push(lines, "  if (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {{")
+    lines.push("  if (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {{")
     for child in stmt["then"]
       emit_stmt(lines, names, child)
     elseif_index = 0
-    while elseif_index < len(stmt["elseif_conds"])
-      push(
-        lines,
+    while elseif_index < stmt["elseif_conds"].len()
+      lines.push(
         "  }} else if (tya_truthy(" + emit_expr(stmt["elseif_conds"][elseif_index]) + ")) {{",
+
       )
       for child in stmt["elseif_bodies"][elseif_index]
         emit_stmt(lines, names, child)
       elseif_index = elseif_index + 1
-    if len(stmt["else"]) > 0
-      push(lines, "  }} else {{")
+    if stmt["else"].len() > 0
+      lines.push("  }} else {{")
       for child in stmt["else"]
         emit_stmt(lines, names, child)
-    push(lines, "  }}")
+    lines.push("  }}")
   if stmt["kind"] == "while"
-    push(lines, "  while (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {{")
+    lines.push("  while (tya_truthy(" + emit_expr(stmt["cond"]) + ")) {{")
     for child in stmt["body"]
       emit_stmt(lines, names, child)
-    push(lines, "  }}")
+    lines.push("  }}")
   if stmt["kind"] == "for"
-    iter_name = "__iter" + to_string(len(lines))
-    index_name = "__i" + to_string(len(lines))
-    push(
-      lines,
+    iter_name = "__iter" + (lines.len()).to_s()
+    index_name = "__i" + (lines.len()).to_s()
+    lines.push(
       "  TyaValue " + iter_name + " = " + emit_expr(stmt["iterable"]) + ";",
+
     )
-    push(
-      lines,
+    lines.push(
       "  for (int " + index_name + " = 0; " + index_name + " < (int)tya_len(" + iter_name + ").number; " + index_name + "++) {{",
+
     )
     item_expr = "tya_index(" + iter_name + ", tya_number(" + index_name + "))"
     if stmt["loop_kind"] == "of"
@@ -2617,9 +2606,9 @@ emit_stmt = lines, names, stmt ->
         + ", tya_number("
         + index_name
         + "))"
-    push(
-      lines,
+    lines.push(
       "  TyaValue " + c_name(stmt["value_name"]) + " = " + item_expr + ";",
+
     )
     if stmt["index_name"] != ""
       index_value_expr = "tya_number(" + index_name + ")"
@@ -2629,21 +2618,21 @@ emit_stmt = lines, names, stmt ->
           + ", tya_number("
           + index_name
           + "))"
-      push(
-        lines,
+      lines.push(
         "  TyaValue " + c_name(stmt["index_name"]) + " = " + index_value_expr + ";",
+
       )
     for child in stmt["body"]
       emit_stmt(lines, names, child)
-    push(lines, "  }}")
+    lines.push("  }}")
 
 collect_assigned_names = statements ->
   names = []
   work = []
   for stmt in statements
-    push(work, stmt)
-  while len(work) > 0
-    stmt = pop(work)
+    work.push(stmt)
+  while work.len() > 0
+    stmt = work.pop()
     if stmt["kind"] == "assign"
       remember(names, stmt["name"])
     if stmt["kind"] == "multi_assign"
@@ -2651,68 +2640,68 @@ collect_assigned_names = statements ->
         remember(names, name)
     if stmt["kind"] == "if"
       for child in stmt["then"]
-        push(work, child)
+        work.push(child)
       for child in stmt["else"]
-        push(work, child)
+        work.push(child)
       elseif_index = 0
-      while elseif_index < len(stmt["elseif_bodies"])
+      while elseif_index < stmt["elseif_bodies"].len()
         for child in stmt["elseif_bodies"][elseif_index]
-          push(work, child)
+          work.push(child)
         elseif_index = elseif_index + 1
     if stmt["kind"] == "while"
       for child in stmt["body"]
-        push(work, child)
+        work.push(child)
     if stmt["kind"] == "for"
       remember(names, stmt["value_name"])
       if stmt["index_name"] != ""
         remember(names, stmt["index_name"])
       for child in stmt["body"]
-        push(work, child)
+        work.push(child)
   names
 
 emit_function_definition = lines, c_fn_name, fn, use_this ->
-  push(
-    lines,
+  lines.push(
     "TyaValue " + c_fn_name + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{",
+
   )
   if not use_this
-    push(lines, "  (void)__this;")
-  push(lines, "  (void)__arg2;")
-  push(lines, "  (void)__arg3;")
-  if len(fn["params"]) < 2
-    push(lines, "  (void)__arg1;")
+    lines.push("  (void)__this;")
+  lines.push("  (void)__arg2;")
+  lines.push("  (void)__arg3;")
+  if fn["params"].len() < 2
+    lines.push("  (void)__arg1;")
   arg_index = 0
   for param in fn["params"]
-    push(
-      lines,
-      "  TyaValue " + c_name(param) + " = __arg" + to_string(arg_index) + ";",
+    lines.push(
+      "  TyaValue " + c_name(param) + " = __arg" + arg_index.to_s() + ";",
+
     )
     arg_index = arg_index + 1
-  if len(fn["body_stmts"]) > 0
+  if fn["body_stmts"].len() > 0
     fn_names = []
     for param in fn["params"]
-      push(fn_names, param)
+      fn_names.push(param)
     for local in collect_assigned_names(fn["body_stmts"])
       if not has_name(fn_names, local)
-        push(fn_names, local)
-        push(lines, "  TyaValue " + c_name(local) + " = tya_nil();")
+        fn_names.push(local)
+        lines.push("  TyaValue " + c_name(local) + " = tya_nil();")
     child_index = 0
-    while child_index < len(fn["body_stmts"])
+    while child_index < fn["body_stmts"].len()
       child = fn["body_stmts"][child_index]
       if (
-        child_index == len(fn["body_stmts"]) - 1 and child["kind"] == "expr_stmt"
+        child_index == fn["body_stmts"].len() - 1 and child["kind"] == "expr_stmt"
       )
-        push(lines, "  return " + emit_expr(child["expr"]) + ";")
+        lines.push("  return " + emit_expr(child["expr"]) + ";")
       else
         emit_stmt(lines, fn_names, child)
       child_index = child_index + 1
-    push(lines, "  return tya_nil();")
-    if len(fn["body_stmts"]) == 0
-      push(lines, "  return tya_nil();")
+    lines.push("  return tya_nil();")
+    if fn["body_stmts"].len() == 0
+      lines.push("  return tya_nil();")
   else
-    push(lines, "  return " + emit_expr(fn["body"]) + ";")
-  push(lines, "}}")
-  push(lines, "")
+    lines.push("  return " + emit_expr(fn["body"]) + ";")
+  lines.push("}}")
+  lines.push("")
   return nil
 
 emit_class_definition = lines, class_name, class_value ->
@@ -2739,65 +2728,65 @@ emit_class_definition = lines, class_name, class_value ->
     emitter_state["method_name"] = saved_method
     emitter_state["class_ref"] = saved_method_class_ref
   emitter_state["class_ref"] = saved_class_ref
-  push(
-    lines,
+  lines.push(
     "TyaValue " + c_func_name(class_name) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{",
+
   )
-  push(lines, "  (void)__this;")
-  push(lines, "  TyaValue __obj = tya_object();")
-  push(
-    lines,
+  lines.push("  (void)__this;")
+  lines.push("  TyaValue __obj = tya_object();")
+  lines.push(
     "  tya_set_member(__obj, " + c_string("class") + ", " + c_name(class_name) + ");",
+
   )
-  push(
-    lines,
+  lines.push(
     "  tya_set_member(__obj, " + c_string("class_name") + ", tya_string(" + c_string(class_value["name"]) + "));",
+
   )
   saved_class_ref = emitter_state["class_ref"]
   emitter_state["class_ref"] = c_name(class_name)
   if (
-    class_value["parent"] != "" and has(emitter_state["class_values"], class_value["parent"])
+    class_value["parent"] != "" and emitter_state["class_values"].has(class_value["parent"])
   )
     parent_class = emitter_state["class_values"][class_value["parent"]]
     for field in parent_class["fields"]
-      field_tmp = "__field" + to_string(len(lines))
-      push(
-        lines,
+      field_tmp = "__field" + (lines.len()).to_s()
+      lines.push(
         "  TyaValue " + field_tmp + " = " + emit_expr(field["value"]) + ";",
+
       )
-      push(
-        lines,
+      lines.push(
         "  tya_set_member(__obj, " + c_string("@" + field["name"]) + ", " + field_tmp + ");",
+
       )
-      push(
-        lines,
+      lines.push(
         "  tya_set_member(__obj, " + c_string(field["name"]) + ", " + field_tmp + ");",
+
       )
   for field in class_value["fields"]
-    field_tmp = "__field" + to_string(len(lines))
-    push(
-      lines,
+    field_tmp = "__field" + (lines.len()).to_s()
+    lines.push(
       "  TyaValue " + field_tmp + " = " + emit_expr(field["value"]) + ";",
+
     )
-    push(
-      lines,
+    lines.push(
       "  tya_set_member(__obj, " + c_string("@" + field["name"]) + ", " + field_tmp + ");",
+
     )
-    push(
-      lines,
+    lines.push(
       "  tya_set_member(__obj, " + c_string(field["name"]) + ", " + field_tmp + ");",
+
     )
   has_init = false
   for method in class_value["methods"]
     if method["name"] == "init" and not method["class"]
       has_init = true
   if has_init
-    push(
-      lines,
+    lines.push(
       "  (void)" + c_func_name(class_name + "_init") + "(__obj, __arg0, __arg1, __arg2, __arg3);",
+
     )
   elseif (
-    class_value["parent"] != "" and has(emitter_state["class_values"], class_value["parent"])
+    class_value["parent"] != "" and emitter_state["class_values"].has(class_value["parent"])
   )
     parent_class = emitter_state["class_values"][class_value["parent"]]
     parent_has_init = false
@@ -2805,22 +2794,22 @@ emit_class_definition = lines, class_name, class_value ->
       if method["name"] == "init" and not method["class"]
         parent_has_init = true
     if parent_has_init
-      push(
-        lines,
+      lines.push(
         "  (void)" + c_func_name(class_value["parent"] + "_init") + "(__obj, __arg0, __arg1, __arg2, __arg3);",
+
       )
     else
-      push(lines, "  (void)__arg0;")
-      push(lines, "  (void)__arg1;")
-      push(lines, "  (void)__arg2;")
-      push(lines, "  (void)__arg3;")
+      lines.push("  (void)__arg0;")
+      lines.push("  (void)__arg1;")
+      lines.push("  (void)__arg2;")
+      lines.push("  (void)__arg3;")
   else
-    push(lines, "  (void)__arg0;")
-    push(lines, "  (void)__arg1;")
-    push(lines, "  (void)__arg2;")
-    push(lines, "  (void)__arg3;")
+    lines.push("  (void)__arg0;")
+    lines.push("  (void)__arg1;")
+    lines.push("  (void)__arg2;")
+    lines.push("  (void)__arg3;")
   if (
-    class_value["parent"] != "" and has(emitter_state["class_values"], class_value["parent"])
+    class_value["parent"] != "" and emitter_state["class_values"].has(class_value["parent"])
   )
     parent_class = emitter_state["class_values"][class_value["parent"]]
     for method in parent_class["methods"]
@@ -2830,30 +2819,30 @@ emit_class_definition = lines, class_name, class_value ->
           if not own_method["class"] and own_method["name"] == method["name"]
             overridden = true
         if not overridden
-          push(
-            lines,
+          lines.push(
             "  tya_set_member(__obj, " + c_string(method["name"]) + ", tya_bind_method(__obj, " + c_func_name(class_value["parent"] + "_" + method["name"]) + "));",
+
           )
   for method in class_value["methods"]
     if not method["class"] and method["name"] != "init"
-      push(
-        lines,
+      lines.push(
         "  tya_set_member(__obj, " + c_string(method["name"]) + ", tya_bind_method(__obj, " + c_func_name(class_name + "_" + method["name"]) + "));",
+
       )
   emitter_state["class_ref"] = saved_class_ref
-  push(lines, "  return __obj;")
-  push(lines, "}}")
-  push(lines, "")
+  lines.push("  return __obj;")
+  lines.push("}}")
+  lines.push("")
   return nil
 
 emit_c = program ->
-  while len(emitter_functions) > 0
-    pop(emitter_functions)
-  while len(emitter_classes) > 0
-    pop(emitter_classes)
+  while emitter_functions.len() > 0
+    emitter_functions.pop()
+  while emitter_classes.len() > 0
+    emitter_classes.pop()
   emitter_state["class_values"] = {}
-  while len(emitter_anon_functions) > 0
-    pop(emitter_anon_functions)
+  while emitter_anon_functions.len() > 0
+    emitter_anon_functions.pop()
   for stmt in program["statements"]
     if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
       remember(emitter_functions, stmt["name"])
@@ -2879,8 +2868,8 @@ emit_c = program ->
   for stmt in program["statements"]
     register_anon_stmt(stmt)
   lines = []
-  push(lines, "#include \"tya_runtime.h\"")
-  push(lines, "")
+  lines.push("#include \"tya_runtime.h\"")
+  lines.push("")
   global_names = collect_assigned_names(program["statements"])
   for stmt in program["statements"]
     if stmt["kind"] == "module"
@@ -2891,135 +2880,135 @@ emit_c = program ->
       remember(global_names, stmt["name"])
   for name in global_names
     if name != ""
-      push(lines, "TyaValue " + c_name(name) + ";")
-  if len(global_names) > 0
-    push(lines, "")
+      lines.push("TyaValue " + c_name(name) + ";")
+  if global_names.len() > 0
+    lines.push("")
   for stmt in program["statements"]
     if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
-      push(
-        lines,
+      lines.push(
         "TyaValue " + c_func_name(stmt["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);",
+
       )
     if stmt["kind"] == "module"
       for member in stmt["members"]
         if member["value"]["kind"] == "func"
-          push(
-            lines,
+          lines.push(
             "TyaValue " + c_func_name(stmt["name"] + "_" + member["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);",
+
           )
       for class_value in stmt["classes"]
-        push(
-          lines,
+        lines.push(
           "TyaValue " + c_func_name(stmt["name"] + "_" + class_value["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);",
+
         )
         for method in class_value["methods"]
-          push(
-            lines,
+          lines.push(
             "TyaValue " + c_func_name(stmt["name"] + "_" + class_value["name"] + "_" + method["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);",
+
           )
     if stmt["kind"] == "class"
-      push(
-        lines,
+      lines.push(
         "TyaValue " + c_func_name(stmt["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);",
+
       )
       for method in stmt["methods"]
-        push(
-          lines,
+        lines.push(
           "TyaValue " + c_func_name(stmt["name"] + "_" + method["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);",
+
         )
   for fn in emitter_anon_functions
-    push(
-      lines,
+    lines.push(
       "TyaValue " + c_func_name(fn["anon_name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3);",
+
     )
-  push(lines, "")
+  lines.push("")
   for stmt in program["statements"]
     if stmt["kind"] == "assign" and stmt["value"]["kind"] == "func"
       fn = stmt["value"]
-      push(
-        lines,
+      lines.push(
         "TyaValue " + c_func_name(stmt["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{",
+
       )
-      push(lines, "  (void)__this;")
-      push(lines, "  (void)__arg2;")
-      push(lines, "  (void)__arg3;")
-      if len(fn["params"]) < 2
-        push(lines, "  (void)__arg1;")
+      lines.push("  (void)__this;")
+      lines.push("  (void)__arg2;")
+      lines.push("  (void)__arg3;")
+      if fn["params"].len() < 2
+        lines.push("  (void)__arg1;")
       arg_index = 0
       for param in fn["params"]
-        push(
-          lines,
-          "  TyaValue " + c_name(param) + " = __arg" + to_string(arg_index) + ";",
+        lines.push(
+          "  TyaValue " + c_name(param) + " = __arg" + arg_index.to_s() + ";",
+
         )
         arg_index = arg_index + 1
-      if len(fn["body_stmts"]) > 0
+      if fn["body_stmts"].len() > 0
         fn_names = []
         for param in fn["params"]
-          push(fn_names, param)
+          fn_names.push(param)
         for local in collect_assigned_names(fn["body_stmts"])
           if not has_name(fn_names, local)
-            push(fn_names, local)
-            push(lines, "  TyaValue " + c_name(local) + " = tya_nil();")
+            fn_names.push(local)
+            lines.push("  TyaValue " + c_name(local) + " = tya_nil();")
         child_index = 0
-        while child_index < len(fn["body_stmts"])
+        while child_index < fn["body_stmts"].len()
           child = fn["body_stmts"][child_index]
           if (
-            child_index == len(fn["body_stmts"]) - 1 and child["kind"] == "expr_stmt"
+            child_index == fn["body_stmts"].len() - 1 and child["kind"] == "expr_stmt"
           )
-            push(lines, "  return " + emit_expr(child["expr"]) + ";")
+            lines.push("  return " + emit_expr(child["expr"]) + ";")
           else
             emit_stmt(lines, fn_names, child)
           child_index = child_index + 1
-        if len(fn["body_stmts"]) == 0
-          push(lines, "  return tya_nil();")
+        if fn["body_stmts"].len() == 0
+          lines.push("  return tya_nil();")
       else
-        push(lines, "  return " + emit_expr(fn["body"]) + ";")
-      push(lines, "}}")
-      push(lines, "")
+        lines.push("  return " + emit_expr(fn["body"]) + ";")
+      lines.push("}}")
+      lines.push("")
     if stmt["kind"] == "module"
       for member in stmt["members"]
         if member["value"]["kind"] == "func"
           fn = member["value"]
-          push(
-            lines,
+          lines.push(
             "TyaValue " + c_func_name(stmt["name"] + "_" + member["name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{",
+
           )
-          push(lines, "  (void)__this;")
-          push(lines, "  (void)__arg2;")
-          push(lines, "  (void)__arg3;")
-          if len(fn["params"]) < 2
-            push(lines, "  (void)__arg1;")
+          lines.push("  (void)__this;")
+          lines.push("  (void)__arg2;")
+          lines.push("  (void)__arg3;")
+          if fn["params"].len() < 2
+            lines.push("  (void)__arg1;")
           arg_index = 0
           for param in fn["params"]
-            push(
-              lines,
-              "  TyaValue " + c_name(param) + " = __arg" + to_string(arg_index) + ";",
+            lines.push(
+              "  TyaValue " + c_name(param) + " = __arg" + arg_index.to_s() + ";",
+
             )
             arg_index = arg_index + 1
-          if len(fn["body_stmts"]) > 0
+          if fn["body_stmts"].len() > 0
             fn_names = []
             for param in fn["params"]
-              push(fn_names, param)
+              fn_names.push(param)
             for local in collect_assigned_names(fn["body_stmts"])
               if not has_name(fn_names, local)
-                push(fn_names, local)
-                push(lines, "  TyaValue " + c_name(local) + " = tya_nil();")
+                fn_names.push(local)
+                lines.push("  TyaValue " + c_name(local) + " = tya_nil();")
             child_index = 0
-            while child_index < len(fn["body_stmts"])
+            while child_index < fn["body_stmts"].len()
               child = fn["body_stmts"][child_index]
               if (
-                child_index == len(fn["body_stmts"]) - 1 and child["kind"] == "expr_stmt"
+                child_index == fn["body_stmts"].len() - 1 and child["kind"] == "expr_stmt"
               )
-                push(lines, "  return " + emit_expr(child["expr"]) + ";")
+                lines.push("  return " + emit_expr(child["expr"]) + ";")
               else
                 emit_stmt(lines, fn_names, child)
               child_index = child_index + 1
-            if len(fn["body_stmts"]) == 0
-              push(lines, "  return tya_nil();")
+            if fn["body_stmts"].len() == 0
+              lines.push("  return tya_nil();")
           else
-            push(lines, "  return " + emit_expr(fn["body"]) + ";")
-          push(lines, "}}")
-          push(lines, "")
+            lines.push("  return " + emit_expr(fn["body"]) + ";")
+          lines.push("}}")
+          lines.push("")
       for class_value in stmt["classes"]
         emit_class_definition(
           lines,
@@ -3029,39 +3018,39 @@ emit_c = program ->
     if stmt["kind"] == "class"
       emit_class_definition(lines, stmt["name"], stmt)
   for fn in emitter_anon_functions
-    push(
-      lines,
+    lines.push(
       "TyaValue " + c_func_name(fn["anon_name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{",
+
     )
-    push(lines, "  (void)__this;")
-    push(lines, "  (void)__arg2;")
-    push(lines, "  (void)__arg3;")
-    if len(fn["params"]) < 2
-      push(lines, "  (void)__arg1;")
+    lines.push("  (void)__this;")
+    lines.push("  (void)__arg2;")
+    lines.push("  (void)__arg3;")
+    if fn["params"].len() < 2
+      lines.push("  (void)__arg1;")
     arg_index = 0
     for param in fn["params"]
-      push(
-        lines,
-        "  TyaValue " + c_name(param) + " = __arg" + to_string(arg_index) + ";",
+      lines.push(
+        "  TyaValue " + c_name(param) + " = __arg" + arg_index.to_s() + ";",
+
       )
       arg_index = arg_index + 1
-    push(lines, "  return " + emit_expr(fn["body"]) + ";")
-    push(lines, "}}")
-    push(lines, "")
-  push(lines, "int main(int argc, char **argv) {{")
-  push(lines, "  (void)argc;")
-  push(lines, "  (void)argv;")
+    lines.push("  return " + emit_expr(fn["body"]) + ";")
+    lines.push("}}")
+    lines.push("")
+  lines.push("int main(int argc, char **argv) {{")
+  lines.push("  (void)argc;")
+  lines.push("  (void)argv;")
   names = clone_names(global_names)
   for stmt in program["statements"]
     emit_stmt(lines, names, stmt)
-  push(lines, "  return 0;")
-  push(lines, "}}")
-  join(lines, "\n") + "\n"
+  lines.push("  return 0;")
+  lines.push("}}")
+  lines.join("\n") + "\n"
 
 dir_name = path ->
   slash = -1
   i = 0
-  while i < len(path)
+  while i < path.len()
     if path[i] == "/"
       slash = i
     i = i + 1
@@ -3086,7 +3075,7 @@ find_module_path = dir, name ->
     return same_dir
   path_list = env("TYA_PATH")
   if path_list != ""
-    for entry in split(path_list, ":")
+    for entry in path_list.split(":")
       if entry != ""
         candidate = join_path(entry, file_name)
         if file_exists(candidate)
@@ -3119,7 +3108,7 @@ load_imports = program, path ->
       clear_list(syntax_errors)
       parse_state["function_depth"] = 0
       module_program = parse(module_tokens)
-      if len(syntax_errors) > 0
+      if syntax_errors.len() > 0
         for message in syntax_errors
           print(message)
           exit(1)
@@ -3130,7 +3119,7 @@ load_imports = program, path ->
           if module_stmt_value["name"] != stmt["name"]
             print(stmt["name"] + ".tya must define module " + stmt["name"])
             exit(1)
-          push(extra, module_stmt_value)
+          extra.push(module_stmt_value)
         elseif module_stmt_value["kind"] != "import"
           print(stmt["name"] + ".tya may only contain imports and one module declaration")
           exit(1)
@@ -3139,34 +3128,34 @@ load_imports = program, path ->
         exit(1)
   combined = []
   for stmt in extra
-    push(combined, stmt)
+    combined.push(stmt)
   for stmt in program["statements"]
-    push(combined, stmt)
+    combined.push(stmt)
   program["statements"] = combined
   program
-if len(args()) > 1 and args()[0] == "--tokens"
+if (args()).len() > 1 and args()[0] == "--tokens"
   token_source = read_file(args()[1])
   token_values, token_errors = lex(token_source)
-  if len(token_errors) > 0
+  if token_errors.len() > 0
     for message in token_errors
       print(message)
     exit(1)
   token_parse_errors = parse_errors(token_values)
-  if len(token_parse_errors) > 0
+  if token_parse_errors.len() > 0
     for message in token_parse_errors
       print(message)
     exit(1)
   print_tokens(token_values)
   exit(0)
-if len(args()) > 1 and args()[0] == "--ast"
+if (args()).len() > 1 and args()[0] == "--ast"
   ast_source = read_file(args()[1])
   ast_tokens, ast_errors = lex(ast_source)
-  if len(ast_errors) > 0
+  if ast_errors.len() > 0
     for message in ast_errors
       print(message)
     exit(1)
   ast_parse_errors = parse_errors(ast_tokens)
-  if len(ast_parse_errors) > 0
+  if ast_parse_errors.len() > 0
     for message in ast_parse_errors
       print(message)
     exit(1)
@@ -3174,7 +3163,7 @@ if len(args()) > 1 and args()[0] == "--ast"
   parse_state["function_depth"] = 0
   parse_state["loop_depth"] = 0
   ast_program = parse(ast_tokens)
-  if len(syntax_errors) > 0
+  if syntax_errors.len() > 0
     for message in syntax_errors
       print(message)
     exit(1)
@@ -3183,12 +3172,12 @@ if len(args()) > 1 and args()[0] == "--ast"
 path = args()[0]
 source = read_file(path)
 program_tokens, lex_errors = lex(source)
-if len(lex_errors) > 0
+if lex_errors.len() > 0
   for message in lex_errors
     print(message)
   exit(1)
 parse_diagnostics = parse_errors(program_tokens)
-if len(parse_diagnostics) > 0
+if parse_diagnostics.len() > 0
   for message in parse_diagnostics
     print(message)
   exit(1)
@@ -3196,13 +3185,13 @@ syntax_errors = []
 parse_state["function_depth"] = 0
 parse_state["loop_depth"] = 0
 program = parse(program_tokens)
-if len(syntax_errors) > 0
+if syntax_errors.len() > 0
   for message in syntax_errors
     print(message)
   exit(1)
 program = load_imports(program, path)
 check_errors = check(program)
-if len(check_errors) > 0
+if check_errors.len() > 0
   for message in check_errors
     print(message)
   exit(1)

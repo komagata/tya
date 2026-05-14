@@ -12,10 +12,6 @@ stdout 'hello\n3\n3\ntrue\ntrue\ntrue\nHi, Tya\na:b:c\na\nb\nTYA\ntya\n3\na\nc\n
 stderr 'array.slice does not support negative indexes'
 
 -- module_apis.tya --
-import string
-import array
-import dict
-
 println("hello")
 
 items = ["a", "b", "c"]
@@ -28,41 +24,39 @@ override =
   role: "editor"
   city: "tokyo"
 
-print(string.len("tya"))
-print(string.byte_len("tya"))
-print(string.contains("hello", "ell"))
-print(string.starts_with("hello", "he"))
-print(string.ends_with("hello", "lo"))
-print(string.replace("Hi, NAME", "NAME", "Tya"))
-print(string.join(items, ":"))
-lines = string.lines("a\nb\n")
+print("tya".len())
+print("tya".byte_len())
+print("hello".contains("ell"))
+print("hello".starts_with("he"))
+print("hello".ends_with("lo"))
+print("Hi, NAME".replace("NAME", "Tya"))
+print(items.join(":"))
+lines = "a\nb\n".lines()
 print(lines[0])
 print(lines[1])
-print(string.upcase("tya"))
-print(string.downcase("TYA"))
+print("tya".upper())
+print("TYA".lower())
 
-print(array.len(items))
-print(array.first(items))
-print(array.last(items))
-print(array.slice(items, 0, 2))
-print(array.reverse(items))
-print(array.join(items, ":"))
-print(array.push(items, "d"))
-print(array.pop(items))
-print(array.last(items))
+print(items.len())
+print(items.first())
+print(items.last())
+print(items.slice(0, 2))
+print(items.reverse())
+print(items.join(":"))
+print(items.push("d"))
+print(items.pop())
+print(items.last())
 
-print(dict.len(user))
-print(dict.has(user, "name"))
-print(dict.get(count, "count"))
-print(dict.get(user, "missing", "fallback"))
-dict.set(user, "role", "admin")
-print(dict.delete(user, "role"))
-print(dict.has(user, "role"))
-merged = dict.merge(user, override)
-print(dict.get(merged, "role"))
-print(dict.get(merged, "city"))
+print(user.len())
+print(user.has("name"))
+print(count.get("count"))
+print(user.get("missing", "fallback"))
+user.set("role", "admin")
+print(user.delete("role"))
+print(user.has("role"))
+merged = user.merge(override)
+print(merged.get("role"))
+print(merged.get("city"))
 
 -- bad_slice.tya --
-import array
-
-print(array.slice(["a"], -1, 1))
+print(["a"].slice(-1, 1))

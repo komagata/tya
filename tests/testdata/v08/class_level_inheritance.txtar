@@ -30,15 +30,12 @@ stderr 'cannot assign to read-only introspection member name'
 ! exec go run ./cmd/tya run $WORK/assign_class_parent.tya
 stderr 'cannot assign to read-only introspection member parent'
 
-! exec go run ./cmd/tya run $WORK/assign_module_class_parent.tya
-stderr 'cannot assign to read-only introspection member parent'
-
 ! exec go run ./cmd/tya run $WORK/missing_class_member.tya
 stderr 'missing class variable or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 ! stderr .
 
 -- class_level.tya --
@@ -87,24 +84,23 @@ print(User.parent)
 print(admin.class.parent)
 
 -- account.tya --
-module account
-  class Account
-    static kind = "account"
+class Account
+  static kind = "account"
 
-    initialize = name ->
-      self.name = name
+  initialize = name ->
+    self.name = name
 
-    kind = ->
-      Self.kind
+  kind = ->
+    Self.kind
 
-    static build = name ->
-      Self(name)
+  static build = name ->
+    Self(name)
 
-    static kind_name = ->
-      Self.kind
+  static kind_name = ->
+    Self.kind
 
-  class Editor extends Account
-    static kind = "editor"
+class Editor extends Account
+  static kind = "editor"
 
 -- main.tya --
 import account
@@ -167,11 +163,6 @@ class User
   name = ""
 
 User.parent = "bad"
-
--- assign_module_class_parent.tya --
-import account
-
-account.Editor.parent = "bad"
 
 -- missing_class_member.tya --
 class User

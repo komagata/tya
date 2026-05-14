@@ -42,7 +42,7 @@ stdout '0\n'
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 ! stderr .
 
 -- inheritance.tya --
@@ -81,20 +81,19 @@ print(User.count)
 print(Admin.count)
 
 -- user.tya --
-module user
-  class User
-    name = ""
+class User
+  name = ""
 
-    initialize = name ->
-      self.name = name
+  initialize = name ->
+    self.name = name
 
-    greeting = ->
-      "Hello, {self.name}"
+  greeting = ->
+    "Hello, {self.name}"
 
 -- main.tya --
 import user
 
-class Admin extends user.User
+class Admin extends User
   greeting = ->
     "{super()} (admin)"
 
@@ -103,21 +102,20 @@ print(admin.name)
 print(admin.greeting())
 
 -- accounts.tya --
-module accounts
-  class User
-    name = ""
+class User
+  name = ""
 
-    initialize = name ->
-      self.name = name
+  initialize = name ->
+    self.name = name
 
-    greeting = ->
-      "Hello, {self.name}"
+  greeting = ->
+    "Hello, {self.name}"
 
-  class Admin extends User
-    role = "admin"
+class Admin extends User
+  role = "admin"
 
-    greeting = ->
-      "{super()} ({self.role})"
+  greeting = ->
+    "{super()} ({self.role})"
 
 -- accounts_main.tya --
 import accounts

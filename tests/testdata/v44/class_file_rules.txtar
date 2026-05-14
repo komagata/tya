@@ -29,7 +29,7 @@ stdout 'wrapped:hello\n'
 -- wrong_main.tya --
 import wrong_pkg
 
-print(wrong_pkg.WrongName())
+print(WrongName())
 
 -- wrong_pkg/WrongName.tya --
 class DifferentName
@@ -39,7 +39,7 @@ class DifferentName
 -- empty_main.tya --
 import empty_pkg
 
-print(empty_pkg.EmptyClass())
+print(EmptyClass())
 
 -- empty_pkg/EmptyClass.tya --
 # Only an interface declaration; no public class with the matching
@@ -50,7 +50,7 @@ interface Empty
 -- stray_main.tya --
 import stray_pkg
 
-print(stray_pkg.Stray())
+print(Stray())
 
 -- stray_pkg/Stray.tya --
 class Stray
@@ -62,7 +62,7 @@ x = 1
 -- ok_main.tya --
 import ok_pkg
 
-s = ok_pkg.Server()
+s = Server()
 print(s.run("hello"))
 
 -- ok_pkg/Server.tya --

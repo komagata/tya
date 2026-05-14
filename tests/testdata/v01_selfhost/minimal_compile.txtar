@@ -1,5 +1,6 @@
 # Tya-written v0.1 compiler starts from AST dictionaries and matches the Go oracle for a small slice.
 cd $REPO
+env TYA_LEGACY_MODULES=1
 
 exec go run ./cmd/tya run $WORK/main.tya
 stdout 'Hello, Tya\nInterpolated Tya\nHello from Tya\nready\nelseif ready\nsecond elseif ready\n0\n1\n2\n2\n9\n2\n9\n6\n0\n2\n1\n9\n2\n6\n8\n3\n3\nTya\ncompiler\ntrue\n2\nfalse\nname\nTya\nleft\nright\n6\n5\n7\n9\n4\n8\n10\nconstant\nblock constant\n6\n4\n5\n0\ninner\ntuple\nok\n.*direct.*nil.*\n.*last.*nil.*\ntry bad\n12\n4\n2\n14\ntrue\ntrue\ntrue\ntrue\n-4\n7\nhello-Tya\nhello:Tya\nhello,compiler\ntrue\ntrue\ntrue\n42\n2.5\n12.5\nnested-expr\ntrue\nfile text\nfile expr\n5\nfalse\nbad\n'
@@ -53,7 +54,7 @@ exec go run ./cmd/tya run selfhost/v01/compiler.tya --tokens $WORK/lexer_tokens.
 stdout 'IDENT\n=\nINT\n.\nNEWLINE\nIDENT\n\(\nSTRING\n\)\nNEWLINE\nEOF\n'
 
 exec go run ./cmd/tya run selfhost/v01/compiler.tya --ast $WORK/parser_ast.tya
-stdout '1: import\n3: assign add = func 2 expr binary [+]\n4: assign zero = func 0 expr int\n5: assign mapped = call ident map 2\n6: assign zero_paren = func 0 expr int\n7: expr_stmt call ident print 1\n8: if elseif 0 else 0\n'
+stdout '1: import\n3: assign add = func 2 expr binary [+]\n4: assign zero = func 0 expr int\n5: assign mapped = call member map 1\n6: assign zero_paren = func 0 expr int\n7: expr_stmt call ident print 1\n8: if elseif 0 else 0\n'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/import_alias.tya
 stdout '1: import aliases are not in Tya v0.1'
@@ -112,11 +113,11 @@ stdout '1: duplicate dictionary key: name'
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/reserved_name.tya
 stdout '1: true cannot be used as a name'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/member_access.tya
-stdout '2: cannot use . access on dictionary; use index access'
+exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/member_access.tya
+stdout 'tya_member'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/array_member.tya
-stdout '2: cannot use . access on array'
+exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/array_member.tya
+stdout 'tya_member'
 
 ! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/member_assignment.tya
 stdout 'undefined variable: user'
@@ -199,19 +200,19 @@ for item in items
 for item, index in items
   print(index)
   print(item)
-push(items, 8)
-print(pop(items))
-print(len(items))
-print(len(items))
+items.push(8)
+print(items.pop())
+print(items.len())
+print(items.len())
 user = { name: "Tya", role: "compiler" }
 print(user["name"])
 user["name"] = "compiler"
 print(user["name"])
 user["name"] = "Tya"
-print(has(user, "name"))
-print(len(keys(user)))
-delete(user, "role")
-print(has(user, "role"))
+print(user.has("name"))
+print(user.keys().len())
+user.delete("role")
+print(user.has("role"))
 for key, value of user
   print(key)
   print(value)
@@ -287,32 +288,32 @@ print(false and false or true)
 print(not false)
 print(-4)
 print (3 + 4)
-text = trim(" hello,Tya ")
-parts = split(text, ",")
-print(join(parts, "-"))
-print(join(split(text, ","), ":"))
-print(replace(text, "Tya", "compiler"))
-print(contains(text, "hello"))
-print(starts_with(text, "hello"))
-print(ends_with(text, "Tya"))
-print(to_int("42"))
-print(to_float("2.5"))
-print(to_number("12.5"))
-print(to_string(join(["nested", "expr"], "-")))
+text = " hello,Tya ".trim()
+parts = text.split(",")
+print(parts.join("-"))
+print(text.split(",").join(":"))
+print(text.replace("Tya", "compiler"))
+print(text.contains("hello"))
+print(text.starts_with("hello"))
+print(text.ends_with("Tya"))
+print("42".to_i())
+print("2.5".to_f())
+print("12.5".to_number())
+print(["nested", "expr"].join("-").to_s())
 path = "/tmp/tya_selfhost_v01.txt"
 write_file(path, "file text")
 print(file_exists(path))
 print(read_file(path))
 path_expr = "/tmp/" + "tya_selfhost_v01_expr.txt"
-write_file(path_expr, join(["file", "expr"], " "))
+write_file(path_expr, ["file", "expr"].join(" "))
 print(read_file(path_expr))
 side_items = []
-push(side_items, 2 + 3)
+side_items.push(2 + 3)
 print(side_items[0])
 side_dict = { dynamic: 1 }
-side_key = join(["dyn", "amic"], "")
-delete(side_dict, side_key)
-print(has(side_dict, "dynamic"))
+side_key = ["dyn", "amic"].join("")
+side_dict.delete(side_key)
+print(side_dict.has("dynamic"))
 err = error("bad")
 print(err["message"])
 
@@ -359,7 +360,7 @@ import greeting
 
 add = left, right -> left + right
 zero = -> 0
-mapped = map(items, item -> item * 2)
+mapped = items.map(item -> item * 2)
 zero_paren = () -> 0
 print(add(2 + 3, zero()))
 if true
@@ -442,7 +443,7 @@ print(user.name)
 
 -- array_member.tya --
 items = [1]
-print(items.count)
+print(items.len())
 
 -- member_assignment.tya --
 user.name = "Tya"

@@ -7,6 +7,7 @@
 # keeping this gate green; once v02 reaches v0.44 parity the gate is
 # replaced with a v0.44-surface fixed-point program.
 cd $REPO
+env TYA_LEGACY_MODULES=1
 
 exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
 ! stderr .
@@ -39,7 +40,7 @@ name = "stage2"
 print("Hello, {name}")
 
 items = [1, 2, 3]
-print(len(items))
+print(items.len())
 
 labels = { x: "X", y: "Y" }
 joined = ""

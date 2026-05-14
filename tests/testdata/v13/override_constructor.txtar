@@ -45,7 +45,7 @@ stderr 'super init expects 2 arguments'
 stderr 'super cannot call private parent constructor'
 
 exec go run ./cmd/tya version
-stdout '0.58.0\n'
+stdout '0.61.0\n'
 ! stderr .
 
 -- override_constructor.tya --
@@ -99,21 +99,20 @@ editor = accounts.Editor("ada", "editor")
 print(editor.label())
 
 -- accounts.tya --
-module accounts
-  class User
-    initialize = name ->
-      self.name = name
+class User
+  initialize = name ->
+    self.name = name
 
-    label = ->
-      "module:{self.name}"
+  label = ->
+    "module:{self.name}"
 
-  class Editor extends User
-    initialize = name, role ->
-      super(name)
-      self.role = role
+class Editor extends User
+  initialize = name, role ->
+    super(name)
+    self.role = role
 
-    override label = ->
-      "module:{self.role}"
+  override label = ->
+    "module:{self.role}"
 
 -- missing_override_target.tya --
 class User

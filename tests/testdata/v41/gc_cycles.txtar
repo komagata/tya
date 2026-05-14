@@ -8,7 +8,7 @@ stdout 'cleared root, after gc:'
 stdout 'cycle reclaimed: true'
 
 -- sample.tya --
-import runtime
+import runtime as runtime
 
 # Build many cyclic dicts: each holds a reference to itself.
 root = []
@@ -16,11 +16,11 @@ i = 0
 while i < 30
   c = {}
   c["self"] = c
-  push(root, c)
+  root.push(c)
   i = i + 1
 
 peak = runtime.Runtime.gc_stats()
-print("made cycles, peak live: " + to_string(peak["live_count"]))
+print("made cycles, peak live: " + peak["live_count"].to_s())
 
 # Drop the only reference. The cycles are now unreachable yet still
 # reference each other.
@@ -28,5 +28,5 @@ root = []
 runtime.Runtime.gc()
 
 after = runtime.Runtime.gc_stats()
-print("cleared root, after gc: " + to_string(after["live_count"]))
-print("cycle reclaimed: " + to_string(after["live_count"] < peak["live_count"]))
+print("cleared root, after gc: " + after["live_count"].to_s())
+print("cycle reclaimed: " + (after["live_count"] < peak["live_count"]).to_s())

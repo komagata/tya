@@ -1,6 +1,6 @@
 # v0.44 nested package directories and within-package class-to-class
 # references. Packages may nest to arbitrary depth via directory
-# nesting; the import binding is the terminal segment. Within a
+# nesting; unaliased imports expose package classes bare. Within a
 # package, sibling classes call each other by their unqualified
 # PascalCase name (Client.fetch builds Request and Response without
 # the v1. prefix).
@@ -13,7 +13,7 @@ stdout 'GET / -> 200\n'
 -- main.tya --
 import api/v1
 
-client = v1.Client()
+client = Client()
 print(client.fetch("/"))
 
 -- api/v1/Client.tya --

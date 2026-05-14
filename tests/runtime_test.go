@@ -118,7 +118,7 @@ func compileAndRunRuntimeAllowExit(t *testing.T, src string, args ...string) ([]
 	gccArgs := []string{cfile, runtime, "-I", include, "-o", bin}
 	switch goruntime.GOOS {
 	case "linux":
-		gccArgs = append(gccArgs, "-lpthread", "-lm", "-lz", "-lz")
+		gccArgs = append(gccArgs, "-lpthread", "-lm", "-lz")
 	case "windows":
 		// no extra flags
 	default:

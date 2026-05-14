@@ -17,14 +17,14 @@ else
 
 user = { name: "Tya", active: true }
 print(greeting.hello(user["name"]))
-print(len(user))
-print(has(user, "active"))
-delete(user, "active")
+print(user.len())
+print(user.has("active"))
+user.delete("active")
 user["kind"] = "lang"
 print(user["name"] + "-" + user["kind"])
 
 items = [1, 2, 3]
-print(len(items))
+print(items.len())
 
 labels = { x: "X", y: "Y" }
 joined = ""
@@ -39,14 +39,13 @@ err = error("missing")
 print(err["message"] == "other")
 print(err["message"])
 
-text = trim(" hello,tya ")
-parts = split(text, ",")
-print(contains(join(parts, "-"), "hello"))
-print(starts_with(replace(text, "tya", "Tya"), "hello"))
+text = " hello,tya ".trim()
+parts = text.split(",")
+print(parts.join("-").contains("hello"))
+print(text.replace("tya", "Tya").starts_with("hello"))
 
 arguments = args()
 print(arguments[0])
 
 -- greeting.tya --
-module greeting
-  hello = name -> "Hello, {name}"
+hello = name -> "Hello, {name}"

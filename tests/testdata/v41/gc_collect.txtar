@@ -9,29 +9,29 @@ stdout 'collect_count: 1'
 stdout 'shrunk: true'
 
 -- sample.tya --
-import runtime
+import runtime as runtime
 
 # Allocate a tree of arrays. Hold the root in a global so it survives GC.
 root = []
 i = 0
 while i < 50
-  push(root, [i, i + 1, i + 2])
+  root.push([i, i + 1, i + 2])
   i = i + 1
 
 before = runtime.Runtime.gc_stats()
-print("before live: " + to_string(before["live_count"]))
+print("before live: " + before["live_count"].to_s())
 
 # Capture the peak live count, then drop the references by overwriting
 # root with a fresh empty array. The previous tree is now unreachable.
 peak = runtime.Runtime.gc_stats()
-print("peak live: " + to_string(peak["live_count"]))
+print("peak live: " + peak["live_count"].to_s())
 root = []
 
 # Trigger a collection. The unreachable inner arrays must be reclaimed.
 runtime.Runtime.gc()
 
 after = runtime.Runtime.gc_stats()
-print("after gc, live: " + to_string(after["live_count"]))
-print("collect_count: " + to_string(after["collect_count"]))
+print("after gc, live: " + after["live_count"].to_s())
+print("collect_count: " + after["collect_count"].to_s())
 shrunk = after["live_count"] < peak["live_count"]
-print("shrunk: " + to_string(shrunk))
+print("shrunk: " + shrunk.to_s())

@@ -1,23 +1,23 @@
 # Worker pool: N workers pull jobs from a shared channel; the
-# coordinator uses sync.Sync.wait_group to wait for every worker to
+# coordinator uses sync.WaitGroup to wait for every worker to
 # finish before printing the summary.
 import channel
 import sync
 
-jobs = channel.Channel.new(16)
-results = channel.Channel.new(16)
-wg = sync.Sync.wait_group()
+jobs = channel.Channel(16)
+results = channel.Channel(16)
+wg = sync.WaitGroup()
 
 worker = jc, rc, wgr ->
   while true
-    job = channel.Channel.receive(jc)
+    job = jc.receive()
     if job == nil
-      sync.Sync.wait_group_done(wgr)
+      wgr.done()
       return
-    channel.Channel.send(rc, job * job)
+    rc.send(job * job)
 
 # Three workers
-sync.Sync.wait_group_add(wg, 3)
+wg.add(3)
 spawn worker(jobs, results, wg)
 spawn worker(jobs, results, wg)
 spawn worker(jobs, results, wg)
@@ -25,18 +25,18 @@ spawn worker(jobs, results, wg)
 # Submit 10 jobs and signal end-of-stream by closing the jobs channel.
 i = 1
 while i <= 10
-  channel.Channel.send(jobs, i)
+  jobs.send(i)
   i = i + 1
-channel.Channel.close(jobs)
+jobs.close()
 
-sync.Sync.wait_group_wait(wg)
-channel.Channel.close(results)
+wg.wait()
+results.close()
 
 total = 0
 while true
-  v = channel.Channel.receive(results)
+  v = results.receive()
   if v == nil
     break
   total = total + v
 
-print("sum of squares 1..10 = " + to_string(total))
+print("sum of squares 1..10 = " + total.to_s())

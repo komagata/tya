@@ -16,5 +16,4 @@ print(greeting.hello("path"))
 import absent
 
 -- lib/greeting.tya --
-module greeting
-  hello = name -> "Hello, {name}"
+hello = name -> "Hello, {name}"

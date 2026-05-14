@@ -13,7 +13,7 @@ class SecureRandom
     while i < n
       b = secure_random_int(0, 255)
       out = out
-        + SecureRandom.hex_digit(to_int(b / 16))
+        + SecureRandom.hex_digit((b / 16).to_i())
         + SecureRandom.hex_digit(b % 16)
       i = i + 1
     return out
@@ -29,36 +29,36 @@ class SecureRandom
       b1 = secure_random_int(0, 255)
       b2 = secure_random_int(0, 255)
       b3 = secure_random_int(0, 255)
-      g1 = to_int(b1 / 4)
-      g2 = b1 % 4 * 16 + to_int(b2 / 16)
-      g3 = b2 % 16 * 4 + to_int(b3 / 64)
+      g1 = (b1 / 4).to_i()
+      g2 = b1 % 4 * 16 + (b2 / 16).to_i()
+      g3 = b2 % 16 * 4 + (b3 / 64).to_i()
       g4 = b3 % 64
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + alphabet[g4]
       i = i + 3
     rem = n - i
     if rem == 1
       b1 = secure_random_int(0, 255)
-      g1 = to_int(b1 / 4)
+      g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16
       out = out + alphabet[g1] + alphabet[g2] + "=="
     elseif rem == 2
       b1 = secure_random_int(0, 255)
       b2 = secure_random_int(0, 255)
-      g1 = to_int(b1 / 4)
-      g2 = b1 % 4 * 16 + to_int(b2 / 16)
+      g1 = (b1 / 4).to_i()
+      g2 = b1 % 4 * 16 + (b2 / 16).to_i()
       g3 = b2 % 16 * 4
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
     return out
 
   static hex_byte = ->
     b = secure_random_int(0, 255)
-    return SecureRandom.hex_digit(to_int(b / 16)) + SecureRandom.hex_digit(b % 16)
+    return SecureRandom.hex_digit((b / 16).to_i()) + SecureRandom.hex_digit(b % 16)
 
   static uuid = ->
     bs = []
     i = 0
     while i < 16
-      push(bs, secure_random_int(0, 255))
+      bs.push(secure_random_int(0, 255))
       i = i + 1
     bs[6] = bs[6] % 16 + 64
     bs[8] = bs[8] % 64 + 128
@@ -67,7 +67,7 @@ class SecureRandom
     while i < 16
       b = bs[i]
       parts = parts
-        + SecureRandom.hex_digit(to_int(b / 16))
+        + SecureRandom.hex_digit((b / 16).to_i())
         + SecureRandom.hex_digit(b % 16)
       if i == 3 or i == 5 or i == 7 or i == 9
         parts = parts + "-"

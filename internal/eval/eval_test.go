@@ -217,8 +217,8 @@ func TestRunInlineDict(t *testing.T) {
 	}
 }
 
-func TestRunModuleDeclaration(t *testing.T) {
-	src := "module util\n  foo = \"foo\"\n\n  bar = ->\n    \"bar\"\n\nprint(util.foo)\nprint(util.bar())\n"
+func TestRunNamespaceDictionary(t *testing.T) {
+	src := "foo = \"foo\"\nbar = ->\n  \"bar\"\nutil = {}\nutil[\"foo\"] = foo\nutil[\"bar\"] = bar\nprint(util.foo)\nprint(util.bar())\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)

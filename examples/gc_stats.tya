@@ -5,7 +5,7 @@ before = runtime.Runtime.gc_stats()
 items = []
 i = 0
 while i < 100
-  push(items, [i, i + 1, i + 2])
+  items.push([i, i + 1, i + 2])
   i = i + 1
 
 after = runtime.Runtime.gc_stats()

@@ -1,7 +1,7 @@
 class Path
   static basename = value ->
-    parts = split(value, "/")
-    i = len(parts) - 1
+    parts = value.split("/")
+    i = parts.len() - 1
     while i >= 0
       if parts[i] != ""
         return parts[i]
@@ -9,34 +9,34 @@ class Path
     return ""
 
   static dirname = value ->
-    parts = split(value, "/")
-    last = len(parts) - 1
+    parts = value.split("/")
+    last = parts.len() - 1
     while last >= 0 and parts[last] == ""
       last = last - 1
     if last <= 0
-      if starts_with(value, "/")
+      if value.starts_with("/")
         return "/"
       return "."
     head = []
     i = 0
     while i < last
-      push(head, parts[i])
+      head.push(parts[i])
       i = i + 1
-    joined = join(head, "/")
+    joined = head.join("/")
     if joined == ""
       return "."
     return joined
 
   static extname = value ->
-    bparts = split(value, "/")
-    bi = len(bparts) - 1
+    bparts = value.split("/")
+    bi = bparts.len() - 1
     base = ""
     while bi >= 0 and base == ""
       if bparts[bi] != ""
         base = bparts[bi]
       bi = bi - 1
-    parts = split(base, ".")
-    n = len(parts)
+    parts = base.split(".")
+    n = parts.len()
     if n < 2
       return ""
     if parts[0] == "" and n == 2
@@ -46,20 +46,20 @@ class Path
   static clean = value ->
     if value == ""
       return "."
-    is_abs = starts_with(value, "/")
-    parts = split(value, "/")
+    is_abs = value.starts_with("/")
+    parts = value.split("/")
     result = []
     for part in parts
       if part != "" and part != "."
         if part == ".."
-          n = len(result)
+          n = result.len()
           if n > 0 and result[n - 1] != ".."
-            pop(result)
+            result.pop()
           elseif not is_abs
-            push(result, "..")
+            result.push("..")
         else
-          push(result, part)
-    joined = join(result, "/")
+          result.push(part)
+    joined = result.join("/")
     if is_abs
       return "/" + joined
     if joined == ""
@@ -67,23 +67,23 @@ class Path
     return joined
 
   static join = parts ->
-    raw = join(parts, "/")
+    raw = parts.join("/")
     if raw == ""
       return "."
-    is_abs = starts_with(raw, "/")
-    sparts = split(raw, "/")
+    is_abs = raw.starts_with("/")
+    sparts = raw.split("/")
     result = []
     for part in sparts
       if part != "" and part != "."
         if part == ".."
-          n = len(result)
+          n = result.len()
           if n > 0 and result[n - 1] != ".."
-            pop(result)
+            result.pop()
           elseif not is_abs
-            push(result, "..")
+            result.push("..")
         else
-          push(result, part)
-    joined = join(result, "/")
+          result.push(part)
+    joined = result.join("/")
     if is_abs
       return "/" + joined
     if joined == ""

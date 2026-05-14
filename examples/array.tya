@@ -1,10 +1,10 @@
 items = [1, 2, 3]
-print(len(items))
+print(items.len())
 print(items[0])
 print(items[9])
-push(items, 4)
-print(len(items))
-print(pop(items))
-print(len(items))
+items.push(4)
+print(items.len())
+print(items.pop())
+print(items.len())
 items[1] = 20
 print(items[1])

@@ -15,8 +15,9 @@ const (
 	CodePositionConstraint = "TYA-E0120"
 
 	// 0140-0159: reserved / deprecated names
-	CodeReservedName     = "TYA-E0140"
+	CodeReservedName      = "TYA-E0140"
 	CodeUnsupportedSyntax = "TYA-E0141"
+	CodeModuleRemoved     = "TYA-E0200"
 
 	// 0160-0179: pattern / assignment syntax
 	CodePatternSyntax = "TYA-E0160"

@@ -3,21 +3,16 @@ class Base64
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
   static byte_at = value, i ->
-    k = kind(value)
-    if k == "bytes"
-      return value[i]
-    return ord(value[i])
+    if value.class == String
+      return ord(value[i])
+    return bytes_array(value)[i]
 
   static byte_count = value ->
-    k = kind(value)
-    if k == "bytes"
-      return len(value)
-    return byte_len(value)
+    if value.class == String
+      return value.byte_len()
+    return bytes_array(value).len()
 
   static encode = value ->
-    k = kind(value)
-    if k != "bytes" and k != "string"
-      raise "base64.encode: argument must be a string or bytes"
     alphabet = Base64.alphabet()
     n = Base64.byte_count(value)
     out = ""
@@ -26,23 +21,23 @@ class Base64
       b1 = Base64.byte_at(value, i)
       b2 = Base64.byte_at(value, i + 1)
       b3 = Base64.byte_at(value, i + 2)
-      g1 = to_int(b1 / 4)
-      g2 = b1 % 4 * 16 + to_int(b2 / 16)
-      g3 = b2 % 16 * 4 + to_int(b3 / 64)
+      g1 = (b1 / 4).to_i()
+      g2 = b1 % 4 * 16 + (b2 / 16).to_i()
+      g3 = b2 % 16 * 4 + (b3 / 64).to_i()
       g4 = b3 % 64
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + alphabet[g4]
       i = i + 3
     rem = n - i
     if rem == 1
       b1 = Base64.byte_at(value, i)
-      g1 = to_int(b1 / 4)
+      g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16
       out = out + alphabet[g1] + alphabet[g2] + "=="
     elseif rem == 2
       b1 = Base64.byte_at(value, i)
       b2 = Base64.byte_at(value, i + 1)
-      g1 = to_int(b1 / 4)
-      g2 = b1 % 4 * 16 + to_int(b2 / 16)
+      g1 = (b1 / 4).to_i()
+      g2 = b1 % 4 * 16 + (b2 / 16).to_i()
       g3 = b2 % 16 * 4
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
     return out
@@ -63,7 +58,7 @@ class Base64
 
   static decode = text ->
     cleaned = ""
-    n = byte_len(text)
+    n = text.byte_len()
     cr = chr(13)
     i = 0
     while i < n
@@ -71,7 +66,7 @@ class Base64
       if c != " " and c != "\n" and c != cr and c != "\t" and c != "="
         cleaned = cleaned + c
       i = i + 1
-    m = byte_len(cleaned)
+    m = cleaned.byte_len()
     if m % 4 == 1
       raise "base64.decode: invalid length"
     arr = []
@@ -81,19 +76,19 @@ class Base64
       v2 = Base64.index_of(cleaned[j + 1])
       v3 = Base64.index_of(cleaned[j + 2])
       v4 = Base64.index_of(cleaned[j + 3])
-      push(arr, v1 * 4 + to_int(v2 / 16))
-      push(arr, v2 % 16 * 16 + to_int(v3 / 4))
-      push(arr, v3 % 4 * 64 + v4)
+      arr.push(v1 * 4 + (v2 / 16).to_i())
+      arr.push(v2 % 16 * 16 + (v3 / 4).to_i())
+      arr.push(v3 % 4 * 64 + v4)
       j = j + 4
     rem = m - j
     if rem == 2
       v1 = Base64.index_of(cleaned[j])
       v2 = Base64.index_of(cleaned[j + 1])
-      push(arr, v1 * 4 + to_int(v2 / 16))
+      arr.push(v1 * 4 + (v2 / 16).to_i())
     elseif rem == 3
       v1 = Base64.index_of(cleaned[j])
       v2 = Base64.index_of(cleaned[j + 1])
       v3 = Base64.index_of(cleaned[j + 2])
-      push(arr, v1 * 4 + to_int(v2 / 16))
-      push(arr, v2 % 16 * 16 + to_int(v3 / 4))
+      arr.push(v1 * 4 + (v2 / 16).to_i())
+      arr.push(v2 % 16 * 16 + (v3 / 4).to_i())
     return bytes(arr)

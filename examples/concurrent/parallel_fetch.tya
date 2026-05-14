@@ -9,9 +9,9 @@ fetch = url ->
 
 results = []
 scope
-  push(results, spawn fetch("https://a"))
-  push(results, spawn fetch("https://b"))
-  push(results, spawn fetch("https://c"))
+  results.push(spawn fetch("https://a"))
+  results.push(spawn fetch("https://b"))
+  results.push(spawn fetch("https://c"))
 
 for r in results
   print(await r)

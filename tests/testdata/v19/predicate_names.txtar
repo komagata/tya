@@ -22,12 +22,10 @@ exec go run ./cmd/tya build $WORK/non_bool_return.tya -o $WORK/non_bool_return
 stderr 'name\? must return boolean'
 
 -- predicates.tya --
-import array
-import dict
-import value
+import value as value
 
-empty? = values -> len(values) == 0
-has_name? = user -> has(user, "name")
+empty? = values -> values.len() == 0
+has_name? = user -> user.has("name")
 _internal? = item -> item == nil
 
 print(empty?([]))
@@ -38,8 +36,8 @@ user =
 
 print(has_name?(user))
 print(_internal?(nil))
-print(array.empty?([]))
-print(dict.has?(user, "name"))
+print([].empty?())
+print(user.has?("name"))
 print(value.Value.nil?(nil))
 
 class User
