@@ -26,6 +26,11 @@ exec sh -c 'cc "$WORK/stage3.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage
 
 exec cmp $WORK/stage2.c $WORK/stage3.c
 
+exec sh -c '"$WORK/stage1" selfhost/v02/ast.tya > "$WORK/ast.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/ast.c" runtime/tya_runtime.c -I runtime -o "$WORK/ast" -lpthread -lm -lz 2>/dev/null'
+
 exec sh -c '"$WORK/stage2" "$WORK/app.tya" > "$WORK/app.c"'
 ! stderr .
 

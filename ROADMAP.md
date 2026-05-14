@@ -175,8 +175,16 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 ## Language
 
 - [ ] **Migrate selfhost compiler to the latest spec and remove Go reference**
-  - [ ] Bring `selfhost/` up to the v1.0.0 spec: lexer, parser, AST, checker,
-    C emitter, and runner.
+  - [x] Prove the `selfhost/v02/` current-spec compiler gate.
+    - [x] Migrate the v02 lexer/parser surface to current syntax.
+    - [x] Migrate the v02 checker surface for selected current semantic
+      families.
+    - [x] Migrate the v02 C emitter for selected current runtime families and
+      deterministic unsupported-codegen failures.
+    - [x] Verify the v02 stage-2 == stage-3 fixed point and document the
+      applicable full-spec fixture coverage.
+  - [ ] Bring `selfhost/` from the v02 current-spec proof to the v1.0.0 spec:
+    lexer, parser, AST, checker, C emitter, and runner.
   - [ ] Implement all language features in the self-hosted compiler.
   - [ ] Verify stage-2 == stage-3 fixed point at the latest spec.
   - [ ] Distribute pre-built `tya` binaries via Homebrew, curl install scripts,
