@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.31 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-31-specification-multi-line-string-literals">Tya v0.31 Specification — Multi-line String Literals</h1>
+<p>Tya v0.31 adds **triple-quoted string literals** (<code>&quot;&quot;&quot;...&quot;&quot;&quot;</code>) so that multi-line strings can be written without <code>\n</code> escapes. The new form parses to the same <code>StringLit</code> AST node as today's <code>&quot;...&quot;</code> literal, runs through the same interpolation pipeline, and produces the same runtime string value. Codegen, eval, the runtime, and the C ABI do not change.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Triple-quoted strings can span any number of lines.</li>
+<li>Newlines inside <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> are part of the string value.</li>
+<li><code>{expr}</code> interpolation works exactly as in <code>&quot;...&quot;</code> strings.</li>
+<li>Indentation normalization makes nested multi-line strings readable</li>
+</ul>
+<p>  without leaking enclosing indent into the value.</p>
+<ul>
+<li>Single-line <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> is also valid (opens and closes on the same</li>
+</ul>
+<p>  line) — the body between the quotes is the value.</p>
+<h2 id="non-goals-v0-31">Non-Goals (v0.31)</h2>
+<ul>
+<li>Heredoc-style markers (<code>&lt;&lt;&lt;TAG ... TAG</code>).</li>
+<li>Raw-string prefixes (<code>r&quot;...&quot;</code>, <code>r&quot;&quot;&quot;...&quot;&quot;&quot;</code>).</li>
+<li>Language-tagged interpolation specifiers (e.g. <code>sql&quot;&quot;&quot;...&quot;&quot;&quot;</code>).</li>
+<li>Formatter rewrite rule — turning long single-line <code>&quot;...&quot;</code> literals</li>
+</ul>
+<p>  into <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> is intentionally deferred to a follow-up release.</p>
+<ul>
+<li>Bytes equivalent (<code>b&quot;&quot;&quot;...&quot;&quot;&quot;</code>) — bytes literals stay single-line in</li>
+</ul>
+<p>  v0.31.</p>
+<h2 id="surface-syntax">Surface Syntax</h2>
+<pre><code>TripleString = '&quot;&quot;&quot;' { Char | NEWLINE } '&quot;&quot;&quot;'</code></pre>
+<p><code>Char</code> is the same alphabet as today's <code>&quot;...&quot;</code> literals: regular UTF-8 text plus the escape sequences <code>\n</code>, <code>\t</code>, <code>\\</code>, <code>\&quot;</code>, <code>\{</code>, the double-brace literals <code>{{</code> / <code>}}</code>, and <code>{expr}</code> interpolation.</p>
+<h3 id="single-line-form">Single-line form</h3>
+<pre><code class="language-tya">greet = &quot;&quot;&quot;Hello, {name}!&quot;&quot;&quot;</code></pre>
+<p>is equivalent to <code>&quot;Hello, {name}!&quot;</code>.</p>
+<h3 id="multi-line-form">Multi-line form</h3>
+<pre><code class="language-tya">poem = &quot;&quot;&quot;
+Roses are red,
+Violets are blue.
+&quot;&quot;&quot;</code></pre>
+<p>Newlines in the body are part of the value. The value of <code>poem</code> is:</p>
+<pre><code>\nRoses are red,\nViolets are blue.\n</code></pre>
+<p>The opening newline immediately after the opening <code>&quot;&quot;&quot;</code> is preserved unless it sits on the line containing the opening <code>&quot;&quot;&quot;</code> (see *Indentation Normalization* below).</p>
+<h3 id="interpolation">Interpolation</h3>
+<pre><code class="language-tya">table = &quot;&quot;&quot;
+| name | role     |
+| ---- | -------- |
+| {name} | {role} |
+&quot;&quot;&quot;</code></pre>
+<p><code>{expr}</code> is parsed and evaluated identically to its <code>&quot;...&quot;</code> cousin. <code>{{</code> and <code>}}</code> produce literal braces. <code>\{</code> is also accepted.</p>
+<h2 id="indentation-normalization">Indentation Normalization</h2>
+<p>The indentation of the **closing** <code>&quot;&quot;&quot;</code> defines a *baseline*. The baseline is removed from every body line before the value is emitted. Concretely:</p>
+<ol>
+<li>Let <code>b</code> be the column (number of leading ASCII spaces) of the</li>
+</ol>
+<p>   closing <code>&quot;&quot;&quot;</code>. Tabs are forbidden by the project's existing    indentation rule and remain forbidden here. 2. For each body line (every line strictly between the opening line    and the closing line):</p>
+<ul>
+<li>If the line is empty (zero characters before the trailing</li>
+</ul>
+<p>     newline), it remains empty.</p>
+<ul>
+<li>Otherwise, the first <code>b</code> characters must all be ASCII spaces;</li>
+</ul>
+<p>     they are stripped.</p>
+<ul>
+<li>If a non-empty body line has fewer than <code>b</code> leading spaces, it is</li>
+</ul>
+<p>     a compile error: <code>mixed indentation in triple-quoted string</code>. 3. The opening line's content (anything between the opening <code>&quot;&quot;&quot;</code> and    the end of that line) is preserved verbatim. If that content is    empty, the leading newline that follows the opening <code>&quot;&quot;&quot;</code> is    *omitted* from the value (so <code>&quot;&quot;&quot;\nfoo\n  &quot;&quot;&quot;</code> renders as <code>foo\n</code>,    not <code>\nfoo\n</code>). 4. The closing line's content (anything before the closing <code>&quot;&quot;&quot;</code> on    the closing line) is preserved verbatim and is **not** subject to    the leading-baseline strip — but must equal <code>&lt;b spaces&gt;</code> followed    immediately by <code>&quot;&quot;&quot;</code> for indentation normalization to apply.</p>
+<h3 id="examples">Examples</h3>
+<pre><code class="language-tya">msg = &quot;&quot;&quot;
+  Hello
+  Tya
+  &quot;&quot;&quot;</code></pre>
+<p>Closing <code>&quot;&quot;&quot;</code> is at column 3, baseline <code>b = 2</code>. The two body lines have ≥ 2 leading spaces; both lose 2. Value: <code>Hello\nTya\n</code>.</p>
+<pre><code class="language-tya">nested = &quot;&quot;&quot;
+    {
+      &quot;a&quot;: 1
+    }
+    &quot;&quot;&quot;</code></pre>
+<p>Baseline <code>b = 4</code>. All body lines lose 4 leading spaces. Value: <code>{\n  &quot;a&quot;: 1\n}\n</code>.</p>
+<pre><code class="language-tya">flat = &quot;&quot;&quot;one line&quot;&quot;&quot;</code></pre>
+<p>Single-line form. Value: <code>one line</code>. No newline normalization.</p>
+<pre><code class="language-tya">inline_open = &quot;&quot;&quot;first
+  more
+  &quot;&quot;&quot;</code></pre>
+<p>Opening line carries content (<code>first</code>). The leading newline after <code>&quot;&quot;&quot;</code> is not omitted because the opening line is non-empty in this form; the value begins with <code>first\n  more\n</code> — wait, that body line does not start with the closing <code>&quot;&quot;&quot;</code>'s baseline.</p>
+<p>To clarify, the opening-line content rule only suppresses the **opening-newline** insertion; baseline stripping still applies to all *body* lines (lines after the opening line and before the closing line). For the example above, baseline is <code>b = 2</code> (closing <code>&quot;&quot;&quot;</code> is at column 3). The body line <code>  more</code> has the 2-space baseline stripped, producing <code>more</code>. The value is <code>first\nmore\n</code>.</p>
+<p>A single-line form — opening and closing <code>&quot;&quot;&quot;</code> on the same line — is a special case where there are no body lines at all and no normalization happens.</p>
+<h3 id="error-cases">Error cases</h3>
+<p>| Condition                                                        | Error                                                        | |------------------------------------------------------------------|--------------------------------------------------------------| | Unterminated <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> (EOF before close)                      | <code>unterminated triple-quoted string</code>                          | | A body line that is non-empty and has fewer leading spaces than the baseline | <code>mixed indentation in triple-quoted string</code>           | | The closing line has non-space content before <code>&quot;&quot;&quot;</code>              | <code>closing &quot;&quot;&quot; must be on a line of its own (whitespace + &quot;&quot;&quot;)</code> when normalization is requested. The single-line form (<code>&quot;&quot;&quot;x&quot;&quot;&quot;</code>) is not subject to this. | | Tab inside a <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> body                                    | The existing project-wide *tabs are forbidden* error fires.  |</p>
+<h2 id="escape-rules">Escape rules</h2>
+<p>Inside <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code>:</p>
+<ul>
+<li><code>\n</code>, <code>\t</code>, <code>\\</code>, <code>\&quot;</code>, <code>\{</code> behave exactly as in <code>&quot;...&quot;</code>.</li>
+<li><code>{{</code> produces <code>{</code>. <code>}}</code> produces <code>}</code>.</li>
+<li>A literal three quote sequence <code>&quot;&quot;&quot;</code> inside the body terminates the</li>
+</ul>
+<p>  string. To embed <code>&quot;&quot;&quot;</code> inside the value, use <code>\&quot;\&quot;\&quot;</code> or split the   string and concatenate.</p>
+<h2 id="lexer-changes">Lexer changes</h2>
+<p>The lexer continues to drive line-by-line, but when <code>lexLine</code> encounters an unmatched <code>&quot;&quot;&quot;</code>:</p>
+<ol>
+<li>The remainder of the current line (after the opening <code>&quot;&quot;&quot;</code>) is</li>
+</ol>
+<p>   buffered into the literal value. 2. The lexer enters a &quot;triple-string&quot; mode that consumes whole    subsequent lines verbatim (raw, not via <code>lexLine</code>'s normal    tokenization) until a line whose trimmed body starts with <code>&quot;&quot;&quot;</code> is    found. 3. The lexer collects the closing-line indent for normalization,    strips the baseline from each buffered body line, applies escape    handling, and emits a single <code>STRING</code> token whose value is the    normalized body. 4. Indent / dedent processing for the lines inside the literal is    suppressed; the lexer resumes its normal indent state on the line    *after* the closing <code>&quot;&quot;&quot;</code>.</p>
+<p>The token kind is the existing <code>STRING</code>. Downstream stages don't need to change.</p>
+<h2 id="ast-and-runtime">AST and runtime</h2>
+<p>No changes. <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> produces an <code>ast.StringLit</code> whose <code>Value</code> is the normalized body string with <code>{expr}</code> interpolations preserved verbatim, exactly as the existing <code>&quot;...&quot;</code> form does.</p>
+<p>The string-interpolation pipeline (existing) sees the same body shape it sees today, so codegen, the C runtime, and the Go interpreter all work unchanged.</p>
+<h2 id="self-host-invariant">Self-Host Invariant</h2>
+<p>The self-host pipeline does not use triple-quoted strings. Its source remains valid v0.31 source. <code>TestSelfhostV01Scripts</code> continues to pass.</p>
+<h2 id="testing-strategy">Testing Strategy</h2>
+<ol>
+<li>**Lexer unit tests** under <code>internal/lexer/lexer_test.go</code>:</li>
+<ul>
+<li>Single-line <code>&quot;&quot;&quot;x&quot;&quot;&quot;</code> → STRING with value <code>x</code>.</li>
+<li>Multi-line with indentation normalization.</li>
+<li>Multi-line with interpolation.</li>
+<li>Mixed-indent → error.</li>
+<li>Unterminated → error.</li>
+</ul>
+</ol>
+<p>2. **Script test** under <code>tests/testdata/v31/multiline.txtar</code>:</p>
+<ul>
+<li>End-to-end <code>tya run</code> of a program using <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> with</li>
+</ul>
+<p>     interpolation and verifies stdout. 3. **Self-host invariant** continues to pass. 4. **Default test suite** (<code>go test ./...</code>) remains green.</p>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<p>A v0.31 build is acceptable when:</p>
+<ol>
+<li><code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> lexes into the same <code>STRING</code> token kind today's</li>
+</ol>
+<p>   <code>&quot;...&quot;</code> form produces. 2. Multi-line literals preserve internal newlines. 3. <code>{expr}</code> interpolation works inside <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code>. 4. Indentation normalization follows the closing-<code>&quot;&quot;&quot;</code> baseline rule. 5. Error cases produce structured errors (line + column). 6. <code>go test ./... -count=1</code> passes, including the self-host    invariant.</p>
+<h2 id="deferred-to-v0-31-x-v0-32">Deferred to v0.31.x / v0.32</h2>
+<ul>
+<li>Formatter rewrite of long single-line <code>&quot;...&quot;</code> to <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code>.</li>
+<li>Raw-string prefix <code>r&quot;&quot;&quot;...&quot;&quot;&quot;</code>.</li>
+<li>Bytes-equivalent <code>b&quot;&quot;&quot;...&quot;&quot;&quot;</code>.</li>
+<li>Heredoc-style markers.</li>
+<li>Language-tagged interpolation specifiers.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

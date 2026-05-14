@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.25 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-25-specification">Tya v0.25 Specification</h1>
+<p>This document is the specification for Tya v0.25 after v0.24 scripting toolkit and lightweight numerics.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.25 adds bit-level integer operations, a byte-sequence value type, and binary file I/O. Together they unblock workloads that need to read, manipulate, and write raw bytes — for example, NES emulators, simple image codecs, byte-stream protocols, and binary parsing.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Add bitwise operators on integers: <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code>.</li>
+<li>Add a <code>bytes</code> value type for raw byte sequences (0..255 each).</li>
+<li>Add binary file I/O: <code>file.read_bytes</code>, <code>file.write_bytes</code>.</li>
+<li>Extend <code>digest</code>, <code>secure_random</code>, <code>hex</code>, and <code>base64</code> to accept and return</li>
+</ul>
+<p>  byte sequences while remaining compatible with strings.</p>
+<ul>
+<li>Avoid disturbing the existing string type (strings stay UTF-8 text).</li>
+</ul>
+<h2 id="included-in-v0-25">Included in v0.25</h2>
+<p>v0.25 includes all v0.24 behavior and adds:</p>
+<ul>
+<li><code>&amp;</code>, <code>|</code>, <code>^</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> binary operators on integers</li>
+<li><code>~</code> unary bitwise NOT operator on integers</li>
+<li><code>bytes</code> value type</li>
+<li>Byte-sequence literal: <code>b&quot;...&quot;</code> (basic-string with <code>\xHH</code> byte escapes)</li>
+<li><code>bytes(values)</code> constructor from an array of integers</li>
+<li><code>bytes_of(text)</code> constructor from a string (UTF-8 bytes)</li>
+<li><code>bytes_text(b)</code> decoder back to a string (raises on invalid UTF-8)</li>
+<li><code>bytes_array(b)</code> to get an array of ints</li>
+<li><code>bytes_concat(a, b)</code> and <code>+</code> overload for <code>bytes + bytes</code></li>
+<li><code>bytes_slice(b, start, end)</code> for sub-sequences</li>
+<li><code>len(b)</code> for byte length</li>
+<li><code>b[i]</code> indexing returning an int (0..255)</li>
+<li><code>file.read_bytes(path)</code> returning <code>bytes</code></li>
+<li><code>file.write_bytes(path, b)</code> accepting <code>bytes</code></li>
+<li><code>digest.*(text_or_bytes)</code> accepts both</li>
+<li><code>secure_random.bytes(n)</code> returns <code>bytes</code> (no longer a string)</li>
+<li><code>hex.encode(bytes)</code>, <code>hex.decode(text) -&gt; bytes</code></li>
+<li><code>base64.encode(bytes)</code>, <code>base64.decode(text) -&gt; bytes</code></li>
+</ul>
+<h2 id="not-included-in-v0-25">Not Included in v0.25</h2>
+<p>v0.25 does not include:</p>
+<ul>
+<li>arbitrary-precision integers</li>
+<li>16-bit / 32-bit / 64-bit fixed-width integer types</li>
+<li>bitwise ops on <code>bytes</code> values directly (must index to int first)</li>
+<li>mutable byte buffers (each <code>bytes</code> value is immutable; build with</li>
+</ul>
+<p>  concatenation)</p>
+<ul>
+<li>bytes pattern matching beyond basic equality</li>
+<li>character-set-aware string ↔ bytes conversion (always UTF-8)</li>
+<li>streaming readers or writers</li>
+<li><code>mmap</code>, file handles, sockets</li>
+</ul>
+<h2 id="bitwise-operators">Bitwise Operators</h2>
+<p>The new operators apply to integer operands. Float operands raise an error.</p>
+<p>| Operator | Form | Meaning | |---|---|---| | <code>a &amp; b</code> | binary | bitwise AND | | <code>a \| b</code> | binary | bitwise OR | | <code>a ^ b</code> | binary | bitwise XOR | | <code>a &lt;&lt; n</code> | binary | left shift (n ≥ 0) | | <code>a &gt;&gt; n</code> | binary | arithmetic right shift (n ≥ 0) | | <code>~a</code> | unary | bitwise NOT |</p>
+<h3 id="semantics">Semantics</h3>
+<ul>
+<li>Operands and results are 64-bit signed integers (the same kind as Tya's</li>
+</ul>
+<p>  existing <code>int</code>).</p>
+<ul>
+<li><code>&lt;&lt;</code> and <code>&gt;&gt;</code> raise when the shift count is negative.</li>
+<li><code>&lt;&lt;</code> shift counts ≥ 64 produce 0; <code>&gt;&gt;</code> produces 0 or -1 depending on the</li>
+</ul>
+<p>  sign of <code>a</code> (consistent with two's-complement arithmetic).</p>
+<ul>
+<li><code>~a</code> is equivalent to <code>-1 ^ a</code>.</li>
+</ul>
+<h3 id="precedence">Precedence</h3>
+<p>Higher precedence to lower:</p>
+<pre><code>~  (unary)
+* / % &lt;&lt; &gt;&gt;
++ -
+&amp; 
+^
+|
+&lt; &lt;= &gt; &gt;= == !=
+and
+or</code></pre>
+<p>This matches C's relative ordering and resolves expressions like <code>a &amp; 0xFF == 0xFF</code> as <code>(a &amp; 0xFF) == 0xFF</code>. (Note that v0.25 introduces no hexadecimal integer literals — see Out of scope.)</p>
+<h3 id="examples">Examples</h3>
+<pre><code class="language-tya">a = 0b11110000      # not part of v0.25; use 240 or to_int(&quot;0xF0&quot;)
+b = 0b00001111      # not part of v0.25; use 15
+
+# 6502 emulator-style bit work
+status = 0
+status = status | 1                # set carry flag
+if (status &amp; 1) != 0
+  println &quot;carry set&quot;
+
+byte = 0xFF                        # not part of v0.25 (use 255)
+high = (byte &gt;&gt; 4) &amp; 0xF
+low  = byte &amp; 0xF</code></pre>
+<p>(Hexadecimal and binary literals are not added in v0.25; use decimal or <code>to_int(string, base)</code>-style helpers in stdlib if needed in user code.)</p>
+<h2 id="bytes-value-type"><code>bytes</code> Value Type</h2>
+<p><code>bytes</code> is a new top-level value type alongside <code>string</code>, <code>int</code>, <code>float</code>, <code>bool</code>, <code>nil</code>, <code>array</code>, <code>dict</code>, etc.</p>
+<h3 id="properties">Properties</h3>
+<ul>
+<li>Immutable.</li>
+<li>Each element is an integer in <code>0..255</code>.</li>
+<li><code>len(b)</code> returns the byte count.</li>
+<li><code>b[i]</code> returns the integer byte at index <code>i</code> (raises on out-of-range).</li>
+<li><code>b1 == b2</code> is true when the byte sequences match.</li>
+<li><code>b1 + b2</code> concatenates.</li>
+<li><code>kind(b)</code> returns <code>&quot;bytes&quot;</code>.</li>
+</ul>
+<h3 id="literal">Literal</h3>
+<pre><code class="language-tya">b1 = b&quot;&quot;
+b2 = b&quot;hello&quot;
+b3 = b&quot;\x01\x02\xff&quot;
+b4 = b&quot;a\nb\tc&quot;            # \n, \t, \r, \\, \&quot;, \xHH supported</code></pre>
+<p>The <code>b&quot;...&quot;</code> literal accepts the same backslash escapes as a basic string, plus <code>\xHH</code> two-digit hexadecimal byte escapes. The literal contents are parsed byte-by-byte; non-ASCII bytes from source UTF-8 are stored verbatim.</p>
+<h3 id="conversions">Conversions</h3>
+<pre><code class="language-tya">bytes_of(&quot;hello&quot;)            # bytes from a string (UTF-8 bytes)
+bytes_text(b3)               # string from bytes (UTF-8); raises on invalid
+bytes_array(b3)              # array of ints
+bytes([72, 101, 108, 108])   # bytes from an array of 0..255 ints</code></pre>
+<h3 id="slicing">Slicing</h3>
+<pre><code class="language-tya">b = b&quot;hello world&quot;
+bytes_slice(b, 0, 5)         # b&quot;hello&quot;
+bytes_slice(b, 6, len(b))    # b&quot;world&quot;</code></pre>
+<p><code>bytes_slice(b, start, end)</code> returns the sub-sequence <code>[start, end)</code> in half-open form. Out-of-range indices raise.</p>
+<h3 id="concatenation">Concatenation</h3>
+<pre><code class="language-tya">b&quot;foo&quot; + b&quot;bar&quot;              # b&quot;foobar&quot;
+bytes_concat(b&quot;a&quot;, b&quot;b&quot;)     # equivalent function form</code></pre>
+<p><code>+</code> between <code>string</code> and <code>bytes</code> is an error in v0.25; convert explicitly.</p>
+<h3 id="iteration">Iteration</h3>
+<pre><code class="language-tya">for byte in bytes_array(b)
+  println byte</code></pre>
+<p>The runtime does not yet support <code>for x in bytes_value</code> directly; iterate via <code>bytes_array(b)</code> or via index in v0.25.</p>
+<h2 id="binary-file-i-o">Binary File I/O</h2>
+<p><code>file.read_bytes(path)</code> reads a file and returns a <code>bytes</code> value.</p>
+<p><code>file.write_bytes(path, b)</code> writes a <code>bytes</code> value to a file.</p>
+<pre><code class="language-tya">import file
+import digest
+
+raw = file.read_bytes(&quot;/usr/local/bin/something&quot;)
+println len(raw)
+println digest.sha256(raw)
+file.write_bytes(&quot;/tmp/copy&quot;, raw)</code></pre>
+<p>The existing <code>file.read(path)</code> (string) and <code>file.write(path, text)</code> are unchanged. They remain UTF-8 text-oriented.</p>
+<h2 id="updated-stdlib-api">Updated stdlib API</h2>
+<p>Affected modules accept and return <code>bytes</code> where it makes sense, while preserving string compatibility.</p>
+<h3 id="digest"><code>digest</code></h3>
+<p><code>digest.md5</code>, <code>digest.sha1</code>, <code>digest.sha256</code>, <code>digest.sha384</code>, <code>digest.sha512</code> accept either <code>string</code> or <code>bytes</code> input. Output remains a lowercase hex string.</p>
+<h3 id="secure-random"><code>secure_random</code></h3>
+<p><code>secure_random.bytes(n)</code> now returns a <code>bytes</code> value (was a NUL-bearing string in v0.24). <code>secure_random.hex(n)</code> and <code>secure_random.base64(n)</code> are unchanged.</p>
+<h3 id="hex"><code>hex</code></h3>
+<p><code>hex.encode(value)</code> accepts <code>bytes</code> (preferred) or <code>string</code> (treated as UTF-8 bytes). <code>hex.decode(text)</code> returns <code>bytes</code>.</p>
+<h3 id="base64"><code>base64</code></h3>
+<p><code>base64.encode(value)</code> accepts <code>bytes</code> (preferred) or <code>string</code>. <code>base64.decode(text)</code> returns <code>bytes</code>.</p>
+<h3 id="backward-compatibility">Backward compatibility</h3>
+<ul>
+<li>Existing user code that passes <code>string</code> to <code>digest.*</code>, <code>hex.encode</code>,</li>
+</ul>
+<p>  <code>base64.encode</code> continues to work.</p>
+<ul>
+<li><code>hex.decode(&quot;...&quot;)</code> and <code>base64.decode(&quot;...&quot;)</code> previously returned</li>
+</ul>
+<p>  <code>string</code>; in v0.25 they return <code>bytes</code>. **This is a breaking change.**   Migrate by wrapping with <code>bytes_text(...)</code> to recover a string when text   data was assumed.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.25 implementations should report source-oriented errors for:</p>
+<ul>
+<li>bitwise ops applied to non-integer operands</li>
+<li>negative shift counts</li>
+<li><code>b&quot;\xHH&quot;</code> with malformed hex escape</li>
+<li>out-of-range <code>b[i]</code> indexing</li>
+<li>out-of-range <code>bytes_slice</code> arguments</li>
+<li><code>bytes(...)</code> with non-integer or out-of-range elements (must be 0..255)</li>
+<li><code>bytes_text(...)</code> on invalid UTF-8 input</li>
+<li><code>+</code> between <code>string</code> and <code>bytes</code> (mixed-type concatenation)</li>
+</ul>
+<p>Diagnostics should mention the operator, function name, expected operand type, and actual value kind when available.</p>
+<h2 id="implementation-notes-non-normative">Implementation Notes (non-normative)</h2>
+<ul>
+<li>C runtime adds a new <code>TYA_BYTES</code> value kind with <code>data: const uint8_t *</code></li>
+</ul>
+<p>  and <code>len: int</code> fields (separate from <code>string</code>'s NUL-terminated <code>char *</code>).</p>
+<ul>
+<li><code>tya_index</code> returns an int when the target is <code>bytes</code>.</li>
+<li><code>tya_add</code> is overloaded to handle <code>bytes + bytes</code>.</li>
+<li>C codegen for <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code>, <code>~</code> emits direct C bitwise</li>
+</ul>
+<p>  operators on <code>(long)x.number</code>, then wraps the result with <code>tya_number</code>.</p>
+<ul>
+<li>Lexer adds <code>&amp;</code>, <code>|</code>, <code>^</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code> tokens (already mostly absent;</li>
+</ul>
+<p>  ensure they don't conflict with existing tokens).</p>
+<ul>
+<li>Parser adds operator precedence levels.</li>
+</ul>
+<p>These notes are guidance, not the spec; conforming implementations may differ as long as the user-visible behavior matches.</p>
+    </article>
+  </main>
+</body>
+</html>

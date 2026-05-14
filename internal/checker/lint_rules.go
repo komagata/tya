@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"tya/internal/ast"
+	"tya/internal/token"
 )
 
 // LintFinding describes one issue reported by the lint rule pipeline.
@@ -33,7 +34,37 @@ const longFunctionThreshold = 50
 func CollectLintFindings(prog *ast.Program) []LintFinding {
 	var out []LintFinding
 	walkLintStmts(prog.Stmts, 0, &out)
+	walkLintExtras(prog.Stmts, newLintScope(nil), &out)
 	return out
+}
+
+type lintScope struct {
+	parent *lintScope
+	names  map[string]token.Token
+}
+
+func newLintScope(parent *lintScope) *lintScope {
+	return &lintScope{parent: parent, names: map[string]token.Token{}}
+}
+
+func (s *lintScope) define(name string, tok token.Token, out *[]LintFinding) {
+	if name == "_" || name == "" {
+		return
+	}
+	for parent := s; parent != nil; parent = parent.parent {
+		if prev, ok := parent.names[name]; ok {
+			*out = append(*out, LintFinding{
+				Code:    "TYAL0008",
+				Message: "shadowed binding " + strconv.Quote(name) + " (previous binding at " + strconv.Itoa(prev.Line) + ":" + strconv.Itoa(prev.Col) + ")",
+				Line:    tok.Line,
+				Col:     tok.Col,
+			})
+			break
+		}
+	}
+	if _, exists := s.names[name]; !exists {
+		s.names[name] = tok
+	}
 }
 
 func walkLintStmts(stmts []ast.Stmt, depth int, out *[]LintFinding) {
@@ -183,6 +214,296 @@ func walkLintExpr(expr ast.Expr, out *[]LintFinding) {
 		}
 	case *ast.TryExpr:
 		walkLintExpr(n.Expr, out)
+	}
+}
+
+func walkLintExtras(stmts []ast.Stmt, scope *lintScope, out *[]LintFinding) {
+	for _, stmt := range stmts {
+		switch n := stmt.(type) {
+		case *ast.ImportStmt:
+			tok := n.NameTok
+			if n.Alias != "" {
+				tok = n.AliasTok
+			}
+			scope.define(n.BindingName(), tok, out)
+		case *ast.AssignStmt:
+			for _, target := range n.Targets {
+				if id, ok := target.(*ast.Ident); ok {
+					scope.define(id.Name, id.Tok, out)
+				}
+			}
+			for _, value := range n.Values {
+				walkLintExprExtras(value, scope, out)
+			}
+		case *ast.IfStmt:
+			walkLintExprExtras(n.Cond, scope, out)
+			walkLintExtras(n.Then, newLintScope(scope), out)
+			walkLintExtras(n.Else, newLintScope(scope), out)
+		case *ast.WhileStmt:
+			walkLintExprExtras(n.Cond, scope, out)
+			walkLintExtras(n.Body, newLintScope(scope), out)
+		case *ast.ForInStmt:
+			walkLintExprExtras(n.Iterable, scope, out)
+			if suspiciousForIndexNames(n.ValueName, n.IndexName) {
+				*out = append(*out, LintFinding{
+					Code:    "TYAL0006",
+					Message: "suspicious for index pattern: value binding comes before index binding",
+					Line:    n.ValueTok.Line,
+					Col:     n.ValueTok.Col,
+				})
+			}
+			child := newLintScope(scope)
+			child.define(n.ValueName, n.ValueTok, out)
+			if n.IndexName != "" {
+				child.define(n.IndexName, n.IndexTok, out)
+			}
+			walkLintExtras(n.Body, child, out)
+		case *ast.ExprStmt:
+			walkLintExprExtras(n.Expr, scope, out)
+		case *ast.ReturnStmt:
+			for _, value := range n.Values {
+				walkLintExprExtras(value, scope, out)
+			}
+		case *ast.RaiseStmt:
+			walkLintExprExtras(n.Value, scope, out)
+		case *ast.TryCatchStmt:
+			walkLintExtras(n.Try, newLintScope(scope), out)
+			child := newLintScope(scope)
+			child.define(n.CatchName, n.CatchTok, out)
+			walkLintExtras(n.Catch, child, out)
+		case *ast.MatchStmt:
+			walkLintExprExtras(n.Value, scope, out)
+			for _, c := range n.Cases {
+				child := newLintScope(scope)
+				defineLintPatternBindings(c.Pattern, child, out)
+				walkLintExtras(c.Body, child, out)
+			}
+		case *ast.SelectStmt:
+			for _, arm := range n.Arms {
+				if arm.Channel != nil {
+					walkLintExprExtras(arm.Channel, scope, out)
+				}
+				if arm.Value != nil {
+					walkLintExprExtras(arm.Value, scope, out)
+				}
+				if arm.Seconds != nil {
+					walkLintExprExtras(arm.Seconds, scope, out)
+				}
+				child := newLintScope(scope)
+				child.define(arm.BindName, arm.BindTok, out)
+				walkLintExtras(arm.Body, child, out)
+			}
+		}
+	}
+}
+
+func walkLintExprExtras(expr ast.Expr, scope *lintScope, out *[]LintFinding) {
+	switch n := expr.(type) {
+	case *ast.FuncLit:
+		reportUnusedParams(n, out)
+		child := newLintScope(scope)
+		for i, param := range n.Params {
+			if i < len(n.ParamToks) {
+				child.define(param, n.ParamToks[i], out)
+			}
+		}
+		if n.Expr != nil {
+			walkLintExprExtras(n.Expr, child, out)
+		}
+		walkLintExtras(n.Body, child, out)
+	case *ast.BinaryExpr:
+		walkLintExprExtras(n.Left, scope, out)
+		walkLintExprExtras(n.Right, scope, out)
+	case *ast.UnaryExpr:
+		walkLintExprExtras(n.Expr, scope, out)
+	case *ast.CallExpr:
+		walkLintExprExtras(n.Callee, scope, out)
+		for _, a := range n.Args {
+			walkLintExprExtras(a, scope, out)
+		}
+	case *ast.MemberExpr:
+		walkLintExprExtras(n.Target, scope, out)
+	case *ast.IndexExpr:
+		walkLintExprExtras(n.Target, scope, out)
+		walkLintExprExtras(n.Index, scope, out)
+	case *ast.ArrayLit:
+		for _, e := range n.Elems {
+			walkLintExprExtras(e, scope, out)
+		}
+	case *ast.DictLit:
+		for _, p := range n.Props {
+			walkLintExprExtras(p.Value, scope, out)
+		}
+	case *ast.TryExpr:
+		walkLintExprExtras(n.Expr, scope, out)
+	case *ast.SpawnExpr:
+		walkLintExprExtras(n.Callee, scope, out)
+	case *ast.AwaitExpr:
+		walkLintExprExtras(n.Target, scope, out)
+	}
+}
+
+func reportUnusedParams(fn *ast.FuncLit, out *[]LintFinding) {
+	if len(fn.Params) == 0 || len(fn.ParamToks) == 0 {
+		return
+	}
+	used := map[string]bool{}
+	if fn.Expr != nil {
+		collectIdentUses(fn.Expr, used)
+	}
+	for _, stmt := range fn.Body {
+		collectStmtIdentUses(stmt, used)
+	}
+	for i, param := range fn.Params {
+		if param == "_" || i >= len(fn.ParamToks) || used[param] {
+			continue
+		}
+		tok := fn.ParamToks[i]
+		*out = append(*out, LintFinding{
+			Code:    "TYAL0007",
+			Message: "unused function parameter " + strconv.Quote(param),
+			Line:    tok.Line,
+			Col:     tok.Col,
+		})
+	}
+}
+
+func suspiciousForIndexNames(valueName, indexName string) bool {
+	if indexName == "" {
+		return false
+	}
+	return isIndexLikeName(valueName) && !isIndexLikeName(indexName)
+}
+
+func isIndexLikeName(name string) bool {
+	switch name {
+	case "i", "j", "k", "idx", "index":
+		return true
+	default:
+		return false
+	}
+}
+
+func defineLintPatternBindings(pattern ast.Expr, scope *lintScope, out *[]LintFinding) {
+	switch n := pattern.(type) {
+	case *ast.Ident:
+		scope.define(n.Name, n.Tok, out)
+	case *ast.ArrayLit:
+		for _, elem := range n.Elems {
+			defineLintPatternBindings(elem, scope, out)
+		}
+	case *ast.DictLit:
+		for _, prop := range n.Props {
+			defineLintPatternBindings(prop.Value, scope, out)
+		}
+	}
+}
+
+func collectStmtIdentUses(stmt ast.Stmt, used map[string]bool) {
+	switch n := stmt.(type) {
+	case *ast.AssignStmt:
+		for _, value := range n.Values {
+			collectIdentUses(value, used)
+		}
+		for _, target := range n.Targets {
+			if _, ok := target.(*ast.Ident); !ok {
+				collectIdentUses(target, used)
+			}
+		}
+	case *ast.IfStmt:
+		collectIdentUses(n.Cond, used)
+		for _, s := range n.Then {
+			collectStmtIdentUses(s, used)
+		}
+		for _, s := range n.Else {
+			collectStmtIdentUses(s, used)
+		}
+	case *ast.WhileStmt:
+		collectIdentUses(n.Cond, used)
+		for _, s := range n.Body {
+			collectStmtIdentUses(s, used)
+		}
+	case *ast.ForInStmt:
+		collectIdentUses(n.Iterable, used)
+		for _, s := range n.Body {
+			collectStmtIdentUses(s, used)
+		}
+	case *ast.ExprStmt:
+		collectIdentUses(n.Expr, used)
+	case *ast.ReturnStmt:
+		for _, value := range n.Values {
+			collectIdentUses(value, used)
+		}
+	case *ast.RaiseStmt:
+		collectIdentUses(n.Value, used)
+	case *ast.TryCatchStmt:
+		for _, s := range n.Try {
+			collectStmtIdentUses(s, used)
+		}
+		for _, s := range n.Catch {
+			collectStmtIdentUses(s, used)
+		}
+	case *ast.MatchStmt:
+		collectIdentUses(n.Value, used)
+		for _, c := range n.Cases {
+			for _, s := range c.Body {
+				collectStmtIdentUses(s, used)
+			}
+		}
+	case *ast.SelectStmt:
+		for _, arm := range n.Arms {
+			if arm.Channel != nil {
+				collectIdentUses(arm.Channel, used)
+			}
+			if arm.Value != nil {
+				collectIdentUses(arm.Value, used)
+			}
+			if arm.Seconds != nil {
+				collectIdentUses(arm.Seconds, used)
+			}
+			for _, s := range arm.Body {
+				collectStmtIdentUses(s, used)
+			}
+		}
+	}
+}
+
+func collectIdentUses(expr ast.Expr, used map[string]bool) {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		used[n.Name] = true
+	case *ast.BinaryExpr:
+		collectIdentUses(n.Left, used)
+		collectIdentUses(n.Right, used)
+	case *ast.UnaryExpr:
+		collectIdentUses(n.Expr, used)
+	case *ast.CallExpr:
+		collectIdentUses(n.Callee, used)
+		for _, a := range n.Args {
+			collectIdentUses(a, used)
+		}
+	case *ast.MemberExpr:
+		collectIdentUses(n.Target, used)
+	case *ast.IndexExpr:
+		collectIdentUses(n.Target, used)
+		collectIdentUses(n.Index, used)
+	case *ast.ArrayLit:
+		for _, e := range n.Elems {
+			collectIdentUses(e, used)
+		}
+	case *ast.DictLit:
+		for _, p := range n.Props {
+			collectIdentUses(p.Value, used)
+		}
+	case *ast.TryExpr:
+		collectIdentUses(n.Expr, used)
+	case *ast.FuncLit:
+		// Nested functions own their parameters; do not count their
+		// body as usage for the outer function's parameter check.
+	case *ast.SpawnExpr:
+		collectIdentUses(n.Callee, used)
+	case *ast.AwaitExpr:
+		collectIdentUses(n.Target, used)
 	}
 }
 

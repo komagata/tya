@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.10 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-10-specification">Tya v0.10 Specification</h1>
+<p>This document is the specification for Tya v0.10 after v0.9 class visibility, private members, private constructors, and abstract classes.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.10 is about abstract behavior contracts and final classes.</p>
+<p>v0.9 adds abstract classes that cannot be directly constructed. v0.10 adds abstract methods so abstract classes can require subclasses to implement specific behavior. It also adds <code>final class</code> so a class can explicitly opt out of subclassing.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Add abstract instance methods.</li>
+<li>Add abstract class methods.</li>
+<li>Require concrete subclasses to implement inherited abstract methods.</li>
+<li>Keep abstract methods body-free.</li>
+<li>Add final classes.</li>
+<li>Keep interfaces and implicit interface conformance for later versions.</li>
+</ul>
+<h2 id="included-in-v0-10">Included in v0.10</h2>
+<p>v0.10 includes all v0.9 class behavior and adds:</p>
+<ul>
+<li><code>abstract method = args -&gt;</code></li>
+<li><code>abstract @@method = args -&gt;</code></li>
+<li>abstract methods only inside abstract classes</li>
+<li>concrete subclass implementation checks</li>
+<li>abstract subclass partial implementation</li>
+<li>abstract method overriding with matching arity</li>
+<li><code>final class Name</code></li>
+<li>final class inheritance checks</li>
+</ul>
+<h2 id="not-included-in-v0-10">Not Included in v0.10</h2>
+<p>v0.10 does not include:</p>
+<ul>
+<li>interface declarations</li>
+<li><code>implements</code></li>
+<li>implicit interface conformance checks</li>
+<li>abstract fields</li>
+<li>abstract constructors</li>
+<li>final methods</li>
+<li>final fields</li>
+<li>sealed classes</li>
+<li>base classes</li>
+<li>mixins</li>
+<li>method overloading</li>
+<li>operator overloading</li>
+<li>decorators</li>
+<li>metaclasses</li>
+<li>type annotations</li>
+<li>generics</li>
+<li>dictionary member access with <code>dict.key</code></li>
+<li>package manager</li>
+<li>native-backed stdlib</li>
+</ul>
+<h2 id="abstract-instance-methods">Abstract Instance Methods</h2>
+<p>An abstract instance method declares a required instance method without a body.</p>
+<pre><code class="language-tya">abstract class Repository
+  abstract find = id -&gt;
+  abstract save = record -&gt;</code></pre>
+<p>Only abstract classes may declare abstract methods.</p>
+<pre><code class="language-tya">class Repository
+  abstract find = id -&gt;</code></pre>
+<p>The <code>abstract find</code> declaration is an error because <code>Repository</code> is not abstract.</p>
+<p>An abstract method has a name and parameter list. It does not have a method body.</p>
+<h2 id="implementing-abstract-instance-methods">Implementing Abstract Instance Methods</h2>
+<p>A concrete subclass must implement every inherited abstract instance method.</p>
+<pre><code class="language-tya">abstract class Repository
+  abstract find = id -&gt;
+  abstract save = record -&gt;
+
+class UserRepository extends Repository
+  find = id -&gt;
+    &quot;user&quot;
+
+  save = record -&gt;
+    nil</code></pre>
+<p>If a concrete subclass omits an abstract method, it is an error.</p>
+<pre><code class="language-tya">class BrokenRepository extends Repository
+  find = id -&gt;
+    &quot;user&quot;</code></pre>
+<p><code>BrokenRepository</code> is invalid because <code>save</code> is not implemented.</p>
+<p>The implementation must use the same arity as the abstract method.</p>
+<pre><code class="language-tya">class BadRepository extends Repository
+  find = first, second -&gt;
+    &quot;user&quot;
+
+  save = record -&gt;
+    nil</code></pre>
+<p>The <code>find</code> implementation is invalid because its arity differs from the abstract method.</p>
+<h2 id="abstract-subclasses">Abstract Subclasses</h2>
+<p>An abstract subclass may leave inherited abstract methods unimplemented.</p>
+<pre><code class="language-tya">abstract class ReadOnlyRepository extends Repository
+  find = id -&gt;
+    &quot;record&quot;</code></pre>
+<p><code>ReadOnlyRepository</code> is valid because it is abstract. A concrete subclass of <code>ReadOnlyRepository</code> must still implement <code>save</code>.</p>
+<p>An abstract subclass may also introduce new abstract methods.</p>
+<pre><code class="language-tya">abstract class SearchRepository extends Repository
+  abstract search = query -&gt;</code></pre>
+<h2 id="abstract-class-methods">Abstract Class Methods</h2>
+<p>An abstract class method declares a required class method without a body.</p>
+<pre><code class="language-tya">abstract class Model
+  abstract @@table_name = -&gt;</code></pre>
+<p>A concrete subclass must implement inherited abstract class methods.</p>
+<pre><code class="language-tya">class User extends Model
+  @@table_name = -&gt;
+    &quot;users&quot;</code></pre>
+<p>The implementation must use the same arity as the abstract class method.</p>
+<p>Abstract class methods participate in class-level inheritance like normal class methods once they are implemented.</p>
+<h2 id="abstract-methods-and-super">Abstract Methods and <code>super</code></h2>
+<p><code>super(args...)</code> cannot call an abstract parent method because there is no method body to execute.</p>
+<pre><code class="language-tya">abstract class User
+  abstract label = -&gt;
+
+class Admin extends User
+  label = -&gt;
+    super()</code></pre>
+<p>The <code>super()</code> call is an error.</p>
+<h2 id="final-classes">Final Classes</h2>
+<p>A final class can be constructed normally but cannot be extended.</p>
+<pre><code class="language-tya">final class User
+  name = &quot;&quot;</code></pre>
+<p>Direct construction is valid.</p>
+<pre><code class="language-tya">user = User()</code></pre>
+<p>Subclassing is invalid.</p>
+<pre><code class="language-tya">class Admin extends User</code></pre>
+<p>The <code>Admin</code> declaration is an error because <code>User</code> is final.</p>
+<h2 id="final-and-abstract-modifiers">Final and Abstract Modifiers</h2>
+<p><code>abstract</code> and <code>final</code> cannot be used together on the same class.</p>
+<pre><code class="language-tya">abstract final class User</code></pre>
+<p>The declaration is an error.</p>
+<p><code>final class</code> may still contain private members, class variables, class methods, instance field defaults, and constructors.</p>
+<pre><code class="language-tya">final class User
+  _name = &quot;&quot;
+
+  init = name -&gt;
+    @_name = name</code></pre>
+<h2 id="modules">Modules</h2>
+<p>Abstract methods and final classes work inside modules.</p>
+<pre><code class="language-tya">module repositories
+  abstract class Repository
+    abstract find = id -&gt;
+
+  final class UserRepository extends Repository
+    find = id -&gt;
+      &quot;user&quot;</code></pre>
+<p>Module users follow the same construction and inheritance rules.</p>
+<pre><code class="language-tya">import repositories
+
+repo = repositories.UserRepository()</code></pre>
+<h2 id="introspection">Introspection</h2>
+<p>v0.10 keeps the v0.8 introspection surface:</p>
+<ul>
+<li><code>object.class</code></li>
+<li><code>object.class_name</code></li>
+<li><code>ClassName.name</code></li>
+<li><code>ClassName.parent</code></li>
+</ul>
+<p>v0.10 does not add introspection for abstract methods or final classes.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.10 implementations should report source-oriented errors for:</p>
+<ul>
+<li>abstract methods declared outside abstract classes</li>
+<li>abstract methods with bodies</li>
+<li>concrete classes missing inherited abstract instance methods</li>
+<li>concrete classes missing inherited abstract class methods</li>
+<li>abstract method implementation arity mismatch</li>
+<li>abstract class method implementation arity mismatch</li>
+<li><code>super</code> targeting an abstract parent method</li>
+<li>extending a final class</li>
+<li>declaring a class as both abstract and final</li>
+<li>dictionary member access with dot syntax</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

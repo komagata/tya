@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.27 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-27-specification">Tya v0.27 Specification</h1>
+<p>This document is the specification for Tya v0.27 after v0.26 external package management.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.27 adds hexadecimal and binary integer literals.</p>
+<p>These are small additions to the lexer and number-literal handling. They do not change the value model: every numeric literal still produces an <code>int</code> or <code>float</code> of the same kind as before. Binary and hex literals are simply a more readable way to write integer constants — particularly useful for bit-level work introduced in v0.25 (NES emulators, network protocols, CPU-flag tables).</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Add hexadecimal integer literals (<code>0xFF</code>).</li>
+<li>Add binary integer literals (<code>0b1010</code>).</li>
+<li>Allow underscores between digits as visual separators.</li>
+<li>Keep all other syntax, types, and semantics unchanged.</li>
+</ul>
+<h2 id="included-in-v0-27">Included in v0.27</h2>
+<p>v0.27 includes all v0.26 behavior and adds:</p>
+<ul>
+<li>Hexadecimal integer literals</li>
+<li>Binary integer literals</li>
+<li>Digit-group underscore separators (<code>1_000_000</code>, <code>0xff_ee</code>, <code>0b1010_0011</code>)</li>
+</ul>
+<h2 id="not-included-in-v0-27">Not Included in v0.27</h2>
+<p>v0.27 does not include:</p>
+<ul>
+<li>Octal literals (<code>0o755</code>)</li>
+<li>Hexadecimal float literals (<code>0x1.fp10</code>)</li>
+<li>Numeric type suffixes (<code>123u</code>, <code>1.5f</code>)</li>
+<li>Arbitrary-precision (big-int / big-decimal)</li>
+<li>Implicit base inference for parsed strings</li>
+</ul>
+<h2 id="hexadecimal-literals">Hexadecimal Literals</h2>
+<p>A hexadecimal integer literal starts with <code>0x</code> or <code>0X</code> followed by one or more hexadecimal digits (<code>0</code>-<code>9</code>, <code>a</code>-<code>f</code>, <code>A</code>-<code>F</code>).</p>
+<pre><code class="language-tya">255           # decimal
+0xff          # 255
+0xFF          # 255
+0xCAFE        # 51966
+0x00          # 0</code></pre>
+<p>Lower-case and upper-case digits both work. The <code>0x</code> / <code>0X</code> prefix is also case-insensitive.</p>
+<p>Hex literals are always integers (<code>int</code>). They have no fractional form in v0.27.</p>
+<p>Underscores may appear between hex digits as visual separators:</p>
+<pre><code class="language-tya">0xff_ee_dd
+0x_dead_beef</code></pre>
+<p>A leading underscore directly after <code>0x</code> is permitted; trailing underscores and consecutive underscores within the digit run are also permitted as long as at least one hex digit appears.</p>
+<h2 id="binary-literals">Binary Literals</h2>
+<p>A binary integer literal starts with <code>0b</code> or <code>0B</code> followed by one or more binary digits (<code>0</code>, <code>1</code>).</p>
+<pre><code class="language-tya">0b1010        # 10
+0b1111_1111   # 255
+0b0           # 0</code></pre>
+<p>Underscore separators apply the same way as for hex literals.</p>
+<h2 id="decimal-literal-underscores">Decimal Literal Underscores</h2>
+<p>Plain decimal literals also accept underscores between digits:</p>
+<pre><code class="language-tya">1_000
+1_000_000
+3.14
+1_000.5</code></pre>
+<p>Underscores are illegal at the start of a decimal literal (<code>_123</code> is an identifier, not a number) and inside the fractional part of a float they are also allowed (<code>1_000.500_500</code>).</p>
+<h2 id="negative-literals">Negative Literals</h2>
+<p>There is no negative-prefix form for integer literals. <code>-0xff</code> parses as the unary <code>-</code> operator applied to <code>0xff</code>, identical to the existing behavior for <code>-1</code>.</p>
+<pre><code class="language-tya">x = -0xff      # -255
+y = -0b10      # -2</code></pre>
+<h2 id="equivalence">Equivalence</h2>
+<p>Hex, binary, and decimal literals produce **identical** Tya values when they represent the same integer. The compiler and runtime see no distinction after parsing:</p>
+<pre><code class="language-tya">255 == 0xff           # true
+255 == 0b1111_1111    # true
+kind(0xff)            # &quot;int&quot;</code></pre>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.27 implementations should report source-oriented errors for:</p>
+<ul>
+<li>a <code>0x</code> prefix not followed by at least one hex digit</li>
+<li>a <code>0b</code> prefix not followed by at least one binary digit</li>
+<li>a hex literal containing a non-hex digit (e.g. <code>0x1g</code>)</li>
+<li>a binary literal containing a digit other than <code>0</code> or <code>1</code></li>
+<li>two adjacent underscores at the start of a literal where no digit has</li>
+</ul>
+<p>  yet appeared</p>
+<p>Diagnostics should mention the offending literal and indicate whether the prefix is <code>0x</code> or <code>0b</code>.</p>
+<h2 id="implementation-notes-non-normative">Implementation Notes (non-normative)</h2>
+<ul>
+<li>Lexer: when the digit-scan starts and the input is <code>0x</code>/<code>0X</code> or <code>0b</code>/</li>
+</ul>
+<p>  <code>0B</code>, switch to a hex- or binary-digit run, accept underscores, and emit   an <code>INT</code> token with the canonical decimal lexeme so the existing   <code>strconv.ParseInt(text, 10, 64)</code> path continues to work. Alternatively,   pass the value through directly as <code>strconv.ParseInt(_, 16, 64)</code> and   store the canonical decimal text in the token lexeme.</p>
+<ul>
+<li>Codegen: nothing changes; the token already carries an integer value.</li>
+<li>Eval: nothing changes; literal evaluation reads the lexeme.</li>
+</ul>
+<p>These notes are guidance, not the spec; conforming implementations may differ as long as the user-visible behavior matches.</p>
+    </article>
+  </main>
+</body>
+</html>

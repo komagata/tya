@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.52 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-52-release-notes">Tya v0.52 Release Notes</h1>
+<p>&gt; **Status:** shipped. <code>tya version</code> reports <code>0.52.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.52 adds the fifth toolchain subcommand: **<code>tya lsp</code>**, an LSP (Language Server Protocol) server. The same <code>tya</code> binary now implements the language server, so the compiler and the editor never drift out of sync.</p>
+<p>A VS Code extension scaffold ships in <code>editors/vscode/</code> for the manual install path; Marketplace publication is queued for v0.53+.</p>
+<p>The language surface is unchanged from v0.49 / v0.50 / v0.51.</p>
+<h2 id="what-s-new">What's new</h2>
+<h3 id="tya-lsp"><code>tya lsp</code></h3>
+<pre><code class="language-sh">$ tya lsp [--log /tmp/tya-lsp.log]</code></pre>
+<p>LSP JSON-RPC 2.0 over stdio. v0.52 advertises:</p>
+<ul>
+<li><code>textDocumentSync</code> = Full</li>
+<li><code>hoverProvider</code></li>
+<li><code>definitionProvider</code></li>
+<li><code>completionProvider</code></li>
+<li><code>documentFormattingProvider</code></li>
+</ul>
+<p>Diagnostics fire on <code>didOpen</code> / <code>didChange</code> / <code>didSave</code> and cover the same surface as the <code>tya check</code> and <code>tya lint</code> CLIs.</p>
+<h3 id="vs-code-extension-editors-vscode">VS Code extension (<code>editors/vscode/</code>)</h3>
+<p>Minimal TypeScript wrapper around <code>vscode-languageclient</code>. Ships with:</p>
+<ul>
+<li>Static TextMate grammar for syntax highlighting</li>
+<li>Settings <code>tya.executable</code> + <code>tya.trace.server</code></li>
+<li><code>package.json</code> manifest at <code>version: 0.52.0</code></li>
+</ul>
+<p>Install manually:</p>
+<pre><code class="language-sh">cd editors/vscode
+npm install
+npm run compile
+npx vsce package
+code --install-extension tya-0.52.0.vsix</code></pre>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>Language: unchanged from v0.49 / v0.50 / v0.51.</li>
+<li><code>tya.toml</code> schema: unchanged.</li>
+<li>CLI: every existing subcommand keeps its v0.51 behaviour. The</li>
+</ul>
+<p>  <code>tya lsp</code> subcommand is purely additive.</p>
+<h2 id="migration">Migration</h2>
+<p>Nothing required. To opt in:</p>
+<ol>
+<li><code>brew install komagata/tap/tya</code> (or upgrade) to a v0.52 binary.</li>
+</ol>
+<p>2. Build the VS Code extension once: <code>cd editors/vscode &amp;&amp; npm install &amp;&amp; npm run compile &amp;&amp; npx vsce package &amp;&amp; code --install-extension tya-0.52.0.vsix</code>. 3. Open any <code>.tya</code> file. Diagnostics, hover, goto-definition, and    format-on-save should work out of the box.</p>
+<h2 id="implementation-notes">Implementation notes</h2>
+<ul>
+<li>New package <code>internal/lsp/</code> with 14 source files plus a unit-test file.</li>
+<li>JSON-RPC framing (<code>rpc.go</code>) is hand-rolled on top of <code>encoding/json</code>. No new external dependencies. <code>go.mod</code> is unchanged.</li>
+<li>LSP protocol types (<code>protocol.go</code>) are hand-written, minimal, and live in one file so future fields are one-line additions.</li>
+<li>Diagnostics pipeline reuses <code>checker.CheckAll</code>, <code>parser.OrphanComments</code>, <code>checker.CollectUnused</code>, and <code>checker.CollectLintFindings</code> so the LSP server stays semantically identical to <code>tya check</code> + <code>tya lint</code>.</li>
+<li>Formatting routes directly through <code>formatter.Unparse</code>.</li>
+<li>Hover/definition/completion build a fresh <code>SymbolIndex</code> per request — programs are small enough that the rebuild cost beats incremental bookkeeping.</li>
+<li><code>internal/checker.BuiltinNames()</code> is now a public accessor (used by completion).</li>
+<li><code>internal/doc.FuncSignature</code> was renamed from <code>funcSignature</code> so hover can render canonical signatures.</li>
+</ul>
+<h2 id="tests">Tests</h2>
+<p><code>tests/lsp_test.go</code> exercises seven subprocess scenarios (build a binary once with <code>os.MkdirTemp</code>, then run all cases against it).</p>
+<h2 id="looking-ahead-v0-53-candidates">Looking ahead (v0.53+ candidates)</h2>
+<p>From <code>ROADMAP.md</code> § Future Work § Toolchain:</p>
+<ul>
+<li>Cross-file definition resolution (follow <code>import</code>)</li>
+<li>Rename / references</li>
+<li>Range formatting (AST slice unparser)</li>
+<li>Code actions (TYAL quick fixes)</li>
+<li>Semantic tokens</li>
+<li>VS Code Marketplace publication (publisher ID, signed VSIX)</li>
+<li>Helix / Neovim / Zed setup recipes</li>
+<li>Incremental document sync</li>
+</ul>
+<p>Self-host work (<code>ROADMAP.md</code> § Scheduled M8/M9/M10) remains deferred until the v1.0.0 prep window.</p>
+    </article>
+  </main>
+</body>
+</html>

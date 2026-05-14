@@ -13,7 +13,7 @@ import (
 )
 
 // lintCommand implements
-// `tya lint [--fix] [--format=text|json] [paths...]`. Each path is
+// `tya lint [--fix] [--format=text|json|sarif] [paths...]`. Each path is
 // a single .tya source file or a directory; directories are walked
 // recursively for files ending in ".tya". With no paths, lint
 // defaults to the current directory.
@@ -25,11 +25,15 @@ import (
 //	TYAL0003 redundant if true/false   (autofix: unwrap-if since v0.55)
 //	TYAL0004 deeply nested blocks       (warn only)
 //	TYAL0005 very long functions        (warn only)
+//	TYAL0006 suspicious for index names (warn only)
+//	TYAL0007 unused function parameter  (warn only)
+//	TYAL0008 shadowed binding           (warn only)
 //
 // `--format=text` (default) prints `path:line:col: CODE message` one
 // per line. `--format=json` emits a single JSON object with a
 // `findings` array. Findings on lines bearing
 // `# tya-lint-ignore[: CODE[, CODE...]]` are filtered before output.
+// `--format=sarif` emits SARIF 2.1.0 for code scanning tools.
 // Exit status: 0 clean / 1 findings remain / 2 arg or I/O error.
 func lintCommand(args []string) int {
 	fix, format, paths, err := parseLintArgs(args)
@@ -77,6 +81,11 @@ func lintCommand(args []string) int {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
 		}
+	case "sarif":
+		if err := writeLintSARIF(os.Stdout, all); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 2
+		}
 	default:
 		for _, f := range all {
 			fmt.Fprintf(os.Stdout, "%s:%d:%d: %s %s\n", f.Path, f.Line, f.Col, f.Code, f.Message)
@@ -96,12 +105,12 @@ func parseLintArgs(args []string) (fix bool, format string, paths []string, err 
 		case a == "--fix":
 			fix = true
 		case a == "-h" || a == "--help":
-			return false, "", nil, fmt.Errorf("usage: tya lint [--fix] [--format=text|json] [paths...]")
+			return false, "", nil, fmt.Errorf("usage: tya lint [--fix] [--format=text|json|sarif] [paths...]")
 		case strings.HasPrefix(a, "--format="):
 			format = a[len("--format="):]
 		case a == "--format":
 			if i+1 >= len(args) {
-				return false, "", nil, fmt.Errorf("--format requires a value (text|json)")
+				return false, "", nil, fmt.Errorf("--format requires a value (text|json|sarif)")
 			}
 			i++
 			format = args[i]
@@ -111,8 +120,8 @@ func parseLintArgs(args []string) (fix bool, format string, paths []string, err 
 			paths = append(paths, a)
 		}
 	}
-	if format != "text" && format != "json" {
-		return false, "", nil, fmt.Errorf("--format must be text or json (got %q)", format)
+	if format != "text" && format != "json" && format != "sarif" {
+		return false, "", nil, fmt.Errorf("--format must be text, json, or sarif (got %q)", format)
 	}
 	return fix, format, paths, nil
 }
@@ -205,6 +214,9 @@ func lintOneFile(path string, fix bool) ([]lintFinding, error) {
 
 	out := []lintFinding{}
 	for _, b := range unused {
+		if b.Line < 1 {
+			continue
+		}
 		if optouts.suppressed(b.Line, "TYAL0001") {
 			continue
 		}
@@ -216,6 +228,7 @@ func lintOneFile(path string, fix bool) ([]lintFinding, error) {
 			Message:     fmt.Sprintf("unused local %q", b.Name),
 			Autofixable: true,
 		})
+		out[len(out)-1] = enrichLintFinding(out[len(out)-1])
 	}
 	for _, f := range other {
 		if optouts.suppressed(f.Line, f.Code) {
@@ -229,6 +242,7 @@ func lintOneFile(path string, fix bool) ([]lintFinding, error) {
 			Message:     f.Message,
 			Autofixable: f.Code == "TYAL0003",
 		})
+		out[len(out)-1] = enrichLintFinding(out[len(out)-1])
 	}
 	return out, nil
 }
@@ -250,12 +264,13 @@ func lintApplyUnwrapIf(source string) (string, int, error) {
 	return newSrc, n, nil
 }
 
-// fixUnusedLines removes any source line that introduces one of the
-// unused bindings. We match by (line, col, name) — a binding lives
-// at the head of an `assign` statement so its column points at the
-// name token, and the surrounding line is safe to drop verbatim.
+// fixUnusedLines removes any source range that introduces one of the
+// unused bindings. Single-line bindings drop only their own line.
+// Multi-line bindings also drop following indented continuation lines
+// so `name =` blocks do not leave orphan body lines behind.
 // Returns the new source and the number of lines removed.
 func fixUnusedLines(source string, unused []checker.UnusedBinding) (string, int) {
+	hadTrailingNewline := strings.HasSuffix(source, "\n")
 	lines := strings.Split(source, "\n")
 	dropLine := make(map[int]bool)
 	for _, b := range unused {
@@ -267,7 +282,19 @@ func fixUnusedLines(source string, unused []checker.UnusedBinding) (string, int)
 		if !strings.HasPrefix(trimmed, b.Name) {
 			continue
 		}
+		indent := leadingSpaces(lines[idx])
 		dropLine[idx] = true
+		for j := idx + 1; j < len(lines); j++ {
+			line := lines[j]
+			if strings.TrimSpace(line) == "" {
+				dropLine[j] = true
+				continue
+			}
+			if leadingSpaces(line) <= indent {
+				break
+			}
+			dropLine[j] = true
+		}
 	}
 	if len(dropLine) == 0 {
 		return source, 0
@@ -279,5 +306,20 @@ func fixUnusedLines(source string, unused []checker.UnusedBinding) (string, int)
 		}
 		out = append(out, line)
 	}
-	return strings.Join(out, "\n"), len(dropLine)
+	for len(out) > 1 && out[len(out)-1] == "" && out[len(out)-2] == "" {
+		out = out[:len(out)-1]
+	}
+	result := strings.Join(out, "\n")
+	if hadTrailingNewline && !strings.HasSuffix(result, "\n") {
+		result += "\n"
+	}
+	return result, len(dropLine)
+}
+
+func leadingSpaces(line string) int {
+	n := 0
+	for n < len(line) && line[n] == ' ' {
+		n++
+	}
+	return n
 }

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.37 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-37-specification-canonical-syntax-step-5">Tya v0.37 Specification — Canonical Syntax, Step 5</h1>
+<p>Tya v0.37 introduces the **AST-driven canonical serializer** (<code>unparse</code>) that Canonical Syntax §11.3 requires. v0.37 ships the foundation: <code>formatter.Unparse(prog *ast.Program) (string, error)</code> that handles a useful subset of the AST. v0.38 extends coverage and adds the wrap rules; v0.39 wires the serializer into the user-facing <code>tya format</code> command and normalizes the codebase.</p>
+<p>v0.37 does not change <code>tya fmt</code> behavior. The existing v0.2 text formatter continues to ship. The serializer is exported for tests and opt-in tooling.</p>
+<h2 id="goals-v0-37">Goals (v0.37)</h2>
+<ul>
+<li>New <code>internal/formatter.Unparse(prog) (string, error)</code> that</li>
+</ul>
+<p>  renders <code>prog</code> as canonical Tya source for the supported subset.</p>
+<ul>
+<li>Coverage of the *common case* of Tya programs: imports, simple</li>
+</ul>
+<p>  assignments (with all literal / operator / call / member / index   / array / dict expressions), expression statements, returns,   raises, break / continue, single-line and block-bodied lambdas,   <code>if</code> / <code>elseif</code> / <code>else</code>, <code>while</code>, <code>for</code>.</p>
+<ul>
+<li>Operator spacing, single-line forms, and indentation per</li>
+</ul>
+<p>  CANONICAL §4 / §7.</p>
+<ul>
+<li><code>if … elseif …</code> is emitted using the canonical <code>elseif</code> keyword</li>
+</ul>
+<p>  even when the source spelled it as nested <code>else / if</code>.</p>
+<h2 id="non-goals-v0-37">Non-Goals (v0.37)</h2>
+<ul>
+<li>Module / class / interface declarations — <code>Unparse</code> returns an</li>
+</ul>
+<p>  unsupported error for these. v0.38 covers them.</p>
+<ul>
+<li><code>match</code> / <code>try</code> / <code>raise</code> (raise is supported; match and</li>
+</ul>
+<p>  try/catch are deferred).</p>
+<ul>
+<li>Multi-line wrap forms (CANONICAL §5). All output is single-line</li>
+</ul>
+<p>  per construct in v0.37.</p>
+<ul>
+<li>80-column limit and atomic-token exception.</li>
+<li><code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> rewrite rule (CANONICAL §6.3).</li>
+<li>Comment emission. <code>Unparse</code> does not yet read</li>
+</ul>
+<p>  <code>Program.HeaderComments</code> or <code>Program.Comments</code>. v0.38 wires those   in.</p>
+<ul>
+<li>Empty-<code>else</code> removal, import sort, blank-line rules. Deferred.</li>
+<li>Replacing <code>tya fmt</code> with the AST-driven serializer.</li>
+<li>Idempotency or full round-trip guarantees outside the supported</li>
+</ul>
+<p>  subset.</p>
+<h2 id="api">API</h2>
+<pre><code class="language-go">package formatter
+
+// Unparse renders prog as canonical Tya source. Returns an error
+// when the AST contains a node v0.37 does not yet handle. The
+// existing FormatSource(string) text pass is unchanged.
+func Unparse(prog *ast.Program) (string, error)</code></pre>
+<p>The error is a sentinel-style <code>fmt.Errorf(&quot;formatter.Unparse: …&quot;)</code>. Callers (tests, tooling) decide whether to fall back to the text formatter or surface the error.</p>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<p>A v0.37 build is acceptable when:</p>
+<ol>
+<li><code>formatter.Unparse</code> round-trips programs in the supported subset</li>
+</ol>
+<p>   to canonical source: assignments, imports, expression    statements, returns / raises / break / continue, <code>if</code> /    <code>elseif</code> / <code>else</code>, <code>while</code>, <code>for</code>, single-line and block-bodied    <code>name -&gt; body</code> and <code>(a, b) -&gt; body</code> lambdas, all literal /    operator / call / member / index / array / dict expressions. 2. <code>Unparse</code> returns an unsupported error when the AST contains a    <code>module</code> / <code>class</code> / <code>interface</code> / <code>match</code> / <code>try</code> node. 3. The default <code>tya fmt</code> and <code>tya format</code> continue to use the    v0.2 text pass; no behavior change for existing CLI users. 4. <code>go test ./... -count=1</code> passes, including the self-host    invariant.</p>
+<h2 id="multi-version-plan-updated">Multi-Version Plan (updated)</h2>
+<p>| Version | Step                                                   | |---------|--------------------------------------------------------| | v0.33   | Parenthesized multi-parameter lambda. (Done.)          | | v0.34   | Lexer comment capture; <code>Program.HeaderComments</code>. (Done.)| | v0.35   | Per-stmt <code>Comments</code> map at top level. (Done.)          | | v0.36   | Nested-body comment attachment. (Done.)                | | v0.37   | <code>Unparse</code> foundation for common-case subset. (This release.) | | v0.38   | Extend <code>Unparse</code> to modules / classes / match / try; emit comments; add empty-<code>else</code> removal, import sort, blank-line rules. | | v0.39   | Multi-line wrap (§5), 80-column limit, <code>&quot;&quot;&quot;...&quot;&quot;&quot;</code> rewrite (§6.3), idempotency. | | v0.40   | Replace text formatter with AST-driven serializer; normalize codebase; reject non-canonical forms. |</p>
+<h2 id="self-host-invariant">Self-Host Invariant</h2>
+<p><code>Unparse</code> is not on the self-host path. The v0.2 text formatter remains the only user-facing serializer. <code>TestSelfhostV01Scripts</code> continues to pass.</p>
+    </article>
+  </main>
+</body>
+</html>

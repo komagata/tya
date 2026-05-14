@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://tya-lang.org/">
-    <img src="docs/assets/tya-logo.png" alt="Tya logo" width="220">
+    <img src="docs_site/assets/tya-logo.png" alt="Tya logo" width="220">
   </a>
 </p>
 
@@ -190,6 +190,8 @@ print(["tya"].first())
 - [Spec](https://tya-lang.org/spec.html): latest Tya language specification.
 - [API](https://tya-lang.org/api.html): latest built-in function reference.
 - [Stdlib](https://tya-lang.org/stdlib.html): standard library reference.
+- [Lint](https://tya-lang.org/lint.html): lint rules, opt-outs, and output
+  formats.
 - [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Versions](https://tya-lang.org/versions.html): minor-version specs and release
   snapshots.
@@ -221,7 +223,7 @@ print(["tya"].first())
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
 Markdown source files are kept in `docs/` for editing. The public website uses
-the generated HTML pages under `docs/*.html`.
+the generated HTML pages under `docs_site/`.
 
 ## Language Scope
 
@@ -328,8 +330,8 @@ sh scripts/go_emit_examples_check.sh
 sh scripts/go_emit_args_check.sh
 ```
 
-The website is served from `docs/` by GitHub Pages. Markdown source files are
-converted to static HTML pages with:
+The website is served from `docs_site/` by GitHub Pages. Markdown source files
+are converted to static HTML pages with:
 
 ```sh
 node scripts/build_docs_pages.js

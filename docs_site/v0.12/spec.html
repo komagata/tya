@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.12 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-12-specification">Tya v0.12 Specification</h1>
+<p>This document is the specification for Tya v0.12 after v0.11 explicit interfaces and <code>implements</code>.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.12 is about interface inheritance and precise conflict diagnostics.</p>
+<p>v0.11 adds explicit interfaces as standalone contracts. v0.12 lets interfaces extend other interfaces so contracts can be composed without repeating method requirements. Because Tya does not support method overloading, v0.12 also defines how conflicting interface requirements are rejected and reported.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Add <code>interface Child extends Parent</code>.</li>
+<li>Allow an interface to extend multiple interfaces.</li>
+<li>Require classes that implement a child interface to satisfy inherited requirements.</li>
+<li>Reject interface inheritance cycles.</li>
+<li>Reject method requirement conflicts with different arity.</li>
+<li>Require conflict diagnostics to name the relevant interfaces, method, and arities.</li>
+<li>Keep interface inheritance separate from class inheritance.</li>
+</ul>
+<h2 id="included-in-v0-12">Included in v0.12</h2>
+<p>v0.12 includes all v0.11 interface behavior and adds:</p>
+<ul>
+<li><code>interface Child extends Parent</code></li>
+<li><code>interface Combined extends First, Second</code></li>
+<li>inherited interface method requirements</li>
+<li>transitive interface inheritance</li>
+<li>implementation checks through inherited interface requirements</li>
+<li>interface inheritance cycle checks</li>
+<li>conflict diagnostics for incompatible interface method requirements</li>
+<li>module-qualified interface inheritance</li>
+</ul>
+<h2 id="not-included-in-v0-12">Not Included in v0.12</h2>
+<p>v0.12 does not include:</p>
+<ul>
+<li>implicit interfaces generated from classes</li>
+<li>implementing a class as if it were an interface</li>
+<li>classes extending interfaces</li>
+<li>interfaces extending classes</li>
+<li>default interface method bodies</li>
+<li>interface fields</li>
+<li>interface class methods</li>
+<li>private interface methods</li>
+<li>interface introspection</li>
+<li>sealed classes</li>
+<li>base classes</li>
+<li>mixins</li>
+<li>traits</li>
+<li>final methods</li>
+<li>final fields</li>
+<li>type annotations</li>
+<li>generics</li>
+<li>method overloading</li>
+<li>operator overloading</li>
+<li>decorators</li>
+<li>metaclasses</li>
+<li>dictionary member access with <code>dict.key</code></li>
+<li>package manager</li>
+<li>native-backed stdlib</li>
+</ul>
+<h2 id="interface-inheritance">Interface Inheritance</h2>
+<p>An interface may extend another interface.</p>
+<pre><code class="language-tya">interface Reader
+  read = -&gt;
+
+interface SeekableReader extends Reader
+  seek = offset -&gt;</code></pre>
+<p><code>SeekableReader</code> requires both <code>read</code> and <code>seek</code>.</p>
+<p>A class that implements <code>SeekableReader</code> must implement inherited requirements from <code>Reader</code> as well as requirements declared directly in <code>SeekableReader</code>.</p>
+<pre><code class="language-tya">class File implements SeekableReader
+  read = -&gt;
+    &quot;data&quot;
+
+  seek = offset -&gt;
+    nil</code></pre>
+<p>This is valid because <code>File</code> implements both required methods.</p>
+<pre><code class="language-tya">class BrokenFile implements SeekableReader
+  seek = offset -&gt;
+    nil</code></pre>
+<p><code>BrokenFile</code> is invalid because the inherited <code>read</code> requirement is missing.</p>
+<h2 id="multiple-interface-inheritance">Multiple Interface Inheritance</h2>
+<p>An interface may extend multiple interfaces.</p>
+<pre><code class="language-tya">interface Reader
+  read = -&gt;
+
+interface Writer
+  write = value -&gt;
+
+interface ReadWriter extends Reader, Writer</code></pre>
+<p><code>ReadWriter</code> requires both <code>read</code> and <code>write</code>.</p>
+<p>An interface may add its own requirements while extending other interfaces.</p>
+<pre><code class="language-tya">interface Closable
+  close = -&gt;
+
+interface FileHandle extends Reader, Writer, Closable
+  path = -&gt;</code></pre>
+<p><code>FileHandle</code> requires <code>read</code>, <code>write</code>, <code>close</code>, and <code>path</code>.</p>
+<h2 id="transitive-inheritance">Transitive Inheritance</h2>
+<p>Interface inheritance is transitive.</p>
+<pre><code class="language-tya">interface Named
+  name = -&gt;
+
+interface Displayable extends Named
+  display = -&gt;
+
+interface MenuItem extends Displayable
+  select = -&gt;</code></pre>
+<p><code>MenuItem</code> requires <code>name</code>, <code>display</code>, and <code>select</code>.</p>
+<h2 id="compatible-duplicate-requirements">Compatible Duplicate Requirements</h2>
+<p>If inherited interfaces require the same method with the same arity, the requirements are compatible.</p>
+<pre><code class="language-tya">interface Named
+  name = -&gt;
+
+interface Labeled
+  name = -&gt;
+
+interface MenuItem extends Named, Labeled</code></pre>
+<p><code>MenuItem</code> has one <code>name</code> requirement.</p>
+<pre><code class="language-tya">class Item implements MenuItem
+  name = -&gt;
+    &quot;File&quot;</code></pre>
+<p>One implementation satisfies both inherited requirements.</p>
+<h2 id="conflicting-requirements">Conflicting Requirements</h2>
+<p>If inherited interfaces require the same method name with different arity, the interface declaration is an error.</p>
+<pre><code class="language-tya">interface LookupById
+  find = id -&gt;
+
+interface LookupByName
+  find = first, last -&gt;
+
+interface Searchable extends LookupById, LookupByName</code></pre>
+<p><code>Searchable</code> is invalid because Tya does not support method overloading. A single <code>find</code> method cannot satisfy both arities.</p>
+<p>Conflict diagnostics should identify the interface being declared, the method name, both source interfaces, and both arities.</p>
+<p>For example:</p>
+<pre><code class="language-text">interface Searchable has conflicting method requirement find:
+LookupById.find expects 1 argument, LookupByName.find expects 2 arguments</code></pre>
+<p>The exact wording may differ, but the diagnostic must include:</p>
+<ul>
+<li>the child interface name</li>
+<li>the conflicting method name</li>
+<li>the parent interface names</li>
+<li>the conflicting arities</li>
+</ul>
+<h2 id="direct-and-inherited-conflicts">Direct and Inherited Conflicts</h2>
+<p>A method declared directly in a child interface must also be compatible with inherited requirements.</p>
+<pre><code class="language-tya">interface Lookup
+  find = id -&gt;
+
+interface BadLookup extends Lookup
+  find = first, last -&gt;</code></pre>
+<p><code>BadLookup</code> is invalid because its direct <code>find</code> requirement conflicts with the inherited <code>Lookup.find</code> requirement.</p>
+<p>If the direct requirement uses the same arity, it is valid and represents the same requirement.</p>
+<pre><code class="language-tya">interface Lookup
+  find = id -&gt;
+
+interface CachedLookup extends Lookup
+  find = key -&gt;</code></pre>
+<p><code>CachedLookup</code> is valid because both <code>find</code> requirements have arity 1. Parameter names are local to each declaration and are not part of compatibility.</p>
+<h2 id="inheritance-cycles">Inheritance Cycles</h2>
+<p>Interface inheritance cannot form cycles.</p>
+<pre><code class="language-tya">interface A extends B
+
+interface B extends A</code></pre>
+<p>This is an error.</p>
+<p>Longer cycles are also errors.</p>
+<pre><code class="language-tya">interface A extends B
+interface B extends C
+interface C extends A</code></pre>
+<p>Cycle diagnostics should mention the interfaces involved in the cycle when available.</p>
+<h2 id="interface-and-class-boundaries">Interface and Class Boundaries</h2>
+<p>Interfaces may extend only interfaces.</p>
+<pre><code class="language-tya">class Base
+  name = -&gt;
+    &quot;base&quot;
+
+interface Named extends Base</code></pre>
+<p><code>Named</code> is invalid because <code>Base</code> is a class.</p>
+<p>Classes may extend only classes.</p>
+<pre><code class="language-tya">interface Named
+  name = -&gt;
+
+class User extends Named</code></pre>
+<p><code>User</code> is invalid because <code>Named</code> is an interface.</p>
+<p>Classes continue to use <code>implements</code> for interfaces.</p>
+<pre><code class="language-tya">class User implements Named
+  name = -&gt;
+    &quot;user&quot;</code></pre>
+<h2 id="abstract-classes-and-inherited-interfaces">Abstract Classes and Inherited Interfaces</h2>
+<p>An abstract class may implement an interface that inherits requirements without implementing every requirement.</p>
+<pre><code class="language-tya">interface Reader
+  read = -&gt;
+
+interface SeekableReader extends Reader
+  seek = offset -&gt;
+
+abstract class AbstractFile implements SeekableReader
+  seek = offset -&gt;
+    nil</code></pre>
+<p><code>AbstractFile</code> is valid because it is abstract. A concrete subclass must still implement <code>read</code>.</p>
+<pre><code class="language-tya">class File extends AbstractFile
+  read = -&gt;
+    &quot;data&quot;</code></pre>
+<h2 id="modules">Modules</h2>
+<p>Interface inheritance works with module-qualified interface names.</p>
+<pre><code class="language-tya">module io
+  interface Reader
+    read = -&gt;
+
+interface FileReader extends io.Reader
+  path = -&gt;</code></pre>
+<p>A class implementing <code>FileReader</code> must satisfy both <code>io.Reader.read</code> and <code>FileReader.path</code>.</p>
+<pre><code class="language-tya">class MemoryFile implements FileReader
+  read = -&gt;
+    &quot;data&quot;
+
+  path = -&gt;
+    &quot;memory&quot;</code></pre>
+<h2 id="introspection">Introspection</h2>
+<p>v0.12 keeps the v0.8 introspection surface:</p>
+<ul>
+<li><code>object.class</code></li>
+<li><code>object.class_name</code></li>
+<li><code>ClassName.name</code></li>
+<li><code>ClassName.parent</code></li>
+</ul>
+<p>v0.12 does not add interface introspection.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.12 implementations should report source-oriented errors for:</p>
+<ul>
+<li>interfaces extending missing names</li>
+<li>interfaces extending classes</li>
+<li>classes extending interfaces</li>
+<li>interface inheritance cycles</li>
+<li>conflicting inherited interface method requirements</li>
+<li>direct interface method requirements that conflict with inherited requirements</li>
+<li>concrete classes missing inherited interface method requirements</li>
+<li>concrete class implementation arity mismatch against inherited interface requirements</li>
+</ul>
+<p>Conflict diagnostics must include the relevant interface names, method name, and arity values when available.</p>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.7 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-7-specification">Tya v0.7 Specification</h1>
+<p>This document is the specification for Tya v0.7 after v0.6 class-level members and instance field defaults.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.7 is about single inheritance for instance behavior.</p>
+<p>v0.5 adds minimal classes and objects. v0.6 adds class variables, class methods, and instance field defaults. v0.7 lets one class reuse and specialize another class's instance fields, initializer, and instance methods.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Add single inheritance with <code>extends</code>.</li>
+<li>Add <code>super(args...)</code> for parent <code>init</code> and overridden instance methods.</li>
+<li>Allow instance method overriding.</li>
+<li>Inherit instance field defaults.</li>
+<li>Keep class-level member inheritance out of v0.7.</li>
+<li>Leave interfaces and richer object-oriented features for later versions.</li>
+</ul>
+<h2 id="included-in-v0-7">Included in v0.7</h2>
+<p>v0.7 includes all v0.6 class behavior and adds:</p>
+<ul>
+<li><code>class Child extends Parent</code></li>
+<li>single inheritance only</li>
+<li>inherited instance field defaults</li>
+<li>inherited instance methods</li>
+<li>instance method overriding</li>
+<li><code>super(args...)</code> inside <code>init</code></li>
+<li><code>super(args...)</code> inside overridden instance methods</li>
+<li>constructor behavior for subclasses</li>
+<li>module class inheritance with <code>module_name.Parent</code></li>
+</ul>
+<h2 id="not-included-in-v0-7">Not Included in v0.7</h2>
+<p>v0.7 does not include:</p>
+<ul>
+<li>multiple inheritance</li>
+<li>mixins</li>
+<li>interfaces</li>
+<li><code>implements</code></li>
+<li>abstract classes</li>
+<li>visibility modifiers</li>
+<li>private fields</li>
+<li>protected fields</li>
+<li>class variable inheritance</li>
+<li>class method inheritance</li>
+<li><code>super</code> inside class methods</li>
+<li><code>super.field</code></li>
+<li><code>super.method(args...)</code></li>
+<li>method overloading</li>
+<li>operator overloading</li>
+<li>decorators</li>
+<li>metaclasses</li>
+<li>dictionary member access with <code>dict.key</code></li>
+<li>package manager</li>
+<li>native-backed stdlib</li>
+</ul>
+<h2 id="extending-a-class">Extending a Class</h2>
+<p>A class may extend one parent class.</p>
+<pre><code class="language-tya">class User
+  name = &quot;&quot;
+
+  init = name -&gt;
+    @name = name
+
+  greeting = -&gt;
+    &quot;Hello, {@name}&quot;
+
+class Admin extends User
+  role = &quot;admin&quot;</code></pre>
+<p><code>Admin</code> is a subclass of <code>User</code>. It inherits <code>User</code>'s instance field defaults and instance methods.</p>
+<pre><code class="language-tya">admin = Admin(&quot;komagata&quot;)
+print admin.name
+print admin.role
+print admin.greeting()</code></pre>
+<p>Multiple inheritance is invalid.</p>
+<pre><code class="language-tya">class Bad extends User, Account</code></pre>
+<h2 id="constructor-behavior">Constructor Behavior</h2>
+<p>If a subclass does not define <code>init</code>, its constructor uses the nearest inherited <code>init</code>.</p>
+<pre><code class="language-tya">class User
+  init = name -&gt;
+    @name = name
+
+class Admin extends User
+
+admin = Admin(&quot;komagata&quot;)
+print admin.name</code></pre>
+<p>If a subclass defines <code>init</code>, it is responsible for calling the parent <code>init</code> with <code>super(args...)</code> when the parent has one.</p>
+<pre><code class="language-tya">class Admin extends User
+  init = name, role -&gt;
+    super(name)
+    @role = role</code></pre>
+<p>There is no implicit argument forwarding from a subclass <code>init</code> to a parent <code>init</code>.</p>
+<p>If a subclass defines <code>init</code> and the parent class defines <code>init</code>, omitting <code>super(args...)</code> is an error.</p>
+<pre><code class="language-tya">class Admin extends User
+  init = name -&gt;
+    @name = name</code></pre>
+<p>The <code>Admin</code> initializer is invalid because <code>User.init</code> is not called.</p>
+<h2 id="field-defaults-and-inheritance">Field Defaults and Inheritance</h2>
+<p>Instance field defaults are applied from parent to child before <code>init</code> runs.</p>
+<pre><code class="language-tya">class User
+  active = true
+
+class Admin extends User
+  role = &quot;admin&quot;
+
+admin = Admin()
+print admin.active
+print admin.role</code></pre>
+<p>A subclass may override a parent field default by declaring the same field name.</p>
+<pre><code class="language-tya">class User
+  role = &quot;user&quot;
+
+class Admin extends User
+  role = &quot;admin&quot;</code></pre>
+<p>The subclass default wins for instances of the subclass.</p>
+<h2 id="method-inheritance">Method Inheritance</h2>
+<p>Instance methods are inherited by subclasses.</p>
+<pre><code class="language-tya">class User
+  greeting = -&gt;
+    &quot;Hello&quot;
+
+class Admin extends User
+
+admin = Admin()
+print admin.greeting()</code></pre>
+<p>A subclass may override an inherited instance method by declaring a method with the same name.</p>
+<pre><code class="language-tya">class User
+  greeting = -&gt;
+    &quot;Hello&quot;
+
+class Admin extends User
+  greeting = -&gt;
+    &quot;Admin&quot;</code></pre>
+<p>The subclass method is used for subclass instances.</p>
+<h2 id="super-in-instance-methods"><code>super</code> in Instance Methods</h2>
+<p>Inside an overridden instance method, <code>super(args...)</code> calls the parent method with the same name.</p>
+<pre><code class="language-tya">class User
+  greeting = -&gt;
+    &quot;Hello, {@name}&quot;
+
+class Admin extends User
+  greeting = -&gt;
+    &quot;{super()} (admin)&quot;</code></pre>
+<p><code>super(args...)</code> must be called explicitly with parentheses when there are no arguments.</p>
+<pre><code class="language-tya">super()</code></pre>
+<p>There is no <code>super.greeting()</code> form in v0.7.</p>
+<h2 id="override-rules">Override Rules</h2>
+<p>An overriding instance method must use the same arity as the parent method.</p>
+<pre><code class="language-tya">class User
+  rename = name -&gt;
+    @name = name
+
+class Admin extends User
+  rename = first_name, last_name -&gt;
+    @name = first_name + &quot; &quot; + last_name</code></pre>
+<p>The <code>Admin.rename</code> override is invalid because the arity differs from <code>User.rename</code>.</p>
+<p>Return values are not checked beyond existing runtime behavior because v0.7 has no type annotations.</p>
+<h2 id="class-level-members-and-inheritance">Class-Level Members and Inheritance</h2>
+<p>v0.7 inheritance applies to instance behavior only.</p>
+<p>Class variables and class methods are not inherited in v0.7.</p>
+<pre><code class="language-tya">class User
+  @@count = 0
+
+  @@count_users = -&gt;
+    @@count
+
+class Admin extends User
+
+print User.count
+print User.count_users()</code></pre>
+<p><code>Admin.count</code> and <code>Admin.count_users()</code> are not part of v0.7 unless <code>Admin</code> declares its own class variable or class method.</p>
+<p>This keeps <code>@@field</code> simple and avoids shared class-variable behavior across inheritance chains.</p>
+<h2 id="modules-and-inheritance">Modules and Inheritance</h2>
+<p>A class may extend a class from an imported module.</p>
+<pre><code class="language-tya"># user.tya
+module user
+  class User
+    init = name -&gt;
+      @name = name
+
+    greeting = -&gt;
+      &quot;Hello, {@name}&quot;</code></pre>
+<pre><code class="language-tya">import user
+
+class Admin extends user.User
+  greeting = -&gt;
+    &quot;{super()} (admin)&quot;</code></pre>
+<p>Classes declared inside a module can also extend another class declared in the same module.</p>
+<pre><code class="language-tya">module accounts
+  class User
+    name = &quot;&quot;
+
+  class Admin extends User
+    role = &quot;admin&quot;</code></pre>
+<p>v0.7 does not import module classes directly into the local namespace.</p>
+<h2 id="dot-access-boundary">Dot Access Boundary</h2>
+<p>Dot access keeps the v0.6 meanings:</p>
+<ul>
+<li>module member access: <code>module_name.member</code></li>
+<li>object field access: <code>object.field</code></li>
+<li>object method calls: <code>object.method(args...)</code></li>
+<li>class variable access: <code>ClassName.field</code></li>
+<li>class method calls: <code>ClassName.method(args...)</code></li>
+</ul>
+<p>v0.7 also allows a module class path in an <code>extends</code> clause:</p>
+<pre><code class="language-tya">class Admin extends user.User</code></pre>
+<p>Dictionaries continue to use bracket access.</p>
+<pre><code class="language-tya">profile = {&quot;name&quot;: &quot;komagata&quot;}
+print profile[&quot;name&quot;]</code></pre>
+<p>Dictionary member access with <code>profile.name</code> is not part of v0.7.</p>
+<h2 id="naming">Naming</h2>
+<p>Class names use PascalCase.</p>
+<pre><code class="language-tya">class User
+class AdminUser
+class HttpClient</code></pre>
+<p>Variables, functions, methods, fields, class variables, modules, files, and dictionary keys keep using snake_case.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.7 implementations should report source-oriented errors for:</p>
+<ul>
+<li>non-PascalCase class names</li>
+<li>unknown parent class</li>
+<li>multiple inheritance syntax</li>
+<li>inheritance cycles</li>
+<li><code>super</code> outside <code>init</code> or an instance method</li>
+<li><code>super</code> inside a class method</li>
+<li><code>super</code> in a method that has no parent method</li>
+<li>subclass <code>init</code> missing a required parent <code>init</code> call</li>
+<li>overriding an instance method with different arity</li>
+<li>duplicate instance members in the same class</li>
+<li>duplicate class members in the same class</li>
+<li>missing object fields</li>
+<li>missing object methods</li>
+<li>missing class variables</li>
+<li>missing class methods</li>
+<li>dictionary member access with dot syntax</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

@@ -455,7 +455,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya doctor native")
 	fmt.Fprintln(os.Stderr, "       tya task [name] [args...]")
 	fmt.Fprintln(os.Stderr, "       tya tool [--list] [--offline] [--path P | --git URL (--tag T|--rev R)] <command> [args...]")
-	fmt.Fprintln(os.Stderr, "       tya lint [--fix] [--format=text|json] [paths...]")
+	fmt.Fprintln(os.Stderr, "       tya lint [--fix] [--format=text|json|sarif] [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya doc [--html <out>] [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya lsp [--log <file>]")
 	fmt.Fprintln(os.Stderr, "       tya version")

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.29 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-29-specification-diagnostics-foundation">Tya v0.29 Specification — Diagnostics Foundation</h1>
+<p>Tya v0.29 lays the foundation for Elm-grade diagnostics across the toolchain. The language itself does not change in this release: no new syntax, no new builtins, no new stdlib behavior. v0.29 introduces the common diagnostic model, the human and JSON renderers, the color and format CLI flags, the stable error-code namespace, and migrates the **checker's strict diagnostics (v0.28 checks)** to the new pipeline as the first concrete user of it.</p>
+<p>The remaining stages (lexer, parser, codegen, runner, fmt) keep their current error strings in v0.29 and will be migrated to the new model in later minor releases. v0.29 is intentionally a foundation release.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>A single in-process diagnostic model (<code>internal/diag</code>) that every</li>
+</ul>
+<p>  stage can target over time.</p>
+<ul>
+<li>A human renderer that produces an Elm-style banner with source</li>
+</ul>
+<p>  snippet, caret underline, hints, notes, and an error code.</p>
+<ul>
+<li>A JSON (NDJSON) renderer behind <code>--format=json</code>, with a stable shape</li>
+</ul>
+<p>  that future tooling and an eventual LSP can consume.</p>
+<ul>
+<li><code>--color=auto|always|never</code> and <code>NO_COLOR</code> honored consistently.</li>
+<li>A stable error-code namespace (<code>TYA-Exxxx</code> / <code>TYA-Wxxxx</code>) with a</li>
+</ul>
+<p>  reference document under <code>docs/v0.29/CODES.md</code>.</p>
+<ul>
+<li>The v0.28 strict-check diagnostics (shadowing, unused import, unused</li>
+</ul>
+<p>  argument, unused private top-level) are emitted through the new   pipeline with banners, snippets, hints, and codes.</p>
+<ul>
+<li><code>tya check</code> runs the strict pass to completion and reports every</li>
+</ul>
+<p>  strict diagnostic it finds in one invocation, instead of stopping at   the first.</p>
+<h2 id="non-goals-v0-29">Non-Goals (v0.29)</h2>
+<ul>
+<li>Migrating lexer, parser, codegen, runner, or fmt errors to the new</li>
+</ul>
+<p>  model. They keep their current stderr strings in v0.29.</p>
+<ul>
+<li>Multi-error parsing.</li>
+<li>Did-you-mean suggestions (deferred — needs scope/type info plumbing</li>
+</ul>
+<p>  not yet in <code>internal/diag</code>).</p>
+<ul>
+<li>LSP server, watch mode, persistent build cache.</li>
+<li>Source maps from <code>.tya</code> to emitted C.</li>
+<li>Localization or hyperlink rendering (OSC 8).</li>
+<li>Auto-applied fix-its.</li>
+</ul>
+<h2 id="diagnostic-model">Diagnostic Model</h2>
+<p>A new package <code>internal/diag</code> provides the core types:</p>
+<pre><code class="language-go">package diag
+
+type Severity int
+const (
+    Error Severity = iota
+    Warning
+)
+
+type Pos struct{ Line, Col int }
+
+type Region struct {
+    File       string
+    Start, End Pos
+}
+
+type Diagnostic struct {
+    Severity Severity
+    Code     string   // e.g. &quot;TYA-E0301&quot;
+    Title    string   // short noun phrase
+    Message  string   // one-sentence problem statement
+    Primary  Region
+    Hints    []string
+    Notes    []string
+    Source   string   // stage: &quot;checker&quot;, etc.
+}</code></pre>
+<p>Lines and columns are 1-based. End is exclusive. v0.29 ships only <code>Primary</code>; secondary regions are reserved for a later release.</p>
+<p><code>internal/diag</code> also exposes:</p>
+<ul>
+<li><code>SourceMap</code> — caches file bytes and line offsets so renderers can</li>
+</ul>
+<p>  draw snippets without each stage re-reading files.</p>
+<ul>
+<li><code>Render(diags []Diagnostic, sm *SourceMap, opts RenderOptions) string</code></li>
+</ul>
+<p>  — human renderer.</p>
+<ul>
+<li><code>RenderJSON(diags []Diagnostic) string</code> — NDJSON renderer.</li>
+<li><code>RenderOptions{ Color ColorMode, TermWidth int }</code> and</li>
+</ul>
+<p>  <code>ColorMode = Auto | Always | Never</code>.</p>
+<h2 id="human-format">Human Format</h2>
+<p>Each diagnostic renders as:</p>
+<pre><code>-- TITLE -------------------------------------- file:line:col
+
+&lt;one-sentence problem statement&gt;
+
+  12 |   foo = bar + baz
+                ^^^
+
+Hint: &lt;actionable suggestion&gt;
+
+Note: &lt;optional context&gt;
+
+(TYA-E0301)</code></pre>
+<p>Rules:</p>
+<ol>
+<li>Banner: <code>-- </code> + uppercased TITLE + space + dashes padded to col 70 +</li>
+</ol>
+<p>   space + <code>file:line:col</code>. If terminal width is narrower than 70,    dashes are truncated; the location is never truncated. 2. Blank line separates banner from message. 3. Snippet: the line containing the primary region's start is shown    with a right-aligned line-number gutter and <code> | </code> separator. The    underline row uses the same gutter width filled with spaces, then    <code> | </code> replaced with <code>   </code>, then <code>^</code> for every column in the primary    region (single-character regions get one <code>^</code>). 4. Long source lines are not wrapped. 5. Hints render as separate paragraphs prefixed with <code>Hint: </code>. 6. Notes render as separate paragraphs prefixed with <code>Note: </code>. 7. Error code on its own line, parenthesized, last. 8. Diagnostics are separated by a single blank line. 9. After all diagnostics, the renderer emits a final summary line:    <code>Found N error(s), M warning(s).</code> Skipped when there are no    diagnostics.</p>
+<h3 id="color">Color</h3>
+<p>When color is enabled, ANSI codes are applied:</p>
+<ul>
+<li>Banner dashes and TITLE: bold, severity color (red error, yellow</li>
+</ul>
+<p>  warning).</p>
+<ul>
+<li>File:line:col: cyan.</li>
+<li>Underline carets: severity color.</li>
+<li><code>Hint:</code> prefix: bold blue. <code>Note:</code> prefix: bold dim.</li>
+<li>Error code: dim.</li>
+</ul>
+<p><code>--color</code> precedence:</p>
+<p>| Value    | Behavior                                              | |----------|-------------------------------------------------------| | <code>auto</code>   | Color when stderr is a TTY and <code>NO_COLOR</code> is unset.   | | <code>always</code> | Color regardless.                                     | | <code>never</code>  | No color.                                             |</p>
+<p><code>auto</code> is the default. <code>NO_COLOR=1</code> in the environment forces <code>never</code> unless <code>--color=always</code> is passed (the explicit flag wins).</p>
+<h2 id="json-format">JSON Format</h2>
+<p><code>--format=json</code> switches stderr to NDJSON. One diagnostic per line:</p>
+<pre><code class="language-json">{&quot;severity&quot;:&quot;error&quot;,&quot;code&quot;:&quot;TYA-E0301&quot;,&quot;title&quot;:&quot;Shadowed binding&quot;,&quot;message&quot;:&quot;This binding shadows an outer name.&quot;,&quot;primary&quot;:{&quot;file&quot;:&quot;main.tya&quot;,&quot;start&quot;:{&quot;line&quot;:12,&quot;col&quot;:3},&quot;end&quot;:{&quot;line&quot;:12,&quot;col&quot;:7}},&quot;hints&quot;:[&quot;Rename the inner binding, or prefix it with `_`.&quot;],&quot;notes&quot;:[],&quot;source&quot;:&quot;checker&quot;}</code></pre>
+<p>After all diagnostics, a single summary object:</p>
+<pre><code class="language-json">{&quot;summary&quot;:{&quot;errors&quot;:1,&quot;warnings&quot;:0}}</code></pre>
+<p>Stdout is unchanged: <code>tya run</code> still streams program stdout, <code>tya emit-c</code> still writes C, etc. Only diagnostic stderr switches format.</p>
+<p><code>--format=json</code> implies <code>--color=never</code>.</p>
+<p>The JSON shape is stable from v0.29 onward. New optional fields may be added; existing fields will not be removed or change type without a major version bump.</p>
+<h2 id="cli-surface">CLI Surface</h2>
+<p>Two new flags are accepted by every subcommand that may emit diagnostics (<code>run</code>, <code>build</code>, <code>check</code>, <code>test</code>, <code>fmt</code>, <code>emit-c</code>):</p>
+<pre><code>--format=human|json     Output format for diagnostics. Default: human.
+--color=auto|always|never  Color in human format. Default: auto.</code></pre>
+<p>In v0.29 these flags only affect *checker strict* diagnostics (the diagnostics migrated in this release). Lexer / parser / codegen / runner errors continue to be printed as plain strings; they will be migrated in a later release. The flags are accepted everywhere now so that users do not have to change scripts when later migrations land.</p>
+<p><code>tya check</code> behavior change for the strict pass: it collects every strict diagnostic in the file and reports them all in one run, instead of stopping at the first. The exit code is non-zero if any strict diagnostic is an error.</p>
+<p><code>tya run</code>, <code>tya build</code>, <code>tya test</code>, <code>tya emit-c</code>, and <code>tya fmt</code> keep fail-fast semantics for non-strict errors. When the strict pass runs in those subcommands, it still surfaces only the first strict diagnostic (preserving today's behavior outside of <code>tya check</code>); this is to keep error output minimal in the build path. <code>tya check</code> is the designated multi-error reporter.</p>
+<h2 id="error-codes">Error Codes</h2>
+<p>Every diagnostic carries a stable code of the form <code>TYA-Xnnnn</code>:</p>
+<ul>
+<li><code>X</code> is <code>E</code> for errors and <code>W</code> for warnings.</li>
+<li><code>nnnn</code> is a zero-padded four-digit number.</li>
+</ul>
+<p>Ranges are pre-allocated by stage so future migrations have room:</p>
+<p>| Range           | Stage    | |-----------------|----------| | <code>E0001</code>–<code>E0099</code> | lexer    | | <code>E0100</code>–<code>E0299</code> | parser   | | <code>E0300</code>–<code>E0599</code> | checker  | | <code>E0600</code>–<code>E0799</code> | codegen  | | <code>E0800</code>–<code>E0899</code> | runner   | | <code>E0900</code>–<code>E0999</code> | fmt      | | <code>W1000</code>+        | warnings |</p>
+<p>v0.29 assigns:</p>
+<p>| Code         | Title                               | Source  | |--------------|-------------------------------------|---------| | <code>TYA-E0301</code>  | Shadowed binding                    | checker | | <code>TYA-E0302</code>  | Unused import                       | checker | | <code>TYA-E0303</code>  | Unused argument                     | checker | | <code>TYA-E0304</code>  | Unused private top-level definition | checker | | <code>TYA-E0305</code>  | Duplicate parameter                 | checker | | <code>TYA-E0306</code>  | Duplicate binding name in pattern   | checker |</p>
+<p>Codes, once assigned, never change meaning. Retired codes stay listed in <code>docs/v0.29/CODES.md</code> marked *retired*. The reference doc lists every code with a one-line description and a minimal example.</p>
+<h2 id="diagnostics-migrated-in-v0-29">Diagnostics Migrated in v0.29</h2>
+<p>The strict checks introduced in v0.28 are emitted through the new pipeline. Each gains a banner, snippet, code, and at least one hint where applicable.</p>
+<h3 id="tya-e0301-shadowed-binding">TYA-E0301 — Shadowed binding</h3>
+<pre><code>-- SHADOWED BINDING --------------------------- main.tya:5:3
+
+This binding shadows the outer name `count`.
+
+   5 |   count = 0
+         ^^^^^
+
+Hint: Rename the inner binding, or prefix it with `_` to mark it as
+intentional.
+
+(TYA-E0301)</code></pre>
+<h3 id="tya-e0302-unused-import">TYA-E0302 — Unused import</h3>
+<pre><code>-- UNUSED IMPORT ------------------------------ main.tya:1:8
+
+The module `string` is imported but never used.
+
+   1 | import string
+              ^^^^^^
+
+Hint: Remove the import, or reference the module somewhere in this
+file.
+
+(TYA-E0302)</code></pre>
+<h3 id="tya-e0303-unused-argument">TYA-E0303 — Unused argument</h3>
+<pre><code>-- UNUSED ARGUMENT ---------------------------- main.tya:3:9
+
+The argument `value` is never used in the body of this function.
+
+   3 | greet = value -&gt; &quot;hello&quot;
+               ^^^^^
+
+Hint: Rename it to `_` or prefix it with `_` (e.g. `_value`) to mark
+it as intentional.
+
+(TYA-E0303)</code></pre>
+<h3 id="tya-e0304-unused-private-top-level-definition">TYA-E0304 — Unused private top-level definition</h3>
+<pre><code>-- UNUSED PRIVATE DEFINITION ------------------ main.tya:1:1
+
+The private top-level definition `_helper` is never referenced in
+this file.
+
+   1 | _helper = 42
+       ^^^^^^^
+
+Hint: Remove the definition, or reference it elsewhere in this file.
+
+(TYA-E0304)</code></pre>
+<h3 id="tya-e0305-duplicate-parameter">TYA-E0305 — Duplicate parameter</h3>
+<pre><code>-- DUPLICATE PARAMETER ------------------------ main.tya:1:13
+
+The parameter `x` appears more than once in this function.
+
+   1 | f = x, x -&gt; x
+                  ^
+
+Hint: Rename one of the parameters.
+
+(TYA-E0305)</code></pre>
+<h3 id="tya-e0306-duplicate-binding-name-in-pattern">TYA-E0306 — Duplicate binding name in pattern</h3>
+<pre><code>-- DUPLICATE BINDING IN PATTERN ---------------- main.tya:2:11
+
+The name `name` is bound more than once in this pattern.
+
+   2 |   case [name, name]
+                      ^^^^
+
+Hint: Rename one of the bindings, or compare with an equality check
+in a guard.
+
+(TYA-E0306)</code></pre>
+<h2 id="source-snippet-loading">Source Snippet Loading</h2>
+<p><code>internal/diag.SourceMap</code> exposes:</p>
+<pre><code class="language-go">type SourceMap struct{ /* ... */ }
+
+func (sm *SourceMap) Add(file string, src []byte)
+func (sm *SourceMap) Line(file string, n int) (string, bool)</code></pre>
+<p>The CLI populates the source map from the entry program and any imported modules before invoking the renderer. For files missing from the map, the renderer omits the snippet and prints <code>(snippet unavailable)</code> on a single line in place of the snippet block. Banner, message, hints, notes, and code still render.</p>
+<h2 id="testing-strategy">Testing Strategy</h2>
+<ol>
+<li>**Unit tests** for <code>internal/diag</code> cover human rendering (with and</li>
+</ol>
+<p>   without color), JSON rendering (line-by-line + summary), color mode    resolution including <code>NO_COLOR</code>, and source-map snippet lookup. 2. **Golden tests** under <code>tests/diagnostics/</code> exercise each migrated    checker code with a small <code>.tya</code> source and <code>.golden.txt</code> /    <code>.golden.json</code> expected outputs. 3. **Code inventory test** asserts that every code registered in code    matches an entry in <code>docs/v0.29/CODES.md</code> and vice versa. 4. **Self-host invariant** (<code>TestSelfhostV01Scripts</code>) continues to    pass. 5. **Existing CLI script tests** keep their current expectations    because <code>tya run</code> / <code>tya build</code> / <code>tya test</code> still surface only the    first strict diagnostic. Only <code>tya check</code> golden tests assert the    new banner format.</p>
+<h2 id="acceptance-criteria">Acceptance Criteria</h2>
+<p>A v0.29 build is acceptable when:</p>
+<ol>
+<li><code>internal/diag</code> exists and exports the documented types and</li>
+</ol>
+<p>   renderers. 2. <code>--format=human|json</code> and <code>--color=auto|always|never</code> are accepted    by every subcommand and behave as specified. 3. <code>NO_COLOR</code> is honored. 4. The six checker codes (<code>TYA-E0301</code>–<code>TYA-E0306</code>) render through the    new pipeline with banners, snippets, hints, and codes. 5. <code>tya check</code> reports multiple strict diagnostics in one run. 6. <code>docs/v0.29/CODES.md</code> is present and matches the registered codes. 7. <code>go test ./... -count=1</code> passes, including the self-host invariant.</p>
+    </article>
+  </main>
+</body>
+</html>

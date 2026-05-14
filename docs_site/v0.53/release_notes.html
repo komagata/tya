@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.53 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-53-release-notes">Tya v0.53 Release Notes</h1>
+<p>&gt; **Status:** shipped. <code>tya version</code> reports <code>0.53.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.53 promotes <code>tya lsp</code> from MVP to a full IDE-grade server: cross-file definition, references, rename, range formatting, code actions, semantic tokens, document and workspace symbols, plus incremental document sync. Setup recipes ship for Neovim, Zed, and Emacs. The language surface is unchanged from v0.52.</p>
+<h2 id="what-s-new">What's new</h2>
+<h3 id="lsp-feature-additions">LSP feature additions</h3>
+<ul>
+<li>**<code>textDocument/definition</code>** now follows <code>import</code> statements</li>
+</ul>
+<p>  and <code>mod.foo</code> member access.</p>
+<ul>
+<li>**<code>textDocument/references</code>** returns every occurrence,</li>
+</ul>
+<p>  workspace-wide for top-level bindings and function-scoped for   local / param.</p>
+<ul>
+<li>**<code>textDocument/rename</code>** produces a <code>WorkspaceEdit</code> honouring</li>
+</ul>
+<p>  the same scope rules. Conflicts are rejected with   <code>[TYA-E0933]</code>.</p>
+<ul>
+<li>**<code>textDocument/rangeFormatting</code>** runs the canonical formatter</li>
+</ul>
+<p>  on the smallest top-level Stmt window enclosing the request.</p>
+<ul>
+<li>**<code>textDocument/codeAction</code>** offers quick fixes for</li>
+</ul>
+<p>  <code>TYAL0001 unused local</code> (line-delete) and   <code>TYAL0003 redundant if true/false</code> (unwrap).</p>
+<ul>
+<li>**<code>textDocument/semanticTokens/full</code>** emits the LSP delta</li>
+</ul>
+<p>  encoding for a 9-type legend.</p>
+<ul>
+<li>**<code>textDocument/documentSymbol</code>** returns the hierarchical</li>
+</ul>
+<p>  outline (class → methods, module → members).</p>
+<ul>
+<li>**<code>workspace/symbol</code>** filters every top-level symbol in</li>
+</ul>
+<p>  workspace <code>*.tya</code> files by case-insensitive substring.</p>
+<ul>
+<li>**Incremental document sync** (<code>TextDocumentSyncKind.Incremental</code>)</li>
+</ul>
+<p>  is advertised. <code>positionEncoding</code> is <code>&quot;utf-8&quot;</code>.</p>
+<h3 id="new-editor-recipes">New editor recipes</h3>
+<p>| Editor | Path | |--------|------| | Neovim (nvim-lspconfig) | <a href="../editors/neovim"><code>editors/neovim/</code></a> | | Zed | <a href="../editors/zed"><code>editors/zed/</code></a> | | Emacs (eglot / lsp-mode) | <a href="../editors/emacs"><code>editors/emacs/</code></a> |</p>
+<p>Each recipe is a short README plus a single drop-in config file that points the editor at the system <code>tya</code> binary as the LSP server.</p>
+<h3 id="vs-code-extension">VS Code extension</h3>
+<p><code>editors/vscode/package.json</code> is bumped to <code>0.53.0</code>. The README and manifest already pick up every new feature via <code>vscode-languageclient</code> because all changes are server-side. Manual install instructions remain identical:</p>
+<pre><code class="language-sh">cd editors/vscode
+npm install
+npm run compile
+npx vsce package
+code --install-extension tya-0.53.0.vsix</code></pre>
+<p>Marketplace publication (publisher registration, signed VSIX, icon, GH Actions release pipeline) is queued for v0.54+.</p>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>Language surface: unchanged from v0.49 — v0.52.</li>
+<li><code>tya.toml</code> schema: unchanged.</li>
+<li>CLI: every existing subcommand keeps its v0.52 behaviour. All</li>
+</ul>
+<p>  new LSP methods are additive.</p>
+<h2 id="migration">Migration</h2>
+<p>Nothing required. Optional:</p>
+<ol>
+<li>Upgrade to v0.53 (<code>brew install komagata/tap/tya</code> or build from</li>
+</ol>
+<p>   source). 2. Re-build the VS Code extension once with <code>npm run compile &amp;&amp;    npx vsce package</code> and install the new VSIX. (No <code>package.json</code>    changes mean an old VSIX still works against the new server.) 3. New editor recipes:</p>
+<ul>
+<li>Neovim: copy <code>editors/neovim/init.lua.example</code> into your config.</li>
+<li>Zed: merge <code>editors/zed/extension.json.example</code> into</li>
+</ul>
+<p>     <code>~/.config/zed/settings.json</code>.</p>
+<ul>
+<li>Emacs: copy <code>editors/emacs/setup.el.example</code>.</li>
+</ul>
+<h2 id="implementation-notes">Implementation notes</h2>
+<ul>
+<li>New package files under <code>internal/lsp/</code>: <code>workspace.go</code>,</li>
+</ul>
+<p>  <code>references.go</code>, <code>rename.go</code>, <code>range_format.go</code>,   <code>code_actions.go</code>, <code>semantic_tokens.go</code>,   <code>document_symbols.go</code>, <code>workspace_symbols.go</code>, <code>incremental.go</code>,   <code>finder_v2.go</code>, <code>protocol_v2.go</code>.</p>
+<ul>
+<li><code>internal/checker/autofix.go</code> exposes</li>
+</ul>
+<p>  <code>LintAutofixHints(prog)</code> for the code-action handler.</p>
+<ul>
+<li><code>Workspace</code> is lazy — it only parses files on demand and caches</li>
+</ul>
+<p>  the result so cross-file rename / references stay incremental   after the first scan.</p>
+<ul>
+<li>All new functionality is reachable through the existing</li>
+</ul>
+<p>  <code>cmd/tya/lsp.go</code> subcommand. No CLI changes.</p>
+<h2 id="tests">Tests</h2>
+<p><code>tests/lsp_v2_test.go</code> adds 11 subprocess scenarios that share the <code>tests/lsp_helper.go</code> harness from v0.52. The 7 original v0.52 cases continue to pass.</p>
+<h2 id="looking-ahead-v0-54-candidates">Looking ahead (v0.54+ candidates)</h2>
+<p>From <code>ROADMAP.md</code> § Future Work § Toolchain:</p>
+<ul>
+<li>VS Code Marketplace publication</li>
+<li><code>prepareRename</code> (rename preview)</li>
+<li>Range formatting at AST slice precision</li>
+<li>Semantic token modifiers</li>
+<li>Inlay hints, call hierarchy, selection range, code lens,</li>
+</ul>
+<p>  folding range, document link</p>
+<ul>
+<li>Toolchain track other Epics (<code>tya lint</code> v3, <code>tya task</code> v2,</li>
+</ul>
+<p>  <code>tya doc</code> v2, diagnostics pipeline migration)</p>
+<ul>
+<li>Language-track Epics (raw <code>&quot;</code> inside <code>{expr}</code> interpolation,</li>
+</ul>
+<p>  primitive class sugar, interface stackable trait surface,   WebAssembly target)</p>
+<p>Self-host work (<code>ROADMAP.md</code> § Scheduled M8 / M9 / M10) remains deferred until the v1.0.0 prep window.</p>
+    </article>
+  </main>
+</body>
+</html>

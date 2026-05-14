@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.50 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-50-release-notes">Tya v0.50 Release Notes</h1>
+<p>&gt; **Status:** shipped. <code>tya version</code> reports <code>0.50.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.49 introduced <code>tya new</code> / <code>tya task</code> / <code>tya lint</code> in minimal form. v0.50 extends each of them so they cover a real project workflow.</p>
+<ul>
+<li>**<code>tya lint</code>** — three new rules (<code>TYAL0003</code> <code>if true</code>/<code>false</code>,</li>
+</ul>
+<p>  <code>TYAL0004</code> deep nesting, <code>TYAL0005</code> long functions) plus a   <code>--fix</code> mode that removes unused-local lines in place.</p>
+<ul>
+<li>**<code>tya new</code>** — <code>--here</code>, <code>--template app|lib</code>, <code>--force</code>,</li>
+</ul>
+<p>  <code>--no-git</code>, and **automatic <code>git init</code> on by default**.   <code>app</code> keeps the v0.49 script template; <code>lib</code> scaffolds a class   file plus a corresponding test.</p>
+<ul>
+<li>**<code>tya task</code>** — TOML table form `[tasks.foo] cmds = [...];</li>
+</ul>
+<p>  parallel = true<code> runs every command concurrently, waits for all   to finish (case B), prefixes each output line with   </code>[&lt;index&gt; &lt;truncated cmd&gt;] `, and exits with the first non-zero   child exit code.</p>
+<p>The language surface is unchanged from v0.49.</p>
+<h2 id="what-s-new">What's new</h2>
+<h3 id="tya-lint"><code>tya lint</code></h3>
+<pre><code class="language-sh">$ tya lint src
+src/foo.tya:5:0: TYAL0003 redundant `if true`
+src/foo.tya:12:0: TYAL0004 deeply nested block (depth &gt;= 5)
+src/foo.tya:42:3: TYAL0005 function body has 78 statements (&gt; 50)
+src/foo.tya:51:1: TYAL0001 unused local &quot;tmp&quot;
+
+$ tya lint --fix src
+# `tmp` line removed in place; TYAL0003/0004/0005 still printed
+src/foo.tya:5:0: TYAL0003 redundant `if true`
+src/foo.tya:12:0: TYAL0004 deeply nested block (depth &gt;= 5)
+src/foo.tya:42:3: TYAL0005 function body has 78 statements (&gt; 50)</code></pre>
+<p><code>--fix</code> only rewrites unused-local lines in v0.50. AST-rewriting autofix for <code>if true</code>/<code>if false</code> is queued for v0.51+.</p>
+<h3 id="tya-new"><code>tya new</code></h3>
+<pre><code class="language-sh">$ tya new myapp                        # app template, git init
+$ tya new --template lib --here mylib  # lib template, cwd
+$ tya new --no-git --force scratch     # skip git, overwrite if exists</code></pre>
+<p>The <code>app</code> template gains <code>tests/main_test.tya</code> (a 1-test boilerplate that uses <code>unittest</code>) and <code>README.md</code>. The <code>lib</code> template scaffolds a class file (<code>src/&lt;PascalName&gt;.tya</code>) plus a matching test file. Both templates include sample <code>[tasks]</code> entries: <code>run</code> and <code>test</code>.</p>
+<h3 id="tya-task"><code>tya task</code></h3>
+<pre><code class="language-toml">[tasks.watch]
+cmds     = [&quot;tya format --watch&quot;, &quot;tya lsp&quot;]
+parallel = true</code></pre>
+<pre><code class="language-sh">$ tya task watch
+[1 tya format --…] Watching src/...
+[2 tya lsp]       LSP listening on stdin</code></pre>
+<p>Failure mode (case B — all wait, first non-zero exit code wins):</p>
+<pre><code>$ tya task ci-parallel
+[1 tya format] ok
+[3 tya test] FAIL: ...
+[2 tya check] ok
+[TYA-E0903] task &quot;ci-parallel&quot; parallel: #3 (&quot;tya test&quot;) exit 1
+$ echo $?
+1</code></pre>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>Language: unchanged from v0.49.</li>
+<li>Manifest schema: backwards compatible. The new <code>[tasks.&lt;name&gt;]</code></li>
+</ul>
+<p>  table form sits next to the existing string and array forms.</p>
+<ul>
+<li>CLI: every existing subcommand retains its v0.49 behavior</li>
+</ul>
+<p>  unchanged. New flags are additive.</p>
+<h2 id="migration">Migration</h2>
+<p>Nothing required. Optional:</p>
+<ol>
+<li>Add a <code>[tasks.&lt;name&gt;] parallel = true</code> task to your</li>
+</ol>
+<p>   <code>tya.toml</code> for concurrent workflows (e.g. dev servers, watch    processes). 2. Run <code>tya lint --fix</code> to autoclean unused locals across <code>src/</code>. 3. New projects: <code>tya new --template lib &lt;name&gt;</code> gives a typed    class entrypoint instead of a bare script.</p>
+<h2 id="implementation-notes">Implementation notes</h2>
+<ul>
+<li>The Task TOML schema is now a tagged union:</li>
+</ul>
+<p>  <code>Kind ∈ {&quot;string&quot;, &quot;array&quot;, &quot;parallel&quot;}</code>. The Go reference   implementation models this in   <code>internal/pkg/manifest.go::Task</code>.</p>
+<ul>
+<li><code>internal/checker.CollectLintFindings</code> is a new public API on</li>
+</ul>
+<p>  top of the existing AST walker. It returns a flat   <code>[]LintFinding</code> covering TYAL0003/0004/0005.</p>
+<ul>
+<li><code>cmd/tya/lint.go::fixUnusedLines</code> does line-based source</li>
+</ul>
+<p>  rewriting, not AST rewriting. This keeps comments / formatting   intact for v0.50; richer AST-rewriting autofix lands later.</p>
+<ul>
+<li><code>cmd/tya/task.go::runParallel</code> uses one goroutine per child</li>
+</ul>
+<p>  plus two more goroutines per child for stdout/stderr line   pumping with <code>bufio.Scanner</code>. Pipes close on <code>cmd.Wait()</code> after   scanners drain.</p>
+<h2 id="looking-ahead-v0-51-candidates">Looking ahead (v0.51+ candidates)</h2>
+<p>From <code>ROADMAP.md</code> § Future Work § Toolchain:</p>
+<ul>
+<li><code>tya lint</code>: TYAL0002 dead code after <code>return</code>/<code>raise</code>,</li>
+</ul>
+<p>  per-line opt-out, <code>--format=json</code>, threshold configuration via   <code>tya.toml [lint]</code>, AST-rewriting autofix for TYAL0003.</p>
+<ul>
+<li><code>tya new</code>: extra templates (web, cli), README variants.</li>
+<li><code>tya task</code>: dependency graph (<code>depends-on</code>), <code>--watch</code> driver,</li>
+</ul>
+<p>  per-task environment variables.</p>
+<ul>
+<li><code>tya doc</code> and <code>tya lsp</code> MVPs (separate Epics).</li>
+</ul>
+<p>Self-host work (<code>ROADMAP.md</code> § Scheduled M8/M9/M10) remains deferred until the v1.0.0 prep window.</p>
+    </article>
+  </main>
+</body>
+</html>

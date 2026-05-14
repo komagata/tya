@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.47 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-47-release-notes">Tya v0.47 Release Notes</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.47.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.47 is the **clean-cut release** that retires the legacy v0.45 class-member surface (<code>@</code>, <code>@@</code>, <code>_</code>-prefix, <code>init</code> / <code>_init</code>) that v0.46 kept alive for backward compatibility. The v0.46 keyword surface (<code>private</code>, <code>static</code>, <code>self</code>, <code>Self</code>, <code>initialize</code>) is now the **only** way to write a class outside the <code>selfhost/v01/</code> self-host tree.</p>
+<h2 id="diagnostics-wired">Diagnostics wired</h2>
+<p>| Code           | Stage   | Condition                                              | | -------------- | ------- | ------------------------------------------------------ | | <code>[TYA-E0407]</code>  | checker | Class member name begins with <code>_</code>.                     | | <code>[TYA-E0410]</code>  | checker | <code>@field</code> or <code>@@field</code> sigil used.                      | | <code>[TYA-E0411]</code>  | checker | <code>self</code> used inside a <code>static</code> method.                  | | <code>[TYA-E0412]</code>  | checker | <code>Self</code> used outside a class body.                      | | <code>[TYA-E0414]</code>  | checker | Class declares <code>init</code> / <code>_init</code>; expected <code>initialize</code>. |</p>
+<h2 id="migration">Migration</h2>
+<p>The same mechanical rewrites listed in v0.46's release notes apply. After v0.47, user code MUST use the new surface; the legacy syntax raises diagnostics. Affected forms:</p>
+<pre><code>@name             →  self.name
+@name = x         →  self.name = x
+@@count           →  Self.count
+@@count = 0       →  static count = 0
+@@count = x       →  Self.count = x
+_name = ...       →  private name = ...
+_init = name -&gt; …  →  private initialize = name -&gt; …
+init = name -&gt; …  →  initialize = name -&gt; …</code></pre>
+<p>All of <code>examples/</code>, <code>stdlib/</code>, and <code>tests/testdata/v*/</code> were migrated to the new surface in this release. The single fixture that pinned legacy-only error messages (<code>v09/private_members</code>) was retired — the underlying <code>_</code>-prefix privacy heuristic is gone.</p>
+<h2 id="self-host-constraint">Self-Host Constraint</h2>
+<p><code>selfhost/v01/compiler.tya</code> uses the v0.43 surface (<code>@</code>, <code>@@</code>, <code>_</code>-prefix, <code>init</code>). The Go reference implementation enters **permissive legacy mode** on the checker when the entry path is under <code>selfhost/v01/</code>. This skips the E0407 / E0410 / E0411 / E0414 diagnostics for that sub-tree. User code is not in that path and is subject to the new rules.</p>
+<p>The mechanism is <code>checker.SetPermissiveLegacy(bool)</code>, called by the runner and <code>cmd/tya</code> entry points after deriving the legacy flag from the input file path via <code>runner.IsLegacyV01Path(path)</code>.</p>
+<p><code>TestSelfhostV01Scripts</code> continues to pass; the v01 compiler self-compiles unchanged.</p>
+<h2 id="deferred-to-future-minors">Deferred to future minors</h2>
+<ul>
+<li>**G1 (strict bare-name receivers)** — full elimination of</li>
+</ul>
+<p>  bare-name → class-member fallback in the checker's identifier   resolution. Today bare names resolve through scope; the v0.47   diagnostics catch the most common legacy paths, but a complete   G1 enforcement requires walking the resolver and proving no   field/static fallback can fire. Tracked for v0.48.</p>
+<ul>
+<li>**G6 (formatter rewrite)** — <code>&lt;DeclaringClass&gt;.foo</code> →</li>
+</ul>
+<p>  <code>Self.foo</code> inside the declaring class body, plus   <code>[TYA-E0413]</code> strict-mode warning. Tracked for v0.48.</p>
+<h2 id="verification">Verification</h2>
+<pre><code class="language-sh">go test ./... -count=1
+go test ./tests -run TestSelfhostV01Scripts -count=1</code></pre>
+<p>All green at the v0.47.0 tag. The v0.46 <code>TestV46Scripts</code> and v0.45 <code>TestV45Scripts</code> continue to pass on the migrated fixtures.</p>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="spec.html"><code>docs/v0.47/SPEC.md</code></a> — frozen v0.47 specification.</li>
+<li><a href="../v0.46/SPEC.md"><code>docs/v0.46/SPEC.md</code></a> — the surface v0.47</li>
+</ul>
+<p>  finalizes.</p>
+<ul>
+<li><a href="../v0.46/RELEASE_NOTES.md"><code>docs/v0.46/RELEASE_NOTES.md</code></a> — the</li>
+</ul>
+<p>  transitional release listing what v0.47 retires.</p>
+<ul>
+<li><a href="../../ROADMAP.md"><code>ROADMAP.md</code></a> — <code>Released</code> § v0.47.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

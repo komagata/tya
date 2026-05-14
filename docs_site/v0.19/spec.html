@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.19 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-19-specification">Tya v0.19 Specification</h1>
+<p>This document is the specification for Tya v0.19 after v0.18 module-style standard APIs and minimal global built-ins.</p>
+<h2 id="theme">Theme</h2>
+<p>Tya v0.19 adds predicate names.</p>
+<p>A function or method name may end with <code>?</code> when the callable answers a yes/no question. Such a callable must return a boolean value.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Allow <code>?</code> at the end of function names.</li>
+<li>Allow <code>?</code> at the end of instance method names.</li>
+<li>Allow <code>?</code> at the end of class method names.</li>
+<li>Require predicate functions and methods to return boolean values.</li>
+<li>Keep predicate names visually distinct without adding a new type system.</li>
+<li>Keep <code>?</code> out of variable, module, class, field, and constant names.</li>
+</ul>
+<h2 id="included-in-v0-19">Included in v0.19</h2>
+<p>v0.19 includes all v0.18 behavior and adds:</p>
+<ul>
+<li>predicate function names such as <code>empty?</code></li>
+<li>predicate instance method names such as <code>active?</code></li>
+<li>predicate class method names such as <code>User.enabled?()</code></li>
+<li>predicate module functions such as <code>array.empty?(values)</code></li>
+<li>boolean return enforcement for predicate calls</li>
+<li>predicate naming convention that prefers <code>nil?</code> over <code>is_nil?</code></li>
+<li>source-oriented diagnostics for invalid predicate names and return values</li>
+</ul>
+<h2 id="not-included-in-v0-19">Not Included in v0.19</h2>
+<p>v0.19 does not include:</p>
+<ul>
+<li>general <code>?</code> suffixes on variables</li>
+<li><code>?</code> suffixes on module names</li>
+<li><code>?</code> suffixes on class names</li>
+<li><code>?</code> suffixes on field names</li>
+<li><code>?</code> suffixes on constants</li>
+<li>optional chaining</li>
+<li>nil-coalescing operators</li>
+<li>ternary operators</li>
+<li>type annotations</li>
+<li>static boolean return inference</li>
+<li>predicate overloading</li>
+<li>method aliases</li>
+<li><code>is_</code> or <code>has_</code> rewrites performed by the compiler</li>
+</ul>
+<h2 id="predicate-function-names">Predicate Function Names</h2>
+<p>A function name may end with <code>?</code>.</p>
+<pre><code class="language-tya">empty? = values -&gt;
+  len(values) == 0
+
+print empty?([])</code></pre>
+<p>The base name before <code>?</code> follows the normal function naming rule.</p>
+<p>Allowed:</p>
+<pre><code class="language-tya">empty? = values -&gt; len(values) == 0
+has_name? = user -&gt; dict.has(user, &quot;name&quot;)
+_internal? = value -&gt; value == nil</code></pre>
+<p>Forbidden:</p>
+<pre><code class="language-tya">Empty? = value -&gt; true
+empty_? = value -&gt; true
+empty?? = value -&gt; true</code></pre>
+<p>Predicate names should not repeat the predicate meaning with an <code>is_</code> prefix when the shorter base name is clear.</p>
+<p>Preferred:</p>
+<pre><code class="language-tya">nil? = value -&gt; value == nil
+empty? = values -&gt; len(values) == 0
+active? = user -&gt; user[&quot;active&quot;] == true</code></pre>
+<p>Avoid:</p>
+<pre><code class="language-tya">is_nil? = value -&gt; value == nil
+is_empty? = values -&gt; len(values) == 0
+is_active? = user -&gt; user[&quot;active&quot;] == true</code></pre>
+<p><code>has_</code> is still allowed when it names possession rather than predicate syntax.</p>
+<pre><code class="language-tya">has_name? = user -&gt; dict.has(user, &quot;name&quot;)</code></pre>
+<h2 id="predicate-methods">Predicate Methods</h2>
+<p>Instance methods may end with <code>?</code>.</p>
+<pre><code class="language-tya">class User
+  init = name -&gt;
+    @name = name
+
+  named? = -&gt;
+    @name != &quot;&quot;
+
+user = User(&quot;komagata&quot;)
+print user.named?()</code></pre>
+<p>Class methods may also end with <code>?</code>.</p>
+<pre><code class="language-tya">class User
+  @@enabled = true
+
+  @@enabled? = -&gt;
+    @@enabled
+
+print User.enabled?()</code></pre>
+<p>Private predicate methods use the existing private naming rule with a leading underscore.</p>
+<pre><code class="language-tya">class User
+  _valid_name? = name -&gt;
+    name != &quot;&quot;</code></pre>
+<h2 id="predicate-module-functions">Predicate Module Functions</h2>
+<p>Module function names may end with <code>?</code>.</p>
+<pre><code class="language-tya">module path
+  absolute? = value -&gt;
+    string.starts_with(value, &quot;/&quot;)</code></pre>
+<p>Use the predicate through normal module member access.</p>
+<pre><code class="language-tya">import path
+
+print path.absolute?(&quot;/tmp/memo.txt&quot;)</code></pre>
+<p>Standard modules may use predicate names when the result is boolean.</p>
+<pre><code class="language-tya">import array
+import dict
+import value
+
+print array.empty?([])
+print dict.has?(user, &quot;name&quot;)
+print value.nil?(result)</code></pre>
+<h2 id="boolean-return-requirement">Boolean Return Requirement</h2>
+<p>Every call to a predicate function or method must return a boolean value.</p>
+<pre><code class="language-tya">ready? = -&gt;
+  true
+
+print ready?()</code></pre>
+<p>Returning any non-boolean value is an error.</p>
+<pre><code class="language-tya">name? = -&gt;
+  &quot;komagata&quot;
+
+print name?()</code></pre>
+<p>The call to <code>name?()</code> is invalid because the function returns a string.</p>
+<p>This check is performed when the predicate call returns. Tya remains a dynamic language and v0.19 does not add static return type inference.</p>
+<h2 id="syntax-boundary">Syntax Boundary</h2>
+<p><code>?</code> is part of the identifier only when it appears at the end of a callable name.</p>
+<p>Allowed callable names:</p>
+<pre><code class="language-text">empty?
+has_name?
+_internal?</code></pre>
+<p>Names that are not callable declarations cannot end with <code>?</code>.</p>
+<pre><code class="language-tya">active? = true       # invalid
+class User?          # invalid
+module user?         # invalid
+@active? = true      # invalid
+@@enabled? = true    # invalid as a class variable</code></pre>
+<p>The following are still ordinary calls and member calls:</p>
+<pre><code class="language-tya">empty?()
+user.active?()
+User.enabled?()
+array.empty?(values)</code></pre>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>v0.19 implementations should report source-oriented errors for:</p>
+<ul>
+<li>invalid <code>?</code> placement in a name</li>
+<li><code>?</code> used on a non-callable binding</li>
+<li>predicate functions returning non-boolean values</li>
+<li>predicate instance methods returning non-boolean values</li>
+<li>predicate class methods returning non-boolean values</li>
+<li>predicate module functions returning non-boolean values</li>
+</ul>
+<p>Diagnostics should mention the predicate name and the actual returned value kind when available.</p>
+    </article>
+  </main>
+</body>
+</html>

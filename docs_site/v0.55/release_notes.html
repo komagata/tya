@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Release Notes v0.55 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-55-release-notes">Tya v0.55 Release Notes</h1>
+<p>&gt; **Status:** shipped. <code>tya version</code> reports <code>0.55.0</code> and &gt; <code>ROADMAP.md</code> carries the matching <code>Released</code> entry.</p>
+<h2 id="tl-dr">TL;DR</h2>
+<p>v0.55 makes <code>tya lint</code> ready for CI use:</p>
+<ul>
+<li>Per-line <code># tya-lint-ignore</code> opt-out comments.</li>
+<li><code>--format=json</code> machine-readable output.</li>
+<li>New <code>TYAL0002</code> rule: dead code after <code>return</code> / <code>raise</code>.</li>
+<li>New autofix: <code>--fix</code> now unwraps redundant <code>if true</code> /</li>
+</ul>
+<p>  <code>if false</code> blocks in place.</p>
+<p>The language surface is unchanged from v0.54.</p>
+<h2 id="what-s-new">What's new</h2>
+<h3 id="per-line-opt-out-comments">Per-line opt-out comments</h3>
+<pre><code class="language-tya"># tya-lint-ignore: TYAL0001
+tmp = 42                       # silences the unused-local finding
+
+guard = false  # tya-lint-ignore   # silences every finding on this line</code></pre>
+<p><code># tya-lint-ignore</code> with no code list is a wildcard; a comma- separated <code>: CODE</code> list scopes the suppression. Inline comments target the same line, full-line comments target the next statement.</p>
+<h3 id="format-json"><code>--format=json</code></h3>
+<pre><code class="language-sh">$ tya lint --format=json src/</code></pre>
+<pre><code class="language-json">{
+  &quot;version&quot;: &quot;0.55.0&quot;,
+  &quot;findings&quot;: [
+    {
+      &quot;path&quot;: &quot;src/foo.tya&quot;,
+      &quot;line&quot;: 12,
+      &quot;col&quot;: 3,
+      &quot;code&quot;: &quot;TYAL0001&quot;,
+      &quot;message&quot;: &quot;unused local \&quot;tmp\&quot;&quot;,
+      &quot;autofixable&quot;: true
+    }
+  ]
+}</code></pre>
+<p>Findings are sorted by <code>(path, line, col, code)</code>. Empty runs emit <code>&quot;findings&quot;: []</code>. Exit codes are unchanged (<code>0</code> clean / <code>1</code> findings / <code>2</code> error).</p>
+<h3 id="tyal0002-dead-code-after-return-raise">TYAL0002 dead code after <code>return</code> / <code>raise</code></h3>
+<pre><code class="language-tya">greet = -&gt;
+  return 1
+  print(&quot;unreachable&quot;)   # TYAL0002 dead code after return</code></pre>
+<p>The rule fires inside every block (function bodies, <code>if</code> arms, <code>while</code> / <code>for</code> bodies, <code>try</code> / <code>catch</code>, <code>match</code> cases). It is warning-only (no autofix) — removing dead code is a human judgement call.</p>
+<h3 id="fix-autofix-for-tyal0003"><code>--fix</code> autofix for <code>TYAL0003</code></h3>
+<pre><code class="language-tya"># before
+if true
+  print(&quot;hi&quot;)
+
+# after `tya lint --fix`
+print(&quot;hi&quot;)</code></pre>
+<p><code>--fix</code> runs in two passes: first <code>TYAL0003</code> unwrap-if (which shifts source positions), then <code>TYAL0001</code> line-delete on the re-lexed source. Each pass writes the file in place.</p>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>The text output format (<code>path:line:col: CODE message</code>) is</li>
+</ul>
+<p>  unchanged. Existing CI pipelines that grep <code>tya lint</code> output   continue to work.</p>
+<ul>
+<li>The global <code>--format=human|json</code> for diagnostics is unchanged.</li>
+</ul>
+<p>  Only the <code>lint</code> subcommand reads its own <code>--format</code> flag.</p>
+<ul>
+<li>LSP code action <code>unwrap-if</code> (v0.51) continues to apply its</li>
+</ul>
+<p>  own edit; the CLI now performs an equivalent rewrite when   <code>--fix</code> is supplied.</p>
+<h2 id="tooling">Tooling</h2>
+<ul>
+<li><code>Formula/tya.rb</code> → <code>0.55.0</code>.</li>
+<li><code>editors/vscode/package.json</code> → <code>0.55.0</code>.</li>
+<li>New fixtures in <code>tests/testdata/v55_lint/</code> covering opt-out,</li>
+</ul>
+<p>  dead-code, <code>--fix</code> unwrap, and JSON output.</p>
+<h2 id="next">Next</h2>
+<ul>
+<li><code>TYAL0004</code> / <code>TYAL0005</code> autofix (deep nesting and long-function</li>
+</ul>
+<p>  splits remain warning-only; the right reshape is human-judged).</p>
+<ul>
+<li><code>--format=sarif</code> for tools that ingest SARIF v2.1 directly.</li>
+<li>File-scope opt-out (<code># tya-lint-ignore-file</code>).</li>
+<li>Other Toolchain Epic items (<code>tya task</code> v2, <code>tya doc</code> v2).</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

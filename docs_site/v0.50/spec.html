@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.50 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-50-specification">Tya v0.50 Specification</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.50.0</code>. &gt; v0.50 extends the three toolchain subcommands introduced in v0.49 &gt; (<code>tya new</code>, <code>tya task</code>, <code>tya lint</code>) so they are usable on a real &gt; project.</p>
+<h2 id="theme">Theme</h2>
+<p>v0.49 cut the first slice of the Toolchain track. v0.50 extends all three subcommands without adding new ones, focusing on the flags and behaviors that turn the v0.49 minimal shapes into a practical workflow.</p>
+<p>The language surface is unchanged from v0.49. Existing programs keep compiling.</p>
+<h2 id="tya-lint-autofix-3-new-rules"><code>tya lint</code> — autofix + 3 new rules</h2>
+<h3 id="cli">CLI</h3>
+<pre><code>tya lint [--fix] [paths...]</code></pre>
+<p><code>--fix</code> applies autofixable findings in place. v0.50 ships autofix for <code>TYAL0001 unused local</code> only (line removal); other rules are warning-only.</p>
+<h3 id="rules">Rules</h3>
+<p>| Code | Description | Autofix in v0.50 | |------|-------------|-------------------| | TYAL0001 | unused local binding (v0.49) | yes (line removal) | | TYAL0003 | redundant <code>if true</code> / <code>if false</code> | no (queued for v0.51+) | | TYAL0004 | deeply nested blocks (depth ≥ 5) | no | | TYAL0005 | very long functions (body &gt; 50 statements) | no |</p>
+<p>Thresholds are hardcoded constants in <code>internal/checker/lint_rules.go</code>: <code>nestingThreshold = 5</code>, <code>longFunctionThreshold = 50</code>. Threshold configuration via <code>tya.toml [lint]</code> is queued for v0.51+.</p>
+<p><code>TYAL0002</code> is reserved (originally planned for dead code after <code>return</code> / <code>raise</code>; deferred so the autofix surface stays small in v0.50).</p>
+<h3 id="output-format">Output format</h3>
+<p>Unchanged from v0.49:</p>
+<pre><code>&lt;path&gt;:&lt;line&gt;:&lt;col&gt;: &lt;code&gt; &lt;message&gt;</code></pre>
+<p>Sorted by path/line/column. Findings stream to stdout. tya exits 1 when any non-autofixed finding remains; 0 when clean; 2 on argument or I/O errors.</p>
+<h3 id="out-of-scope-v0-50">Out of scope (v0.50)</h3>
+<ul>
+<li>Per-line opt-out (<code># tya-lint-ignore: TYAL0001</code>). Aligns with Go</li>
+</ul>
+<p>  culture: prefer fixing flagged code over suppressing it. May   ship later if a concrete need appears.</p>
+<ul>
+<li><code>--format=json</code> output.</li>
+<li>AST-rewriting autofix for TYAL0003 (currently requires safe</li>
+</ul>
+<p>  <code>formatter.Unparse</code> round-trip; deferred to v0.51+).</p>
+<h2 id="tya-new-flags-templates"><code>tya new</code> — flags + templates</h2>
+<h3 id="cli">CLI</h3>
+<pre><code>tya new [flags] &lt;name&gt;
+tya new --here [flags]</code></pre>
+<p>Flags:</p>
+<p>| Flag | Default | Effect | |------|---------|--------| | <code>--here</code> | off | initialise the current directory (no <code>&lt;name&gt;</code>) | | <code>--template app\|lib</code> | <code>app</code> | scaffold variant | | <code>--force</code> | off | overwrite an existing target directory | | <code>--no-git</code> | off (git init runs) | skip the automatic <code>git init</code> |</p>
+<h3 id="scaffold-contents">Scaffold contents</h3>
+<p>Both templates write <code>tya.toml</code> (with <code>[tasks]</code> sample entries <code>run</code> and <code>test</code>), <code>.gitignore</code>, and a short <code>README.md</code>.</p>
+<p><code>app</code> template (default):</p>
+<pre><code>&lt;name&gt;/
+  tya.toml
+  src/main.tya       # print(&quot;Hello, Tya!&quot;)
+  tests/main_test.tya
+  .gitignore
+  README.md</code></pre>
+<p><code>lib</code> template:</p>
+<pre><code>&lt;name&gt;/
+  tya.toml
+  src/&lt;PascalName&gt;.tya   # class skeleton
+  tests/&lt;pascalname&gt;_test.tya
+  .gitignore
+  README.md</code></pre>
+<p><code>&lt;PascalName&gt;</code> is <code>&lt;name&gt;</code> rewritten to PascalCase, splitting on <code>-</code>, <code>_</code>, and <code>.</code> and capitalising the first letter of each part (<code>my-lib</code> → <code>MyLib</code>).</p>
+<h3 id="git-init">git init</h3>
+<p>Runs <code>git init --quiet &lt;target&gt;</code> after writing the scaffold. If <code>git</code> is missing or fails, prints a warning to stderr and proceeds without aborting (exit 0). <code>--no-git</code> skips the call entirely.</p>
+<h3 id="errors-and-exit-codes">Errors and exit codes</h3>
+<p>| Code | When | |------|------| | TYA-E0910 | invalid project name (contains a path separator) | | TYA-E0911 | target directory already exists (and <code>--force</code> not given) | | TYA-E0912 | invalid <code>--template</code> value | | TYA-E0913 | <code>--here</code> combined with a target name |</p>
+<h2 id="tya-task-parallel-execution"><code>tya task</code> — parallel execution</h2>
+<h3 id="new-toml-form">New TOML form</h3>
+<p>A task can be declared as a table with a <code>cmds</code> array and an optional <code>parallel = true</code> flag. The string and array forms from v0.49 are unchanged.</p>
+<pre><code class="language-toml">[tasks]
+ci      = &quot;tya format &amp;&amp; tya test&quot;           # string form (sequential single)
+release = [&quot;tya build&quot;, &quot;git push --tags&quot;]   # array form (sequential)
+
+[tasks.watch]                                # table form
+cmds     = [&quot;tya format --watch&quot;, &quot;tya lsp&quot;]
+parallel = true                              # if false or absent, behaves like array form</code></pre>
+<h3 id="execution-model">Execution model</h3>
+<p>When <code>parallel = true</code>:</p>
+<ul>
+<li>Every <code>cmds</code> entry runs under its own <code>/bin/sh -c</code> concurrently.</li>
+<li>tya waits for **all** child processes (case B). It does not</li>
+</ul>
+<p>  SIGTERM siblings when one fails.</p>
+<ul>
+<li>Each line of every child's stdout/stderr is prefixed with</li>
+</ul>
+<p>  <code>[&lt;index&gt; &lt;truncated cmd&gt;] </code> and streamed to the parent's   stdout/stderr. <code>&lt;index&gt;</code> is 1-origin; the command is truncated   to 16 characters with <code>…</code> as the truncation marker.</p>
+<ul>
+<li>After all children finish, if any exited non-zero, tya itself</li>
+</ul>
+<p>  exits with the **first** non-zero exit code observed (defined   as: smallest index among the failing commands).</p>
+<ul>
+<li>The final stderr line is `[TYA-E0903] task &quot;&lt;name&gt;&quot; parallel:</li>
+</ul>
+<p>  &lt;failed list&gt;<code> where </code>&lt;failed list&gt;<code> enumerates every failure   as </code>#&lt;idx&gt; (&quot;&lt;cmd&gt;&quot;) exit &lt;code&gt;`.</p>
+<p>When <code>parallel = false</code> (or absent): identical to the v0.49 array form (sequential, stop on first failure, TYA-E0901 on failure).</p>
+<h3 id="argument-passthrough">Argument passthrough</h3>
+<p>Unchanged from v0.49: extra args after <code>&lt;name&gt;</code> are POSIX-quoted and appended to **every** command in the task (parallel form included).</p>
+<h3 id="out-of-scope-v0-50">Out of scope (v0.50)</h3>
+<ul>
+<li>Task dependency graph (<code>depends-on = [...]</code>).</li>
+<li><code>--watch</code> driver.</li>
+<li>Per-task environment variables.</li>
+<li>TTY-aware coloured prefixes (always plain text in v0.50).</li>
+</ul>
+<h2 id="diagnostic-code-registry-update">Diagnostic code registry update</h2>
+<p>v0.50 adds two codes; the rest of the <code>TYA-E090x</code> range continues to belong to the toolchain subcommands.</p>
+<p>| Code | Subcommand | Meaning | |------|------------|---------| | TYA-E0900 | <code>tya task</code> | unknown task name (v0.49) | | TYA-E0901 | <code>tya task</code> | array-form task: one entry failed (v0.49) | | TYA-E0902 | <code>tya task</code> | no <code>tya.toml</code> found (v0.49) | | TYA-E0903 | <code>tya task</code> | parallel-form task: one or more cmds failed (v0.50) | | TYA-E0910 | <code>tya new</code>  | invalid project name (v0.49) | | TYA-E0911 | <code>tya new</code>  | target directory already exists (v0.49) | | TYA-E0912 | <code>tya new</code>  | invalid <code>--template</code> value (v0.50) | | TYA-E0913 | <code>tya new</code>  | <code>--here</code> and target name conflict (v0.50) | | TYAL0001  | <code>tya lint</code> | unused local (v0.49; autofix in v0.50) | | TYAL0003  | <code>tya lint</code> | redundant <code>if true</code> / <code>if false</code> (v0.50) | | TYAL0004  | <code>tya lint</code> | deeply nested block (v0.50) | | TYAL0005  | <code>tya lint</code> | very long function (v0.50) |</p>
+<p><code>TYAL0002</code> is reserved.</p>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>Language surface unchanged from v0.49 (and v0.48 before it).</li>
+<li><code>tya.toml</code> schema: backwards compatible. v0.49 manifests parse</li>
+</ul>
+<p>  unchanged in v0.50 (new table form is purely additive).</p>
+<ul>
+<li>CLI: no existing subcommand changed shape. v0.49 manifests/usage</li>
+</ul>
+<p>  continue to work.</p>
+    </article>
+  </main>
+</body>
+</html>

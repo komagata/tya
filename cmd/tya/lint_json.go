@@ -11,6 +11,8 @@ type lintFinding struct {
 	Line        int    `json:"line"`
 	Col         int    `json:"col"`
 	Code        string `json:"code"`
+	Title       string `json:"title"`
+	DocURL      string `json:"doc_url"`
 	Message     string `json:"message"`
 	Autofixable bool   `json:"autofixable"`
 }

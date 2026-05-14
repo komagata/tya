@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.46 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-46-specification">Tya v0.46 Specification</h1>
+<p>&gt; **Status:** shipped, transitional. The new keyword surface &gt; (<code>private</code>, <code>static</code>, <code>self</code>, <code>Self</code>, <code>initialize</code>) is fully &gt; implemented and is the canonical form for new code. The legacy &gt; v0.45 surface (<code>@</code>, <code>@@</code>, <code>_</code>-prefix, <code>init</code>) still parses for &gt; backward compatibility — the clean-cut removal of legacy syntax &gt; is deferred to v0.47. G4 (strict bare-name receivers) is also &gt; deferred: bare identifiers in method bodies continue to resolve &gt; through the v0.45 rules during the transition.</p>
+<h2 id="theme">Theme</h2>
+<p>v0.44 / v0.45 settled the **shape** of classes and packages (directory-as-package, class files, cross-file private). v0.46 replaces the **sigil-based member syntax** (<code>@</code>, <code>@@</code>, <code>_</code>-prefix) with **keyword-based syntax** modelled on Swift: <code>self</code> for the instance, <code>Self</code> for the declaring class, <code>private</code> for visibility, <code>static</code> for class-level members.</p>
+<p>The result reads like Swift/Java but eliminates Java's bare-name ambiguity (a real footgun in a dynamically-typed language) by **requiring an explicit receiver** for every field/static access.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>**G1.** Replace the leading-underscore private convention on class</li>
+</ul>
+<p>  members with an explicit <code>private</code> keyword.</p>
+<ul>
+<li>**G2.** Replace the <code>@field</code> / <code>@@field</code> sigils with the Swift</li>
+</ul>
+<p>  keyword pair: <code>self.field</code> (instance) and <code>Self.field</code> (class).</p>
+<ul>
+<li>**G3.** Replace the <code>@@field</code> declaration prefix with a <code>static</code></li>
+</ul>
+<p>  modifier keyword.</p>
+<ul>
+<li>**G4.** Enforce explicit receivers — bare identifiers in method</li>
+</ul>
+<p>  bodies resolve to locals / parameters / imports only, never to   class members.</p>
+<ul>
+<li>**G5.** Rename the constructor method from <code>init</code> to <code>initialize</code>.</li>
+</ul>
+<h2 id="non-goals">Non-Goals</h2>
+<ul>
+<li>Type annotations (Tya stays dynamically typed).</li>
+<li>Method overloading.</li>
+<li>Polymorphic / dynamic static dispatch. <code>Self</code> is **statically</li>
+</ul>
+<p>  resolved** to the lexically enclosing class — same as a hardcoded   class name, just rename-safe. (Swift's dynamic-Self semantics are   not adopted; see Q4.)</p>
+<ul>
+<li>Self-host upgrade work — that lives in v0.4x (M8 onward).</li>
+<li>Module-level private bindings (<code>module foo; _helper</code>) keep the</li>
+</ul>
+<p>  underscore convention until v0.4x M9 retires the module keyword   entirely.</p>
+<h2 id="g1-private-keyword">G1 — <code>private</code> keyword</h2>
+<p><code>private</code> is a prefix modifier on a class member declaration. The absence of <code>private</code> means public. Leading-underscore on a class member is **no longer a visibility marker** in v0.46.</p>
+<pre><code class="language-tya">class User
+  name = &quot;&quot;                # public instance field
+  private id = 0           # private instance field
+  static count = 0         # public class field
+  private static seed = 1  # private class field
+
+  initialize = name -&gt;           # public constructor
+    self.name = name
+
+  private initialize_with_id = name, id -&gt;   # private constructor
+    self.name = name
+    self.id = id
+
+  greeting = -&gt;            # public instance method
+    &quot;Hello, {self.name}&quot;
+
+  private normalize = -&gt;   # private instance method
+    self.name = trim(self.name)
+
+  static build = name -&gt;   # public class method
+    Self(name)
+
+  private static next_id = -&gt;   # private class method
+    Self.seed + 1</code></pre>
+<p>Canonical modifier order:</p>
+<pre><code>[private] [static] [abstract|final|override] &lt;name&gt; = &lt;body&gt;</code></pre>
+<p>Other orders are rejected by the parser (canonical syntax: every program has exactly one source representation).</p>
+<p><code>_init</code> is no longer special-cased. The v0.46 private constructor is spelled <code>private initialize</code> (see G5 for the constructor rename).</p>
+<h2 id="g2-self-and-self-keywords">G2 — <code>self</code> and <code>Self</code> keywords</h2>
+<h3 id="reserved-words">Reserved words</h3>
+<ul>
+<li>**<code>self</code>** (lowercase) — refers to the **instance**.</li>
+<ul>
+<li>Valid inside instance methods and constructors.</li>
+<li>Invalid in <code>static</code> methods (the receiver is the class, not an</li>
+</ul>
+</ul>
+<p>    instance) — <code>[TYA-E0411]</code>.</p>
+<ul>
+<li>This is a **breaking change** to the existing <code>self</code> semantics</li>
+</ul>
+<p>    (v0.45 reserved <code>self</code> as a class-method-only reference to the     class object; v0.46 reverses it).</p>
+<ul>
+<li>**<code>Self</code>** (uppercase) — refers to the **class itself**.</li>
+<ul>
+<li>Valid inside instance methods, static methods, field</li>
+</ul>
+</ul>
+<p>    initializers, and constructors.</p>
+<ul>
+<li>Invalid outside a class body — <code>[TYA-E0412]</code>.</li>
+<li>**Statically resolved** to the lexically enclosing class. The</li>
+</ul>
+<p>    <code>Self</code> written inside <code>class User</code> always means <code>User</code>,     regardless of how the method is invoked. <code>Self</code> inside     <code>class Admin extends User</code> means <code>Admin</code>.</p>
+<ul>
+<li><code>Self(args)</code> is equivalent to <code>&lt;DeclaringClass&gt;(args)</code> — i.e.</li>
+</ul>
+<p>    instance construction.</p>
+<p><code>Self</code> is the only PascalCase reserved word in Tya. Its visual form mirrors the language's existing class-name convention (<code>PascalCase</code> = type-like), matching Swift's design.</p>
+<h3 id="g2-sample">G2 sample</h3>
+<pre><code class="language-tya">class User
+  name = &quot;&quot;
+  static count = 0
+
+  initialize = name -&gt;
+    self.name = name              # instance field write
+    Self.count = Self.count + 1   # class field write
+
+  greeting = -&gt;
+    &quot;Hello, {self.name} (#{Self.count})&quot;   # both forms in interpolation
+
+  static build = name -&gt;
+    Self(name)                    # constructs an instance of User
+
+class Admin extends User
+  initialize = name -&gt;
+    super(name)                   # parent constructor
+    self.role = &quot;admin&quot;
+    Self.count = Self.count + 1   # Admin's own count (if redeclared);
+                                  # otherwise inherits User.count
+
+  greeting = -&gt;
+    &quot;Hello, {self.name} (admin)&quot;</code></pre>
+<h2 id="g3-static-keyword">G3 — <code>static</code> keyword</h2>
+<p><code>static</code> is a prefix modifier marking a class-level (class-bound, not instance-bound) member declaration.</p>
+<pre><code class="language-tya">class Counter
+  static value = 0                   # class field
+  static increment = -&gt;              # class method
+    Self.value = Self.value + 1
+  static reset = -&gt;                  # class method
+    Self.value = 0</code></pre>
+<p><code>static</code> composes with <code>private</code>, in canonical order:</p>
+<pre><code class="language-tya">class Counter
+  private static seed = 42           # private class field
+  private static reseed = n -&gt;       # private class method
+    Self.seed = n</code></pre>
+<p>The <code>@@field</code> declaration prefix is **removed** (<code>[TYA-E0410]</code>).</p>
+<h2 id="g4-explicit-receivers">G4 — Explicit receivers</h2>
+<p>In v0.46 a class-member access **always requires a receiver**:</p>
+<p>| Target              | Form                  | | ------------------- | --------------------- | | Local / param       | bare name <code>x</code>         | | Instance member     | <code>self.x</code>              | | Class member (own)  | <code>Self.x</code>              | | Class member (other) | <code>&lt;ClassName&gt;.x</code>      |</p>
+<p>A bare identifier in a method body never resolves to a class member. This is the deliberate divergence from Java, where bare-name resolution falls back to <code>this.field</code> and class statics when no local matches — a hazard that requires static type checking to disambiguate. In a dynamically-typed language, the bare-name fallback silently turns typos into new locals (or vice versa).</p>
+<p>The rule is symmetric for reads and writes. <code>count = count + 1</code> inside a method body always creates / updates a local <code>count</code> and never touches <code>Self.count</code>. To update a class field, write <code>Self.count = Self.count + 1</code>.</p>
+<h3 id="why-this-beats-java">Why this beats Java</h3>
+<p>| Java pain                       | v0.46 resolution                         | | ------------------------------- | ---------------------------------------- | | <code>count = count + 1</code> ambiguous   | Bare <code>count</code> is **always** a local.      | | <code>this</code> works only in instance   | <code>Self</code> is symmetric and works in static. | | <code>ClassName.foo</code> hardcoded       | <code>Self.foo</code> is rename-safe.               | | <code>_init</code> / <code>_foo</code> underscore     | <code>private initialize</code> / <code>private foo</code>.    | | <code>public</code> is a verbose default   | Public is implicit (no marker).          | | Static access bare or qualified | One canonical form: <code>Self.foo</code>.          |</p>
+<h3 id="canonical-receiver-rule">Canonical receiver rule</h3>
+<p>When accessing a member of the declaring class from inside that class, the canonical form is **<code>Self.foo</code>**, not <code>&lt;DeclaringClass&gt;.foo</code>. The formatter rewrites the latter to the former.</p>
+<p><code>&lt;OtherClass&gt;.foo</code> (a name other than the declaring class) is permitted **only when the access is to a different class** — for example reaching a parent's class field from a subclass:</p>
+<pre><code class="language-tya">class User
+  static count = 0
+
+  static record_birth = -&gt;
+    Self.count = Self.count + 1   # canonical: Self
+
+class Admin extends User
+  static admin_count = 0
+
+  static record_birth = -&gt;
+    User.count = User.count + 1   # explicit: reaching parent's count
+    Self.admin_count = Self.admin_count + 1   # own static</code></pre>
+<p>If the access target is <code>Self</code> (the declaring class) but written as a class name, the formatter rewrites it; the checker emits a warning under <code>--check-unused</code> strict mode (<code>[TYA-E0413]</code>).</p>
+<h2 id="g5-initialize-constructor-name">G5 — <code>initialize</code> constructor name</h2>
+<p>The constructor method name changes from <code>init</code> to <code>initialize</code>. Tya joins the Ruby tradition (<code>initialize</code>) rather than Swift's abbreviation (<code>init</code>); the longer name is unambiguous and stops reading as a regular noun.</p>
+<pre><code class="language-tya">class User
+  name = &quot;&quot;
+
+  initialize = name -&gt;         # public constructor (was: init)
+    self.name = name
+
+  private initialize_with_id = name, id -&gt;   # private constructor variant
+    self.name = name
+    self.id = id
+
+  greeting = -&gt;
+    &quot;Hello, {self.name}&quot;</code></pre>
+<p>The <code>init</code> identifier becomes a regular name with no special status. Code that previously declared <code>init = ...</code> either (a) renames to <code>initialize</code> (typical migration) or (b) keeps the name <code>init</code> if it was a non-constructor helper method (unusual but allowed — <code>init</code> is no longer reserved).</p>
+<p>Combined with G1: the v0.45 <code>_init</code> private constructor becomes <code>private initialize</code> in v0.46, not <code>private init</code>.</p>
+<p>Diagnostic: <code>[TYA-E0414]</code> — a class declares <code>init = ...</code> (or <code>private init = ...</code>) where <code>initialize</code> is expected. The error points at the rename. Wired in v0.46 as a clean cut; there is no deprecation window.</p>
+<h2 id="static-dispatch-semantics">Static dispatch semantics</h2>
+<p><code>Self</code> is **statically resolved**, like Java's static methods:</p>
+<ul>
+<li><code>Self</code> inside <code>class User</code>'s body is <code>User</code>. Always.</li>
+<li><code>Self</code> inside <code>class Admin extends User</code>'s body is <code>Admin</code>. Always.</li>
+<li>If <code>Admin</code> does not redeclare a static method declared on <code>User</code>,</li>
+</ul>
+<p>  calling <code>Admin.foo()</code> invokes the inherited body — which still   reads <code>User</code>'s statics (because that body was lexically inside   <code>User</code> when it wrote <code>Self</code>).</p>
+<p>Concretely:</p>
+<pre><code class="language-tya">class User
+  static count = 0
+  static record_birth = -&gt;
+    Self.count = Self.count + 1   # Self is User here
+
+class Admin extends User
+  static count = 0                # Admin's own (shadows User.count)
+  # record_birth not redeclared
+
+Admin.record_birth()
+# Calls User.record_birth (inherited).
+# Inside that body, Self == User → User.count is updated.
+# Admin.count stays 0.</code></pre>
+<p>If you want the subclass's <code>count</code> updated, redeclare <code>record_birth</code> on <code>Admin</code>. This matches Java's static-not-virtual rule and avoids Swift's dynamic-Self subtleties.</p>
+<h2 id="full-surface-combined-sample">Full surface (combined sample)</h2>
+<pre><code class="language-tya">abstract class Shape
+  private name = &quot;&quot;
+  static species_count = 0
+
+  initialize = name -&gt;
+    self.name = name
+    Self.species_count = Self.species_count + 1
+
+  abstract area = -&gt;
+    nil
+
+  describe = -&gt;
+    &quot;{self.name} (area={self.area()})&quot;
+
+  private normalize = -&gt;
+    self.name = trim(self.name)
+
+  static count = -&gt;
+    Self.species_count
+
+final class Circle extends Shape
+  private radius = 0
+
+  initialize = name, radius -&gt;
+    super(name)
+    self.radius = radius
+
+  override area = -&gt;
+    self.radius * self.radius * 3.14</code></pre>
+<h2 id="migration">Migration</h2>
+<p>Mechanical rewrites:</p>
+<p>| Old (v0.45)            | New (v0.46)                       | | ---------------------- | --------------------------------- | | <code>@name</code>                | <code>self.name</code>                       | | <code>@name = x</code>            | <code>self.name = x</code>                   | | <code>@@count</code> (read)       | <code>Self.count</code>                      | | <code>@@count = x</code>          | <code>Self.count = x</code>                  | | <code>@@count = 0</code> (decl)   | <code>static count = 0</code>                | | <code>@@build = -&gt; ...</code>     | <code>static build = -&gt; ...</code>           | | <code>_name = ...</code>          | <code>private name = ...</code>              | | <code>_method = -&gt; ...</code>     | <code>private method = -&gt; ...</code>         | | <code>init = name -&gt; ...</code>   | <code>initialize = name -&gt; ...</code>        | | <code>_init = name -&gt; ...</code>  | <code>private initialize = name -&gt; ...</code> | | <code>@@_count = 0</code>         | <code>private static count = 0</code>        | | <code>@@_helper = -&gt; ...</code>   | <code>private static helper = -&gt; ...</code>  | | <code>User.foo</code> (inside User) | <code>Self.foo</code>                      | | <code>User.foo</code> (outside)   | <code>User.foo</code> (unchanged)            |</p>
+<p>The migration is purely mechanical and can be automated. Tya does not ship a deprecation window: v0.46 is a clean cut, with the diagnostics table below pointing at every site that needs editing.</p>
+<h2 id="diagnostics">Diagnostics</h2>
+<p>| Code           | Stage   | Wired in | Condition                                              | | -------------- | ------- | -------- | ------------------------------------------------------ | | <code>[TYA-E0407]</code>  | checker | v0.46    | A class member name begins with <code>_</code>. The leading underscore is no longer a privacy marker; rename or add <code>private</code>. | | <code>[TYA-E0408]</code>  | parser  | v0.46    | <code>private</code> keyword used outside a class body.           | | <code>[TYA-E0409]</code>  | parser  | v0.46    | Modifier order is non-canonical. Expected: <code>private static abstract|final|override &lt;name&gt;</code>. | | <code>[TYA-E0410]</code>  | parser  | v0.46    | <code>@</code> or <code>@@</code> sigil used. Removed in v0.46; use <code>self.name</code> / <code>Self.name</code> / <code>static name = ...</code>. | | <code>[TYA-E0411]</code>  | checker | v0.46    | <code>self</code> used inside a <code>static</code> method. <code>self</code> refers to the instance and is unavailable here; use <code>Self</code>. | | <code>[TYA-E0412]</code>  | checker | v0.46    | <code>Self</code> used outside a class body.                      | | <code>[TYA-E0413]</code>  | checker | v0.46    | <code>&lt;DeclaringClass&gt;.foo</code> written inside its own class body. Canonical form is <code>Self.foo</code>. (Strict-mode warning; the formatter auto-rewrites.) | | <code>[TYA-E0414]</code>  | checker | v0.46    | Class declares <code>init = ...</code> (or <code>private init = ...</code>) where <code>initialize</code> is expected. Constructor renamed to <code>initialize</code> in v0.46. |</p>
+<h2 id="implementation-sketch">Implementation Sketch</h2>
+<ul>
+<li>**Lexer:** add <code>private</code>, <code>static</code>, <code>Self</code>, <code>this</code>-reserve (for</li>
+</ul>
+<p>  future use, but <code>this</code> is not exposed in v0.46) to the reserved-   word table. The existing <code>self</code> keyword stays reserved but   changes meaning (see Checker).</p>
+<ul>
+<li>**Parser:** class-body statement dispatch grows a modifier</li>
+</ul>
+<p>  prefix loop accepting <code>private</code> and <code>static</code> in canonical order.   AST <code>ClassMember</code> nodes get <code>Private</code> and <code>Static</code> flags. The   <code>_init</code> special case is removed.</p>
+<ul>
+<li>**AST:** <code>SelfExpr</code> (existing) is renamed <code>InstanceSelfExpr</code></li>
+</ul>
+<p>  and gains a new sibling <code>ClassSelfExpr</code> for <code>Self</code>. Or simpler:   one <code>SelfExpr</code> with a <code>Class bool</code> field. Field-access nodes   walk through <code>self.foo</code> / <code>Self.foo</code> parsing as <code>MemberExpr</code>   with the reserved-word target.</p>
+<ul>
+<li>**Checker:** rewire <code>isPrivateName(name)</code> to read the new</li>
+</ul>
+<p>  <code>Private</code> flag. New checks:</p>
+<ul>
+<li><code>self</code> outside instance method → <code>[TYA-E0411]</code></li>
+<li><code>Self</code> outside class body → <code>[TYA-E0412]</code></li>
+<li><code>&lt;DeclaringClass&gt;.foo</code> inside own class body → <code>[TYA-E0413]</code></li>
+</ul>
+<p>    (warn).</p>
+<ul>
+<li>bare identifier that matches an instance / class member but</li>
+</ul>
+<p>    not a local → undefined-variable error pointing at     <code>self.foo</code> / <code>Self.foo</code> as the fix.</p>
+<ul>
+<li>**C emitter:** <code>self.foo</code> lowers to the same C as the v0.45</li>
+</ul>
+<p>  <code>@foo</code> did (<code>tya_member(__this, &quot;@&quot; + name)</code>). <code>Self.foo</code>   lowers to the same C as v0.45 <code>@@foo</code> did. The runtime layer   is unchanged.</p>
+<ul>
+<li>**Formatter:** emit <code>private</code> / <code>static</code> keywords in canonical</li>
+</ul>
+<p>  order. Rewrite <code>&lt;DeclaringClass&gt;.foo</code> → <code>Self.foo</code> inside the   declaring class. Rewrite legacy <code>@</code>/<code>@@</code>/<code>_foo</code> shapes during   migration (offered behind <code>tya format --migrate</code> for one minor).</p>
+<h2 id="acceptance">Acceptance</h2>
+<ul>
+<li><code>go test ./... -count=1</code> green; both self-host gates green.</li>
+<li>New fixtures under <code>tests/testdata/v46/</code>:</li>
+<ul>
+<li><code>private_keyword.txtar</code> — every class-member shape with and</li>
+</ul>
+</ul>
+<p>    without <code>private</code>.</p>
+<ul>
+<li><code>self_keyword.txtar</code> — <code>self.field</code> and <code>self.method()</code> reads</li>
+</ul>
+<p>    and writes inside instance methods; <code>[TYA-E0411]</code> from inside     a static method.</p>
+<ul>
+<li><code>Self_keyword.txtar</code> — <code>Self.field</code>, <code>Self.method()</code>,</li>
+</ul>
+<p>    <code>Self(args)</code>, both from instance and static methods;     <code>[TYA-E0412]</code> from outside a class.</p>
+<ul>
+<li><code>static_keyword.txtar</code> — every static-declaration shape.</li>
+<li><code>combined_modifiers.txtar</code> — <code>private static</code>, `private</li>
+</ul>
+<p>    abstract<code>, </code>override<code>, </code>final` combinations.</p>
+<ul>
+<li><code>migration_diagnostics.txtar</code> — every E0407 / E0410 / E0411 /</li>
+</ul>
+<p>    E0412 / E0413 case.</p>
+<ul>
+<li><code>examples/</code>, <code>stdlib/</code>, and the v0.46-surface portion of the</li>
+</ul>
+<p>  Go reference impl carry no <code>@</code>/<code>@@</code> sigils and no <code>_</code>-prefixed   class members after v0.46 lands.</p>
+<h2 id="self-host-constraint">Self-Host Constraint</h2>
+<p><code>selfhost/v01/compiler.tya</code> uses the v0.43 surface (<code>@</code>, <code>@@</code>, <code>_foo</code> privacy). v0.46 ships the new surface in the **Go reference implementation** only; the v01 self-host stays on its frozen surface and is exempt from the new diagnostics when invoked as a v0.1-surface source.</p>
+<p>Concretely:</p>
+<ul>
+<li>The Go lexer/parser/checker accept the v0.46 surface AND the</li>
+</ul>
+<p>  v0.43 surface during a transition window.</p>
+<ul>
+<li>Files identified as part of <code>selfhost/v01/</code> keep the v0.43</li>
+</ul>
+<p>  rules. (Path-based exemption is acceptable for a self-host   gate; user code is not in that path.)</p>
+<ul>
+<li><code>selfhost/v02/</code> is reset to track the v0.46 surface as it</li>
+</ul>
+<p>  develops in the v0.4x Epic. The M8.0–M8.2d scaffolding lands as   before, but the M8.x work going forward targets the v0.46   surface directly.</p>
+<p>The clean alternative — port v01 to the v0.46 surface — is also acceptable but adds a sub-task that the v0.46 Epic does not currently scope. Pick at implementation time.</p>
+<h2 id="open-questions">Open Questions</h2>
+<p>**Q1.** Should <code>Self</code> be allowed at the very top level of a class body (in field initializer position)? Yes:</p>
+<pre><code class="language-tya">class Sequence
+  static current = 0
+  static next = Self.current + 1   # OK at decl time? checker order?</code></pre>
+<p>Implementation concern: declaration order matters. <code>Self.current</code> referenced before <code>current</code> is declared raises an &quot;undefined class member&quot; error. Tya does not promise forward references in class bodies. The user must order declarations top-down.</p>
+<p>**Q2.** <code>super</code> for static methods? Current Tya <code>super(args)</code> works for parent constructor / parent instance method. v0.46 does not extend <code>super</code> to static methods; reach the parent's static explicitly via <code>&lt;ParentName&gt;.foo</code> (the <code>&lt;OtherClass&gt;.foo</code> permitted form). Revisit if subclasses need to call shadowed parent statics frequently.</p>
+<p>**Q3.** Reserve <code>this</code> even though v0.46 does not use it? Yes, for future-proofing. <code>[TYA-E0415]</code> &quot;<code>this</code> is reserved&quot; if a user tries to use it as an identifier — prevents future surprises.</p>
+<p>**Q4.** Adopt Swift's dynamic-<code>Self</code> (polymorphic statics) in a later minor? Open. The v0.46 spec is consistent with Swift in naming but conservative in semantics (static resolution). If a future minor adopts dynamic resolution it can do so without renaming the keyword; the change is purely in <code>Self</code>-lookup at codegen time.</p>
+<h2 id="cross-references">Cross-References</h2>
+<ul>
+<li><a href="../v0.44/SPEC.md"><code>docs/v0.44/SPEC.md</code></a> — the class model that</li>
+</ul>
+<p>  v0.46 reshapes.</p>
+<ul>
+<li><a href="../v0.45/SPEC.md"><code>docs/v0.45/SPEC.md</code></a> — cross-file private</li>
+</ul>
+<p>  enforcement (defines <code>[TYA-E0406]</code> which v0.46 keeps unchanged).</p>
+<ul>
+<li><a href="../NAMING.md"><code>docs/NAMING.md</code></a> — file/identifier shape rules;</li>
+</ul>
+<p>  v0.46 adds <code>Self</code> as the sole PascalCase keyword.</p>
+<ul>
+<li><a href="../CANONICAL_SYNTAX.md"><code>docs/CANONICAL_SYNTAX.md</code></a> — v0.46</li>
+</ul>
+<p>  adds: (a) canonical modifier order on class members, (b) the   <code>Self.foo</code> over <code>&lt;DeclaringClass&gt;.foo</code> rule.</p>
+<ul>
+<li><a href="../../ROADMAP.md"><code>ROADMAP.md</code></a> — v0.46 entry to be added under</li>
+</ul>
+<p>  <code>Scheduled</code>.</p>
+    </article>
+  </main>
+</body>
+</html>

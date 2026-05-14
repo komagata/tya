@@ -163,15 +163,15 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   - [ ] Task dependency graphs.
   - [ ] Per-task environment variables.
 
-- [ ] **Linter extensions**
-  - [ ] Additional rules: suspicious `for` index patterns, unused function
+- [x] **Linter extensions**
+  - [x] Additional rules: suspicious `for` index patterns, unused function
     parameters, and shadowed bindings.
-  - [ ] Extend `TYAL0001 --fix` to remove full multi-line bindings without
+  - [x] Extend `TYAL0001 --fix` to remove full multi-line bindings without
     leaving orphan indented lines.
-  - [ ] File-scope opt-out: `# tya-lint-ignore-file: TYAL0001`.
-  - [ ] `--format=sarif`.
-  - [ ] Share the LSP unwrap-if code action and CLI autofix rewriter.
-  - [ ] Each rule has a stable code, title, and doc URL.
+  - [x] File-scope opt-out: `# tya-lint-ignore-file: TYAL0001`.
+  - [x] `--format=sarif`.
+  - [x] Share the LSP unwrap-if code action and CLI autofix rewriter.
+  - [x] Each rule has a stable code, title, and doc URL.
 
 ## Language
 

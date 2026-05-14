@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codes v0.29 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-diagnostic-codes">Tya Diagnostic Codes</h1>
+<p>Every Tya diagnostic carries a stable code of the form <code>TYA-Xnnnn</code>:</p>
+<ul>
+<li><code>X</code> is <code>E</code> for errors and <code>W</code> for warnings.</li>
+<li><code>nnnn</code> is a zero-padded four-digit number.</li>
+</ul>
+<p>Ranges are pre-allocated by stage so future migrations have room:</p>
+<p>| Range           | Stage    | |-----------------|----------| | <code>E0001</code>–<code>E0099</code> | lexer    | | <code>E0100</code>–<code>E0299</code> | parser   | | <code>E0300</code>–<code>E0599</code> | checker  | | <code>E0600</code>–<code>E0799</code> | codegen  | | <code>E0800</code>–<code>E0899</code> | runner   | | <code>E0900</code>–<code>E0999</code> | fmt      | | <code>W1000</code>+        | warnings |</p>
+<p>v0.29 ships the checker codes below. Lexer, parser, codegen, runner, and fmt errors will be migrated in later releases.</p>
+<p>---</p>
+<h2 id="tya-e0301-shadowed-binding">TYA-E0301 — Shadowed binding</h2>
+<p>A new binding (for-loop variable, catch binding, match-pattern binding, or function-local introduction) reuses a name that is visible in a strictly enclosing scope.</p>
+<pre><code class="language-tya">count = 0
+for count in [1, 2, 3]   # TYA-E0301: count shadows outer count
+  print count</code></pre>
+<p>Fix: rename the inner binding, or prefix it with <code>_</code> to mark it as intentional (<code>_count</code>).</p>
+<h2 id="tya-e0302-unused-import">TYA-E0302 — Unused import</h2>
+<p>A module is imported but no expression in the file references it.</p>
+<pre><code class="language-tya">import string            # TYA-E0302: string is imported but never used
+print &quot;hi&quot;</code></pre>
+<p>Fix: remove the import, or reference the module somewhere in the file.</p>
+<h2 id="tya-e0303-unused-argument">TYA-E0303 — Unused argument</h2>
+<p>A function parameter is never read in the body.</p>
+<pre><code class="language-tya">greet = value -&gt; &quot;hello&quot;  # TYA-E0303: value is unused
+print greet(1)</code></pre>
+<p>Fix: rename the parameter to <code>_</code>, or prefix it with <code>_</code> (e.g. <code>_value</code>) to mark it intentional.</p>
+<h2 id="tya-e0304-unused-private-definition">TYA-E0304 — Unused private definition</h2>
+<p>A top-level binding whose name starts with <code>_</code> is never referenced elsewhere in the file. Names starting with <code>_</code> are private to the file by convention; declaring one and never using it is treated as dead code.</p>
+<pre><code class="language-tya">_helper = 42              # TYA-E0304: _helper is never referenced
+print &quot;hi&quot;</code></pre>
+<p>Fix: remove the definition, or reference it elsewhere in the file.</p>
+<h2 id="tya-e0305-duplicate-parameter">TYA-E0305 — Duplicate parameter</h2>
+<p>A function declares the same parameter name more than once.</p>
+<pre><code class="language-tya">f = x, x -&gt; x             # TYA-E0305: duplicate parameter x</code></pre>
+<p>Fix: rename one of the parameters.</p>
+<h2 id="tya-e0306-duplicate-binding-in-pattern">TYA-E0306 — Duplicate binding in pattern</h2>
+<p>A <code>match</code> pattern binds the same name in more than one position.</p>
+<pre><code class="language-tya">match [&quot;a&quot;, &quot;b&quot;]
+  case [name, name]       # TYA-E0306: name is bound twice
+    print name</code></pre>
+<p>Fix: rename one of the bindings, or compare with an equality check in a guard once guards land.</p>
+    </article>
+  </main>
+</body>
+</html>

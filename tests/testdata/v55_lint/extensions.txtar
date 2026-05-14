@@ -1,0 +1,66 @@
+# Linter extension rules and output formats.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya lint rules.tya
+stdout 'TYAL0006 suspicious for index pattern'
+stdout 'TYAL0007 unused function parameter "unused"'
+stdout 'TYAL0008 shadowed binding "outer"'
+
+! exec $WORK/tya lint --format=json rules.tya
+stdout '"code": "TYAL0007"'
+stdout '"title": "Unused function parameter"'
+stdout '"doc_url": "https://tya-lang.org/lint.html#tyal0007"'
+
+! exec $WORK/tya lint --format=sarif rules.tya
+stdout '"version": "2.1.0"'
+stdout '"ruleId": "TYAL0008"'
+stdout '"helpUri": "https://tya-lang.org/lint.html#tyal0008"'
+
+exec $WORK/tya lint ignored.tya
+! stdout .
+! stderr .
+
+exec $WORK/tya lint --fix multiline.tya
+cmp multiline.tya multiline_expected.tya
+exec $WORK/tya lint multiline.tya
+! stdout .
+! stderr .
+
+-- rules.tya --
+items = ["a", "b"]
+
+for i, item in items
+  print(item)
+
+outer = 1
+if true
+  outer = 2
+  print(outer)
+
+handler = used, unused ->
+  print(used)
+
+handler("ok", "drop")
+
+-- ignored.tya --
+# tya-lint-ignore-file: TYAL0001, TYAL0007, TYAL0008
+
+unused = 1
+outer = 1
+handler = used, ignored ->
+  outer = 2
+  print(used)
+
+handler("ok", "drop")
+
+-- multiline.tya --
+keep = 1
+unused = value ->
+  print(value)
+print(keep)
+
+-- multiline_expected.tya --
+keep = 1
+print(keep)

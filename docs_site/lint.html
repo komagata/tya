@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lint - Tya</title>
+  <link rel="stylesheet" href="document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="index.html">
+        <img src="assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="guide.html">Guide</a>
+        <a href="spec.html">Spec</a>
+        <a href="api.html">API</a>
+        <a href="stdlib.html">Stdlib</a>
+        <a href="libraries.html">Libraries</a>
+        <a href="lint.html">Lint</a>
+        <a href="naming.html">Naming</a>
+        <a href="versions.html">Versions</a>
+        <a href="roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-lint">Tya Lint</h1>
+<p><code>tya lint</code> reports project-policy warnings for valid Tya programs. It does not define language validity; <code>tya check</code> owns compile-time errors.</p>
+<pre><code class="language-sh">tya lint [--fix] [--format=text|json|sarif] [paths...]</code></pre>
+<p>With no paths, lint scans the current directory recursively for <code>.tya</code> files. Text output is the default. JSON output includes stable rule metadata, and SARIF output can be uploaded to code-scanning tools.</p>
+<h2 id="opt-out-comments">Opt-Out Comments</h2>
+<p>Suppress one finding on the same line:</p>
+<pre><code class="language-tya">unused = 1  # tya-lint-ignore: TYAL0001</code></pre>
+<p>Suppress findings for the next statement:</p>
+<pre><code class="language-tya"># tya-lint-ignore: TYAL0007
+handler = used, unused -&gt;
+  print(used)</code></pre>
+<p>Suppress an entire file:</p>
+<pre><code class="language-tya"># tya-lint-ignore-file: TYAL0001, TYAL0007</code></pre>
+<p>Omit the code list to suppress every lint rule for the target line or file.</p>
+<h2 id="autofix">Autofix</h2>
+<p><code>tya lint --fix</code> applies conservative rewrites:</p>
+<ul>
+<li><code>TYAL0001</code>: remove unused local bindings. Multi-line bindings remove their</li>
+</ul>
+<p>  indented continuation block as well as the binding line.</p>
+<ul>
+<li><code>TYAL0003</code>: unwrap <code>if true</code> and <code>if false</code> blocks using the same autofix</li>
+</ul>
+<p>  hints consumed by LSP code actions.</p>
+<p>Rules without a listed autofix remain warnings.</p>
+<h2 id="rules">Rules</h2>
+<h3 id="tyal0001-unused-local">TYAL0001 Unused Local</h3>
+<p>Reports a local binding that is never read.</p>
+<pre><code class="language-tya">unused = 1</code></pre>
+<p>Autofix: remove the binding line, or the full multi-line binding block.</p>
+<h3 id="tyal0002-dead-code-after-return-or-raise">TYAL0002 Dead Code After Return Or Raise</h3>
+<p>Reports statements that cannot run after <code>return</code> or <code>raise</code> in the same block.</p>
+<pre><code class="language-tya">load = -&gt;
+  return &quot;done&quot;
+  print(&quot;unreachable&quot;)</code></pre>
+<h3 id="tyal0003-redundant-constant-if">TYAL0003 Redundant Constant If</h3>
+<p>Reports <code>if true</code> and <code>if false</code>.</p>
+<pre><code class="language-tya">if true
+  print(&quot;always&quot;)</code></pre>
+<p>Autofix: replace the whole <code>if</code> statement with the reachable body.</p>
+<h3 id="tyal0004-deeply-nested-block">TYAL0004 Deeply Nested Block</h3>
+<p>Reports blocks nested at depth 5 or deeper.</p>
+<h3 id="tyal0005-long-function-body">TYAL0005 Long Function Body</h3>
+<p>Reports function literals with more than 50 statements in the body.</p>
+<h3 id="tyal0006-suspicious-for-index-pattern">TYAL0006 Suspicious For Index Pattern</h3>
+<p>Reports loops where the first binding looks like an index name and the second binding does not. Tya's array loop order is <code>value, index</code>, so this usually means the bindings were accidentally reversed.</p>
+<pre><code class="language-tya">for i, item in items
+  print(item)</code></pre>
+<p>Use:</p>
+<pre><code class="language-tya">for item, i in items
+  print(item)</code></pre>
+<h3 id="tyal0007-unused-function-parameter">TYAL0007 Unused Function Parameter</h3>
+<p>Reports function parameters that are never read. Use <code>_</code> for intentionally ignored parameters.</p>
+<pre><code class="language-tya">handler = req, unused -&gt;
+  print(req)</code></pre>
+<h3 id="tyal0008-shadowed-binding">TYAL0008 Shadowed Binding</h3>
+<p>Reports a binding that reuses a name from the same or an outer lexical scope.</p>
+<pre><code class="language-tya">value = 1
+if ready
+  value = 2</code></pre>
+    </article>
+  </main>
+</body>
+</html>

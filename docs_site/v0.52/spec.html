@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spec v0.52 - Tya</title>
+  <link rel="stylesheet" href="../document.css">
+</head>
+<body>
+  <main class="doc-shell">
+    <nav class="doc-nav" aria-label="Documentation">
+      <a class="brand" href="../index.html">
+        <img src="../assets/tya-logo.png" alt="Tya">
+        <span>Tya</span>
+      </a>
+      <div class="links">
+        <a href="../guide.html">Guide</a>
+        <a href="../spec.html">Spec</a>
+        <a href="../api.html">API</a>
+        <a href="../stdlib.html">Stdlib</a>
+        <a href="../libraries.html">Libraries</a>
+        <a href="../lint.html">Lint</a>
+        <a href="../naming.html">Naming</a>
+        <a href="../versions.html">Versions</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </div>
+    </nav>
+    <article class="doc-content">
+<h1 id="tya-v0-52-specification">Tya v0.52 Specification</h1>
+<p>&gt; **Status:** shipped. The <code>tya version</code> constant is <code>0.52.0</code>. &gt; v0.52 adds the <code>tya lsp</code> Language Server. The language surface &gt; is unchanged from v0.49 / v0.50 / v0.51.</p>
+<h2 id="theme">Theme</h2>
+<p>v0.51 closed the documentation tooling slice with <code>tya doc</code>. v0.52 adds the fifth toolchain subcommand: **<code>tya lsp</code>**, a Language Server Protocol (LSP) implementation that ships in the same binary. Editors (VS Code, Helix, Neovim, Emacs, Zed) can now surface diagnostics, formatting, hover, go-to-definition, and completion against tya source without any extra build step.</p>
+<p>A VS Code extension scaffold lives at <code>editors/vscode/</code> and ships as part of the repository (manual install via <code>npx vsce package</code> in v0.52; Marketplace publication queued for v0.53+).</p>
+<h2 id="tya-lsp-language-server-stdio-json-rpc"><code>tya lsp</code> — Language Server (stdio JSON-RPC)</h2>
+<h3 id="cli">CLI</h3>
+<pre><code>tya lsp [--log &lt;file&gt;]</code></pre>
+<ul>
+<li>Speaks LSP JSON-RPC 2.0 over stdio.</li>
+<li><code>--log &lt;file&gt;</code> writes timestamped debug lines to a file. Without</li>
+</ul>
+<p>  it no logs are emitted; stderr stays clean so editors that capture   stderr do not see spurious output.</p>
+<ul>
+<li>Exit codes: <code>0</code> clean shutdown, <code>1</code> runtime I/O failure</li>
+</ul>
+<p>  (<code>TYA-E0931</code>), <code>2</code> argument failure (<code>TYA-E0930</code>).</p>
+<h3 id="capabilities-advertised">Capabilities advertised</h3>
+<pre><code class="language-json">{
+  &quot;textDocumentSync&quot;: { &quot;openClose&quot;: true, &quot;change&quot;: 1, &quot;save&quot;: { &quot;includeText&quot;: false } },
+  &quot;hoverProvider&quot;: true,
+  &quot;definitionProvider&quot;: true,
+  &quot;completionProvider&quot;: { &quot;resolveProvider&quot;: false },
+  &quot;documentFormattingProvider&quot;: true
+}</code></pre>
+<p><code>change = 1</code> means <code>TextDocumentSyncKind.Full</code>. The server stores each <code>didChange</code> text in full; incremental sync is v0.53+ work.</p>
+<h3 id="lifecycle-methods">Lifecycle methods</h3>
+<p>| Method | Direction | Behaviour | |--------|-----------|-----------| | <code>initialize</code> | request | Returns <code>serverInfo.{name:&quot;tya&quot;, version}</code> and the capabilities object. | | <code>initialized</code> | notification | Acknowledged silently. | | <code>shutdown</code> | request | Returns <code>null</code>. Sets the shutting-down flag. | | <code>exit</code> | notification | Ends the server loop (exit code 0). |</p>
+<h3 id="document-sync">Document sync</h3>
+<ul>
+<li><code>textDocument/didOpen</code> — stores text + publishes diagnostics.</li>
+<li><code>textDocument/didChange</code> — replaces text + republishes diagnostics.</li>
+<li><code>textDocument/didSave</code> — refreshes diagnostics (text reused as-is unless <code>includeText</code> was true).</li>
+<li><code>textDocument/didClose</code> — drops the document and publishes an empty diagnostic list to clear markers.</li>
+</ul>
+<h3 id="diagnostics-publishdiagnostics">Diagnostics (publishDiagnostics)</h3>
+<p>Every store mutation triggers a synchronous re-check. Pipeline:</p>
+<ol>
+<li><code>lexer.LexWithComments</code></li>
+</ol>
+<p>2. <code>parser.ParseWithComments</code> 3. <code>checker.CheckAll(prog, nil, path, true)</code> (no modules in MVP) 4. <code>parser.OrphanComments</code> 5. <code>checker.CollectUnused</code> (TYAL0001 surfaced as warnings) 6. <code>checker.CollectLintFindings</code> (TYAL0003 / TYAL0004 / TYAL0005)</p>
+<p>Severity mapping: tya <code>diag.Error</code> → LSP <code>1</code>, <code>diag.Warning</code> → <code>2</code>. Each finding's <code>code</code> matches the tya diagnostic registry (<code>TYA-E…</code>, <code>TYAL…</code>). The <code>source</code> is always <code>&quot;tya&quot;</code>.</p>
+<h3 id="formatting-textdocument-formatting">Formatting (textDocument/formatting)</h3>
+<p><code>formatter.Unparse(prog)</code> is run on the current text. The response is one full-document TextEdit, or an empty edit list when the buffer is already canonical. Range formatting is v0.53+.</p>
+<h3 id="hover-textdocument-hover">Hover (textDocument/hover)</h3>
+<p>The identifier under the cursor is resolved against a symbol index built from the current file. For local top-level bindings, the response contains the signature in a <code>tya</code> code fence plus the leading <code>#</code>-comment block. Stdlib module names and builtin function names are recognised and produce a short generic blurb.</p>
+<h3 id="definition-textdocument-definition">Definition (textDocument/definition)</h3>
+<p>Same-file resolution only in v0.52. The token position of the defining declaration's name is returned as a single Location. Cross-file lookup via <code>import</code> is v0.53+.</p>
+<h3 id="completion-textdocument-completion">Completion (textDocument/completion)</h3>
+<p>Flat list of candidates is returned every time. Sources:</p>
+<ol>
+<li>Top-level bindings in the current file (kind: function / class / module / interface).</li>
+</ol>
+<p>2. Standard attached library module names (kind: module). 3. Builtin function names (kind: function). 4. Language keywords (kind: keyword).</p>
+<p>The client filters by prefix. <code>triggerCharacters</code> is empty in v0.52.</p>
+<h3 id="positions">Positions</h3>
+<p>LSP positions are 0-origin <code>(line, character)</code>. tya internally uses 1-origin tokens; the LSP boundary converts in both directions.</p>
+<p><code>character</code> is defined by LSP as UTF-16 code units. tya identifiers are ASCII, so v0.52 treats <code>character</code> as a byte offset. UTF-16 strictness is queued for v0.53+ alongside rename/range-formatting.</p>
+<h3 id="scope-single-file-mvp">Scope (single-file MVP)</h3>
+<ul>
+<li>No <code>import</code> traversal; diagnostics and symbol resolution operate</li>
+</ul>
+<p>  on the open buffer only.</p>
+<ul>
+<li>No incremental document sync (<code>Change: 1</code> = Full).</li>
+<li>No workspace symbols / document outline.</li>
+</ul>
+<p>These deferrals are intentional. See §Non-goals.</p>
+<h2 id="vs-code-extension-editors-vscode">VS Code extension (<code>editors/vscode/</code>)</h2>
+<p>A small TypeScript wrapper around <code>vscode-languageclient</code> ships in the repository. It registers the <code>tya</code> language, contributes a TextMate grammar for syntax highlighting, and launches <code>tya lsp</code> as the LSP server.</p>
+<h3 id="manual-install">Manual install</h3>
+<pre><code class="language-sh">cd editors/vscode
+npm install
+npm run compile
+npx vsce package
+code --install-extension tya-0.52.0.vsix</code></pre>
+<p>Marketplace publication (publisher ID, signed VSIX, icon) is queued for v0.53+.</p>
+<h3 id="settings">Settings</h3>
+<p>| Setting | Default | Effect | |---------|---------|--------| | <code>tya.executable</code> | <code>&quot;tya&quot;</code> | Path to the tya binary used as the LSP server. | | <code>tya.trace.server</code> | <code>&quot;off&quot;</code> | Built-in <code>vscode-languageclient</code> tracing. |</p>
+<h3 id="syntax-grammar-coverage">Syntax grammar coverage</h3>
+<p>The shipped <code>syntaxes/tya.tmLanguage.json</code> covers comments, strings, numbers, keywords (control / declaration), language literals, function-call positions, and operators. Semantic highlighting is v0.53+.</p>
+<h2 id="error-codes-added">Error codes added</h2>
+<p>| Code | Subcommand | Meaning | |------|------------|---------| | <code>TYA-E0930</code> | <code>tya lsp</code> | Startup / argument failure (bad <code>--log</code>, unknown flag) | | <code>TYA-E0931</code> | <code>tya lsp</code> | I/O failure (broken pipe, framing error) |</p>
+<h2 id="non-goals-for-v0-52">Non-goals for v0.52</h2>
+<ul>
+<li>Rename / references / code actions / range formatting</li>
+<li>Cross-file definition resolution</li>
+<li>Incremental document sync</li>
+<li>Marketplace publication of the VS Code extension</li>
+<li>Setup recipes for other editors (Helix / Neovim / Zed) — covered</li>
+</ul>
+<p>  in v0.53+.</p>
+<ul>
+<li>Semantic tokens / document outline.</li>
+</ul>
+<h2 id="compatibility">Compatibility</h2>
+<ul>
+<li>Language surface: unchanged from v0.49 / v0.50 / v0.51.</li>
+<li><code>tya.toml</code> schema: unchanged.</li>
+<li>CLI: every existing subcommand keeps its v0.51 behaviour. The</li>
+</ul>
+<p>  <code>tya lsp</code> subcommand is purely additive.</p>
+<h2 id="tests">Tests</h2>
+<p>Seven Go subprocess tests live in <code>tests/lsp_test.go</code>:</p>
+<ol>
+<li><code>TestLSPInitialize</code> — capabilities advertised.</li>
+</ol>
+<p>2. <code>TestLSPDiagnosticsOnDidOpen</code> — bad source ⇒ ≥1 diagnostic. 3. <code>TestLSPFormatting</code> — <code>formatter.Unparse</code> round-trip. 4. <code>TestLSPHover</code> — function signature visible. 5. <code>TestLSPDefinition</code> — same-file location. 6. <code>TestLSPCompletion</code> — builtins / stdlib / keywords surfaced. 7. <code>TestLSPShutdownExit</code> — clean shutdown path.</p>
+<p><code>tests/lsp_helper.go</code> builds the binary once via <code>os.MkdirTemp</code> so the seven cases share the build cost.</p>
+    </article>
+  </main>
+</body>
+</html>
