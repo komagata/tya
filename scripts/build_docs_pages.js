@@ -305,7 +305,6 @@ function renderPage(page, body) {
         <a href="${prefix}libraries.html">Libraries</a>
         <a href="${prefix}lint.html">Lint</a>
         <a href="${prefix}naming.html">Naming</a>
-        <a href="${prefix}versions.html">Versions</a>
         <a href="${prefix}roadmap.html">Roadmap</a>
       </div>
     </nav>

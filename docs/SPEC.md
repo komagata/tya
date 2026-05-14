@@ -1,9 +1,8 @@
 # Tya Language Specification
 
-Status: current repository specification. Historical release snapshots live
-under `docs/vX.Y/`. This page describes the language surface maintained on
-`main`, including the current package, tooling, concurrency, interface, and
-standard-library integration rules.
+Status: current repository specification. This page describes the language
+surface maintained on `main`, including the current package, tooling,
+concurrency, interface, and standard-library integration rules.
 
 ## Introduction
 
