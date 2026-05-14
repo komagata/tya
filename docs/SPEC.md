@@ -21,7 +21,8 @@ Tya's user-facing commitments are:
 - a maintained self-hosting path.
 
 This document specifies the language. Built-in functions are listed in
-`docs/API.md`. Standard-library modules are listed in `docs/STDLIB.md`.
+`docs/API.md`. Standard-library packages and APIs are listed in
+`docs/STDLIB.md`.
 Reusable user libraries and packages are described in `docs/LIBRARIES.md`.
 Canonical formatting details are described in `docs/CANONICAL_SYNTAX.md`.
 
@@ -32,7 +33,7 @@ than a complete parser grammar. Names in examples follow `docs/NAMING.md`.
 
 ```text
 snake_case            variable, function, method, import path segment
-_snake_case           private source binding
+_snake_case           file-private top-level binding in importable files
 SCREAMING_SNAKE_CASE  constant
 PascalCase            class and interface
 ```
@@ -72,6 +73,16 @@ name = "tya" # line-end comment
 
 Comments may attach to declarations and statements for formatting, LSP hover,
 and `tya doc`. Comment placement rules are part of canonical syntax.
+
+Tya recognizes three source comment roles:
+
+- file header comments at the beginning of a file;
+- leading comments immediately attached to the following declaration or statement;
+- line-end comments attached to the preceding statement.
+
+Comments in positions with no definite attachment target are invalid. A block
+whose body contains only comments is invalid because it has no executable or
+declarative body item.
 
 ### Tokens
 
@@ -138,6 +149,9 @@ defines a rewrite.
 Byte literals use `b"..."` or byte heredoc forms and produce byte values rather
 than strings.
 
+Integer literals may be written in decimal, hexadecimal, or binary form.
+Floating-point literals use decimal notation.
+
 ## Values And Kinds
 
 Tya is dynamically typed. Values carry a runtime kind. The core runtime kinds
@@ -194,6 +208,40 @@ interface bodies, `try` / `catch`, `scope`, `select`, and similar constructs.
 Top-level source consists of imports, declarations, assignments, and statements
 allowed by the file kind. Class files are more restrictive than script files.
 
+## File Kinds
+
+A `.tya` file's role is determined by its filename and context.
+
+Lowercase `.tya` files are script files. They may be entry files for `tya run`
+and may also be imported directly. When imported, their public top-level
+bindings are exposed through the import binding.
+
+PascalCase `.tya` files are class files. They are library-only and cannot be
+entry files. A class file must declare exactly one public class whose name
+matches the filename without `.tya`.
+
+Class files may be loaded explicitly as part of a directory package or
+implicitly as same-directory siblings of an entry script. A script entry sees
+PascalCase class files in its own directory without import.
+
+The removed `module` declaration is not part of current Tya. Current Tya has
+importable files and directory packages, not a user-facing `module` construct.
+Source using the old `module` keyword must be migrated to one of those shapes.
+
+## Canonical Syntax
+
+Tya has a canonical syntax: every well-formed program has one source
+representation. `tya format` is therefore part of the language surface, not an
+optional style tool.
+
+Canonical syntax covers indentation, blank lines, comment attachment, import
+grouping, operator spacing, single-line and multi-line forms, string literal
+forms, empty collection forms, and other source-shape decisions. The complete
+rules live in `docs/CANONICAL_SYNTAX.md`.
+
+Implementations must preserve semantic behavior when formatting. Formatting
+must be idempotent and stable across platforms.
+
 ## Declarations And Scope
 
 ### Bindings
@@ -213,10 +261,35 @@ value, err = parse_user(text)
 
 Names beginning with `_` are private when they are top-level bindings in an
 importable source file. Private top-level bindings are not exported through a
-single-file module namespace.
+file import binding.
 
 Constants use `SCREAMING_SNAKE_CASE` and are checked as constants by naming
 and assignment rules.
+
+Class member privacy does not use `_` prefixes in current Tya. Use the
+`private` keyword for private class fields, methods, class variables, class
+methods, and constructors. A class member name beginning with `_` is invalid
+and should be renamed or marked with `private`.
+
+```tya
+class User
+  private id = 0
+
+  private normalize = ->
+    self.id.to_s()
+```
+
+### Embedded Assets
+
+`embed` declares a top-level binding whose value is loaded from a file at build
+time. Embed declarations are resolved relative to the source file.
+
+```tya
+embed "templates/index.html" as index_html
+```
+
+Embed transforms are implementation-defined by the compiler surface and must
+produce ordinary Tya values.
 
 ### Functions
 
@@ -281,7 +354,8 @@ Tya supports:
 - `abstract class` and abstract methods;
 - `final class`;
 - `override` for explicit method override checks;
-- runtime class inspection through `.class`.
+- runtime class inspection through `.class`;
+- read-only class metadata members such as `class`, `class_name`, `name`, and `parent` where documented by the runtime.
 
 ```tya
 class Admin extends User
@@ -296,6 +370,9 @@ A class file is a PascalCase `.tya` file. It must declare exactly one public
 class whose name matches the filename. It may also declare private helper
 classes and interfaces. Class files are library files and cannot be run as
 entry scripts.
+
+Additional classes in a class file are private to that file. They are not
+visible from other files, even inside the same directory package.
 
 ### Interfaces
 
@@ -354,6 +431,9 @@ Interface conflict rules are strict:
 - arity conflicts are errors;
 - initializer order is deterministic and follows class inheritance before newly implemented interfaces.
 
+Interfaces declared in class files are exported as package public names unless
+their names begin with `_`.
+
 ## Expressions
 
 Expressions compute values.
@@ -403,6 +483,8 @@ if ready and not disabled
 Arithmetic operations require numbers unless a documented primitive method or
 operator case says otherwise. `nil` arithmetic is invalid.
 
+Bitwise operators require integer-compatible number values.
+
 ### Collections
 
 Arrays use bracket literals and integer indexing.
@@ -450,6 +532,26 @@ print(await task)
 
 Channels and sync resources are standard-library-backed runtime values with
 documented methods in `docs/STDLIB.md`.
+
+## Parallelism And Concurrency
+
+Tya exposes structured concurrency through tasks, scopes, channels, sync
+resources, and `select`.
+
+Tasks are lightweight runtime values created by `spawn`. `await` joins a task.
+Awaiting a completed task returns the cached result or re-raises the cached
+error.
+
+`scope` defines a structured lifetime for tasks spawned inside it. A scope
+waits for its child tasks before leaving the region.
+
+Channels and sync resources are implemented by the runtime and surfaced through
+standard-library classes and methods. `select` waits across channel send,
+receive, timeout, and default branches.
+
+The runtime may run tasks in parallel where the target platform and runtime
+support it. Program correctness must not depend on a specific scheduling order
+except where the language or standard library documents an ordering guarantee.
 
 ## Statements
 
@@ -528,6 +630,14 @@ for key, value of user
 `match` selects one `case` block by comparing an expression to case patterns.
 `case _` is the wildcard case and is canonical only as the final case.
 
+```tya
+match value
+case "ok"
+  print("ok")
+case _
+  print("other")
+```
+
 ### Return Statements
 
 `return` exits the current function or method. It may return zero, one, or
@@ -597,7 +707,7 @@ read_file("memo.txt")
 write_file("memo.txt", "text")
 ```
 
-Standard library APIs are imported as ordinary modules.
+Standard library APIs are imported with the same `import` syntax as user code.
 
 ## Imports And Packages
 
@@ -615,16 +725,16 @@ Import paths are slash-separated `snake_case` segments. Relative filesystem
 paths, absolute paths, empty segments, and PascalCase terminal segments are
 invalid.
 
-### Single-File Modules
+### Single-File Imports
 
-A single-file module is a lowercase `.tya` file resolved by import path.
+A single-file import resolves an import path to a lowercase `.tya` file.
 
 ```text
 import greeting          -> greeting.tya
 import http/server       -> http/server.tya
 ```
 
-It exports public top-level bindings through the import binding.
+The imported file exposes public top-level bindings through the import binding.
 
 ```tya
 import greeting
@@ -667,9 +777,9 @@ Imports are resolved in this order:
 3. directories listed in `TYA_PATH`, from left to right;
 4. the bundled `stdlib/` directory.
 
-The first matching file or package directory wins. Local application modules
-may shadow package, `TYA_PATH`, and standard-library modules. Package
-dependencies may shadow `TYA_PATH` and standard-library modules.
+The first matching file or package directory wins. Local application imports
+may shadow package dependencies, `TYA_PATH`, and standard-library imports.
+Package dependencies may shadow `TYA_PATH` and standard-library imports.
 
 ### Package Manifests
 
@@ -694,13 +804,137 @@ tya emit-c hello.tya
 
 Class files are library-only and cannot be entry files.
 
-`tya check` validates source without running it. `tya format` rewrites source
-to canonical syntax. `tya test` discovers and runs tests using the standard
-`unittest` surface. `tya lint` reports style and safety diagnostics.
-`tya doc` extracts source documentation and may generate static HTML.
+Tya uses a compile-to-C pipeline for native execution. `tya run` compiles a
+temporary native executable, runs it, and removes the temporary executable.
+`tya build` writes a reusable executable. `tya emit-c` prints or writes the C
+program generated from Tya source. The generated C links against the Tya
+runtime.
+
+The default native target uses the host C toolchain. Native package metadata
+from `[native]` contributes C sources, headers, include directories,
+`pkg-config` flags, compiler flags, and linker flags to the build.
 
 WASM build targets are available where supported. Native packages are rejected
 for unsupported WASM targets.
+
+Cross-compilation is selected with `--target`. The native target is the
+default. Current WebAssembly targets include:
+
+```sh
+tya build --target native src/main.tya -o app
+tya build --target wasm32-wasi examples/wasm/hello.tya -o hello.wasm
+tya build --target wasm32-browser examples/wasm/hello.tya -o hello.wasm
+```
+
+`wasm32-wasi` produces a WASI `.wasm` artifact. `wasm32-browser` produces a
+browser-oriented `.wasm` artifact and JavaScript loader. `tya doctor wasm`
+reports the WebAssembly build environment. `tya run` remains native-only.
+
+## Built-In Tools
+
+The `tya` command is an all-in-one toolchain. The same binary contains the
+compiler, formatter, language server, test runner, linter, documentation
+generator, package manager, project scaffolder, task runner, doctor commands,
+and package tool runner.
+
+Core commands include:
+
+```text
+tya run
+tya build
+tya emit-c
+tya check
+tya format
+tya test
+tya cover
+tya lint
+tya lsp
+tya doc
+tya new
+tya task
+tya install
+tya update
+tya add
+tya remove
+tya outdated
+tya tool
+tya doctor
+tya embed
+tya version
+```
+
+Tool commands share the same parser, checker, formatter, package resolver, and
+diagnostic conventions where applicable. This keeps command behavior aligned
+with the language specification instead of treating each command as a separate
+frontend.
+
+`tya run` builds and executes a script file as a temporary native executable.
+
+`tya build` builds a reusable executable or target artifact. It accepts
+`--target` for supported native and WebAssembly targets.
+
+`tya emit-c` emits the generated C program for inspection or external build
+pipelines.
+
+`tya check` parses, loads imports, and validates source without running the
+program or invoking the C compiler.
+
+`tya format` prints canonical source, and `tya format -w` rewrites files in
+place.
+
+`tya test` discovers and runs tests using the standard `unittest` surface. It
+can collect coverage data with `--cover`.
+
+`tya cover` reports coverage profiles in human-readable or JSON form.
+
+`tya lint` reports stable linter diagnostics. It supports autofix and text,
+JSON, and SARIF output.
+
+`tya lsp` runs the language server over JSON-RPC for editor integration.
+
+`tya doc` extracts documentation from source comments and can generate static
+HTML.
+
+`tya new` scaffolds new projects and libraries, including native package
+scaffolds.
+
+`tya task` lists and runs tasks declared in `tya.toml`, including serial and
+parallel task forms.
+
+`tya install` resolves dependencies and writes `tya.lock`.
+
+`tya update` refreshes locked dependency versions.
+
+`tya add` adds manifest dependencies, including git, tag, revision, branch,
+path, and dev dependencies.
+
+`tya remove` removes manifest dependencies.
+
+`tya outdated` reports dependencies with newer available versions.
+
+`tya tool` lists and runs package-provided tools. It also supports one-shot
+tool execution from a local path or pinned git source.
+
+`tya doctor` reports host environment details for native and WebAssembly
+builds.
+
+`tya embed` inspects or supports embedded asset handling.
+
+`tya version` prints the installed Tya version.
+
+## Single Binary Distribution
+
+Tya is distributed as one primary `tya` binary. The binary contains the
+toolchain entry points and uses the bundled standard library and C runtime
+files that ship with the release.
+
+The one-binary model is part of the language's operational design: users should
+not need separate formatter, test runner, LSP server, doc generator, package
+manager, or build driver executables for normal Tya work.
+
+Releases may include support files such as the standard library, C runtime
+sources, editor assets, examples, or installation metadata, but the command
+surface is centered on the single `tya` executable.
 
 ## Errors And Diagnostics
 
@@ -720,7 +954,7 @@ errors according to the API being used.
 ## Standard Library
 
 The standard library is shipped with Tya under `stdlib/` and is imported using
-the same import syntax as user modules and packages.
+the same import syntax as user files and packages.
 
 Examples include:
 
