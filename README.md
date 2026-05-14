@@ -98,7 +98,7 @@ tya test
 tya test tests
 ```
 
-### Project workflow (v0.49+)
+### Project workflow
 
 ```sh
 tya new app           # scaffold tya.toml + src/main.tya + .gitignore
@@ -117,11 +117,10 @@ appends them to the task command (mirrors `$@`). Array-form tasks
 run each entry under `/bin/sh -c` in order and stop on the first
 failure.
 
-### Editor integration (v0.53+)
+### Editor integration
 
 `tya lsp` runs the Language Server (LSP JSON-RPC 2.0 over stdio)
-from the same binary as the compiler. v0.53 supports the full IDE
-feature set:
+from the same binary as the compiler. It supports the full IDE feature set:
 
 - Diagnostics on save / on change
 - Formatting (full + range, backed by `tya format`)
@@ -193,33 +192,6 @@ print(["tya"].first())
 - [Lint](https://tya-lang.org/lint.html): lint rules, opt-outs, and output
   formats.
 - [Naming](https://tya-lang.org/naming.html): naming rules.
-- [Versions](https://tya-lang.org/versions.html): minor-version specs and release
-  snapshots.
-- [v0.28 Spec](https://tya-lang.org/v0.28/spec.html): strict compile-time checks (shadowing, unused imports/args/private definitions).
-- [v0.27 Spec](https://tya-lang.org/v0.27/spec.html): hexadecimal and binary integer literals.
-- [v0.26 Spec](https://tya-lang.org/v0.26/spec.html): external packages, `tya.toml`, and version resolution.
-- [v0.25 Spec](https://tya-lang.org/v0.25/spec.html): bitwise operators, byte sequences, and binary file I/O.
-- [v0.24 Spec](https://tya-lang.org/v0.24/spec.html): time, random, math expansion, process, hex, digest, secure_random, and matrix standard modules.
-- [v0.23 Spec](https://tya-lang.org/v0.23/spec.html): TOML, JSON, CSV, base64, and URL standard modules.
-- [v0.22 Spec](https://tya-lang.org/v0.22/spec.html): unittest standard module, module reflection, and `tya test` runner.
-- [v0.21 Spec](https://tya-lang.org/v0.21/spec.html): native-backed `file` and `os` standard modules.
-- [v0.20 Spec](https://tya-lang.org/v0.20/spec.html): standard attached `math` and `path` modules.
-- [v0.19 Spec](https://tya-lang.org/v0.19/spec.html): predicate function and method names ending with `?`.
-- [v0.18 Spec](https://tya-lang.org/v0.18/spec.html): expanded module-style string, array, and dict APIs.
-- [v0.17 Spec](https://tya-lang.org/v0.17/spec.html): import aliases and module loading rules.
-- [v0.16 Spec](https://tya-lang.org/v0.16/spec.html): pattern matching and string interpolation polish.
-- [v0.15 Spec](https://tya-lang.org/v0.15/spec.html): structured error handling.
-- [v0.14 Spec](https://tya-lang.org/v0.14/spec.html): destructuring assignment.
-- [v0.13 Spec](https://tya-lang.org/v0.13/spec.html): explicit override and constructor chaining checks.
-- [v0.12 Spec](https://tya-lang.org/v0.12/spec.html): interface inheritance and conflict diagnostics.
-- [v0.11 Spec](https://tya-lang.org/v0.11/spec.html): explicit interfaces and implements.
-- [v0.10 Spec](https://tya-lang.org/v0.10/spec.html): abstract methods and final classes.
-- [v0.9 Spec](https://tya-lang.org/v0.9/spec.html): class visibility, private members, and abstract classes.
-- [v0.8 Spec](https://tya-lang.org/v0.8/spec.html): class-level inheritance and introspection.
-- [v0.7 Spec](https://tya-lang.org/v0.7/spec.html): released single inheritance.
-- [v0.6 Spec](https://tya-lang.org/v0.6/spec.html): released class variables and class methods.
-- [v0.5 Spec](https://tya-lang.org/v0.5/spec.html): released class syntax.
-- [v0.4 Spec](https://tya-lang.org/v0.4/spec.html): released testing direction.
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
 Markdown source files are kept in `docs/` for editing. The public website uses
@@ -243,20 +215,20 @@ The current implementation on `main` includes:
   values
 - `try` error propagation
 - same-directory, package dependency, `TYA_PATH`, and standard library import
-  lookup with namespace member access
+  lookup
 - git and path package dependencies through `tya.toml`, `tya.lock`, and
   `tya install`
 - native package metadata through `[native]`, `tya doctor native`, and
   `tya new --template lib --native`
 - package-provided tools through `[tools]` and `tya tool`
-- standard library modules loaded from `stdlib/`
+- standard library packages and APIs loaded from `stdlib/`
 - standard builtins listed in the API document
 - compile-to-C execution through `tya run`, `tya build`, and `tya emit-c`
 - source checking through `tya check`
 - test discovery and assertions through `tya test`
 - conservative source formatting through `tya format`
-- WebAssembly build targets with unsupported native packages rejected for WASM
-  builds
+- WebAssembly build targets with unsupported native packages rejected for
+  WebAssembly builds
 - minimal classes, constructor calls, `init`, public instance fields,
   instance methods, instance field defaults, class variables, class methods,
   single inheritance, class-level inheritance, class introspection, private
@@ -269,7 +241,7 @@ External packages and tools such as SQLite, SDL2, GTK4, raylib, Slim,
 Flakewatch, and Magvideo live in separate `komagata/*` repositories and are
 consumed by git URL plus tag.
 
-Tya v0.62 does not include multiple inheritance, protected members, async,
+Current Tya does not include multiple inheritance, protected members, async,
 macros, a central package registry, `tya publish`, mocking, benchmark, watch
 mode, parallel test execution, or set literals.
 
@@ -296,9 +268,9 @@ are:
 - `internal/lexer/`: source text to tokens.
 - `internal/parser/`: tokens to AST.
 - `internal/ast/`: AST node definitions.
-- `internal/checker/`: language and module validation.
+- `internal/checker/`: language and import validation.
 - `internal/codegen/`: C emitter.
-- `internal/runner/`: source loading, module loading, and run helpers.
+- `internal/runner/`: source loading, import loading, and run helpers.
 - `runtime/`: C runtime used by generated programs.
 - `cmd/tya/`: user-facing CLI.
 - `tests/`: CLI, example, and specification-level tests.
@@ -337,16 +309,6 @@ are converted to static HTML pages with:
 node scripts/build_docs_pages.js
 ```
 
-Tya uses semantic versioning. Specification changes happen at the minor version
-level, such as `v0.3` and `v0.4`. Patch releases such as `v0.3.1` must not
-change language or standard-library semantics. Specification documents use
-minor-version labels such as `v0.3`.
-
-When changing planned language docs, keep minor-version documents under
-`docs/vX.Y/` and regenerate the HTML pages. Release snapshots for exact patch
-tags may live under `docs/vX.Y.Z/`; the v0.2.0 frozen documents live under
-`docs/v0.2.0/`.
-
 Before committing Go changes, format touched Go files and run the default test
 suite. The default suite includes the maintained self-host fixed-point check.
 
@@ -355,6 +317,5 @@ gofmt -w path/to/changed.go
 go test ./... -count=1
 ```
 
-Historical pre-v0.1 self-host notes and experiments live under
-`docs/archive/pre-v0.1/`. They are reference material, but the current
-`selfhost/v01/compiler.tya` fixed point is maintained and must not regress.
+The current `selfhost/v01/compiler.tya` fixed point is maintained and must not
+regress.
