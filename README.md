@@ -160,7 +160,7 @@ user = { name: "komagata", age: 20 }
 greet = user -> "Hello, {user["name"]}!"
 
 if user["age"] >= 20
-  print greet(user)
+  print(greet(user))
 ```
 
 Imports expose public top-level bindings from separate files.
@@ -174,14 +174,14 @@ hello = name -> "Hello, {name}"
 # main.tya
 import greeting
 
-print greeting.hello("komagata")
+print(greeting.hello("komagata"))
 ```
 
 Primitive values expose their standard operations as methods.
 
 ```tya
-print "  ".blank?()
-print ["tya"].first()
+print("  ".blank?())
+print(["tya"].first())
 ```
 
 ## Documentation
@@ -225,7 +225,7 @@ the generated HTML pages under `docs/*.html`.
 
 ## Language Scope
 
-The current released implementation, Tya v0.61, includes:
+The current implementation on `main` includes:
 
 - `.tya` files
 - indentation-based blocks

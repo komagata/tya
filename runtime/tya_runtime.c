@@ -274,7 +274,10 @@ struct TyaTask {
   TyaValue pending_value;
   TyaValue waiting_value;
   bool channel_send_failed;
+  bool sleeping;
+  double wake_time;
   TyaTask *next_ready;
+  TyaTask *next_sleep;
   TyaTask *next_waiter;
   TyaTask *next_channel_waiter;
   /* Every not-yet-joined task lives in a global doubly-linked list so
@@ -289,6 +292,7 @@ struct TyaTask {
 static TyaTask *tya_live_tasks = NULL;
 static TyaTask *tya_ready_head = NULL;
 static TyaTask *tya_ready_tail = NULL;
+static TyaTask *tya_sleep_head = NULL;
 static ucontext_t tya_scheduler_ctx;
 static bool tya_scheduler_ctx_valid = false;
 static _Thread_local TyaTask *tya_current_task_ptr = NULL;
@@ -296,6 +300,8 @@ static _Thread_local TyaTask *tya_current_task_ptr = NULL;
 static void tya_live_tasks_add(TyaTask *t);
 static void tya_live_tasks_remove(TyaTask *t);
 static void tya_task_enqueue(TyaTask *t);
+static void tya_task_sleep_until(TyaTask *t, double wake_time);
+static void tya_task_wake_sleepers(void);
 static void tya_scheduler_run_one(void);
 static void tya_scheduler_run_until_task_done(TyaTask *t);
 static void tya_task_yield(bool requeue);
@@ -2275,21 +2281,30 @@ TyaValue tya_time_sleep(TyaValue seconds) {
     tya_raise(tya_string("time.sleep: negative duration"));
     return tya_nil();
   }
-  double whole = floor(seconds.number);
-  double frac = seconds.number - whole;
   if (tya_current_task_ptr == NULL) {
     double deadline = tya_now_seconds() + seconds.number;
-    while (tya_ready_head != NULL && tya_now_seconds() < deadline) {
-      tya_scheduler_run_one();
+    while (tya_now_seconds() < deadline) {
+      tya_task_wake_sleepers();
+      if (tya_ready_head != NULL) {
+        tya_scheduler_run_one();
+        continue;
+      }
+      double delay = deadline - tya_now_seconds();
+      if (tya_sleep_head != NULL && tya_sleep_head->wake_time < deadline) {
+        delay = tya_sleep_head->wake_time - tya_now_seconds();
+      }
+      if (delay <= 0.0) continue;
+      struct timespec req;
+      req.tv_sec = (time_t)floor(delay);
+      req.tv_nsec = (long)((delay - floor(delay)) * 1.0e9);
+      nanosleep(&req, NULL);
     }
+    return tya_nil();
   } else {
-    tya_task_yield(true);
+    tya_task_sleep_until(tya_current_task_ptr, tya_now_seconds() + seconds.number);
+    tya_task_yield(false);
     return tya_nil();
   }
-  struct timespec req;
-  req.tv_sec = (time_t)whole;
-  req.tv_nsec = (long)(frac * 1.0e9);
-  nanosleep(&req, NULL);
   return tya_nil();
 }
 
@@ -4931,6 +4946,7 @@ static void tya_task_enqueue(TyaTask *t) {
 }
 
 static TyaTask *tya_task_dequeue(void) {
+  tya_task_wake_sleepers();
   TyaTask *t = tya_ready_head;
   if (t == NULL) return NULL;
   tya_ready_head = t->next_ready;
@@ -4938,6 +4954,54 @@ static TyaTask *tya_task_dequeue(void) {
   t->next_ready = NULL;
   t->queued = false;
   return t;
+}
+
+static void tya_task_sleep_until(TyaTask *t, double wake_time) {
+  if (t == NULL || t->done) return;
+  t->sleeping = true;
+  t->wake_time = wake_time;
+  t->next_sleep = NULL;
+  if (tya_sleep_head == NULL || wake_time < tya_sleep_head->wake_time) {
+    t->next_sleep = tya_sleep_head;
+    tya_sleep_head = t;
+    return;
+  }
+  TyaTask *cur = tya_sleep_head;
+  while (cur->next_sleep != NULL && cur->next_sleep->wake_time <= wake_time) {
+    cur = cur->next_sleep;
+  }
+  t->next_sleep = cur->next_sleep;
+  cur->next_sleep = t;
+}
+
+static void tya_task_wake_sleepers(void) {
+  double now = tya_now_seconds();
+  while (tya_sleep_head != NULL && tya_sleep_head->wake_time <= now) {
+    TyaTask *t = tya_sleep_head;
+    tya_sleep_head = t->next_sleep;
+    t->next_sleep = NULL;
+    t->sleeping = false;
+    tya_task_enqueue(t);
+  }
+}
+
+bool tya_task_has_ready(void) {
+  tya_task_wake_sleepers();
+  return tya_ready_head != NULL;
+}
+
+double tya_task_next_wake_delay(double max_seconds) {
+  tya_task_wake_sleepers();
+  if (tya_ready_head != NULL) return 0.0;
+  if (tya_sleep_head == NULL) return max_seconds;
+  double delay = tya_sleep_head->wake_time - tya_now_seconds();
+  if (delay < 0.0) return 0.0;
+  if (delay > max_seconds) return max_seconds;
+  return delay;
+}
+
+void tya_task_run_ready(void) {
+  tya_scheduler_run_one();
 }
 
 static void tya_task_yield(bool requeue) {
@@ -4958,8 +5022,19 @@ static void tya_scheduler_run_one(void) {
 }
 
 static void tya_scheduler_run_until_task_done(TyaTask *t) {
-  while (t != NULL && !t->done && tya_ready_head != NULL) {
-    tya_scheduler_run_one();
+  while (t != NULL && !t->done) {
+    tya_task_wake_sleepers();
+    if (tya_ready_head != NULL) {
+      tya_scheduler_run_one();
+      continue;
+    }
+    if (tya_sleep_head == NULL) break;
+    double delay = tya_sleep_head->wake_time - tya_now_seconds();
+    if (delay <= 0.0) continue;
+    struct timespec req;
+    req.tv_sec = (time_t)floor(delay);
+    req.tv_nsec = (long)((delay - floor(delay)) * 1.0e9);
+    nanosleep(&req, NULL);
   }
 }
 
@@ -5042,9 +5117,7 @@ void tya_scope_exit(TyaScope *scope) {
     if (had_raise) {
       atomic_store(&t->cancelled, true);
     }
-    while (!t->done && tya_ready_head != NULL) {
-      tya_scheduler_run_one();
-    }
+    tya_scheduler_run_until_task_done(t);
     if (t->raised && !had_raise) {
       first_raise = t->raise_value;
       had_raise = true;
@@ -5069,9 +5142,7 @@ void tya_scope_raise(TyaScope *scope, TyaValue value) {
   }
   for (int i = 0; i < scope->len; i++) {
     TyaTask *t = scope->tasks[i];
-    while (!t->done && tya_ready_head != NULL) {
-      tya_scheduler_run_one();
-    }
+    tya_scheduler_run_until_task_done(t);
   }
   free(scope->tasks);
   scope->tasks = NULL;
@@ -5137,10 +5208,16 @@ TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValu
   t->result = tya_nil();
   t->raise_value = tya_nil();
   t->pending_value = tya_nil();
+  t->waiting_value = tya_nil();
+  t->channel_send_failed = false;
+  t->sleeping = false;
+  t->wake_time = 0.0;
   t->prev_live = NULL;
   t->next_live = NULL;
   t->next_ready = NULL;
+  t->next_sleep = NULL;
   t->next_waiter = NULL;
+  t->next_channel_waiter = NULL;
   t->in_live_list = false;
   t->stack_size = 64 * 1024;
   t->stack = malloc(t->stack_size);

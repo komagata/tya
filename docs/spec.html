@@ -25,8 +25,24 @@
       </div>
     </nav>
     <article class="doc-content">
-<h1 id="tya-v0-61-specification">Tya v0.61 Specification</h1>
-<p>&gt; **Status:** released. v0.61 is the current released implementation. It &gt; includes stackable interface behavior plus the post-v0.60 toolchain, &gt; package, stdlib, and external-package support that shipped in the v0.61.0 &gt; tag.</p>
+<h1 id="tya-current-specification">Tya Current Specification</h1>
+<p>&gt; **Status:** current repository specification. Historical release snapshots &gt; live under <code>docs/vX.Y/</code>. This page describes the language and standard &gt; library surface maintained on <code>main</code>, including the v0.61 stackable &gt; interface work and later <code>net/http</code> v2 additions.</p>
+<h2 id="language-overview">Language Overview</h2>
+<p>Tya source files use indentation for blocks and parentheses for calls:</p>
+<pre><code class="language-tya">greet = name -&gt; &quot;Hello, {name}&quot;
+
+if args().len() &gt; 0
+  print(greet(args()[0]))</code></pre>
+<p>The core value types are <code>nil</code>, booleans, numbers, strings, bytes, arrays, dictionaries, functions, classes, objects, tasks, channels, and resources. Strings support interpolation. Arrays and dictionaries are mutable. Primitive operations are methods on the values themselves:</p>
+<pre><code class="language-tya">print(&quot; tya &quot;.trim().upper())
+print([1, 2, 3].map(n -&gt; n * 2))
+print({ name: &quot;tya&quot; }.keys())</code></pre>
+<p>Control flow includes <code>if</code> / <code>elseif</code> / <code>else</code>, <code>while</code>, <code>for</code>, <code>break</code>, <code>continue</code>, <code>return</code>, <code>raise</code>, <code>try</code>, and <code>catch</code>. Functions use <code>-&gt;</code> and return the final expression implicitly unless an explicit <code>return</code> is used.</p>
+<p>Imports load same-directory files, manifest dependencies from <code>tya.lock</code>, directories listed in <code>TYA_PATH</code>, and the bundled <code>stdlib/</code> directory. Directory packages expose public classes and interfaces directly unless an alias is used:</p>
+<pre><code class="language-tya">import net/http as http
+
+app = http.Server()</code></pre>
+<p>Classes support <code>initialize</code>, instance fields and methods, class variables and methods, single inheritance, <code>super(args...)</code>, private members, abstract classes, final classes, and explicit <code>implements</code> clauses.</p>
 <h2 id="interface-stackable-behavior">Interface Stackable Behavior</h2>
 <p>v0.61 grows <code>interface</code> from a requirement-only contract into Tya's stackable behavior mechanism. Interfaces may define default instance methods, contribute instance fields, define zero-argument initializer hooks, and participate in deterministic <code>super()</code> chains across stacked interfaces.</p>
 <p>The keyword remains <code>interface</code>; Tya does not add a separate <code>trait</code> keyword. Static interface members, private interface members, and <code>Self</code> inside interface methods remain invalid.</p>
@@ -61,7 +77,7 @@
 <p>  packages</p>
 <ul>
 <li>extended <code>url.Url</code> parsing and resolution</li>
-<li>extended <code>net/http.Server</code> routing helpers</li>
+<li><code>net/http.Client</code> helpers and cooperative <code>net/http.Server</code> connection tasks</li>
 </ul>
 <h2 id="external-packages">External Packages</h2>
 <p>The first external packages and tools are separate repositories, not part of this repository's standard library:</p>
@@ -538,7 +554,7 @@ class User implements A, B</code></pre>
     self.count = self.count + 1</code></pre>
 <p>If the behavior requires complex construction arguments or strong invariants, prefer an ordinary class until the interface model proves itself in practice.</p>
 <h2 id="success-criteria">Success Criteria</h2>
-<p>v0.61 is complete when:</p>
+<p>The stackable interface work is complete when:</p>
 <ul>
 <li>interface methods may be body-free requirements or default methods;</li>
 <li>interface fields are composed into implementing classes;</li>
@@ -547,7 +563,7 @@ class User implements A, B</code></pre>
 <li>class members can explicitly override interface contributions;</li>
 <li>interface inheritance diamonds are deterministic and de-duplicated;</li>
 <li>method and field conflicts produce structured diagnostics;</li>
-<li>old v0.11 and v0.12 interface behavior is preserved;</li>
+<li>historical v0.11 and v0.12 interface behavior is preserved;</li>
 <li><code>go test ./... -count=1</code> passes, including the self-host fixed point.</li>
 </ul>
     </article>

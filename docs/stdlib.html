@@ -29,17 +29,17 @@
 <p>This document defines the current standard library shipped with Tya.</p>
 <p>The standard library is a set of <code>.tya</code> modules shipped with Tya. Third-party packages are managed separately through <code>tya.toml</code>, <code>tya.lock</code>, and <code>tya install</code>.</p>
 <h2 id="importing">Importing</h2>
-<p>Standard modules use the same import syntax as user modules. Primitive string, array, and dict helpers are not imported modules in v0.59; they are methods on the values themselves.</p>
+<p>Standard modules use the same import syntax as user modules. Primitive string, array, dict, number, boolean, and nil helpers are methods on the values themselves.</p>
 <pre><code class="language-tya">import math as math
 import json as json</code></pre>
 <p>Directory packages expose public class and interface names directly when they are imported without an alias. Use an alias when a namespace binding is wanted:</p>
 <pre><code class="language-tya">import net/http
 
-server = Server.new()
+server = Server()
 
 import net/http as http
 
-server = http.Server.new()</code></pre>
+server = http.Server()</code></pre>
 <p>The import search order is:</p>
 <ol>
 <li>The importing file's directory.</li>
@@ -55,7 +55,7 @@ server = http.Server.new()</code></pre>
 [&quot;a&quot;, &quot;b&quot;].join(&quot;,&quot;)
 { name: &quot;tya&quot; }.keys()
 value.class</code></pre>
-<p>See the v0.59 specification for the exhaustive primitive method surface. Use <code>x.class</code> to inspect the runtime class wrapper for primitive and object values.</p>
+<p>Use <code>x.class</code> to inspect the runtime class wrapper for primitive and object values. Built-in functions and common primitive methods are listed in <code>docs/API.md</code>.</p>
 <h2 id="net-http"><code>net/http</code></h2>
 <pre><code class="language-tya">import net/http as http
 
@@ -65,9 +65,19 @@ app.group(&quot;/admin&quot;, group -&gt;
   group.get(&quot;/users/:id&quot;, show_user, { name: &quot;admin_user&quot; })
 )
 app.run(8080)</code></pre>
+<p><code>http.Client</code> provides small HTTP/1.1 client helpers for plain <code>http://</code> URLs:</p>
+<pre><code class="language-tya">resp = http.Client.get(&quot;http://example.test/&quot;)
+posted = http.Client.post(&quot;http://example.test/items&quot;, &quot;body&quot;)
+custom = http.Client.request(&quot;PATCH&quot;, &quot;http://example.test/items/1&quot;, {
+  headers: { &quot;Content-Type&quot;: &quot;text/plain&quot; },
+  body: &quot;updated&quot;,
+  timeout: 5
+})</code></pre>
+<p>Client responses are dictionaries with <code>status</code>, lowercase <code>headers</code>, and a string <code>body</code>. The client sends <code>Connection: close</code> and reads <code>Content-Length</code>, chunked transfer encoding, or a close-delimited body. HTTPS is not part of the built-in client yet.</p>
 <p><code>http.Server</code> provides Sinatra-style HTTP/1.1 routing. Route helpers include <code>get</code>, <code>post</code>, <code>put</code>, <code>delete</code>, <code>patch</code>, <code>options</code>, <code>head</code>, <code>any</code>, and generic <code>route(method, path, handler, options)</code>. Routes are chainable, method names are stored uppercase, <code>any</code> matches every method, HEAD falls back to GET with an empty body, and OPTIONS can synthesize an <code>Allow</code> header for matching paths.</p>
 <p>Path patterns support exact segments, <code>:name</code> parameters, and final wildcard segments such as <code>/assets/*path</code>. Captures are available through both <code>req[&quot;params&quot;]</code> and <code>req[&quot;path_params&quot;]</code>. Use <code>{ trailing_slash: &quot;ignore&quot; }</code> to match a route with or without one trailing slash.</p>
 <p>Middleware registered with <code>use</code> receives <code>(req, next)</code> and calls <code>next.call(req)</code>. <code>group(prefix, fn)</code> prefixes nested routes and composes group middleware after global middleware. <code>not_found(handler)</code> and <code>error(handler)</code> override the default 404 and 500 responses. Named routes use <code>{ name: &quot;route_name&quot; }</code> and <code>app.path(name, params)</code>. <code>app.redirect(path)</code> and <code>app.redirect(path, status)</code> return redirect response dictionaries.</p>
+<p>The runtime accepts connections cooperatively through Tya lightweight tasks. Handlers that yield, such as via <code>time.Time.sleep</code>, do not block other ready clients. The server still handles one request per connection and closes the connection after each response.</p>
 <h2 id="color"><code>color</code></h2>
 <pre><code class="language-tya">import color as color
 
@@ -75,7 +85,7 @@ red = color.Color.rgb(255, 0, 0)
 blue = color.Color.hex(&quot;#0066ff&quot;)
 mixed = color.Color.blend(red, blue, 0.5)
 
-print mixed.to_hex()</code></pre>
+print(mixed.to_hex())</code></pre>
 <p><code>Color</code> instances expose numeric <code>r</code>, <code>g</code>, <code>b</code>, and <code>a</code> fields in the range <code>0..255</code>. Constructors validate channels and raise <code>color.*</code> errors for invalid input.</p>
 <p>Class members on <code>color.Color</code> include <code>rgb</code>, <code>rgba</code>, <code>gray</code>, <code>hex</code>, <code>css</code>, <code>from_array</code>, named color constructors, <code>equal?</code>, <code>nearly_equal?</code>, <code>luminance</code>, <code>contrast_ratio</code>, <code>with_alpha</code>, <code>invert</code>, <code>grayscale</code>, <code>blend</code>, <code>over</code>, <code>lighten</code>, and <code>darken</code>.</p>
 <p><code>hex(text)</code> accepts <code>#rgb</code>, <code>#rgba</code>, <code>#rrggbb</code>, <code>#rrggbbaa</code>, and the same forms without <code>#</code>. <code>css(text)</code> accepts those hex forms, <code>rgb(...)</code>, <code>rgba(...)</code>, and the documented lowercase named colors.</p>
@@ -101,7 +111,7 @@ v = geo.Vector2.normalize(geo.Vector2.new(3, 4))
 r = geo.Rect.new(0, 0, 100, 50)
 
 if geo.Rect.contains_point?(r, p)
-  print &quot;inside&quot;</code></pre>
+  print(&quot;inside&quot;)</code></pre>
 <p>The <code>geometry</code> package provides class-style values for vectors and simple shapes:</p>
 <ul>
 <li><code>Vector2</code> with <code>x</code>, <code>y</code></li>
@@ -122,7 +132,7 @@ scale = transform2d.Transform2D.uniform_scale(2)
 world = transform2d.Transform2D.compose(move, scale)
 
 point = transform2d.Transform2D.apply_point(world, geo.Point.new(3, 4))
-print geo.Vector2.to_array(geo.Point.to_vector(point))</code></pre>
+print(geo.Vector2.to_array(geo.Point.to_vector(point)))</code></pre>
 <p><code>Transform2D</code> instances expose numeric <code>a</code>, <code>b</code>, <code>c</code>, <code>d</code>, <code>tx</code>, and <code>ty</code> fields representing <code>[a c tx; b d ty; 0 0 1]</code>.</p>
 <p>Constructors include <code>identity</code>, <code>translation</code>, <code>scale</code>, <code>uniform_scale</code>, <code>rotation</code>, <code>rotation_around</code>, <code>skew</code>, <code>from_array</code>, and <code>new</code>.</p>
 <p>Operations include <code>compose</code>, <code>translate</code>, <code>scale_by</code>, <code>rotate</code>, <code>determinant</code>, <code>invertible?</code>, <code>inverse</code>, <code>equal?</code>, <code>nearly_equal?</code>, <code>apply_point</code>, <code>apply_vector2</code>, <code>apply_rect</code>, <code>apply_size</code>, <code>to_matrix</code>, and <code>from_matrix</code>.</p>
@@ -135,9 +145,9 @@ import compiler/format
 
 tokens = Lexer.lex(&quot;x = 1\n&quot;)[&quot;tokens&quot;]
 program = Parser.parse_tokens(tokens)[&quot;program&quot;]
-print Ast.kind(program)
-print Checker.check(&quot;print missing\n&quot;)[&quot;ok&quot;]
-print Format.unparse(program)</code></pre>
+print(Ast.kind(program))
+print(Checker.check(&quot;print(missing)\n&quot;)[&quot;ok&quot;])
+print(Format.unparse(program))</code></pre>
 <p>The public compiler introspection packages expose stable dictionaries and arrays instead of private Go handles:</p>
 <ul>
 <li><code>compiler/lexer.Lexer.lex(source)</code></li>
@@ -193,15 +203,15 @@ print(seen.has?(&quot;asset.png&quot;))</code></pre>
 <h2 id="math"><code>math</code></h2>
 <pre><code class="language-tya">import math as math
 
-print math.Math.abs(-3)
-print math.Math.min(2, 5)
-print math.Math.max(2, 5)
-print math.Math.clamp(12, 0, 10)</code></pre>
+print(math.Math.abs(-3))
+print(math.Math.min(2, 5))
+print(math.Math.max(2, 5))
+print(math.Math.clamp(12, 0, 10))</code></pre>
 <p>Class members on <code>math.Math</code>:</p>
-<pre><code class="language-tya">abs value
-min left, right
-max left, right
-clamp value, min, max</code></pre>
+<pre><code class="language-tya">abs(value)
+min(left, right)
+max(left, right)
+clamp(value, min, max)</code></pre>
 <p><code>abs(value)</code> returns the absolute value of an integer or float.</p>
 <p><code>min(left, right)</code> returns the smaller number.</p>
 <p><code>max(left, right)</code> returns the larger number.</p>
@@ -209,15 +219,15 @@ clamp value, min, max</code></pre>
 <h2 id="path"><code>path</code></h2>
 <pre><code class="language-tya">import path as path
 
-print path.Path.join([&quot;tmp&quot;, &quot;tya&quot;, &quot;memo.txt&quot;])
-print path.Path.clean(&quot;tmp/./tya/../memo.txt&quot;)
-print path.Path.basename(&quot;/tmp/tya/memo.txt&quot;)
-print path.Path.dirname(&quot;/tmp/tya/memo.txt&quot;)
-print path.Path.extname(&quot;/tmp/tya/memo.txt&quot;)</code></pre>
+print(path.Path.join([&quot;tmp&quot;, &quot;tya&quot;, &quot;memo.txt&quot;]))
+print(path.Path.clean(&quot;tmp/./tya/../memo.txt&quot;))
+print(path.Path.basename(&quot;/tmp/tya/memo.txt&quot;))
+print(path.Path.dirname(&quot;/tmp/tya/memo.txt&quot;))
+print(path.Path.extname(&quot;/tmp/tya/memo.txt&quot;))</code></pre>
 <p>Class members on <code>path.Path</code>:</p>
-<pre><code class="language-tya">join parts
-clean value
-basename value
+<pre><code class="language-tya">join(parts)
+clean(value)
+basename(value)
 dirname value
 extname value</code></pre>
 <p><code>join(parts)</code> joins an array of path segments with <code>/</code> and cleans the result.</p>
@@ -231,13 +241,13 @@ extname value</code></pre>
 
 if file.File.exists?(&quot;memo.txt&quot;)
   text = file.File.read(&quot;memo.txt&quot;)
-  println text
+  println(text)
 
 file.File.write(&quot;out.txt&quot;, &quot;hello&quot;)</code></pre>
 <p>Class members on <code>file.File</code>:</p>
-<pre><code class="language-tya">read path
-write path, text
-exists? path</code></pre>
+<pre><code class="language-tya">read(path)
+write(path, text)
+exists?(path)</code></pre>
 <p><code>read(path)</code> reads the entire file and returns it as a string.</p>
 <p><code>write(path, text)</code> writes <code>text</code> to <code>path</code> and returns <code>nil</code> on success.</p>
 <p><code>exists?(path)</code> returns <code>true</code> when the path exists, <code>false</code> when it does not.</p>
@@ -247,9 +257,9 @@ exists? path</code></pre>
 args = os.Os.args()
 home = os.Os.env(&quot;HOME&quot;)</code></pre>
 <p>Class members on <code>os.Os</code>:</p>
-<pre><code class="language-tya">args
-env name
-exit code</code></pre>
+<pre><code class="language-tya">args()
+env(name)
+exit(code)</code></pre>
 <p><code>args()</code> returns the command-line arguments as an array of strings.</p>
 <p><code>env(name)</code> returns the environment variable value, or <code>nil</code> when not present.</p>
 <p><code>exit(code)</code> exits the process with <code>code</code>.</p>
@@ -262,9 +272,9 @@ names = dir.Dir.list(&quot;.&quot;)
 dir.Dir.mkdir(&quot;tmp&quot;)
 dir.Dir.rmdir(&quot;tmp&quot;)</code></pre>
 <p>Class members on <code>dir.Dir</code>:</p>
-<pre><code class="language-tya">list path
-mkdir path
-rmdir path</code></pre>
+<pre><code class="language-tya">list(path)
+mkdir(path)
+rmdir(path)</code></pre>
 <p><code>list(path)</code> returns an array of names directly under <code>path</code> in dictionary order. <code>.</code> and <code>..</code> are excluded.</p>
 <p><code>mkdir(path)</code> creates one directory level. It raises an error when the parent directory does not exist or when <code>path</code> already exists.</p>
 <p><code>rmdir(path)</code> removes an empty directory. It raises an error when the directory is not empty.</p>
@@ -274,8 +284,8 @@ rmdir path</code></pre>
 file.File.remove(&quot;memo.txt&quot;)
 file.File.rename(&quot;a.txt&quot;, &quot;b.txt&quot;)
 info = file.File.stat(&quot;b.txt&quot;)
-println info[&quot;kind&quot;]
-println info[&quot;size&quot;]</code></pre>
+println(info[&quot;kind&quot;])
+println(info[&quot;size&quot;])</code></pre>
 <p><code>remove(path)</code> removes a file. It raises an error when <code>path</code> is a directory.</p>
 <p><code>rename(old_path, new_path)</code> renames a file or directory.</p>
 <p><code>stat(path)</code> returns a dictionary with <code>kind</code> (<code>&quot;file&quot;</code>, <code>&quot;dir&quot;</code>, or <code>&quot;other&quot;</code>), <code>size</code> in bytes, and <code>readable</code>, <code>writable</code>, <code>executable</code> booleans.</p>
@@ -284,13 +294,13 @@ println info[&quot;size&quot;]</code></pre>
 <h2 id="base64"><code>base64</code></h2>
 <pre><code class="language-tya">import base64 as base64
 
-println base64.Base64.encode(&quot;hello&quot;)
-println base64.Base64.decode(&quot;aGVsbG8=&quot;)</code></pre>
+println(base64.Base64.encode(&quot;hello&quot;))
+println(base64.Base64.decode(&quot;aGVsbG8=&quot;))</code></pre>
 <p><code>encode(text)</code> returns the standard-alphabet Base64 representation with <code>=</code> padding. <code>decode(text)</code> decodes standard Base64 (padding optional, whitespace ignored).</p>
 <h2 id="url-v0-61"><code>url</code> (v0.61)</h2>
 <pre><code class="language-tya">import url as url
 
-println url.Url.encode(&quot;hello world&quot;)
+println(url.Url.encode(&quot;hello world&quot;))
 parts = url.Url.parse(&quot;https://example.com:8080/path?x=1&quot;)
 full = url.Url.resolve(&quot;https://example.com/a/b&quot;, &quot;../c?x=1&quot;)</code></pre>
 <p>Class members on <code>url.Url</code>: <code>encode</code>, <code>decode</code>, <code>encode_query</code>, <code>decode_query</code>, <code>query_dict</code>, <code>parse</code>, <code>build</code>, <code>resolve</code>, and <code>normalize</code>.</p>
@@ -300,7 +310,7 @@ full = url.Url.resolve(&quot;https://example.com/a/b&quot;, &quot;../c?x=1&quot;
 <h2 id="json"><code>json</code></h2>
 <pre><code class="language-tya">import json as json
 
-println json.Json.dump({ name: &quot;tya&quot;, version: 23 })
+println(json.Json.dump({ name: &quot;tya&quot;, version: 23 }))
 data = json.Json.parse(&quot;[1, 2, 3]&quot;)</code></pre>
 <p><code>Json.parse(text)</code> parses RFC 8259 JSON; <code>Json.dump(value)</code> emits compact JSON. Numbers without fractional parts decode to ints; with fractional parts to floats. Parsed JSON values are data-exchange dictionaries and arrays, not stdlib domain instances.</p>
 <h2 id="serialization"><code>serialization</code></h2>
@@ -325,7 +335,7 @@ tests = root.find_all_recursive(&quot;testcase&quot;)</code></pre>
 <pre><code class="language-tya">import csv as csv
 
 rows = csv.Csv.parse(&quot;name,age\ntya,1\n&quot;, { header: true })
-println csv.Csv.dump([[&quot;a&quot;, &quot;b&quot;], [&quot;1&quot;, &quot;2&quot;]], nil)</code></pre>
+println(csv.Csv.dump([[&quot;a&quot;, &quot;b&quot;], [&quot;1&quot;, &quot;2&quot;]], nil))</code></pre>
 <p><code>Csv.parse(text, options)</code> accepts <code>{ separator, header }</code> options. <code>Csv.dump(rows, options)</code> quotes fields containing the separator, quote, CR, or LF.</p>
 <h2 id="cli"><code>cli</code></h2>
 <pre><code class="language-tya">import cli
@@ -342,7 +352,7 @@ result = cli.Cli.parse(args(), spec)</code></pre>
 <pre><code class="language-tya">import toml
 
 config = toml.Toml.parse(&quot;[server]\nhost = \&quot;localhost\&quot;\nport = 80\n&quot;)
-println toml.Toml.dump(config)</code></pre>
+println(toml.Toml.dump(config))</code></pre>
 <p><code>toml.Toml.parse(text)</code> parses TOML 1.0 documents. <code>toml.Toml.dump(value)</code> emits TOML for a dict of primitives, arrays, and nested tables (including arrays of tables).</p>
 <p>The public <code>toml</code> stdlib package is separate from the toolchain's private TOML parser for <code>tya.toml</code> manifests and <code>tya.lock</code> lockfiles.</p>
 <h2 id="time"><code>time</code></h2>
@@ -373,28 +383,28 @@ hand = rng.sample(deck, 5)</code></pre>
 <pre><code class="language-tya">import process
 
 result = process.run([&quot;echo&quot;, &quot;hello&quot;], nil)
-println result[&quot;stdout&quot;]
-println result[&quot;exit_code&quot;]
+println(result[&quot;stdout&quot;])
+println(result[&quot;exit_code&quot;])
 
 process.run([&quot;sh&quot;, &quot;-c&quot;, &quot;echo $X&quot;], { env: { X: &quot;tya&quot; } })</code></pre>
 <p><code>run(command, options)</code> returns <code>{exit_code, stdout, stderr}</code>. <code>command</code> is an array of strings — never a shell string. Options: <code>cwd</code>, <code>env</code>, <code>input</code>.</p>
 <h2 id="hex"><code>hex</code></h2>
 <pre><code class="language-tya">import hex
 
-println hex.encode(&quot;Tya&quot;)     # 547961
-println hex.decode(&quot;547961&quot;)  # Tya</code></pre>
+println(hex.encode(&quot;Tya&quot;))     # 547961
+println(hex.decode(&quot;547961&quot;))  # Tya</code></pre>
 <h2 id="digest"><code>digest</code></h2>
 <pre><code class="language-tya">import digest as digest
 
-println digest.Digest.md5(&quot;hello&quot;)
-println digest.Digest.sha256(&quot;hello&quot;)</code></pre>
+println(digest.Digest.md5(&quot;hello&quot;))
+println(digest.Digest.sha256(&quot;hello&quot;))</code></pre>
 <p>Class members on <code>digest.Digest</code>: <code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code>. Each takes a text and returns a lowercase hex digest string.</p>
 <h2 id="secure-random"><code>secure_random</code></h2>
 <pre><code class="language-tya">import secure_random as secure_random
 
-println secure_random.SecureRandom.hex(16)     # 32 hex chars
-println secure_random.SecureRandom.uuid()      # RFC 4122 v4
-println secure_random.SecureRandom.int(0, 99)</code></pre>
+println(secure_random.SecureRandom.hex(16))     # 32 hex chars
+println(secure_random.SecureRandom.uuid())      # RFC 4122 v4
+println(secure_random.SecureRandom.int(0, 99))</code></pre>
 <p>Cryptographically secure. Class members on <code>secure_random.SecureRandom</code>: <code>bytes</code>, <code>hex</code>, <code>base64</code>, <code>uuid</code>, <code>int</code>.</p>
 <h2 id="matrix"><code>matrix</code></h2>
 <pre><code class="language-tya">import matrix as matrix
@@ -402,9 +412,9 @@ println secure_random.SecureRandom.int(0, 99)</code></pre>
 a = matrix.Matrix.new([[1, 2], [3, 4]])
 b = matrix.Matrix.identity(2)
 
-println matrix.Matrix.add(a, b).data
-println matrix.Matrix.mul(a, a).data
-println matrix.Matrix.det(a)</code></pre>
+println(matrix.Matrix.add(a, b).data)
+println(matrix.Matrix.mul(a, a).data)
+println(matrix.Matrix.det(a))</code></pre>
 <p>Class members on <code>matrix.Matrix</code>: <code>new</code>, <code>zero</code>, <code>identity</code>, <code>at</code>, <code>put</code>, <code>add</code>, <code>sub</code>, <code>scale</code>, <code>mul</code>, <code>transpose</code>, <code>det</code> (&lt;= 4x4), <code>equal?</code>.</p>
 <p><code>Matrix.new</code>, <code>Matrix.zero</code>, <code>Matrix.identity</code>, <code>Matrix.add</code>, <code>Matrix.sub</code>, <code>Matrix.scale</code>, <code>Matrix.mul</code>, and <code>Matrix.transpose</code> return a Matrix instance with public <code>data</code>, <code>rows</code>, and <code>cols</code> fields.</p>
 <h2 id="bytes-v0-25"><code>bytes</code> (v0.25)</h2>
@@ -413,12 +423,12 @@ println matrix.Matrix.det(a)</code></pre>
 b2 = b&quot;\x00\x01\xff&quot;
 b3 = bytes([72, 101, 108, 108, 111])
 
-println b1.len()             # 5
-println b1[0]                # 104
-println bytes_text(b1)       # hello
-println bytes_array(b1)      # [104, 101, 108, 108, 111]
-println bytes_slice(b1, 0, 3)
-println b1 + b2              # concat</code></pre>
+println(b1.len())             # 5
+println(b1[0])                # 104
+println(bytes_text(b1))       # hello
+println(bytes_array(b1))      # [104, 101, 108, 108, 111]
+println(bytes_slice(b1, 0, 3))
+println(b1 + b2)              # concat</code></pre>
 <p>Builtins: <code>bytes(int_array)</code>, <code>bytes_of(text)</code>, <code>bytes_text(b)</code>, <code>bytes_array(b)</code>, <code>bytes_concat(a, b)</code>, <code>bytes_slice(b, start, end)</code>.</p>
 <h2 id="file-v0-25-binary-i-o"><code>file</code> (v0.25 binary I/O)</h2>
 <pre><code class="language-tya">import file as file

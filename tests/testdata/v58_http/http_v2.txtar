@@ -1,0 +1,64 @@
+# net/http v2: Client helpers and cooperative server concurrency.
+[!exec:sh] skip 'sh not on PATH'
+[!exec:curl] skip 'curl not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/client_server.tya -o $WORK/client_server
+exec go run ./cmd/tya build $WORK/client.tya -o $WORK/client
+exec sh -c '$WORK/client_server & pid=$!; sleep 0.2; $WORK/client; client=$?; wait $pid; server=$?; exit $((client + server))'
+stdout '201'
+stdout 'hello client'
+stdout 'chunked body'
+
+exec go run ./cmd/tya build $WORK/concurrent_server.tya -o $WORK/concurrent_server
+exec sh -c '$WORK/concurrent_server & pid=$!; sleep 0.5; curl -s -m 2 http://localhost:18092/slow >/tmp/tya-slow-$$ & slow=$!; sleep 0.1; fast=$(curl -s -m 0.4 http://localhost:18092/fast); fast_status=$?; wait $slow; slow_status=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; test "$fast" = fast && exit $((fast_status + slow_status))'
+
+-- client_server.tya --
+import net/socket as socket
+
+server = socket.Server.listen("127.0.0.1", 18091, {})
+conn = server.accept()
+line = conn.read_line()
+while line != nil and line != chr(13) + "\n" and line != "\n"
+  line = conn.read_line()
+conn.write("HTTP/1.1 201 Created" + chr(13) + "\n")
+conn.write("Content-Length: 12" + chr(13) + "\n")
+conn.write(chr(13) + "\n")
+conn.write("hello client")
+conn.close()
+
+conn = server.accept()
+line = conn.read_line()
+while line != nil and line != chr(13) + "\n" and line != "\n"
+  line = conn.read_line()
+conn.write("HTTP/1.1 200 OK" + chr(13) + "\n")
+conn.write("Transfer-Encoding: chunked" + chr(13) + "\n")
+conn.write(chr(13) + "\n")
+conn.write("c" + chr(13) + "\n")
+conn.write("chunked body" + chr(13) + "\n")
+conn.write("0" + chr(13) + "\n")
+conn.write(chr(13) + "\n")
+conn.close()
+server.close()
+
+-- client.tya --
+import net/http as http
+
+posted = http.Client.post("http://127.0.0.1:18091/submit", "payload")
+print(posted["status"])
+print(posted["body"])
+
+chunked = http.Client.get("http://127.0.0.1:18091/chunked")
+print(chunked["body"])
+
+-- concurrent_server.tya --
+import net/http as http
+import time as time
+
+app = http.Server()
+slow = _req ->
+  time.Time.sleep(1)
+  return { status: 200, body: "slow" }
+app.get("/slow", slow)
+app.get("/fast", _req -> { status: 200, body: "fast" })
+app.run(18092)

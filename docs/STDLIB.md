@@ -9,8 +9,8 @@ packages are managed separately through `tya.toml`, `tya.lock`, and
 ## Importing
 
 Standard modules use the same import syntax as user modules. Primitive string,
-array, and dict helpers are not imported modules in v0.59; they are methods on
-the values themselves.
+array, dict, number, boolean, and nil helpers are methods on the values
+themselves.
 
 ```tya
 import math as math
@@ -23,11 +23,11 @@ are imported without an alias. Use an alias when a namespace binding is wanted:
 ```tya
 import net/http
 
-server = Server.new()
+server = Server()
 
 import net/http as http
 
-server = http.Server.new()
+server = http.Server()
 ```
 
 The import search order is:
@@ -50,9 +50,9 @@ Primitive literals expose their core operations through wrapper classes:
 value.class
 ```
 
-See the v0.59 specification for the exhaustive primitive method surface.
 Use `x.class` to inspect the runtime class wrapper for primitive and object
-values.
+values. Built-in functions and common primitive methods are listed in
+`docs/API.md`.
 
 ## `net/http`
 
@@ -66,6 +66,23 @@ app.group("/admin", group ->
 )
 app.run(8080)
 ```
+
+`http.Client` provides small HTTP/1.1 client helpers for plain `http://` URLs:
+
+```tya
+resp = http.Client.get("http://example.test/")
+posted = http.Client.post("http://example.test/items", "body")
+custom = http.Client.request("PATCH", "http://example.test/items/1", {
+  headers: { "Content-Type": "text/plain" },
+  body: "updated",
+  timeout: 5
+})
+```
+
+Client responses are dictionaries with `status`, lowercase `headers`, and a
+string `body`. The client sends `Connection: close` and reads
+`Content-Length`, chunked transfer encoding, or a close-delimited body. HTTPS is
+not part of the built-in client yet.
 
 `http.Server` provides Sinatra-style HTTP/1.1 routing. Route helpers include
 `get`, `post`, `put`, `delete`, `patch`, `options`, `head`, `any`, and generic
@@ -85,6 +102,11 @@ override the default 404 and 500 responses. Named routes use
 `{ name: "route_name" }` and `app.path(name, params)`. `app.redirect(path)` and
 `app.redirect(path, status)` return redirect response dictionaries.
 
+The runtime accepts connections cooperatively through Tya lightweight tasks.
+Handlers that yield, such as via `time.Time.sleep`, do not block other ready
+clients. The server still handles one request per connection and closes the
+connection after each response.
+
 ## `color`
 
 ```tya
@@ -94,7 +116,7 @@ red = color.Color.rgb(255, 0, 0)
 blue = color.Color.hex("#0066ff")
 mixed = color.Color.blend(red, blue, 0.5)
 
-print mixed.to_hex()
+print(mixed.to_hex())
 ```
 
 `Color` instances expose numeric `r`, `g`, `b`, and `a` fields in the range
@@ -157,7 +179,7 @@ v = geo.Vector2.normalize(geo.Vector2.new(3, 4))
 r = geo.Rect.new(0, 0, 100, 50)
 
 if geo.Rect.contains_point?(r, p)
-  print "inside"
+  print("inside")
 ```
 
 The `geometry` package provides class-style values for vectors and simple
@@ -191,7 +213,7 @@ scale = transform2d.Transform2D.uniform_scale(2)
 world = transform2d.Transform2D.compose(move, scale)
 
 point = transform2d.Transform2D.apply_point(world, geo.Point.new(3, 4))
-print geo.Vector2.to_array(geo.Point.to_vector(point))
+print(geo.Vector2.to_array(geo.Point.to_vector(point)))
 ```
 
 `Transform2D` instances expose numeric `a`, `b`, `c`, `d`, `tx`, and `ty`
@@ -216,9 +238,9 @@ import compiler/format
 
 tokens = Lexer.lex("x = 1\n")["tokens"]
 program = Parser.parse_tokens(tokens)["program"]
-print Ast.kind(program)
-print Checker.check("print missing\n")["ok"]
-print Format.unparse(program)
+print(Ast.kind(program))
+print(Checker.check("print(missing)\n")["ok"])
+print(Format.unparse(program))
 ```
 
 The public compiler introspection packages expose stable dictionaries and
@@ -304,19 +326,19 @@ instead of returning `nil`.
 ```tya
 import math as math
 
-print math.Math.abs(-3)
-print math.Math.min(2, 5)
-print math.Math.max(2, 5)
-print math.Math.clamp(12, 0, 10)
+print(math.Math.abs(-3))
+print(math.Math.min(2, 5))
+print(math.Math.max(2, 5))
+print(math.Math.clamp(12, 0, 10))
 ```
 
 Class members on `math.Math`:
 
 ```tya
-abs value
-min left, right
-max left, right
-clamp value, min, max
+abs(value)
+min(left, right)
+max(left, right)
+clamp(value, min, max)
 ```
 
 `abs(value)` returns the absolute value of an integer or float.
@@ -333,19 +355,19 @@ clamp value, min, max
 ```tya
 import path as path
 
-print path.Path.join(["tmp", "tya", "memo.txt"])
-print path.Path.clean("tmp/./tya/../memo.txt")
-print path.Path.basename("/tmp/tya/memo.txt")
-print path.Path.dirname("/tmp/tya/memo.txt")
-print path.Path.extname("/tmp/tya/memo.txt")
+print(path.Path.join(["tmp", "tya", "memo.txt"]))
+print(path.Path.clean("tmp/./tya/../memo.txt"))
+print(path.Path.basename("/tmp/tya/memo.txt"))
+print(path.Path.dirname("/tmp/tya/memo.txt"))
+print(path.Path.extname("/tmp/tya/memo.txt"))
 ```
 
 Class members on `path.Path`:
 
 ```tya
-join parts
-clean value
-basename value
+join(parts)
+clean(value)
+basename(value)
 dirname value
 extname value
 ```
@@ -373,7 +395,7 @@ import file as file
 
 if file.File.exists?("memo.txt")
   text = file.File.read("memo.txt")
-  println text
+  println(text)
 
 file.File.write("out.txt", "hello")
 ```
@@ -381,9 +403,9 @@ file.File.write("out.txt", "hello")
 Class members on `file.File`:
 
 ```tya
-read path
-write path, text
-exists? path
+read(path)
+write(path, text)
+exists?(path)
 ```
 
 `read(path)` reads the entire file and returns it as a string.
@@ -404,9 +426,9 @@ home = os.Os.env("HOME")
 Class members on `os.Os`:
 
 ```tya
-args
-env name
-exit code
+args()
+env(name)
+exit(code)
 ```
 
 `args()` returns the command-line arguments as an array of strings.
@@ -433,9 +455,9 @@ dir.Dir.rmdir("tmp")
 Class members on `dir.Dir`:
 
 ```tya
-list path
-mkdir path
-rmdir path
+list(path)
+mkdir(path)
+rmdir(path)
 ```
 
 `list(path)` returns an array of names directly under `path` in dictionary
@@ -455,8 +477,8 @@ import file as file
 file.File.remove("memo.txt")
 file.File.rename("a.txt", "b.txt")
 info = file.File.stat("b.txt")
-println info["kind"]
-println info["size"]
+println(info["kind"])
+println(info["size"])
 ```
 
 `remove(path)` removes a file. It raises an error when `path` is a
@@ -478,8 +500,8 @@ directory. Other strings are returned unchanged.
 ```tya
 import base64 as base64
 
-println base64.Base64.encode("hello")
-println base64.Base64.decode("aGVsbG8=")
+println(base64.Base64.encode("hello"))
+println(base64.Base64.decode("aGVsbG8="))
 ```
 
 `encode(text)` returns the standard-alphabet Base64 representation with `=`
@@ -491,7 +513,7 @@ ignored).
 ```tya
 import url as url
 
-println url.Url.encode("hello world")
+println(url.Url.encode("hello world"))
 parts = url.Url.parse("https://example.com:8080/path?x=1")
 full = url.Url.resolve("https://example.com/a/b", "../c?x=1")
 ```
@@ -517,7 +539,7 @@ dictionary, storing duplicate values as arrays.
 ```tya
 import json as json
 
-println json.Json.dump({ name: "tya", version: 23 })
+println(json.Json.dump({ name: "tya", version: 23 }))
 data = json.Json.parse("[1, 2, 3]")
 ```
 
@@ -582,7 +604,7 @@ unterminated comments/CDATA/tags, and invalid entity references.
 import csv as csv
 
 rows = csv.Csv.parse("name,age\ntya,1\n", { header: true })
-println csv.Csv.dump([["a", "b"], ["1", "2"]], nil)
+println(csv.Csv.dump([["a", "b"], ["1", "2"]], nil))
 ```
 
 `Csv.parse(text, options)` accepts `{ separator, header }` options. `Csv.dump(rows,
@@ -616,7 +638,7 @@ when parsing fails.
 import toml
 
 config = toml.Toml.parse("[server]\nhost = \"localhost\"\nport = 80\n")
-println toml.Toml.dump(config)
+println(toml.Toml.dump(config))
 ```
 
 `toml.Toml.parse(text)` parses TOML 1.0 documents.
@@ -682,8 +704,8 @@ constants `pi` and `e`.
 import process
 
 result = process.run(["echo", "hello"], nil)
-println result["stdout"]
-println result["exit_code"]
+println(result["stdout"])
+println(result["exit_code"])
 
 process.run(["sh", "-c", "echo $X"], { env: { X: "tya" } })
 ```
@@ -696,8 +718,8 @@ an array of strings — never a shell string. Options: `cwd`, `env`, `input`.
 ```tya
 import hex
 
-println hex.encode("Tya")     # 547961
-println hex.decode("547961")  # Tya
+println(hex.encode("Tya"))     # 547961
+println(hex.decode("547961"))  # Tya
 ```
 
 ## `digest`
@@ -705,8 +727,8 @@ println hex.decode("547961")  # Tya
 ```tya
 import digest as digest
 
-println digest.Digest.md5("hello")
-println digest.Digest.sha256("hello")
+println(digest.Digest.md5("hello"))
+println(digest.Digest.sha256("hello"))
 ```
 
 Class members on `digest.Digest`: `md5`, `sha1`, `sha256`, `sha384`,
@@ -717,9 +739,9 @@ Class members on `digest.Digest`: `md5`, `sha1`, `sha256`, `sha384`,
 ```tya
 import secure_random as secure_random
 
-println secure_random.SecureRandom.hex(16)     # 32 hex chars
-println secure_random.SecureRandom.uuid()      # RFC 4122 v4
-println secure_random.SecureRandom.int(0, 99)
+println(secure_random.SecureRandom.hex(16))     # 32 hex chars
+println(secure_random.SecureRandom.uuid())      # RFC 4122 v4
+println(secure_random.SecureRandom.int(0, 99))
 ```
 
 Cryptographically secure. Class members on `secure_random.SecureRandom`:
@@ -733,9 +755,9 @@ import matrix as matrix
 a = matrix.Matrix.new([[1, 2], [3, 4]])
 b = matrix.Matrix.identity(2)
 
-println matrix.Matrix.add(a, b).data
-println matrix.Matrix.mul(a, a).data
-println matrix.Matrix.det(a)
+println(matrix.Matrix.add(a, b).data)
+println(matrix.Matrix.mul(a, a).data)
+println(matrix.Matrix.det(a))
 ```
 
 Class members on `matrix.Matrix`: `new`, `zero`, `identity`, `at`, `put`,
@@ -755,12 +777,12 @@ b1 = b"hello"
 b2 = b"\x00\x01\xff"
 b3 = bytes([72, 101, 108, 108, 111])
 
-println b1.len()             # 5
-println b1[0]                # 104
-println bytes_text(b1)       # hello
-println bytes_array(b1)      # [104, 101, 108, 108, 111]
-println bytes_slice(b1, 0, 3)
-println b1 + b2              # concat
+println(b1.len())             # 5
+println(b1[0])                # 104
+println(bytes_text(b1))       # hello
+println(bytes_array(b1))      # [104, 101, 108, 108, 111]
+println(bytes_slice(b1, 0, 3))
+println(b1 + b2)              # concat
 ```
 
 Builtins: `bytes(int_array)`, `bytes_of(text)`, `bytes_text(b)`,

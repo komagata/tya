@@ -1,9 +1,50 @@
-# Tya v0.61 Specification
+# Tya Current Specification
 
-> **Status:** released. v0.61 is the current released implementation. It
-> includes stackable interface behavior plus the post-v0.60 toolchain,
-> package, stdlib, and external-package support that shipped in the v0.61.0
-> tag.
+> **Status:** current repository specification. Historical release snapshots
+> live under `docs/vX.Y/`. This page describes the language and standard
+> library surface maintained on `main`, including the v0.61 stackable
+> interface work and later `net/http` v2 additions.
+
+## Language Overview
+
+Tya source files use indentation for blocks and parentheses for calls:
+
+```tya
+greet = name -> "Hello, {name}"
+
+if args().len() > 0
+  print(greet(args()[0]))
+```
+
+The core value types are `nil`, booleans, numbers, strings, bytes, arrays,
+dictionaries, functions, classes, objects, tasks, channels, and resources.
+Strings support interpolation. Arrays and dictionaries are mutable. Primitive
+operations are methods on the values themselves:
+
+```tya
+print(" tya ".trim().upper())
+print([1, 2, 3].map(n -> n * 2))
+print({ name: "tya" }.keys())
+```
+
+Control flow includes `if` / `elseif` / `else`, `while`, `for`, `break`,
+`continue`, `return`, `raise`, `try`, and `catch`. Functions use `->` and
+return the final expression implicitly unless an explicit `return` is used.
+
+Imports load same-directory files, manifest dependencies from `tya.lock`,
+directories listed in `TYA_PATH`, and the bundled `stdlib/` directory.
+Directory packages expose public classes and interfaces directly unless an
+alias is used:
+
+```tya
+import net/http as http
+
+app = http.Server()
+```
+
+Classes support `initialize`, instance fields and methods, class variables and
+methods, single inheritance, `super(args...)`, private members, abstract
+classes, final classes, and explicit `implements` clauses.
 
 ## Interface Stackable Behavior
 
@@ -49,7 +90,7 @@ v0.61 includes the class-style stdlib additions and extensions documented in
 - `binary`, `collections`, random extensions, serialization, XML, and image
   packages
 - extended `url.Url` parsing and resolution
-- extended `net/http.Server` routing helpers
+- `net/http.Client` helpers and cooperative `net/http.Server` connection tasks
 
 ## External Packages
 
@@ -803,7 +844,7 @@ prefer an ordinary class until the interface model proves itself in practice.
 
 ## Success Criteria
 
-v0.61 is complete when:
+The stackable interface work is complete when:
 
 - interface methods may be body-free requirements or default methods;
 - interface fields are composed into implementing classes;
@@ -812,5 +853,5 @@ v0.61 is complete when:
 - class members can explicitly override interface contributions;
 - interface inheritance diamonds are deterministic and de-duplicated;
 - method and field conflicts produce structured diagnostics;
-- old v0.11 and v0.12 interface behavior is preserved;
+- historical v0.11 and v0.12 interface behavior is preserved;
 - `go test ./... -count=1` passes, including the self-host fixed point.

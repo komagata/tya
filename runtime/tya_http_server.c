@@ -51,6 +51,7 @@ TyaValue tya_http_server_run(TyaValue routes, TyaValue port) {
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -59,6 +60,20 @@ TyaValue tya_http_server_run(TyaValue routes, TyaValue port) {
 #define TYA_HTTP_MAX_HEADER_BYTES (16 * 1024)
 #define TYA_HTTP_MAX_BODY_BYTES (10 * 1024 * 1024)
 #define TYA_HTTP_READ_CHUNK 4096
+
+static void handle_connection(int fd, TyaValue routes);
+
+static TyaValue http_connection_task(TyaValue self, TyaValue fd, TyaValue routes, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)self;
+  (void)c;
+  (void)d;
+  (void)e;
+  (void)f;
+  if (fd.kind == TYA_NUMBER) {
+    handle_connection((int)fd.number, routes);
+  }
+  return tya_nil();
+}
 
 typedef struct {
   char *buf;
@@ -863,6 +878,22 @@ TyaValue tya_http_server_run(TyaValue routes, TyaValue port) {
   }
 
   for (;;) {
+    while (tya_task_has_ready()) {
+      tya_task_run_ready();
+    }
+    double delay = tya_task_next_wake_delay(0.05);
+    struct timeval tv;
+    tv.tv_sec = (time_t)delay;
+    tv.tv_usec = (suseconds_t)((delay - (double)tv.tv_sec) * 1000000.0);
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(sock, &rfds);
+    int ready = select(sock + 1, &rfds, NULL, NULL, &tv);
+    if (ready < 0) {
+      if (errno == EINTR) continue;
+      break;
+    }
+    if (ready == 0) continue;
     struct sockaddr_in caddr;
     socklen_t clen = sizeof(caddr);
     int c = accept(sock, (struct sockaddr *)&caddr, &clen);
@@ -870,7 +901,7 @@ TyaValue tya_http_server_run(TyaValue routes, TyaValue port) {
       if (errno == EINTR) continue;
       break;
     }
-    handle_connection(c, routes);
+    tya_task_new(tya_function(http_connection_task), 2, tya_number((double)c), routes, tya_nil(), tya_nil());
   }
   close(sock);
   return tya_nil();

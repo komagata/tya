@@ -225,6 +225,9 @@ typedef struct TyaScope {
 
 TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValue c, TyaValue d);
 TyaValue tya_task_await(TyaValue task);
+void tya_task_run_ready(void);
+bool tya_task_has_ready(void);
+double tya_task_next_wake_delay(double max_seconds);
 /* Cooperative cancellation (v0.43). The cancel flag is set to true;
  * worker code is expected to poll task_is_cancelled at safe points and
  * return early. tya_scope_exit also sets the cancel flag on every

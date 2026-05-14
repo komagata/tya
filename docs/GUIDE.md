@@ -1,34 +1,40 @@
 # Tya Guide
 
-Tya is a language without hesitation — an indentation-based, dynamically
-typed compile-to-C language. This guide is for reading from top to bottom.
+Tya is an indentation-based, dynamically typed language that compiles to C.
+The toolchain is intentionally all-in-one: the same `tya` command checks,
+formats, builds, runs, tests, documents, and manages packages.
+
+This guide shows the current language surface used by the latest repository
+state. Historical release snapshots live under `docs/vX.Y/`.
 
 ## Run A Program
 
-```sh
-tya run examples/hello.tya
+Create `hello.tya`.
+
+```tya
+print("Hello, Tya")
 ```
 
-`tya run` builds a temporary executable, runs it, and removes the temporary
-file. This is the normal way to run a Tya program during development.
-
-To keep the executable, use `tya build`.
+Run it during development:
 
 ```sh
-tya build examples/hello.tya
+tya run hello.tya
+```
+
+Build a reusable executable:
+
+```sh
+tya build hello.tya -o hello
 ./hello
 ```
 
-Without `-o`, `tya build` writes an executable named after the input file
-basename in the current directory. Use `-o` to choose the output path.
+Useful commands:
 
 ```sh
-tya build examples/hello.tya -o bin/hello
-```
-
-To print the installed Tya version:
-
-```sh
+tya check hello.tya
+tya format -w hello.tya
+tya emit-c hello.tya
+tya test
 tya version
 ```
 
@@ -40,23 +46,50 @@ age = 1
 pi = 3.14
 ready = true
 missing = nil
+data = b"abc"
 ```
 
-Strings can contain interpolated expressions.
+Strings support interpolation:
 
 ```tya
-print "Hello, {name}"
+print("Hello, {name}")
+```
+
+Arrays and dictionaries are mutable:
+
+```tya
+items = [1, 2]
+items.push(3)
+print(items[0])
+
+user = { name: "komagata", age: 20 }
+print(user["name"])
+user["admin"] = true
+```
+
+Primitive values expose methods:
+
+```tya
+print(" tya ".trim().upper())
+print([1, 2, 3].len())
+print(user.keys())
+print(value.to_s())
+print(value.class)
 ```
 
 ## Names
 
-Use `snake_case` for variables, functions, import paths, dictionary keys, and
-public imported members.
-Use `SCREAMING_SNAKE_CASE` for constants.
+Use `snake_case` for variables, functions, methods, imports, and dictionary
+keys. Use `PascalCase` for classes and interfaces. Use
+`SCREAMING_SNAKE_CASE` for constants.
 
 ```tya
 user_name = "komagata"
 MAX_COUNT = 10
+
+class UserProfile
+  initialize = name ->
+    self.name = name
 ```
 
 See `docs/NAMING.md` for the full naming rules.
@@ -65,18 +98,18 @@ See `docs/NAMING.md` for the full naming rules.
 
 ```tya
 if age >= 20
-  print "adult"
+  print("adult")
 elseif age >= 13
-  print "teen"
+  print("teen")
 else
-  print "young"
+  print("young")
 ```
 
 Use `and`, `or`, and `not` for logic.
 
 ```tya
 if ready and not missing
-  print "ok"
+  print("ok")
 ```
 
 ## Loops
@@ -84,7 +117,7 @@ if ready and not missing
 ```tya
 count = 0
 while count < 3
-  print count
+  print(count)
   count = count + 1
 ```
 
@@ -92,10 +125,10 @@ while count < 3
 items = ["a", "b"]
 
 for item in items
-  print item
+  print(item)
 
 for item, index in items
-  print "{index}: {item}"
+  print("{index}: {item}")
 ```
 
 Use `of` to iterate dictionary keys and values.
@@ -104,20 +137,23 @@ Use `of` to iterate dictionary keys and values.
 user = { name: "komagata", age: 20 }
 
 for key, value of user
-  print "{key}: {value}"
+  print("{key}: {value}")
 ```
+
+`break` and `continue` are available inside loops.
 
 ## Functions
 
-Functions use `->`. The last expression is returned implicitly.
+Functions use `->`. Calls use parentheses.
 
 ```tya
 greet = name -> "Hello, {name}"
 
-print greet "Tya"
+print(greet("Tya"))
 ```
 
-Use an indented body for multiple statements.
+Use an indented body for multiple statements. The last expression is returned
+implicitly.
 
 ```tya
 double = value ->
@@ -125,68 +161,174 @@ double = value ->
   result
 ```
 
-Use `return` when returning early or returning multiple values.
+Use `return` for early returns or multiple return values.
 
 ```tya
 parse_user = text ->
   if text == ""
-    return nil, error "empty user"
+    return nil, error("empty user")
   return { name: text }, nil
 ```
 
-## Arrays And Dictionaries
+Anonymous functions can be passed directly.
 
 ```tya
-items = [1, 2]
-push items, 3
-print items[0]
+items = [1, 2, 3]
+print(items.map(item -> item * 2))
 ```
+
+## Errors And `try`
+
+Tya has structured error handling with `raise`, `try`, and `catch`.
 
 ```tya
-user = { name: "komagata", age: 20 }
+read_name = path ->
+  text = read_file(path)
+  if text == ""
+    raise "empty file"
+  text.trim()
 
-print user["name"]
+try
+  print(read_name("name.txt"))
+catch err
+  print("error: {err}")
 ```
 
-Use index access for dictionaries. Dictionary member access is not part of
-Tya v0.1.
-
-## Errors
-
-Tya uses error values, not exceptions.
+`try` can also wrap an expression inside a function body:
 
 ```tya
-user, err = parse_user ""
-if err
-  print err["message"]
+load_user = path ->
+  try
+    text = read_file(path)
+    { name: text.trim() }
+  catch err
+    { name: "guest" }
 ```
 
-Inside a function, `try` propagates the error part of a `value, err` result.
+For APIs that return `value, err`, destructure both values explicitly.
+
+## Classes
+
+Classes are ordinary runtime values. Constructors use `initialize`.
 
 ```tya
-load_user = text ->
-  user = try parse_user(text)
-  user["name"]
+class User
+  initialize = name ->
+    self.name = name
+
+  label = ->
+    "user:{self.name}"
+
+user = User("komagata")
+print(user.label())
 ```
 
-## Modules
+Tya supports single class inheritance, `super(args...)`, private members,
+abstract classes, final classes, class variables, class methods, and runtime
+class inspection.
 
-Import another `.tya` file from the same directory.
+```tya
+class Admin extends User
+  initialize = name ->
+    super(name)
+
+  label = ->
+    "admin:{self.name}"
+```
+
+## Interfaces
+
+Interfaces are explicit. They can declare requirements and provide stackable
+behavior through default methods, fields, and zero-argument initializer hooks.
+
+```tya
+import time as time
+
+interface Named
+  name = ->
+
+  label = ->
+    self.name()
+
+interface Timestamped
+  created_at = nil
+
+  initialize = ->
+    self.created_at = time.Time.now()
+
+class Account implements Named, Timestamped
+  initialize = name ->
+    self.name_value = name
+    super()
+
+  name = ->
+    self.name_value
+```
+
+Classes list implemented interfaces explicitly with `implements`.
+
+## Imports And Packages
+
+Import another `.tya` file from the same directory:
 
 ```tya
 import greeting
 
-print greeting.hello("komagata")
+print(greeting.hello("komagata"))
 ```
-
-Imported files export public top-level bindings through the import namespace.
 
 ```tya
 # greeting.tya
 hello = name -> "Hello, {name}"
 ```
 
+Use aliases for namespaces:
+
+```tya
+import net/http as http
+
+app = http.Server()
+```
+
+Directory packages expose public class and interface names directly when they
+are imported without an alias:
+
+```tya
+import net/http
+
+app = Server()
+```
+
+Project dependencies live in `tya.toml`, are resolved into `tya.lock`, and are
+installed with `tya install`. Git and local path dependencies are supported.
+
+## Concurrency
+
+Use `spawn` to start a lightweight task and `await` to receive its result.
+
+```tya
+worker = value ->
+  value * 2
+
+task = spawn worker(21)
+print(await task)
+```
+
+`scope` waits for tasks spawned inside it. Channels and sync primitives are in
+the standard library.
+
 ## Standard Library
 
-See `docs/API.md` for v0.1 built-in functions such as `print`, `len`,
-`read_file`, and `to_string`.
+The standard library is documented in `docs/STDLIB.md`. Common packages
+include `json`, `toml`, `csv`, `url`, `time`, `random`, `math`, `file`, `dir`,
+`path`, `process`, `unittest`, `template`, `markdown`, `compress`, `log`, `io`,
+`net/ip`, `net/socket`, and `net/http`.
+
+```tya
+import net/http as http
+
+resp = http.Client.get("http://example.test/")
+print(resp["status"])
+```
+
+Built-in functions are documented in `docs/API.md`.

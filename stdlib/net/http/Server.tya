@@ -2,8 +2,9 @@
 #
 # Routes are registered with .get / .post / .put / .delete; each
 # handler is a function `request -> response_dict`. Call .run(port)
-# to start listening. The server is single-threaded in v0.58 — one
-# request is handled to completion before the next is accepted.
+# to start listening. Accepted connections run on the lightweight task
+# scheduler so a handler that yields, for example with time.sleep, does
+# not block other ready clients.
 class Server
   initialize = ->
     self.routes = []

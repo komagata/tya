@@ -1,0 +1,181 @@
+class Client
+  static get = target ->
+    return Client.request("GET", target, {})
+
+  static post = target, body ->
+    return Client.request("POST", target, { body: body })
+
+  static request = method, target, opts ->
+    if opts == nil
+      opts = {}
+    u = Client.parse_url(target)
+    if u["scheme"] != "http"
+      raise "http.request: only http:// URLs are supported"
+    host = u["host"]
+    if host == ""
+      raise "http.request: URL host is required"
+    port = 80
+    if u["port"] != ""
+      port = u["port"].to_i()
+    path = u["path"]
+    if path == ""
+      path = "/"
+    if u["has_query"]
+      path = path + "?" + u["query"]
+
+    headers = {}
+    if opts.has("headers") and opts["headers"] != nil
+      headers = opts["headers"]
+    body = ""
+    if opts.has("body") and opts["body"] != nil
+      body = opts["body"].to_s()
+
+    crlf = chr(13) + "\n"
+    req = method.upper() + " " + path + " HTTP/1.1" + crlf
+    req = req + "Host: " + Client.host_header(host, u["port"]) + crlf
+    req = req + "Connection: close" + crlf
+    if body != ""
+      req = req + "Content-Length: " + body.byte_len().to_s() + crlf
+    for entry in headers.entries()
+      req = req + entry[0] + ": " + entry[1].to_s() + crlf
+    req = req + crlf + body
+
+    s = socket_connect(host, port, { timeout: opts.get("timeout", 10) })
+    socket_write(s, req)
+    response = Client.read_response(s)
+    socket_close(s)
+    return response
+
+  static host_header = host, port ->
+    if port == "" or port == "80"
+      return host
+    return host + ":" + port
+
+  static read_response = s ->
+    status_line = socket_read_line(s)
+    if status_line == nil
+      raise "http.response: empty response"
+    status_line = Client.chomp(status_line)
+    parts = status_line.split(" ")
+    if parts.len() < 2
+      raise "http.response: invalid status line"
+    status = parts[1].to_i()
+    headers = {}
+    line = socket_read_line(s)
+    while line != nil and Client.chomp(line) != ""
+      clean = Client.chomp(line)
+      idx = Client.index_of(clean, ":", 0)
+      if idx > 0
+        name = Client.slice(clean, 0, idx).lower()
+        value = Client.slice(clean, idx + 1, clean.byte_len()).trim()
+        headers[name] = value
+      line = socket_read_line(s)
+
+    body = ""
+    transfer = headers.get("transfer-encoding", "")
+    if transfer.lower().contains("chunked")
+      body = Client.read_chunked(s)
+    elseif headers.has("content-length")
+      body = socket_read(s, headers["content-length"].to_i())
+    else
+      chunk = socket_read(s, 4096)
+      while chunk != nil and chunk != ""
+        body = body + chunk
+        chunk = socket_read(s, 4096)
+    return { status: status, headers: headers, body: body }
+
+  static read_chunked = s ->
+    out = ""
+    size_line = socket_read_line(s)
+    while size_line != nil
+      size_text = Client.chomp(size_line).split(";")[0].trim()
+      size = Client.hex_to_i(size_text)
+      if size == 0
+        Client.read_trailers(s)
+        return out
+      out = out + socket_read(s, size)
+      socket_read_line(s)
+      size_line = socket_read_line(s)
+    return out
+
+  static read_trailers = s ->
+    line = socket_read_line(s)
+    while line != nil and Client.chomp(line) != ""
+      line = socket_read_line(s)
+    nil
+
+  static parse_url = target ->
+    prefix = "http://"
+    if not target.starts_with(prefix)
+      raise "http.request: only http:// URLs are supported"
+    rest = Client.slice(target, prefix.byte_len(), target.byte_len())
+    slash = Client.index_of(rest, "/", 0)
+    query = Client.index_of(rest, "?", 0)
+    end_auth = rest.byte_len()
+    if slash >= 0 and slash < end_auth
+      end_auth = slash
+    if query >= 0 and query < end_auth
+      end_auth = query
+    authority = Client.slice(rest, 0, end_auth)
+    remainder = Client.slice(rest, end_auth, rest.byte_len())
+    host = authority
+    port = ""
+    colon = Client.index_of(authority, ":", 0)
+    if colon >= 0
+      host = Client.slice(authority, 0, colon)
+      port = Client.slice(authority, colon + 1, authority.byte_len())
+    path = remainder
+    query_text = ""
+    has_query = false
+    q = Client.index_of(remainder, "?", 0)
+    if q >= 0
+      has_query = true
+      path = Client.slice(remainder, 0, q)
+      query_text = Client.slice(remainder, q + 1, remainder.byte_len())
+    if path == ""
+      path = "/"
+    return { scheme: "http", host: host, port: port, path: path, query: query_text, has_query: has_query }
+
+  static chomp = text ->
+    n = text.byte_len()
+    if n > 0 and text[n - 1] == "\n"
+      n = n - 1
+    if n > 0 and text[n - 1] == chr(13)
+      n = n - 1
+    return Client.slice(text, 0, n)
+
+  static index_of = text, needle, start ->
+    i = start
+    n = text.byte_len()
+    m = needle.byte_len()
+    while i + m <= n
+      if Client.slice(text, i, i + m) == needle
+        return i
+      i = i + 1
+    return -1
+
+  static slice = text, start, finish ->
+    out = ""
+    i = start
+    while i < finish
+      out = out + text[i]
+      i = i + 1
+    return out
+
+  static hex_to_i = text ->
+    value = 0
+    i = 0
+    while i < text.byte_len()
+      c = ord(text[i])
+      digit = -1
+      if c >= 48 and c <= 57
+        digit = c - 48
+      elseif c >= 65 and c <= 70
+        digit = c - 55
+      elseif c >= 97 and c <= 102
+        digit = c - 87
+      else
+        raise "http.response: invalid chunk size"
+      value = value * 16 + digit
+      i = i + 1
+    return value

@@ -91,21 +91,31 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <p>Use <code>go-cmp</code> for readable token, AST, diagnostic, and generated-output diffs. Use <code>testscript</code> for CLI-level specification tests, especially <code>tya run</code>, <code>tya build</code>, expected stdout/stderr, and negative examples.</p>
 <h2 id="near-term">Near Term</h2>
 <ul>
-<li>[ ] **Finish <code>net/http</code> v2**</li>
+<li>[x] **Finish <code>net/http</code> v2**</li>
 <ul>
-<li>[ ] HTTP client: <code>http.get(url)</code>, <code>http.post(url, body)</code>, and</li>
+<li>[x] HTTP client: <code>http.Client.get(url)</code>, <code>http.Client.post(url, body)</code>, and</li>
 </ul>
 </ul>
-<p>    <code>http.request(method, url, opts)</code>.</p>
+<p>    <code>http.Client.request(method, url, opts)</code>.</p>
 <ul>
 <li>[x] Integrate the generic <code>template.Template</code> stdlib renderer for HTTP</li>
 </ul>
 <p>    response templates.</p>
 <ul>
-<li>[ ] Server concurrency so slow handlers do not block other clients.</li>
-<li>[ ] keep-alive, chunked transfer encoding, multipart bodies, HTTPS/TLS,</li>
+<li>[x] Server concurrency so slow yielding handlers do not block other ready</li>
 </ul>
-<p>    cookies, middleware, and HEAD/PATCH/OPTIONS.</p>
+<p>    clients.</p>
+<ul>
+<li>[x] Chunked transfer decoding in the HTTP client.</li>
+<li>[x] Server middleware and HEAD/PATCH/OPTIONS routing helpers.</li>
+</ul>
+<ul>
+<li>[ ] **Expand HTTP protocol coverage**</li>
+<ul>
+<li>[ ] keep-alive, server-side chunked transfer encoding, multipart bodies,</li>
+</ul>
+</ul>
+<p>    HTTPS/TLS, and cookies.</p>
 <ul>
 <li>[ ] Windows support via WinSock2.</li>
 <li>[ ] Per-request arena to bound the v0.58 string-buffer leak.</li>

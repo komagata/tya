@@ -131,14 +131,19 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Near Term
 
-- [ ] **Finish `net/http` v2**
-  - [ ] HTTP client: `http.get(url)`, `http.post(url, body)`, and
-    `http.request(method, url, opts)`.
+- [x] **Finish `net/http` v2**
+  - [x] HTTP client: `http.Client.get(url)`, `http.Client.post(url, body)`, and
+    `http.Client.request(method, url, opts)`.
   - [x] Integrate the generic `template.Template` stdlib renderer for HTTP
     response templates.
-  - [ ] Server concurrency so slow handlers do not block other clients.
-  - [ ] keep-alive, chunked transfer encoding, multipart bodies, HTTPS/TLS,
-    cookies, middleware, and HEAD/PATCH/OPTIONS.
+  - [x] Server concurrency so slow yielding handlers do not block other ready
+    clients.
+  - [x] Chunked transfer decoding in the HTTP client.
+  - [x] Server middleware and HEAD/PATCH/OPTIONS routing helpers.
+
+- [ ] **Expand HTTP protocol coverage**
+  - [ ] keep-alive, server-side chunked transfer encoding, multipart bodies,
+    HTTPS/TLS, and cookies.
   - [ ] Windows support via WinSock2.
   - [ ] Per-request arena to bound the v0.58 string-buffer leak.
 
