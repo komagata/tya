@@ -224,10 +224,6 @@ Class files may be loaded explicitly as part of a directory package or
 implicitly as same-directory siblings of an entry script. A script entry sees
 PascalCase class files in its own directory without import.
 
-The removed `module` declaration is not part of current Tya. Current Tya has
-importable files and directory packages, not a user-facing `module` construct.
-Source using the old `module` keyword must be migrated to one of those shapes.
-
 ## Canonical Syntax
 
 Tya has a canonical syntax: every well-formed program has one source

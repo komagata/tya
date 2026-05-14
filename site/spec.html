@@ -132,7 +132,6 @@ print(value.class)</code></pre>
 <p>Lowercase <code>.tya</code> files are script files. They may be entry files for <code>tya run</code> and may also be imported directly. When imported, their public top-level bindings are exposed through the import binding.</p>
 <p>PascalCase <code>.tya</code> files are class files. They are library-only and cannot be entry files. A class file must declare exactly one public class whose name matches the filename without <code>.tya</code>.</p>
 <p>Class files may be loaded explicitly as part of a directory package or implicitly as same-directory siblings of an entry script. A script entry sees PascalCase class files in its own directory without import.</p>
-<p>The removed <code>module</code> declaration is not part of current Tya. Current Tya has importable files and directory packages, not a user-facing <code>module</code> construct. Source using the old <code>module</code> keyword must be migrated to one of those shapes.</p>
 <h2 id="canonical-syntax">Canonical Syntax</h2>
 <p>Tya has a canonical syntax: every well-formed program has one source representation. <code>tya format</code> is therefore part of the language surface, not an optional style tool.</p>
 <p>Canonical syntax covers indentation, blank lines, comment attachment, import grouping, operator spacing, single-line and multi-line forms, string literal forms, empty collection forms, and other source-shape decisions. The complete rules live in <code>docs/CANONICAL_SYNTAX.md</code>.</p>
