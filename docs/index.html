@@ -329,6 +329,27 @@ render_with_liquid: false
                 font-size: 14px;
             }
 
+            .install-requirements {
+                display: grid;
+                gap: 4px;
+                margin: 2px 0 10px;
+                padding: 0;
+                list-style: none;
+                color: var(--muted);
+                font-size: 14px;
+            }
+
+            .install-requirements li {
+                display: flex;
+                gap: 8px;
+                align-items: baseline;
+            }
+
+            .install-requirements strong {
+                color: var(--ink);
+                font-size: 13px;
+            }
+
             main {
                 max-width: 1180px;
                 margin: 0 auto;
@@ -697,16 +718,20 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                                 >
                                     <div class="install-method">
                                         <h3>Homebrew</h3>
-                                        <p class="install-note">
-                                            Native <code>tya run</code> and <code>tya build</code> require a C compiler. WebAssembly targets require Zig.
-                                        </p>
+                                        <ul class="install-requirements">
+                                            <li><strong>Installs</strong> Tya command and bundled runtime.</li>
+                                            <li><strong>Needs</strong> C compiler for native <code>run</code>/<code>build</code>.</li>
+                                            <li><strong>Optional</strong> Zig for WebAssembly targets.</li>
+                                        </ul>
                                         <pre><code>brew install komagata/tap/tya</code></pre>
                                     </div>
                                     <div class="install-method">
                                         <h3>Shell installer</h3>
-                                        <p class="install-note">
-                                            Install the latest release under <code>$HOME/.local</code>. Native builds require a C compiler; WebAssembly targets require Zig.
-                                        </p>
+                                        <ul class="install-requirements">
+                                            <li><strong>Installs</strong> latest Tya release under <code>$HOME/.local</code>.</li>
+                                            <li><strong>Needs</strong> C compiler for native <code>run</code>/<code>build</code>.</li>
+                                            <li><strong>Optional</strong> Zig for WebAssembly targets.</li>
+                                        </ul>
                                         <pre><code>curl -fsSL https://tya-lang.org/install.sh | sh</code></pre>
                                     </div>
                                 </div>
@@ -715,9 +740,11 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                                     class="tab-panel linux-panel"
                                     role="tabpanel"
                                 >
-                                    <p class="install-note">
-                                        Install the latest release under <code>$HOME/.local</code>. Native builds require a C compiler; WebAssembly targets require Zig.
-                                    </p>
+                                    <ul class="install-requirements">
+                                        <li><strong>Installs</strong> latest Tya release under <code>$HOME/.local</code>.</li>
+                                        <li><strong>Needs</strong> C compiler for native <code>run</code>/<code>build</code>.</li>
+                                        <li><strong>Optional</strong> Zig for WebAssembly targets.</li>
+                                    </ul>
                                     <pre><code>curl -fsSL https://tya-lang.org/install.sh | sh</code></pre>
                                 </div>
 
@@ -725,9 +752,11 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                                     class="tab-panel windows-panel"
                                     role="tabpanel"
                                 >
-                                    <p class="install-note">
-                                        Install the latest release with PowerShell. Native builds require a C compiler; WebAssembly targets require Zig.
-                                    </p>
+                                    <ul class="install-requirements">
+                                        <li><strong>Installs</strong> latest Tya release with PowerShell.</li>
+                                        <li><strong>Needs</strong> C compiler for native <code>run</code>/<code>build</code>.</li>
+                                        <li><strong>Optional</strong> Zig for WebAssembly targets.</li>
+                                    </ul>
                                     <pre><code>irm https://tya-lang.org/install.ps1 | iex</code></pre>
                                 </div>
                             </div>

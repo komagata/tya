@@ -64,21 +64,36 @@ tar -xzf "$tmp/$package.tar.gz" -C "$tmp"
   PREFIX="$prefix" sh ./install.sh
 )
 
+cat <<EOF
+
+Tya binary installed:
+  $prefix/bin/tya
+EOF
 "$prefix/bin/tya" version
 
 if ! command -v cc >/dev/null 2>&1; then
   cat >&2 <<'EOF'
-warning: no C compiler named "cc" was found in PATH.
-tya was installed, but native `tya run` and `tya build` require a C compiler.
+
+Requirement missing:
+  cc
+
+Native `tya run` and `tya build` require a C compiler.
 
 macOS:   install Xcode Command Line Tools with `xcode-select --install`
 Linux:   install your distribution's build-essential/clang package
 EOF
+else
+  echo "Native build requirement found: cc"
 fi
 
 if ! command -v zig >/dev/null 2>&1; then
   cat >&2 <<'EOF'
-note: Zig was not found in PATH.
+
+Optional requirement missing:
+  zig
+
 WebAssembly targets (`wasm32-wasi` and `wasm32-browser`) require Zig.
 EOF
+else
+  echo "WebAssembly build requirement found: zig"
 fi

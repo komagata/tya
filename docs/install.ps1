@@ -37,6 +37,9 @@ try {
     } finally {
         Pop-Location
     }
+    Write-Host ""
+    Write-Host "Tya binary installed:"
+    Write-Host "  $(Join-Path $prefix 'bin\tya.exe')"
     & (Join-Path $prefix "bin\tya.exe") version
 
     $compiler = Get-Command cc.exe -ErrorAction SilentlyContinue
@@ -44,11 +47,15 @@ try {
         $compiler = Get-Command clang.exe -ErrorAction SilentlyContinue
     }
     if (-not $compiler) {
-        Write-Warning "tya was installed, but native tya run and tya build require a C compiler. Install LLVM/Clang or another cc-compatible C toolchain and add it to PATH."
+        Write-Warning "Requirement missing: C compiler. Native tya run and tya build require cc.exe or clang.exe. Install LLVM/Clang or another cc-compatible C toolchain and add it to PATH."
+    } else {
+        Write-Host "Native build requirement found: $($compiler.Name)"
     }
 
     if (-not (Get-Command zig.exe -ErrorAction SilentlyContinue)) {
-        Write-Host "note: Zig was not found in PATH. WebAssembly targets (wasm32-wasi and wasm32-browser) require Zig."
+        Write-Host "Optional requirement missing: zig. WebAssembly targets (wasm32-wasi and wasm32-browser) require Zig."
+    } else {
+        Write-Host "WebAssembly build requirement found: zig"
     }
 } finally {
     Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
