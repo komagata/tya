@@ -56,6 +56,30 @@ server = http.Server()</code></pre>
 { name: &quot;tya&quot; }.keys()
 value.class</code></pre>
 <p>Use <code>x.class</code> to inspect the runtime class wrapper for primitive and object values. Built-in functions and common primitive methods are listed in <code>docs/API.md</code>.</p>
+<h2 id="iterable-protocol">Iterable Protocol</h2>
+<p><code>Iterator</code>, <code>Iterable</code>, and <code>Sequence</code> are standard interfaces for values that can be consumed with <code>for ... in</code>.</p>
+<pre><code class="language-tya">iter = items.iter()
+while iter.has_next?()
+  print(iter.next())
+
+seq = items.sequence().filter(item -&gt; item &gt; 1).map(item -&gt; item * 2)
+print(seq.to_a().join(&quot;,&quot;))</code></pre>
+<p>Arrays, dictionaries, and strings conform to <code>Iterable</code> without boxing their primitive values. Array iteration yields elements, string iteration yields the same characters as <code>chars()</code>, and dictionary iteration yields entry dictionaries with <code>key</code> and <code>value</code> fields. Use <code>dict.keys()</code> or <code>dict.values()</code> when only keys or values are needed. <code>for ... of</code> remains for compatibility, but <code>for entry in dict</code> is the preferred dictionary traversal form.</p>
+<h2 id="comparable-protocol">Comparable Protocol</h2>
+<p><code>Comparable</code> is the standard interface for values that provide total ordering through <code>compare(other)</code>.</p>
+<pre><code class="language-tya">interface Comparable
+  compare = other -&gt;</code></pre>
+<p><code>compare(other)</code> returns a negative number, zero, or a positive number when the receiver sorts before, equal to, or after <code>other</code>. Default methods derive <code>lt?</code>, <code>lte?</code>, <code>gt?</code>, <code>gte?</code>, and <code>between?</code> from <code>compare</code>. Primitive numbers and strings expose the same methods without changing their primitive representation. Ordering operators do not dispatch to user-defined <code>compare</code>; classes call <code>compare</code> or the predicate methods explicitly.</p>
+<h2 id="equatable-protocol">Equatable Protocol</h2>
+<p><code>Equatable</code> is the standard interface for domain equality through <code>equal?(other)</code>.</p>
+<pre><code class="language-tya">interface Equatable
+  equal? = other -&gt;</code></pre>
+<p><code>==</code> remains normal runtime equality, and top-level <code>equal(left, right)</code> remains deep equality for arrays and dictionaries. <code>Equatable.equal?</code> is an explicit protocol method. Primitive scalar values follow <code>==</code>; primitive arrays and dictionaries use deep equality for <code>equal?</code>.</p>
+<h2 id="stringable-protocol">Stringable Protocol</h2>
+<p><code>Stringable</code> is the standard interface for human-readable string representations.</p>
+<pre><code class="language-tya">interface Stringable
+  to_s = -&gt;</code></pre>
+<p><code>to_s()</code> returns a string and should be side-effect free for ordinary formatting use. Primitive numbers, strings, arrays, dictionaries, booleans, and nil expose <code>to_s()</code> without boxing or changing <code>value.class</code>. <code>Stringable</code> is for display and logs; use <code>Serializable.to_data()</code> for structured JSON/TOML/XML-style data.</p>
 <h2 id="net-http"><code>net/http</code></h2>
 <pre><code class="language-tya">import net/http as http
 
@@ -320,7 +344,8 @@ data = serialization.Serializer.to_data(player)
 text = serialization.Serializer.to_json(player, { include_class: true })
 loaded = serialization.Serializer.from_json(text, Player)</code></pre>
 <p><code>serialization.Serializer</code> maps primitive values, arrays, dictionaries with string keys, bytes with an explicit encoding option, and class instances with public fields to JSON-compatible data trees. It can emit JSON through <code>to_json</code> and TOML for dictionary-like top-level values through <code>to_toml</code>.</p>
-<p>Class instances serialize from public fields. <code>to_serialized()</code> and <code>Class.from_serialized(data)</code> hooks override the default field mapping. <code>from_data(data, Class)</code> constructs a class instance and assigns fields from the data tree.</p>
+<p><code>Serializable</code> is the standard protocol for structured machine-readable data: implement <code>to_data()</code> to return a tree of nil, booleans, numbers, strings, supported bytes, arrays, and dictionaries with string keys. <code>to_data()</code> is preferred over the older <code>to_serialized()</code> hook when both exist. <code>Class.from_serialized(data)</code> remains the deserialization hook.</p>
+<p>Class instances without <code>to_data()</code> or <code>to_serialized()</code> serialize from public fields. <code>from_data(data, Class)</code> constructs a class instance and assigns fields from the data tree.</p>
 <p>Options include <code>bytes: &quot;base64&quot;</code>, <code>bytes: &quot;array&quot;</code>, <code>include_class</code>, <code>class_key</code>, <code>fields</code>, <code>defaults</code>, and <code>strict_fields</code>. Cycles and unsupported runtime resources raise <code>serialization</code> errors.</p>
 <h2 id="xml"><code>xml</code></h2>
 <pre><code class="language-tya">import xml as xml
@@ -595,6 +620,7 @@ count = io.Io.copy(reader, writer)
 reader.close()
 writer.close()</code></pre>
 <p>Class members on <code>io.Io</code>: <code>stdin</code>, <code>stdout</code>, <code>stderr</code>, <code>open</code>, <code>copy</code>.</p>
+<p>Protocol interfaces in <code>io</code>: <code>Readable</code>, <code>Writable</code>, <code>Closable</code>, and <code>Flushable</code>. These are capability contracts for stream-like values. They are separate from the concrete <code>Reader</code> and <code>Writer</code> classes returned by <code>io.Io</code>.</p>
 <p>Reader methods: <code>read</code>, <code>read_line</code>, <code>each_line</code>, <code>eof?</code>, <code>close</code>. Writer methods: <code>write</code>, <code>write_line</code>, <code>flush</code>, <code>close</code>.</p>
 <p><code>Io.stdin()</code>, <code>Io.stdout()</code>, and <code>Io.stderr()</code> wrap the process streams. Closing those borrowed streams is a no-op for the host process. <code>Io.open(path, mode)</code> accepts text modes such as <code>&quot;r&quot;</code> and <code>&quot;w&quot;</code> and binary modes <code>&quot;rb&quot;</code> and <code>&quot;wb&quot;</code>.</p>
 <p><code>reader.read(size)</code> returns a string in text mode and bytes in binary mode. It returns an empty value at EOF for chunk reads; <code>reader.read_line()</code> returns <code>nil</code> after the last line. <code>reader.each_line(fn)</code> calls <code>fn(line)</code> for each line, preserving trailing newlines.</p>
@@ -623,6 +649,7 @@ client.close()
 server.close()</code></pre>
 <p>Class members on <code>net/socket.Socket</code>: <code>connect</code>.</p>
 <p>Class members on <code>net/socket.Server</code>: <code>listen</code>.</p>
+<p>Protocol interfaces in <code>net/socket</code>: <code>Readable</code>, <code>Writable</code>, and <code>Closable</code>. <code>Socket</code> implements all three; <code>Server</code> implements <code>Closable</code>.</p>
 <p>Socket methods: <code>read</code>, <code>read_line</code>, <code>write</code>, <code>write_line</code>, <code>close</code>, <code>closed?</code>, <code>local_address</code>, and <code>remote_address</code>.</p>
 <p>Server methods: <code>accept</code>, <code>close</code>, and <code>local_address</code>.</p>
 <p><code>Socket.connect(host, port, options)</code> connects to a TCP server. <code>Server.listen</code> binds a TCP listener; pass <code>0</code> for the port to request an ephemeral port and read it back from <code>server.local_address()[&quot;port&quot;]</code>.</p>

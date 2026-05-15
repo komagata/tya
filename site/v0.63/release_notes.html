@@ -27,6 +27,15 @@
     <article class="doc-content">
 <h1 id="tya-v0-63-release-notes">Tya v0.63 Release Notes</h1>
 <p>v0.63 advances the Tya-written self-host compiler under <code>selfhost/v02/</code> to a current-spec proof gate. The Go implementation remains the active reference, but v02 now has focused lexer/parser, checker, C emitter, and fixed-point coverage for representative current language families.</p>
+<h2 id="language">Language</h2>
+<ul>
+<li>Function literals in the active compile-to-C path now support lexical</li>
+</ul>
+<p>  closures over enclosing function parameters and locals. Captures snapshot the   current <code>TyaValue</code>, so heap-backed values remain shared values without deep   copying.</p>
+<ul>
+<li>Closure bodies may read captured bindings, pass closures through higher-order</li>
+</ul>
+<p>  APIs, and use captured closures with <code>spawn</code> / <code>await</code>. Direct reassignment   to an outer binding and indexed or member mutation through a captured binding   are rejected.</p>
 <h2 id="self-host">Self-Host</h2>
 <ul>
 <li><code>selfhost/v02/compiler.tya</code> recognizes current syntax families including</li>

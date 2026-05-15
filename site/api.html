@@ -95,11 +95,13 @@ has(dict, &quot;name&quot;)
 keys(dict)
 values(dict)
 pop(array)</code></pre>
-<p><code>equal</code> performs deep equality for arrays and dictionaries. <code>==</code> checks normal runtime equality. Dictionaries and arrays also expose method forms such as <code>dict.has(&quot;name&quot;)</code>, <code>dict.keys()</code>, and <code>array.pop()</code>.</p>
+<p><code>equal</code> performs deep equality for arrays and dictionaries. <code>==</code> checks normal runtime equality. <code>value.equal?(other)</code> is the <code>Equatable</code> protocol method: primitive arrays and dictionaries use deep equality there, while scalar primitive values follow normal runtime equality. Dictionaries and arrays also expose method forms such as <code>dict.has(&quot;name&quot;)</code>, <code>dict.keys()</code>, and <code>array.pop()</code>.</p>
 <h2 id="primitive-methods">Primitive Methods</h2>
 <p>Every runtime value exposes common methods:</p>
 <pre><code class="language-tya">value.to_s()
-value.class</code></pre>
+value.class
+value.equal?(other)</code></pre>
+<p><code>value.to_s()</code> is the <code>Stringable</code> protocol method for human-readable text. Primitive numbers, strings, arrays, dictionaries, booleans, and nil expose it without changing their <code>value.class</code> identity. Use <code>serialization.Serializable.to_data()</code> for structured machine-readable data.</p>
 <p>Strings expose text helpers:</p>
 <pre><code class="language-tya">&quot; tya &quot;.trim()
 &quot;tya&quot;.upper()
@@ -113,7 +115,15 @@ value.class</code></pre>
 &quot;abc&quot;.bytes()
 &quot;abc&quot;.byte_len()
 &quot;abc&quot;.blank?()
-&quot;abc&quot;.present?()</code></pre>
+&quot;abc&quot;.present?()
+&quot;abc&quot;.iter()
+&quot;abc&quot;.sequence()
+&quot;abc&quot;.compare(other)
+&quot;abc&quot;.lt?(other)
+&quot;abc&quot;.lte?(other)
+&quot;abc&quot;.gt?(other)
+&quot;abc&quot;.gte?(other)
+&quot;abc&quot;.between?(min, max)</code></pre>
 <p>Arrays expose sequence helpers:</p>
 <pre><code class="language-tya">items = [1, 2, 3]
 items.len()
@@ -132,7 +142,10 @@ items.find(item -&gt; item == 2)
 items.any(item -&gt; item == 3)
 items.all(item -&gt; item &gt; 0)
 sum = total, item -&gt; total + item
-items.reduce(0, sum)</code></pre>
+items.reduce(0, sum)
+items.iter()
+items.sequence()</code></pre>
+<p><code>iter()</code> returns a consuming iterator with <code>has_next?()</code> and <code>next()</code>. <code>sequence()</code> returns a lazy, re-iterable sequence with <code>map</code>, <code>filter</code>, <code>take</code>, <code>drop</code>, <code>reduce</code>, and <code>to_a</code>.</p>
 <p>Dictionaries expose key/value helpers:</p>
 <pre><code class="language-tya">dict.has(&quot;name&quot;)
 dict.get(&quot;name&quot;, &quot;fallback&quot;)
@@ -141,7 +154,10 @@ dict.delete(&quot;name&quot;)
 dict.keys()
 dict.values()
 dict.entries()
-dict.merge(other)</code></pre>
+dict.merge(other)
+dict.iter()
+dict.sequence()</code></pre>
+<p><code>for entry in dict</code> is the canonical dictionary traversal spelling. It yields entry dictionaries with <code>key</code> and <code>value</code> fields. Use <code>dict.keys()</code> or <code>dict.values()</code> when only one side is needed.</p>
 <p>Numbers expose numeric helpers:</p>
 <pre><code class="language-tya">n.abs()
 n.floor()
@@ -152,7 +168,13 @@ n.sqrt()
 n.pow(2)
 n.integer?()
 n.finite?()
-n.nan?()</code></pre>
+n.nan?()
+n.compare(other)
+n.lt?(other)
+n.lte?(other)
+n.gt?(other)
+n.gte?(other)
+n.between?(min, max)</code></pre>
 <h2 id="errors">Errors</h2>
 <p>Use <code>raise</code>, <code>try</code>, and <code>catch</code> for structured error handling.</p>
 <pre><code class="language-tya">parse = text -&gt;
@@ -184,6 +206,8 @@ socket_write(sock, &quot;ping&quot;)
 line = socket_read_line(sock)
 socket_close(sock)</code></pre>
 <p>HTTP server support is exposed through <code>net/http.Server</code>, not direct builtin calls. Use <code>http.Client</code> for HTTP client requests.</p>
+<p>The stdlib stream packages expose protocol interfaces for shared I/O shapes: <code>io.Readable</code>, <code>io.Writable</code>, <code>io.Closable</code>, <code>io.Flushable</code>, and the socket package's <code>Readable</code>, <code>Writable</code>, and <code>Closable</code> interfaces. Concrete <code>io.Reader</code>, <code>io.Writer</code>, <code>net/socket.Socket</code>, and <code>net/socket.Server</code> classes declare these contracts where their existing methods match.</p>
+<p><code>serialization.Serializable</code> is the structured data protocol. Its <code>to_data()</code> method is for machine-readable JSON/TOML/XML-style data trees and is preferred by <code>serialization.Serializer.to_data</code>; use <code>Stringable.to_s()</code> for human-readable text.</p>
 <h2 id="compiler-introspection">Compiler Introspection</h2>
 <p>The compiler builtins back <code>compiler/*</code> packages:</p>
 <pre><code class="language-tya">compiler_lexer_lex(source)
