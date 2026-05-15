@@ -1479,6 +1479,19 @@ parse_simple_block = tokens, index ->
     )
       record_name_error(current)
       record_name_error(tokens[next + 2])
+      if token_kind(tokens[next + 5]) != "INDENT"
+        fn = func_expr(
+          [token_text(tokens[next + 2])],
+          nil_expr(token_line(current)),
+          token_line(current),
+        )
+        fn["body_stmts"] = []
+        statements.push(
+          assign_stmt(token_text(current), fn, token_line(current)),
+
+        )
+        next = next + 4
+        continue
       body, after_block_func = parse_function_body_block(tokens, next + 4)
       fn = func_expr(
         [token_text(tokens[next + 2])],
@@ -1498,6 +1511,19 @@ parse_simple_block = tokens, index ->
       record_name_error(current)
       record_name_error(tokens[next + 2])
       record_name_error(tokens[next + 4])
+      if token_kind(tokens[next + 7]) != "INDENT"
+        fn = func_expr(
+          [token_text(tokens[next + 2]), token_text(tokens[next + 4])],
+          nil_expr(token_line(current)),
+          token_line(current),
+        )
+        fn["body_stmts"] = []
+        statements.push(
+          assign_stmt(token_text(current), fn, token_line(current)),
+
+        )
+        next = next + 6
+        continue
       body, after_block_func = parse_function_body_block(tokens, next + 6)
       fn = func_expr(
         [token_text(tokens[next + 2]), token_text(tokens[next + 4])],
@@ -1518,6 +1544,19 @@ parse_simple_block = tokens, index ->
       record_name_error(tokens[next + 2])
       record_name_error(tokens[next + 4])
       record_name_error(tokens[next + 6])
+      if token_kind(tokens[next + 9]) != "INDENT"
+        fn = func_expr(
+          [token_text(tokens[next + 2]), token_text(tokens[next + 4]), token_text(tokens[next + 6])],
+          nil_expr(token_line(current)),
+          token_line(current),
+        )
+        fn["body_stmts"] = []
+        statements.push(
+          assign_stmt(token_text(current), fn, token_line(current)),
+
+        )
+        next = next + 8
+        continue
       body, after_block_func = parse_function_body_block(tokens, next + 8)
       fn = func_expr(
         [token_text(tokens[next + 2]), token_text(tokens[next + 4]), token_text(tokens[next + 6])],
@@ -1539,6 +1578,19 @@ parse_simple_block = tokens, index ->
       record_name_error(tokens[next + 4])
       record_name_error(tokens[next + 6])
       record_name_error(tokens[next + 8])
+      if token_kind(tokens[next + 11]) != "INDENT"
+        fn = func_expr(
+          [token_text(tokens[next + 2]), token_text(tokens[next + 4]), token_text(tokens[next + 6]), token_text(tokens[next + 8])],
+          nil_expr(token_line(current)),
+          token_line(current),
+        )
+        fn["body_stmts"] = []
+        statements.push(
+          assign_stmt(token_text(current), fn, token_line(current)),
+
+        )
+        next = next + 10
+        continue
       body, after_block_func = parse_function_body_block(tokens, next + 10)
       fn = func_expr(
         [token_text(tokens[next + 2]), token_text(tokens[next + 4]), token_text(tokens[next + 6]), token_text(tokens[next + 8])],
@@ -1979,6 +2031,8 @@ is_snake_name = name ->
   i = 0
   while i < name.len()
     char = name[i]
+    if char == "?"
+      return i == name.len() - 1 and i > 0
     if not (is_lower(char) or is_digit(char) or char == "_")
       return false
     i = i + 1
@@ -2104,12 +2158,35 @@ checker_context = errors, names, kinds, constants ->
   { errors: errors, names: names, kinds: kinds, constants: constants }
 
 clone_checker_context = ctx ->
-  checker_context(
+  out = checker_context(
     ctx["errors"],
     clone_names(ctx["names"]),
     clone_dict(ctx["kinds"]),
     clone_dict(ctx["constants"]),
   )
+  if ctx.has("in_method")
+    out["in_method"] = true
+  if ctx.has("in_class")
+    out["in_class"] = true
+  if ctx.has("in_class_method")
+    out["in_class_method"] = true
+  if ctx.has("in_func")
+    out["in_func"] = true
+  if ctx.has("captured_names")
+    out["captured_names"] = clone_names(ctx["captured_names"])
+  out
+
+is_captured_name = ctx, name ->
+  ctx.has("captured_names") and has_name(ctx["captured_names"], name)
+
+target_capture_name = expr ->
+  if expr["kind"] == "ident"
+    return expr["name"]
+  if expr["kind"] == "index"
+    return target_capture_name(expr["target"])
+  if expr["kind"] == "member"
+    return target_capture_name(expr["target"])
+  ""
 
 predeclare_function_bindings = ctx, statements ->
   for stmt in statements
@@ -2262,10 +2339,15 @@ check_expr = ctx, expr ->
       for arg in current["args"]
         work.push(arg)
     if current["kind"] == "func"
+      captured_names = []
+      if ctx.has("in_func")
+        captured_names = clone_names(names)
       fn_names = clone_names(names)
       fn_kinds = clone_dict(kinds)
       fn_constants = clone_dict(constants)
       fn_ctx = checker_context(errors, fn_names, fn_kinds, fn_constants)
+      fn_ctx["captured_names"] = captured_names
+      fn_ctx["in_func"] = true
       if ctx.has("in_method")
         fn_ctx["in_method"] = true
       if ctx.has("in_class")
@@ -2387,10 +2469,22 @@ check_simple_stmt = ctx, stmt ->
       if is_screaming_name(name)
         constants[name] = true
   if stmt["kind"] == "index_assign"
+    capture_name = target_capture_name(stmt["target"])
+    if capture_name != "" and is_captured_name(ctx, capture_name)
+      errors.push(
+        stmt["line"].to_s() + ": cannot mutate captured binding: " + capture_name,
+
+      )
     check_expr(ctx, stmt["target"])
     check_expr(ctx, stmt["index"])
     check_expr(ctx, stmt["value"])
   if stmt["kind"] == "member_assign"
+    capture_name = target_capture_name(stmt["target"])
+    if capture_name != "" and is_captured_name(ctx, capture_name)
+      errors.push(
+        stmt["line"].to_s() + ": cannot mutate captured binding: " + capture_name,
+
+      )
     check_expr(ctx, stmt["target"])
     check_expr(ctx, stmt["value"])
   if stmt["kind"] == "field_assign"
@@ -2538,6 +2632,20 @@ check = program ->
   remember(names, "read_line")
   remember(names, "assert")
   remember(names, "assert_equal")
+  remember(names, "MapSequence")
+  remember(names, "FilterSequence")
+  remember(names, "TakeSequence")
+  remember(names, "DropSequence")
+  remember(names, "io_stream_read")
+  remember(names, "io_stream_read_line")
+  remember(names, "io_stream_eof")
+  remember(names, "io_stream_close")
+  remember(names, "serialization_has_member")
+  remember(names, "serialization_kind")
+  remember(names, "serialization_public_fields")
+  remember(names, "serialization_id")
+  remember(names, "bytes_array")
+  remember(names, "String")
   ctx = checker_context(errors, names, kinds, constants)
   predeclare_type_bindings(ctx, program["statements"])
   predeclare_function_bindings(ctx, program["statements"])

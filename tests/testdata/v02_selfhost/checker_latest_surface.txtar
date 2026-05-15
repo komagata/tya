@@ -1,0 +1,102 @@
+# v02 checker accepts latest semantic surface slices and rejects unsupported
+# captured-binding mutation deterministically.
+cd $REPO
+env TYA_LEGACY_MODULES=1
+
+exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm -lz 2>/dev/null'
+
+exec $WORK/stage1 --check $WORK/valid_closure_iterable.tya
+! stderr .
+
+! exec $WORK/stage1 --check $WORK/invalid_captured_mutation.tya
+stdout '4: cannot mutate captured binding: items'
+stdout '10: cannot mutate captured binding: state'
+stdout '16: cannot mutate captured binding: box'
+! stderr .
+
+exec $WORK/stage1 --check $WORK/predicate_protocol.tya
+! stderr .
+
+! exec $WORK/stage1 --check $WORK/missing_predicate_protocol.tya
+stdout '4: class Box must implement interface method between?'
+! stderr .
+
+exec $WORK/stage1 --check stdlib/comparable.tya
+! stderr .
+
+exec $WORK/stage1 --check stdlib/equatable.tya
+! stderr .
+
+exec $WORK/stage1 --check stdlib/stringable.tya
+! stderr .
+
+exec $WORK/stage1 --check stdlib/io/Reader.tya
+! stderr .
+
+exec $WORK/stage1 --check stdlib/serialization/Serializer.tya
+! stderr .
+
+exec $WORK/stage1 --check stdlib/sequence.tya
+! stderr .
+
+-- valid_closure_iterable.tya --
+make_counter = start ->
+  count = start
+  step = delta ->
+    count + delta
+  step
+
+items = [1, 2, 3]
+for item in items
+  print(item)
+
+for char in "tya"
+  print(char)
+
+for key in { name: "Tya" }.keys()
+  print(key)
+
+-- invalid_captured_mutation.tya --
+array_case = ->
+  items = []
+  f = ->
+    items[0] = 1
+  f
+
+dict_case = ->
+  state = { count: 0 }
+  f = ->
+    state["count"] = 1
+  f
+
+member_case = ->
+  box = { value: 0 }
+  f = ->
+    box.value = 1
+  f
+
+-- predicate_protocol.tya --
+interface Equatable
+  equal? = other ->
+
+class User implements Equatable
+  equal? = other ->
+    true
+
+interface Comparable
+  between? = min, max ->
+
+class Range implements Comparable
+  between? = min, max ->
+    true
+
+-- missing_predicate_protocol.tya --
+interface Comparable
+  between? = min, max ->
+
+class Box implements Comparable
+  value = ->
+    1

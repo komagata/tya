@@ -20,6 +20,10 @@ implementation until the later Go-removal phase.
   bitwise parsing, latest lexical-closure and iterable parser forms, standard
   protocol interface source files, checker accepts/rejects, selected current
   runtime emission, and deterministic unsupported-codegen failures.
+- Latest checker surface: `checker_latest_surface.txtar` exercises lexical
+  closure capture checks, deterministic captured mutation rejection, iterable
+  `for ... in` checking, predicate protocol requirements, and selected stdlib
+  protocol interface source files.
 
 ## Excluded Until Later Phases
 

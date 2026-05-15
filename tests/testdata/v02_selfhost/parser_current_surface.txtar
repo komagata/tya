@@ -53,7 +53,7 @@ stdout '1: assign empty? = func 1 expr binary ==\n2: expr_stmt call ident print 
 ! stderr .
 
 exec $WORK/stage1 --ast stdlib/comparable.tya
-stdout '1: interface Comparable methods 1 fields 0\n'
+stdout '1: interface Comparable methods 6 fields 0\n'
 ! stderr .
 
 exec $WORK/stage1 --ast stdlib/equatable.tya
