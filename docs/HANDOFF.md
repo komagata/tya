@@ -110,6 +110,41 @@ sugar, interface defaults, raw `"` in interpolation, etc.).
 These captured corrections from past sessions — read before
 inventing your own deferral plan.
 
+### Crash recovery during selfhost v02 latest work
+
+The `selfhost-v02-latest-c-emitter` PRD and follow-up
+`selfhost-v02-latest-fixed-point` proof completed on 2026-05-16.
+The relevant committed artifacts are:
+
+- `selfhost/v02/compiler.tya`: lexical closure capture emission.
+- `tests/testdata/v02_selfhost/emitter_latest_surface.txtar`:
+  latest emitter surface fixture.
+- `tests/testdata/v02_selfhost/full_spec_manifest.md`: latest
+  emitter fixture coverage note.
+- PRDs:
+  `docs/prd/selfhost-v02-latest-c-emitter.md` and
+  `docs/prd/selfhost-v02-latest-fixed-point.md`.
+- `tests/testdata/v02_selfhost/fixed_point.txtar`: latest fixed-point
+  proof anchor; stage-2 C and stage-3 C match byte-for-byte, and the
+  fixture also emits every other `selfhost/v02/*.tya` source.
+
+Avoid running a crash-prone single long selfhost command directly in a
+Codex foreground session. For diagnosis, split the fixture into
+subprocess-sized checks with OS-level timeouts and logs:
+
+1. Generate stage1 C with `TYA_LEGACY_MODULES=1 go run ./cmd/tya run
+   selfhost/v02/compiler.tya selfhost/v02/compiler.tya`, redirecting
+   stdout/stderr to files under `/tmp/tya-v02-diag`.
+2. Compile that C with `cc`.
+3. Extract `latest_runtime.tya` and `unsupported_latest.tya` from
+   `tests/testdata/v02_selfhost/emitter_latest_surface.txtar`.
+4. Run the stage1 binary against each extracted file.
+5. Compile and run the generated `latest_runtime.c`.
+
+Use `timeout` for each long subprocess and inspect only `ps`, `wc`, and
+`tail` from Codex. Do not revert existing uncommitted files unless the user
+explicitly asks.
+
 ### Don't unilaterally defer SPEC items
 
 When a SPEC says "clean cut, no deprecation window," it means

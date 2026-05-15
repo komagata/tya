@@ -1,11 +1,10 @@
-# v0.45 M8.0: scaffolding step.
+# v02 latest fixed-point proof.
 #
-# selfhost/v02/ is the future self-host compiler on the v0.44 surface
-# (M8.2–M8.7). For M8.0 it is a byte-equivalent copy of selfhost/v01/
-# and exercises the same v0.1-surface fixed-point gate as v01. Each
-# subsequent M8.x STEP lands a v0.44 surface feature in v02 while
-# keeping this gate green; once v02 reaches v0.44 parity the gate is
-# replaced with a v0.44-surface fixed-point program.
+# Stage 1 compiles selfhost/v02/compiler.tya, stage 2 recompiles the same
+# source, and stage 3 must match stage 2 byte-for-byte. The same stage 1
+# compiler also emits every other selfhost/v02/*.tya source that exists today.
+# Latest lexical-closure, iterable, and protocol-interface fixtures live in
+# sibling v02_selfhost scripts; this fixture is the fixed-point anchor.
 cd $REPO
 env TYA_LEGACY_MODULES=1
 
