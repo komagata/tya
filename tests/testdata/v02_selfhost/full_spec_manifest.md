@@ -24,6 +24,10 @@ implementation until the later Go-removal phase.
   closure capture checks, deterministic captured mutation rejection, iterable
   `for ... in` checking, predicate protocol requirements, and selected stdlib
   protocol interface source files.
+- Latest emitter surface: `emitter_latest_surface.txtar` exercises lexical
+  closure C emission, sequence-backed iterable loops, primitive string and
+  dictionary iteration, protocol-interface erasure, and deterministic
+  unsupported-codegen failures for remaining valid forms.
 
 ## Excluded Until Later Phases
 

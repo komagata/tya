@@ -133,6 +133,7 @@ emitter_state =
   super_class: ""
   method_name: ""
   class_values: {}
+  captures: []
 has_name = names, name ->
   found = false
   for item in names
@@ -2678,6 +2679,122 @@ emitter_functions = []
 emitter_classes = []
 emitter_anon_functions = []
 emitter_source_path = ""
+
+capture_expr = name ->
+  if emitter_state.has("captures") and has_name(emitter_state["captures"], name)
+    return "tya_member(__this, " + c_string(name) + ")"
+  c_name(name)
+
+remember_expr_name = names, expr ->
+  if expr["kind"] == "ident"
+    remember(names, expr["name"])
+  if expr["kind"] == "binary"
+    remember_expr_name(names, expr["left"])
+    remember_expr_name(names, expr["right"])
+  if expr["kind"] == "unary" or expr["kind"] == "try"
+    remember_expr_name(names, expr["expr"])
+  if expr["kind"] == "spawn" or expr["kind"] == "await"
+    remember_expr_name(names, expr["expr"])
+  if expr["kind"] == "array"
+    for item in expr["items"]
+      remember_expr_name(names, item)
+  if expr["kind"] == "dict"
+    for entry in expr["entries"]
+      remember_expr_name(names, entry["value"])
+  if expr["kind"] == "index"
+    remember_expr_name(names, expr["target"])
+    remember_expr_name(names, expr["index"])
+  if expr["kind"] == "member"
+    remember_expr_name(names, expr["target"])
+  if expr["kind"] == "call"
+    remember_expr_name(names, expr["callee"])
+    for arg in expr["args"]
+      remember_expr_name(names, arg)
+  if expr["kind"] == "func"
+    for name in free_names_for_func(expr)
+      remember(names, name)
+
+remember_stmt_name = names, stmt ->
+  if stmt["kind"] == "assign"
+    remember_expr_name(names, stmt["value"])
+  if stmt["kind"] == "multi_assign" or stmt["kind"] == "return"
+    remember_expr_name(names, stmt["value"])
+  if stmt["kind"] == "index_assign"
+    remember_expr_name(names, stmt["target"])
+    remember_expr_name(names, stmt["index"])
+    remember_expr_name(names, stmt["value"])
+  if stmt["kind"] == "member_assign"
+    remember_expr_name(names, stmt["target"])
+    remember_expr_name(names, stmt["value"])
+  if stmt["kind"] == "field_assign" or stmt["kind"] == "class_var_assign"
+    remember_expr_name(names, stmt["value"])
+  if stmt["kind"] == "expr_stmt"
+    remember_expr_name(names, stmt["expr"])
+  if stmt["kind"] == "if"
+    remember_expr_name(names, stmt["cond"])
+    for child in stmt["then"]
+      remember_stmt_name(names, child)
+    for child in stmt["else"]
+      remember_stmt_name(names, child)
+    elseif_index = 0
+    while elseif_index < stmt["elseif_conds"].len()
+      remember_expr_name(names, stmt["elseif_conds"][elseif_index])
+      for child in stmt["elseif_bodies"][elseif_index]
+        remember_stmt_name(names, child)
+      elseif_index = elseif_index + 1
+  if stmt["kind"] == "while"
+    remember_expr_name(names, stmt["cond"])
+    for child in stmt["body"]
+      remember_stmt_name(names, child)
+  if stmt["kind"] == "for"
+    remember_expr_name(names, stmt["iterable"])
+    for child in stmt["body"]
+      remember_stmt_name(names, child)
+
+free_names_for_func = fn ->
+  defined = []
+  for param in fn["params"]
+    remember(defined, param)
+  for local in collect_assigned_names(fn["body_stmts"])
+    remember(defined, local)
+  used = []
+  if fn["body_stmts"].len() > 0
+    for stmt in fn["body_stmts"]
+      remember_stmt_name(used, stmt)
+  else
+    remember_expr_name(used, fn["body"])
+  free = []
+  for name in used
+    if not has_name(defined, name)
+      remember(free, name)
+  free
+
+capture_names_for_func = fn, names, exclude ->
+  captures = []
+  for name in free_names_for_func(fn)
+    if name != exclude and has_name(names, name) and not has_name(emitter_functions, name) and not has_name(emitter_classes, name)
+      remember(captures, name)
+  captures
+
+emit_func_value = fn, names, exclude ->
+  if not fn.has("anon_name")
+    name = "__anon" + (emitter_anon_functions.len()).to_s()
+    fn["anon_name"] = name
+    emitter_anon_functions.push(fn)
+  captures = capture_names_for_func(fn, names, exclude)
+  fn["captures"] = captures
+  if captures.len() == 0
+    return "tya_function(" + c_func_name(fn["anon_name"]) + ")"
+  env_name = "__env" + (emitter_anon_functions.len()).to_s() + "_" + captures.len().to_s()
+  parts = ["({{ TyaValue " + env_name + " = tya_object();"]
+  for name in captures
+    parts.push(
+      "tya_set_member(" + env_name + ", " + c_string(name) + ", " + capture_expr(name) + ");",
+
+    )
+  parts.push("tya_bind_method(" + env_name + ", " + c_func_name(fn["anon_name"]) + "); }})")
+  parts.join(" ")
+
 register_anon_expr = expr ->
   if expr["kind"] == "func"
     if not expr.has("anon_name")
@@ -2711,6 +2828,10 @@ register_anon_stmt = stmt ->
   if stmt["kind"] == "assign"
     if stmt["value"]["kind"] != "func"
       register_anon_expr(stmt["value"])
+    else
+      register_anon_expr(stmt["value"])
+      for child in stmt["value"]["body_stmts"]
+        register_anon_stmt(child)
   if stmt["kind"] == "multi_assign"
     register_anon_expr(stmt["value"])
   if stmt["kind"] == "index_assign"
@@ -2730,12 +2851,17 @@ register_anon_stmt = stmt ->
     for member in stmt["members"]
       if member["value"]["kind"] != "func"
         register_anon_expr(member["value"])
+      else
+        for child in member["value"]["body_stmts"]
+          register_anon_stmt(child)
     for class_value in stmt["classes"]
       for method in class_value["methods"]
-        register_anon_expr(method["value"])
+        for child in method["value"]["body_stmts"]
+          register_anon_stmt(child)
   if stmt["kind"] == "class"
     for method in stmt["methods"]
-      register_anon_expr(method["value"])
+      for child in method["value"]["body_stmts"]
+        register_anon_stmt(child)
   if stmt["kind"] == "if"
     register_anon_expr(stmt["cond"])
     for child in stmt["then"]
@@ -2967,7 +3093,7 @@ emit_atom = expr ->
       return c_name(expr["name"])
     if has_name(emitter_functions, expr["name"])
       return "tya_function(" + c_func_name(expr["name"]) + ")"
-    return c_name(expr["name"])
+    return capture_expr(expr["name"])
   if expr["kind"] == "int"
     return "tya_number(" + expr["value"].to_s() + ")"
   if expr["kind"] == "float"
@@ -3064,7 +3190,7 @@ emit_scalar = expr ->
       return c_name(expr["name"])
     if has_name(emitter_functions, expr["name"])
       return "tya_function(" + c_func_name(expr["name"]) + ")"
-    return c_name(expr["name"])
+    return capture_expr(expr["name"])
   if expr["kind"] == "int"
     return "tya_number(" + expr["value"].to_s() + ")"
   if expr["kind"] == "float"
@@ -3337,7 +3463,10 @@ emit_simple_stmt = lines, names, stmt ->
     else
       value = emit_expr(stmt["value"])
       if stmt["value"]["kind"] == "func"
-        value = "tya_function(" + c_func_name(stmt["name"]) + ")"
+        if has_name(emitter_functions, stmt["name"])
+          value = "tya_function(" + c_func_name(stmt["name"]) + ")"
+        else
+          value = emit_func_value(stmt["value"], names, stmt["name"])
       if has_name(names, stmt["name"])
         lines.push("  " + c_name(stmt["name"]) + " = " + value + ";")
       else
@@ -3574,6 +3703,11 @@ collect_assigned_names = statements ->
   names
 
 emit_function_definition = lines, c_fn_name, fn, use_this ->
+  saved_captures = emitter_state["captures"]
+  if fn.has("captures")
+    emitter_state["captures"] = fn["captures"]
+  else
+    emitter_state["captures"] = []
   lines.push(
     "TyaValue " + c_fn_name + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{",
 
@@ -3616,6 +3750,7 @@ emit_function_definition = lines, c_fn_name, fn, use_this ->
     lines.push("  return " + emit_expr(fn["body"]) + ";")
   lines.push("}}")
   lines.push("")
+  emitter_state["captures"] = saved_captures
   return nil
 
 emit_class_definition = lines, class_name, class_value ->
@@ -3932,25 +4067,7 @@ emit_c = program ->
     if stmt["kind"] == "class"
       emit_class_definition(lines, stmt["name"], stmt)
   for fn in emitter_anon_functions
-    lines.push(
-      "TyaValue " + c_func_name(fn["anon_name"]) + "(TyaValue __this, TyaValue __arg0, TyaValue __arg1, TyaValue __arg2, TyaValue __arg3) {{",
-
-    )
-    lines.push("  (void)__this;")
-    lines.push("  (void)__arg2;")
-    lines.push("  (void)__arg3;")
-    if fn["params"].len() < 2
-      lines.push("  (void)__arg1;")
-    arg_index = 0
-    for param in fn["params"]
-      lines.push(
-        "  TyaValue " + c_name(param) + " = __arg" + arg_index.to_s() + ";",
-
-      )
-      arg_index = arg_index + 1
-    lines.push("  return " + emit_expr(fn["body"]) + ";")
-    lines.push("}}")
-    lines.push("")
+    emit_function_definition(lines, c_func_name(fn["anon_name"]), fn, true)
   lines.push("int main(int argc, char **argv) {{")
   lines.push("  (void)argc;")
   lines.push("  (void)argv;")

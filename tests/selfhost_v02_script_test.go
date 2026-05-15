@@ -23,7 +23,7 @@ func TestSelfhostV02Scripts(t *testing.T) {
 	}
 	modCache := goEnvForSelfhostV02(t, "GOMODCACHE")
 	goCache := goEnvForSelfhostV02(t, "GOCACHE")
-	testscript.Run(t, testscript.Params{
+	testscript.RunT(limitedSelfhostV02T{T: t}, testscript.Params{
 		Dir: "testdata/v02_selfhost",
 		Setup: func(env *testscript.Env) error {
 			env.Setenv("REPO", repo)
@@ -32,6 +32,30 @@ func TestSelfhostV02Scripts(t *testing.T) {
 			return nil
 		},
 	})
+}
+
+type limitedSelfhostV02T struct {
+	*testing.T
+}
+
+var selfhostV02Parallel = make(chan struct{}, 2)
+
+func (t limitedSelfhostV02T) Parallel() {
+	t.T.Parallel()
+	selfhostV02Parallel <- struct{}{}
+	t.T.Cleanup(func() {
+		<-selfhostV02Parallel
+	})
+}
+
+func (t limitedSelfhostV02T) Run(name string, f func(testscript.T)) {
+	t.T.Run(name, func(st *testing.T) {
+		f(limitedSelfhostV02T{T: st})
+	})
+}
+
+func (t limitedSelfhostV02T) Verbose() bool {
+	return testing.Verbose()
 }
 
 func goEnvForSelfhostV02(t *testing.T, key string) string {

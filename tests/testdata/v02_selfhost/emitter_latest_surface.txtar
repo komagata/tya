@@ -1,0 +1,54 @@
+# v02 C emitter runtime coverage for latest closure, iterable, and protocol
+# erasure surfaces.
+cd $REPO
+env TYA_LEGACY_MODULES=1
+
+exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
+! stderr .
+
+exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm -lz 2>/dev/null'
+
+exec sh -c '"$WORK/stage1" "$WORK/latest_runtime.tya" > "$WORK/latest_runtime.c"'
+! stderr .
+
+exec cc $WORK/latest_runtime.c runtime/tya_runtime.c -I runtime -o $WORK/latest_runtime -lpthread -lm -lz
+! stderr .
+
+exec $WORK/latest_runtime
+stdout '42\n3\n4\nt\ny\na\nname\nTya\n'
+! stderr .
+
+! exec $WORK/stage1 $WORK/unsupported_latest.tya
+stdout '2: unsupported codegen: spawn'
+! stderr .
+
+-- latest_runtime.tya --
+interface Stringable
+  to_s = ->
+
+make_counter = start ->
+  step = delta ->
+    start + delta
+  step
+
+counter = make_counter(40)
+print(counter(2))
+
+items = [1, 2, 3]
+for item in items.map(x -> x + 1).filter(x -> x > 2)
+  print(item)
+
+for char in "tya"
+  print(char)
+
+for key, value of { name: "Tya" }
+  print(key)
+  print(value)
+
+-- unsupported_latest.tya --
+run = ->
+  task = spawn work()
+  task
+
+work = ->
+  "done"
