@@ -442,6 +442,14 @@ providing `equal?(other)`, which must return a boolean. Primitive values expose
 deep equality. The `==` operator and top-level `equal(left, right)` keep their
 existing behavior and do not dispatch to user-defined `equal?`.
 
+`Stringable` is the standard human-readable formatting protocol. A class
+implements it by providing `to_s()`, which returns a string and should be
+side-effect free for ordinary formatting use. Number, String, Array, Dict,
+Boolean, and Nil conform to `Stringable` as primitive values without changing
+their tagged runtime representation or `value.class` behavior. `Stringable` is
+not a structured serialization protocol; use `Serializable.to_data()` for data
+trees.
+
 ## Expressions
 
 Expressions compute values.

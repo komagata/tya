@@ -135,6 +135,11 @@ value.class
 value.equal?(other)
 ```
 
+`value.to_s()` is the `Stringable` protocol method for human-readable text.
+Primitive numbers, strings, arrays, dictionaries, booleans, and nil expose it
+without changing their `value.class` identity. Use
+`serialization.Serializable.to_data()` for structured machine-readable data.
+
 Strings expose text helpers:
 
 ```tya

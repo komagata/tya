@@ -1,0 +1,2 @@
+interface Stringable
+  to_s = ->

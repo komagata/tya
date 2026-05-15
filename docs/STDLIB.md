@@ -108,6 +108,22 @@ remains deep equality for arrays and dictionaries. `Equatable.equal?` is an
 explicit protocol method. Primitive scalar values follow `==`; primitive arrays
 and dictionaries use deep equality for `equal?`.
 
+## Stringable Protocol
+
+`Stringable` is the standard interface for human-readable string
+representations.
+
+```tya
+interface Stringable
+  to_s = ->
+```
+
+`to_s()` returns a string and should be side-effect free for ordinary
+formatting use. Primitive numbers, strings, arrays, dictionaries, booleans, and
+nil expose `to_s()` without boxing or changing `value.class`. `Stringable` is
+for display and logs; use `Serializable.to_data()` for structured
+JSON/TOML/XML-style data.
+
 ## `net/http`
 
 ```tya

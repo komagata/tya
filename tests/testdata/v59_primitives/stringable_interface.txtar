@@ -1,0 +1,58 @@
+# Stringable interface and primitive to_s behavior.
+cd $REPO
+
+exec go run ./cmd/tya check stdlib/stringable.tya
+
+exec go run ./cmd/tya run $WORK/user_stringable.tya
+stdout 'user:Ada\n'
+
+! exec go run ./cmd/tya check $WORK/missing_to_s.tya
+stderr 'class User must implement interface method to_s'
+
+exec go run ./cmd/tya run $WORK/primitives.tya
+stdout '42'
+stdout 'hi'
+stdout '\[1, 2\]'
+stdout '\{name: Tya\}'
+stdout 'true'
+stdout 'nil'
+stdout 'Number'
+stdout 'String'
+stdout 'Array'
+stdout 'Dict'
+stdout 'Boolean'
+stdout 'Nil'
+
+-- user_stringable.tya --
+interface Stringable
+  to_s = ->
+
+class User implements Stringable
+  initialize = name ->
+    self.name = name
+
+  to_s = ->
+    "user:" + self.name
+
+print(User("Ada").to_s())
+
+-- missing_to_s.tya --
+interface Stringable
+  to_s = ->
+
+class User implements Stringable
+  name = "Ada"
+
+-- primitives.tya --
+print(42.to_s())
+print("hi".to_s())
+print([1, 2].to_s())
+print({ name: "Tya" }.to_s())
+print(true.to_s())
+print(nil.to_s())
+print(42.class.name)
+print("hi".class.name)
+print([1, 2].class.name)
+print({ name: "Tya" }.class.name)
+print(true.class.name)
+print(nil.class.name)
