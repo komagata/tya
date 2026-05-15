@@ -1,0 +1,4 @@
+class DropSequence implements Sequence
+  initialize = source, n ->
+    self.source = source
+    self.n = n

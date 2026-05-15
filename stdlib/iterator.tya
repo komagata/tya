@@ -1,0 +1,4 @@
+interface Iterator
+  has_next = ->
+
+  next = ->

@@ -1,0 +1,26 @@
+interface Sequence implements Iterable
+  iter = ->
+
+  map = fn ->
+    MapSequence(self, fn)
+
+  filter = fn ->
+    FilterSequence(self, fn)
+
+  take = n ->
+    TakeSequence(self, n)
+
+  drop = n ->
+    DropSequence(self, n)
+
+  reduce = initial, fn ->
+    acc = initial
+    for item in self
+      acc = fn(acc, item)
+    acc
+
+  to_a = ->
+    out = []
+    for item in self
+      out.push(item)
+    out

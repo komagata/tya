@@ -53,6 +53,12 @@ exec $WORK/tya run explicit_parameter_mutation.tya
 stdout '2\n'
 ! stderr .
 
+# Primitive values, user-defined Iterable values, lazy Sequence wrappers, and
+# for ... of compatibility all work through the same active C path.
+exec $WORK/tya run iterable_protocol.tya
+stdout '1\n2\n3\n10/0\n20/1\nt\ny\na\nname=Tya\nname\nTya\ntrue\nnil\ntrue\ncaught\nnil\n7\nbuilt\nfilter 1\nfilter 2\nmap 2\nfilter 3\nmap 3\n4,6\nfilter 1\nfilter 2\nmap 2\nfilter 3\nmap 3\n4,6\n5\nname=Tya\n'
+! stderr .
+
 -- nested_capture.tya --
 make = x ->
   mid = y ->
@@ -159,3 +165,169 @@ set_first = items ->
 items = [1]
 set_first(items)
 print(items[0])
+
+-- primitive_iteration.tya --
+for item in [1, 2, 3]
+  print(item)
+
+for item, index in [10, 20]
+  print("{item}/{index}")
+
+for char in "tya"
+  print(char)
+
+for entry in { name: "Tya" }
+  key = entry["key"]
+  value = entry["value"]
+  print("{key}={value}")
+
+for key in { name: "Tya" }.keys()
+  print(key)
+
+for value in { name: "Tya" }.values()
+  print(value)
+
+-- explicit_iterators.tya --
+array_iter = [nil].iter()
+print(array_iter.has_next?())
+print(array_iter.next())
+print(not array_iter.has_next?())
+try
+  array_iter.next()
+  print("missing")
+catch err
+  print("caught")
+
+-- user_iterable.tya --
+interface Iterable
+  iter = ->
+
+class PairIterator
+  initialize = ->
+    self.index = 0
+
+  has_next? = ->
+    self.index < 2
+
+  next = ->
+    if not self.has_next?()
+      raise "done"
+    self.index = self.index + 1
+    if self.index == 1
+      return nil
+    7
+
+class Pair implements Iterable
+  iter = ->
+    PairIterator()
+
+for item in Pair()
+  if item == nil
+    print("nil")
+  else
+    print(item)
+
+-- lazy_sequence.tya --
+items = [1, 2, 3, 4]
+filter_fn = item ->
+  print("filter {item}")
+  return item > 1
+
+map_fn = item ->
+  print("map {item}")
+  return item * 2
+
+seq = items.sequence().filter(filter_fn).map(map_fn).take(2)
+
+print("built")
+print(seq.to_a().join(","))
+print(seq.to_a().join(","))
+
+sum_fn = total, item -> total + item
+sum = [1, 2, 3].sequence().drop(1).reduce(0, sum_fn)
+print(sum)
+
+-- for_of_compat.tya --
+for key, value of { name: "Tya" }
+  print("{key}={value}")
+
+-- iterable_protocol.tya --
+for item in [1, 2, 3]
+  print(item)
+
+for item, index in [10, 20]
+  print("{item}/{index}")
+
+for char in "tya"
+  print(char)
+
+for entry in { name: "Tya" }
+  key = entry["key"]
+  value = entry["value"]
+  print("{key}={value}")
+
+for key in { name: "Tya" }.keys()
+  print(key)
+
+for value in { name: "Tya" }.values()
+  print(value)
+
+array_iter = [nil].iter()
+print(array_iter.has_next?())
+print(array_iter.next())
+print(not array_iter.has_next?())
+try
+  array_iter.next()
+  print("missing")
+catch err
+  print("caught")
+
+interface Iterable
+  iter = ->
+
+class PairIterator
+  initialize = ->
+    self.index = 0
+
+  has_next? = ->
+    self.index < 2
+
+  next = ->
+    if not self.has_next?()
+      raise "done"
+    self.index = self.index + 1
+    if self.index == 1
+      return nil
+    7
+
+class Pair implements Iterable
+  iter = ->
+    PairIterator()
+
+for item in Pair()
+  if item == nil
+    print("nil")
+  else
+    print(item)
+
+items = [1, 2, 3, 4]
+filter_fn = item ->
+  print("filter {item}")
+  return item > 1
+
+map_fn = item ->
+  print("map {item}")
+  return item * 2
+
+seq = items.sequence().filter(filter_fn).map(map_fn).take(2)
+
+print("built")
+print(seq.to_a().join(","))
+print(seq.to_a().join(","))
+
+sum_fn = total, item -> total + item
+sum = [1, 2, 3].sequence().drop(1).reduce(0, sum_fn)
+print(sum)
+
+for key, value of { name: "Tya" }
+  print("{key}={value}")

@@ -147,6 +147,8 @@ Strings expose text helpers:
 "abc".byte_len()
 "abc".blank?()
 "abc".present?()
+"abc".iter()
+"abc".sequence()
 ```
 
 Arrays expose sequence helpers:
@@ -170,7 +172,13 @@ items.any(item -> item == 3)
 items.all(item -> item > 0)
 sum = total, item -> total + item
 items.reduce(0, sum)
+items.iter()
+items.sequence()
 ```
+
+`iter()` returns a consuming iterator with `has_next?()` and `next()`.
+`sequence()` returns a lazy, re-iterable sequence with `map`, `filter`, `take`,
+`drop`, `reduce`, and `to_a`.
 
 Dictionaries expose key/value helpers:
 
@@ -183,7 +191,13 @@ dict.keys()
 dict.values()
 dict.entries()
 dict.merge(other)
+dict.iter()
+dict.sequence()
 ```
+
+`for entry in dict` is the canonical dictionary traversal spelling. It yields
+entry dictionaries with `key` and `value` fields. Use `dict.keys()` or
+`dict.values()` when only one side is needed.
 
 Numbers expose numeric helpers:
 

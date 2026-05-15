@@ -612,8 +612,10 @@ while count < 3
 
 ### For Statements
 
-`for ... in` iterates arrays and other iterable values. For arrays, the second
-binding receives the index when present.
+`for ... in` is the canonical way to consume iterable values. Arrays yield
+elements, strings yield characters, dictionaries yield `{ key: key, value:
+value }` entry dictionaries, and user values participate by exposing `iter()`.
+The second binding receives a zero-based index when present.
 
 ```tya
 for item in items
@@ -621,9 +623,16 @@ for item in items
 
 for item, index in items
   print("{index}: {item}")
+
+for entry in user
+  key = entry["key"]
+  value = entry["value"]
+  print("{key}: {value}")
 ```
 
-`for ... of` iterates dictionary keys and values.
+`for ... of` remains as a compatibility spelling for dictionary keys and
+values, but new code should prefer `for entry in dict`, `dict.keys()`, or
+`dict.values()` depending on intent.
 
 ```tya
 for key, value of user

@@ -541,11 +541,12 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		}
 		iterName := fmt.Sprintf("__iter%d", g.temp)
 		indexName := fmt.Sprintf("__i%d", g.temp)
+		genericName := fmt.Sprintf("__generic_iter%d", g.temp)
 		g.temp++
 		g.line(fmt.Sprintf("TyaValue %s = %s;", iterName, iterable))
-		g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
-		g.indent++
 		if n.Kind == "of" {
+			g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
+			g.indent++
 			if g.vars[n.ValueName] {
 				g.line(fmt.Sprintf("%s = tya_dict_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
 			} else {
@@ -560,27 +561,67 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 					g.line(fmt.Sprintf("TyaValue %s = tya_dict_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
 				}
 			}
-		} else {
-			if n.IndexName != "" {
-				if g.vars[n.IndexName] {
-					g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
-				} else {
-					g.vars[n.IndexName] = true
-					g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", cName(n.IndexName), indexName))
+			for _, stmt := range n.Body {
+				if err := g.stmt(stmt); err != nil {
+					return err
 				}
 			}
-			if g.vars[n.ValueName] {
-				g.line(fmt.Sprintf("%s = tya_index(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
+			g.indent--
+			g.line("}")
+			return nil
+		}
+		g.line(fmt.Sprintf("if (%s.kind == TYA_ARRAY || %s.kind == TYA_STRING || %s.kind == TYA_DICT) {", iterName, iterName, iterName))
+		g.indent++
+		g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
+		g.indent++
+		if n.IndexName != "" {
+			if g.vars[n.IndexName] {
+				g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
 			} else {
-				g.vars[n.ValueName] = true
-				g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
+				g.vars[n.IndexName] = true
+				g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", cName(n.IndexName), indexName))
 			}
+		}
+		if g.vars[n.ValueName] {
+			g.line(fmt.Sprintf("%s = (%s.kind == TYA_DICT ? tya_dict_entry_at(%s, tya_number(%s)) : tya_index(%s, tya_number(%s)));", cName(n.ValueName), iterName, iterName, indexName, iterName, indexName))
+		} else {
+			g.vars[n.ValueName] = true
+			g.line(fmt.Sprintf("TyaValue %s = (%s.kind == TYA_DICT ? tya_dict_entry_at(%s, tya_number(%s)) : tya_index(%s, tya_number(%s)));", cName(n.ValueName), iterName, iterName, indexName, iterName, indexName))
 		}
 		for _, stmt := range n.Body {
 			if err := g.stmt(stmt); err != nil {
 				return err
 			}
 		}
+		g.indent--
+		g.line("}")
+		g.indent--
+		g.line("} else {")
+		g.indent++
+		g.line(fmt.Sprintf("TyaValue %s = tya_iter(%s);", genericName, iterName))
+		g.line(fmt.Sprintf("for (int %s = 0; tya_truthy(tya_iterator_has_next(%s)); %s++) {", indexName, genericName, indexName))
+		g.indent++
+		if n.IndexName != "" {
+			if g.vars[n.IndexName] {
+				g.line(fmt.Sprintf("%s = tya_number(%s);", cName(n.IndexName), indexName))
+			} else {
+				g.vars[n.IndexName] = true
+				g.line(fmt.Sprintf("TyaValue %s = tya_number(%s);", cName(n.IndexName), indexName))
+			}
+		}
+		if g.vars[n.ValueName] {
+			g.line(fmt.Sprintf("%s = tya_iterator_next(%s);", cName(n.ValueName), genericName))
+		} else {
+			g.vars[n.ValueName] = true
+			g.line(fmt.Sprintf("TyaValue %s = tya_iterator_next(%s);", cName(n.ValueName), genericName))
+		}
+		for _, stmt := range n.Body {
+			if err := g.stmt(stmt); err != nil {
+				return err
+			}
+		}
+		g.indent--
+		g.line("}")
 		g.indent--
 		g.line("}")
 	case *ast.ReturnStmt:

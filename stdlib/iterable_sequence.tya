@@ -1,0 +1,3 @@
+class IterableSequence implements Sequence
+  initialize = source ->
+    self.source = source

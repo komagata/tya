@@ -54,6 +54,28 @@ Use `x.class` to inspect the runtime class wrapper for primitive and object
 values. Built-in functions and common primitive methods are listed in
 `docs/API.md`.
 
+## Iterable Protocol
+
+`Iterator`, `Iterable`, and `Sequence` are standard interfaces for values that
+can be consumed with `for ... in`.
+
+```tya
+iter = items.iter()
+while iter.has_next?()
+  print(iter.next())
+
+seq = items.sequence().filter(item -> item > 1).map(item -> item * 2)
+print(seq.to_a().join(","))
+```
+
+Arrays, dictionaries, and strings conform to `Iterable` without boxing their
+primitive values. Array iteration yields elements, string iteration yields the
+same characters as `chars()`, and dictionary iteration yields entry
+dictionaries with `key` and `value` fields. Use `dict.keys()` or
+`dict.values()` when only keys or values are needed. `for ... of` remains for
+compatibility, but `for entry in dict` is the preferred dictionary traversal
+form.
+
 ## `net/http`
 
 ```tya

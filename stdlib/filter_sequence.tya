@@ -1,0 +1,4 @@
+class FilterSequence implements Sequence
+  initialize = source, fn ->
+    self.source = source
+    self.fn = fn

@@ -1,0 +1,4 @@
+class MapSequence implements Sequence
+  initialize = source, fn ->
+    self.source = source
+    self.fn = fn
