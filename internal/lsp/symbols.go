@@ -66,19 +66,10 @@ func symbolFromStmt(stmt ast.Stmt, prog *ast.Program) (Symbol, bool) {
 	leading := leadingFor(stmt, prog)
 	switch d := stmt.(type) {
 	case *ast.ClassDecl:
-		if strings.HasPrefix(d.Name, "_") {
-			return Symbol{}, false
-		}
 		return Symbol{Name: d.Name, Kind: "class", Signature: "class " + d.Name, NameTok: d.NameTok, DocBody: leading}, true
 	case *ast.ModuleDecl:
-		if strings.HasPrefix(d.Name, "_") {
-			return Symbol{}, false
-		}
 		return Symbol{Name: d.Name, Kind: "module", Signature: "module " + d.Name, NameTok: d.NameTok, DocBody: leading}, true
 	case *ast.InterfaceDecl:
-		if strings.HasPrefix(d.Name, "_") {
-			return Symbol{}, false
-		}
 		return Symbol{Name: d.Name, Kind: "interface", Signature: "interface " + d.Name, NameTok: d.NameTok, DocBody: leading}, true
 	case *ast.AssignStmt:
 		if len(d.Targets) != 1 || len(d.Values) != 1 {
@@ -90,9 +81,6 @@ func symbolFromStmt(stmt ast.Stmt, prog *ast.Program) (Symbol, bool) {
 		}
 		fn, ok := d.Values[0].(*ast.FuncLit)
 		if !ok {
-			return Symbol{}, false
-		}
-		if strings.HasPrefix(id.Name, "_") {
 			return Symbol{}, false
 		}
 		return Symbol{

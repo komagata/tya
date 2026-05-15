@@ -684,12 +684,7 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		if !p.match(token.ASSIGN) {
 			return nil, p.err("expected '=' after class member name")
 		}
-		// v0.46 G1 transitional: combine the explicit `private`
-		// modifier with the legacy `_`-prefix convention. Both produce
-		// the same Private flag; the checker reads only the flag.
-		// `_init` private-constructor short-circuit is preserved by
-		// treating `_init` like `private init`.
-		memberPrivate := isPrivateMember || (strings.HasPrefix(memberName.Lexeme, "_") && memberName.Lexeme != "_")
+		memberPrivate := isPrivateMember
 		if isAbstractMethod {
 			params, paramToks, err := p.abstractMethodParams()
 			if err != nil {
@@ -765,9 +760,6 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 		methodName, err := p.expectCallableName("expected interface method name")
 		if err != nil {
 			return nil, err
-		}
-		if strings.HasPrefix(methodName.Lexeme, "_") {
-			return nil, p.errAt(methodName, "private interface methods are not in Tya v0.13")
 		}
 		if !p.match(token.ASSIGN) {
 			return nil, p.err("expected '=' after interface method name")

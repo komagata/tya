@@ -17,8 +17,8 @@ stderr '"summary":\{"errors":1'
 # tya check collects multiple strict diagnostics in one run.
 ! exec go run ./cmd/tya check $WORK/multi.tya
 stderr 'TYA-E0303'
-stderr 'TYA-E0304'
-stderr 'Found 2 error'
+! stderr 'TYA-E0304'
+stderr 'Found 1 error'
 
 # --color=never disables ANSI codes.
 ! exec go run ./cmd/tya check --color=never $WORK/shadow.tya

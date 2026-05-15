@@ -672,7 +672,7 @@ func publicTopLevelNames(prog *ast.Program) []string {
 	seen := map[string]bool{}
 	names := []string{}
 	add := func(name string) {
-		if name == "" || strings.HasPrefix(name, "_") || seen[name] {
+		if name == "" || seen[name] {
 			return
 		}
 		seen[name] = true
@@ -938,13 +938,13 @@ func publicPackageNames(classFiles []string) ([]string, error) {
 		for _, stmt := range prog.Stmts {
 			switch n := stmt.(type) {
 			case *ast.ClassDecl:
-				if strings.HasPrefix(n.Name, "_") || seen[n.Name] {
+				if seen[n.Name] {
 					continue
 				}
 				seen[n.Name] = true
 				names = append(names, n.Name)
 			case *ast.InterfaceDecl:
-				if strings.HasPrefix(n.Name, "_") || seen[n.Name] {
+				if seen[n.Name] {
 					continue
 				}
 				seen[n.Name] = true

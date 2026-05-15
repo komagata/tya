@@ -158,7 +158,7 @@ func TestLoadSourceLoadsModuleClassDeclaration(t *testing.T) {
 	}
 }
 
-func TestLoadSourceRejectsTopLevelHelperInImportedFile(t *testing.T) {
+func TestLoadSourceExportsUnderscoreTopLevelHelperInImportedFile(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "text = \"hello\"\n_helper = \"ok\"\n")
 	main := filepath.Join(dir, "main.tya")
@@ -168,7 +168,7 @@ func TestLoadSourceRejectsTopLevelHelperInImportedFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(source, "greeting[\"text\"] = text") || strings.Contains(source, "greeting[\"_helper\"]") {
+	if !strings.Contains(source, "greeting[\"text\"] = text") || !strings.Contains(source, "greeting[\"_helper\"] = _helper") {
 		t.Fatalf("unexpected synthesized namespace:\n%s", source)
 	}
 }
@@ -305,7 +305,7 @@ func TestLoadSourceRejectsImportCycle(t *testing.T) {
 	}
 }
 
-func TestLoadSourceAllowsPrivateHelperInImportedScript(t *testing.T) {
+func TestLoadSourceExportsUnderscoreHelperInImportedScript(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "_message = \"hello\"\ntext = _message\n")
 	main := filepath.Join(dir, "main.tya")
@@ -315,7 +315,7 @@ func TestLoadSourceAllowsPrivateHelperInImportedScript(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(source, "greeting[\"text\"] = text") || strings.Contains(source, "greeting[\"_message\"]") {
+	if !strings.Contains(source, "greeting[\"text\"] = text") || !strings.Contains(source, "greeting[\"_message\"] = _message") {
 		t.Fatalf("unexpected synthesized namespace:\n%s", source)
 	}
 }

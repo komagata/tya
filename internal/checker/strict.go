@@ -9,9 +9,8 @@ import (
 	"tya/internal/diag"
 )
 
-// v0.28 strict-lint checks: shadowing forbidden, unused imports, unused
-// function arguments, unused private top-level definitions. v0.29 routes
-// them through the diag.Diagnostic pipeline.
+// v0.28 strict-lint checks: shadowing forbidden, unused imports, and unused
+// function arguments. v0.29 routes them through the diag.Diagnostic pipeline.
 
 type strictBinding struct {
 	name string
@@ -27,7 +26,6 @@ const (
 	strictLocal strictKind = iota
 	strictImport
 	strictArg
-	strictPrivateTop
 	strictPredeclared
 )
 
@@ -260,11 +258,7 @@ func strictCollectTopLevel(stmts []ast.Stmt, scope *strictScope, ctx *strictCtx)
 		case *ast.AssignStmt:
 			for _, target := range n.Targets {
 				if id, ok := target.(*ast.Ident); ok {
-					kind := strictLocal
-					if strings.HasPrefix(id.Name, "_") && id.Name != "_" {
-						kind = strictPrivateTop
-					}
-					scope.define(id.Name, kind, id.Tok.Line, id.Tok.Col, ctx, len(id.Name))
+					scope.define(id.Name, strictLocal, id.Tok.Line, id.Tok.Col, ctx, len(id.Name))
 				}
 			}
 		case *ast.ModuleDecl:
@@ -768,15 +762,6 @@ func strictDiagnoseScope(scope *strictScope, ctx *strictCtx) {
 				Message:  fmt.Sprintf("The argument `%s` is never used in the body of this function.", b.name),
 				Primary:  region(b.line, b.col, len(b.name)),
 				Hints:    []string{"Rename it to `_` or prefix it with `_` (e.g. `_" + b.name + "`) to mark it as intentional."},
-			})
-		case strictPrivateTop:
-			ctx.report(diag.Diagnostic{
-				Severity: diag.Error,
-				Code:     "TYA-E0304",
-				Title:    "Unused private definition",
-				Message:  fmt.Sprintf("The private top-level definition `%s` is never referenced in this file.", b.name),
-				Primary:  region(b.line, b.col, len(b.name)),
-				Hints:    []string{"Remove the definition, or reference it elsewhere in this file."},
 			})
 		}
 	}

@@ -51,7 +51,7 @@ stderr 'Self is not allowed in interface methods'
 stderr 'TYA-E0102'
 
 ! exec go run ./cmd/tya run $WORK/interface_private.tya
-stderr 'TYA-E0141'
+stderr 'invalid interface method _hidden'
 
 ! exec go run ./cmd/tya run $WORK/interface_nested_class.tya
 stderr 'TYA-E0140'

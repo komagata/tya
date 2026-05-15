@@ -488,7 +488,7 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 			}
 			scope.define(binding, kindModule)
 		case *ast.EmbedStmt:
-			if !valueNameRE.MatchString(n.Name) || strings.HasPrefix(n.Name, "_") {
+			if !valueNameRE.MatchString(n.Name) {
 				return fmt.Errorf("%d:%d: invalid embed binding %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 			}
 			for key := range n.Transforms {
@@ -1184,9 +1184,6 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
 		}
-		if isPrivateName(n.Name) {
-			return fmt.Errorf("%d:%d: private member %s is not accessible here", n.NameTok.Line, n.NameTok.Col, n.Name)
-		}
 		switch kindOf(n.Target, scope) {
 		case kindModule:
 			if classNameRE.MatchString(n.Name) {
@@ -1272,17 +1269,6 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				if len(n.Args) != arity {
 					return fmt.Errorf("%d:%d: super method %s expects %d arguments", super.Tok.Line, super.Tok.Col, scope.currentMethod, arity)
 				}
-			}
-			for _, arg := range n.Args {
-				if err := checkExpr(arg, scope); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-		if id, ok := n.Callee.(*ast.Ident); ok && isPrivateName(id.Name) && scope.inInstanceMethod && scope.currentClass != "" {
-			if !scope.classes[scope.currentClass].privateMethods[id.Name] {
-				return fmt.Errorf("%d:%d: private method %s is not declared in %s", id.Tok.Line, id.Tok.Col, id.Name, scope.currentClass)
 			}
 			for _, arg := range n.Args {
 				if err := checkExpr(arg, scope); err != nil {
@@ -2624,9 +2610,6 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 		}
 		if id, ok := n.Target.(*ast.Ident); ok && isPrimitiveClassName(id.Name) {
 			return fmt.Errorf("%d:%d: [TYA-E0814] cannot add or redefine method %s on built-in primitive class %s", n.NameTok.Line, n.NameTok.Col, n.Name, id.Name)
-		}
-		if isPrivateName(n.Name) {
-			return fmt.Errorf("%d:%d: private member %s is not accessible here", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err

@@ -116,9 +116,6 @@ func stmtToDocItem(stmt ast.Stmt, prog *ast.Program, path string) (DocItem, bool
 
 	switch d := stmt.(type) {
 	case *ast.ClassDecl:
-		if isPrivateName(d.Name) {
-			return DocItem{}, false
-		}
 		return DocItem{
 			Name:      d.Name,
 			Kind:      "class",
@@ -128,9 +125,6 @@ func stmtToDocItem(stmt ast.Stmt, prog *ast.Program, path string) (DocItem, bool
 			Line:      d.NameTok.Line,
 		}, true
 	case *ast.ModuleDecl:
-		if isPrivateName(d.Name) {
-			return DocItem{}, false
-		}
 		return DocItem{
 			Name:      d.Name,
 			Kind:      "module",
@@ -140,9 +134,6 @@ func stmtToDocItem(stmt ast.Stmt, prog *ast.Program, path string) (DocItem, bool
 			Line:      d.NameTok.Line,
 		}, true
 	case *ast.InterfaceDecl:
-		if isPrivateName(d.Name) {
-			return DocItem{}, false
-		}
 		return DocItem{
 			Name:      d.Name,
 			Kind:      "interface",
@@ -159,9 +150,6 @@ func stmtToDocItem(stmt ast.Stmt, prog *ast.Program, path string) (DocItem, bool
 		if !ok {
 			return DocItem{}, false
 		}
-		if isPrivateName(id.Name) {
-			return DocItem{}, false
-		}
 		fn, ok := d.Values[0].(*ast.FuncLit)
 		if !ok {
 			return DocItem{}, false
@@ -176,12 +164,6 @@ func stmtToDocItem(stmt ast.Stmt, prog *ast.Program, path string) (DocItem, bool
 		}, true
 	}
 	return DocItem{}, false
-}
-
-// isPrivateName treats top-level bindings whose name starts with
-// "_" as private, per the v0.51 SPEC.
-func isPrivateName(name string) bool {
-	return strings.HasPrefix(name, "_")
 }
 
 // stripLeading takes the slice of raw leading-comment text returned

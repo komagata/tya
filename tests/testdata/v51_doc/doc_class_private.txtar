@@ -1,5 +1,5 @@
-# Classes are listed; top-level bindings whose name starts with
-# `_` are excluded as conventional-private.
+# Classes and documented top-level bindings are listed. Leading `_` is
+# ordinary spelling for top-level names, not a documentation privacy marker.
 cd $REPO
 exec go build -o $WORK/tya ./cmd/tya
 cd $WORK
@@ -10,7 +10,7 @@ cp mix.tya src/mix.tya
 exec $WORK/tya doc
 stdout '## class Greeter'
 stdout '## function pub'
-! stdout '_priv'
+stdout '## function _priv'
 
 -- mix.tya --
 # Public surface
