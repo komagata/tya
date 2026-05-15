@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"tya/internal/ast"
@@ -151,6 +152,14 @@ func (s *strictScope) resolvesAboveFunction(name string) bool {
 	}
 	if fnRoot == nil {
 		return false
+	}
+	for sc := s; sc != nil; sc = sc.parent {
+		if _, ok := sc.bindings[name]; ok {
+			return false
+		}
+		if sc == fnRoot {
+			break
+		}
 	}
 	for sc := fnRoot.parent; sc != nil; sc = sc.parent {
 		if b, ok := sc.bindings[name]; ok {
@@ -597,6 +606,20 @@ func strictWalkExpr(expr ast.Expr, scope *strictScope, ctx *strictCtx) {
 }
 
 func strictWalkAssignTarget(target ast.Expr, scope *strictScope, ctx *strictCtx) {
+	if id := assignedOuterRoot(target, scope); id != nil && !permissiveCapturedMutation() {
+		ctx.report(diag.Diagnostic{
+			Severity: diag.Error,
+			Code:     "TYA-E0308",
+			Title:    "Mutation through captured binding",
+			Message:  fmt.Sprintf("Cannot mutate `%s` through a captured binding from inside a function body.", id.Name),
+			Primary:  region(id.Tok.Line, id.Tok.Col, len(id.Name)),
+			Hints: []string{
+				"Tya closures may read captured values but cannot mutate through them.",
+				"Pass the mutable value as an explicit parameter when mutation is intended.",
+			},
+		})
+		return
+	}
 	switch n := target.(type) {
 	case *ast.Ident:
 	case *ast.MemberExpr:
@@ -609,6 +632,35 @@ func strictWalkAssignTarget(target ast.Expr, scope *strictScope, ctx *strictCtx)
 		}
 		strictWalkExpr(n.Index, scope, ctx)
 	}
+}
+
+func permissiveCapturedMutation() bool {
+	return permissiveLegacy || os.Getenv("TYA_LEGACY_MODULES") == "1"
+}
+
+func assignedOuterRoot(target ast.Expr, scope *strictScope) *ast.Ident {
+	switch n := target.(type) {
+	case *ast.MemberExpr:
+		return assignedOuterRootIdent(n.Target, scope)
+	case *ast.IndexExpr:
+		return assignedOuterRootIdent(n.Target, scope)
+	default:
+		return nil
+	}
+}
+
+func assignedOuterRootIdent(expr ast.Expr, scope *strictScope) *ast.Ident {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		if scope.resolvesAboveFunction(n.Name) {
+			return n
+		}
+	case *ast.MemberExpr:
+		return assignedOuterRootIdent(n.Target, scope)
+	case *ast.IndexExpr:
+		return assignedOuterRootIdent(n.Target, scope)
+	}
+	return nil
 }
 
 func strictDefinePatternBindings(pattern ast.Expr, scope *strictScope, ctx *strictCtx) {

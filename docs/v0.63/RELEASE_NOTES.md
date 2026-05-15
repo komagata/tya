@@ -5,6 +5,17 @@ current-spec proof gate. The Go implementation remains the active reference,
 but v02 now has focused lexer/parser, checker, C emitter, and fixed-point
 coverage for representative current language families.
 
+## Language
+
+- Function literals in the active compile-to-C path now support lexical
+  closures over enclosing function parameters and locals. Captures snapshot the
+  current `TyaValue`, so heap-backed values remain shared values without deep
+  copying.
+- Closure bodies may read captured bindings, pass closures through higher-order
+  APIs, and use captured closures with `spawn` / `await`. Direct reassignment
+  to an outer binding and indexed or member mutation through a captured binding
+  are rejected.
+
 ## Self-Host
 
 - `selfhost/v02/compiler.tya` recognizes current syntax families including

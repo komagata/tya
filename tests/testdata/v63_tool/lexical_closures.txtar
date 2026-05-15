@@ -1,0 +1,161 @@
+# Build the CLI once so closure behavior is tested through the active C path.
+exec env -u GOROOT go -C $REPO build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+
+# Grandchild closures can capture values from every enclosing function.
+exec $WORK/tya run nested_capture.tya
+stdout '6\n'
+! stderr .
+
+# Returned closures can capture parameters and locals, each call receives an
+# independent environment, and later creator reassignment does not alter the
+# captured snapshot.
+exec $WORK/tya run returned_capture.tya
+stdout '5\n'
+stdout '8\n'
+stdout '1\n'
+! stderr .
+
+# Captured values remain usable through array higher-order methods.
+exec $WORK/tya run array_higher_order.tya
+stdout '11,12,13\n'
+stdout '2,3\n'
+stdout '36\n'
+! stderr .
+
+# Captured closures can be passed to spawn and awaited.
+exec $WORK/tya run spawn_capture.tya
+stdout '42\n'
+! stderr .
+
+# Captured heap values stay reachable across explicit GC.
+exec $WORK/tya run gc_capture.tya
+stdout '42\n'
+! stderr .
+
+# Direct reassignment to an outer binding remains rejected.
+! exec $WORK/tya check direct_outer_reassign.tya
+stderr 'Cannot reassign `x` from inside a function body'
+
+# Closures may not mutate through captured outer bindings.
+! exec $WORK/tya check captured_array_mutation.tya
+stderr 'Cannot mutate `items` through a captured binding'
+
+! exec $WORK/tya check captured_dict_mutation.tya
+stderr 'Cannot mutate `state` through a captured binding'
+
+! exec $WORK/tya check captured_member_mutation.tya
+stderr 'Cannot mutate `box` through a captured binding'
+
+# Passing mutable state explicitly keeps mutation possible.
+exec $WORK/tya run explicit_parameter_mutation.tya
+stdout '2\n'
+! stderr .
+
+-- nested_capture.tya --
+make = x ->
+  mid = y ->
+    z -> x + y + z
+  mid
+
+f = make(1)(2)
+print(f(3))
+
+-- returned_capture.tya --
+make_param = x ->
+  y -> x + y
+
+make_local = base ->
+  local = base + 1
+  y -> local + y
+
+make_snapshot = ->
+  x = 1
+  f = -> x
+  x = 2
+  f
+
+add2 = make_param(2)
+add5 = make_param(5)
+print(add2(3))
+print(add5(3))
+print(make_snapshot()())
+
+-- array_higher_order.tya --
+make_mapper = offset ->
+  item -> item + offset
+
+make_filter = min ->
+  item -> item > min
+
+make_sum = offset ->
+  total, item -> total + item + offset
+
+items = [1, 2, 3]
+print(items.map(make_mapper(10)).join(","))
+print(items.filter(make_filter(1)).join(","))
+print(items.reduce(0, make_sum(10)))
+
+-- spawn_capture.tya --
+make_worker = base ->
+  -> base + 1
+
+worker = make_worker(41)
+task = spawn worker()
+print(await task)
+
+-- gc_capture.tya --
+import runtime as runtime
+
+make = ->
+  items = [41]
+  -> items[0] + 1
+
+f = make()
+runtime.Runtime.gc()
+print(f())
+
+-- direct_outer_reassign.tya --
+make = ->
+  x = 1
+  ->
+    x = 2
+
+make()
+
+-- captured_array_mutation.tya --
+make = ->
+  items = [1]
+  ->
+    items[0] = 2
+
+make()
+
+-- captured_dict_mutation.tya --
+make = ->
+  state = { count: 0 }
+  ->
+    state["count"] = state["count"] + 1
+
+make()
+
+-- captured_member_mutation.tya --
+class Box
+  initialize = value ->
+    self.value = value
+
+make = ->
+  box = Box.new(1)
+  ->
+    box.value = 2
+
+make()
+
+-- explicit_parameter_mutation.tya --
+set_first = items ->
+  items[0] = 2
+
+items = [1]
+set_first(items)
+print(items[0])

@@ -453,6 +453,18 @@ the current class in class contexts where it is valid. `super(...)` delegates
 to the parent constructor, parent method, or next stacked interface method
 depending on context.
 
+Function literals are lexical closures. A function literal may read parameters
+and local bindings from enclosing function bodies. Captures are value snapshots
+created when the function literal is evaluated; heap-backed values such as
+arrays, dictionaries, objects, functions, resources, and tasks are captured as
+values, not deep-copied. Top-level names are not captured and continue to use
+module/global lookup.
+
+Function bodies cannot write back to outer bindings. Direct reassignment of an
+outer binding is invalid, and indexed or member assignment through a captured
+outer binding is invalid. Pass mutable state as an explicit parameter when a
+function is intended to mutate that value.
+
 ### Operators
 
 Tya supports arithmetic, comparison, logical, and bitwise operators.

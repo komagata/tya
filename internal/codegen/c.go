@@ -233,6 +233,7 @@ type cgen struct {
 	superClass        string
 	interfaceSuperSym string
 	predicateName     string
+	closureVars       map[string]bool
 	raiseDepth        int
 	coverEnabled      bool
 	coverOpt          *CoverageOptions
@@ -415,12 +416,23 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 			return nil
 		}
 		if fn, ok := n.Values[0].(*ast.FuncLit); ok {
-			sym, err := g.emitFunc(id.Name, fn)
+			captures := g.freeVars(fn)
+			sym, err := g.emitFuncWithCaptures(id.Name, fn, "", "", captures)
 			if err != nil {
 				return err
 			}
-			g.funcs[id.Name] = sym
-			g.line(fmt.Sprintf("%s = tya_function(%s);", cName(id.Name), sym))
+			if len(captures) == 0 {
+				g.funcs[id.Name] = sym
+				g.line(fmt.Sprintf("%s = tya_function(%s);", cName(id.Name), sym))
+				return nil
+			}
+			env := fmt.Sprintf("__env%d", g.temp)
+			g.temp++
+			g.line(fmt.Sprintf("TyaValue %s = tya_object();", env))
+			for _, name := range sortedMapKeys(captures) {
+				g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", env, strconv.Quote(name), g.captureValue(name)))
+			}
+			g.line(fmt.Sprintf("%s = tya_bind_method(%s, %s);", cName(id.Name), env, sym))
 			return nil
 		}
 		ex, typ, err := g.expr(n.Values[0])
@@ -1008,6 +1020,10 @@ func (g *cgen) emitFunc(name string, fn *ast.FuncLit) (string, error) {
 }
 
 func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string, methodKind string) (string, error) {
+	return g.emitFuncWithCaptures(name, fn, classRef, methodKind, nil)
+}
+
+func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef string, methodKind string, captures map[string]bool) (string, error) {
 	sym := cFuncName(name, g.temp)
 	g.temp++
 	var out strings.Builder
@@ -1034,6 +1050,7 @@ func (g *cgen) emitFuncWithContext(name string, fn *ast.FuncLit, classRef string
 		superClass:        g.superClass,
 		interfaceSuperSym: g.interfaceSuperSym,
 		predicateName:     predicateName(name),
+		closureVars:       captures,
 	}
 	for i, param := range fn.Params {
 		child.vars[param] = true
@@ -1138,6 +1155,171 @@ func isSideEffectCall(expr ast.Expr) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func sortedMapKeys(m map[string]bool) []string {
+	keys := make([]string, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func (g *cgen) freeVars(fn *ast.FuncLit) map[string]bool {
+	defined := map[string]bool{}
+	for _, param := range fn.Params {
+		defined[param] = true
+	}
+	for _, local := range assignedNames(fn.Body) {
+		defined[local] = true
+	}
+	used := map[string]bool{}
+	if fn.Expr != nil {
+		collectExprIdents(fn.Expr, used)
+	}
+	for _, stmt := range fn.Body {
+		collectStmtIdents(stmt, used)
+	}
+	captures := map[string]bool{}
+	for name := range used {
+		if defined[name] || primitiveClassNames[name] || g.classes[name] != "" || g.funcs[name] != "" {
+			continue
+		}
+		if (g.inFunc && g.vars[name]) || (g.closureVars != nil && g.closureVars[name]) {
+			captures[name] = true
+		}
+	}
+	return captures
+}
+
+func (g *cgen) captureValue(name string) string {
+	if g.closureVars != nil && g.closureVars[name] {
+		return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(name))
+	}
+	return cName(name)
+}
+
+func collectStmtIdents(stmt ast.Stmt, out map[string]bool) {
+	switch n := stmt.(type) {
+	case *ast.AssignStmt:
+		for _, value := range n.Values {
+			collectExprIdents(value, out)
+		}
+	case *ast.ExprStmt:
+		collectExprIdents(n.Expr, out)
+	case *ast.IfStmt:
+		collectExprIdents(n.Cond, out)
+		for _, stmt := range n.Then {
+			collectStmtIdents(stmt, out)
+		}
+		for _, stmt := range n.Else {
+			collectStmtIdents(stmt, out)
+		}
+	case *ast.WhileStmt:
+		collectExprIdents(n.Cond, out)
+		for _, stmt := range n.Body {
+			collectStmtIdents(stmt, out)
+		}
+	case *ast.ForInStmt:
+		collectExprIdents(n.Iterable, out)
+		for _, stmt := range n.Body {
+			collectStmtIdents(stmt, out)
+		}
+	case *ast.ReturnStmt:
+		for _, value := range n.Values {
+			collectExprIdents(value, out)
+		}
+	case *ast.RaiseStmt:
+		collectExprIdents(n.Value, out)
+	case *ast.TryCatchStmt:
+		for _, stmt := range n.Try {
+			collectStmtIdents(stmt, out)
+		}
+		for _, stmt := range n.Catch {
+			collectStmtIdents(stmt, out)
+		}
+	case *ast.MatchStmt:
+		collectExprIdents(n.Value, out)
+		for _, c := range n.Cases {
+			for _, stmt := range c.Body {
+				collectStmtIdents(stmt, out)
+			}
+		}
+	case *ast.ScopeBlock:
+		for _, stmt := range n.Body {
+			collectStmtIdents(stmt, out)
+		}
+	case *ast.SelectStmt:
+		for _, arm := range n.Arms {
+			collectExprIdents(arm.Channel, out)
+			collectExprIdents(arm.Value, out)
+			collectExprIdents(arm.Seconds, out)
+			for _, stmt := range arm.Body {
+				collectStmtIdents(stmt, out)
+			}
+		}
+	}
+}
+
+func collectExprIdents(expr ast.Expr, out map[string]bool) {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		out[n.Name] = true
+	case *ast.ArrayLit:
+		for _, elem := range n.Elems {
+			collectExprIdents(elem, out)
+		}
+	case *ast.DictLit:
+		for _, prop := range n.Props {
+			collectExprIdents(prop.Value, out)
+		}
+	case *ast.BinaryExpr:
+		collectExprIdents(n.Left, out)
+		collectExprIdents(n.Right, out)
+	case *ast.UnaryExpr:
+		collectExprIdents(n.Expr, out)
+	case *ast.TryExpr:
+		collectExprIdents(n.Expr, out)
+	case *ast.MemberExpr:
+		collectExprIdents(n.Target, out)
+	case *ast.IndexExpr:
+		collectExprIdents(n.Target, out)
+		collectExprIdents(n.Index, out)
+	case *ast.CallExpr:
+		collectExprIdents(n.Callee, out)
+		for _, arg := range n.Args {
+			collectExprIdents(arg, out)
+		}
+	case *ast.SpawnExpr:
+		collectExprIdents(n.Callee, out)
+	case *ast.AwaitExpr:
+		collectExprIdents(n.Target, out)
+	case *ast.FuncLit:
+		collectFuncFreeIdentUses(n, out)
+	}
+}
+
+func collectFuncFreeIdentUses(fn *ast.FuncLit, out map[string]bool) {
+	defined := map[string]bool{}
+	for _, param := range fn.Params {
+		defined[param] = true
+	}
+	for _, local := range assignedNames(fn.Body) {
+		defined[local] = true
+	}
+	used := map[string]bool{}
+	if fn.Expr != nil {
+		collectExprIdents(fn.Expr, used)
+	}
+	for _, stmt := range fn.Body {
+		collectStmtIdents(stmt, used)
+	}
+	for name := range used {
+		if !defined[name] {
+			out[name] = true
+		}
 	}
 }
 
@@ -2003,12 +2185,26 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		return fmt.Sprintf("tya_dict((TyaDictEntry[]){%s}, %d)", strings.Join(entries, ", "), len(entries)), "TyaValue", nil
 	case *ast.FuncLit:
 		name := fmt.Sprintf("__anon%d", g.temp)
-		sym, err := g.emitFunc(name, n)
+		captures := g.freeVars(n)
+		sym, err := g.emitFuncWithCaptures(name, n, "", "", captures)
 		if err != nil {
 			return "", "", err
 		}
-		return fmt.Sprintf("tya_function(%s)", sym), "TyaValue", nil
+		if len(captures) == 0 {
+			return fmt.Sprintf("tya_function(%s)", sym), "TyaValue", nil
+		}
+		env := fmt.Sprintf("__env%d", g.temp)
+		g.temp++
+		lines := []string{fmt.Sprintf("TyaValue %s = tya_object();", env)}
+		for _, name := range sortedMapKeys(captures) {
+			lines = append(lines, fmt.Sprintf("tya_set_member(%s, %s, %s);", env, strconv.Quote(name), g.captureValue(name)))
+		}
+		lines = append(lines, fmt.Sprintf("tya_bind_method(%s, %s)", env, sym))
+		return fmt.Sprintf("({ %s; })", strings.Join(lines, " ")), "TyaValue", nil
 	case *ast.Ident:
+		if g.closureVars != nil && g.closureVars[n.Name] {
+			return fmt.Sprintf("tya_member(__this, %s)", strconv.Quote(n.Name)), "TyaValue", nil
+		}
 		if primitiveClassNames[n.Name] {
 			return fmt.Sprintf("tya_primitive_class(%s)", strconv.Quote(n.Name)), "TyaValue", nil
 		}
