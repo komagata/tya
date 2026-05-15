@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Release Notes
+permalink: /v0.62/release-notes/
+---
+
 # Tya v0.62 Release Notes
 
 v0.62 is the current released implementation. It finishes the `net/http` v2

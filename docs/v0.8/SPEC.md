@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.8/spec/
+---
+
 # Tya v0.8 Specification
 
 This document is the specification for Tya v0.8 after v0.7 single inheritance

@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.6/spec/
+---
+
 # Tya v0.6 Specification
 
 This document is the specification for Tya v0.6 after v0.5 minimal classes and

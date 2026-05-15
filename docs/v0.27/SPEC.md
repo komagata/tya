@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.27/spec/
+---
+
 # Tya v0.27 Specification
 
 This document is the specification for Tya v0.27 after v0.26 external

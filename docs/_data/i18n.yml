@@ -1,0 +1,20 @@
+en:
+  root: /
+  guide_url: /guide/
+  guide: Guide
+  spec_url: /spec/
+  spec: Spec
+  versions_url: /versions/
+  versions: Versions
+  language_url: /ja/
+  language: 日本語
+ja:
+  root: /ja/
+  guide_url: /guide/
+  guide: ガイド
+  spec_url: /ja/spec/
+  spec: 仕様
+  versions_url: /versions/
+  versions: バージョン
+  language_url: /
+  language: English

@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Release Notes
+permalink: /v0.64/release-notes/
+---
+
 # Tya v0.64 Release Notes
 
 v0.64 adds first-class lexical closures, iterable sequence protocols, and a

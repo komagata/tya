@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://tya-lang.org/">
-    <img src="site/assets/tya-logo.png" alt="Tya logo" width="220">
+    <img src="docs/assets/tya-logo.png" alt="Tya logo" width="220">
   </a>
 </p>
 
@@ -185,12 +185,11 @@ print(["tya"].first())
 
 ## Documentation
 
-- [Guide](https://tya-lang.org/guide.html): read this first to learn Tya.
-- [Spec](https://tya-lang.org/spec.html): latest Tya language specification.
-- [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
+- [Guide](https://tya-lang.org/guide/): read this first to learn Tya.
+- [Spec](https://tya-lang.org/spec/): latest Tya language specification.
+- [Versions](https://tya-lang.org/versions/): frozen historical release docs.
 
-Markdown source files are kept in `docs/` for editing. The public website uses
-the generated HTML pages under `site/`.
+The public website is built from the Jekyll source files under `docs/`.
 
 ## Language Scope
 
@@ -217,7 +216,7 @@ The current implementation on `main` includes:
   `tya new --template lib --native`
 - package-provided tools through `[tools]` and `tya tool`
 - standard library packages and APIs loaded from `stdlib/`
-- standard builtins listed in the API document
+- standard builtins listed in the specification
 - compile-to-C execution through `tya run`, `tya build`, and `tya emit-c`
 - source checking through `tya check`
 - test discovery and assertions through `tya test`
@@ -297,11 +296,12 @@ sh scripts/go_emit_examples_check.sh
 sh scripts/go_emit_args_check.sh
 ```
 
-The website is served from `site/` by GitHub Pages. Markdown source files
-are converted to static HTML pages with:
+The website is served by GitHub Pages from the Jekyll source files under
+`docs/`.
 
 ```sh
-node scripts/build_docs_pages.js
+bundle install
+bundle exec jekyll build --source docs --destination _site
 ```
 
 Before committing Go changes, format touched Go files and run the default test

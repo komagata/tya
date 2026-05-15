@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Release Notes
+permalink: /v0.48/release-notes/
+---
+
 # Tya v0.48 Release Notes
 
 > **Status:** shipped. The `tya version` constant is `0.48.0` and

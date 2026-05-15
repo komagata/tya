@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Verification Commands
+permalink: /verification/
+---
+
 # Tya Verification Command Specification
 
 This document defines the shared behavior for Tya verification commands.

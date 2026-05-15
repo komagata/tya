@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.1.0/spec/
+---
+
 # Tya v0.1 Language Spec
 
 This document is the language specification for Tya v0.1.

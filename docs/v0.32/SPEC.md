@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.32/spec/
+---
+
 # Tya v0.32 Specification — Lexer Diagnostics + Markdown Foundation
 
 Tya v0.32 advances two epics by their first foundation step:

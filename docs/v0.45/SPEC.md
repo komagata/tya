@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.45/spec/
+---
+
 # Tya v0.45 Specification
 
 This document is the frozen specification for Tya v0.45, a

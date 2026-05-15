@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.40/spec/
+---
+
 # Tya v0.40 Specification — Raw and Bytes String Extensions
 
 Tya v0.40 extends the v0.31 multi-line string foundation with two

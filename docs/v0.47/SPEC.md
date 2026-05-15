@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.47/spec/
+---
+
 # Tya v0.47 Specification
 
 > **Status:** shipped. The clean cut of the legacy v0.45 class-

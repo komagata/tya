@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.29/spec/
+---
+
 # Tya v0.29 Specification — Diagnostics Foundation
 
 Tya v0.29 lays the foundation for Elm-grade diagnostics across the

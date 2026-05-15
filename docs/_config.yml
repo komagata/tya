@@ -1,0 +1,17 @@
+title: Tya
+description: A language without hesitation.
+url: "https://tya-lang.org"
+baseurl: ""
+markdown: kramdown
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: doc
+      render_with_liquid: false
+
+exclude:
+  - archive/
+  - prd/
+  - HANDOFF.md

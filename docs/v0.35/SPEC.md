@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.35/spec/
+---
+
 # Tya v0.35 Specification — Canonical Syntax, Step 3
 
 Tya v0.35 is the third step in the multi-version landing of

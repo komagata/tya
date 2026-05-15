@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.64/spec/
+---
+
 # Tya Language Specification
 
 Status: current repository specification. This page describes the language

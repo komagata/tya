@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.3/spec/
+---
+
 # Tya v0.3 Draft Language Spec
 
 This document is the draft language specification for Tya v0.3.

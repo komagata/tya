@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Release Notes
+permalink: /v0.53/release-notes/
+---
+
 # Tya v0.53 Release Notes
 
 > **Status:** shipped. `tya version` reports `0.53.0` and

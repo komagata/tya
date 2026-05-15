@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.18/spec/
+---
+
 # Tya v0.18 Specification
 
 This document is the specification for Tya v0.18 after v0.17 import aliases and

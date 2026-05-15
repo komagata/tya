@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.42/spec/
+---
+
 # Tya v0.42 Specification
 
 This document is the in-progress specification for Tya v0.42. It is updated as

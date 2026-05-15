@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.61/spec/
+---
+
 # Tya v0.61 Specification
 
 > **Status:** released. v0.61 is the current released implementation. It

@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.14/spec/
+---
+
 # Tya v0.14 Specification
 
 This document is the specification for Tya v0.14 after v0.13 explicit

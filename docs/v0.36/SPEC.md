@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.36/spec/
+---
+
 # Tya v0.36 Specification — Canonical Syntax, Step 4
 
 Tya v0.36 is the fourth step in the multi-version landing of

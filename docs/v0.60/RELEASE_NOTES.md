@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Release Notes
+permalink: /v0.60/release-notes/
+---
+
 # Tya v0.60 Release Notes
 
 v0.60 makes Tya concurrency match the class-style direction of the standard

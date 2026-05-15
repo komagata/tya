@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Api
+permalink: /v0.1.0/api/
+---
+
 # Tya v0.1 API
 
 This document defines the standard built-in functions for Tya v0.1.

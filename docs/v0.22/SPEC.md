@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.22/spec/
+---
+
 # Tya v0.22 Specification
 
 This document is the specification for Tya v0.22 after v0.21 native-backed

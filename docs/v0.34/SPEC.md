@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.34/spec/
+---
+
 # Tya v0.34 Specification — Canonical Syntax, Step 2
 
 Tya v0.34 is the second step in the multi-version landing of

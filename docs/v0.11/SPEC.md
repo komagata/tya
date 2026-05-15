@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.11/spec/
+---
+
 # Tya v0.11 Specification
 
 This document is the specification for Tya v0.11 after v0.10 abstract methods

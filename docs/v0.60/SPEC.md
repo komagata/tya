@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.60/spec/
+---
+
 # Tya v0.60 Specification
 
 > **Status:** released. v0.60 turns the existing concurrency surface into a

@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.33/spec/
+---
+
 # Tya v0.33 Specification — Canonical Syntax, Step 1
 
 Tya v0.33 begins the multi-version push toward **Canonical Syntax**, the

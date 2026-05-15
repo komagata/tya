@@ -1,0 +1,14 @@
+<nav class="doc-nav" aria-label="Documentation">
+  {% assign lang = page.lang | default: 'en' %}
+  {% assign t = site.data.i18n[lang] | default: site.data.i18n.en %}
+  <a class="brand" href="{{ t.root | relative_url }}">
+    <img src="{{ '/assets/tya-logo.png' | relative_url }}" alt="Tya">
+    <span>Tya</span>
+  </a>
+  <div class="links">
+    <a href="{{ t.guide_url | relative_url }}">{{ t.guide }}</a>
+    <a href="{{ t.spec_url | relative_url }}">{{ t.spec }}</a>
+    <a href="{{ t.versions_url | relative_url }}">{{ t.versions }}</a>
+    <a href="{{ t.language_url | relative_url }}">{{ t.language }}</a>
+  </div>
+</nav>

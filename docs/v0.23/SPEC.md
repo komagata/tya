@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.23/spec/
+---
+
 # Tya v0.23 Specification
 
 This document is the specification for Tya v0.23 after v0.22 unit testing.

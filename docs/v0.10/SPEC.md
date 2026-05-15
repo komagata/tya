@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.10/spec/
+---
+
 # Tya v0.10 Specification
 
 This document is the specification for Tya v0.10 after v0.9 class visibility,

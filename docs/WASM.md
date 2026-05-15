@@ -1,3 +1,9 @@
+---
+layout: doc
+title: WebAssembly Targets
+permalink: /wasm/
+---
+
 # WebAssembly Targets
 
 Tya can build simple WebAssembly modules through Zig while preserving the

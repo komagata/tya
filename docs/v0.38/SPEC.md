@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.38/spec/
+---
+
 # Tya v0.38 Specification — Canonical Syntax (Landing)
 
 Tya v0.38 lands the **Canonical Syntax** described in

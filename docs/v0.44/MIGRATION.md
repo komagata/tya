@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Migration
+permalink: /v0.44/migration/
+---
+
 # Tya v0.44 Migration Guide
 
 This guide explains how to migrate Tya code from the v0.43 module

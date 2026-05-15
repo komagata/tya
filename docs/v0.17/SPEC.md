@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.17/spec/
+---
+
 # Tya v0.17 Specification
 
 This document is the specification for Tya v0.17 after v0.16 pattern matching

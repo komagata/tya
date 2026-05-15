@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.46/spec/
+---
+
 # Tya v0.46 Specification
 
 > **Status:** shipped, transitional. The new keyword surface

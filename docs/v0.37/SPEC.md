@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.37/spec/
+---
+
 # Tya v0.37 Specification — Canonical Syntax, Step 5
 
 Tya v0.37 introduces the **AST-driven canonical serializer**

@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.16/spec/
+---
+
 # Tya v0.16 Specification
 
 This document is the specification for Tya v0.16 after v0.15 structured error

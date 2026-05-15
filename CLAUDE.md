@@ -64,10 +64,10 @@ sh scripts/go_emit_examples_check.sh
 sh scripts/go_emit_args_check.sh
 ```
 
-Rebuild the static doc site (Markdown in `docs/` → HTML):
+Build the Jekyll doc site:
 
 ```sh
-node scripts/build_docs_pages.js
+bundle exec jekyll build --source docs --destination _site
 ```
 
 ## Versioning convention

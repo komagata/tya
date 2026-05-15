@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.15/spec/
+---
+
 # Tya v0.15 Specification
 
 This document is the specification for Tya v0.15 after v0.14 destructuring

@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Guide
+permalink: /guide/
+---
+
 # Tya Guide
 
 Tya is an indentation-based language that compiles to C. You write `.tya`

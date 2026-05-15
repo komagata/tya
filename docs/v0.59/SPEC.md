@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.59/spec/
+---
+
 # Tya v0.59 Specification
 
 > **Status:** shipped. The `tya version` constant is `0.59.0`.

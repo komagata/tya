@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.28/spec/
+---
+
 # Tya v0.28 Specification
 
 This document is the specification for Tya v0.28 after v0.27 hexadecimal

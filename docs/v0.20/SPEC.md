@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.20/spec/
+---
+
 # Tya v0.20 Specification
 
 This document is the specification for Tya v0.20 after v0.19 predicate names.

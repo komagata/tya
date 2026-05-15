@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Stdlib
+permalink: /v0.3/stdlib/
+---
+
 # Tya v0.3 Standard Attached Library
 
 This document defines the standard attached library for Tya v0.3.

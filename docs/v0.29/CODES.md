@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Codes
+permalink: /v0.29/codes/
+---
+
 # Tya Diagnostic Codes
 
 Every Tya diagnostic carries a stable code of the form `TYA-Xnnnn`:

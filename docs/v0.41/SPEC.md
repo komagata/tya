@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.41/spec/
+---
+
 # Tya v0.41 Specification
 
 ## Theme

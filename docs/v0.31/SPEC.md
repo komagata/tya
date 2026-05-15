@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.31/spec/
+---
+
 # Tya v0.31 Specification — Multi-line String Literals
 
 Tya v0.31 adds **triple-quoted string literals** (`"""..."""`) so that

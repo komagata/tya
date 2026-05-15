@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.44/spec/
+---
+
 # Tya v0.44 Specification
 
 This document is the specification for Tya v0.44 after v0.43 concurrency

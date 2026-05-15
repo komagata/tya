@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.26/spec/
+---
+
 # Tya v0.26 Specification
 
 This document is the specification for Tya v0.26 after v0.25 bit-level

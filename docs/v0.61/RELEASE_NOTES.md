@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Release Notes
+permalink: /v0.61/release-notes/
+---
+
 # Tya v0.61 Release Notes
 
 v0.61 is the current released implementation. It includes stackable interface

@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.30/spec/
+---
+
 # Tya v0.30 Specification — Test Coverage (Foundation)
 
 Tya v0.30 ships the **measurement foundation** for line coverage:

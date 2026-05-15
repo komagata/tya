@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Goal Tree
+permalink: /goal-tree/
+---
+
 # Goal Tree
 
 Goal Tree is a compact format for describing a hierarchical, status-tracked

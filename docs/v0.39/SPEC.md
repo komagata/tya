@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Spec
+permalink: /v0.39/spec/
+---
+
 # Tya v0.39 Specification — Canonical Syntax (Surface Cleanup)
 
 Tya v0.39 finalizes the Canonical Syntax surface that landed in

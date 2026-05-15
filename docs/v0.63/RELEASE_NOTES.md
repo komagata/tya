@@ -1,3 +1,9 @@
+---
+layout: doc
+title: Release Notes
+permalink: /v0.63/release-notes/
+---
+
 # Tya v0.63 Release Notes
 
 v0.63 advances the Tya-written self-host compiler under `selfhost/v02/` to a
