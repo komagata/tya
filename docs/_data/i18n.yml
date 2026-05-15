@@ -7,7 +7,7 @@ en:
   versions_url: /versions/
   versions: Versions
   language_url: /ja/
-  language: 日本語
+  language: Japanese
 ja:
   root: /ja/
   guide_url: /guide/
@@ -17,4 +17,4 @@ ja:
   versions_url: /versions/
   versions: バージョン
   language_url: /
-  language: English
+  language: 英語
