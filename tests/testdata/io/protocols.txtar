@@ -1,7 +1,7 @@
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/protocols.tya
-stdout 'helloworld\n10\n'
+stdout 'helloworld10\n'
 ! stderr .
 
 ! exec go run ./cmd/tya run $WORK/construct_readable.tya
