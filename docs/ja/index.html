@@ -242,26 +242,27 @@ render_with_liquid: false
             }
 
             .command-list pre,
-            .install-one-liner pre,
             .tab-panel pre {
                 border: 1px solid var(--line);
                 border-radius: 6px;
             }
 
-            .install-one-liner {
+            .install-method {
                 display: grid;
                 gap: 8px;
-                border: 1px solid var(--line);
-                border-radius: 7px;
-                background: var(--panel);
-                padding: 18px;
-                margin-bottom: 16px;
             }
 
-            .install-one-liner p {
+            .install-method + .install-method {
+                margin-top: 18px;
+                border-top: 1px solid var(--line);
+                padding-top: 18px;
+            }
+
+            .install-method h3 {
                 margin: 0;
-                color: var(--muted);
-                font-size: 14px;
+                color: var(--ink);
+                font-size: 15px;
+                line-height: 1.3;
             }
 
             .install-tabs input {
@@ -661,10 +662,6 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                         <div class="section-title">
                             <h2>インストール</h2>
                         </div>
-                        <div class="install-one-liner">
-                            <p>macOS または Linux に最新リリースをインストールします。</p>
-                            <pre><code>curl -fsSL https://tya-lang.org/install.sh | sh</code></pre>
-                        </div>
                         <div class="install-tabs">
                             <input
                                 id="install-mac"
@@ -702,7 +699,20 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                                     class="tab-panel mac-panel"
                                     role="tabpanel"
                                 >
-                                    <pre><code>brew install komagata/tap/tya</code></pre>
+                                    <div class="install-method">
+                                        <h3>Homebrew</h3>
+                                        <p class="install-note">
+                                            native の <code>tya run</code> と <code>tya build</code> には C コンパイラが必要です。WebAssembly target には Zig が必要です。
+                                        </p>
+                                        <pre><code>brew install komagata/tap/tya</code></pre>
+                                    </div>
+                                    <div class="install-method">
+                                        <h3>Shell installer</h3>
+                                        <p class="install-note">
+                                            最新リリースを <code>$HOME/.local</code> にインストールします。native build には C コンパイラ、WebAssembly target には Zig が必要です。
+                                        </p>
+                                        <pre><code>curl -fsSL https://tya-lang.org/install.sh | sh</code></pre>
+                                    </div>
                                 </div>
 
                                 <div
@@ -710,13 +720,9 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                                     role="tabpanel"
                                 >
                                     <p class="install-note">
-                                        リリースソースをダウンロードし、<code>tya</code>
-                                        コマンドをローカルでビルドします。
+                                        最新リリースを <code>$HOME/.local</code> にインストールします。native build には C コンパイラ、WebAssembly target には Zig が必要です。
                                     </p>
-                                    <pre><code>curl -L https://github.com/komagata/tya/archive/refs/tags/v0.64.0.tar.gz | tar xz
-cd tya-0.64.0
-go build -o tya ./cmd/tya
-./tya version</code></pre>
+                                    <pre><code>curl -fsSL https://tya-lang.org/install.sh | sh</code></pre>
                                 </div>
 
                                 <div
@@ -724,14 +730,9 @@ go build -o tya ./cmd/tya
                                     role="tabpanel"
                                 >
                                     <p class="install-note">
-                                        リリースソースをダウンロードし、<code>tya</code>
-                                        コマンドをローカルでビルドします。
+                                        PowerShell で最新リリースをインストールします。native build には C コンパイラ、WebAssembly target には Zig が必要です。
                                     </p>
-                                    <pre><code>curl.exe -L https://github.com/komagata/tya/archive/refs/tags/v0.64.0.tar.gz -o tya-v0.64.0.tar.gz
-tar.exe xzf tya-v0.64.0.tar.gz
-cd tya-0.64.0
-go build -o tya.exe ./cmd/tya
-.\tya.exe version</code></pre>
+                                    <pre><code>irm https://tya-lang.org/install.ps1 | iex</code></pre>
                                 </div>
                             </div>
                         </div>

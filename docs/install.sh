@@ -65,3 +65,20 @@ tar -xzf "$tmp/$package.tar.gz" -C "$tmp"
 )
 
 "$prefix/bin/tya" version
+
+if ! command -v cc >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+warning: no C compiler named "cc" was found in PATH.
+tya was installed, but native `tya run` and `tya build` require a C compiler.
+
+macOS:   install Xcode Command Line Tools with `xcode-select --install`
+Linux:   install your distribution's build-essential/clang package
+EOF
+fi
+
+if ! command -v zig >/dev/null 2>&1; then
+  cat >&2 <<'EOF'
+note: Zig was not found in PATH.
+WebAssembly targets (`wasm32-wasi` and `wasm32-browser`) require Zig.
+EOF
+fi
