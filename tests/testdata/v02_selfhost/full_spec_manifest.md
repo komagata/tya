@@ -17,8 +17,9 @@ implementation until the later Go-removal phase.
 - Current front-end/checker/emitter surface: `parser_current_surface.txtar`
   exercises current imports, reserved words, interfaces, class modifiers,
   control syntax, embed syntax, string forms, lambdas, predicate names,
-  bitwise parsing, checker accepts/rejects, selected current runtime emission,
-  and deterministic unsupported-codegen failures.
+  bitwise parsing, latest lexical-closure and iterable parser forms, standard
+  protocol interface source files, checker accepts/rejects, selected current
+  runtime emission, and deterministic unsupported-codegen failures.
 
 ## Excluded Until Later Phases
 

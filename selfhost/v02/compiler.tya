@@ -1144,7 +1144,7 @@ class_body_start = tokens, index ->
 interface_body_start = tokens, index ->
   next = index + 2
   parents = []
-  if token_text(tokens[next]) == "extends"
+  if token_text(tokens[next]) == "extends" or token_text(tokens[next]) == "implements"
     next = next + 1
     while token_kind(tokens[next]) == "IDENT"
       parents.push(token_text(tokens[next]))
@@ -1638,6 +1638,7 @@ parse_simple_block = tokens, index ->
       after_iterable = record_block_header_error(tokens, after_iterable)
       body, after_stmt = parse_loop_body_block(tokens, after_iterable)
       stmt = for_stmt(value_name, index_name, loop_kind, iterable)
+      stmt["line"] = token_line(current)
       stmt["body"] = body
       statements.push(stmt)
       next = after_stmt
@@ -1934,6 +1935,7 @@ parse_statement = tokens, index ->
     after_iterable = record_block_header_error(tokens, after_iterable)
     body, next = parse_loop_body_block(tokens, after_iterable)
     stmt = for_stmt(value_name, index_name, loop_kind, iterable)
+    stmt["line"] = token_line(current)
     stmt["body"] = body
     return stmt, next
   return parse_simple_statement(tokens, index)

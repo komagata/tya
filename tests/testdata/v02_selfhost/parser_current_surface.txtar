@@ -44,8 +44,28 @@ exec $WORK/stage1 --ast $WORK/lambda.tya
 stdout '1: assign add = func 2 expr binary \+\n2: assign square = func 1 expr binary \*\n'
 ! stderr .
 
+exec $WORK/stage1 --ast $WORK/latest_closure_iterable.tya
+stdout '1: assign make_counter = func 1 block 3\n7: assign items = array 3\n8: for\n'
+! stderr .
+
 exec $WORK/stage1 --ast $WORK/predicate_bitwise.tya
 stdout '1: assign empty? = func 1 expr binary ==\n2: expr_stmt call ident print 1\n3: assign mask = binary \\|\n4: assign shifted = binary >>\n'
+! stderr .
+
+exec $WORK/stage1 --ast stdlib/comparable.tya
+stdout '1: interface Comparable methods 1 fields 0\n'
+! stderr .
+
+exec $WORK/stage1 --ast stdlib/equatable.tya
+stdout '1: interface Equatable methods 1 fields 0\n'
+! stderr .
+
+exec $WORK/stage1 --ast stdlib/stringable.tya
+stdout '1: interface Stringable methods 1 fields 0\n'
+! stderr .
+
+exec $WORK/stage1 --ast stdlib/sequence.tya
+stdout '1: interface Sequence methods 7 fields 0\n'
 ! stderr .
 
 exec $WORK/stage1 --ast $WORK/heredoc.tya
@@ -154,6 +174,17 @@ tagged = sql"""select 1"""
 -- lambda.tya --
 add = (a, b) -> a + b
 square = (x) -> x * x
+
+-- latest_closure_iterable.tya --
+make_counter = start ->
+  count = start
+  step = delta ->
+    count + delta
+  step
+
+items = [1, 2, 3]
+for item in items.map(x -> x + 1).filter(x -> x > 1)
+  print(item)
 
 -- predicate_bitwise.tya --
 empty? = values -> values.len() == 0
