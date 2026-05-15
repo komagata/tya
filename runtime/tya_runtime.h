@@ -120,6 +120,7 @@ TyaValue tya_upcase(TyaValue text);
 TyaValue tya_downcase(TyaValue text);
 bool tya_equal(TyaValue left, TyaValue right);
 TyaValue tya_deep_equal(TyaValue left, TyaValue right);
+TyaValue tya_compare(TyaValue left, TyaValue right);
 TyaValue tya_add(TyaValue left, TyaValue right);
 TyaValue tya_and(TyaValue left, TyaValue right);
 TyaValue tya_or(TyaValue left, TyaValue right);

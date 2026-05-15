@@ -76,6 +76,23 @@ dictionaries with `key` and `value` fields. Use `dict.keys()` or
 compatibility, but `for entry in dict` is the preferred dictionary traversal
 form.
 
+## Comparable Protocol
+
+`Comparable` is the standard interface for values that provide total ordering
+through `compare(other)`.
+
+```tya
+interface Comparable
+  compare = other ->
+```
+
+`compare(other)` returns a negative number, zero, or a positive number when the
+receiver sorts before, equal to, or after `other`. Default methods derive
+`lt?`, `lte?`, `gt?`, `gte?`, and `between?` from `compare`. Primitive numbers
+and strings expose the same methods without changing their primitive
+representation. Ordering operators do not dispatch to user-defined `compare`;
+classes call `compare` or the predicate methods explicitly.
+
 ## `net/http`
 
 ```tya

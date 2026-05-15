@@ -429,6 +429,13 @@ Interface conflict rules are strict:
 Interfaces declared in class files are exported as package public names unless
 their names begin with `_`.
 
+`Comparable` is the standard ordering protocol. A class implements it by
+providing `compare(other)`, which returns a negative number, zero, or a
+positive number when the receiver sorts before, equal to, or after `other`.
+Numbers and strings conform to `Comparable` as primitive values. The ordering
+operators `<`, `<=`, `>`, and `>=` keep their existing primitive behavior and
+do not dispatch to user-defined `compare`.
+
 ## Expressions
 
 Expressions compute values.

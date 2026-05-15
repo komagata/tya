@@ -1,0 +1,62 @@
+# Comparable interface defaults and primitive methods.
+cd $REPO
+
+exec go run ./cmd/tya check stdlib/comparable.tya
+
+exec go run ./cmd/tya run $WORK/defaults.tya
+stdout 'true\ntrue\ntrue\ntrue\ntrue\n'
+
+! exec go run ./cmd/tya check $WORK/missing_compare.tya
+stderr 'class Box must implement interface method compare'
+
+exec go run ./cmd/tya run $WORK/primitives.tya
+stdout '-1\n1\ntrue\ntrue\ntrue\ntrue\n'
+
+-- defaults.tya --
+interface Comparable
+  compare = other ->
+
+  lt? = other ->
+    self.compare(other) < 0
+
+  lte? = other ->
+    self.compare(other) <= 0
+
+  gt? = other ->
+    self.compare(other) > 0
+
+  gte? = other ->
+    self.compare(other) >= 0
+
+  between? = min, max ->
+    self.gte?(min) and self.lte?(max)
+
+class Box implements Comparable
+  initialize = value ->
+    self.value = value
+
+  compare = other ->
+    self.value - other.value
+
+box = Box(2)
+print(box.lt?(Box(3)))
+print(box.lte?(Box(2)))
+print(box.gt?(Box(1)))
+print(box.gte?(Box(2)))
+print(box.between?(Box(1), Box(3)))
+
+-- missing_compare.tya --
+interface Comparable
+  compare = other ->
+
+class Box implements Comparable
+  initialize = value ->
+    self.value = value
+
+-- primitives.tya --
+print(1.compare(2))
+print("b".compare("a"))
+print(1.lt?(2))
+print(2.gte?(2))
+print("a".lte?("b"))
+print("b".between?("a", "c"))

@@ -1588,7 +1588,7 @@ func checkInterface(iface *ast.InterfaceDecl, scope *scope, module string) error
 	key := refKey(&ast.ClassRef{Name: iface.Name, Tok: iface.NameTok}, module, scope)
 	seen := map[string]bool{}
 	for _, method := range iface.Methods {
-		if !valueNameRE.MatchString(method.Name) || isPrivateName(method.Name) {
+		if !validCallableName(method.Name) || isPrivateName(method.Name) {
 			return fmt.Errorf("%d:%d: invalid interface method %s", method.Tok.Line, method.Tok.Col, method.Name)
 		}
 		if seen[method.Name] {

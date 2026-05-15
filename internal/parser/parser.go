@@ -762,7 +762,7 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 		if p.at(token.IDENT) && p.peek().Lexeme == "static" {
 			return nil, p.err("interface bodies may only contain instance method requirements")
 		}
-		methodName, err := p.expectName("expected interface method name")
+		methodName, err := p.expectCallableName("expected interface method name")
 		if err != nil {
 			return nil, err
 		}

@@ -149,6 +149,12 @@ Strings expose text helpers:
 "abc".present?()
 "abc".iter()
 "abc".sequence()
+"abc".compare(other)
+"abc".lt?(other)
+"abc".lte?(other)
+"abc".gt?(other)
+"abc".gte?(other)
+"abc".between?(min, max)
 ```
 
 Arrays expose sequence helpers:
@@ -212,6 +218,12 @@ n.pow(2)
 n.integer?()
 n.finite?()
 n.nan?()
+n.compare(other)
+n.lt?(other)
+n.lte?(other)
+n.gt?(other)
+n.gte?(other)
+n.between?(min, max)
 ```
 
 ## Errors

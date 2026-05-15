@@ -129,6 +129,12 @@ static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, Ty
 static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_compare(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_lt_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_lte_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_gt_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_gte_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_between_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_abs(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_floor(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_ceil(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -1559,6 +1565,22 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
     return left.resource == right.resource;
   }
   return false;
+}
+
+TyaValue tya_compare(TyaValue left, TyaValue right) {
+  if (left.kind == TYA_NUMBER && right.kind == TYA_NUMBER) {
+    if (left.number < right.number) return tya_number(-1);
+    if (left.number > right.number) return tya_number(1);
+    return tya_number(0);
+  }
+  if (left.kind == TYA_STRING && right.kind == TYA_STRING && left.string != NULL && right.string != NULL) {
+    int result = strcmp(left.string, right.string);
+    if (result < 0) return tya_number(-1);
+    if (result > 0) return tya_number(1);
+    return tya_number(0);
+  }
+  tya_raise(tya_string("compare: values are not comparable"));
+  return tya_nil();
 }
 
 TyaValue tya_add(TyaValue left, TyaValue right) {
@@ -3095,6 +3117,12 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
     if (strcmp(key, "to_i") == 0) return tya_bind_method(receiver, tya_method_to_i);
     if (strcmp(key, "to_f") == 0 || strcmp(key, "to_number") == 0) return tya_bind_method(receiver, tya_method_to_f);
+    if (strcmp(key, "compare") == 0) return tya_bind_method(receiver, tya_method_compare);
+    if (strcmp(key, "lt?") == 0) return tya_bind_method(receiver, tya_method_lt_p);
+    if (strcmp(key, "lte?") == 0) return tya_bind_method(receiver, tya_method_lte_p);
+    if (strcmp(key, "gt?") == 0) return tya_bind_method(receiver, tya_method_gt_p);
+    if (strcmp(key, "gte?") == 0) return tya_bind_method(receiver, tya_method_gte_p);
+    if (strcmp(key, "between?") == 0) return tya_bind_method(receiver, tya_method_between_p);
     if (strcmp(key, "abs") == 0) return tya_bind_method(receiver, tya_method_abs);
     if (strcmp(key, "floor") == 0) return tya_bind_method(receiver, tya_method_floor);
     if (strcmp(key, "ceil") == 0) return tya_bind_method(receiver, tya_method_ceil);
@@ -3132,6 +3160,12 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
     if (strcmp(key, "to_i") == 0) return tya_bind_method(receiver, tya_method_to_i);
     if (strcmp(key, "to_f") == 0 || strcmp(key, "to_number") == 0) return tya_bind_method(receiver, tya_method_to_f);
+    if (strcmp(key, "compare") == 0) return tya_bind_method(receiver, tya_method_compare);
+    if (strcmp(key, "lt?") == 0) return tya_bind_method(receiver, tya_method_lt_p);
+    if (strcmp(key, "lte?") == 0) return tya_bind_method(receiver, tya_method_lte_p);
+    if (strcmp(key, "gt?") == 0) return tya_bind_method(receiver, tya_method_gt_p);
+    if (strcmp(key, "gte?") == 0) return tya_bind_method(receiver, tya_method_gte_p);
+    if (strcmp(key, "between?") == 0) return tya_bind_method(receiver, tya_method_between_p);
     if (strcmp(key, "upper") == 0) return tya_bind_method(receiver, tya_method_upper);
     if (strcmp(key, "lower") == 0) return tya_bind_method(receiver, tya_method_lower);
     if (strcmp(key, "blank?") == 0) return tya_bind_method(receiver, tya_method_blank_p);
@@ -3225,6 +3259,12 @@ static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, Ty
 static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_string(receiver); }
 static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_int(receiver); }
 static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_number(receiver); }
+static TyaValue tya_method_compare(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_compare(receiver, other); }
+static TyaValue tya_method_lt_p(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_bool(tya_compare(receiver, other).number < 0); }
+static TyaValue tya_method_lte_p(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_bool(tya_compare(receiver, other).number <= 0); }
+static TyaValue tya_method_gt_p(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_bool(tya_compare(receiver, other).number > 0); }
+static TyaValue tya_method_gte_p(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_bool(tya_compare(receiver, other).number >= 0); }
+static TyaValue tya_method_between_p(TyaValue receiver, TyaValue min, TyaValue max, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_bool(tya_compare(receiver, min).number >= 0 && tya_compare(receiver, max).number <= 0); }
 static TyaValue tya_method_abs(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_number(fabs(receiver.number)); }
 static TyaValue tya_method_floor(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_floor(receiver); }
 static TyaValue tya_method_ceil(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_math_ceil(receiver); }
