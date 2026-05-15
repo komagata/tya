@@ -187,11 +187,6 @@ print(["tya"].first())
 
 - [Guide](https://tya-lang.org/guide.html): read this first to learn Tya.
 - [Spec](https://tya-lang.org/spec.html): latest Tya language specification.
-- [API](https://tya-lang.org/api.html): latest built-in function reference.
-- [Stdlib](https://tya-lang.org/stdlib.html): standard library reference.
-- [Lint](https://tya-lang.org/lint.html): lint rules, opt-outs, and output
-  formats.
-- [Naming](https://tya-lang.org/naming.html): naming rules.
 - [Roadmap](https://tya-lang.org/roadmap.html): current remaining-work plan.
 
 Markdown source files are kept in `docs/` for editing. The public website uses

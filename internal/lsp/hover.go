@@ -41,7 +41,7 @@ func HoverAt(doc *Document, line, character int) (*Hover, error) {
 	}
 	if isBuiltinName(id.Name) {
 		return &Hover{
-			Contents: MarkupContent{Kind: MarkupMarkdown, Value: fmt.Sprintf("```tya\n%s(…)\n```\n\nBuilt-in function. See [API](https://tya-lang.org/api.html).", id.Name)},
+			Contents: MarkupContent{Kind: MarkupMarkdown, Value: fmt.Sprintf("```tya\n%s(…)\n```\n\nBuilt-in function. See [Spec](https://tya-lang.org/spec.html).", id.Name)},
 			Range:    rangePtr(rangeAt(id.Tok.Line, id.Tok.Col, len(id.Name))),
 		}, nil
 	}

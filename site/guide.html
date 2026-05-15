@@ -16,32 +16,34 @@
       <div class="links">
         <a href="guide.html">Guide</a>
         <a href="spec.html">Spec</a>
-        <a href="api.html">API</a>
-        <a href="stdlib.html">Stdlib</a>
-        <a href="libraries.html">Libraries</a>
-        <a href="lint.html">Lint</a>
-        <a href="naming.html">Naming</a>
         <a href="roadmap.html">Roadmap</a>
       </div>
     </nav>
     <article class="doc-content">
 <h1 id="tya-guide">Tya Guide</h1>
-<p>Tya is an indentation-based, dynamically typed language that compiles to C. The toolchain is intentionally all-in-one: the same <code>tya</code> command checks, formats, builds, runs, tests, documents, and manages packages.</p>
-<p>This guide shows the current language surface used by the latest repository state. Historical release snapshots live under <code>docs/vX.Y/</code>.</p>
-<h2 id="run-a-program">Run A Program</h2>
+<p>Tya is an indentation-based language that compiles to C. You write <code>.tya</code> files and use one command, <code>tya</code>, to run, build, format, test, document, and manage packages.</p>
+<p>For exact language rules, read <code>docs/SPEC.md</code>. This guide is the practical starting point.</p>
+<h2 id="first-program">First Program</h2>
 <p>Create <code>hello.tya</code>.</p>
 <pre><code class="language-tya">print(&quot;Hello, Tya&quot;)</code></pre>
-<p>Run it during development:</p>
+<p>Run it:</p>
 <pre><code class="language-sh">tya run hello.tya</code></pre>
-<p>Build a reusable executable:</p>
+<p>Build an executable:</p>
 <pre><code class="language-sh">tya build hello.tya -o hello
 ./hello</code></pre>
-<p>Useful commands:</p>
+<p>Useful everyday commands:</p>
 <pre><code class="language-sh">tya check hello.tya
 tya format -w hello.tya
-tya emit-c hello.tya
 tya test
+tya lint
 tya version</code></pre>
+<h2 id="files">Files</h2>
+<p>Lowercase files are scripts. They can be run and imported.</p>
+<pre><code class="language-text">main.tya
+greeting.tya</code></pre>
+<p>PascalCase files are class files. They are library files, not entry scripts.</p>
+<pre><code class="language-text">User.tya
+HttpClient.tya</code></pre>
 <h2 id="values">Values</h2>
 <pre><code class="language-tya">name = &quot;Tya&quot;
 age = 1
@@ -49,7 +51,7 @@ pi = 3.14
 ready = true
 missing = nil
 data = b&quot;abc&quot;</code></pre>
-<p>Strings support interpolation:</p>
+<p>Strings use interpolation:</p>
 <pre><code class="language-tya">print(&quot;Hello, {name}&quot;)</code></pre>
 <p>Arrays and dictionaries are mutable:</p>
 <pre><code class="language-tya">items = [1, 2]
@@ -59,68 +61,74 @@ print(items[0])
 user = { name: &quot;komagata&quot;, age: 20 }
 print(user[&quot;name&quot;])
 user[&quot;admin&quot;] = true</code></pre>
-<p>Primitive values expose methods:</p>
+<p>Primitive values have methods:</p>
 <pre><code class="language-tya">print(&quot; tya &quot;.trim().upper())
 print([1, 2, 3].len())
 print(user.keys())
 print(value.to_s())
 print(value.class)</code></pre>
 <h2 id="names">Names</h2>
-<p>Use <code>snake_case</code> for variables, functions, methods, imports, and dictionary keys. Use <code>PascalCase</code> for classes and interfaces. Use <code>SCREAMING_SNAKE_CASE</code> for constants.</p>
+<p>Use <code>snake_case</code> for values, functions, methods, files, imports, and dictionary keys. Use <code>PascalCase</code> for classes and interfaces. Use <code>SCREAMING_SNAKE_CASE</code> for constants.</p>
 <pre><code class="language-tya">user_name = &quot;komagata&quot;
 MAX_COUNT = 10
 
 class UserProfile
   initialize = name -&gt;
     self.name = name</code></pre>
-<p>See <code>docs/NAMING.md</code> for the full naming rules.</p>
-<h2 id="conditions">Conditions</h2>
+<p>Leading <code>_</code> does not make a binding private. For class members, use <code>private</code>.</p>
+<h2 id="control-flow">Control Flow</h2>
 <pre><code class="language-tya">if age &gt;= 20
   print(&quot;adult&quot;)
 elseif age &gt;= 13
   print(&quot;teen&quot;)
 else
   print(&quot;young&quot;)</code></pre>
-<p>Use <code>and</code>, <code>or</code>, and <code>not</code> for logic.</p>
-<pre><code class="language-tya">if ready and not missing
+<p>Use <code>and</code>, <code>or</code>, and <code>not</code>.</p>
+<pre><code class="language-tya">if ready and not disabled
   print(&quot;ok&quot;)</code></pre>
-<h2 id="loops">Loops</h2>
+<p>Loops:</p>
 <pre><code class="language-tya">count = 0
 while count &lt; 3
   print(count)
-  count = count + 1</code></pre>
-<pre><code class="language-tya">items = [&quot;a&quot;, &quot;b&quot;]
+  count = count + 1
 
+items = [&quot;a&quot;, &quot;b&quot;]
 for item in items
   print(item)
 
 for item, index in items
   print(&quot;{index}: {item}&quot;)</code></pre>
-<p>Use <code>of</code> to iterate dictionary keys and values.</p>
+<p>Dictionaries can be iterated as entries:</p>
 <pre><code class="language-tya">user = { name: &quot;komagata&quot;, age: 20 }
 
-for key, value of user
-  print(&quot;{key}: {value}&quot;)</code></pre>
-<p><code>break</code> and <code>continue</code> are available inside loops.</p>
+for entry in user
+  print(&quot;{entry[&quot;key&quot;]}: {entry[&quot;value&quot;]}&quot;)</code></pre>
+<p><code>break</code> exits the nearest loop. <code>continue</code> skips to the next iteration.</p>
 <h2 id="functions">Functions</h2>
-<p>Functions use <code>-&gt;</code>. Calls use parentheses.</p>
+<p>Functions use <code>-&gt;</code>. Calls always use parentheses.</p>
 <pre><code class="language-tya">greet = name -&gt; &quot;Hello, {name}&quot;
 
 print(greet(&quot;Tya&quot;))</code></pre>
-<p>Use an indented body for multiple statements. The last expression is returned implicitly.</p>
+<p>Use an indented body for multiple statements. The final expression is returned.</p>
 <pre><code class="language-tya">double = value -&gt;
   result = value * 2
   result</code></pre>
-<p>Use <code>return</code> for early returns or multiple return values.</p>
+<p>Use <code>return</code> for early return or multiple return values.</p>
 <pre><code class="language-tya">parse_user = text -&gt;
   if text == &quot;&quot;
     return nil, error(&quot;empty user&quot;)
   return { name: text }, nil</code></pre>
-<p>Anonymous functions can be passed directly.</p>
+<p>Functions are values, so they can be passed to other functions.</p>
 <pre><code class="language-tya">items = [1, 2, 3]
 print(items.map(item -&gt; item * 2))</code></pre>
-<h2 id="errors-and-try">Errors And <code>try</code></h2>
-<p>Tya has structured error handling with <code>raise</code>, <code>try</code>, and <code>catch</code>.</p>
+<p>Closures can read values from the outer function.</p>
+<pre><code class="language-tya">make_adder = base -&gt;
+  value -&gt; base + value
+
+add_two = make_adder(2)
+print(add_two(3))</code></pre>
+<h2 id="errors">Errors</h2>
+<p>Use <code>raise</code>, <code>try</code>, and <code>catch</code>.</p>
 <pre><code class="language-tya">read_name = path -&gt;
   text = read_file(path)
   if text == &quot;&quot;
@@ -131,16 +139,15 @@ try
   print(read_name(&quot;name.txt&quot;))
 catch err
   print(&quot;error: {err}&quot;)</code></pre>
-<p><code>try</code> can also wrap an expression inside a function body:</p>
+<p><code>try</code> can also be an expression inside a function.</p>
 <pre><code class="language-tya">load_user = path -&gt;
   try
     text = read_file(path)
     { name: text.trim() }
   catch err
     { name: &quot;guest&quot; }</code></pre>
-<p>For APIs that return <code>value, err</code>, destructure both values explicitly.</p>
 <h2 id="classes">Classes</h2>
-<p>Classes are ordinary runtime values. Constructors use <code>initialize</code>.</p>
+<p>Classes are runtime values. <code>initialize</code> is the constructor hook.</p>
 <pre><code class="language-tya">class User
   initialize = name -&gt;
     self.name = name
@@ -150,7 +157,13 @@ catch err
 
 user = User(&quot;komagata&quot;)
 print(user.label())</code></pre>
-<p>Tya supports single class inheritance, <code>super(args...)</code>, private members, abstract classes, final classes, class variables, class methods, and runtime class inspection.</p>
+<p>Use <code>private</code> for private class members.</p>
+<pre><code class="language-tya">class User
+  private id = 0
+
+  private normalize = -&gt;
+    self.id.to_s()</code></pre>
+<p>Inheritance uses <code>extends</code>; parent behavior is called with <code>super(...)</code>.</p>
 <pre><code class="language-tya">class Admin extends User
   initialize = name -&gt;
     super(name)
@@ -158,31 +171,22 @@ print(user.label())</code></pre>
   label = -&gt;
     &quot;admin:{self.name}&quot;</code></pre>
 <h2 id="interfaces">Interfaces</h2>
-<p>Interfaces are explicit. They can declare requirements and provide stackable behavior through default methods, fields, and zero-argument initializer hooks.</p>
-<pre><code class="language-tya">import time as time
-
-interface Named
+<p>Interfaces are explicit contracts. Classes opt in with <code>implements</code>.</p>
+<pre><code class="language-tya">interface Named
   name = -&gt;
 
   label = -&gt;
     self.name()
 
-interface Timestamped
-  created_at = nil
-
-  initialize = -&gt;
-    self.created_at = time.Time.now()
-
-class Account implements Named, Timestamped
+class Account implements Named
   initialize = name -&gt;
     self.name_value = name
-    super()
 
   name = -&gt;
     self.name_value</code></pre>
-<p>Classes list implemented interfaces explicitly with <code>implements</code>.</p>
-<h2 id="imports-and-packages">Imports And Packages</h2>
-<p>Import another <code>.tya</code> file from the same directory:</p>
+<p>Interfaces can also provide default methods, fields, and zero-argument initializer hooks. Standard interfaces include <code>Comparable</code>, <code>Equatable</code>, <code>Stringable</code>, <code>Iterator</code>, <code>Iterable</code>, <code>Sequence</code>, <code>Readable</code>, <code>Writable</code>, <code>Closable</code>, <code>Flushable</code>, and <code>Serializable</code>.</p>
+<h2 id="imports">Imports</h2>
+<p>Import a sibling file:</p>
 <pre><code class="language-tya">import greeting
 
 print(greeting.hello(&quot;komagata&quot;))</code></pre>
@@ -191,27 +195,61 @@ hello = name -&gt; &quot;Hello, {name}&quot;</code></pre>
 <p>Use aliases for namespaces:</p>
 <pre><code class="language-tya">import net/http as http
 
-app = http.Server()</code></pre>
-<p>Directory packages expose public class and interface names directly when they are imported without an alias:</p>
+server = http.Server()</code></pre>
+<p>Directory packages expose public class and interface names directly when imported without an alias:</p>
 <pre><code class="language-tya">import net/http
 
-app = Server()</code></pre>
-<p>Project dependencies live in <code>tya.toml</code>, are resolved into <code>tya.lock</code>, and are installed with <code>tya install</code>. Git and local path dependencies are supported.</p>
+server = Server()</code></pre>
+<h2 id="packages">Packages</h2>
+<p>Projects use <code>tya.toml</code> for dependencies and <code>tya.lock</code> for resolved versions.</p>
+<pre><code class="language-sh">tya install
+tya add https://github.com/komagata/tya-sqlite --tag v0.1.0
+tya update
+tya outdated</code></pre>
+<p>Git and local path dependencies are supported. There is no central package registry.</p>
+<h2 id="testing-and-linting">Testing And Linting</h2>
+<p>Run tests:</p>
+<pre><code class="language-sh">tya test
+tya test tests
+tya test --cover</code></pre>
+<p>Show coverage:</p>
+<pre><code class="language-sh">tya cover
+tya cover --format=json</code></pre>
+<p>Run lint:</p>
+<pre><code class="language-sh">tya lint
+tya lint --fix src</code></pre>
+<p>Lint warnings are project-policy warnings. Compile-time validity is checked by <code>tya check</code>.</p>
+<h2 id="formatting">Formatting</h2>
+<p><code>tya format</code> prints canonical Tya source. <code>-w</code> rewrites files.</p>
+<pre><code class="language-sh">tya format src/main.tya
+tya format -w src tests</code></pre>
+<p>Formatting is part of the language: there is one canonical source representation for each well-formed program.</p>
 <h2 id="concurrency">Concurrency</h2>
-<p>Use <code>spawn</code> to start a lightweight task and <code>await</code> to receive its result.</p>
+<p>Use <code>spawn</code> to start a task and <code>await</code> to receive its result.</p>
 <pre><code class="language-tya">worker = value -&gt;
   value * 2
 
 task = spawn worker(21)
 print(await task)</code></pre>
-<p><code>scope</code> waits for tasks spawned inside it. Channels and sync primitives are in the standard library.</p>
+<p><code>scope</code> waits for tasks spawned inside it before leaving the block.</p>
+<pre><code class="language-tya">scope
+  task = spawn worker(21)
+  print(await task)</code></pre>
+<p>Channels and sync primitives are in the standard library.</p>
+<h2 id="cross-compilation">Cross Compilation</h2>
+<p><code>tya build</code> can target native and WebAssembly outputs.</p>
+<pre><code class="language-sh">tya build --target native src/main.tya -o app
+tya build --target wasm32-wasi examples/wasm/hello.tya -o hello.wasm
+tya build --target wasm32-browser examples/wasm/hello.tya -o hello.wasm
+tya doctor wasm</code></pre>
+<p><code>tya run</code> is native-only.</p>
 <h2 id="standard-library">Standard Library</h2>
-<p>The standard library is documented in <code>docs/STDLIB.md</code>. Common packages include <code>json</code>, <code>toml</code>, <code>csv</code>, <code>url</code>, <code>time</code>, <code>random</code>, <code>math</code>, <code>file</code>, <code>dir</code>, <code>path</code>, <code>process</code>, <code>unittest</code>, <code>template</code>, <code>markdown</code>, <code>compress</code>, <code>log</code>, <code>io</code>, <code>net/ip</code>, <code>net/socket</code>, and <code>net/http</code>.</p>
+<p>Common packages include <code>json</code>, <code>toml</code>, <code>csv</code>, <code>url</code>, <code>time</code>, <code>random</code>, <code>math</code>, <code>file</code>, <code>path</code>, <code>unittest</code>, <code>template</code>, <code>markdown</code>, <code>compress</code>, <code>log</code>, <code>io</code>, <code>net/ip</code>, <code>net/socket</code>, <code>net/http</code>, <code>channel</code>, <code>sync</code>, and <code>task</code>.</p>
 <pre><code class="language-tya">import net/http as http
 
 resp = http.Client.get(&quot;http://example.test/&quot;)
 print(resp[&quot;status&quot;])</code></pre>
-<p>Built-in functions are documented in <code>docs/API.md</code>.</p>
+<p>Built-in functions and standard-library packages are specified in <code>docs/SPEC.md</code>.</p>
     </article>
   </main>
 </body>

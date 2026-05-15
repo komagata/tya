@@ -29,7 +29,7 @@ import (
 
 // Unparse renders prog as canonical Tya source. When prog was
 // produced by parser.ParseWithComments, header and per-statement
-// comments are emitted per docs/CANONICAL_SYNTAX.md §3.
+// comments are emitted per docs/SPEC.md Canonical Syntax.
 //
 // Top-level statements follow the §3.5 / §8.4 normalization rules:
 // imports are sorted alphabetically and grouped (stdlib first, then

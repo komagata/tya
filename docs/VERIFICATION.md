@@ -4,8 +4,7 @@ This document defines the shared behavior for Tya verification commands.
 
 Verification commands inspect source code and report whether it satisfies a
 specific contract. They do not define language syntax by themselves. Language
-syntax remains defined by `docs/SPEC.md`, and standard-library behavior remains
-defined by `docs/STDLIB.md`.
+syntax and standard-library behavior remain defined by `docs/SPEC.md`.
 
 ## Command Scope
 

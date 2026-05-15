@@ -19,26 +19,36 @@ Tya's user-facing commitments are:
 - structured diagnostics with stable codes;
 - a maintained self-hosting path.
 
-This document specifies the language. Built-in functions are listed in
-`docs/API.md`. Standard-library packages and APIs are listed in
-`docs/STDLIB.md`.
-Reusable user libraries and packages are described in `docs/LIBRARIES.md`.
-Canonical formatting details are described in `docs/CANONICAL_SYNTAX.md`.
+This document specifies the language, built-in function surface,
+standard-library surface, package rules, and tool surface.
 
 ## Notation
 
 Examples use ordinary Tya source. Grammar fragments are illustrative rather
-than a complete parser grammar. Names in examples follow `docs/NAMING.md`.
+than a complete parser grammar.
 
 ```text
 snake_case            variable, function, method, import path segment
-_snake_case           file-private top-level binding in importable files
 SCREAMING_SNAKE_CASE  constant
 PascalCase            class and interface
 ```
 
 The words "must", "must not", "may", and "should" are normative when they
 describe program validity or implementation behavior.
+
+## Naming
+
+Tya names express naming category, not accessibility. Accessibility is
+expressed by language constructs such as `private`.
+
+Value names, function names, method names, file names, import path segments,
+and dictionary keys use `snake_case`. Constants use `SCREAMING_SNAKE_CASE`.
+Classes and interfaces use `PascalCase`.
+
+Single-file imports use the source filename without `.tya` as the import path
+segment. Import paths are slash-separated `snake_case` segments. Leading `_`
+has no visibility meaning for ordinary bindings. Standard-library APIs use
+`snake_case`; CamelCase builtin spellings are not part of the language surface.
 
 ## Source Code Representation
 
@@ -212,8 +222,8 @@ allowed by the file kind. Class files are more restrictive than script files.
 A `.tya` file's role is determined by its filename and context.
 
 Lowercase `.tya` files are script files. They may be entry files for `tya run`
-and may also be imported directly. When imported, their public top-level
-bindings are exposed through the import binding.
+and may also be imported directly. When imported, their top-level names are
+exposed through the import binding.
 
 PascalCase `.tya` files are class files. They are library-only and cannot be
 entry files. A class file must declare exactly one public class whose name
@@ -229,10 +239,25 @@ Tya has a canonical syntax: every well-formed program has one source
 representation. `tya format` is therefore part of the language surface, not an
 optional style tool.
 
-Canonical syntax covers indentation, blank lines, comment attachment, import
-grouping, operator spacing, single-line and multi-line forms, string literal
-forms, empty collection forms, and other source-shape decisions. The complete
-rules live in `docs/CANONICAL_SYNTAX.md`.
+Canonical syntax covers indentation, blank lines, comment attachment, line
+wrapping, import grouping, operator spacing, string literal forms, empty
+collection forms, and other source-shape decisions. The formatter is the
+canonical serializer and has no style configuration.
+
+The core canonical rules are:
+
+- indentation is two spaces; tabs are invalid in source;
+- the column limit is 80, except for one unbreakable atomic token;
+- comments must be file header comments, leading comments, or line-end
+  comments with a definite attachment target;
+- blank lines are determined by AST shape, not user preference;
+- multi-line calls, arrays, dictionaries, parameter lists, operator chains, and
+  long conditions use the formatter-defined continuation forms;
+- imports are atomic and not line-wrapped;
+- `elseif` is the canonical spelling, and `else if` is not canonical;
+- `case _` in `match` is the wildcard case and must be final;
+- empty collection forms and empty `else` branches follow formatter-defined
+  shapes.
 
 Implementations must preserve semantic behavior when formatting. Formatting
 must be idempotent and stable across platforms.
@@ -254,17 +279,14 @@ Multiple assignment is supported.
 value, err = parse_user(text)
 ```
 
-Names beginning with `_` are private when they are top-level bindings in an
-importable source file. Private top-level bindings are not exported through a
-file import binding.
+Leading `_` has no visibility meaning for ordinary bindings. Top-level
+privacy is not expressed by name spelling.
 
 Constants use `SCREAMING_SNAKE_CASE` and are checked as constants by naming
 and assignment rules.
 
-Class member privacy does not use `_` prefixes in current Tya. Use the
-`private` keyword for private class fields, methods, class variables, class
-methods, and constructors. A class member name beginning with `_` is invalid
-and should be renamed or marked with `private`.
+Class member privacy uses the `private` keyword for private class fields,
+methods, class variables, class methods, and constructors.
 
 ```tya
 class User
@@ -450,6 +472,26 @@ their tagged runtime representation or `value.class` behavior. `Stringable` is
 not a structured serialization protocol; use `Serializable.to_data()` for data
 trees.
 
+The standard library also defines protocol interfaces for iteration,
+sequences, I/O, and structured data:
+
+- `Iterator` requires `has_next()` and `next()`;
+- `Iterable` requires `iter()` and provides `sequence()`;
+- `Sequence implements Iterable` and provides lazy-style `map(fn)`,
+  `filter(fn)`, `take(n)`, `drop(n)`, `reduce(initial, fn)`, and `to_a()`;
+- `Readable` requires `read(size)`;
+- `Writable` requires `write(data)`;
+- `Closable` requires `close()`;
+- `Flushable` requires `flush()`;
+- `Serializable` requires `to_data()`.
+
+Arrays, dictionaries, and strings conform to `Iterable` as primitive values.
+`for ... in` consumes primitive iterables directly and consumes user-defined
+iterables through `iter()`. I/O protocol interfaces are defined in the relevant
+standard-library packages such as `io` and `net/socket`; they document shared
+stream behavior and are implemented by concrete reader, writer, socket, and
+server classes where their methods match.
+
 ## Expressions
 
 Expressions compute values.
@@ -485,6 +527,41 @@ Function bodies cannot write back to outer bindings. Direct reassignment of an
 outer binding is invalid, and indexed or member assignment through a captured
 outer binding is invalid. Pass mutable state as an explicit parameter when a
 function is intended to mutate that value.
+
+Each evaluation of a function literal creates an independent closure
+environment.
+
+```tya
+make_adder = base ->
+  value -> base + value
+
+add_two = make_adder(2)
+add_ten = make_adder(10)
+
+print(add_two(3))
+print(add_ten(3))
+```
+
+Reassigning the original local after a closure is created does not change the
+captured value.
+
+```tya
+make_label = name ->
+  label = -> name
+  name = "changed"
+  label
+
+print(make_label("first")())
+```
+
+Mutating through a captured binding is invalid. The closure must receive the
+mutable value as a parameter if mutation is intended.
+
+```tya
+make_bad = items ->
+  ->
+    items[0] = "changed" # invalid: cannot mutate captured binding
+```
 
 ### Operators
 
@@ -559,7 +636,7 @@ print(await task)
 ```
 
 Channels and sync resources are standard-library-backed runtime values with
-documented methods in `docs/STDLIB.md`.
+the methods specified in the Standard Library section.
 
 ## Parallelism And Concurrency
 
@@ -725,26 +802,226 @@ default
   print("none")
 ```
 
-The exact channel methods and sync primitives are defined in `docs/STDLIB.md`.
+The exact channel methods and sync primitives are defined in the Standard
+Library section.
 
 ## Built-In Functions
 
 Tya has predeclared builtins for core runtime operations, I/O, conversion,
 errors, process access, files, collections, and compiler introspection.
-The normative list is `docs/API.md`.
+Calls use parentheses. Builtins use `snake_case`; CamelCase builtin spellings
+are not part of the language specification.
 
-Common examples:
+Core:
 
-```tya
-print("hello")
+```text
+print(value)
+println(value)
+assert(value)
+assert_equal(expected, actual)
+panic(message)
+exit(status)
+error(message)
+```
+
+Process and environment:
+
+```text
 args()
+env(name)
+cwd()
+chdir(path)
+```
+
+Files, directories, and paths:
+
+```text
+read_file(path)
+write_file(path, text)
+file_append(path, text)
+file_exists(path)
+file_stat(path)
+file_remove(path)
+file_rename(old_path, new_path)
+file_read_bytes(path)
+file_write_bytes(path, bytes)
+dir_list(path)
+dir_mkdir(path)
+dir_rmdir(path)
+path_expand_user(path)
+```
+
+Input and streams:
+
+```text
+read_line()
+stderr_write(text)
+io_stdin()
+io_stdout()
+io_open(path, options)
+io_stream_read(stream, size)
+io_stream_read_line(stream)
+io_stream_write(stream, value)
+io_stream_flush(stream)
+io_stream_eof(stream)
+io_stream_close(stream)
+```
+
+Text, bytes, and conversion:
+
+```text
+chr(number)
+ord(string)
+kind(value)
 type(value)
-error("message")
-read_file("memo.txt")
-write_file("memo.txt", "text")
+to_string(value)
+to_int(value)
+to_float(value)
+to_number(value)
+bytes(value)
+bytes_of(string)
+bytes_text(bytes)
+bytes_array(bytes)
+bytes_concat(left, right)
+bytes_slice(bytes, start, end)
+```
+
+Collections:
+
+```text
+equal(left, right)
+delete(dict, key)
+has(dict, key)
+keys(dict)
+values(dict)
+pop(array)
+```
+
+Low-level standard-library support builtins:
+
+```text
+time_now()
+time_sleep(seconds)
+random_seed(seed)
+random_int(min, max)
+random_float()
+compress_gzip(value)
+compress_gunzip(value)
+digest_sha256(value)
+secure_random_bytes(size)
+socket_connect(host, port, options)
+socket_read(socket, size)
+socket_read_line(socket)
+socket_write(socket, value)
+socket_close(socket)
+compiler_lexer_lex(source)
+compiler_parser_parse(source)
+compiler_checker_check(source)
+compiler_format_format(source)
+```
+
+Prefer standard-library package APIs over low-level support builtins when a
+package exists.
+
+Primitive method surface:
+
+```text
+value.to_s()
+value.class
+value.equal?(other)
+
+string.trim()
+string.upper()
+string.lower()
+string.starts_with(prefix)
+string.ends_with(suffix)
+string.contains(part)
+string.split(separator)
+string.lines()
+string.chars()
+string.bytes()
+string.byte_len()
+string.blank?()
+string.present?()
+string.iter()
+string.sequence()
+string.compare(other)
+string.lt?(other)
+string.lte?(other)
+string.gt?(other)
+string.gte?(other)
+string.between?(min, max)
+
+array.len()
+array.empty?()
+array.first()
+array.last()
+array.push(value)
+array.pop()
+array.slice(start, end)
+array.reverse()
+array.sort()
+array.join(separator)
+array.map(fn)
+array.filter(fn)
+array.find(fn)
+array.any(fn)
+array.all(fn)
+array.reduce(initial, fn)
+array.iter()
+array.sequence()
+
+dict.has(key)
+dict.get(key, fallback)
+dict.set(key, value)
+dict.delete(key)
+dict.keys()
+dict.values()
+dict.entries()
+dict.merge(other)
+dict.iter()
+dict.sequence()
+
+number.abs()
+number.floor()
+number.ceil()
+number.round()
+number.trunc()
+number.sqrt()
+number.pow(exp)
+number.integer?()
+number.finite?()
+number.nan?()
+number.compare(other)
+number.lt?(other)
+number.lte?(other)
+number.gt?(other)
+number.gte?(other)
+number.between?(min, max)
 ```
 
 Standard library APIs are imported with the same `import` syntax as user code.
+
+## Terminology
+
+Current Tya documentation uses these terms normatively:
+
+```text
+language feature             syntax or semantics built into Tya
+built-in function            function available without import
+built-in class               class available without import; none currently
+user module                  importable non-stdlib .tya source
+user library                 reusable directory tree of user modules
+standard-library module      .tya source shipped with Tya and imported normally
+bundled library              library or support file shipped with the toolchain
+native-backed stdlib module  importable stdlib API backed by runtime or host code
+package                      versioned dependency unit declared by tya.toml
+package tool                 [tools] entry run by tya tool
+```
+
+Language features are not imported and cannot be shadowed. Standard-library
+modules are specified in the Standard Library section; they are imported
+modules, not builtins.
 
 ## Imports And Packages
 
@@ -771,13 +1048,17 @@ import greeting          -> greeting.tya
 import http/server       -> http/server.tya
 ```
 
-The imported file exposes public top-level bindings through the import binding.
+The imported file exposes its top-level bindings through the import binding.
 
 ```tya
 import greeting
 
 print(greeting.hello("komagata"))
 ```
+
+A single-file source may contain top-level imports, assignments, function
+values, classes, and embeds. Top-level names become members of the imported
+namespace.
 
 ### Directory Packages
 
@@ -805,6 +1086,24 @@ server = http.Server()
 Within the same directory package, sibling public classes are visible by bare
 PascalCase name without import.
 
+The public API of a directory package is the set of public classes and
+interfaces in its PascalCase class files. A class is public when its class name
+matches its filename. Additional classes in a class file are private to that
+file.
+
+### User Libraries
+
+A user library is a directory tree of importable source intended for reuse. It
+does not require a manifest. A library root may be made available through
+`TYA_PATH`.
+
+```sh
+TYA_PATH=libs/web tya run app.tya
+```
+
+`TYA_PATH` entries are import roots, not relative import syntax. Source inside
+a user library should use the same import paths that applications use.
+
 ### Resolution Order
 
 Imports are resolved in this order:
@@ -825,8 +1124,29 @@ package-provided tools. `tya install` resolves dependencies and writes
 `tya.lock`. Git and local path dependencies are supported. There is currently
 no central package registry and no `tya publish` command.
 
-Native package metadata lives under `[native]`. Package-provided tools live
-under `[tools]` and run through `tya tool`.
+A package is a versioned distribution unit for reusable Tya code. Package code
+normally exposes importable source under `src/`. Applications consume packages
+through manifest dependencies:
+
+```toml
+[dependencies]
+my_lib = { git = "https://github.com/example/my_lib", tag = "v0.1.0" }
+local_lib = { path = "../local_lib" }
+```
+
+`tya.lock` records resolved dependency sources and should be committed by
+applications.
+
+Native package metadata lives under `[native]`. Native paths are relative to
+the package root. `tya build`, `tya run`, and `tya test` compile declared C
+sources with generated C, the Tya runtime, include directories, `pkg-config`
+flags, `cflags`, and `ldflags`. Native wrapper functions use the Tya runtime
+ABI and are called from package code like predeclared functions inside that
+package.
+
+Package-provided tools live under `[tools]` and run through `tya tool`.
+Package tools are not global installs and are not shell tasks; they run from
+locked dependencies or an explicit one-shot git/path source.
 
 ## Program Execution
 
@@ -852,10 +1172,21 @@ from `[native]` contributes C sources, headers, include directories,
 `pkg-config` flags, compiler flags, and linker flags to the build.
 
 WASM build targets are available where supported. Native packages are rejected
-for unsupported WASM targets.
+for unsupported WASM targets. `tya run` remains native-only.
 
-Cross-compilation is selected with `--target`. The native target is the
-default. Current WebAssembly targets include:
+## Cross Compilation
+
+Cross-compilation is selected with `--target` on `tya build`. The native target
+is the default and uses the host C toolchain. WebAssembly targets produce
+artifacts for a different execution environment without running the program.
+
+Current targets include:
+
+- `native`, the host native executable target;
+- `wasm32-wasi`, a WASI `.wasm` artifact for WASI runtimes;
+- `wasm32-browser`, a browser-oriented `.wasm` artifact and JavaScript loader.
+
+Typical commands:
 
 ```sh
 tya build --target native src/main.tya -o app
@@ -863,101 +1194,61 @@ tya build --target wasm32-wasi examples/wasm/hello.tya -o hello.wasm
 tya build --target wasm32-browser examples/wasm/hello.tya -o hello.wasm
 ```
 
-`wasm32-wasi` produces a WASI `.wasm` artifact. `wasm32-browser` produces a
-browser-oriented `.wasm` artifact and JavaScript loader. `tya doctor wasm`
-reports the WebAssembly build environment. `tya run` remains native-only.
+`tya doctor wasm` reports the WebAssembly build environment. `tya doctor
+native` reports the native build environment. Native package metadata may
+contribute C sources and linker flags for native builds, but packages with
+unsupported native requirements are rejected for unsupported WebAssembly
+targets.
 
 ## Built-In Tools
 
-The `tya` command is an all-in-one toolchain. The same binary contains the
-compiler, formatter, language server, test runner, linter, documentation
-generator, package manager, project scaffolder, task runner, doctor commands,
-and package tool runner.
-
-Core commands include:
+The `tya` binary contains the compiler, formatter, language server, test
+runner, linter, documentation generator, package manager, project scaffolder,
+task runner, doctor commands, and package tool runner. Tool commands share the
+parser, checker, formatter, package resolver, and diagnostic conventions where
+applicable.
 
 ```text
-tya run
-tya build
-tya emit-c
-tya check
-tya format
-tya test
-tya cover
-tya lint
-tya lsp
-tya doc
-tya new
-tya task
-tya install
-tya update
-tya add
-tya remove
-tya outdated
-tya tool
-tya doctor
-tya embed
-tya version
+run       compile and execute a lowercase script entry as a temporary native executable
+build     compile a reusable executable or target artifact; accepts --target and -o
+emit-c    emit generated C
+check     parse, load imports, and validate source without executing or invoking C
+format    emit canonical source; -w rewrites files in place
+test      discover and run unittest tests; --cover records coverage
+cover     render coverage profiles as text, JSON, or HTML
+lint      report project-policy diagnostics for valid programs
+lsp       run the JSON-RPC language server on stdio
+doc       extract source-comment documentation; may generate static HTML
+new       scaffold projects and libraries
+task      list or run tya.toml tasks
+install   resolve dependencies and write tya.lock
+update    refresh locked dependency versions
+add       add manifest dependencies
+remove    remove manifest dependencies
+outdated  report dependencies with newer versions
+tool      list or run package-provided tools
+doctor    report native or WebAssembly build environment details
+embed     inspect embedded asset declarations
+version   print the installed Tya version
 ```
 
-Tool commands share the same parser, checker, formatter, package resolver, and
-diagnostic conventions where applicable. This keeps command behavior aligned
-with the language specification instead of treating each command as a separate
-frontend.
+`tya lint` diagnostics are warnings, not language validity errors. Suppression
+comments are `# tya-lint-ignore: CODE` for one line or next statement and
+`# tya-lint-ignore-file: CODE, CODE` for a file. Omitting codes suppresses all
+rules for that target. `--fix` may rewrite only rules with declared autofix.
 
-`tya run` builds and executes a script file as a temporary native executable.
+Current lint rules are:
 
-`tya build` builds a reusable executable or target artifact. It accepts
-`--target` for supported native and WebAssembly targets.
-
-`tya emit-c` emits the generated C program for inspection or external build
-pipelines.
-
-`tya check` parses, loads imports, and validates source without running the
-program or invoking the C compiler.
-
-`tya format` prints canonical source, and `tya format -w` rewrites files in
-place.
-
-`tya test` discovers and runs tests using the standard `unittest` surface. It
-can collect coverage data with `--cover`.
-
-`tya cover` reports coverage profiles in human-readable or JSON form.
-
-`tya lint` reports stable linter diagnostics. It supports autofix and text,
-JSON, and SARIF output.
-
-`tya lsp` runs the language server over JSON-RPC for editor integration.
-
-`tya doc` extracts documentation from source comments and can generate static
-HTML.
-
-`tya new` scaffolds new projects and libraries, including native package
-scaffolds.
-
-`tya task` lists and runs tasks declared in `tya.toml`, including serial and
-parallel task forms.
-
-`tya install` resolves dependencies and writes `tya.lock`.
-
-`tya update` refreshes locked dependency versions.
-
-`tya add` adds manifest dependencies, including git, tag, revision, branch,
-path, and dev dependencies.
-
-`tya remove` removes manifest dependencies.
-
-`tya outdated` reports dependencies with newer available versions.
-
-`tya tool` lists and runs package-provided tools. It also supports one-shot
-tool execution from a local path or pinned git source.
-
-`tya doctor` reports host environment details for native and WebAssembly
-builds.
-
-`tya embed` inspects or supports embedded asset handling.
-
-`tya version` prints the installed Tya version.
+```text
+TYAL0001 unused local binding              autofix
+TYAL0002 dead code after return or raise
+TYAL0003 redundant constant if             autofix
+TYAL0004 deeply nested block
+TYAL0005 long function body
+TYAL0006 suspicious for-index binding order
+TYAL0007 unused function parameter
+TYAL0008 shadowed binding
+```
 
 ## Single Binary Distribution
 
@@ -993,33 +1284,126 @@ errors according to the API being used.
 The standard library is shipped with Tya under `stdlib/` and is imported using
 the same import syntax as user files and packages.
 
-Examples include:
+The standard library is part of the language distribution. Its public surface
+is the set of importable lowercase helper files and PascalCase package classes
+under `stdlib/`. Standard-library imports are resolved after local files,
+locked package dependencies, and `TYA_PATH` entries.
+
+Current standard-library surface:
 
 ```text
-math
-path
-file
-json
-toml
-csv
-url
-time
-random
-unittest
-template
-markdown
-compress
-log
-io
-net/ip
-net/socket
-net/http
-channel
-sync
-task
+base64/Base64              Base64 encode/decode helpers
+binary/Reader              binary input reader
+binary/Writer              binary output writer
+channel/Channel            native channel value
+cli/Cli                    command-line option parser and usage formatter
+collections/Deque          double-ended queue
+collections/PriorityQueue  priority queue
+collections/Queue          FIFO queue
+collections/Set            set collection
+collections/Stack          LIFO stack
+color/Color                RGBA color value and conversions
+compiler/ast/Ast           compiler AST helpers
+compiler/checker/Checker   compiler checker helpers
+compiler/format/Format     compiler formatter helpers
+compiler/lexer/Lexer       compiler lexer helpers
+compiler/parser/Parser     compiler parser helpers
+compress/Compress          compression helpers
+csv/Csv                    CSV parse/generate helpers
+digest/Digest              digest/hash helpers
+dir/Dir                    directory helpers
+file/File                  file helpers
+geometry/Circle            circle value
+geometry/Point             point value
+geometry/Rect              rectangle value
+geometry/Size              size value
+geometry/Vector2           2D vector value
+geometry/Vector3           3D vector value
+hex/Hex                    hexadecimal encode/decode helpers
+image/Codec                image codec helpers
+image/Image                image value
+io/Io                      stream helpers
+io/Reader                  readable stream wrapper
+io/Writer                  writable stream wrapper
+json/Json                  JSON parse/generate helpers
+log/Logger                 logger
+markdown/Markdown          Markdown renderer
+math/Math                  numeric helpers
+matrix/Matrix              matrix value
+net/http/Client            HTTP client
+net/http/Next              HTTP middleware continuation
+net/http/Server            HTTP router/server
+net/ip/Address             IP address value
+net/ip/Network             IP network value
+net/socket/Server          socket listener
+net/socket/Socket          socket connection
+os/Os                      operating-system helpers
+path/Path                  path manipulation helpers
+process/Process            process helpers
+random/Random              random helpers
+random/Rng                 seeded random generator
+runtime/Runtime            runtime introspection helpers
+secure_random/SecureRandom secure random helpers
+serialization/Serializer   data serialization helpers
+sync/AtomicInteger         native atomic integer
+sync/Mutex                 native mutex
+sync/WaitGroup             native wait group
+task/Task                  task helpers
+template/Template          template renderer
+time/Time                  time value and time helpers
+toml/Toml                  TOML parse/generate helpers
+transform2d/Transform2D    2D affine transform value
+unittest/TestCase          test case base class
+unittest/TestRunner        test runner
+unittest/TestSuite         test suite
+url/Url                    URL parse/build helpers
+value/Value                value introspection helpers
+xml/Xml                    XML parse/generate helpers
+xml/Document               XML document node
+xml/Element                XML element node
+xml/Text                   XML text node
+xml/CData                  XML CDATA node
+xml/Comment                XML comment node
 ```
 
-The normative standard-library API reference is `docs/STDLIB.md`.
+Current standard-library protocol and sequence helper files:
+
+```text
+comparable                 Comparable interface
+equatable                  Equatable interface
+stringable                 Stringable interface
+iterator                   Iterator interface; requires has_next() and next()
+iterable                   Iterable interface; requires iter()
+sequence                   Sequence class and chainable sequence protocol
+iterable_sequence          sequence wrapper for Iterable values
+map_sequence               lazy map sequence
+filter_sequence            lazy filter sequence
+take_sequence              lazy take sequence
+drop_sequence              lazy drop sequence
+```
+
+`Comparable` requires `compare(other)` and provides `lt?`, `lte?`, `gt?`,
+`gte?`, and `between?`. `Equatable` requires `equal?(other)`. `Stringable`
+requires `to_s()`. `Iterable` requires `iter()` and provides `sequence()`.
+`Sequence` provides `iter()`, `map(fn)`, `filter(fn)`, `take(n)`, `drop(n)`,
+`reduce(initial, fn)`, and `to_a()`.
+
+`io/Reader`, `io/Writer`, and `net/socket` define stream capability
+interfaces for readable, writable, closable, and flushable values. `Reader`
+supports `read`, `read_line`, `each_line`, `eof?`, and `close`. `Writer`
+supports `write`, `write_line`, `flush`, and `close`. `Socket` supports
+`connect`, `read`, `read_line`, `write`, `write_line`, `close`, `closed?`,
+`local_address`, and `remote_address`; `net/socket/Server` supports `listen`,
+`accept`, `close`, and `local_address`.
+
+`net/http/Server` defines route registration by HTTP method (`get`, `post`,
+`put`, `delete`, `patch`, `options`, `head`, `any`), middleware (`use`,
+`group`), error and not-found handlers, static-file serving, redirects, route
+dispatch, and server execution. `net/http/Client` defines `get`, `post`, and
+generic `request`.
+
+`serialization/Serializer` converts Tya values to and from data values, JSON,
+and TOML. Classes that implement `Serializable` expose `to_data()`.
 
 ## External Packages
 

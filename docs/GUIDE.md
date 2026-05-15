@@ -1,13 +1,13 @@
 # Tya Guide
 
-Tya is an indentation-based, dynamically typed language that compiles to C.
-The toolchain is intentionally all-in-one: the same `tya` command checks,
-formats, builds, runs, tests, documents, and manages packages.
+Tya is an indentation-based language that compiles to C. You write `.tya`
+files and use one command, `tya`, to run, build, format, test, document, and
+manage packages.
 
-This guide shows the current language surface used by the latest repository
-state. Historical release snapshots live under `docs/vX.Y/`.
+For exact language rules, read `docs/SPEC.md`. This guide is the practical
+starting point.
 
-## Run A Program
+## First Program
 
 Create `hello.tya`.
 
@@ -15,27 +15,43 @@ Create `hello.tya`.
 print("Hello, Tya")
 ```
 
-Run it during development:
+Run it:
 
 ```sh
 tya run hello.tya
 ```
 
-Build a reusable executable:
+Build an executable:
 
 ```sh
 tya build hello.tya -o hello
 ./hello
 ```
 
-Useful commands:
+Useful everyday commands:
 
 ```sh
 tya check hello.tya
 tya format -w hello.tya
-tya emit-c hello.tya
 tya test
+tya lint
 tya version
+```
+
+## Files
+
+Lowercase files are scripts. They can be run and imported.
+
+```text
+main.tya
+greeting.tya
+```
+
+PascalCase files are class files. They are library files, not entry scripts.
+
+```text
+User.tya
+HttpClient.tya
 ```
 
 ## Values
@@ -49,7 +65,7 @@ missing = nil
 data = b"abc"
 ```
 
-Strings support interpolation:
+Strings use interpolation:
 
 ```tya
 print("Hello, {name}")
@@ -67,7 +83,7 @@ print(user["name"])
 user["admin"] = true
 ```
 
-Primitive values expose methods:
+Primitive values have methods:
 
 ```tya
 print(" tya ".trim().upper())
@@ -79,7 +95,7 @@ print(value.class)
 
 ## Names
 
-Use `snake_case` for variables, functions, methods, imports, and dictionary
+Use `snake_case` for values, functions, methods, files, imports, and dictionary
 keys. Use `PascalCase` for classes and interfaces. Use
 `SCREAMING_SNAKE_CASE` for constants.
 
@@ -92,9 +108,10 @@ class UserProfile
     self.name = name
 ```
 
-See `docs/NAMING.md` for the full naming rules.
+Leading `_` does not make a binding private. For class members, use
+`private`.
 
-## Conditions
+## Control Flow
 
 ```tya
 if age >= 20
@@ -105,25 +122,22 @@ else
   print("young")
 ```
 
-Use `and`, `or`, and `not` for logic.
+Use `and`, `or`, and `not`.
 
 ```tya
-if ready and not missing
+if ready and not disabled
   print("ok")
 ```
 
-## Loops
+Loops:
 
 ```tya
 count = 0
 while count < 3
   print(count)
   count = count + 1
-```
 
-```tya
 items = ["a", "b"]
-
 for item in items
   print(item)
 
@@ -131,20 +145,20 @@ for item, index in items
   print("{index}: {item}")
 ```
 
-Use `of` to iterate dictionary keys and values.
+Dictionaries can be iterated as entries:
 
 ```tya
 user = { name: "komagata", age: 20 }
 
-for key, value of user
-  print("{key}: {value}")
+for entry in user
+  print("{entry["key"]}: {entry["value"]}")
 ```
 
-`break` and `continue` are available inside loops.
+`break` exits the nearest loop. `continue` skips to the next iteration.
 
 ## Functions
 
-Functions use `->`. Calls use parentheses.
+Functions use `->`. Calls always use parentheses.
 
 ```tya
 greet = name -> "Hello, {name}"
@@ -152,8 +166,7 @@ greet = name -> "Hello, {name}"
 print(greet("Tya"))
 ```
 
-Use an indented body for multiple statements. The last expression is returned
-implicitly.
+Use an indented body for multiple statements. The final expression is returned.
 
 ```tya
 double = value ->
@@ -161,7 +174,7 @@ double = value ->
   result
 ```
 
-Use `return` for early returns or multiple return values.
+Use `return` for early return or multiple return values.
 
 ```tya
 parse_user = text ->
@@ -170,16 +183,26 @@ parse_user = text ->
   return { name: text }, nil
 ```
 
-Anonymous functions can be passed directly.
+Functions are values, so they can be passed to other functions.
 
 ```tya
 items = [1, 2, 3]
 print(items.map(item -> item * 2))
 ```
 
-## Errors And `try`
+Closures can read values from the outer function.
 
-Tya has structured error handling with `raise`, `try`, and `catch`.
+```tya
+make_adder = base ->
+  value -> base + value
+
+add_two = make_adder(2)
+print(add_two(3))
+```
+
+## Errors
+
+Use `raise`, `try`, and `catch`.
 
 ```tya
 read_name = path ->
@@ -194,7 +217,7 @@ catch err
   print("error: {err}")
 ```
 
-`try` can also wrap an expression inside a function body:
+`try` can also be an expression inside a function.
 
 ```tya
 load_user = path ->
@@ -205,11 +228,9 @@ load_user = path ->
     { name: "guest" }
 ```
 
-For APIs that return `value, err`, destructure both values explicitly.
-
 ## Classes
 
-Classes are ordinary runtime values. Constructors use `initialize`.
+Classes are runtime values. `initialize` is the constructor hook.
 
 ```tya
 class User
@@ -223,9 +244,17 @@ user = User("komagata")
 print(user.label())
 ```
 
-Tya supports single class inheritance, `super(args...)`, private members,
-abstract classes, final classes, class variables, class methods, and runtime
-class inspection.
+Use `private` for private class members.
+
+```tya
+class User
+  private id = 0
+
+  private normalize = ->
+    self.id.to_s()
+```
+
+Inheritance uses `extends`; parent behavior is called with `super(...)`.
 
 ```tya
 class Admin extends User
@@ -238,38 +267,31 @@ class Admin extends User
 
 ## Interfaces
 
-Interfaces are explicit. They can declare requirements and provide stackable
-behavior through default methods, fields, and zero-argument initializer hooks.
+Interfaces are explicit contracts. Classes opt in with `implements`.
 
 ```tya
-import time as time
-
 interface Named
   name = ->
 
   label = ->
     self.name()
 
-interface Timestamped
-  created_at = nil
-
-  initialize = ->
-    self.created_at = time.Time.now()
-
-class Account implements Named, Timestamped
+class Account implements Named
   initialize = name ->
     self.name_value = name
-    super()
 
   name = ->
     self.name_value
 ```
 
-Classes list implemented interfaces explicitly with `implements`.
+Interfaces can also provide default methods, fields, and zero-argument
+initializer hooks. Standard interfaces include `Comparable`, `Equatable`,
+`Stringable`, `Iterator`, `Iterable`, `Sequence`, `Readable`, `Writable`,
+`Closable`, `Flushable`, and `Serializable`.
 
-## Imports And Packages
+## Imports
 
-Import another `.tya` file from the same directory:
+Import a sibling file:
 
 ```tya
 import greeting
@@ -287,24 +309,74 @@ Use aliases for namespaces:
 ```tya
 import net/http as http
 
-app = http.Server()
+server = http.Server()
 ```
 
-Directory packages expose public class and interface names directly when they
-are imported without an alias:
+Directory packages expose public class and interface names directly when
+imported without an alias:
 
 ```tya
 import net/http
 
-app = Server()
+server = Server()
 ```
 
-Project dependencies live in `tya.toml`, are resolved into `tya.lock`, and are
-installed with `tya install`. Git and local path dependencies are supported.
+## Packages
+
+Projects use `tya.toml` for dependencies and `tya.lock` for resolved versions.
+
+```sh
+tya install
+tya add https://github.com/komagata/tya-sqlite --tag v0.1.0
+tya update
+tya outdated
+```
+
+Git and local path dependencies are supported. There is no central package
+registry.
+
+## Testing And Linting
+
+Run tests:
+
+```sh
+tya test
+tya test tests
+tya test --cover
+```
+
+Show coverage:
+
+```sh
+tya cover
+tya cover --format=json
+```
+
+Run lint:
+
+```sh
+tya lint
+tya lint --fix src
+```
+
+Lint warnings are project-policy warnings. Compile-time validity is checked by
+`tya check`.
+
+## Formatting
+
+`tya format` prints canonical Tya source. `-w` rewrites files.
+
+```sh
+tya format src/main.tya
+tya format -w src tests
+```
+
+Formatting is part of the language: there is one canonical source
+representation for each well-formed program.
 
 ## Concurrency
 
-Use `spawn` to start a lightweight task and `await` to receive its result.
+Use `spawn` to start a task and `await` to receive its result.
 
 ```tya
 worker = value ->
@@ -314,15 +386,34 @@ task = spawn worker(21)
 print(await task)
 ```
 
-`scope` waits for tasks spawned inside it. Channels and sync primitives are in
-the standard library.
+`scope` waits for tasks spawned inside it before leaving the block.
+
+```tya
+scope
+  task = spawn worker(21)
+  print(await task)
+```
+
+Channels and sync primitives are in the standard library.
+
+## Cross Compilation
+
+`tya build` can target native and WebAssembly outputs.
+
+```sh
+tya build --target native src/main.tya -o app
+tya build --target wasm32-wasi examples/wasm/hello.tya -o hello.wasm
+tya build --target wasm32-browser examples/wasm/hello.tya -o hello.wasm
+tya doctor wasm
+```
+
+`tya run` is native-only.
 
 ## Standard Library
 
-The standard library is documented in `docs/STDLIB.md`. Common packages
-include `json`, `toml`, `csv`, `url`, `time`, `random`, `math`, `file`, `dir`,
-`path`, `process`, `unittest`, `template`, `markdown`, `compress`, `log`, `io`,
-`net/ip`, `net/socket`, and `net/http`.
+Common packages include `json`, `toml`, `csv`, `url`, `time`, `random`,
+`math`, `file`, `path`, `unittest`, `template`, `markdown`, `compress`, `log`,
+`io`, `net/ip`, `net/socket`, `net/http`, `channel`, `sync`, and `task`.
 
 ```tya
 import net/http as http
@@ -331,4 +422,5 @@ resp = http.Client.get("http://example.test/")
 print(resp["status"])
 ```
 
-Built-in functions are documented in `docs/API.md`.
+Built-in functions and standard-library packages are specified in
+`docs/SPEC.md`.

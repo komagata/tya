@@ -10,14 +10,8 @@ const siteDir = path.join(root, "site");
 const pages = [
   { source: path.join(docsDir, "GUIDE.md"), output: path.join(siteDir, "guide.html"), title: "Guide" },
   { source: path.join(docsDir, "SPEC.md"), output: path.join(siteDir, "spec.html"), title: "Spec" },
-  { source: path.join(docsDir, "API.md"), output: path.join(siteDir, "api.html"), title: "API" },
-  { source: path.join(docsDir, "STDLIB.md"), output: path.join(siteDir, "stdlib.html"), title: "Stdlib" },
-  { source: path.join(docsDir, "LIBRARIES.md"), output: path.join(siteDir, "libraries.html"), title: "Libraries" },
-  { source: path.join(docsDir, "NAMING.md"), output: path.join(siteDir, "naming.html"), title: "Naming" },
   { source: path.join(docsDir, "VERSIONS.md"), output: path.join(siteDir, "versions.html"), title: "Versions" },
-  { source: path.join(docsDir, "CANONICAL_SYNTAX.md"), output: path.join(siteDir, "CANONICAL_SYNTAX.html"), title: "Canonical Syntax" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(siteDir, "roadmap.html"), title: "Roadmap" },
-  { source: path.join(docsDir, "LINT.md"), output: path.join(siteDir, "lint.html"), title: "Lint" },
   { source: path.join(docsDir, "v0.64", "SPEC.md"), output: path.join(siteDir, "v0.64", "spec.html"), title: "Spec v0.64", versioned: true },
   { source: path.join(docsDir, "v0.64", "RELEASE_NOTES.md"), output: path.join(siteDir, "v0.64", "release_notes.html"), title: "Release Notes v0.64", versioned: true },
   { source: path.join(docsDir, "v0.63", "SPEC.md"), output: path.join(siteDir, "v0.63", "spec.html"), title: "Spec v0.63", versioned: true },
@@ -143,17 +137,21 @@ function rewriteHref(href, page) {
   if (page && page.versioned) {
     const versionedMapping = {
       "SPEC.md": "spec.html",
-      "API.md": "api.html",
-      "STDLIB.md": "stdlib.html",
-      "LIBRARIES.md": "libraries.html",
-      "LINT.md": "lint.html",
+      "API.md": "spec.html",
+      "STDLIB.md": "spec.html",
+      "LIBRARIES.md": "spec.html",
       "docs/SPEC.md": "spec.html",
-      "docs/API.md": "api.html",
-      "docs/STDLIB.md": "stdlib.html",
-      "docs/LIBRARIES.md": "libraries.html",
-      "docs/LINT.md": "lint.html",
-      "NAMING.md": "../naming.html",
-      "docs/NAMING.md": "../naming.html",
+      "docs/API.md": "spec.html",
+      "docs/STDLIB.md": "spec.html",
+      "docs/LIBRARIES.md": "spec.html",
+      "TERMINOLOGY.md": "spec.html",
+      "docs/TERMINOLOGY.md": "spec.html",
+      "LINT.md": "spec.html",
+      "docs/LINT.md": "spec.html",
+      "NAMING.md": "../spec.html",
+      "docs/NAMING.md": "../spec.html",
+      "CANONICAL_SYNTAX.md": "../spec.html",
+      "docs/CANONICAL_SYNTAX.md": "../spec.html",
     };
     if (versionedMapping[href] || versionedMapping[clean]) {
       return versionedMapping[href] || versionedMapping[clean];
@@ -162,11 +160,13 @@ function rewriteHref(href, page) {
   const mapping = {
     "GUIDE.md": "guide.html",
     "SPEC.md": "spec.html",
-    "API.md": "api.html",
-    "STDLIB.md": "stdlib.html",
-    "LIBRARIES.md": "libraries.html",
-    "LINT.md": "lint.html",
-    "NAMING.md": "naming.html",
+    "API.md": "spec.html",
+    "STDLIB.md": "spec.html",
+    "LIBRARIES.md": "spec.html",
+    "TERMINOLOGY.md": "spec.html",
+    "LINT.md": "spec.html",
+    "NAMING.md": "spec.html",
+    "CANONICAL_SYNTAX.md": "spec.html",
     "VERSIONS.md": "versions.html",
     "v0.4.md": "v0.4/spec.html",
     "ROADMAP.md": "roadmap.html",
@@ -304,11 +304,6 @@ function renderPage(page, body) {
       <div class="links">
         <a href="${prefix}guide.html">Guide</a>
         <a href="${prefix}spec.html">Spec</a>
-        <a href="${prefix}api.html">API</a>
-        <a href="${prefix}stdlib.html">Stdlib</a>
-        <a href="${prefix}libraries.html">Libraries</a>
-        <a href="${prefix}lint.html">Lint</a>
-        <a href="${prefix}naming.html">Naming</a>
         <a href="${prefix}roadmap.html">Roadmap</a>
       </div>
     </nav>

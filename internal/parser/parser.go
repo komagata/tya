@@ -47,7 +47,7 @@ func Parse(toks []token.Token) (*ast.Program, []diag.Diagnostic, error) {
 
 // ParseWithComments runs Parse and additionally fills
 // Program.HeaderComments and Program.Comments from the supplied
-// comments slice. Per docs/CANONICAL_SYNTAX.md §3.1–§3.3:
+// comments slice. Per docs/SPEC.md Canonical Syntax:
 //
 //   - Leading comments: contiguous `#` lines immediately before a
 //     statement, at the same indent as that statement.

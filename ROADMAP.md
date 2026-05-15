@@ -73,10 +73,7 @@ and the per-version release notes, not in this roadmap.
 Latest editable documentation:
 
 1. [`docs/SPEC.md`](docs/SPEC.md)
-1. [`docs/API.md`](docs/API.md)
-1. [`docs/STDLIB.md`](docs/STDLIB.md)
-1. [`docs/NAMING.md`](docs/NAMING.md)
-1. [`docs/CANONICAL_SYNTAX.md`](docs/CANONICAL_SYNTAX.md)
+1. [`docs/GUIDE.md`](docs/GUIDE.md)
 
 Active implementation authority remains:
 

@@ -72,6 +72,6 @@ node scripts/build_docs_pages.js
 
 ## Versioning convention
 
-Semantic versioning. Spec changes ride minor versions (`v0.3`, `v0.4`); patch releases must not change language or stdlib semantics. Frozen release docs live under `docs/vX.Y.Z/` (e.g. `docs/v0.1.0/`, `docs/v0.2.0/`); the latest editable spec, API, stdlib, and naming docs live directly under `docs/` (`SPEC.md`, `API.md`, `STDLIB.md`, `NAMING.md`).
+Semantic versioning. Spec changes ride minor versions (`v0.3`, `v0.4`); patch releases must not change language or stdlib semantics. Frozen release docs live under `docs/vX.Y.Z/` (e.g. `docs/v0.1.0/`, `docs/v0.2.0/`); the latest editable spec and guide docs live directly under `docs/` (`SPEC.md`, `GUIDE.md`).
 
 `ROADMAP.md` is the single source of truth for planned work. Its format is **Goal Tree**, defined in [`docs/GOAL_TREE.md`](docs/GOAL_TREE.md): a single Goal at the root, with Epic → Milestone → Task underneath, each node carrying a complete/incomplete status. `ROADMAP.md` uses the Markdown rendering (GFM nested task lists). Treat `ROADMAP.md` as a stable remaining-work plan, not a chronological log — follow the Stability Rules in `GOAL_TREE.md` before editing it.

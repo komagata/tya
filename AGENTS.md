@@ -5,8 +5,8 @@ Tya is a language without hesitation — an indentation-based, dynamically typed
 ## Project Rules
 
 - Prefer the current hand-written compiler style over adding parser generators or large dependencies.
-- Keep language syntax and naming consistent with `docs/SPEC.md` and `docs/NAMING.md`.
-- Keep stdlib behavior consistent with `docs/API.md`.
+- Keep language syntax and naming consistent with `docs/SPEC.md`.
+- Keep stdlib behavior consistent with `docs/SPEC.md`.
 - Treat `docs/archive/pre-v0.1/` as historical reference only. Archived self-host, class/module, and stdlib notes are not current v0.1 authority.
 - Preserve the existing Tya-written self-host compiler fixed point. Once self-host works, do not regress it while implementing later versions. Changes to lexer, parser, AST, checker, C emitter, runtime, CLI, examples, stdlib, or tests must keep `selfhost/v01/compiler.tya` compiling itself to a stable stage-2/stage-3 fixed point.
 - Use `ROADMAP.md` as the single source of truth for TODO, TASK, and roadmap planning. Express roadmap work as Markdown nested task lists: top-level items are Epics, second-level items are Milestones, and third-level items are Tasks. A Milestone is complete when every Task below it is complete, and an Epic is complete when every Milestone below it is complete.
