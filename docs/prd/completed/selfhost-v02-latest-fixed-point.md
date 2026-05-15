@@ -71,6 +71,4 @@ go test ./... -count=1 -timeout=20m
 
 ## Dependencies
 
-- `docs/prd/selfhost-v02-latest-lexer-parser.md`
-- `docs/prd/selfhost-v02-latest-checker.md`
-- `docs/prd/selfhost-v02-latest-c-emitter.md`
+- `docs/prd/completed/selfhost-v02-latest-c-emitter.md`
