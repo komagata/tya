@@ -18,6 +18,8 @@ const pages = [
   { source: path.join(docsDir, "CANONICAL_SYNTAX.md"), output: path.join(siteDir, "CANONICAL_SYNTAX.html"), title: "Canonical Syntax" },
   { source: path.join(root, "ROADMAP.md"), output: path.join(siteDir, "roadmap.html"), title: "Roadmap" },
   { source: path.join(docsDir, "LINT.md"), output: path.join(siteDir, "lint.html"), title: "Lint" },
+  { source: path.join(docsDir, "v0.63", "SPEC.md"), output: path.join(siteDir, "v0.63", "spec.html"), title: "Spec v0.63", versioned: true },
+  { source: path.join(docsDir, "v0.63", "RELEASE_NOTES.md"), output: path.join(siteDir, "v0.63", "release_notes.html"), title: "Release Notes v0.63", versioned: true },
   { source: path.join(docsDir, "v0.62", "SPEC.md"), output: path.join(siteDir, "v0.62", "spec.html"), title: "Spec v0.62", versioned: true },
   { source: path.join(docsDir, "v0.62", "RELEASE_NOTES.md"), output: path.join(siteDir, "v0.62", "release_notes.html"), title: "Release Notes v0.62", versioned: true },
   { source: path.join(docsDir, "v0.61", "SPEC.md"), output: path.join(siteDir, "v0.61", "spec.html"), title: "Spec v0.61", versioned: true },

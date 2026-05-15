@@ -161,10 +161,26 @@ github.com/rogpeppe/go-internal/testscript</code></pre>
 <ul>
 <li>[ ] **Migrate selfhost compiler to the latest spec and remove Go reference**</li>
 <ul>
-<li>[ ] Bring <code>selfhost/</code> up to the v1.0.0 spec: lexer, parser, AST, checker,</li>
+<li>[x] Prove the <code>selfhost/v02/</code> current-spec compiler gate.</li>
+<ul>
+<li>[x] Migrate the v02 lexer/parser surface to current syntax.</li>
+<li>[x] Migrate the v02 checker surface for selected current semantic</li>
 </ul>
 </ul>
-<p>    C emitter, and runner.</p>
+</ul>
+<p>      families.</p>
+<ul>
+<li>[x] Migrate the v02 C emitter for selected current runtime families and</li>
+</ul>
+<p>      deterministic unsupported-codegen failures.</p>
+<ul>
+<li>[x] Verify the v02 stage-2 == stage-3 fixed point and document the</li>
+</ul>
+<p>      applicable full-spec fixture coverage.</p>
+<ul>
+<li>[ ] Bring <code>selfhost/</code> from the v02 current-spec proof to the v1.0.0 spec:</li>
+</ul>
+<p>    lexer, parser, AST, checker, C emitter, and runner.</p>
 <ul>
 <li>[ ] Implement all language features in the self-hosted compiler.</li>
 <li>[ ] Verify stage-2 == stage-3 fixed point at the latest spec.</li>

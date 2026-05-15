@@ -13,11 +13,12 @@ func TestV62Scripts(t *testing.T) {
 		t.Fatal(err)
 	}
 	modCache := goEnv(t, "GOMODCACHE")
+	goCache := goEnv(t, "GOCACHE")
 	testscript.Run(t, testscript.Params{
 		Dir: "testdata/v62_native",
 		Setup: func(env *testscript.Env) error {
 			env.Setenv("REPO", repo)
-			env.Setenv("GOCACHE", filepath.Join(env.WorkDir, ".gocache"))
+			env.Setenv("GOCACHE", goCache)
 			env.Setenv("GOMODCACHE", modCache)
 			return nil
 		},
