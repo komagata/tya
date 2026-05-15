@@ -1,4 +1,16 @@
-class Reader
+interface Readable
+  read = size ->
+
+interface Writable
+  write = data ->
+
+interface Closable
+  close = ->
+
+interface Flushable
+  flush = ->
+
+class Reader implements Readable, Closable
   initialize = handle, binary ->
     self.handle = handle
     self.binary = binary

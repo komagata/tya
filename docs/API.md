@@ -283,6 +283,12 @@ socket_close(sock)
 HTTP server support is exposed through `net/http.Server`, not direct builtin
 calls. Use `http.Client` for HTTP client requests.
 
+The stdlib stream packages expose protocol interfaces for shared I/O shapes:
+`io.Readable`, `io.Writable`, `io.Closable`, `io.Flushable`, and the socket
+package's `Readable`, `Writable`, and `Closable` interfaces. Concrete
+`io.Reader`, `io.Writer`, `net/socket.Socket`, and `net/socket.Server` classes
+declare these contracts where their existing methods match.
+
 ## Compiler Introspection
 
 The compiler builtins back `compiler/*` packages:

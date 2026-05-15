@@ -1,4 +1,4 @@
-class Writer
+class Writer implements Writable, Flushable, Closable
   initialize = handle, binary ->
     self.handle = handle
     self.binary = binary

@@ -1177,6 +1177,10 @@ writer.close()
 
 Class members on `io.Io`: `stdin`, `stdout`, `stderr`, `open`, `copy`.
 
+Protocol interfaces in `io`: `Readable`, `Writable`, `Closable`, and
+`Flushable`. These are capability contracts for stream-like values. They are
+separate from the concrete `Reader` and `Writer` classes returned by `io.Io`.
+
 Reader methods: `read`, `read_line`, `each_line`, `eof?`, `close`.
 Writer methods: `write`, `write_line`, `flush`, `close`.
 
@@ -1240,6 +1244,9 @@ server.close()
 Class members on `net/socket.Socket`: `connect`.
 
 Class members on `net/socket.Server`: `listen`.
+
+Protocol interfaces in `net/socket`: `Readable`, `Writable`, and `Closable`.
+`Socket` implements all three; `Server` implements `Closable`.
 
 Socket methods: `read`, `read_line`, `write`, `write_line`, `close`,
 `closed?`, `local_address`, and `remote_address`.

@@ -1,4 +1,13 @@
-class Socket
+interface Readable
+  read = size ->
+
+interface Writable
+  write = data ->
+
+interface Closable
+  close = ->
+
+class Socket implements Readable, Writable, Closable
   static connect = host, port, options ->
     if options == nil
       options = {}

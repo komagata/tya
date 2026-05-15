@@ -1,0 +1,72 @@
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/protocols.tya
+stdout 'helloworld\n10\n'
+! stderr .
+
+! exec go run ./cmd/tya run $WORK/construct_readable.tya
+stderr 'cannot construct interface Readable'
+
+! exec go run ./cmd/tya run $WORK/missing_read.tya
+stderr 'class BrokenReadable must implement interface method read'
+
+! exec go run ./cmd/tya run $WORK/missing_write.tya
+stderr 'class BrokenWritable must implement interface method write'
+
+! exec go run ./cmd/tya run $WORK/missing_close.tya
+stderr 'class BrokenClosable must implement interface method close'
+
+! exec go run ./cmd/tya run $WORK/missing_flush.tya
+stderr 'class BrokenFlushable must implement interface method flush'
+
+-- protocols.tya --
+import io as io
+import file as file
+
+path = "io_protocols.txt"
+file.File.write(path, "helloworld")
+
+reader = io.Io.open(path, "r")
+writer = io.Io.stdout()
+count = io.Io.copy(reader, writer)
+reader.close()
+writer.flush()
+file.File.remove(path)
+print(count)
+
+-- construct_readable.tya --
+import io as io
+
+reader = io.Readable()
+
+-- missing_read.tya --
+interface Readable
+  read = size ->
+
+class BrokenReadable implements Readable
+  close = ->
+    nil
+
+-- missing_write.tya --
+interface Writable
+  write = data ->
+
+class BrokenWritable implements Writable
+  close = ->
+    nil
+
+-- missing_close.tya --
+interface Closable
+  close = ->
+
+class BrokenClosable implements Closable
+  read = size ->
+    ""
+
+-- missing_flush.tya --
+interface Flushable
+  flush = ->
+
+class BrokenFlushable implements Flushable
+  write = data ->
+    0

@@ -1,4 +1,4 @@
-class Server
+class Server implements Closable
   static listen = host, port, options ->
     if options == nil
       options = {}
