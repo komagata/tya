@@ -30,7 +30,9 @@
 #include <time.h>
 #include <ucontext.h>
 #include <unistd.h>
+#ifdef TYA_ENABLE_ZLIB
 #include <zlib.h>
+#endif
 
 #ifndef _WIN32
 #include <arpa/inet.h>
@@ -4489,6 +4491,7 @@ static bool tya_value_bytes(TyaValue value, const unsigned char **data, size_t *
   return false;
 }
 
+#ifdef TYA_ENABLE_ZLIB
 static TyaValue tya_deflate_bytes(TyaValue value, int window_bits, const char *op) {
   const unsigned char *input = NULL;
   size_t input_len = 0;
@@ -4588,6 +4591,34 @@ TyaValue tya_compress_zlib(TyaValue value) {
 TyaValue tya_compress_unzlib(TyaValue value) {
   return tya_inflate_bytes(value, 15, "compress.unzlib");
 }
+#else
+static TyaValue tya_zlib_disabled(const char *op) {
+  char buf[128];
+  snprintf(buf, sizeof(buf), "%s: zlib support is not enabled for this build", op);
+  tya_raise(tya_string(buf));
+  return tya_nil();
+}
+
+TyaValue tya_compress_gzip(TyaValue value) {
+  (void)value;
+  return tya_zlib_disabled("compress.gzip");
+}
+
+TyaValue tya_compress_gunzip(TyaValue value) {
+  (void)value;
+  return tya_zlib_disabled("compress.gunzip");
+}
+
+TyaValue tya_compress_zlib(TyaValue value) {
+  (void)value;
+  return tya_zlib_disabled("compress.zlib");
+}
+
+TyaValue tya_compress_unzlib(TyaValue value) {
+  (void)value;
+  return tya_zlib_disabled("compress.unzlib");
+}
+#endif
 
 static TyaValue tya_stream_value(FILE *fp, bool borrowed, bool binary, bool readable, bool writable) {
   TyaResource *r = tya_resource_new(TYA_RES_STREAM);

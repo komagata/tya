@@ -3,6 +3,7 @@ set -eu
 
 repo="komagata/tya"
 prefix="${PREFIX:-$HOME/.local}"
+zig_version="${TYA_ZIG_VERSION:-0.16.0}"
 
 need() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -64,36 +65,38 @@ tar -xzf "$tmp/$package.tar.gz" -C "$tmp"
   PREFIX="$prefix" sh ./install.sh
 )
 
+zig_os="$os"
+if [ "$zig_os" = "darwin" ]; then
+  zig_os="macos"
+fi
+zig_arch="$arch"
+if [ "$zig_arch" = "amd64" ]; then
+  zig_arch="x86_64"
+else
+  zig_arch="aarch64"
+fi
+zig_package="zig-$zig_arch-$zig_os-$zig_version"
+zig_url="https://ziglang.org/download/$zig_version/$zig_package.tar.xz"
+zig_dir="$prefix/zig/$zig_version"
+zig_bin="$zig_dir/zig"
+
+if [ -x "$zig_bin" ] && [ "$("$zig_bin" version 2>/dev/null || true)" = "$zig_version" ]; then
+  echo "Managed Zig already installed: $zig_bin"
+else
+  echo "Downloading $zig_url"
+  rm -rf "$tmp/$zig_package" "$zig_dir"
+  curl -fsSL "$zig_url" -o "$tmp/$zig_package.tar.xz"
+  tar -xJf "$tmp/$zig_package.tar.xz" -C "$tmp"
+  mkdir -p "$(dirname "$zig_dir")"
+  mv "$tmp/$zig_package" "$zig_dir"
+fi
+
 cat <<EOF
 
 Tya binary installed:
   $prefix/bin/tya
+Managed Zig installed:
+  $zig_bin
 EOF
 "$prefix/bin/tya" version
-
-if ! command -v cc >/dev/null 2>&1; then
-  cat >&2 <<'EOF'
-
-Requirement missing:
-  cc
-
-Native `tya run` and `tya build` require a C compiler.
-
-macOS:   install Xcode Command Line Tools with `xcode-select --install`
-Linux:   install your distribution's build-essential/clang package
-EOF
-else
-  echo "Native build requirement found: cc"
-fi
-
-if ! command -v zig >/dev/null 2>&1; then
-  cat >&2 <<'EOF'
-
-Optional requirement missing:
-  zig
-
-WebAssembly targets (`wasm32-wasi` and `wasm32-browser`) require Zig.
-EOF
-else
-  echo "WebAssembly build requirement found: zig"
-fi
+"$zig_bin" version

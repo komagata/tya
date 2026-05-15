@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -12,8 +11,9 @@ import (
 )
 
 func buildWasmExecutable(path string, output string, target string) (*codegen.CoverageRegistry, error) {
-	if _, err := exec.LookPath("zig"); err != nil {
-		return nil, fmt.Errorf("WASM target %s requires Zig: %w", target, err)
+	zig, err := resolveZigToolchain()
+	if err != nil {
+		return nil, fmt.Errorf("WASM target %s requires managed Zig: %w", target, err)
 	}
 	if plan, err := nativePlanForPath(path); err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func buildWasmExecutable(path string, output string, target string) (*codegen.Co
 	if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
 		return nil, err
 	}
-	cmd := exec.Command("zig", args...)
+	cmd := zigCommand(zig.Path, args...)
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return nil, err

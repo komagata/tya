@@ -987,13 +987,13 @@ tya emit-c hello.tya
 
 Tya は native 実行のために C へコンパイルするパイプラインを使う。`tya run` は一時 native 実行ファイルをコンパイルし、実行し、その一時実行ファイルを削除する。`tya build` は再利用可能な実行ファイルを書く。`tya emit-c` は Tya ソースから生成された C プログラムを表示または書き出す。生成された C は Tya ランタイムへリンクされる。
 
-デフォルトの native target はホストの C toolchain を使う。`[native]` の native パッケージメタデータは、C ソース、ヘッダー、include ディレクトリ、`pkg-config` フラグ、コンパイラフラグ、リンカフラグをビルドへ寄与する。
+デフォルトの native target は Tya-managed Zig toolchain を `zig cc` として使う。`[native]` の native パッケージメタデータは、C ソース、ヘッダー、include ディレクトリ、`pkg-config` フラグ、コンパイラフラグ、リンカフラグをビルドへ寄与する。
 
 WASM build target は、サポートされる場所で利用できる。native パッケージは未サポートの WASM target で拒否される。`tya run` は native 専用のままである。
 
 ## クロスコンパイル
 
-クロスコンパイルは `tya build` の `--target` で選択する。native target がデフォルトであり、ホストの C toolchain を使う。WebAssembly target はプログラムを実行せず、別の実行環境向けの artifact を生成する。
+クロスコンパイルは `tya build` の `--target` で選択する。native target がデフォルトであり、Tya-managed Zig toolchain を `zig cc` として使う。WebAssembly target はプログラムを実行せず、別の実行環境向けの artifact を生成する。
 
 現在の target は次を含む。
 
@@ -1009,9 +1009,9 @@ tya build --target wasm32-wasi examples/wasm/hello.tya -o hello.wasm
 tya build --target wasm32-browser examples/wasm/hello.tya -o hello.wasm
 ```
 
-`tya doctor wasm` は WebAssembly build 環境を報告する。`tya doctor native` は native build 環境を報告する。native パッケージメタデータは native build に C source と linker flag を寄与できるが、未サポートの native requirement を持つ package は未サポートの WebAssembly target で拒否される。
+`tya doctor wasm` は WebAssembly build 環境と選択された Zig path/version を報告する。`tya doctor native` は native build 環境と選択された managed `zig cc` path/version を報告する。native パッケージメタデータは native build に C source と linker flag を寄与できるが、未サポートの native requirement を持つ package は未サポートの WebAssembly target で拒否される。
 
-WebAssembly build は compile-to-C backend を保持し、サポートされる WebAssembly C toolchain を使う。最初の WebAssembly target layer は stdout-oriented smoke programs をサポートする。browser build は filesystem と process-oriented imports も拒否する。`tya run` は native 専用であり、WebAssembly artifacts を実行しない。
+WebAssembly build は compile-to-C backend を保持し、native build と同じ Zig resolver を使う。最初の WebAssembly target layer は stdout-oriented smoke programs をサポートする。browser build は filesystem と process-oriented imports も拒否する。`tya run` は native 専用であり、WebAssembly artifacts を実行しない。
 
 ## 組み込みツール
 

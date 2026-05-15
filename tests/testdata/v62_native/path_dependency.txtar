@@ -25,7 +25,8 @@ stdout '1 tests, 1 passed, 0 failed'
 ! stderr .
 
 exec $WORK/tya doctor native
-stdout 'C compiler:'
+stdout 'Native compiler: managed zig cc'
+stdout 'Zig version:'
 stdout 'pkg-config:'
 stdout 'native_dep'
 

@@ -1173,9 +1173,10 @@ temporary native executable, runs it, and removes the temporary executable.
 program generated from Tya source. The generated C links against the Tya
 runtime.
 
-The default native target uses the host C toolchain. Native package metadata
-from `[native]` contributes C sources, headers, include directories,
-`pkg-config` flags, compiler flags, and linker flags to the build.
+The default native target uses the Tya-managed Zig toolchain as `zig cc`.
+Native package metadata from `[native]` contributes C sources, headers,
+include directories, `pkg-config` flags, compiler flags, and linker flags to
+the build.
 
 WASM build targets are available where supported. Native packages are rejected
 for unsupported WASM targets. `tya run` remains native-only.
@@ -1183,8 +1184,9 @@ for unsupported WASM targets. `tya run` remains native-only.
 ## Cross Compilation
 
 Cross-compilation is selected with `--target` on `tya build`. The native target
-is the default and uses the host C toolchain. WebAssembly targets produce
-artifacts for a different execution environment without running the program.
+is the default and uses the Tya-managed Zig toolchain as `zig cc`.
+WebAssembly targets produce artifacts for a different execution environment
+without running the program.
 
 Current targets include:
 
@@ -1200,14 +1202,14 @@ tya build --target wasm32-wasi examples/wasm/hello.tya -o hello.wasm
 tya build --target wasm32-browser examples/wasm/hello.tya -o hello.wasm
 ```
 
-`tya doctor wasm` reports the WebAssembly build environment. `tya doctor
-native` reports the native build environment. Native package metadata may
-contribute C sources and linker flags for native builds, but packages with
-unsupported native requirements are rejected for unsupported WebAssembly
-targets.
+`tya doctor wasm` reports the WebAssembly build environment and selected Zig
+path/version. `tya doctor native` reports the native build environment and
+selected managed `zig cc` path/version. Native package metadata may contribute
+C sources and linker flags for native builds, but packages with unsupported
+native requirements are rejected for unsupported WebAssembly targets.
 
-WebAssembly builds preserve the compile-to-C backend and use the supported
-WebAssembly C toolchain. The first WebAssembly target layer supports
+WebAssembly builds preserve the compile-to-C backend and use the same Zig
+resolver as native builds. The first WebAssembly target layer supports
 stdout-oriented smoke programs. Browser builds also reject filesystem and
 process-oriented imports. `tya run` is native-only and does not execute
 WebAssembly artifacts.

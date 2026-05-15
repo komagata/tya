@@ -1,0 +1,53 @@
+package main
+
+import (
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+)
+
+func TestResolveZigToolchainUsesTYAZig(t *testing.T) {
+	dir := t.TempDir()
+	zig := filepath.Join(dir, zigExecutableName())
+	script := "#!/bin/sh\nprintf '0.16.0\\n'\n"
+	if runtime.GOOS == "windows" {
+		t.Skip("shell fake is POSIX-only")
+	}
+	if err := os.WriteFile(zig, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("TYA_ZIG", zig)
+	t.Setenv("TYA_ZIG_DIR", "")
+	t.Setenv("PATH", "")
+
+	got, err := resolveZigToolchain()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Path != zig {
+		t.Fatalf("path = %q, want %q", got.Path, zig)
+	}
+	if got.Source != "TYA_ZIG" {
+		t.Fatalf("source = %q, want TYA_ZIG", got.Source)
+	}
+	if got.Version != managedZigVersion {
+		t.Fatalf("version = %q, want %q", got.Version, managedZigVersion)
+	}
+}
+
+func TestResolveZigToolchainMissingReportsRepair(t *testing.T) {
+	t.Setenv("TYA_ZIG", "")
+	t.Setenv("TYA_ZIG_DIR", "")
+	t.Setenv("PATH", "")
+
+	_, err := resolveZigToolchain()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	want := "reinstall or repair Tya"
+	if !strings.Contains(err.Error(), want) {
+		t.Fatalf("error = %q, want substring %q", err.Error(), want)
+	}
+}

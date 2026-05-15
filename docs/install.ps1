@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $repo = "komagata/tya"
 $prefix = if ($env:PREFIX) { $env:PREFIX } else { Join-Path $env:LOCALAPPDATA "Programs\tya" }
 $tag = $env:TYA_VERSION
+$zigVersion = if ($env:TYA_ZIG_VERSION) { $env:TYA_ZIG_VERSION } else { "0.16.0" }
 
 if (-not $tag) {
     $latest = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest"
@@ -37,26 +38,43 @@ try {
     } finally {
         Pop-Location
     }
+
+    $zigArch = switch ($arch) {
+        "amd64" { "x86_64" }
+        "arm64" { "aarch64" }
+        default { throw "tya install: unsupported Zig architecture: $arch" }
+    }
+    $zigPackage = "zig-$zigArch-windows-$zigVersion"
+    $zigUrl = "https://ziglang.org/download/$zigVersion/$zigPackage.zip"
+    $zigDir = Join-Path (Join-Path $prefix "zig") $zigVersion
+    $zigExe = Join-Path $zigDir "zig.exe"
+    $hasMatchingZig = $false
+    if (Test-Path $zigExe) {
+        try {
+            $hasMatchingZig = ((& $zigExe version).Trim() -eq $zigVersion)
+        } catch {
+            $hasMatchingZig = $false
+        }
+    }
+    if ($hasMatchingZig) {
+        Write-Host "Managed Zig already installed: $zigExe"
+    } else {
+        $zigArchive = Join-Path $tmp "$zigPackage.zip"
+        Write-Host "Downloading $zigUrl"
+        Invoke-WebRequest $zigUrl -OutFile $zigArchive
+        Remove-Item -Recurse -Force $zigDir -ErrorAction SilentlyContinue
+        Expand-Archive $zigArchive -DestinationPath $tmp -Force
+        New-Item -ItemType Directory -Force -Path (Split-Path $zigDir) | Out-Null
+        Move-Item (Join-Path $tmp $zigPackage) $zigDir
+    }
+
     Write-Host ""
     Write-Host "Tya binary installed:"
     Write-Host "  $(Join-Path $prefix 'bin\tya.exe')"
+    Write-Host "Managed Zig installed:"
+    Write-Host "  $zigExe"
     & (Join-Path $prefix "bin\tya.exe") version
-
-    $compiler = Get-Command cc.exe -ErrorAction SilentlyContinue
-    if (-not $compiler) {
-        $compiler = Get-Command clang.exe -ErrorAction SilentlyContinue
-    }
-    if (-not $compiler) {
-        Write-Warning "Requirement missing: C compiler. Native tya run and tya build require cc.exe or clang.exe. Install LLVM/Clang or another cc-compatible C toolchain and add it to PATH."
-    } else {
-        Write-Host "Native build requirement found: $($compiler.Name)"
-    }
-
-    if (-not (Get-Command zig.exe -ErrorAction SilentlyContinue)) {
-        Write-Host "Optional requirement missing: zig. WebAssembly targets (wasm32-wasi and wasm32-browser) require Zig."
-    } else {
-        Write-Host "WebAssembly build requirement found: zig"
-    }
+    & $zigExe version
 } finally {
     Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
 }

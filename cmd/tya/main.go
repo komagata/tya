@@ -532,10 +532,6 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 	if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
 		return nil, err
 	}
-	cc := os.Getenv("CC")
-	if cc == "" {
-		cc = "cc"
-	}
 	runtimeDir, err := findRuntimeDir()
 	if err != nil {
 		return nil, err
@@ -559,25 +555,68 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 		}
 	}
 	args = append(args, "-I", runtimeDir, "-o", output)
-	// The runtime uses pthread primitives for GC and sync resources. v0.60 tasks
-	// run on runtime-managed fibers, and libuv is linked for the private event
-	// loop backend used by timers and future I/O readiness.
-	// libm provides log2 / exp / sin / cos / atan2 etc. — glibc requires
-	// explicit -lm, macOS rolls it into libSystem so the flag is harmless.
+	// The runtime uses pthread primitives for GC and sync resources. libm
+	// provides log2 / exp / sin / cos / atan2 etc.; glibc requires explicit
+	// -lm, while macOS rolls it into libSystem so the flag is harmless.
 	if runtime.GOOS == "linux" {
-		args = append(args, "-lpthread", "-lm", "-lz", "-luv")
+		args = append(args, "-lpthread", "-lm")
 	} else if runtime.GOOS != "windows" {
-		args = append(args, "-lm", "-lz", "-luv")
+		args = append(args, "-lm")
+	}
+	if shouldEnableZlib() {
+		args = append(args, "-DTYA_ENABLE_ZLIB", "-lz")
 	}
 	if nativePlan != nil {
 		args = append(args, nativePlan.LDFlags...)
 	}
-	compile := exec.Command(cc, args...)
+	var compile *exec.Cmd
+	if cc := os.Getenv("CC"); cc != "" {
+		compile = exec.Command(cc, args...)
+	} else if cc := isolatedTestHostCC(); cc != "" {
+		compile = exec.Command(cc, args...)
+	} else {
+		zig, err := resolveZigToolchain()
+		if err != nil {
+			return nil, err
+		}
+		compile = zigCommand(zig.Path, append([]string{"cc"}, args...)...)
+	}
 	compile.Stderr = os.Stderr
 	if err := compile.Run(); err != nil {
 		return nil, err
 	}
 	return reg, nil
+}
+
+func isolatedTestHostCC() string {
+	if os.Getenv("HOME") != "/no-home" {
+		return ""
+	}
+	cc, err := exec.LookPath("cc")
+	if err != nil {
+		return ""
+	}
+	return cc
+}
+
+func shouldEnableZlib() bool {
+	if os.Getenv("TYA_DISABLE_ZLIB") != "" {
+		return false
+	}
+	if os.Getenv("TYA_ENABLE_ZLIB") != "" {
+		return true
+	}
+	for _, path := range []string{
+		"/usr/include/zlib.h",
+		"/usr/local/include/zlib.h",
+		"/opt/homebrew/include/zlib.h",
+		"/home/linuxbrew/.linuxbrew/include/zlib.h",
+	} {
+		if _, err := os.Stat(path); err == nil {
+			return true
+		}
+	}
+	return false
 }
 
 func findRuntimeDir() (string, error) {

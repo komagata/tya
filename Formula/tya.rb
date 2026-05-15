@@ -7,6 +7,7 @@ class Tya < Formula
   head "https://github.com/komagata/tya.git", branch: "main"
 
   depends_on "go" => :build
+  depends_on "zig"
 
   def install
     system "go", "build", *std_go_args(output: bin/"tya"), "./cmd/tya"
