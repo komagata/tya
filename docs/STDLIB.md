@@ -617,8 +617,14 @@ string keys, bytes with an explicit encoding option, and class instances with
 public fields to JSON-compatible data trees. It can emit JSON through
 `to_json` and TOML for dictionary-like top-level values through `to_toml`.
 
-Class instances serialize from public fields. `to_serialized()` and
-`Class.from_serialized(data)` hooks override the default field mapping.
+`Serializable` is the standard protocol for structured machine-readable data:
+implement `to_data()` to return a tree of nil, booleans, numbers, strings,
+supported bytes, arrays, and dictionaries with string keys. `to_data()` is
+preferred over the older `to_serialized()` hook when both exist.
+`Class.from_serialized(data)` remains the deserialization hook.
+
+Class instances without `to_data()` or `to_serialized()` serialize from public
+fields.
 `from_data(data, Class)` constructs a class instance and assigns fields from
 the data tree.
 

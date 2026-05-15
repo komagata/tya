@@ -289,6 +289,11 @@ package's `Readable`, `Writable`, and `Closable` interfaces. Concrete
 `io.Reader`, `io.Writer`, `net/socket.Socket`, and `net/socket.Server` classes
 declare these contracts where their existing methods match.
 
+`serialization.Serializable` is the structured data protocol. Its `to_data()`
+method is for machine-readable JSON/TOML/XML-style data trees and is preferred
+by `serialization.Serializer.to_data`; use `Stringable.to_s()` for
+human-readable text.
+
 ## Compiler Introspection
 
 The compiler builtins back `compiler/*` packages:

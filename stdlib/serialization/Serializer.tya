@@ -2,6 +2,9 @@ import json as json
 import toml as toml
 import base64 as base64
 
+interface Serializable
+  to_data = ->
+
 class Serializer
   static to_data = value, options ->
     opts = Serializer.options(options)
@@ -79,6 +82,12 @@ class Serializer
         return out
       data = value
       if kind == "object"
+        if serialization_has_member(value, "to_data")
+          data = value.to_data()
+          if serialization_kind(data) == "object"
+            raise "serialization.to_data: to_data returned unsupported object"
+          seen.pop()
+          return Serializer.to_data_seen(data, opts, seen)
         if serialization_has_member(value, "to_serialized")
           data = value.to_serialized()
           seen.pop()

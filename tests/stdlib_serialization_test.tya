@@ -16,6 +16,25 @@ class HookedPlayer
   static from_serialized = data ->
     return HookedPlayer(data["name"].lower())
 
+class SerializablePlayer implements Serializable
+  initialize = name, score ->
+    self.name = name
+    self.score = score
+
+  to_data = ->
+    return { name: self.name, score: self.score, kind: "serializable" }
+
+class DualHookPlayer implements Serializable
+  to_data = ->
+    return { hook: "to_data" }
+
+  to_serialized = ->
+    return { hook: "to_serialized" }
+
+class ObjectData implements Serializable
+  to_data = ->
+    return SavePlayer("Ada", 7)
+
 class StdlibSerializationTest extends TestCase
 
   test_data_and_json_primitives = ->
@@ -41,6 +60,13 @@ class StdlibSerializationTest extends TestCase
     restored = serialization.Serializer.from_data({ name: "ADA" }, HookedPlayer)
     self.assert_equal(HookedPlayer, restored.class, "hook class")
     self.assert_equal("ada", restored.name, "hook name")
+
+  test_serializable_interface = ->
+    player = SerializablePlayer("Ada", 7)
+    data = serialization.Serializer.to_data(player)
+    self.assert_equal({ name: "Ada", score: 7, kind: "serializable" }, data, "serializable data")
+    self.assert_equal({ hook: "to_data" }, serialization.Serializer.to_data(DualHookPlayer()), "to_data precedence")
+    self.assert_raises(-> serialization.Serializer.to_data(ObjectData()), "to_data returned unsupported object")
 
   test_options = ->
     player = SavePlayer("Ada", 7)
