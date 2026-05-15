@@ -1,0 +1,2 @@
+interface Equatable
+  equal? = other ->

@@ -436,6 +436,12 @@ Numbers and strings conform to `Comparable` as primitive values. The ordering
 operators `<`, `<=`, `>`, and `>=` keep their existing primitive behavior and
 do not dispatch to user-defined `compare`.
 
+`Equatable` is the standard domain equality protocol. A class implements it by
+providing `equal?(other)`, which must return a boolean. Primitive values expose
+`equal?`; scalar primitives follow `==`, while arrays and dictionaries use
+deep equality. The `==` operator and top-level `equal(left, right)` keep their
+existing behavior and do not dispatch to user-defined `equal?`.
+
 ## Expressions
 
 Expressions compute values.

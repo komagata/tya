@@ -1,0 +1,55 @@
+# Equatable interface and primitive equal? methods.
+cd $REPO
+
+exec go run ./cmd/tya check stdlib/equatable.tya
+
+exec go run ./cmd/tya run $WORK/user_equatable.tya
+stdout 'true\nfalse\n'
+
+! exec go run ./cmd/tya check $WORK/missing_equal.tya
+stderr 'class User must implement interface method equal\?'
+
+! exec go run ./cmd/tya run $WORK/non_bool_equal.tya
+stderr 'equal\? must return boolean'
+
+exec go run ./cmd/tya run $WORK/primitives.tya
+stdout 'true\ntrue\ntrue\ntrue\ntrue\ntrue\n'
+
+-- user_equatable.tya --
+interface Equatable
+  equal? = other ->
+
+class User implements Equatable
+  initialize = name ->
+    self.name = name
+
+  equal? = other ->
+    self.name == other.name
+
+print(User("a").equal?(User("a")))
+print(User("a").equal?(User("b")))
+
+-- missing_equal.tya --
+interface Equatable
+  equal? = other ->
+
+class User implements Equatable
+  initialize = name ->
+    self.name = name
+
+-- non_bool_equal.tya --
+class User
+  equal? = other ->
+    if other == nil
+      return "yes"
+    "yes"
+
+print(User().equal?(nil))
+
+-- primitives.tya --
+print(1.equal?(1))
+print("a".equal?("a"))
+print(true.equal?(true))
+print(nil.equal?(nil))
+print([1, [2]].equal?([1, [2]]))
+print({ name: "Tya" }.equal?({ name: "Tya" }))

@@ -119,8 +119,11 @@ pop(array)
 ```
 
 `equal` performs deep equality for arrays and dictionaries. `==` checks normal
-runtime equality. Dictionaries and arrays also expose method forms such as
-`dict.has("name")`, `dict.keys()`, and `array.pop()`.
+runtime equality. `value.equal?(other)` is the `Equatable` protocol method:
+primitive arrays and dictionaries use deep equality there, while scalar
+primitive values follow normal runtime equality. Dictionaries and arrays also
+expose method forms such as `dict.has("name")`, `dict.keys()`, and
+`array.pop()`.
 
 ## Primitive Methods
 
@@ -129,6 +132,7 @@ Every runtime value exposes common methods:
 ```tya
 value.to_s()
 value.class
+value.equal?(other)
 ```
 
 Strings expose text helpers:

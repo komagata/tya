@@ -130,6 +130,7 @@ static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaVa
 static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_compare(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_equal_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_lt_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_lte_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_gt_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -3109,12 +3110,15 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
   switch (receiver.kind) {
   case TYA_NIL:
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     return tya_nil();
   case TYA_BOOL:
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     return tya_nil();
   case TYA_NUMBER:
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "to_i") == 0) return tya_bind_method(receiver, tya_method_to_i);
     if (strcmp(key, "to_f") == 0 || strcmp(key, "to_number") == 0) return tya_bind_method(receiver, tya_method_to_f);
     if (strcmp(key, "compare") == 0) return tya_bind_method(receiver, tya_method_compare);
@@ -3158,6 +3162,7 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "chars") == 0) return tya_bind_method(receiver, tya_method_chars);
     if (strcmp(key, "bytes") == 0) return tya_bind_method(receiver, tya_method_bytes);
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "to_i") == 0) return tya_bind_method(receiver, tya_method_to_i);
     if (strcmp(key, "to_f") == 0 || strcmp(key, "to_number") == 0) return tya_bind_method(receiver, tya_method_to_f);
     if (strcmp(key, "compare") == 0) return tya_bind_method(receiver, tya_method_compare);
@@ -3197,6 +3202,7 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "sort") == 0) return tya_bind_method(receiver, tya_method_sort);
     if (strcmp(key, "sort_by") == 0) return tya_bind_method(receiver, tya_method_sort_by);
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "iter") == 0) return tya_bind_method(receiver, tya_method_iter);
     if (strcmp(key, "sequence") == 0) return tya_bind_method(receiver, tya_method_sequence);
     return tya_nil();
@@ -3212,6 +3218,7 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "entries") == 0) return tya_bind_method(receiver, tya_method_entries);
     if (strcmp(key, "merge") == 0) return tya_bind_method(receiver, tya_method_merge);
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "iter") == 0) return tya_bind_method(receiver, tya_method_iter);
     if (strcmp(key, "sequence") == 0) return tya_bind_method(receiver, tya_method_sequence);
     return tya_nil();
@@ -3260,6 +3267,11 @@ static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaVa
 static TyaValue tya_method_to_i(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_int(receiver); }
 static TyaValue tya_method_to_f(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_to_number(receiver); }
 static TyaValue tya_method_compare(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_compare(receiver, other); }
+static TyaValue tya_method_equal_p(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d;
+  if (receiver.kind == TYA_ARRAY || receiver.kind == TYA_DICT) return tya_deep_equal(receiver, other);
+  return tya_bool(tya_equal(receiver, other));
+}
 static TyaValue tya_method_lt_p(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_bool(tya_compare(receiver, other).number < 0); }
 static TyaValue tya_method_lte_p(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_bool(tya_compare(receiver, other).number <= 0); }
 static TyaValue tya_method_gt_p(TyaValue receiver, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_bool(tya_compare(receiver, other).number > 0); }

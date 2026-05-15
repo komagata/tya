@@ -93,6 +93,21 @@ and strings expose the same methods without changing their primitive
 representation. Ordering operators do not dispatch to user-defined `compare`;
 classes call `compare` or the predicate methods explicitly.
 
+## Equatable Protocol
+
+`Equatable` is the standard interface for domain equality through
+`equal?(other)`.
+
+```tya
+interface Equatable
+  equal? = other ->
+```
+
+`==` remains normal runtime equality, and top-level `equal(left, right)`
+remains deep equality for arrays and dictionaries. `Equatable.equal?` is an
+explicit protocol method. Primitive scalar values follow `==`; primitive arrays
+and dictionaries use deep equality for `equal?`.
+
 ## `net/http`
 
 ```tya
