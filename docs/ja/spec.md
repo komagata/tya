@@ -1011,6 +1011,8 @@ tya build --target wasm32-browser examples/wasm/hello.tya -o hello.wasm
 
 `tya doctor wasm` は WebAssembly build 環境を報告する。`tya doctor native` は native build 環境を報告する。native パッケージメタデータは native build に C source と linker flag を寄与できるが、未サポートの native requirement を持つ package は未サポートの WebAssembly target で拒否される。
 
+WebAssembly build は compile-to-C backend を保持し、サポートされる WebAssembly C toolchain を使う。最初の WebAssembly target layer は stdout-oriented smoke programs をサポートする。browser build は filesystem と process-oriented imports も拒否する。`tya run` は native 専用であり、WebAssembly artifacts を実行しない。
+
 ## 組み込みツール
 
 `tya` コマンドはオールインワンの toolchain である。同じ binary が、コンパイラ、フォーマッタ、language server、test runner、linter、documentation generator、package manager、project scaffolder、task runner、doctor commands、package tool runner を含む。
@@ -1204,6 +1206,50 @@ tya embed --list --format=json src/main.tya
 ```sh
 tya version
 ```
+
+## 検証コマンド
+
+検証コマンドはソースを検査し、特定の contract を満たすかを報告する。検証コマンド自体は言語構文や標準ライブラリ挙動を定義しない。
+
+検証コマンドは `tya format --check`、`tya check`、`tya lint`、`tya test`、将来の `tya verify` を含む。`tya run` と `tya build` は diagnostics と exit-code 規約を共有してよいが、実行および build command であり、検証コマンドではない。
+
+`tya format --check` は source files が canonical Tya formatting に一致しているかを検査する。これは `tya format` がそのファイルを変更するかに答える。ファイルを書き換えてはならない。
+
+`tya check` は C emission や execution の前に、source files が有効な Tya program であるかを検査する。lexical analysis、parsing、semantic checking、requested program に必要な import loading を含む。C emission、C compiler invocation、executable creation、program execution、unit test execution、lint rules は含まない。
+
+`tya lint` は language validity に必須ではない rule を検査する。lint rule だけに失敗する program は有効な Tya program である。lint rules は built-in、project configuration、または将来の tooling で追加される rule であってよい。
+
+`tya test` は unittest-based tests の execution entry point である。passed tests、failed assertions、サポートされる場合の skipped tests、runtime errors、test discovery errors を報告する。
+
+`tya verify` は標準 verification pipeline のために予約される。その順序は次である。
+
+```text
+format --check -> check -> lint -> test
+```
+
+初期実装は、その時点で存在するコマンドだけを実行してよい。`tya verify` が存在するまでは、CI は次を直接実行できる。
+
+```sh
+tya format --check .
+tya check .
+```
+
+検証コマンドは安定した exit-code meaning を使う。
+
+```text
+0  verification passed
+1  verification failed
+2  command usage error
+3  internal tool error
+```
+
+検証コマンドは明示的な file と directory target を受け付ける。directory target は、その command に意味のある `.tya` source files を再帰的に選択する。target がない場合、より強い既存 convention を持つ command を除き、現在の directory を default target とする。
+
+人間向け検証出力はデフォルトで簡潔である。failure は command name、file path、利用可能な場合の line と column、利用可能な場合の短い rule または diagnostic name、actionable message を含むべきである。multi-file command は実用的な場合、通常の verification failure の後も続行し、最後に summary を報告するべきである。
+
+`--quiet`、`--verbose`、`--json` は一貫した verification behavior のために予約される。`--json` は human-readable output と同じ pass/fail meaning と exit codes を保持する。
+
+検証コマンドは checking と rewriting を区別する。`tya format` はファイルを書き換えてよい。`tya format --check`、`tya check`、`tya lint`、`tya test`、`tya verify` はデフォルトではファイルを書き換えない。automatic lint fixes には `--fix` のような明示的 option が必要である。
 
 ## 単一バイナリ配布
 

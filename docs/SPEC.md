@@ -1206,6 +1206,12 @@ contribute C sources and linker flags for native builds, but packages with
 unsupported native requirements are rejected for unsupported WebAssembly
 targets.
 
+WebAssembly builds preserve the compile-to-C backend and use the supported
+WebAssembly C toolchain. The first WebAssembly target layer supports
+stdout-oriented smoke programs. Browser builds also reject filesystem and
+process-oriented imports. `tya run` is native-only and does not execute
+WebAssembly artifacts.
+
 ## Built-In Tools
 
 The `tya` binary contains the compiler, formatter, language server, test
@@ -1255,6 +1261,77 @@ TYAL0006 suspicious for-index binding order
 TYAL0007 unused function parameter
 TYAL0008 shadowed binding
 ```
+
+## Verification Commands
+
+Verification commands inspect source and report whether it satisfies a specific
+contract. They do not define language syntax or standard-library behavior.
+
+Verification commands include `tya format --check`, `tya check`, `tya lint`,
+`tya test`, and future `tya verify`. `tya run` and `tya build` may share
+diagnostics and exit-code conventions with verification commands, but they are
+execution and build commands.
+
+`tya format --check` checks whether source files already match canonical Tya
+formatting. It answers whether `tya format` would change the file. It must not
+rewrite files.
+
+`tya check` checks whether source files are valid Tya programs before C
+emission or execution. It includes lexical analysis, parsing, semantic
+checking, and import loading needed for the requested program. It excludes C
+emission, C compiler invocation, executable creation, program execution, unit
+test execution, and lint rules.
+
+`tya lint` checks rules that are not required for language validity. A program
+that fails only lint rules is still a valid Tya program. Lint rules may be
+built in, configured by a project, or added later by tooling.
+
+`tya test` is the execution entry point for unittest-based tests. It reports
+passed tests, failed assertions, skipped tests when supported, runtime errors,
+and test discovery errors.
+
+`tya verify` is reserved for the standard verification pipeline. Its order is:
+
+```text
+format --check -> check -> lint -> test
+```
+
+Initial implementations may run only the commands that exist at the time.
+Before `tya verify` exists, CI may run:
+
+```sh
+tya format --check .
+tya check .
+```
+
+Verification commands use stable exit-code meanings:
+
+```text
+0  verification passed
+1  verification failed
+2  command usage error
+3  internal tool error
+```
+
+Verification commands accept explicit file and directory targets. Directory
+targets recursively select `.tya` source files meaningful for the command. With
+no target, verification commands use the current directory unless the command
+has a stronger existing convention.
+
+Human-readable verification output is concise by default. Failures should
+include the command name, file path, line and column when available, a short
+rule or diagnostic name when available, and an actionable message. Multi-file
+commands should continue after ordinary verification failures where practical
+and then report a summary.
+
+`--quiet`, `--verbose`, and `--json` are reserved for consistent verification
+behavior. `--json` preserves the same pass/fail meaning and exit codes as
+human-readable output.
+
+Verification commands distinguish checking from rewriting. `tya format` may
+rewrite files. `tya format --check`, `tya check`, `tya lint`, `tya test`, and
+`tya verify` do not rewrite files by default. Automatic lint fixes require an
+explicit option such as `--fix`.
 
 ## Single Binary Distribution
 
