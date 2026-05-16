@@ -52,13 +52,14 @@ conn.close()
 server.close()
 
 -- binary_client.tya --
+import bytes as bytes
 import net/socket as socket
 
 client = socket.Socket.connect("127.0.0.1", 18181, { mode: "binary" })
 client.write(b"abc")
 data = client.read(3)
 print(data.len())
-print(bytes_text(data))
+print(bytes.Bytes.text(data))
 client.close()
 
 -- timeout_server.tya --

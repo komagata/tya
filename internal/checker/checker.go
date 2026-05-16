@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -95,6 +96,9 @@ func checkStructure(prog *ast.Program, modules []string) error {
 	constants := map[string]bool{}
 	scope := newScope(nil)
 	for _, name := range builtinNames {
+		scope.define(name, kindUnknown)
+	}
+	for _, name := range internalBuiltinNames {
 		scope.define(name, kindUnknown)
 	}
 	for _, name := range extraBuiltinNames {
@@ -223,13 +227,16 @@ func CheckModuleFile(prog *ast.Program, path string) error {
 }
 
 var builtinNames = []string{
-	"args", "assert", "assert_equal", "chdir", "chr",
+	"args", "env", "error", "exit", "print", "println",
+}
+
+var internalBuiltinNames = []string{
+	"assert", "assert_equal", "chdir", "chr",
 	"cwd", "delete", "dir_list", "dir_mkdir", "dir_rmdir",
-	"env", "equal", "error", "exit", "file_exists", "file_remove",
+	"equal", "file_exists", "file_remove",
 	"file_rename", "file_stat",
 	"ord", "panic",
 	"path_expand_user",
-	"print", "println",
 	"read_file", "read_line",
 	"write_file", "stderr_write", "file_append",
 	"compress_gzip", "compress_gunzip", "compress_zlib", "compress_unzlib",
@@ -298,32 +305,111 @@ func isPrimitiveClassName(name string) bool {
 }
 
 var removedTopLevelPrimitiveBuiltins = map[string]string{
-	"kind":        "x.class or x.class.name",
-	"len":         "value.len()",
-	"byte_len":    "text.byte_len()",
-	"char_len":    "text.len()",
-	"trim":        "text.trim()",
-	"contains":    "text.contains(part)",
-	"starts_with": "text.starts_with(prefix)",
-	"ends_with":   "text.ends_with(suffix)",
-	"replace":     "text.replace(old, new)",
-	"split":       "text.split(separator)",
-	"join":        "items.join(separator)",
-	"keys":        "dict.keys()",
-	"values":      "dict.values()",
-	"has":         "dict.has(key)",
-	"push":        "items.push(value)",
-	"pop":         "items.pop()",
-	"map":         "items.map(fn)",
-	"filter":      "items.filter(fn)",
-	"find":        "items.find(fn)",
-	"any":         "items.any(fn)",
-	"all":         "items.all(fn)",
-	"reduce":      "items.reduce(initial, fn)",
-	"to_string":   "value.to_s()",
-	"to_int":      "value.to_i()",
-	"to_float":    "value.to_f()",
-	"to_number":   "value.to_number()",
+	"chdir":                            "Process.chdir(path)",
+	"chr":                              "String.chr(number)",
+	"cwd":                              "Process.cwd()",
+	"delete":                           "dict.delete(key)",
+	"dir_list":                         "Dir.list(path)",
+	"dir_mkdir":                        "Dir.mkdir(path)",
+	"dir_rmdir":                        "Dir.rmdir(path)",
+	"equal":                            "left == right or left.equal?(right)",
+	"file_append":                      "File.append(path, text)",
+	"file_exists":                      "File.exists?(path)",
+	"file_remove":                      "File.remove(path)",
+	"file_rename":                      "File.rename(old_path, new_path)",
+	"file_stat":                        "File.stat(path)",
+	"ord":                              "String.ord(string)",
+	"path_expand_user":                 "Path.expand_user(path)",
+	"read_file":                        "File.read(path)",
+	"read_line":                        "Io.stdin().read_line()",
+	"write_file":                       "File.write(path, text)",
+	"stderr_write":                     "Io.stderr().write(value)",
+	"compress_gzip":                    "Compress.gzip(value)",
+	"compress_gunzip":                  "Compress.gunzip(value)",
+	"compress_zlib":                    "Compress.zlib(value)",
+	"compress_unzlib":                  "Compress.unzlib(value)",
+	"io_stdin":                         "Io.stdin()",
+	"io_stdout":                        "Io.stdout()",
+	"io_stderr":                        "Io.stderr()",
+	"io_open":                          "Io.open(path, mode)",
+	"io_stream_read":                   "Reader.read(size)",
+	"io_stream_read_line":              "Reader.read_line()",
+	"io_stream_eof":                    "Reader.eof?()",
+	"io_stream_write":                  "Writer.write(value)",
+	"io_stream_flush":                  "Writer.flush()",
+	"io_stream_close":                  "Reader.close() or Writer.close()",
+	"socket_connect":                   "Socket.connect(host, port, options)",
+	"socket_server_listen":             "Server.listen(host, port, options)",
+	"socket_server_accept":             "server.accept()",
+	"socket_read":                      "socket.read(size)",
+	"socket_read_line":                 "socket.read_line()",
+	"socket_write":                     "socket.write(value)",
+	"socket_close":                     "socket.close()",
+	"socket_closed":                    "socket.closed?()",
+	"socket_local_address":             "socket.local_address()",
+	"socket_remote_address":            "socket.remote_address()",
+	"socket_server_close":              "server.close()",
+	"socket_server_local_address":      "server.local_address()",
+	"bytes":                            "Bytes.new(array)",
+	"bytes_of":                         "Bytes.of(string)",
+	"bytes_text":                       "bytes.text()",
+	"bytes_array":                      "bytes.array()",
+	"bytes_concat":                     "left.concat(right)",
+	"bytes_slice":                      "bytes.slice(start, end)",
+	"file_read_bytes":                  "File.read_bytes(path)",
+	"file_write_bytes":                 "File.write_bytes(path, bytes)",
+	"time_now":                         "Time.now()",
+	"time_sleep":                       "Time.sleep(seconds)",
+	"time_format":                      "Time.format(...)",
+	"time_parse":                       "Time.parse(...)",
+	"time_since":                       "Time.since(...)",
+	"random_seed":                      "Random.seed(seed)",
+	"random_int":                       "Random.int(min, max)",
+	"random_float":                     "Random.float()",
+	"compiler_lexer_lex":               "Lexer.lex(source)",
+	"compiler_lexer_lex_with_comments": "Lexer.lex_with_comments(source)",
+	"compiler_parser_parse":            "Parser.parse(source)",
+	"compiler_parser_parse_tokens":     "Parser.parse_tokens(tokens)",
+	"compiler_ast_children":            "Ast.children(node)",
+	"compiler_ast_kind":                "Ast.kind(node)",
+	"compiler_ast_span":                "Ast.span(node)",
+	"compiler_checker_check":           "Checker.check(source)",
+	"compiler_checker_check_ast":       "Checker.check_ast(program)",
+	"compiler_format_format":           "Format.format(source)",
+	"compiler_format_unparse":          "Format.unparse(program)",
+	"digest_md5":                       "Digest.md5(value)",
+	"digest_sha1":                      "Digest.sha1(value)",
+	"digest_sha256":                    "Digest.sha256(value)",
+	"digest_sha384":                    "Digest.sha384(value)",
+	"digest_sha512":                    "Digest.sha512(value)",
+	"secure_random_bytes":              "SecureRandom.bytes(size)",
+	"secure_random_int":                "SecureRandom.int(min, max)",
+	"kind":                             "x.class or x.class.name",
+	"len":                              "value.len()",
+	"byte_len":                         "text.byte_len()",
+	"char_len":                         "text.len()",
+	"trim":                             "text.trim()",
+	"contains":                         "text.contains(part)",
+	"starts_with":                      "text.starts_with(prefix)",
+	"ends_with":                        "text.ends_with(suffix)",
+	"replace":                          "text.replace(old, new)",
+	"split":                            "text.split(separator)",
+	"join":                             "items.join(separator)",
+	"keys":                             "dict.keys()",
+	"values":                           "dict.values()",
+	"has":                              "dict.has(key)",
+	"push":                             "items.push(value)",
+	"pop":                              "items.pop()",
+	"map":                              "items.map(fn)",
+	"filter":                           "items.filter(fn)",
+	"find":                             "items.find(fn)",
+	"any":                              "items.any(fn)",
+	"all":                              "items.all(fn)",
+	"reduce":                           "items.reduce(initial, fn)",
+	"to_string":                        "value.to_s()",
+	"to_int":                           "value.to_i()",
+	"to_float":                         "value.to_f()",
+	"to_number":                        "value.to_number()",
 }
 
 func removedTopLevelPrimitiveBuiltinError(name string, line, col int) error {
@@ -1381,7 +1467,7 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 			return nil
 		}
-		if id, ok := n.Callee.(*ast.Ident); ok {
+		if id, ok := n.Callee.(*ast.Ident); ok && scope.currentClass == "" && !permissiveLegacy && os.Getenv("TYA_LEGACY_MODULES") != "1" {
 			if err := removedTopLevelPrimitiveBuiltinError(id.Name, id.Tok.Line, id.Tok.Col); err != nil {
 				return err
 			}

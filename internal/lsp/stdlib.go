@@ -8,6 +8,7 @@ var stdlibModules = []string{
 	"array",
 	"base64",
 	"binary",
+	"bytes",
 	"channel",
 	"cli",
 	"collections",

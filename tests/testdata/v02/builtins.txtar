@@ -24,12 +24,14 @@ print(items.any(item -> item == 4))
 print(items.all(item -> item > 0))
 print(items.reduce(0, sum))
 print([1] == [1])
-print(equal([1, {name: "tya"}], [1, {name: "tya"}]))
-print(equal({nested: [1, 2]}, {nested: [1, 2]}))
+print([1, {name: "tya"}].equal?([1, {name: "tya"}]))
+print({nested: [1, 2]}.equal?({nested: [1, 2]}))
 
 -- read.tya --
-line = read_line()
-if line == nil
+import io as io
+
+input_line = io.Io.stdin().read_line()
+if input_line == nil
   print("empty")
 else
-  print(line)
+  print(input_line)

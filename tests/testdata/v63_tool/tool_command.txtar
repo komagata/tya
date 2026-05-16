@@ -123,8 +123,10 @@ for arg in args()
   println("arg:{arg}")
 
 -- tool_pkg/tools/stdin.tya --
-line = read_line()
-println("stdin:{line}")
+import io as io
+
+input_line = io.Io.stdin().read_line()
+println("stdin:{input_line}")
 
 -- tool_pkg/tools/fail.tya --
 println("before-exit")

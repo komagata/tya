@@ -255,6 +255,15 @@ func displayModuleName(path string) string {
 	return strings.TrimSuffix(filepath.Base(path), ".tya")
 }
 
+func samePath(left string, right string) bool {
+	leftAbs, leftErr := filepath.Abs(left)
+	rightAbs, rightErr := filepath.Abs(right)
+	if leftErr != nil || rightErr != nil {
+		return filepath.Clean(left) == filepath.Clean(right)
+	}
+	return filepath.Clean(leftAbs) == filepath.Clean(rightAbs)
+}
+
 func loadSource(path string, state *loadState, module bool, packageNamespace bool) (string, []string, error) {
 	abs, err := filepath.Abs(path)
 	if err != nil {
@@ -529,6 +538,9 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 		candidates = append(candidates, filepath.Join(dir, fileName))
 	}
 	for _, candidate := range candidates {
+		if samePath(candidate, importerPath) {
+			continue
+		}
 		if _, err := os.Stat(candidate); err == nil {
 			abs, err := filepath.Abs(candidate)
 			if err != nil {

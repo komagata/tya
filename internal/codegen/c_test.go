@@ -148,22 +148,33 @@ func TestEmitCCompilesFunctionLiteralsAsValues(t *testing.T) {
 }
 
 func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
 	dir := t.TempDir()
 	path := filepath.Join(dir, "input.txt")
 	if err := os.WriteFile(path, []byte("12\na\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	src := "path = args()[0]\ntext = read_file(path)\nparts = text.split(\"\\n\")\nfirst = parts[0].to_i()\nprint(first + 8)\nprint(true.to_s())\nprint(parts.join(\":\"))\n"
-	out := compileAndRunArgs(t, src, path)
+	main := filepath.Join(dir, "main.tya")
+	src := "import file as file\npath = args()[0]\ntext = file.File.read(path)\nparts = text.split(\"\\n\")\nfirst = parts[0].to_i()\nprint(first + 8)\nprint(true.to_s())\nprint(parts.join(\":\"))\n"
+	if err := os.WriteFile(main, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := compileAndRunFile(t, main, path)
 	if string(out) != "20\ntrue\n12:a:\n" {
 		t.Fatalf("got %q", out)
 	}
 }
 
 func TestEmitCCompilesWriteFileProgram(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "output.txt")
-	src := "path = args()[0]\nwrite_file(path, \"Hello\")\nprint(file_exists(path))\nprint(read_file(path))\n"
-	out := compileAndRunArgs(t, src, path)
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	dir := t.TempDir()
+	path := filepath.Join(dir, "output.txt")
+	main := filepath.Join(dir, "main.tya")
+	src := "import file as file\npath = args()[0]\nfile.File.write(path, \"Hello\")\nprint(file.File.exists?(path))\nprint(file.File.read(path))\n"
+	if err := os.WriteFile(main, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := compileAndRunFile(t, main, path)
 	if string(out) != "true\nHello\n" {
 		t.Fatalf("got %q", out)
 	}

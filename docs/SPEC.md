@@ -804,112 +804,32 @@ Library section.
 
 ## Built-In Functions
 
-Tya has predeclared builtins for core runtime operations, I/O, conversion,
-errors, process access, files, collections, and compiler introspection.
-Calls use parentheses. Builtins use `snake_case`; CamelCase builtin spellings
-are not part of the language specification.
+Tya keeps the public builtin surface intentionally small. File, directory,
+path, process, stream, bytes, random, compression, digest, socket, compiler,
+and collection helper operations are exposed through class-style standard
+library APIs. Low-level runtime intrinsics may exist internally to implement
+those classes, but they are not public standalone builtins.
 
-Core:
+Public builtins:
 
 ```text
 print(value)
 println(value)
-assert(value)
-assert_equal(expected, actual)
-panic(message)
-exit(status)
 error(message)
-```
-
-Process and environment:
-
-```text
+exit(status)
 args()
 env(name)
-cwd()
-chdir(path)
 ```
 
-Files, directories, and paths:
-
-```text
-read_file(path)
-write_file(path, text)
-file_append(path, text)
-file_exists(path)
-file_stat(path)
-file_remove(path)
-file_rename(old_path, new_path)
-file_read_bytes(path)
-file_write_bytes(path, bytes)
-dir_list(path)
-dir_mkdir(path)
-dir_rmdir(path)
-path_expand_user(path)
-```
-
-Input and streams:
-
-```text
-read_line()
-stderr_write(text)
-io_stdin()
-io_stdout()
-io_open(path, options)
-io_stream_read(stream, size)
-io_stream_read_line(stream)
-io_stream_write(stream, value)
-io_stream_flush(stream)
-io_stream_eof(stream)
-io_stream_close(stream)
-```
-
-Text, bytes, and conversion:
-
-```text
-chr(number)
-ord(string)
-type(value)
-bytes(value)
-bytes_of(string)
-bytes_text(bytes)
-bytes_array(bytes)
-bytes_concat(left, right)
-bytes_slice(bytes, start, end)
-```
-
-Collections:
-
-```text
-equal(left, right)
-delete(dict, key)
-```
-
-Low-level standard-library support builtins:
-
-```text
-time_now()
-time_sleep(seconds)
-random_seed(seed)
-random_int(min, max)
-random_float()
-compress_gzip(value)
-compress_gunzip(value)
-digest_sha256(value)
-secure_random_bytes(size)
-socket_connect(host, port, options)
-socket_read(socket, size)
-socket_read_line(socket)
-socket_write(socket, value)
-socket_close(socket)
-compiler_lexer_lex(source)
-compiler_parser_parse(source)
-compiler_checker_check(source)
-compiler_format_format(source)
-```
-
-Prefer standard-library package APIs over low-level support builtins when a
-package exists.
+Use standard-library APIs such as `File.read(path)`, `File.append(path, text)`,
+`Dir.list(path)`, `Path.expand_user(path)`, `Process.cwd()`,
+`Process.chdir(path)`, `Io.open(path, mode)`, `Reader#read(size)`,
+`Writer#write(value)`, `Random.int(min, max)`, `Compress.gzip(value)`,
+`Digest.sha256(value)`, `Socket.connect(host, port, options)`,
+`Lexer.lex(source)`, `Parser.parse(source)`, `Checker.check(source)`, and
+`Format.format(source)` instead of low-level intrinsic names. Use receiver
+methods for conversions and collections, for example `value.to_s()`,
+`value.to_i()`, `dict.delete(key)`, `dict.keys()`, and `items.pop()`.
 
 Standard library APIs are imported with the same `import` syntax as user code.
 

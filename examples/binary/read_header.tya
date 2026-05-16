@@ -1,9 +1,10 @@
 import binary as binary
+import bytes as bytes
 
 data = b"Tya\x00\x02\x01"
 reader = binary.Reader.new(data)
 
-magic = bytes_text(reader.read_bytes(3))
+magic = bytes.Bytes.text(reader.read_bytes(3))
 reader.skip(1)
 major = reader.read_u8()
 minor = reader.read_u8()

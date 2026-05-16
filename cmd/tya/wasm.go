@@ -171,6 +171,7 @@ TyaValue tya_file_rename(TyaValue old_path, TyaValue new_path);
 TyaValue tya_file_stat(TyaValue path);
 TyaValue tya_file_read_bytes(TyaValue path);
 TyaValue tya_file_write_bytes(TyaValue path, TyaValue b);
+TyaValue tya_file_append(TyaValue path, TyaValue text);
 void tya_panic(TyaValue value);
 void tya_gc_register_root(TyaValue *root);
 void tya_gc_maybe_collect(void);
@@ -211,6 +212,7 @@ TyaValue tya_file_rename(TyaValue old_path, TyaValue new_path) { (void)old_path;
 TyaValue tya_file_stat(TyaValue path) { (void)path; return tya_dict(NULL, 0); }
 TyaValue tya_file_read_bytes(TyaValue path) { (void)path; return tya_nil(); }
 TyaValue tya_file_write_bytes(TyaValue path, TyaValue b) { (void)path; (void)b; return tya_nil(); }
+TyaValue tya_file_append(TyaValue path, TyaValue text) { (void)path; (void)text; return tya_nil(); }
 `
 
 const wasmRuntimeCommon = `#include "tya_runtime.h"

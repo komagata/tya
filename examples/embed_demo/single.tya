@@ -1,4 +1,6 @@
 # v0.57: a single file is read at build time and exposed as
-# bytes. bytes_text recovers the source text.
+# bytes. bytes.Bytes.text recovers the source text.
+import bytes as bytes
+
 embed "data.txt" as payload
-print(bytes_text(payload))
+print(bytes.Bytes.text(payload))

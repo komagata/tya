@@ -1,3 +1,9 @@
 class Process
+  static cwd = ->
+    cwd()
+
+  static chdir = path ->
+    chdir(path)
+
   static run = command, options ->
     process_run(command, options)

@@ -16,28 +16,33 @@ exec sh -c '$WORK/concurrent_server & pid=$!; sleep 0.5; curl -s -m 2 http://loc
 -- client_server.tya --
 import net/socket as socket
 
+class HttpText
+  static cr = ->
+    chr(13)
+
+crlf = HttpText.cr() + "\n"
 server = socket.Server.listen("127.0.0.1", 18091, {})
 conn = server.accept()
 line = conn.read_line()
-while line != nil and line != chr(13) + "\n" and line != "\n"
+while line != nil and line != crlf and line != "\n"
   line = conn.read_line()
-conn.write("HTTP/1.1 201 Created" + chr(13) + "\n")
-conn.write("Content-Length: 12" + chr(13) + "\n")
-conn.write(chr(13) + "\n")
+conn.write("HTTP/1.1 201 Created" + crlf)
+conn.write("Content-Length: 12" + crlf)
+conn.write(crlf)
 conn.write("hello client")
 conn.close()
 
 conn = server.accept()
 line = conn.read_line()
-while line != nil and line != chr(13) + "\n" and line != "\n"
+while line != nil and line != crlf and line != "\n"
   line = conn.read_line()
-conn.write("HTTP/1.1 200 OK" + chr(13) + "\n")
-conn.write("Transfer-Encoding: chunked" + chr(13) + "\n")
-conn.write(chr(13) + "\n")
-conn.write("c" + chr(13) + "\n")
-conn.write("chunked body" + chr(13) + "\n")
-conn.write("0" + chr(13) + "\n")
-conn.write(chr(13) + "\n")
+conn.write("HTTP/1.1 200 OK" + crlf)
+conn.write("Transfer-Encoding: chunked" + crlf)
+conn.write(crlf)
+conn.write("c" + crlf)
+conn.write("chunked body" + crlf)
+conn.write("0" + crlf)
+conn.write(crlf)
 conn.close()
 server.close()
 

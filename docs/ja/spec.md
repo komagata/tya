@@ -660,108 +660,28 @@ default
 
 ## 組み込み関数
 
-Tya には、中核ランタイム操作、I/O、変換、エラー、プロセスアクセス、ファイル、コレクション、コンパイラ introspection のための事前宣言された組み込みがある。call は parentheses を使う。builtin は `snake_case` を使い、CamelCase builtin spelling は言語仕様に含まれない。
+Tya の public builtin surface は意図的に小さい。file、directory、path、process、stream、bytes、random、compression、digest、socket、compiler、collection helper 操作は class-style standard-library API として公開される。これらの class を実装するために low-level runtime intrinsic が内部に存在してよいが、public standalone builtin ではない。
 
-Core:
+Public builtins:
 
 ```text
 print(value)
 println(value)
-assert(value)
-assert_equal(expected, actual)
-panic(message)
-exit(status)
 error(message)
-```
-
-Process and environment:
-
-```text
+exit(status)
 args()
 env(name)
-cwd()
-chdir(path)
 ```
 
-Files, directories, and paths:
-
-```text
-read_file(path)
-write_file(path, text)
-file_append(path, text)
-file_exists(path)
-file_stat(path)
-file_remove(path)
-file_rename(old_path, new_path)
-file_read_bytes(path)
-file_write_bytes(path, bytes)
-dir_list(path)
-dir_mkdir(path)
-dir_rmdir(path)
-path_expand_user(path)
-```
-
-Input and streams:
-
-```text
-read_line()
-stderr_write(text)
-io_stdin()
-io_stdout()
-io_open(path, options)
-io_stream_read(stream, size)
-io_stream_read_line(stream)
-io_stream_write(stream, value)
-io_stream_flush(stream)
-io_stream_eof(stream)
-io_stream_close(stream)
-```
-
-Text, bytes, and conversion:
-
-```text
-chr(number)
-ord(string)
-type(value)
-bytes(value)
-bytes_of(string)
-bytes_text(bytes)
-bytes_array(bytes)
-bytes_concat(left, right)
-bytes_slice(bytes, start, end)
-```
-
-Collections:
-
-```text
-equal(left, right)
-delete(dict, key)
-```
-
-Low-level standard-library support builtins:
-
-```text
-time_now()
-time_sleep(seconds)
-random_seed(seed)
-random_int(min, max)
-random_float()
-compress_gzip(value)
-compress_gunzip(value)
-digest_sha256(value)
-secure_random_bytes(size)
-socket_connect(host, port, options)
-socket_read(socket, size)
-socket_read_line(socket)
-socket_write(socket, value)
-socket_close(socket)
-compiler_lexer_lex(source)
-compiler_parser_parse(source)
-compiler_checker_check(source)
-compiler_format_format(source)
-```
-
-対応する package が存在する場合、low-level support builtin より standard-library package API を優先する。
+low-level intrinsic name ではなく、`File.read(path)`, `File.append(path, text)`,
+`Dir.list(path)`, `Path.expand_user(path)`, `Process.cwd()`,
+`Process.chdir(path)`, `Io.open(path, mode)`, `Reader#read(size)`,
+`Writer#write(value)`, `Random.int(min, max)`, `Compress.gzip(value)`,
+`Digest.sha256(value)`, `Socket.connect(host, port, options)`,
+`Lexer.lex(source)`, `Parser.parse(source)`, `Checker.check(source)`,
+`Format.format(source)` などの standard-library API を使う。conversion と
+collection helper は `value.to_s()`, `value.to_i()`, `dict.delete(key)`,
+`dict.keys()`, `items.pop()` のような receiver method を使う。
 
 標準ライブラリ API は、ユーザーコードと同じ `import` 構文でインポートされる。
 

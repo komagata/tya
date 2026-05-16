@@ -5,6 +5,9 @@ class File
   static write = path, text ->
     write_file(path, text)
 
+  static append = path, text ->
+    file_append(path, text)
+
   static exists? = path ->
     file_exists(path)
 

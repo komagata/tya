@@ -1,0 +1,18 @@
+class Bytes
+  static new = values ->
+    bytes(values)
+
+  static of = text ->
+    bytes_of(text)
+
+  static text = value ->
+    bytes_text(value)
+
+  static array = value ->
+    bytes_array(value)
+
+  static concat = left, right ->
+    bytes_concat(left, right)
+
+  static slice = value, start, end ->
+    bytes_slice(value, start, end)

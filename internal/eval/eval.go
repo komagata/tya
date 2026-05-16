@@ -590,6 +590,20 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			module.Members[member.Name] = nameFunction(member.Name, value)
 		}
 		return module, nil
+	case *ast.ClassDecl:
+		class := Dict{}
+		env.set(n.Name, class)
+		for _, method := range n.Methods {
+			if !method.Class || method.Abstract {
+				continue
+			}
+			value, err := evalExpr(method.Func, env)
+			if err != nil {
+				return nil, err
+			}
+			class[method.Name] = nameFunction(method.Name, value)
+		}
+		return class, nil
 	case *ast.InterfaceDecl:
 		return nil, nil
 	case *ast.ExprStmt:

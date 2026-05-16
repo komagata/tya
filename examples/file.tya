@@ -1,4 +1,14 @@
+class FileExample
+  static write = path, text ->
+    write_file(path, text)
+
+  static exists? = path ->
+    file_exists(path)
+
+  static read = path ->
+    read_file(path)
+
 path = "/tmp/tya_example.txt"
-write_file(path, "Hello from Tya")
-print(file_exists(path))
-print(read_file(path))
+FileExample.write(path, "Hello from Tya")
+print(FileExample.exists?(path))
+print(FileExample.read(path))
