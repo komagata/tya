@@ -41,8 +41,7 @@ scripts/verify_editor_assets.sh
 Last observed GitHub Actions verification:
 
 ```text
-Publish VS Code extension / main / 25778959381 / success / 2026-05-13T04:48:26Z
-Publish VS Code extension / main / 25779551179 / success / 2026-05-13T05:07:03Z
+Publish VS Code extension / main / 25953906444 / success / 2026-05-16T05:29:57Z
 ```
 
 ## Published Repository Evidence
@@ -56,9 +55,9 @@ Publish VS Code extension / main / 25779551179 / success / 2026-05-13T05:07:03Z
 - Main commit with manual editor asset bundle docs: `3aad8f2`
 - Main commit licensing the Tree-sitter grammar as MIT: `018f8a6`
 - Latest observed GitHub Actions `Publish VS Code extension` Marketplace run:
-  `25778959381`, status: success.
+  `25953906444`, status: success.
 - Latest observed GitHub Actions `Publish VS Code extension` Open VSX run:
-  `25779551179`, status: success.
+  `25953906444`, status: success.
 - VS Code manual-install release:
   https://github.com/komagata/tya/releases/tag/editors-vscode-v0.65.0
   (`tya-0.65.0.vsix`, sha256
