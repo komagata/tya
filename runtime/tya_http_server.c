@@ -82,6 +82,52 @@ typedef struct {
   int cap;
 } byte_buffer;
 
+typedef struct http_arena_block {
+  void *ptr;
+  struct http_arena_block *next;
+} http_arena_block;
+
+typedef struct {
+  http_arena_block *head;
+} http_arena;
+
+static void arena_init(http_arena *arena) {
+  arena->head = NULL;
+}
+
+static void *arena_alloc(http_arena *arena, size_t size) {
+  void *ptr = malloc(size);
+  if (ptr == NULL) return NULL;
+  http_arena_block *block = malloc(sizeof(http_arena_block));
+  if (block == NULL) {
+    free(ptr);
+    return NULL;
+  }
+  block->ptr = ptr;
+  block->next = arena->head;
+  arena->head = block;
+  return ptr;
+}
+
+static char *arena_dup_bytes(http_arena *arena, const char *src, int len) {
+  char *out = arena_alloc(arena, len + 1);
+  if (out == NULL) return NULL;
+  memcpy(out, src, len);
+  out[len] = '\0';
+  return out;
+}
+
+static void arena_free(http_arena *arena) {
+  http_arena_block *block = arena->head;
+  while (block != NULL) {
+    http_arena_block *next = block->next;
+    free(block->ptr);
+    free(block);
+    block = next;
+  }
+  arena->head = NULL;
+}
+
 static void buf_init(byte_buffer *b) {
   b->buf = NULL;
   b->len = 0;
@@ -111,12 +157,8 @@ static void buf_free(byte_buffer *b) {
 }
 
 // dup_bytes copies len bytes from src into a freshly allocated
-// NUL-terminated string. The runtime's TyaValue wrappers store the
-// pointer by reference (no internal copy), so strings handed to
-// tya_string / tya_dict_set must outlive the request. In v0.58 we
-// intentionally leak these per-request buffers; switching to a per-
-// request arena or a GC-tracked string allocator is a v0.59+
-// follow-up.
+// NUL-terminated string. Request-owned strings use http_arena instead;
+// this helper is for short-lived temporary buffers that callers free.
 static char *dup_bytes(const char *src, int len) {
   char *out = malloc(len + 1);
   if (out == NULL) return NULL;
@@ -187,7 +229,7 @@ static char *strip_trailing_slash_copy(const char *s) {
 // path_match compares a route pattern against a request path,
 // optionally collecting :name captures into `params`. Returns 1 on
 // match (and writes params into the dict via tya_dict_set).
-static int path_match(const char *pat, const char *req, TyaValue params) {
+static int path_match(const char *pat, const char *req, TyaValue params, http_arena *arena) {
   // Split both on '/' and walk segment by segment.
   const char *p = pat;
   const char *r = req;
@@ -206,10 +248,10 @@ static int path_match(const char *pat, const char *req, TyaValue params) {
     if (p_done != r_done) return 0;
 
     if (p_len > 0 && p[0] == '*') {
-      char *name = dup_bytes(p + 1, p_len - 1);
+      char *name = arena_dup_bytes(arena, p + 1, p_len - 1);
       const char *value_start = r;
       int value_len = (int)strlen(r);
-      char *value = dup_bytes(value_start, value_len);
+      char *value = arena_dup_bytes(arena, value_start, value_len);
       if (name != NULL && value != NULL) {
         tya_dict_set(params, tya_string(name), tya_string(value));
       }
@@ -226,12 +268,11 @@ static int path_match(const char *pat, const char *req, TyaValue params) {
       return 0;
     }
     if (param_name != NULL && param_name_len > 0) {
-      char *name = dup_bytes(param_name, param_name_len);
-      char *value = dup_bytes(param_value, param_value_len);
+      char *name = arena_dup_bytes(arena, param_name, param_name_len);
+      char *value = arena_dup_bytes(arena, param_value, param_value_len);
       if (name != NULL && value != NULL) {
         tya_dict_set(params, tya_string(name), tya_string(value));
       }
-      // Intentional per-request leak: see dup_bytes comment.
     }
     p = p_end;
     r = r_end;
@@ -240,19 +281,19 @@ static int path_match(const char *pat, const char *req, TyaValue params) {
   }
 }
 
-static int route_path_match(TyaValue route, const char *path, TyaValue params) {
+static int route_path_match(TyaValue route, const char *path, TyaValue params, http_arena *arena) {
   TyaValue r_path = tya_dict_get(route, tya_string("path"), tya_nil(), true);
   if (r_path.kind != TYA_STRING || r_path.string == NULL || path == NULL) return 0;
   TyaValue slash = tya_dict_get(route, tya_string("trailing_slash"), tya_string("strict"), true);
   if (slash.kind == TYA_STRING && slash.string != NULL && strcmp(slash.string, "ignore") == 0) {
     char *rp = strip_trailing_slash_copy(r_path.string);
     char *pp = strip_trailing_slash_copy(path);
-    int ok = path_match(rp, pp, params);
+    int ok = path_match(rp, pp, params, arena);
     free(rp);
     free(pp);
     return ok;
   }
-  return path_match(r_path.string, path, params);
+  return path_match(r_path.string, path, params, arena);
 }
 
 static int route_method_match(const char *route_method, const char *request_method, int allow_head_fallback) {
@@ -286,7 +327,11 @@ static char *allow_header_for(TyaValue routes, const char *path) {
     TyaValue r_method = tya_dict_get(r, tya_string("method"), tya_nil(), true);
     if (r_method.kind != TYA_STRING || r_method.string == NULL || r_method.string[0] == '_') continue;
     TyaValue params = tya_dict(NULL, 0);
-    if (!route_path_match(r, path, params)) continue;
+    http_arena tmp_arena;
+    arena_init(&tmp_arena);
+    int matched = route_path_match(r, path, params, &tmp_arena);
+    arena_free(&tmp_arena);
+    if (!matched) continue;
     const char *method = strcmp(r_method.string, "ANY") == 0 ? "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD" : r_method.string;
     if (strstr(buf, method) == NULL) {
       if (buf[0] != '\0') strncat(buf, ", ", sizeof(buf) - strlen(buf) - 1);
@@ -302,7 +347,7 @@ static char *allow_header_for(TyaValue routes, const char *path) {
 
 // parse_query splits "?a=1&b=2" style content (without the leading
 // '?'), populating `query` with string-typed entries.
-static void parse_query(const char *qs, TyaValue query) {
+static void parse_query(const char *qs, TyaValue query, http_arena *arena) {
   if (qs == NULL || *qs == '\0') return;
   const char *p = qs;
   while (*p) {
@@ -312,18 +357,16 @@ static void parse_query(const char *qs, TyaValue query) {
     if (eq != NULL) {
       int key_len = (int)(eq - p);
       int val_len = pair_len - key_len - 1;
-      char *key = dup_bytes(p, key_len);
-      char *val = dup_bytes(eq + 1, val_len);
+      char *key = arena_dup_bytes(arena, p, key_len);
+      char *val = arena_dup_bytes(arena, eq + 1, val_len);
       if (key != NULL && val != NULL) {
         tya_dict_set(query, tya_string(key), tya_string(val));
       }
-      // Intentional per-request leak.
     } else {
-      char *key = dup_bytes(p, pair_len);
+      char *key = arena_dup_bytes(arena, p, pair_len);
       if (key != NULL) {
         tya_dict_set(query, tya_string(key), tya_string(""));
       }
-      // Intentional per-request leak.
     }
     if (amp == NULL) break;
     p = amp + 1;
@@ -359,6 +402,7 @@ static int request_keep_alive(const char *version, int version_len, const char *
             char *trimmed = trim_ws(value);
             if (strstr(trimmed, "close") != NULL) keep_alive = 0;
             if (strstr(trimmed, "keep-alive") != NULL) keep_alive = 1;
+            free(value);
           }
         }
       }
@@ -369,9 +413,9 @@ static int request_keep_alive(const char *version, int version_len, const char *
   return keep_alive;
 }
 
-static void parse_cookie_header(const char *header, TyaValue cookies) {
+static void parse_cookie_header(const char *header, TyaValue cookies, http_arena *arena) {
   if (header == NULL || *header == '\0') return;
-  char *copy = dup_bytes(header, (int)strlen(header));
+  char *copy = arena_dup_bytes(arena, header, (int)strlen(header));
   if (copy == NULL) return;
   char *p = copy;
   while (*p) {
@@ -392,7 +436,7 @@ static void parse_cookie_header(const char *header, TyaValue cookies) {
   }
 }
 
-static char *header_param_value(const char *header, const char *param) {
+static char *header_param_value(const char *header, const char *param, http_arena *arena) {
   if (header == NULL || param == NULL) return NULL;
   int param_len = (int)strlen(param);
   const char *p = header;
@@ -404,11 +448,11 @@ static char *header_param_value(const char *header, const char *param) {
         p++;
         const char *end = strchr(p, '"');
         if (end == NULL) return NULL;
-        return dup_bytes(p, (int)(end - p));
+        return arena_dup_bytes(arena, p, (int)(end - p));
       }
       const char *end = p;
       while (*end && *end != ';' && *end != '\r' && *end != '\n') end++;
-      char *value = dup_bytes(p, (int)(end - p));
+      char *value = arena_dup_bytes(arena, p, (int)(end - p));
       if (value == NULL) return NULL;
       return trim_ws(value);
     }
@@ -417,13 +461,13 @@ static char *header_param_value(const char *header, const char *param) {
   return NULL;
 }
 
-static char *multipart_boundary(const char *content_type) {
+static char *multipart_boundary(const char *content_type, http_arena *arena) {
   if (content_type == NULL) return NULL;
   if (strstr(content_type, "multipart/form-data") == NULL) return NULL;
-  return header_param_value(content_type, "boundary");
+  return header_param_value(content_type, "boundary", arena);
 }
 
-static char *part_header_value(const char *headers, int headers_len, const char *wanted) {
+static char *part_header_value(const char *headers, int headers_len, const char *wanted, http_arena *arena) {
   int wanted_len = (int)strlen(wanted);
   const char *cursor = headers;
   const char *limit = headers + headers_len;
@@ -440,7 +484,7 @@ static char *part_header_value(const char *headers, int headers_len, const char 
       name[n] = '\0';
       lowercase_inplace(name);
       if (name_len == wanted_len && strcmp(name, wanted) == 0) {
-        char *value = dup_bytes(colon + 1, line_len - name_len - 1);
+        char *value = arena_dup_bytes(arena, colon + 1, line_len - name_len - 1);
         if (value == NULL) return NULL;
         return trim_ws(value);
       }
@@ -451,8 +495,8 @@ static char *part_header_value(const char *headers, int headers_len, const char 
   return NULL;
 }
 
-static int parse_multipart_body(const char *content_type, const uint8_t *body, int body_len, TyaValue form, TyaValue files) {
-  char *boundary = multipart_boundary(content_type);
+static int parse_multipart_body(const char *content_type, const uint8_t *body, int body_len, TyaValue form, TyaValue files, http_arena *arena) {
+  char *boundary = multipart_boundary(content_type, arena);
   if (boundary == NULL) return 1;
   int boundary_len = (int)strlen(boundary);
   if (boundary_len == 0) return 0;
@@ -495,21 +539,21 @@ static int parse_multipart_body(const char *content_type, const uint8_t *body, i
       return 0;
     }
     int content_len = (int)(next - content - 2);
-    char *disp = part_header_value(pos, (int)(header_end - pos), "content-disposition");
+    char *disp = part_header_value(pos, (int)(header_end - pos), "content-disposition", arena);
     if (disp != NULL && strstr(disp, "form-data") != NULL) {
-      char *name = header_param_value(disp, "name");
+      char *name = header_param_value(disp, "name", arena);
       if (name != NULL && name[0] != '\0') {
-        char *filename = header_param_value(disp, "filename");
+        char *filename = header_param_value(disp, "filename", arena);
         if (filename != NULL) {
           TyaValue meta = tya_dict(NULL, 0);
           tya_dict_set(meta, tya_string("filename"), tya_string(filename));
-          char *ct = part_header_value(pos, (int)(header_end - pos), "content-type");
+          char *ct = part_header_value(pos, (int)(header_end - pos), "content-type", arena);
           tya_dict_set(meta, tya_string("content_type"), tya_string(ct == NULL ? "" : ct));
           tya_dict_set(meta, tya_string("body"), tya_bytes_lit(content, content_len));
           tya_dict_set(meta, tya_string("size"), tya_number(content_len));
           tya_dict_set(files, tya_string(name), meta);
         } else {
-          char *value = dup_bytes(content, content_len);
+          char *value = arena_dup_bytes(arena, content, content_len);
           if (value != NULL) {
             tya_dict_set(form, tya_string(name), tya_string(value));
           }
@@ -609,17 +653,17 @@ static TyaValue build_request_dict(const char *method, int method_len,
                                    const char *query_str, int query_len,
                                    const char *headers_text, int headers_len,
                                    const uint8_t *body, int body_len,
-                                   TyaValue params, int keep_alive, int *bad_request) {
+                                   TyaValue params, int keep_alive, http_arena *arena, int *bad_request) {
   TyaValue req = tya_dict(NULL, 0);
   {
-    char *m = dup_bytes(method, method_len);
+    char *m = arena_dup_bytes(arena, method, method_len);
     if (m != NULL) {
       // method is already uppercase from HTTP/1.1.
       tya_dict_set(req, tya_string("method"), tya_string(m));
     }
   }
   {
-    char *p = dup_bytes(path, path_len);
+    char *p = arena_dup_bytes(arena, path, path_len);
     if (p != NULL) {
       tya_dict_set(req, tya_string("path"), tya_string(p));
     }
@@ -632,9 +676,7 @@ static TyaValue build_request_dict(const char *method, int method_len,
   if (query_len > 0) {
     char *q = dup_bytes(query_str, query_len);
     if (q != NULL) {
-      parse_query(q, query);
-      // q itself is throwaway after parse_query (parse_query
-      // duped each key/value separately); free here is OK.
+      parse_query(q, query, arena);
       free(q);
     }
   }
@@ -657,15 +699,13 @@ static TyaValue build_request_dict(const char *method, int method_len,
         const char *colon = memchr(cursor, ':', line_len);
         if (colon != NULL) {
           int name_len = (int)(colon - cursor);
-          char *name = dup_bytes(cursor, name_len);
+          char *name = arena_dup_bytes(arena, cursor, name_len);
           int value_start = (int)(colon - cursor) + 1;
-          char *value = dup_bytes(cursor + value_start, line_len - value_start);
+          char *value = arena_dup_bytes(arena, cursor + value_start, line_len - value_start);
           if (name != NULL && value != NULL) {
             lowercase_inplace(name);
             char *value_trim = trim_ws(value);
             tya_dict_set(headers, tya_string(name), tya_string(value_trim));
-            // Intentional per-request leak (see dup_bytes comment).
-            // value_trim points into value; value can't be freed.
           }
         }
       }
@@ -677,14 +717,14 @@ static TyaValue build_request_dict(const char *method, int method_len,
   TyaValue cookies = tya_dict(NULL, 0);
   TyaValue cookie_header = tya_dict_get(headers, tya_string("cookie"), tya_nil(), true);
   if (cookie_header.kind == TYA_STRING && cookie_header.string != NULL) {
-    parse_cookie_header(cookie_header.string, cookies);
+    parse_cookie_header(cookie_header.string, cookies, arena);
   }
   tya_dict_set(req, tya_string("cookies"), cookies);
   TyaValue form = tya_dict(NULL, 0);
   TyaValue files = tya_dict(NULL, 0);
   TyaValue content_type = tya_dict_get(headers, tya_string("content-type"), tya_nil(), true);
   if (content_type.kind == TYA_STRING && content_type.string != NULL) {
-    if (!parse_multipart_body(content_type.string, body, body_len, form, files)) {
+    if (!parse_multipart_body(content_type.string, body, body_len, form, files, arena)) {
       if (bad_request != NULL) *bad_request = 1;
     }
   }
@@ -930,9 +970,12 @@ static void handle_connection(int fd, TyaValue routes) {
   byte_buffer body_buf;
   buf_init(&headers_buf);
   buf_init(&body_buf);
+  http_arena arena;
+  arena_init(&arena);
   int content_length = 0;
   if (read_request(fd, &headers_buf, &body_buf, &content_length) != 0) {
     if (request_count == 0) write_simple_response(fd, 400, "Bad Request");
+    arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
     close(fd);
@@ -943,6 +986,7 @@ static void handle_connection(int fd, TyaValue routes) {
   char *line_end = memchr(headers_buf.buf, '\n', headers_buf.len);
   if (line_end == NULL) {
     write_simple_response(fd, 400, "Bad Request");
+    arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
     close(fd);
@@ -957,6 +1001,7 @@ static void handle_connection(int fd, TyaValue routes) {
   while (method_len < rl_len && method[method_len] != ' ') method_len++;
   if (method_len == 0 || method_len == rl_len) {
     write_simple_response(fd, 400, "Bad Request");
+    arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
     close(fd);
@@ -989,6 +1034,7 @@ static void handle_connection(int fd, TyaValue routes) {
   // Iterate routes and find first match by (method, path).
   if (routes.kind != TYA_ARRAY || routes.array == NULL) {
     write_simple_response(fd, 500, "Server misconfigured: routes missing");
+    arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
     close(fd);
@@ -1009,7 +1055,7 @@ static void handle_connection(int fd, TyaValue routes) {
     if (method_cstr == NULL) continue;
     if (!route_method_match(r_method.string, method_cstr, 0)) continue;
     TyaValue params = tya_dict(NULL, 0);
-    if (route_path_match(r, path_cstr, params)) {
+    if (route_path_match(r, path_cstr, params, &arena)) {
       matched_handler = r_handler;
       matched_params = params;
       matched_route = r;
@@ -1025,7 +1071,7 @@ static void handle_connection(int fd, TyaValue routes) {
       if (r_method.kind != TYA_STRING || r_method.string == NULL) continue;
       if (!route_method_match(r_method.string, method_cstr, 1)) continue;
       TyaValue params = tya_dict(NULL, 0);
-      if (route_path_match(r, path_cstr, params)) {
+      if (route_path_match(r, path_cstr, params, &arena)) {
         matched_handler = r_handler;
         matched_params = params;
         matched_route = r;
@@ -1046,6 +1092,7 @@ static void handle_connection(int fd, TyaValue routes) {
       write_response(fd, resp, keep_alive);
       free(method_cstr);
       free(path_cstr);
+      arena_free(&arena);
       buf_free(&headers_buf);
       buf_free(&body_buf);
       if (keep_alive) continue;
@@ -1067,9 +1114,10 @@ static void handle_connection(int fd, TyaValue routes) {
                                         query_str, query_len,
                                         (const char *)(headers_buf.buf), headers_buf.len,
                                         (const uint8_t *)body_buf.buf, body_buf.len,
-                                        tya_dict(NULL, 0), keep_alive, &bad_request);
+                                        tya_dict(NULL, 0), keep_alive, &arena, &bad_request);
       if (bad_request) {
         write_simple_response(fd, 400, "Bad Request");
+        arena_free(&arena);
         buf_free(&headers_buf);
         buf_free(&body_buf);
         close(fd);
@@ -1081,6 +1129,7 @@ static void handle_connection(int fd, TyaValue routes) {
     } else {
       write_simple_response(fd, 404, "Not Found");
     }
+    arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
     if (keep_alive) continue;
@@ -1098,9 +1147,10 @@ static void handle_connection(int fd, TyaValue routes) {
                                     query_str, query_len,
                                     headers_text, headers_text_len,
                                     (const uint8_t *)body_buf.buf, body_buf.len,
-                                    matched_params, keep_alive, &bad_request);
+                                    matched_params, keep_alive, &arena, &bad_request);
   if (bad_request) {
     write_simple_response(fd, 400, "Bad Request");
+    arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
     close(fd);
@@ -1136,6 +1186,7 @@ static void handle_connection(int fd, TyaValue routes) {
   } else {
     write_response(fd, resp, keep_alive);
   }
+  arena_free(&arena);
   buf_free(&headers_buf);
   buf_free(&body_buf);
   if (keep_alive) continue;

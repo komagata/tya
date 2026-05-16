@@ -160,7 +160,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   - [x] Keep-alive.
   - [ ] HTTPS/TLS.
   - [ ] Windows support via WinSock2.
-  - [ ] Per-request arena to bound the v0.58 string-buffer leak.
+  - [x] Per-request arena to bound the v0.58 string-buffer leak.
 
 ## Toolchain
 

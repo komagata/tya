@@ -1,0 +1,44 @@
+# Repeated keep-alive requests should not grow HTTP parser memory
+# without bound.
+[!exec:python3] skip 'python3 not on PATH'
+[!exec:sh] skip 'sh not on PATH'
+[!exec:ps] skip 'ps not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
+exec sh -c '$WORK/server & pid=$!; sleep 1; before=$(ps -o rss= -p $pid); python3 $WORK/client.py; after=$(ps -o rss= -p $pid); kill $pid 2>/dev/null; wait $pid 2>/dev/null; delta=$((after - before)); test $delta -lt 20000'
+
+-- main.tya --
+import net/http as http
+
+app = http.Server()
+app.get("/echo/:id", req -> { status: 200, body: req["path_params"]["id"] + ":" + req["query"].get("q", "") + ":" + req["cookies"].get("a", "") })
+app.run(18096)
+
+-- client.py --
+import socket
+
+def read_response(sock):
+    data = b""
+    while b"\r\n\r\n" not in data:
+        data += sock.recv(4096)
+    head, rest = data.split(b"\r\n\r\n", 1)
+    headers = {}
+    for line in head.split(b"\r\n")[1:]:
+        name, value = line.decode().split(":", 1)
+        headers[name.lower()] = value.strip().lower()
+    length = int(headers.get("content-length", "0"))
+    body = rest
+    while len(body) < length:
+        body += sock.recv(4096)
+    return body[:length].decode()
+
+s = socket.create_connection(("127.0.0.1", 18096), timeout=5)
+for i in range(80):
+    req = f"GET /echo/{i}?q={i} HTTP/1.1\r\nHost: localhost\r\nCookie: a={i}\r\n\r\n".encode()
+    s.sendall(req)
+    body = read_response(s)
+    expected = f"{i}:{i}:{i}"
+    if body != expected:
+        raise RuntimeError((body, expected))
+s.close()
