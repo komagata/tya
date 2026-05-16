@@ -48,13 +48,13 @@ For local formula development from this repository:
 brew install --HEAD ./Formula/tya.rb
 ```
 
-For v0.64.0, download the release source and build the `tya` command locally.
+For v0.65.0, download the release source and build the `tya` command locally.
 This currently requires Go because the reference implementation is written
 in Go.
 
 ```sh
-curl -L https://github.com/komagata/tya/archive/refs/tags/v0.64.0.tar.gz | tar xz
-cd tya-0.64.0
+curl -L https://github.com/komagata/tya/archive/refs/tags/v0.65.0.tar.gz | tar xz
+cd tya-0.65.0
 go build -o tya ./cmd/tya
 ./tya version
 ```
@@ -141,14 +141,17 @@ Setup recipes ship in [`editors/`](./editors):
 - [`editors/github-linguist/`](./editors/github-linguist) — GitHub Linguist registration notes
 - [`editors/TOKENS.md`](./editors/TOKENS.md) — shared syntax-color token taxonomy
 
-VS Code manual install:
+VS Code extension:
+
+Install `komagata.tya` from the Visual Studio Marketplace or Open VSX.
+For a local package build:
 
 ```sh
 cd editors/vscode
 npm install
 npm run compile
 npx vsce package
-code --install-extension tya-0.61.0.vsix
+code --install-extension tya-0.65.0.vsix
 ```
 
 ## Example
