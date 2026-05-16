@@ -394,12 +394,8 @@ render_with_liquid: false
 
             .matrix {
                 display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns: repeat(3, minmax(0, 1fr));
                 gap: 12px;
-            }
-
-            .matrix .tile:last-child:nth-child(odd) {
-                grid-column: span 2;
             }
 
             .tile {
@@ -575,10 +571,6 @@ render_with_liquid: false
                     grid-template-columns: 1fr;
                 }
 
-                .matrix .tile:last-child:nth-child(odd) {
-                    grid-column: auto;
-                }
-
                 .flow li {
                     min-height: auto;
                 }
@@ -638,15 +630,15 @@ render_with_liquid: false
                             <article class="tile">
                                 <h3>一意のソース表現</h3>
                                 <p>
-                                    すべてのプログラムには、ただ一つのソース表現があります。
+                                    全てのプログラムには、インデントベースのただ一つのソース表現があります。（lossless syntax tree）
                                 </p>
                             </article>
                             <article class="tile">
-                                <h3>C へのコンパイル</h3>
+                                <h3>配布しやすい実行ファイル</h3>
                                 <p>
-                                    小さくて移植性の高いランタイムと精密なマーク&スイープ
-                                    GC。仮想マシンも組み込みインタプリタもなし —
-                                    配布するのは単一のバイナリだけ。
+                                    C を経由するのでクロスコンパイルがしやすく、
+                                    ランタイム込みの 1 バイナリとして配布できます。
+                                    VM や外部インタプリタは不要です。
                                 </p>
                             </article>
                             <article class="tile">
@@ -654,14 +646,6 @@ render_with_liquid: false
                                 <p>
                                     <code>tya</code>
                                     バイナリにコンパイラ、フォーマッタ、チェッカ、テストランナ、パッケージマネージャがすべて入っています。
-                                </p>
-                            </article>
-                            <article class="tile">
-                                <h3>親切な診断</h3>
-                                <p>
-                                    すべてのエラーに安定コード
-                                    (<code>TYA-Exxxx</code>)、ソーススニペット付きバナー、実行可能なヒント、解説へのリンクが付きます。CI
-                                    とエディタ向けに JSON 出力も。
                                 </p>
                             </article>
                         </div>
