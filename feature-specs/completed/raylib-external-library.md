@@ -242,8 +242,8 @@ tya run examples/embedded_texture.tya
 For this repository's spec tracking only:
 
 ```sh
-test -f docs/prd/raylib-external-library.md
-rg -n "Raylib External Library" docs/prd/raylib-external-library.md
+test -f feature-specs/raylib-external-library.md
+rg -n "Raylib External Library" feature-specs/raylib-external-library.md
 ```
 
 ## Dependencies

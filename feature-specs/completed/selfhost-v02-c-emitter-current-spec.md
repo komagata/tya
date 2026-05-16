@@ -88,8 +88,8 @@ go test ./... -count=1
 
 ## Dependencies
 
-- `docs/prd/selfhost-v02-lexer-parser-current-spec.md`
-- `docs/prd/selfhost-v02-checker-current-spec.md`
+- `feature-specs/selfhost-v02-lexer-parser-current-spec.md`
+- `feature-specs/selfhost-v02-checker-current-spec.md`
 
 ## Open Questions
 

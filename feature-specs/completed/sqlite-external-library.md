@@ -225,8 +225,8 @@ tya run examples/transaction.tya
 For this repository's spec tracking only:
 
 ```sh
-test -f docs/prd/sqlite-external-library.md
-rg -n "SQLite External Library" docs/prd/sqlite-external-library.md
+test -f feature-specs/sqlite-external-library.md
+rg -n "SQLite External Library" feature-specs/sqlite-external-library.md
 ```
 
 ## Dependencies

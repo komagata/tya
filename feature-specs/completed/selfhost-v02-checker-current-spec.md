@@ -92,7 +92,7 @@ go test ./... -count=1
 
 ## Dependencies
 
-- `docs/prd/selfhost-v02-lexer-parser-current-spec.md`
+- `feature-specs/selfhost-v02-lexer-parser-current-spec.md`
 
 ## Open Questions
 

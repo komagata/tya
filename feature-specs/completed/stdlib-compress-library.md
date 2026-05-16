@@ -46,7 +46,7 @@ and use broadly available formats.
 
 ## Dependencies
 
-- Implement `docs/prd/stdlib-io-stream-library.md` first if file helpers need
+- Implement `feature-specs/stdlib-io-stream-library.md` first if file helpers need
   streaming rather than whole-file reads.
 
 ## Out of Scope

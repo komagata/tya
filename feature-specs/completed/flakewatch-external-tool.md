@@ -316,8 +316,8 @@ tya run src/main.tya serve --db tmp/flakewatch.sqlite3 --host 127.0.0.1 --port 8
 For this repository's spec tracking only:
 
 ```sh
-test -f docs/prd/flakewatch-external-tool.md
-rg -n "Flakewatch External Tool" docs/prd/flakewatch-external-tool.md
+test -f feature-specs/flakewatch-external-tool.md
+rg -n "Flakewatch External Tool" feature-specs/flakewatch-external-tool.md
 ```
 
 ## Dependencies

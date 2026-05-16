@@ -221,8 +221,8 @@ tya run examples/form.tya
 For this repository's spec tracking only:
 
 ```sh
-test -f docs/prd/slim-html-template-external-package.md
-rg -n "Slim-Style HTML Template External Package" docs/prd/slim-html-template-external-package.md
+test -f feature-specs/slim-html-template-external-package.md
+rg -n "Slim-Style HTML Template External Package" feature-specs/slim-html-template-external-package.md
 ```
 
 ## Dependencies

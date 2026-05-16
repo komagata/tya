@@ -79,7 +79,7 @@ style, not revive module-level functions.
 
 ## Dependencies
 
-- Implement `docs/prd/stdlib-template-library.md` first only if Markdown
+- Implement `feature-specs/stdlib-template-library.md` first only if Markdown
   rendering is expected to reuse generic template rendering. Otherwise this spec
   can proceed independently.
 

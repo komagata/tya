@@ -77,4 +77,4 @@ go test ./... -count=1 -timeout=20m
 
 ## Dependencies
 
-- `docs/prd/selfhost-v02-latest-lexer-parser.md`
+- `feature-specs/selfhost-v02-latest-lexer-parser.md`

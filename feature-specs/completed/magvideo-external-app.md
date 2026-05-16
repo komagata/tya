@@ -334,8 +334,8 @@ magvideo
 For this repository's spec tracking only:
 
 ```sh
-test -f docs/prd/magvideo-external-app.md
-rg -n "Magvideo External App" docs/prd/magvideo-external-app.md
+test -f feature-specs/magvideo-external-app.md
+rg -n "Magvideo External App" feature-specs/magvideo-external-app.md
 ```
 
 ## Dependencies

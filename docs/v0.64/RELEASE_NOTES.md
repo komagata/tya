@@ -48,7 +48,7 @@ serialization, and human-readable string conversion.
 - `docs/SPEC.md`, `docs/API.md`, and `docs/STDLIB.md` document the new
   protocols and distinguish `Stringable.to_s()` from
   `Serializable.to_data()`.
-- Completed PRDs for the release were moved to `docs/prd/completed/`.
+- Completed PRDs for the release were moved to `feature-specs/completed/`.
 
 ## Verification
 

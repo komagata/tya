@@ -122,8 +122,8 @@ The relevant committed artifacts are:
 - `tests/testdata/v02_selfhost/full_spec_manifest.md`: latest
   emitter fixture coverage note.
 - PRDs:
-  `docs/prd/selfhost-v02-latest-c-emitter.md` and
-  `docs/prd/selfhost-v02-latest-fixed-point.md`.
+  `feature-specs/completed/selfhost-v02-latest-c-emitter.md` and
+  `feature-specs/completed/selfhost-v02-latest-fixed-point.md`.
 - `tests/testdata/v02_selfhost/fixed_point.txtar`: latest fixed-point
   proof anchor; stage-2 C and stage-3 C match byte-for-byte, and the
   fixture also emits every other `selfhost/v02/*.tya` source.

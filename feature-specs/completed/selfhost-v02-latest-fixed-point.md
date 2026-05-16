@@ -71,4 +71,4 @@ go test ./... -count=1 -timeout=20m
 
 ## Dependencies
 
-- `docs/prd/completed/selfhost-v02-latest-c-emitter.md`
+- `feature-specs/completed/selfhost-v02-latest-c-emitter.md`

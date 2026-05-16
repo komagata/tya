@@ -414,8 +414,8 @@ tya run examples/settings_panel.tya
 For this repository's spec tracking only:
 
 ```sh
-test -f docs/prd/gtk4-external-library.md
-rg -n "GTK4 External Library" docs/prd/gtk4-external-library.md
+test -f feature-specs/gtk4-external-library.md
+rg -n "GTK4 External Library" feature-specs/gtk4-external-library.md
 ```
 
 ## Dependencies

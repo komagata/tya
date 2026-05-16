@@ -12,7 +12,7 @@ files.
 `selfhost/v02/` already has a completed current-spec proof gate under
 `tests/testdata/v02_selfhost/`. That proof predates the latest protocol and
 closure work. The draft umbrella at
-`docs/prd/drafts/migrate-selfhost-compiler-to-latest-spec.md` is not
+`feature-specs/drafts/migrate-selfhost-compiler-to-latest-spec.md` is not
 implementation-ready by itself; this spec is the first executable follow-up
 slice.
 

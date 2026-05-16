@@ -279,8 +279,8 @@ tya run examples/embedded_bmp.tya
 For this repository's spec tracking only:
 
 ```sh
-test -f docs/prd/sdl2-external-library.md
-rg -n "SDL2 External Library" docs/prd/sdl2-external-library.md
+test -f feature-specs/sdl2-external-library.md
+rg -n "SDL2 External Library" feature-specs/sdl2-external-library.md
 ```
 
 ## Dependencies

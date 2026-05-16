@@ -55,9 +55,9 @@ dev tools, test servers, and as a foundation for future stdlib networking.
 
 ## Dependencies
 
-- Implement `docs/prd/stdlib-net-ip-library.md` first if socket address values
+- Implement `feature-specs/stdlib-net-ip-library.md` first if socket address values
   should reuse the shared IP address representation.
-- Implement `docs/prd/stdlib-io-stream-library.md` first if socket reads and
+- Implement `feature-specs/stdlib-io-stream-library.md` first if socket reads and
   writes should share stream abstractions.
 
 ## Out of Scope

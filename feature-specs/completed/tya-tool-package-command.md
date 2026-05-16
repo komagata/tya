@@ -105,7 +105,7 @@ tya tool --path ../tya-tools format_docs
 
 ## Dependencies
 
-- Implement `docs/prd/stdlib-cli-library.md` first if `tya tool` will use the
+- Implement `feature-specs/stdlib-cli-library.md` first if `tya tool` will use the
   public `cli.Cli` parser for option handling.
 
 ## Out of Scope

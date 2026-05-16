@@ -238,7 +238,7 @@ test -z "$(find stdlib -name '*.tya' -printf '%f\n' | rg '^[a-z]')"
 test -z "$(rg -n '^module ' stdlib)"
 rg -n 'math\.Math\.abs|file\.File\.read|json\.Json\.parse|url\.Url\.encode' docs/STDLIB.md
 test -z "$(rg -n '\b(math|file|json|url|random|secure_random)\.[a-z_][a-z0-9_!?]*\(' docs/STDLIB.md docs/SPEC.md docs/API.md docs/LIBRARIES.md)"
-rg -n 'Matrix instance|Address instance|Network instance|data-exchange dictionar' docs/STDLIB.md docs/prd/stdlib-all-class-style.md
+rg -n 'Matrix instance|Address instance|Network instance|data-exchange dictionar' docs/STDLIB.md feature-specs/stdlib-all-class-style.md
 go test ./tests -run TestSelfhostV01Scripts -count=1
 go test ./... -count=1
 ```

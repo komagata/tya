@@ -119,7 +119,7 @@ class StringBlankTest < TestCase
 ## Scope
 
 - `stdlib/unittest/Unittest.tya`
-- `docs/prd/completed/bare-package-imports.md` landed first in the same
+- `feature-specs/completed/bare-package-imports.md` landed first in the same
   long-running implementation batch.
 - `cmd/tya/main.go` test-suite synthesis
 - `cmd/tya/new.go` test templates
