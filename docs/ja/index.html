@@ -745,31 +745,31 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                         </div>
                         <ul class="command-list">
                             <li>
-                                <span>tya run</span>
-                                <pre><code>tya run examples/hello.tya</code></pre>
-                                <p>ソースファイルをその場でコンパイルして実行します。小さなスクリプトや動作確認に使います。</p>
+                                <span>すぐ動かす: tya run</span>
+                                <p>ファイルを指定すると、その場でコンパイルして実行します。試作や手元での動作確認に向いています。</p>
+                                <pre><code>tya run hello.tya</code></pre>
                             </li>
                             <li>
-                                <span>tya build</span>
-                                <pre><code>tya build examples/hello.tya -o hello
+                                <span>配布用に固める: tya build</span>
+                                <p>実行ファイルを作ります。できあがったバイナリは Tya コマンドなしで起動できます。</p>
+                                <pre><code>tya build hello.tya -o hello
 ./hello</code></pre>
-                                <p>配布できる実行ファイルを作ります。CI やリリースではこのコマンドで 1 バイナリを生成します。</p>
                             </li>
                             <li>
-                                <span>tya test</span>
-                                <pre><code>tya test tests</code></pre>
-                                <p>テストファイルをまとめて実行します。標準のテストランナが入っているので追加ツールは不要です。</p>
+                                <span>テストする: tya test</span>
+                                <p>プロジェクトのテストをまとめて実行します。テストランナは最初から同じバイナリに入っています。</p>
+                                <pre><code>tya test</code></pre>
                             </li>
                             <li>
-                                <span>tya lint</span>
+                                <span>問題を見つける: tya lint</span>
+                                <p>未使用の変数や避けたい書き方を検出します。実行前や CI でのチェックに使えます。</p>
                                 <pre><code>tya lint src</code></pre>
-                                <p>未使用の変数や危険な書き方を検出します。CI に組み込んでコード品質を保てます。</p>
                             </li>
                             <li>
-                                <span>tya task</span>
+                                <span>定型作業を呼び出す: tya task</span>
+                                <p>プロジェクトに定義したタスクを一覧表示し、そのまま実行できます。</p>
                                 <pre><code>tya task
 tya task run</code></pre>
-                                <p>プロジェクトに定義されたタスクを一覧表示し、同じコマンドから実行できます。</p>
                             </li>
                         </ul>
                     </section>
