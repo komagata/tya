@@ -910,7 +910,20 @@ tya cover html -o .tya/coverage/index.html
 tya cover --profile .tya/coverage/profile --min 80
 ```
 
-`tya lint` は安定した linter diagnostics を報告する。autofix と text、JSON、SARIF 出力をサポートする。
+`tya lint` は安定した linter diagnostics を報告する。lint diagnostics は warning であり、program の validity error ではない。autofix と text、JSON、SARIF 出力をサポートする。JSON finding は `code`、`title`、`message`、`path`、`line`、`col`、`autofixable`、`doc_url` を含む。SARIF と LSP diagnostics は同じ stable rule code、title、help URL、warning severity を使う。public rule documentation は `docs/lint.md` と `https://tya-lang.org/lint.html#tyal000N` に置く。
+
+現在の lint rules は次のとおり。
+
+```text
+TYAL0001 unused local binding              autofix
+TYAL0002 dead code after return or raise
+TYAL0003 redundant constant if             autofix
+TYAL0004 deeply nested block
+TYAL0005 long function body
+TYAL0006 suspicious for-index binding order
+TYAL0007 unused function parameter
+TYAL0008 shadowed binding
+```
 
 ```sh
 tya lint src

@@ -1,0 +1,156 @@
+# v1 lint contract: stable metadata, docs anchors, suppression forms, and fixes.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+
+grep '## TYAL0001' docs/lint.md
+grep '## TYAL0008' docs/lint.md
+grep 'doc_url' docs/SPEC.md
+grep 'TYAL0008 shadowed binding' docs/ja/spec.md
+
+cd $WORK
+
+! exec $WORK/tya lint all_rules.tya
+stdout 'TYAL0001 unused local "unused_local"'
+stdout 'TYAL0002 dead code after return'
+stdout 'TYAL0003 redundant `if true`'
+stdout 'TYAL0004 deeply nested block'
+stdout 'TYAL0005 function body has 52 statements'
+stdout 'TYAL0006 suspicious for index pattern'
+stdout 'TYAL0007 unused function parameter "unused_param"'
+stdout 'TYAL0008 shadowed binding "outer"'
+
+! exec $WORK/tya lint --format=json all_rules.tya
+stdout '"path": "all_rules.tya"'
+stdout '"line":'
+stdout '"col":'
+stdout '"code": "TYAL0001"'
+stdout '"title": "Unused local"'
+stdout '"message": "unused local'
+stdout '"autofixable": true'
+stdout '"doc_url": "https://tya-lang.org/lint.html#tyal0001"'
+stdout '"code": "TYAL0008"'
+stdout '"title": "Shadowed binding"'
+stdout '"doc_url": "https://tya-lang.org/lint.html#tyal0008"'
+
+! exec $WORK/tya lint --format=sarif all_rules.tya
+stdout '"id": "TYAL0001"'
+stdout '"name": "Unused local"'
+stdout '"helpUri": "https://tya-lang.org/lint.html#tyal0001"'
+stdout '"ruleId": "TYAL0008"'
+stdout '"level": "warning"'
+stdout '"startLine":'
+stdout '"startColumn":'
+
+exec $WORK/tya lint suppression.tya
+! stdout .
+! stderr .
+
+exec $WORK/tya lint --fix fixable.tya
+cmp fixable.tya fixable_expected.tya
+exec $WORK/tya lint --fix fixable.tya
+exec $WORK/tya lint fixable.tya
+! stdout .
+! stderr .
+
+-- all_rules.tya --
+unused_local = 1
+
+dead = ->
+  return 1
+  print("dead")
+
+if true
+  print("constant")
+
+deep = ->
+  if true
+    if true
+      if true
+        if true
+          if true
+            print("deep")
+
+long = ->
+  print("1")
+  print("2")
+  print("3")
+  print("4")
+  print("5")
+  print("6")
+  print("7")
+  print("8")
+  print("9")
+  print("10")
+  print("11")
+  print("12")
+  print("13")
+  print("14")
+  print("15")
+  print("16")
+  print("17")
+  print("18")
+  print("19")
+  print("20")
+  print("21")
+  print("22")
+  print("23")
+  print("24")
+  print("25")
+  print("26")
+  print("27")
+  print("28")
+  print("29")
+  print("30")
+  print("31")
+  print("32")
+  print("33")
+  print("34")
+  print("35")
+  print("36")
+  print("37")
+  print("38")
+  print("39")
+  print("40")
+  print("41")
+  print("42")
+  print("43")
+  print("44")
+  print("45")
+  print("46")
+  print("47")
+  print("48")
+  print("49")
+  print("50")
+  print("51")
+  print("52")
+
+items = ["a", "b"]
+for i, item in items
+  print(item)
+
+handler = used_param, unused_param ->
+  print(used_param)
+handler("ok", "drop")
+
+outer = 1
+shadow = ->
+  outer = 2
+  print(outer)
+
+-- suppression.tya --
+# tya-lint-ignore
+wildcard_next = 1
+inline_wildcard = 2  # tya-lint-ignore
+# tya-lint-ignore: TYAL0007
+handler = used, unused ->
+  print(used)
+handler("ok", "drop")
+
+-- fixable.tya --
+unused = value ->
+  print(value)
+if true
+  print("kept")
+
+-- fixable_expected.tya --
+print("kept")

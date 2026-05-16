@@ -1054,6 +1054,10 @@ version   print the installed Tya version
 comments are `# tya-lint-ignore: CODE` for one line or next statement and
 `# tya-lint-ignore-file: CODE, CODE` for a file. Omitting codes suppresses all
 rules for that target. `--fix` may rewrite only rules with declared autofix.
+JSON findings include `code`, `title`, `message`, `path`, `line`, `col`,
+`autofixable`, and `doc_url`. SARIF and LSP diagnostics use the same stable
+rule codes, titles, help URLs, and warning severity. Public rule documentation
+lives at `docs/lint.md` and `https://tya-lang.org/lint.html#tyal000N`.
 
 Current lint rules are:
 
