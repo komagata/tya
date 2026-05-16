@@ -26,8 +26,9 @@ and run representative programs through the maintained surface.
 ## v1.0.0 Goal
 
 Tya v1.0.0 is the version at which all six language commitments hold and
-are publicly defensible. These commitments are also Tya's external "at a
-glance" feature list:
+are publicly defensible. The homepage's short feature list currently highlights
+commitments 1, 3, and 4; the remaining commitments are release-quality gates
+for the language and implementation.
 
 1. **Canonical Syntax** — every program has exactly one source representation.
    The formatter is part of the language, not a separate opinion.
@@ -38,7 +39,7 @@ glance" feature list:
 4. **All-in-one toolchain** (Gleam-style) — the `tya` binary holds the
    compiler, formatter, language server, test runner, doc generator, and
    package manager.
-5. **Kind diagnostics** (Elm-grade) — every error has a stable code, an
+5. **Structured diagnostics** — every error has a stable code, an
    expected/found block, an actionable hint, and a linked explanation.
 6. **Self-hosted** — the Tya compiler is written in Tya itself. The Go
    reference implementation is removed at v1.0.0 release. Bootstrap from
@@ -47,10 +48,10 @@ glance" feature list:
 
 Each commitment maps to one or more Epics below:
 
-- Commitment 1 → *(landed)*.
-- Commitment 2 → strict-semantics audit (currently implicit; to be made
-  an explicit Epic).
-- Commitment 3 → already shipped; maintained.
+- Commitment 1 → landed and documented in current SPEC/homepage.
+- Commitment 2 → strict-semantics audit still needs an explicit v1.0.0 gate.
+- Commitment 3 → shipped and maintained; cross-compilation and one-binary
+  distribution are now the public framing.
 - Commitment 4 → maintain and polish the all-in-one toolchain: `tya check`,
   `tya test`, `tya format`, `tya lsp`, `tya doc`, `tya new`, `tya task`,
   `tya lint`, and package tooling.
@@ -58,15 +59,26 @@ Each commitment maps to one or more Epics below:
 - Commitment 6 → *Migrate selfhost compiler to latest spec and remove
   the Go reference implementation* (see Future Work / Self-host).
 
-Other Epics (WASM target, syntax coloring, embedding,
-self-introspection library, coverage extensions, markdown extensions,
-lint, multi-line string extensions) are valuable but not strictly
-required for v1.0.0. They may ship before or after v1.0.0.
+Other Epics (HTTP expansion, documentation generator extensions, task runner
+extensions, editor publication, and ecosystem polish) are valuable but not
+strictly required for v1.0.0 unless they become blockers for the commitments
+above.
+
+Current v1.0.0 blockers:
+
+1. Make the strict-semantics audit explicit and close any gaps it finds.
+2. Finish the self-hosted compiler through the latest spec and prove the
+   latest-spec stage-2/stage-3 fixed point.
+3. Decide the exact v1.0.0 relationship between the self-hosted compiler and
+   the Go implementation: full Go removal at v1.0.0, or a documented
+   transition release before that removal.
+4. Complete the remaining structured-diagnostic coverage needed for the
+   supported parser/checker/codegen/runtime/tool failures.
 
 ## Current Direction
 
 Tya is implemented as a small, hand-written compile-to-C language. The latest
-released specification is **v0.62**. Frozen release documents live under
+released specification is **v0.65**. Frozen release documents live under
 `docs/vX.Y/`; release history is tracked in [`docs/VERSIONS.md`](docs/VERSIONS.md)
 and the per-version release notes, not in this roadmap.
 
@@ -86,6 +98,7 @@ Go C emitter
 C runtime
 specification tests
 selfhost/v01 fixed point
+selfhost/v02 latest-spec proof gates
 ```
 
 Go interpreter behavior, ASTMODE, archived node-string experiments, and
@@ -128,17 +141,19 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Near Term
 
-- [x] **Finish `net/http` v2**
+- [ ] **Finish `net/http` v2**
   - [x] HTTP client: `http.Client.get(url)`, `http.Client.post(url, body)`, and
     `http.Client.request(method, url, opts)`.
-  - [x] Integrate the generic `template.Template` stdlib renderer for HTTP
-    response templates.
+  - [ ] Integrate the generic `template.Template` stdlib renderer for HTTP
+    response templates. Queued as
+    `feature-specs/http-response-template-rendering.md`.
   - [x] Server concurrency so slow yielding handlers do not block other ready
     clients.
   - [x] Chunked transfer decoding in the HTTP client.
   - [x] Server middleware and HEAD/PATCH/OPTIONS routing helpers.
 
-- [ ] **Expand HTTP protocol coverage**
+- [ ] **Expand HTTP protocol coverage** *(post-v1.0.0 unless it blocks a
+  supported release use case)*
   - [ ] keep-alive, server-side chunked transfer encoding, multipart bodies,
     HTTPS/TLS, and cookies.
   - [ ] Windows support via WinSock2.
@@ -146,14 +161,15 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Toolchain
 
-- [ ] **Documentation generator extensions**
+- [ ] **Documentation generator extensions** *(polish; not a v1.0.0 blocker
+  unless docs publication requires it)*
   - [ ] Stdlib re-exports by following imports.
   - [ ] `tya doc --json`.
   - [ ] Reuse the public Tya self-introspection library when it exists.
   - [ ] Diagnose orphan doc comments, duplicate definitions, and unparseable
     Markdown bodies.
 
-- [ ] **Task runner extensions**
+- [ ] **Task runner extensions** *(polish; not a v1.0.0 blocker)*
   - [ ] Parallel execution syntax.
   - [ ] File-watching mode: `tya task <name> --watch`.
   - [ ] Task dependency graphs.
@@ -170,6 +186,17 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   - [x] Each rule has a stable code, title, and doc URL.
 
 ## Language
+
+- [ ] **Strict semantics audit for v1.0.0**
+  - [ ] Enumerate the no-implicit-conversion, no-`nil` arithmetic, truthiness,
+    comparison, indexing, assignment, argument, and return-value rules that
+    define the v1.0.0 strict-semantics contract.
+  - [ ] Map each rule to SPEC text and at least one active test or testscript
+    fixture.
+  - [ ] Add or fix diagnostics where invalid programs currently fail late,
+    fail unclearly, or execute with non-strict behavior.
+  - [ ] Document any intentionally dynamic behavior that remains valid in
+    v1.0.0.
 
 - [ ] **Migrate selfhost compiler to the latest spec and remove Go reference**
   - [x] Prove the `selfhost/v02/` current-spec compiler gate.
