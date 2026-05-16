@@ -115,6 +115,20 @@ class Server
     headers["Location"] = path
     return { status: status, headers: headers, body: "" }
 
+  # cookie returns a validated Set-Cookie header value.
+  # Options may include path, domain, max_age, expires, secure, http_only, and same_site.
+  cookie = name, value, options ->
+    return Server.cookie_value(name, value, options)
+
+  # with_cookie appends a Set-Cookie header value to response and returns response.
+  with_cookie = response, name, value, options ->
+    if response["header_values"] == nil
+      response["header_values"] = {}
+    if response["header_values"]["Set-Cookie"] == nil
+      response["header_values"]["Set-Cookie"] = []
+    response["header_values"]["Set-Cookie"].push(Server.cookie_value(name, value, options))
+    return response
+
   # Server.dispatch provides the net/http/Server standard library operation.
   dispatch = method, path ->
     method = method.upper()
@@ -239,6 +253,58 @@ class Server
     if opts["trailing_slash"] != "strict" and opts["trailing_slash"] != "ignore"
       raise "http.route: invalid trailing_slash option"
     return opts
+
+  # cookie_value formats a Set-Cookie header value.
+  static cookie_value = name, value, options ->
+    Server.validate_cookie_name(name)
+    Server.validate_cookie_value(value)
+    if options == nil
+      options = {}
+    out = name + "=" + value
+    if options.get("path", nil) != nil
+      out = out + "; Path=" + options["path"].to_s()
+    if options.get("domain", nil) != nil
+      out = out + "; Domain=" + options["domain"].to_s()
+    if options.get("max_age", nil) != nil
+      out = out + "; Max-Age=" + options["max_age"].to_s()
+    if options.get("expires", nil) != nil
+      out = out + "; Expires=" + options["expires"].to_s()
+    if options.get("secure", false)
+      out = out + "; Secure"
+    if options.get("http_only", false)
+      out = out + "; HttpOnly"
+    same_site = options.get("same_site", nil)
+    if same_site != nil
+      if same_site != "Lax" and same_site != "Strict" and same_site != "None"
+        raise "http.cookie: unsupported SameSite"
+      if same_site == "None" and not options.get("secure", false)
+        raise "http.cookie: SameSite=None requires Secure"
+      out = out + "; SameSite=" + same_site
+    return out
+
+  # validate_cookie_name raises when name is not a valid cookie name.
+  static validate_cookie_name = name ->
+    if name == nil or name == ""
+      raise "http.cookie: invalid cookie name"
+    i = 0
+    while i < name.byte_len()
+      c = name[i]
+      code = ord(c)
+      if code < 32 or code == 127 or c == " " or c == "=" or c == ";" or c == ","
+        raise "http.cookie: invalid cookie name"
+      i = i + 1
+
+  # validate_cookie_value raises when value cannot be used in a cookie.
+  static validate_cookie_value = value ->
+    if value == nil
+      raise "http.cookie: invalid cookie value"
+    i = 0
+    while i < value.byte_len()
+      c = value[i]
+      code = ord(c)
+      if code < 32 or code == 127 or c == ";" or c == ","
+        raise "http.cookie: invalid cookie value"
+      i = i + 1
 
   # Server.validate_pattern provides the net/http/Server standard library operation.
   static validate_pattern = path ->

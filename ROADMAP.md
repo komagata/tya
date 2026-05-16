@@ -154,8 +154,9 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 - [ ] **Expand HTTP protocol coverage** *(post-v1.0.0 unless it blocks a
   supported release use case)*
+  - [x] Cookies.
   - [ ] keep-alive, server-side chunked transfer encoding, multipart bodies,
-    HTTPS/TLS, and cookies.
+    and HTTPS/TLS.
   - [ ] Windows support via WinSock2.
   - [ ] Per-request arena to bound the v0.58 string-buffer leak.
 

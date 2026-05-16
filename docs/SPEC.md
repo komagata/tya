@@ -1322,6 +1322,20 @@ supports `write`, `write_line`, `flush`, and `close`. `Socket` supports
 dispatch, and server execution. `net/http/Client` defines `get`, `post`, and
 generic `request`.
 
+Compiled `net/http/Server` handlers receive request dictionaries with
+`cookies`, a dictionary parsed from the incoming `Cookie` header. Missing
+cookies produce `{}`. Malformed pairs without `=` are ignored, whitespace
+around names and values is trimmed, and repeated names keep the last value.
+
+`Server.cookie(name, value, options)` formats a `Set-Cookie` header value.
+Options may include `path`, `domain`, `max_age`, `expires`, `secure`,
+`http_only`, and `same_site` (`Lax`, `Strict`, or `None`). `SameSite=None`
+requires `secure: true`. `Server.with_cookie(response, name, value, options)`
+appends a cookie to `response["header_values"]["Set-Cookie"]`. Response
+dictionaries may use `header_values` for repeated response headers; each array
+entry is emitted as a separate header line while ordinary `headers` behavior is
+unchanged.
+
 `serialization/Serializer` converts Tya values to and from data values, JSON,
 and TOML. Classes that implement `Serializable` expose `to_data()`.
 

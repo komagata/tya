@@ -1190,6 +1190,10 @@ drop_sequence              lazy drop sequence
 
 `net/http/Server` は HTTP method ごとの route registration (`get`, `post`, `put`, `delete`, `patch`, `options`, `head`, `any`)、middleware (`use`, `group`)、error と not-found handlers、static-file serving、redirect、route dispatch、server execution を定義する。`net/http/Client` は `get`、`post`、generic `request` を定義する。
 
+compiled `net/http/Server` handler が受け取る request dictionary は、incoming `Cookie` header から parse された `cookies` dictionary を持つ。cookie がない場合は `{}` になる。`=` のない malformed pair は無視され、name と value 周辺の whitespace は trim され、同じ name が複数回出た場合は最後の value が残る。
+
+`Server.cookie(name, value, options)` は `Set-Cookie` header value を format する。options は `path`、`domain`、`max_age`、`expires`、`secure`、`http_only`、`same_site` (`Lax`、`Strict`、`None`) を受け付ける。`SameSite=None` は `secure: true` を要求する。`Server.with_cookie(response, name, value, options)` は `response["header_values"]["Set-Cookie"]` に cookie を追加する。response dictionary は repeated response header のために `header_values` を使える。各 array entry は個別の header line として出力され、通常の `headers` 動作は変わらない。
+
 `serialization/Serializer` は Tya values を data values、JSON、TOML と相互変換する。`Serializable` を実装する class は `to_data()` を公開する。
 
 ## 外部パッケージ

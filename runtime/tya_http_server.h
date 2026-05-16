@@ -12,10 +12,10 @@
 //   {method: "GET", path: "/users/:id", handler: <fn>}
 //
 // The handler receives a request dict:
-//   {method, path, params, query, headers, body}
+//   {method, path, params, query, headers, cookies, body}
 //
 // and must return a response dict:
-//   {status: 200, headers: {...}, body: "..." | <bytes>}
+//   {status: 200, headers: {...}, header_values: {...}, body: "..." | <bytes>}
 //
 // The function blocks forever (or until SIGINT). It handles one
 // request per connection and always returns tya_nil() on graceful exit.

@@ -1,0 +1,48 @@
+# Cookie helper formatting and validation can be exercised without
+# starting a server.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/main.tya
+stdout 'id=42; Path=/; Domain=example.test; Max-Age=60; Expires=Wed, 21 Oct 2015 07:28:00 GMT; Secure; HttpOnly; SameSite=None'
+stdout '2'
+stdout 'bad-name'
+stdout 'bad-value'
+stdout 'bad-samesite'
+stdout 'none-secure'
+
+-- main.tya --
+import net/http as http
+
+app = http.Server()
+
+class Check
+  static run = ->
+    opts = { path: "/", domain: "example.test", max_age: 60, expires: "Wed, 21 Oct 2015 07:28:00 GMT", secure: true, http_only: true, same_site: "None" }
+    print(app.cookie("id", "42", opts))
+
+    response = { status: 200, body: "ok" }
+    app.with_cookie(response, "a", "1", {})
+    app.with_cookie(response, "b", "2", {})
+    print(response["header_values"]["Set-Cookie"].len())
+
+    try
+      app.cookie("bad name", "x", {})
+    catch _
+      print("bad-name")
+
+    try
+      app.cookie("ok", "bad;value", {})
+    catch _
+      print("bad-value")
+
+    try
+      app.cookie("ok", "v", { same_site: "Bogus" })
+    catch _
+      print("bad-samesite")
+
+    try
+      app.cookie("ok", "v", { same_site: "None" })
+    catch _
+      print("none-secure")
+
+Check.run()

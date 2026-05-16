@@ -320,6 +320,29 @@ static void parse_query(const char *qs, TyaValue query) {
   }
 }
 
+static void parse_cookie_header(const char *header, TyaValue cookies) {
+  if (header == NULL || *header == '\0') return;
+  char *copy = dup_bytes(header, (int)strlen(header));
+  if (copy == NULL) return;
+  char *p = copy;
+  while (*p) {
+    char *semi = strchr(p, ';');
+    if (semi != NULL) *semi = '\0';
+    char *pair = trim_ws(p);
+    char *eq = strchr(pair, '=');
+    if (eq != NULL) {
+      *eq = '\0';
+      char *name = trim_ws(pair);
+      char *value = trim_ws(eq + 1);
+      if (*name != '\0') {
+        tya_dict_set(cookies, tya_string(name), tya_string(value));
+      }
+    }
+    if (semi == NULL) break;
+    p = semi + 1;
+  }
+}
+
 // read_request fills `headers_buf` until "\r\n\r\n" is observed,
 // then reads the body up to Content-Length bytes into `body_buf`.
 // Returns 0 on success, -1 on I/O / parse failure, -2 on overflow.
@@ -471,6 +494,12 @@ static TyaValue build_request_dict(const char *method, int method_len,
     }
   }
   tya_dict_set(req, tya_string("headers"), headers);
+  TyaValue cookies = tya_dict(NULL, 0);
+  TyaValue cookie_header = tya_dict_get(headers, tya_string("cookie"), tya_nil(), true);
+  if (cookie_header.kind == TYA_STRING && cookie_header.string != NULL) {
+    parse_cookie_header(cookie_header.string, cookies);
+  }
+  tya_dict_set(req, tya_string("cookies"), cookies);
 
   if (body_len > 0 && body != NULL) {
     TyaValue body_value = tya_bytes_lit((const char *)body, body_len);
@@ -556,6 +585,20 @@ static void write_response(int fd, TyaValue resp) {
       char header_line[1024];
       int hn = snprintf(header_line, sizeof(header_line), "%s: %s\r\n", e.key, vstr);
       if (hn > 0) write_all(fd, header_line, hn);
+    }
+  }
+  TyaValue header_values_v = tya_dict_get(resp, tya_string("header_values"), tya_nil(), true);
+  if (header_values_v.kind == TYA_DICT && header_values_v.dict != NULL) {
+    for (int i = 0; i < header_values_v.dict->len; i++) {
+      TyaDictEntry e = header_values_v.dict->entries[i];
+      if (e.key == NULL || e.value.kind != TYA_ARRAY || e.value.array == NULL) continue;
+      for (int j = 0; j < e.value.array->len; j++) {
+        TyaValue hv = e.value.array->items[j];
+        if (hv.kind != TYA_STRING || hv.string == NULL) continue;
+        char header_line[1024];
+        int hn = snprintf(header_line, sizeof(header_line), "%s: %s\r\n", e.key, hv.string);
+        if (hn > 0) write_all(fd, header_line, hn);
+      }
     }
   }
   if (!has_content_type) {

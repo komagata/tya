@@ -1,0 +1,27 @@
+# net/http Server exposes request cookies and writes repeated Set-Cookie
+# headers through response header_values.
+[!exec:curl] skip 'curl not on PATH'
+[!exec:sh] skip 'sh not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -i -m 5 --retry 5 --retry-connrefused -H "Cookie: a=1; b = two; bad; a=last" http://localhost:18092/cookies; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+stdout 'Set-Cookie: session=abc; Path=/; HttpOnly'
+stdout 'Set-Cookie: prefs=dark; SameSite=Lax'
+stdout 'last,two,none'
+
+-- main.tya --
+import net/http as http
+
+app = http.Server()
+
+class App
+  static cookies = req ->
+    body = req["cookies"]["a"] + "," + req["cookies"]["b"] + "," + req["cookies"].get("missing", "none")
+    response = { status: 200, body: body }
+    app.with_cookie(response, "session", "abc", { path: "/", http_only: true })
+    app.with_cookie(response, "prefs", "dark", { same_site: "Lax" })
+    return response
+
+app.get("/cookies", App.cookies)
+app.run(18092)
