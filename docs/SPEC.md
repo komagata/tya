@@ -1203,6 +1203,12 @@ is the set of importable PascalCase package classes and interfaces under
 `stdlib/`. Standard-library imports are resolved after local packages, locked
 package dependencies, and `TYA_PATH` entries.
 
+Public standard-library classes, interfaces, and user-facing methods carry
+source doc comments. Generated stdlib API documentation is produced from those
+comments with `tya doc`, for example `tya doc --json stdlib` for a
+machine-readable reference that includes package paths, signatures, rendered
+comments, source paths, and source lines.
+
 Current standard-library surface:
 
 ```text

@@ -1,19 +1,25 @@
+# Random provides the random/Random standard library API.
 class Random
+  # Random.seed provides the random/Random standard library operation.
   static seed = value ->
     random_seed(value)
 
+  # Random.int provides the random/Random standard library operation.
   static int = min, max ->
     random_int(min, max)
 
+  # Random.float provides the random/Random standard library operation.
   static float = ->
     random_float()
 
+  # Random.choice provides the random/Random standard library operation.
   static choice = items ->
     n = items.len()
     if n == 0
       raise "random.choice: empty array"
     return items[random_int(0, n - 1)]
 
+  # Random.shuffle provides the random/Random standard library operation.
   static shuffle = items ->
     n = items.len()
     i = n - 1
@@ -25,17 +31,20 @@ class Random
       i = i - 1
     return nil
 
+  # Random.bool provides the random/Random standard library operation.
   static bool = probability ->
     if probability == nil
       probability = 0.5
     Random.check_probability(probability)
     return random_float() < probability
 
+  # Random.shuffle_copy provides the random/Random standard library operation.
   static shuffle_copy = items ->
     copy = Random.copy_array(items)
     Random.shuffle(copy)
     return copy
 
+  # Random.sample provides the random/Random standard library operation.
   static sample = items, count ->
     Random.check_sample_count(items, count)
     shuffled = Random.shuffle_copy(items)
@@ -46,11 +55,13 @@ class Random
       i = i + 1
     return out
 
+  # Random.weighted_choice provides the random/Random standard library operation.
   static weighted_choice = items, weights ->
     if items.len() != weights.len()
       raise "random.weighted_choice: items and weights length mismatch"
     return items[Random.weighted_index(weights)]
 
+  # Random.weighted_index provides the random/Random standard library operation.
   static weighted_index = weights ->
     total = Random.weight_total(weights, "random.weighted_index")
     pick = random_float() * total
@@ -63,6 +74,7 @@ class Random
       i = i + 1
     return weights.len() - 1
 
+  # Random.copy_array provides the random/Random standard library operation.
   static copy_array = items ->
     out = []
     i = 0
@@ -71,16 +83,19 @@ class Random
       i = i + 1
     return out
 
+  # Random.check_probability provides the random/Random standard library operation.
   static check_probability = probability ->
     if probability.class != Number or probability != probability or probability < 0 or probability > 1
       raise "random.bool: probability must be between 0.0 and 1.0"
 
+  # Random.check_sample_count provides the random/Random standard library operation.
   static check_sample_count = items, count ->
     if count.class != Number or count != count or count != count.to_i()
       raise "random.sample: count must be an integer"
     if count < 0 or count > items.len()
       raise "random.sample: count out of range"
 
+  # Random.weight_total provides the random/Random standard library operation.
   static weight_total = weights, label ->
     if weights.len() == 0
       raise label + ": empty weights"

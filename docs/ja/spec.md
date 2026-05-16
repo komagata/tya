@@ -1089,6 +1089,8 @@ runtime kind errors、不正な操作、失敗した assertions、失敗した I
 
 標準ライブラリは言語配布物の一部である。公開 surface は、`stdlib/` 以下の import 可能な PascalCase package class と interface の集合である。標準ライブラリ import は、local package、lock された package dependency、`TYA_PATH` entries の後に解決される。
 
+public な標準ライブラリ class、interface、user-facing method は source doc comment を持つ。生成される stdlib API documentation はそれらの comment から `tya doc` で作られる。例えば `tya doc --json stdlib` は package path、signature、rendered comment、source path、source line を含む machine-readable reference を出力する。
+
 現在の標準ライブラリ surface:
 
 ```text

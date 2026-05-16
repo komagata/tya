@@ -1,24 +1,32 @@
+# Sequence provides the sequence standard library API.
 interface Sequence implements Iterable
+  # Sequence.iter provides the sequence standard library operation.
   iter = ->
 
+  # Sequence.map provides the sequence standard library operation.
   map = fn ->
     MapSequence(self, fn)
 
+  # Sequence.filter provides the sequence standard library operation.
   filter = fn ->
     FilterSequence(self, fn)
 
+  # Sequence.take provides the sequence standard library operation.
   take = n ->
     TakeSequence(self, n)
 
+  # Sequence.drop provides the sequence standard library operation.
   drop = n ->
     DropSequence(self, n)
 
+  # Sequence.reduce provides the sequence standard library operation.
   reduce = initial, fn ->
     acc = initial
     for item in self
       acc = fn(acc, item)
     acc
 
+  # Sequence.to_a provides the sequence standard library operation.
   to_a = ->
     out = []
     for item in self

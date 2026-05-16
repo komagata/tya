@@ -1,18 +1,24 @@
 import io as io
 
+# Compress provides the compress/Compress standard library API.
 class Compress
+  # Compress.gzip provides the compress/Compress standard library operation.
   static gzip = value ->
     compress_gzip(value)
 
+  # Compress.gunzip provides the compress/Compress standard library operation.
   static gunzip = value ->
     compress_gunzip(value)
 
+  # Compress.zlib provides the compress/Compress standard library operation.
   static zlib = value ->
     compress_zlib(value)
 
+  # Compress.unzlib provides the compress/Compress standard library operation.
   static unzlib = value ->
     compress_unzlib(value)
 
+  # Compress.gzip_file provides the compress/Compress standard library operation.
   static gzip_file = src, dst ->
     reader = io.Io.open(src, "rb")
     writer = io.Io.open(dst, "wb")
@@ -26,6 +32,7 @@ class Compress
     reader.close()
     nil
 
+  # Compress.gunzip_file provides the compress/Compress standard library operation.
   static gunzip_file = src, dst ->
     reader = io.Io.open(src, "rb")
     writer = io.Io.open(dst, "wb")

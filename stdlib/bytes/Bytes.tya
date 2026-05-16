@@ -1,18 +1,25 @@
+# Bytes provides the bytes/Bytes standard library API.
 class Bytes
+  # Bytes.new provides the bytes/Bytes standard library operation.
   static new = values ->
     bytes(values)
 
+  # Bytes.of provides the bytes/Bytes standard library operation.
   static of = text ->
     bytes_of(text)
 
+  # Bytes.text provides the bytes/Bytes standard library operation.
   static text = value ->
     bytes_text(value)
 
+  # Bytes.array provides the bytes/Bytes standard library operation.
   static array = value ->
     bytes_array(value)
 
+  # Bytes.concat provides the bytes/Bytes standard library operation.
   static concat = left, right ->
     bytes_concat(left, right)
 
+  # Bytes.slice provides the bytes/Bytes standard library operation.
   static slice = value, start, end ->
     bytes_slice(value, start, end)

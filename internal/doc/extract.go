@@ -56,15 +56,7 @@ func ExtractFile(path string) ([]DocItem, error) {
 		return nil, err
 	}
 
-	var items []DocItem
-	for _, stmt := range parsed.prog.Stmts {
-		item, ok := stmtToDocItem(stmt, parsed.prog, path)
-		if !ok {
-			continue
-		}
-		items = append(items, item)
-	}
-	return items, nil
+	return docItemsForProgram(parsed.prog, parsed.comments, path), nil
 }
 
 // ExtractFiles processes multiple files and returns the merged
@@ -103,7 +95,7 @@ func ExtractReport(paths []string) (Report, error) {
 		}
 		report.Items = append(report.Items, file.items...)
 		for _, c := range parser.OrphanComments(file.prog, file.comments) {
-			if !c.IsFullLine {
+			if !c.IsFullLine || c.Indent > 0 {
 				continue
 			}
 			report.Diagnostics = append(report.Diagnostics, Diagnostic{
@@ -141,6 +133,8 @@ func kindOrder(kind string) int {
 		return 2
 	case "function":
 		return 3
+	case "method":
+		return 4
 	default:
 		return 9
 	}
@@ -184,10 +178,8 @@ func parseFile(path string) (*parsedFile, error) {
 		return nil, err
 	}
 	file := &parsedFile{path: path, prog: prog, comments: infos}
+	file.items = append(file.items, docItemsForProgram(prog, infos, path)...)
 	for _, stmt := range prog.Stmts {
-		if item, ok := stmtToDocItem(stmt, prog, path); ok {
-			file.items = append(file.items, item)
-		}
 		if imp, ok := stmt.(*ast.ImportStmt); ok {
 			file.imports = append(file.imports, importInfo{
 				name: imp.Name,
@@ -197,6 +189,43 @@ func parseFile(path string) (*parsedFile, error) {
 		}
 	}
 	return file, nil
+}
+
+func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path string) []DocItem {
+	var items []DocItem
+	for _, stmt := range prog.Stmts {
+		if item, ok := stmtToDocItem(stmt, prog, path); ok {
+			items = append(items, item)
+		}
+		switch d := stmt.(type) {
+		case *ast.ClassDecl:
+			for _, method := range d.Methods {
+				if method.Private {
+					continue
+				}
+				items = append(items, DocItem{
+					Name:      d.Name + "." + method.Name,
+					Kind:      "method",
+					Signature: MethodSignature(d.Name, method),
+					RawDoc:    leadingBeforeLine(comments, method.Tok.Line, 2),
+					FilePath:  path,
+					Line:      method.Tok.Line,
+				})
+			}
+		case *ast.InterfaceDecl:
+			for _, method := range d.Methods {
+				items = append(items, DocItem{
+					Name:      d.Name + "." + method.Name,
+					Kind:      "method",
+					Signature: InterfaceMethodSignature(d.Name, method),
+					RawDoc:    leadingBeforeLine(comments, method.Tok.Line, 2),
+					FilePath:  path,
+					Line:      method.Tok.Line,
+				})
+			}
+		}
+	}
+	return items
 }
 
 func collectReexports(paths []string, parsed map[string]*parsedFile, root map[string]bool, report *Report) []DocItem {
@@ -303,7 +332,7 @@ func duplicateDiagnostics(items []DocItem) []Diagnostic {
 	first := map[string]DocItem{}
 	var out []Diagnostic
 	for _, item := range items {
-		key := item.Kind + "\x00" + item.Name
+		key := filepath.Dir(item.FilePath) + "\x00" + item.Kind + "\x00" + item.Name
 		if prev, ok := first[key]; ok {
 			out = append(out, Diagnostic{
 				Code:     "TYADOC0002",
@@ -427,9 +456,43 @@ func stripLeading(lines []string) string {
 	return strings.Join(out, "\n")
 }
 
+func leadingBeforeLine(comments []parser.CommentInfo, line int, indent int) string {
+	var lines []string
+	expected := line - 1
+	for i := len(comments) - 1; i >= 0; i-- {
+		c := comments[i]
+		if c.Line > expected {
+			continue
+		}
+		if c.Line < expected {
+			if len(lines) == 0 {
+				continue
+			}
+			break
+		}
+		if !c.IsFullLine || c.Indent != indent {
+			if len(lines) == 0 {
+				continue
+			}
+			break
+		}
+		lines = append([]string{c.Text}, lines...)
+		expected--
+	}
+	return stripLeading(lines)
+}
+
 // FuncSignature renders a "name(p1, p2)" string from a FuncLit's
 // parameter names. Type information is not available in the AST so
 // this is the maximum precision v0.51 ships.
 func FuncSignature(name string, fn *ast.FuncLit) string {
 	return name + "(" + strings.Join(fn.Params, ", ") + ")"
+}
+
+func MethodSignature(className string, method ast.ClassMethod) string {
+	return className + "." + FuncSignature(method.Name, method.Func)
+}
+
+func InterfaceMethodSignature(interfaceName string, method ast.InterfaceMethod) string {
+	return interfaceName + "." + method.Name + "(" + strings.Join(method.Params, ", ") + ")"
 }

@@ -1,15 +1,20 @@
+# Markdown provides the markdown/Markdown standard library API.
 class Markdown
+  # Markdown.to_html provides the markdown/Markdown standard library operation.
   static to_html = text ->
     return Markdown.render(Markdown.to_html_ast(Markdown.parse(text)))
 
+  # Markdown.parse provides the markdown/Markdown standard library operation.
   static parse = text ->
     lines = text.split("\n")
     refs = Markdown.reference_defs(lines)
     return { kind: "document", blocks: Markdown.parse_blocks(lines), references: refs }
 
+  # Markdown.to_html_ast provides the markdown/Markdown standard library operation.
   static to_html_ast = ast ->
     return { kind: "html_document", blocks: ast["blocks"], references: ast["references"] }
 
+  # Markdown.render provides the markdown/Markdown standard library operation.
   static render = ast, options ->
     if options == nil
       options = {}
@@ -23,6 +28,7 @@ class Markdown
       parts.push(Markdown.render_block(block, refs, options))
     return parts.join("")
 
+  # Markdown.parse_blocks provides the markdown/Markdown standard library operation.
   static parse_blocks = lines ->
     blocks = []
     para = []
@@ -153,6 +159,7 @@ class Markdown
     Markdown.flush_paragraph(blocks, para)
     return blocks
 
+  # Markdown.flush_paragraph provides the markdown/Markdown standard library operation.
   static flush_paragraph = blocks, para ->
     if para.len() == 0
       return nil
@@ -160,6 +167,7 @@ class Markdown
     blocks.push({ kind: "p", text: text })
     return nil
 
+  # Markdown.is_thematic_break provides the markdown/Markdown standard library operation.
   static is_thematic_break = s ->
     if s == "---"
       return true
@@ -169,6 +177,7 @@ class Markdown
       return true
     return false
 
+  # Markdown.is_setext_underline provides the markdown/Markdown standard library operation.
   static is_setext_underline = s ->
     if s == ""
       return false
@@ -182,9 +191,11 @@ class Markdown
       i = i + 1
     return true
 
+  # Markdown.is_html_block_start provides the markdown/Markdown standard library operation.
   static is_html_block_start = s ->
     return s.starts_with("<div") or s.starts_with("<section") or s.starts_with("<article") or s.starts_with("<p") or s.starts_with("<table") or s.starts_with("<h1") or s.starts_with("<h2") or s.starts_with("<h3") or s.starts_with("<ul") or s.starts_with("<ol")
 
+  # Markdown.is_reference_def provides the markdown/Markdown standard library operation.
   static is_reference_def = s ->
     if not s.starts_with("[")
       return false
@@ -195,6 +206,7 @@ class Markdown
       return false
     return s[close + 1] == ":"
 
+  # Markdown.reference_defs provides the markdown/Markdown standard library operation.
   static reference_defs = lines ->
     refs = {}
     for line in lines
@@ -206,6 +218,7 @@ class Markdown
         refs[label] = url
     return refs
 
+  # Markdown.heading_level provides the markdown/Markdown standard library operation.
   static heading_level = s ->
     n = s.byte_len()
     i = 0
@@ -219,6 +232,7 @@ class Markdown
       return 0
     return i
 
+  # Markdown.heading_rest provides the markdown/Markdown standard library operation.
   static heading_rest = s, level ->
     n = s.byte_len()
     rest = ""
@@ -228,6 +242,7 @@ class Markdown
       i = i + 1
     return rest.trim()
 
+  # Markdown.is_unordered_item provides the markdown/Markdown standard library operation.
   static is_unordered_item = s ->
     if s.starts_with("- ")
       return true
@@ -237,19 +252,24 @@ class Markdown
       return true
     return false
 
+  # Markdown.strip_list_marker provides the markdown/Markdown standard library operation.
   static strip_list_marker = s ->
     return Markdown.trim_left_n(s, 2)
 
+  # Markdown.is_nested_unordered_item provides the markdown/Markdown standard library operation.
   static is_nested_unordered_item = s ->
     return (s.starts_with("  - ") or s.starts_with("  * ") or s.starts_with("  + ")) and Markdown.is_unordered_item(s.trim())
 
+  # Markdown.is_task_item provides the markdown/Markdown standard library operation.
   static is_task_item = s ->
     return s.starts_with("- [ ] ") or s.starts_with("- [x] ") or s.starts_with("- [X] ")
 
+  # Markdown.parse_task_item provides the markdown/Markdown standard library operation.
   static parse_task_item = s ->
     checked = s.starts_with("- [x] ") or s.starts_with("- [X] ")
     return { checked: checked, text: Markdown.trim_left_n(s, 6) }
 
+  # Markdown.is_table_start provides the markdown/Markdown standard library operation.
   static is_table_start = lines, i ->
     if i + 1 >= lines.len()
       return false
@@ -257,6 +277,7 @@ class Markdown
     sep = lines[i + 1].trim()
     return head.contains("|") and Markdown.is_table_separator(sep)
 
+  # Markdown.is_table_separator provides the markdown/Markdown standard library operation.
   static is_table_separator = s ->
     if not s.contains("|")
       return false
@@ -279,6 +300,7 @@ class Markdown
         return false
     return true
 
+  # Markdown.table_cells provides the markdown/Markdown standard library operation.
   static table_cells = s ->
     text = s
     if text.starts_with("|")
@@ -291,6 +313,7 @@ class Markdown
       cells.push(cell.trim())
     return cells
 
+  # Markdown.is_ordered_item provides the markdown/Markdown standard library operation.
   static is_ordered_item = s ->
     n = s.byte_len()
     i = 0
@@ -306,6 +329,7 @@ class Markdown
       return false
     return true
 
+  # Markdown.strip_ordered_marker provides the markdown/Markdown standard library operation.
   static strip_ordered_marker = s ->
     n = s.byte_len()
     i = 0
@@ -313,6 +337,7 @@ class Markdown
       i = i + 1
     return Markdown.trim_left_n(s, i + 2)
 
+  # Markdown.trim_left_n provides the markdown/Markdown standard library operation.
   static trim_left_n = s, k ->
     n = s.byte_len()
     out = ""
@@ -322,6 +347,7 @@ class Markdown
       i = i + 1
     return out
 
+  # Markdown.render_block provides the markdown/Markdown standard library operation.
   static render_block = block, refs, options ->
     kind = block["kind"]
     if kind == "hr"
@@ -393,6 +419,7 @@ class Markdown
       return "<p>" + Markdown.escape_html(block["text"]) + "</p>\n"
     return ""
 
+  # Markdown.escape_html provides the markdown/Markdown standard library operation.
   static escape_html = text ->
     text = text.replace("&", "&amp;")
     text = text.replace("<", "&lt;")
@@ -401,6 +428,7 @@ class Markdown
     text = text.replace("'", "&#39;")
     return text
 
+  # Markdown.escape_attr provides the markdown/Markdown standard library operation.
   static escape_attr = text ->
     text = text.replace("&", "&amp;")
     text = text.replace("\"", "&quot;")
@@ -408,9 +436,11 @@ class Markdown
     text = text.replace(">", "&gt;")
     return text
 
+  # Markdown.inline provides the markdown/Markdown standard library operation.
   static inline = text ->
     return Markdown.inline_with_refs(text, {})
 
+  # Markdown.inline_with_refs provides the markdown/Markdown standard library operation.
   static inline_with_refs = text, refs ->
     n = text.byte_len()
     out = ""
@@ -485,6 +515,7 @@ class Markdown
       i = i + 1
     return out
 
+  # Markdown.find_byte provides the markdown/Markdown standard library operation.
   static find_byte = text, b, start ->
     n = text.byte_len()
     i = start
@@ -494,6 +525,7 @@ class Markdown
       i = i + 1
     return -1
 
+  # Markdown.find_double provides the markdown/Markdown standard library operation.
   static find_double = text, b, start ->
     n = text.byte_len()
     i = start
@@ -503,6 +535,7 @@ class Markdown
       i = i + 1
     return -1
 
+  # Markdown.slice_str provides the markdown/Markdown standard library operation.
   static slice_str = text, s, e ->
     out = ""
     i = s
@@ -511,6 +544,7 @@ class Markdown
       i = i + 1
     return out
 
+  # Markdown.try_link provides the markdown/Markdown standard library operation.
   static try_link = text, start, refs ->
     n = text.byte_len()
     close_text = Markdown.find_byte(text, "]", start + 1)
@@ -547,6 +581,7 @@ class Markdown
       + "</a>"
     return { html: html, end: end }
 
+  # Markdown.try_image provides the markdown/Markdown standard library operation.
   static try_image = text, start, refs ->
     n = text.byte_len()
     if start + 1 >= n or text[start + 1] != "["
@@ -579,6 +614,7 @@ class Markdown
     html = "<img src=\"" + Markdown.escape_attr(url) + "\" alt=\"" + Markdown.escape_attr(alt) + "\"/>"
     return { html: html, end: end }
 
+  # Markdown.try_autolink provides the markdown/Markdown standard library operation.
   static try_autolink = text, start ->
     close = Markdown.find_byte(text, ">", start + 1)
     if close < 0

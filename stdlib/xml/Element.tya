@@ -1,18 +1,24 @@
+# Element provides the xml/Element standard library API.
 class Element
+  # Element.initialize provides the xml/Element standard library operation.
   initialize = name, attrs, children ->
     self.name = name
     self.attrs = attrs
     self.children = children
 
+  # Element.new provides the xml/Element standard library operation.
   static new = name, attrs, children ->
     return Element(name, attrs, children)
 
+  # Element.attr provides the xml/Element standard library operation.
   attr = name, default ->
     return self.attrs.get(name, default)
 
+  # Element.has_attr? provides the xml/Element standard library operation.
   has_attr? = name ->
     return self.attrs.has?(name)
 
+  # Element.text provides the xml/Element standard library operation.
   text = ->
     out = ""
     i = 0
@@ -25,6 +31,7 @@ class Element
       i = i + 1
     return out
 
+  # Element.child_elements provides the xml/Element standard library operation.
   child_elements = ->
     out = []
     i = 0
@@ -34,12 +41,14 @@ class Element
       i = i + 1
     return out
 
+  # Element.find provides the xml/Element standard library operation.
   find = name ->
     found = self.find_all(name)
     if found.len() == 0
       return nil
     return found[0]
 
+  # Element.find_all provides the xml/Element standard library operation.
   find_all = name ->
     out = []
     children = self.child_elements()
@@ -50,16 +59,19 @@ class Element
       i = i + 1
     return out
 
+  # Element.find_recursive provides the xml/Element standard library operation.
   find_recursive = name ->
     found = self.find_all_recursive(name)
     if found.len() == 0
       return nil
     return found[0]
 
+  # Element.find_all_recursive provides the xml/Element standard library operation.
   find_all_recursive = name ->
     out = []
     Xml.collect_recursive(self, name, out)
     return out
 
+  # Element.to_s provides the xml/Element standard library operation.
   to_s = ->
     return Xml.dump(self)

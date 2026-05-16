@@ -1,9 +1,12 @@
+# Hex provides the hex/Hex standard library API.
 class Hex
+  # Hex.hex_digit provides the hex/Hex standard library operation.
   static hex_digit = d ->
     if d < 10
       return chr(48 + d)
     return chr(87 + d)
 
+  # Hex.decode_digit provides the hex/Hex standard library operation.
   static decode_digit = c ->
     code = ord(c)
     if code >= 48 and code <= 57
@@ -14,6 +17,7 @@ class Hex
       return code - 87
     raise "hex.decode: invalid hex digit"
 
+  # Hex.encode provides the hex/Hex standard library operation.
   static encode = value ->
     out = ""
     if value.class != String
@@ -35,6 +39,7 @@ class Hex
       return out
     raise "hex.encode: argument must be a string or bytes"
 
+  # Hex.decode provides the hex/Hex standard library operation.
   static decode = text ->
     n = text.byte_len()
     if n % 2 != 0

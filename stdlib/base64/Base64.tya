@@ -1,17 +1,22 @@
+# Base64 provides the base64/Base64 standard library API.
 class Base64
+  # Base64.alphabet provides the base64/Base64 standard library operation.
   static alphabet = ->
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
+  # Base64.byte_at provides the base64/Base64 standard library operation.
   static byte_at = value, i ->
     if value.class == String
       return ord(value[i])
     return bytes_array(value)[i]
 
+  # Base64.byte_count provides the base64/Base64 standard library operation.
   static byte_count = value ->
     if value.class == String
       return value.byte_len()
     return bytes_array(value).len()
 
+  # Base64.encode provides the base64/Base64 standard library operation.
   static encode = value ->
     alphabet = Base64.alphabet()
     n = Base64.byte_count(value)
@@ -42,6 +47,7 @@ class Base64
       out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
     return out
 
+  # Base64.index_of provides the base64/Base64 standard library operation.
   static index_of = c ->
     code = ord(c)
     if code >= 65 and code <= 90
@@ -56,6 +62,7 @@ class Base64
       return 63
     raise "base64.decode: invalid character"
 
+  # Base64.decode provides the base64/Base64 standard library operation.
   static decode = text ->
     cleaned = ""
     n = text.byte_len()

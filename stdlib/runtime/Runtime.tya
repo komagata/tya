@@ -1,3 +1,4 @@
+# Runtime provides the runtime/Runtime standard library API.
 class Runtime
   # Returns a snapshot of the current GC counters as a dict with the
   # following keys:

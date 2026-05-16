@@ -1,4 +1,6 @@
+# Queue provides the collections/Queue standard library API.
 class Queue
+  # Queue.initialize provides the collections/Queue standard library operation.
   initialize = values ->
     if values == nil
       self.items = []
@@ -6,16 +8,20 @@ class Queue
       self.items = values.slice(0, values.len())
     self.head = 0
 
+  # Queue.new provides the collections/Queue standard library operation.
   static new = ->
     return Queue(nil)
 
+  # Queue.from_array provides the collections/Queue standard library operation.
   static from_array = values ->
     return Queue(values)
 
+  # Queue.push provides the collections/Queue standard library operation.
   push = value ->
     self.items.push(value)
     return self
 
+  # Queue.pop provides the collections/Queue standard library operation.
   pop = ->
     if self.empty?()
       raise "collections.Queue.pop: empty queue"
@@ -24,22 +30,27 @@ class Queue
     self.compact()
     return value
 
+  # Queue.peek provides the collections/Queue standard library operation.
   peek = ->
     if self.empty?()
       raise "collections.Queue.peek: empty queue"
     return self.items[self.head]
 
+  # Queue.len provides the collections/Queue standard library operation.
   len = ->
     return self.items.len() - self.head
 
+  # Queue.empty? provides the collections/Queue standard library operation.
   empty? = ->
     return self.len() == 0
 
+  # Queue.clear provides the collections/Queue standard library operation.
   clear = ->
     self.items = []
     self.head = 0
     return self
 
+  # Queue.to_array provides the collections/Queue standard library operation.
   to_array = ->
     out = []
     i = self.head
@@ -48,6 +59,7 @@ class Queue
       i = i + 1
     return out
 
+  # Queue.compact provides the collections/Queue standard library operation.
   compact = ->
     if self.head > 32 and self.head * 2 >= self.items.len()
       self.items = self.to_array()

@@ -154,7 +154,53 @@ func attachStmtCommentsTracked(prog *ast.Program, comments []CommentInfo) []bool
 	}
 	prog.Comments = map[ast.Stmt]ast.StmtComments{}
 	attachStmtBlock(prog.Comments, prog.Stmts, 0, comments, used)
+	markMemberComments(prog.Stmts, comments, used)
 	return used
+}
+
+func markMemberComments(stmts []ast.Stmt, comments []CommentInfo, used []bool) {
+	for _, stmt := range stmts {
+		switch d := stmt.(type) {
+		case *ast.ClassDecl:
+			for _, field := range d.Fields {
+				markLeadingComments(field.Tok.Line, 2, comments, used)
+			}
+			for _, classVar := range d.Vars {
+				markLeadingComments(classVar.Tok.Line, 2, comments, used)
+			}
+			for _, method := range d.Methods {
+				markLeadingComments(method.Tok.Line, 2, comments, used)
+			}
+		case *ast.InterfaceDecl:
+			for _, field := range d.Fields {
+				markLeadingComments(field.Tok.Line, 2, comments, used)
+			}
+			for _, method := range d.Methods {
+				markLeadingComments(method.Tok.Line, 2, comments, used)
+			}
+		}
+	}
+}
+
+func markLeadingComments(startLine int, indent int, comments []CommentInfo, used []bool) {
+	expectedLine := startLine - 1
+	for j := len(comments) - 1; j >= 0; j-- {
+		if used[j] {
+			continue
+		}
+		c := comments[j]
+		if c.Line > expectedLine {
+			continue
+		}
+		if c.Line < expectedLine {
+			break
+		}
+		if !c.IsFullLine || c.Indent != indent {
+			break
+		}
+		used[j] = true
+		expectedLine--
+	}
 }
 
 // OrphanComments reports comments that ParseWithComments could not
@@ -722,7 +768,7 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 		return nil, err
 	}
 	var parents []ast.ClassRef
-	if p.at(token.IDENT) && p.peek().Lexeme == "extends" {
+	if p.at(token.IDENT) && (p.peek().Lexeme == "extends" || p.peek().Lexeme == "implements") {
 		p.next()
 		for {
 			ref, err := p.classRef()

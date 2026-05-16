@@ -1,16 +1,21 @@
+# Deque provides the collections/Deque standard library API.
 class Deque
+  # Deque.initialize provides the collections/Deque standard library operation.
   initialize = values ->
     if values == nil
       self.items = []
     else
       self.items = values.slice(0, values.len())
 
+  # Deque.new provides the collections/Deque standard library operation.
   static new = ->
     return Deque(nil)
 
+  # Deque.from_array provides the collections/Deque standard library operation.
   static from_array = values ->
     return Deque(values)
 
+  # Deque.push_front provides the collections/Deque standard library operation.
   push_front = value ->
     next = [value]
     i = 0
@@ -20,10 +25,12 @@ class Deque
     self.items = next
     return self
 
+  # Deque.push_back provides the collections/Deque standard library operation.
   push_back = value ->
     self.items.push(value)
     return self
 
+  # Deque.pop_front provides the collections/Deque standard library operation.
   pop_front = ->
     if self.empty?()
       raise "collections.Deque.pop_front: empty deque"
@@ -31,30 +38,37 @@ class Deque
     self.items = self.items.slice(1, self.items.len())
     return value
 
+  # Deque.pop_back provides the collections/Deque standard library operation.
   pop_back = ->
     if self.empty?()
       raise "collections.Deque.pop_back: empty deque"
     return self.items.pop()
 
+  # Deque.peek_front provides the collections/Deque standard library operation.
   peek_front = ->
     if self.empty?()
       raise "collections.Deque.peek_front: empty deque"
     return self.items[0]
 
+  # Deque.peek_back provides the collections/Deque standard library operation.
   peek_back = ->
     if self.empty?()
       raise "collections.Deque.peek_back: empty deque"
     return self.items[self.items.len() - 1]
 
+  # Deque.len provides the collections/Deque standard library operation.
   len = ->
     return self.items.len()
 
+  # Deque.empty? provides the collections/Deque standard library operation.
   empty? = ->
     return self.items.empty?()
 
+  # Deque.clear provides the collections/Deque standard library operation.
   clear = ->
     self.items = []
     return self
 
+  # Deque.to_array provides the collections/Deque standard library operation.
   to_array = ->
     return self.items.slice(0, self.items.len())

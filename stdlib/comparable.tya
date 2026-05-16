@@ -1,17 +1,24 @@
+# Comparable provides the comparable standard library API.
 interface Comparable
+  # Comparable.compare provides the comparable standard library operation.
   compare = other ->
 
+  # Comparable.lt? provides the comparable standard library operation.
   lt? = other ->
     self.compare(other) < 0
 
+  # Comparable.lte? provides the comparable standard library operation.
   lte? = other ->
     self.compare(other) <= 0
 
+  # Comparable.gt? provides the comparable standard library operation.
   gt? = other ->
     self.compare(other) > 0
 
+  # Comparable.gte? provides the comparable standard library operation.
   gte? = other ->
     self.compare(other) >= 0
 
+  # Comparable.between? provides the comparable standard library operation.
   between? = min, max ->
     self.gte?(min) and self.lte?(max)

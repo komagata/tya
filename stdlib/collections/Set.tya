@@ -1,4 +1,6 @@
+# Set provides the collections/Set standard library API.
 class Set
+  # Set.initialize provides the collections/Set standard library operation.
   initialize = values ->
     self.items = []
     if values != nil
@@ -14,17 +16,21 @@ class Set
           self.items.push(values[i])
         i = i + 1
 
+  # Set.new provides the collections/Set standard library operation.
   static new = ->
     return Set(nil)
 
+  # Set.from_array provides the collections/Set standard library operation.
   static from_array = values ->
     return Set(values)
 
+  # Set.add provides the collections/Set standard library operation.
   add = value ->
     if not self.has?(value)
       self.items.push(value)
     return self
 
+  # Set.delete provides the collections/Set standard library operation.
   delete = value ->
     next = []
     removed = false
@@ -38,6 +44,7 @@ class Set
     self.items = next
     return removed
 
+  # Set.has? provides the collections/Set standard library operation.
   has? = value ->
     i = 0
     while i < self.items.len()
@@ -46,19 +53,24 @@ class Set
       i = i + 1
     return false
 
+  # Set.len provides the collections/Set standard library operation.
   len = ->
     return self.items.len()
 
+  # Set.empty? provides the collections/Set standard library operation.
   empty? = ->
     return self.items.empty?()
 
+  # Set.clear provides the collections/Set standard library operation.
   clear = ->
     self.items = []
     return self
 
+  # Set.to_array provides the collections/Set standard library operation.
   to_array = ->
     return self.items.slice(0, self.items.len())
 
+  # Set.union provides the collections/Set standard library operation.
   static union = a, b ->
     out = Set.from_array(a.to_array())
     i = 0
@@ -68,6 +80,7 @@ class Set
       i = i + 1
     return out
 
+  # Set.intersection provides the collections/Set standard library operation.
   static intersection = a, b ->
     out = Set.new()
     values = a.to_array()
@@ -78,6 +91,7 @@ class Set
       i = i + 1
     return out
 
+  # Set.difference provides the collections/Set standard library operation.
   static difference = a, b ->
     out = Set.new()
     values = a.to_array()
@@ -88,6 +102,7 @@ class Set
       i = i + 1
     return out
 
+  # Set.subset? provides the collections/Set standard library operation.
   static subset? = a, b ->
     values = a.to_array()
     i = 0

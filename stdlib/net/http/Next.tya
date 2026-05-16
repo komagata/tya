@@ -1,12 +1,16 @@
+# Next provides the net/http/Next standard library API.
 class Next
+  # Next.initialize provides the net/http/Next standard library operation.
   initialize = middlewares, index, handler ->
     self.middlewares = middlewares
     self.index = index
     self.handler = handler
 
+  # Next.new provides the net/http/Next standard library operation.
   static new = middlewares, index, handler ->
     return Next(middlewares, index, handler)
 
+  # Next.call provides the net/http/Next standard library operation.
   call = req ->
     if self.index >= self.middlewares.len()
       return self.handler(req)

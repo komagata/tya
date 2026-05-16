@@ -114,6 +114,8 @@ func kindTitle(kind string) string {
 		return "Interfaces"
 	case "function":
 		return "Functions"
+	case "method":
+		return "Methods"
 	}
 	return kind
 }

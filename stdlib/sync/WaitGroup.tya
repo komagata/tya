@@ -1,2 +1,4 @@
+# WaitGroup provides the sync/WaitGroup standard library API.
 class WaitGroup
+  # WaitGroup.native provides the sync/WaitGroup standard library operation.
   native = true

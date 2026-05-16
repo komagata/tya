@@ -1,4 +1,6 @@
+# Path provides the path/Path standard library API.
 class Path
+  # Path.basename provides the path/Path standard library operation.
   static basename = value ->
     parts = value.split("/")
     i = parts.len() - 1
@@ -8,6 +10,7 @@ class Path
       i = i - 1
     return ""
 
+  # Path.dirname provides the path/Path standard library operation.
   static dirname = value ->
     parts = value.split("/")
     last = parts.len() - 1
@@ -27,6 +30,7 @@ class Path
       return "."
     return joined
 
+  # Path.extname provides the path/Path standard library operation.
   static extname = value ->
     bparts = value.split("/")
     bi = bparts.len() - 1
@@ -43,6 +47,7 @@ class Path
       return ""
     return "." + parts[n - 1]
 
+  # Path.clean provides the path/Path standard library operation.
   static clean = value ->
     if value == ""
       return "."
@@ -66,6 +71,7 @@ class Path
       return "."
     return joined
 
+  # Path.join provides the path/Path standard library operation.
   static join = parts ->
     raw = parts.join("/")
     if raw == ""
@@ -90,5 +96,6 @@ class Path
       return "."
     return joined
 
+  # Path.expand_user provides the path/Path standard library operation.
   static expand_user = value ->
     path_expand_user(value)

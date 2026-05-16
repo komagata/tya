@@ -1,43 +1,63 @@
+# Readable provides the net/socket/Socket standard library API.
 interface Readable
+  # Readable.read provides the net/socket/Socket standard library operation.
   read = size ->
 
+# Writable provides the net/socket/Socket standard library API.
 interface Writable
+  # Writable.write provides the net/socket/Socket standard library operation.
   write = data ->
 
+# Closable provides the net/socket/Socket standard library API.
 interface Closable
+  # Closable.close provides the net/socket/Socket standard library operation.
   close = ->
 
+# Socket represents a TCP stream connection.
 class Socket implements Readable, Writable, Closable
+  # connect opens a TCP connection to host and port.
+  # Raises when the connection cannot be established.
   static connect = host, port, options ->
     if options == nil
       options = {}
     Socket(socket_connect(host, port, options), options["mode"] == "binary")
 
+  # Socket.initialize provides the net/socket/Socket standard library operation.
   initialize = handle, binary ->
     self.handle = handle
     self.binary = binary
 
+  # read returns up to size bytes from the socket.
+  # Raises when the socket read fails.
   read = size ->
     socket_read(self.handle, size)
 
+  # Socket.read_line provides the net/socket/Socket standard library operation.
   read_line = ->
     socket_read_line(self.handle)
 
+  # write sends value to the socket and returns the byte count.
+  # Raises when the socket write fails.
   write = value ->
     socket_write(self.handle, value)
 
+  # Socket.write_line provides the net/socket/Socket standard library operation.
   write_line = value ->
     self.write(value)
     self.write("\n")
 
+  # Socket.close provides the net/socket/Socket standard library operation.
   close = ->
     socket_close(self.handle)
 
+  # Socket.closed? provides the net/socket/Socket standard library operation.
   closed? = ->
     socket_closed(self.handle)
 
+  # Socket.local_address provides the net/socket/Socket standard library operation.
   local_address = ->
     socket_local_address(self.handle)
 
+  # Socket.remote_address provides the net/socket/Socket standard library operation.
   remote_address = ->
     socket_remote_address(self.handle)

@@ -1,15 +1,21 @@
+# Digest provides the digest/Digest standard library API.
 class Digest
+  # Digest.md5 provides the digest/Digest standard library operation.
   static md5 = text ->
     digest_md5(text)
 
+  # Digest.sha1 provides the digest/Digest standard library operation.
   static sha1 = text ->
     digest_sha1(text)
 
+  # Digest.sha256 provides the digest/Digest standard library operation.
   static sha256 = text ->
     digest_sha256(text)
 
+  # Digest.sha384 provides the digest/Digest standard library operation.
   static sha384 = text ->
     digest_sha384(text)
 
+  # Digest.sha512 provides the digest/Digest standard library operation.
   static sha512 = text ->
     digest_sha512(text)

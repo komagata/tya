@@ -2,14 +2,19 @@ import json as json
 import toml as toml
 import base64 as base64
 
+# Serializable provides the serialization/Serializer standard library API.
 interface Serializable
+  # Serializable.to_data provides the serialization/Serializer standard library operation.
   to_data = ->
 
+# Serializer provides the serialization/Serializer standard library API.
 class Serializer
+  # Serializer.to_data provides the serialization/Serializer standard library operation.
   static to_data = value, options ->
     opts = Serializer.options(options)
     return Serializer.to_data_seen(value, opts, [])
 
+  # Serializer.from_data provides the serialization/Serializer standard library operation.
   static from_data = data, klass, options ->
     opts = Serializer.options(options)
     if klass == nil
@@ -44,21 +49,26 @@ class Serializer
       i = i + 1
     return obj
 
+  # Serializer.to_json provides the serialization/Serializer standard library operation.
   static to_json = value, options ->
     return json.Json.dump(Serializer.to_data(value, options))
 
+  # Serializer.from_json provides the serialization/Serializer standard library operation.
   static from_json = text, klass, options ->
     return Serializer.from_data(json.Json.parse(text), klass, options)
 
+  # Serializer.to_toml provides the serialization/Serializer standard library operation.
   static to_toml = value, options ->
     data = Serializer.to_data(value, options)
     if serialization_kind(data) != "dict"
       raise "serialization.to_toml: top-level value must serialize to a dict"
     return toml.Toml.dump(data)
 
+  # Serializer.from_toml provides the serialization/Serializer standard library operation.
   static from_toml = text, klass, options ->
     return Serializer.from_data(toml.Toml.parse(text), klass, options)
 
+  # Serializer.to_data_seen provides the serialization/Serializer standard library operation.
   static to_data_seen = value, opts, seen ->
     kind = serialization_kind(value)
     if kind == "nil" or kind == "bool" or kind == "number" or kind == "string"
@@ -110,6 +120,7 @@ class Serializer
       return out
     raise "serialization.to_data: unsupported " + kind
 
+  # Serializer.enter_seen provides the serialization/Serializer standard library operation.
   static enter_seen = value, seen ->
     id = serialization_id(value)
     i = 0
@@ -119,6 +130,7 @@ class Serializer
       i = i + 1
     seen.push(id)
 
+  # Serializer.options provides the serialization/Serializer standard library operation.
   static options = options ->
     opts = { "bytes": nil, "include_class": false, "class_key": "$class", "fields": nil, "defaults": {}, "strict_fields": false }
     if options == nil
@@ -136,6 +148,7 @@ class Serializer
       raise "serialization.options: bytes must be base64 or array"
     return opts
 
+  # Serializer.array_has? provides the serialization/Serializer standard library operation.
   static array_has? = values, value ->
     i = 0
     while i < values.len()

@@ -1,12 +1,16 @@
+# Document provides the xml/Document standard library API.
 class Document
+  # Document.initialize provides the xml/Document standard library operation.
   initialize = children, version, encoding ->
     self.nodes = children
     self.doc_version = version
     self.doc_encoding = encoding
 
+  # Document.new provides the xml/Document standard library operation.
   static new = children, version, encoding ->
     return Document(children, version, encoding)
 
+  # Document.root provides the xml/Document standard library operation.
   root = ->
     i = 0
     while i < self.nodes.len()
@@ -15,14 +19,18 @@ class Document
       i = i + 1
     return nil
 
+  # Document.children provides the xml/Document standard library operation.
   children = ->
     return self.nodes
 
+  # Document.version provides the xml/Document standard library operation.
   version = ->
     return self.doc_version
 
+  # Document.encoding provides the xml/Document standard library operation.
   encoding = ->
     return self.doc_encoding
 
+  # Document.to_s provides the xml/Document standard library operation.
   to_s = ->
     return Xml.dump(self)

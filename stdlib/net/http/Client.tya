@@ -1,10 +1,14 @@
+# Client provides the net/http/Client standard library API.
 class Client
+  # Client.get provides the net/http/Client standard library operation.
   static get = target ->
     return Client.request("GET", target, {})
 
+  # Client.post provides the net/http/Client standard library operation.
   static post = target, body ->
     return Client.request("POST", target, { body: body })
 
+  # Client.request provides the net/http/Client standard library operation.
   static request = method, target, opts ->
     if opts == nil
       opts = {}
@@ -46,11 +50,13 @@ class Client
     socket_close(s)
     return response
 
+  # Client.host_header provides the net/http/Client standard library operation.
   static host_header = host, port ->
     if port == "" or port == "80"
       return host
     return host + ":" + port
 
+  # Client.read_response provides the net/http/Client standard library operation.
   static read_response = s ->
     status_line = socket_read_line(s)
     if status_line == nil
@@ -84,6 +90,7 @@ class Client
         chunk = socket_read(s, 4096)
     return { status: status, headers: headers, body: body }
 
+  # Client.read_chunked provides the net/http/Client standard library operation.
   static read_chunked = s ->
     out = ""
     size_line = socket_read_line(s)
@@ -98,12 +105,14 @@ class Client
       size_line = socket_read_line(s)
     return out
 
+  # Client.read_trailers provides the net/http/Client standard library operation.
   static read_trailers = s ->
     line = socket_read_line(s)
     while line != nil and Client.chomp(line) != ""
       line = socket_read_line(s)
     nil
 
+  # Client.parse_url provides the net/http/Client standard library operation.
   static parse_url = target ->
     prefix = "http://"
     if not target.starts_with(prefix)
@@ -136,6 +145,7 @@ class Client
       path = "/"
     return { scheme: "http", host: host, port: port, path: path, query: query_text, has_query: has_query }
 
+  # Client.chomp provides the net/http/Client standard library operation.
   static chomp = text ->
     n = text.byte_len()
     if n > 0 and text[n - 1] == "\n"
@@ -144,6 +154,7 @@ class Client
       n = n - 1
     return Client.slice(text, 0, n)
 
+  # Client.index_of provides the net/http/Client standard library operation.
   static index_of = text, needle, start ->
     i = start
     n = text.byte_len()
@@ -154,6 +165,7 @@ class Client
       i = i + 1
     return -1
 
+  # Client.slice provides the net/http/Client standard library operation.
   static slice = text, start, finish ->
     out = ""
     i = start
@@ -162,6 +174,7 @@ class Client
       i = i + 1
     return out
 
+  # Client.hex_to_i provides the net/http/Client standard library operation.
   static hex_to_i = text ->
     value = 0
     i = 0

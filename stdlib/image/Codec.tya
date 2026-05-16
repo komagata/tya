@@ -1,9 +1,12 @@
 import file as file
 
+# Codec provides the image/Codec standard library API.
 class Codec
+  # Codec.identify_file provides the image/Codec standard library operation.
   static identify_file = path ->
     return Codec.identify(file.File.read_bytes(path))
 
+  # Codec.identify provides the image/Codec standard library operation.
   static identify = data ->
     text = bytes_text(data)
     parts = text.split("\n")
@@ -17,5 +20,6 @@ class Codec
       raise "image.identify: unsupported format " + format
     return { format: format, width: header[2].to_i(), height: header[3].to_i(), frames: header[5].to_i(), animated: header[5].to_i() > 1, has_alpha: header[4] == "1", color_space: "srgb" }
 
+  # Codec.supported_format? provides the image/Codec standard library operation.
   static supported_format? = format ->
     return format == "png" or format == "jpeg" or format == "gif" or format == "bmp" or format == "ppm"

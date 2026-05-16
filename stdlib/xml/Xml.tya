@@ -1,4 +1,6 @@
+# Xml provides the xml/Xml standard library API.
 class Xml
+  # Xml.parse provides the xml/Xml standard library operation.
   static parse = text ->
     state = { src: text, pos: 0, len: text.byte_len(), version: "1.0", encoding: nil }
     children = []
@@ -11,6 +13,7 @@ class Xml
         return Document.new(children, state["version"], state["encoding"])
       children.push(Xml.parse_node(state))
 
+  # Xml.dump provides the xml/Xml standard library operation.
   static dump = value ->
     if value.class == Document
       out = ""
@@ -44,6 +47,7 @@ class Xml
       return "<!--" + value.text + "-->"
     raise "xml.dump: unsupported node"
 
+  # Xml.escape_text provides the xml/Xml standard library operation.
   static escape_text = text ->
     out = ""
     i = 0
@@ -60,9 +64,11 @@ class Xml
       i = i + 1
     return out
 
+  # Xml.escape_attr provides the xml/Xml standard library operation.
   static escape_attr = text ->
     return Xml.escape_text(text).replace("\"", "&quot;").replace("'", "&apos;")
 
+  # Xml.collect_recursive provides the xml/Xml standard library operation.
   static collect_recursive = element, name, out ->
     children = element.child_elements()
     i = 0
@@ -73,6 +79,7 @@ class Xml
       Xml.collect_recursive(child, name, out)
       i = i + 1
 
+  # Xml.parse_decl provides the xml/Xml standard library operation.
   static parse_decl = state ->
     Xml.expect_text(state, "<?xml")
     attrs = Xml.parse_attrs_until(state, "?>")
@@ -81,6 +88,7 @@ class Xml
     if attrs.has?("encoding")
       state["encoding"] = attrs["encoding"]
 
+  # Xml.parse_node provides the xml/Xml standard library operation.
   static parse_node = state ->
     if Xml.starts_at(state, "<!--")
       return Xml.parse_comment(state)
@@ -95,6 +103,7 @@ class Xml
       return Xml.parse_element(state)
     return Xml.parse_text(state)
 
+  # Xml.parse_element provides the xml/Xml standard library operation.
   static parse_element = state ->
     Xml.expect(state, "<")
     name = Xml.parse_name(state)
@@ -117,6 +126,7 @@ class Xml
         return Element.new(name, attrs, children)
       children.push(Xml.parse_node(state))
 
+  # Xml.parse_attrs_until provides the xml/Xml standard library operation.
   static parse_attrs_until = state, terminator ->
     attrs = {}
     while true
@@ -146,6 +156,7 @@ class Xml
       state["pos"] = state["pos"] + 1
       attrs[name] = Xml.decode_entities(raw, state)
 
+  # Xml.parse_text provides the xml/Xml standard library operation.
   static parse_text = state ->
     raw = ""
     while state["pos"] < state["len"] and Xml.peek(state) != "<"
@@ -153,20 +164,24 @@ class Xml
       state["pos"] = state["pos"] + 1
     return Text.new(Xml.decode_entities(raw, state))
 
+  # Xml.parse_comment provides the xml/Xml standard library operation.
   static parse_comment = state ->
     Xml.expect_text(state, "<!--")
     text = Xml.read_until(state, "-->", "unterminated comment")
     return Comment.new(text)
 
+  # Xml.parse_cdata provides the xml/Xml standard library operation.
   static parse_cdata = state ->
     Xml.expect_text(state, "<![CDATA[")
     text = Xml.read_until(state, "]]>", "unterminated CDATA")
     return CData.new(text)
 
+  # Xml.skip_processing_instruction provides the xml/Xml standard library operation.
   static skip_processing_instruction = state ->
     Xml.expect_text(state, "<?")
     Xml.read_until(state, "?>", "unterminated processing instruction")
 
+  # Xml.read_until provides the xml/Xml standard library operation.
   static read_until = state, terminator, message ->
     out = ""
     while state["pos"] < state["len"]
@@ -177,6 +192,7 @@ class Xml
       state["pos"] = state["pos"] + 1
     Xml.error(state, message)
 
+  # Xml.decode_entities provides the xml/Xml standard library operation.
   static decode_entities = text, state ->
     out = ""
     i = 0
@@ -193,6 +209,7 @@ class Xml
         i = i + 1
     return out
 
+  # Xml.decode_entity provides the xml/Xml standard library operation.
   static decode_entity = entity, state ->
     if entity == "amp"
       return "&"
@@ -210,6 +227,7 @@ class Xml
       return chr(Xml.slice(entity, 1, entity.byte_len()).to_i())
     Xml.error(state, "invalid entity reference")
 
+  # Xml.parse_name provides the xml/Xml standard library operation.
   static parse_name = state ->
     name = ""
     while state["pos"] < state["len"]
@@ -222,6 +240,7 @@ class Xml
       state["pos"] = state["pos"] + 1
     Xml.error(state, "expected name")
 
+  # Xml.skip_ws provides the xml/Xml standard library operation.
   static skip_ws = state ->
     while state["pos"] < state["len"]
       c = Xml.peek(state)
@@ -230,16 +249,19 @@ class Xml
       else
         return nil
 
+  # Xml.expect provides the xml/Xml standard library operation.
   static expect = state, c ->
     if Xml.peek(state) != c
       Xml.error(state, "expected " + c)
     state["pos"] = state["pos"] + 1
 
+  # Xml.expect_text provides the xml/Xml standard library operation.
   static expect_text = state, text ->
     if not Xml.starts_at(state, text)
       Xml.error(state, "expected " + text)
     state["pos"] = state["pos"] + text.byte_len()
 
+  # Xml.starts_at provides the xml/Xml standard library operation.
   static starts_at = state, text ->
     src = state["src"]
     if state["pos"] + text.byte_len() > state["len"]
@@ -251,11 +273,13 @@ class Xml
       i = i + 1
     return true
 
+  # Xml.peek provides the xml/Xml standard library operation.
   static peek = state ->
     if state["pos"] >= state["len"]
       return ""
     return state["src"][state["pos"]]
 
+  # Xml.slice provides the xml/Xml standard library operation.
   static slice = text, start, finish ->
     out = ""
     i = start
@@ -264,6 +288,7 @@ class Xml
       i = i + 1
     return out
 
+  # Xml.index_of provides the xml/Xml standard library operation.
   static index_of = text, needle, start ->
     i = start
     while i < text.byte_len()
@@ -272,6 +297,7 @@ class Xml
       i = i + 1
     return -1
 
+  # Xml.parse_hex provides the xml/Xml standard library operation.
   static parse_hex = text ->
     value = 0
     i = 0
@@ -290,5 +316,6 @@ class Xml
       i = i + 1
     return value
 
+  # Xml.error provides the xml/Xml standard library operation.
   static error = state, message ->
     raise "xml.parse: " + message + " at byte " + state["pos"].to_s()

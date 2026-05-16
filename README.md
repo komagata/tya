@@ -108,7 +108,8 @@ tya task run          # run the named task
 tya lint src                  # report unused locals (TYAL0001) under a path
 tya lint --fix src            # rewrite TYAL0001 line-deletes and TYAL0003 `if true` unwraps in place
 tya lint --format=json src    # machine-readable findings for CI consumers
-tya doc               # print top-level binding documentation
+tya doc               # print source-comment API documentation
+tya doc --json stdlib # emit generated stdlib API documentation
 tya doc --html ./out  # write a multi-page HTML site
 ```
 

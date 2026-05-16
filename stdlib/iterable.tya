@@ -1,5 +1,8 @@
+# Iterable provides the iterable standard library API.
 interface Iterable
+  # Iterable.iter provides the iterable standard library operation.
   iter = ->
 
+  # Iterable.sequence provides the iterable standard library operation.
   sequence = ->
     IterableSequence(self)

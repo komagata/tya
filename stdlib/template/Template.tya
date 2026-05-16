@@ -1,22 +1,30 @@
+# Template renders small HTML-oriented templates from dictionaries.
 class Template
+  # render expands source using data and options.
+  # Values are HTML-escaped unless raw template syntax is used.
   static render = source, data, options ->
     if options == nil
       options = {}
     return Template.render_with_options(source, data, options)
 
+  # Template.render_html provides the template/Template standard library operation.
   static render_html = source, data ->
     return Template.render_with_options(source, data, { escape: "html" })
 
+  # render_file reads a template file and renders it with data and options.
+  # Raises when the file cannot be read or the template is invalid.
   static render_file = path, data, options ->
     if options == nil
       options = {}
     return Template.render_with_options(read_file(path), data, options)
 
+  # Template.render_with_options provides the template/Template standard library operation.
   static render_with_options = source, data, options ->
     state = { source: source, pos: 0, len: source.byte_len() }
     env = { data: data, locals: {}, options: options }
     return Template.render_until(state, env, "")
 
+  # Template.render_until provides the template/Template standard library operation.
   static render_until = state, env, stop ->
     out = ""
     src = state["source"]
@@ -44,11 +52,13 @@ class Template
       raise Template.error(state, "missing " + stop)
     return out
 
+  # Template.render_raw_tag provides the template/Template standard library operation.
   static render_raw_tag = state, env ->
     state["pos"] = state["pos"] + 3
     tag = Template.read_until(state, Template.raw_close())
     return Template.render_value(tag.trim(), env, false)
 
+  # Template.render_value provides the template/Template standard library operation.
   static render_value = path, env, escaped ->
     found = Template.lookup(path, env)
     if not found["ok"]
@@ -58,6 +68,7 @@ class Template
       return Template.escape_html(text)
     return text
 
+  # Template.render_if provides the template/Template standard library operation.
   static render_if = state, tag, env ->
     cond = Template.slice(tag, 3, tag.byte_len())
     truth = false
@@ -75,6 +86,7 @@ class Template
       return Template.render_range(state["source"], then_start, split["end"], env)
     return ""
 
+  # Template.render_for provides the template/Template standard library operation.
   static render_for = state, tag, env ->
     parts = tag.split(" ")
     if parts.len() != 4 or parts[2] != "in"
@@ -95,6 +107,7 @@ class Template
       out = out + Template.render_range(state["source"], body_start, split["end"], child_env)
     return out
 
+  # Template.render_partial provides the template/Template standard library operation.
   static render_partial = tag, env ->
     rest = Template.slice(tag, 8, tag.byte_len()).trim()
     if rest.byte_len() < 2 or rest[0] != "\""
@@ -122,6 +135,7 @@ class Template
         ctx = {}
     return Template.render_with_options(partials[name], ctx, options)
 
+  # Template.find_block_split provides the template/Template standard library operation.
   static find_block_split = source, start ->
     pos = start
     depth = 0
@@ -146,11 +160,13 @@ class Template
       pos = close + 2
     raise "template.render: missing end"
 
+  # Template.render_range provides the template/Template standard library operation.
   static render_range = source, start, finish, env ->
     part = Template.slice(source, start, finish)
     state = { source: part, pos: 0, len: part.byte_len() }
     return Template.render_until(state, env, "")
 
+  # Template.lookup provides the template/Template standard library operation.
   static lookup = path, env ->
     p = path.trim()
     parts = Template.path_parts(p)
@@ -189,6 +205,7 @@ class Template
       i = i + 1
     return { ok: true, value: value }
 
+  # Template.path_parts provides the template/Template standard library operation.
   static path_parts = path ->
     parts = []
     cur = ""
@@ -216,6 +233,7 @@ class Template
       parts.push(cur)
     return parts
 
+  # Template.starts provides the template/Template standard library operation.
   static starts = state, text ->
     src = state["source"]
     pos = state["pos"]
@@ -228,6 +246,7 @@ class Template
       i = i + 1
     return true
 
+  # Template.starts_tag provides the template/Template standard library operation.
   static starts_tag = state, tag ->
     if not Template.starts(state, Template.open())
       return false
@@ -237,16 +256,19 @@ class Template
     text = Template.slice(state["source"], state["pos"] + 2, close).trim()
     return text == tag
 
+  # Template.starts_text provides the template/Template standard library operation.
   static starts_text = text, prefix ->
     if prefix.byte_len() > text.byte_len()
       return false
     return Template.slice(text, 0, prefix.byte_len()) == prefix
 
+  # Template.read_tag provides the template/Template standard library operation.
   static read_tag = state ->
     state["pos"] = state["pos"] + 2
     tag = Template.read_until(state, Template.close())
     return tag.trim()
 
+  # Template.read_until provides the template/Template standard library operation.
   static read_until = state, marker ->
     src = state["source"]
     start = state["pos"]
@@ -256,6 +278,7 @@ class Template
     state["pos"] = close + marker.byte_len()
     return Template.slice(src, start, close)
 
+  # Template.find_next_tag provides the template/Template standard library operation.
   static find_next_tag = source, start ->
     i = start
     while i + 1 < source.byte_len()
@@ -264,6 +287,7 @@ class Template
       i = i + 1
     return -1
 
+  # Template.find_close provides the template/Template standard library operation.
   static find_close = source, start, marker ->
     i = start
     while i + marker.byte_len() <= source.byte_len()
@@ -272,6 +296,7 @@ class Template
       i = i + 1
     return -1
 
+  # Template.slice provides the template/Template standard library operation.
   static slice = text, start, finish ->
     out = ""
     i = start
@@ -280,38 +305,48 @@ class Template
       i = i + 1
     return out
 
+  # Template.copy_dict provides the template/Template standard library operation.
   static copy_dict = dict ->
     out = {}
     for key in dict.keys()
       out[key] = dict[key]
     return out
 
+  # Template.lbrace provides the template/Template standard library operation.
   static lbrace = ->
     return chr(123)
 
+  # Template.rbrace provides the template/Template standard library operation.
   static rbrace = ->
     return chr(125)
 
+  # Template.open provides the template/Template standard library operation.
   static open = ->
     return Template.lbrace() + Template.lbrace()
 
+  # Template.close provides the template/Template standard library operation.
   static close = ->
     return Template.rbrace() + Template.rbrace()
 
+  # Template.raw_open provides the template/Template standard library operation.
   static raw_open = ->
     return Template.open() + Template.lbrace()
 
+  # Template.raw_close provides the template/Template standard library operation.
   static raw_close = ->
     return Template.rbrace() + Template.close()
 
+  # Template.option provides the template/Template standard library operation.
   static option = options, name, default ->
     if options.has(name)
       return options[name]
     return default
 
+  # Template.strict provides the template/Template standard library operation.
   static strict = options ->
     return options.has("strict") and options["strict"]
 
+  # Template.is_number provides the template/Template standard library operation.
   static is_number = text ->
     if text == ""
       return false
@@ -323,6 +358,7 @@ class Template
       i = i + 1
     return true
 
+  # Template.escape_html provides the template/Template standard library operation.
   static escape_html = text ->
     out = ""
     i = 0
@@ -343,6 +379,7 @@ class Template
       i = i + 1
     return out
 
+  # Template.error provides the template/Template standard library operation.
   static error = state, message ->
     line = 1
     col = 1

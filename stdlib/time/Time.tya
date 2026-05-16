@@ -1,10 +1,16 @@
+# Time provides the time/Time standard library API.
 class Time
+  # Time.now provides the time/Time standard library operation.
   static now = () -> time_now()
 
+  # Time.sleep provides the time/Time standard library operation.
   static sleep = seconds -> time_sleep(seconds)
 
+  # Time.format provides the time/Time standard library operation.
   static format = t, layout -> time_format(t, layout)
 
+  # Time.parse provides the time/Time standard library operation.
   static parse = text -> time_parse(text)
 
+  # Time.since provides the time/Time standard library operation.
   static since = t -> time_since(t)

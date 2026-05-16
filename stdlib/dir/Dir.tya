@@ -1,9 +1,13 @@
+# Dir provides the dir/Dir standard library API.
 class Dir
+  # Dir.list provides the dir/Dir standard library operation.
   static list = path ->
     dir_list(path)
 
+  # Dir.mkdir provides the dir/Dir standard library operation.
   static mkdir = path ->
     dir_mkdir(path)
 
+  # Dir.rmdir provides the dir/Dir standard library operation.
   static rmdir = path ->
     dir_rmdir(path)

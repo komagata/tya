@@ -1,6 +1,9 @@
+# Parser provides the compiler/parser/Parser standard library API.
 class Parser
+  # Parser.parse provides the compiler/parser/Parser standard library operation.
   static parse = source ->
     return compiler_parser_parse(source)
 
+  # Parser.parse_tokens provides the compiler/parser/Parser standard library operation.
   static parse_tokens = tokens ->
     return compiler_parser_parse_tokens(tokens)

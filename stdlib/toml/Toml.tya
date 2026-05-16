@@ -1,8 +1,11 @@
+# Toml parses and formats TOML documents.
 class Toml
+  # Toml.is_digit provides the toml/Toml standard library operation.
   static is_digit = c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
+  # Toml.is_bare_key_char provides the toml/Toml standard library operation.
   static is_bare_key_char = c ->
     code = ord(c)
     if code >= 65 and code <= 90
@@ -13,6 +16,7 @@ class Toml
       return true
     return c == "_" or c == "-"
 
+  # Toml.skip_ws_in_line provides the toml/Toml standard library operation.
   static skip_ws_in_line = state ->
     p = state["pos"]
     n = state["len"]
@@ -30,6 +34,7 @@ class Toml
         return nil
     state["pos"] = p
 
+  # Toml.skip_ws_and_newlines provides the toml/Toml standard library operation.
   static skip_ws_and_newlines = state ->
     p = state["pos"]
     n = state["len"]
@@ -47,6 +52,7 @@ class Toml
         return nil
     state["pos"] = p
 
+  # Toml.parse_basic_string provides the toml/Toml standard library operation.
   static parse_basic_string = state ->
     p = state["pos"]
     src = state["src"]
@@ -91,6 +97,7 @@ class Toml
         p = p + 1
     raise "toml.parse: unterminated string"
 
+  # Toml.parse_literal_string provides the toml/Toml standard library operation.
   static parse_literal_string = state ->
     p = state["pos"]
     src = state["src"]
@@ -110,6 +117,7 @@ class Toml
       p = p + 1
     raise "toml.parse: unterminated literal string"
 
+  # Toml.parse_key provides the toml/Toml standard library operation.
   static parse_key = state ->
     Toml.skip_ws_in_line(state)
     p = state["pos"]
@@ -131,6 +139,7 @@ class Toml
     state["pos"] = p
     return out
 
+  # Toml.parse_number_or_keyword provides the toml/Toml standard library operation.
   static parse_number_or_keyword = state ->
     p = state["pos"]
     src = state["src"]
@@ -164,6 +173,7 @@ class Toml
       return raw.to_f()
     return raw.to_i()
 
+  # Toml.starts_with_text provides the toml/Toml standard library operation.
   static starts_with_text = state, word ->
     src = state["src"]
     n = state["len"]
@@ -178,6 +188,7 @@ class Toml
       k = k + 1
     return true
 
+  # Toml.parse_value provides the toml/Toml standard library operation.
   static parse_value = state ->
     Toml.skip_ws_in_line(state)
     p = state["pos"]
@@ -200,6 +211,7 @@ class Toml
       return false
     return Toml.parse_number_or_keyword(state)
 
+  # Toml.parse_array provides the toml/Toml standard library operation.
   static parse_array = state ->
     p = state["pos"]
     if state["src"][p] != "["
@@ -231,6 +243,7 @@ class Toml
       else
         raise "toml.parse: expected ',' or ']' in array"
 
+  # Toml.parse_inline_table provides the toml/Toml standard library operation.
   static parse_inline_table = state ->
     p = state["pos"]
     if state["src"][p] != "{{"
@@ -262,6 +275,7 @@ class Toml
       else
         raise "toml.parse: expected ',' or '}}' in inline table"
 
+  # Toml.parse_value_with_inline provides the toml/Toml standard library operation.
   static parse_value_with_inline = state ->
     Toml.skip_ws_in_line(state)
     p = state["pos"]
@@ -269,6 +283,7 @@ class Toml
       return Toml.parse_inline_table(state)
     return Toml.parse_value(state)
 
+  # Toml.ensure_path provides the toml/Toml standard library operation.
   static ensure_path = root, segments ->
     cur = root
     i = 0
@@ -280,6 +295,7 @@ class Toml
       i = i + 1
     return cur
 
+  # Toml.ensure_array_path provides the toml/Toml standard library operation.
   static ensure_array_path = root, segments ->
     cur = root
     i = 0
@@ -298,6 +314,7 @@ class Toml
     arr.push(new_table)
     return new_table
 
+  # Toml.parse_header_segments provides the toml/Toml standard library operation.
   static parse_header_segments = state ->
     segments = []
     while true
@@ -311,6 +328,8 @@ class Toml
       else
         return segments
 
+  # parse converts TOML text into nested dictionaries and arrays.
+  # Raises when the input is not valid TOML.
   static parse = text ->
     state = { src: text, pos: 0, len: text.byte_len() }
     root = {}
@@ -358,6 +377,7 @@ class Toml
             raise "toml.parse: unexpected trailing characters on line"
     return root
 
+  # Toml.is_bare_key provides the toml/Toml standard library operation.
   static is_bare_key = text ->
     n = text.byte_len()
     if n == 0
@@ -369,6 +389,7 @@ class Toml
       i = i + 1
     return true
 
+  # Toml.format_key provides the toml/Toml standard library operation.
   static format_key = text ->
     if Toml.is_bare_key(text)
       return text
@@ -386,6 +407,7 @@ class Toml
       i = i + 1
     return out + "\""
 
+  # Toml.format_string provides the toml/Toml standard library operation.
   static format_string = text ->
     out = "\""
     n = text.byte_len()
@@ -410,6 +432,7 @@ class Toml
       i = i + 1
     return out + "\""
 
+  # Toml.format_inline_value provides the toml/Toml standard library operation.
   static format_inline_value = value ->
     if value.class == Nil
       raise "toml.dump: nil is not representable in TOML"
@@ -445,6 +468,7 @@ class Toml
       return out + "}}"
     raise "toml.dump: unsupported value kind"
 
+  # Toml.is_array_of_dicts provides the toml/Toml standard library operation.
   static is_array_of_dicts = value ->
     if value.class != Array
       return false
@@ -457,6 +481,7 @@ class Toml
       i = i + 1
     return true
 
+  # Toml.emit_table provides the toml/Toml standard library operation.
   static emit_table = value, prefix ->
     primitives = ""
     sub_tables = ""
@@ -499,6 +524,7 @@ class Toml
       i = i + 1
     return primitives + sub_tables
 
+  # dump converts dictionaries, arrays, strings, numbers, booleans, and nil to TOML text.
   static dump = value ->
     if value.class != Dict
       raise "toml.dump: top-level value must be a dict"

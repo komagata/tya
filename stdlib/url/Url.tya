@@ -1,4 +1,6 @@
+# Url provides the url/Url standard library API.
 class Url
+  # Url.is_unreserved provides the url/Url standard library operation.
   static is_unreserved = code ->
     if code >= 65 and code <= 90
       return true
@@ -10,11 +12,13 @@ class Url
       return true
     return false
 
+  # Url.hex_digit provides the url/Url standard library operation.
   static hex_digit = d ->
     if d < 10
       return chr(48 + d)
     return chr(55 + d)
 
+  # Url.decode_hex provides the url/Url standard library operation.
   static decode_hex = c ->
     code = ord(c)
     if code >= 48 and code <= 57
@@ -25,6 +29,7 @@ class Url
       return code - 87
     raise "url.decode: invalid percent-escape"
 
+  # Url.encode provides the url/Url standard library operation.
   static encode = text ->
     n = text.byte_len()
     out = ""
@@ -41,6 +46,7 @@ class Url
       i = i + 1
     return out
 
+  # Url.decode provides the url/Url standard library operation.
   static decode = text ->
     n = text.byte_len()
     out = ""
@@ -59,6 +65,7 @@ class Url
         i = i + 1
     return out
 
+  # Url.validate_percent provides the url/Url standard library operation.
   static validate_percent = text ->
     n = text.byte_len()
     i = 0
@@ -73,6 +80,7 @@ class Url
         i = i + 1
     nil
 
+  # Url.decimal? provides the url/Url standard library operation.
   static decimal? = text ->
     if text == ""
       return false
@@ -84,6 +92,7 @@ class Url
       i = i + 1
     true
 
+  # Url.slice provides the url/Url standard library operation.
   static slice = text, start, finish ->
     out = ""
     i = start
@@ -92,6 +101,7 @@ class Url
       i = i + 1
     out
 
+  # Url.contains_colon? provides the url/Url standard library operation.
   static contains_colon? = text ->
     i = 0
     while i < text.byte_len()
@@ -100,6 +110,7 @@ class Url
       i = i + 1
     false
 
+  # Url.encode_query provides the url/Url standard library operation.
   static encode_query = pairs ->
     parts_a = []
     if pairs.has("kind")
@@ -113,6 +124,7 @@ class Url
         parts_a.push("{encoded_k}={encoded_v}")
     return parts_a.join("&")
 
+  # Url.encode_query_pairs provides the url/Url standard library operation.
   static encode_query_pairs = pairs ->
     parts_a = []
     for pair in pairs
@@ -123,6 +135,7 @@ class Url
       parts_a.push("{encoded_k}={encoded_v}")
     return parts_a.join("&")
 
+  # Url.decode_query_value provides the url/Url standard library operation.
   static decode_query_value = text ->
     n = text.byte_len()
     out = ""
@@ -144,6 +157,7 @@ class Url
         i = i + 1
     return out
 
+  # Url.decode_query provides the url/Url standard library operation.
   static decode_query = text ->
     out = []
     if text == ""
@@ -175,6 +189,7 @@ class Url
           out.push([Url.decode_query_value(k_raw), Url.decode_query_value(v_raw)])
     return out
 
+  # Url.query_dict provides the url/Url standard library operation.
   static query_dict = query ->
     pairs = query
     if query.class == String
@@ -193,6 +208,7 @@ class Url
         out[k] = v
     out
 
+  # Url.parse provides the url/Url standard library operation.
   static parse = text ->
     n = text.byte_len()
     out =
@@ -354,6 +370,7 @@ class Url
       Url.validate_percent(frag_text)
     return out
 
+  # Url.normalize_path provides the url/Url standard library operation.
   static normalize_path = path ->
     absolute = path.starts_with("/")
     trailing = path.ends_with("/") and path != "/"
@@ -376,6 +393,7 @@ class Url
       out = out + "/"
     out
 
+  # Url.merge_path provides the url/Url standard library operation.
   static merge_path = base_path, ref_path ->
     idx = -1
     i = 0
@@ -387,6 +405,7 @@ class Url
       return ref_path
     return Url.slice(base_path, 0, idx + 1) + ref_path
 
+  # Url.resolve provides the url/Url standard library operation.
   static resolve = base, ref ->
     b = Url.parse(base)
     r = Url.parse(ref)
@@ -427,6 +446,7 @@ class Url
         out["query"] = r["query"]
     Url.build(out)
 
+  # Url.normalize provides the url/Url standard library operation.
   static normalize = text ->
     p = Url.parse(text)
     p["scheme"] = p["scheme"].lower()
@@ -434,6 +454,7 @@ class Url
     p["path"] = Url.normalize_path(p["path"])
     Url.build(p)
 
+  # Url.build provides the url/Url standard library operation.
   static build = parts ->
     out = ""
     if parts.has("scheme") and parts["scheme"] != ""

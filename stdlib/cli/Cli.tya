@@ -1,4 +1,6 @@
+# Cli provides the cli/Cli standard library API.
 class Cli
+  # Cli.parse provides the cli/Cli standard library operation.
   static parse = args, spec ->
     state =
       args: args
@@ -37,6 +39,7 @@ class Cli
       errors: state["errors"]
     return result
 
+  # Cli.parse_or_exit provides the cli/Cli standard library operation.
   static parse_or_exit = args, spec ->
     result = Cli.parse(args, spec)
     if result["errors"].len() > 0
@@ -47,6 +50,7 @@ class Cli
       exit(1)
     return result
 
+  # Cli.usage provides the cli/Cli standard library operation.
   static usage = command, spec ->
     parts = ["Usage: {command}"]
     options = Cli.spec_options(spec)
@@ -89,6 +93,7 @@ class Cli
         out = out + "\n" + line
     return out
 
+  # Cli.parse_long provides the cli/Cli standard library operation.
   static parse_long = state, i ->
     arg = state["args"][i]
     raw = Cli.slice(arg, 2, arg.byte_len())
@@ -130,6 +135,7 @@ class Cli
     Cli.assign_value(state, name, opt, value)
     return i
 
+  # Cli.parse_short provides the cli/Cli standard library operation.
   static parse_short = state, i ->
     arg = state["args"][i]
     raw = Cli.slice(arg, 1, arg.byte_len())
@@ -159,6 +165,7 @@ class Cli
           return i
     return i
 
+  # Cli.apply_defaults provides the cli/Cli standard library operation.
   static apply_defaults = state ->
     options = Cli.spec_options(state["spec"])
     names = options.keys()
@@ -173,6 +180,7 @@ class Cli
         elseif typ == "array"
           state["options"][name] = []
 
+  # Cli.check_required provides the cli/Cli standard library operation.
   static check_required = state ->
     options = Cli.spec_options(state["spec"])
     names = options.keys().sort()
@@ -181,6 +189,7 @@ class Cli
       if Cli.spec_bool(opt, "required", false) and not state["options"].has(name)
         Cli.error(state, "required", name, "--{name} is required")
 
+  # Cli.assign_value provides the cli/Cli standard library operation.
   static assign_value = state, name, opt, value ->
     typ = Cli.option_type(opt)
     if typ == "string"
@@ -202,6 +211,7 @@ class Cli
     else
       Cli.error(state, "invalid_type", name, "unsupported option type {typ}")
 
+  # Cli.parse_bool_value provides the cli/Cli standard library operation.
   static parse_bool_value = state, name, value ->
     if value == "true" or value == "1" or value == "yes"
       return true
@@ -210,33 +220,40 @@ class Cli
     Cli.error(state, "invalid_value", name, "--{name} expects bool")
     return false
 
+  # Cli.unknown provides the cli/Cli standard library operation.
   static unknown = state, raw ->
     if Cli.spec_bool(state["spec"], "allow_unknown", false)
       state["rest"].push(raw)
     else
       Cli.error(state, "unknown_option", raw, "unknown option {raw}")
 
+  # Cli.error provides the cli/Cli standard library operation.
   static error = state, kind, name, message ->
     state["errors"].push({ kind: kind, option: name, message: message })
 
+  # Cli.option_type provides the cli/Cli standard library operation.
   static option_type = opt ->
     Cli.spec_string(opt, "type", "string")
 
+  # Cli.spec_options provides the cli/Cli standard library operation.
   static spec_options = spec ->
     if spec.has("options")
       return spec["options"]
     return {}
 
+  # Cli.spec_bool provides the cli/Cli standard library operation.
   static spec_bool = spec, name, fallback ->
     if spec.has(name)
       return spec[name]
     return fallback
 
+  # Cli.spec_string provides the cli/Cli standard library operation.
   static spec_string = spec, name, fallback ->
     if spec.has(name)
       return spec[name]
     return fallback
 
+  # Cli.name_for_alias provides the cli/Cli standard library operation.
   static name_for_alias = spec, alias ->
     options = Cli.spec_options(spec)
     names = options.keys()
@@ -246,6 +263,7 @@ class Cli
         return name
     return ""
 
+  # Cli.index_of provides the cli/Cli standard library operation.
   static index_of = text, needle ->
     i = 0
     while i < text.byte_len()
@@ -254,6 +272,7 @@ class Cli
       i = i + 1
     return -1
 
+  # Cli.slice provides the cli/Cli standard library operation.
   static slice = text, start, finish ->
     out = ""
     i = start

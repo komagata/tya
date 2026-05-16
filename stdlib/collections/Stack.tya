@@ -1,39 +1,50 @@
+# Stack provides the collections/Stack standard library API.
 class Stack
+  # Stack.initialize provides the collections/Stack standard library operation.
   initialize = values ->
     if values == nil
       self.items = []
     else
       self.items = values.slice(0, values.len())
 
+  # Stack.new provides the collections/Stack standard library operation.
   static new = ->
     return Stack(nil)
 
+  # Stack.from_array provides the collections/Stack standard library operation.
   static from_array = values ->
     return Stack(values)
 
+  # Stack.push provides the collections/Stack standard library operation.
   push = value ->
     self.items.push(value)
     return self
 
+  # Stack.pop provides the collections/Stack standard library operation.
   pop = ->
     if self.empty?()
       raise "collections.Stack.pop: empty stack"
     return self.items.pop()
 
+  # Stack.peek provides the collections/Stack standard library operation.
   peek = ->
     if self.empty?()
       raise "collections.Stack.peek: empty stack"
     return self.items[self.items.len() - 1]
 
+  # Stack.len provides the collections/Stack standard library operation.
   len = ->
     return self.items.len()
 
+  # Stack.empty? provides the collections/Stack standard library operation.
   empty? = ->
     return self.items.empty?()
 
+  # Stack.clear provides the collections/Stack standard library operation.
   clear = ->
     self.items = []
     return self
 
+  # Stack.to_array provides the collections/Stack standard library operation.
   to_array = ->
     return self.items.slice(0, self.items.len())

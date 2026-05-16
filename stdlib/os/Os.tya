@@ -1,15 +1,21 @@
+# Os provides the os/Os standard library API.
 class Os
+  # Os.args provides the os/Os standard library operation.
   static args = ->
     args()
 
+  # Os.env provides the os/Os standard library operation.
   static env = name ->
     env(name)
 
+  # Os.exit provides the os/Os standard library operation.
   static exit = code ->
     exit(code)
 
+  # Os.cwd provides the os/Os standard library operation.
   static cwd = ->
     cwd()
 
+  # Os.chdir provides the os/Os standard library operation.
   static chdir = path ->
     chdir(path)

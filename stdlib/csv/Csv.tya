@@ -1,7 +1,10 @@
+# Csv provides the csv/Csv standard library API.
 class Csv
+  # Csv.default_options provides the csv/Csv standard library operation.
   static default_options = () ->
     return { separator: ",", header: false }
 
+  # Csv.merge_options provides the csv/Csv standard library operation.
   static merge_options = options ->
     base = Csv.default_options()
     if options == nil
@@ -12,6 +15,7 @@ class Csv
       base["header"] = options["header"]
     return base
 
+  # Csv.parse_rows provides the csv/Csv standard library operation.
   static parse_rows = text, separator ->
     rows = []
     n = text.byte_len()
@@ -64,6 +68,7 @@ class Csv
       rows.push(row)
     return rows
 
+  # Csv.parse provides the csv/Csv standard library operation.
   static parse = text, options ->
     opts = Csv.merge_options(options)
     rows = Csv.parse_rows(text, opts["separator"])
@@ -88,6 +93,7 @@ class Csv
       i = i + 1
     return out
 
+  # Csv.escape_field provides the csv/Csv standard library operation.
   static escape_field = field, separator ->
     needs_quote = false
     n = field.byte_len()
@@ -112,6 +118,7 @@ class Csv
       i = i + 1
     return out + "\""
 
+  # Csv.dump_array_rows provides the csv/Csv standard library operation.
   static dump_array_rows = rows, separator ->
     out = ""
     i = 0
@@ -129,6 +136,7 @@ class Csv
       i = i + 1
     return out
 
+  # Csv.dump provides the csv/Csv standard library operation.
   static dump = rows, options ->
     opts = Csv.merge_options(options)
     sep = opts["separator"]

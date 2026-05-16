@@ -1,3 +1,5 @@
+# Value provides the value/Value standard library API.
 class Value
+  # Value.nil? provides the value/Value standard library operation.
   static nil? = item ->
     item == nil

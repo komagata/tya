@@ -1,2 +1,4 @@
+# Channel provides the channel/Channel standard library API.
 class Channel
+  # Channel.native provides the channel/Channel standard library operation.
   native = true

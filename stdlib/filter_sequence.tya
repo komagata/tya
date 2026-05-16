@@ -1,4 +1,6 @@
+# FilterSequence provides the filter_sequence standard library API.
 class FilterSequence implements Sequence
+  # FilterSequence.initialize provides the filter_sequence standard library operation.
   initialize = source, fn ->
     self.source = source
     self.fn = fn

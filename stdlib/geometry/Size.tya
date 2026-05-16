@@ -1,31 +1,40 @@
+# Size provides the geometry/Size standard library API.
 class Size
+  # Size.initialize provides the geometry/Size standard library operation.
   initialize = width, height ->
     self.width = Size.dimension(width, "width")
     self.height = Size.dimension(height, "height")
 
+  # Size.new provides the geometry/Size standard library operation.
   static new = width, height ->
     return Size(width, height)
 
+  # Size.zero provides the geometry/Size standard library operation.
   static zero = ->
     return Size(0, 0)
 
+  # Size.area provides the geometry/Size standard library operation.
   static area = size ->
     Size.expect(size, "size")
     return size.width * size.height
 
+  # Size.aspect_ratio provides the geometry/Size standard library operation.
   static aspect_ratio = size ->
     Size.expect(size, "size")
     if size.height == 0
       raise "geometry.Size.aspect_ratio: height is zero"
     return size.width / size.height
 
+  # Size.equal? provides the geometry/Size standard library operation.
   static equal? = a, b ->
     return a.class == Size and b.class == Size and a.width == b.width and a.height == b.height
 
+  # Size.expect provides the geometry/Size standard library operation.
   static expect = value, name ->
     if value.class != Size
       raise "geometry.Size: " + name + " must be a Size"
 
+  # Size.dimension provides the geometry/Size standard library operation.
   static dimension = value, name ->
     if value.class != Number
       raise "geometry.Size: " + name + " must be a number"

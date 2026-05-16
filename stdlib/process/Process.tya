@@ -1,9 +1,13 @@
+# Process provides the process/Process standard library API.
 class Process
+  # Process.cwd provides the process/Process standard library operation.
   static cwd = ->
     cwd()
 
+  # Process.chdir provides the process/Process standard library operation.
   static chdir = path ->
     chdir(path)
 
+  # Process.run provides the process/Process standard library operation.
   static run = command, options ->
     process_run(command, options)

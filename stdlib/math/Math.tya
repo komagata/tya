@@ -1,23 +1,31 @@
+# Math provides numeric constants and common math functions.
 class Math
+  # pi is the ratio of a circle circumference to its diameter.
   static pi = 3.141592653589793
 
+  # e is Euler's number, the base of natural logarithms.
   static e = 2.718281828459045
 
+  # abs returns the absolute value of a number.
   static abs = value ->
     if value < 0
       return 0 - value
     return value
 
+  # Math.min provides the math/Math standard library operation.
   static min = left, right ->
     if left < right
       return left
     return right
 
+  # Math.max provides the math/Math standard library operation.
   static max = left, right ->
     if left > right
       return left
     return right
 
+  # clamp constrains value to the inclusive lo..hi range.
+  # Raises when lo is greater than hi.
   static clamp = value, lo, hi ->
     if lo > hi
       raise "math.clamp: min must be less than or equal to max"
@@ -27,53 +35,70 @@ class Math
       return hi
     return value
 
+  # Math.sqrt provides the math/Math standard library operation.
   static sqrt = x ->
     math_sqrt(x)
 
+  # Math.pow provides the math/Math standard library operation.
   static pow = x, y ->
     math_pow(x, y)
 
+  # Math.floor provides the math/Math standard library operation.
   static floor = x ->
     math_floor(x)
 
+  # Math.ceil provides the math/Math standard library operation.
   static ceil = x ->
     math_ceil(x)
 
+  # Math.round provides the math/Math standard library operation.
   static round = x ->
     math_round(x)
 
+  # Math.trunc provides the math/Math standard library operation.
   static trunc = x ->
     math_trunc(x)
 
+  # Math.log provides the math/Math standard library operation.
   static log = x ->
     math_log(x)
 
+  # Math.log2 provides the math/Math standard library operation.
   static log2 = x ->
     math_log2(x)
 
+  # Math.log10 provides the math/Math standard library operation.
   static log10 = x ->
     math_log10(x)
 
+  # Math.exp provides the math/Math standard library operation.
   static exp = x ->
     math_exp(x)
 
+  # Math.sin provides the math/Math standard library operation.
   static sin = x ->
     math_sin(x)
 
+  # Math.cos provides the math/Math standard library operation.
   static cos = x ->
     math_cos(x)
 
+  # Math.tan provides the math/Math standard library operation.
   static tan = x ->
     math_tan(x)
 
+  # Math.asin provides the math/Math standard library operation.
   static asin = x ->
     math_asin(x)
 
+  # Math.acos provides the math/Math standard library operation.
   static acos = x ->
     math_acos(x)
 
+  # Math.atan provides the math/Math standard library operation.
   static atan = x ->
     math_atan(x)
 
+  # Math.atan2 provides the math/Math standard library operation.
   static atan2 = y, x ->
     math_atan2(y, x)

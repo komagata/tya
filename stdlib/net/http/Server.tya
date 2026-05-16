@@ -6,6 +6,7 @@
 # scheduler so a handler that yields, for example with time.sleep, does
 # not block other ready clients.
 class Server
+  # Server.initialize provides the net/http/Server standard library operation.
   initialize = ->
     self.routes = []
     self.prefix = ""
@@ -14,6 +15,7 @@ class Server
     self.not_found_handler = nil
     self.error_handler = nil
 
+  # Server.child provides the net/http/Server standard library operation.
   static child = parent, prefix ->
     child = Server()
     child.routes = parent.routes
@@ -24,30 +26,43 @@ class Server
     child.error_handler = parent.error_handler
     return child
 
+  # Server.get provides the net/http/Server standard library operation.
+  # get registers a GET route and returns the server.
   get = path, handler, options ->
     return self.route("GET", path, handler, options)
 
+  # Server.post provides the net/http/Server standard library operation.
+  # post registers a POST route and returns the server.
   post = path, handler, options ->
     return self.route("POST", path, handler, options)
 
+  # Server.put provides the net/http/Server standard library operation.
   put = path, handler, options ->
     return self.route("PUT", path, handler, options)
 
+  # Server.delete provides the net/http/Server standard library operation.
   delete = path, handler, options ->
     return self.route("DELETE", path, handler, options)
 
+  # Server.patch provides the net/http/Server standard library operation.
   patch = path, handler, options ->
     return self.route("PATCH", path, handler, options)
 
+  # Server.options provides the net/http/Server standard library operation.
   options = path, handler, options ->
     return self.route("OPTIONS", path, handler, options)
 
+  # Server.head provides the net/http/Server standard library operation.
   head = path, handler, options ->
     return self.route("HEAD", path, handler, options)
 
+  # Server.any provides the net/http/Server standard library operation.
   any = path, handler, options ->
     return self.route("ANY", path, handler, options)
 
+  # Server.route provides the net/http/Server standard library operation.
+  # route registers a handler for method and path.
+  # Raises when the path pattern or route options are invalid.
   route = method, path, handler, options ->
     opts = Server.route_options(options)
     full_path = Server.join_paths(self.prefix, path)
@@ -58,31 +73,39 @@ class Server
       self.named_routes[opts["name"]] = route
     return self
 
+  # Server.use provides the net/http/Server standard library operation.
   use = middleware ->
     self.middlewares.push(middleware)
     return self
 
+  # Server.group provides the net/http/Server standard library operation.
   group = prefix, fn ->
     child = Server.child(self, prefix)
     fn(child)
     return self
 
+  # Server.not_found provides the net/http/Server standard library operation.
   not_found = handler ->
     self.not_found_handler = handler
     self.routes.push({ method: "__NOT_FOUND__", path: "*", handler: handler })
     return self
 
+  # Server.error provides the net/http/Server standard library operation.
   error = handler ->
     self.error_handler = handler
     self.routes.push({ method: "__ERROR__", path: "*", handler: handler })
     return self
 
+  # Server.path provides the net/http/Server standard library operation.
   path = name, params ->
     route = self.named_routes.get(name, nil)
     if route == nil
       raise "http.path: unknown route " + name
     return Server.build_path(route["path"], params)
 
+  # Server.redirect provides the net/http/Server standard library operation.
+  # redirect returns a response dictionary with Location set.
+  # Raises when status is not a supported redirect status.
   redirect = path, status ->
     if status == nil
       status = 302
@@ -92,6 +115,7 @@ class Server
     headers["Location"] = path
     return { status: status, headers: headers, body: "" }
 
+  # Server.dispatch provides the net/http/Server standard library operation.
   dispatch = method, path ->
     method = method.upper()
     route = self.find_route(method, path)
@@ -113,6 +137,7 @@ class Server
       return { status: 404, body: "Not Found" }
     return self.call_route(route, method, path)
 
+  # Server.call_route provides the net/http/Server standard library operation.
   call_route = route, method, path ->
     params = Server.match_params(route, path)
     req = { method: method, path: path, params: params, path_params: params, query: {}, headers: {}, body: b"", route: route }
@@ -126,6 +151,7 @@ class Server
       return { status: 500, body: "Internal Server Error" }
     return result
 
+  # Server.find_route provides the net/http/Server standard library operation.
   find_route = method, path ->
     i = 0
     while i < self.routes.len()
@@ -135,6 +161,7 @@ class Server
       i = i + 1
     return nil
 
+  # Server.allow_for provides the net/http/Server standard library operation.
   allow_for = path ->
     methods = []
     i = 0
@@ -151,6 +178,7 @@ class Server
       i = i + 1
     return methods.join(", ")
 
+  # Server.static provides the net/http/Server standard library operation.
   static = prefix, assets ->
     for entry in assets.entries()
       path = entry[0]
@@ -164,6 +192,7 @@ class Server
         self.static_one(prefix, path, asset, false)
     self
 
+  # Server.static_one provides the net/http/Server standard library operation.
   static_one = prefix, path, asset, hashed_route ->
     self.routes.push({
       method: "GET",
@@ -174,6 +203,7 @@ class Server
       trailing_slash: "strict"
     })
 
+  # Server.content_type provides the net/http/Server standard library operation.
   content_type = path ->
     if path.ends_with(".html")
       return "text/html; charset=utf-8"
@@ -193,6 +223,7 @@ class Server
   run = port ->
     http_server_run(self.routes, port)
 
+  # Server.route_options provides the net/http/Server standard library operation.
   static route_options = options ->
     opts = { trailing_slash: "strict", name: nil }
     if options == nil
@@ -209,6 +240,7 @@ class Server
       raise "http.route: invalid trailing_slash option"
     return opts
 
+  # Server.validate_pattern provides the net/http/Server standard library operation.
   static validate_pattern = path ->
     if not path.starts_with("/")
       raise "http.route: path must start with /"
@@ -226,6 +258,7 @@ class Server
         names.push(name)
       i = i + 1
 
+  # Server.match_params provides the net/http/Server standard library operation.
   static match_params = route, path ->
     pattern = route["path"]
     if route.get("trailing_slash", "strict") == "ignore"
@@ -257,6 +290,7 @@ class Server
       return nil
     return params
 
+  # Server.build_path provides the net/http/Server standard library operation.
   static build_path = pattern, params ->
     out = []
     parts = pattern.split("/")
@@ -276,6 +310,7 @@ class Server
       return "/"
     return result
 
+  # Server.join_paths provides the net/http/Server standard library operation.
   static join_paths = prefix, path ->
     if prefix == nil or prefix == ""
       if path == ""
@@ -285,16 +320,19 @@ class Server
       return prefix
     return Server.strip_trailing(prefix) + "/" + Server.strip_leading(path)
 
+  # Server.strip_trailing provides the net/http/Server standard library operation.
   static strip_trailing = path ->
     while path.byte_len() > 1 and path.ends_with("/")
       path = Server.slice(path, 0, path.byte_len() - 1)
     return path
 
+  # Server.strip_leading provides the net/http/Server standard library operation.
   static strip_leading = path ->
     while path.byte_len() > 0 and path.starts_with("/")
       path = Server.slice(path, 1, path.byte_len())
     return path
 
+  # Server.slice provides the net/http/Server standard library operation.
   static slice = text, start, finish ->
     out = ""
     i = start
@@ -303,6 +341,7 @@ class Server
       i = i + 1
     return out
 
+  # Server.copy_array provides the net/http/Server standard library operation.
   static copy_array = values ->
     out = []
     i = 0
@@ -311,6 +350,7 @@ class Server
       i = i + 1
     return out
 
+  # Server.array_has? provides the net/http/Server standard library operation.
   static array_has? = values, value ->
     i = 0
     while i < values.len()

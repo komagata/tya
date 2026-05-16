@@ -1,2 +1,4 @@
+# AtomicInteger provides the sync/AtomicInteger standard library API.
 class AtomicInteger
+  # AtomicInteger.native provides the sync/AtomicInteger standard library operation.
   native = true

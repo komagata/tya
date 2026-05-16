@@ -1,4 +1,6 @@
+# Json parses and formats JSON values.
 class Json
+  # Json.skip_ws provides the json/Json standard library operation.
   static skip_ws = state ->
     n = state["len"]
     p = state["pos"]
@@ -11,6 +13,7 @@ class Json
       p = p + 1
     state["pos"] = p
 
+  # Json.expect provides the json/Json standard library operation.
   static expect = state, ch ->
     Json.skip_ws(state)
     p = state["pos"]
@@ -18,6 +21,7 @@ class Json
       raise "json.parse: expected '{ch}'"
     state["pos"] = p + 1
 
+  # Json.hex_value provides the json/Json standard library operation.
   static hex_value = c ->
     code = ord(c)
     if code >= 48 and code <= 57
@@ -28,6 +32,7 @@ class Json
       return code - 87
     raise "json.parse: invalid hex digit"
 
+  # Json.utf8_encode provides the json/Json standard library operation.
   static utf8_encode = code ->
     if code < 128
       return chr(code)
@@ -40,6 +45,7 @@ class Json
     b3 = 128 + code % 64
     return chr(b1) + chr(b2) + chr(b3)
 
+  # Json.parse_string provides the json/Json standard library operation.
   static parse_string = state ->
     p = state["pos"]
     src = state["src"]
@@ -95,10 +101,12 @@ class Json
         p = p + 1
     raise "json.parse: unterminated string"
 
+  # Json.is_digit provides the json/Json standard library operation.
   static is_digit = c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
+  # Json.parse_number provides the json/Json standard library operation.
   static parse_number = state ->
     p = state["pos"]
     src = state["src"]
@@ -131,6 +139,7 @@ class Json
       return text.to_f()
     return text.to_i()
 
+  # Json.parse_value provides the json/Json standard library operation.
   static parse_value = state ->
     Json.skip_ws(state)
     p = state["pos"]
@@ -169,6 +178,7 @@ class Json
       return Json.parse_number(state)
     raise "json.parse: unexpected character"
 
+  # Json.parse_object provides the json/Json standard library operation.
   static parse_object = state ->
     Json.expect(state, "{{")
     out = {}
@@ -193,6 +203,7 @@ class Json
         state["pos"] = p + 1
         return out
 
+  # Json.parse_array provides the json/Json standard library operation.
   static parse_array = state ->
     Json.expect(state, "[")
     out = []
@@ -214,6 +225,8 @@ class Json
         state["pos"] = p + 1
         return out
 
+  # parse converts JSON text into Tya arrays, dictionaries, strings, numbers, booleans, and nil.
+  # Raises when the input is not valid JSON.
   static parse = text ->
     state = { src: text, pos: 0, len: text.byte_len() }
     v = Json.parse_value(state)
@@ -222,6 +235,7 @@ class Json
       raise "json.parse: trailing characters"
     return v
 
+  # Json.escape_string provides the json/Json standard library operation.
   static escape_string = text ->
     n = text.byte_len()
     out = "\""
@@ -261,6 +275,7 @@ class Json
       i = i + 1
     return out + "\""
 
+  # Json.pad provides the json/Json standard library operation.
   static pad = indent, level ->
     if indent <= 0
       return ""
@@ -276,6 +291,7 @@ class Json
       k = k + 1
     return out
 
+  # Json.emit provides the json/Json standard library operation.
   static emit = value, indent, level ->
     if value.class == Nil
       return "null"
@@ -322,5 +338,7 @@ class Json
       return out + "}}"
     raise "json.dump: unsupported value kind"
 
+  # dump converts Tya arrays, dictionaries, strings, numbers, booleans, and nil to JSON text.
+  # Raises when a value cannot be represented as JSON.
   static dump = value ->
     return Json.emit(value, 0, 0)
