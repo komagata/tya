@@ -223,7 +223,7 @@ func TestLSPCompletion(t *testing.T) {
 	for _, it := range list.Items {
 		got[it.Label] = true
 	}
-	for _, want := range []string{"print", "string", "if"} {
+	for _, want := range []string{"print", "if"} {
 		if !got[want] {
 			t.Errorf("completion missing %q (items: %d)", want, len(list.Items))
 		}

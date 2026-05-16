@@ -11,7 +11,7 @@ stdout 'raw heredoc: \\d\+ files in \{dir\}'
 stdout 'bytes heredoc len: 5'
 
 exec go run ./cmd/tya version
-stdout '0.64.0\n'
+stdout '0.65.0\n'
 
 -- sample.tya --
 re = r"\d+ files in {dir}"
