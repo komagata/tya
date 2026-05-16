@@ -46,13 +46,13 @@ print("Hello, {name}")
 items = [1, 2, 3]
 print(items.len())
 
-labels = { x: "X", y: "Y" }
+labels = [{ key: "x" }, { key: "y" }]
 joined = ""
-for key, value of labels
+for entry in labels
   if joined == ""
-    joined = key
+    joined = entry["key"]
   else
-    joined = joined + ":" + key
+    joined = joined + ":" + entry["key"]
 print(joined)
 
 argv = args()

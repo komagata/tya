@@ -54,7 +54,7 @@ stdout '2\n'
 ! stderr .
 
 # Primitive values, user-defined Iterable values, lazy Sequence wrappers, and
-# for ... of compatibility all work through the same active C path.
+# dictionary entry iteration all works through the same active C path.
 exec $WORK/tya run iterable_protocol.tya
 stdout '1\n2\n3\n10/0\n20/1\nt\ny\na\nname=Tya\nname\nTya\ntrue\nnil\ntrue\ncaught\nnil\n7\nbuilt\nfilter 1\nfilter 2\nmap 2\nfilter 3\nmap 3\n4,6\nfilter 1\nfilter 2\nmap 2\nfilter 3\nmap 3\n4,6\n5\nname=Tya\n'
 ! stderr .
@@ -247,8 +247,10 @@ sum_fn = total, item -> total + item
 sum = [1, 2, 3].sequence().drop(1).reduce(0, sum_fn)
 print(sum)
 
--- for_of_compat.tya --
-for key, value of { name: "Tya" }
+-- dict_entries.tya --
+for entry in { name: "Tya" }
+  key = entry["key"]
+  value = entry["value"]
   print("{key}={value}")
 
 -- iterable_protocol.tya --
@@ -329,5 +331,7 @@ sum_fn = total, item -> total + item
 sum = [1, 2, 3].sequence().drop(1).reduce(0, sum_fn)
 print(sum)
 
-for key, value of { name: "Tya" }
+for entry in { name: "Tya" }
+  key = entry["key"]
+  value = entry["value"]
   print("{key}={value}")

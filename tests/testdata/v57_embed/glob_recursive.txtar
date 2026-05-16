@@ -18,12 +18,12 @@ stdout '"source_path": "static/index.html"'
 body{}
 -- main.tya --
 embed "static/**" as assets
-for path, _ of assets
-  print(path)
+for entry in assets
+  print(entry["key"])
 
 embed "static/**" as packed with { gzip: true, hash: true, minify: true }
-for path, asset of packed
-  if path == "static/css/main.css"
-    print(asset["hashed_path"])
-  if path == "static/index.html"
-    print(asset["content_type"])
+for entry in packed
+  if entry["key"] == "static/css/main.css"
+    print(entry["value"]["hashed_path"])
+  if entry["key"] == "static/index.html"
+    print(entry["value"]["content_type"])

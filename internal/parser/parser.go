@@ -1063,10 +1063,8 @@ func (p *Parser) forStmt() (ast.Stmt, error) {
 	kind := ""
 	if p.matchWord("in") {
 		kind = "in"
-	} else if p.matchWord("of") {
-		kind = "of"
 	} else {
-		return nil, p.err("expected 'in' or 'of' in for loop")
+		return nil, p.err("expected 'in' in for loop")
 	}
 	iterable, err := p.exprLine()
 	if err != nil {
@@ -2308,7 +2306,7 @@ func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
 	case "object", "set":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
-	case "interface", "class", "self", "Self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "of", "break", "continue", "return", "try", "module", "import", "embed", "and", "or", "not", "spawn", "await", "scope":
+	case "interface", "class", "self", "Self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "break", "continue", "return", "try", "module", "import", "embed", "and", "or", "not", "spawn", "await", "scope":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
 	default:
 		return nil

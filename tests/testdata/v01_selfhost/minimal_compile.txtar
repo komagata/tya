@@ -213,9 +213,10 @@ print(user.has("name"))
 print(user.keys().len())
 user.delete("role")
 print(user.has("role"))
-for key, value of user
-  print(key)
-  print(value)
+user_entries = [{ key: "name", value: "Tya" }]
+for entry in user_entries
+  print(entry["key"])
+  print(entry["value"])
 left, right = ["left", "right"]
 print(left)
 print(right)

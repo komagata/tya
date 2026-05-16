@@ -459,7 +459,7 @@ is_v01_excluded_word = word ->
   word == "interface" or word == "object" or word == "set"
 
 is_v01_reserved_name = word ->
-  word == "self" or word == "true" or word == "false" or word == "nil" or word == "if" or word == "elseif" or word == "else" or word == "while" or word == "for" or word == "in" or word == "of" or word == "break" or word == "continue" or word == "return" or word == "import" or word == "module" or word == "and" or word == "or" or word == "not" or word == "try"
+  word == "self" or word == "true" or word == "false" or word == "nil" or word == "if" or word == "elseif" or word == "else" or word == "while" or word == "for" or word == "in" or word == "break" or word == "continue" or word == "return" or word == "import" or word == "module" or word == "and" or word == "or" or word == "not" or word == "try"
 
 record_name_error = tok ->
   if token_kind(tok) == "IDENT" and is_v01_reserved_name(token_text(tok))
@@ -1213,6 +1213,11 @@ parse_simple_block = tokens, index ->
         record_name_error(tokens[next + 3])
         loop_kind = token_text(tokens[next + 4])
         iterable_start = next + 5
+      if loop_kind != "in"
+        syntax_errors.push(
+          (token_line(tokens[next])).to_s() + ": expected 'in' in for loop",
+
+        )
       iterable, after_iterable = parse_expr(tokens, iterable_start)
       after_iterable = record_block_header_error(tokens, after_iterable)
       body, after_stmt = parse_loop_body_block(tokens, after_iterable)
@@ -1409,6 +1414,11 @@ parse_statement = tokens, index ->
       record_name_error(tokens[index + 3])
       loop_kind = token_text(tokens[index + 4])
       iterable_start = index + 5
+    if loop_kind != "in"
+      syntax_errors.push(
+        (token_line(tokens[index])).to_s() + ": expected 'in' in for loop",
+
+      )
     iterable, after_iterable = parse_expr(tokens, iterable_start)
     after_iterable = record_block_header_error(tokens, after_iterable)
     body, next = parse_loop_body_block(tokens, after_iterable)
@@ -1443,8 +1453,8 @@ clone_names = names ->
 
 clone_dict = dict ->
   out = {}
-  for key, value of dict
-    out[key] = value
+  for entry in dict
+    out[entry["key"]] = entry["value"]
   out
 
 is_snake_name = name ->
@@ -1482,22 +1492,6 @@ is_binding_name = name ->
   is_snake_name(name) or is_screaming_name(name)
 
 is_pure_builtin_name = name ->
-  if name == "len"
-    return true
-  if name == "has"
-    return true
-  if name == "keys"
-    return true
-  if name == "values"
-    return true
-  if name == "to_string"
-    return true
-  if name == "to_int"
-    return true
-  if name == "to_float"
-    return true
-  if name == "to_number"
-    return true
   if name == "read_file"
     return true
   if name == "file_exists"
@@ -1507,34 +1501,6 @@ is_pure_builtin_name = name ->
   if name == "env"
     return true
   if name == "error"
-    return true
-  if name == "pop"
-    return true
-  if name == "split"
-    return true
-  if name == "join"
-    return true
-  if name == "trim"
-    return true
-  if name == "replace"
-    return true
-  if name == "contains"
-    return true
-  if name == "starts_with"
-    return true
-  if name == "ends_with"
-    return true
-  if name == "map"
-    return true
-  if name == "filter"
-    return true
-  if name == "find"
-    return true
-  if name == "any"
-    return true
-  if name == "all"
-    return true
-  if name == "reduce"
     return true
   if name == "equal"
     return true
@@ -1833,17 +1799,7 @@ check = program ->
   constants = {}
   errors = []
   remember(names, "print")
-  remember(names, "len")
-  remember(names, "push")
-  remember(names, "pop")
   remember(names, "delete")
-  remember(names, "has")
-  remember(names, "keys")
-  remember(names, "values")
-  remember(names, "to_string")
-  remember(names, "to_int")
-  remember(names, "to_float")
-  remember(names, "to_number")
   remember(names, "read_file")
   remember(names, "write_file")
   remember(names, "file_exists")
@@ -1852,19 +1808,6 @@ check = program ->
   remember(names, "error")
   remember(names, "panic")
   remember(names, "exit")
-  remember(names, "split")
-  remember(names, "join")
-  remember(names, "trim")
-  remember(names, "replace")
-  remember(names, "contains")
-  remember(names, "starts_with")
-  remember(names, "ends_with")
-  remember(names, "map")
-  remember(names, "filter")
-  remember(names, "find")
-  remember(names, "any")
-  remember(names, "all")
-  remember(names, "reduce")
   remember(names, "equal")
   remember(names, "read_line")
   remember(names, "assert")
@@ -2600,24 +2543,12 @@ emit_stmt = lines, names, stmt ->
 
     )
     item_expr = "tya_index(" + iter_name + ", tya_number(" + index_name + "))"
-    if stmt["loop_kind"] == "of"
-      item_expr = "tya_dict_key_at("
-        + iter_name
-        + ", tya_number("
-        + index_name
-        + "))"
     lines.push(
       "  TyaValue " + c_name(stmt["value_name"]) + " = " + item_expr + ";",
 
     )
     if stmt["index_name"] != ""
       index_value_expr = "tya_number(" + index_name + ")"
-      if stmt["loop_kind"] == "of"
-        index_value_expr = "tya_dict_value_at("
-          + iter_name
-          + ", tya_number("
-          + index_name
-          + "))"
       lines.push(
         "  TyaValue " + c_name(stmt["index_name"]) + " = " + index_value_expr + ";",
 

@@ -156,6 +156,33 @@ func TestCheckRejectsExcludedBuiltins(t *testing.T) {
 	}
 }
 
+func TestCheckRejectsRemovedPrimitiveHelpersWithReplacement(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{name: "top_level_len", src: "items = [1]\nprint(len(items))\n", want: "use value.len()"},
+		{name: "top_level_trim", src: "text = \" tya \"\nprint(trim(text))\n", want: "use text.trim()"},
+		{name: "top_level_to_number", src: "print(to_number(\"12\"))\n", want: "use value.to_number()"},
+		{name: "string_module", src: "print(string.trim(\" tya \"))\n", want: "use text.trim()"},
+		{name: "array_module", src: "print(array.len([1]))\n", want: "use items.len()"},
+		{name: "dict_module", src: "print(dict.has({ name: \"Tya\" }, \"name\"))\n", want: "use dict.has(key)"},
+		{name: "value_module", src: "print(value.nil?(nil))\n", want: "use value == nil"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := Check(parse(t, tt.src))
+			if err == nil {
+				t.Fatal("expected removed primitive helper error")
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestCheckAllowsMemberAccessOnUnknownValue(t *testing.T) {
 	prog := parse(t, "show = user -> user.name\n")
 	if err := Check(prog); err != nil {

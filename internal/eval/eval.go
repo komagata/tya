@@ -223,200 +223,6 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r"), nil
 	}))
-	env.set("len", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 1 {
-			return nil, fmt.Errorf("len expects 1 argument")
-		}
-		switch v := args[0].(type) {
-		case string:
-			return int64(len(env.runes(v))), nil
-		case *Array:
-			return int64(len(v.items)), nil
-		case *Bytes:
-			return int64(len(v.data)), nil
-		case Dict:
-			return int64(len(v)), nil
-		default:
-			return nil, fmt.Errorf("len expects string, array, bytes, or dictionary")
-		}
-	}))
-	env.set("push", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 2 {
-			return nil, fmt.Errorf("push expects 2 arguments")
-		}
-		arr, ok := args[0].(*Array)
-		if !ok {
-			return nil, fmt.Errorf("push expects array")
-		}
-		arr.items = append(arr.items, args[1])
-		return arr, nil
-	}))
-	env.set("pop", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 1 {
-			return nil, fmt.Errorf("pop expects 1 argument")
-		}
-		arr, ok := args[0].(*Array)
-		if !ok {
-			return nil, fmt.Errorf("pop expects array")
-		}
-		if len(arr.items) == 0 {
-			return nil, nil
-		}
-		last := arr.items[len(arr.items)-1]
-		arr.items = arr.items[:len(arr.items)-1]
-		return last, nil
-	}))
-	env.set("map", Builtin(func(args []Value) (Value, error) {
-		arr, fn, err := arrayAndFunction("map", args)
-		if err != nil {
-			return nil, err
-		}
-		out := &Array{items: make([]Value, 0, len(arr.items))}
-		for _, item := range arr.items {
-			mapped, err := callValue(fn, []Value{item})
-			if err != nil {
-				return nil, err
-			}
-			out.items = append(out.items, mapped)
-		}
-		return out, nil
-	}))
-	env.set("filter", Builtin(func(args []Value) (Value, error) {
-		arr, fn, err := arrayAndFunction("filter", args)
-		if err != nil {
-			return nil, err
-		}
-		out := &Array{}
-		for _, item := range arr.items {
-			keep, err := callValue(fn, []Value{item})
-			if err != nil {
-				return nil, err
-			}
-			if truthy(keep) {
-				out.items = append(out.items, item)
-			}
-		}
-		return out, nil
-	}))
-	env.set("find", Builtin(func(args []Value) (Value, error) {
-		arr, fn, err := arrayAndFunction("find", args)
-		if err != nil {
-			return nil, err
-		}
-		for _, item := range arr.items {
-			found, err := callValue(fn, []Value{item})
-			if err != nil {
-				return nil, err
-			}
-			if truthy(found) {
-				return item, nil
-			}
-		}
-		return nil, nil
-	}))
-	env.set("any", Builtin(func(args []Value) (Value, error) {
-		arr, fn, err := arrayAndFunction("any", args)
-		if err != nil {
-			return nil, err
-		}
-		for _, item := range arr.items {
-			ok, err := callValue(fn, []Value{item})
-			if err != nil {
-				return nil, err
-			}
-			if truthy(ok) {
-				return true, nil
-			}
-		}
-		return false, nil
-	}))
-	env.set("all", Builtin(func(args []Value) (Value, error) {
-		arr, fn, err := arrayAndFunction("all", args)
-		if err != nil {
-			return nil, err
-		}
-		for _, item := range arr.items {
-			ok, err := callValue(fn, []Value{item})
-			if err != nil {
-				return nil, err
-			}
-			if !truthy(ok) {
-				return false, nil
-			}
-		}
-		return true, nil
-	}))
-	env.set("each", Builtin(func(args []Value) (Value, error) {
-		arr, fn, err := arrayAndFunction("each", args)
-		if err != nil {
-			return nil, err
-		}
-		for _, item := range arr.items {
-			if _, err := callValue(fn, []Value{item}); err != nil {
-				return nil, err
-			}
-		}
-		return nil, nil
-	}))
-	env.set("reduce", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 3 {
-			return nil, fmt.Errorf("reduce expects 3 arguments")
-		}
-		arr, ok := args[0].(*Array)
-		if !ok {
-			return nil, fmt.Errorf("reduce expects array")
-		}
-		fn, ok := args[2].(*Function)
-		if !ok {
-			return nil, fmt.Errorf("reduce expects function")
-		}
-		acc := args[1]
-		for _, item := range arr.items {
-			next, err := callValue(fn, []Value{acc, item})
-			if err != nil {
-				return nil, err
-			}
-			acc = next
-		}
-		return acc, nil
-	}))
-	env.set("keys", Builtin(func(args []Value) (Value, error) {
-		obj, err := oneDict("keys", args)
-		if err != nil {
-			return nil, err
-		}
-		arr := &Array{}
-		for key := range obj {
-			arr.items = append(arr.items, key)
-		}
-		return arr, nil
-	}))
-	env.set("values", Builtin(func(args []Value) (Value, error) {
-		obj, err := oneDict("values", args)
-		if err != nil {
-			return nil, err
-		}
-		arr := &Array{}
-		for _, value := range obj {
-			arr.items = append(arr.items, value)
-		}
-		return arr, nil
-	}))
-	env.set("has", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 2 {
-			return nil, fmt.Errorf("has expects 2 arguments")
-		}
-		obj, ok := args[0].(Dict)
-		if !ok {
-			return nil, fmt.Errorf("has expects dictionary")
-		}
-		key, ok := args[1].(string)
-		if !ok {
-			return nil, fmt.Errorf("has expects string key")
-		}
-		_, exists := obj[key]
-		return exists, nil
-	}))
 	env.set("delete", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
 			return nil, fmt.Errorf("delete expects 2 arguments")
@@ -437,125 +243,6 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return nil, fmt.Errorf("equal expects 2 arguments")
 		}
 		return deepEqual(args[0], args[1]), nil
-	}))
-	env.set("to_string", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 1 {
-			return nil, fmt.Errorf("to_string expects 1 argument")
-		}
-		return stringify(args[0]), nil
-	}))
-	env.set("split", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 2 {
-			return nil, fmt.Errorf("split expects 2 arguments")
-		}
-		text, ok := args[0].(string)
-		if !ok {
-			return nil, fmt.Errorf("split expects string text")
-		}
-		sep, ok := args[1].(string)
-		if !ok {
-			return nil, fmt.Errorf("split expects string separator")
-		}
-		parts := strings.Split(text, sep)
-		arr := &Array{items: make([]Value, 0, len(parts))}
-		for _, part := range parts {
-			arr.items = append(arr.items, part)
-		}
-		return arr, nil
-	}))
-	env.set("join", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 2 {
-			return nil, fmt.Errorf("join expects 2 arguments")
-		}
-		arr, ok := args[0].(*Array)
-		if !ok {
-			return nil, fmt.Errorf("join expects array")
-		}
-		sep, ok := args[1].(string)
-		if !ok {
-			return nil, fmt.Errorf("join expects string separator")
-		}
-		parts := make([]string, 0, len(arr.items))
-		for _, item := range arr.items {
-			parts = append(parts, stringify(item))
-		}
-		return strings.Join(parts, sep), nil
-	}))
-	env.set("trim", Builtin(func(args []Value) (Value, error) {
-		text, err := oneString("trim", args)
-		if err != nil {
-			return nil, err
-		}
-		return strings.TrimSpace(text), nil
-	}))
-	env.set("replace", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 3 {
-			return nil, fmt.Errorf("replace expects 3 arguments")
-		}
-		text, ok := args[0].(string)
-		if !ok {
-			return nil, fmt.Errorf("replace expects string text")
-		}
-		old, ok := args[1].(string)
-		if !ok {
-			return nil, fmt.Errorf("replace expects string old value")
-		}
-		newValue, ok := args[2].(string)
-		if !ok {
-			return nil, fmt.Errorf("replace expects string new value")
-		}
-		return strings.ReplaceAll(text, old, newValue), nil
-	}))
-	env.set("contains", Builtin(func(args []Value) (Value, error) {
-		text, part, err := twoStrings("contains", args)
-		if err != nil {
-			return nil, err
-		}
-		return strings.Contains(text, part), nil
-	}))
-	env.set("starts_with", Builtin(func(args []Value) (Value, error) {
-		text, prefix, err := twoStrings("starts_with", args)
-		if err != nil {
-			return nil, err
-		}
-		return strings.HasPrefix(text, prefix), nil
-	}))
-	env.set("ends_with", Builtin(func(args []Value) (Value, error) {
-		text, suffix, err := twoStrings("ends_with", args)
-		if err != nil {
-			return nil, err
-		}
-		return strings.HasSuffix(text, suffix), nil
-	}))
-	env.set("kind", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 1 {
-			return nil, fmt.Errorf("kind expects 1 argument")
-		}
-		switch v := args[0].(type) {
-		case nil:
-			return "nil", nil
-		case bool:
-			return "bool", nil
-		case int64:
-			_ = v
-			return "int", nil
-		case float64:
-			_ = v
-			return "float", nil
-		case string:
-			_ = v
-			return "string", nil
-		case *Bytes:
-			_ = v
-			return "bytes", nil
-		case *Array:
-			_ = v
-			return "array", nil
-		case Dict:
-			_ = v
-			return "dict", nil
-		}
-		return "unknown", nil
 	}))
 	env.set("ord", Builtin(func(args []Value) (Value, error) {
 		s, err := oneString("ord", args)
@@ -846,15 +533,6 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		}
 		return parseFloatValue(args[0])
 	}))
-	env.set("to_number", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 1 {
-			return nil, fmt.Errorf("to_number expects 1 argument")
-		}
-		if i, err := parseIntValue(args[0]); err == nil {
-			return i, nil
-		}
-		return parseFloatValue(args[0])
-	}))
 }
 
 func evalStmts(stmts []ast.Stmt, env *Env) (Value, error) {
@@ -951,11 +629,30 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		if n.Kind == "of" {
-			return evalDictFor(n, iterable, env)
-		}
 		arr, ok := iterable.(*Array)
 		if !ok {
+			if obj, ok := iterable.(Dict); ok {
+				var last Value
+				i := 0
+				for key, value := range obj {
+					env.set(n.ValueName, Dict{"key": key, "value": value})
+					if n.IndexName != "" {
+						env.set(n.IndexName, int64(i))
+					}
+					i++
+					last, err = evalStmts(n.Body, env)
+					if errors.Is(err, errBreak) {
+						return last, nil
+					}
+					if errors.Is(err, errContinue) {
+						continue
+					}
+					if err != nil {
+						return nil, err
+					}
+				}
+				return last, nil
+			}
 			return nil, fmt.Errorf("for in expects array")
 		}
 		var last Value
@@ -1352,21 +1049,6 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 }
 
 func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
-	if member, ok := c.Callee.(*ast.MemberExpr); ok {
-		if target, ok := member.Target.(*ast.Ident); ok {
-			args := make([]Value, 0, len(c.Args))
-			for _, a := range c.Args {
-				v, err := evalExpr(a, env)
-				if err != nil {
-					return nil, err
-				}
-				args = append(args, v)
-			}
-			if value, handled, err := evalStandardModuleCall(target.Name, member.Name, args, env); handled {
-				return value, err
-			}
-		}
-	}
 	fnVal, err := evalCallee(c.Callee, env)
 	if err != nil {
 		return nil, err
@@ -1957,32 +1639,6 @@ func nameFunction(name string, value Value) Value {
 		fn.Name = name
 	}
 	return value
-}
-
-func evalDictFor(n *ast.ForInStmt, iterable Value, env *Env) (Value, error) {
-	obj, ok := iterable.(Dict)
-	if !ok {
-		return nil, fmt.Errorf("for of expects dictionary")
-	}
-	var last Value
-	for key, value := range obj {
-		env.set(n.ValueName, key)
-		if n.IndexName != "" {
-			env.set(n.IndexName, value)
-		}
-		var err error
-		last, err = evalStmts(n.Body, env)
-		if errors.Is(err, errBreak) {
-			return last, nil
-		}
-		if errors.Is(err, errContinue) {
-			continue
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	return last, nil
 }
 
 func evalCallee(e ast.Expr, env *Env) (Value, error) {

@@ -117,7 +117,7 @@ func TestSelfhostParserMatchesGoParserSubset(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/parser_subset.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nremaining = count - 1\ndoubled = count * 2\nhalved = doubled / 2\nmodded = doubled % 2\ngrouped = (doubled * 3)\nlarge = count > 0\nresult = identity(trimmed)\ntried = try identity(trimmed)\nleft, right = result\ncallLeft, callRight = identity(trimmed)\nbareLeft, bareRight = identity \"value\"\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint starts_with trimmed, \"T\"\nprint ends_with trimmed, \"a\"\nprint len trimmed\nif count > 0\n  print trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count > 0\n  break\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\nprint trimmed\npush queue, trimmed\nfor entry in queue\n  print entry\nfor entry, index in queue\n  print entry\nfor key, value of user\n  print key\nreturn trimmed, \"ok\"\nreturn nil, error \"bad\"\nreturn { name: trimmed }, nil\n"
+	src := "message = \" Tya \"\ntrimmed = trim message\ncount = 1 + 1\nremaining = count - 1\ndoubled = count * 2\nhalved = doubled / 2\nmodded = doubled % 2\ngrouped = (doubled * 3)\nlarge = count > 0\nresult = identity(trimmed)\ntried = try identity(trimmed)\nleft, right = result\ncallLeft, callRight = identity(trimmed)\nbareLeft, bareRight = identity \"value\"\nparts = split(trimmed, \"\\n\")\nreplaced = replace(trimmed, \"T\", trimmed)\nprint replace trimmed, \"T\", trimmed\nprint contains trimmed, \"T\"\nprint starts_with trimmed, \"T\"\nprint ends_with trimmed, \"a\"\nprint len trimmed\nif count > 0\n  print trimmed\nif count >= 2\n  print trimmed\nelse\n  print \"small\"\nwhile count > 0\n  break\nwhile count <= 2\n  break\nqueue = [trimmed, \"Other\"]\nuser = { name: trimmed }\nprint trimmed\npush queue, trimmed\nfor entry in queue\n  print entry\nfor entry, index in queue\n  print entry\nfor entry in user\n  print entry[\"key\"]\nreturn trimmed, \"ok\"\nreturn nil, error \"bad\"\nreturn { name: trimmed }, nil\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -4075,7 +4075,7 @@ func TestSelfhostParserLegacyAdapterForForCallAndMultiAssign(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := dir + "/for_call_multi.tya"
 	tokensPath := dir + "/tokens.txt"
-	src := "for item in items\n  print item\nfor item, index in items\n  print index\nfor key of user\n  print key\nfor role, key of user\n  print role\nwrite_file path, \"ok\"\nleft, right = pair\nuser, err = parse_user \"komagata\"\nvalue, err = parse_user(\"komagata\")\ntrimmed, err = parse_user message\n"
+	src := "for item in items\n  print item\nfor item, index in items\n  print index\nfor key in user\n  print key\nfor role, key in user\n  print role\nwrite_file path, \"ok\"\nleft, right = pair\nuser, err = parse_user \"komagata\"\nvalue, err = parse_user(\"komagata\")\ntrimmed, err = parse_user message\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}

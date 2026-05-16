@@ -298,43 +298,147 @@ func isPrimitiveClassName(name string) bool {
 }
 
 var removedTopLevelPrimitiveBuiltins = map[string]string{
-	"kind":        "TYA-E0810",
-	"len":         "TYA-E0812",
-	"byte_len":    "TYA-E0812",
-	"char_len":    "TYA-E0812",
-	"trim":        "TYA-E0812",
-	"contains":    "TYA-E0812",
-	"starts_with": "TYA-E0812",
-	"ends_with":   "TYA-E0812",
-	"replace":     "TYA-E0812",
-	"split":       "TYA-E0812",
-	"join":        "TYA-E0812",
-	"keys":        "TYA-E0812",
-	"values":      "TYA-E0812",
-	"has":         "TYA-E0812",
-	"push":        "TYA-E0812",
-	"pop":         "TYA-E0812",
-	"map":         "TYA-E0812",
-	"filter":      "TYA-E0812",
-	"find":        "TYA-E0812",
-	"any":         "TYA-E0812",
-	"all":         "TYA-E0812",
-	"reduce":      "TYA-E0812",
-	"to_string":   "TYA-E0812",
-	"to_int":      "TYA-E0812",
-	"to_float":    "TYA-E0812",
-	"to_number":   "TYA-E0812",
+	"kind":        "x.class or x.class.name",
+	"len":         "value.len()",
+	"byte_len":    "text.byte_len()",
+	"char_len":    "text.len()",
+	"trim":        "text.trim()",
+	"contains":    "text.contains(part)",
+	"starts_with": "text.starts_with(prefix)",
+	"ends_with":   "text.ends_with(suffix)",
+	"replace":     "text.replace(old, new)",
+	"split":       "text.split(separator)",
+	"join":        "items.join(separator)",
+	"keys":        "dict.keys()",
+	"values":      "dict.values()",
+	"has":         "dict.has(key)",
+	"push":        "items.push(value)",
+	"pop":         "items.pop()",
+	"map":         "items.map(fn)",
+	"filter":      "items.filter(fn)",
+	"find":        "items.find(fn)",
+	"any":         "items.any(fn)",
+	"all":         "items.all(fn)",
+	"reduce":      "items.reduce(initial, fn)",
+	"to_string":   "value.to_s()",
+	"to_int":      "value.to_i()",
+	"to_float":    "value.to_f()",
+	"to_number":   "value.to_number()",
 }
 
 func removedTopLevelPrimitiveBuiltinError(name string, line, col int) error {
-	code, ok := removedTopLevelPrimitiveBuiltins[name]
+	replacement, ok := removedTopLevelPrimitiveBuiltins[name]
 	if !ok {
 		return nil
 	}
-	if code == "TYA-E0810" {
-		return fmt.Errorf("%d:%d: [TYA-E0810] kind builtin removed in v0.59; use x.class or x.class.name", line, col)
+	if name == "kind" {
+		return fmt.Errorf("%d:%d: [TYA-E0810] kind builtin removed in v0.59; use %s", line, col, replacement)
 	}
-	return fmt.Errorf("%d:%d: [TYA-E0812] top-level builtin %s was removed in v0.59; method now lives on the wrapper class", line, col, name)
+	return fmt.Errorf("%d:%d: [TYA-E0812] top-level builtin %s was removed in v0.59; use %s", line, col, name, replacement)
+}
+
+func removedPrimitiveModuleCallError(member *ast.MemberExpr, scope *scope) error {
+	id, ok := member.Target.(*ast.Ident)
+	if !ok {
+		return nil
+	}
+	if scope.defined(id.Name) {
+		return nil
+	}
+	replacement := ""
+	switch id.Name {
+	case "string":
+		switch member.Name {
+		case "len", "char_len":
+			replacement = "text.len()"
+		case "byte_len":
+			replacement = "text.byte_len()"
+		case "trim":
+			replacement = "text.trim()"
+		case "contains":
+			replacement = "text.contains(part)"
+		case "starts_with":
+			replacement = "text.starts_with(prefix)"
+		case "ends_with":
+			replacement = "text.ends_with(suffix)"
+		case "replace":
+			replacement = "text.replace(old, new)"
+		case "split":
+			replacement = "text.split(separator)"
+		case "join":
+			replacement = "items.join(separator)"
+		case "lines":
+			replacement = "text.lines()"
+		case "upcase":
+			replacement = "text.upper()"
+		case "downcase":
+			replacement = "text.lower()"
+		}
+	case "array":
+		switch member.Name {
+		case "len":
+			replacement = "items.len()"
+		case "empty?":
+			replacement = "items.empty?()"
+		case "first":
+			replacement = "items.first()"
+		case "last":
+			replacement = "items.last()"
+		case "push":
+			replacement = "items.push(value)"
+		case "pop":
+			replacement = "items.pop()"
+		case "slice":
+			replacement = "items.slice(start, end)"
+		case "reverse":
+			replacement = "items.reverse()"
+		case "join":
+			replacement = "items.join(separator)"
+		case "map":
+			replacement = "items.map(fn)"
+		case "filter":
+			replacement = "items.filter(fn)"
+		case "find":
+			replacement = "items.find(fn)"
+		case "any":
+			replacement = "items.any(fn)"
+		case "all":
+			replacement = "items.all(fn)"
+		case "each":
+			replacement = "items.each(fn)"
+		case "reduce":
+			replacement = "items.reduce(initial, fn)"
+		}
+	case "dict":
+		switch member.Name {
+		case "len":
+			replacement = "dict.len()"
+		case "has", "has?":
+			replacement = "dict.has(key)"
+		case "get":
+			replacement = "dict.get(key)"
+		case "set":
+			replacement = "dict.set(key, value)"
+		case "delete":
+			replacement = "dict.delete(key)"
+		case "keys":
+			replacement = "dict.keys()"
+		case "values":
+			replacement = "dict.values()"
+		case "entries":
+			replacement = "dict.entries()"
+		case "merge":
+			replacement = "dict.merge(other)"
+		}
+	case "value":
+		if member.Name == "nil?" {
+			replacement = "value == nil"
+		}
+	}
+	if replacement == "" {
+		return nil
+	}
+	return fmt.Errorf("%d:%d: [TYA-E0812] primitive helper %s.%s was removed in v0.59; use %s", member.NameTok.Line, member.NameTok.Col, id.Name, member.Name, replacement)
 }
 
 // BuiltinNames returns a copy of the registered builtin function
@@ -1279,6 +1383,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok {
 			if err := removedTopLevelPrimitiveBuiltinError(id.Name, id.Tok.Line, id.Tok.Col); err != nil {
+				return err
+			}
+		}
+		if member, ok := n.Callee.(*ast.MemberExpr); ok {
+			if err := removedPrimitiveModuleCallError(member, scope); err != nil {
 				return err
 			}
 		}

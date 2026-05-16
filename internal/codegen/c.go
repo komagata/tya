@@ -28,6 +28,23 @@ var primitiveClassNames = map[string]bool{
 	"Nil":     true,
 }
 
+var removedPrimitiveHelperNames = map[string]bool{
+	"kind": true, "len": true, "byte_len": true, "char_len": true,
+	"trim": true, "contains": true, "starts_with": true, "ends_with": true,
+	"replace": true, "split": true, "join": true, "keys": true,
+	"values": true, "has": true, "push": true, "pop": true,
+	"map": true, "filter": true, "find": true, "any": true,
+	"all": true, "reduce": true, "to_string": true, "to_int": true,
+	"to_float": true, "to_number": true,
+}
+
+var removedPrimitiveModuleNames = map[string]bool{
+	"string": true,
+	"array":  true,
+	"dict":   true,
+	"value":  true,
+}
+
 var nativeFunctions map[string]pkg.NativeFunction
 
 func SetNativeFunctions(functions map[string]pkg.NativeFunction) func() {
@@ -540,32 +557,6 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		genericName := fmt.Sprintf("__generic_iter%d", g.temp)
 		g.temp++
 		g.line(fmt.Sprintf("TyaValue %s = %s;", iterName, iterable))
-		if n.Kind == "of" {
-			g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
-			g.indent++
-			if g.vars[n.ValueName] {
-				g.line(fmt.Sprintf("%s = tya_dict_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
-			} else {
-				g.vars[n.ValueName] = true
-				g.line(fmt.Sprintf("TyaValue %s = tya_dict_key_at(%s, tya_number(%s));", cName(n.ValueName), iterName, indexName))
-			}
-			if n.IndexName != "" {
-				if g.vars[n.IndexName] {
-					g.line(fmt.Sprintf("%s = tya_dict_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
-				} else {
-					g.vars[n.IndexName] = true
-					g.line(fmt.Sprintf("TyaValue %s = tya_dict_value_at(%s, tya_number(%s));", cName(n.IndexName), iterName, indexName))
-				}
-			}
-			for _, stmt := range n.Body {
-				if err := g.stmt(stmt); err != nil {
-					return err
-				}
-			}
-			g.indent--
-			g.line("}")
-			return nil
-		}
 		g.line(fmt.Sprintf("if (%s.kind == TYA_ARRAY || %s.kind == TYA_STRING || %s.kind == TYA_DICT) {", iterName, iterName, iterName))
 		g.indent++
 		g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
@@ -2373,6 +2364,9 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		id, ok := n.Callee.(*ast.Ident)
 		if ok {
+			if removedPrimitiveHelperNames[id.Name] {
+				return "", "", fmt.Errorf("top-level builtin %s was removed; use receiver method syntax", id.Name)
+			}
 			classKey := id.Name
 			sym, found := g.classes[classKey]
 			if !found {
@@ -2824,8 +2818,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				return call, "TyaValue", err
 			}
 			if target, ok := member.Target.(*ast.Ident); ok {
-				if call, err := g.standardModuleCall(target.Name, member.Name, n.Args); call != "" || err != nil {
-					return call, "TyaValue", err
+				if removedPrimitiveModuleNames[target.Name] && !g.vars[target.Name] && g.funcs[target.Name] == "" && g.classes[target.Name] == "" {
+					return "", "", fmt.Errorf("primitive helper %s.%s was removed; use receiver method syntax", target.Name, member.Name)
 				}
 			}
 			receiver, _, err := g.expr(member.Target)

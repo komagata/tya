@@ -70,7 +70,7 @@ func TestRunComparisonAndLogic(t *testing.T) {
 }
 
 func TestRunArrays(t *testing.T) {
-	src := "items = [1, 2, 3]\nprint(len(items))\nprint(items[0])\nprint(items[9])\npush(items, 4)\nprint(len(items))\nprint(pop(items))\nprint(len(items))\nitems[1] = 20\nprint(items[1])\n"
+	src := "items = [1, 2, 3]\nprint(items.len())\nprint(items[0])\nprint(items[9])\nitems.push(4)\nprint(items.len())\nprint(items.pop())\nprint(items.len())\nitems[1] = 20\nprint(items[1])\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -138,7 +138,7 @@ func TestRunReturn(t *testing.T) {
 }
 
 func TestRunConversions(t *testing.T) {
-	src := "print(to_string(20))\nprint(to_int(\"42\"))\nprint(to_float(\"2.5\"))\nprint(to_number(\"12\"))\nprint(to_number(\"12.5\"))\n"
+	src := "print(20.to_s())\nprint(\"42\".to_i())\nprint(\"2.5\".to_f())\nprint(\"12\".to_number())\nprint(\"12.5\".to_number())\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -158,7 +158,7 @@ func TestRunConversions(t *testing.T) {
 }
 
 func TestRunStringBuiltins(t *testing.T) {
-	src := "text = \"  hello,tya  \"\ntrimmed = trim(text)\nparts = split(trimmed, \",\")\nprint(join(parts, \"-\"))\nprint(replace(trimmed, \"tya\", \"Tya\"))\nprint(contains(trimmed, \"hello\"))\nprint(starts_with(trimmed, \"hello\"))\nprint(ends_with(trimmed, \"tya\"))\nprint(\"quote: \\\"tya\\\"\")\nprint(\"tya\"[1])\n"
+	src := "text = \"  hello,tya  \"\ntrimmed = text.trim()\nparts = trimmed.split(\",\")\nprint(parts.join(\"-\"))\nprint(trimmed.replace(\"tya\", \"Tya\"))\nprint(trimmed.contains(\"hello\"))\nprint(trimmed.starts_with(\"hello\"))\nprint(trimmed.ends_with(\"tya\"))\nprint(\"quote: \\\"tya\\\"\")\nprint(\"tya\"[1])\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -178,7 +178,7 @@ func TestRunStringBuiltins(t *testing.T) {
 }
 
 func TestRunDictBuiltins(t *testing.T) {
-	src := "user =\n  name: \"komagata\"\n  age: 20\n\nprint(has(user, \"name\"))\nprint(len(keys(user)))\nprint(len(values(user)))\ndelete(user, \"age\")\nprint(has(user, \"age\"))\nprint(user[\"age\"])\nuser[\"city\"] = \"Tokyo\"\nprint(user[\"city\"])\n"
+	src := "user =\n  name: \"komagata\"\n  age: 20\n\nprint(user.has(\"name\"))\nprint(user.keys().len())\nprint(user.values().len())\nuser.delete(\"age\")\nprint(user.has(\"age\"))\nprint(user[\"age\"])\nuser[\"city\"] = \"Tokyo\"\nprint(user[\"city\"])\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -277,8 +277,8 @@ func TestRunForIn(t *testing.T) {
 	}
 }
 
-func TestRunForOfObject(t *testing.T) {
-	src := "user =\n  name: \"komagata\"\n  age: 20\ncount = 0\nfor key, value of user\n  if key == \"name\"\n    print(value)\n  count = count + 1\nprint(count)\n"
+func TestRunForInDictEntries(t *testing.T) {
+	src := "user =\n  name: \"komagata\"\n  age: 20\ncount = 0\nfor entry in user\n  if entry[\"key\"] == \"name\"\n    print(entry[\"value\"])\n  count = count + 1\nprint(count)\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -320,7 +320,7 @@ func TestRunFileBuiltins(t *testing.T) {
 
 func TestRunArgsAndEnvBuiltins(t *testing.T) {
 	t.Setenv("TYA_TEST_ENV", "ok")
-	src := "items = args()\nprint(len(items))\nprint(items[0])\nprint(env(\"TYA_TEST_ENV\"))\nprint(env(\"TYA_MISSING_ENV\"))\n"
+	src := "items = args()\nprint(items.len())\nprint(items[0])\nprint(env(\"TYA_TEST_ENV\"))\nprint(env(\"TYA_MISSING_ENV\"))\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)

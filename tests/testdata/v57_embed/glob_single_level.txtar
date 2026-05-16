@@ -14,5 +14,5 @@ B
 C
 -- main.tya --
 embed "assets/*.txt" as files
-for path, _ of files
-  print(path)
+for entry in files
+  print(entry["key"])

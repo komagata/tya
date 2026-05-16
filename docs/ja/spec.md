@@ -722,12 +722,7 @@ Text, bytes, and conversion:
 ```text
 chr(number)
 ord(string)
-kind(value)
 type(value)
-to_string(value)
-to_int(value)
-to_float(value)
-to_number(value)
 bytes(value)
 bytes_of(string)
 bytes_text(bytes)
@@ -741,10 +736,6 @@ Collections:
 ```text
 equal(left, right)
 delete(dict, key)
-has(dict, key)
-keys(dict)
-values(dict)
-pop(array)
 ```
 
 Low-level standard-library support builtins:

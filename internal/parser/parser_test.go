@@ -755,24 +755,13 @@ func TestParseReturnMultipleValues(t *testing.T) {
 	}
 }
 
-func TestParseForOfDictionaryIteration(t *testing.T) {
+func TestParseRejectsForOfDictionaryIteration(t *testing.T) {
 	toks, errs := lexer.Lex("for key, value of user\n  print(value)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	prog, _, err := Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	loop, ok := prog.Stmts[0].(*ast.ForInStmt)
-	if !ok {
-		t.Fatalf("got %T", prog.Stmts[0])
-	}
-	if loop.Kind != "of" {
-		t.Fatalf("got loop kind %q", loop.Kind)
-	}
-	if loop.ValueName != "key" || loop.IndexName != "value" {
-		t.Fatalf("got loop names %q, %q", loop.ValueName, loop.IndexName)
+	if _, _, err := Parse(toks); err == nil {
+		t.Fatal("expected for of parse error")
 	}
 }
 
@@ -1054,8 +1043,8 @@ func TestParseASTGoldenV01CoreProgram(t *testing.T) {
 		"  else",
 		"    return \"C\"",
 		"",
-		"for key, value of user",
-		"  print(value)",
+		"for entry in user",
+		"  print(entry[\"value\"])",
 		"",
 		"print(greeting.hello(user[\"name\"]))",
 	}, "\n") + "\n"
@@ -1072,7 +1061,7 @@ func TestParseASTGoldenV01CoreProgram(t *testing.T) {
 		"import greeting",
 		"assign ident(user) = dict{name: string(\"komagata\"), age: int(20)}",
 		"assign ident(score_label) = func(score) block[if binary(ident(score) >= int(90)) then[return string(\"A\")] else[if binary(ident(score) >= int(80)) then[return string(\"B\")] else[return string(\"C\")]]]",
-		"for key,value of ident(user) [expr call(ident(print), ident(value))]",
+		"for entry in ident(user) [expr call(ident(print), index(ident(entry), string(\"value\")))]",
 		"expr call(ident(print), call(member(ident(greeting).hello), index(ident(user), string(\"name\"))))",
 	}, "\n")
 	if diff := cmp.Diff(want, got); diff != "" {

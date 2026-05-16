@@ -41,9 +41,9 @@ for item in items.map(x -> x + 1).filter(x -> x > 2)
 for char in "tya"
   print(char)
 
-for key, value of { name: "Tya" }
-  print(key)
-  print(value)
+for entry in [{ key: "name", value: "Tya" }]
+  print(entry["key"])
+  print(entry["value"])
 
 -- unsupported_latest.tya --
 run = ->

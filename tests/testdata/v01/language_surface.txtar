@@ -28,11 +28,11 @@ print(items.len())
 
 labels = { x: "X", y: "Y" }
 joined = ""
-for key, value of labels
+for entry in labels
   if joined == ""
-    joined = key
+    joined = entry["key"]
   else
-    joined = joined + ":" + key
+    joined = joined + ":" + entry["key"]
 print(joined)
 
 err = error("missing")

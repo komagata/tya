@@ -297,8 +297,8 @@ class RuntimeAccount implements RuntimeNamed
 
 account = RuntimeAccount("Tya")
 print(account.greeting())
-print(trim(asset_text))
-print(join(["A", "B"], ","))
+print(asset_text.trim())
+print(["A", "B"].join(","))
 
 -- unsupported_runtime.tya --
 scope
