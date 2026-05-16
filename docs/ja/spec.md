@@ -1191,6 +1191,7 @@ drop_sequence              lazy drop sequence
 `net/http/Server` は HTTP method ごとの route registration (`get`, `post`, `put`, `delete`, `patch`, `options`, `head`, `any`)、middleware (`use`, `group`)、error と not-found handlers、static-file serving、redirect、route dispatch、server execution を定義する。`net/http/Client` は `get`、`post`、generic `request` を定義する。
 
 compiled `net/http/Server` handler が受け取る request dictionary は、incoming `Cookie` header から parse された `cookies` dictionary を持つ。cookie がない場合は `{}` になる。`=` のない malformed pair は無視され、name と value 周辺の whitespace は trim され、同じ name が複数回出た場合は最後の value が残る。
+handler は `form` と `files` dictionary も受け取る。non-multipart request ではどちらも空になる。`multipart/form-data` request では、`form` は field name から最後の string value への mapping、`files` は field name から最後の uploaded file metadata dictionary への mapping になる。file metadata は `filename`、`content_type`、bytes の `body`、`size` を含む。元の raw request body は `body` に残る。malformed multipart body は handler 実行前に `400 Bad Request` を返す。
 
 `Server.cookie(name, value, options)` は `Set-Cookie` header value を format する。options は `path`、`domain`、`max_age`、`expires`、`secure`、`http_only`、`same_site` (`Lax`、`Strict`、`None`) を受け付ける。`SameSite=None` は `secure: true` を要求する。`Server.with_cookie(response, name, value, options)` は `response["header_values"]["Set-Cookie"]` に cookie を追加する。response dictionary は repeated response header のために `header_values` を使える。各 array entry は個別の header line として出力され、通常の `headers` 動作は変わらない。
 

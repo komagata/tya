@@ -1326,6 +1326,13 @@ Compiled `net/http/Server` handlers receive request dictionaries with
 `cookies`, a dictionary parsed from the incoming `Cookie` header. Missing
 cookies produce `{}`. Malformed pairs without `=` are ignored, whitespace
 around names and values is trimmed, and repeated names keep the last value.
+Handlers also receive `form` and `files` dictionaries. For non-multipart
+requests both are empty. For `multipart/form-data` requests, `form` maps field
+names to the last string value and `files` maps field names to the last uploaded
+file metadata dictionary. File metadata contains `filename`, `content_type`,
+`body` as bytes, and `size`. The original raw request body remains available in
+`body`. Malformed multipart bodies return `400 Bad Request` before the handler
+runs.
 
 `Server.cookie(name, value, options)` formats a `Set-Cookie` header value.
 Options may include `path`, `domain`, `max_age`, `expires`, `secure`,

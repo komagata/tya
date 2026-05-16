@@ -12,7 +12,7 @@
 //   {method: "GET", path: "/users/:id", handler: <fn>}
 //
 // The handler receives a request dict:
-//   {method, path, params, query, headers, cookies, body}
+//   {method, path, params, query, headers, cookies, form, files, body}
 //
 // and must return a response dict:
 //   {status: 200, headers: {...}, header_values: {...}, body: "..." | <bytes>}

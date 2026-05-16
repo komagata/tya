@@ -1,0 +1,41 @@
+# net/http Server parses multipart/form-data fields and files while
+# preserving the raw request body.
+[!exec:curl] skip 'curl not on PATH'
+[!exec:sh] skip 'sh not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connrefused -F "name=first" -F "name=last" -F "avatar=@'$WORK'/avatar.txt;type=text/plain" http://localhost:18093/upload; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+stdout 'last|avatar.txt|text/plain|11|body'
+
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connrefused http://localhost:18093/empty; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+stdout 'empty'
+
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -o '$WORK'/bad_body -w "%{http_code}" -m 5 --retry 5 --retry-connrefused -H "Content-Type: multipart/form-data; boundary=bad" --data-binary "--bad\r\nContent-Disposition: form-data; name=\"x\"\r\n\r\nunterminated" http://localhost:18093/upload; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+stdout '400'
+! stdout 'SHOULD_NOT_RUN'
+
+-- avatar.txt --
+hello file!
+
+-- main.tya --
+import net/http as http
+
+app = http.Server()
+
+class App
+  static upload = req ->
+    avatar = req["files"]["avatar"]
+    body_state = "body"
+    if req["body"].byte_len() == 0
+      body_state = "no-body"
+    return { status: 200, body: req["form"]["name"] + "|" + avatar["filename"] + "|" + avatar["content_type"] + "|" + avatar["size"].to_s() + "|" + body_state }
+
+  static empty = req ->
+    if req["form"].len() == 0 and req["files"].len() == 0
+      return { status: 200, body: "empty" }
+    return { status: 500, body: "not empty" }
+
+app.post("/upload", App.upload)
+app.get("/empty", App.empty)
+app.run(18093)

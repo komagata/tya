@@ -145,6 +145,15 @@ static char *trim_ws(char *s) {
   return s;
 }
 
+static const char *find_bytes(const char *haystack, int haystack_len, const char *needle, int needle_len) {
+  if (needle_len <= 0) return haystack;
+  if (haystack_len < needle_len) return NULL;
+  for (int i = 0; i <= haystack_len - needle_len; i++) {
+    if (memcmp(haystack + i, needle, needle_len) == 0) return haystack + i;
+  }
+  return NULL;
+}
+
 // segment_match tries to match a pattern segment (e.g. ":id" or
 // "users") against a request segment. When the pattern segment is a
 // `:name` parameter, captures the request segment as the param.
@@ -343,6 +352,136 @@ static void parse_cookie_header(const char *header, TyaValue cookies) {
   }
 }
 
+static char *header_param_value(const char *header, const char *param) {
+  if (header == NULL || param == NULL) return NULL;
+  int param_len = (int)strlen(param);
+  const char *p = header;
+  while ((p = strstr(p, param)) != NULL) {
+    if ((p == header || p[-1] == ';' || p[-1] == ' ' || p[-1] == '\t') && p[param_len] == '=') {
+      p += param_len + 1;
+      while (*p == ' ' || *p == '\t') p++;
+      if (*p == '"') {
+        p++;
+        const char *end = strchr(p, '"');
+        if (end == NULL) return NULL;
+        return dup_bytes(p, (int)(end - p));
+      }
+      const char *end = p;
+      while (*end && *end != ';' && *end != '\r' && *end != '\n') end++;
+      char *value = dup_bytes(p, (int)(end - p));
+      if (value == NULL) return NULL;
+      return trim_ws(value);
+    }
+    p += param_len;
+  }
+  return NULL;
+}
+
+static char *multipart_boundary(const char *content_type) {
+  if (content_type == NULL) return NULL;
+  if (strstr(content_type, "multipart/form-data") == NULL) return NULL;
+  return header_param_value(content_type, "boundary");
+}
+
+static char *part_header_value(const char *headers, int headers_len, const char *wanted) {
+  int wanted_len = (int)strlen(wanted);
+  const char *cursor = headers;
+  const char *limit = headers + headers_len;
+  while (cursor < limit) {
+    const char *line_end = find_bytes(cursor, (int)(limit - cursor), "\r\n", 2);
+    if (line_end == NULL) line_end = limit;
+    int line_len = (int)(line_end - cursor);
+    const char *colon = memchr(cursor, ':', line_len);
+    if (colon != NULL) {
+      int name_len = (int)(colon - cursor);
+      char name[64];
+      int n = name_len < (int)sizeof(name) - 1 ? name_len : (int)sizeof(name) - 1;
+      memcpy(name, cursor, n);
+      name[n] = '\0';
+      lowercase_inplace(name);
+      if (name_len == wanted_len && strcmp(name, wanted) == 0) {
+        char *value = dup_bytes(colon + 1, line_len - name_len - 1);
+        if (value == NULL) return NULL;
+        return trim_ws(value);
+      }
+    }
+    if (line_end == limit) break;
+    cursor = line_end + 2;
+  }
+  return NULL;
+}
+
+static int parse_multipart_body(const char *content_type, const uint8_t *body, int body_len, TyaValue form, TyaValue files) {
+  char *boundary = multipart_boundary(content_type);
+  if (boundary == NULL) return 1;
+  int boundary_len = (int)strlen(boundary);
+  if (boundary_len == 0) return 0;
+  int marker_len = boundary_len + 2;
+  char *marker = malloc(marker_len + 1);
+  if (marker == NULL) return 0;
+  marker[0] = '-';
+  marker[1] = '-';
+  memcpy(marker + 2, boundary, boundary_len);
+  marker[marker_len] = '\0';
+
+  const char *buf = (const char *)body;
+  const char *limit = buf + body_len;
+  const char *pos = find_bytes(buf, body_len, marker, marker_len);
+  if (pos == NULL) {
+    free(marker);
+    return 0;
+  }
+  pos += marker_len;
+  int saw_final = 0;
+  while (pos < limit) {
+    if (pos + 2 <= limit && pos[0] == '-' && pos[1] == '-') {
+      saw_final = 1;
+      break;
+    }
+    if (pos + 2 > limit || pos[0] != '\r' || pos[1] != '\n') {
+      free(marker);
+      return 0;
+    }
+    pos += 2;
+    const char *header_end = find_bytes(pos, (int)(limit - pos), "\r\n\r\n", 4);
+    if (header_end == NULL) {
+      free(marker);
+      return 0;
+    }
+    const char *content = header_end + 4;
+    const char *next = find_bytes(content, (int)(limit - content), marker, marker_len);
+    if (next == NULL || next < content + 2 || next[-2] != '\r' || next[-1] != '\n') {
+      free(marker);
+      return 0;
+    }
+    int content_len = (int)(next - content - 2);
+    char *disp = part_header_value(pos, (int)(header_end - pos), "content-disposition");
+    if (disp != NULL && strstr(disp, "form-data") != NULL) {
+      char *name = header_param_value(disp, "name");
+      if (name != NULL && name[0] != '\0') {
+        char *filename = header_param_value(disp, "filename");
+        if (filename != NULL) {
+          TyaValue meta = tya_dict(NULL, 0);
+          tya_dict_set(meta, tya_string("filename"), tya_string(filename));
+          char *ct = part_header_value(pos, (int)(header_end - pos), "content-type");
+          tya_dict_set(meta, tya_string("content_type"), tya_string(ct == NULL ? "" : ct));
+          tya_dict_set(meta, tya_string("body"), tya_bytes_lit(content, content_len));
+          tya_dict_set(meta, tya_string("size"), tya_number(content_len));
+          tya_dict_set(files, tya_string(name), meta);
+        } else {
+          char *value = dup_bytes(content, content_len);
+          if (value != NULL) {
+            tya_dict_set(form, tya_string(name), tya_string(value));
+          }
+        }
+      }
+    }
+    pos = next + marker_len;
+  }
+  free(marker);
+  return saw_final;
+}
+
 // read_request fills `headers_buf` until "\r\n\r\n" is observed,
 // then reads the body up to Content-Length bytes into `body_buf`.
 // Returns 0 on success, -1 on I/O / parse failure, -2 on overflow.
@@ -430,7 +569,7 @@ static TyaValue build_request_dict(const char *method, int method_len,
                                    const char *query_str, int query_len,
                                    const char *headers_text, int headers_len,
                                    const uint8_t *body, int body_len,
-                                   TyaValue params) {
+                                   TyaValue params, int *bad_request) {
   TyaValue req = tya_dict(NULL, 0);
   {
     char *m = dup_bytes(method, method_len);
@@ -500,6 +639,16 @@ static TyaValue build_request_dict(const char *method, int method_len,
     parse_cookie_header(cookie_header.string, cookies);
   }
   tya_dict_set(req, tya_string("cookies"), cookies);
+  TyaValue form = tya_dict(NULL, 0);
+  TyaValue files = tya_dict(NULL, 0);
+  TyaValue content_type = tya_dict_get(headers, tya_string("content-type"), tya_nil(), true);
+  if (content_type.kind == TYA_STRING && content_type.string != NULL) {
+    if (!parse_multipart_body(content_type.string, body, body_len, form, files)) {
+      if (bad_request != NULL) *bad_request = 1;
+    }
+  }
+  tya_dict_set(req, tya_string("form"), form);
+  tya_dict_set(req, tya_string("files"), files);
 
   if (body_len > 0 && body != NULL) {
     TyaValue body_value = tya_bytes_lit((const char *)body, body_len);
@@ -812,12 +961,20 @@ static void handle_connection(int fd, TyaValue routes) {
   if (matched_handler.kind != TYA_FUNCTION && static_asset.kind == TYA_NIL) {
     TyaValue not_found = find_special_handler(routes, "__NOT_FOUND__");
     if (not_found.kind == TYA_FUNCTION) {
+      int bad_request = 0;
       TyaValue req = build_request_dict(method, method_len,
                                         path_start, path_only_len,
                                         query_str, query_len,
                                         (const char *)(headers_buf.buf), headers_buf.len,
                                         (const uint8_t *)body_buf.buf, body_buf.len,
-                                        tya_dict(NULL, 0));
+                                        tya_dict(NULL, 0), &bad_request);
+      if (bad_request) {
+        write_simple_response(fd, 400, "Bad Request");
+        buf_free(&headers_buf);
+        buf_free(&body_buf);
+        close(fd);
+        return;
+      }
       TyaValue resp = tya_call1(not_found, req);
       if (resp.kind == TYA_DICT) write_response(fd, resp);
       else write_simple_response(fd, 404, "Not Found");
@@ -834,12 +991,20 @@ static void handle_connection(int fd, TyaValue routes) {
   const char *headers_text = (const char *)(headers_buf.buf);
   int headers_text_len = headers_buf.len;
 
+  int bad_request = 0;
   TyaValue req = build_request_dict(method, method_len,
                                     path_start, path_only_len,
                                     query_str, query_len,
                                     headers_text, headers_text_len,
                                     (const uint8_t *)body_buf.buf, body_buf.len,
-                                    matched_params);
+                                    matched_params, &bad_request);
+  if (bad_request) {
+    write_simple_response(fd, 400, "Bad Request");
+    buf_free(&headers_buf);
+    buf_free(&body_buf);
+    close(fd);
+    return;
+  }
   tya_dict_set(req, tya_string("route"), matched_route);
   TyaValue resp = tya_nil();
   if (matched_handler.kind == TYA_FUNCTION) {
