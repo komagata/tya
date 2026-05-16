@@ -1,6 +1,8 @@
 # Syntax coloring sample for editor integrations.
 import time.Time as Time
 
+embed "templates/index.html" as index_html
+
 module demo
   interface Named
     name = ->
@@ -13,6 +15,7 @@ module demo
     count = 0x2a
     mask = 0b1010
     data = b"tya"
+    raw = r"C:\tya\source"
 
     initialize = name ->
       super()
@@ -42,6 +45,10 @@ module demo
           "answer"
         case _
           "other"
+
+  class Admin extends User
+    override name = ->
+      "admin:{super()}"
 
 user = demo.User("komagata")
 if user.active and not false

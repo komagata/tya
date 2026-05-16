@@ -3,7 +3,7 @@
   "displayName": "tya",
   "description": "Language support for the tya programming language (compiler + LSP).",
   "publisher": "komagata",
-  "version": "0.61.0",
+  "version": "0.65.0",
   "icon": "icon.png",
   "license": "UNLICENSED",
   "repository": {
@@ -67,7 +67,7 @@
     "compile": "tsc -p .",
     "package": "vsce package",
     "publish:marketplace": "vsce publish",
-    "publish:open-vsx": "ovsx publish tya-0.61.0.vsix"
+    "publish:open-vsx": "ovsx publish"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

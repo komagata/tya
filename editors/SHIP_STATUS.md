@@ -11,9 +11,9 @@ Objective: ship syntax coloring for major editors.
 | Shared syntax fixture exists | `editors/syntax-sample.tya` |
 | VS Code syntax coloring exists | `editors/vscode/syntaxes/tya.tmLanguage.json`, registered from `editors/vscode/package.json` |
 | VS Code package builds | `npm run compile` and `npm run package` in `editors/vscode` |
-| VS Code manual-install package is published | GitHub Release `editors-vscode-v0.61.0` with `tya-0.61.0.vsix` |
-| VS Code Marketplace package is published | `komagata.tya` version `0.61.0` on Visual Studio Marketplace |
-| Open VSX package is published | `komagata.tya` version `0.61.0` on Open VSX |
+| VS Code manual-install package is published | GitHub Release `editors-vscode-v0.65.0` with `tya-0.65.0.vsix` |
+| VS Code Marketplace package is published | `komagata.tya` version `0.65.0` on Visual Studio Marketplace |
+| Open VSX package is published | `komagata.tya` version `0.65.0` on Open VSX |
 | VS Code publish workflow exists | `.github/workflows/publish-vscode-extension.yml` |
 | Vim / Neovim syntax coloring exists | `editors/vim/syntax/tya.vim` |
 | Vim / Neovim filetype and indent exist | `editors/vim/ftdetect/tya.vim`, `editors/vim/indent/tya.vim` |
@@ -60,15 +60,15 @@ Publish VS Code extension / main / 25779551179 / success / 2026-05-13T05:07:03Z
 - Latest observed GitHub Actions `Publish VS Code extension` Open VSX run:
   `25779551179`, status: success.
 - VS Code manual-install release:
-  https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
-  (`tya-0.61.0.vsix`, sha256
-  `305322bcae342e81db145297329a9941e89eb6ed52c23afbe5812e59b4d3b67d`)
+  https://github.com/komagata/tya/releases/tag/editors-vscode-v0.65.0
+  (`tya-0.65.0.vsix`, sha256
+  `667e9205153615b893484ea091cd8bc04ab41ee5df55533264621b0f9ad09216`)
 - Manual editor asset bundle:
   https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
   (`tya-editor-assets-v0.61.0.tar.gz`, sha256
   `87e2c78cf2d5a1fc224780d1f0db1dc2870ae008fcd85e584bd0159af49c8f8f`)
-- Visual Studio Marketplace extension: `komagata.tya` version `0.61.0`
-- Open VSX extension: `komagata.tya` version `0.61.0`
+- Visual Studio Marketplace extension: `komagata.tya` version `0.65.0`
+- Open VSX extension: `komagata.tya` version `0.65.0`
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Standalone Tree-sitter grammar repository: https://github.com/komagata/tree-sitter-tya
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`

@@ -23,6 +23,16 @@
     "strings": {
       "patterns": [
         {
+          "name": "string.quoted.double.raw.block.tya",
+          "begin": "r\"\"\"",
+          "end": "\"\"\""
+        },
+        {
+          "name": "string.quoted.double.bytes.block.tya",
+          "begin": "b\"\"\"",
+          "end": "\"\"\""
+        },
+        {
           "name": "string.quoted.double.block.tya",
           "begin": "\"\"\"",
           "end": "\"\"\"",
@@ -32,12 +42,17 @@
         },
         {
           "name": "string.quoted.double.tya",
-          "begin": "\"",
+          "begin": "(?<![A-Za-z_])\"",
           "end": "\"",
           "patterns": [
             { "name": "constant.character.escape.tya", "match": "\\\\." },
             { "include": "#interpolation" }
           ]
+        },
+        {
+          "name": "string.quoted.double.raw.tya",
+          "begin": "r\"",
+          "end": "\""
         },
         {
           "name": "string.quoted.double.bytes.tya",
@@ -80,7 +95,7 @@
         },
         {
           "name": "storage.type.tya",
-          "match": "\\b(class|module|interface|implements|extends|abstract|final|private|static|initialize|import|as)\\b"
+          "match": "\\b(class|module|interface|implements|extends|abstract|final|override|private|static|initialize|import|as|embed)\\b"
         },
         {
           "name": "variable.language.tya",

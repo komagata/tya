@@ -23,7 +23,7 @@ scripts/verify_editor_assets.sh
 
 Manual-install release:
 
-- https://github.com/komagata/tya/releases/tag/editors-vscode-v0.61.0
+- https://github.com/komagata/tya/releases/tag/editors-vscode-v0.65.0
 
 Publish:
 
@@ -37,13 +37,13 @@ Or run the GitHub Actions workflow `Publish VS Code extension` with
 
 Published package:
 
-- `komagata.tya` version `0.61.0`
+- `komagata.tya` version `0.65.0`
 
 Requirements:
 
 - Visual Studio Marketplace publisher: `komagata`
 - `VSCE_PAT` or an interactive `vsce login komagata`
-- Generated package: `editors/vscode/tya-0.61.0.vsix`
+- Generated package: `editors/vscode/tya-0.65.0.vsix`
 
 ## Open VSX
 
@@ -57,7 +57,7 @@ Publish:
 
 ```sh
 cd editors/vscode
-npx ovsx publish tya-0.61.0.vsix
+npx ovsx publish
 ```
 
 Or run the GitHub Actions workflow `Publish VS Code extension` with
@@ -65,7 +65,7 @@ Or run the GitHub Actions workflow `Publish VS Code extension` with
 
 Published package:
 
-- `komagata.tya` version `0.61.0`
+- `komagata.tya` version `0.65.0`
 
 Requirements:
 
