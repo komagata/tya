@@ -560,6 +560,8 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 	// -lm, while macOS rolls it into libSystem so the flag is harmless.
 	if runtime.GOOS == "linux" {
 		args = append(args, "-lpthread", "-lm")
+	} else if runtime.GOOS == "windows" {
+		args = append(args, "-lws2_32")
 	} else if runtime.GOOS != "windows" {
 		args = append(args, "-lm")
 	}

@@ -158,7 +158,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   - [x] Server-side chunked transfer encoding.
   - [x] Keep-alive.
   - [ ] HTTPS/TLS.
-  - [ ] Windows support via WinSock2.
+  - [x] Windows support via WinSock2.
   - [x] Per-request arena to bound the v0.58 string-buffer leak.
 
 ## Toolchain

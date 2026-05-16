@@ -1186,7 +1186,7 @@ drop_sequence              lazy drop sequence
 
 `Comparable` は `compare(other)` を要求し、`lt?`、`lte?`、`gt?`、`gte?`、`between?` を提供する。`Equatable` は `equal?(other)` を要求する。`Stringable` は `to_s()` を要求する。`Iterable` は `iter()` を要求し、`sequence()` を提供する。`Sequence` は `iter()`、`map(fn)`、`filter(fn)`、`take(n)`、`drop(n)`、`reduce(initial, fn)`、`to_a()` を提供する。
 
-`io/Reader`、`io/Writer`、`net/socket` は readable、writable、closable、flushable values の stream capability interfaces を定義する。`Reader` は `read`、`read_line`、`each_line`、`eof?`、`close` をサポートする。`Writer` は `write`、`write_line`、`flush`、`close` をサポートする。`Socket` は `connect`、`read`、`read_line`、`write`、`write_line`、`close`、`closed?`、`local_address`、`remote_address` をサポートする。`net/socket/Server` は `listen`、`accept`、`close`、`local_address` をサポートする。
+`io/Reader`、`io/Writer`、`net/socket` は readable、writable、closable、flushable values の stream capability interfaces を定義する。`Reader` は `read`、`read_line`、`each_line`、`eof?`、`close` をサポートする。`Writer` は `write`、`write_line`、`flush`、`close` をサポートする。`Socket` は `connect`、`read`、`read_line`、`write`、`write_line`、`close`、`closed?`、`local_address`、`remote_address` をサポートする。`net/socket/Server` は `listen`、`accept`、`close`、`local_address` をサポートする。compiled runtime は POSIX socket platform と Windows WinSock2 で `net/socket` をサポートする。
 
 `net/http/Server` は HTTP method ごとの route registration (`get`, `post`, `put`, `delete`, `patch`, `options`, `head`, `any`)、middleware (`use`, `group`)、error と not-found handlers、static-file serving、redirect、route dispatch、server execution を定義する。`net/http/Client` は `get`、`post`、generic `request` を定義する。
 

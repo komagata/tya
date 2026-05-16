@@ -1314,7 +1314,8 @@ supports `read`, `read_line`, `each_line`, `eof?`, and `close`. `Writer`
 supports `write`, `write_line`, `flush`, and `close`. `Socket` supports
 `connect`, `read`, `read_line`, `write`, `write_line`, `close`, `closed?`,
 `local_address`, and `remote_address`; `net/socket/Server` supports `listen`,
-`accept`, `close`, and `local_address`.
+`accept`, `close`, and `local_address`. The compiled runtime supports
+`net/socket` on POSIX socket platforms and Windows through WinSock2.
 
 `net/http/Server` defines route registration by HTTP method (`get`, `post`,
 `put`, `delete`, `patch`, `options`, `head`, `any`), middleware (`use`,

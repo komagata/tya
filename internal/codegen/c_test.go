@@ -394,6 +394,8 @@ func compileAndRunC(t *testing.T, csrc string, input string, args ...string) ([]
 	gccArgs := []string{cfile, runtime, "-I", include, "-o", bin}
 	if runtimeOS == "linux" {
 		gccArgs = append(gccArgs, "-lpthread", "-lm", "-lz")
+	} else if runtimeOS == "windows" {
+		gccArgs = append(gccArgs, "-lws2_32", "-lz")
 	} else if runtimeOS != "windows" {
 		gccArgs = append(gccArgs, "-lm", "-lz")
 	}
