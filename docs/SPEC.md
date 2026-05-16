@@ -1343,6 +1343,14 @@ dictionaries may use `header_values` for repeated response headers; each array
 entry is emitted as a separate header line while ordinary `headers` behavior is
 unchanged.
 
+Response dictionaries may set `chunked: true` to send an HTTP/1.1 chunked
+response. In that mode the runtime writes `Transfer-Encoding: chunked`, omits
+`Content-Length`, and writes each string or bytes item from an array body as one
+chunk. A channel body may yield string or bytes chunks and closes the stream
+when the channel closes. Empty chunks are skipped except for the final
+terminating chunk. Non-chunked responses keep the normal `Content-Length`
+behavior.
+
 `serialization/Serializer` converts Tya values to and from data values, JSON,
 and TOML. Classes that implement `Serializable` expose `to_data()`.
 

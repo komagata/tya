@@ -1195,6 +1195,8 @@ handler は `form` と `files` dictionary も受け取る。non-multipart reques
 
 `Server.cookie(name, value, options)` は `Set-Cookie` header value を format する。options は `path`、`domain`、`max_age`、`expires`、`secure`、`http_only`、`same_site` (`Lax`、`Strict`、`None`) を受け付ける。`SameSite=None` は `secure: true` を要求する。`Server.with_cookie(response, name, value, options)` は `response["header_values"]["Set-Cookie"]` に cookie を追加する。response dictionary は repeated response header のために `header_values` を使える。各 array entry は個別の header line として出力され、通常の `headers` 動作は変わらない。
 
+response dictionary は `chunked: true` によって HTTP/1.1 chunked response を送れる。この mode では runtime が `Transfer-Encoding: chunked` を書き、`Content-Length` を省略し、array body の各 string または bytes item を 1 chunk として書く。channel body は string または bytes chunk を yield でき、channel close で stream を閉じる。空 chunk は final terminating chunk を除いて skip される。non-chunked response は通常の `Content-Length` 動作を保つ。
+
 `serialization/Serializer` は Tya values を data values、JSON、TOML と相互変換する。`Serializable` を実装する class は `to_data()` を公開する。
 
 ## 外部パッケージ

@@ -156,7 +156,8 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   supported release use case)*
   - [x] Cookies.
   - [x] Multipart bodies.
-  - [ ] keep-alive, server-side chunked transfer encoding, and HTTPS/TLS.
+  - [x] Server-side chunked transfer encoding.
+  - [ ] keep-alive and HTTPS/TLS.
   - [ ] Windows support via WinSock2.
   - [ ] Per-request arena to bound the v0.58 string-buffer leak.
 

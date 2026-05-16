@@ -1,0 +1,49 @@
+# net/http Server can emit HTTP/1.1 chunked responses from string and
+# bytes chunks while preserving normal Content-Length responses.
+[!exec:curl] skip 'curl not on PATH'
+[!exec:sh] skip 'sh not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl --raw -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18094/chunked > '$WORK'/chunked.out; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+grep 'Transfer-Encoding: chunked' $WORK/chunked.out
+! grep 'Content-Length:' $WORK/chunked.out
+grep '1' $WORK/chunked.out
+grep 'a' $WORK/chunked.out
+grep '2' $WORK/chunked.out
+grep 'bc' $WORK/chunked.out
+grep '0' $WORK/chunked.out
+
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl --raw -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18094/channel > '$WORK'/channel.out; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+grep 'Transfer-Encoding: chunked' $WORK/channel.out
+grep 'x' $WORK/channel.out
+grep 'yz' $WORK/channel.out
+
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18094/normal > '$WORK'/normal.out; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+grep 'Content-Length: 6' $WORK/normal.out
+! grep 'Transfer-Encoding: chunked' $WORK/normal.out
+
+-- main.tya --
+import net/http as http
+import channel as channel
+
+app = http.Server()
+
+class App
+  static chunked = _req ->
+    return { status: 200, chunked: true, body: ["a", b"bc", ""] }
+
+  static channel = _req ->
+    c = channel.Channel(2)
+    c.send("x")
+    c.send(b"yz")
+    c.close()
+    return { status: 200, chunked: true, body: c }
+
+  static normal = _req ->
+    return { status: 200, body: "normal" }
+
+app.get("/chunked", App.chunked)
+app.get("/channel", App.channel)
+app.get("/normal", App.normal)
+app.run(18094)

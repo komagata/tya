@@ -692,11 +692,50 @@ static int write_all(int fd, const char *buf, int len) {
   return 0;
 }
 
+static int write_chunk(int fd, const uint8_t *data, int len) {
+  if (len <= 0) return 0;
+  char prefix[32];
+  int pn = snprintf(prefix, sizeof(prefix), "%x\r\n", len);
+  if (pn <= 0 || write_all(fd, prefix, pn) < 0) return -1;
+  if (write_all(fd, (const char *)data, len) < 0) return -1;
+  return write_all(fd, "\r\n", 2);
+}
+
+static int write_chunk_value(int fd, TyaValue value) {
+  if (value.kind == TYA_STRING && value.string != NULL) {
+    return write_chunk(fd, (const uint8_t *)value.string, (int)strlen(value.string));
+  }
+  if (value.kind == TYA_BYTES && value.bytes != NULL) {
+    return write_chunk(fd, value.bytes->data, value.bytes->len);
+  }
+  return -1;
+}
+
+static int write_chunked_body(int fd, TyaValue body) {
+  if (body.kind == TYA_ARRAY && body.array != NULL) {
+    for (int i = 0; i < body.array->len; i++) {
+      if (write_chunk_value(fd, body.array->items[i]) < 0) return -1;
+    }
+    return write_all(fd, "0\r\n\r\n", 5);
+  }
+  if (body.kind == TYA_CHANNEL && body.channel != NULL) {
+    while (1) {
+      TyaValue item = tya_channel_receive(body);
+      if (item.kind == TYA_NIL) break;
+      if (write_chunk_value(fd, item) < 0) return -1;
+    }
+    return write_all(fd, "0\r\n\r\n", 5);
+  }
+  return -1;
+}
+
 // write_response serialises a handler's response dict over fd.
 static void write_response(int fd, TyaValue resp) {
   int status = 200;
   TyaValue status_v = tya_dict_get(resp, tya_string("status"), tya_nil(), true);
   if (status_v.kind == TYA_NUMBER) status = (int)status_v.number;
+  TyaValue chunked_v = tya_dict_get(resp, tya_string("chunked"), tya_bool(false), true);
+  int chunked = chunked_v.kind == TYA_BOOL && chunked_v.boolean;
 
   // Determine body bytes + length.
   const uint8_t *body = NULL;
@@ -728,6 +767,8 @@ static void write_response(int fd, TyaValue resp) {
       memcpy(lname, e.key, klen);
       lname[klen] = '\0';
       lowercase_inplace(lname);
+      if (chunked && strcmp(lname, "content-length") == 0) continue;
+      if (chunked && strcmp(lname, "transfer-encoding") == 0) continue;
       if (strcmp(lname, "content-type") == 0) has_content_type = 1;
       const char *vstr = "";
       if (e.value.kind == TYA_STRING && e.value.string != NULL) vstr = e.value.string;
@@ -755,14 +796,21 @@ static void write_response(int fd, TyaValue resp) {
     write_all(fd, default_ct, (int)strlen(default_ct));
   }
 
-  char clbuf[64];
-  int cln = snprintf(clbuf, sizeof(clbuf), "Content-Length: %d\r\n", body_len);
-  write_all(fd, clbuf, cln);
+  if (chunked) {
+    const char *te = "Transfer-Encoding: chunked\r\n";
+    write_all(fd, te, (int)strlen(te));
+  } else {
+    char clbuf[64];
+    int cln = snprintf(clbuf, sizeof(clbuf), "Content-Length: %d\r\n", body_len);
+    write_all(fd, clbuf, cln);
+  }
 
   const char *connection_close = "Connection: close\r\n\r\n";
   write_all(fd, connection_close, (int)strlen(connection_close));
 
-  if (body != NULL && body_len > 0) {
+  if (chunked) {
+    write_chunked_body(fd, body_v);
+  } else if (body != NULL && body_len > 0) {
     write_all(fd, (const char *)body, body_len);
   }
 }
