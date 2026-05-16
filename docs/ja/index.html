@@ -241,6 +241,13 @@ render_with_liquid: false
                 font-weight: 700;
             }
 
+            .command-list p {
+                margin: 0;
+                color: var(--muted);
+                font-size: 14px;
+                line-height: 1.55;
+            }
+
             .command-list pre,
             .tab-panel pre {
                 border: 1px solid var(--line);
@@ -597,7 +604,7 @@ render_with_liquid: false
                 <nav class="nav" aria-label="Page sections">
                     <a href="#overview">特徴</a>
                     <a href="#install">インストール</a>
-                    <a href="#quick-run">実行</a>
+                    <a href="#toolchain">ツールチェイン</a>
                     <a href="#docs">ドキュメント</a>
                 </nav>
                 <nav class="nav nav-external" aria-label="External links">
@@ -732,19 +739,37 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                         </div>
                     </section>
 
-                    <section class="section section-grid" id="quick-run">
+                    <section class="section section-grid" id="toolchain">
                         <div class="section-title">
-                            <h2>実行</h2>
+                            <h2>ツールチェイン</h2>
                         </div>
                         <ul class="command-list">
                             <li>
-                                <span>ビルドして実行</span>
+                                <span>tya run</span>
                                 <pre><code>tya run examples/hello.tya</code></pre>
+                                <p>ソースファイルをその場でコンパイルして実行します。小さなスクリプトや動作確認に使います。</p>
                             </li>
                             <li>
-                                <span>実行ファイルをビルド</span>
+                                <span>tya build</span>
                                 <pre><code>tya build examples/hello.tya -o hello
 ./hello</code></pre>
+                                <p>配布できる実行ファイルを作ります。CI やリリースではこのコマンドで 1 バイナリを生成します。</p>
+                            </li>
+                            <li>
+                                <span>tya test</span>
+                                <pre><code>tya test tests</code></pre>
+                                <p>テストファイルをまとめて実行します。標準のテストランナが入っているので追加ツールは不要です。</p>
+                            </li>
+                            <li>
+                                <span>tya lint</span>
+                                <pre><code>tya lint src</code></pre>
+                                <p>未使用の変数や危険な書き方を検出します。CI に組み込んでコード品質を保てます。</p>
+                            </li>
+                            <li>
+                                <span>tya task</span>
+                                <pre><code>tya task
+tya task run</code></pre>
+                                <p>プロジェクトに定義されたタスクを一覧表示し、同じコマンドから実行できます。</p>
                             </li>
                         </ul>
                     </section>
