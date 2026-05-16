@@ -3524,6 +3524,10 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 			return fmt.Sprintf(format, out[0], out[1])
 		case 3:
 			return fmt.Sprintf(format, out[0], out[1], out[2])
+		case 4:
+			return fmt.Sprintf(format, out[0], out[1], out[2], out[3])
+		case 5:
+			return fmt.Sprintf(format, out[0], out[1], out[2], out[3], out[4])
 		}
 		return ""
 	}
@@ -3752,6 +3756,8 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_io_stream_close(%s)", 1)
 	case "socket_connect":
 		return emit("tya_socket_connect(%s, %s, %s)", 3)
+	case "tls_connect":
+		return emit("tya_tls_connect(%s, %s, %s)", 3)
 	case "socket_server_listen":
 		return emit("tya_socket_server_listen(%s, %s, %s)", 3)
 	case "socket_server_accept":
@@ -3776,6 +3782,8 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_socket_server_local_address(%s)", 1)
 	case "http_server_run":
 		return emit("tya_http_server_run(%s, %s)", 2)
+	case "http_server_run_tls":
+		return emit("tya_http_server_run_tls(%s, %s, %s, %s, %s)", 5)
 	}
 	return ""
 }

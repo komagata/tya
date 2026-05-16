@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#ifdef TYA_ENABLE_OPENSSL
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+#endif
 
 // Mirror of the internal struct layouts in tya_runtime.c. The public
 // header exposes `TyaBytes *`, `TyaDict *`, and `TyaArray *` opaquely;
@@ -59,13 +63,18 @@ typedef int TyaHttpSocket;
 #define tya_http_close_socket close
 #endif
 
+typedef struct {
+  TyaHttpSocket fd;
+  void *ssl;
+} TyaHttpConn;
+
 // Defensive limits — keep one connection from exhausting memory.
 #define TYA_HTTP_MAX_HEADER_BYTES (16 * 1024)
 #define TYA_HTTP_MAX_BODY_BYTES (10 * 1024 * 1024)
 #define TYA_HTTP_READ_CHUNK 4096
 #define TYA_HTTP_MAX_REQUESTS_PER_CONNECTION 100
 
-static void handle_connection(TyaHttpSocket fd, TyaValue routes);
+static void handle_connection(TyaHttpConn *conn, TyaValue routes);
 
 static TyaValue http_connection_task(TyaValue self, TyaValue fd, TyaValue routes, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
   (void)self;
@@ -74,7 +83,10 @@ static TyaValue http_connection_task(TyaValue self, TyaValue fd, TyaValue routes
   (void)e;
   (void)f;
   if (fd.kind == TYA_NUMBER) {
-    handle_connection((TyaHttpSocket)fd.number, routes);
+    TyaHttpConn conn;
+    conn.fd = (TyaHttpSocket)fd.number;
+    conn.ssl = NULL;
+    handle_connection(&conn, routes);
   }
   return tya_nil();
 }
@@ -106,6 +118,34 @@ static TyaHttpSocket tya_http_socket_open(int family, int type, int protocol) {
 #else
   return (TyaHttpSocket)syscall(SYS_socket, family, type, protocol);
 #endif
+}
+
+static int tya_http_conn_read(TyaHttpConn *conn, char *buf, int len) {
+#ifdef TYA_ENABLE_OPENSSL
+  if (conn->ssl != NULL) return SSL_read((SSL *)conn->ssl, buf, len);
+#endif
+  return recv(conn->fd, buf, len, 0);
+}
+
+static int tya_http_conn_write(TyaHttpConn *conn, const char *buf, int len) {
+#ifdef TYA_ENABLE_OPENSSL
+  if (conn->ssl != NULL) return SSL_write((SSL *)conn->ssl, buf, len);
+#endif
+  return send(conn->fd, buf, len, 0);
+}
+
+static void tya_http_conn_close(TyaHttpConn *conn) {
+#ifdef TYA_ENABLE_OPENSSL
+  if (conn->ssl != NULL) {
+    SSL_shutdown((SSL *)conn->ssl);
+    SSL_free((SSL *)conn->ssl);
+    conn->ssl = NULL;
+  }
+#endif
+  if (conn->fd != TYA_HTTP_INVALID_SOCKET) {
+    tya_http_close_socket(conn->fd);
+    conn->fd = TYA_HTTP_INVALID_SOCKET;
+  }
 }
 
 typedef struct {
@@ -601,12 +641,12 @@ static int parse_multipart_body(const char *content_type, const uint8_t *body, i
 // read_request fills `headers_buf` until "\r\n\r\n" is observed,
 // then reads the body up to Content-Length bytes into `body_buf`.
 // Returns 0 on success, -1 on I/O / parse failure, -2 on overflow.
-static int read_request(TyaHttpSocket fd, byte_buffer *headers_buf,
+static int read_request(TyaHttpConn *conn, byte_buffer *headers_buf,
                         byte_buffer *body_buf, int *content_length_out) {
   char chunk[TYA_HTTP_READ_CHUNK];
   int header_end = -1;
   while (header_end < 0) {
-    int n = recv(fd, chunk, (int)sizeof(chunk), 0);
+    int n = tya_http_conn_read(conn, chunk, (int)sizeof(chunk));
     if (n <= 0) return -1;
     if (headers_buf->len + (int)n > TYA_HTTP_MAX_HEADER_BYTES + TYA_HTTP_MAX_BODY_BYTES) {
       return -2;
@@ -671,7 +711,7 @@ static int read_request(TyaHttpSocket fd, byte_buffer *headers_buf,
   while (body_buf->len < content_length) {
     int want = content_length - body_buf->len;
     if (want > (int)sizeof(chunk)) want = (int)sizeof(chunk);
-    int n = recv(fd, chunk, want, 0);
+    int n = tya_http_conn_read(conn, chunk, want);
     if (n <= 0) return -1;
     if (buf_append(body_buf, chunk, (int)n) < 0) return -1;
   }
@@ -792,10 +832,10 @@ static const char *status_text(int status) {
 
 // write_all writes len bytes from buf to fd, looping past partial
 // writes. Returns 0 on success, -1 on error.
-static int write_all(TyaHttpSocket fd, const char *buf, int len) {
+static int write_all(TyaHttpConn *conn, const char *buf, int len) {
   int written = 0;
   while (written < len) {
-    int n = send(fd, buf + written, len - written, 0);
+    int n = tya_http_conn_write(conn, buf + written, len - written);
     if (n <= 0) {
       if (n < 0 && tya_http_socket_interrupted()) continue;
       return -1;
@@ -805,45 +845,45 @@ static int write_all(TyaHttpSocket fd, const char *buf, int len) {
   return 0;
 }
 
-static int write_chunk(TyaHttpSocket fd, const uint8_t *data, int len) {
+static int write_chunk(TyaHttpConn *conn, const uint8_t *data, int len) {
   if (len <= 0) return 0;
   char prefix[32];
   int pn = snprintf(prefix, sizeof(prefix), "%x\r\n", len);
-  if (pn <= 0 || write_all(fd, prefix, pn) < 0) return -1;
-  if (write_all(fd, (const char *)data, len) < 0) return -1;
-  return write_all(fd, "\r\n", 2);
+  if (pn <= 0 || write_all(conn, prefix, pn) < 0) return -1;
+  if (write_all(conn, (const char *)data, len) < 0) return -1;
+  return write_all(conn, "\r\n", 2);
 }
 
-static int write_chunk_value(TyaHttpSocket fd, TyaValue value) {
+static int write_chunk_value(TyaHttpConn *conn, TyaValue value) {
   if (value.kind == TYA_STRING && value.string != NULL) {
-    return write_chunk(fd, (const uint8_t *)value.string, (int)strlen(value.string));
+    return write_chunk(conn, (const uint8_t *)value.string, (int)strlen(value.string));
   }
   if (value.kind == TYA_BYTES && value.bytes != NULL) {
-    return write_chunk(fd, value.bytes->data, value.bytes->len);
+    return write_chunk(conn, value.bytes->data, value.bytes->len);
   }
   return -1;
 }
 
-static int write_chunked_body(TyaHttpSocket fd, TyaValue body) {
+static int write_chunked_body(TyaHttpConn *conn, TyaValue body) {
   if (body.kind == TYA_ARRAY && body.array != NULL) {
     for (int i = 0; i < body.array->len; i++) {
-      if (write_chunk_value(fd, body.array->items[i]) < 0) return -1;
+      if (write_chunk_value(conn, body.array->items[i]) < 0) return -1;
     }
-    return write_all(fd, "0\r\n\r\n", 5);
+    return write_all(conn, "0\r\n\r\n", 5);
   }
   if (body.kind == TYA_CHANNEL && body.channel != NULL) {
     while (1) {
       TyaValue item = tya_channel_receive(body);
       if (item.kind == TYA_NIL) break;
-      if (write_chunk_value(fd, item) < 0) return -1;
+      if (write_chunk_value(conn, item) < 0) return -1;
     }
-    return write_all(fd, "0\r\n\r\n", 5);
+    return write_all(conn, "0\r\n\r\n", 5);
   }
   return -1;
 }
 
 // write_response serialises a handler's response dict over fd.
-static void write_response(TyaHttpSocket fd, TyaValue resp, int keep_alive) {
+static void write_response(TyaHttpConn *conn, TyaValue resp, int keep_alive) {
   int status = 200;
   TyaValue status_v = tya_dict_get(resp, tya_string("status"), tya_nil(), true);
   if (status_v.kind == TYA_NUMBER) status = (int)status_v.number;
@@ -865,7 +905,7 @@ static void write_response(TyaHttpSocket fd, TyaValue resp, int keep_alive) {
   // Write status line.
   char status_line[64];
   int n = snprintf(status_line, sizeof(status_line), "HTTP/1.1 %d %s\r\n", status, status_text(status));
-  write_all(fd, status_line, n);
+  write_all(conn, status_line, n);
 
   // Default content-type when no headers dict.
   TyaValue headers_v = tya_dict_get(resp, tya_string("headers"), tya_nil(), true);
@@ -888,7 +928,7 @@ static void write_response(TyaHttpSocket fd, TyaValue resp, int keep_alive) {
       if (e.value.kind == TYA_STRING && e.value.string != NULL) vstr = e.value.string;
       char header_line[1024];
       int hn = snprintf(header_line, sizeof(header_line), "%s: %s\r\n", e.key, vstr);
-      if (hn > 0) write_all(fd, header_line, hn);
+      if (hn > 0) write_all(conn, header_line, hn);
     }
   }
   TyaValue header_values_v = tya_dict_get(resp, tya_string("header_values"), tya_nil(), true);
@@ -901,41 +941,41 @@ static void write_response(TyaHttpSocket fd, TyaValue resp, int keep_alive) {
         if (hv.kind != TYA_STRING || hv.string == NULL) continue;
         char header_line[1024];
         int hn = snprintf(header_line, sizeof(header_line), "%s: %s\r\n", e.key, hv.string);
-        if (hn > 0) write_all(fd, header_line, hn);
+        if (hn > 0) write_all(conn, header_line, hn);
       }
     }
   }
   if (!has_content_type) {
     const char *default_ct = "Content-Type: text/plain; charset=utf-8\r\n";
-    write_all(fd, default_ct, (int)strlen(default_ct));
+    write_all(conn, default_ct, (int)strlen(default_ct));
   }
 
   if (chunked) {
     const char *te = "Transfer-Encoding: chunked\r\n";
-    write_all(fd, te, (int)strlen(te));
+    write_all(conn, te, (int)strlen(te));
   } else {
     char clbuf[64];
     int cln = snprintf(clbuf, sizeof(clbuf), "Content-Length: %d\r\n", body_len);
-    write_all(fd, clbuf, cln);
+    write_all(conn, clbuf, cln);
   }
 
   const char *connection_header = keep_alive ? "Connection: keep-alive\r\n\r\n" : "Connection: close\r\n\r\n";
-  write_all(fd, connection_header, (int)strlen(connection_header));
+  write_all(conn, connection_header, (int)strlen(connection_header));
 
   if (chunked) {
-    write_chunked_body(fd, body_v);
+    write_chunked_body(conn, body_v);
   } else if (body != NULL && body_len > 0) {
-    write_all(fd, (const char *)body, body_len);
+    write_all(conn, (const char *)body, body_len);
   }
 }
 
 // write_simple_response writes a status + plain-text body without
 // invoking a handler. Used for routing failures and parse errors.
-static void write_simple_response(TyaHttpSocket fd, int status, const char *body) {
+static void write_simple_response(TyaHttpConn *conn, int status, const char *body) {
   TyaValue resp = tya_dict(NULL, 0);
   tya_dict_set(resp, tya_string("status"), tya_number(status));
   tya_dict_set(resp, tya_string("body"), tya_string(body == NULL ? status_text(status) : body));
-  write_response(fd, resp, 0);
+  write_response(conn, resp, 0);
 }
 
 static const char *static_content_type_for_path(const char *path) {
@@ -996,7 +1036,7 @@ static TyaValue build_static_response(TyaValue route, TyaValue req) {
 
 // handle_connection reads one HTTP/1.1 request, dispatches it to
 // the matching route, and writes the response. Closes fd on exit.
-static void handle_connection(TyaHttpSocket fd, TyaValue routes) {
+static void handle_connection(TyaHttpConn *conn, TyaValue routes) {
   for (int request_count = 0; request_count < TYA_HTTP_MAX_REQUESTS_PER_CONNECTION; request_count++) {
   byte_buffer headers_buf;
   byte_buffer body_buf;
@@ -1005,23 +1045,23 @@ static void handle_connection(TyaHttpSocket fd, TyaValue routes) {
   http_arena arena;
   arena_init(&arena);
   int content_length = 0;
-  if (read_request(fd, &headers_buf, &body_buf, &content_length) != 0) {
-    if (request_count == 0) write_simple_response(fd, 400, "Bad Request");
+  if (read_request(conn, &headers_buf, &body_buf, &content_length) != 0) {
+    if (request_count == 0) write_simple_response(conn, 400, "Bad Request");
     arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
-    tya_http_close_socket(fd);
+    tya_http_conn_close(conn);
     return;
   }
 
   // Parse request line "METHOD PATH HTTP/1.1\r\n".
   char *line_end = memchr(headers_buf.buf, '\n', headers_buf.len);
   if (line_end == NULL) {
-    write_simple_response(fd, 400, "Bad Request");
+    write_simple_response(conn, 400, "Bad Request");
     arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
-    tya_http_close_socket(fd);
+    tya_http_conn_close(conn);
     return;
   }
   int rl_len = (int)(line_end - headers_buf.buf);
@@ -1032,11 +1072,11 @@ static void handle_connection(TyaHttpSocket fd, TyaValue routes) {
   int method_len = 0;
   while (method_len < rl_len && method[method_len] != ' ') method_len++;
   if (method_len == 0 || method_len == rl_len) {
-    write_simple_response(fd, 400, "Bad Request");
+    write_simple_response(conn, 400, "Bad Request");
     arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
-    tya_http_close_socket(fd);
+    tya_http_conn_close(conn);
     return;
   }
   const char *path_start = method + method_len + 1;
@@ -1065,11 +1105,11 @@ static void handle_connection(TyaHttpSocket fd, TyaValue routes) {
 
   // Iterate routes and find first match by (method, path).
   if (routes.kind != TYA_ARRAY || routes.array == NULL) {
-    write_simple_response(fd, 500, "Server misconfigured: routes missing");
+    write_simple_response(conn, 500, "Server misconfigured: routes missing");
     arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
-    tya_http_close_socket(fd);
+    tya_http_conn_close(conn);
     return;
   }
   TyaValue matched_handler = tya_nil();
@@ -1121,14 +1161,14 @@ static void handle_connection(TyaHttpSocket fd, TyaValue routes) {
       tya_dict_set(resp, tya_string("status"), tya_number(204));
       tya_dict_set(resp, tya_string("headers"), headers);
       tya_dict_set(resp, tya_string("body"), tya_string(""));
-      write_response(fd, resp, keep_alive);
+      write_response(conn, resp, keep_alive);
       free(method_cstr);
       free(path_cstr);
       arena_free(&arena);
       buf_free(&headers_buf);
       buf_free(&body_buf);
       if (keep_alive) continue;
-      tya_http_close_socket(fd);
+      tya_http_conn_close(conn);
       return;
     }
     free(allow);
@@ -1148,24 +1188,24 @@ static void handle_connection(TyaHttpSocket fd, TyaValue routes) {
                                         (const uint8_t *)body_buf.buf, body_buf.len,
                                         tya_dict(NULL, 0), keep_alive, &arena, &bad_request);
       if (bad_request) {
-        write_simple_response(fd, 400, "Bad Request");
+        write_simple_response(conn, 400, "Bad Request");
         arena_free(&arena);
         buf_free(&headers_buf);
         buf_free(&body_buf);
-        tya_http_close_socket(fd);
+        tya_http_conn_close(conn);
         return;
       }
       TyaValue resp = tya_call1(not_found, req);
-      if (resp.kind == TYA_DICT) write_response(fd, resp, keep_alive);
-      else write_simple_response(fd, 404, "Not Found");
+      if (resp.kind == TYA_DICT) write_response(conn, resp, keep_alive);
+      else write_simple_response(conn, 404, "Not Found");
     } else {
-      write_simple_response(fd, 404, "Not Found");
+      write_simple_response(conn, 404, "Not Found");
     }
     arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
     if (keep_alive) continue;
-    tya_http_close_socket(fd);
+    tya_http_conn_close(conn);
     return;
   }
 
@@ -1181,11 +1221,11 @@ static void handle_connection(TyaHttpSocket fd, TyaValue routes) {
                                     (const uint8_t *)body_buf.buf, body_buf.len,
                                     matched_params, keep_alive, &arena, &bad_request);
   if (bad_request) {
-    write_simple_response(fd, 400, "Bad Request");
+    write_simple_response(conn, 400, "Bad Request");
     arena_free(&arena);
     buf_free(&headers_buf);
     buf_free(&body_buf);
-    tya_http_close_socket(fd);
+    tya_http_conn_close(conn);
     return;
   }
   tya_dict_set(req, tya_string("route"), matched_route);
@@ -1214,18 +1254,18 @@ static void handle_connection(TyaHttpSocket fd, TyaValue routes) {
     tya_dict_set(resp, tya_string("body"), tya_string(""));
   }
   if (resp.kind != TYA_DICT) {
-    write_simple_response(fd, 500, "Handler returned non-dict");
+    write_simple_response(conn, 500, "Handler returned non-dict");
   } else {
-    write_response(fd, resp, keep_alive);
+    write_response(conn, resp, keep_alive);
   }
   arena_free(&arena);
   buf_free(&headers_buf);
   buf_free(&body_buf);
   if (keep_alive) continue;
-  tya_http_close_socket(fd);
+  tya_http_conn_close(conn);
   return;
   }
-  tya_http_close_socket(fd);
+  tya_http_conn_close(conn);
 }
 
 TyaValue tya_http_server_run(TyaValue routes, TyaValue port) {
@@ -1312,4 +1352,117 @@ TyaValue tya_http_server_run(TyaValue routes, TyaValue port) {
   }
   tya_http_close_socket(sock);
   return tya_nil();
+}
+
+TyaValue tya_http_server_run_tls(TyaValue routes, TyaValue port, TyaValue cert_file, TyaValue key_file, TyaValue options) {
+#ifndef TYA_ENABLE_OPENSSL
+  (void)routes; (void)port; (void)cert_file; (void)key_file; (void)options;
+  tya_panic(tya_string("http.tls: OpenSSL support is not enabled"));
+  return tya_nil();
+#else
+  tya_http_socket_init();
+  if (cert_file.kind != TYA_STRING || cert_file.string == NULL || key_file.kind != TYA_STRING || key_file.string == NULL) {
+    tya_panic(tya_string("http.tls: cert_file and key_file must be strings"));
+    return tya_nil();
+  }
+  int port_num = 0;
+  if (port.kind == TYA_NUMBER) port_num = (int)port.number;
+  if (port_num < 0 || port_num > 65535) {
+    tya_panic(tya_string("net/http: port out of range"));
+    return tya_nil();
+  }
+  const char *host = "0.0.0.0";
+  double timeout = 0.0;
+  if (options.kind == TYA_DICT || options.kind == TYA_OBJECT) {
+    TyaValue hv = tya_index(options, tya_string("host"));
+    if (hv.kind == TYA_STRING && hv.string != NULL) host = hv.string;
+    TyaValue tv = tya_index(options, tya_string("timeout"));
+    if (tv.kind == TYA_NUMBER && tv.number > 0) timeout = tv.number;
+  }
+#ifndef _WIN32
+  signal(SIGPIPE, SIG_IGN);
+#endif
+  SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
+  if (ctx == NULL) {
+    tya_panic(tya_string("http.tls: failed to create TLS context"));
+    return tya_nil();
+  }
+  if (SSL_CTX_use_certificate_file(ctx, cert_file.string, SSL_FILETYPE_PEM) != 1 ||
+      SSL_CTX_use_PrivateKey_file(ctx, key_file.string, SSL_FILETYPE_PEM) != 1 ||
+      SSL_CTX_check_private_key(ctx) != 1) {
+    SSL_CTX_free(ctx);
+    tya_panic(tya_string("http.tls: failed to load certificate or private key"));
+    return tya_nil();
+  }
+  TyaHttpSocket sock = tya_http_socket_open(AF_INET, SOCK_STREAM, 0);
+  if (sock == TYA_HTTP_INVALID_SOCKET) {
+    SSL_CTX_free(ctx);
+    tya_panic(tya_string("net/http: socket() failed"));
+    return tya_nil();
+  }
+  int one = 1;
+  setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *)&one, sizeof(one));
+  struct sockaddr_in addr;
+  memset(&addr, 0, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons((uint16_t)port_num);
+  if (inet_pton(AF_INET, host, &addr.sin_addr) != 1) {
+    tya_http_close_socket(sock);
+    SSL_CTX_free(ctx);
+    tya_panic(tya_string("http.tls: host must be an IPv4 address"));
+    return tya_nil();
+  }
+  if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    tya_http_close_socket(sock);
+    SSL_CTX_free(ctx);
+    tya_panic(tya_string("http.tls: bind() failed"));
+    return tya_nil();
+  }
+  if (listen(sock, 16) < 0) {
+    tya_http_close_socket(sock);
+    SSL_CTX_free(ctx);
+    tya_panic(tya_string("http.tls: listen() failed"));
+    return tya_nil();
+  }
+  socklen_t alen = sizeof(addr);
+  if (getsockname(sock, (struct sockaddr *)&addr, &alen) == 0) {
+    int actual = ntohs(addr.sin_port);
+    fprintf(stderr, "listening on %d\n", actual);
+    fflush(stderr);
+  }
+  for (;;) {
+    struct sockaddr_in caddr;
+    socklen_t clen = sizeof(caddr);
+    TyaHttpSocket c = accept(sock, (struct sockaddr *)&caddr, &clen);
+    if (c == TYA_HTTP_INVALID_SOCKET) {
+      if (tya_http_socket_interrupted()) continue;
+      break;
+    }
+    if (timeout > 0) {
+      struct timeval tv;
+      tv.tv_sec = (time_t)timeout;
+      tv.tv_usec = (long)((timeout - (double)tv.tv_sec) * 1000000.0);
+      setsockopt(c, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv));
+      setsockopt(c, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof(tv));
+    }
+    SSL *ssl = SSL_new(ctx);
+    if (ssl == NULL) {
+      tya_http_close_socket(c);
+      continue;
+    }
+    SSL_set_fd(ssl, (int)c);
+    if (SSL_accept(ssl) != 1) {
+      SSL_free(ssl);
+      tya_http_close_socket(c);
+      continue;
+    }
+    TyaHttpConn conn;
+    conn.fd = c;
+    conn.ssl = ssl;
+    handle_connection(&conn, routes);
+  }
+  tya_http_close_socket(sock);
+  SSL_CTX_free(ctx);
+  return tya_nil();
+#endif
 }

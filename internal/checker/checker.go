@@ -243,7 +243,7 @@ var internalBuiltinNames = []string{
 	"io_stdin", "io_stdout", "io_stderr", "io_open", "io_stream_read",
 	"io_stream_read_line", "io_stream_eof", "io_stream_write", "io_stream_flush",
 	"io_stream_close",
-	"socket_connect", "socket_server_listen", "socket_server_accept",
+	"socket_connect", "tls_connect", "socket_server_listen", "socket_server_accept",
 	"socket_read", "socket_read_line", "socket_write", "socket_close",
 	"socket_closed", "socket_local_address", "socket_remote_address",
 	"socket_server_close", "socket_server_local_address",
@@ -252,7 +252,7 @@ var internalBuiltinNames = []string{
 	"file_read_bytes", "file_write_bytes",
 	"binary_read_f32", "binary_read_f64", "binary_write_f32", "binary_write_f64",
 	// v0.58
-	"http_server_run",
+	"http_server_run", "http_server_run_tls",
 	// v0.24
 	"time_now", "time_sleep", "time_format", "time_parse", "time_since",
 	"random_seed", "random_int", "random_float",
@@ -339,6 +339,7 @@ var removedTopLevelPrimitiveBuiltins = map[string]string{
 	"io_stream_flush":                  "Writer.flush()",
 	"io_stream_close":                  "Reader.close() or Writer.close()",
 	"socket_connect":                   "Socket.connect(host, port, options)",
+	"tls_connect":                      "http.Client.get(https_url)",
 	"socket_server_listen":             "Server.listen(host, port, options)",
 	"socket_server_accept":             "server.accept()",
 	"socket_read":                      "socket.read(size)",

@@ -37,6 +37,10 @@
 #ifdef TYA_ENABLE_ZLIB
 #include <zlib.h>
 #endif
+#ifdef TYA_ENABLE_OPENSSL
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+#endif
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -255,6 +259,8 @@ struct TyaResource {
   bool socket_binary;
   bool socket_closed;
   double socket_timeout;
+  void *tls_ssl;
+  void *tls_ctx;
   bool mu_initialized;
   bool cv_initialized;
 };
@@ -527,6 +533,10 @@ static void tya_gc_free_one(TyaGcHeader *h) {
     }
     case TYA_GC_RESOURCE: {
       TyaResource *r = (TyaResource *)h;
+#ifdef TYA_ENABLE_OPENSSL
+      if (r->tls_ssl != NULL) SSL_free((SSL *)r->tls_ssl);
+      if (r->tls_ctx != NULL) SSL_CTX_free((SSL_CTX *)r->tls_ctx);
+#endif
       if (r->mu_initialized) pthread_mutex_destroy(&r->mu);
       if (r->cv_initialized) pthread_cond_destroy(&r->cv);
       free(r);
@@ -4937,6 +4947,34 @@ static TyaValue tya_sockaddr_value(struct sockaddr_storage *addr, socklen_t len)
   return tya_dict((TyaDictEntry[]){{"host", tya_string(strdup(host))}, {"port", tya_number((double)atoi(serv))}}, 2);
 }
 
+#ifdef TYA_ENABLE_OPENSSL
+static void tya_tls_raise(const char *op) {
+  unsigned long err = ERR_get_error();
+  char buf[256];
+  if (err != 0) {
+    char detail[160];
+    ERR_error_string_n(err, detail, sizeof(detail));
+    snprintf(buf, sizeof(buf), "%s: %s", op, detail);
+  } else {
+    snprintf(buf, sizeof(buf), "%s: TLS error", op);
+  }
+  tya_raise(tya_string(buf));
+}
+
+static bool tya_tls_bool_option(TyaValue options, const char *name) {
+  if (options.kind != TYA_DICT && options.kind != TYA_OBJECT) return false;
+  TyaValue value = tya_index(options, tya_string(name));
+  return value.kind == TYA_BOOL && value.boolean;
+}
+
+static const char *tya_tls_string_option(TyaValue options, const char *name) {
+  if (options.kind != TYA_DICT && options.kind != TYA_OBJECT) return NULL;
+  TyaValue value = tya_index(options, tya_string(name));
+  if (value.kind != TYA_STRING || value.string == NULL) return NULL;
+  return value.string;
+}
+#endif
+
 TyaValue tya_socket_connect(TyaValue host, TyaValue port, TyaValue options) {
   tya_socket_init();
   if (host.kind != TYA_STRING || host.string == NULL) {
@@ -4977,6 +5015,60 @@ TyaValue tya_socket_connect(TyaValue host, TyaValue port, TyaValue options) {
   double timeout = tya_socket_timeout_option(options);
   tya_socket_apply_timeout(fd, timeout);
   return tya_socket_value(fd, TYA_RES_SOCKET, tya_socket_binary_option(options), timeout);
+}
+
+TyaValue tya_tls_connect(TyaValue host, TyaValue port, TyaValue options) {
+#ifndef TYA_ENABLE_OPENSSL
+  (void)host; (void)port; (void)options;
+  tya_raise(tya_string("http.tls: OpenSSL support is not enabled"));
+  return tya_nil();
+#else
+  TyaValue socket = tya_socket_connect(host, port, options);
+  TyaResource *r = tya_resource_check(socket, TYA_RES_SOCKET, "http.tls.connect");
+  if (r == NULL) return tya_nil();
+  SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
+  if (ctx == NULL) {
+    tya_socket_close(socket);
+    tya_tls_raise("http.tls");
+    return tya_nil();
+  }
+  bool insecure = tya_tls_bool_option(options, "insecure_skip_verify");
+  if (insecure) {
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+  } else {
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+    const char *ca_file = tya_tls_string_option(options, "ca_file");
+    int ok = ca_file != NULL ? SSL_CTX_load_verify_locations(ctx, ca_file, NULL) : SSL_CTX_set_default_verify_paths(ctx);
+    if (ok != 1) {
+      SSL_CTX_free(ctx);
+      tya_socket_close(socket);
+      tya_tls_raise("http.tls");
+      return tya_nil();
+    }
+  }
+  SSL *ssl = SSL_new(ctx);
+  if (ssl == NULL) {
+    SSL_CTX_free(ctx);
+    tya_socket_close(socket);
+    tya_tls_raise("http.tls");
+    return tya_nil();
+  }
+  SSL_set_fd(ssl, (int)r->socket_fd);
+  if (host.kind == TYA_STRING && host.string != NULL) {
+    SSL_set_tlsext_host_name(ssl, host.string);
+    if (!insecure) SSL_set1_host(ssl, host.string);
+  }
+  if (SSL_connect(ssl) != 1) {
+    SSL_free(ssl);
+    SSL_CTX_free(ctx);
+    tya_socket_close(socket);
+    tya_tls_raise("http.tls");
+    return tya_nil();
+  }
+  r->tls_ssl = ssl;
+  r->tls_ctx = ctx;
+  return socket;
+#endif
 }
 
 TyaValue tya_socket_server_listen(TyaValue host, TyaValue port, TyaValue options) {
@@ -5048,7 +5140,12 @@ TyaValue tya_socket_read(TyaValue socket, TyaValue size_v) {
     tya_raise(tya_string("socket.read: out of memory"));
     return tya_nil();
   }
-    int n = recv(r->socket_fd, buf, (int)size, 0);
+  int n = 0;
+#ifdef TYA_ENABLE_OPENSSL
+  if (r->tls_ssl != NULL) n = SSL_read((SSL *)r->tls_ssl, buf, size);
+  else
+#endif
+  n = recv(r->socket_fd, buf, (int)size, 0);
   if (n < 0) {
     free(buf);
     tya_socket_raise_errno("socket.read");
@@ -5071,7 +5168,12 @@ TyaValue tya_socket_read_line(TyaValue socket) {
   }
   char ch;
   while (true) {
-    int n = recv(r->socket_fd, &ch, 1, 0);
+    int n = 0;
+#ifdef TYA_ENABLE_OPENSSL
+    if (r->tls_ssl != NULL) n = SSL_read((SSL *)r->tls_ssl, &ch, 1);
+    else
+#endif
+    n = recv(r->socket_fd, &ch, 1, 0);
     if (n == 0) break;
     if (n < 0) {
       free(buf);
@@ -5117,7 +5219,12 @@ TyaValue tya_socket_write(TyaValue socket, TyaValue value) {
   }
   size_t sent = 0;
   while (sent < len) {
-    int n = send(r->socket_fd, (const char *)(data + sent), (int)(len - sent), 0);
+    int n = 0;
+#ifdef TYA_ENABLE_OPENSSL
+    if (r->tls_ssl != NULL) n = SSL_write((SSL *)r->tls_ssl, data + sent, (int)(len - sent));
+    else
+#endif
+    n = send(r->socket_fd, (const char *)(data + sent), (int)(len - sent), 0);
     if (n < 0) {
       tya_socket_raise_errno("socket.write");
       return tya_nil();
@@ -5130,6 +5237,17 @@ TyaValue tya_socket_write(TyaValue socket, TyaValue value) {
 TyaValue tya_socket_close(TyaValue socket) {
   TyaResource *r = tya_resource_check(socket, TYA_RES_SOCKET, "socket.close");
   if (r == NULL || r->socket_closed) return tya_nil();
+#ifdef TYA_ENABLE_OPENSSL
+  if (r->tls_ssl != NULL) {
+    SSL_shutdown((SSL *)r->tls_ssl);
+    SSL_free((SSL *)r->tls_ssl);
+    r->tls_ssl = NULL;
+  }
+  if (r->tls_ctx != NULL) {
+    SSL_CTX_free((SSL_CTX *)r->tls_ctx);
+    r->tls_ctx = NULL;
+  }
+#endif
   tya_socket_close_handle(r->socket_fd);
   r->socket_fd = TYA_INVALID_SOCKET;
   r->socket_closed = true;
@@ -6080,6 +6198,8 @@ static TyaResource *tya_resource_new(TyaResourceSubkind sub) {
   r->socket_binary = false;
   r->socket_closed = false;
   r->socket_timeout = 0.0;
+  r->tls_ssl = NULL;
+  r->tls_ctx = NULL;
   r->mu_initialized = false;
   r->cv_initialized = false;
   return r;

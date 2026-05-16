@@ -1323,6 +1323,15 @@ supports `write`, `write_line`, `flush`, and `close`. `Socket` supports
 dispatch, and server execution. `net/http/Client` defines `get`, `post`, and
 generic `request`.
 
+`net/http/Client` accepts both `http://` and `https://` URLs. HTTPS uses the
+compiled runtime's OpenSSL backend. Certificate verification is enabled by
+default; request options may set `ca_file` to a PEM CA bundle or
+`insecure_skip_verify: true` to disable verification explicitly. TLS failures
+raise `http.tls:` or `http.request:` errors. `net/http/Server.run_tls(port,
+cert_file, key_file, options)` serves HTTPS using PEM certificate and private
+key files; options may include `host` and `timeout`. Building TLS-enabled
+programs requires OpenSSL headers and libraries.
+
 Compiled `net/http/Server` handlers receive request dictionaries with
 `cookies`, a dictionary parsed from the incoming `Cookie` header. Missing
 cookies produce `{}`. Malformed pairs without `=` are ignored, whitespace

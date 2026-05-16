@@ -275,6 +275,12 @@ class Server
   run = port ->
     http_server_run(self.routes, port)
 
+  # run_tls starts an HTTPS server with a PEM certificate and private key.
+  run_tls = port, cert_file, key_file, options ->
+    if options == nil
+      options = {}
+    http_server_run_tls(self.routes, port, cert_file, key_file, options)
+
   # Server.route_options provides the net/http/Server standard library operation.
   static route_options = options ->
     opts = { trailing_slash: "strict", name: nil }

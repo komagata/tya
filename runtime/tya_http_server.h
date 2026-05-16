@@ -23,5 +23,6 @@
 // When port == 0, the chosen port is printed to stderr as
 // "listening on <port>\n" so test harnesses can latch onto it.
 TyaValue tya_http_server_run(TyaValue routes, TyaValue port);
+TyaValue tya_http_server_run_tls(TyaValue routes, TyaValue port, TyaValue cert_file, TyaValue key_file, TyaValue options);
 
 #endif

@@ -1190,6 +1190,8 @@ drop_sequence              lazy drop sequence
 
 `net/http/Server` は HTTP method ごとの route registration (`get`, `post`, `put`, `delete`, `patch`, `options`, `head`, `any`)、middleware (`use`, `group`)、error と not-found handlers、static-file serving、redirect、route dispatch、server execution を定義する。`net/http/Client` は `get`、`post`、generic `request` を定義する。
 
+`net/http/Client` は `http://` と `https://` URL を受け付ける。HTTPS は compiled runtime の OpenSSL backend を使う。certificate verification は default で有効で、request options は PEM CA bundle を指定する `ca_file`、または明示的に verification を無効化する `insecure_skip_verify: true` を受け付ける。TLS failure は `http.tls:` または `http.request:` error として raise される。`net/http/Server.run_tls(port, cert_file, key_file, options)` は PEM certificate と private key file を使って HTTPS を serve する。options は `host` と `timeout` を受け付ける。TLS-enabled program の build には OpenSSL headers と libraries が必要になる。
+
 compiled `net/http/Server` handler が受け取る request dictionary は、incoming `Cookie` header から parse された `cookies` dictionary を持つ。cookie がない場合は `{}` になる。`=` のない malformed pair は無視され、name と value 周辺の whitespace は trim され、同じ name が複数回出た場合は最後の value が残る。
 handler は `form` と `files` dictionary も受け取る。non-multipart request ではどちらも空になる。`multipart/form-data` request では、`form` は field name から最後の string value への mapping、`files` は field name から最後の uploaded file metadata dictionary への mapping になる。file metadata は `filename`、`content_type`、bytes の `body`、`size` を含む。元の raw request body は `body` に残る。malformed multipart body は handler 実行前に `400 Bad Request` を返す。
 

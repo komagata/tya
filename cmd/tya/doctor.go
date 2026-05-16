@@ -39,8 +39,18 @@ func doctorCommand(args []string) error {
 	}
 	if path, err := exec.LookPath("pkg-config"); err == nil {
 		fmt.Fprintf(os.Stdout, "pkg-config: %s\n", path)
+		if err := exec.Command("pkg-config", "--exists", "openssl").Run(); err == nil {
+			fmt.Fprintln(os.Stdout, "OpenSSL: available")
+		} else {
+			fmt.Fprintln(os.Stdout, "OpenSSL: not found by pkg-config")
+		}
 	} else {
 		fmt.Fprintln(os.Stdout, "pkg-config: not found")
+		if shouldEnableOpenSSL() {
+			fmt.Fprintln(os.Stdout, "OpenSSL: available")
+		} else {
+			fmt.Fprintln(os.Stdout, "OpenSSL: not found")
+		}
 	}
 	plan, err := pkg.CollectNative(root)
 	if err != nil {

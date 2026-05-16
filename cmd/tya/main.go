@@ -568,6 +568,9 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 	if shouldEnableZlib() {
 		args = append(args, "-DTYA_ENABLE_ZLIB", "-lz")
 	}
+	if shouldEnableOpenSSL() {
+		args = append(args, "-DTYA_ENABLE_OPENSSL", "-lssl", "-lcrypto")
+	}
 	if nativePlan != nil {
 		args = append(args, nativePlan.LDFlags...)
 	}
@@ -613,6 +616,31 @@ func shouldEnableZlib() bool {
 		"/usr/local/include/zlib.h",
 		"/opt/homebrew/include/zlib.h",
 		"/home/linuxbrew/.linuxbrew/include/zlib.h",
+	} {
+		if _, err := os.Stat(path); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
+func shouldEnableOpenSSL() bool {
+	if os.Getenv("TYA_DISABLE_OPENSSL") != "" {
+		return false
+	}
+	if os.Getenv("TYA_ENABLE_OPENSSL") != "" {
+		return true
+	}
+	if _, err := exec.LookPath("pkg-config"); err == nil {
+		if err := exec.Command("pkg-config", "--exists", "openssl").Run(); err == nil {
+			return true
+		}
+	}
+	for _, path := range []string{
+		"/usr/include/openssl/ssl.h",
+		"/usr/local/include/openssl/ssl.h",
+		"/opt/homebrew/include/openssl/ssl.h",
+		"/home/linuxbrew/.linuxbrew/include/openssl/ssl.h",
 	} {
 		if _, err := os.Stat(path); err == nil {
 			return true

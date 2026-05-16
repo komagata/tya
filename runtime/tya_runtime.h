@@ -353,6 +353,7 @@ TyaValue tya_io_stream_write(TyaValue stream, TyaValue value);
 TyaValue tya_io_stream_flush(TyaValue stream);
 TyaValue tya_io_stream_close(TyaValue stream);
 TyaValue tya_socket_connect(TyaValue host, TyaValue port, TyaValue options);
+TyaValue tya_tls_connect(TyaValue host, TyaValue port, TyaValue options);
 TyaValue tya_socket_server_listen(TyaValue host, TyaValue port, TyaValue options);
 TyaValue tya_socket_server_accept(TyaValue server);
 TyaValue tya_socket_read(TyaValue socket, TyaValue size);
@@ -396,5 +397,6 @@ bool tya_truthy(TyaValue value);
 // v0.58 net/http server. Defined in runtime/tya_http_server.c.
 // `routes` is an array of dicts {method, path, handler}.
 TyaValue tya_http_server_run(TyaValue routes, TyaValue port);
+TyaValue tya_http_server_run_tls(TyaValue routes, TyaValue port, TyaValue cert_file, TyaValue key_file, TyaValue options);
 
 #endif
