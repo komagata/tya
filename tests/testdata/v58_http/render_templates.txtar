@@ -1,0 +1,77 @@
+# net/http Server renders template responses from files, strings, and embedded bytes.
+[!exec:curl] skip 'curl not on PATH'
+[!exec:sh] skip 'sh not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
+exec sh -c '(cd $WORK && ./server) & pid=$!; sleep 1; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/file > '$WORK'/file.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/source > '$WORK'/source.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/html > '$WORK'/html.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/custom > '$WORK'/custom.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/broken > '$WORK'/broken.out; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+grep 'HTTP/1.1 200 OK' $WORK/file.out
+grep 'Content-Type: text/html; charset=utf-8' $WORK/file.out
+grep 'File Tya' $WORK/file.out
+grep 'Hello, Src' $WORK/source.out
+grep 'HTTP/1.1 201 Created' $WORK/html.out
+grep 'X-View: embedded' $WORK/html.out
+grep 'Escaped &lt;tag&gt;' $WORK/html.out
+grep 'HTTP/1.1 202' $WORK/custom.out
+grep 'Content-Type: text/custom' $WORK/custom.out
+grep 'X-Extra: 1' $WORK/custom.out
+grep 'plain Tya' $WORK/custom.out
+grep 'HTTP/1.1 599' $WORK/broken.out
+grep 'render-error' $WORK/broken.out
+
+-- view.html --
+File {{ name }}
+
+-- embedded.html --
+Escaped {{ value }}
+
+-- main.tya --
+import net/http as http
+
+embed "embedded.html" as embedded_view
+
+app = http.Server()
+
+class App
+  static file = _req ->
+    return app.render("view.html", { name: "Tya" }, nil)
+
+  static source = _req ->
+    ob = chr(123) + chr(123)
+    cb = chr(125) + chr(125)
+    return app.render("Hello, " + ob + " name " + cb, { name: "Src" }, nil)
+
+  static html = _req ->
+    headers = {}
+    headers["X-View"] = "embedded"
+    return app.render_html(embedded_view, { value: "<tag>" }, {
+      status: 201,
+      headers: headers
+    })
+
+  static custom = _req ->
+    headers = {}
+    headers["X-Extra"] = "1"
+    ob = chr(123) + chr(123)
+    cb = chr(125) + chr(125)
+    return app.render("plain " + ob + " name " + cb, { name: "Tya" }, {
+      status: 202,
+      content_type: "text/custom",
+      headers: headers
+    })
+
+  static broken = _req ->
+    ob = chr(123) + chr(123)
+    cb = chr(125) + chr(125)
+    return app.render(ob + " if missing " + cb + "oops", {}, nil)
+
+  static error_handler = _err, _req ->
+    return { status: 599, body: "render-error" }
+
+app.get("/file", App.file)
+app.get("/source", App.source)
+app.get("/html", App.html)
+app.get("/custom", App.custom)
+app.get("/broken", App.broken)
+app.error(App.error_handler)
+app.run(18097)

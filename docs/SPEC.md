@@ -1343,6 +1343,17 @@ dictionaries may use `header_values` for repeated response headers; each array
 entry is emitted as a separate header line while ordinary `headers` behavior is
 unchanged.
 
+`Server.render(template, data, options)` and
+`Server.render_html(template, data, options)` return response dictionaries with
+rendered HTML bodies. `options` may be `nil`; the default response status is
+`200` and the default `Content-Type` is `text/html; charset=utf-8`. Supported
+options are `status`, `headers`, `content_type`, and `template_options`.
+String templates that name an existing file are rendered with
+`template.Template.render_file`; other strings are rendered as template source.
+Embedded bytes are decoded as UTF-8 text before rendering. `render_html` forces
+HTML escaping even when `template_options` is present. Extra headers are merged
+after defaults, so callers may override `Content-Type`.
+
 Response dictionaries may set `chunked: true` to send an HTTP/1.1 chunked
 response. In that mode the runtime writes `Transfer-Encoding: chunked`, omits
 `Content-Length`, and writes each string or bytes item from an array body as one

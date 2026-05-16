@@ -1,3 +1,7 @@
+import bytes as bytes
+import file as file
+import template as template
+
 # Server is a minimal Sinatra-style HTTP/1.1 server.
 #
 # Routes are registered with .get / .post / .put / .delete; each
@@ -114,6 +118,40 @@ class Server
     headers = {}
     headers["Location"] = path
     return { status: status, headers: headers, body: "" }
+
+  # render returns an HTML response by rendering a template file or source string.
+  render = tmpl, data, options ->
+    return self.render_with_mode(tmpl, data, options, false)
+
+  # render_html returns an HTML response and forces HTML escaping.
+  render_html = tmpl, data, options ->
+    return self.render_with_mode(tmpl, data, options, true)
+
+  # render_with_mode builds an HTML response from a template source.
+  render_with_mode = tmpl, data, options, html ->
+    if options == nil
+      options = {}
+    headers = {}
+    headers["Content-Type"] = options.get("content_type", "text/html; charset=utf-8")
+    extra = options.get("headers", nil)
+    if extra != nil
+      keys = extra.keys()
+      i = 0
+      while i < keys.len()
+        headers[keys[i]] = extra[keys[i]]
+        i = i + 1
+    template_options = options.get("template_options", {})
+    if html
+      template_options["escape"] = "html"
+    source = tmpl
+    if tmpl.class != String
+      source = bytes.Bytes.text(tmpl)
+    body = ""
+    if tmpl.class == String and file.File.exists?(tmpl)
+      body = template.Template.render_file(tmpl, data, template_options)
+    else
+      body = template.Template.render(source, data, template_options)
+    return { status: options.get("status", 200), headers: headers, body: body }
 
   # cookie returns a validated Set-Cookie header value.
   # Options may include path, domain, max_age, expires, secure, http_only, and same_site.
