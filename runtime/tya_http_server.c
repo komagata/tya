@@ -60,6 +60,7 @@ TyaValue tya_http_server_run(TyaValue routes, TyaValue port) {
 #define TYA_HTTP_MAX_HEADER_BYTES (16 * 1024)
 #define TYA_HTTP_MAX_BODY_BYTES (10 * 1024 * 1024)
 #define TYA_HTTP_READ_CHUNK 4096
+#define TYA_HTTP_MAX_REQUESTS_PER_CONNECTION 100
 
 static void handle_connection(int fd, TyaValue routes);
 
@@ -329,6 +330,45 @@ static void parse_query(const char *qs, TyaValue query) {
   }
 }
 
+static int request_keep_alive(const char *version, int version_len, const char *headers_text, int headers_len) {
+  int http11 = version_len == 8 && memcmp(version, "HTTP/1.1", 8) == 0;
+  int keep_alive = http11;
+  const char *cursor = headers_text;
+  const char *limit = headers_text + headers_len;
+  int first_line = 1;
+  while (cursor < limit) {
+    const char *line_end = memchr(cursor, '\n', limit - cursor);
+    if (line_end == NULL) line_end = limit;
+    int line_len = (int)(line_end - cursor);
+    while (line_len > 0 && cursor[line_len - 1] == '\r') line_len--;
+    if (first_line) {
+      first_line = 0;
+    } else if (line_len > 0) {
+      const char *colon = memchr(cursor, ':', line_len);
+      if (colon != NULL) {
+        int name_len = (int)(colon - cursor);
+        char name[64];
+        int n = name_len < (int)sizeof(name) - 1 ? name_len : (int)sizeof(name) - 1;
+        memcpy(name, cursor, n);
+        name[n] = '\0';
+        lowercase_inplace(name);
+        if (strcmp(name, "connection") == 0) {
+          char *value = dup_bytes(colon + 1, line_len - name_len - 1);
+          if (value != NULL) {
+            lowercase_inplace(value);
+            char *trimmed = trim_ws(value);
+            if (strstr(trimmed, "close") != NULL) keep_alive = 0;
+            if (strstr(trimmed, "keep-alive") != NULL) keep_alive = 1;
+          }
+        }
+      }
+    }
+    if (line_end == limit) break;
+    cursor = line_end + 1;
+  }
+  return keep_alive;
+}
+
 static void parse_cookie_header(const char *header, TyaValue cookies) {
   if (header == NULL || *header == '\0') return;
   char *copy = dup_bytes(header, (int)strlen(header));
@@ -569,7 +609,7 @@ static TyaValue build_request_dict(const char *method, int method_len,
                                    const char *query_str, int query_len,
                                    const char *headers_text, int headers_len,
                                    const uint8_t *body, int body_len,
-                                   TyaValue params, int *bad_request) {
+                                   TyaValue params, int keep_alive, int *bad_request) {
   TyaValue req = tya_dict(NULL, 0);
   {
     char *m = dup_bytes(method, method_len);
@@ -586,6 +626,7 @@ static TyaValue build_request_dict(const char *method, int method_len,
   }
   tya_dict_set(req, tya_string("params"), params);
   tya_dict_set(req, tya_string("path_params"), params);
+  tya_dict_set(req, tya_string("keep_alive"), tya_bool(keep_alive));
 
   TyaValue query = tya_dict(NULL, 0);
   if (query_len > 0) {
@@ -730,7 +771,7 @@ static int write_chunked_body(int fd, TyaValue body) {
 }
 
 // write_response serialises a handler's response dict over fd.
-static void write_response(int fd, TyaValue resp) {
+static void write_response(int fd, TyaValue resp, int keep_alive) {
   int status = 200;
   TyaValue status_v = tya_dict_get(resp, tya_string("status"), tya_nil(), true);
   if (status_v.kind == TYA_NUMBER) status = (int)status_v.number;
@@ -767,6 +808,7 @@ static void write_response(int fd, TyaValue resp) {
       memcpy(lname, e.key, klen);
       lname[klen] = '\0';
       lowercase_inplace(lname);
+      if (strcmp(lname, "connection") == 0) continue;
       if (chunked && strcmp(lname, "content-length") == 0) continue;
       if (chunked && strcmp(lname, "transfer-encoding") == 0) continue;
       if (strcmp(lname, "content-type") == 0) has_content_type = 1;
@@ -805,8 +847,8 @@ static void write_response(int fd, TyaValue resp) {
     write_all(fd, clbuf, cln);
   }
 
-  const char *connection_close = "Connection: close\r\n\r\n";
-  write_all(fd, connection_close, (int)strlen(connection_close));
+  const char *connection_header = keep_alive ? "Connection: keep-alive\r\n\r\n" : "Connection: close\r\n\r\n";
+  write_all(fd, connection_header, (int)strlen(connection_header));
 
   if (chunked) {
     write_chunked_body(fd, body_v);
@@ -821,7 +863,7 @@ static void write_simple_response(int fd, int status, const char *body) {
   TyaValue resp = tya_dict(NULL, 0);
   tya_dict_set(resp, tya_string("status"), tya_number(status));
   tya_dict_set(resp, tya_string("body"), tya_string(body == NULL ? status_text(status) : body));
-  write_response(fd, resp);
+  write_response(fd, resp, 0);
 }
 
 static const char *static_content_type_for_path(const char *path) {
@@ -883,13 +925,14 @@ static TyaValue build_static_response(TyaValue route, TyaValue req) {
 // handle_connection reads one HTTP/1.1 request, dispatches it to
 // the matching route, and writes the response. Closes fd on exit.
 static void handle_connection(int fd, TyaValue routes) {
+  for (int request_count = 0; request_count < TYA_HTTP_MAX_REQUESTS_PER_CONNECTION; request_count++) {
   byte_buffer headers_buf;
   byte_buffer body_buf;
   buf_init(&headers_buf);
   buf_init(&body_buf);
   int content_length = 0;
   if (read_request(fd, &headers_buf, &body_buf, &content_length) != 0) {
-    write_simple_response(fd, 400, "Bad Request");
+    if (request_count == 0) write_simple_response(fd, 400, "Bad Request");
     buf_free(&headers_buf);
     buf_free(&body_buf);
     close(fd);
@@ -923,6 +966,14 @@ static void handle_connection(int fd, TyaValue routes) {
   int rem = rl_len - method_len - 1;
   int path_len = 0;
   while (path_len < rem && path_start[path_len] != ' ') path_len++;
+  const char *version = path_start + path_len;
+  int version_len = 0;
+  if (path_len < rem && *version == ' ') {
+    version++;
+    version_len = rem - path_len - 1;
+  }
+  int keep_alive = request_keep_alive(version, version_len, (const char *)headers_buf.buf, headers_buf.len);
+  if (request_count + 1 >= TYA_HTTP_MAX_REQUESTS_PER_CONNECTION) keep_alive = 0;
 
   // Split path and query.
   const char *query_str = NULL;
@@ -992,11 +1043,12 @@ static void handle_connection(int fd, TyaValue routes) {
       tya_dict_set(resp, tya_string("status"), tya_number(204));
       tya_dict_set(resp, tya_string("headers"), headers);
       tya_dict_set(resp, tya_string("body"), tya_string(""));
-      write_response(fd, resp);
+      write_response(fd, resp, keep_alive);
       free(method_cstr);
       free(path_cstr);
       buf_free(&headers_buf);
       buf_free(&body_buf);
+      if (keep_alive) continue;
       close(fd);
       return;
     }
@@ -1015,7 +1067,7 @@ static void handle_connection(int fd, TyaValue routes) {
                                         query_str, query_len,
                                         (const char *)(headers_buf.buf), headers_buf.len,
                                         (const uint8_t *)body_buf.buf, body_buf.len,
-                                        tya_dict(NULL, 0), &bad_request);
+                                        tya_dict(NULL, 0), keep_alive, &bad_request);
       if (bad_request) {
         write_simple_response(fd, 400, "Bad Request");
         buf_free(&headers_buf);
@@ -1024,13 +1076,14 @@ static void handle_connection(int fd, TyaValue routes) {
         return;
       }
       TyaValue resp = tya_call1(not_found, req);
-      if (resp.kind == TYA_DICT) write_response(fd, resp);
+      if (resp.kind == TYA_DICT) write_response(fd, resp, keep_alive);
       else write_simple_response(fd, 404, "Not Found");
     } else {
       write_simple_response(fd, 404, "Not Found");
     }
     buf_free(&headers_buf);
     buf_free(&body_buf);
+    if (keep_alive) continue;
     close(fd);
     return;
   }
@@ -1045,7 +1098,7 @@ static void handle_connection(int fd, TyaValue routes) {
                                     query_str, query_len,
                                     headers_text, headers_text_len,
                                     (const uint8_t *)body_buf.buf, body_buf.len,
-                                    matched_params, &bad_request);
+                                    matched_params, keep_alive, &bad_request);
   if (bad_request) {
     write_simple_response(fd, 400, "Bad Request");
     buf_free(&headers_buf);
@@ -1081,10 +1134,14 @@ static void handle_connection(int fd, TyaValue routes) {
   if (resp.kind != TYA_DICT) {
     write_simple_response(fd, 500, "Handler returned non-dict");
   } else {
-    write_response(fd, resp);
+    write_response(fd, resp, keep_alive);
   }
   buf_free(&headers_buf);
   buf_free(&body_buf);
+  if (keep_alive) continue;
+  close(fd);
+  return;
+  }
   close(fd);
 }
 

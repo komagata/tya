@@ -1,0 +1,71 @@
+# net/http Server handles multiple sequential HTTP/1.1 requests on one
+# TCP connection and honors Connection: close.
+[!exec:python3] skip 'python3 not on PATH'
+[!exec:sh] skip 'sh not on PATH'
+cd $REPO
+
+exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
+exec sh -c '$WORK/server & pid=$!; sleep 1; python3 $WORK/client.py; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+stdout 'first=/one:true'
+stdout 'second=/two:true'
+stdout 'first-conn=keep-alive'
+stdout 'second-conn=keep-alive'
+stdout 'close=/close:false'
+stdout 'close-conn=close'
+
+-- main.tya --
+import net/http as http
+
+app = http.Server()
+
+class App
+  static show = req ->
+    return { status: 200, body: req["path"] + ":" + req["keep_alive"].to_s() }
+
+app.get("/one", App.show)
+app.get("/two", App.show)
+app.get("/close", App.show)
+app.run(18095)
+
+-- client.py --
+import socket
+
+def read_response(sock):
+    data = b""
+    while b"\r\n\r\n" not in data:
+        chunk = sock.recv(4096)
+        if not chunk:
+            raise RuntimeError("closed before headers")
+        data += chunk
+    head, rest = data.split(b"\r\n\r\n", 1)
+    headers = {}
+    for line in head.split(b"\r\n")[1:]:
+        name, value = line.decode().split(":", 1)
+        headers[name.lower()] = value.strip().lower()
+    length = int(headers.get("content-length", "0"))
+    body = rest
+    while len(body) < length:
+        body += sock.recv(4096)
+    return headers, body[:length].decode()
+
+s = socket.create_connection(("127.0.0.1", 18095), timeout=5)
+s.sendall(b"GET /one HTTP/1.1\r\nHost: localhost\r\n\r\n")
+h1, b1 = read_response(s)
+s.sendall(b"GET /two HTTP/1.1\r\nHost: localhost\r\n\r\n")
+h2, b2 = read_response(s)
+s.close()
+
+s = socket.create_connection(("127.0.0.1", 18095), timeout=5)
+s.sendall(b"GET /close HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n")
+h3, b3 = read_response(s)
+tail = s.recv(1)
+s.close()
+if tail != b"":
+    raise RuntimeError("connection stayed open after close response")
+
+print("first=" + b1)
+print("second=" + b2)
+print("first-conn=" + h1["connection"])
+print("second-conn=" + h2["connection"])
+print("close=" + b3)
+print("close-conn=" + h3["connection"])

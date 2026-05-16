@@ -1197,6 +1197,8 @@ handler は `form` と `files` dictionary も受け取る。non-multipart reques
 
 response dictionary は `chunked: true` によって HTTP/1.1 chunked response を送れる。この mode では runtime が `Transfer-Encoding: chunked` を書き、`Content-Length` を省略し、array body の各 string または bytes item を 1 chunk として書く。channel body は string または bytes chunk を yield でき、channel close で stream を閉じる。空 chunk は final terminating chunk を除いて skip される。non-chunked response は通常の `Content-Length` 動作を保つ。
 
+HTTP/1.1 server connection は request に `Connection: close` がない限り keep-alive になる。HTTP/1.0 connection は request に `Connection: keep-alive` がない限り close になる。request dictionary はその request の判定を boolean の `keep_alive` として公開する。response は `Connection: keep-alive` または `Connection: close` を含み、各 accepted connection は保守的な最大 request 数で制限される。
+
 `serialization/Serializer` は Tya values を data values、JSON、TOML と相互変換する。`Serializable` を実装する class は `to_data()` を公開する。
 
 ## 外部パッケージ

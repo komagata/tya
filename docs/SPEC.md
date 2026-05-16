@@ -1351,6 +1351,13 @@ when the channel closes. Empty chunks are skipped except for the final
 terminating chunk. Non-chunked responses keep the normal `Content-Length`
 behavior.
 
+HTTP/1.1 server connections default to keep-alive unless the request contains
+`Connection: close`. HTTP/1.0 connections default to close unless the request
+contains `Connection: keep-alive`. Request dictionaries expose
+`keep_alive` as the boolean decision for that request. Responses include
+`Connection: keep-alive` or `Connection: close`, and each accepted connection is
+limited to a conservative maximum number of requests.
+
 `serialization/Serializer` converts Tya values to and from data values, JSON,
 and TOML. Classes that implement `Serializable` expose `to_data()`.
 
