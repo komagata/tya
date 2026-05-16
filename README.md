@@ -143,7 +143,7 @@ Setup recipes ship in [`editors/`](./editors):
 
 VS Code extension:
 
-Install `komagata.tya` from the Visual Studio Marketplace or Open VSX.
+Install Tya from the Visual Studio Marketplace or Open VSX.
 For a local package build:
 
 ```sh
@@ -151,7 +151,7 @@ cd editors/vscode
 npm install
 npm run compile
 npx vsce package
-code --install-extension tya-0.65.0.vsix
+code --install-extension tya-0.65.1.vsix
 ```
 
 ## Example

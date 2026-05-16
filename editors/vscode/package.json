@@ -1,9 +1,9 @@
 {
   "name": "tya",
-  "displayName": "tya",
+  "displayName": "Tya",
   "description": "Language support for the tya programming language (compiler + LSP).",
   "publisher": "komagata",
-  "version": "0.65.0",
+  "version": "0.65.1",
   "icon": "icon.png",
   "license": "UNLICENSED",
   "repository": {
