@@ -239,7 +239,7 @@ Class files may be loaded explicitly as part of a directory package or
 implicitly as same-directory siblings of an entry script. A script entry sees
 PascalCase class files in its own directory without import.
 
-## Canonical Syntax
+## Canonical Syntax {#canonical-syntax}
 
 Tya has a canonical syntax: every well-formed program has one source
 representation. `tya format` is therefore part of the language surface, not an
@@ -985,7 +985,7 @@ the build.
 WASM build targets are available where supported. Native packages are rejected
 for unsupported WASM targets. `tya run` remains native-only.
 
-## Cross Compilation
+## Cross Compilation {#cross-compilation}
 
 Cross-compilation is selected with `--target` on `tya build`. The native target
 is the default and uses the Tya-managed Zig toolchain as `zig cc`.
@@ -1018,7 +1018,7 @@ stdout-oriented smoke programs. Browser builds also reject filesystem and
 process-oriented imports. `tya run` is native-only and does not execute
 WebAssembly artifacts.
 
-## Built-In Tools
+## Built-In Tools {#builtin-tools}
 
 The `tya` binary contains the compiler, formatter, language server, test
 runner, linter, documentation generator, package manager, project scaffolder,

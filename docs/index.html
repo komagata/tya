@@ -241,6 +241,13 @@ render_with_liquid: false
                 font-weight: 700;
             }
 
+            .command-list p {
+                margin: 0;
+                color: var(--muted);
+                font-size: 14px;
+                line-height: 1.55;
+            }
+
             .command-list pre,
             .tab-panel pre {
                 border: 1px solid var(--line);
@@ -394,12 +401,8 @@ render_with_liquid: false
 
             .matrix {
                 display: grid;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns: repeat(3, minmax(0, 1fr));
                 gap: 12px;
-            }
-
-            .matrix .tile:last-child:nth-child(odd) {
-                grid-column: span 2;
             }
 
             .tile {
@@ -413,6 +416,18 @@ render_with_liquid: false
                 margin: 0 0 8px;
                 font-size: 16px;
                 line-height: 1.3;
+            }
+
+            .tile h3 a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+            .tile h3 a:hover,
+            .tile h3 a:focus {
+                color: var(--green);
+                text-decoration: underline;
+                text-underline-offset: 3px;
             }
 
             .tile p {
@@ -575,10 +590,6 @@ render_with_liquid: false
                     grid-template-columns: 1fr;
                 }
 
-                .matrix .tile:last-child:nth-child(odd) {
-                    grid-column: auto;
-                }
-
                 .flow li {
                     min-height: auto;
                 }
@@ -605,7 +616,7 @@ render_with_liquid: false
                 <nav class="nav" aria-label="Page sections">
                     <a href="#overview">Overview</a>
                     <a href="#install">Install</a>
-                    <a href="#quick-run">Quick run</a>
+                    <a href="#toolchain">Toolchain</a>
                     <a href="#docs">Docs</a>
                 </nav>
                 <nav class="nav nav-external" aria-label="External links">
@@ -636,28 +647,21 @@ render_with_liquid: false
 
                         <div class="matrix">
                             <article class="tile">
-                                <h3>Canonical syntax</h3>
+                                <h3><a href="/spec/#canonical-syntax">Canonical syntax</a></h3>
                                 <p>
-                                    Every program has exactly one source representation.
+                                    Every program has exactly one indentation-based source representation (a lossless syntax tree). Programmers do not have to choose between competing ways to write the same code.
                                 </p>
                             </article>
                             <article class="tile">
-                                <h3>Compiles to C</h3>
+                                <h3><a href="/spec/#cross-compilation">Easy-to-ship executables</a></h3>
                                 <p>
-                                    Small, portable runtime with a precise mark-and-sweep GC.
-                                    No virtual machine, no embedded interpreter — just a single binary you ship.
+                                    Tya goes through C, so cross-compilation is straightforward and apps can ship as one runtime-included binary. No VM or external interpreter required.
                                 </p>
                             </article>
                             <article class="tile">
-                                <h3>All-in-one toolchain</h3>
+                                <h3><a href="/spec/#builtin-tools">All-in-one toolchain</a></h3>
                                 <p>
                                     The <code>tya</code> binary holds the compiler, formatter, checker, test runner, and package manager.
-                                </p>
-                            </article>
-                            <article class="tile">
-                                <h3>Kind diagnostics</h3>
-                                <p>
-                                    Every error has a stable code (<code>TYA-Exxxx</code>), a banner with the source snippet, an actionable hint, and a linked explanation. JSON output for CI and editors.
                                 </p>
                             </article>
                         </div>
@@ -743,19 +747,37 @@ greet = user -&gt; <span class="str">"Hello, </span>{user[<span class="str">"nam
                         </div>
                     </section>
 
-                    <section class="section section-grid" id="quick-run">
+                    <section class="section section-grid" id="toolchain">
                         <div class="section-title">
-                            <h2>Quick run</h2>
+                            <h2>Toolchain</h2>
                         </div>
                         <ul class="command-list">
                             <li>
-                                <span>Build and run</span>
-                                <pre><code>tya run examples/hello.tya</code></pre>
+                                <span>Run immediately: tya run</span>
+                                <p>Compile and run a source file in one step. Use it for prototypes and quick local checks.</p>
+                                <pre><code>tya run hello.tya</code></pre>
                             </li>
                             <li>
-                                <span>Build an executable</span>
-                                <pre><code>tya build examples/hello.tya -o hello
+                                <span>Package for distribution: tya build</span>
+                                <p>Create an executable. The resulting binary can run without the Tya command.</p>
+                                <pre><code>tya build hello.tya -o hello
 ./hello</code></pre>
+                            </li>
+                            <li>
+                                <span>Run tests: tya test</span>
+                                <p>Run the project test suite. The test runner is included in the same binary.</p>
+                                <pre><code>tya test</code></pre>
+                            </li>
+                            <li>
+                                <span>Find problems: tya lint</span>
+                                <p>Detect unused variables and discouraged patterns before running or in CI.</p>
+                                <pre><code>tya lint src</code></pre>
+                            </li>
+                            <li>
+                                <span>Call project tasks: tya task</span>
+                                <p>List tasks declared by the project and run them from the same command.</p>
+                                <pre><code>tya task
+tya task run</code></pre>
                             </li>
                         </ul>
                     </section>
