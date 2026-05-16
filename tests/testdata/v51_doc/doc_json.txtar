@@ -1,0 +1,28 @@
+# `tya doc --json` emits a stable machine-readable report and follows
+# re-exports when an explicit package surface imports another file.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+mkdir src
+cp api.tya src/api.tya
+cp helper.tya src/helper.tya
+
+exec $WORK/tya doc --json src/api.tya
+stdout '"version": "1"'
+stdout '"name": "helper"'
+stdout '"kind": "function"'
+stdout '"signature": "helper\(\)"'
+stdout '"raw_doc": "Helper docs."'
+stdout '"doc": "Helper docs."'
+stdout '"path": "src/helper.tya"'
+stdout '"reexported_from": "src/api.tya"'
+stdout '"diagnostics": \[\]'
+! stderr .
+
+-- api.tya --
+import helper
+
+-- helper.tya --
+# Helper docs.
+helper = -> 1

@@ -163,10 +163,10 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 - [ ] **Documentation generator extensions** *(polish; not a v1.0.0 blocker
   unless docs publication requires it)*
-  - [ ] Stdlib re-exports by following imports.
-  - [ ] `tya doc --json`.
+  - [x] Stdlib re-exports by following imports.
+  - [x] `tya doc --json`.
   - [ ] Reuse the public Tya self-introspection library when it exists.
-  - [ ] Diagnose orphan doc comments, duplicate definitions, and unparseable
+  - [x] Diagnose orphan doc comments, duplicate definitions, and unparseable
     Markdown bodies.
 
 - [ ] **Task runner extensions** *(polish; not a v1.0.0 blocker)*

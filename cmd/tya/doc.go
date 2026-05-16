@@ -13,7 +13,7 @@ import (
 // docCommand implements `tya doc`. It returns the process exit
 // code (0 success, 1 partial errors, 2 argument / I/O errors).
 func docCommand(args []string) int {
-	htmlOut, paths, err := parseDocArgs(args)
+	mode, htmlOut, paths, err := parseDocArgs(args)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
@@ -30,21 +30,42 @@ func docCommand(args []string) int {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
 	}
-	items, extractErr := doc.ExtractFiles(files)
+	report, extractErr := doc.ExtractReport(files)
 	if extractErr != nil {
 		fmt.Fprintln(os.Stderr, extractErr)
+		return 2
 	}
-	if htmlOut != "" {
-		site := &doc.Site{Title: "API", Items: items}
+	if mode == "json" {
+		if err := doc.FormatJSON(report, os.Stdout); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 2
+		}
+		if doc.HasErrorDiagnostics(report.Diagnostics) {
+			return 1
+		}
+		return 0
+	}
+	if err := doc.WriteDiagnostics(report.Diagnostics, os.Stderr); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
+	}
+	if mode == "html" {
+		site := &doc.Site{Title: "API", Items: report.Items}
 		if err := site.Generate(htmlOut, os.Stderr); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
 		}
+		if doc.HasErrorDiagnostics(report.Diagnostics) {
+			return 1
+		}
 		return 0
 	}
-	if err := doc.FormatText(items, os.Stdout); err != nil {
+	if err := doc.FormatText(report.Items, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
+	}
+	if doc.HasErrorDiagnostics(report.Diagnostics) {
+		return 1
 	}
 	return 0
 }
@@ -52,32 +73,46 @@ func docCommand(args []string) int {
 // parseDocArgs parses the v0.51 `tya doc` argument shape:
 // `[--html <out>] [paths...]`. Anything after `--` is treated as a
 // literal path so files literally named `--html` remain reachable.
-func parseDocArgs(args []string) (htmlOut string, paths []string, err error) {
+func parseDocArgs(args []string) (mode string, htmlOut string, paths []string, err error) {
+	mode = "text"
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		switch {
 		case a == "--html":
+			if mode != "text" {
+				return "", "", nil, fmt.Errorf("[TYA-E0920] tya doc accepts only one output mode")
+			}
+			mode = "html"
 			i++
 			if i >= len(args) {
-				return "", nil, fmt.Errorf("[TYA-E0920] --html requires a directory argument")
+				return "", "", nil, fmt.Errorf("[TYA-E0920] --html requires a directory argument")
 			}
 			htmlOut = args[i]
 			if strings.TrimSpace(htmlOut) == "" {
-				return "", nil, fmt.Errorf("[TYA-E0920] --html requires a non-empty directory argument")
+				return "", "", nil, fmt.Errorf("[TYA-E0920] --html requires a non-empty directory argument")
 			}
 		case strings.HasPrefix(a, "--html="):
+			if mode != "text" {
+				return "", "", nil, fmt.Errorf("[TYA-E0920] tya doc accepts only one output mode")
+			}
+			mode = "html"
 			htmlOut = strings.TrimPrefix(a, "--html=")
 			if strings.TrimSpace(htmlOut) == "" {
-				return "", nil, fmt.Errorf("[TYA-E0920] --html requires a non-empty directory argument")
+				return "", "", nil, fmt.Errorf("[TYA-E0920] --html requires a non-empty directory argument")
 			}
+		case a == "--json":
+			if mode != "text" {
+				return "", "", nil, fmt.Errorf("[TYA-E0920] tya doc accepts only one output mode")
+			}
+			mode = "json"
 		case a == "--":
 			paths = append(paths, args[i+1:]...)
-			return htmlOut, paths, nil
+			return mode, htmlOut, paths, nil
 		default:
 			paths = append(paths, a)
 		}
 	}
-	return htmlOut, paths, nil
+	return mode, htmlOut, paths, nil
 }
 
 // docCollectFiles expands directories to all `.tya` files inside

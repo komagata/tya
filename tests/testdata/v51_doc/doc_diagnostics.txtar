@@ -1,0 +1,32 @@
+# Documentation diagnostics are stable across text, HTML, and JSON
+# modes. Error diagnostics exit 1 after rendering partial output.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+mkdir src
+cp one.tya src/one.tya
+cp two.tya src/two.tya
+
+! exec $WORK/tya doc src
+stdout '## function same'
+stderr 'TYADOC0002'
+stderr 'TYADOC0003'
+
+! exec $WORK/tya doc --html out src
+exists out/index.html
+stderr 'TYADOC0002'
+stderr 'TYADOC0003'
+
+! exec $WORK/tya doc --json src
+stdout '"code": "TYADOC0002"'
+stdout '"code": "TYADOC0003"'
+
+-- one.tya --
+# One docs.
+same = -> 1
+
+-- two.tya --
+# Broken docs.
+# ```tya
+same = -> 2

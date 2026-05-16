@@ -925,13 +925,18 @@ tya lint --format=sarif src > lint.sarif
 tya lsp
 ```
 
-`tya doc` はソースコメントからドキュメントを抽出する。text view の表示と静的 HTML site の生成ができる。
+`tya doc` は public top-level function、class、module、interface に付いた leading source comment からドキュメントを抽出する。path なしでは `src/` を scan する。text view、JSON report、静的 HTML site を生成できる。
 
 ```sh
 tya doc
 tya doc src
-tya doc --html ./out
+tya doc --json src
+tya doc --html ./out src
 ```
+
+JSON report は `version`、`items`、`diagnostics` を含む。各 item は name、kind、signature、raw Markdown comment、rendered text、source path と line、import された package surface 経由で含まれた場合の `reexported_from` を持つ。`tya doc` は import をたどって public re-export を含め、import cycle は hang せず diagnostic として報告する。
+
+documentation diagnostic は stable な `TYADOC` code を使う。orphan doc comment、duplicate public documentation name、未サポート Markdown body、import cycle は text/HTML では stderr に出力され、JSON では payload に含まれる。error diagnostic は output 生成後に exit status 1、argument、path、I/O、lex、parse の致命的失敗は exit status 2 になる。
 
 `tya new` は native package scaffold を含む新規 project と library を scaffold する。
 

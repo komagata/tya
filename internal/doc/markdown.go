@@ -99,6 +99,22 @@ func ParseMarkdown(src string) []Block {
 	return blocks
 }
 
+// ValidateMarkdown reports constructs that the small documentation
+// Markdown subset cannot render reliably.
+func ValidateMarkdown(src, path string, line int) []Diagnostic {
+	if strings.Count(src, "```")%2 == 1 {
+		return []Diagnostic{{
+			Code:     "TYADOC0003",
+			Severity: "error",
+			Message:  "unclosed Markdown code fence",
+			FilePath: path,
+			Line:     line,
+			Col:      1,
+		}}
+	}
+	return nil
+}
+
 func appendListItem(blocks []Block, kind, item string) []Block {
 	if len(blocks) > 0 && blocks[len(blocks)-1].Kind == kind {
 		blocks[len(blocks)-1].Lines = append(blocks[len(blocks)-1].Lines, item)

@@ -1036,7 +1036,7 @@ test      discover and run unittest tests; --cover records coverage
 cover     render coverage profiles as text, JSON, or HTML
 lint      report project-policy diagnostics for valid programs
 lsp       run the JSON-RPC language server on stdio
-doc       extract source-comment documentation; may generate static HTML
+doc       extract source-comment documentation; may emit JSON or static HTML
 new       scaffold projects and libraries
 task      list or run tya.toml tasks
 install   resolve dependencies and write tya.lock
@@ -1067,6 +1067,31 @@ TYAL0006 suspicious for-index binding order
 TYAL0007 unused function parameter
 TYAL0008 shadowed binding
 ```
+
+`tya doc` extracts leading source comments attached to public top-level
+functions, classes, modules, and interfaces. With no path it scans `src/`.
+It can render terminal text, generate static HTML, or emit a stable JSON
+report:
+
+```sh
+tya doc
+tya doc src
+tya doc --json src
+tya doc --html ./out src
+```
+
+The JSON report contains `version`, `items`, and `diagnostics`. Each item
+includes its name, kind, signature, raw Markdown comment, rendered text,
+source path and line, and `reexported_from` when the item is included through
+an imported package surface. Documentation extraction follows public
+re-exports through imports, reports import cycles without hanging, and keeps
+ordering deterministic.
+
+Documentation diagnostics use stable `TYADOC` codes. Orphan doc comments,
+duplicate public documentation names, unsupported Markdown bodies, and import
+cycles are reported to stderr for text and HTML output and embedded in JSON
+output. Error diagnostics exit with status 1 after output is produced;
+argument, path, I/O, lex, and parse failures exit with status 2.
 
 ## Verification Commands
 
