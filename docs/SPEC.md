@@ -124,7 +124,7 @@ The following words are reserved in positions where ordinary names are parsed:
 
 ```text
 abstract and as await break case catch class continue default else elseif embed
-extends false final for if implements import in interface module nil not of or
+extends false final for if implements import in interface module nil not or
 override private raise return scope select self Self spawn static super true try
 while with
 ```
@@ -672,7 +672,7 @@ Calls and other useful expressions may appear as statements.
 
 ```tya
 print("hello")
-logger.info("started")
+save_user(user)
 ```
 
 ### Assignment Statements
@@ -731,15 +731,6 @@ for item, index in items
 for entry in user
   key = entry["key"]
   value = entry["value"]
-  print("{key}: {value}")
-```
-
-`for ... of` remains as a compatibility spelling for dictionary keys and
-values, but new code should prefer `for entry in dict`, `dict.keys()`, or
-`dict.values()` depending on intent.
-
-```tya
-for key, value of user
   print("{key}: {value}")
 ```
 
@@ -929,83 +920,6 @@ compiler_format_format(source)
 Prefer standard-library package APIs over low-level support builtins when a
 package exists.
 
-Primitive method surface:
-
-```text
-value.to_s()
-value.class
-value.equal?(other)
-
-string.trim()
-string.upper()
-string.lower()
-string.starts_with(prefix)
-string.ends_with(suffix)
-string.contains(part)
-string.split(separator)
-string.lines()
-string.chars()
-string.bytes()
-string.byte_len()
-string.blank?()
-string.present?()
-string.iter()
-string.sequence()
-string.compare(other)
-string.lt?(other)
-string.lte?(other)
-string.gt?(other)
-string.gte?(other)
-string.between?(min, max)
-
-array.len()
-array.empty?()
-array.first()
-array.last()
-array.push(value)
-array.pop()
-array.slice(start, end)
-array.reverse()
-array.sort()
-array.join(separator)
-array.map(fn)
-array.filter(fn)
-array.find(fn)
-array.any(fn)
-array.all(fn)
-array.reduce(initial, fn)
-array.iter()
-array.sequence()
-
-dict.has(key)
-dict.get(key, fallback)
-dict.set(key, value)
-dict.delete(key)
-dict.keys()
-dict.values()
-dict.entries()
-dict.merge(other)
-dict.iter()
-dict.sequence()
-
-number.abs()
-number.floor()
-number.ceil()
-number.round()
-number.trunc()
-number.sqrt()
-number.pow(exp)
-number.integer?()
-number.finite?()
-number.nan?()
-number.compare(other)
-number.lt?(other)
-number.lte?(other)
-number.gt?(other)
-number.gte?(other)
-number.between?(min, max)
-```
-
 Standard library APIs are imported with the same `import` syntax as user code.
 
 ## Terminology
@@ -1016,9 +930,9 @@ Current Tya documentation uses these terms normatively:
 language feature             syntax or semantics built into Tya
 built-in function            function available without import
 built-in class               class available without import; none currently
-user module                  importable non-stdlib .tya source
-user library                 reusable directory tree of user modules
-standard-library module      .tya source shipped with Tya and imported normally
+user package                 importable directory of PascalCase class files
+user library                 reusable directory tree of user packages
+standard-library package     .tya source shipped with Tya and imported normally
 bundled library              library or support file shipped with the toolchain
 native-backed stdlib module  importable stdlib API backed by runtime or host code
 package                      versioned dependency unit declared by tya.toml
@@ -1026,8 +940,8 @@ package tool                 [tools] entry run by tya tool
 ```
 
 Language features are not imported and cannot be shadowed. Standard-library
-modules are specified in the Standard Library section; they are imported
-modules, not builtins.
+packages are specified in the Standard Library section; they are imported
+packages, not builtins.
 
 ## Imports And Packages
 
@@ -1044,27 +958,6 @@ import net/http as http
 Import paths are slash-separated `snake_case` segments. Relative filesystem
 paths, absolute paths, empty segments, and PascalCase terminal segments are
 invalid.
-
-### Single-File Imports
-
-A single-file import resolves an import path to a lowercase `.tya` file.
-
-```text
-import greeting          -> greeting.tya
-import http/server       -> http/server.tya
-```
-
-The imported file exposes its top-level bindings through the import binding.
-
-```tya
-import greeting
-
-print(greeting.hello("komagata"))
-```
-
-A single-file source may contain top-level imports, assignments, function
-values, classes, and embeds. Top-level names become members of the imported
-namespace.
 
 ### Directory Packages
 
@@ -1370,9 +1263,9 @@ The standard library is shipped with Tya under `stdlib/` and is imported using
 the same import syntax as user files and packages.
 
 The standard library is part of the language distribution. Its public surface
-is the set of importable lowercase helper files and PascalCase package classes
-under `stdlib/`. Standard-library imports are resolved after local files,
-locked package dependencies, and `TYA_PATH` entries.
+is the set of importable PascalCase package classes and interfaces under
+`stdlib/`. Standard-library imports are resolved after local packages, locked
+package dependencies, and `TYA_PATH` entries.
 
 Current standard-library surface:
 

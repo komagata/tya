@@ -92,7 +92,7 @@ Tya は 3 つのソースコメント役割を認識する。
 
 ```text
 abstract and as await break case catch class continue default else elseif embed
-extends false final for if implements import in interface module nil not of or
+extends false final for if implements import in interface module nil not or
 override private raise return scope select self Self spawn static super true try
 while with
 ```
@@ -537,7 +537,7 @@ Tya はタスク、scope、チャンネル、sync リソース、`select` を通
 
 ```tya
 print("hello")
-logger.info("started")
+save_user(user)
 ```
 
 ### 代入文
@@ -592,13 +592,6 @@ for item, index in items
 for entry in user
   key = entry["key"]
   value = entry["value"]
-  print("{key}: {value}")
-```
-
-`for ... of` は辞書の key と value に対する互換綴りとして残るが、新しいコードは意図に応じて `for entry in dict`、`dict.keys()`、`dict.values()` を優先すべきである。
-
-```tya
-for key, value of user
   print("{key}: {value}")
 ```
 
@@ -779,83 +772,6 @@ compiler_format_format(source)
 
 対応する package が存在する場合、low-level support builtin より standard-library package API を優先する。
 
-Primitive method surface:
-
-```text
-value.to_s()
-value.class
-value.equal?(other)
-
-string.trim()
-string.upper()
-string.lower()
-string.starts_with(prefix)
-string.ends_with(suffix)
-string.contains(part)
-string.split(separator)
-string.lines()
-string.chars()
-string.bytes()
-string.byte_len()
-string.blank?()
-string.present?()
-string.iter()
-string.sequence()
-string.compare(other)
-string.lt?(other)
-string.lte?(other)
-string.gt?(other)
-string.gte?(other)
-string.between?(min, max)
-
-array.len()
-array.empty?()
-array.first()
-array.last()
-array.push(value)
-array.pop()
-array.slice(start, end)
-array.reverse()
-array.sort()
-array.join(separator)
-array.map(fn)
-array.filter(fn)
-array.find(fn)
-array.any(fn)
-array.all(fn)
-array.reduce(initial, fn)
-array.iter()
-array.sequence()
-
-dict.has(key)
-dict.get(key, fallback)
-dict.set(key, value)
-dict.delete(key)
-dict.keys()
-dict.values()
-dict.entries()
-dict.merge(other)
-dict.iter()
-dict.sequence()
-
-number.abs()
-number.floor()
-number.ceil()
-number.round()
-number.trunc()
-number.sqrt()
-number.pow(exp)
-number.integer?()
-number.finite?()
-number.nan?()
-number.compare(other)
-number.lt?(other)
-number.lte?(other)
-number.gt?(other)
-number.gte?(other)
-number.between?(min, max)
-```
-
 標準ライブラリ API は、ユーザーコードと同じ `import` 構文でインポートされる。
 
 ## 用語
@@ -866,16 +782,16 @@ number.between?(min, max)
 language feature             Tya に組み込まれた構文または semantics
 built-in function            import なしで利用できる関数
 built-in class               import なしで利用できる class。現在は存在しない
-user module                  import 可能な非 stdlib .tya source
-user library                 user module の再利用可能な directory tree
-standard-library module      Tya に同梱され、通常通り import される .tya source
+user package                 PascalCase class file の import 可能な directory
+user library                 user package の再利用可能な directory tree
+standard-library package     Tya に同梱され、通常通り import される .tya source
 bundled library              toolchain と一緒に配布される library または support file
 native-backed stdlib module  runtime または host code に支えられた import 可能 stdlib API
 package                      tya.toml で宣言される versioned dependency unit
 package tool                 tya tool で実行される [tools] entry
 ```
 
-language feature は import されず、shadow できない。standard-library module は標準ライブラリ節で規定される。それらは import される module であり、builtin ではない。
+language feature は import されず、shadow できない。standard-library package は標準ライブラリ節で規定される。それらは import される package であり、builtin ではない。
 
 ## インポートとパッケージ
 
@@ -890,25 +806,6 @@ import net/http as http
 ```
 
 インポートパスはスラッシュ区切りの `snake_case` セグメントである。相対ファイルシステムパス、絶対パス、空セグメント、終端が `PascalCase` のセグメントは不正である。
-
-### 単一ファイルインポート
-
-単一ファイルインポートは、インポートパスを小文字の `.tya` ファイルへ解決する。
-
-```text
-import greeting          -> greeting.tya
-import http/server       -> http/server.tya
-```
-
-インポートされたファイルは、そのトップレベル束縛をインポート束縛を通して公開する。
-
-```tya
-import greeting
-
-print(greeting.hello("komagata"))
-```
-
-単一ファイル source は、トップレベル import、assignment、function value、class、embed を含められる。トップレベル名は imported namespace の member になる。
 
 ### ディレクトリパッケージ
 
@@ -1274,7 +1171,7 @@ runtime kind errors、不正な操作、失敗した assertions、失敗した I
 
 標準ライブラリは `stdlib/` の下で Tya に同梱され、ユーザーファイルやパッケージと同じ import 構文でインポートされる。
 
-標準ライブラリは言語配布物の一部である。公開 surface は、`stdlib/` 以下の import 可能な lowercase helper file と PascalCase package class の集合である。標準ライブラリ import は、local file、lock された package dependency、`TYA_PATH` entries の後に解決される。
+標準ライブラリは言語配布物の一部である。公開 surface は、`stdlib/` 以下の import 可能な PascalCase package class と interface の集合である。標準ライブラリ import は、local package、lock された package dependency、`TYA_PATH` entries の後に解決される。
 
 現在の標準ライブラリ surface:
 

@@ -280,6 +280,17 @@ a {
   line-height: 1.72;
 }
 
+@media (max-width: 640px) {
+  .doc-content pre {
+    padding: 14px;
+  }
+
+  .doc-content pre code {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+
 .doc-content blockquote {
   margin: 18px 0;
   border-left: 4px solid var(--green-2);
