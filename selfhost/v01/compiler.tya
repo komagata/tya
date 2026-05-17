@@ -1835,9 +1835,9 @@ c_string = text ->
     i = i + 1
   out + "\""
 
-c_name = name -> "tya_user_" + name
+c_name = name -> "tya_user_{name}"
 
-c_func_name = name -> "tya_fn_" + name
+c_func_name = name -> "tya_fn_{name}"
 emitter_functions = []
 emitter_classes = []
 emitter_anon_functions = []

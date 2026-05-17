@@ -8,14 +8,22 @@ exec $WORK/tya check valid.tya
 exec $WORK/tya run valid.tya
 stdout 'truthy'
 stdout 'Ty'
+stdout '<bytes:2>'
+stdout 'count: 3'
 stdout 'nil'
+stdout 'true'
+stdout 'true'
 stdout 'matched'
 
 exec $WORK/tya build valid.tya -o valid
 exec ./valid
 stdout 'truthy'
 stdout 'Ty'
+stdout '<bytes:2>'
+stdout 'count: 3'
 stdout 'nil'
+stdout 'true'
+stdout 'true'
 stdout 'matched'
 
 ! exec $WORK/tya check return_outside.tya
@@ -23,6 +31,28 @@ stderr 'TYA-E0120'
 
 ! exec $WORK/tya check bad_pattern.tya
 stderr 'TYA-E0160'
+
+! exec $WORK/tya check kind_reassign.tya
+stderr 'cannot reassign value from number to string'
+
+! exec $WORK/tya check constant_mutation.tya
+stderr 'cannot mutate constant ITEMS'
+
+! exec $WORK/tya run raise_nil.tya
+stderr 'raise expects non-nil value'
+
+! exec $WORK/tya check string_plus_number.tya
+stderr '\+ expects numbers, strings, or bytes of the same kind'
+
+! exec $WORK/tya check number_plus_string.tya
+stderr '\+ expects numbers, strings, or bytes of the same kind'
+
+! exec $WORK/tya build string_plus_number.tya -o bad_string_plus
+stderr '\+ expects numbers, strings, or bytes of the same kind'
+
+exec $WORK/tya build dynamic_string_plus_number.tya -o dynamic_bad_string_plus
+! exec ./dynamic_bad_string_plus
+stderr '\+ expects numbers, strings, or bytes of the same kind'
 
 exec $WORK/tya run bad_call.tya
 stdout 'nil'
@@ -35,7 +65,12 @@ if 0
   print("truthy")
 
 print("T" + "y")
+print(b"T" + b"y")
+count = 3
+print("count: {count}")
 print({ name: "Tya" }["missing"])
+print(nil or "fallback")
+print({ nested: [1, 2] } == { nested: [1, 2] })
 
 value = "ok"
 match value
@@ -61,6 +96,29 @@ user = { name: "tya" }
 match user
   case { name: value }
     print(value)
+
+-- kind_reassign.tya --
+value = 1
+value = "one"
+
+-- constant_mutation.tya --
+ITEMS = [1]
+ITEMS[0] = 2
+
+-- raise_nil.tya --
+raise nil
+
+-- string_plus_number.tya --
+count = 3
+print("count: " + count)
+
+-- number_plus_string.tya --
+count = 3
+print(count + " items")
+
+-- dynamic_string_plus_number.tya --
+value = -> 3
+print("count: " + value())
 
 -- bad_call.tya --
 fn = nil

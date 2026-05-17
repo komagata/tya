@@ -141,6 +141,10 @@ func (e *Env) set(name string, v Value) {
 		e.vars[name] = v
 		return
 	}
+	if e.inFunc {
+		e.vars[name] = v
+		return
+	}
 	if _, ok := e.parent.get(name); ok {
 		e.parent.assign(name, v)
 		return
@@ -708,6 +712,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
+		if value == nil {
+			return nil, fmt.Errorf("raise expects non-nil value")
+		}
 		return nil, &raisedSignal{value: value}
 	case *ast.TryCatchStmt:
 		last, err := evalStmts(n.Try, env)
@@ -810,6 +817,13 @@ func assign(target ast.Expr, v Value, env *Env) error {
 	case *ast.Ident:
 		if t.Name == "_" {
 			return nil
+		}
+		existing, exists := env.get(t.Name)
+		if env.inFunc {
+			_, exists = env.vars[t.Name]
+		}
+		if exists && runtimeKind(existing) != "nil" && runtimeKind(v) != "nil" && runtimeKind(existing) != runtimeKind(v) {
+			return fmt.Errorf("cannot reassign %s from %s to %s", t.Name, runtimeKind(existing), runtimeKind(v))
 		}
 		env.set(t.Name, nameFunction(t.Name, v))
 		return nil
@@ -1028,7 +1042,7 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 				return nil, fmt.Errorf("bytes index must be int")
 			}
 			if i < 0 || i >= int64(len(bytesVal.data)) {
-				return nil, &raisedSignal{value: "bytes index out of range"}
+				return nil, nil
 			}
 			return int64(bytesVal.data[i]), nil
 		}
@@ -1621,7 +1635,7 @@ func callValue(fn Value, args []Value) (Value, error) {
 		callEnv := f.Env.child()
 		callEnv.inFunc = true
 		for i, name := range f.Params {
-			callEnv.set(name, args[i])
+			callEnv.vars[name] = args[i]
 		}
 		checkPredicate := func(v Value, err error) (Value, error) {
 			if err != nil {
@@ -1844,15 +1858,23 @@ func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 	}
 	if b.Op.Lexeme == "and" {
 		if !truthy(l) {
-			return l, nil
+			return false, nil
 		}
-		return evalExpr(b.Right, env)
+		r, err := evalExpr(b.Right, env)
+		if err != nil {
+			return nil, err
+		}
+		return truthy(r), nil
 	}
 	if b.Op.Lexeme == "or" {
 		if truthy(l) {
-			return l, nil
+			return true, nil
 		}
-		return evalExpr(b.Right, env)
+		r, err := evalExpr(b.Right, env)
+		if err != nil {
+			return nil, err
+		}
+		return truthy(r), nil
 	}
 	r, err := evalExpr(b.Right, env)
 	if err != nil {
@@ -1910,16 +1932,19 @@ func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 			return &Bytes{data: out}, nil
 		}
 	}
-	if _, ok := l.(string); ok {
-		return stringify(l) + stringify(r), nil
+	if ls, ok := l.(string); ok {
+		if rs, ok := r.(string); ok {
+			return ls + rs, nil
+		}
+		return nil, fmt.Errorf("%d:%d: + expects numbers, strings, or bytes of the same kind", b.Op.Line, b.Op.Col)
 	}
 	if _, ok := r.(string); ok {
-		return stringify(l) + stringify(r), nil
+		return nil, fmt.Errorf("%d:%d: + expects numbers, strings, or bytes of the same kind", b.Op.Line, b.Op.Col)
 	}
 	lf, lok := asFloat(l)
 	rf, rok := asFloat(r)
 	if !lok || !rok {
-		return nil, fmt.Errorf("+ expects numbers or strings")
+		return nil, fmt.Errorf("%d:%d: + expects numbers, strings, or bytes of the same kind", b.Op.Line, b.Op.Col)
 	}
 	if li, ok := l.(int64); ok {
 		if ri, ok := r.(int64); ok {
@@ -1955,9 +1980,10 @@ func equal(l, r Value) bool {
 		return ok && lv == rv
 	case Dict:
 		rv, ok := r.(Dict)
-		return ok && fmt.Sprintf("%p", lv) == fmt.Sprintf("%p", rv)
+		return ok && deepEqual(lv, rv)
 	case *Array:
-		return lv == r
+		rv, ok := r.(*Array)
+		return ok && deepEqual(lv, rv)
 	case *Function:
 		return lv == r
 	case *ErrorValue:
@@ -1966,6 +1992,37 @@ func equal(l, r Value) bool {
 		return lv == r
 	}
 	return false
+}
+
+func runtimeKind(v Value) string {
+	switch v.(type) {
+	case nil:
+		return "nil"
+	case bool:
+		return "bool"
+	case int64:
+		return "number"
+	case float64:
+		return "number"
+	case string:
+		return "string"
+	case *Bytes:
+		return "bytes"
+	case *Array:
+		return "array"
+	case Dict:
+		return "dict"
+	case *Function:
+		return "function"
+	case Builtin:
+		return "function"
+	case *ErrorValue:
+		return "error"
+	case *Module:
+		return "module"
+	default:
+		return "object"
+	}
 }
 
 func deepEqual(l, r Value) bool {

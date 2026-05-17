@@ -27,6 +27,46 @@ func TestCheckAllowsVariableReassignment(t *testing.T) {
 	}
 }
 
+func TestCheckRejectsKindChangingReassignment(t *testing.T) {
+	prog := parse(t, "retry_count = 3\nretry_count = \"three\"\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected kind-changing reassignment error")
+	}
+	if !strings.Contains(err.Error(), "cannot reassign retry_count from number to string") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsMixedStringPlus(t *testing.T) {
+	tests := []string{
+		"count = 3\nprint(\"count: \" + count)\n",
+		"count = 3\nprint(count + \" items\")\n",
+		"data = b\"a\"\nprint(data + \"b\")\n",
+	}
+	for _, src := range tests {
+		prog := parse(t, src)
+		err := Check(prog)
+		if err == nil {
+			t.Fatalf("expected mixed plus error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "+ expects numbers, strings, or bytes of the same kind") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+}
+
+func TestCheckRejectsConstantMutation(t *testing.T) {
+	prog := parse(t, "ITEMS = [1]\nITEMS[0] = 2\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected constant mutation error")
+	}
+	if !strings.Contains(err.Error(), "cannot mutate constant ITEMS") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckRejectsInvalidBindingName(t *testing.T) {
 	prog := parse(t, "userName = \"komagata\"\n")
 	err := Check(prog)

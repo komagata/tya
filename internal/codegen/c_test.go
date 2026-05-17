@@ -108,10 +108,31 @@ func TestEmitCCompilesEqualityProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesAdditionProgram(t *testing.T) {
-	src := "print(2 + 3)\nprint(\"Ty\" + \"a\")\n"
+	src := "print(2 + 3)\nprint(\"Ty\" + \"a\")\nprint(b\"Ty\" + b\"a\")\ncount = 3\nprint(\"count: {count}\")\n"
 	out := compileAndRun(t, src)
-	if string(out) != "5\nTya\n" {
+	if string(out) != "5\nTya\n<bytes:3>\ncount: 3\n" {
 		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCRejectsMixedStringPlus(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+	}{
+		{name: "string number", src: "value = -> 3\nprint(\"count: \" + value())\n"},
+		{name: "number string", src: "value = -> 3\nprint(value() + \" items\")\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, code := compileAndRunArgsAllowExit(t, tt.src)
+			if code == 0 {
+				t.Fatalf("expected non-zero exit, got output %q", out)
+			}
+			if !strings.Contains(string(out), "+ expects numbers, strings, or bytes of the same kind") {
+				t.Fatalf("unexpected output: %q", out)
+			}
+		})
 	}
 }
 

@@ -286,6 +286,21 @@ name = "Tya"
 count = count + 1
 ```
 
+Reassignment must preserve the binding's runtime kind, except that `nil` may
+move to or from a concrete kind because it represents absence. A name first
+assigned a number may later receive another number, but not a string, array,
+dictionary, function, class, object, error, or resource value. This keeps Tya
+dynamically typed while making rebinding strict and predictable.
+
+```tya
+count = 1
+count = 2      # valid
+count = "two"  # invalid
+
+err = nil
+err = error("failed") # valid
+```
+
 Multiple assignment is supported.
 
 ```tya
@@ -296,7 +311,8 @@ Leading `_` has no visibility meaning for ordinary bindings. Top-level
 privacy is not expressed by name spelling.
 
 Constants use `SCREAMING_SNAKE_CASE` and are checked as constants by naming
-and assignment rules.
+and assignment rules. Constants cannot be reassigned. Heap-backed values stored
+in constants are also immutable through that constant binding.
 
 Class member privacy uses the `private` keyword for private class fields,
 methods, class variables, class methods, and constructors.
@@ -339,8 +355,9 @@ Calls always use parentheses.
 print(greet("Tya"))
 ```
 
-The final expression in a function body is returned implicitly. Use `return`
-for early return or multiple return values.
+The final evaluated statement or expression in a function body is returned
+implicitly when no explicit `return` exits first. Use `return` for early return
+or multiple return values.
 
 ```tya
 parse_user = text ->
@@ -536,10 +553,11 @@ arrays, dictionaries, objects, functions, resources, and tasks are captured as
 values, not deep-copied. Top-level names are not captured and continue to use
 module/global lookup.
 
-Function bodies cannot write back to outer bindings. Direct reassignment of an
-outer binding is invalid, and indexed or member assignment through a captured
-outer binding is invalid. Pass mutable state as an explicit parameter when a
-function is intended to mutate that value.
+Function bodies cannot write back to outer function bindings. Direct
+reassignment of an outer function binding is invalid, and indexed or member
+assignment through a captured outer function binding is invalid. Pass mutable
+state as an explicit parameter when a function is intended to mutate that
+value.
 
 Each evaluation of a function literal creates an independent closure
 environment.
@@ -599,14 +617,22 @@ if ready and not disabled
 ```
 
 Arithmetic operations require numbers unless a documented primitive method or
-operator case says otherwise. `+` formats through string conversion when either
-operand is a string, and concatenates two bytes values. String interpolation
-formats embedded values with the `Stringable` surface. `nil` arithmetic is
-invalid.
+operator case says otherwise. `+` adds two numbers, concatenates two strings,
+and concatenates two bytes values. `+` does not format mixed operands through
+implicit string conversion. String interpolation formats embedded values with
+the display surface. `nil` arithmetic is invalid.
+
+`and` and `or` return booleans. They test operands with Tya truthiness, do not
+return either operand as a value, and short-circuit: `and` skips the right
+operand when the left operand is falsey, while `or` skips the right operand
+when the left operand is truthy.
 
 Bitwise operators require integer-compatible number values.
 
-Equality operators may compare any two runtime values without coercion.
+Equality operators may compare any two runtime values without coercion. Values
+with different runtime kinds compare unequal. Arrays and dictionaries compare
+by contents; functions, classes, objects, resources, tasks, and channels
+compare by identity unless their documented primitive surface says otherwise.
 Ordering operators `<`, `<=`, `>`, and `>=` require numbers.
 
 ### Collections
@@ -632,8 +658,13 @@ Dictionary block forms and empty collection forms are canonicalized by the
 formatter.
 
 Array, string, and bytes indexes must be integers. Dictionary and error-value
-indexes must be strings. Missing dictionary keys and out-of-range array or
-string indexes return `nil`; indexing a non-collection target is invalid.
+indexes must be strings. Missing dictionary keys and out-of-range array,
+string, or bytes indexes return `nil`; indexing a non-collection target is
+invalid.
+
+Array index assignment requires an existing array index and fails on
+out-of-range writes. Dictionary index assignment may create a new key.
+Arrays and dictionaries are mutable. Strings and bytes are immutable.
 
 ### Error Expressions
 
@@ -896,12 +927,19 @@ PascalCase class files. It must contain at least one class file and must not
 contain lowercase script files at the package leaf.
 
 Unaliased directory imports expose public class and interface names directly.
+They do not create a lowercase namespace binding for the import path or terminal
+directory segment.
 
 ```tya
 import net/http
 
 server = Server()
+http = "local label"
 ```
+
+In the example above, `http` is an ordinary local binding. `http.Server()` is
+invalid because unaliased directory imports do not expose a namespace object.
+If a namespace is desired, use an alias.
 
 Aliased directory imports expose a namespace binding and do not import public
 names bare.
@@ -910,6 +948,19 @@ names bare.
 import net/http as http
 
 server = http.Server()
+```
+
+With an alias, package public names are only available through the alias
+namespace. `Server()` is invalid in the example above; use `http.Server()`.
+
+Imported public names are reserved in the importing scope. Reassigning or
+redeclaring an imported public class or interface name is invalid, and importing
+two packages that expose the same public name is invalid.
+
+```tya
+import net/http
+
+Request = -> "local" # invalid: Request is imported from net/http
 ```
 
 Within the same directory package, sibling public classes are visible by bare
@@ -1258,6 +1309,17 @@ an actionable message and, where practical, a hint and documentation URL.
 Runtime kind errors, invalid operations, failed assertions, failed I/O, and
 native wrapper errors are represented as Tya error values or raised runtime
 errors according to the API being used.
+
+Standard-library failure behavior is part of each public API contract. Invalid
+argument kinds or arity are runtime errors. Absence and lookup APIs return
+`nil` only where documented. Operations that can fail because of the outside
+world, such as file, process, network, compression, digest, time, and random
+APIs, either raise a non-`nil` error value or return a documented
+`value, err` pair; an individual API must not leave this choice implicit.
+
+`raise` may raise any non-`nil` value. Raising `nil` is invalid because it
+carries no error information. A `catch` binding receives the exact raised
+value.
 
 ## Standard Library
 

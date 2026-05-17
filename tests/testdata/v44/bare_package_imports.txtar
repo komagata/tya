@@ -7,6 +7,10 @@ exec go run ./cmd/tya run $WORK/bare.tya
 stdout 'bare\n'
 ! stderr .
 
+exec go run ./cmd/tya run $WORK/bare_path_name_local.tya
+stdout 'local http\nbare\n'
+! stderr .
+
 exec go run ./cmd/tya run $WORK/aliased.tya
 stdout 'aliased\n'
 ! stderr .
@@ -27,6 +31,14 @@ stderr 'import name conflict: Request'
 import net/http
 
 request = Request("bare")
+print(request.label())
+
+-- bare_path_name_local.tya --
+import net/http
+
+http = "local http"
+request = Request("bare")
+print(http)
 print(request.label())
 
 -- aliased.tya --

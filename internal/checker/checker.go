@@ -627,6 +627,12 @@ const (
 	kindClass
 	kindInterface
 	kindObject
+	kindNil
+	kindBool
+	kindNumber
+	kindString
+	kindBytes
+	kindFunction
 )
 
 func (s *scope) define(name string, kind valueKind) {
@@ -718,10 +724,14 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				if constants[name.Name] {
 					return fmt.Errorf("%d:%d: cannot reassign constant %s", n.Tok.Line, n.Tok.Col, name.Name)
 				}
+				nextKind := exprKind(n.Values, scope)
+				if prevKind := scope.kind(name.Name); prevKind != kindUnknown && nextKind != kindUnknown && prevKind != kindModule && prevKind != kindNil && nextKind != kindNil && prevKind != nextKind {
+					return fmt.Errorf("%d:%d: cannot reassign %s from %s to %s", n.Tok.Line, n.Tok.Col, name.Name, valueKindName(prevKind), valueKindName(nextKind))
+				}
 				if constNameRE.MatchString(name.Name) {
 					constants[name.Name] = true
 				}
-				scope.define(name.Name, exprKind(n.Values, scope))
+				scope.define(name.Name, nextKind)
 			}
 		case *ast.ModuleDecl:
 			if !valueNameRE.MatchString(n.Name) || strings.HasPrefix(n.Name, "_") {
@@ -1317,6 +1327,15 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.BinaryExpr:
 		if err := checkExpr(n.Left, scope); err != nil {
 			return err
+		}
+		if n.Op.Lexeme == "+" {
+			leftKind := kindOf(n.Left, scope)
+			rightKind := kindOf(n.Right, scope)
+			if leftKind != kindUnknown && rightKind != kindUnknown {
+				if (leftKind == kindString || rightKind == kindString || leftKind == kindBytes || rightKind == kindBytes) && leftKind != rightKind {
+					return fmt.Errorf("%d:%d: + expects numbers, strings, or bytes of the same kind", n.Op.Line, n.Op.Col)
+				}
+			}
 		}
 		return checkExpr(n.Right, scope)
 	case *ast.UnaryExpr:
@@ -2807,6 +2826,9 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 		if id, ok := n.Target.(*ast.Ident); ok && isPrimitiveClassName(id.Name) {
 			return fmt.Errorf("%d:%d: [TYA-E0814] cannot add or redefine method %s on built-in primitive class %s", n.NameTok.Line, n.NameTok.Col, n.Name, id.Name)
 		}
+		if id, ok := n.Target.(*ast.Ident); ok && constants[id.Name] {
+			return fmt.Errorf("%d:%d: cannot mutate constant %s", n.NameTok.Line, n.NameTok.Col, id.Name)
+		}
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
 		}
@@ -2838,6 +2860,9 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 			return err
 		}
 	case *ast.IndexExpr:
+		if id, ok := n.Target.(*ast.Ident); ok && constants[id.Name] {
+			return fmt.Errorf("%d:%d: cannot mutate constant %s", id.Tok.Line, id.Tok.Col, id.Name)
+		}
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
 		}
@@ -2990,6 +3015,16 @@ func memberKey(member *ast.MemberExpr) string {
 
 func literalKind(expr ast.Expr) valueKind {
 	switch n := expr.(type) {
+	case *ast.BinaryExpr:
+		if n.Op.Lexeme != "+" {
+			return kindUnknown
+		}
+		left := literalKind(n.Left)
+		right := literalKind(n.Right)
+		if left != kindUnknown && left == right && (left == kindString || left == kindBytes || left == kindNumber) {
+			return left
+		}
+		return kindUnknown
 	case *ast.ArrayLit:
 		return kindArray
 	case *ast.DictLit:
@@ -2997,8 +3032,51 @@ func literalKind(expr ast.Expr) valueKind {
 			return kindUnknown
 		}
 		return kindDict
+	case *ast.NilLit:
+		return kindNil
+	case *ast.BoolLit:
+		return kindBool
+	case *ast.IntLit, *ast.FloatLit:
+		return kindNumber
+	case *ast.StringLit:
+		return kindString
+	case *ast.BytesLit:
+		return kindBytes
+	case *ast.FuncLit:
+		return kindFunction
 	}
 	return kindUnknown
+}
+
+func valueKindName(kind valueKind) string {
+	switch kind {
+	case kindArray:
+		return "array"
+	case kindDict:
+		return "dict"
+	case kindModule:
+		return "module"
+	case kindClass:
+		return "class"
+	case kindInterface:
+		return "interface"
+	case kindObject:
+		return "object"
+	case kindNil:
+		return "nil"
+	case kindBool:
+		return "bool"
+	case kindNumber:
+		return "number"
+	case kindString:
+		return "string"
+	case kindBytes:
+		return "bytes"
+	case kindFunction:
+		return "function"
+	default:
+		return "unknown"
+	}
 }
 
 func hasFunctionMember(dict *ast.DictLit) bool {

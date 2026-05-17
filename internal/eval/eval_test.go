@@ -30,6 +30,68 @@ func TestRunArithmeticAndLiterals(t *testing.T) {
 	}
 }
 
+func TestRunStrictStringPlus(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{name: "string string", src: "print(\"Ty\" + \"a\")\n", want: "Tya\n"},
+		{name: "number number", src: "print(2 + 3)\n", want: "5\n"},
+		{name: "bytes bytes", src: "print(b\"Ty\" + b\"a\")\n", want: "&{[84 121 97]}\n"},
+		{name: "interpolation formats number", src: "count = 3\nprint(\"count: {count}\")\n", want: "count: 3\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			toks, errs := lexer.Lex(tt.src)
+			if len(errs) != 0 {
+				t.Fatalf("lex errors: %v", errs)
+			}
+			prog, _, err := parser.Parse(toks)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var out bytes.Buffer
+			if err := Run(prog, &out); err != nil {
+				t.Fatal(err)
+			}
+			if out.String() != tt.want {
+				t.Fatalf("got %q, want %q", out.String(), tt.want)
+			}
+		})
+	}
+}
+
+func TestRunRejectsMixedStringPlus(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+	}{
+		{name: "string number", src: "count = 3\nprint(\"count: \" + count)\n"},
+		{name: "number string", src: "count = 3\nprint(count + \" items\")\n"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			toks, errs := lexer.Lex(tt.src)
+			if len(errs) != 0 {
+				t.Fatalf("lex errors: %v", errs)
+			}
+			prog, _, err := parser.Parse(toks)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var out bytes.Buffer
+			err = Run(prog, &out)
+			if err == nil {
+				t.Fatal("expected mixed string plus error")
+			}
+			if !strings.Contains(err.Error(), "+ expects numbers, strings, or bytes of the same kind") {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestRunIfElseTruthiness(t *testing.T) {
 	src := "if nil\n  print(\"bad\")\nelse\n  print(\"nil\")\n\nif 0\n  print(\"zero\")\n"
 	toks, errs := lexer.Lex(src)
@@ -51,7 +113,7 @@ func TestRunIfElseTruthiness(t *testing.T) {
 }
 
 func TestRunComparisonAndLogic(t *testing.T) {
-	src := "age = 20\nname = \"komagata\"\nif age >= 20 and name == \"komagata\"\n  print(\"match\")\nprint(nil or \"anonymous\")\nprint(not false)\n"
+	src := "age = 20\nname = \"komagata\"\nif age >= 20 and name == \"komagata\"\n  print(\"match\")\nprint(nil or \"anonymous\")\nprint(\"fallback\" or false)\nprint(not false)\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -64,7 +126,7 @@ func TestRunComparisonAndLogic(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "match\nanonymous\ntrue\n"
+	want := "match\ntrue\ntrue\ntrue\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
@@ -252,7 +314,27 @@ func TestRunDictionaryEquality(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "false\n"
+	want := "true\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunBytesOutOfRangeIndexReturnsNil(t *testing.T) {
+	src := "data = b\"abc\"\nprint(data[99])\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "nil\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
@@ -450,7 +532,7 @@ func TestRunRejectsStrictDynamicErrors(t *testing.T) {
 		src  string
 		want string
 	}{
-		{name: "nil arithmetic", src: "print(nil + 1)\n", want: "+ expects numbers or strings"},
+		{name: "nil arithmetic", src: "print(nil + 1)\n", want: "+ expects numbers, strings, or bytes of the same kind"},
 		{name: "nil ordering", src: "print(nil < 1)\n", want: "< expects numbers"},
 		{name: "nil indexing", src: "print(nil[0])\n", want: "index target is not array or string"},
 		{name: "wrong array index", src: "print([1][\"0\"])\n", want: "array index must be int"},
@@ -459,6 +541,8 @@ func TestRunRejectsStrictDynamicErrors(t *testing.T) {
 		{name: "nil member", src: "print(nil.name)\n", want: "cannot read property name on non-dictionary"},
 		{name: "assignment arity", src: "first, second = [1]\n", want: "assignment expects 2 values, got 1"},
 		{name: "function arity", src: "add = a, b -> a + b\nprint(add(1))\n", want: "function expects 2 arguments, got 1"},
+		{name: "kind changing reassignment", src: "value = 1\nvalue = \"one\"\n", want: "cannot reassign value from number to string"},
+		{name: "raise nil", src: "raise nil\n", want: "raise expects non-nil value"},
 	}
 
 	for _, tt := range tests {

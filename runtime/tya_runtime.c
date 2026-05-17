@@ -1482,8 +1482,9 @@ bool tya_equal(TyaValue left, TyaValue right) {
     }
     return strcmp(left.string, right.string) == 0;
   case TYA_ARRAY:
-    return left.array == right.array;
+    return tya_deep_equal_bool(left, right);
   case TYA_DICT:
+    return tya_deep_equal_bool(left, right);
   case TYA_OBJECT:
     return left.dict == right.dict;
   case TYA_FUNCTION:
@@ -1630,21 +1631,21 @@ TyaValue tya_add(TyaValue left, TyaValue right) {
     out[left_len + right_len] = '\0';
     return tya_string(out);
   }
+  if (left.kind == TYA_STRING || right.kind == TYA_STRING || left.kind == TYA_BYTES || right.kind == TYA_BYTES) {
+    tya_raise(tya_string("+ expects numbers, strings, or bytes of the same kind"));
+  }
+  if (left.kind != TYA_NUMBER || right.kind != TYA_NUMBER) {
+    tya_raise(tya_string("+ expects numbers, strings, or bytes of the same kind"));
+  }
   return tya_number(left.number + right.number);
 }
 
 TyaValue tya_and(TyaValue left, TyaValue right) {
-  if (!tya_truthy(left)) {
-    return left;
-  }
-  return right;
+  return tya_bool(tya_truthy(left) && tya_truthy(right));
 }
 
 TyaValue tya_or(TyaValue left, TyaValue right) {
-  if (tya_truthy(left)) {
-    return left;
-  }
-  return right;
+  return tya_bool(tya_truthy(left) || tya_truthy(right));
 }
 
 TyaValue tya_args(int argc, char **argv) {
@@ -2365,6 +2366,10 @@ TyaValue tya_current_raise(void) {
 }
 
 void tya_raise(TyaValue value) {
+  if (value.kind == TYA_NIL) {
+    fprintf(stderr, "raise expects non-nil value\n");
+    exit(1);
+  }
   if (tya_raise_frame == NULL) {
     TyaValue text = tya_to_string(value);
     fprintf(stderr, "uncaught raised value: %s\n", text.string == NULL ? "" : text.string);

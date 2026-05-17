@@ -101,6 +101,11 @@ selfhost/v01 fixed point
 selfhost/v02 latest-spec proof gates
 ```
 
+[`docs/static-typing-discussion.md`](docs/static-typing-discussion.md) records a
+static-typing discussion note. It is intentionally not current language
+authority, not an accepted direction, not on the roadmap, and not scheduled for
+implementation.
+
 Go interpreter behavior, ASTMODE, archived node-string experiments, and
 `docs/archive/pre-v0.1/` are not specification authority.
 

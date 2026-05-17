@@ -1,7 +1,7 @@
 # v0.2 collection builtins, deep equality, and stdin.
 cd $REPO
 exec go run ./cmd/tya run $WORK/builtins.tya
-stdout '2,4,6,8\n2\n3\ntrue\ntrue\n10\nfalse\ntrue\ntrue\n'
+stdout '2,4,6,8\n2\n3\ntrue\ntrue\n10\ntrue\ntrue\ntrue\n'
 ! stderr .
 
 exec sh -c 'printf "hello\n" | go run ./cmd/tya run "$WORK/read.tya"'
