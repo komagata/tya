@@ -1,0 +1,23 @@
+# v0.50 task --watch consumes the runner flag, reruns on watched .tya
+# changes, and ignores configured paths.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+mkdir src tmp
+exec touch src/main.tya tmp/ignored.tya
+
+exec sh -c '$WORK/tya task dev --watch > out.txt 2> err.txt & pid=$!; sleep 1; echo change >> src/main.tya; sleep 1; echo ignored >> tmp/ignored.tya; sleep 1; kill $pid 2>/dev/null; wait $pid 2>/dev/null || true'
+exec cat out.txt
+stdout -count=2 'run'
+! stdout 'run\nrun\nrun'
+exec cat err.txt
+! stdout .
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks.dev]
+cmds = ["echo run"]
+watch = ["src/**/*.tya"]
+ignore = ["tmp/**"]

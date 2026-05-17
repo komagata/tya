@@ -966,12 +966,19 @@ tya new --template lib mylib
 tya new --template lib --native my_native_lib
 ```
 
-`tya task` は `tya.toml` で宣言された task を一覧表示および実行する。string task は 1 つの command として実行される。array task は各 entry を順に実行する。追加引数は POSIX-quoted され、選択された task command に追加される。
+`tya task` は `tya.toml` の `[tasks]` で宣言された project-local shell task を一覧表示および実行する。manifest は現在ディレクトリから親へ探索され、command は project root を working directory として実行される。string task は 1 つの `/bin/sh -c` command として実行される。array task は各 entry を順に実行し、最初の失敗で停止する。table task は `cmds = [...]` を使い、`parallel = true` の場合は各 command を並行実行する。
+
+table task は `depends_on = ["build", "lint"]` で依存 task を宣言できる。依存は選択された task の前に、書かれた順序で、1 invocation につき 1 回だけ実行される。依存 cycle と未知の依存は、どの task command も実行する前に診断される。
+
+table task の `env = { KEY = "value" }` は、その task だけの environment override である。依存 task は自分自身の `env` を使い、下流 task の `env` は漏れない。
+
+`tya task <name> --watch` は task を 1 回実行し、監視対象の project file が変わるたびに再実行する。default では `.tya` file、`tya.toml`、存在する `src/`、`tests/`、`stdlib/`、`examples/` 配下を監視し、`.git/`、`node_modules/`、`_site/`、一般的な build output directory、hidden cache directory を無視する。table task の `watch = [...]` は default 監視対象を上書きし、`ignore = [...]` は ignore glob を追加する。`--watch` は `--` より前では task runner flag として消費され、`--` より後では task command へ渡される。
 
 ```sh
 tya task
 tya task run
 tya task lint --fix
+tya task dev --watch
 ```
 
 `tya install` は `tya.toml` で宣言された依存を解決し、取得または materialize して、`tya.lock` を書く。

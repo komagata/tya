@@ -1116,6 +1116,49 @@ cycles are reported to stderr for text and HTML output and embedded in JSON
 output. Error diagnostics exit with status 1 after output is produced;
 argument, path, I/O, lex, and parse failures exit with status 2.
 
+`tya task` lists and runs project-local shell tasks declared under `[tasks]`
+in `tya.toml`. It discovers the project manifest by walking up from the
+current directory and runs commands with the project root as the working
+directory.
+
+Task entries may be strings, arrays of strings, or table forms:
+
+```toml
+[tasks]
+run = "tya run src/main.tya"
+check = ["tya format --check src", "tya check src/main.tya"]
+
+[tasks.dev]
+depends_on = ["check"]
+env = { TYA_ENV = "dev" }
+cmds = ["tya run src/main.tya"]
+
+[tasks.watch]
+cmds = ["tya check src/main.tya", "tya lint src"]
+parallel = true
+watch = ["src/**/*.tya", "tests/**/*.tya"]
+ignore = ["tmp/**", "dist/**"]
+```
+
+String tasks run as one `/bin/sh -c` command. Array tasks run sequentially and
+stop on the first failing command. Table tasks use `cmds = [...]`; when
+`parallel = true`, commands run concurrently and line output is prefixed with
+the command index. `depends_on` runs dependency tasks before the selected task,
+once per invocation, in the order written. Dependency cycles and unknown
+dependencies are reported before any task command runs.
+
+`env` values override the inherited process environment for that task only.
+Dependencies use their own environment and do not inherit the selected task's
+overrides.
+
+`tya task <name> --watch` runs the task once and reruns it after watched project
+files change. By default, watch mode observes `.tya` files, `tya.toml`, and
+files under existing `src/`, `tests/`, `stdlib/`, and `examples/` directories,
+while ignoring `.git/`, `node_modules/`, `_site/`, common build output
+directories, and hidden cache directories. Table-form `watch` overrides the
+default watch set and `ignore` adds ignored globs. `--watch` is consumed by the
+task runner before `--`; arguments after `--` are passed to the task command.
+
 ## Verification Commands
 
 Verification commands inspect source and report whether it satisfies a specific

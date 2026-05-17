@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 )
 
 // FindManifest walks startDir and its parents (up to 16 levels) looking
@@ -82,10 +83,14 @@ type Dependency struct {
 //	                   runs every entry concurrently, waits for all, returns
 //	                   the first non-zero exit code
 type Task struct {
-	Name   string
-	Kind   string   // "string" | "array" | "parallel"
-	String string   // populated when Kind == "string"
-	Array  []string // populated when Kind == "array" or "parallel"
+	Name      string
+	Kind      string            // "string" | "array" | "parallel"
+	String    string            // populated when Kind == "string"
+	Array     []string          // populated when Kind == "array" or "parallel"
+	DependsOn []string          // dependency task names, in manifest order
+	Env       map[string]string // per-task environment overrides
+	Watch     []string          // optional watch globs
+	Ignore    []string          // optional additional ignore globs
 }
 
 func ReadManifest(path string) (*Manifest, error) {
@@ -277,10 +282,60 @@ func readTask(name string, v TomlValue) (Task, error) {
 		if p, ok := v.Table["parallel"]; ok && p.Kind == "bool" && p.Bool {
 			t.Kind = "parallel"
 		}
+		var err error
+		if t.DependsOn, err = readStringArrayTaskField(v, "depends_on"); err != nil {
+			return t, err
+		}
+		if t.Watch, err = readStringArrayTaskField(v, "watch"); err != nil {
+			return t, err
+		}
+		if t.Ignore, err = readStringArrayTaskField(v, "ignore"); err != nil {
+			return t, err
+		}
+		if t.Env, err = readTaskEnv(v); err != nil {
+			return t, fmt.Errorf("[TYA-E0906] %v", err)
+		}
 		return t, nil
 	default:
 		return t, fmt.Errorf("expected string, array of strings, or table form, got %s", v.Kind)
 	}
+}
+
+func readStringArrayTaskField(v TomlValue, name string) ([]string, error) {
+	field, ok := v.Table[name]
+	if !ok {
+		return nil, nil
+	}
+	if field.Kind != "array" {
+		return nil, fmt.Errorf("%s: expected array of strings", name)
+	}
+	out := []string{}
+	for i, item := range field.Array {
+		if item.Kind != "string" {
+			return nil, fmt.Errorf("%s[%d]: expected string, got %s", name, i, item.Kind)
+		}
+		out = append(out, item.Str)
+	}
+	return out, nil
+}
+
+func readTaskEnv(v TomlValue) (map[string]string, error) {
+	field, ok := v.Table["env"]
+	if !ok {
+		return nil, nil
+	}
+	if field.Kind != "table" {
+		return nil, fmt.Errorf("env: expected table")
+	}
+	out := map[string]string{}
+	for _, key := range field.Order {
+		value := field.Table[key]
+		if value.Kind != "string" {
+			return nil, fmt.Errorf("env.%s: expected string", key)
+		}
+		out[key] = value.Str
+	}
+	return out, nil
 }
 
 func readDep(name string, v TomlValue) (Dependency, error) {
@@ -424,24 +479,58 @@ func nativeToToml(n Native) TomlValue {
 }
 
 func taskToToml(t Task) TomlValue {
-	switch t.Kind {
-	case "array":
-		arr := NewTomlArray()
-		for _, cmd := range t.Array {
-			arr.Array = append(arr.Array, TomlString(cmd))
-		}
-		return arr
-	case "parallel":
+	if len(t.DependsOn) > 0 || len(t.Env) > 0 || len(t.Watch) > 0 || len(t.Ignore) > 0 || t.Kind == "parallel" {
 		tbl := NewTomlTable()
 		arr := NewTomlArray()
 		for _, cmd := range t.Array {
 			arr.Array = append(arr.Array, TomlString(cmd))
 		}
+		if t.Kind == "string" {
+			arr.Array = append(arr.Array, TomlString(t.String))
+		}
 		tbl.SetField("cmds", arr)
-		tbl.SetField("parallel", TomlBool(true))
+		if t.Kind == "parallel" {
+			tbl.SetField("parallel", TomlBool(true))
+		}
+		if len(t.DependsOn) > 0 {
+			tbl.SetField("depends_on", stringsToTomlArray(t.DependsOn))
+		}
+		if len(t.Env) > 0 {
+			env := NewTomlTable()
+			keys := make([]string, 0, len(t.Env))
+			for key := range t.Env {
+				keys = append(keys, key)
+			}
+			sort.Strings(keys)
+			for _, key := range keys {
+				env.SetField(key, TomlString(t.Env[key]))
+			}
+			tbl.SetField("env", env)
+		}
+		if len(t.Watch) > 0 {
+			tbl.SetField("watch", stringsToTomlArray(t.Watch))
+		}
+		if len(t.Ignore) > 0 {
+			tbl.SetField("ignore", stringsToTomlArray(t.Ignore))
+		}
 		return tbl
 	}
+	if t.Kind == "array" {
+		arr := NewTomlArray()
+		for _, cmd := range t.Array {
+			arr.Array = append(arr.Array, TomlString(cmd))
+		}
+		return arr
+	}
 	return TomlString(t.String)
+}
+
+func stringsToTomlArray(values []string) TomlValue {
+	arr := NewTomlArray()
+	for _, value := range values {
+		arr.Array = append(arr.Array, TomlString(value))
+	}
+	return arr
 }
 
 func depToToml(d Dependency) TomlValue {

@@ -171,11 +171,11 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   - [x] Diagnose orphan doc comments, duplicate definitions, and unparseable
     Markdown bodies.
 
-- [ ] **Task runner extensions** *(polish; not a v1.0.0 blocker)*
-  - [ ] Parallel execution syntax.
-  - [ ] File-watching mode: `tya task <name> --watch`.
-  - [ ] Task dependency graphs.
-  - [ ] Per-task environment variables.
+- [x] **Task runner extensions** *(polish; not a v1.0.0 blocker)*
+  - [x] Parallel execution syntax.
+  - [x] File-watching mode: `tya task <name> --watch`.
+  - [x] Task dependency graphs.
+  - [x] Per-task environment variables.
 
 - [x] **Linter extensions**
   - [x] Additional rules: suspicious `for` index patterns, unused function

@@ -1,0 +1,30 @@
+# v0.50 task dependency diagnostics fail before running commands.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya task unknown
+stderr 'TYA-E0905'
+stderr 'unknown task "missing"'
+! exists should_not_exist
+
+! exec $WORK/tya task cycle_a
+stderr 'TYA-E0904'
+stderr 'cycle_a -> cycle_b -> cycle_a'
+! exists should_not_exist
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks.unknown]
+depends_on = ["missing"]
+cmds = ["touch should_not_exist"]
+
+[tasks.cycle_a]
+depends_on = ["cycle_b"]
+cmds = ["touch should_not_exist"]
+
+[tasks.cycle_b]
+depends_on = ["cycle_a"]
+cmds = ["touch should_not_exist"]

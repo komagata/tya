@@ -116,7 +116,9 @@ tya doc --html ./out  # write a multi-page HTML site
 `tya task <name> [args...]` POSIX-quotes the trailing args and
 appends them to the task command (mirrors `$@`). Array-form tasks
 run each entry under `/bin/sh -c` in order and stop on the first
-failure.
+failure. Table-form tasks support `cmds = [...]`, `parallel = true`,
+`depends_on = [...]`, per-task `env = { KEY = "value" }`, and
+`tya task <name> --watch` for reruns on project file changes.
 
 ### Editor integration
 

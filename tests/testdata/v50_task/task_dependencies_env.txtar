@@ -1,0 +1,45 @@
+# v0.50 task runner extensions: dependencies, shared deps, env isolation,
+# and task-runner flag parsing.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+exec $WORK/tya task app extra
+stdout 'prepare'
+stdout 'shared'
+stdout 'build:build-env'
+stdout 'lint:lint-env'
+stdout 'app:app-env extra'
+! stdout 'lint:app-env'
+! stderr .
+
+exec $WORK/tya task passthrough -- --watch
+stdout 'args:--watch'
+
+-- tya.toml --
+name = "demo"
+version = "0.1.0"
+
+[tasks.prepare]
+cmds = ["echo prepare"]
+
+[tasks.shared]
+cmds = ["echo shared"]
+
+[tasks.build]
+depends_on = ["prepare", "shared"]
+env = { MODE = "build-env" }
+cmds = ["echo build:$MODE"]
+
+[tasks.lint]
+depends_on = ["shared"]
+env = { MODE = "lint-env" }
+cmds = ["echo lint:$MODE"]
+
+[tasks.app]
+depends_on = ["build", "lint"]
+env = { MODE = "app-env" }
+cmds = ["echo app:$MODE"]
+
+[tasks.passthrough]
+cmds = ["printf 'args:%s\\n'"]
