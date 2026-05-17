@@ -43,7 +43,10 @@ func main() {
 		os.Exit(2)
 	}
 	if os.Args[1] == "version" || os.Args[1] == "--version" {
-		fmt.Fprintln(os.Stdout, version)
+		if err := versionCommand(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
 		return
 	}
 	switch os.Args[1] {
@@ -210,6 +213,12 @@ func main() {
 		return
 	case "outdated":
 		if err := outdatedCommand(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	case "clean":
+		if err := cleanCommand(os.Args[2:]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -451,6 +460,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya add <name> [<constraint>] [--git URL --tag T] [--path P] [--dev]")
 	fmt.Fprintln(os.Stderr, "       tya remove <name>")
 	fmt.Fprintln(os.Stderr, "       tya outdated")
+	fmt.Fprintln(os.Stderr, "       tya clean [--packages]")
 	fmt.Fprintln(os.Stderr, "       tya new <name>")
 	fmt.Fprintln(os.Stderr, "       tya doctor native")
 	fmt.Fprintln(os.Stderr, "       tya task [name] [args...]")
@@ -459,6 +469,39 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "       tya doc [--html <out>] [paths...]")
 	fmt.Fprintln(os.Stderr, "       tya lsp [--log <file>]")
 	fmt.Fprintln(os.Stderr, "       tya version")
+}
+
+func versionCommand(args []string) error {
+	if len(args) == 0 {
+		fmt.Fprintln(os.Stdout, version)
+		return nil
+	}
+	if len(args) == 1 && args[0] == "--json" {
+		fmt.Fprintf(os.Stdout, "{\"compiler\":\"%s\",\"runtime\":\"%s\",\"spec\":\"1.0.0\",\"selfhost\":\"v01/v02\"}\n", version, version)
+		return nil
+	}
+	return fmt.Errorf("unknown version option: %s", args[0])
+}
+
+func cleanCommand(args []string) error {
+	removePackages := false
+	for _, arg := range args {
+		if arg != "--packages" {
+			return fmt.Errorf("unknown clean option: %s", arg)
+		}
+		removePackages = true
+	}
+	root, err := projectRoot()
+	if err != nil {
+		return err
+	}
+	if err := os.RemoveAll(filepath.Join(root, ".tya", "build")); err != nil {
+		return err
+	}
+	if removePackages {
+		return os.RemoveAll(filepath.Join(root, ".tya", "packages"))
+	}
+	return nil
 }
 
 func compileAndRun(path string, args []string) error {
@@ -520,11 +563,13 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 	if output == "" {
 		output = defaultOutputPath(path)
 	}
-	outDir, err := os.MkdirTemp("", "tya-build-*")
-	if err != nil {
+	outDir := filepath.Join(filepath.Dir(path), ".tya", "build")
+	if root, _, err := pkg.FindManifest(filepath.Dir(path)); err == nil {
+		outDir = filepath.Join(root, ".tya", "build")
+	}
+	if err := os.MkdirAll(outDir, 0755); err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(outDir)
 	cfile := filepath.Join(outDir, "main.c")
 	if err := os.WriteFile(cfile, []byte(csrc), 0644); err != nil {
 		return nil, err

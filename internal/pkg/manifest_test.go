@@ -10,6 +10,7 @@ func TestReadManifest(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "myapp"
 version = "0.1.0"
+license = "MIT"
 description = "An app"
 authors = ["Alice", "Bob"]
 
@@ -71,6 +72,7 @@ func TestReadManifestTasks(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "tasks-app"
 version = "0.1.0"
+license = "MIT"
 
 [tasks]
 ci = "tya format && tya test"
@@ -106,6 +108,7 @@ func TestReadManifestNative(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "native-demo"
 version = "0.1.0"
+license = "MIT"
 
 [native]
 sources = ["native/demo.c"]
@@ -149,6 +152,7 @@ func TestReadManifestTasksInvalidType(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "x"
 version = "0.1.0"
+license = "MIT"
 
 [tasks]
 broken = 42
@@ -166,6 +170,7 @@ func TestReadManifestTasksParallelTable(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "x"
 version = "0.1.0"
+license = "MIT"
 
 [tasks.watch]
 cmds = ["tya format --watch", "tya lsp"]
@@ -195,6 +200,7 @@ func TestReadManifestTasksTableWithoutParallel(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "x"
 version = "0.1.0"
+license = "MIT"
 
 [tasks.build]
 cmds = ["echo step1", "echo step2"]
@@ -220,6 +226,7 @@ func TestReadManifestTasksArrayWithNonString(t *testing.T) {
 	dir := t.TempDir()
 	src := `name = "x"
 version = "0.1.0"
+license = "MIT"
 
 [tasks]
 mixed = ["ok", 42]
@@ -233,6 +240,64 @@ mixed = ["ok", 42]
 	}
 }
 
+func TestManifestRejectsUnknownKeys(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tya.toml")
+	src := "name = \"x\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\nversoin = \"typo\"\n"
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ReadManifest(path); err == nil {
+		t.Fatal("expected unknown key error")
+	}
+}
+
+func TestManifestRequiresLicense(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tya.toml")
+	if err := os.WriteFile(path, []byte("name = \"x\"\nversion = \"0.1.0\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ReadManifest(path); err == nil {
+		t.Fatal("expected missing license error")
+	}
+}
+
+func TestManifestAcceptsExplicitDependenciesOnly(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tya.toml")
+	src := `name = "x"
+version = "0.1.0"
+license = "MIT"
+
+[dependencies]
+local = { path = "../local" }
+remote = { git = "https://example.com/remote.git", rev = "abc123" }
+`
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	m, err := ReadManifest(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.Deps["local"].Source != "path" || m.Deps["remote"].Source != "git" {
+		t.Fatalf("unexpected deps: %#v", m.Deps)
+	}
+}
+
+func TestNativePackageRejectsBuildScripts(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tya.toml")
+	src := "name = \"x\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n\n[native]\nbuild_script = \"make\"\n"
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ReadManifest(path); err == nil {
+		t.Fatal("expected native build script error")
+	}
+}
+
 func TestWriteManifestTasksRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "tya.toml")
@@ -240,6 +305,7 @@ func TestWriteManifestTasksRoundTrip(t *testing.T) {
 		Path:    path,
 		Name:    "x",
 		Version: Version{Major: 1, Minor: 0, Patch: 0, Raw: "1.0.0"},
+		License: "MIT",
 		Tasks: map[string]Task{
 			"ci":      {Name: "ci", Kind: "string", String: "tya test"},
 			"release": {Name: "release", Kind: "array", Array: []string{"tya build", "git tag v1.0.0"}},
@@ -272,6 +338,7 @@ func TestWriteManifestToolsRoundTrip(t *testing.T) {
 		Path:      path,
 		Name:      "x",
 		Version:   Version{Major: 1, Minor: 0, Patch: 0, Raw: "1.0.0"},
+		License:   "MIT",
 		Tools:     map[string]string{"hello": "tools/hello.tya"},
 		ToolOrder: []string{"hello"},
 	}
@@ -297,6 +364,7 @@ func TestWriteManifestRoundTrip(t *testing.T) {
 		Path:    path,
 		Name:    "x",
 		Version: Version{Major: 1, Minor: 0, Patch: 0, Raw: "1.0.0"},
+		License: "MIT",
 		Deps: map[string]Dependency{
 			"foo": {Name: "foo", Source: "path", PathRef: "../foo"},
 		},

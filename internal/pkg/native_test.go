@@ -47,6 +47,7 @@ func nativeProject(t *testing.T, nativeLine string) string {
 	}
 	src := `name = "demo"
 version = "0.1.0"
+license = "MIT"
 
 [native]
 sources = ["native/demo.c"]

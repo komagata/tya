@@ -41,6 +41,18 @@ func TestCLICheckUnusedAllowsUsedBinding(t *testing.T) {
 	}
 }
 
+func buildTyaCLI(t *testing.T) string {
+	t.Helper()
+	bin := filepath.Join(t.TempDir(), "tya")
+	cmd := exec.Command("go", "build", "-o", bin, "./cmd/tya")
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("build tya CLI failed: %v\n%s", err, out)
+	}
+	return bin
+}
+
 func TestCLIAllowsCombinedOptions(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "used.tya")
 	if err := os.WriteFile(path, []byte("name = \"Tya\"\nprint(name)\n"), 0644); err != nil {
@@ -274,6 +286,100 @@ func TestNoExperimentalFeatureWithoutSpec(t *testing.T) {
 	}
 }
 
+func TestFormatDoesNotRewriteTyaToml(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "tya.toml")
+	original := "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n"
+	if err := os.WriteFile(path, []byte(original), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "format", "-w", path)
+	cmd.Dir = ".."
+	_, _ = cmd.CombinedOutput()
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != original {
+		t.Fatalf("format rewrote tya.toml: %q", got)
+	}
+}
+
+func TestVersionJsonIncludesVersions(t *testing.T) {
+	cmd := exec.Command("go", "run", "./cmd/tya", "version", "--json")
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	text := string(out)
+	for _, key := range []string{`"compiler"`, `"runtime"`, `"spec"`, `"selfhost"`} {
+		if !strings.Contains(text, key) {
+			t.Fatalf("version json missing %s: %s", key, text)
+		}
+	}
+}
+
+func TestPublishCommandUnavailable(t *testing.T) {
+	cmd := exec.Command("go", "run", "./cmd/tya", "publish")
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected publish to fail")
+	}
+	if !strings.Contains(string(out), "invalid Tya file name: publish") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestCleanRemovesBuildOnly(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tya.toml"), []byte("name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	buildDir := filepath.Join(dir, ".tya", "build")
+	pkgDir := filepath.Join(dir, ".tya", "packages")
+	if err := os.MkdirAll(buildDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(pkgDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	tya := buildTyaCLI(t)
+	cmd := exec.Command(tya, "clean")
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if _, err := os.Stat(buildDir); !os.IsNotExist(err) {
+		t.Fatalf("build dir still exists or stat failed: %v", err)
+	}
+	if _, err := os.Stat(pkgDir); err != nil {
+		t.Fatalf("packages dir should remain: %v", err)
+	}
+}
+
+func TestCleanPackagesRemovesDependencyCache(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "tya.toml"), []byte("name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	pkgDir := filepath.Join(dir, ".tya", "packages")
+	if err := os.MkdirAll(pkgDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	tya := buildTyaCLI(t)
+	cmd := exec.Command(tya, "clean", "--packages")
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if _, err := os.Stat(pkgDir); !os.IsNotExist(err) {
+		t.Fatalf("packages dir still exists or stat failed: %v", err)
+	}
+}
+
 func TestCLIBuildWritesExecutable(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "hello.tya")
@@ -294,6 +400,9 @@ func TestCLIBuildWritesExecutable(t *testing.T) {
 	}
 	if string(out) != "Hello from build\n" {
 		t.Fatalf("unexpected output: %s", out)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".tya", "build", "main.c")); err != nil {
+		t.Fatalf("missing intermediate C artifact under .tya/build: %v", err)
 	}
 }
 

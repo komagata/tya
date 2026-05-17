@@ -102,6 +102,9 @@ func ReadManifest(path string) (*Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := validateManifestKeys(tv); err != nil {
+		return nil, err
+	}
 	m := &Manifest{Path: path, Deps: map[string]Dependency{}, DevDeps: map[string]Dependency{}, Tasks: map[string]Task{}, Tools: map[string]string{}}
 	if v, ok := tv.Table["name"]; ok && v.Kind == "string" {
 		m.Name = v.Str
@@ -179,7 +182,38 @@ func ReadManifest(path string) (*Manifest, error) {
 	if m.Version.Raw == "" {
 		return nil, fmt.Errorf("tya.toml: missing version")
 	}
+	if m.License == "" {
+		return nil, fmt.Errorf("tya.toml: missing license")
+	}
 	return m, nil
+}
+
+func validateManifestKeys(tv TomlValue) error {
+	allowedTop := map[string]bool{
+		"name": true, "version": true, "description": true, "authors": true,
+		"license": true, "dependencies": true, "dev-dependencies": true,
+		"tasks": true, "tools": true, "native": true,
+	}
+	for _, key := range tv.Order {
+		if !allowedTop[key] {
+			return fmt.Errorf("tya.toml: unknown top-level key %s", key)
+		}
+	}
+	if native, ok := tv.Table["native"]; ok && native.Kind == "table" {
+		allowedNative := map[string]bool{
+			"sources": true, "headers": true, "include_dirs": true, "pkg_config": true,
+			"cflags": true, "ldflags": true, "functions": true, "abi": true,
+		}
+		for _, key := range native.Order {
+			if !allowedNative[key] {
+				return fmt.Errorf("native: unknown key %s", key)
+			}
+			if key == "build" || key == "script" || key == "build_script" {
+				return fmt.Errorf("native: shell build scripts are not supported")
+			}
+		}
+	}
+	return nil
 }
 
 func readNative(v TomlValue) (Native, error) {

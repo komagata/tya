@@ -311,7 +311,7 @@ func TestResolveImportPriority(t *testing.T) {
 	project := t.TempDir()
 	importer := filepath.Join(project, "main.tya")
 	writeFile(t, importer, "")
-	writeFile(t, filepath.Join(project, "tya.toml"), "name = \"app\"\nversion = \"1.0.0\"\n\n[dependencies]\nshared = { path = \"../dep\" }\n")
+	writeFile(t, filepath.Join(project, "tya.toml"), "name = \"app\"\nversion = \"1.0.0\"\nlicense = \"MIT\"\n\n[dependencies]\nshared = { path = \"../dep\" }\n")
 	dep := filepath.Join(project, "..", "dep")
 	if err := os.MkdirAll(filepath.Join(dep, "src"), 0755); err != nil {
 		t.Fatal(err)
@@ -394,7 +394,7 @@ func TestLockfileMismatchRequiresUpdate(t *testing.T) {
 	project := t.TempDir()
 	importer := filepath.Join(project, "main.tya")
 	writeFile(t, importer, "")
-	writeFile(t, filepath.Join(project, "tya.toml"), "name = \"app\"\nversion = \"1.0.0\"\n\n[dependencies]\nshared = \"^2.0.0\"\n")
+	writeFile(t, filepath.Join(project, "tya.toml"), "name = \"app\"\nversion = \"1.0.0\"\nlicense = \"MIT\"\n\n[dependencies]\nshared = \"^2.0.0\"\n")
 	if err := pkg.WriteLockfile(filepath.Join(project, "tya.lock"), &pkg.Lockfile{
 		Packages: []pkg.LockedPackage{{
 			Name:    "shared",
@@ -412,6 +412,44 @@ func TestLockfileMismatchRequiresUpdate(t *testing.T) {
 		t.Fatal("expected stale lockfile error")
 	}
 	if !strings.Contains(err.Error(), "tya.lock is stale") || !strings.Contains(err.Error(), "tya install") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestDependencyHashMismatchFails(t *testing.T) {
+	project := t.TempDir()
+	importer := filepath.Join(project, "main.tya")
+	writeFile(t, importer, "")
+	writeFile(t, filepath.Join(project, "tya.toml"), "name = \"app\"\nversion = \"1.0.0\"\nlicense = \"MIT\"\n\n[dependencies]\nshared = { git = \"https://example.com/shared.git\", rev = \"abc\" }\n")
+	pkgRoot := filepath.Join(project, ".tya", "packages", "shared-1.0.0")
+	if err := os.MkdirAll(filepath.Join(pkgRoot, "src"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(pkgRoot, "tya.toml"), "name = \"shared\"\nversion = \"1.0.0\"\nlicense = \"MIT\"\n")
+	writeFile(t, filepath.Join(pkgRoot, "src", "shared.tya"), "text = \"before\"\n")
+	checksum, err := pkg.TreeChecksum(pkgRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(pkgRoot, "src", "shared.tya"), "text = \"after\"\n")
+	if err := pkg.WriteLockfile(filepath.Join(project, "tya.lock"), &pkg.Lockfile{
+		Packages: []pkg.LockedPackage{{
+			Name:     "shared",
+			Version:  pkg.Version{Major: 1, Minor: 0, Patch: 0, Raw: "1.0.0"},
+			Source:   "git",
+			Git:      "https://example.com/shared.git",
+			Rev:      "abc",
+			Checksum: checksum,
+		}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = resolveModulePath(importer, "shared")
+	if err == nil {
+		t.Fatal("expected hash mismatch")
+	}
+	if !strings.Contains(err.Error(), "content hash mismatch") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

@@ -599,7 +599,17 @@ func packageSrcDirsFromRoot(root, leadingName string) ([]string, error) {
 			if p.Name != leadingName {
 				continue
 			}
-			out = append(out, filepath.Join(pkg.PackageDir(root, p), "src"))
+			pkgRoot := pkg.PackageDir(root, p)
+			if p.Source != "path" && p.Checksum != "" {
+				got, err := pkg.TreeChecksum(pkgRoot)
+				if err != nil {
+					return nil, fmt.Errorf("[TYA-E0942] locked dependency %s is unavailable locally; run `tya install`", p.Name)
+				}
+				if got != p.Checksum {
+					return nil, fmt.Errorf("[TYA-E0943] dependency %s content hash mismatch; run `tya install`", p.Name)
+				}
+			}
+			out = append(out, filepath.Join(pkgRoot, "src"))
 		}
 	}
 	pkgs := filepath.Join(root, ".tya", "packages")

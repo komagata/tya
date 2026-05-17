@@ -146,6 +146,7 @@ test = "tya test tests"
 	}
 	manifest := fmt.Sprintf(`name = "%s"
 version = "0.1.0"
+license = "MIT"
 
 [tasks]
 %s`, name, tasks)
@@ -186,6 +187,7 @@ func writeNativeLibTemplate(target, name string) error {
 	}
 	manifest := fmt.Sprintf(`name = "%s"
 version = "0.1.0"
+license = "MIT"
 
 [native]
 sources = ["native/%s.c"]

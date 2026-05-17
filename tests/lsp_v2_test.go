@@ -31,7 +31,7 @@ func writeWorkspace(t *testing.T, files map[string]string) string {
 
 func TestLSPCrossFileDefinition(t *testing.T) {
 	dir := writeWorkspace(t, map[string]string{
-		"tya.toml":        "name = \"demo\"\nversion = \"0.1.0\"\n",
+		"tya.toml":        "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
 		"src/helpers.tya": "# add two numbers\nadd = a, b -> a + b\n",
 		"src/main.tya":    "import helpers\n\nhelpers.add(1, 2)\n",
 	})
@@ -419,7 +419,7 @@ func TestLSPDocumentSymbols(t *testing.T) {
 
 func TestLSPWorkspaceSymbols(t *testing.T) {
 	dir := writeWorkspace(t, map[string]string{
-		"tya.toml":  "name = \"demo\"\nversion = \"0.1.0\"\n",
+		"tya.toml":  "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
 		"src/a.tya": "greet = -> 1\n",
 		"src/b.tya": "class Greeter\n  static hi = -> 1\n",
 	})

@@ -1071,9 +1071,12 @@ Package dependencies may shadow `TYA_PATH` and standard-library imports.
 ### Package Manifests
 
 `tya.toml` declares package metadata, dependencies, native wrappers, and
-package-provided tools. `tya install` resolves dependencies and writes
-`tya.lock`. Git and local path dependencies are supported. There is currently
-no central package registry and no `tya publish` command.
+package-provided tools. Unknown top-level keys are errors so typos are not
+silently ignored. Package manifests require `name`, `version`, and `license`.
+`tya install` resolves dependencies and writes `tya.lock`. Git and explicit
+local path dependencies are supported. Registry-style implicit package source
+discovery is not supported. There is currently no central package registry and
+no `tya publish` command.
 
 A package is a versioned distribution unit for reusable Tya code. Package code
 normally exposes importable source under `src/`. Applications consume packages
@@ -1085,18 +1088,23 @@ my_lib = { git = "https://github.com/example/my_lib", tag = "v0.1.0" }
 local_lib = { path = "../local_lib" }
 ```
 
-`tya.lock` records resolved dependency sources and should be committed by
-applications. When `tya.lock` exists, it is authoritative for dependency
-versions and sources. If `tya.toml` and `tya.lock` disagree, commands that
-resolve package imports fail with a stale-lock diagnostic and instruct the user
-to run `tya install` before the changed dependency graph is used.
+`tya.lock` records resolved dependency sources, revisions, and content hashes
+where applicable, and should be committed by applications. When `tya.lock`
+exists, it is authoritative for dependency versions and sources. If `tya.toml`
+and `tya.lock` disagree, commands that resolve package imports fail with a
+stale-lock diagnostic and instruct the user to run `tya install` before the
+changed dependency graph is used. If cached package content does not match the
+locked hash, import resolution fails and instructs the user to run
+`tya install`.
 
 Native package metadata lives under `[native]`. Native paths are relative to
 the package root. `tya build`, `tya run`, and `tya test` compile declared C
 sources with generated C, the Tya runtime, include directories, `pkg-config`
 flags, `cflags`, and `ldflags`. Native wrapper functions use the Tya runtime
 ABI and are called from package code like predeclared functions inside that
-package.
+package. Native packages are declarative; arbitrary shell build scripts in
+manifest metadata are not supported. Native packages compile and link trusted
+C/native code and are outside the safe-analysis trust boundary.
 
 Package-provided tools live under `[tools]` and run through `tya tool`.
 Package tools are not global installs and are not shell tasks; they run from
@@ -1117,9 +1125,11 @@ Class files are library-only and cannot be entry files.
 
 Tya uses a compile-to-C pipeline for native execution. `tya run` compiles a
 temporary native executable, runs it, and removes the temporary executable.
-`tya build` writes a reusable executable. `tya emit-c` prints or writes the C
-program generated from Tya source. The generated C links against the Tya
-runtime.
+`tya build -o PATH` writes a reusable executable to `PATH`; without `-o`,
+`tya build` writes an executable in the current directory using the source
+basename. Intermediate native build artifacts live under `.tya/build/`.
+`tya emit-c` prints or writes the C program generated from Tya source. The
+generated C links against the Tya runtime.
 
 The default native target uses the Tya-managed Zig toolchain as `zig cc`.
 Native package metadata from `[native]` contributes C sources, headers,
@@ -1194,6 +1204,24 @@ embed     inspect embedded asset declarations
 version   print the installed Tya version
 ```
 
+`tya clean` removes `.tya/build/` and keeps `.tya/packages/`. `tya clean
+--packages` also removes the project-local dependency cache. Project-local
+`.tya/packages/` defines dependency meaning; global caches may optimize fetches
+but must not change resolution.
+
+`tya version --json` reports compiler, runtime, SPEC, and self-host version
+metadata.
+
+Only `tya install` and explicit update/add package operations perform
+dependency network access by default. `tya check`, `tya run`, `tya build`, and
+`tya test` do not fetch missing dependencies automatically; if a required
+locked dependency is unavailable locally, they fail with an explicit error.
+
+`tya check` and `tya doc` are safe-analysis commands: they parse, inspect, and
+report without executing user code or compiling native code. `tya run`,
+`tya build`, and `tya test` execute or build user code and may compile/link
+native package code.
+
 `tya lint` diagnostics are warnings, not language validity errors. Suppression
 comments are `# tya-lint-ignore: CODE` for one line or next statement and
 `# tya-lint-ignore-file: CODE, CODE` for a file. Omitting codes suppresses all
@@ -1228,7 +1256,8 @@ exits with status 1 when validation fails. If parser recovery is not possible,
 
 `tya format` never rewrites a file that cannot be lexed, parsed, and
 serialized by the canonical formatter. Invalid source reports an error and
-exits without modifying the input file.
+exits without modifying the input file. `tya format` formats only `.tya`
+source files and never rewrites `tya.toml`.
 
 LSP diagnostics use the same stable diagnostic codes and messages as the
 parser, checker, and linter diagnostics used by CLI tools. LSP may transport
@@ -1242,6 +1271,15 @@ nondeterministic metadata unless a future debug option explicitly requests it.
 v1.0 has no experimental language feature gates. Experimental syntax or
 `--experimental-*` tool options are invalid unless a later accepted SPEC adds
 that behavior explicitly.
+
+Environment variables are read by user programs only through explicit calls
+such as `env(name)` or documented standard-library APIs. `.env` files are not
+loaded automatically; users or task-runner commands may load them before
+invoking Tya. Toolchain behavior may be affected by the documented variables
+`TYA_PATH`, `TYA_STDLIB_DIR`, `TYA_RUNTIME_DIR`, `TYA_PROJECT_ROOT`, `TYA_ZIG`,
+`TYA_ZIG_HOME`, `TYA_ZIG_VERSION`, `TYA_ZIG_SHA256`, `TYA_DISABLE_ZLIB`,
+`TYA_ENABLE_ZLIB`, `TYA_DISABLE_OPENSSL`, `TYA_ENABLE_OPENSSL`, `CC`,
+`NO_COLOR`, and `HOME` in isolated test/toolchain contexts.
 
 `tya doc` extracts leading source comments attached to public top-level
 functions, classes, modules, and interfaces. A doc comment attaches only to the
