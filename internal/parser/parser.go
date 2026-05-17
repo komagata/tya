@@ -1277,8 +1277,8 @@ func (p *Parser) dictBody() (*ast.DictLit, error) {
 	dict := &ast.DictLit{}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
-		name := p.expect(token.IDENT)
-		if name.Type != token.IDENT {
+		name := p.next()
+		if name.Type != token.IDENT && name.Type != token.STRING {
 			return nil, p.err("expected dictionary key")
 		}
 		if !p.match(token.COLON) {

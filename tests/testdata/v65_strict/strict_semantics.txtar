@@ -18,6 +18,14 @@ stdout 'true'
 stdout '2'
 stdout '2'
 stdout 'matched'
+stdout 'text/plain'
+stdout 'x'
+stdout 'empty'
+stdout 'nil'
+stdout '1'
+stdout 'nil'
+stdout 'あ'
+stdout 'nil'
 
 exec $WORK/tya build valid.tya -o valid
 exec ./valid
@@ -33,6 +41,14 @@ stdout 'true'
 stdout '2'
 stdout '2'
 stdout 'matched'
+stdout 'text/plain'
+stdout 'x'
+stdout 'empty'
+stdout 'nil'
+stdout '1'
+stdout 'nil'
+stdout 'あ'
+stdout 'nil'
 
 ! exec $WORK/tya check return_outside.tya
 stderr 'TYA-E0120'
@@ -48,6 +64,9 @@ stderr 'cannot mutate constant ITEMS'
 
 ! exec $WORK/tya check dict_dot.tya
 stderr 'cannot use . access on dictionary; use index access'
+
+! exec $WORK/tya check duplicate_normalized_dict_key.tya
+stderr 'duplicate dictionary key name'
 
 ! exec $WORK/tya check kind_reassign_through_nil.tya
 stderr 'cannot reassign value from number to string'
@@ -129,6 +148,18 @@ user, err = parse_user("tya")
 if err
   print(err["message"])
 
+headers = { "Content-Type": "text/plain", "$schema": "x", "": "empty" }
+print(headers["Content-Type"])
+print(headers["$schema"])
+print(headers[""])
+items = []
+print(items.push(1))
+print(items.pop())
+dict = {}
+print(dict.set("name", "Tya"))
+print("あい"[0])
+print("あい"[99])
+
 -- return_outside.tya --
 return 1
 
@@ -149,6 +180,9 @@ ITEMS[0] = 2
 -- dict_dot.tya --
 user = { name: "komagata" }
 print(user.name)
+
+-- duplicate_normalized_dict_key.tya --
+user = { name: "Tya", "name": "duplicate" }
 
 -- kind_reassign_through_nil.tya --
 value = 1

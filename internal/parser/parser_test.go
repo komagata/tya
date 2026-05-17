@@ -54,6 +54,31 @@ func TestParseInlineDict(t *testing.T) {
 	}
 }
 
+func TestParseDictionaryStringKeys(t *testing.T) {
+	tests := []string{
+		"headers = { \"Content-Type\": \"text/plain\", \"$schema\": \"x\", \"\": \"empty\" }\n",
+		"headers =\n  \"Content-Type\": \"text/plain\"\n  \"$schema\": \"x\"\n  \"\": \"empty\"\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		prog, _, err := Parse(toks)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assign := prog.Stmts[0].(*ast.AssignStmt)
+		obj, ok := assign.Values[0].(*ast.DictLit)
+		if !ok {
+			t.Fatalf("got %T", assign.Values[0])
+		}
+		if len(obj.Props) != 3 {
+			t.Fatalf("got %d props", len(obj.Props))
+		}
+	}
+}
+
 func TestParseRejectsSetLiteral(t *testing.T) {
 	toks, errs := lexer.Lex("roles = { \"admin\", \"owner\" }\n")
 	if len(errs) != 0 {

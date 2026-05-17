@@ -12,6 +12,7 @@ import (
 	"tya/internal/interp"
 	"tya/internal/lexer"
 	"tya/internal/parser"
+	"tya/internal/token"
 )
 
 var constNameRE = regexp.MustCompile(`^[A-Z][A-Z0-9_]*$`)
@@ -1276,7 +1277,7 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.DictLit:
 		seen := map[string]bool{}
 		for _, prop := range n.Props {
-			if !valueNameRE.MatchString(prop.Name) {
+			if prop.Tok.Type != token.STRING && !valueNameRE.MatchString(prop.Name) {
 				return fmt.Errorf("%d:%d: invalid dictionary key %s", prop.Tok.Line, prop.Tok.Col, prop.Name)
 			}
 			if seen[prop.Name] {

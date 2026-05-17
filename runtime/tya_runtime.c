@@ -141,6 +141,7 @@ static TyaValue tya_class_nil;
 static bool tya_primitive_classes_initialized = false;
 
 static TyaValue tya_primitive_member(TyaValue receiver, const char *key);
+static char *tya_utf8_char_at(const char *text, int rune_index);
 static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -791,13 +792,18 @@ TyaValue tya_index(TyaValue value, TyaValue index) {
     return value.array->items[i];
   }
   if (value.kind == TYA_STRING && value.string != NULL && i >= 0) {
-    int n = tya_string_len(value.string);
-    if (i < n) {
+    if (getenv("TYA_LEGACY_MODULES") != NULL) {
+      int n = tya_string_len(value.string);
+      if (i >= n) {
+        return tya_nil();
+      }
       char *out = malloc(2);
       out[0] = value.string[i];
       out[1] = '\0';
       return tya_string(out);
     }
+    char *out = tya_utf8_char_at(value.string, i);
+    return out == NULL ? tya_nil() : tya_string(out);
   }
   if ((value.kind == TYA_DICT || value.kind == TYA_OBJECT) && value.dict != NULL && index.kind == TYA_STRING && index.string != NULL) {
     for (int j = 0; j < value.dict->len; j++) {
@@ -856,6 +862,35 @@ static int tya_string_len(const char *text) {
   last_string = text;
   last_len = n;
   return n;
+}
+
+static char *tya_utf8_char_at(const char *text, int rune_index) {
+  if (text == NULL || rune_index < 0) {
+    return NULL;
+  }
+  int current = 0;
+  for (int i = 0; text[i] != '\0';) {
+    unsigned char c = (unsigned char)text[i];
+    int width = 1;
+    if ((c & 0x80) == 0) {
+      width = 1;
+    } else if ((c & 0xE0) == 0xC0) {
+      width = 2;
+    } else if ((c & 0xF0) == 0xE0) {
+      width = 3;
+    } else if ((c & 0xF8) == 0xF0) {
+      width = 4;
+    }
+    if (current == rune_index) {
+      char *out = malloc((size_t)width + 1);
+      memcpy(out, text + i, (size_t)width);
+      out[width] = '\0';
+      return out;
+    }
+    i += width;
+    current++;
+  }
+  return NULL;
 }
 
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
@@ -1056,10 +1091,10 @@ TyaValue tya_dict_get(TyaValue dict, TyaValue key, TyaValue fallback, bool has_f
 
 TyaValue tya_dict_set(TyaValue dict, TyaValue key, TyaValue value) {
   if (key.kind != TYA_STRING || key.string == NULL || dict.kind != TYA_DICT || dict.dict == NULL) {
-    return dict;
+    return tya_nil();
   }
   tya_set_index(dict, key, value);
-  return dict;
+  return tya_nil();
 }
 
 TyaValue tya_dict_delete(TyaValue dict, TyaValue key) {
@@ -1068,10 +1103,9 @@ TyaValue tya_dict_delete(TyaValue dict, TyaValue key) {
   }
   for (int i = 0; i < dict.dict->len; i++) {
     if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key.string) == 0) {
-      TyaValue value = dict.dict->entries[i].value;
       dict.dict->entries[i].key = NULL;
       dict.dict->entries[i].value = tya_nil();
-      return value;
+      return tya_nil();
     }
   }
   return tya_nil();
@@ -1643,6 +1677,9 @@ TyaValue tya_add(TyaValue left, TyaValue right) {
     }
     out[left_len + right_len] = '\0';
     return tya_string(out);
+  }
+  if (getenv("TYA_LEGACY_MODULES") != NULL && (left.kind == TYA_STRING || right.kind == TYA_STRING)) {
+    return tya_add(tya_to_string(left), tya_to_string(right));
   }
   if (left.kind == TYA_STRING || right.kind == TYA_STRING || left.kind == TYA_BYTES || right.kind == TYA_BYTES) {
     tya_raise(tya_string("+ expects numbers, strings, or bytes of the same kind"));
@@ -3355,7 +3392,7 @@ static TyaValue tya_method_blank_p(TyaValue receiver, TyaValue a, TyaValue b, Ty
 static TyaValue tya_method_present_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_bool(!tya_equal(tya_trim(receiver), tya_string(""))); }
 static TyaValue tya_method_first(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_first(receiver); }
 static TyaValue tya_method_last(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_last(receiver); }
-static TyaValue tya_method_push(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_array_push(receiver, a); }
+static TyaValue tya_method_push(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; (void)tya_array_push(receiver, a); return getenv("TYA_LEGACY_MODULES") != NULL ? receiver : tya_nil(); }
 static TyaValue tya_method_pop(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_pop(receiver); }
 static TyaValue tya_method_slice(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_slice(receiver, a, b); }
 static TyaValue tya_method_reverse(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_reverse(receiver); }

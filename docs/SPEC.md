@@ -650,8 +650,11 @@ items.push("c")
 print(items[0])
 ```
 
-Dictionaries use brace literals. Identifier keys in dictionary literals are
-stored as string keys.
+Dictionaries use brace literals. Identifier keys and string-literal keys in
+dictionary literals are stored as string keys. String-literal keys support
+JSON-style names such as `"Content-Type"`, `"$schema"`, `"1"`, and `""`.
+Duplicate keys are invalid after normalizing identifier and string-literal
+forms to strings.
 
 ```tya
 user = { name: "komagata", age: 20 }
@@ -670,11 +673,13 @@ access such as `user.name` is invalid.
 Array, string, and bytes indexes must be integers. Dictionary and error-value
 indexes must be strings. Missing dictionary keys and out-of-range array,
 string, or bytes indexes return `nil`; indexing a non-collection target is
-invalid.
+invalid. String indexing is by Unicode rune. Bytes indexing is byte-based.
 
 Array index assignment requires an existing array index and fails on
 out-of-range writes. Dictionary index assignment may create a new key.
 Arrays and dictionaries are mutable. Strings and bytes are immutable.
+`Array.push`, `Dict.set`, and `Dict.delete` return `nil`. `Array.pop` returns
+the removed value, or `nil` when the array is empty.
 
 ### Error Expressions
 
@@ -794,7 +799,10 @@ for entry in user
   print("{key}: {value}")
 ```
 
-`break` exits the nearest loop. `continue` skips to the next iteration.
+`for` evaluates to the last completed body value. An empty loop evaluates to
+`nil`. `break` exits the nearest loop and leaves the loop value as the last
+completed body value before the break, or `nil` if there is none. `continue`
+skips to the next iteration and discards the current iteration's partial value.
 
 ### Match Statements
 
@@ -822,8 +830,9 @@ return value, err
 
 ### Raise, Try, And Catch Statements
 
-`raise` raises a value. `try` executes a block and handles raised values with
-`catch`.
+`raise` raises any non-`nil` value. `raise nil` is invalid. `try` executes a
+block and `catch` catches every raised non-`nil` value; branch by raised value
+inside the `catch` body with `if` or `match`.
 
 ```tya
 try

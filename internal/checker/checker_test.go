@@ -74,6 +74,24 @@ func TestCheckAllowsDictionaryIndexAndMethodAccess(t *testing.T) {
 	}
 }
 
+func TestCheckAllowsDictionaryStringLiteralKeys(t *testing.T) {
+	prog := parse(t, "headers = { \"Content-Type\": \"text/plain\", \"$schema\": \"x\", \"1\": \"one\", \"\": \"empty\" }\nprint(headers[\"Content-Type\"])\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsDuplicateNormalizedDictionaryKeys(t *testing.T) {
+	prog := parse(t, "user = { name: \"Tya\", \"name\": \"duplicate\" }\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected duplicate dictionary key error")
+	}
+	if !strings.Contains(err.Error(), "duplicate dictionary key name") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckRejectsKindChangingReassignmentThroughNil(t *testing.T) {
 	prog := parse(t, "value = 1\nvalue = nil\nvalue = \"one\"\n")
 	err := Check(prog)

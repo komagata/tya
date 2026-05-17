@@ -599,6 +599,69 @@ func TestRunTryPropagation(t *testing.T) {
 	}
 }
 
+func TestRunDictionaryStringLiteralKeys(t *testing.T) {
+	src := "headers = { \"Content-Type\": \"text/plain\", \"$schema\": \"x\", \"1\": \"one\", \"\": \"empty\" }\nprint(headers[\"Content-Type\"])\nprint(headers[\"$schema\"])\nprint(headers[\"1\"])\nprint(headers[\"\"])\nprint(headers[\"missing\"])\n"
+	out := runEval(t, src)
+	want := "text/plain\nx\none\nempty\nnil\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunCollectionMutationReturnValues(t *testing.T) {
+	src := "items = []\nprint(items.push(1))\nprint(items.pop())\nprint(items.pop())\ndict = {}\nprint(dict.set(\"name\", \"Tya\"))\nprint(dict[\"name\"])\nprint(dict.delete(\"name\"))\nprint(dict[\"name\"])\n"
+	out := runEval(t, src)
+	want := "nil\n1\nnil\nnil\nTya\nnil\nnil\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunEmptyControlFlowValues(t *testing.T) {
+	src := "empty_for = ->\n  for item in []\n    item\nunmatched_if = ->\n  if false\n    \"bad\"\nunmatched_match = ->\n  match \"x\"\n    case \"y\"\n      \"bad\"\nprint(empty_for())\nprint(unmatched_if())\nprint(unmatched_match())\n"
+	out := runEval(t, src)
+	want := "nil\nnil\nnil\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunBreakContinueLoopValues(t *testing.T) {
+	src := "break_before = ->\n  for item in [1]\n    break\nbreak_after = ->\n  for item in [1, 2]\n    item\n    break\ncontinue_discards = ->\n  for item in [1, 2]\n    item\n    continue\nprint(break_before())\nprint(break_after())\nprint(continue_discards())\n"
+	out := runEval(t, src)
+	want := "nil\n1\nnil\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunAssignmentEvaluationOrderAndSwap(t *testing.T) {
+	src := "items = []\nrecord = value ->\n  items.push(value)\n  return value\na = 1\nb = 2\na, b = record(b), record(a)\nprint(a)\nprint(b)\nprint(items.join(\",\"))\n"
+	out := runEval(t, src)
+	want := "2\n1\n2,1\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunStringIndexingUsesRunes(t *testing.T) {
+	src := "print(\"abc\"[1])\nprint(\"あい\"[0])\nprint(\"あい\"[99])\n"
+	out := runEval(t, src)
+	want := "b\nあ\nnil\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunCatchCatchesAnyNonNilValue(t *testing.T) {
+	src := "raise_and_catch = value ->\n  try\n    raise value\n  catch err\n    return err\nprint(raise_and_catch(\"bad\"))\nprint(raise_and_catch(3))\nprint(raise_and_catch({ \"kind\": \"dict\" })[\"kind\"])\n"
+	out := runEval(t, src)
+	want := "bad\n3\ndict\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {
@@ -607,6 +670,23 @@ func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	if _, _, err := parser.Parse(toks); err == nil {
 		t.Fatal("expected parser error")
 	}
+}
+
+func runEval(t *testing.T, src string) string {
+	t.Helper()
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	return out.String()
 }
 
 func TestRunRejectsStrictDynamicErrors(t *testing.T) {

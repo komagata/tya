@@ -2,11 +2,11 @@
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/module_apis.tya
-stdout 'hello\n3\n3\ntrue\ntrue\ntrue\nHi, Tya\na:b:c\na\nb\nTYA\ntya\n3\na\nc\n\[a, b\]\n\[c, b, a\]\na:b:c\n\[a, b, c, d\]\nd\nc\n2\ntrue\n1\nfallback\nadmin\nfalse\neditor\ntokyo\n'
+stdout 'hello\n3\n3\ntrue\ntrue\ntrue\nHi, Tya\na:b:c\na\nb\nTYA\ntya\n3\na\nc\n\[a, b\]\n\[c, b, a\]\na:b:c\nnil\nd\nc\n2\ntrue\n1\nfallback\nnil\nfalse\neditor\ntokyo\n'
 
 exec go run ./cmd/tya build $WORK/module_apis.tya -o $WORK/module_apis
 exec $WORK/module_apis
-stdout 'hello\n3\n3\ntrue\ntrue\ntrue\nHi, Tya\na:b:c\na\nb\nTYA\ntya\n3\na\nc\n\[a, b\]\n\[c, b, a\]\na:b:c\n\[a, b, c, d\]\nd\nc\n2\ntrue\n1\nfallback\nadmin\nfalse\neditor\ntokyo\n'
+stdout 'hello\n3\n3\ntrue\ntrue\ntrue\nHi, Tya\na:b:c\na\nb\nTYA\ntya\n3\na\nc\n\[a, b\]\n\[c, b, a\]\na:b:c\nnil\nd\nc\n2\ntrue\n1\nfallback\nnil\nfalse\neditor\ntokyo\n'
 
 ! exec go run ./cmd/tya run $WORK/bad_slice.tya
 stderr 'array.slice does not support negative indexes'

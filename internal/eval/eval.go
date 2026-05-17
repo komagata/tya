@@ -616,7 +616,7 @@ func evalStmts(stmts []ast.Stmt, env *Env) (Value, error) {
 	for _, s := range stmts {
 		v, err := evalStmt(s, env)
 		if err != nil {
-			return nil, err
+			return last, err
 		}
 		last = v
 	}
@@ -703,9 +703,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			if !truthy(cond) {
 				return last, nil
 			}
-			last, err = evalStmts(n.Body, env.child())
+			bodyValue, err := evalStmts(n.Body, env.child())
 			if errors.Is(err, errBreak) {
-				return last, nil
+				return bodyValue, nil
 			}
 			if errors.Is(err, errContinue) {
 				continue
@@ -713,6 +713,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
+			last = bodyValue
 		}
 	case *ast.ForInStmt:
 		iterable, err := evalExpr(n.Iterable, env)
@@ -733,9 +734,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 						loopEnv.rememberKind(n.IndexName, loopEnv.vars[n.IndexName])
 					}
 					i++
-					last, err = evalStmts(n.Body, loopEnv)
+					bodyValue, err := evalStmts(n.Body, loopEnv)
 					if errors.Is(err, errBreak) {
-						return last, nil
+						return bodyValue, nil
 					}
 					if errors.Is(err, errContinue) {
 						continue
@@ -743,6 +744,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 					if err != nil {
 						return nil, err
 					}
+					last = bodyValue
 				}
 				return last, nil
 			}
@@ -757,9 +759,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 				loopEnv.vars[n.IndexName] = int64(i)
 				loopEnv.rememberKind(n.IndexName, loopEnv.vars[n.IndexName])
 			}
-			last, err = evalStmts(n.Body, loopEnv)
+			bodyValue, err := evalStmts(n.Body, loopEnv)
 			if errors.Is(err, errBreak) {
-				return last, nil
+				return bodyValue, nil
 			}
 			if errors.Is(err, errContinue) {
 				continue
@@ -767,6 +769,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
+			last = bodyValue
 		}
 		return last, nil
 	case *ast.BreakStmt:
@@ -1390,7 +1393,10 @@ func evalArrayModuleCall(name string, args []Value, env *Env) (Value, error) {
 			return nil, fmt.Errorf("array.push expects array")
 		}
 		arr.items = append(arr.items, args[1])
-		return arr, nil
+		if os.Getenv("TYA_LEGACY_MODULES") == "1" {
+			return arr, nil
+		}
+		return nil, nil
 	case "pop":
 		arr, err := oneArray("array.pop", args)
 		if err != nil {
@@ -1484,7 +1490,7 @@ func evalDictModuleCall(name string, args []Value, env *Env) (Value, error) {
 			return nil, fmt.Errorf("dict.set expects string key")
 		}
 		obj[key] = args[2]
-		return obj, nil
+		return nil, nil
 	case "delete":
 		if len(args) != 2 {
 			return nil, fmt.Errorf("dict.delete expects 2 arguments")
@@ -1497,9 +1503,8 @@ func evalDictModuleCall(name string, args []Value, env *Env) (Value, error) {
 		if !ok {
 			return nil, fmt.Errorf("dict.delete expects string key")
 		}
-		value := obj[key]
 		delete(obj, key)
-		return value, nil
+		return nil, nil
 	case "keys":
 		obj, err := oneDict("dict.keys", args)
 		if err != nil {
