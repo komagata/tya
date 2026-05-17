@@ -3,6 +3,10 @@ package lsp
 import (
 	"strings"
 	"testing"
+
+	"tya/internal/checker"
+	"tya/internal/lexer"
+	"tya/internal/parser"
 )
 
 func TestDiagnosticsForLintWarningsUseStableCodes(t *testing.T) {
@@ -39,11 +43,41 @@ func TestDiagnosticsForStrictCheckerErrors(t *testing.T) {
 			if d.Severity != DiagSeverityError {
 				t.Fatalf("TYA-E0307 severity = %d, want error", d.Severity)
 			}
-			if !strings.Contains(d.Message, "Assignment to outer binding") {
+			if !strings.Contains(d.Message, "Cannot reassign `outer`") {
 				t.Fatalf("message = %q", d.Message)
 			}
 			return
 		}
 	}
 	t.Fatalf("missing TYA-E0307 in %#v", diags)
+}
+
+func TestLspDiagnosticsMatchTyaCheck(t *testing.T) {
+	path := "strict.tya"
+	src := "outer = 1\nhandler = value ->\n  outer = value\n  value\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkDiags, err := checker.CheckAll(prog, nil, path, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lspDiags := DiagnosticsFor(path, src)
+	for _, checkDiag := range checkDiags {
+		found := false
+		for _, lspDiag := range lspDiags {
+			if lspDiag.Code == checkDiag.Code && lspDiag.Message == checkDiag.Message {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("missing check diagnostic %s %q in %#v", checkDiag.Code, checkDiag.Message, lspDiags)
+		}
+	}
 }

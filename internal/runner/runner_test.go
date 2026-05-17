@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"tya/internal/pkg"
 )
 
 func TestValidateFileName(t *testing.T) {
@@ -305,6 +307,115 @@ func TestLoadSourceRejectsImportCycle(t *testing.T) {
 	}
 }
 
+func TestResolveImportPriority(t *testing.T) {
+	project := t.TempDir()
+	importer := filepath.Join(project, "main.tya")
+	writeFile(t, importer, "")
+	writeFile(t, filepath.Join(project, "tya.toml"), "name = \"app\"\nversion = \"1.0.0\"\n\n[dependencies]\nshared = { path = \"../dep\" }\n")
+	dep := filepath.Join(project, "..", "dep")
+	if err := os.MkdirAll(filepath.Join(dep, "src"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := pkg.WriteLockfile(filepath.Join(project, "tya.lock"), &pkg.Lockfile{
+		Packages: []pkg.LockedPackage{{
+			Name:    "shared",
+			Version: pkg.Version{Major: 1},
+			Source:  "path",
+			PathRef: "../dep",
+		}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	pathRoot := filepath.Join(project, "..", "path")
+	stdlib := filepath.Join(project, "..", "stdlib")
+	for _, dir := range []string{filepath.Join(project, "src"), filepath.Join(pathRoot), filepath.Join(stdlib)} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeFile(t, filepath.Join(project, "shared.tya"), "text = \"local-dir\"\n")
+	writeFile(t, filepath.Join(project, "src", "shared.tya"), "text = \"project-src\"\n")
+	writeFile(t, filepath.Join(dep, "src", "shared.tya"), "text = \"locked-dep\"\n")
+	writeFile(t, filepath.Join(pathRoot, "shared.tya"), "text = \"tya-path\"\n")
+	writeFile(t, filepath.Join(stdlib, "shared.tya"), "text = \"stdlib\"\n")
+	t.Setenv("TYA_PATH", pathRoot)
+	t.Setenv("TYA_STDLIB_DIR", stdlib)
+
+	got, err := resolveModulePath(importer, "shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != absPath(t, filepath.Join(project, "shared.tya")) {
+		t.Fatalf("got %q, want local dir", got)
+	}
+	if err := os.Remove(filepath.Join(project, "shared.tya")); err != nil {
+		t.Fatal(err)
+	}
+	got, err = resolveModulePath(importer, "shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != absPath(t, filepath.Join(project, "src", "shared.tya")) {
+		t.Fatalf("got %q, want project src", got)
+	}
+	if err := os.Remove(filepath.Join(project, "src", "shared.tya")); err != nil {
+		t.Fatal(err)
+	}
+	got, err = resolveModulePath(importer, "shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != absPath(t, filepath.Join(dep, "src", "shared.tya")) {
+		t.Fatalf("got %q, want locked dependency", got)
+	}
+	if err := os.Remove(filepath.Join(dep, "src", "shared.tya")); err != nil {
+		t.Fatal(err)
+	}
+	got, err = resolveModulePath(importer, "shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != absPath(t, filepath.Join(pathRoot, "shared.tya")) {
+		t.Fatalf("got %q, want TYA_PATH", got)
+	}
+	if err := os.Remove(filepath.Join(pathRoot, "shared.tya")); err != nil {
+		t.Fatal(err)
+	}
+	got, err = resolveModulePath(importer, "shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != absPath(t, filepath.Join(stdlib, "shared.tya")) {
+		t.Fatalf("got %q, want stdlib", got)
+	}
+}
+
+func TestLockfileMismatchRequiresUpdate(t *testing.T) {
+	project := t.TempDir()
+	importer := filepath.Join(project, "main.tya")
+	writeFile(t, importer, "")
+	writeFile(t, filepath.Join(project, "tya.toml"), "name = \"app\"\nversion = \"1.0.0\"\n\n[dependencies]\nshared = \"^2.0.0\"\n")
+	if err := pkg.WriteLockfile(filepath.Join(project, "tya.lock"), &pkg.Lockfile{
+		Packages: []pkg.LockedPackage{{
+			Name:    "shared",
+			Version: pkg.Version{Major: 1},
+			Source:  "git",
+			Git:     "https://example.com/shared.git",
+			Rev:     "abc",
+		}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := resolveModulePath(importer, "shared")
+	if err == nil {
+		t.Fatal("expected stale lockfile error")
+	}
+	if !strings.Contains(err.Error(), "tya.lock is stale") || !strings.Contains(err.Error(), "tya install") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestLoadSourceExportsUnderscoreHelperInImportedScript(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, filepath.Join(dir, "greeting.tya"), "_message = \"hello\"\ntext = _message\n")
@@ -567,4 +678,13 @@ func writeFile(t *testing.T, path string, src string) {
 	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func absPath(t *testing.T, path string) string {
+	t.Helper()
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return filepath.Clean(abs)
 }

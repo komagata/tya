@@ -525,7 +525,11 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 	fileName := filepath.Join(pathParts...)
 	candidates := []string{filepath.Join(filepath.Dir(importerPath), fileName)}
 	// v0.26: manifest-declared packages live under .tya/packages/<name>-<version>/src/
-	for _, dir := range packageSrcDirs(importerPath, leading) {
+	pkgDirs, err := packageSrcDirs(importerPath, leading)
+	if err != nil {
+		return "", err
+	}
+	for _, dir := range pkgDirs {
 		candidates = append(candidates, filepath.Join(dir, fileName))
 	}
 	for _, dir := range filepath.SplitList(os.Getenv("TYA_PATH")) {
@@ -559,11 +563,15 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 // tya.lock for package locations: git-sourced packages live under
 // .tya/packages/<name>-<version>/, while path-sourced packages are read
 // directly from the path recorded in the lockfile.
-func packageSrcDirs(importerPath, leadingName string) []string {
+func packageSrcDirs(importerPath, leadingName string) ([]string, error) {
 	dir := filepath.Dir(importerPath)
 	if root := os.Getenv("TYA_PROJECT_ROOT"); root != "" {
-		if out := packageSrcDirsFromRoot(root, leadingName); len(out) > 0 {
-			return out
+		out, err := packageSrcDirsFromRoot(root, leadingName)
+		if err != nil {
+			return nil, err
+		}
+		if len(out) > 0 {
+			return out, nil
 		}
 	}
 	for i := 0; i < 8; i++ {
@@ -576,13 +584,16 @@ func packageSrcDirs(importerPath, leadingName string) []string {
 		}
 		dir = parent
 	}
-	return nil
+	return nil, nil
 }
 
-func packageSrcDirsFromRoot(root, leadingName string) []string {
+func packageSrcDirsFromRoot(root, leadingName string) ([]string, error) {
 	out := []string{filepath.Join(root, "src")}
 	lockPath := filepath.Join(root, "tya.lock")
 	if lf, err := pkg.ReadLockfile(lockPath); err == nil {
+		if m, manifestErr := pkg.ReadManifest(filepath.Join(root, "tya.toml")); manifestErr == nil && !lf.SatisfiesManifest(m) {
+			return nil, fmt.Errorf("[TYA-E0941] tya.lock is stale; run `tya install`")
+		}
 		for i := range lf.Packages {
 			p := &lf.Packages[i]
 			if p.Name != leadingName {
@@ -604,7 +615,7 @@ func packageSrcDirsFromRoot(root, leadingName string) []string {
 			}
 		}
 	}
-	return out
+	return out, nil
 }
 
 func stdlibDirs() []string {
@@ -993,7 +1004,11 @@ func resolvePackageDir(importerPath string, name string) (string, []string, erro
 	leading := parts[0]
 	relDir := filepath.Join(parts...)
 	candidates := []string{filepath.Join(filepath.Dir(importerPath), relDir)}
-	for _, dir := range packageSrcDirs(importerPath, leading) {
+	pkgDirs, err := packageSrcDirs(importerPath, leading)
+	if err != nil {
+		return "", nil, err
+	}
+	for _, dir := range pkgDirs {
 		candidates = append(candidates, filepath.Join(dir, relDir))
 	}
 	for _, dir := range filepath.SplitList(os.Getenv("TYA_PATH")) {

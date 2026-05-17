@@ -553,6 +553,49 @@ func TestCheckClassFileAcceptsInterfaceCompanion(t *testing.T) {
 	}
 }
 
+func TestCheckAllowsSelfFieldCreationInInstanceMethods(t *testing.T) {
+	src := "class Request\n  initialize = url ->\n    self.url = url\n  reset = ->\n    self.url = nil\n"
+	prog := parse(t, src)
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsTopLevelSelfFieldAssignment(t *testing.T) {
+	prog := parse(t, "self.url = \"https://example.com\"\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected top-level self error")
+	}
+	if !strings.Contains(err.Error(), "self is only valid inside a class method or instance method") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckInterfaceArityExactMatch(t *testing.T) {
+	src := "interface Drawable\n  draw = x, y ->\n\nclass Point implements Drawable\n  draw = x ->\n    nil\n"
+	prog := parse(t, src)
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected interface arity error")
+	}
+	if !strings.Contains(err.Error(), "implementing interface method draw expects 2 parameters") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckInterfaceArityIgnoresDefaultParameters(t *testing.T) {
+	src := "interface Drawable\n  draw = x ->\n\nclass Point implements Drawable\n  draw = x, y = 0 ->\n    nil\n"
+	prog := parse(t, src)
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected interface arity error")
+	}
+	if !strings.Contains(err.Error(), "implementing interface method draw expects 1 parameters") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestCheckClassFileRejectsMissingPublicClass(t *testing.T) {
 	prog := parse(t, "class Helper\n  initialize = ->\n    self.x = 1\n")
 	err := CheckClassFile(prog, "Request.tya")

@@ -1602,12 +1602,38 @@ func formatCommand(args []string) error {
 	if err != nil {
 		return err
 	}
-	formatted := formatSource(string(src))
+	formatted, err := formatSourceStrict(string(src))
+	if err != nil {
+		return err
+	}
 	if write {
 		return os.WriteFile(path, []byte(formatted), 0644)
 	}
 	fmt.Fprint(os.Stdout, formatted)
 	return nil
+}
+
+func formatSourceStrict(src string) (string, error) {
+	toks, lcomments, errs := lexer.LexWithComments(src)
+	if len(errs) > 0 {
+		return "", errs[0]
+	}
+	comments := make([]parser.CommentInfo, 0, len(lcomments))
+	for _, c := range lcomments {
+		comments = append(comments, parser.CommentInfo{
+			Line: c.Line, Col: c.Col, Indent: c.Indent,
+			Text: c.Text, IsFullLine: c.IsFullLine,
+		})
+	}
+	prog, _, err := parser.ParseWithComments(toks, comments)
+	if err != nil {
+		return "", err
+	}
+	out, err := formatter.Unparse(prog)
+	if err != nil {
+		return formatter.FormatSource(src), nil
+	}
+	return out, nil
 }
 
 // formatSource applies the canonical AST-driven serializer. On

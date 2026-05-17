@@ -90,23 +90,8 @@ func diagToLSP(d diag.Diagnostic) Diagnostic {
 		Severity: sev,
 		Code:     d.Code,
 		Source:   "tya",
-		Message:  joinMessage(d),
+		Message:  d.Message,
 	}
-}
-
-func joinMessage(d diag.Diagnostic) string {
-	parts := []string{}
-	if d.Title != "" && d.Title != d.Message {
-		parts = append(parts, d.Title)
-	}
-	if d.Message != "" {
-		parts = append(parts, d.Message)
-	}
-	body := strings.Join(parts, ": ")
-	if len(d.Hints) > 0 {
-		body += "\n\nhint: " + strings.Join(d.Hints, " ")
-	}
-	return body
 }
 
 func lexErrorToLSP(e error) Diagnostic {

@@ -3,6 +3,7 @@ package doc
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -20,6 +21,41 @@ func TestExtractFileIncludesUnderscoreTopLevelFunction(t *testing.T) {
 	}
 	if len(items) != 1 || items[0].Name != "_helper" {
 		t.Fatalf("expected _helper doc item, got %#v", items)
+	}
+}
+
+func TestDocCommentAttachment(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "api.tya")
+	src := strings.Join([]string{
+		"# Attached docs",
+		"attached = -> 1",
+		"",
+		"# Orphan docs",
+		"",
+		"orphaned = -> 2",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := ExtractReport([]string{path})
+	if err != nil {
+		t.Fatal(err)
+	}
+	docs := map[string]string{}
+	for _, item := range report.Items {
+		docs[item.Name] = item.RawDoc
+	}
+	if docs["attached"] != "Attached docs" {
+		t.Fatalf("attached doc = %q", docs["attached"])
+	}
+	if docs["orphaned"] != "" {
+		t.Fatalf("blank line should break doc attachment, got %q", docs["orphaned"])
+	}
+	if len(report.Diagnostics) != 1 || report.Diagnostics[0].Code != "TYADOC0001" {
+		t.Fatalf("expected one orphan doc diagnostic, got %#v", report.Diagnostics)
 	}
 }
 

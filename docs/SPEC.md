@@ -1086,7 +1086,10 @@ local_lib = { path = "../local_lib" }
 ```
 
 `tya.lock` records resolved dependency sources and should be committed by
-applications.
+applications. When `tya.lock` exists, it is authoritative for dependency
+versions and sources. If `tya.toml` and `tya.lock` disagree, commands that
+resolve package imports fail with a stale-lock diagnostic and instruct the user
+to run `tya install` before the changed dependency graph is used.
 
 Native package metadata lives under `[native]`. Native paths are relative to
 the package root. `tya build`, `tya run`, and `tya test` compile declared C
@@ -1213,10 +1216,38 @@ TYAL0007 unused function parameter
 TYAL0008 shadowed binding
 ```
 
+`tya test` discovers only files whose basename ends in `_test.tya`. Ordinary
+`.tya` files are not auto-discovered as test files. Directory test discovery is
+deterministic: files run in ascending path order, and tests inside one file run
+in definition order. Tests are not run in parallel unless a future explicit
+option adds that behavior.
+
+`tya check` reports every recoverable checker diagnostic it can collect and
+exits with status 1 when validation fails. If parser recovery is not possible,
+`tya check` may stop at that parser error and still exits with status 1.
+
+`tya format` never rewrites a file that cannot be lexed, parsed, and
+serialized by the canonical formatter. Invalid source reports an error and
+exits without modifying the input file.
+
+LSP diagnostics use the same stable diagnostic codes and messages as the
+parser, checker, and linter diagnostics used by CLI tools. LSP may transport
+diagnostics in LSP shape, but it must not invent alternate wording for the same
+source validity issue.
+
+Ordinary `emit-c` output is stable for the same source and toolchain version.
+It does not include absolute paths, timestamps, random identifiers, or other
+nondeterministic metadata unless a future debug option explicitly requests it.
+
+v1.0 has no experimental language feature gates. Experimental syntax or
+`--experimental-*` tool options are invalid unless a later accepted SPEC adds
+that behavior explicitly.
+
 `tya doc` extracts leading source comments attached to public top-level
-functions, classes, modules, and interfaces. With no path it scans `src/`.
-It can render terminal text, generate static HTML, or emit a stable JSON
-report:
+functions, classes, modules, and interfaces. A doc comment attaches only to the
+immediately following public item; a blank line breaks attachment and leaves the
+comment orphaned. With no path it scans `src/`. It can render terminal text,
+generate static HTML, or emit a stable JSON report:
 
 ```sh
 tya doc

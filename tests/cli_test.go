@@ -142,6 +142,138 @@ func TestCLIRunLoadsImportedModule(t *testing.T) {
 	}
 }
 
+func TestCLIFormatDoesNotRewriteInvalidSource(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "invalid.tya")
+	original := "x=1\nif\n"
+	if err := os.WriteFile(path, []byte(original), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "format", "-w", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected invalid format input to fail")
+	}
+	if !strings.Contains(string(out), "expected expression") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+	got, readErr := os.ReadFile(path)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if string(got) != original {
+		t.Fatalf("format rewrote invalid source: %q", got)
+	}
+}
+
+func TestTyaTestDiscoversOnlyTestFilesAndOrdersDeterministically(t *testing.T) {
+	dir := t.TempDir()
+	writeTestFile := func(name, className, methodName string) {
+		t.Helper()
+		src := fmt.Sprintf("import unittest\n\nclass %s extends TestCase\n  %s = ->\n    self.assert(true, \"%s\")\n", className, methodName, methodName)
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(src), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeTestFile("b_test.tya", "BTest", "test_second")
+	writeTestFile("a_test.tya", "ATest", "test_first")
+	if err := os.WriteFile(filepath.Join(dir, "helper.tya"), []byte("print(\"must not run\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := exec.Command("go", "run", "./cmd/tya", "test", dir)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	text := string(out)
+	first := strings.Index(text, "PASS  ATest.test_first")
+	second := strings.Index(text, "PASS  BTest.test_second")
+	if first < 0 || second < 0 || first > second {
+		t.Fatalf("expected path and definition order, got:\n%s", text)
+	}
+	if strings.Contains(text, "must not run") {
+		t.Fatalf("ordinary .tya file was discovered:\n%s", text)
+	}
+	if !strings.Contains(text, "2 tests, 2 passed, 0 failed") {
+		t.Fatalf("unexpected summary:\n%s", text)
+	}
+}
+
+func TestCLIEmitCStableAndNoNondeterministicMetadata(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "main.tya")
+	if err := os.WriteFile(path, []byte("print(\"stable\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	run := func() string {
+		t.Helper()
+		cmd := exec.Command("go", "run", "./cmd/tya", "emit-c", path)
+		cmd.Dir = ".."
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("emit-c failed: %v\n%s", err, out)
+		}
+		return string(out)
+	}
+	first := run()
+	second := run()
+	if first != second {
+		t.Fatalf("emit-c output is not stable")
+	}
+	if strings.Contains(first, filepath.Dir(path)) {
+		t.Fatalf("emit-c output contains absolute temp path:\n%s", first)
+	}
+}
+
+func TestTyaCheckReportsMultipleRecoverableErrors(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "strict.tya")
+	src := strings.Join([]string{
+		"outer = 1",
+		"handler = value ->",
+		"  outer = value",
+		"  value",
+		"other = unused ->",
+		"  1",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "--format=json", "check", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected check to fail")
+	}
+	if exit, ok := err.(*exec.ExitError); !ok || exit.ExitCode() != 1 {
+		t.Fatalf("expected exit code 1, got %v", err)
+	}
+	text := string(out)
+	if !strings.Contains(text, `"code":"TYA-E0307"`) || !strings.Contains(text, `"code":"TYA-E0303"`) {
+		t.Fatalf("expected multiple recoverable diagnostics, got:\n%s", text)
+	}
+	if !strings.Contains(text, `"errors":2`) {
+		t.Fatalf("expected error summary, got:\n%s", text)
+	}
+}
+
+func TestNoExperimentalFeatureWithoutSpec(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "main.tya")
+	if err := os.WriteFile(path, []byte("print(\"ok\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "format", "--experimental-layout", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected unknown experimental option to fail")
+	}
+	if !strings.Contains(string(out), "unknown format option: --experimental-layout") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
 func TestCLIBuildWritesExecutable(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "hello.tya")
