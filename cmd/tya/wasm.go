@@ -134,7 +134,7 @@ func writeBrowserLoader(wasmPath string) error {
 const wasmRuntimeHeader = `#ifndef TYA_RUNTIME_H
 #define TYA_RUNTIME_H
 #include <stdbool.h>
-typedef enum { TYA_NIL, TYA_BOOL, TYA_NUMBER, TYA_STRING, TYA_ARRAY, TYA_DICT, TYA_OBJECT, TYA_FUNCTION, TYA_ERROR, TYA_BYTES, TYA_TASK, TYA_CHANNEL, TYA_RESOURCE } TyaKind;
+typedef enum { TYA_NIL, TYA_BOOL, TYA_NUMBER, TYA_STRING, TYA_ARRAY, TYA_DICT, TYA_OBJECT, TYA_FUNCTION, TYA_ERROR, TYA_BYTES, TYA_TASK, TYA_CHANNEL, TYA_RESOURCE, TYA_MISSING } TyaKind;
 typedef struct TyaArray TyaArray;
 typedef struct TyaDict TyaDict;
 typedef struct TyaFunction TyaFunction;
@@ -143,6 +143,7 @@ struct TyaValue { TyaKind kind; bool boolean; double number; const char *string;
 typedef struct { const char *key; TyaValue value; } TyaDictEntry;
 typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
 TyaValue tya_nil(void);
+TyaValue tya_missing(void);
 TyaValue tya_bool(bool value);
 TyaValue tya_number(double value);
 TyaValue tya_string(const char *value);
@@ -155,6 +156,7 @@ TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn);
 #define tya_function(fn) tya_function_raw((TyaFunctionPtr)(fn))
 #define tya_class(fn, name, parent) tya_class_raw((TyaFunctionPtr)(fn), name, parent)
 #define tya_bind_method(receiver, fn) tya_bind_method_raw(receiver, (TyaFunctionPtr)(fn))
+TyaValue tya_call0(TyaValue fn);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);
 TyaValue tya_index(TyaValue value, TyaValue index);
@@ -236,6 +238,7 @@ static int tya_streq(const char *a, const char *b) {
   return a && b && a[i] == b[i];
 }
 TyaValue tya_nil(void) { return (TyaValue){.kind = TYA_NIL}; }
+TyaValue tya_missing(void) { return (TyaValue){.kind = TYA_MISSING}; }
 TyaValue tya_bool(bool value) { return (TyaValue){.kind = TYA_BOOL, .boolean = value}; }
 TyaValue tya_number(double value) { return (TyaValue){.kind = TYA_NUMBER, .number = value}; }
 TyaValue tya_string(const char *value) { return (TyaValue){.kind = TYA_STRING, .string = value}; }
@@ -268,6 +271,10 @@ TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn) {
   TyaFunction *f = tya_alloc(sizeof(TyaFunction));
   f->fn = fn; f->receiver = receiver; f->bound = true; f->members = tya_dict(NULL, 0).dict;
   return (TyaValue){.kind = TYA_FUNCTION, .function = f};
+}
+TyaValue tya_call0(TyaValue fn) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) return tya_nil();
+  return fn.function->fn(fn.function->receiver, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());
 }
 TyaValue tya_call1(TyaValue fn, TyaValue arg) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL) return tya_nil();

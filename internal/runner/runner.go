@@ -502,7 +502,7 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 	if module {
 		state.loaded[abs] = true
 	}
-	return out.String(), modules, nil
+	return dedupeTopLevelImports(out.String()), modules, nil
 }
 
 func legacyModuleSource(prog *ast.Program) bool {
@@ -839,6 +839,38 @@ func stripBarePackageImports(src string, imports []importSpec) string {
 		trimmed := strings.TrimSpace(line)
 		if strings.HasPrefix(line, "import ") && strip[strings.TrimPrefix(trimmed, "import ")] {
 			continue
+		}
+		out.WriteString(line)
+		out.WriteString("\n")
+	}
+	return strings.TrimRight(out.String(), "\n") + "\n"
+}
+
+func dedupeTopLevelImports(src string) string {
+	seenPath := map[string]bool{}
+	seenLine := map[string]bool{}
+	var out strings.Builder
+	for _, line := range strings.Split(src, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if (strings.HasPrefix(trimmed, "import ") || trimmed == "import") && !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+			if seenLine[trimmed] {
+				continue
+			}
+			seenLine[trimmed] = true
+			body := strings.TrimSpace(strings.TrimPrefix(trimmed, "import "))
+			path, alias, hasAlias := strings.Cut(body, " as ")
+			path = strings.TrimSpace(path)
+			alias = strings.TrimSpace(alias)
+			if seenPath[path] {
+				if hasAlias && alias != "" {
+					out.WriteString(alias)
+					out.WriteString(" = ")
+					out.WriteString(filepath.Base(path))
+					out.WriteString("\n")
+				}
+				continue
+			}
+			seenPath[path] = true
 		}
 		out.WriteString(line)
 		out.WriteString("\n")

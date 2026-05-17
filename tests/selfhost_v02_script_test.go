@@ -17,6 +17,8 @@ import (
 // STEP. The v01 gate stays in place until M9 retires the legacy
 // `module` keyword.
 func TestSelfhostV02Scripts(t *testing.T) {
+	t.Parallel()
+
 	repo, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatal(err)
@@ -38,13 +40,11 @@ type limitedSelfhostV02T struct {
 	*testing.T
 }
 
-var selfhostV02Parallel = make(chan struct{}, 2)
-
 func (t limitedSelfhostV02T) Parallel() {
 	t.T.Parallel()
-	selfhostV02Parallel <- struct{}{}
+	selfhostScriptParallel <- struct{}{}
 	t.T.Cleanup(func() {
-		<-selfhostV02Parallel
+		<-selfhostScriptParallel
 	})
 }
 
