@@ -170,7 +170,9 @@ Byte literals use `b"..."` or byte heredoc forms and produce byte values rather
 than strings.
 
 Integer literals may be written in decimal, hexadecimal, or binary form.
-Floating-point literals use decimal notation.
+Floating-point literals use decimal notation. `NaN`, `Infinity`, `nan`, and
+`infinity` are ordinary identifiers when used as names; they are not numeric
+literal spellings.
 
 ## Values And Kinds
 
@@ -215,8 +217,9 @@ plus the exact operator cases listed below.
 
 ## Blocks
 
-A block is a non-empty or empty sequence of statements introduced by a header
-line and an increased indentation level.
+A block is a non-empty sequence of statements introduced by a header line and
+an increased indentation level. Empty blocks are invalid; use an explicit
+expression such as `nil` for an intentional no-op body.
 
 ```tya
 while count < 3
@@ -270,6 +273,8 @@ The core canonical rules are:
 - blank lines are determined by AST shape, not user preference;
 - multi-line calls, arrays, dictionaries, parameter lists, operator chains, and
   long conditions use the formatter-defined continuation forms;
+- trailing commas are prohibited in arrays, dictionaries, calls, and parameter
+  lists;
 - imports are atomic and not line-wrapped;
 - `elseif` is the canonical spelling, and `else if` is not canonical;
 - `case _` in `match` is the wildcard case and must be final;
@@ -489,9 +494,11 @@ their names begin with `_`.
 `Comparable` is the standard ordering protocol. A class implements it by
 providing `compare(other)`, which returns a negative number, zero, or a
 positive number when the receiver sorts before, equal to, or after `other`.
-Numbers and strings conform to `Comparable` as primitive values. The ordering
-operators `<`, `<=`, `>`, and `>=` keep their existing primitive behavior and
-do not dispatch to user-defined `compare`.
+Numbers conform to `Comparable` as primitive values. Strings do not define
+ordering operators; string ordering, collation, or locale-aware comparison must
+use explicit methods or standard-library APIs. The ordering operators `<`,
+`<=`, `>`, and `>=` keep their primitive numeric behavior and do not dispatch
+to user-defined `compare`.
 
 `Equatable` is the standard domain equality protocol. A class implements it by
 providing `equal?(other)`, which must return a boolean. Primitive values expose
@@ -567,6 +574,15 @@ value.
 Each evaluation of a function literal creates an independent closure
 environment.
 
+Function parameters may have default values. Required parameters must precede
+defaulted parameters, calls may omit only a trailing run of defaulted
+parameters, and too few required arguments or too many arguments are invalid.
+Default expressions are evaluated at call time, left to right, and may
+reference earlier parameters but not later parameters. Mutable defaults are
+fresh because the default expression is re-evaluated for each omitted argument.
+Variadic parameter syntax is not part of Tya; pass an array explicitly when a
+function needs a variable number of values.
+
 ```tya
 make_adder = base ->
   value -> base + value
@@ -625,7 +641,10 @@ Arithmetic operations require numbers unless a documented primitive method or
 operator case says otherwise. `+` adds two numbers, concatenates two strings,
 and concatenates two bytes values. `+` does not format mixed operands through
 implicit string conversion. String interpolation formats embedded values with
-the display surface. `nil` arithmetic is invalid.
+the display surface. `/` always performs number division, so `5 / 2` evaluates
+to `2.5`; integer division uses an explicit API such as `div()`. `%` is
+integer-only and is invalid for floating-point operands. `nil` arithmetic is
+invalid.
 
 `and` and `or` return booleans. They test operands with Tya truthiness, do not
 return either operand as a value, and short-circuit: `and` skips the right
@@ -638,7 +657,9 @@ Equality operators may compare any two runtime values without coercion. Values
 with different runtime kinds compare unequal. Arrays and dictionaries compare
 by contents; functions, classes, objects, resources, tasks, and channels
 compare by identity unless their documented primitive surface says otherwise.
-Ordering operators `<`, `<=`, `>`, and `>=` require numbers.
+Numeric int and float values compare as one number kind, so `1 == 1.0` is
+true. Ordering operators `<`, `<=`, `>`, and `>=` require numbers; string
+ordering is not defined by these operators.
 
 ### Collections
 
@@ -673,7 +694,10 @@ access such as `user.name` is invalid.
 Array, string, and bytes indexes must be integers. Dictionary and error-value
 indexes must be strings. Missing dictionary keys and out-of-range array,
 string, or bytes indexes return `nil`; indexing a non-collection target is
-invalid. String indexing is by Unicode rune. Bytes indexing is byte-based.
+invalid. Negative indexes are invalid for arrays, strings, and bytes. Slice
+syntax such as `items[1:3]` is not part of the language; use explicit methods
+such as `items.slice(1, 3)`. String indexing is by Unicode rune. Bytes indexing
+is byte-based.
 
 Array index assignment requires an existing array index and fails on
 out-of-range writes. Dictionary index assignment may create a new key.
@@ -890,6 +914,9 @@ args()
 env(name)
 ```
 
+`print` and `println` write only to stdout. stderr output is available through
+explicit standard-library APIs such as `Io.stderr()`.
+
 Use standard-library APIs such as `File.read(path)`, `File.append(path, text)`,
 `Dir.list(path)`, `Path.expand_user(path)`, `Process.cwd()`,
 `Process.chdir(path)`, `Io.open(path, mode)`, `Reader#read(size)`,
@@ -974,7 +1001,8 @@ namespace. `Server()` is invalid in the example above; use `http.Server()`.
 
 Imported public names are reserved in the importing scope. Reassigning or
 redeclaring an imported public class or interface name is invalid, and importing
-two packages that expose the same public name is invalid.
+two packages that expose the same public name is invalid. Importing the same
+path twice is invalid even when aliases differ.
 
 ```tya
 import net/http

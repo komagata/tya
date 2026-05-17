@@ -212,6 +212,9 @@ func checkUnusedExpr(expr ast.Expr, scope *useScope) {
 		for _, param := range n.Params {
 			child.define(param, 0, 0)
 		}
+		for _, def := range n.Defaults {
+			checkUnusedExpr(def, child)
+		}
 		if n.Expr != nil {
 			checkUnusedExpr(n.Expr, child)
 		}

@@ -29,14 +29,14 @@ class Reader
 
   # Reader.seek provides the binary/Reader standard library operation.
   seek = offset ->
-    if offset.class != Number or offset < 0 or offset > self.data.len()
+    if offset == nil or offset.class != Number or offset < 0 or offset > self.data.len()
       raise "binary.Reader.seek: invalid offset"
     self.offset = offset
     return self
 
   # Reader.skip provides the binary/Reader standard library operation.
   skip = count ->
-    if count.class != Number or count < 0
+    if count == nil or count.class != Number or count < 0
       raise "binary.Reader.skip: invalid count"
     return self.seek(self.offset + count)
 
@@ -50,7 +50,7 @@ class Reader
 
   # Reader.read_bytes provides the binary/Reader standard library operation.
   read_bytes = count ->
-    if count.class != Number or count < 0
+    if count == nil or count.class != Number or count < 0
       raise "binary.Reader.read_bytes: invalid count"
     self.require(count)
     start = self.offset

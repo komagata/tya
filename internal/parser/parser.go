@@ -873,7 +873,7 @@ func (p *Parser) interfaceMethodValue() ([]string, []token.Token, *ast.FuncLit, 
 	if !p.startsExpr() && !(p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT) {
 		return params, paramToks, nil, nil
 	}
-	fn, err := p.finishFunc(params, paramToks)
+	fn, err := p.finishFunc(params, paramToks, nil)
 	return params, paramToks, fn, err
 }
 
@@ -1241,6 +1241,11 @@ func (p *Parser) block(owner string) ([]ast.Stmt, error) {
 		// keeps them all visible.
 		_ = p.err("expected dedent after " + owner)
 	}
+	if len(stmts) == 0 {
+		if os.Getenv("TYA_LEGACY_MODULES") != "1" {
+			return nil, p.err("empty blocks are prohibited")
+		}
+	}
 	return stmts, nil
 }
 
@@ -1287,7 +1292,7 @@ func (p *Parser) dictBody() (*ast.DictLit, error) {
 		var val ast.Expr
 		var err error
 		if p.match(token.ARROW) {
-			val, err = p.finishFunc(nil, nil)
+			val, err = p.finishFunc(nil, nil, nil)
 		} else {
 			val, err = p.exprLine()
 		}
@@ -1331,18 +1336,18 @@ func (p *Parser) exprNoCommaFunc() (ast.Expr, error) {
 
 func (p *Parser) exprWithCommaFunc(allowCommaFunc bool) (ast.Expr, error) {
 	if p.startsFunctionParams(allowCommaFunc) {
-		params, paramToks, err := p.functionParams()
+		params, paramToks, defaults, err := p.functionParams()
 		if err != nil {
 			return nil, err
 		}
-		return p.finishFunc(params, paramToks)
+		return p.finishFunc(params, paramToks, defaults)
 	}
 	if p.startsParenFunctionParams() {
-		params, paramToks, err := p.parenFunctionParams()
+		params, paramToks, defaults, err := p.parenFunctionParams()
 		if err != nil {
 			return nil, err
 		}
-		return p.finishFunc(params, paramToks)
+		return p.finishFunc(params, paramToks, defaults)
 	}
 	left, err := p.logicOr()
 	if err != nil {
@@ -1357,7 +1362,7 @@ func (p *Parser) exprWithCommaFunc(allowCommaFunc bool) (ast.Expr, error) {
 		} else {
 			return nil, p.err("function parameters must be identifiers")
 		}
-		return p.finishFunc(params, paramToks)
+		return p.finishFunc(params, paramToks, nil)
 	}
 	return left, nil
 }
@@ -1366,7 +1371,7 @@ func (p *Parser) startsFunctionParams(allowCommaFunc bool) bool {
 	if !p.at(token.IDENT) {
 		return false
 	}
-	if p.peekN(1).Type == token.ARROW {
+	if p.peekN(1).Type == token.ARROW || p.peekN(1).Type == token.ASSIGN {
 		return true
 	}
 	if !allowCommaFunc || p.peekN(1).Type != token.COMMA {
@@ -1381,6 +1386,36 @@ func (p *Parser) startsFunctionParams(allowCommaFunc bool) bool {
 		switch p.toks[i].Type {
 		case token.ARROW:
 			return true
+		case token.ASSIGN:
+			i++
+			depth := 0
+			for i < len(p.toks) {
+				switch p.toks[i].Type {
+				case token.LPAREN, token.LBRACKET, token.LBRACE:
+					depth++
+				case token.RPAREN, token.RBRACKET, token.RBRACE:
+					if depth == 0 {
+						return false
+					}
+					depth--
+				case token.COMMA:
+					if depth == 0 {
+						if p.toks[i+1].Type != token.IDENT {
+							return false
+						}
+						i++
+						goto nextParam
+					}
+				case token.ARROW:
+					if depth == 0 {
+						return true
+					}
+				case token.NEWLINE, token.EOF:
+					return false
+				}
+				i++
+			}
+			return false
 		case token.COMMA:
 			i++
 			if p.toks[i].Type != token.IDENT {
@@ -1389,6 +1424,7 @@ func (p *Parser) startsFunctionParams(allowCommaFunc bool) bool {
 		default:
 			return false
 		}
+	nextParam:
 	}
 }
 
@@ -1412,6 +1448,37 @@ func (p *Parser) startsParenFunctionParams() bool {
 				return true
 			}
 			return false
+		case token.ASSIGN:
+			i++
+			depth := 0
+			for i < len(p.toks) {
+				switch p.toks[i].Type {
+				case token.LPAREN, token.LBRACKET, token.LBRACE:
+					depth++
+				case token.RPAREN:
+					if depth == 0 {
+						return p.toks[i+1].Type == token.ARROW
+					}
+					depth--
+				case token.RBRACKET, token.RBRACE:
+					if depth == 0 {
+						return false
+					}
+					depth--
+				case token.COMMA:
+					if depth == 0 {
+						if p.toks[i+1].Type != token.IDENT {
+							return false
+						}
+						i++
+						goto nextParam
+					}
+				case token.NEWLINE, token.EOF:
+					return false
+				}
+				i++
+			}
+			return false
 		case token.COMMA:
 			i++
 			if p.toks[i].Type != token.IDENT {
@@ -1420,51 +1487,71 @@ func (p *Parser) startsParenFunctionParams() bool {
 		default:
 			return false
 		}
+	nextParam:
 	}
 }
 
-func (p *Parser) parenFunctionParams() ([]string, []token.Token, error) {
+func (p *Parser) parenFunctionParams() ([]string, []token.Token, []ast.Expr, error) {
 	if !p.match(token.LPAREN) {
-		return nil, nil, p.err("expected '('")
+		return nil, nil, nil, p.err("expected '('")
 	}
-	first, err := p.expectName("expected function parameter")
+	first, def, err := p.functionParam()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	params := []string{first.Lexeme}
 	paramToks := []token.Token{first}
+	defaults := []ast.Expr{def}
 	for p.match(token.COMMA) {
-		next, err := p.expectName("expected function parameter")
+		next, def, err := p.functionParam()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		params = append(params, next.Lexeme)
 		paramToks = append(paramToks, next)
+		defaults = append(defaults, def)
 	}
 	if !p.match(token.RPAREN) {
-		return nil, nil, p.err("expected ')'")
+		return nil, nil, nil, p.err("expected ')'")
 	}
 	p.match(token.ARROW)
-	return params, paramToks, nil
+	return params, paramToks, defaults, nil
 }
 
-func (p *Parser) functionParams() ([]string, []token.Token, error) {
-	first, err := p.expectName("expected function parameter")
+func (p *Parser) functionParams() ([]string, []token.Token, []ast.Expr, error) {
+	first, def, err := p.functionParam()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	params := []string{first.Lexeme}
 	paramToks := []token.Token{first}
+	defaults := []ast.Expr{def}
 	for p.match(token.COMMA) {
-		next, err := p.expectName("expected function parameter")
+		next, def, err := p.functionParam()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		params = append(params, next.Lexeme)
 		paramToks = append(paramToks, next)
+		defaults = append(defaults, def)
 	}
 	p.match(token.ARROW)
-	return params, paramToks, nil
+	return params, paramToks, defaults, nil
+}
+
+func (p *Parser) functionParam() (token.Token, ast.Expr, error) {
+	name, err := p.expectName("expected function parameter")
+	if err != nil {
+		return token.Token{}, nil, err
+	}
+	if !p.match(token.ASSIGN) {
+		return name, nil, nil
+	}
+	def, err := p.logicOr()
+	if err != nil {
+		return token.Token{}, nil, err
+	}
+	return name, def, nil
 }
 
 func (p *Parser) logicOr() (ast.Expr, error) {
@@ -1682,10 +1769,10 @@ func (p *Parser) call() (ast.Expr, error) {
 					if !p.match(token.COMMA) {
 						break
 					}
-					// Trailing comma in multi-line call form
-					// (CANONICAL §5.4): allow `,` immediately
-					// before `)`.
 					if p.at(token.RPAREN) {
+						if os.Getenv("TYA_LEGACY_MODULES") != "1" {
+							return nil, p.err("trailing commas are prohibited")
+						}
 						break
 					}
 				}
@@ -1772,7 +1859,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 	case token.LPAREN:
 		if p.match(token.RPAREN) {
 			if p.match(token.ARROW) {
-				return p.finishFunc(nil, nil)
+				return p.finishFunc(nil, nil, nil)
 			}
 			return nil, p.err("expected expression")
 		}
@@ -1799,10 +1886,10 @@ func (p *Parser) primary() (ast.Expr, error) {
 				if !p.match(token.COMMA) {
 					break
 				}
-				// Trailing comma in multi-line array form
-				// (CANONICAL §5.4): allow `,` immediately
-				// before `]`.
 				if p.at(token.RBRACKET) {
+					if os.Getenv("TYA_LEGACY_MODULES") != "1" {
+						return nil, p.err("trailing commas are prohibited")
+					}
 					break
 				}
 			}
@@ -1814,7 +1901,7 @@ func (p *Parser) primary() (ast.Expr, error) {
 	case token.LBRACE:
 		return p.curlyLiteral()
 	case token.ARROW:
-		return p.finishFunc(nil, nil)
+		return p.finishFunc(nil, nil, nil)
 	}
 	return nil, p.err("expected expression")
 }
@@ -1848,6 +1935,12 @@ func (p *Parser) dictLiteral() (ast.Expr, error) {
 		if !p.match(token.COMMA) {
 			break
 		}
+		if p.at(token.RBRACE) {
+			if os.Getenv("TYA_LEGACY_MODULES") != "1" {
+				return nil, p.err("trailing commas are prohibited")
+			}
+			break
+		}
 	}
 	if !p.match(token.RBRACE) {
 		return nil, p.err("expected '}'")
@@ -1859,7 +1952,7 @@ func (p *Parser) dictLiteralKeyAhead() bool {
 	return (p.at(token.IDENT) || p.at(token.STRING)) && p.peekN(1).Type == token.COLON
 }
 
-func (p *Parser) finishFunc(params []string, paramToks []token.Token) (*ast.FuncLit, error) {
+func (p *Parser) finishFunc(params []string, paramToks []token.Token, defaults []ast.Expr) (*ast.FuncLit, error) {
 	p.functionDepth++
 	defer func() { p.functionDepth-- }()
 
@@ -1886,13 +1979,18 @@ func (p *Parser) finishFunc(params []string, paramToks []token.Token) (*ast.Func
 		if !p.match(token.DEDENT) {
 			return nil, p.err("expected dedent after function")
 		}
-		return &ast.FuncLit{Params: params, ParamToks: paramToks, Body: body}, nil
+		if len(body) == 0 {
+			if os.Getenv("TYA_LEGACY_MODULES") != "1" {
+				return nil, p.err("empty blocks are prohibited")
+			}
+		}
+		return &ast.FuncLit{Params: params, ParamToks: paramToks, Defaults: defaults, Body: body}, nil
 	}
 	ex, err := p.exprLine()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.FuncLit{Params: params, ParamToks: paramToks, Expr: ex}, nil
+	return &ast.FuncLit{Params: params, ParamToks: paramToks, Defaults: defaults, Expr: ex}, nil
 }
 
 func (p *Parser) assignTargets() ([]ast.Expr, error) {

@@ -26,6 +26,14 @@ stdout '1'
 stdout 'nil'
 stdout 'あ'
 stdout 'nil'
+stdout 'true'
+stdout '2.5'
+stdout '1'
+stdout 'Tya!'
+stdout 'fallback'
+stdout 'nil'
+stdout '1'
+stdout '1'
 
 exec $WORK/tya build valid.tya -o valid
 exec ./valid
@@ -49,6 +57,14 @@ stdout '1'
 stdout 'nil'
 stdout 'あ'
 stdout 'nil'
+stdout 'true'
+stdout '2.5'
+stdout '1'
+stdout 'Tya!'
+stdout 'fallback'
+stdout 'nil'
+stdout '1'
+stdout '1'
 
 ! exec $WORK/tya check return_outside.tya
 stderr 'TYA-E0120'
@@ -91,6 +107,27 @@ stderr '\+ expects numbers, strings, or bytes of the same kind'
 
 ! exec $WORK/tya check number_plus_string.tya
 stderr '\+ expects numbers, strings, or bytes of the same kind'
+
+! exec $WORK/tya check float_modulo.tya
+stderr '% expects integers'
+
+! exec $WORK/tya check negative_index.tya
+stderr 'negative indexes are invalid'
+
+! exec $WORK/tya check string_ordering.tya
+stderr '< expects numbers'
+
+! exec $WORK/tya check required_after_default.tya
+stderr 'required parameter b after default parameter'
+
+! exec $WORK/tya check default_later_reference.tya
+stderr 'undefined variable b'
+
+! exec $WORK/tya check trailing_comma.tya
+stderr 'trailing commas are prohibited'
+
+! exec $WORK/tya check duplicate_import.tya
+stderr 'duplicate import helper'
 
 ! exec $WORK/tya build string_plus_number.tya -o bad_string_plus
 stderr '\+ expects numbers, strings, or bytes of the same kind'
@@ -159,6 +196,19 @@ dict = {}
 print(dict.set("name", "Tya"))
 print("あい"[0])
 print("あい"[99])
+print(1 == 1.0)
+print(5 / 2)
+print(5 % 2)
+greet = name, suffix = "!" -> name + suffix
+print(greet("Tya"))
+maybe = value = "fallback" -> value
+print(maybe())
+print(maybe(nil))
+make = items = [] ->
+  items.push(1)
+  items.len()
+print(make())
+print(make())
 
 -- return_outside.tya --
 return 1
@@ -224,6 +274,32 @@ print("count: " + count)
 -- number_plus_string.tya --
 count = 3
 print(count + " items")
+
+-- float_modulo.tya --
+print(5.5 % 2)
+
+-- negative_index.tya --
+items = [1]
+print(items[-1])
+
+-- string_ordering.tya --
+print("a" < "b")
+
+-- required_after_default.tya --
+f = a = 1, b -> b
+
+-- default_later_reference.tya --
+f = a = b, b = 1 -> a
+
+-- trailing_comma.tya --
+items = [1,]
+
+-- duplicate_import.tya --
+import helper as first
+import helper as second
+
+-- helper.tya --
+value = 1
 
 -- dynamic_string_plus_number.tya --
 value = -> 3

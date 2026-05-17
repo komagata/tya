@@ -1080,10 +1080,26 @@ func (g *cgen) emitFuncWithCaptures(name string, fn *ast.FuncLit, classRef strin
 		predicateName:     predicateName(name),
 		closureVars:       captures,
 	}
+	hasDefaults := false
+	for _, def := range fn.Defaults {
+		if def != nil {
+			hasDefaults = true
+			break
+		}
+	}
 	for i, param := range fn.Params {
 		child.vars[param] = true
 		if i < 6 {
 			child.line(fmt.Sprintf("TyaValue %s = __arg%d;", cName(param), i))
+			if i < len(fn.Defaults) && fn.Defaults[i] != nil {
+				def, _, err := child.expr(fn.Defaults[i])
+				if err != nil {
+					return "", err
+				}
+				child.line(fmt.Sprintf("if (%s.kind == TYA_MISSING) { %s = %s; }", cName(param), cName(param), def))
+			} else if hasDefaults {
+				child.line(fmt.Sprintf("if (%s.kind == TYA_MISSING) { %s = tya_nil(); }", cName(param), cName(param)))
+			}
 		}
 	}
 	for _, local := range assignedNames(fn.Body) {
@@ -1204,6 +1220,9 @@ func (g *cgen) freeVars(fn *ast.FuncLit) map[string]bool {
 		defined[local] = true
 	}
 	used := map[string]bool{}
+	for _, def := range fn.Defaults {
+		collectExprIdents(def, used)
+	}
 	if fn.Expr != nil {
 		collectExprIdents(fn.Expr, used)
 	}
@@ -1338,6 +1357,9 @@ func collectFuncFreeIdentUses(fn *ast.FuncLit, out map[string]bool) {
 		defined[local] = true
 	}
 	used := map[string]bool{}
+	for _, def := range fn.Defaults {
+		collectExprIdents(def, used)
+	}
 	if fn.Expr != nil {
 		collectExprIdents(fn.Expr, used)
 	}
@@ -1810,7 +1832,7 @@ func (g *cgen) emitInterfaceInitializers(out *strings.Builder, className string,
 			if err != nil {
 				return err
 			}
-			out.WriteString(fmt.Sprintf("  (void)%s(__obj, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", sym))
+			out.WriteString(fmt.Sprintf("  (void)%s(__obj, tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing());\n", sym))
 		}
 	}
 	return nil
@@ -1878,7 +1900,7 @@ func (g *cgen) interfaceInitializerRunnerForCurrentClass() (string, error) {
 			if err != nil {
 				return "", err
 			}
-			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", initSym))
+			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing());\n", initSym))
 		}
 	}
 	out.WriteString("  return tya_nil();\n")
@@ -1926,7 +1948,7 @@ func (g *cgen) constructorSuperRunnerForCurrentClass(parentSym string) (string, 
 			if err != nil {
 				return "", err
 			}
-			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());\n", initSym))
+			out.WriteString(fmt.Sprintf("  (void)%s(__this, tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing());\n", initSym))
 		}
 	}
 	out.WriteString("  return tya_nil();\n")
@@ -2261,16 +2283,28 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		if err != nil {
 			return "", "", err
 		}
+		op := n.Op.Lexeme
+		if op == "and" {
+			right, _, err := g.expr(n.Right)
+			if err != nil {
+				return "", "", err
+			}
+			tmp := fmt.Sprintf("__logic%d", g.temp)
+			g.temp++
+			return fmt.Sprintf("({ TyaValue %s = %s; tya_truthy(%s) ? tya_bool(tya_truthy(%s)) : tya_bool(false); })", tmp, left, tmp, right), "TyaValue", nil
+		}
+		if op == "or" {
+			right, _, err := g.expr(n.Right)
+			if err != nil {
+				return "", "", err
+			}
+			tmp := fmt.Sprintf("__logic%d", g.temp)
+			g.temp++
+			return fmt.Sprintf("({ TyaValue %s = %s; tya_truthy(%s) ? tya_bool(true) : tya_bool(tya_truthy(%s)); })", tmp, left, tmp, right), "TyaValue", nil
+		}
 		right, _, err := g.expr(n.Right)
 		if err != nil {
 			return "", "", err
-		}
-		op := n.Op.Lexeme
-		if op == "and" {
-			op = "&&"
-		}
-		if op == "or" {
-			op = "||"
 		}
 		typ := "TyaValue"
 		expr := fmt.Sprintf("(%s.number %s %s.number)", left, op, right)
@@ -2286,7 +2320,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		case "||":
 			expr = fmt.Sprintf("tya_bool(tya_truthy(%s) || tya_truthy(%s))", left, right)
 		case "%":
-			expr = fmt.Sprintf("tya_number((long)%s.number %% (long)%s.number)", left, right)
+			expr = fmt.Sprintf("tya_mod(%s, %s)", left, right)
 		case "&":
 			expr = fmt.Sprintf("tya_number((long)%s.number & (long)%s.number)", left, right)
 		case "|":
@@ -2298,7 +2332,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		case ">>":
 			expr = fmt.Sprintf("tya_number((long)%s.number >> (long)%s.number)", left, right)
 		case "<", "<=", ">", ">=":
-			expr = fmt.Sprintf("tya_bool(%s.number %s %s.number)", left, op, right)
+			expr = fmt.Sprintf("tya_bool(tya_order_compare(%s, %s).number %s 0)", left, right, op)
 		default:
 			expr = fmt.Sprintf("tya_number(%s)", expr)
 		}
@@ -2359,7 +2393,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 				args = append(args, ex)
 			}
 			for len(args) < 6 {
-				args = append(args, "tya_nil()")
+				args = append(args, "tya_missing()")
 			}
 			return fmt.Sprintf("%s(__this, %s)", sym, strings.Join(args[:6], ", ")), "TyaValue", nil
 		}
@@ -2389,7 +2423,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 					args = append(args, ex)
 				}
 				for len(args) < 6 {
-					args = append(args, "tya_nil()")
+					args = append(args, "tya_missing()")
 				}
 				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:6], ", ")), "TyaValue", nil
 			}
@@ -2792,7 +2826,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 					args = append(args, ex)
 				}
 				for len(args) < 6 {
-					args = append(args, "tya_nil()")
+					args = append(args, "tya_missing()")
 				}
 				return fmt.Sprintf("%s(tya_nil(), %s)", sym, strings.Join(args[:6], ", ")), "TyaValue", nil
 			}
@@ -2837,7 +2871,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			switch len(args) {
 			case 0:
-				return fmt.Sprintf("tya_call1(tya_member(%s, %s), tya_nil())", receiver, strconv.Quote(member.Name)), "TyaValue", nil
+				return fmt.Sprintf("tya_call0(tya_member(%s, %s))", receiver, strconv.Quote(member.Name)), "TyaValue", nil
 			case 1:
 				return fmt.Sprintf("tya_call1(tya_member(%s, %s), %s)", receiver, strconv.Quote(member.Name), args[0]), "TyaValue", nil
 			case 2:
@@ -2866,7 +2900,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		}
 		switch len(args) {
 		case 0:
-			return fmt.Sprintf("tya_call1(%s, tya_nil())", callee), "TyaValue", nil
+			return fmt.Sprintf("tya_call0(%s)", callee), "TyaValue", nil
 		case 1:
 			return fmt.Sprintf("tya_call1(%s, %s)", callee, args[0]), "TyaValue", nil
 		case 2:
@@ -2989,7 +3023,7 @@ func (g *cgen) concurrencyConstructorCall(member *ast.MemberExpr, argExprs []ast
 func (g *cgen) emitDynamicCall(callee string, args []string) string {
 	switch len(args) {
 	case 0:
-		return fmt.Sprintf("tya_call1(%s, tya_nil())", callee)
+		return fmt.Sprintf("tya_call0(%s)", callee)
 	case 1:
 		return fmt.Sprintf("tya_call1(%s, %s)", callee, args[0])
 	case 2:
@@ -3176,7 +3210,7 @@ func (g *cgen) interpolationExpr(expr string) (string, error) {
 		if sym == "" {
 			return "tya_nil()", nil
 		}
-		return fmt.Sprintf("%s(__this, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil())", sym), nil
+		return fmt.Sprintf("%s(__this, tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing(), tya_missing())", sym), nil
 	}
 	toks, errs := lexer.Lex(expr)
 	if len(errs) > 0 {

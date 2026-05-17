@@ -671,9 +671,14 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 	if err := predeclareFunctionBindings(stmts, scope); err != nil {
 		return err
 	}
+	imports := map[string]token.Token{}
 	for _, stmt := range stmts {
 		switch n := stmt.(type) {
 		case *ast.ImportStmt:
+			if first, ok := imports[n.Name]; ok {
+				return fmt.Errorf("%d:%d: duplicate import %s first imported at %d:%d", n.NameTok.Line, n.NameTok.Col, n.Name, first.Line, first.Col)
+			}
+			imports[n.Name] = n.NameTok
 			for _, segment := range strings.Split(n.Name, "/") {
 				if !valueNameRE.MatchString(segment) || strings.HasPrefix(segment, "_") {
 					return fmt.Errorf("%d:%d: invalid module name %s", n.NameTok.Line, n.NameTok.Col, n.Name)
@@ -1295,12 +1300,20 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		child.currentMethod = scope.currentMethod
 		child.inClassMethod = scope.inClassMethod
 		child.inInstanceMethod = scope.inInstanceMethod
+		seenDefault := false
 		for i, param := range n.Params {
 			line := 0
 			col := 0
 			if i < len(n.ParamToks) {
 				line = n.ParamToks[i].Line
 				col = n.ParamToks[i].Col
+			}
+			var def ast.Expr
+			if i < len(n.Defaults) {
+				def = n.Defaults[i]
+			}
+			if def == nil && seenDefault {
+				return fmt.Errorf("%d:%d: required parameter %s after default parameter", line, col, param)
 			}
 			if err := checkBindingName(param, line, col); err != nil {
 				return err
@@ -1312,6 +1325,12 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				return fmt.Errorf("duplicate function parameter %s", param)
 			}
 			seen[param] = true
+			if def != nil {
+				seenDefault = true
+				if err := checkExpr(def, child); err != nil {
+					return err
+				}
+			}
 			child.define(param, kindUnknown)
 		}
 		if n.Expr != nil {
@@ -1331,6 +1350,16 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.BinaryExpr:
 		if err := checkExpr(n.Left, scope); err != nil {
 			return err
+		}
+		switch n.Op.Lexeme {
+		case "%":
+			if isFloatLiteral(n.Left) || isFloatLiteral(n.Right) {
+				return fmt.Errorf("%d:%d: %% expects integers", n.Op.Line, n.Op.Col)
+			}
+		case "<", "<=", ">", ">=":
+			if isStringLiteral(n.Left) || isStringLiteral(n.Right) {
+				return fmt.Errorf("%d:%d: %s expects numbers", n.Op.Line, n.Op.Col, n.Op.Lexeme)
+			}
 		}
 		if n.Op.Lexeme == "+" {
 			leftKind := kindOf(n.Left, scope)
@@ -1428,6 +1457,9 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 	case *ast.IndexExpr:
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err
+		}
+		if isNegativeNumberLiteral(n.Index) {
+			return fmt.Errorf("negative indexes are invalid")
 		}
 		return checkExpr(n.Index, scope)
 	case *ast.CallExpr:
@@ -3095,6 +3127,29 @@ func hasFunctionMember(dict *ast.DictLit) bool {
 		}
 	}
 	return false
+}
+
+func isFloatLiteral(expr ast.Expr) bool {
+	_, ok := expr.(*ast.FloatLit)
+	return ok
+}
+
+func isStringLiteral(expr ast.Expr) bool {
+	_, ok := expr.(*ast.StringLit)
+	return ok
+}
+
+func isNegativeNumberLiteral(expr ast.Expr) bool {
+	unary, ok := expr.(*ast.UnaryExpr)
+	if !ok || unary.Op.Type != token.MINUS {
+		return false
+	}
+	switch unary.Expr.(type) {
+	case *ast.IntLit, *ast.FloatLit:
+		return true
+	default:
+		return false
+	}
 }
 
 func isDictMethodName(name string) bool {

@@ -62,6 +62,87 @@ func TestRunStrictStringPlus(t *testing.T) {
 	}
 }
 
+func TestRunDefaultParameters(t *testing.T) {
+	src := strings.Join([]string{
+		"greet = name, suffix = \"!\" -> name + suffix",
+		"label = name, text = name -> text",
+		"make = items = [] ->",
+		"  items.push(1)",
+		"  items.len()",
+		"print(greet(\"Tya\"))",
+		"print(greet(\"Tya\", \"?\"))",
+		"print(label(\"copy\"))",
+		"maybe = value = \"fallback\" -> value",
+		"print(maybe())",
+		"print(maybe(nil))",
+		"print(make())",
+		"print(make())",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "Tya!\nTya?\ncopy\nfallback\nnil\n1\n1\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunNumericEdgeSemantics(t *testing.T) {
+	src := "print(1 == 1.0)\nprint(5 / 2)\nprint(5 % 2)\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "true\n2.5\n1\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunNegativeIndexesError(t *testing.T) {
+	tests := []string{
+		"i = -1\nprint([1][i])\n",
+		"i = -1\nprint(\"abc\"[i])\n",
+		"i = -1\nprint(b\"abc\"[i])\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		prog, _, err := parser.Parse(toks)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var out bytes.Buffer
+		err = Run(prog, &out)
+		if err == nil {
+			t.Fatalf("expected negative index error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "negative indexes are invalid") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+}
+
 func TestRunRejectsMixedStringPlus(t *testing.T) {
 	tests := []struct {
 		name string

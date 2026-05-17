@@ -121,7 +121,7 @@ class Writer
 
   # Writer.write_int provides the binary/Writer standard library operation.
   write_int = value, width, min, max, endian ->
-    if value.class != Number or value < min or value > max
+    if value == nil or value.class != Number or value < min or value > max
       raise "binary.Writer: integer out of range"
     if value < 0
       value = value + Writer.pow2(width * 8)
@@ -131,8 +131,8 @@ class Writer
       shift = i
       if endian == "big"
         shift = width - i - 1
-      div = Writer.pow256(shift)
-      byte = (value / div) % 256
+      divisor = Writer.pow256(shift)
+      byte = (value / divisor).to_i() % 256
       arr.push(byte)
       i = i + 1
     return self.write_bytes(bytes(arr))

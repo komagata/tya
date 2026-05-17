@@ -310,6 +310,7 @@ type DictProp struct {
 type FuncLit struct {
 	Params    []string
 	ParamToks []token.Token
+	Defaults  []Expr
 	Body      []Stmt
 	Expr      Expr
 }

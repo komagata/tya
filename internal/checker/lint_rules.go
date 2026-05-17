@@ -307,6 +307,9 @@ func walkLintExprExtras(expr ast.Expr, scope *lintScope, out *[]LintFinding) {
 				child.define(param, n.ParamToks[i], out)
 			}
 		}
+		for _, def := range n.Defaults {
+			walkLintExprExtras(def, child, out)
+		}
 		if n.Expr != nil {
 			walkLintExprExtras(n.Expr, child, out)
 		}
@@ -348,6 +351,9 @@ func reportUnusedParams(fn *ast.FuncLit, out *[]LintFinding) {
 		return
 	}
 	used := map[string]bool{}
+	for _, def := range fn.Defaults {
+		collectIdentUses(def, used)
+	}
 	if fn.Expr != nil {
 		collectIdentUses(fn.Expr, used)
 	}

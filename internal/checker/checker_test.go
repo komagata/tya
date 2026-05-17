@@ -81,6 +81,105 @@ func TestCheckAllowsDictionaryStringLiteralKeys(t *testing.T) {
 	}
 }
 
+func TestCheckNumberKindAllowsIntFloatEquality(t *testing.T) {
+	prog := parse(t, "print(1 == 1.0)\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsFloatModulo(t *testing.T) {
+	tests := []string{
+		"print(5.5 % 2)\n",
+		"print(5 % 2.0)\n",
+	}
+	for _, src := range tests {
+		prog := parse(t, src)
+		err := Check(prog)
+		if err == nil {
+			t.Fatalf("expected float modulo error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "% expects integers") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+}
+
+func TestCheckRejectsNegativeLiteralIndexes(t *testing.T) {
+	tests := []string{
+		"items = [1]\nprint(items[-1])\n",
+		"print(\"abc\"[-1])\n",
+		"print(b\"abc\"[-1])\n",
+	}
+	for _, src := range tests {
+		prog := parse(t, src)
+		err := Check(prog)
+		if err == nil {
+			t.Fatalf("expected negative index error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "negative indexes are invalid") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+}
+
+func TestCheckRejectsStringOrdering(t *testing.T) {
+	prog := parse(t, "print(\"a\" < \"b\")\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected string ordering error")
+	}
+	if !strings.Contains(err.Error(), "< expects numbers") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckDefaultParameterRules(t *testing.T) {
+	t.Run("earlier param reference", func(t *testing.T) {
+		prog := parse(t, "label = name, text = name -> text\nprint(label(\"Tya\"))\n")
+		if err := Check(prog); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("required after default", func(t *testing.T) {
+		prog := parse(t, "f = a = 1, b -> b\n")
+		err := Check(prog)
+		if err == nil {
+			t.Fatal("expected required-after-default error")
+		}
+		if !strings.Contains(err.Error(), "required parameter b after default parameter") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+	t.Run("later param reference", func(t *testing.T) {
+		prog := parse(t, "f = a = b, b = 1 -> a\n")
+		err := Check(prog)
+		if err == nil {
+			t.Fatal("expected later-reference error")
+		}
+		if !strings.Contains(err.Error(), "undefined variable b") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+}
+
+func TestCheckRejectsDuplicateImports(t *testing.T) {
+	tests := []string{
+		"import string as s\nimport string as s\n",
+		"import string as first\nimport string as second\n",
+	}
+	for _, src := range tests {
+		prog := parse(t, src)
+		err := Check(prog)
+		if err == nil {
+			t.Fatalf("expected duplicate import error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "duplicate import string") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+}
+
 func TestCheckRejectsDuplicateNormalizedDictionaryKeys(t *testing.T) {
 	prog := parse(t, "user = { name: \"Tya\", \"name\": \"duplicate\" }\n")
 	err := Check(prog)

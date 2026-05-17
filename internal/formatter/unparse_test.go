@@ -304,7 +304,7 @@ func TestUnparseWrapsLongCall(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "result = compute_filtered_items(\n  source_alpha,\n  source_beta,\n  source_gamma,\n  source_delta,\n)\n"
+	want := "result = compute_filtered_items(\n  source_alpha,\n  source_beta,\n  source_gamma,\n  source_delta\n)\n"
 	if got != want {
 		t.Errorf("wrap mismatch\nwant:\n%s\ngot:\n%s", want, got)
 	}
@@ -316,7 +316,7 @@ func TestUnparseWrapsLongArray(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"items = [\n  first_item_name,\n", "  fifth_item_name,\n]\n"} {
+	for _, want := range []string{"items = [\n  first_item_name,\n", "  fifth_item_name\n]\n"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}

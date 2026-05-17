@@ -79,6 +79,89 @@ func TestParseDictionaryStringKeys(t *testing.T) {
 	}
 }
 
+func TestParseFunctionDefaultParameters(t *testing.T) {
+	toks, errs := lexer.Lex("greet = name, suffix = \"!\" -> name + suffix\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assign := prog.Stmts[0].(*ast.AssignStmt)
+	fn := assign.Values[0].(*ast.FuncLit)
+	if len(fn.Params) != 2 || fn.Params[0] != "name" || fn.Params[1] != "suffix" {
+		t.Fatalf("got params %v", fn.Params)
+	}
+	if len(fn.Defaults) != 2 || fn.Defaults[0] != nil || fn.Defaults[1] == nil {
+		t.Fatalf("got defaults %#v", fn.Defaults)
+	}
+}
+
+func TestParseRejectsTrailingCommas(t *testing.T) {
+	tests := []string{
+		"items = [1,]\n",
+		"user = { name: \"Tya\", }\n",
+		"print(1,)\n",
+		"f = (a,) -> a\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		if _, _, err := Parse(toks); err == nil {
+			t.Fatalf("expected trailing comma error for %q", src)
+		}
+	}
+}
+
+func TestParseRejectsSliceSyntax(t *testing.T) {
+	toks, errs := lexer.Lex("items = [1, 2, 3]\nprint(items[1:3])\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err == nil {
+		t.Fatal("expected slice syntax error")
+	}
+}
+
+func TestParseRejectsEmptyBlocks(t *testing.T) {
+	toks, errs := lexer.Lex("if true\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err == nil {
+		t.Fatal("expected empty block error")
+	}
+}
+
+func TestParseAllowsExplicitNilNoOpBlock(t *testing.T) {
+	toks, errs := lexer.Lex("if true\n  nil\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestParseRejectsVariadicParameters(t *testing.T) {
+	tests := []string{
+		"f = values... -> values\n",
+		"f = *args -> args\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			continue
+		}
+		if _, _, err := Parse(toks); err == nil {
+			t.Fatalf("expected variadic syntax error for %q", src)
+		}
+	}
+}
+
 func TestParseRejectsSetLiteral(t *testing.T) {
 	toks, errs := lexer.Lex("roles = { \"admin\", \"owner\" }\n")
 	if len(errs) != 0 {

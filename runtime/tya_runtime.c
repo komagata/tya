@@ -591,6 +591,10 @@ TyaValue tya_nil(void) {
   return (TyaValue){.kind = TYA_NIL};
 }
 
+TyaValue tya_missing(void) {
+  return (TyaValue){.kind = TYA_MISSING};
+}
+
 TyaValue tya_bool(bool value) {
   return (TyaValue){.kind = TYA_BOOL, .boolean = value};
 }
@@ -719,6 +723,13 @@ TyaValue tya_error(TyaValue message) {
   return (TyaValue){.kind = TYA_ERROR, .error = message.string};
 }
 
+TyaValue tya_call0(TyaValue fn) {
+  if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
+    return tya_nil();
+  }
+  return fn.function->fn(fn.function->receiver, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());
+}
+
 TyaValue tya_call1(TyaValue fn, TyaValue arg) {
   if (fn.kind != TYA_FUNCTION || fn.function == NULL || fn.function->fn == NULL) {
     return tya_nil();
@@ -785,6 +796,10 @@ TyaValue tya_len(TyaValue value) {
 
 TyaValue tya_index(TyaValue value, TyaValue index) {
   int i = (int)index.number;
+  if ((value.kind == TYA_BYTES || value.kind == TYA_ARRAY || value.kind == TYA_STRING) && i < 0) {
+    tya_raise(tya_string("negative indexes are invalid"));
+    return tya_nil();
+  }
   if (value.kind == TYA_BYTES && value.bytes != NULL && i >= 0 && i < value.bytes->len) {
     return tya_number((double)value.bytes->data[i]);
   }
@@ -1213,7 +1228,7 @@ TyaValue tya_iter(TyaValue value) {
   if (value.kind == TYA_STRING) return tya_iterator_object("string", value);
   if (value.kind == TYA_DICT) return tya_iterator_object("dict", value);
   TyaValue method = tya_member(value, "iter");
-  if (method.kind == TYA_FUNCTION) return tya_call1(method, tya_nil());
+  if (method.kind == TYA_FUNCTION) return tya_call0(method);
   tya_raise(tya_string("for: value is not iterable"));
   return tya_nil();
 }
@@ -1221,13 +1236,13 @@ TyaValue tya_iter(TyaValue value) {
 TyaValue tya_iterator_has_next(TyaValue iter) {
   if (iter.kind != TYA_DICT && iter.kind != TYA_OBJECT) {
     TyaValue method = tya_member(iter, "has_next?");
-    if (method.kind == TYA_FUNCTION) return tya_call1(method, tya_nil());
+    if (method.kind == TYA_FUNCTION) return tya_call0(method);
     return tya_bool(false);
   }
   TyaValue kind = tya_member_optional(iter, "__iter_kind");
   if (kind.kind != TYA_STRING || kind.string == NULL) {
     TyaValue method = tya_member(iter, "has_next?");
-    if (method.kind == TYA_FUNCTION) return tya_call1(method, tya_nil());
+    if (method.kind == TYA_FUNCTION) return tya_call0(method);
     return tya_bool(false);
   }
   TyaValue source = tya_member(iter, "source");
@@ -1268,7 +1283,7 @@ TyaValue tya_iterator_next(TyaValue iter) {
   TyaValue kind = tya_member_optional(iter, "__iter_kind");
   if (kind.kind != TYA_STRING || kind.string == NULL) {
     TyaValue method = tya_member(iter, "next");
-    if (method.kind == TYA_FUNCTION) return tya_call1(method, tya_nil());
+    if (method.kind == TYA_FUNCTION) return tya_call0(method);
     tya_raise(tya_string("iterator.next: iterator exhausted"));
     return tya_nil();
   }
@@ -1404,6 +1419,7 @@ TyaValue tya_ord(TyaValue text) {
 TyaValue tya_kind(TyaValue value) {
   switch (value.kind) {
   case TYA_NIL:
+  case TYA_MISSING:
     return tya_string("nil");
   case TYA_BOOL:
     return tya_string("bool");
@@ -1518,6 +1534,7 @@ bool tya_equal(TyaValue left, TyaValue right) {
   }
   switch (left.kind) {
   case TYA_NIL:
+  case TYA_MISSING:
     return true;
   case TYA_BOOL:
     return left.boolean == right.boolean;
@@ -1569,6 +1586,7 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
   }
   switch (left.kind) {
   case TYA_NIL:
+  case TYA_MISSING:
     return true;
   case TYA_BOOL:
     return left.boolean == right.boolean;
@@ -1653,6 +1671,40 @@ TyaValue tya_compare(TyaValue left, TyaValue right) {
   }
   tya_raise(tya_string("compare: values are not comparable"));
   return tya_nil();
+}
+
+TyaValue tya_order_compare(TyaValue left, TyaValue right) {
+  if (left.kind == TYA_NUMBER && right.kind == TYA_NUMBER) {
+    if (left.number < right.number) return tya_number(-1);
+    if (left.number > right.number) return tya_number(1);
+    return tya_number(0);
+  }
+  if (left.kind == TYA_NIL && right.kind == TYA_NUMBER) {
+    return tya_number(-1);
+  }
+  if (left.kind == TYA_NUMBER && right.kind == TYA_NIL) {
+    return tya_number(1);
+  }
+  tya_raise(tya_string("< expects numbers"));
+  return tya_nil();
+}
+
+TyaValue tya_mod(TyaValue left, TyaValue right) {
+  if (left.kind != TYA_NUMBER || right.kind != TYA_NUMBER) {
+    tya_raise(tya_string("% expects numbers"));
+    return tya_nil();
+  }
+  long l = (long)left.number;
+  long r = (long)right.number;
+  if ((double)l != left.number || (double)r != right.number) {
+    tya_raise(tya_string("% expects integers"));
+    return tya_nil();
+  }
+  if (r == 0) {
+    tya_raise(tya_string("modulo by zero"));
+    return tya_nil();
+  }
+  return tya_number(l % r);
 }
 
 TyaValue tya_add(TyaValue left, TyaValue right) {
@@ -1821,6 +1873,7 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
   char scratch[64];
   switch (value.kind) {
   case TYA_NIL:
+  case TYA_MISSING:
     tya_builder_append(builder, "nil");
     break;
   case TYA_BOOL:
@@ -2458,6 +2511,7 @@ void tya_assert_equal(TyaValue expected, TyaValue actual, const char *path, int 
 static void tya_write_value(FILE *out, TyaValue value) {
   switch (value.kind) {
   case TYA_NIL:
+  case TYA_MISSING:
     fprintf(out, "nil");
     break;
   case TYA_BOOL:
@@ -2526,7 +2580,7 @@ static void tya_write_value(FILE *out, TyaValue value) {
 }
 
 bool tya_truthy(TyaValue value) {
-  if (value.kind == TYA_NIL) {
+  if (value.kind == TYA_NIL || value.kind == TYA_MISSING) {
     return false;
   }
   if (value.kind == TYA_BOOL) {
@@ -2748,7 +2802,9 @@ TyaValue tya_random_float(void) {
 
 TyaValue tya_serialization_kind(TyaValue value) {
   switch (value.kind) {
-  case TYA_NIL: return tya_string("nil");
+  case TYA_NIL:
+  case TYA_MISSING:
+    return tya_string("nil");
   case TYA_BOOL: return tya_string("bool");
   case TYA_NUMBER: return tya_string("number");
   case TYA_STRING: return tya_string("string");
@@ -3436,7 +3492,7 @@ static TyaValue tya_method_mutex_with_lock(TyaValue receiver, TyaValue fn, TyaVa
   TyaRaiseFrame frame;
   if (setjmp(frame.env) == 0) {
     tya_push_raise_frame(&frame);
-    TyaValue result = tya_call1(fn, tya_nil());
+    TyaValue result = tya_call0(fn);
     tya_pop_raise_frame();
     pthread_mutex_unlock(&r->mu);
     return result;
@@ -5436,7 +5492,7 @@ TyaValue tya_gc_stats(void) {
 static TyaValue tya_task_invoke(TyaValue callee, int argc, TyaValue *argv) {
   switch (argc) {
     case 0:
-      return tya_call1(callee, tya_nil());
+      return tya_call0(callee);
     case 1:
       return tya_call1(callee, argv[0]);
     case 2:

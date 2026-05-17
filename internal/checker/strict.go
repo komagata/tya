@@ -561,6 +561,12 @@ func strictWalkExpr(expr ast.Expr, scope *strictScope, ctx *strictCtx) {
 				return
 			}
 		}
+		for _, def := range n.Defaults {
+			strictWalkExpr(def, fnScope, ctx)
+			if ctx.halted() {
+				return
+			}
+		}
 		strictWalkStmts(n.Body, fnScope, false, ctx)
 		if ctx.halted() {
 			return

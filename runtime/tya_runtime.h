@@ -18,6 +18,7 @@ typedef enum {
   TYA_TASK,
   TYA_CHANNEL,
   TYA_RESOURCE,
+  TYA_MISSING,
 } TyaKind;
 
 typedef struct TyaBytes TyaBytes;
@@ -60,6 +61,7 @@ struct TyaRaiseFrame {
 };
 
 TyaValue tya_nil(void);
+TyaValue tya_missing(void);
 TyaValue tya_bool(bool value);
 TyaValue tya_number(double value);
 TyaValue tya_string(const char *value);
@@ -75,6 +77,7 @@ TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn);
 #define tya_class(fn, name, parent) tya_class_raw((TyaFunctionPtr)(fn), name, parent)
 #define tya_bind_method(receiver, fn) tya_bind_method_raw(receiver, (TyaFunctionPtr)(fn))
 TyaValue tya_error(TyaValue message);
+TyaValue tya_call0(TyaValue fn);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);
 TyaValue tya_call3(TyaValue fn, TyaValue first, TyaValue second, TyaValue third);
@@ -121,7 +124,9 @@ TyaValue tya_downcase(TyaValue text);
 bool tya_equal(TyaValue left, TyaValue right);
 TyaValue tya_deep_equal(TyaValue left, TyaValue right);
 TyaValue tya_compare(TyaValue left, TyaValue right);
+TyaValue tya_order_compare(TyaValue left, TyaValue right);
 TyaValue tya_add(TyaValue left, TyaValue right);
+TyaValue tya_mod(TyaValue left, TyaValue right);
 TyaValue tya_and(TyaValue left, TyaValue right);
 TyaValue tya_or(TyaValue left, TyaValue right);
 TyaValue tya_args(int argc, char **argv);

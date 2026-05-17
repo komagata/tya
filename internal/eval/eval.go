@@ -93,11 +93,12 @@ type Module struct {
 }
 
 type Function struct {
-	Params []string
-	Body   []ast.Stmt
-	Expr   ast.Expr
-	Env    *Env
-	Name   string
+	Params   []string
+	Defaults []ast.Expr
+	Body     []ast.Stmt
+	Expr     ast.Expr
+	Env      *Env
+	Name     string
 }
 
 type Builtin func([]Value) (Value, error)
@@ -1027,7 +1028,7 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		}
 		return arr, nil
 	case *ast.FuncLit:
-		return &Function{Params: n.Params, Body: n.Body, Expr: n.Expr, Env: env}, nil
+		return &Function{Params: n.Params, Defaults: n.Defaults, Body: n.Body, Expr: n.Expr, Env: env}, nil
 	case *ast.BinaryExpr:
 		return evalBinary(n, env)
 	case *ast.UnaryExpr:
@@ -1132,7 +1133,10 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			if !ok {
 				return nil, fmt.Errorf("bytes index must be int")
 			}
-			if i < 0 || i >= int64(len(bytesVal.data)) {
+			if i < 0 {
+				return nil, fmt.Errorf("negative indexes are invalid")
+			}
+			if i >= int64(len(bytesVal.data)) {
 				return nil, nil
 			}
 			return int64(bytesVal.data[i]), nil
@@ -1148,7 +1152,10 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 				return nil, fmt.Errorf("string index must be int")
 			}
 			runes := env.runes(text)
-			if i < 0 || i >= int64(len(runes)) {
+			if i < 0 {
+				return nil, fmt.Errorf("negative indexes are invalid")
+			}
+			if i >= int64(len(runes)) {
 				return nil, nil
 			}
 			return string(runes[i]), nil
@@ -1157,7 +1164,10 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		if !ok {
 			return nil, fmt.Errorf("array index must be int")
 		}
-		if i < 0 || i >= int64(len(arr.items)) {
+		if i < 0 {
+			return nil, fmt.Errorf("negative indexes are invalid")
+		}
+		if i >= int64(len(arr.items)) {
 			return nil, nil
 		}
 		return arr.items[i], nil
@@ -1722,14 +1732,39 @@ func callValue(fn Value, args []Value) (Value, error) {
 	case Builtin:
 		return f(args)
 	case *Function:
-		if len(args) != len(f.Params) {
-			return nil, fmt.Errorf("function expects %d arguments, got %d", len(f.Params), len(args))
+		required := len(f.Params)
+		for i, def := range f.Defaults {
+			if i < len(f.Params) && def != nil {
+				required = i
+				break
+			}
+		}
+		if len(args) < required || len(args) > len(f.Params) {
+			if required == len(f.Params) {
+				return nil, fmt.Errorf("function expects %d arguments, got %d", len(f.Params), len(args))
+			}
+			return nil, fmt.Errorf("function expects %d to %d arguments, got %d", required, len(f.Params), len(args))
 		}
 		callEnv := f.Env.child()
 		callEnv.inFunc = true
 		for i, name := range f.Params {
-			callEnv.vars[name] = args[i]
-			callEnv.rememberKind(name, args[i])
+			var value Value
+			if i < len(args) {
+				value = args[i]
+			} else if i < len(f.Defaults) && f.Defaults[i] != nil {
+				v, err := evalExpr(f.Defaults[i], callEnv)
+				if err != nil {
+					return nil, err
+				}
+				value = v
+			} else {
+				if required == len(f.Params) {
+					return nil, fmt.Errorf("function expects %d arguments, got %d", len(f.Params), len(args))
+				}
+				return nil, fmt.Errorf("function expects %d to %d arguments, got %d", required, len(f.Params), len(args))
+			}
+			callEnv.vars[name] = value
+			callEnv.rememberKind(name, value)
 		}
 		checkPredicate := func(v Value, err error) (Value, error) {
 			if err != nil {

@@ -744,13 +744,16 @@ func (u *unparser) emitWrappedCall(stmt ast.Stmt, prefix string, call *ast.CallE
 	}
 	u.line(prefix + callee + "(")
 	u.indent++
-	for _, a := range call.Args {
+	for i, a := range call.Args {
 		s, err := u.expr(a)
 		if err != nil {
 			u.indent--
 			return err
 		}
-		u.line(s + ",")
+		if i < len(call.Args)-1 {
+			s += ","
+		}
+		u.line(s)
 	}
 	u.indent--
 	closing := ")"
@@ -976,13 +979,16 @@ func (u *unparser) emitDictBlock(stmt ast.Stmt, target string, dict *ast.DictLit
 func (u *unparser) emitWrappedArray(stmt ast.Stmt, prefix string, arr *ast.ArrayLit) error {
 	u.line(prefix + "[")
 	u.indent++
-	for _, el := range arr.Elems {
+	for i, el := range arr.Elems {
 		s, err := u.expr(el)
 		if err != nil {
 			u.indent--
 			return err
 		}
-		u.line(s + ",")
+		if i < len(arr.Elems)-1 {
+			s += ","
+		}
+		u.line(s)
 	}
 	u.indent--
 	closing := "]"
@@ -1081,10 +1087,21 @@ func (u *unparser) funcHead(fn *ast.FuncLit) (string, error) {
 	if len(fn.Params) == 0 {
 		return "()", nil
 	}
-	if len(fn.Params) == 1 {
-		return fn.Params[0], nil
+	parts := make([]string, len(fn.Params))
+	for i, param := range fn.Params {
+		parts[i] = param
+		if i < len(fn.Defaults) && fn.Defaults[i] != nil {
+			def, err := u.expr(fn.Defaults[i])
+			if err != nil {
+				return "", err
+			}
+			parts[i] += " = " + def
+		}
 	}
-	return strings.Join(fn.Params, ", "), nil
+	if len(parts) == 1 {
+		return parts[0], nil
+	}
+	return strings.Join(parts, ", "), nil
 }
 
 func (u *unparser) expr(e ast.Expr) (string, error) {
