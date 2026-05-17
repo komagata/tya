@@ -848,6 +848,7 @@ func stripBarePackageImports(src string, imports []importSpec) string {
 
 func dedupeTopLevelImports(src string) string {
 	seenNoAlias := map[string]bool{}
+	seenAlias := map[string]map[string]bool{}
 	var out strings.Builder
 	for _, line := range strings.Split(src, "\n") {
 		trimmed := strings.TrimSpace(line)
@@ -856,14 +857,26 @@ func dedupeTopLevelImports(src string) string {
 			path, alias, hasAlias := strings.Cut(body, " as ")
 			path = strings.TrimSpace(path)
 			alias = strings.TrimSpace(alias)
-			if seenNoAlias[path] && hasAlias && alias != "" {
-				out.WriteString(alias)
-				out.WriteString(" = ")
-				out.WriteString(filepath.Base(path))
-				out.WriteString("\n")
+			effectiveNoAlias := !hasAlias || alias == filepath.Base(path)
+			if hasAlias && alias != "" {
+				if aliases := seenAlias[path]; aliases != nil && aliases[alias] {
+					continue
+				}
+				if seenAlias[path] == nil {
+					seenAlias[path] = map[string]bool{}
+				}
+				seenAlias[path][alias] = true
+			}
+			if seenNoAlias[path] {
+				if !effectiveNoAlias && alias != "" {
+					out.WriteString(alias)
+					out.WriteString(" = ")
+					out.WriteString(filepath.Base(path))
+					out.WriteString("\n")
+				}
 				continue
 			}
-			if !hasAlias {
+			if effectiveNoAlias {
 				seenNoAlias[path] = true
 			}
 		}
