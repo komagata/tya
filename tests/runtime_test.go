@@ -24,8 +24,8 @@ int main(void) {
   TyaValue dict = tya_dict((TyaDictEntry[]){{"name", tya_string("Tya")}}, 1);
   tya_set_member(dict, "version", tya_number(1));
   tya_print(dict);
-  tya_print(tya_member(dict, "name"));
-  tya_print(tya_member(dict, "version"));
+  tya_print(tya_index(dict, tya_string("name")));
+  tya_print(tya_index(dict, tya_string("version")));
 
   TyaValue doubled = tya_call1(tya_function(double_value), tya_index(items, tya_number(2)));
   tya_print(doubled);

@@ -2461,6 +2461,10 @@ emit_stmt = lines, names, stmt ->
         "  " + prefix + "tya_dict((TyaDictEntry[]){{" + entries.join(", ") + "}}, " + (entries.len()).to_s() + ");",
 
       )
+    lines.push(
+      "  tya_set_member(" + c_name(stmt["name"]) + ", " + c_string("__module_namespace") + ", tya_bool(true));",
+
+    )
     for member in stmt["members"]
       if member["value"]["kind"] == "func"
         lines.push(

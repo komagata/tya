@@ -224,6 +224,10 @@ while count < 3
   count = count + 1
 ```
 
+Bindings created inside `if`, `while`, `for`, `catch`, `match case`, `scope`,
+and `select` bodies are local to that body. Assigning to an existing outer
+non-function binding from such a nested block updates the outer binding.
+
 Blocks appear in control-flow statements, function bodies, class bodies,
 interface bodies, `try` / `catch`, `scope`, `select`, and similar constructs.
 
@@ -287,10 +291,11 @@ count = count + 1
 ```
 
 Reassignment must preserve the binding's runtime kind, except that `nil` may
-move to or from a concrete kind because it represents absence. A name first
-assigned a number may later receive another number, but not a string, array,
-dictionary, function, class, object, error, or resource value. This keeps Tya
-dynamically typed while making rebinding strict and predictable.
+move to or from a concrete kind because it represents absence. Assigning `nil`
+does not erase the last known concrete kind. A name first assigned a number may
+later receive another number or `nil`, but not a string, array, dictionary,
+function, class, object, error, or resource value. This keeps Tya dynamically
+typed while making rebinding strict and predictable.
 
 ```tya
 count = 1
@@ -656,6 +661,11 @@ user["admin"] = true
 
 Dictionary block forms and empty collection forms are canonicalized by the
 formatter.
+
+Dictionary keys are read and written with string indexes. Dot access on
+dictionaries is reserved for documented dictionary receiver methods such as
+`keys()`, `has?()`, `get()`, `set()`, and `delete()`; dictionary key member
+access such as `user.name` is invalid.
 
 Array, string, and bytes indexes must be integers. Dictionary and error-value
 indexes must be strings. Missing dictionary keys and out-of-range array,

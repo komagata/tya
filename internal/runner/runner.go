@@ -669,6 +669,8 @@ func synthesizeScriptNamespace(source string, binding string) (string, error) {
 	var out strings.Builder
 	out.WriteString(binding)
 	out.WriteString(" = {}\n")
+	out.WriteString(binding)
+	out.WriteString("[\"__module_namespace\"] = true\n")
 	for _, name := range names {
 		out.WriteString(binding)
 		out.WriteString("[")
@@ -920,6 +922,8 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 	if includeNamespace {
 		out.WriteString(pkgName)
 		out.WriteString(" = {}\n")
+		out.WriteString(pkgName)
+		out.WriteString("[\"__module_namespace\"] = true\n")
 		for _, name := range names {
 			out.WriteString(pkgName)
 			out.WriteString("[")

@@ -640,6 +640,9 @@ func (s *scope) define(name string, kind valueKind) {
 	if s.kinds[name] == kindModule {
 		return
 	}
+	if kind == kindNil && s.kinds[name] != kindUnknown {
+		return
+	}
 	s.kinds[name] = kind
 }
 
@@ -1395,6 +1398,11 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			return err
 		}
 		switch kindOf(n.Target, scope) {
+		case kindDict:
+			if isDictMethodName(n.Name) {
+				return nil
+			}
+			return memberAccessError(n, "dictionary")
 		case kindModule:
 			if classNameRE.MatchString(n.Name) {
 				key := memberKey(n)
@@ -3086,6 +3094,15 @@ func hasFunctionMember(dict *ast.DictLit) bool {
 		}
 	}
 	return false
+}
+
+func isDictMethodName(name string) bool {
+	switch name {
+	case "class", "len", "empty?", "has", "has?", "get", "set", "delete", "keys", "values", "entries", "merge", "to_s", "equal?", "iter", "sequence":
+		return true
+	default:
+		return false
+	}
 }
 
 func memberAccessError(expr *ast.MemberExpr, receiver string) error {

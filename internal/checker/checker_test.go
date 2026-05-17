@@ -56,6 +56,100 @@ func TestCheckRejectsMixedStringPlus(t *testing.T) {
 	}
 }
 
+func TestCheckRejectsDictionaryKeyMemberAccess(t *testing.T) {
+	prog := parse(t, "user = { name: \"komagata\" }\nprint(user.name)\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected dictionary member access error")
+	}
+	if !strings.Contains(err.Error(), "cannot use . access on dictionary; use index access") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckAllowsDictionaryIndexAndMethodAccess(t *testing.T) {
+	prog := parse(t, "user = { name: \"komagata\" }\nprint(user[\"name\"])\nprint(user.keys())\nprint(user.has?(\"name\"))\nuser.delete(\"age\")\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsKindChangingReassignmentThroughNil(t *testing.T) {
+	prog := parse(t, "value = 1\nvalue = nil\nvalue = \"one\"\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected kind-changing reassignment through nil error")
+	}
+	if !strings.Contains(err.Error(), "cannot reassign value from number to string") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckAllowsNilToConcreteWhenNoPriorConcreteKind(t *testing.T) {
+	prog := parse(t, "value = nil\nvalue = \"one\"\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckKeepsBlockLocalBindingsLocal(t *testing.T) {
+	prog := parse(t, "if true\n  local = 1\nprint(local)\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected block local binding error")
+	}
+	if !strings.Contains(err.Error(), "undefined variable") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckAllowsBlockAssignmentToOuterBinding(t *testing.T) {
+	prog := parse(t, "count = 1\nif true\n  count = 2\nprint(count)\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckKeepsForBindingsLocal(t *testing.T) {
+	prog := parse(t, "items = [1]\nfor item, index in items\n  print(item)\nprint(item)\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected for binding scope error")
+	}
+	if !strings.Contains(err.Error(), "undefined variable") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckKeepsCatchBindingLocal(t *testing.T) {
+	prog := parse(t, "try\n  raise \"bad\"\ncatch err\n  print(err)\nprint(err)\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected catch binding scope error")
+	}
+	if !strings.Contains(err.Error(), "undefined variable") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckKeepsMatchBindingsLocal(t *testing.T) {
+	prog := parse(t, "value = [1]\nmatch value\n  case [item]\n    print(item)\nprint(item)\n")
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected match binding scope error")
+	}
+	if !strings.Contains(err.Error(), "undefined variable") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckAllowsFunctionReassignment(t *testing.T) {
+	prog := parse(t, "handler = -> 1\nhandler = -> 2\nprint(handler())\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCheckRejectsConstantMutation(t *testing.T) {
 	prog := parse(t, "ITEMS = [1]\nITEMS[0] = 2\n")
 	err := Check(prog)
@@ -140,10 +234,14 @@ func TestCheckAllowsDictionaryIndexAccess(t *testing.T) {
 	}
 }
 
-func TestCheckAllowsDictionaryMemberAccess(t *testing.T) {
+func TestCheckRejectsDictionaryMemberAccess(t *testing.T) {
 	prog := parse(t, "user = { name: \"komagata\" }\nprint(user.name)\n")
-	if err := Check(prog); err != nil {
-		t.Fatal(err)
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected dictionary member access error")
+	}
+	if !strings.Contains(err.Error(), "cannot use . access on dictionary; use index access") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
@@ -162,7 +260,7 @@ func TestCheckAllowsKnownModuleMemberAccess(t *testing.T) {
 }
 
 func TestCheckNamespaceDictionary(t *testing.T) {
-	src := "foo = \"foo\"\nbar = -> \"bar\"\nutil = { foo: foo, bar: bar }\nprint(util.foo)\nprint(util.bar())\n"
+	src := "foo = \"foo\"\nbar = -> \"bar\"\nutil = { foo: foo, bar: bar }\nprint(util[\"foo\"])\nprint(util[\"bar\"]())\n"
 	if err := Check(parse(t, src)); err != nil {
 		t.Fatal(err)
 	}

@@ -1386,6 +1386,7 @@ func (g *cgen) assignModuleDecl(module *ast.ModuleDecl) error {
 		g.line(fmt.Sprintf("TyaValue %s = tya_nil();", target))
 	}
 	g.line(fmt.Sprintf("%s = tya_dict((TyaDictEntry[]){%s}, %d);", target, strings.Join(entries, ", "), len(entries)))
+	g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_bool(true));", target, strconv.Quote("__module_namespace")))
 	for _, member := range functions {
 		fn := member.Value.(*ast.FuncLit)
 		funcName := module.Name + "_" + member.Name
@@ -3043,7 +3044,7 @@ func (g *cgen) selectStmt(n *ast.SelectStmt) error {
 	g.indent++
 	g.line(fmt.Sprintf("TyaValue %s = tya_array((TyaValue[]){%s}, %d);", opsName, strings.Join(ops, ", "), len(ops)))
 	g.line(fmt.Sprintf("TyaValue %s = tya_channel_select(%s);", resultName, opsName))
-	g.line(fmt.Sprintf("TyaValue %s = tya_member(%s, \"index\");", indexName, resultName))
+	g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_string(\"index\"));", indexName, resultName))
 	for i, arm := range n.Arms {
 		if i == 0 {
 			g.line(fmt.Sprintf("if ((int)%s.number == %d) {", indexName, i))
@@ -3052,7 +3053,7 @@ func (g *cgen) selectStmt(n *ast.SelectStmt) error {
 		}
 		g.indent++
 		if arm.Kind == "receive" && arm.BindName != "" {
-			g.line(fmt.Sprintf("TyaValue %s = tya_member(%s, \"value\");", cName(arm.BindName), resultName))
+			g.line(fmt.Sprintf("TyaValue %s = tya_index(%s, tya_string(\"value\"));", cName(arm.BindName), resultName))
 		}
 		for _, st := range arm.Body {
 			if err := g.stmt(st); err != nil {

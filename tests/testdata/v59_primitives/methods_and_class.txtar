@@ -26,7 +26,7 @@ items.push(4)
 print(items.len())
 print(items.pop())
 print([3, 1, 2].sort().join("-"))
-print([{name: "bb"}, {name: "a"}].sort_by(item -> item.name.len())[0].name)
+print([{name: "bb"}, {name: "a"}].sort_by(item -> item["name"].len())[0]["name"])
 user = {a: 1}
 print(user.len())
 print(user.has("a"))

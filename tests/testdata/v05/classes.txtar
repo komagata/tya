@@ -28,9 +28,9 @@ stderr 'class User constructor expects 1 arguments'
 ! exec go run ./cmd/tya run $WORK/no_init_args.tya
 stderr 'class Marker has no init and takes no arguments'
 
-exec go run ./cmd/tya run $WORK/dict_dot.tya
-stdout 'komagata\n'
-! stderr .
+! exec go run ./cmd/tya run $WORK/dict_dot.tya
+stderr 'cannot use . access on dictionary; use index access'
+! stdout .
 
 ! exec go run ./cmd/tya run $WORK/missing_field.tya
 stderr 'missing object field or method: missing'

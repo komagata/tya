@@ -105,16 +105,17 @@ type Builtin func([]Value) (Value, error)
 type Env struct {
 	parent    *Env
 	vars      map[string]Value
+	kinds     map[string]string
 	inFunc    bool
 	runeCache map[string][]rune
 }
 
 func NewEnv() *Env {
-	return &Env{vars: map[string]Value{}, runeCache: map[string][]rune{}}
+	return &Env{vars: map[string]Value{}, kinds: map[string]string{}, runeCache: map[string][]rune{}}
 }
 
 func (e *Env) child() *Env {
-	return &Env{parent: e, vars: map[string]Value{}, inFunc: e.inFunc, runeCache: e.runeCache}
+	return &Env{parent: e, vars: map[string]Value{}, kinds: map[string]string{}, inFunc: e.inFunc, runeCache: e.runeCache}
 }
 
 func (e *Env) runes(text string) []rune {
@@ -139,26 +140,97 @@ func (e *Env) get(name string) (Value, bool) {
 func (e *Env) set(name string, v Value) {
 	if _, ok := e.vars[name]; ok || e.parent == nil {
 		e.vars[name] = v
+		e.rememberKind(name, v)
 		return
 	}
-	if e.inFunc {
-		e.vars[name] = v
+	if e.parent.assignInNonRoot(name, v) {
 		return
 	}
-	if _, ok := e.parent.get(name); ok {
-		e.parent.assign(name, v)
-		return
+	if !e.inFunc {
+		if _, ok := e.parent.get(name); ok {
+			e.parent.assign(name, v)
+			return
+		}
 	}
 	e.vars[name] = v
+	e.rememberKind(name, v)
+}
+
+func (e *Env) assignInNonRoot(name string, v Value) bool {
+	if e.parent == nil {
+		return false
+	}
+	if _, ok := e.vars[name]; ok {
+		e.vars[name] = v
+		e.rememberKind(name, v)
+		return true
+	}
+	if e.parent != nil {
+		return e.parent.assignInNonRoot(name, v)
+	}
+	return false
 }
 
 func (e *Env) assign(name string, v Value) bool {
 	if _, ok := e.vars[name]; ok {
 		e.vars[name] = v
+		e.rememberKind(name, v)
 		return true
 	}
 	if e.parent != nil {
 		return e.parent.assign(name, v)
+	}
+	return false
+}
+
+func (e *Env) kind(name string) (string, bool) {
+	if kind, ok := e.kinds[name]; ok {
+		return kind, true
+	}
+	if e.parent != nil {
+		return e.parent.kind(name)
+	}
+	return "", false
+}
+
+func (e *Env) kindInNonRoot(name string) (string, bool) {
+	if e.parent == nil {
+		return "", false
+	}
+	if kind, ok := e.kinds[name]; ok {
+		return kind, true
+	}
+	if e.parent != nil {
+		return e.parent.kindInNonRoot(name)
+	}
+	return "", false
+}
+
+func (e *Env) rememberKind(name string, v Value) {
+	kind := runtimeKind(v)
+	if kind == "nil" {
+		return
+	}
+	if _, ok := e.vars[name]; ok {
+		e.kinds[name] = kind
+		return
+	}
+	if e.parent != nil && e.parent.rememberKindInNonRoot(name, kind) {
+		return
+	}
+	e.kinds[name] = kind
+}
+
+func (e *Env) rememberKindInNonRoot(name string, kind string) bool {
+	if e.parent == nil {
+		return false
+	}
+	if _, ok := e.vars[name]; ok {
+		e.kinds[name] = kind
+		return true
+	}
+	if e.parent != nil {
+		return e.parent.rememberKindInNonRoot(name, kind)
 	}
 	return false
 }
@@ -595,7 +667,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		}
 		return module, nil
 	case *ast.ClassDecl:
-		class := Dict{}
+		class := Dict{"__module_namespace": true}
 		env.set(n.Name, class)
 		for _, method := range n.Methods {
 			if !method.Class || method.Abstract {
@@ -618,9 +690,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			return nil, err
 		}
 		if truthy(cond) {
-			return evalStmts(n.Then, env)
+			return evalStmts(n.Then, env.child())
 		}
-		return evalStmts(n.Else, env)
+		return evalStmts(n.Else, env.child())
 	case *ast.WhileStmt:
 		var last Value
 		for {
@@ -631,7 +703,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			if !truthy(cond) {
 				return last, nil
 			}
-			last, err = evalStmts(n.Body, env)
+			last, err = evalStmts(n.Body, env.child())
 			if errors.Is(err, errBreak) {
 				return last, nil
 			}
@@ -653,12 +725,15 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 				var last Value
 				i := 0
 				for key, value := range obj {
-					env.set(n.ValueName, Dict{"key": key, "value": value})
+					loopEnv := env.child()
+					loopEnv.vars[n.ValueName] = Dict{"key": key, "value": value}
+					loopEnv.rememberKind(n.ValueName, loopEnv.vars[n.ValueName])
 					if n.IndexName != "" {
-						env.set(n.IndexName, int64(i))
+						loopEnv.vars[n.IndexName] = int64(i)
+						loopEnv.rememberKind(n.IndexName, loopEnv.vars[n.IndexName])
 					}
 					i++
-					last, err = evalStmts(n.Body, env)
+					last, err = evalStmts(n.Body, loopEnv)
 					if errors.Is(err, errBreak) {
 						return last, nil
 					}
@@ -675,11 +750,14 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		}
 		var last Value
 		for i, item := range arr.items {
-			env.set(n.ValueName, item)
+			loopEnv := env.child()
+			loopEnv.vars[n.ValueName] = item
+			loopEnv.rememberKind(n.ValueName, item)
 			if n.IndexName != "" {
-				env.set(n.IndexName, int64(i))
+				loopEnv.vars[n.IndexName] = int64(i)
+				loopEnv.rememberKind(n.IndexName, loopEnv.vars[n.IndexName])
 			}
-			last, err = evalStmts(n.Body, env)
+			last, err = evalStmts(n.Body, loopEnv)
 			if errors.Is(err, errBreak) {
 				return last, nil
 			}
@@ -717,7 +795,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		}
 		return nil, &raisedSignal{value: value}
 	case *ast.TryCatchStmt:
-		last, err := evalStmts(n.Try, env)
+		last, err := evalStmts(n.Try, env.child())
 		var raised *raisedSignal
 		if !errors.As(err, &raised) {
 			return last, err
@@ -740,6 +818,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			caseEnv := env.child()
 			for name, value := range bindings {
 				caseEnv.vars[name] = value
+				caseEnv.rememberKind(name, value)
 			}
 			return evalStmts(c.Body, caseEnv)
 		}
@@ -818,12 +897,15 @@ func assign(target ast.Expr, v Value, env *Env) error {
 		if t.Name == "_" {
 			return nil
 		}
-		existing, exists := env.get(t.Name)
+		_, exists := env.get(t.Name)
+		prevKind, hasKind := env.kind(t.Name)
 		if env.inFunc {
 			_, exists = env.vars[t.Name]
+			prevKind, hasKind = env.kindInNonRoot(t.Name)
 		}
-		if exists && runtimeKind(existing) != "nil" && runtimeKind(v) != "nil" && runtimeKind(existing) != runtimeKind(v) {
-			return fmt.Errorf("cannot reassign %s from %s to %s", t.Name, runtimeKind(existing), runtimeKind(v))
+		nextKind := runtimeKind(v)
+		if exists && hasKind && prevKind != "nil" && nextKind != "nil" && prevKind != nextKind {
+			return fmt.Errorf("cannot reassign %s from %s to %s", t.Name, prevKind, nextKind)
 		}
 		env.set(t.Name, nameFunction(t.Name, v))
 		return nil
@@ -1005,11 +1087,17 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		if module, ok := obj.(*Module); ok {
 			return module.Members[n.Name], nil
 		}
+		if n.Name == "class" {
+			return classOf(obj), nil
+		}
 		o, ok := obj.(Dict)
 		if !ok {
 			return nil, fmt.Errorf("cannot read property %s on non-dictionary", n.Name)
 		}
-		return o[n.Name], nil
+		if isModuleNamespace(o) {
+			return o[n.Name], nil
+		}
+		return nil, fmt.Errorf("cannot use . access on dictionary; use index access")
 	case *ast.IndexExpr:
 		obj, err := evalExpr(n.Target, env)
 		if err != nil {
@@ -1636,6 +1724,7 @@ func callValue(fn Value, args []Value) (Value, error) {
 		callEnv.inFunc = true
 		for i, name := range f.Params {
 			callEnv.vars[name] = args[i]
+			callEnv.rememberKind(name, args[i])
 		}
 		checkPredicate := func(v Value, err error) (Value, error) {
 			if err != nil {
@@ -1679,8 +1768,8 @@ func evalCallee(e ast.Expr, env *Env) (Value, error) {
 			return module.Members[m.Name], nil
 		}
 		if dict, ok := obj.(Dict); ok {
-			if value, ok := dict[m.Name]; ok {
-				return value, nil
+			if isModuleNamespace(dict) {
+				return dict[m.Name], nil
 			}
 		}
 		if method := primitiveMethodValue(obj, m.Name, env); method != nil {
@@ -1812,6 +1901,34 @@ func primitiveMethodValue(receiver Value, name string, env *Env) Value {
 		}
 	}
 	return nil
+}
+
+func isModuleNamespace(dict Dict) bool {
+	marker, ok := dict["__module_namespace"].(bool)
+	return ok && marker
+}
+
+func classOf(value Value) Value {
+	switch value.(type) {
+	case nil:
+		return primitiveClass("Nil")
+	case bool:
+		return primitiveClass("Boolean")
+	case int64, float64:
+		return primitiveClass("Number")
+	case string:
+		return primitiveClass("String")
+	case *Array:
+		return primitiveClass("Array")
+	case Dict:
+		return primitiveClass("Dict")
+	default:
+		return nil
+	}
+}
+
+func primitiveClass(name string) Dict {
+	return Dict{"__module_namespace": true, "name": name}
 }
 
 func toIntValue(value Value) (Value, error) {

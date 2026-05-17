@@ -132,6 +132,89 @@ func TestRunComparisonAndLogic(t *testing.T) {
 	}
 }
 
+func TestRunLogicShortCircuitsAndReturnsBool(t *testing.T) {
+	src := "boom = ->\n  raise \"boom\"\nprint(false and boom())\nprint(true or boom())\nprint(\"value\" and \"right\")\nprint(nil or \"fallback\")\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "false\ntrue\ntrue\ntrue\n"
+	if out.String() != want {
+		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunRejectsDictionaryKeyMemberAccess(t *testing.T) {
+	src := "make_user = -> { name: \"komagata\" }\nuser = make_user()\nprint(user.name)\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	if err == nil {
+		t.Fatal("expected dictionary member access error")
+	}
+	if !strings.Contains(err.Error(), "cannot use . access on dictionary; use index access") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunRejectsKindChangingReassignmentThroughNil(t *testing.T) {
+	src := "value = 1\nvalue = nil\nvalue = \"one\"\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	if err == nil {
+		t.Fatal("expected kind-changing reassignment error")
+	}
+	if !strings.Contains(err.Error(), "cannot reassign value from number to string") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunBlockScopeAndOuterAssignment(t *testing.T) {
+	src := "count = 1\nif true\n  count = 2\n  local = 9\nprint(count)\nshow = ->\n  if true\n    inner = 1\n  return inner\nprint(show())\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	if err == nil {
+		t.Fatal("expected block local lookup error")
+	}
+	if out.String() != "2\n" {
+		t.Fatalf("got output %q, want %q", out.String(), "2\n")
+	}
+	if !strings.Contains(err.Error(), "undefined variable inner") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestRunArrays(t *testing.T) {
 	src := "items = [1, 2, 3]\nprint(items.len())\nprint(items[0])\nprint(items[9])\nitems.push(4)\nprint(items.len())\nprint(items.pop())\nprint(items.len())\nitems[1] = 20\nprint(items[1])\n"
 	toks, errs := lexer.Lex(src)
@@ -281,7 +364,7 @@ func TestRunInlineDict(t *testing.T) {
 }
 
 func TestRunNamespaceDictionary(t *testing.T) {
-	src := "foo = \"foo\"\nbar = ->\n  \"bar\"\nutil = {}\nutil[\"foo\"] = foo\nutil[\"bar\"] = bar\nprint(util.foo)\nprint(util.bar())\n"
+	src := "foo = \"foo\"\nbar = ->\n  \"bar\"\nutil = {}\nutil[\"foo\"] = foo\nutil[\"bar\"] = bar\nprint(util[\"foo\"])\nprint(util[\"bar\"]())\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)

@@ -13,6 +13,10 @@ stdout 'count: 3'
 stdout 'nil'
 stdout 'true'
 stdout 'true'
+stdout 'komagata'
+stdout 'true'
+stdout '2'
+stdout '2'
 stdout 'matched'
 
 exec $WORK/tya build valid.tya -o valid
@@ -24,6 +28,10 @@ stdout 'count: 3'
 stdout 'nil'
 stdout 'true'
 stdout 'true'
+stdout 'komagata'
+stdout 'true'
+stdout '2'
+stdout '2'
 stdout 'matched'
 
 ! exec $WORK/tya check return_outside.tya
@@ -37,6 +45,24 @@ stderr 'cannot reassign value from number to string'
 
 ! exec $WORK/tya check constant_mutation.tya
 stderr 'cannot mutate constant ITEMS'
+
+! exec $WORK/tya check dict_dot.tya
+stderr 'cannot use . access on dictionary; use index access'
+
+! exec $WORK/tya check kind_reassign_through_nil.tya
+stderr 'cannot reassign value from number to string'
+
+! exec $WORK/tya check block_local.tya
+stderr 'undefined variable'
+
+! exec $WORK/tya check for_binding_local.tya
+stderr 'undefined variable'
+
+! exec $WORK/tya check catch_binding_local.tya
+stderr 'undefined variable'
+
+! exec $WORK/tya check match_binding_local.tya
+stderr 'undefined variable'
 
 ! exec $WORK/tya run raise_nil.tya
 stderr 'raise expects non-nil value'
@@ -53,6 +79,10 @@ stderr '\+ expects numbers, strings, or bytes of the same kind'
 exec $WORK/tya build dynamic_string_plus_number.tya -o dynamic_bad_string_plus
 ! exec ./dynamic_bad_string_plus
 stderr '\+ expects numbers, strings, or bytes of the same kind'
+
+exec $WORK/tya build dynamic_dict_dot.tya -o dynamic_dict_dot
+! exec ./dynamic_dict_dot
+stderr 'cannot use . access on dictionary; use index access'
 
 exec $WORK/tya run bad_call.tya
 stdout 'nil'
@@ -71,6 +101,17 @@ print("count: {count}")
 print({ name: "Tya" }["missing"])
 print(nil or "fallback")
 print({ nested: [1, 2] } == { nested: [1, 2] })
+user = { name: "komagata" }
+print(user["name"])
+print(user.has?("name"))
+count = 1
+if true
+  count = 2
+  local = 9
+print(count)
+handler = -> 1
+handler = -> 2
+print(handler())
 
 value = "ok"
 match value
@@ -105,6 +146,40 @@ value = "one"
 ITEMS = [1]
 ITEMS[0] = 2
 
+-- dict_dot.tya --
+user = { name: "komagata" }
+print(user.name)
+
+-- kind_reassign_through_nil.tya --
+value = 1
+value = nil
+value = "one"
+
+-- block_local.tya --
+if true
+  local = 1
+print(local)
+
+-- for_binding_local.tya --
+items = [1]
+for item, index in items
+  print(item)
+print(item)
+
+-- catch_binding_local.tya --
+try
+  raise "bad"
+catch err
+  print(err)
+print(err)
+
+-- match_binding_local.tya --
+value = [1]
+match value
+  case [item]
+    print(item)
+print(item)
+
 -- raise_nil.tya --
 raise nil
 
@@ -119,6 +194,11 @@ print(count + " items")
 -- dynamic_string_plus_number.tya --
 value = -> 3
 print("count: " + value())
+
+-- dynamic_dict_dot.tya --
+make_user = -> { name: "komagata" }
+user = make_user()
+print(user.name)
 
 -- bad_call.tya --
 fn = nil

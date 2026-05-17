@@ -290,7 +290,7 @@ func TestEmitCCompilesMemberInterpolationProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesNamespaceDictionary(t *testing.T) {
-	src := "foo = \"foo\"\nbar = -> \"bar\"\nutil = { foo: foo, bar: bar }\nprint(util.foo)\nprint(util.bar())\n"
+	src := "foo = \"foo\"\nbar = -> \"bar\"\nutil = { foo: foo, bar: bar }\nprint(util[\"foo\"])\nprint(util[\"bar\"]())\n"
 	out := compileAndRun(t, src)
 	if string(out) != "foo\nbar\n" {
 		t.Fatalf("got %q", out)

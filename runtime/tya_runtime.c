@@ -901,6 +901,19 @@ TyaValue tya_member(TyaValue dict, const char *key) {
   if ((dict.kind != TYA_DICT && dict.kind != TYA_OBJECT) || dict.dict == NULL) {
     return tya_nil();
   }
+  if (dict.kind == TYA_DICT) {
+    bool module_namespace = false;
+    for (int i = 0; i < dict.dict->len; i++) {
+      if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, "__module_namespace") == 0) {
+        module_namespace = tya_truthy(dict.dict->entries[i].value);
+        break;
+      }
+    }
+    if (!module_namespace) {
+      fprintf(stderr, "cannot use . access on dictionary; use index access\n");
+      exit(1);
+    }
+  }
   for (int i = 0; i < dict.dict->len; i++) {
     if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key) == 0) {
       return dict.dict->entries[i].value;
@@ -1558,10 +1571,10 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right) {
       if (key == NULL) {
         continue;
       }
-      TyaValue right_value = tya_member(right, key);
       if (!tya_truthy(tya_has(right, tya_string(key)))) {
         return false;
       }
+      TyaValue right_value = tya_dict_get(right, tya_string(key), tya_nil(), false);
       if (!tya_deep_equal_bool(left.dict->entries[i].value, right_value)) {
         return false;
       }
@@ -2951,7 +2964,7 @@ TyaValue tya_compiler_parser_parse_tokens(TyaValue tokens) {
     return tya_nil();
   }
   TyaValue first = tokens.array->items[0];
-  TyaValue source = tya_member(first, "source");
+  TyaValue source = tya_index(first, tya_string("source"));
   if (source.kind != TYA_STRING) {
     source = tya_string("");
   }
@@ -2965,7 +2978,7 @@ TyaValue tya_compiler_ast_children(TyaValue node) {
   }
   const char *array_keys[] = {"body", "then", "else", "targets", "values", "args", "elements"};
   for (int i = 0; i < 7; i++) {
-    TyaValue arr = tya_member(node, array_keys[i]);
+    TyaValue arr = tya_index(node, tya_string(array_keys[i]));
     if (arr.kind == TYA_ARRAY && arr.array != NULL) {
       for (int j = 0; j < arr.array->len; j++) {
         tya_array_push(out, arr.array->items[j]);
@@ -2976,12 +2989,12 @@ TyaValue tya_compiler_ast_children(TyaValue node) {
 }
 
 TyaValue tya_compiler_ast_kind(TyaValue node) {
-  TyaValue kind = tya_member(node, "kind");
+  TyaValue kind = tya_index(node, tya_string("kind"));
   return kind.kind == TYA_STRING ? kind : tya_string("");
 }
 
 TyaValue tya_compiler_ast_span(TyaValue node) {
-  return tya_member(node, "span");
+  return tya_index(node, tya_string("span"));
 }
 
 TyaValue tya_compiler_checker_check(TyaValue source) {
@@ -3001,7 +3014,7 @@ TyaValue tya_compiler_checker_check_ast(TyaValue program) {
   if (program.kind != TYA_DICT && program.kind != TYA_OBJECT) {
     return tya_compiler_checker_check(tya_string("missing"));
   }
-  TyaValue source = tya_member(program, "source");
+  TyaValue source = tya_index(program, tya_string("source"));
   if (source.kind != TYA_STRING) {
     return tya_compiler_checker_check(tya_string("missing"));
   }
@@ -3033,12 +3046,12 @@ TyaValue tya_compiler_format_format(TyaValue source) {
 }
 
 TyaValue tya_compiler_format_unparse(TyaValue program) {
-  TyaValue source = tya_member(program, "source");
+  TyaValue source = tya_index(program, tya_string("source"));
   if (source.kind != TYA_STRING) {
     tya_raise(tya_string("compiler.format.unparse: program.source is required"));
     return tya_nil();
   }
-  return tya_member(tya_compiler_format_format(source), "source");
+  return tya_index(tya_compiler_format_format(source), tya_string("source"));
 }
 
 /* =========================================================================
@@ -3493,16 +3506,16 @@ TyaValue tya_process_run(TyaValue command, TyaValue options) {
   char **child_env = NULL;
   bool replace_env = false;
   if (options.kind == TYA_DICT && options.dict != NULL) {
-    TyaValue cwd = tya_member(options, "cwd");
+    TyaValue cwd = tya_index(options, tya_string("cwd"));
     if (cwd.kind == TYA_STRING && cwd.string != NULL) {
       cwd_path = cwd.string;
     }
-    TyaValue inp = tya_member(options, "input");
+    TyaValue inp = tya_index(options, tya_string("input"));
     if (inp.kind == TYA_STRING && inp.string != NULL) {
       input_text = inp.string;
       input_len = strlen(input_text);
     }
-    TyaValue env_v = tya_member(options, "env");
+    TyaValue env_v = tya_index(options, tya_string("env"));
     if (env_v.kind == TYA_DICT && env_v.dict != NULL) {
       replace_env = true;
       int env_count = 0;
