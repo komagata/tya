@@ -77,9 +77,9 @@ and v02 self-host fixed point.
 - Tya has no common CLI `--timeout` option.
 - Timeout behavior may be added later to specific commands such as tests or
   task runner if specified separately.
-- Program arguments for `tya run` use `--` as the separator.
+- Program arguments for `tya run` may use `--` as the separator.
 - `tya run file.tya -- arg1 arg2` makes `args()` return `["arg1", "arg2"]`.
-- Passing program arguments without `--` is invalid.
+- Passing program arguments without `--` remains supported for compatibility.
 - `tya build` does not accept program arguments.
 - Program arguments are passed to the generated executable at execution time.
 - `tya test --filter PATTERN` filters tests by substring match on test name.
@@ -133,7 +133,7 @@ and v02 self-host fixed point.
 - Ctrl-C exits with code `130` and cleans temporary files when safe.
 - No common `--timeout` option exists.
 - `tya run file.tya -- arg1 arg2` passes args to `args()`.
-- `tya run file.tya arg1` is invalid.
+- `tya run file.tya arg1` remains valid for compatibility.
 - `tya build` rejects program args.
 - `tya test --filter foo` uses substring matching.
 - Test failure output includes name, location, expected/actual when available,
@@ -208,8 +208,8 @@ Argument tests:
 
 - `TestRunArgsAfterSeparator`
   - `tya run file.tya -- arg1 arg2` makes `args()` return `["arg1", "arg2"]`.
-- `TestRunArgsWithoutSeparatorRejected`
-  - `tya run file.tya arg1` is invalid.
+- `TestRunArgsWithoutSeparatorStillSupported`
+  - `tya run file.tya arg1` remains valid for compatibility.
 - `TestBuildRejectsProgramArgs`
   - `tya build file.tya -- arg1` is invalid.
 

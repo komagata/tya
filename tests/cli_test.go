@@ -392,18 +392,19 @@ func TestRunArgsAfterSeparator(t *testing.T) {
 	}
 }
 
-func TestRunArgsWithoutSeparatorRejected(t *testing.T) {
+func TestRunArgsWithoutSeparatorStillSupported(t *testing.T) {
 	tya := buildTyaCLI(t)
 	path := filepath.Join(t.TempDir(), "args.tya")
-	if err := os.WriteFile(path, []byte("print(\"ok\")\n"), 0644); err != nil {
+	if err := os.WriteFile(path, []byte("print(args()[0])\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd := exec.Command(tya, "run", path, "one")
+	setRuntimeEnv(t, cmd)
 	out, err := cmd.CombinedOutput()
-	if err == nil {
-		t.Fatal("expected run args without separator to fail")
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
-	if !strings.Contains(string(out), "must follow --") {
+	if string(out) != "one\n" {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }

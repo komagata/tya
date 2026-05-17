@@ -1072,7 +1072,8 @@ Package dependencies may shadow `TYA_PATH` and standard-library imports.
 
 `tya.toml` declares package metadata, dependencies, native wrappers, and
 package-provided tools. Unknown top-level keys are errors so typos are not
-silently ignored. Package manifests require `name`, `version`, and `license`.
+silently ignored. Package manifests require `name` and `version`; `license` is
+recommended package metadata and is preserved when present.
 `tya install` resolves dependencies and writes `tya.lock`. Git and explicit
 local path dependencies are supported. Registry-style implicit package source
 discovery is not supported. There is currently no central package registry and
@@ -1257,10 +1258,10 @@ exits with status 1 when validation fails. If parser recovery is not possible,
 reporting diagnostics for stdin source.
 
 `tya run -` reads source from standard input. Relative imports for stdin source
-resolve from the current working directory. Program arguments for `tya run`
-must follow `--`: `tya run file.tya -- arg1 arg2` makes `args()` return
-`["arg1", "arg2"]`. Passing program arguments without `--` is invalid. `tya
-build` does not accept program arguments.
+resolve from the current working directory. Program arguments for `tya run` may
+follow `--`: `tya run file.tya -- arg1 arg2` makes `args()` return
+`["arg1", "arg2"]`. The legacy form `tya run file.tya arg1 arg2` remains
+accepted for compatibility. `tya build` does not accept program arguments.
 
 `tya format` never rewrites a file that cannot be lexed, parsed, and
 serialized by the canonical formatter. Invalid source reports an error and

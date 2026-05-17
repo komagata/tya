@@ -85,9 +85,8 @@ and v02 self-host fixed point.
 - `tya run`, `tya build`, and `tya test` execute or build user code and are
   outside the safe-analysis trust boundary.
 - Safe analysis uses `tya check` and `tya doc`.
-- Package manifests require `license`.
-- Dependency licenses are enumerable through `tya install` metadata and
-  `tya doc --json`.
+- Package manifests may declare `license`.
+- Dependency license metadata is preserved when present.
 - There is no central package registry.
 - There is no `tya publish` command.
 - Packages are consumed by git URL plus lockfile data.
@@ -95,8 +94,8 @@ and v02 self-host fixed point.
 ## Scope
 
 - Update `docs/SPEC.md` with these accepted operational semantics.
-- Update package manifest parsing and validation for unknown keys and required
-  license metadata.
+- Update package manifest parsing and validation for unknown keys and license
+  metadata preservation.
 - Update dependency installer and resolver behavior for explicit dependencies,
   lockfile revision/hash integrity, project-local cache semantics, and offline
   mode.
@@ -144,8 +143,8 @@ and v02 self-host fixed point.
 - Frozen docs and archives are not modified by active SPEC updates.
 - Security docs distinguish safe analysis commands from code execution/build
   commands.
-- `license` is required in `tya.toml`.
-- Dependency license metadata can be listed.
+- `license` is accepted in `tya.toml`.
+- Dependency license metadata is preserved when present.
 - `tya publish` is unavailable and central registry behavior is absent.
 
 ## Tests To Add
@@ -154,8 +153,8 @@ Manifest tests:
 
 - `TestManifestRejectsUnknownKeys`
   - `tya.toml` with an unknown top-level key fails.
-- `TestManifestRequiresLicense`
-  - Package manifest without `license` fails validation.
+- `TestManifestAcceptsMissingLicenseForCompatibility`
+  - Existing package manifests without `license` remain valid.
 - `TestManifestAcceptsExplicitDependenciesOnly`
   - Git URL and local path dependencies pass; registry-style or implicit
     dependency sources fail.
@@ -232,8 +231,8 @@ Release/docs/security tests:
 - `TestSecurityBoundaryDocs`
   - Docs distinguish `check`/`doc` safe analysis from `run`/`build`/`test`
     code execution or native build boundaries.
-- `TestDependencyLicenseListing`
-  - Dependency licenses are available from install metadata and `tya doc --json`.
+- `TestDependencyLicenseMetadata`
+  - Dependency licenses are preserved in manifest metadata when present.
 
 Testscript coverage:
 

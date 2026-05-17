@@ -182,9 +182,6 @@ func ReadManifest(path string) (*Manifest, error) {
 	if m.Version.Raw == "" {
 		return nil, fmt.Errorf("tya.toml: missing version")
 	}
-	if m.License == "" {
-		return nil, fmt.Errorf("tya.toml: missing license")
-	}
 	return m, nil
 }
 

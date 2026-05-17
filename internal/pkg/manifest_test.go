@@ -252,14 +252,14 @@ func TestManifestRejectsUnknownKeys(t *testing.T) {
 	}
 }
 
-func TestManifestRequiresLicense(t *testing.T) {
+func TestManifestAcceptsMissingLicenseForCompatibility(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "tya.toml")
 	if err := os.WriteFile(path, []byte("name = \"x\"\nversion = \"0.1.0\"\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ReadManifest(path); err == nil {
-		t.Fatal("expected missing license error")
+	if _, err := ReadManifest(path); err != nil {
+		t.Fatal(err)
 	}
 }
 

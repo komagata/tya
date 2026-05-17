@@ -518,10 +518,10 @@ func parseRunArgs(args []string) ([]string, error) {
 	if len(args) == 0 {
 		return nil, nil
 	}
-	if args[0] != "--" {
-		return nil, fmt.Errorf("program arguments for `tya run` must follow --")
+	if args[0] == "--" {
+		return args[1:], nil
 	}
-	return args[1:], nil
+	return args, nil
 }
 
 func stdinSourceFile() (string, func(), error) {
@@ -1589,7 +1589,7 @@ func parseGlobalDiagFlags() error {
 	exemptAfter := -1
 	for i, a := range args {
 		if !strings.HasPrefix(a, "-") {
-			if a == "lint" {
+			if a == "lint" || a == "doc" || a == "cover" || a == "embed" || a == "version" {
 				exemptAfter = i
 			}
 			break
