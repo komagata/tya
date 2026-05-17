@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -55,11 +56,26 @@ func main() {
 			usage()
 			os.Exit(2)
 		}
-		if err := compileAndRun(os.Args[2], os.Args[3:]); err != nil {
+		runPath := os.Args[2]
+		runArgs, err := parseRunArgs(os.Args[3:])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(2)
+		}
+		if runPath == "-" {
+			var cleanup func()
+			runPath, cleanup, err = stdinSourceFile()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			defer cleanup()
+		}
+		if err := compileAndRun(runPath, runArgs); err != nil {
 			if exitErr, ok := err.(*exec.ExitError); ok {
 				os.Exit(exitErr.ExitCode())
 			}
-			printDiagnostic(os.Args[2], err)
+			printDiagnostic(runPath, err)
 			os.Exit(1)
 		}
 		return
@@ -83,9 +99,24 @@ func main() {
 			usage()
 			os.Exit(2)
 		}
-		if err := checkFile(os.Args[2]); err != nil {
+		path := os.Args[2]
+		if path == "-" {
+			var cleanup func()
+			var err error
+			path, cleanup, err = stdinSourceFile()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
+			}
+			defer cleanup()
+		}
+		if err := checkFile(path); err != nil {
 			if !errors.Is(err, errStrictReported) {
-				printDiagnostic(os.Args[2], err)
+				if os.Args[2] == "-" {
+					printDiagnostic("<stdin>", err)
+				} else {
+					printDiagnostic(path, err)
+				}
 			}
 			os.Exit(1)
 		}
@@ -481,6 +512,32 @@ func versionCommand(args []string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown version option: %s", args[0])
+}
+
+func parseRunArgs(args []string) ([]string, error) {
+	if len(args) == 0 {
+		return nil, nil
+	}
+	if args[0] != "--" {
+		return nil, fmt.Errorf("program arguments for `tya run` must follow --")
+	}
+	return args[1:], nil
+}
+
+func stdinSourceFile() (string, func(), error) {
+	src, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return "", nil, err
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", nil, err
+	}
+	path := filepath.Join(cwd, "tya_stdin.tya")
+	if err := os.WriteFile(path, src, 0644); err != nil {
+		return "", nil, err
+	}
+	return path, func() { _ = os.Remove(path) }, nil
 }
 
 func cleanCommand(args []string) error {
@@ -1545,6 +1602,10 @@ func parseGlobalDiagFlags() error {
 			continue
 		}
 		switch {
+		case a == "--json":
+			cliFormat = diag.FormatJSON
+		case a == "--no-color":
+			cliColor = diag.ColorNever
 		case strings.HasPrefix(a, "--format="):
 			f, err := diag.ParseFormat(strings.TrimPrefix(a, "--format="))
 			if err != nil {

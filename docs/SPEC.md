@@ -1253,6 +1253,14 @@ option adds that behavior.
 `tya check` reports every recoverable checker diagnostic it can collect and
 exits with status 1 when validation fails. If parser recovery is not possible,
 `tya check` may stop at that parser error and still exits with status 1.
+`tya check -` reads source from standard input and uses `<stdin>` when
+reporting diagnostics for stdin source.
+
+`tya run -` reads source from standard input. Relative imports for stdin source
+resolve from the current working directory. Program arguments for `tya run`
+must follow `--`: `tya run file.tya -- arg1 arg2` makes `args()` return
+`["arg1", "arg2"]`. Passing program arguments without `--` is invalid. `tya
+build` does not accept program arguments.
 
 `tya format` never rewrites a file that cannot be lexed, parsed, and
 serialized by the canonical formatter. Invalid source reports an error and
@@ -1263,6 +1271,13 @@ LSP diagnostics use the same stable diagnostic codes and messages as the
 parser, checker, and linter diagnostics used by CLI tools. LSP may transport
 diagnostics in LSP shape, but it must not invent alternate wording for the same
 source validity issue.
+
+`--json` is accepted as a global alias for JSON diagnostic output. JSON
+diagnostics use the existing stable NDJSON schema: diagnostic objects followed
+by a summary object. `--format=json` remains accepted for compatibility.
+Human-readable diagnostic color follows the existing color controls:
+`NO_COLOR=1` and `--no-color` disable color, and
+`--color=auto|always|never` remains accepted for compatibility.
 
 Ordinary `emit-c` output is stable for the same source and toolchain version.
 It does not include absolute paths, timestamps, random identifiers, or other

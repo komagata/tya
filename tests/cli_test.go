@@ -53,6 +53,15 @@ func buildTyaCLI(t *testing.T) string {
 	return bin
 }
 
+func setRuntimeEnv(t *testing.T, cmd *exec.Cmd) {
+	t.Helper()
+	repo, err := filepath.Abs("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd.Env = append(os.Environ(), "TYA_RUNTIME_DIR="+filepath.Join(repo, "runtime"))
+}
+
 func TestCLIAllowsCombinedOptions(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "used.tya")
 	if err := os.WriteFile(path, []byte("name = \"Tya\"\nprint(name)\n"), 0644); err != nil {
@@ -301,6 +310,168 @@ func TestFormatDoesNotRewriteTyaToml(t *testing.T) {
 	}
 	if string(got) != original {
 		t.Fatalf("format rewrote tya.toml: %q", got)
+	}
+}
+
+func TestRunReadsStdin(t *testing.T) {
+	tya := buildTyaCLI(t)
+	cmd := exec.Command(tya, "run", "-")
+	cmd.Dir = t.TempDir()
+	cmd.Stdin = strings.NewReader("print(\"stdin\")\n")
+	setRuntimeEnv(t, cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if string(out) != "stdin\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestCheckReadsStdin(t *testing.T) {
+	tya := buildTyaCLI(t)
+	cmd := exec.Command(tya, "check", "-")
+	cmd.Dir = t.TempDir()
+	cmd.Stdin = strings.NewReader("print(\"ok\")\n")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if string(out) != "" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestStdinDiagnosticsUseStdinPath(t *testing.T) {
+	tya := buildTyaCLI(t)
+	cmd := exec.Command(tya, "check", "-")
+	cmd.Dir = t.TempDir()
+	cmd.Stdin = strings.NewReader("if\n")
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected check to fail")
+	}
+	if !strings.Contains(string(out), "<stdin>") {
+		t.Fatalf("expected <stdin> diagnostic path, got:\n%s", out)
+	}
+}
+
+func TestStdinRelativeImportsUseCwd(t *testing.T) {
+	dir := t.TempDir()
+	tya := buildTyaCLI(t)
+	if err := os.WriteFile(filepath.Join(dir, "helper.tya"), []byte("message = \"cwd import\"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(tya, "run", "-")
+	cmd.Dir = dir
+	cmd.Stdin = strings.NewReader("import helper\nprint(helper.message)\n")
+	setRuntimeEnv(t, cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if string(out) != "cwd import\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestRunArgsAfterSeparator(t *testing.T) {
+	tya := buildTyaCLI(t)
+	path := filepath.Join(t.TempDir(), "args.tya")
+	if err := os.WriteFile(path, []byte("print(args()[0])\nprint(args()[1])\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(tya, "run", path, "--", "one", "two")
+	setRuntimeEnv(t, cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if string(out) != "one\ntwo\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestRunArgsWithoutSeparatorRejected(t *testing.T) {
+	tya := buildTyaCLI(t)
+	path := filepath.Join(t.TempDir(), "args.tya")
+	if err := os.WriteFile(path, []byte("print(\"ok\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command(tya, "run", path, "one")
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected run args without separator to fail")
+	}
+	if !strings.Contains(string(out), "must follow --") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestBuildRejectsProgramArgs(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "main.tya")
+	if err := os.WriteFile(path, []byte("print(\"ok\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "build", path, "--", "one")
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected build program args to fail")
+	}
+	if !strings.Contains(string(out), "unknown build option: --") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestNoCommonTimeoutFlag(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "main.tya")
+	if err := os.WriteFile(path, []byte("print(\"ok\")\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "check", "--timeout", "1s", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected timeout flag to fail")
+	}
+	if !strings.Contains(string(out), "usage: tya") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
+func TestJsonDiagnosticAliasSchema(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "bad.tya")
+	if err := os.WriteFile(path, []byte("outer = 1\nhandler = value ->\n  outer = value\n  value\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "--json", "check", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected check to fail")
+	}
+	text := string(out)
+	for _, key := range []string{`"code"`, `"severity"`, `"message"`, `"primary"`, `"file"`, `"line"`, `"col"`, `"hints"`, `"source"`, `"summary"`} {
+		if !strings.Contains(text, key) {
+			t.Fatalf("json diagnostic missing %s:\n%s", key, text)
+		}
+	}
+}
+
+func TestNoColorFlag(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "bad.tya")
+	if err := os.WriteFile(path, []byte("print(missing)\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "--no-color", "check", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected check to fail")
+	}
+	if strings.Contains(string(out), "\x1b[") {
+		t.Fatalf("expected no ANSI color, got:\n%s", out)
 	}
 }
 
