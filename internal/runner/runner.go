@@ -1298,9 +1298,16 @@ func rejectHiddenImportUseStmt(stmt ast.Stmt, hidden map[string]bool, bound map[
 		if err := rejectHiddenImportUseStmts(n.Try, hidden, bound); err != nil {
 			return err
 		}
-		child := cloneBoolMap(bound)
-		child[n.CatchName] = true
-		return rejectHiddenImportUseStmts(n.Catch, hidden, child)
+		if n.Catch != nil {
+			child := cloneBoolMap(bound)
+			if n.CatchName != "" {
+				child[n.CatchName] = true
+			}
+			if err := rejectHiddenImportUseStmts(n.Catch, hidden, child); err != nil {
+				return err
+			}
+		}
+		return rejectHiddenImportUseStmts(n.Finally, hidden, bound)
 	case *ast.MatchStmt:
 		if err := rejectHiddenImportUseExpr(n.Value, hidden, bound); err != nil {
 			return err

@@ -11,9 +11,9 @@ import (
 // Kind values:
 //   - "delete-line"  remove the line at Line (1-origin) entirely.
 //   - "unwrap-if"    replace the `if` statement starting at Line
-//                    with its Then body (when Code == TYAL0003 and
-//                    the literal is `true`) or with its Else body
-//                    (when the literal is `false`).
+//     with its Then body (when Code == TYAL0003 and
+//     the literal is `true`) or with its Else body
+//     (when the literal is `false`).
 type LintAutofixHint struct {
 	Code     string
 	Kind     string
@@ -91,6 +91,9 @@ func walkAutofixStmt(stmt ast.Stmt) []LintAutofixHint {
 			out = append(out, walkAutofixStmt(s)...)
 		}
 		for _, s := range n.Catch {
+			out = append(out, walkAutofixStmt(s)...)
+		}
+		for _, s := range n.Finally {
 			out = append(out, walkAutofixStmt(s)...)
 		}
 	case *ast.MatchStmt:

@@ -198,7 +198,9 @@ func stmtLastLine(s ast.Stmt) int {
 		return last
 	case *ast.TryCatchStmt:
 		last := stmtFirstLine(s)
-		for _, b := range append(n.Try, n.Catch...) {
+		body := append(append([]ast.Stmt{}, n.Try...), n.Catch...)
+		body = append(body, n.Finally...)
+		for _, b := range body {
 			if l := stmtLastLine(b); l > last {
 				last = l
 			}

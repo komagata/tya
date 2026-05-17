@@ -20,9 +20,11 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"tya/internal/ast"
 	"tya/internal/interp"
@@ -367,6 +369,9 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		if err != nil {
 			return nil, err
 		}
+		if !utf8.Valid(data) {
+			return nil, &raisedSignal{value: "read_file: invalid UTF-8"}
+		}
 		return string(data), nil
 	}))
 	env.set("write_file", Builtin(func(args []Value) (Value, error) {
@@ -668,7 +673,7 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		}
 		return module, nil
 	case *ast.ClassDecl:
-		class := Dict{"__module_namespace": true}
+		class := Dict{"__module_namespace": true, "__class_name": n.Name, "name": n.Name}
 		env.set(n.Name, class)
 		for _, method := range n.Methods {
 			if !method.Class || method.Abstract {
@@ -801,14 +806,20 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 	case *ast.TryCatchStmt:
 		last, err := evalStmts(n.Try, env.child())
 		var raised *raisedSignal
-		if !errors.As(err, &raised) {
-			return last, err
+		if errors.As(err, &raised) && n.Catch != nil {
+			catchEnv := env.child()
+			if n.CatchName != "_" && n.CatchName != "" {
+				catchEnv.set(n.CatchName, raised.value)
+			}
+			last, err = evalStmts(n.Catch, catchEnv)
 		}
-		catchEnv := env.child()
-		if n.CatchName != "_" {
-			catchEnv.set(n.CatchName, raised.value)
+		if len(n.Finally) > 0 {
+			finallyValue, finallyErr := evalStmts(n.Finally, env.child())
+			if finallyErr != nil {
+				return finallyValue, finallyErr
+			}
 		}
-		return evalStmts(n.Catch, catchEnv)
+		return last, err
 	case *ast.MatchStmt:
 		value, err := evalExpr(n.Value, env)
 		if err != nil {
@@ -1096,12 +1107,15 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		}
 		o, ok := obj.(Dict)
 		if !ok {
-			return nil, fmt.Errorf("cannot read property %s on non-dictionary", n.Name)
+			return nil, fmt.Errorf("unknown member %s on %s", n.Name, runtimeKind(obj))
 		}
 		if isModuleNamespace(o) {
-			return o[n.Name], nil
+			if value, ok := o[n.Name]; ok {
+				return value, nil
+			}
+			return nil, fmt.Errorf("unknown member %s on %s", n.Name, runtimeKind(o))
 		}
-		return nil, fmt.Errorf("cannot use . access on dictionary; use index access")
+		return nil, fmt.Errorf("unknown member %s on dictionary", n.Name)
 	case *ast.IndexExpr:
 		obj, err := evalExpr(n.Target, env)
 		if err != nil {
@@ -1815,7 +1829,7 @@ func evalCallee(e ast.Expr, env *Env) (Value, error) {
 		if method := primitiveMethodValue(obj, m.Name, env); method != nil {
 			return method, nil
 		}
-		return nil, fmt.Errorf("member calls require module receiver")
+		return nil, fmt.Errorf("unknown method %s on %s", m.Name, runtimeKind(obj))
 	}
 	return evalExpr(e, env)
 }
@@ -1968,7 +1982,7 @@ func classOf(value Value) Value {
 }
 
 func primitiveClass(name string) Dict {
-	return Dict{"__module_namespace": true, "name": name}
+	return Dict{"__module_namespace": true, "__class_name": name, "name": name}
 }
 
 func toIntValue(value Value) (Value, error) {
@@ -2039,9 +2053,11 @@ func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 	}
 	switch b.Op.Lexeme {
 	case "==":
-		return equal(l, r), nil
+		ok, err := equalStrict(l, r)
+		return ok, err
 	case "!=":
-		return !equal(l, r), nil
+		ok, err := equalStrict(l, r)
+		return !ok, err
 	case "<", "<=", ">", ">=":
 		return compare(b.Op.Lexeme, l, r)
 	case "&", "|", "^", "<<", ">>":
@@ -2112,47 +2128,71 @@ func evalBinary(b *ast.BinaryExpr, env *Env) (Value, error) {
 }
 
 func equal(l, r Value) bool {
+	ok, _ := equalValue(l, r, map[visitPair]bool{})
+	return ok
+}
+
+func equalStrict(l, r Value) (bool, error) {
+	return equalValue(l, r, map[visitPair]bool{})
+}
+
+type visitPair struct {
+	left  uintptr
+	right uintptr
+}
+
+func visitKey(l, r Value) visitPair {
+	return visitPair{left: reflect.ValueOf(l).Pointer(), right: reflect.ValueOf(r).Pointer()}
+}
+
+func equalValue(l, r Value, seen map[visitPair]bool) (bool, error) {
 	switch lv := l.(type) {
 	case nil:
-		return r == nil
+		return r == nil, nil
 	case bool:
 		rv, ok := r.(bool)
-		return ok && lv == rv
+		return ok && lv == rv, nil
 	case int64:
 		switch rv := r.(type) {
 		case int64:
-			return lv == rv
+			return lv == rv, nil
 		case float64:
-			return float64(lv) == rv
+			return float64(lv) == rv, nil
 		}
 	case float64:
 		switch rv := r.(type) {
 		case int64:
-			return lv == float64(rv)
+			return lv == float64(rv), nil
 		case float64:
-			return lv == rv
+			return lv == rv, nil
 		}
 	case string:
 		rv, ok := r.(string)
-		return ok && lv == rv
+		return ok && lv == rv, nil
 	case Dict:
 		rv, ok := r.(Dict)
-		return ok && deepEqual(lv, rv)
+		if !ok {
+			return false, nil
+		}
+		return deepEqualValue(lv, rv, seen)
 	case *Array:
 		rv, ok := r.(*Array)
-		return ok && deepEqual(lv, rv)
+		if !ok {
+			return false, nil
+		}
+		return deepEqualValue(lv, rv, seen)
 	case *Function:
-		return lv == r
+		return lv == r, nil
 	case *ErrorValue:
-		return lv == r
+		return lv == r, nil
 	case *Module:
-		return lv == r
+		return lv == r, nil
 	}
-	return false
+	return false, nil
 }
 
 func runtimeKind(v Value) string {
-	switch v.(type) {
+	switch x := v.(type) {
 	case nil:
 		return "nil"
 	case bool:
@@ -2168,6 +2208,11 @@ func runtimeKind(v Value) string {
 	case *Array:
 		return "array"
 	case Dict:
+		if isModuleNamespace(x) {
+			if name, ok := x["__class_name"].(string); ok {
+				return "class " + name
+			}
+		}
 		return "dict"
 	case *Function:
 		return "function"
@@ -2176,39 +2221,61 @@ func runtimeKind(v Value) string {
 	case *ErrorValue:
 		return "error"
 	case *Module:
-		return "module"
+		return "package"
 	default:
 		return "object"
 	}
 }
 
 func deepEqual(l, r Value) bool {
+	ok, _ := deepEqualValue(l, r, map[visitPair]bool{})
+	return ok
+}
+
+func deepEqualValue(l, r Value, seen map[visitPair]bool) (bool, error) {
 	switch lv := l.(type) {
 	case *Array:
 		rv, ok := r.(*Array)
 		if !ok || len(lv.items) != len(rv.items) {
-			return false
+			return false, nil
 		}
+		pair := visitKey(lv, rv)
+		if seen[pair] {
+			return false, fmt.Errorf("cyclic equality is invalid")
+		}
+		seen[pair] = true
+		defer delete(seen, pair)
 		for i := range lv.items {
-			if !deepEqual(lv.items[i], rv.items[i]) {
-				return false
+			ok, err := equalValue(lv.items[i], rv.items[i], seen)
+			if err != nil || !ok {
+				return ok, err
 			}
 		}
-		return true
+		return true, nil
 	case Dict:
 		rv, ok := r.(Dict)
 		if !ok || len(lv) != len(rv) {
-			return false
+			return false, nil
 		}
+		pair := visitKey(lv, rv)
+		if seen[pair] {
+			return false, fmt.Errorf("cyclic equality is invalid")
+		}
+		seen[pair] = true
+		defer delete(seen, pair)
 		for key, leftValue := range lv {
 			rightValue, ok := rv[key]
-			if !ok || !deepEqual(leftValue, rightValue) {
-				return false
+			if !ok {
+				return false, nil
+			}
+			ok, err := equalValue(leftValue, rightValue, seen)
+			if err != nil || !ok {
+				return ok, err
 			}
 		}
-		return true
+		return true, nil
 	default:
-		return equal(l, r)
+		return equalValue(l, r, seen)
 	}
 }
 
@@ -2445,6 +2512,10 @@ func evalInterpolationExpr(expr string, env *Env) (Value, error) {
 }
 
 func stringify(v Value) string {
+	return stringifyValue(v, map[uintptr]bool{})
+}
+
+func stringifyValue(v Value, seen map[uintptr]bool) string {
 	switch x := v.(type) {
 	case nil:
 		return "nil"
@@ -2462,19 +2533,54 @@ func stringify(v Value) string {
 	case *ErrorValue:
 		return "error: " + x.Message
 	case *Array:
+		key := reflect.ValueOf(x).Pointer()
+		if seen[key] {
+			return "<cycle>"
+		}
+		seen[key] = true
+		defer delete(seen, key)
 		parts := make([]string, 0, len(x.items))
 		for _, item := range x.items {
-			parts = append(parts, stringify(item))
+			parts = append(parts, stringifyValue(item, seen))
 		}
 		return "[" + strings.Join(parts, ", ") + "]"
+	case Dict:
+		if isModuleNamespace(x) {
+			if name, ok := x["__class_name"].(string); ok {
+				return "<class " + name + ">"
+			}
+		}
+		key := reflect.ValueOf(x).Pointer()
+		if seen[key] {
+			return "<cycle>"
+		}
+		seen[key] = true
+		defer delete(seen, key)
+		parts := make([]string, 0, len(x))
+		for k, item := range x {
+			if strings.HasPrefix(k, "__") {
+				continue
+			}
+			parts = append(parts, k+": "+stringifyValue(item, seen))
+		}
+		return "{" + strings.Join(parts, ", ") + "}"
 	case *Tuple:
 		parts := make([]string, 0, len(x.items))
 		for _, item := range x.items {
-			parts = append(parts, stringify(item))
+			parts = append(parts, stringifyValue(item, seen))
 		}
 		return strings.Join(parts, ", ")
 	case *Module:
-		return "<module " + x.Name + ">"
+		return "<package " + x.Name + ">"
+	case *Function:
+		if x.Name != "" {
+			return "<function " + x.Name + ">"
+		}
+		return "<function>"
+	case Builtin:
+		return "<function>"
+	case *Bytes:
+		return fmt.Sprintf("<bytes:%d>", len(x.data))
 	default:
 		return fmt.Sprintf("%v", x)
 	}
@@ -2920,6 +3026,9 @@ func registerV25Builtins(env *Env) {
 			if c == 0 {
 				return nil, &raisedSignal{value: "bytes_text: NUL byte not allowed"}
 			}
+		}
+		if !utf8.Valid(b.data) {
+			return nil, &raisedSignal{value: "bytes_text: invalid UTF-8"}
 		}
 		return string(b.data), nil
 	}))

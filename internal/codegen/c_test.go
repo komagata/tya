@@ -209,6 +209,25 @@ func TestEmitCCompilesErrorProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesTryCatchFinally(t *testing.T) {
+	src := "try\n  print(\"try\")\ncatch err\n  print(err)\nfinally\n  print(\"finally\")\ntry\n  raise \"boom\"\ncatch err\n  print(err)\nfinally\n  print(\"cleanup\")\n"
+	out := compileAndRun(t, src)
+	if string(out) != "try\nfinally\nboom\ncleanup\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCCompilesTryFinallyReraises(t *testing.T) {
+	src := "try\n  raise \"boom\"\nfinally\n  print(\"cleanup\")\n"
+	out, code := compileAndRunArgsAllowExit(t, src)
+	if code == 0 {
+		t.Fatalf("expected non-zero exit, got %q", out)
+	}
+	if !strings.Contains(string(out), "cleanup") || !strings.Contains(string(out), "boom") {
+		t.Fatalf("unexpected output: %q", out)
+	}
+}
+
 func TestEmitCCompilesArgsAndEnvProgram(t *testing.T) {
 	t.Setenv("TYA_EXAMPLE", "hello")
 	src := "items = args()\nprint(items.len())\nprint(env(\"TYA_EXAMPLE\"))\n"

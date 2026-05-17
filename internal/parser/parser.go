@@ -289,6 +289,7 @@ func recurseStmtBodies(out map[ast.Stmt]ast.StmtComments, stmt ast.Stmt, indent 
 	case *ast.TryCatchStmt:
 		attachStmtBlock(out, n.Try, inner, comments, used)
 		attachStmtBlock(out, n.Catch, inner, comments, used)
+		attachStmtBlock(out, n.Finally, inner, comments, used)
 	case *ast.MatchStmt:
 		for _, c := range n.Cases {
 			attachStmtBlock(out, c.Body, inner, comments, used)
@@ -440,6 +441,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "catch" {
 		return nil, p.err("catch outside block try")
+	}
+	if p.at(token.IDENT) && p.peek().Lexeme == "finally" {
+		return nil, p.err("finally outside block try")
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "raise" {
 		return p.raiseStmt()
@@ -1156,22 +1160,38 @@ func (p *Parser) tryCatchStmt() (ast.Stmt, error) {
 		return nil, err
 	}
 	p.skipNewlines()
-	if !(p.at(token.IDENT) && p.peek().Lexeme == "catch") {
-		return nil, p.errAt(tok, "block try requires catch")
+	catchName := ""
+	var catchTok token.Token
+	var catchBody []ast.Stmt
+	var finallyBody []ast.Stmt
+	if p.at(token.IDENT) && p.peek().Lexeme == "catch" {
+		ctok := p.next()
+		if !p.at(token.IDENT) {
+			return nil, p.errAt(ctok, "catch requires a binding name")
+		}
+		name := p.next()
+		if p.at(token.COMMA) || p.at(token.LBRACKET) || p.at(token.LBRACE) {
+			return nil, p.errAt(name, "catch binding must be a name")
+		}
+		catchName = name.Lexeme
+		catchTok = name
+		catchBody, err = p.block("catch")
+		if err != nil {
+			return nil, err
+		}
+		p.skipNewlines()
 	}
-	catchTok := p.next()
-	if !p.at(token.IDENT) {
-		return nil, p.errAt(catchTok, "catch requires a binding name")
+	if p.at(token.IDENT) && p.peek().Lexeme == "finally" {
+		p.next()
+		finallyBody, err = p.block("finally")
+		if err != nil {
+			return nil, err
+		}
 	}
-	name := p.next()
-	if p.at(token.COMMA) || p.at(token.LBRACKET) || p.at(token.LBRACE) {
-		return nil, p.errAt(name, "catch binding must be a name")
+	if catchBody == nil && finallyBody == nil {
+		return nil, p.errAt(tok, "block try requires catch or finally")
 	}
-	catchBody, err := p.block("catch")
-	if err != nil {
-		return nil, err
-	}
-	return &ast.TryCatchStmt{Try: body, CatchName: name.Lexeme, CatchTok: name, Catch: catchBody, Tok: tok}, nil
+	return &ast.TryCatchStmt{Try: body, CatchName: catchName, CatchTok: catchTok, Catch: catchBody, Finally: finallyBody, Tok: tok}, nil
 }
 
 func (p *Parser) matchStmt() (ast.Stmt, error) {
@@ -2003,15 +2023,9 @@ func (p *Parser) assignTargets() ([]ast.Expr, error) {
 		if isDestructuringTarget(first) {
 			return nil, p.err("mixed destructuring and multiple assignment is not in Tya v0.14")
 		}
-		if _, ok := first.(*ast.Ident); !ok {
-			return nil, p.err("multiple assignment targets must be identifiers")
-		}
 		next, err := p.assignTarget()
 		if err != nil {
 			return nil, err
-		}
-		if _, ok := next.(*ast.Ident); !ok {
-			return nil, p.err("multiple assignment targets must be identifiers")
 		}
 		targets = append(targets, next)
 	}
@@ -2450,7 +2464,7 @@ func (p *Parser) rejectReservedName(tok token.Token) error {
 	switch tok.Lexeme {
 	case "object", "set":
 		return p.errAt(tok, tok.Lexeme+" is not in Tya v0.1")
-	case "interface", "class", "self", "Self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "break", "continue", "return", "try", "module", "import", "embed", "and", "or", "not", "spawn", "await", "scope":
+	case "interface", "class", "self", "Self", "true", "false", "nil", "if", "elseif", "else", "while", "for", "in", "break", "continue", "return", "try", "catch", "finally", "module", "import", "embed", "and", "or", "not", "spawn", "await", "scope":
 		return p.errAt(tok, tok.Lexeme+" cannot be used as a name")
 	default:
 		return nil

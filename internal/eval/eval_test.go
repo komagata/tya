@@ -2,6 +2,7 @@ package eval
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -38,7 +39,7 @@ func TestRunStrictStringPlus(t *testing.T) {
 	}{
 		{name: "string string", src: "print(\"Ty\" + \"a\")\n", want: "Tya\n"},
 		{name: "number number", src: "print(2 + 3)\n", want: "5\n"},
-		{name: "bytes bytes", src: "print(b\"Ty\" + b\"a\")\n", want: "&{[84 121 97]}\n"},
+		{name: "bytes bytes", src: "print(b\"Ty\" + b\"a\")\n", want: "<bytes:3>\n"},
 		{name: "interpolation formats number", src: "count = 3\nprint(\"count: {count}\")\n", want: "count: 3\n"},
 	}
 	for _, tt := range tests {
@@ -94,6 +95,400 @@ func TestRunDefaultParameters(t *testing.T) {
 	want := "Tya!\nTya?\ncopy\nfallback\nnil\n1\n1\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
+	}
+}
+
+func TestRunTryCatchFinallyValue(t *testing.T) {
+	src := strings.Join([]string{
+		"try",
+		"  print(\"try\")",
+		"catch err",
+		"  print(err)",
+		"finally",
+		"  print(\"finally\")",
+		"try",
+		"  raise \"boom\"",
+		"catch err",
+		"  print(err)",
+		"finally",
+		"  print(\"cleanup\")",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	want := "try\nfinally\nboom\ncleanup\n"
+	if out.String() != want {
+		t.Fatalf("got %q want %q", out.String(), want)
+	}
+}
+
+func TestRunTryFinallyReraises(t *testing.T) {
+	src := "try\n  raise \"boom\"\nfinally\n  print(\"cleanup\")\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	if err == nil || !strings.Contains(err.Error(), "boom") {
+		t.Fatalf("expected boom raise, got %v", err)
+	}
+	if out.String() != "cleanup\n" {
+		t.Fatalf("got %q want cleanup", out.String())
+	}
+}
+
+func TestRunFinallyRunsBeforeReturn(t *testing.T) {
+	src := strings.Join([]string{
+		"f = ->",
+		"  try",
+		"    return \"value\"",
+		"  finally",
+		"    print(\"cleanup\")",
+		"print(f())",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "cleanup\nvalue\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunFinallyRunsBeforeBreakAndContinue(t *testing.T) {
+	src := strings.Join([]string{
+		"i = 0",
+		"while i < 3",
+		"  i = i + 1",
+		"  try",
+		"    if i == 1",
+		"      continue",
+		"    break",
+		"  finally",
+		"    print(i)",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "1\n2\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunFinallyControlFlowOverridesPendingFlow(t *testing.T) {
+	src := strings.Join([]string{
+		"f = ->",
+		"  try",
+		"    return \"value\"",
+		"  finally",
+		"    raise \"override\"",
+		"print(f())",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	if err == nil || !strings.Contains(err.Error(), "override") {
+		t.Fatalf("expected override raise, got %v", err)
+	}
+}
+
+func TestRunMethodReceiverEvaluatedOnce(t *testing.T) {
+	src := strings.Join([]string{
+		"state = { count: 0 }",
+		"get_text = ->",
+		"  state[\"count\"] = state[\"count\"] + 1",
+		"  \"tya\"",
+		"print(get_text().upper())",
+		"print(state[\"count\"])",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "TYA\n1\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunAssignmentTargetEvaluationOrder(t *testing.T) {
+	src := strings.Join([]string{
+		"events = []",
+		"items = [0, 0]",
+		"record = name, value ->",
+		"  events.push(name)",
+		"  value",
+		"items[record(\"i\", 0)], items[record(\"j\", 1)] = record(\"a\", 10), record(\"b\", 20)",
+		"print(events.join(\",\"))",
+		"print(items[0])",
+		"print(items[1])",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "a,b,i,j\n10\n20\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunLogicalOperatorsReturnBoolAndShortCircuit(t *testing.T) {
+	src := strings.Join([]string{
+		"count = 0",
+		"bump = ->",
+		"  count = count + 1",
+		"  true",
+		"print(\"x\" and \"y\")",
+		"print(nil or \"y\")",
+		"print(false and bump())",
+		"print(true or bump())",
+		"print(count)",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "true\ntrue\nfalse\ntrue\n0\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunNotReturnsBool(t *testing.T) {
+	src := "print(not nil)\nprint(not false)\nprint(not true)\nprint(not 0)\nprint(not \"x\")\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "true\ntrue\nfalse\nfalse\nfalse\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunFunctionDebugNameDisplay(t *testing.T) {
+	src := "named = -> nil\nprint(named)\nprint(-> nil)\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "<function named>\n<function>\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunStableRuntimeDisplays(t *testing.T) {
+	src := strings.Join([]string{
+		"class User",
+		"  static name = -> \"User\"",
+		"print(User)",
+		"print(42.class)",
+		"print(b\"abc\")",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "<class User>\n<class Number>\n<bytes:3>\n" {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunCyclicDisplayTerminates(t *testing.T) {
+	src := "items = []\nitems.push(items)\nprint(items)\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "<cycle>") {
+		t.Fatalf("got %q", out.String())
+	}
+}
+
+func TestRunCyclicDeepEqualityErrors(t *testing.T) {
+	src := "items = []\nitems.push(items)\nprint(items == items)\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	if err == nil || !strings.Contains(err.Error(), "cyclic equality") {
+		t.Fatalf("expected cyclic equality error, got %v", err)
+	}
+}
+
+func TestRunUnknownMemberErrorIncludesReceiver(t *testing.T) {
+	tests := []struct {
+		src  string
+		want string
+	}{
+		{src: "print(1.missing())\n", want: "unknown method missing on number"},
+		{src: "print(nil.name)\n", want: "unknown member name on nil"},
+	}
+	for _, tt := range tests {
+		toks, errs := lexer.Lex(tt.src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		prog, _, err := parser.Parse(toks)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var out bytes.Buffer
+		err = Run(prog, &out)
+		if err == nil || !strings.Contains(err.Error(), tt.want) {
+			t.Fatalf("got %v, want %q", err, tt.want)
+		}
+	}
+}
+
+func TestRunInvalidUtf8TextReadErrors(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "bad.txt")
+	if err := os.WriteFile(path, []byte{0xff}, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	src := "print(read_file(\"" + strings.ReplaceAll(path, "\\", "\\\\") + "\"))\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	err = Run(prog, &out)
+	if err == nil || !strings.Contains(err.Error(), "invalid UTF-8") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunBinaryReadReturnsBytesForInvalidUtf8(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "bad.bin")
+	if err := os.WriteFile(path, []byte{0xff}, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	src := "data = file_read_bytes(\"" + strings.ReplaceAll(path, "\\", "\\\\") + "\")\nprint(bytes_array(data)[0])\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "255\n" {
+		t.Fatalf("got %q", out.String())
 	}
 }
 
@@ -248,7 +643,7 @@ func TestRunRejectsDictionaryKeyMemberAccess(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected dictionary member access error")
 	}
-	if !strings.Contains(err.Error(), "cannot use . access on dictionary; use index access") {
+	if !strings.Contains(err.Error(), "unknown member name on dictionary") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -782,7 +1177,7 @@ func TestRunRejectsStrictDynamicErrors(t *testing.T) {
 		{name: "wrong array index", src: "print([1][\"0\"])\n", want: "array index must be int"},
 		{name: "wrong dict index", src: "print({ name: \"tya\" }[0])\n", want: "dictionary index must be string"},
 		{name: "nil call", src: "fn = nil\nprint(fn())\n", want: "value is not callable"},
-		{name: "nil member", src: "print(nil.name)\n", want: "cannot read property name on non-dictionary"},
+		{name: "nil member", src: "print(nil.name)\n", want: "unknown member name on nil"},
 		{name: "assignment arity", src: "first, second = [1]\n", want: "assignment expects 2 values, got 1"},
 		{name: "function arity", src: "add = a, b -> a + b\nprint(add(1))\n", want: "function expects 2 arguments, got 1"},
 		{name: "kind changing reassignment", src: "value = 1\nvalue = \"one\"\n", want: "cannot reassign value from number to string"},

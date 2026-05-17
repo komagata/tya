@@ -100,6 +100,17 @@ func TestUnparseIfElseifElse(t *testing.T) {
 	}
 }
 
+func TestFormatTryFinally(t *testing.T) {
+	src := "try\n  print(\"try\")\ncatch err\n  print(err)\nfinally\n  print(\"done\")\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != src {
+		t.Fatalf("got %q want %q", got, src)
+	}
+}
+
 func TestUnparseLambdaSingleLine(t *testing.T) {
 	src := "add = a, b -> a + b\nprint(add(2, 3))\n"
 	got, err := unparseSource(t, src)

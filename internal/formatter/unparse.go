@@ -414,10 +414,20 @@ func (u *unparser) tryStmt(n *ast.TryCatchStmt) error {
 	}
 	if n.CatchName != "" {
 		u.line("catch " + n.CatchName)
-	} else {
+		if err := u.block(n.Catch); err != nil {
+			return err
+		}
+	} else if len(n.Catch) > 0 {
 		u.line("catch _")
+		if err := u.block(n.Catch); err != nil {
+			return err
+		}
 	}
-	return u.block(n.Catch)
+	if len(n.Finally) > 0 {
+		u.line("finally")
+		return u.block(n.Finally)
+	}
+	return nil
 }
 
 func (u *unparser) moduleDecl(n *ast.ModuleDecl) error {

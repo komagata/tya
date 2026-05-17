@@ -142,6 +142,7 @@ type TryCatchStmt struct {
 	CatchName string
 	CatchTok  token.Token
 	Catch     []Stmt
+	Finally   []Stmt
 	Tok       token.Token
 }
 

@@ -92,6 +92,7 @@ func walkStmt(stmt ast.Stmt, visit func(node any)) {
 	case *ast.TryCatchStmt:
 		walkStmts(n.Try, visit)
 		walkStmts(n.Catch, visit)
+		walkStmts(n.Finally, visit)
 	case *ast.MatchStmt:
 		walkExpr(n.Value, visit)
 		for _, c := range n.Cases {

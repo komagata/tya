@@ -174,6 +174,9 @@ Floating-point literals use decimal notation. `NaN`, `Infinity`, `nan`, and
 `infinity` are ordinary identifiers when used as names; they are not numeric
 literal spellings.
 
+Tya `String` values are UTF-8 text. Text file APIs that return strings reject
+invalid UTF-8. Binary file APIs return `Bytes` and do not validate UTF-8.
+
 ## Values And Kinds
 
 Tya is dynamically typed. Values carry a runtime kind. The core runtime kinds
@@ -574,6 +577,10 @@ value.
 Each evaluation of a function literal creates an independent closure
 environment.
 
+Function literals themselves have no declaration name. When a function value
+is assigned to a binding, the binding may be used as a debugging/display name;
+that name does not affect equality, identity, or call behavior.
+
 Function parameters may have default values. Required parameters must precede
 defaulted parameters, calls may omit only a trailing run of defaulted
 parameters, and too few required arguments or too many arguments are invalid.
@@ -651,6 +658,9 @@ return either operand as a value, and short-circuit: `and` skips the right
 operand when the left operand is falsey, while `or` skips the right operand
 when the left operand is truthy.
 
+Method-call receivers are evaluated exactly once before method lookup and
+argument evaluation continues.
+
 Bitwise operators require integer-compatible number values.
 
 Equality operators may compare any two runtime values without coercion. Values
@@ -660,6 +670,9 @@ compare by identity unless their documented primitive surface says otherwise.
 Numeric int and float values compare as one number kind, so `1 == 1.0` is
 true. Ordering operators `<`, `<=`, `>`, and `>=` require numbers; string
 ordering is not defined by these operators.
+
+Deep equality on cyclic arrays or dictionaries is a runtime error. Display of
+cyclic arrays or dictionaries must terminate with a stable cycle marker.
 
 ### Collections
 
@@ -774,7 +787,8 @@ user["admin"] = true
 ```
 
 Multiple assignment evaluates the right-hand side and binds the corresponding
-left-hand names.
+left-hand targets. Right-hand expressions are evaluated first, left to right;
+after that, assignment targets are evaluated and assigned left to right.
 
 ### If Statements
 
@@ -856,13 +870,23 @@ return value, err
 
 `raise` raises any non-`nil` value. `raise nil` is invalid. `try` executes a
 block and `catch` catches every raised non-`nil` value; branch by raised value
-inside the `catch` body with `if` or `match`.
+inside the `catch` body with `if` or `match`. `finally` may follow
+`try/catch` or a bare `try` block. A bare `try` with neither `catch` nor
+`finally` is invalid.
+
+`finally` always runs as control leaves the `try` or `catch` body, including
+normal completion, `return`, `raise`, `break`, and `continue`. The value of a
+`finally` body is ignored for ordinary completion. If the `finally` body
+performs its own control flow, that control flow replaces any pending control
+flow from the `try` or `catch` body.
 
 ```tya
 try
   save_user(user)
 catch err
   print("save failed: {err}")
+finally
+  cleanup()
 ```
 
 ### Scope Statements

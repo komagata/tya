@@ -857,13 +857,16 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				return err
 			}
 			catchScope := newScope(scope)
-			if n.CatchName != "_" {
+			if n.CatchName != "_" && n.CatchName != "" {
 				if err := checkBindingName(n.CatchName, n.CatchTok.Line, n.CatchTok.Col); err != nil {
 					return err
 				}
 				catchScope.define(n.CatchName, kindUnknown)
 			}
 			if err := checkStmts(n.Catch, constants, catchScope); err != nil {
+				return err
+			}
+			if err := checkStmts(n.Finally, constants, newScope(scope)); err != nil {
 				return err
 			}
 		case *ast.MatchStmt:

@@ -122,6 +122,7 @@ func walkLintStmt(stmt ast.Stmt, depth int, out *[]LintFinding) {
 	case *ast.TryCatchStmt:
 		walkBlock(n.Try, depth+1, out)
 		walkBlock(n.Catch, depth+1, out)
+		walkBlock(n.Finally, depth+1, out)
 	case *ast.MatchStmt:
 		walkLintExpr(n.Value, out)
 		for _, c := range n.Cases {
@@ -268,9 +269,14 @@ func walkLintExtras(stmts []ast.Stmt, scope *lintScope, out *[]LintFinding) {
 			walkLintExprExtras(n.Value, scope, out)
 		case *ast.TryCatchStmt:
 			walkLintExtras(n.Try, newLintScope(scope), out)
-			child := newLintScope(scope)
-			child.define(n.CatchName, n.CatchTok, out)
-			walkLintExtras(n.Catch, child, out)
+			if n.Catch != nil {
+				child := newLintScope(scope)
+				if n.CatchName != "" {
+					child.define(n.CatchName, n.CatchTok, out)
+				}
+				walkLintExtras(n.Catch, child, out)
+			}
+			walkLintExtras(n.Finally, newLintScope(scope), out)
 		case *ast.MatchStmt:
 			walkLintExprExtras(n.Value, scope, out)
 			for _, c := range n.Cases {
@@ -447,6 +453,9 @@ func collectStmtIdentUses(stmt ast.Stmt, used map[string]bool) {
 			collectStmtIdentUses(s, used)
 		}
 		for _, s := range n.Catch {
+			collectStmtIdentUses(s, used)
+		}
+		for _, s := range n.Finally {
 			collectStmtIdentUses(s, used)
 		}
 	case *ast.MatchStmt:

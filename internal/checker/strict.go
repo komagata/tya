@@ -393,14 +393,17 @@ func strictWalkStmt(stmt ast.Stmt, scope *strictScope, atRoot bool, ctx *strictC
 		if ctx.halted() {
 			return
 		}
-		child := newStrictScope(scope)
-		if n.CatchName != "_" {
-			child.define(n.CatchName, strictLocal, n.CatchTok.Line, n.CatchTok.Col, ctx, len(n.CatchName))
-			if b, ok := child.bindings[n.CatchName]; ok {
-				b.used = true
+		if n.Catch != nil {
+			child := newStrictScope(scope)
+			if n.CatchName != "_" && n.CatchName != "" {
+				child.define(n.CatchName, strictLocal, n.CatchTok.Line, n.CatchTok.Col, ctx, len(n.CatchName))
+				if b, ok := child.bindings[n.CatchName]; ok {
+					b.used = true
+				}
 			}
+			strictWalkStmts(n.Catch, child, false, ctx)
 		}
-		strictWalkStmts(n.Catch, child, false, ctx)
+		strictWalkStmts(n.Finally, newStrictScope(scope), false, ctx)
 	case *ast.MatchStmt:
 		strictWalkExpr(n.Value, scope, ctx)
 		if ctx.halted() {

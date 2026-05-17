@@ -142,11 +142,16 @@ func checkUnusedStmts(stmts []ast.Stmt, scope *useScope) error {
 			if err := checkUnusedStmts(n.Try, newUseScope(scope)); err != nil {
 				return err
 			}
-			child := newUseScope(scope)
-			if n.CatchName != "_" {
-				child.define(n.CatchName, n.CatchTok.Line, n.CatchTok.Col)
+			if n.Catch != nil {
+				child := newUseScope(scope)
+				if n.CatchName != "_" && n.CatchName != "" {
+					child.define(n.CatchName, n.CatchTok.Line, n.CatchTok.Col)
+				}
+				if err := checkUnusedStmts(n.Catch, child); err != nil {
+					return err
+				}
 			}
-			if err := checkUnusedStmts(n.Catch, child); err != nil {
+			if err := checkUnusedStmts(n.Finally, newUseScope(scope)); err != nil {
 				return err
 			}
 		case *ast.MatchStmt:

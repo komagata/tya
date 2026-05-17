@@ -98,6 +98,56 @@ func TestParseFunctionDefaultParameters(t *testing.T) {
 	}
 }
 
+func TestParseTryCatchFinally(t *testing.T) {
+	toks, errs := lexer.Lex("try\n  print(\"try\")\ncatch err\n  print(err)\nfinally\n  print(\"done\")\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stmt := prog.Stmts[0].(*ast.TryCatchStmt)
+	if len(stmt.Try) != 1 || stmt.CatchName != "err" || len(stmt.Catch) != 1 || len(stmt.Finally) != 1 {
+		t.Fatalf("unexpected try stmt: %#v", stmt)
+	}
+}
+
+func TestParseTryFinally(t *testing.T) {
+	toks, errs := lexer.Lex("try\n  print(\"try\")\nfinally\n  print(\"done\")\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stmt := prog.Stmts[0].(*ast.TryCatchStmt)
+	if stmt.Catch != nil || len(stmt.Finally) != 1 {
+		t.Fatalf("unexpected try/finally stmt: %#v", stmt)
+	}
+}
+
+func TestParseRejectsBareTry(t *testing.T) {
+	toks, errs := lexer.Lex("try\n  print(\"try\")\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err == nil {
+		t.Fatal("expected bare try error")
+	}
+}
+
+func TestParseRejectsCatchWithoutTry(t *testing.T) {
+	toks, errs := lexer.Lex("catch err\n  print(err)\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err == nil {
+		t.Fatal("expected catch without try error")
+	}
+}
+
 func TestParseRejectsTrailingCommas(t *testing.T) {
 	tests := []string{
 		"items = [1,]\n",
@@ -663,16 +713,12 @@ func TestParseMemberAssignment(t *testing.T) {
 	}
 }
 
-func TestParseRejectsMultipleAssignmentToIndexTarget(t *testing.T) {
+func TestParseAllowsMultipleAssignmentToIndexTarget(t *testing.T) {
 	toks, errs := lexer.Lex("items[0], right = pair()\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
-	_, _, err := Parse(toks)
-	if err == nil {
-		t.Fatal("expected multiple assignment target error")
-	}
-	if !strings.Contains(err.Error(), "multiple assignment targets must be identifiers") {
+	if _, _, err := Parse(toks); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

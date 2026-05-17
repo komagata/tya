@@ -803,20 +803,48 @@ func (g *cgen) tryCatchStmt(n *ast.TryCatchStmt) error {
 		}
 	}
 	g.raiseDepth--
+	if len(n.Finally) > 0 {
+		for _, stmt := range n.Finally {
+			if err := g.stmt(stmt); err != nil {
+				return err
+			}
+		}
+	}
 	g.line("tya_pop_raise_frame();")
 	g.indent--
 	g.line("} else {")
 	g.indent++
-	if n.CatchName != "_" {
+	raisedValue := fmt.Sprintf("__raised%d", g.temp)
+	g.temp++
+	g.line(fmt.Sprintf("TyaValue %s = tya_current_raise();", raisedValue))
+	if n.Catch != nil && n.CatchName != "_" {
 		name := cName(n.CatchName)
 		g.vars[n.CatchName] = true
-		g.line(fmt.Sprintf("TyaValue %s = tya_current_raise();", name))
+		g.line(fmt.Sprintf("TyaValue %s = %s;", name, raisedValue))
 	}
 	g.line("tya_pop_raise_frame();")
-	for _, stmt := range n.Catch {
-		if err := g.stmt(stmt); err != nil {
-			return err
+	if n.Catch != nil {
+		for _, stmt := range n.Catch {
+			if err := g.stmt(stmt); err != nil {
+				return err
+			}
 		}
+		if len(n.Finally) > 0 {
+			for _, stmt := range n.Finally {
+				if err := g.stmt(stmt); err != nil {
+					return err
+				}
+			}
+		}
+	} else {
+		if len(n.Finally) > 0 {
+			for _, stmt := range n.Finally {
+				if err := g.stmt(stmt); err != nil {
+					return err
+				}
+			}
+		}
+		g.line(fmt.Sprintf("tya_raise(%s);", raisedValue))
 	}
 	g.indent--
 	g.line("}")
@@ -1285,6 +1313,9 @@ func collectStmtIdents(stmt ast.Stmt, out map[string]bool) {
 			collectStmtIdents(stmt, out)
 		}
 		for _, stmt := range n.Catch {
+			collectStmtIdents(stmt, out)
+		}
+		for _, stmt := range n.Finally {
 			collectStmtIdents(stmt, out)
 		}
 	case *ast.MatchStmt:
@@ -3284,6 +3315,7 @@ func assignedNames(stmts []ast.Stmt) []string {
 			case *ast.TryCatchStmt:
 				walk(n.Try)
 				walk(n.Catch)
+				walk(n.Finally)
 			case *ast.MatchStmt:
 				for _, c := range n.Cases {
 					walk(c.Body)
