@@ -1,0 +1,70 @@
+# v0.65 strict dynamic semantics audit smoke coverage.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+cd $WORK
+
+exec $WORK/tya check valid.tya
+exec $WORK/tya run valid.tya
+stdout 'truthy'
+stdout 'Ty'
+stdout 'nil'
+stdout 'matched'
+
+exec $WORK/tya build valid.tya -o valid
+exec ./valid
+stdout 'truthy'
+stdout 'Ty'
+stdout 'nil'
+stdout 'matched'
+
+! exec $WORK/tya check return_outside.tya
+stderr 'TYA-E0120'
+
+! exec $WORK/tya check bad_pattern.tya
+stderr 'TYA-E0160'
+
+exec $WORK/tya run bad_call.tya
+stdout 'nil'
+
+exec $WORK/tya run bad_index.tya
+stdout 'nil'
+
+-- valid.tya --
+if 0
+  print("truthy")
+
+print("T" + "y")
+print({ name: "Tya" }["missing"])
+
+value = "ok"
+match value
+  case "ok"
+    print("matched")
+  case _
+    print("fallback")
+
+parse_user = text ->
+  if text == ""
+    return nil, error("empty user")
+  return { name: text }, nil
+
+user, err = parse_user("tya")
+if err
+  print(err["message"])
+
+-- return_outside.tya --
+return 1
+
+-- bad_pattern.tya --
+user = { name: "tya" }
+match user
+  case { name: value }
+    print(value)
+
+-- bad_call.tya --
+fn = nil
+print(fn())
+
+-- bad_index.tya --
+print(nil[0])

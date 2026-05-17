@@ -28,6 +28,11 @@ Tya's user-facing commitments are:
 This document specifies the language, built-in function surface,
 standard-library surface, package rules, and tool surface.
 
+The strict-semantics rule matrix in
+[`docs/STRICT_SEMANTICS.md`](STRICT_SEMANTICS.md) is normative for v1.0.0
+validity boundaries and records the active parser, checker, runtime, CLI, LSP,
+and self-host coverage for each rule family.
+
 ## Notation
 
 Examples use ordinary Tya source. Grammar fragments are illustrative rather
@@ -204,7 +209,9 @@ print(value.class)
 
 Tya does not perform implicit conversions. Operations that require a number,
 string, array, dictionary, function, class, task, channel, or resource must
-receive a value of the required kind or raise a runtime error.
+receive a value of the required kind or raise a runtime error. The documented
+exceptions are formatting operations such as string interpolation and `to_s()`,
+plus the exact operator cases listed below.
 
 ## Blocks
 
@@ -592,9 +599,15 @@ if ready and not disabled
 ```
 
 Arithmetic operations require numbers unless a documented primitive method or
-operator case says otherwise. `nil` arithmetic is invalid.
+operator case says otherwise. `+` formats through string conversion when either
+operand is a string, and concatenates two bytes values. String interpolation
+formats embedded values with the `Stringable` surface. `nil` arithmetic is
+invalid.
 
 Bitwise operators require integer-compatible number values.
+
+Equality operators may compare any two runtime values without coercion.
+Ordering operators `<`, `<=`, `>`, and `>=` require numbers.
 
 ### Collections
 
@@ -617,6 +630,10 @@ user["admin"] = true
 
 Dictionary block forms and empty collection forms are canonicalized by the
 formatter.
+
+Array, string, and bytes indexes must be integers. Dictionary and error-value
+indexes must be strings. Missing dictionary keys and out-of-range array or
+string indexes return `nil`; indexing a non-collection target is invalid.
 
 ### Error Expressions
 
@@ -703,6 +720,8 @@ else
 ```
 
 `elseif` is the canonical spelling. `else if` is not canonical Tya.
+Only `nil` and `false` are falsey. All other values, including `0`, `""`,
+empty arrays, and empty dictionaries, are truthy.
 
 ### While Statements
 

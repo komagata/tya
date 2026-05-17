@@ -3,6 +3,7 @@ package eval
 import (
 	"bytes"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"tya/internal/lexer"
@@ -440,5 +441,44 @@ func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	}
 	if _, _, err := parser.Parse(toks); err == nil {
 		t.Fatal("expected parser error")
+	}
+}
+
+func TestRunRejectsStrictDynamicErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{name: "nil arithmetic", src: "print(nil + 1)\n", want: "+ expects numbers or strings"},
+		{name: "nil ordering", src: "print(nil < 1)\n", want: "< expects numbers"},
+		{name: "nil indexing", src: "print(nil[0])\n", want: "index target is not array or string"},
+		{name: "wrong array index", src: "print([1][\"0\"])\n", want: "array index must be int"},
+		{name: "wrong dict index", src: "print({ name: \"tya\" }[0])\n", want: "dictionary index must be string"},
+		{name: "nil call", src: "fn = nil\nprint(fn())\n", want: "value is not callable"},
+		{name: "nil member", src: "print(nil.name)\n", want: "cannot read property name on non-dictionary"},
+		{name: "assignment arity", src: "first, second = [1]\n", want: "assignment expects 2 values, got 1"},
+		{name: "function arity", src: "add = a, b -> a + b\nprint(add(1))\n", want: "function expects 2 arguments, got 1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			toks, errs := lexer.Lex(tt.src)
+			if len(errs) != 0 {
+				t.Fatalf("lex errors: %v", errs)
+			}
+			prog, _, err := parser.Parse(toks)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var out bytes.Buffer
+			err = Run(prog, &out)
+			if err == nil {
+				t.Fatal("expected runtime error")
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("got error %q, want %q", err.Error(), tt.want)
+			}
+		})
 	}
 }

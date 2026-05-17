@@ -1,6 +1,9 @@
 package lsp
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestDiagnosticsForLintWarningsUseStableCodes(t *testing.T) {
 	src := "outer = 1\nhandler = used, unused ->\n  outer = 2\n  print(used)\n"
@@ -26,4 +29,21 @@ func TestDiagnosticsForLintWarningsUseStableCodes(t *testing.T) {
 			t.Fatalf("missing %s in %#v", code, diags)
 		}
 	}
+}
+
+func TestDiagnosticsForStrictCheckerErrors(t *testing.T) {
+	src := "outer = 1\nhandler = value ->\n  outer = value\n  value\n"
+	diags := DiagnosticsFor("strict.tya", src)
+	for _, d := range diags {
+		if d.Code == "TYA-E0307" {
+			if d.Severity != DiagSeverityError {
+				t.Fatalf("TYA-E0307 severity = %d, want error", d.Severity)
+			}
+			if !strings.Contains(d.Message, "Assignment to outer binding") {
+				t.Fatalf("message = %q", d.Message)
+			}
+			return
+		}
+	}
+	t.Fatalf("missing TYA-E0307 in %#v", diags)
 }
