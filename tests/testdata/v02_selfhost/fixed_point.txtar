@@ -8,10 +8,8 @@
 cd $REPO
 env TYA_LEGACY_MODULES=1
 
-exec sh -c 'go run ./cmd/tya run selfhost/v02/compiler.tya selfhost/v02/compiler.tya > "$WORK/stage1.c"'
-! stderr .
-
-exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm -lz 2>/dev/null'
+exec cp $SELFHOST_V02_STAGE1_C $WORK/stage1.c
+exec cp $SELFHOST_V02_STAGE1_BIN $WORK/stage1
 
 exec sh -c '"$WORK/stage1" selfhost/v02/compiler.tya > "$WORK/stage2.c"'
 ! stderr .

@@ -5,7 +5,7 @@ env TYA_LEGACY_MODULES=1
 exec go run ./cmd/tya run $WORK/main.tya
 stdout 'Hello, Tya\nInterpolated Tya\nHello from Tya\nready\nelseif ready\nsecond elseif ready\n0\n1\n2\n2\n9\n2\n9\n6\n0\n2\n1\n9\n2\n6\n8\n3\n3\nTya\ncompiler\ntrue\n2\nfalse\nname\nTya\nleft\nright\n6\n5\n7\n9\n4\n8\n10\nconstant\nblock constant\n6\n4\n5\n0\ninner\ntuple\nok\n12\n4\n2\n14\ntrue\ntrue\ntrue\ntrue\n-4\n7\nhello-Tya\nhello:Tya\nhello,compiler\ntrue\ntrue\ntrue\n42\n2.5\n12.5\nnested-expr\ntrue\nfile text\nfile expr\n5\nfalse\nbad\n'
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/main.tya" > "$WORK/main.c"'
+exec sh -c '$SELFHOST_V01_STAGE1_BIN "$WORK/main.tya" > "$WORK/main.c"'
 ! stderr .
 
 exec grep 'tya_user_name' $WORK/main.c
@@ -22,7 +22,7 @@ exec go run ./cmd/tya run $WORK/branch_scope.tya
 stdout 'yes\ntop\n'
 ! stderr .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/branch_scope.tya" > "$WORK/branch_scope.c"'
+exec sh -c '$SELFHOST_V01_STAGE1_BIN "$WORK/branch_scope.tya" > "$WORK/branch_scope.c"'
 ! stderr .
 
 exec cc $WORK/branch_scope.c runtime/tya_runtime.c -I runtime -o $WORK/branch_scope -lpthread -lm -lz
@@ -32,127 +32,127 @@ exec $WORK/branch_scope
 stdout 'yes\ntop\n'
 ! stderr .
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/undefined.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/undefined.tya
 stdout 'undefined variable: missing'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/tab.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/tab.tya
 stdout '2: tabs are forbidden'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_indent.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/bad_indent.tya
 stdout '2: indentation may only increase by 2 spaces'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_char.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/bad_char.tya
 stdout 'unexpected character'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_escape.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/bad_escape.tya
 stdout '1:11: unknown escape \\q'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/unterminated.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/unterminated.tya
 stdout '1:7: unterminated string'
 
-exec go run ./cmd/tya run selfhost/v01/compiler.tya --tokens $WORK/lexer_tokens.tya
+exec $SELFHOST_V01_STAGE1_BIN --tokens $WORK/lexer_tokens.tya
 stdout 'IDENT\n=\nINT\n.\nNEWLINE\nIDENT\n\(\nSTRING\n\)\nNEWLINE\nEOF\n'
 
-exec go run ./cmd/tya run selfhost/v01/compiler.tya --ast $WORK/parser_ast.tya
+exec $SELFHOST_V01_STAGE1_BIN --ast $WORK/parser_ast.tya
 stdout '1: import\n3: assign add = func 2 expr binary [+]\n4: assign zero = func 0 expr int\n5: assign mapped = call member map 1\n6: assign zero_paren = func 0 expr int\n7: expr_stmt call ident print 1\n8: if elseif 0 else 0\n'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/import_alias.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/import_alias.tya
 stdout '1: import aliases are not in Tya v0.1'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/nested_import.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/nested_import.tya
 stdout '2: import must be top-level'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/nested_module.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/nested_module.tya
 stdout '2: module must be top-level'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/no_paren_call.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/no_paren_call.tya
 stdout '1: function calls require parentheses in Tya v0.1'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_elseif_header.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/bad_elseif_header.tya
 stdout '3: unexpected token before block'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_if_header.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/bad_if_header.tya
 stdout '1: unexpected token before block'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_while_header.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/bad_while_header.tya
 stdout '1: unexpected token before block'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_for_header.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/bad_for_header.tya
 stdout '1: unexpected token before block'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/top_level_try.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/top_level_try.tya
 stdout '1: try must be inside a function'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/class.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/class.tya
 stdout 'class body may only contain member definitions'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/self.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/self.tya
 stdout '1: self is only valid inside a class method'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/set_literal.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/set_literal.tya
 stdout '1: set literals are not in Tya v0.1'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/function_missing.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/function_missing.tya
 stdout '2: undefined variable: missing'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/param_scope.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/param_scope.tya
 stdout '2: undefined variable: value'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/bad_name.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/bad_name.tya
 stdout '1: invalid variable name: BadName'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/constant_reassign.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/constant_reassign.tya
 stdout '2: cannot reassign constant: MAX_RETRY'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/invalid_dict_key.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/invalid_dict_key.tya
 stdout '1: invalid dictionary key: Name'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/duplicate_dict_key.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/duplicate_dict_key.tya
 stdout '1: duplicate dictionary key: name'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/reserved_name.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/reserved_name.tya
 stdout '1: true cannot be used as a name'
 
-exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/member_access.tya
+exec $SELFHOST_V01_STAGE1_BIN $WORK/member_access.tya
 stdout 'tya_member'
 
-exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/array_member.tya
+exec $SELFHOST_V01_STAGE1_BIN $WORK/array_member.tya
 stdout 'tya_member'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/member_assignment.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/member_assignment.tya
 stdout 'undefined variable: user'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/multiple_index_assign.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/multiple_index_assign.tya
 stdout '1: multiple assignment targets must be identifiers'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/duplicate_member.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/duplicate_member.tya
 stdout '3: duplicate module member: hello'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/module_mismatch/main.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/module_mismatch/main.tya
 stdout 'greeting.tya must define module greeting'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/module_multiple/main.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/module_multiple/main.tya
 stdout 'greeting.tya must define exactly one module'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/module_extra/main.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/module_extra/main.tya
 stdout 'greeting.tya may only contain imports and one module declaration'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/top_level_return.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/top_level_return.tya
 stdout '1: return must be inside a function'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/top_level_break.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/top_level_break.tya
 stdout '1: break must be inside a loop'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/top_level_continue.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/top_level_continue.tya
 stdout '1: continue must be inside a loop'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/function_break.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/function_break.tya
 stdout '3: break must be inside a loop'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/duplicate_param.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/duplicate_param.tya
 stdout '1: duplicate function parameter: value'
 
-! exec go run ./cmd/tya run selfhost/v01/compiler.tya $WORK/nested_missing.tya
+! exec $SELFHOST_V01_STAGE1_BIN $WORK/nested_missing.tya
 stdout '4: undefined variable: missing'
 
 -- main.tya --

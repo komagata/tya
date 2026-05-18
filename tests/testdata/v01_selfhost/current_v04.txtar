@@ -2,7 +2,7 @@
 cd $REPO
 env TYA_LEGACY_MODULES=1
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/current_v04.tya" > "$WORK/current_v04.c"'
+exec sh -c '$SELFHOST_V01_STAGE1_BIN "$WORK/current_v04.tya" > "$WORK/current_v04.c"'
 ! stderr .
 
 exec cc $WORK/current_v04.c runtime/tya_runtime.c -I runtime -o $WORK/current_v04 -lpthread -lm -lz
@@ -12,10 +12,8 @@ exec $WORK/current_v04
 stdout 'ok\n'
 ! stderr .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya selfhost/v01/compiler.tya > "$WORK/stage1.c"'
-! stderr .
-
-exec sh -c 'cc "$WORK/stage1.c" runtime/tya_runtime.c -I runtime -o "$WORK/stage1" -lpthread -lm -lz 2>/dev/null'
+exec cp $SELFHOST_V01_STAGE1_C $WORK/stage1.c
+exec cp $SELFHOST_V01_STAGE1_BIN $WORK/stage1
 
 exec sh -c '"$WORK/stage1" selfhost/v01/compiler.tya > "$WORK/stage2.c"'
 ! stderr .
@@ -32,7 +30,7 @@ exec $WORK/current_v04_stage2
 stdout 'ok\n'
 ! stderr .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/fail_assert.tya" > "$WORK/fail_assert.c"'
+exec sh -c '$SELFHOST_V01_STAGE1_BIN "$WORK/fail_assert.tya" > "$WORK/fail_assert.c"'
 ! stderr .
 
 exec cc $WORK/fail_assert.c runtime/tya_runtime.c -I runtime -o $WORK/fail_assert -lpthread -lm -lz
@@ -42,7 +40,7 @@ exec cc $WORK/fail_assert.c runtime/tya_runtime.c -I runtime -o $WORK/fail_asser
 stderr 'fail_assert.tya:1:1: assertion failed'
 ! stdout .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/fail_equal.tya" > "$WORK/fail_equal.c"'
+exec sh -c '$SELFHOST_V01_STAGE1_BIN "$WORK/fail_equal.tya" > "$WORK/fail_equal.c"'
 ! stderr .
 
 exec cc $WORK/fail_equal.c runtime/tya_runtime.c -I runtime -o $WORK/fail_equal -lpthread -lm -lz
@@ -56,7 +54,7 @@ stderr 'actual:'
 stderr 'name: Tya'
 ! stdout .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_string.tya" > "$WORK/v04_string.c"'
+exec sh -c '$SELFHOST_V01_STAGE1_BIN "$WORK/v04_string.tya" > "$WORK/v04_string.c"'
 ! stderr .
 
 exec cc $WORK/v04_string.c runtime/tya_runtime.c -I runtime -o $WORK/v04_string -lpthread -lm -lz
@@ -66,7 +64,7 @@ exec $WORK/v04_string
 ! stdout .
 ! stderr .
 
-exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/v04_array.tya" > "$WORK/v04_array.c"'
+exec sh -c '$SELFHOST_V01_STAGE1_BIN "$WORK/v04_array.tya" > "$WORK/v04_array.c"'
 ! stderr .
 
 exec cc $WORK/v04_array.c runtime/tya_runtime.c -I runtime -o $WORK/v04_array -lpthread -lm -lz

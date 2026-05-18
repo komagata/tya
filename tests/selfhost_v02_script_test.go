@@ -25,12 +25,15 @@ func TestSelfhostV02Scripts(t *testing.T) {
 	}
 	modCache := goEnvForSelfhostV02(t, "GOMODCACHE")
 	goCache := goEnvForSelfhostV02(t, "GOCACHE")
+	stage := buildSelfhostScriptStage1(t, repo, "v02")
 	testscript.RunT(limitedSelfhostV02T{T: t}, testscript.Params{
 		Dir: "testdata/v02_selfhost",
 		Setup: func(env *testscript.Env) error {
 			env.Setenv("REPO", repo)
 			env.Setenv("GOCACHE", goCache)
 			env.Setenv("GOMODCACHE", modCache)
+			env.Setenv("SELFHOST_V02_STAGE1_C", stage.cPath)
+			env.Setenv("SELFHOST_V02_STAGE1_BIN", stage.binPath)
 			return nil
 		},
 	})
