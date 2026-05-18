@@ -9,5 +9,9 @@ class Process
     chdir(path)
 
   # Process.run provides the process/Process standard library operation.
-  static run = command, options ->
+  static run = command, options = {} ->
     process_run(command, options)
+
+  # Process.exec replaces this process where the platform supports exec.
+  static exec = command, options = {} ->
+    process_exec(command, options)

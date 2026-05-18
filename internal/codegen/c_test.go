@@ -25,6 +25,15 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCEnvironmentAndProcessProgram(t *testing.T) {
+	src := "setenv(\"TYA_CODEGEN_ENV\", \"ok\")\nprint(env(\"TYA_CODEGEN_ENV\"))\nr = process_run([\"sh\", \"-c\", \"printf $TYA_CODEGEN_CHILD\"], { env: { \"TYA_CODEGEN_CHILD\": \"child\" } })\nprint(r[\"status\"])\nprint(r[\"success\"])\nprint(r[\"stdout\"])\n"
+	out := compileAndRun(t, src)
+	want := "ok\n0\ntrue\nchild\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestEmitCIncludesSourceLineComments(t *testing.T) {
 	prog := checkedProgram(t, "x = 1\nprint(x)\n")
 	csrc, _, err := EmitC(prog)

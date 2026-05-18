@@ -250,6 +250,24 @@ func TestPreV1ContradictionsRejectedWithMigrationDocs(t *testing.T) {
 	}
 }
 
+func TestSpecDocumentsEnvironmentProcessContract(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"### Environment And Process",
+		"`environ()`",
+		"`setenv(name, value)`",
+		"`unsetenv(name)`",
+		"`process/Process.run(command, options = {})`",
+		"`options[\"shell\"] == true`",
+		"`status`, `success`, `stdout`, `stderr`, and `timed_out`",
+		"Non-zero child exit status is reported in the result dictionary",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing environment/process text %q", required)
+		}
+	}
+}
+
 func readRepoFile(t *testing.T, elems ...string) string {
 	t.Helper()
 	parts := append([]string{".."}, elems...)

@@ -3714,6 +3714,23 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		if len(args) == 2 {
 			return emit("tya_process_run(%s, %s)", 2)
 		}
+	case "process_exec":
+		if len(args) == 1 {
+			a, _, err := g.expr(args[0])
+			if err != nil {
+				return ""
+			}
+			return fmt.Sprintf("tya_process_exec(%s, tya_nil())", a)
+		}
+		if len(args) == 2 {
+			return emit("tya_process_exec(%s, %s)", 2)
+		}
+	case "environ":
+		return emit("tya_environ()", 0)
+	case "setenv":
+		return emit("tya_setenv(%s, %s)", 2)
+	case "unsetenv":
+		return emit("tya_unsetenv(%s)", 1)
 	case "digest_md5":
 		return emit("tya_digest_md5(%s)", 1)
 	case "digest_sha1":

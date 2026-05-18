@@ -1661,6 +1661,30 @@ requires `to_s()`. `Iterable` requires `iter()` and provides `sequence()`.
 `Sequence` provides `iter()`, `map(fn)`, `filter(fn)`, `take(n)`, `drop(n)`,
 `reduce(initial, fn)`, and `to_a()`.
 
+### Environment And Process
+
+`os/Os` exposes process environment and working-directory helpers:
+`args()`, `env(name)`, `environ()`, `setenv(name, value)`,
+`unsetenv(name)`, `cwd()`, `chdir(path)`, and `exit(code)`. Environment names
+and values are strings. A missing environment variable returns `nil`, and
+environment mutation affects the current process and child processes started
+after the mutation.
+
+`process/Process.run(command, options = {})` runs a child process and returns a
+result dictionary. `command` may be an array of strings for direct execution or
+a string when `options["shell"] == true`. String commands without explicit
+shell opt-in are invalid. Supported options are `cwd`, `env`, `clear_env`,
+`stdin`, `capture_stdout`, `capture_stderr`, `timeout`, and `shell`. Unknown
+option keys are invalid. `env` values override the inherited environment
+unless `clear_env` is true. `stdin` may be a string or bytes value.
+
+The result dictionary contains `status`, `success`, `stdout`, `stderr`, and
+`timed_out`; `exit_code` remains as a compatibility alias for `status`.
+Non-zero child exit status is reported in the result dictionary and is not a
+raised error. Spawn/setup failures, invalid options, invalid environment
+values, timeout setup failures, and unsupported `Process.exec(command,
+options = {})` raise structured process errors.
+
 `io/Reader`, `io/Writer`, and `net/socket` define stream capability
 interfaces for readable, writable, closable, and flushable values. `Reader`
 supports `read`, `read_line`, `each_line`, `eof?`, and `close`. `Writer`

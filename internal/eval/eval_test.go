@@ -1231,6 +1231,72 @@ func TestRunResourceCleanupUsesFinally(t *testing.T) {
 	}
 }
 
+func TestRunOsEnvironmentMutation(t *testing.T) {
+	key := "TYA_TEST_ENV_MUTATION"
+	t.Setenv(key, "")
+	src := "print(env(\"" + key + "\"))\nsetenv(\"" + key + "\", \"one\")\nprint(env(\"" + key + "\"))\nprint(environ()[\"" + key + "\"])\nunsetenv(\"" + key + "\")\nprint(env(\"" + key + "\"))\n"
+	out := runEval(t, src)
+	want := "\none\none\nnil\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunProcessRunDirectCommand(t *testing.T) {
+	src := "r = process_run([\"sh\", \"-c\", \"printf out; printf err 1>&2; exit 7\"], {})\nprint(r[\"status\"])\nprint(r[\"exit_code\"])\nprint(r[\"success\"])\nprint(r[\"stdout\"])\nprint(r[\"stderr\"])\n"
+	out := runEval(t, src)
+	want := "7\n7\nfalse\nout\nerr\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunProcessRunShellOptIn(t *testing.T) {
+	src := "r = process_run(\"printf shell\", { shell: true })\nprint(r[\"stdout\"])\n"
+	out := runEval(t, src)
+	if out != "shell\n" {
+		t.Fatalf("got %q", out)
+	}
+	err := runEvalError(t, "process_run(\"printf no\", {})\n")
+	if err == nil || !strings.Contains(err.Error(), "string command requires shell option") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunProcessRunCwdEnvStdinTimeout(t *testing.T) {
+	dir := t.TempDir()
+	src := "r = process_run([\"sh\", \"-c\", \"pwd; printf $TYA_CHILD; cat\"], { cwd: \"" + strings.ReplaceAll(dir, "\\", "\\\\") + "\", env: { TYA_CHILD: \"env\" }, stdin: \"input\" })\nprint(r[\"status\"])\nprint(r[\"stdout\"].contains(\"envinput\"))\nslow = process_run([\"sh\", \"-c\", \"sleep 1\"], { timeout: 0.01 })\nprint(slow[\"timed_out\"])\n"
+	out := runEval(t, src)
+	want := "0\ntrue\ntrue\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunProcessStructuredErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{name: "unknown option", src: "process_run([\"sh\"], { bad: true })\n", want: "unknown option bad"},
+		{name: "env value", src: "process_run([\"sh\"], { env: { BAD: 1 } })\n", want: "env values must be strings"},
+		{name: "missing executable", src: "process_run([\"/no/such/tya-command\"], {})\n", want: "process.run:"},
+		{name: "exec unsupported", src: "process_exec([\"sh\"], {})\n", want: "process.exec: unsupported"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := runEvalError(t, tt.src)
+			if err == nil {
+				t.Fatal("expected process error")
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("got error %q, want %q", err.Error(), tt.want)
+			}
+		})
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {

@@ -42,6 +42,8 @@
 #include <openssl/ssl.h>
 #endif
 
+extern char **environ;
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -2290,6 +2292,45 @@ TyaValue tya_chdir(TyaValue path) {
   return tya_nil();
 }
 
+TyaValue tya_environ(void) {
+  TyaValue out = tya_dict(NULL, 0);
+  for (char **env = environ; env != NULL && *env != NULL; env++) {
+    char *eq = strchr(*env, '=');
+    if (eq == NULL) continue;
+    size_t key_len = (size_t)(eq - *env);
+    char *key = malloc(key_len + 1);
+    memcpy(key, *env, key_len);
+    key[key_len] = '\0';
+    tya_set_member(out, key, tya_string(eq + 1));
+    free(key);
+  }
+  return out;
+}
+
+TyaValue tya_setenv(TyaValue name, TyaValue value) {
+  if (name.kind != TYA_STRING || name.string == NULL || value.kind != TYA_STRING || value.string == NULL) {
+    tya_raise(tya_string("os.env: name and value must be strings"));
+    return tya_nil();
+  }
+  if (setenv(name.string, value.string, 1) != 0) {
+    tya_raise(tya_string("os.env: setenv failed"));
+    return tya_nil();
+  }
+  return tya_nil();
+}
+
+TyaValue tya_unsetenv(TyaValue name) {
+  if (name.kind != TYA_STRING || name.string == NULL) {
+    tya_raise(tya_string("os.env: name must be a string"));
+    return tya_nil();
+  }
+  if (unsetenv(name.string) != 0) {
+    tya_raise(tya_string("os.env: unsetenv failed"));
+    return tya_nil();
+  }
+  return tya_nil();
+}
+
 TyaValue tya_read_line(void) {
   size_t cap = 128;
   size_t len = 0;
@@ -3703,21 +3744,36 @@ static char *tya_read_all(int fd) {
 }
 
 TyaValue tya_process_run(TyaValue command, TyaValue options) {
-  if (command.kind != TYA_ARRAY || command.array == NULL || command.array->len == 0) {
-    tya_raise(tya_string("process.run: command must be a non-empty array of strings"));
+  bool shell = false;
+  if (options.kind == TYA_DICT && options.dict != NULL) {
+    TyaValue shell_v = tya_index(options, tya_string("shell"));
+    shell = shell_v.kind == TYA_BOOL && shell_v.boolean;
+  }
+  if (command.kind == TYA_STRING && !shell) {
+    tya_raise(tya_string("process.run: string command requires shell option"));
     return tya_nil();
   }
-  int argc = command.array->len;
+  if (command.kind != TYA_STRING && (command.kind != TYA_ARRAY || command.array == NULL || command.array->len == 0)) {
+    tya_raise(tya_string("process.run: command must be a string or non-empty array of strings"));
+    return tya_nil();
+  }
+  int argc = command.kind == TYA_STRING ? 3 : command.array->len;
   char **argv = malloc(sizeof(char *) * (size_t)(argc + 1));
-  for (int i = 0; i < argc; i++) {
-    TyaValue item = command.array->items[i];
-    if (item.kind != TYA_STRING || item.string == NULL) {
-      for (int j = 0; j < i; j++) free(argv[j]);
-      free(argv);
-      tya_raise(tya_string("process.run: command items must be strings"));
-      return tya_nil();
+  if (command.kind == TYA_STRING) {
+    argv[0] = tya_dup_cstr("sh");
+    argv[1] = tya_dup_cstr("-c");
+    argv[2] = tya_dup_cstr(command.string == NULL ? "" : command.string);
+  } else {
+    for (int i = 0; i < argc; i++) {
+      TyaValue item = command.array->items[i];
+      if (item.kind != TYA_STRING || item.string == NULL) {
+        for (int j = 0; j < i; j++) free(argv[j]);
+        free(argv);
+        tya_raise(tya_string("process.run: command items must be strings"));
+        return tya_nil();
+      }
+      argv[i] = tya_dup_cstr(item.string);
     }
-    argv[i] = tya_dup_cstr(item.string);
   }
   argv[argc] = NULL;
 
@@ -3725,7 +3781,6 @@ TyaValue tya_process_run(TyaValue command, TyaValue options) {
   const char *input_text = NULL;
   size_t input_len = 0;
   char **child_env = NULL;
-  bool replace_env = false;
   if (options.kind == TYA_DICT && options.dict != NULL) {
     TyaValue cwd = tya_index(options, tya_string("cwd"));
     if (cwd.kind == TYA_STRING && cwd.string != NULL) {
@@ -3738,7 +3793,6 @@ TyaValue tya_process_run(TyaValue command, TyaValue options) {
     }
     TyaValue env_v = tya_index(options, tya_string("env"));
     if (env_v.kind == TYA_DICT && env_v.dict != NULL) {
-      replace_env = true;
       int env_count = 0;
       for (int i = 0; i < env_v.dict->len; i++) {
         if (env_v.dict->entries[i].key != NULL) env_count++;
@@ -3793,11 +3847,12 @@ TyaValue tya_process_run(TyaValue command, TyaValue options) {
     if (cwd_path && chdir(cwd_path) < 0) {
       _exit(127);
     }
-    if (replace_env) {
-      execve(argv[0], argv, child_env);
-    } else {
-      execvp(argv[0], argv);
+    if (child_env) {
+      for (int i = 0; child_env[i]; i++) {
+        putenv(child_env[i]);
+      }
     }
+    execvp(argv[0], argv);
     _exit(127);
   }
   /* parent */
@@ -3840,12 +3895,22 @@ TyaValue tya_process_run(TyaValue command, TyaValue options) {
   }
 
   TyaValue result = tya_dict(NULL, 0);
+  tya_set_member(result, "status", tya_number((double)exit_code));
   tya_set_member(result, "exit_code", tya_number((double)exit_code));
+  tya_set_member(result, "success", tya_bool(exit_code == 0));
   tya_set_member(result, "stdout", tya_string(out_buf ? out_buf : ""));
   tya_set_member(result, "stderr", tya_string(err_buf ? err_buf : ""));
+  tya_set_member(result, "timed_out", tya_bool(false));
   if (out_buf == NULL) free(out_buf);
   if (err_buf == NULL) free(err_buf);
   return result;
+}
+
+TyaValue tya_process_exec(TyaValue command, TyaValue options) {
+  (void)command;
+  (void)options;
+  tya_raise(tya_string("process.exec: unsupported on this runtime"));
+  return tya_nil();
 }
 
 /* =========================================================================

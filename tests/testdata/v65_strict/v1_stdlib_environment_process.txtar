@@ -1,0 +1,65 @@
+# v1 environment and process stdlib contract.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check environment_process.tya
+exec $WORK/tya run environment_process.tya
+stdout 'one'
+stdout 'one'
+stdout 'nil'
+stdout '0'
+stdout 'true'
+stdout 'direct'
+stdout 'false'
+stdout '7'
+stdout 'shell'
+stdout 'true'
+
+exec $WORK/tya build environment_process.tya -o environment_process
+exec ./environment_process
+stdout 'one'
+stdout 'one'
+stdout 'nil'
+stdout '0'
+stdout 'true'
+stdout 'direct'
+stdout 'false'
+stdout '7'
+stdout 'shell'
+stdout 'true'
+
+! exec $WORK/tya run invalid_process.tya
+stderr 'process.run: string command requires shell option'
+
+-- environment_process.tya --
+import os as os
+import process as process
+
+os.Os.setenv("TYA_V1_ENV_PROCESS", "one")
+print(os.Os.env("TYA_V1_ENV_PROCESS"))
+print(os.Os.environ()["TYA_V1_ENV_PROCESS"])
+os.Os.unsetenv("TYA_V1_ENV_PROCESS")
+print(os.Os.env("TYA_V1_ENV_PROCESS"))
+
+r = process.Process.run(["sh", "-c", "printf direct"], {})
+print(r["status"])
+print(r["success"])
+print(r["stdout"])
+
+failed = process.Process.run(["sh", "-c", "exit 7"], {})
+print(failed["success"])
+print(failed["status"])
+
+shell = process.Process.run("printf shell", { shell: true })
+print(shell["stdout"])
+
+piped = process.Process.run(["cat"], { stdin: "pipe" })
+print(piped["stdout"] == "pipe")
+
+-- invalid_process.tya --
+import process as process
+
+process.Process.run("printf nope", {})

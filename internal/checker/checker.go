@@ -267,7 +267,7 @@ var internalBuiltinNames = []string{
 	"math_trunc", "math_log", "math_log2", "math_log10", "math_exp",
 	"math_sin", "math_cos", "math_tan", "math_asin", "math_acos", "math_atan",
 	"math_atan2",
-	"process_run",
+	"process_run", "process_exec", "environ", "setenv", "unsetenv",
 	"digest_md5", "digest_sha1", "digest_sha256", "digest_sha384", "digest_sha512",
 	"secure_random_bytes", "secure_random_int",
 	// v0.41 GC

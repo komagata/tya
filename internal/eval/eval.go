@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"compress/zlib"
+	"context"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
@@ -607,6 +608,52 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return nil, nil
 		}
 		return value, nil
+	}))
+	env.set("environ", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("environ expects 0 arguments")
+		}
+		out := Dict{}
+		for _, item := range os.Environ() {
+			key, value, ok := strings.Cut(item, "=")
+			if ok {
+				out[key] = value
+			}
+		}
+		return out, nil
+	}))
+	env.set("setenv", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("setenv expects 2 arguments")
+		}
+		name, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("setenv expects string name")
+		}
+		value, ok := args[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("setenv expects string value")
+		}
+		if strings.ContainsRune(name, 0) || strings.ContainsRune(value, 0) {
+			return nil, &raisedSignal{value: "os.env: NUL byte not allowed"}
+		}
+		if err := os.Setenv(name, value); err != nil {
+			return nil, &raisedSignal{value: "os.env: " + err.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("unsetenv", Builtin(func(args []Value) (Value, error) {
+		name, err := oneString("unsetenv", args)
+		if err != nil {
+			return nil, err
+		}
+		if strings.ContainsRune(name, 0) {
+			return nil, &raisedSignal{value: "os.env: NUL byte not allowed"}
+		}
+		if err := os.Unsetenv(name); err != nil {
+			return nil, &raisedSignal{value: "os.env: " + err.Error()}
+		}
+		return nil, nil
 	}))
 	env.set("exit", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
@@ -2869,46 +2916,101 @@ func registerV24Builtins(env *Env) {
 		if len(args) < 1 || len(args) > 2 {
 			return nil, fmt.Errorf("process_run expects 1 or 2 arguments")
 		}
-		arr, ok := args[0].(*Array)
-		if !ok || len(arr.items) == 0 {
-			return nil, &raisedSignal{value: "process.run: command must be a non-empty array"}
-		}
-		cmdArgs := make([]string, len(arr.items))
-		for i, v := range arr.items {
-			s, ok := v.(string)
+		opts := Dict{}
+		if len(args) == 2 && args[1] != nil {
+			var ok bool
+			opts, ok = args[1].(Dict)
 			if !ok {
-				return nil, &raisedSignal{value: "process.run: command items must be strings"}
+				return nil, &raisedSignal{value: "process.run: options must be a dictionary"}
 			}
-			cmdArgs[i] = s
 		}
-		cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+		allowed := map[string]bool{"cwd": true, "env": true, "clear_env": true, "stdin": true, "input": true, "capture_stdout": true, "capture_stderr": true, "timeout": true, "shell": true}
+		for key := range opts {
+			if !allowed[key] {
+				return nil, &raisedSignal{value: "process.run: unknown option " + key}
+			}
+		}
+		shell := false
+		if v, has := opts["shell"]; has {
+			var ok bool
+			shell, ok = v.(bool)
+			if !ok {
+				return nil, &raisedSignal{value: "process.run: shell must be bool"}
+			}
+		}
+		var cmdArgs []string
+		switch command := args[0].(type) {
+		case string:
+			if command == "" {
+				return nil, &raisedSignal{value: "process.run: command must be non-empty"}
+			}
+			if !shell {
+				return nil, &raisedSignal{value: "process.run: string command requires shell option"}
+			}
+			cmdArgs = []string{"sh", "-c", command}
+		case *Array:
+			if len(command.items) == 0 {
+				return nil, &raisedSignal{value: "process.run: command must be a non-empty array"}
+			}
+			cmdArgs = make([]string, len(command.items))
+			for i, v := range command.items {
+				s, ok := v.(string)
+				if !ok {
+					return nil, &raisedSignal{value: "process.run: command items must be strings"}
+				}
+				cmdArgs[i] = s
+			}
+		default:
+			return nil, &raisedSignal{value: "process.run: command must be a string or array"}
+		}
+		var ctx context.Context = context.Background()
+		var cancel context.CancelFunc
+		if v, has := opts["timeout"]; has {
+			secs, ok := numberAsFloat(v)
+			if !ok {
+				return nil, &raisedSignal{value: "process.run: timeout must be a number"}
+			}
+			ctx, cancel = context.WithTimeout(ctx, time.Duration(secs*float64(time.Second)))
+			defer cancel()
+		}
+		cmd := exec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
 		var stdoutBuf, stderrBuf bytes.Buffer
 		cmd.Stdout = &stdoutBuf
 		cmd.Stderr = &stderrBuf
-		if len(args) == 2 {
-			opts, ok := args[1].(Dict)
-			if ok {
-				if cwd, has := opts["cwd"].(string); has {
-					cmd.Dir = cwd
+		if cwd, has := opts["cwd"].(string); has {
+			cmd.Dir = cwd
+		}
+		input := opts["stdin"]
+		if input == nil {
+			input = opts["input"]
+		}
+		if input != nil {
+			switch v := input.(type) {
+			case string:
+				cmd.Stdin = strings.NewReader(v)
+			case *Bytes:
+				cmd.Stdin = bytes.NewReader(v.data)
+			default:
+				return nil, &raisedSignal{value: "process.run: stdin must be string or bytes"}
+			}
+		}
+		if clear, has := opts["clear_env"].(bool); has && clear {
+			cmd.Env = []string{}
+		} else {
+			cmd.Env = os.Environ()
+		}
+		if envDict, has := opts["env"].(Dict); has {
+			for k, v := range envDict {
+				s, ok := v.(string)
+				if !ok {
+					return nil, &raisedSignal{value: "process.run: env values must be strings"}
 				}
-				if input, has := opts["input"].(string); has {
-					cmd.Stdin = strings.NewReader(input)
-				}
-				if envDict, has := opts["env"].(Dict); has {
-					envSlice := []string{}
-					for k, v := range envDict {
-						s, ok := v.(string)
-						if !ok {
-							return nil, &raisedSignal{value: "process.run: env values must be strings"}
-						}
-						envSlice = append(envSlice, k+"="+s)
-					}
-					cmd.Env = envSlice
-				}
+				cmd.Env = append(cmd.Env, k+"="+s)
 			}
 		}
 		err := cmd.Run()
 		exitCode := 0
+		timedOut := ctx.Err() == context.DeadlineExceeded
 		if err != nil {
 			if exitErr, ok := err.(*exec.ExitError); ok {
 				exitCode = exitErr.ExitCode()
@@ -2917,10 +3019,16 @@ func registerV24Builtins(env *Env) {
 			}
 		}
 		out := Dict{}
+		out["status"] = int64(exitCode)
 		out["exit_code"] = int64(exitCode)
+		out["success"] = exitCode == 0
 		out["stdout"] = stdoutBuf.String()
 		out["stderr"] = stderrBuf.String()
+		out["timed_out"] = timedOut
 		return out, nil
+	}))
+	env.set("process_exec", Builtin(func(args []Value) (Value, error) {
+		return nil, &raisedSignal{value: "process.exec: unsupported on this runtime"}
 	}))
 
 	digestInput := func(name string, args []Value) ([]byte, error) {

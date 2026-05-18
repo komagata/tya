@@ -154,6 +154,9 @@ TyaValue tya_file_stat(TyaValue path);
 TyaValue tya_path_expand_user(TyaValue value);
 TyaValue tya_cwd(void);
 TyaValue tya_chdir(TyaValue path);
+TyaValue tya_environ(void);
+TyaValue tya_setenv(TyaValue name, TyaValue value);
+TyaValue tya_unsetenv(TyaValue name);
 
 TyaValue tya_time_now(void);
 TyaValue tya_time_sleep(TyaValue seconds);
@@ -203,6 +206,7 @@ TyaValue tya_number_finite_p(TyaValue x);
 TyaValue tya_number_nan_p(TyaValue x);
 
 TyaValue tya_process_run(TyaValue command, TyaValue options);
+TyaValue tya_process_exec(TyaValue command, TyaValue options);
 
 TyaValue tya_digest_md5(TyaValue text);
 TyaValue tya_digest_sha1(TyaValue text);
