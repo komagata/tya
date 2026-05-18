@@ -295,7 +295,7 @@ func SetExtraBuiltinNames(names []string) func() {
 	return func() { extraBuiltinNames = prev }
 }
 
-var primitiveClassNames = []string{"Number", "String", "Bytes", "Array", "Dict", "Boolean", "Nil"}
+var primitiveClassNames = []string{"Number", "String", "Array", "Dict", "Boolean", "Nil"}
 
 func isPrimitiveClassName(name string) bool {
 	for _, className := range primitiveClassNames {

@@ -3,10 +3,13 @@ class Time
   # Time.now provides the time/Time standard library operation.
   static now = () -> time_now()
 
+  # Time.monotonic returns a monotonic timestamp.
   static monotonic = () -> time_monotonic()
 
+  # Time.unix constructs a UTC wall-clock time.
   static unix = seconds, nanos = 0 -> time_unix(seconds, nanos)
 
+  # Time.duration constructs a duration value.
   static duration = seconds = 0, options = {} -> time_duration(seconds, options)
 
   # Time.sleep provides the time/Time standard library operation.

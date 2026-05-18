@@ -1,10 +1,13 @@
 # Regex provides the regex/Regex standard library API.
 class Regex
+  # Regex.compile compiles a reusable regex value.
   static compile = pattern, options = {} ->
     return regex_compile(pattern, options)
 
+  # Regex.match? returns whether pattern appears in text.
   static match? = pattern, text, options = {} ->
     return Self.compile(pattern, options).match?(text)
 
+  # Regex.search returns the first match dictionary or nil.
   static search = pattern, text, options = {} ->
     return Self.compile(pattern, options).find(text)
