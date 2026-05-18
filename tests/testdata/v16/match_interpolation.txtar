@@ -17,7 +17,7 @@ stderr 'match requires a value expression'
 stderr 'pattern dictionary keys must be string literals'
 
 ! exec go run ./cmd/tya check $WORK/duplicate_binding.tya
-stderr 'duplicate binding name in pattern'
+stderr 'binding patterns are not part of Tya v1.0.0'
 
 ! exec go run ./cmd/tya check $WORK/empty_interpolation.tya
 stderr 'empty interpolation'
@@ -42,23 +42,23 @@ match status
 
 user = {name: "komagata", age: 48, email: "k@example.test"}
 match user
-  case {"name": name, "email": email}
-    print(name)
+  case {"name": "komagata", "email": "k@example.test"}
+    print(user["name"])
   case _
     print("unknown")
 
 match ["komagata"]
-  case [name, age]
-    print(name)
+  case ["komagata", 48]
+    print("unexpected")
   case _
     print("fallback")
 
 response = {type: "error", message: "bad"}
 match response
-  case {"type": "ok", "value": [name, email]}
-    print(name)
-  case {"type": "error", "message": message}
-    print("error:{message}")
+  case {"type": "ok", "value": ["komagata", "k@example.test"]}
+    print("ok")
+  case {"type": "error", "message": "bad"}
+    print("error:{response["message"]}")
   case _
     print("unknown")
 

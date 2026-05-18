@@ -1,0 +1,96 @@
+# Accepted v1 alternatives for intentionally excluded syntax.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check alternatives.tya
+exec $WORK/tya run alternatives.tya
+stdout 'bc'
+stdout '10'
+stdout '3'
+stdout '1'
+stdout '2'
+stdout 'match'
+stdout 'Tya'
+
+exec $WORK/tya check package_api.tya
+exec $WORK/tya run package_api.tya
+stdout 'Hello, Tya'
+
+exec $WORK/tya check concurrency.tya
+exec $WORK/tya run concurrency.tya
+stdout 'task'
+stdout 'idle'
+
+exec $WORK/tya build alternatives.tya -o alternatives
+exec ./alternatives
+stdout 'bc'
+stdout '10'
+stdout '3'
+stdout '1'
+stdout '2'
+stdout 'match'
+stdout 'Tya'
+
+-- alternatives.tya --
+letters = ["a", "b", "c", "d"]
+print(letters.slice(1, 3).join(""))
+
+request = _url, options -> options["timeout"]
+print(request("https://example.test", { timeout: 10 }))
+
+sum = items ->
+  total = 0
+  for item in items
+    total = total + item
+  total
+print(sum([1, 2]))
+
+pair = ->
+  return 1, 2
+a, b = pair()
+print(a)
+print(b)
+
+class Box
+  initialize = value ->
+    self.value = value
+
+  same? = other ->
+    self.value == other.value
+
+left = Box("Tya")
+right = Box("Tya")
+if left.same?(right)
+  print("match")
+print(left.value)
+
+-- package_api.tya --
+import pkg
+
+greeter = Greeter("Tya")
+print(greeter.greet())
+
+-- pkg/Greeter.tya --
+class Greeter
+  initialize = name ->
+    self.name = name
+
+  greet = ->
+    "Hello, {self.name}"
+
+-- concurrency.tya --
+import channel as channel
+
+work = -> "task"
+task = spawn work()
+print(await task)
+
+c = channel.Channel(1)
+select
+  receive c
+    print("received")
+  default
+    print("idle")

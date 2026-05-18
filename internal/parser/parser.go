@@ -388,6 +388,9 @@ func (p *Parser) stmt() (ast.Stmt, error) {
 			"delete the module line and move its members to top level",
 		)
 	}
+	if err := p.rejectV1ExcludedStatementSyntax(); err != nil {
+		return nil, err
+	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "interface" {
 		if p.blockDepth != 0 {
 			return nil, p.err("interface must be top-level")
@@ -1219,6 +1222,9 @@ func (p *Parser) matchStmt() (ast.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
+		if p.at(token.IDENT) && p.peek().Lexeme == "if" {
+			return nil, p.err("match guards are not part of Tya v1.0.0")
+		}
 		body, err := p.block("case")
 		if err != nil {
 			return nil, err
@@ -1758,6 +1764,13 @@ func (p *Parser) unary() (ast.Expr, error) {
 }
 
 func (p *Parser) call() (ast.Expr, error) {
+	if p.at(token.IDENT) &&
+		p.peekN(1).Type == token.LT &&
+		p.peekN(2).Type == token.IDENT &&
+		p.peekN(3).Type == token.GT &&
+		(p.peekN(4).Type == token.LPAREN || p.peekN(4).Type == token.NEWLINE || p.peekN(4).Type == token.EOF) {
+		return nil, p.err("generic type-parameter syntax is not part of Tya v1.0.0")
+	}
 	ex, err := p.primary()
 	if err != nil {
 		return nil, err
@@ -1775,6 +1788,12 @@ func (p *Parser) call() (ast.Expr, error) {
 			var args []ast.Expr
 			if !p.at(token.RPAREN) {
 				for {
+					if p.at(token.IDENT) && p.peekN(1).Type == token.COLON {
+						return nil, p.err("named arguments are not part of Tya v1.0.0")
+					}
+					if p.at(token.STAR) {
+						return nil, p.err("splat call syntax is not part of Tya v1.0.0")
+					}
 					arg, err := p.exprNoCommaFunc()
 					if err != nil {
 						// v0.56 expression-level recovery: the
@@ -1807,6 +1826,9 @@ func (p *Parser) call() (ast.Expr, error) {
 			index, err := p.expr()
 			if err != nil {
 				return nil, err
+			}
+			if p.at(token.COLON) {
+				return nil, p.err("slice syntax is not part of Tya v1.0.0; use .slice(...)")
 			}
 			if !p.match(token.RBRACKET) {
 				return nil, p.err("expected ']'")
@@ -2035,10 +2057,10 @@ func (p *Parser) assignTargets() ([]ast.Expr, error) {
 func (p *Parser) assignTarget() (ast.Expr, error) {
 	var ex ast.Expr
 	if p.at(token.LBRACKET) {
-		return p.arrayPattern()
+		return nil, p.err("destructuring assignment is not part of Tya v1.0.0; use multi-return assignment")
 	}
 	if p.at(token.LBRACE) {
-		return p.dictPattern()
+		return nil, p.err("destructuring assignment is not part of Tya v1.0.0; use multi-return assignment")
 	}
 	if p.match(token.AT) {
 		if p.at(token.AT) {
@@ -2083,6 +2105,9 @@ func (p *Parser) assignTarget() (ast.Expr, error) {
 			index, err := p.expr()
 			if err != nil {
 				return nil, err
+			}
+			if p.at(token.COLON) {
+				return nil, p.err("slice syntax is not part of Tya v1.0.0; use .slice(...)")
 			}
 			if !p.match(token.RBRACKET) {
 				return nil, p.err("expected ']'")
@@ -2176,11 +2201,7 @@ func (p *Parser) patternValue(bindings map[string]bool) (ast.Expr, error) {
 		case "_":
 			return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
 		default:
-			if bindings[tok.Lexeme] {
-				return nil, p.errAt(tok, "duplicate binding name in pattern")
-			}
-			bindings[tok.Lexeme] = true
-			return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
+			return nil, p.errAt(tok, "binding patterns are not part of Tya v1.0.0")
 		}
 	case token.INT:
 		tok := p.next()
@@ -2456,6 +2477,20 @@ func (p *Parser) rejectV01ExcludedWord(word string) error {
 	switch word {
 	case "object", "set":
 		return p.err(word + " is not in Tya v0.1")
+	default:
+		return nil
+	}
+}
+func (p *Parser) rejectV1ExcludedStatementSyntax() error {
+	if !p.at(token.IDENT) {
+		return nil
+	}
+	switch p.peek().Lexeme {
+	case "enum", "record", "struct", "macro", "async", "protected", "friend":
+		if p.peekN(1).Type != token.IDENT {
+			return nil
+		}
+		return p.err(p.peek().Lexeme + " syntax is not part of Tya v1.0.0")
 	default:
 		return nil
 	}

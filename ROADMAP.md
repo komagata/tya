@@ -206,6 +206,8 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     fixture.
   - [x] Add or fix diagnostics where invalid programs currently fail late,
     fail unclearly, or execute with non-strict behavior.
+  - [x] Freeze v1.0.0 syntax exclusions across SPEC, parser/checker
+    diagnostics, formatter behavior, and CLI fixtures.
   - [ ] Document any intentionally dynamic behavior that remains valid in
     v1.0.0.
 

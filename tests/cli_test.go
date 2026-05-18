@@ -187,6 +187,30 @@ func TestCLIFormatDoesNotRewriteInvalidSource(t *testing.T) {
 	}
 }
 
+func TestFormatRejectsExcludedV1Syntax(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "excluded.tya")
+	original := "items = [1, 2, 3]\nprint(items[1:3])\n"
+	if err := os.WriteFile(path, []byte(original), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "format", "-w", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected excluded syntax format input to fail")
+	}
+	if !strings.Contains(string(out), "slice syntax is not part of Tya") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+	got, readErr := os.ReadFile(path)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if string(got) != original {
+		t.Fatalf("format rewrote excluded source: %q", got)
+	}
+}
+
 func TestTyaTestDiscoversOnlyTestFilesAndOrdersDeterministically(t *testing.T) {
 	dir := t.TempDir()
 	writeTestFile := func(name, className, methodName string) {

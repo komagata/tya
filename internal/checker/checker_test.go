@@ -249,17 +249,6 @@ func TestCheckKeepsCatchBindingLocal(t *testing.T) {
 	}
 }
 
-func TestCheckKeepsMatchBindingsLocal(t *testing.T) {
-	prog := parse(t, "value = [1]\nmatch value\n  case [item]\n    print(item)\nprint(item)\n")
-	err := Check(prog)
-	if err == nil {
-		t.Fatal("expected match binding scope error")
-	}
-	if !strings.Contains(err.Error(), "undefined variable") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
 func TestCheckAllowsFunctionReassignment(t *testing.T) {
 	prog := parse(t, "handler = -> 1\nhandler = -> 2\nprint(handler())\n")
 	if err := Check(prog); err != nil {
@@ -307,6 +296,28 @@ func TestCheckRejectsDuplicateFunctionParameter(t *testing.T) {
 		t.Fatal("expected duplicate parameter error")
 	}
 	if !strings.Contains(err.Error(), "1:10: duplicate function parameter a") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsOperatorOverloadDeclarations(t *testing.T) {
+	toks, errs := lexer.Lex("class Number\n  + = other ->\n    self\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := parser.Parse(toks); err == nil {
+		t.Fatal("expected operator method declaration to fail before checking")
+	}
+}
+
+func TestCheckRejectsFunctionAndMethodOverloads(t *testing.T) {
+	src := "class Finder\n  find = id ->\n    id\n  find = first, last ->\n    first\n"
+	prog := parse(t, src)
+	err := Check(prog)
+	if err == nil {
+		t.Fatal("expected duplicate method overload error")
+	}
+	if !strings.Contains(err.Error(), "duplicate instance member find") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

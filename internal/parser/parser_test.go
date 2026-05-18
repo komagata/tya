@@ -167,12 +167,29 @@ func TestParseRejectsTrailingCommas(t *testing.T) {
 }
 
 func TestParseRejectsSliceSyntax(t *testing.T) {
-	toks, errs := lexer.Lex("items = [1, 2, 3]\nprint(items[1:3])\n")
+	tests := []string{
+		"items = [1, 2, 3]\nprint(items[1:3])\n",
+		"items = [1, 2, 3]\nprint(items[:3])\n",
+		"items = [1, 2, 3]\nprint(items[1:])\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		if _, _, err := Parse(toks); err == nil {
+			t.Fatalf("expected slice syntax error for %q", src)
+		}
+	}
+}
+
+func TestParseRejectsNamedArguments(t *testing.T) {
+	toks, errs := lexer.Lex("request(url, timeout: 10)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
 	if _, _, err := Parse(toks); err == nil {
-		t.Fatal("expected slice syntax error")
+		t.Fatal("expected named argument syntax error")
 	}
 }
 
@@ -208,6 +225,85 @@ func TestParseRejectsVariadicParameters(t *testing.T) {
 		}
 		if _, _, err := Parse(toks); err == nil {
 			t.Fatalf("expected variadic syntax error for %q", src)
+		}
+	}
+}
+
+func TestParseRejectsVariadicAndSplatSyntax(t *testing.T) {
+	tests := []string{
+		"fn = *args -> args\n",
+		"fn = items -> items\nfn(*items)\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		if _, _, err := Parse(toks); err == nil {
+			t.Fatalf("expected variadic or splat syntax error for %q", src)
+		}
+	}
+}
+
+func TestParseRejectsDestructuringAssignment(t *testing.T) {
+	valid := "pair = -> 1, 2\na, b = pair()\n"
+	toks, errs := lexer.Lex(valid)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	if _, _, err := Parse(toks); err != nil {
+		t.Fatalf("multi-return assignment should remain valid: %v", err)
+	}
+
+	tests := []string{
+		"[a, b] = items\n",
+		"{ name } = user\n",
+		"{ \"name\": name } = user\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		_, _, err := Parse(toks)
+		if err == nil {
+			t.Fatalf("expected destructuring assignment error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "destructuring assignment is not part of Tya v1.0.0") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+}
+
+func TestParseRejectsMatchGuardsAndBindingPatterns(t *testing.T) {
+	tests := []struct {
+		src  string
+		want string
+	}{
+		{
+			src:  "ready = true\nmatch 1\n  case _ if ready\n    print(\"ready\")\n",
+			want: "match guards are not part of Tya v1.0.0",
+		},
+		{
+			src:  "match [1, 2]\n  case [head, tail]\n    print(head)\n",
+			want: "binding patterns are not part of Tya v1.0.0",
+		},
+		{
+			src:  "match 1\n  case value\n    print(value)\n",
+			want: "binding patterns are not part of Tya v1.0.0",
+		},
+	}
+	for _, tt := range tests {
+		toks, errs := lexer.Lex(tt.src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		_, _, err := Parse(toks)
+		if err == nil {
+			t.Fatalf("expected %q error", tt.want)
+		}
+		if !strings.Contains(err.Error(), tt.want) {
+			t.Fatalf("unexpected error: %v", err)
 		}
 	}
 }
@@ -375,6 +471,97 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 		})
+	}
+}
+
+func TestParseRejectsGenericSyntax(t *testing.T) {
+	tests := []string{
+		"items: Array<Int> = []\n",
+		"value = Box<T>\n",
+		"fn<T>(1)\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		if _, _, err := Parse(toks); err == nil {
+			t.Fatalf("expected generic syntax error for %q", src)
+		}
+	}
+}
+
+func TestParseRejectsModuleEnumRecordStructMacroAsyncSyntax(t *testing.T) {
+	tests := []struct {
+		src  string
+		want string
+	}{
+		{
+			src:  "module util\n  value = 1\n",
+			want: "module declarations were removed",
+		},
+		{
+			src:  "enum Role\n  Admin\n",
+			want: "enum syntax is not part of Tya v1.0.0",
+		},
+		{
+			src:  "record User\n  name = \"\"\n",
+			want: "record syntax is not part of Tya v1.0.0",
+		},
+		{
+			src:  "struct Point\n  x = 0\n",
+			want: "struct syntax is not part of Tya v1.0.0",
+		},
+		{
+			src:  "macro debug(value)\n  value\n",
+			want: "macro syntax is not part of Tya v1.0.0",
+		},
+		{
+			src:  "async fetch = -> nil\n",
+			want: "async syntax is not part of Tya v1.0.0",
+		},
+	}
+	for _, tt := range tests {
+		toks, errs := lexer.Lex(tt.src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		_, _, err := Parse(toks)
+		if err == nil {
+			t.Fatalf("expected %q error", tt.want)
+		}
+		if !strings.Contains(err.Error(), tt.want) {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+}
+
+func TestParseRejectsUnsupportedVisibilityModifiers(t *testing.T) {
+	tests := []struct {
+		src  string
+		want string
+	}{
+		{
+			src:  "protected name = 1\n",
+			want: "protected syntax is not part of Tya v1.0.0",
+		},
+		{
+			src:  "friend class Helper\n",
+			want: "friend syntax is not part of Tya v1.0.0",
+		},
+	}
+	for _, tt := range tests {
+		toks, errs := lexer.Lex(tt.src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		_, _, err := Parse(toks)
+		if err == nil {
+			t.Fatalf("expected %q error", tt.want)
+		}
+		if !strings.Contains(err.Error(), tt.want) {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	}
 }
 

@@ -1,21 +1,20 @@
-# v0.14 destructuring assignment.
+# v0.14-era destructuring assignment is excluded from the v1 syntax surface.
 cd $REPO
 
-exec go run ./cmd/tya run $WORK/destructuring.tya
-stdout 'ada\n31\nx\nleft\nnested\nada\nchanged\n7\nlocal\n'
-! stderr .
+! exec go run ./cmd/tya run $WORK/destructuring.tya
+stderr 'destructuring assignment is not part of Tya v1.0.0'
 
 ! exec go run ./cmd/tya run $WORK/bad_array_len.tya
-stderr 'array destructuring expects 2 elements, got 1'
+stderr 'destructuring assignment is not part of Tya v1.0.0'
 
 ! exec go run ./cmd/tya run $WORK/bad_dict_missing.tya
-stderr 'dictionary destructuring missing key email'
+stderr 'destructuring assignment is not part of Tya v1.0.0'
 
 ! exec go run ./cmd/tya check $WORK/bad_dict_key.tya
-stderr 'destructuring dictionary keys must be string literals'
+stderr 'destructuring assignment is not part of Tya v1.0.0'
 
 ! exec go run ./cmd/tya check $WORK/bad_mixed.tya
-stderr 'mixed destructuring and multiple assignment is not in Tya v0.14'
+stderr 'destructuring assignment is not part of Tya v1.0.0'
 
 exec go run ./cmd/tya version
 stdout '0.65.0\n'

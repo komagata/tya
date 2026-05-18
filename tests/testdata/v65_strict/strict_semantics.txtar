@@ -97,7 +97,7 @@ stderr 'undefined variable'
 stderr 'undefined variable'
 
 ! exec $WORK/tya check match_binding_local.tya
-stderr 'undefined variable'
+stderr 'binding patterns are not part of Tya v1.0.0'
 
 ! exec $WORK/tya run raise_nil.tya
 stderr 'raise expects error value'

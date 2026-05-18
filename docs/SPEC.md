@@ -287,6 +287,39 @@ The core canonical rules are:
 Implementations must preserve semantic behavior when formatting. Formatting
 must be idempotent and stable across platforms.
 
+## V1 Language Boundaries
+
+Tya v1.0.0 intentionally keeps the syntax surface small. The following forms
+are not part of v1.0.0 and must fail before code generation:
+
+- slice syntax such as `items[1:3]`, `items[:3]`, `items[1:]`, and stepped
+  slices; use explicit `.slice(...)` methods;
+- named or keyword arguments such as `request(url, timeout: 10)`; pass
+  dictionary options such as `request(url, { timeout: 10 })`;
+- variadic parameter syntax and splat calls such as `fn = *args -> args` and
+  `fn(*items)`; pass arrays explicitly;
+- destructuring assignment with array or dictionary patterns such as
+  `[a, b] = items` and `{ name } = user`; use multi-return assignment such as
+  `a, b = pair()`;
+- match guards and binding patterns such as `case value if ready` and
+  `case [head, tail]`; match patterns remain literals, `nil`, booleans,
+  `case _`, and array/dictionary structure patterns that do not introduce
+  names;
+- operator overloading, function overloading, and method overloading; use
+  explicit method names, default parameters, or dictionary options;
+- generic type-parameter syntax such as `Array<Int>`, `Box<T>`, `fn<T>`, and
+  type-argument calls;
+- public `module` declarations; use script files, class files, directory
+  packages, and import aliases;
+- dedicated `enum`, `record`, or `struct` declarations; use classes,
+  dictionaries, constants, or standard-library value classes;
+- macro and general compile-time metaprogramming syntax; `embed` remains a
+  dedicated declaration;
+- async function coloring such as `async fn`; use `spawn`, `await`, `scope`,
+  `select`, tasks, and channels;
+- visibility modifiers beyond public and `private`, including `protected` and
+  `friend`.
+
 ## Declarations And Scope
 
 ### Bindings

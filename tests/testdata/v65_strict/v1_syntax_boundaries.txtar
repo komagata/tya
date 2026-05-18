@@ -1,0 +1,115 @@
+# v1 syntax boundaries are rejected consistently before code generation.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+! exec $WORK/tya check slice.tya
+stderr 'slice syntax is not part of Tya'
+
+! exec $WORK/tya check named_args.tya
+stderr 'named arguments are not part of Tya v1.0.0'
+
+! exec $WORK/tya check splat.tya
+stderr 'splat call syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check destructuring.tya
+stderr 'destructuring assignment is not part of Tya v1.0.0'
+
+! exec $WORK/tya check match_guard.tya
+stderr 'match guards are not part of Tya v1.0.0'
+
+! exec $WORK/tya check match_binding.tya
+stderr 'binding patterns are not part of Tya v1.0.0'
+
+! exec $WORK/tya check generic.tya
+stderr 'generic type-parameter syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check module.tya
+stderr 'module declarations were removed'
+
+! exec $WORK/tya check enum.tya
+stderr 'enum syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check record.tya
+stderr 'record syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check struct.tya
+stderr 'struct syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check macro.tya
+stderr 'macro syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check async.tya
+stderr 'async syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check protected.tya
+stderr 'protected syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check friend.tya
+stderr 'friend syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya run slice.tya
+stderr 'slice syntax is not part of Tya'
+
+! exec $WORK/tya build named_args.tya -o named_args
+stderr 'named arguments are not part of Tya v1.0.0'
+
+-- slice.tya --
+items = [1, 2, 3]
+print(items[1:3])
+
+-- named_args.tya --
+request = url, options -> url
+request("https://example.test", timeout: 10)
+
+-- splat.tya --
+call = items -> items
+call(*[1, 2])
+
+-- destructuring.tya --
+[a, b] = [1, 2]
+
+-- match_guard.tya --
+ready = true
+match 1
+  case _ if ready
+    print("ready")
+
+-- match_binding.tya --
+match [1, 2]
+  case [head, tail]
+    print(head)
+
+-- generic.tya --
+value = Box<T>
+
+-- module.tya --
+module util
+  value = 1
+
+-- enum.tya --
+enum Role
+  Admin
+
+-- record.tya --
+record User
+  name = ""
+
+-- struct.tya --
+struct Point
+  x = 0
+
+-- macro.tya --
+macro debug(value)
+  value
+
+-- async.tya --
+async fetch = -> nil
+
+-- protected.tya --
+protected name = 1
+
+-- friend.tya --
+friend class Helper
