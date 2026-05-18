@@ -50,7 +50,7 @@ stderr 'catch requires a binding name'
 stderr 'catch filters are not part of Tya v1.0.0'
 
 ! exec $WORK/tya check multiple_catch.tya
-stderr 'catch outside block try'
+stderr 'multiple catch clauses are not part of Tya v1.0.0'
 
 -- valid.tya --
 try

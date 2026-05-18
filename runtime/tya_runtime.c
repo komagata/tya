@@ -945,6 +945,49 @@ static int tya_string_len(const char *text) {
   return n;
 }
 
+static int tya_utf8_valid_bytes(const unsigned char *data, int len) {
+  for (int i = 0; i < len;) {
+    unsigned char c = data[i];
+    if ((c & 0x80) == 0) {
+      i++;
+      continue;
+    }
+    int width = 0;
+    unsigned int min = 0;
+    unsigned int code = 0;
+    if ((c & 0xE0) == 0xC0) {
+      width = 2;
+      min = 0x80;
+      code = c & 0x1F;
+    } else if ((c & 0xF0) == 0xE0) {
+      width = 3;
+      min = 0x800;
+      code = c & 0x0F;
+    } else if ((c & 0xF8) == 0xF0) {
+      width = 4;
+      min = 0x10000;
+      code = c & 0x07;
+    } else {
+      return 0;
+    }
+    if (i + width > len) {
+      return 0;
+    }
+    for (int j = 1; j < width; j++) {
+      unsigned char cc = data[i + j];
+      if ((cc & 0xC0) != 0x80) {
+        return 0;
+      }
+      code = (code << 6) | (cc & 0x3F);
+    }
+    if (code < min || code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF)) {
+      return 0;
+    }
+    i += width;
+  }
+  return 1;
+}
+
 static char *tya_utf8_char_at(const char *text, int rune_index) {
   if (text == NULL || rune_index < 0) {
     return NULL;
@@ -4484,6 +4527,10 @@ TyaValue tya_bytes_text(TyaValue b) {
       tya_raise(tya_string("bytes_text: NUL byte not allowed in string"));
       return tya_nil();
     }
+  }
+  if (!tya_utf8_valid_bytes((const unsigned char *)b.bytes->data, b.bytes->len)) {
+    tya_raise(tya_string("bytes_text: invalid UTF-8"));
+    return tya_nil();
   }
   char *out = malloc((size_t)b.bytes->len + 1);
   memcpy(out, b.bytes->data, (size_t)b.bytes->len);

@@ -939,6 +939,19 @@ scope
   print(await task)
 ```
 
+### Runtime Boundaries
+
+`defer`, language-level `assert`, and language-level cancellation syntax are
+not part of v1.0.0. Cleanup is written with `try/finally` and explicit resource
+methods such as `close()`. Programs must not rely on GC finalizers for
+correctness.
+
+Channels have fixed closed-state behavior: receiving from a closed channel
+returns `nil`, and sending to a closed channel raises an error. Task lifetime
+is structured by `scope`, which waits for child tasks before leaving. v1.0.0
+does not define a cancellation statement or a language-level cancellation
+token; cancellation helpers are ordinary library APIs where documented.
+
 ### Select Statements
 
 `select` waits on channel operations, timeouts, and default branches.

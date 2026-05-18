@@ -1129,10 +1129,103 @@ func TestRunStringIndexingUsesRunes(t *testing.T) {
 	}
 }
 
+func TestRunNumberKindAndDivisionBoundaries(t *testing.T) {
+	src := "print(1 == 1.0)\nprint(5 / 2)\nprint(1.0 & 3)\n"
+	out := runEval(t, src)
+	want := "true\n2.5\n1\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+
+	tests := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{name: "float modulo", src: "print(5.5 % 2)\n", want: "% expects integers"},
+		{name: "float bitwise", src: "print(1.5 & 1)\n", want: "& expects integers"},
+		{name: "float shift", src: "print(1 << 1.5)\n", want: "<< expects integers"},
+		{name: "float index", src: "print([10][0.5])\n", want: "array index must be int"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := runEvalError(t, tt.src)
+			if err == nil {
+				t.Fatal("expected runtime error")
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("got error %q, want %q", err.Error(), tt.want)
+			}
+		})
+	}
+}
+
+func TestRunStringBytesConversionBoundaries(t *testing.T) {
+	src := "data = bytes([255, 65])\nprint(data)\nprint(bytes_array(data)[0])\n"
+	out := runEval(t, src)
+	want := "<bytes:2>\n255\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+
+	err := runEvalError(t, "print(bytes_text(bytes([255])))\n")
+	if err == nil {
+		t.Fatal("expected invalid UTF-8 error")
+	}
+	if !strings.Contains(err.Error(), "invalid UTF-8") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunErrorValuesAreNotStrings(t *testing.T) {
+	src := "err = error(\"failed\")\nprint(err)\nprint(err == \"failed\")\nprint(err[\"message\"])\n"
+	out := runEval(t, src)
+	want := "failed\nfalse\nfailed\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestRunCatchCatchesErrorValue(t *testing.T) {
 	src := "raise_and_catch = value ->\n  try\n    raise value\n  catch err\n    return err\nprint(raise_and_catch(error(\"bad\"))[\"message\"])\n"
 	out := runEval(t, src)
 	want := "bad\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
+func TestRunCatchCatchesStructuredErrorsOnly(t *testing.T) {
+	src := "try\n  raise error(\"bad\", { kind: \"test\", code: \"failed\" })\ncatch err\n  print(err[\"kind\"])\n  print(err[\"code\"])\n"
+	out := runEval(t, src)
+	want := "test\nfailed\n"
+	if out != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+
+	tests := []string{
+		"raise \"failed\"\n",
+		"raise 1\n",
+		"raise { message: \"failed\" }\n",
+		"raise nil\n",
+	}
+	for _, src := range tests {
+		t.Run(src, func(t *testing.T) {
+			err := runEvalError(t, src)
+			if err == nil {
+				t.Fatal("expected non-error raise error")
+			}
+			if !strings.Contains(err.Error(), "raise expects error value") {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestRunResourceCleanupUsesFinally(t *testing.T) {
+	src := "state = { closed: false }\ntry\n  raise error(\"boom\")\ncatch err\n  print(err[\"message\"])\nfinally\n  state[\"closed\"] = true\nprint(state[\"closed\"])\n"
+	out := runEval(t, src)
+	want := "boom\ntrue\n"
 	if out != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
@@ -1163,6 +1256,20 @@ func runEval(t *testing.T, src string) string {
 		t.Fatal(err)
 	}
 	return out.String()
+}
+
+func runEvalError(t *testing.T, src string) error {
+	t.Helper()
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	return Run(prog, &out)
 }
 
 func TestRunRejectsStrictDynamicErrors(t *testing.T) {

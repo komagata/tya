@@ -1189,6 +1189,9 @@ func (p *Parser) tryCatchStmt() (ast.Stmt, error) {
 			return nil, err
 		}
 		p.skipNewlines()
+		if p.at(token.IDENT) && p.peek().Lexeme == "catch" {
+			return nil, p.err("multiple catch clauses are not part of Tya v1.0.0")
+		}
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "finally" {
 		p.next()
@@ -2484,7 +2487,7 @@ func (p *Parser) rejectV1ExcludedStatementSyntax() error {
 		return nil
 	}
 	switch p.peek().Lexeme {
-	case "enum", "record", "struct", "macro", "async", "protected", "friend":
+	case "enum", "record", "struct", "macro", "async", "protected", "friend", "defer", "assert", "cancel":
 		if p.peekN(1).Type != token.IDENT {
 			return nil
 		}

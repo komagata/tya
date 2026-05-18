@@ -210,7 +210,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     diagnostics, formatter behavior, and CLI fixtures.
   - [x] Unify v1.0.0 user-facing error handling on structured
     `raise` / `try` / `catch` / `finally`.
-  - [ ] Document any intentionally dynamic behavior that remains valid in
+  - [x] Document any intentionally dynamic behavior that remains valid in
     v1.0.0.
 
 - [ ] **Migrate selfhost compiler to the latest spec and remove Go dependency**

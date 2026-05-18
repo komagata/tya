@@ -1,0 +1,80 @@
+# v1 runtime boundaries for numbers, text/bytes, errors, channels, scope, and cleanup.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check runtime_boundaries.tya
+exec $WORK/tya run runtime_boundaries.tya
+stdout 'true'
+stdout '2.5'
+stdout 'あ'
+stdout '255'
+stdout 'false'
+stdout 'failed'
+stdout 'nil'
+stdout 'closed send'
+stdout 'done'
+stdout 'closed'
+
+exec $WORK/tya build runtime_boundaries.tya -o runtime_boundaries
+exec ./runtime_boundaries
+stdout 'true'
+stdout '2.5'
+stdout 'あ'
+stdout '255'
+stdout 'false'
+stdout 'failed'
+stdout 'nil'
+stdout 'closed send'
+stdout 'done'
+stdout 'closed'
+
+! exec $WORK/tya run invalid_utf8_text.tya
+stderr 'invalid UTF-8'
+
+-- runtime_boundaries.tya --
+import channel as channel
+import bytes as bytes
+
+print(1 == 1.0)
+print(5 / 2)
+print("あい"[0])
+print(bytes.Bytes.array(bytes.Bytes.new([255, 65]))[0])
+
+err = error("failed", { kind: "test", code: "bad" })
+print(err == "failed")
+try
+  raise err
+catch caught
+  print(caught["message"])
+
+c = channel.Channel(1)
+c.close()
+print(c.receive())
+try
+  c.send("bad")
+catch send_err
+  print("closed send")
+
+done = channel.Channel(1)
+worker = ch -> ch.send("done")
+scope
+  spawn worker(done)
+print(done.receive())
+
+state = { closed: false }
+try
+  raise error("boom")
+catch cleanup_err
+  nil
+finally
+  state["closed"] = true
+if state["closed"]
+  print("closed")
+
+-- invalid_utf8_text.tya --
+import bytes as bytes
+
+print(bytes.Bytes.text(bytes.Bytes.new([255])))

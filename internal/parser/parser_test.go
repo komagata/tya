@@ -565,6 +565,71 @@ func TestParseRejectsUnsupportedVisibilityModifiers(t *testing.T) {
 	}
 }
 
+func TestParseRejectsDefer(t *testing.T) {
+	toks, errs := lexer.Lex("defer cleanup()\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	_, _, err := Parse(toks)
+	if err == nil {
+		t.Fatal("expected defer syntax error")
+	}
+	if !strings.Contains(err.Error(), "defer syntax is not part of Tya v1.0.0") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestParseRejectsLanguageAssert(t *testing.T) {
+	toks, errs := lexer.Lex("assert ready\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	_, _, err := Parse(toks)
+	if err == nil {
+		t.Fatal("expected assert syntax error")
+	}
+	if !strings.Contains(err.Error(), "assert syntax is not part of Tya v1.0.0") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestParseRejectsCancellationSyntax(t *testing.T) {
+	toks, errs := lexer.Lex("cancel task\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	_, _, err := Parse(toks)
+	if err == nil {
+		t.Fatal("expected cancellation syntax error")
+	}
+	if !strings.Contains(err.Error(), "cancel syntax is not part of Tya v1.0.0") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestParseRejectsNonFiniteNumericLiterals(t *testing.T) {
+	for _, name := range []string{"NaN", "Infinity", "nan", "infinity"} {
+		t.Run(name, func(t *testing.T) {
+			toks, errs := lexer.Lex("value = " + name + "\n")
+			if len(errs) != 0 {
+				t.Fatalf("lex errors: %v", errs)
+			}
+			prog, _, err := Parse(toks)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assign, ok := prog.Stmts[0].(*ast.AssignStmt)
+			if !ok || len(assign.Values) != 1 {
+				t.Fatalf("unexpected assignment: %#v", prog.Stmts[0])
+			}
+			ident, ok := assign.Values[0].(*ast.Ident)
+			if !ok || ident.Name != name {
+				t.Fatalf("%s parsed as %#v, want identifier", name, assign.Values[0])
+			}
+		})
+	}
+}
+
 func TestParseInstanceFieldSyntax(t *testing.T) {
 	toks, errs := lexer.Lex("class User\n  initialize = name ->\n    self.name = name\n  name = ->\n    @name\n")
 	if len(errs) != 0 {
@@ -1320,6 +1385,25 @@ func TestParseRejectsUnsupportedCatchForms(t *testing.T) {
 		if _, _, err := Parse(toks); err == nil {
 			t.Fatalf("expected unsupported catch form error for %q", src)
 		}
+	}
+}
+
+func TestParseRejectsTypedPatternAndMultipleCatch(t *testing.T) {
+	tests := []string{
+		"try\n  raise error(\"bad\")\ncatch Error err\n  print(err)\n",
+		"try\n  raise error(\"bad\")\ncatch { \"kind\": \"io\" }\n  print(\"io\")\n",
+		"try\n  raise error(\"bad\")\ncatch first\n  print(first)\ncatch second\n  print(second)\n",
+	}
+	for _, src := range tests {
+		t.Run(src, func(t *testing.T) {
+			toks, errs := lexer.Lex(src)
+			if len(errs) != 0 {
+				t.Fatalf("lex errors: %v", errs)
+			}
+			if _, _, err := Parse(toks); err == nil {
+				t.Fatal("expected unsupported catch form error")
+			}
+		})
 	}
 }
 

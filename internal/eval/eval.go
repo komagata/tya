@@ -3741,6 +3741,9 @@ func numberAsInt(v Value) (int64, bool) {
 	case int64:
 		return x, true
 	case float64:
+		if x != mathpkg.Trunc(x) {
+			return 0, false
+		}
 		return int64(x), true
 	}
 	return 0, false

@@ -1,0 +1,60 @@
+# v1 excluded runtime syntax remains diagnosed at parse/check time.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+! exec $WORK/tya check defer.tya
+stderr 'defer syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check assert.tya
+stderr 'assert syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check cancel.tya
+stderr 'cancel syntax is not part of Tya v1.0.0'
+
+! exec $WORK/tya check typed_catch.tya
+stderr 'catch syntax is only catch err in Tya v1.0.0'
+
+! exec $WORK/tya check pattern_catch.tya
+stderr 'catch requires a binding name'
+
+! exec $WORK/tya check multiple_catch.tya
+stderr 'multiple catch clauses are not part of Tya v1.0.0'
+
+! exec $WORK/tya check nonfinite_names.tya
+stderr 'undefined variable NaN'
+
+-- defer.tya --
+defer cleanup()
+
+-- assert.tya --
+assert ready
+
+-- cancel.tya --
+cancel task
+
+-- typed_catch.tya --
+try
+  raise error("bad")
+catch Error err
+  print(err)
+
+-- pattern_catch.tya --
+try
+  raise error("bad")
+catch { "kind": "io" }
+  print("io")
+
+-- multiple_catch.tya --
+try
+  raise error("bad")
+catch first
+  print(first)
+catch second
+  print(second)
+
+-- nonfinite_names.tya --
+value = NaN
+print(value)
