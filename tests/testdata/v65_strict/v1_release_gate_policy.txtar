@@ -1,0 +1,20 @@
+# v1 release-gate policy coverage.
+
+exec test -x $REPO/scripts/dev_selfhost_smoke.sh
+exec test -x $REPO/scripts/release_gate.sh
+grep 'TestSelfhostV02Scripts/fixed_point' $REPO/scripts/dev_selfhost_smoke.sh
+grep 'TestBootstrapNoGoSelfhostV02FixedPoint' $REPO/scripts/release_gate.sh
+grep 'go test ./... -count=1' $REPO/scripts/release_gate.sh
+grep 'TYA-E0200' $REPO/docs/DIAGNOSTICS.md
+grep 'ordinary v1.x releases' $REPO/docs/SPEC.md
+
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+! exec $WORK/tya check legacy_module.tya
+stderr 'module declarations were removed'
+stderr 'TYA-E0200'
+
+-- legacy_module.tya --
+module old

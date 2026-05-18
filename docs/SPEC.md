@@ -42,6 +42,12 @@ implementation remains in the repository as a reference implementation and
 bootstrap recovery path until the no-Go self-host bootstrap proof replaces that
 recovery role.
 
+Specification authority for v1.0.0 is, in order: this specification and the
+frozen `docs/v1.0/SPEC.md`; the latest self-host compiler behavior when it
+implements the documented v1 surface; then the Go implementation as reference
+and bootstrap recovery path. If the Go implementation and latest self-host
+compiler disagree, the behavior matching the v1 specification is authoritative.
+
 The strict-semantics rule matrix in
 [`docs/STRICT_SEMANTICS.md`](STRICT_SEMANTICS.md) is normative for v1.0.0
 validity boundaries and records the active parser, checker, runtime, CLI, LSP,
@@ -1388,9 +1394,13 @@ Ordinary `emit-c` output is stable for the same source and toolchain version.
 It does not include absolute paths, timestamps, random identifiers, or other
 nondeterministic metadata unless a future debug option explicitly requests it.
 
-v1.0 has no experimental language feature gates. Experimental syntax or
-`--experimental-*` tool options are invalid unless a later accepted SPEC adds
-that behavior explicitly.
+v1.0 has no experimental language feature gates. New syntax is not added in
+ordinary v1.x releases; v1.x may add standard-library APIs, package APIs,
+tooling improvements, diagnostics, and compatible runtime behavior. New syntax
+requires v2 planning or an explicitly accepted experimental feature path
+outside the stable v1 public contract. Experimental syntax or `--experimental-*`
+tool options are invalid unless a later accepted SPEC adds that behavior
+explicitly.
 
 Environment variables are read by user programs only through explicit calls
 such as `env(name)` or documented standard-library APIs. `.env` files are not

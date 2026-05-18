@@ -65,11 +65,24 @@ extensions, editor publication, and ecosystem polish) are valuable but not
 strictly required for v1.0.0 unless they become blockers for the commitments
 above.
 
+Current v1.0.0 release-gate policy:
+
+1. The latest self-host compiler line is the v1.0.0 release-critical
+   self-host gate. It must prove the v1.0.0 fixed point and no-Go bootstrap
+   path before release.
+2. `selfhost/v01` remains maintained legacy regression coverage, but it does
+   not define v1.0.0 language validity or release readiness once the latest
+   self-host gate is green.
+3. Normal development may use `scripts/dev_selfhost_smoke.sh` as the fast
+   self-host smoke gate. The v1.0.0 release tag gate uses
+   `scripts/release_gate.sh`, which runs the latest self-host fixed point,
+   no-Go bootstrap proof, and full repository conformance checks.
+
 Current v1.0.0 blockers:
 
 1. Make the strict-semantics audit explicit and close any gaps it finds.
 2. Finish the self-hosted compiler through the latest spec and prove the
-   latest-spec stage-2/stage-3 fixed point.
+   release-critical latest-spec stage-2/stage-3 fixed point.
 3. Make the no-Go bootstrap path explicit: a released `tya` binary rebuilds
    the self-hosted compiler, proves the latest-spec fixed point, and runs the
    compiler conformance suite without `go` installed.
