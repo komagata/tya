@@ -183,10 +183,8 @@ double = value ->
 Use `return` for early return or multiple return values.
 
 ```tya
-parse_user = text ->
-  if text == ""
-    return nil, error("empty user")
-  return { name: text }, nil
+bounds = items ->
+  return items[0], items[items.len() - 1]
 ```
 
 Functions are values, so they can be passed to other functions.
@@ -223,15 +221,17 @@ catch err
   print("error: {err}")
 ```
 
-`try` can also be an expression inside a function.
+Use local bindings inside `try/catch` when recovery needs to produce a value.
 
 ```tya
 load_user = path ->
+  user = { name: "guest" }
   try
     text = read_file(path)
-    { name: text.trim() }
+    user = { name: text.trim() }
   catch err
-    { name: "guest" }
+    user = { name: "guest" }
+  user
 ```
 
 ## Classes

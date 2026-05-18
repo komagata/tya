@@ -1,18 +1,20 @@
 parse_user = text ->
   if text == ""
-    return nil, error("empty user")
-  return { name: text }, nil
+    raise error("empty user")
+  { name: text }
 
 read_user = text ->
-  user = try parse_user(text)
-  return user["name"], nil
-name, err = read_user("komagata")
-if err
-  print(err["message"])
-else
+  user = parse_user(text)
+  user["name"]
+
+try
+  name = read_user("komagata")
   print(name)
-name, err = read_user("")
-if err
+catch err
   print(err["message"])
-else
+
+try
+  name = read_user("")
   print(name)
+catch err
+  print(err["message"])

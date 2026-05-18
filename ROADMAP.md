@@ -208,6 +208,8 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     fail unclearly, or execute with non-strict behavior.
   - [x] Freeze v1.0.0 syntax exclusions across SPEC, parser/checker
     diagnostics, formatter behavior, and CLI fixtures.
+  - [x] Unify v1.0.0 user-facing error handling on structured
+    `raise` / `try` / `catch` / `finally`.
   - [ ] Document any intentionally dynamic behavior that remains valid in
     v1.0.0.
 

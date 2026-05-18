@@ -179,14 +179,10 @@ match value
   case _
     print("fallback")
 
-parse_user = text ->
-  if text == ""
-    return nil, error("empty user")
-  return { name: text }, nil
+bounds = items ->
+  return items[0], items[items.len() - 1]
 
-user, err = parse_user("tya")
-if err
-  print(err["message"])
+min, max = bounds([1, 2])
 
 headers = { "Content-Type": "text/plain", "$schema": "x", "": "empty" }
 print(headers["Content-Type"])

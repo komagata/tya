@@ -350,7 +350,7 @@ err = error("failed") # valid
 Multiple assignment is supported.
 
 ```tya
-value, err = parse_user(text)
+min, max = bounds(items)
 ```
 
 Leading `_` has no visibility meaning for ordinary bindings. Top-level
@@ -408,8 +408,8 @@ or multiple return values.
 ```tya
 parse_user = text ->
   if text == ""
-    return nil, error("empty user")
-  return { name: text }, nil
+    raise error("empty user")
+  { name: text }
 ```
 
 Parameters are local bindings. `_` may be used for intentionally ignored
@@ -751,17 +751,21 @@ Arrays and dictionaries are mutable. Strings and bytes are immutable.
 `Array.push`, `Dict.set`, and `Dict.delete` return `nil`. `Array.pop` returns
 the removed value, or `nil` when the array is empty.
 
-### Error Expressions
+### Error Values
 
-`try` may be used as an expression inside a function body. A `catch` branch
-receives the raised value.
+`error(message, options = {})` creates an error value. `message`, `kind`, and
+`code` are strings; `data` is a dictionary; and `cause` is another error value
+or `nil`. Unknown option keys are invalid. Error display uses `message`.
 
 ```tya
-load_name = path ->
-  try
-    read_file(path).trim()
-  catch err
-    "guest"
+err = error("not found", {
+  kind: "io",
+  code: "file_not_found",
+  data: { path: "missing.txt" }
+})
+print(err["message"])
+print(err["kind"])
+print(err["code"])
 ```
 
 ### Concurrency Expressions
@@ -896,16 +900,18 @@ multiple values.
 ```tya
 return
 return value
-return value, err
+return min, max
 ```
 
 ### Raise, Try, And Catch Statements
 
 `raise` raises an error value. `raise nil` and other non-error values are
-invalid. `try` executes a block and `catch` catches raised error values; branch
-by error details inside the `catch` body with `if` or `match`. `finally` may follow
-`try/catch` or a bare `try` block. A bare `try` with neither `catch` nor
-`finally` is invalid.
+invalid. `try` is a statement only; try expressions are not part of v1.0.0.
+`catch err` is the only catch syntax and catches raised error values. Typed
+catch, pattern catch, catch filters, and multiple catch clauses are invalid.
+Branch by error details inside the `catch` body with `if` or `match`.
+`finally` may follow `try/catch` or a bare `try` block. A bare `try` with
+neither `catch` nor `finally` is invalid.
 
 `finally` always runs as control leaves the `try` or `catch` body, including
 normal completion, `return`, `raise`, `break`, and `continue`. The value of a
@@ -1502,9 +1508,10 @@ errors according to the API being used.
 Standard-library failure behavior is part of each public API contract. Invalid
 argument kinds or arity are runtime errors. Absence and lookup APIs return
 `nil` only where documented. Operations that can fail because of the outside
-world, such as file, process, network, compression, digest, time, and random
-APIs, either raise an error value or return a documented `value, err` pair; an
-individual API must not leave this choice implicit.
+world, such as file, process, network, parse, compression, digest, time,
+random, native-wrapper, and serialization APIs, raise structured error values.
+Public v1.0.0 APIs do not use `value, err` pairs as the failure convention.
+Multiple return values remain valid for ordinary successful values.
 
 `raise` may raise only error values. Raising `nil`, strings, numbers,
 dictionaries, or other non-error values is invalid because they do not carry the

@@ -1,0 +1,42 @@
+# Representative stdlib failures raise structured error values.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya run stdlib_errors.tya
+stdout 'file'
+stdout 'json'
+stdout 'process'
+stdout 'serialization'
+
+-- stdlib_errors.tya --
+import file as file
+import json as json
+import process as process
+import serialization as serialization
+
+try
+  file.File.stat("__missing__.txt")
+catch err
+  if err["message"] != ""
+    print("file")
+
+try
+  json.Json.parse("{{")
+catch err
+  if err["message"] != ""
+    print("json")
+
+try
+  process.Process.run([])
+catch err
+  if err["message"] != ""
+    print("process")
+
+try
+  serialization.Serializer.to_data(-> nil)
+catch err
+  if err["message"] != ""
+    print("serialization")

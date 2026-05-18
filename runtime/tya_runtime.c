@@ -485,6 +485,10 @@ static void tya_gc_mark_value(TyaValue v) {
     case TYA_RESOURCE:
       if (v.resource) tya_gc_mark_header((TyaGcHeader *)v.resource);
       break;
+    case TYA_ERROR:
+      if (v.dict) tya_gc_mark_header((TyaGcHeader *)v.dict);
+      if (v.error_cause) tya_gc_mark_value(*v.error_cause);
+      break;
     default:
       break;
   }
@@ -716,20 +720,73 @@ TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn) {
   return (TyaValue){.kind = TYA_FUNCTION, .function = function};
 }
 
-TyaValue tya_error(TyaValue message) {
+static void tya_error_options_panic(const char *message) {
+  fprintf(stderr, "%s\n", message);
+  exit(1);
+}
+
+static TyaValue tya_error_from_parts(TyaValue message, TyaValue options, bool has_options) {
   if (message.kind != TYA_STRING) {
-    if ((message.kind == TYA_DICT || message.kind == TYA_OBJECT) && message.dict != NULL) {
-      TyaValue text = tya_index(message, tya_string("message"));
-      TyaValue kind = tya_index(message, tya_string("kind"));
-      return (TyaValue){
-        .kind = TYA_ERROR,
-        .error = text.kind == TYA_STRING ? text.string : "",
-        .error_kind = kind.kind == TYA_STRING ? kind.string : "",
-      };
-    }
-    return (TyaValue){.kind = TYA_ERROR, .error = "", .error_kind = ""};
+    tya_error_options_panic("error message must be string");
   }
-  return (TyaValue){.kind = TYA_ERROR, .error = message.string, .error_kind = ""};
+  TyaValue value = {
+    .kind = TYA_ERROR,
+    .error = message.string == NULL ? "" : message.string,
+    .error_kind = "error",
+    .error_code = "",
+    .dict = NULL,
+    .error_cause = NULL,
+  };
+  if (!has_options) {
+    return value;
+  }
+  if ((options.kind != TYA_DICT && options.kind != TYA_OBJECT) || options.dict == NULL) {
+    tya_error_options_panic("error options must be a dictionary");
+  }
+  for (int i = 0; i < options.dict->len; i++) {
+    const char *key = options.dict->entries[i].key;
+    TyaValue option = options.dict->entries[i].value;
+    if (strcmp(key, "message") == 0) {
+      if (option.kind != TYA_STRING) tya_error_options_panic("error options message must be string");
+      value.error = option.string == NULL ? "" : option.string;
+    } else if (strcmp(key, "kind") == 0) {
+      if (option.kind != TYA_STRING) tya_error_options_panic("error options kind must be string");
+      value.error_kind = option.string == NULL ? "" : option.string;
+    } else if (strcmp(key, "code") == 0) {
+      if (option.kind != TYA_STRING) tya_error_options_panic("error options code must be string");
+      value.error_code = option.string == NULL ? "" : option.string;
+    } else if (strcmp(key, "data") == 0) {
+      if ((option.kind != TYA_DICT && option.kind != TYA_OBJECT) || option.dict == NULL) {
+        tya_error_options_panic("error options data must be dictionary");
+      }
+      value.dict = option.dict;
+    } else if (strcmp(key, "cause") == 0) {
+      if (option.kind == TYA_NIL) {
+        value.error_cause = NULL;
+      } else if (option.kind == TYA_ERROR) {
+        value.error_cause = malloc(sizeof(TyaValue));
+        if (value.error_cause == NULL) tya_error_options_panic("error options cause allocation failed");
+        *value.error_cause = option;
+      } else {
+        tya_error_options_panic("error options cause must be error or nil");
+      }
+    } else {
+      tya_error_options_panic("error options unknown key");
+    }
+  }
+  return value;
+}
+
+TyaValue tya_error(TyaValue message) {
+  if ((message.kind == TYA_DICT || message.kind == TYA_OBJECT) && message.dict != NULL) {
+    TyaValue text = tya_index(message, tya_string("message"));
+    return tya_error_from_parts(text, message, true);
+  }
+  return tya_error_from_parts(message, tya_nil(), false);
+}
+
+TyaValue tya_error2(TyaValue message, TyaValue options) {
+  return tya_error_from_parts(message, options, true);
 }
 
 TyaValue tya_call0(TyaValue fn) {
@@ -937,6 +994,15 @@ TyaValue tya_member(TyaValue dict, const char *key) {
   }
   if (dict.kind == TYA_ERROR && strcmp(key, "kind") == 0) {
     return tya_string(dict.error_kind == NULL ? "" : dict.error_kind);
+  }
+  if (dict.kind == TYA_ERROR && strcmp(key, "code") == 0) {
+    return tya_string(dict.error_code == NULL ? "" : dict.error_code);
+  }
+  if (dict.kind == TYA_ERROR && strcmp(key, "data") == 0) {
+    return dict.dict == NULL ? tya_dict(NULL, 0) : (TyaValue){.kind = TYA_DICT, .dict = dict.dict};
+  }
+  if (dict.kind == TYA_ERROR && strcmp(key, "cause") == 0) {
+    return dict.error_cause == NULL ? tya_nil() : *dict.error_cause;
   }
   if (dict.kind == TYA_FUNCTION && dict.function != NULL && dict.function->members != NULL) {
     if (dict.function->is_class && key != NULL && strcmp(key, "name") == 0) {
@@ -1935,7 +2001,6 @@ static void tya_build_value(TyaStringBuilder *builder, TyaValue value) {
     }
     break;
   case TYA_ERROR:
-    tya_builder_append(builder, "error: ");
     tya_builder_append(builder, value.error == NULL ? "" : value.error);
     break;
   case TYA_STRING:
@@ -2582,7 +2647,7 @@ static void tya_write_value(FILE *out, TyaValue value) {
     }
     break;
   case TYA_ERROR:
-    fprintf(out, "error: %s", value.error == NULL ? "" : value.error);
+    fprintf(out, "%s", value.error == NULL ? "" : value.error);
     break;
   case TYA_BYTES:
     fprintf(out, "<bytes:%d>", value.bytes == NULL ? 0 : value.bytes->len);

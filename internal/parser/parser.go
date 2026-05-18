@@ -1176,6 +1176,12 @@ func (p *Parser) tryCatchStmt() (ast.Stmt, error) {
 		if p.at(token.COMMA) || p.at(token.LBRACKET) || p.at(token.LBRACE) {
 			return nil, p.errAt(name, "catch binding must be a name")
 		}
+		if p.at(token.IDENT) && p.peek().Lexeme == "if" {
+			return nil, p.err("catch filters are not part of Tya v1.0.0")
+		}
+		if !p.at(token.NEWLINE) && !p.at(token.DEDENT) && !p.at(token.EOF) {
+			return nil, p.err("catch syntax is only catch err in Tya v1.0.0")
+		}
 		catchName = name.Lexeme
 		catchTok = name
 		catchBody, err = p.block("catch")
@@ -1726,15 +1732,7 @@ func (p *Parser) factor() (ast.Expr, error) {
 
 func (p *Parser) unary() (ast.Expr, error) {
 	if p.at(token.IDENT) && p.peek().Lexeme == "try" {
-		if p.functionDepth == 0 {
-			return nil, p.err("try must be inside a function")
-		}
-		tok := p.next()
-		ex, err := p.unary()
-		if err != nil {
-			return nil, err
-		}
-		return &ast.TryExpr{Expr: ex, Tok: tok}, nil
+		return nil, p.err("try expressions are not part of Tya v1.0.0; use try as a statement")
 	}
 	if p.at(token.IDENT) && p.peek().Lexeme == "spawn" {
 		tok := p.next()

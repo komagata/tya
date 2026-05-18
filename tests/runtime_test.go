@@ -37,7 +37,7 @@ int main(void) {
 }
 `
 	out := compileAndRunRuntime(t, src)
-	want := "3\n3\n{name: Tya, version: 1}\nTya\n1\n6\nerror: bad\nbad\n"
+	want := "3\n3\n{name: Tya, version: 1}\nTya\n1\n6\nbad\nbad\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

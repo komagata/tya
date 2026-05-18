@@ -202,9 +202,9 @@ func TestEmitCCompilesWriteFileProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesErrorProgram(t *testing.T) {
-	src := "err = error(\"file not found\")\nprint(err)\nprint(err[\"message\"])\ntagged = error({ kind: \"io\", message: \"missing\" })\nprint(tagged[\"kind\"])\nprint(tagged[\"message\"])\n"
+	src := "err = error(\"file not found\")\nprint(err)\nprint(err[\"message\"])\ncause = error(\"root\")\ntagged = error(\"missing\", { kind: \"io\", code: \"file_not_found\", data: { path: \"missing.txt\" }, cause: cause })\nprint(tagged[\"kind\"])\nprint(tagged[\"code\"])\nprint(tagged[\"data\"][\"path\"])\nprint(tagged[\"cause\"][\"message\"])\n"
 	out := compileAndRun(t, src)
-	if string(out) != "error: file not found\nfile not found\nio\nmissing\n" {
+	if string(out) != "file not found\nfile not found\nio\nfile_not_found\nmissing.txt\nroot\n" {
 		t.Fatalf("got %q", out)
 	}
 }
@@ -269,17 +269,17 @@ func TestEmitCCompilesFunctionProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesMultipleReturnProgram(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error(\"empty user\")\n  return { name: text }, nil\n\nuser, err = parse_user(\"komagata\")\nif err\n  print(err[\"message\"])\nelse\n  print(user[\"name\"])\n\nmissing, err = parse_user(\"\")\nif err\n  print(err[\"message\"])\nelse\n  print(missing[\"name\"])\n"
+	src := "bounds = items ->\n  return items[0], items[items.len() - 1]\n\nmin, max = bounds([1, 2, 3])\nprint(min)\nprint(max)\n"
 	out := compileAndRun(t, src)
-	if string(out) != "komagata\nempty user\n" {
+	if string(out) != "1\n3\n" {
 		t.Fatalf("got %q", out)
 	}
 }
 
-func TestEmitCCompilesTryProgram(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error(\"empty user\")\n  return { name: text }, nil\n\nread_user = text ->\n  user = try parse_user(text)\n  return user[\"name\"], nil\n\nname, err = read_user(\"komagata\")\nif err\n  print(err[\"message\"])\nelse\n  print(name)\n\nname, err = read_user(\"\")\nif err\n  print(err[\"message\"])\nelse\n  print(name)\n"
+func TestEmitCCompilesStructuredErrorProgram(t *testing.T) {
+	src := "try\n  raise error(\"missing\", { kind: \"io\", code: \"file_not_found\", data: { path: \"missing.txt\" } })\ncatch err\n  print(err[\"message\"])\n  print(err[\"kind\"])\n  print(err[\"code\"])\n  print(err[\"data\"][\"path\"])\n"
 	out := compileAndRun(t, src)
-	if string(out) != "komagata\nempty user\n" {
+	if string(out) != "missing\nio\nfile_not_found\nmissing.txt\n" {
 		t.Fatalf("got %q", out)
 	}
 }

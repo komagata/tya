@@ -1,0 +1,112 @@
+# v1 unified error handling uses raise/try/catch/finally and structured errors.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check valid.tya
+exec $WORK/tya run valid.tya
+stdout 'failed'
+stdout 'io'
+stdout 'file_not_found'
+stdout 'missing.txt'
+stdout 'cleanup'
+stdout '1'
+stdout '3'
+
+exec $WORK/tya build valid.tya -o valid
+exec ./valid
+stdout 'failed'
+stdout 'io'
+stdout 'file_not_found'
+stdout 'missing.txt'
+stdout 'cleanup'
+stdout '1'
+stdout '3'
+
+! exec $WORK/tya check try_expression.tya
+stderr 'try expressions are not part of Tya v1.0.0'
+
+! exec $WORK/tya run raise_string.tya
+stderr 'raise expects error value'
+
+! exec $WORK/tya run raise_number.tya
+stderr 'raise expects error value'
+
+! exec $WORK/tya run raise_dict.tya
+stderr 'raise expects error value'
+
+! exec $WORK/tya run raise_nil.tya
+stderr 'raise expects error value'
+
+! exec $WORK/tya check typed_catch.tya
+stderr 'catch syntax is only catch err in Tya v1.0.0'
+
+! exec $WORK/tya check pattern_catch.tya
+stderr 'catch requires a binding name'
+
+! exec $WORK/tya check catch_filter.tya
+stderr 'catch filters are not part of Tya v1.0.0'
+
+! exec $WORK/tya check multiple_catch.tya
+stderr 'catch outside block try'
+
+-- valid.tya --
+try
+  raise error("failed", { kind: "io", code: "file_not_found", data: { path: "missing.txt" } })
+catch err
+  print(err["message"])
+  print(err["kind"])
+  print(err["code"])
+  print(err["data"]["path"])
+finally
+  print("cleanup")
+
+bounds = items ->
+  return items[0], items[items.len() - 1]
+
+min, max = bounds([1, 2, 3])
+print(min)
+print(max)
+
+-- try_expression.tya --
+load = fn -> try fn()
+
+-- raise_string.tya --
+raise "failed"
+
+-- raise_number.tya --
+raise 1
+
+-- raise_dict.tya --
+raise { message: "failed" }
+
+-- raise_nil.tya --
+raise nil
+
+-- typed_catch.tya --
+try
+  raise error("bad")
+catch Error err
+  print(err)
+
+-- pattern_catch.tya --
+try
+  raise error("bad")
+catch { message: "bad" }
+  print("bad")
+
+-- catch_filter.tya --
+try
+  raise error("bad")
+catch err if err["kind"] == "io"
+  print(err)
+
+-- multiple_catch.tya --
+try
+  raise error("bad")
+catch first
+  print(first)
+catch second
+  print(second)

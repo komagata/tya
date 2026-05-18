@@ -1,14 +1,6 @@
-parse_user = text ->
-  if text == ""
-    return nil, error("empty user")
-  return { name: text }, nil
-user, err = parse_user("komagata")
-if err
-  print(err["message"])
-else
-  print(user["name"])
-missing, err = parse_user("")
-if err
-  print(err["message"])
-else
-  print(missing["name"])
+bounds = items ->
+  return items[0], items[items.len() - 1]
+
+min, max = bounds([1, 2, 3])
+print(min)
+print(max)

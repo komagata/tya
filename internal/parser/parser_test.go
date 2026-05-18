@@ -1263,35 +1263,22 @@ func TestParseRejectsTrailingTokensInBlockHeaderExpressions(t *testing.T) {
 }
 
 func TestParseTryExpression(t *testing.T) {
-	toks, errs := lexer.Lex("load_user = text ->\n  user = try parse_user(text)\n  user[\"name\"]\n")
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
+	tests := []string{
+		"load_user = text ->\n  user = try parse_user(text)\n  user[\"name\"]\n",
+		"load_user = text -> try parse_user(text)\n",
 	}
-	prog, _, err := Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assign := prog.Stmts[0].(*ast.AssignStmt)
-	fn := assign.Values[0].(*ast.FuncLit)
-	userAssign := fn.Body[0].(*ast.AssignStmt)
-	if _, ok := userAssign.Values[0].(*ast.TryExpr); !ok {
-		t.Fatalf("got %T", userAssign.Values[0])
-	}
-}
-
-func TestParseTryExpressionInExpressionBodyFunction(t *testing.T) {
-	toks, errs := lexer.Lex("load_user = text -> try parse_user(text)\n")
-	if len(errs) != 0 {
-		t.Fatalf("lex errors: %v", errs)
-	}
-	prog, _, err := Parse(toks)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assign := prog.Stmts[0].(*ast.AssignStmt)
-	fn := assign.Values[0].(*ast.FuncLit)
-	if _, ok := fn.Expr.(*ast.TryExpr); !ok {
-		t.Fatalf("got %T", fn.Expr)
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		_, _, err := Parse(toks)
+		if err == nil {
+			t.Fatal("expected try expression error")
+		}
+		if !strings.Contains(err.Error(), "try expressions are not part of Tya v1.0.0") {
+			t.Fatalf("unexpected error: %v", err)
+		}
 	}
 }
 
@@ -1311,10 +1298,28 @@ func TestParseRejectsTryOutsideFunction(t *testing.T) {
 			if err == nil {
 				t.Fatal("expected try context error")
 			}
-			if !strings.Contains(err.Error(), "try must be inside a function") {
+			if !strings.Contains(err.Error(), "try expressions are not part of Tya v1.0.0") {
 				t.Fatalf("unexpected error: %v", err)
 			}
 		})
+	}
+}
+
+func TestParseRejectsUnsupportedCatchForms(t *testing.T) {
+	tests := []string{
+		"try\n  raise error(\"bad\")\ncatch Error err\n  print(err)\n",
+		"try\n  raise error(\"bad\")\ncatch { \"kind\": \"io\" }\n  print(\"io\")\n",
+		"try\n  raise error(\"bad\")\ncatch err if err[\"kind\"] == \"io\"\n  print(err)\n",
+		"try\n  raise error(\"bad\")\ncatch first\n  print(first)\ncatch second\n  print(second)\n",
+	}
+	for _, src := range tests {
+		toks, errs := lexer.Lex(src)
+		if len(errs) != 0 {
+			t.Fatalf("lex errors: %v", errs)
+		}
+		if _, _, err := Parse(toks); err == nil {
+			t.Fatalf("expected unsupported catch form error for %q", src)
+		}
 	}
 }
 

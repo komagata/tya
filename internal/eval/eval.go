@@ -89,6 +89,9 @@ type Tuple struct {
 type ErrorValue struct {
 	Message string
 	Kind    string
+	Code    string
+	Data    Dict
+	Cause   *ErrorValue
 }
 type Module struct {
 	Name    string
@@ -105,6 +108,50 @@ type Function struct {
 }
 
 type Builtin func([]Value) (Value, error)
+
+func applyErrorOptions(errValue *ErrorValue, options Dict) error {
+	for key, value := range options {
+		switch key {
+		case "message":
+			message, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("error options message must be string")
+			}
+			errValue.Message = message
+		case "kind":
+			kind, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("error options kind must be string")
+			}
+			errValue.Kind = kind
+		case "code":
+			code, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("error options code must be string")
+			}
+			errValue.Code = code
+		case "data":
+			data, ok := value.(Dict)
+			if !ok {
+				return fmt.Errorf("error options data must be dictionary")
+			}
+			errValue.Data = data
+		case "cause":
+			if value == nil {
+				errValue.Cause = nil
+				continue
+			}
+			cause, ok := value.(*ErrorValue)
+			if !ok {
+				return fmt.Errorf("error options cause must be error or nil")
+			}
+			errValue.Cause = cause
+		default:
+			return fmt.Errorf("error options unknown key %s", key)
+		}
+	}
+	return nil
+}
 
 type Env struct {
 	parent    *Env
@@ -578,11 +625,24 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		return nil, fmt.Errorf("panic: %s", stringify(args[0]))
 	}))
 	env.set("error", Builtin(func(args []Value) (Value, error) {
-		if len(args) != 1 {
-			return nil, fmt.Errorf("error expects 1 argument")
+		if len(args) < 1 || len(args) > 2 {
+			return nil, fmt.Errorf("error expects 1 or 2 arguments")
 		}
 		if message, ok := args[0].(string); ok {
-			return &ErrorValue{Message: message}, nil
+			errValue := &ErrorValue{Message: message, Kind: "error", Code: "", Data: Dict{}, Cause: nil}
+			if len(args) == 2 {
+				options, ok := args[1].(Dict)
+				if !ok {
+					return nil, fmt.Errorf("error options must be a dictionary")
+				}
+				if err := applyErrorOptions(errValue, options); err != nil {
+					return nil, err
+				}
+			}
+			return errValue, nil
+		}
+		if len(args) != 1 {
+			return nil, fmt.Errorf("error message must be string")
 		}
 		options, ok := args[0].(Dict)
 		if !ok {
@@ -592,8 +652,11 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		if !ok {
 			return nil, fmt.Errorf("error options message must be string")
 		}
-		kind, _ := options["kind"].(string)
-		return &ErrorValue{Message: message, Kind: kind}, nil
+		errValue := &ErrorValue{Message: message, Kind: "error", Code: "", Data: Dict{}, Cause: nil}
+		if err := applyErrorOptions(errValue, options); err != nil {
+			return nil, err
+		}
+		return errValue, nil
 	}))
 	env.set("div", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
@@ -1103,11 +1166,20 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			return nil, err
 		}
 		if errValue, ok := obj.(*ErrorValue); ok {
-			if n.Name == "message" {
+			switch n.Name {
+			case "message":
 				return errValue.Message, nil
-			}
-			if n.Name == "kind" {
+			case "kind":
 				return errValue.Kind, nil
+			case "code":
+				return errValue.Code, nil
+			case "data":
+				return errValue.Data, nil
+			case "cause":
+				if errValue.Cause == nil {
+					return nil, nil
+				}
+				return errValue.Cause, nil
 			}
 			return nil, nil
 		}
@@ -1149,11 +1221,20 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			if !ok {
 				return nil, fmt.Errorf("error index must be string")
 			}
-			if key == "message" {
+			switch key {
+			case "message":
 				return errValue.Message, nil
-			}
-			if key == "kind" {
+			case "kind":
 				return errValue.Kind, nil
+			case "code":
+				return errValue.Code, nil
+			case "data":
+				return errValue.Data, nil
+			case "cause":
+				if errValue.Cause == nil {
+					return nil, nil
+				}
+				return errValue.Cause, nil
 			}
 			return nil, nil
 		}
@@ -2546,7 +2627,7 @@ func stringifyValue(v Value, seen map[uintptr]bool) string {
 		}
 		return "false"
 	case *ErrorValue:
-		return "error: " + x.Message
+		return x.Message
 	case *Array:
 		key := reflect.ValueOf(x).Pointer()
 		if seen[key] {

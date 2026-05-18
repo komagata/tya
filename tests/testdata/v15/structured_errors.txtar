@@ -6,7 +6,7 @@ stdout 'ok\nfailed\nouter:failed\nfailed\nouter\nfallback\nloop-done\nmissing co
 ! stderr .
 
 ! exec go run ./cmd/tya run $WORK/uncaught.tya
-stderr 'uncaught raised value: error: boom'
+stderr 'uncaught raised value: boom'
 
 ! exec go run ./cmd/tya check $WORK/raise_without_expression.tya
 stderr 'raise requires an expression'

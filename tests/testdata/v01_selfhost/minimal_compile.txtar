@@ -3,7 +3,7 @@ cd $REPO
 env TYA_LEGACY_MODULES=1
 
 exec go run ./cmd/tya run $WORK/main.tya
-stdout 'Hello, Tya\nInterpolated Tya\nHello from Tya\nready\nelseif ready\nsecond elseif ready\n0\n1\n2\n2\n9\n2\n9\n6\n0\n2\n1\n9\n2\n6\n8\n3\n3\nTya\ncompiler\ntrue\n2\nfalse\nname\nTya\nleft\nright\n6\n5\n7\n9\n4\n8\n10\nconstant\nblock constant\n6\n4\n5\n0\ninner\ntuple\nok\n.*direct.*nil.*\n.*last.*nil.*\ntry bad\n12\n4\n2\n14\ntrue\ntrue\ntrue\ntrue\n-4\n7\nhello-Tya\nhello:Tya\nhello,compiler\ntrue\ntrue\ntrue\n42\n2.5\n12.5\nnested-expr\ntrue\nfile text\nfile expr\n5\nfalse\nbad\n'
+stdout 'Hello, Tya\nInterpolated Tya\nHello from Tya\nready\nelseif ready\nsecond elseif ready\n0\n1\n2\n2\n9\n2\n9\n6\n0\n2\n1\n9\n2\n6\n8\n3\n3\nTya\ncompiler\ntrue\n2\nfalse\nname\nTya\nleft\nright\n6\n5\n7\n9\n4\n8\n10\nconstant\nblock constant\n6\n4\n5\n0\ninner\ntuple\nok\n12\n4\n2\n14\ntrue\ntrue\ntrue\ntrue\n-4\n7\nhello-Tya\nhello:Tya\nhello,compiler\ntrue\ntrue\ntrue\n42\n2.5\n12.5\nnested-expr\ntrue\nfile text\nfile expr\n5\nfalse\nbad\n'
 
 exec sh -c 'go run ./cmd/tya run selfhost/v01/compiler.tya "$WORK/main.tya" > "$WORK/main.c"'
 ! stderr .
@@ -15,7 +15,7 @@ exec cc $WORK/main.c runtime/tya_runtime.c -I runtime -o $WORK/main -lpthread -l
 ! stderr .
 
 exec $WORK/main
-stdout 'Hello, Tya\nInterpolated Tya\nHello from Tya\nready\nelseif ready\nsecond elseif ready\n0\n1\n2\n2\n9\n2\n9\n6\n0\n2\n1\n9\n2\n6\n8\n3\n3\nTya\ncompiler\ntrue\n2\nfalse\nname\nTya\nleft\nright\n6\n5\n7\n9\n4\n8\n10\nconstant\nblock constant\n6\n4\n5\n0\ninner\ntuple\nok\n.*direct.*nil.*\n.*last.*nil.*\ntry bad\n12\n4\n2\n14\ntrue\ntrue\ntrue\ntrue\n-4\n7\nhello-Tya\nhello:Tya\nhello,compiler\ntrue\ntrue\ntrue\n42\n2.5\n12.5\nnested-expr\ntrue\nfile text\nfile expr\n5\nfalse\nbad\n'
+stdout 'Hello, Tya\nInterpolated Tya\nHello from Tya\nready\nelseif ready\nsecond elseif ready\n0\n1\n2\n2\n9\n2\n9\n6\n0\n2\n1\n9\n2\n6\n8\n3\n3\nTya\ncompiler\ntrue\n2\nfalse\nname\nTya\nleft\nright\n6\n5\n7\n9\n4\n8\n10\nconstant\nblock constant\n6\n4\n5\n0\ninner\ntuple\nok\n12\n4\n2\n14\ntrue\ntrue\ntrue\ntrue\n-4\n7\nhello-Tya\nhello:Tya\nhello,compiler\ntrue\ntrue\ntrue\n42\n2.5\n12.5\nnested-expr\ntrue\nfile text\nfile expr\n5\nfalse\nbad\n'
 ! stderr .
 
 exec go run ./cmd/tya run $WORK/branch_scope.tya
@@ -267,18 +267,6 @@ print(tuple_value)
 print(tuple_status)
 ok_pair = value ->
   return value, nil
-try_direct = fn -> try fn("direct")
-print(try_direct(ok_pair))
-try_block_last = fn ->
-  try fn("last")
-print(try_block_last(ok_pair))
-fail = _value ->
-  return nil, error("try bad")
-try_load = fn ->
-  result = try fn("x")
-  return result, nil
-try_value, try_err = try_load(fail)
-print(try_err["message"])
 print(3 * 4)
 print(8 / 2)
 print(8 % 3)

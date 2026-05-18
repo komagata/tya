@@ -31,8 +31,9 @@ typedef struct TyaRaiseFrame TyaRaiseFrame;
 typedef struct TyaTask TyaTask;
 typedef struct TyaChannel TyaChannel;
 typedef struct TyaResource TyaResource;
+typedef struct TyaValue TyaValue;
 
-typedef struct {
+struct TyaValue {
   TyaKind kind;
   bool boolean;
   double number;
@@ -42,11 +43,13 @@ typedef struct {
   TyaFunction *function;
   const char *error;
   const char *error_kind;
+  const char *error_code;
+  TyaValue *error_cause;
   TyaBytes *bytes;
   TyaTask *task;
   TyaChannel *channel;
   TyaResource *resource;
-} TyaValue;
+};
 
 typedef TyaValue (*TyaFunctionPtr)(TyaValue, TyaValue, TyaValue, TyaValue, TyaValue, TyaValue, TyaValue);
 
@@ -78,6 +81,7 @@ TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn);
 #define tya_class(fn, name, parent) tya_class_raw((TyaFunctionPtr)(fn), name, parent)
 #define tya_bind_method(receiver, fn) tya_bind_method_raw(receiver, (TyaFunctionPtr)(fn))
 TyaValue tya_error(TyaValue message);
+TyaValue tya_error2(TyaValue message, TyaValue options);
 TyaValue tya_call0(TyaValue fn);
 TyaValue tya_call1(TyaValue fn, TyaValue arg);
 TyaValue tya_call2(TyaValue fn, TyaValue first, TyaValue second);

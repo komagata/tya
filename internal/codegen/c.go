@@ -2629,6 +2629,17 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("tya_error(%s)", message), "TyaValue", nil
 		}
+		if ok && id.Name == "error" && len(n.Args) == 2 {
+			message, _, err := g.expr(n.Args[0])
+			if err != nil {
+				return "", "", err
+			}
+			options, _, err := g.expr(n.Args[1])
+			if err != nil {
+				return "", "", err
+			}
+			return fmt.Sprintf("tya_error2(%s, %s)", message, options), "TyaValue", nil
+		}
 		if ok && id.Name == "panic" && len(n.Args) == 1 {
 			message, _, err := g.expr(n.Args[0])
 			if err != nil {

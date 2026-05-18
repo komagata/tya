@@ -1017,7 +1017,7 @@ func TestRunPanicBuiltin(t *testing.T) {
 }
 
 func TestRunErrorBuiltin(t *testing.T) {
-	toks, errs := lexer.Lex("err = error(\"file not found\")\nprint(err)\nprint(err[\"message\"])\ntagged = error({ kind: \"io\", message: \"missing\" })\nprint(tagged[\"kind\"])\nprint(tagged[\"message\"])\n")
+	toks, errs := lexer.Lex("err = error(\"file not found\")\nprint(err)\nprint(err[\"message\"])\nprint(err[\"kind\"])\nprint(err[\"code\"])\nprint(err[\"data\"].len())\nprint(err[\"cause\"])\ncause = error(\"root\")\ntagged = error(\"missing\", { kind: \"io\", code: \"file_not_found\", data: { path: \"missing.txt\" }, cause: cause })\nprint(tagged[\"kind\"])\nprint(tagged[\"code\"])\nprint(tagged[\"data\"][\"path\"])\nprint(tagged[\"cause\"][\"message\"])\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -1029,14 +1029,14 @@ func TestRunErrorBuiltin(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "error: file not found\nfile not found\nio\nmissing\n"
+	want := "file not found\nfile not found\nerror\n\n0\nnil\nio\nfile_not_found\nmissing.txt\nroot\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
 }
 
 func TestRunMultipleReturnAndAssignment(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error(\"empty user\")\n  return { name: text }, nil\nuser, err = parse_user(\"komagata\")\nif err\n  print(err[\"message\"])\nelse\n  print(user[\"name\"])\nmissing, err = parse_user(\"\")\nif err\n  print(err[\"message\"])\nelse\n  print(missing[\"name\"])\n"
+	src := "bounds = items ->\n  return items[0], items[items.len() - 1]\nmin, max = bounds([1, 2, 3])\nprint(min)\nprint(max)\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -1049,14 +1049,14 @@ func TestRunMultipleReturnAndAssignment(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "komagata\nempty user\n"
+	want := "1\n3\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
 }
 
-func TestRunTryPropagation(t *testing.T) {
-	src := "parse_user = text ->\n  if text == \"\"\n    return nil, error(\"empty user\")\n  return { name: text }, nil\nread_user = text ->\n  user = try parse_user(text)\n  return user[\"name\"], nil\nname, err = read_user(\"komagata\")\nif err\n  print(err[\"message\"])\nelse\n  print(name)\nname, err = read_user(\"\")\nif err\n  print(err[\"message\"])\nelse\n  print(name)\n"
+func TestRunRaiseCatchStructuredError(t *testing.T) {
+	src := "try\n  raise error(\"missing\", { kind: \"io\", code: \"file_not_found\", data: { path: \"missing.txt\" } })\ncatch err\n  print(err[\"message\"])\n  print(err[\"kind\"])\n  print(err[\"code\"])\n  print(err[\"data\"][\"path\"])\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -1069,7 +1069,7 @@ func TestRunTryPropagation(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "komagata\nempty user\n"
+	want := "missing\nio\nfile_not_found\nmissing.txt\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
