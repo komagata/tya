@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec Questioner"
+  short_description: "Ask decision questions and write testable feature specs."
+  default_prompt: "他にも明確化したほうがいい点があれば僕に質問して、その結果をテストすることを含めた SPEC として作成して"
