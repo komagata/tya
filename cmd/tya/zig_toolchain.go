@@ -94,7 +94,7 @@ func zigCommand(path string, args ...string) *exec.Cmd {
 }
 
 func managedZigError(cause error) error {
-	msg := fmt.Sprintf("managed Zig %s is required; reinstall or repair Tya", managedZigVersion)
+	msg := fmt.Sprintf("managed Zig %s is required; reinstall or repair Tya with: curl -fsSL https://tya-lang.org/install.sh | sh; Windows PowerShell: irm https://tya-lang.org/install.ps1 | iex; or set TYA_ZIG=/path/to/zig or TYA_ZIG_DIR=/path/to/zig-dir", managedZigVersion)
 	if cause != nil {
 		return fmt.Errorf("%s: %w", msg, cause)
 	}

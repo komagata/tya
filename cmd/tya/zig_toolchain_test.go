@@ -46,8 +46,15 @@ func TestResolveZigToolchainMissingReportsRepair(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	want := "reinstall or repair Tya"
-	if !strings.Contains(err.Error(), want) {
-		t.Fatalf("error = %q, want substring %q", err.Error(), want)
+	for _, want := range []string{
+		"reinstall or repair Tya",
+		"https://tya-lang.org/install.sh",
+		"https://tya-lang.org/install.ps1",
+		"TYA_ZIG=/path/to/zig",
+		"TYA_ZIG_DIR=/path/to/zig-dir",
+	} {
+		if !strings.Contains(err.Error(), want) {
+			t.Fatalf("error = %q, want substring %q", err.Error(), want)
+		}
 	}
 }
