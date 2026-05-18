@@ -269,6 +269,7 @@ var internalBuiltinNames = []string{
 	"math_atan2",
 	"process_run", "process_exec", "environ", "setenv", "unsetenv",
 	"digest_md5", "digest_sha1", "digest_sha256", "digest_sha384", "digest_sha512",
+	"regex_compile",
 	"secure_random_bytes", "secure_random_int",
 	// v0.41 GC
 	"runtime_gc_stats",

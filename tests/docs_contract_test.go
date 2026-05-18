@@ -303,6 +303,25 @@ func TestSpecDocumentsHmacStdlib(t *testing.T) {
 	}
 }
 
+func TestSpecDocumentsRegexStdlib(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"`regex/Regex`",
+		"`Regex.compile(pattern, options = {})`",
+		"`Regex.search(pattern, text, options = {})`",
+		"`find_all(text)`",
+		"`replace(text, replacement, limit = nil)`",
+		"`${1}`",
+		"`ignore_case`, `multi_line`, and `dot_all`",
+		"portable regex syntax subset",
+		"Lookbehind, backtracking-control verbs",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing Regex stdlib text %q", required)
+		}
+	}
+}
+
 func readRepoFile(t *testing.T, elems ...string) string {
 	t.Helper()
 	parts := append([]string{".."}, elems...)

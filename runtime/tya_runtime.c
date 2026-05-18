@@ -15,8 +15,21 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <locale.h>
 #include <math.h>
 #include <pthread.h>
+#ifndef _WIN32
+#include <regex.h>
+#else
+typedef struct { size_t re_nsub; } regex_t;
+typedef struct { int rm_so; int rm_eo; } regmatch_t;
+#define REG_EXTENDED 0
+#define REG_ICASE 0
+#define REG_NEWLINE 0
+static int regcomp(regex_t *re, const char *pattern, int flags) { (void)re; (void)pattern; (void)flags; return 1; }
+static int regexec(const regex_t *re, const char *text, size_t nmatch, regmatch_t matches[], int flags) { (void)re; (void)text; (void)nmatch; (void)matches; (void)flags; return 1; }
+static void regfree(regex_t *re) { (void)re; }
+#endif
 #include <signal.h>
 #include <stdatomic.h>
 #include <stdint.h>
@@ -4107,6 +4120,339 @@ TyaValue tya_process_exec(TyaValue command, TyaValue options) {
   (void)options;
   tya_raise(tya_string("process.exec: unsupported on this runtime"));
   return tya_nil();
+}
+
+/* =========================================================================
+ * v1: regex
+ * ========================================================================= */
+
+static void tya_regex_raise(const char *message, const char *code) {
+  TyaDictEntry entries[] = {
+    {"kind", tya_string("regex")},
+    {"code", tya_string(code)},
+  };
+  tya_raise_user(tya_error2(tya_string(message), tya_dict(entries, 2)));
+}
+
+static int tya_regex_flags(TyaValue options) {
+  if (options.kind == TYA_MISSING || options.kind == TYA_NIL) {
+    return REG_EXTENDED;
+  }
+  if (options.kind != TYA_DICT || options.dict == NULL) {
+    tya_regex_raise("regex.compile: options must be a dictionary", "invalid_options");
+    return REG_EXTENDED;
+  }
+  int flags = REG_EXTENDED;
+  for (int i = 0; i < options.dict->len; i++) {
+    const char *key = options.dict->entries[i].key;
+    TyaValue value = options.dict->entries[i].value;
+    if (key == NULL) continue;
+    if (value.kind != TYA_BOOL) {
+      char msg[160];
+      snprintf(msg, sizeof(msg), "regex.compile: option %s must be bool", key);
+      tya_regex_raise(msg, "invalid_option_kind");
+      return flags;
+    }
+    if (strcmp(key, "ignore_case") == 0) {
+      if (value.boolean) flags |= REG_ICASE;
+    } else if (strcmp(key, "multi_line") == 0) {
+      if (value.boolean) flags |= REG_NEWLINE;
+    } else if (strcmp(key, "dot_all") == 0) {
+      if (!value.boolean) flags |= REG_NEWLINE;
+    } else {
+      char msg[160];
+      snprintf(msg, sizeof(msg), "regex.compile: unknown option %s", key);
+      tya_regex_raise(msg, "unknown_option");
+      return flags;
+    }
+  }
+  return flags;
+}
+
+static int tya_regex_rune_index(const char *text, int byte_index) {
+  int runes = 0;
+  for (int i = 0; text[i] != '\0' && i < byte_index;) {
+    unsigned char c = (unsigned char)text[i];
+    int width = 1;
+    if ((c & 0x80) == 0) width = 1;
+    else if ((c & 0xE0) == 0xC0) width = 2;
+    else if ((c & 0xF0) == 0xE0) width = 3;
+    else if ((c & 0xF8) == 0xF0) width = 4;
+    i += width;
+    runes++;
+  }
+  return runes;
+}
+
+static TyaValue tya_regex_match_dict(const char *text, regmatch_t *matches, size_t nmatch) {
+  if (matches[0].rm_so < 0) return tya_nil();
+  TyaValue groups = tya_array(NULL, 0);
+  for (size_t i = 1; i < nmatch; i++) {
+    if (matches[i].rm_so < 0) {
+      tya_array_push(groups, tya_nil());
+    } else {
+      tya_array_push(groups, tya_string(tya_substr(text, (int)matches[i].rm_so, (int)(matches[i].rm_eo - matches[i].rm_so))));
+    }
+  }
+  TyaDictEntry entries[] = {
+    {"text", tya_string(tya_substr(text, (int)matches[0].rm_so, (int)(matches[0].rm_eo - matches[0].rm_so)))},
+    {"start", tya_number(tya_regex_rune_index(text, (int)matches[0].rm_so))},
+    {"end", tya_number(tya_regex_rune_index(text, (int)matches[0].rm_eo))},
+    {"groups", groups},
+  };
+  return tya_dict(entries, 4);
+}
+
+static int tya_regex_compile_inner(TyaValue self, regex_t *re) {
+  if (setlocale(LC_CTYPE, "C.UTF-8") == NULL) setlocale(LC_CTYPE, "");
+  TyaValue pattern = tya_member(self, "__regex_pattern");
+  TyaValue options = tya_member(self, "__regex_options");
+  if (pattern.kind != TYA_STRING || pattern.string == NULL) {
+    tya_regex_raise("regex.compile: pattern must be a string", "invalid_pattern_kind");
+    return -1;
+  }
+  int rc = regcomp(re, pattern.string, tya_regex_flags(options));
+  if (rc != 0) {
+    tya_regex_raise("regex.compile: invalid pattern", "invalid_pattern");
+    return -1;
+  }
+  return 0;
+}
+
+static TyaValue tya_regex_method_find(TyaValue self, TyaValue text, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e) {
+  (void)a; (void)b; (void)c; (void)d; (void)e;
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_regex_raise("regex.find: text must be a string", "invalid_text");
+    return tya_nil();
+  }
+  regex_t re;
+  if (tya_regex_compile_inner(self, &re) < 0) return tya_nil();
+  size_t nmatch = re.re_nsub + 1;
+  if (nmatch > 16) nmatch = 16;
+  regmatch_t matches[16];
+  int rc = regexec(&re, text.string, nmatch, matches, 0);
+  regfree(&re);
+  if (rc != 0) return tya_nil();
+  return tya_regex_match_dict(text.string, matches, nmatch);
+}
+
+static TyaValue tya_regex_method_match_p(TyaValue self, TyaValue text, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e) {
+  (void)a; (void)b; (void)c; (void)d; (void)e;
+  TyaValue found = tya_regex_method_find(self, text, tya_nil(), tya_nil(), tya_nil(), tya_nil(), tya_nil());
+  return tya_bool(found.kind != TYA_NIL);
+}
+
+static TyaValue tya_regex_method_find_all(TyaValue self, TyaValue text, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e) {
+  (void)a; (void)b; (void)c; (void)d; (void)e;
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_regex_raise("regex.find_all: text must be a string", "invalid_text");
+    return tya_nil();
+  }
+  regex_t re;
+  if (tya_regex_compile_inner(self, &re) < 0) return tya_nil();
+  size_t nmatch = re.re_nsub + 1;
+  if (nmatch > 16) nmatch = 16;
+  TyaValue out = tya_array(NULL, 0);
+  const char *cursor = text.string;
+  int offset = 0;
+  regmatch_t matches[16];
+  while (regexec(&re, cursor, nmatch, matches, 0) == 0) {
+    regmatch_t adjusted[16];
+    for (size_t i = 0; i < nmatch; i++) {
+      adjusted[i] = matches[i];
+      if (adjusted[i].rm_so >= 0) {
+        adjusted[i].rm_so += offset;
+        adjusted[i].rm_eo += offset;
+      }
+    }
+    tya_array_push(out, tya_regex_match_dict(text.string, adjusted, nmatch));
+    int advance = (int)matches[0].rm_eo;
+    if (advance <= 0) advance = 1;
+    cursor += advance;
+    offset += advance;
+    if (*cursor == '\0') break;
+  }
+  regfree(&re);
+  return out;
+}
+
+static TyaValue tya_regex_method_split(TyaValue self, TyaValue text, TyaValue limit_v, TyaValue b, TyaValue c, TyaValue d, TyaValue e) {
+  (void)b; (void)c; (void)d; (void)e;
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_regex_raise("regex.split: text must be a string", "invalid_text");
+    return tya_nil();
+  }
+  int limit = -1;
+  if (limit_v.kind != TYA_NIL && limit_v.kind != TYA_MISSING) {
+    if (limit_v.kind != TYA_NUMBER || floor(limit_v.number) != limit_v.number) {
+      tya_regex_raise("regex.split: limit must be an integer", "invalid_limit");
+      return tya_nil();
+    }
+    limit = (int)limit_v.number;
+  }
+  regex_t re;
+  if (tya_regex_compile_inner(self, &re) < 0) return tya_nil();
+  TyaValue out = tya_array(NULL, 0);
+  const char *cursor = text.string;
+  int offset = 0;
+  int parts = 0;
+  regmatch_t m;
+  while ((limit < 0 || parts < limit - 1) && regexec(&re, cursor, 1, &m, 0) == 0) {
+    tya_array_push(out, tya_string(tya_substr(text.string, offset, (int)m.rm_so)));
+    parts++;
+    int advance = (int)m.rm_eo;
+    if (advance <= 0) advance = 1;
+    cursor += advance;
+    offset += advance;
+    if (*cursor == '\0') break;
+  }
+  tya_array_push(out, tya_string(tya_dup_cstr(cursor)));
+  regfree(&re);
+  return out;
+}
+
+typedef struct {
+  char *data;
+  int len;
+  int cap;
+} TyaRegexBuffer;
+
+static void tya_regex_buf_append(TyaRegexBuffer *buf, const char *data, int len) {
+  if (len <= 0) return;
+  if (buf->len + len + 1 > buf->cap) {
+    int next = buf->cap == 0 ? 64 : buf->cap;
+    while (buf->len + len + 1 > next) next *= 2;
+    buf->data = realloc(buf->data, (size_t)next);
+    buf->cap = next;
+  }
+  memcpy(buf->data + buf->len, data, (size_t)len);
+  buf->len += len;
+  buf->data[buf->len] = '\0';
+}
+
+static int tya_regex_expand_replacement(TyaRegexBuffer *out, const char *text, const char *replacement, regmatch_t *matches, size_t nmatch) {
+  for (int i = 0; replacement[i] != '\0';) {
+    if (replacement[i] != '$') {
+      tya_regex_buf_append(out, replacement + i, 1);
+      i++;
+      continue;
+    }
+    if (replacement[i + 1] == '$') {
+      tya_regex_buf_append(out, "$", 1);
+      i += 2;
+      continue;
+    }
+    if (replacement[i + 1] != '{') {
+      tya_regex_raise("regex.replace: invalid replacement capture", "invalid_replacement");
+      return -1;
+    }
+    int j = i + 2;
+    int index = 0;
+    if (replacement[j] < '0' || replacement[j] > '9') {
+      tya_regex_raise("regex.replace: invalid replacement capture", "invalid_replacement");
+      return -1;
+    }
+    while (replacement[j] >= '0' && replacement[j] <= '9') {
+      index = index * 10 + (replacement[j] - '0');
+      j++;
+    }
+    if (replacement[j] != '}') {
+      tya_regex_raise("regex.replace: invalid replacement capture", "invalid_replacement");
+      return -1;
+    }
+    if (index == 0 || (size_t)index >= nmatch) {
+      tya_regex_raise("regex.replace: unknown capture reference", "unknown_capture");
+      return -1;
+    }
+    if (matches[index].rm_so >= 0) {
+      tya_regex_buf_append(out, text + matches[index].rm_so, (int)(matches[index].rm_eo - matches[index].rm_so));
+    }
+    i = j + 1;
+  }
+  return 0;
+}
+
+static TyaValue tya_regex_method_replace(TyaValue self, TyaValue text, TyaValue replacement, TyaValue limit_v, TyaValue c, TyaValue d, TyaValue e) {
+  (void)c; (void)d; (void)e;
+  if (text.kind != TYA_STRING || text.string == NULL) {
+    tya_regex_raise("regex.replace: text must be a string", "invalid_text");
+    return tya_nil();
+  }
+  if (replacement.kind != TYA_STRING || replacement.string == NULL) {
+    tya_regex_raise("regex.replace: replacement must be a string", "invalid_replacement");
+    return tya_nil();
+  }
+  int limit = -1;
+  if (limit_v.kind != TYA_NIL && limit_v.kind != TYA_MISSING) {
+    if (limit_v.kind != TYA_NUMBER || floor(limit_v.number) != limit_v.number) {
+      tya_regex_raise("regex.replace: limit must be an integer", "invalid_limit");
+      return tya_nil();
+    }
+    limit = (int)limit_v.number;
+  }
+  regex_t re;
+  if (tya_regex_compile_inner(self, &re) < 0) return tya_nil();
+  size_t nmatch = re.re_nsub + 1;
+  if (nmatch > 16) nmatch = 16;
+  TyaRegexBuffer out = {0};
+  const char *cursor = text.string;
+  int offset = 0;
+  int replaced = 0;
+  regmatch_t matches[16];
+  while ((limit < 0 || replaced < limit) && regexec(&re, cursor, nmatch, matches, 0) == 0) {
+    tya_regex_buf_append(&out, cursor, (int)matches[0].rm_so);
+    regmatch_t adjusted[16];
+    for (size_t i = 0; i < nmatch; i++) {
+      adjusted[i] = matches[i];
+      if (adjusted[i].rm_so >= 0) {
+        adjusted[i].rm_so += offset;
+        adjusted[i].rm_eo += offset;
+      }
+    }
+    if (tya_regex_expand_replacement(&out, text.string, replacement.string, adjusted, nmatch) < 0) {
+      regfree(&re);
+      return tya_nil();
+    }
+    int advance = (int)matches[0].rm_eo;
+    if (advance <= 0) advance = 1;
+    cursor += advance;
+    offset += advance;
+    replaced++;
+    if (*cursor == '\0') break;
+  }
+  tya_regex_buf_append(&out, cursor, (int)strlen(cursor));
+  regfree(&re);
+  return tya_string(out.data == NULL ? "" : out.data);
+}
+
+TyaValue tya_regex_compile(TyaValue pattern, TyaValue options) {
+#ifdef _WIN32
+  (void)pattern; (void)options;
+  tya_regex_raise("regex.compile: unsupported on this runtime", "unsupported_runtime");
+  return tya_nil();
+#else
+  if (setlocale(LC_CTYPE, "C.UTF-8") == NULL) setlocale(LC_CTYPE, "");
+  if (pattern.kind != TYA_STRING || pattern.string == NULL) {
+    tya_regex_raise("regex.compile: pattern must be a string", "invalid_pattern_kind");
+    return tya_nil();
+  }
+  regex_t re;
+  int rc = regcomp(&re, pattern.string, tya_regex_flags(options));
+  if (rc != 0) {
+    tya_regex_raise("regex.compile: invalid pattern", "invalid_pattern");
+    return tya_nil();
+  }
+  regfree(&re);
+  TyaValue obj = tya_object();
+  tya_set_member(obj, "__regex_pattern", pattern);
+  tya_set_member(obj, "__regex_options", options);
+  tya_set_member(obj, "match?", tya_bind_method(obj, tya_regex_method_match_p));
+  tya_set_member(obj, "find", tya_bind_method(obj, tya_regex_method_find));
+  tya_set_member(obj, "find_all", tya_bind_method(obj, tya_regex_method_find_all));
+  tya_set_member(obj, "split", tya_bind_method(obj, tya_regex_method_split));
+  tya_set_member(obj, "replace", tya_bind_method(obj, tya_regex_method_replace));
+  return obj;
+#endif
 }
 
 /* =========================================================================

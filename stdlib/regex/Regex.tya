@@ -1,0 +1,10 @@
+# Regex provides the regex/Regex standard library API.
+class Regex
+  static compile = pattern, options = {} ->
+    return regex_compile(pattern, options)
+
+  static match? = pattern, text, options = {} ->
+    return Self.compile(pattern, options).match?(text)
+
+  static search = pattern, text, options = {} ->
+    return Self.compile(pattern, options).find(text)

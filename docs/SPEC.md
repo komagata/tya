@@ -1603,6 +1603,7 @@ json/Json                  JSON parse/generate helpers
 log/Logger                 logger
 markdown/Markdown          Markdown renderer
 math/Math                  numeric helpers
+regex/Regex                regular expression helpers
 matrix/Matrix              matrix value
 net/http/Client            HTTP client
 net/http/Next              HTTP middleware continuation
@@ -1728,6 +1729,33 @@ algorithms, malformed encodings, unknown options, and wrong kinds raise
 structured crypto errors. General encryption, public-key cryptography,
 password hashing, certificates, and streaming HMAC contexts are outside
 v1.0.0.
+
+### Regex
+
+`regex/Regex` provides regular expression helpers without adding regex
+literals or operators to the language. `Regex.compile(pattern, options = {})`
+returns a reusable regex value. `Regex.match?(pattern, text, options = {})`
+returns whether the pattern appears anywhere in `text`, and
+`Regex.search(pattern, text, options = {})` returns the first match dictionary
+or `nil`.
+
+Compiled regex values support `match?(text)`, `find(text)`,
+`find_all(text)`, `split(text, limit = nil)`, and
+`replace(text, replacement, limit = nil)`. Match dictionaries contain
+`text`, `start`, `end`, and `groups`; `start` and `end` are Unicode rune
+indexes and `groups` is an array of captured strings or `nil` for unmatched
+optional groups. Replacement supports explicit numeric capture references with
+the `${1}` spelling; `$$` emits a literal dollar sign, and unknown capture
+references are invalid.
+
+Supported options are `ignore_case`, `multi_line`, and `dot_all`, all bools
+defaulting to `false`. The v1 portable regex syntax subset is common extended
+regular expression syntax: literals, `.`, character classes, grouping,
+alternation, `*`, `+`, `?`, bounded repeats, and `^`/`$` anchors. Lookbehind,
+backtracking-control verbs, locale-dependent matching, regex literals, and
+engine-specific extensions are outside v1.0.0. Invalid patterns, unknown
+options, wrong option kinds, wrong argument kinds, and invalid replacement
+captures raise structured regex errors.
 
 `io/Reader`, `io/Writer`, and `net/socket` define stream capability
 interfaces for readable, writable, closable, and flushable values. `Reader`

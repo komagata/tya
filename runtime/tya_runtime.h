@@ -220,6 +220,7 @@ TyaValue tya_digest_sha1(TyaValue text);
 TyaValue tya_digest_sha256(TyaValue text);
 TyaValue tya_digest_sha384(TyaValue text);
 TyaValue tya_digest_sha512(TyaValue text);
+TyaValue tya_regex_compile(TyaValue pattern, TyaValue options);
 
 TyaValue tya_secure_random_bytes(TyaValue n);
 TyaValue tya_secure_random_int(TyaValue min, TyaValue max);

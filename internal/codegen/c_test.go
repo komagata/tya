@@ -67,6 +67,21 @@ func TestEmitCHmacProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCRegexProgram(t *testing.T) {
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	dir := t.TempDir()
+	main := filepath.Join(dir, "main.tya")
+	code := "import regex as regex\nrx = regex.Regex.compile(\"([a-z]+)=([0-9]+)\")\nfound = rx.find(\"a=1 b=22\")\nprint(found[\"text\"])\nprint(found[\"groups\"][1])\nprint(rx.find_all(\"a=1 b=22\").len())\nprint(regex.Regex.compile(\", *\").split(\"a, b, c\").join(\"|\"))\nprint(rx.replace(\"a=1 b=22\", r\"${2}\", 1))\n"
+	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := compileAndRunFile(t, main)
+	want := "a=1\n1\n2\na|b|c\n1 b=22\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestEmitCIncludesSourceLineComments(t *testing.T) {
 	prog := checkedProgram(t, "x = 1\nprint(x)\n")
 	csrc, _, err := EmitC(prog)

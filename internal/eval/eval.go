@@ -23,6 +23,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -101,6 +102,11 @@ type Module struct {
 	Members Dict
 }
 
+type RegexValue struct {
+	pattern string
+	re      *regexp.Regexp
+}
+
 type Function struct {
 	Params   []string
 	Defaults []ast.Expr
@@ -154,6 +160,210 @@ func applyErrorOptions(errValue *ErrorValue, options Dict) error {
 		}
 	}
 	return nil
+}
+
+func regexError(message string, code string) *ErrorValue {
+	return &ErrorValue{Message: message, Kind: "regex", Code: code, Data: Dict{}, Cause: nil}
+}
+
+func regexRaised(message string, code string) *raisedSignal {
+	return &raisedSignal{value: regexError(message, code)}
+}
+
+func compileRegexValue(pattern string, options Dict) (*RegexValue, error) {
+	prefix := ""
+	for key, value := range options {
+		flag, ok := value.(bool)
+		if !ok {
+			return nil, regexRaised("regex.compile: option "+key+" must be bool", "invalid_option_kind")
+		}
+		switch key {
+		case "ignore_case":
+			if flag {
+				prefix += "i"
+			}
+		case "multi_line":
+			if flag {
+				prefix += "m"
+			}
+		case "dot_all":
+			if flag {
+				prefix += "s"
+			}
+		default:
+			return nil, regexRaised("regex.compile: unknown option "+key, "unknown_option")
+		}
+	}
+	expr := pattern
+	if prefix != "" {
+		expr = "(?" + prefix + ")" + pattern
+	}
+	re, err := regexp.Compile(expr)
+	if err != nil {
+		return nil, regexRaised("regex.compile: invalid pattern", "invalid_pattern")
+	}
+	return &RegexValue{pattern: pattern, re: re}, nil
+}
+
+func regexObject(compiled *RegexValue) Dict {
+	obj := Dict{"__module_namespace": true, "__regex": compiled}
+	obj["match?"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("regex.match? expects 1 argument")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, regexRaised("regex.match?: text must be a string", "invalid_text")
+		}
+		return compiled.re.FindStringIndex(text) != nil, nil
+	})
+	obj["find"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("regex.find expects 1 argument")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, regexRaised("regex.find: text must be a string", "invalid_text")
+		}
+		return regexMatchDict(compiled.re, text, compiled.re.FindStringSubmatchIndex(text)), nil
+	})
+	obj["find_all"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("regex.find_all expects 1 argument")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, regexRaised("regex.find_all: text must be a string", "invalid_text")
+		}
+		matches := compiled.re.FindAllStringSubmatchIndex(text, -1)
+		items := make([]Value, 0, len(matches))
+		for _, match := range matches {
+			items = append(items, regexMatchDict(compiled.re, text, match))
+		}
+		return &Array{items: items}, nil
+	})
+	obj["split"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) < 1 || len(args) > 2 {
+			return nil, fmt.Errorf("regex.split expects 1 or 2 arguments")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, regexRaised("regex.split: text must be a string", "invalid_text")
+		}
+		limit := -1
+		if len(args) == 2 && args[1] != nil {
+			n, ok := numberAsInt(args[1])
+			if !ok {
+				return nil, regexRaised("regex.split: limit must be an integer", "invalid_limit")
+			}
+			limit = int(n)
+		}
+		parts := compiled.re.Split(text, limit)
+		items := make([]Value, 0, len(parts))
+		for _, part := range parts {
+			items = append(items, part)
+		}
+		return &Array{items: items}, nil
+	})
+	obj["replace"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) < 2 || len(args) > 3 {
+			return nil, fmt.Errorf("regex.replace expects 2 or 3 arguments")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, regexRaised("regex.replace: text must be a string", "invalid_text")
+		}
+		replacement, ok := args[1].(string)
+		if !ok {
+			return nil, regexRaised("regex.replace: replacement must be a string", "invalid_replacement")
+		}
+		limit := -1
+		if len(args) == 3 && args[2] != nil {
+			n, ok := numberAsInt(args[2])
+			if !ok {
+				return nil, regexRaised("regex.replace: limit must be an integer", "invalid_limit")
+			}
+			limit = int(n)
+		}
+		return regexReplace(compiled.re, text, replacement, limit)
+	})
+	return obj
+}
+
+func regexMatchDict(re *regexp.Regexp, text string, match []int) Value {
+	if match == nil {
+		return nil
+	}
+	groups := make([]Value, 0, len(match)/2-1)
+	for i := 2; i < len(match); i += 2 {
+		if match[i] < 0 {
+			groups = append(groups, nil)
+			continue
+		}
+		groups = append(groups, text[match[i]:match[i+1]])
+	}
+	return Dict{
+		"text":   text[match[0]:match[1]],
+		"start":  int64(utf8.RuneCountInString(text[:match[0]])),
+		"end":    int64(utf8.RuneCountInString(text[:match[1]])),
+		"groups": &Array{items: groups},
+	}
+}
+
+func regexReplace(re *regexp.Regexp, text string, replacement string, limit int) (Value, error) {
+	matches := re.FindAllStringSubmatchIndex(text, -1)
+	if limit >= 0 && len(matches) > limit {
+		matches = matches[:limit]
+	}
+	var out strings.Builder
+	last := 0
+	for _, match := range matches {
+		out.WriteString(text[last:match[0]])
+		part, err := regexExpandReplacement(text, replacement, match)
+		if err != nil {
+			return nil, err
+		}
+		out.WriteString(part)
+		last = match[1]
+	}
+	out.WriteString(text[last:])
+	return out.String(), nil
+}
+
+func regexExpandReplacement(text string, replacement string, match []int) (string, error) {
+	var out strings.Builder
+	for i := 0; i < len(replacement); {
+		if replacement[i] != '$' {
+			out.WriteByte(replacement[i])
+			i++
+			continue
+		}
+		if i+1 < len(replacement) && replacement[i+1] == '$' {
+			out.WriteByte('$')
+			i += 2
+			continue
+		}
+		if i+2 >= len(replacement) || replacement[i+1] != '{' {
+			return "", regexRaised("regex.replace: invalid replacement capture", "invalid_replacement")
+		}
+		j := i + 2
+		for j < len(replacement) && replacement[j] >= '0' && replacement[j] <= '9' {
+			j++
+		}
+		if j == i+2 || j >= len(replacement) || replacement[j] != '}' {
+			return "", regexRaised("regex.replace: invalid replacement capture", "invalid_replacement")
+		}
+		index, _ := strconv.Atoi(replacement[i+2 : j])
+		slot := index * 2
+		if index == 0 || slot+1 >= len(match) {
+			return "", regexRaised("regex.replace: unknown capture reference", "unknown_capture")
+		}
+		if match[slot] >= 0 {
+			out.WriteString(text[match[slot]:match[slot+1]])
+		}
+		i = j + 1
+	}
+	return out.String(), nil
 }
 
 type Env struct {
@@ -386,6 +596,24 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 			return nil, fmt.Errorf("equal expects 2 arguments")
 		}
 		return deepEqual(args[0], args[1]), nil
+	}))
+	env.set("regex_compile", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("regex_compile expects 2 arguments")
+		}
+		pattern, ok := args[0].(string)
+		if !ok {
+			return nil, regexRaised("regex.compile: pattern must be a string", "invalid_pattern_kind")
+		}
+		options, ok := args[1].(Dict)
+		if !ok {
+			return nil, regexRaised("regex.compile: options must be a dictionary", "invalid_options")
+		}
+		compiled, err := compileRegexValue(pattern, options)
+		if err != nil {
+			return nil, err
+		}
+		return regexObject(compiled), nil
 	}))
 	env.set("ord", Builtin(func(args []Value) (Value, error) {
 		s, err := oneString("ord", args)

@@ -3742,6 +3742,8 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_digest_sha384(%s)", 1)
 	case "digest_sha512":
 		return emit("tya_digest_sha512(%s)", 1)
+	case "regex_compile":
+		return emit("tya_regex_compile(%s, %s)", 2)
 	case "secure_random_bytes":
 		return emit("tya_secure_random_bytes(%s)", 1)
 	case "secure_random_int":
