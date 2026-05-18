@@ -1757,6 +1757,34 @@ engine-specific extensions are outside v1.0.0. Invalid patterns, unknown
 options, wrong option kinds, wrong argument kinds, and invalid replacement
 captures raise structured regex errors.
 
+### Time
+
+`time/Time` provides wall-clock times, monotonic timestamps, durations,
+formatting, parsing, arithmetic, and sleeping without adding date/time syntax.
+`Time.now()` returns the current wall-clock time. `Time.monotonic()` returns a
+monotonic timestamp for elapsed-time measurement; monotonic values may be
+subtracted or compared but cannot be formatted as wall-clock dates.
+
+`Time.unix(seconds, nanos = 0)` constructs a UTC wall-clock time. Wall-clock
+time values support `unix()`, `unix_nanos()`, `utc()`, `local()`,
+`format(layout)`, `add(duration)`, and `sub(other)`. `sub` returns a duration.
+`Time.parse(text, layout = "rfc3339")` parses documented layouts. Supported
+layout names are `rfc3339`, `date`, `time`, and `unix` for formatting, and
+`rfc3339`, `date`, and `unix` for parsing.
+
+`Time.duration(seconds = 0, options = {})` constructs a duration. Supported
+duration options are `minutes`, `hours`, `milliseconds`, `microseconds`, and
+`nanoseconds`. Duration values support `seconds()`, `milliseconds()`,
+`microseconds()`, `nanoseconds()`, `add(other)`, and `sub(other)`.
+`Time.sleep(duration_or_seconds)` accepts either a duration value or a number
+of seconds.
+
+Timezone support for v1.0.0 is limited to UTC and the process local timezone.
+Named timezone database lookup, locale-aware month/day names, date/time
+literals, recurrence APIs, and leap-second guarantees beyond host runtime
+behavior are outside v1.0.0. Invalid layouts, invalid parse text, wrong
+argument kinds, and unknown duration options raise structured time errors.
+
 `io/Reader`, `io/Writer`, and `net/socket` define stream capability
 interfaces for readable, writable, closable, and flushable values. `Reader`
 supports `read`, `read_line`, `each_line`, `eof?`, and `close`. `Writer`

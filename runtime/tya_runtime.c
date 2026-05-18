@@ -2971,23 +2971,249 @@ bool tya_truthy(TyaValue value) {
  * v0.24: time
  * ========================================================================= */
 
+static void tya_time_raise(const char *message, const char *code) {
+  TyaDictEntry entries[] = {
+    {"kind", tya_string("time")},
+    {"code", tya_string(code)},
+  };
+  tya_raise_user(tya_error2(tya_string(message), tya_dict(entries, 2)));
+}
+
+static double tya_time_value_seconds(TyaValue value, bool *monotonic, bool *ok) {
+  if (value.kind == TYA_NUMBER) {
+    if (monotonic) *monotonic = false;
+    if (ok) *ok = true;
+    return value.number;
+  }
+  if ((value.kind == TYA_OBJECT || value.kind == TYA_DICT) && value.dict != NULL) {
+    TyaValue seconds = tya_member(value, "__time_seconds");
+    if (seconds.kind == TYA_NUMBER) {
+      TyaValue mono = tya_member(value, "__time_monotonic");
+      if (monotonic) *monotonic = mono.kind == TYA_BOOL && mono.boolean;
+      if (ok) *ok = true;
+      return seconds.number;
+    }
+  }
+  if (ok) *ok = false;
+  return 0.0;
+}
+
+static double tya_duration_value_seconds(TyaValue value, bool *ok) {
+  if (value.kind == TYA_NUMBER) {
+    if (ok) *ok = true;
+    return value.number;
+  }
+  if ((value.kind == TYA_OBJECT || value.kind == TYA_DICT) && value.dict != NULL) {
+    TyaValue seconds = tya_member(value, "__duration_seconds");
+    if (seconds.kind == TYA_NUMBER) {
+      if (ok) *ok = true;
+      return seconds.number;
+    }
+  }
+  if (ok) *ok = false;
+  return 0.0;
+}
+
+static TyaValue tya_time_object(double seconds, bool monotonic, bool local);
+static TyaValue tya_duration_object(double seconds);
+
+static TyaValue tya_time_method_unix(TyaValue self, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false;
+  double seconds = tya_time_value_seconds(self, NULL, &ok);
+  return ok ? tya_number(floor(seconds)) : tya_nil();
+}
+
+static TyaValue tya_time_method_unix_nanos(TyaValue self, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false;
+  double seconds = tya_time_value_seconds(self, NULL, &ok);
+  return ok ? tya_number(seconds * 1.0e9) : tya_nil();
+}
+
+static TyaValue tya_time_method_utc(TyaValue self, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false, mono = false;
+  double seconds = tya_time_value_seconds(self, &mono, &ok);
+  return ok ? tya_time_object(seconds, mono, false) : tya_nil();
+}
+
+static TyaValue tya_time_method_local(TyaValue self, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false, mono = false;
+  double seconds = tya_time_value_seconds(self, &mono, &ok);
+  return ok ? tya_time_object(seconds, mono, true) : tya_nil();
+}
+
+static TyaValue tya_time_method_format(TyaValue self, TyaValue layout, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d; (void)e; (void)f;
+  return tya_time_format(self, layout, true);
+}
+
+static TyaValue tya_time_method_add(TyaValue self, TyaValue duration, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false, mono = false, dok = false;
+  double seconds = tya_time_value_seconds(self, &mono, &ok);
+  double delta = tya_duration_value_seconds(duration, &dok);
+  if (!ok || !dok) {
+    tya_time_raise("time.add: duration must be a duration", "invalid_duration");
+    return tya_nil();
+  }
+  TyaValue local = tya_member(self, "__time_local");
+  return tya_time_object(seconds + delta, mono, local.kind == TYA_BOOL && local.boolean);
+}
+
+static TyaValue tya_time_method_sub(TyaValue self, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false, ook = false;
+  double seconds = tya_time_value_seconds(self, NULL, &ok);
+  double rhs = tya_time_value_seconds(other, NULL, &ook);
+  if (!ok || !ook) {
+    tya_time_raise("time.sub: other must be a time", "invalid_time");
+    return tya_nil();
+  }
+  return tya_duration_object(seconds - rhs);
+}
+
+static TyaValue tya_duration_method_seconds(TyaValue self, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false;
+  double seconds = tya_duration_value_seconds(self, &ok);
+  return ok ? tya_number(seconds) : tya_nil();
+}
+
+static TyaValue tya_duration_method_milliseconds(TyaValue self, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false;
+  double seconds = tya_duration_value_seconds(self, &ok);
+  return ok ? tya_number(seconds * 1.0e3) : tya_nil();
+}
+
+static TyaValue tya_duration_method_microseconds(TyaValue self, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false;
+  double seconds = tya_duration_value_seconds(self, &ok);
+  return ok ? tya_number(seconds * 1.0e6) : tya_nil();
+}
+
+static TyaValue tya_duration_method_nanoseconds(TyaValue self, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false;
+  double seconds = tya_duration_value_seconds(self, &ok);
+  return ok ? tya_number(seconds * 1.0e9) : tya_nil();
+}
+
+static TyaValue tya_duration_method_add(TyaValue self, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false, ook = false;
+  double seconds = tya_duration_value_seconds(self, &ok);
+  double rhs = tya_duration_value_seconds(other, &ook);
+  if (!ok || !ook) return tya_nil();
+  return tya_duration_object(seconds + rhs);
+}
+
+static TyaValue tya_duration_method_sub(TyaValue self, TyaValue other, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d; (void)e; (void)f;
+  bool ok = false, ook = false;
+  double seconds = tya_duration_value_seconds(self, &ok);
+  double rhs = tya_duration_value_seconds(other, &ook);
+  if (!ok || !ook) return tya_nil();
+  return tya_duration_object(seconds - rhs);
+}
+
+static TyaValue tya_time_object(double seconds, bool monotonic, bool local) {
+  TyaValue obj = tya_object();
+  tya_set_member(obj, "__time_seconds", tya_number(seconds));
+  tya_set_member(obj, "__time_monotonic", tya_bool(monotonic));
+  tya_set_member(obj, "__time_local", tya_bool(local));
+  tya_set_member(obj, "unix", tya_bind_method(obj, tya_time_method_unix));
+  tya_set_member(obj, "unix_nanos", tya_bind_method(obj, tya_time_method_unix_nanos));
+  tya_set_member(obj, "utc", tya_bind_method(obj, tya_time_method_utc));
+  tya_set_member(obj, "local", tya_bind_method(obj, tya_time_method_local));
+  tya_set_member(obj, "format", tya_bind_method(obj, tya_time_method_format));
+  tya_set_member(obj, "add", tya_bind_method(obj, tya_time_method_add));
+  tya_set_member(obj, "sub", tya_bind_method(obj, tya_time_method_sub));
+  return obj;
+}
+
+static TyaValue tya_duration_object(double seconds) {
+  TyaValue obj = tya_object();
+  tya_set_member(obj, "__duration_seconds", tya_number(seconds));
+  tya_set_member(obj, "seconds", tya_bind_method(obj, tya_duration_method_seconds));
+  tya_set_member(obj, "milliseconds", tya_bind_method(obj, tya_duration_method_milliseconds));
+  tya_set_member(obj, "microseconds", tya_bind_method(obj, tya_duration_method_microseconds));
+  tya_set_member(obj, "nanoseconds", tya_bind_method(obj, tya_duration_method_nanoseconds));
+  tya_set_member(obj, "add", tya_bind_method(obj, tya_duration_method_add));
+  tya_set_member(obj, "sub", tya_bind_method(obj, tya_duration_method_sub));
+  return obj;
+}
+
 TyaValue tya_time_now(void) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  return tya_number((double)tv.tv_sec + (double)tv.tv_usec / 1.0e6);
+  return tya_time_object((double)tv.tv_sec + (double)tv.tv_usec / 1.0e6, false, false);
+}
+
+TyaValue tya_time_monotonic(void) {
+  return tya_time_object(tya_now_seconds(), true, false);
+}
+
+TyaValue tya_time_unix(TyaValue seconds, TyaValue nanos) {
+  if (nanos.kind == TYA_MISSING || nanos.kind == TYA_NIL) nanos = tya_number(0);
+  if (seconds.kind != TYA_NUMBER || nanos.kind != TYA_NUMBER || floor(nanos.number) != nanos.number) {
+    tya_time_raise("time.unix: seconds must be a number and nanos must be an integer", "invalid_seconds");
+    return tya_nil();
+  }
+  return tya_time_object(seconds.number + nanos.number / 1.0e9, false, false);
+}
+
+TyaValue tya_time_duration(TyaValue seconds, TyaValue options) {
+  if (seconds.kind != TYA_NUMBER) {
+    tya_time_raise("time.duration: seconds must be a number", "invalid_seconds");
+    return tya_nil();
+  }
+  if (options.kind == TYA_MISSING || options.kind == TYA_NIL) {
+    return tya_duration_object(seconds.number);
+  }
+  if (options.kind != TYA_DICT || options.dict == NULL) {
+    tya_time_raise("time.duration: options must be a dictionary", "invalid_options");
+    return tya_nil();
+  }
+  double total = seconds.number;
+  for (int i = 0; i < options.dict->len; i++) {
+    const char *key = options.dict->entries[i].key;
+    TyaValue value = options.dict->entries[i].value;
+    if (key == NULL) continue;
+    if (value.kind != TYA_NUMBER) {
+      tya_time_raise("time.duration: option must be a number", "invalid_option");
+      return tya_nil();
+    }
+    if (strcmp(key, "minutes") == 0) total += value.number * 60.0;
+    else if (strcmp(key, "hours") == 0) total += value.number * 3600.0;
+    else if (strcmp(key, "milliseconds") == 0) total += value.number / 1.0e3;
+    else if (strcmp(key, "microseconds") == 0) total += value.number / 1.0e6;
+    else if (strcmp(key, "nanoseconds") == 0) total += value.number / 1.0e9;
+    else {
+      tya_time_raise("time.duration: unknown option", "unknown_option");
+      return tya_nil();
+    }
+  }
+  return tya_duration_object(total);
 }
 
 TyaValue tya_time_sleep(TyaValue seconds) {
-  if (seconds.kind != TYA_NUMBER) {
-    tya_raise(tya_string("time.sleep: argument must be a number"));
+  bool ok = false;
+  double sleep_seconds = tya_duration_value_seconds(seconds, &ok);
+  if (!ok) {
+    tya_time_raise("time.sleep: argument must be a duration or number", "invalid_duration");
     return tya_nil();
   }
-  if (seconds.number < 0) {
-    tya_raise(tya_string("time.sleep: negative duration"));
+  if (sleep_seconds < 0) {
+    tya_time_raise("time.sleep: negative duration", "negative_duration");
     return tya_nil();
   }
   if (tya_current_task_ptr == NULL) {
-    double deadline = tya_now_seconds() + seconds.number;
+    double deadline = tya_now_seconds() + sleep_seconds;
     while (tya_now_seconds() < deadline) {
       tya_task_wake_sleepers();
       if (tya_ready_head != NULL) {
@@ -3006,7 +3232,7 @@ TyaValue tya_time_sleep(TyaValue seconds) {
     }
     return tya_nil();
   } else {
-    tya_task_sleep_until(tya_current_task_ptr, tya_now_seconds() + seconds.number);
+    tya_task_sleep_until(tya_current_task_ptr, tya_now_seconds() + sleep_seconds);
     tya_task_yield(false);
     return tya_nil();
   }
@@ -3014,37 +3240,48 @@ TyaValue tya_time_sleep(TyaValue seconds) {
 }
 
 TyaValue tya_time_format(TyaValue t, TyaValue layout, bool has_layout) {
-  if (t.kind != TYA_NUMBER) {
-    tya_raise(tya_string("time.format: argument must be a number"));
+  bool ok = false, monotonic = false;
+  double seconds = tya_time_value_seconds(t, &monotonic, &ok);
+  if (!ok) {
+    tya_time_raise("time.format: argument must be a time", "invalid_time");
     return tya_nil();
   }
-  const char *layout_name = "iso";
+  if (monotonic) {
+    tya_time_raise("time.format: monotonic time cannot be formatted", "monotonic_format");
+    return tya_nil();
+  }
+  const char *layout_name = "rfc3339";
   if (has_layout) {
     if (layout.kind != TYA_STRING || layout.string == NULL) {
-      tya_raise(tya_string("time.format: layout must be a string"));
+      tya_time_raise("time.format: layout must be a string", "invalid_layout");
       return tya_nil();
     }
     layout_name = layout.string;
   }
   if (strcmp(layout_name, "unix") == 0) {
     char buf[32];
-    snprintf(buf, sizeof(buf), "%ld", (long)t.number);
+    snprintf(buf, sizeof(buf), "%ld", (long)seconds);
     char *out = malloc(strlen(buf) + 1);
     strcpy(out, buf);
     return tya_string(out);
   }
-  time_t tt = (time_t)t.number;
+  time_t tt = (time_t)seconds;
   struct tm gm;
-  gmtime_r(&tt, &gm);
+  TyaValue local = tya_member(t, "__time_local");
+  if (local.kind == TYA_BOOL && local.boolean) {
+    localtime_r(&tt, &gm);
+  } else {
+    gmtime_r(&tt, &gm);
+  }
   char buf[64];
-  if (strcmp(layout_name, "iso") == 0) {
+  if (strcmp(layout_name, "iso") == 0 || strcmp(layout_name, "rfc3339") == 0) {
     strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%SZ", &gm);
   } else if (strcmp(layout_name, "date") == 0) {
     strftime(buf, sizeof(buf), "%Y-%m-%d", &gm);
   } else if (strcmp(layout_name, "time") == 0) {
     strftime(buf, sizeof(buf), "%H:%M:%S", &gm);
   } else {
-    tya_raise(tya_string("time.format: unknown layout"));
+    tya_time_raise("time.format: unknown layout", "unknown_layout");
     return tya_nil();
   }
   char *out = malloc(strlen(buf) + 1);
@@ -3052,39 +3289,59 @@ TyaValue tya_time_format(TyaValue t, TyaValue layout, bool has_layout) {
   return tya_string(out);
 }
 
-TyaValue tya_time_parse(TyaValue text) {
+TyaValue tya_time_parse(TyaValue text, TyaValue layout, bool has_layout) {
   if (text.kind != TYA_STRING || text.string == NULL) {
-    tya_raise(tya_string("time.parse: argument must be a string"));
+    tya_time_raise("time.parse: text must be a string", "invalid_text");
     return tya_nil();
+  }
+  const char *layout_name = "rfc3339";
+  if (has_layout) {
+    if (layout.kind == TYA_MISSING || layout.kind == TYA_NIL) {
+      layout_name = "rfc3339";
+    } else
+    if (layout.kind != TYA_STRING || layout.string == NULL) {
+      tya_time_raise("time.parse: layout must be a string", "invalid_layout");
+      return tya_nil();
+    } else {
+      layout_name = layout.string;
+    }
   }
   struct tm tm;
   memset(&tm, 0, sizeof(tm));
   const char *s = text.string;
-  size_t n = strlen(s);
-  const char *fmt;
-  if (n >= 20 && s[10] == 'T' && s[n - 1] == 'Z') {
+  const char *fmt = NULL;
+  if (strcmp(layout_name, "rfc3339") == 0 || strcmp(layout_name, "iso") == 0) {
     fmt = "%Y-%m-%dT%H:%M:%SZ";
-  } else if (n == 10) {
+  } else if (strcmp(layout_name, "date") == 0) {
     fmt = "%Y-%m-%d";
+  } else if (strcmp(layout_name, "unix") == 0) {
+    char *end = NULL;
+    long value = strtol(s, &end, 10);
+    if (end == s || *end != '\0') {
+      tya_time_raise("time.parse: invalid timestamp", "invalid_timestamp");
+      return tya_nil();
+    }
+    return tya_time_object((double)value, false, false);
   } else {
-    tya_raise(tya_string("time.parse: unsupported format"));
+    tya_time_raise("time.parse: unknown layout", "unknown_layout");
     return tya_nil();
   }
   if (strptime(s, fmt, &tm) == NULL) {
-    tya_raise(tya_string("time.parse: invalid timestamp"));
+    tya_time_raise("time.parse: invalid timestamp", "invalid_timestamp");
     return tya_nil();
   }
   time_t tt = timegm(&tm);
-  return tya_number((double)tt);
+  return tya_time_object((double)tt, false, false);
 }
 
 TyaValue tya_time_since(TyaValue t) {
-  if (t.kind != TYA_NUMBER) {
-    tya_raise(tya_string("time.since: argument must be a number"));
+  bool ok = false;
+  double seconds = tya_time_value_seconds(t, NULL, &ok);
+  if (!ok) {
+    tya_time_raise("time.since: argument must be a time", "invalid_time");
     return tya_nil();
   }
-  TyaValue now = tya_time_now();
-  return tya_number(now.number - t.number);
+  return tya_duration_object(tya_now_seconds() - seconds);
 }
 
 /* =========================================================================

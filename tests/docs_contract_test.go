@@ -322,6 +322,26 @@ func TestSpecDocumentsRegexStdlib(t *testing.T) {
 	}
 }
 
+func TestSpecDocumentsTimeContract(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"`time/Time`",
+		"`Time.now()`",
+		"`Time.monotonic()`",
+		"`Time.unix(seconds, nanos = 0)`",
+		"`unix()`, `unix_nanos()`, `utc()`, `local()`",
+		"`Time.parse(text, layout = \"rfc3339\")`",
+		"`Time.duration(seconds = 0, options = {})`",
+		"`minutes`, `hours`, `milliseconds`, `microseconds`, and `nanoseconds`",
+		"`Time.sleep(duration_or_seconds)`",
+		"Named timezone database lookup",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing Time contract text %q", required)
+		}
+	}
+}
+
 func readRepoFile(t *testing.T, elems ...string) string {
 	t.Helper()
 	parts := append([]string{".."}, elems...)

@@ -2714,6 +2714,19 @@ func runtimeKind(v Value) string {
 	case *Array:
 		return "array"
 	case Dict:
+		if secs, ok := numberAsFloat(x["__duration_seconds"]); ok {
+			return fmt.Sprintf("%gs", secs)
+		}
+		if secs, ok := numberAsFloat(x["__time_seconds"]); ok {
+			monotonic, _ := x["__time_monotonic"].(bool)
+			if monotonic {
+				return "<monotonic time>"
+			}
+			value, err := formatTimeValue(secs, false, false, "rfc3339")
+			if err == nil {
+				return value.(string)
+			}
+		}
 		if isModuleNamespace(x) {
 			if name, ok := x["__class_name"].(string); ok {
 				return "class " + name
@@ -3117,24 +3130,235 @@ func stringifyValue(v Value, seen map[uintptr]bool) string {
 
 // v0.24 builtins
 var tyaRng = mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
+var tyaMonotonicStart = time.Now()
+
+func timeError(message string, code string) *ErrorValue {
+	return &ErrorValue{Message: message, Kind: "time", Code: code, Data: Dict{}, Cause: nil}
+}
+
+func timeRaised(message string, code string) *raisedSignal {
+	return &raisedSignal{value: timeError(message, code)}
+}
+
+func timeSeconds(value Value) (float64, bool, bool) {
+	switch v := value.(type) {
+	case float64:
+		return v, false, true
+	case int64:
+		return float64(v), false, true
+	case Dict:
+		secs, ok := numberAsFloat(v["__time_seconds"])
+		if !ok {
+			return 0, false, false
+		}
+		mono, _ := v["__time_monotonic"].(bool)
+		return secs, mono, true
+	default:
+		return 0, false, false
+	}
+}
+
+func durationSeconds(value Value) (float64, bool) {
+	switch v := value.(type) {
+	case float64:
+		return v, true
+	case int64:
+		return float64(v), true
+	case Dict:
+		secs, ok := numberAsFloat(v["__duration_seconds"])
+		return secs, ok
+	default:
+		return 0, false
+	}
+}
+
+func timeObject(secs float64, monotonic bool, local bool) Dict {
+	obj := Dict{"__module_namespace": true, "__time_seconds": secs, "__time_monotonic": monotonic, "__time_local": local}
+	obj["unix"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("time.unix expects 0 arguments")
+		}
+		return int64(mathpkg.Floor(secs)), nil
+	})
+	obj["unix_nanos"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("time.unix_nanos expects 0 arguments")
+		}
+		return int64(secs * 1e9), nil
+	})
+	obj["utc"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("time.utc expects 0 arguments")
+		}
+		return timeObject(secs, monotonic, false), nil
+	})
+	obj["local"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("time.local expects 0 arguments")
+		}
+		return timeObject(secs, monotonic, true), nil
+	})
+	obj["format"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("time.format expects 1 argument")
+		}
+		layout, ok := args[0].(string)
+		if !ok {
+			return nil, timeRaised("time.format: layout must be a string", "invalid_layout")
+		}
+		return formatTimeValue(secs, monotonic, local, layout)
+	})
+	obj["add"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("time.add expects 1 argument")
+		}
+		d, ok := durationSeconds(args[0])
+		if !ok {
+			return nil, timeRaised("time.add: duration must be a duration", "invalid_duration")
+		}
+		return timeObject(secs+d, monotonic, local), nil
+	})
+	obj["sub"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("time.sub expects 1 argument")
+		}
+		other, _, ok := timeSeconds(args[0])
+		if !ok {
+			return nil, timeRaised("time.sub: other must be a time", "invalid_time")
+		}
+		return durationObject(secs - other), nil
+	})
+	return obj
+}
+
+func durationObject(secs float64) Dict {
+	obj := Dict{"__module_namespace": true, "__duration_seconds": secs}
+	obj["seconds"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("duration.seconds expects 0 arguments")
+		}
+		return secs, nil
+	})
+	obj["milliseconds"] = Builtin(func(args []Value) (Value, error) { return secs * 1e3, nil })
+	obj["microseconds"] = Builtin(func(args []Value) (Value, error) { return secs * 1e6, nil })
+	obj["nanoseconds"] = Builtin(func(args []Value) (Value, error) { return int64(secs * 1e9), nil })
+	obj["add"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("duration.add expects 1 argument")
+		}
+		other, ok := durationSeconds(args[0])
+		if !ok {
+			return nil, timeRaised("duration.add: other must be a duration", "invalid_duration")
+		}
+		return durationObject(secs + other), nil
+	})
+	obj["sub"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("duration.sub expects 1 argument")
+		}
+		other, ok := durationSeconds(args[0])
+		if !ok {
+			return nil, timeRaised("duration.sub: other must be a duration", "invalid_duration")
+		}
+		return durationObject(secs - other), nil
+	})
+	return obj
+}
+
+func formatTimeValue(secs float64, monotonic bool, local bool, layout string) (Value, error) {
+	if monotonic {
+		return nil, timeRaised("time.format: monotonic time cannot be formatted", "monotonic_format")
+	}
+	t := time.Unix(int64(secs), int64((secs-mathpkg.Floor(secs))*1e9))
+	if local {
+		t = t.Local()
+	} else {
+		t = t.UTC()
+	}
+	switch layout {
+	case "rfc3339", "iso":
+		return t.Format(time.RFC3339), nil
+	case "date":
+		return t.Format("2006-01-02"), nil
+	case "time":
+		return t.Format("15:04:05"), nil
+	case "unix":
+		return strconv.FormatInt(t.Unix(), 10), nil
+	}
+	return nil, timeRaised("time.format: unknown layout", "unknown_layout")
+}
 
 func registerV24Builtins(env *Env) {
 	env.set("time_now", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 0 {
 			return nil, fmt.Errorf("time_now expects 0 arguments")
 		}
-		return float64(time.Now().UnixNano()) / 1e9, nil
+		return timeObject(float64(time.Now().UnixNano())/1e9, false, false), nil
+	}))
+	env.set("time_monotonic", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("time_monotonic expects 0 arguments")
+		}
+		return timeObject(time.Since(tyaMonotonicStart).Seconds(), true, false), nil
+	}))
+	env.set("time_unix", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("time_unix expects 2 arguments")
+		}
+		secs, ok := numberAsFloat(args[0])
+		if !ok {
+			return nil, timeRaised("time.unix: seconds must be a number", "invalid_seconds")
+		}
+		nanos, ok := numberAsInt(args[1])
+		if !ok {
+			return nil, timeRaised("time.unix: nanos must be an integer", "invalid_nanos")
+		}
+		return timeObject(secs+float64(nanos)/1e9, false, false), nil
+	}))
+	env.set("time_duration", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("time_duration expects 2 arguments")
+		}
+		secs, ok := numberAsFloat(args[0])
+		if !ok {
+			return nil, timeRaised("time.duration: seconds must be a number", "invalid_seconds")
+		}
+		options, ok := args[1].(Dict)
+		if !ok {
+			return nil, timeRaised("time.duration: options must be a dictionary", "invalid_options")
+		}
+		for key, value := range options {
+			n, ok := numberAsFloat(value)
+			if !ok {
+				return nil, timeRaised("time.duration: option "+key+" must be a number", "invalid_option")
+			}
+			switch key {
+			case "minutes":
+				secs += n * 60
+			case "hours":
+				secs += n * 3600
+			case "milliseconds":
+				secs += n / 1e3
+			case "microseconds":
+				secs += n / 1e6
+			case "nanoseconds":
+				secs += n / 1e9
+			default:
+				return nil, timeRaised("time.duration: unknown option "+key, "unknown_option")
+			}
+		}
+		return durationObject(secs), nil
 	}))
 	env.set("time_sleep", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("time_sleep expects 1 argument")
 		}
-		secs, ok := numberAsFloat(args[0])
+		secs, ok := durationSeconds(args[0])
 		if !ok {
-			return nil, fmt.Errorf("time_sleep expects number")
+			return nil, timeRaised("time.sleep: argument must be a duration or number", "invalid_duration")
 		}
 		if secs < 0 {
-			return nil, &raisedSignal{value: "time.sleep: negative duration"}
+			return nil, timeRaised("time.sleep: negative duration", "negative_duration")
 		}
 		time.Sleep(time.Duration(secs * float64(time.Second)))
 		return nil, nil
@@ -3143,53 +3367,71 @@ func registerV24Builtins(env *Env) {
 		if len(args) < 1 || len(args) > 2 {
 			return nil, fmt.Errorf("time_format expects 1 or 2 arguments")
 		}
-		secs, ok := numberAsFloat(args[0])
+		secs, monotonic, ok := timeSeconds(args[0])
 		if !ok {
-			return nil, fmt.Errorf("time_format expects number")
+			return nil, timeRaised("time.format: argument must be a time", "invalid_time")
 		}
-		layout := "iso"
+		local := false
+		if dict, ok := args[0].(Dict); ok {
+			local, _ = dict["__time_local"].(bool)
+		}
+		layout := "rfc3339"
 		if len(args) == 2 {
 			s, ok := args[1].(string)
 			if !ok {
-				return nil, fmt.Errorf("time_format layout must be string")
+				return nil, timeRaised("time.format: layout must be a string", "invalid_layout")
 			}
 			layout = s
 		}
-		t := time.Unix(int64(secs), int64((secs-mathpkg.Floor(secs))*1e9)).UTC()
-		switch layout {
-		case "iso":
-			return t.Format("2006-01-02T15:04:05Z"), nil
-		case "date":
-			return t.Format("2006-01-02"), nil
-		case "time":
-			return t.Format("15:04:05"), nil
-		case "unix":
-			return strconv.FormatInt(t.Unix(), 10), nil
-		}
-		return nil, &raisedSignal{value: "time.format: unknown layout"}
+		return formatTimeValue(secs, monotonic, local, layout)
 	}))
 	env.set("time_parse", Builtin(func(args []Value) (Value, error) {
-		s, err := oneString("time_parse", args)
-		if err != nil {
-			return nil, err
+		if len(args) < 1 || len(args) > 2 {
+			return nil, fmt.Errorf("time_parse expects 1 or 2 arguments")
 		}
-		layouts := []string{"2006-01-02T15:04:05Z", "2006-01-02"}
-		for _, l := range layouts {
-			if t, err := time.Parse(l, s); err == nil {
-				return float64(t.Unix()), nil
+		s, ok := args[0].(string)
+		if !ok {
+			return nil, timeRaised("time.parse: text must be a string", "invalid_text")
+		}
+		layout := "rfc3339"
+		if len(args) == 2 {
+			var ok bool
+			layout, ok = args[1].(string)
+			if !ok {
+				return nil, timeRaised("time.parse: layout must be a string", "invalid_layout")
 			}
 		}
-		return nil, &raisedSignal{value: "time.parse: invalid timestamp"}
+		switch layout {
+		case "rfc3339", "iso":
+			t, err := time.Parse(time.RFC3339, s)
+			if err != nil {
+				return nil, timeRaised("time.parse: invalid timestamp", "invalid_timestamp")
+			}
+			return timeObject(float64(t.UnixNano())/1e9, false, false), nil
+		case "date":
+			t, err := time.Parse("2006-01-02", s)
+			if err != nil {
+				return nil, timeRaised("time.parse: invalid timestamp", "invalid_timestamp")
+			}
+			return timeObject(float64(t.UnixNano())/1e9, false, false), nil
+		case "unix":
+			n, err := strconv.ParseInt(s, 10, 64)
+			if err != nil {
+				return nil, timeRaised("time.parse: invalid timestamp", "invalid_timestamp")
+			}
+			return timeObject(float64(n), false, false), nil
+		}
+		return nil, timeRaised("time.parse: unknown layout", "unknown_layout")
 	}))
 	env.set("time_since", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
 			return nil, fmt.Errorf("time_since expects 1 argument")
 		}
-		t, ok := numberAsFloat(args[0])
+		t, _, ok := timeSeconds(args[0])
 		if !ok {
-			return nil, fmt.Errorf("time_since expects number")
+			return nil, timeRaised("time.since: argument must be a time", "invalid_time")
 		}
-		return float64(time.Now().UnixNano())/1e9 - t, nil
+		return durationObject(float64(time.Now().UnixNano())/1e9 - t), nil
 	}))
 
 	env.set("random_seed", Builtin(func(args []Value) (Value, error) {

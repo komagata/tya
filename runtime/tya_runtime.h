@@ -166,9 +166,12 @@ TyaValue tya_setenv(TyaValue name, TyaValue value);
 TyaValue tya_unsetenv(TyaValue name);
 
 TyaValue tya_time_now(void);
+TyaValue tya_time_monotonic(void);
+TyaValue tya_time_unix(TyaValue seconds, TyaValue nanos);
+TyaValue tya_time_duration(TyaValue seconds, TyaValue options);
 TyaValue tya_time_sleep(TyaValue seconds);
 TyaValue tya_time_format(TyaValue t, TyaValue layout, bool has_layout);
-TyaValue tya_time_parse(TyaValue text);
+TyaValue tya_time_parse(TyaValue text, TyaValue layout, bool has_layout);
 TyaValue tya_time_since(TyaValue t);
 
 TyaValue tya_random_seed(TyaValue value);

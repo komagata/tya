@@ -1,0 +1,47 @@
+# v1 Time stdlib contract.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check time_valid.tya
+exec $WORK/tya run time_valid.tya
+stdout '2024-01-01T00:00:00Z'
+stdout '1704067200'
+stdout '61.5'
+stdout '61500'
+stdout 'true'
+stdout 'monotonic_format'
+
+exec $WORK/tya build time_valid.tya -o time_valid
+exec ./time_valid
+stdout '2024-01-01T00:00:00Z'
+stdout '1704067200'
+stdout '61.5'
+stdout '61500'
+stdout 'true'
+stdout 'monotonic_format'
+
+! exec $WORK/tya run time_invalid.tya
+stderr 'time.parse: invalid timestamp'
+
+-- time_valid.tya --
+import time as time
+
+t = time.Time.unix(1704067200)
+print(t.format("rfc3339"))
+print(time.Time.parse("2024-01-01T00:00:00Z").format("unix"))
+d = time.Time.duration(1, { minutes: 1, milliseconds: 500 })
+print(d.seconds())
+print(d.milliseconds())
+print(t.add(d).sub(t).nanoseconds() >= 61500000000)
+try
+  time.Time.monotonic().format("rfc3339")
+catch err
+  print(err["code"])
+
+-- time_invalid.tya --
+import time as time
+
+time.Time.parse("bad")

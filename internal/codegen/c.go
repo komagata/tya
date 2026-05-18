@@ -3613,6 +3613,12 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 	switch name {
 	case "time_now":
 		return emit("tya_time_now()", 0)
+	case "time_monotonic":
+		return emit("tya_time_monotonic()", 0)
+	case "time_unix":
+		return emit("tya_time_unix(%s, %s)", 2)
+	case "time_duration":
+		return emit("tya_time_duration(%s, %s)", 2)
 	case "time_sleep":
 		return emit("tya_time_sleep(%s)", 1)
 	case "time_format":
@@ -3631,7 +3637,20 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 			return fmt.Sprintf("tya_time_format(%s, %s, true)", a, b)
 		}
 	case "time_parse":
-		return emit("tya_time_parse(%s)", 1)
+		if len(args) == 1 {
+			return emit("tya_time_parse(%s, tya_nil(), false)", 1)
+		}
+		if len(args) == 2 {
+			a, _, err := g.expr(args[0])
+			if err != nil {
+				return ""
+			}
+			b, _, err := g.expr(args[1])
+			if err != nil {
+				return ""
+			}
+			return fmt.Sprintf("tya_time_parse(%s, %s, true)", a, b)
+		}
 	case "time_since":
 		return emit("tya_time_since(%s)", 1)
 	case "random_seed":

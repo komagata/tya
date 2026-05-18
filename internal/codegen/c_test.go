@@ -82,6 +82,21 @@ func TestEmitCRegexProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCTimeContractProgram(t *testing.T) {
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	dir := t.TempDir()
+	main := filepath.Join(dir, "main.tya")
+	code := "import time as time\nt = time.Time.unix(1704067200)\nprint(t.format(\"rfc3339\"))\nprint(time.Time.parse(\"2024-01-01T00:00:00Z\").format(\"unix\"))\nd = time.Time.duration(1, { milliseconds: 500 })\nprint(d.milliseconds())\nprint(t.add(d).sub(t).nanoseconds() == 1500000000)\ntime.Time.sleep(time.Time.duration(0))\n"
+	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := compileAndRunFile(t, main)
+	want := "2024-01-01T00:00:00Z\n1704067200\n1500\ntrue\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestEmitCIncludesSourceLineComments(t *testing.T) {
 	prog := checkedProgram(t, "x = 1\nprint(x)\n")
 	csrc, _, err := EmitC(prog)

@@ -3,14 +3,20 @@ class Time
   # Time.now provides the time/Time standard library operation.
   static now = () -> time_now()
 
+  static monotonic = () -> time_monotonic()
+
+  static unix = seconds, nanos = 0 -> time_unix(seconds, nanos)
+
+  static duration = seconds = 0, options = {} -> time_duration(seconds, options)
+
   # Time.sleep provides the time/Time standard library operation.
-  static sleep = seconds -> time_sleep(seconds)
+  static sleep = duration_or_seconds -> time_sleep(duration_or_seconds)
 
   # Time.format provides the time/Time standard library operation.
   static format = t, layout -> time_format(t, layout)
 
   # Time.parse provides the time/Time standard library operation.
-  static parse = text -> time_parse(text)
+  static parse = text, layout = "rfc3339" -> time_parse(text, layout)
 
   # Time.since provides the time/Time standard library operation.
   static since = t -> time_since(t)
