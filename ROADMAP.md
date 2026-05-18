@@ -105,6 +105,11 @@ selfhost/v01 fixed point
 selfhost/v02 latest-spec proof gates
 ```
 
+For v1.0.0, the Go implementation remains the reference implementation and
+bootstrap recovery path while release artifacts must prove the no-Go
+self-host bootstrap path. Removing `cmd/tya` or `internal/*` is not a v1.0.0
+release requirement.
+
 [`docs/static-typing-discussion.md`](docs/static-typing-discussion.md) records a
 static-typing discussion note. It is intentionally not current language
 authority, not an accepted direction, not on the roadmap, and not scheduled for
@@ -238,7 +243,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
     `tya` binary plus the checked-in source tree and does not invoke `go`.
   - [ ] Add CI coverage for the no-Go bootstrap proof in an environment where
     `go` is intentionally unavailable or hidden from `PATH`.
-  - [ ] Maintain a selfhost coverage manifest mapping latest `docs/SPEC.md`
+  - [x] Maintain a selfhost coverage manifest mapping latest `docs/SPEC.md`
     features to selfhost lexer/parser/checker/emitter support and fixtures.
   - [ ] Implement all language features in the self-hosted compiler.
   - [ ] Verify stage-2 == stage-3 fixed point at the latest spec.

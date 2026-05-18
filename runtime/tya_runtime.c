@@ -2604,7 +2604,7 @@ void tya_raise(TyaValue value) {
 
 void tya_raise_user(TyaValue value) {
   if (value.kind != TYA_ERROR) {
-    fprintf(stderr, "raise expects error value\n");
+    fprintf(stderr, "TYA-E0900: raise expects error value\n");
     exit(1);
   }
   tya_raise(value);

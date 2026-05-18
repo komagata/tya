@@ -1,0 +1,17 @@
+# v1 release artifact contract: managed Zig, platform declarations, and no-Go bootstrap hooks.
+cd $REPO
+
+exec grep -q 'build_package linux amd64' scripts/build_release_packages.sh
+exec grep -q 'build_package linux arm64' scripts/build_release_packages.sh
+exec grep -q 'build_package darwin amd64' scripts/build_release_packages.sh
+exec grep -q 'build_package darwin arm64' scripts/build_release_packages.sh
+exec grep -q 'build_package windows amd64' scripts/build_release_packages.sh
+exec grep -q 'build_package windows arm64' scripts/build_release_packages.sh
+exec grep -q 'Managed Zig installed' scripts/build_release_packages.sh
+
+exec grep -q 'TYA_BOOTSTRAP_TYA' scripts/bootstrap_no_go.sh
+exec grep -q 'fixed-point compare passed' scripts/bootstrap_no_go.sh
+exec grep -q 'no-Go violation' scripts/bootstrap_no_go.sh
+
+exec grep -q 'WebAssembly is documented for v1.0.0' docs/SPEC.md
+exec grep -q 'release-blocking target' docs/SPEC.md

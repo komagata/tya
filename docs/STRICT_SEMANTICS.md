@@ -48,3 +48,26 @@ Self-host v01 and v02 are part of the gate for this contract. Changes to
 runtime semantics must keep the Go implementation, generated C, and
 self-hosted compiler fixed points aligned for the syntax and runtime behavior
 the self-host compiler uses.
+
+## Dynamic Allowances
+
+Tya remains dynamically typed in v1.0.0. The following behavior is valid
+because runtime values carry kinds and operations validate the kind they need:
+
+- Runtime-kind checks may happen at execution time when operand kinds are not
+  statically knowable.
+- `nil` may be returned, assigned, printed, compared with `nil`, used as a
+  missing lookup result where documented, and tested as falsey in control-flow
+  conditions.
+- `==` and `!=` may compare any two values without coercion. Arrays and
+  dictionaries compare by contents, while functions, classes, objects,
+  resources, tasks, and channels compare by identity unless a documented
+  primitive surface says otherwise.
+- Runtime errors are valid for operations whose operand kinds are only known
+  during execution, such as calling a non-callable value, indexing a
+  non-collection, sending on a closed channel, or converting invalid UTF-8
+  bytes to text.
+
+These allowances do not permit implicit conversion. If an operation requires a
+number, string, bytes, array, dictionary, channel, function, or error value,
+unrelated kinds remain invalid.

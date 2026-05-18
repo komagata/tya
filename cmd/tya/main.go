@@ -1820,18 +1820,31 @@ func printDiagnostic(path string, err error) {
 	}
 	line, col, msg, ok := parseLineColError(err.Error())
 	if !ok {
-		fmt.Fprintf(os.Stderr, "%s: %s\n", path, err)
+		emitDiagnostics([]diag.Diagnostic{{
+			Severity: diag.Error,
+			Code:     "TYA-E0900",
+			Title:    "runtime error",
+			Message:  err.Error(),
+			Primary:  diag.Region{File: path},
+			Source:   "runtime",
+		}}, path)
 		return
 	}
-	lines := strings.Split(strings.ReplaceAll(string(src), "\r\n", "\n"), "\n")
-	sourceLine := ""
-	if line >= 1 && line <= len(lines) {
-		sourceLine = lines[line-1]
-	}
-	fmt.Fprintf(os.Stderr, "%s:%d:%d: %s\n", path, line, col, msg)
-	if sourceLine != "" {
-		fmt.Fprintf(os.Stderr, "  %s\n", sourceLine)
-		fmt.Fprintf(os.Stderr, "  %s^\n", strings.Repeat(" ", max(0, col-1)))
+	_ = src
+	emitDiagnostics([]diag.Diagnostic{{
+		Severity: diag.Error,
+		Code:     "TYA-E0900",
+		Title:    "runtime error",
+		Message:  msg,
+		Primary: diag.Region{
+			File:  path,
+			Start: diag.Pos{Line: line, Col: col},
+			End:   diag.Pos{Line: line, Col: col + 1},
+		},
+		Source: "runtime",
+	}}, path)
+	if cliFormat != diag.FormatJSON {
+		fmt.Fprintf(os.Stderr, "%s:%d:%d: %s\n", path, line, col, msg)
 	}
 }
 

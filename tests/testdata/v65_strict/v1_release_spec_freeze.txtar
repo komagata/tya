@@ -1,0 +1,53 @@
+# v1 release-level contract: diagnostics, JSON codes, dynamic allowances, and migrations.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check dynamic_allowances.tya
+exec $WORK/tya run dynamic_allowances.tya
+stdout 'truthy'
+stdout 'true'
+stdout 'nil'
+stdout 'true'
+
+! exec $WORK/tya --json check parser_error.tya
+stderr '"code":"TYA-E0120"'
+
+! exec $WORK/tya --json check checker_error.tya
+stderr '"code":"TYA-E0900"'
+
+! exec $WORK/tya run runtime_error.tya
+stderr 'TYA-E0900'
+stderr 'raise expects error value'
+
+! exec $WORK/tya check removed_helper.tya
+stderr 'TYA-E0812'
+stderr 'use bytes.array()'
+
+! exec $WORK/tya format defer.tya
+stderr 'defer syntax is not part of Tya v1.0.0'
+
+-- dynamic_allowances.tya --
+if 0
+  print("truthy")
+print(nil == nil)
+print({ name: "Tya" }["missing"])
+print([1, 2] == [1, 2])
+
+-- parser_error.tya --
+return 1
+
+-- checker_error.tya --
+ITEMS = []
+ITEMS = [1]
+
+-- runtime_error.tya --
+raise nil
+
+-- removed_helper.tya --
+print(bytes_array(b"x"))
+
+-- defer.tya --
+defer cleanup()

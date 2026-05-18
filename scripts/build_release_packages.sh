@@ -153,5 +153,6 @@ build_package darwin arm64 ""
 build_package linux amd64 ""
 build_package linux arm64 ""
 build_package windows amd64 ".exe"
+build_package windows arm64 ".exe"
 
 ls -1 "$dist_dir"/*.tar.gz

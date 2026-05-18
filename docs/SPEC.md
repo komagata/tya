@@ -28,6 +28,20 @@ Tya's user-facing commitments are:
 This document specifies the language, built-in function surface,
 standard-library surface, package rules, and tool surface.
 
+## v1.0.0 Compatibility Boundary
+
+Tya v1.x compatibility covers accepted syntax, documented runtime behavior,
+documented public standard-library and package APIs, stable diagnostic codes,
+the CLI JSON diagnostic schema, and release artifact semantics described in
+this specification. Undocumented implementation details, generated C internals,
+internal Go package layout, unsupported experimental flags, external package
+internals, and post-v1 ecosystem packages are not compatibility guarantees.
+
+The self-hosted compiler is the primary compiler direction for v1.0.0. The Go
+implementation remains in the repository as a reference implementation and
+bootstrap recovery path until the no-Go self-host bootstrap proof replaces that
+recovery role.
+
 The strict-semantics rule matrix in
 [`docs/STRICT_SEMANTICS.md`](STRICT_SEMANTICS.md) is normative for v1.0.0
 validity boundaries and records the active parser, checker, runtime, CLI, LSP,
@@ -1223,7 +1237,9 @@ WebAssembly builds preserve the compile-to-C backend and use the same Zig
 resolver as native builds. The first WebAssembly target layer supports
 stdout-oriented smoke programs. Browser builds also reject filesystem and
 process-oriented imports. `tya run` is native-only and does not execute
-WebAssembly artifacts.
+WebAssembly artifacts. WebAssembly is documented for v1.0.0 but is not a
+release-blocking target; WASM-specific gaps are tracked separately from the
+core language release gates.
 
 ## Built-In Tools {#builtin-tools}
 
