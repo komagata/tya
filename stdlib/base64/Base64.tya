@@ -18,14 +18,14 @@ class Base64
 
   # Base64.encode provides the base64/Base64 standard library operation.
   static encode = value ->
-    alphabet = Base64.alphabet()
-    n = Base64.byte_count(value)
+    alphabet = Self.alphabet()
+    n = Self.byte_count(value)
     out = ""
     i = 0
     while i + 3 <= n
-      b1 = Base64.byte_at(value, i)
-      b2 = Base64.byte_at(value, i + 1)
-      b3 = Base64.byte_at(value, i + 2)
+      b1 = Self.byte_at(value, i)
+      b2 = Self.byte_at(value, i + 1)
+      b3 = Self.byte_at(value, i + 2)
       g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16 + (b2 / 16).to_i()
       g3 = b2 % 16 * 4 + (b3 / 64).to_i()
@@ -34,13 +34,13 @@ class Base64
       i = i + 3
     rem = n - i
     if rem == 1
-      b1 = Base64.byte_at(value, i)
+      b1 = Self.byte_at(value, i)
       g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16
       out = out + alphabet[g1] + alphabet[g2] + "=="
     elseif rem == 2
-      b1 = Base64.byte_at(value, i)
-      b2 = Base64.byte_at(value, i + 1)
+      b1 = Self.byte_at(value, i)
+      b2 = Self.byte_at(value, i + 1)
       g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16 + (b2 / 16).to_i()
       g3 = b2 % 16 * 4
@@ -79,23 +79,23 @@ class Base64
     arr = []
     j = 0
     while j + 4 <= m
-      v1 = Base64.index_of(cleaned[j])
-      v2 = Base64.index_of(cleaned[j + 1])
-      v3 = Base64.index_of(cleaned[j + 2])
-      v4 = Base64.index_of(cleaned[j + 3])
+      v1 = Self.index_of(cleaned[j])
+      v2 = Self.index_of(cleaned[j + 1])
+      v3 = Self.index_of(cleaned[j + 2])
+      v4 = Self.index_of(cleaned[j + 3])
       arr.push(v1 * 4 + (v2 / 16).to_i())
       arr.push(v2 % 16 * 16 + (v3 / 4).to_i())
       arr.push(v3 % 4 * 64 + v4)
       j = j + 4
     rem = m - j
     if rem == 2
-      v1 = Base64.index_of(cleaned[j])
-      v2 = Base64.index_of(cleaned[j + 1])
+      v1 = Self.index_of(cleaned[j])
+      v2 = Self.index_of(cleaned[j + 1])
       arr.push(v1 * 4 + (v2 / 16).to_i())
     elseif rem == 3
-      v1 = Base64.index_of(cleaned[j])
-      v2 = Base64.index_of(cleaned[j + 1])
-      v3 = Base64.index_of(cleaned[j + 2])
+      v1 = Self.index_of(cleaned[j])
+      v2 = Self.index_of(cleaned[j + 1])
+      v3 = Self.index_of(cleaned[j + 2])
       arr.push(v1 * 4 + (v2 / 16).to_i())
       arr.push(v2 % 16 * 16 + (v3 / 4).to_i())
     return bytes(arr)

@@ -52,6 +52,21 @@ func TestEmitCFilesystemUtilitiesProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCHmacProgram(t *testing.T) {
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	dir := t.TempDir()
+	main := filepath.Join(dir, "main.tya")
+	code := "import hmac as hmac\nprint(hmac.Hmac.hexdigest(\"sha256\", \"key\", \"The quick brown fox jumps over the lazy dog\"))\nprint(hmac.Hmac.verify(\"sha256\", \"key\", \"The quick brown fox jumps over the lazy dog\", \"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\"))\n"
+	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := compileAndRunFile(t, main)
+	want := "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\ntrue\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestEmitCIncludesSourceLineComments(t *testing.T) {
 	prog := checkedProgram(t, "x = 1\nprint(x)\n")
 	csrc, _, err := EmitC(prog)

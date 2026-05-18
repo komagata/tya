@@ -1,0 +1,111 @@
+import digest as digest
+import hex as hex
+import base64 as base64
+
+# Hmac provides keyed message authentication helpers.
+class Hmac
+  static block_size = algorithm ->
+    if algorithm == "sha256"
+      return 64
+    if algorithm == "sha384" or algorithm == "sha512"
+      return 128
+    raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
+
+  static digest_size = algorithm ->
+    if algorithm == "sha256"
+      return 32
+    if algorithm == "sha384"
+      return 48
+    if algorithm == "sha512"
+      return 64
+    raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
+
+  static input_bytes = name, value ->
+    if value.class == String
+      return bytes_of(value)
+    if value.class == Bytes
+      return value
+    raise error("hmac." + name + ": value must be a string or bytes", { kind: "crypto", code: "invalid_input" })
+
+  static hash_hex = algorithm, value ->
+    if algorithm == "sha256"
+      return digest.Digest.sha256(value)
+    if algorithm == "sha384"
+      return digest.Digest.sha384(value)
+    if algorithm == "sha512"
+      return digest.Digest.sha512(value)
+    raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
+
+  static pad = data, size ->
+    arr = bytes_array(data)
+    while arr.len() < size
+      arr.push(0)
+    return bytes(arr)
+
+  static xor = data, byte ->
+    arr = bytes_array(data)
+    out = []
+    i = 0
+    while i < arr.len()
+      out.push(arr[i] ^ byte)
+      i = i + 1
+    return bytes(out)
+
+  static digest = algorithm, key, message ->
+    return hex.Hex.decode(Self.hexdigest(algorithm, key, message))
+
+  static hexdigest = algorithm, key, message ->
+    size = Self.block_size(algorithm)
+    key_bytes = Self.input_bytes("key", key)
+    if bytes_array(key_bytes).len() > size
+      key_bytes = hex.Hex.decode(Self.hash_hex(algorithm, key_bytes))
+    key_block = Self.pad(key_bytes, size)
+    inner = Self.xor(key_block, 0x36)
+    outer = Self.xor(key_block, 0x5c)
+    msg = Self.input_bytes("message", message)
+    inner_hash = hex.Hex.decode(Self.hash_hex(algorithm, bytes_concat(inner, msg)))
+    return Self.hash_hex(algorithm, bytes_concat(outer, inner_hash))
+
+  static base64digest = algorithm, key, message ->
+    return base64.Base64.encode(Self.digest(algorithm, key, message))
+
+  static constant_time_equal = left, right ->
+    a = bytes_array(left)
+    b = bytes_array(right)
+    if a.len() != b.len()
+      return false
+    diff = 0
+    i = 0
+    while i < a.len()
+      diff = diff | (a[i] ^ b[i])
+      i = i + 1
+    return diff == 0
+
+  static expected_bytes = algorithm, expected, options ->
+    algorithm
+    encoding = nil
+    if options != nil
+      if options.class != Dict
+        raise error("hmac.verify: options must be a dictionary", { kind: "crypto", code: "invalid_options" })
+      for entry in options
+        if entry["key"] != "encoding"
+          raise error("hmac.verify: unknown option " + entry["key"], { kind: "crypto", code: "unknown_option" })
+      encoding = options["encoding"]
+    if expected.class == Bytes
+      if encoding == nil or encoding == "raw"
+        return expected
+      raise error("hmac.verify: bytes expected value requires raw encoding", { kind: "crypto", code: "invalid_encoding" })
+    if expected.class != String
+      raise error("hmac.verify: expected must be a string or bytes", { kind: "crypto", code: "invalid_expected" })
+    if encoding == nil
+      encoding = "hex"
+    if encoding == "hex"
+      return hex.Hex.decode(expected)
+    if encoding == "base64"
+      return base64.Base64.decode(expected)
+    raise error("hmac.verify: invalid encoding", { kind: "crypto", code: "invalid_encoding" })
+
+  static verify = algorithm, key, message, expected, options = {} ->
+    actual = Self.digest(algorithm, key, message)
+    wanted = Self.expected_bytes(algorithm, expected, options)
+    return Self.constant_time_equal(actual, wanted)

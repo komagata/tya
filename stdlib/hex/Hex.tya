@@ -26,7 +26,7 @@ class Hex
       i = 0
       while i < n
         code = bytes[i]
-        out = out + Hex.hex_digit((code / 16).to_i()) + Hex.hex_digit(code % 16)
+        out = out + Self.hex_digit((code / 16).to_i()) + Self.hex_digit(code % 16)
         i = i + 1
       return out
     if value.class == String
@@ -34,7 +34,7 @@ class Hex
       i = 0
       while i < n
         code = ord(value[i])
-        out = out + Hex.hex_digit((code / 16).to_i()) + Hex.hex_digit(code % 16)
+        out = out + Self.hex_digit((code / 16).to_i()) + Self.hex_digit(code % 16)
         i = i + 1
       return out
     raise error("hex.encode: argument must be a string or bytes")
@@ -47,8 +47,8 @@ class Hex
     arr = []
     i = 0
     while i < n
-      hi = Hex.decode_digit(text[i])
-      lo = Hex.decode_digit(text[i + 1])
+      hi = Self.decode_digit(text[i])
+      lo = Self.decode_digit(text[i + 1])
       arr.push(hi * 16 + lo)
       i = i + 2
     return bytes(arr)

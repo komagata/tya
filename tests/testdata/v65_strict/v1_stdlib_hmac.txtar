@@ -1,0 +1,41 @@
+# v1 HMAC stdlib contract.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check hmac_valid.tya
+exec $WORK/tya run hmac_valid.tya
+stdout 'f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8'
+stdout 'd7f4727e2c0b39ae0f1e40cc96f60242d5b7801841cea6fc592c5d3e1ae50700582a96cf35e1e554995fe4e03381c237'
+stdout 'b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a'
+stdout '97yD9DBThCSxMpjmqm\+xQ\+9NWaFJRhdZl0edvC0aPNg='
+stdout 'true'
+stdout 'true'
+stdout 'false'
+
+exec $WORK/tya build hmac_valid.tya -o hmac_valid
+exec ./hmac_valid
+stdout 'f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8'
+stdout 'true'
+
+! exec $WORK/tya run hmac_invalid.tya
+stderr 'hmac.algorithm: unsupported algorithm'
+
+-- hmac_valid.tya --
+import hmac as hmac
+
+message = "The quick brown fox jumps over the lazy dog"
+print(hmac.Hmac.hexdigest("sha256", "key", message))
+print(hmac.Hmac.hexdigest("sha384", "key", message))
+print(hmac.Hmac.hexdigest("sha512", "key", message))
+print(hmac.Hmac.base64digest("sha256", "key", message))
+print(hmac.Hmac.verify("sha256", "key", message, "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"))
+print(hmac.Hmac.verify("sha256", "key", message, "97yD9DBThCSxMpjmqm+xQ+9NWaFJRhdZl0edvC0aPNg=", { encoding: "base64" }))
+print(hmac.Hmac.verify("sha256", "key", message, "00"))
+
+-- hmac_invalid.tya --
+import hmac as hmac
+
+print(hmac.Hmac.hexdigest("md5", "key", "message"))

@@ -164,6 +164,16 @@ type Env struct {
 	runeCache map[string][]rune
 }
 
+var primitiveClasses = map[string]Dict{
+	"Number":  {"__module_namespace": true, "__class_name": "Number", "name": "Number"},
+	"String":  {"__module_namespace": true, "__class_name": "String", "name": "String"},
+	"Bytes":   {"__module_namespace": true, "__class_name": "Bytes", "name": "Bytes"},
+	"Array":   {"__module_namespace": true, "__class_name": "Array", "name": "Array"},
+	"Dict":    {"__module_namespace": true, "__class_name": "Dict", "name": "Dict"},
+	"Boolean": {"__module_namespace": true, "__class_name": "Boolean", "name": "Boolean"},
+	"Nil":     {"__module_namespace": true, "__class_name": "Nil", "name": "Nil"},
+}
+
 func NewEnv() *Env {
 	return &Env{vars: map[string]Value{}, kinds: map[string]string{}, runeCache: map[string][]rune{}}
 }
@@ -322,6 +332,9 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 	var lineReader *bufio.Reader
 	if in != nil {
 		lineReader = bufio.NewReader(in)
+	}
+	for _, name := range []string{"Number", "String", "Bytes", "Array", "Dict", "Boolean", "Nil"} {
+		env.set(name, primitiveClass(name))
 	}
 	env.set("print", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 1 {
@@ -900,7 +913,9 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			if !method.Class || method.Abstract {
 				continue
 			}
-			value, err := evalExpr(method.Func, env)
+			methodEnv := env.child()
+			methodEnv.set("Self", class)
+			value, err := evalExpr(method.Func, methodEnv)
 			if err != nil {
 				return nil, err
 			}
@@ -1261,6 +1276,19 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		return arr, nil
 	case *ast.FuncLit:
 		return &Function{Params: n.Params, Defaults: n.Defaults, Body: n.Body, Expr: n.Expr, Env: env}, nil
+	case *ast.SelfExpr:
+		if n.Class {
+			value, ok := env.get("Self")
+			if !ok {
+				return nil, fmt.Errorf("Self is only valid inside a class body")
+			}
+			return value, nil
+		}
+		value, ok := env.get("self")
+		if !ok {
+			return nil, fmt.Errorf("self is only valid inside a method")
+		}
+		return value, nil
 	case *ast.BinaryExpr:
 		return evalBinary(n, env)
 	case *ast.UnaryExpr:
@@ -2217,6 +2245,8 @@ func classOf(value Value) Value {
 		return primitiveClass("Number")
 	case string:
 		return primitiveClass("String")
+	case *Bytes:
+		return primitiveClass("Bytes")
 	case *Array:
 		return primitiveClass("Array")
 	case Dict:
@@ -2227,6 +2257,9 @@ func classOf(value Value) Value {
 }
 
 func primitiveClass(name string) Dict {
+	if class, ok := primitiveClasses[name]; ok {
+		return class
+	}
 	return Dict{"__module_namespace": true, "__class_name": name, "name": name}
 }
 

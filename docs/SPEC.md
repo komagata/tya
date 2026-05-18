@@ -1593,6 +1593,7 @@ geometry/Size              size value
 geometry/Vector2           2D vector value
 geometry/Vector3           3D vector value
 hex/Hex                    hexadecimal encode/decode helpers
+hmac/Hmac                  keyed message authentication helpers
 image/Codec                image codec helpers
 image/Image                image value
 io/Io                      stream helpers
@@ -1709,6 +1710,24 @@ path order. `fn` receives an entry dictionary with `path`, `name`, `kind`, and
 `stat`. Supported options are `follow_symlinks`, `include_dirs`, and
 `include_files`; symlink following is not required where the host platform
 cannot safely detect loops.
+
+### HMAC
+
+`hmac/Hmac` provides keyed message authentication without adding a broader
+cryptography suite to v1.0.0. `Hmac.digest(algorithm, key, message)` returns
+raw bytes. `Hmac.hexdigest(algorithm, key, message)` returns lowercase
+hexadecimal text, and `Hmac.base64digest(algorithm, key, message)` returns
+Base64 text. Supported algorithms are `sha256`, `sha384`, and `sha512`.
+
+`key` and `message` must be strings or bytes; strings are encoded as UTF-8
+bytes. `Hmac.verify(algorithm, key, message, expected, options = {})` compares
+the computed digest to `expected` using constant-time comparison for equal
+length byte sequences. `expected` may be raw bytes, hex text, or Base64 text
+when `options["encoding"]` is `"raw"`, `"hex"`, or `"base64"`. Unsupported
+algorithms, malformed encodings, unknown options, and wrong kinds raise
+structured crypto errors. General encryption, public-key cryptography,
+password hashing, certificates, and streaming HMAC contexts are outside
+v1.0.0.
 
 `io/Reader`, `io/Writer`, and `net/socket` define stream capability
 interfaces for readable, writable, closable, and flushable values. `Reader`

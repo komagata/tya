@@ -22,6 +22,7 @@ var classNameRE = regexp.MustCompile(`^[A-Z][a-zA-Z0-9]*$`)
 var primitiveClassNames = map[string]bool{
 	"Number":  true,
 	"String":  true,
+	"Bytes":   true,
 	"Array":   true,
 	"Dict":    true,
 	"Boolean": true,

@@ -286,6 +286,23 @@ func TestSpecDocumentsFilesystemUtilities(t *testing.T) {
 	}
 }
 
+func TestSpecDocumentsHmacStdlib(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"`hmac/Hmac`",
+		"`Hmac.digest(algorithm, key, message)`",
+		"`Hmac.hexdigest(algorithm, key, message)`",
+		"`Hmac.base64digest(algorithm, key, message)`",
+		"`sha256`, `sha384`, and `sha512`",
+		"constant-time comparison",
+		"General encryption, public-key cryptography",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing HMAC stdlib text %q", required)
+		}
+	}
+}
+
 func readRepoFile(t *testing.T, elems ...string) string {
 	t.Helper()
 	parts := append([]string{".."}, elems...)
