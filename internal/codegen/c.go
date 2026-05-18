@@ -3809,6 +3809,63 @@ func v24Codegen(g *cgen, name string, args []ast.Expr) string {
 		return emit("tya_file_read_bytes(%s)", 1)
 	case "file_write_bytes":
 		return emit("tya_file_write_bytes(%s, %s)", 2)
+	case "file_copy":
+		if len(args) == 2 {
+			a, _, err := g.expr(args[0])
+			if err != nil {
+				return ""
+			}
+			b, _, err := g.expr(args[1])
+			if err != nil {
+				return ""
+			}
+			return fmt.Sprintf("tya_file_copy(%s, %s, tya_nil())", a, b)
+		}
+		if len(args) == 3 {
+			return emit("tya_file_copy(%s, %s, %s)", 3)
+		}
+	case "file_chmod":
+		return emit("tya_file_chmod(%s, %s)", 2)
+	case "file_temp":
+		if len(args) == 0 {
+			return "tya_file_temp(tya_string(\"tya\"), tya_string(\"\"))"
+		}
+		if len(args) == 1 {
+			a, _, err := g.expr(args[0])
+			if err != nil {
+				return ""
+			}
+			return fmt.Sprintf("tya_file_temp(%s, tya_string(\"\"))", a)
+		}
+		if len(args) == 2 {
+			return emit("tya_file_temp(%s, %s)", 2)
+		}
+	case "dir_mkdir_all":
+		return emit("tya_dir_mkdir_all(%s)", 1)
+	case "dir_remove_all":
+		return emit("tya_dir_remove_all(%s)", 1)
+	case "dir_temp_dir":
+		if len(args) == 0 {
+			return "tya_dir_temp_dir(tya_string(\"tya\"))"
+		}
+		if len(args) == 1 {
+			return emit("tya_dir_temp_dir(%s)", 1)
+		}
+	case "dir_walk":
+		if len(args) == 2 {
+			a, _, err := g.expr(args[0])
+			if err != nil {
+				return ""
+			}
+			b, _, err := g.expr(args[1])
+			if err != nil {
+				return ""
+			}
+			return fmt.Sprintf("tya_dir_walk(%s, %s, tya_nil())", a, b)
+		}
+		if len(args) == 3 {
+			return emit("tya_dir_walk(%s, %s, %s)", 3)
+		}
 	case "binary_read_f32":
 		return emit("tya_binary_read_f32(%s, %s, %s)", 3)
 	case "binary_read_f64":

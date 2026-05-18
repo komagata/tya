@@ -233,9 +233,9 @@ var builtinNames = []string{
 
 var internalBuiltinNames = []string{
 	"assert", "assert_equal", "chdir", "chr",
-	"cwd", "delete", "dir_list", "dir_mkdir", "dir_rmdir",
+	"cwd", "delete", "dir_list", "dir_mkdir", "dir_rmdir", "dir_mkdir_all", "dir_remove_all", "dir_walk", "dir_temp_dir",
 	"equal", "file_exists", "file_remove",
-	"file_rename", "file_stat",
+	"file_rename", "file_stat", "file_copy", "file_chmod", "file_temp",
 	"ord", "panic",
 	"path_expand_user",
 	"read_file", "read_line",

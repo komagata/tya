@@ -44,6 +44,8 @@
 
 extern char **environ;
 
+static char *tya_dup_cstr(const char *s);
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -2238,7 +2240,201 @@ TyaValue tya_file_stat(TyaValue path) {
   tya_set_member(out, "readable", tya_bool(access(path.string, R_OK) == 0));
   tya_set_member(out, "writable", tya_bool(access(path.string, W_OK) == 0));
   tya_set_member(out, "executable", tya_bool(access(path.string, X_OK) == 0));
+  tya_set_member(out, "mode", tya_number((double)(st.st_mode & 0777)));
   return out;
+}
+
+TyaValue tya_dir_mkdir_all(TyaValue path) {
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    tya_raise(tya_string("filesystem.mkdir_all: path must be a string"));
+    return tya_nil();
+  }
+  char *tmp = tya_dup_cstr(path.string);
+  size_t len = strlen(tmp);
+  for (size_t i = 1; i <= len; i++) {
+    if (tmp[i] == '/' || tmp[i] == '\0') {
+      char saved = tmp[i];
+      tmp[i] = '\0';
+      if (tmp[0] != '\0' && mkdir(tmp, 0755) != 0 && errno != EEXIST) {
+        free(tmp);
+        tya_raise(tya_string("filesystem.mkdir_all: mkdir failed"));
+        return tya_nil();
+      }
+      tmp[i] = saved;
+    }
+  }
+  free(tmp);
+  return tya_nil();
+}
+
+static bool tya_dangerous_path(const char *path) {
+  return path == NULL || path[0] == '\0' || strcmp(path, ".") == 0 || strcmp(path, "/") == 0;
+}
+
+static void tya_remove_all_cstr(const char *path) {
+  struct stat st;
+  if (lstat(path, &st) != 0) {
+    return;
+  }
+  if (S_ISDIR(st.st_mode)) {
+    DIR *dir = opendir(path);
+    if (dir != NULL) {
+      struct dirent *entry;
+      while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        size_t n = strlen(path) + 1 + strlen(entry->d_name) + 1;
+        char *child = malloc(n);
+        snprintf(child, n, "%s/%s", path, entry->d_name);
+        tya_remove_all_cstr(child);
+        free(child);
+      }
+      closedir(dir);
+    }
+    rmdir(path);
+  } else {
+    unlink(path);
+  }
+}
+
+TyaValue tya_dir_remove_all(TyaValue path) {
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    tya_raise(tya_string("filesystem.remove_all: path must be a string"));
+    return tya_nil();
+  }
+  if (tya_dangerous_path(path.string)) {
+    tya_raise(tya_string("filesystem.remove_all: dangerous path"));
+    return tya_nil();
+  }
+  tya_remove_all_cstr(path.string);
+  return tya_nil();
+}
+
+TyaValue tya_dir_temp_dir(TyaValue prefix) {
+  const char *p = (prefix.kind == TYA_STRING && prefix.string != NULL) ? prefix.string : "tya";
+  char templ[512];
+  snprintf(templ, sizeof(templ), "/tmp/%sXXXXXX", p);
+  char *path = tya_dup_cstr(templ);
+  if (mkdtemp(path) == NULL) {
+    free(path);
+    tya_raise(tya_string("filesystem.temp_dir: mkdtemp failed"));
+    return tya_nil();
+  }
+  return tya_string(path);
+}
+
+static TyaValue tya_stat_dict_for_path(const char *path) {
+  struct stat st;
+  if (stat(path, &st) != 0) return tya_dict(NULL, 0);
+  TyaValue out = tya_dict(NULL, 0);
+  const char *kind = S_ISDIR(st.st_mode) ? "dir" : (S_ISREG(st.st_mode) ? "file" : "other");
+  tya_set_member(out, "kind", tya_string(kind));
+  tya_set_member(out, "size", tya_number((double)st.st_size));
+  tya_set_member(out, "mode", tya_number((double)(st.st_mode & 0777)));
+  return out;
+}
+
+static void tya_walk_collect(const char *root, TyaValue paths) {
+  DIR *dir = opendir(root);
+  if (dir == NULL) return;
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+    size_t n = strlen(root) + 1 + strlen(entry->d_name) + 1;
+    char *child = malloc(n);
+    snprintf(child, n, "%s/%s", root, entry->d_name);
+    tya_push(paths, tya_string(child));
+    struct stat st;
+    if (stat(child, &st) == 0 && S_ISDIR(st.st_mode)) {
+      tya_walk_collect(child, paths);
+    }
+    free(child);
+  }
+  closedir(dir);
+}
+
+TyaValue tya_dir_walk(TyaValue path, TyaValue fn, TyaValue options) {
+  (void)options;
+  if (path.kind != TYA_STRING || path.string == NULL) {
+    tya_raise(tya_string("filesystem.walk: path must be string"));
+    return tya_nil();
+  }
+  TyaValue paths = tya_array(NULL, 0);
+  tya_walk_collect(path.string, paths);
+  paths = tya_array_sort(paths);
+  for (int i = 0; paths.array != NULL && i < paths.array->len; i++) {
+    TyaValue p = paths.array->items[i];
+    struct stat st;
+    if (p.kind != TYA_STRING || stat(p.string, &st) != 0) continue;
+    TyaValue entry = tya_dict(NULL, 0);
+    const char *slash = strrchr(p.string, '/');
+    tya_set_member(entry, "path", p);
+    tya_set_member(entry, "name", tya_string(slash == NULL ? p.string : slash + 1));
+    tya_set_member(entry, "kind", tya_string(S_ISDIR(st.st_mode) ? "dir" : "file"));
+    tya_set_member(entry, "stat", tya_stat_dict_for_path(p.string));
+    tya_call1(fn, entry);
+  }
+  return tya_nil();
+}
+
+TyaValue tya_file_copy(TyaValue src, TyaValue dst, TyaValue options) {
+  if (src.kind != TYA_STRING || src.string == NULL || dst.kind != TYA_STRING || dst.string == NULL) {
+    tya_raise(tya_string("filesystem.copy: paths must be strings"));
+    return tya_nil();
+  }
+  bool overwrite = true;
+  if (options.kind == TYA_DICT && options.dict != NULL) {
+    TyaValue ow = tya_index(options, tya_string("overwrite"));
+    if (ow.kind == TYA_BOOL) overwrite = ow.boolean;
+  }
+  if (!overwrite && access(dst.string, F_OK) == 0) {
+    tya_raise(tya_string("filesystem.copy: destination exists"));
+    return tya_nil();
+  }
+  FILE *in = fopen(src.string, "rb");
+  if (in == NULL) {
+    tya_raise(tya_string("filesystem.copy: source open failed"));
+    return tya_nil();
+  }
+  FILE *out = fopen(dst.string, "wb");
+  if (out == NULL) {
+    fclose(in);
+    tya_raise(tya_string("filesystem.copy: destination open failed"));
+    return tya_nil();
+  }
+  char buf[8192];
+  size_t n;
+  while ((n = fread(buf, 1, sizeof(buf), in)) > 0) {
+    fwrite(buf, 1, n, out);
+  }
+  fclose(in);
+  fclose(out);
+  return tya_nil();
+}
+
+TyaValue tya_file_chmod(TyaValue path, TyaValue mode) {
+  if (path.kind != TYA_STRING || path.string == NULL || mode.kind != TYA_NUMBER) {
+    tya_raise(tya_string("filesystem.chmod: invalid arguments"));
+    return tya_nil();
+  }
+  if (chmod(path.string, (mode_t)mode.number) != 0) {
+    tya_raise(tya_string("filesystem.chmod: chmod failed"));
+    return tya_nil();
+  }
+  return tya_nil();
+}
+
+TyaValue tya_file_temp(TyaValue prefix, TyaValue suffix) {
+  const char *p = (prefix.kind == TYA_STRING && prefix.string != NULL) ? prefix.string : "tya";
+  const char *s = (suffix.kind == TYA_STRING && suffix.string != NULL) ? suffix.string : "";
+  char templ[512];
+  snprintf(templ, sizeof(templ), "/tmp/%sXXXXXX%s", p, s);
+  int fd = mkstemps(templ, (int)strlen(s));
+  if (fd < 0) {
+    tya_raise(tya_string("filesystem.temp: mkstemp failed"));
+    return tya_nil();
+  }
+  close(fd);
+  return tya_string(templ);
 }
 
 TyaValue tya_path_expand_user(TyaValue value) {

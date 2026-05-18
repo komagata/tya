@@ -40,3 +40,15 @@ class File
   # Raises when the file cannot be written.
   static write_bytes = path, b ->
     file_write_bytes(path, b)
+
+  # copy copies file contents as bytes.
+  static copy = src, dst, options = {} ->
+    file_copy(src, dst, options)
+
+  # chmod changes POSIX-like permissions where supported.
+  static chmod = path, mode ->
+    file_chmod(path, mode)
+
+  # temp creates an empty temporary file and returns its path.
+  static temp = prefix = "tya", suffix = "" ->
+    file_temp(prefix, suffix)

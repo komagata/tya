@@ -1297,6 +1297,63 @@ func TestRunProcessStructuredErrors(t *testing.T) {
 	}
 }
 
+func TestRunFileCopyAndChmod(t *testing.T) {
+	dir := t.TempDir()
+	src := filepath.Join(dir, "src.bin")
+	dst := filepath.Join(dir, "dst.bin")
+	if err := os.WriteFile(src, []byte{0, 255, 65}, 0600); err != nil {
+		t.Fatal(err)
+	}
+	code := "file_copy(\"" + src + "\", \"" + dst + "\", { overwrite: true })\nfile_chmod(\"" + dst + "\", 420)\nprint(bytes_array(file_read_bytes(\"" + dst + "\"))[1])\nprint(file_stat(\"" + dst + "\")[\"mode\"])\n"
+	out := runEval(t, code)
+	if out != "255\n420\n" {
+		t.Fatalf("got %q", out)
+	}
+	err := runEvalError(t, "file_copy(\""+src+"\", \""+dst+"\", { overwrite: false })\n")
+	if err == nil || !strings.Contains(err.Error(), "destination exists") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunDirMkdirAllAndRemoveAll(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "a", "b")
+	code := "dir_mkdir_all(\"" + dir + "\")\nprint(file_exists(\"" + dir + "\"))\ndir_remove_all(\"" + filepath.Dir(filepath.Dir(dir)) + "\")\nprint(file_exists(\"" + dir + "\"))\ndir_remove_all(\"" + filepath.Join(t.TempDir(), "missing") + "\")\n"
+	out := runEval(t, code)
+	if out != "true\nfalse\n" {
+		t.Fatalf("got %q", out)
+	}
+	err := runEvalError(t, "dir_remove_all(\".\")\n")
+	if err == nil || !strings.Contains(err.Error(), "dangerous path") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunDirWalkDeterministicOrder(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "sub"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "b.txt"), []byte("b"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "sub", "a.txt"), []byte("a"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	code := "names = []\nrecord = entry -> names.push(entry[\"name\"])\ndir_walk(\"" + dir + "\", record, {})\nprint(names.join(\",\"))\n"
+	out := runEval(t, code)
+	if out != "b.txt,sub,a.txt\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestRunTempFileAndDir(t *testing.T) {
+	code := "f1 = file_temp(\"tya-test\", \".tmp\")\nf2 = file_temp(\"tya-test\", \".tmp\")\nd = dir_temp_dir(\"tya-test\")\nprint(f1 != f2)\nprint(file_exists(f1))\nprint(file_exists(d))\ndir_remove_all(d)\nfile_remove(f1)\nfile_remove(f2)\n"
+	out := runEval(t, code)
+	if out != "true\ntrue\ntrue\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestRunRejectsReturnOutsideFunction(t *testing.T) {
 	toks, errs := lexer.Lex("return 1\n")
 	if len(errs) != 0 {

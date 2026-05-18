@@ -11,3 +11,19 @@ class Dir
   # Dir.rmdir provides the dir/Dir standard library operation.
   static rmdir = path ->
     dir_rmdir(path)
+
+  # mkdir_all creates a directory and missing parents.
+  static mkdir_all = path ->
+    dir_mkdir_all(path)
+
+  # remove_all removes a file or directory tree recursively.
+  static remove_all = path ->
+    dir_remove_all(path)
+
+  # walk visits entries in deterministic order.
+  static walk = path, fn, options = {} ->
+    dir_walk(path, fn, options)
+
+  # temp_dir creates a temporary directory and returns its path.
+  static temp_dir = prefix = "tya" ->
+    dir_temp_dir(prefix)

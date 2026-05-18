@@ -268,6 +268,24 @@ func TestSpecDocumentsEnvironmentProcessContract(t *testing.T) {
 	}
 }
 
+func TestSpecDocumentsFilesystemUtilities(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"### Filesystem Utilities",
+		"`file/File.copy(src, dst, options = {})`",
+		"`file/File.chmod(path, mode)`",
+		"`dir/Dir.mkdir_all(path)`",
+		"`dir/Dir.remove_all(path)`",
+		"`dir/Dir.walk(path, fn, options = {})`",
+		"`file/File.temp(prefix = \"tya\", suffix = \"\")`",
+		"Windows permissions are best-effort",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing filesystem utility text %q", required)
+		}
+	}
+}
+
 func readRepoFile(t *testing.T, elems ...string) string {
 	t.Helper()
 	parts := append([]string{".."}, elems...)

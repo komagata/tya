@@ -1685,6 +1685,31 @@ raised error. Spawn/setup failures, invalid options, invalid environment
 values, timeout setup failures, and unsupported `Process.exec(command,
 options = {})` raise structured process errors.
 
+### Filesystem Utilities
+
+`file/File.copy(src, dst, options = {})` copies file contents as bytes.
+Supported options are `overwrite` and `preserve_mode`, both defaulting to
+`true`. When `overwrite` is false and `dst` exists, the operation raises a
+filesystem error.
+
+`file/File.chmod(path, mode)` changes POSIX-like permissions where the platform
+supports them. Windows permissions are best-effort and unsupported permission
+changes raise filesystem errors rather than silently promising POSIX behavior.
+`file/File.temp(prefix = "tya", suffix = "")` creates an empty temporary file
+under the operating-system temporary directory and returns its path.
+
+`dir/Dir.mkdir_all(path)` creates a directory and missing parents.
+`dir/Dir.remove_all(path)` removes a file or directory tree recursively;
+missing paths are a no-op, while dangerous roots such as `""`, `"."`, `/`, and
+platform roots are invalid. `dir/Dir.temp_dir(prefix = "tya")` creates a
+temporary directory and returns its path.
+
+`dir/Dir.walk(path, fn, options = {})` visits a directory tree in ascending
+path order. `fn` receives an entry dictionary with `path`, `name`, `kind`, and
+`stat`. Supported options are `follow_symlinks`, `include_dirs`, and
+`include_files`; symlink following is not required where the host platform
+cannot safely detect loops.
+
 `io/Reader`, `io/Writer`, and `net/socket` define stream capability
 interfaces for readable, writable, closable, and flushable values. `Reader`
 supports `read`, `read_line`, `each_line`, `eof?`, and `close`. `Writer`

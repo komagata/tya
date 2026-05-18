@@ -21,7 +21,9 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -545,7 +547,107 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		out["readable"] = mode&0444 != 0
 		out["writable"] = mode&0222 != 0
 		out["executable"] = mode&0111 != 0
+		out["mode"] = int64(mode.Perm())
 		return out, nil
+	}))
+	env.set("dir_mkdir_all", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("dir_mkdir_all", args)
+		if err != nil {
+			return nil, err
+		}
+		if err := os.MkdirAll(path, 0755); err != nil {
+			return nil, &raisedSignal{value: "filesystem.mkdir_all: " + err.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("dir_remove_all", Builtin(func(args []Value) (Value, error) {
+		path, err := oneString("dir_remove_all", args)
+		if err != nil {
+			return nil, err
+		}
+		if filesystemDangerousPath(path) {
+			return nil, &raisedSignal{value: "filesystem.remove_all: dangerous path"}
+		}
+		if err := os.RemoveAll(path); err != nil {
+			return nil, &raisedSignal{value: "filesystem.remove_all: " + err.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("dir_temp_dir", Builtin(func(args []Value) (Value, error) {
+		prefix := "tya"
+		if len(args) > 1 {
+			return nil, fmt.Errorf("dir_temp_dir expects 0 or 1 arguments")
+		}
+		if len(args) == 1 {
+			var ok bool
+			prefix, ok = args[0].(string)
+			if !ok {
+				return nil, &raisedSignal{value: "filesystem.temp_dir: prefix must be string"}
+			}
+		}
+		path, err := os.MkdirTemp("", prefix)
+		if err != nil {
+			return nil, &raisedSignal{value: "filesystem.temp_dir: " + err.Error()}
+		}
+		return path, nil
+	}))
+	env.set("dir_walk", Builtin(func(args []Value) (Value, error) {
+		if len(args) < 2 || len(args) > 3 {
+			return nil, fmt.Errorf("dir_walk expects 2 or 3 arguments")
+		}
+		root, ok := args[0].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "filesystem.walk: path must be string"}
+		}
+		fn, ok := args[1].(*Function)
+		if !ok {
+			return nil, &raisedSignal{value: "filesystem.walk: callback must be function"}
+		}
+		includeDirs, includeFiles := true, true
+		if len(args) == 3 && args[2] != nil {
+			opts, ok := args[2].(Dict)
+			if !ok {
+				return nil, &raisedSignal{value: "filesystem.walk: options must be dictionary"}
+			}
+			if v, has := opts["include_dirs"].(bool); has {
+				includeDirs = v
+			}
+			if v, has := opts["include_files"].(bool); has {
+				includeFiles = v
+			}
+		}
+		var paths []string
+		if err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if path != root {
+				paths = append(paths, path)
+			}
+			return nil
+		}); err != nil {
+			return nil, &raisedSignal{value: "filesystem.walk: " + err.Error()}
+		}
+		sort.Strings(paths)
+		for _, path := range paths {
+			info, err := os.Stat(path)
+			if err != nil {
+				return nil, &raisedSignal{value: "filesystem.walk: " + err.Error()}
+			}
+			isDir := info.IsDir()
+			if (isDir && !includeDirs) || (!isDir && !includeFiles) {
+				continue
+			}
+			kind := "file"
+			if isDir {
+				kind = "dir"
+			}
+			entry := Dict{"path": path, "name": filepath.Base(path), "kind": kind, "stat": fileInfoDict(info)}
+			if _, err := callValue(fn, []Value{entry}); err != nil {
+				return nil, err
+			}
+		}
+		return nil, nil
 	}))
 	env.set("path_expand_user", Builtin(func(args []Value) (Value, error) {
 		v, err := oneString("path_expand_user", args)
@@ -2571,6 +2673,29 @@ func oneArray(name string, args []Value) (*Array, error) {
 	return arr, nil
 }
 
+func fileInfoDict(info os.FileInfo) Dict {
+	kind := "other"
+	if info.Mode().IsRegular() {
+		kind = "file"
+	} else if info.IsDir() {
+		kind = "dir"
+	}
+	mode := info.Mode()
+	return Dict{
+		"kind":       kind,
+		"size":       int64(info.Size()),
+		"readable":   mode&0444 != 0,
+		"writable":   mode&0222 != 0,
+		"executable": mode&0111 != 0,
+		"mode":       int64(mode.Perm()),
+	}
+}
+
+func filesystemDangerousPath(path string) bool {
+	clean := filepath.Clean(path)
+	return path == "" || clean == "." || clean == string(filepath.Separator) || filepath.VolumeName(clean) == clean
+}
+
 func arrayAndFunction(name string, args []Value) (*Array, *Function, error) {
 	if len(args) != 2 {
 		return nil, nil, fmt.Errorf("%s expects 2 arguments", name)
@@ -3309,6 +3434,98 @@ func registerV25Builtins(env *Env) {
 			return nil, &raisedSignal{value: err.Error()}
 		}
 		return nil, nil
+	}))
+	env.set("file_copy", Builtin(func(args []Value) (Value, error) {
+		if len(args) < 2 || len(args) > 3 {
+			return nil, fmt.Errorf("file_copy expects 2 or 3 arguments")
+		}
+		src, ok := args[0].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "filesystem.copy: src must be string"}
+		}
+		dst, ok := args[1].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "filesystem.copy: dst must be string"}
+		}
+		overwrite := true
+		preserveMode := true
+		if len(args) == 3 && args[2] != nil {
+			opts, ok := args[2].(Dict)
+			if !ok {
+				return nil, &raisedSignal{value: "filesystem.copy: options must be dictionary"}
+			}
+			if v, has := opts["overwrite"].(bool); has {
+				overwrite = v
+			}
+			if v, has := opts["preserve_mode"].(bool); has {
+				preserveMode = v
+			}
+		}
+		if !overwrite {
+			if _, err := os.Stat(dst); err == nil {
+				return nil, &raisedSignal{value: "filesystem.copy: destination exists"}
+			}
+		}
+		data, err := os.ReadFile(src)
+		if err != nil {
+			return nil, &raisedSignal{value: "filesystem.copy: " + err.Error()}
+		}
+		mode := os.FileMode(0644)
+		if preserveMode {
+			if info, err := os.Stat(src); err == nil {
+				mode = info.Mode().Perm()
+			}
+		}
+		if err := os.WriteFile(dst, data, mode); err != nil {
+			return nil, &raisedSignal{value: "filesystem.copy: " + err.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("file_chmod", Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("file_chmod expects 2 arguments")
+		}
+		path, ok := args[0].(string)
+		if !ok {
+			return nil, &raisedSignal{value: "filesystem.chmod: path must be string"}
+		}
+		mode, ok := numberAsInt(args[1])
+		if !ok {
+			return nil, &raisedSignal{value: "filesystem.chmod: mode must be integer"}
+		}
+		if err := os.Chmod(path, os.FileMode(mode)); err != nil {
+			return nil, &raisedSignal{value: "filesystem.chmod: " + err.Error()}
+		}
+		return nil, nil
+	}))
+	env.set("file_temp", Builtin(func(args []Value) (Value, error) {
+		prefix, suffix := "tya", ""
+		if len(args) > 2 {
+			return nil, fmt.Errorf("file_temp expects 0 to 2 arguments")
+		}
+		if len(args) >= 1 {
+			var ok bool
+			prefix, ok = args[0].(string)
+			if !ok {
+				return nil, &raisedSignal{value: "filesystem.temp: prefix must be string"}
+			}
+		}
+		if len(args) == 2 {
+			var ok bool
+			suffix, ok = args[1].(string)
+			if !ok {
+				return nil, &raisedSignal{value: "filesystem.temp: suffix must be string"}
+			}
+		}
+		f, err := os.CreateTemp("", prefix+"*"+suffix)
+		if err != nil {
+			return nil, &raisedSignal{value: "filesystem.temp: " + err.Error()}
+		}
+		path := f.Name()
+		if err := f.Close(); err != nil {
+			return nil, &raisedSignal{value: "filesystem.temp: " + err.Error()}
+		}
+		return path, nil
 	}))
 	env.set("stderr_write", Builtin(func(args []Value) (Value, error) {
 		text, err := oneString("stderr_write", args)

@@ -1,0 +1,65 @@
+# v1 filesystem utility stdlib contract.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check filesystem_utilities.tya
+exec $WORK/tya run filesystem_utilities.tya
+stdout '255'
+stdout 'true'
+stdout 'false'
+stdout 'true'
+stdout 'false'
+
+exec $WORK/tya build filesystem_utilities.tya -o filesystem_utilities
+exec ./filesystem_utilities
+stdout '255'
+stdout 'true'
+stdout 'false'
+stdout 'true'
+stdout 'false'
+
+! exec $WORK/tya run invalid_remove_all.tya
+stderr 'filesystem.remove_all: dangerous path'
+
+! exec $WORK/tya run invalid_copy.tya
+stderr 'filesystem.copy: destination exists'
+
+-- filesystem_utilities.tya --
+import file as file
+import dir as dir
+import bytes as bytes
+
+root = dir.Dir.temp_dir("tya-fs")
+dir.Dir.mkdir_all("{root}/nested")
+file.File.write_bytes("{root}/a.txt", bytes.Bytes.new([0, 255]))
+file.File.copy("{root}/a.txt", "{root}/b.txt", {})
+print(bytes.Bytes.array(file.File.read_bytes("{root}/b.txt"))[1])
+file.File.chmod("{root}/b.txt", 420)
+print(file.File.stat("{root}/b.txt")["mode"] == 420)
+
+seen = []
+record = entry -> seen.push(entry["name"])
+dir.Dir.walk(root, record, {})
+print(seen.contains("nested"))
+print(seen.join(","))
+
+tmp = file.File.temp("tya-fs", ".tmp")
+print(file.File.exists?(tmp))
+file.File.remove(tmp)
+dir.Dir.remove_all(root)
+print(file.File.exists?(root))
+
+-- invalid_remove_all.tya --
+import dir as dir
+
+dir.Dir.remove_all(".")
+
+-- invalid_copy.tya --
+import file as file
+
+file.File.write("src.txt", "a")
+file.File.write("dst.txt", "b")
+file.File.copy("src.txt", "dst.txt", { overwrite: false })

@@ -34,6 +34,24 @@ func TestEmitCEnvironmentAndProcessProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCFilesystemUtilitiesProgram(t *testing.T) {
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	dir := t.TempDir()
+	root := filepath.Join(dir, "root")
+	src := filepath.Join(root, "src.bin")
+	dst := filepath.Join(root, "dst.bin")
+	code := "import file as file\nimport dir as dir\nimport bytes as bytes\ndir.Dir.mkdir_all(\"" + root + "\")\nfile.File.write_bytes(\"" + src + "\", bytes.Bytes.new([0, 255, 65]))\nfile.File.copy(\"" + src + "\", \"" + dst + "\", {})\nprint(bytes.Bytes.array(file.File.read_bytes(\"" + dst + "\"))[1])\nseen = []\nrecord = entry -> seen.push(entry[\"name\"])\ndir.Dir.walk(\"" + root + "\", record, {})\nprint(seen.len() >= 0)\ntmp = file.File.temp(\"tya-cg\", \".tmp\")\nprint(file.File.exists?(tmp))\nfile.File.remove(tmp)\ndir.Dir.remove_all(\"" + root + "\")\nprint(file.File.exists?(\"" + root + "\"))\n"
+	main := filepath.Join(dir, "main.tya")
+	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
+		t.Fatal(err)
+	}
+	out := compileAndRunFile(t, main)
+	want := "255\ntrue\ntrue\nfalse\n"
+	if string(out) != want {
+		t.Fatalf("got %q, want %q", out, want)
+	}
+}
+
 func TestEmitCIncludesSourceLineComments(t *testing.T) {
 	prog := checkedProgram(t, "x = 1\nprint(x)\n")
 	csrc, _, err := EmitC(prog)
