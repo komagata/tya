@@ -41,6 +41,7 @@ typedef struct {
   TyaDict *dict;
   TyaFunction *function;
   const char *error;
+  const char *error_kind;
   TyaBytes *bytes;
   TyaTask *task;
   TyaChannel *channel;
@@ -394,6 +395,7 @@ void tya_push_raise_frame(TyaRaiseFrame *frame);
 void tya_pop_raise_frame(void);
 TyaValue tya_current_raise(void);
 void tya_raise(TyaValue value);
+void tya_raise_user(TyaValue value);
 void tya_print(TyaValue value);
 void tya_assert(TyaValue value, const char *path, int line);
 void tya_assert_equal(TyaValue expected, TyaValue actual, const char *path, int line);

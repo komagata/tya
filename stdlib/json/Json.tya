@@ -18,7 +18,7 @@ class Json
     Json.skip_ws(state)
     p = state["pos"]
     if p >= state["len"] or state["src"][p] != ch
-      raise "json.parse: expected '{ch}'"
+      raise error("json.parse: expected '{ch}'")
     state["pos"] = p + 1
 
   # Json.hex_value provides the json/Json standard library operation.
@@ -30,7 +30,7 @@ class Json
       return code - 55
     if code >= 97 and code <= 102
       return code - 87
-    raise "json.parse: invalid hex digit"
+    raise error("json.parse: invalid hex digit")
 
   # Json.utf8_encode provides the json/Json standard library operation.
   static utf8_encode = code ->
@@ -51,7 +51,7 @@ class Json
     src = state["src"]
     n = state["len"]
     if p >= n or src[p] != "\""
-      raise "json.parse: expected string"
+      raise error("json.parse: expected string")
     p = p + 1
     out = ""
     while p < n
@@ -61,7 +61,7 @@ class Json
         return out
       if c == "\\"
         if p + 1 >= n
-          raise "json.parse: truncated escape"
+          raise error("json.parse: truncated escape")
         e = src[p + 1]
         if e == "\""
           out = out + "\""
@@ -85,7 +85,7 @@ class Json
               else
                 if e == "u"
                   if p + 5 >= n
-                    raise "json.parse: truncated unicode escape"
+                    raise error("json.parse: truncated unicode escape")
                   h1 = Json.hex_value(src[p + 2])
                   h2 = Json.hex_value(src[p + 3])
                   h3 = Json.hex_value(src[p + 4])
@@ -94,12 +94,12 @@ class Json
                   out = out + Json.utf8_encode(code)
                   p = p + 4
                 else
-                  raise "json.parse: invalid escape"
+                  raise error("json.parse: invalid escape")
         p = p + 2
       else
         out = out + c
         p = p + 1
-    raise "json.parse: unterminated string"
+    raise error("json.parse: unterminated string")
 
   # Json.is_digit provides the json/Json standard library operation.
   static is_digit = c ->
@@ -144,7 +144,7 @@ class Json
     Json.skip_ws(state)
     p = state["pos"]
     if p >= state["len"]
-      raise "json.parse: unexpected end of input"
+      raise error("json.parse: unexpected end of input")
     src = state["src"]
     c = src[p]
     if c == "{{"
@@ -159,24 +159,24 @@ class Json
       )
         state["pos"] = p + 4
         return true
-      raise "json.parse: invalid token"
+      raise error("json.parse: invalid token")
     if c == "f"
       if (
         p + 5 <= state["len"] and src[p + 1] == "a" and src[p + 2] == "l" and src[p + 3] == "s" and src[p + 4] == "e"
       )
         state["pos"] = p + 5
         return false
-      raise "json.parse: invalid token"
+      raise error("json.parse: invalid token")
     if c == "n"
       if (
         p + 4 <= state["len"] and src[p + 1] == "u" and src[p + 2] == "l" and src[p + 3] == "l"
       )
         state["pos"] = p + 4
         return nil
-      raise "json.parse: invalid token"
+      raise error("json.parse: invalid token")
     if c == "-" or Json.is_digit(c)
       return Json.parse_number(state)
-    raise "json.parse: unexpected character"
+    raise error("json.parse: unexpected character")
 
   # Json.parse_object provides the json/Json standard library operation.
   static parse_object = state ->
@@ -232,7 +232,7 @@ class Json
     v = Json.parse_value(state)
     Json.skip_ws(state)
     if state["pos"] < state["len"]
-      raise "json.parse: trailing characters"
+      raise error("json.parse: trailing characters")
     return v
 
   # Json.escape_string provides the json/Json standard library operation.
@@ -336,7 +336,7 @@ class Json
         i = i + 1
       out = out + Json.pad(indent, level)
       return out + "}}"
-    raise "json.dump: unsupported value kind"
+    raise error("json.dump: unsupported value kind")
 
   # dump converts Tya arrays, dictionaries, strings, numbers, booleans, and nil to JSON text.
   # Raises when a value cannot be represented as JSON.

@@ -40,7 +40,7 @@ class Vector2
     Vector2.expect(v, "v")
     Vector2.number(k, "k")
     if k == 0
-      raise "geometry.Vector2.div: divide by zero"
+      raise error("geometry.Vector2.div: divide by zero")
     return Vector2(v.x / k, v.y / k)
 
   # Vector2.dot provides the geometry/Vector2 standard library operation.
@@ -96,7 +96,7 @@ class Vector2
     Vector2.expect(a, "a")
     Vector2.expect(b, "b")
     if epsilon < 0
-      raise "geometry.Vector2.nearly_equal?: epsilon must be non-negative"
+      raise error("geometry.Vector2.nearly_equal?: epsilon must be non-negative")
     return Vector2.abs(a.x - b.x) <= epsilon and Vector2.abs(a.y - b.y) <= epsilon
 
   # Vector2.to_array provides the geometry/Vector2 standard library operation.
@@ -107,18 +107,18 @@ class Vector2
   # Vector2.from_array provides the geometry/Vector2 standard library operation.
   static from_array = values ->
     if values.class != Array or values.len() != 2
-      raise "geometry.Vector2.from_array: expected two-number array"
+      raise error("geometry.Vector2.from_array: expected two-number array")
     return Vector2(values[0], values[1])
 
   # Vector2.expect provides the geometry/Vector2 standard library operation.
   static expect = value, name ->
     if value.class != Vector2
-      raise "geometry.Vector2: " + name + " must be a Vector2"
+      raise error("geometry.Vector2: " + name + " must be a Vector2")
 
   # Vector2.number provides the geometry/Vector2 standard library operation.
   static number = value, name ->
     if value.class != Number
-      raise "geometry.Vector2: " + name + " must be a number"
+      raise error("geometry.Vector2: " + name + " must be a number")
     return value
 
   # Vector2.clamp_number provides the geometry/Vector2 standard library operation.

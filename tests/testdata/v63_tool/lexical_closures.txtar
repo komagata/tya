@@ -211,7 +211,7 @@ class PairIterator
 
   next = ->
     if not self.has_next?()
-      raise "done"
+      raise error("done")
     self.index = self.index + 1
     if self.index == 1
       return nil
@@ -296,7 +296,7 @@ class PairIterator
 
   next = ->
     if not self.has_next?()
-      raise "done"
+      raise error("done")
     self.index = self.index + 1
     if self.index == 1
       return nil

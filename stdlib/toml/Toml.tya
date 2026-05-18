@@ -58,7 +58,7 @@ class Toml
     src = state["src"]
     n = state["len"]
     if src[p] != "\""
-      raise "toml.parse: expected '\"'"
+      raise error("toml.parse: expected '\"'")
     p = p + 1
     out = ""
     while p < n
@@ -68,7 +68,7 @@ class Toml
         return out
       if c == "\\"
         if p + 1 >= n
-          raise "toml.parse: truncated escape"
+          raise error("toml.parse: truncated escape")
         e = src[p + 1]
         if e == "\""
           out = out + "\""
@@ -88,14 +88,14 @@ class Toml
               if e == "f"
                 out = out + chr(12)
               else
-                raise "toml.parse: invalid escape"
+                raise error("toml.parse: invalid escape")
         p = p + 2
       elseif c == "\n"
-        raise "toml.parse: newline in basic string"
+        raise error("toml.parse: newline in basic string")
       else
         out = out + c
         p = p + 1
-    raise "toml.parse: unterminated string"
+    raise error("toml.parse: unterminated string")
 
   # Toml.parse_literal_string provides the toml/Toml standard library operation.
   static parse_literal_string = state ->
@@ -103,7 +103,7 @@ class Toml
     src = state["src"]
     n = state["len"]
     if src[p] != "'"
-      raise "toml.parse: expected literal string"
+      raise error("toml.parse: expected literal string")
     p = p + 1
     out = ""
     while p < n
@@ -112,10 +112,10 @@ class Toml
         state["pos"] = p + 1
         return out
       if c == "\n"
-        raise "toml.parse: newline in literal string"
+        raise error("toml.parse: newline in literal string")
       out = out + c
       p = p + 1
-    raise "toml.parse: unterminated literal string"
+    raise error("toml.parse: unterminated literal string")
 
   # Toml.parse_key provides the toml/Toml standard library operation.
   static parse_key = state ->
@@ -124,7 +124,7 @@ class Toml
     src = state["src"]
     n = state["len"]
     if p >= n
-      raise "toml.parse: expected key"
+      raise error("toml.parse: expected key")
     c = src[p]
     if c == "\""
       return Toml.parse_basic_string(state)
@@ -135,7 +135,7 @@ class Toml
       out = out + src[p]
       p = p + 1
     if out == ""
-      raise "toml.parse: expected key"
+      raise error("toml.parse: expected key")
     state["pos"] = p
     return out
 
@@ -195,7 +195,7 @@ class Toml
     src = state["src"]
     n = state["len"]
     if p >= n
-      raise "toml.parse: expected value"
+      raise error("toml.parse: expected value")
     c = src[p]
     if c == "\""
       return Toml.parse_basic_string(state)
@@ -215,7 +215,7 @@ class Toml
   static parse_array = state ->
     p = state["pos"]
     if state["src"][p] != "["
-      raise "toml.parse: expected '['"
+      raise error("toml.parse: expected '['")
     state["pos"] = p + 1
     out = []
     Toml.skip_ws_and_newlines(state)
@@ -229,7 +229,7 @@ class Toml
       Toml.skip_ws_and_newlines(state)
       p = state["pos"]
       if p >= state["len"]
-        raise "toml.parse: unterminated array"
+        raise error("toml.parse: unterminated array")
       if state["src"][p] == ","
         state["pos"] = p + 1
         Toml.skip_ws_and_newlines(state)
@@ -241,13 +241,13 @@ class Toml
         state["pos"] = p + 1
         return out
       else
-        raise "toml.parse: expected ',' or ']' in array"
+        raise error("toml.parse: expected ',' or ']' in array")
 
   # Toml.parse_inline_table provides the toml/Toml standard library operation.
   static parse_inline_table = state ->
     p = state["pos"]
     if state["src"][p] != "{{"
-      raise "toml.parse: expected inline table"
+      raise error("toml.parse: expected inline table")
     state["pos"] = p + 1
     out = {}
     Toml.skip_ws_in_line(state)
@@ -260,7 +260,7 @@ class Toml
       Toml.skip_ws_in_line(state)
       p = state["pos"]
       if p >= state["len"] or state["src"][p] != "="
-        raise "toml.parse: expected '=' in inline table"
+        raise error("toml.parse: expected '=' in inline table")
       state["pos"] = p + 1
       v = Toml.parse_value_with_inline(state)
       out[key] = v
@@ -273,7 +273,7 @@ class Toml
         state["pos"] = p + 1
         return out
       else
-        raise "toml.parse: expected ',' or '}}' in inline table"
+        raise error("toml.parse: expected ',' or '}}' in inline table")
 
   # Toml.parse_value_with_inline provides the toml/Toml standard library operation.
   static parse_value_with_inline = state ->
@@ -353,12 +353,12 @@ class Toml
         p = state["pos"]
         if is_array_table
           if p + 1 >= state["len"] or src[p] != "]" or src[p + 1] != "]"
-            raise "toml.parse: expected ']]'"
+            raise error("toml.parse: expected ']]'")
           state["pos"] = p + 2
           current = Toml.ensure_array_path(root, segments)
         else
           if p >= state["len"] or src[p] != "]"
-            raise "toml.parse: expected ']'"
+            raise error("toml.parse: expected ']'")
           state["pos"] = p + 1
           current = Toml.ensure_path(root, segments)
       else
@@ -366,7 +366,7 @@ class Toml
         Toml.skip_ws_in_line(state)
         p = state["pos"]
         if p >= state["len"] or state["src"][p] != "="
-          raise "toml.parse: expected '=' after key"
+          raise error("toml.parse: expected '=' after key")
         state["pos"] = p + 1
         v = Toml.parse_value_with_inline(state)
         current[key] = v
@@ -374,7 +374,7 @@ class Toml
         p = state["pos"]
         if p < state["len"] and state["src"][p] != "\n"
           if state["src"][p] != "#"
-            raise "toml.parse: unexpected trailing characters on line"
+            raise error("toml.parse: unexpected trailing characters on line")
     return root
 
   # Toml.is_bare_key provides the toml/Toml standard library operation.
@@ -435,7 +435,7 @@ class Toml
   # Toml.format_inline_value provides the toml/Toml standard library operation.
   static format_inline_value = value ->
     if value.class == Nil
-      raise "toml.dump: nil is not representable in TOML"
+      raise error("toml.dump: nil is not representable in TOML")
     if value.class == Boolean
       if value
         return "true"
@@ -466,7 +466,7 @@ class Toml
           + Toml.format_inline_value(value[ks[i]])
         i = i + 1
       return out + "}}"
-    raise "toml.dump: unsupported value kind"
+    raise error("toml.dump: unsupported value kind")
 
   # Toml.is_array_of_dicts provides the toml/Toml standard library operation.
   static is_array_of_dicts = value ->
@@ -527,5 +527,5 @@ class Toml
   # dump converts dictionaries, arrays, strings, numbers, booleans, and nil to TOML text.
   static dump = value ->
     if value.class != Dict
-      raise "toml.dump: top-level value must be a dict"
+      raise error("toml.dump: top-level value must be a dict")
     return Toml.emit_table(value, "")

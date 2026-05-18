@@ -718,9 +718,18 @@ TyaValue tya_bind_method_raw(TyaValue receiver, TyaFunctionPtr fn) {
 
 TyaValue tya_error(TyaValue message) {
   if (message.kind != TYA_STRING) {
-    return (TyaValue){.kind = TYA_ERROR, .error = ""};
+    if ((message.kind == TYA_DICT || message.kind == TYA_OBJECT) && message.dict != NULL) {
+      TyaValue text = tya_index(message, tya_string("message"));
+      TyaValue kind = tya_index(message, tya_string("kind"));
+      return (TyaValue){
+        .kind = TYA_ERROR,
+        .error = text.kind == TYA_STRING ? text.string : "",
+        .error_kind = kind.kind == TYA_STRING ? kind.string : "",
+      };
+    }
+    return (TyaValue){.kind = TYA_ERROR, .error = "", .error_kind = ""};
   }
-  return (TyaValue){.kind = TYA_ERROR, .error = message.string};
+  return (TyaValue){.kind = TYA_ERROR, .error = message.string, .error_kind = ""};
 }
 
 TyaValue tya_call0(TyaValue fn) {
@@ -925,6 +934,9 @@ TyaValue tya_member(TyaValue dict, const char *key) {
   }
   if (dict.kind == TYA_ERROR && strcmp(key, "message") == 0) {
     return tya_string(dict.error == NULL ? "" : dict.error);
+  }
+  if (dict.kind == TYA_ERROR && strcmp(key, "kind") == 0) {
+    return tya_string(dict.error_kind == NULL ? "" : dict.error_kind);
   }
   if (dict.kind == TYA_FUNCTION && dict.function != NULL && dict.function->members != NULL) {
     if (dict.function->is_class && key != NULL && strcmp(key, "name") == 0) {
@@ -2480,6 +2492,14 @@ void tya_raise(TyaValue value) {
   }
   tya_raise_frame->value = value;
   longjmp(tya_raise_frame->env, 1);
+}
+
+void tya_raise_user(TyaValue value) {
+  if (value.kind != TYA_ERROR) {
+    fprintf(stderr, "raise expects error value\n");
+    exit(1);
+  }
+  tya_raise(value);
 }
 
 void tya_print(TyaValue value) {

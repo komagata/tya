@@ -100,7 +100,7 @@ import unittest
 
 class SetupErrorTest extends TestCase
   setup = ->
-    raise "setup exploded"
+    raise error("setup exploded")
 
   test_body = ->
     self.assert(true, "unreachable")

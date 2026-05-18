@@ -23,7 +23,7 @@ class StdlibTemplateTest extends TestCase
       cb = chr(125) + chr(125)
       template.Template.render(ob + " user.name " + cb, {}, { strict: true })
     catch e
-      err = e
+      err = e["message"]
     self.assert_equal("template.render: missing user.name", err, "strict")
 
   test_if_else = ->

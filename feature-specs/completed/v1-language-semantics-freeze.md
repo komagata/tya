@@ -72,8 +72,9 @@ runtime behavior, and no silent fallback. Tya remains dynamically typed.
     bare names;
   - `import net/http as http` creates a namespace binding and does not import
     public names bare.
-- `raise nil` remains invalid.
-  - raised values must be non-`nil`;
+- `raise` remains restricted to structured error values.
+  - `raise error("failed")` is valid;
+  - `raise nil` and other non-error values are invalid;
   - `nil` continues to represent absence rather than an error payload.
 - `and` and `or` return booleans.
   - they use Tya truthiness;
@@ -111,8 +112,8 @@ runtime behavior, and no silent fallback. Tya remains dynamically typed.
 - `docs/STRICT_SEMANTICS.md` maps each runtime-validity boundary to an active
   test, diagnostic, or runtime error.
 - Invalid programs for dictionary member key access, string ordering,
-  `raise nil`, interface default conflicts, implicit interface initializer
-  assumptions, captured mutation, and multiple public class files produce
+  invalid `raise` operands, interface default conflicts, implicit interface
+  initializer assumptions, captured mutation, and multiple public class files produce
   clear parser/checker/runtime failures at the earliest feasible layer.
 - Valid programs for truthiness, out-of-range reads returning `nil`, implicit
   returns, imported lowercase module initialization, bare directory imports,
@@ -134,9 +135,10 @@ Parser/checker tests:
   - `"a" < "b"`
   - Expected: checker or runtime diagnostic stating ordering requires numbers.
 
-- `TestParseOrCheckRejectsRaiseNil`
+- `TestParseOrCheckRejectsInvalidRaiseOperands`
   - `raise nil`
-  - Expected: invalid source or checker diagnostic for raising `nil`.
+  - `raise "failed"`
+  - Expected: invalid source or checker diagnostic requiring an error value.
 
 - `TestCheckRejectsInterfaceDefaultConflictWithoutOverride`
   - Two unrelated interfaces provide the same default method and a class

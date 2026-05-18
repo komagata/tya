@@ -88,6 +88,7 @@ type Tuple struct {
 }
 type ErrorValue struct {
 	Message string
+	Kind    string
 }
 type Module struct {
 	Name    string
@@ -580,11 +581,19 @@ func installBuiltins(env *Env, in io.Reader, out io.Writer, processArgs []string
 		if len(args) != 1 {
 			return nil, fmt.Errorf("error expects 1 argument")
 		}
-		message, ok := args[0].(string)
-		if !ok {
-			return nil, fmt.Errorf("error expects string message")
+		if message, ok := args[0].(string); ok {
+			return &ErrorValue{Message: message}, nil
 		}
-		return &ErrorValue{Message: message}, nil
+		options, ok := args[0].(Dict)
+		if !ok {
+			return nil, fmt.Errorf("error expects string message or dictionary options")
+		}
+		message, ok := options["message"].(string)
+		if !ok {
+			return nil, fmt.Errorf("error options message must be string")
+		}
+		kind, _ := options["kind"].(string)
+		return &ErrorValue{Message: message, Kind: kind}, nil
 	}))
 	env.set("div", Builtin(func(args []Value) (Value, error) {
 		if len(args) != 2 {
@@ -799,8 +808,8 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		if value == nil {
-			return nil, fmt.Errorf("raise expects non-nil value")
+		if _, ok := value.(*ErrorValue); !ok {
+			return nil, fmt.Errorf("raise expects error value")
 		}
 		return nil, &raisedSignal{value: value}
 	case *ast.TryCatchStmt:
@@ -1097,6 +1106,9 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			if n.Name == "message" {
 				return errValue.Message, nil
 			}
+			if n.Name == "kind" {
+				return errValue.Kind, nil
+			}
 			return nil, nil
 		}
 		if module, ok := obj.(*Module); ok {
@@ -1139,6 +1151,9 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			}
 			if key == "message" {
 				return errValue.Message, nil
+			}
+			if key == "kind" {
+				return errValue.Kind, nil
 			}
 			return nil, nil
 		}

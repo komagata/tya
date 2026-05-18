@@ -10,17 +10,17 @@ class Network
   static parse = cidr ->
     slash = Address.last_index(cidr, "/")
     if slash < 0
-      raise "ip.Network.parse: missing prefix"
+      raise error("ip.Network.parse: missing prefix")
     addr = Address.parse(Address.slice(cidr, 0, slash))
     prefix_text = Address.slice(cidr, slash + 1, cidr.byte_len())
     if prefix_text == "" or not Address.decimal?(prefix_text)
-      raise "ip.Network.parse: invalid prefix"
+      raise error("ip.Network.parse: invalid prefix")
     prefix = prefix_text.to_i()
     max = 32
     if addr.version == 6
       max = 128
     if prefix < 0 or prefix > max
-      raise "ip.Network.parse: invalid prefix"
+      raise error("ip.Network.parse: invalid prefix")
     return Network(addr, prefix)
 
   # Network.contains? provides the net/ip/Network standard library operation.

@@ -25,10 +25,10 @@ start = time.Time.now()
 try
   scope
     t = spawn cooperative_worker()
-    raise "body raise"
+    raise error("body raise")
   print("unreachable")
 catch e
   elapsed = time.Time.now() - start
-  print("caught: " + e)
+  print("caught: " + e["message"])
   print("fast: " + (elapsed < 1.0).to_s())
 print("after")

@@ -198,13 +198,13 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 
 ## Language
 
-- [ ] **Strict semantics audit for v1.0.0**
-  - [ ] Enumerate the no-implicit-conversion, no-`nil` arithmetic, truthiness,
+- [x] **Strict semantics audit for v1.0.0**
+  - [x] Enumerate the no-implicit-conversion, no-`nil` arithmetic, truthiness,
     comparison, indexing, assignment, argument, and return-value rules that
     define the v1.0.0 strict-semantics contract.
-  - [ ] Map each rule to SPEC text and at least one active test or testscript
+  - [x] Map each rule to SPEC text and at least one active test or testscript
     fixture.
-  - [ ] Add or fix diagnostics where invalid programs currently fail late,
+  - [x] Add or fix diagnostics where invalid programs currently fail late,
     fail unclearly, or execute with non-strict behavior.
   - [ ] Document any intentionally dynamic behavior that remains valid in
     v1.0.0.

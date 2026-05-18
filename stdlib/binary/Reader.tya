@@ -15,12 +15,12 @@ class Reader
     if options == nil
       return "big"
     if options.class != Dict
-      raise "binary.Reader: options must be a dict"
+      raise error("binary.Reader: options must be a dict")
     if not options.has("endian")
       return "big"
     endian = options["endian"]
     if endian != "big" and endian != "little"
-      raise "binary.Reader: invalid endian"
+      raise error("binary.Reader: invalid endian")
     return endian
 
   # Reader.position provides the binary/Reader standard library operation.
@@ -30,14 +30,14 @@ class Reader
   # Reader.seek provides the binary/Reader standard library operation.
   seek = offset ->
     if offset == nil or offset.class != Number or offset < 0 or offset > self.data.len()
-      raise "binary.Reader.seek: invalid offset"
+      raise error("binary.Reader.seek: invalid offset")
     self.offset = offset
     return self
 
   # Reader.skip provides the binary/Reader standard library operation.
   skip = count ->
     if count == nil or count.class != Number or count < 0
-      raise "binary.Reader.skip: invalid count"
+      raise error("binary.Reader.skip: invalid count")
     return self.seek(self.offset + count)
 
   # Reader.remaining provides the binary/Reader standard library operation.
@@ -51,7 +51,7 @@ class Reader
   # Reader.read_bytes provides the binary/Reader standard library operation.
   read_bytes = count ->
     if count == nil or count.class != Number or count < 0
-      raise "binary.Reader.read_bytes: invalid count"
+      raise error("binary.Reader.read_bytes: invalid count")
     self.require(count)
     start = self.offset
     self.offset = self.offset + count
@@ -170,7 +170,7 @@ class Reader
   # Reader.require provides the binary/Reader standard library operation.
   require = count ->
     if self.offset + count > self.data.len()
-      raise "binary.Reader: read past end"
+      raise error("binary.Reader: read past end")
 
   # Reader.signed provides the binary/Reader standard library operation.
   static signed = value, bits ->

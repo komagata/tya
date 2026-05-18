@@ -10,21 +10,21 @@ class Matrix
   # Matrix.validate_data provides the matrix/Matrix standard library operation.
   static validate_data = data ->
     if data.class != Array
-      raise "matrix.new: data must be an array of arrays"
+      raise error("matrix.new: data must be an array of arrays")
     rows = data.len()
     if rows == 0
-      raise "matrix.new: empty matrix"
+      raise error("matrix.new: empty matrix")
     if data[0].class != Array
-      raise "matrix.new: rows must be arrays"
+      raise error("matrix.new: rows must be arrays")
     cols = data[0].len()
     i = 0
     while i < rows
       if data[i].class != Array or data[i].len() != cols
-        raise "matrix.new: inconsistent row lengths"
+        raise error("matrix.new: inconsistent row lengths")
       j = 0
       while j < cols
         if data[i][j].class != Number
-          raise "matrix.new: elements must be numbers"
+          raise error("matrix.new: elements must be numbers")
         j = j + 1
       i = i + 1
     return cols
@@ -67,20 +67,20 @@ class Matrix
   # Matrix.at provides the matrix/Matrix standard library operation.
   static at = m, r, c ->
     if r < 0 or r >= m.rows or c < 0 or c >= m.cols
-      raise "matrix.at: index out of range"
+      raise error("matrix.at: index out of range")
     return m.data[r][c]
 
   # Matrix.put provides the matrix/Matrix standard library operation.
   static put = m, r, c, value ->
     if r < 0 or r >= m.rows or c < 0 or c >= m.cols
-      raise "matrix.put: index out of range"
+      raise error("matrix.put: index out of range")
     m.data[r][c] = value
     return nil
 
   # Matrix.add provides the matrix/Matrix standard library operation.
   static add = a, b ->
     if a.rows != b.rows or a.cols != b.cols
-      raise "matrix.add: dimension mismatch"
+      raise error("matrix.add: dimension mismatch")
     out_data = []
     i = 0
     while i < a.rows
@@ -96,7 +96,7 @@ class Matrix
   # Matrix.sub provides the matrix/Matrix standard library operation.
   static sub = a, b ->
     if a.rows != b.rows or a.cols != b.cols
-      raise "matrix.sub: dimension mismatch"
+      raise error("matrix.sub: dimension mismatch")
     out_data = []
     i = 0
     while i < a.rows
@@ -126,7 +126,7 @@ class Matrix
   # Matrix.mul provides the matrix/Matrix standard library operation.
   static mul = a, b ->
     if a.cols != b.rows
-      raise "matrix.mul: inner dimensions disagree"
+      raise error("matrix.mul: inner dimensions disagree")
     out_data = []
     i = 0
     while i < a.rows
@@ -161,10 +161,10 @@ class Matrix
   # Matrix.det provides the matrix/Matrix standard library operation.
   static det = a ->
     if a.rows != a.cols
-      raise "matrix.det: not square"
+      raise error("matrix.det: not square")
     n = a.rows
     if n > 4
-      raise "matrix.det: size > 4 not supported in v0.24"
+      raise error("matrix.det: size > 4 not supported in v0.24")
     d = a.data
     if n == 1
       return d[0][0]

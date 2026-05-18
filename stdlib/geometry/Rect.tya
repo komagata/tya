@@ -117,7 +117,7 @@ class Rect
   static translate = rect, vector ->
     Rect.expect(rect, "rect")
     if vector.class != Vector2
-      raise "geometry.Rect.translate: vector must be a Vector2"
+      raise error("geometry.Rect.translate: vector must be a Vector2")
     return Rect(rect.x + vector.x, rect.y + vector.y, rect.width, rect.height)
 
   # Rect.inflate provides the geometry/Rect standard library operation.
@@ -128,7 +128,7 @@ class Rect
     geometry_width = rect.width + dx * 2
     geometry_height = rect.height + dy * 2
     if geometry_width < 0 or geometry_height < 0
-      raise "geometry.Rect.inflate: resulting size is negative"
+      raise error("geometry.Rect.inflate: resulting size is negative")
     return Rect(rect.x - dx, rect.y - dy, geometry_width, geometry_height)
 
   # Rect.clamp_point provides the geometry/Rect standard library operation.
@@ -144,19 +144,19 @@ class Rect
   # Rect.expect provides the geometry/Rect standard library operation.
   static expect = value, name ->
     if value.class != Rect
-      raise "geometry.Rect: " + name + " must be a Rect"
+      raise error("geometry.Rect: " + name + " must be a Rect")
 
   # Rect.number provides the geometry/Rect standard library operation.
   static number = value, name ->
     if value.class != Number
-      raise "geometry.Rect: " + name + " must be a number"
+      raise error("geometry.Rect: " + name + " must be a number")
     return value
 
   # Rect.dimension provides the geometry/Rect standard library operation.
   static dimension = value, name ->
     Rect.number(value, name)
     if value < 0
-      raise "geometry.Rect: " + name + " must be non-negative"
+      raise error("geometry.Rect: " + name + " must be non-negative")
     return value
 
   # Rect.min provides the geometry/Rect standard library operation.

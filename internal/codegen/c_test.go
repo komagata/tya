@@ -202,15 +202,15 @@ func TestEmitCCompilesWriteFileProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesErrorProgram(t *testing.T) {
-	src := "err = error(\"file not found\")\nprint(err)\nprint(err[\"message\"])\n"
+	src := "err = error(\"file not found\")\nprint(err)\nprint(err[\"message\"])\ntagged = error({ kind: \"io\", message: \"missing\" })\nprint(tagged[\"kind\"])\nprint(tagged[\"message\"])\n"
 	out := compileAndRun(t, src)
-	if string(out) != "error: file not found\nfile not found\n" {
+	if string(out) != "error: file not found\nfile not found\nio\nmissing\n" {
 		t.Fatalf("got %q", out)
 	}
 }
 
 func TestEmitCCompilesTryCatchFinally(t *testing.T) {
-	src := "try\n  print(\"try\")\ncatch err\n  print(err)\nfinally\n  print(\"finally\")\ntry\n  raise \"boom\"\ncatch err\n  print(err)\nfinally\n  print(\"cleanup\")\n"
+	src := "try\n  print(\"try\")\ncatch err\n  print(err)\nfinally\n  print(\"finally\")\ntry\n  raise error(\"boom\")\ncatch err\n  print(err[\"message\"])\nfinally\n  print(\"cleanup\")\n"
 	out := compileAndRun(t, src)
 	if string(out) != "try\nfinally\nboom\ncleanup\n" {
 		t.Fatalf("got %q", out)
@@ -218,7 +218,7 @@ func TestEmitCCompilesTryCatchFinally(t *testing.T) {
 }
 
 func TestEmitCCompilesTryFinallyReraises(t *testing.T) {
-	src := "try\n  raise \"boom\"\nfinally\n  print(\"cleanup\")\n"
+	src := "try\n  raise error(\"boom\")\nfinally\n  print(\"cleanup\")\n"
 	out, code := compileAndRunArgsAllowExit(t, src)
 	if code == 0 {
 		t.Fatalf("expected non-zero exit, got %q", out)
@@ -281,6 +281,21 @@ func TestEmitCCompilesTryProgram(t *testing.T) {
 	out := compileAndRun(t, src)
 	if string(out) != "komagata\nempty user\n" {
 		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCCompilesRaiseCatchErrorProgram(t *testing.T) {
+	src := "raise_and_catch = ->\n  try\n    raise error(\"failed\")\n  catch err\n    print(err[\"message\"])\nraise_and_catch()\n"
+	out := compileAndRun(t, src)
+	if string(out) != "failed\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCRejectsRaiseNonErrorProgram(t *testing.T) {
+	_, code := compileAndRunArgsAllowExit(t, "raise \"failed\"\n")
+	if code == 0 {
+		t.Fatal("expected raise non-error program to fail")
 	}
 }
 

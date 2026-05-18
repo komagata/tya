@@ -22,7 +22,7 @@ class Size
   static aspect_ratio = size ->
     Size.expect(size, "size")
     if size.height == 0
-      raise "geometry.Size.aspect_ratio: height is zero"
+      raise error("geometry.Size.aspect_ratio: height is zero")
     return size.width / size.height
 
   # Size.equal? provides the geometry/Size standard library operation.
@@ -32,12 +32,12 @@ class Size
   # Size.expect provides the geometry/Size standard library operation.
   static expect = value, name ->
     if value.class != Size
-      raise "geometry.Size: " + name + " must be a Size"
+      raise error("geometry.Size: " + name + " must be a Size")
 
   # Size.dimension provides the geometry/Size standard library operation.
   static dimension = value, name ->
     if value.class != Number
-      raise "geometry.Size: " + name + " must be a number"
+      raise error("geometry.Size: " + name + " must be a number")
     if value < 0
-      raise "geometry.Size: " + name + " must be non-negative"
+      raise error("geometry.Size: " + name + " must be non-negative")
     return value

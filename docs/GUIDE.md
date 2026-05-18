@@ -214,7 +214,7 @@ Use `raise`, `try`, and `catch`.
 read_name = path ->
   text = read_file(path)
   if text == ""
-    raise "empty file"
+    raise error("empty file")
   text.trim()
 
 try

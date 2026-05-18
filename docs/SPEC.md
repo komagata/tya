@@ -868,9 +868,9 @@ return value, err
 
 ### Raise, Try, And Catch Statements
 
-`raise` raises any non-`nil` value. `raise nil` is invalid. `try` executes a
-block and `catch` catches every raised non-`nil` value; branch by raised value
-inside the `catch` body with `if` or `match`. `finally` may follow
+`raise` raises an error value. `raise nil` and other non-error values are
+invalid. `try` executes a block and `catch` catches raised error values; branch
+by error details inside the `catch` body with `if` or `match`. `finally` may follow
 `try/catch` or a bare `try` block. A bare `try` with neither `catch` nor
 `finally` is invalid.
 
@@ -1470,12 +1470,12 @@ Standard-library failure behavior is part of each public API contract. Invalid
 argument kinds or arity are runtime errors. Absence and lookup APIs return
 `nil` only where documented. Operations that can fail because of the outside
 world, such as file, process, network, compression, digest, time, and random
-APIs, either raise a non-`nil` error value or return a documented
-`value, err` pair; an individual API must not leave this choice implicit.
+APIs, either raise an error value or return a documented `value, err` pair; an
+individual API must not leave this choice implicit.
 
-`raise` may raise any non-`nil` value. Raising `nil` is invalid because it
-carries no error information. A `catch` binding receives the exact raised
-value.
+`raise` may raise only error values. Raising `nil`, strings, numbers,
+dictionaries, or other non-error values is invalid because they do not carry the
+language error kind. A `catch` binding receives the exact raised error value.
 
 ## Standard Library
 

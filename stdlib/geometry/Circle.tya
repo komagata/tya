@@ -58,7 +58,7 @@ class Circle
   static translate = circle, vector ->
     Circle.expect(circle, "circle")
     if vector.class != Vector2
-      raise "geometry.Circle.translate: vector must be a Vector2"
+      raise error("geometry.Circle.translate: vector must be a Vector2")
     return Circle(circle.x + vector.x, circle.y + vector.y, circle.radius)
 
   # Circle.equal? provides the geometry/Circle standard library operation.
@@ -68,17 +68,17 @@ class Circle
   # Circle.expect provides the geometry/Circle standard library operation.
   static expect = value, name ->
     if value.class != Circle
-      raise "geometry.Circle: " + name + " must be a Circle"
+      raise error("geometry.Circle: " + name + " must be a Circle")
 
   # Circle.number provides the geometry/Circle standard library operation.
   static number = value, name ->
     if value.class != Number
-      raise "geometry.Circle: " + name + " must be a number"
+      raise error("geometry.Circle: " + name + " must be a number")
     return value
 
   # Circle.radius_value provides the geometry/Circle standard library operation.
   static radius_value = value ->
     Circle.number(value, "radius")
     if value < 0
-      raise "geometry.Circle: radius must be non-negative"
+      raise error("geometry.Circle: radius must be non-negative")
     return value

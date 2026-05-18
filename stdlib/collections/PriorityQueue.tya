@@ -9,7 +9,7 @@ class PriorityQueue
       while i < items.len()
         priority = items[i][0]
         if priority.class != Number
-          raise "collections.PriorityQueue.from_array: priority must be a number"
+          raise error("collections.PriorityQueue.from_array: priority must be a number")
         self.items.push([priority, self.seq, items[i][1]])
         self.seq = self.seq + 1
         i = i + 1
@@ -25,7 +25,7 @@ class PriorityQueue
   # PriorityQueue.push provides the collections/PriorityQueue standard library operation.
   push = value, priority ->
     if priority.class != Number
-      raise "collections.PriorityQueue.push: priority must be a number"
+      raise error("collections.PriorityQueue.push: priority must be a number")
     self.items.push([priority, self.seq, value])
     self.seq = self.seq + 1
     return self
@@ -33,7 +33,7 @@ class PriorityQueue
   # PriorityQueue.pop provides the collections/PriorityQueue standard library operation.
   pop = ->
     if self.empty?()
-      raise "collections.PriorityQueue.pop: empty priority queue"
+      raise error("collections.PriorityQueue.pop: empty priority queue")
     index = self.best_index()
     entry = self.items[index]
     self.remove_at(index)
@@ -42,13 +42,13 @@ class PriorityQueue
   # PriorityQueue.peek provides the collections/PriorityQueue standard library operation.
   peek = ->
     if self.empty?()
-      raise "collections.PriorityQueue.peek: empty priority queue"
+      raise error("collections.PriorityQueue.peek: empty priority queue")
     return self.items[self.best_index()][2]
 
   # PriorityQueue.peek_priority provides the collections/PriorityQueue standard library operation.
   peek_priority = ->
     if self.empty?()
-      raise "collections.PriorityQueue.peek_priority: empty priority queue"
+      raise error("collections.PriorityQueue.peek_priority: empty priority queue")
     return self.items[self.best_index()][0]
 
   # PriorityQueue.len provides the collections/PriorityQueue standard library operation.

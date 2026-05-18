@@ -6,7 +6,7 @@ stdout 'ok\nfailed\nouter:failed\nfailed\nouter\nfallback\nloop-done\nmissing co
 ! stderr .
 
 ! exec go run ./cmd/tya run $WORK/uncaught.tya
-stderr 'uncaught raised value: boom'
+stderr 'uncaught raised value: error: boom'
 
 ! exec go run ./cmd/tya check $WORK/raise_without_expression.tya
 stderr 'raise requires an expression'
@@ -81,7 +81,7 @@ load = ->
   raise error("missing config")
 
 -- uncaught.tya --
-raise "boom"
+raise error("boom")
 
 -- raise_without_expression.tya --
 raise
@@ -102,6 +102,6 @@ try
 
 -- catch_bad_name.tya --
 try
-  raise "x"
+  raise error("x")
 catch User
   print(User)

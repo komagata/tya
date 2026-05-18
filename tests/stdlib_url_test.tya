@@ -46,10 +46,10 @@ class StdlibUrlTest extends TestCase
       url.Url.parse("https://example.com/%zz")
       self.fail("expected invalid percent escape")
     catch err
-      self.assert_equal("url.decode: invalid percent-escape", err, "invalid escape")
+      self.assert_equal("url.decode: invalid percent-escape", err["message"], "invalid escape")
   test_invalid_port = ->
     try
       url.Url.parse("https://example.com:abc/")
       self.fail("expected invalid port")
     catch err
-      self.assert_equal("url.parse: invalid port", err, "invalid port")
+      self.assert_equal("url.parse: invalid port", err["message"], "invalid port")

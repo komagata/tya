@@ -60,7 +60,7 @@ class Transform2D
   # Transform2D.from_array provides the transform2d/Transform2D standard library operation.
   static from_array = values ->
     if values.class != Array or values.len() != 6
-      raise "transform2d.from_array: expected six-number array"
+      raise error("transform2d.from_array: expected six-number array")
     return Transform2D(values[0], values[1], values[2], values[3], values[4], values[5])
 
   # Transform2D.to_array provides the transform2d/Transform2D standard library operation.
@@ -107,7 +107,7 @@ class Transform2D
     Transform2D.expect(transform, "transform")
     geometry_det = Transform2D.determinant(transform)
     if Transform2D.abs(geometry_det) <= 0.000000001
-      raise "transform2d.inverse: transform is not invertible"
+      raise error("transform2d.inverse: transform is not invertible")
     geometry_a = transform.d / geometry_det
     geometry_b = (0 - transform.b) / geometry_det
     geometry_c = (0 - transform.c) / geometry_det
@@ -125,7 +125,7 @@ class Transform2D
     Transform2D.expect(a, "a")
     Transform2D.expect(b, "b")
     if epsilon < 0
-      raise "transform2d.nearly_equal?: epsilon must be non-negative"
+      raise error("transform2d.nearly_equal?: epsilon must be non-negative")
     return Transform2D.abs(a.a - b.a) <= epsilon and Transform2D.abs(a.b - b.b) <= epsilon and Transform2D.abs(a.c - b.c) <= epsilon and Transform2D.abs(a.d - b.d) <= epsilon and Transform2D.abs(a.tx - b.tx) <= epsilon and Transform2D.abs(a.ty - b.ty) <= epsilon
 
   # Transform2D.apply_point provides the transform2d/Transform2D standard library operation.
@@ -168,42 +168,42 @@ class Transform2D
   # Transform2D.from_matrix provides the transform2d/Transform2D standard library operation.
   static from_matrix = value ->
     if value.class != matrix.Matrix
-      raise "transform2d.from_matrix: value must be a matrix.Matrix"
+      raise error("transform2d.from_matrix: value must be a matrix.Matrix")
     if value.rows != 3 or value.cols != 3
-      raise "transform2d.from_matrix: matrix must be 3x3"
+      raise error("transform2d.from_matrix: matrix must be 3x3")
     if value.data[2][0] != 0 or value.data[2][1] != 0 or value.data[2][2] != 1
-      raise "transform2d.from_matrix: matrix must be affine"
+      raise error("transform2d.from_matrix: matrix must be affine")
     return Transform2D(value.data[0][0], value.data[1][0], value.data[0][1], value.data[1][1], value.data[0][2], value.data[1][2])
 
   # Transform2D.expect provides the transform2d/Transform2D standard library operation.
   static expect = value, name ->
     if value.class != Transform2D
-      raise "transform2d: " + name + " must be a Transform2D"
+      raise error("transform2d: " + name + " must be a Transform2D")
 
   # Transform2D.expect_point provides the transform2d/Transform2D standard library operation.
   static expect_point = value, name ->
     if value.class != geo.Point
-      raise "transform2d: " + name + " must be a geometry.Point"
+      raise error("transform2d: " + name + " must be a geometry.Point")
 
   # Transform2D.expect_vector2 provides the transform2d/Transform2D standard library operation.
   static expect_vector2 = value, name ->
     if value.class != geo.Vector2
-      raise "transform2d: " + name + " must be a geometry.Vector2"
+      raise error("transform2d: " + name + " must be a geometry.Vector2")
 
   # Transform2D.expect_rect provides the transform2d/Transform2D standard library operation.
   static expect_rect = value, name ->
     if value.class != geo.Rect
-      raise "transform2d: " + name + " must be a geometry.Rect"
+      raise error("transform2d: " + name + " must be a geometry.Rect")
 
   # Transform2D.expect_size provides the transform2d/Transform2D standard library operation.
   static expect_size = value, name ->
     if value.class != geo.Size
-      raise "transform2d: " + name + " must be a geometry.Size"
+      raise error("transform2d: " + name + " must be a geometry.Size")
 
   # Transform2D.number provides the transform2d/Transform2D standard library operation.
   static number = value, name ->
     if value.class != Number
-      raise "transform2d: " + name + " must be a number"
+      raise error("transform2d: " + name + " must be a number")
     return value
 
   # Transform2D.abs provides the transform2d/Transform2D standard library operation.

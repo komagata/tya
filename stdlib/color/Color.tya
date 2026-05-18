@@ -68,17 +68,17 @@ class Color
   # Color.from_array provides the color/Color standard library operation.
   static from_array = values ->
     if values.class != Array
-      raise "color.from_array: values must be an array"
+      raise error("color.from_array: values must be an array")
     if values.len() == 3
       return Color.rgb(values[0], values[1], values[2])
     if values.len() == 4
       return Color.rgba(values[0], values[1], values[2], values[3])
-    raise "color.from_array: expected 3 or 4 channels"
+    raise error("color.from_array: expected 3 or 4 channels")
 
   # Color.hex provides the color/Color standard library operation.
   static hex = text ->
     if text.class != String
-      raise "color.hex: text must be a string"
+      raise error("color.hex: text must be a string")
     color_raw = text
     if color_raw.starts_with("#")
       color_raw = Color.slice(color_raw, 1, color_raw.byte_len())
@@ -99,12 +99,12 @@ class Color
       if color_len == 8
         color_a = Color.hex_pair(color_raw[6], color_raw[7])
       return Color.rgba(color_r, color_g, color_b, color_a)
-    raise "color.hex: invalid hex color"
+    raise error("color.hex: invalid hex color")
 
   # Color.css provides the color/Color standard library operation.
   static css = text ->
     if text.class != String
-      raise "color.css: text must be a string"
+      raise error("color.css: text must be a string")
     color_raw = text.trim().lower()
     if color_raw == "black"
       return Color.black()
@@ -138,10 +138,10 @@ class Color
     color_parts = color_body.split(",")
     if has_alpha
       if color_parts.len() != 4
-        raise "color.css: rgba() expects 4 channels"
+        raise error("color.css: rgba() expects 4 channels")
       return Color.rgba(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i(), color_parts[3].trim().to_i())
     if color_parts.len() != 3
-      raise "color.css: rgb() expects 3 channels"
+      raise error("color.css: rgb() expects 3 channels")
     return Color.rgb(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i())
 
   # Color.to_hex provides the color/Color standard library operation.
@@ -164,7 +164,7 @@ class Color
   # Color.nearly_equal? provides the color/Color standard library operation.
   static nearly_equal? = a, b, tolerance ->
     if tolerance < 0
-      raise "color.nearly_equal?: tolerance must be non-negative"
+      raise error("color.nearly_equal?: tolerance must be non-negative")
     return Color.abs(a.r - b.r) <= tolerance and Color.abs(a.g - b.g) <= tolerance and Color.abs(a.b - b.b) <= tolerance and Color.abs(a.a - b.a) <= tolerance
 
   # Color.luminance provides the color/Color standard library operation.
@@ -232,19 +232,19 @@ class Color
   # Color.channel provides the color/Color standard library operation.
   static channel = value, name ->
     if value.class != Number
-      raise "color.channel: " + name + " must be a number"
+      raise error("color.channel: " + name + " must be a number")
     if value < 0 or value > 255
-      raise "color.channel: " + name + " out of range"
+      raise error("color.channel: " + name + " out of range")
     if value != value.to_i()
-      raise "color.channel: " + name + " must be an integer"
+      raise error("color.channel: " + name + " must be an integer")
     return value.to_i()
 
   # Color.ratio provides the color/Color standard library operation.
   static ratio = value, name ->
     if value.class != Number
-      raise name + ": amount must be a number"
+      raise error(name + ": amount must be a number")
     if value < 0.0 or value > 1.0
-      raise name + ": amount out of range"
+      raise error(name + ": amount out of range")
     return value
 
   # Color.mix_channel provides the color/Color standard library operation.
@@ -271,7 +271,7 @@ class Color
       return color_code - 55
     if color_code >= 97 and color_code <= 102
       return color_code - 87
-    raise "color.hex: invalid hex digit"
+    raise error("color.hex: invalid hex digit")
 
   # Color.hex_pair provides the color/Color standard library operation.
   static hex_pair = hi, lo ->

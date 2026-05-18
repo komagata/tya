@@ -14,10 +14,10 @@ class Client
       opts = {}
     u = Client.parse_url(target)
     if u["scheme"] != "http" and u["scheme"] != "https"
-      raise "http.request: only http:// and https:// URLs are supported"
+      raise error("http.request: only http:// and https:// URLs are supported")
     host = u["host"]
     if host == ""
-      raise "http.request: URL host is required"
+      raise error("http.request: URL host is required")
     port = 80
     if u["scheme"] == "https"
       port = 443
@@ -71,11 +71,11 @@ class Client
   static read_response = s ->
     status_line = socket_read_line(s)
     if status_line == nil
-      raise "http.response: empty response"
+      raise error("http.response: empty response")
     status_line = Client.chomp(status_line)
     parts = status_line.split(" ")
     if parts.len() < 2
-      raise "http.response: invalid status line"
+      raise error("http.response: invalid status line")
     status = parts[1].to_i()
     headers = {}
     line = socket_read_line(s)
@@ -131,7 +131,7 @@ class Client
       prefix = "https://"
       scheme = "https"
     elseif not target.starts_with(prefix)
-      raise "http.request: only http:// and https:// URLs are supported"
+      raise error("http.request: only http:// and https:// URLs are supported")
     rest = Client.slice(target, prefix.byte_len(), target.byte_len())
     slash = Client.index_of(rest, "/", 0)
     query = Client.index_of(rest, "?", 0)
@@ -203,7 +203,7 @@ class Client
       elseif c >= 97 and c <= 102
         digit = c - 87
       else
-        raise "http.response: invalid chunk size"
+        raise error("http.response: invalid chunk size")
       value = value * 16 + digit
       i = i + 1
     return value

@@ -33,7 +33,7 @@ print(await t3)
 
 -- raise.tya --
 boom = x ->
-  raise "boom!"
+  raise error("boom!")
   return x
 
 t = spawn boom(1)
@@ -42,7 +42,7 @@ try
   v = await t
   print("got: " + v.to_s())
 catch e
-  print("caught: " + e)
+  print("caught: " + e["message"])
 
 -- no_args.tya --
 greet = () -> "noargs"

@@ -42,14 +42,14 @@ class Template
         elseif Template.starts_text(tag, "partial ")
           out = out + Template.render_partial(tag, env)
         elseif tag == "else" or tag == "end"
-          raise Template.error(state, "unexpected " + tag)
+          raise error(Template.error(state, "unexpected " + tag))
         else
           out = out + Template.render_value(tag, env, true)
       else
         out = out + src[state["pos"]]
         state["pos"] = state["pos"] + 1
     if stop != ""
-      raise Template.error(state, "missing " + stop)
+      raise error(Template.error(state, "missing " + stop))
     return out
 
   # Template.render_raw_tag provides the template/Template standard library operation.
@@ -90,7 +90,7 @@ class Template
   static render_for = state, tag, env ->
     parts = tag.split(" ")
     if parts.len() != 4 or parts[2] != "in"
-      raise Template.error(state, "invalid for")
+      raise error(Template.error(state, "invalid for"))
     name = parts[1]
     path = parts[3]
     body_start = state["pos"]
@@ -111,21 +111,21 @@ class Template
   static render_partial = tag, env ->
     rest = Template.slice(tag, 8, tag.byte_len()).trim()
     if rest.byte_len() < 2 or rest[0] != "\""
-      raise "template.render: invalid partial"
+      raise error("template.render: invalid partial")
     i = 1
     name = ""
     while i < rest.byte_len() and rest[i] != "\""
       name = name + rest[i]
       i = i + 1
     if i >= rest.byte_len()
-      raise "template.render: invalid partial"
+      raise error("template.render: invalid partial")
     ctx_path = Template.slice(rest, i + 1, rest.byte_len()).trim()
     options = env["options"]
     if not options.has("partials")
-      raise "template.render: missing partials"
+      raise error("template.render: missing partials")
     partials = options["partials"]
     if not partials.has(name)
-      raise "template.render: missing partial " + name
+      raise error("template.render: missing partial " + name)
     ctx = env["data"]
     if ctx_path != ""
       found = Template.lookup(ctx_path, env)
@@ -145,7 +145,7 @@ class Template
     while pos < n
       open = Template.find_next_tag(source, pos)
       if open < 0
-        raise "template.render: missing end"
+        raise error("template.render: missing end")
       close = Template.find_close(source, open + 2, Template.close())
       tag = Template.slice(source, open + 2, close).trim()
       if Template.starts_text(tag, "if ") or Template.starts_text(tag, "for ")
@@ -158,7 +158,7 @@ class Template
         else_pos = open
         else_end = close + 2
       pos = close + 2
-    raise "template.render: missing end"
+    raise error("template.render: missing end")
 
   # Template.render_range provides the template/Template standard library operation.
   static render_range = source, start, finish, env ->
@@ -186,7 +186,7 @@ class Template
       value = data[first]
     if not ok
       if Template.strict(options)
-        raise "template.render: missing " + p
+        raise error("template.render: missing " + p)
       return { ok: false, value: "" }
     i = 1
     while i < parts.len()
@@ -200,7 +200,7 @@ class Template
           value = value[key]
         else
           if Template.strict(options)
-            raise "template.render: missing " + p
+            raise error("template.render: missing " + p)
           return { ok: false, value: "" }
       i = i + 1
     return { ok: true, value: value }
@@ -274,7 +274,7 @@ class Template
     start = state["pos"]
     close = Template.find_close(src, start, marker)
     if close < 0
-      raise Template.error(state, "unclosed tag")
+      raise error(Template.error(state, "unclosed tag"))
     state["pos"] = close + marker.byte_len()
     return Template.slice(src, start, close)
 

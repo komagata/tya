@@ -33,7 +33,7 @@ for r in results
 
 -- raise_in_task.tya --
 boom = () ->
-  raise "boom"
+  raise error("boom")
 ok = () ->
   return 1
 try
@@ -43,4 +43,4 @@ try
     t3 = spawn ok()
   print("scope completed (unreachable)")
 catch e
-  print("caught after scope: " + e)
+  print("caught after scope: " + e["message"])

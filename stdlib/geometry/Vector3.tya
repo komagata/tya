@@ -41,7 +41,7 @@ class Vector3
     Vector3.expect(v, "v")
     Vector3.number(k, "k")
     if k == 0
-      raise "geometry.Vector3.div: divide by zero"
+      raise error("geometry.Vector3.div: divide by zero")
     return Vector3(v.x / k, v.y / k, v.z / k)
 
   # Vector3.dot provides the geometry/Vector3 standard library operation.
@@ -96,7 +96,7 @@ class Vector3
     Vector3.expect(a, "a")
     Vector3.expect(b, "b")
     if epsilon < 0
-      raise "geometry.Vector3.nearly_equal?: epsilon must be non-negative"
+      raise error("geometry.Vector3.nearly_equal?: epsilon must be non-negative")
     return Vector3.abs(a.x - b.x) <= epsilon and Vector3.abs(a.y - b.y) <= epsilon and Vector3.abs(a.z - b.z) <= epsilon
 
   # Vector3.to_array provides the geometry/Vector3 standard library operation.
@@ -107,18 +107,18 @@ class Vector3
   # Vector3.from_array provides the geometry/Vector3 standard library operation.
   static from_array = values ->
     if values.class != Array or values.len() != 3
-      raise "geometry.Vector3.from_array: expected three-number array"
+      raise error("geometry.Vector3.from_array: expected three-number array")
     return Vector3(values[0], values[1], values[2])
 
   # Vector3.expect provides the geometry/Vector3 standard library operation.
   static expect = value, name ->
     if value.class != Vector3
-      raise "geometry.Vector3: " + name + " must be a Vector3"
+      raise error("geometry.Vector3: " + name + " must be a Vector3")
 
   # Vector3.number provides the geometry/Vector3 standard library operation.
   static number = value, name ->
     if value.class != Number
-      raise "geometry.Vector3: " + name + " must be a number"
+      raise error("geometry.Vector3: " + name + " must be a number")
     return value
 
   # Vector3.abs provides the geometry/Vector3 standard library operation.

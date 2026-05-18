@@ -85,7 +85,7 @@ class Logger
       return 30
     if level == "error"
       return 40
-    raise "log.Logger: unknown level " + level
+    raise error("log.Logger: unknown level " + level)
 
   # Logger.level_name provides the log/Logger standard library operation.
   static level_name = n ->

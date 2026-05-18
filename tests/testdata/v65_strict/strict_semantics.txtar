@@ -100,7 +100,10 @@ stderr 'undefined variable'
 stderr 'undefined variable'
 
 ! exec $WORK/tya run raise_nil.tya
-stderr 'raise expects non-nil value'
+stderr 'raise expects error value'
+
+! exec $WORK/tya run raise_string.tya
+stderr 'raise expects error value'
 
 ! exec $WORK/tya check string_plus_number.tya
 stderr '\+ expects numbers, strings, or bytes of the same kind'
@@ -252,9 +255,9 @@ print(item)
 
 -- catch_binding_local.tya --
 try
-  raise "bad"
+  raise error("bad")
 catch err
-  print(err)
+  print(err["message"])
 print(err)
 
 -- match_binding_local.tya --
@@ -266,6 +269,9 @@ print(item)
 
 -- raise_nil.tya --
 raise nil
+
+-- raise_string.tya --
+raise "failed"
 
 -- string_plus_number.tya --
 count = 3

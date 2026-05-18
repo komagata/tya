@@ -62,7 +62,7 @@ class Csv
               field = field + c
               i = i + 1
       if in_quote
-        raise "csv.parse: unterminated quoted field"
+        raise error("csv.parse: unterminated quoted field")
       if not ended
         row.push(field)
       rows.push(row)
@@ -129,7 +129,7 @@ class Csv
         if j > 0
           out = out + separator
         if r[j].class != String
-          raise "csv.dump: row values must be strings"
+          raise error("csv.dump: row values must be strings")
         out = out + Csv.escape_field(r[j], separator)
         j = j + 1
       out = out + "\n"
@@ -166,11 +166,11 @@ class Csv
           if r.has(header[j])
             raw = r[header[j]]
             if raw.class != String
-              raise "csv.dump: row values must be strings"
+              raise error("csv.dump: row values must be strings")
             v = raw
           out = out + Csv.escape_field(v, sep)
           j = j + 1
         out = out + "\n"
         i = i + 1
       return out
-    raise "csv.dump: rows must be array of arrays or array of dicts"
+    raise error("csv.dump: rows must be array of arrays or array of dicts")

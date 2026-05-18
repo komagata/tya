@@ -510,7 +510,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		g.line(fmt.Sprintf("tya_raise(%s);", value))
+		g.line(fmt.Sprintf("tya_raise_user(%s);", value))
 	case *ast.TryCatchStmt:
 		return g.tryCatchStmt(n)
 	case *ast.MatchStmt:

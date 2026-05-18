@@ -23,13 +23,13 @@ class Stack
   # Stack.pop provides the collections/Stack standard library operation.
   pop = ->
     if self.empty?()
-      raise "collections.Stack.pop: empty stack"
+      raise error("collections.Stack.pop: empty stack")
     return self.items.pop()
 
   # Stack.peek provides the collections/Stack standard library operation.
   peek = ->
     if self.empty?()
-      raise "collections.Stack.peek: empty stack"
+      raise error("collections.Stack.peek: empty stack")
     return self.items[self.items.len() - 1]
 
   # Stack.len provides the collections/Stack standard library operation.

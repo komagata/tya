@@ -24,7 +24,7 @@ class Queue
   # Queue.pop provides the collections/Queue standard library operation.
   pop = ->
     if self.empty?()
-      raise "collections.Queue.pop: empty queue"
+      raise error("collections.Queue.pop: empty queue")
     value = self.items[self.head]
     self.head = self.head + 1
     self.compact()
@@ -33,7 +33,7 @@ class Queue
   # Queue.peek provides the collections/Queue standard library operation.
   peek = ->
     if self.empty?()
-      raise "collections.Queue.peek: empty queue"
+      raise error("collections.Queue.peek: empty queue")
     return self.items[self.head]
 
   # Queue.len provides the collections/Queue standard library operation.

@@ -33,7 +33,7 @@ class Deque
   # Deque.pop_front provides the collections/Deque standard library operation.
   pop_front = ->
     if self.empty?()
-      raise "collections.Deque.pop_front: empty deque"
+      raise error("collections.Deque.pop_front: empty deque")
     value = self.items[0]
     self.items = self.items.slice(1, self.items.len())
     return value
@@ -41,19 +41,19 @@ class Deque
   # Deque.pop_back provides the collections/Deque standard library operation.
   pop_back = ->
     if self.empty?()
-      raise "collections.Deque.pop_back: empty deque"
+      raise error("collections.Deque.pop_back: empty deque")
     return self.items.pop()
 
   # Deque.peek_front provides the collections/Deque standard library operation.
   peek_front = ->
     if self.empty?()
-      raise "collections.Deque.peek_front: empty deque"
+      raise error("collections.Deque.peek_front: empty deque")
     return self.items[0]
 
   # Deque.peek_back provides the collections/Deque standard library operation.
   peek_back = ->
     if self.empty?()
-      raise "collections.Deque.peek_back: empty deque"
+      raise error("collections.Deque.peek_back: empty deque")
     return self.items[self.items.len() - 1]
 
   # Deque.len provides the collections/Deque standard library operation.

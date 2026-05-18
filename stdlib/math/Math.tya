@@ -28,7 +28,7 @@ class Math
   # Raises when lo is greater than hi.
   static clamp = value, lo, hi ->
     if lo > hi
-      raise "math.clamp: min must be less than or equal to max"
+      raise error("math.clamp: min must be less than or equal to max")
     if value < lo
       return lo
     if value > hi

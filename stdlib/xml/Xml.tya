@@ -45,7 +45,7 @@ class Xml
       return "<![CDATA[" + value.text + "]]>"
     if value.class == Comment
       return "<!--" + value.text + "-->"
-    raise "xml.dump: unsupported node"
+    raise error("xml.dump: unsupported node")
 
   # Xml.escape_text provides the xml/Xml standard library operation.
   static escape_text = text ->
@@ -311,11 +311,11 @@ class Xml
       elseif code >= 97 and code <= 102
         digit = code - 87
       else
-        raise "xml.parse: invalid numeric character reference"
+        raise error("xml.parse: invalid numeric character reference")
       value = value * 16 + digit
       i = i + 1
     return value
 
   # Xml.error provides the xml/Xml standard library operation.
   static error = state, message ->
-    raise "xml.parse: " + message + " at byte " + state["pos"].to_s()
+    raise error("xml.parse: " + message + " at byte " + state["pos"].to_s())

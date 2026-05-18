@@ -14,12 +14,12 @@ class Writer
     if options == nil
       return "big"
     if options.class != Dict
-      raise "binary.Writer: options must be a dict"
+      raise error("binary.Writer: options must be a dict")
     if not options.has("endian")
       return "big"
     endian = options["endian"]
     if endian != "big" and endian != "little"
-      raise "binary.Writer: invalid endian"
+      raise error("binary.Writer: invalid endian")
     return endian
 
   # Writer.position provides the binary/Writer standard library operation.
@@ -122,7 +122,7 @@ class Writer
   # Writer.write_int provides the binary/Writer standard library operation.
   write_int = value, width, min, max, endian ->
     if value == nil or value.class != Number or value < min or value > max
-      raise "binary.Writer: integer out of range"
+      raise error("binary.Writer: integer out of range")
     if value < 0
       value = value + Writer.pow2(width * 8)
     arr = []

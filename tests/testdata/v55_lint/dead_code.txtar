@@ -14,7 +14,7 @@ fnret = ->
   print("after return")
 
 fnraise = ->
-  raise "boom"
+  raise error("boom")
   print("after raise")
 
 print("done")

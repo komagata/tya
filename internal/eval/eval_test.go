@@ -107,9 +107,9 @@ func TestRunTryCatchFinallyValue(t *testing.T) {
 		"finally",
 		"  print(\"finally\")",
 		"try",
-		"  raise \"boom\"",
+		"  raise error(\"boom\")",
 		"catch err",
-		"  print(err)",
+		"  print(err[\"message\"])",
 		"finally",
 		"  print(\"cleanup\")",
 		"",
@@ -133,7 +133,7 @@ func TestRunTryCatchFinallyValue(t *testing.T) {
 }
 
 func TestRunTryFinallyReraises(t *testing.T) {
-	src := "try\n  raise \"boom\"\nfinally\n  print(\"cleanup\")\n"
+	src := "try\n  raise error(\"boom\")\nfinally\n  print(\"cleanup\")\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -215,7 +215,7 @@ func TestRunFinallyControlFlowOverridesPendingFlow(t *testing.T) {
 		"  try",
 		"    return \"value\"",
 		"  finally",
-		"    raise \"override\"",
+		"    raise error(\"override\")",
 		"print(f())",
 		"",
 	}, "\n")
@@ -1017,7 +1017,7 @@ func TestRunPanicBuiltin(t *testing.T) {
 }
 
 func TestRunErrorBuiltin(t *testing.T) {
-	toks, errs := lexer.Lex("err = error(\"file not found\")\nprint(err)\nprint(err[\"message\"])\n")
+	toks, errs := lexer.Lex("err = error(\"file not found\")\nprint(err)\nprint(err[\"message\"])\ntagged = error({ kind: \"io\", message: \"missing\" })\nprint(tagged[\"kind\"])\nprint(tagged[\"message\"])\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -1029,7 +1029,7 @@ func TestRunErrorBuiltin(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "error: file not found\nfile not found\n"
+	want := "error: file not found\nfile not found\nio\nmissing\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
@@ -1129,10 +1129,10 @@ func TestRunStringIndexingUsesRunes(t *testing.T) {
 	}
 }
 
-func TestRunCatchCatchesAnyNonNilValue(t *testing.T) {
-	src := "raise_and_catch = value ->\n  try\n    raise value\n  catch err\n    return err\nprint(raise_and_catch(\"bad\"))\nprint(raise_and_catch(3))\nprint(raise_and_catch({ \"kind\": \"dict\" })[\"kind\"])\n"
+func TestRunCatchCatchesErrorValue(t *testing.T) {
+	src := "raise_and_catch = value ->\n  try\n    raise value\n  catch err\n    return err\nprint(raise_and_catch(error(\"bad\"))[\"message\"])\n"
 	out := runEval(t, src)
-	want := "bad\n3\ndict\n"
+	want := "bad\n"
 	if out != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}
@@ -1181,7 +1181,8 @@ func TestRunRejectsStrictDynamicErrors(t *testing.T) {
 		{name: "assignment arity", src: "first, second = [1]\n", want: "assignment expects 2 values, got 1"},
 		{name: "function arity", src: "add = a, b -> a + b\nprint(add(1))\n", want: "function expects 2 arguments, got 1"},
 		{name: "kind changing reassignment", src: "value = 1\nvalue = \"one\"\n", want: "cannot reassign value from number to string"},
-		{name: "raise nil", src: "raise nil\n", want: "raise expects non-nil value"},
+		{name: "raise nil", src: "raise nil\n", want: "raise expects error value"},
+		{name: "raise string", src: "raise \"failed\"\n", want: "raise expects error value"},
 	}
 
 	for _, tt := range tests {

@@ -46,11 +46,12 @@ portable across the C runtime and future self-hosted compiler.
   - Errors are not strings.
   - Error display uses the message.
   - Error values may carry optional structured data when documented by an API.
-- `catch err` catches every non-`nil` raised value.
+- `catch err` catches structured error values raised with `raise`.
+  - `raise` accepts only error values.
   - Typed catches, pattern catches, and multiple catch clauses are not part of
     v1.0.0.
-  - Branching by error kind, message, or data is written inside the catch body
-    with `if` or `match`.
+  - Branching by error kind, message, code, or data is written inside the catch
+    body with `if` or `match`.
 - `defer` is not part of v1.0.0.
   - Cleanup uses `try/finally`, explicit `close()`, and structured `scope`
     behavior.
@@ -105,7 +106,7 @@ portable across the C runtime and future self-hosted compiler.
   - invalid UTF-8 rejection for string APIs;
   - bytes raw-data preservation;
   - error values as non-string runtime values;
-  - catch-all non-`nil` error handling;
+  - catch-all structured error handling;
   - closed-channel receive and send behavior;
   - explicit resource cleanup.
 - Parser/checker diagnostics reject excluded `defer`, typed/pattern catch,
@@ -161,9 +162,11 @@ Eval/runtime tests:
   - Expected: `err` has error kind, displays as the message, and is not equal
     to `"failed"`.
 
-- `TestRunCatchCatchesAnyNonNilRaisedValue`
-  - Raises an error, string, number, and object value.
-  - Expected: each is caught by `catch err`; `raise nil` remains invalid.
+- `TestRunCatchCatchesStructuredErrorsOnly`
+  - Raises an error value.
+  - Attempts to raise a string, number, object value, and `nil`.
+  - Expected: the error value is caught by `catch err`; non-error operands are
+    rejected before catch handling.
 
 - `TestRunClosedChannelBoundaries`
   - Receiving from a closed channel returns `nil`.

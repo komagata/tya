@@ -3,28 +3,28 @@ class TestCase
   # TestCase.assert provides the unittest/TestCase standard library operation.
   assert = cond, desc ->
     if not cond
-      raise { kind: "unittest_fail", message: desc }
+      raise error({ kind: "unittest_fail", message: desc })
 
   # TestCase.assert_falsy provides the unittest/TestCase standard library operation.
   assert_falsy = cond, desc ->
     if cond
-      raise { kind: "unittest_fail", message: desc }
+      raise error({ kind: "unittest_fail", message: desc })
 
   # assert_equal fails the current test when expected and actual differ.
   assert_equal = expected, actual, desc ->
     if not equal(expected, actual)
       msg = "{desc}: expected {expected}, got {actual}"
-      raise { kind: "unittest_fail", message: msg }
+      raise error({ kind: "unittest_fail", message: msg })
 
   # TestCase.assert_not_equal provides the unittest/TestCase standard library operation.
   assert_not_equal = left, right, desc ->
     if equal(left, right)
-      raise { kind: "unittest_fail", message: "{desc}: expected not equal" }
+      raise error({ kind: "unittest_fail", message: "{desc}: expected not equal" })
 
   # TestCase.assert_nil provides the unittest/TestCase standard library operation.
   assert_nil = value, desc ->
     if value != nil
-      raise { kind: "unittest_fail", message: "{desc}: expected nil, got {value}" }
+      raise error({ kind: "unittest_fail", message: "{desc}: expected nil, got {value}" })
 
   # assert_raises fails unless body raises an error.
   assert_raises = body ->
@@ -34,8 +34,8 @@ class TestCase
     catch _
       raised = true
     if not raised
-      raise { kind: "unittest_fail", message: "expected raise but none" }
+      raise error({ kind: "unittest_fail", message: "expected raise but none" })
 
   # TestCase.fail provides the unittest/TestCase standard library operation.
   fail = msg ->
-    raise { kind: "unittest_fail", message: msg }
+    raise error({ kind: "unittest_fail", message: msg })

@@ -66,11 +66,11 @@ class StdlibHttpRoutingTest extends TestCase
 
   static error_handler = err, req ->
     req["handled"] = true
-    return { status: 500, body: "caught " + err }
+    return { status: 500, body: "caught " + err["message"] }
 
   static boom = req ->
     req["boom"] = true
-    raise "boom"
+    raise error("boom")
 
   static hello = req ->
     return { status: 200, body: "hello " + req["path"] }

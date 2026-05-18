@@ -104,7 +104,7 @@ class Server
   path = name, params ->
     route = self.named_routes.get(name, nil)
     if route == nil
-      raise "http.path: unknown route " + name
+      raise error("http.path: unknown route " + name)
     return Server.build_path(route["path"], params)
 
   # Server.redirect provides the net/http/Server standard library operation.
@@ -114,7 +114,7 @@ class Server
     if status == nil
       status = 302
     if status != 301 and status != 302 and status != 303 and status != 307 and status != 308
-      raise "http.redirect: unsupported redirect status"
+      raise error("http.redirect: unsupported redirect status")
     headers = {}
     headers["Location"] = path
     return { status: status, headers: headers, body: "" }
@@ -291,11 +291,11 @@ class Server
     while i < keys.len()
       key = keys[i]
       if key != "trailing_slash" and key != "name"
-        raise "http.route: unknown option " + key
+        raise error("http.route: unknown option " + key)
       opts[key] = options[key]
       i = i + 1
     if opts["trailing_slash"] != "strict" and opts["trailing_slash"] != "ignore"
-      raise "http.route: invalid trailing_slash option"
+      raise error("http.route: invalid trailing_slash option")
     return opts
 
   # cookie_value formats a Set-Cookie header value.
@@ -320,51 +320,51 @@ class Server
     same_site = options.get("same_site", nil)
     if same_site != nil
       if same_site != "Lax" and same_site != "Strict" and same_site != "None"
-        raise "http.cookie: unsupported SameSite"
+        raise error("http.cookie: unsupported SameSite")
       if same_site == "None" and not options.get("secure", false)
-        raise "http.cookie: SameSite=None requires Secure"
+        raise error("http.cookie: SameSite=None requires Secure")
       out = out + "; SameSite=" + same_site
     return out
 
   # validate_cookie_name raises when name is not a valid cookie name.
   static validate_cookie_name = name ->
     if name == nil or name == ""
-      raise "http.cookie: invalid cookie name"
+      raise error("http.cookie: invalid cookie name")
     i = 0
     while i < name.byte_len()
       c = name[i]
       code = ord(c)
       if code < 32 or code == 127 or c == " " or c == "=" or c == ";" or c == ","
-        raise "http.cookie: invalid cookie name"
+        raise error("http.cookie: invalid cookie name")
       i = i + 1
 
   # validate_cookie_value raises when value cannot be used in a cookie.
   static validate_cookie_value = value ->
     if value == nil
-      raise "http.cookie: invalid cookie value"
+      raise error("http.cookie: invalid cookie value")
     i = 0
     while i < value.byte_len()
       c = value[i]
       code = ord(c)
       if code < 32 or code == 127 or c == ";" or c == ","
-        raise "http.cookie: invalid cookie value"
+        raise error("http.cookie: invalid cookie value")
       i = i + 1
 
   # Server.validate_pattern provides the net/http/Server standard library operation.
   static validate_pattern = path ->
     if not path.starts_with("/")
-      raise "http.route: path must start with /"
+      raise error("http.route: path must start with /")
     names = []
     parts = path.split("/")
     i = 0
     while i < parts.len()
       part = parts[i]
       if part.starts_with("*") and i != parts.len() - 1
-        raise "http.route: wildcard must be final segment"
+        raise error("http.route: wildcard must be final segment")
       if part.starts_with(":") or part.starts_with("*")
         name = Server.slice(part, 1, part.byte_len())
         if name == "" or Server.array_has?(names, name)
-          raise "http.route: duplicate or empty parameter " + name
+          raise error("http.route: duplicate or empty parameter " + name)
         names.push(name)
       i = i + 1
 
@@ -410,7 +410,7 @@ class Server
       if part.starts_with(":") or part.starts_with("*")
         name = Server.slice(part, 1, part.byte_len())
         if params == nil or not params.has?(name)
-          raise "http.path: missing param " + name
+          raise error("http.path: missing param " + name)
         out.push(params[name])
       else
         out.push(part)

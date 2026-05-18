@@ -15,7 +15,7 @@ class Hex
       return code - 55
     if code >= 97 and code <= 102
       return code - 87
-    raise "hex.decode: invalid hex digit"
+    raise error("hex.decode: invalid hex digit")
 
   # Hex.encode provides the hex/Hex standard library operation.
   static encode = value ->
@@ -37,13 +37,13 @@ class Hex
         out = out + Hex.hex_digit((code / 16).to_i()) + Hex.hex_digit(code % 16)
         i = i + 1
       return out
-    raise "hex.encode: argument must be a string or bytes"
+    raise error("hex.encode: argument must be a string or bytes")
 
   # Hex.decode provides the hex/Hex standard library operation.
   static decode = text ->
     n = text.byte_len()
     if n % 2 != 0
-      raise "hex.decode: odd-length input"
+      raise error("hex.decode: odd-length input")
     arr = []
     i = 0
     while i < n

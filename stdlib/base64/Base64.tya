@@ -60,7 +60,7 @@ class Base64
       return 62
     if code == 47
       return 63
-    raise "base64.decode: invalid character"
+    raise error("base64.decode: invalid character")
 
   # Base64.decode provides the base64/Base64 standard library operation.
   static decode = text ->
@@ -75,7 +75,7 @@ class Base64
       i = i + 1
     m = cleaned.byte_len()
     if m % 4 == 1
-      raise "base64.decode: invalid length"
+      raise error("base64.decode: invalid length")
     arr = []
     j = 0
     while j + 4 <= m

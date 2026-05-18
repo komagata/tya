@@ -34,16 +34,16 @@ class Image
   # Image.decode provides the image/Image standard library operation.
   static decode = data, options ->
     if options != nil and options.has?("frame") and options["frame"] != 0
-      raise "image.decode: frame out of range"
+      raise error("image.decode: frame out of range")
     meta = Codec.identify(data)
     text = bytes_text(data)
     lines = text.split("\n")
     if lines.len() < 2
-      raise "image.decode: malformed " + meta["format"]
+      raise error("image.decode: malformed " + meta["format"])
     values = lines[1].split(",")
     expected = meta["width"] * meta["height"] * 4
     if values.len() != expected
-      raise "image.decode: malformed " + meta["format"] + " pixel data"
+      raise error("image.decode: malformed " + meta["format"] + " pixel data")
     img = Image.new(meta["width"], meta["height"], nil)
     img.format = meta["format"]
     img.pixels = []
@@ -69,7 +69,7 @@ class Image
     if format == nil
       format = self.format
     if not Image.encodable_format?(format)
-      raise "image.encode: unsupported format " + format.to_s()
+      raise error("image.encode: unsupported format " + format.to_s())
     Image.check_encode_options(format, options)
     alpha = "0"
     if self.has_alpha?()
@@ -119,7 +119,7 @@ class Image
     self.check_xy(x, y)
     Image.check_dimensions(width, height)
     if x + width > self.width or y + height > self.height
-      raise "image.crop: rectangle out of bounds"
+      raise error("image.crop: rectangle out of bounds")
     out = Image.new(width, height, nil)
     yy = 0
     while yy < height
@@ -264,9 +264,9 @@ class Image
   # Image.check_xy provides the image/Image standard library operation.
   check_xy = x, y ->
     if x.class != Number or y.class != Number or x != x.to_i() or y != y.to_i()
-      raise "image: coordinates must be integers"
+      raise error("image: coordinates must be integers")
     if x < 0 or y < 0 or x >= self.width or y >= self.height
-      raise "image: pixel coordinate out of bounds"
+      raise error("image: pixel coordinate out of bounds")
 
   # Image.from_pixels provides the image/Image standard library operation.
   static from_pixels = width, height, format, pixels ->
@@ -289,13 +289,13 @@ class Image
     while i < keys.len()
       key = keys[i]
       if key != "filter" and key != "fit" and key != "background"
-        raise "image.resize: unknown option " + key
+        raise error("image.resize: unknown option " + key)
       opts[key] = options[key]
       i = i + 1
     if opts["filter"] != "nearest" and opts["filter"] != "bilinear"
-      raise "image.resize: unsupported filter"
+      raise error("image.resize: unsupported filter")
     if opts["fit"] != "stretch" and opts["fit"] != "contain" and opts["fit"] != "cover"
-      raise "image.resize: unsupported fit"
+      raise error("image.resize: unsupported fit")
     Image.check_color(opts["background"])
     return opts
 
@@ -318,7 +318,7 @@ class Image
       return "bmp"
     if lower.ends_with(".ppm")
       return "ppm"
-    raise "image: unknown image format"
+    raise error("image: unknown image format")
 
   # Image.encodable_format? provides the image/Image standard library operation.
   static encodable_format? = format ->
@@ -333,26 +333,26 @@ class Image
     while i < keys.len()
       key = keys[i]
       if key != "format" and key != "compression" and key != "quality" and key != "background"
-        raise "image.encode: unknown option " + key
+        raise error("image.encode: unknown option " + key)
       i = i + 1
     if format == "jpeg" and options.has?("quality")
       q = options["quality"]
       if q.class != Number or q < 1 or q > 100
-        raise "image.encode: jpeg quality out of range"
+        raise error("image.encode: jpeg quality out of range")
 
   # Image.check_dimensions provides the image/Image standard library operation.
   static check_dimensions = width, height ->
     if width.class != Number or height.class != Number or width != width.to_i() or height != height.to_i()
-      raise "image: dimensions must be integers"
+      raise error("image: dimensions must be integers")
     if width <= 0 or height <= 0 or width * height > 10000000
-      raise "image: invalid dimensions"
+      raise error("image: invalid dimensions")
 
   # Image.check_color provides the image/Image standard library operation.
   static check_color = value ->
     if value.class != color.Color
-      raise "image: expected color.Color"
+      raise error("image: expected color.Color")
 
   # Image.check_channel provides the image/Image standard library operation.
   static check_channel = value ->
     if value.class != Number or value < 0 or value > 255 or value != value.to_i()
-      raise "image: channel out of range"
+      raise error("image: channel out of range")

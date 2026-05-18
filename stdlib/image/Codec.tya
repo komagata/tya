@@ -11,13 +11,13 @@ class Codec
     text = bytes_text(data)
     parts = text.split("\n")
     if parts.len() == 0
-      raise "image.identify: unsupported or malformed image"
+      raise error("image.identify: unsupported or malformed image")
     header = parts[0].split(":")
     if header.len() != 6 or header[0] != "TYAIMG"
-      raise "image.identify: unsupported or malformed image"
+      raise error("image.identify: unsupported or malformed image")
     format = header[1]
     if not Codec.supported_format?(format)
-      raise "image.identify: unsupported format " + format
+      raise error("image.identify: unsupported format " + format)
     return { format: format, width: header[2].to_i(), height: header[3].to_i(), frames: header[5].to_i(), animated: header[5].to_i() > 1, has_alpha: header[4] == "1", color_space: "srgb" }
 
   # Codec.supported_format? provides the image/Codec standard library operation.
