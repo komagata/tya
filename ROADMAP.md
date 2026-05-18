@@ -230,7 +230,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
       normalized.
     - [ ] The verification command fails clearly when `go` is absent but the
       release bootstrap artifact is missing.
-  - [ ] Add a `scripts/bootstrap_no_go.sh` proof that runs from a release
+  - [x] Add a `scripts/bootstrap_no_go.sh` proof that runs from a release
     `tya` binary plus the checked-in source tree and does not invoke `go`.
   - [ ] Add CI coverage for the no-Go bootstrap proof in an environment where
     `go` is intentionally unavailable or hidden from `PATH`.
