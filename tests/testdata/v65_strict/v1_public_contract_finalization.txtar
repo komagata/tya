@@ -1,0 +1,27 @@
+# v1 public contract finalization docs and stdlib imports.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+env TYA_STDLIB_DIR=$REPO/stdlib
+cd $WORK
+
+exec $WORK/tya check public_contract.tya
+exec $WORK/tya run public_contract.tya
+stdout '1'
+stdout '0'
+stdout 'true'
+stdout 'true'
+
+-- public_contract.tya --
+import regex as regex
+import time as time
+import hmac as hmac
+import file as file
+import dir as dir
+import os as os
+import process as process
+
+print(regex.Regex.search("[0-9]+", "v1")["text"])
+print(time.Time.unix(0).format("unix"))
+print(hmac.Hmac.verify("sha256", "key", "The quick brown fox jumps over the lazy dog", "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"))
+print(os.Os.env("TYA_NO_SUCH_V1_ENV") == nil)

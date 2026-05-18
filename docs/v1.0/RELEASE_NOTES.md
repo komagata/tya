@@ -38,3 +38,19 @@ deprecation window. Representative replacements:
 - Use explicit conversion methods; operations do not implicitly convert values.
 
 WebAssembly remains documented for v1.0.0 but is not a release-blocking target.
+# Tya v1.0 Release Notes
+
+Tya v1.0 freezes the public language, runtime, stdlib, diagnostics, and release
+contract documented in `SPEC.md`.
+
+The v1 stdlib blocker set is implemented and documented: `regex/Regex`,
+filesystem utilities in `file/File` and `dir/Dir`, `time/Time`,
+environment/process APIs in `os/Os` and `process/Process`, and `hmac/Hmac`.
+
+All user-facing diagnostics use the stable `TYA-E....` namespace. Runtime
+structured errors keep domain `kind` and `code` fields for programmatic
+handling while CLI/LSP/reporting surfaces stable Tya diagnostics.
+
+The release gate is repository-internal and uses Go tests, testscript fixtures,
+self-host fixed-point checks, and release packaging checks. Tya v1.0 does not
+add a public `tya conformance` command.

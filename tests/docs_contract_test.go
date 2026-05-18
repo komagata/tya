@@ -342,6 +342,90 @@ func TestSpecDocumentsTimeContract(t *testing.T) {
 	}
 }
 
+func TestStrictSemanticsHasNoPublicCRuntimeExemptions(t *testing.T) {
+	strict := readRepoFile(t, "docs", "STRICT_SEMANTICS.md")
+	for _, forbidden := range []string{
+		"C runtime keeps",
+		"generated C keeps",
+		"for self-host compatibility",
+		"Generated C keeps nil-return compatibility",
+	} {
+		if strings.Contains(strict, forbidden) {
+			t.Fatalf("STRICT_SEMANTICS.md still documents public C-runtime exemption %q", forbidden)
+		}
+	}
+}
+
+func TestSpecDocumentsUnifiedDiagnosticNamespace(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"single stable `TYA-E....` diagnostic-code namespace",
+		"lexer, parser, checker, codegen, runtime, CLI, LSP",
+		"Runtime structured error values may additionally carry domain-specific `kind`",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing unified diagnostic namespace text %q", required)
+		}
+	}
+}
+
+func TestSpecDocumentsV1StdlibBlockerSet(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"`regex/Regex`",
+		"`file/File` and `dir/Dir`",
+		"`time/Time`",
+		"`os/Os`",
+		"`process/Process`",
+		"`hmac/Hmac`",
+		"v1.0.0 stdlib blocker set",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing v1 stdlib blocker text %q", required)
+		}
+	}
+}
+
+func TestSpecDocumentsCompilerIntrospectionCompatibilityBoundary(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"Compiler introspection compatibility is intentionally narrow",
+		"`Lexer.lex`, `Parser.parse`,",
+		"`Checker.check`, `Format.format`",
+		"Full AST dictionary shapes, checker internals",
+		"not v1 compatibility guarantees",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing compiler introspection boundary text %q", required)
+		}
+	}
+}
+
+func TestFrozenV10DocsExist(t *testing.T) {
+	for _, path := range [][]string{
+		{"docs", "v1.0", "SPEC.md"},
+		{"docs", "v1.0", "RELEASE_NOTES.md"},
+		{"docs", "v1.0", "MIGRATION.md"},
+	} {
+		text := readRepoFile(t, path...)
+		if !strings.Contains(text, "v1") && !strings.Contains(text, "v1.0") {
+			t.Fatalf("%s does not describe v1 behavior", filepath.Join(path...))
+		}
+	}
+}
+
+func TestPublicDocsMarkLegacyAliases(t *testing.T) {
+	for _, path := range [][]string{
+		{"docs", "SPEC.md"},
+		{"docs", "v1.0", "MIGRATION.md"},
+	} {
+		text := readRepoFile(t, path...)
+		if strings.Contains(text, "legacy alias") && !strings.Contains(text, "legacy compatibility only") {
+			t.Fatalf("%s mentions legacy aliases without legacy compatibility marker", filepath.Join(path...))
+		}
+	}
+}
+
 func readRepoFile(t *testing.T, elems ...string) string {
 	t.Helper()
 	parts := append([]string{".."}, elems...)
