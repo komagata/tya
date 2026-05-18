@@ -41,10 +41,11 @@ for the language and implementation.
    package manager.
 5. **Structured diagnostics** — every error has a stable code, an
    expected/found block, an actionable hint, and a linked explanation.
-6. **Self-hosted** — the Tya compiler is written in Tya itself. The Go
-   reference implementation is removed at v1.0.0 release. Bootstrap from
-   a pre-built `tya` binary distributed via the project's release
-   channels.
+6. **Self-hosted** — the Tya compiler is written in Tya itself. A released
+   pre-built `tya` binary can rebuild the Tya compiler and prove a stable
+   stage-2/stage-3 fixed point without requiring Go on the user's machine.
+   Removing the Go reference implementation is the final transition step after
+   that bootstrap path is routine and release-quality.
 
 Each commitment maps to one or more Epics below:
 
@@ -57,7 +58,7 @@ Each commitment maps to one or more Epics below:
   `tya lint`, and package tooling.
 - Commitment 5 → diagnostics polish and remaining structured-error coverage.
 - Commitment 6 → *Migrate selfhost compiler to latest spec and remove
-  the Go reference implementation* (see Future Work / Self-host).
+  the required Go dependency* (see Future Work / Self-host).
 
 Other Epics (HTTP expansion, documentation generator extensions, task runner
 extensions, editor publication, and ecosystem polish) are valuable but not
@@ -69,10 +70,13 @@ Current v1.0.0 blockers:
 1. Make the strict-semantics audit explicit and close any gaps it finds.
 2. Finish the self-hosted compiler through the latest spec and prove the
    latest-spec stage-2/stage-3 fixed point.
-3. Decide the exact v1.0.0 relationship between the self-hosted compiler and
+3. Make the no-Go bootstrap path explicit: a released `tya` binary rebuilds
+   the self-hosted compiler, proves the latest-spec fixed point, and runs the
+   compiler conformance suite without `go` installed.
+4. Decide the exact v1.0.0 relationship between the self-hosted compiler and
    the Go implementation: full Go removal at v1.0.0, or a documented
-   transition release before that removal.
-4. Complete the remaining structured-diagnostic coverage needed for the
+   transition release where Go remains as a reference/bootstrap recovery path.
+5. Complete the remaining structured-diagnostic coverage needed for the
    supported parser/checker/codegen/runtime/tool failures.
 
 ## Current Direction
@@ -205,7 +209,7 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
   - [ ] Document any intentionally dynamic behavior that remains valid in
     v1.0.0.
 
-- [ ] **Migrate selfhost compiler to the latest spec and remove Go reference**
+- [ ] **Migrate selfhost compiler to the latest spec and remove Go dependency**
   - [x] Prove the `selfhost/v02/` current-spec compiler gate.
     - [x] Migrate the v02 lexer/parser surface to current syntax.
     - [x] Migrate the v02 checker surface for selected current semantic
@@ -216,11 +220,33 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
       applicable full-spec fixture coverage.
   - [ ] Bring `selfhost/` from the v02 current-spec proof to the v1.0.0 spec:
     lexer, parser, AST, checker, C emitter, and runner.
+  - [ ] Define a no-Go bootstrap contract:
+    - [ ] A release artifact supplies a trusted stage-1 `tya` binary.
+    - [ ] That binary compiles the checked-in self-host compiler source to a
+      stage-2 compiler.
+    - [ ] The stage-2 compiler recompiles the same source to stage-3.
+    - [ ] Stage-2 and stage-3 generated C output, diagnostics, and selected
+      runtime behavior are byte-for-byte stable or otherwise explicitly
+      normalized.
+    - [ ] The verification command fails clearly when `go` is absent but the
+      release bootstrap artifact is missing.
+  - [ ] Add a `scripts/bootstrap_no_go.sh` proof that runs from a release
+    `tya` binary plus the checked-in source tree and does not invoke `go`.
+  - [ ] Add CI coverage for the no-Go bootstrap proof in an environment where
+    `go` is intentionally unavailable or hidden from `PATH`.
+  - [ ] Maintain a selfhost coverage manifest mapping latest `docs/SPEC.md`
+    features to selfhost lexer/parser/checker/emitter support and fixtures.
   - [ ] Implement all language features in the self-hosted compiler.
   - [ ] Verify stage-2 == stage-3 fixed point at the latest spec.
   - [ ] Distribute pre-built `tya` binaries via Homebrew, curl install scripts,
     and GitHub Releases as the bootstrap source.
-  - [ ] Remove `cmd/tya` and `internal/*` Go sources.
+  - [ ] Make release packaging prefer the self-hosted compiler artifact once
+    the no-Go bootstrap proof is green across supported platforms.
+  - [ ] Freeze the Go implementation as a reference/bootstrap recovery path and
+    require any remaining Go-only behavior to be tracked as a selfhost parity
+    gap.
+  - [ ] Remove `cmd/tya` and `internal/*` Go sources only after the no-Go
+    bootstrap path is release-quality, documented, and routinely used.
   - [ ] Migrate Go-based tests to Tya-based tests where practical; keep
     specification-driven black-box tests in any language that runs against the
     `tya` binary.
