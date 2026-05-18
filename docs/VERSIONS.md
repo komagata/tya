@@ -20,6 +20,11 @@ historical copy, such as `v0.1.0` and `v0.2.0`.
 - [Current Spec](/spec/)
 - [Release Notes](/v1.0/release-notes/)
 
+## v0.66
+
+- [Spec](/v0.66/spec/)
+- [Release Notes](/v0.66/release-notes/)
+
 ## v0.65
 
 - [Spec](/v0.65/spec/)

@@ -95,7 +95,7 @@ Current v1.0.0 blockers:
 ## Current Direction
 
 Tya is implemented as a small, hand-written compile-to-C language. The latest
-released specification is **v0.65**. Frozen release documents live under
+released specification is **v0.66**. Frozen release documents live under
 `docs/vX.Y/`; release history is tracked in [`docs/VERSIONS.md`](docs/VERSIONS.md)
 and the per-version release notes, not in this roadmap.
 

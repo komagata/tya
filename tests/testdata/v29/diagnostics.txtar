@@ -31,7 +31,7 @@ env NO_COLOR=1
 
 # version
 exec go run ./cmd/tya version
-stdout '0.65.0\n'
+stdout '0.66.0\n'
 
 -- shadow.tya --
 x = 1
