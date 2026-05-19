@@ -10,7 +10,7 @@ Status: current repository specification. This page describes the language
 surface maintained on `main`, including the current package, tooling,
 concurrency, interface, and standard-library integration rules.
 
-## Introduction
+## Overview
 
 Tya is an indentation-based, dynamically typed language that compiles to C.
 The implementation is intentionally small and explicit: source is tokenized,
@@ -53,7 +53,13 @@ The strict-semantics rule matrix in
 validity boundaries and records the active parser, checker, runtime, CLI, LSP,
 and self-host coverage for each rule family.
 
-## Notation
+Completed feature specs under `feature-specs/completed/` are design history.
+They may explain why a rule was accepted, but users do not need them to know
+the current v1.0.0 contract. Public v1 authority is this specification,
+[`docs/STRICT_SEMANTICS.md`](STRICT_SEMANTICS.md), and the frozen documents
+under `docs/v1.0/`.
+
+## Source and Lexical Structure
 
 Examples use ordinary Tya source. Grammar fragments are illustrative rather
 than a complete parser grammar.
@@ -67,7 +73,7 @@ PascalCase            class and interface
 The words "must", "must not", "may", and "should" are normative when they
 describe program validity or implementation behavior.
 
-## Naming
+### Naming
 
 Tya names express naming category, not accessibility. Accessibility is
 expressed by language constructs such as `private`.
@@ -81,7 +87,7 @@ segment. Import paths are slash-separated `snake_case` segments. Leading `_`
 has no visibility meaning for ordinary bindings. Standard-library APIs use
 `snake_case`; CamelCase builtin spellings are not part of the language surface.
 
-## Source Code Representation
+### Source Code Representation
 
 Tya source is UTF-8 text. The compiler normalizes CRLF line endings to LF before
 lexing. Source files use `.tya`.
@@ -100,7 +106,7 @@ Each physical line is part of one logical line except when it is inside a
 parenthesized call, an array literal, a string literal, or a canonical
 continuation form accepted by the parser and formatter.
 
-## Lexical Elements
+### Lexical Elements
 
 ### Comments
 
@@ -238,7 +244,7 @@ receive a value of the required kind or raise a runtime error. The documented
 exceptions are formatting operations such as string interpolation and `to_s()`,
 plus the exact operator cases listed below.
 
-## Blocks
+### Blocks
 
 A block is a non-empty sequence of statements introduced by a header line and
 an increased indentation level. Empty blocks are invalid; use an explicit
@@ -260,7 +266,7 @@ interface bodies, `try` / `catch`, `scope`, `select`, and similar constructs.
 Top-level source consists of imports, declarations, assignments, and statements
 allowed by the file kind. Class files are more restrictive than script files.
 
-## File Kinds
+### File Kinds
 
 A `.tya` file's role is determined by its filename and context.
 
@@ -276,7 +282,7 @@ Class files may be loaded explicitly as part of a directory package or
 implicitly as same-directory siblings of an entry script. A script entry sees
 PascalCase class files in its own directory without import.
 
-## Canonical Syntax {#canonical-syntax}
+### Canonical Syntax {#canonical-syntax}
 
 Tya has a canonical syntax: every well-formed program has one source
 representation. `tya format` is therefore part of the language surface, not an
@@ -307,7 +313,7 @@ The core canonical rules are:
 Implementations must preserve semantic behavior when formatting. Formatting
 must be idempotent and stable across platforms.
 
-## V1 Language Boundaries
+### V1 Language Boundaries
 
 Tya v1.0.0 intentionally keeps the syntax surface small. The following forms
 are not part of v1.0.0 and must fail before code generation:
@@ -801,7 +807,7 @@ print(await task)
 Channels and sync resources are standard-library-backed runtime values with
 the methods specified in the Standard Library section.
 
-## Parallelism And Concurrency
+### Parallelism And Concurrency
 
 Tya exposes structured concurrency through tasks, scopes, channels, sync
 resources, and `select`.
@@ -991,7 +997,7 @@ default
 The exact channel methods and sync primitives are defined in the Standard
 Library section.
 
-## Built-In Functions
+### Built-In Functions
 
 Tya keeps the public builtin surface intentionally small. File, directory,
 path, process, stream, bytes, random, compression, digest, socket, compiler,
@@ -1025,7 +1031,7 @@ methods for conversions and collections, for example `value.to_s()`,
 
 Standard library APIs are imported with the same `import` syntax as user code.
 
-## Terminology
+## Imports and Packages
 
 Current Tya documentation uses these terms normatively:
 
@@ -1045,8 +1051,6 @@ package tool                 [tools] entry run by tya tool
 Language features are not imported and cannot be shadowed. Standard-library
 packages are specified in the Standard Library section; they are imported
 packages, not builtins.
-
-## Imports And Packages
 
 ### Import Syntax
 
@@ -1183,7 +1187,7 @@ Package-provided tools live under `[tools]` and run through `tya tool`.
 Package tools are not global installs and are not shell tasks; they run from
 locked dependencies or an explicit one-shot git/path source.
 
-## Program Execution
+## Runtime and Concurrency
 
 A script file is a lowercase `.tya` file and may be used as an entry file for
 `tya run`, `tya build`, and `tya emit-c`.
@@ -1212,7 +1216,7 @@ the build.
 WASM build targets are available where supported. Native packages are rejected
 for unsupported WASM targets. `tya run` remains native-only.
 
-## Cross Compilation {#cross-compilation}
+### Cross Compilation {#cross-compilation}
 
 Cross-compilation is selected with `--target` on `tya build`. The native target
 is the default and uses the Tya-managed Zig toolchain as `zig cc`.
@@ -1246,6 +1250,33 @@ process-oriented imports. `tya run` is native-only and does not execute
 WebAssembly artifacts. WebAssembly is documented for v1.0.0 but is not a
 release-blocking target; WASM-specific gaps are tracked separately from the
 core language release gates.
+
+## Errors and Diagnostics
+
+Tya has two related error systems:
+
+- language-level `raise`, `try`, and `catch` for program errors;
+- compiler and tool diagnostics for invalid source and tooling failures.
+
+Compiler diagnostics use stable codes such as `TYA-E0015` and linter
+diagnostics use stable codes such as `TYAL0001`. Diagnostics should include
+an actionable message and, where practical, a hint and documentation URL.
+
+Runtime kind errors, invalid operations, failed assertions, failed I/O, and
+native wrapper errors are represented as Tya error values or raised runtime
+errors according to the API being used.
+
+Standard-library failure behavior is part of each public API contract. Invalid
+argument kinds or arity are runtime errors. Absence and lookup APIs return
+`nil` only where documented. Operations that can fail because of the outside
+world, such as file, process, network, parse, compression, digest, time,
+random, native-wrapper, and serialization APIs, raise structured error values.
+Public v1.0.0 APIs do not use `value, err` pairs as the failure convention.
+Multiple return values remain valid for ordinary successful values.
+
+`raise` may raise only error values. Raising `nil`, strings, numbers,
+dictionaries, or other non-error values is invalid because they do not carry the
+language error kind. A `catch` binding receives the exact raised error value.
 
 ## Built-In Tools {#builtin-tools}
 
@@ -1480,7 +1511,7 @@ directories, and hidden cache directories. Table-form `watch` overrides the
 default watch set and `ignore` adds ignored globs. `--watch` is consumed by the
 task runner before `--`; arguments after `--` are passed to the task command.
 
-## Verification Commands
+### Verification Commands
 
 Verification commands inspect source and report whether it satisfies a specific
 contract. They do not define language syntax or standard-library behavior.
@@ -1551,7 +1582,7 @@ rewrite files. `tya format --check`, `tya check`, `tya lint`, `tya test`, and
 `tya verify` do not rewrite files by default. Automatic lint fixes require an
 explicit option such as `--fix`.
 
-## Single Binary Distribution
+### Single Binary Distribution
 
 Tya is distributed as one primary `tya` binary. The binary contains the
 toolchain entry points and uses the bundled standard library and C runtime
@@ -1564,33 +1595,6 @@ manager, or build driver executables for normal Tya work.
 Releases may include support files such as the standard library, C runtime
 sources, editor assets, examples, or installation metadata, but the command
 surface is centered on the single `tya` executable.
-
-## Errors And Diagnostics
-
-Tya has two related error systems:
-
-- language-level `raise`, `try`, and `catch` for program errors;
-- compiler and tool diagnostics for invalid source and tooling failures.
-
-Compiler diagnostics use stable codes such as `TYA-E0015` and linter
-diagnostics use stable codes such as `TYAL0001`. Diagnostics should include
-an actionable message and, where practical, a hint and documentation URL.
-
-Runtime kind errors, invalid operations, failed assertions, failed I/O, and
-native wrapper errors are represented as Tya error values or raised runtime
-errors according to the API being used.
-
-Standard-library failure behavior is part of each public API contract. Invalid
-argument kinds or arity are runtime errors. Absence and lookup APIs return
-`nil` only where documented. Operations that can fail because of the outside
-world, such as file, process, network, parse, compression, digest, time,
-random, native-wrapper, and serialization APIs, raise structured error values.
-Public v1.0.0 APIs do not use `value, err` pairs as the failure convention.
-Multiple return values remain valid for ordinary successful values.
-
-`raise` may raise only error values. Raising `nil`, strings, numbers,
-dictionaries, or other non-error values is invalid because they do not carry the
-language error kind. A `catch` binding receives the exact raised error value.
 
 ## Standard Library
 
@@ -1905,7 +1909,7 @@ limited to a conservative maximum number of requests.
 `serialization/Serializer` converts Tya values to and from data values, JSON,
 and TOML. Classes that implement `Serializable` expose `to_data()`.
 
-## External Packages
+### External Packages
 
 External packages and tools are distributed outside this repository and are
 consumed by git URL plus tag, branch, or revision through `tya.toml`.
@@ -1920,7 +1924,7 @@ Known public packages and tools include:
 - `https://github.com/komagata/flakewatch`
 - `https://github.com/komagata/magvideo`
 
-## System Considerations
+## Distribution and System Considerations
 
 Tya programs compile to C and link against the Tya runtime. The runtime
 provides value representation, garbage collection, primitive methods, class

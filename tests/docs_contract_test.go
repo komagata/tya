@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -422,6 +423,118 @@ func TestPublicDocsMarkLegacyAliases(t *testing.T) {
 		text := readRepoFile(t, path...)
 		if strings.Contains(text, "legacy alias") && !strings.Contains(text, "legacy compatibility only") {
 			t.Fatalf("%s mentions legacy aliases without legacy compatibility marker", filepath.Join(path...))
+		}
+	}
+}
+
+func TestSpecUsesAcceptedSectionOrder(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	want := []string{
+		"## Overview",
+		"## v1.0.0 Compatibility Boundary",
+		"## Source and Lexical Structure",
+		"## Values And Kinds",
+		"## Declarations And Scope",
+		"## Expressions",
+		"## Statements",
+		"## Imports and Packages",
+		"## Runtime and Concurrency",
+		"## Errors and Diagnostics",
+		"## Built-In Tools",
+		"## Standard Library",
+		"## Distribution and System Considerations",
+	}
+	last := -1
+	for _, heading := range want {
+		idx := strings.Index(spec, heading)
+		if idx < 0 {
+			t.Fatalf("SPEC.md missing accepted section heading %q", heading)
+		}
+		if idx <= last {
+			t.Fatalf("SPEC.md heading %q appears out of accepted order", heading)
+		}
+		last = idx
+	}
+}
+
+func TestSpecDocumentsPublicAuthority(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"Completed feature specs under `feature-specs/completed/` are design history",
+		"users do not need them to know the current v1.0.0 contract",
+		"Public v1 authority is this specification, [`docs/STRICT_SEMANTICS.md`](STRICT_SEMANTICS.md), and the frozen documents under `docs/v1.0/`",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing public authority text %q", required)
+		}
+	}
+}
+
+func TestSpecReferencesGeneratedStdlibDocs(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	for _, required := range []string{
+		"Generated stdlib API documentation is produced",
+		"`tya doc --json stdlib`",
+		"machine-readable reference",
+		"package paths, signatures, rendered comments, source paths, and source lines",
+	} {
+		if !containsNormalized(spec, required) {
+			t.Fatalf("SPEC.md missing generated stdlib docs reference %q", required)
+		}
+	}
+}
+
+func TestRoadmapHasNoOpenV1DecisionContradictions(t *testing.T) {
+	roadmap := readRepoFile(t, "ROADMAP.md")
+	for _, forbidden := range []string{
+		"Decide the exact v1.0.0 relationship",
+		"full Go removal at v1.0.0, or",
+		"strict-semantics audit still needs an explicit v1.0.0 gate",
+	} {
+		if strings.Contains(roadmap, forbidden) {
+			t.Fatalf("ROADMAP.md still presents accepted v1 decision as open: %q", forbidden)
+		}
+	}
+}
+
+func TestV10ReleaseChecklistExists(t *testing.T) {
+	checklist := readRepoFile(t, "docs", "v1.0", "RELEASE_CHECKLIST.md")
+	for _, required := range []string{
+		"Strict semantics gate",
+		"Latest self-host fixed point",
+		"No-Go bootstrap proof",
+		"Structured diagnostics coverage",
+		"Standard-library blocker APIs",
+		"Frozen v1.0 docs",
+		"Release artifacts",
+		"Package-manager behavior",
+	} {
+		if !containsNormalized(checklist, required) {
+			t.Fatalf("RELEASE_CHECKLIST.md missing release gate %q", required)
+		}
+	}
+}
+
+func TestSpecInternalLinksResolve(t *testing.T) {
+	spec := readRepoFile(t, "docs", "SPEC.md")
+	re := regexp.MustCompile(`\[[^\]]+\]\(([^):#]+(?:#[^)]+)?)\)`)
+	for _, match := range re.FindAllStringSubmatch(spec, -1) {
+		target := match[1]
+		if strings.Contains(target, "://") || strings.HasPrefix(target, "mailto:") {
+			continue
+		}
+		path := target
+		if hash := strings.Index(path, "#"); hash >= 0 {
+			path = path[:hash]
+		}
+		if path == "" {
+			continue
+		}
+		if strings.HasPrefix(path, "/") {
+			t.Fatalf("SPEC.md uses absolute local link %q", target)
+		}
+		if _, err := os.Stat(filepath.Join("..", "docs", path)); err != nil {
+			t.Fatalf("SPEC.md local link %q does not resolve: %v", target, err)
 		}
 	}
 }

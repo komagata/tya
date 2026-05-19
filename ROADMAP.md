@@ -50,7 +50,7 @@ for the language and implementation.
 Each commitment maps to one or more Epics below:
 
 - Commitment 1 → landed and documented in current SPEC/homepage.
-- Commitment 2 → strict-semantics audit still needs an explicit v1.0.0 gate.
+- Commitment 2 → strict-semantics audit is the accepted v1.0.0 semantics gate.
 - Commitment 3 → shipped and maintained; cross-compilation and one-binary
   distribution are now the public framing.
 - Commitment 4 → maintain and polish the all-in-one toolchain: `tya check`,
@@ -86,9 +86,9 @@ Current v1.0.0 blockers:
 3. Make the no-Go bootstrap path explicit: a released `tya` binary rebuilds
    the self-hosted compiler, proves the latest-spec fixed point, and runs the
    compiler conformance suite without `go` installed.
-4. Decide the exact v1.0.0 relationship between the self-hosted compiler and
-   the Go implementation: full Go removal at v1.0.0, or a documented
-   transition release where Go remains as a reference/bootstrap recovery path.
+4. Maintain the accepted v1.0.0 compiler relationship: the Go implementation
+   remains the reference implementation and bootstrap recovery path while
+   release artifacts prove the no-Go self-host bootstrap path.
 5. Complete the remaining structured-diagnostic coverage needed for the
    supported parser/checker/codegen/runtime/tool failures.
 
