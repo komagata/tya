@@ -431,6 +431,50 @@ func TestVersionsDoesNotListUnreleasedV10(t *testing.T) {
 	}
 }
 
+func TestGuidePagesCoverFirstRunWorkflow(t *testing.T) {
+	cases := []struct {
+		path     []string
+		required []string
+	}{
+		{
+			path: []string{"docs", "GUIDE.md"},
+			required: []string{
+				"## Install",
+				"## Create a Program",
+				"tya run hello.tya",
+				"tya build hello.tya -o hello",
+				"## Values",
+				"## Functions",
+				"## Standard Library",
+			},
+		},
+		{
+			path: []string{"docs", "ja", "guide.md"},
+			required: []string{
+				"## インストール",
+				"## プログラムを作る",
+				"tya run hello.tya",
+				"tya build hello.tya -o hello",
+				"## 値",
+				"## 関数",
+				"## 標準ライブラリ",
+			},
+		},
+	}
+	for _, tc := range cases {
+		text := readRepoFile(t, tc.path...)
+		for _, required := range tc.required {
+			if !strings.Contains(text, required) {
+				t.Fatalf("%s missing guide workflow text %q", filepath.Join(tc.path...), required)
+			}
+		}
+	}
+	home := readRepoFile(t, "docs", "ja", "index.html")
+	if !strings.Contains(home, `href="/ja/guide/"`) {
+		t.Fatal("Japanese homepage must link to the Japanese guide")
+	}
+}
+
 func TestPublicDocsMarkLegacyAliases(t *testing.T) {
 	for _, path := range [][]string{
 		{"docs", "SPEC.md"},

@@ -6,19 +6,53 @@ permalink: /guide/
 
 # Tya Guide
 
-Tya is an indentation-based language that compiles to C. You write `.tya`
-files and use one command, `tya`, to run, build, format, test, document, and
-manage packages.
+This guide is for people trying Tya for the first time. It starts with
+installation, then walks through writing a small program, running it, building
+an executable, and using the basic language features.
 
-For exact language rules, read `docs/SPEC.md`. This guide is the practical
-starting point.
+For the exact language contract, read the [specification](/spec/). This guide
+is practical: copy the examples, run the commands, and change the code as you
+go.
 
-## First Program
+## Install
 
-Create `hello.tya`.
+Download the latest release for your platform from GitHub:
+
+```sh
+curl -fsSL https://tya-lang.org/install.sh | sh
+```
+
+Or install manually from the release page:
+
+```text
+https://github.com/komagata/tya/releases/latest
+```
+
+Check that the command is available:
+
+```sh
+tya version
+```
+
+Tya builds native executables through its bundled toolchain support. If native
+builds fail on your machine, run:
+
+```sh
+tya doctor
+```
+
+## Create a Program
+
+Create a new directory and a file named `hello.tya`.
+
+```sh
+mkdir hello-tya
+cd hello-tya
+```
 
 ```tya
-print("Hello, Tya")
+name = "Tya"
+print("Hello, {name}")
 ```
 
 Run it:
@@ -27,45 +61,96 @@ Run it:
 tya run hello.tya
 ```
 
-Build an executable:
+Expected output:
 
-```sh
-tya build hello.tya -o hello
-./hello
+```text
+Hello, Tya
 ```
 
-Useful everyday commands:
+Tya source files use `.tya`. Lowercase files such as `hello.tya` and
+`main.tya` can be used as script entry points.
+
+## Check and Format
+
+Use `tya check` before running or building when you want a fast validity check.
 
 ```sh
 tya check hello.tya
+```
+
+Use `tya format` to print canonical source:
+
+```sh
+tya format hello.tya
+```
+
+Use `-w` to rewrite the file:
+
+```sh
 tya format -w hello.tya
-tya test
-tya lint
-tya version
 ```
 
-## Files
+Formatting is part of Tya's language design. A valid program has one canonical
+source representation.
 
-Lowercase files are scripts. They can be run and imported.
+## Build an Executable
 
-```text
-main.tya
-greeting.tya
+Build a native executable:
+
+```sh
+tya build hello.tya -o hello
 ```
 
-PascalCase files are class files. They are library files, not entry scripts.
+Run the built program:
 
-```text
-User.tya
-HttpClient.tya
+```sh
+./hello
 ```
+
+On Windows, use an `.exe` output name:
+
+```sh
+tya build hello.tya -o hello.exe
+hello.exe
+```
+
+`tya run` is for quick local execution. `tya build` creates a reusable
+executable.
+
+## A Small Script
+
+Replace `hello.tya` with a slightly larger program.
+
+```tya
+greet = name ->
+  "Hello, {name}"
+
+names = ["Ada", "Matz", "Tya"]
+
+for name in names
+  print(greet(name))
+```
+
+Run it:
+
+```sh
+tya run hello.tya
+```
+
+This example shows three core ideas:
+
+- functions are values and use `->`;
+- arrays use `[...]`;
+- indentation defines blocks.
 
 ## Values
 
+Tya is dynamically typed. Values carry runtime kinds.
+
 ```tya
 name = "Tya"
-age = 1
-pi = 3.14
+count = 3
+price = 12.5
 ready = true
 missing = nil
 data = b"abc"
@@ -74,52 +159,61 @@ data = b"abc"
 Strings use interpolation:
 
 ```tya
-print("Hello, {name}")
+print("count = {count}")
 ```
 
-Arrays and dictionaries are mutable:
+Arrays are mutable:
 
 ```tya
 items = [1, 2]
 items.push(3)
 print(items[0])
+print(items.len())
+```
 
-user = { name: "komagata", age: 20 }
+Dictionaries use string keys:
+
+```tya
+user = { name: "Ada", admin: true }
 print(user["name"])
-user["admin"] = true
+user["city"] = "London"
 ```
 
 Primitive values have methods:
 
 ```tya
 print(" tya ".trim().upper())
+print(42.to_s())
 print([1, 2, 3].len())
-print(user.keys())
-print(value.to_s())
-print(value.class)
 ```
 
 ## Names
 
-Use `snake_case` for values, functions, methods, files, imports, and dictionary
-keys. Use `PascalCase` for classes and interfaces. Use
-`SCREAMING_SNAKE_CASE` for constants.
+Use `snake_case` for values, functions, methods, files, import paths, and
+dictionary keys.
+
+Use `PascalCase` for classes and interfaces.
+
+Use `SCREAMING_SNAKE_CASE` for constants.
 
 ```tya
-user_name = "komagata"
-MAX_COUNT = 10
+user_name = "Ada"
+MAX_RETRIES = 3
 
 class UserProfile
   initialize = name ->
     self.name = name
 ```
 
-Leading `_` does not make a binding private. For class members, use
-`private`.
+Leading `_` does not make a binding private. For class members, use `private`.
 
 ## Control Flow
 
+Use `if`, `elseif`, and `else`.
+
 ```tya
+age = 20
+
 if age >= 20
   print("adult")
 elseif age >= 13
@@ -128,22 +222,27 @@ else
   print("young")
 ```
 
-Use `and`, `or`, and `not`.
+Use `and`, `or`, and `not` for boolean logic.
 
 ```tya
 if ready and not disabled
-  print("ok")
+  print("ready")
 ```
 
-Loops:
+Use `while` for repeated work:
 
 ```tya
 count = 0
 while count < 3
   print(count)
   count = count + 1
+```
 
-items = ["a", "b"]
+Use `for` to iterate arrays:
+
+```tya
+items = ["a", "b", "c"]
+
 for item in items
   print(item)
 
@@ -151,25 +250,16 @@ for item, index in items
   print("{index}: {item}")
 ```
 
-Dictionaries can be iterated as entries:
-
-```tya
-user = { name: "komagata", age: 20 }
-
-for entry in user
-  print("{entry["key"]}: {entry["value"]}")
-```
-
-`break` exits the nearest loop. `continue` skips to the next iteration.
+Use `break` to leave the nearest loop and `continue` to skip to the next
+iteration.
 
 ## Functions
 
 Functions use `->`. Calls always use parentheses.
 
 ```tya
-greet = name -> "Hello, {name}"
-
-print(greet("Tya"))
+add = a, b -> a + b
+print(add(2, 3))
 ```
 
 Use an indented body for multiple statements. The final expression is returned.
@@ -178,60 +268,83 @@ Use an indented body for multiple statements. The final expression is returned.
 double = value ->
   result = value * 2
   result
+
+print(double(21))
 ```
 
-Use `return` for early return or multiple return values.
+Use `return` for early return:
 
 ```tya
-bounds = items ->
-  return items[0], items[items.len() - 1]
+label = name ->
+  if name == ""
+    return "anonymous"
+  name
 ```
 
-Functions are values, so they can be passed to other functions.
+Functions can be passed to other functions:
 
 ```tya
 items = [1, 2, 3]
 print(items.map(item -> item * 2))
 ```
 
-Closures can read values from the outer function.
-
-```tya
-make_adder = base ->
-  value -> base + value
-
-add_two = make_adder(2)
-print(add_two(3))
-```
-
 ## Errors
 
-Use `raise`, `try`, and `catch`.
+Use `error(...)` to create an error value. Use `raise`, `try`, and `catch` to
+handle failures.
 
 ```tya
-read_name = path ->
-  text = read_file(path)
-  if text == ""
-    raise error("empty file")
-  text.trim()
+require_name = name ->
+  if name == ""
+    raise error("name is required")
+  name
 
 try
-  print(read_name("name.txt"))
+  print(require_name(""))
 catch err
-  print("error: {err}")
+  message = err["message"]
+  print("error: {message}")
 ```
 
-Use local bindings inside `try/catch` when recovery needs to produce a value.
+Use `try/finally` when cleanup must run.
 
 ```tya
-load_user = path ->
-  user = { name: "guest" }
-  try
-    text = read_file(path)
-    user = { name: text.trim() }
-  catch err
-    user = { name: "guest" }
-  user
+try
+  print("work")
+finally
+  print("cleanup")
+```
+
+## Split Code into Files
+
+Create `greeting.tya`:
+
+```tya
+hello = name ->
+  "Hello, {name}"
+```
+
+Create `main.tya`:
+
+```tya
+import greeting
+
+print(greeting.hello("Tya"))
+```
+
+Run the entry file:
+
+```sh
+tya run main.tya
+```
+
+Use an alias when a package name is long:
+
+```tya
+import net/http as http
+
+resp = http.Client.get("https://example.com/")
+print(resp["status"])
 ```
 
 ## Classes
@@ -246,90 +359,96 @@ class User
   label = ->
     "user:{self.name}"
 
-user = User("komagata")
+user = User("Ada")
 print(user.label())
 ```
 
 Use `private` for private class members.
 
 ```tya
-class User
-  private id = 0
+class Counter
+  private count = 0
 
-  private normalize = ->
-    self.id.to_s()
+  increment = ->
+    self.count = self.count + 1
+    self.count
 ```
 
-Inheritance uses `extends`; parent behavior is called with `super(...)`.
+PascalCase files such as `User.tya` are class files. They are library files,
+not script entry points.
+
+## Standard Library
+
+Standard-library packages are imported like user files.
 
 ```tya
-class Admin extends User
-  initialize = name ->
-    super(name)
+import json as json
+import time as time
 
-  label = ->
-    "admin:{self.name}"
+json_text = json.Json.dump({ name: "Tya" })
+print(json_text)
+
+now = time.Time.now()
+print(now.format("rfc3339"))
 ```
 
-## Interfaces
+Common packages include `json`, `toml`, `csv`, `url`, `time`, `random`,
+`math`, `file`, `path`, `unittest`, `template`, `markdown`, `compress`, `log`,
+`io`, `net/ip`, `net/socket`, `net/http`, `channel`, and `sync`.
 
-Interfaces are explicit contracts. Classes opt in with `implements`.
+Generated API documentation can be produced from source comments:
 
-```tya
-interface Named
-  name = ->
-
-  label = ->
-    self.name()
-
-class Account implements Named
-  initialize = name ->
-    self.name_value = name
-
-  name = ->
-    self.name_value
+```sh
+tya doc --json stdlib
 ```
 
-Interfaces can also provide default methods, fields, and zero-argument
-initializer hooks. Standard interfaces include `Comparable`, `Equatable`,
-`Stringable`, `Iterator`, `Iterable`, `Sequence`, `Readable`, `Writable`,
-`Closable`, `Flushable`, and `Serializable`.
+## Tests
 
-## Imports
+Tya test files end with `_test.tya`.
 
-Import a sibling file:
+Create `hello_test.tya`:
 
 ```tya
-import greeting
+import unittest
 
-print(greeting.hello("komagata"))
+class AdditionTest extends TestCase
+  test_addition_works = ->
+    self.assert_equal(4, 2 + 2, "addition")
 ```
 
-```tya
-# greeting.tya
-hello = name -> "Hello, {name}"
+Run tests:
+
+```sh
+tya test
 ```
 
-Use aliases for namespaces:
+Show coverage when your project uses coverage-supported tests:
 
-```tya
-import net/http as http
-
-server = http.Server()
+```sh
+tya test --cover
+tya cover
 ```
 
-Directory packages expose public class and interface names directly when
-imported without an alias:
+## Lint and Docs
 
-```tya
-import net/http
+Run lint:
 
-server = Server()
+```sh
+tya lint
+tya lint --fix .
+```
+
+Generate docs from source comments:
+
+```sh
+tya doc
+tya doc --html ./site src
 ```
 
 ## Packages
 
-Projects use `tya.toml` for dependencies and `tya.lock` for resolved versions.
+Projects use `tya.toml` for metadata and dependencies. Resolved dependencies
+are written to `tya.lock`.
 
 ```sh
 tya install
@@ -338,76 +457,20 @@ tya update
 tya outdated
 ```
 
-Git and local path dependencies are supported. There is no central package
-registry.
-
-## Testing And Linting
-
-Run tests:
-
-```sh
-tya test
-tya test tests
-tya test --cover
-```
-
-Show coverage:
-
-```sh
-tya cover
-tya cover --format=json
-```
-
-Run lint:
-
-```sh
-tya lint
-tya lint --fix src
-```
-
-Lint warnings are project-policy warnings. Compile-time validity is checked by
-`tya check`.
-
-## Formatting
-
-`tya format` prints canonical Tya source. `-w` rewrites files.
-
-```sh
-tya format src/main.tya
-tya format -w src tests
-```
-
-Formatting is part of the language: there is one canonical source
-representation for each well-formed program.
-
-## Concurrency
-
-Use `spawn` to start a task and `await` to receive its result.
-
-```tya
-worker = value ->
-  value * 2
-
-task = spawn worker(21)
-print(await task)
-```
-
-`scope` waits for tasks spawned inside it before leaving the block.
-
-```tya
-scope
-  task = spawn worker(21)
-  print(await task)
-```
-
-Channels and sync primitives are in the standard library.
+Git and local path dependencies are supported. Tya does not currently use a
+central package registry.
 
 ## Cross Compilation
 
-`tya build` can target native and WebAssembly outputs.
+Build the native target explicitly:
 
 ```sh
-tya build --target native src/main.tya -o app
+tya build --target native main.tya -o app
+```
+
+Build WebAssembly targets:
+
+```sh
 tya build --target wasm32-wasi examples/wasm/hello.tya -o hello.wasm
 tya build --target wasm32-browser examples/wasm/hello.tya -o hello.wasm
 tya doctor wasm
@@ -415,18 +478,19 @@ tya doctor wasm
 
 `tya run` is native-only.
 
-## Standard Library
+## Everyday Command List
 
-Common packages include `json`, `toml`, `csv`, `url`, `time`, `random`,
-`math`, `file`, `path`, `unittest`, `template`, `markdown`, `compress`, `log`,
-`io`, `net/ip`, `net/socket`, `net/http`, `channel`, `sync`, and `task`.
-
-```tya
-import net/http as http
-
-resp = http.Client.get("http://example.test/")
-print(resp["status"])
+```sh
+tya version
+tya run main.tya
+tya check main.tya
+tya format -w .
+tya build main.tya -o app
+tya test
+tya lint
+tya doc
+tya doctor
 ```
 
-Built-in functions and standard-library packages are specified in
-`docs/SPEC.md`.
+After this guide, read the [specification](/spec/) when you need exact syntax,
+runtime behavior, package rules, or standard-library boundaries.

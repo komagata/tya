@@ -10,7 +10,7 @@ en:
   language: Japanese
 ja:
   root: /ja/
-  guide_url: /guide/
+  guide_url: /ja/guide/
   guide: ガイド
   spec_url: /ja/spec/
   spec: 仕様
