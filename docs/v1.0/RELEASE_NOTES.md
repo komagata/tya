@@ -2,6 +2,7 @@
 layout: doc
 title: Release Notes
 permalink: /v1.0/release-notes/
+published: false
 ---
 
 # Tya v1.0.0 Release Notes

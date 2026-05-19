@@ -415,6 +415,22 @@ func TestFrozenV10DocsExist(t *testing.T) {
 	}
 }
 
+func TestVersionsDoesNotListUnreleasedV10(t *testing.T) {
+	versions := readRepoFile(t, "docs", "VERSIONS.md")
+	for _, forbidden := range []string{
+		"## v1.0",
+		"/v1.0/release-notes/",
+	} {
+		if strings.Contains(versions, forbidden) {
+			t.Fatalf("VERSIONS.md lists unreleased v1.0 content %q", forbidden)
+		}
+	}
+	notes := readRepoFile(t, "docs", "v1.0", "RELEASE_NOTES.md")
+	if !strings.Contains(notes, "published: false") {
+		t.Fatal("draft v1.0 release notes must not be published before v1.0.0 is released")
+	}
+}
+
 func TestPublicDocsMarkLegacyAliases(t *testing.T) {
 	for _, path := range [][]string{
 		{"docs", "SPEC.md"},
