@@ -3,6 +3,7 @@ layout: doc
 title: ガイド
 lang: ja
 permalink: /ja/guide/
+language_url: /guide/
 ---
 
 # Tya ガイド

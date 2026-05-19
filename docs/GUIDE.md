@@ -2,6 +2,7 @@
 layout: doc
 title: Guide
 permalink: /guide/
+language_url: /ja/guide/
 ---
 
 # Tya Guide
