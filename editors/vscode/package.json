@@ -3,7 +3,7 @@
   "displayName": "Tya",
   "description": "Language support for the tya programming language (compiler + LSP).",
   "publisher": "komagata",
-  "version": "0.65.1",
+  "version": "0.65.2",
   "icon": "icon.png",
   "license": "UNLICENSED",
   "repository": {
@@ -60,6 +60,12 @@
           "default": "off",
           "description": "LSP communication trace verbosity."
         }
+      }
+    },
+    "configurationDefaults": {
+      "[tya]": {
+        "editor.defaultFormatter": "komagata.tya",
+        "editor.formatOnSave": true
       }
     }
   },

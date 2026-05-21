@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as fs from "fs";
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -10,7 +11,7 @@ let client: LanguageClient | undefined;
 
 export function activate(_context: vscode.ExtensionContext): void {
   const config = vscode.workspace.getConfiguration("tya");
-  const exe = config.get<string>("executable", "tya");
+  const exe = resolveExecutable(config.get<string>("executable", "tya"));
   const serverOptions: ServerOptions = {
     run: { command: exe, args: ["lsp"], transport: TransportKind.stdio },
     debug: { command: exe, args: ["lsp", "--log", "/tmp/tya-lsp.log"], transport: TransportKind.stdio },
@@ -27,4 +28,22 @@ export function activate(_context: vscode.ExtensionContext): void {
 
 export function deactivate(): Thenable<void> | undefined {
   return client?.stop();
+}
+
+function resolveExecutable(configured: string): string {
+  if (configured && configured !== "tya") {
+    return configured;
+  }
+
+  for (const path of [
+    "/opt/homebrew/bin/tya",
+    "/usr/local/bin/tya",
+    "/usr/bin/tya",
+  ]) {
+    if (fs.existsSync(path)) {
+      return path;
+    }
+  }
+
+  return "tya";
 }
