@@ -39,7 +39,8 @@ Website: <https://tya-lang.org/>
 On macOS, install Tya with Homebrew:
 
 ```sh
-brew install komagata/tap/tya
+brew tap komagata/tap
+brew install tya
 ```
 
 For local formula development from this repository:
