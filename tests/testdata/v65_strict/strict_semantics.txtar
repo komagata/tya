@@ -126,8 +126,7 @@ stderr 'required parameter b after default parameter'
 ! exec $WORK/tya check default_later_reference.tya
 stderr 'undefined variable b'
 
-! exec $WORK/tya check trailing_comma.tya
-stderr 'trailing commas are prohibited'
+exec $WORK/tya check trailing_comma.tya
 
 ! exec $WORK/tya check duplicate_import.tya
 stderr 'duplicate import helper'
@@ -294,7 +293,10 @@ f = a = 1, b -> b
 f = a = b, b = 1 -> a
 
 -- trailing_comma.tya --
-items = [1,]
+add = (a, b,) -> a + b
+items = [1, 2,]
+user = { name: 'Tya', age: 20, }
+print(add(items[0], add(1, 2,)))
 
 -- duplicate_import.tya --
 import helper as first

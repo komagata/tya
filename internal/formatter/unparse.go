@@ -1,4 +1,4 @@
-// AST-driven canonical serializer (Canonical Syntax §11.3).
+// AST-driven formatted syntax serializer.
 //
 // v0.37 ships the foundation for this serializer. It handles the
 // common subset of the AST (imports, simple assignments, expression
@@ -27,9 +27,9 @@ import (
 	"tya/internal/ast"
 )
 
-// Unparse renders prog as canonical Tya source. When prog was
+// Unparse renders prog as formatted Tya source. When prog was
 // produced by parser.ParseWithComments, header and per-statement
-// comments are emitted per docs/SPEC.md Canonical Syntax.
+// comments are emitted per docs/SPEC.md Formatted Syntax.
 //
 // Top-level statements follow the §3.5 / §8.4 normalization rules:
 // imports are sorted alphabetically and grouped (stdlib first, then

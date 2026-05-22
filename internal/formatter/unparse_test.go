@@ -122,6 +122,49 @@ func TestUnparseLambdaSingleLine(t *testing.T) {
 	}
 }
 
+func TestUnparseAcceptedSyntaxToFormattedSyntax(t *testing.T) {
+	src := strings.Join([]string{
+		"items = [1, 2,]",
+		"user = { name: 'Ada', age: 20, }",
+		"add = (a, b,) -> a + b",
+		"print(add(1, 2,))",
+		"",
+	}, "\n")
+	want := strings.Join([]string{
+		"items = [1, 2]",
+		"user = { name: \"Ada\", age: 20 }",
+		"add = a, b -> a + b",
+		"print(add(1, 2))",
+		"",
+	}, "\n")
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\n%s", again)
+	}
+}
+
+func TestUnparseSingleQuotedStringPreservesLiteralValue(t *testing.T) {
+	src := "value = '{name} } \" \\\\ \\' \\n \\t \\r'\n"
+	want := "value = \"{{name}} }} \\\" \\\\ ' \\n \\t \\r\"\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("got %q want %q", got, want)
+	}
+}
+
 func TestUnparseLambdaBlock(t *testing.T) {
 	src := "f = x ->\n  y = x + 1\n  return y\nprint(f(2))\n"
 	got, err := unparseSource(t, src)

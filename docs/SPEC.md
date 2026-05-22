@@ -18,7 +18,7 @@ parsed into an AST, checked, emitted as C, and linked with the Tya runtime.
 
 Tya's user-facing commitments are:
 
-- canonical source formatting through `tya format`;
+- deterministic Formatted Syntax through `tya format`;
 - strict dynamic semantics with no implicit conversions;
 - a compile-to-C runtime model;
 - one all-in-one `tya` command for running, building, checking, formatting, testing, linting, documenting, packaging, and editor support;
@@ -118,7 +118,7 @@ name = "tya" # line-end comment
 ```
 
 Comments may attach to declarations and statements for formatting, LSP hover,
-and `tya doc`. Comment placement rules are part of canonical syntax.
+and `tya doc`. Comment placement rules are part of Formatted Syntax.
 
 Tya recognizes three source comment roles:
 
@@ -189,7 +189,7 @@ print("Hello, {user["name"]}")
 
 Triple-quoted strings and heredoc forms are available for multi-line text.
 Raw and byte heredoc forms preserve their documented escaping behavior. The
-formatter treats multi-line strings as atomic except where canonical syntax
+formatter treats multi-line strings as atomic except where Formatted Syntax
 defines a rewrite.
 
 Byte literals use `b"..."` or byte heredoc forms and produce byte values rather
@@ -282,18 +282,24 @@ Class files may be loaded explicitly as part of a directory package or
 implicitly as same-directory siblings of an entry script. A script entry sees
 PascalCase class files in its own directory without import.
 
-### Canonical Syntax {#canonical-syntax}
+### Accepted Syntax and Formatted Syntax {#accepted-formatted-syntax}
 
-Tya has a canonical syntax: every well-formed program has one source
-representation. `tya format` is therefore part of the language surface, not an
-optional style tool.
+Tya has a two-layer source model. Accepted Syntax is the source surface accepted
+by the lexer and parser. Formatted Syntax is the deterministic representation
+emitted by `tya format`. Every accepted program has exactly one standard
+formatted representation, but accepted source may have editing-friendly spelling
+that the formatter rewrites.
 
-Canonical syntax covers indentation, blank lines, comment attachment, line
+`tya check`, `tya run`, `tya build`, `tya format`, `tya lint`, and LSP read the
+same Accepted Syntax. Documentation, examples, stdlib, and self-host sources
+should stay in Formatted Syntax.
+
+Formatted Syntax covers indentation, blank lines, comment attachment, line
 wrapping, import grouping, operator spacing, string literal forms, empty
 collection forms, and other source-shape decisions. The formatter is the
-canonical serializer and has no style configuration.
+formatted syntax serializer and has no style configuration.
 
-The core canonical rules are:
+The core formatted rules are:
 
 - indentation is two spaces; tabs are invalid in source;
 - the column limit is 80, except for one unbreakable atomic token;
@@ -302,8 +308,8 @@ The core canonical rules are:
 - blank lines are determined by AST shape, not user preference;
 - multi-line calls, arrays, dictionaries, parameter lists, operator chains, and
   long conditions use the formatter-defined continuation forms;
-- trailing commas are prohibited in arrays, dictionaries, calls, and parameter
-  lists;
+- trailing commas accepted in arrays, dictionaries, calls, and parameter lists
+  are omitted;
 - imports are atomic and not line-wrapped;
 - `elseif` is the canonical spelling, and `else if` is not canonical;
 - `case _` in `match` is the wildcard case and must be final;
@@ -1291,7 +1297,7 @@ run       compile and execute a lowercase script entry as a temporary native exe
 build     compile a reusable executable or target artifact; accepts --target and -o
 emit-c    emit generated C
 check     parse, load imports, and validate source without executing or invoking C
-format    emit canonical source; -w rewrites files in place
+format    emit Formatted Syntax; --check reports drift; -w rewrites files in place
 test      discover and run unittest tests; --cover records coverage
 cover     render coverage profiles as text, JSON, or HTML
 lint      report project-policy diagnostics for valid programs
@@ -1405,7 +1411,7 @@ follow `--`: `tya run file.tya -- arg1 arg2` makes `args()` return
 accepted for compatibility. `tya build` does not accept program arguments.
 
 `tya format` never rewrites a file that cannot be lexed, parsed, and
-serialized by the canonical formatter. Invalid source reports an error and
+serialized by the formatter. Invalid source reports an error and
 exits without modifying the input file. `tya format` formats only `.tya`
 source files and never rewrites `tya.toml`.
 
@@ -1521,8 +1527,8 @@ Verification commands include `tya format --check`, `tya check`, `tya lint`,
 diagnostics and exit-code conventions with verification commands, but they are
 execution and build commands.
 
-`tya format --check` checks whether source files already match canonical Tya
-formatting. It answers whether `tya format` would change the file. It must not
+`tya format --check` checks whether source files already match Formatted
+Syntax. It answers whether `tya format` would change the file. It must not
 rewrite files.
 
 `tya check` checks whether source files are valid Tya programs before C

@@ -10,14 +10,14 @@ type Program struct {
 	Stmts []Stmt
 
 	// HeaderComments holds the file-header comment block introduced
-	// in v0.34. Per docs/SPEC.md Canonical Syntax, these are `#` lines
+	// in v0.34. Per docs/SPEC.md Formatted Syntax, these are `#` lines
 	// at the top of the file separated from the body by exactly one
 	// blank line. The slice contains the comment texts in source
 	// order, without the leading `#`.
 	HeaderComments []string
 
 	// Comments associates each Stmt with its leading and line-end
-	// comments per docs/SPEC.md Canonical Syntax. The map is
+	// comments per docs/SPEC.md Formatted Syntax. The map is
 	// introduced in v0.35; it is populated by ParseWithComments and
 	// is nil from the default Parse path. Keyed by Stmt pointer.
 	Comments map[Stmt]StmtComments

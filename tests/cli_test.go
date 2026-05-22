@@ -110,6 +110,23 @@ func TestCLIRunCompilesAndRunsProgram(t *testing.T) {
 	}
 }
 
+func TestCLIRunAcceptedButUnformattedSyntax(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "accepted.tya")
+	src := "add = (a, b,) -> a + b\nname = 'Tya'\nitems = [1, 2,]\nuser = { name: name, age: 20, }\nprint(add(items[0], add(1, 2,)))\nprint(user[\"name\"])\n"
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "run", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if string(out) != "4\nTya\n" {
+		t.Fatalf("unexpected output: %s", out)
+	}
+}
+
 func TestCLIDirectFileDoesNotUseInterpreterPath(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "hello.tya")
 	if err := os.WriteFile(path, []byte("print(\"direct\")\n"), 0644); err != nil {
@@ -184,6 +201,58 @@ func TestCLIFormatDoesNotRewriteInvalidSource(t *testing.T) {
 	}
 	if string(got) != original {
 		t.Fatalf("format rewrote invalid source: %q", got)
+	}
+}
+
+func TestCLIFormatAndCheckAcceptedSyntax(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "accepted.tya")
+	original := "add = (a, b,) -> a + b\nname = 'Tya'\nprint(add(1, 2,))\n"
+	if err := os.WriteFile(path, []byte(original), 0644); err != nil {
+		t.Fatal(err)
+	}
+	check := exec.Command("go", "run", "./cmd/tya", "format", "--check", path)
+	check.Dir = ".."
+	out, err := check.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected format --check to report drift")
+	}
+	if !strings.Contains(string(out), "not in formatted syntax") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+
+	format := exec.Command("go", "run", "./cmd/tya", "format", "-w", path)
+	format.Dir = ".."
+	out, err = format.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected format error: %v\n%s", err, out)
+	}
+	got, readErr := os.ReadFile(path)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	want := "add = a, b -> a + b\nname = \"Tya\"\nprint(add(1, 2))\n"
+	if string(got) != want {
+		t.Fatalf("got %q want %q", got, want)
+	}
+	check = exec.Command("go", "run", "./cmd/tya", "format", "--check", path)
+	check.Dir = ".."
+	out, err = check.CombinedOutput()
+	if err != nil {
+		t.Fatalf("formatted source should pass --check: %v\n%s", err, out)
+	}
+}
+
+func TestCLILintParsesAcceptedButUnformattedSyntax(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "accepted.tya")
+	src := "add = (a, b,) -> a + b\nprint(add(1, 2,))\n"
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("go", "run", "./cmd/tya", "lint", path)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected lint parse error: %v\n%s", err, out)
 	}
 }
 
@@ -599,6 +668,24 @@ func TestCLIBuildWritesExecutable(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, ".tya", "build", "main.c")); err != nil {
 		t.Fatalf("missing intermediate C artifact under .tya/build: %v", err)
+	}
+}
+
+func TestCLIBuildAcceptedButUnformattedSyntax(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "accepted.tya")
+	if err := os.WriteFile(path, []byte("add = (a, b,) -> a + b\nprint(add(1, 2,))\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	bin := filepath.Join(dir, "accepted-bin")
+	cmd := exec.Command("go", "run", "./cmd/tya", "build", path, "-o", bin)
+	cmd.Dir = ".."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if _, err := os.Stat(bin); err != nil {
+		t.Fatalf("missing executable: %v", err)
 	}
 }
 

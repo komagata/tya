@@ -47,7 +47,7 @@ func Parse(toks []token.Token) (*ast.Program, []diag.Diagnostic, error) {
 
 // ParseWithComments runs Parse and additionally fills
 // Program.HeaderComments and Program.Comments from the supplied
-// comments slice. Per docs/SPEC.md Canonical Syntax:
+// comments slice. Per docs/SPEC.md Formatted Syntax:
 //
 //   - Leading comments: contiguous `#` lines immediately before a
 //     statement, at the same indent as that statement.
@@ -1435,6 +1435,9 @@ func (p *Parser) startsFunctionParams(allowCommaFunc bool) bool {
 					depth--
 				case token.COMMA:
 					if depth == 0 {
+						if p.toks[i+1].Type == token.ARROW {
+							return true
+						}
 						if p.toks[i+1].Type != token.IDENT {
 							return false
 						}
@@ -1453,6 +1456,9 @@ func (p *Parser) startsFunctionParams(allowCommaFunc bool) bool {
 			return false
 		case token.COMMA:
 			i++
+			if p.toks[i].Type == token.ARROW {
+				return true
+			}
 			if p.toks[i].Type != token.IDENT {
 				return false
 			}
@@ -1502,6 +1508,9 @@ func (p *Parser) startsParenFunctionParams() bool {
 					depth--
 				case token.COMMA:
 					if depth == 0 {
+						if p.toks[i+1].Type == token.RPAREN {
+							return p.toks[i+2].Type == token.ARROW
+						}
 						if p.toks[i+1].Type != token.IDENT {
 							return false
 						}
@@ -1516,6 +1525,9 @@ func (p *Parser) startsParenFunctionParams() bool {
 			return false
 		case token.COMMA:
 			i++
+			if p.toks[i].Type == token.RPAREN {
+				return p.toks[i+1].Type == token.ARROW
+			}
 			if p.toks[i].Type != token.IDENT {
 				return false
 			}
@@ -1538,6 +1550,9 @@ func (p *Parser) parenFunctionParams() ([]string, []token.Token, []ast.Expr, err
 	paramToks := []token.Token{first}
 	defaults := []ast.Expr{def}
 	for p.match(token.COMMA) {
+		if p.at(token.RPAREN) {
+			break
+		}
 		next, def, err := p.functionParam()
 		if err != nil {
 			return nil, nil, nil, err
@@ -1562,6 +1577,9 @@ func (p *Parser) functionParams() ([]string, []token.Token, []ast.Expr, error) {
 	paramToks := []token.Token{first}
 	defaults := []ast.Expr{def}
 	for p.match(token.COMMA) {
+		if p.at(token.ARROW) {
+			break
+		}
 		next, def, err := p.functionParam()
 		if err != nil {
 			return nil, nil, nil, err
@@ -1810,9 +1828,6 @@ func (p *Parser) call() (ast.Expr, error) {
 						break
 					}
 					if p.at(token.RPAREN) {
-						if os.Getenv("TYA_LEGACY_MODULES") != "1" {
-							return nil, p.err("trailing commas are prohibited")
-						}
 						break
 					}
 				}
@@ -1930,9 +1945,6 @@ func (p *Parser) primary() (ast.Expr, error) {
 					break
 				}
 				if p.at(token.RBRACKET) {
-					if os.Getenv("TYA_LEGACY_MODULES") != "1" {
-						return nil, p.err("trailing commas are prohibited")
-					}
 					break
 				}
 			}
@@ -1979,9 +1991,6 @@ func (p *Parser) dictLiteral() (ast.Expr, error) {
 			break
 		}
 		if p.at(token.RBRACE) {
-			if os.Getenv("TYA_LEGACY_MODULES") != "1" {
-				return nil, p.err("trailing commas are prohibited")
-			}
 			break
 		}
 	}

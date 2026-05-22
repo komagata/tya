@@ -13,8 +13,8 @@ which tool to install, what an error means.
 
 ## At a glance
 
-- **Canonical Syntax** — every program has exactly one source representation.
-  The formatter is part of the language, not a separate opinion.
+- **Accepted Syntax + Formatted Syntax** — Tya accepts editing-friendly source,
+  while `tya format` emits one deterministic representation.
 - **Dynamically typed**, indentation-based, with strict semantics
   (no implicit conversions, no `nil` arithmetic).
 - **Compiles to C** for a small, portable runtime.
@@ -94,6 +94,7 @@ To check, format, or inspect generated C:
 tya check hello.tya
 tya format hello.tya
 tya format -w hello.tya
+tya format --check hello.tya
 tya emit-c hello.tya
 tya test
 tya test tests

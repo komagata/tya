@@ -482,7 +482,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "usage: tya run <file.tya> [args...]")
 	fmt.Fprintln(os.Stderr, "       tya build <file.tya> [-o <output>]")
 	fmt.Fprintln(os.Stderr, "       tya check <file.tya>")
-	fmt.Fprintln(os.Stderr, "       tya format [-w] <file.tya>")
+	fmt.Fprintln(os.Stderr, "       tya format [--check] [-w] <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya emit-c <file.tya>")
 	fmt.Fprintln(os.Stderr, "       tya test [--cover [--profile FILE]] [path]")
 	fmt.Fprintln(os.Stderr, "       tya cover [--format=human|json] [--profile FILE]")
@@ -1684,10 +1684,15 @@ func isTTY(f *os.File) bool {
 
 func formatCommand(args []string) error {
 	write := false
+	check := false
 	path := ""
 	for _, arg := range args {
 		if arg == "-w" {
 			write = true
+			continue
+		}
+		if arg == "--check" {
+			check = true
 			continue
 		}
 		if strings.HasPrefix(arg, "-") {
@@ -1711,6 +1716,12 @@ func formatCommand(args []string) error {
 	formatted, err := formatSourceStrict(string(src))
 	if err != nil {
 		return err
+	}
+	if check {
+		if formatted != string(src) {
+			return fmt.Errorf("%s is not in formatted syntax", path)
+		}
+		return nil
 	}
 	if write {
 		return os.WriteFile(path, []byte(formatted), 0644)

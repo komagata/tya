@@ -191,12 +191,26 @@ func TestLexRejectsTabs(t *testing.T) {
 }
 
 func TestLexStringEscapes(t *testing.T) {
-	toks, errs := Lex("print \"a\\n\\\"b\\\"\"\n")
+	toks, errs := Lex("print \"a\\n\\r\\\"b\\\"\"\n")
 	if len(errs) != 0 {
 		t.Fatalf("unexpected errors: %v", errs)
 	}
-	if toks[1].Lexeme != "a\n\"b\"" {
+	if toks[1].Lexeme != "a\n\r\"b\"" {
 		t.Fatalf("got %q", toks[1].Lexeme)
+	}
+}
+
+func TestLexSingleQuotedStringIsLiteral(t *testing.T) {
+	toks, errs := Lex("value = 'hi {name} # text \\' \" \\\\ \\n \\t \\r'\n")
+	if len(errs) != 0 {
+		t.Fatalf("unexpected errors: %v", errs)
+	}
+	if toks[2].StringForm != "single" {
+		t.Fatalf("form = %q", toks[2].StringForm)
+	}
+	want := "hi {{name}} # text ' \" \\ \n \t \r"
+	if toks[2].Lexeme != want {
+		t.Fatalf("got %q want %q", toks[2].Lexeme, want)
 	}
 }
 

@@ -148,20 +148,21 @@ func TestParseRejectsCatchWithoutTry(t *testing.T) {
 	}
 }
 
-func TestParseRejectsTrailingCommas(t *testing.T) {
+func TestParseAcceptsFormattedSyntaxTrailingCommas(t *testing.T) {
 	tests := []string{
 		"items = [1,]\n",
 		"user = { name: \"Tya\", }\n",
 		"print(1,)\n",
 		"f = (a,) -> a\n",
+		"f = a, b, -> a + b\n",
 	}
 	for _, src := range tests {
 		toks, errs := lexer.Lex(src)
 		if len(errs) != 0 {
 			t.Fatalf("lex errors: %v", errs)
 		}
-		if _, _, err := Parse(toks); err == nil {
-			t.Fatalf("expected trailing comma error for %q", src)
+		if _, _, err := Parse(toks); err != nil {
+			t.Fatalf("unexpected trailing comma error for %q: %v", src, err)
 		}
 	}
 }

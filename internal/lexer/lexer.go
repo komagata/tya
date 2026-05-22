@@ -635,7 +635,7 @@ func interpretBytesEscapes(s string, line, col int) (string, error) {
 	return b.String(), nil
 }
 
-// interpretEscapes processes \n, \t, \", \\, \{ inside a string body
+// interpretEscapes processes \n, \t, \r, \", \\, \{ inside a string body
 // the same way the single-line "..." path does. {{ and }} pass
 // through unchanged for the interpolation pipeline.
 func interpretEscapes(s string, line, col int) (string, error) {
@@ -680,6 +680,8 @@ func interpretEscapes(s string, line, col int) (string, error) {
 				b.WriteByte('\n')
 			case 't':
 				b.WriteByte('\t')
+			case 'r':
+				b.WriteByte('\r')
 			case '"':
 				b.WriteByte('"')
 			case '\\':
@@ -696,7 +698,70 @@ func interpretEscapes(s string, line, col int) (string, error) {
 						Start: diag.Pos{Line: line, Col: col + i},
 						End:   diag.Pos{Line: line, Col: col + i + 2},
 					},
-					Hints:  []string{"Supported escapes: \\n, \\t, \\\", \\\\, \\{."},
+					Hints:  []string{"Supported escapes: \\n, \\t, \\r, \\\", \\\\, \\{."},
+					Source: "lexer",
+				}}
+			}
+			i++
+			continue
+		}
+		b.WriteByte(c)
+	}
+	return b.String(), nil
+}
+
+func interpretSingleQuotedEscapes(s string, line, col int) (string, error) {
+	var b strings.Builder
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch c {
+		case '{':
+			b.WriteString("{{")
+			continue
+		case '}':
+			b.WriteString("}}")
+			continue
+		case '\\':
+			if i+1 >= len(s) {
+				return "", &Diagnostic{Diag: diag.Diagnostic{
+					Severity: diag.Error,
+					Code:     "TYA-E0007",
+					Title:    "Unterminated escape",
+					Message:  "Backslash at end of string body has no escape character.",
+					Primary: diag.Region{
+						Start: diag.Pos{Line: line, Col: col + i},
+						End:   diag.Pos{Line: line, Col: col + i + 1},
+					},
+					Hints:  []string{"Add the escape character (e.g. \\n, \\t, \\\\, \\')."},
+					Source: "lexer",
+				}}
+			}
+			switch s[i+1] {
+			case 'n':
+				b.WriteByte('\n')
+			case 't':
+				b.WriteByte('\t')
+			case 'r':
+				b.WriteByte('\r')
+			case '"':
+				b.WriteByte('"')
+			case '\'':
+				b.WriteByte('\'')
+			case '\\':
+				b.WriteByte('\\')
+			case '{':
+				b.WriteString(`\{`)
+			default:
+				return "", &Diagnostic{Diag: diag.Diagnostic{
+					Severity: diag.Error,
+					Code:     "TYA-E0008",
+					Title:    "Unknown escape",
+					Message:  fmt.Sprintf("Unknown escape sequence \\%c.", s[i+1]),
+					Primary: diag.Region{
+						Start: diag.Pos{Line: line, Col: col + i},
+						End:   diag.Pos{Line: line, Col: col + i + 2},
+					},
+					Hints:  []string{"Supported escapes: \\n, \\t, \\r, \\\", \\', \\\\, \\{."},
 					Source: "lexer",
 				}}
 			}
@@ -960,6 +1025,8 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 						b.WriteByte('\n')
 					case 't':
 						b.WriteByte('\t')
+					case 'r':
+						b.WriteByte('\r')
 					case '"':
 						b.WriteByte('"')
 					case '\\':
@@ -967,7 +1034,7 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 					default:
 						l.diagErr("TYA-E0008", "Unknown escape",
 							fmt.Sprintf("Unknown escape sequence \\%c.", s[i+1]),
-							"Supported escapes: \\n, \\t, \\\", \\\\.",
+							"Supported escapes: \\n, \\t, \\r, \\\", \\\\.",
 							line, baseCol+i, 2)
 						return
 					}
@@ -986,6 +1053,43 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 			}
 			i++
 			l.add(token.STRING, b.String(), line, col)
+			continue
+		}
+		if ch == '\'' {
+			start := col
+			i++
+			var raw strings.Builder
+			for i < len(s) && s[i] != '\'' {
+				if s[i] == '\\' {
+					if i+1 >= len(s) {
+						l.diagErr("TYA-E0007", "Unterminated escape",
+							"Backslash at end of string has no escape character.",
+							"Add the escape character (e.g. \\n, \\t, \\\\, \\').",
+							line, baseCol+i, 1)
+						return
+					}
+					raw.WriteByte(s[i])
+					raw.WriteByte(s[i+1])
+					i += 2
+					continue
+				}
+				raw.WriteByte(s[i])
+				i++
+			}
+			if i >= len(s) {
+				l.diagErr("TYA-E0006", "Unterminated string",
+					"This single-quoted string literal has no closing quote.",
+					"Add a closing ' on the same line.",
+					line, start, 1)
+				return
+			}
+			i++
+			value, err := interpretSingleQuotedEscapes(raw.String(), line, start+1)
+			if err != nil {
+				l.errs = append(l.errs, err)
+				return
+			}
+			l.addString(token.STRING, value, line, start, "single", "", "")
 			continue
 		}
 		if ch == '-' && i+1 < len(s) && s[i+1] == '>' {
@@ -1084,7 +1188,7 @@ func (l *Lexer) lexLine(s string, line, baseCol int) {
 // the `#` itself), the byte offset of the `#`, and true. When no
 // comment is found, hasComment is false and stripped == s.
 func splitComment(s string) (stripped, comment string, pos int, hasComment bool) {
-	inString := false
+	var quote byte
 	escaped := false
 	for i := 0; i < len(s); i++ {
 		ch := s[i]
@@ -1092,14 +1196,18 @@ func splitComment(s string) (stripped, comment string, pos int, hasComment bool)
 			escaped = false
 			continue
 		}
-		if inString && ch == '\\' {
+		if quote != 0 && ch == '\\' {
 			escaped = true
 			continue
 		}
-		if ch == '"' {
-			inString = !inString
+		if ch == '"' || ch == '\'' {
+			if quote == 0 {
+				quote = ch
+			} else if quote == ch {
+				quote = 0
+			}
 		}
-		if ch == '#' && !inString {
+		if ch == '#' && quote == 0 {
 			return s[:i], strings.TrimRight(s[i+1:], " \t"), i, true
 		}
 	}
@@ -1107,7 +1215,7 @@ func splitComment(s string) (stripped, comment string, pos int, hasComment bool)
 }
 
 func stripComment(s string) string {
-	inString := false
+	var quote byte
 	escaped := false
 	for i := 0; i < len(s); i++ {
 		ch := s[i]
@@ -1115,14 +1223,18 @@ func stripComment(s string) string {
 			escaped = false
 			continue
 		}
-		if inString && ch == '\\' {
+		if quote != 0 && ch == '\\' {
 			escaped = true
 			continue
 		}
-		if ch == '"' {
-			inString = !inString
+		if ch == '"' || ch == '\'' {
+			if quote == 0 {
+				quote = ch
+			} else if quote == ch {
+				quote = 0
+			}
 		}
-		if ch == '#' && !inString {
+		if ch == '#' && quote == 0 {
 			return s[:i]
 		}
 	}

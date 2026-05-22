@@ -81,3 +81,13 @@ func TestLspDiagnosticsMatchTyaCheck(t *testing.T) {
 		}
 	}
 }
+
+func TestLspAcceptsAcceptedButUnformattedSyntax(t *testing.T) {
+	src := "add = (a, b,) -> a + b\nname = 'Tya'\nprint(add(1, 2,))\n"
+	diags := DiagnosticsFor("accepted.tya", src)
+	for _, d := range diags {
+		if d.Severity == DiagSeverityError {
+			t.Fatalf("unexpected syntax/check error: %#v", d)
+		}
+	}
+}
