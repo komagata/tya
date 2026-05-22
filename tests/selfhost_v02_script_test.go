@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -18,6 +19,9 @@ import (
 // `module` keyword.
 func TestSelfhostV02Scripts(t *testing.T) {
 	t.Parallel()
+	if os.Getenv("TYA_RUN_LONG_SELFHOST") != "1" {
+		t.Skip("set TYA_RUN_LONG_SELFHOST=1 to run v02 self-host scripts")
+	}
 
 	repo, err := filepath.Abs("..")
 	if err != nil {

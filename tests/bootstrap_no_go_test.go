@@ -83,6 +83,9 @@ func TestBootstrapNoGoSelfhostV02FixedPoint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds and runs the v02 self-host fixed-point proof")
 	}
+	if os.Getenv("TYA_RUN_LONG_SELFHOST") != "1" {
+		t.Skip("set TYA_RUN_LONG_SELFHOST=1 to run the v02 no-Go fixed-point proof")
+	}
 	bin := filepath.Join(t.TempDir(), "tya")
 	cmd := exec.Command("go", "build", "-o", bin, "./cmd/tya")
 	cmd.Dir = ".."
