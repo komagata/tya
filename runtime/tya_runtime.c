@@ -1987,14 +1987,37 @@ TyaValue tya_join(TyaValue array, TyaValue sep) {
   if (array.kind != TYA_ARRAY || array.array == NULL || sep.kind != TYA_STRING || sep.string == NULL) {
     return tya_string("");
   }
-  TyaValue out = tya_string("");
+  size_t sep_len = strlen(sep.string);
+  size_t total = 0;
   for (int i = 0; i < array.array->len; i++) {
     if (i > 0) {
-      out = tya_add(out, sep);
+      total += sep_len;
     }
-    out = tya_add(out, tya_to_string(array.array->items[i]));
+    TyaValue item = tya_to_string(array.array->items[i]);
+    if (item.string != NULL) {
+      total += strlen(item.string);
+    }
   }
-  return out;
+  char *out = malloc(total + 1);
+  if (out == NULL) {
+    fprintf(stderr, "tya: out of memory\n");
+    exit(1);
+  }
+  char *dst = out;
+  for (int i = 0; i < array.array->len; i++) {
+    if (i > 0 && sep_len > 0) {
+      memcpy(dst, sep.string, sep_len);
+      dst += sep_len;
+    }
+    TyaValue item = tya_to_string(array.array->items[i]);
+    if (item.string != NULL) {
+      size_t item_len = strlen(item.string);
+      memcpy(dst, item.string, item_len);
+      dst += item_len;
+    }
+  }
+  *dst = '\0';
+  return tya_string(out);
 }
 
 TyaValue tya_to_string(TyaValue value) {

@@ -425,6 +425,21 @@ func TestEmitCCompilesImportedModuleAlias(t *testing.T) {
 	}
 }
 
+func TestEmitCCompilesAliasedPackageClassWithSameNamedLocalClass(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "cli"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(dir, "cli", "Cli.tya"), "class Cli\n  static parse_or_exit = args, spec ->\n    return Cli.parse(args, spec)\n\n  static parse = args, spec ->\n    return { args: args, spec: spec }\n")
+	writeFile(t, filepath.Join(dir, "Cli.tya"), "import cli as cli\n\nclass Cli\n  static main = argv ->\n    parsed = cli.Cli.parse_or_exit(argv, Self.option_spec())\n    println(\"ok\")\n\n  static option_spec = ->\n    return { command: \"demo\", options: {} }\n")
+	main := filepath.Join(dir, "main.tya")
+	writeFile(t, main, "Cli.main(args())\n")
+	out := compileAndRunFile(t, main)
+	if string(out) != "ok\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func compileAndRun(t *testing.T, src string) []byte {
 	t.Helper()
 	return compileAndRunArgs(t, src)

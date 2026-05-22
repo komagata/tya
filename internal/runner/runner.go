@@ -17,6 +17,7 @@ import (
 	"tya/internal/lexer"
 	"tya/internal/parser"
 	"tya/internal/pkg"
+	"tya/internal/token"
 )
 
 var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
@@ -887,11 +888,11 @@ func dedupeTopLevelImports(src string) string {
 }
 
 // synthesizePackageSource takes a list of class file paths and a
-// package name and produces a single Tya source string containing
-// every class file's non-import top-level content plus a package
-// namespace dict (`pkg = { ClassName: ClassName }`). Imports from
-// the class files are hoisted above the package body and deduplicated
-// by their (path, alias) pair.
+// package name and produces a single Tya source string. Bare package
+// imports expose every class as a top-level binding. Aliased package
+// imports rewrite the package-internal class names and expose a
+// namespace dict with the original public names so generated symbols
+// stay distinct from same-named local classes.
 //
 // Each class file is validated via checker.CheckClassFile before
 // inclusion; its imports are extracted from the AST, and the file's
@@ -909,6 +910,7 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 	var bodies []string
 	origins := map[string]string{}
 	publicClasses := map[string]bool{}
+	packageClasses := map[string]bool{}
 
 	for _, file := range classFiles {
 		raw, err := os.ReadFile(file)
@@ -934,6 +936,7 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 				seenImports[key] = true
 				orderedImports = append(orderedImports, n)
 			case *ast.ClassDecl:
+				packageClasses[n.Name] = true
 				if _, dup := origins[n.Name]; !dup {
 					origins[n.Name] = relName
 				}
@@ -972,15 +975,16 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 		}
 		out.WriteString("\n")
 	}
-	for _, b := range bodies {
-		out.WriteString(b)
-	}
 	names := make([]string, 0, len(publicClasses))
 	for name := range publicClasses {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 	if includeNamespace {
+		renames := packageClassRenames(packageClasses, pkgName)
+		for _, b := range bodies {
+			out.WriteString(rewritePackageClassNames(b, renames))
+		}
 		out.WriteString(pkgName)
 		out.WriteString(" = {}\n")
 		out.WriteString(pkgName)
@@ -990,11 +994,100 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 			out.WriteString("[")
 			out.WriteString(strconv.Quote(name))
 			out.WriteString("] = ")
-			out.WriteString(name)
+			out.WriteString(renames[name])
 			out.WriteString("\n")
 		}
+		return out.String(), origins, nil
+	}
+	for _, b := range bodies {
+		out.WriteString(b)
 	}
 	return out.String(), origins, nil
+}
+
+func packageClassRenames(classes map[string]bool, pkgName string) map[string]string {
+	names := make([]string, 0, len(classes))
+	for name := range classes {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	suffix := "TyaPkg" + pascalIdentifier(pkgName)
+	renames := map[string]string{}
+	for _, name := range names {
+		renames[name] = name + suffix
+	}
+	return renames
+}
+
+func pascalIdentifier(name string) string {
+	var out strings.Builder
+	capNext := true
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			if capNext && r >= 'a' && r <= 'z' {
+				r = r - 'a' + 'A'
+			}
+			out.WriteRune(r)
+			capNext = false
+			continue
+		}
+		capNext = true
+	}
+	if out.Len() == 0 {
+		return "Package"
+	}
+	return out.String()
+}
+
+func rewritePackageClassNames(src string, renames map[string]string) string {
+	if len(renames) == 0 {
+		return src
+	}
+	toks, errs := lexer.Lex(src)
+	if len(errs) > 0 {
+		return src
+	}
+	lineStarts := []int{0}
+	for i, r := range src {
+		if r == '\n' {
+			lineStarts = append(lineStarts, i+1)
+		}
+	}
+	type replacement struct {
+		start int
+		end   int
+		value string
+	}
+	replacements := []replacement{}
+	var prev token.Token
+	for _, tok := range toks {
+		name, ok := renames[tok.Lexeme]
+		if !ok || tok.Type != token.IDENT {
+			if tok.Type != token.NEWLINE && tok.Type != token.INDENT && tok.Type != token.DEDENT {
+				prev = tok
+			}
+			continue
+		}
+		if prev.Type == token.DOT {
+			prev = tok
+			continue
+		}
+		if tok.Line < 1 || tok.Line > len(lineStarts) {
+			prev = tok
+			continue
+		}
+		start := lineStarts[tok.Line-1] + tok.Col - 1
+		end := start + len(tok.Lexeme)
+		if start >= 0 && end <= len(src) {
+			replacements = append(replacements, replacement{start: start, end: end, value: name})
+		}
+		prev = tok
+	}
+	for i := len(replacements) - 1; i >= 0; i-- {
+		r := replacements[i]
+		src = src[:r.start] + r.value + src[r.end:]
+	}
+	return src
 }
 
 func publicPackageNames(classFiles []string) ([]string, error) {

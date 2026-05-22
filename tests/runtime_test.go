@@ -62,11 +62,17 @@ int main(int argc, char **argv) {
   tya_write_file(path, tya_string("file text"));
   tya_print(tya_file_exists(path));
   tya_print(tya_read_file(path));
+
+  TyaValue many = tya_array(0, 0);
+  for (int i = 0; i < 10000; i++) {
+    tya_push(many, tya_string("abc"));
+  }
+  tya_print(tya_len(tya_join(many, tya_string(","))));
   return 0;
 }
 `
 	out := compileAndRunRuntime(t, src, path)
-	want := "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n42\ntrue\nfile text\n"
+	want := "hello-tya\nhello,Tya\ntrue\ntrue\ntrue\n42\ntrue\nfile text\n39999\n"
 	if string(out) != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

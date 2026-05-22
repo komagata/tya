@@ -2599,21 +2599,22 @@ check = program ->
   errors
 
 c_string = text ->
-  out = "\""
+  parts = ["\""]
   i = 0
   while i < text.len()
     char = text[i]
     if char == "\""
-      out = out + "\\\""
+      parts.push("\\\"")
     elseif char == "\\"
-      out = out + "\\\\"
+      parts.push("\\\\")
     else
       if char == "\n"
-        out = out + "\\n"
+        parts.push("\\n")
       else
-        out = out + char
+        parts.push(char)
     i = i + 1
-  out + "\""
+  parts.push("\"")
+  parts.join("")
 
 c_name = name -> "tya_user_{name}"
 
