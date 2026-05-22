@@ -2287,29 +2287,38 @@ func (p *Parser) isAssignStart() bool {
 	if !p.scanAssignTarget(&i) {
 		return false
 	}
-	for p.toks[i].Type == token.COMMA {
+	for i < len(p.toks) && p.toks[i].Type == token.COMMA {
 		i++
 		if !p.scanAssignTarget(&i) {
 			return false
 		}
 	}
-	return p.toks[i].Type == token.ASSIGN
+	return i < len(p.toks) && p.toks[i].Type == token.ASSIGN
 }
 
 func (p *Parser) scanAssignTarget(i *int) bool {
+	if *i >= len(p.toks) {
+		return false
+	}
 	if p.toks[*i].Type == token.LBRACKET || p.toks[*i].Type == token.LBRACE {
 		return p.scanBalancedPattern(i)
 	}
 	if p.toks[*i].Type == token.AT {
 		*i++
+		if *i >= len(p.toks) {
+			return false
+		}
 		if p.toks[*i].Type == token.AT {
 			*i++
+		}
+		if *i >= len(p.toks) {
+			return false
 		}
 		if p.toks[*i].Type != token.IDENT {
 			return false
 		}
 		*i++
-		if p.toks[*i].Type == token.QUESTION {
+		if *i < len(p.toks) && p.toks[*i].Type == token.QUESTION {
 			*i++
 		}
 		return true
@@ -2318,12 +2327,18 @@ func (p *Parser) scanAssignTarget(i *int) bool {
 		return false
 	}
 	*i++
-	if p.toks[*i].Type == token.QUESTION {
+	if *i < len(p.toks) && p.toks[*i].Type == token.QUESTION {
 		*i++
 	}
 	for {
+		if *i >= len(p.toks) {
+			return false
+		}
 		if p.toks[*i].Type == token.DOT {
 			*i += 2
+			if *i >= len(p.toks) {
+				return false
+			}
 			if p.toks[*i].Type == token.QUESTION {
 				*i++
 			}

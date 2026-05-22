@@ -314,11 +314,11 @@ class Template
 
   # Template.lbrace provides the template/Template standard library operation.
   static lbrace = ->
-    return chr(123)
+    return "{{"
 
   # Template.rbrace provides the template/Template standard library operation.
   static rbrace = ->
-    return chr(125)
+    return "}}"
 
   # Template.open provides the template/Template standard library operation.
   static open = ->
