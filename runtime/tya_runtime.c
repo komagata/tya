@@ -159,6 +159,7 @@ static bool tya_primitive_classes_initialized = false;
 
 static TyaValue tya_primitive_member(TyaValue receiver, const char *key);
 static char *tya_utf8_char_at(const char *text, int rune_index);
+static int tya_utf8_byte_offset_at(const char *text, int rune_index);
 static TyaValue tya_method_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_empty_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_to_s(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -193,6 +194,7 @@ static TyaValue tya_method_integer_p(TyaValue receiver, TyaValue a, TyaValue b, 
 static TyaValue tya_method_finite_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_nan_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_byte_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_string_slice(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_trim(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_contains(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_starts_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -1034,6 +1036,32 @@ static char *tya_utf8_char_at(const char *text, int rune_index) {
   return NULL;
 }
 
+static int tya_utf8_byte_offset_at(const char *text, int rune_index) {
+  if (text == NULL || rune_index < 0) {
+    return -1;
+  }
+  int current = 0;
+  for (int i = 0; text[i] != '\0';) {
+    if (current == rune_index) {
+      return i;
+    }
+    unsigned char c = (unsigned char)text[i];
+    int width = 1;
+    if ((c & 0x80) == 0) {
+      width = 1;
+    } else if ((c & 0xE0) == 0xC0) {
+      width = 2;
+    } else if ((c & 0xF0) == 0xE0) {
+      width = 3;
+    } else if ((c & 0xF8) == 0xF0) {
+      width = 4;
+    }
+    i += width;
+    current++;
+  }
+  return current == rune_index ? (int)strlen(text) : -1;
+}
+
 void tya_set_index(TyaValue value, TyaValue index, TyaValue item) {
   int i = (int)index.number;
   if (value.kind == TYA_ARRAY && value.array != NULL && i >= 0 && i < value.array->len) {
@@ -1544,6 +1572,30 @@ TyaValue tya_byte_len(TyaValue text) {
     return tya_number(0);
   }
   return tya_number((double)strlen(text.string));
+}
+
+TyaValue tya_string_slice(TyaValue text, TyaValue start, TyaValue end) {
+  if (text.kind != TYA_STRING || text.string == NULL || start.kind != TYA_NUMBER || end.kind != TYA_NUMBER) {
+    return tya_string("");
+  }
+  int s = (int)start.number;
+  int e = (int)end.number;
+  if (s < 0 || e < 0) {
+    tya_panic(tya_string("string.slice does not support negative indexes"));
+  }
+  if (s > e) {
+    tya_panic(tya_string("string.slice index out of range"));
+  }
+  int start_byte = tya_utf8_byte_offset_at(text.string, s);
+  int end_byte = tya_utf8_byte_offset_at(text.string, e);
+  if (start_byte < 0 || end_byte < 0) {
+    tya_panic(tya_string("string.slice index out of range"));
+  }
+  int len = end_byte - start_byte;
+  char *out = malloc((size_t)len + 1);
+  memcpy(out, text.string + start_byte, (size_t)len);
+  out[len] = '\0';
+  return tya_string(out);
 }
 
 TyaValue tya_ord(TyaValue text) {
@@ -3944,6 +3996,7 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
   case TYA_STRING:
     if (strcmp(key, "len") == 0 || strcmp(key, "char_len") == 0) return tya_bind_method(receiver, tya_method_len);
     if (strcmp(key, "byte_len") == 0) return tya_bind_method(receiver, tya_method_byte_len);
+    if (strcmp(key, "slice") == 0) return tya_bind_method(receiver, tya_method_string_slice);
     if (strcmp(key, "trim") == 0) return tya_bind_method(receiver, tya_method_trim);
     if (strcmp(key, "contains") == 0) return tya_bind_method(receiver, tya_method_contains);
     if (strcmp(key, "starts_with") == 0) return tya_bind_method(receiver, tya_method_starts_with);
@@ -4091,6 +4144,7 @@ static TyaValue tya_method_integer_p(TyaValue receiver, TyaValue a, TyaValue b, 
 static TyaValue tya_method_finite_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_number_finite_p(receiver); }
 static TyaValue tya_method_nan_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_number_nan_p(receiver); }
 static TyaValue tya_method_byte_len(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_byte_len(receiver); }
+static TyaValue tya_method_string_slice(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)c; (void)d; return tya_string_slice(receiver, a, b); }
 static TyaValue tya_method_trim(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_trim(receiver); }
 static TyaValue tya_method_contains(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_contains_method(receiver, a); }
 static TyaValue tya_method_starts_with(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_starts_with(receiver, a); }

@@ -12,7 +12,7 @@ cd $REPO
 exec go run ./cmd/tya format $WORK/Greeter.tya
 stdout 'class Greeter'
 stdout 'initialize = name ->'
-stdout 'greet = ->'
+stdout 'greet = \(\) ->'
 ! stderr .
 
 exec go run ./cmd/tya format $WORK/main.tya

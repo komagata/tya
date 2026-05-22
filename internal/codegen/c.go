@@ -3383,6 +3383,10 @@ func standardStringCall(name string, args []string) string {
 		if len(args) == 1 {
 			return fmt.Sprintf("tya_byte_len(%s)", args[0])
 		}
+	case "slice":
+		if len(args) == 3 {
+			return fmt.Sprintf("tya_string_slice(%s, %s, %s)", args[0], args[1], args[2])
+		}
 	case "trim":
 		if len(args) == 1 {
 			return fmt.Sprintf("tya_trim(%s)", args[0])

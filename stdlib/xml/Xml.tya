@@ -201,7 +201,7 @@ class Xml
         semi = Xml.index_of(text, ";", i + 1)
         if semi < 0
           Xml.error(state, "invalid entity reference")
-        entity = Xml.slice(text, i + 1, semi)
+        entity = text.slice(i + 1, semi)
         out = out + Xml.decode_entity(entity, state)
         i = semi + 1
       else
@@ -222,9 +222,9 @@ class Xml
     if entity == "apos"
       return "'"
     if entity.starts_with("#x")
-      return chr(Xml.parse_hex(Xml.slice(entity, 2, entity.byte_len())))
+      return chr(Xml.parse_hex(entity.slice(2, entity.len())))
     if entity.starts_with("#")
-      return chr(Xml.slice(entity, 1, entity.byte_len()).to_i())
+      return chr(entity.slice(1, entity.len()).to_i())
     Xml.error(state, "invalid entity reference")
 
   # Xml.parse_name provides the xml/Xml standard library operation.
@@ -278,15 +278,6 @@ class Xml
     if state["pos"] >= state["len"]
       return ""
     return state["src"][state["pos"]]
-
-  # Xml.slice provides the xml/Xml standard library operation.
-  static slice = text, start, finish ->
-    out = ""
-    i = start
-    while i < finish
-      out = out + text[i]
-      i = i + 1
-    return out
 
   # Xml.index_of provides the xml/Xml standard library operation.
   static index_of = text, needle, start ->

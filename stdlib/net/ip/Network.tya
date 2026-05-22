@@ -11,8 +11,8 @@ class Network
     slash = Address.last_index(cidr, "/")
     if slash < 0
       raise error("ip.Network.parse: missing prefix")
-    addr = Address.parse(Address.slice(cidr, 0, slash))
-    prefix_text = Address.slice(cidr, slash + 1, cidr.byte_len())
+    addr = Address.parse(cidr.slice(0, slash))
+    prefix_text = cidr.slice(slash + 1, cidr.len())
     if prefix_text == "" or not Address.decimal?(prefix_text)
       raise error("ip.Network.parse: invalid prefix")
     prefix = prefix_text.to_i()

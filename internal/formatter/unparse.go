@@ -503,7 +503,7 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 		for _, r := range n.Implements {
 			impls = append(impls, classRefString(r))
 		}
-		head += " : " + strings.Join(impls, ", ")
+		head += " implements " + strings.Join(impls, ", ")
 	}
 	u.line(head)
 	u.indent++

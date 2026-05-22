@@ -1747,7 +1747,7 @@ func evalStandardModuleCall(module string, name string, args []Value, env *Env) 
 
 func isStandardStringCall(name string) bool {
 	switch name {
-	case "len", "byte_len", "char_len", "trim", "contains", "starts_with", "ends_with", "replace", "split", "join", "lines", "upcase", "downcase":
+	case "len", "byte_len", "char_len", "slice", "trim", "contains", "starts_with", "ends_with", "replace", "split", "join", "lines", "upcase", "downcase":
 		return true
 	default:
 		return false
@@ -1788,6 +1788,30 @@ func evalStringModuleCall(name string, args []Value, env *Env) (Value, error) {
 			return nil, err
 		}
 		return int64(len([]rune(text))), nil
+	case "slice":
+		if len(args) != 3 {
+			return nil, fmt.Errorf("string.slice expects 3 arguments")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.slice expects string text")
+		}
+		start, ok := args[1].(int64)
+		if !ok {
+			return nil, fmt.Errorf("string.slice expects integer start")
+		}
+		end, ok := args[2].(int64)
+		if !ok {
+			return nil, fmt.Errorf("string.slice expects integer end")
+		}
+		if start < 0 || end < 0 {
+			return nil, fmt.Errorf("string.slice does not support negative indexes")
+		}
+		runes := []rune(text)
+		if start > end || int(end) > len(runes) {
+			return nil, fmt.Errorf("string.slice index out of range")
+		}
+		return string(runes[int(start):int(end)]), nil
 	case "trim":
 		text, err := oneString("string.trim", args)
 		if err != nil {

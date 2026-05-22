@@ -83,8 +83,8 @@ class Client
       clean = Client.chomp(line)
       idx = Client.index_of(clean, ":", 0)
       if idx > 0
-        name = Client.slice(clean, 0, idx).lower()
-        value = Client.slice(clean, idx + 1, clean.byte_len()).trim()
+        name = clean.slice(0, idx).lower()
+        value = clean.slice(idx + 1, clean.len()).trim()
         headers[name] = value
       line = socket_read_line(s)
 
@@ -132,7 +132,7 @@ class Client
       scheme = "https"
     elseif not target.starts_with(prefix)
       raise error("http.request: only http:// and https:// URLs are supported")
-    rest = Client.slice(target, prefix.byte_len(), target.byte_len())
+    rest = target.slice(prefix.len(), target.len())
     slash = Client.index_of(rest, "/", 0)
     query = Client.index_of(rest, "?", 0)
     end_auth = rest.byte_len()
@@ -140,22 +140,22 @@ class Client
       end_auth = slash
     if query >= 0 and query < end_auth
       end_auth = query
-    authority = Client.slice(rest, 0, end_auth)
-    remainder = Client.slice(rest, end_auth, rest.byte_len())
+    authority = rest.slice(0, end_auth)
+    remainder = rest.slice(end_auth, rest.len())
     host = authority
     port = ""
     colon = Client.index_of(authority, ":", 0)
     if colon >= 0
-      host = Client.slice(authority, 0, colon)
-      port = Client.slice(authority, colon + 1, authority.byte_len())
+      host = authority.slice(0, colon)
+      port = authority.slice(colon + 1, authority.len())
     path = remainder
     query_text = ""
     has_query = false
     q = Client.index_of(remainder, "?", 0)
     if q >= 0
       has_query = true
-      path = Client.slice(remainder, 0, q)
-      query_text = Client.slice(remainder, q + 1, remainder.byte_len())
+      path = remainder.slice(0, q)
+      query_text = remainder.slice(q + 1, remainder.len())
     if path == ""
       path = "/"
     return { scheme: scheme, host: host, port: port, path: path, query: query_text, has_query: has_query }
@@ -167,7 +167,7 @@ class Client
       n = n - 1
     if n > 0 and text[n - 1] == chr(13)
       n = n - 1
-    return Client.slice(text, 0, n)
+    return text.slice(0, n)
 
   # Client.index_of provides the net/http/Client standard library operation.
   static index_of = text, needle, start ->
@@ -175,19 +175,10 @@ class Client
     n = text.byte_len()
     m = needle.byte_len()
     while i + m <= n
-      if Client.slice(text, i, i + m) == needle
+      if text.slice(i, i + m) == needle
         return i
       i = i + 1
     return -1
-
-  # Client.slice provides the net/http/Client standard library operation.
-  static slice = text, start, finish ->
-    out = ""
-    i = start
-    while i < finish
-      out = out + text[i]
-      i = i + 1
-    return out
 
   # Client.hex_to_i provides the net/http/Client standard library operation.
   static hex_to_i = text ->

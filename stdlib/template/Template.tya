@@ -70,7 +70,7 @@ class Template
 
   # Template.render_if provides the template/Template standard library operation.
   static render_if = state, tag, env ->
-    cond = Template.slice(tag, 3, tag.byte_len())
+    cond = tag.slice(3, tag.len())
     truth = false
     found = Template.lookup(cond.trim(), env)
     if found["ok"] and found["value"]
@@ -109,7 +109,7 @@ class Template
 
   # Template.render_partial provides the template/Template standard library operation.
   static render_partial = tag, env ->
-    rest = Template.slice(tag, 8, tag.byte_len()).trim()
+    rest = tag.slice(8, tag.len()).trim()
     if rest.byte_len() < 2 or rest[0] != "\""
       raise error("template.render: invalid partial")
     i = 1
@@ -119,7 +119,7 @@ class Template
       i = i + 1
     if i >= rest.byte_len()
       raise error("template.render: invalid partial")
-    ctx_path = Template.slice(rest, i + 1, rest.byte_len()).trim()
+    ctx_path = rest.slice(i + 1, rest.len()).trim()
     options = env["options"]
     if not options.has("partials")
       raise error("template.render: missing partials")
@@ -147,7 +147,7 @@ class Template
       if open < 0
         raise error("template.render: missing end")
       close = Template.find_close(source, open + 2, Template.close())
-      tag = Template.slice(source, open + 2, close).trim()
+      tag = source.slice(open + 2, close).trim()
       if Template.starts_text(tag, "if ") or Template.starts_text(tag, "for ")
         depth = depth + 1
       elseif tag == "end"
@@ -162,7 +162,7 @@ class Template
 
   # Template.render_range provides the template/Template standard library operation.
   static render_range = source, start, finish, env ->
-    part = Template.slice(source, start, finish)
+    part = source.slice(start, finish)
     state = { source: part, pos: 0, len: part.byte_len() }
     return Template.render_until(state, env, "")
 
@@ -253,14 +253,14 @@ class Template
     close = Template.find_close(state["source"], state["pos"] + 2, Template.close())
     if close < 0
       return false
-    text = Template.slice(state["source"], state["pos"] + 2, close).trim()
+    text = state["source"].slice(state["pos"] + 2, close).trim()
     return text == tag
 
   # Template.starts_text provides the template/Template standard library operation.
   static starts_text = text, prefix ->
-    if prefix.byte_len() > text.byte_len()
+    if prefix.len() > text.byte_len()
       return false
-    return Template.slice(text, 0, prefix.byte_len()) == prefix
+    return text.slice(0, prefix.len()) == prefix
 
   # Template.read_tag provides the template/Template standard library operation.
   static read_tag = state ->
@@ -275,8 +275,8 @@ class Template
     close = Template.find_close(src, start, marker)
     if close < 0
       raise error(Template.error(state, "unclosed tag"))
-    state["pos"] = close + marker.byte_len()
-    return Template.slice(src, start, close)
+    state["pos"] = close + marker.len()
+    return src.slice(start, close)
 
   # Template.find_next_tag provides the template/Template standard library operation.
   static find_next_tag = source, start ->
@@ -290,20 +290,11 @@ class Template
   # Template.find_close provides the template/Template standard library operation.
   static find_close = source, start, marker ->
     i = start
-    while i + marker.byte_len() <= source.byte_len()
-      if Template.slice(source, i, i + marker.byte_len()) == marker
+    while i + marker.len() <= source.byte_len()
+      if source.slice(i, i + marker.len()) == marker
         return i
       i = i + 1
     return -1
-
-  # Template.slice provides the template/Template standard library operation.
-  static slice = text, start, finish ->
-    out = ""
-    i = start
-    while i < finish
-      out = out + text[i]
-      i = i + 1
-    return out
 
   # Template.copy_dict provides the template/Template standard library operation.
   static copy_dict = dict ->

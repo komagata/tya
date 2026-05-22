@@ -92,15 +92,6 @@ class Url
       i = i + 1
     true
 
-  # Url.slice provides the url/Url standard library operation.
-  static slice = text, start, finish ->
-    out = ""
-    i = start
-    while i < finish
-      out = out + text[i]
-      i = i + 1
-    out
-
   # Url.contains_colon? provides the url/Url standard library operation.
   static contains_colon? = text ->
     i = 0
@@ -310,11 +301,11 @@ class Url
           ci = ci + 1
         if close_idx < 0
           raise error("url.parse: invalid IPv6 host")
-        out["host"] = Url.slice(hostport, 1, close_idx)
+        out["host"] = hostport.slice(1, close_idx)
         if close_idx + 1 < hp_n
           if hostport[close_idx + 1] != ":"
             raise error("url.parse: invalid host")
-          port_part = Url.slice(hostport, close_idx + 2, hp_n)
+          port_part = hostport.slice(close_idx + 2, hp_n)
           if not Url.decimal?(port_part)
             raise error("url.parse: invalid port")
           out["port"] = port_part
@@ -329,8 +320,8 @@ class Url
         if colon_idx < 0
           out["host"] = hostport
         else
-          host_part = Url.slice(hostport, 0, colon_idx)
-          port_part = Url.slice(hostport, colon_idx + 1, hp_n)
+          host_part = hostport.slice(0, colon_idx)
+          port_part = hostport.slice(colon_idx + 1, hp_n)
           if not Url.decimal?(port_part)
             raise error("url.parse: invalid port")
           out["host"] = host_part
@@ -403,7 +394,7 @@ class Url
       i = i + 1
     if idx < 0
       return ref_path
-    return Url.slice(base_path, 0, idx + 1) + ref_path
+    return base_path.slice(0, idx + 1) + ref_path
 
   # Url.resolve provides the url/Url standard library operation.
   static resolve = base, ref ->

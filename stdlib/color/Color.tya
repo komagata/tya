@@ -81,7 +81,7 @@ class Color
       raise error("color.hex: text must be a string")
     color_raw = text
     if color_raw.starts_with("#")
-      color_raw = Color.slice(color_raw, 1, color_raw.byte_len())
+      color_raw = color_raw.slice(1, color_raw.len())
     color_len = color_raw.byte_len()
     if color_len == 3 or color_len == 4
       color_r = Color.hex_pair(color_raw[0], color_raw[0])
@@ -134,7 +134,7 @@ class Color
 
   # Color.css_rgb provides the color/Color standard library operation.
   static css_rgb = text, start, has_alpha ->
-    color_body = Color.slice(text, start, text.byte_len() - 1)
+    color_body = text.slice(start, text.len() - 1)
     color_parts = color_body.split(",")
     if has_alpha
       if color_parts.len() != 4
@@ -294,12 +294,3 @@ class Color
     if value < 0
       return 0 - value
     return value
-
-  # Color.slice provides the color/Color standard library operation.
-  static slice = text, start, finish ->
-    color_out = ""
-    color_i = start
-    while color_i < finish
-      color_out = color_out + text[color_i]
-      color_i = color_i + 1
-    return color_out

@@ -213,8 +213,8 @@ class Markdown
       s = line.trim()
       if Markdown.is_reference_def(s)
         close = Markdown.find_byte(s, "]", 1)
-        label = Markdown.slice_str(s, 1, close).trim().lower()
-        url = Markdown.slice_str(s, close + 2, s.byte_len()).trim()
+        label = s.slice(1, close).trim().lower()
+        url = s.slice(close + 2, s.len()).trim()
         refs[label] = url
     return refs
 
@@ -304,9 +304,9 @@ class Markdown
   static table_cells = s ->
     text = s
     if text.starts_with("|")
-      text = Markdown.slice_str(text, 1, text.byte_len())
+      text = text.slice(1, text.len())
     if text.ends_with("|")
-      text = Markdown.slice_str(text, 0, text.byte_len() - 1)
+      text = text.slice(0, text.len() - 1)
     raw = text.split("|")
     cells = []
     for cell in raw
@@ -454,42 +454,42 @@ class Markdown
       if c == "`"
         end = Markdown.find_byte(text, "`", i + 1)
         if end >= 0
-          inner = Markdown.slice_str(text, i + 1, end)
+          inner = text.slice(i + 1, end)
           out = out + "<code>" + Markdown.escape_html(inner) + "</code>"
           i = end + 1
           continue
       if c == "~" and i + 1 < n and text[i + 1] == "~"
         end = Markdown.find_double(text, "~", i + 2)
         if end >= 0
-          inner = Markdown.slice_str(text, i + 2, end)
+          inner = text.slice(i + 2, end)
           out = out + "<del>" + Markdown.inline_with_refs(inner, refs) + "</del>"
           i = end + 2
           continue
       if c == "*" and i + 1 < n and text[i + 1] == "*"
         end = Markdown.find_double(text, "*", i + 2)
         if end >= 0
-          inner = Markdown.slice_str(text, i + 2, end)
+          inner = text.slice(i + 2, end)
           out = out + "<strong>" + Markdown.inline_with_refs(inner, refs) + "</strong>"
           i = end + 2
           continue
       if c == "_" and i + 1 < n and text[i + 1] == "_"
         end = Markdown.find_double(text, "_", i + 2)
         if end >= 0
-          inner = Markdown.slice_str(text, i + 2, end)
+          inner = text.slice(i + 2, end)
           out = out + "<strong>" + Markdown.inline_with_refs(inner, refs) + "</strong>"
           i = end + 2
           continue
       if c == "*"
         end = Markdown.find_byte(text, "*", i + 1)
         if end >= 0
-          inner = Markdown.slice_str(text, i + 1, end)
+          inner = text.slice(i + 1, end)
           out = out + "<em>" + Markdown.inline_with_refs(inner, refs) + "</em>"
           i = end + 1
           continue
       if c == "_"
         end = Markdown.find_byte(text, "_", i + 1)
         if end >= 0
-          inner = Markdown.slice_str(text, i + 1, end)
+          inner = text.slice(i + 1, end)
           out = out + "<em>" + Markdown.inline_with_refs(inner, refs) + "</em>"
           i = end + 1
           continue
@@ -535,15 +535,6 @@ class Markdown
       i = i + 1
     return -1
 
-  # Markdown.slice_str provides the markdown/Markdown standard library operation.
-  static slice_str = text, s, e ->
-    out = ""
-    i = s
-    while i < e
-      out = out + text[i]
-      i = i + 1
-    return out
-
   # Markdown.try_link provides the markdown/Markdown standard library operation.
   static try_link = text, start, refs ->
     n = text.byte_len()
@@ -552,20 +543,20 @@ class Markdown
       return nil
     if close_text + 1 >= n
       return nil
-    inner = Markdown.slice_str(text, start + 1, close_text)
+    inner = text.slice(start + 1, close_text)
     url = nil
     end = close_text + 1
     if text[close_text + 1] == "("
       close_url = Markdown.find_byte(text, ")", close_text + 2)
       if close_url < 0
         return nil
-      url = Markdown.slice_str(text, close_text + 2, close_url)
+      url = text.slice(close_text + 2, close_url)
       end = close_url + 1
     elseif text[close_text + 1] == "["
       close_ref = Markdown.find_byte(text, "]", close_text + 2)
       if close_ref < 0
         return nil
-      label = Markdown.slice_str(text, close_text + 2, close_ref).trim().lower()
+      label = text.slice(close_text + 2, close_ref).trim().lower()
       if label == ""
         label = inner.trim().lower()
       if not refs.has(label)
@@ -589,20 +580,20 @@ class Markdown
     close_text = Markdown.find_byte(text, "]", start + 2)
     if close_text < 0 or close_text + 1 >= n
       return nil
-    alt = Markdown.slice_str(text, start + 2, close_text)
+    alt = text.slice(start + 2, close_text)
     url = nil
     end = close_text + 1
     if text[close_text + 1] == "("
       close_url = Markdown.find_byte(text, ")", close_text + 2)
       if close_url < 0
         return nil
-      url = Markdown.slice_str(text, close_text + 2, close_url)
+      url = text.slice(close_text + 2, close_url)
       end = close_url + 1
     elseif text[close_text + 1] == "["
       close_ref = Markdown.find_byte(text, "]", close_text + 2)
       if close_ref < 0
         return nil
-      label = Markdown.slice_str(text, close_text + 2, close_ref).trim().lower()
+      label = text.slice(close_text + 2, close_ref).trim().lower()
       if label == ""
         label = alt.trim().lower()
       if not refs.has(label)
@@ -619,7 +610,7 @@ class Markdown
     close = Markdown.find_byte(text, ">", start + 1)
     if close < 0
       return nil
-    inner = Markdown.slice_str(text, start + 1, close)
+    inner = text.slice(start + 1, close)
     if not (inner.starts_with("http://") or inner.starts_with("https://"))
       return nil
     html = "<a href=\""

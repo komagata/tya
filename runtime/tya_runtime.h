@@ -119,6 +119,7 @@ TyaValue tya_ends_with(TyaValue text, TyaValue suffix);
 TyaValue tya_trim(TyaValue text);
 TyaValue tya_replace(TyaValue text, TyaValue old, TyaValue replacement);
 TyaValue tya_byte_len(TyaValue text);
+TyaValue tya_string_slice(TyaValue text, TyaValue start, TyaValue end);
 TyaValue tya_ord(TyaValue text);
 TyaValue tya_chr(TyaValue code);
 TyaValue tya_kind(TyaValue value);

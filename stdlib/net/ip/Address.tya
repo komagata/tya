@@ -96,11 +96,11 @@ class Address
       last_colon = Address.last_index(text, ":")
       if last_colon < 0
         raise error("ip.Address.parse: invalid IPv6 address")
-      ipv4_text = Address.slice(text, last_colon + 1, text.byte_len())
+      ipv4_text = text.slice(last_colon + 1, text.len())
       ipv4 = Address.parse_v4(ipv4_text)
       b = ipv4.bytes
       ipv4_groups = [b[0] * 256 + b[1], b[2] * 256 + b[3]]
-      text = Address.slice(text, 0, last_colon)
+      text = text.slice(0, last_colon)
       mapped = true
     parts = text.split("::")
     if parts.len() > 2
@@ -241,12 +241,3 @@ class Address
         return i
       i = i - 1
     return -1
-
-  # Address.slice provides the net/ip/Address standard library operation.
-  static slice = text, start, finish ->
-    out = ""
-    i = start
-    while i < finish
-      out = out + text[i]
-      i = i + 1
-    return out

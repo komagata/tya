@@ -362,7 +362,7 @@ class Server
       if part.starts_with("*") and i != parts.len() - 1
         raise error("http.route: wildcard must be final segment")
       if part.starts_with(":") or part.starts_with("*")
-        name = Server.slice(part, 1, part.byte_len())
+        name = part.slice(1, part.len())
         if name == "" or Server.array_has?(names, name)
           raise error("http.route: duplicate or empty parameter " + name)
         names.push(name)
@@ -381,7 +381,7 @@ class Server
     while i < p.len()
       part = p[i]
       if part.starts_with("*")
-        name = Server.slice(part, 1, part.byte_len())
+        name = part.slice(1, part.len())
         rest = []
         j = i
         while j < r.len()
@@ -392,7 +392,7 @@ class Server
       if i >= r.len()
         return nil
       if part.starts_with(":")
-        params[Server.slice(part, 1, part.byte_len())] = r[i]
+        params[part.slice(1, part.len())] = r[i]
       elseif part != r[i]
         return nil
       i = i + 1
@@ -408,7 +408,7 @@ class Server
     while i < parts.len()
       part = parts[i]
       if part.starts_with(":") or part.starts_with("*")
-        name = Server.slice(part, 1, part.byte_len())
+        name = part.slice(1, part.len())
         if params == nil or not params.has?(name)
           raise error("http.path: missing param " + name)
         out.push(params[name])
@@ -433,23 +433,14 @@ class Server
   # Server.strip_trailing provides the net/http/Server standard library operation.
   static strip_trailing = path ->
     while path.byte_len() > 1 and path.ends_with("/")
-      path = Server.slice(path, 0, path.byte_len() - 1)
+      path = path.slice(0, path.len() - 1)
     return path
 
   # Server.strip_leading provides the net/http/Server standard library operation.
   static strip_leading = path ->
     while path.byte_len() > 0 and path.starts_with("/")
-      path = Server.slice(path, 1, path.byte_len())
+      path = path.slice(1, path.len())
     return path
-
-  # Server.slice provides the net/http/Server standard library operation.
-  static slice = text, start, finish ->
-    out = ""
-    i = start
-    while i < finish
-      out = out + text[i]
-      i = i + 1
-    return out
 
   # Server.copy_array provides the net/http/Server standard library operation.
   static copy_array = values ->

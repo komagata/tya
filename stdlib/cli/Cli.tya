@@ -96,19 +96,19 @@ class Cli
   # Cli.parse_long provides the cli/Cli standard library operation.
   static parse_long = state, i ->
     arg = state["args"][i]
-    raw = Cli.slice(arg, 2, arg.byte_len())
+    raw = arg.slice(2, arg.len())
     eq = Cli.index_of(raw, "=")
     name = raw
     value = nil
     has_value = false
     if eq >= 0
-      name = Cli.slice(raw, 0, eq)
-      value = Cli.slice(raw, eq + 1, raw.byte_len())
+      name = raw.slice(0, eq)
+      value = raw.slice(eq + 1, raw.len())
       has_value = true
     negated = false
     if name.starts_with("no-")
       negated = true
-      name = Cli.slice(name, 3, name.byte_len())
+      name = name.slice(3, name.len())
     options = Cli.spec_options(state["spec"])
     if not options.has(name)
       Cli.unknown(state, arg)
@@ -138,7 +138,7 @@ class Cli
   # Cli.parse_short provides the cli/Cli standard library operation.
   static parse_short = state, i ->
     arg = state["args"][i]
-    raw = Cli.slice(arg, 1, arg.byte_len())
+    raw = arg.slice(1, arg.len())
     j = 0
     while j < raw.byte_len()
       alias = raw[j]
@@ -154,7 +154,7 @@ class Cli
           j = j + 1
         else
           if j + 1 < raw.byte_len()
-            value = Cli.slice(raw, j + 1, raw.byte_len())
+            value = raw.slice(j + 1, raw.len())
             Cli.assign_value(state, name, opt, value)
             return i
           if i + 1 >= state["args"].len()
@@ -271,12 +271,3 @@ class Cli
         return i
       i = i + 1
     return -1
-
-  # Cli.slice provides the cli/Cli standard library operation.
-  static slice = text, start, finish ->
-    out = ""
-    i = start
-    while i < finish
-      out = out + text[i]
-      i = i + 1
-    return out
