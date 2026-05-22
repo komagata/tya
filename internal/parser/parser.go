@@ -660,7 +660,7 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		return nil, err
 	}
 	var parent *ast.ClassRef
-	if p.at(token.IDENT) && p.peek().Lexeme == "extends" {
+	if (p.at(token.IDENT) && p.peek().Lexeme == "extends") || p.at(token.LT) {
 		p.next()
 		parent, err = p.classRef()
 		if err != nil {

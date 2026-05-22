@@ -315,6 +315,32 @@ func TestTyaTestDiscoversOnlyTestFilesAndOrdersDeterministically(t *testing.T) {
 	}
 }
 
+func TestFormatClassInheritanceOutputRunsInTyaTest(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "sample_test.tya")
+	src := "import unittest\n\nclass SampleTest extends TestCase\n  test_example = () ->\n    self.assert(true, \"example\")\n"
+	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
+		t.Fatal(err)
+	}
+	format := exec.Command("go", "run", "./cmd/tya", "format", "-w", path)
+	format.Dir = ".."
+	if out, err := format.CombinedOutput(); err != nil {
+		t.Fatalf("format failed: %v\n%s", err, out)
+	}
+	formatted, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(formatted), "class SampleTest < TestCase") {
+		t.Fatalf("formatted source missing canonical inheritance: %s", formatted)
+	}
+	testCmd := exec.Command("go", "run", "./cmd/tya", "test", path)
+	testCmd.Dir = ".."
+	if out, err := testCmd.CombinedOutput(); err != nil {
+		t.Fatalf("tya test failed after format: %v\n%s", err, out)
+	}
+}
+
 func TestCLIEmitCStableAndNoNondeterministicMetadata(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "main.tya")
 	if err := os.WriteFile(path, []byte("print(\"stable\")\n"), 0644); err != nil {
@@ -924,7 +950,7 @@ func TestCLIVersionCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
-	if string(out) != "0.67.2\n" {
+	if string(out) != "0.67.3\n" {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }

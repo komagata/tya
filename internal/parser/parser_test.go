@@ -413,11 +413,6 @@ func TestParseRejectsV01ExcludedSyntaxVariants(t *testing.T) {
 		want string
 	}{
 		{
-			name: "class inheritance",
-			src:  "class Admin < User\n  name = \"\"\n",
-			want: "expected indented block after class",
-		},
-		{
 			name: "interface inheritance",
 			src:  "interface Writer < Reader\n  write: text -> text\n",
 			want: "expected indented block after interface",
@@ -813,6 +808,21 @@ func TestParseSuperCall(t *testing.T) {
 	prog, _, err := Parse(toks)
 	if err != nil {
 		t.Fatalf("parse super: %v", err)
+	}
+	class := prog.Stmts[0].(*ast.ClassDecl)
+	if class.Parent == nil || class.Parent.Name != "User" {
+		t.Fatalf("parent = %#v", class.Parent)
+	}
+}
+
+func TestParseFormattedClassInheritance(t *testing.T) {
+	toks, errs := lexer.Lex("class Admin < User\n  initialize = name ->\n    super(name)\n")
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("parse formatted inheritance: %v", err)
 	}
 	class := prog.Stmts[0].(*ast.ClassDecl)
 	if class.Parent == nil || class.Parent.Name != "User" {
