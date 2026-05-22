@@ -11,9 +11,9 @@ Objective: ship syntax coloring for major editors.
 | Shared syntax fixture exists | `editors/syntax-sample.tya` |
 | VS Code syntax coloring exists | `editors/vscode/syntaxes/tya.tmLanguage.json`, registered from `editors/vscode/package.json` |
 | VS Code package builds | `npm run compile` and `npm run package` in `editors/vscode` |
-| VS Code manual-install package is published | GitHub Release `editors-vscode-v0.65.2` with `tya-0.65.2.vsix` |
-| VS Code Marketplace package is published | `komagata.tya` version `0.65.2` on Visual Studio Marketplace |
-| Open VSX package is published | `komagata.tya` version `0.65.2` on Open VSX |
+| VS Code manual-install package is published | GitHub Release `editors-vscode-v0.65.3` with `tya-0.65.3.vsix` |
+| VS Code Marketplace package is published | `komagata.tya` version `0.65.3` on Visual Studio Marketplace |
+| Open VSX package is published | `komagata.tya` version `0.65.1` on Open VSX |
 | VS Code publish workflow exists | `.github/workflows/publish-vscode-extension.yml` |
 | Vim / Neovim syntax coloring exists | `editors/vim/syntax/tya.vim` |
 | Vim / Neovim filetype and indent exist | `editors/vim/ftdetect/tya.vim`, `editors/vim/indent/tya.vim` |
@@ -41,7 +41,7 @@ scripts/verify_editor_assets.sh
 Last observed GitHub Actions verification:
 
 ```text
-Publish VS Code extension / main / 25953906444 / success / 2026-05-16T05:29:57Z
+Publish VS Code extension / main / 26315329619 / success / 2026-05-22T22:37:38Z
 ```
 
 ## Published Repository Evidence
@@ -55,19 +55,19 @@ Publish VS Code extension / main / 25953906444 / success / 2026-05-16T05:29:57Z
 - Main commit with manual editor asset bundle docs: `3aad8f2`
 - Main commit licensing the Tree-sitter grammar as MIT: `018f8a6`
 - Latest observed GitHub Actions `Publish VS Code extension` Marketplace run:
-  `25953906444`, status: success.
+  `26315329619`, status: success.
 - Latest observed GitHub Actions `Publish VS Code extension` Open VSX run:
   `25953906444`, status: success.
 - VS Code manual-install release:
-  https://github.com/komagata/tya/releases/tag/editors-vscode-v0.65.2
-  (`tya-0.65.2.vsix`, sha256
-  `eb63cec706301ff0808392eb4a44174f9c7ba2a6042c80997162c92f90a7cdab`)
+  https://github.com/komagata/tya/releases/tag/editors-vscode-v0.65.3
+  (`tya-0.65.3.vsix`, sha256
+  `f35ab6b0d3df30377978ffa4eebf13797181d094deceb61341e0214ea0b2e7ed`)
 - Manual editor asset bundle:
   https://github.com/komagata/tya/releases/tag/editors-assets-v0.61.0
   (`tya-editor-assets-v0.61.0.tar.gz`, sha256
   `87e2c78cf2d5a1fc224780d1f0db1dc2870ae008fcd85e584bd0159af49c8f8f`)
-- Visual Studio Marketplace extension: `komagata.tya` version `0.65.2`
-- Open VSX extension: `komagata.tya` version `0.65.2`
+- Visual Studio Marketplace extension: `komagata.tya` version `0.65.3`
+- Open VSX extension: `komagata.tya` version `0.65.1`
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Standalone Tree-sitter grammar repository: https://github.com/komagata/tree-sitter-tya
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`
