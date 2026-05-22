@@ -98,6 +98,231 @@ func TestLSPRenameSameFileTopLevel(t *testing.T) {
 	}
 }
 
+func TestLSPRenameTopLevelClassDeclaration(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	uri := fileURI("/tmp/lsp_v2_rename_class.tya")
+	src := "class Widget\n  static name = () -> \"widget\"\n"
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+	res := p.request("textDocument/rename", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"position":     map[string]any{"line": 0, "character": 6},
+		"newName":      "RenamedWidget",
+	})
+	var edit struct {
+		Changes map[string][]struct {
+			NewText string `json:"newText"`
+		} `json:"changes"`
+	}
+	if err := json.Unmarshal(res, &edit); err != nil {
+		t.Fatalf("decode: %v\n%s", err, res)
+	}
+	if len(edit.Changes[uri]) != 1 {
+		t.Fatalf("expected 1 edit, got %d: %s", len(edit.Changes[uri]), res)
+	}
+	if edit.Changes[uri][0].NewText != "RenamedWidget" {
+		t.Errorf("edit newText = %q", edit.Changes[uri][0].NewText)
+	}
+}
+
+func TestLSPRenameClassDeclarationRenamesMatchingFile(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "Widget.tya")
+	uri := fileURI(path)
+	src := "class Widget\n  static name = () -> \"widget\"\n"
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+	res := p.request("textDocument/rename", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"position":     map[string]any{"line": 0, "character": 6},
+		"newName":      "RenamedWidget",
+	})
+	var edit struct {
+		Changes         map[string][]any `json:"changes"`
+		DocumentChanges []struct {
+			Kind   string `json:"kind"`
+			OldURI string `json:"oldUri"`
+			NewURI string `json:"newUri"`
+		} `json:"documentChanges"`
+	}
+	if err := json.Unmarshal(res, &edit); err != nil {
+		t.Fatalf("decode: %v\n%s", err, res)
+	}
+	if len(edit.Changes[uri]) != 1 {
+		t.Fatalf("expected class text edit, got %s", res)
+	}
+	wantNewURI := fileURI(filepath.Join(dir, "RenamedWidget.tya"))
+	foundRename := false
+	for _, change := range edit.DocumentChanges {
+		if change.Kind == "rename" && change.OldURI == uri && change.NewURI == wantNewURI {
+			foundRename = true
+		}
+	}
+	if !foundRename {
+		t.Fatalf("expected file rename %s -> %s in %s", uri, wantNewURI, res)
+	}
+}
+
+func TestLSPRenameClassDeclarationRenamesMismatchedFile(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "OldWidget.tya")
+	uri := fileURI(path)
+	src := "class Widget\n  static name = () -> \"widget\"\n"
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+	res := p.request("textDocument/rename", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"position":     map[string]any{"line": 0, "character": 6},
+		"newName":      "RenamedWidget",
+	})
+	var edit struct {
+		DocumentChanges []struct {
+			Kind   string `json:"kind"`
+			OldURI string `json:"oldUri"`
+			NewURI string `json:"newUri"`
+		} `json:"documentChanges"`
+	}
+	if err := json.Unmarshal(res, &edit); err != nil {
+		t.Fatalf("decode: %v\n%s", err, res)
+	}
+	wantNewURI := fileURI(filepath.Join(dir, "RenamedWidget.tya"))
+	for _, change := range edit.DocumentChanges {
+		if change.Kind == "rename" && change.OldURI == uri && change.NewURI == wantNewURI {
+			return
+		}
+	}
+	t.Fatalf("expected mismatched file rename %s -> %s in %s", uri, wantNewURI, res)
+}
+
+func TestLSPRenameClassDoesNotRenameImportedPackageClass(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	dir := writeWorkspace(t, map[string]string{
+		"tya.toml":    "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
+		"src/Cli.tya": "import cli as cli\n\nclass Cli\n  static parse = args ->\n    cli.Cli.parse_or_exit(args, Self.option_spec())\n  static option_spec = () -> {}\n",
+	})
+	uri := fileURI(filepath.Join(dir, "src", "Cli.tya"))
+	src, _ := os.ReadFile(filepath.Join(dir, "src", "Cli.tya"))
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": string(src)},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+	res := p.request("textDocument/rename", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"position":     map[string]any{"line": 2, "character": 6},
+		"newName":      "CommandLine",
+	})
+	var edit struct {
+		Changes map[string][]struct {
+			Range struct {
+				Start struct {
+					Line int `json:"line"`
+				} `json:"start"`
+			} `json:"range"`
+		} `json:"changes"`
+	}
+	if err := json.Unmarshal(res, &edit); err != nil {
+		t.Fatalf("decode: %v\n%s", err, res)
+	}
+	for _, textEdit := range edit.Changes[uri] {
+		if textEdit.Range.Start.Line == 4 {
+			t.Fatalf("imported package class cli.Cli was renamed: %s", res)
+		}
+	}
+}
+
+func TestLSPRenameClassMethodDeclaration(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	uri := fileURI("/tmp/lsp_v2_rename_class_method.tya")
+	src := "class Widget\n  static call = () -> Self.helper()\n  static helper = () -> 1\n"
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+	res := p.request("textDocument/rename", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"position":     map[string]any{"line": 2, "character": 9},
+		"newName":      "renamed_helper",
+	})
+	var edit struct {
+		Changes map[string][]struct {
+			NewText string `json:"newText"`
+		} `json:"changes"`
+	}
+	if err := json.Unmarshal(res, &edit); err != nil {
+		t.Fatalf("decode: %v\n%s", err, res)
+	}
+	if len(edit.Changes[uri]) != 2 {
+		t.Fatalf("expected 2 edits, got %d: %s", len(edit.Changes[uri]), res)
+	}
+}
+
+func TestLSPRenameClassMethodReference(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	uri := fileURI("/tmp/lsp_v2_rename_class_method_ref.tya")
+	src := "class Widget\n  static call = () -> Self.helper()\n  static helper = () -> 1\n"
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+	res := p.request("textDocument/rename", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"position":     map[string]any{"line": 1, "character": 27},
+		"newName":      "renamed_helper",
+	})
+	var edit struct {
+		Changes map[string][]struct {
+			NewText string `json:"newText"`
+		} `json:"changes"`
+	}
+	if err := json.Unmarshal(res, &edit); err != nil {
+		t.Fatalf("decode: %v\n%s", err, res)
+	}
+	if len(edit.Changes[uri]) != 2 {
+		t.Fatalf("expected 2 edits, got %d: %s", len(edit.Changes[uri]), res)
+	}
+}
+
+func TestLSPRenameLocalInsideClassMethod(t *testing.T) {
+	p := initLSP(t)
+	defer p.close()
+	uri := fileURI("/tmp/lsp_v2_rename_class_method_local.tya")
+	src := "class Widget\n  static call = () ->\n    value = 1\n    value + 1\n"
+	p.notify("textDocument/didOpen", map[string]any{
+		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
+	})
+	p.expectNotification("textDocument/publishDiagnostics")
+	res := p.request("textDocument/rename", map[string]any{
+		"textDocument": map[string]any{"uri": uri},
+		"position":     map[string]any{"line": 2, "character": 4},
+		"newName":      "amount",
+	})
+	var edit struct {
+		Changes map[string][]struct {
+			NewText string `json:"newText"`
+		} `json:"changes"`
+	}
+	if err := json.Unmarshal(res, &edit); err != nil {
+		t.Fatalf("decode: %v\n%s", err, res)
+	}
+	if len(edit.Changes[uri]) != 2 {
+		t.Fatalf("expected 2 edits, got %d: %s", len(edit.Changes[uri]), res)
+	}
+}
+
 func TestLSPPrepareRename(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()

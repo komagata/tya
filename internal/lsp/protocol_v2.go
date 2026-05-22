@@ -5,10 +5,26 @@ package lsp
 // surface intact and easy to diff.
 
 // WorkspaceEdit is the shape returned by rename and code action
-// responses. tya v0.53 only emits the Changes map; the optional
-// DocumentChanges (versioned) field is queued for v0.54+.
+// responses.
 type WorkspaceEdit struct {
-	Changes map[string][]TextEdit `json:"changes"`
+	Changes         map[string][]TextEdit `json:"changes,omitempty"`
+	DocumentChanges []any                 `json:"documentChanges,omitempty"`
+}
+
+type TextDocumentEdit struct {
+	TextDocument OptionalVersionedTextDocumentIdentifier `json:"textDocument"`
+	Edits        []TextEdit                              `json:"edits"`
+}
+
+type OptionalVersionedTextDocumentIdentifier struct {
+	URI     string `json:"uri"`
+	Version *int   `json:"version"`
+}
+
+type RenameFileOperation struct {
+	Kind   string `json:"kind"`
+	OldURI string `json:"oldUri"`
+	NewURI string `json:"newUri"`
 }
 
 // RenameParams matches LSP textDocument/rename.

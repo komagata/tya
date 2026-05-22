@@ -16,6 +16,8 @@ func lspCommand(args []string) int {
 	for i := 0; i < len(args); i++ {
 		a := args[i]
 		switch {
+		case a == "--stdio":
+			// vscode-languageclient appends this for stdio transports.
 		case a == "--log":
 			i++
 			if i >= len(args) {

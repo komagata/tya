@@ -21,6 +21,7 @@ const (
 // References and Rename when the scope is global to the file.
 func FindAllIdentRefs(prog *ast.Program, name string) []token.Token {
 	var out []token.Token
+	imports := importBindings(prog)
 	walkStmts(prog.Stmts, func(node any) {
 		switch n := node.(type) {
 		case *ast.Ident:
@@ -28,12 +29,69 @@ func FindAllIdentRefs(prog *ast.Program, name string) []token.Token {
 				out = append(out, n.Tok)
 			}
 		case *ast.MemberExpr:
+			if memberTargetIsImport(n, imports) {
+				return
+			}
 			if n.Name == name {
 				out = append(out, n.NameTok)
+			}
+		case *ast.ClassDecl:
+			if n.Name == name {
+				out = append(out, n.NameTok)
+			}
+		case *ast.ModuleDecl:
+			if n.Name == name {
+				out = append(out, n.NameTok)
+			}
+		case *ast.InterfaceDecl:
+			if n.Name == name {
+				out = append(out, n.NameTok)
+			}
+		case *ast.ClassMethod:
+			if n.Name == name {
+				out = append(out, n.Tok)
+			}
+		case *ast.ClassField:
+			if n.Name == name {
+				out = append(out, n.Tok)
+			}
+		case *ast.ClassVar:
+			if n.Name == name {
+				out = append(out, n.Tok)
+			}
+		case *ast.ModuleMember:
+			if n.Name == name {
+				out = append(out, n.Tok)
+			}
+		case *ast.InterfaceMethod:
+			if n.Name == name {
+				out = append(out, n.Tok)
+			}
+		case *ast.ClassRef:
+			if n.Name == name {
+				out = append(out, n.Tok)
 			}
 		}
 	})
 	return out
+}
+
+func importBindings(prog *ast.Program) map[string]bool {
+	out := map[string]bool{}
+	if prog == nil {
+		return out
+	}
+	for _, stmt := range prog.Stmts {
+		if imp, ok := stmt.(*ast.ImportStmt); ok {
+			out[imp.BindingName()] = true
+		}
+	}
+	return out
+}
+
+func memberTargetIsImport(expr *ast.MemberExpr, imports map[string]bool) bool {
+	target, ok := expr.Target.(*ast.Ident)
+	return ok && imports[target.Name]
 }
 
 // FindAllIdentRefsIn walks a subset of statements (e.g. a FuncLit
@@ -274,6 +332,9 @@ func ScopeKindAt(prog *ast.Program, line, col int) (ScopeKind, string) {
 	if _, ok := idx.Lookup(id.Name); ok {
 		return ScopeKindTopLevel, id.Name
 	}
+	if isTopLevelMemberNameAt(prog, id.Name, line, col) {
+		return ScopeKindTopLevel, id.Name
+	}
 	fn := EnclosingFunc(prog, line, col)
 	if fn != nil {
 		for _, p := range fn.Params {
@@ -291,5 +352,85 @@ func ScopeKindAt(prog *ast.Program, line, col int) (ScopeKind, string) {
 			}
 		}
 	}
+	if isTopLevelMemberName(prog, id.Name) {
+		return ScopeKindTopLevel, id.Name
+	}
 	return ScopeKindUnknown, id.Name
+}
+
+func isTopLevelMemberName(prog *ast.Program, name string) bool {
+	found := false
+	for _, stmt := range prog.Stmts {
+		switch n := stmt.(type) {
+		case *ast.ClassDecl:
+			for _, m := range n.Methods {
+				found = found || m.Name == name
+			}
+			for _, f := range n.Fields {
+				found = found || f.Name == name
+			}
+			for _, v := range n.Vars {
+				found = found || v.Name == name
+			}
+		case *ast.ModuleDecl:
+			for _, m := range n.Members {
+				found = found || m.Name == name
+			}
+		case *ast.InterfaceDecl:
+			for _, m := range n.Methods {
+				found = found || m.Name == name
+			}
+			for _, f := range n.Fields {
+				found = found || f.Name == name
+			}
+		}
+	}
+	return found
+}
+
+func isTopLevelMemberNameAt(prog *ast.Program, name string, line, col int) bool {
+	found := false
+	covers := func(tok token.Token) {
+		if tokenCovers(tok, name, line, col) {
+			found = true
+		}
+	}
+	for _, stmt := range prog.Stmts {
+		switch n := stmt.(type) {
+		case *ast.ClassDecl:
+			for _, m := range n.Methods {
+				if m.Name == name {
+					covers(m.Tok)
+				}
+			}
+			for _, f := range n.Fields {
+				if f.Name == name {
+					covers(f.Tok)
+				}
+			}
+			for _, v := range n.Vars {
+				if v.Name == name {
+					covers(v.Tok)
+				}
+			}
+		case *ast.ModuleDecl:
+			for _, m := range n.Members {
+				if m.Name == name {
+					covers(m.Tok)
+				}
+			}
+		case *ast.InterfaceDecl:
+			for _, m := range n.Methods {
+				if m.Name == name {
+					covers(m.Tok)
+				}
+			}
+			for _, f := range n.Fields {
+				if f.Name == name {
+					covers(f.Tok)
+				}
+			}
+		}
+	}
+	return found
 }

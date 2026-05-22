@@ -144,7 +144,6 @@ func (s *Server) onInitialize(m *Message) error {
 			CodeLensProvider:        &CodeLensOptions{ResolveProvider: false},
 			FoldingRangeProvider:    true,
 			DocumentLinkProvider:    &DocumentLinkOptions{ResolveProvider: false},
-			PositionEncoding:        "utf-8",
 		},
 		ServerInfo: ServerInfo{Name: "tya", Version: Version},
 	}

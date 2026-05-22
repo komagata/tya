@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import {
   LanguageClient,
   LanguageClientOptions,
@@ -35,15 +37,30 @@ function resolveExecutable(configured: string): string {
     return configured;
   }
 
-  for (const path of [
+  const home = os.homedir();
+  for (const candidate of [
+    path.join(home, ".local", "bin", "tya"),
+    path.join(home, ".local", "share", "mise", "shims", "tya"),
+    path.join(home, ".asdf", "shims", "tya"),
+    path.join(home, ".cargo", "bin", "tya"),
+    path.join(home, "go", "bin", "tya"),
     "/opt/homebrew/bin/tya",
     "/usr/local/bin/tya",
     "/usr/bin/tya",
   ]) {
-    if (fs.existsSync(path)) {
-      return path;
+    if (isExecutable(candidate)) {
+      return candidate;
     }
   }
 
   return "tya";
+}
+
+function isExecutable(filePath: string): boolean {
+  try {
+    fs.accessSync(filePath, fs.constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }

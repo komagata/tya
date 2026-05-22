@@ -34,10 +34,28 @@ func FindIdentAt(prog *ast.Program, line, col int) *ast.Ident {
 			// Targets that are Idents may be top-level definitions; walked separately.
 		case *ast.ClassDecl:
 			consider(n.Name, n.NameTok)
+			for _, m := range n.Methods {
+				consider(m.Name, m.Tok)
+			}
+			for _, f := range n.Fields {
+				consider(f.Name, f.Tok)
+			}
+			for _, v := range n.Vars {
+				consider(v.Name, v.Tok)
+			}
 		case *ast.ModuleDecl:
 			consider(n.Name, n.NameTok)
+			for _, m := range n.Members {
+				consider(m.Name, m.Tok)
+			}
 		case *ast.InterfaceDecl:
 			consider(n.Name, n.NameTok)
+			for _, m := range n.Methods {
+				consider(m.Name, m.Tok)
+			}
+			for _, f := range n.Fields {
+				consider(f.Name, f.Tok)
+			}
 		}
 	})
 	return best
@@ -99,8 +117,16 @@ func walkStmt(stmt ast.Stmt, visit func(node any)) {
 			walkStmts(c.Body, visit)
 		}
 	case *ast.ClassDecl:
+		if n.Parent != nil {
+			visit(n.Parent)
+		}
+		for i := range n.Implements {
+			visit(&n.Implements[i])
+		}
 		for _, m := range n.Methods {
+			visit(&m)
 			if m.Func != nil {
+				visit(m.Func)
 				walkStmts(m.Func.Body, visit)
 				if m.Func.Expr != nil {
 					walkExpr(m.Func.Expr, visit)
@@ -108,14 +134,48 @@ func walkStmt(stmt ast.Stmt, visit func(node any)) {
 			}
 		}
 		for _, v := range n.Vars {
+			visit(&v)
 			if v.Value != nil {
 				walkExpr(v.Value, visit)
 			}
 		}
+		for _, f := range n.Fields {
+			visit(&f)
+			if f.Value != nil {
+				walkExpr(f.Value, visit)
+			}
+		}
 	case *ast.ModuleDecl:
 		for _, m := range n.Members {
+			visit(&m)
 			if m.Value != nil {
 				walkExpr(m.Value, visit)
+			}
+		}
+		for _, c := range n.Classes {
+			walkStmt(c, visit)
+		}
+		for _, i := range n.Interfaces {
+			walkStmt(i, visit)
+		}
+	case *ast.InterfaceDecl:
+		for _, p := range n.Parents {
+			visit(&p)
+		}
+		for _, m := range n.Methods {
+			visit(&m)
+			if m.Func != nil {
+				visit(m.Func)
+				walkStmts(m.Func.Body, visit)
+				if m.Func.Expr != nil {
+					walkExpr(m.Func.Expr, visit)
+				}
+			}
+		}
+		for _, f := range n.Fields {
+			visit(&f)
+			if f.Value != nil {
+				walkExpr(f.Value, visit)
 			}
 		}
 	}

@@ -68,4 +68,5 @@ The extension contributes these language defaults for `.tya` files:
 ```
 
 When `tya.executable` is left at the default, the extension also checks common
-Homebrew locations before falling back to `tya` on `PATH`.
+user-local, version-manager, and Homebrew locations before falling back to
+`tya` on `PATH`.

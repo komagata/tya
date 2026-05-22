@@ -2,6 +2,8 @@ package lsp
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"tya/internal/ast"
 	"tya/internal/token"
@@ -92,7 +94,86 @@ func renameTopLevel(ctx DefinitionContext, doc *Document, prog *ast.Program, nam
 			}
 		}
 	}
-	return &WorkspaceEdit{Changes: changes}, nil
+	return workspaceEditWithOptionalFileRename(doc, prog, changes, name, newName)
+}
+
+func workspaceEditWithOptionalFileRename(doc *Document, prog *ast.Program, changes map[string][]TextEdit, name, newName string) (*WorkspaceEdit, error) {
+	edit := &WorkspaceEdit{Changes: changes}
+	docChanges := textDocumentChanges(changes)
+	if oldURI, newURI, ok, err := classFileRename(doc, prog, name, newName); err != nil {
+		return nil, err
+	} else if ok {
+		docChanges = append(docChanges, RenameFileOperation{Kind: "rename", OldURI: oldURI, NewURI: newURI})
+	}
+	if len(docChanges) > 0 {
+		edit.DocumentChanges = docChanges
+	}
+	return edit, nil
+}
+
+func textDocumentChanges(changes map[string][]TextEdit) []any {
+	out := []any{}
+	for uri, edits := range changes {
+		out = append(out, TextDocumentEdit{
+			TextDocument: OptionalVersionedTextDocumentIdentifier{URI: uri, Version: nil},
+			Edits:        edits,
+		})
+	}
+	return out
+}
+
+func classFileRename(doc *Document, prog *ast.Program, name, newName string) (string, string, bool, error) {
+	if !declaresClass(prog, name) {
+		return "", "", false, nil
+	}
+	path, err := URIToPath(doc.URI)
+	if err != nil {
+		return "", "", false, nil
+	}
+	newPath := filepath.Join(filepath.Dir(path), newName+".tya")
+	if _, err := filepath.Abs(newPath); err != nil {
+		return "", "", false, err
+	}
+	if newPath != path {
+		if pf := filepath.Clean(newPath); pf != filepath.Clean(path) {
+			if existsPath(pf) {
+				return "", "", false, fmt.Errorf("[TYA-E0933] rename conflict: target file already exists: %s", pf)
+			}
+		}
+	}
+	newURI, err := PathToURI(newPath)
+	if err != nil {
+		return "", "", false, err
+	}
+	return doc.URI, newURI, true, nil
+}
+
+func declaresClass(prog *ast.Program, name string) bool {
+	for _, stmt := range prog.Stmts {
+		if classDeclaresName(stmt, name) {
+			return true
+		}
+	}
+	return false
+}
+
+func classDeclaresName(stmt ast.Stmt, name string) bool {
+	switch n := stmt.(type) {
+	case *ast.ClassDecl:
+		return n.Name == name
+	case *ast.ModuleDecl:
+		for _, c := range n.Classes {
+			if c.Name == name {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func existsPath(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 func tokensToEdits(toks []token.Token, oldName, newName string) []TextEdit {
