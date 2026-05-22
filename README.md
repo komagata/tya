@@ -156,7 +156,7 @@ cd editors/vscode
 npm install
 npm run compile
 npx vsce package
-code --install-extension tya-0.65.1.vsix
+code --install-extension tya-0.65.2.vsix
 ```
 
 ## Example

@@ -13,7 +13,7 @@ Objective: ship syntax coloring for major editors.
 | VS Code package builds | `npm run compile` and `npm run package` in `editors/vscode` |
 | VS Code manual-install package is published | GitHub Release `editors-vscode-v0.65.2` with `tya-0.65.2.vsix` |
 | VS Code Marketplace package is published | `komagata.tya` version `0.65.2` on Visual Studio Marketplace |
-| Open VSX package is published | `komagata.tya` version `0.65.1` on Open VSX |
+| Open VSX package is published | `komagata.tya` version `0.65.2` on Open VSX |
 | VS Code publish workflow exists | `.github/workflows/publish-vscode-extension.yml` |
 | Vim / Neovim syntax coloring exists | `editors/vim/syntax/tya.vim` |
 | Vim / Neovim filetype and indent exist | `editors/vim/ftdetect/tya.vim`, `editors/vim/indent/tya.vim` |
@@ -67,7 +67,7 @@ Publish VS Code extension / main / 25953906444 / success / 2026-05-16T05:29:57Z
   (`tya-editor-assets-v0.61.0.tar.gz`, sha256
   `87e2c78cf2d5a1fc224780d1f0db1dc2870ae008fcd85e584bd0159af49c8f8f`)
 - Visual Studio Marketplace extension: `komagata.tya` version `0.65.2`
-- Open VSX extension: `komagata.tya` version `0.65.1`
+- Open VSX extension: `komagata.tya` version `0.65.2`
 - MELPA pull request: https://github.com/melpa/melpa/pull/10013
 - Standalone Tree-sitter grammar repository: https://github.com/komagata/tree-sitter-tya
 - Follow-up issues: `komagata/tya#1`, `komagata/tya#2`, `komagata/tya#3`

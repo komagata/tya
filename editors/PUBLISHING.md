@@ -65,7 +65,7 @@ Or run the GitHub Actions workflow `Publish VS Code extension` with
 
 Published package:
 
-- `komagata.tya` version `0.65.1`
+- `komagata.tya` version `0.65.2`
 
 Requirements:
 
