@@ -71,6 +71,7 @@
   },
   "scripts": {
     "compile": "tsc -p .",
+    "test:integration": "npm run compile && node ./test/runTest.js",
     "package": "vsce package",
     "publish:marketplace": "vsce publish",
     "publish:open-vsx": "ovsx publish"
@@ -81,6 +82,8 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/vscode": "^1.75.0",
+    "@vscode/test-electron": "^2.5.2",
+    "mocha": "^10.8.2",
     "typescript": "^5.4.0",
     "@vscode/vsce": "^2.24.0",
     "ovsx": "^0.10.4"

@@ -1134,6 +1134,13 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		return "false", nil
 	case *ast.NilLit:
 		return "nil", nil
+	case *ast.SelfExpr:
+		if n.Class {
+			return "Self", nil
+		}
+		return "self", nil
+	case *ast.SuperExpr:
+		return "super", nil
 	case *ast.BinaryExpr:
 		left, err := u.binaryOperand(n.Left, n.Op.Lexeme, true)
 		if err != nil {

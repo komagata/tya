@@ -62,6 +62,7 @@ func TestEditorSyntaxAssets(t *testing.T) {
 				ScopeName string `json:"scopeName"`
 				Path      string `json:"path"`
 			} `json:"grammars"`
+			ConfigurationDefaults map[string]map[string]any `json:"configurationDefaults"`
 		} `json:"contributes"`
 	}
 	readJSON(t, filepath.Join(root, "editors/vscode/package.json"), &pkg)
@@ -73,6 +74,13 @@ func TestEditorSyntaxAssets(t *testing.T) {
 	}
 	if len(pkg.Contributes.Grammars) == 0 || pkg.Contributes.Grammars[0].ScopeName != "source.tya" {
 		t.Fatalf("VS Code package does not register source.tya grammar")
+	}
+	tyaDefaults := pkg.Contributes.ConfigurationDefaults["[tya]"]
+	if got := tyaDefaults["editor.defaultFormatter"]; got != "komagata.tya" {
+		t.Fatalf("VS Code package default formatter = %v, want komagata.tya", got)
+	}
+	if got := tyaDefaults["editor.formatOnSave"]; got != true {
+		t.Fatalf("VS Code package format on save = %v, want true", got)
 	}
 
 	var grammar struct {

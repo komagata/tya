@@ -165,6 +165,18 @@ func TestUnparseSingleQuotedStringPreservesLiteralValue(t *testing.T) {
 	}
 }
 
+func TestUnparseSelfAndSuperExpressions(t *testing.T) {
+	src := "class Box\n  static get = ->\n    return Self.wrap(self.value + super.value)\n"
+	want := "class Box\n  static get = () ->\n    return Self.wrap(self.value + super.value)\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+}
+
 func TestUnparseLambdaBlock(t *testing.T) {
 	src := "f = x ->\n  y = x + 1\n  return y\nprint(f(2))\n"
 	got, err := unparseSource(t, src)
