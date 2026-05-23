@@ -167,7 +167,47 @@ func TestUnparseSingleQuotedStringPreservesLiteralValue(t *testing.T) {
 
 func TestUnparseSelfAndSuperExpressions(t *testing.T) {
 	src := "class Box\n  static get = ->\n    return Self.wrap(self.value + super.value)\n"
-	want := "class Box\n  static get = () ->\n    return Self.wrap(self.value + super.value)\n"
+	want := "class Box\n  static get = ->\n    return Self.wrap(self.value + super.value)\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+}
+
+func TestUnparseZeroArgFunctionDefinitionsUseShortArrow(t *testing.T) {
+	src := strings.Join([]string{
+		"helper = () ->",
+		"  return true",
+		"",
+		"inline = () -> true",
+		"",
+		"with_args = name -> name",
+		"",
+		"class Box",
+		"  initialize = () ->",
+		"    self.value = 1",
+		"",
+		"  static build = () -> Box.new()",
+		"",
+	}, "\n")
+	want := strings.Join([]string{
+		"helper = ->",
+		"  return true",
+		"",
+		"inline = -> true",
+		"",
+		"with_args = name -> name",
+		"",
+		"class Box",
+		"  initialize = ->",
+		"    self.value = 1",
+		"",
+		"  static build = -> Self.new()",
+		"",
+	}, "\n")
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
@@ -407,7 +447,7 @@ func TestUnparseClass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"class Dog", "  bark = () ->", "    return \"woof\""} {
+	for _, want := range []string{"class Dog", "  bark = ->", "    return \"woof\""} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}

@@ -25,7 +25,7 @@ stderr 'TYA-E0019'
 stderr 'TYA-E0018'
 
 exec go run ./cmd/tya version
-stdout '0.67.3\n'
+stdout '0.67.4\n'
 
 -- m.tya --
 name = "Tya"

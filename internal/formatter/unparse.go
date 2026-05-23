@@ -467,11 +467,11 @@ func (u *unparser) moduleDecl(n *ast.ModuleDecl) error {
 
 func (u *unparser) moduleMember(m ast.ModuleMember) error {
 	if fn, ok := m.Value.(*ast.FuncLit); ok && fn.Expr == nil && len(fn.Body) > 0 {
-		head, err := u.funcHead(fn)
+		head, err := u.funcDefHead(fn)
 		if err != nil {
 			return err
 		}
-		u.line(m.Name + " = " + head + " ->")
+		u.line(m.Name + " = " + defArrow(head))
 		return u.block(fn.Body)
 	}
 	val, err := u.expr(m.Value)
@@ -575,15 +575,15 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 		prefix += " "
 	}
 	if m.Abstract {
-		head, err := u.funcHead(m.Func)
+		head, err := u.funcDefHead(m.Func)
 		if err != nil {
 			return err
 		}
-		u.line(prefix + m.Name + " = " + head)
+		u.line(prefix + m.Name + " = " + defArrow(head))
 		return nil
 	}
 	fn := m.Func
-	head, err := u.funcHead(fn)
+	head, err := u.funcDefHead(fn)
 	if err != nil {
 		return err
 	}
@@ -592,10 +592,10 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 		if err != nil {
 			return err
 		}
-		u.line(prefix + m.Name + " = " + head + " -> " + body)
+		u.line(prefix + m.Name + " = " + defArrow(head) + " " + body)
 		return nil
 	}
-	u.line(prefix + m.Name + " = " + head + " ->")
+	u.line(prefix + m.Name + " = " + defArrow(head))
 	return u.block(fn.Body)
 }
 
@@ -619,7 +619,7 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 		u.line(f.Name + " = " + value)
 	}
 	for _, m := range n.Methods {
-		head := m.Name + " = " + strings.Join(m.Params, ", ") + " ->"
+		head := m.Name + " = " + defArrow(strings.Join(m.Params, ", "))
 		if m.Func == nil {
 			u.line(head)
 			continue
@@ -662,13 +662,25 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 	// FuncLit value with a block body needs special handling: we
 	// emit `name = params -> ...` and recurse into the block.
 	if len(n.Values) == 1 {
-		if fn, ok := n.Values[0].(*ast.FuncLit); ok && fn.Expr == nil && len(fn.Body) > 0 {
-			head, err := u.funcHead(fn)
+		if fn, ok := n.Values[0].(*ast.FuncLit); ok {
+			head, err := u.funcDefHead(fn)
 			if err != nil {
 				return err
 			}
-			u.line(strings.Join(targets, ", ") + " = " + head + " ->")
-			return u.block(fn.Body)
+			if fn.Expr != nil {
+				body, err := u.expr(fn.Expr)
+				if err != nil {
+					return err
+				}
+				line := strings.Join(targets, ", ") + " = " + defArrow(head) + " " + body
+				if u.fitsInline(line) {
+					u.emitStmtLine(n, line)
+					return nil
+				}
+			} else if len(fn.Body) > 0 {
+				u.line(strings.Join(targets, ", ") + " = " + defArrow(head))
+				return u.block(fn.Body)
+			}
 		}
 		if lit, ok := n.Values[0].(*ast.StringLit); ok && strings.Contains(lit.Form, "heredoc") {
 			return u.emitHeredoc(n, strings.Join(targets, ", ")+" = ", lit)
@@ -718,7 +730,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 			// rendering exceeds 80 columns switches to the
 			// block-body form `name ->\n  expr`.
 			if v.Expr != nil {
-				head, err := u.funcHead(v)
+				head, err := u.funcDefHead(v)
 				if err != nil {
 					return err
 				}
@@ -726,7 +738,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 				if err != nil {
 					return err
 				}
-				u.line(strings.Join(targets, ", ") + " = " + head + " ->")
+				u.line(strings.Join(targets, ", ") + " = " + defArrow(head))
 				u.indent++
 				u.line(bodyStr)
 				u.indent--
@@ -1112,6 +1124,20 @@ func (u *unparser) funcHead(fn *ast.FuncLit) (string, error) {
 		return parts[0], nil
 	}
 	return strings.Join(parts, ", "), nil
+}
+
+func (u *unparser) funcDefHead(fn *ast.FuncLit) (string, error) {
+	if len(fn.Params) == 0 {
+		return "", nil
+	}
+	return u.funcHead(fn)
+}
+
+func defArrow(head string) string {
+	if head == "" {
+		return "->"
+	}
+	return head + " ->"
 }
 
 func (u *unparser) expr(e ast.Expr) (string, error) {
