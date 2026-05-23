@@ -29,7 +29,7 @@ stderr 'unclosed interpolation'
 stderr 'unmatched .* in string interpolation'
 
 exec go run ./cmd/tya version
-stdout '0.67.4\n'
+stdout '0.67.5\n'
 ! stderr .
 
 -- match_interpolation.tya --

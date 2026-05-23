@@ -331,7 +331,7 @@ func TestFormatClassInheritanceOutputRunsInTyaTest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(formatted), "class SampleTest < TestCase") {
+	if !strings.Contains(string(formatted), "class SampleTest extends TestCase") {
 		t.Fatalf("formatted source missing canonical inheritance: %s", formatted)
 	}
 	testCmd := exec.Command("go", "run", "./cmd/tya", "test", path)
@@ -950,7 +950,7 @@ func TestCLIVersionCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
-	if string(out) != "0.67.4\n" {
+	if string(out) != "0.67.5\n" {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }

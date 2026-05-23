@@ -496,7 +496,7 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 		head = "final " + head
 	}
 	if n.Parent != nil {
-		head += " < " + classRefString(*n.Parent)
+		head += " extends " + classRefString(*n.Parent)
 	}
 	if len(n.Implements) > 0 {
 		impls := make([]string, 0, len(n.Implements))
