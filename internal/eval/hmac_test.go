@@ -14,10 +14,10 @@ func TestRunHmacKnownVectors(t *testing.T) {
 	out := runHmacProgram(t, strings.Join([]string{
 		"import hmac as hmac",
 		"message = \"The quick brown fox jumps over the lazy dog\"",
-		"print(hmac.Hmac.hexdigest(\"sha256\", \"key\", message))",
-		"print(hmac.Hmac.hexdigest(\"sha384\", \"key\", message))",
-		"print(hmac.Hmac.hexdigest(\"sha512\", \"key\", message))",
-		"print(hmac.Hmac.base64digest(\"sha256\", \"key\", message))",
+		"print(hmac.Hmac(\"sha256\", \"key\").hexdigest(message))",
+		"print(hmac.Hmac(\"sha384\", \"key\").hexdigest(message))",
+		"print(hmac.Hmac(\"sha512\", \"key\").hexdigest(message))",
+		"print(hmac.Hmac(\"sha256\", \"key\").base64digest(message))",
 		"",
 	}, "\n"))
 	want := strings.Join([]string{
@@ -35,8 +35,8 @@ func TestRunHmacKnownVectors(t *testing.T) {
 func TestRunHmacStringAndBytesInputs(t *testing.T) {
 	out := runHmacProgram(t, strings.Join([]string{
 		"import hmac as hmac",
-		"text = hmac.Hmac.hexdigest(\"sha256\", \"key\", \"message\")",
-		"raw = hmac.Hmac.hexdigest(\"sha256\", b\"key\", b\"message\")",
+		"text = hmac.Hmac(\"sha256\", \"key\").hexdigest(\"message\")",
+		"raw = hmac.Hmac(\"sha256\", b\"key\").hexdigest(b\"message\")",
 		"print(text == raw)",
 		"",
 	}, "\n"))
@@ -50,12 +50,12 @@ func TestRunHmacVerifyEncodings(t *testing.T) {
 		"import hmac as hmac",
 		"message = \"The quick brown fox jumps over the lazy dog\"",
 		"expected_hex = \"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\"",
-		"raw = hmac.Hmac.digest(\"sha256\", \"key\", message)",
+		"raw = hmac.Hmac(\"sha256\", \"key\").digest(message)",
 		"b64 = \"97yD9DBThCSxMpjmqm+xQ+9NWaFJRhdZl0edvC0aPNg=\"",
-		"print(hmac.Hmac.verify(\"sha256\", \"key\", message, raw, { encoding: \"raw\" }))",
-		"print(hmac.Hmac.verify(\"sha256\", \"key\", message, expected_hex))",
-		"print(hmac.Hmac.verify(\"sha256\", \"key\", message, b64, { encoding: \"base64\" }))",
-		"print(hmac.Hmac.verify(\"sha256\", \"key\", message, \"00\"))",
+		"print(hmac.Hmac(\"sha256\", \"key\").verify(message, raw, { encoding: \"raw\" }))",
+		"print(hmac.Hmac(\"sha256\", \"key\").verify(message, expected_hex))",
+		"print(hmac.Hmac(\"sha256\", \"key\").verify(message, b64, { encoding: \"base64\" }))",
+		"print(hmac.Hmac(\"sha256\", \"key\").verify(message, \"00\"))",
 		"",
 	}, "\n"))
 	if out != "true\ntrue\ntrue\nfalse\n" {
@@ -69,11 +69,11 @@ func TestRunHmacStructuredErrors(t *testing.T) {
 		src  string
 		want string
 	}{
-		{name: "algorithm", src: "hmac.Hmac.hexdigest(\"md5\", \"key\", \"message\")", want: "unsupported algorithm"},
-		{name: "malformed hex", src: "hmac.Hmac.verify(\"sha256\", \"key\", \"message\", \"f\")", want: "odd-length input"},
-		{name: "malformed base64", src: "hmac.Hmac.verify(\"sha256\", \"key\", \"message\", \"????\", { encoding: \"base64\" })", want: "invalid character"},
-		{name: "unknown option", src: "hmac.Hmac.verify(\"sha256\", \"key\", \"message\", \"00\", { bad: true })", want: "unknown option bad"},
-		{name: "wrong kind", src: "hmac.Hmac.hexdigest(\"sha256\", 1, \"message\")", want: "value must be a string or bytes"},
+		{name: "algorithm", src: "hmac.Hmac(\"md5\", \"key\").hexdigest(\"message\")", want: "unsupported algorithm"},
+		{name: "malformed hex", src: "hmac.Hmac(\"sha256\", \"key\").verify(\"message\", \"f\")", want: "odd-length input"},
+		{name: "malformed base64", src: "hmac.Hmac(\"sha256\", \"key\").verify(\"message\", \"????\", { encoding: \"base64\" })", want: "invalid character"},
+		{name: "unknown option", src: "hmac.Hmac(\"sha256\", \"key\").verify(\"message\", \"00\", { bad: true })", want: "unknown option bad"},
+		{name: "wrong kind", src: "hmac.Hmac(\"sha256\", 1).hexdigest(\"message\")", want: "value must be a string or bytes"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

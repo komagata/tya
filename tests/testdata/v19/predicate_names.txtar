@@ -38,7 +38,7 @@ print(has_name?(user))
 print(_internal?(nil))
 print([].empty?())
 print(user.has?("name"))
-print(value.Value.nil?(nil))
+print(value.Value(nil).nil?())
 
 class User
   initialize = name ->

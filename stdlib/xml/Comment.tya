@@ -5,5 +5,5 @@ class Comment
     self.text = text
 
   # Comment.new provides the xml/Comment standard library operation.
-  static new = text ->
+  new = text ->
     return Comment(text)

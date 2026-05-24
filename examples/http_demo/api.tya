@@ -8,7 +8,7 @@ import net/http
 show_user = req -> { status: 200, body: "User " + req["params"]["id"] }
 
 create_user = req ->
-  payload = bytes.Bytes.text(req["body"])
+  payload = bytes.Bytes(req["body"]).to_text()
   return { status: 201, body: "got: " + payload }
 
 app = http.Server()

@@ -1135,10 +1135,10 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		}
 		return module, nil
 	case *ast.ClassDecl:
-		class := Dict{"__module_namespace": true, "__class_name": n.Name, "name": n.Name}
+		class := Dict{"__module_namespace": true, "__class_name": n.Name, "name": n.Name, "__instance_methods": Dict{}}
 		env.set(n.Name, class)
 		for _, method := range n.Methods {
-			if !method.Class || method.Abstract {
+			if method.Abstract {
 				continue
 			}
 			methodEnv := env.child()
@@ -1147,7 +1147,11 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 			if err != nil {
 				return nil, err
 			}
-			class[method.Name] = nameFunction(method.Name, value)
+			if method.Class {
+				class[method.Name] = nameFunction(method.Name, value)
+			} else {
+				class["__instance_methods"].(Dict)[method.Name] = nameFunction(method.Name, value)
+			}
 		}
 		return class, nil
 	case *ast.InterfaceDecl:
@@ -1604,6 +1608,11 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			}
 			return nil, fmt.Errorf("unknown member %s on %s", n.Name, runtimeKind(o))
 		}
+		if _, ok := o["__class"]; ok {
+			if value, ok := o[n.Name]; ok {
+				return value, nil
+			}
+		}
 		return nil, fmt.Errorf("unknown member %s on dictionary", n.Name)
 	case *ast.IndexExpr:
 		obj, err := evalExpr(n.Target, env)
@@ -1708,6 +1717,10 @@ func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
 	switch fn := fnVal.(type) {
 	case Builtin, *Function:
 		return callValue(fn, args)
+	case Dict:
+		if isModuleNamespace(fn) {
+			return instantiateClass(fn, args)
+		}
 	}
 	return nil, fmt.Errorf("value is not callable")
 }
@@ -2330,6 +2343,35 @@ func callValue(fn Value, args []Value) (Value, error) {
 	return nil, fmt.Errorf("value is not callable")
 }
 
+func instantiateClass(class Dict, args []Value) (Value, error) {
+	name, _ := class["__class_name"].(string)
+	obj := Dict{"__class": class, "__class_name": name}
+	methods, _ := class["__instance_methods"].(Dict)
+	init, ok := methods["initialize"]
+	if !ok {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("function expects 0 arguments, got %d", len(args))
+		}
+		return obj, nil
+	}
+	if _, err := callMethod(init, obj, args); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+func callMethod(method Value, receiver Value, args []Value) (Value, error) {
+	fn, ok := method.(*Function)
+	if !ok {
+		return callValue(method, args)
+	}
+	callEnv := fn.Env.child()
+	callEnv.set("self", receiver)
+	bound := *fn
+	bound.Env = callEnv
+	return callValue(&bound, args)
+}
+
 func nameFunction(name string, value Value) Value {
 	if fn, ok := value.(*Function); ok {
 		fn.Name = name
@@ -2349,6 +2391,15 @@ func evalCallee(e ast.Expr, env *Env) (Value, error) {
 		if dict, ok := obj.(Dict); ok {
 			if isModuleNamespace(dict) {
 				return dict[m.Name], nil
+			}
+			if class, ok := dict["__class"].(Dict); ok {
+				if methods, ok := class["__instance_methods"].(Dict); ok {
+					if method, ok := methods[m.Name]; ok {
+						return Builtin(func(args []Value) (Value, error) {
+							return callMethod(method, dict, args)
+						}), nil
+					}
+				}
 			}
 		}
 		if method := primitiveMethodValue(obj, m.Name, env); method != nil {

@@ -29,19 +29,19 @@ stderr 'time.parse: invalid timestamp'
 -- time_valid.tya --
 import time as time
 
-t = time.Time.unix(1704067200)
+t = time.Time().unix(1704067200)
 print(t.format("rfc3339"))
-print(time.Time.parse("2024-01-01T00:00:00Z").format("unix"))
-d = time.Time.duration(1, { minutes: 1, milliseconds: 500 })
+print(time.Time("2024-01-01T00:00:00Z").parse().format("unix"))
+d = time.Time().duration(1, { minutes: 1, milliseconds: 500 })
 print(d.seconds())
 print(d.milliseconds())
 print(t.add(d).sub(t).nanoseconds() >= 61500000000)
 try
-  time.Time.monotonic().format("rfc3339")
+  time.Time().monotonic().format("rfc3339")
 catch err
   print(err["code"])
 
 -- time_invalid.tya --
 import time as time
 
-time.Time.parse("bad")
+time.Time("bad").parse()

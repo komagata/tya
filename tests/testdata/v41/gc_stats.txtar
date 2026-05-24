@@ -1,4 +1,4 @@
-# v0.41 STEP 1: GC-aware allocator + runtime.Runtime.gc_stats() introspection.
+# v0.41 STEP 1: GC-aware allocator + runtime.Runtime().gc_stats() introspection.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/sample.tya
@@ -8,7 +8,7 @@ stdout 'live grew: true'
 -- sample.tya --
 import runtime as runtime
 
-before = runtime.Runtime.gc_stats()
+before = runtime.Runtime().gc_stats()
 
 # Allocate enough heap structs that live_count must increase.
 items = []
@@ -17,7 +17,7 @@ while i < 50
   items.push([i, i + 1])
   i = i + 1
 
-after = runtime.Runtime.gc_stats()
+after = runtime.Runtime().gc_stats()
 
 # Expected keys are present.
 keys_ok = before.has("alloc_count") and before.has("alloc_bytes")

@@ -27,23 +27,23 @@ class TestSuite
       if is_suite
         total = total + test.count()
       else
-        total = total + TestSuite.test_methods_for(test).len()
+        total = total + self.test_methods_for(test).len()
     total
 
   # TestSuite.discover provides the unittest/TestSuite standard library operation.
-  static discover = cases ->
+  discover = cases ->
     found = TestSuite()
     for c in cases
       names = c.keys()
       for name in names
         value = c[name]
-        methods = TestSuite.test_methods_for(value)
+        methods = self.test_methods_for(value)
         if methods.len() > 0
           found.add(value)
     found
 
   # TestSuite.test_methods_for provides the unittest/TestSuite standard library operation.
-  static test_methods_for = test ->
+  test_methods_for = test ->
     methods = []
     try
       methods = test.unittest_test_methods

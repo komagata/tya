@@ -1,14 +1,16 @@
 # Matrix provides the matrix/Matrix standard library API.
 class Matrix
   # Matrix.initialize provides the matrix/Matrix standard library operation.
-  initialize = data ->
-    cols = Matrix.validate_data(data)
+  initialize = data = nil ->
+    if data == nil
+      data = [[0]]
+    cols = self.validate_data(data)
     self.rows = data.len()
     self.cols = cols
     self.data = data
 
   # Matrix.validate_data provides the matrix/Matrix standard library operation.
-  static validate_data = data ->
+  validate_data = data ->
     if data.class != Array
       raise error("matrix.new: data must be an array of arrays")
     rows = data.len()
@@ -30,11 +32,11 @@ class Matrix
     return cols
 
   # Matrix.new provides the matrix/Matrix standard library operation.
-  static new = data ->
+  new = data ->
     return Matrix(data)
 
   # Matrix.zero provides the matrix/Matrix standard library operation.
-  static zero = rows, cols ->
+  zero = rows, cols ->
     data = []
     i = 0
     while i < rows
@@ -48,7 +50,7 @@ class Matrix
     return Matrix(data)
 
   # Matrix.identity provides the matrix/Matrix standard library operation.
-  static identity = n ->
+  identity = n ->
     data = []
     i = 0
     while i < n
@@ -65,20 +67,32 @@ class Matrix
     return Matrix(data)
 
   # Matrix.at provides the matrix/Matrix standard library operation.
-  static at = m, r, c ->
+  at = m, r, c = nil ->
+    if c == nil
+      c = r
+      r = m
+      m = self
     if r < 0 or r >= m.rows or c < 0 or c >= m.cols
       raise error("matrix.at: index out of range")
     return m.data[r][c]
 
   # Matrix.put provides the matrix/Matrix standard library operation.
-  static put = m, r, c, value ->
+  put = m, r, c, value = nil ->
+    if value == nil
+      value = c
+      c = r
+      r = m
+      m = self
     if r < 0 or r >= m.rows or c < 0 or c >= m.cols
       raise error("matrix.put: index out of range")
     m.data[r][c] = value
     return nil
 
   # Matrix.add provides the matrix/Matrix standard library operation.
-  static add = a, b ->
+  add = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
     if a.rows != b.rows or a.cols != b.cols
       raise error("matrix.add: dimension mismatch")
     out_data = []
@@ -94,7 +108,10 @@ class Matrix
     return Matrix(out_data)
 
   # Matrix.sub provides the matrix/Matrix standard library operation.
-  static sub = a, b ->
+  sub = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
     if a.rows != b.rows or a.cols != b.cols
       raise error("matrix.sub: dimension mismatch")
     out_data = []
@@ -110,7 +127,10 @@ class Matrix
     return Matrix(out_data)
 
   # Matrix.scale provides the matrix/Matrix standard library operation.
-  static scale = a, k ->
+  scale = a, k = nil ->
+    if k == nil
+      k = a
+      a = self
     out_data = []
     i = 0
     while i < a.rows
@@ -124,7 +144,10 @@ class Matrix
     return Matrix(out_data)
 
   # Matrix.mul provides the matrix/Matrix standard library operation.
-  static mul = a, b ->
+  mul = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
     if a.cols != b.rows
       raise error("matrix.mul: inner dimensions disagree")
     out_data = []
@@ -145,7 +168,9 @@ class Matrix
     return Matrix(out_data)
 
   # Matrix.transpose provides the matrix/Matrix standard library operation.
-  static transpose = a ->
+  transpose = a = nil ->
+    if a == nil
+      a = self
     out_data = []
     j = 0
     while j < a.cols
@@ -159,7 +184,9 @@ class Matrix
     return Matrix(out_data)
 
   # Matrix.det provides the matrix/Matrix standard library operation.
-  static det = a ->
+  det = a = nil ->
+    if a == nil
+      a = self
     if a.rows != a.cols
       raise error("matrix.det: not square")
     n = a.rows
@@ -187,7 +214,7 @@ class Matrix
         minor_data.push(row)
         r = r + 1
       sub_m = Matrix(minor_data)
-      cofactor = Matrix.det(sub_m) * d[0][j]
+      cofactor = self.det(sub_m) * d[0][j]
       if j % 2 == 0
         sum = sum + cofactor
       else
@@ -196,7 +223,10 @@ class Matrix
     return sum
 
   # Matrix.equal? provides the matrix/Matrix standard library operation.
-  static equal? = a, b ->
+  equal? = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
     if a.rows != b.rows or a.cols != b.cols
       return false
     return equal(a.data, b.data)

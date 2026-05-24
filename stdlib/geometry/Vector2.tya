@@ -1,128 +1,164 @@
 # Vector2 provides the geometry/Vector2 standard library API.
 class Vector2
   # Vector2.initialize provides the geometry/Vector2 standard library operation.
-  initialize = x, y ->
-    self.x = Vector2.number(x, "x")
-    self.y = Vector2.number(y, "y")
+  initialize = x = 0, y = 0 ->
+    self.x = self.number(x, "x")
+    self.y = self.number(y, "y")
 
   # Vector2.new provides the geometry/Vector2 standard library operation.
-  static new = x, y ->
+  new = x, y ->
     return Vector2(x, y)
 
   # Vector2.zero provides the geometry/Vector2 standard library operation.
-  static zero = ->
+  zero = ->
     return Vector2(0, 0)
 
   # Vector2.one provides the geometry/Vector2 standard library operation.
-  static one = ->
+  one = ->
     return Vector2(1, 1)
 
   # Vector2.add provides the geometry/Vector2 standard library operation.
-  static add = a, b ->
-    Vector2.expect(a, "a")
-    Vector2.expect(b, "b")
+  add = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, "a")
+    self.expect(b, "b")
     return Vector2(a.x + b.x, a.y + b.y)
 
   # Vector2.sub provides the geometry/Vector2 standard library operation.
-  static sub = a, b ->
-    Vector2.expect(a, "a")
-    Vector2.expect(b, "b")
+  sub = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, "a")
+    self.expect(b, "b")
     return Vector2(a.x - b.x, a.y - b.y)
 
   # Vector2.scale provides the geometry/Vector2 standard library operation.
-  static scale = v, k ->
-    Vector2.expect(v, "v")
-    Vector2.number(k, "k")
+  scale = v, k = nil ->
+    if k == nil
+      k = v
+      v = self
+    self.expect(v, "v")
+    self.number(k, "k")
     return Vector2(v.x * k, v.y * k)
 
   # Vector2.div provides the geometry/Vector2 standard library operation.
-  static div = v, k ->
-    Vector2.expect(v, "v")
-    Vector2.number(k, "k")
+  div = v, k = nil ->
+    if k == nil
+      k = v
+      v = self
+    self.expect(v, "v")
+    self.number(k, "k")
     if k == 0
       raise error("geometry.Vector2.div: divide by zero")
     return Vector2(v.x / k, v.y / k)
 
   # Vector2.dot provides the geometry/Vector2 standard library operation.
-  static dot = a, b ->
-    Vector2.expect(a, "a")
-    Vector2.expect(b, "b")
+  dot = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, "a")
+    self.expect(b, "b")
     return a.x * b.x + a.y * b.y
 
   # Vector2.length_squared provides the geometry/Vector2 standard library operation.
-  static length_squared = v ->
-    Vector2.expect(v, "v")
-    return Vector2.dot(v, v)
+  length_squared = v = nil ->
+    if v == nil
+      v = self
+    self.expect(v, "v")
+    return self.dot(v, v)
 
   # Vector2.length provides the geometry/Vector2 standard library operation.
-  static length = v ->
-    return math_sqrt(Vector2.length_squared(v))
+  length = v = nil ->
+    if v == nil
+      v = self
+    return math_sqrt(self.length_squared(v))
 
   # Vector2.distance_squared provides the geometry/Vector2 standard library operation.
-  static distance_squared = a, b ->
-    return Vector2.length_squared(Vector2.sub(a, b))
+  distance_squared = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    return self.length_squared(self.sub(a, b))
 
   # Vector2.distance provides the geometry/Vector2 standard library operation.
-  static distance = a, b ->
-    return math_sqrt(Vector2.distance_squared(a, b))
+  distance = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    return math_sqrt(self.distance_squared(a, b))
 
   # Vector2.normalize provides the geometry/Vector2 standard library operation.
-  static normalize = v ->
-    geometry_len = Vector2.length(v)
+  normalize = v = nil ->
+    if v == nil
+      v = self
+    geometry_len = self.length(v)
     if geometry_len == 0
-      return Vector2.zero()
-    return Vector2.div(v, geometry_len)
+      return self.zero()
+    return self.div(v, geometry_len)
 
   # Vector2.lerp provides the geometry/Vector2 standard library operation.
-  static lerp = a, b, t ->
-    Vector2.expect(a, "a")
-    Vector2.expect(b, "b")
-    Vector2.number(t, "t")
+  lerp = a, b, t ->
+    self.expect(a, "a")
+    self.expect(b, "b")
+    self.number(t, "t")
     return Vector2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
 
   # Vector2.clamp provides the geometry/Vector2 standard library operation.
-  static clamp = v, min_v, max_v ->
-    Vector2.expect(v, "v")
-    Vector2.expect(min_v, "min_v")
-    Vector2.expect(max_v, "max_v")
-    return Vector2(Vector2.clamp_number(v.x, min_v.x, max_v.x), Vector2.clamp_number(v.y, min_v.y, max_v.y))
+  clamp = v, min_v, max_v ->
+    self.expect(v, "v")
+    self.expect(min_v, "min_v")
+    self.expect(max_v, "max_v")
+    return Vector2(self.clamp_number(v.x, min_v.x, max_v.x), self.clamp_number(v.y, min_v.y, max_v.y))
 
   # Vector2.equal? provides the geometry/Vector2 standard library operation.
-  static equal? = a, b ->
+  equal? = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
     return a.class == Vector2 and b.class == Vector2 and a.x == b.x and a.y == b.y
 
   # Vector2.nearly_equal? provides the geometry/Vector2 standard library operation.
-  static nearly_equal? = a, b, epsilon ->
-    Vector2.expect(a, "a")
-    Vector2.expect(b, "b")
+  nearly_equal? = a, b, epsilon = nil ->
+    if epsilon == nil
+      epsilon = b
+      b = a
+      a = self
+    self.expect(a, "a")
+    self.expect(b, "b")
     if epsilon < 0
       raise error("geometry.Vector2.nearly_equal?: epsilon must be non-negative")
-    return Vector2.abs(a.x - b.x) <= epsilon and Vector2.abs(a.y - b.y) <= epsilon
+    return self.abs(a.x - b.x) <= epsilon and self.abs(a.y - b.y) <= epsilon
 
   # Vector2.to_array provides the geometry/Vector2 standard library operation.
-  static to_array = v ->
-    Vector2.expect(v, "v")
+  to_array = v = nil ->
+    if v == nil
+      v = self
+    self.expect(v, "v")
     return [v.x, v.y]
 
   # Vector2.from_array provides the geometry/Vector2 standard library operation.
-  static from_array = values ->
+  from_array = values ->
     if values.class != Array or values.len() != 2
       raise error("geometry.Vector2.from_array: expected two-number array")
     return Vector2(values[0], values[1])
 
   # Vector2.expect provides the geometry/Vector2 standard library operation.
-  static expect = value, name ->
+  expect = value, name ->
     if value.class != Vector2
       raise error("geometry.Vector2: " + name + " must be a Vector2")
 
   # Vector2.number provides the geometry/Vector2 standard library operation.
-  static number = value, name ->
+  number = value, name ->
     if value.class != Number
       raise error("geometry.Vector2: " + name + " must be a number")
     return value
 
   # Vector2.clamp_number provides the geometry/Vector2 standard library operation.
-  static clamp_number = value, lo, hi ->
+  clamp_number = value, lo, hi ->
     if value < lo
       return lo
     if value > hi
@@ -130,7 +166,7 @@ class Vector2
     return value
 
   # Vector2.abs provides the geometry/Vector2 standard library operation.
-  static abs = value ->
+  abs = value ->
     if value < 0
       return 0 - value
     return value

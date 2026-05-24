@@ -258,7 +258,7 @@ func TestSpecDocumentsEnvironmentProcessContract(t *testing.T) {
 		"`environ()`",
 		"`setenv(name, value)`",
 		"`unsetenv(name)`",
-		"`process/Process.run(command, options = {})`",
+		"`process/Process().run(command, options = {})`",
 		"`options[\"shell\"] == true`",
 		"`status`, `success`, `stdout`, `stderr`, and `timed_out`",
 		"Non-zero child exit status is reported in the result dictionary",
@@ -273,12 +273,12 @@ func TestSpecDocumentsFilesystemUtilities(t *testing.T) {
 	spec := readRepoFile(t, "docs", "SPEC.md")
 	for _, required := range []string{
 		"### Filesystem Utilities",
-		"`file/File.copy(src, dst, options = {})`",
-		"`file/File.chmod(path, mode)`",
-		"`dir/Dir.mkdir_all(path)`",
-		"`dir/Dir.remove_all(path)`",
-		"`dir/Dir.walk(path, fn, options = {})`",
-		"`file/File.temp(prefix = \"tya\", suffix = \"\")`",
+		"`file/File().copy(src, dst, options = {})`",
+		"`file/File().chmod(path, mode)`",
+		"`dir/Dir().mkdir_all(path)`",
+		"`dir/Dir().remove_all(path)`",
+		"`dir/Dir().walk(path, fn, options = {})`",
+		"`file/File().temp(prefix = \"tya\", suffix = \"\")`",
 		"Windows permissions are best-effort",
 	} {
 		if !containsNormalized(spec, required) {
@@ -291,9 +291,9 @@ func TestSpecDocumentsHmacStdlib(t *testing.T) {
 	spec := readRepoFile(t, "docs", "SPEC.md")
 	for _, required := range []string{
 		"`hmac/Hmac`",
-		"`Hmac.digest(algorithm, key, message)`",
-		"`Hmac.hexdigest(algorithm, key, message)`",
-		"`Hmac.base64digest(algorithm, key, message)`",
+		"`Hmac().digest(algorithm, key, message)`",
+		"`Hmac().hexdigest(algorithm, key, message)`",
+		"`Hmac().base64digest(algorithm, key, message)`",
 		"`sha256`, `sha384`, and `sha512`",
 		"constant-time comparison",
 		"General encryption, public-key cryptography",
@@ -308,8 +308,8 @@ func TestSpecDocumentsRegexStdlib(t *testing.T) {
 	spec := readRepoFile(t, "docs", "SPEC.md")
 	for _, required := range []string{
 		"`regex/Regex`",
-		"`Regex.compile(pattern, options = {})`",
-		"`Regex.search(pattern, text, options = {})`",
+		"`Regex().compile(pattern, options = {})`",
+		"`Regex().search(pattern, text, options = {})`",
 		"`find_all(text)`",
 		"`replace(text, replacement, limit = nil)`",
 		"`${1}`",
@@ -327,14 +327,14 @@ func TestSpecDocumentsTimeContract(t *testing.T) {
 	spec := readRepoFile(t, "docs", "SPEC.md")
 	for _, required := range []string{
 		"`time/Time`",
-		"`Time.now()`",
-		"`Time.monotonic()`",
-		"`Time.unix(seconds, nanos = 0)`",
+		"`Time().now()`",
+		"`Time().monotonic()`",
+		"`Time().unix(seconds, nanos = 0)`",
 		"`unix()`, `unix_nanos()`, `utc()`, `local()`",
-		"`Time.parse(text, layout = \"rfc3339\")`",
-		"`Time.duration(seconds = 0, options = {})`",
+		"`Time().parse(text, layout = \"rfc3339\")`",
+		"`Time().duration(seconds = 0, options = {})`",
 		"`minutes`, `hours`, `milliseconds`, `microseconds`, and `nanoseconds`",
-		"`Time.sleep(duration_or_seconds)`",
+		"`Time().sleep(duration_or_seconds)`",
 		"Named timezone database lookup",
 	} {
 		if !containsNormalized(spec, required) {

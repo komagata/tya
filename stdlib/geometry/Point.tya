@@ -1,47 +1,58 @@
 # Point provides the geometry/Point standard library API.
 class Point
   # Point.initialize provides the geometry/Point standard library operation.
-  initialize = x, y ->
-    self.x = Point.number(x, "x")
-    self.y = Point.number(y, "y")
+  initialize = x = 0, y = 0 ->
+    self.x = self.number(x, "x")
+    self.y = self.number(y, "y")
 
   # Point.new provides the geometry/Point standard library operation.
-  static new = x, y ->
+  new = x, y ->
     return Point(x, y)
 
   # Point.from_vector provides the geometry/Point standard library operation.
-  static from_vector = v ->
+  from_vector = v ->
     if v.class != Vector2
       raise error("geometry.Point.from_vector: v must be a Vector2")
     return Point(v.x, v.y)
 
   # Point.to_vector provides the geometry/Point standard library operation.
-  static to_vector = p ->
-    Point.expect(p, "p")
+  to_vector = p = nil ->
+    if p == nil
+      p = self
+    self.expect(p, "p")
     return Vector2(p.x, p.y)
 
   # Point.translate provides the geometry/Point standard library operation.
-  static translate = p, v ->
-    Point.expect(p, "p")
+  translate = p, v = nil ->
+    if v == nil
+      v = p
+      p = self
+    self.expect(p, "p")
     if v.class != Vector2
       raise error("geometry.Point.translate: v must be a Vector2")
     return Point(p.x + v.x, p.y + v.y)
 
   # Point.distance provides the geometry/Point standard library operation.
-  static distance = a, b ->
-    return Vector2.distance(Point.to_vector(a), Point.to_vector(b))
+  distance = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    return Vector2(0, 0).distance(self.to_vector(a), self.to_vector(b))
 
   # Point.equal? provides the geometry/Point standard library operation.
-  static equal? = a, b ->
+  equal? = a, b = nil ->
+    if b == nil
+      b = a
+      a = self
     return a.class == Point and b.class == Point and a.x == b.x and a.y == b.y
 
   # Point.expect provides the geometry/Point standard library operation.
-  static expect = value, name ->
+  expect = value, name ->
     if value.class != Point
       raise error("geometry.Point: " + name + " must be a Point")
 
   # Point.number provides the geometry/Point standard library operation.
-  static number = value, name ->
+  number = value, name ->
     if value.class != Number
       raise error("geometry.Point: " + name + " must be a number")
     return value

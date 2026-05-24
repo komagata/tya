@@ -119,7 +119,7 @@ make = ->
   -> items[0] + 1
 
 f = make()
-runtime.Runtime.gc()
+runtime.Runtime().gc()
 print(f())
 
 -- direct_outer_reassign.tya --

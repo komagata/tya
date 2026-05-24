@@ -10,7 +10,7 @@ stderr ' error bad\n'
 -- default_stderr.tya --
 import log as log
 
-logger = log.Logger.default()
+logger = log.Logger(nil).default()
 logger.debug("debug", {})
 logger.info("hello", { app: "tya" })
 logger.warn("careful", {})

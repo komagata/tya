@@ -1,34 +1,34 @@
 # SecureRandom provides the secure_random/SecureRandom standard library API.
 class SecureRandom
   # SecureRandom.hex_digit provides the secure_random/SecureRandom standard library operation.
-  static hex_digit = d ->
+  hex_digit = d ->
     if d < 10
       return chr(48 + d)
     return chr(87 + d)
 
   # SecureRandom.bytes provides the secure_random/SecureRandom standard library operation.
-  static bytes = n ->
+  bytes = n ->
     return secure_random_bytes(n)
 
   # SecureRandom.hex provides the secure_random/SecureRandom standard library operation.
-  static hex = n ->
+  hex = n ->
     out = ""
     i = 0
     while i < n
       b = secure_random_int(0, 255)
       out = out
-        + SecureRandom.hex_digit((b / 16).to_i())
-        + SecureRandom.hex_digit(b % 16)
+        + SecureRandom().hex_digit((b / 16).to_i())
+        + SecureRandom().hex_digit(b % 16)
       i = i + 1
     return out
 
   # SecureRandom.base64_alphabet provides the secure_random/SecureRandom standard library operation.
-  static base64_alphabet = ->
+  base64_alphabet = ->
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
   # SecureRandom.base64 provides the secure_random/SecureRandom standard library operation.
-  static base64 = n ->
-    alphabet = SecureRandom.base64_alphabet()
+  base64 = n ->
+    alphabet = SecureRandom().base64_alphabet()
     out = ""
     i = 0
     while i + 3 <= n
@@ -57,12 +57,12 @@ class SecureRandom
     return out
 
   # SecureRandom.hex_byte provides the secure_random/SecureRandom standard library operation.
-  static hex_byte = ->
+  hex_byte = ->
     b = secure_random_int(0, 255)
-    return SecureRandom.hex_digit((b / 16).to_i()) + SecureRandom.hex_digit(b % 16)
+    return SecureRandom().hex_digit((b / 16).to_i()) + SecureRandom().hex_digit(b % 16)
 
   # SecureRandom.uuid provides the secure_random/SecureRandom standard library operation.
-  static uuid = ->
+  uuid = ->
     bs = []
     i = 0
     while i < 16
@@ -75,13 +75,13 @@ class SecureRandom
     while i < 16
       b = bs[i]
       parts = parts
-        + SecureRandom.hex_digit((b / 16).to_i())
-        + SecureRandom.hex_digit(b % 16)
+        + SecureRandom().hex_digit((b / 16).to_i())
+        + SecureRandom().hex_digit(b % 16)
       if i == 3 or i == 5 or i == 7 or i == 9
         parts = parts + "-"
       i = i + 1
     return parts
 
   # SecureRandom.int provides the secure_random/SecureRandom standard library operation.
-  static int = min, max ->
+  int = min, max ->
     secure_random_int(min, max)

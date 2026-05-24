@@ -30,7 +30,7 @@ print({nested: [1, 2]}.equal?({nested: [1, 2]}))
 -- read.tya --
 import io as io
 
-input_line = io.Io.stdin().read_line()
+input_line = io.Io().stdin().read_line()
 if input_line == nil
   print("empty")
 else

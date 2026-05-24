@@ -344,7 +344,7 @@ Use an alias when a package name is long:
 ```tya
 import net/http as http
 
-resp = http.Client.get("https://example.com/")
+resp = http.Client().get("https://example.com/")
 print(resp["status"])
 ```
 
@@ -386,10 +386,10 @@ Standard-library packages are imported like user files.
 import json as json
 import time as time
 
-json_text = json.Json.dump({ name: "Tya" })
+json_text = json.Json().dump({ name: "Tya" })
 print(json_text)
 
-now = time.Time.now()
+now = time.Time().now()
 print(now.format("rfc3339"))
 ```
 

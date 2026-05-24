@@ -1,7 +1,7 @@
 # Set provides the collections/Set standard library API.
 class Set
   # Set.initialize provides the collections/Set standard library operation.
-  initialize = values ->
+  initialize = values = nil ->
     self.items = []
     if values != nil
       i = 0
@@ -17,11 +17,11 @@ class Set
         i = i + 1
 
   # Set.new provides the collections/Set standard library operation.
-  static new = ->
+  new = ->
     return Set(nil)
 
   # Set.from_array provides the collections/Set standard library operation.
-  static from_array = values ->
+  from_array = values ->
     return Set(values)
 
   # Set.add provides the collections/Set standard library operation.
@@ -71,43 +71,43 @@ class Set
     return self.items.slice(0, self.items.len())
 
   # Set.union provides the collections/Set standard library operation.
-  static union = a, b ->
-    out = Set.from_array(a.to_array())
+  union = other ->
+    out = Set(self.to_array())
     i = 0
-    values = b.to_array()
+    values = other.to_array()
     while i < values.len()
       out.add(values[i])
       i = i + 1
     return out
 
   # Set.intersection provides the collections/Set standard library operation.
-  static intersection = a, b ->
-    out = Set.new()
-    values = a.to_array()
+  intersection = other ->
+    out = Set(nil)
+    values = self.to_array()
     i = 0
     while i < values.len()
-      if b.has?(values[i])
+      if other.has?(values[i])
         out.add(values[i])
       i = i + 1
     return out
 
   # Set.difference provides the collections/Set standard library operation.
-  static difference = a, b ->
-    out = Set.new()
-    values = a.to_array()
+  difference = other ->
+    out = Set(nil)
+    values = self.to_array()
     i = 0
     while i < values.len()
-      if not b.has?(values[i])
+      if not other.has?(values[i])
         out.add(values[i])
       i = i + 1
     return out
 
   # Set.subset? provides the collections/Set standard library operation.
-  static subset? = a, b ->
-    values = a.to_array()
+  subset? = other ->
+    values = self.to_array()
     i = 0
     while i < values.len()
-      if not b.has?(values[i])
+      if not other.has?(values[i])
         return false
       i = i + 1
     return true

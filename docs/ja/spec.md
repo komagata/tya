@@ -351,7 +351,7 @@ interface Timestamped
   created_at = nil
 
   initialize = ->
-    self.created_at = Time.now()
+    self.created_at = Time().now()
 
 class Account implements Named, Timestamped
   initialize = name ->
@@ -680,13 +680,13 @@ args()
 env(name)
 ```
 
-low-level intrinsic name ではなく、`File.read(path)`, `File.append(path, text)`,
-`Dir.list(path)`, `Path.expand_user(path)`, `Process.cwd()`,
-`Process.chdir(path)`, `Io.open(path, mode)`, `Reader#read(size)`,
-`Writer#write(value)`, `Random.int(min, max)`, `Compress.gzip(value)`,
-`Digest.sha256(value)`, `Socket.connect(host, port, options)`,
-`Lexer.lex(source)`, `Parser.parse(source)`, `Checker.check(source)`,
-`Format.format(source)` などの standard-library API を使う。conversion と
+low-level intrinsic name ではなく、`File().read(path)`, `File().append(path, text)`,
+`Dir().list(path)`, `Path().expand_user(path)`, `Process().cwd()`,
+`Process().chdir(path)`, `Io().open(path, mode)`, `Reader#read(size)`,
+`Writer#write(value)`, `Random().int(min, max)`, `Compress().gzip(value)`,
+`Digest().sha256(value)`, `Socket.connect(host, port, options)`,
+`Lexer().lex(source)`, `Parser().parse(source)`, `Checker().check(source)`,
+`Format().format(source)` などの standard-library API を使う。conversion と
 collection helper は `value.to_s()`, `value.to_i()`, `dict.delete(key)`,
 `dict.keys()`, `items.pop()` のような receiver method を使う。
 

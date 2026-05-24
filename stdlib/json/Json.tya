@@ -1,7 +1,11 @@
 # Json parses and formats JSON values.
 class Json
+  # Json.initialize stores a value or JSON text.
+  initialize = value = nil ->
+    self.value = value
+
   # Json.skip_ws provides the json/Json standard library operation.
-  static skip_ws = state ->
+  skip_ws = state ->
     n = state["len"]
     p = state["pos"]
     src = state["src"]
@@ -14,15 +18,15 @@ class Json
     state["pos"] = p
 
   # Json.expect provides the json/Json standard library operation.
-  static expect = state, ch ->
-    Json.skip_ws(state)
+  expect = state, ch ->
+    Json(nil).skip_ws(state)
     p = state["pos"]
     if p >= state["len"] or state["src"][p] != ch
       raise error("json.parse: expected '{ch}'")
     state["pos"] = p + 1
 
   # Json.hex_value provides the json/Json standard library operation.
-  static hex_value = c ->
+  hex_value = c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -33,7 +37,7 @@ class Json
     raise error("json.parse: invalid hex digit")
 
   # Json.utf8_encode provides the json/Json standard library operation.
-  static utf8_encode = code ->
+  utf8_encode = code ->
     if code < 128
       return chr(code)
     if code < 2048
@@ -46,7 +50,7 @@ class Json
     return chr(b1) + chr(b2) + chr(b3)
 
   # Json.parse_string provides the json/Json standard library operation.
-  static parse_string = state ->
+  parse_string = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -86,12 +90,12 @@ class Json
                 if e == "u"
                   if p + 5 >= n
                     raise error("json.parse: truncated unicode escape")
-                  h1 = Json.hex_value(src[p + 2])
-                  h2 = Json.hex_value(src[p + 3])
-                  h3 = Json.hex_value(src[p + 4])
-                  h4 = Json.hex_value(src[p + 5])
+                  h1 = Json(nil).hex_value(src[p + 2])
+                  h2 = Json(nil).hex_value(src[p + 3])
+                  h3 = Json(nil).hex_value(src[p + 4])
+                  h4 = Json(nil).hex_value(src[p + 5])
                   code = h1 * 4096 + h2 * 256 + h3 * 16 + h4
-                  out = out + Json.utf8_encode(code)
+                  out = out + Json(nil).utf8_encode(code)
                   p = p + 4
                 else
                   raise error("json.parse: invalid escape")
@@ -102,32 +106,32 @@ class Json
     raise error("json.parse: unterminated string")
 
   # Json.is_digit provides the json/Json standard library operation.
-  static is_digit = c ->
+  is_digit = c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
   # Json.parse_number provides the json/Json standard library operation.
-  static parse_number = state ->
+  parse_number = state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
     start = p
     if src[p] == "-"
       p = p + 1
-    while p < n and Json.is_digit(src[p])
+    while p < n and Json(nil).is_digit(src[p])
       p = p + 1
     is_float = false
     if p < n and src[p] == "."
       is_float = true
       p = p + 1
-      while p < n and Json.is_digit(src[p])
+      while p < n and Json(nil).is_digit(src[p])
         p = p + 1
     if p < n and (src[p] == "e" or src[p] == "E")
       is_float = true
       p = p + 1
       if p < n and (src[p] == "+" or src[p] == "-")
         p = p + 1
-      while p < n and Json.is_digit(src[p])
+      while p < n and Json(nil).is_digit(src[p])
         p = p + 1
     text = ""
     k = start
@@ -140,19 +144,19 @@ class Json
     return text.to_i()
 
   # Json.parse_value provides the json/Json standard library operation.
-  static parse_value = state ->
-    Json.skip_ws(state)
+  parse_value = state ->
+    Json(nil).skip_ws(state)
     p = state["pos"]
     if p >= state["len"]
       raise error("json.parse: unexpected end of input")
     src = state["src"]
     c = src[p]
     if c == "{{"
-      return Json.parse_object(state)
+      return Json(nil).parse_object(state)
     if c == "["
-      return Json.parse_array(state)
+      return Json(nil).parse_array(state)
     if c == "\""
-      return Json.parse_string(state)
+      return Json(nil).parse_string(state)
     if c == "t"
       if (
         p + 4 <= state["len"] and src[p + 1] == "r" and src[p + 2] == "u" and src[p + 3] == "e"
@@ -174,15 +178,15 @@ class Json
         state["pos"] = p + 4
         return nil
       raise error("json.parse: invalid token")
-    if c == "-" or Json.is_digit(c)
-      return Json.parse_number(state)
+    if c == "-" or Json(nil).is_digit(c)
+      return Json(nil).parse_number(state)
     raise error("json.parse: unexpected character")
 
   # Json.parse_object provides the json/Json standard library operation.
-  static parse_object = state ->
-    Json.expect(state, "{{")
+  parse_object = state ->
+    Json(nil).expect(state, "{{")
     out = {}
-    Json.skip_ws(state)
+    Json(nil).skip_ws(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "}}"
       state["pos"] = p + 1
@@ -190,24 +194,24 @@ class Json
     first = true
     while true
       if not first
-        Json.expect(state, ",")
+        Json(nil).expect(state, ",")
       first = false
-      Json.skip_ws(state)
-      key = Json.parse_string(state)
-      Json.expect(state, ":")
-      value = Json.parse_value(state)
+      Json(nil).skip_ws(state)
+      key = Json(nil).parse_string(state)
+      Json(nil).expect(state, ":")
+      value = Json(nil).parse_value(state)
       out[key] = value
-      Json.skip_ws(state)
+      Json(nil).skip_ws(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == "}}"
         state["pos"] = p + 1
         return out
 
   # Json.parse_array provides the json/Json standard library operation.
-  static parse_array = state ->
-    Json.expect(state, "[")
+  parse_array = state ->
+    Json(nil).expect(state, "[")
     out = []
-    Json.skip_ws(state)
+    Json(nil).skip_ws(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "]"
       state["pos"] = p + 1
@@ -215,11 +219,11 @@ class Json
     first = true
     while true
       if not first
-        Json.expect(state, ",")
+        Json(nil).expect(state, ",")
       first = false
-      v = Json.parse_value(state)
+      v = Json(nil).parse_value(state)
       out.push(v)
-      Json.skip_ws(state)
+      Json(nil).skip_ws(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == "]"
         state["pos"] = p + 1
@@ -227,16 +231,18 @@ class Json
 
   # parse converts JSON text into Tya arrays, dictionaries, strings, numbers, booleans, and nil.
   # Raises when the input is not valid JSON.
-  static parse = text ->
+  parse = text = nil ->
+    if text == nil
+      text = self.value
     state = { src: text, pos: 0, len: text.byte_len() }
-    v = Json.parse_value(state)
-    Json.skip_ws(state)
+    v = Json(nil).parse_value(state)
+    Json(nil).skip_ws(state)
     if state["pos"] < state["len"]
       raise error("json.parse: trailing characters")
     return v
 
   # Json.escape_string provides the json/Json standard library operation.
-  static escape_string = text ->
+  escape_string = text ->
     n = text.byte_len()
     out = "\""
     i = 0
@@ -276,7 +282,7 @@ class Json
     return out + "\""
 
   # Json.pad provides the json/Json standard library operation.
-  static pad = indent, level ->
+  pad = indent, level ->
     if indent <= 0
       return ""
     out = "\n"
@@ -292,7 +298,7 @@ class Json
     return out
 
   # Json.emit provides the json/Json standard library operation.
-  static emit = value, indent, level ->
+  emit = value, indent, level ->
     if value.class == Nil
       return "null"
     if value.class == Boolean
@@ -302,7 +308,7 @@ class Json
     if value.class == Number
       return value.to_s()
     if value.class == String
-      return Json.escape_string(value)
+      return Json(nil).escape_string(value)
     if value.class == Array
       n = value.len()
       if n == 0
@@ -312,10 +318,10 @@ class Json
       while i < n
         if i > 0
           out = out + ","
-        out = out + Json.pad(indent, level + 1)
-        out = out + Json.emit(value[i], indent, level + 1)
+        out = out + Json(nil).pad(indent, level + 1)
+        out = out + Json(nil).emit(value[i], indent, level + 1)
         i = i + 1
-      out = out + Json.pad(indent, level)
+      out = out + Json(nil).pad(indent, level)
       return out + "]"
     if value.class == Dict
       names = value.keys()
@@ -327,18 +333,24 @@ class Json
       while i < n
         if i > 0
           out = out + ","
-        out = out + Json.pad(indent, level + 1)
+        out = out + Json(nil).pad(indent, level + 1)
         key_name = names[i]
-        out = out + Json.escape_string(key_name) + ":"
+        out = out + Json(nil).escape_string(key_name) + ":"
         if indent > 0
           out = out + " "
-        out = out + Json.emit(value[key_name], indent, level + 1)
+        out = out + Json(nil).emit(value[key_name], indent, level + 1)
         i = i + 1
-      out = out + Json.pad(indent, level)
+      out = out + Json(nil).pad(indent, level)
       return out + "}}"
     raise error("json.dump: unsupported value kind")
 
-  # dump converts Tya arrays, dictionaries, strings, numbers, booleans, and nil to JSON text.
+  # stringify converts Tya arrays, dictionaries, strings, numbers, booleans, and nil to JSON text.
   # Raises when a value cannot be represented as JSON.
-  static dump = value ->
-    return Json.emit(value, 0, 0)
+  stringify = value = nil ->
+    if value == nil
+      value = self.value
+    return Json(nil).emit(value, 0, 0)
+
+  # dump is a compatibility alias for stringify.
+  dump = value = nil ->
+    self.stringify(value)

@@ -4,11 +4,11 @@ import os as os
 class StdlibOsTest extends TestCase
 
   test_args_returns_array = ->
-    a = os.Os.args()
+    a = os.Os().args()
     self.assert_equal(0, a.len() - a.len(), "args len roundtrip")
   test_env_home_present = ->
-    home = os.Os.env("HOME")
+    home = os.Os().env("HOME")
     self.assert(home != nil, "HOME present")
   test_env_missing_is_nil = ->
-    missing = os.Os.env("__TYA_V022_NO_SUCH_ENV__")
+    missing = os.Os().env("__TYA_V022_NO_SUCH_ENV__")
     self.assert_nil(missing, "missing env nil")

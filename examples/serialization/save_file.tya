@@ -6,9 +6,9 @@ class Player
     self.score = score
 
 player = Player("Ada", 42)
-saved_json = serialization.Serializer.to_json(player, { include_class: true })
+saved_json = serialization.Serializer(nil).to_json(player, { include_class: true })
 println(saved_json)
 
-loaded = serialization.Serializer.from_json(saved_json, Player)
+loaded = serialization.Serializer(nil).from_json(saved_json, Player)
 println(loaded.name)
 println(loaded.score)

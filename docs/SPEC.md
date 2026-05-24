@@ -528,7 +528,7 @@ interface Timestamped
   created_at = nil
 
   initialize = ->
-    self.created_at = Time.now()
+    self.created_at = Time().now()
 
 class Account implements Named, Timestamped
   initialize = name ->
@@ -1023,15 +1023,15 @@ env(name)
 ```
 
 `print` and `println` write only to stdout. stderr output is available through
-explicit standard-library APIs such as `Io.stderr()`.
+explicit standard-library APIs such as `Io().stderr()`.
 
-Use standard-library APIs such as `File.read(path)`, `File.append(path, text)`,
-`Dir.list(path)`, `Path.expand_user(path)`, `Process.cwd()`,
-`Process.chdir(path)`, `Io.open(path, mode)`, `Reader#read(size)`,
-`Writer#write(value)`, `Random.int(min, max)`, `Compress.gzip(value)`,
-`Digest.sha256(value)`, `Socket.connect(host, port, options)`,
-`Lexer.lex(source)`, `Parser.parse(source)`, `Checker.check(source)`, and
-`Format.format(source)` instead of low-level intrinsic names. Use receiver
+Use standard-library APIs such as `File().read(path)`, `File().append(path, text)`,
+`Dir().list(path)`, `Path().expand_user(path)`, `Process().cwd()`,
+`Process().chdir(path)`, `Io().open(path, mode)`, `Reader#read(size)`,
+`Writer#write(value)`, `Random().int(min, max)`, `Compress().gzip(value)`,
+`Digest().sha256(value)`, `Socket.connect(host, port, options)`,
+`Lexer().lex(source)`, `Parser().parse(source)`, `Checker().check(source)`, and
+`Format().format(source)` instead of low-level intrinsic names. Use receiver
 methods for conversions and collections, for example `value.to_s()`,
 `value.to_i()`, `dict.delete(key)`, `dict.keys()`, and `items.pop()`.
 
@@ -1728,7 +1728,7 @@ and values are strings. A missing environment variable returns `nil`, and
 environment mutation affects the current process and child processes started
 after the mutation.
 
-`process/Process.run(command, options = {})` runs a child process and returns a
+`process/Process().run(command, options = {})` runs a child process and returns a
 result dictionary. `command` may be an array of strings for direct execution or
 a string when `options["shell"] == true`. String commands without explicit
 shell opt-in are invalid. Supported options are `cwd`, `env`, `clear_env`,
@@ -1740,29 +1740,29 @@ The result dictionary contains `status`, `success`, `stdout`, `stderr`, and
 `timed_out`; `exit_code` remains as a compatibility alias for `status`.
 Non-zero child exit status is reported in the result dictionary and is not a
 raised error. Spawn/setup failures, invalid options, invalid environment
-values, timeout setup failures, and unsupported `Process.exec(command,
+values, timeout setup failures, and unsupported `Process().exec(command,
 options = {})` raise structured process errors.
 
 ### Filesystem Utilities
 
-`file/File.copy(src, dst, options = {})` copies file contents as bytes.
+`file/File().copy(src, dst, options = {})` copies file contents as bytes.
 Supported options are `overwrite` and `preserve_mode`, both defaulting to
 `true`. When `overwrite` is false and `dst` exists, the operation raises a
 filesystem error.
 
-`file/File.chmod(path, mode)` changes POSIX-like permissions where the platform
+`file/File().chmod(path, mode)` changes POSIX-like permissions where the platform
 supports them. Windows permissions are best-effort and unsupported permission
 changes raise filesystem errors rather than silently promising POSIX behavior.
-`file/File.temp(prefix = "tya", suffix = "")` creates an empty temporary file
+`file/File().temp(prefix = "tya", suffix = "")` creates an empty temporary file
 under the operating-system temporary directory and returns its path.
 
-`dir/Dir.mkdir_all(path)` creates a directory and missing parents.
-`dir/Dir.remove_all(path)` removes a file or directory tree recursively;
+`dir/Dir().mkdir_all(path)` creates a directory and missing parents.
+`dir/Dir().remove_all(path)` removes a file or directory tree recursively;
 missing paths are a no-op, while dangerous roots such as `""`, `"."`, `/`, and
-platform roots are invalid. `dir/Dir.temp_dir(prefix = "tya")` creates a
+platform roots are invalid. `dir/Dir().temp_dir(prefix = "tya")` creates a
 temporary directory and returns its path.
 
-`dir/Dir.walk(path, fn, options = {})` visits a directory tree in ascending
+`dir/Dir().walk(path, fn, options = {})` visits a directory tree in ascending
 path order. `fn` receives an entry dictionary with `path`, `name`, `kind`, and
 `stat`. Supported options are `follow_symlinks`, `include_dirs`, and
 `include_files`; symlink following is not required where the host platform
@@ -1771,13 +1771,13 @@ cannot safely detect loops.
 ### HMAC
 
 `hmac/Hmac` provides keyed message authentication without adding a broader
-cryptography suite to v1.0.0. `Hmac.digest(algorithm, key, message)` returns
-raw bytes. `Hmac.hexdigest(algorithm, key, message)` returns lowercase
-hexadecimal text, and `Hmac.base64digest(algorithm, key, message)` returns
+cryptography suite to v1.0.0. `Hmac().digest(algorithm, key, message)` returns
+raw bytes. `Hmac().hexdigest(algorithm, key, message)` returns lowercase
+hexadecimal text, and `Hmac().base64digest(algorithm, key, message)` returns
 Base64 text. Supported algorithms are `sha256`, `sha384`, and `sha512`.
 
 `key` and `message` must be strings or bytes; strings are encoded as UTF-8
-bytes. `Hmac.verify(algorithm, key, message, expected, options = {})` compares
+bytes. `Hmac().verify(algorithm, key, message, expected, options = {})` compares
 the computed digest to `expected` using constant-time comparison for equal
 length byte sequences. `expected` may be raw bytes, hex text, or Base64 text
 when `options["encoding"]` is `"raw"`, `"hex"`, or `"base64"`. Unsupported
@@ -1789,10 +1789,10 @@ v1.0.0.
 ### Regex
 
 `regex/Regex` provides regular expression helpers without adding regex
-literals or operators to the language. `Regex.compile(pattern, options = {})`
-returns a reusable regex value. `Regex.match?(pattern, text, options = {})`
+literals or operators to the language. `Regex().compile(pattern, options = {})`
+returns a reusable regex value. `Regex().match?(pattern, text, options = {})`
 returns whether the pattern appears anywhere in `text`, and
-`Regex.search(pattern, text, options = {})` returns the first match dictionary
+`Regex().search(pattern, text, options = {})` returns the first match dictionary
 or `nil`.
 
 Compiled regex values support `match?(text)`, `find(text)`,
@@ -1817,22 +1817,22 @@ captures raise structured regex errors.
 
 `time/Time` provides wall-clock times, monotonic timestamps, durations,
 formatting, parsing, arithmetic, and sleeping without adding date/time syntax.
-`Time.now()` returns the current wall-clock time. `Time.monotonic()` returns a
+`Time().now()` returns the current wall-clock time. `Time().monotonic()` returns a
 monotonic timestamp for elapsed-time measurement; monotonic values may be
 subtracted or compared but cannot be formatted as wall-clock dates.
 
-`Time.unix(seconds, nanos = 0)` constructs a UTC wall-clock time. Wall-clock
+`Time().unix(seconds, nanos = 0)` constructs a UTC wall-clock time. Wall-clock
 time values support `unix()`, `unix_nanos()`, `utc()`, `local()`,
 `format(layout)`, `add(duration)`, and `sub(other)`. `sub` returns a duration.
-`Time.parse(text, layout = "rfc3339")` parses documented layouts. Supported
+`Time().parse(text, layout = "rfc3339")` parses documented layouts. Supported
 layout names are `rfc3339`, `date`, `time`, and `unix` for formatting, and
 `rfc3339`, `date`, and `unix` for parsing.
 
-`Time.duration(seconds = 0, options = {})` constructs a duration. Supported
+`Time().duration(seconds = 0, options = {})` constructs a duration. Supported
 duration options are `minutes`, `hours`, `milliseconds`, `microseconds`, and
 `nanoseconds`. Duration values support `seconds()`, `milliseconds()`,
 `microseconds()`, `nanoseconds()`, `add(other)`, and `sub(other)`.
-`Time.sleep(duration_or_seconds)` accepts either a duration value or a number
+`Time().sleep(duration_or_seconds)` accepts either a duration value or a number
 of seconds.
 
 Timezone support for v1.0.0 is limited to UTC and the process local timezone.

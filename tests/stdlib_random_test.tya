@@ -4,49 +4,49 @@ import random as random
 class StdlibRandomTest extends TestCase
 
   test_seed_reproducible = ->
-    random.Random.seed(42)
-    a = random.Random.int(1, 1000)
-    random.Random.seed(42)
-    b = random.Random.int(1, 1000)
+    random.Random().seed(42)
+    a = random.Random().int(1, 1000)
+    random.Random().seed(42)
+    b = random.Random().int(1, 1000)
     self.assert_equal(a, b, "seeded reproducibility")
   test_int_range = ->
-    random.Random.seed(1)
+    random.Random().seed(1)
     i = 0
     while i < 50
-      v = random.Random.int(0, 9)
+      v = random.Random().int(0, 9)
       self.assert(v >= 0, "lower")
       self.assert(v <= 9, "upper")
       i = i + 1
   test_float_range = ->
-    f = random.Random.float()
+    f = random.Random().float()
     self.assert(f >= 0, "f >= 0")
     self.assert(f < 1, "f < 1")
   test_choice_picks_member = ->
     items = ["a", "b", "c"]
-    c = random.Random.choice(items)
+    c = random.Random().choice(items)
     self.assert(c == "a" or c == "b" or c == "c", "valid choice")
 
   test_static_helpers = ->
-    random.Random.seed(7)
+    random.Random().seed(7)
     items = ["a", "b", "c"]
-    copy = random.Random.shuffle_copy(items)
+    copy = random.Random().shuffle_copy(items)
     self.assert_equal(["a", "b", "c"], items, "shuffle_copy does not mutate")
     self.assert_equal(3, copy.len(), "shuffle_copy len")
-    self.assert_equal([], random.Random.sample(items, 0), "sample zero")
-    self.assert_equal(3, random.Random.sample(items, 3).len(), "sample full")
-    self.assert(random.Random.bool(1.0), "bool one")
-    self.assert(not random.Random.bool(0.0), "bool zero")
-    self.assert_equal(1, random.Random.weighted_index([0, 5, 0]), "weighted index")
-    self.assert_equal("rare", random.Random.weighted_choice(["common", "rare"], [0, 1]), "weighted choice")
-    self.assert_raises(-> random.Random.sample([1], 2), "count out of range")
-    self.assert_raises(-> random.Random.bool(2), "probability")
-    self.assert_raises(-> random.Random.weighted_index([0, 0]), "positive")
-    self.assert_raises(-> random.Random.weighted_choice(["a"], [1, 2]), "mismatch")
+    self.assert_equal([], random.Random().sample(items, 0), "sample zero")
+    self.assert_equal(3, random.Random().sample(items, 3).len(), "sample full")
+    self.assert(random.Random().bool(1.0), "bool one")
+    self.assert(not random.Random().bool(0.0), "bool zero")
+    self.assert_equal(1, random.Random().weighted_index([0, 5, 0]), "weighted index")
+    self.assert_equal("rare", random.Random().weighted_choice(["common", "rare"], [0, 1]), "weighted choice")
+    self.assert_raises(-> random.Random().sample([1], 2), "count out of range")
+    self.assert_raises(-> random.Random().bool(2), "probability")
+    self.assert_raises(-> random.Random().weighted_index([0, 0]), "positive")
+    self.assert_raises(-> random.Random().weighted_choice(["a"], [1, 2]), "mismatch")
 
   test_rng_reproducible_and_independent = ->
-    a = random.Rng.new(42)
-    b = random.Rng.new(42)
-    c = random.Rng.new(7)
+    a = random.Rng(42)
+    b = random.Rng(42)
+    c = random.Rng(7)
     self.assert_equal(random.Rng, a.class, "class")
     self.assert_equal(a.int(1, 1000), b.int(1, 1000), "same first")
     self.assert_equal(a.int(1, 1000), b.int(1, 1000), "same second")
@@ -56,7 +56,7 @@ class StdlibRandomTest extends TestCase
     self.assert(c_first != a.int(1, 1000), "independent")
 
   test_rng_helpers = ->
-    rng = random.Rng.new(9)
+    rng = random.Rng(9)
     items = ["a", "b", "c", "d"]
     copy = rng.shuffle_copy(items)
     self.assert_equal(["a", "b", "c", "d"], items, "shuffle_copy does not mutate")
@@ -65,10 +65,10 @@ class StdlibRandomTest extends TestCase
     self.assert_equal(4, rng.sample(items, 4).len(), "sample full")
     self.assert(rng.bool(1.0), "bool one")
     self.assert(not rng.bool(0.0), "bool zero")
-    self.assert_equal(2, random.Rng.new(1).weighted_index([0, 0, 3]), "weighted index")
-    self.assert_equal("b", random.Rng.new(1).weighted_choice(["a", "b"], [0, 2]), "weighted choice")
-    self.assert_raises(-> random.Rng.new(1).choice([]), "empty array")
-    self.assert_raises(-> random.Rng.new(1).int(5, 4), "max < min")
-    self.assert_raises(-> random.Rng.new(1).sample([1], -1), "count out of range")
-    self.assert_raises(-> random.Rng.new(1).bool(-0.1), "probability")
-    self.assert_raises(-> random.Rng.new(1).weighted_index([1, -1]), "weights")
+    self.assert_equal(2, random.Rng(1).weighted_index([0, 0, 3]), "weighted index")
+    self.assert_equal("b", random.Rng(1).weighted_choice(["a", "b"], [0, 2]), "weighted choice")
+    self.assert_raises(-> random.Rng(1).choice([]), "empty array")
+    self.assert_raises(-> random.Rng(1).int(5, 4), "max < min")
+    self.assert_raises(-> random.Rng(1).sample([1], -1), "count out of range")
+    self.assert_raises(-> random.Rng(1).bool(-0.1), "probability")
+    self.assert_raises(-> random.Rng(1).weighted_index([1, -1]), "weights")

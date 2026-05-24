@@ -41,7 +41,7 @@ import bytes as bytes
 print(1 == 1.0)
 print(5 / 2)
 print("あい"[0])
-print(bytes.Bytes.array(bytes.Bytes.new([255, 65]))[0])
+print(bytes.Bytes().to_array(bytes.Bytes([255, 65]).from_array())[0])
 
 err = error("failed", { kind: "test", code: "bad" })
 print(err == "failed")
@@ -77,4 +77,4 @@ if state["closed"]
 -- invalid_utf8_text.tya --
 import bytes as bytes
 
-print(bytes.Bytes.text(bytes.Bytes.new([255])))
+print(bytes.Bytes().to_text(bytes.Bytes([255]).from_array()))

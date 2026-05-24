@@ -7,7 +7,7 @@ class Next
     self.handler = handler
 
   # Next.new provides the net/http/Next standard library operation.
-  static new = middlewares, index, handler ->
+  new = middlewares, index, handler ->
     return Next(middlewares, index, handler)
 
   # Next.call provides the net/http/Next standard library operation.
@@ -15,5 +15,5 @@ class Next
     if self.index >= self.middlewares.len()
       return self.handler(req)
     middleware = self.middlewares[self.index]
-    next = Next.new(self.middlewares, self.index + 1, self.handler)
+    next = Next(self.middlewares, self.index + 1, self.handler)
     return middleware(req, next)

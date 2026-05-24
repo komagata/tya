@@ -4,15 +4,15 @@ import digest as digest
 class StdlibDigestTest extends TestCase
 
   test_md5_hello = ->
-    self.assert_equal("5d41402abc4b2a76b9719d911017c592", digest.Digest.md5("hello"), "md5 hello")
+    self.assert_equal("5d41402abc4b2a76b9719d911017c592", digest.Digest("hello").md5(), "md5 hello")
   test_md5_empty = ->
-    self.assert_equal("d41d8cd98f00b204e9800998ecf8427e", digest.Digest.md5(""), "md5 empty")
+    self.assert_equal("d41d8cd98f00b204e9800998ecf8427e", digest.Digest("").md5(), "md5 empty")
   test_sha1_hello = ->
-    self.assert_equal("aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d", digest.Digest.sha1("hello"), "sha1 hello")
+    self.assert_equal("aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d", digest.Digest("hello").sha1(), "sha1 hello")
   test_sha256_hello = ->
-    self.assert_equal("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", digest.Digest.sha256("hello"), "sha256 hello")
+    self.assert_equal("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", digest.Digest("hello").sha256(), "sha256 hello")
   test_sha256_empty = ->
-    self.assert_equal("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", digest.Digest.sha256(""), "sha256 empty")
+    self.assert_equal("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", digest.Digest("").sha256(), "sha256 empty")
   test_sha512_hello = ->
     expected = "9b71d224bd62f3785d96d46ad3ea3d73319bfbc2890caadae2dff72519673ca72323c3d99ba5c11d7c7acc6e14b8c5da0c4663475c2e5c3adef46f73bcdec043"
-    self.assert_equal(expected, digest.Digest.sha512("hello"), "sha512 hello")
+    self.assert_equal(expected, digest.Digest("hello").sha512(), "sha512 hello")

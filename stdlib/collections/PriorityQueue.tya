@@ -1,7 +1,7 @@
 # PriorityQueue provides the collections/PriorityQueue standard library API.
 class PriorityQueue
   # PriorityQueue.initialize provides the collections/PriorityQueue standard library operation.
-  initialize = items ->
+  initialize = items = nil ->
     self.items = []
     self.seq = 0
     if items != nil
@@ -15,11 +15,11 @@ class PriorityQueue
         i = i + 1
 
   # PriorityQueue.new provides the collections/PriorityQueue standard library operation.
-  static new = ->
+  new = ->
     return PriorityQueue(nil)
 
   # PriorityQueue.from_array provides the collections/PriorityQueue standard library operation.
-  static from_array = items ->
+  from_array = items ->
     return PriorityQueue(items)
 
   # PriorityQueue.push provides the collections/PriorityQueue standard library operation.
@@ -66,7 +66,7 @@ class PriorityQueue
 
   # PriorityQueue.to_array provides the collections/PriorityQueue standard library operation.
   to_array = ->
-    clone = PriorityQueue.new()
+    clone = PriorityQueue(nil)
     i = 0
     while i < self.items.len()
       clone.items.push(self.items[i])

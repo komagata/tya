@@ -30,19 +30,19 @@ stderr 'regex.compile: invalid pattern'
 -- regex_valid.tya --
 import regex as regex
 
-rx = regex.Regex.compile("([a-z]+)([0-9]+)")
+rx = regex.Regex("([a-z]+)([0-9]+)").compile()
 found = rx.find("xx abc123 yy")
 print(found["text"])
 print(found["start"])
 print(found["end"])
 print(found["groups"][0])
 
-pairs = regex.Regex.compile("([a-z]+)=([0-9]+)")
+pairs = regex.Regex("([a-z]+)=([0-9]+)").compile()
 print(pairs.find_all("a=1 b=22").len())
-print(regex.Regex.compile(", *").split("a, b, c").join("|"))
+print(regex.Regex(", *").compile().split("a, b, c").join("|"))
 print(pairs.replace("a=1 b=22", r"${2}", 1))
 
-utf8 = regex.Regex.search("い.", "あいうえ")
+utf8 = regex.Regex("い.").search("あいうえ")
 print(utf8["text"])
 print(utf8["start"])
 print(utf8["end"])
@@ -50,4 +50,4 @@ print(utf8["end"])
 -- regex_invalid.tya --
 import regex as regex
 
-regex.Regex.compile("[")
+regex.Regex("[").compile()

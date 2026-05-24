@@ -1,9 +1,9 @@
 # Format provides the compiler/format/Format standard library API.
 class Format
   # Format.format provides the compiler/format/Format standard library operation.
-  static format = source ->
+  format = source ->
     return compiler_format_format(source)
 
   # Format.unparse provides the compiler/format/Format standard library operation.
-  static unparse = program ->
+  unparse = program ->
     return compiler_format_unparse(program)

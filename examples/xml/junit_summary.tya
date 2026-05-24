@@ -1,7 +1,7 @@
 import xml as xml
 
 xml_text = "<testsuite name=\"pkg\" tests=\"2\" failures=\"1\"><testcase classname=\"pkg.Test\" name=\"passes\"/><testcase classname=\"pkg.Test\" name=\"fails\"><failure><![CDATA[stack trace]]></failure></testcase></testsuite>"
-doc = xml.Xml.parse(xml_text)
+doc = xml.Xml(xml_text).parse()
 root = doc.root()
 
 cases = root.find_all_recursive("testcase")

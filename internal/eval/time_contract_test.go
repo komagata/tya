@@ -13,11 +13,11 @@ import (
 func TestRunTimeUnixFormatParse(t *testing.T) {
 	out := runTimeProgram(t, strings.Join([]string{
 		"import time as time",
-		"t = time.Time.unix(1704067200)",
+		"t = time.Time().unix(1704067200)",
 		"print(t.unix())",
 		"print(t.format(\"rfc3339\"))",
-		"print(time.Time.parse(\"2024-01-01T00:00:00Z\").unix())",
-		"print(time.Time.parse(\"2024-01-01\", \"date\").format(\"date\"))",
+		"print(time.Time(\"2024-01-01T00:00:00Z\").parse().unix())",
+		"print(time.Time(\"2024-01-01\").parse(\"date\").format(\"date\"))",
 		"",
 	}, "\n"))
 	want := "1704067200\n2024-01-01T00:00:00Z\n1704067200\n2024-01-01\n"
@@ -29,8 +29,8 @@ func TestRunTimeUnixFormatParse(t *testing.T) {
 func TestRunTimeDurationArithmetic(t *testing.T) {
 	out := runTimeProgram(t, strings.Join([]string{
 		"import time as time",
-		"a = time.Time.duration(1, { minutes: 1, milliseconds: 500 })",
-		"b = time.Time.duration(2)",
+		"a = time.Time().duration(1, { minutes: 1, milliseconds: 500 })",
+		"b = time.Time().duration(2)",
 		"print(a.seconds())",
 		"print(a.milliseconds())",
 		"print(a.add(b).seconds())",
@@ -46,7 +46,7 @@ func TestRunTimeDurationArithmetic(t *testing.T) {
 func TestRunTimeUtcLocalBoundaries(t *testing.T) {
 	out := runTimeProgram(t, strings.Join([]string{
 		"import time as time",
-		"t = time.Time.unix(1704067200)",
+		"t = time.Time().unix(1704067200)",
 		"local = t.local()",
 		"print(t.utc().format(\"rfc3339\"))",
 		"print(local.unix())",
@@ -61,9 +61,9 @@ func TestRunTimeUtcLocalBoundaries(t *testing.T) {
 func TestRunTimeMonotonicElapsed(t *testing.T) {
 	out := runTimeProgram(t, strings.Join([]string{
 		"import time as time",
-		"start = time.Time.monotonic()",
-		"time.Time.sleep(time.Time.duration(0.001))",
-		"elapsed = time.Time.monotonic().sub(start)",
+		"start = time.Time().monotonic()",
+		"time.Time().sleep(time.Time().duration(0.001))",
+		"elapsed = time.Time().monotonic().sub(start)",
 		"print(elapsed.nanoseconds() >= 0)",
 		"try",
 		"  start.format(\"rfc3339\")",
@@ -83,10 +83,10 @@ func TestRunTimeStructuredErrors(t *testing.T) {
 		src  string
 		want string
 	}{
-		{name: "parse", src: "time.Time.parse(\"bad\")", want: "invalid_timestamp"},
-		{name: "layout", src: "time.Time.unix(0).format(\"bad\")", want: "unknown_layout"},
-		{name: "option", src: "time.Time.duration(0, { days: 1 })", want: "unknown_option"},
-		{name: "wrong kind", src: "time.Time.unix(\"0\")", want: "invalid_seconds"},
+		{name: "parse", src: "time.Time(\"bad\").parse()", want: "invalid_timestamp"},
+		{name: "layout", src: "time.Time().unix(0).format(\"bad\")", want: "unknown_layout"},
+		{name: "option", src: "time.Time().duration(0, { days: 1 })", want: "unknown_option"},
+		{name: "wrong kind", src: "time.Time().unix(\"0\")", want: "invalid_seconds"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

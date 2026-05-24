@@ -4,34 +4,34 @@ import path as path
 class StdlibPathTest extends TestCase
 
   test_join_segments = ->
-    self.assert_equal("tmp/tya/memo.txt", path.Path.join(["tmp", "tya", "memo.txt"]), "join")
+    self.assert_equal("tmp/tya/memo.txt", path.Path(["tmp", "tya", "memo.txt"]).join(), "join")
   test_clean_dot_dotdot = ->
-    self.assert_equal("tmp/memo.txt", path.Path.clean("tmp/./tya/../memo.txt"), "clean")
+    self.assert_equal("tmp/memo.txt", path.Path("tmp/./tya/../memo.txt").clean(), "clean")
   test_basename_abs = ->
-    self.assert_equal("memo.txt", path.Path.basename("/tmp/tya/memo.txt"), "basename abs")
+    self.assert_equal("memo.txt", path.Path("/tmp/tya/memo.txt").basename(), "basename abs")
   test_dirname_abs = ->
-    self.assert_equal("/tmp/tya", path.Path.dirname("/tmp/tya/memo.txt"), "dirname abs")
+    self.assert_equal("/tmp/tya", path.Path("/tmp/tya/memo.txt").dirname(), "dirname abs")
   test_extname_normal = ->
-    self.assert_equal(".txt", path.Path.extname("/tmp/tya/memo.txt"), "extname normal")
+    self.assert_equal(".txt", path.Path("/tmp/tya/memo.txt").extname(), "extname normal")
   test_basename_no_dir = ->
-    self.assert_equal("memo.txt", path.Path.basename("memo.txt"), "basename bare")
+    self.assert_equal("memo.txt", path.Path("memo.txt").basename(), "basename bare")
   test_dirname_bare = ->
-    self.assert_equal(".", path.Path.dirname("memo.txt"), "dirname bare")
+    self.assert_equal(".", path.Path("memo.txt").dirname(), "dirname bare")
   test_dirname_root = ->
-    self.assert_equal("/", path.Path.dirname("/"), "dirname root")
+    self.assert_equal("/", path.Path("/").dirname(), "dirname root")
   test_extname_none = ->
-    self.assert_equal("", path.Path.extname("foo"), "no ext")
+    self.assert_equal("", path.Path("foo").extname(), "no ext")
   test_extname_dotfile = ->
-    self.assert_equal("", path.Path.extname(".bashrc"), "dotfile")
+    self.assert_equal("", path.Path(".bashrc").extname(), "dotfile")
   test_extname_double = ->
-    self.assert_equal(".gz", path.Path.extname("foo.tar.gz"), "double ext")
+    self.assert_equal(".gz", path.Path("foo.tar.gz").extname(), "double ext")
   test_clean_empty = ->
-    self.assert_equal(".", path.Path.clean(""), "clean empty")
+    self.assert_equal(".", path.Path("").clean(), "clean empty")
   test_clean_root = ->
-    self.assert_equal("/", path.Path.clean("/"), "clean root")
+    self.assert_equal("/", path.Path("/").clean(), "clean root")
   test_clean_messy = ->
-    self.assert_equal("a/b/d", path.Path.clean("a//b/./c/../d"), "clean messy")
+    self.assert_equal("a/b/d", path.Path("a//b/./c/../d").clean(), "clean messy")
   test_clean_relative_dotdot = ->
-    self.assert_equal("../a/b", path.Path.clean("../a/b"), "rel dotdot")
+    self.assert_equal("../a/b", path.Path("../a/b").clean(), "rel dotdot")
   test_join_absolute = ->
-    self.assert_equal("/a/b", path.Path.join(["/", "a", "b"]), "join abs")
+    self.assert_equal("/a/b", path.Path(["/", "a", "b"]).join(), "join abs")

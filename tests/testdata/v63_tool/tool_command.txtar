@@ -118,14 +118,14 @@ fail = "tools/fail.tya"
 import os as os
 
 println("pkg:tool_pkg")
-println("cwd:" + os.Os.cwd())
+println("cwd:" + os.Os().cwd())
 for arg in args()
   println("arg:{arg}")
 
 -- tool_pkg/tools/stdin.tya --
 import io as io
 
-input_line = io.Io.stdin().read_line()
+input_line = io.Io().stdin().read_line()
 println("stdin:{input_line}")
 
 -- tool_pkg/tools/fail.tya --

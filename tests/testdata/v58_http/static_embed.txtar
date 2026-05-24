@@ -23,5 +23,5 @@ import net/http as http
 embed "static/**" as assets with { hash: true, minify: true, gzip: true }
 
 app = http.Server()
-app.static("/assets", assets)
+app.serve_static("/assets", assets)
 app.run(18084)

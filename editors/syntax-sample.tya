@@ -26,7 +26,7 @@ module demo
 
     run = ->
       scope
-        task = spawn -> Time.sleep(0.01)
+        task = spawn -> Time().sleep(0.01)
         await task
 
       ch = channel.Channel(1)

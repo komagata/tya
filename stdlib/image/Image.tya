@@ -4,11 +4,11 @@ import file as file
 # Image provides the image/Image standard library API.
 class Image
   # Image.initialize provides the image/Image standard library operation.
-  initialize = width, height, fill ->
-    Image.check_dimensions(width, height)
+  initialize = width = 1, height = 1, fill = nil ->
+    self.check_dimensions(width, height)
     if fill == nil
-      fill = color.Color.rgba(0, 0, 0, 0)
-    Image.check_color(fill)
+      fill = color.Color(0, 0, 0, 0)
+    self.check_color(fill)
     self.width = width
     self.height = height
     self.format = nil
@@ -22,20 +22,20 @@ class Image
       i = i + 1
 
   # Image.new provides the image/Image standard library operation.
-  static new = width, height, fill ->
+  new = width, height, fill ->
     return Image(width, height, fill)
 
   # Image.read provides the image/Image standard library operation.
-  static read = path ->
-    img = Image.decode(file.File.read_bytes(path), nil)
-    img.format = Image.format_from_path(path)
+  read = path ->
+    img = self.decode(file.File(path).read_bytes(), nil)
+    img.format = self.format_from_path(path)
     return img
 
   # Image.decode provides the image/Image standard library operation.
-  static decode = data, options ->
+  decode = data, options ->
     if options != nil and options.has?("frame") and options["frame"] != 0
       raise error("image.decode: frame out of range")
-    meta = Codec.identify(data)
+    meta = Codec(nil).metadata(data)
     text = bytes_text(data)
     lines = text.split("\n")
     if lines.len() < 2
@@ -44,33 +44,33 @@ class Image
     expected = meta["width"] * meta["height"] * 4
     if values.len() != expected
       raise error("image.decode: malformed " + meta["format"] + " pixel data")
-    img = Image.new(meta["width"], meta["height"], nil)
+    img = Image(meta["width"], meta["height"], nil)
     img.format = meta["format"]
     img.pixels = []
     i = 0
     while i < values.len()
       channel = values[i].to_i()
-      Image.check_channel(channel)
+      self.check_channel(channel)
       img.pixels.push(channel)
       i = i + 1
     return img
 
   # Image.decode_frames provides the image/Image standard library operation.
-  static decode_frames = data ->
-    return [Image.decode(data, { frame: 0 })]
+  decode_frames = data ->
+    return [self.decode(data, { frame: 0 })]
 
   # Image.write provides the image/Image standard library operation.
   write = path, options ->
-    file.File.write_bytes(path, self.encode(Image.write_format(path, options), options))
+    file.File(path).write_bytes(self.encode(self.write_format(path, options), options))
     return nil
 
   # Image.encode provides the image/Image standard library operation.
   encode = format, options ->
     if format == nil
       format = self.format
-    if not Image.encodable_format?(format)
+    if not self.encodable_format?(format)
       raise error("image.encode: unsupported format " + format.to_s())
-    Image.check_encode_options(format, options)
+    self.check_encode_options(format, options)
     alpha = "0"
     if self.has_alpha?()
       alpha = "1"
@@ -95,18 +95,22 @@ class Image
 
   # Image.bytes provides the image/Image standard library operation.
   bytes = ->
+    return self.to_bytes()
+
+  # Image.to_bytes provides the image/Image standard library operation.
+  to_bytes = ->
     return bytes(self.pixels)
 
   # Image.pixel provides the image/Image standard library operation.
   pixel = x, y ->
     self.check_xy(x, y)
     i = (y * self.width + x) * 4
-    return color.Color.rgba(self.pixels[i], self.pixels[i + 1], self.pixels[i + 2], self.pixels[i + 3])
+    return color.Color(self.pixels[i], self.pixels[i + 1], self.pixels[i + 2], self.pixels[i + 3])
 
   # Image.set_pixel provides the image/Image standard library operation.
   set_pixel = x, y, value ->
     self.check_xy(x, y)
-    Image.check_color(value)
+    self.check_color(value)
     i = (y * self.width + x) * 4
     self.pixels[i] = value.r
     self.pixels[i + 1] = value.g
@@ -117,10 +121,10 @@ class Image
   # Image.crop provides the image/Image standard library operation.
   crop = x, y, width, height ->
     self.check_xy(x, y)
-    Image.check_dimensions(width, height)
+    self.check_dimensions(width, height)
     if x + width > self.width or y + height > self.height
       raise error("image.crop: rectangle out of bounds")
-    out = Image.new(width, height, nil)
+    out = Image(width, height, nil)
     yy = 0
     while yy < height
       xx = 0
@@ -132,8 +136,8 @@ class Image
 
   # Image.resize provides the image/Image standard library operation.
   resize = width, height, options ->
-    Image.check_dimensions(width, height)
-    opts = Image.resize_options(options)
+    self.check_dimensions(width, height)
+    opts = self.resize_options(options)
     if opts["fit"] == "contain"
       return self.resize_contain(width, height, opts)
     if opts["fit"] == "cover"
@@ -142,7 +146,7 @@ class Image
 
   # Image.resize_stretch provides the image/Image standard library operation.
   resize_stretch = width, height ->
-    out = Image.new(width, height, nil)
+    out = Image(width, height, nil)
     y = 0
     while y < height
       x = 0
@@ -168,7 +172,7 @@ class Image
     if new_h < 1
       new_h = 1
     resized = self.resize_stretch(new_w, new_h)
-    out = Image.new(width, height, opts["background"])
+    out = Image(width, height, opts["background"])
     ox = ((width - new_w) / 2).to_i()
     oy = ((height - new_h) / 2).to_i()
     return out.composite(resized, ox, oy)
@@ -191,7 +195,7 @@ class Image
 
   # Image.flip_horizontal provides the image/Image standard library operation.
   flip_horizontal = ->
-    out = Image.new(self.width, self.height, nil)
+    out = Image(self.width, self.height, nil)
     y = 0
     while y < self.height
       x = 0
@@ -203,7 +207,7 @@ class Image
 
   # Image.flip_vertical provides the image/Image standard library operation.
   flip_vertical = ->
-    out = Image.new(self.width, self.height, nil)
+    out = Image(self.width, self.height, nil)
     y = 0
     while y < self.height
       x = 0
@@ -215,7 +219,7 @@ class Image
 
   # Image.rotate90 provides the image/Image standard library operation.
   rotate90 = ->
-    out = Image.new(self.height, self.width, nil)
+    out = Image(self.height, self.width, nil)
     y = 0
     while y < self.height
       x = 0
@@ -227,21 +231,21 @@ class Image
 
   # Image.grayscale provides the image/Image standard library operation.
   grayscale = ->
-    out = Image.new(self.width, self.height, nil)
+    out = Image(self.width, self.height, nil)
     y = 0
     while y < self.height
       x = 0
       while x < self.width
         c = self.pixel(x, y)
         g = ((c.r * 30 + c.g * 59 + c.b * 11) / 100).to_i()
-        out.set_pixel(x, y, color.Color.rgba(g, g, g, c.a))
+        out.set_pixel(x, y, color.Color(g, g, g, c.a))
         x = x + 1
       y = y + 1
     return out
 
   # Image.composite provides the image/Image standard library operation.
   composite = over, x, y ->
-    out = Image.from_pixels(self.width, self.height, self.format, self.pixels)
+    out = self.from_pixels(self.width, self.height, self.format, self.pixels)
     yy = 0
     while yy < over.height
       xx = 0
@@ -256,7 +260,7 @@ class Image
           r = (top.r * a + under.r * inv).to_i()
           g = (top.g * a + under.g * inv).to_i()
           b = (top.b * a + under.b * inv).to_i()
-          out.set_pixel(dx, dy, color.Color.rgba(r, g, b, 255))
+          out.set_pixel(dx, dy, color.Color(r, g, b, 255))
         xx = xx + 1
       yy = yy + 1
     return out
@@ -269,8 +273,8 @@ class Image
       raise error("image: pixel coordinate out of bounds")
 
   # Image.from_pixels provides the image/Image standard library operation.
-  static from_pixels = width, height, format, pixels ->
-    out = Image.new(width, height, nil)
+  from_pixels = width, height, format, pixels ->
+    out = Image(width, height, nil)
     out.format = format
     out.pixels = []
     i = 0
@@ -280,8 +284,8 @@ class Image
     return out
 
   # Image.resize_options provides the image/Image standard library operation.
-  static resize_options = options ->
-    opts = { filter: "nearest", fit: "stretch", background: color.Color.rgba(0, 0, 0, 0) }
+  resize_options = options ->
+    opts = { filter: "nearest", fit: "stretch", background: color.Color(0, 0, 0, 0) }
     if options == nil
       return opts
     keys = options.keys()
@@ -296,17 +300,17 @@ class Image
       raise error("image.resize: unsupported filter")
     if opts["fit"] != "stretch" and opts["fit"] != "contain" and opts["fit"] != "cover"
       raise error("image.resize: unsupported fit")
-    Image.check_color(opts["background"])
+    self.check_color(opts["background"])
     return opts
 
   # Image.write_format provides the image/Image standard library operation.
-  static write_format = path, options ->
+  write_format = path, options ->
     if options != nil and options.has?("format")
       return options["format"]
-    return Image.format_from_path(path)
+    return self.format_from_path(path)
 
   # Image.format_from_path provides the image/Image standard library operation.
-  static format_from_path = path ->
+  format_from_path = path ->
     lower = path.lower()
     if lower.ends_with(".png")
       return "png"
@@ -321,11 +325,11 @@ class Image
     raise error("image: unknown image format")
 
   # Image.encodable_format? provides the image/Image standard library operation.
-  static encodable_format? = format ->
+  encodable_format? = format ->
     return format == "png" or format == "jpeg" or format == "bmp" or format == "ppm"
 
   # Image.check_encode_options provides the image/Image standard library operation.
-  static check_encode_options = format, options ->
+  check_encode_options = format, options ->
     if options == nil
       return nil
     keys = options.keys()
@@ -341,18 +345,18 @@ class Image
         raise error("image.encode: jpeg quality out of range")
 
   # Image.check_dimensions provides the image/Image standard library operation.
-  static check_dimensions = width, height ->
+  check_dimensions = width, height ->
     if width.class != Number or height.class != Number or width != width.to_i() or height != height.to_i()
       raise error("image: dimensions must be integers")
     if width <= 0 or height <= 0 or width * height > 10000000
       raise error("image: invalid dimensions")
 
   # Image.check_color provides the image/Image standard library operation.
-  static check_color = value ->
+  check_color = value ->
     if value.class != color.Color
       raise error("image: expected color.Color")
 
   # Image.check_channel provides the image/Image standard library operation.
-  static check_channel = value ->
+  check_channel = value ->
     if value.class != Number or value < 0 or value > 255 or value != value.to_i()
       raise error("image: channel out of range")

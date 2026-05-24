@@ -9,14 +9,26 @@ interface Serializable
 
 # Serializer provides the serialization/Serializer standard library API.
 class Serializer
+  # Serializer.initialize stores a value or serialized text.
+  initialize = value = nil ->
+    self.value = value
+
   # Serializer.to_data provides the serialization/Serializer standard library operation.
-  static to_data = value, options ->
-    opts = Serializer.options(options)
-    return Serializer.to_data_seen(value, opts, [])
+  to_data = value = nil, options = nil ->
+    if value == nil
+      value = self.value
+    opts = Serializer(nil).options(options)
+    return Serializer(nil).to_data_seen(value, opts, [])
+
+  # Serializer.serialize converts a value into serialization data.
+  serialize = value = nil, options = nil ->
+    self.to_data(value, options)
 
   # Serializer.from_data provides the serialization/Serializer standard library operation.
-  static from_data = data, klass, options ->
-    opts = Serializer.options(options)
+  from_data = data = nil, klass = nil, options = nil ->
+    if data == nil
+      data = self.value
+    opts = Serializer(nil).options(options)
     if klass == nil
       return data
     if serialization_has_member(klass, "from_serialized")
@@ -33,8 +45,8 @@ class Serializer
     i = 0
     while i < keys.len()
       key = keys[i]
-      if fields == nil or Serializer.array_has?(fields, key)
-        obj[key] = Serializer.from_data(defaults[key], nil, opts)
+      if fields == nil or Serializer(nil).array_has?(fields, key)
+        obj[key] = Serializer(nil).from_data(defaults[key], nil, opts)
       i = i + 1
 
     keys = data.keys()
@@ -42,51 +54,63 @@ class Serializer
     while i < keys.len()
       key = keys[i]
       if key != opts["class_key"]
-        if fields == nil or Serializer.array_has?(fields, key)
+        if fields == nil or Serializer(nil).array_has?(fields, key)
           if strict and not existing.has?(key) and not defaults.has?(key)
             raise error("serialization.from_data: unknown field " + key)
-          obj[key] = Serializer.from_data(data[key], nil, opts)
+          obj[key] = Serializer(nil).from_data(data[key], nil, opts)
       i = i + 1
     return obj
 
+  # Serializer.deserialize restores a value from serialization data.
+  deserialize = data = nil, klass = nil, options = nil ->
+    self.from_data(data, klass, options)
+
   # Serializer.to_json provides the serialization/Serializer standard library operation.
-  static to_json = value, options ->
-    return json.Json.dump(Serializer.to_data(value, options))
+  to_json = value = nil, options = nil ->
+    if value == nil
+      value = self.value
+    return json.Json(Serializer(nil).to_data(value, options)).stringify()
 
   # Serializer.from_json provides the serialization/Serializer standard library operation.
-  static from_json = text, klass, options ->
-    return Serializer.from_data(json.Json.parse(text), klass, options)
+  from_json = text = nil, klass = nil, options = nil ->
+    if text == nil
+      text = self.value
+    return Serializer(nil).from_data(json.Json(text).parse(), klass, options)
 
   # Serializer.to_toml provides the serialization/Serializer standard library operation.
-  static to_toml = value, options ->
-    data = Serializer.to_data(value, options)
+  to_toml = value = nil, options = nil ->
+    if value == nil
+      value = self.value
+    data = Serializer(nil).to_data(value, options)
     if serialization_kind(data) != "dict"
       raise error("serialization.to_toml: top-level value must serialize to a dict")
-    return toml.Toml.dump(data)
+    return toml.Toml(data).stringify()
 
   # Serializer.from_toml provides the serialization/Serializer standard library operation.
-  static from_toml = text, klass, options ->
-    return Serializer.from_data(toml.Toml.parse(text), klass, options)
+  from_toml = text = nil, klass = nil, options = nil ->
+    if text == nil
+      text = self.value
+    return Serializer(nil).from_data(toml.Toml(text).parse(), klass, options)
 
   # Serializer.to_data_seen provides the serialization/Serializer standard library operation.
-  static to_data_seen = value, opts, seen ->
+  to_data_seen = value, opts, seen ->
     kind = serialization_kind(value)
     if kind == "nil" or kind == "bool" or kind == "number" or kind == "string"
       return value
     if kind == "bytes"
       mode = opts.get("bytes", nil)
       if mode == "base64"
-        return base64.Base64.encode(value)
+        return base64.Base64(value).encode()
       if mode == "array"
         return bytes_array(value)
       raise error("serialization.to_data: bytes require bytes option")
     if kind == "array" or kind == "dict" or kind == "object"
-      Serializer.enter_seen(value, seen)
+      Serializer(nil).enter_seen(value, seen)
       if kind == "array"
         out = []
         i = 0
         while i < value.len()
-          out.push(Serializer.to_data_seen(value[i], opts, seen))
+          out.push(Serializer(nil).to_data_seen(value[i], opts, seen))
           i = i + 1
         seen.pop()
         return out
@@ -97,11 +121,11 @@ class Serializer
           if serialization_kind(data) == "object"
             raise error("serialization.to_data: to_data returned unsupported object")
           seen.pop()
-          return Serializer.to_data_seen(data, opts, seen)
+          return Serializer(nil).to_data_seen(data, opts, seen)
         if serialization_has_member(value, "to_serialized")
           data = value.to_serialized()
           seen.pop()
-          return Serializer.to_data_seen(data, opts, seen)
+          return Serializer(nil).to_data_seen(data, opts, seen)
         data = serialization_public_fields(value)
       out = {}
       if kind == "object" and opts["include_class"]
@@ -113,15 +137,15 @@ class Serializer
         key = keys[i]
         if key.class != String
           raise error("serialization.to_data: dictionary keys must be strings")
-        if fields == nil or Serializer.array_has?(fields, key)
-          out[key] = Serializer.to_data_seen(data[key], opts, seen)
+        if fields == nil or Serializer(nil).array_has?(fields, key)
+          out[key] = Serializer(nil).to_data_seen(data[key], opts, seen)
         i = i + 1
       seen.pop()
       return out
     raise error("serialization.to_data: unsupported " + kind)
 
   # Serializer.enter_seen provides the serialization/Serializer standard library operation.
-  static enter_seen = value, seen ->
+  enter_seen = value, seen ->
     id = serialization_id(value)
     i = 0
     while i < seen.len()
@@ -131,7 +155,7 @@ class Serializer
     seen.push(id)
 
   # Serializer.options provides the serialization/Serializer standard library operation.
-  static options = options ->
+  options = options ->
     opts = { "bytes": nil, "include_class": false, "class_key": "$class", "fields": nil, "defaults": {}, "strict_fields": false }
     if options == nil
       return opts
@@ -140,7 +164,7 @@ class Serializer
     i = 0
     while i < keys.len()
       key = keys[i]
-      if not Serializer.array_has?(allowed, key)
+      if not Serializer(nil).array_has?(allowed, key)
         raise error("serialization.options: unknown option " + key)
       opts[key] = options[key]
       i = i + 1
@@ -149,7 +173,7 @@ class Serializer
     return opts
 
   # Serializer.array_has? provides the serialization/Serializer standard library operation.
-  static array_has? = values, value ->
+  array_has? = values, value ->
     i = 0
     while i < values.len()
       if values[i] == value

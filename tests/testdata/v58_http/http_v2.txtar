@@ -21,7 +21,7 @@ class HttpText
     chr(13)
 
 crlf = HttpText.cr() + "\n"
-server = socket.Server.listen("127.0.0.1", 18091, {})
+server = socket.Server(nil).listen("127.0.0.1", 18091, {})
 conn = server.accept()
 line = conn.read_line()
 while line != nil and line != crlf and line != "\n"
@@ -49,11 +49,11 @@ server.close()
 -- client.tya --
 import net/http as http
 
-posted = http.Client.post("http://127.0.0.1:18091/submit", "payload")
+posted = http.Client("http://127.0.0.1:18091/submit").post("payload")
 print(posted["status"])
 print(posted["body"])
 
-chunked = http.Client.get("http://127.0.0.1:18091/chunked")
+chunked = http.Client("http://127.0.0.1:18091/chunked").get()
 print(chunked["body"])
 
 -- concurrent_server.tya --
@@ -62,7 +62,7 @@ import time as time
 
 app = http.Server()
 slow = _req ->
-  time.Time.sleep(1)
+  time.Time().sleep(1)
   return { status: 200, body: "slow" }
 app.get("/slow", slow)
 app.get("/fast", _req -> { status: 200, body: "fast" })

@@ -1414,7 +1414,7 @@ func synthesizeTestSuite(files []string) (string, error) {
 		b.WriteString(m)
 		b.WriteString("\n")
 	}
-	b.WriteString("\nsuite = TestSuite.discover([")
+	b.WriteString("\nsuite = TestSuite().discover([")
 	for i, m := range moduleNames {
 		if i > 0 {
 			b.WriteString(", ")
@@ -1422,7 +1422,7 @@ func synthesizeTestSuite(files []string) (string, error) {
 		b.WriteString(m)
 	}
 	b.WriteString("])\n")
-	b.WriteString("TestRunner.default().run_and_exit(suite)\n")
+	b.WriteString("TestRunner().default().run_and_exit(suite)\n")
 	return b.String(), nil
 }
 

@@ -7,29 +7,29 @@ class StdlibDirTest extends TestCase
   test_mkdir_list_rmdir = ->
     root = "/tmp/tya_v23_dir_a"
     try
-      dir.Dir.rmdir(root)
+      dir.Dir(root).rmdir()
     catch _
       nil
-    dir.Dir.mkdir(root)
-    file.File.write("{root}/b.txt", "")
-    file.File.write("{root}/a.txt", "")
-    self.assert_equal(["a.txt", "b.txt"], dir.Dir.list(root), "sorted list")
-    file.File.remove("{root}/a.txt")
-    file.File.remove("{root}/b.txt")
-    dir.Dir.rmdir(root)
-    self.assert_equal(false, file.File.exists?(root), "rmdir removed")
+    dir.Dir(root).mkdir()
+    file.File("{root}/b.txt").write("")
+    file.File("{root}/a.txt").write("")
+    self.assert_equal(["a.txt", "b.txt"], dir.Dir(root).list(), "sorted list")
+    file.File("{root}/a.txt").remove()
+    file.File("{root}/b.txt").remove()
+    dir.Dir(root).rmdir()
+    self.assert_equal(false, file.File(root).exists?(), "rmdir removed")
 
   test_mkdir_existing_raises = ->
     root = "/tmp/tya_v23_dir_b"
     try
-      dir.Dir.rmdir(root)
+      dir.Dir(root).rmdir()
     catch _
       nil
-    dir.Dir.mkdir(root)
+    dir.Dir(root).mkdir()
     raised = false
     try
-      dir.Dir.mkdir(root)
+      dir.Dir(root).mkdir()
     catch _
       raised = true
     self.assert(raised, "duplicate mkdir raises")
-    dir.Dir.rmdir(root)
+    dir.Dir(root).rmdir()

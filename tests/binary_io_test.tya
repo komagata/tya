@@ -6,13 +6,13 @@ class BinaryIoTest extends TestCase
   test_round_trip = ->
     p = "/tmp/tya_v25_test.bin"
     data = b"\x00\x01\x02\xff"
-    file.File.write_bytes(p, data)
-    back = file.File.read_bytes(p)
+    file.File(p).write_bytes(data)
+    back = file.File(p).read_bytes()
     self.assert_equal(4, back.len(), "len")
     self.assert_equal(255, back[3], "byte 3")
     self.assert(data == back, "equal")
   test_text_to_bytes_roundtrip = ->
     p = "/tmp/tya_v25_text.bin"
-    file.File.write_bytes(p, bytes_of("Tya"))
-    back = file.File.read_bytes(p)
+    file.File(p).write_bytes(bytes_of("Tya"))
+    back = file.File(p).read_bytes()
     self.assert_equal("Tya", bytes_text(back), "round trip")

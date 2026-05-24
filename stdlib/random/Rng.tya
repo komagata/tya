@@ -10,7 +10,7 @@ class Rng
       self.state = self.state + 2147483646
 
   # Rng.new provides the random/Rng standard library operation.
-  static new = seed ->
+  new = seed ->
     return Rng(seed)
 
   # Rng.seed provides the random/Rng standard library operation.
@@ -39,7 +39,7 @@ class Rng
   bool = probability ->
     if probability == nil
       probability = 0.5
-    Rng.check_probability(probability)
+    self.check_probability(probability)
     return self.float() < probability
 
   # Rng.choice provides the random/Rng standard library operation.
@@ -63,13 +63,13 @@ class Rng
 
   # Rng.shuffle_copy provides the random/Rng standard library operation.
   shuffle_copy = items ->
-    copy = Rng.copy_array(items)
+    copy = self.copy_array(items)
     self.shuffle(copy)
     return copy
 
   # Rng.sample provides the random/Rng standard library operation.
   sample = items, count ->
-    Rng.check_sample_count(items, count)
+    self.check_sample_count(items, count)
     shuffled = self.shuffle_copy(items)
     out = []
     i = 0
@@ -86,7 +86,7 @@ class Rng
 
   # Rng.weighted_index provides the random/Rng standard library operation.
   weighted_index = weights ->
-    total = Rng.weight_total(weights, "random.Rng.weighted_index")
+    total = self.weight_total(weights, "random.Rng.weighted_index")
     pick = self.float() * total
     sum = 0
     i = 0
@@ -103,7 +103,7 @@ class Rng
     return self.state
 
   # Rng.copy_array provides the random/Rng standard library operation.
-  static copy_array = items ->
+  copy_array = items ->
     out = []
     i = 0
     while i < items.len()
@@ -112,19 +112,19 @@ class Rng
     return out
 
   # Rng.check_probability provides the random/Rng standard library operation.
-  static check_probability = probability ->
+  check_probability = probability ->
     if probability.class != Number or probability != probability or probability < 0 or probability > 1
       raise error("random.Rng.bool: probability must be between 0.0 and 1.0")
 
   # Rng.check_sample_count provides the random/Rng standard library operation.
-  static check_sample_count = items, count ->
+  check_sample_count = items, count ->
     if count.class != Number or count != count.to_i() or count != count
       raise error("random.Rng.sample: count must be an integer")
     if count < 0 or count > items.len()
       raise error("random.Rng.sample: count out of range")
 
   # Rng.weight_total provides the random/Rng standard library operation.
-  static weight_total = weights, label ->
+  weight_total = weights, label ->
     if weights.len() == 0
       raise error(label + ": empty weights")
     total = 0

@@ -20,11 +20,11 @@ class Server
     self.error_handler = nil
 
   # Server.child provides the net/http/Server standard library operation.
-  static child = parent, prefix ->
+  child = parent, prefix ->
     child = Server()
     child.routes = parent.routes
-    child.prefix = Server.join_paths(parent.prefix, prefix)
-    child.middlewares = Server.copy_array(parent.middlewares)
+    child.prefix = self.join_paths(parent.prefix, prefix)
+    child.middlewares = self.copy_array(parent.middlewares)
     child.named_routes = parent.named_routes
     child.not_found_handler = parent.not_found_handler
     child.error_handler = parent.error_handler
@@ -68,10 +68,10 @@ class Server
   # route registers a handler for method and path.
   # Raises when the path pattern or route options are invalid.
   route = method, path, handler, options ->
-    opts = Server.route_options(options)
-    full_path = Server.join_paths(self.prefix, path)
-    Server.validate_pattern(full_path)
-    route = { method: method.upper(), path: full_path, handler: handler, middlewares: Server.copy_array(self.middlewares), trailing_slash: opts["trailing_slash"], name: opts["name"] }
+    opts = self.route_options(options)
+    full_path = self.join_paths(self.prefix, path)
+    self.validate_pattern(full_path)
+    route = { method: method.upper(), path: full_path, handler: handler, middlewares: self.copy_array(self.middlewares), trailing_slash: opts["trailing_slash"], name: opts["name"] }
     self.routes.push(route)
     if opts["name"] != nil
       self.named_routes[opts["name"]] = route
@@ -84,7 +84,7 @@ class Server
 
   # Server.group provides the net/http/Server standard library operation.
   group = prefix, fn ->
-    child = Server.child(self, prefix)
+    child = self.child(self, prefix)
     fn(child)
     return self
 
@@ -105,7 +105,7 @@ class Server
     route = self.named_routes.get(name, nil)
     if route == nil
       raise error("http.path: unknown route " + name)
-    return Server.build_path(route["path"], params)
+    return self.build_path(route["path"], params)
 
   # Server.redirect provides the net/http/Server standard library operation.
   # redirect returns a response dictionary with Location set.
@@ -145,18 +145,18 @@ class Server
       template_options["escape"] = "html"
     source = tmpl
     if tmpl.class != String
-      source = bytes.Bytes.text(tmpl)
+      source = bytes.Bytes(tmpl).to_text()
     body = ""
-    if tmpl.class == String and file.File.exists?(tmpl)
-      body = template.Template.render_file(tmpl, data, template_options)
+    if tmpl.class == String and file.File(tmpl).exists?()
+      body = template.Template(tmpl).render_file(data, template_options)
     else
-      body = template.Template.render(source, data, template_options)
+      body = template.Template(source).render(data, template_options)
     return { status: options.get("status", 200), headers: headers, body: body }
 
   # cookie returns a validated Set-Cookie header value.
   # Options may include path, domain, max_age, expires, secure, http_only, and same_site.
   cookie = name, value, options ->
-    return Server.cookie_value(name, value, options)
+    return self.cookie_value(name, value, options)
 
   # with_cookie appends a Set-Cookie header value to response and returns response.
   with_cookie = response, name, value, options ->
@@ -164,7 +164,7 @@ class Server
       response["header_values"] = {}
     if response["header_values"]["Set-Cookie"] == nil
       response["header_values"]["Set-Cookie"] = []
-    response["header_values"]["Set-Cookie"].push(Server.cookie_value(name, value, options))
+    response["header_values"]["Set-Cookie"].push(self.cookie_value(name, value, options))
     return response
 
   # Server.dispatch provides the net/http/Server standard library operation.
@@ -191,9 +191,9 @@ class Server
 
   # Server.call_route provides the net/http/Server standard library operation.
   call_route = route, method, path ->
-    params = Server.match_params(route, path)
+    params = self.match_params(route, path)
     req = { method: method, path: path, params: params, path_params: params, query: {}, headers: {}, body: b"", route: route }
-    next = Next.new(route["middlewares"], 0, route["handler"])
+    next = Next(route["middlewares"], 0, route["handler"])
     result = nil
     try
       result = next.call(req)
@@ -208,7 +208,7 @@ class Server
     i = 0
     while i < self.routes.len()
       route = self.routes[i]
-      if (route["method"] == method or route["method"] == "ANY") and Server.match_params(route, path) != nil
+      if (route["method"] == method or route["method"] == "ANY") and self.match_params(route, path) != nil
         return route
       i = i + 1
     return nil
@@ -219,19 +219,19 @@ class Server
     i = 0
     while i < self.routes.len()
       route = self.routes[i]
-      if route["method"] != "__NOT_FOUND__" and route["method"] != "__ERROR__" and Server.match_params(route, path) != nil
+      if route["method"] != "__NOT_FOUND__" and route["method"] != "__ERROR__" and self.match_params(route, path) != nil
         method = route["method"]
         if method == "ANY"
           method = "GET,POST,PUT,DELETE,PATCH,OPTIONS,HEAD"
-        if not Server.array_has?(methods, method)
+        if not self.array_has?(methods, method)
           methods.push(method)
-        if method == "GET" and not Server.array_has?(methods, "HEAD")
+        if method == "GET" and not self.array_has?(methods, "HEAD")
           methods.push("HEAD")
       i = i + 1
     return methods.join(", ")
 
   # Server.static provides the net/http/Server standard library operation.
-  static = prefix, assets ->
+  serve_static = prefix, assets ->
     for entry in assets.entries()
       path = entry[0]
       asset = entry[1]
@@ -282,7 +282,7 @@ class Server
     http_server_run_tls(self.routes, port, cert_file, key_file, options)
 
   # Server.route_options provides the net/http/Server standard library operation.
-  static route_options = options ->
+  route_options = options ->
     opts = { trailing_slash: "strict", name: nil }
     if options == nil
       return opts
@@ -299,9 +299,9 @@ class Server
     return opts
 
   # cookie_value formats a Set-Cookie header value.
-  static cookie_value = name, value, options ->
-    Server.validate_cookie_name(name)
-    Server.validate_cookie_value(value)
+  cookie_value = name, value, options ->
+    self.validate_cookie_name(name)
+    self.validate_cookie_value(value)
     if options == nil
       options = {}
     out = name + "=" + value
@@ -327,7 +327,7 @@ class Server
     return out
 
   # validate_cookie_name raises when name is not a valid cookie name.
-  static validate_cookie_name = name ->
+  validate_cookie_name = name ->
     if name == nil or name == ""
       raise error("http.cookie: invalid cookie name")
     i = 0
@@ -339,7 +339,7 @@ class Server
       i = i + 1
 
   # validate_cookie_value raises when value cannot be used in a cookie.
-  static validate_cookie_value = value ->
+  validate_cookie_value = value ->
     if value == nil
       raise error("http.cookie: invalid cookie value")
     i = 0
@@ -351,7 +351,7 @@ class Server
       i = i + 1
 
   # Server.validate_pattern provides the net/http/Server standard library operation.
-  static validate_pattern = path ->
+  validate_pattern = path ->
     if not path.starts_with("/")
       raise error("http.route: path must start with /")
     names = []
@@ -363,17 +363,17 @@ class Server
         raise error("http.route: wildcard must be final segment")
       if part.starts_with(":") or part.starts_with("*")
         name = part.slice(1, part.len())
-        if name == "" or Server.array_has?(names, name)
+        if name == "" or self.array_has?(names, name)
           raise error("http.route: duplicate or empty parameter " + name)
         names.push(name)
       i = i + 1
 
   # Server.match_params provides the net/http/Server standard library operation.
-  static match_params = route, path ->
+  match_params = route, path ->
     pattern = route["path"]
     if route.get("trailing_slash", "strict") == "ignore"
-      pattern = Server.strip_trailing(pattern)
-      path = Server.strip_trailing(path)
+      pattern = self.strip_trailing(pattern)
+      path = self.strip_trailing(path)
     p = pattern.split("/")
     r = path.split("/")
     params = {}
@@ -401,7 +401,7 @@ class Server
     return params
 
   # Server.build_path provides the net/http/Server standard library operation.
-  static build_path = pattern, params ->
+  build_path = pattern, params ->
     out = []
     parts = pattern.split("/")
     i = 0
@@ -421,29 +421,29 @@ class Server
     return result
 
   # Server.join_paths provides the net/http/Server standard library operation.
-  static join_paths = prefix, path ->
+  join_paths = prefix, path ->
     if prefix == nil or prefix == ""
       if path == ""
         return "/"
       return path
     if path == nil or path == "" or path == "/"
       return prefix
-    return Server.strip_trailing(prefix) + "/" + Server.strip_leading(path)
+    return self.strip_trailing(prefix) + "/" + self.strip_leading(path)
 
   # Server.strip_trailing provides the net/http/Server standard library operation.
-  static strip_trailing = path ->
+  strip_trailing = path ->
     while path.byte_len() > 1 and path.ends_with("/")
       path = path.slice(0, path.len() - 1)
     return path
 
   # Server.strip_leading provides the net/http/Server standard library operation.
-  static strip_leading = path ->
+  strip_leading = path ->
     while path.byte_len() > 0 and path.starts_with("/")
       path = path.slice(1, path.len())
     return path
 
   # Server.copy_array provides the net/http/Server standard library operation.
-  static copy_array = values ->
+  copy_array = values ->
     out = []
     i = 0
     while i < values.len()
@@ -452,7 +452,7 @@ class Server
     return out
 
   # Server.array_has? provides the net/http/Server standard library operation.
-  static array_has? = values, value ->
+  array_has? = values, value ->
     i = 0
     while i < values.len()
       if values[i] == value

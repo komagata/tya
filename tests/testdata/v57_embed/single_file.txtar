@@ -14,7 +14,7 @@ hello tya embed
 import bytes as bytes
 
 embed "data.txt" as payload
-print(bytes.Bytes.text(payload))
+print(bytes.Bytes(payload).to_text())
 
 embed "data.txt" as meta with { hash: true, gzip: true }
 print(meta["path"])

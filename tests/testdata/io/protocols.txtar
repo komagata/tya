@@ -24,14 +24,14 @@ import io as io
 import file as file
 
 path = "io_protocols.txt"
-file.File.write(path, "helloworld")
+file.File(path).write("helloworld")
 
-reader = io.Io.open(path, "r")
-writer = io.Io.stdout()
-count = io.Io.copy(reader, writer)
+reader = io.Io().open(path, "r")
+writer = io.Io().stdout()
+count = io.Io().copy(reader, writer)
 reader.close()
 writer.flush()
-file.File.remove(path)
+file.File(path).remove()
 print(count)
 
 -- construct_readable.tya --

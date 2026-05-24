@@ -23,13 +23,13 @@ import net/http as http
 
 url = "https://127.0.0.1:18098/"
 try
-  http.Client.get(url)
+  http.Client(url).get()
   print("unexpected")
 catch err
   print("verify_failed")
 
-trusted = http.Client.request("GET", url, { ca_file: "cert.pem" })
+trusted = http.Client(url).request("GET", { ca_file: "cert.pem" })
 print("trusted:" + trusted["body"])
 
-insecure = http.Client.request("GET", url, { insecure_skip_verify: true })
+insecure = http.Client(url).request("GET", { insecure_skip_verify: true })
 print("insecure:" + insecure["body"])

@@ -1,7 +1,13 @@
 # Path provides the path/Path standard library API.
 class Path
+  # Path.initialize stores a filesystem path.
+  initialize = value = nil ->
+    self.value = value
+
   # Path.basename provides the path/Path standard library operation.
-  static basename = value ->
+  basename = value = nil ->
+    if value == nil
+      value = self.value
     parts = value.split("/")
     i = parts.len() - 1
     while i >= 0
@@ -11,7 +17,9 @@ class Path
     return ""
 
   # Path.dirname provides the path/Path standard library operation.
-  static dirname = value ->
+  dirname = value = nil ->
+    if value == nil
+      value = self.value
     parts = value.split("/")
     last = parts.len() - 1
     while last >= 0 and parts[last] == ""
@@ -31,7 +39,9 @@ class Path
     return joined
 
   # Path.extname provides the path/Path standard library operation.
-  static extname = value ->
+  extname = value = nil ->
+    if value == nil
+      value = self.value
     bparts = value.split("/")
     bi = bparts.len() - 1
     base = ""
@@ -48,7 +58,9 @@ class Path
     return "." + parts[n - 1]
 
   # Path.clean provides the path/Path standard library operation.
-  static clean = value ->
+  clean = value = nil ->
+    if value == nil
+      value = self.value
     if value == ""
       return "."
     is_abs = value.starts_with("/")
@@ -72,7 +84,9 @@ class Path
     return joined
 
   # Path.join provides the path/Path standard library operation.
-  static join = parts ->
+  join = parts = nil ->
+    if parts == nil
+      parts = self.value
     raw = parts.join("/")
     if raw == ""
       return "."
@@ -97,5 +111,7 @@ class Path
     return joined
 
   # Path.expand_user provides the path/Path standard library operation.
-  static expand_user = value ->
+  expand_user = value = nil ->
+    if value == nil
+      value = self.value
     path_expand_user(value)

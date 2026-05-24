@@ -4,27 +4,27 @@ import json as json
 class StdlibJsonTest extends TestCase
 
   test_dump_object = ->
-    out = json.Json.dump({ name: "tya", n: 23 })
+    out = json.Json({ name: "tya", n: 23 }).stringify()
     self.assert_equal("{{\"name\":\"tya\",\"n\":23}}", out, "object")
   test_dump_array = ->
-    self.assert_equal("[1,2,3]", json.Json.dump([1, 2, 3]), "array")
+    self.assert_equal("[1,2,3]", json.Json([1, 2, 3]).stringify(), "array")
   test_dump_primitives = ->
-    self.assert_equal("null", json.Json.dump(nil), "nil")
-    self.assert_equal("true", json.Json.dump(true), "true")
-    self.assert_equal("false", json.Json.dump(false), "false")
-    self.assert_equal("42", json.Json.dump(42), "int")
+    self.assert_equal("null", json.Json(nil).stringify(), "nil")
+    self.assert_equal("true", json.Json(true).stringify(), "true")
+    self.assert_equal("false", json.Json(false).stringify(), "false")
+    self.assert_equal("42", json.Json(42).stringify(), "int")
   test_dump_string_escapes = ->
-    self.assert_equal("\"a\\nb\"", json.Json.dump("a\nb"), "newline")
+    self.assert_equal("\"a\\nb\"", json.Json("a\nb").stringify(), "newline")
   test_parse_object = ->
     src = "{{\"name\":\"tya\",\"n\":23}}"
-    v = json.Json.parse(src)
+    v = json.Json(src).parse()
     self.assert_equal("tya", v["name"], "name")
     self.assert_equal(23, v["n"], "n")
   test_parse_array = ->
-    v = json.Json.parse("[1, 2, 3]")
+    v = json.Json("[1, 2, 3]").parse()
     self.assert_equal([1, 2, 3], v, "array")
   test_parse_primitives = ->
-    self.assert_equal(nil, json.Json.parse("null"), "null")
-    self.assert_equal(true, json.Json.parse("true"), "true")
-    self.assert_equal(false, json.Json.parse("false"), "false")
-    self.assert_equal(42, json.Json.parse("42"), "int")
+    self.assert_equal(nil, json.Json("null").parse(), "null")
+    self.assert_equal(true, json.Json("true").parse(), "true")
+    self.assert_equal(false, json.Json("false").parse(), "false")
+    self.assert_equal(42, json.Json("42").parse(), "int")

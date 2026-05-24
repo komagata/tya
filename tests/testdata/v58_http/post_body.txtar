@@ -12,7 +12,7 @@ stdout 'got: hello v58'
 import bytes as bytes
 import net/http as http
 
-handle = req -> { status: 201, body: "got: " + bytes.Bytes.text(req["body"]) }
+handle = req -> { status: 201, body: "got: " + bytes.Bytes(req["body"]).to_text() }
 
 app = http.Server()
 app.post("/echo", handle)

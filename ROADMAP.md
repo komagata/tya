@@ -169,8 +169,8 @@ Use `testscript` for CLI-level specification tests, especially `tya run`,
 ## Near Term
 
 - [ ] **Finish `net/http` v2**
-  - [x] HTTP client: `http.Client.get(url)`, `http.Client.post(url, body)`, and
-    `http.Client.request(method, url, opts)`.
+  - [x] HTTP client: `http.Client().get(url)`, `http.Client().post(url, body)`, and
+    `http.Client().request(method, url, opts)`.
   - [x] Integrate the generic `template.Template` stdlib renderer for HTTP
     response templates.
   - [x] Server concurrency so slow yielding handlers do not block other ready

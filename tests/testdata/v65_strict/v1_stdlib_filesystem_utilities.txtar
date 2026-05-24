@@ -32,34 +32,34 @@ import file as file
 import dir as dir
 import bytes as bytes
 
-root = dir.Dir.temp_dir("tya-fs")
-dir.Dir.mkdir_all("{root}/nested")
-file.File.write_bytes("{root}/a.txt", bytes.Bytes.new([0, 255]))
-file.File.copy("{root}/a.txt", "{root}/b.txt", {})
-print(bytes.Bytes.array(file.File.read_bytes("{root}/b.txt"))[1])
-file.File.chmod("{root}/b.txt", 420)
-print(file.File.stat("{root}/b.txt")["mode"] == 420)
+root = dir.Dir(nil).temp_dir("tya-fs")
+dir.Dir("{root}/nested").mkdir_all()
+file.File("{root}/a.txt").write_bytes(bytes.Bytes([0, 255]).from_array())
+file.File("{root}/a.txt").copy("{root}/b.txt", {})
+print(bytes.Bytes().to_array(file.File("{root}/b.txt").read_bytes())[1])
+file.File("{root}/b.txt").chmod(420)
+print(file.File("{root}/b.txt").stat()["mode"] == 420)
 
 seen = []
 record = entry -> seen.push(entry["name"])
-dir.Dir.walk(root, record, {})
+dir.Dir(root).walk(record, {})
 print(seen.contains("nested"))
 print(seen.join(","))
 
-tmp = file.File.temp("tya-fs", ".tmp")
-print(file.File.exists?(tmp))
-file.File.remove(tmp)
-dir.Dir.remove_all(root)
-print(file.File.exists?(root))
+tmp = file.File().temp("tya-fs", ".tmp")
+print(file.File(tmp).exists?())
+file.File(tmp).remove()
+dir.Dir(root).remove_all()
+print(file.File(root).exists?())
 
 -- invalid_remove_all.tya --
 import dir as dir
 
-dir.Dir.remove_all(".")
+dir.Dir(".").remove_all()
 
 -- invalid_copy.tya --
 import file as file
 
-file.File.write("src.txt", "a")
-file.File.write("dst.txt", "b")
-file.File.copy("src.txt", "dst.txt", { overwrite: false })
+file.File("src.txt").write("a")
+file.File("dst.txt").write("b")
+file.File("src.txt").copy("dst.txt", { overwrite: false })

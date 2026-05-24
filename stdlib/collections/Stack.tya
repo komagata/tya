@@ -1,18 +1,18 @@
 # Stack provides the collections/Stack standard library API.
 class Stack
   # Stack.initialize provides the collections/Stack standard library operation.
-  initialize = values ->
+  initialize = values = nil ->
     if values == nil
       self.items = []
     else
       self.items = values.slice(0, values.len())
 
   # Stack.new provides the collections/Stack standard library operation.
-  static new = ->
+  new = ->
     return Stack(nil)
 
   # Stack.from_array provides the collections/Stack standard library operation.
-  static from_array = values ->
+  from_array = values ->
     return Stack(values)
 
   # Stack.push provides the collections/Stack standard library operation.

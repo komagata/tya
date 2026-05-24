@@ -2522,7 +2522,7 @@ TyaValue tya_file_temp(TyaValue prefix, TyaValue suffix) {
     return tya_nil();
   }
   close(fd);
-  return tya_string(templ);
+  return tya_string(strdup(templ));
 }
 
 TyaValue tya_path_expand_user(TyaValue value) {
@@ -6871,7 +6871,7 @@ TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValu
   t->next_waiter = NULL;
   t->next_channel_waiter = NULL;
   t->in_live_list = false;
-  t->stack_size = 64 * 1024;
+  t->stack_size = 256 * 1024;
   t->stack = malloc(t->stack_size);
   if (t->stack == NULL) {
     tya_raise(tya_string("spawn: task stack allocation failed"));

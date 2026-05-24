@@ -13,7 +13,7 @@ import (
 func TestRunRegexCompileAndSearch(t *testing.T) {
 	out := runRegexProgram(t, strings.Join([]string{
 		"import regex as regex",
-		"rx = regex.Regex.compile(\"([a-z]+)([0-9]+)\")",
+		"rx = regex.Regex(\"([a-z]+)([0-9]+)\").compile()",
 		"found = rx.find(\"xx abc123 yy\")",
 		"print(found[\"text\"])",
 		"print(found[\"start\"])",
@@ -21,7 +21,7 @@ func TestRunRegexCompileAndSearch(t *testing.T) {
 		"print(found[\"groups\"][0])",
 		"print(found[\"groups\"][1])",
 		"print(rx.match?(\"no digits\"))",
-		"print(regex.Regex.search(\"[0-9]+\", \"abc123\")[\"text\"])",
+		"print(regex.Regex(\"[0-9]+\").search(\"abc123\")[\"text\"])",
 		"",
 	}, "\n"))
 	want := "abc123\n3\n9\nabc\n123\nfalse\n123\n"
@@ -33,11 +33,11 @@ func TestRunRegexCompileAndSearch(t *testing.T) {
 func TestRunRegexFindAllSplitReplace(t *testing.T) {
 	out := runRegexProgram(t, strings.Join([]string{
 		"import regex as regex",
-		"rx = regex.Regex.compile(\"([a-z]+)=([0-9]+)\")",
+		"rx = regex.Regex(\"([a-z]+)=([0-9]+)\").compile()",
 		"matches = rx.find_all(\"a=1 b=22\")",
 		"print(matches.len())",
 		"print(matches[1][\"groups\"][0])",
-		"print(regex.Regex.compile(\", *\").split(\"a, b, c\").join(\"|\"))",
+		"print(regex.Regex(\", *\").compile().split(\"a, b, c\").join(\"|\"))",
 		"print(rx.replace(\"a=1 b=22\", r\"${1}:$$:${2}\"))",
 		"print(rx.replace(\"a=1 b=22\", r\"${2}\", 1))",
 		"",
@@ -51,7 +51,7 @@ func TestRunRegexFindAllSplitReplace(t *testing.T) {
 func TestRunRegexUtf8RuneIndexes(t *testing.T) {
 	out := runRegexProgram(t, strings.Join([]string{
 		"import regex as regex",
-		"found = regex.Regex.search(\"い.\", \"あいうえ\")",
+		"found = regex.Regex(\"い.\").search(\"あいうえ\")",
 		"print(found[\"text\"])",
 		"print(found[\"start\"])",
 		"print(found[\"end\"])",
@@ -68,11 +68,11 @@ func TestRunRegexInvalidPatternsAndOptionsRaiseStructuredErrors(t *testing.T) {
 		src  string
 		want string
 	}{
-		{name: "pattern", src: "regex.Regex.compile(\"[\")", want: "invalid pattern"},
-		{name: "unknown option", src: "regex.Regex.compile(\"a\", { bad: true })", want: "unknown option bad"},
-		{name: "option kind", src: "regex.Regex.compile(\"a\", { ignore_case: 1 })", want: "option ignore_case must be bool"},
-		{name: "unknown capture", src: "regex.Regex.compile(\"(a)\").replace(\"a\", r\"${9}\")", want: "unknown capture reference"},
-		{name: "wrong kind", src: "regex.Regex.compile(1)", want: "pattern must be a string"},
+		{name: "pattern", src: "regex.Regex(\"[\").compile()", want: "invalid pattern"},
+		{name: "unknown option", src: "regex.Regex(\"a\").compile({ bad: true })", want: "unknown option bad"},
+		{name: "option kind", src: "regex.Regex(\"a\").compile({ ignore_case: 1 })", want: "option ignore_case must be bool"},
+		{name: "unknown capture", src: "regex.Regex(\"(a)\").compile().replace(\"a\", r\"${9}\")", want: "unknown capture reference"},
+		{name: "wrong kind", src: "regex.Regex(1).compile()", want: "pattern must be a string"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

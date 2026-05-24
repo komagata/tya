@@ -7,8 +7,8 @@ stderr 'err\n'
 -- stdout_stderr.tya --
 import io as io
 
-out = io.Io.stdout()
-err = io.Io.stderr()
+out = io.Io().stdout()
+err = io.Io().stderr()
 out.write_line("out")
 out.flush()
 err.write_line("err")

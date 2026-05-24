@@ -3,7 +3,7 @@ import image as image
 src = args()[0]
 dst = args()[1]
 
-source_image = image.Image.read(src)
+source_image = image.Image(1, 1, nil).read(src)
 thumb = source_image.resize(128, 128, { fit: "contain" })
 thumb.write(dst)
 println(dst)

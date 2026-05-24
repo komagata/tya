@@ -1,4 +1,4 @@
 import image as image
 
-image_info = image.Codec.identify_file(args()[0])
+image_info = image.Codec(nil).metadata_file(args()[0])
 println(image_info["format"] + " " + image_info["width"].to_s() + "x" + image_info["height"].to_s())

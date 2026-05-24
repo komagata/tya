@@ -19,14 +19,14 @@ while i < 30
   root.push(c)
   i = i + 1
 
-peak = runtime.Runtime.gc_stats()
+peak = runtime.Runtime().gc_stats()
 print("made cycles, peak live: " + peak["live_count"].to_s())
 
 # Drop the only reference. The cycles are now unreachable yet still
 # reference each other.
 root = []
-runtime.Runtime.gc()
+runtime.Runtime().gc()
 
-after = runtime.Runtime.gc_stats()
+after = runtime.Runtime().gc_stats()
 print("cleared root, after gc: " + after["live_count"].to_s())
 print("cycle reclaimed: " + (after["live_count"] < peak["live_count"]).to_s())

@@ -1,8 +1,8 @@
 import color as color
 
-base = color.Color.hex("#0066ff")
-accent = color.Color.lighten(base, 0.35)
-shadow = color.Color.darken(base, 0.35)
+base = color.Color().hex("#0066ff")
+accent = base.lighten(0.35)
+shadow = base.darken(0.35)
 
 print(base.to_hex())
 print(accent.to_hex())

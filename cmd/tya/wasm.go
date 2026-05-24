@@ -183,6 +183,10 @@ void tya_gc_maybe_collect(void);
 void tya_print(TyaValue value);
 TyaValue tya_to_string(TyaValue value);
 TyaValue tya_add(TyaValue left, TyaValue right);
+bool tya_equal(TyaValue left, TyaValue right);
+bool tya_truthy(TyaValue value);
+TyaValue tya_class_of(TyaValue value);
+TyaValue tya_primitive_class(const char *name);
 #endif
 `
 
@@ -350,6 +354,32 @@ TyaValue tya_env(TyaValue name) { (void)name; return tya_nil(); }
 void tya_panic(TyaValue value) { tya_print(value); }
 TyaValue tya_to_string(TyaValue value) { return value.kind == TYA_STRING ? value : tya_string(""); }
 TyaValue tya_add(TyaValue left, TyaValue right) { (void)right; return left; }
+bool tya_equal(TyaValue left, TyaValue right) {
+  if (left.kind != right.kind) return false;
+  if (left.kind == TYA_NIL || left.kind == TYA_MISSING) return true;
+  if (left.kind == TYA_BOOL) return left.boolean == right.boolean;
+  if (left.kind == TYA_NUMBER) return left.number == right.number;
+  if (left.kind == TYA_STRING) return tya_streq(left.string, right.string);
+  return left.dict == right.dict && left.array == right.array && left.function == right.function;
+}
+bool tya_truthy(TyaValue value) {
+  if (value.kind == TYA_NIL || value.kind == TYA_MISSING) return false;
+  if (value.kind == TYA_BOOL) return value.boolean;
+  return true;
+}
+TyaValue tya_primitive_class(const char *name) { return tya_string(name); }
+TyaValue tya_class_of(TyaValue value) {
+  if (value.kind == TYA_NIL) return tya_string("Nil");
+  if (value.kind == TYA_BOOL) return tya_string("Bool");
+  if (value.kind == TYA_NUMBER) return tya_string("Number");
+  if (value.kind == TYA_STRING) return tya_string("String");
+  if (value.kind == TYA_ARRAY) return tya_string("Array");
+  if (value.kind == TYA_DICT) return tya_string("Dict");
+  if (value.kind == TYA_OBJECT) return tya_string("Object");
+  if (value.kind == TYA_FUNCTION) return tya_string("Function");
+  if (value.kind == TYA_BYTES) return tya_string("Bytes");
+  return tya_string("Value");
+}
 static int tya_strlen2(const char *s) { int n = 0; while (s && s[n]) n++; return n; }
 void tya_print(TyaValue value) {
   char buf[64];

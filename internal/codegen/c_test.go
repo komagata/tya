@@ -40,7 +40,7 @@ func TestEmitCFilesystemUtilitiesProgram(t *testing.T) {
 	root := filepath.Join(dir, "root")
 	src := filepath.Join(root, "src.bin")
 	dst := filepath.Join(root, "dst.bin")
-	code := "import file as file\nimport dir as dir\nimport bytes as bytes\ndir.Dir.mkdir_all(\"" + root + "\")\nfile.File.write_bytes(\"" + src + "\", bytes.Bytes.new([0, 255, 65]))\nfile.File.copy(\"" + src + "\", \"" + dst + "\", {})\nprint(bytes.Bytes.array(file.File.read_bytes(\"" + dst + "\"))[1])\nseen = []\nrecord = entry -> seen.push(entry[\"name\"])\ndir.Dir.walk(\"" + root + "\", record, {})\nprint(seen.len() >= 0)\ntmp = file.File.temp(\"tya-cg\", \".tmp\")\nprint(file.File.exists?(tmp))\nfile.File.remove(tmp)\ndir.Dir.remove_all(\"" + root + "\")\nprint(file.File.exists?(\"" + root + "\"))\n"
+	code := "import file as file\nimport dir as dir\nimport bytes as bytes\ndir.Dir(\"" + root + "\").mkdir_all()\nfile.File(\"" + src + "\").write_bytes(bytes.Bytes([0, 255, 65]).from_array())\nfile.File(\"" + src + "\").copy(\"" + dst + "\", {})\nprint(bytes.Bytes(file.File(\"" + dst + "\").read_bytes()).to_array()[1])\nseen = []\nrecord = entry -> seen.push(entry[\"name\"])\ndir.Dir(\"" + root + "\").walk(record, {})\nprint(seen.len() >= 0)\ntmp = file.File().temp(\"tya-cg\", \".tmp\")\nprint(file.File(tmp).exists?())\nfile.File(tmp).remove()\ndir.Dir(\"" + root + "\").remove_all()\nprint(file.File(\"" + root + "\").exists?())\n"
 	main := filepath.Join(dir, "main.tya")
 	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
 		t.Fatal(err)
@@ -56,7 +56,7 @@ func TestEmitCHmacProgram(t *testing.T) {
 	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
-	code := "import hmac as hmac\nprint(hmac.Hmac.hexdigest(\"sha256\", \"key\", \"The quick brown fox jumps over the lazy dog\"))\nprint(hmac.Hmac.verify(\"sha256\", \"key\", \"The quick brown fox jumps over the lazy dog\", \"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\"))\n"
+	code := "import hmac as hmac\nprint(hmac.Hmac(\"sha256\", \"key\").hexdigest(\"The quick brown fox jumps over the lazy dog\"))\nprint(hmac.Hmac(\"sha256\", \"key\").verify(\"The quick brown fox jumps over the lazy dog\", \"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\"))\n"
 	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +71,7 @@ func TestEmitCRegexProgram(t *testing.T) {
 	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
-	code := "import regex as regex\nrx = regex.Regex.compile(\"([a-z]+)=([0-9]+)\")\nfound = rx.find(\"a=1 b=22\")\nprint(found[\"text\"])\nprint(found[\"groups\"][1])\nprint(rx.find_all(\"a=1 b=22\").len())\nprint(regex.Regex.compile(\", *\").split(\"a, b, c\").join(\"|\"))\nprint(rx.replace(\"a=1 b=22\", r\"${2}\", 1))\n"
+	code := "import regex as regex\nrx = regex.Regex(\"([a-z]+)=([0-9]+)\").compile()\nfound = rx.find(\"a=1 b=22\")\nprint(found[\"text\"])\nprint(found[\"groups\"][1])\nprint(rx.find_all(\"a=1 b=22\").len())\nprint(regex.Regex(\", *\").compile().split(\"a, b, c\").join(\"|\"))\nprint(rx.replace(\"a=1 b=22\", r\"${2}\", 1))\n"
 	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestEmitCTimeContractProgram(t *testing.T) {
 	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
-	code := "import time as time\nt = time.Time.unix(1704067200)\nprint(t.format(\"rfc3339\"))\nprint(time.Time.parse(\"2024-01-01T00:00:00Z\").format(\"unix\"))\nd = time.Time.duration(1, { milliseconds: 500 })\nprint(d.milliseconds())\nprint(t.add(d).sub(t).nanoseconds() == 1500000000)\ntime.Time.sleep(time.Time.duration(0))\n"
+	code := "import time as time\nt = time.Time().unix(1704067200)\nprint(t.format(\"rfc3339\"))\nprint(time.Time(\"2024-01-01T00:00:00Z\").parse().format(\"unix\"))\nd = time.Time().duration(1, { milliseconds: 500 })\nprint(d.milliseconds())\nprint(t.add(d).sub(t).nanoseconds() == 1500000000)\ntime.Time().sleep(time.Time().duration(0))\n"
 	if err := os.WriteFile(main, []byte(code), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -248,7 +248,7 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 		t.Fatal(err)
 	}
 	main := filepath.Join(dir, "main.tya")
-	src := "import file as file\npath = args()[0]\ntext = file.File.read(path)\nparts = text.split(\"\\n\")\nfirst = parts[0].to_i()\nprint(first + 8)\nprint(true.to_s())\nprint(parts.join(\":\"))\n"
+	src := "import file as file\npath = args()[0]\ntext = file.File(path).read()\nparts = text.split(\"\\n\")\nfirst = parts[0].to_i()\nprint(first + 8)\nprint(true.to_s())\nprint(parts.join(\":\"))\n"
 	if err := os.WriteFile(main, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -263,7 +263,7 @@ func TestEmitCCompilesWriteFileProgram(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "output.txt")
 	main := filepath.Join(dir, "main.tya")
-	src := "import file as file\npath = args()[0]\nfile.File.write(path, \"Hello\")\nprint(file.File.exists?(path))\nprint(file.File.read(path))\n"
+	src := "import file as file\npath = args()[0]\nfile.File(path).write(\"Hello\")\nprint(file.File(path).exists?())\nprint(file.File(path).read())\n"
 	if err := os.WriteFile(main, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}

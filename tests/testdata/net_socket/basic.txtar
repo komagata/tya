@@ -24,7 +24,7 @@ stdout 'refused'
 -- echo_server.tya --
 import net/socket as socket
 
-server = socket.Server.listen("127.0.0.1", 18180, {})
+server = socket.Server(nil).listen("127.0.0.1", 18180, {})
 conn = server.accept()
 line = conn.read_line()
 conn.write("echo:")
@@ -35,7 +35,7 @@ server.close()
 -- echo_client.tya --
 import net/socket as socket
 
-client = socket.Socket.connect("127.0.0.1", 18180, {})
+client = socket.Socket(nil, false).connect("127.0.0.1", 18180, {})
 client.write_line("hello")
 print(client.read_line().trim())
 print(client.remote_address()["port"] == 18180)
@@ -44,7 +44,7 @@ client.close()
 -- binary_server.tya --
 import net/socket as socket
 
-server = socket.Server.listen("127.0.0.1", 18181, { mode: "binary" })
+server = socket.Server(nil).listen("127.0.0.1", 18181, { mode: "binary" })
 conn = server.accept()
 data = conn.read(3)
 conn.write(data)
@@ -55,17 +55,17 @@ server.close()
 import bytes as bytes
 import net/socket as socket
 
-client = socket.Socket.connect("127.0.0.1", 18181, { mode: "binary" })
+client = socket.Socket(nil, false).connect("127.0.0.1", 18181, { mode: "binary" })
 client.write(b"abc")
 data = client.read(3)
 print(data.len())
-print(bytes.Bytes.text(data))
+print(bytes.Bytes().to_text(data))
 client.close()
 
 -- timeout_server.tya --
 import net/socket as socket
 
-server = socket.Server.listen("127.0.0.1", 18182, { timeout: 0.5 })
+server = socket.Server(nil).listen("127.0.0.1", 18182, { timeout: 0.5 })
 conn = server.accept()
 try
   conn.read_line()
@@ -78,14 +78,14 @@ server.close()
 import net/socket as socket
 import time as time
 
-client = socket.Socket.connect("127.0.0.1", 18182, {})
-time.Time.sleep(0.7)
+client = socket.Socket(nil, false).connect("127.0.0.1", 18182, {})
+time.Time().sleep(0.7)
 client.close()
 
 -- refused.tya --
 import net/socket as socket
 
 try
-  socket.Socket.connect("127.0.0.1", 1, { timeout: 0.1 })
+  socket.Socket(nil, false).connect("127.0.0.1", 1, { timeout: 0.1 })
 catch err
   print("refused")

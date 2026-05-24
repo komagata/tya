@@ -4,18 +4,18 @@ import math as math
 class StdlibMathTest extends TestCase
 
   test_abs_negative = ->
-    self.assert_equal(3, math.Math.abs(-3), "abs negative")
+    self.assert_equal(3, math.Math().abs(-3), "abs negative")
   test_abs_positive = ->
-    self.assert_equal(5, math.Math.abs(5), "abs positive")
+    self.assert_equal(5, math.Math().abs(5), "abs positive")
   test_abs_zero = ->
-    self.assert_equal(0, math.Math.abs(0), "abs zero")
+    self.assert_equal(0, math.Math().abs(0), "abs zero")
   test_min = ->
-    self.assert_equal(2, math.Math.min(2, 5), "min")
+    self.assert_equal(2, math.Math().min(2, 5), "min")
   test_max = ->
-    self.assert_equal(5, math.Math.max(2, 5), "max")
+    self.assert_equal(5, math.Math().max(2, 5), "max")
   test_clamp_above_max = ->
-    self.assert_equal(10, math.Math.clamp(12, 0, 10), "clamp above max")
+    self.assert_equal(10, math.Math().clamp(12, 0, 10), "clamp above max")
   test_clamp_below_min = ->
-    self.assert_equal(0, math.Math.clamp(-1, 0, 10), "clamp below min")
+    self.assert_equal(0, math.Math().clamp(-1, 0, 10), "clamp below min")
   test_clamp_within = ->
-    self.assert_equal(5, math.Math.clamp(5, 0, 10), "clamp within")
+    self.assert_equal(5, math.Math().clamp(5, 0, 10), "clamp within")

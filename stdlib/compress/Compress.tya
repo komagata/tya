@@ -2,46 +2,88 @@ import io as io
 
 # Compress provides the compress/Compress standard library API.
 class Compress
-  # Compress.gzip provides the compress/Compress standard library operation.
-  static gzip = value ->
+  # Compress.initialize stores data or a path for compression helpers.
+  initialize = value = nil ->
+    self.value = value
+
+  # Compress.gzip_compress compresses data with gzip.
+  gzip_compress = value = nil ->
+    if value == nil
+      value = self.value
     compress_gzip(value)
 
-  # Compress.gunzip provides the compress/Compress standard library operation.
-  static gunzip = value ->
+  # Compress.gzip_decompress decompresses gzip data.
+  gzip_decompress = value = nil ->
+    if value == nil
+      value = self.value
     compress_gunzip(value)
 
-  # Compress.zlib provides the compress/Compress standard library operation.
-  static zlib = value ->
+  # Compress.zlib_compress compresses data with zlib.
+  zlib_compress = value = nil ->
+    if value == nil
+      value = self.value
     compress_zlib(value)
 
-  # Compress.unzlib provides the compress/Compress standard library operation.
-  static unzlib = value ->
+  # Compress.zlib_decompress decompresses zlib data.
+  zlib_decompress = value = nil ->
+    if value == nil
+      value = self.value
     compress_unzlib(value)
 
-  # Compress.gzip_file provides the compress/Compress standard library operation.
-  static gzip_file = src, dst ->
-    reader = io.Io.open(src, "rb")
-    writer = io.Io.open(dst, "wb")
+  # Compress.gzip is a compatibility alias for gzip_compress.
+  gzip = value = nil ->
+    self.gzip_compress(value)
+
+  # Compress.gunzip is a compatibility alias for gzip_decompress.
+  gunzip = value = nil ->
+    self.gzip_decompress(value)
+
+  # Compress.zlib is a compatibility alias for zlib_compress.
+  zlib = value = nil ->
+    self.zlib_compress(value)
+
+  # Compress.unzlib is a compatibility alias for zlib_decompress.
+  unzlib = value = nil ->
+    self.zlib_decompress(value)
+
+  # Compress.gzip_compress_file compresses a file with gzip.
+  gzip_compress_file = src, dst = nil ->
+    if dst == nil
+      dst = src
+      src = self.value
+    reader = io.Io().open(src, "rb")
+    writer = io.Io().open(dst, "wb")
     data = reader.read(1048576)
     all = b""
     while data.len() > 0
       all = all + data
       data = reader.read(1048576)
-    writer.write(Compress.gzip(all))
+    writer.write(Compress(all).gzip_compress())
     writer.close()
     reader.close()
     nil
 
-  # Compress.gunzip_file provides the compress/Compress standard library operation.
-  static gunzip_file = src, dst ->
-    reader = io.Io.open(src, "rb")
-    writer = io.Io.open(dst, "wb")
+  # Compress.gzip_decompress_file decompresses a gzip file.
+  gzip_decompress_file = src, dst = nil ->
+    if dst == nil
+      dst = src
+      src = self.value
+    reader = io.Io().open(src, "rb")
+    writer = io.Io().open(dst, "wb")
     data = reader.read(1048576)
     all = b""
     while data.len() > 0
       all = all + data
       data = reader.read(1048576)
-    writer.write(Compress.gunzip(all))
+    writer.write(Compress(all).gzip_decompress())
     writer.close()
     reader.close()
     nil
+
+  # Compress.gzip_file is a compatibility alias for gzip_compress_file.
+  gzip_file = src, dst = nil ->
+    self.gzip_compress_file(src, dst)
+
+  # Compress.gunzip_file is a compatibility alias for gzip_decompress_file.
+  gunzip_file = src, dst = nil ->
+    self.gzip_decompress_file(src, dst)

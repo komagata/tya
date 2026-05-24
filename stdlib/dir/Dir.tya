@@ -1,29 +1,49 @@
 # Dir provides the dir/Dir standard library API.
 class Dir
+  # Dir.initialize stores a directory path.
+  initialize = path = nil ->
+    self.path = path
+
   # Dir.list provides the dir/Dir standard library operation.
-  static list = path ->
+  list = path = nil ->
+    if path == nil
+      path = self.path
     dir_list(path)
 
   # Dir.mkdir provides the dir/Dir standard library operation.
-  static mkdir = path ->
+  mkdir = path = nil ->
+    if path == nil
+      path = self.path
     dir_mkdir(path)
 
   # Dir.rmdir provides the dir/Dir standard library operation.
-  static rmdir = path ->
+  rmdir = path = nil ->
+    if path == nil
+      path = self.path
     dir_rmdir(path)
 
   # mkdir_all creates a directory and missing parents.
-  static mkdir_all = path ->
+  mkdir_all = path = nil ->
+    if path == nil
+      path = self.path
     dir_mkdir_all(path)
 
   # remove_all removes a file or directory tree recursively.
-  static remove_all = path ->
+  remove_all = path = nil ->
+    if path == nil
+      path = self.path
     dir_remove_all(path)
 
   # walk visits entries in deterministic order.
-  static walk = path, fn, options = {} ->
+  walk = path, fn = nil, options = {} ->
+    if self.path != nil and fn != nil
+      options = fn
+      fn = path
+      path = self.path
+    if path == nil
+      path = self.path
     dir_walk(path, fn, options)
 
   # temp_dir creates a temporary directory and returns its path.
-  static temp_dir = prefix = "tya" ->
+  temp_dir = prefix = "tya" ->
     dir_temp_dir(prefix)

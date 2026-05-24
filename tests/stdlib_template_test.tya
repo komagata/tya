@@ -6,14 +6,14 @@ class StdlibTemplateTest extends TestCase
   test_render_variable = ->
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
-    got = template.Template.render("Hello, " + ob + " name " + cb, { name: "Tya" })
+    got = template.Template("Hello, " + ob + " name " + cb).render({ name: "Tya" })
     self.assert_equal("Hello, Tya", got, "variable")
 
   test_paths_and_missing_values = ->
     data = { user: { name: "Ada" }, items: [{ name: "one" }] }
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
-    got = template.Template.render(ob + " user.name " + cb + " " + ob + " items[0].name " + cb + " " + ob + " missing " + cb, data)
+    got = template.Template(ob + " user.name " + cb + " " + ob + " items[0].name " + cb + " " + ob + " missing " + cb).render(data)
     self.assert_equal("Ada one ", got, "paths")
 
   test_strict_missing_value = ->
@@ -21,7 +21,7 @@ class StdlibTemplateTest extends TestCase
     try
       ob = chr(123) + chr(123)
       cb = chr(125) + chr(125)
-      template.Template.render(ob + " user.name " + cb, {}, { strict: true })
+      template.Template(ob + " user.name " + cb).render({}, { strict: true })
     catch e
       err = e["message"]
     self.assert_equal("template.render: missing user.name", err, "strict")
@@ -30,22 +30,22 @@ class StdlibTemplateTest extends TestCase
     data = { user: { admin: true } }
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
-    got = template.Template.render(ob + " if user.admin " + cb + "Admin" + ob + " else " + cb + "User" + ob + " end " + cb, data)
+    got = template.Template(ob + " if user.admin " + cb + "Admin" + ob + " else " + cb + "User" + ob + " end " + cb).render(data)
     self.assert_equal("Admin", got, "if")
-    got = template.Template.render(ob + " if user.missing " + cb + "Admin" + ob + " else " + cb + "User" + ob + " end " + cb, data)
+    got = template.Template(ob + " if user.missing " + cb + "Admin" + ob + " else " + cb + "User" + ob + " end " + cb).render(data)
     self.assert_equal("User", got, "else")
 
   test_for_loop = ->
     data = { items: [{ name: "a" }, { name: "b" }] }
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
-    got = template.Template.render(ob + " for item in items " + cb + ob + " item.name " + cb + ob + " end " + cb, data)
+    got = template.Template(ob + " for item in items " + cb + ob + " item.name " + cb + ob + " end " + cb).render(data)
     self.assert_equal("ab", got, "for")
 
   test_partials = ->
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
-    got = template.Template.render(ob + " partial \"row\" user " + cb, {
+    got = template.Template(ob + " partial \"row\" user " + cb).render({
       user: { name: "Tya" }
     }, {
       partials: { row: "<li>" + ob + " name " + cb + "</li>" }
@@ -56,7 +56,7 @@ class StdlibTemplateTest extends TestCase
     data = { value: "<b>\"Tya\" & 'lang'</b>" }
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
-    got = template.Template.render_html(ob + " value " + cb + " " + ob + chr(123) + " value " + chr(125) + cb, data)
+    got = template.Template(ob + " value " + cb + " " + ob + chr(123) + " value " + chr(125) + cb).render_html(data)
     self.assert_equal("&lt;b&gt;&quot;Tya&quot; &amp; &#39;lang&#39;&lt;/b&gt; <b>\"Tya\" & 'lang'</b>", got, "html")
 
   test_render_file = ->
@@ -64,6 +64,6 @@ class StdlibTemplateTest extends TestCase
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
     write_file(path, "File " + ob + " name " + cb)
-    got = template.Template.render_file(path, { name: "Tya" })
+    got = template.Template(path).render_file({ name: "Tya" })
     file_remove(path)
     self.assert_equal("File Tya", got, "file")

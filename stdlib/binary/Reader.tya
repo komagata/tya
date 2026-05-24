@@ -4,14 +4,14 @@ class Reader
   initialize = data, options ->
     self.data = data
     self.offset = 0
-    self.endian = Reader.option_endian(options)
+    self.endian = self.option_endian(options)
 
   # Reader.new provides the binary/Reader standard library operation.
-  static new = data, options ->
+  new = data, options ->
     return Reader(data, options)
 
   # Reader.option_endian provides the binary/Reader standard library operation.
-  static option_endian = options ->
+  option_endian = options ->
     if options == nil
       return "big"
     if options.class != Dict
@@ -77,7 +77,7 @@ class Reader
 
   # Reader.read_i16 provides the binary/Reader standard library operation.
   read_i16 = ->
-    return Reader.signed(self.read_u16(), 16)
+    return self.signed(self.read_u16(), 16)
 
   # Reader.read_u32 provides the binary/Reader standard library operation.
   read_u32 = ->
@@ -85,7 +85,7 @@ class Reader
 
   # Reader.read_i32 provides the binary/Reader standard library operation.
   read_i32 = ->
-    return Reader.signed(self.read_u32(), 32)
+    return self.signed(self.read_u32(), 32)
 
   # Reader.read_u16_le provides the binary/Reader standard library operation.
   read_u16_le = ->
@@ -93,7 +93,7 @@ class Reader
 
   # Reader.read_i16_le provides the binary/Reader standard library operation.
   read_i16_le = ->
-    return Reader.signed(self.read_u16_le(), 16)
+    return self.signed(self.read_u16_le(), 16)
 
   # Reader.read_u32_le provides the binary/Reader standard library operation.
   read_u32_le = ->
@@ -101,7 +101,7 @@ class Reader
 
   # Reader.read_i32_le provides the binary/Reader standard library operation.
   read_i32_le = ->
-    return Reader.signed(self.read_u32_le(), 32)
+    return self.signed(self.read_u32_le(), 32)
 
   # Reader.read_u16_be provides the binary/Reader standard library operation.
   read_u16_be = ->
@@ -109,7 +109,7 @@ class Reader
 
   # Reader.read_i16_be provides the binary/Reader standard library operation.
   read_i16_be = ->
-    return Reader.signed(self.read_u16_be(), 16)
+    return self.signed(self.read_u16_be(), 16)
 
   # Reader.read_u32_be provides the binary/Reader standard library operation.
   read_u32_be = ->
@@ -117,7 +117,7 @@ class Reader
 
   # Reader.read_i32_be provides the binary/Reader standard library operation.
   read_i32_be = ->
-    return Reader.signed(self.read_u32_be(), 32)
+    return self.signed(self.read_u32_be(), 32)
 
   # Reader.read_f32 provides the binary/Reader standard library operation.
   read_f32 = ->
@@ -153,7 +153,7 @@ class Reader
       if endian == "big"
         value = value * 256 + b
       else
-        value = value + b * Reader.pow256(i)
+        value = value + b * self.pow256(i)
       i = i + 1
     self.offset = self.offset + width
     return value
@@ -173,15 +173,15 @@ class Reader
       raise error("binary.Reader: read past end")
 
   # Reader.signed provides the binary/Reader standard library operation.
-  static signed = value, bits ->
-    limit = Reader.pow2(bits - 1)
-    mod = Reader.pow2(bits)
+  signed = value, bits ->
+    limit = self.pow2(bits - 1)
+    mod = self.pow2(bits)
     if value >= limit
       return value - mod
     return value
 
   # Reader.pow256 provides the binary/Reader standard library operation.
-  static pow256 = n ->
+  pow256 = n ->
     out = 1
     i = 0
     while i < n
@@ -190,7 +190,7 @@ class Reader
     return out
 
   # Reader.pow2 provides the binary/Reader standard library operation.
-  static pow2 = n ->
+  pow2 = n ->
     out = 1
     i = 0
     while i < n

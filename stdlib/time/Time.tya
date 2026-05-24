@@ -1,25 +1,50 @@
 # Time provides the time/Time standard library API.
 class Time
+  # Time.initialize stores a time value or parseable text.
+  initialize = value = nil ->
+    self.value = value
+
   # Time.now provides the time/Time standard library operation.
-  static now = () -> time_now()
+  now = () -> time_now()
 
   # Time.monotonic returns a monotonic timestamp.
-  static monotonic = () -> time_monotonic()
+  monotonic = () -> time_monotonic()
 
   # Time.unix constructs a UTC wall-clock time.
-  static unix = seconds, nanos = 0 -> time_unix(seconds, nanos)
+  unix = seconds, nanos = 0 ->
+    time_unix(seconds, nanos)
 
   # Time.duration constructs a duration value.
-  static duration = seconds = 0, options = {} -> time_duration(seconds, options)
+  duration = seconds = 0, options = {} ->
+    time_duration(seconds, options)
 
   # Time.sleep provides the time/Time standard library operation.
-  static sleep = duration_or_seconds -> time_sleep(duration_or_seconds)
+  sleep = duration_or_seconds ->
+    time_sleep(duration_or_seconds)
 
   # Time.format provides the time/Time standard library operation.
-  static format = t, layout -> time_format(t, layout)
+  format = t, layout = nil ->
+    if layout == nil
+      layout = t
+      t = self.value
+    time_format(t, layout)
 
   # Time.parse provides the time/Time standard library operation.
-  static parse = text, layout = "rfc3339" -> time_parse(text, layout)
+  parse = text = nil, layout = "rfc3339" ->
+    if self.value != nil
+      if text != nil
+        if layout == "rfc3339"
+          layout = text
+          text = self.value
+        if layout == nil
+          layout = text
+          text = self.value
+    if text == nil
+      text = self.value
+    time_parse(text, layout)
 
   # Time.since provides the time/Time standard library operation.
-  static since = t -> time_since(t)
+  since = t = nil ->
+    if t == nil
+      t = self.value
+    time_since(t)

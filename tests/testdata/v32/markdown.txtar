@@ -52,7 +52,7 @@ line <html>
 
 ---
 """
-print(markdown.Markdown.to_html(src))
+print(markdown.Markdown(src).to_html())
 
 -- extended.tya --
 import markdown as markdown
@@ -82,7 +82,7 @@ print("hi")
 [ref]: https://example.com/ref
 """
 
-ast = markdown.Markdown.parse(src)
-html_ast = markdown.Markdown.to_html_ast(ast)
-print(markdown.Markdown.render(html_ast))
-print(markdown.Markdown.render(html_ast, { raw_html: true }))
+ast = markdown.Markdown(src).parse()
+html_ast = markdown.Markdown(nil).to_html_ast(ast)
+print(markdown.Markdown(nil).render_html_ast(html_ast))
+print(markdown.Markdown(nil).render_html_ast(html_ast, { raw_html: true }))

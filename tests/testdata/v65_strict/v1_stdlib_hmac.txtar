@@ -27,15 +27,15 @@ stderr 'hmac.algorithm: unsupported algorithm'
 import hmac as hmac
 
 message = "The quick brown fox jumps over the lazy dog"
-print(hmac.Hmac.hexdigest("sha256", "key", message))
-print(hmac.Hmac.hexdigest("sha384", "key", message))
-print(hmac.Hmac.hexdigest("sha512", "key", message))
-print(hmac.Hmac.base64digest("sha256", "key", message))
-print(hmac.Hmac.verify("sha256", "key", message, "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"))
-print(hmac.Hmac.verify("sha256", "key", message, "97yD9DBThCSxMpjmqm+xQ+9NWaFJRhdZl0edvC0aPNg=", { encoding: "base64" }))
-print(hmac.Hmac.verify("sha256", "key", message, "00"))
+print(hmac.Hmac("sha256", "key").hexdigest(message))
+print(hmac.Hmac("sha384", "key").hexdigest(message))
+print(hmac.Hmac("sha512", "key").hexdigest(message))
+print(hmac.Hmac("sha256", "key").base64digest(message))
+print(hmac.Hmac("sha256", "key").verify(message, "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"))
+print(hmac.Hmac("sha256", "key").verify(message, "97yD9DBThCSxMpjmqm+xQ+9NWaFJRhdZl0edvC0aPNg=", { encoding: "base64" }))
+print(hmac.Hmac("sha256", "key").verify(message, "00"))
 
 -- hmac_invalid.tya --
 import hmac as hmac
 
-print(hmac.Hmac.hexdigest("md5", "key", "message"))
+print(hmac.Hmac("md5", "key").hexdigest("message"))

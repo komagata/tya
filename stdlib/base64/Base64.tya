@@ -1,31 +1,37 @@
 # Base64 provides the base64/Base64 standard library API.
 class Base64
+  # Base64.initialize stores an optional value for later encoding or decoding.
+  initialize = value = nil ->
+    self.value = value
+
   # Base64.alphabet provides the base64/Base64 standard library operation.
-  static alphabet = ->
+  alphabet = ->
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
   # Base64.byte_at provides the base64/Base64 standard library operation.
-  static byte_at = value, i ->
+  byte_at = value, i ->
     if value.class == String
       return ord(value[i])
     return bytes_array(value)[i]
 
   # Base64.byte_count provides the base64/Base64 standard library operation.
-  static byte_count = value ->
+  byte_count = value ->
     if value.class == String
       return value.byte_len()
     return bytes_array(value).len()
 
   # Base64.encode provides the base64/Base64 standard library operation.
-  static encode = value ->
-    alphabet = Self.alphabet()
-    n = Self.byte_count(value)
+  encode = value = nil ->
+    if value == nil
+      value = self.value
+    alphabet = self.alphabet()
+    n = self.byte_count(value)
     out = ""
     i = 0
     while i + 3 <= n
-      b1 = Self.byte_at(value, i)
-      b2 = Self.byte_at(value, i + 1)
-      b3 = Self.byte_at(value, i + 2)
+      b1 = self.byte_at(value, i)
+      b2 = self.byte_at(value, i + 1)
+      b3 = self.byte_at(value, i + 2)
       g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16 + (b2 / 16).to_i()
       g3 = b2 % 16 * 4 + (b3 / 64).to_i()
@@ -34,13 +40,13 @@ class Base64
       i = i + 3
     rem = n - i
     if rem == 1
-      b1 = Self.byte_at(value, i)
+      b1 = self.byte_at(value, i)
       g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16
       out = out + alphabet[g1] + alphabet[g2] + "=="
     elseif rem == 2
-      b1 = Self.byte_at(value, i)
-      b2 = Self.byte_at(value, i + 1)
+      b1 = self.byte_at(value, i)
+      b2 = self.byte_at(value, i + 1)
       g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16 + (b2 / 16).to_i()
       g3 = b2 % 16 * 4
@@ -48,7 +54,7 @@ class Base64
     return out
 
   # Base64.index_of provides the base64/Base64 standard library operation.
-  static index_of = c ->
+  index_of = c ->
     code = ord(c)
     if code >= 65 and code <= 90
       return code - 65
@@ -63,7 +69,9 @@ class Base64
     raise error("base64.decode: invalid character")
 
   # Base64.decode provides the base64/Base64 standard library operation.
-  static decode = text ->
+  decode = text = nil ->
+    if text == nil
+      text = self.value
     cleaned = ""
     n = text.byte_len()
     cr = chr(13)
@@ -79,23 +87,23 @@ class Base64
     arr = []
     j = 0
     while j + 4 <= m
-      v1 = Self.index_of(cleaned[j])
-      v2 = Self.index_of(cleaned[j + 1])
-      v3 = Self.index_of(cleaned[j + 2])
-      v4 = Self.index_of(cleaned[j + 3])
+      v1 = self.index_of(cleaned[j])
+      v2 = self.index_of(cleaned[j + 1])
+      v3 = self.index_of(cleaned[j + 2])
+      v4 = self.index_of(cleaned[j + 3])
       arr.push(v1 * 4 + (v2 / 16).to_i())
       arr.push(v2 % 16 * 16 + (v3 / 4).to_i())
       arr.push(v3 % 4 * 64 + v4)
       j = j + 4
     rem = m - j
     if rem == 2
-      v1 = Self.index_of(cleaned[j])
-      v2 = Self.index_of(cleaned[j + 1])
+      v1 = self.index_of(cleaned[j])
+      v2 = self.index_of(cleaned[j + 1])
       arr.push(v1 * 4 + (v2 / 16).to_i())
     elseif rem == 3
-      v1 = Self.index_of(cleaned[j])
-      v2 = Self.index_of(cleaned[j + 1])
-      v3 = Self.index_of(cleaned[j + 2])
+      v1 = self.index_of(cleaned[j])
+      v2 = self.index_of(cleaned[j + 1])
+      v3 = self.index_of(cleaned[j + 2])
       arr.push(v1 * 4 + (v2 / 16).to_i())
       arr.push(v2 % 16 * 16 + (v3 / 4).to_i())
     return bytes(arr)

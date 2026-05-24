@@ -6,54 +6,54 @@ class StdlibIoTest extends TestCase
 
   test_file_read_lines = ->
     path = "io_lines.txt"
-    file.File.write(path, "one\ntwo\n")
-    r = io.Io.open(path, "r")
+    file.File(path).write("one\ntwo\n")
+    r = io.Io().open(path, "r")
     first = r.read_line()
     second = r.read_line()
     third = r.read_line()
     r.close()
-    file.File.remove(path)
+    file.File(path).remove()
     self.assert_equal("one\n", first, "first line")
     self.assert_equal("two\n", second, "second line")
     self.assert_nil(third, "eof line")
 
   test_file_write_and_flush = ->
     path = "io_write.txt"
-    w = io.Io.open(path, "w")
+    w = io.Io().open(path, "w")
     w.write("hello")
     w.write_line(" world")
     w.flush()
     w.close()
-    text = file.File.read(path)
-    file.File.remove(path)
+    text = file.File(path).read()
+    file.File(path).remove()
     self.assert_equal("hello world\n", text, "write")
 
   test_text_copy = ->
     src = "io_copy_src.txt"
     dst = "io_copy_dst.txt"
-    file.File.write(src, "copy me")
-    r = io.Io.open(src, "r")
-    w = io.Io.open(dst, "w")
-    n = io.Io.copy(r, w)
+    file.File(src).write("copy me")
+    r = io.Io().open(src, "r")
+    w = io.Io().open(dst, "w")
+    n = io.Io().copy(r, w)
     r.close()
     w.close()
-    text = file.File.read(dst)
-    file.File.remove(src)
-    file.File.remove(dst)
+    text = file.File(dst).read()
+    file.File(src).remove()
+    file.File(dst).remove()
     self.assert_equal(7, n, "count")
     self.assert_equal("copy me", text, "copy")
 
   test_binary_copy = ->
     src = "io_copy_src.bin"
     dst = "io_copy_dst.bin"
-    file.File.write_bytes(src, b"\x00\x01\xff")
-    r = io.Io.open(src, "rb")
-    w = io.Io.open(dst, "wb")
-    n = io.Io.copy(r, w)
+    file.File(src).write_bytes(b"\x00\x01\xff")
+    r = io.Io().open(src, "rb")
+    w = io.Io().open(dst, "wb")
+    n = io.Io().copy(r, w)
     r.close()
     w.close()
-    data = file.File.read_bytes(dst)
-    file.File.remove(src)
-    file.File.remove(dst)
+    data = file.File(dst).read_bytes()
+    file.File(src).remove()
+    file.File(dst).remove()
     self.assert_equal(3, n, "count")
     self.assert_equal([0, 1, 255], bytes_array(data), "bytes")

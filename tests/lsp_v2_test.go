@@ -210,7 +210,7 @@ func TestLSPRenameClassDoesNotRenameImportedPackageClass(t *testing.T) {
 	defer p.close()
 	dir := writeWorkspace(t, map[string]string{
 		"tya.toml":    "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
-		"src/Cli.tya": "import cli as cli\n\nclass Cli\n  static parse = args ->\n    cli.Cli.parse_or_exit(args, Self.option_spec())\n  static option_spec = () -> {}\n",
+		"src/Cli.tya": "import cli as cli\n\nclass Cli\n  static parse = args ->\n    cli.Cli(args).parse_or_exit(Self.option_spec())\n  static option_spec = () -> {}\n",
 	})
 	uri := fileURI(filepath.Join(dir, "src", "Cli.tya"))
 	src, _ := os.ReadFile(filepath.Join(dir, "src", "Cli.tya"))

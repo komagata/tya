@@ -1,44 +1,44 @@
 # Ast provides the compiler/ast/Ast standard library API.
 class Ast
   # Ast.walk provides the compiler/ast/Ast standard library operation.
-  static walk = node, visitor ->
+  walk = node, visitor ->
     visitor(node)
-    ast_walk_children = Ast.children(node)
+    ast_walk_children = Ast().children(node)
     i = 0
     while i < ast_walk_children.len()
-      Ast.walk(ast_walk_children[i], visitor)
+      Ast().walk(ast_walk_children[i], visitor)
       i = i + 1
     return nil
 
   # Ast.children provides the compiler/ast/Ast standard library operation.
-  static children = node ->
+  children = node ->
     out = []
-    Ast.push_children(out, node, "body")
-    Ast.push_children(out, node, "then")
-    Ast.push_children(out, node, "else")
-    Ast.push_children(out, node, "targets")
-    Ast.push_children(out, node, "values")
-    Ast.push_children(out, node, "args")
-    Ast.push_children(out, node, "elements")
-    Ast.push_child(out, node, "expr")
-    Ast.push_child(out, node, "cond")
-    Ast.push_child(out, node, "callee")
-    Ast.push_child(out, node, "left")
-    Ast.push_child(out, node, "right")
-    Ast.push_child(out, node, "target")
-    Ast.push_child(out, node, "iterable")
+    Ast().push_children(out, node, "body")
+    Ast().push_children(out, node, "then")
+    Ast().push_children(out, node, "else")
+    Ast().push_children(out, node, "targets")
+    Ast().push_children(out, node, "values")
+    Ast().push_children(out, node, "args")
+    Ast().push_children(out, node, "elements")
+    Ast().push_child(out, node, "expr")
+    Ast().push_child(out, node, "cond")
+    Ast().push_child(out, node, "callee")
+    Ast().push_child(out, node, "left")
+    Ast().push_child(out, node, "right")
+    Ast().push_child(out, node, "target")
+    Ast().push_child(out, node, "iterable")
     return out
 
   # Ast.kind provides the compiler/ast/Ast standard library operation.
-  static kind = node ->
+  kind = node ->
     return compiler_ast_kind(node)
 
   # Ast.span provides the compiler/ast/Ast standard library operation.
-  static span = node ->
+  span = node ->
     return compiler_ast_span(node)
 
   # Ast.push_children provides the compiler/ast/Ast standard library operation.
-  static push_children = out, node, key ->
+  push_children = out, node, key ->
     if node.has(key)
       ast_children_values = node[key]
       i = 0
@@ -48,7 +48,7 @@ class Ast
     return nil
 
   # Ast.push_child provides the compiler/ast/Ast standard library operation.
-  static push_child = out, node, key ->
+  push_child = out, node, key ->
     if node.has(key)
       out.push(node[key])
     return nil

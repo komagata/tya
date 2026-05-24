@@ -7,13 +7,13 @@ stdout 'alpha\nbeta\n'
 import io as io
 import file as file
 
-out = io.Io.stdout()
+out = io.Io().stdout()
 collect = line -> out.write(line)
 
 path = "each_line.txt"
-file.File.write(path, "alpha\nbeta\n")
-reader = io.Io.open(path, "r")
+file.File(path).write("alpha\nbeta\n")
+reader = io.Io().open(path, "r")
 reader.each_line(collect)
 reader.close()
 out.flush()
-file.File.remove(path)
+file.File(path).remove()

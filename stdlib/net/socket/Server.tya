@@ -1,7 +1,7 @@
 # Server provides the net/socket/Server standard library API.
 class Server implements Closable
   # Server.listen provides the net/socket/Server standard library operation.
-  static listen = host, port, options ->
+  listen = host, port, options ->
     if options == nil
       options = {}
     Server(socket_server_listen(host, port, options))

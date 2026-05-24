@@ -1,12 +1,16 @@
 # Csv provides the csv/Csv standard library API.
 class Csv
+  # Csv.initialize stores text or rows for CSV conversion.
+  initialize = value = nil ->
+    self.value = value
+
   # Csv.default_options provides the csv/Csv standard library operation.
-  static default_options = () ->
+  default_options = () ->
     return { separator: ",", header: false }
 
   # Csv.merge_options provides the csv/Csv standard library operation.
-  static merge_options = options ->
-    base = Csv.default_options()
+  merge_options = options ->
+    base = Csv(nil).default_options()
     if options == nil
       return base
     if options.has("separator")
@@ -16,7 +20,7 @@ class Csv
     return base
 
   # Csv.parse_rows provides the csv/Csv standard library operation.
-  static parse_rows = text, separator ->
+  parse_rows = text, separator ->
     rows = []
     n = text.byte_len()
     i = 0
@@ -69,9 +73,14 @@ class Csv
     return rows
 
   # Csv.parse provides the csv/Csv standard library operation.
-  static parse = text, options ->
-    opts = Csv.merge_options(options)
-    rows = Csv.parse_rows(text, opts["separator"])
+  parse = text = nil, options = nil ->
+    if self.value != nil and text != nil and text.class == Dict
+      options = text
+      text = self.value
+    if text == nil
+      text = self.value
+    opts = Csv(nil).merge_options(options)
+    rows = Csv(nil).parse_rows(text, opts["separator"])
     if not opts["header"]
       return rows
     if rows.len() == 0
@@ -94,7 +103,7 @@ class Csv
     return out
 
   # Csv.escape_field provides the csv/Csv standard library operation.
-  static escape_field = field, separator ->
+  escape_field = field, separator ->
     needs_quote = false
     n = field.byte_len()
     cr = chr(13)
@@ -119,7 +128,7 @@ class Csv
     return out + "\""
 
   # Csv.dump_array_rows provides the csv/Csv standard library operation.
-  static dump_array_rows = rows, separator ->
+  dump_array_rows = rows, separator ->
     out = ""
     i = 0
     while i < rows.len()
@@ -130,20 +139,29 @@ class Csv
           out = out + separator
         if r[j].class != String
           raise error("csv.dump: row values must be strings")
-        out = out + Csv.escape_field(r[j], separator)
+        out = out + Csv(nil).escape_field(r[j], separator)
         j = j + 1
       out = out + "\n"
       i = i + 1
     return out
 
   # Csv.dump provides the csv/Csv standard library operation.
-  static dump = rows, options ->
-    opts = Csv.merge_options(options)
+  dump = rows = nil, options = nil ->
+    return self.stringify(rows, options)
+
+  # Csv.stringify provides the csv/Csv standard library operation.
+  stringify = rows = nil, options = nil ->
+    if self.value != nil and rows != nil and rows.class == Dict
+      options = rows
+      rows = self.value
+    if rows == nil
+      rows = self.value
+    opts = Csv(nil).merge_options(options)
     sep = opts["separator"]
     if rows.len() == 0
       return ""
     if rows[0].class == Array
-      return Csv.dump_array_rows(rows, sep)
+      return Csv(nil).dump_array_rows(rows, sep)
     if rows[0].class == Dict
       header = rows[0].keys()
       out = ""
@@ -152,7 +170,7 @@ class Csv
         while j < header.len()
           if j > 0
             out = out + sep
-          out = out + Csv.escape_field(header[j], sep)
+          out = out + Csv(nil).escape_field(header[j], sep)
           j = j + 1
         out = out + "\n"
       i = 0
@@ -168,7 +186,7 @@ class Csv
             if raw.class != String
               raise error("csv.dump: row values must be strings")
             v = raw
-          out = out + Csv.escape_field(v, sep)
+          out = out + Csv(nil).escape_field(v, sep)
           j = j + 1
         out = out + "\n"
         i = i + 1

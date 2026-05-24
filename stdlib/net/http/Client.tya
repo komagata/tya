@@ -1,18 +1,30 @@
 # Client provides the net/http/Client standard library API.
 class Client
+  # Client.initialize stores a target URL.
+  initialize = target ->
+    self.target = target
+
   # Client.get provides the net/http/Client standard library operation.
-  static get = target ->
-    return Client.request("GET", target, {})
+  get = target = nil ->
+    if target == nil
+      target = self.target
+    return Client(target).request("GET", {})
 
   # Client.post provides the net/http/Client standard library operation.
-  static post = target, body ->
-    return Client.request("POST", target, { body: body })
+  post = target, body = nil ->
+    if self.target != nil
+      body = target
+      target = self.target
+    return Client(target).request("POST", { body: body })
 
   # Client.request provides the net/http/Client standard library operation.
-  static request = method, target, opts ->
+  request = method, target = nil, opts = nil ->
+    if self.target != nil
+      opts = target
+      target = self.target
     if opts == nil
       opts = {}
-    u = Client.parse_url(target)
+    u = Client(nil).parse_url(target)
     if u["scheme"] != "http" and u["scheme"] != "https"
       raise error("http.request: only http:// and https:// URLs are supported")
     host = u["host"]
@@ -38,7 +50,7 @@ class Client
 
     crlf = chr(13) + "\n"
     req = method.upper() + " " + path + " HTTP/1.1" + crlf
-    req = req + "Host: " + Client.host_header(host, u["port"]) + crlf
+    req = req + "Host: " + Client(nil).host_header(host, u["port"]) + crlf
     req = req + "Connection: close" + crlf
     if body != ""
       req = req + "Content-Length: " + body.byte_len().to_s() + crlf
@@ -57,31 +69,31 @@ class Client
     else
       s = socket_connect(host, port, connect_options)
     socket_write(s, req)
-    response = Client.read_response(s)
+    response = Client(nil).read_response(s)
     socket_close(s)
     return response
 
   # Client.host_header provides the net/http/Client standard library operation.
-  static host_header = host, port ->
+  host_header = host, port ->
     if port == "" or port == "80" or port == "443"
       return host
     return host + ":" + port
 
   # Client.read_response provides the net/http/Client standard library operation.
-  static read_response = s ->
+  read_response = s ->
     status_line = socket_read_line(s)
     if status_line == nil
       raise error("http.response: empty response")
-    status_line = Client.chomp(status_line)
+    status_line = Client(nil).chomp(status_line)
     parts = status_line.split(" ")
     if parts.len() < 2
       raise error("http.response: invalid status line")
     status = parts[1].to_i()
     headers = {}
     line = socket_read_line(s)
-    while line != nil and Client.chomp(line) != ""
-      clean = Client.chomp(line)
-      idx = Client.index_of(clean, ":", 0)
+    while line != nil and Client(nil).chomp(line) != ""
+      clean = Client(nil).chomp(line)
+      idx = Client(nil).index_of(clean, ":", 0)
       if idx > 0
         name = clean.slice(0, idx).lower()
         value = clean.slice(idx + 1, clean.len()).trim()
@@ -91,7 +103,7 @@ class Client
     body = ""
     transfer = headers.get("transfer-encoding", "")
     if transfer.lower().contains("chunked")
-      body = Client.read_chunked(s)
+      body = Client(nil).read_chunked(s)
     elseif headers.has("content-length")
       body = socket_read(s, headers["content-length"].to_i())
     else
@@ -102,14 +114,14 @@ class Client
     return { status: status, headers: headers, body: body }
 
   # Client.read_chunked provides the net/http/Client standard library operation.
-  static read_chunked = s ->
+  read_chunked = s ->
     out = ""
     size_line = socket_read_line(s)
     while size_line != nil
-      size_text = Client.chomp(size_line).split(";")[0].trim()
-      size = Client.hex_to_i(size_text)
+      size_text = Client(nil).chomp(size_line).split(";")[0].trim()
+      size = Client(nil).hex_to_i(size_text)
       if size == 0
-        Client.read_trailers(s)
+        Client(nil).read_trailers(s)
         return out
       out = out + socket_read(s, size)
       socket_read_line(s)
@@ -117,14 +129,14 @@ class Client
     return out
 
   # Client.read_trailers provides the net/http/Client standard library operation.
-  static read_trailers = s ->
+  read_trailers = s ->
     line = socket_read_line(s)
-    while line != nil and Client.chomp(line) != ""
+    while line != nil and Client(nil).chomp(line) != ""
       line = socket_read_line(s)
     nil
 
   # Client.parse_url provides the net/http/Client standard library operation.
-  static parse_url = target ->
+  parse_url = target ->
     prefix = "http://"
     scheme = "http"
     if target.starts_with("https://")
@@ -133,8 +145,8 @@ class Client
     elseif not target.starts_with(prefix)
       raise error("http.request: only http:// and https:// URLs are supported")
     rest = target.slice(prefix.len(), target.len())
-    slash = Client.index_of(rest, "/", 0)
-    query = Client.index_of(rest, "?", 0)
+    slash = Client(nil).index_of(rest, "/", 0)
+    query = Client(nil).index_of(rest, "?", 0)
     end_auth = rest.byte_len()
     if slash >= 0 and slash < end_auth
       end_auth = slash
@@ -144,14 +156,14 @@ class Client
     remainder = rest.slice(end_auth, rest.len())
     host = authority
     port = ""
-    colon = Client.index_of(authority, ":", 0)
+    colon = Client(nil).index_of(authority, ":", 0)
     if colon >= 0
       host = authority.slice(0, colon)
       port = authority.slice(colon + 1, authority.len())
     path = remainder
     query_text = ""
     has_query = false
-    q = Client.index_of(remainder, "?", 0)
+    q = Client(nil).index_of(remainder, "?", 0)
     if q >= 0
       has_query = true
       path = remainder.slice(0, q)
@@ -161,7 +173,7 @@ class Client
     return { scheme: scheme, host: host, port: port, path: path, query: query_text, has_query: has_query }
 
   # Client.chomp provides the net/http/Client standard library operation.
-  static chomp = text ->
+  chomp = text ->
     n = text.byte_len()
     if n > 0 and text[n - 1] == "\n"
       n = n - 1
@@ -170,7 +182,7 @@ class Client
     return text.slice(0, n)
 
   # Client.index_of provides the net/http/Client standard library operation.
-  static index_of = text, needle, start ->
+  index_of = text, needle, start ->
     i = start
     n = text.byte_len()
     m = needle.byte_len()
@@ -181,7 +193,7 @@ class Client
     return -1
 
   # Client.hex_to_i provides the net/http/Client standard library operation.
-  static hex_to_i = text ->
+  hex_to_i = text ->
     value = 0
     i = 0
     while i < text.byte_len()

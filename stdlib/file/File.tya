@@ -1,54 +1,90 @@
 # File reads, writes, and inspects filesystem paths.
 class File
+  # File.initialize stores a file path.
+  initialize = path = nil ->
+    self.path = path
+
   # read returns the UTF-8 text contents of path.
   # Raises when the file cannot be opened or read.
-  static read = path ->
+  read = path = nil ->
+    if path == nil
+      path = self.path
     read_file(path)
 
   # write replaces path with text and creates the file when needed.
   # Raises when the file cannot be written.
-  static write = path, text ->
+  write = path, text = nil ->
+    if text == nil
+      text = path
+      path = self.path
     write_file(path, text)
 
   # File.append provides the file/File standard library operation.
-  static append = path, text ->
+  append = path, text = nil ->
+    if text == nil
+      text = path
+      path = self.path
     file_append(path, text)
 
   # exists? returns true when path exists.
-  static exists? = path ->
+  exists? = path = nil ->
+    if path == nil
+      path = self.path
     file_exists(path)
 
   # File.remove provides the file/File standard library operation.
-  static remove = path ->
+  remove = path = nil ->
+    if path == nil
+      path = self.path
     file_remove(path)
 
   # File.rename provides the file/File standard library operation.
-  static rename = old_path, new_path ->
+  rename = old_path, new_path = nil ->
+    if new_path == nil
+      new_path = old_path
+      old_path = self.path
     file_rename(old_path, new_path)
 
   # stat returns metadata for path as a dictionary.
   # Raises when the path cannot be inspected.
-  static stat = path ->
+  stat = path = nil ->
+    if path == nil
+      path = self.path
     file_stat(path)
 
   # read_bytes returns the raw bytes stored at path.
   # Raises when the file cannot be opened or read.
-  static read_bytes = path ->
+  read_bytes = path = nil ->
+    if path == nil
+      path = self.path
     file_read_bytes(path)
 
   # write_bytes replaces path with raw bytes.
   # Raises when the file cannot be written.
-  static write_bytes = path, b ->
+  write_bytes = path, b = nil ->
+    if b == nil
+      b = path
+      path = self.path
     file_write_bytes(path, b)
 
   # copy copies file contents as bytes.
-  static copy = src, dst, options = {} ->
+  copy = src, dst = nil, options = {} ->
+    if self.path != nil and dst != nil and dst.class == Dict
+      options = dst
+      dst = src
+      src = self.path
+    if dst == nil
+      dst = src
+      src = self.path
     file_copy(src, dst, options)
 
   # chmod changes POSIX-like permissions where supported.
-  static chmod = path, mode ->
+  chmod = path, mode = nil ->
+    if mode == nil
+      mode = path
+      path = self.path
     file_chmod(path, mode)
 
   # temp creates an empty temporary file and returns its path.
-  static temp = prefix = "tya", suffix = "" ->
+  temp = prefix = "tya", suffix = "" ->
     file_temp(prefix, suffix)

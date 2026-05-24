@@ -1,9 +1,9 @@
 # Lexer provides the compiler/lexer/Lexer standard library API.
 class Lexer
   # Lexer.lex provides the compiler/lexer/Lexer standard library operation.
-  static lex = source ->
+  lex = source ->
     return compiler_lexer_lex(source)
 
   # Lexer.lex_with_comments provides the compiler/lexer/Lexer standard library operation.
-  static lex_with_comments = source ->
+  lex_with_comments = source ->
     return compiler_lexer_lex_with_comments(source)

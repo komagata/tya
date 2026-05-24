@@ -5,5 +5,5 @@ class CData
     self.text = text
 
   # CData.new provides the xml/CData standard library operation.
-  static new = text ->
+  new = text ->
     return CData(text)

@@ -2,12 +2,20 @@ import file as file
 
 # Codec provides the image/Codec standard library API.
 class Codec
-  # Codec.identify_file provides the image/Codec standard library operation.
-  static identify_file = path ->
-    return Codec.identify(file.File.read_bytes(path))
+  # Codec.initialize stores image data or a path.
+  initialize = value = nil ->
+    self.value = value
 
-  # Codec.identify provides the image/Codec standard library operation.
-  static identify = data ->
+  # Codec.metadata_file reads image metadata from a file.
+  metadata_file = path = nil ->
+    if path == nil
+      path = self.value
+    return Codec(nil).metadata(file.File(path).read_bytes())
+
+  # Codec.metadata reads image metadata from encoded bytes.
+  metadata = data = nil ->
+    if data == nil
+      data = self.value
     text = bytes_text(data)
     parts = text.split("\n")
     if parts.len() == 0
@@ -16,10 +24,18 @@ class Codec
     if header.len() != 6 or header[0] != "TYAIMG"
       raise error("image.identify: unsupported or malformed image")
     format = header[1]
-    if not Codec.supported_format?(format)
+    if not Codec(nil).supported_format?(format)
       raise error("image.identify: unsupported format " + format)
     return { format: format, width: header[2].to_i(), height: header[3].to_i(), frames: header[5].to_i(), animated: header[5].to_i() > 1, has_alpha: header[4] == "1", color_space: "srgb" }
 
+  # Codec.identify_file is a compatibility alias for Codec.metadata_file.
+  identify_file = path = nil ->
+    self.metadata_file(path)
+
+  # Codec.identify is a compatibility alias for Codec.metadata.
+  identify = data = nil ->
+    self.metadata(data)
+
   # Codec.supported_format? provides the image/Codec standard library operation.
-  static supported_format? = format ->
+  supported_format? = format ->
     return format == "png" or format == "jpeg" or format == "gif" or format == "bmp" or format == "ppm"

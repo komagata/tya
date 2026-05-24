@@ -1,21 +1,33 @@
 # Markdown provides the markdown/Markdown standard library API.
 class Markdown
+  # Markdown.initialize stores source Markdown text.
+  initialize = source ->
+    self.source = source
+
   # Markdown.to_html provides the markdown/Markdown standard library operation.
-  static to_html = text ->
-    return Markdown.render(Markdown.to_html_ast(Markdown.parse(text)))
+  to_html = text = nil ->
+    if text == nil
+      text = self.source
+    return Markdown(nil).render_html_ast(Markdown(nil).to_html_ast(Markdown(nil).parse(text)))
 
   # Markdown.parse provides the markdown/Markdown standard library operation.
-  static parse = text ->
+  parse = text = nil ->
+    if text == nil
+      text = self.source
     lines = text.split("\n")
-    refs = Markdown.reference_defs(lines)
-    return { kind: "document", blocks: Markdown.parse_blocks(lines), references: refs }
+    refs = Markdown(nil).reference_defs(lines)
+    return { kind: "document", blocks: Markdown(nil).parse_blocks(lines), references: refs }
 
   # Markdown.to_html_ast provides the markdown/Markdown standard library operation.
-  static to_html_ast = ast ->
+  to_html_ast = ast ->
     return { kind: "html_document", blocks: ast["blocks"], references: ast["references"] }
 
   # Markdown.render provides the markdown/Markdown standard library operation.
-  static render = ast, options ->
+  render = ast, options ->
+    return self.render_html_ast(ast, options)
+
+  # Markdown.render_html_ast provides the markdown/Markdown standard library operation.
+  render_html_ast = ast, options = nil ->
     if options == nil
       options = {}
     refs = {}
@@ -25,11 +37,11 @@ class Markdown
       refs = ast["references"]
     parts = []
     for block in blocks
-      parts.push(Markdown.render_block(block, refs, options))
+      parts.push(Markdown(nil).render_block(block, refs, options))
     return parts.join("")
 
   # Markdown.parse_blocks provides the markdown/Markdown standard library operation.
-  static parse_blocks = lines ->
+  parse_blocks = lines ->
     blocks = []
     para = []
     i = 0
@@ -37,18 +49,18 @@ class Markdown
     while i < n
       line = lines[i]
       stripped = line.trim()
-      if Markdown.is_reference_def(stripped)
-        Markdown.flush_paragraph(blocks, para)
+      if Markdown(nil).is_reference_def(stripped)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         i = i + 1
         continue
       if stripped == ""
-        Markdown.flush_paragraph(blocks, para)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         i = i + 1
         continue
-      if i + 1 < n and Markdown.is_setext_underline(lines[i + 1].trim())
-        Markdown.flush_paragraph(blocks, para)
+      if i + 1 < n and Markdown(nil).is_setext_underline(lines[i + 1].trim())
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         level = 2
         if lines[i + 1].trim().starts_with("=")
@@ -56,14 +68,14 @@ class Markdown
         blocks.push({ kind: "h", level: level, text: stripped })
         i = i + 2
         continue
-      if Markdown.is_thematic_break(stripped)
-        Markdown.flush_paragraph(blocks, para)
+      if Markdown(nil).is_thematic_break(stripped)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         blocks.push({ kind: "hr" })
         i = i + 1
         continue
-      if Markdown.is_html_block_start(stripped)
-        Markdown.flush_paragraph(blocks, para)
+      if Markdown(nil).is_html_block_start(stripped)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         html_lines = []
         while i < n and lines[i].trim() != ""
@@ -71,20 +83,20 @@ class Markdown
           i = i + 1
         blocks.push({ kind: "html", text: html_lines.join("\n") })
         continue
-      heading_level = Markdown.heading_level(stripped)
+      heading_level = Markdown(nil).heading_level(stripped)
       if heading_level > 0
-        Markdown.flush_paragraph(blocks, para)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
-        rest = Markdown.heading_rest(stripped, heading_level)
+        rest = Markdown(nil).heading_rest(stripped, heading_level)
         blocks.push({ kind: "h", level: heading_level, text: rest })
         i = i + 1
         continue
       if stripped.starts_with("```")
-        Markdown.flush_paragraph(blocks, para)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         i = i + 1
         code_lines = []
-        info = Markdown.trim_left_n(stripped, 3).trim()
+        info = Markdown(nil).trim_left_n(stripped, 3).trim()
         while i < n and not lines[i].trim().starts_with("```")
           code_lines.push(lines[i])
           i = i + 1
@@ -93,7 +105,7 @@ class Markdown
         blocks.push({ kind: "code", lines: code_lines, info: info })
         continue
       if stripped.starts_with("> ") or stripped == ">"
-        Markdown.flush_paragraph(blocks, para)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         quote_lines = []
         while i < n
@@ -105,62 +117,62 @@ class Markdown
           if q == ">"
             quote_lines.push("")
           else
-            quote_lines.push(Markdown.trim_left_n(q, 2))
+            quote_lines.push(Markdown(nil).trim_left_n(q, 2))
           i = i + 1
         blocks.push({ kind: "quote", lines: quote_lines })
         continue
-      if Markdown.is_task_item(stripped)
-        Markdown.flush_paragraph(blocks, para)
+      if Markdown(nil).is_task_item(stripped)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         items = []
-        while i < n and Markdown.is_task_item(lines[i].trim())
-          task = Markdown.parse_task_item(lines[i].trim())
+        while i < n and Markdown(nil).is_task_item(lines[i].trim())
+          task = Markdown(nil).parse_task_item(lines[i].trim())
           items.push(task)
           i = i + 1
         blocks.push({ kind: "task_list", items: items })
         continue
-      if Markdown.is_table_start(lines, i)
-        Markdown.flush_paragraph(blocks, para)
+      if Markdown(nil).is_table_start(lines, i)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
-        headers = Markdown.table_cells(stripped)
+        headers = Markdown(nil).table_cells(stripped)
         i = i + 2
         rows = []
         while i < n and lines[i].trim().contains("|") and lines[i].trim() != ""
-          rows.push(Markdown.table_cells(lines[i].trim()))
+          rows.push(Markdown(nil).table_cells(lines[i].trim()))
           i = i + 1
         blocks.push({ kind: "table", headers: headers, rows: rows })
         continue
-      if Markdown.is_unordered_item(stripped)
-        Markdown.flush_paragraph(blocks, para)
+      if Markdown(nil).is_unordered_item(stripped)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         items = []
-        while i < n and Markdown.is_unordered_item(lines[i].trim())
-          item_text = Markdown.strip_list_marker(lines[i].trim())
+        while i < n and Markdown(nil).is_unordered_item(lines[i].trim())
+          item_text = Markdown(nil).strip_list_marker(lines[i].trim())
           children = []
           i = i + 1
-          while i < n and Markdown.is_nested_unordered_item(lines[i])
-            children.push(Markdown.strip_list_marker(lines[i].trim()))
+          while i < n and Markdown(nil).is_nested_unordered_item(lines[i])
+            children.push(Markdown(nil).strip_list_marker(lines[i].trim()))
             i = i + 1
           items.push({ text: item_text, children: children })
         blocks.push({ kind: "ul", items: items })
         continue
-      if Markdown.is_ordered_item(stripped)
-        Markdown.flush_paragraph(blocks, para)
+      if Markdown(nil).is_ordered_item(stripped)
+        Markdown(nil).flush_paragraph(blocks, para)
         para = []
         items = []
-        while i < n and Markdown.is_ordered_item(lines[i].trim())
-          item_text = Markdown.strip_ordered_marker(lines[i].trim())
+        while i < n and Markdown(nil).is_ordered_item(lines[i].trim())
+          item_text = Markdown(nil).strip_ordered_marker(lines[i].trim())
           items.push(item_text)
           i = i + 1
         blocks.push({ kind: "ol", items: items })
         continue
       para.push(stripped)
       i = i + 1
-    Markdown.flush_paragraph(blocks, para)
+    Markdown(nil).flush_paragraph(blocks, para)
     return blocks
 
   # Markdown.flush_paragraph provides the markdown/Markdown standard library operation.
-  static flush_paragraph = blocks, para ->
+  flush_paragraph = blocks, para ->
     if para.len() == 0
       return nil
     text = para.join("\n")
@@ -168,7 +180,7 @@ class Markdown
     return nil
 
   # Markdown.is_thematic_break provides the markdown/Markdown standard library operation.
-  static is_thematic_break = s ->
+  is_thematic_break = s ->
     if s == "---"
       return true
     if s == "***"
@@ -178,7 +190,7 @@ class Markdown
     return false
 
   # Markdown.is_setext_underline provides the markdown/Markdown standard library operation.
-  static is_setext_underline = s ->
+  is_setext_underline = s ->
     if s == ""
       return false
     marker = s[0]
@@ -192,14 +204,14 @@ class Markdown
     return true
 
   # Markdown.is_html_block_start provides the markdown/Markdown standard library operation.
-  static is_html_block_start = s ->
+  is_html_block_start = s ->
     return s.starts_with("<div") or s.starts_with("<section") or s.starts_with("<article") or s.starts_with("<p") or s.starts_with("<table") or s.starts_with("<h1") or s.starts_with("<h2") or s.starts_with("<h3") or s.starts_with("<ul") or s.starts_with("<ol")
 
   # Markdown.is_reference_def provides the markdown/Markdown standard library operation.
-  static is_reference_def = s ->
+  is_reference_def = s ->
     if not s.starts_with("[")
       return false
-    close = Markdown.find_byte(s, "]", 1)
+    close = Markdown(nil).find_byte(s, "]", 1)
     if close <= 1
       return false
     if close + 1 >= s.byte_len()
@@ -207,19 +219,19 @@ class Markdown
     return s[close + 1] == ":"
 
   # Markdown.reference_defs provides the markdown/Markdown standard library operation.
-  static reference_defs = lines ->
+  reference_defs = lines ->
     refs = {}
     for line in lines
       s = line.trim()
-      if Markdown.is_reference_def(s)
-        close = Markdown.find_byte(s, "]", 1)
+      if Markdown(nil).is_reference_def(s)
+        close = Markdown(nil).find_byte(s, "]", 1)
         label = s.slice(1, close).trim().lower()
         url = s.slice(close + 2, s.len()).trim()
         refs[label] = url
     return refs
 
   # Markdown.heading_level provides the markdown/Markdown standard library operation.
-  static heading_level = s ->
+  heading_level = s ->
     n = s.byte_len()
     i = 0
     while i < n and i < 6 and s[i] == "#"
@@ -233,7 +245,7 @@ class Markdown
     return i
 
   # Markdown.heading_rest provides the markdown/Markdown standard library operation.
-  static heading_rest = s, level ->
+  heading_rest = s, level ->
     n = s.byte_len()
     rest = ""
     i = level + 1
@@ -243,7 +255,7 @@ class Markdown
     return rest.trim()
 
   # Markdown.is_unordered_item provides the markdown/Markdown standard library operation.
-  static is_unordered_item = s ->
+  is_unordered_item = s ->
     if s.starts_with("- ")
       return true
     if s.starts_with("* ")
@@ -253,35 +265,35 @@ class Markdown
     return false
 
   # Markdown.strip_list_marker provides the markdown/Markdown standard library operation.
-  static strip_list_marker = s ->
-    return Markdown.trim_left_n(s, 2)
+  strip_list_marker = s ->
+    return Markdown(nil).trim_left_n(s, 2)
 
   # Markdown.is_nested_unordered_item provides the markdown/Markdown standard library operation.
-  static is_nested_unordered_item = s ->
-    return (s.starts_with("  - ") or s.starts_with("  * ") or s.starts_with("  + ")) and Markdown.is_unordered_item(s.trim())
+  is_nested_unordered_item = s ->
+    return (s.starts_with("  - ") or s.starts_with("  * ") or s.starts_with("  + ")) and Markdown(nil).is_unordered_item(s.trim())
 
   # Markdown.is_task_item provides the markdown/Markdown standard library operation.
-  static is_task_item = s ->
+  is_task_item = s ->
     return s.starts_with("- [ ] ") or s.starts_with("- [x] ") or s.starts_with("- [X] ")
 
   # Markdown.parse_task_item provides the markdown/Markdown standard library operation.
-  static parse_task_item = s ->
+  parse_task_item = s ->
     checked = s.starts_with("- [x] ") or s.starts_with("- [X] ")
-    return { checked: checked, text: Markdown.trim_left_n(s, 6) }
+    return { checked: checked, text: Markdown(nil).trim_left_n(s, 6) }
 
   # Markdown.is_table_start provides the markdown/Markdown standard library operation.
-  static is_table_start = lines, i ->
+  is_table_start = lines, i ->
     if i + 1 >= lines.len()
       return false
     head = lines[i].trim()
     sep = lines[i + 1].trim()
-    return head.contains("|") and Markdown.is_table_separator(sep)
+    return head.contains("|") and Markdown(nil).is_table_separator(sep)
 
   # Markdown.is_table_separator provides the markdown/Markdown standard library operation.
-  static is_table_separator = s ->
+  is_table_separator = s ->
     if not s.contains("|")
       return false
-    cells = Markdown.table_cells(s)
+    cells = Markdown(nil).table_cells(s)
     if cells.len() == 0
       return false
     for cell in cells
@@ -301,7 +313,7 @@ class Markdown
     return true
 
   # Markdown.table_cells provides the markdown/Markdown standard library operation.
-  static table_cells = s ->
+  table_cells = s ->
     text = s
     if text.starts_with("|")
       text = text.slice(1, text.len())
@@ -314,7 +326,7 @@ class Markdown
     return cells
 
   # Markdown.is_ordered_item provides the markdown/Markdown standard library operation.
-  static is_ordered_item = s ->
+  is_ordered_item = s ->
     n = s.byte_len()
     i = 0
     while i < n and "0123456789".contains(s[i])
@@ -330,15 +342,15 @@ class Markdown
     return true
 
   # Markdown.strip_ordered_marker provides the markdown/Markdown standard library operation.
-  static strip_ordered_marker = s ->
+  strip_ordered_marker = s ->
     n = s.byte_len()
     i = 0
     while i < n and "0123456789".contains(s[i])
       i = i + 1
-    return Markdown.trim_left_n(s, i + 2)
+    return Markdown(nil).trim_left_n(s, i + 2)
 
   # Markdown.trim_left_n provides the markdown/Markdown standard library operation.
-  static trim_left_n = s, k ->
+  trim_left_n = s, k ->
     n = s.byte_len()
     out = ""
     i = k
@@ -348,27 +360,27 @@ class Markdown
     return out
 
   # Markdown.render_block provides the markdown/Markdown standard library operation.
-  static render_block = block, refs, options ->
+  render_block = block, refs, options ->
     kind = block["kind"]
     if kind == "hr"
       return "<hr/>\n"
     if kind == "h"
       level = block["level"].to_s()
-      inner = Markdown.inline_with_refs(block["text"], refs)
+      inner = Markdown(nil).inline_with_refs(block["text"], refs)
       return "<h" + level + ">" + inner + "</h" + level + ">\n"
     if kind == "p"
-      return "<p>" + Markdown.inline_with_refs(block["text"], refs) + "</p>\n"
+      return "<p>" + Markdown(nil).inline_with_refs(block["text"], refs) + "</p>\n"
     if kind == "code"
       body = ""
       for line in block["lines"]
-        body = body + Markdown.escape_html(line) + "\n"
+        body = body + Markdown(nil).escape_html(line) + "\n"
       info = block["info"]
       if info != nil and info != ""
-        return "<pre><code class=\"language-" + Markdown.escape_attr(info) + "\">" + body + "</code></pre>\n"
+        return "<pre><code class=\"language-" + Markdown(nil).escape_attr(info) + "\">" + body + "</code></pre>\n"
       return "<pre><code>" + body + "</code></pre>\n"
     if kind == "quote"
       inner_text = block["lines"].join("\n")
-      return "<blockquote>\n<p>" + Markdown.inline_with_refs(inner_text, refs) + "</p>\n</blockquote>\n"
+      return "<blockquote>\n<p>" + Markdown(nil).inline_with_refs(inner_text, refs) + "</p>\n</blockquote>\n"
     if kind == "ul"
       out = "<ul>\n"
       for item in block["items"]
@@ -377,11 +389,11 @@ class Markdown
         if item["text"] != nil
           text = item["text"]
           children = item["children"]
-        out = out + "<li>" + Markdown.inline_with_refs(text, refs)
+        out = out + "<li>" + Markdown(nil).inline_with_refs(text, refs)
         if children.len() > 0
           out = out + "\n<ul>\n"
           for child in children
-            out = out + "<li>" + Markdown.inline_with_refs(child, refs) + "</li>\n"
+            out = out + "<li>" + Markdown(nil).inline_with_refs(child, refs) + "</li>\n"
           out = out + "</ul>\n"
         out = out + "</li>\n"
       out = out + "</ul>\n"
@@ -389,7 +401,7 @@ class Markdown
     if kind == "ol"
       out = "<ol>\n"
       for item in block["items"]
-        out = out + "<li>" + Markdown.inline_with_refs(item, refs) + "</li>\n"
+        out = out + "<li>" + Markdown(nil).inline_with_refs(item, refs) + "</li>\n"
       out = out + "</ol>\n"
       return out
     if kind == "task_list"
@@ -398,29 +410,29 @@ class Markdown
         checked = ""
         if item["checked"]
           checked = " checked"
-        out = out + "<li><input type=\"checkbox\" disabled" + checked + "/> " + Markdown.inline_with_refs(item["text"], refs) + "</li>\n"
+        out = out + "<li><input type=\"checkbox\" disabled" + checked + "/> " + Markdown(nil).inline_with_refs(item["text"], refs) + "</li>\n"
       out = out + "</ul>\n"
       return out
     if kind == "table"
       out = "<table>\n<thead><tr>"
       for cell in block["headers"]
-        out = out + "<th>" + Markdown.inline_with_refs(cell, refs) + "</th>"
+        out = out + "<th>" + Markdown(nil).inline_with_refs(cell, refs) + "</th>"
       out = out + "</tr></thead>\n<tbody>\n"
       for row in block["rows"]
         out = out + "<tr>"
         for cell in row
-          out = out + "<td>" + Markdown.inline_with_refs(cell, refs) + "</td>"
+          out = out + "<td>" + Markdown(nil).inline_with_refs(cell, refs) + "</td>"
         out = out + "</tr>\n"
       out = out + "</tbody>\n</table>\n"
       return out
     if kind == "html"
       if options["raw_html"] == true
         return block["text"] + "\n"
-      return "<p>" + Markdown.escape_html(block["text"]) + "</p>\n"
+      return "<p>" + Markdown(nil).escape_html(block["text"]) + "</p>\n"
     return ""
 
   # Markdown.escape_html provides the markdown/Markdown standard library operation.
-  static escape_html = text ->
+  escape_html = text ->
     text = text.replace("&", "&amp;")
     text = text.replace("<", "&lt;")
     text = text.replace(">", "&gt;")
@@ -429,7 +441,7 @@ class Markdown
     return text
 
   # Markdown.escape_attr provides the markdown/Markdown standard library operation.
-  static escape_attr = text ->
+  escape_attr = text ->
     text = text.replace("&", "&amp;")
     text = text.replace("\"", "&quot;")
     text = text.replace("<", "&lt;")
@@ -437,86 +449,86 @@ class Markdown
     return text
 
   # Markdown.inline provides the markdown/Markdown standard library operation.
-  static inline = text ->
-    return Markdown.inline_with_refs(text, {})
+  inline = text ->
+    return Markdown(nil).inline_with_refs(text, {})
 
   # Markdown.inline_with_refs provides the markdown/Markdown standard library operation.
-  static inline_with_refs = text, refs ->
+  inline_with_refs = text, refs ->
     n = text.byte_len()
     out = ""
     i = 0
     while i < n
       c = text[i]
       if c == "\\" and i + 1 < n
-        out = out + Markdown.escape_html(text[i + 1])
+        out = out + Markdown(nil).escape_html(text[i + 1])
         i = i + 2
         continue
       if c == "`"
-        end = Markdown.find_byte(text, "`", i + 1)
+        end = Markdown(nil).find_byte(text, "`", i + 1)
         if end >= 0
           inner = text.slice(i + 1, end)
-          out = out + "<code>" + Markdown.escape_html(inner) + "</code>"
+          out = out + "<code>" + Markdown(nil).escape_html(inner) + "</code>"
           i = end + 1
           continue
       if c == "~" and i + 1 < n and text[i + 1] == "~"
-        end = Markdown.find_double(text, "~", i + 2)
+        end = Markdown(nil).find_double(text, "~", i + 2)
         if end >= 0
           inner = text.slice(i + 2, end)
-          out = out + "<del>" + Markdown.inline_with_refs(inner, refs) + "</del>"
+          out = out + "<del>" + Markdown(nil).inline_with_refs(inner, refs) + "</del>"
           i = end + 2
           continue
       if c == "*" and i + 1 < n and text[i + 1] == "*"
-        end = Markdown.find_double(text, "*", i + 2)
+        end = Markdown(nil).find_double(text, "*", i + 2)
         if end >= 0
           inner = text.slice(i + 2, end)
-          out = out + "<strong>" + Markdown.inline_with_refs(inner, refs) + "</strong>"
+          out = out + "<strong>" + Markdown(nil).inline_with_refs(inner, refs) + "</strong>"
           i = end + 2
           continue
       if c == "_" and i + 1 < n and text[i + 1] == "_"
-        end = Markdown.find_double(text, "_", i + 2)
+        end = Markdown(nil).find_double(text, "_", i + 2)
         if end >= 0
           inner = text.slice(i + 2, end)
-          out = out + "<strong>" + Markdown.inline_with_refs(inner, refs) + "</strong>"
+          out = out + "<strong>" + Markdown(nil).inline_with_refs(inner, refs) + "</strong>"
           i = end + 2
           continue
       if c == "*"
-        end = Markdown.find_byte(text, "*", i + 1)
+        end = Markdown(nil).find_byte(text, "*", i + 1)
         if end >= 0
           inner = text.slice(i + 1, end)
-          out = out + "<em>" + Markdown.inline_with_refs(inner, refs) + "</em>"
+          out = out + "<em>" + Markdown(nil).inline_with_refs(inner, refs) + "</em>"
           i = end + 1
           continue
       if c == "_"
-        end = Markdown.find_byte(text, "_", i + 1)
+        end = Markdown(nil).find_byte(text, "_", i + 1)
         if end >= 0
           inner = text.slice(i + 1, end)
-          out = out + "<em>" + Markdown.inline_with_refs(inner, refs) + "</em>"
+          out = out + "<em>" + Markdown(nil).inline_with_refs(inner, refs) + "</em>"
           i = end + 1
           continue
       if c == "!" and i + 1 < n and text[i + 1] == "["
-        image = Markdown.try_image(text, i, refs)
+        image = Markdown(nil).try_image(text, i, refs)
         if image != nil
           out = out + image["html"]
           i = image["end"]
           continue
       if c == "["
-        link = Markdown.try_link(text, i, refs)
+        link = Markdown(nil).try_link(text, i, refs)
         if link != nil
           out = out + link["html"]
           i = link["end"]
           continue
       if c == "<"
-        auto = Markdown.try_autolink(text, i)
+        auto = Markdown(nil).try_autolink(text, i)
         if auto != nil
           out = out + auto["html"]
           i = auto["end"]
           continue
-      out = out + Markdown.escape_html(c)
+      out = out + Markdown(nil).escape_html(c)
       i = i + 1
     return out
 
   # Markdown.find_byte provides the markdown/Markdown standard library operation.
-  static find_byte = text, b, start ->
+  find_byte = text, b, start ->
     n = text.byte_len()
     i = start
     while i < n
@@ -526,7 +538,7 @@ class Markdown
     return -1
 
   # Markdown.find_double provides the markdown/Markdown standard library operation.
-  static find_double = text, b, start ->
+  find_double = text, b, start ->
     n = text.byte_len()
     i = start
     while i < n - 1
@@ -536,9 +548,9 @@ class Markdown
     return -1
 
   # Markdown.try_link provides the markdown/Markdown standard library operation.
-  static try_link = text, start, refs ->
+  try_link = text, start, refs ->
     n = text.byte_len()
-    close_text = Markdown.find_byte(text, "]", start + 1)
+    close_text = Markdown(nil).find_byte(text, "]", start + 1)
     if close_text < 0
       return nil
     if close_text + 1 >= n
@@ -547,13 +559,13 @@ class Markdown
     url = nil
     end = close_text + 1
     if text[close_text + 1] == "("
-      close_url = Markdown.find_byte(text, ")", close_text + 2)
+      close_url = Markdown(nil).find_byte(text, ")", close_text + 2)
       if close_url < 0
         return nil
       url = text.slice(close_text + 2, close_url)
       end = close_url + 1
     elseif text[close_text + 1] == "["
-      close_ref = Markdown.find_byte(text, "]", close_text + 2)
+      close_ref = Markdown(nil).find_byte(text, "]", close_text + 2)
       if close_ref < 0
         return nil
       label = text.slice(close_text + 2, close_ref).trim().lower()
@@ -566,31 +578,31 @@ class Markdown
     else
       return nil
     html = "<a href=\""
-      + Markdown.escape_attr(url)
+      + Markdown(nil).escape_attr(url)
       + "\">"
-      + Markdown.inline_with_refs(inner, refs)
+      + Markdown(nil).inline_with_refs(inner, refs)
       + "</a>"
     return { html: html, end: end }
 
   # Markdown.try_image provides the markdown/Markdown standard library operation.
-  static try_image = text, start, refs ->
+  try_image = text, start, refs ->
     n = text.byte_len()
     if start + 1 >= n or text[start + 1] != "["
       return nil
-    close_text = Markdown.find_byte(text, "]", start + 2)
+    close_text = Markdown(nil).find_byte(text, "]", start + 2)
     if close_text < 0 or close_text + 1 >= n
       return nil
     alt = text.slice(start + 2, close_text)
     url = nil
     end = close_text + 1
     if text[close_text + 1] == "("
-      close_url = Markdown.find_byte(text, ")", close_text + 2)
+      close_url = Markdown(nil).find_byte(text, ")", close_text + 2)
       if close_url < 0
         return nil
       url = text.slice(close_text + 2, close_url)
       end = close_url + 1
     elseif text[close_text + 1] == "["
-      close_ref = Markdown.find_byte(text, "]", close_text + 2)
+      close_ref = Markdown(nil).find_byte(text, "]", close_text + 2)
       if close_ref < 0
         return nil
       label = text.slice(close_text + 2, close_ref).trim().lower()
@@ -602,20 +614,20 @@ class Markdown
       end = close_ref + 1
     else
       return nil
-    html = "<img src=\"" + Markdown.escape_attr(url) + "\" alt=\"" + Markdown.escape_attr(alt) + "\"/>"
+    html = "<img src=\"" + Markdown(nil).escape_attr(url) + "\" alt=\"" + Markdown(nil).escape_attr(alt) + "\"/>"
     return { html: html, end: end }
 
   # Markdown.try_autolink provides the markdown/Markdown standard library operation.
-  static try_autolink = text, start ->
-    close = Markdown.find_byte(text, ">", start + 1)
+  try_autolink = text, start ->
+    close = Markdown(nil).find_byte(text, ">", start + 1)
     if close < 0
       return nil
     inner = text.slice(start + 1, close)
     if not (inner.starts_with("http://") or inner.starts_with("https://"))
       return nil
     html = "<a href=\""
-      + Markdown.escape_attr(inner)
+      + Markdown(nil).escape_attr(inner)
       + "\">"
-      + Markdown.escape_html(inner)
+      + Markdown(nil).escape_html(inner)
       + "</a>"
     return { html: html, end: close + 1 }

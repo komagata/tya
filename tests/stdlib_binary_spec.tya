@@ -4,7 +4,7 @@ import binary as binary
 class StdlibBinaryTest extends TestCase
 
   test_reader_navigation = ->
-    reader = binary.Reader.new(b"\x01\x02\x03")
+    reader = binary.Reader(b"\x01\x02\x03")
     self.assert_equal(0, reader.position(), "position")
     self.assert_equal(3, reader.remaining(), "remaining")
     self.assert_equal(1, reader.read_u8(), "u8")
@@ -15,45 +15,45 @@ class StdlibBinaryTest extends TestCase
     self.assert(reader.eof?(), "eof")
 
   test_integer_endian_reads = ->
-    big = binary.Reader.new(b"\x12\x34\xff\xfe")
+    big = binary.Reader(b"\x12\x34\xff\xfe")
     self.assert_equal(0x1234, big.read_u16(), "u16 be")
     self.assert_equal(-2, big.read_i16(), "i16 be")
-    little = binary.Reader.new(b"\x34\x12\xfe\xff", { endian: "little" })
+    little = binary.Reader(b"\x34\x12\xfe\xff", { endian: "little" })
     self.assert_equal(0x1234, little.read_u16(), "u16 le default")
     self.assert_equal(-2, little.read_i16(), "i16 le default")
-    mixed = binary.Reader.new(b"\x34\x12\x12\x34", { endian: "little" })
+    mixed = binary.Reader(b"\x34\x12\x12\x34", { endian: "little" })
     self.assert_equal(0x1234, mixed.read_u16_le(), "u16 le")
     self.assert_equal(0x1234, mixed.read_u16_be(), "u16 be override")
 
   test_writer_integers = ->
-    writer = binary.Writer.new(nil)
+    writer = binary.Writer(nil)
     self.assert(writer.write_u8(1) == writer, "chain")
     writer.write_i8(-1).write_u16(0x1234).write_i16_le(-2)
-    self.assert_equal([1, 255, 0x12, 0x34, 0xfe, 0xff], bytes_array(writer.bytes()), "bytes")
+    self.assert_equal([1, 255, 0x12, 0x34, 0xfe, 0xff], bytes_array(writer.to_bytes()), "bytes")
     self.assert_equal(6, writer.position(), "position")
 
   test_writer_little_default = ->
-    writer = binary.Writer.new({ endian: "little" })
+    writer = binary.Writer({ endian: "little" })
     writer.write_u16(0x1234).write_u16_be(0x1234)
-    self.assert_equal([0x34, 0x12, 0x12, 0x34], bytes_array(writer.bytes()), "endian")
+    self.assert_equal([0x34, 0x12, 0x12, 0x34], bytes_array(writer.to_bytes()), "endian")
 
   test_u32_and_i32 = ->
-    writer = binary.Writer.new(nil)
+    writer = binary.Writer(nil)
     writer.write_u32(0xffffffff).write_i32(-1)
-    reader = binary.Reader.new(writer.bytes())
+    reader = binary.Reader(writer.to_bytes())
     self.assert_equal(0xffffffff, reader.read_u32(), "u32")
     self.assert_equal(-1, reader.read_i32(), "i32")
 
   test_float_round_trip = ->
-    writer = binary.Writer.new({ endian: "little" })
+    writer = binary.Writer({ endian: "little" })
     writer.write_f32_le(1.5).write_f64_be(-2.25)
-    reader = binary.Reader.new(writer.bytes(), { endian: "little" })
+    reader = binary.Reader(writer.to_bytes(), { endian: "little" })
     self.assert_equal(1.5, reader.read_f32_le(), "f32")
     self.assert_equal(-2.25, reader.read_f64_be(), "f64")
 
   test_errors = ->
-    self.assert_raises(-> binary.Reader.new(b"", { endian: "middle" }), "bad endian")
-    self.assert_raises(-> binary.Reader.new(b"\x01").read_u16(), "past end")
-    self.assert_raises(-> binary.Reader.new(b"\x01").seek(2), "seek")
-    self.assert_raises(-> binary.Writer.new(nil).write_u8(256), "range")
-    self.assert_raises(-> binary.Writer.new(nil).write_i16(-32769), "range")
+    self.assert_raises(-> binary.Reader(b"", { endian: "middle" }), "bad endian")
+    self.assert_raises(-> binary.Reader(b"\x01").read_u16(), "past end")
+    self.assert_raises(-> binary.Reader(b"\x01").seek(2), "seek")
+    self.assert_raises(-> binary.Writer(nil).write_u8(256), "range")
+    self.assert_raises(-> binary.Writer(nil).write_i16(-32769), "range")

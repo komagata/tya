@@ -7,7 +7,7 @@ class Document
     self.doc_encoding = encoding
 
   # Document.new provides the xml/Document standard library operation.
-  static new = children, version, encoding ->
+  new = children, version, encoding ->
     return Document(children, version, encoding)
 
   # Document.root provides the xml/Document standard library operation.
@@ -33,4 +33,4 @@ class Document
 
   # Document.to_s provides the xml/Document standard library operation.
   to_s = ->
-    return Xml.dump(self)
+    return Xml(nil).stringify(self)

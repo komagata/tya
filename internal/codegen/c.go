@@ -1549,6 +1549,18 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote("@"+field.Name), value))
 		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, %s);\n", strconv.Quote(field.Name), value))
 	}
+	if parentKey != "" {
+		g.emitParentMethods(&out, parentKey, class)
+	}
+	if err := g.emitInterfaceMethods(&out, name, class); err != nil {
+		return "", err
+	}
+	for _, method := range class.Methods {
+		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
+			continue
+		}
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
+	}
 	if initMethod != nil {
 		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5);\n", methodSyms[initMethod.Name]))
 	} else if parentKey != "" {

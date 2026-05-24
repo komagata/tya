@@ -9,12 +9,12 @@ import time
 results = channel.Channel(64)
 
 worker = id, rc ->
-  me = task.Task.current()
+  me = task.Task().current()
   produced = 0
   while not me.cancelled?()
     rc.send(id * 1000 + produced)
     produced = produced + 1
-    time.Time.sleep(0.005)
+    time.Time().sleep(0.005)
   return produced
 
 t1 = spawn worker(1, results)
@@ -22,7 +22,7 @@ t2 = spawn worker(2, results)
 t3 = spawn worker(3, results)
 
 # Let the workers produce for a short while.
-time.Time.sleep(0.05)
+time.Time().sleep(0.05)
 t1.cancel()
 t2.cancel()
 t3.cancel()

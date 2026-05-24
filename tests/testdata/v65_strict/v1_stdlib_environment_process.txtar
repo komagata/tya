@@ -38,28 +38,28 @@ stderr 'process.run: string command requires shell option'
 import os as os
 import process as process
 
-os.Os.setenv("TYA_V1_ENV_PROCESS", "one")
-print(os.Os.env("TYA_V1_ENV_PROCESS"))
-print(os.Os.environ()["TYA_V1_ENV_PROCESS"])
-os.Os.unsetenv("TYA_V1_ENV_PROCESS")
-print(os.Os.env("TYA_V1_ENV_PROCESS"))
+os.Os().setenv("TYA_V1_ENV_PROCESS", "one")
+print(os.Os().env("TYA_V1_ENV_PROCESS"))
+print(os.Os().environ()["TYA_V1_ENV_PROCESS"])
+os.Os().unsetenv("TYA_V1_ENV_PROCESS")
+print(os.Os().env("TYA_V1_ENV_PROCESS"))
 
-r = process.Process.run(["sh", "-c", "printf direct"], {})
+r = process.Process(["sh", "-c", "printf direct"]).run({})
 print(r["status"])
 print(r["success"])
 print(r["stdout"])
 
-failed = process.Process.run(["sh", "-c", "exit 7"], {})
+failed = process.Process(["sh", "-c", "exit 7"]).run({})
 print(failed["success"])
 print(failed["status"])
 
-shell = process.Process.run("printf shell", { shell: true })
+shell = process.Process("printf shell").run({ shell: true })
 print(shell["stdout"])
 
-piped = process.Process.run(["cat"], { stdin: "pipe" })
+piped = process.Process(["cat"]).run({ stdin: "pipe" })
 print(piped["stdout"] == "pipe")
 
 -- invalid_process.tya --
 import process as process
 
-process.Process.run("printf nope", {})
+process.Process("printf nope").run({})

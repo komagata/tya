@@ -4,39 +4,39 @@ import matrix as matrix
 class StdlibMatrixTest extends TestCase
 
   test_new_and_at = ->
-    m = matrix.Matrix.new([[1, 2], [3, 4]])
+    m = matrix.Matrix([[1, 2], [3, 4]])
     self.assert_equal(matrix.Matrix, m.class, "class")
     self.assert_equal(2, m.rows, "rows")
     self.assert_equal(2, m.cols, "cols")
-    self.assert_equal(1, matrix.Matrix.at(m, 0, 0), "at 0,0")
-    self.assert_equal(4, matrix.Matrix.at(m, 1, 1), "at 1,1")
+    self.assert_equal(1, m.at(0, 0), "at 0,0")
+    self.assert_equal(4, m.at(1, 1), "at 1,1")
   test_zero = ->
-    m = matrix.Matrix.zero(2, 3)
+    m = matrix.Matrix().zero(2, 3)
     self.assert_equal([[0, 0, 0], [0, 0, 0]], m.data, "zero 2x3")
   test_identity = ->
-    m = matrix.Matrix.identity(3)
+    m = matrix.Matrix().identity(3)
     self.assert_equal([[1, 0, 0], [0, 1, 0], [0, 0, 1]], m.data, "I3")
   test_add = ->
-    a = matrix.Matrix.new([[1, 2], [3, 4]])
-    b = matrix.Matrix.identity(2)
-    sum = matrix.Matrix.add(a, b)
+    a = matrix.Matrix([[1, 2], [3, 4]])
+    b = matrix.Matrix().identity(2)
+    sum = a.add(b)
     self.assert_equal(matrix.Matrix, sum.class, "class")
     self.assert_equal([[2, 2], [3, 5]], sum.data, "add")
   test_mul = ->
-    a = matrix.Matrix.new([[1, 2], [3, 4]])
-    p = matrix.Matrix.mul(a, a)
+    a = matrix.Matrix([[1, 2], [3, 4]])
+    p = a.mul(a)
     self.assert_equal([[7, 10], [15, 22]], p.data, "a*a")
   test_transpose = ->
-    a = matrix.Matrix.new([[1, 2, 3]])
-    t = matrix.Matrix.transpose(a)
+    a = matrix.Matrix([[1, 2, 3]])
+    t = a.transpose()
     self.assert_equal([[1], [2], [3]], t.data, "transpose")
   test_det_2x2 = ->
-    a = matrix.Matrix.new([[1, 2], [3, 4]])
-    self.assert_equal(-2, matrix.Matrix.det(a), "det 2x2")
+    a = matrix.Matrix([[1, 2], [3, 4]])
+    self.assert_equal(-2, a.det(), "det 2x2")
   test_det_3x3 = ->
-    a = matrix.Matrix.new([[6, 1, 1], [4, -2, 5], [2, 8, 7]])
-    self.assert_equal(-306, matrix.Matrix.det(a), "det 3x3")
+    a = matrix.Matrix([[6, 1, 1], [4, -2, 5], [2, 8, 7]])
+    self.assert_equal(-306, a.det(), "det 3x3")
   test_scale = ->
-    a = matrix.Matrix.new([[1, 2], [3, 4]])
-    s = matrix.Matrix.scale(a, 2)
+    a = matrix.Matrix([[1, 2], [3, 4]])
+    s = a.scale(2)
     self.assert_equal([[2, 4], [6, 8]], s.data, "scale 2")

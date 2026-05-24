@@ -17,7 +17,7 @@ interface Closable
 class Socket implements Readable, Writable, Closable
   # connect opens a TCP connection to host and port.
   # Raises when the connection cannot be established.
-  static connect = host, port, options ->
+  connect = host, port, options ->
     if options == nil
       options = {}
     Socket(socket_connect(host, port, options), options["mode"] == "binary")

@@ -7,7 +7,7 @@ class Element
     self.children = children
 
   # Element.new provides the xml/Element standard library operation.
-  static new = name, attrs, children ->
+  new = name, attrs, children ->
     return Element(name, attrs, children)
 
   # Element.attr provides the xml/Element standard library operation.
@@ -69,9 +69,9 @@ class Element
   # Element.find_all_recursive provides the xml/Element standard library operation.
   find_all_recursive = name ->
     out = []
-    Xml.collect_recursive(self, name, out)
+    Xml(nil).collect_recursive(self, name, out)
     return out
 
   # Element.to_s provides the xml/Element standard library operation.
   to_s = ->
-    return Xml.dump(self)
+    return Xml(nil).stringify(self)

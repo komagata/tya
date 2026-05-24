@@ -18,7 +18,7 @@ class StdlibCliTest extends TestCase
     return out
 
   test_long_and_equals = ->
-    result = cli.Cli.parse(["--verbose", "--output=dist", "--count", "3", "src"], self.spec())
+    result = cli.Cli(["--verbose", "--output=dist", "--count", "3", "src"]).parse(self.spec())
     self.assert_equal(true, result["options"]["verbose"], "verbose")
     self.assert_equal("dist", result["options"]["output"], "output")
     self.assert_equal(3, result["options"]["count"], "count")
@@ -26,18 +26,18 @@ class StdlibCliTest extends TestCase
     self.assert_equal([], result["errors"], "errors")
 
   test_short_grouped_bool_and_value = ->
-    result = cli.Cli.parse(["-v", "-t", "one", "-ttwo", "-o", "out"], self.spec())
+    result = cli.Cli(["-v", "-t", "one", "-ttwo", "-o", "out"]).parse(self.spec())
     self.assert_equal(true, result["options"]["verbose"], "verbose")
     self.assert_equal("out", result["options"]["output"], "output")
     self.assert_equal(["one", "two"], result["options"]["tag"], "tag")
 
   test_no_flag_and_double_dash = ->
-    result = cli.Cli.parse(["--no-color", "-o", "out", "--", "--literal", "x"], self.spec())
+    result = cli.Cli(["--no-color", "-o", "out", "--", "--literal", "x"]).parse(self.spec())
     self.assert_equal(false, result["options"]["color"], "color")
     self.assert_equal(["--literal", "x"], result["rest"], "rest")
 
   test_required_and_unknown_errors = ->
-    result = cli.Cli.parse(["--missing"], self.spec())
+    result = cli.Cli(["--missing"]).parse(self.spec())
     self.assert_equal(2, result["errors"].len(), "error count")
     self.assert_equal("unknown_option", result["errors"][0]["kind"], "unknown")
     self.assert_equal("required", result["errors"][1]["kind"], "required")
@@ -45,12 +45,12 @@ class StdlibCliTest extends TestCase
   test_allow_unknown = ->
     spec = self.spec()
     spec["allow_unknown"] = true
-    result = cli.Cli.parse(["--other", "-o", "out"], spec)
+    result = cli.Cli(["--other", "-o", "out"]).parse(spec)
     self.assert_equal(["--other"], result["rest"], "rest")
     self.assert_equal([], result["errors"], "errors")
 
   test_usage = ->
-    text = cli.Cli.usage("tool", self.spec())
+    text = cli.Cli("tool").usage(self.spec())
     self.assert(text.contains("Usage: tool [options] <input>"), "usage line")
     self.assert(text.contains("-o, --output <string> (required)"), "required")
     self.assert(text.contains("--count <int> (default: 1)"), "default")

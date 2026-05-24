@@ -1,7 +1,7 @@
 # TestRunner provides the unittest/TestRunner standard library API.
 class TestRunner
   # TestRunner.default provides the unittest/TestRunner standard library operation.
-  static default = ->
+  default = ->
     TestRunner()
 
   # TestRunner.run provides the unittest/TestRunner standard library operation.

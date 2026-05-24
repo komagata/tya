@@ -1,114 +1,135 @@
 # Template renders small HTML-oriented templates from dictionaries.
 class Template
+  # Template.initialize stores template source or path.
+  initialize = source = nil ->
+    self.source = source
+
   # render expands source using data and options.
   # Values are HTML-escaped unless raw template syntax is used.
-  static render = source, data, options ->
+  render = source, data = nil, options = nil ->
+    if self.source != nil and data != nil and data.class == Dict
+      options = data
+      data = source
+      source = self.source
+    if data == nil
+      data = source
+      source = self.source
     if options == nil
       options = {}
-    return Template.render_with_options(source, data, options)
+    return Template(nil).render_with_options(source, data, options)
 
   # Template.render_html provides the template/Template standard library operation.
-  static render_html = source, data ->
-    return Template.render_with_options(source, data, { escape: "html" })
+  render_html = source, data = nil ->
+    if data == nil
+      data = source
+      source = self.source
+    return Template(nil).render_with_options(source, data, { escape: "html" })
 
   # render_file reads a template file and renders it with data and options.
   # Raises when the file cannot be read or the template is invalid.
-  static render_file = path, data, options ->
+  render_file = path, data = nil, options = nil ->
+    if self.source != nil and data != nil and data.class == Dict
+      options = data
+      data = path
+      path = self.source
+    if data == nil
+      data = path
+      path = self.source
     if options == nil
       options = {}
-    return Template.render_with_options(read_file(path), data, options)
+    return Template(nil).render_with_options(read_file(path), data, options)
 
   # Template.render_with_options provides the template/Template standard library operation.
-  static render_with_options = source, data, options ->
+  render_with_options = source, data, options ->
     state = { source: source, pos: 0, len: source.byte_len() }
     env = { data: data, locals: {}, options: options }
-    return Template.render_until(state, env, "")
+    return Template(nil).render_until(state, env, "")
 
   # Template.render_until provides the template/Template standard library operation.
-  static render_until = state, env, stop ->
+  render_until = state, env, stop ->
     out = ""
     src = state["source"]
     while state["pos"] < state["len"]
-      if stop != "" and Template.starts_tag(state, stop)
+      if stop != "" and Template(nil).starts_tag(state, stop)
         return out
-      if Template.starts(state, Template.raw_open())
-        out = out + Template.render_raw_tag(state, env)
-      elseif Template.starts(state, Template.open())
-        tag = Template.read_tag(state)
-        if Template.starts_text(tag, "if ")
-          out = out + Template.render_if(state, tag, env)
-        elseif Template.starts_text(tag, "for ")
-          out = out + Template.render_for(state, tag, env)
-        elseif Template.starts_text(tag, "partial ")
-          out = out + Template.render_partial(tag, env)
+      if Template(nil).starts(state, Template(nil).raw_open())
+        out = out + Template(nil).render_raw_tag(state, env)
+      elseif Template(nil).starts(state, Template(nil).open())
+        tag = Template(nil).read_tag(state)
+        if Template(nil).starts_text(tag, "if ")
+          out = out + Template(nil).render_if(state, tag, env)
+        elseif Template(nil).starts_text(tag, "for ")
+          out = out + Template(nil).render_for(state, tag, env)
+        elseif Template(nil).starts_text(tag, "partial ")
+          out = out + Template(nil).render_partial(tag, env)
         elseif tag == "else" or tag == "end"
-          raise error(Template.error(state, "unexpected " + tag))
+          raise error(Template(nil).error(state, "unexpected " + tag))
         else
-          out = out + Template.render_value(tag, env, true)
+          out = out + Template(nil).render_value(tag, env, true)
       else
         out = out + src[state["pos"]]
         state["pos"] = state["pos"] + 1
     if stop != ""
-      raise error(Template.error(state, "missing " + stop))
+      raise error(Template(nil).error(state, "missing " + stop))
     return out
 
   # Template.render_raw_tag provides the template/Template standard library operation.
-  static render_raw_tag = state, env ->
+  render_raw_tag = state, env ->
     state["pos"] = state["pos"] + 3
-    tag = Template.read_until(state, Template.raw_close())
-    return Template.render_value(tag.trim(), env, false)
+    tag = Template(nil).read_until(state, Template(nil).raw_close())
+    return Template(nil).render_value(tag.trim(), env, false)
 
   # Template.render_value provides the template/Template standard library operation.
-  static render_value = path, env, escaped ->
-    found = Template.lookup(path, env)
+  render_value = path, env, escaped ->
+    found = Template(nil).lookup(path, env)
     if not found["ok"]
       return ""
     text = found["value"].to_s()
-    if escaped and Template.option(env["options"], "escape", "none") == "html"
-      return Template.escape_html(text)
+    if escaped and Template(nil).option(env["options"], "escape", "none") == "html"
+      return Template(nil).escape_html(text)
     return text
 
   # Template.render_if provides the template/Template standard library operation.
-  static render_if = state, tag, env ->
+  render_if = state, tag, env ->
     cond = tag.slice(3, tag.len())
     truth = false
-    found = Template.lookup(cond.trim(), env)
+    found = Template(nil).lookup(cond.trim(), env)
     if found["ok"] and found["value"]
       truth = true
     then_start = state["pos"]
-    split = Template.find_block_split(state["source"], then_start)
+    split = Template(nil).find_block_split(state["source"], then_start)
     state["pos"] = split["end_end"]
     if split["else"] >= 0
       if truth
-        return Template.render_range(state["source"], then_start, split["else"], env)
-      return Template.render_range(state["source"], split["else_end"], split["end"], env)
+        return Template(nil).render_range(state["source"], then_start, split["else"], env)
+      return Template(nil).render_range(state["source"], split["else_end"], split["end"], env)
     if truth
-      return Template.render_range(state["source"], then_start, split["end"], env)
+      return Template(nil).render_range(state["source"], then_start, split["end"], env)
     return ""
 
   # Template.render_for provides the template/Template standard library operation.
-  static render_for = state, tag, env ->
+  render_for = state, tag, env ->
     parts = tag.split(" ")
     if parts.len() != 4 or parts[2] != "in"
-      raise error(Template.error(state, "invalid for"))
+      raise error(Template(nil).error(state, "invalid for"))
     name = parts[1]
     path = parts[3]
     body_start = state["pos"]
-    split = Template.find_block_split(state["source"], body_start)
+    split = Template(nil).find_block_split(state["source"], body_start)
     state["pos"] = split["end_end"]
-    found = Template.lookup(path, env)
+    found = Template(nil).lookup(path, env)
     if not found["ok"]
       return ""
     out = ""
     for item in found["value"]
-      child = Template.copy_dict(env["locals"])
+      child = Template(nil).copy_dict(env["locals"])
       child[name] = item
       child_env = { data: env["data"], locals: child, options: env["options"] }
-      out = out + Template.render_range(state["source"], body_start, split["end"], child_env)
+      out = out + Template(nil).render_range(state["source"], body_start, split["end"], child_env)
     return out
 
   # Template.render_partial provides the template/Template standard library operation.
-  static render_partial = tag, env ->
+  render_partial = tag, env ->
     rest = tag.slice(8, tag.len()).trim()
     if rest.byte_len() < 2 or rest[0] != "\""
       raise error("template.render: invalid partial")
@@ -128,27 +149,27 @@ class Template
       raise error("template.render: missing partial " + name)
     ctx = env["data"]
     if ctx_path != ""
-      found = Template.lookup(ctx_path, env)
+      found = Template(nil).lookup(ctx_path, env)
       if found["ok"]
         ctx = found["value"]
       else
         ctx = {}
-    return Template.render_with_options(partials[name], ctx, options)
+    return Template(nil).render_with_options(partials[name], ctx, options)
 
   # Template.find_block_split provides the template/Template standard library operation.
-  static find_block_split = source, start ->
+  find_block_split = source, start ->
     pos = start
     depth = 0
     else_pos = -1
     else_end = -1
     n = source.byte_len()
     while pos < n
-      open = Template.find_next_tag(source, pos)
+      open = Template(nil).find_next_tag(source, pos)
       if open < 0
         raise error("template.render: missing end")
-      close = Template.find_close(source, open + 2, Template.close())
+      close = Template(nil).find_close(source, open + 2, Template(nil).close())
       tag = source.slice(open + 2, close).trim()
-      if Template.starts_text(tag, "if ") or Template.starts_text(tag, "for ")
+      if Template(nil).starts_text(tag, "if ") or Template(nil).starts_text(tag, "for ")
         depth = depth + 1
       elseif tag == "end"
         if depth == 0
@@ -161,15 +182,15 @@ class Template
     raise error("template.render: missing end")
 
   # Template.render_range provides the template/Template standard library operation.
-  static render_range = source, start, finish, env ->
+  render_range = source, start, finish, env ->
     part = source.slice(start, finish)
     state = { source: part, pos: 0, len: part.byte_len() }
-    return Template.render_until(state, env, "")
+    return Template(nil).render_until(state, env, "")
 
   # Template.lookup provides the template/Template standard library operation.
-  static lookup = path, env ->
+  lookup = path, env ->
     p = path.trim()
-    parts = Template.path_parts(p)
+    parts = Template(nil).path_parts(p)
     if parts.len() == 0
       return { ok: false, value: "" }
     first = parts[0]
@@ -185,7 +206,7 @@ class Template
       ok = true
       value = data[first]
     if not ok
-      if Template.strict(options)
+      if Template(nil).strict(options)
         raise error("template.render: missing " + p)
       return { ok: false, value: "" }
     i = 1
@@ -193,20 +214,20 @@ class Template
       key = parts[i]
       if key == ""
         return { ok: true, value: value }
-      if Template.is_number(key)
+      if Template(nil).is_number(key)
         value = value[key.to_i()]
       else
         if value.has(key)
           value = value[key]
         else
-          if Template.strict(options)
+          if Template(nil).strict(options)
             raise error("template.render: missing " + p)
           return { ok: false, value: "" }
       i = i + 1
     return { ok: true, value: value }
 
   # Template.path_parts provides the template/Template standard library operation.
-  static path_parts = path ->
+  path_parts = path ->
     parts = []
     cur = ""
     i = 0
@@ -234,7 +255,7 @@ class Template
     return parts
 
   # Template.starts provides the template/Template standard library operation.
-  static starts = state, text ->
+  starts = state, text ->
     src = state["source"]
     pos = state["pos"]
     if pos + text.byte_len() > state["len"]
@@ -247,48 +268,48 @@ class Template
     return true
 
   # Template.starts_tag provides the template/Template standard library operation.
-  static starts_tag = state, tag ->
-    if not Template.starts(state, Template.open())
+  starts_tag = state, tag ->
+    if not Template(nil).starts(state, Template(nil).open())
       return false
-    close = Template.find_close(state["source"], state["pos"] + 2, Template.close())
+    close = Template(nil).find_close(state["source"], state["pos"] + 2, Template(nil).close())
     if close < 0
       return false
     text = state["source"].slice(state["pos"] + 2, close).trim()
     return text == tag
 
   # Template.starts_text provides the template/Template standard library operation.
-  static starts_text = text, prefix ->
+  starts_text = text, prefix ->
     if prefix.len() > text.byte_len()
       return false
     return text.slice(0, prefix.len()) == prefix
 
   # Template.read_tag provides the template/Template standard library operation.
-  static read_tag = state ->
+  read_tag = state ->
     state["pos"] = state["pos"] + 2
-    tag = Template.read_until(state, Template.close())
+    tag = Template(nil).read_until(state, Template(nil).close())
     return tag.trim()
 
   # Template.read_until provides the template/Template standard library operation.
-  static read_until = state, marker ->
+  read_until = state, marker ->
     src = state["source"]
     start = state["pos"]
-    close = Template.find_close(src, start, marker)
+    close = Template(nil).find_close(src, start, marker)
     if close < 0
-      raise error(Template.error(state, "unclosed tag"))
+      raise error(Template(nil).error(state, "unclosed tag"))
     state["pos"] = close + marker.len()
     return src.slice(start, close)
 
   # Template.find_next_tag provides the template/Template standard library operation.
-  static find_next_tag = source, start ->
+  find_next_tag = source, start ->
     i = start
     while i + 1 < source.byte_len()
-      if source[i] == Template.lbrace() and source[i + 1] == Template.lbrace()
+      if source[i] == Template(nil).lbrace() and source[i + 1] == Template(nil).lbrace()
         return i
       i = i + 1
     return -1
 
   # Template.find_close provides the template/Template standard library operation.
-  static find_close = source, start, marker ->
+  find_close = source, start, marker ->
     i = start
     while i + marker.len() <= source.byte_len()
       if source.slice(i, i + marker.len()) == marker
@@ -297,48 +318,48 @@ class Template
     return -1
 
   # Template.copy_dict provides the template/Template standard library operation.
-  static copy_dict = dict ->
+  copy_dict = dict ->
     out = {}
     for key in dict.keys()
       out[key] = dict[key]
     return out
 
   # Template.lbrace provides the template/Template standard library operation.
-  static lbrace = ->
+  lbrace = ->
     return "{{"
 
   # Template.rbrace provides the template/Template standard library operation.
-  static rbrace = ->
+  rbrace = ->
     return "}}"
 
   # Template.open provides the template/Template standard library operation.
-  static open = ->
-    return Template.lbrace() + Template.lbrace()
+  open = ->
+    return Template(nil).lbrace() + Template(nil).lbrace()
 
   # Template.close provides the template/Template standard library operation.
-  static close = ->
-    return Template.rbrace() + Template.rbrace()
+  close = ->
+    return Template(nil).rbrace() + Template(nil).rbrace()
 
   # Template.raw_open provides the template/Template standard library operation.
-  static raw_open = ->
-    return Template.open() + Template.lbrace()
+  raw_open = ->
+    return Template(nil).open() + Template(nil).lbrace()
 
   # Template.raw_close provides the template/Template standard library operation.
-  static raw_close = ->
-    return Template.rbrace() + Template.close()
+  raw_close = ->
+    return Template(nil).rbrace() + Template(nil).close()
 
   # Template.option provides the template/Template standard library operation.
-  static option = options, name, default ->
+  option = options, name, default ->
     if options.has(name)
       return options[name]
     return default
 
   # Template.strict provides the template/Template standard library operation.
-  static strict = options ->
+  strict = options ->
     return options.has("strict") and options["strict"]
 
   # Template.is_number provides the template/Template standard library operation.
-  static is_number = text ->
+  is_number = text ->
     if text == ""
       return false
     i = 0
@@ -350,7 +371,7 @@ class Template
     return true
 
   # Template.escape_html provides the template/Template standard library operation.
-  static escape_html = text ->
+  escape_html = text ->
     out = ""
     i = 0
     while i < text.byte_len()
@@ -371,7 +392,7 @@ class Template
     return out
 
   # Template.error provides the template/Template standard library operation.
-  static error = state, message ->
+  error = state, message ->
     line = 1
     col = 1
     i = 0

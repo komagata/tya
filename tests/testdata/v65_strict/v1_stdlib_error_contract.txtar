@@ -18,25 +18,25 @@ import process as process
 import serialization as serialization
 
 try
-  file.File.stat("__missing__.txt")
+  file.File("__missing__.txt").stat()
 catch err
   if err["message"] != ""
     print("file")
 
 try
-  json.Json.parse("{{")
+  json.Json("{{").parse()
 catch err
   if err["message"] != ""
     print("json")
 
 try
-  process.Process.run([])
+  process.Process([]).run()
 catch err
   if err["message"] != ""
     print("process")
 
 try
-  serialization.Serializer.to_data(-> nil)
+  serialization.Serializer(nil).serialize(-> nil)
 catch err
   if err["message"] != ""
     print("serialization")

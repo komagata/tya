@@ -1,25 +1,53 @@
 # Bytes provides the bytes/Bytes standard library API.
 class Bytes
-  # Bytes.new provides the bytes/Bytes standard library operation.
-  static new = values ->
+  # Bytes.initialize stores an optional value for byte conversion.
+  initialize = value = nil ->
+    self.value = value
+
+  # Bytes.from_array builds bytes from an array of byte values.
+  from_array = values = nil ->
+    if values == nil
+      values = self.value
     bytes(values)
 
-  # Bytes.of provides the bytes/Bytes standard library operation.
-  static of = text ->
+  # Bytes.from_text encodes text as bytes.
+  from_text = text = nil ->
+    if text == nil
+      text = self.value
     bytes_of(text)
 
-  # Bytes.text provides the bytes/Bytes standard library operation.
-  static text = value ->
+  # Bytes.to_text decodes bytes as text.
+  to_text = value = nil ->
+    if value == nil
+      value = self.value
     bytes_text(value)
 
-  # Bytes.array provides the bytes/Bytes standard library operation.
-  static array = value ->
+  # Bytes.to_array returns bytes as an array of byte values.
+  to_array = value = nil ->
+    if value == nil
+      value = self.value
     bytes_array(value)
 
+  # Bytes.new is a compatibility alias for Bytes.from_array.
+  new = values = nil ->
+    self.from_array(values)
+
+  # Bytes.of is a compatibility alias for Bytes.from_text.
+  of = text = nil ->
+    self.from_text(text)
+
+  # Bytes.text is a compatibility alias for Bytes.to_text.
+  text = value = nil ->
+    self.to_text(value)
+
+  # Bytes.array is a compatibility alias for Bytes.to_array.
+  array = value = nil ->
+    self.to_array(value)
+
   # Bytes.concat provides the bytes/Bytes standard library operation.
-  static concat = left, right ->
+  concat = left, right ->
     bytes_concat(left, right)
 
   # Bytes.slice provides the bytes/Bytes standard library operation.
-  static slice = value, start, end ->
+  slice = value, start, end ->
     bytes_slice(value, start, end)

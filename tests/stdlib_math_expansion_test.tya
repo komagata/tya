@@ -4,28 +4,28 @@ import math as math
 class StdlibMathExpansionTest extends TestCase
 
   test_sqrt = ->
-    self.assert_equal(2, math.Math.sqrt(4), "sqrt 4")
-    self.assert_equal(3, math.Math.sqrt(9), "sqrt 9")
+    self.assert_equal(2, math.Math().sqrt(4), "sqrt 4")
+    self.assert_equal(3, math.Math().sqrt(9), "sqrt 9")
   test_pow = ->
-    self.assert_equal(8, math.Math.pow(2, 3), "2^3")
-    self.assert_equal(1024, math.Math.pow(2, 10), "2^10")
+    self.assert_equal(8, math.Math().pow(2, 3), "2^3")
+    self.assert_equal(1024, math.Math().pow(2, 10), "2^10")
   test_floor_ceil = ->
-    self.assert_equal(1, math.Math.floor(1.9), "floor")
-    self.assert_equal(2, math.Math.ceil(1.1), "ceil")
+    self.assert_equal(1, math.Math().floor(1.9), "floor")
+    self.assert_equal(2, math.Math().ceil(1.1), "ceil")
   test_round_trunc = ->
-    self.assert_equal(2, math.Math.round(1.5), "round")
-    self.assert_equal(1, math.Math.trunc(1.9), "trunc")
+    self.assert_equal(2, math.Math().round(1.5), "round")
+    self.assert_equal(1, math.Math().trunc(1.9), "trunc")
   test_constants = ->
     self.assert(math.Math.pi > 3.14, "pi")
     self.assert(math.Math.pi < 3.15, "pi")
     self.assert(math.Math.e > 2.71, "e")
   test_log_exp = ->
-    self.assert(math.Math.log(math.Math.e) > 0.99, "log(e)")
-    self.assert(math.Math.log(math.Math.e) < 1.01, "log(e)")
+    self.assert(math.Math().log(math.Math.e) > 0.99, "log(e)")
+    self.assert(math.Math().log(math.Math.e) < 1.01, "log(e)")
   test_trig = ->
-    s = math.Math.sin(0)
+    s = math.Math().sin(0)
     self.assert(s < 0.001 and s > -0.001, "sin 0")
-    c = math.Math.cos(0)
+    c = math.Math().cos(0)
     self.assert_equal(1, c, "cos 0")
   test_atan2 = ->
-    self.assert_equal(0, math.Math.atan2(0, 1), "atan2 0,1")
+    self.assert_equal(0, math.Math().atan2(0, 1), "atan2 0,1")

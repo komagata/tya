@@ -60,7 +60,7 @@ class BetaTest extends TestCase
 suite = TestSuite()
 suite.add(AlphaTest)
 suite.add(BetaTest)
-outcome = TestRunner.default().run(suite)
+outcome = TestRunner().default().run(suite)
 total_count = outcome["tests"]
 pass_count = outcome["passes"]
 failure_count = outcome["failures"]
@@ -83,7 +83,7 @@ inner.add(BetaTest)
 outer = TestSuite()
 outer.add(AlphaTest)
 outer.add(inner)
-TestRunner.default().run_and_exit(outer)
+TestRunner().default().run_and_exit(outer)
 
 -- failing_test.tya --
 import unittest

@@ -3,14 +3,14 @@ class Writer
   # Writer.initialize provides the binary/Writer standard library operation.
   initialize = options, _unused ->
     self.parts = []
-    self.endian = Writer.option_endian(options)
+    self.endian = self.option_endian(options)
 
   # Writer.new provides the binary/Writer standard library operation.
-  static new = options ->
+  new = options ->
     return Writer(options, nil)
 
   # Writer.option_endian provides the binary/Writer standard library operation.
-  static option_endian = options ->
+  option_endian = options ->
     if options == nil
       return "big"
     if options.class != Dict
@@ -28,6 +28,10 @@ class Writer
 
   # Writer.bytes provides the binary/Writer standard library operation.
   bytes = ->
+    return self.to_bytes()
+
+  # Writer.to_bytes provides the binary/Writer standard library operation.
+  to_bytes = ->
     return bytes(self.parts)
 
   # Writer.write_bytes provides the binary/Writer standard library operation.
@@ -124,21 +128,21 @@ class Writer
     if value == nil or value.class != Number or value < min or value > max
       raise error("binary.Writer: integer out of range")
     if value < 0
-      value = value + Writer.pow2(width * 8)
+      value = value + self.pow2(width * 8)
     arr = []
     i = 0
     while i < width
       shift = i
       if endian == "big"
         shift = width - i - 1
-      divisor = Writer.pow256(shift)
+      divisor = self.pow256(shift)
       byte = (value / divisor).to_i() % 256
       arr.push(byte)
       i = i + 1
     return self.write_bytes(bytes(arr))
 
   # Writer.pow256 provides the binary/Writer standard library operation.
-  static pow256 = n ->
+  pow256 = n ->
     out = 1
     i = 0
     while i < n
@@ -147,7 +151,7 @@ class Writer
     return out
 
   # Writer.pow2 provides the binary/Writer standard library operation.
-  static pow2 = n ->
+  pow2 = n ->
     out = 1
     i = 0
     while i < n

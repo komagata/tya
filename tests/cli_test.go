@@ -863,8 +863,8 @@ func TestCLIBuildWasiSupportsArgsAndBasicFiles(t *testing.T) {
 	source := strings.Join([]string{
 		"import file as file",
 		"print(args().len())",
-		"file.File.write(\"tya-wasi-check.txt\", \"ok\")",
-		"print(file.File.read(\"tya-wasi-check.txt\"))",
+		"file.File().write(\"tya-wasi-check.txt\", \"ok\")",
+		"print(file.File().read(\"tya-wasi-check.txt\"))",
 		"",
 	}, "\n")
 	if err := os.WriteFile(path, []byte(source), 0644); err != nil {

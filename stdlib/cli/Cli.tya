@@ -1,7 +1,14 @@
 # Cli provides the cli/Cli standard library API.
 class Cli
+  # Cli.initialize stores command-line args or a command name.
+  initialize = value ->
+    self.value = value
+
   # Cli.parse provides the cli/Cli standard library operation.
-  static parse = args, spec ->
+  parse = args, spec = nil ->
+    if self.value != nil
+      spec = args
+      args = self.value
     state =
       args: args
       spec: spec
@@ -10,7 +17,7 @@ class Cli
       rest: []
       errors: []
       stop_options: false
-    Cli.apply_defaults(state)
+    Cli(nil).apply_defaults(state)
     i = 0
     while i < args.len()
       arg = args[i]
@@ -18,20 +25,20 @@ class Cli
         state["rest"].push(arg)
       elseif arg == "--"
         state["stop_options"] = true
-        if Cli.spec_bool(spec, "stop_at_double_dash", true)
+        if Cli(nil).spec_bool(spec, "stop_at_double_dash", true)
           j = i + 1
           while j < args.len()
             state["rest"].push(args[j])
             j = j + 1
           i = args.len()
       elseif arg.starts_with("--") and arg.byte_len() > 2
-        i = Cli.parse_long(state, i)
+        i = Cli(nil).parse_long(state, i)
       elseif arg.starts_with("-") and arg != "-"
-        i = Cli.parse_short(state, i)
+        i = Cli(nil).parse_short(state, i)
       else
         state["positionals"].push(arg)
       i = i + 1
-    Cli.check_required(state)
+    Cli(nil).check_required(state)
     result =
       options: state["options"]
       positionals: state["positionals"]
@@ -40,20 +47,26 @@ class Cli
     return result
 
   # Cli.parse_or_exit provides the cli/Cli standard library operation.
-  static parse_or_exit = args, spec ->
-    result = Cli.parse(args, spec)
+  parse_or_exit = args, spec = nil ->
+    if self.value != nil
+      spec = args
+      args = self.value
+    result = Cli(args).parse(spec)
     if result["errors"].len() > 0
-      command = Cli.spec_string(spec, "command", "usage")
-      println(Cli.usage(command, spec))
+      command = Cli(nil).spec_string(spec, "command", "usage")
+      println(Cli(nil).usage(command, spec))
       for err in result["errors"]
         println(err["message"])
       exit(1)
     return result
 
   # Cli.usage provides the cli/Cli standard library operation.
-  static usage = command, spec ->
+  usage = command, spec = nil ->
+    if self.value != nil
+      spec = command
+      command = self.value
     parts = ["Usage: {command}"]
-    options = Cli.spec_options(spec)
+    options = Cli(nil).spec_options(spec)
     names = options.keys().sort()
     if names.len() > 0
       parts.push("[options]")
@@ -62,8 +75,8 @@ class Cli
         if pos.class == String
           parts.push("<{pos}>")
         else
-          name = Cli.spec_string(pos, "name", "arg")
-          required = Cli.spec_bool(pos, "required", true)
+          name = Cli(nil).spec_string(pos, "name", "arg")
+          required = Cli(nil).spec_bool(pos, "required", true)
           if required
             parts.push("<{name}>")
           else
@@ -74,14 +87,14 @@ class Cli
       for name in names
         opt = options[name]
         line = "  --{name}"
-        alias = Cli.spec_string(opt, "alias", "")
+        alias = Cli(nil).spec_string(opt, "alias", "")
         if alias != ""
           line = "  -{alias}, --{name}"
-        typ = Cli.option_type(opt)
+        typ = Cli(nil).option_type(opt)
         if typ != "bool"
           line = line + " <{typ}>"
         markers = []
-        if Cli.spec_bool(opt, "required", false)
+        if Cli(nil).spec_bool(opt, "required", false)
           markers.push("required")
         if opt.has("default")
           default_value = opt["default"]
@@ -94,10 +107,10 @@ class Cli
     return out
 
   # Cli.parse_long provides the cli/Cli standard library operation.
-  static parse_long = state, i ->
+  parse_long = state, i ->
     arg = state["args"][i]
     raw = arg.slice(2, arg.len())
-    eq = Cli.index_of(raw, "=")
+    eq = Cli(nil).index_of(raw, "=")
     name = raw
     value = nil
     has_value = false
@@ -109,162 +122,162 @@ class Cli
     if name.starts_with("no-")
       negated = true
       name = name.slice(3, name.len())
-    options = Cli.spec_options(state["spec"])
+    options = Cli(nil).spec_options(state["spec"])
     if not options.has(name)
-      Cli.unknown(state, arg)
+      Cli(nil).unknown(state, arg)
       return i
     opt = options[name]
-    typ = Cli.option_type(opt)
+    typ = Cli(nil).option_type(opt)
     if typ == "bool"
       if negated
         state["options"][name] = false
       elseif has_value
-        state["options"][name] = Cli.parse_bool_value(state, name, value)
+        state["options"][name] = Cli(nil).parse_bool_value(state, name, value)
       else
         state["options"][name] = true
       return i
     if negated
-      Cli.error(state, "invalid_option", name, "--no-{name} is only valid for bool options")
+      Cli(nil).error(state, "invalid_option", name, "--no-{name} is only valid for bool options")
       return i
     if not has_value
       if i + 1 >= state["args"].len()
-        Cli.error(state, "missing_value", name, "--{name} requires a value")
+        Cli(nil).error(state, "missing_value", name, "--{name} requires a value")
         return i
       i = i + 1
       value = state["args"][i]
-    Cli.assign_value(state, name, opt, value)
+    Cli(nil).assign_value(state, name, opt, value)
     return i
 
   # Cli.parse_short provides the cli/Cli standard library operation.
-  static parse_short = state, i ->
+  parse_short = state, i ->
     arg = state["args"][i]
     raw = arg.slice(1, arg.len())
     j = 0
     while j < raw.byte_len()
       alias = raw[j]
-      name = Cli.name_for_alias(state["spec"], alias)
+      name = Cli(nil).name_for_alias(state["spec"], alias)
       if name == ""
-        Cli.unknown(state, "-{alias}")
+        Cli(nil).unknown(state, "-{alias}")
         j = j + 1
       else
-        opt = Cli.spec_options(state["spec"])[name]
-        typ = Cli.option_type(opt)
+        opt = Cli(nil).spec_options(state["spec"])[name]
+        typ = Cli(nil).option_type(opt)
         if typ == "bool"
           state["options"][name] = true
           j = j + 1
         else
           if j + 1 < raw.byte_len()
             value = raw.slice(j + 1, raw.len())
-            Cli.assign_value(state, name, opt, value)
+            Cli(nil).assign_value(state, name, opt, value)
             return i
           if i + 1 >= state["args"].len()
-            Cli.error(state, "missing_value", name, "-{alias} requires a value")
+            Cli(nil).error(state, "missing_value", name, "-{alias} requires a value")
             return i
           i = i + 1
-          Cli.assign_value(state, name, opt, state["args"][i])
+          Cli(nil).assign_value(state, name, opt, state["args"][i])
           return i
     return i
 
   # Cli.apply_defaults provides the cli/Cli standard library operation.
-  static apply_defaults = state ->
-    options = Cli.spec_options(state["spec"])
+  apply_defaults = state ->
+    options = Cli(nil).spec_options(state["spec"])
     names = options.keys()
     for name in names
       opt = options[name]
       if opt.has("default")
         state["options"][name] = opt["default"]
       else
-        typ = Cli.option_type(opt)
+        typ = Cli(nil).option_type(opt)
         if typ == "bool"
           state["options"][name] = false
         elseif typ == "array"
           state["options"][name] = []
 
   # Cli.check_required provides the cli/Cli standard library operation.
-  static check_required = state ->
-    options = Cli.spec_options(state["spec"])
+  check_required = state ->
+    options = Cli(nil).spec_options(state["spec"])
     names = options.keys().sort()
     for name in names
       opt = options[name]
-      if Cli.spec_bool(opt, "required", false) and not state["options"].has(name)
-        Cli.error(state, "required", name, "--{name} is required")
+      if Cli(nil).spec_bool(opt, "required", false) and not state["options"].has(name)
+        Cli(nil).error(state, "required", name, "--{name} is required")
 
   # Cli.assign_value provides the cli/Cli standard library operation.
-  static assign_value = state, name, opt, value ->
-    typ = Cli.option_type(opt)
+  assign_value = state, name, opt, value ->
+    typ = Cli(nil).option_type(opt)
     if typ == "string"
       state["options"][name] = value
     elseif typ == "int"
       try
         state["options"][name] = value.to_i()
       catch _
-        Cli.error(state, "invalid_value", name, "--{name} expects int")
+        Cli(nil).error(state, "invalid_value", name, "--{name} expects int")
     elseif typ == "float"
       try
         state["options"][name] = value.to_f()
       catch _
-        Cli.error(state, "invalid_value", name, "--{name} expects float")
+        Cli(nil).error(state, "invalid_value", name, "--{name} expects float")
     elseif typ == "array"
       if not state["options"].has(name)
         state["options"][name] = []
       state["options"][name].push(value)
     else
-      Cli.error(state, "invalid_type", name, "unsupported option type {typ}")
+      Cli(nil).error(state, "invalid_type", name, "unsupported option type {typ}")
 
   # Cli.parse_bool_value provides the cli/Cli standard library operation.
-  static parse_bool_value = state, name, value ->
+  parse_bool_value = state, name, value ->
     if value == "true" or value == "1" or value == "yes"
       return true
     if value == "false" or value == "0" or value == "no"
       return false
-    Cli.error(state, "invalid_value", name, "--{name} expects bool")
+    Cli(nil).error(state, "invalid_value", name, "--{name} expects bool")
     return false
 
   # Cli.unknown provides the cli/Cli standard library operation.
-  static unknown = state, raw ->
-    if Cli.spec_bool(state["spec"], "allow_unknown", false)
+  unknown = state, raw ->
+    if Cli(nil).spec_bool(state["spec"], "allow_unknown", false)
       state["rest"].push(raw)
     else
-      Cli.error(state, "unknown_option", raw, "unknown option {raw}")
+      Cli(nil).error(state, "unknown_option", raw, "unknown option {raw}")
 
   # Cli.error provides the cli/Cli standard library operation.
-  static error = state, kind, name, message ->
+  error = state, kind, name, message ->
     state["errors"].push({ kind: kind, option: name, message: message })
 
   # Cli.option_type provides the cli/Cli standard library operation.
-  static option_type = opt ->
-    Cli.spec_string(opt, "type", "string")
+  option_type = opt ->
+    Cli(nil).spec_string(opt, "type", "string")
 
   # Cli.spec_options provides the cli/Cli standard library operation.
-  static spec_options = spec ->
+  spec_options = spec ->
     if spec.has("options")
       return spec["options"]
     return {}
 
   # Cli.spec_bool provides the cli/Cli standard library operation.
-  static spec_bool = spec, name, fallback ->
+  spec_bool = spec, name, fallback ->
     if spec.has(name)
       return spec[name]
     return fallback
 
   # Cli.spec_string provides the cli/Cli standard library operation.
-  static spec_string = spec, name, fallback ->
+  spec_string = spec, name, fallback ->
     if spec.has(name)
       return spec[name]
     return fallback
 
   # Cli.name_for_alias provides the cli/Cli standard library operation.
-  static name_for_alias = spec, alias ->
-    options = Cli.spec_options(spec)
+  name_for_alias = spec, alias ->
+    options = Cli(nil).spec_options(spec)
     names = options.keys()
     for name in names
       opt = options[name]
-      if Cli.spec_string(opt, "alias", "") == alias
+      if Cli(nil).spec_string(opt, "alias", "") == alias
         return name
     return ""
 
   # Cli.index_of provides the cli/Cli standard library operation.
-  static index_of = text, needle ->
+  index_of = text, needle ->
     i = 0
     while i < text.byte_len()
       if text[i] == needle

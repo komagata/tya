@@ -1,6 +1,6 @@
 import random as random
 
-rng = random.Rng.new(42)
+rng = random.Rng(42)
 loot = ["common", "rare", "legendary"]
 weights = [90, 9, 1]
 

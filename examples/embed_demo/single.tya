@@ -3,4 +3,4 @@
 import bytes as bytes
 
 embed "data.txt" as payload
-print(bytes.Bytes.text(payload))
+print(bytes.Bytes(nil).to_text(payload))

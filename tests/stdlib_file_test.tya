@@ -5,11 +5,11 @@ class StdlibFileTest extends TestCase
 
   test_write_then_read = ->
     p = "/tmp/tya_v022_test.txt"
-    file.File.write(p, "hello tya")
-    self.assert_equal("hello tya", file.File.read(p), "round-trip")
+    file.File(p).write("hello tya")
+    self.assert_equal("hello tya", file.File(p).read(), "round-trip")
   test_exists_true = ->
     p = "/tmp/tya_v022_test.txt"
-    file.File.write(p, "hi")
-    self.assert(file.File.exists?(p), "exists")
+    file.File(p).write("hi")
+    self.assert(file.File(p).exists?(), "exists")
   test_exists_false = ->
-    self.assert_equal(false, file.File.exists?("/tmp/__tya_v022_no_such__"), "missing")
+    self.assert_equal(false, file.File("/tmp/__tya_v022_no_such__").exists?(), "missing")
