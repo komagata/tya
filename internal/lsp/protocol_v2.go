@@ -125,6 +125,7 @@ const (
 	SymbolKindModule    = 2
 	SymbolKindInterface = 11
 	SymbolKindMethod    = 6
+	SymbolKindConstant  = 14
 	SymbolKindVariable  = 13
 	SymbolKindProperty  = 7
 )

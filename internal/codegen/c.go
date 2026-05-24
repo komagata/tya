@@ -1633,6 +1633,13 @@ func (g *cgen) emitClassMembers(target string, name string, class *ast.ClassDecl
 	}
 	g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote("unittest_has_setup"), setupValue))
 	g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote("unittest_has_teardown"), teardownValue))
+	for _, constant := range class.Constants {
+		value, _, err := g.expr(constant.Value)
+		if err != nil {
+			return err
+		}
+		g.line(fmt.Sprintf("tya_set_member(%s, %s, %s);", target, strconv.Quote(constant.Name), value))
+	}
 	for _, variable := range class.Vars {
 		value, _, err := g.expr(variable.Value)
 		if err != nil {

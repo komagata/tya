@@ -1137,6 +1137,13 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 	case *ast.ClassDecl:
 		class := Dict{"__module_namespace": true, "__class_name": n.Name, "name": n.Name, "__instance_methods": Dict{}}
 		env.set(n.Name, class)
+		for _, constant := range n.Constants {
+			value, err := evalExpr(constant.Value, env)
+			if err != nil {
+				return nil, err
+			}
+			class[constant.Name] = value
+		}
 		for _, method := range n.Methods {
 			if method.Abstract {
 				continue

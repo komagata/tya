@@ -59,6 +59,10 @@ func FindAllIdentRefs(prog *ast.Program, name string) []token.Token {
 			if n.Name == name {
 				out = append(out, n.Tok)
 			}
+		case *ast.ClassConst:
+			if n.Name == name {
+				out = append(out, n.Tok)
+			}
 		case *ast.ModuleMember:
 			if n.Name == name {
 				out = append(out, n.Tok)
@@ -372,6 +376,9 @@ func isTopLevelMemberName(prog *ast.Program, name string) bool {
 			for _, v := range n.Vars {
 				found = found || v.Name == name
 			}
+			for _, c := range n.Constants {
+				found = found || c.Name == name
+			}
 		case *ast.ModuleDecl:
 			for _, m := range n.Members {
 				found = found || m.Name == name
@@ -411,6 +418,11 @@ func isTopLevelMemberNameAt(prog *ast.Program, name string, line, col int) bool 
 			for _, v := range n.Vars {
 				if v.Name == name {
 					covers(v.Tok)
+				}
+			}
+			for _, c := range n.Constants {
+				if c.Name == name {
+					covers(c.Tok)
 				}
 			}
 		case *ast.ModuleDecl:

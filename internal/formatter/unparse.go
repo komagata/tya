@@ -542,6 +542,21 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 		}
 		u.line(varPrefix + v.Name + " = " + val)
 	}
+	for _, c := range n.Constants {
+		if !first {
+			u.b.WriteByte('\n')
+		}
+		first = false
+		val, err := u.expr(c.Value)
+		if err != nil {
+			return err
+		}
+		prefix := ""
+		if c.Private {
+			prefix = "private "
+		}
+		u.line(prefix + c.Name + " = " + val)
+	}
 	for _, m := range n.Methods {
 		if !first {
 			u.b.WriteByte('\n')

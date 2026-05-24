@@ -199,6 +199,19 @@ func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path s
 		}
 		switch d := stmt.(type) {
 		case *ast.ClassDecl:
+			for _, constant := range d.Constants {
+				if constant.Private {
+					continue
+				}
+				items = append(items, DocItem{
+					Name:      d.Name + "." + constant.Name,
+					Kind:      "constant",
+					Signature: d.Name + "." + constant.Name,
+					RawDoc:    leadingBeforeLine(comments, constant.Tok.Line, 2),
+					FilePath:  path,
+					Line:      constant.Tok.Line,
+				})
+			}
 			for _, method := range d.Methods {
 				if method.Private {
 					continue

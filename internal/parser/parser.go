@@ -755,6 +755,8 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 			decl.Methods = append(decl.Methods, ast.ClassMethod{Name: memberName.Lexeme, Tok: memberName, Func: funcLit, Class: isClassMember, Override: isOverrideMethod, Private: memberPrivate})
 		} else if isOverrideMethod {
 			return nil, p.err("override can only be used on methods")
+		} else if !isClassMember && isConstName(memberName.Lexeme) {
+			decl.Constants = append(decl.Constants, ast.ClassConst{Name: memberName.Lexeme, Tok: memberName, Value: value, Private: memberPrivate})
 		} else if isClassMember {
 			decl.Vars = append(decl.Vars, ast.ClassVar{Name: memberName.Lexeme, Tok: memberName, Value: value, Private: memberPrivate})
 		} else {
@@ -766,6 +768,20 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		return nil, p.err("expected dedent after class")
 	}
 	return decl, nil
+}
+
+func isConstName(name string) bool {
+	if name == "" || name[0] < 'A' || name[0] > 'Z' {
+		return false
+	}
+	for i := 1; i < len(name); i++ {
+		ch := name[i]
+		if (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 func (p *Parser) interfaceDecl() (ast.Stmt, error) {

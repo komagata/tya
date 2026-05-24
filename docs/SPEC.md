@@ -393,14 +393,16 @@ and assignment rules. Constants cannot be reassigned. Heap-backed values stored
 in constants are also immutable through that constant binding.
 
 Class member privacy uses the `private` keyword for private class fields,
-methods, class variables, class methods, and constructors.
+class constants, methods, class variables, class methods, and constructors.
 
 ```tya
 class User
+  private ROLE = "user"
+
   private id = 0
 
   private normalize = ->
-    self.id.to_s()
+    Self.ROLE + ":" + self.id.to_s()
 ```
 
 ### Embedded Assets
@@ -475,12 +477,19 @@ Tya supports:
 - single class inheritance with `extends`;
 - constructor and method delegation with `super(...)`;
 - `private` members;
+- class constants declared as `SCREAMING_SNAKE_CASE = value`;
 - `static` class methods and class variables;
 - `abstract class` and abstract methods;
 - `final class`;
 - `override` for explicit method override checks;
 - runtime class inspection through `.class`;
 - read-only class metadata members such as `class`, `class_name`, `name`, and `parent` where documented by the runtime.
+
+Class constants are class-owned immutable members. Inside the defining class,
+canonical access is `Self.NAME`. Public class constants may be read as
+`pkg.Class.NAME`; private class constants may only be read from the defining
+class. `static NAME = ...` is a class variable spelling and is not the
+canonical constant form.
 
 ```tya
 class Admin extends User

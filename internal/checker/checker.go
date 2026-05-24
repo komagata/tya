@@ -569,6 +569,7 @@ type classInfo struct {
 	interfaceInitializers bool
 	privateFields         map[string]bool
 	privateMethods        map[string]bool
+	classConstants        map[string]bool
 	privateClassMembers   map[string]bool
 	privateClassMethods   map[string]bool
 	privateFieldAssigned  map[string]bool
@@ -1151,6 +1152,7 @@ func newClassInfo(key string, class *ast.ClassDecl) classInfo {
 		interfaceMethods:     map[string]int{},
 		privateFields:        map[string]bool{},
 		privateMethods:       map[string]bool{},
+		classConstants:       map[string]bool{},
 		privateClassMembers:  map[string]bool{},
 		privateClassMethods:  map[string]bool{},
 		privateFieldAssigned: map[string]bool{},
@@ -1166,6 +1168,12 @@ func collectPrivateClassMembers(info *classInfo, class *ast.ClassDecl) {
 	for _, variable := range class.Vars {
 		if variable.Private {
 			info.privateClassMembers[variable.Name] = true
+		}
+	}
+	for _, constant := range class.Constants {
+		info.classConstants[constant.Name] = true
+		if constant.Private {
+			info.privateClassMembers[constant.Name] = true
 		}
 	}
 	for _, method := range class.Methods {
@@ -1452,6 +1460,9 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			}
 			return nil
 		case kindClass:
+			if err := checkExternalClassMemberAccess(n, scope); err != nil {
+				return err
+			}
 			return nil
 		case kindObject:
 			return nil
@@ -1590,6 +1601,9 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			if err := removedConcurrencyHelperError(member); err != nil {
 				return err
 			}
+			if name := classConstantName(member.Target, scope); name != "" && isKnownMutatingMethod(member.Name) {
+				return fmt.Errorf("%d:%d: cannot mutate constant %s", member.NameTok.Line, member.NameTok.Col, name)
+			}
 		}
 		for _, arg := range n.Args {
 			if err := checkExpr(arg, scope); err != nil {
@@ -1704,6 +1718,18 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 		}
 		classMembers[variable.Name] = true
 		if err := checkExpr(variable.Value, classBody); err != nil {
+			return err
+		}
+	}
+	for _, constant := range class.Constants {
+		if !constNameRE.MatchString(constant.Name) {
+			return fmt.Errorf("%d:%d: invalid class constant name %s", constant.Tok.Line, constant.Tok.Col, constant.Name)
+		}
+		if classMembers[constant.Name] {
+			return fmt.Errorf("%d:%d: duplicate class member %s", constant.Tok.Line, constant.Tok.Col, constant.Name)
+		}
+		classMembers[constant.Name] = true
+		if err := checkExpr(constant.Value, classBody); err != nil {
 			return err
 		}
 	}
@@ -2178,6 +2204,97 @@ func checkPrivateClassAccess(name string, line, col int, scope *scope) error {
 		parent = parentInfo.parent
 	}
 	return nil
+}
+
+func checkExternalClassMemberAccess(member *ast.MemberExpr, scope *scope) error {
+	key := classExprKey(member.Target, scope)
+	if key == "" {
+		return nil
+	}
+	info, ok := scope.classes[key]
+	if !ok || !info.privateClassMembers[member.Name] {
+		return nil
+	}
+	if scope.currentClass == key {
+		return nil
+	}
+	return fmt.Errorf("%d:%d: private class member %s is not accessible from %s", member.NameTok.Line, member.NameTok.Col, member.Name, accessSite(scope))
+}
+
+func accessSite(scope *scope) string {
+	if scope.currentClass != "" {
+		return scope.currentClass
+	}
+	return "outside the class"
+}
+
+func classExprKey(expr ast.Expr, scope *scope) string {
+	switch n := expr.(type) {
+	case *ast.SelfExpr:
+		if n.Class {
+			return scope.currentClass
+		}
+	case *ast.Ident:
+		if scope.kind(n.Name) == kindClass {
+			return n.Name
+		}
+		if mod := currentModulePrefix(scope); mod != "" {
+			key := mod + "." + n.Name
+			if scope.kind(key) == kindClass {
+				return key
+			}
+		}
+	case *ast.MemberExpr:
+		if kindOf(n, scope) == kindClass {
+			key := memberKey(n)
+			if scope.kind(key) == kindClass {
+				return key
+			}
+			if scope.kind(n.Name) == kindClass {
+				return n.Name
+			}
+		}
+	}
+	return ""
+}
+
+func classConstantName(expr ast.Expr, scope *scope) string {
+	member, ok := expr.(*ast.MemberExpr)
+	if !ok {
+		return ""
+	}
+	key := classExprKey(member.Target, scope)
+	if key == "" {
+		return ""
+	}
+	info, ok := scope.classes[key]
+	if !ok || !info.classConstants[member.Name] {
+		return ""
+	}
+	return member.Name
+}
+
+func exprLineCol(expr ast.Expr) (int, int) {
+	switch n := expr.(type) {
+	case *ast.Ident:
+		return n.Tok.Line, n.Tok.Col
+	case *ast.MemberExpr:
+		return n.NameTok.Line, n.NameTok.Col
+	case *ast.ClassVarExpr:
+		return n.NameTok.Line, n.NameTok.Col
+	case *ast.InstanceFieldExpr:
+		return n.NameTok.Line, n.NameTok.Col
+	}
+	return 0, 0
+}
+
+func isKnownMutatingMethod(name string) bool {
+	switch name {
+	case "push", "pop", "clear", "delete", "set", "append", "remove":
+		return true
+	default:
+		return false
+	}
 }
 
 func inheritedInitArity(className string, scope *scope) (int, bool) {
@@ -2868,6 +2985,9 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 		if n.Name == "class" || n.Name == "class_name" || ((n.Name == "name" || n.Name == "parent") && kindOf(n.Target, scope) == kindClass) {
 			return fmt.Errorf("%d:%d: cannot assign to read-only introspection member %s", n.NameTok.Line, n.NameTok.Col, n.Name)
 		}
+		if classConstantName(n, scope) != "" {
+			return fmt.Errorf("%d:%d: cannot reassign constant %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
 		if id, ok := n.Target.(*ast.Ident); ok && isPrimitiveClassName(id.Name) {
 			return fmt.Errorf("%d:%d: [TYA-E0814] cannot add or redefine method %s on built-in primitive class %s", n.NameTok.Line, n.NameTok.Col, n.Name, id.Name)
 		}
@@ -2907,6 +3027,10 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 	case *ast.IndexExpr:
 		if id, ok := n.Target.(*ast.Ident); ok && constants[id.Name] {
 			return fmt.Errorf("%d:%d: cannot mutate constant %s", id.Tok.Line, id.Tok.Col, id.Name)
+		}
+		if name := classConstantName(n.Target, scope); name != "" {
+			line, col := exprLineCol(n.Target)
+			return fmt.Errorf("%d:%d: cannot mutate constant %s", line, col, name)
 		}
 		if err := checkExpr(n.Target, scope); err != nil {
 			return err

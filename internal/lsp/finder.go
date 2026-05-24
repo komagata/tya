@@ -43,6 +43,9 @@ func FindIdentAt(prog *ast.Program, line, col int) *ast.Ident {
 			for _, v := range n.Vars {
 				consider(v.Name, v.Tok)
 			}
+			for _, c := range n.Constants {
+				consider(c.Name, c.Tok)
+			}
 		case *ast.ModuleDecl:
 			consider(n.Name, n.NameTok)
 			for _, m := range n.Members {
@@ -137,6 +140,12 @@ func walkStmt(stmt ast.Stmt, visit func(node any)) {
 			visit(&v)
 			if v.Value != nil {
 				walkExpr(v.Value, visit)
+			}
+		}
+		for _, c := range n.Constants {
+			visit(&c)
+			if c.Value != nil {
+				walkExpr(c.Value, visit)
 			}
 		}
 		for _, f := range n.Fields {

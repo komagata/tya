@@ -186,6 +186,7 @@ type ClassDecl struct {
 	Abstract   bool
 	Final      bool
 	Fields     []ClassField
+	Constants  []ClassConst
 	Vars       []ClassVar
 	Methods    []ClassMethod
 	// OriginFile is the source file (relative to the package root)
@@ -228,6 +229,13 @@ type ClassField struct {
 }
 
 type ClassVar struct {
+	Name    string
+	Tok     token.Token
+	Value   Expr
+	Private bool // v0.46 G1; see ClassField.Private.
+}
+
+type ClassConst struct {
 	Name    string
 	Tok     token.Token
 	Value   Expr

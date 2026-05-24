@@ -380,6 +380,25 @@ func TestParseClassDeclaration(t *testing.T) {
 	}
 }
 
+func TestParseClassConstants(t *testing.T) {
+	src := "class Base64\n  private ALPHABET = \"abc\"\n  encode = -> Self.ALPHABET\n"
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := Parse(toks)
+	if err != nil {
+		t.Fatalf("parse class constants: %v", err)
+	}
+	class := prog.Stmts[0].(*ast.ClassDecl)
+	if len(class.Constants) != 1 || class.Constants[0].Name != "ALPHABET" || !class.Constants[0].Private {
+		t.Fatalf("constants = %#v", class.Constants)
+	}
+	if len(class.Vars) != 0 || len(class.Fields) != 0 {
+		t.Fatalf("class = %#v", class)
+	}
+}
+
 func TestParseInterfaceDeclaration(t *testing.T) {
 	src := "interface Reader extends io.Source, Seekable\n  read = ->\n  write = text ->\ninterface Named extends Reader\n"
 	toks, errs := lexer.Lex(src)

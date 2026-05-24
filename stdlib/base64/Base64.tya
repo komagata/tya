@@ -1,12 +1,10 @@
 # Base64 provides the base64/Base64 standard library API.
 class Base64
+  private ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
   # Base64.initialize stores an optional value for later encoding or decoding.
   initialize = value = nil ->
     self.value = value
-
-  # Base64.alphabet provides the base64/Base64 standard library operation.
-  alphabet = ->
-    return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
   # Base64.byte_at provides the base64/Base64 standard library operation.
   byte_at = value, i ->
@@ -24,7 +22,6 @@ class Base64
   encode = value = nil ->
     if value == nil
       value = self.value
-    alphabet = self.alphabet()
     n = self.byte_count(value)
     out = ""
     i = 0
@@ -36,21 +33,21 @@ class Base64
       g2 = b1 % 4 * 16 + (b2 / 16).to_i()
       g3 = b2 % 16 * 4 + (b3 / 64).to_i()
       g4 = b3 % 64
-      out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + alphabet[g4]
+      out = out + Self.ALPHABET[g1] + Self.ALPHABET[g2] + Self.ALPHABET[g3] + Self.ALPHABET[g4]
       i = i + 3
     rem = n - i
     if rem == 1
       b1 = self.byte_at(value, i)
       g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16
-      out = out + alphabet[g1] + alphabet[g2] + "=="
+      out = out + Self.ALPHABET[g1] + Self.ALPHABET[g2] + "=="
     elseif rem == 2
       b1 = self.byte_at(value, i)
       b2 = self.byte_at(value, i + 1)
       g1 = (b1 / 4).to_i()
       g2 = b1 % 4 * 16 + (b2 / 16).to_i()
       g3 = b2 % 16 * 4
-      out = out + alphabet[g1] + alphabet[g2] + alphabet[g3] + "="
+      out = out + Self.ALPHABET[g1] + Self.ALPHABET[g2] + Self.ALPHABET[g3] + "="
     return out
 
   # Base64.index_of provides the base64/Base64 standard library operation.

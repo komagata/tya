@@ -97,6 +97,14 @@ func classSymbol(c *ast.ClassDecl) DocumentSymbol {
 			SelectionRange: tokenRange(f.Tok, len(f.Name)),
 		})
 	}
+	for _, constant := range c.Constants {
+		children = append(children, DocumentSymbol{
+			Name:           constant.Name,
+			Kind:           SymbolKindConstant,
+			Range:          tokenRange(constant.Tok, len(constant.Name)),
+			SelectionRange: tokenRange(constant.Tok, len(constant.Name)),
+		})
+	}
 	return DocumentSymbol{
 		Name:           c.Name,
 		Kind:           SymbolKindClass,

@@ -225,16 +225,18 @@ value, err = parse_user(text)
 
 通常の束縛では、先頭の `_` は visibility の意味を持たない。トップレベルの privacy は名前の綴りでは表現しない。
 
-定数は `SCREAMING_SNAKE_CASE` を使い、命名規則と代入規則によって定数として検査される。
+定数は `SCREAMING_SNAKE_CASE` を使い、命名規則と代入規則によって定数として検査される。定数は再代入できず、定数束縛を通して heap-backed value を変更できない。
 
-クラスメンバーの privacy には `private` キーワードを使う。private なクラスフィールド、メソッド、クラス変数、クラスメソッド、コンストラクタは `private` で宣言する。
+クラスメンバーの privacy には `private` キーワードを使う。private なクラスフィールド、クラス定数、メソッド、クラス変数、クラスメソッド、コンストラクタは `private` で宣言する。
 
 ```tya
 class User
+  private ROLE = "user"
+
   private id = 0
 
   private normalize = ->
-    self.id.to_s()
+    Self.ROLE + ":" + self.id.to_s()
 ```
 
 ### 埋め込みアセット
@@ -303,12 +305,15 @@ Tya は次をサポートする。
 - `extends` による単一クラス継承
 - `super(...)` によるコンストラクタおよびメソッド委譲
 - `private` メンバー
+- `SCREAMING_SNAKE_CASE = value` で宣言するクラス定数
 - `static` クラスメソッドとクラス変数
 - `abstract class` と抽象メソッド
 - `final class`
 - 明示的なメソッド override 検査のための `override`
 - `.class` による実行時クラス検査
 - ランタイムで文書化された `class`、`class_name`、`name`、`parent` などの読み取り専用クラスメタデータメンバー
+
+クラス定数はクラスが持つ immutable なメンバーである。定義クラス内では `Self.NAME` でアクセスするのが canonical である。public なクラス定数は `pkg.Class.NAME` として外部から読める。private なクラス定数は定義クラスの外から読めない。`static NAME = ...` はクラス変数の書き方であり、canonical な定数形式ではない。
 
 ```tya
 class Admin extends User

@@ -1,0 +1,71 @@
+# Class-level constants are class-owned immutable members.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+env TYA_RUNTIME_DIR=$REPO/runtime
+cd $WORK
+
+exec $WORK/tya check class_constants.tya
+exec $WORK/tya run class_constants.tya
+stdout 'local: secret/public'
+stdout 'pkg: package'
+
+! exec $WORK/tya check private_external.tya
+stderr 'private class member SECRET is not accessible'
+
+! exec $WORK/tya check reassign.tya
+stderr 'cannot reassign constant VALUE'
+
+! exec $WORK/tya check mutate_index.tya
+stderr 'cannot mutate constant ITEMS'
+
+! exec $WORK/tya check mutate_call.tya
+stderr 'cannot mutate constant ITEMS'
+
+! exec $WORK/tya check static_uppercase.tya
+stderr 'invalid class variable name VALUE'
+
+-- class_constants.tya --
+import helper as helper
+
+class Foo
+  VALUE = "public"
+  private SECRET = "secret"
+
+  expose = ->
+    "local: " + Self.SECRET + "/" + Self.VALUE
+
+print(Foo().expose())
+print("pkg: " + helper.Foo.VALUE)
+
+-- helper.tya --
+class Foo
+  VALUE = "package"
+
+-- private_external.tya --
+class Foo
+  private SECRET = "secret"
+
+print(Foo.SECRET)
+
+-- reassign.tya --
+class Foo
+  VALUE = 1
+
+Foo.VALUE = 2
+
+-- mutate_index.tya --
+class Foo
+  ITEMS = [1]
+
+Foo.ITEMS[0] = 2
+
+-- mutate_call.tya --
+class Foo
+  ITEMS = []
+
+  add = ->
+    Self.ITEMS.push(1)
+
+-- static_uppercase.tya --
+class Foo
+  static VALUE = 1
