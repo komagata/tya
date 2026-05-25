@@ -109,6 +109,45 @@ func TestExtractReportDuplicateAndMarkdownDiagnostics(t *testing.T) {
 	}
 }
 
+func TestExtractReportDistinguishesStaticAndInstanceMethods(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "api.tya")
+	src := strings.Join([]string{
+		"# User docs",
+		"class User",
+		"  # Static label docs",
+		"  static label = ->",
+		"    \"static\"",
+		"",
+		"  # Instance label docs",
+		"  label = ->",
+		"    \"instance\"",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	report, err := ExtractReport([]string{path})
+	if err != nil {
+		t.Fatal(err)
+	}
+	kinds := map[string]bool{}
+	for _, item := range report.Items {
+		if item.Name == "User.label" {
+			kinds[item.Kind] = true
+		}
+	}
+	if !kinds["static method"] || !kinds["method"] {
+		t.Fatalf("expected static and instance method docs, got %#v", report.Items)
+	}
+	for _, diag := range report.Diagnostics {
+		if diag.Code == "TYADOC0002" {
+			t.Fatalf("static and instance methods should not collide: %#v", report.Diagnostics)
+		}
+	}
+}
+
 func TestExtractReportImportCycleDiagnostic(t *testing.T) {
 	dir := t.TempDir()
 	a := filepath.Join(dir, "a.tya")

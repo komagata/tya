@@ -50,7 +50,11 @@ func docCommand(args []string) int {
 		return 2
 	}
 	if mode == "html" {
-		site := &doc.Site{Title: "API", Items: report.Items}
+		title := "API"
+		if docsStdlib(paths) {
+			title = "Standard Library API"
+		}
+		site := &doc.Site{Title: title, Items: report.Items}
 		if err := site.Generate(htmlOut, os.Stderr); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
@@ -68,6 +72,14 @@ func docCommand(args []string) int {
 		return 1
 	}
 	return 0
+}
+
+func docsStdlib(paths []string) bool {
+	if len(paths) != 1 {
+		return false
+	}
+	clean := filepath.Clean(paths[0])
+	return clean == "stdlib" || strings.HasSuffix(filepath.ToSlash(clean), "/stdlib")
 }
 
 // parseDocArgs parses the v0.51 `tya doc` argument shape:

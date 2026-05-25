@@ -133,8 +133,10 @@ func kindOrder(kind string) int {
 		return 2
 	case "function":
 		return 3
-	case "method":
+	case "static method":
 		return 4
+	case "method":
+		return 5
 	default:
 		return 9
 	}
@@ -216,9 +218,13 @@ func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path s
 				if method.Private {
 					continue
 				}
+				kind := "method"
+				if method.Class {
+					kind = "static method"
+				}
 				items = append(items, DocItem{
 					Name:      d.Name + "." + method.Name,
-					Kind:      "method",
+					Kind:      kind,
 					Signature: MethodSignature(d.Name, method),
 					RawDoc:    leadingBeforeLine(comments, method.Tok.Line, 2),
 					FilePath:  path,
@@ -503,7 +509,11 @@ func FuncSignature(name string, fn *ast.FuncLit) string {
 }
 
 func MethodSignature(className string, method ast.ClassMethod) string {
-	return className + "." + FuncSignature(method.Name, method.Func)
+	prefix := className + "."
+	if method.Class {
+		prefix = "static " + prefix
+	}
+	return prefix + FuncSignature(method.Name, method.Func)
 }
 
 func InterfaceMethodSignature(interfaceName string, method ast.InterfaceMethod) string {

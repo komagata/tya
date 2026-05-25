@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>method Runtime.gc_stats</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<div class="doc-content">
+<p><a href="../index.html">&larr; back to index</a></p>
+<h1>method <code>Runtime.gc_stats</code></h1>
+<pre><code>Runtime.gc_stats()</code></pre>
+<p><small>stdlib/runtime/Runtime.tya:14</small></p>
+<p>Returns a snapshot of the current GC counters as a dict with the following keys:</p>
+<p>  alloc_count    total tracked allocations made since program start   alloc_bytes    total tracked allocation bytes since program start   freed_count    total tracked allocations reclaimed by collections   freed_bytes    total tracked allocation bytes reclaimed   live_count     alloc_count - freed_count   live_bytes     alloc_bytes - freed_bytes   collect_count  number of collections performed   threshold      live_count threshold that triggers a collection</p>
+</div>
+</div>
+</body>
+</html>

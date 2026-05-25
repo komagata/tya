@@ -108,3 +108,41 @@ func TestStdlibAPIDocsIncludeRepresentativePackages(t *testing.T) {
 		}
 	}
 }
+
+func TestStdlibHTMLDocsGenerateRepresentativePages(t *testing.T) {
+	root := filepath.Join("..", "..", "stdlib")
+	var paths []string
+	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && strings.HasSuffix(path, ".tya") {
+			paths = append(paths, path)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, err := ExtractReport(paths)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if HasErrorDiagnostics(report.Diagnostics) {
+		t.Fatalf("unexpected stdlib doc error diagnostics: %#v", report.Diagnostics)
+	}
+	out := t.TempDir()
+	site := &Site{Title: "Standard Library API", Items: report.Items}
+	if err := site.Generate(out, nil); err != nil {
+		t.Fatal(err)
+	}
+	index, err := os.ReadFile(filepath.Join(out, "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"Json.parse", "File.read", "Math.abs", "Template.render", "Server.get", "Address.parse"} {
+		if !strings.Contains(string(index), want) {
+			t.Fatalf("generated stdlib index missing %s", want)
+		}
+	}
+}

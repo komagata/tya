@@ -114,17 +114,25 @@ func kindTitle(kind string) string {
 		return "Interfaces"
 	case "function":
 		return "Functions"
+	case "static method":
+		return "Static Methods"
 	case "method":
 		return "Methods"
 	}
 	return kind
 }
 
-// itemFileName returns "<kind>_<sanitized-name>.html". The kind
-// prefix prevents collisions between e.g. a `Foo` class and a `foo`
-// function in the same project.
+// itemFileName returns a path-qualified stable file name. The kind and
+// source path prefixes prevent collisions between same-named public
+// items from different packages, such as net/http.Server and
+// net/socket.Server in the standard library.
 func itemFileName(item DocItem) string {
-	return item.Kind + "_" + sanitizeFileName(item.Name) + ".html"
+	path := strings.TrimSuffix(filepath.ToSlash(item.FilePath), ".tya")
+	base := item.Kind + "_" + item.Name
+	if path == "stdlib" || strings.HasPrefix(path, "stdlib/") || strings.Contains(path, "/stdlib/") {
+		base = item.Kind + "_" + path + "_" + item.Name
+	}
+	return sanitizeFileName(base) + ".html"
 }
 
 func sanitizeFileName(name string) string {
