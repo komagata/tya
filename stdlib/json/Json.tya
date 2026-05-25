@@ -49,6 +49,13 @@ class Json
     b3 = 128 + code % 64
     return chr(b1) + chr(b2) + chr(b3)
 
+  # Json.text_len counts string indexes, independent of byte length.
+  text_len = text ->
+    i = 0
+    while text[i] != nil
+      i = i + 1
+    return i
+
   # Json.parse_string provides the json/Json standard library operation.
   parse_string = state ->
     p = state["pos"]
@@ -234,7 +241,7 @@ class Json
   parse = text = nil ->
     if text == nil
       text = self.value
-    state = { src: text, pos: 0, len: text.len() }
+    state = { src: text, pos: 0, len: Json(nil).text_len(text) }
     v = Json(nil).parse_value(state)
     Json(nil).skip_ws(state)
     if state["pos"] < state["len"]
@@ -243,7 +250,7 @@ class Json
 
   # Json.escape_string provides the json/Json standard library operation.
   escape_string = text ->
-    n = text.len()
+    n = Json(nil).text_len(text)
     out = "\""
     i = 0
     while i < n
