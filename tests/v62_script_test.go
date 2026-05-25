@@ -9,13 +9,15 @@ import (
 )
 
 func TestV62Scripts(t *testing.T) {
+	t.Parallel()
+
 	repo, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatal(err)
 	}
 	modCache := goEnv(t, "GOMODCACHE")
 	goCache := goEnv(t, "GOCACHE")
-	testscript.Run(t, testscript.Params{
+	testscript.RunT(limitedScriptT{T: t}, testscript.Params{
 		Dir: "testdata/v62_native",
 		Setup: func(env *testscript.Env) error {
 			env.Setenv("REPO", repo)
