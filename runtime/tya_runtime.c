@@ -6750,6 +6750,16 @@ static void tya_task_fiber_main(uintptr_t raw) {
   setcontext(&tya_scheduler_ctx);
 }
 
+static void tya_task_fiber_trampoline(uint32_t raw_lo, uint32_t raw_hi) {
+  uintptr_t raw = (uintptr_t)raw_lo;
+#if UINTPTR_MAX > UINT32_MAX
+  raw |= ((uintptr_t)raw_hi << 32);
+#else
+  (void)raw_hi;
+#endif
+  tya_task_fiber_main(raw);
+}
+
 /* Per-thread chain of structured-concurrency scopes. tya_task_new
  * registers each new task in the innermost scope (if any) so that
  * tya_scope_exit can wait for it before returning. */
@@ -6897,7 +6907,8 @@ TyaValue tya_task_new(TyaValue callee, int argc, TyaValue a, TyaValue b, TyaValu
   t->ctx.uc_stack.ss_sp = t->stack;
   t->ctx.uc_stack.ss_size = t->stack_size;
   t->ctx.uc_link = &tya_scheduler_ctx;
-  makecontext(&t->ctx, (void (*)(void))tya_task_fiber_main, 1, (uintptr_t)t);
+  uintptr_t raw = (uintptr_t)t;
+  makecontext(&t->ctx, (void (*)(void))tya_task_fiber_trampoline, 2, (uint32_t)raw, (uint32_t)(raw >> 32));
   tya_live_tasks_add(t);
   tya_scope_register_task(t);
   tya_task_enqueue(t);
