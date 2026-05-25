@@ -234,7 +234,7 @@ class Json
   parse = text = nil ->
     if text == nil
       text = self.value
-    state = { src: text, pos: 0, len: text.byte_len() }
+    state = { src: text, pos: 0, len: text.len() }
     v = Json(nil).parse_value(state)
     Json(nil).skip_ws(state)
     if state["pos"] < state["len"]
@@ -243,7 +243,7 @@ class Json
 
   # Json.escape_string provides the json/Json standard library operation.
   escape_string = text ->
-    n = text.byte_len()
+    n = text.len()
     out = "\""
     i = 0
     while i < n
