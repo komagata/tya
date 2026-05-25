@@ -4,7 +4,7 @@
 cd $REPO
 
 exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
-exec sh -c '(cd $WORK && ./server) & pid=$!; sleep 1; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/file > '$WORK'/file.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/source > '$WORK'/source.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/html > '$WORK'/html.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/custom > '$WORK'/custom.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/broken > '$WORK'/broken.out; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+exec sh -c '(cd $WORK && exec ./server) & pid=$!; sleep 1; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/file > '$WORK'/file.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/source > '$WORK'/source.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/html > '$WORK'/html.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/custom > '$WORK'/custom.out; curl -s -i -m 5 --retry 5 --retry-connrefused http://localhost:18097/broken > '$WORK'/broken.out; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
 grep 'HTTP/1.1 200 OK' $WORK/file.out
 grep 'Content-Type: text/html; charset=utf-8' $WORK/file.out
 grep 'File Tya' $WORK/file.out

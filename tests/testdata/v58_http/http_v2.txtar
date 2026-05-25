@@ -5,7 +5,7 @@ cd $REPO
 
 exec go run ./cmd/tya build $WORK/client_server.tya -o $WORK/client_server
 exec go run ./cmd/tya build $WORK/client.tya -o $WORK/client
-exec sh -c '$WORK/client_server & pid=$!; sleep 0.2; $WORK/client; client=$?; wait $pid; server=$?; exit $((client + server))'
+exec sh -c '$WORK/client_server & pid=$!; sleep 0.2; $WORK/client; client=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; server=$?; test $client -eq 0 && test $server -eq 0'
 stdout '201'
 stdout 'hello client'
 stdout 'chunked body'
@@ -26,6 +26,7 @@ conn = server.accept()
 line = conn.read_line()
 while line != nil and line != crlf and line != "\n"
   line = conn.read_line()
+conn.read(7)
 conn.write("HTTP/1.1 201 Created" + crlf)
 conn.write("Content-Length: 12" + crlf)
 conn.write(crlf)
