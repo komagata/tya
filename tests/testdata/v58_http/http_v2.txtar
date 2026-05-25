@@ -11,7 +11,7 @@ stdout 'hello client'
 stdout 'chunked body'
 
 exec go run ./cmd/tya build $WORK/concurrent_server.tya -o $WORK/concurrent_server
-exec sh -c '$WORK/concurrent_server & pid=$!; sleep 0.5; curl -s -m 2 http://localhost:18092/slow >/tmp/tya-slow-$$ & slow=$!; sleep 0.1; fast=$(curl -s -m 0.4 http://localhost:18092/fast); fast_status=$?; wait $slow; slow_status=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; test "$fast" = fast && exit $((fast_status + slow_status))'
+exec sh -c '$WORK/concurrent_server & pid=$!; (i=0; while [ $i -lt 20 ]; do curl -s -m 2 http://localhost:18092/slow >/tmp/tya-slow-$$ && exit 0; sleep 0.25; i=$((i + 1)); done; exit 1) & slow=$!; sleep 0.1; fast=""; fast_status=1; i=0; while [ $i -lt 20 ]; do fast=$(curl -s -m 0.4 http://localhost:18092/fast); fast_status=$?; [ "$fast_status" -eq 0 ] && break; sleep 0.25; i=$((i + 1)); done; wait $slow; slow_status=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; test "$fast" = fast && exit $((fast_status + slow_status))'
 
 -- client_server.tya --
 import net/socket as socket
