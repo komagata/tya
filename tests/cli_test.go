@@ -1074,7 +1074,7 @@ func TestCLIVersionCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
-	if string(out) != "0.67.7\n" {
+	if string(out) != "0.67.8\n" {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }

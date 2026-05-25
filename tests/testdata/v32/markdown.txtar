@@ -14,7 +14,7 @@ stdout '<hr/>'
 stdout '<pre><code>line &lt;html&gt;'
 
 exec go run ./cmd/tya version
-stdout '0.67.7\n'
+stdout '0.67.8\n'
 
 exec go run ./cmd/tya run $WORK/extended.tya
 stdout '<h1>Setext</h1>'
