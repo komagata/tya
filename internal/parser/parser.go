@@ -727,7 +727,7 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		// v0.46 canonical modifier order:
 		//   [private] [static] [abstract|override] [@@] <name> = <body>
 		isPrivateMember := false
-		if p.at(token.IDENT) && p.peek().Lexeme == "private" {
+		if p.at(token.IDENT) && p.peek().Lexeme == "private" && p.peekN(1).Type != token.QUESTION {
 			isPrivateMember = true
 			p.next()
 		}

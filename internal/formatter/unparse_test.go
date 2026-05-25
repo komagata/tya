@@ -461,6 +461,18 @@ func TestUnparseClass(t *testing.T) {
 	}
 }
 
+func TestUnparsePrivatePredicateMethodName(t *testing.T) {
+	src := "class Address\n  private? = -> true\n  static private? = -> false\n  private helper = -> true\n"
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "class Address\n  static private? = -> false\n\n  private? = -> true\n\n  private helper = -> true\n"
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+}
+
 func TestUnparseSortsClassMembers(t *testing.T) {
 	src := strings.Join([]string{
 		"class Sample",

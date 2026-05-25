@@ -1499,6 +1499,7 @@ func (g *cgen) assignClassDecl(name string, class *ast.ClassDecl) error {
 
 func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (string, error) {
 	methodSyms := map[string]string{}
+	collidingMethodNames := classMethodNameCollisions(class)
 	var initMethod *ast.ClassMethod
 	parentKey := g.parentKey(name, class)
 	for i := range class.Methods {
@@ -1512,13 +1513,21 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		if method.Class {
 			methodKind = "class"
 		}
-		sym, err := g.emitFuncWithContext(name+"_"+method.Name, method.Func, classRef, methodKind)
+		emitName := name + "_" + method.Name
+		if method.Class && collidingMethodNames[method.Name] {
+			emitName = name + "_class_" + method.Name
+		}
+		sym, err := g.emitFuncWithContext(emitName, method.Func, classRef, methodKind)
 		g.className, g.methodName, g.superClass = prevClass, prevMethod, prevSuper
 		if err != nil {
 			return "", err
 		}
-		methodSyms[method.Name] = sym
-		g.classMethods[name+"."+method.Name] = sym
+		methodSyms[methodSymbolKey(*method)] = sym
+		if method.Class {
+			g.classMethods[name+".class."+method.Name] = sym
+		} else {
+			g.classMethods[name+"."+method.Name] = sym
+		}
 		if (method.Name == "init" || method.Name == "_init" || method.Name == "initialize") && !method.Class {
 			initMethod = method
 		}
@@ -1559,10 +1568,10 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			continue
 		}
-		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[methodSymbolKey(method)]))
 	}
 	if initMethod != nil {
-		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5);\n", methodSyms[initMethod.Name]))
+		out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5);\n", methodSyms[methodSymbolKey(*initMethod)]))
 	} else if parentKey != "" {
 		if parentInit := g.inheritedMethodSym(parentKey, "init"); parentInit != "" {
 			out.WriteString(fmt.Sprintf("  (void)%s(__obj, __arg0, __arg1, __arg2, __arg3, __arg4, __arg5);\n", parentInit))
@@ -1588,12 +1597,41 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 		if method.Abstract || method.Class || method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			continue
 		}
-		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[method.Name]))
+		out.WriteString(fmt.Sprintf("  tya_set_member(__obj, %s, tya_bind_method(__obj, %s));\n", strconv.Quote(method.Name), methodSyms[methodSymbolKey(method)]))
 	}
 	out.WriteString("  return __obj;\n")
 	out.WriteString("}\n\n")
 	g.funcOut.WriteString(out.String())
 	return sym, nil
+}
+
+func methodSymbolKey(method ast.ClassMethod) string {
+	if method.Class {
+		return "class:" + method.Name
+	}
+	return "instance:" + method.Name
+}
+
+func classMethodNameCollisions(class *ast.ClassDecl) map[string]bool {
+	instance := map[string]bool{}
+	classSide := map[string]bool{}
+	for _, method := range class.Methods {
+		if method.Abstract {
+			continue
+		}
+		if method.Class {
+			classSide[method.Name] = true
+		} else {
+			instance[method.Name] = true
+		}
+	}
+	out := map[string]bool{}
+	for name := range instance {
+		if classSide[name] {
+			out[name] = true
+		}
+	}
+	return out
 }
 
 func (g *cgen) emitClassMembers(target string, name string, class *ast.ClassDecl) error {
@@ -1651,7 +1689,7 @@ func (g *cgen) emitClassMembers(target string, name string, class *ast.ClassDecl
 		if method.Abstract || !method.Class {
 			continue
 		}
-		sym := g.classMethods[name+"."+method.Name]
+		sym := g.classMethods[name+".class."+method.Name]
 		g.line(fmt.Sprintf("tya_set_member(%s, %s, tya_bind_method(%s, %s));", target, strconv.Quote(method.Name), target, sym))
 	}
 	return nil
@@ -2046,7 +2084,7 @@ func (g *cgen) inheritedClassMethodSym(parentKey string, method string) string {
 		}
 		for _, parentMethod := range parent.Methods {
 			if parentMethod.Class && parentMethod.Name == method {
-				return g.classMethods[g.cClassName(parentKey)+"."+method]
+				return g.classMethods[g.cClassName(parentKey)+".class."+method]
 			}
 		}
 		parentKey = g.parentKey(g.cClassName(parentKey), parent)

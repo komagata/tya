@@ -33,6 +33,14 @@ func TestEmitCFieldAssignmentDoesNotOverwriteSameNamedMethod(t *testing.T) {
 	}
 }
 
+func TestEmitCAllowsInstanceAndClassPrivatePredicateMethods(t *testing.T) {
+	src := "class Address\n  private? = -> true\n\n  static private? = -> false\n\naddr = Address()\nprint(addr.private?())\nprint(Address.private?())\n"
+	out := compileAndRun(t, src)
+	if string(out) != "true\nfalse\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCEnvironmentAndProcessProgram(t *testing.T) {
 	src := "setenv(\"TYA_CODEGEN_ENV\", \"ok\")\nprint(env(\"TYA_CODEGEN_ENV\"))\nr = process_run([\"sh\", \"-c\", \"printf $TYA_CODEGEN_CHILD\"], { env: { \"TYA_CODEGEN_CHILD\": \"child\" } })\nprint(r[\"status\"])\nprint(r[\"success\"])\nprint(r[\"stdout\"])\n"
 	out := compileAndRun(t, src)

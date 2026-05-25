@@ -2,11 +2,11 @@
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/predicates.tya
-stdout 'true\nfalse\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n'
+stdout 'true\nfalse\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\nfalse\n'
 
 exec go run ./cmd/tya build $WORK/predicates.tya -o $WORK/predicates
 exec $WORK/predicates
-stdout 'true\nfalse\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\n'
+stdout 'true\nfalse\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\ntrue\nfalse\n'
 
 ! exec go run ./cmd/tya run $WORK/non_callable_binding.tya
 stderr 'predicate binding active\? must be a function'
@@ -53,9 +53,22 @@ class Feature
   static enabled? = ->
     Self.enabled
 
+class Address
+  private? = ->
+    true
+
+  static private? = ->
+    false
+
+  private helper = ->
+    true
+
 person = User("komagata")
 print(person.named?())
 print(Feature.enabled?())
+addr = Address()
+print(addr.private?())
+print(Address.private?())
 
 -- non_callable_binding.tya --
 active? = true
