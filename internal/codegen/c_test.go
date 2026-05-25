@@ -25,6 +25,14 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 	}
 }
 
+func TestEmitCFieldAssignmentDoesNotOverwriteSameNamedMethod(t *testing.T) {
+	src := "class Response\n  initialize = ->\n    self.status = 200\n    self.bump()\n\n  bump = ->\n    self.status = self.status + 1\n\n  status = ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
+	out := compileAndRun(t, src)
+	if string(out) != "201\n202\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCEnvironmentAndProcessProgram(t *testing.T) {
 	src := "setenv(\"TYA_CODEGEN_ENV\", \"ok\")\nprint(env(\"TYA_CODEGEN_ENV\"))\nr = process_run([\"sh\", \"-c\", \"printf $TYA_CODEGEN_CHILD\"], { env: { \"TYA_CODEGEN_CHILD\": \"child\" } })\nprint(r[\"status\"])\nprint(r[\"success\"])\nprint(r[\"stdout\"])\n"
 	out := compileAndRun(t, src)

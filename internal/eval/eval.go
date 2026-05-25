@@ -1437,7 +1437,7 @@ func assign(target ast.Expr, v Value, env *Env) error {
 		if !ok {
 			return fmt.Errorf("cannot assign property on non-dictionary")
 		}
-		o[t.Name] = v
+		assignMember(o, t.Name, v)
 		return nil
 	case *ast.IndexExpr:
 		obj, err := evalExpr(t.Target, env)
@@ -1616,6 +1616,11 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 			return nil, fmt.Errorf("unknown member %s on %s", n.Name, runtimeKind(o))
 		}
 		if _, ok := o["__class"]; ok {
+			if selfTarget, ok := n.Target.(*ast.SelfExpr); ok && !selfTarget.Class {
+				if value, ok := o["@"+n.Name]; ok {
+					return value, nil
+				}
+			}
 			if value, ok := o[n.Name]; ok {
 				return value, nil
 			}
@@ -1706,6 +1711,18 @@ func evalExpr(e ast.Expr, env *Env) (Value, error) {
 		return evalCall(n, env)
 	}
 	return nil, fmt.Errorf("unknown expression")
+}
+
+func assignMember(o Dict, name string, value Value) {
+	if _, ok := o["__class"]; ok {
+		if _, isFunction := value.(*Function); !isFunction {
+			o["@"+name] = value
+			if _, existingFunction := o[name].(*Function); existingFunction {
+				return
+			}
+		}
+	}
+	o[name] = value
 }
 
 func evalCall(c *ast.CallExpr, env *Env) (Value, error) {

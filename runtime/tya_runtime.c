@@ -1191,6 +1191,9 @@ void tya_set_member(TyaValue dict, const char *key, TyaValue value) {
   }
   for (int i = 0; i < dict.dict->len; i++) {
     if (dict.dict->entries[i].key != NULL && strcmp(dict.dict->entries[i].key, key) == 0) {
+      if (dict.kind == TYA_OBJECT && value.kind != TYA_FUNCTION && dict.dict->entries[i].value.kind == TYA_FUNCTION && key != NULL && key[0] != '@') {
+        return;
+      }
       dict.dict->entries[i].value = value;
       return;
     }

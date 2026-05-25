@@ -691,6 +691,13 @@ func TestRunBlockScopeAndOuterAssignment(t *testing.T) {
 	}
 }
 
+func TestRunFieldAssignmentDoesNotOverwriteSameNamedMethod(t *testing.T) {
+	src := "class Response\n  initialize = ->\n    self.status = 200\n    self.bump()\n\n  bump = ->\n    self.status = self.status + 1\n\n  status = ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
+	if got := runEval(t, src); got != "201\n202\n" {
+		t.Fatalf("got %q", got)
+	}
+}
+
 func TestRunArrays(t *testing.T) {
 	src := "items = [1, 2, 3]\nprint(items.len())\nprint(items[0])\nprint(items[9])\nitems.push(4)\nprint(items.len())\nprint(items.pop())\nprint(items.len())\nitems[1] = 20\nprint(items[1])\n"
 	toks, errs := lexer.Lex(src)

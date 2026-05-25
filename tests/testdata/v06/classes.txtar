@@ -9,6 +9,10 @@ exec go run ./cmd/tya run $WORK/main.tya
 stdout 'module\n1\n1\n7\n'
 ! stderr .
 
+exec go run ./cmd/tya run $WORK/shadowing.tya
+stdout '201\n202\n'
+! stderr .
+
 ! exec go run ./cmd/tya run $WORK/class_var_outside.tya
 stderr 'TYA-E0412'
 
@@ -90,6 +94,23 @@ print(user.User.count)
 print(user.User.count_users())
 user.User.count = 7
 print(user.User.count)
+
+-- shadowing.tya --
+class Response
+  initialize = ->
+    self.status = 200
+    self.bump()
+
+  bump = ->
+    self.status = self.status + 1
+
+  status = ->
+    self.status
+
+response = Response()
+print(response.status())
+response.bump()
+print(response.status())
 
 -- class_var_outside.tya --
 Self.count = 0
