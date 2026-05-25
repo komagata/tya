@@ -5,7 +5,7 @@
 cd $REPO
 
 exec go run ./cmd/tya build $WORK/main.tya -o $WORK/server
-exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -i -m 5 --retry 5 --retry-connrefused -H "Cookie: a=1; b = two; bad; a=last" http://localhost:18092/cookies; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
+exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -i -m 5 --retry 5 --retry-connrefused -H "Cookie: a=1; b = two; bad; a=last" http://localhost:18099/cookies; ret=$?; kill $pid 2>/dev/null; wait $pid 2>/dev/null; exit $ret'
 stdout 'Set-Cookie: session=abc; Path=/; HttpOnly'
 stdout 'Set-Cookie: prefs=dark; SameSite=Lax'
 stdout 'last,two,none'
@@ -24,4 +24,4 @@ class App
     return response
 
 app.get("/cookies", App.cookies)
-app.run(18092)
+app.run(18099)
