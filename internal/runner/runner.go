@@ -546,17 +546,41 @@ func resolveModulePath(importerPath string, name string) (string, error) {
 		if samePath(candidate, importerPath) {
 			continue
 		}
-		if _, err := os.Stat(candidate); err == nil {
+		if ok, err := exactFileExists(candidate); err != nil {
+			return "", err
+		} else if ok {
 			abs, err := filepath.Abs(candidate)
 			if err != nil {
 				return "", err
 			}
 			return filepath.Clean(abs), nil
-		} else if !os.IsNotExist(err) {
-			return "", err
 		}
 	}
 	return "", fmt.Errorf("module not found: %s", name)
+}
+
+func exactFileExists(path string) (bool, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	if info.IsDir() {
+		return false, nil
+	}
+	entries, err := os.ReadDir(filepath.Dir(path))
+	if err != nil {
+		return false, err
+	}
+	base := filepath.Base(path)
+	for _, entry := range entries {
+		if entry.Name() == base {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // packageSrcDirs walks up from importerPath looking for a project root that

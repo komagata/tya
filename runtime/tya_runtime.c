@@ -8,6 +8,9 @@
 #ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE
 #endif
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
 #include "tya_runtime.h"
 
@@ -72,6 +75,19 @@ typedef SOCKET TyaSocketHandle;
 #include <sys/syscall.h>
 typedef int TyaSocketHandle;
 #define TYA_INVALID_SOCKET (-1)
+#endif
+
+#ifdef __APPLE__
+#ifndef NI_MAXHOST
+#define NI_MAXHOST 1025
+#endif
+#ifndef NI_MAXSERV
+#define NI_MAXSERV 32
+#endif
+extern char *mkdtemp(char *);
+extern int mkstemps(char *, int);
+extern time_t timegm(struct tm *);
+extern long syscall(long, ...);
 #endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)

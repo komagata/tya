@@ -1,3 +1,7 @@
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 #include "tya_http_server.h"
 
 #include <errno.h>

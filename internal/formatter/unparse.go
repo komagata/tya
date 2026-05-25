@@ -204,6 +204,12 @@ func (u *unparser) preStmt(stmt ast.Stmt) {
 	}
 }
 
+func (u *unparser) leadingComments(comments ast.StmtComments) {
+	for _, c := range comments.Leading {
+		u.line("#" + c)
+	}
+}
+
 // trailingFor returns the line-end comment text for stmt, or "" when
 // none. The caller is responsible for concatenating it onto the
 // emitted line.
@@ -508,68 +514,135 @@ func (u *unparser) classDecl(n *ast.ClassDecl) error {
 	u.line(head)
 	u.indent++
 	defer func() { u.indent-- }()
-	first := true
-	for _, f := range n.Fields {
-		if !first {
+	members := canonicalClassMembers(n)
+	for i, member := range members {
+		if i > 0 {
 			u.b.WriteByte('\n')
 		}
-		first = false
-		val, err := u.expr(f.Value)
-		if err != nil {
-			return err
-		}
-		// v0.46+ canonical: `private` keyword instead of `_`-prefix.
-		fieldPrefix := ""
-		if f.Private {
-			fieldPrefix = "private "
-		}
-		u.line(fieldPrefix + f.Name + " = " + val)
-	}
-	for _, v := range n.Vars {
-		if !first {
-			u.b.WriteByte('\n')
-		}
-		first = false
-		val, err := u.expr(v.Value)
-		if err != nil {
-			return err
-		}
-		// v0.46+ canonical: `static` keyword instead of `@@`; `private`
-		// keyword instead of `_`-prefix.
-		varPrefix := "static "
-		if v.Private {
-			varPrefix = "private static "
-		}
-		u.line(varPrefix + v.Name + " = " + val)
-	}
-	for _, c := range n.Constants {
-		if !first {
-			u.b.WriteByte('\n')
-		}
-		first = false
-		val, err := u.expr(c.Value)
-		if err != nil {
-			return err
-		}
-		prefix := ""
-		if c.Private {
-			prefix = "private "
-		}
-		u.line(prefix + c.Name + " = " + val)
-	}
-	for _, m := range n.Methods {
-		if !first {
-			u.b.WriteByte('\n')
-		}
-		first = false
-		if err := u.classMethod(m); err != nil {
+		if err := member.emit(u); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
+type classMember struct {
+	name string
+	rank int
+	emit func(*unparser) error
+}
+
+func canonicalClassMembers(n *ast.ClassDecl) []classMember {
+	members := make([]classMember, 0, len(n.Constants)+len(n.Vars)+len(n.Fields)+len(n.Methods))
+	for _, c := range n.Constants {
+		c := c
+		rank := 0
+		if c.Private {
+			rank = 1
+		}
+		members = append(members, classMember{name: c.Name, rank: rank, emit: func(u *unparser) error {
+			return u.classConst(c)
+		}})
+	}
+	for _, v := range n.Vars {
+		v := v
+		rank := 2
+		if v.Private {
+			rank = 3
+		}
+		members = append(members, classMember{name: v.Name, rank: rank, emit: func(u *unparser) error {
+			return u.classVar(v)
+		}})
+	}
+	for _, f := range n.Fields {
+		f := f
+		rank := 4
+		if f.Private {
+			rank = 5
+		}
+		members = append(members, classMember{name: f.Name, rank: rank, emit: func(u *unparser) error {
+			return u.classField(f)
+		}})
+	}
+	for _, m := range n.Methods {
+		m := m
+		rank := classMethodRank(m)
+		members = append(members, classMember{name: m.Name, rank: rank, emit: func(u *unparser) error {
+			return u.classMethod(m)
+		}})
+	}
+	sort.SliceStable(members, func(i, j int) bool {
+		if members[i].rank != members[j].rank {
+			return members[i].rank < members[j].rank
+		}
+		return members[i].name < members[j].name
+	})
+	return members
+}
+
+func classMethodRank(m ast.ClassMethod) int {
+	if m.Class {
+		if m.Private {
+			return 7
+		}
+		return 6
+	}
+	if m.Name == "initialize" {
+		return 8
+	}
+	if m.Private {
+		return 10
+	}
+	return 9
+}
+
+func (u *unparser) classField(f ast.ClassField) error {
+	u.leadingComments(f.Comments)
+	val, err := u.expr(f.Value)
+	if err != nil {
+		return err
+	}
+	// v0.46+ canonical: `private` keyword instead of `_`-prefix.
+	fieldPrefix := ""
+	if f.Private {
+		fieldPrefix = "private "
+	}
+	u.line(fieldPrefix + f.Name + " = " + val)
+	return nil
+}
+
+func (u *unparser) classVar(v ast.ClassVar) error {
+	u.leadingComments(v.Comments)
+	val, err := u.expr(v.Value)
+	if err != nil {
+		return err
+	}
+	// v0.46+ canonical: `static` keyword instead of `@@`; `private`
+	// keyword instead of `_`-prefix.
+	varPrefix := "static "
+	if v.Private {
+		varPrefix = "private static "
+	}
+	u.line(varPrefix + v.Name + " = " + val)
+	return nil
+}
+
+func (u *unparser) classConst(c ast.ClassConst) error {
+	u.leadingComments(c.Comments)
+	val, err := u.expr(c.Value)
+	if err != nil {
+		return err
+	}
+	prefix := ""
+	if c.Private {
+		prefix = "private "
+	}
+	u.line(prefix + c.Name + " = " + val)
+	return nil
+}
+
 func (u *unparser) classMethod(m ast.ClassMethod) error {
+	u.leadingComments(m.Comments)
 	// v0.46+ canonical: keyword modifiers in canonical order
 	// (`private static abstract|override`). Legacy `@@` is removed.
 	parts := []string{}

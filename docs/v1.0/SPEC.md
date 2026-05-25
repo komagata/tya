@@ -299,6 +299,9 @@ The core canonical rules are:
 - trailing commas are prohibited in arrays, dictionaries, calls, and parameter
   lists;
 - imports are atomic and not line-wrapped;
+- class bodies are ordered by member category, then static/instance,
+  public/private, and member name, with `initialize` first among public
+  instance methods;
 - `elseif` is the canonical spelling, and `else if` is not canonical;
 - `case _` in `match` is the wildcard case and must be final;
 - empty collection forms and empty `else` branches follow formatter-defined

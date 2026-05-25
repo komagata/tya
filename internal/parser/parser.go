@@ -161,29 +161,52 @@ func attachStmtCommentsTracked(prog *ast.Program, comments []CommentInfo) []bool
 func markMemberComments(stmts []ast.Stmt, comments []CommentInfo, used []bool) {
 	for _, stmt := range stmts {
 		switch d := stmt.(type) {
+		case *ast.ModuleDecl:
+			for _, class := range d.Classes {
+				markClassMemberComments(class, comments, used)
+			}
+			for _, iface := range d.Interfaces {
+				markInterfaceMemberComments(iface, comments, used)
+			}
 		case *ast.ClassDecl:
-			for _, field := range d.Fields {
-				markLeadingComments(field.Tok.Line, 2, comments, used)
-			}
-			for _, classVar := range d.Vars {
-				markLeadingComments(classVar.Tok.Line, 2, comments, used)
-			}
-			for _, method := range d.Methods {
-				markLeadingComments(method.Tok.Line, 2, comments, used)
-			}
+			markClassMemberComments(d, comments, used)
 		case *ast.InterfaceDecl:
-			for _, field := range d.Fields {
-				markLeadingComments(field.Tok.Line, 2, comments, used)
-			}
-			for _, method := range d.Methods {
-				markLeadingComments(method.Tok.Line, 2, comments, used)
-			}
+			markInterfaceMemberComments(d, comments, used)
 		}
 	}
 }
 
+func markClassMemberComments(d *ast.ClassDecl, comments []CommentInfo, used []bool) {
+	for i := range d.Fields {
+		d.Fields[i].Comments.Leading = takeLeadingComments(d.Fields[i].Tok.Line, 2, comments, used)
+	}
+	for i := range d.Constants {
+		d.Constants[i].Comments.Leading = takeLeadingComments(d.Constants[i].Tok.Line, 2, comments, used)
+	}
+	for i := range d.Vars {
+		d.Vars[i].Comments.Leading = takeLeadingComments(d.Vars[i].Tok.Line, 2, comments, used)
+	}
+	for i := range d.Methods {
+		d.Methods[i].Comments.Leading = takeLeadingComments(d.Methods[i].Tok.Line, 2, comments, used)
+	}
+}
+
+func markInterfaceMemberComments(d *ast.InterfaceDecl, comments []CommentInfo, used []bool) {
+	for i := range d.Fields {
+		d.Fields[i].Comments.Leading = takeLeadingComments(d.Fields[i].Tok.Line, 2, comments, used)
+	}
+	for _, method := range d.Methods {
+		markLeadingComments(method.Tok.Line, 2, comments, used)
+	}
+}
+
 func markLeadingComments(startLine int, indent int, comments []CommentInfo, used []bool) {
+	takeLeadingComments(startLine, indent, comments, used)
+}
+
+func takeLeadingComments(startLine int, indent int, comments []CommentInfo, used []bool) []string {
 	expectedLine := startLine - 1
+	var leading []string
 	for j := len(comments) - 1; j >= 0; j-- {
 		if used[j] {
 			continue
@@ -199,8 +222,13 @@ func markLeadingComments(startLine int, indent int, comments []CommentInfo, used
 			break
 		}
 		used[j] = true
+		leading = append(leading, c.Text)
 		expectedLine--
 	}
+	for i, j := 0, len(leading)-1; i < j; i, j = i+1, j-1 {
+		leading[i], leading[j] = leading[j], leading[i]
+	}
+	return leading
 }
 
 // OrphanComments reports comments that ParseWithComments could not

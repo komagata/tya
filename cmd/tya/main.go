@@ -671,7 +671,9 @@ func buildExecutableWithCoverTarget(path string, output string, opt *codegen.Cov
 		args = append(args, "-DTYA_ENABLE_ZLIB", "-lz")
 	}
 	if shouldEnableOpenSSL() {
-		args = append(args, "-DTYA_ENABLE_OPENSSL", "-lssl", "-lcrypto")
+		args = append(args, "-DTYA_ENABLE_OPENSSL")
+		args = append(args, opensslCompileFlags()...)
+		args = append(args, "-lssl", "-lcrypto")
 	}
 	if nativePlan != nil {
 		args = append(args, nativePlan.LDFlags...)
@@ -713,6 +715,9 @@ func shouldEnableZlib() bool {
 	if os.Getenv("TYA_ENABLE_ZLIB") != "" {
 		return true
 	}
+	if runtime.GOOS == "darwin" {
+		return true
+	}
 	for _, path := range []string{
 		"/usr/include/zlib.h",
 		"/usr/local/include/zlib.h",
@@ -749,6 +754,35 @@ func shouldEnableOpenSSL() bool {
 		}
 	}
 	return false
+}
+
+func opensslCompileFlags() []string {
+	flags := []string{}
+	for _, dir := range []string{
+		"/opt/homebrew/include",
+		"/usr/local/include",
+		"/home/linuxbrew/.linuxbrew/include",
+	} {
+		if _, err := os.Stat(filepath.Join(dir, "openssl", "ssl.h")); err == nil {
+			flags = append(flags, "-I", dir)
+			break
+		}
+	}
+	for _, dir := range []string{
+		"/opt/homebrew/lib",
+		"/usr/local/lib",
+		"/home/linuxbrew/.linuxbrew/lib",
+	} {
+		if _, err := os.Stat(filepath.Join(dir, "libssl.dylib")); err == nil {
+			flags = append(flags, "-L", dir)
+			break
+		}
+		if _, err := os.Stat(filepath.Join(dir, "libssl.so")); err == nil {
+			flags = append(flags, "-L", dir)
+			break
+		}
+	}
+	return flags
 }
 
 func findRuntimeDir() (string, error) {

@@ -202,10 +202,10 @@ func TestUnparseZeroArgFunctionDefinitionsUseShortArrow(t *testing.T) {
 		"with_args = name -> name",
 		"",
 		"class Box",
+		"  static build = -> Self.new()",
+		"",
 		"  initialize = ->",
 		"    self.value = 1",
-		"",
-		"  static build = -> Self.new()",
 		"",
 	}, "\n")
 	got, err := unparseSource(t, src)
@@ -451,6 +451,95 @@ func TestUnparseClass(t *testing.T) {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}
+	}
+}
+
+func TestUnparseSortsClassMembers(t *testing.T) {
+	src := strings.Join([]string{
+		"class Sample",
+		"  private helper = -> 1",
+		"",
+		"  zed = 0",
+		"",
+		"  static make = -> Self()",
+		"",
+		"  # public constant",
+		"  ALPHA = 1",
+		"",
+		"  private static hidden_count = 0",
+		"",
+		"  beta = -> 2",
+		"",
+		"  static build = -> Self()",
+		"",
+		"  private id = 0",
+		"",
+		"  # private static method",
+		"  private static normalize = -> 3",
+		"",
+		"  private SECRET = 9",
+		"",
+		"  initialize = ->",
+		"    self.ready = true",
+		"",
+		"  name = \"\"",
+		"",
+		"  ZETA = 2",
+		"",
+		"  static alpha_count = 0",
+		"",
+		"  zeta = -> 4",
+		"",
+	}, "\n")
+	want := strings.Join([]string{
+		"class Sample",
+		"  # public constant",
+		"  ALPHA = 1",
+		"",
+		"  ZETA = 2",
+		"",
+		"  private SECRET = 9",
+		"",
+		"  static alpha_count = 0",
+		"",
+		"  private static hidden_count = 0",
+		"",
+		"  name = \"\"",
+		"",
+		"  zed = 0",
+		"",
+		"  private id = 0",
+		"",
+		"  static build = -> Self()",
+		"",
+		"  static make = -> Self()",
+		"",
+		"  # private static method",
+		"  private static normalize = -> 3",
+		"",
+		"  initialize = ->",
+		"    self.ready = true",
+		"",
+		"  beta = -> 2",
+		"",
+		"  zeta = -> 4",
+		"",
+		"  private helper = -> 1",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("class member order mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("class member order is not idempotent\nfirst:\n%s\nsecond:\n%s", got, again)
 	}
 }
 

@@ -242,6 +242,75 @@ func TestCLIFormatAndCheckAcceptedSyntax(t *testing.T) {
 	}
 }
 
+func TestCLIFormatAndCheckClassMemberOrder(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "class_order.tya")
+	original := strings.Join([]string{
+		"class Sample",
+		"  private helper = -> 1",
+		"",
+		"  static make = -> Self()",
+		"",
+		"  ALPHA = 1",
+		"",
+		"  initialize = ->",
+		"    self.ready = true",
+		"",
+		"  static build = -> Self()",
+		"",
+		"  name = \"\"",
+		"",
+		"print(\"ok\")",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(original), 0644); err != nil {
+		t.Fatal(err)
+	}
+	checkSyntax := exec.Command("go", "run", "./cmd/tya", "check", path)
+	checkSyntax.Dir = ".."
+	if out, err := checkSyntax.CombinedOutput(); err != nil {
+		t.Fatalf("unordered class members should remain accepted syntax: %v\n%s", err, out)
+	}
+	checkFormat := exec.Command("go", "run", "./cmd/tya", "format", "--check", path)
+	checkFormat.Dir = ".."
+	out, err := checkFormat.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected format --check to report class member order drift")
+	}
+	if !strings.Contains(string(out), "not in formatted syntax") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+	format := exec.Command("go", "run", "./cmd/tya", "format", "-w", path)
+	format.Dir = ".."
+	out, err = format.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected format error: %v\n%s", err, out)
+	}
+	got, readErr := os.ReadFile(path)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	want := strings.Join([]string{
+		"class Sample",
+		"  ALPHA = 1",
+		"",
+		"  name = \"\"",
+		"",
+		"  static build = -> Self()",
+		"",
+		"  static make = -> Self()",
+		"",
+		"  initialize = ->",
+		"    self.ready = true",
+		"",
+		"  private helper = -> 1",
+		"print(\"ok\")",
+		"",
+	}, "\n")
+	if string(got) != want {
+		t.Fatalf("got %q want %q", got, want)
+	}
+}
+
 func TestCLILintParsesAcceptedButUnformattedSyntax(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "accepted.tya")
 	src := "add = (a, b,) -> a + b\nprint(add(1, 2,))\n"
