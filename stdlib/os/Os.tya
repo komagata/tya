@@ -1,5 +1,37 @@
 # Os provides the os/Os standard library API.
 class Os
+  # Os.args returns the current process arguments.
+  static args = ->
+    args()
+
+  # Os.env returns the value of an environment variable or nil.
+  static env = name ->
+    env(name)
+
+  # Os.environ returns the current process environment as a dictionary.
+  static environ = ->
+    environ()
+
+  # Os.setenv sets an environment variable for this process and children.
+  static setenv = name, value ->
+    setenv(name, value)
+
+  # Os.unsetenv removes an environment variable for this process and children.
+  static unsetenv = name ->
+    unsetenv(name)
+
+  # Os.exit terminates the current process with code.
+  static exit = code ->
+    exit(code)
+
+  # Os.cwd returns the current working directory.
+  static cwd = ->
+    cwd()
+
+  # Os.chdir changes the current working directory.
+  static chdir = path ->
+    chdir(path)
+
   # Os.args provides the os/Os standard library operation.
   args = ->
     args()

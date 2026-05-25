@@ -9,6 +9,10 @@ exec $WORK/tya check environment_process.tya
 exec $WORK/tya run environment_process.tya
 stdout 'one'
 stdout 'one'
+stdout 'one'
+stdout 'one'
+stdout 'nil'
+stdout 'two'
 stdout 'nil'
 stdout '0'
 stdout 'true'
@@ -22,6 +26,10 @@ exec $WORK/tya build environment_process.tya -o environment_process
 exec ./environment_process
 stdout 'one'
 stdout 'one'
+stdout 'one'
+stdout 'one'
+stdout 'nil'
+stdout 'two'
 stdout 'nil'
 stdout '0'
 stdout 'true'
@@ -41,8 +49,14 @@ import process as process
 os.Os().setenv("TYA_V1_ENV_PROCESS", "one")
 print(os.Os().env("TYA_V1_ENV_PROCESS"))
 print(os.Os().environ()["TYA_V1_ENV_PROCESS"])
+print(os.Os.env("TYA_V1_ENV_PROCESS"))
+print(os.Os.environ()["TYA_V1_ENV_PROCESS"])
 os.Os().unsetenv("TYA_V1_ENV_PROCESS")
 print(os.Os().env("TYA_V1_ENV_PROCESS"))
+os.Os.setenv("TYA_V1_ENV_PROCESS", "two")
+print(os.Os().env("TYA_V1_ENV_PROCESS"))
+os.Os.unsetenv("TYA_V1_ENV_PROCESS")
+print(os.Os.env("TYA_V1_ENV_PROCESS"))
 
 r = process.Process(["sh", "-c", "printf direct"]).run({})
 print(r["status"])

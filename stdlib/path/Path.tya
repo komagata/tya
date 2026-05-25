@@ -1,5 +1,29 @@
 # Path provides the path/Path standard library API.
 class Path
+  # Path.basename returns the last path element.
+  static basename = value ->
+    Path(nil).basename(value)
+
+  # Path.dirname returns all but the last path element.
+  static dirname = value ->
+    Path(nil).dirname(value)
+
+  # Path.extname returns the extension of value.
+  static extname = value ->
+    Path(nil).extname(value)
+
+  # Path.clean normalizes dot segments and repeated separators.
+  static clean = value ->
+    Path(nil).clean(value)
+
+  # Path.join joins path parts and cleans the result.
+  static join = parts ->
+    Path(nil).join(parts)
+
+  # Path.expand_user expands a leading ~ using the current home directory.
+  static expand_user = value ->
+    path_expand_user(value)
+
   # Path.initialize stores a filesystem path.
   initialize = value = nil ->
     self.value = value

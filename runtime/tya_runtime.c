@@ -8,6 +8,11 @@
 #ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE
 #endif
+#ifdef __APPLE__
+#ifndef _DARWIN_C_SOURCE
+#define _DARWIN_C_SOURCE
+#endif
+#endif
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
@@ -75,11 +80,6 @@ typedef SOCKET TyaSocketHandle;
 #include <sys/syscall.h>
 typedef int TyaSocketHandle;
 #define TYA_INVALID_SOCKET (-1)
-#ifdef __APPLE__
-extern int syscall(int, ...);
-#else
-extern long syscall(long, ...);
-#endif
 #endif
 
 #ifdef __APPLE__

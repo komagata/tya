@@ -1,5 +1,13 @@
 # Json parses and formats JSON values.
 class Json
+  # Json.parse parses JSON text into Tya values.
+  static parse = text ->
+    Json(nil).parse(text)
+
+  # Json.dump formats a Tya value as JSON text.
+  static dump = value ->
+    Json(nil).dump(value)
+
   # Json.initialize stores a value or JSON text.
   initialize = value = nil ->
     self.value = value

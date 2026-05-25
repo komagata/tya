@@ -12,6 +12,8 @@ stdout 'true'
 stdout 'false'
 stdout 'true'
 stdout 'false'
+stdout 'class'
+stdout 'true'
 
 exec $WORK/tya build filesystem_utilities.tya -o filesystem_utilities
 exec ./filesystem_utilities
@@ -20,6 +22,8 @@ stdout 'true'
 stdout 'false'
 stdout 'true'
 stdout 'false'
+stdout 'class'
+stdout 'true'
 
 ! exec $WORK/tya run invalid_remove_all.tya
 stderr 'filesystem.remove_all: dangerous path'
@@ -51,6 +55,12 @@ print(file.File(tmp).exists?())
 file.File(tmp).remove()
 dir.Dir(root).remove_all()
 print(file.File(root).exists?())
+
+class_file = file.File.temp("tya-fs-class", ".tmp")
+file.File.write(class_file, "class")
+print(file.File.read(class_file))
+print(file.File.exists?(class_file))
+file.File.remove(class_file)
 
 -- invalid_remove_all.tya --
 import dir as dir
