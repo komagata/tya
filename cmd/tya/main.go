@@ -758,31 +758,70 @@ func shouldEnableOpenSSL() bool {
 
 func opensslCompileFlags() []string {
 	flags := []string{}
+	if _, err := exec.LookPath("pkg-config"); err == nil {
+		if cflags, err := exec.Command("pkg-config", "--cflags", "openssl").Output(); err == nil {
+			flags = append(flags, strings.Fields(string(cflags))...)
+		}
+		if ldflags, err := exec.Command("pkg-config", "--libs", "openssl").Output(); err == nil {
+			for _, flag := range strings.Fields(string(ldflags)) {
+				if flag == "-lssl" || flag == "-lcrypto" {
+					continue
+				}
+				flags = append(flags, flag)
+			}
+		}
+	}
 	for _, dir := range []string{
+		"/opt/homebrew/opt/openssl@3/include",
 		"/opt/homebrew/include",
+		"/usr/local/opt/openssl@3/include",
 		"/usr/local/include",
+		"/home/linuxbrew/.linuxbrew/opt/openssl@3/include",
 		"/home/linuxbrew/.linuxbrew/include",
 	} {
 		if _, err := os.Stat(filepath.Join(dir, "openssl", "ssl.h")); err == nil {
-			flags = append(flags, "-I", dir)
+			if !hasCompileFlag(flags, "-I"+dir) {
+				flags = append(flags, "-I", dir)
+			}
 			break
 		}
 	}
 	for _, dir := range []string{
+		"/opt/homebrew/opt/openssl@3/lib",
 		"/opt/homebrew/lib",
+		"/usr/local/opt/openssl@3/lib",
 		"/usr/local/lib",
+		"/home/linuxbrew/.linuxbrew/opt/openssl@3/lib",
 		"/home/linuxbrew/.linuxbrew/lib",
 	} {
 		if _, err := os.Stat(filepath.Join(dir, "libssl.dylib")); err == nil {
-			flags = append(flags, "-L", dir)
+			if !hasCompileFlag(flags, "-L"+dir) {
+				flags = append(flags, "-L", dir)
+			}
 			break
 		}
 		if _, err := os.Stat(filepath.Join(dir, "libssl.so")); err == nil {
-			flags = append(flags, "-L", dir)
+			if !hasCompileFlag(flags, "-L"+dir) {
+				flags = append(flags, "-L", dir)
+			}
 			break
 		}
 	}
 	return flags
+}
+
+func hasCompileFlag(flags []string, compact string) bool {
+	splitPrefix := compact[:2]
+	splitValue := compact[2:]
+	for i, flag := range flags {
+		if flag == compact {
+			return true
+		}
+		if flag == splitPrefix && i+1 < len(flags) && flags[i+1] == splitValue {
+			return true
+		}
+	}
+	return false
 }
 
 func findRuntimeDir() (string, error) {

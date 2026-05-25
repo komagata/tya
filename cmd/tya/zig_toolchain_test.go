@@ -58,3 +58,17 @@ func TestResolveZigToolchainMissingReportsRepair(t *testing.T) {
 		}
 	}
 }
+
+func TestHasCompileFlagAcceptsSplitAndCompactForms(t *testing.T) {
+	flags := []string{"-I", "/opt/homebrew/opt/openssl@3/include", "-L/usr/local/lib"}
+
+	if !hasCompileFlag(flags, "-I/opt/homebrew/opt/openssl@3/include") {
+		t.Fatal("expected split -I flag to match compact form")
+	}
+	if !hasCompileFlag(flags, "-L/usr/local/lib") {
+		t.Fatal("expected compact -L flag to match compact form")
+	}
+	if hasCompileFlag(flags, "-L/opt/homebrew/opt/openssl@3/lib") {
+		t.Fatal("unexpected missing -L flag match")
+	}
+}
