@@ -75,6 +75,11 @@ typedef SOCKET TyaSocketHandle;
 #include <sys/syscall.h>
 typedef int TyaSocketHandle;
 #define TYA_INVALID_SOCKET (-1)
+#ifdef __APPLE__
+extern int syscall(int, ...);
+#else
+extern long syscall(long, ...);
+#endif
 #endif
 
 #ifdef __APPLE__
@@ -87,7 +92,6 @@ typedef int TyaSocketHandle;
 extern char *mkdtemp(char *);
 extern int mkstemps(char *, int);
 extern time_t timegm(struct tm *);
-extern long syscall(long, ...);
 #endif
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__)
