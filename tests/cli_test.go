@@ -242,6 +242,61 @@ func TestCLIFormatAndCheckAcceptedSyntax(t *testing.T) {
 	}
 }
 
+func TestCLIFormatAndCheckCollapsesImportBlankLines(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "imports.tya")
+	original := strings.Join([]string{
+		"import os",
+		"",
+		"import cli as cli",
+		"",
+		"class Cli",
+		"  initialize = ->",
+		"    self.value = 1",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(original), 0644); err != nil {
+		t.Fatal(err)
+	}
+	check := exec.Command("go", "run", "./cmd/tya", "format", "--check", path)
+	check.Dir = ".."
+	out, err := check.CombinedOutput()
+	if err == nil {
+		t.Fatal("expected format --check to report import blank-line drift")
+	}
+	if !strings.Contains(string(out), "not in formatted syntax") {
+		t.Fatalf("unexpected output: %s", out)
+	}
+
+	format := exec.Command("go", "run", "./cmd/tya", "format", "-w", path)
+	format.Dir = ".."
+	out, err = format.CombinedOutput()
+	if err != nil {
+		t.Fatalf("unexpected format error: %v\n%s", err, out)
+	}
+	got, readErr := os.ReadFile(path)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	want := strings.Join([]string{
+		"import os",
+		"import cli as cli",
+		"",
+		"class Cli",
+		"  initialize = ->",
+		"    self.value = 1",
+		"",
+	}, "\n")
+	if string(got) != want {
+		t.Fatalf("got %q want %q", got, want)
+	}
+	check = exec.Command("go", "run", "./cmd/tya", "format", "--check", path)
+	check.Dir = ".."
+	out, err = check.CombinedOutput()
+	if err != nil {
+		t.Fatalf("expected formatted imports to pass --check: %v\n%s", err, out)
+	}
+}
+
 func TestCLIFormatAndCheckClassMemberOrder(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "class_order.tya")
 	original := strings.Join([]string{

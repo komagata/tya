@@ -136,15 +136,15 @@ func isStdlibImport(name string) bool {
 
 // requiresBlankBefore reports whether canonical layout puts a blank
 // line between prev and cur at the top level. Per §3.5 / §8.4: a
-// blank line goes between two top-level definitions, between an
-// import and any following non-import statement, and at the
-// stdlib/user import-group boundary. All other transitions get no
-// blank line.
+// blank line goes between two top-level definitions and between an
+// import and any following non-import statement. Consecutive imports
+// always stay in one import block. All other transitions get no blank
+// line.
 func requiresBlankBefore(cur, prev ast.Stmt) bool {
-	pi, prevImport := prev.(*ast.ImportStmt)
-	ci, curImport := cur.(*ast.ImportStmt)
+	_, prevImport := prev.(*ast.ImportStmt)
+	_, curImport := cur.(*ast.ImportStmt)
 	if prevImport && curImport {
-		return isStdlibImport(pi.Name) != isStdlibImport(ci.Name)
+		return false
 	}
 	if prevImport && !curImport {
 		return true

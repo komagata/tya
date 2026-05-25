@@ -435,9 +435,16 @@ func TestUnparseImportSortAndBlankLines(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "import file\nimport string\n\nimport mylib\nimport zmod\n\ngreet = name -> name\nx = 1\n"
+	want := "import file\nimport string\nimport mylib\nimport zmod\n\ngreet = name -> name\nx = 1\n"
 	if got != want {
 		t.Errorf("import sort/blank-line layout mismatch\nwant:\n%s\ngot:\n%s", want, got)
+	}
+	again, err := unparseSource(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\n%s", again)
 	}
 }
 

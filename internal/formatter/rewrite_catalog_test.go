@@ -109,7 +109,6 @@ func TestRewriteCatalog(t *testing.T) {
 			}, "\n"),
 			want: strings.Join([]string{
 				"import file",
-				"",
 				"import app",
 				"",
 				"main = -> true",
