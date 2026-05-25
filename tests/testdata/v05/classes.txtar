@@ -9,6 +9,10 @@ exec go run ./cmd/tya run $WORK/main.tya
 stdout 'Hello, module\n'
 ! stderr .
 
+exec go run ./cmd/tya run $WORK/constructor_defaults.tya
+stdout 'guest:member\nkomagata:member\nkomagata:admin\n'
+! stderr .
+
 ! exec go run ./cmd/tya run $WORK/bad_class_name.tya
 stderr 'invalid class name user'
 
@@ -24,6 +28,12 @@ stderr 'duplicate instance member name'
 
 ! exec go run ./cmd/tya run $WORK/constructor_arity.tya
 stderr 'class User constructor expects 1 arguments'
+
+! exec go run ./cmd/tya run $WORK/constructor_defaults_too_few.tya
+stderr 'class User constructor expects 1 to 2 arguments'
+
+! exec go run ./cmd/tya run $WORK/constructor_defaults_too_many.tya
+stderr 'class User constructor expects 1 to 2 arguments'
 
 ! exec go run ./cmd/tya run $WORK/no_init_args.tya
 stderr 'class Marker has no init and takes no arguments'
@@ -90,6 +100,43 @@ import user
 
 item = user.User("module")
 print(item.greeting())
+
+-- constructor_defaults.tya --
+class Profile
+  initialize = name = "guest", role = "member" ->
+    self.name = name
+    self.role = role
+
+  label = ->
+    "{self.name}:{self.role}"
+
+class User
+  initialize = name, role = "member" ->
+    self.name = name
+    self.role = role
+
+  label = ->
+    "{self.name}:{self.role}"
+
+print(Profile().label())
+print(User("komagata").label())
+print(User("komagata", "admin").label())
+
+-- constructor_defaults_too_few.tya --
+class User
+  initialize = name, role = "member" ->
+    self.name = name
+    self.role = role
+
+user = User()
+
+-- constructor_defaults_too_many.tya --
+class User
+  initialize = name, role = "member" ->
+    self.name = name
+    self.role = role
+
+user = User("komagata", "admin", "extra")
 
 -- bad_class_name.tya --
 class user

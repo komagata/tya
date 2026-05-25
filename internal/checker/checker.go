@@ -559,6 +559,7 @@ type classInfo struct {
 	abstract              bool
 	final                 bool
 	hasInit               bool
+	initRequired          int
 	initArity             int
 	privateInit           bool
 	methods               map[string]int
@@ -583,6 +584,11 @@ type classInfo struct {
 	// directory package (single-file script, legacy `module` decl),
 	// and no cross-file check applies.
 	originFile string
+}
+
+type arityRange struct {
+	required int
+	max      int
 }
 
 type interfaceInfo struct {
@@ -1080,6 +1086,7 @@ func predeclareModuleClass(module string, class *ast.ClassDecl, scope *scope) er
 		// `init` and `_init` are recognized during the transition.
 		if method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			info.hasInit = true
+			info.initRequired = requiredParamCount(method.Func)
 			info.initArity = len(method.Func.Params)
 			if method.Private {
 				info.privateInit = true
@@ -1128,6 +1135,7 @@ func predeclareClass(class *ast.ClassDecl, scope *scope) error {
 		// `init` and `_init` are recognized during the transition.
 		if method.Name == "init" || method.Name == "_init" || method.Name == "initialize" {
 			info.hasInit = true
+			info.initRequired = requiredParamCount(method.Func)
 			info.initArity = len(method.Func.Params)
 			if method.Private {
 				info.privateInit = true
@@ -1519,10 +1527,10 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 					if !scope.classes[scope.currentClass].interfaceInitializers {
 						return fmt.Errorf("%d:%d: constructor super has no parent init", super.Tok.Line, super.Tok.Col)
 					}
-					arity = 0
+					arity = arityRange{required: 0, max: 0}
 				}
-				if len(n.Args) != arity {
-					return fmt.Errorf("%d:%d: super init expects %d arguments", super.Tok.Line, super.Tok.Col, arity)
+				if !arity.accepts(len(n.Args)) {
+					return fmt.Errorf("%d:%d: super init expects %s", super.Tok.Line, super.Tok.Col, arity.describe())
 				}
 			} else {
 				if _, ok := inheritedAbstractMethodArity(parent, scope.currentMethod, scope); ok {
@@ -2063,15 +2071,36 @@ func hasInheritanceCycle(start string, scope *scope) bool {
 	return false
 }
 
-func effectiveInit(info classInfo, scope *scope) (bool, int) {
+func effectiveInit(info classInfo, scope *scope) (bool, arityRange) {
 	if info.hasInit {
-		return true, info.initArity
+		return true, arityRange{required: info.initRequired, max: info.initArity}
 	}
 	if info.parent != "" {
-		arity, ok := inheritedInitArity(info.parent, scope)
-		return ok, arity
+		rng, ok := inheritedInitArity(info.parent, scope)
+		return ok, rng
 	}
-	return false, 0
+	return false, arityRange{}
+}
+
+func requiredParamCount(fn *ast.FuncLit) int {
+	required := len(fn.Params)
+	for i, def := range fn.Defaults {
+		if def != nil && i < required {
+			required = i
+		}
+	}
+	return required
+}
+
+func (r arityRange) accepts(argc int) bool {
+	return argc >= r.required && argc <= r.max
+}
+
+func (r arityRange) describe() string {
+	if r.required == r.max {
+		return fmt.Sprintf("%d arguments", r.max)
+	}
+	return fmt.Sprintf("%d to %d arguments", r.required, r.max)
 }
 
 // bareClassName strips the leading "module." prefix from a class
@@ -2140,8 +2169,8 @@ func checkClassCall(key, display string, line, col, argc int, scope *scope) erro
 	if !hasInit && argc > 0 {
 		return fmt.Errorf("%d:%d: class %s has no init and takes no arguments", line, col, display)
 	}
-	if hasInit && argc != arity {
-		return fmt.Errorf("%d:%d: class %s constructor expects %d arguments", line, col, display, arity)
+	if hasInit && !arity.accepts(argc) {
+		return fmt.Errorf("%d:%d: class %s constructor expects %s", line, col, display, arity.describe())
 	}
 	return nil
 }
@@ -2297,18 +2326,18 @@ func isKnownMutatingMethod(name string) bool {
 	}
 }
 
-func inheritedInitArity(className string, scope *scope) (int, bool) {
+func inheritedInitArity(className string, scope *scope) (arityRange, bool) {
 	for className != "" {
 		info, ok := scope.classes[className]
 		if !ok {
-			return 0, false
+			return arityRange{}, false
 		}
 		if info.hasInit && !info.privateInit {
-			return info.initArity, true
+			return arityRange{required: info.initRequired, max: info.initArity}, true
 		}
 		className = info.parent
 	}
-	return 0, false
+	return arityRange{}, false
 }
 
 func inheritedMethodArity(className string, method string, scope *scope) (int, bool) {
@@ -2425,10 +2454,8 @@ func checkConstructorSuper(class *ast.ClassDecl, method ast.ClassMethod, parent 
 		return fmt.Errorf("%d:%d: constructor super called more than once", method.Tok.Line, method.Tok.Col)
 	}
 	parentHasInit := false
-	parentInitArity := 0
-	if arity, ok := inheritedInitArity(parent, scope); ok {
+	if _, ok := inheritedInitArity(parent, scope); ok {
 		parentHasInit = true
-		parentInitArity = arity
 	}
 	hasInterfaceInit := classHasInterfaceInitializers(class, module, scope)
 	if count > 0 && !parentHasInit && !hasInterfaceInit {
@@ -2450,7 +2477,6 @@ func checkConstructorSuper(class *ast.ClassDecl, method ast.ClassMethod, parent 
 		return fmt.Errorf("%d:%d: super cannot call private parent constructor", method.Tok.Line, method.Tok.Col)
 	}
 	_ = class
-	_ = parentInitArity
 	return nil
 }
 

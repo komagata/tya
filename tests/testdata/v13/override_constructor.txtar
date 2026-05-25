@@ -5,6 +5,10 @@ exec go run ./cmd/tya run $WORK/override_constructor.tya
 stdout 'admin\nfound:7\nmodels\nadmin:ada:owner\nmodule:editor\n'
 ! stderr .
 
+exec go run ./cmd/tya run $WORK/super_constructor_defaults.tya
+stdout 'ada:member\n'
+! stderr .
+
 ! exec go run ./cmd/tya run $WORK/missing_override_target.tya
 stderr 'override method lable has no inherited method target'
 
@@ -97,6 +101,21 @@ admin_label = admin.label()
 print("{admin_label}:{admin.name}:{admin.role}")
 editor = accounts.Editor("ada", "editor")
 print(editor.label())
+
+-- super_constructor_defaults.tya --
+class User
+  initialize = name, role = "member" ->
+    self.name = name
+    self.role = role
+
+class Admin extends User
+  initialize = name ->
+    super(name)
+
+  label = ->
+    "{self.name}:{self.role}"
+
+print(Admin("ada").label())
 
 -- accounts.tya --
 class User

@@ -472,7 +472,10 @@ user = User("komagata")
 print(user.label())
 ```
 
-`initialize` is the constructor hook. Instance methods receive `self`.
+`initialize` is the constructor hook. Constructor calls use the same
+default-argument rules as ordinary method calls: callers may omit trailing
+defaulted `initialize` parameters, while required constructor parameters and
+the total parameter count are still enforced. Instance methods receive `self`.
 Instance fields are created by assignment to `self.<name>`.
 
 Tya supports:
