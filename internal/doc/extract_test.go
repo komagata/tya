@@ -24,6 +24,35 @@ func TestExtractFileIncludesUnderscoreTopLevelFunction(t *testing.T) {
 	}
 }
 
+func TestExtractFileIncludesDefaultParameterValuesInSignatures(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "csv.tya")
+	src := strings.Join([]string{
+		"class Csv",
+		"  # Initialize docs",
+		"  initialize: options = {} ->",
+		"    nil",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	items, err := ExtractFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, item := range items {
+		if item.Name == "Csv.initialize" {
+			if item.Signature != "Csv.initialize(options = {})" {
+				t.Fatalf("signature = %q", item.Signature)
+			}
+			return
+		}
+	}
+	t.Fatalf("Csv.initialize not found in %#v", items)
+}
+
 func TestDocCommentAttachment(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "api.tya")

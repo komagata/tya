@@ -524,6 +524,8 @@ func removedPrimitiveModuleCallError(member *ast.MemberExpr, scope *scope) error
 			replacement = "dict.entries()"
 		case "merge":
 			replacement = "dict.merge(other)"
+		case "update":
+			replacement = "dict.update(other)"
 		}
 	case "value":
 		if member.Name == "nil?" {
@@ -1704,6 +1706,7 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 	hasPrivateInit := false
 	classBody := newScope(scope)
 	classBody.inClassBody = true
+	classBody.currentClass = key
 	for _, field := range class.Fields {
 		if !valueNameRE.MatchString(field.Name) {
 			return fmt.Errorf("%d:%d: invalid field name %s", field.Tok.Line, field.Tok.Col, field.Name)
@@ -3359,7 +3362,7 @@ func isNegativeNumberLiteral(expr ast.Expr) bool {
 
 func isDictMethodName(name string) bool {
 	switch name {
-	case "class", "len", "empty?", "has", "has?", "get", "set", "delete", "keys", "values", "entries", "merge", "to_s", "equal?", "iter", "sequence":
+	case "class", "len", "empty?", "has", "has?", "get", "set", "delete", "keys", "values", "entries", "merge", "update", "to_s", "equal?", "iter", "sequence":
 		return true
 	default:
 		return false

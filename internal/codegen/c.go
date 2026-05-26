@@ -556,7 +556,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		genericName := fmt.Sprintf("__generic_iter%d", g.temp)
 		g.temp++
 		g.line(fmt.Sprintf("TyaValue %s = %s;", iterName, iterable))
-		g.line(fmt.Sprintf("if (%s.kind == TYA_ARRAY || %s.kind == TYA_STRING || %s.kind == TYA_DICT) {", iterName, iterName, iterName))
+		g.line(fmt.Sprintf("if (%s.kind == TYA_ARRAY || %s.kind == TYA_STRING || %s.kind == TYA_BYTES || %s.kind == TYA_DICT) {", iterName, iterName, iterName, iterName))
 		g.indent++
 		g.line(fmt.Sprintf("for (int %s = 0; %s < (int)tya_len(%s).number; %s++) {", indexName, indexName, iterName, indexName))
 		g.indent++
@@ -1543,6 +1543,11 @@ func (g *cgen) emitClass(name string, class *ast.ClassDecl, classRef string) (st
 			initMethod = method
 		}
 	}
+	prevClass, prevClassRef := g.className, g.classRef
+	g.className, g.classRef = name, classRef
+	defer func() {
+		g.className, g.classRef = prevClass, prevClassRef
+	}()
 	sym := cFuncName(name+"_new", g.temp)
 	g.temp++
 	var out strings.Builder
@@ -3650,6 +3655,10 @@ func standardDictCall(name string, args []string) string {
 	case "merge":
 		if len(args) == 2 {
 			return fmt.Sprintf("tya_dict_merge(%s, %s)", args[0], args[1])
+		}
+	case "update":
+		if len(args) == 2 {
+			return fmt.Sprintf("tya_dict_update(%s, %s)", args[0], args[1])
 		}
 	case "entries":
 		if len(args) == 1 {

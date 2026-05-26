@@ -27,6 +27,13 @@ func TestCheckAllowsVariableReassignment(t *testing.T) {
 	}
 }
 
+func TestCheckAllowsSelfClassConstantInFieldInitializer(t *testing.T) {
+	prog := parse(t, "class Csv\n  SEPARATOR: \",\"\n\n  options: { separator: Self.SEPARATOR, header: false }\n")
+	if err := Check(prog); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCheckRejectsKindChangingReassignment(t *testing.T) {
 	prog := parse(t, "retry_count = 3\nretry_count = \"three\"\n")
 	err := Check(prog)

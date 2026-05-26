@@ -603,14 +603,17 @@ sequences, I/O, and structured data:
 - `Iterator` requires `has_next()` and `next()`;
 - `Iterable` requires `iter()` and provides `sequence()`;
 - `Sequence implements Iterable` and provides lazy-style `map(fn)`,
-  `filter(fn)`, `take(n)`, `drop(n)`, `reduce(initial, fn)`, and `to_a()`;
+  `filter(fn)`, `take(n)`, `drop(n)`, `reduce(initial, fn)`, `each(fn)`,
+  `any?(fn)`, `all?(fn)`, `find(fn)`, and `to_a()`;
 - `Readable` requires `read(size)`;
 - `Writable` requires `write(data)`;
 - `Closable` requires `close()`;
 - `Flushable` requires `flush()`;
 - `Serializable` requires `to_data()`.
 
-Arrays, dictionaries, and strings conform to `Iterable` as primitive values.
+Arrays, dictionaries, strings, and bytes conform to `Iterable` as primitive
+values. String iteration yields one-character strings. Bytes iteration yields
+numeric byte values.
 `for ... in` consumes primitive iterables directly and consumes user-defined
 iterables through `iter()`. I/O protocol interfaces are defined in the relevant
 standard-library packages such as `io` and `net/socket`; they document shared
@@ -797,7 +800,7 @@ is byte-based.
 Array index assignment requires an existing array index and fails on
 out-of-range writes. Dictionary index assignment may create a new key.
 Arrays and dictionaries are mutable. Strings and bytes are immutable.
-`Array.push`, `Dict.set`, and `Dict.delete` return `nil`. `Array.pop` returns
+`Array.push`, `Dict.set`, `Dict.update`, and `Dict.delete` return `nil`. `Array.pop` returns
 the removed value, or `nil` when the array is empty.
 
 ### Error Values
@@ -1736,7 +1739,8 @@ drop_sequence              lazy drop sequence
 `gte?`, and `between?`. `Equatable` requires `equal?(other)`. `Stringable`
 requires `to_s()`. `Iterable` requires `iter()` and provides `sequence()`.
 `Sequence` provides `iter()`, `map(fn)`, `filter(fn)`, `take(n)`, `drop(n)`,
-`reduce(initial, fn)`, and `to_a()`.
+`reduce(initial, fn)`, `each(fn)`, `any?(fn)`, `all?(fn)`, `find(fn)`, and
+`to_a()`.
 
 ### Environment And Process
 

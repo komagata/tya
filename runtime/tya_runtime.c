@@ -253,6 +253,7 @@ static TyaValue tya_method_keys(TyaValue receiver, TyaValue a, TyaValue b, TyaVa
 static TyaValue tya_method_values(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_entries(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_merge(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_update(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_channel_send(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_channel_receive(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_channel_receive_timeout(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
@@ -278,6 +279,10 @@ static TyaValue tya_method_sequence_filter(TyaValue receiver, TyaValue a, TyaVal
 static TyaValue tya_method_sequence_take(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_sequence_drop(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_sequence_reduce(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_sequence_each(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_sequence_any_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_sequence_all_p(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
+static TyaValue tya_method_sequence_find(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 static TyaValue tya_method_sequence_to_a(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f);
 
 /* TyaResource owns a sync primitive (mutex / atomic / wait group).
@@ -1339,6 +1344,17 @@ TyaValue tya_dict_merge(TyaValue left, TyaValue right) {
   return out;
 }
 
+TyaValue tya_dict_update(TyaValue left, TyaValue right) {
+  if (left.kind == TYA_DICT && left.dict != NULL && right.kind == TYA_DICT && right.dict != NULL) {
+    for (int i = 0; i < right.dict->len; i++) {
+      if (right.dict->entries[i].key != NULL) {
+        tya_set_index(left, tya_string(right.dict->entries[i].key), right.dict->entries[i].value);
+      }
+    }
+  }
+  return tya_nil();
+}
+
 TyaValue tya_dict_entries(TyaValue dict) {
   TyaValue out = tya_array(NULL, 0);
   if (dict.kind != TYA_DICT || dict.dict == NULL) {
@@ -1385,6 +1401,10 @@ static TyaValue tya_sequence_object(const char *kind, TyaValue source, TyaValue 
   tya_set_member(seq, "take", tya_bind_method(seq, tya_method_sequence_take));
   tya_set_member(seq, "drop", tya_bind_method(seq, tya_method_sequence_drop));
   tya_set_member(seq, "reduce", tya_bind_method(seq, tya_method_sequence_reduce));
+  tya_set_member(seq, "each", tya_bind_method(seq, tya_method_sequence_each));
+  tya_set_member(seq, "any?", tya_bind_method(seq, tya_method_sequence_any_p));
+  tya_set_member(seq, "all?", tya_bind_method(seq, tya_method_sequence_all_p));
+  tya_set_member(seq, "find", tya_bind_method(seq, tya_method_sequence_find));
   tya_set_member(seq, "to_a", tya_bind_method(seq, tya_method_sequence_to_a));
   return seq;
 }
@@ -1420,6 +1440,7 @@ static TyaValue tya_member_optional(TyaValue value, const char *key) {
 TyaValue tya_iter(TyaValue value) {
   if (value.kind == TYA_ARRAY) return tya_iterator_object("array", value);
   if (value.kind == TYA_STRING) return tya_iterator_object("string", value);
+  if (value.kind == TYA_BYTES) return tya_iterator_object("bytes", value);
   if (value.kind == TYA_DICT) return tya_iterator_object("dict", value);
   TyaValue method = tya_member(value, "iter");
   if (method.kind == TYA_FUNCTION) return tya_call0(method);
@@ -1441,7 +1462,7 @@ TyaValue tya_iterator_has_next(TyaValue iter) {
   }
   TyaValue source = tya_member(iter, "source");
   int index = (int)tya_member(iter, "index").number;
-  if (strcmp(kind.string, "array") == 0 || strcmp(kind.string, "string") == 0 || strcmp(kind.string, "dict") == 0) {
+  if (strcmp(kind.string, "array") == 0 || strcmp(kind.string, "string") == 0 || strcmp(kind.string, "bytes") == 0 || strcmp(kind.string, "dict") == 0) {
     return tya_bool(index < (int)tya_len(source).number);
   }
   if (strcmp(kind.string, "map") == 0 || strcmp(kind.string, "drop") == 0) {
@@ -1484,7 +1505,7 @@ TyaValue tya_iterator_next(TyaValue iter) {
   TyaValue source = tya_member_optional(iter, "source");
   int index = (int)tya_member_optional(iter, "index").number;
   tya_set_member(iter, "index", tya_number((double)(index + 1)));
-  if (strcmp(kind.string, "array") == 0 || strcmp(kind.string, "string") == 0) {
+  if (strcmp(kind.string, "array") == 0 || strcmp(kind.string, "string") == 0 || strcmp(kind.string, "bytes") == 0) {
     return tya_index(source, tya_number((double)index));
   }
   if (strcmp(kind.string, "dict") == 0) {
@@ -4098,6 +4119,8 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
   case TYA_BYTES:
     if (strcmp(key, "len") == 0) return tya_bind_method(receiver, tya_method_len);
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
+    if (strcmp(key, "iter") == 0) return tya_bind_method(receiver, tya_method_iter);
+    if (strcmp(key, "sequence") == 0) return tya_bind_method(receiver, tya_method_sequence);
     return tya_nil();
   case TYA_ARRAY:
     if (strcmp(key, "len") == 0) return tya_bind_method(receiver, tya_method_len);
@@ -4134,6 +4157,7 @@ static TyaValue tya_primitive_member(TyaValue receiver, const char *key) {
     if (strcmp(key, "values") == 0) return tya_bind_method(receiver, tya_method_values);
     if (strcmp(key, "entries") == 0) return tya_bind_method(receiver, tya_method_entries);
     if (strcmp(key, "merge") == 0) return tya_bind_method(receiver, tya_method_merge);
+    if (strcmp(key, "update") == 0) return tya_bind_method(receiver, tya_method_update);
     if (strcmp(key, "to_s") == 0) return tya_bind_method(receiver, tya_method_to_s);
     if (strcmp(key, "equal?") == 0) return tya_bind_method(receiver, tya_method_equal_p);
     if (strcmp(key, "iter") == 0) return tya_bind_method(receiver, tya_method_iter);
@@ -4255,6 +4279,7 @@ static TyaValue tya_method_keys(TyaValue receiver, TyaValue a, TyaValue b, TyaVa
 static TyaValue tya_method_values(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_values(receiver); }
 static TyaValue tya_method_entries(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_dict_entries(receiver); }
 static TyaValue tya_method_merge(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_dict_merge(receiver, a); }
+static TyaValue tya_method_update(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_dict_update(receiver, a); }
 static TyaValue tya_method_channel_send(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_channel_send(receiver, a); }
 static TyaValue tya_method_channel_receive(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)a; (void)b; (void)c; (void)d; return tya_channel_receive(receiver); }
 static TyaValue tya_method_channel_receive_timeout(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) { (void)b; (void)c; (void)d; return tya_channel_receive_timeout(receiver, a); }
@@ -4314,6 +4339,39 @@ static TyaValue tya_method_sequence_reduce(TyaValue receiver, TyaValue initial, 
     acc = tya_call2(fn, acc, tya_iterator_next(iter));
   }
   return acc;
+}
+static TyaValue tya_method_sequence_each(TyaValue receiver, TyaValue fn, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d;
+  TyaValue iter = tya_iter(receiver);
+  while (tya_truthy(tya_iterator_has_next(iter))) {
+    (void)tya_call1(fn, tya_iterator_next(iter));
+  }
+  return tya_nil();
+}
+static TyaValue tya_method_sequence_any_p(TyaValue receiver, TyaValue fn, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d;
+  TyaValue iter = tya_iter(receiver);
+  while (tya_truthy(tya_iterator_has_next(iter))) {
+    if (tya_truthy(tya_call1(fn, tya_iterator_next(iter)))) return tya_bool(true);
+  }
+  return tya_bool(false);
+}
+static TyaValue tya_method_sequence_all_p(TyaValue receiver, TyaValue fn, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d;
+  TyaValue iter = tya_iter(receiver);
+  while (tya_truthy(tya_iterator_has_next(iter))) {
+    if (!tya_truthy(tya_call1(fn, tya_iterator_next(iter)))) return tya_bool(false);
+  }
+  return tya_bool(true);
+}
+static TyaValue tya_method_sequence_find(TyaValue receiver, TyaValue fn, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
+  (void)b; (void)c; (void)d;
+  TyaValue iter = tya_iter(receiver);
+  while (tya_truthy(tya_iterator_has_next(iter))) {
+    TyaValue item = tya_iterator_next(iter);
+    if (tya_truthy(tya_call1(fn, item))) return item;
+  }
+  return tya_nil();
 }
 static TyaValue tya_method_sequence_to_a(TyaValue receiver, TyaValue a, TyaValue b, TyaValue c, TyaValue d, TyaValue e, TyaValue f) {
   (void)a; (void)b; (void)c; (void)d;

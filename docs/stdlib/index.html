@@ -117,25 +117,25 @@
 <li><a href="items/static-method_stdlib-base64-Base64_Base64-decode.html"><code>static Base64.decode(text)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
 <li><a href="items/static-method_stdlib-base64-Base64_Base64-encode.html"><code>static Base64.encode(value)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
 <li><a href="items/static-method_stdlib-bytes-Bytes_Bytes-at.html"><code>static Bytes.at(value, index)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/static-method_stdlib-bytes-Bytes_Bytes-index_of.html"><code>static Bytes.index_of(value, byte, start)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/static-method_stdlib-bytes-Bytes_Bytes-index_of.html"><code>static Bytes.index_of(value, byte, start = 0)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
 <li><a href="items/static-method_stdlib-bytes-Bytes_Bytes-len.html"><code>static Bytes.len(value)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
 <li><a href="items/static-method_stdlib-dir-Dir_Dir-list.html"><code>static Dir.list(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
 <li><a href="items/static-method_stdlib-dir-Dir_Dir-mkdir.html"><code>static Dir.mkdir(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
 <li><a href="items/static-method_stdlib-dir-Dir_Dir-mkdir_all.html"><code>static Dir.mkdir_all(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
 <li><a href="items/static-method_stdlib-dir-Dir_Dir-remove_all.html"><code>static Dir.remove_all(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
 <li><a href="items/static-method_stdlib-dir-Dir_Dir-rmdir.html"><code>static Dir.rmdir(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/static-method_stdlib-dir-Dir_Dir-temp_dir.html"><code>static Dir.temp_dir(prefix)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/static-method_stdlib-dir-Dir_Dir-walk.html"><code>static Dir.walk(path, fn, options)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/static-method_stdlib-dir-Dir_Dir-temp_dir.html"><code>static Dir.temp_dir(prefix = &quot;tya&quot;)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/static-method_stdlib-dir-Dir_Dir-walk.html"><code>static Dir.walk(path, fn, options = {})</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-append.html"><code>static File.append(path, text)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-chmod.html"><code>static File.chmod(path, mode)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/static-method_stdlib-file-File_File-copy.html"><code>static File.copy(src, dst, options)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/static-method_stdlib-file-File_File-copy.html"><code>static File.copy(src, dst, options = {})</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-exists-.html"><code>static File.exists?(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-read.html"><code>static File.read(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-read_bytes.html"><code>static File.read_bytes(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-remove.html"><code>static File.remove(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-rename.html"><code>static File.rename(old_path, new_path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-stat.html"><code>static File.stat(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/static-method_stdlib-file-File_File-temp.html"><code>static File.temp(prefix, suffix)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/static-method_stdlib-file-File_File-temp.html"><code>static File.temp(prefix = &quot;tya&quot;, suffix = &quot;&quot;)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-write.html"><code>static File.write(path, text)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-file-File_File-write_bytes.html"><code>static File.write_bytes(path, bytes)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/static-method_stdlib-json-Json_Json-dump.html"><code>static Json.dump(value)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
@@ -164,19 +164,19 @@
 <li><a href="items/method_stdlib-net-ip-Address_Address-format_v6.html"><code>Address.format_v6(groups, mapped)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-hex_digit.html"><code>Address.hex_digit(c)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-hex_to_int.html"><code>Address.hex_to_int(text)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
-<li><a href="items/method_stdlib-net-ip-Address_Address-initialize.html"><code>Address.initialize(version, bytes, groups, mapped)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
+<li><a href="items/method_stdlib-net-ip-Address_Address-initialize.html"><code>Address.initialize(version = nil, bytes = nil, groups = nil, mapped = false)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-int_to_hex.html"><code>Address.int_to_hex(n)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-last_index.html"><code>Address.last_index(text, needle)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
-<li><a href="items/method_stdlib-net-ip-Address_Address-loopback-.html"><code>Address.loopback?(addr)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
+<li><a href="items/method_stdlib-net-ip-Address_Address-loopback-.html"><code>Address.loopback?(addr = nil)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-parse.html"><code>Address.parse(text)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-parse_v4.html"><code>Address.parse_v4(text)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-parse_v6.html"><code>Address.parse_v6(text)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-parse_v6_side.html"><code>Address.parse_v6_side(text)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
-<li><a href="items/method_stdlib-net-ip-Address_Address-private_address-.html"><code>Address.private_address?(addr)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
-<li><a href="items/method_stdlib-net-ip-Address_Address-to_s.html"><code>Address.to_s(addr)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
-<li><a href="items/method_stdlib-net-ip-Address_Address-unspecified-.html"><code>Address.unspecified?(addr)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
+<li><a href="items/method_stdlib-net-ip-Address_Address-private_address-.html"><code>Address.private_address?(addr = nil)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
+<li><a href="items/method_stdlib-net-ip-Address_Address-to_s.html"><code>Address.to_s(addr = nil)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
+<li><a href="items/method_stdlib-net-ip-Address_Address-unspecified-.html"><code>Address.unspecified?(addr = nil)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-valid-.html"><code>Address.valid?(text)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
-<li><a href="items/method_stdlib-net-ip-Address_Address-version_of.html"><code>Address.version_of(addr)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
+<li><a href="items/method_stdlib-net-ip-Address_Address-version_of.html"><code>Address.version_of(addr = nil)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Address_Address-zero_run.html"><code>Address.zero_run(groups)</code></a> &mdash; <code>stdlib/net/ip/Address.tya</code></li>
 <li><a href="items/method_stdlib-compiler-ast-Ast_Ast-children.html"><code>Ast.children(node)</code></a> &mdash; <code>stdlib/compiler/ast/Ast.tya</code></li>
 <li><a href="items/method_stdlib-compiler-ast-Ast_Ast-kind.html"><code>Ast.kind(node)</code></a> &mdash; <code>stdlib/compiler/ast/Ast.tya</code></li>
@@ -184,36 +184,36 @@
 <li><a href="items/method_stdlib-compiler-ast-Ast_Ast-push_children.html"><code>Ast.push_children(out, node, key)</code></a> &mdash; <code>stdlib/compiler/ast/Ast.tya</code></li>
 <li><a href="items/method_stdlib-compiler-ast-Ast_Ast-span.html"><code>Ast.span(node)</code></a> &mdash; <code>stdlib/compiler/ast/Ast.tya</code></li>
 <li><a href="items/method_stdlib-compiler-ast-Ast_Ast-walk.html"><code>Ast.walk(node, visitor)</code></a> &mdash; <code>stdlib/compiler/ast/Ast.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-array.html"><code>Bytes.array(value)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-array.html"><code>Bytes.array(value = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
 <li><a href="items/method_stdlib-bytes-Bytes_Bytes-concat.html"><code>Bytes.concat(left, right)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-from_array.html"><code>Bytes.from_array(values)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-from_text.html"><code>Bytes.from_text(text)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-initialize.html"><code>Bytes.initialize(value)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-new.html"><code>Bytes.new(values)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-of.html"><code>Bytes.of(text)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-from_array.html"><code>Bytes.from_array(values = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-from_text.html"><code>Bytes.from_text(text = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-initialize.html"><code>Bytes.initialize(value = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-new.html"><code>Bytes.new(values = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-of.html"><code>Bytes.of(text = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
 <li><a href="items/method_stdlib-bytes-Bytes_Bytes-slice.html"><code>Bytes.slice(value, start, end)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-text.html"><code>Bytes.text(value)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-to_array.html"><code>Bytes.to_array(value)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
-<li><a href="items/method_stdlib-bytes-Bytes_Bytes-to_text.html"><code>Bytes.to_text(value)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-text.html"><code>Bytes.text(value = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-to_array.html"><code>Bytes.to_array(value = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/method_stdlib-bytes-Bytes_Bytes-to_text.html"><code>Bytes.to_text(value = nil)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
 <li><a href="items/method_stdlib-xml-CData_CData-initialize.html"><code>CData.initialize(text)</code></a> &mdash; <code>stdlib/xml/CData.tya</code></li>
 <li><a href="items/method_stdlib-xml-CData_CData-new.html"><code>CData.new(text)</code></a> &mdash; <code>stdlib/xml/CData.tya</code></li>
 <li><a href="items/method_stdlib-compiler-checker-Checker_Checker-check.html"><code>Checker.check(source)</code></a> &mdash; <code>stdlib/compiler/checker/Checker.tya</code></li>
 <li><a href="items/method_stdlib-compiler-checker-Checker_Checker-check_ast.html"><code>Checker.check_ast(program)</code></a> &mdash; <code>stdlib/compiler/checker/Checker.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-area.html"><code>Circle.area(circle)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-bounding_rect.html"><code>Circle.bounding_rect(circle)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-center.html"><code>Circle.center(circle)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-circumference.html"><code>Circle.circumference(circle)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-contains_point-.html"><code>Circle.contains_point?(circle, point)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-equal-.html"><code>Circle.equal?(a, b)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-area.html"><code>Circle.area(circle = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-bounding_rect.html"><code>Circle.bounding_rect(circle = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-center.html"><code>Circle.center(circle = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-circumference.html"><code>Circle.circumference(circle = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-contains_point-.html"><code>Circle.contains_point?(circle, point = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-equal-.html"><code>Circle.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Circle_Circle-expect.html"><code>Circle.expect(value, name)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Circle_Circle-from_center.html"><code>Circle.from_center(center, radius)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-initialize.html"><code>Circle.initialize(x, y, radius)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-intersects_circle-.html"><code>Circle.intersects_circle?(a, b)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-intersects_rect-.html"><code>Circle.intersects_rect?(circle, rect)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-initialize.html"><code>Circle.initialize(x = 0, y = 0, radius = 0)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-intersects_circle-.html"><code>Circle.intersects_circle?(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-intersects_rect-.html"><code>Circle.intersects_rect?(circle, rect = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Circle_Circle-new.html"><code>Circle.new(x, y, radius)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Circle_Circle-number.html"><code>Circle.number(value, name)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Circle_Circle-radius_value.html"><code>Circle.radius_value(value)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Circle_Circle-translate.html"><code>Circle.translate(circle, vector)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Circle_Circle-translate.html"><code>Circle.translate(circle, vector = nil)</code></a> &mdash; <code>stdlib/geometry/Circle.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-apply_defaults.html"><code>Cli.apply_defaults(state)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-assign_value.html"><code>Cli.assign_value(state, name, opt, value)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-check_required.html"><code>Cli.check_required(state)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
@@ -222,69 +222,69 @@
 <li><a href="items/method_stdlib-cli-Cli_Cli-initialize.html"><code>Cli.initialize(value)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-name_for_alias.html"><code>Cli.name_for_alias(spec, alias)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-option_type.html"><code>Cli.option_type(opt)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
-<li><a href="items/method_stdlib-cli-Cli_Cli-parse.html"><code>Cli.parse(args, spec)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
+<li><a href="items/method_stdlib-cli-Cli_Cli-parse.html"><code>Cli.parse(args, spec = nil)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-parse_bool_value.html"><code>Cli.parse_bool_value(state, name, value)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-parse_long.html"><code>Cli.parse_long(state, i)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
-<li><a href="items/method_stdlib-cli-Cli_Cli-parse_or_exit.html"><code>Cli.parse_or_exit(args, spec)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
+<li><a href="items/method_stdlib-cli-Cli_Cli-parse_or_exit.html"><code>Cli.parse_or_exit(args, spec = nil)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-parse_short.html"><code>Cli.parse_short(state, i)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-spec_bool.html"><code>Cli.spec_bool(spec, name, fallback)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-spec_options.html"><code>Cli.spec_options(spec)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-spec_string.html"><code>Cli.spec_string(spec, name, fallback)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-cli-Cli_Cli-unknown.html"><code>Cli.unknown(state, raw)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
-<li><a href="items/method_stdlib-cli-Cli_Cli-usage.html"><code>Cli.usage(command, spec)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
+<li><a href="items/method_stdlib-cli-Cli_Cli-usage.html"><code>Cli.usage(command, spec = nil)</code></a> &mdash; <code>stdlib/cli/Cli.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-chomp.html"><code>Client.chomp(text)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
-<li><a href="items/method_stdlib-net-http-Client_Client-get.html"><code>Client.get(target)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
+<li><a href="items/method_stdlib-net-http-Client_Client-get.html"><code>Client.get(target = nil)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-hex_to_i.html"><code>Client.hex_to_i(text)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-host_header.html"><code>Client.host_header(host, port)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-index_of.html"><code>Client.index_of(text, needle, start)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-initialize.html"><code>Client.initialize(target)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-parse_url.html"><code>Client.parse_url(target)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
-<li><a href="items/method_stdlib-net-http-Client_Client-post.html"><code>Client.post(target, body)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
+<li><a href="items/method_stdlib-net-http-Client_Client-post.html"><code>Client.post(target, body = nil)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-read_chunked.html"><code>Client.read_chunked(s)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-read_response.html"><code>Client.read_response(s)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Client_Client-read_trailers.html"><code>Client.read_trailers(s)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
-<li><a href="items/method_stdlib-net-http-Client_Client-request.html"><code>Client.request(method, target, opts)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
+<li><a href="items/method_stdlib-net-http-Client_Client-request.html"><code>Client.request(method, target = nil, opts = nil)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-io-Reader_Closable-close.html"><code>Closable.close()</code></a> &mdash; <code>stdlib/io/Reader.tya</code></li>
 <li><a href="items/method_stdlib-net-socket-Socket_Closable-close.html"><code>Closable.close()</code></a> &mdash; <code>stdlib/net/socket/Socket.tya</code></li>
 <li><a href="items/method_stdlib-compress-Codec_Codec-compress.html"><code>Codec.compress(value)</code></a> &mdash; <code>stdlib/compress/Codec.tya</code></li>
 <li><a href="items/method_stdlib-compress-Codec_Codec-decompress.html"><code>Codec.decompress(value)</code></a> &mdash; <code>stdlib/compress/Codec.tya</code></li>
-<li><a href="items/method_stdlib-image-Codec_Codec-identify.html"><code>Codec.identify(data)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
-<li><a href="items/method_stdlib-image-Codec_Codec-identify_file.html"><code>Codec.identify_file(path)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
-<li><a href="items/method_stdlib-image-Codec_Codec-initialize.html"><code>Codec.initialize(value)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
-<li><a href="items/method_stdlib-image-Codec_Codec-metadata.html"><code>Codec.metadata(data)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
-<li><a href="items/method_stdlib-image-Codec_Codec-metadata_file.html"><code>Codec.metadata_file(path)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
+<li><a href="items/method_stdlib-image-Codec_Codec-identify.html"><code>Codec.identify(data = nil)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
+<li><a href="items/method_stdlib-image-Codec_Codec-identify_file.html"><code>Codec.identify_file(path = nil)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
+<li><a href="items/method_stdlib-image-Codec_Codec-initialize.html"><code>Codec.initialize(value = nil)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
+<li><a href="items/method_stdlib-image-Codec_Codec-metadata.html"><code>Codec.metadata(data = nil)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
+<li><a href="items/method_stdlib-image-Codec_Codec-metadata_file.html"><code>Codec.metadata_file(path = nil)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
 <li><a href="items/method_stdlib-image-Codec_Codec-supported_format-.html"><code>Codec.supported_format?(format)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-abs.html"><code>Color.abs(value)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-black.html"><code>Color.black()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-blend.html"><code>Color.blend(a, b, t)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-blend.html"><code>Color.blend(a, b, t = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-blue.html"><code>Color.blue()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-channel.html"><code>Color.channel(value, name)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-contrast_ratio.html"><code>Color.contrast_ratio(a, b)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-contrast_ratio.html"><code>Color.contrast_ratio(a, b = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-css.html"><code>Color.css(text)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-css_rgb.html"><code>Color.css_rgb(text, start, has_alpha)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-cyan.html"><code>Color.cyan()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-darken.html"><code>Color.darken(color, amount)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-darken.html"><code>Color.darken(color, amount = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-digit_char.html"><code>Color.digit_char(value)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-equal-.html"><code>Color.equal?(a, b)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-equal-.html"><code>Color.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-from_array.html"><code>Color.from_array(values)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-gray.html"><code>Color.gray(value, alpha)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-gray50.html"><code>Color.gray50()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-grayscale.html"><code>Color.grayscale(color)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-grayscale.html"><code>Color.grayscale(color = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-green.html"><code>Color.green()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-hex.html"><code>Color.hex(text)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-hex_byte.html"><code>Color.hex_byte(value)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-hex_digit.html"><code>Color.hex_digit(c)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-hex_pair.html"><code>Color.hex_pair(hi, lo)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-initialize.html"><code>Color.initialize(r, g, b, a)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-invert.html"><code>Color.invert(color)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-lighten.html"><code>Color.lighten(color, amount)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-initialize.html"><code>Color.initialize(r = nil, g = nil, b = nil, a = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-invert.html"><code>Color.invert(color = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-lighten.html"><code>Color.lighten(color, amount = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-linear.html"><code>Color.linear(value)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-luminance.html"><code>Color.luminance(color)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-luminance.html"><code>Color.luminance(color = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-magenta.html"><code>Color.magenta()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-mix_channel.html"><code>Color.mix_channel(a, b, t)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-nearly_equal-.html"><code>Color.nearly_equal?(a, b, tolerance)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-nearly_equal-.html"><code>Color.nearly_equal?(a, b, tolerance = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-new.html"><code>Color.new(r, g, b, a)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-over.html"><code>Color.over(foreground, background)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-over.html"><code>Color.over(foreground, background = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-ratio.html"><code>Color.ratio(value, name)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-red.html"><code>Color.red()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-rgb.html"><code>Color.rgb(r, g, b)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
@@ -294,7 +294,7 @@
 <li><a href="items/method_stdlib-color-Color_Color-to_hex.html"><code>Color.to_hex(include_alpha)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-transparent.html"><code>Color.transparent()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-white.html"><code>Color.white()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
-<li><a href="items/method_stdlib-color-Color_Color-with_alpha.html"><code>Color.with_alpha(color, alpha)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
+<li><a href="items/method_stdlib-color-Color_Color-with_alpha.html"><code>Color.with_alpha(color, alpha = nil)</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-color-Color_Color-yellow.html"><code>Color.yellow()</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/method_stdlib-xml-Comment_Comment-initialize.html"><code>Comment.initialize(text)</code></a> &mdash; <code>stdlib/xml/Comment.tya</code></li>
 <li><a href="items/method_stdlib-xml-Comment_Comment-new.html"><code>Comment.new(text)</code></a> &mdash; <code>stdlib/xml/Comment.tya</code></li>
@@ -304,19 +304,14 @@
 <li><a href="items/method_stdlib-comparable_Comparable-gte-.html"><code>Comparable.gte?(other)</code></a> &mdash; <code>stdlib/comparable.tya</code></li>
 <li><a href="items/method_stdlib-comparable_Comparable-lt-.html"><code>Comparable.lt?(other)</code></a> &mdash; <code>stdlib/comparable.tya</code></li>
 <li><a href="items/method_stdlib-comparable_Comparable-lte-.html"><code>Comparable.lte?(other)</code></a> &mdash; <code>stdlib/comparable.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-default_options.html"><code>Csv.default_options()</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-dump.html"><code>Csv.dump(rows, options)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-dump_array_rows.html"><code>Csv.dump_array_rows(rows, separator)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-escape_field.html"><code>Csv.escape_field(field, separator)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-initialize.html"><code>Csv.initialize(value)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-merge_options.html"><code>Csv.merge_options(options)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-parse.html"><code>Csv.parse(text, options)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-parse_rows.html"><code>Csv.parse_rows(text, separator)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
-<li><a href="items/method_stdlib-csv-Csv_Csv-stringify.html"><code>Csv.stringify(rows, options)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
+<li><a href="items/method_stdlib-csv-Csv_Csv-dump.html"><code>Csv.dump(options = nil)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
+<li><a href="items/method_stdlib-csv-Csv_Csv-initialize.html"><code>Csv.initialize(options = nil)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
+<li><a href="items/method_stdlib-csv-Csv_Csv-parse.html"><code>Csv.parse(text = nil, options = nil)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
+<li><a href="items/method_stdlib-csv-Csv_Csv-stringify.html"><code>Csv.stringify(options = nil)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
 <li><a href="items/method_stdlib-collections-Deque_Deque-clear.html"><code>Deque.clear()</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
 <li><a href="items/method_stdlib-collections-Deque_Deque-empty-.html"><code>Deque.empty?()</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
 <li><a href="items/method_stdlib-collections-Deque_Deque-from_array.html"><code>Deque.from_array(values)</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
-<li><a href="items/method_stdlib-collections-Deque_Deque-initialize.html"><code>Deque.initialize(values)</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
+<li><a href="items/method_stdlib-collections-Deque_Deque-initialize.html"><code>Deque.initialize(values = nil)</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
 <li><a href="items/method_stdlib-collections-Deque_Deque-len.html"><code>Deque.len()</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
 <li><a href="items/method_stdlib-collections-Deque_Deque-new.html"><code>Deque.new()</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
 <li><a href="items/method_stdlib-collections-Deque_Deque-peek_back.html"><code>Deque.peek_back()</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
@@ -326,20 +321,20 @@
 <li><a href="items/method_stdlib-collections-Deque_Deque-push_back.html"><code>Deque.push_back(value)</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
 <li><a href="items/method_stdlib-collections-Deque_Deque-push_front.html"><code>Deque.push_front(value)</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
 <li><a href="items/method_stdlib-collections-Deque_Deque-to_array.html"><code>Deque.to_array()</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
-<li><a href="items/method_stdlib-digest-Digest_Digest-initialize.html"><code>Digest.initialize(value)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
-<li><a href="items/method_stdlib-digest-Digest_Digest-md5.html"><code>Digest.md5(text)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
-<li><a href="items/method_stdlib-digest-Digest_Digest-sha1.html"><code>Digest.sha1(text)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
-<li><a href="items/method_stdlib-digest-Digest_Digest-sha256.html"><code>Digest.sha256(text)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
-<li><a href="items/method_stdlib-digest-Digest_Digest-sha384.html"><code>Digest.sha384(text)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
-<li><a href="items/method_stdlib-digest-Digest_Digest-sha512.html"><code>Digest.sha512(text)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
-<li><a href="items/method_stdlib-dir-Dir_Dir-initialize.html"><code>Dir.initialize(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/method_stdlib-dir-Dir_Dir-list.html"><code>Dir.list(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/method_stdlib-dir-Dir_Dir-mkdir.html"><code>Dir.mkdir(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/method_stdlib-dir-Dir_Dir-mkdir_all.html"><code>Dir.mkdir_all(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/method_stdlib-dir-Dir_Dir-remove_all.html"><code>Dir.remove_all(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/method_stdlib-dir-Dir_Dir-rmdir.html"><code>Dir.rmdir(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/method_stdlib-dir-Dir_Dir-temp_dir.html"><code>Dir.temp_dir(prefix)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
-<li><a href="items/method_stdlib-dir-Dir_Dir-walk.html"><code>Dir.walk(path, fn, options)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/method_stdlib-digest-Digest_Digest-initialize.html"><code>Digest.initialize(value = nil)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
+<li><a href="items/method_stdlib-digest-Digest_Digest-md5.html"><code>Digest.md5(text = nil)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
+<li><a href="items/method_stdlib-digest-Digest_Digest-sha1.html"><code>Digest.sha1(text = nil)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
+<li><a href="items/method_stdlib-digest-Digest_Digest-sha256.html"><code>Digest.sha256(text = nil)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
+<li><a href="items/method_stdlib-digest-Digest_Digest-sha384.html"><code>Digest.sha384(text = nil)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
+<li><a href="items/method_stdlib-digest-Digest_Digest-sha512.html"><code>Digest.sha512(text = nil)</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
+<li><a href="items/method_stdlib-dir-Dir_Dir-initialize.html"><code>Dir.initialize(path = nil)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/method_stdlib-dir-Dir_Dir-list.html"><code>Dir.list(path = nil)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/method_stdlib-dir-Dir_Dir-mkdir.html"><code>Dir.mkdir(path = nil)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/method_stdlib-dir-Dir_Dir-mkdir_all.html"><code>Dir.mkdir_all(path = nil)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/method_stdlib-dir-Dir_Dir-remove_all.html"><code>Dir.remove_all(path = nil)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/method_stdlib-dir-Dir_Dir-rmdir.html"><code>Dir.rmdir(path = nil)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/method_stdlib-dir-Dir_Dir-temp_dir.html"><code>Dir.temp_dir(prefix = &quot;tya&quot;)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
+<li><a href="items/method_stdlib-dir-Dir_Dir-walk.html"><code>Dir.walk(path, fn = nil, options = {})</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
 <li><a href="items/method_stdlib-xml-Document_Document-children.html"><code>Document.children()</code></a> &mdash; <code>stdlib/xml/Document.tya</code></li>
 <li><a href="items/method_stdlib-xml-Document_Document-encoding.html"><code>Document.encoding()</code></a> &mdash; <code>stdlib/xml/Document.tya</code></li>
 <li><a href="items/method_stdlib-xml-Document_Document-initialize.html"><code>Document.initialize(children, version, encoding)</code></a> &mdash; <code>stdlib/xml/Document.tya</code></li>
@@ -360,19 +355,19 @@
 <li><a href="items/method_stdlib-xml-Element_Element-text.html"><code>Element.text()</code></a> &mdash; <code>stdlib/xml/Element.tya</code></li>
 <li><a href="items/method_stdlib-xml-Element_Element-to_s.html"><code>Element.to_s()</code></a> &mdash; <code>stdlib/xml/Element.tya</code></li>
 <li><a href="items/method_stdlib-equatable_Equatable-equal-.html"><code>Equatable.equal?(other)</code></a> &mdash; <code>stdlib/equatable.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-append.html"><code>File.append(path, text)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-chmod.html"><code>File.chmod(path, mode)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-copy.html"><code>File.copy(src, dst, options)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-exists-.html"><code>File.exists?(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-initialize.html"><code>File.initialize(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-read.html"><code>File.read(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-read_bytes.html"><code>File.read_bytes(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-remove.html"><code>File.remove(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-rename.html"><code>File.rename(old_path, new_path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-stat.html"><code>File.stat(path)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-temp.html"><code>File.temp(prefix, suffix)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-write.html"><code>File.write(path, text)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
-<li><a href="items/method_stdlib-file-File_File-write_bytes.html"><code>File.write_bytes(path, b)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-append.html"><code>File.append(path, text = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-chmod.html"><code>File.chmod(path, mode = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-copy.html"><code>File.copy(src, dst = nil, options = {})</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-exists-.html"><code>File.exists?(path = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-initialize.html"><code>File.initialize(path = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-read.html"><code>File.read(path = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-read_bytes.html"><code>File.read_bytes(path = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-remove.html"><code>File.remove(path = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-rename.html"><code>File.rename(old_path, new_path = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-stat.html"><code>File.stat(path = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-temp.html"><code>File.temp(prefix = &quot;tya&quot;, suffix = &quot;&quot;)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-write.html"><code>File.write(path, text = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
+<li><a href="items/method_stdlib-file-File_File-write_bytes.html"><code>File.write_bytes(path, b = nil)</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/method_stdlib-filter_sequence_FilterSequence-initialize.html"><code>FilterSequence.initialize(source, fn)</code></a> &mdash; <code>stdlib/filter_sequence.tya</code></li>
 <li><a href="items/method_stdlib-io-Reader_Flushable-flush.html"><code>Flushable.flush()</code></a> &mdash; <code>stdlib/io/Reader.tya</code></li>
 <li><a href="items/method_stdlib-compiler-format-Format_Format-format.html"><code>Format.format(source)</code></a> &mdash; <code>stdlib/compiler/format/Format.tya</code></li>
@@ -381,23 +376,23 @@
 <li><a href="items/method_stdlib-compress-Gzip_Gzip-compress_file.html"><code>Gzip.compress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
 <li><a href="items/method_stdlib-compress-Gzip_Gzip-decompress.html"><code>Gzip.decompress(value)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
 <li><a href="items/method_stdlib-compress-Gzip_Gzip-decompress_file.html"><code>Gzip.decompress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
-<li><a href="items/method_stdlib-hex-Hex_Hex-decode.html"><code>Hex.decode(text)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
+<li><a href="items/method_stdlib-hex-Hex_Hex-decode.html"><code>Hex.decode(text = nil)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
 <li><a href="items/method_stdlib-hex-Hex_Hex-decode_digit.html"><code>Hex.decode_digit(c)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
-<li><a href="items/method_stdlib-hex-Hex_Hex-encode.html"><code>Hex.encode(value)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
+<li><a href="items/method_stdlib-hex-Hex_Hex-encode.html"><code>Hex.encode(value = nil)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
 <li><a href="items/method_stdlib-hex-Hex_Hex-hex_digit.html"><code>Hex.hex_digit(d)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
-<li><a href="items/method_stdlib-hex-Hex_Hex-initialize.html"><code>Hex.initialize(value)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
-<li><a href="items/method_stdlib-hmac-Hmac_Hmac-base64digest.html"><code>Hmac.base64digest(algorithm, key, message)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
+<li><a href="items/method_stdlib-hex-Hex_Hex-initialize.html"><code>Hex.initialize(value = nil)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
+<li><a href="items/method_stdlib-hmac-Hmac_Hmac-base64digest.html"><code>Hmac.base64digest(algorithm, key = nil, message = nil)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-block_size.html"><code>Hmac.block_size(algorithm)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-constant_time_equal.html"><code>Hmac.constant_time_equal(left, right)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
-<li><a href="items/method_stdlib-hmac-Hmac_Hmac-digest.html"><code>Hmac.digest(algorithm, key, message)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
+<li><a href="items/method_stdlib-hmac-Hmac_Hmac-digest.html"><code>Hmac.digest(algorithm, key = nil, message = nil)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-digest_size.html"><code>Hmac.digest_size(algorithm)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-expected_bytes.html"><code>Hmac.expected_bytes(algorithm, expected, options)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-hash_hex.html"><code>Hmac.hash_hex(algorithm, value)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
-<li><a href="items/method_stdlib-hmac-Hmac_Hmac-hexdigest.html"><code>Hmac.hexdigest(algorithm, key, message)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
+<li><a href="items/method_stdlib-hmac-Hmac_Hmac-hexdigest.html"><code>Hmac.hexdigest(algorithm, key = nil, message = nil)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-initialize.html"><code>Hmac.initialize(algorithm, key)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-input_bytes.html"><code>Hmac.input_bytes(name, value)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-pad.html"><code>Hmac.pad(data, size)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
-<li><a href="items/method_stdlib-hmac-Hmac_Hmac-verify.html"><code>Hmac.verify(algorithm, key, message, expected, options)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
+<li><a href="items/method_stdlib-hmac-Hmac_Hmac-verify.html"><code>Hmac.verify(algorithm, key = nil, message = nil, expected = nil, options = {})</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-hmac-Hmac_Hmac-xor.html"><code>Hmac.xor(data, byte)</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/method_stdlib-image-Image_Image-bytes.html"><code>Image.bytes()</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
 <li><a href="items/method_stdlib-image-Image_Image-check_channel.html"><code>Image.check_channel(value)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
@@ -417,7 +412,7 @@
 <li><a href="items/method_stdlib-image-Image_Image-from_pixels.html"><code>Image.from_pixels(width, height, format, pixels)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
 <li><a href="items/method_stdlib-image-Image_Image-grayscale.html"><code>Image.grayscale()</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
 <li><a href="items/method_stdlib-image-Image_Image-has_alpha-.html"><code>Image.has_alpha?()</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
-<li><a href="items/method_stdlib-image-Image_Image-initialize.html"><code>Image.initialize(width, height, fill)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
+<li><a href="items/method_stdlib-image-Image_Image-initialize.html"><code>Image.initialize(width = 1, height = 1, fill = nil)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
 <li><a href="items/method_stdlib-image-Image_Image-new.html"><code>Image.new(width, height, fill)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
 <li><a href="items/method_stdlib-image-Image_Image-pixel.html"><code>Image.pixel(x, y)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
 <li><a href="items/method_stdlib-image-Image_Image-read.html"><code>Image.read(path)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
@@ -432,7 +427,7 @@
 <li><a href="items/method_stdlib-image-Image_Image-write.html"><code>Image.write(path, options)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
 <li><a href="items/method_stdlib-image-Image_Image-write_format.html"><code>Image.write_format(path, options)</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
 <li><a href="items/method_stdlib-io-Io_Io-copy.html"><code>Io.copy(reader, writer)</code></a> &mdash; <code>stdlib/io/Io.tya</code></li>
-<li><a href="items/method_stdlib-io-Io_Io-open.html"><code>Io.open(path, mode)</code></a> &mdash; <code>stdlib/io/Io.tya</code></li>
+<li><a href="items/method_stdlib-io-Io_Io-open.html"><code>Io.open(path, mode = nil)</code></a> &mdash; <code>stdlib/io/Io.tya</code></li>
 <li><a href="items/method_stdlib-io-Io_Io-stderr.html"><code>Io.stderr()</code></a> &mdash; <code>stdlib/io/Io.tya</code></li>
 <li><a href="items/method_stdlib-io-Io_Io-stdin.html"><code>Io.stdin()</code></a> &mdash; <code>stdlib/io/Io.tya</code></li>
 <li><a href="items/method_stdlib-io-Io_Io-stdout.html"><code>Io.stdout()</code></a> &mdash; <code>stdlib/io/Io.tya</code></li>
@@ -441,22 +436,22 @@
 <li><a href="items/method_stdlib-iterable_sequence_IterableSequence-initialize.html"><code>IterableSequence.initialize(source)</code></a> &mdash; <code>stdlib/iterable_sequence.tya</code></li>
 <li><a href="items/method_stdlib-iterator_Iterator-has_next.html"><code>Iterator.has_next()</code></a> &mdash; <code>stdlib/iterator.tya</code></li>
 <li><a href="items/method_stdlib-iterator_Iterator-next.html"><code>Iterator.next()</code></a> &mdash; <code>stdlib/iterator.tya</code></li>
-<li><a href="items/method_stdlib-json-Json_Json-dump.html"><code>Json.dump(value)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
+<li><a href="items/method_stdlib-json-Json_Json-dump.html"><code>Json.dump(value = nil)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-emit.html"><code>Json.emit(value, indent, level)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-escape_string.html"><code>Json.escape_string(text)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-expect.html"><code>Json.expect(state, ch)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-hex_value.html"><code>Json.hex_value(c)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
-<li><a href="items/method_stdlib-json-Json_Json-initialize.html"><code>Json.initialize(value)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
+<li><a href="items/method_stdlib-json-Json_Json-initialize.html"><code>Json.initialize(value = nil)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-is_digit.html"><code>Json.is_digit(c)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-pad.html"><code>Json.pad(indent, level)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
-<li><a href="items/method_stdlib-json-Json_Json-parse.html"><code>Json.parse(text)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
+<li><a href="items/method_stdlib-json-Json_Json-parse.html"><code>Json.parse(text = nil)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-parse_array.html"><code>Json.parse_array(state)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-parse_number.html"><code>Json.parse_number(state)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-parse_object.html"><code>Json.parse_object(state)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-parse_string.html"><code>Json.parse_string(state)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-parse_value.html"><code>Json.parse_value(state)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-skip_ws.html"><code>Json.skip_ws(state)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
-<li><a href="items/method_stdlib-json-Json_Json-stringify.html"><code>Json.stringify(value)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
+<li><a href="items/method_stdlib-json-Json_Json-stringify.html"><code>Json.stringify(value = nil)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-text_len.html"><code>Json.text_len(text)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-json-Json_Json-utf8_encode.html"><code>Json.utf8_encode(code)</code></a> &mdash; <code>stdlib/json/Json.tya</code></li>
 <li><a href="items/method_stdlib-compiler-lexer-Lexer_Lexer-lex.html"><code>Lexer.lex(source)</code></a> &mdash; <code>stdlib/compiler/lexer/Lexer.tya</code></li>
@@ -499,17 +494,17 @@
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-is_task_item.html"><code>Markdown.is_task_item(s)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-is_thematic_break.html"><code>Markdown.is_thematic_break(s)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-is_unordered_item.html"><code>Markdown.is_unordered_item(s)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
-<li><a href="items/method_stdlib-markdown-Markdown_Markdown-parse.html"><code>Markdown.parse(text)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
+<li><a href="items/method_stdlib-markdown-Markdown_Markdown-parse.html"><code>Markdown.parse(text = nil)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-parse_blocks.html"><code>Markdown.parse_blocks(lines)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-parse_task_item.html"><code>Markdown.parse_task_item(s)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-reference_defs.html"><code>Markdown.reference_defs(lines)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-render.html"><code>Markdown.render(ast, options)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-render_block.html"><code>Markdown.render_block(block, refs, options)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
-<li><a href="items/method_stdlib-markdown-Markdown_Markdown-render_html_ast.html"><code>Markdown.render_html_ast(ast, options)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
+<li><a href="items/method_stdlib-markdown-Markdown_Markdown-render_html_ast.html"><code>Markdown.render_html_ast(ast, options = nil)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-strip_list_marker.html"><code>Markdown.strip_list_marker(s)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-strip_ordered_marker.html"><code>Markdown.strip_ordered_marker(s)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-table_cells.html"><code>Markdown.table_cells(s)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
-<li><a href="items/method_stdlib-markdown-Markdown_Markdown-to_html.html"><code>Markdown.to_html(text)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
+<li><a href="items/method_stdlib-markdown-Markdown_Markdown-to_html.html"><code>Markdown.to_html(text = nil)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-to_html_ast.html"><code>Markdown.to_html_ast(ast)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-trim_left_n.html"><code>Markdown.trim_left_n(s, k)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
 <li><a href="items/method_stdlib-markdown-Markdown_Markdown-try_autolink.html"><code>Markdown.try_autolink(text, start)</code></a> &mdash; <code>stdlib/markdown/Markdown.tya</code></li>
@@ -536,23 +531,23 @@
 <li><a href="items/method_stdlib-math-Math_Math-sqrt.html"><code>Math.sqrt(x)</code></a> &mdash; <code>stdlib/math/Math.tya</code></li>
 <li><a href="items/method_stdlib-math-Math_Math-tan.html"><code>Math.tan(x)</code></a> &mdash; <code>stdlib/math/Math.tya</code></li>
 <li><a href="items/method_stdlib-math-Math_Math-trunc.html"><code>Math.trunc(x)</code></a> &mdash; <code>stdlib/math/Math.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-add.html"><code>Matrix.add(a, b)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-at.html"><code>Matrix.at(m, r, c)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-det.html"><code>Matrix.det(a)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-equal-.html"><code>Matrix.equal?(a, b)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-add.html"><code>Matrix.add(a, b = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-at.html"><code>Matrix.at(m, r, c = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-det.html"><code>Matrix.det(a = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-equal-.html"><code>Matrix.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
 <li><a href="items/method_stdlib-matrix-Matrix_Matrix-identity.html"><code>Matrix.identity(n)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-initialize.html"><code>Matrix.initialize(data)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-mul.html"><code>Matrix.mul(a, b)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-initialize.html"><code>Matrix.initialize(data = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-mul.html"><code>Matrix.mul(a, b = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
 <li><a href="items/method_stdlib-matrix-Matrix_Matrix-new.html"><code>Matrix.new(data)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-put.html"><code>Matrix.put(m, r, c, value)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-scale.html"><code>Matrix.scale(a, k)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-sub.html"><code>Matrix.sub(a, b)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-matrix-Matrix_Matrix-transpose.html"><code>Matrix.transpose(a)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-put.html"><code>Matrix.put(m, r, c, value = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-scale.html"><code>Matrix.scale(a, k = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-sub.html"><code>Matrix.sub(a, b = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
+<li><a href="items/method_stdlib-matrix-Matrix_Matrix-transpose.html"><code>Matrix.transpose(a = nil)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
 <li><a href="items/method_stdlib-matrix-Matrix_Matrix-validate_data.html"><code>Matrix.validate_data(data)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
 <li><a href="items/method_stdlib-matrix-Matrix_Matrix-zero.html"><code>Matrix.zero(rows, cols)</code></a> &mdash; <code>stdlib/matrix/Matrix.tya</code></li>
-<li><a href="items/method_stdlib-net-ip-Network_Network-contains-.html"><code>Network.contains?(network, addr)</code></a> &mdash; <code>stdlib/net/ip/Network.tya</code></li>
+<li><a href="items/method_stdlib-net-ip-Network_Network-contains-.html"><code>Network.contains?(network, addr = nil)</code></a> &mdash; <code>stdlib/net/ip/Network.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Network_Network-contains_parts-.html"><code>Network.contains_parts?(base, value, prefix, width)</code></a> &mdash; <code>stdlib/net/ip/Network.tya</code></li>
-<li><a href="items/method_stdlib-net-ip-Network_Network-initialize.html"><code>Network.initialize(address, prefix)</code></a> &mdash; <code>stdlib/net/ip/Network.tya</code></li>
+<li><a href="items/method_stdlib-net-ip-Network_Network-initialize.html"><code>Network.initialize(address = nil, prefix = 0)</code></a> &mdash; <code>stdlib/net/ip/Network.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Network_Network-parse.html"><code>Network.parse(cidr)</code></a> &mdash; <code>stdlib/net/ip/Network.tya</code></li>
 <li><a href="items/method_stdlib-net-ip-Network_Network-pow2.html"><code>Network.pow2(n)</code></a> &mdash; <code>stdlib/net/ip/Network.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Next_Next-call.html"><code>Next.call(req)</code></a> &mdash; <code>stdlib/net/http/Next.tya</code></li>
@@ -568,27 +563,27 @@
 <li><a href="items/method_stdlib-os-Os_Os-unsetenv.html"><code>Os.unsetenv(name)</code></a> &mdash; <code>stdlib/os/Os.tya</code></li>
 <li><a href="items/method_stdlib-compiler-parser-Parser_Parser-parse.html"><code>Parser.parse(source)</code></a> &mdash; <code>stdlib/compiler/parser/Parser.tya</code></li>
 <li><a href="items/method_stdlib-compiler-parser-Parser_Parser-parse_tokens.html"><code>Parser.parse_tokens(tokens)</code></a> &mdash; <code>stdlib/compiler/parser/Parser.tya</code></li>
-<li><a href="items/method_stdlib-path-Path_Path-basename.html"><code>Path.basename(value)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
-<li><a href="items/method_stdlib-path-Path_Path-clean.html"><code>Path.clean(value)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
-<li><a href="items/method_stdlib-path-Path_Path-dirname.html"><code>Path.dirname(value)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
-<li><a href="items/method_stdlib-path-Path_Path-expand_user.html"><code>Path.expand_user(value)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
-<li><a href="items/method_stdlib-path-Path_Path-extname.html"><code>Path.extname(value)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
-<li><a href="items/method_stdlib-path-Path_Path-initialize.html"><code>Path.initialize(value)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
-<li><a href="items/method_stdlib-path-Path_Path-join.html"><code>Path.join(parts)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Point_Point-distance.html"><code>Point.distance(a, b)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Point_Point-equal-.html"><code>Point.equal?(a, b)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
+<li><a href="items/method_stdlib-path-Path_Path-basename.html"><code>Path.basename(value = nil)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
+<li><a href="items/method_stdlib-path-Path_Path-clean.html"><code>Path.clean(value = nil)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
+<li><a href="items/method_stdlib-path-Path_Path-dirname.html"><code>Path.dirname(value = nil)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
+<li><a href="items/method_stdlib-path-Path_Path-expand_user.html"><code>Path.expand_user(value = nil)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
+<li><a href="items/method_stdlib-path-Path_Path-extname.html"><code>Path.extname(value = nil)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
+<li><a href="items/method_stdlib-path-Path_Path-initialize.html"><code>Path.initialize(value = nil)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
+<li><a href="items/method_stdlib-path-Path_Path-join.html"><code>Path.join(parts = nil)</code></a> &mdash; <code>stdlib/path/Path.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Point_Point-distance.html"><code>Point.distance(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Point_Point-equal-.html"><code>Point.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Point_Point-expect.html"><code>Point.expect(value, name)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Point_Point-from_vector.html"><code>Point.from_vector(v)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Point_Point-initialize.html"><code>Point.initialize(x, y)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Point_Point-initialize.html"><code>Point.initialize(x = 0, y = 0)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Point_Point-new.html"><code>Point.new(x, y)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Point_Point-number.html"><code>Point.number(value, name)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Point_Point-to_vector.html"><code>Point.to_vector(p)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Point_Point-translate.html"><code>Point.translate(p, v)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Point_Point-to_vector.html"><code>Point.to_vector(p = nil)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Point_Point-translate.html"><code>Point.translate(p, v = nil)</code></a> &mdash; <code>stdlib/geometry/Point.tya</code></li>
 <li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-best_index.html"><code>PriorityQueue.best_index()</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
 <li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-clear.html"><code>PriorityQueue.clear()</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
 <li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-empty-.html"><code>PriorityQueue.empty?()</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
 <li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-from_array.html"><code>PriorityQueue.from_array(items)</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
-<li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-initialize.html"><code>PriorityQueue.initialize(items)</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
+<li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-initialize.html"><code>PriorityQueue.initialize(items = nil)</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
 <li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-len.html"><code>PriorityQueue.len()</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
 <li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-new.html"><code>PriorityQueue.new()</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
 <li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-peek.html"><code>PriorityQueue.peek()</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
@@ -599,14 +594,14 @@
 <li><a href="items/method_stdlib-collections-PriorityQueue_PriorityQueue-to_array.html"><code>PriorityQueue.to_array()</code></a> &mdash; <code>stdlib/collections/PriorityQueue.tya</code></li>
 <li><a href="items/method_stdlib-process-Process_Process-chdir.html"><code>Process.chdir(path)</code></a> &mdash; <code>stdlib/process/Process.tya</code></li>
 <li><a href="items/method_stdlib-process-Process_Process-cwd.html"><code>Process.cwd()</code></a> &mdash; <code>stdlib/process/Process.tya</code></li>
-<li><a href="items/method_stdlib-process-Process_Process-exec.html"><code>Process.exec(command, options)</code></a> &mdash; <code>stdlib/process/Process.tya</code></li>
-<li><a href="items/method_stdlib-process-Process_Process-initialize.html"><code>Process.initialize(command)</code></a> &mdash; <code>stdlib/process/Process.tya</code></li>
-<li><a href="items/method_stdlib-process-Process_Process-run.html"><code>Process.run(command, options)</code></a> &mdash; <code>stdlib/process/Process.tya</code></li>
+<li><a href="items/method_stdlib-process-Process_Process-exec.html"><code>Process.exec(command = nil, options = {})</code></a> &mdash; <code>stdlib/process/Process.tya</code></li>
+<li><a href="items/method_stdlib-process-Process_Process-initialize.html"><code>Process.initialize(command = nil)</code></a> &mdash; <code>stdlib/process/Process.tya</code></li>
+<li><a href="items/method_stdlib-process-Process_Process-run.html"><code>Process.run(command = nil, options = {})</code></a> &mdash; <code>stdlib/process/Process.tya</code></li>
 <li><a href="items/method_stdlib-collections-Queue_Queue-clear.html"><code>Queue.clear()</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
 <li><a href="items/method_stdlib-collections-Queue_Queue-compact.html"><code>Queue.compact()</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
 <li><a href="items/method_stdlib-collections-Queue_Queue-empty-.html"><code>Queue.empty?()</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
 <li><a href="items/method_stdlib-collections-Queue_Queue-from_array.html"><code>Queue.from_array(values)</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
-<li><a href="items/method_stdlib-collections-Queue_Queue-initialize.html"><code>Queue.initialize(values)</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
+<li><a href="items/method_stdlib-collections-Queue_Queue-initialize.html"><code>Queue.initialize(values = nil)</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
 <li><a href="items/method_stdlib-collections-Queue_Queue-len.html"><code>Queue.len()</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
 <li><a href="items/method_stdlib-collections-Queue_Queue-new.html"><code>Queue.new()</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
 <li><a href="items/method_stdlib-collections-Queue_Queue-peek.html"><code>Queue.peek()</code></a> &mdash; <code>stdlib/collections/Queue.tya</code></li>
@@ -670,38 +665,38 @@
 <li><a href="items/method_stdlib-binary-Reader_Reader-seek.html"><code>Reader.seek(offset)</code></a> &mdash; <code>stdlib/binary/Reader.tya</code></li>
 <li><a href="items/method_stdlib-binary-Reader_Reader-signed.html"><code>Reader.signed(value, bits)</code></a> &mdash; <code>stdlib/binary/Reader.tya</code></li>
 <li><a href="items/method_stdlib-binary-Reader_Reader-skip.html"><code>Reader.skip(count)</code></a> &mdash; <code>stdlib/binary/Reader.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-area.html"><code>Rect.area(rect)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-bottom.html"><code>Rect.bottom(rect)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-center.html"><code>Rect.center(rect)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-area.html"><code>Rect.area(rect = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-bottom.html"><code>Rect.bottom(rect = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-center.html"><code>Rect.center(rect = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-clamp_number.html"><code>Rect.clamp_number(value, lo, hi)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-clamp_point.html"><code>Rect.clamp_point(rect, point)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-contains_point-.html"><code>Rect.contains_point?(rect, point)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-contains_rect-.html"><code>Rect.contains_rect?(outer, inner)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-clamp_point.html"><code>Rect.clamp_point(rect, point = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-contains_point-.html"><code>Rect.contains_point?(rect, point = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-contains_rect-.html"><code>Rect.contains_rect?(outer, inner = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-dimension.html"><code>Rect.dimension(value, name)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-empty-.html"><code>Rect.empty?(rect)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-equal-.html"><code>Rect.equal?(a, b)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-expand.html"><code>Rect.expand(rect, amount)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-empty-.html"><code>Rect.empty?(rect = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-equal-.html"><code>Rect.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-expand.html"><code>Rect.expand(rect, amount = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-expect.html"><code>Rect.expect(value, name)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-from_center.html"><code>Rect.from_center(center, size)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-from_points.html"><code>Rect.from_points(a, b)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-inflate.html"><code>Rect.inflate(rect, dx, dy)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-initialize.html"><code>Rect.initialize(x, y, width, height)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-intersection.html"><code>Rect.intersection(a, b)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-intersects-.html"><code>Rect.intersects?(a, b)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-left.html"><code>Rect.left(rect)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-inflate.html"><code>Rect.inflate(rect, dx, dy = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-initialize.html"><code>Rect.initialize(x = 0, y = 0, width = 0, height = 0)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-intersection.html"><code>Rect.intersection(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-intersects-.html"><code>Rect.intersects?(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-left.html"><code>Rect.left(rect = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-max.html"><code>Rect.max(a, b)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-min.html"><code>Rect.min(a, b)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-new.html"><code>Rect.new(x, y, width, height)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Rect_Rect-number.html"><code>Rect.number(value, name)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-right.html"><code>Rect.right(rect)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-size.html"><code>Rect.size(rect)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-top.html"><code>Rect.top(rect)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-translate.html"><code>Rect.translate(rect, vector)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Rect_Rect-union.html"><code>Rect.union(a, b)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
-<li><a href="items/method_stdlib-regex-Regex_Regex-compile.html"><code>Regex.compile(pattern, options)</code></a> &mdash; <code>stdlib/regex/Regex.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-right.html"><code>Rect.right(rect = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-size.html"><code>Rect.size(rect = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-top.html"><code>Rect.top(rect = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-translate.html"><code>Rect.translate(rect, vector = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Rect_Rect-union.html"><code>Rect.union(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Rect.tya</code></li>
+<li><a href="items/method_stdlib-regex-Regex_Regex-compile.html"><code>Regex.compile(pattern = nil, options = {})</code></a> &mdash; <code>stdlib/regex/Regex.tya</code></li>
 <li><a href="items/method_stdlib-regex-Regex_Regex-initialize.html"><code>Regex.initialize(pattern)</code></a> &mdash; <code>stdlib/regex/Regex.tya</code></li>
-<li><a href="items/method_stdlib-regex-Regex_Regex-match-.html"><code>Regex.match?(pattern, text, options)</code></a> &mdash; <code>stdlib/regex/Regex.tya</code></li>
-<li><a href="items/method_stdlib-regex-Regex_Regex-search.html"><code>Regex.search(pattern, text, options)</code></a> &mdash; <code>stdlib/regex/Regex.tya</code></li>
+<li><a href="items/method_stdlib-regex-Regex_Regex-match-.html"><code>Regex.match?(pattern, text = nil, options = {})</code></a> &mdash; <code>stdlib/regex/Regex.tya</code></li>
+<li><a href="items/method_stdlib-regex-Regex_Regex-search.html"><code>Regex.search(pattern, text = nil, options = {})</code></a> &mdash; <code>stdlib/regex/Regex.tya</code></li>
 <li><a href="items/method_stdlib-random-Rng_Rng-bool.html"><code>Rng.bool(probability)</code></a> &mdash; <code>stdlib/random/Rng.tya</code></li>
 <li><a href="items/method_stdlib-random-Rng_Rng-check_probability.html"><code>Rng.check_probability(probability)</code></a> &mdash; <code>stdlib/random/Rng.tya</code></li>
 <li><a href="items/method_stdlib-random-Rng_Rng-check_sample_count.html"><code>Rng.check_sample_count(items, count)</code></a> &mdash; <code>stdlib/random/Rng.tya</code></li>
@@ -738,18 +733,18 @@
 <li><a href="items/method_stdlib-sequence_Sequence-to_a.html"><code>Sequence.to_a()</code></a> &mdash; <code>stdlib/sequence.tya</code></li>
 <li><a href="items/method_stdlib-serialization-Serializer_Serializable-to_data.html"><code>Serializable.to_data()</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
 <li><a href="items/method_stdlib-serialization-Serializer_Serializer-array_has-.html"><code>Serializer.array_has?(values, value)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-deserialize.html"><code>Serializer.deserialize(data, klass, options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-deserialize.html"><code>Serializer.deserialize(data = nil, klass = nil, options = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
 <li><a href="items/method_stdlib-serialization-Serializer_Serializer-enter_seen.html"><code>Serializer.enter_seen(value, seen)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-from_data.html"><code>Serializer.from_data(data, klass, options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-from_json.html"><code>Serializer.from_json(text, klass, options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-from_toml.html"><code>Serializer.from_toml(text, klass, options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-initialize.html"><code>Serializer.initialize(value)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-from_data.html"><code>Serializer.from_data(data = nil, klass = nil, options = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-from_json.html"><code>Serializer.from_json(text = nil, klass = nil, options = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-from_toml.html"><code>Serializer.from_toml(text = nil, klass = nil, options = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-initialize.html"><code>Serializer.initialize(value = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
 <li><a href="items/method_stdlib-serialization-Serializer_Serializer-options.html"><code>Serializer.options(options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-serialize.html"><code>Serializer.serialize(value, options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-to_data.html"><code>Serializer.to_data(value, options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-serialize.html"><code>Serializer.serialize(value = nil, options = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-to_data.html"><code>Serializer.to_data(value = nil, options = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
 <li><a href="items/method_stdlib-serialization-Serializer_Serializer-to_data_seen.html"><code>Serializer.to_data_seen(value, opts, seen)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-to_json.html"><code>Serializer.to_json(value, options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
-<li><a href="items/method_stdlib-serialization-Serializer_Serializer-to_toml.html"><code>Serializer.to_toml(value, options)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-to_json.html"><code>Serializer.to_json(value = nil, options = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
+<li><a href="items/method_stdlib-serialization-Serializer_Serializer-to_toml.html"><code>Serializer.to_toml(value = nil, options = nil)</code></a> &mdash; <code>stdlib/serialization/Serializer.tya</code></li>
 <li><a href="items/method_stdlib-net-socket-Server_Server-accept.html"><code>Server.accept()</code></a> &mdash; <code>stdlib/net/socket/Server.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Server_Server-allow_for.html"><code>Server.allow_for(path)</code></a> &mdash; <code>stdlib/net/http/Server.tya</code></li>
 <li><a href="items/method_stdlib-net-http-Server_Server-any.html"><code>Server.any(path, handler, options)</code></a> &mdash; <code>stdlib/net/http/Server.tya</code></li>
@@ -805,19 +800,19 @@
 <li><a href="items/method_stdlib-collections-Set_Set-empty-.html"><code>Set.empty?()</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
 <li><a href="items/method_stdlib-collections-Set_Set-from_array.html"><code>Set.from_array(values)</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
 <li><a href="items/method_stdlib-collections-Set_Set-has-.html"><code>Set.has?(value)</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
-<li><a href="items/method_stdlib-collections-Set_Set-initialize.html"><code>Set.initialize(values)</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
+<li><a href="items/method_stdlib-collections-Set_Set-initialize.html"><code>Set.initialize(values = nil)</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
 <li><a href="items/method_stdlib-collections-Set_Set-intersection.html"><code>Set.intersection(other)</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
 <li><a href="items/method_stdlib-collections-Set_Set-len.html"><code>Set.len()</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
 <li><a href="items/method_stdlib-collections-Set_Set-new.html"><code>Set.new()</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
 <li><a href="items/method_stdlib-collections-Set_Set-subset-.html"><code>Set.subset?(other)</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
 <li><a href="items/method_stdlib-collections-Set_Set-to_array.html"><code>Set.to_array()</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
 <li><a href="items/method_stdlib-collections-Set_Set-union.html"><code>Set.union(other)</code></a> &mdash; <code>stdlib/collections/Set.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Size_Size-area.html"><code>Size.area(size)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Size_Size-aspect_ratio.html"><code>Size.aspect_ratio(size)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Size_Size-area.html"><code>Size.area(size = nil)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Size_Size-aspect_ratio.html"><code>Size.aspect_ratio(size = nil)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Size_Size-dimension.html"><code>Size.dimension(value, name)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Size_Size-equal-.html"><code>Size.equal?(a, b)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Size_Size-equal-.html"><code>Size.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Size_Size-expect.html"><code>Size.expect(value, name)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Size_Size-initialize.html"><code>Size.initialize(width, height)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Size_Size-initialize.html"><code>Size.initialize(width = 0, height = 0)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Size_Size-new.html"><code>Size.new(width, height)</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Size_Size-zero.html"><code>Size.zero()</code></a> &mdash; <code>stdlib/geometry/Size.tya</code></li>
 <li><a href="items/method_stdlib-net-socket-Socket_Socket-close.html"><code>Socket.close()</code></a> &mdash; <code>stdlib/net/socket/Socket.tya</code></li>
@@ -833,7 +828,7 @@
 <li><a href="items/method_stdlib-collections-Stack_Stack-clear.html"><code>Stack.clear()</code></a> &mdash; <code>stdlib/collections/Stack.tya</code></li>
 <li><a href="items/method_stdlib-collections-Stack_Stack-empty-.html"><code>Stack.empty?()</code></a> &mdash; <code>stdlib/collections/Stack.tya</code></li>
 <li><a href="items/method_stdlib-collections-Stack_Stack-from_array.html"><code>Stack.from_array(values)</code></a> &mdash; <code>stdlib/collections/Stack.tya</code></li>
-<li><a href="items/method_stdlib-collections-Stack_Stack-initialize.html"><code>Stack.initialize(values)</code></a> &mdash; <code>stdlib/collections/Stack.tya</code></li>
+<li><a href="items/method_stdlib-collections-Stack_Stack-initialize.html"><code>Stack.initialize(values = nil)</code></a> &mdash; <code>stdlib/collections/Stack.tya</code></li>
 <li><a href="items/method_stdlib-collections-Stack_Stack-len.html"><code>Stack.len()</code></a> &mdash; <code>stdlib/collections/Stack.tya</code></li>
 <li><a href="items/method_stdlib-collections-Stack_Stack-new.html"><code>Stack.new()</code></a> &mdash; <code>stdlib/collections/Stack.tya</code></li>
 <li><a href="items/method_stdlib-collections-Stack_Stack-peek.html"><code>Stack.peek()</code></a> &mdash; <code>stdlib/collections/Stack.tya</code></li>
@@ -850,7 +845,7 @@
 <li><a href="items/method_stdlib-template-Template_Template-find_block_split.html"><code>Template.find_block_split(source, start)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-find_close.html"><code>Template.find_close(source, start, marker)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-find_next_tag.html"><code>Template.find_next_tag(source, start)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
-<li><a href="items/method_stdlib-template-Template_Template-initialize.html"><code>Template.initialize(source)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
+<li><a href="items/method_stdlib-template-Template_Template-initialize.html"><code>Template.initialize(source = nil)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-is_number.html"><code>Template.is_number(text)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-lbrace.html"><code>Template.lbrace()</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-lookup.html"><code>Template.lookup(path, env)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
@@ -862,10 +857,10 @@
 <li><a href="items/method_stdlib-template-Template_Template-rbrace.html"><code>Template.rbrace()</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-read_tag.html"><code>Template.read_tag(state)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-read_until.html"><code>Template.read_until(state, marker)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
-<li><a href="items/method_stdlib-template-Template_Template-render.html"><code>Template.render(source, data, options)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
-<li><a href="items/method_stdlib-template-Template_Template-render_file.html"><code>Template.render_file(path, data, options)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
+<li><a href="items/method_stdlib-template-Template_Template-render.html"><code>Template.render(source, data = nil, options = nil)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
+<li><a href="items/method_stdlib-template-Template_Template-render_file.html"><code>Template.render_file(path, data = nil, options = nil)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-render_for.html"><code>Template.render_for(state, tag, env)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
-<li><a href="items/method_stdlib-template-Template_Template-render_html.html"><code>Template.render_html(source, data)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
+<li><a href="items/method_stdlib-template-Template_Template-render_html.html"><code>Template.render_html(source, data = nil)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-render_if.html"><code>Template.render_if(state, tag, env)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-render_partial.html"><code>Template.render_partial(tag, env)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
 <li><a href="items/method_stdlib-template-Template_Template-render_range.html"><code>Template.render_range(source, start, finish, env)</code></a> &mdash; <code>stdlib/template/Template.tya</code></li>
@@ -902,28 +897,28 @@
 <li><a href="items/method_stdlib-unittest-TestSuite_TestSuite-test_methods_for.html"><code>TestSuite.test_methods_for(test)</code></a> &mdash; <code>stdlib/unittest/TestSuite.tya</code></li>
 <li><a href="items/method_stdlib-xml-Text_Text-initialize.html"><code>Text.initialize(text)</code></a> &mdash; <code>stdlib/xml/Text.tya</code></li>
 <li><a href="items/method_stdlib-xml-Text_Text-new.html"><code>Text.new(text)</code></a> &mdash; <code>stdlib/xml/Text.tya</code></li>
-<li><a href="items/method_stdlib-time-Time_Time-duration.html"><code>Time.duration(seconds, options)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
-<li><a href="items/method_stdlib-time-Time_Time-format.html"><code>Time.format(t, layout)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
-<li><a href="items/method_stdlib-time-Time_Time-initialize.html"><code>Time.initialize(value)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
+<li><a href="items/method_stdlib-time-Time_Time-duration.html"><code>Time.duration(seconds = 0, options = {})</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
+<li><a href="items/method_stdlib-time-Time_Time-format.html"><code>Time.format(t, layout = nil)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
+<li><a href="items/method_stdlib-time-Time_Time-initialize.html"><code>Time.initialize(value = nil)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
 <li><a href="items/method_stdlib-time-Time_Time-monotonic.html"><code>Time.monotonic()</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
 <li><a href="items/method_stdlib-time-Time_Time-now.html"><code>Time.now()</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
-<li><a href="items/method_stdlib-time-Time_Time-parse.html"><code>Time.parse(text, layout)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
-<li><a href="items/method_stdlib-time-Time_Time-since.html"><code>Time.since(t)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
+<li><a href="items/method_stdlib-time-Time_Time-parse.html"><code>Time.parse(text = nil, layout = &quot;rfc3339&quot;)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
+<li><a href="items/method_stdlib-time-Time_Time-since.html"><code>Time.since(t = nil)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
 <li><a href="items/method_stdlib-time-Time_Time-sleep.html"><code>Time.sleep(duration_or_seconds)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
-<li><a href="items/method_stdlib-time-Time_Time-unix.html"><code>Time.unix(seconds, nanos)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
-<li><a href="items/method_stdlib-toml-Toml_Toml-dump.html"><code>Toml.dump(value)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
+<li><a href="items/method_stdlib-time-Time_Time-unix.html"><code>Time.unix(seconds, nanos = 0)</code></a> &mdash; <code>stdlib/time/Time.tya</code></li>
+<li><a href="items/method_stdlib-toml-Toml_Toml-dump.html"><code>Toml.dump(value = nil)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-emit_table.html"><code>Toml.emit_table(value, prefix)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-ensure_array_path.html"><code>Toml.ensure_array_path(root, segments)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-ensure_path.html"><code>Toml.ensure_path(root, segments)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-format_inline_value.html"><code>Toml.format_inline_value(value)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-format_key.html"><code>Toml.format_key(text)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-format_string.html"><code>Toml.format_string(text)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
-<li><a href="items/method_stdlib-toml-Toml_Toml-initialize.html"><code>Toml.initialize(value)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
+<li><a href="items/method_stdlib-toml-Toml_Toml-initialize.html"><code>Toml.initialize(value = nil)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-is_array_of_dicts.html"><code>Toml.is_array_of_dicts(value)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-is_bare_key.html"><code>Toml.is_bare_key(text)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-is_bare_key_char.html"><code>Toml.is_bare_key_char(c)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-is_digit.html"><code>Toml.is_digit(c)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
-<li><a href="items/method_stdlib-toml-Toml_Toml-parse.html"><code>Toml.parse(text)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
+<li><a href="items/method_stdlib-toml-Toml_Toml-parse.html"><code>Toml.parse(text = nil)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-parse_array.html"><code>Toml.parse_array(state)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-parse_basic_string.html"><code>Toml.parse_basic_string(state)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-parse_header_segments.html"><code>Toml.parse_header_segments(state)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
@@ -936,15 +931,15 @@
 <li><a href="items/method_stdlib-toml-Toml_Toml-skip_ws_and_newlines.html"><code>Toml.skip_ws_and_newlines(state)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-skip_ws_in_line.html"><code>Toml.skip_ws_in_line(state)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-toml-Toml_Toml-starts_with_text.html"><code>Toml.starts_with_text(state, word)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
-<li><a href="items/method_stdlib-toml-Toml_Toml-stringify.html"><code>Toml.stringify(value)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
+<li><a href="items/method_stdlib-toml-Toml_Toml-stringify.html"><code>Toml.stringify(value = nil)</code></a> &mdash; <code>stdlib/toml/Toml.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-abs.html"><code>Transform2D.abs(value)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-apply_point.html"><code>Transform2D.apply_point(transform, point)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-apply_rect.html"><code>Transform2D.apply_rect(transform, rect)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-apply_size.html"><code>Transform2D.apply_size(transform, size)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-apply_vector2.html"><code>Transform2D.apply_vector2(transform, vector)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-compose.html"><code>Transform2D.compose(a, b)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-determinant.html"><code>Transform2D.determinant(transform)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-equal-.html"><code>Transform2D.equal?(a, b)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-apply_point.html"><code>Transform2D.apply_point(transform, point = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-apply_rect.html"><code>Transform2D.apply_rect(transform, rect = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-apply_size.html"><code>Transform2D.apply_size(transform, size = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-apply_vector2.html"><code>Transform2D.apply_vector2(transform, vector = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-compose.html"><code>Transform2D.compose(a, b = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-determinant.html"><code>Transform2D.determinant(transform = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-equal-.html"><code>Transform2D.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-expect.html"><code>Transform2D.expect(value, name)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-expect_point.html"><code>Transform2D.expect_point(value, name)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-expect_rect.html"><code>Transform2D.expect_rect(value, name)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
@@ -953,94 +948,94 @@
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-from_array.html"><code>Transform2D.from_array(values)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-from_matrix.html"><code>Transform2D.from_matrix(value)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-identity.html"><code>Transform2D.identity()</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-initialize.html"><code>Transform2D.initialize(a, b, c, d, tx, ty)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-inverse.html"><code>Transform2D.inverse(transform)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-invertible-.html"><code>Transform2D.invertible?(transform)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-initialize.html"><code>Transform2D.initialize(a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-inverse.html"><code>Transform2D.inverse(transform = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-invertible-.html"><code>Transform2D.invertible?(transform = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-max.html"><code>Transform2D.max(a, b)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-min.html"><code>Transform2D.min(a, b)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-nearly_equal-.html"><code>Transform2D.nearly_equal?(a, b, epsilon)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-nearly_equal-.html"><code>Transform2D.nearly_equal?(a, b, epsilon = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-new.html"><code>Transform2D.new(a, b, c, d, tx, ty)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-number.html"><code>Transform2D.number(value, name)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-rotate.html"><code>Transform2D.rotate(transform, radians)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-rotate.html"><code>Transform2D.rotate(transform, radians = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-rotation.html"><code>Transform2D.rotation(radians)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-rotation_around.html"><code>Transform2D.rotation_around(radians, point)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-scale.html"><code>Transform2D.scale(sx, sy)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-scale_by.html"><code>Transform2D.scale_by(transform, sx, sy)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-scale_by.html"><code>Transform2D.scale_by(transform, sx, sy = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-skew.html"><code>Transform2D.skew(x_radians, y_radians)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-to_array.html"><code>Transform2D.to_array(transform)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-to_matrix.html"><code>Transform2D.to_matrix(transform)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-translate.html"><code>Transform2D.translate(transform, x, y)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-to_array.html"><code>Transform2D.to_array(transform = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-to_matrix.html"><code>Transform2D.to_matrix(transform = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
+<li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-translate.html"><code>Transform2D.translate(transform, x, y = nil)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-translation.html"><code>Transform2D.translation(x, y)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
 <li><a href="items/method_stdlib-transform2d-Transform2D_Transform2D-uniform_scale.html"><code>Transform2D.uniform_scale(s)</code></a> &mdash; <code>stdlib/transform2d/Transform2D.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-build.html"><code>Url.build(parts)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-build.html"><code>Url.build(parts = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-contains_colon-.html"><code>Url.contains_colon?(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-decimal-.html"><code>Url.decimal?(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-decode.html"><code>Url.decode(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-decode.html"><code>Url.decode(text = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-decode_hex.html"><code>Url.decode_hex(c)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-decode_query.html"><code>Url.decode_query(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-decode_query.html"><code>Url.decode_query(text = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-decode_query_value.html"><code>Url.decode_query_value(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-encode.html"><code>Url.encode(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-encode_query.html"><code>Url.encode_query(pairs)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-encode.html"><code>Url.encode(text = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-encode_query.html"><code>Url.encode_query(pairs = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-encode_query_pairs.html"><code>Url.encode_query_pairs(pairs)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-format.html"><code>Url.format(parts)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-format.html"><code>Url.format(parts = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-hex_digit.html"><code>Url.hex_digit(d)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-initialize.html"><code>Url.initialize(value)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-initialize.html"><code>Url.initialize(value = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-is_unreserved.html"><code>Url.is_unreserved(code)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-merge_path.html"><code>Url.merge_path(base_path, ref_path)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-normalize.html"><code>Url.normalize(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-normalize.html"><code>Url.normalize(text = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-normalize_path.html"><code>Url.normalize_path(path)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
-<li><a href="items/method_stdlib-url-Url_Url-parse.html"><code>Url.parse(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
+<li><a href="items/method_stdlib-url-Url_Url-parse.html"><code>Url.parse(text = nil)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-query_dict.html"><code>Url.query_dict(query)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-resolve.html"><code>Url.resolve(base, ref)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-url-Url_Url-validate_percent.html"><code>Url.validate_percent(text)</code></a> &mdash; <code>stdlib/url/Url.tya</code></li>
 <li><a href="items/method_stdlib-value-Value_Value-initialize.html"><code>Value.initialize(item)</code></a> &mdash; <code>stdlib/value/Value.tya</code></li>
-<li><a href="items/method_stdlib-value-Value_Value-nil-.html"><code>Value.nil?(item)</code></a> &mdash; <code>stdlib/value/Value.tya</code></li>
+<li><a href="items/method_stdlib-value-Value_Value-nil-.html"><code>Value.nil?(item = nil)</code></a> &mdash; <code>stdlib/value/Value.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-abs.html"><code>Vector2.abs(value)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-add.html"><code>Vector2.add(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-add.html"><code>Vector2.add(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-clamp.html"><code>Vector2.clamp(v, min_v, max_v)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-clamp_number.html"><code>Vector2.clamp_number(value, lo, hi)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-distance.html"><code>Vector2.distance(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-distance_squared.html"><code>Vector2.distance_squared(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-div.html"><code>Vector2.div(v, k)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-dot.html"><code>Vector2.dot(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-equal-.html"><code>Vector2.equal?(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-distance.html"><code>Vector2.distance(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-distance_squared.html"><code>Vector2.distance_squared(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-div.html"><code>Vector2.div(v, k = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-dot.html"><code>Vector2.dot(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-equal-.html"><code>Vector2.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-expect.html"><code>Vector2.expect(value, name)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-from_array.html"><code>Vector2.from_array(values)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-initialize.html"><code>Vector2.initialize(x, y)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-length.html"><code>Vector2.length(v)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-length_squared.html"><code>Vector2.length_squared(v)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-initialize.html"><code>Vector2.initialize(x = 0, y = 0)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-length.html"><code>Vector2.length(v = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-length_squared.html"><code>Vector2.length_squared(v = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-lerp.html"><code>Vector2.lerp(a, b, t)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-nearly_equal-.html"><code>Vector2.nearly_equal?(a, b, epsilon)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-nearly_equal-.html"><code>Vector2.nearly_equal?(a, b, epsilon = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-new.html"><code>Vector2.new(x, y)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-normalize.html"><code>Vector2.normalize(v)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-normalize.html"><code>Vector2.normalize(v = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-number.html"><code>Vector2.number(value, name)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-one.html"><code>Vector2.one()</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-scale.html"><code>Vector2.scale(v, k)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-sub.html"><code>Vector2.sub(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector2_Vector2-to_array.html"><code>Vector2.to_array(v)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-scale.html"><code>Vector2.scale(v, k = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-sub.html"><code>Vector2.sub(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector2_Vector2-to_array.html"><code>Vector2.to_array(v = nil)</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector2_Vector2-zero.html"><code>Vector2.zero()</code></a> &mdash; <code>stdlib/geometry/Vector2.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector3_Vector3-abs.html"><code>Vector3.abs(value)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-add.html"><code>Vector3.add(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-cross.html"><code>Vector3.cross(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-distance.html"><code>Vector3.distance(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-distance_squared.html"><code>Vector3.distance_squared(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-div.html"><code>Vector3.div(v, k)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-dot.html"><code>Vector3.dot(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-equal-.html"><code>Vector3.equal?(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-add.html"><code>Vector3.add(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-cross.html"><code>Vector3.cross(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-distance.html"><code>Vector3.distance(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-distance_squared.html"><code>Vector3.distance_squared(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-div.html"><code>Vector3.div(v, k = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-dot.html"><code>Vector3.dot(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-equal-.html"><code>Vector3.equal?(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector3_Vector3-expect.html"><code>Vector3.expect(value, name)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector3_Vector3-from_array.html"><code>Vector3.from_array(values)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-initialize.html"><code>Vector3.initialize(x, y, z)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-length.html"><code>Vector3.length(v)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-length_squared.html"><code>Vector3.length_squared(v)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-initialize.html"><code>Vector3.initialize(x = 0, y = 0, z = 0)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-length.html"><code>Vector3.length(v = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-length_squared.html"><code>Vector3.length_squared(v = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector3_Vector3-lerp.html"><code>Vector3.lerp(a, b, t)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-nearly_equal-.html"><code>Vector3.nearly_equal?(a, b, epsilon)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-nearly_equal-.html"><code>Vector3.nearly_equal?(a, b, epsilon = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector3_Vector3-new.html"><code>Vector3.new(x, y, z)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-normalize.html"><code>Vector3.normalize(v)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-normalize.html"><code>Vector3.normalize(v = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector3_Vector3-number.html"><code>Vector3.number(value, name)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector3_Vector3-one.html"><code>Vector3.one()</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-scale.html"><code>Vector3.scale(v, k)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-sub.html"><code>Vector3.sub(a, b)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
-<li><a href="items/method_stdlib-geometry-Vector3_Vector3-to_array.html"><code>Vector3.to_array(v)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-scale.html"><code>Vector3.scale(v, k = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-sub.html"><code>Vector3.sub(a, b = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
+<li><a href="items/method_stdlib-geometry-Vector3_Vector3-to_array.html"><code>Vector3.to_array(v = nil)</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
 <li><a href="items/method_stdlib-geometry-Vector3_Vector3-zero.html"><code>Vector3.zero()</code></a> &mdash; <code>stdlib/geometry/Vector3.tya</code></li>
 <li><a href="items/method_stdlib-io-Reader_Writable-write.html"><code>Writable.write(data)</code></a> &mdash; <code>stdlib/io/Reader.tya</code></li>
 <li><a href="items/method_stdlib-net-socket-Socket_Writable-write.html"><code>Writable.write(data)</code></a> &mdash; <code>stdlib/net/socket/Socket.tya</code></li>
@@ -1082,15 +1077,15 @@
 <li><a href="items/method_stdlib-xml-Xml_Xml-collect_recursive.html"><code>Xml.collect_recursive(element, name, out)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-decode_entities.html"><code>Xml.decode_entities(text, state)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-decode_entity.html"><code>Xml.decode_entity(entity, state)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
-<li><a href="items/method_stdlib-xml-Xml_Xml-dump.html"><code>Xml.dump(value)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
+<li><a href="items/method_stdlib-xml-Xml_Xml-dump.html"><code>Xml.dump(value = nil)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-error.html"><code>Xml.error(state, message)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-escape_attr.html"><code>Xml.escape_attr(text)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-escape_text.html"><code>Xml.escape_text(text)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-expect.html"><code>Xml.expect(state, c)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-expect_text.html"><code>Xml.expect_text(state, text)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-index_of.html"><code>Xml.index_of(text, needle, start)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
-<li><a href="items/method_stdlib-xml-Xml_Xml-initialize.html"><code>Xml.initialize(value)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
-<li><a href="items/method_stdlib-xml-Xml_Xml-parse.html"><code>Xml.parse(text)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
+<li><a href="items/method_stdlib-xml-Xml_Xml-initialize.html"><code>Xml.initialize(value = nil)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
+<li><a href="items/method_stdlib-xml-Xml_Xml-parse.html"><code>Xml.parse(text = nil)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-parse_attrs_until.html"><code>Xml.parse_attrs_until(state, terminator)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-parse_cdata.html"><code>Xml.parse_cdata(state)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-parse_comment.html"><code>Xml.parse_comment(state)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
@@ -1105,11 +1100,15 @@
 <li><a href="items/method_stdlib-xml-Xml_Xml-skip_processing_instruction.html"><code>Xml.skip_processing_instruction(state)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-skip_ws.html"><code>Xml.skip_ws(state)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-starts_at.html"><code>Xml.starts_at(state, text)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
-<li><a href="items/method_stdlib-xml-Xml_Xml-stringify.html"><code>Xml.stringify(value)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
+<li><a href="items/method_stdlib-xml-Xml_Xml-stringify.html"><code>Xml.stringify(value = nil)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-compress-Zlib_Zlib-compress.html"><code>Zlib.compress(value)</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
 <li><a href="items/method_stdlib-compress-Zlib_Zlib-compress_file.html"><code>Zlib.compress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
 <li><a href="items/method_stdlib-compress-Zlib_Zlib-decompress.html"><code>Zlib.decompress(value)</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
 <li><a href="items/method_stdlib-compress-Zlib_Zlib-decompress_file.html"><code>Zlib.decompress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
+</ul>
+<h2>constant</h2>
+<ul>
+<li><a href="items/constant_stdlib-csv-Csv_Csv-SEPARATOR.html"><code>Csv.SEPARATOR</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
 </ul>
 </div>
 </div>

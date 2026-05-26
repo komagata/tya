@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"tya/internal/ast"
@@ -505,7 +506,51 @@ func leadingBeforeLine(comments []parser.CommentInfo, line int, indent int) stri
 // parameter names. Type information is not available in the AST so
 // this is the maximum precision v0.51 ships.
 func FuncSignature(name string, fn *ast.FuncLit) string {
-	return name + "(" + strings.Join(fn.Params, ", ") + ")"
+	return name + "(" + strings.Join(paramSignatures(fn.Params, fn.Defaults), ", ") + ")"
+}
+
+func paramSignatures(params []string, defaults []ast.Expr) []string {
+	out := make([]string, len(params))
+	for i, param := range params {
+		out[i] = param
+		if i >= len(defaults) || defaults[i] == nil {
+			continue
+		}
+		out[i] += " = " + exprSignature(defaults[i])
+	}
+	return out
+}
+
+func exprSignature(expr ast.Expr) string {
+	switch n := expr.(type) {
+	case *ast.NilLit:
+		return "nil"
+	case *ast.BoolLit:
+		if n.Value {
+			return "true"
+		}
+		return "false"
+	case *ast.IntLit:
+		return strconv.FormatInt(n.Value, 10)
+	case *ast.FloatLit:
+		return strconv.FormatFloat(n.Value, 'f', -1, 64)
+	case *ast.StringLit:
+		return strconv.Quote(n.Value)
+	case *ast.Ident:
+		return n.Name
+	case *ast.DictLit:
+		if len(n.Props) == 0 {
+			return "{}"
+		}
+		return "{...}"
+	case *ast.ArrayLit:
+		if len(n.Elems) == 0 {
+			return "[]"
+		}
+		return "[...]"
+	default:
+		return "..."
+	}
 }
 
 func MethodSignature(className string, method ast.ClassMethod) string {

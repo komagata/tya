@@ -478,7 +478,7 @@ func (u *unparser) moduleMember(m ast.ModuleMember) error {
 			return err
 		}
 		u.line(m.Name + " = " + defArrow(head))
-		return u.block(fn.Body)
+		return u.funcBlock(fn.Body)
 	}
 	val, err := u.expr(m.Value)
 	if err != nil {
@@ -684,7 +684,7 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 		return nil
 	}
 	u.line(prefix + m.Name + ": " + defArrow(head))
-	return u.block(fn.Body)
+	return u.funcBlock(fn.Body)
 }
 
 func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
@@ -767,7 +767,7 @@ func (u *unparser) assignStmt(n *ast.AssignStmt) error {
 				}
 			} else if len(fn.Body) > 0 {
 				u.line(strings.Join(targets, ", ") + " = " + defArrow(head))
-				return u.block(fn.Body)
+				return u.funcBlock(fn.Body)
 			}
 		}
 		if lit, ok := n.Values[0].(*ast.StringLit); ok && strings.Contains(lit.Form, "heredoc") {
@@ -1193,6 +1193,90 @@ func (u *unparser) blockBody(stmts []ast.Stmt) error {
 	return u.block(stmts)
 }
 
+func (u *unparser) funcBlock(stmts []ast.Stmt) error {
+	if len(stmts) == 0 {
+		return u.block(stmts)
+	}
+	u.indent++
+	for _, st := range stmts[:len(stmts)-1] {
+		if err := u.stmt(st); err != nil {
+			u.indent--
+			return err
+		}
+	}
+	err := u.funcTailStmt(stmts[len(stmts)-1])
+	u.indent--
+	return err
+}
+
+func (u *unparser) funcTailStmt(st ast.Stmt) error {
+	switch n := st.(type) {
+	case *ast.ReturnStmt:
+		if len(n.Values) != 1 {
+			return u.stmt(st)
+		}
+		ex, err := u.expr(n.Values[0])
+		if err != nil {
+			return err
+		}
+		u.emitStmtLine(&ast.ExprStmt{Expr: n.Values[0]}, ex)
+		return nil
+	case *ast.IfStmt:
+		return u.ifStmtTail(n)
+	default:
+		return u.stmt(st)
+	}
+}
+
+func (u *unparser) tailBlock(stmts []ast.Stmt) error {
+	if len(stmts) == 0 {
+		return nil
+	}
+	u.indent++
+	for _, st := range stmts[:len(stmts)-1] {
+		if err := u.stmt(st); err != nil {
+			u.indent--
+			return err
+		}
+	}
+	err := u.funcTailStmt(stmts[len(stmts)-1])
+	u.indent--
+	return err
+}
+
+func (u *unparser) ifStmtTail(n *ast.IfStmt) error {
+	cond, err := u.expr(n.Cond)
+	if err != nil {
+		return err
+	}
+	u.emitCondHeader("if", cond)
+	if err := u.tailBlock(n.Then); err != nil {
+		return err
+	}
+	if len(n.Else) == 0 {
+		return nil
+	}
+	if len(n.Else) == 1 {
+		if inner, ok := n.Else[0].(*ast.IfStmt); ok {
+			cond2, err := u.expr(inner.Cond)
+			if err != nil {
+				return err
+			}
+			u.emitCondHeader("elseif", cond2)
+			if err := u.tailBlock(inner.Then); err != nil {
+				return err
+			}
+			if len(inner.Else) > 0 {
+				u.line("else")
+				return u.tailBlock(inner.Else)
+			}
+			return nil
+		}
+	}
+	u.line("else")
+	return u.tailBlock(n.Else)
+}
+
 func (u *unparser) funcHead(fn *ast.FuncLit) (string, error) {
 	if len(fn.Params) == 0 {
 		return "()", nil
@@ -1201,9 +1285,6 @@ func (u *unparser) funcHead(fn *ast.FuncLit) (string, error) {
 	for i, param := range fn.Params {
 		parts[i] = param
 		if i < len(fn.Defaults) && fn.Defaults[i] != nil {
-			if _, ok := fn.Defaults[i].(*ast.NilLit); ok {
-				continue
-			}
 			def, err := u.expr(fn.Defaults[i])
 			if err != nil {
 				return "", err

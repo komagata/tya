@@ -1201,6 +1201,54 @@ func evalStmt(s ast.Stmt, env *Env) (Value, error) {
 		if err != nil {
 			return nil, err
 		}
+		if text, ok := iterable.(string); ok {
+			var last Value
+			for i, r := range []rune(text) {
+				loopEnv := env.child()
+				loopEnv.vars[n.ValueName] = string(r)
+				loopEnv.rememberKind(n.ValueName, loopEnv.vars[n.ValueName])
+				if n.IndexName != "" {
+					loopEnv.vars[n.IndexName] = int64(i)
+					loopEnv.rememberKind(n.IndexName, loopEnv.vars[n.IndexName])
+				}
+				bodyValue, err := evalStmts(n.Body, loopEnv)
+				if errors.Is(err, errBreak) {
+					return bodyValue, nil
+				}
+				if errors.Is(err, errContinue) {
+					continue
+				}
+				if err != nil {
+					return nil, err
+				}
+				last = bodyValue
+			}
+			return last, nil
+		}
+		if bytesVal, ok := iterable.(*Bytes); ok {
+			var last Value
+			for i, b := range bytesVal.data {
+				loopEnv := env.child()
+				loopEnv.vars[n.ValueName] = int64(b)
+				loopEnv.rememberKind(n.ValueName, loopEnv.vars[n.ValueName])
+				if n.IndexName != "" {
+					loopEnv.vars[n.IndexName] = int64(i)
+					loopEnv.rememberKind(n.IndexName, loopEnv.vars[n.IndexName])
+				}
+				bodyValue, err := evalStmts(n.Body, loopEnv)
+				if errors.Is(err, errBreak) {
+					return bodyValue, nil
+				}
+				if errors.Is(err, errContinue) {
+					continue
+				}
+				if err != nil {
+					return nil, err
+				}
+				last = bodyValue
+			}
+			return last, nil
+		}
 		arr, ok := iterable.(*Array)
 		if !ok {
 			if obj, ok := iterable.(Dict); ok {
@@ -1784,7 +1832,7 @@ func evalStandardModuleCall(module string, name string, args []Value, env *Env) 
 
 func isStandardStringCall(name string) bool {
 	switch name {
-	case "len", "byte_len", "char_len", "slice", "trim", "contains", "starts_with", "ends_with", "replace", "split", "join", "lines", "upcase", "downcase":
+	case "len", "byte_len", "char_len", "slice", "trim", "contains", "starts_with", "ends_with", "replace", "split", "join", "lines", "upcase", "downcase", "sequence":
 		return true
 	default:
 		return false
@@ -1793,7 +1841,7 @@ func isStandardStringCall(name string) bool {
 
 func isStandardArrayCall(name string) bool {
 	switch name {
-	case "len", "empty?", "first", "last", "push", "pop", "slice", "reverse", "join", "map", "filter", "find", "any", "all", "each", "reduce":
+	case "len", "empty?", "first", "last", "push", "pop", "slice", "reverse", "join", "map", "filter", "find", "any", "all", "each", "reduce", "sequence":
 		return true
 	default:
 		return false
@@ -1802,7 +1850,7 @@ func isStandardArrayCall(name string) bool {
 
 func isStandardDictCall(name string) bool {
 	switch name {
-	case "len", "has", "has?", "get", "set", "delete", "keys", "values", "merge":
+	case "len", "has", "has?", "get", "set", "delete", "keys", "values", "merge", "update":
 		return true
 	default:
 		return false
@@ -1937,6 +1985,15 @@ func evalStringModuleCall(name string, args []Value, env *Env) (Value, error) {
 			return nil, err
 		}
 		return strings.ToLower(text), nil
+	case "sequence":
+		if len(args) != 1 {
+			return nil, fmt.Errorf("string.sequence expects 1 argument")
+		}
+		text, ok := args[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("string.sequence expects string")
+		}
+		return primitiveSequence(text), nil
 	default:
 		return nil, fmt.Errorf("unknown string.%s", name)
 	}
@@ -2032,6 +2089,15 @@ func evalArrayModuleCall(name string, args []Value, env *Env) (Value, error) {
 		return evalJoin("array.join", args)
 	case "map", "filter", "find", "any", "all", "each", "reduce":
 		return evalCollectionBuiltin(name, args)
+	case "sequence":
+		if len(args) != 1 {
+			return nil, fmt.Errorf("array.sequence expects 1 argument")
+		}
+		arr, ok := args[0].(*Array)
+		if !ok {
+			return nil, fmt.Errorf("array.sequence expects array")
+		}
+		return primitiveSequence(arr), nil
 	default:
 		return nil, fmt.Errorf("unknown array.%s", name)
 	}
@@ -2131,6 +2197,22 @@ func evalDictModuleCall(name string, args []Value, env *Env) (Value, error) {
 			out[key] = value
 		}
 		return out, nil
+	case "update":
+		if len(args) != 2 {
+			return nil, fmt.Errorf("dict.update expects 2 arguments")
+		}
+		left, ok := args[0].(Dict)
+		if !ok {
+			return nil, fmt.Errorf("dict.update expects dictionary left")
+		}
+		right, ok := args[1].(Dict)
+		if !ok {
+			return nil, fmt.Errorf("dict.update expects dictionary right")
+		}
+		for key, value := range right {
+			left[key] = value
+		}
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("unknown dict.%s", name)
 	}
@@ -2147,7 +2229,7 @@ func evalLen(name string, args []Value, env *Env) (Value, error) {
 		return int64(len(v.items)), nil
 	case Dict:
 		return int64(len(v)), nil
-	case Bytes:
+	case *Bytes:
 		return int64(len(v.data)), nil
 	default:
 		return nil, fmt.Errorf("%s expects string, array, dictionary, or bytes", name)
@@ -2300,6 +2382,127 @@ func evalCollectionBuiltin(name string, args []Value) (Value, error) {
 		return acc, nil
 	default:
 		return nil, fmt.Errorf("unknown array.%s", name)
+	}
+}
+
+func primitiveSequence(source Value) Dict {
+	seq := Dict{}
+	seq["to_a"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 0 {
+			return nil, fmt.Errorf("sequence.to_a expects 0 arguments")
+		}
+		return sequenceItems(source)
+	})
+	seq["reduce"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 2 {
+			return nil, fmt.Errorf("sequence.reduce expects 2 arguments")
+		}
+		items, err := sequenceItems(source)
+		if err != nil {
+			return nil, err
+		}
+		acc := args[0]
+		for _, item := range items.items {
+			acc, err = callValue(args[1], []Value{acc, item})
+			if err != nil {
+				return nil, err
+			}
+		}
+		return acc, nil
+	})
+	seq["each"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("sequence.each expects 1 argument")
+		}
+		items, err := sequenceItems(source)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range items.items {
+			if _, err := callValue(args[0], []Value{item}); err != nil {
+				return nil, err
+			}
+		}
+		return nil, nil
+	})
+	seq["any?"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("sequence.any? expects 1 argument")
+		}
+		items, err := sequenceItems(source)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range items.items {
+			ok, err := callValue(args[0], []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if truthy(ok) {
+				return true, nil
+			}
+		}
+		return false, nil
+	})
+	seq["all?"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("sequence.all? expects 1 argument")
+		}
+		items, err := sequenceItems(source)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range items.items {
+			ok, err := callValue(args[0], []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if !truthy(ok) {
+				return false, nil
+			}
+		}
+		return true, nil
+	})
+	seq["find"] = Builtin(func(args []Value) (Value, error) {
+		if len(args) != 1 {
+			return nil, fmt.Errorf("sequence.find expects 1 argument")
+		}
+		items, err := sequenceItems(source)
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range items.items {
+			ok, err := callValue(args[0], []Value{item})
+			if err != nil {
+				return nil, err
+			}
+			if truthy(ok) {
+				return item, nil
+			}
+		}
+		return nil, nil
+	})
+	return seq
+}
+
+func sequenceItems(source Value) (*Array, error) {
+	switch v := source.(type) {
+	case string:
+		out := &Array{items: make([]Value, 0, len([]rune(v)))}
+		for _, r := range []rune(v) {
+			out.items = append(out.items, string(r))
+		}
+		return out, nil
+	case *Bytes:
+		out := &Array{items: make([]Value, 0, len(v.data))}
+		for _, b := range v.data {
+			out.items = append(out.items, int64(b))
+		}
+		return out, nil
+	case *Array:
+		return v, nil
+	default:
+		return nil, fmt.Errorf("sequence source is not iterable")
 	}
 }
 
@@ -2519,13 +2722,21 @@ func primitiveMethodValue(receiver Value, name string, env *Env) Value {
 		if isStandardDictCall(name) {
 			return call(func(args []Value) (Value, error) { return evalDictModuleCall(name, args, env) })
 		}
-	case Bytes:
+	case *Bytes:
 		if name == "len" {
 			return Builtin(func(args []Value) (Value, error) {
 				if len(args) != 0 {
 					return nil, fmt.Errorf("bytes.len expects 0 arguments")
 				}
-				return int64(len(receiver.(Bytes).data)), nil
+				return int64(len(receiver.(*Bytes).data)), nil
+			})
+		}
+		if name == "sequence" {
+			return Builtin(func(args []Value) (Value, error) {
+				if len(args) != 0 {
+					return nil, fmt.Errorf("bytes.sequence expects 0 arguments")
+				}
+				return primitiveSequence(receiver), nil
 			})
 		}
 	case int64, float64, bool, nil:

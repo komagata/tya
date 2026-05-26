@@ -167,7 +167,7 @@ func TestUnparseSingleQuotedStringPreservesLiteralValue(t *testing.T) {
 
 func TestUnparseSelfAndSuperExpressions(t *testing.T) {
 	src := "class Box\n  static get: ->\n    return Self.wrap(self.value + super.value)\n"
-	want := "class Box\n  static get: ->\n    return Self.wrap(self.value + super.value)\n"
+	want := "class Box\n  static get: ->\n    Self.wrap(self.value + super.value)\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
@@ -195,7 +195,7 @@ func TestUnparseZeroArgFunctionDefinitionsUseShortArrow(t *testing.T) {
 	}, "\n")
 	want := strings.Join([]string{
 		"helper = ->",
-		"  return true",
+		"  true",
 		"",
 		"inline = -> true",
 		"",
@@ -223,7 +223,7 @@ func TestUnparseLambdaBlock(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"f = x ->", "  y = x + 1", "  return y", "print(f(2))"} {
+	for _, want := range []string{"f = x ->", "  y = x + 1", "  y", "print(f(2))"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}
@@ -454,7 +454,7 @@ func TestUnparseClass(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"class Dog", "  bark: ->", "    return \"woof\""} {
+	for _, want := range []string{"class Dog", "  bark: ->", "    \"woof\""} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}
@@ -468,6 +468,63 @@ func TestUnparsePrivatePredicateMethodName(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := "class Address\n  static private?: -> false\n\n  private?: -> true\n\n  private helper: -> true\n"
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+}
+
+func TestUnparseOmitsFinalReturnInFunctionBodies(t *testing.T) {
+	src := strings.Join([]string{
+		"double = x ->",
+		"  y = x * 2",
+		"  return y",
+		"",
+		"class Box",
+		"  value: ->",
+		"    return 1",
+		"",
+		"  branch: ok ->",
+		"    if ok",
+		"      return 1",
+		"    else",
+		"      return 2",
+		"",
+		"  choose: a, b ->",
+		"    if a",
+		"      return 1",
+		"    elseif b",
+		"      return 2",
+		"    else",
+		"      return 3",
+		"",
+	}, "\n")
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := strings.Join([]string{
+		"double = x ->",
+		"  y = x * 2",
+		"  y",
+		"",
+		"class Box",
+		"  branch: ok ->",
+		"    if ok",
+		"      1",
+		"    else",
+		"      2",
+		"",
+		"  choose: a, b ->",
+		"    if a",
+		"      1",
+		"    elseif b",
+		"      2",
+		"    else",
+		"      3",
+		"",
+		"  value: ->",
+		"    1",
+	}, "\n") + "\n"
 	if got != want {
 		t.Fatalf("got:\n%swant:\n%s", got, want)
 	}

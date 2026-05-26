@@ -22,7 +22,7 @@ func TestRewriteCatalog(t *testing.T) {
 			}, "\n"),
 			want: strings.Join([]string{
 				"main = ->",
-				"  return true",
+				"  true",
 				"",
 			}, "\n"),
 		},
@@ -40,7 +40,7 @@ func TestRewriteCatalog(t *testing.T) {
 		},
 		{
 			category: "function-head",
-			name:     "nil default arguments are omitted",
+			name:     "nil default arguments are preserved",
 			input: strings.Join([]string{
 				"setup = value = nil -> value",
 				"class Codec",
@@ -50,13 +50,13 @@ func TestRewriteCatalog(t *testing.T) {
 				"",
 			}, "\n"),
 			want: strings.Join([]string{
-				"setup = value -> value",
+				"setup = value = nil -> value",
 				"",
 				"class Codec",
-				"  initialize: value ->",
+				"  initialize: value = nil ->",
 				"    self.value = value",
 				"",
-				"  encode: value, padded = true -> value",
+				"  encode: value = nil, padded = true -> value",
 				"",
 			}, "\n"),
 		},

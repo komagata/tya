@@ -108,6 +108,7 @@ TyaValue tya_dict_get(TyaValue dict, TyaValue key, TyaValue fallback, bool has_f
 TyaValue tya_dict_set(TyaValue dict, TyaValue key, TyaValue value);
 TyaValue tya_dict_delete(TyaValue dict, TyaValue key);
 TyaValue tya_dict_merge(TyaValue left, TyaValue right);
+TyaValue tya_dict_update(TyaValue left, TyaValue right);
 TyaValue tya_dict_entries(TyaValue dict);
 TyaValue tya_dict_entry_at(TyaValue dict, TyaValue index);
 TyaValue tya_iter(TyaValue value);

@@ -41,6 +41,14 @@ func TestEmitCAllowsInstanceAndClassPrivatePredicateMethods(t *testing.T) {
 	}
 }
 
+func TestEmitCAllowsSelfClassConstantInFieldInitializer(t *testing.T) {
+	src := "class Csv\n  SEPARATOR: \",\"\n\n  options: { separator: Self.SEPARATOR, header: false }\n\ncsv = Csv()\nprint(csv.options[\"separator\"])\n"
+	out := compileAndRun(t, src)
+	if string(out) != ",\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
 func TestEmitCEnvironmentAndProcessProgram(t *testing.T) {
 	src := "setenv(\"TYA_CODEGEN_ENV\", \"ok\")\nprint(env(\"TYA_CODEGEN_ENV\"))\nr = process_run([\"sh\", \"-c\", \"printf $TYA_CODEGEN_CHILD\"], { env: { \"TYA_CODEGEN_CHILD\": \"child\" } })\nprint(r[\"status\"])\nprint(r[\"success\"])\nprint(r[\"stdout\"])\n"
 	out := compileAndRun(t, src)
@@ -396,9 +404,9 @@ func TestEmitCCompilesStringInterpolationProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesDictProgram(t *testing.T) {
-	src := "user =\n  name: \"komagata\"\n  age: 20\nprint(user[\"name\"])\nprint(user.len())\nuser[\"city\"] = \"Tokyo\"\nprint(user[\"city\"])\n"
+	src := "user =\n  name: \"komagata\"\n  age: 20\nprint(user[\"name\"])\nprint(user.len())\nuser[\"city\"] = \"Tokyo\"\nprint(user[\"city\"])\nprint(user.update({ name: \"Tya\", lang: \"tya\" }))\nprint(user[\"name\"])\nprint(user[\"lang\"])\n"
 	out := compileAndRun(t, src)
-	if string(out) != "komagata\n2\nTokyo\n" {
+	if string(out) != "komagata\n2\nTokyo\nnil\nTya\ntya\n" {
 		t.Fatalf("got %q", out)
 	}
 }

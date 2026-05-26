@@ -1,23 +1,73 @@
-import unittest
 import csv as csv
+import unittest
 
 class StdlibCsvTest extends TestCase
+  test_dump_arrays: ->
+    doc = csv.Csv()
+    doc.rows = [["a", "b"], ["1", "2"]]
+    out = doc.stringify()
+    self.assert_equal("a,b\n1,2\n", out, "dump arrays")
+
+  test_dump_dicts_with_header: ->
+    doc = csv.Csv()
+    doc.rows = [{ x: "1", y: "2" }]
+    out = doc.dump({ header: true })
+    self.assert_equal("x,y\n1,2\n", out, "dicts with header")
+
+  test_dump_quotes_special: ->
+    doc = csv.Csv()
+    doc.rows = [["a, b", "c"]]
+    out = doc.stringify()
+    self.assert_equal("\"a, b\",c\n", out, "quotes comma")
+
+  test_empty_csv_has_rows: ->
+    doc = csv.Csv()
+    self.assert_equal([], doc.parse(), "empty rows")
+    self.assert_equal("", doc.dump(), "empty dump")
+
+  test_initialize_accepts_options: ->
+    doc = csv.Csv({ separator: ";" })
+    doc.rows = [["a", "b"]]
+    self.assert_equal("a;b\n", doc.dump(), "initial options")
+
+  test_options_are_per_instance: ->
+    first = csv.Csv()
+    first.parse("x;y\n1;2\n", { separator: ";", header: true })
+    second = csv.Csv()
+    second.rows = [["a", "b"]]
+    self.assert_equal("a,b\n", second.dump(), "default options")
+
+  test_options_persist_on_instance: ->
+    doc = csv.Csv()
+    doc.parse("x;y\n1;2\n", { separator: ";", header: true })
+    self.assert_equal("x;y\n1;2\n", doc.dump(), "instance options")
+
+  test_parse_header_controls_dump_order: ->
+    doc = csv.Csv()
+    doc.parse("y,x\n2,1\n", { header: true })
+    self.assert_equal(
+      "y,x\n2,1\n",
+      doc.dump({ header: true }),
+      "parsed header order"
+    )
 
   test_parse_no_header: ->
-    rows = csv.Csv("a,b\n1,2\n").parse(nil)
+    rows = csv.Csv().parse("a,b\n1,2\n")
     self.assert_equal([["a", "b"], ["1", "2"]], rows, "raw rows")
-  test_parse_with_header: ->
-    rows = csv.Csv("name,age\ntya,1\n").parse({ header: true })
-    self.assert_equal([{ name: "tya", age: "1" }], rows, "with header")
+
   test_parse_quoted_field: ->
-    rows = csv.Csv("a,b\n\"hello, world\",x\n").parse(nil)
+    rows = csv.Csv().parse("a,b\n\"hello, world\",x\n")
     self.assert_equal([["a", "b"], ["hello, world", "x"]], rows, "quoted")
-  test_dump_arrays: ->
-    out = csv.Csv([["a", "b"], ["1", "2"]]).stringify(nil)
-    self.assert_equal("a,b\n1,2\n", out, "dump arrays")
-  test_dump_quotes_special: ->
-    out = csv.Csv([["a, b", "c"]]).stringify(nil)
-    self.assert_equal("\"a, b\",c\n", out, "quotes comma")
-  test_dump_dicts_with_header: ->
-    out = csv.Csv([{ x: "1", y: "2" }]).stringify({ header: true })
-    self.assert_equal("x,y\n1,2\n", out, "dicts with header")
+
+  test_parse_stores_rows_for_dump: ->
+    doc = csv.Csv()
+    doc.parse("x,y\n1,2\n", { header: true })
+    self.assert_equal(
+      "x,y\n1,2\n",
+      doc.dump({ header: true }),
+      "dump stored dict rows"
+    )
+
+  test_parse_with_header: ->
+    rows = csv.Csv().parse("name,age\ntya,1\n", { header: true })
+    self.assert_equal([{ name: "tya", age: "1" }], rows, "with header")

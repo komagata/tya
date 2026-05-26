@@ -59,6 +59,10 @@ exec $WORK/tya run iterable_protocol.tya
 stdout '1\n2\n3\n10/0\n20/1\nt\ny\na\nname=Tya\nname\nTya\ntrue\nnil\ntrue\ncaught\nnil\n7\nbuilt\nfilter 1\nfilter 2\nmap 2\nfilter 3\nmap 3\n4,6\nfilter 1\nfilter 2\nmap 2\nfilter 3\nmap 3\n4,6\n5\nname=Tya\n'
 ! stderr .
 
+exec $WORK/tya run primitive_sequence_methods.tya
+stdout 'a,b,c\ntrue\ntrue\nb\n65,66,67\n198\n65\n66\n67\nseen a\nseen b\ntrue\nall a\nall b\nfalse\nfind a\nfind b\nb\nx\ny\nnil\n'
+! stderr .
+
 -- nested_capture.tya --
 make = x ->
   mid = y ->
@@ -186,6 +190,52 @@ for key in { name: "Tya" }.keys()
 
 for value in { name: "Tya" }.values()
   print(value)
+
+-- primitive_sequence_methods.tya --
+print("abc".sequence().to_a().join(","))
+print("abc".sequence().any?(c -> c == "b"))
+print("abc".sequence().all?(c -> c != "z"))
+print("abc".sequence().find(c -> c == "b"))
+print(b"ABC".sequence().to_a().join(","))
+byte_sum = total, byte -> total + byte
+sum = b"ABC".sequence().reduce(0, byte_sum)
+print(sum)
+
+for byte in b"ABC"
+  print(byte)
+
+any_check = c ->
+  print("seen {c}")
+  if c == "b"
+    return true
+  false
+
+any_result = "abc".sequence().any?(any_check)
+print(any_result)
+
+all_check = c ->
+  print("all {c}")
+  if c != "b"
+    return true
+  false
+
+all_result = "abc".sequence().all?(all_check)
+print(all_result)
+
+find_check = c ->
+  print("find {c}")
+  if c == "b"
+    return true
+  false
+
+found = "abc".sequence().find(find_check)
+print(found)
+
+print_item = c ->
+  print(c)
+
+each_result = "xy".sequence().each(print_item)
+print(each_result)
 
 -- explicit_iterators.tya --
 array_iter = [nil].iter()
