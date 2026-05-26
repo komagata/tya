@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { execFile } from "child_process";
+import { execFile, execFileSync } from "child_process";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -72,6 +72,7 @@ function resolveExecutable(configured: string): string {
     return configured;
   }
 
+  let best: { path: string; version: number[] } | undefined;
   const home = os.homedir();
   for (const candidate of [
     path.join(home, ".local", "bin", "tya"),
@@ -83,12 +84,22 @@ function resolveExecutable(configured: string): string {
     "/usr/local/bin/tya",
     "/usr/bin/tya",
   ]) {
-    if (isExecutable(candidate)) {
-      return candidate;
+    if (!isExecutable(candidate)) {
+      continue;
+    }
+    const version = executableVersion(candidate);
+    if (!version) {
+      if (!best) {
+        best = { path: candidate, version: [] };
+      }
+      continue;
+    }
+    if (!best || compareVersions(version, best.version) > 0) {
+      best = { path: candidate, version };
     }
   }
 
-  return "tya";
+  return best?.path ?? "tya";
 }
 
 function isExecutable(filePath: string): boolean {
@@ -98,4 +109,36 @@ function isExecutable(filePath: string): boolean {
   } catch {
     return false;
   }
+}
+
+function executableVersion(filePath: string): number[] | undefined {
+  try {
+    const stdout = execFileSync(filePath, ["version"], {
+      encoding: "utf8",
+      timeout: 2000,
+      maxBuffer: 1024 * 1024,
+    });
+    return parseVersion(stdout.trim());
+  } catch {
+    return undefined;
+  }
+}
+
+function parseVersion(value: string): number[] | undefined {
+  const match = value.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (!match) {
+    return undefined;
+  }
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function compareVersions(left: number[], right: number[]): number {
+  for (let i = 0; i < 3; i++) {
+    const l = left[i] ?? -1;
+    const r = right[i] ?? -1;
+    if (l !== r) {
+      return l - r;
+    }
+  }
+  return 0;
 }

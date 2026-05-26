@@ -159,6 +159,29 @@ func LoadSourceWithOrigins(path string) (string, []string, map[string]map[string
 	return LoadUserSourceWithOrigins(path)
 }
 
+// LoadClassFileWithSiblingOrigins loads a PascalCase class/interface file
+// together with the other PascalCase files in the same directory. It is used
+// by read-only commands such as `tya check Foo.tya`, where the checked file is
+// a package member rather than an entry script.
+func LoadClassFileWithSiblingOrigins(path string) (string, []string, map[string]map[string]string, error) {
+	if err := ValidateAnyTyaFileName(path); err != nil {
+		return "", nil, nil, err
+	}
+	if !checker.IsClassFileName(path) {
+		return "", nil, nil, fmt.Errorf("%s is not a class file", filepath.Base(path))
+	}
+	classFiles, err := findEntrySiblings(path)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	pkgName := "classfile"
+	source, origins, err := synthesizePackageSource(classFiles, pkgName, false)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	return source, nil, map[string]map[string]string{pkgName: origins}, nil
+}
+
 func LoadUserSource(path string) (string, error) {
 	src, _, err := LoadUserSourceWithModules(path)
 	return src, err

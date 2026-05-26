@@ -1547,14 +1547,14 @@ func checkFile(path string) error {
 	}
 	// v0.44: tya check on a PascalCase class file is allowed
 	// (read-only, no entry semantics). Skip the entry-only
-	// runner.LoadSourceWithModules path and validate the class
-	// file structure + body in isolation.
+	// runner.LoadSourceWithModules path and check the class file
+	// together with sibling package members.
 	if checker.IsClassFileName(path) {
-		src, err := os.ReadFile(path)
+		source, modules, origins, err := runner.LoadClassFileWithSiblingOrigins(path)
 		if err != nil {
 			return err
 		}
-		toks, errs := lexer.Lex(string(src))
+		toks, errs := lexer.Lex(source)
 		if len(errs) > 0 {
 			return errs[0]
 		}
@@ -1562,7 +1562,17 @@ func checkFile(path string) error {
 		if err != nil {
 			return err
 		}
-		return checker.CheckClassFile(prog, path)
+		runner.StampOriginFiles(prog, origins)
+		diags, err := checker.CheckAll(prog, modules, path, true)
+		if err != nil {
+			return err
+		}
+		if len(diags) == 0 {
+			_, _, err := codegen.EmitCWithPath(prog, path)
+			return err
+		}
+		emitDiagnostics(diags, path)
+		return errStrictReported
 	}
 	source, modules, origins, err := runner.LoadSourceWithOrigins(path)
 	if err != nil {
