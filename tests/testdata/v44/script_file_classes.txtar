@@ -18,10 +18,10 @@ stdout 'A->B->C\n'
 
 -- inline.tya --
 class Wrapper
-  initialize = msg ->
+  initialize: msg ->
     self.msg = msg
 
-  show = ->
+  show: ->
     "inline:{self.msg}"
 
 w = Wrapper("hello")
@@ -29,15 +29,15 @@ print(w.show())
 
 -- multi.tya --
 class A
-  pass = next ->
+  pass: next ->
     "A->{next.pass(C())}"
 
 class B
-  pass = c ->
+  pass: c ->
     "B->{c.label()}"
 
 class C
-  label = ->
+  label: ->
     "C"
 
 print(A().pass(B()))

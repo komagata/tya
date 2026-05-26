@@ -5,13 +5,13 @@ import os as os
 
 class StdlibFilesystemTest extends TestCase
 
-  test_file_remove = ->
+  test_file_remove: ->
     p = "/tmp/tya_v23_remove.txt"
     file.File(p).write("x")
     file.File(p).remove()
     self.assert_equal(false, file.File(p).exists?(), "removed")
 
-  test_file_rename = ->
+  test_file_rename: ->
     a = "/tmp/tya_v23_rename_a.txt"
     b = "/tmp/tya_v23_rename_b.txt"
     try
@@ -24,7 +24,7 @@ class StdlibFilesystemTest extends TestCase
     self.assert(file.File(b).exists?(), "new exists")
     file.File(b).remove()
 
-  test_file_stat_kind_size = ->
+  test_file_stat_kind_size: ->
     p = "/tmp/tya_v23_stat.txt"
     file.File(p).write("abcde")
     info = file.File(p).stat()
@@ -33,17 +33,17 @@ class StdlibFilesystemTest extends TestCase
     self.assert(info["readable"], "readable")
     file.File(p).remove()
 
-  test_path_expand_user_tilde = ->
+  test_path_expand_user_tilde: ->
     home = os.Os().env("HOME")
     self.assert_equal(home, path.Path("~").expand_user(), "tilde alone")
     self.assert_equal("{home}/foo", path.Path("~/foo").expand_user(), "tilde slash")
     self.assert_equal("/abs/path", path.Path("/abs/path").expand_user(), "absolute unchanged")
 
-  test_os_cwd_returns_string = ->
+  test_os_cwd_returns_string: ->
     here = os.Os().cwd()
     self.assert(here != nil, "cwd not nil")
 
-  test_os_chdir_round_trip = ->
+  test_os_chdir_round_trip: ->
     original = os.Os().cwd()
     os.Os().chdir("/tmp")
     new = os.Os().cwd()

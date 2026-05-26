@@ -14,6 +14,7 @@ module.exports = grammar({
         $.module_declaration,
         $.class_declaration,
         $.interface_declaration,
+        $.member_declaration,
         $.function_assignment,
         $.assignment,
         $.control_statement,
@@ -45,6 +46,18 @@ module.exports = grammar({
 
     function_assignment: ($) =>
       prec.right(2, seq(field("name", $.identifier), "=", $.lambda, optional($.line_tail))),
+
+    member_declaration: ($) =>
+      prec.right(
+        2,
+        seq(
+          optional(choice("private", "static", seq("private", "static"), "abstract", "override")),
+          field("name", $.identifier),
+          ":",
+          choice($.lambda, $._expression),
+          optional($.line_tail),
+        ),
+      ),
 
     assignment: ($) =>
       prec.right(1, seq(field("target", choice($.identifier, $.member)), "=", $._expression, optional($.line_tail))),

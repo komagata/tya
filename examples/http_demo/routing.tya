@@ -1,20 +1,20 @@
 import net/http as http
 
 class Demo
-  static middleware = req, next ->
+  static middleware: req, next ->
     res = next.call(req)
     headers = {}
     headers["X-Demo"] = "routing"
     res["headers"] = headers
     return res
 
-  static admin_user = req ->
+  static admin_user: req ->
     return { status: 200, body: "admin user " + req["params"]["id"] }
 
-  static admin_routes = group ->
+  static admin_routes: group ->
     group.get("/users/:id", Demo.admin_user, { name: "admin_user" })
 
-  static home = req ->
+  static home: req ->
     return { status: 200, body: "routing " + req["path"] }
 
 app = http.Server()

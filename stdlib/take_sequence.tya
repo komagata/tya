@@ -1,6 +1,6 @@
 # TakeSequence provides the take_sequence standard library API.
 class TakeSequence implements Sequence
   # TakeSequence.initialize provides the take_sequence standard library operation.
-  initialize = source, n ->
+  initialize: source, n ->
     self.source = source
     self.n = n

@@ -16,17 +16,17 @@ print(d.describe())
 
 -- zoo/Animal.tya --
 class Animal
-  initialize = ->
+  initialize: ->
     self.category = "animal"
 
-  category = ->
+  category: ->
     self.category
 
 -- zoo/Dog.tya --
 class Dog extends Animal
-  initialize = ->
+  initialize: ->
     super()
     self.kind = "dog"
 
-  describe = ->
+  describe: ->
     "{self.category}:{self.kind}"

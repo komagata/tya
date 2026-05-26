@@ -1,69 +1,69 @@
 # Dir provides the dir/Dir standard library API.
 class Dir
   # Dir.list returns entries in path.
-  static list = path ->
+  static list: path ->
     dir_list(path)
 
   # Dir.mkdir creates a directory.
-  static mkdir = path ->
+  static mkdir: path ->
     dir_mkdir(path)
 
   # Dir.rmdir removes an empty directory.
-  static rmdir = path ->
+  static rmdir: path ->
     dir_rmdir(path)
 
   # Dir.mkdir_all creates a directory and missing parents.
-  static mkdir_all = path ->
+  static mkdir_all: path ->
     dir_mkdir_all(path)
 
   # Dir.remove_all removes a file or directory tree recursively.
-  static remove_all = path ->
+  static remove_all: path ->
     dir_remove_all(path)
 
   # Dir.walk visits entries in deterministic order.
-  static walk = path, fn, options = {} ->
+  static walk: path, fn, options = {} ->
     dir_walk(path, fn, options)
 
   # Dir.temp_dir creates a temporary directory and returns its path.
-  static temp_dir = prefix = "tya" ->
+  static temp_dir: prefix = "tya" ->
     dir_temp_dir(prefix)
 
   # Dir.initialize stores a directory path.
-  initialize = path = nil ->
+  initialize: path = nil ->
     self.path = path
 
   # Dir.list provides the dir/Dir standard library operation.
-  list = path = nil ->
+  list: path = nil ->
     if path == nil
       path = self.path
     dir_list(path)
 
   # Dir.mkdir provides the dir/Dir standard library operation.
-  mkdir = path = nil ->
+  mkdir: path = nil ->
     if path == nil
       path = self.path
     dir_mkdir(path)
 
   # Dir.rmdir provides the dir/Dir standard library operation.
-  rmdir = path = nil ->
+  rmdir: path = nil ->
     if path == nil
       path = self.path
     dir_rmdir(path)
 
   # mkdir_all creates a directory and missing parents.
-  mkdir_all = path = nil ->
+  mkdir_all: path = nil ->
     if path == nil
       path = self.path
     dir_mkdir_all(path)
 
   # remove_all removes a file or directory tree recursively.
-  remove_all = path = nil ->
+  remove_all: path = nil ->
     if path == nil
       path = self.path
     dir_remove_all(path)
 
   # walk visits entries in deterministic order.
-  walk = path, fn = nil, options = {} ->
+  walk: path, fn = nil, options = {} ->
     if self.path != nil and fn != nil
       options = fn
       fn = path
@@ -73,5 +73,5 @@ class Dir
     dir_walk(path, fn, options)
 
   # temp_dir creates a temporary directory and returns its path.
-  temp_dir = prefix = "tya" ->
+  temp_dir: prefix = "tya" ->
     dir_temp_dir(prefix)

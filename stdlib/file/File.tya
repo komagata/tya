@@ -1,93 +1,93 @@
 # File reads, writes, and inspects filesystem paths.
 class File
   # File.read returns the UTF-8 text contents of path.
-  static read = path ->
+  static read: path ->
     read_file(path)
 
   # File.write replaces path with text and creates the file when needed.
-  static write = path, text ->
+  static write: path, text ->
     write_file(path, text)
 
   # File.append appends text to path and creates the file when needed.
-  static append = path, text ->
+  static append: path, text ->
     file_append(path, text)
 
   # File.exists? returns true when path exists.
-  static exists? = path ->
+  static exists?: path ->
     file_exists(path)
 
   # File.remove removes path.
-  static remove = path ->
+  static remove: path ->
     file_remove(path)
 
   # File.rename renames old_path to new_path.
-  static rename = old_path, new_path ->
+  static rename: old_path, new_path ->
     file_rename(old_path, new_path)
 
   # File.stat returns metadata for path as a dictionary.
-  static stat = path ->
+  static stat: path ->
     file_stat(path)
 
   # File.read_bytes returns the raw bytes stored at path.
-  static read_bytes = path ->
+  static read_bytes: path ->
     file_read_bytes(path)
 
   # File.write_bytes replaces path with raw bytes.
-  static write_bytes = path, bytes ->
+  static write_bytes: path, bytes ->
     file_write_bytes(path, bytes)
 
   # File.copy copies file contents as bytes.
-  static copy = src, dst, options = {} ->
+  static copy: src, dst, options = {} ->
     file_copy(src, dst, options)
 
   # File.chmod changes POSIX-like permissions where supported.
-  static chmod = path, mode ->
+  static chmod: path, mode ->
     file_chmod(path, mode)
 
   # File.temp creates an empty temporary file and returns its path.
-  static temp = prefix = "tya", suffix = "" ->
+  static temp: prefix = "tya", suffix = "" ->
     file_temp(prefix, suffix)
 
   # File.initialize stores a file path.
-  initialize = path = nil ->
+  initialize: path = nil ->
     self.path = path
 
   # read returns the UTF-8 text contents of path.
   # Raises when the file cannot be opened or read.
-  read = path = nil ->
+  read: path = nil ->
     if path == nil
       path = self.path
     read_file(path)
 
   # write replaces path with text and creates the file when needed.
   # Raises when the file cannot be written.
-  write = path, text = nil ->
+  write: path, text = nil ->
     if text == nil
       text = path
       path = self.path
     write_file(path, text)
 
   # File.append provides the file/File standard library operation.
-  append = path, text = nil ->
+  append: path, text = nil ->
     if text == nil
       text = path
       path = self.path
     file_append(path, text)
 
   # exists? returns true when path exists.
-  exists? = path = nil ->
+  exists?: path = nil ->
     if path == nil
       path = self.path
     file_exists(path)
 
   # File.remove provides the file/File standard library operation.
-  remove = path = nil ->
+  remove: path = nil ->
     if path == nil
       path = self.path
     file_remove(path)
 
   # File.rename provides the file/File standard library operation.
-  rename = old_path, new_path = nil ->
+  rename: old_path, new_path = nil ->
     if new_path == nil
       new_path = old_path
       old_path = self.path
@@ -95,28 +95,28 @@ class File
 
   # stat returns metadata for path as a dictionary.
   # Raises when the path cannot be inspected.
-  stat = path = nil ->
+  stat: path = nil ->
     if path == nil
       path = self.path
     file_stat(path)
 
   # read_bytes returns the raw bytes stored at path.
   # Raises when the file cannot be opened or read.
-  read_bytes = path = nil ->
+  read_bytes: path = nil ->
     if path == nil
       path = self.path
     file_read_bytes(path)
 
   # write_bytes replaces path with raw bytes.
   # Raises when the file cannot be written.
-  write_bytes = path, b = nil ->
+  write_bytes: path, b = nil ->
     if b == nil
       b = path
       path = self.path
     file_write_bytes(path, b)
 
   # copy copies file contents as bytes.
-  copy = src, dst = nil, options = {} ->
+  copy: src, dst = nil, options = {} ->
     if self.path != nil and dst != nil and dst.class == Dict
       options = dst
       dst = src
@@ -127,12 +127,12 @@ class File
     file_copy(src, dst, options)
 
   # chmod changes POSIX-like permissions where supported.
-  chmod = path, mode = nil ->
+  chmod: path, mode = nil ->
     if mode == nil
       mode = path
       path = self.path
     file_chmod(path, mode)
 
   # temp creates an empty temporary file and returns its path.
-  temp = prefix = "tya", suffix = "" ->
+  temp: prefix = "tya", suffix = "" ->
     file_temp(prefix, suffix)

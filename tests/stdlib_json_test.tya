@@ -3,35 +3,35 @@ import json as json
 
 class StdlibJsonTest extends TestCase
 
-  test_dump_object = ->
+  test_dump_object: ->
     out = json.Json({ name: "tya", n: 23 }).stringify()
     self.assert_equal("{{\"name\":\"tya\",\"n\":23}}", out, "object")
-  test_dump_array = ->
+  test_dump_array: ->
     self.assert_equal("[1,2,3]", json.Json([1, 2, 3]).stringify(), "array")
-  test_dump_primitives = ->
+  test_dump_primitives: ->
     self.assert_equal("null", json.Json(nil).stringify(), "nil")
     self.assert_equal("true", json.Json(true).stringify(), "true")
     self.assert_equal("false", json.Json(false).stringify(), "false")
     self.assert_equal("42", json.Json(42).stringify(), "int")
-  test_dump_string_escapes = ->
+  test_dump_string_escapes: ->
     self.assert_equal("\"a\\nb\"", json.Json("a\nb").stringify(), "newline")
-  test_parse_object = ->
+  test_parse_object: ->
     src = "{{\"name\":\"tya\",\"n\":23}}"
     v = json.Json(src).parse()
     self.assert_equal("tya", v["name"], "name")
     self.assert_equal(23, v["n"], "n")
-  test_parse_non_ascii_string = ->
+  test_parse_non_ascii_string: ->
     src = "{{\"name\":\"test_copies_learning_and_product_data_when_進捗コピー_button_is_clicked\",\"duration\":0}}"
     v = json.Json(src).parse()
     self.assert_equal("test_copies_learning_and_product_data_when_進捗コピー_button_is_clicked", v["name"], "name")
     self.assert_equal(0, v["duration"], "duration")
-  test_parse_unicode_escape_string_concatenates_as_string = ->
+  test_parse_unicode_escape_string_concatenates_as_string: ->
     v = json.Json("{{\"name\":\"\\u9032\\u6357\\u30b3\\u30d4\\u30fc\"}}").parse()
     self.assert_equal("prefix:進捗コピー", "prefix:" + v["name"], "concat")
-  test_parse_array = ->
+  test_parse_array: ->
     v = json.Json("[1, 2, 3]").parse()
     self.assert_equal([1, 2, 3], v, "array")
-  test_parse_primitives = ->
+  test_parse_primitives: ->
     self.assert_equal(nil, json.Json("null").parse(), "null")
     self.assert_equal(true, json.Json("true").parse(), "true")
     self.assert_equal(false, json.Json("false").parse(), "false")

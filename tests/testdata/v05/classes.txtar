@@ -47,30 +47,30 @@ stderr 'missing object field or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.67.9\n'
+stdout '0.68.0\n'
 ! stderr .
 
 -- classes.tya --
 class User
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  rename = name ->
+  rename: name ->
     self.name = name
 
-  greeting = ->
+  greeting: ->
     "Hello, {self.name}"
 
 class Counter
-  initialize = ->
+  initialize: ->
     self.value = 0
 
-  increment = ->
+  increment: ->
     self.value = self.value + 1
     self.value
 
 class Marker
-  label = ->
+  label: ->
     "marker"
 
 user = User("komagata")
@@ -89,10 +89,10 @@ print(marker.label())
 
 -- user.tya --
 class User
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  greeting = ->
+  greeting: ->
     "Hello, {self.name}"
 
 -- main.tya --
@@ -103,19 +103,19 @@ print(item.greeting())
 
 -- constructor_defaults.tya --
 class Profile
-  initialize = name = "guest", role = "member" ->
+  initialize: name = "guest", role = "member" ->
     self.name = name
     self.role = role
 
-  label = ->
+  label: ->
     "{self.name}:{self.role}"
 
 class User
-  initialize = name, role = "member" ->
+  initialize: name, role = "member" ->
     self.name = name
     self.role = role
 
-  label = ->
+  label: ->
     "{self.name}:{self.role}"
 
 print(Profile().label())
@@ -124,7 +124,7 @@ print(User("komagata", "admin").label())
 
 -- constructor_defaults_too_few.tya --
 class User
-  initialize = name, role = "member" ->
+  initialize: name, role = "member" ->
     self.name = name
     self.role = role
 
@@ -132,7 +132,7 @@ user = User()
 
 -- constructor_defaults_too_many.tya --
 class User
-  initialize = name, role = "member" ->
+  initialize: name, role = "member" ->
     self.name = name
     self.role = role
 
@@ -140,7 +140,7 @@ user = User("komagata", "admin", "extra")
 
 -- bad_class_name.tya --
 class user
-  initialize = ->
+  initialize: ->
     self.name = "bad"
 
 -- at_outside_method.tya --
@@ -151,22 +151,22 @@ Self.name = "bad"
 
 -- duplicate_method.tya --
 class User
-  name = ->
+  name: ->
     "a"
 
-  name = ->
+  name: ->
     "b"
 
 -- constructor_arity.tya --
 class User
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
 user = User()
 
 -- no_init_args.tya --
 class Marker
-  label = -> "marker"
+  label: -> "marker"
 
 marker = Marker("bad")
 
@@ -176,7 +176,7 @@ print(profile.name)
 
 -- missing_field.tya --
 class User
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
 user = User("komagata")

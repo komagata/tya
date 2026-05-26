@@ -4,7 +4,7 @@ import matrix as matrix
 # Transform2D provides the transform2d/Transform2D standard library API.
 class Transform2D
   # Transform2D.initialize provides the transform2d/Transform2D standard library operation.
-  initialize = a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0 ->
+  initialize: a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0 ->
     self.a = self.number(a, "a")
     self.b = self.number(b, "b")
     self.c = self.number(c, "c")
@@ -13,65 +13,65 @@ class Transform2D
     self.ty = self.number(ty, "ty")
 
   # Transform2D.new provides the transform2d/Transform2D standard library operation.
-  new = a, b, c, d, tx, ty ->
+  new: a, b, c, d, tx, ty ->
     return Transform2D(a, b, c, d, tx, ty)
 
   # Transform2D.identity provides the transform2d/Transform2D standard library operation.
-  identity = ->
+  identity: ->
     return Transform2D(1, 0, 0, 1, 0, 0)
 
   # Transform2D.translation provides the transform2d/Transform2D standard library operation.
-  translation = x, y ->
+  translation: x, y ->
     self.number(x, "x")
     self.number(y, "y")
     return Transform2D(1, 0, 0, 1, x, y)
 
   # Transform2D.scale provides the transform2d/Transform2D standard library operation.
-  scale = sx, sy ->
+  scale: sx, sy ->
     self.number(sx, "sx")
     self.number(sy, "sy")
     return Transform2D(sx, 0, 0, sy, 0, 0)
 
   # Transform2D.uniform_scale provides the transform2d/Transform2D standard library operation.
-  uniform_scale = s ->
+  uniform_scale: s ->
     self.number(s, "s")
     return self.scale(s, s)
 
   # Transform2D.rotation provides the transform2d/Transform2D standard library operation.
-  rotation = radians ->
+  rotation: radians ->
     self.number(radians, "radians")
     geometry_cos = math_cos(radians)
     geometry_sin = math_sin(radians)
     return Transform2D(geometry_cos, geometry_sin, 0 - geometry_sin, geometry_cos, 0, 0)
 
   # Transform2D.rotation_around provides the transform2d/Transform2D standard library operation.
-  rotation_around = radians, point ->
+  rotation_around: radians, point ->
     self.expect_point(point, "point")
     geometry_to_origin = self.translation(0 - point.x, 0 - point.y)
     geometry_back = self.translation(point.x, point.y)
     return self.compose(geometry_back, self.compose(self.rotation(radians), geometry_to_origin))
 
   # Transform2D.skew provides the transform2d/Transform2D standard library operation.
-  skew = x_radians, y_radians ->
+  skew: x_radians, y_radians ->
     self.number(x_radians, "x_radians")
     self.number(y_radians, "y_radians")
     return Transform2D(1, math_tan(y_radians), math_tan(x_radians), 1, 0, 0)
 
   # Transform2D.from_array provides the transform2d/Transform2D standard library operation.
-  from_array = values ->
+  from_array: values ->
     if values.class != Array or values.len() != 6
       raise error("transform2d.from_array: expected six-number array")
     return Transform2D(values[0], values[1], values[2], values[3], values[4], values[5])
 
   # Transform2D.to_array provides the transform2d/Transform2D standard library operation.
-  to_array = transform = nil ->
+  to_array: transform = nil ->
     if transform == nil
       transform = self
     self.expect(transform, "transform")
     return [transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty]
 
   # Transform2D.compose provides the transform2d/Transform2D standard library operation.
-  compose = a, b = nil ->
+  compose: a, b = nil ->
     if b == nil
       b = a
       a = self
@@ -87,7 +87,7 @@ class Transform2D
     )
 
   # Transform2D.translate provides the transform2d/Transform2D standard library operation.
-  translate = transform, x, y = nil ->
+  translate: transform, x, y = nil ->
     if y == nil
       y = x
       x = transform
@@ -95,7 +95,7 @@ class Transform2D
     return self.compose(self.translation(x, y), transform)
 
   # Transform2D.scale_by provides the transform2d/Transform2D standard library operation.
-  scale_by = transform, sx, sy = nil ->
+  scale_by: transform, sx, sy = nil ->
     if sy == nil
       sy = sx
       sx = transform
@@ -103,50 +103,50 @@ class Transform2D
     return self.compose(self.scale(sx, sy), transform)
 
   # Transform2D.rotate provides the transform2d/Transform2D standard library operation.
-  rotate = transform, radians = nil ->
+  rotate: transform, radians = nil ->
     if radians == nil
       radians = transform
       transform = self
     return self.compose(self.rotation(radians), transform)
 
   # Transform2D.determinant provides the transform2d/Transform2D standard library operation.
-  determinant = transform = nil ->
+  determinant: transform = nil ->
     if transform == nil
       transform = self
     self.expect(transform, "transform")
     return transform.a * transform.d - transform.b * transform.c
 
   # Transform2D.invertible? provides the transform2d/Transform2D standard library operation.
-  invertible? = transform = nil ->
+  invertible?: transform = nil ->
     if transform == nil
       transform = self
     return self.abs(self.determinant(transform)) > 0.000000001
 
   # Transform2D.inverse provides the transform2d/Transform2D standard library operation.
-  inverse = transform = nil ->
+  inverse: transform = nil ->
     if transform == nil
       transform = self
     self.expect(transform, "transform")
     geometry_det = self.determinant(transform)
     if self.abs(geometry_det) <= 0.000000001
       raise error("transform2d.inverse: transform is not invertible")
-    geometry_a = transform.d / geometry_det
-    geometry_b = (0 - transform.b) / geometry_det
-    geometry_c = (0 - transform.c) / geometry_det
-    geometry_d = transform.a / geometry_det
-    geometry_tx = (transform.c * transform.ty - transform.d * transform.tx) / geometry_det
-    geometry_ty = (transform.b * transform.tx - transform.a * transform.ty) / geometry_det
+    geometry_a = transform.d.to_f() / geometry_det
+    geometry_b = (0 - transform.b).to_f() / geometry_det
+    geometry_c = (0 - transform.c).to_f() / geometry_det
+    geometry_d = transform.a.to_f() / geometry_det
+    geometry_tx = (transform.c * transform.ty - transform.d * transform.tx).to_f() / geometry_det
+    geometry_ty = (transform.b * transform.tx - transform.a * transform.ty).to_f() / geometry_det
     return Transform2D(geometry_a, geometry_b, geometry_c, geometry_d, geometry_tx, geometry_ty)
 
   # Transform2D.equal? provides the transform2d/Transform2D standard library operation.
-  equal? = a, b = nil ->
+  equal?: a, b = nil ->
     if b == nil
       b = a
       a = self
     return a.class == Transform2D and b.class == Transform2D and a.a == b.a and a.b == b.b and a.c == b.c and a.d == b.d and a.tx == b.tx and a.ty == b.ty
 
   # Transform2D.nearly_equal? provides the transform2d/Transform2D standard library operation.
-  nearly_equal? = a, b, epsilon = nil ->
+  nearly_equal?: a, b, epsilon = nil ->
     if epsilon == nil
       epsilon = b
       b = a
@@ -158,7 +158,7 @@ class Transform2D
     return self.abs(a.a - b.a) <= epsilon and self.abs(a.b - b.b) <= epsilon and self.abs(a.c - b.c) <= epsilon and self.abs(a.d - b.d) <= epsilon and self.abs(a.tx - b.tx) <= epsilon and self.abs(a.ty - b.ty) <= epsilon
 
   # Transform2D.apply_point provides the transform2d/Transform2D standard library operation.
-  apply_point = transform, point = nil ->
+  apply_point: transform, point = nil ->
     if point == nil
       point = transform
       transform = self
@@ -167,7 +167,7 @@ class Transform2D
     return geo.Point(transform.a * point.x + transform.c * point.y + transform.tx, transform.b * point.x + transform.d * point.y + transform.ty)
 
   # Transform2D.apply_vector2 provides the transform2d/Transform2D standard library operation.
-  apply_vector2 = transform, vector = nil ->
+  apply_vector2: transform, vector = nil ->
     if vector == nil
       vector = transform
       transform = self
@@ -176,7 +176,7 @@ class Transform2D
     return geo.Vector2(transform.a * vector.x + transform.c * vector.y, transform.b * vector.x + transform.d * vector.y)
 
   # Transform2D.apply_rect provides the transform2d/Transform2D standard library operation.
-  apply_rect = transform, rect = nil ->
+  apply_rect: transform, rect = nil ->
     if rect == nil
       rect = transform
       transform = self
@@ -193,7 +193,7 @@ class Transform2D
     return geo.Rect(geometry_left, geometry_top, geometry_right - geometry_left, geometry_bottom - geometry_top)
 
   # Transform2D.apply_size provides the transform2d/Transform2D standard library operation.
-  apply_size = transform, size = nil ->
+  apply_size: transform, size = nil ->
     if size == nil
       size = transform
       transform = self
@@ -202,14 +202,14 @@ class Transform2D
     return geo.Size(geometry_rect.width, geometry_rect.height)
 
   # Transform2D.to_matrix provides the transform2d/Transform2D standard library operation.
-  to_matrix = transform = nil ->
+  to_matrix: transform = nil ->
     if transform == nil
       transform = self
     self.expect(transform, "transform")
     return matrix.Matrix([[transform.a, transform.c, transform.tx], [transform.b, transform.d, transform.ty], [0, 0, 1]])
 
   # Transform2D.from_matrix provides the transform2d/Transform2D standard library operation.
-  from_matrix = value ->
+  from_matrix: value ->
     if value.class != matrix.Matrix
       raise error("transform2d.from_matrix: value must be a matrix.Matrix")
     if value.rows != 3 or value.cols != 3
@@ -219,50 +219,50 @@ class Transform2D
     return Transform2D(value.data[0][0], value.data[1][0], value.data[0][1], value.data[1][1], value.data[0][2], value.data[1][2])
 
   # Transform2D.expect provides the transform2d/Transform2D standard library operation.
-  expect = value, name ->
+  expect: value, name ->
     if value.class != Transform2D
       raise error("transform2d: " + name + " must be a Transform2D")
 
   # Transform2D.expect_point provides the transform2d/Transform2D standard library operation.
-  expect_point = value, name ->
+  expect_point: value, name ->
     if value.class != geo.Point
       raise error("transform2d: " + name + " must be a geometry.Point")
 
   # Transform2D.expect_vector2 provides the transform2d/Transform2D standard library operation.
-  expect_vector2 = value, name ->
+  expect_vector2: value, name ->
     if value.class != geo.Vector2
       raise error("transform2d: " + name + " must be a geometry.Vector2")
 
   # Transform2D.expect_rect provides the transform2d/Transform2D standard library operation.
-  expect_rect = value, name ->
+  expect_rect: value, name ->
     if value.class != geo.Rect
       raise error("transform2d: " + name + " must be a geometry.Rect")
 
   # Transform2D.expect_size provides the transform2d/Transform2D standard library operation.
-  expect_size = value, name ->
+  expect_size: value, name ->
     if value.class != geo.Size
       raise error("transform2d: " + name + " must be a geometry.Size")
 
   # Transform2D.number provides the transform2d/Transform2D standard library operation.
-  number = value, name ->
+  number: value, name ->
     if value.class != Number
       raise error("transform2d: " + name + " must be a number")
     return value
 
   # Transform2D.abs provides the transform2d/Transform2D standard library operation.
-  abs = value ->
+  abs: value ->
     if value < 0
       return 0 - value
     return value
 
   # Transform2D.min provides the transform2d/Transform2D standard library operation.
-  min = a, b ->
+  min: a, b ->
     if a < b
       return a
     return b
 
   # Transform2D.max provides the transform2d/Transform2D standard library operation.
-  max = a, b ->
+  max: a, b ->
     if a > b
       return a
     return b

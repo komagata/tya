@@ -17,26 +17,26 @@ stdout 'Hello, komagata\n42\n1\nbuilt:Tya\n'
 
 -- sigil_free.tya --
 class User
-  name = ""
-  private id = 0
-  static count = 0
-  private static seed = 41
+  name: ""
+  private id: 0
+  static count: 0
+  private static seed: 41
 
-  initialize = name ->
+  initialize: name ->
     self.name = name
     self.id = Self.next_id()
     Self.count = Self.count + 1
 
-  greeting = ->
+  greeting: ->
     "Hello, {self.name}"
 
-  show_id = ->
+  show_id: ->
     self.id
 
-  static build = name ->
+  static build: name ->
     Self(name)
 
-  private static next_id = ->
+  private static next_id: ->
     Self.seed = Self.seed + 1
     Self.seed
 
@@ -46,10 +46,10 @@ print(u.show_id())
 print(User.count)
 
 class Admin extends User
-  initialize = name ->
+  initialize: name ->
     super(name)
 
-  greeting = ->
+  greeting: ->
     "built:{self.name}"
 
 a = Admin.build("Tya")

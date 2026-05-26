@@ -113,7 +113,7 @@ func TestPublicV1RejectsLegacySyntaxOutsideLegacyPaths(t *testing.T) {
 		want string
 	}{
 		{"module", "module old\n", "module declarations were removed"},
-		{"instance_variable", "class Counter\n  initialize = ->\n    @count = 0\n", "is removed; use self."},
+		{"instance_variable", "class Counter\n  initialize: ->\n    @count = 0\n", "is removed; use self."},
 		{"removed_helper", "print(len([1]))\n", "top-level builtin len was removed"},
 	}
 	for _, tc := range cases {

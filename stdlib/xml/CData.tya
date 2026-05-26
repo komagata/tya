@@ -1,9 +1,9 @@
 # CData provides the xml/CData standard library API.
 class CData
   # CData.initialize provides the xml/CData standard library operation.
-  initialize = text ->
+  initialize: text ->
     self.text = text
 
   # CData.new provides the xml/CData standard library operation.
-  new = text ->
+  new: text ->
     return CData(text)

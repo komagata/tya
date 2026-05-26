@@ -114,19 +114,19 @@ private = 4
 
 -- interfaces.tya --
 interface Named
-  name = ->
+  name: ->
 
-  label = ->
+  label: ->
     "label:" + self.name()
 
 interface Timestamped extends Named
-  created_at = nil
+  created_at: nil
 
-  initialize = ->
+  initialize: ->
     self.created_at = Time.now()
 
 class Account implements Named, Timestamped
-  initialize = name ->
+  initialize: name ->
     self.name_value = name
 
 -- control.tya --
@@ -206,16 +206,16 @@ SQL
 
 -- member_modifiers.tya --
 class Account implements Named
-  private token = ""
+  private token: ""
 
-  static build = name ->
+  static build: name ->
     Account(name)
 
-  override label = ->
+  override label: ->
     "account"
 
 interface Named
-  abstract label = ->
+  abstract label: ->
 
 -- valid_semantics.tya --
 import net/http as http
@@ -223,16 +223,16 @@ import net/http as http
 embed "templates/index.html" as index_html
 
 interface Named
-  name = ->
+  name: ->
 
 class Account implements Named
-  initialize = name ->
+  initialize: name ->
     self.name_value = name
 
-  name = ->
+  name: ->
     self.name_value
 
-  static build = name ->
+  static build: name ->
     Self(name)
 
 run = ->
@@ -260,16 +260,16 @@ work = ->
 
 -- invalid_semantics.tya --
 class Broken implements Named
-  value = 1
+  value: 1
 
 interface Named
-  name = ->
+  name: ->
 
 class Duplicate
-  value = ->
+  value: ->
     1
 
-  value = ->
+  value: ->
     2
 
 outside = ->
@@ -281,16 +281,16 @@ embed "missing.txt" as missing
 embed "asset.txt" as asset_text
 
 interface RuntimeNamed
-  name = ->
+  name: ->
 
 class RuntimeAccount implements RuntimeNamed
-  init = name ->
+  init: name ->
     @name = name
 
-  name = ->
+  name: ->
     @name
 
-  greeting = ->
+  greeting: ->
     "Hello, {@name}"
 
 account = RuntimeAccount("Tya")

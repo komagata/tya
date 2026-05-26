@@ -3,13 +3,13 @@ import random as random
 
 class StdlibRandomTest extends TestCase
 
-  test_seed_reproducible = ->
+  test_seed_reproducible: ->
     random.Random().seed(42)
     a = random.Random().int(1, 1000)
     random.Random().seed(42)
     b = random.Random().int(1, 1000)
     self.assert_equal(a, b, "seeded reproducibility")
-  test_int_range = ->
+  test_int_range: ->
     random.Random().seed(1)
     i = 0
     while i < 50
@@ -17,16 +17,16 @@ class StdlibRandomTest extends TestCase
       self.assert(v >= 0, "lower")
       self.assert(v <= 9, "upper")
       i = i + 1
-  test_float_range = ->
+  test_float_range: ->
     f = random.Random().float()
     self.assert(f >= 0, "f >= 0")
     self.assert(f < 1, "f < 1")
-  test_choice_picks_member = ->
+  test_choice_picks_member: ->
     items = ["a", "b", "c"]
     c = random.Random().choice(items)
     self.assert(c == "a" or c == "b" or c == "c", "valid choice")
 
-  test_static_helpers = ->
+  test_static_helpers: ->
     random.Random().seed(7)
     items = ["a", "b", "c"]
     copy = random.Random().shuffle_copy(items)
@@ -43,7 +43,7 @@ class StdlibRandomTest extends TestCase
     self.assert_raises(-> random.Random().weighted_index([0, 0]), "positive")
     self.assert_raises(-> random.Random().weighted_choice(["a"], [1, 2]), "mismatch")
 
-  test_rng_reproducible_and_independent = ->
+  test_rng_reproducible_and_independent: ->
     a = random.Rng(42)
     b = random.Rng(42)
     c = random.Rng(7)
@@ -55,7 +55,7 @@ class StdlibRandomTest extends TestCase
     self.assert_equal(b.seed(42).int(1, 1000), a.int(1, 1000), "reset")
     self.assert(c_first != a.int(1, 1000), "independent")
 
-  test_rng_helpers = ->
+  test_rng_helpers: ->
     rng = random.Rng(9)
     items = ["a", "b", "c", "d"]
     copy = rng.shuffle_copy(items)

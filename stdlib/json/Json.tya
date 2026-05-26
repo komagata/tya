@@ -1,19 +1,19 @@
 # Json parses and formats JSON values.
 class Json
   # Json.parse parses JSON text into Tya values.
-  static parse = text ->
+  static parse: text ->
     Json(nil).parse(text)
 
   # Json.dump formats a Tya value as JSON text.
-  static dump = value ->
+  static dump: value ->
     Json(nil).dump(value)
 
   # Json.initialize stores a value or JSON text.
-  initialize = value = nil ->
+  initialize: value = nil ->
     self.value = value
 
   # Json.skip_ws provides the json/Json standard library operation.
-  skip_ws = state ->
+  skip_ws: state ->
     n = state["len"]
     p = state["pos"]
     src = state["src"]
@@ -26,7 +26,7 @@ class Json
     state["pos"] = p
 
   # Json.expect provides the json/Json standard library operation.
-  expect = state, ch ->
+  expect: state, ch ->
     Json(nil).skip_ws(state)
     p = state["pos"]
     if p >= state["len"] or state["src"][p] != ch
@@ -34,7 +34,7 @@ class Json
     state["pos"] = p + 1
 
   # Json.hex_value provides the json/Json standard library operation.
-  hex_value = c ->
+  hex_value: c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -45,7 +45,7 @@ class Json
     raise error("json.parse: invalid hex digit")
 
   # Json.utf8_encode provides the json/Json standard library operation.
-  utf8_encode = code ->
+  utf8_encode: code ->
     if code < 128
       return chr(code)
     if code < 2048
@@ -58,14 +58,14 @@ class Json
     return chr(b1) + chr(b2) + chr(b3)
 
   # Json.text_len counts string indexes, independent of byte length.
-  text_len = text ->
+  text_len: text ->
     i = 0
     while text[i] != nil
       i = i + 1
     return i
 
   # Json.parse_string provides the json/Json standard library operation.
-  parse_string = state ->
+  parse_string: state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -121,12 +121,12 @@ class Json
     raise error("json.parse: unterminated string")
 
   # Json.is_digit provides the json/Json standard library operation.
-  is_digit = c ->
+  is_digit: c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
   # Json.parse_number provides the json/Json standard library operation.
-  parse_number = state ->
+  parse_number: state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -159,7 +159,7 @@ class Json
     return text.to_i()
 
   # Json.parse_value provides the json/Json standard library operation.
-  parse_value = state ->
+  parse_value: state ->
     Json(nil).skip_ws(state)
     p = state["pos"]
     if p >= state["len"]
@@ -198,7 +198,7 @@ class Json
     raise error("json.parse: unexpected character")
 
   # Json.parse_object provides the json/Json standard library operation.
-  parse_object = state ->
+  parse_object: state ->
     Json(nil).expect(state, "{{")
     out = {}
     Json(nil).skip_ws(state)
@@ -223,7 +223,7 @@ class Json
         return out
 
   # Json.parse_array provides the json/Json standard library operation.
-  parse_array = state ->
+  parse_array: state ->
     Json(nil).expect(state, "[")
     out = []
     Json(nil).skip_ws(state)
@@ -246,7 +246,7 @@ class Json
 
   # parse converts JSON text into Tya arrays, dictionaries, strings, numbers, booleans, and nil.
   # Raises when the input is not valid JSON.
-  parse = text = nil ->
+  parse: text = nil ->
     if text == nil
       text = self.value
     state = { src: text, pos: 0, len: Json(nil).text_len(text) }
@@ -257,7 +257,7 @@ class Json
     return v
 
   # Json.escape_string provides the json/Json standard library operation.
-  escape_string = text ->
+  escape_string: text ->
     n = Json(nil).text_len(text)
     out = "\""
     i = 0
@@ -297,7 +297,7 @@ class Json
     return out + "\""
 
   # Json.pad provides the json/Json standard library operation.
-  pad = indent, level ->
+  pad: indent, level ->
     if indent <= 0
       return ""
     out = "\n"
@@ -313,7 +313,7 @@ class Json
     return out
 
   # Json.emit provides the json/Json standard library operation.
-  emit = value, indent, level ->
+  emit: value, indent, level ->
     if value.class == Nil
       return "null"
     if value.class == Boolean
@@ -361,11 +361,11 @@ class Json
 
   # stringify converts Tya arrays, dictionaries, strings, numbers, booleans, and nil to JSON text.
   # Raises when a value cannot be represented as JSON.
-  stringify = value = nil ->
+  stringify: value = nil ->
     if value == nil
       value = self.value
     return Json(nil).emit(value, 0, 0)
 
   # dump is a compatibility alias for stringify.
-  dump = value = nil ->
+  dump: value = nil ->
     self.stringify(value)

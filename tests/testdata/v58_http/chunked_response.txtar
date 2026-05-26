@@ -30,17 +30,17 @@ import channel as channel
 app = http.Server()
 
 class App
-  static chunked = _req ->
+  static chunked: _req ->
     return { status: 200, chunked: true, body: ["a", b"bc", ""] }
 
-  static channel = _req ->
+  static channel: _req ->
     c = channel.Channel(2)
     c.send("x")
     c.send(b"yz")
     c.close()
     return { status: 200, chunked: true, body: c }
 
-  static normal = _req ->
+  static normal: _req ->
     return { status: 200, body: "normal" }
 
 app.get("/chunked", App.chunked)

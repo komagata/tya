@@ -1,5 +1,5 @@
 class Util
-  static foo = "foo"
+  static foo: "foo"
 
-  static bar = () ->
+  static bar: () ->
     "bar"

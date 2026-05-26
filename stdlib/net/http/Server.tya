@@ -11,7 +11,7 @@ import template as template
 # not block other ready clients.
 class Server
   # Server.initialize provides the net/http/Server standard library operation.
-  initialize = ->
+  initialize: ->
     self.routes = []
     self.prefix = ""
     self.middlewares = []
@@ -20,7 +20,7 @@ class Server
     self.error_handler = nil
 
   # Server.child provides the net/http/Server standard library operation.
-  child = parent, prefix ->
+  child: parent, prefix ->
     child = Server()
     child.routes = parent.routes
     child.prefix = self.join_paths(parent.prefix, prefix)
@@ -32,42 +32,42 @@ class Server
 
   # Server.get provides the net/http/Server standard library operation.
   # get registers a GET route and returns the server.
-  get = path, handler, options ->
+  get: path, handler, options ->
     return self.route("GET", path, handler, options)
 
   # Server.post provides the net/http/Server standard library operation.
   # post registers a POST route and returns the server.
-  post = path, handler, options ->
+  post: path, handler, options ->
     return self.route("POST", path, handler, options)
 
   # Server.put provides the net/http/Server standard library operation.
-  put = path, handler, options ->
+  put: path, handler, options ->
     return self.route("PUT", path, handler, options)
 
   # Server.delete provides the net/http/Server standard library operation.
-  delete = path, handler, options ->
+  delete: path, handler, options ->
     return self.route("DELETE", path, handler, options)
 
   # Server.patch provides the net/http/Server standard library operation.
-  patch = path, handler, options ->
+  patch: path, handler, options ->
     return self.route("PATCH", path, handler, options)
 
   # Server.options provides the net/http/Server standard library operation.
-  options = path, handler, options ->
+  options: path, handler, options ->
     return self.route("OPTIONS", path, handler, options)
 
   # Server.head provides the net/http/Server standard library operation.
-  head = path, handler, options ->
+  head: path, handler, options ->
     return self.route("HEAD", path, handler, options)
 
   # Server.any provides the net/http/Server standard library operation.
-  any = path, handler, options ->
+  any: path, handler, options ->
     return self.route("ANY", path, handler, options)
 
   # Server.route provides the net/http/Server standard library operation.
   # route registers a handler for method and path.
   # Raises when the path pattern or route options are invalid.
-  route = method, path, handler, options ->
+  route: method, path, handler, options ->
     opts = self.route_options(options)
     full_path = self.join_paths(self.prefix, path)
     self.validate_pattern(full_path)
@@ -78,30 +78,30 @@ class Server
     return self
 
   # Server.use provides the net/http/Server standard library operation.
-  use = middleware ->
+  use: middleware ->
     self.middlewares.push(middleware)
     return self
 
   # Server.group provides the net/http/Server standard library operation.
-  group = prefix, fn ->
+  group: prefix, fn ->
     child = self.child(self, prefix)
     fn(child)
     return self
 
   # Server.not_found provides the net/http/Server standard library operation.
-  not_found = handler ->
+  not_found: handler ->
     self.not_found_handler = handler
     self.routes.push({ method: "__NOT_FOUND__", path: "*", handler: handler })
     return self
 
   # Server.error provides the net/http/Server standard library operation.
-  error = handler ->
+  error: handler ->
     self.error_handler = handler
     self.routes.push({ method: "__ERROR__", path: "*", handler: handler })
     return self
 
   # Server.path provides the net/http/Server standard library operation.
-  path = name, params ->
+  path: name, params ->
     route = self.named_routes.get(name, nil)
     if route == nil
       raise error("http.path: unknown route " + name)
@@ -110,7 +110,7 @@ class Server
   # Server.redirect provides the net/http/Server standard library operation.
   # redirect returns a response dictionary with Location set.
   # Raises when status is not a supported redirect status.
-  redirect = path, status ->
+  redirect: path, status ->
     if status == nil
       status = 302
     if status != 301 and status != 302 and status != 303 and status != 307 and status != 308
@@ -120,15 +120,15 @@ class Server
     return { status: status, headers: headers, body: "" }
 
   # render returns an HTML response by rendering a template file or source string.
-  render = tmpl, data, options ->
+  render: tmpl, data, options ->
     return self.render_with_mode(tmpl, data, options, false)
 
   # render_html returns an HTML response and forces HTML escaping.
-  render_html = tmpl, data, options ->
+  render_html: tmpl, data, options ->
     return self.render_with_mode(tmpl, data, options, true)
 
   # render_with_mode builds an HTML response from a template source.
-  render_with_mode = tmpl, data, options, html ->
+  render_with_mode: tmpl, data, options, html ->
     if options == nil
       options = {}
     headers = {}
@@ -155,11 +155,11 @@ class Server
 
   # cookie returns a validated Set-Cookie header value.
   # Options may include path, domain, max_age, expires, secure, http_only, and same_site.
-  cookie = name, value, options ->
+  cookie: name, value, options ->
     return self.cookie_value(name, value, options)
 
   # with_cookie appends a Set-Cookie header value to response and returns response.
-  with_cookie = response, name, value, options ->
+  with_cookie: response, name, value, options ->
     if response["header_values"] == nil
       response["header_values"] = {}
     if response["header_values"]["Set-Cookie"] == nil
@@ -168,7 +168,7 @@ class Server
     return response
 
   # Server.dispatch provides the net/http/Server standard library operation.
-  dispatch = method, path ->
+  dispatch: method, path ->
     method = method.upper()
     route = self.find_route(method, path)
     if route == nil and method == "HEAD"
@@ -190,7 +190,7 @@ class Server
     return self.call_route(route, method, path)
 
   # Server.call_route provides the net/http/Server standard library operation.
-  call_route = route, method, path ->
+  call_route: route, method, path ->
     params = self.match_params(route, path)
     req = { method: method, path: path, params: params, path_params: params, query: {}, headers: {}, body: b"", route: route }
     next = Next(route["middlewares"], 0, route["handler"])
@@ -204,7 +204,7 @@ class Server
     return result
 
   # Server.find_route provides the net/http/Server standard library operation.
-  find_route = method, path ->
+  find_route: method, path ->
     i = 0
     while i < self.routes.len()
       route = self.routes[i]
@@ -214,7 +214,7 @@ class Server
     return nil
 
   # Server.allow_for provides the net/http/Server standard library operation.
-  allow_for = path ->
+  allow_for: path ->
     methods = []
     i = 0
     while i < self.routes.len()
@@ -231,7 +231,7 @@ class Server
     return methods.join(", ")
 
   # Server.static provides the net/http/Server standard library operation.
-  serve_static = prefix, assets ->
+  serve_static: prefix, assets ->
     for entry in assets.entries()
       path = entry[0]
       asset = entry[1]
@@ -245,7 +245,7 @@ class Server
     self
 
   # Server.static_one provides the net/http/Server standard library operation.
-  static_one = prefix, path, asset, hashed_route ->
+  static_one: prefix, path, asset, hashed_route ->
     self.routes.push({
       method: "GET",
       path: prefix + "/" + path,
@@ -256,7 +256,7 @@ class Server
     })
 
   # Server.content_type provides the net/http/Server standard library operation.
-  content_type = path ->
+  content_type: path ->
     if path.ends_with(".html")
       return "text/html; charset=utf-8"
     if path.ends_with(".css")
@@ -272,17 +272,17 @@ class Server
   # run binds `port` (0 = OS picks a free port) and enters the
   # accept loop. Blocks forever; the only ways out are a fatal
   # error or SIGINT.
-  run = port ->
+  run: port ->
     http_server_run(self.routes, port)
 
   # run_tls starts an HTTPS server with a PEM certificate and private key.
-  run_tls = port, cert_file, key_file, options ->
+  run_tls: port, cert_file, key_file, options ->
     if options == nil
       options = {}
     http_server_run_tls(self.routes, port, cert_file, key_file, options)
 
   # Server.route_options provides the net/http/Server standard library operation.
-  route_options = options ->
+  route_options: options ->
     opts = { trailing_slash: "strict", name: nil }
     if options == nil
       return opts
@@ -299,7 +299,7 @@ class Server
     return opts
 
   # cookie_value formats a Set-Cookie header value.
-  cookie_value = name, value, options ->
+  cookie_value: name, value, options ->
     self.validate_cookie_name(name)
     self.validate_cookie_value(value)
     if options == nil
@@ -327,7 +327,7 @@ class Server
     return out
 
   # validate_cookie_name raises when name is not a valid cookie name.
-  validate_cookie_name = name ->
+  validate_cookie_name: name ->
     if name == nil or name == ""
       raise error("http.cookie: invalid cookie name")
     i = 0
@@ -339,7 +339,7 @@ class Server
       i = i + 1
 
   # validate_cookie_value raises when value cannot be used in a cookie.
-  validate_cookie_value = value ->
+  validate_cookie_value: value ->
     if value == nil
       raise error("http.cookie: invalid cookie value")
     i = 0
@@ -351,7 +351,7 @@ class Server
       i = i + 1
 
   # Server.validate_pattern provides the net/http/Server standard library operation.
-  validate_pattern = path ->
+  validate_pattern: path ->
     if not path.starts_with("/")
       raise error("http.route: path must start with /")
     names = []
@@ -369,7 +369,7 @@ class Server
       i = i + 1
 
   # Server.match_params provides the net/http/Server standard library operation.
-  match_params = route, path ->
+  match_params: route, path ->
     pattern = route["path"]
     if route.get("trailing_slash", "strict") == "ignore"
       pattern = self.strip_trailing(pattern)
@@ -401,7 +401,7 @@ class Server
     return params
 
   # Server.build_path provides the net/http/Server standard library operation.
-  build_path = pattern, params ->
+  build_path: pattern, params ->
     out = []
     parts = pattern.split("/")
     i = 0
@@ -421,7 +421,7 @@ class Server
     return result
 
   # Server.join_paths provides the net/http/Server standard library operation.
-  join_paths = prefix, path ->
+  join_paths: prefix, path ->
     if prefix == nil or prefix == ""
       if path == ""
         return "/"
@@ -431,19 +431,19 @@ class Server
     return self.strip_trailing(prefix) + "/" + self.strip_leading(path)
 
   # Server.strip_trailing provides the net/http/Server standard library operation.
-  strip_trailing = path ->
+  strip_trailing: path ->
     while path.byte_len() > 1 and path.ends_with("/")
       path = path.slice(0, path.len() - 1)
     return path
 
   # Server.strip_leading provides the net/http/Server standard library operation.
-  strip_leading = path ->
+  strip_leading: path ->
     while path.byte_len() > 0 and path.starts_with("/")
       path = path.slice(1, path.len())
     return path
 
   # Server.copy_array provides the net/http/Server standard library operation.
-  copy_array = values ->
+  copy_array: values ->
     out = []
     i = 0
     while i < values.len()
@@ -452,7 +452,7 @@ class Server
     return out
 
   # Server.array_has? provides the net/http/Server standard library operation.
-  array_has? = values, value ->
+  array_has?: values, value ->
     i = 0
     while i < values.len()
       if values[i] == value

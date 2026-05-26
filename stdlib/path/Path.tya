@@ -1,35 +1,35 @@
 # Path provides the path/Path standard library API.
 class Path
   # Path.basename returns the last path element.
-  static basename = value ->
+  static basename: value ->
     Path(nil).basename(value)
 
   # Path.dirname returns all but the last path element.
-  static dirname = value ->
+  static dirname: value ->
     Path(nil).dirname(value)
 
   # Path.extname returns the extension of value.
-  static extname = value ->
+  static extname: value ->
     Path(nil).extname(value)
 
   # Path.clean normalizes dot segments and repeated separators.
-  static clean = value ->
+  static clean: value ->
     Path(nil).clean(value)
 
   # Path.join joins path parts and cleans the result.
-  static join = parts ->
+  static join: parts ->
     Path(nil).join(parts)
 
   # Path.expand_user expands a leading ~ using the current home directory.
-  static expand_user = value ->
+  static expand_user: value ->
     path_expand_user(value)
 
   # Path.initialize stores a filesystem path.
-  initialize = value = nil ->
+  initialize: value = nil ->
     self.value = value
 
   # Path.basename provides the path/Path standard library operation.
-  basename = value = nil ->
+  basename: value = nil ->
     if value == nil
       value = self.value
     parts = value.split("/")
@@ -41,7 +41,7 @@ class Path
     return ""
 
   # Path.dirname provides the path/Path standard library operation.
-  dirname = value = nil ->
+  dirname: value = nil ->
     if value == nil
       value = self.value
     parts = value.split("/")
@@ -63,7 +63,7 @@ class Path
     return joined
 
   # Path.extname provides the path/Path standard library operation.
-  extname = value = nil ->
+  extname: value = nil ->
     if value == nil
       value = self.value
     bparts = value.split("/")
@@ -82,7 +82,7 @@ class Path
     return "." + parts[n - 1]
 
   # Path.clean provides the path/Path standard library operation.
-  clean = value = nil ->
+  clean: value = nil ->
     if value == nil
       value = self.value
     if value == ""
@@ -108,7 +108,7 @@ class Path
     return joined
 
   # Path.join provides the path/Path standard library operation.
-  join = parts = nil ->
+  join: parts = nil ->
     if parts == nil
       parts = self.value
     raw = parts.join("/")
@@ -135,7 +135,7 @@ class Path
     return joined
 
   # Path.expand_user provides the path/Path standard library operation.
-  expand_user = value = nil ->
+  expand_user: value = nil ->
     if value == nil
       value = self.value
     path_expand_user(value)

@@ -1,6 +1,6 @@
 # DropSequence provides the drop_sequence standard library API.
 class DropSequence implements Sequence
   # DropSequence.initialize provides the drop_sequence standard library operation.
-  initialize = source, n ->
+  initialize: source, n ->
     self.source = source
     self.n = n

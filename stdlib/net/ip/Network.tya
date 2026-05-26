@@ -1,13 +1,13 @@
 # Network provides the net/ip/Network standard library API.
 class Network
   # Network.initialize provides the net/ip/Network standard library operation.
-  initialize = address = nil, prefix = 0 ->
+  initialize: address = nil, prefix = 0 ->
     self.address = address
     self.prefix = prefix
     self.version = address.version
 
   # Network.parse provides the net/ip/Network standard library operation.
-  parse = cidr ->
+  parse: cidr ->
     slash = Address(nil, nil, nil, false).last_index(cidr, "/")
     if slash < 0
       raise error("ip.Network.parse: missing prefix")
@@ -24,7 +24,7 @@ class Network
     return Network(addr, prefix)
 
   # Network.contains? provides the net/ip/Network standard library operation.
-  contains? = network, addr = nil ->
+  contains?: network, addr = nil ->
     if addr == nil
       addr = network
       network = self
@@ -35,7 +35,7 @@ class Network
     return self.contains_parts?(network.address.groups, addr.groups, network.prefix, 16)
 
   # Network.contains_parts? provides the net/ip/Network standard library operation.
-  contains_parts? = base, value, prefix, width ->
+  contains_parts?: base, value, prefix, width ->
     remain = prefix
     i = 0
     while i < base.len()
@@ -54,7 +54,7 @@ class Network
     return true
 
   # Network.pow2 provides the net/ip/Network standard library operation.
-  pow2 = n ->
+  pow2: n ->
     out = 1
     i = 0
     while i < n

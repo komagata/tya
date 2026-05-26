@@ -3,33 +3,33 @@ import toml as toml
 
 class StdlibTomlTest extends TestCase
 
-  test_parse_basic = ->
+  test_parse_basic: ->
     v = toml.Toml("name = \"tya\"\nport = 8080\n").parse()
     self.assert_equal("tya", v["name"], "name")
     self.assert_equal(8080, v["port"], "port")
-  test_parse_section = ->
+  test_parse_section: ->
     text = "[server]\nhost = \"localhost\"\nport = 80\n"
     v = toml.Toml(text).parse()
     self.assert_equal("localhost", v["server"]["host"], "host")
     self.assert_equal(80, v["server"]["port"], "port")
-  test_parse_array = ->
+  test_parse_array: ->
     v = toml.Toml("nums = [1, 2, 3]\n").parse()
     self.assert_equal([1, 2, 3], v["nums"], "array")
-  test_parse_array_of_tables = ->
+  test_parse_array_of_tables: ->
     text = "[[items]]\nname = \"a\"\n[[items]]\nname = \"b\"\n"
     v = toml.Toml(text).parse()
     self.assert_equal(2, v["items"].len(), "two items")
     self.assert_equal("a", v["items"][0]["name"], "first")
     self.assert_equal("b", v["items"][1]["name"], "second")
-  test_parse_booleans = ->
+  test_parse_booleans: ->
     v = toml.Toml("a = true\nb = false\n").parse()
     self.assert_equal(true, v["a"], "true")
     self.assert_equal(false, v["b"], "false")
-  test_dump_basic = ->
+  test_dump_basic: ->
     out = toml.Toml({ name: "tya", port: 8080 }).stringify()
     expected = "name = \"tya\"\nport = 8080\n"
     self.assert_equal(expected, out, "dump basic")
-  test_dump_section = ->
+  test_dump_section: ->
     out = toml.Toml({ server: { host: "x", port: 80 } }).stringify()
     expected = "\n[server]\nhost = \"x\"\nport = 80\n"
     self.assert_equal(expected, out, "dump section")

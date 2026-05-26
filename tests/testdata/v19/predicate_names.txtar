@@ -41,26 +41,26 @@ print(user.has?("name"))
 print(value.Value(nil).nil?())
 
 class User
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  named? = ->
+  named?: ->
     self.name != ""
 
 class Feature
-  static enabled = true
+  static enabled: true
 
-  static enabled? = ->
+  static enabled?: ->
     Self.enabled
 
 class Address
-  private? = ->
+  private?: ->
     true
 
-  static private? = ->
+  static private?: ->
     false
 
-  private helper = ->
+  private helper: ->
     true
 
 person = User("komagata")
@@ -75,7 +75,7 @@ active? = true
 
 -- bad_class_var.tya --
 class Feature
-  static enabled? = true
+  static enabled?: true
 
 -- non_bool_return.tya --
 name? = ->

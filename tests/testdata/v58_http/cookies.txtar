@@ -16,7 +16,7 @@ import net/http as http
 app = http.Server()
 
 class App
-  static cookies = req ->
+  static cookies: req ->
     body = req["cookies"]["a"] + "," + req["cookies"]["b"] + "," + req["cookies"].get("missing", "none")
     response = { status: 200, body: body }
     app.with_cookie(response, "session", "abc", { path: "/", http_only: true })

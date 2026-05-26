@@ -3,20 +3,20 @@ import template as template
 
 class StdlibTemplateTest extends TestCase
 
-  test_render_variable = ->
+  test_render_variable: ->
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
     got = template.Template("Hello, " + ob + " name " + cb).render({ name: "Tya" })
     self.assert_equal("Hello, Tya", got, "variable")
 
-  test_paths_and_missing_values = ->
+  test_paths_and_missing_values: ->
     data = { user: { name: "Ada" }, items: [{ name: "one" }] }
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
     got = template.Template(ob + " user.name " + cb + " " + ob + " items[0].name " + cb + " " + ob + " missing " + cb).render(data)
     self.assert_equal("Ada one ", got, "paths")
 
-  test_strict_missing_value = ->
+  test_strict_missing_value: ->
     err = nil
     try
       ob = chr(123) + chr(123)
@@ -26,7 +26,7 @@ class StdlibTemplateTest extends TestCase
       err = e["message"]
     self.assert_equal("template.render: missing user.name", err, "strict")
 
-  test_if_else = ->
+  test_if_else: ->
     data = { user: { admin: true } }
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
@@ -35,14 +35,14 @@ class StdlibTemplateTest extends TestCase
     got = template.Template(ob + " if user.missing " + cb + "Admin" + ob + " else " + cb + "User" + ob + " end " + cb).render(data)
     self.assert_equal("User", got, "else")
 
-  test_for_loop = ->
+  test_for_loop: ->
     data = { items: [{ name: "a" }, { name: "b" }] }
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
     got = template.Template(ob + " for item in items " + cb + ob + " item.name " + cb + ob + " end " + cb).render(data)
     self.assert_equal("ab", got, "for")
 
-  test_partials = ->
+  test_partials: ->
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
     got = template.Template(ob + " partial \"row\" user " + cb).render({
@@ -52,14 +52,14 @@ class StdlibTemplateTest extends TestCase
     })
     self.assert_equal("<li>Tya</li>", got, "partial")
 
-  test_html_escape_and_raw = ->
+  test_html_escape_and_raw: ->
     data = { value: "<b>\"Tya\" & 'lang'</b>" }
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
     got = template.Template(ob + " value " + cb + " " + ob + chr(123) + " value " + chr(125) + cb).render_html(data)
     self.assert_equal("&lt;b&gt;&quot;Tya&quot; &amp; &#39;lang&#39;&lt;/b&gt; <b>\"Tya\" & 'lang'</b>", got, "html")
 
-  test_render_file = ->
+  test_render_file: ->
     path = "template_test_input.txt"
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)

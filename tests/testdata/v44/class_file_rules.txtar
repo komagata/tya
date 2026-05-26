@@ -33,7 +33,7 @@ print(WrongName())
 
 -- wrong_pkg/WrongName.tya --
 class DifferentName
-  initialize = ->
+  initialize: ->
     self.x = 1
 
 -- empty_main.tya --
@@ -45,7 +45,7 @@ print(EmptyClass())
 # Only an interface declaration; no public class with the matching
 # filename. CheckClassFileStructure flags missing public class.
 interface Empty
-  noop = ->
+  noop: ->
 
 -- stray_main.tya --
 import stray_pkg
@@ -54,7 +54,7 @@ print(Stray())
 
 -- stray_pkg/Stray.tya --
 class Stray
-  initialize = ->
+  initialize: ->
     self.x = 1
 
 x = 1
@@ -67,16 +67,16 @@ print(s.run("hello"))
 
 -- ok_pkg/Server.tya --
 class Connection
-  initialize = msg ->
+  initialize: msg ->
     self.msg = msg
 
-  body = ->
+  body: ->
     self.msg
 
 class Server
-  initialize = ->
+  initialize: ->
     self.prefix = "wrapped"
 
-  run = msg ->
+  run: msg ->
     conn = Connection(msg)
     "{self.prefix}:{conn.body()}"

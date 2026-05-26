@@ -1,17 +1,17 @@
 # Document provides the xml/Document standard library API.
 class Document
   # Document.initialize provides the xml/Document standard library operation.
-  initialize = children, version, encoding ->
+  initialize: children, version, encoding ->
     self.nodes = children
     self.doc_version = version
     self.doc_encoding = encoding
 
   # Document.new provides the xml/Document standard library operation.
-  new = children, version, encoding ->
+  new: children, version, encoding ->
     return Document(children, version, encoding)
 
   # Document.root provides the xml/Document standard library operation.
-  root = ->
+  root: ->
     i = 0
     while i < self.nodes.len()
       if self.nodes[i].class == Element
@@ -20,17 +20,17 @@ class Document
     return nil
 
   # Document.children provides the xml/Document standard library operation.
-  children = ->
+  children: ->
     return self.nodes
 
   # Document.version provides the xml/Document standard library operation.
-  version = ->
+  version: ->
     return self.doc_version
 
   # Document.encoding provides the xml/Document standard library operation.
-  encoding = ->
+  encoding: ->
     return self.doc_encoding
 
   # Document.to_s provides the xml/Document standard library operation.
-  to_s = ->
+  to_s: ->
     return Xml(nil).stringify(self)

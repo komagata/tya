@@ -22,7 +22,7 @@ stdout '2: unsupported codegen: spawn'
 
 -- latest_runtime.tya --
 interface Stringable
-  to_s = ->
+  to_s: ->
 
 make_counter = start ->
   step = delta ->

@@ -16,10 +16,10 @@ import unittest
 import feature
 
 class FeatureTest extends TestCase
-  test_greet = ->
+  test_greet: ->
     self.assert_equal("hi", Feature.greet(), "greet")
 
 -- feature/Feature.tya --
 class Feature
-  static greet = ->
+  static greet: ->
     "hi"

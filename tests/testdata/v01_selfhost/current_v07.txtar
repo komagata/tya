@@ -17,25 +17,25 @@ stdout 'komagata\nadmin\nHello, komagata \(admin\)\nTya\n'
 
 -- current_v07.tya --
 class User
-  name = ""
-  role = "user"
+  name: ""
+  role: "user"
 
-  init = name ->
+  init: name ->
     @name = name
 
-  greeting = ->
+  greeting: ->
     "Hello, {@name}"
 
-  rename = name ->
+  rename: name ->
     @name = name
 
 class Admin extends User
-  role = "admin"
+  role: "admin"
 
-  init = name ->
+  init: name ->
     super(name)
 
-  greeting = ->
+  greeting: ->
     "{super()} (admin)"
 
 admin = Admin("komagata")

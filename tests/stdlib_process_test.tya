@@ -3,16 +3,16 @@ import process as process
 
 class StdlibProcessTest extends TestCase
 
-  test_echo = ->
+  test_echo: ->
     r = process.Process(["echo", "hello"]).run(nil)
     self.assert_equal(0, r["exit_code"], "exit 0")
     self.assert_equal("hello\n", r["stdout"], "stdout")
-  test_exit_code = ->
+  test_exit_code: ->
     r = process.Process(["sh", "-c", "exit 42"]).run(nil)
     self.assert_equal(42, r["exit_code"], "exit 42")
-  test_stderr_capture = ->
+  test_stderr_capture: ->
     r = process.Process(["sh", "-c", "echo err 1>&2"]).run(nil)
     self.assert_equal("err\n", r["stderr"], "stderr")
-  test_input = ->
+  test_input: ->
     r = process.Process(["cat"]).run({ input: "piped" })
     self.assert_equal("piped", r["stdout"], "stdin")

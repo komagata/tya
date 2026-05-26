@@ -35,34 +35,34 @@ stderr 'missing class variable or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.67.9\n'
+stdout '0.68.0\n'
 ! stderr .
 
 -- class_level.tya --
 class User
-  static count = 0
-  static label = "user"
+  static count: 0
+  static label: "user"
 
-  initialize = name ->
+  initialize: name ->
     self.name = name
     Self.count = Self.count + 1
 
-  label = ->
+  label: ->
     Self.label
 
-  static build = name ->
+  static build: name ->
     Self(name)
 
-  static label_name = ->
+  static label_name: ->
     Self.label
 
-  static role = ->
+  static role: ->
     "user"
 
 class Admin extends User
-  static label = "admin"
+  static label: "admin"
 
-  static role = ->
+  static role: ->
     "{super()} admin"
 
 print(User.count)
@@ -85,22 +85,22 @@ print(admin.class.parent)
 
 -- account.tya --
 class Account
-  static kind = "account"
+  static kind: "account"
 
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  kind = ->
+  kind: ->
     Self.kind
 
-  static build = name ->
+  static build: name ->
     Self(name)
 
-  static kind_name = ->
+  static kind_name: ->
     Self.kind
 
 class Editor extends Account
-  static kind = "editor"
+  static kind: "editor"
 
 -- main.tya --
 import account
@@ -120,52 +120,52 @@ print(self)
 
 -- super_no_parent_class_method.tya --
 class User
-  static build = ->
+  static build: ->
     "user"
 
 class Admin extends User
-  static make = ->
+  static make: ->
     super()
 
 print(Admin.make())
 
 -- bad_class_method_override_arity.tya --
 class User
-  static role = ->
+  static role: ->
     "user"
 
 class Admin extends User
-  static role = name ->
+  static role: name ->
     name
 
 -- assign_object_class.tya --
 class User
-  name = ""
+  name: ""
 
 user = User()
 user.class = "bad"
 
 -- assign_object_class_name.tya --
 class User
-  name = ""
+  name: ""
 
 user = User()
 user.class_name = "bad"
 
 -- assign_class_name.tya --
 class User
-  name = ""
+  name: ""
 
 User.name = "bad"
 
 -- assign_class_parent.tya --
 class User
-  name = ""
+  name: ""
 
 User.parent = "bad"
 
 -- missing_class_member.tya --
 class User
-  name = ""
+  name: ""
 
 print(User.missing)

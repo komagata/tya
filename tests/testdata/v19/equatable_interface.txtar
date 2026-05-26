@@ -17,13 +17,13 @@ stdout 'true\ntrue\ntrue\ntrue\ntrue\ntrue\n'
 
 -- user_equatable.tya --
 interface Equatable
-  equal? = other ->
+  equal?: other ->
 
 class User implements Equatable
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  equal? = other ->
+  equal?: other ->
     self.name == other.name
 
 print(User("a").equal?(User("a")))
@@ -31,15 +31,15 @@ print(User("a").equal?(User("b")))
 
 -- missing_equal.tya --
 interface Equatable
-  equal? = other ->
+  equal?: other ->
 
 class User implements Equatable
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
 -- non_bool_equal.tya --
 class User
-  equal? = other ->
+  equal?: other ->
     if other == nil
       return "yes"
     "yes"

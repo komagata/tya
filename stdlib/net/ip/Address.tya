@@ -1,20 +1,20 @@
 # Address provides the net/ip/Address standard library API.
 class Address
   # Address.initialize provides the net/ip/Address standard library operation.
-  initialize = version = nil, bytes = nil, groups = nil, mapped = false ->
+  initialize: version = nil, bytes = nil, groups = nil, mapped = false ->
     self.version = version
     self.bytes = bytes
     self.groups = groups
     self.mapped = mapped
 
   # Address.parse provides the net/ip/Address standard library operation.
-  parse = text ->
+  parse: text ->
     if text.contains(":")
       return self.parse_v6(text)
     return self.parse_v4(text)
 
   # Address.valid? provides the net/ip/Address standard library operation.
-  valid? = text ->
+  valid?: text ->
     try
       self.parse(text)
       return true
@@ -22,13 +22,13 @@ class Address
       return false
 
   # Address.version provides the net/ip/Address standard library operation.
-  version_of = addr = nil ->
+  version_of: addr = nil ->
     if addr == nil
       addr = self
     return addr.version
 
   # Address.to_s provides the net/ip/Address standard library operation.
-  to_s = addr = nil ->
+  to_s: addr = nil ->
     if addr == nil
       addr = self
     if addr.version == 4
@@ -39,7 +39,7 @@ class Address
     return self.format_v6(addr.groups, addr.mapped)
 
   # Address.loopback? provides the net/ip/Address standard library operation.
-  loopback? = addr = nil ->
+  loopback?: addr = nil ->
     if addr == nil
       addr = self
     if addr.version == 4
@@ -53,7 +53,7 @@ class Address
     return groups[7] == 1
 
   # Address.unspecified? provides the net/ip/Address standard library operation.
-  unspecified? = addr = nil ->
+  unspecified?: addr = nil ->
     if addr == nil
       addr = self
     if addr.version == 4
@@ -64,7 +64,7 @@ class Address
     return true
 
   # Address.private? provides the net/ip/Address standard library operation.
-  private_address? = addr = nil ->
+  private_address?: addr = nil ->
     if addr == nil
       addr = self
     if addr.version == 4
@@ -80,7 +80,7 @@ class Address
     return (g0 >= 0xfc00 and g0 <= 0xfdff)
 
   # Address.parse_v4 provides the net/ip/Address standard library operation.
-  parse_v4 = text ->
+  parse_v4: text ->
     parts = text.split(".")
     if parts.len() != 4
       raise error("ip.Address.parse: invalid IPv4 address")
@@ -97,7 +97,7 @@ class Address
     return Address(4, bytes, nil, false)
 
   # Address.parse_v6 provides the net/ip/Address standard library operation.
-  parse_v6 = text ->
+  parse_v6: text ->
     if text == ""
       raise error("ip.Address.parse: invalid IPv6 address")
     mapped = false
@@ -147,7 +147,7 @@ class Address
     return Address(6, nil, groups, mapped)
 
   # Address.parse_v6_side provides the net/ip/Address standard library operation.
-  parse_v6_side = text ->
+  parse_v6_side: text ->
     parts = text.split(":")
     out = []
     for part in parts
@@ -157,7 +157,7 @@ class Address
     return out
 
   # Address.format_v6 provides the net/ip/Address standard library operation.
-  format_v6 = groups, mapped ->
+  format_v6: groups, mapped ->
     if mapped and groups[0] == 0 and groups[1] == 0 and groups[2] == 0 and groups[3] == 0 and groups[4] == 0 and groups[5] == 65535
       b1 = (groups[6] / 256).to_i()
       b2 = groups[6] % 256
@@ -184,7 +184,7 @@ class Address
     return out
 
   # Address.zero_run provides the net/ip/Address standard library operation.
-  zero_run = groups ->
+  zero_run: groups ->
     best_start = -1
     best_len = 0
     i = 0
@@ -202,7 +202,7 @@ class Address
     return { start: best_start, len: best_len }
 
   # Address.decimal? provides the net/ip/Address standard library operation.
-  decimal? = text ->
+  decimal?: text ->
     i = 0
     while i < text.byte_len()
       c = ord(text[i])
@@ -212,7 +212,7 @@ class Address
     return true
 
   # Address.hex_to_int provides the net/ip/Address standard library operation.
-  hex_to_int = text ->
+  hex_to_int: text ->
     n = 0
     i = 0
     while i < text.byte_len()
@@ -221,7 +221,7 @@ class Address
     return n
 
   # Address.hex_digit provides the net/ip/Address standard library operation.
-  hex_digit = c ->
+  hex_digit: c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -232,7 +232,7 @@ class Address
     raise error("ip.Address.parse: invalid IPv6 address")
 
   # Address.int_to_hex provides the net/ip/Address standard library operation.
-  int_to_hex = n ->
+  int_to_hex: n ->
     digits = "0123456789abcdef"
     if n == 0
       return "0"
@@ -244,7 +244,7 @@ class Address
     return out
 
   # Address.last_index provides the net/ip/Address standard library operation.
-  last_index = text, needle ->
+  last_index: text, needle ->
     i = text.byte_len() - 1
     while i >= 0
       if text[i] == needle

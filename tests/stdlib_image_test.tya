@@ -5,7 +5,7 @@ import image as image
 
 class StdlibImageTest extends TestCase
 
-  test_new_pixels_and_raw_bytes = ->
+  test_new_pixels_and_raw_bytes: ->
     red = color.Color(255, 0, 0, 255)
     img = image.Image(2, 2, red)
     self.assert_equal(image.Image, img.class, "class")
@@ -17,7 +17,7 @@ class StdlibImageTest extends TestCase
     self.assert(img.has_alpha?(), "alpha")
     self.assert_equal(16, bytes_array(img.to_bytes()).len(), "raw bytes")
 
-  test_encode_decode_and_identify_formats = ->
+  test_encode_decode_and_identify_formats: ->
     img = StdlibImageTest.sample_image()
     png = img.encode("png")
     meta = image.Codec(nil).metadata(png)
@@ -41,7 +41,7 @@ class StdlibImageTest extends TestCase
     self.assert_equal(1, gif_meta["frames"], "gif frames")
     self.assert(not gif_meta["animated"], "gif animated")
 
-  test_read_write = ->
+  test_read_write: ->
     img = StdlibImageTest.sample_image()
     path = "/tmp/tya_image_test.png"
     img.write(path)
@@ -51,7 +51,7 @@ class StdlibImageTest extends TestCase
     self.assert_equal("png", read.format, "read format")
     self.assert_equal([0, 255, 0, 255], read.pixel(0, 1).to_array(), "read pixel")
 
-  test_operations = ->
+  test_operations: ->
     img = StdlibImageTest.sample_image()
     crop = img.crop(1, 0, 1, 2)
     self.assert_equal([0, 0, 255, 128], crop.pixel(0, 0).to_array(), "crop")
@@ -70,7 +70,7 @@ class StdlibImageTest extends TestCase
     over = image.Image(1, 1, color.Color(100, 100, 100, 128))
     self.assert_equal([50, 50, 50, 255], base.composite(over, 0, 0).pixel(0, 0).to_array(), "composite")
 
-  test_errors = ->
+  test_errors: ->
     self.assert_raises(-> image.Image(0, 1), "dimensions")
     self.assert_raises(-> image.Image(1, 1, "red"), "color.Color")
     self.assert_raises(-> image.Image(1, 1).pixel(1, 0), "out of bounds")
@@ -79,7 +79,7 @@ class StdlibImageTest extends TestCase
     self.assert_raises(-> StdlibImageTest.sample_image().encode("jpeg", { quality: 101 }), "quality")
     self.assert_raises(-> StdlibImageTest.sample_image().resize(1, 1, { nope: true }), "unknown option")
 
-  static sample_image = ->
+  static sample_image: ->
     img = image.Image(2, 2, color.Color(0, 0, 0, 0))
     img.set_pixel(0, 0, color.Color(255, 0, 0, 255))
     img.set_pixel(1, 0, color.Color(0, 0, 255, 128))
@@ -87,5 +87,5 @@ class StdlibImageTest extends TestCase
     img.set_pixel(1, 1, color.Color(255, 255, 255, 255))
     return img
 
-  static fixture_bytes = format ->
+  static fixture_bytes: format ->
     return bytes_of("TYAIMG:" + format + ":1:1:0:1\n1,2,3,255")

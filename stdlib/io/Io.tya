@@ -1,19 +1,19 @@
 # Io provides the io/Io standard library API.
 class Io
   # Io.stdin provides the io/Io standard library operation.
-  stdin = ->
+  stdin: ->
     Reader(io_stdin(), false)
 
   # Io.stdout provides the io/Io standard library operation.
-  stdout = ->
+  stdout: ->
     Writer(io_stdout(), false)
 
   # Io.stderr provides the io/Io standard library operation.
-  stderr = ->
+  stderr: ->
     Writer(io_stderr(), false)
 
   # Io.open provides the io/Io standard library operation.
-  open = path, mode = nil ->
+  open: path, mode = nil ->
     if mode == nil
       mode = "r"
     handle = io_open(path, mode)
@@ -23,7 +23,7 @@ class Io
     return Writer(handle, binary)
 
   # Io.copy provides the io/Io standard library operation.
-  copy = reader, writer ->
+  copy: reader, writer ->
     total = 0
     chunk = reader.read(8192)
     while chunk != nil and chunk.len() > 0

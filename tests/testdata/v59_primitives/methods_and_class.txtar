@@ -33,7 +33,7 @@ print(user.has("a"))
 print(user.get("a"))
 print(user.entries()[0][0])
 class Point
-  initialize = x ->
+  initialize: x ->
     self.x = x
 
 p = Point(1)

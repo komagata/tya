@@ -2,37 +2,37 @@ import unittest
 
 class BytesTypeTest extends TestCase
 
-  test_literal_and_len = ->
+  test_literal_and_len: ->
     b = b"hello"
     self.assert_equal(5, b.len(), "len 5")
     self.assert_equal(104, b[0], "h byte")
     self.assert_equal(111, b[4], "o byte")
-  test_hex_escapes = ->
+  test_hex_escapes: ->
     b = b"\x00\x01\xff"
     self.assert_equal(3, b.len(), "hex escapes")
     self.assert_equal(0, b[0], "0x00")
     self.assert_equal(255, b[2], "0xff")
-  test_kind = ->
+  test_kind: ->
     self.assert_equal([120], bytes_array(b"x"), "bytes array")
-  test_concat = ->
+  test_concat: ->
     b = b"foo" + b"bar"
     self.assert_equal(6, b.len(), "concat len")
     self.assert_equal(102, b[0], "f")
-  test_equality = ->
+  test_equality: ->
     self.assert(b"abc" == b"abc", "equal")
     self.assert_equal(false, b"abc" == b"abd", "not equal")
-  test_bytes_of = ->
+  test_bytes_of: ->
     b = bytes_of("Tya")
     self.assert_equal(3, b.len(), "len 3")
     self.assert_equal(84, b[0], "T")
-  test_bytes_text = ->
+  test_bytes_text: ->
     self.assert_equal("Tya", bytes_text(b"Tya"), "round trip")
-  test_bytes_array = ->
+  test_bytes_array: ->
     self.assert_equal([97, 98, 99], bytes_array(b"abc"), "to array")
-  test_bytes_from_array = ->
+  test_bytes_from_array: ->
     b = bytes([72, 101, 108, 108, 111])
     self.assert_equal("Hello", bytes_text(b), "from array")
-  test_bytes_slice = ->
+  test_bytes_slice: ->
     b = bytes_slice(b"hello world", 0, 5)
     self.assert_equal("hello", bytes_text(b), "slice 0..5")
     b = bytes_slice(b"hello world", 6, 11)

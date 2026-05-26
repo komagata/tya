@@ -1,7 +1,7 @@
 # Queue provides the collections/Queue standard library API.
 class Queue
   # Queue.initialize provides the collections/Queue standard library operation.
-  initialize = values = nil ->
+  initialize: values = nil ->
     if values == nil
       self.items = []
     else
@@ -9,20 +9,20 @@ class Queue
     self.head = 0
 
   # Queue.new provides the collections/Queue standard library operation.
-  new = ->
+  new: ->
     return Queue(nil)
 
   # Queue.from_array provides the collections/Queue standard library operation.
-  from_array = values ->
+  from_array: values ->
     return Queue(values)
 
   # Queue.push provides the collections/Queue standard library operation.
-  push = value ->
+  push: value ->
     self.items.push(value)
     return self
 
   # Queue.pop provides the collections/Queue standard library operation.
-  pop = ->
+  pop: ->
     if self.empty?()
       raise error("collections.Queue.pop: empty queue")
     value = self.items[self.head]
@@ -31,27 +31,27 @@ class Queue
     return value
 
   # Queue.peek provides the collections/Queue standard library operation.
-  peek = ->
+  peek: ->
     if self.empty?()
       raise error("collections.Queue.peek: empty queue")
     return self.items[self.head]
 
   # Queue.len provides the collections/Queue standard library operation.
-  len = ->
+  len: ->
     return self.items.len() - self.head
 
   # Queue.empty? provides the collections/Queue standard library operation.
-  empty? = ->
+  empty?: ->
     return self.len() == 0
 
   # Queue.clear provides the collections/Queue standard library operation.
-  clear = ->
+  clear: ->
     self.items = []
     self.head = 0
     return self
 
   # Queue.to_array provides the collections/Queue standard library operation.
-  to_array = ->
+  to_array: ->
     out = []
     i = self.head
     while i < self.items.len()
@@ -60,7 +60,7 @@ class Queue
     return out
 
   # Queue.compact provides the collections/Queue standard library operation.
-  compact = ->
+  compact: ->
     if self.head > 32 and self.head * 2 >= self.items.len()
       self.items = self.to_array()
       self.head = 0

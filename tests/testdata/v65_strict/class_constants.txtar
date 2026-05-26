@@ -28,10 +28,10 @@ stderr 'invalid class variable name VALUE'
 import helper as helper
 
 class Foo
-  VALUE = "public"
-  private SECRET = "secret"
+  VALUE: "public"
+  private SECRET: "secret"
 
-  expose = ->
+  expose: ->
     "local: " + Self.SECRET + "/" + Self.VALUE
 
 print(Foo().expose())
@@ -39,33 +39,33 @@ print("pkg: " + helper.Foo.VALUE)
 
 -- helper.tya --
 class Foo
-  VALUE = "package"
+  VALUE: "package"
 
 -- private_external.tya --
 class Foo
-  private SECRET = "secret"
+  private SECRET: "secret"
 
 print(Foo.SECRET)
 
 -- reassign.tya --
 class Foo
-  VALUE = 1
+  VALUE: 1
 
 Foo.VALUE = 2
 
 -- mutate_index.tya --
 class Foo
-  ITEMS = [1]
+  ITEMS: [1]
 
 Foo.ITEMS[0] = 2
 
 -- mutate_call.tya --
 class Foo
-  ITEMS = []
+  ITEMS: []
 
-  add = ->
+  add: ->
     Self.ITEMS.push(1)
 
 -- static_uppercase.tya --
 class Foo
-  static VALUE = 1
+  static VALUE: 1

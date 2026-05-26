@@ -4,6 +4,9 @@ print(2 + 3 * 4)
 grouped = (2 + 3) * 4
 print(grouped)
 print(5 / 2)
+print(5.0 / 2)
+print(-5 / 2)
+print(-5 % 2)
 negative = -5 + 2
 print(negative)
 print(true)

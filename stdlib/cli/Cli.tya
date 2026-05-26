@@ -1,11 +1,11 @@
 # Cli provides the cli/Cli standard library API.
 class Cli
   # Cli.initialize stores command-line args or a command name.
-  initialize = value ->
+  initialize: value ->
     self.value = value
 
   # Cli.parse provides the cli/Cli standard library operation.
-  parse = args, spec = nil ->
+  parse: args, spec = nil ->
     if self.value != nil
       spec = args
       args = self.value
@@ -47,7 +47,7 @@ class Cli
     return result
 
   # Cli.parse_or_exit provides the cli/Cli standard library operation.
-  parse_or_exit = args, spec = nil ->
+  parse_or_exit: args, spec = nil ->
     if self.value != nil
       spec = args
       args = self.value
@@ -61,7 +61,7 @@ class Cli
     return result
 
   # Cli.usage provides the cli/Cli standard library operation.
-  usage = command, spec = nil ->
+  usage: command, spec = nil ->
     if self.value != nil
       spec = command
       command = self.value
@@ -107,7 +107,7 @@ class Cli
     return out
 
   # Cli.parse_long provides the cli/Cli standard library operation.
-  parse_long = state, i ->
+  parse_long: state, i ->
     arg = state["args"][i]
     raw = arg.slice(2, arg.len())
     eq = Cli(nil).index_of(raw, "=")
@@ -149,7 +149,7 @@ class Cli
     return i
 
   # Cli.parse_short provides the cli/Cli standard library operation.
-  parse_short = state, i ->
+  parse_short: state, i ->
     arg = state["args"][i]
     raw = arg.slice(1, arg.len())
     j = 0
@@ -179,7 +179,7 @@ class Cli
     return i
 
   # Cli.apply_defaults provides the cli/Cli standard library operation.
-  apply_defaults = state ->
+  apply_defaults: state ->
     options = Cli(nil).spec_options(state["spec"])
     names = options.keys()
     for name in names
@@ -194,7 +194,7 @@ class Cli
           state["options"][name] = []
 
   # Cli.check_required provides the cli/Cli standard library operation.
-  check_required = state ->
+  check_required: state ->
     options = Cli(nil).spec_options(state["spec"])
     names = options.keys().sort()
     for name in names
@@ -203,7 +203,7 @@ class Cli
         Cli(nil).error(state, "required", name, "--{name} is required")
 
   # Cli.assign_value provides the cli/Cli standard library operation.
-  assign_value = state, name, opt, value ->
+  assign_value: state, name, opt, value ->
     typ = Cli(nil).option_type(opt)
     if typ == "string"
       state["options"][name] = value
@@ -225,7 +225,7 @@ class Cli
       Cli(nil).error(state, "invalid_type", name, "unsupported option type {typ}")
 
   # Cli.parse_bool_value provides the cli/Cli standard library operation.
-  parse_bool_value = state, name, value ->
+  parse_bool_value: state, name, value ->
     if value == "true" or value == "1" or value == "yes"
       return true
     if value == "false" or value == "0" or value == "no"
@@ -234,40 +234,40 @@ class Cli
     return false
 
   # Cli.unknown provides the cli/Cli standard library operation.
-  unknown = state, raw ->
+  unknown: state, raw ->
     if Cli(nil).spec_bool(state["spec"], "allow_unknown", false)
       state["rest"].push(raw)
     else
       Cli(nil).error(state, "unknown_option", raw, "unknown option {raw}")
 
   # Cli.error provides the cli/Cli standard library operation.
-  error = state, kind, name, message ->
+  error: state, kind, name, message ->
     state["errors"].push({ kind: kind, option: name, message: message })
 
   # Cli.option_type provides the cli/Cli standard library operation.
-  option_type = opt ->
+  option_type: opt ->
     Cli(nil).spec_string(opt, "type", "string")
 
   # Cli.spec_options provides the cli/Cli standard library operation.
-  spec_options = spec ->
+  spec_options: spec ->
     if spec.has("options")
       return spec["options"]
     return {}
 
   # Cli.spec_bool provides the cli/Cli standard library operation.
-  spec_bool = spec, name, fallback ->
+  spec_bool: spec, name, fallback ->
     if spec.has(name)
       return spec[name]
     return fallback
 
   # Cli.spec_string provides the cli/Cli standard library operation.
-  spec_string = spec, name, fallback ->
+  spec_string: spec, name, fallback ->
     if spec.has(name)
       return spec[name]
     return fallback
 
   # Cli.name_for_alias provides the cli/Cli standard library operation.
-  name_for_alias = spec, alias ->
+  name_for_alias: spec, alias ->
     options = Cli(nil).spec_options(spec)
     names = options.keys()
     for name in names
@@ -277,7 +277,7 @@ class Cli
     return ""
 
   # Cli.index_of provides the cli/Cli standard library operation.
-  index_of = text, needle ->
+  index_of: text, needle ->
     i = 0
     while i < text.byte_len()
       if text[i] == needle

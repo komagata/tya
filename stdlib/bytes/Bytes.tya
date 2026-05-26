@@ -1,53 +1,102 @@
 # Bytes provides the bytes/Bytes standard library API.
 class Bytes
+  # Bytes.len returns the byte length of a string or bytes value.
+  static len: value ->
+    Self.array_of(value).len()
+
+  # Bytes.at returns a byte at a zero-based byte index.
+  static at: value, index ->
+    if index.class != Number or index != index.to_i()
+      raise error("bytes.at: index must be an integer")
+    arr = Self.array_of(value)
+    if index < 0 or index >= arr.len()
+      raise error("bytes.at: index out of bounds")
+    return arr[index]
+
+  # Bytes.index_of returns the byte index of byte in a string or bytes value.
+  static index_of: value, byte, start = 0 ->
+    if start == nil
+      start = 0
+    if start.class != Number or start != start.to_i()
+      raise error("bytes.index_of: start must be an integer")
+    arr = Self.array_of(value)
+    target = Self.byte_of(byte)
+    i = start
+    if i < 0
+      i = 0
+    while i < arr.len()
+      if arr[i] == target
+        return i
+      i = i + 1
+    return nil
+
+  # Bytes.array_of returns a byte array for a string or bytes value.
+  private static array_of: value ->
+    if value.class == String
+      return bytes_array(bytes_of(value))
+    if serialization_kind(value) == "bytes"
+      return bytes_array(value)
+    raise error("bytes: value must be string or bytes")
+
+  # Bytes.byte_of normalizes a byte argument.
+  private static byte_of: byte ->
+    if byte.class == Number
+      if byte != byte.to_i() or byte < 0 or byte > 255
+        raise error("bytes.index_of: byte must be 0..255")
+      return byte.to_i()
+    arr = Self.array_of(byte)
+    if arr.len() != 1
+      raise error("bytes.index_of: byte must be exactly one byte")
+    return arr[0]
+
   # Bytes.initialize stores an optional value for byte conversion.
-  initialize = value = nil ->
+  initialize: value = nil ->
     self.value = value
 
   # Bytes.from_array builds bytes from an array of byte values.
-  from_array = values = nil ->
+  from_array: values = nil ->
     if values == nil
       values = self.value
     bytes(values)
 
   # Bytes.from_text encodes text as bytes.
-  from_text = text = nil ->
+  from_text: text = nil ->
     if text == nil
       text = self.value
     bytes_of(text)
 
   # Bytes.to_text decodes bytes as text.
-  to_text = value = nil ->
+  to_text: value = nil ->
     if value == nil
       value = self.value
     bytes_text(value)
 
   # Bytes.to_array returns bytes as an array of byte values.
-  to_array = value = nil ->
+  to_array: value = nil ->
     if value == nil
       value = self.value
     bytes_array(value)
 
   # Bytes.new is a compatibility alias for Bytes.from_array.
-  new = values = nil ->
+  new: values = nil ->
     self.from_array(values)
 
   # Bytes.of is a compatibility alias for Bytes.from_text.
-  of = text = nil ->
+  of: text = nil ->
     self.from_text(text)
 
   # Bytes.text is a compatibility alias for Bytes.to_text.
-  text = value = nil ->
+  text: value = nil ->
     self.to_text(value)
 
   # Bytes.array is a compatibility alias for Bytes.to_array.
-  array = value = nil ->
+  array: value = nil ->
     self.to_array(value)
 
   # Bytes.concat provides the bytes/Bytes standard library operation.
-  concat = left, right ->
+  concat: left, right ->
     bytes_concat(left, right)
 
   # Bytes.slice provides the bytes/Bytes standard library operation.
-  slice = value, start, end ->
+  slice: value, start, end ->
     bytes_slice(value, start, end)

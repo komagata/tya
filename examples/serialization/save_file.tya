@@ -1,7 +1,7 @@
 import serialization as serialization
 
 class Player
-  initialize = name, score ->
+  initialize: name, score ->
     self.name = name
     self.score = score
 

@@ -385,9 +385,9 @@ methods, class variables, class methods, and constructors.
 
 ```tya
 class User
-  private id = 0
+  private id: 0
 
-  private normalize = ->
+  private normalize: ->
     self.id.to_s()
 ```
 
@@ -441,10 +441,10 @@ A class declares a runtime class value.
 
 ```tya
 class User
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  label = ->
+  label: ->
     "user:{self.name}"
 ```
 
@@ -472,10 +472,10 @@ Tya supports:
 
 ```tya
 class Admin extends User
-  initialize = name ->
+  initialize: name ->
     super(name)
 
-  override label = ->
+  override label: ->
     "admin:{self.name}"
 ```
 
@@ -493,9 +493,9 @@ Interfaces are explicit contracts and stackable behavior units.
 
 ```tya
 interface Named
-  name = ->
+  name: ->
 
-  label = ->
+  label: ->
     self.name()
 ```
 
@@ -513,17 +513,17 @@ Classes list implemented interfaces with `implements`.
 
 ```tya
 interface Timestamped
-  created_at = nil
+  created_at: nil
 
-  initialize = ->
+  initialize: ->
     self.created_at = Time.now()
 
 class Account implements Named, Timestamped
-  initialize = name ->
+  initialize: name ->
     self.name_value = name
     super()
 
-  name = ->
+  name: ->
     self.name_value
 ```
 
@@ -701,10 +701,12 @@ Arithmetic operations require numbers unless a documented primitive method or
 operator case says otherwise. `+` adds two numbers, concatenates two strings,
 and concatenates two bytes values. `+` does not format mixed operands through
 implicit string conversion. String interpolation formats embedded values with
-the display surface. `/` always performs number division, so `5 / 2` evaluates
-to `2.5`; integer division uses an explicit API such as `div()`. `%` is
-integer-only and is invalid for floating-point operands. `nil` arithmetic is
-invalid.
+the display surface. `/` performs integer division when both operands are
+integer-compatible numbers and number division when either operand is a
+floating-point value, so `5 / 2` evaluates to `2` and `5.0 / 2` evaluates to
+`2.5`. Integer division truncates toward zero, so `-5 / 2` evaluates to `-2`.
+`%` is integer-only, follows the same truncation model, and is invalid for
+floating-point operands. `nil` arithmetic is invalid.
 
 `and` and `or` return booleans. They test operands with Tya truthiness, do not
 return either operand as a value, and short-circuit: `and` skips the right

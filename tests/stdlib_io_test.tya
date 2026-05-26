@@ -4,7 +4,7 @@ import file as file
 
 class StdlibIoTest extends TestCase
 
-  test_file_read_lines = ->
+  test_file_read_lines: ->
     path = "io_lines.txt"
     file.File(path).write("one\ntwo\n")
     r = io.Io().open(path, "r")
@@ -17,7 +17,7 @@ class StdlibIoTest extends TestCase
     self.assert_equal("two\n", second, "second line")
     self.assert_nil(third, "eof line")
 
-  test_file_write_and_flush = ->
+  test_file_write_and_flush: ->
     path = "io_write.txt"
     w = io.Io().open(path, "w")
     w.write("hello")
@@ -28,7 +28,7 @@ class StdlibIoTest extends TestCase
     file.File(path).remove()
     self.assert_equal("hello world\n", text, "write")
 
-  test_text_copy = ->
+  test_text_copy: ->
     src = "io_copy_src.txt"
     dst = "io_copy_dst.txt"
     file.File(src).write("copy me")
@@ -43,7 +43,7 @@ class StdlibIoTest extends TestCase
     self.assert_equal(7, n, "count")
     self.assert_equal("copy me", text, "copy")
 
-  test_binary_copy = ->
+  test_binary_copy: ->
     src = "io_copy_src.bin"
     dst = "io_copy_dst.bin"
     file.File(src).write_bytes(b"\x00\x01\xff")

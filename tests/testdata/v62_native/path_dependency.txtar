@@ -61,7 +61,7 @@ import native_dep
 import unittest
 
 class NativeDepTest extends TestCase
-  test_version = ->
+  test_version: ->
     self.assert_equal("native-ok", NativeDep.version(), "native wrapper")
 
 -- native_dep/tya.toml --
@@ -80,7 +80,7 @@ native_dep_version = { symbol = "tya_native_dep_version", arity = 0 }
 
 -- native_dep/src/native_dep/NativeDep.tya --
 class NativeDep
-  static version = ->
+  static version: ->
     return native_dep_version()
 
 -- native_dep/include/native_dep.h --
@@ -133,7 +133,7 @@ git_dep_version = { symbol = "tya_git_dep_version", arity = 0 }
 
 -- git_dep/src/git_dep/GitDep.tya --
 class GitDep
-  static version = ->
+  static version: ->
     return git_dep_version()
 
 -- git_dep/include/git_dep.h --

@@ -3,10 +3,10 @@ import secure_random as secure_random
 
 class StdlibSecureRandomTest extends TestCase
 
-  test_hex_length = ->
+  test_hex_length: ->
     s = secure_random.SecureRandom().hex(16)
     self.assert_equal(32, s.byte_len(), "32 hex chars for 16 bytes")
-  test_uuid_format = ->
+  test_uuid_format: ->
     u = secure_random.SecureRandom().uuid()
     self.assert_equal(36, u.byte_len(), "uuid is 36 chars")
     self.assert_equal("-", u[8], "dash at 8")
@@ -14,13 +14,13 @@ class StdlibSecureRandomTest extends TestCase
     self.assert_equal("-", u[18], "dash at 18")
     self.assert_equal("-", u[23], "dash at 23")
     self.assert_equal("4", u[14], "version 4")
-  test_int_in_range = ->
+  test_int_in_range: ->
     i = 0
     while i < 100
       v = secure_random.SecureRandom().int(0, 99)
       self.assert(v >= 0, "lower")
       self.assert(v <= 99, "upper")
       i = i + 1
-  test_base64_length = ->
+  test_base64_length: ->
     s = secure_random.SecureRandom().base64(3)
     self.assert_equal(4, s.byte_len(), "4 chars for 3 bytes")

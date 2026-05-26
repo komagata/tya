@@ -29,7 +29,7 @@ print(Shared.label())
 
 -- lib/shared/Shared.tya --
 class Shared
-  static label = ->
+  static label: ->
     "from-lib"
 
 -- which.tya --
@@ -39,10 +39,10 @@ print(Overlay.tag())
 
 -- lib_a/overlay/Overlay.tya --
 class Overlay
-  static tag = ->
+  static tag: ->
     "a"
 
 -- lib_b/overlay/Overlay.tya --
 class Overlay
-  static tag = ->
+  static tag: ->
     "b"

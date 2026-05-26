@@ -1,24 +1,24 @@
 # Client provides the net/http/Client standard library API.
 class Client
   # Client.initialize stores a target URL.
-  initialize = target ->
+  initialize: target ->
     self.target = target
 
   # Client.get provides the net/http/Client standard library operation.
-  get = target = nil ->
+  get: target = nil ->
     if target == nil
       target = self.target
     return Client(target).request("GET", {})
 
   # Client.post provides the net/http/Client standard library operation.
-  post = target, body = nil ->
+  post: target, body = nil ->
     if self.target != nil
       body = target
       target = self.target
     return Client(target).request("POST", { body: body })
 
   # Client.request provides the net/http/Client standard library operation.
-  request = method, target = nil, opts = nil ->
+  request: method, target = nil, opts = nil ->
     if self.target != nil
       opts = target
       target = self.target
@@ -74,13 +74,13 @@ class Client
     return response
 
   # Client.host_header provides the net/http/Client standard library operation.
-  host_header = host, port ->
+  host_header: host, port ->
     if port == "" or port == "80" or port == "443"
       return host
     return host + ":" + port
 
   # Client.read_response provides the net/http/Client standard library operation.
-  read_response = s ->
+  read_response: s ->
     status_line = socket_read_line(s)
     if status_line == nil
       raise error("http.response: empty response")
@@ -114,7 +114,7 @@ class Client
     return { status: status, headers: headers, body: body }
 
   # Client.read_chunked provides the net/http/Client standard library operation.
-  read_chunked = s ->
+  read_chunked: s ->
     out = ""
     size_line = socket_read_line(s)
     while size_line != nil
@@ -129,14 +129,14 @@ class Client
     return out
 
   # Client.read_trailers provides the net/http/Client standard library operation.
-  read_trailers = s ->
+  read_trailers: s ->
     line = socket_read_line(s)
     while line != nil and Client(nil).chomp(line) != ""
       line = socket_read_line(s)
     nil
 
   # Client.parse_url provides the net/http/Client standard library operation.
-  parse_url = target ->
+  parse_url: target ->
     prefix = "http://"
     scheme = "http"
     if target.starts_with("https://")
@@ -173,7 +173,7 @@ class Client
     return { scheme: scheme, host: host, port: port, path: path, query: query_text, has_query: has_query }
 
   # Client.chomp provides the net/http/Client standard library operation.
-  chomp = text ->
+  chomp: text ->
     n = text.byte_len()
     if n > 0 and text[n - 1] == "\n"
       n = n - 1
@@ -182,7 +182,7 @@ class Client
     return text.slice(0, n)
 
   # Client.index_of provides the net/http/Client standard library operation.
-  index_of = text, needle, start ->
+  index_of: text, needle, start ->
     i = start
     n = text.byte_len()
     m = needle.byte_len()
@@ -193,7 +193,7 @@ class Client
     return -1
 
   # Client.hex_to_i provides the net/http/Client standard library operation.
-  hex_to_i = text ->
+  hex_to_i: text ->
     value = 0
     i = 0
     while i < text.byte_len()

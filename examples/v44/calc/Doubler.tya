@@ -1,7 +1,7 @@
 class Doubler
-  initialize = ->
+  initialize: ->
     self.count = 0
 
-  apply = n ->
+  apply: n ->
     self.count = self.count + 1
     n * 2

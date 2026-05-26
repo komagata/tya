@@ -4,7 +4,7 @@ import file as file
 
 class StdlibDirTest extends TestCase
 
-  test_mkdir_list_rmdir = ->
+  test_mkdir_list_rmdir: ->
     root = "/tmp/tya_v23_dir_a"
     try
       dir.Dir(root).rmdir()
@@ -19,7 +19,7 @@ class StdlibDirTest extends TestCase
     dir.Dir(root).rmdir()
     self.assert_equal(false, file.File(root).exists?(), "rmdir removed")
 
-  test_mkdir_existing_raises = ->
+  test_mkdir_existing_raises: ->
     root = "/tmp/tya_v23_dir_b"
     try
       dir.Dir(root).rmdir()

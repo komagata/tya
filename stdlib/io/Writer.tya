@@ -1,23 +1,23 @@
 # Writer provides the io/Writer standard library API.
 class Writer implements Writable, Flushable, Closable
   # Writer.initialize provides the io/Writer standard library operation.
-  initialize = handle, binary ->
+  initialize: handle, binary ->
     self.handle = handle
     self.binary = binary
 
   # Writer.write provides the io/Writer standard library operation.
-  write = value ->
+  write: value ->
     io_stream_write(self.handle, value)
 
   # Writer.write_line provides the io/Writer standard library operation.
-  write_line = value ->
+  write_line: value ->
     self.write(value)
     self.write("\n")
 
   # Writer.flush provides the io/Writer standard library operation.
-  flush = ->
+  flush: ->
     io_stream_flush(self.handle)
 
   # Writer.close provides the io/Writer standard library operation.
-  close = ->
+  close: ->
     io_stream_close(self.handle)

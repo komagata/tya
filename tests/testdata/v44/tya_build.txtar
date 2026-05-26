@@ -22,5 +22,5 @@ print(Lib.greet())
 
 -- lib/Lib.tya --
 class Lib
-  static greet = ->
+  static greet: ->
     "hi from app"

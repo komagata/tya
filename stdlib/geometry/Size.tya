@@ -1,27 +1,27 @@
 # Size provides the geometry/Size standard library API.
 class Size
   # Size.initialize provides the geometry/Size standard library operation.
-  initialize = width = 0, height = 0 ->
+  initialize: width = 0, height = 0 ->
     self.width = self.dimension(width, "width")
     self.height = self.dimension(height, "height")
 
   # Size.new provides the geometry/Size standard library operation.
-  new = width, height ->
+  new: width, height ->
     return Size(width, height)
 
   # Size.zero provides the geometry/Size standard library operation.
-  zero = ->
+  zero: ->
     return Size(0, 0)
 
   # Size.area provides the geometry/Size standard library operation.
-  area = size = nil ->
+  area: size = nil ->
     if size == nil
       size = self
     self.expect(size, "size")
     return size.width * size.height
 
   # Size.aspect_ratio provides the geometry/Size standard library operation.
-  aspect_ratio = size = nil ->
+  aspect_ratio: size = nil ->
     if size == nil
       size = self
     self.expect(size, "size")
@@ -30,19 +30,19 @@ class Size
     return size.width / size.height
 
   # Size.equal? provides the geometry/Size standard library operation.
-  equal? = a, b = nil ->
+  equal?: a, b = nil ->
     if b == nil
       b = a
       a = self
     return a.class == Size and b.class == Size and a.width == b.width and a.height == b.height
 
   # Size.expect provides the geometry/Size standard library operation.
-  expect = value, name ->
+  expect: value, name ->
     if value.class != Size
       raise error("geometry.Size: " + name + " must be a Size")
 
   # Size.dimension provides the geometry/Size standard library operation.
-  dimension = value, name ->
+  dimension: value, name ->
     if value.class != Number
       raise error("geometry.Size: " + name + " must be a number")
     if value < 0

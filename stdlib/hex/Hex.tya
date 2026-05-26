@@ -1,17 +1,17 @@
 # Hex provides the hex/Hex standard library API.
 class Hex
   # Hex.initialize stores an optional value for hex encoding or decoding.
-  initialize = value = nil ->
+  initialize: value = nil ->
     self.value = value
 
   # Hex.hex_digit provides the hex/Hex standard library operation.
-  hex_digit = d ->
+  hex_digit: d ->
     if d < 10
       return chr(48 + d)
     return chr(87 + d)
 
   # Hex.decode_digit provides the hex/Hex standard library operation.
-  decode_digit = c ->
+  decode_digit: c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -22,7 +22,7 @@ class Hex
     raise error("hex.decode: invalid hex digit")
 
   # Hex.encode provides the hex/Hex standard library operation.
-  encode = value = nil ->
+  encode: value = nil ->
     if value == nil
       value = self.value
     out = ""
@@ -46,7 +46,7 @@ class Hex
     raise error("hex.encode: argument must be a string or bytes")
 
   # Hex.decode provides the hex/Hex standard library operation.
-  decode = text = nil ->
+  decode: text = nil ->
     if text == nil
       text = self.value
     n = text.byte_len()

@@ -18,27 +18,27 @@ print(client.fetch("/"))
 
 -- api/v1/Client.tya --
 class Client
-  initialize = ->
+  initialize: ->
     self.hits = 0
 
-  fetch = url ->
+  fetch: url ->
     request = Request("GET", url)
     response = Response(200)
     "{request.summary()} -> {response.status()}"
 
 -- api/v1/Request.tya --
 class Request
-  initialize = method, url ->
+  initialize: method, url ->
     self.method = method
     self.url = url
 
-  summary = ->
+  summary: ->
     "{self.method} {self.url}"
 
 -- api/v1/Response.tya --
 class Response
-  initialize = status ->
+  initialize: status ->
     self.status = status
 
-  status = ->
+  status: ->
     self.status

@@ -1,9 +1,9 @@
 # Checker provides the compiler/checker/Checker standard library API.
 class Checker
   # Checker.check provides the compiler/checker/Checker standard library operation.
-  check = source ->
+  check: source ->
     return compiler_checker_check(source)
 
   # Checker.check_ast provides the compiler/checker/Checker standard library operation.
-  check_ast = program ->
+  check_ast: program ->
     return compiler_checker_check_ast(program)

@@ -314,7 +314,7 @@ Tya は次をサポートする。
 - `.class` による実行時クラス検査
 - ランタイムで文書化された `class`、`class_name`、`name`、`parent` などの読み取り専用クラスメタデータメンバー
 
-クラス定数はクラスが持つ immutable なメンバーである。定義クラス内では `Self.NAME` でアクセスするのが canonical である。public なクラス定数は `pkg.Class.NAME` として外部から読める。private なクラス定数は定義クラスの外から読めない。`static NAME = ...` はクラス変数の書き方であり、canonical な定数形式ではない。
+クラス定数はクラスが持つ immutable なメンバーである。定義クラス内では `Self.NAME` でアクセスするのが canonical である。public なクラス定数は `pkg.Class.NAME` として外部から読める。private なクラス定数は定義クラスの外から読めない。`static NAME: ...` はクラス変数の書き方であり、canonical な定数形式ではない。
 
 ```tya
 class Admin extends User
@@ -689,7 +689,7 @@ env(name)
 low-level intrinsic name ではなく、`File().read(path)`, `File().append(path, text)`,
 `Dir().list(path)`, `Path().expand_user(path)`, `Process().cwd()`,
 `Process().chdir(path)`, `Io().open(path, mode)`, `Reader#read(size)`,
-`Writer#write(value)`, `Random().int(min, max)`, `Compress().gzip(value)`,
+`Writer#write(value)`, `Random().int(min, max)`, `compress.Gzip().compress(value)`,
 `Digest().sha256(value)`, `Socket.connect(host, port, options)`,
 `Lexer().lex(source)`, `Parser().parse(source)`, `Checker().check(source)`,
 `Format().format(source)` などの standard-library API を使う。conversion と
@@ -1143,7 +1143,9 @@ compiler/checker/Checker   compiler checker helpers
 compiler/format/Format     compiler formatter helpers
 compiler/lexer/Lexer       compiler lexer helpers
 compiler/parser/Parser     compiler parser helpers
-compress/Compress          compression helpers
+compress/Codec             compression codec interface
+compress/Gzip              gzip compression helpers
+compress/Zlib              zlib compression helpers
 csv/Csv                    CSV parse/generate helpers
 digest/Digest              digest/hash helpers
 dir/Dir                    directory helpers

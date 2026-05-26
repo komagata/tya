@@ -7,7 +7,7 @@ import compiler/format
 
 class StdlibCompilerIntrospectionTest extends TestCase
 
-  test_lexer_returns_token_dictionaries = ->
+  test_lexer_returns_token_dictionaries: ->
     result = Lexer().lex("x = 1\n")
     self.assert_equal(0, result["diagnostics"].len(), "lexer diagnostics")
     self.assert_equal("IDENT", result["tokens"][0]["kind"], "token kind")
@@ -16,7 +16,7 @@ class StdlibCompilerIntrospectionTest extends TestCase
     self.assert_equal(1, result["tokens"][0]["col"], "token col")
     self.assert(result["tokens"][0]["end_col"] > 1, "token end col")
 
-  test_parser_ast_and_walk = ->
+  test_parser_ast_and_walk: ->
     parsed = Parser().parse("x = 1 + 2\n")
     program = parsed["program"]
     self.assert_equal(0, parsed["diagnostics"].len(), "parser diagnostics")
@@ -26,13 +26,13 @@ class StdlibCompilerIntrospectionTest extends TestCase
     children = Ast().children(program["body"][0])
     self.assert_equal("binary", Ast().kind(children[0]), "children reaches binary")
 
-  test_parse_tokens = ->
+  test_parse_tokens: ->
     lexed = Lexer().lex("name = \"tya\"\n")
     parsed = Parser().parse_tokens(lexed["tokens"])
     self.assert_equal(0, parsed["diagnostics"].len(), "parse tokens diagnostics")
     self.assert_equal("program", parsed["program"]["kind"], "program")
 
-  test_checker_and_format = ->
+  test_checker_and_format: ->
     ok = Checker().check("x = 1\nprint x\n")
     self.assert(ok["ok"], "checker ok")
     bad = Checker().check("print missing\n")
@@ -41,7 +41,7 @@ class StdlibCompilerIntrospectionTest extends TestCase
     self.assert_equal(0, formatted["diagnostics"].len(), "format diagnostics")
     self.assert(formatted["source"].contains("x = 1"), "formatted source")
 
-  test_unparse_round_trip_and_comments = ->
+  test_unparse_round_trip_and_comments: ->
     source = "# header\n\n# leading\nx = 1 # line\n"
     parsed = Parser().parse(source)
     program = parsed["program"]
@@ -51,7 +51,7 @@ class StdlibCompilerIntrospectionTest extends TestCase
     reparsed = Parser().parse(out)
     self.assert_equal("program", reparsed["program"]["kind"], "round trip")
 
-  test_invalid_inputs_return_diagnostics = ->
+  test_invalid_inputs_return_diagnostics: ->
     parsed = Parser().parse("if\n")
     self.assert_equal(nil, parsed["program"], "invalid parser program")
     self.assert(parsed["diagnostics"].len() > 0, "parser diagnostics")

@@ -17,17 +17,17 @@ stdout 'Hello, komagata\nkomagata\n1\n1\n'
 
 -- current_v06.tya --
 class User
-  name = ""
+  name: ""
   @@count = 0
 
-  init = name ->
+  init: name ->
     @name = name
     @@count = @@count + 1
 
-  greeting = ->
+  greeting: ->
     "Hello, {@name}"
 
-  count = ->
+  count: ->
     @@count
 
   @@build = name ->

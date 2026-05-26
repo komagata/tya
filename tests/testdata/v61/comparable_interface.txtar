@@ -14,28 +14,28 @@ stdout '-1\n1\ntrue\ntrue\ntrue\ntrue\n'
 
 -- defaults.tya --
 interface Comparable
-  compare = other ->
+  compare: other ->
 
-  lt? = other ->
+  lt?: other ->
     self.compare(other) < 0
 
-  lte? = other ->
+  lte?: other ->
     self.compare(other) <= 0
 
-  gt? = other ->
+  gt?: other ->
     self.compare(other) > 0
 
-  gte? = other ->
+  gte?: other ->
     self.compare(other) >= 0
 
-  between? = min, max ->
+  between?: min, max ->
     self.gte?(min) and self.lte?(max)
 
 class Box implements Comparable
-  initialize = value ->
+  initialize: value ->
     self.value = value
 
-  compare = other ->
+  compare: other ->
     self.value - other.value
 
 box = Box(2)
@@ -47,10 +47,10 @@ print(box.between?(Box(1), Box(3)))
 
 -- missing_compare.tya --
 interface Comparable
-  compare = other ->
+  compare: other ->
 
 class Box implements Comparable
-  initialize = value ->
+  initialize: value ->
     self.value = value
 
 -- primitives.tya --

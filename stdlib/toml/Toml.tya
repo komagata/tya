@@ -1,16 +1,16 @@
 # Toml parses and formats TOML documents.
 class Toml
   # Toml.initialize stores a value or TOML text.
-  initialize = value = nil ->
+  initialize: value = nil ->
     self.value = value
 
   # Toml.is_digit provides the toml/Toml standard library operation.
-  is_digit = c ->
+  is_digit: c ->
     code = ord(c)
     return code >= 48 and code <= 57
 
   # Toml.is_bare_key_char provides the toml/Toml standard library operation.
-  is_bare_key_char = c ->
+  is_bare_key_char: c ->
     code = ord(c)
     if code >= 65 and code <= 90
       return true
@@ -21,7 +21,7 @@ class Toml
     return c == "_" or c == "-"
 
   # Toml.skip_ws_in_line provides the toml/Toml standard library operation.
-  skip_ws_in_line = state ->
+  skip_ws_in_line: state ->
     p = state["pos"]
     n = state["len"]
     src = state["src"]
@@ -39,7 +39,7 @@ class Toml
     state["pos"] = p
 
   # Toml.skip_ws_and_newlines provides the toml/Toml standard library operation.
-  skip_ws_and_newlines = state ->
+  skip_ws_and_newlines: state ->
     p = state["pos"]
     n = state["len"]
     src = state["src"]
@@ -57,7 +57,7 @@ class Toml
     state["pos"] = p
 
   # Toml.parse_basic_string provides the toml/Toml standard library operation.
-  parse_basic_string = state ->
+  parse_basic_string: state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -102,7 +102,7 @@ class Toml
     raise error("toml.parse: unterminated string")
 
   # Toml.parse_literal_string provides the toml/Toml standard library operation.
-  parse_literal_string = state ->
+  parse_literal_string: state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -122,7 +122,7 @@ class Toml
     raise error("toml.parse: unterminated literal string")
 
   # Toml.parse_key provides the toml/Toml standard library operation.
-  parse_key = state ->
+  parse_key: state ->
     Toml(nil).skip_ws_in_line(state)
     p = state["pos"]
     src = state["src"]
@@ -144,7 +144,7 @@ class Toml
     return out
 
   # Toml.parse_number_or_keyword provides the toml/Toml standard library operation.
-  parse_number_or_keyword = state ->
+  parse_number_or_keyword: state ->
     p = state["pos"]
     src = state["src"]
     n = state["len"]
@@ -178,7 +178,7 @@ class Toml
     return raw.to_i()
 
   # Toml.starts_with_text provides the toml/Toml standard library operation.
-  starts_with_text = state, word ->
+  starts_with_text: state, word ->
     src = state["src"]
     n = state["len"]
     p = state["pos"]
@@ -193,7 +193,7 @@ class Toml
     return true
 
   # Toml.parse_value provides the toml/Toml standard library operation.
-  parse_value = state ->
+  parse_value: state ->
     Toml(nil).skip_ws_in_line(state)
     p = state["pos"]
     src = state["src"]
@@ -216,7 +216,7 @@ class Toml
     return Toml(nil).parse_number_or_keyword(state)
 
   # Toml.parse_array provides the toml/Toml standard library operation.
-  parse_array = state ->
+  parse_array: state ->
     p = state["pos"]
     if state["src"][p] != "["
       raise error("toml.parse: expected '['")
@@ -248,7 +248,7 @@ class Toml
         raise error("toml.parse: expected ',' or ']' in array")
 
   # Toml.parse_inline_table provides the toml/Toml standard library operation.
-  parse_inline_table = state ->
+  parse_inline_table: state ->
     p = state["pos"]
     if state["src"][p] != "{{"
       raise error("toml.parse: expected inline table")
@@ -280,7 +280,7 @@ class Toml
         raise error("toml.parse: expected ',' or '}}' in inline table")
 
   # Toml.parse_value_with_inline provides the toml/Toml standard library operation.
-  parse_value_with_inline = state ->
+  parse_value_with_inline: state ->
     Toml(nil).skip_ws_in_line(state)
     p = state["pos"]
     if p < state["len"] and state["src"][p] == "{{"
@@ -288,7 +288,7 @@ class Toml
     return Toml(nil).parse_value(state)
 
   # Toml.ensure_path provides the toml/Toml standard library operation.
-  ensure_path = root, segments ->
+  ensure_path: root, segments ->
     cur = root
     i = 0
     while i < segments.len()
@@ -300,7 +300,7 @@ class Toml
     return cur
 
   # Toml.ensure_array_path provides the toml/Toml standard library operation.
-  ensure_array_path = root, segments ->
+  ensure_array_path: root, segments ->
     cur = root
     i = 0
     last = segments.len() - 1
@@ -319,7 +319,7 @@ class Toml
     return new_table
 
   # Toml.parse_header_segments provides the toml/Toml standard library operation.
-  parse_header_segments = state ->
+  parse_header_segments: state ->
     segments = []
     while true
       Toml(nil).skip_ws_in_line(state)
@@ -334,7 +334,7 @@ class Toml
 
   # parse converts TOML text into nested dictionaries and arrays.
   # Raises when the input is not valid TOML.
-  parse = text = nil ->
+  parse: text = nil ->
     if text == nil
       text = self.value
     state = { src: text, pos: 0, len: text.byte_len() }
@@ -384,7 +384,7 @@ class Toml
     return root
 
   # Toml.is_bare_key provides the toml/Toml standard library operation.
-  is_bare_key = text ->
+  is_bare_key: text ->
     n = text.byte_len()
     if n == 0
       return false
@@ -396,7 +396,7 @@ class Toml
     return true
 
   # Toml.format_key provides the toml/Toml standard library operation.
-  format_key = text ->
+  format_key: text ->
     if Toml(nil).is_bare_key(text)
       return text
     out = "\""
@@ -414,7 +414,7 @@ class Toml
     return out + "\""
 
   # Toml.format_string provides the toml/Toml standard library operation.
-  format_string = text ->
+  format_string: text ->
     out = "\""
     n = text.byte_len()
     i = 0
@@ -439,7 +439,7 @@ class Toml
     return out + "\""
 
   # Toml.format_inline_value provides the toml/Toml standard library operation.
-  format_inline_value = value ->
+  format_inline_value: value ->
     if value.class == Nil
       raise error("toml.dump: nil is not representable in TOML")
     if value.class == Boolean
@@ -475,7 +475,7 @@ class Toml
     raise error("toml.dump: unsupported value kind")
 
   # Toml.is_array_of_dicts provides the toml/Toml standard library operation.
-  is_array_of_dicts = value ->
+  is_array_of_dicts: value ->
     if value.class != Array
       return false
     if value.len() == 0
@@ -488,7 +488,7 @@ class Toml
     return true
 
   # Toml.emit_table provides the toml/Toml standard library operation.
-  emit_table = value, prefix ->
+  emit_table: value, prefix ->
     primitives = ""
     sub_tables = ""
     ks = value.keys()
@@ -531,7 +531,7 @@ class Toml
     return primitives + sub_tables
 
   # stringify converts dictionaries, arrays, strings, numbers, booleans, and nil to TOML text.
-  stringify = value = nil ->
+  stringify: value = nil ->
     if value == nil
       value = self.value
     if value.class != Dict
@@ -539,5 +539,5 @@ class Toml
     return Toml(nil).emit_table(value, "")
 
   # dump is a compatibility alias for stringify.
-  dump = value = nil ->
+  dump: value = nil ->
     self.stringify(value)

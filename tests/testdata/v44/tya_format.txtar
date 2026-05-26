@@ -11,8 +11,8 @@ cd $REPO
 
 exec go run ./cmd/tya format $WORK/Greeter.tya
 stdout 'class Greeter'
-stdout 'initialize = name ->'
-stdout 'greet = ->'
+stdout 'initialize: name ->'
+stdout 'greet: ->'
 ! stderr .
 
 exec go run ./cmd/tya format $WORK/main.tya
@@ -22,10 +22,10 @@ stdout 'lib.Lib.greet'
 
 -- Greeter.tya --
 class Greeter
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  greet = ->
+  greet: ->
     "Hello, {self.name}"
 
 -- main.tya --
@@ -35,5 +35,5 @@ print(lib.Lib.greet())
 
 -- lib/Lib.tya --
 class Lib
-  static greet = ->
+  static greet: ->
     "hi"

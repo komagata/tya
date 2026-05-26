@@ -27,7 +27,10 @@ stdout 'nil'
 stdout 'あ'
 stdout 'nil'
 stdout 'true'
+stdout '2'
 stdout '2.5'
+stdout '-2'
+stdout '-1'
 stdout '1'
 stdout 'Tya!'
 stdout 'fallback'
@@ -58,7 +61,10 @@ stdout 'nil'
 stdout 'あ'
 stdout 'nil'
 stdout 'true'
+stdout '2'
 stdout '2.5'
+stdout '-2'
+stdout '-1'
 stdout '1'
 stdout 'Tya!'
 stdout 'fallback'
@@ -196,6 +202,9 @@ print("あい"[0])
 print("あい"[99])
 print(1 == 1.0)
 print(5 / 2)
+print(5.0 / 2)
+print(-5 / 2)
+print(-5 % 2)
 print(5 % 2)
 greet = name, suffix = "!" -> name + suffix
 print(greet("Tya"))

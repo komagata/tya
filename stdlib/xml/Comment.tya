@@ -1,9 +1,9 @@
 # Comment provides the xml/Comment standard library API.
 class Comment
   # Comment.initialize provides the xml/Comment standard library operation.
-  initialize = text ->
+  initialize: text ->
     self.text = text
 
   # Comment.new provides the xml/Comment standard library operation.
-  new = text ->
+  new: text ->
     return Comment(text)

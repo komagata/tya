@@ -1,7 +1,7 @@
 # Color provides the color/Color standard library API.
 class Color
   # Color.initialize provides the color/Color standard library operation.
-  initialize = r = nil, g = nil, b = nil, a = nil ->
+  initialize: r = nil, g = nil, b = nil, a = nil ->
     if r == nil
       r = 0
     if g == nil
@@ -24,65 +24,65 @@ class Color
     self.a = a.to_i()
 
   # Color.new provides the color/Color standard library operation.
-  new = r, g, b, a ->
+  new: r, g, b, a ->
     return Color(r, g, b, a)
 
   # Color.rgb provides the color/Color standard library operation.
-  rgb = r, g, b ->
+  rgb: r, g, b ->
     return Color(r, g, b, 255)
 
   # Color.rgba provides the color/Color standard library operation.
-  rgba = r, g, b, a ->
+  rgba: r, g, b, a ->
     return Color(r, g, b, a)
 
   # Color.gray provides the color/Color standard library operation.
-  gray = value, alpha ->
+  gray: value, alpha ->
     if alpha == nil
       alpha = 255
     return Color(value, value, value, alpha)
 
   # Color.transparent provides the color/Color standard library operation.
-  transparent = ->
+  transparent: ->
     return Color(0, 0, 0, 0)
 
   # Color.black provides the color/Color standard library operation.
-  black = ->
+  black: ->
     return self.rgb(0, 0, 0)
 
   # Color.white provides the color/Color standard library operation.
-  white = ->
+  white: ->
     return self.rgb(255, 255, 255)
 
   # Color.red provides the color/Color standard library operation.
-  red = ->
+  red: ->
     return self.rgb(255, 0, 0)
 
   # Color.green provides the color/Color standard library operation.
-  green = ->
+  green: ->
     return self.rgb(0, 128, 0)
 
   # Color.blue provides the color/Color standard library operation.
-  blue = ->
+  blue: ->
     return self.rgb(0, 0, 255)
 
   # Color.yellow provides the color/Color standard library operation.
-  yellow = ->
+  yellow: ->
     return self.rgb(255, 255, 0)
 
   # Color.cyan provides the color/Color standard library operation.
-  cyan = ->
+  cyan: ->
     return self.rgb(0, 255, 255)
 
   # Color.magenta provides the color/Color standard library operation.
-  magenta = ->
+  magenta: ->
     return self.rgb(255, 0, 255)
 
   # Color.gray50 provides the color/Color standard library operation.
-  gray50 = ->
+  gray50: ->
     return self.rgb(128, 128, 128)
 
   # Color.from_array provides the color/Color standard library operation.
-  from_array = values ->
+  from_array: values ->
     if values.class != Array
       raise error("color.from_array: values must be an array")
     if values.len() == 3
@@ -92,7 +92,7 @@ class Color
     raise error("color.from_array: expected 3 or 4 channels")
 
   # Color.hex provides the color/Color standard library operation.
-  hex = text ->
+  hex: text ->
     if text.class != String
       raise error("color.hex: text must be a string")
     color_raw = text
@@ -118,7 +118,7 @@ class Color
     raise error("color.hex: invalid hex color")
 
   # Color.css provides the color/Color standard library operation.
-  css = text ->
+  css: text ->
     if text.class != String
       raise error("color.css: text must be a string")
     color_raw = text.trim().lower()
@@ -149,7 +149,7 @@ class Color
     return self.hex(color_raw)
 
   # Color.css_rgb provides the color/Color standard library operation.
-  css_rgb = text, start, has_alpha ->
+  css_rgb: text, start, has_alpha ->
     color_body = text.slice(start, text.len() - 1)
     color_parts = color_body.split(",")
     if has_alpha
@@ -161,7 +161,7 @@ class Color
     return self.rgb(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i())
 
   # Color.to_hex provides the color/Color standard library operation.
-  to_hex = include_alpha ->
+  to_hex: include_alpha ->
     if include_alpha == nil
       include_alpha = false
     color_out = "#" + self.hex_byte(self.r) + self.hex_byte(self.g) + self.hex_byte(self.b)
@@ -170,18 +170,18 @@ class Color
     return color_out
 
   # Color.to_array provides the color/Color standard library operation.
-  to_array = ->
+  to_array: ->
     return [self.r, self.g, self.b, self.a]
 
   # Color.equal? provides the color/Color standard library operation.
-  equal? = a, b = nil ->
+  equal?: a, b = nil ->
     if b == nil
       b = a
       a = self
     return a.r == b.r and a.g == b.g and a.b == b.b and a.a == b.a
 
   # Color.nearly_equal? provides the color/Color standard library operation.
-  nearly_equal? = a, b, tolerance = nil ->
+  nearly_equal?: a, b, tolerance = nil ->
     if tolerance == nil
       tolerance = b
       b = a
@@ -191,7 +191,7 @@ class Color
     return self.abs(a.r - b.r) <= tolerance and self.abs(a.g - b.g) <= tolerance and self.abs(a.b - b.b) <= tolerance and self.abs(a.a - b.a) <= tolerance
 
   # Color.luminance provides the color/Color standard library operation.
-  luminance = color = nil ->
+  luminance: color = nil ->
     if color == nil
       color = self
     color_r = self.linear(color.r)
@@ -200,7 +200,7 @@ class Color
     return 0.2126 * color_r + 0.7152 * color_g + 0.0722 * color_b
 
   # Color.contrast_ratio provides the color/Color standard library operation.
-  contrast_ratio = a, b = nil ->
+  contrast_ratio: a, b = nil ->
     if b == nil
       b = a
       a = self
@@ -213,27 +213,27 @@ class Color
     return (color_la + 0.05) / (color_lb + 0.05)
 
   # Color.with_alpha provides the color/Color standard library operation.
-  with_alpha = color, alpha = nil ->
+  with_alpha: color, alpha = nil ->
     if alpha == nil
       alpha = color
       color = self
     return self.rgba(color.r, color.g, color.b, alpha)
 
   # Color.invert provides the color/Color standard library operation.
-  invert = color = nil ->
+  invert: color = nil ->
     if color == nil
       color = self
     return self.rgba(255 - color.r, 255 - color.g, 255 - color.b, color.a)
 
   # Color.grayscale provides the color/Color standard library operation.
-  grayscale = color = nil ->
+  grayscale: color = nil ->
     if color == nil
       color = self
     color_value = self.round(0.299 * color.r + 0.587 * color.g + 0.114 * color.b)
     return self.rgba(color_value, color_value, color_value, color.a)
 
   # Color.blend provides the color/Color standard library operation.
-  blend = a, b, t = nil ->
+  blend: a, b, t = nil ->
     if t == nil
       t = b
       b = a
@@ -247,7 +247,7 @@ class Color
     )
 
   # Color.over provides the color/Color standard library operation.
-  over = foreground, background = nil ->
+  over: foreground, background = nil ->
     if background == nil
       background = foreground
       foreground = self
@@ -262,7 +262,7 @@ class Color
     return self.rgba(self.round(color_r), self.round(color_g), self.round(color_b), self.round(color_out_a * 255.0))
 
   # Color.lighten provides the color/Color standard library operation.
-  lighten = color, amount = nil ->
+  lighten: color, amount = nil ->
     if amount == nil
       amount = color
       color = self
@@ -270,7 +270,7 @@ class Color
     return self.blend(color, self.white(), amount)
 
   # Color.darken provides the color/Color standard library operation.
-  darken = color, amount = nil ->
+  darken: color, amount = nil ->
     if amount == nil
       amount = color
       color = self
@@ -278,7 +278,7 @@ class Color
     return self.blend(color, self.black(), amount)
 
   # Color.channel provides the color/Color standard library operation.
-  channel = value, name ->
+  channel: value, name ->
     if value.class != Number
       raise error("color.channel: " + name + " must be a number")
     if value < 0 or value > 255
@@ -288,7 +288,7 @@ class Color
     return value.to_i()
 
   # Color.ratio provides the color/Color standard library operation.
-  ratio = value, name ->
+  ratio: value, name ->
     if value.class != Number
       raise error(name + ": amount must be a number")
     if value < 0.0 or value > 1.0
@@ -296,22 +296,22 @@ class Color
     return value
 
   # Color.mix_channel provides the color/Color standard library operation.
-  mix_channel = a, b, t ->
+  mix_channel: a, b, t ->
     return self.round(a + (b - a) * t)
 
   # Color.round provides the color/Color standard library operation.
-  round = value ->
+  round: value ->
     return math_round(value).to_i()
 
   # Color.linear provides the color/Color standard library operation.
-  linear = value ->
+  linear: value ->
     color_component = value / 255.0
     if color_component <= 0.03928
       return color_component / 12.92
     return math_pow((color_component + 0.055) / 1.055, 2.4)
 
   # Color.hex_digit provides the color/Color standard library operation.
-  hex_digit = c ->
+  hex_digit: c ->
     color_code = ord(c)
     if color_code >= 48 and color_code <= 57
       return color_code - 48
@@ -322,23 +322,23 @@ class Color
     raise error("color.hex: invalid hex digit")
 
   # Color.hex_pair provides the color/Color standard library operation.
-  hex_pair = hi, lo ->
+  hex_pair: hi, lo ->
     return self.hex_digit(hi) * 16 + self.hex_digit(lo)
 
   # Color.hex_byte provides the color/Color standard library operation.
-  hex_byte = value ->
+  hex_byte: value ->
     color_hi = (value / 16).to_i()
     color_lo = value % 16
     return self.digit_char(color_hi) + self.digit_char(color_lo)
 
   # Color.digit_char provides the color/Color standard library operation.
-  digit_char = value ->
+  digit_char: value ->
     if value < 10
       return chr(48 + value)
     return chr(87 + value)
 
   # Color.abs provides the color/Color standard library operation.
-  abs = value ->
+  abs: value ->
     if value < 0
       return 0 - value
     return value

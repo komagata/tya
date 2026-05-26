@@ -33,15 +33,15 @@ embed "embedded.html" as embedded_view
 app = http.Server()
 
 class App
-  static file = _req ->
+  static file: _req ->
     return app.render("view.html", { name: "Tya" }, nil)
 
-  static source = _req ->
+  static source: _req ->
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
     return app.render("Hello, " + ob + " name " + cb, { name: "Src" }, nil)
 
-  static html = _req ->
+  static html: _req ->
     headers = {}
     headers["X-View"] = "embedded"
     return app.render_html(embedded_view, { value: "<tag>" }, {
@@ -49,7 +49,7 @@ class App
       headers: headers
     })
 
-  static custom = _req ->
+  static custom: _req ->
     headers = {}
     headers["X-Extra"] = "1"
     ob = chr(123) + chr(123)
@@ -60,12 +60,12 @@ class App
       headers: headers
     })
 
-  static broken = _req ->
+  static broken: _req ->
     ob = chr(123) + chr(123)
     cb = chr(125) + chr(125)
     return app.render(ob + " if missing " + cb + "oops", {}, nil)
 
-  static error_handler = _err, _req ->
+  static error_handler: _err, _req ->
     return { status: 599, body: "render-error" }
 
 app.get("/file", App.file)

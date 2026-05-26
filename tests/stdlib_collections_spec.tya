@@ -3,7 +3,7 @@ import collections as collections
 
 class StdlibCollectionsTest extends TestCase
 
-  test_stack = ->
+  test_stack: ->
     stack = collections.Stack(nil)
     self.assert_equal(collections.Stack, stack.class, "class")
     self.assert(stack.empty?(), "empty")
@@ -19,7 +19,7 @@ class StdlibCollectionsTest extends TestCase
     self.assert_equal(3, from.pop(), "from array")
     self.assert(from.clear().empty?(), "clear")
 
-  test_queue = ->
+  test_queue: ->
     queue = collections.Queue(nil)
     self.assert_equal(collections.Queue, queue.class, "class")
     queue.push("a").push("b").push(nil)
@@ -35,7 +35,7 @@ class StdlibCollectionsTest extends TestCase
     self.assert_equal([2, 3], from.to_array(), "remaining")
     self.assert_equal(0, from.clear().len(), "clear")
 
-  test_deque = ->
+  test_deque: ->
     deque = collections.Deque(nil)
     self.assert_equal(collections.Deque, deque.class, "class")
     deque.push_back("b").push_front("a").push_back("c")
@@ -51,7 +51,7 @@ class StdlibCollectionsTest extends TestCase
     self.assert_equal(2, from.pop_back(), "from back")
     self.assert(from.clear().empty?(), "clear")
 
-  test_set = ->
+  test_set: ->
     seen = collections.Set(["a", "b", "a", nil])
     self.assert_equal(collections.Set, seen.class, "class")
     self.assert_equal(3, seen.len(), "unique")
@@ -73,7 +73,7 @@ class StdlibCollectionsTest extends TestCase
     self.assert(not right.subset?(left), "not subset")
     self.assert(seen.clear().empty?(), "clear")
 
-  test_priority_queue = ->
+  test_priority_queue: ->
     pq = collections.PriorityQueue(nil)
     self.assert_equal(collections.PriorityQueue, pq.class, "class")
     self.assert(pq.empty?(), "empty")

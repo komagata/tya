@@ -24,14 +24,14 @@ import net/http as http
 app = http.Server()
 
 class App
-  static upload = req ->
+  static upload: req ->
     avatar = req["files"]["avatar"]
     body_state = "body"
     if req["body"].byte_len() == 0
       body_state = "no-body"
     return { status: 200, body: req["form"]["name"] + "|" + avatar["filename"] + "|" + avatar["content_type"] + "|" + avatar["size"].to_s() + "|" + body_state }
 
-  static empty = req ->
+  static empty: req ->
     if req["form"].len() == 0 and req["files"].len() == 0
       return { status: 200, body: "empty" }
     return { status: 500, body: "not empty" }

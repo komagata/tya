@@ -20,17 +20,17 @@ stdout 'dog says woof\n'
 
 -- override.tya --
 class Animal
-  init = name ->
+  init: name ->
     @name = name
 
-  speak = ->
+  speak: ->
     "{@name} says ???"
 
 class Dog extends Animal
-  init = ->
+  init: ->
     super("dog")
 
-  override speak = ->
+  override speak: ->
     "{@name} says woof"
 
 d = Dog()

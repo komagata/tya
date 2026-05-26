@@ -1,43 +1,43 @@
 # Circle provides the geometry/Circle standard library API.
 class Circle
   # Circle.initialize provides the geometry/Circle standard library operation.
-  initialize = x = 0, y = 0, radius = 0 ->
+  initialize: x = 0, y = 0, radius = 0 ->
     self.x = self.number(x, "x")
     self.y = self.number(y, "y")
     self.radius = self.radius_value(radius)
 
   # Circle.new provides the geometry/Circle standard library operation.
-  new = x, y, radius ->
+  new: x, y, radius ->
     return Circle(x, y, radius)
 
   # Circle.from_center provides the geometry/Circle standard library operation.
-  from_center = center, radius ->
+  from_center: center, radius ->
     Point(0, 0).expect(center, "center")
     return Circle(center.x, center.y, radius)
 
   # Circle.center provides the geometry/Circle standard library operation.
-  center = circle = nil ->
+  center: circle = nil ->
     if circle == nil
       circle = self
     self.expect(circle, "circle")
     return Point(circle.x, circle.y)
 
   # Circle.area provides the geometry/Circle standard library operation.
-  area = circle = nil ->
+  area: circle = nil ->
     if circle == nil
       circle = self
     self.expect(circle, "circle")
     return 3.141592653589793 * circle.radius * circle.radius
 
   # Circle.circumference provides the geometry/Circle standard library operation.
-  circumference = circle = nil ->
+  circumference: circle = nil ->
     if circle == nil
       circle = self
     self.expect(circle, "circle")
     return 2 * 3.141592653589793 * circle.radius
 
   # Circle.contains_point? provides the geometry/Circle standard library operation.
-  contains_point? = circle, point = nil ->
+  contains_point?: circle, point = nil ->
     if point == nil
       point = circle
       circle = self
@@ -46,7 +46,7 @@ class Circle
     return Point(0, 0).distance(self.center(circle), point) <= circle.radius
 
   # Circle.intersects_circle? provides the geometry/Circle standard library operation.
-  intersects_circle? = a, b = nil ->
+  intersects_circle?: a, b = nil ->
     if b == nil
       b = a
       a = self
@@ -55,7 +55,7 @@ class Circle
     return Point(0, 0).distance(self.center(a), self.center(b)) <= a.radius + b.radius
 
   # Circle.intersects_rect? provides the geometry/Circle standard library operation.
-  intersects_rect? = circle, rect = nil ->
+  intersects_rect?: circle, rect = nil ->
     if rect == nil
       rect = circle
       circle = self
@@ -65,14 +65,14 @@ class Circle
     return self.contains_point?(circle, geometry_clamped)
 
   # Circle.bounding_rect provides the geometry/Circle standard library operation.
-  bounding_rect = circle = nil ->
+  bounding_rect: circle = nil ->
     if circle == nil
       circle = self
     self.expect(circle, "circle")
     return Rect(circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2)
 
   # Circle.translate provides the geometry/Circle standard library operation.
-  translate = circle, vector = nil ->
+  translate: circle, vector = nil ->
     if vector == nil
       vector = circle
       circle = self
@@ -82,25 +82,25 @@ class Circle
     return Circle(circle.x + vector.x, circle.y + vector.y, circle.radius)
 
   # Circle.equal? provides the geometry/Circle standard library operation.
-  equal? = a, b = nil ->
+  equal?: a, b = nil ->
     if b == nil
       b = a
       a = self
     return a.class == Circle and b.class == Circle and a.x == b.x and a.y == b.y and a.radius == b.radius
 
   # Circle.expect provides the geometry/Circle standard library operation.
-  expect = value, name ->
+  expect: value, name ->
     if value.class != Circle
       raise error("geometry.Circle: " + name + " must be a Circle")
 
   # Circle.number provides the geometry/Circle standard library operation.
-  number = value, name ->
+  number: value, name ->
     if value.class != Number
       raise error("geometry.Circle: " + name + " must be a number")
     return value
 
   # Circle.radius_value provides the geometry/Circle standard library operation.
-  radius_value = value ->
+  radius_value: value ->
     self.number(value, "radius")
     if value < 0
       raise error("geometry.Circle: radius must be non-negative")

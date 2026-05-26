@@ -73,24 +73,24 @@ print(Request())
 
 -- net/http/Request.tya --
 class Request
-  initialize = label ->
+  initialize: label ->
     self.text = label
 
-  label = ->
+  label: ->
     self.text
 
 -- api/Request.tya --
 class Request
-  initialize = label ->
+  initialize: label ->
     self.text = label
 
-  label = ->
+  label: ->
     self.text
 
 -- web/Request.tya --
 class Request
-  initialize = label ->
+  initialize: label ->
     self.text = label
 
-  label = ->
+  label: ->
     self.text

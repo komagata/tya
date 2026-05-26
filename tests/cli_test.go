@@ -250,7 +250,7 @@ func TestCLIFormatAndCheckCollapsesImportBlankLines(t *testing.T) {
 		"import cli as cli",
 		"",
 		"class Cli",
-		"  initialize = ->",
+		"  initialize: ->",
 		"    self.value = 1",
 		"",
 	}, "\n")
@@ -282,7 +282,7 @@ func TestCLIFormatAndCheckCollapsesImportBlankLines(t *testing.T) {
 		"import cli as cli",
 		"",
 		"class Cli",
-		"  initialize = ->",
+		"  initialize: ->",
 		"    self.value = 1",
 		"",
 	}, "\n")
@@ -301,18 +301,18 @@ func TestCLIFormatAndCheckClassMemberOrder(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "class_order.tya")
 	original := strings.Join([]string{
 		"class Sample",
-		"  private helper = -> 1",
+		"  private helper: -> 1",
 		"",
-		"  static make = -> Self()",
+		"  static make: -> Self()",
 		"",
-		"  ALPHA = 1",
+		"  ALPHA: 1",
 		"",
-		"  initialize = ->",
+		"  initialize: ->",
 		"    self.ready = true",
 		"",
-		"  static build = -> Self()",
+		"  static build: -> Self()",
 		"",
-		"  name = \"\"",
+		"  name: \"\"",
 		"",
 		"print(\"ok\")",
 		"",
@@ -346,18 +346,18 @@ func TestCLIFormatAndCheckClassMemberOrder(t *testing.T) {
 	}
 	want := strings.Join([]string{
 		"class Sample",
-		"  ALPHA = 1",
+		"  ALPHA: 1",
 		"",
-		"  name = \"\"",
+		"  name: \"\"",
 		"",
-		"  static build = -> Self()",
+		"  static build: -> Self()",
 		"",
-		"  static make = -> Self()",
+		"  static make: -> Self()",
 		"",
-		"  initialize = ->",
+		"  initialize: ->",
 		"    self.ready = true",
 		"",
-		"  private helper = -> 1",
+		"  private helper: -> 1",
 		"print(\"ok\")",
 		"",
 	}, "\n")
@@ -408,7 +408,7 @@ func TestTyaTestDiscoversOnlyTestFilesAndOrdersDeterministically(t *testing.T) {
 	dir := t.TempDir()
 	writeTestFile := func(name, className, methodName string) {
 		t.Helper()
-		src := fmt.Sprintf("import unittest\n\nclass %s extends TestCase\n  %s = ->\n    self.assert(true, \"%s\")\n", className, methodName, methodName)
+		src := fmt.Sprintf("import unittest\n\nclass %s extends TestCase\n  %s: ->\n    self.assert(true, \"%s\")\n", className, methodName, methodName)
 		if err := os.WriteFile(filepath.Join(dir, name), []byte(src), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -442,7 +442,7 @@ func TestTyaTestDiscoversOnlyTestFilesAndOrdersDeterministically(t *testing.T) {
 func TestFormatClassInheritanceOutputRunsInTyaTest(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "sample_test.tya")
-	src := "import unittest\n\nclass SampleTest extends TestCase\n  test_example = () ->\n    self.assert(true, \"example\")\n"
+	src := "import unittest\n\nclass SampleTest extends TestCase\n  test_example: () ->\n    self.assert(true, \"example\")\n"
 	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -933,7 +933,7 @@ func TestCLIBuildBrowserWasmSupportsBasicRuntimeValues(t *testing.T) {
 	path := filepath.Join(dir, "basic.tya")
 	source := strings.Join([]string{
 		"class Box",
-		"  initialize = value ->",
+		"  initialize : value ->",
 		"    self.value = value",
 		"",
 		"items = [1, 2]",
@@ -1074,7 +1074,7 @@ func TestCLIVersionCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
-	if string(out) != "0.67.9\n" {
+	if string(out) != "0.68.0\n" {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }

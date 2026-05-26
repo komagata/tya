@@ -39,48 +39,48 @@ stderr 'duplicate interface Reader'
 stderr 'abstract interface method read expects 0 parameters'
 
 exec go run ./cmd/tya version
-stdout '0.67.9\n'
+stdout '0.68.0\n'
 ! stderr .
 
 -- interfaces.tya --
 interface Reader
-  read = ->
+  read: ->
 
 interface Writer
-  write = value ->
+  write: value ->
 
 interface Named
-  name = ->
+  name: ->
 
 class File implements Reader, Writer
-  read = ->
+  read: ->
     "data"
 
-  write = value ->
+  write: value ->
     "saved:{value}"
 
 class User
-  name = ->
+  name: ->
     "user"
 
 class Admin extends User implements Named
-  role = "admin"
+  role: "admin"
 
 abstract class AbstractReader implements Reader
-  abstract read = ->
+  abstract read: ->
 
 class MemoryReader extends AbstractReader
-  read = ->
+  read: ->
     "memory"
 
 final class FinalReader implements Reader
-  read = ->
+  read: ->
     "final"
 
 import io
 
 class QualifiedMemoryReader implements Reader
-  read = ->
+  read: ->
     "qualified"
 
 file = File()
@@ -100,93 +100,93 @@ print(final_reader.read())
 
 -- io.tya --
 interface IOReader
-  read = ->
+  read: ->
 
 class MemoryReader implements IOReader
-  read = ->
+  read: ->
     "module"
 
 -- construct_interface.tya --
 interface Reader
-  read = ->
+  read: ->
 
 reader = Reader()
 
 -- interface_field.tya --
 interface Named
-  name = "named"
+  name: "named"
 
 class User implements Named
-  id = 1
+  id: 1
 
 print(User().name)
 
 -- interface_class_method.tya --
 interface Model
-  static table_name = ->
+  static table_name: ->
 
 -- interface_private_method.tya --
 interface Reader
-  _read = ->
+  _read: ->
 
 -- missing_method.tya --
 interface Reader
-  read = ->
+  read: ->
 
 class BrokenReader implements Reader
-  name = ""
+  name: ""
 
 -- missing_inherited_interface_method.tya --
 interface Repository
-  find = id ->
-  save = record ->
+  find: id ->
+  save: record ->
 
 abstract class ReadOnlyRepository implements Repository
-  find = id ->
+  find: id ->
     "record"
 
 class UserRepository extends ReadOnlyRepository
-  name = ""
+  name: ""
 
 -- bad_arity.tya --
 interface Reader
-  read = ->
+  read: ->
 
 class BadReader implements Reader
-  read = path ->
+  read: path ->
     "data"
 
 -- conflicting_arity.tya --
 interface LookupById
-  find = id ->
+  find: id ->
 
 interface LookupByName
-  find = first, last ->
+  find: first, last ->
 
 class UserRepository implements LookupById, LookupByName
-  find = id ->
+  find: id ->
     "user"
 
 -- implements_class.tya --
 class User
-  name = ->
+  name: ->
     "user"
 
 class Admin implements User
-  name = ->
+  name: ->
     "admin"
 
 -- duplicate_interface.tya --
 interface Reader
-  read = ->
+  read: ->
 
 class File implements Reader, Reader
-  read = ->
+  read: ->
     "data"
 
 -- abstract_bad_arity.tya --
 interface Reader
-  read = ->
+  read: ->
 
 abstract class BaseReader implements Reader
-  abstract read = path ->
+  abstract read: path ->

@@ -16,7 +16,7 @@ import net/http as http
 app = http.Server()
 
 class Check
-  static run = ->
+  static run: ->
     opts = { path: "/", domain: "example.test", max_age: 60, expires: "Wed, 21 Oct 2015 07:28:00 GMT", secure: true, http_only: true, same_site: "None" }
     print(app.cookie("id", "42", opts))
 

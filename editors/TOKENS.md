@@ -26,7 +26,7 @@ consistent across VS Code, Vim / Neovim, Emacs, and GitHub.
 | `and`, `or`, `not` | logical operator | `keyword.operator.logical.tya` |
 | `->`, `==`, `!=`, `<=`, `>=`, `<<`, `>>`, `+`, `-`, `*`, `/`, `%`, `=`, `.`, `,`, `:`, `&`, `|`, `^`, `~` | operator / punctuation | `keyword.operator.tya` |
 | `Name` in `class Name`, `interface Name`, `module Name` | type / namespace declaration | `entity.name.type.tya` / `entity.name.namespace.tya` |
-| `name` in `name = ->` | function / method declaration | `entity.name.function.tya` |
+| `name` in `name = ->` or `name: ->` | function / method declaration | `entity.name.function.tya` |
 
 Editor-specific token names may differ, but they should map back to these
 semantic groups.

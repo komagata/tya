@@ -3,7 +3,7 @@ import log as log
 
 class StdlibLogTest extends TestCase
 
-  test_file_text_logs_are_filtered_and_sorted = ->
+  test_file_text_logs_are_filtered_and_sorted: ->
     path = "logger_text.log"
     if file_exists(path)
       file_remove(path)
@@ -15,7 +15,7 @@ class StdlibLogTest extends TestCase
     self.assert(text.contains(" info hello a=first z=1\n"), "text line")
     self.assert_falsy(text.contains("skip"), "debug filtered")
 
-  test_level_enables_debug = ->
+  test_level_enables_debug: ->
     path = "logger_debug.log"
     if file_exists(path)
       file_remove(path)
@@ -26,7 +26,7 @@ class StdlibLogTest extends TestCase
     file_remove(path)
     self.assert(text.contains(" debug debugging\n"), "debug line")
 
-  test_json_and_with_fields = ->
+  test_json_and_with_fields: ->
     path = "logger_json.log"
     if file_exists(path)
       file_remove(path)

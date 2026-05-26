@@ -3,19 +3,19 @@ import url as url
 
 class StdlibUrlTest extends TestCase
 
-  test_encode_space = ->
+  test_encode_space: ->
     self.assert_equal("hello%20world", url.Url("hello world").encode(), "space")
-  test_encode_special = ->
+  test_encode_special: ->
     self.assert_equal("a%2Fb%3Fc%3Dd", url.Url("a/b?c=d").encode(), "special chars")
-  test_decode_space = ->
+  test_decode_space: ->
     self.assert_equal("hello world", url.Url("hello%20world").decode(), "decode space")
-  test_decode_round_trip = ->
+  test_decode_round_trip: ->
     text = "tya v0.23"
     self.assert_equal(text, url.Url(nil).decode(url.Url(text).encode()), "round trip")
-  test_decode_query_plus = ->
+  test_decode_query_plus: ->
     pairs = url.Url("q=tya+lang&page=2").decode_query()
     self.assert_equal([["q", "tya lang"], ["page", "2"]], pairs, "decode_query")
-  test_parse_full_url = ->
+  test_parse_full_url: ->
     p = url.Url("https://user:pw@example.com:8080/path?x=1#frag").parse()
     self.assert_equal("https", p["scheme"], "scheme")
     self.assert_equal("user", p["user"], "user")
@@ -25,29 +25,29 @@ class StdlibUrlTest extends TestCase
     self.assert_equal("/path", p["path"], "path")
     self.assert_equal("x=1", p["query"], "query")
     self.assert_equal("frag", p["fragment"], "fragment")
-  test_format = ->
+  test_format: ->
     expected = "https://example.com/search?q=tya"
     parts = { scheme: "https", host: "example.com", path: "/search", query: "q=tya" }
     self.assert_equal(expected, url.Url(parts).format(), "format")
-  test_ipv6_parse_and_build = ->
+  test_ipv6_parse_and_build: ->
     p = url.Url("http://[2001:db8::1]:8080/a").parse()
     self.assert_equal("2001:db8::1", p["host"], "ipv6 host")
     self.assert_equal("8080", p["port"], "ipv6 port")
     self.assert_equal("http://[2001:db8::1]:8080/a", url.Url(p).format(), "ipv6 format")
-  test_resolve_relative = ->
+  test_resolve_relative: ->
     self.assert_equal("https://example.com/a/c?x=1#top", url.Url(nil).resolve("https://example.com/a/b/index.html", "../c?x=1#top"), "resolve")
-  test_query_dict_duplicates = ->
+  test_query_dict_duplicates: ->
     q = url.Url("a=1&a=2&b=3").decode_query()
     d = url.Url(nil).query_dict(q)
     self.assert_equal(["1", "2"], d["a"], "duplicates")
     self.assert_equal("3", d["b"], "single")
-  test_invalid_percent_escape = ->
+  test_invalid_percent_escape: ->
     try
       url.Url("https://example.com/%zz").parse()
       self.fail("expected invalid percent escape")
     catch err
       self.assert_equal("url.decode: invalid percent-escape", err["message"], "invalid escape")
-  test_invalid_port = ->
+  test_invalid_port: ->
     try
       url.Url("https://example.com:abc/").parse()
       self.fail("expected invalid port")

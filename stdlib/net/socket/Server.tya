@@ -1,23 +1,23 @@
 # Server provides the net/socket/Server standard library API.
 class Server implements Closable
   # Server.listen provides the net/socket/Server standard library operation.
-  listen = host, port, options ->
+  listen: host, port, options ->
     if options == nil
       options = {}
     Server(socket_server_listen(host, port, options))
 
   # Server.initialize provides the net/socket/Server standard library operation.
-  initialize = handle ->
+  initialize: handle ->
     self.handle = handle
 
   # Server.accept provides the net/socket/Server standard library operation.
-  accept = ->
+  accept: ->
     Socket(socket_server_accept(self.handle), false)
 
   # Server.close provides the net/socket/Server standard library operation.
-  close = ->
+  close: ->
     socket_server_close(self.handle)
 
   # Server.local_address provides the net/socket/Server standard library operation.
-  local_address = ->
+  local_address: ->
     socket_server_local_address(self.handle)

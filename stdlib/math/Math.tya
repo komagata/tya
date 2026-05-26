@@ -1,32 +1,32 @@
 # Math provides numeric constants and common math functions.
 class Math
   # pi is the ratio of a circle circumference to its diameter.
-  static pi = 3.141592653589793
+  static pi: 3.141592653589793
 
   # e is Euler's number, the base of natural logarithms.
-  static e = 2.718281828459045
+  static e: 2.718281828459045
 
   # abs returns the absolute value of a number.
-  abs = value ->
+  abs: value ->
     if value < 0
       return 0 - value
     return value
 
   # Math.min provides the math/Math standard library operation.
-  min = left, right ->
+  min: left, right ->
     if left < right
       return left
     return right
 
   # Math.max provides the math/Math standard library operation.
-  max = left, right ->
+  max: left, right ->
     if left > right
       return left
     return right
 
   # clamp constrains value to the inclusive lo..hi range.
   # Raises when lo is greater than hi.
-  clamp = value, lo, hi ->
+  clamp: value, lo, hi ->
     if lo > hi
       raise error("math.clamp: min must be less than or equal to max")
     if value < lo
@@ -36,69 +36,69 @@ class Math
     return value
 
   # Math.sqrt provides the math/Math standard library operation.
-  sqrt = x ->
+  sqrt: x ->
     math_sqrt(x)
 
   # Math.pow provides the math/Math standard library operation.
-  pow = x, y ->
+  pow: x, y ->
     math_pow(x, y)
 
   # Math.floor provides the math/Math standard library operation.
-  floor = x ->
+  floor: x ->
     math_floor(x)
 
   # Math.ceil provides the math/Math standard library operation.
-  ceil = x ->
+  ceil: x ->
     math_ceil(x)
 
   # Math.round provides the math/Math standard library operation.
-  round = x ->
+  round: x ->
     math_round(x)
 
   # Math.trunc provides the math/Math standard library operation.
-  trunc = x ->
+  trunc: x ->
     math_trunc(x)
 
   # Math.log provides the math/Math standard library operation.
-  log = x ->
+  log: x ->
     math_log(x)
 
   # Math.log2 provides the math/Math standard library operation.
-  log2 = x ->
+  log2: x ->
     math_log2(x)
 
   # Math.log10 provides the math/Math standard library operation.
-  log10 = x ->
+  log10: x ->
     math_log10(x)
 
   # Math.exp provides the math/Math standard library operation.
-  exp = x ->
+  exp: x ->
     math_exp(x)
 
   # Math.sin provides the math/Math standard library operation.
-  sin = x ->
+  sin: x ->
     math_sin(x)
 
   # Math.cos provides the math/Math standard library operation.
-  cos = x ->
+  cos: x ->
     math_cos(x)
 
   # Math.tan provides the math/Math standard library operation.
-  tan = x ->
+  tan: x ->
     math_tan(x)
 
   # Math.asin provides the math/Math standard library operation.
-  asin = x ->
+  asin: x ->
     math_asin(x)
 
   # Math.acos provides the math/Math standard library operation.
-  acos = x ->
+  acos: x ->
     math_acos(x)
 
   # Math.atan provides the math/Math standard library operation.
-  atan = x ->
+  atan: x ->
     math_atan(x)
 
   # Math.atan2 provides the math/Math standard library operation.
-  atan2 = y, x ->
+  atan2: y, x ->
     math_atan2(y, x)

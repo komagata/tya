@@ -1,7 +1,7 @@
 class Adder
-  initialize = ->
+  initialize: ->
     self.total = 0
 
-  add = n ->
+  add: n ->
     self.total = self.total + n
     self.total

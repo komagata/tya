@@ -359,7 +359,7 @@ func TestParseRejectsMixedDictAndSetLiteral(t *testing.T) {
 }
 
 func TestParseClassDeclaration(t *testing.T) {
-	src := "class User\n  initialize = name ->\n    self.name = name\n\n  greeting = ->\n    \"Hello, {@name}\"\n"
+	src := "class User\n  initialize: name ->\n    self.name = name\n\n  greeting: ->\n    \"Hello, {static countname}\"\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -381,7 +381,7 @@ func TestParseClassDeclaration(t *testing.T) {
 }
 
 func TestParseClassConstants(t *testing.T) {
-	src := "class Base64\n  private ALPHABET = \"abc\"\n  encode = -> Self.ALPHABET\n"
+	src := "class Base64\n  private ALPHABET: \"abc\"\n  encode: -> Self.ALPHABET\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -399,8 +399,42 @@ func TestParseClassConstants(t *testing.T) {
 	}
 }
 
+func TestParseRejectsOldClassAndInterfaceMemberAssignmentSyntax(t *testing.T) {
+	tests := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{
+			name: "class member",
+			src:  "class User\n  name = \"Ada\"\n",
+			want: "class members use ':' declarations",
+		},
+		{
+			name: "interface member",
+			src:  "interface Named\n  name = ->\n",
+			want: "interface members use ':' declarations",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			toks, errs := lexer.Lex(tt.src)
+			if len(errs) != 0 {
+				t.Fatalf("lex errors: %v", errs)
+			}
+			_, _, err := Parse(toks)
+			if err == nil {
+				t.Fatal("expected parse error")
+			}
+			if !strings.Contains(err.Error(), tt.want) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestParseInterfaceDeclaration(t *testing.T) {
-	src := "interface Reader extends io.Source, Seekable\n  read = ->\n  write = text ->\ninterface Named extends Reader\n"
+	src := "interface Reader extends io.Source, Seekable\n  read: ->\n  write: text ->\ninterface Named extends Reader\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -520,7 +554,7 @@ func TestParseRejectsModuleEnumRecordStructMacroAsyncSyntax(t *testing.T) {
 			want: "enum syntax is not part of Tya v1.0.0",
 		},
 		{
-			src:  "record User\n  name = \"\"\n",
+			src:  "record User\n  name: \"\"\n",
 			want: "record syntax is not part of Tya v1.0.0",
 		},
 		{
@@ -646,7 +680,7 @@ func TestParseRejectsNonFiniteNumericLiterals(t *testing.T) {
 }
 
 func TestParseInstanceFieldSyntax(t *testing.T) {
-	toks, errs := lexer.Lex("class User\n  initialize = name ->\n    self.name = name\n  name = ->\n    @name\n")
+	toks, errs := lexer.Lex("class User\n  initialize: name ->\n    self.name = name\n  name: ->\n    self.name\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -654,7 +688,7 @@ func TestParseInstanceFieldSyntax(t *testing.T) {
 		t.Fatalf("parse instance fields: %v", err)
 	}
 
-	toks, errs = lexer.Lex("class User\n  name = \"\"\n  @@count = 0\n  initialize = ->\n    @@count = @@count + 1\n  @@count_users = ->\n    @@count\n")
+	toks, errs = lexer.Lex("class User\n  name: \"\"\n  static count: 0\n  initialize: ->\n    Self.count = Self.count + 1\n  static count_users: ->\n    Self.count\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -723,7 +757,7 @@ func TestParseRejectsReservedNamesInBindingPositions(t *testing.T) {
 }
 
 func TestParseRejectsModuleDeclaration(t *testing.T) {
-	src := "module util\n  foo = \"foo\"\n\n  bar = name ->\n    name\n"
+	src := "module util\n  foo = \"foo\"\n\n  bar: name ->\n    name\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -820,7 +854,7 @@ func TestParseImportAlias(t *testing.T) {
 }
 
 func TestParseSuperCall(t *testing.T) {
-	toks, errs := lexer.Lex("class Admin extends User\n  initialize = name ->\n    super(name)\n")
+	toks, errs := lexer.Lex("class Admin extends User\n  initialize: name ->\n    super(name)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}
@@ -835,7 +869,7 @@ func TestParseSuperCall(t *testing.T) {
 }
 
 func TestParseFormattedClassInheritance(t *testing.T) {
-	toks, errs := lexer.Lex("class Admin < User\n  initialize = name ->\n    super(name)\n")
+	toks, errs := lexer.Lex("class Admin < User\n  initialize: name ->\n    super(name)\n")
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
 	}

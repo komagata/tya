@@ -26,7 +26,7 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 }
 
 func TestEmitCFieldAssignmentDoesNotOverwriteSameNamedMethod(t *testing.T) {
-	src := "class Response\n  initialize = ->\n    self.status = 200\n    self.bump()\n\n  bump = ->\n    self.status = self.status + 1\n\n  status = ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
+	src := "class Response\n  initialize: ->\n    self.status = 200\n    self.bump()\n\n  bump: ->\n    self.status = self.status + 1\n\n  status: ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
 	out := compileAndRun(t, src)
 	if string(out) != "201\n202\n" {
 		t.Fatalf("got %q", out)
@@ -34,7 +34,7 @@ func TestEmitCFieldAssignmentDoesNotOverwriteSameNamedMethod(t *testing.T) {
 }
 
 func TestEmitCAllowsInstanceAndClassPrivatePredicateMethods(t *testing.T) {
-	src := "class Address\n  private? = -> true\n\n  static private? = -> false\n\naddr = Address()\nprint(addr.private?())\nprint(Address.private?())\n"
+	src := "class Address\n  private?: -> true\n\n  static private?: -> false\n\naddr = Address()\nprint(addr.private?())\nprint(Address.private?())\n"
 	out := compileAndRun(t, src)
 	if string(out) != "true\nfalse\n" {
 		t.Fatalf("got %q", out)
@@ -446,8 +446,8 @@ func TestEmitCCompilesAliasedPackageClassWithSameNamedLocalClass(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(dir, "cli"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	writeFile(t, filepath.Join(dir, "cli", "Cli.tya"), "class Cli\n  static parse_or_exit = args, spec ->\n    return Cli.parse(args, spec)\n\n  static parse = args, spec ->\n    return { args: args, spec: spec }\n")
-	writeFile(t, filepath.Join(dir, "Cli.tya"), "import cli as cli\n\nclass Cli\n  static main = argv ->\n    parsed = cli.Cli.parse_or_exit(argv, Self.option_spec())\n    println(\"ok\")\n\n  static option_spec = ->\n    return { command: \"demo\", options: {} }\n")
+	writeFile(t, filepath.Join(dir, "cli", "Cli.tya"), "class Cli\n  static parse_or_exit: args, spec ->\n    return Cli.parse(args, spec)\n\n  static parse: args, spec ->\n    return { args: args, spec: spec }\n")
+	writeFile(t, filepath.Join(dir, "Cli.tya"), "import cli as cli\n\nclass Cli\n  static main: argv ->\n    parsed = cli.Cli.parse_or_exit(argv, Self.option_spec())\n    println(\"ok\")\n\n  static option_spec: ->\n    return { command: \"demo\", options: {} }\n")
 	main := filepath.Join(dir, "main.tya")
 	writeFile(t, main, "Cli.main(args())\n")
 	out := compileAndRunFile(t, main)

@@ -33,38 +33,38 @@ stderr 'cannot extend final class User'
 stderr 'class cannot be both abstract and final'
 
 exec go run ./cmd/tya version
-stdout '0.67.9\n'
+stdout '0.68.0\n'
 ! stderr .
 
 -- abstract_final.tya --
 abstract class Repository
-  abstract find = id ->
-  abstract save = record ->
+  abstract find: id ->
+  abstract save: record ->
 
 abstract class ReadOnlyRepository extends Repository
-  find = id ->
+  find: id ->
     "readonly:{id}"
 
 class ConcreteReadOnlyRepository extends ReadOnlyRepository
-  save = _record ->
+  save: _record ->
     nil
 
 class UserRepository extends Repository
-  find = id ->
+  find: id ->
     "user:{id}"
 
-  save = _record ->
+  save: _record ->
     nil
 
 abstract class Model
-  static abstract table_name = ->
+  static abstract table_name: ->
 
 class User extends Model
-  static table_name = ->
+  static table_name: ->
     "users"
 
 final class FinalUser
-  label = ->
+  label: ->
     "final"
 
 repo = UserRepository()
@@ -82,67 +82,67 @@ print(final_user.label())
 
 -- repositories.tya --
 abstract class Repository
-  abstract find = id ->
+  abstract find: id ->
 
 final class UserRepository extends Repository
-  find = id ->
+  find: id ->
     "module:{id}"
 
 -- abstract_in_concrete.tya --
 class Repository
-  abstract find = id ->
+  abstract find: id ->
 
 -- abstract_method_body.tya --
 abstract class Repository
-  abstract find = id -> "bad"
+  abstract find: id -> "bad"
 
 -- missing_instance_method.tya --
 abstract class Repository
-  abstract find = id ->
-  abstract save = record ->
+  abstract find: id ->
+  abstract save: record ->
 
 class BrokenRepository extends Repository
-  find = id ->
+  find: id ->
     "user"
 
 -- bad_instance_arity.tya --
 abstract class Repository
-  abstract find = id ->
+  abstract find: id ->
 
 class BadRepository extends Repository
-  find = first, second ->
+  find: first, second ->
     "user"
 
 -- missing_class_method.tya --
 abstract class Model
-  static abstract table_name = ->
+  static abstract table_name: ->
 
 class BrokenModel extends Model
-  name = ""
+  name: ""
 
 -- bad_class_arity.tya --
 abstract class Model
-  static abstract table_name = ->
+  static abstract table_name: ->
 
 class BadModel extends Model
-  static table_name = name ->
+  static table_name: name ->
     name
 
 -- super_abstract.tya --
 abstract class User
-  abstract label = ->
+  abstract label: ->
 
 class Admin extends User
-  label = ->
+  label: ->
     super()
 
 -- extend_final.tya --
 final class User
-  name = ""
+  name: ""
 
 class Admin extends User
-  role = "admin"
+  role: "admin"
 
 -- abstract_final_class.tya --
 abstract final class User
-  name = ""
+  name: ""

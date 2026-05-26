@@ -42,32 +42,32 @@ stdout '0\n'
 ! stderr .
 
 exec go run ./cmd/tya version
-stdout '0.67.9\n'
+stdout '0.68.0\n'
 ! stderr .
 
 -- inheritance.tya --
 class User
-  name = ""
-  role = "user"
-  static count = 0
+  name: ""
+  role: "user"
+  static count: 0
 
-  initialize = name ->
+  initialize: name ->
     self.name = name
     Self.count = Self.count + 1
 
-  greeting = ->
+  greeting: ->
     "Hello, {self.name}"
 
-  rename = name ->
+  rename: name ->
     self.name = name
 
 class Admin extends User
-  role = "admin"
+  role: "admin"
 
-  initialize = name ->
+  initialize: name ->
     super(name)
 
-  greeting = ->
+  greeting: ->
     "{super()} ({self.role})"
 
 admin = Admin("komagata")
@@ -82,19 +82,19 @@ print(Admin.count)
 
 -- user.tya --
 class User
-  name = ""
+  name: ""
 
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  greeting = ->
+  greeting: ->
     "Hello, {self.name}"
 
 -- main.tya --
 import user
 
 class Admin extends User
-  greeting = ->
+  greeting: ->
     "{super()} (admin)"
 
 admin = Admin("module")
@@ -103,18 +103,18 @@ print(admin.greeting())
 
 -- accounts.tya --
 class User
-  name = ""
+  name: ""
 
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  greeting = ->
+  greeting: ->
     "Hello, {self.name}"
 
 class Admin extends User
-  role = "admin"
+  role: "admin"
 
-  greeting = ->
+  greeting: ->
     "{super()} ({self.role})"
 
 -- accounts_main.tya --
@@ -127,61 +127,61 @@ print(admin.greeting())
 
 -- unknown_parent.tya --
 class Admin extends Missing
-  name = ""
+  name: ""
 
 -- multiple_inheritance.tya --
 class Bad extends User, Account
-  name = ""
+  name: ""
 
 -- cycle.tya --
 class User extends Admin
-  name = ""
+  name: ""
 class Admin extends User
-  name = ""
+  name: ""
 
 -- super_outside.tya --
 print(super())
 
 -- super_in_class_method.tya --
 class User
-  greeting = ->
+  greeting: ->
     "Hello"
 
 class Admin extends User
-  static build = ->
+  static build: ->
     super()
 
 -- no_parent_method.tya --
 class User
-  name = ""
+  name: ""
 
 class Admin extends User
-  greeting = ->
+  greeting: ->
     super()
 
 -- missing_super.tya --
 class User
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
 class Admin extends User
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
 -- bad_override_arity.tya --
 class User
-  rename = name ->
+  rename: name ->
     self.name = name
 
 class Admin extends User
-  rename = first_name, last_name ->
+  rename: first_name, last_name ->
     self.name = first_name + " " + last_name
 
 -- class_member_inheritance.tya --
 class User
-  static count = 0
+  static count: 0
 
 class Admin extends User
-  name = ""
+  name: ""
 
 print(Admin.count)

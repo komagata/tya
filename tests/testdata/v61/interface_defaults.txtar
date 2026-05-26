@@ -67,13 +67,13 @@ stderr 'interface field initializers cannot reference self'
 
 -- default_method.tya --
 interface Named
-  name = ->
+  name: ->
 
-  label = ->
+  label: ->
     "label:" + self.name()
 
 class User implements Named
-  name = ->
+  name: ->
     "user"
 
 user = User()
@@ -82,13 +82,13 @@ print(user.label())
 
 -- field.tya --
 interface Timestamped
-  created = false
+  created: false
 
-  touch = ->
+  touch: ->
     self.created = true
 
 class Post implements Timestamped
-  title = nil
+  title: nil
 
 post = Post()
 print("created: " + post.created.to_s())
@@ -97,26 +97,26 @@ print("created: " + post.created.to_s())
 
 -- initializer.tya --
 interface Ready
-  ready = false
+  ready: false
 
-  initialize = ->
+  initialize: ->
     self.ready = true
 
 class Job implements Ready
-  title = nil
+  title: nil
 
 job = Job()
 print("ready: " + job.ready.to_s())
 
 -- initializer_super_point.tya --
 interface Ready
-  ready = false
+  ready: false
 
-  initialize = ->
+  initialize: ->
     self.ready = true
 
 class Job implements Ready
-  initialize = ->
+  initialize: ->
     print("before:" + self.ready.to_s())
     super()
     print("after:" + self.ready.to_s())
@@ -125,17 +125,17 @@ Job()
 
 -- subclass_initializer.tya --
 interface Ready
-  ready = false
+  ready: false
 
-  initialize = ->
+  initialize: ->
     self.ready = true
 
 class Base
-  initialize = ->
+  initialize: ->
     self.base_ready = true
 
 class Job extends Base implements Ready
-  initialize = ->
+  initialize: ->
     super()
     print("base:" + self.base_ready.to_s())
     print("ready:" + self.ready.to_s())
@@ -144,50 +144,50 @@ Job()
 
 -- default_satisfies_requirement.tya --
 interface RequiresLabel
-  label = ->
+  label: ->
 
 interface DefaultLabel
-  label = ->
+  label: ->
     "default"
 
 class Item implements RequiresLabel, DefaultLabel
-  name = nil
+  name: nil
 
 print(Item().label())
 
 -- class_super_to_interface.tya --
 interface Label
-  label = ->
+  label: ->
     "interface"
 
 class User implements Label
-  label = ->
+  label: ->
     "class:" + super()
 
 print(User().label())
 
 -- stackable_super.tya --
 interface BaseLabel
-  label = ->
+  label: ->
     "base"
 
 interface BracketLabel extends BaseLabel
-  label = ->
+  label: ->
     "[" + super() + "]"
 
 interface StarLabel
-  label = ->
+  label: ->
     "*" + super() + "*"
 
 class User implements BracketLabel, StarLabel
-  label = ->
+  label: ->
     super()
 
 print(User().label())
 
 -- diamond_dedup.tya --
 interface Root
-  label = ->
+  label: ->
     "root"
 
 interface Left extends Root
@@ -195,110 +195,110 @@ interface Left extends Root
 interface Right extends Root
 
 class User implements Left, Right
-  name = nil
+  name: nil
 
 print(User().label())
 
 -- default_conflict.tya --
 interface A
-  label = ->
+  label: ->
     "a"
 
 interface B
-  label = ->
+  label: ->
     "b"
 
 class Item implements A, B
-  name = nil
+  name: nil
 
 -- super_without_next.tya --
 interface Label
-  label = ->
+  label: ->
     super()
 
 class User implements Label
-  name = nil
+  name: nil
 
 print(User().label())
 
 -- interface_self.tya --
 interface Bad
-  klass = ->
+  klass: ->
     Self
 
 class User implements Bad
-  name = nil
+  name: nil
 
 -- interface_static.tya --
 interface Bad
-  static label = ->
+  static label: ->
     "bad"
 
 class User implements Bad
-  name = nil
+  name: nil
 
 -- interface_private.tya --
 interface Bad
-  _hidden = ->
+  _hidden: ->
     "bad"
 
 class User implements Bad
-  name = nil
+  name: nil
 
 -- interface_nested_class.tya --
 interface Bad
   class Nested
-    initialize = ->
+    initialize: ->
       nil
 
 class User implements Bad
-  name = nil
+  name: nil
 
 -- interface_nested_interface.tya --
 interface Bad
   interface Nested
-    label = ->
+    label: ->
 
 class User implements Bad
-  name = nil
+  name: nil
 
 -- interface_initializer_arity.tya --
 interface Bad
-  initialize = value ->
+  initialize: value ->
     self.value = value
 
 class User implements Bad
-  initialize = ->
+  initialize: ->
     super()
 
 User()
 
 -- interface_field_self.tya --
 interface Bad
-  value = self.name
+  value: self.name
 
 class User implements Bad
-  name = "user"
+  name: "user"
 
 -- missing_initializer_super.tya --
 interface Ready
-  ready = false
+  ready: false
 
-  initialize = ->
+  initialize: ->
     self.ready = true
 
 class Job implements Ready
-  initialize = ->
+  initialize: ->
     self.ready = false
 
 Job()
 
 -- field_conflict.tya --
 interface A
-  enabled = false
+  enabled: false
 
 interface B
-  enabled = false
+  enabled: false
 
 class Item implements A, B
-  name = nil
+  name: nil

@@ -3,15 +3,15 @@ import time as time
 # Logger provides the log/Logger standard library API.
 class Logger
   # Logger.default provides the log/Logger standard library operation.
-  default = ->
+  default: ->
     Logger({})
 
   # Logger.new provides the log/Logger standard library operation.
-  new = options ->
+  new: options ->
     Logger(options)
 
   # Logger.initialize provides the log/Logger standard library operation.
-  initialize = options ->
+  initialize: options ->
     if options == nil
       options = {}
     self.min_level = self.level_number(self.option(options, "level", "info"))
@@ -20,23 +20,23 @@ class Logger
     self.fields = self.option(options, "fields", {})
 
   # Logger.debug provides the log/Logger standard library operation.
-  debug = message, fields ->
+  debug: message, fields ->
     self.write("debug", message, fields)
 
   # Logger.info provides the log/Logger standard library operation.
-  info = message, fields ->
+  info: message, fields ->
     self.write("info", message, fields)
 
   # Logger.warn provides the log/Logger standard library operation.
-  warn = message, fields ->
+  warn: message, fields ->
     self.write("warn", message, fields)
 
   # Logger.error provides the log/Logger standard library operation.
-  error = message, fields ->
+  error: message, fields ->
     self.write("error", message, fields)
 
   # Logger.with provides the log/Logger standard library operation.
-  with = fields ->
+  with: fields ->
     merged = self.merge_fields(self.fields, fields)
     return Logger({
       level: self.level_name(self.min_level),
@@ -46,12 +46,12 @@ class Logger
     })
 
   # Logger.level provides the log/Logger standard library operation.
-  level = value ->
+  level: value ->
     self.min_level = self.level_number(value)
     self
 
   # Logger.write provides the log/Logger standard library operation.
-  write = level, message, fields ->
+  write: level, message, fields ->
     if fields == nil
       fields = {}
     if self.level_number(level) < self.min_level
@@ -70,13 +70,13 @@ class Logger
     return nil
 
   # Logger.option provides the log/Logger standard library operation.
-  option = options, name, fallback ->
+  option: options, name, fallback ->
     if options.has(name)
       return options[name]
     return fallback
 
   # Logger.level_number provides the log/Logger standard library operation.
-  level_number = level ->
+  level_number: level ->
     if level == "debug"
       return 10
     if level == "info"
@@ -88,7 +88,7 @@ class Logger
     raise error("log.Logger: unknown level " + level)
 
   # Logger.level_name provides the log/Logger standard library operation.
-  level_name = n ->
+  level_name: n ->
     if n <= 10
       return "debug"
     if n <= 20
@@ -98,7 +98,7 @@ class Logger
     return "error"
 
   # Logger.merge_fields provides the log/Logger standard library operation.
-  merge_fields = base, extra ->
+  merge_fields: base, extra ->
     out = {}
     if base != nil
       for key in base.keys()
@@ -109,7 +109,7 @@ class Logger
     return out
 
   # Logger.text_record provides the log/Logger standard library operation.
-  text_record = ts, level, message, fields ->
+  text_record: ts, level, message, fields ->
     out = ts + " " + level + " " + message
     names = fields.keys().sort()
     for name in names
@@ -117,7 +117,7 @@ class Logger
     return out
 
   # Logger.json_record provides the log/Logger standard library operation.
-  json_record = ts, level, message, fields ->
+  json_record: ts, level, message, fields ->
     out = chr(123)
     out = out + "\"timestamp\":\"" + self.escape_json(ts) + "\""
     out = out + ",\"level\":\"" + self.escape_json(level) + "\""
@@ -129,7 +129,7 @@ class Logger
     return out
 
   # Logger.escape_json provides the log/Logger standard library operation.
-  escape_json = text ->
+  escape_json: text ->
     out = ""
     i = 0
     while i < text.byte_len()

@@ -5,26 +5,26 @@ embed "templates/index.html" as index_html
 
 module demo
   interface Named
-    name = ->
+    name: ->
 
-    label = ->
+    label: ->
       "label:{self.name()}"
 
   class User implements Named
-    active = true
-    count = 0x2a
-    mask = 0b1010
-    data = b"tya"
-    raw = r"C:\tya\source"
+    active: true
+    count: 0x2a
+    mask: 0b1010
+    data: b"tya"
+    raw: r"C:\tya\source"
 
-    initialize = name ->
+    initialize: name ->
       super()
       self.name_value = name
 
-    name = ->
+    name: ->
       self.name_value
 
-    run = ->
+    run: ->
       scope
         task = spawn -> Time().sleep(0.01)
         await task
@@ -47,7 +47,7 @@ module demo
           "other"
 
   class Admin extends User
-    override name = ->
+    override name: ->
       "admin:{super()}"
 
 user = demo.User("komagata")

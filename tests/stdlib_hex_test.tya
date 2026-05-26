@@ -3,18 +3,18 @@ import hex as hex
 
 class StdlibHexTest extends TestCase
 
-  test_encode_string = ->
+  test_encode_string: ->
     self.assert_equal("547961", hex.Hex("Tya").encode(), "encode string")
     self.assert_equal("", hex.Hex("").encode(), "empty")
-  test_encode_bytes = ->
+  test_encode_bytes: ->
     self.assert_equal("547961", hex.Hex(b"Tya").encode(), "encode bytes")
     self.assert_equal("0001ff", hex.Hex(b"\x00\x01\xff").encode(), "binary")
-  test_decode_returns_bytes = ->
+  test_decode_returns_bytes: ->
     decoded = hex.Hex("547961").decode()
     self.assert_equal([84, 121, 97], bytes_array(decoded), "decode returns bytes")
     self.assert_equal("Tya", bytes_text(decoded), "decoded value")
-  test_decode_uppercase = ->
+  test_decode_uppercase: ->
     self.assert_equal("Tya", bytes_text(hex.Hex("547961").decode()), "lowercase")
-  test_round_trip = ->
+  test_round_trip: ->
     text = "hello world"
     self.assert_equal(text, bytes_text(hex.Hex(nil).decode(hex.Hex(text).encode())), "round trip")

@@ -1,4 +1,4 @@
 # Stringable provides the stringable standard library API.
 interface Stringable
   # Stringable.to_s provides the stringable standard library operation.
-  to_s = ->
+  to_s: ->

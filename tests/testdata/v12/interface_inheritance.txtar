@@ -31,24 +31,24 @@ stderr 'BadLookup.find expects 2 arguments'
 stderr 'Lookup.find expects 1 arguments'
 
 exec go run ./cmd/tya version
-stdout '0.67.9\n'
+stdout '0.68.0\n'
 ! stderr .
 
 -- interfaces.tya --
 interface Reader
-  read = ->
+  read: ->
 
 interface Seeker
-  seek = offset ->
+  seek: offset ->
 
 interface Closable
-  close = ->
+  close: ->
 
 interface Named
-  name = ->
+  name: ->
 
 interface Labeled
-  name = ->
+  name: ->
 
 interface Readable extends Reader
 
@@ -57,38 +57,38 @@ interface FileHandle extends Readable, Seeker, Closable
 interface MenuItem extends Named, Labeled
 
 class File implements FileHandle
-  read = ->
+  read: ->
     "data"
 
-  seek = offset ->
+  seek: offset ->
     "seek:{offset}"
 
-  close = ->
+  close: ->
     "closed"
 
 class Item implements MenuItem
-  name = ->
+  name: ->
     "name"
 
 interface ModuleFile extends Reader
-  path = ->
+  path: ->
 
 class MemoryFile implements ModuleFile
-  read = ->
+  read: ->
     "module-data"
 
-  path = ->
+  path: ->
     "module-path"
 
 abstract class AbstractFile implements FileHandle
-  seek = _offset ->
+  seek: _offset ->
     nil
 
-  close = ->
+  close: ->
     nil
 
 class ConcreteFile extends AbstractFile
-  read = ->
+  read: ->
     "abstract-data"
 
 import io
@@ -107,46 +107,46 @@ print(concrete.read())
 
 -- io.tya --
 interface IOReader
-  read = ->
+  read: ->
 
 -- missing_inherited.tya --
 interface Reader
-  read = ->
+  read: ->
 
 interface SeekableReader extends Reader
-  seek = offset ->
+  seek: offset ->
 
 class BrokenFile implements SeekableReader
-  seek = _offset ->
+  seek: _offset ->
     nil
 
 -- bad_inherited_arity.tya --
 interface Reader
-  read = ->
+  read: ->
 
 interface SeekableReader extends Reader
-  seek = offset ->
+  seek: offset ->
 
 class BadFile implements SeekableReader
-  read = _path ->
+  read: _path ->
     "data"
 
-  seek = _offset ->
+  seek: _offset ->
     nil
 
 -- interface_extends_class.tya --
 class Base
-  name = ->
+  name: ->
     "base"
 
 interface Named extends Base
 
 -- class_extends_interface.tya --
 interface Named
-  name = ->
+  name: ->
 
 class User extends Named
-  name = ->
+  name: ->
     "user"
 
 -- interface_cycle.tya --
@@ -156,16 +156,16 @@ interface B extends A
 
 -- interface_conflict.tya --
 interface LookupById
-  find = id ->
+  find: id ->
 
 interface LookupByName
-  find = first, last ->
+  find: first, last ->
 
 interface Searchable extends LookupById, LookupByName
 
 -- direct_conflict.tya --
 interface Lookup
-  find = id ->
+  find: id ->
 
 interface BadLookup extends Lookup
-  find = first, last ->
+  find: first, last ->

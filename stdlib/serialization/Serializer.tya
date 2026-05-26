@@ -5,27 +5,27 @@ import base64 as base64
 # Serializable provides the serialization/Serializer standard library API.
 interface Serializable
   # Serializable.to_data provides the serialization/Serializer standard library operation.
-  to_data = ->
+  to_data: ->
 
 # Serializer provides the serialization/Serializer standard library API.
 class Serializer
   # Serializer.initialize stores a value or serialized text.
-  initialize = value = nil ->
+  initialize: value = nil ->
     self.value = value
 
   # Serializer.to_data provides the serialization/Serializer standard library operation.
-  to_data = value = nil, options = nil ->
+  to_data: value = nil, options = nil ->
     if value == nil
       value = self.value
     opts = Serializer(nil).options(options)
     return Serializer(nil).to_data_seen(value, opts, [])
 
   # Serializer.serialize converts a value into serialization data.
-  serialize = value = nil, options = nil ->
+  serialize: value = nil, options = nil ->
     self.to_data(value, options)
 
   # Serializer.from_data provides the serialization/Serializer standard library operation.
-  from_data = data = nil, klass = nil, options = nil ->
+  from_data: data = nil, klass = nil, options = nil ->
     if data == nil
       data = self.value
     opts = Serializer(nil).options(options)
@@ -62,23 +62,23 @@ class Serializer
     return obj
 
   # Serializer.deserialize restores a value from serialization data.
-  deserialize = data = nil, klass = nil, options = nil ->
+  deserialize: data = nil, klass = nil, options = nil ->
     self.from_data(data, klass, options)
 
   # Serializer.to_json provides the serialization/Serializer standard library operation.
-  to_json = value = nil, options = nil ->
+  to_json: value = nil, options = nil ->
     if value == nil
       value = self.value
     return json.Json(Serializer(nil).to_data(value, options)).stringify()
 
   # Serializer.from_json provides the serialization/Serializer standard library operation.
-  from_json = text = nil, klass = nil, options = nil ->
+  from_json: text = nil, klass = nil, options = nil ->
     if text == nil
       text = self.value
     return Serializer(nil).from_data(json.Json(text).parse(), klass, options)
 
   # Serializer.to_toml provides the serialization/Serializer standard library operation.
-  to_toml = value = nil, options = nil ->
+  to_toml: value = nil, options = nil ->
     if value == nil
       value = self.value
     data = Serializer(nil).to_data(value, options)
@@ -87,20 +87,20 @@ class Serializer
     return toml.Toml(data).stringify()
 
   # Serializer.from_toml provides the serialization/Serializer standard library operation.
-  from_toml = text = nil, klass = nil, options = nil ->
+  from_toml: text = nil, klass = nil, options = nil ->
     if text == nil
       text = self.value
     return Serializer(nil).from_data(toml.Toml(text).parse(), klass, options)
 
   # Serializer.to_data_seen provides the serialization/Serializer standard library operation.
-  to_data_seen = value, opts, seen ->
+  to_data_seen: value, opts, seen ->
     kind = serialization_kind(value)
     if kind == "nil" or kind == "bool" or kind == "number" or kind == "string"
       return value
     if kind == "bytes"
       mode = opts.get("bytes", nil)
       if mode == "base64"
-        return base64.Base64(value).encode()
+        return base64.Base64.encode(value)
       if mode == "array"
         return bytes_array(value)
       raise error("serialization.to_data: bytes require bytes option")
@@ -145,7 +145,7 @@ class Serializer
     raise error("serialization.to_data: unsupported " + kind)
 
   # Serializer.enter_seen provides the serialization/Serializer standard library operation.
-  enter_seen = value, seen ->
+  enter_seen: value, seen ->
     id = serialization_id(value)
     i = 0
     while i < seen.len()
@@ -155,7 +155,7 @@ class Serializer
     seen.push(id)
 
   # Serializer.options provides the serialization/Serializer standard library operation.
-  options = options ->
+  options: options ->
     opts = { "bytes": nil, "include_class": false, "class_key": "$class", "fields": nil, "defaults": {}, "strict_fields": false }
     if options == nil
       return opts
@@ -173,7 +173,7 @@ class Serializer
     return opts
 
   # Serializer.array_has? provides the serialization/Serializer standard library operation.
-  array_has? = values, value ->
+  array_has?: values, value ->
     i = 0
     while i < values.len()
       if values[i] == value

@@ -1,11 +1,11 @@
 # Url provides the url/Url standard library API.
 class Url
   # Url.initialize stores a URL or query value.
-  initialize = value = nil ->
+  initialize: value = nil ->
     self.value = value
 
   # Url.is_unreserved provides the url/Url standard library operation.
-  is_unreserved = code ->
+  is_unreserved: code ->
     if code >= 65 and code <= 90
       return true
     if code >= 97 and code <= 122
@@ -17,13 +17,13 @@ class Url
     return false
 
   # Url.hex_digit provides the url/Url standard library operation.
-  hex_digit = d ->
+  hex_digit: d ->
     if d < 10
       return chr(48 + d)
     return chr(55 + d)
 
   # Url.decode_hex provides the url/Url standard library operation.
-  decode_hex = c ->
+  decode_hex: c ->
     code = ord(c)
     if code >= 48 and code <= 57
       return code - 48
@@ -34,7 +34,7 @@ class Url
     raise error("url.decode: invalid percent-escape")
 
   # Url.encode provides the url/Url standard library operation.
-  encode = text = nil ->
+  encode: text = nil ->
     if text == nil
       text = self.value
     n = text.byte_len()
@@ -53,7 +53,7 @@ class Url
     return out
 
   # Url.decode provides the url/Url standard library operation.
-  decode = text = nil ->
+  decode: text = nil ->
     if text == nil
       text = self.value
     n = text.byte_len()
@@ -74,7 +74,7 @@ class Url
     return out
 
   # Url.validate_percent provides the url/Url standard library operation.
-  validate_percent = text ->
+  validate_percent: text ->
     n = text.byte_len()
     i = 0
     while i < n
@@ -89,7 +89,7 @@ class Url
     nil
 
   # Url.decimal? provides the url/Url standard library operation.
-  decimal? = text ->
+  decimal?: text ->
     if text == ""
       return false
     i = 0
@@ -101,7 +101,7 @@ class Url
     true
 
   # Url.contains_colon? provides the url/Url standard library operation.
-  contains_colon? = text ->
+  contains_colon?: text ->
     i = 0
     while i < text.byte_len()
       if text[i] == ":"
@@ -110,7 +110,7 @@ class Url
     false
 
   # Url.encode_query provides the url/Url standard library operation.
-  encode_query = pairs = nil ->
+  encode_query: pairs = nil ->
     if pairs == nil
       pairs = self.value
     parts_a = []
@@ -126,7 +126,7 @@ class Url
     return parts_a.join("&")
 
   # Url.encode_query_pairs provides the url/Url standard library operation.
-  encode_query_pairs = pairs ->
+  encode_query_pairs: pairs ->
     parts_a = []
     for pair in pairs
       k = pair[0]
@@ -137,7 +137,7 @@ class Url
     return parts_a.join("&")
 
   # Url.decode_query_value provides the url/Url standard library operation.
-  decode_query_value = text ->
+  decode_query_value: text ->
     n = text.byte_len()
     out = ""
     i = 0
@@ -159,7 +159,7 @@ class Url
     return out
 
   # Url.decode_query provides the url/Url standard library operation.
-  decode_query = text = nil ->
+  decode_query: text = nil ->
     if text == nil
       text = self.value
     out = []
@@ -193,7 +193,7 @@ class Url
     return out
 
   # Url.query_dict provides the url/Url standard library operation.
-  query_dict = query ->
+  query_dict: query ->
     pairs = query
     if query.class == String
       pairs = Url(nil).decode_query(query)
@@ -212,7 +212,7 @@ class Url
     out
 
   # Url.parse provides the url/Url standard library operation.
-  parse = text = nil ->
+  parse: text = nil ->
     if text == nil
       text = self.value
     n = text.byte_len()
@@ -376,7 +376,7 @@ class Url
     return out
 
   # Url.normalize_path provides the url/Url standard library operation.
-  normalize_path = path ->
+  normalize_path: path ->
     absolute = path.starts_with("/")
     trailing = path.ends_with("/") and path != "/"
     parts = path.split("/")
@@ -399,7 +399,7 @@ class Url
     out
 
   # Url.merge_path provides the url/Url standard library operation.
-  merge_path = base_path, ref_path ->
+  merge_path: base_path, ref_path ->
     idx = -1
     i = 0
     while i < base_path.byte_len()
@@ -411,7 +411,7 @@ class Url
     return base_path.slice(0, idx + 1) + ref_path
 
   # Url.resolve provides the url/Url standard library operation.
-  resolve = base, ref ->
+  resolve: base, ref ->
     b = Url(nil).parse(base)
     r = Url(nil).parse(ref)
     if r["scheme"] != ""
@@ -452,7 +452,7 @@ class Url
     Url(nil).format(out)
 
   # Url.normalize provides the url/Url standard library operation.
-  normalize = text = nil ->
+  normalize: text = nil ->
     if text == nil
       text = self.value
     p = Url(nil).parse(text)
@@ -462,11 +462,11 @@ class Url
     Url(nil).format(p)
 
   # Url.build provides the url/Url standard library operation.
-  build = parts = nil ->
+  build: parts = nil ->
     return self.format(parts)
 
   # Url.format provides the url/Url standard library operation.
-  format = parts = nil ->
+  format: parts = nil ->
     if parts == nil
       parts = self.value
     out = ""

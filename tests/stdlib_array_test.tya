@@ -2,11 +2,11 @@ import unittest
 
 class StdlibArrayTest extends TestCase
 
-  test_empty_array = ->
+  test_empty_array: ->
     self.assert([].empty?(), "empty []")
-  test_non_empty_array = ->
+  test_non_empty_array: ->
     self.assert_equal(false, ["tya"].empty?(), "non-empty array")
-  test_first_returns_first = ->
+  test_first_returns_first: ->
     self.assert_equal("tya", ["tya"].first(), "first of single")
-  test_array_deep_equal = ->
+  test_array_deep_equal: ->
     self.assert_equal([1, { name: "tya" }], [1, { name: "tya" }], "deep equal")

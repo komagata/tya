@@ -41,32 +41,32 @@ reader = io.Readable()
 
 -- missing_read.tya --
 interface Readable
-  read = size ->
+  read: size ->
 
 class BrokenReadable implements Readable
-  close = ->
+  close: ->
     nil
 
 -- missing_write.tya --
 interface Writable
-  write = data ->
+  write: data ->
 
 class BrokenWritable implements Writable
-  close = ->
+  close: ->
     nil
 
 -- missing_close.tya --
 interface Closable
-  close = ->
+  close: ->
 
 class BrokenClosable implements Closable
-  read = size ->
+  read: size ->
     ""
 
 -- missing_flush.tya --
 interface Flushable
-  flush = ->
+  flush: ->
 
 class BrokenFlushable implements Flushable
-  write = data ->
+  write: data ->
     0

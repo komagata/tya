@@ -33,16 +33,16 @@ stdout '1 tests, 0 passed, 0 failed, 1 errors'
 import unittest
 
 class StringBlankTest extends TestCase
-  setup = ->
+  setup: ->
     self.subject = " "
 
-  teardown = ->
+  teardown: ->
     self.subject = nil
 
-  test_blank_for_whitespace = ->
+  test_blank_for_whitespace: ->
     self.assert(self.subject.blank?(), "spaces")
 
-  test_blank_returns_false_for_content = ->
+  test_blank_returns_false_for_content: ->
     self.subject = "tya"
     self.assert_equal(false, self.subject.blank?(), "content")
 
@@ -50,11 +50,11 @@ class StringBlankTest extends TestCase
 import unittest
 
 class AlphaTest extends TestCase
-  test_one = ->
+  test_one: ->
     self.assert(true, "one")
 
 class BetaTest extends TestCase
-  test_two = ->
+  test_two: ->
     self.assert_equal(2, 1 + 1, "two")
 
 suite = TestSuite()
@@ -71,11 +71,11 @@ print("returned:{total_count}/{pass_count}/{failure_count}/{error_count}")
 import unittest
 
 class AlphaTest extends TestCase
-  test_one = ->
+  test_one: ->
     self.assert(true, "one")
 
 class BetaTest extends TestCase
-  test_two = ->
+  test_two: ->
     self.assert_equal(2, 1 + 1, "two")
 
 inner = TestSuite()
@@ -89,18 +89,18 @@ TestRunner().default().run_and_exit(outer)
 import unittest
 
 class BrokenTest extends TestCase
-  test_failure = ->
+  test_failure: ->
     self.assert_equal("expected", "actual", "mismatch")
 
-  test_later = ->
+  test_later: ->
     self.assert(true, "continues")
 
 -- setup_error_test.tya --
 import unittest
 
 class SetupErrorTest extends TestCase
-  setup = ->
+  setup: ->
     raise error("setup exploded")
 
-  test_body = ->
+  test_body: ->
     self.assert(true, "unreachable")

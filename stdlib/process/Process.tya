@@ -1,19 +1,19 @@
 # Process provides the process/Process standard library API.
 class Process
   # Process.initialize stores a command.
-  initialize = command = nil ->
+  initialize: command = nil ->
     self.command = command
 
   # Process.cwd provides the process/Process standard library operation.
-  cwd = ->
+  cwd: ->
     cwd()
 
   # Process.chdir provides the process/Process standard library operation.
-  chdir = path ->
+  chdir: path ->
     chdir(path)
 
   # Process.run provides the process/Process standard library operation.
-  run = command = nil, options = {} ->
+  run: command = nil, options = {} ->
     if self.command != nil
       if command != nil
         options = command
@@ -21,7 +21,7 @@ class Process
     process_run(command, options)
 
   # Process.exec replaces this process where the platform supports exec.
-  exec = command = nil, options = {} ->
+  exec: command = nil, options = {} ->
     if self.command != nil
       if command != nil
         options = command

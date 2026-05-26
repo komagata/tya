@@ -2,27 +2,27 @@ import unittest
 
 class BitwiseTest extends TestCase
 
-  test_and = ->
+  test_and: ->
     self.assert_equal(12, 15 & 12, "15 & 12")
     self.assert_equal(0, 255 & 0, "255 & 0")
-  test_or = ->
+  test_or: ->
     self.assert_equal(15, 12 | 3, "12 | 3")
-  test_xor = ->
+  test_xor: ->
     self.assert_equal(3, 15 ^ 12, "15 ^ 12")
     self.assert_equal(0, 7 ^ 7, "self xor")
-  test_not = ->
+  test_not: ->
     self.assert_equal(-1, ~0, "~0")
     self.assert_equal(-256, ~255, "~255")
-  test_shl = ->
+  test_shl: ->
     self.assert_equal(16, 1 << 4, "1 << 4")
     self.assert_equal(1024, 1 << 10, "1 << 10")
-  test_shr = ->
+  test_shr: ->
     self.assert_equal(16, 256 >> 4, "256 >> 4")
     self.assert_equal(0, 1 >> 1, "1 >> 1")
-  test_precedence = ->
+  test_precedence: ->
     self.assert_equal(15, (12 | 3) & 15, "or then and")
     self.assert_equal(7, 15 & 7 | 0, "and then or")
-  test_compound = ->
+  test_compound: ->
     status = 0
     status = status | 1
     status = status | 4

@@ -12,13 +12,13 @@ stderr 'class BrokenSerializable must implement interface method to_data'
 
 -- serializable.tya --
 interface Serializable
-  to_data = ->
+  to_data: ->
 
 class Player implements Serializable
-  initialize = name ->
+  initialize: name ->
     self.name = name
 
-  to_data = ->
+  to_data: ->
     { name: self.name }
 
 print(Player("Ada").to_data()["name"])
@@ -30,7 +30,7 @@ value = serialization.Serializable()
 
 -- missing_to_data.tya --
 interface Serializable
-  to_data = ->
+  to_data: ->
 
 class BrokenSerializable implements Serializable
-  name = "Ada"
+  name: "Ada"

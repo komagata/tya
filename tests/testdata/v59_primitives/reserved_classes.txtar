@@ -24,7 +24,7 @@ stderr 'TYA-E0811'
 Number = 1
 -- subclass.tya --
 class MyNumber extends Number
-  initialize = ->
+  initialize: ->
     nil
 -- monkey_patch.tya --
 Number.foo = -> 1

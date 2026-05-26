@@ -21,4 +21,4 @@ _priv = y -> y - 1
 
 # Greeter says hello.
 class Greeter
-  static hi = name -> "hi " + name
+  static hi: name -> "hi " + name

@@ -50,7 +50,7 @@ broken_value = { symbol = "tya_broken_value", arity = 0 }
 
 -- broken_native/src/broken_native/BrokenNative.tya --
 class BrokenNative
-  static value = ->
+  static value: ->
     return broken_value()
 
 -- dup_app/tya.toml --
@@ -78,7 +78,7 @@ shared_native = { symbol = "tya_dep_one_value", arity = 0 }
 
 -- dep_one/src/dep_one/DepOne.tya --
 class DepOne
-  static value = ->
+  static value: ->
     return shared_native()
 
 -- dep_one/native/dep_one.c --
@@ -100,7 +100,7 @@ shared_native = { symbol = "tya_dep_two_value", arity = 0 }
 
 -- dep_two/src/dep_two/DepTwo.tya --
 class DepTwo
-  static value = ->
+  static value: ->
     return shared_native()
 
 -- dep_two/native/dep_two.c --

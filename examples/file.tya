@@ -1,11 +1,11 @@
 class FileExample
-  static write = path, text ->
+  static write: path, text ->
     write_file(path, text)
 
-  static exists? = path ->
+  static exists?: path ->
     file_exists(path)
 
-  static read = path ->
+  static read: path ->
     read_file(path)
 
 path = "/tmp/tya_example.txt"

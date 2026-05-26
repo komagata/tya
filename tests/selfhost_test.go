@@ -1955,7 +1955,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeCallPushArrayReturnFunctionProgr
 func TestSelfhostAstGeneratedPipelineRunsAstModeToStringPushArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "to_string_push_array_return_function_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 7\n  push items, to_string count\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 7\n  push items, to_string count\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2165,7 +2165,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeCallStringAccumulationArrayRetur
 func TestSelfhostAstGeneratedPipelineRunsAstModeToStringAccumulationArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "to_string_accum_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  text = \"\"\n  count = 1\n  while count <= 2\n    text = text + to_string count\n    count = count + 1\n  push items, text\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  text = \"\"\n  count : 1\n  while count <= 2\n    text = text + to_string count\n    count = count + 1\n  push items, text\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2193,7 +2193,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeAliasedStringAccumulatingArrayRe
 func TestSelfhostAstGeneratedPipelineRunsAstModeNamedCounterStepArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "named_counter_step_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    push items, value\n    count = count + 2\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    push items, value\n    count = count + 2\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2207,7 +2207,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeNamedCounterStepArrayReturnFunct
 func TestSelfhostAstGeneratedPipelineRunsAstModeLessEqualLoopArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "less_equal_loop_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count <= 5\n    push items, value\n    count = count + 2\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count <= 5\n    push items, value\n    count = count + 2\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2221,7 +2221,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeLessEqualLoopArrayReturnFunction
 func TestSelfhostAstGeneratedPipelineRunsAstModeDecrementingLoopArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "decrementing_loop_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 3\n  while count > 0\n    push items, value\n    count = count - 1\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 3\n  while count > 0\n    push items, value\n    count = count - 1\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2235,7 +2235,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeDecrementingLoopArrayReturnFunct
 func TestSelfhostAstGeneratedPipelineRunsAstModeNamedCounterStepContinueArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "named_counter_step_continue_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    if count == 1\n      count = count + 2\n      continue\n    push items, value\n    count = count + 2\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    if count == 1\n      count = count + 2\n      continue\n    push items, value\n    count = count + 2\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2249,7 +2249,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeNamedCounterStepContinueArrayRet
 func TestSelfhostAstGeneratedPipelineRunsAstModeNotEqualContinueArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "not_equal_continue_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    if count != 3\n      count = count + 2\n      continue\n    push items, value\n    count = count + 2\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    if count != 3\n      count = count + 2\n      continue\n    push items, value\n    count = count + 2\n  return items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2263,7 +2263,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeNotEqualContinueArrayReturnFunct
 func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalPushArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "conditional_push_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    if count == 3\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    if count == 3\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2277,7 +2277,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalPushArrayReturnFuncti
 func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalStringAccumulationArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "conditional_string_accum_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  text = \"\"\n  count = 1\n  while count < 5\n    if count == 3\n      text = text + value\n    text = text + \"!\"\n    count = count + 2\n  push items, text\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  text = \"\"\n  count : 1\n  while count < 5\n    if count == 3\n      text = text + value\n    text = text + \"!\"\n    count = count + 2\n  push items, text\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2291,7 +2291,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalStringAccumulationArr
 func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalCallStringAccumulationArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "conditional_call_string_accum_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  text = \"\"\n  count = 1\n  while count < 5\n    if count == 3\n      text = text + trim value\n    text = text + \"!\"\n    count = count + 2\n  push items, text\n  return items\nmessage = \" hit \"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  text = \"\"\n  count : 1\n  while count < 5\n    if count == 3\n      text = text + trim value\n    text = text + \"!\"\n    count = count + 2\n  push items, text\n  return items\nmessage = \" hit \"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2305,7 +2305,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalCallStringAccumulatio
 func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalNotEqualPushArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "conditional_not_equal_push_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    if count != 3\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    if count != 3\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2319,7 +2319,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalNotEqualPushArrayRetu
 func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalGreaterThanPushArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "conditional_greater_than_push_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    if count > 1\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    if count > 1\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2333,7 +2333,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalGreaterThanPushArrayR
 func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalGreaterEqualPushArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "conditional_greater_equal_push_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    if count >= 3\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    if count >= 3\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2347,7 +2347,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalGreaterEqualPushArray
 func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalLessEqualPushArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "conditional_less_equal_push_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    if count <= 1\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    if count <= 1\n      push items, value\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2361,7 +2361,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalLessEqualPushArrayRet
 func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalMultiStatementArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "conditional_multi_stmt_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  text = \"\"\n  count = 1\n  while count < 5\n    if count >= 3\n      text = text + value\n      push items, text\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  text = \"\"\n  count : 1\n  while count < 5\n    if count >= 3\n      text = text + value\n      push items, text\n    push items, \"all\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2375,7 +2375,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeConditionalMultiStatementArrayRe
 func TestSelfhostAstGeneratedPipelineRunsAstModeIfElseArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "if_else_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    if count >= 3\n      push items, value\n    else\n      push items, \"low\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    if count >= 3\n      push items, value\n    else\n      push items, \"low\"\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2389,7 +2389,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeIfElseArrayReturnFunctionProgram
 func TestSelfhostAstGeneratedPipelineRunsAstModeIfElseMultiStatementArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "if_else_multi_stmt_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  text = \"\"\n  count = 1\n  while count < 5\n    if count >= 3\n      text = text + value\n      push items, text\n    else\n      text = text + \"low\"\n      push items, text\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  text = \"\"\n  count : 1\n  while count < 5\n    if count >= 3\n      text = text + value\n      push items, text\n    else\n      text = text + \"low\"\n      push items, text\n    count = count + 2\n  return items\nmessage = \"hit\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2403,7 +2403,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModeIfElseMultiStatementArrayReturnF
 func TestSelfhostAstGeneratedPipelineRunsAstModePostLoopIfElseArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "post_loop_if_else_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  text = \"\"\n  count = 1\n  while count < 5\n    text = text + value\n    count = count + 2\n  if count >= 5\n    push items, text\n  else\n    push items, \"low\"\n  return items\nmessage = \"hi\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  text = \"\"\n  count : 1\n  while count < 5\n    text = text + value\n    count = count + 2\n  if count >= 5\n    push items, text\n  else\n    push items, \"low\"\n  return items\nmessage = \"hi\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -2417,7 +2417,7 @@ func TestSelfhostAstGeneratedPipelineRunsAstModePostLoopIfElseArrayReturnFunctio
 func TestSelfhostAstGeneratedPipelineRunsAstModePostLoopIfElseCallPushArrayReturnFunctionProgram(t *testing.T) {
 	dir := t.TempDir()
 	srcPath := filepath.Join(dir, "post_loop_if_else_call_push_array_return_ast.tya")
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    count = count + 2\n  if count >= 5\n    push items, trim value\n  else\n    push items, \"low\"\n  return items\nmessage = \" hi \"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    count = count + 2\n  if count >= 5\n    push items, trim value\n  else\n    push items, \"low\"\n  return items\nmessage = \" hi \"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -4703,7 +4703,7 @@ func TestSelfhostAstParserCheckerCodegenRunsLoopingAliasedArrayReturnFunctionStr
 	nodesPath := dir + "/nodes.txt"
 	cPath := dir + "/ast_loop_alias_array_func.c"
 	binPath := dir + "/ast_loop_alias_array_func"
-	src := "collect = value ->\n  items = []\n  item = value\n  count = 0\n  while count < 2\n    push items, item\n    count = count + 1\n  items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  item = value\n  count : 0\n  while count < 2\n    push items, item\n    count = count + 1\n  items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -4794,7 +4794,7 @@ func TestSelfhostAstParserCheckerCodegenRunsNamedCounterArrayReturnFunctionStrea
 	nodesPath := dir + "/nodes.txt"
 	cPath := dir + "/ast_named_counter_array_func.c"
 	binPath := dir + "/ast_named_counter_array_func"
-	src := "collect = value ->\n  items = []\n  count = 0\n  while count < 2\n    push items, value\n    count = count + 1\n  items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 0\n  while count < 2\n    push items, value\n    count = count + 1\n  items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -4842,7 +4842,7 @@ func TestSelfhostAstParserCheckerCodegenRunsNamedCounterInitialValueArrayReturnF
 	nodesPath := dir + "/nodes.txt"
 	cPath := dir + "/ast_named_counter_initial_array_func.c"
 	binPath := dir + "/ast_named_counter_initial_array_func"
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 3\n    push items, value\n    count = count + 1\n  items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 3\n    push items, value\n    count = count + 1\n  items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -4889,7 +4889,7 @@ func TestSelfhostAstParserCheckerCodegenRunsNamedCounterStepArrayReturnFunctionS
 	nodesPath := dir + "/nodes.txt"
 	cPath := dir + "/ast_named_counter_step_array_func.c"
 	binPath := dir + "/ast_named_counter_step_array_func"
-	src := "collect = value ->\n  items = []\n  count = 1\n  while count < 5\n    push items, value\n    count = count + 2\n  items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  count : 1\n  while count < 5\n    push items, value\n    count = count + 2\n  items\nmessage = \"Tya\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -5023,7 +5023,7 @@ func TestSelfhostAstParserCheckerCodegenRunsAliasedStringAccumulatingArrayReturn
 	nodesPath := dir + "/nodes.txt"
 	cPath := dir + "/ast_alias_string_accum_array_func.c"
 	binPath := dir + "/ast_alias_string_accum_array_func"
-	src := "collect = value ->\n  items = []\n  text = \"\"\n  part = value\n  count = 0\n  while count < 2\n    text = text + part\n    count = count + 1\n  push items, text\n  items\nmessage = \"Ty\"\nitems = collect(message)\nfor item in items\n  print item\n"
+	src := "collect = value ->\n  items = []\n  text = \"\"\n  part = value\n  count : 0\n  while count < 2\n    text = text + part\n    count = count + 1\n  push items, text\n  items\nmessage = \"Ty\"\nitems = collect(message)\nfor item in items\n  print item\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -5239,7 +5239,7 @@ func TestSelfhostAstParserCheckerCodegenRunsIfWhileStream(t *testing.T) {
 	nodesPath := dir + "/nodes.txt"
 	cPath := dir + "/ast_if_while.c"
 	binPath := dir + "/ast_if_while"
-	src := "count = 2\nif count > 0\n  print count\nwhile count > 0\n  print count\n  count = count - 1\nprint count\n"
+	src := "count = 2\nif count > 0\n  print count\nwhile count > 0\n  print count\n  count : count - 1\nprint count\n"
 	if err := os.WriteFile(srcPath, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}

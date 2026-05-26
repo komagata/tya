@@ -9,7 +9,7 @@ import (
 func TestDefinitionAtBarePackageClassImport(t *testing.T) {
 	dir := t.TempDir()
 	writeLSPFile(t, filepath.Join(dir, "tya.toml"), "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n")
-	writeLSPFile(t, filepath.Join(dir, "src", "net", "http", "Request.tya"), "class Request\n  initialize = ->\n    self.path = \"\"\n")
+	writeLSPFile(t, filepath.Join(dir, "src", "net", "http", "Request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	mainPath := filepath.Join(dir, "src", "main.tya")
 	mainSrc := "import net/http\n\nrequest = Request()\n"
 	writeLSPFile(t, mainPath, mainSrc)
@@ -36,7 +36,7 @@ func TestDefinitionAtBarePackageClassImport(t *testing.T) {
 func TestDefinitionAtAliasedPackageClassImport(t *testing.T) {
 	dir := t.TempDir()
 	writeLSPFile(t, filepath.Join(dir, "tya.toml"), "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n")
-	writeLSPFile(t, filepath.Join(dir, "src", "net", "http", "Request.tya"), "class Request\n  initialize = ->\n    self.path = \"\"\n")
+	writeLSPFile(t, filepath.Join(dir, "src", "net", "http", "Request.tya"), "class Request\n  initialize: ->\n    self.path = \"\"\n")
 	mainPath := filepath.Join(dir, "src", "main.tya")
 	mainSrc := "import net/http as http\n\nrequest = http.Request()\n"
 	writeLSPFile(t, mainPath, mainSrc)

@@ -14,7 +14,7 @@ func TestExamplesGolden(t *testing.T) {
 	root := ".."
 	cases := map[string]string{
 		"args.tya":              "2\nok\n",
-		"arithmetic.tya":        "5\n14\n20\n2.5\n-3\ntrue\nnil\nnext year: 21\n",
+		"arithmetic.tya":        "5\n14\n20\n2\n2.5\n-2\n-1\n-3\ntrue\nnil\nnext year: 21\n",
 		"array.tya":             "3\n1\nnil\n4\n4\n3\n20\n",
 		"classic/array_sum.tya": "6\n",
 		"classic/factorial.tya": "120\n",

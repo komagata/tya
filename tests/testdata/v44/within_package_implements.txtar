@@ -20,16 +20,16 @@ print(JsonEncoder().encode())
 # Encoder is a generic stub class; the file's real product is the
 # Encodable interface used by sibling files.
 interface Encodable
-  encode = ->
+  encode: ->
 
 class Encoder
-  static noop = ->
+  static noop: ->
     nil
 
 -- codec/JsonEncoder.tya --
 class JsonEncoder implements Encodable
-  initialize = ->
+  initialize: ->
     nil
 
-  encode = ->
+  encode: ->
     "json-encoded"

@@ -3,7 +3,7 @@ import geometry as geo
 
 class StdlibGeometryTest extends TestCase
 
-  test_vector2 = ->
+  test_vector2: ->
     v = geo.Vector2(3, 4)
     self.assert_equal(geo.Vector2, v.class, "class")
     self.assert_equal([4, 5], v.add(geo.Vector2(0, 0).one()).to_array(), "add")
@@ -20,7 +20,7 @@ class StdlibGeometryTest extends TestCase
     self.assert(v.equal?(geo.Vector2(0, 0).from_array([3, 4])), "equal")
     self.assert(v.nearly_equal?(geo.Vector2(3.1, 3.9), 0.11), "nearly")
 
-  test_vector3 = ->
+  test_vector3: ->
     v = geo.Vector3(1, 2, 3)
     self.assert_equal(geo.Vector3, v.class, "class")
     self.assert_equal([2, 3, 4], v.add(geo.Vector3(0, 0, 0).one()).to_array(), "add")
@@ -33,7 +33,7 @@ class StdlibGeometryTest extends TestCase
     self.assert(v.equal?(geo.Vector3(0, 0, 0).from_array([1, 2, 3])), "equal")
     self.assert(v.nearly_equal?(geo.Vector3(1.1, 2.1, 2.9), 0.11), "nearly")
 
-  test_point_and_size = ->
+  test_point_and_size: ->
     p = geo.Point(1, 2)
     v = p.to_vector()
     self.assert_equal(geo.Point, p.class, "point class")
@@ -47,7 +47,7 @@ class StdlibGeometryTest extends TestCase
     self.assert_raises(-> geo.Size(-1, 2), "negative size")
     self.assert_raises(-> geo.Size(1, 0).aspect_ratio(), "zero height")
 
-  test_rect = ->
+  test_rect: ->
     r = geo.Rect(0, 0, 10, 5)
     self.assert_equal(geo.Rect, r.class, "class")
     self.assert_equal(10, r.right(), "right")
@@ -65,7 +65,7 @@ class StdlibGeometryTest extends TestCase
     self.assert(geo.Rect(0, 0, 0, 1).empty?(), "empty")
     self.assert_raises(-> geo.Rect(0, 0, -1, 1), "negative rect")
 
-  test_circle = ->
+  test_circle: ->
     c = geo.Circle(0, 0, 5)
     self.assert_equal(geo.Circle, c.class, "class")
     self.assert(c.contains_point?(geo.Point(3, 4)), "contains point")
@@ -75,7 +75,7 @@ class StdlibGeometryTest extends TestCase
     self.assert(c.translate(geo.Vector2(1, 2)).equal?(geo.Circle(1, 2, 5)), "translate")
     self.assert_raises(-> geo.Circle(0, 0, -1), "negative radius")
 
-  test_errors = ->
+  test_errors: ->
     self.assert_raises(-> geo.Vector2("x", 0), "non-number")
     self.assert_raises(-> geo.Vector2(0, 0).one().div(0), "divide zero")
     self.assert_raises(-> geo.Vector3(0, 0, 0).one().div(0), "divide zero")

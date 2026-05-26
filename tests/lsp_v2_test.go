@@ -102,7 +102,7 @@ func TestLSPRenameTopLevelClassDeclaration(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_v2_rename_class.tya")
-	src := "class Widget\n  static name = () -> \"widget\"\n"
+	src := "class Widget\n  static name: () -> \"widget\"\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -134,7 +134,7 @@ func TestLSPRenameClassDeclarationRenamesMatchingFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "Widget.tya")
 	uri := fileURI(path)
-	src := "class Widget\n  static name = () -> \"widget\"\n"
+	src := "class Widget\n  static name: () -> \"widget\"\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -176,7 +176,7 @@ func TestLSPRenameClassDeclarationRenamesMismatchedFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "OldWidget.tya")
 	uri := fileURI(path)
-	src := "class Widget\n  static name = () -> \"widget\"\n"
+	src := "class Widget\n  static name: () -> \"widget\"\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -210,7 +210,7 @@ func TestLSPRenameClassDoesNotRenameImportedPackageClass(t *testing.T) {
 	defer p.close()
 	dir := writeWorkspace(t, map[string]string{
 		"tya.toml":    "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
-		"src/Cli.tya": "import cli as cli\n\nclass Cli\n  static parse = args ->\n    cli.Cli(args).parse_or_exit(Self.option_spec())\n  static option_spec = () -> {}\n",
+		"src/Cli.tya": "import cli as cli\n\nclass Cli\n  static parse: args ->\n    cli.Cli(args).parse_or_exit(Self.option_spec())\n  static option_spec: () -> {}\n",
 	})
 	uri := fileURI(filepath.Join(dir, "src", "Cli.tya"))
 	src, _ := os.ReadFile(filepath.Join(dir, "src", "Cli.tya"))
@@ -246,7 +246,7 @@ func TestLSPRenameClassMethodDeclaration(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_v2_rename_class_method.tya")
-	src := "class Widget\n  static call = () -> Self.helper()\n  static helper = () -> 1\n"
+	src := "class Widget\n  static call: () -> Self.helper()\n  static helper: () -> 1\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -273,7 +273,7 @@ func TestLSPRenameClassMethodReference(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_v2_rename_class_method_ref.tya")
-	src := "class Widget\n  static call = () -> Self.helper()\n  static helper = () -> 1\n"
+	src := "class Widget\n  static call: () -> Self.helper()\n  static helper: () -> 1\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -300,7 +300,7 @@ func TestLSPRenameLocalInsideClassMethod(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_v2_rename_class_method_local.tya")
-	src := "class Widget\n  static call = () ->\n    value = 1\n    value + 1\n"
+	src := "class Widget\n  static call: () ->\n    value = 1\n    value + 1\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -511,7 +511,7 @@ func TestLSPSemanticTokens(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_v2_sem.tya")
-	src := "x = 1\nclass Foo\n  static bar = -> 42\n"
+	src := "x = 1\nclass Foo\n  static bar: -> 42\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -534,7 +534,7 @@ func TestLSPPolishProviders(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_polish.tya")
-	src := "# [docs](https://example.com)\nimport unittest\n\nclass SampleTest extends TestCase\n\n  test_one = ->\n    println(\"ok\")\n"
+	src := "# [docs](https://example.com)\nimport unittest\n\nclass SampleTest extends TestCase\n\n  test_one: ->\n    println(\"ok\")\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -612,7 +612,7 @@ func TestLSPDocumentSymbols(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_v2_docsyms.tya")
-	src := "class Foo\n  private LIMIT = 10\n  private static count = 0\n  private field = 1\n  initialize = ->\n    self.field = 1\n  static bar = -> 42\n  private helper = value -> value\n\ngreet = -> 1\n"
+	src := "class Foo\n  private LIMIT: 10\n  private static count: 0\n  private field: 1\n  initialize: ->\n    self.field = 1\n  static bar: -> 42\n  private helper: value -> value\n\ngreet = -> 1\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -699,7 +699,7 @@ func TestLSPWorkspaceSymbols(t *testing.T) {
 	dir := writeWorkspace(t, map[string]string{
 		"tya.toml":  "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
 		"src/a.tya": "greet = -> 1\n",
-		"src/b.tya": "class Greeter\n  static hi = -> 1\n",
+		"src/b.tya": "class Greeter\n  static hi: -> 1\n",
 	})
 	p := initLSP(t)
 	defer p.close()

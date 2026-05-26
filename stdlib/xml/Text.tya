@@ -1,9 +1,9 @@
 # Text provides the xml/Text standard library API.
 class Text
   # Text.initialize provides the xml/Text standard library operation.
-  initialize = text ->
+  initialize: text ->
     self.text = text
 
   # Text.new provides the xml/Text standard library operation.
-  new = text ->
+  new: text ->
     return Text(text)

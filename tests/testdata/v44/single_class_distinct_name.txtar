@@ -13,5 +13,5 @@ print(Helper.use())
 
 -- tools/Helper.tya --
 class Helper
-  static use = ->
+  static use: ->
     "helper used"

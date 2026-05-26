@@ -78,23 +78,23 @@ member_case = ->
 
 -- predicate_protocol.tya --
 interface Equatable
-  equal? = other ->
+  equal?: other ->
 
 class User implements Equatable
-  equal? = other ->
+  equal?: other ->
     true
 
 interface Comparable
-  between? = min, max ->
+  between?: min, max ->
 
 class Range implements Comparable
-  between? = min, max ->
+  between?: min, max ->
     true
 
 -- missing_predicate_protocol.tya --
 interface Comparable
-  between? = min, max ->
+  between?: min, max ->
 
 class Box implements Comparable
-  value = ->
+  value: ->
     1

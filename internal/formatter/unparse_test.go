@@ -166,8 +166,8 @@ func TestUnparseSingleQuotedStringPreservesLiteralValue(t *testing.T) {
 }
 
 func TestUnparseSelfAndSuperExpressions(t *testing.T) {
-	src := "class Box\n  static get = ->\n    return Self.wrap(self.value + super.value)\n"
-	want := "class Box\n  static get = ->\n    return Self.wrap(self.value + super.value)\n"
+	src := "class Box\n  static get: ->\n    return Self.wrap(self.value + super.value)\n"
+	want := "class Box\n  static get: ->\n    return Self.wrap(self.value + super.value)\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
@@ -187,10 +187,10 @@ func TestUnparseZeroArgFunctionDefinitionsUseShortArrow(t *testing.T) {
 		"with_args = name -> name",
 		"",
 		"class Box",
-		"  initialize = () ->",
+		"  initialize: () ->",
 		"    self.value = 1",
 		"",
-		"  static build = () -> Box.new()",
+		"  static build: () -> Box.new()",
 		"",
 	}, "\n")
 	want := strings.Join([]string{
@@ -202,9 +202,9 @@ func TestUnparseZeroArgFunctionDefinitionsUseShortArrow(t *testing.T) {
 		"with_args = name -> name",
 		"",
 		"class Box",
-		"  static build = -> Self.new()",
+		"  static build: -> Self.new()",
 		"",
-		"  initialize = ->",
+		"  initialize: ->",
 		"    self.value = 1",
 		"",
 	}, "\n")
@@ -449,12 +449,12 @@ func TestUnparseImportSortAndBlankLines(t *testing.T) {
 }
 
 func TestUnparseClass(t *testing.T) {
-	src := "class Dog\n  bark = ->\n    return \"woof\"\n"
+	src := "class Dog\n  bark: ->\n    return \"woof\"\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"class Dog", "  bark = ->", "    return \"woof\""} {
+	for _, want := range []string{"class Dog", "  bark: ->", "    return \"woof\""} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in:\n%s", want, got)
 		}
@@ -462,12 +462,12 @@ func TestUnparseClass(t *testing.T) {
 }
 
 func TestUnparsePrivatePredicateMethodName(t *testing.T) {
-	src := "class Address\n  private? = -> true\n  static private? = -> false\n  private helper = -> true\n"
+	src := "class Address\n  private?: -> true\n  static private?: -> false\n  private helper: -> true\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "class Address\n  static private? = -> false\n\n  private? = -> true\n\n  private helper = -> true\n"
+	want := "class Address\n  static private?: -> false\n\n  private?: -> true\n\n  private helper: -> true\n"
 	if got != want {
 		t.Fatalf("got:\n%swant:\n%s", got, want)
 	}
@@ -476,74 +476,74 @@ func TestUnparsePrivatePredicateMethodName(t *testing.T) {
 func TestUnparseSortsClassMembers(t *testing.T) {
 	src := strings.Join([]string{
 		"class Sample",
-		"  private helper = -> 1",
+		"  private helper: -> 1",
 		"",
-		"  zed = 0",
+		"  zed: 0",
 		"",
-		"  static make = -> Self()",
+		"  static make: -> Self()",
 		"",
 		"  # public constant",
-		"  ALPHA = 1",
+		"  ALPHA: 1",
 		"",
-		"  private static hidden_count = 0",
+		"  private static hidden_count: 0",
 		"",
-		"  beta = -> 2",
+		"  beta: -> 2",
 		"",
-		"  static build = -> Self()",
+		"  static build: -> Self()",
 		"",
-		"  private id = 0",
+		"  private id: 0",
 		"",
 		"  # private static method",
-		"  private static normalize = -> 3",
+		"  private static normalize: -> 3",
 		"",
-		"  private SECRET = 9",
+		"  private SECRET: 9",
 		"",
-		"  initialize = ->",
+		"  initialize: ->",
 		"    self.ready = true",
 		"",
-		"  name = \"\"",
+		"  name: \"\"",
 		"",
-		"  ZETA = 2",
+		"  ZETA: 2",
 		"",
-		"  static alpha_count = 0",
+		"  static alpha_count: 0",
 		"",
-		"  zeta = -> 4",
+		"  zeta: -> 4",
 		"",
 	}, "\n")
 	want := strings.Join([]string{
 		"class Sample",
 		"  # public constant",
-		"  ALPHA = 1",
+		"  ALPHA: 1",
 		"",
-		"  ZETA = 2",
+		"  ZETA: 2",
 		"",
-		"  private SECRET = 9",
+		"  private SECRET: 9",
 		"",
-		"  static alpha_count = 0",
+		"  static alpha_count: 0",
 		"",
-		"  private static hidden_count = 0",
+		"  private static hidden_count: 0",
 		"",
-		"  name = \"\"",
+		"  name: \"\"",
 		"",
-		"  zed = 0",
+		"  zed: 0",
 		"",
-		"  private id = 0",
+		"  private id: 0",
 		"",
-		"  static build = -> Self()",
+		"  static build: -> Self()",
 		"",
-		"  static make = -> Self()",
+		"  static make: -> Self()",
 		"",
 		"  # private static method",
-		"  private static normalize = -> 3",
+		"  private static normalize: -> 3",
 		"",
-		"  initialize = ->",
+		"  initialize: ->",
 		"    self.ready = true",
 		"",
-		"  beta = -> 2",
+		"  beta: -> 2",
 		"",
-		"  zeta = -> 4",
+		"  zeta: -> 4",
 		"",
-		"  private helper = -> 1",
+		"  private helper: -> 1",
 		"",
 	}, "\n")
 	got, err := unparseSourceWithComments(t, src)

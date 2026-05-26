@@ -1,7 +1,7 @@
 # PriorityQueue provides the collections/PriorityQueue standard library API.
 class PriorityQueue
   # PriorityQueue.initialize provides the collections/PriorityQueue standard library operation.
-  initialize = items = nil ->
+  initialize: items = nil ->
     self.items = []
     self.seq = 0
     if items != nil
@@ -15,15 +15,15 @@ class PriorityQueue
         i = i + 1
 
   # PriorityQueue.new provides the collections/PriorityQueue standard library operation.
-  new = ->
+  new: ->
     return PriorityQueue(nil)
 
   # PriorityQueue.from_array provides the collections/PriorityQueue standard library operation.
-  from_array = items ->
+  from_array: items ->
     return PriorityQueue(items)
 
   # PriorityQueue.push provides the collections/PriorityQueue standard library operation.
-  push = value, priority ->
+  push: value, priority ->
     if priority.class != Number
       raise error("collections.PriorityQueue.push: priority must be a number")
     self.items.push([priority, self.seq, value])
@@ -31,7 +31,7 @@ class PriorityQueue
     return self
 
   # PriorityQueue.pop provides the collections/PriorityQueue standard library operation.
-  pop = ->
+  pop: ->
     if self.empty?()
       raise error("collections.PriorityQueue.pop: empty priority queue")
     index = self.best_index()
@@ -40,32 +40,32 @@ class PriorityQueue
     return entry[2]
 
   # PriorityQueue.peek provides the collections/PriorityQueue standard library operation.
-  peek = ->
+  peek: ->
     if self.empty?()
       raise error("collections.PriorityQueue.peek: empty priority queue")
     return self.items[self.best_index()][2]
 
   # PriorityQueue.peek_priority provides the collections/PriorityQueue standard library operation.
-  peek_priority = ->
+  peek_priority: ->
     if self.empty?()
       raise error("collections.PriorityQueue.peek_priority: empty priority queue")
     return self.items[self.best_index()][0]
 
   # PriorityQueue.len provides the collections/PriorityQueue standard library operation.
-  len = ->
+  len: ->
     return self.items.len()
 
   # PriorityQueue.empty? provides the collections/PriorityQueue standard library operation.
-  empty? = ->
+  empty?: ->
     return self.items.empty?()
 
   # PriorityQueue.clear provides the collections/PriorityQueue standard library operation.
-  clear = ->
+  clear: ->
     self.items = []
     return self
 
   # PriorityQueue.to_array provides the collections/PriorityQueue standard library operation.
-  to_array = ->
+  to_array: ->
     clone = PriorityQueue(nil)
     i = 0
     while i < self.items.len()
@@ -80,7 +80,7 @@ class PriorityQueue
     return out
 
   # PriorityQueue.best_index provides the collections/PriorityQueue standard library operation.
-  best_index = ->
+  best_index: ->
     best = 0
     i = 1
     while i < self.items.len()
@@ -92,7 +92,7 @@ class PriorityQueue
     return best
 
   # PriorityQueue.remove_at provides the collections/PriorityQueue standard library operation.
-  remove_at = index ->
+  remove_at: index ->
     next = []
     i = 0
     while i < self.items.len()

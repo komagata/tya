@@ -1,15 +1,15 @@
 # Csv provides the csv/Csv standard library API.
 class Csv
   # Csv.initialize stores text or rows for CSV conversion.
-  initialize = value = nil ->
+  initialize: value = nil ->
     self.value = value
 
   # Csv.default_options provides the csv/Csv standard library operation.
-  default_options = () ->
+  default_options: () ->
     return { separator: ",", header: false }
 
   # Csv.merge_options provides the csv/Csv standard library operation.
-  merge_options = options ->
+  merge_options: options ->
     base = Csv(nil).default_options()
     if options == nil
       return base
@@ -20,7 +20,7 @@ class Csv
     return base
 
   # Csv.parse_rows provides the csv/Csv standard library operation.
-  parse_rows = text, separator ->
+  parse_rows: text, separator ->
     rows = []
     n = text.byte_len()
     i = 0
@@ -73,7 +73,7 @@ class Csv
     return rows
 
   # Csv.parse provides the csv/Csv standard library operation.
-  parse = text = nil, options = nil ->
+  parse: text = nil, options = nil ->
     if self.value != nil and text != nil and text.class == Dict
       options = text
       text = self.value
@@ -103,7 +103,7 @@ class Csv
     return out
 
   # Csv.escape_field provides the csv/Csv standard library operation.
-  escape_field = field, separator ->
+  escape_field: field, separator ->
     needs_quote = false
     n = field.byte_len()
     cr = chr(13)
@@ -128,7 +128,7 @@ class Csv
     return out + "\""
 
   # Csv.dump_array_rows provides the csv/Csv standard library operation.
-  dump_array_rows = rows, separator ->
+  dump_array_rows: rows, separator ->
     out = ""
     i = 0
     while i < rows.len()
@@ -146,11 +146,11 @@ class Csv
     return out
 
   # Csv.dump provides the csv/Csv standard library operation.
-  dump = rows = nil, options = nil ->
+  dump: rows = nil, options = nil ->
     return self.stringify(rows, options)
 
   # Csv.stringify provides the csv/Csv standard library operation.
-  stringify = rows = nil, options = nil ->
+  stringify: rows = nil, options = nil ->
     if self.value != nil and rows != nil and rows.class == Dict
       options = rows
       rows = self.value

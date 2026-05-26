@@ -724,8 +724,8 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 	decl := &ast.ClassDecl{Name: name.Lexeme, NameTok: name, Parent: parent, Implements: implements, Abstract: abstract, Final: final}
 	p.skipNewlines()
 	for !p.at(token.DEDENT) && !p.at(token.EOF) {
-		// v0.46 canonical modifier order:
-		//   [private] [static] [abstract|override] [@@] <name> = <body>
+		// v0.68 canonical modifier order:
+		//   [private] [static] [abstract|override] [@@] <name>: <body>
 		isPrivateMember := false
 		if p.at(token.IDENT) && p.peek().Lexeme == "private" && p.peekN(1).Type != token.QUESTION {
 			isPrivateMember = true
@@ -762,8 +762,11 @@ func (p *Parser) classDecl() (ast.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
-		if !p.match(token.ASSIGN) {
-			return nil, p.err("expected '=' after class member name")
+		if p.match(token.ASSIGN) {
+			return nil, p.err("class members use ':' declarations; replace '=' with ':'")
+		}
+		if !p.match(token.COLON) {
+			return nil, p.err("expected ':' after class member name")
 		}
 		memberPrivate := isPrivateMember
 		if isAbstractMethod {
@@ -858,8 +861,11 @@ func (p *Parser) interfaceDecl() (ast.Stmt, error) {
 		if err != nil {
 			return nil, err
 		}
-		if !p.match(token.ASSIGN) {
-			return nil, p.err("expected '=' after interface method name")
+		if p.match(token.ASSIGN) {
+			return nil, p.err("interface members use ':' declarations; replace '=' with ':'")
+		}
+		if !p.match(token.COLON) {
+			return nil, p.err("expected ':' after interface member name")
 		}
 		if p.startsInterfaceMethodValue() {
 			params, paramToks, fn, err := p.interfaceMethodValue()
@@ -886,45 +892,39 @@ func (p *Parser) startsInterfaceMethodValue() bool {
 	if p.at(token.ARROW) {
 		return true
 	}
-	if !p.at(token.IDENT) {
-		return false
+	if p.startsParenFunctionParams() || p.startsFunctionParams(true) {
+		return true
 	}
-	i := 1
-	for {
-		if p.peekN(i).Type == token.ARROW {
-			return true
-		}
-		if p.peekN(i).Type == token.COMMA && p.peekN(i+1).Type == token.IDENT {
-			i += 2
-			continue
-		}
-		return false
-	}
+	return p.at(token.LPAREN) && p.peekN(1).Type == token.RPAREN && p.peekN(2).Type == token.ARROW
 }
 
 func (p *Parser) interfaceMethodValue() ([]string, []token.Token, *ast.FuncLit, error) {
 	var params []string
 	var paramToks []token.Token
-	if !p.at(token.ARROW) {
-		for {
-			param, err := p.expectName("expected interface method parameter")
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			params = append(params, param.Lexeme)
-			paramToks = append(paramToks, param)
-			if !p.match(token.COMMA) {
-				break
-			}
+	var defaults []ast.Expr
+	if p.match(token.ARROW) {
+		// no parameters
+	} else if p.at(token.LPAREN) && p.peekN(1).Type == token.RPAREN && p.peekN(2).Type == token.ARROW {
+		p.next()
+		p.next()
+		p.next()
+	} else if p.startsParenFunctionParams() {
+		var err error
+		params, paramToks, defaults, err = p.parenFunctionParams()
+		if err != nil {
+			return nil, nil, nil, err
 		}
-	}
-	if !p.match(token.ARROW) {
-		return nil, nil, nil, p.err("expected '->' after interface method parameters")
+	} else {
+		var err error
+		params, paramToks, defaults, err = p.functionParams()
+		if err != nil {
+			return nil, nil, nil, err
+		}
 	}
 	if !p.startsExpr() && !(p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT) {
 		return params, paramToks, nil, nil
 	}
-	fn, err := p.finishFunc(params, paramToks, nil)
+	fn, err := p.finishFunc(params, paramToks, defaults)
 	return params, paramToks, fn, err
 }
 
@@ -950,7 +950,7 @@ func (p *Parser) startsClassDecl() bool {
 func (p *Parser) abstractMethodParams() ([]string, []token.Token, error) {
 	var params []string
 	var paramToks []token.Token
-	if p.match(token.ARROW) {
+	checkNoBody := func() ([]string, []token.Token, error) {
 		if p.startsExpr() {
 			return nil, nil, p.err("abstract methods cannot have bodies")
 		}
@@ -958,6 +958,24 @@ func (p *Parser) abstractMethodParams() ([]string, []token.Token, error) {
 			return nil, nil, p.err("abstract methods cannot have bodies")
 		}
 		return params, paramToks, nil
+	}
+	if p.match(token.ARROW) {
+		return checkNoBody()
+	}
+	if p.at(token.LPAREN) && p.peekN(1).Type == token.RPAREN && p.peekN(2).Type == token.ARROW {
+		p.next()
+		p.next()
+		p.next()
+		return checkNoBody()
+	}
+	if p.startsParenFunctionParams() {
+		parsedParams, parsedToks, _, err := p.parenFunctionParams()
+		if err != nil {
+			return nil, nil, err
+		}
+		params = parsedParams
+		paramToks = parsedToks
+		return checkNoBody()
 	}
 	for {
 		param, err := p.expectName("expected abstract method parameter")
@@ -973,13 +991,7 @@ func (p *Parser) abstractMethodParams() ([]string, []token.Token, error) {
 	if !p.match(token.ARROW) {
 		return nil, nil, p.err("expected '->' after abstract method parameters")
 	}
-	if p.startsExpr() {
-		return nil, nil, p.err("abstract methods cannot have bodies")
-	}
-	if p.at(token.NEWLINE) && p.peekN(1).Type == token.INDENT {
-		return nil, nil, p.err("abstract methods cannot have bodies")
-	}
-	return params, paramToks, nil
+	return checkNoBody()
 }
 
 func (p *Parser) classRef() (*ast.ClassRef, error) {

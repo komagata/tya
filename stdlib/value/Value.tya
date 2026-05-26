@@ -1,11 +1,11 @@
 # Value provides the value/Value standard library API.
 class Value
   # Value.initialize stores a value for predicates.
-  initialize = item ->
+  initialize: item ->
     self.item = item
 
   # Value.nil? provides the value/Value standard library operation.
-  nil? = item = nil ->
+  nil?: item = nil ->
     if self.item != nil
       item = self.item
     item == nil

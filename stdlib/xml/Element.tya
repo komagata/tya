@@ -1,25 +1,25 @@
 # Element provides the xml/Element standard library API.
 class Element
   # Element.initialize provides the xml/Element standard library operation.
-  initialize = name, attrs, children ->
+  initialize: name, attrs, children ->
     self.name = name
     self.attrs = attrs
     self.children = children
 
   # Element.new provides the xml/Element standard library operation.
-  new = name, attrs, children ->
+  new: name, attrs, children ->
     return Element(name, attrs, children)
 
   # Element.attr provides the xml/Element standard library operation.
-  attr = name, default ->
+  attr: name, default ->
     return self.attrs.get(name, default)
 
   # Element.has_attr? provides the xml/Element standard library operation.
-  has_attr? = name ->
+  has_attr?: name ->
     return self.attrs.has?(name)
 
   # Element.text provides the xml/Element standard library operation.
-  text = ->
+  text: ->
     out = ""
     i = 0
     while i < self.children.len()
@@ -32,7 +32,7 @@ class Element
     return out
 
   # Element.child_elements provides the xml/Element standard library operation.
-  child_elements = ->
+  child_elements: ->
     out = []
     i = 0
     while i < self.children.len()
@@ -42,14 +42,14 @@ class Element
     return out
 
   # Element.find provides the xml/Element standard library operation.
-  find = name ->
+  find: name ->
     found = self.find_all(name)
     if found.len() == 0
       return nil
     return found[0]
 
   # Element.find_all provides the xml/Element standard library operation.
-  find_all = name ->
+  find_all: name ->
     out = []
     children = self.child_elements()
     i = 0
@@ -60,18 +60,18 @@ class Element
     return out
 
   # Element.find_recursive provides the xml/Element standard library operation.
-  find_recursive = name ->
+  find_recursive: name ->
     found = self.find_all_recursive(name)
     if found.len() == 0
       return nil
     return found[0]
 
   # Element.find_all_recursive provides the xml/Element standard library operation.
-  find_all_recursive = name ->
+  find_all_recursive: name ->
     out = []
     Xml(nil).collect_recursive(self, name, out)
     return out
 
   # Element.to_s provides the xml/Element standard library operation.
-  to_s = ->
+  to_s: ->
     return Xml(nil).stringify(self)

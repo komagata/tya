@@ -1,40 +1,40 @@
 # Readable provides the io/Reader standard library API.
 interface Readable
   # Readable.read provides the io/Reader standard library operation.
-  read = size ->
+  read: size ->
 
 # Writable provides the io/Reader standard library API.
 interface Writable
   # Writable.write provides the io/Reader standard library operation.
-  write = data ->
+  write: data ->
 
 # Closable provides the io/Reader standard library API.
 interface Closable
   # Closable.close provides the io/Reader standard library operation.
-  close = ->
+  close: ->
 
 # Flushable provides the io/Reader standard library API.
 interface Flushable
   # Flushable.flush provides the io/Reader standard library operation.
-  flush = ->
+  flush: ->
 
 # Reader provides the io/Reader standard library API.
 class Reader implements Readable, Closable
   # Reader.initialize provides the io/Reader standard library operation.
-  initialize = handle, binary ->
+  initialize: handle, binary ->
     self.handle = handle
     self.binary = binary
 
   # Reader.read provides the io/Reader standard library operation.
-  read = size ->
+  read: size ->
     io_stream_read(self.handle, size)
 
   # Reader.read_line provides the io/Reader standard library operation.
-  read_line = ->
+  read_line: ->
     io_stream_read_line(self.handle)
 
   # Reader.each_line provides the io/Reader standard library operation.
-  each_line = fn ->
+  each_line: fn ->
     line = self.read_line()
     while line != nil
       fn(line)
@@ -42,9 +42,9 @@ class Reader implements Readable, Closable
     nil
 
   # Reader.eof? provides the io/Reader standard library operation.
-  eof? = ->
+  eof?: ->
     io_stream_eof(self.handle)
 
   # Reader.close provides the io/Reader standard library operation.
-  close = ->
+  close: ->
     io_stream_close(self.handle)

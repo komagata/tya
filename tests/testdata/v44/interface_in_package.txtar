@@ -16,12 +16,12 @@ print(req.summary())
 
 -- api/web/Request.tya --
 interface Summarizable
-  summary = ->
+  summary: ->
 
 class Request implements Summarizable
-  initialize = method, url ->
+  initialize: method, url ->
     self.method = method
     self.url = url
 
-  summary = ->
+  summary: ->
     "{self.method} {self.url}"

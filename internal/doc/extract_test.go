@@ -116,11 +116,11 @@ func TestExtractReportDistinguishesStaticAndInstanceMethods(t *testing.T) {
 		"# User docs",
 		"class User",
 		"  # Static label docs",
-		"  static label = ->",
+		"  static label : ->",
 		"    \"static\"",
 		"",
 		"  # Instance label docs",
-		"  label = ->",
+		"  label : ->",
 		"    \"instance\"",
 		"",
 	}, "\n")

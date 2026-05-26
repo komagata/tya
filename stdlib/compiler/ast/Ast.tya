@@ -1,7 +1,7 @@
 # Ast provides the compiler/ast/Ast standard library API.
 class Ast
   # Ast.walk provides the compiler/ast/Ast standard library operation.
-  walk = node, visitor ->
+  walk: node, visitor ->
     visitor(node)
     ast_walk_children = Ast().children(node)
     i = 0
@@ -11,7 +11,7 @@ class Ast
     return nil
 
   # Ast.children provides the compiler/ast/Ast standard library operation.
-  children = node ->
+  children: node ->
     out = []
     Ast().push_children(out, node, "body")
     Ast().push_children(out, node, "then")
@@ -30,15 +30,15 @@ class Ast
     return out
 
   # Ast.kind provides the compiler/ast/Ast standard library operation.
-  kind = node ->
+  kind: node ->
     return compiler_ast_kind(node)
 
   # Ast.span provides the compiler/ast/Ast standard library operation.
-  span = node ->
+  span: node ->
     return compiler_ast_span(node)
 
   # Ast.push_children provides the compiler/ast/Ast standard library operation.
-  push_children = out, node, key ->
+  push_children: out, node, key ->
     if node.has(key)
       ast_children_values = node[key]
       i = 0
@@ -48,7 +48,7 @@ class Ast
     return nil
 
   # Ast.push_child provides the compiler/ast/Ast standard library operation.
-  push_child = out, node, key ->
+  push_child: out, node, key ->
     if node.has(key)
       out.push(node[key])
     return nil

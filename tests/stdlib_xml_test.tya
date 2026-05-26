@@ -3,7 +3,7 @@ import xml as xml
 
 class StdlibXmlTest extends TestCase
 
-  test_parse_document_and_nodes = ->
+  test_parse_document_and_nodes: ->
     doc = xml.Xml("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root a=\"1 &amp; 2\"><child>hi&lt;</child><!-- ok --><![CDATA[raw <x>]]></root>").parse()
     self.assert_equal(xml.Document, doc.class, "doc class")
     self.assert_equal("1.0", doc.version(), "version")
@@ -18,7 +18,7 @@ class StdlibXmlTest extends TestCase
     self.assert_equal(xml.Comment, root.children[1].class, "comment")
     self.assert_equal(xml.CData, root.children[2].class, "cdata")
 
-  test_find_helpers_and_dump = ->
+  test_find_helpers_and_dump: ->
     doc = xml.Xml("<root><item id='1'/><group><item id='2'>two</item></group></root>").parse()
     root = doc.root()
     self.assert_equal(1, root.find_all("item").len(), "immediate")
@@ -31,7 +31,7 @@ class StdlibXmlTest extends TestCase
     self.assert_equal("&lt;&amp;&gt;", xml.Xml(nil).escape_text("<&>"), "escape text")
     self.assert_equal("&quot;&apos;", xml.Xml(nil).escape_attr("\"'"), "escape attr")
 
-  test_junit_testsuite = ->
+  test_junit_testsuite: ->
     text = "<testsuite name=\"pkg\" tests=\"2\" failures=\"1\" errors=\"0\" skipped=\"0\"><testcase classname=\"pkg.Test\" name=\"passes\" time=\"0.01\"/><testcase classname=\"pkg.Test\" name=\"fails\" time=\"0.02\"><failure message=\"expected true\"><![CDATA[stack trace]]></failure><system-out>stdout text</system-out><system-err>stderr text</system-err></testcase></testsuite>"
     root = xml.Xml(text).parse().root()
     cases = root.find_all_recursive("testcase")
@@ -42,14 +42,14 @@ class StdlibXmlTest extends TestCase
     self.assert_equal("stdout text", cases[1].find("system-out").text(), "stdout")
     self.assert_equal("stderr text", cases[1].find("system-err").text(), "stderr")
 
-  test_junit_testsuites = ->
+  test_junit_testsuites: ->
     text = "<testsuites><testsuite name=\"pkg\"><testcase classname=\"pkg.A\" name=\"one\"/></testsuite><testsuite name=\"pkg2\"><testcase classname=\"pkg.B\" name=\"two\"><skipped/></testcase></testsuite></testsuites>"
     cases = xml.Xml(text).parse().root().find_all_recursive("testcase")
     self.assert_equal(2, cases.len(), "cases")
     self.assert_equal("two", cases[1].attr("name"), "nested")
     self.assert(cases[1].find("skipped") != nil, "skipped")
 
-  test_errors = ->
+  test_errors: ->
     self.assert_raises(-> xml.Xml("<!DOCTYPE root []><root/>").parse(), "DTD")
     self.assert_raises(-> xml.Xml("<root><a></root>").parse(), "mismatched")
     self.assert_raises(-> xml.Xml("<root a='1' a='2'/>").parse(), "duplicate")

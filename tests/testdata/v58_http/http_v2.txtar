@@ -17,7 +17,7 @@ exec sh -c '$WORK/concurrent_server & pid=$!; (i=0; while [ $i -lt 20 ]; do curl
 import net/socket as socket
 
 class HttpText
-  static cr = ->
+  static cr: ->
     chr(13)
 
 crlf = HttpText.cr() + "\n"

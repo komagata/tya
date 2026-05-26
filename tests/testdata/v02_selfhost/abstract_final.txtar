@@ -21,14 +21,14 @@ stdout 'shape\ncircle\n'
 
 -- abstract_final.tya --
 abstract class Shape
-  init = name ->
+  init: name ->
     @name = name
 
-  describe = ->
+  describe: ->
     @name
 
 final class Circle extends Shape
-  init = ->
+  init: ->
     super("circle")
 
 s = Shape("shape")

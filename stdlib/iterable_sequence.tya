@@ -1,5 +1,5 @@
 # IterableSequence provides the iterable_sequence standard library API.
 class IterableSequence implements Sequence
   # IterableSequence.initialize provides the iterable_sequence standard library operation.
-  initialize = source ->
+  initialize: source ->
     self.source = source

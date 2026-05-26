@@ -607,7 +607,7 @@ func (u *unparser) classField(f ast.ClassField) error {
 	if f.Private {
 		fieldPrefix = "private "
 	}
-	u.line(fieldPrefix + f.Name + " = " + val)
+	u.line(fieldPrefix + f.Name + ": " + val)
 	return nil
 }
 
@@ -623,7 +623,7 @@ func (u *unparser) classVar(v ast.ClassVar) error {
 	if v.Private {
 		varPrefix = "private static "
 	}
-	u.line(varPrefix + v.Name + " = " + val)
+	u.line(varPrefix + v.Name + ": " + val)
 	return nil
 }
 
@@ -637,7 +637,7 @@ func (u *unparser) classConst(c ast.ClassConst) error {
 	if c.Private {
 		prefix = "private "
 	}
-	u.line(prefix + c.Name + " = " + val)
+	u.line(prefix + c.Name + ": " + val)
 	return nil
 }
 
@@ -667,7 +667,7 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 		if err != nil {
 			return err
 		}
-		u.line(prefix + m.Name + " = " + defArrow(head))
+		u.line(prefix + m.Name + ": " + defArrow(head))
 		return nil
 	}
 	fn := m.Func
@@ -680,10 +680,10 @@ func (u *unparser) classMethod(m ast.ClassMethod) error {
 		if err != nil {
 			return err
 		}
-		u.line(prefix + m.Name + " = " + defArrow(head) + " " + body)
+		u.line(prefix + m.Name + ": " + defArrow(head) + " " + body)
 		return nil
 	}
-	u.line(prefix + m.Name + " = " + defArrow(head))
+	u.line(prefix + m.Name + ": " + defArrow(head))
 	return u.block(fn.Body)
 }
 
@@ -704,10 +704,10 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 		if err != nil {
 			return err
 		}
-		u.line(f.Name + " = " + value)
+		u.line(f.Name + ": " + value)
 	}
 	for _, m := range n.Methods {
-		head := m.Name + " = " + defArrow(strings.Join(m.Params, ", "))
+		head := m.Name + ": " + defArrow(strings.Join(m.Params, ", "))
 		if m.Func == nil {
 			u.line(head)
 			continue

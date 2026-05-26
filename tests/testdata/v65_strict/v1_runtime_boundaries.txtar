@@ -8,7 +8,10 @@ cd $WORK
 exec $WORK/tya check runtime_boundaries.tya
 exec $WORK/tya run runtime_boundaries.tya
 stdout 'true'
+stdout '2'
 stdout '2.5'
+stdout '-2'
+stdout '-1'
 stdout 'あ'
 stdout '255'
 stdout 'false'
@@ -21,7 +24,10 @@ stdout 'closed'
 exec $WORK/tya build runtime_boundaries.tya -o runtime_boundaries
 exec ./runtime_boundaries
 stdout 'true'
+stdout '2'
 stdout '2.5'
+stdout '-2'
+stdout '-1'
 stdout 'あ'
 stdout '255'
 stdout 'false'
@@ -40,6 +46,9 @@ import bytes as bytes
 
 print(1 == 1.0)
 print(5 / 2)
+print(5.0 / 2)
+print(-5 / 2)
+print(-5 % 2)
 print("あい"[0])
 print(bytes.Bytes().to_array(bytes.Bytes([255, 65]).from_array())[0])
 

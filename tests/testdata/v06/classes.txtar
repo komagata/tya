@@ -27,36 +27,36 @@ stderr 'missing class variable or method: missing'
 ! stdout .
 
 exec go run ./cmd/tya version
-stdout '0.67.9\n'
+stdout '0.68.0\n'
 ! stderr .
 
 -- classes.tya --
 class User
-  name = ""
-  active = true
-  static count = 0
-  static prefix = "on"
+  name: ""
+  active: true
+  static count: 0
+  static prefix: "on"
 
-  initialize = name ->
+  initialize: name ->
     self.name = name
     Self.count = Self.count + 1
 
-  greeting = ->
+  greeting: ->
     "Hello, {self.name}"
 
-  count = ->
+  count: ->
     Self.count
 
-  label = ->
+  label: ->
     "{Self.prefix}:{self.name}"
 
-  static build = name ->
+  static build: name ->
     User(name)
 
-  static count_users = ->
+  static count_users: ->
     Self.count
 
-  static reset = ->
+  static reset: ->
     Self.count = 0
 
 print(User.count)
@@ -73,16 +73,16 @@ print(User.count)
 
 -- user.tya --
 class User
-  static count = 0
+  static count: 0
 
-  initialize = name ->
+  initialize: name ->
     self.name = name
     Self.count = Self.count + 1
 
-  name = ->
+  name: ->
     self.name
 
-  static count_users = ->
+  static count_users: ->
     Self.count
 
 -- main.tya --
@@ -97,14 +97,14 @@ print(user.User.count)
 
 -- shadowing.tya --
 class Response
-  initialize = ->
+  initialize: ->
     self.status = 200
     self.bump()
 
-  bump = ->
+  bump: ->
     self.status = self.status + 1
 
-  status = ->
+  status: ->
     self.status
 
 response = Response()
@@ -117,18 +117,18 @@ Self.count = 0
 
 -- duplicate_class_member.tya --
 class User
-  static count = 0
-  static count = ->
+  static count: 0
+  static count: ->
     1
 
 -- duplicate_instance_member.tya --
 class User
-  name = ""
-  name = ->
+  name: ""
+  name: ->
     self.name
 
 -- missing_class_member.tya --
 class User
-  static count = 0
+  static count: 0
 
 print(User.missing)

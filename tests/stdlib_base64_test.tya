@@ -3,25 +3,26 @@ import base64 as base64
 
 class StdlibBase64Test extends TestCase
 
-  test_encode_basic = ->
-    self.assert_equal("aGVsbG8=", base64.Base64("hello").encode(), "encode hello")
-  test_encode_bytes = ->
-    self.assert_equal("aGVsbG8=", base64.Base64(b"hello").encode(), "encode bytes")
-  test_encode_two = ->
-    self.assert_equal("aGk=", base64.Base64("hi").encode(), "encode 2 bytes")
-  test_encode_one = ->
-    self.assert_equal("aA==", base64.Base64("h").encode(), "encode 1 byte")
-  test_encode_empty = ->
-    self.assert_equal("", base64.Base64("").encode(), "empty")
-  test_decode_returns_bytes = ->
-    decoded = base64.Base64("aGVsbG8=").decode()
+  test_encode_basic: ->
+    self.assert_equal("aGVsbG8=", base64.Base64.encode("hello"), "encode hello")
+  test_encode_bytes: ->
+    self.assert_equal("aGVsbG8=", base64.Base64.encode(b"hello"), "encode bytes")
+  test_encode_two: ->
+    self.assert_equal("aGk=", base64.Base64.encode("hi"), "encode 2 bytes")
+  test_encode_one: ->
+    self.assert_equal("aA==", base64.Base64.encode("h"), "encode 1 byte")
+  test_encode_empty: ->
+    self.assert_equal("", base64.Base64.encode(""), "empty")
+  test_encode_utf8_string: ->
+    self.assert_equal("44GC", base64.Base64.encode("あ"), "encode utf8 bytes")
+  test_decode_returns_bytes: ->
+    decoded = base64.Base64.decode("aGVsbG8=")
     self.assert_equal([104, 101, 108, 108, 111], bytes_array(decoded), "decode returns bytes")
     self.assert_equal("hello", bytes_text(decoded), "decoded value")
-  test_decode_no_padding = ->
-    self.assert_equal("hi", bytes_text(base64.Base64("aGk").decode()), "no padding")
-  test_decode_with_whitespace = ->
-    self.assert_equal("hello world", bytes_text(base64.Base64("aGVsbG8gd29ybGQ=").decode()), "longer")
-  test_round_trip = ->
+  test_decode_no_padding: ->
+    self.assert_equal("hi", bytes_text(base64.Base64.decode("aGk")), "no padding")
+  test_decode_with_whitespace: ->
+    self.assert_equal("hello world", bytes_text(base64.Base64.decode("aGVsbG8gd29ybGQ=")), "longer")
+  test_round_trip: ->
     text = "The quick brown fox"
-    codec = base64.Base64()
-    self.assert_equal(text, bytes_text(codec.decode(codec.encode(text))), "round trip")
+    self.assert_equal(text, bytes_text(base64.Base64.decode(base64.Base64.encode(text))), "round trip")

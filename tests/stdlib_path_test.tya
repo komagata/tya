@@ -3,35 +3,35 @@ import path as path
 
 class StdlibPathTest extends TestCase
 
-  test_join_segments = ->
+  test_join_segments: ->
     self.assert_equal("tmp/tya/memo.txt", path.Path(["tmp", "tya", "memo.txt"]).join(), "join")
-  test_clean_dot_dotdot = ->
+  test_clean_dot_dotdot: ->
     self.assert_equal("tmp/memo.txt", path.Path("tmp/./tya/../memo.txt").clean(), "clean")
-  test_basename_abs = ->
+  test_basename_abs: ->
     self.assert_equal("memo.txt", path.Path("/tmp/tya/memo.txt").basename(), "basename abs")
-  test_dirname_abs = ->
+  test_dirname_abs: ->
     self.assert_equal("/tmp/tya", path.Path("/tmp/tya/memo.txt").dirname(), "dirname abs")
-  test_extname_normal = ->
+  test_extname_normal: ->
     self.assert_equal(".txt", path.Path("/tmp/tya/memo.txt").extname(), "extname normal")
-  test_basename_no_dir = ->
+  test_basename_no_dir: ->
     self.assert_equal("memo.txt", path.Path("memo.txt").basename(), "basename bare")
-  test_dirname_bare = ->
+  test_dirname_bare: ->
     self.assert_equal(".", path.Path("memo.txt").dirname(), "dirname bare")
-  test_dirname_root = ->
+  test_dirname_root: ->
     self.assert_equal("/", path.Path("/").dirname(), "dirname root")
-  test_extname_none = ->
+  test_extname_none: ->
     self.assert_equal("", path.Path("foo").extname(), "no ext")
-  test_extname_dotfile = ->
+  test_extname_dotfile: ->
     self.assert_equal("", path.Path(".bashrc").extname(), "dotfile")
-  test_extname_double = ->
+  test_extname_double: ->
     self.assert_equal(".gz", path.Path("foo.tar.gz").extname(), "double ext")
-  test_clean_empty = ->
+  test_clean_empty: ->
     self.assert_equal(".", path.Path("").clean(), "clean empty")
-  test_clean_root = ->
+  test_clean_root: ->
     self.assert_equal("/", path.Path("/").clean(), "clean root")
-  test_clean_messy = ->
+  test_clean_messy: ->
     self.assert_equal("a/b/d", path.Path("a//b/./c/../d").clean(), "clean messy")
-  test_clean_relative_dotdot = ->
+  test_clean_relative_dotdot: ->
     self.assert_equal("../a/b", path.Path("../a/b").clean(), "rel dotdot")
-  test_join_absolute = ->
+  test_join_absolute: ->
     self.assert_equal("/a/b", path.Path(["/", "a", "b"]).join(), "join abs")

@@ -1,11 +1,11 @@
 # Regex provides the regex/Regex standard library API.
 class Regex
   # Regex.initialize stores a pattern.
-  initialize = pattern ->
+  initialize: pattern ->
     self.pattern = pattern
 
   # Regex.compile compiles a reusable regex value.
-  compile = pattern = nil, options = {} ->
+  compile: pattern = nil, options = {} ->
     if self.pattern != nil
       if pattern != nil
         options = pattern
@@ -15,14 +15,14 @@ class Regex
     return regex_compile(pattern, options)
 
   # Regex.match? returns whether pattern appears in text.
-  match? = pattern, text = nil, options = {} ->
+  match?: pattern, text = nil, options = {} ->
     if self.pattern != nil
       text = pattern
       pattern = self.pattern
     return Regex(pattern).compile(options).match?(text)
 
   # Regex.search returns the first match dictionary or nil.
-  search = pattern, text = nil, options = {} ->
+  search: pattern, text = nil, options = {} ->
     if self.pattern != nil
       text = pattern
       pattern = self.pattern

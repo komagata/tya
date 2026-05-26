@@ -148,7 +148,7 @@ make()
 
 -- captured_member_mutation.tya --
 class Box
-  initialize = value ->
+  initialize: value ->
     self.value = value
 
 make = ->
@@ -200,16 +200,16 @@ catch err
 
 -- user_iterable.tya --
 interface Iterable
-  iter = ->
+  iter: ->
 
 class PairIterator
-  initialize = ->
+  initialize: ->
     self.index = 0
 
-  has_next? = ->
+  has_next?: ->
     self.index < 2
 
-  next = ->
+  next: ->
     if not self.has_next?()
       raise error("done")
     self.index = self.index + 1
@@ -218,7 +218,7 @@ class PairIterator
     7
 
 class Pair implements Iterable
-  iter = ->
+  iter: ->
     PairIterator()
 
 for item in Pair()
@@ -285,16 +285,16 @@ catch err
   print("caught")
 
 interface Iterable
-  iter = ->
+  iter: ->
 
 class PairIterator
-  initialize = ->
+  initialize: ->
     self.index = 0
 
-  has_next? = ->
+  has_next?: ->
     self.index < 2
 
-  next = ->
+  next: ->
     if not self.has_next?()
       raise error("done")
     self.index = self.index + 1
@@ -303,7 +303,7 @@ class PairIterator
     7
 
 class Pair implements Iterable
-  iter = ->
+  iter: ->
     PairIterator()
 
 for item in Pair()
