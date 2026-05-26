@@ -26,7 +26,7 @@ import (
 	"tya/internal/runner"
 )
 
-const version = "0.68.0"
+const version = "0.69.0"
 
 var cliFormat = diag.FormatHuman
 var cliColor = diag.ColorAuto
