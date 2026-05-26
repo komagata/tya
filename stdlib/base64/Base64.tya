@@ -2,56 +2,20 @@
 class Base64
   private ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-  # Base64.initialize stores an optional value for later encoding or decoding.
-  initialize = value = nil ->
-    self.value = value
-
   # Base64.byte_at provides the base64/Base64 standard library operation.
-  byte_at = value, i ->
+  private static byte_at = value, i ->
     if value.class == String
       return ord(value[i])
     return bytes_array(value)[i]
 
   # Base64.byte_count provides the base64/Base64 standard library operation.
-  byte_count = value ->
+  private static byte_count = value ->
     if value.class == String
       return value.byte_len()
     return bytes_array(value).len()
 
-  # Base64.encode provides the base64/Base64 standard library operation.
-  encode = value = nil ->
-    if value == nil
-      value = self.value
-    n = self.byte_count(value)
-    out = ""
-    i = 0
-    while i + 3 <= n
-      b1 = self.byte_at(value, i)
-      b2 = self.byte_at(value, i + 1)
-      b3 = self.byte_at(value, i + 2)
-      g1 = (b1 / 4).to_i()
-      g2 = b1 % 4 * 16 + (b2 / 16).to_i()
-      g3 = b2 % 16 * 4 + (b3 / 64).to_i()
-      g4 = b3 % 64
-      out = out + Self.ALPHABET[g1] + Self.ALPHABET[g2] + Self.ALPHABET[g3] + Self.ALPHABET[g4]
-      i = i + 3
-    rem = n - i
-    if rem == 1
-      b1 = self.byte_at(value, i)
-      g1 = (b1 / 4).to_i()
-      g2 = b1 % 4 * 16
-      out = out + Self.ALPHABET[g1] + Self.ALPHABET[g2] + "=="
-    elseif rem == 2
-      b1 = self.byte_at(value, i)
-      b2 = self.byte_at(value, i + 1)
-      g1 = (b1 / 4).to_i()
-      g2 = b1 % 4 * 16 + (b2 / 16).to_i()
-      g3 = b2 % 16 * 4
-      out = out + Self.ALPHABET[g1] + Self.ALPHABET[g2] + Self.ALPHABET[g3] + "="
-    return out
-
   # Base64.index_of provides the base64/Base64 standard library operation.
-  index_of = c ->
+  private static index_of = c ->
     code = ord(c)
     if code >= 65 and code <= 90
       return code - 65
@@ -64,6 +28,15 @@ class Base64
     if code == 47
       return 63
     raise error("base64.decode: invalid character")
+
+  # Base64.int_div provides the base64/Base64 standard library operation.
+  private static int_div = left, right ->
+    value = left / right
+    return value.to_i()
+
+  # Base64.initialize stores an optional value for later encoding or decoding.
+  initialize = value = nil ->
+    self.value = value
 
   # Base64.decode provides the base64/Base64 standard library operation.
   decode = text = nil ->
@@ -84,23 +57,63 @@ class Base64
     arr = []
     j = 0
     while j + 4 <= m
-      v1 = self.index_of(cleaned[j])
-      v2 = self.index_of(cleaned[j + 1])
-      v3 = self.index_of(cleaned[j + 2])
-      v4 = self.index_of(cleaned[j + 3])
-      arr.push(v1 * 4 + (v2 / 16).to_i())
-      arr.push(v2 % 16 * 16 + (v3 / 4).to_i())
+      v1 = Self.index_of(cleaned[j])
+      v2 = Self.index_of(cleaned[j + 1])
+      v3 = Self.index_of(cleaned[j + 2])
+      v4 = Self.index_of(cleaned[j + 3])
+      arr.push(v1 * 4 + Self.int_div(v2, 16))
+      arr.push(v2 % 16 * 16 + Self.int_div(v3, 4))
       arr.push(v3 % 4 * 64 + v4)
       j = j + 4
     rem = m - j
     if rem == 2
-      v1 = self.index_of(cleaned[j])
-      v2 = self.index_of(cleaned[j + 1])
-      arr.push(v1 * 4 + (v2 / 16).to_i())
+      v1 = Self.index_of(cleaned[j])
+      v2 = Self.index_of(cleaned[j + 1])
+      arr.push(v1 * 4 + Self.int_div(v2, 16))
     elseif rem == 3
-      v1 = self.index_of(cleaned[j])
-      v2 = self.index_of(cleaned[j + 1])
-      v3 = self.index_of(cleaned[j + 2])
-      arr.push(v1 * 4 + (v2 / 16).to_i())
-      arr.push(v2 % 16 * 16 + (v3 / 4).to_i())
+      v1 = Self.index_of(cleaned[j])
+      v2 = Self.index_of(cleaned[j + 1])
+      v3 = Self.index_of(cleaned[j + 2])
+      arr.push(v1 * 4 + Self.int_div(v2, 16))
+      arr.push(v2 % 16 * 16 + Self.int_div(v3, 4))
     return bytes(arr)
+
+  # Base64.encode provides the base64/Base64 standard library operation.
+  encode = value = nil ->
+    if value == nil
+      value = self.value
+    n = Self.byte_count(value)
+    out = ""
+    i = 0
+    while i + 3 <= n
+      b1 = Self.byte_at(value, i)
+      b2 = Self.byte_at(value, i + 1)
+      b3 = Self.byte_at(value, i + 2)
+      g1 = Self.int_div(b1, 4)
+      g2 = b1 % 4 * 16 + Self.int_div(b2, 16)
+      g3 = b2 % 16 * 4 + Self.int_div(b3, 64)
+      g4 = b3 % 64
+      out = out
+        + Self.ALPHABET[g1]
+        + Self.ALPHABET[g2]
+        + Self.ALPHABET[g3]
+        + Self.ALPHABET[g4]
+      i = i + 3
+    rem = n - i
+    if rem == 1
+      b1 = Self.byte_at(value, i)
+      g1 = Self.int_div(b1, 4)
+      g2 = b1 % 4 * 16
+      out = out + Self.ALPHABET[g1] + Self.ALPHABET[g2] + "=="
+    elseif rem == 2
+      b1 = Self.byte_at(value, i)
+      b2 = Self.byte_at(value, i + 1)
+      g1 = Self.int_div(b1, 4)
+      g2 = b1 % 4 * 16 + Self.int_div(b2, 16)
+      g3 = b2 % 16 * 4
+      out = out
+        + Self.ALPHABET[g1]
+        + Self.ALPHABET[g2]
+        + Self.ALPHABET[g3]
+        + "="
+    return out

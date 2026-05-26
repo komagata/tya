@@ -1201,6 +1201,9 @@ func (u *unparser) funcHead(fn *ast.FuncLit) (string, error) {
 	for i, param := range fn.Params {
 		parts[i] = param
 		if i < len(fn.Defaults) && fn.Defaults[i] != nil {
+			if _, ok := fn.Defaults[i].(*ast.NilLit); ok {
+				continue
+			}
 			def, err := u.expr(fn.Defaults[i])
 			if err != nil {
 				return "", err

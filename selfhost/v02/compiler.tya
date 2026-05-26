@@ -3160,7 +3160,7 @@ emit_nested = expr ->
       if is_pure_builtin_name(name)
         return emit_scalar(expr)
     if expr["args"].len() == 0
-      return "tya_call1(" + emit_nested(expr["callee"]) + ", tya_nil())"
+      return "tya_call0(" + emit_nested(expr["callee"]) + ")"
     if expr["args"].len() == 2
       return "tya_call2(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
     if expr["args"].len() == 3
@@ -3291,7 +3291,7 @@ emit_scalar = expr ->
       if name == "read_line"
         return "tya_read_line()"
     if expr["args"].len() == 0
-      return "tya_call1(" + emit_nested(expr["callee"]) + ", tya_nil())"
+      return "tya_call0(" + emit_nested(expr["callee"]) + ")"
     if expr["args"].len() == 2
       return "tya_call2(" + emit_nested(expr["callee"]) + ", " + emit_nested(expr["args"][0]) + ", " + emit_nested(expr["args"][1]) + ")"
     if expr["args"].len() == 3

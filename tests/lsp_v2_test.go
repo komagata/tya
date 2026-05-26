@@ -612,7 +612,7 @@ func TestLSPDocumentSymbols(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	uri := fileURI("/tmp/lsp_v2_docsyms.tya")
-	src := "class Foo\n  static bar = -> 42\n\ngreet = -> 1\n"
+	src := "class Foo\n  private LIMIT = 10\n  private static count = 0\n  private field = 1\n  initialize = ->\n    self.field = 1\n  static bar = -> 42\n  private helper = value -> value\n\ngreet = -> 1\n"
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": src},
 	})
@@ -621,10 +621,23 @@ func TestLSPDocumentSymbols(t *testing.T) {
 		"textDocument": map[string]any{"uri": uri},
 	})
 	var syms []struct {
-		Name     string `json:"name"`
-		Kind     int    `json:"kind"`
+		Name   string `json:"name"`
+		Detail string `json:"detail"`
+		Kind   int    `json:"kind"`
+		Range  struct {
+			End struct {
+				Line int `json:"line"`
+			} `json:"end"`
+		} `json:"range"`
 		Children []struct {
-			Name string `json:"name"`
+			Name   string `json:"name"`
+			Detail string `json:"detail"`
+			Kind   int    `json:"kind"`
+			Range  struct {
+				Start struct {
+					Line int `json:"line"`
+				} `json:"start"`
+			} `json:"range"`
 		} `json:"children"`
 	}
 	if err := json.Unmarshal(res, &syms); err != nil {
@@ -639,6 +652,46 @@ func TestLSPDocumentSymbols(t *testing.T) {
 	}
 	if !got["Foo"] || !got["Foo.bar"] || !got["greet"] {
 		t.Errorf("missing expected symbols, got %v", got)
+	}
+	wantDetails := map[string]string{
+		"greet":          "()",
+		"Foo.bar":        "() static",
+		"Foo.helper":     "(value) private",
+		"Foo.initialize": "()",
+		"Foo.field":      "private",
+		"Foo.LIMIT":      "private",
+		"Foo.count":      "private static",
+	}
+	for _, s := range syms {
+		if want, ok := wantDetails[s.Name]; ok && s.Detail != want {
+			t.Fatalf("symbol %s detail = %q, want %q", s.Name, s.Detail, want)
+		}
+		for _, c := range s.Children {
+			key := s.Name + "." + c.Name
+			if want, ok := wantDetails[key]; ok && c.Detail != want {
+				t.Fatalf("symbol %s detail = %q, want %q", key, c.Detail, want)
+			}
+		}
+	}
+	wantKinds := map[string]int{
+		"Foo.initialize": 9,
+		"Foo.field":      8,
+	}
+	for _, s := range syms {
+		for _, c := range s.Children {
+			key := s.Name + "." + c.Name
+			if want, ok := wantKinds[key]; ok && c.Kind != want {
+				t.Fatalf("symbol %s kind = %d, want %d", key, c.Kind, want)
+			}
+		}
+	}
+	for _, s := range syms {
+		if s.Name != "Foo" || len(s.Children) == 0 {
+			continue
+		}
+		if s.Range.End.Line < s.Children[0].Range.Start.Line {
+			t.Fatalf("class range does not enclose method child: %s", res)
+		}
 	}
 }
 

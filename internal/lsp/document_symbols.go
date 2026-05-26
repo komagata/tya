@@ -1,6 +1,8 @@
 package lsp
 
 import (
+	"strings"
+
 	"tya/internal/ast"
 	"tya/internal/token"
 )
@@ -32,7 +34,7 @@ func DocumentSymbolsFor(doc *Document) []DocumentSymbol {
 					out = append(out, DocumentSymbol{
 						Name:           id.Name,
 						Kind:           SymbolKindFunction,
-						Detail:         identifierSignature(id.Name, fn),
+						Detail:         functionSignature(fn),
 						Range:          tokenRange(id.Tok, len(id.Name)),
 						SelectionRange: tokenRange(id.Tok, len(id.Name)),
 					})
@@ -57,11 +59,45 @@ func assignFunctionTarget(a *ast.AssignStmt) (*ast.Ident, bool) {
 	return id, true
 }
 
-func identifierSignature(name string, fn *ast.FuncLit) string {
+func functionSignature(fn *ast.FuncLit) string {
 	if fn == nil {
-		return name
+		return ""
 	}
-	return name + "(" + joinParams(fn.Params) + ")"
+	return "(" + joinParams(fn.Params) + ")"
+}
+
+func symbolDetail(base string, parts ...string) string {
+	out := []string{}
+	if base != "" {
+		out = append(out, base)
+	}
+	for _, part := range parts {
+		if part != "" {
+			out = append(out, part)
+		}
+	}
+	return strings.Join(out, " ")
+}
+
+func privateModifier(private bool) string {
+	if private {
+		return "private"
+	}
+	return ""
+}
+
+func classMethodDetail(m ast.ClassMethod) string {
+	parts := []string{functionSignature(m.Func), privateModifier(m.Private)}
+	if m.Class {
+		parts = append(parts, "static")
+	}
+	if m.Abstract {
+		parts = append(parts, "abstract")
+	}
+	if m.Override {
+		parts = append(parts, "override")
+	}
+	return symbolDetail("", parts...)
 }
 
 func joinParams(params []string) string {
@@ -81,10 +117,14 @@ func classSymbol(c *ast.ClassDecl) DocumentSymbol {
 		if m.Func == nil {
 			continue
 		}
+		kind := SymbolKindMethod
+		if m.Name == "initialize" {
+			kind = SymbolKindConstructor
+		}
 		children = append(children, DocumentSymbol{
 			Name:           m.Name,
-			Kind:           SymbolKindMethod,
-			Detail:         identifierSignature(m.Name, m.Func),
+			Kind:           kind,
+			Detail:         classMethodDetail(m),
 			Range:          tokenRange(m.Tok, len(m.Name)),
 			SelectionRange: tokenRange(m.Tok, len(m.Name)),
 		})
@@ -92,7 +132,8 @@ func classSymbol(c *ast.ClassDecl) DocumentSymbol {
 	for _, f := range c.Fields {
 		children = append(children, DocumentSymbol{
 			Name:           f.Name,
-			Kind:           SymbolKindProperty,
+			Kind:           SymbolKindField,
+			Detail:         privateModifier(f.Private),
 			Range:          tokenRange(f.Tok, len(f.Name)),
 			SelectionRange: tokenRange(f.Tok, len(f.Name)),
 		})
@@ -101,15 +142,26 @@ func classSymbol(c *ast.ClassDecl) DocumentSymbol {
 		children = append(children, DocumentSymbol{
 			Name:           constant.Name,
 			Kind:           SymbolKindConstant,
+			Detail:         privateModifier(constant.Private),
 			Range:          tokenRange(constant.Tok, len(constant.Name)),
 			SelectionRange: tokenRange(constant.Tok, len(constant.Name)),
 		})
 	}
+	for _, variable := range c.Vars {
+		children = append(children, DocumentSymbol{
+			Name:           variable.Name,
+			Kind:           SymbolKindVariable,
+			Detail:         symbolDetail("", privateModifier(variable.Private), "static"),
+			Range:          tokenRange(variable.Tok, len(variable.Name)),
+			SelectionRange: tokenRange(variable.Tok, len(variable.Name)),
+		})
+	}
+	selection := tokenRange(c.NameTok, len(c.Name))
 	return DocumentSymbol{
 		Name:           c.Name,
 		Kind:           SymbolKindClass,
-		Range:          tokenRange(c.NameTok, len(c.Name)),
-		SelectionRange: tokenRange(c.NameTok, len(c.Name)),
+		Range:          enclosingRange(selection, children),
+		SelectionRange: selection,
 		Children:       children,
 	}
 }
@@ -121,7 +173,7 @@ func moduleSymbol(m *ast.ModuleDecl) DocumentSymbol {
 		detail := ""
 		if fn, ok := mem.Value.(*ast.FuncLit); ok {
 			kind = SymbolKindFunction
-			detail = identifierSignature(mem.Name, fn)
+			detail = functionSignature(fn)
 		}
 		children = append(children, DocumentSymbol{
 			Name:           mem.Name,
@@ -131,11 +183,12 @@ func moduleSymbol(m *ast.ModuleDecl) DocumentSymbol {
 			SelectionRange: tokenRange(mem.Tok, len(mem.Name)),
 		})
 	}
+	selection := tokenRange(m.NameTok, len(m.Name))
 	return DocumentSymbol{
 		Name:           m.Name,
 		Kind:           SymbolKindModule,
-		Range:          tokenRange(m.NameTok, len(m.Name)),
-		SelectionRange: tokenRange(m.NameTok, len(m.Name)),
+		Range:          enclosingRange(selection, children),
+		SelectionRange: selection,
 		Children:       children,
 	}
 }
@@ -146,19 +199,46 @@ func interfaceSymbol(i *ast.InterfaceDecl) DocumentSymbol {
 		children = append(children, DocumentSymbol{
 			Name:           mth.Name,
 			Kind:           SymbolKindMethod,
+			Detail:         functionSignature(mth.Func),
 			Range:          tokenRange(mth.Tok, len(mth.Name)),
 			SelectionRange: tokenRange(mth.Tok, len(mth.Name)),
 		})
 	}
+	selection := tokenRange(i.NameTok, len(i.Name))
 	return DocumentSymbol{
 		Name:           i.Name,
 		Kind:           SymbolKindInterface,
-		Range:          tokenRange(i.NameTok, len(i.Name)),
-		SelectionRange: tokenRange(i.NameTok, len(i.Name)),
+		Range:          enclosingRange(selection, children),
+		SelectionRange: selection,
 		Children:       children,
 	}
 }
 
 func tokenRange(t token.Token, length int) Range {
 	return rangeAt(t.Line, t.Col, length)
+}
+
+func enclosingRange(base Range, children []DocumentSymbol) Range {
+	out := base
+	for _, child := range children {
+		out = expandRange(out, child.Range)
+	}
+	return out
+}
+
+func expandRange(a, b Range) Range {
+	if positionBefore(b.Start, a.Start) {
+		a.Start = b.Start
+	}
+	if positionBefore(a.End, b.End) {
+		a.End = b.End
+	}
+	return a
+}
+
+func positionBefore(a, b Position) bool {
+	if a.Line != b.Line {
+		return a.Line < b.Line
+	}
+	return a.Character < b.Character
 }

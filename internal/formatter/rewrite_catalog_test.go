@@ -39,6 +39,28 @@ func TestRewriteCatalog(t *testing.T) {
 			want:     "add = a, b -> a + b\n",
 		},
 		{
+			category: "function-head",
+			name:     "nil default arguments are omitted",
+			input: strings.Join([]string{
+				"setup = value = nil -> value",
+				"class Codec",
+				"  initialize = value = nil ->",
+				"    self.value = value",
+				"  encode = value = nil, padded = true -> value",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"setup = value -> value",
+				"",
+				"class Codec",
+				"  initialize = value ->",
+				"    self.value = value",
+				"",
+				"  encode = value, padded = true -> value",
+				"",
+			}, "\n"),
+		},
+		{
 			category: "collection",
 			name:     "array trailing comma is removed",
 			input:    "items = [1, 2,]\n",

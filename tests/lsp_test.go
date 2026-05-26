@@ -39,8 +39,9 @@ func TestLSPInitialize(t *testing.T) {
 			CodeLensProvider       struct {
 				ResolveProvider bool `json:"resolveProvider"`
 			} `json:"codeLensProvider"`
-			FoldingRangeProvider bool `json:"foldingRangeProvider"`
-			DocumentLinkProvider struct {
+			DocumentSymbolProvider bool `json:"documentSymbolProvider"`
+			FoldingRangeProvider   bool `json:"foldingRangeProvider"`
+			DocumentLinkProvider   struct {
 				ResolveProvider bool `json:"resolveProvider"`
 			} `json:"documentLinkProvider"`
 		} `json:"capabilities"`
@@ -66,6 +67,9 @@ func TestLSPInitialize(t *testing.T) {
 	}
 	if !got.Capabilities.RenameProvider.PrepareProvider {
 		t.Error("prepareRename not advertised")
+	}
+	if !got.Capabilities.DocumentSymbolProvider {
+		t.Error("documentSymbolProvider not advertised")
 	}
 	if !got.Capabilities.InlayHintProvider || !got.Capabilities.CallHierarchyProvider || !got.Capabilities.SelectionRangeProvider || !got.Capabilities.FoldingRangeProvider {
 		t.Errorf("missing polish providers: %+v", got.Capabilities)

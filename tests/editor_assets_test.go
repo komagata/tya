@@ -82,6 +82,10 @@ func TestEditorSyntaxAssets(t *testing.T) {
 	if got := tyaDefaults["editor.formatOnSave"]; got != true {
 		t.Fatalf("VS Code package format on save = %v, want true", got)
 	}
+	vscodeIgnore := readText(t, filepath.Join(root, "editors/vscode/.vscodeignore"))
+	if strings.Contains(vscodeIgnore, "node_modules/**") {
+		t.Fatal("VS Code package must include runtime dependencies such as vscode-languageclient")
+	}
 
 	var grammar struct {
 		ScopeName  string `json:"scopeName"`
