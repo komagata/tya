@@ -25,7 +25,7 @@ func TestRunArithmeticAndLiterals(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "5\n14\n20\n2.5\n-3\ntrue\nnil\nnext year: 21\n"
+	want := "5\n14\n20\n2\n-3\ntrue\nnil\nnext year: 21\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
@@ -362,7 +362,7 @@ func TestRunFunctionDebugNameDisplay(t *testing.T) {
 func TestRunStableRuntimeDisplays(t *testing.T) {
 	src := strings.Join([]string{
 		"class User",
-		"  static name = -> \"User\"",
+		"  static name: -> \"User\"",
 		"print(User)",
 		"print(42.class)",
 		"print(b\"abc\")",
@@ -493,7 +493,7 @@ func TestRunBinaryReadReturnsBytesForInvalidUtf8(t *testing.T) {
 }
 
 func TestRunNumericEdgeSemantics(t *testing.T) {
-	src := "print(1 == 1.0)\nprint(5 / 2)\nprint(5 % 2)\n"
+	src := "print(1 == 1.0)\nprint(5 / 2)\nprint(5.0 / 2)\nprint(-5 / 2)\nprint(-5 % 2)\nprint(5 % 2)\n"
 	toks, errs := lexer.Lex(src)
 	if len(errs) != 0 {
 		t.Fatalf("lex errors: %v", errs)
@@ -506,7 +506,7 @@ func TestRunNumericEdgeSemantics(t *testing.T) {
 	if err := Run(prog, &out); err != nil {
 		t.Fatal(err)
 	}
-	want := "true\n2.5\n1\n"
+	want := "true\n2\n2.5\n-2\n-1\n1\n"
 	if out.String() != want {
 		t.Fatalf("got %q, want %q", out.String(), want)
 	}
@@ -692,7 +692,7 @@ func TestRunBlockScopeAndOuterAssignment(t *testing.T) {
 }
 
 func TestRunFieldAssignmentDoesNotOverwriteSameNamedMethod(t *testing.T) {
-	src := "class Response\n  initialize = ->\n    self.status = 200\n    self.bump()\n\n  bump = ->\n    self.status = self.status + 1\n\n  status = ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
+	src := "class Response\n  initialize: ->\n    self.status = 200\n    self.bump()\n\n  bump: ->\n    self.status = self.status + 1\n\n  status: ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
 	if got := runEval(t, src); got != "201\n202\n" {
 		t.Fatalf("got %q", got)
 	}
@@ -1137,9 +1137,9 @@ func TestRunStringIndexingUsesRunes(t *testing.T) {
 }
 
 func TestRunNumberKindAndDivisionBoundaries(t *testing.T) {
-	src := "print(1 == 1.0)\nprint(5 / 2)\nprint(1.0 & 3)\n"
+	src := "print(1 == 1.0)\nprint(5 / 2)\nprint(5.0 / 2)\nprint(1.0 & 3)\n"
 	out := runEval(t, src)
-	want := "true\n2.5\n1\n"
+	want := "true\n2\n2.5\n1\n"
 	if out != want {
 		t.Fatalf("got %q, want %q", out, want)
 	}

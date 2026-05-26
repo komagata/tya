@@ -620,6 +620,7 @@ static bool tya_deep_equal_bool(TyaValue left, TyaValue right);
 static void tya_write_value(FILE *out, TyaValue value);
 static void tya_build_value(TyaStringBuilder *builder, TyaValue value);
 static void tya_builder_append(TyaStringBuilder *builder, const char *text);
+static TyaValue tya_member_optional(TyaValue value, const char *key);
 
 /* Each task (including the main thread) has its own raise-frame chain.
  * Storing it as _Thread_local keeps tya_raise / tya_pop_raise_frame
@@ -643,7 +644,11 @@ TyaValue tya_bool(bool value) {
 }
 
 TyaValue tya_number(double value) {
-  return (TyaValue){.kind = TYA_NUMBER, .number = value};
+  return (TyaValue){.kind = TYA_NUMBER, .number = value, .number_is_int = floor(value) == value};
+}
+
+TyaValue tya_float(double value) {
+  return (TyaValue){.kind = TYA_NUMBER, .number = value, .number_is_int = false};
 }
 
 TyaValue tya_string(const char *value) {
@@ -1909,7 +1914,7 @@ TyaValue tya_mod(TyaValue left, TyaValue right) {
   }
   long l = (long)left.number;
   long r = (long)right.number;
-  if ((double)l != left.number || (double)r != right.number) {
+  if (!left.number_is_int || !right.number_is_int || (double)l != left.number || (double)r != right.number) {
     tya_raise(tya_string("% expects integers"));
     return tya_nil();
   }
@@ -1918,6 +1923,23 @@ TyaValue tya_mod(TyaValue left, TyaValue right) {
     return tya_nil();
   }
   return tya_number(l % r);
+}
+
+TyaValue tya_div(TyaValue left, TyaValue right) {
+  if (left.kind != TYA_NUMBER || right.kind != TYA_NUMBER) {
+    tya_raise(tya_string("/ expects numbers"));
+    return tya_nil();
+  }
+  if (right.number == 0) {
+    tya_raise(tya_string("division by zero"));
+    return tya_nil();
+  }
+  long l = (long)left.number;
+  long r = (long)right.number;
+  if (left.number_is_int && right.number_is_int && (double)l == left.number && (double)r == right.number) {
+    return tya_number(l / r);
+  }
+  return tya_float(left.number / right.number);
 }
 
 TyaValue tya_add(TyaValue left, TyaValue right) {
@@ -1952,7 +1974,34 @@ TyaValue tya_add(TyaValue left, TyaValue right) {
   if (left.kind != TYA_NUMBER || right.kind != TYA_NUMBER) {
     tya_raise(tya_string("+ expects numbers, strings, or bytes of the same kind"));
   }
-  return tya_number(left.number + right.number);
+  TyaValue out = tya_number(left.number + right.number);
+  out.number_is_int = left.number_is_int && right.number_is_int;
+  return out;
+}
+
+TyaValue tya_sub(TyaValue left, TyaValue right) {
+  TyaValue left_time = tya_member_optional(left, "__time_seconds");
+  TyaValue right_time = tya_member_optional(right, "__time_seconds");
+  if (left_time.kind == TYA_NUMBER && right_time.kind == TYA_NUMBER) {
+    return tya_float(left_time.number - right_time.number);
+  }
+  if (left.kind != TYA_NUMBER || right.kind != TYA_NUMBER) {
+    tya_raise(tya_string("- expects numbers"));
+    return tya_nil();
+  }
+  TyaValue out = tya_number(left.number - right.number);
+  out.number_is_int = left.number_is_int && right.number_is_int;
+  return out;
+}
+
+TyaValue tya_mul(TyaValue left, TyaValue right) {
+  if (left.kind != TYA_NUMBER || right.kind != TYA_NUMBER) {
+    tya_raise(tya_string("* expects numbers"));
+    return tya_nil();
+  }
+  TyaValue out = tya_number(left.number * right.number);
+  out.number_is_int = left.number_is_int && right.number_is_int;
+  return out;
 }
 
 TyaValue tya_and(TyaValue left, TyaValue right) {
@@ -2209,12 +2258,12 @@ TyaValue tya_to_int(TyaValue value) {
 
 TyaValue tya_to_float(TyaValue value) {
   if (value.kind == TYA_NUMBER) {
-    return value;
+    return tya_float(value.number);
   }
   if (value.kind == TYA_STRING && value.string != NULL) {
-    return tya_number(strtod(value.string, NULL));
+    return tya_float(strtod(value.string, NULL));
   }
-  return tya_number(0);
+  return tya_float(0);
 }
 
 TyaValue tya_to_number(TyaValue value) {

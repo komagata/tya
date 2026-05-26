@@ -2926,6 +2926,11 @@ func evalNumeric(op string, l, r Value) (Value, error) {
 		if rf == 0 {
 			return nil, fmt.Errorf("division by zero")
 		}
+		if li, ok := l.(int64); ok {
+			if ri, ok := r.(int64); ok {
+				return li / ri, nil
+			}
+		}
 		return lf / rf, nil
 	}
 	li, lint := l.(int64)

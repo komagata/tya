@@ -2300,7 +2300,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 	case *ast.IntLit:
 		return "tya_number(" + strconv.FormatInt(n.Value, 10) + ")", "TyaValue", nil
 	case *ast.FloatLit:
-		return "tya_number(" + strconv.FormatFloat(n.Value, 'f', -1, 64) + ")", "TyaValue", nil
+		return "tya_float(" + strconv.FormatFloat(n.Value, 'f', -1, 64) + ")", "TyaValue", nil
 	case *ast.StringLit:
 		if strings.ContainsAny(n.Value, "{}") {
 			value, err := g.interpolateString(n.Value)
@@ -2437,6 +2437,10 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		switch op {
 		case "+":
 			expr = fmt.Sprintf("tya_add(%s, %s)", left, right)
+		case "-":
+			expr = fmt.Sprintf("tya_sub(%s, %s)", left, right)
+		case "*":
+			expr = fmt.Sprintf("tya_mul(%s, %s)", left, right)
 		case "==":
 			expr = fmt.Sprintf("tya_bool(tya_equal(%s, %s))", left, right)
 		case "!=":
@@ -2447,6 +2451,8 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			expr = fmt.Sprintf("tya_bool(tya_truthy(%s) || tya_truthy(%s))", left, right)
 		case "%":
 			expr = fmt.Sprintf("tya_mod(%s, %s)", left, right)
+		case "/":
+			expr = fmt.Sprintf("tya_div(%s, %s)", left, right)
 		case "&":
 			expr = fmt.Sprintf("tya_number((long)%s.number & (long)%s.number)", left, right)
 		case "|":
@@ -2474,7 +2480,7 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 		if n.Op.Lexeme == "~" {
 			return "tya_number(~(long)" + ex + ".number)", "TyaValue", nil
 		}
-		return "tya_number(-" + ex + ".number)", typ, nil
+		return "({ TyaValue __neg = " + ex + "; TyaValue __out = tya_number(-__neg.number); __out.number_is_int = __neg.number_is_int; __out; })", typ, nil
 	case *ast.CallExpr:
 		if _, ok := n.Callee.(*ast.SuperExpr); ok {
 			sym := g.inheritedMethodSym(g.superClass, g.methodName)
