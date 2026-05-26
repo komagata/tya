@@ -132,9 +132,9 @@ func IsScriptFileName(path string) bool {
 }
 
 // CheckClassFileStructure validates the file-level shape of a v0.44
-// class file: PascalCase filename, exactly one public class whose
-// name matches the filename, additional class declarations allowed
-// as private siblings, imports preceding class/interface
+// class file: PascalCase filename, exactly one public class or
+// interface whose name matches the filename, additional declarations
+// allowed as private siblings, imports preceding class/interface
 // declarations, and no other top-level statements. It does NOT
 // recurse into class bodies, so cross-class references inside method
 // bodies are deferred to the full checker pass on the merged
@@ -156,11 +156,17 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 			}
 		case *ast.InterfaceDecl:
 			inDeclarations = true
+			if n.Name == want {
+				if publicSeen {
+					return fmt.Errorf("[TYA-E0405] class file %s declares public type %s more than once", base, want)
+				}
+				publicSeen = true
+			}
 		case *ast.ClassDecl:
 			inDeclarations = true
 			if n.Name == want {
 				if publicSeen {
-					return fmt.Errorf("[TYA-E0405] class file %s declares public class %s more than once", base, want)
+					return fmt.Errorf("[TYA-E0405] class file %s declares public type %s more than once", base, want)
 				}
 				publicSeen = true
 			}
@@ -169,15 +175,15 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 		}
 	}
 	if !publicSeen {
-		return fmt.Errorf("[TYA-E0400] class file %s must define class %s", base, want)
+		return fmt.Errorf("[TYA-E0400] class file %s must define class or interface %s", base, want)
 	}
 	return nil
 }
 
 // CheckClassFile validates a v0.44 class file at the given path. The
-// file must contain exactly one public class whose name matches the
-// filename without ".tya". Additional class declarations are private
-// to the file (visibility is enforced separately in M5). Top-level
+// file must contain exactly one public class or interface whose name
+// matches the filename without ".tya". Additional declarations are
+// private to the file (visibility is enforced separately in M5). Top-level
 // statements other than import, class, and interface declarations are
 // rejected. Imports must precede any class or interface declaration.
 //

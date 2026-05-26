@@ -1,13 +1,5 @@
 import io as io
 
-# Codec describes byte/string compression codecs.
-interface Codec
-  # Codec.compress compresses text or bytes and returns bytes.
-  compress: value ->
-
-  # Codec.decompress decompresses bytes and returns bytes.
-  decompress: value ->
-
 # Gzip provides gzip compression and decompression.
 class Gzip implements Codec
   # Gzip.compress compresses data with gzip.

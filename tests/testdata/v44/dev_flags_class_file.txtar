@@ -24,7 +24,7 @@ stdout 'int main\('
 # --emit-c on a structurally bad class file fails with a class
 # file diagnostic, not the entry-only TYA-E0850 message.
 ! exec go run ./cmd/tya --emit-c $WORK/BadName.tya
-stderr 'must define class BadName'
+stderr 'must define class or interface BadName'
 
 # --check-unused on a clean class file: passes silently.
 exec go run ./cmd/tya --check-unused $WORK/Foo.tya

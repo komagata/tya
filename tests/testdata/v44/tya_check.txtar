@@ -16,7 +16,7 @@ exec go run ./cmd/tya check $WORK/standalone/Good.tya
 
 # Class file with a name mismatch fails the structure check.
 ! exec go run ./cmd/tya check $WORK/standalone/Hello.tya
-stderr 'must define class Hello'
+stderr 'must define class or interface Hello'
 
 # Check failure on an unresolved import.
 ! exec go run ./cmd/tya check $WORK/missing/main.tya

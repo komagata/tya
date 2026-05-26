@@ -1,8 +1,7 @@
 # v0.44 a class file in a package may `implements` an interface
 # defined in another file of the same package, using the bare
-# interface name. Per SPEC §"Class file" each class file must
-# contain a public class matching the filename, so the interface
-# co-locates with a public class in its own file.
+# interface name. Interface-only PascalCase files are accepted when
+# the interface name matches the filename.
 cd $REPO
 
 exec go run ./cmd/tya run $WORK/main.tya
@@ -14,17 +13,9 @@ import codec
 
 print(JsonEncoder().encode())
 
--- codec/Encoder.tya --
-# The companion public class is needed because v0.44 requires every
-# class file to declare a public class matching the filename. Here
-# Encoder is a generic stub class; the file's real product is the
-# Encodable interface used by sibling files.
+-- codec/Encodable.tya --
 interface Encodable
   encode: ->
-
-class Encoder
-  static noop: ->
-    nil
 
 -- codec/JsonEncoder.tya --
 class JsonEncoder implements Encodable

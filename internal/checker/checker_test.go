@@ -540,6 +540,13 @@ func TestCheckClassFileAcceptsMatchingClass(t *testing.T) {
 	}
 }
 
+func TestCheckClassFileAcceptsMatchingInterface(t *testing.T) {
+	prog := parse(t, "interface Request\n  send: ->\n")
+	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCheckClassFileAcceptsImportsBeforeClass(t *testing.T) {
 	prog := parse(t, "import string\n\nclass Request\n  initialize: url ->\n    self.url = url\n")
 	if err := CheckClassFile(prog, "Request.tya"); err != nil {
@@ -613,7 +620,7 @@ func TestCheckClassFileRejectsMissingPublicClass(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected missing public class error")
 	}
-	if !strings.Contains(err.Error(), "must define class Request") {
+	if !strings.Contains(err.Error(), "must define class or interface Request") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

@@ -1,0 +1,4 @@
+# Codec describes byte/string compression codecs.
+interface Codec
+  compress: value ->
+  decompress: value ->

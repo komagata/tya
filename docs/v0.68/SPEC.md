@@ -273,8 +273,8 @@ and may also be imported directly. When imported, their top-level names are
 exposed through the import binding.
 
 PascalCase `.tya` files are class files. They are library-only and cannot be
-entry files. A class file must declare exactly one public class whose name
-matches the filename without `.tya`.
+entry files. A class file must declare exactly one public class or interface
+whose name matches the filename without `.tya`.
 
 Class files may be loaded explicitly as part of a directory package or
 implicitly as same-directory siblings of an entry script. A script entry sees
@@ -505,9 +505,9 @@ class Admin extends User
 ```
 
 A class file is a PascalCase `.tya` file. It must declare exactly one public
-class whose name matches the filename. It may also declare private helper
-classes and interfaces. Class files are library files and cannot be run as
-entry scripts.
+class or interface whose name matches the filename. It may also declare private
+helper classes and interfaces. Class files are library files and cannot be run
+as entry scripts.
 
 Additional classes in a class file are private to that file. They are not
 visible from other files, even inside the same directory package.
