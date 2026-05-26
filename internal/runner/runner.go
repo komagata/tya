@@ -933,8 +933,9 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 	seenImports := map[importKey]bool{}
 	var bodies []string
 	origins := map[string]string{}
-	publicClasses := map[string]bool{}
-	packageClasses := map[string]bool{}
+	publicSymbols := map[string]bool{}
+	packageSymbols := map[string]bool{}
+	publicInterfaces := map[string]bool{}
 
 	for _, file := range classFiles {
 		raw, err := os.ReadFile(file)
@@ -960,13 +961,17 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 				seenImports[key] = true
 				orderedImports = append(orderedImports, n)
 			case *ast.ClassDecl:
-				packageClasses[n.Name] = true
+				packageSymbols[n.Name] = true
 				if _, dup := origins[n.Name]; !dup {
 					origins[n.Name] = relName
 				}
 				if relName == n.Name+".tya" {
-					publicClasses[n.Name] = true
+					publicSymbols[n.Name] = true
 				}
+			case *ast.InterfaceDecl:
+				packageSymbols[n.Name] = true
+				publicSymbols[n.Name] = true
+				publicInterfaces[n.Name] = true
 			}
 		}
 		// Strip top-level import lines from the source text.
@@ -999,13 +1004,13 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 		}
 		out.WriteString("\n")
 	}
-	names := make([]string, 0, len(publicClasses))
-	for name := range publicClasses {
+	names := make([]string, 0, len(publicSymbols))
+	for name := range publicSymbols {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 	if includeNamespace {
-		renames := packageClassRenames(packageClasses, pkgName)
+		renames := packageSymbolRenames(packageSymbols, pkgName)
 		for _, b := range bodies {
 			out.WriteString(rewritePackageClassNames(b, renames))
 		}
@@ -1018,7 +1023,11 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 			out.WriteString("[")
 			out.WriteString(strconv.Quote(name))
 			out.WriteString("] = ")
-			out.WriteString(renames[name])
+			if publicInterfaces[name] {
+				out.WriteString(strconv.Quote("interface " + pkgName + "." + name))
+			} else {
+				out.WriteString(renames[name])
+			}
 			out.WriteString("\n")
 		}
 		return out.String(), origins, nil
@@ -1029,9 +1038,9 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 	return out.String(), origins, nil
 }
 
-func packageClassRenames(classes map[string]bool, pkgName string) map[string]string {
-	names := make([]string, 0, len(classes))
-	for name := range classes {
+func packageSymbolRenames(symbols map[string]bool, pkgName string) map[string]string {
+	names := make([]string, 0, len(symbols))
+	for name := range symbols {
 		names = append(names, name)
 	}
 	sort.Strings(names)

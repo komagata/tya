@@ -26,7 +26,6 @@
 <li><a href="items/class_stdlib-image-Codec_Codec.html"><code>class Codec</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
 <li><a href="items/class_stdlib-color-Color_Color.html"><code>class Color</code></a> &mdash; <code>stdlib/color/Color.tya</code></li>
 <li><a href="items/class_stdlib-xml-Comment_Comment.html"><code>class Comment</code></a> &mdash; <code>stdlib/xml/Comment.tya</code></li>
-<li><a href="items/class_stdlib-compress-Compress_Compress.html"><code>class Compress</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
 <li><a href="items/class_stdlib-csv-Csv_Csv.html"><code>class Csv</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
 <li><a href="items/class_stdlib-collections-Deque_Deque.html"><code>class Deque</code></a> &mdash; <code>stdlib/collections/Deque.tya</code></li>
 <li><a href="items/class_stdlib-digest-Digest_Digest.html"><code>class Digest</code></a> &mdash; <code>stdlib/digest/Digest.tya</code></li>
@@ -37,6 +36,7 @@
 <li><a href="items/class_stdlib-file-File_File.html"><code>class File</code></a> &mdash; <code>stdlib/file/File.tya</code></li>
 <li><a href="items/class_stdlib-filter_sequence_FilterSequence.html"><code>class FilterSequence</code></a> &mdash; <code>stdlib/filter_sequence.tya</code></li>
 <li><a href="items/class_stdlib-compiler-format-Format_Format.html"><code>class Format</code></a> &mdash; <code>stdlib/compiler/format/Format.tya</code></li>
+<li><a href="items/class_stdlib-compress-Gzip_Gzip.html"><code>class Gzip</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
 <li><a href="items/class_stdlib-hex-Hex_Hex.html"><code>class Hex</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
 <li><a href="items/class_stdlib-hmac-Hmac_Hmac.html"><code>class Hmac</code></a> &mdash; <code>stdlib/hmac/Hmac.tya</code></li>
 <li><a href="items/class_stdlib-image-Image_Image.html"><code>class Image</code></a> &mdash; <code>stdlib/image/Image.tya</code></li>
@@ -92,11 +92,13 @@
 <li><a href="items/class_stdlib-binary-Writer_Writer.html"><code>class Writer</code></a> &mdash; <code>stdlib/binary/Writer.tya</code></li>
 <li><a href="items/class_stdlib-io-Writer_Writer.html"><code>class Writer</code></a> &mdash; <code>stdlib/io/Writer.tya</code></li>
 <li><a href="items/class_stdlib-xml-Xml_Xml.html"><code>class Xml</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
+<li><a href="items/class_stdlib-compress-Zlib_Zlib.html"><code>class Zlib</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
 </ul>
 <h2>Interfaces</h2>
 <ul>
 <li><a href="items/interface_stdlib-io-Reader_Closable.html"><code>interface Closable</code></a> &mdash; <code>stdlib/io/Reader.tya</code></li>
 <li><a href="items/interface_stdlib-net-socket-Socket_Closable.html"><code>interface Closable</code></a> &mdash; <code>stdlib/net/socket/Socket.tya</code></li>
+<li><a href="items/interface_stdlib-compress-Gzip_Codec.html"><code>interface Codec</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
 <li><a href="items/interface_stdlib-comparable_Comparable.html"><code>interface Comparable</code></a> &mdash; <code>stdlib/comparable.tya</code></li>
 <li><a href="items/interface_stdlib-equatable_Equatable.html"><code>interface Equatable</code></a> &mdash; <code>stdlib/equatable.tya</code></li>
 <li><a href="items/interface_stdlib-io-Reader_Flushable.html"><code>interface Flushable</code></a> &mdash; <code>stdlib/io/Reader.tya</code></li>
@@ -112,6 +114,11 @@
 </ul>
 <h2>Static Methods</h2>
 <ul>
+<li><a href="items/static-method_stdlib-base64-Base64_Base64-decode.html"><code>static Base64.decode(text)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
+<li><a href="items/static-method_stdlib-base64-Base64_Base64-encode.html"><code>static Base64.encode(value)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
+<li><a href="items/static-method_stdlib-bytes-Bytes_Bytes-at.html"><code>static Bytes.at(value, index)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/static-method_stdlib-bytes-Bytes_Bytes-index_of.html"><code>static Bytes.index_of(value, byte, start)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
+<li><a href="items/static-method_stdlib-bytes-Bytes_Bytes-len.html"><code>static Bytes.len(value)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
 <li><a href="items/static-method_stdlib-dir-Dir_Dir-list.html"><code>static Dir.list(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
 <li><a href="items/static-method_stdlib-dir-Dir_Dir-mkdir.html"><code>static Dir.mkdir(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
 <li><a href="items/static-method_stdlib-dir-Dir_Dir-mkdir_all.html"><code>static Dir.mkdir_all(path)</code></a> &mdash; <code>stdlib/dir/Dir.tya</code></li>
@@ -177,12 +184,6 @@
 <li><a href="items/method_stdlib-compiler-ast-Ast_Ast-push_children.html"><code>Ast.push_children(out, node, key)</code></a> &mdash; <code>stdlib/compiler/ast/Ast.tya</code></li>
 <li><a href="items/method_stdlib-compiler-ast-Ast_Ast-span.html"><code>Ast.span(node)</code></a> &mdash; <code>stdlib/compiler/ast/Ast.tya</code></li>
 <li><a href="items/method_stdlib-compiler-ast-Ast_Ast-walk.html"><code>Ast.walk(node, visitor)</code></a> &mdash; <code>stdlib/compiler/ast/Ast.tya</code></li>
-<li><a href="items/method_stdlib-base64-Base64_Base64-byte_at.html"><code>Base64.byte_at(value, i)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
-<li><a href="items/method_stdlib-base64-Base64_Base64-byte_count.html"><code>Base64.byte_count(value)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
-<li><a href="items/method_stdlib-base64-Base64_Base64-decode.html"><code>Base64.decode(text)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
-<li><a href="items/method_stdlib-base64-Base64_Base64-encode.html"><code>Base64.encode(value)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
-<li><a href="items/method_stdlib-base64-Base64_Base64-index_of.html"><code>Base64.index_of(c)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
-<li><a href="items/method_stdlib-base64-Base64_Base64-initialize.html"><code>Base64.initialize(value)</code></a> &mdash; <code>stdlib/base64/Base64.tya</code></li>
 <li><a href="items/method_stdlib-bytes-Bytes_Bytes-array.html"><code>Bytes.array(value)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
 <li><a href="items/method_stdlib-bytes-Bytes_Bytes-concat.html"><code>Bytes.concat(left, right)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
 <li><a href="items/method_stdlib-bytes-Bytes_Bytes-from_array.html"><code>Bytes.from_array(values)</code></a> &mdash; <code>stdlib/bytes/Bytes.tya</code></li>
@@ -245,6 +246,8 @@
 <li><a href="items/method_stdlib-net-http-Client_Client-request.html"><code>Client.request(method, target, opts)</code></a> &mdash; <code>stdlib/net/http/Client.tya</code></li>
 <li><a href="items/method_stdlib-io-Reader_Closable-close.html"><code>Closable.close()</code></a> &mdash; <code>stdlib/io/Reader.tya</code></li>
 <li><a href="items/method_stdlib-net-socket-Socket_Closable-close.html"><code>Closable.close()</code></a> &mdash; <code>stdlib/net/socket/Socket.tya</code></li>
+<li><a href="items/method_stdlib-compress-Gzip_Codec-compress.html"><code>Codec.compress(value)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
+<li><a href="items/method_stdlib-compress-Gzip_Codec-decompress.html"><code>Codec.decompress(value)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
 <li><a href="items/method_stdlib-image-Codec_Codec-identify.html"><code>Codec.identify(data)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
 <li><a href="items/method_stdlib-image-Codec_Codec-identify_file.html"><code>Codec.identify_file(path)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
 <li><a href="items/method_stdlib-image-Codec_Codec-initialize.html"><code>Codec.initialize(value)</code></a> &mdash; <code>stdlib/image/Codec.tya</code></li>
@@ -301,19 +304,6 @@
 <li><a href="items/method_stdlib-comparable_Comparable-gte-.html"><code>Comparable.gte?(other)</code></a> &mdash; <code>stdlib/comparable.tya</code></li>
 <li><a href="items/method_stdlib-comparable_Comparable-lt-.html"><code>Comparable.lt?(other)</code></a> &mdash; <code>stdlib/comparable.tya</code></li>
 <li><a href="items/method_stdlib-comparable_Comparable-lte-.html"><code>Comparable.lte?(other)</code></a> &mdash; <code>stdlib/comparable.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-gunzip.html"><code>Compress.gunzip(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-gunzip_file.html"><code>Compress.gunzip_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-gzip.html"><code>Compress.gzip(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-gzip_compress.html"><code>Compress.gzip_compress(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-gzip_compress_file.html"><code>Compress.gzip_compress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-gzip_decompress.html"><code>Compress.gzip_decompress(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-gzip_decompress_file.html"><code>Compress.gzip_decompress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-gzip_file.html"><code>Compress.gzip_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-initialize.html"><code>Compress.initialize(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-unzlib.html"><code>Compress.unzlib(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-zlib.html"><code>Compress.zlib(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-zlib_compress.html"><code>Compress.zlib_compress(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
-<li><a href="items/method_stdlib-compress-Compress_Compress-zlib_decompress.html"><code>Compress.zlib_decompress(value)</code></a> &mdash; <code>stdlib/compress/Compress.tya</code></li>
 <li><a href="items/method_stdlib-csv-Csv_Csv-default_options.html"><code>Csv.default_options()</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
 <li><a href="items/method_stdlib-csv-Csv_Csv-dump.html"><code>Csv.dump(rows, options)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
 <li><a href="items/method_stdlib-csv-Csv_Csv-dump_array_rows.html"><code>Csv.dump_array_rows(rows, separator)</code></a> &mdash; <code>stdlib/csv/Csv.tya</code></li>
@@ -387,6 +377,10 @@
 <li><a href="items/method_stdlib-io-Reader_Flushable-flush.html"><code>Flushable.flush()</code></a> &mdash; <code>stdlib/io/Reader.tya</code></li>
 <li><a href="items/method_stdlib-compiler-format-Format_Format-format.html"><code>Format.format(source)</code></a> &mdash; <code>stdlib/compiler/format/Format.tya</code></li>
 <li><a href="items/method_stdlib-compiler-format-Format_Format-unparse.html"><code>Format.unparse(program)</code></a> &mdash; <code>stdlib/compiler/format/Format.tya</code></li>
+<li><a href="items/method_stdlib-compress-Gzip_Gzip-compress.html"><code>Gzip.compress(value)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
+<li><a href="items/method_stdlib-compress-Gzip_Gzip-compress_file.html"><code>Gzip.compress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
+<li><a href="items/method_stdlib-compress-Gzip_Gzip-decompress.html"><code>Gzip.decompress(value)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
+<li><a href="items/method_stdlib-compress-Gzip_Gzip-decompress_file.html"><code>Gzip.decompress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Gzip.tya</code></li>
 <li><a href="items/method_stdlib-hex-Hex_Hex-decode.html"><code>Hex.decode(text)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
 <li><a href="items/method_stdlib-hex-Hex_Hex-decode_digit.html"><code>Hex.decode_digit(c)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
 <li><a href="items/method_stdlib-hex-Hex_Hex-encode.html"><code>Hex.encode(value)</code></a> &mdash; <code>stdlib/hex/Hex.tya</code></li>
@@ -1112,6 +1106,10 @@
 <li><a href="items/method_stdlib-xml-Xml_Xml-skip_ws.html"><code>Xml.skip_ws(state)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-starts_at.html"><code>Xml.starts_at(state, text)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
 <li><a href="items/method_stdlib-xml-Xml_Xml-stringify.html"><code>Xml.stringify(value)</code></a> &mdash; <code>stdlib/xml/Xml.tya</code></li>
+<li><a href="items/method_stdlib-compress-Zlib_Zlib-compress.html"><code>Zlib.compress(value)</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
+<li><a href="items/method_stdlib-compress-Zlib_Zlib-compress_file.html"><code>Zlib.compress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
+<li><a href="items/method_stdlib-compress-Zlib_Zlib-decompress.html"><code>Zlib.decompress(value)</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
+<li><a href="items/method_stdlib-compress-Zlib_Zlib-decompress_file.html"><code>Zlib.decompress_file(src, dst)</code></a> &mdash; <code>stdlib/compress/Zlib.tya</code></li>
 </ul>
 </div>
 </div>

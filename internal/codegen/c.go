@@ -328,8 +328,7 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		return g.assignClassDecl(n.Name, n)
 	case *ast.InterfaceDecl:
 		g.sourceLine(n.NameTok.Line)
-		g.line("/* interface declaration checked at compile time */")
-		return nil
+		return g.assignInterfaceDecl(n.Name)
 	case *ast.AssignStmt:
 		g.sourceLine(n.Tok.Line)
 		if len(n.Targets) != 1 || len(n.Values) != 1 {
@@ -641,6 +640,18 @@ func (g *cgen) stmt(stmt ast.Stmt) error {
 		line, col, _ := stmtPos(stmt)
 		return codegenError(codeStmtUnsupported, fmt.Sprintf("C emitter does not support %T", stmt), line, col)
 	}
+	return nil
+}
+
+func (g *cgen) assignInterfaceDecl(name string) error {
+	target := cName(name)
+	if g.vars[name] {
+		g.line(fmt.Sprintf("%s = tya_string(%s);", target, strconv.Quote("interface "+name)))
+		return nil
+	}
+	g.vars[name] = true
+	g.globalLine(fmt.Sprintf("TyaValue %s;", target))
+	g.line(fmt.Sprintf("%s = tya_string(%s);", target, strconv.Quote("interface "+name)))
 	return nil
 }
 
@@ -1776,6 +1787,9 @@ func (g *cgen) emitParentMethods(out *strings.Builder, parentKey string, class *
 
 func (g *cgen) interfaceKey(className string, ref ast.ClassRef) string {
 	if ref.Module != "" {
+		if key := aliasedPackageSymbolKey(ref.Module, ref.Name); g.interfaceDecls[key] != nil {
+			return key
+		}
 		return ref.Module + "." + ref.Name
 	}
 	if strings.Contains(className, "_") {
@@ -1785,6 +1799,30 @@ func (g *cgen) interfaceKey(className string, ref ast.ClassRef) string {
 		}
 	}
 	return ref.Name
+}
+
+func aliasedPackageSymbolKey(module, name string) string {
+	return name + "TyaPkg" + pascalIdentifier(module)
+}
+
+func pascalIdentifier(name string) string {
+	var out strings.Builder
+	capNext := true
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			if capNext && r >= 'a' && r <= 'z' {
+				r = r - 'a' + 'A'
+			}
+			out.WriteRune(r)
+			capNext = false
+			continue
+		}
+		capNext = true
+	}
+	if out.Len() == 0 {
+		return "Package"
+	}
+	return out.String()
 }
 
 func (g *cgen) effectiveInterfaces(className string, class *ast.ClassDecl) []*ast.InterfaceDecl {

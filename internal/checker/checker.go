@@ -326,10 +326,10 @@ var removedTopLevelPrimitiveBuiltins = map[string]string{
 	"read_line":                        "Io().stdin().read_line()",
 	"write_file":                       "File().write(path, text)",
 	"stderr_write":                     "Io().stderr().write(value)",
-	"compress_gzip":                    "Compress().gzip_compress(value)",
-	"compress_gunzip":                  "Compress().gzip_decompress(value)",
-	"compress_zlib":                    "Compress().zlib_compress(value)",
-	"compress_unzlib":                  "Compress().zlib_decompress(value)",
+	"compress_gzip":                    "compress.Gzip().compress(value)",
+	"compress_gunzip":                  "compress.Gzip().decompress(value)",
+	"compress_zlib":                    "compress.Zlib().compress(value)",
+	"compress_unzlib":                  "compress.Zlib().decompress(value)",
 	"io_stdin":                         "Io().stdin()",
 	"io_stdout":                        "Io().stdout()",
 	"io_stderr":                        "Io().stderr()",
@@ -1599,7 +1599,8 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 					return err
 				}
 			}
-			if scope.kind(key) == kindInterface {
+			aliasedKey := aliasedPackageSymbolKey(memberKeyModule(member), member.Name)
+			if scope.kind(key) == kindInterface || scope.kind(aliasedKey) == kindInterface {
 				return fmt.Errorf("%d:%d: cannot construct interface %s", member.NameTok.Line, member.NameTok.Col, member.Name)
 			} else if scope.kind(member.Name) == kindInterface {
 				return fmt.Errorf("%d:%d: cannot construct interface %s", member.NameTok.Line, member.NameTok.Col, member.Name)
@@ -2038,6 +2039,9 @@ func currentModulePrefix(scope *scope) string {
 
 func refKey(ref *ast.ClassRef, currentModule string, scope *scope) string {
 	if ref.Module != "" {
+		if key := aliasedPackageSymbolKey(ref.Module, ref.Name); scope.kind(key) == kindInterface || scope.kind(key) == kindClass {
+			return key
+		}
 		return ref.Module + "." + ref.Name
 	}
 	if currentModule != "" {
@@ -2049,6 +2053,30 @@ func refKey(ref *ast.ClassRef, currentModule string, scope *scope) string {
 		}
 	}
 	return ref.Name
+}
+
+func aliasedPackageSymbolKey(module, name string) string {
+	return name + "TyaPkg" + pascalIdentifier(module)
+}
+
+func pascalIdentifier(name string) string {
+	var out strings.Builder
+	capNext := true
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') {
+			if capNext && r >= 'a' && r <= 'z' {
+				r = r - 'a' + 'A'
+			}
+			out.WriteRune(r)
+			capNext = false
+			continue
+		}
+		capNext = true
+	}
+	if out.Len() == 0 {
+		return "Package"
+	}
+	return out.String()
 }
 
 func parentName(ref *ast.ClassRef) string {
@@ -3185,6 +3213,12 @@ func kindOf(expr ast.Expr, scope *scope) valueKind {
 		if scope.kind(memberKey(member)) == kindClass {
 			return kindClass
 		}
+		if scope.kind(memberKey(member)) == kindInterface {
+			return kindInterface
+		}
+		if scope.kind(aliasedPackageSymbolKey(memberKeyModule(member), member.Name)) == kindInterface {
+			return kindInterface
+		}
 		if scope.kind(member.Name) == kindClass {
 			return kindClass
 		}
@@ -3206,6 +3240,17 @@ func memberKey(member *ast.MemberExpr) string {
 			return strings.Join(parts, ".")
 		}
 	}
+}
+
+func memberKeyModule(member *ast.MemberExpr) string {
+	if id, ok := member.Target.(*ast.Ident); ok {
+		return id.Name
+	}
+	key := memberKey(member)
+	if head, _, ok := strings.Cut(key, "."); ok {
+		return head
+	}
+	return key
 }
 
 func literalKind(expr ast.Expr) valueKind {

@@ -4,31 +4,50 @@ import file as file
 
 class StdlibCompressTest extends TestCase
 
-  test_gzip_round_trip_string = ->
-    data = compress.Compress("hello gzip").gzip_compress()
+  test_gzip_round_trip_string: ->
+    data = compress.Gzip().compress("hello gzip")
     self.assert(data.len() > 0, "gzip returns bytes")
-    self.assert_equal("hello gzip", bytes_text(compress.Compress(data).gzip_decompress()), "gzip round trip")
+    self.assert_equal("hello gzip", bytes_text(compress.Gzip().decompress(data)), "gzip round trip")
 
-  test_gzip_round_trip_bytes = ->
-    data = compress.Compress(b"\x00\x01data").gzip_compress()
-    self.assert_equal([0, 1, 100, 97, 116, 97], bytes_array(compress.Compress(data).gzip_decompress()), "bytes round trip")
+  test_gzip_round_trip_bytes: ->
+    data = compress.Gzip().compress(b"\x00\x01data")
+    self.assert_equal([0, 1, 100, 97, 116, 97], bytes_array(compress.Gzip().decompress(data)), "bytes round trip")
 
-  test_zlib_round_trip = ->
-    data = compress.Compress("hello zlib").zlib_compress()
-    self.assert_equal("hello zlib", bytes_text(compress.Compress(data).zlib_decompress()), "zlib round trip")
+  test_zlib_round_trip: ->
+    data = compress.Zlib().compress("hello zlib")
+    self.assert_equal("hello zlib", bytes_text(compress.Zlib().decompress(data)), "zlib round trip")
 
-  test_invalid_input_raises = ->
-    self.assert_raises(() -> compress.Compress(b"not gzip").gzip_decompress())
-    self.assert_raises(() -> compress.Compress(b"not zlib").zlib_decompress())
+  test_codecs_implement_codec: ->
+    gzip = compress.Gzip()
+    zlib = compress.Zlib()
+    self.assert_equal(compress.Gzip, gzip.class, "gzip class")
+    self.assert_equal(compress.Zlib, zlib.class, "zlib class")
+    self.assert_equal(compress.Codec, compress.Codec, "codec interface exported")
 
-  test_file_helpers = ->
+  test_invalid_input_raises: ->
+    self.assert_raises(() -> compress.Gzip().decompress(b"not gzip"))
+    self.assert_raises(() -> compress.Zlib().decompress(b"not zlib"))
+
+  test_gzip_file_helpers: ->
     src = "compress_src.txt"
     gz = "compress_src.txt.gz"
     dst = "compress_dst.txt"
     file.File(src).write("file contents")
-    compress.Compress(src).gzip_compress_file(gz)
-    compress.Compress(gz).gzip_decompress_file(dst)
+    compress.Gzip().compress_file(src, gz)
+    compress.Gzip().decompress_file(gz, dst)
     self.assert_equal("file contents", file.File(dst).read(), "file round trip")
     file.File(src).remove()
     file.File(gz).remove()
+    file.File(dst).remove()
+
+  test_zlib_file_helpers: ->
+    src = "compress_zlib_src.txt"
+    z = "compress_zlib_src.txt.z"
+    dst = "compress_zlib_dst.txt"
+    file.File(src).write("zlib file contents")
+    compress.Zlib().compress_file(src, z)
+    compress.Zlib().decompress_file(z, dst)
+    self.assert_equal("zlib file contents", file.File(dst).read(), "zlib file round trip")
+    file.File(src).remove()
+    file.File(z).remove()
     file.File(dst).remove()

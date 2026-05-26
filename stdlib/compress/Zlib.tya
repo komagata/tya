@@ -1,0 +1,39 @@
+import io as io
+
+# Zlib provides zlib compression and decompression.
+class Zlib implements Codec
+  # Zlib.compress compresses data with zlib.
+  compress: value ->
+    compress_zlib(value)
+
+  # Zlib.decompress decompresses zlib data.
+  decompress: value ->
+    compress_unzlib(value)
+
+  # Zlib.compress_file compresses a file with zlib.
+  compress_file: src, dst ->
+    data = Self.read_all(src)
+    Self.write_all(dst, self.compress(data))
+    nil
+
+  # Zlib.decompress_file decompresses a zlib file.
+  decompress_file: src, dst ->
+    data = Self.read_all(src)
+    Self.write_all(dst, self.decompress(data))
+    nil
+
+  private static read_all: path ->
+    reader = io.Io().open(path, "rb")
+    data = reader.read(1048576)
+    all = b""
+    while data.len() > 0
+      all = all + data
+      data = reader.read(1048576)
+    reader.close()
+    all
+
+  private static write_all: path, data ->
+    writer = io.Io().open(path, "wb")
+    writer.write(data)
+    writer.close()
+    nil

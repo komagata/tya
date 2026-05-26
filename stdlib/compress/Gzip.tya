@@ -1,0 +1,47 @@
+import io as io
+
+# Codec describes byte/string compression codecs.
+interface Codec
+  # Codec.compress compresses text or bytes and returns bytes.
+  compress: value ->
+
+  # Codec.decompress decompresses bytes and returns bytes.
+  decompress: value ->
+
+# Gzip provides gzip compression and decompression.
+class Gzip implements Codec
+  # Gzip.compress compresses data with gzip.
+  compress: value ->
+    compress_gzip(value)
+
+  # Gzip.decompress decompresses gzip data.
+  decompress: value ->
+    compress_gunzip(value)
+
+  # Gzip.compress_file compresses a file with gzip.
+  compress_file: src, dst ->
+    data = Self.read_all(src)
+    Self.write_all(dst, self.compress(data))
+    nil
+
+  # Gzip.decompress_file decompresses a gzip file.
+  decompress_file: src, dst ->
+    data = Self.read_all(src)
+    Self.write_all(dst, self.decompress(data))
+    nil
+
+  private static read_all: path ->
+    reader = io.Io().open(path, "rb")
+    data = reader.read(1048576)
+    all = b""
+    while data.len() > 0
+      all = all + data
+      data = reader.read(1048576)
+    reader.close()
+    all
+
+  private static write_all: path, data ->
+    writer = io.Io().open(path, "wb")
+    writer.write(data)
+    writer.close()
+    nil
