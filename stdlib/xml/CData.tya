@@ -1,9 +1,17 @@
 # CData provides the xml/CData standard library API.
 class CData
+  # CData.text stores instance state.
+  # @type Nil
+  text: nil
+
   # CData.initialize provides the xml/CData standard library operation.
+  # @param text String text value.
+  # @return Self the initialized object.
   initialize: text ->
     self.text = text
 
   # CData.new provides the xml/CData standard library operation.
+  # @param text String text value.
+  # @return Self the resulting value.
   new: text ->
-    return CData(text)
+    CData(text)

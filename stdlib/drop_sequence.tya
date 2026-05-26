@@ -1,6 +1,17 @@
 # DropSequence provides the drop_sequence standard library API.
 class DropSequence implements Sequence
+  # DropSequence.n stores instance state.
+  # @type Nil
+  n: nil
+
+  # DropSequence.source stores instance state.
+  # @type Nil
+  source: nil
+
   # DropSequence.initialize provides the drop_sequence standard library operation.
+  # @param source String source value.
+  # @param n Int n value.
+  # @return Self the initialized object.
   initialize: source, n ->
     self.source = source
     self.n = n

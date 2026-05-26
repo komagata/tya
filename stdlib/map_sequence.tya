@@ -1,6 +1,17 @@
 # MapSequence provides the map_sequence standard library API.
 class MapSequence implements Sequence
+  # MapSequence.fn stores instance state.
+  # @type Nil
+  fn: nil
+
+  # MapSequence.source stores instance state.
+  # @type Nil
+  source: nil
+
   # MapSequence.initialize provides the map_sequence standard library operation.
+  # @param source String source value.
+  # @param fn Function fn value.
+  # @return Self the initialized object.
   initialize: source, fn ->
     self.source = source
     self.fn = fn

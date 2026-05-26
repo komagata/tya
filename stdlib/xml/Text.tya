@@ -1,9 +1,17 @@
 # Text provides the xml/Text standard library API.
 class Text
+  # Text.text stores instance state.
+  # @type Nil
+  text: nil
+
   # Text.initialize provides the xml/Text standard library operation.
+  # @param text String text value.
+  # @return Self the initialized object.
   initialize: text ->
     self.text = text
 
   # Text.new provides the xml/Text standard library operation.
+  # @param text String text value.
+  # @return Self the resulting value.
   new: text ->
-    return Text(text)
+    Text(text)

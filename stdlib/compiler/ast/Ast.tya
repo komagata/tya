@@ -1,16 +1,8 @@
 # Ast provides the compiler/ast/Ast standard library API.
 class Ast
-  # Ast.walk provides the compiler/ast/Ast standard library operation.
-  walk: node, visitor ->
-    visitor(node)
-    ast_walk_children = Ast().children(node)
-    i = 0
-    while i < ast_walk_children.len()
-      Ast().walk(ast_walk_children[i], visitor)
-      i = i + 1
-    return nil
-
   # Ast.children provides the compiler/ast/Ast standard library operation.
+  # @param node Any node value.
+  # @return Any the resulting value.
   children: node ->
     out = []
     Ast().push_children(out, node, "body")
@@ -27,17 +19,29 @@ class Ast
     Ast().push_child(out, node, "right")
     Ast().push_child(out, node, "target")
     Ast().push_child(out, node, "iterable")
-    return out
+    out
 
   # Ast.kind provides the compiler/ast/Ast standard library operation.
+  # @param node Any node value.
+  # @return Any the resulting value.
   kind: node ->
-    return compiler_ast_kind(node)
+    compiler_ast_kind(node)
 
-  # Ast.span provides the compiler/ast/Ast standard library operation.
-  span: node ->
-    return compiler_ast_span(node)
+  # Ast.push_child provides the compiler/ast/Ast standard library operation.
+  # @param out Any out value.
+  # @param node Any node value.
+  # @param key String key value.
+  # @return Any the resulting value.
+  push_child: out, node, key ->
+    if node.has(key)
+      out.push(node[key])
+    nil
 
   # Ast.push_children provides the compiler/ast/Ast standard library operation.
+  # @param out Any out value.
+  # @param node Any node value.
+  # @param key String key value.
+  # @return Any the resulting value.
   push_children: out, node, key ->
     if node.has(key)
       ast_children_values = node[key]
@@ -45,10 +49,23 @@ class Ast
       while i < ast_children_values.len()
         out.push(ast_children_values[i])
         i = i + 1
-    return nil
+    nil
 
-  # Ast.push_child provides the compiler/ast/Ast standard library operation.
-  push_child: out, node, key ->
-    if node.has(key)
-      out.push(node[key])
-    return nil
+  # Ast.span provides the compiler/ast/Ast standard library operation.
+  # @param node Any node value.
+  # @return Any the resulting value.
+  span: node ->
+    compiler_ast_span(node)
+
+  # Ast.walk provides the compiler/ast/Ast standard library operation.
+  # @param node Any node value.
+  # @param visitor Any visitor value.
+  # @return Any the resulting value.
+  walk: node, visitor ->
+    visitor(node)
+    ast_walk_children = Ast().children(node)
+    i = 0
+    while i < ast_walk_children.len()
+      Ast().walk(ast_walk_children[i], visitor)
+      i = i + 1
+    nil

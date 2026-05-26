@@ -1,68 +1,110 @@
 # Dir provides the dir/Dir standard library API.
 class Dir
+  # Dir.path stores instance state.
+  # @type Nil
+  path: nil
+
   # Dir.list returns entries in path.
+  # @param path String path value.
+  # @return Any the resulting value.
   static list: path ->
     dir_list(path)
 
   # Dir.mkdir creates a directory.
+  # @param path String path value.
+  # @return Any the resulting value.
   static mkdir: path ->
     dir_mkdir(path)
 
-  # Dir.rmdir removes an empty directory.
-  static rmdir: path ->
-    dir_rmdir(path)
-
   # Dir.mkdir_all creates a directory and missing parents.
+  # @param path String path value.
+  # @return Any the resulting value.
   static mkdir_all: path ->
     dir_mkdir_all(path)
 
   # Dir.remove_all removes a file or directory tree recursively.
+  # @param path String path value.
+  # @return Any the resulting value.
   static remove_all: path ->
     dir_remove_all(path)
 
-  # Dir.walk visits entries in deterministic order.
-  static walk: path, fn, options = {} ->
-    dir_walk(path, fn, options)
+  # Dir.rmdir removes an empty directory.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static rmdir: path ->
+    dir_rmdir(path)
 
   # Dir.temp_dir creates a temporary directory and returns its path.
+  # @param prefix Any prefix value.
+  # @return Any the resulting value.
   static temp_dir: prefix = "tya" ->
     dir_temp_dir(prefix)
 
+  # Dir.walk visits entries in deterministic order.
+  # @param path String path value.
+  # @param fn Function fn value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  static walk: path, fn, options = {} ->
+    dir_walk(path, fn, options)
+
   # Dir.initialize stores a directory path.
+  # @param path String path value.
+  # @return Self the initialized object.
   initialize: path = nil ->
     self.path = path
 
   # Dir.list provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
   list: path = nil ->
     if path == nil
       path = self.path
     dir_list(path)
 
   # Dir.mkdir provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
   mkdir: path = nil ->
     if path == nil
       path = self.path
     dir_mkdir(path)
 
-  # Dir.rmdir provides the dir/Dir standard library operation.
-  rmdir: path = nil ->
-    if path == nil
-      path = self.path
-    dir_rmdir(path)
-
   # mkdir_all creates a directory and missing parents.
+  # @param path String path value.
+  # @return Any the resulting value.
   mkdir_all: path = nil ->
     if path == nil
       path = self.path
     dir_mkdir_all(path)
 
   # remove_all removes a file or directory tree recursively.
+  # @param path String path value.
+  # @return Any the resulting value.
   remove_all: path = nil ->
     if path == nil
       path = self.path
     dir_remove_all(path)
 
+  # Dir.rmdir provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  rmdir: path = nil ->
+    if path == nil
+      path = self.path
+    dir_rmdir(path)
+
+  # temp_dir creates a temporary directory and returns its path.
+  # @param prefix Any prefix value.
+  # @return Any the resulting value.
+  temp_dir: prefix = "tya" ->
+    dir_temp_dir(prefix)
+
   # walk visits entries in deterministic order.
+  # @param path String path value.
+  # @param fn Function fn value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   walk: path, fn = nil, options = {} ->
     if self.path != nil and fn != nil
       options = fn
@@ -71,7 +113,3 @@ class Dir
     if path == nil
       path = self.path
     dir_walk(path, fn, options)
-
-  # temp_dir creates a temporary directory and returns its path.
-  temp_dir: prefix = "tya" ->
-    dir_temp_dir(prefix)

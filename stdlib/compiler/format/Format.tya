@@ -1,9 +1,13 @@
 # Format provides the compiler/format/Format standard library API.
 class Format
   # Format.format provides the compiler/format/Format standard library operation.
+  # @param source String source value.
+  # @return Any the resulting value.
   format: source ->
-    return compiler_format_format(source)
+    compiler_format_format(source)
 
   # Format.unparse provides the compiler/format/Format standard library operation.
+  # @param program Any program value.
+  # @return Any the resulting value.
   unparse: program ->
-    return compiler_format_unparse(program)
+    compiler_format_unparse(program)

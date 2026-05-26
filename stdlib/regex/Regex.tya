@@ -1,10 +1,19 @@
 # Regex provides the regex/Regex standard library API.
 class Regex
+  # Regex.pattern stores instance state.
+  # @type Nil
+  pattern: nil
+
   # Regex.initialize stores a pattern.
+  # @param pattern String pattern value.
+  # @return Self the initialized object.
   initialize: pattern ->
     self.pattern = pattern
 
   # Regex.compile compiles a reusable regex value.
+  # @param pattern String pattern value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   compile: pattern = nil, options = {} ->
     if self.pattern != nil
       if pattern != nil
@@ -12,18 +21,26 @@ class Regex
       pattern = self.pattern
     if options == nil
       options = {}
-    return regex_compile(pattern, options)
+    regex_compile(pattern, options)
 
   # Regex.match? returns whether pattern appears in text.
+  # @param pattern String pattern value.
+  # @param text String text value.
+  # @param options Dict options value.
+  # @return Boolean whether the condition is true.
   match?: pattern, text = nil, options = {} ->
     if self.pattern != nil
       text = pattern
       pattern = self.pattern
-    return Regex(pattern).compile(options).match?(text)
+    Regex(pattern).compile(options).match?(text)
 
   # Regex.search returns the first match dictionary or nil.
+  # @param pattern String pattern value.
+  # @param text String text value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   search: pattern, text = nil, options = {} ->
     if self.pattern != nil
       text = pattern
       pattern = self.pattern
-    return Regex(pattern).compile(options).find(text)
+    Regex(pattern).compile(options).find(text)

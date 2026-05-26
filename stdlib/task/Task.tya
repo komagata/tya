@@ -1,4 +1,5 @@
 # Task provides the task/Task standard library API.
 class Task
   # Task.current provides the task/Task standard library operation.
-  current: () -> task_current()
+  # @return Any the resulting value.
+  current: -> task_current()

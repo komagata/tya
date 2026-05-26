@@ -1,21 +1,31 @@
 # TestSuite provides the unittest/TestSuite standard library API.
 class TestSuite
+  # TestSuite.tests stores instance state.
+  # @type Array
+  tests: []
+
   # TestSuite.initialize provides the unittest/TestSuite standard library operation.
+  # @return Self the initialized object.
   initialize: ->
     self.tests = []
 
   # TestSuite.add provides the unittest/TestSuite standard library operation.
+  # @param test Any test value.
+  # @return Any the resulting value.
   add: test ->
     self.tests.push(test)
     self
 
   # TestSuite.add_all provides the unittest/TestSuite standard library operation.
+  # @param tests Any tests value.
+  # @return Any the resulting value.
   add_all: tests ->
     for test in tests
       self.add(test)
     self
 
   # TestSuite.count provides the unittest/TestSuite standard library operation.
+  # @return Int the resulting value.
   count: ->
     total = 0
     for test in self.tests
@@ -31,6 +41,8 @@ class TestSuite
     total
 
   # TestSuite.discover provides the unittest/TestSuite standard library operation.
+  # @param cases Any cases value.
+  # @return Any the resulting value.
   discover: cases ->
     found = TestSuite()
     for c in cases
@@ -43,6 +55,8 @@ class TestSuite
     found
 
   # TestSuite.test_methods_for provides the unittest/TestSuite standard library operation.
+  # @param test Any test value.
+  # @return Any the resulting value.
   test_methods_for: test ->
     methods = []
     try

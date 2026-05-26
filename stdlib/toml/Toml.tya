@@ -1,305 +1,71 @@
 # Toml parses and formats TOML documents.
 class Toml
+  # Toml.value stores instance state.
+  # @type Nil
+  value: nil
+
   # Toml.initialize stores a value or TOML text.
+  # @param value String value value.
+  # @return Self the initialized object.
   initialize: value = nil ->
     self.value = value
 
-  # Toml.is_digit provides the toml/Toml standard library operation.
-  is_digit: c ->
-    code = ord(c)
-    return code >= 48 and code <= 57
+  # dump is a compatibility alias for stringify.
+  # @param value String value value.
+  # @return String the resulting value.
+  dump: value = nil ->
+    self.stringify(value)
 
-  # Toml.is_bare_key_char provides the toml/Toml standard library operation.
-  is_bare_key_char: c ->
-    code = ord(c)
-    if code >= 65 and code <= 90
-      return true
-    if code >= 97 and code <= 122
-      return true
-    if code >= 48 and code <= 57
-      return true
-    return c == "_" or c == "-"
-
-  # Toml.skip_ws_in_line provides the toml/Toml standard library operation.
-  skip_ws_in_line: state ->
-    p = state["pos"]
-    n = state["len"]
-    src = state["src"]
-    cr = chr(13)
-    while p < n
-      c = src[p]
-      if c == " " or c == "\t" or c == cr
-        p = p + 1
-      elseif c == "#"
-        while p < n and src[p] != "\n"
-          p = p + 1
-      else
-        state["pos"] = p
-        return nil
-    state["pos"] = p
-
-  # Toml.skip_ws_and_newlines provides the toml/Toml standard library operation.
-  skip_ws_and_newlines: state ->
-    p = state["pos"]
-    n = state["len"]
-    src = state["src"]
-    cr = chr(13)
-    while p < n
-      c = src[p]
-      if c == " " or c == "\t" or c == cr or c == "\n"
-        p = p + 1
-      elseif c == "#"
-        while p < n and src[p] != "\n"
-          p = p + 1
-      else
-        state["pos"] = p
-        return nil
-    state["pos"] = p
-
-  # Toml.parse_basic_string provides the toml/Toml standard library operation.
-  parse_basic_string: state ->
-    p = state["pos"]
-    src = state["src"]
-    n = state["len"]
-    if src[p] != "\""
-      raise error("toml.parse: expected '\"'")
-    p = p + 1
-    out = ""
-    while p < n
-      c = src[p]
-      if c == "\""
-        state["pos"] = p + 1
-        return out
-      if c == "\\"
-        if p + 1 >= n
-          raise error("toml.parse: truncated escape")
-        e = src[p + 1]
-        if e == "\""
-          out = out + "\""
-        elseif e == "\\"
-          out = out + "\\"
-        else
-          if e == "n"
-            out = out + "\n"
-          elseif e == "t"
-            out = out + "\t"
-          else
-            if e == "r"
-              out = out + chr(13)
-            elseif e == "b"
-              out = out + chr(8)
-            else
-              if e == "f"
-                out = out + chr(12)
-              else
-                raise error("toml.parse: invalid escape")
-        p = p + 2
-      elseif c == "\n"
-        raise error("toml.parse: newline in basic string")
-      else
-        out = out + c
-        p = p + 1
-    raise error("toml.parse: unterminated string")
-
-  # Toml.parse_literal_string provides the toml/Toml standard library operation.
-  parse_literal_string: state ->
-    p = state["pos"]
-    src = state["src"]
-    n = state["len"]
-    if src[p] != "'"
-      raise error("toml.parse: expected literal string")
-    p = p + 1
-    out = ""
-    while p < n
-      c = src[p]
-      if c == "'"
-        state["pos"] = p + 1
-        return out
-      if c == "\n"
-        raise error("toml.parse: newline in literal string")
-      out = out + c
-      p = p + 1
-    raise error("toml.parse: unterminated literal string")
-
-  # Toml.parse_key provides the toml/Toml standard library operation.
-  parse_key: state ->
-    Toml(nil).skip_ws_in_line(state)
-    p = state["pos"]
-    src = state["src"]
-    n = state["len"]
-    if p >= n
-      raise error("toml.parse: expected key")
-    c = src[p]
-    if c == "\""
-      return Toml(nil).parse_basic_string(state)
-    if c == "'"
-      return Toml(nil).parse_literal_string(state)
-    out = ""
-    while p < n and Toml(nil).is_bare_key_char(src[p])
-      out = out + src[p]
-      p = p + 1
-    if out == ""
-      raise error("toml.parse: expected key")
-    state["pos"] = p
-    return out
-
-  # Toml.parse_number_or_keyword provides the toml/Toml standard library operation.
-  parse_number_or_keyword: state ->
-    p = state["pos"]
-    src = state["src"]
-    n = state["len"]
-    start = p
-    if src[p] == "-" or src[p] == "+"
-      p = p + 1
-    while p < n and (Toml(nil).is_digit(src[p]) or src[p] == "_")
-      p = p + 1
-    is_float = false
-    if p < n and src[p] == "."
-      is_float = true
-      p = p + 1
-      while p < n and (Toml(nil).is_digit(src[p]) or src[p] == "_")
-        p = p + 1
-    if p < n and (src[p] == "e" or src[p] == "E")
-      is_float = true
-      p = p + 1
-      if p < n and (src[p] == "+" or src[p] == "-")
-        p = p + 1
-      while p < n and (Toml(nil).is_digit(src[p]) or src[p] == "_")
-        p = p + 1
-    raw = ""
-    k = start
-    while k < p
-      if src[k] != "_"
-        raw = raw + src[k]
-      k = k + 1
-    state["pos"] = p
-    if is_float
-      return raw.to_f()
-    return raw.to_i()
-
-  # Toml.starts_with_text provides the toml/Toml standard library operation.
-  starts_with_text: state, word ->
-    src = state["src"]
-    n = state["len"]
-    p = state["pos"]
-    wn = word.byte_len()
-    if p + wn > n
-      return false
-    k = 0
-    while k < wn
-      if src[p + k] != word[k]
-        return false
-      k = k + 1
-    return true
-
-  # Toml.parse_value provides the toml/Toml standard library operation.
-  parse_value: state ->
-    Toml(nil).skip_ws_in_line(state)
-    p = state["pos"]
-    src = state["src"]
-    n = state["len"]
-    if p >= n
-      raise error("toml.parse: expected value")
-    c = src[p]
-    if c == "\""
-      return Toml(nil).parse_basic_string(state)
-    if c == "'"
-      return Toml(nil).parse_literal_string(state)
-    if c == "["
-      return Toml(nil).parse_array(state)
-    if Toml(nil).starts_with_text(state, "true")
-      state["pos"] = p + 4
-      return true
-    if Toml(nil).starts_with_text(state, "false")
-      state["pos"] = p + 5
-      return false
-    return Toml(nil).parse_number_or_keyword(state)
-
-  # Toml.parse_array provides the toml/Toml standard library operation.
-  parse_array: state ->
-    p = state["pos"]
-    if state["src"][p] != "["
-      raise error("toml.parse: expected '['")
-    state["pos"] = p + 1
-    out = []
-    Toml(nil).skip_ws_and_newlines(state)
-    p = state["pos"]
-    if p < state["len"] and state["src"][p] == "]"
-      state["pos"] = p + 1
-      return out
-    while true
-      v = Toml(nil).parse_value(state)
-      out.push(v)
-      Toml(nil).skip_ws_and_newlines(state)
-      p = state["pos"]
-      if p >= state["len"]
-        raise error("toml.parse: unterminated array")
-      if state["src"][p] == ","
-        state["pos"] = p + 1
-        Toml(nil).skip_ws_and_newlines(state)
-        p = state["pos"]
-        if p < state["len"] and state["src"][p] == "]"
-          state["pos"] = p + 1
-          return out
-      elseif state["src"][p] == "]"
-        state["pos"] = p + 1
-        return out
-      else
-        raise error("toml.parse: expected ',' or ']' in array")
-
-  # Toml.parse_inline_table provides the toml/Toml standard library operation.
-  parse_inline_table: state ->
-    p = state["pos"]
-    if state["src"][p] != "{{"
-      raise error("toml.parse: expected inline table")
-    state["pos"] = p + 1
-    out = {}
-    Toml(nil).skip_ws_in_line(state)
-    p = state["pos"]
-    if p < state["len"] and state["src"][p] == "}}"
-      state["pos"] = p + 1
-      return out
-    while true
-      key = Toml(nil).parse_key(state)
-      Toml(nil).skip_ws_in_line(state)
-      p = state["pos"]
-      if p >= state["len"] or state["src"][p] != "="
-        raise error("toml.parse: expected '=' in inline table")
-      state["pos"] = p + 1
-      v = Toml(nil).parse_value_with_inline(state)
-      out[key] = v
-      Toml(nil).skip_ws_in_line(state)
-      p = state["pos"]
-      if p < state["len"] and state["src"][p] == ","
-        state["pos"] = p + 1
-        Toml(nil).skip_ws_in_line(state)
-      elseif p < state["len"] and state["src"][p] == "}}"
-        state["pos"] = p + 1
-        return out
-      else
-        raise error("toml.parse: expected ',' or '}}' in inline table")
-
-  # Toml.parse_value_with_inline provides the toml/Toml standard library operation.
-  parse_value_with_inline: state ->
-    Toml(nil).skip_ws_in_line(state)
-    p = state["pos"]
-    if p < state["len"] and state["src"][p] == "{{"
-      return Toml(nil).parse_inline_table(state)
-    return Toml(nil).parse_value(state)
-
-  # Toml.ensure_path provides the toml/Toml standard library operation.
-  ensure_path: root, segments ->
-    cur = root
+  # Toml.emit_table provides the toml/Toml standard library operation.
+  # @param value String value value.
+  # @param prefix Any prefix value.
+  # @return Any the resulting value.
+  emit_table: value, prefix ->
+    primitives = ""
+    sub_tables = ""
+    ks = value.keys()
     i = 0
-    while i < segments.len()
-      seg = segments[i]
-      if not cur.has(seg)
-        cur[seg] = {}
-      cur = cur[seg]
+    while i < ks.len()
+      k = ks[i]
+      v = value[k]
+      if v.class == Dict
+        new_prefix = ""
+        if prefix == ""
+          new_prefix = Toml(nil).format_key(k)
+        else
+          new_prefix = prefix + "." + Toml(nil).format_key(k)
+        sub_tables = sub_tables
+          + "\n["
+          + new_prefix
+          + "]\n"
+          + Toml(nil).emit_table(v, new_prefix)
+      elseif Toml(nil).is_array_of_dicts(v)
+        new_prefix = ""
+        if prefix == ""
+          new_prefix = Toml(nil).format_key(k)
+        else
+          new_prefix = prefix + "." + Toml(nil).format_key(k)
+        j = 0
+        while j < v.len()
+          sub_tables = sub_tables
+            + "\n[["
+            + new_prefix
+            + "]]\n"
+            + Toml(nil).emit_table(v[j], new_prefix)
+          j = j + 1
+      else
+        primitives = primitives
+          + Toml(nil).format_key(k)
+          + " = "
+          + Toml(nil).format_inline_value(v)
+          + "\n"
       i = i + 1
-    return cur
+    primitives + sub_tables
 
   # Toml.ensure_array_path provides the toml/Toml standard library operation.
+  # @param root Any root value.
+  # @param segments Any segments value.
+  # @return String the resulting value.
   ensure_array_path: root, segments ->
     cur = root
     i = 0
@@ -316,24 +82,161 @@ class Toml
     arr = cur[final]
     new_table = {}
     arr.push(new_table)
-    return new_table
+    new_table
 
-  # Toml.parse_header_segments provides the toml/Toml standard library operation.
-  parse_header_segments: state ->
-    segments = []
-    while true
-      Toml(nil).skip_ws_in_line(state)
-      key = Toml(nil).parse_key(state)
-      segments.push(key)
-      Toml(nil).skip_ws_in_line(state)
-      p = state["pos"]
-      if p < state["len"] and state["src"][p] == "."
-        state["pos"] = p + 1
+  # Toml.ensure_path provides the toml/Toml standard library operation.
+  # @param root Any root value.
+  # @param segments Any segments value.
+  # @return String the resulting value.
+  ensure_path: root, segments ->
+    cur = root
+    i = 0
+    while i < segments.len()
+      seg = segments[i]
+      if not cur.has(seg)
+        cur[seg] = {}
+      cur = cur[seg]
+      i = i + 1
+    cur
+
+  # Toml.format_inline_value provides the toml/Toml standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  format_inline_value: value ->
+    if value.class == Nil
+      raise error("toml.dump: nil is not representable in TOML")
+    if value.class == Boolean
+      if value
+        return "true"
+      return "false"
+    if value.class == Number
+      return value.to_s()
+    if value.class == String
+      return Toml(nil).format_string(value)
+    if value.class == Array
+      out = "["
+      i = 0
+      while i < value.len()
+        if i > 0
+          out = out + ", "
+        out = out + Toml(nil).format_inline_value(value[i])
+        i = i + 1
+      return out + "]"
+    if value.class == Dict
+      out = "{{"
+      ks = value.keys()
+      i = 0
+      while i < ks.len()
+        if i > 0
+          out = out + ", "
+        out = out
+          + Toml(nil).format_key(ks[i])
+          + " = "
+          + Toml(nil).format_inline_value(value[ks[i]])
+        i = i + 1
+      return out + "}}"
+    raise error("toml.dump: unsupported value kind")
+
+  # Toml.format_key provides the toml/Toml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  format_key: text ->
+    if Toml(nil).is_bare_key(text)
+      return text
+    out = "\""
+    n = text.byte_len()
+    i = 0
+    while i < n
+      c = text[i]
+      if c == "\""
+        out = out + "\\\""
+      elseif c == "\\"
+        out = out + "\\\\"
       else
-        return segments
+        out = out + c
+      i = i + 1
+    out + "\""
+
+  # Toml.format_string provides the toml/Toml standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
+  format_string: text ->
+    out = "\""
+    n = text.byte_len()
+    i = 0
+    while i < n
+      c = text[i]
+      code = ord(c)
+      if c == "\""
+        out = out + "\\\""
+      elseif c == "\\"
+        out = out + "\\\\"
+      else
+        if c == "\n"
+          out = out + "\\n"
+        elseif c == "\t"
+          out = out + "\\t"
+        else
+          if code == 13
+            out = out + "\\r"
+          else
+            out = out + c
+      i = i + 1
+    out + "\""
+
+  # Toml.is_array_of_dicts provides the toml/Toml standard library operation.
+  # @param value String value value.
+  # @return Boolean the resulting value.
+  is_array_of_dicts: value ->
+    if value.class != Array
+      return false
+    if value.len() == 0
+      return false
+    i = 0
+    while i < value.len()
+      if value[i].class != Dict
+        return false
+      i = i + 1
+    true
+
+  # Toml.is_bare_key provides the toml/Toml standard library operation.
+  # @param text String text value.
+  # @return Boolean the resulting value.
+  is_bare_key: text ->
+    n = text.byte_len()
+    if n == 0
+      return false
+    i = 0
+    while i < n
+      if not Toml(nil).is_bare_key_char(text[i])
+        return false
+      i = i + 1
+    true
+
+  # Toml.is_bare_key_char provides the toml/Toml standard library operation.
+  # @param c Any c value.
+  # @return Boolean the resulting value.
+  is_bare_key_char: c ->
+    code = ord(c)
+    if code >= 65 and code <= 90
+      return true
+    if code >= 97 and code <= 122
+      return true
+    if code >= 48 and code <= 57
+      return true
+    c == "_" or c == "-"
+
+  # Toml.is_digit provides the toml/Toml standard library operation.
+  # @param c Any c value.
+  # @return Boolean the resulting value.
+  is_digit: c ->
+    code = ord(c)
+    code >= 48 and code <= 57
 
   # parse converts TOML text into nested dictionaries and arrays.
   # Raises when the input is not valid TOML.
+  # @param text String text value.
+  # @return Any the resulting value.
   parse: text = nil ->
     if text == nil
       text = self.value
@@ -381,163 +284,320 @@ class Toml
         if p < state["len"] and state["src"][p] != "\n"
           if state["src"][p] != "#"
             raise error("toml.parse: unexpected trailing characters on line")
-    return root
+    root
 
-  # Toml.is_bare_key provides the toml/Toml standard library operation.
-  is_bare_key: text ->
-    n = text.byte_len()
-    if n == 0
-      return false
-    i = 0
-    while i < n
-      if not Toml(nil).is_bare_key_char(text[i])
-        return false
-      i = i + 1
-    return true
+  # Toml.parse_array provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Array the resulting value.
+  parse_array: state ->
+    p = state["pos"]
+    if state["src"][p] != "["
+      raise error("toml.parse: expected '['")
+    state["pos"] = p + 1
+    out = []
+    Toml(nil).skip_ws_and_newlines(state)
+    p = state["pos"]
+    if p < state["len"] and state["src"][p] == "]"
+      state["pos"] = p + 1
+      return out
+    while true
+      v = Toml(nil).parse_value(state)
+      out.push(v)
+      Toml(nil).skip_ws_and_newlines(state)
+      p = state["pos"]
+      if p >= state["len"]
+        raise error("toml.parse: unterminated array")
+      if state["src"][p] == ","
+        state["pos"] = p + 1
+        Toml(nil).skip_ws_and_newlines(state)
+        p = state["pos"]
+        if p < state["len"] and state["src"][p] == "]"
+          state["pos"] = p + 1
+          return out
+      elseif state["src"][p] == "]"
+        state["pos"] = p + 1
+        return out
+      else
+        raise error("toml.parse: expected ',' or ']' in array")
 
-  # Toml.format_key provides the toml/Toml standard library operation.
-  format_key: text ->
-    if Toml(nil).is_bare_key(text)
-      return text
-    out = "\""
-    n = text.byte_len()
-    i = 0
-    while i < n
-      c = text[i]
+  # Toml.parse_basic_string provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return String the resulting value.
+  parse_basic_string: state ->
+    p = state["pos"]
+    src = state["src"]
+    n = state["len"]
+    if src[p] != "\""
+      raise error("toml.parse: expected '\"'")
+    p = p + 1
+    out = ""
+    while p < n
+      c = src[p]
       if c == "\""
-        out = out + "\\\""
-      elseif c == "\\"
-        out = out + "\\\\"
+        state["pos"] = p + 1
+        return out
+      if c == "\\"
+        if p + 1 >= n
+          raise error("toml.parse: truncated escape")
+        e = src[p + 1]
+        if e == "\""
+          out = out + "\""
+        elseif e == "\\"
+          out = out + "\\"
+        else
+          if e == "n"
+            out = out + "\n"
+          elseif e == "t"
+            out = out + "\t"
+          else
+            if e == "r"
+              out = out + chr(13)
+            elseif e == "b"
+              out = out + chr(8)
+            else
+              if e == "f"
+                out = out + chr(12)
+              else
+                raise error("toml.parse: invalid escape")
+        p = p + 2
+      elseif c == "\n"
+        raise error("toml.parse: newline in basic string")
       else
         out = out + c
-      i = i + 1
-    return out + "\""
+        p = p + 1
+    raise error("toml.parse: unterminated string")
 
-  # Toml.format_string provides the toml/Toml standard library operation.
-  format_string: text ->
-    out = "\""
-    n = text.byte_len()
-    i = 0
-    while i < n
-      c = text[i]
-      code = ord(c)
-      if c == "\""
-        out = out + "\\\""
-      elseif c == "\\"
-        out = out + "\\\\"
+  # Toml.parse_header_segments provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_header_segments: state ->
+    segments = []
+    while true
+      Toml(nil).skip_ws_in_line(state)
+      key = Toml(nil).parse_key(state)
+      segments.push(key)
+      Toml(nil).skip_ws_in_line(state)
+      p = state["pos"]
+      if p < state["len"] and state["src"][p] == "."
+        state["pos"] = p + 1
       else
-        if c == "\n"
-          out = out + "\\n"
-        elseif c == "\t"
-          out = out + "\\t"
-        else
-          if code == 13
-            out = out + "\\r"
-          else
-            out = out + c
-      i = i + 1
-    return out + "\""
+        return segments
 
-  # Toml.format_inline_value provides the toml/Toml standard library operation.
-  format_inline_value: value ->
-    if value.class == Nil
-      raise error("toml.dump: nil is not representable in TOML")
-    if value.class == Boolean
-      if value
-        return "true"
-      return "false"
-    if value.class == Number
-      return value.to_s()
-    if value.class == String
-      return Toml(nil).format_string(value)
-    if value.class == Array
-      out = "["
-      i = 0
-      while i < value.len()
-        if i > 0
-          out = out + ", "
-        out = out + Toml(nil).format_inline_value(value[i])
-        i = i + 1
-      return out + "]"
-    if value.class == Dict
-      out = "{{"
-      ks = value.keys()
-      i = 0
-      while i < ks.len()
-        if i > 0
-          out = out + ", "
-        out = out
-          + Toml(nil).format_key(ks[i])
-          + " = "
-          + Toml(nil).format_inline_value(value[ks[i]])
-        i = i + 1
-      return out + "}}"
-    raise error("toml.dump: unsupported value kind")
+  # Toml.parse_inline_table provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_inline_table: state ->
+    p = state["pos"]
+    if state["src"][p] != "{{"
+      raise error("toml.parse: expected inline table")
+    state["pos"] = p + 1
+    out = {}
+    Toml(nil).skip_ws_in_line(state)
+    p = state["pos"]
+    if p < state["len"] and state["src"][p] == "}}"
+      state["pos"] = p + 1
+      return out
+    while true
+      key = Toml(nil).parse_key(state)
+      Toml(nil).skip_ws_in_line(state)
+      p = state["pos"]
+      if p >= state["len"] or state["src"][p] != "="
+        raise error("toml.parse: expected '=' in inline table")
+      state["pos"] = p + 1
+      v = Toml(nil).parse_value_with_inline(state)
+      out[key] = v
+      Toml(nil).skip_ws_in_line(state)
+      p = state["pos"]
+      if p < state["len"] and state["src"][p] == ","
+        state["pos"] = p + 1
+        Toml(nil).skip_ws_in_line(state)
+      elseif p < state["len"] and state["src"][p] == "}}"
+        state["pos"] = p + 1
+        return out
+      else
+        raise error("toml.parse: expected ',' or '}}' in inline table")
 
-  # Toml.is_array_of_dicts provides the toml/Toml standard library operation.
-  is_array_of_dicts: value ->
-    if value.class != Array
+  # Toml.parse_key provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_key: state ->
+    Toml(nil).skip_ws_in_line(state)
+    p = state["pos"]
+    src = state["src"]
+    n = state["len"]
+    if p >= n
+      raise error("toml.parse: expected key")
+    c = src[p]
+    if c == "\""
+      return Toml(nil).parse_basic_string(state)
+    if c == "'"
+      return Toml(nil).parse_literal_string(state)
+    out = ""
+    while p < n and Toml(nil).is_bare_key_char(src[p])
+      out = out + src[p]
+      p = p + 1
+    if out == ""
+      raise error("toml.parse: expected key")
+    state["pos"] = p
+    out
+
+  # Toml.parse_literal_string provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return String the resulting value.
+  parse_literal_string: state ->
+    p = state["pos"]
+    src = state["src"]
+    n = state["len"]
+    if src[p] != "'"
+      raise error("toml.parse: expected literal string")
+    p = p + 1
+    out = ""
+    while p < n
+      c = src[p]
+      if c == "'"
+        state["pos"] = p + 1
+        return out
+      if c == "\n"
+        raise error("toml.parse: newline in literal string")
+      out = out + c
+      p = p + 1
+    raise error("toml.parse: unterminated literal string")
+
+  # Toml.parse_number_or_keyword provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_number_or_keyword: state ->
+    p = state["pos"]
+    src = state["src"]
+    n = state["len"]
+    start = p
+    if src[p] == "-" or src[p] == "+"
+      p = p + 1
+    while p < n and (Toml(nil).is_digit(src[p]) or src[p] == "_")
+      p = p + 1
+    is_float = false
+    if p < n and src[p] == "."
+      is_float = true
+      p = p + 1
+      while p < n and (Toml(nil).is_digit(src[p]) or src[p] == "_")
+        p = p + 1
+    if p < n and (src[p] == "e" or src[p] == "E")
+      is_float = true
+      p = p + 1
+      if p < n and (src[p] == "+" or src[p] == "-")
+        p = p + 1
+      while p < n and (Toml(nil).is_digit(src[p]) or src[p] == "_")
+        p = p + 1
+    raw = ""
+    k = start
+    while k < p
+      if src[k] != "_"
+        raw = raw + src[k]
+      k = k + 1
+    state["pos"] = p
+    if is_float
+      return raw.to_f()
+    raw.to_i()
+
+  # Toml.parse_value provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_value: state ->
+    Toml(nil).skip_ws_in_line(state)
+    p = state["pos"]
+    src = state["src"]
+    n = state["len"]
+    if p >= n
+      raise error("toml.parse: expected value")
+    c = src[p]
+    if c == "\""
+      return Toml(nil).parse_basic_string(state)
+    if c == "'"
+      return Toml(nil).parse_literal_string(state)
+    if c == "["
+      return Toml(nil).parse_array(state)
+    if Toml(nil).starts_with_text(state, "true")
+      state["pos"] = p + 4
+      return true
+    if Toml(nil).starts_with_text(state, "false")
+      state["pos"] = p + 5
       return false
-    if value.len() == 0
+    Toml(nil).parse_number_or_keyword(state)
+
+  # Toml.parse_value_with_inline provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_value_with_inline: state ->
+    Toml(nil).skip_ws_in_line(state)
+    p = state["pos"]
+    if p < state["len"] and state["src"][p] == "{{"
+      return Toml(nil).parse_inline_table(state)
+    Toml(nil).parse_value(state)
+
+  # Toml.skip_ws_and_newlines provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  skip_ws_and_newlines: state ->
+    p = state["pos"]
+    n = state["len"]
+    src = state["src"]
+    cr = chr(13)
+    while p < n
+      c = src[p]
+      if c == " " or c == "\t" or c == cr or c == "\n"
+        p = p + 1
+      elseif c == "#"
+        while p < n and src[p] != "\n"
+          p = p + 1
+      else
+        state["pos"] = p
+        return nil
+    state["pos"] = p
+
+  # Toml.skip_ws_in_line provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  skip_ws_in_line: state ->
+    p = state["pos"]
+    n = state["len"]
+    src = state["src"]
+    cr = chr(13)
+    while p < n
+      c = src[p]
+      if c == " " or c == "\t" or c == cr
+        p = p + 1
+      elseif c == "#"
+        while p < n and src[p] != "\n"
+          p = p + 1
+      else
+        state["pos"] = p
+        return nil
+    state["pos"] = p
+
+  # Toml.starts_with_text provides the toml/Toml standard library operation.
+  # @param state Any state value.
+  # @param word Any word value.
+  # @return String the resulting value.
+  starts_with_text: state, word ->
+    src = state["src"]
+    n = state["len"]
+    p = state["pos"]
+    wn = word.byte_len()
+    if p + wn > n
       return false
-    i = 0
-    while i < value.len()
-      if value[i].class != Dict
+    k = 0
+    while k < wn
+      if src[p + k] != word[k]
         return false
-      i = i + 1
-    return true
-
-  # Toml.emit_table provides the toml/Toml standard library operation.
-  emit_table: value, prefix ->
-    primitives = ""
-    sub_tables = ""
-    ks = value.keys()
-    i = 0
-    while i < ks.len()
-      k = ks[i]
-      v = value[k]
-      if v.class == Dict
-        new_prefix = ""
-        if prefix == ""
-          new_prefix = Toml(nil).format_key(k)
-        else
-          new_prefix = prefix + "." + Toml(nil).format_key(k)
-        sub_tables = sub_tables
-          + "\n["
-          + new_prefix
-          + "]\n"
-          + Toml(nil).emit_table(v, new_prefix)
-      elseif Toml(nil).is_array_of_dicts(v)
-        new_prefix = ""
-        if prefix == ""
-          new_prefix = Toml(nil).format_key(k)
-        else
-          new_prefix = prefix + "." + Toml(nil).format_key(k)
-        j = 0
-        while j < v.len()
-          sub_tables = sub_tables
-            + "\n[["
-            + new_prefix
-            + "]]\n"
-            + Toml(nil).emit_table(v[j], new_prefix)
-          j = j + 1
-      else
-        primitives = primitives
-          + Toml(nil).format_key(k)
-          + " = "
-          + Toml(nil).format_inline_value(v)
-          + "\n"
-      i = i + 1
-    return primitives + sub_tables
+      k = k + 1
+    true
 
   # stringify converts dictionaries, arrays, strings, numbers, booleans, and nil to TOML text.
+  # @param value String value value.
+  # @return String the resulting value.
   stringify: value = nil ->
     if value == nil
       value = self.value
     if value.class != Dict
       raise error("toml.dump: top-level value must be a dict")
-    return Toml(nil).emit_table(value, "")
-
-  # dump is a compatibility alias for stringify.
-  dump: value = nil ->
-    self.stringify(value)
+    Toml(nil).emit_table(value, "")

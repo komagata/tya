@@ -1,51 +1,18 @@
 # Hex provides the hex/Hex standard library API.
 class Hex
+  # Hex.value stores instance state.
+  # @type Nil
+  value: nil
+
   # Hex.initialize stores an optional value for hex encoding or decoding.
+  # @param value String value value.
+  # @return Self the initialized object.
   initialize: value = nil ->
     self.value = value
 
-  # Hex.hex_digit provides the hex/Hex standard library operation.
-  hex_digit: d ->
-    if d < 10
-      return chr(48 + d)
-    return chr(87 + d)
-
-  # Hex.decode_digit provides the hex/Hex standard library operation.
-  decode_digit: c ->
-    code = ord(c)
-    if code >= 48 and code <= 57
-      return code - 48
-    if code >= 65 and code <= 70
-      return code - 55
-    if code >= 97 and code <= 102
-      return code - 87
-    raise error("hex.decode: invalid hex digit")
-
-  # Hex.encode provides the hex/Hex standard library operation.
-  encode: value = nil ->
-    if value == nil
-      value = self.value
-    out = ""
-    if value.class != String
-      bytes = bytes_array(value)
-      n = bytes.len()
-      i = 0
-      while i < n
-        code = bytes[i]
-        out = out + self.hex_digit((code / 16).to_i()) + self.hex_digit(code % 16)
-        i = i + 1
-      return out
-    if value.class == String
-      n = value.byte_len()
-      i = 0
-      while i < n
-        code = ord(value[i])
-        out = out + self.hex_digit((code / 16).to_i()) + self.hex_digit(code % 16)
-        i = i + 1
-      return out
-    raise error("hex.encode: argument must be a string or bytes")
-
   # Hex.decode provides the hex/Hex standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
   decode: text = nil ->
     if text == nil
       text = self.value
@@ -59,4 +26,51 @@ class Hex
       lo = self.decode_digit(text[i + 1])
       arr.push(hi * 16 + lo)
       i = i + 2
-    return bytes(arr)
+    bytes(arr)
+
+  # Hex.decode_digit provides the hex/Hex standard library operation.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  decode_digit: c ->
+    code = ord(c)
+    if code >= 48 and code <= 57
+      return code - 48
+    if code >= 65 and code <= 70
+      return code - 55
+    if code >= 97 and code <= 102
+      return code - 87
+    raise error("hex.decode: invalid hex digit")
+
+  # Hex.encode provides the hex/Hex standard library operation.
+  # @param value String value value.
+  # @return String the resulting value.
+  encode: value = nil ->
+    if value == nil
+      value = self.value
+    out = ""
+    if value.class != String
+      bytes = bytes_array(value)
+      n = bytes.len()
+      i = 0
+      while i < n
+        code = bytes[i]
+        out = out + self.hex_digit(code / 16.to_i()) + self.hex_digit(code % 16)
+        i = i + 1
+      return out
+    if value.class == String
+      n = value.byte_len()
+      i = 0
+      while i < n
+        code = ord(value[i])
+        out = out + self.hex_digit(code / 16.to_i()) + self.hex_digit(code % 16)
+        i = i + 1
+      return out
+    raise error("hex.encode: argument must be a string or bytes")
+
+  # Hex.hex_digit provides the hex/Hex standard library operation.
+  # @param d Any d value.
+  # @return Any the resulting value.
+  hex_digit: d ->
+    if d < 10
+      return chr(48 + d)
+    chr(87 + d)

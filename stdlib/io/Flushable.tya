@@ -1,0 +1,5 @@
+# Flushable provides the io/Flushable standard library API.
+interface Flushable
+  # flush provides the Flushable API operation.
+  # @return Nil the resulting value.
+  flush: ->

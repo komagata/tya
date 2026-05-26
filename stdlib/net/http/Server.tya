@@ -10,7 +10,32 @@ import template as template
 # scheduler so a handler that yields, for example with time.sleep, does
 # not block other ready clients.
 class Server
+  # Server.error_handler stores instance state.
+  # @type Nil
+  error_handler: nil
+
+  # Server.middlewares stores instance state.
+  # @type Array
+  middlewares: []
+
+  # Server.named_routes stores instance state.
+  # @type Dict
+  named_routes: {}
+
+  # Server.not_found_handler stores instance state.
+  # @type Nil
+  not_found_handler: nil
+
+  # Server.prefix stores instance state.
+  # @type String
+  prefix: ""
+
+  # Server.routes stores instance state.
+  # @type Array
+  routes: []
+
   # Server.initialize provides the net/http/Server standard library operation.
+  # @return Self the initialized object.
   initialize: ->
     self.routes = []
     self.prefix = ""
@@ -20,6 +45,9 @@ class Server
     self.error_handler = nil
 
   # Server.child provides the net/http/Server standard library operation.
+  # @param parent Any parent value.
+  # @param prefix Any prefix value.
+  # @return Any the resulting value.
   child: parent, prefix ->
     child = Server()
     child.routes = parent.routes
@@ -32,41 +60,78 @@ class Server
 
   # Server.get provides the net/http/Server standard library operation.
   # get registers a GET route and returns the server.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   get: path, handler, options ->
     return self.route("GET", path, handler, options)
 
   # Server.post provides the net/http/Server standard library operation.
   # post registers a POST route and returns the server.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   post: path, handler, options ->
     return self.route("POST", path, handler, options)
 
   # Server.put provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   put: path, handler, options ->
     return self.route("PUT", path, handler, options)
 
   # Server.delete provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   delete: path, handler, options ->
     return self.route("DELETE", path, handler, options)
 
   # Server.patch provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   patch: path, handler, options ->
     return self.route("PATCH", path, handler, options)
 
   # Server.options provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Dict the resulting value.
   options: path, handler, options ->
     return self.route("OPTIONS", path, handler, options)
 
   # Server.head provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   head: path, handler, options ->
     return self.route("HEAD", path, handler, options)
 
   # Server.any provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   any: path, handler, options ->
     return self.route("ANY", path, handler, options)
 
   # Server.route provides the net/http/Server standard library operation.
   # route registers a handler for method and path.
   # Raises when the path pattern or route options are invalid.
+  # @param method String method value.
+  # @param path String path value.
+  # @param handler Any handler value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   route: method, path, handler, options ->
     opts = self.route_options(options)
     full_path = self.join_paths(self.prefix, path)
@@ -78,29 +143,41 @@ class Server
     return self
 
   # Server.use provides the net/http/Server standard library operation.
+  # @param middleware Any middleware value.
+  # @return Any the resulting value.
   use: middleware ->
     self.middlewares.push(middleware)
     return self
 
   # Server.group provides the net/http/Server standard library operation.
+  # @param prefix Any prefix value.
+  # @param fn Function fn value.
+  # @return Any the resulting value.
   group: prefix, fn ->
     child = self.child(self, prefix)
     fn(child)
     return self
 
   # Server.not_found provides the net/http/Server standard library operation.
+  # @param handler Any handler value.
+  # @return Any the resulting value.
   not_found: handler ->
     self.not_found_handler = handler
     self.routes.push({ method: "__NOT_FOUND__", path: "*", handler: handler })
     return self
 
   # Server.error provides the net/http/Server standard library operation.
+  # @param handler Any handler value.
+  # @return Any the resulting value.
   error: handler ->
     self.error_handler = handler
     self.routes.push({ method: "__ERROR__", path: "*", handler: handler })
     return self
 
   # Server.path provides the net/http/Server standard library operation.
+  # @param name String name value.
+  # @param params Any params value.
+  # @return String the resulting value.
   path: name, params ->
     route = self.named_routes.get(name, nil)
     if route == nil
@@ -110,6 +187,9 @@ class Server
   # Server.redirect provides the net/http/Server standard library operation.
   # redirect returns a response dictionary with Location set.
   # Raises when status is not a supported redirect status.
+  # @param path String path value.
+  # @param status Any status value.
+  # @return Any the resulting value.
   redirect: path, status ->
     if status == nil
       status = 302
@@ -120,14 +200,27 @@ class Server
     return { status: status, headers: headers, body: "" }
 
   # render returns an HTML response by rendering a template file or source string.
+  # @param tmpl Any tmpl value.
+  # @param data Array data value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   render: tmpl, data, options ->
     return self.render_with_mode(tmpl, data, options, false)
 
   # render_html returns an HTML response and forces HTML escaping.
+  # @param tmpl Any tmpl value.
+  # @param data Array data value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   render_html: tmpl, data, options ->
     return self.render_with_mode(tmpl, data, options, true)
 
   # render_with_mode builds an HTML response from a template source.
+  # @param tmpl Any tmpl value.
+  # @param data Array data value.
+  # @param options Dict options value.
+  # @param html Any html value.
+  # @return Any the resulting value.
   render_with_mode: tmpl, data, options, html ->
     if options == nil
       options = {}
@@ -155,10 +248,19 @@ class Server
 
   # cookie returns a validated Set-Cookie header value.
   # Options may include path, domain, max_age, expires, secure, http_only, and same_site.
+  # @param name String name value.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   cookie: name, value, options ->
     return self.cookie_value(name, value, options)
 
   # with_cookie appends a Set-Cookie header value to response and returns response.
+  # @param response Any response value.
+  # @param name String name value.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   with_cookie: response, name, value, options ->
     if response["header_values"] == nil
       response["header_values"] = {}
@@ -168,6 +270,9 @@ class Server
     return response
 
   # Server.dispatch provides the net/http/Server standard library operation.
+  # @param method String method value.
+  # @param path String path value.
+  # @return Any the resulting value.
   dispatch: method, path ->
     method = method.upper()
     route = self.find_route(method, path)
@@ -190,6 +295,10 @@ class Server
     return self.call_route(route, method, path)
 
   # Server.call_route provides the net/http/Server standard library operation.
+  # @param route Any route value.
+  # @param method String method value.
+  # @param path String path value.
+  # @return Any the resulting value.
   call_route: route, method, path ->
     params = self.match_params(route, path)
     req = { method: method, path: path, params: params, path_params: params, query: {}, headers: {}, body: b"", route: route }
@@ -204,6 +313,9 @@ class Server
     return result
 
   # Server.find_route provides the net/http/Server standard library operation.
+  # @param method String method value.
+  # @param path String path value.
+  # @return Any the resulting value.
   find_route: method, path ->
     i = 0
     while i < self.routes.len()
@@ -214,6 +326,8 @@ class Server
     return nil
 
   # Server.allow_for provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
   allow_for: path ->
     methods = []
     i = 0
@@ -231,6 +345,9 @@ class Server
     return methods.join(", ")
 
   # Server.static provides the net/http/Server standard library operation.
+  # @param prefix Any prefix value.
+  # @param assets Any assets value.
+  # @return Any the resulting value.
   serve_static: prefix, assets ->
     for entry in assets.entries()
       path = entry[0]
@@ -245,6 +362,11 @@ class Server
     self
 
   # Server.static_one provides the net/http/Server standard library operation.
+  # @param prefix Any prefix value.
+  # @param path String path value.
+  # @param asset Any asset value.
+  # @param hashed_route Any hashed route value.
+  # @return Any the resulting value.
   static_one: prefix, path, asset, hashed_route ->
     self.routes.push({
       method: "GET",
@@ -256,6 +378,8 @@ class Server
     })
 
   # Server.content_type provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
   content_type: path ->
     if path.ends_with(".html")
       return "text/html; charset=utf-8"
@@ -272,16 +396,25 @@ class Server
   # run binds `port` (0 = OS picks a free port) and enters the
   # accept loop. Blocks forever; the only ways out are a fatal
   # error or SIGINT.
+  # @param port Any port value.
+  # @return Any the resulting value.
   run: port ->
     http_server_run(self.routes, port)
 
   # run_tls starts an HTTPS server with a PEM certificate and private key.
+  # @param port Any port value.
+  # @param cert_file Any cert file value.
+  # @param key_file Any key file value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   run_tls: port, cert_file, key_file, options ->
     if options == nil
       options = {}
     http_server_run_tls(self.routes, port, cert_file, key_file, options)
 
   # Server.route_options provides the net/http/Server standard library operation.
+  # @param options Dict options value.
+  # @return Dict the resulting value.
   route_options: options ->
     opts = { trailing_slash: "strict", name: nil }
     if options == nil
@@ -299,6 +432,10 @@ class Server
     return opts
 
   # cookie_value formats a Set-Cookie header value.
+  # @param name String name value.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   cookie_value: name, value, options ->
     self.validate_cookie_name(name)
     self.validate_cookie_value(value)
@@ -327,6 +464,8 @@ class Server
     return out
 
   # validate_cookie_name raises when name is not a valid cookie name.
+  # @param name String name value.
+  # @return Boolean the resulting value.
   validate_cookie_name: name ->
     if name == nil or name == ""
       raise error("http.cookie: invalid cookie name")
@@ -339,6 +478,8 @@ class Server
       i = i + 1
 
   # validate_cookie_value raises when value cannot be used in a cookie.
+  # @param value String value value.
+  # @return Boolean the resulting value.
   validate_cookie_value: value ->
     if value == nil
       raise error("http.cookie: invalid cookie value")
@@ -351,6 +492,8 @@ class Server
       i = i + 1
 
   # Server.validate_pattern provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @return Boolean the resulting value.
   validate_pattern: path ->
     if not path.starts_with("/")
       raise error("http.route: path must start with /")
@@ -369,6 +512,9 @@ class Server
       i = i + 1
 
   # Server.match_params provides the net/http/Server standard library operation.
+  # @param route Any route value.
+  # @param path String path value.
+  # @return Any the resulting value.
   match_params: route, path ->
     pattern = route["path"]
     if route.get("trailing_slash", "strict") == "ignore"
@@ -401,6 +547,9 @@ class Server
     return params
 
   # Server.build_path provides the net/http/Server standard library operation.
+  # @param pattern String pattern value.
+  # @param params Any params value.
+  # @return String the resulting value.
   build_path: pattern, params ->
     out = []
     parts = pattern.split("/")
@@ -421,6 +570,9 @@ class Server
     return result
 
   # Server.join_paths provides the net/http/Server standard library operation.
+  # @param prefix Any prefix value.
+  # @param path String path value.
+  # @return String the resulting value.
   join_paths: prefix, path ->
     if prefix == nil or prefix == ""
       if path == ""
@@ -431,18 +583,24 @@ class Server
     return self.strip_trailing(prefix) + "/" + self.strip_leading(path)
 
   # Server.strip_trailing provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
   strip_trailing: path ->
     while path.byte_len() > 1 and path.ends_with("/")
       path = path.slice(0, path.len() - 1)
     return path
 
   # Server.strip_leading provides the net/http/Server standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
   strip_leading: path ->
     while path.byte_len() > 0 and path.starts_with("/")
       path = path.slice(1, path.len())
     return path
 
   # Server.copy_array provides the net/http/Server standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
   copy_array: values ->
     out = []
     i = 0
@@ -452,6 +610,9 @@ class Server
     return out
 
   # Server.array_has? provides the net/http/Server standard library operation.
+  # @param values Array values value.
+  # @param value String value value.
+  # @return Boolean whether the condition is true.
   array_has?: values, value ->
     i = 0
     while i < values.len()

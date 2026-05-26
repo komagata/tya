@@ -1,50 +1,78 @@
 # Size provides the geometry/Size standard library API.
 class Size
+  # Size.height stores instance state.
+  # @type Int
+  height: 0
+
+  # Size.width stores instance state.
+  # @type Int
+  width: 0
+
   # Size.initialize provides the geometry/Size standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Self the initialized object.
   initialize: width = 0, height = 0 ->
     self.width = self.dimension(width, "width")
     self.height = self.dimension(height, "height")
 
-  # Size.new provides the geometry/Size standard library operation.
-  new: width, height ->
-    return Size(width, height)
-
-  # Size.zero provides the geometry/Size standard library operation.
-  zero: ->
-    return Size(0, 0)
-
   # Size.area provides the geometry/Size standard library operation.
+  # @param size Int size value.
+  # @return Any the resulting value.
   area: size = nil ->
     if size == nil
       size = self
     self.expect(size, "size")
-    return size.width * size.height
+    size.width * size.height
 
   # Size.aspect_ratio provides the geometry/Size standard library operation.
+  # @param size Int size value.
+  # @return Any the resulting value.
   aspect_ratio: size = nil ->
     if size == nil
       size = self
     self.expect(size, "size")
     if size.height == 0
       raise error("geometry.Size.aspect_ratio: height is zero")
-    return size.width / size.height
-
-  # Size.equal? provides the geometry/Size standard library operation.
-  equal?: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    return a.class == Size and b.class == Size and a.width == b.width and a.height == b.height
-
-  # Size.expect provides the geometry/Size standard library operation.
-  expect: value, name ->
-    if value.class != Size
-      raise error("geometry.Size: " + name + " must be a Size")
+    size.width / size.height
 
   # Size.dimension provides the geometry/Size standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
   dimension: value, name ->
     if value.class != Number
       raise error("geometry.Size: " + name + " must be a number")
     if value < 0
       raise error("geometry.Size: " + name + " must be non-negative")
-    return value
+    value
+
+  # Size.equal? provides the geometry/Size standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    a.class == Size and b.class == Size and a.width == b.width and a.height == b.height
+
+  # Size.expect provides the geometry/Size standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect: value, name ->
+    if value.class != Size
+      raise error("geometry.Size: " + name + " must be a Size")
+
+  # Size.new provides the geometry/Size standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Self the resulting value.
+  new: width, height ->
+    Size(width, height)
+
+  # Size.zero provides the geometry/Size standard library operation.
+  # @return Any the resulting value.
+  zero: ->
+    Size(0, 0)

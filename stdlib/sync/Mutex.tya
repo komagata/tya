@@ -1,4 +1,5 @@
 # Mutex provides the sync/Mutex standard library API.
 class Mutex
   # Mutex.native provides the sync/Mutex standard library operation.
+  # @type Boolean
   native: true

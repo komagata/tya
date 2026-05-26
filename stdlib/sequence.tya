@@ -1,38 +1,70 @@
 # Sequence provides the sequence standard library API.
 interface Sequence extends Iterable
+  # iter provides the sequence API operation.
+  # @return Iterator the resulting value.
   iter: ->
+  # map provides the sequence API operation.
+  # @param fn Function fn value.
+  # @return Sequence the resulting value.
   map: fn ->
     MapSequence(self, fn)
+  # filter provides the sequence API operation.
+  # @param fn Function fn value.
+  # @return Sequence the resulting value.
   filter: fn ->
     FilterSequence(self, fn)
+  # take provides the sequence API operation.
+  # @param n Int n value.
+  # @return Sequence the resulting value.
   take: n ->
     TakeSequence(self, n)
+  # drop provides the sequence API operation.
+  # @param n Int n value.
+  # @return Sequence the resulting value.
   drop: n ->
     DropSequence(self, n)
+  # reduce provides the sequence API operation.
+  # @param initial Int initial value.
+  # @param fn Function fn value.
+  # @return Any the resulting value.
   reduce: initial, fn ->
     acc = initial
     for item in self
       acc = fn(acc, item)
     acc
+  # each provides the sequence API operation.
+  # @param fn Function fn value.
+  # @return Nil the resulting value.
   each: fn ->
     for item in self
       fn(item)
     nil
+  # any? provides the sequence API operation.
+  # @param fn Function fn value.
+  # @return Boolean the resulting value.
   any?: fn ->
     for item in self
       if fn(item)
         return true
     false
+  # all? provides the sequence API operation.
+  # @param fn Function fn value.
+  # @return Boolean the resulting value.
   all?: fn ->
     for item in self
       if not fn(item)
         return false
     true
+  # find provides the sequence API operation.
+  # @param fn Function fn value.
+  # @return Any the resulting value.
   find: fn ->
     for item in self
       if fn(item)
         return item
     nil
+  # to_a provides the sequence API operation.
+  # @return Array the resulting value.
   to_a: ->
     out = []
     for item in self

@@ -1,19 +1,41 @@
 # Next provides the net/http/Next standard library API.
 class Next
+  # Next.handler stores instance state.
+  # @type Nil
+  handler: nil
+
+  # Next.index stores instance state.
+  # @type Nil
+  index: nil
+
+  # Next.middlewares stores instance state.
+  # @type Nil
+  middlewares: nil
+
   # Next.initialize provides the net/http/Next standard library operation.
+  # @param middlewares Any middlewares value.
+  # @param index Int index value.
+  # @param handler Any handler value.
+  # @return Self the initialized object.
   initialize: middlewares, index, handler ->
     self.middlewares = middlewares
     self.index = index
     self.handler = handler
 
-  # Next.new provides the net/http/Next standard library operation.
-  new: middlewares, index, handler ->
-    return Next(middlewares, index, handler)
-
   # Next.call provides the net/http/Next standard library operation.
+  # @param req Any req value.
+  # @return Any the resulting value.
   call: req ->
     if self.index >= self.middlewares.len()
       return self.handler(req)
     middleware = self.middlewares[self.index]
     next = Next(self.middlewares, self.index + 1, self.handler)
-    return middleware(req, next)
+    middleware(req, next)
+
+  # Next.new provides the net/http/Next standard library operation.
+  # @param middlewares Any middlewares value.
+  # @param index Int index value.
+  # @param handler Any handler value.
+  # @return Self the resulting value.
+  new: middlewares, index, handler ->
+    Next(middlewares, index, handler)

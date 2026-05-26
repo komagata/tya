@@ -1,19 +1,26 @@
 # Bytes provides the bytes/Bytes standard library API.
 class Bytes
-  # Bytes.len returns the byte length of a string or bytes value.
-  static len: value ->
-    Self.array_of(value).len()
+  # Bytes.value stores instance state.
+  # @type Nil
+  value: nil
 
   # Bytes.at returns a byte at a zero-based byte index.
+  # @param value String value value.
+  # @param index Int index value.
+  # @return Any the resulting value.
   static at: value, index ->
     if index.class != Number or index != index.to_i()
       raise error("bytes.at: index must be an integer")
     arr = Self.array_of(value)
     if index < 0 or index >= arr.len()
       raise error("bytes.at: index out of bounds")
-    return arr[index]
+    arr[index]
 
   # Bytes.index_of returns the byte index of byte in a string or bytes value.
+  # @param value String value value.
+  # @param byte Int byte value.
+  # @param start Int start value.
+  # @return Any the resulting value.
   static index_of: value, byte, start = 0 ->
     if start == nil
       start = 0
@@ -28,7 +35,13 @@ class Bytes
       if arr[i] == target
         return i
       i = i + 1
-    return nil
+    nil
+
+  # Bytes.len returns the byte length of a string or bytes value.
+  # @param value String value value.
+  # @return Int the resulting value.
+  static len: value ->
+    Self.array_of(value).len()
 
   # Bytes.array_of returns a byte array for a string or bytes value.
   private static array_of: value ->
@@ -47,56 +60,81 @@ class Bytes
     arr = Self.array_of(byte)
     if arr.len() != 1
       raise error("bytes.index_of: byte must be exactly one byte")
-    return arr[0]
+    arr[0]
 
   # Bytes.initialize stores an optional value for byte conversion.
+  # @param value String value value.
+  # @return Self the initialized object.
   initialize: value = nil ->
     self.value = value
 
+  # Bytes.array is a compatibility alias for Bytes.to_array.
+  # @param value String value value.
+  # @return Array the resulting value.
+  array: value = nil ->
+    self.to_array(value)
+
+  # Bytes.concat provides the bytes/Bytes standard library operation.
+  # @param left Any left value.
+  # @param right Any right value.
+  # @return Any the resulting value.
+  concat: left, right ->
+    bytes_concat(left, right)
+
   # Bytes.from_array builds bytes from an array of byte values.
+  # @param values Array values value.
+  # @return Array the resulting value.
   from_array: values = nil ->
     if values == nil
       values = self.value
     bytes(values)
 
   # Bytes.from_text encodes text as bytes.
+  # @param text String text value.
+  # @return String the resulting value.
   from_text: text = nil ->
     if text == nil
       text = self.value
     bytes_of(text)
 
-  # Bytes.to_text decodes bytes as text.
-  to_text: value = nil ->
-    if value == nil
-      value = self.value
-    bytes_text(value)
+  # Bytes.new is a compatibility alias for Bytes.from_array.
+  # @param values Array values value.
+  # @return Self the resulting value.
+  new: values = nil ->
+    self.from_array(values)
+
+  # Bytes.of is a compatibility alias for Bytes.from_text.
+  # @param text String text value.
+  # @return Any the resulting value.
+  of: text = nil ->
+    self.from_text(text)
+
+  # Bytes.slice provides the bytes/Bytes standard library operation.
+  # @param value String value value.
+  # @param start Int start value.
+  # @param end Int end value.
+  # @return Any the resulting value.
+  slice: value, start, end ->
+    bytes_slice(value, start, end)
+
+  # Bytes.text is a compatibility alias for Bytes.to_text.
+  # @param value String value value.
+  # @return String the resulting value.
+  text: value = nil ->
+    self.to_text(value)
 
   # Bytes.to_array returns bytes as an array of byte values.
+  # @param value String value value.
+  # @return Array the resulting value.
   to_array: value = nil ->
     if value == nil
       value = self.value
     bytes_array(value)
 
-  # Bytes.new is a compatibility alias for Bytes.from_array.
-  new: values = nil ->
-    self.from_array(values)
-
-  # Bytes.of is a compatibility alias for Bytes.from_text.
-  of: text = nil ->
-    self.from_text(text)
-
-  # Bytes.text is a compatibility alias for Bytes.to_text.
-  text: value = nil ->
-    self.to_text(value)
-
-  # Bytes.array is a compatibility alias for Bytes.to_array.
-  array: value = nil ->
-    self.to_array(value)
-
-  # Bytes.concat provides the bytes/Bytes standard library operation.
-  concat: left, right ->
-    bytes_concat(left, right)
-
-  # Bytes.slice provides the bytes/Bytes standard library operation.
-  slice: value, start, end ->
-    bytes_slice(value, start, end)
+  # Bytes.to_text decodes bytes as text.
+  # @param value String value value.
+  # @return String the resulting value.
+  to_text: value = nil ->
+    if value == nil
+      value = self.value
+    bytes_text(value)

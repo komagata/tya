@@ -1,0 +1,6 @@
+# Readable provides the io/Readable standard library API.
+interface Readable
+  # read provides the Readable API operation.
+  # @param size Int size value.
+  # @return Any the resulting value.
+  read: size ->

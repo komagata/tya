@@ -517,7 +517,7 @@ class Math
 import math
 
 print(math.Math.sin(0.5))
-print(math.Math.pi)
+print(math.Math.PI)
 ```
 
 ### Private class inside a class file

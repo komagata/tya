@@ -1,63 +1,94 @@
 # Readable provides the net/socket/Socket standard library API.
 interface Readable
-  # Readable.read provides the net/socket/Socket standard library operation.
+  # read provides the Socket API operation.
+  # @param size Int size value.
+  # @return Any the resulting value.
   read: size ->
 
 # Writable provides the net/socket/Socket standard library API.
 interface Writable
-  # Writable.write provides the net/socket/Socket standard library operation.
+  # write provides the Socket API operation.
+  # @param data Any data value.
+  # @return Any the resulting value.
   write: data ->
 
 # Closable provides the net/socket/Socket standard library API.
 interface Closable
-  # Closable.close provides the net/socket/Socket standard library operation.
+  # close provides the Socket API operation.
+  # @return Nil the resulting value.
   close: ->
 
 # Socket represents a TCP stream connection.
 class Socket implements Readable, Writable, Closable
+  # Socket.binary stores instance state.
+  # @type Nil
+  binary: nil
+
+  # Socket.handle stores instance state.
+  # @type Nil
+  handle: nil
+
+  # Socket.initialize provides the net/socket/Socket standard library operation.
+  # @param handle Any handle value.
+  # @param binary Boolean binary value.
+  # @return Self the initialized object.
+  initialize: handle, binary ->
+    self.handle = handle
+    self.binary = binary
+
+  # Socket.close provides the net/socket/Socket standard library operation.
+  # @return Nil the resulting value.
+  close: ->
+    socket_close(self.handle)
+
+  # Socket.closed? provides the net/socket/Socket standard library operation.
+  # @return Boolean whether the condition is true.
+  closed?: ->
+    socket_closed(self.handle)
+
   # connect opens a TCP connection to host and port.
   # Raises when the connection cannot be established.
+  # @param host String host value.
+  # @param port Any port value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   connect: host, port, options ->
     if options == nil
       options = {}
     Socket(socket_connect(host, port, options), options["mode"] == "binary")
 
-  # Socket.initialize provides the net/socket/Socket standard library operation.
-  initialize: handle, binary ->
-    self.handle = handle
-    self.binary = binary
+  # Socket.local_address provides the net/socket/Socket standard library operation.
+  # @return Any the resulting value.
+  local_address: ->
+    socket_local_address(self.handle)
 
   # read returns up to size bytes from the socket.
   # Raises when the socket read fails.
+  # @param size Int size value.
+  # @return Any the resulting value.
   read: size ->
     socket_read(self.handle, size)
 
   # Socket.read_line provides the net/socket/Socket standard library operation.
+  # @return String the resulting value.
   read_line: ->
     socket_read_line(self.handle)
 
+  # Socket.remote_address provides the net/socket/Socket standard library operation.
+  # @return Any the resulting value.
+  remote_address: ->
+    socket_remote_address(self.handle)
+
   # write sends value to the socket and returns the byte count.
   # Raises when the socket write fails.
+  # @param value String value value.
+  # @return Any the resulting value.
   write: value ->
     socket_write(self.handle, value)
 
   # Socket.write_line provides the net/socket/Socket standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
   write_line: value ->
     self.write(value)
     self.write("\n")
-
-  # Socket.close provides the net/socket/Socket standard library operation.
-  close: ->
-    socket_close(self.handle)
-
-  # Socket.closed? provides the net/socket/Socket standard library operation.
-  closed?: ->
-    socket_closed(self.handle)
-
-  # Socket.local_address provides the net/socket/Socket standard library operation.
-  local_address: ->
-    socket_local_address(self.handle)
-
-  # Socket.remote_address provides the net/socket/Socket standard library operation.
-  remote_address: ->
-    socket_remote_address(self.handle)

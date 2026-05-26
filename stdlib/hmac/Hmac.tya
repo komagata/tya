@@ -1,15 +1,40 @@
+import base64 as base64
 import digest as digest
 import hex as hex
-import base64 as base64
 
 # Hmac provides keyed message authentication helpers.
 class Hmac
+  # Hmac.algorithm stores instance state.
+  # @type Nil
+  algorithm: nil
+
+  # Hmac.key stores instance state.
+  # @type Nil
+  key: nil
+
   # Hmac.initialize stores the algorithm and key.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @return Self the initialized object.
   initialize: algorithm, key ->
     self.algorithm = algorithm
     self.key = key
 
+  # Hmac.base64digest returns the HMAC digest as Base64.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  base64digest: algorithm, key = nil, message = nil ->
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    base64.Base64.encode(Hmac(algorithm, key).digest(message))
+
   # Hmac.block_size returns the digest block size for algorithm.
+  # @param algorithm Any algorithm value.
+  # @return Any the resulting value.
   block_size: algorithm ->
     if algorithm == "sha256"
       return 64
@@ -17,7 +42,37 @@ class Hmac
       return 128
     raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
 
+  # Hmac.constant_time_equal compares equal-length byte sequences.
+  # @param left Any left value.
+  # @param right Any right value.
+  # @return Any the resulting value.
+  constant_time_equal: left, right ->
+    a = bytes_array(left)
+    b = bytes_array(right)
+    if a.len() != b.len()
+      return false
+    diff = 0
+    i = 0
+    while i < a.len()
+      diff = diff | a[i] ^ b[i]
+      i = i + 1
+    diff == 0
+
+  # Hmac.digest returns the raw HMAC digest bytes.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  digest: algorithm, key = nil, message = nil ->
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    hex.Hex(nil).decode(Hmac(algorithm, key).hexdigest(message))
+
   # Hmac.digest_size returns the digest byte size for algorithm.
+  # @param algorithm Any algorithm value.
+  # @return Any the resulting value.
   digest_size: algorithm ->
     if algorithm == "sha256"
       return 32
@@ -27,88 +82,11 @@ class Hmac
       return 64
     raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
 
-  # Hmac.input_bytes normalizes string or bytes input.
-  input_bytes: name, value ->
-    if value.class == String
-      return bytes_of(value)
-    if value.class.name == "Bytes"
-      return value
-    raise error("hmac." + name + ": value must be a string or bytes", { kind: "crypto", code: "invalid_input" })
-
-  # Hmac.hash_hex hashes value with algorithm and returns lowercase hex.
-  hash_hex: algorithm, value ->
-    if algorithm == "sha256"
-      return digest.Digest(value).sha256()
-    if algorithm == "sha384"
-      return digest.Digest(value).sha384()
-    if algorithm == "sha512"
-      return digest.Digest(value).sha512()
-    raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
-
-  # Hmac.pad right-pads data with zeros to size.
-  pad: data, size ->
-    arr = bytes_array(data)
-    while arr.len() < size
-      arr.push(0)
-    return bytes(arr)
-
-  # Hmac.xor applies a byte-wise xor mask.
-  xor: data, byte ->
-    arr = bytes_array(data)
-    out = []
-    i = 0
-    while i < arr.len()
-      out.push(arr[i] ^ byte)
-      i = i + 1
-    return bytes(out)
-
-  # Hmac.digest returns the raw HMAC digest bytes.
-  digest: algorithm, key = nil, message = nil ->
-    if self.algorithm != nil
-      message = algorithm
-      algorithm = self.algorithm
-      key = self.key
-    return hex.Hex(nil).decode(Hmac(algorithm, key).hexdigest(message))
-
-  # Hmac.hexdigest returns the HMAC digest as lowercase hex.
-  hexdigest: algorithm, key = nil, message = nil ->
-    if self.algorithm != nil
-      message = algorithm
-      algorithm = self.algorithm
-      key = self.key
-    size = self.block_size(algorithm)
-    key_bytes = self.input_bytes("key", key)
-    if bytes_array(key_bytes).len() > size
-      key_bytes = hex.Hex(nil).decode(self.hash_hex(algorithm, key_bytes))
-    key_block = self.pad(key_bytes, size)
-    inner = self.xor(key_block, 0x36)
-    outer = self.xor(key_block, 0x5c)
-    msg = self.input_bytes("message", message)
-    inner_hash = hex.Hex(nil).decode(self.hash_hex(algorithm, bytes_concat(inner, msg)))
-    return self.hash_hex(algorithm, bytes_concat(outer, inner_hash))
-
-  # Hmac.base64digest returns the HMAC digest as Base64.
-  base64digest: algorithm, key = nil, message = nil ->
-    if self.algorithm != nil
-      message = algorithm
-      algorithm = self.algorithm
-      key = self.key
-    return base64.Base64.encode(Hmac(algorithm, key).digest(message))
-
-  # Hmac.constant_time_equal compares equal-length byte sequences.
-  constant_time_equal: left, right ->
-    a = bytes_array(left)
-    b = bytes_array(right)
-    if a.len() != b.len()
-      return false
-    diff = 0
-    i = 0
-    while i < a.len()
-      diff = diff | (a[i] ^ b[i])
-      i = i + 1
-    return diff == 0
-
   # Hmac.expected_bytes decodes a verification digest.
+  # @param algorithm Any algorithm value.
+  # @param expected Any expected value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   expected_bytes: algorithm, expected, options ->
     algorithm
     encoding = nil
@@ -131,7 +109,70 @@ class Hmac
       return expected
     raise error("hmac.verify: bytes expected value requires raw encoding", { kind: "crypto", code: "invalid_encoding" })
 
+  # Hmac.hash_hex hashes value with algorithm and returns lowercase hex.
+  # @param algorithm Any algorithm value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  hash_hex: algorithm, value ->
+    if algorithm == "sha256"
+      return digest.Digest.sha256(value)
+    if algorithm == "sha384"
+      return digest.Digest.sha384(value)
+    if algorithm == "sha512"
+      return digest.Digest.sha512(value)
+    raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
+
+  # Hmac.hexdigest returns the HMAC digest as lowercase hex.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  hexdigest: algorithm, key = nil, message = nil ->
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    size = self.block_size(algorithm)
+    key_bytes = self.input_bytes("key", key)
+    if bytes_array(key_bytes).len() > size
+      key_bytes = hex.Hex(nil).decode(self.hash_hex(algorithm, key_bytes))
+    key_block = self.pad(key_bytes, size)
+    inner = self.xor(key_block, 54)
+    outer = self.xor(key_block, 92)
+    msg = self.input_bytes("message", message)
+    inner_hash = hex.Hex(nil).decode(
+      self.hash_hex(algorithm, bytes_concat(inner, msg))
+    )
+    self.hash_hex(algorithm, bytes_concat(outer, inner_hash))
+
+  # Hmac.input_bytes normalizes string or bytes input.
+  # @param name String name value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  input_bytes: name, value ->
+    if value.class == String
+      return bytes_of(value)
+    if value.class.name == "Bytes"
+      return value
+    raise error("hmac." + name + ": value must be a string or bytes", { kind: "crypto", code: "invalid_input" })
+
+  # Hmac.pad right-pads data with zeros to size.
+  # @param data Array data value.
+  # @param size Int size value.
+  # @return Any the resulting value.
+  pad: data, size ->
+    arr = bytes_array(data)
+    while arr.len() < size
+      arr.push(0)
+    bytes(arr)
+
   # Hmac.verify checks an expected digest.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @param expected Any expected value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   verify: algorithm, key = nil, message = nil, expected = nil, options = {} ->
     if self.algorithm != nil
       if message != nil
@@ -146,4 +187,17 @@ class Hmac
       options = {}
     actual = Hmac(algorithm, key).digest(message)
     wanted = self.expected_bytes(algorithm, expected, options)
-    return self.constant_time_equal(actual, wanted)
+    self.constant_time_equal(actual, wanted)
+
+  # Hmac.xor applies a byte-wise xor mask.
+  # @param data Array data value.
+  # @param byte Int byte value.
+  # @return Any the resulting value.
+  xor: data, byte ->
+    arr = bytes_array(data)
+    out = []
+    i = 0
+    while i < arr.len()
+      out.push(arr[i] ^ byte)
+      i = i + 1
+    bytes(out)

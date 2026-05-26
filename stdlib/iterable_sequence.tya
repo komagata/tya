@@ -1,5 +1,11 @@
 # IterableSequence provides the iterable_sequence standard library API.
 class IterableSequence implements Sequence
+  # IterableSequence.source stores instance state.
+  # @type Nil
+  source: nil
+
   # IterableSequence.initialize provides the iterable_sequence standard library operation.
+  # @param source String source value.
+  # @return Self the initialized object.
   initialize: source ->
     self.source = source

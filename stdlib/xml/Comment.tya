@@ -1,9 +1,17 @@
 # Comment provides the xml/Comment standard library API.
 class Comment
+  # Comment.text stores instance state.
+  # @type Nil
+  text: nil
+
   # Comment.initialize provides the xml/Comment standard library operation.
+  # @param text String text value.
+  # @return Self the initialized object.
   initialize: text ->
     self.text = text
 
   # Comment.new provides the xml/Comment standard library operation.
+  # @param text String text value.
+  # @return Self the resulting value.
   new: text ->
-    return Comment(text)
+    Comment(text)

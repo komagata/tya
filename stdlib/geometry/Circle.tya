@@ -1,60 +1,122 @@
 # Circle provides the geometry/Circle standard library API.
 class Circle
+  # Circle.radius stores instance state.
+  # @type Int
+  radius: 0
+
+  # Circle.x stores instance state.
+  # @type Int
+  x: 0
+
+  # Circle.y stores instance state.
+  # @type Int
+  y: 0
+
   # Circle.initialize provides the geometry/Circle standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param radius Any radius value.
+  # @return Self the initialized object.
   initialize: x = 0, y = 0, radius = 0 ->
     self.x = self.number(x, "x")
     self.y = self.number(y, "y")
     self.radius = self.radius_value(radius)
 
-  # Circle.new provides the geometry/Circle standard library operation.
-  new: x, y, radius ->
-    return Circle(x, y, radius)
-
-  # Circle.from_center provides the geometry/Circle standard library operation.
-  from_center: center, radius ->
-    Point(0, 0).expect(center, "center")
-    return Circle(center.x, center.y, radius)
-
-  # Circle.center provides the geometry/Circle standard library operation.
-  center: circle = nil ->
-    if circle == nil
-      circle = self
-    self.expect(circle, "circle")
-    return Point(circle.x, circle.y)
-
   # Circle.area provides the geometry/Circle standard library operation.
+  # @param circle Any circle value.
+  # @return Any the resulting value.
   area: circle = nil ->
     if circle == nil
       circle = self
     self.expect(circle, "circle")
-    return 3.141592653589793 * circle.radius * circle.radius
+    3.141592653589793 * circle.radius * circle.radius
+
+  # Circle.bounding_rect provides the geometry/Circle standard library operation.
+  # @param circle Any circle value.
+  # @return Any the resulting value.
+  bounding_rect: circle = nil ->
+    if circle == nil
+      circle = self
+    self.expect(circle, "circle")
+    Rect(
+      circle.x - circle.radius,
+      circle.y - circle.radius,
+      circle.radius * 2,
+      circle.radius * 2
+    )
+
+  # Circle.center provides the geometry/Circle standard library operation.
+  # @param circle Any circle value.
+  # @return Any the resulting value.
+  center: circle = nil ->
+    if circle == nil
+      circle = self
+    self.expect(circle, "circle")
+    Point(circle.x, circle.y)
 
   # Circle.circumference provides the geometry/Circle standard library operation.
+  # @param circle Any circle value.
+  # @return Any the resulting value.
   circumference: circle = nil ->
     if circle == nil
       circle = self
     self.expect(circle, "circle")
-    return 2 * 3.141592653589793 * circle.radius
+    2 * 3.141592653589793 * circle.radius
 
   # Circle.contains_point? provides the geometry/Circle standard library operation.
+  # @param circle Any circle value.
+  # @param point Any point value.
+  # @return Boolean whether the condition is true.
   contains_point?: circle, point = nil ->
     if point == nil
       point = circle
       circle = self
     self.expect(circle, "circle")
     Point(0, 0).expect(point, "point")
-    return Point(0, 0).distance(self.center(circle), point) <= circle.radius
+    Point(0, 0).distance(self.center(circle), point) <= circle.radius
+
+  # Circle.equal? provides the geometry/Circle standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    a.class == Circle and b.class == Circle and a.x == b.x and a.y == b.y and a.radius == b.radius
+
+  # Circle.expect provides the geometry/Circle standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect: value, name ->
+    if value.class != Circle
+      raise error("geometry.Circle: " + name + " must be a Circle")
+
+  # Circle.from_center provides the geometry/Circle standard library operation.
+  # @param center Any center value.
+  # @param radius Any radius value.
+  # @return Self the resulting value.
+  from_center: center, radius ->
+    Point(0, 0).expect(center, "center")
+    Circle(center.x, center.y, radius)
 
   # Circle.intersects_circle? provides the geometry/Circle standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
   intersects_circle?: a, b = nil ->
     if b == nil
       b = a
       a = self
     self.expect(a, "a")
     self.expect(b, "b")
-    return Point(0, 0).distance(self.center(a), self.center(b)) <= a.radius + b.radius
+    Point(0, 0).distance(self.center(a), self.center(b)) <= a.radius + b.radius
 
   # Circle.intersects_rect? provides the geometry/Circle standard library operation.
+  # @param circle Any circle value.
+  # @param rect Any rect value.
+  # @return Boolean whether the condition is true.
   intersects_rect?: circle, rect = nil ->
     if rect == nil
       rect = circle
@@ -62,16 +124,38 @@ class Circle
     self.expect(circle, "circle")
     Rect(0, 0, 0, 0).expect(rect, "rect")
     geometry_clamped = Rect(0, 0, 0, 0).clamp_point(rect, self.center(circle))
-    return self.contains_point?(circle, geometry_clamped)
+    self.contains_point?(circle, geometry_clamped)
 
-  # Circle.bounding_rect provides the geometry/Circle standard library operation.
-  bounding_rect: circle = nil ->
-    if circle == nil
-      circle = self
-    self.expect(circle, "circle")
-    return Rect(circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2)
+  # Circle.new provides the geometry/Circle standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param radius Any radius value.
+  # @return Self the resulting value.
+  new: x, y, radius ->
+    Circle(x, y, radius)
+
+  # Circle.number provides the geometry/Circle standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  number: value, name ->
+    if value.class != Number
+      raise error("geometry.Circle: " + name + " must be a number")
+    value
+
+  # Circle.radius_value provides the geometry/Circle standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  radius_value: value ->
+    self.number(value, "radius")
+    if value < 0
+      raise error("geometry.Circle: radius must be non-negative")
+    value
 
   # Circle.translate provides the geometry/Circle standard library operation.
+  # @param circle Any circle value.
+  # @param vector Any vector value.
+  # @return Any the resulting value.
   translate: circle, vector = nil ->
     if vector == nil
       vector = circle
@@ -79,29 +163,4 @@ class Circle
     self.expect(circle, "circle")
     if vector.class != Vector2
       raise error("geometry.Circle.translate: vector must be a Vector2")
-    return Circle(circle.x + vector.x, circle.y + vector.y, circle.radius)
-
-  # Circle.equal? provides the geometry/Circle standard library operation.
-  equal?: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    return a.class == Circle and b.class == Circle and a.x == b.x and a.y == b.y and a.radius == b.radius
-
-  # Circle.expect provides the geometry/Circle standard library operation.
-  expect: value, name ->
-    if value.class != Circle
-      raise error("geometry.Circle: " + name + " must be a Circle")
-
-  # Circle.number provides the geometry/Circle standard library operation.
-  number: value, name ->
-    if value.class != Number
-      raise error("geometry.Circle: " + name + " must be a number")
-    return value
-
-  # Circle.radius_value provides the geometry/Circle standard library operation.
-  radius_value: value ->
-    self.number(value, "radius")
-    if value < 0
-      raise error("geometry.Circle: radius must be non-negative")
-    return value
+    Circle(circle.x + vector.x, circle.y + vector.y, circle.radius)

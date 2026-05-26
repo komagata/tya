@@ -1,36 +1,61 @@
 # Document provides the xml/Document standard library API.
 class Document
+  # Document.doc_encoding stores instance state.
+  # @type Nil
+  doc_encoding: nil
+
+  # Document.doc_version stores instance state.
+  # @type Nil
+  doc_version: nil
+
+  # Document.nodes stores instance state.
+  # @type Nil
+  nodes: nil
+
   # Document.initialize provides the xml/Document standard library operation.
+  # @param children Any children value.
+  # @param version Any version value.
+  # @param encoding Any encoding value.
+  # @return Self the initialized object.
   initialize: children, version, encoding ->
     self.nodes = children
     self.doc_version = version
     self.doc_encoding = encoding
 
+  # Document.children provides the xml/Document standard library operation.
+  # @return Any the resulting value.
+  children: ->
+    self.nodes
+
+  # Document.encoding provides the xml/Document standard library operation.
+  # @return Any the resulting value.
+  encoding: ->
+    self.doc_encoding
+
   # Document.new provides the xml/Document standard library operation.
+  # @param children Any children value.
+  # @param version Any version value.
+  # @param encoding Any encoding value.
+  # @return Self the resulting value.
   new: children, version, encoding ->
-    return Document(children, version, encoding)
+    Document(children, version, encoding)
 
   # Document.root provides the xml/Document standard library operation.
+  # @return Any the resulting value.
   root: ->
     i = 0
     while i < self.nodes.len()
       if self.nodes[i].class == Element
         return self.nodes[i]
       i = i + 1
-    return nil
-
-  # Document.children provides the xml/Document standard library operation.
-  children: ->
-    return self.nodes
-
-  # Document.version provides the xml/Document standard library operation.
-  version: ->
-    return self.doc_version
-
-  # Document.encoding provides the xml/Document standard library operation.
-  encoding: ->
-    return self.doc_encoding
+    nil
 
   # Document.to_s provides the xml/Document standard library operation.
+  # @return String the resulting value.
   to_s: ->
-    return Xml(nil).stringify(self)
+    Xml(nil).stringify(self)
+
+  # Document.version provides the xml/Document standard library operation.
+  # @return Any the resulting value.
+  version: ->
+    self.doc_version

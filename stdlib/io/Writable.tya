@@ -1,0 +1,6 @@
+# Writable provides the io/Writable standard library API.
+interface Writable
+  # write provides the Writable API operation.
+  # @param data Any data value.
+  # @return Any the resulting value.
+  write: data ->

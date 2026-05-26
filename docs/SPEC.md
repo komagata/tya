@@ -1049,7 +1049,7 @@ Use standard-library APIs such as `File().read(path)`, `File().append(path, text
 `Dir().list(path)`, `Path().expand_user(path)`, `Process().cwd()`,
 `Process().chdir(path)`, `Io().open(path, mode)`, `Reader#read(size)`,
 `Writer#write(value)`, `Random().int(min, max)`, `compress.Gzip().compress(value)`,
-`Digest().sha256(value)`, `Socket.connect(host, port, options)`,
+`Digest.sha256(value)`, `Socket.connect(host, port, options)`,
 `Lexer().lex(source)`, `Parser().parse(source)`, `Checker().check(source)`, and
 `Format().format(source)` instead of low-level intrinsic names. Use receiver
 methods for conversions and collections, for example `value.to_s()`,

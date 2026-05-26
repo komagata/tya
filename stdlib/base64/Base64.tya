@@ -3,6 +3,8 @@ class Base64
   private ALPHABET: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
   # Base64.decode provides the base64/Base64 standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
   static decode: text ->
     cleaned = ""
     n = text.byte_len()
@@ -38,9 +40,11 @@ class Base64
       v3 = Self.decode_value(cleaned[j + 2])
       arr.push(v1 * 4 + v2 / 16)
       arr.push(v2 % 16 * 16 + v3 / 4)
-    return bytes(arr)
+    bytes(arr)
 
   # Base64.encode provides the base64/Base64 standard library operation.
+  # @param value String value value.
+  # @return String the resulting value.
   static encode: value ->
     data = nil
     if value.class == String
@@ -81,7 +85,7 @@ class Base64
         + Self.ALPHABET[g2]
         + Self.ALPHABET[g3]
         + "="
-    return out
+    out
 
   # Base64.decode_value returns the Base64 alphabet index for a character.
   private static decode_value: c ->

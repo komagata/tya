@@ -1,28 +1,9 @@
 # Io provides the io/Io standard library API.
 class Io
-  # Io.stdin provides the io/Io standard library operation.
-  stdin: ->
-    Reader(io_stdin(), false)
-
-  # Io.stdout provides the io/Io standard library operation.
-  stdout: ->
-    Writer(io_stdout(), false)
-
-  # Io.stderr provides the io/Io standard library operation.
-  stderr: ->
-    Writer(io_stderr(), false)
-
-  # Io.open provides the io/Io standard library operation.
-  open: path, mode = nil ->
-    if mode == nil
-      mode = "r"
-    handle = io_open(path, mode)
-    binary = mode.contains("b")
-    if mode.contains("r")
-      return Reader(handle, binary)
-    return Writer(handle, binary)
-
   # Io.copy provides the io/Io standard library operation.
+  # @param reader Any reader value.
+  # @param writer Any writer value.
+  # @return Any the resulting value.
   copy: reader, writer ->
     total = 0
     chunk = reader.read(8192)
@@ -30,4 +11,32 @@ class Io
       total = total + writer.write(chunk)
       chunk = reader.read(8192)
     writer.flush()
-    return total
+    total
+
+  # Io.open provides the io/Io standard library operation.
+  # @param path String path value.
+  # @param mode Any mode value.
+  # @return Any the resulting value.
+  open: path, mode = nil ->
+    if mode == nil
+      mode = "r"
+    handle = io_open(path, mode)
+    binary = mode.contains("b")
+    if mode.contains("r")
+      return Reader(handle, binary)
+    Writer(handle, binary)
+
+  # Io.stderr provides the io/Io standard library operation.
+  # @return Any the resulting value.
+  stderr: ->
+    Writer(io_stderr(), false)
+
+  # Io.stdin provides the io/Io standard library operation.
+  # @return Any the resulting value.
+  stdin: ->
+    Reader(io_stdin(), false)
+
+  # Io.stdout provides the io/Io standard library operation.
+  # @return Any the resulting value.
+  stdout: ->
+    Writer(io_stdout(), false)

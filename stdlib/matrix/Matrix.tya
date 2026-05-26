@@ -1,6 +1,20 @@
 # Matrix provides the matrix/Matrix standard library API.
 class Matrix
+  # Matrix.cols stores instance state.
+  # @type Nil
+  cols: nil
+
+  # Matrix.data stores instance state.
+  # @type Array
+  data: []
+
+  # Matrix.rows stores instance state.
+  # @type Array
+  rows: []
+
   # Matrix.initialize provides the matrix/Matrix standard library operation.
+  # @param data Array data value.
+  # @return Self the initialized object.
   initialize: data = nil ->
     if data == nil
       data = [[0]]
@@ -9,86 +23,10 @@ class Matrix
     self.cols = cols
     self.data = data
 
-  # Matrix.validate_data provides the matrix/Matrix standard library operation.
-  validate_data: data ->
-    if data.class != Array
-      raise error("matrix.new: data must be an array of arrays")
-    rows = data.len()
-    if rows == 0
-      raise error("matrix.new: empty matrix")
-    if data[0].class != Array
-      raise error("matrix.new: rows must be arrays")
-    cols = data[0].len()
-    i = 0
-    while i < rows
-      if data[i].class != Array or data[i].len() != cols
-        raise error("matrix.new: inconsistent row lengths")
-      j = 0
-      while j < cols
-        if data[i][j].class != Number
-          raise error("matrix.new: elements must be numbers")
-        j = j + 1
-      i = i + 1
-    return cols
-
-  # Matrix.new provides the matrix/Matrix standard library operation.
-  new: data ->
-    return Matrix(data)
-
-  # Matrix.zero provides the matrix/Matrix standard library operation.
-  zero: rows, cols ->
-    data = []
-    i = 0
-    while i < rows
-      row = []
-      j = 0
-      while j < cols
-        row.push(0)
-        j = j + 1
-      data.push(row)
-      i = i + 1
-    return Matrix(data)
-
-  # Matrix.identity provides the matrix/Matrix standard library operation.
-  identity: n ->
-    data = []
-    i = 0
-    while i < n
-      row = []
-      j = 0
-      while j < n
-        if i == j
-          row.push(1)
-        else
-          row.push(0)
-        j = j + 1
-      data.push(row)
-      i = i + 1
-    return Matrix(data)
-
-  # Matrix.at provides the matrix/Matrix standard library operation.
-  at: m, r, c = nil ->
-    if c == nil
-      c = r
-      r = m
-      m = self
-    if r < 0 or r >= m.rows or c < 0 or c >= m.cols
-      raise error("matrix.at: index out of range")
-    return m.data[r][c]
-
-  # Matrix.put provides the matrix/Matrix standard library operation.
-  put: m, r, c, value = nil ->
-    if value == nil
-      value = c
-      c = r
-      r = m
-      m = self
-    if r < 0 or r >= m.rows or c < 0 or c >= m.cols
-      raise error("matrix.put: index out of range")
-    m.data[r][c] = value
-    return nil
-
   # Matrix.add provides the matrix/Matrix standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
   add: a, b = nil ->
     if b == nil
       b = a
@@ -105,85 +43,25 @@ class Matrix
         j = j + 1
       out_data.push(row)
       i = i + 1
-    return Matrix(out_data)
+    Matrix(out_data)
 
-  # Matrix.sub provides the matrix/Matrix standard library operation.
-  sub: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    if a.rows != b.rows or a.cols != b.cols
-      raise error("matrix.sub: dimension mismatch")
-    out_data = []
-    i = 0
-    while i < a.rows
-      row = []
-      j = 0
-      while j < a.cols
-        row.push(a.data[i][j] - b.data[i][j])
-        j = j + 1
-      out_data.push(row)
-      i = i + 1
-    return Matrix(out_data)
-
-  # Matrix.scale provides the matrix/Matrix standard library operation.
-  scale: a, k = nil ->
-    if k == nil
-      k = a
-      a = self
-    out_data = []
-    i = 0
-    while i < a.rows
-      row = []
-      j = 0
-      while j < a.cols
-        row.push(a.data[i][j] * k)
-        j = j + 1
-      out_data.push(row)
-      i = i + 1
-    return Matrix(out_data)
-
-  # Matrix.mul provides the matrix/Matrix standard library operation.
-  mul: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    if a.cols != b.rows
-      raise error("matrix.mul: inner dimensions disagree")
-    out_data = []
-    i = 0
-    while i < a.rows
-      row = []
-      j = 0
-      while j < b.cols
-        sum = 0
-        k = 0
-        while k < a.cols
-          sum = sum + a.data[i][k] * b.data[k][j]
-          k = k + 1
-        row.push(sum)
-        j = j + 1
-      out_data.push(row)
-      i = i + 1
-    return Matrix(out_data)
-
-  # Matrix.transpose provides the matrix/Matrix standard library operation.
-  transpose: a = nil ->
-    if a == nil
-      a = self
-    out_data = []
-    j = 0
-    while j < a.cols
-      row = []
-      i = 0
-      while i < a.rows
-        row.push(a.data[i][j])
-        i = i + 1
-      out_data.push(row)
-      j = j + 1
-    return Matrix(out_data)
+  # Matrix.at provides the matrix/Matrix standard library operation.
+  # @param m Any m value.
+  # @param r Int r value.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  at: m, r, c = nil ->
+    if c == nil
+      c = r
+      r = m
+      m = self
+    if r < 0 or r >= m.rows or c < 0 or c >= m.cols
+      raise error("matrix.at: index out of range")
+    m.data[r][c]
 
   # Matrix.det provides the matrix/Matrix standard library operation.
+  # @param a Int a value.
+  # @return Any the resulting value.
   det: a = nil ->
     if a == nil
       a = self
@@ -220,13 +98,186 @@ class Matrix
       else
         sum = sum - cofactor
       j = j + 1
-    return sum
+    sum
 
   # Matrix.equal? provides the matrix/Matrix standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
   equal?: a, b = nil ->
     if b == nil
       b = a
       a = self
     if a.rows != b.rows or a.cols != b.cols
       return false
-    return equal(a.data, b.data)
+    equal(a.data, b.data)
+
+  # Matrix.identity provides the matrix/Matrix standard library operation.
+  # @param n Int n value.
+  # @return Any the resulting value.
+  identity: n ->
+    data = []
+    i = 0
+    while i < n
+      row = []
+      j = 0
+      while j < n
+        if i == j
+          row.push(1)
+        else
+          row.push(0)
+        j = j + 1
+      data.push(row)
+      i = i + 1
+    Matrix(data)
+
+  # Matrix.mul provides the matrix/Matrix standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  mul: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    if a.cols != b.rows
+      raise error("matrix.mul: inner dimensions disagree")
+    out_data = []
+    i = 0
+    while i < a.rows
+      row = []
+      j = 0
+      while j < b.cols
+        sum = 0
+        k = 0
+        while k < a.cols
+          sum = sum + a.data[i][k] * b.data[k][j]
+          k = k + 1
+        row.push(sum)
+        j = j + 1
+      out_data.push(row)
+      i = i + 1
+    Matrix(out_data)
+
+  # Matrix.new provides the matrix/Matrix standard library operation.
+  # @param data Array data value.
+  # @return Self the resulting value.
+  new: data ->
+    Matrix(data)
+
+  # Matrix.put provides the matrix/Matrix standard library operation.
+  # @param m Any m value.
+  # @param r Int r value.
+  # @param c Any c value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  put: m, r, c, value = nil ->
+    if value == nil
+      value = c
+      c = r
+      r = m
+      m = self
+    if r < 0 or r >= m.rows or c < 0 or c >= m.cols
+      raise error("matrix.put: index out of range")
+    m.data[r][c] = value
+    nil
+
+  # Matrix.scale provides the matrix/Matrix standard library operation.
+  # @param a Int a value.
+  # @param k Any k value.
+  # @return Any the resulting value.
+  scale: a, k = nil ->
+    if k == nil
+      k = a
+      a = self
+    out_data = []
+    i = 0
+    while i < a.rows
+      row = []
+      j = 0
+      while j < a.cols
+        row.push(a.data[i][j] * k)
+        j = j + 1
+      out_data.push(row)
+      i = i + 1
+    Matrix(out_data)
+
+  # Matrix.sub provides the matrix/Matrix standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  sub: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    if a.rows != b.rows or a.cols != b.cols
+      raise error("matrix.sub: dimension mismatch")
+    out_data = []
+    i = 0
+    while i < a.rows
+      row = []
+      j = 0
+      while j < a.cols
+        row.push(a.data[i][j] - b.data[i][j])
+        j = j + 1
+      out_data.push(row)
+      i = i + 1
+    Matrix(out_data)
+
+  # Matrix.transpose provides the matrix/Matrix standard library operation.
+  # @param a Int a value.
+  # @return Any the resulting value.
+  transpose: a = nil ->
+    if a == nil
+      a = self
+    out_data = []
+    j = 0
+    while j < a.cols
+      row = []
+      i = 0
+      while i < a.rows
+        row.push(a.data[i][j])
+        i = i + 1
+      out_data.push(row)
+      j = j + 1
+    Matrix(out_data)
+
+  # Matrix.validate_data provides the matrix/Matrix standard library operation.
+  # @param data Array data value.
+  # @return Boolean the resulting value.
+  validate_data: data ->
+    if data.class != Array
+      raise error("matrix.new: data must be an array of arrays")
+    rows = data.len()
+    if rows == 0
+      raise error("matrix.new: empty matrix")
+    if data[0].class != Array
+      raise error("matrix.new: rows must be arrays")
+    cols = data[0].len()
+    i = 0
+    while i < rows
+      if data[i].class != Array or data[i].len() != cols
+        raise error("matrix.new: inconsistent row lengths")
+      j = 0
+      while j < cols
+        if data[i][j].class != Number
+          raise error("matrix.new: elements must be numbers")
+        j = j + 1
+      i = i + 1
+    cols
+
+  # Matrix.zero provides the matrix/Matrix standard library operation.
+  # @param rows Array rows value.
+  # @param cols Any cols value.
+  # @return Any the resulting value.
+  zero: rows, cols ->
+    data = []
+    i = 0
+    while i < rows
+      row = []
+      j = 0
+      while j < cols
+        row.push(0)
+        j = j + 1
+      data.push(row)
+      i = i + 1
+    Matrix(data)

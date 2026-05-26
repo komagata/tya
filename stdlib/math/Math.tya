@@ -1,31 +1,58 @@
 # Math provides numeric constants and common math functions.
 class Math
-  # pi is the ratio of a circle circumference to its diameter.
-  static pi: 3.141592653589793
+  # E is Euler's number, the base of natural logarithms.
+  # @type Float
+  E: 2.718281828459045
 
-  # e is Euler's number, the base of natural logarithms.
-  static e: 2.718281828459045
+  # PI is the ratio of a circle circumference to its diameter.
+  # @type Float
+  PI: 3.141592653589793
 
   # abs returns the absolute value of a number.
+  # @param value String value value.
+  # @return Any the resulting value.
   abs: value ->
     if value < 0
       return 0 - value
-    return value
+    value
 
-  # Math.min provides the math/Math standard library operation.
-  min: left, right ->
-    if left < right
-      return left
-    return right
+  # Math.acos provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  acos: x ->
+    math_acos(x)
 
-  # Math.max provides the math/Math standard library operation.
-  max: left, right ->
-    if left > right
-      return left
-    return right
+  # Math.asin provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  asin: x ->
+    math_asin(x)
+
+  # Math.atan provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  atan: x ->
+    math_atan(x)
+
+  # Math.atan2 provides the math/Math standard library operation.
+  # @param y Int y value.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  atan2: y, x ->
+    math_atan2(y, x)
+
+  # Math.ceil provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  ceil: x ->
+    math_ceil(x)
 
   # clamp constrains value to the inclusive lo..hi range.
   # Raises when lo is greater than hi.
+  # @param value String value value.
+  # @param lo Any lo value.
+  # @param hi Any hi value.
+  # @return Any the resulting value.
   clamp: value, lo, hi ->
     if lo > hi
       raise error("math.clamp: min must be less than or equal to max")
@@ -33,72 +60,95 @@ class Math
       return lo
     if value > hi
       return hi
-    return value
-
-  # Math.sqrt provides the math/Math standard library operation.
-  sqrt: x ->
-    math_sqrt(x)
-
-  # Math.pow provides the math/Math standard library operation.
-  pow: x, y ->
-    math_pow(x, y)
-
-  # Math.floor provides the math/Math standard library operation.
-  floor: x ->
-    math_floor(x)
-
-  # Math.ceil provides the math/Math standard library operation.
-  ceil: x ->
-    math_ceil(x)
-
-  # Math.round provides the math/Math standard library operation.
-  round: x ->
-    math_round(x)
-
-  # Math.trunc provides the math/Math standard library operation.
-  trunc: x ->
-    math_trunc(x)
-
-  # Math.log provides the math/Math standard library operation.
-  log: x ->
-    math_log(x)
-
-  # Math.log2 provides the math/Math standard library operation.
-  log2: x ->
-    math_log2(x)
-
-  # Math.log10 provides the math/Math standard library operation.
-  log10: x ->
-    math_log10(x)
-
-  # Math.exp provides the math/Math standard library operation.
-  exp: x ->
-    math_exp(x)
-
-  # Math.sin provides the math/Math standard library operation.
-  sin: x ->
-    math_sin(x)
+    value
 
   # Math.cos provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
   cos: x ->
     math_cos(x)
 
+  # Math.exp provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  exp: x ->
+    math_exp(x)
+
+  # Math.floor provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  floor: x ->
+    math_floor(x)
+
+  # Math.log provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  log: x ->
+    math_log(x)
+
+  # Math.log10 provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  log10: x ->
+    math_log10(x)
+
+  # Math.log2 provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  log2: x ->
+    math_log2(x)
+
+  # Math.max provides the math/Math standard library operation.
+  # @param left Any left value.
+  # @param right Any right value.
+  # @return Any the resulting value.
+  max: left, right ->
+    if left > right
+      return left
+    right
+
+  # Math.min provides the math/Math standard library operation.
+  # @param left Any left value.
+  # @param right Any right value.
+  # @return Any the resulting value.
+  min: left, right ->
+    if left < right
+      return left
+    right
+
+  # Math.pow provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  pow: x, y ->
+    math_pow(x, y)
+
+  # Math.round provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  round: x ->
+    math_round(x)
+
+  # Math.sin provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  sin: x ->
+    math_sin(x)
+
+  # Math.sqrt provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  sqrt: x ->
+    math_sqrt(x)
+
   # Math.tan provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
   tan: x ->
     math_tan(x)
 
-  # Math.asin provides the math/Math standard library operation.
-  asin: x ->
-    math_asin(x)
-
-  # Math.acos provides the math/Math standard library operation.
-  acos: x ->
-    math_acos(x)
-
-  # Math.atan provides the math/Math standard library operation.
-  atan: x ->
-    math_atan(x)
-
-  # Math.atan2 provides the math/Math standard library operation.
-  atan2: y, x ->
-    math_atan2(y, x)
+  # Math.trunc provides the math/Math standard library operation.
+  # @param x Int x value.
+  # @return Any the resulting value.
+  trunc: x ->
+    math_trunc(x)

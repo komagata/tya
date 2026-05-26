@@ -1,141 +1,83 @@
 # Client provides the net/http/Client standard library API.
 class Client
+  # Client.target stores instance state.
+  # @type Nil
+  target: nil
+
   # Client.initialize stores a target URL.
+  # @param target Any target value.
+  # @return Self the initialized object.
   initialize: target ->
     self.target = target
 
+  # Client.chomp provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  chomp: text ->
+    n = text.byte_len()
+    if n > 0 and text[n - 1] == "\n"
+      n = n - 1
+    if n > 0 and text[n - 1] == chr(13)
+      n = n - 1
+    text.slice(0, n)
+
   # Client.get provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @return Any the resulting value.
   get: target = nil ->
     if target == nil
       target = self.target
-    return Client(target).request("GET", {})
+    Client(target).request("GET", {})
 
-  # Client.post provides the net/http/Client standard library operation.
-  post: target, body = nil ->
-    if self.target != nil
-      body = target
-      target = self.target
-    return Client(target).request("POST", { body: body })
-
-  # Client.request provides the net/http/Client standard library operation.
-  request: method, target = nil, opts = nil ->
-    if self.target != nil
-      opts = target
-      target = self.target
-    if opts == nil
-      opts = {}
-    u = Client(nil).parse_url(target)
-    if u["scheme"] != "http" and u["scheme"] != "https"
-      raise error("http.request: only http:// and https:// URLs are supported")
-    host = u["host"]
-    if host == ""
-      raise error("http.request: URL host is required")
-    port = 80
-    if u["scheme"] == "https"
-      port = 443
-    if u["port"] != ""
-      port = u["port"].to_i()
-    path = u["path"]
-    if path == ""
-      path = "/"
-    if u["has_query"]
-      path = path + "?" + u["query"]
-
-    headers = {}
-    if opts.has("headers") and opts["headers"] != nil
-      headers = opts["headers"]
-    body = ""
-    if opts.has("body") and opts["body"] != nil
-      body = opts["body"].to_s()
-
-    crlf = chr(13) + "\n"
-    req = method.upper() + " " + path + " HTTP/1.1" + crlf
-    req = req + "Host: " + Client(nil).host_header(host, u["port"]) + crlf
-    req = req + "Connection: close" + crlf
-    if body != ""
-      req = req + "Content-Length: " + body.byte_len().to_s() + crlf
-    for entry in headers.entries()
-      req = req + entry[0] + ": " + entry[1].to_s() + crlf
-    req = req + crlf + body
-
-    connect_options = { timeout: opts.get("timeout", 10) }
-    if opts.has("insecure_skip_verify")
-      connect_options["insecure_skip_verify"] = opts["insecure_skip_verify"]
-    if opts.has("ca_file")
-      connect_options["ca_file"] = opts["ca_file"]
-    s = nil
-    if u["scheme"] == "https"
-      s = tls_connect(host, port, connect_options)
-    else
-      s = socket_connect(host, port, connect_options)
-    socket_write(s, req)
-    response = Client(nil).read_response(s)
-    socket_close(s)
-    return response
+  # Client.hex_to_i provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  hex_to_i: text ->
+    value = 0
+    i = 0
+    while i < text.byte_len()
+      c = ord(text[i])
+      digit = -1
+      if c >= 48 and c <= 57
+        digit = c - 48
+      elseif c >= 65 and c <= 70
+        digit = c - 55
+      else
+        if c >= 97 and c <= 102
+          digit = c - 87
+        else
+          raise error("http.response: invalid chunk size")
+      value = value * 16 + digit
+      i = i + 1
+    value
 
   # Client.host_header provides the net/http/Client standard library operation.
+  # @param host String host value.
+  # @param port Any port value.
+  # @return Any the resulting value.
   host_header: host, port ->
     if port == "" or port == "80" or port == "443"
       return host
-    return host + ":" + port
+    host + ":" + port
 
-  # Client.read_response provides the net/http/Client standard library operation.
-  read_response: s ->
-    status_line = socket_read_line(s)
-    if status_line == nil
-      raise error("http.response: empty response")
-    status_line = Client(nil).chomp(status_line)
-    parts = status_line.split(" ")
-    if parts.len() < 2
-      raise error("http.response: invalid status line")
-    status = parts[1].to_i()
-    headers = {}
-    line = socket_read_line(s)
-    while line != nil and Client(nil).chomp(line) != ""
-      clean = Client(nil).chomp(line)
-      idx = Client(nil).index_of(clean, ":", 0)
-      if idx > 0
-        name = clean.slice(0, idx).lower()
-        value = clean.slice(idx + 1, clean.len()).trim()
-        headers[name] = value
-      line = socket_read_line(s)
-
-    body = ""
-    transfer = headers.get("transfer-encoding", "")
-    if transfer.lower().contains("chunked")
-      body = Client(nil).read_chunked(s)
-    elseif headers.has("content-length")
-      body = socket_read(s, headers["content-length"].to_i())
-    else
-      chunk = socket_read(s, 4096)
-      while chunk != nil and chunk != ""
-        body = body + chunk
-        chunk = socket_read(s, 4096)
-    return { status: status, headers: headers, body: body }
-
-  # Client.read_chunked provides the net/http/Client standard library operation.
-  read_chunked: s ->
-    out = ""
-    size_line = socket_read_line(s)
-    while size_line != nil
-      size_text = Client(nil).chomp(size_line).split(";")[0].trim()
-      size = Client(nil).hex_to_i(size_text)
-      if size == 0
-        Client(nil).read_trailers(s)
-        return out
-      out = out + socket_read(s, size)
-      socket_read_line(s)
-      size_line = socket_read_line(s)
-    return out
-
-  # Client.read_trailers provides the net/http/Client standard library operation.
-  read_trailers: s ->
-    line = socket_read_line(s)
-    while line != nil and Client(nil).chomp(line) != ""
-      line = socket_read_line(s)
-    nil
+  # Client.index_of provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @param start Int start value.
+  # @return Any the resulting value.
+  index_of: text, needle, start ->
+    i = start
+    n = text.byte_len()
+    m = needle.byte_len()
+    while i + m <= n
+      if text.slice(i, i + m) == needle
+        return i
+      i = i + 1
+    -1
 
   # Client.parse_url provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @return String the resulting value.
   parse_url: target ->
     prefix = "http://"
     scheme = "http"
@@ -170,43 +112,132 @@ class Client
       query_text = remainder.slice(q + 1, remainder.len())
     if path == ""
       path = "/"
-    return { scheme: scheme, host: host, port: port, path: path, query: query_text, has_query: has_query }
+    { scheme: scheme, host: host, port: port, path: path, query: query_text, has_query: has_query }
 
-  # Client.chomp provides the net/http/Client standard library operation.
-  chomp: text ->
-    n = text.byte_len()
-    if n > 0 and text[n - 1] == "\n"
-      n = n - 1
-    if n > 0 and text[n - 1] == chr(13)
-      n = n - 1
-    return text.slice(0, n)
+  # Client.post provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @param body String body value.
+  # @return Any the resulting value.
+  post: target, body = nil ->
+    if self.target != nil
+      body = target
+      target = self.target
+    Client(target).request("POST", { body: body })
 
-  # Client.index_of provides the net/http/Client standard library operation.
-  index_of: text, needle, start ->
-    i = start
-    n = text.byte_len()
-    m = needle.byte_len()
-    while i + m <= n
-      if text.slice(i, i + m) == needle
-        return i
-      i = i + 1
-    return -1
+  # Client.read_chunked provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_chunked: s ->
+    out = ""
+    size_line = socket_read_line(s)
+    while size_line != nil
+      size_text = Client(nil).chomp(size_line).split(";")[0].trim()
+      size = Client(nil).hex_to_i(size_text)
+      if size == 0
+        Client(nil).read_trailers(s)
+        return out
+      out = out + socket_read(s, size)
+      socket_read_line(s)
+      size_line = socket_read_line(s)
+    out
 
-  # Client.hex_to_i provides the net/http/Client standard library operation.
-  hex_to_i: text ->
-    value = 0
-    i = 0
-    while i < text.byte_len()
-      c = ord(text[i])
-      digit = -1
-      if c >= 48 and c <= 57
-        digit = c - 48
-      elseif c >= 65 and c <= 70
-        digit = c - 55
-      elseif c >= 97 and c <= 102
-        digit = c - 87
-      else
-        raise error("http.response: invalid chunk size")
-      value = value * 16 + digit
-      i = i + 1
-    return value
+  # Client.read_response provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_response: s ->
+    status_line = socket_read_line(s)
+    if status_line == nil
+      raise error("http.response: empty response")
+    status_line = Client(nil).chomp(status_line)
+    parts = status_line.split(" ")
+    if parts.len() < 2
+      raise error("http.response: invalid status line")
+    status = parts[1].to_i()
+    headers = {}
+    line = socket_read_line(s)
+    while line != nil and Client(nil).chomp(line) != ""
+      clean = Client(nil).chomp(line)
+      idx = Client(nil).index_of(clean, ":", 0)
+      if idx > 0
+        name = clean.slice(0, idx).lower()
+        value = clean.slice(idx + 1, clean.len()).trim()
+        headers[name] = value
+      line = socket_read_line(s)
+    body = ""
+    transfer = headers.get("transfer-encoding", "")
+    if transfer.lower().contains("chunked")
+      body = Client(nil).read_chunked(s)
+    elseif headers.has("content-length")
+      body = socket_read(s, headers["content-length"].to_i())
+    else
+      chunk = socket_read(s, 4096)
+      while chunk != nil and chunk != ""
+        body = body + chunk
+        chunk = socket_read(s, 4096)
+    { status: status, headers: headers, body: body }
+
+  # Client.read_trailers provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_trailers: s ->
+    line = socket_read_line(s)
+    while line != nil and Client(nil).chomp(line) != ""
+      line = socket_read_line(s)
+    nil
+
+  # Client.request provides the net/http/Client standard library operation.
+  # @param method String method value.
+  # @param target Any target value.
+  # @param opts Any opts value.
+  # @return Any the resulting value.
+  request: method, target = nil, opts = nil ->
+    if self.target != nil
+      opts = target
+      target = self.target
+    if opts == nil
+      opts = {}
+    u = Client(nil).parse_url(target)
+    if u["scheme"] != "http" and u["scheme"] != "https"
+      raise error("http.request: only http:// and https:// URLs are supported")
+    host = u["host"]
+    if host == ""
+      raise error("http.request: URL host is required")
+    port = 80
+    if u["scheme"] == "https"
+      port = 443
+    if u["port"] != ""
+      port = u["port"].to_i()
+    path = u["path"]
+    if path == ""
+      path = "/"
+    if u["has_query"]
+      path = path + "?" + u["query"]
+    headers = {}
+    if opts.has("headers") and opts["headers"] != nil
+      headers = opts["headers"]
+    body = ""
+    if opts.has("body") and opts["body"] != nil
+      body = opts["body"].to_s()
+    crlf = chr(13) + "\n"
+    req = method.upper() + " " + path + " HTTP/1.1" + crlf
+    req = req + "Host: " + Client(nil).host_header(host, u["port"]) + crlf
+    req = req + "Connection: close" + crlf
+    if body != ""
+      req = req + "Content-Length: " + body.byte_len().to_s() + crlf
+    for entry in headers.entries()
+      req = req + entry[0] + ": " + entry[1].to_s() + crlf
+    req = req + crlf + body
+    connect_options = { timeout: opts.get("timeout", 10) }
+    if opts.has("insecure_skip_verify")
+      connect_options["insecure_skip_verify"] = opts["insecure_skip_verify"]
+    if opts.has("ca_file")
+      connect_options["ca_file"] = opts["ca_file"]
+    s = nil
+    if u["scheme"] == "https"
+      s = tls_connect(host, port, connect_options)
+    else
+      s = socket_connect(host, port, connect_options)
+    socket_write(s, req)
+    response = Client(nil).read_response(s)
+    socket_close(s)
+    response

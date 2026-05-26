@@ -163,10 +163,10 @@ functions and two constants.
 
 ### New constants
 
-- `math.pi`
-- `math.e`
+- `math.PI`
+- `math.E`
 
-Constants are values, not functions: `math.pi`, not `math.pi()`.
+Constants are values, not functions: `math.PI`, not `math.PI()`.
 
 `math.abs`, `math.min`, `math.max`, `math.clamp` from v0.20 stay unchanged.
 

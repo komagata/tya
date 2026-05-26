@@ -1,35 +1,31 @@
 # Digest provides the digest/Digest standard library API.
 class Digest
-  # Digest.initialize stores a value for digest calculation.
-  initialize: value = nil ->
-    self.value = value
-
   # Digest.md5 provides the digest/Digest standard library operation.
-  md5: text = nil ->
-    if text == nil
-      text = self.value
+  # @param text String text value.
+  # @return Any the resulting value.
+  static md5: text ->
     digest_md5(text)
 
   # Digest.sha1 provides the digest/Digest standard library operation.
-  sha1: text = nil ->
-    if text == nil
-      text = self.value
+  # @param text String text value.
+  # @return Any the resulting value.
+  static sha1: text ->
     digest_sha1(text)
 
   # Digest.sha256 provides the digest/Digest standard library operation.
-  sha256: text = nil ->
-    if text == nil
-      text = self.value
+  # @param text String text value.
+  # @return Any the resulting value.
+  static sha256: text ->
     digest_sha256(text)
 
   # Digest.sha384 provides the digest/Digest standard library operation.
-  sha384: text = nil ->
-    if text == nil
-      text = self.value
+  # @param text String text value.
+  # @return Any the resulting value.
+  static sha384: text ->
     digest_sha384(text)
 
   # Digest.sha512 provides the digest/Digest standard library operation.
-  sha512: text = nil ->
-    if text == nil
-      text = self.value
+  # @param text String text value.
+  # @return Any the resulting value.
+  static sha512: text ->
     digest_sha512(text)

@@ -1,0 +1,5 @@
+# Closable provides the io/Closable standard library API.
+interface Closable
+  # close provides the Closable API operation.
+  # @return Nil the resulting value.
+  close: ->

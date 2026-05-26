@@ -1,44 +1,130 @@
 # Address provides the net/ip/Address standard library API.
 class Address
+  # Address.bytes stores instance state.
+  # @type Nil
+  bytes: nil
+
+  # Address.groups stores instance state.
+  # @type Nil
+  groups: nil
+
+  # Address.mapped stores instance state.
+  # @type Nil
+  mapped: nil
+
+  # Address.version stores instance state.
+  # @type Nil
+  version: nil
+
   # Address.initialize provides the net/ip/Address standard library operation.
+  # @param version Any version value.
+  # @param bytes Array bytes value.
+  # @param groups Any groups value.
+  # @param mapped Any mapped value.
+  # @return Self the initialized object.
   initialize: version = nil, bytes = nil, groups = nil, mapped = false ->
     self.version = version
     self.bytes = bytes
     self.groups = groups
     self.mapped = mapped
 
-  # Address.parse provides the net/ip/Address standard library operation.
-  parse: text ->
-    if text.contains(":")
-      return self.parse_v6(text)
-    return self.parse_v4(text)
+  # Address.decimal? provides the net/ip/Address standard library operation.
+  # @param text String text value.
+  # @return Boolean whether the condition is true.
+  decimal?: text ->
+    i = 0
+    while i < text.byte_len()
+      c = ord(text[i])
+      if c < 48 or c > 57
+        return false
+      i = i + 1
+    true
 
-  # Address.valid? provides the net/ip/Address standard library operation.
-  valid?: text ->
-    try
-      self.parse(text)
-      return true
-    catch _
-      return false
+  # Address.format_v6 provides the net/ip/Address standard library operation.
+  # @param groups Any groups value.
+  # @param mapped Any mapped value.
+  # @return Any the resulting value.
+  format_v6: groups, mapped ->
+    if (
+      mapped and groups[0] == 0 and groups[1] == 0 and groups[2] == 0 and groups[3] == 0 and groups[4] == 0 and groups[5] == 65535
+    )
+      b1 = groups[6] / 256.to_i()
+      b2 = groups[6] % 256
+      b3 = groups[7] / 256.to_i()
+      b4 = groups[7] % 256
+      return "::ffff:" + b1.to_s() + "." + b2.to_s() + "." + b3.to_s() + "." + b4.to_s()
+    run = self.zero_run(groups)
+    out = ""
+    i = 0
+    while i < 8
+      if run["len"] > 1 and i == run["start"]
+        if out == ""
+          out = "::"
+        else
+          out = out + "::"
+        i = i + run["len"]
+        if i >= 8
+          return out
+      else
+        if out != "" and not out.ends_with(":")
+          out = out + ":"
+        out = out + self.int_to_hex(groups[i])
+        i = i + 1
+    out
 
-  # Address.version provides the net/ip/Address standard library operation.
-  version_of: addr = nil ->
-    if addr == nil
-      addr = self
-    return addr.version
+  # Address.hex_digit provides the net/ip/Address standard library operation.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  hex_digit: c ->
+    code = ord(c)
+    if code >= 48 and code <= 57
+      return code - 48
+    if code >= 65 and code <= 70
+      return code - 55
+    if code >= 97 and code <= 102
+      return code - 87
+    raise error("ip.Address.parse: invalid IPv6 address")
 
-  # Address.to_s provides the net/ip/Address standard library operation.
-  to_s: addr = nil ->
-    if addr == nil
-      addr = self
-    if addr.version == 4
-      parts = []
-      for b in addr.bytes
-        parts.push(b.to_s())
-      return parts.join(".")
-    return self.format_v6(addr.groups, addr.mapped)
+  # Address.hex_to_int provides the net/ip/Address standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  hex_to_int: text ->
+    n = 0
+    i = 0
+    while i < text.byte_len()
+      n = n * 16 + self.hex_digit(text[i])
+      i = i + 1
+    n
+
+  # Address.int_to_hex provides the net/ip/Address standard library operation.
+  # @param n Int n value.
+  # @return Any the resulting value.
+  int_to_hex: n ->
+    digits = "0123456789abcdef"
+    if n == 0
+      return "0"
+    out = ""
+    value = n
+    while value > 0
+      out = digits[value % 16] + out
+      value = value / 16.to_i()
+    out
+
+  # Address.last_index provides the net/ip/Address standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @return Int the resulting value.
+  last_index: text, needle ->
+    i = text.byte_len() - 1
+    while i >= 0
+      if text[i] == needle
+        return i
+      i = i - 1
+    -1
 
   # Address.loopback? provides the net/ip/Address standard library operation.
+  # @param addr Any addr value.
+  # @return Boolean whether the condition is true.
   loopback?: addr = nil ->
     if addr == nil
       addr = self
@@ -50,36 +136,19 @@ class Address
       if groups[i] != 0
         return false
       i = i + 1
-    return groups[7] == 1
+    groups[7] == 1
 
-  # Address.unspecified? provides the net/ip/Address standard library operation.
-  unspecified?: addr = nil ->
-    if addr == nil
-      addr = self
-    if addr.version == 4
-      return addr.bytes[0] == 0 and addr.bytes[1] == 0 and addr.bytes[2] == 0 and addr.bytes[3] == 0
-    for g in addr.groups
-      if g != 0
-        return false
-    return true
-
-  # Address.private? provides the net/ip/Address standard library operation.
-  private_address?: addr = nil ->
-    if addr == nil
-      addr = self
-    if addr.version == 4
-      b = addr.bytes
-      if b[0] == 10
-        return true
-      if b[0] == 172 and b[1] >= 16 and b[1] <= 31
-        return true
-      if b[0] == 192 and b[1] == 168
-        return true
-      return false
-    g0 = addr.groups[0]
-    return (g0 >= 0xfc00 and g0 <= 0xfdff)
+  # Address.parse provides the net/ip/Address standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  parse: text ->
+    if text.contains(":")
+      return self.parse_v6(text)
+    self.parse_v4(text)
 
   # Address.parse_v4 provides the net/ip/Address standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
   parse_v4: text ->
     parts = text.split(".")
     if parts.len() != 4
@@ -94,9 +163,11 @@ class Address
       if n.to_s() != part and not (n == 0 and part == "0")
         raise error("ip.Address.parse: invalid IPv4 address")
       bytes.push(n)
-    return Address(4, bytes, nil, false)
+    Address(4, bytes, nil, false)
 
   # Address.parse_v6 provides the net/ip/Address standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
   parse_v6: text ->
     if text == ""
       raise error("ip.Address.parse: invalid IPv6 address")
@@ -144,9 +215,11 @@ class Address
         groups.push(g)
     if groups.len() != 8
       raise error("ip.Address.parse: invalid IPv6 address")
-    return Address(6, nil, groups, mapped)
+    Address(6, nil, groups, mapped)
 
   # Address.parse_v6_side provides the net/ip/Address standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
   parse_v6_side: text ->
     parts = text.split(":")
     out = []
@@ -154,36 +227,73 @@ class Address
       if part == "" or part.byte_len() > 4
         raise error("ip.Address.parse: invalid IPv6 address")
       out.push(self.hex_to_int(part))
-    return out
+    out
 
-  # Address.format_v6 provides the net/ip/Address standard library operation.
-  format_v6: groups, mapped ->
-    if mapped and groups[0] == 0 and groups[1] == 0 and groups[2] == 0 and groups[3] == 0 and groups[4] == 0 and groups[5] == 65535
-      b1 = (groups[6] / 256).to_i()
-      b2 = groups[6] % 256
-      b3 = (groups[7] / 256).to_i()
-      b4 = groups[7] % 256
-      return "::ffff:" + b1.to_s() + "." + b2.to_s() + "." + b3.to_s() + "." + b4.to_s()
-    run = self.zero_run(groups)
-    out = ""
-    i = 0
-    while i < 8
-      if run["len"] > 1 and i == run["start"]
-        if out == ""
-          out = "::"
-        else
-          out = out + "::"
-        i = i + run["len"]
-        if i >= 8
-          return out
-      else
-        if out != "" and not out.ends_with(":")
-          out = out + ":"
-        out = out + self.int_to_hex(groups[i])
-        i = i + 1
-    return out
+  # Address.private? provides the net/ip/Address standard library operation.
+  # @param addr Any addr value.
+  # @return Boolean whether the condition is true.
+  private_address?: addr = nil ->
+    if addr == nil
+      addr = self
+    if addr.version == 4
+      b = addr.bytes
+      if b[0] == 10
+        return true
+      if b[0] == 172 and b[1] >= 16 and b[1] <= 31
+        return true
+      if b[0] == 192 and b[1] == 168
+        return true
+      return false
+    g0 = addr.groups[0]
+    g0 >= 64512 and g0 <= 65023
+
+  # Address.to_s provides the net/ip/Address standard library operation.
+  # @param addr Any addr value.
+  # @return String the resulting value.
+  to_s: addr = nil ->
+    if addr == nil
+      addr = self
+    if addr.version == 4
+      parts = []
+      for b in addr.bytes
+        parts.push(b.to_s())
+      return parts.join(".")
+    self.format_v6(addr.groups, addr.mapped)
+
+  # Address.unspecified? provides the net/ip/Address standard library operation.
+  # @param addr Any addr value.
+  # @return Boolean whether the condition is true.
+  unspecified?: addr = nil ->
+    if addr == nil
+      addr = self
+    if addr.version == 4
+      return addr.bytes[0] == 0 and addr.bytes[1] == 0 and addr.bytes[2] == 0 and addr.bytes[3] == 0
+    for g in addr.groups
+      if g != 0
+        return false
+    true
+
+  # Address.valid? provides the net/ip/Address standard library operation.
+  # @param text String text value.
+  # @return Boolean whether the condition is true.
+  valid?: text ->
+    try
+      self.parse(text)
+      return true
+    catch _
+      return false
+
+  # Address.version provides the net/ip/Address standard library operation.
+  # @param addr Any addr value.
+  # @return Any the resulting value.
+  version_of: addr = nil ->
+    if addr == nil
+      addr = self
+    addr.version
 
   # Address.zero_run provides the net/ip/Address standard library operation.
+  # @param groups Any groups value.
+  # @return Any the resulting value.
   zero_run: groups ->
     best_start = -1
     best_len = 0
@@ -199,55 +309,4 @@ class Address
           best_len = n
       else
         i = i + 1
-    return { start: best_start, len: best_len }
-
-  # Address.decimal? provides the net/ip/Address standard library operation.
-  decimal?: text ->
-    i = 0
-    while i < text.byte_len()
-      c = ord(text[i])
-      if c < 48 or c > 57
-        return false
-      i = i + 1
-    return true
-
-  # Address.hex_to_int provides the net/ip/Address standard library operation.
-  hex_to_int: text ->
-    n = 0
-    i = 0
-    while i < text.byte_len()
-      n = n * 16 + self.hex_digit(text[i])
-      i = i + 1
-    return n
-
-  # Address.hex_digit provides the net/ip/Address standard library operation.
-  hex_digit: c ->
-    code = ord(c)
-    if code >= 48 and code <= 57
-      return code - 48
-    if code >= 65 and code <= 70
-      return code - 55
-    if code >= 97 and code <= 102
-      return code - 87
-    raise error("ip.Address.parse: invalid IPv6 address")
-
-  # Address.int_to_hex provides the net/ip/Address standard library operation.
-  int_to_hex: n ->
-    digits = "0123456789abcdef"
-    if n == 0
-      return "0"
-    out = ""
-    value = n
-    while value > 0
-      out = digits[value % 16] + out
-      value = (value / 16).to_i()
-    return out
-
-  # Address.last_index provides the net/ip/Address standard library operation.
-  last_index: text, needle ->
-    i = text.byte_len() - 1
-    while i >= 0
-      if text[i] == needle
-        return i
-      i = i - 1
-    return -1
+    { start: best_start, len: best_len }

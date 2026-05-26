@@ -1,28 +1,86 @@
 # Point provides the geometry/Point standard library API.
 class Point
+  # Point.x stores instance state.
+  # @type Int
+  x: 0
+
+  # Point.y stores instance state.
+  # @type Int
+  y: 0
+
   # Point.initialize provides the geometry/Point standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Self the initialized object.
   initialize: x = 0, y = 0 ->
     self.x = self.number(x, "x")
     self.y = self.number(y, "y")
 
-  # Point.new provides the geometry/Point standard library operation.
-  new: x, y ->
-    return Point(x, y)
+  # Point.distance provides the geometry/Point standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  distance: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    Vector2(0, 0).distance(self.to_vector(a), self.to_vector(b))
+
+  # Point.equal? provides the geometry/Point standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    a.class == Point and b.class == Point and a.x == b.x and a.y == b.y
+
+  # Point.expect provides the geometry/Point standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect: value, name ->
+    if value.class != Point
+      raise error("geometry.Point: " + name + " must be a Point")
 
   # Point.from_vector provides the geometry/Point standard library operation.
+  # @param v Any v value.
+  # @return Self the resulting value.
   from_vector: v ->
     if v.class != Vector2
       raise error("geometry.Point.from_vector: v must be a Vector2")
-    return Point(v.x, v.y)
+    Point(v.x, v.y)
+
+  # Point.new provides the geometry/Point standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Self the resulting value.
+  new: x, y ->
+    Point(x, y)
+
+  # Point.number provides the geometry/Point standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  number: value, name ->
+    if value.class != Number
+      raise error("geometry.Point: " + name + " must be a number")
+    value
 
   # Point.to_vector provides the geometry/Point standard library operation.
+  # @param p Any p value.
+  # @return Any the resulting value.
   to_vector: p = nil ->
     if p == nil
       p = self
     self.expect(p, "p")
-    return Vector2(p.x, p.y)
+    Vector2(p.x, p.y)
 
   # Point.translate provides the geometry/Point standard library operation.
+  # @param p Any p value.
+  # @param v Any v value.
+  # @return Any the resulting value.
   translate: p, v = nil ->
     if v == nil
       v = p
@@ -30,29 +88,4 @@ class Point
     self.expect(p, "p")
     if v.class != Vector2
       raise error("geometry.Point.translate: v must be a Vector2")
-    return Point(p.x + v.x, p.y + v.y)
-
-  # Point.distance provides the geometry/Point standard library operation.
-  distance: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    return Vector2(0, 0).distance(self.to_vector(a), self.to_vector(b))
-
-  # Point.equal? provides the geometry/Point standard library operation.
-  equal?: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    return a.class == Point and b.class == Point and a.x == b.x and a.y == b.y
-
-  # Point.expect provides the geometry/Point standard library operation.
-  expect: value, name ->
-    if value.class != Point
-      raise error("geometry.Point: " + name + " must be a Point")
-
-  # Point.number provides the geometry/Point standard library operation.
-  number: value, name ->
-    if value.class != Number
-      raise error("geometry.Point: " + name + " must be a number")
-    return value
+    Point(p.x + v.x, p.y + v.y)

@@ -1,35 +1,44 @@
 # Time provides the time/Time standard library API.
 class Time
+  # Time.value stores instance state.
+  # @type Nil
+  value: nil
+
   # Time.initialize stores a time value or parseable text.
+  # @param value String value value.
+  # @return Self the initialized object.
   initialize: value = nil ->
     self.value = value
 
-  # Time.now provides the time/Time standard library operation.
-  now: () -> time_now()
-
-  # Time.monotonic returns a monotonic timestamp.
-  monotonic: () -> time_monotonic()
-
-  # Time.unix constructs a UTC wall-clock time.
-  unix: seconds, nanos = 0 ->
-    time_unix(seconds, nanos)
-
   # Time.duration constructs a duration value.
+  # @param seconds Any seconds value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
   duration: seconds = 0, options = {} ->
     time_duration(seconds, options)
 
-  # Time.sleep provides the time/Time standard library operation.
-  sleep: duration_or_seconds ->
-    time_sleep(duration_or_seconds)
-
   # Time.format provides the time/Time standard library operation.
+  # @param t Any t value.
+  # @param layout Any layout value.
+  # @return Any the resulting value.
   format: t, layout = nil ->
     if layout == nil
       layout = t
       t = self.value
     time_format(t, layout)
 
+  # Time.monotonic returns a monotonic timestamp.
+  # @return Any the resulting value.
+  monotonic: -> time_monotonic()
+
+  # Time.now provides the time/Time standard library operation.
+  # @return Any the resulting value.
+  now: -> time_now()
+
   # Time.parse provides the time/Time standard library operation.
+  # @param text String text value.
+  # @param layout Any layout value.
+  # @return Any the resulting value.
   parse: text = nil, layout = "rfc3339" ->
     if self.value != nil
       if text != nil
@@ -44,7 +53,22 @@ class Time
     time_parse(text, layout)
 
   # Time.since provides the time/Time standard library operation.
+  # @param t Any t value.
+  # @return Any the resulting value.
   since: t = nil ->
     if t == nil
       t = self.value
     time_since(t)
+
+  # Time.sleep provides the time/Time standard library operation.
+  # @param duration_or_seconds Any duration or seconds value.
+  # @return Nil the resulting value.
+  sleep: duration_or_seconds ->
+    time_sleep(duration_or_seconds)
+
+  # Time.unix constructs a UTC wall-clock time.
+  # @param seconds Any seconds value.
+  # @param nanos Any nanos value.
+  # @return Any the resulting value.
+  unix: seconds, nanos = 0 ->
+    time_unix(seconds, nanos)

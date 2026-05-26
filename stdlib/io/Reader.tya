@@ -1,39 +1,29 @@
-# Readable provides the io/Reader standard library API.
-interface Readable
-  # Readable.read provides the io/Reader standard library operation.
-  read: size ->
-
-# Writable provides the io/Reader standard library API.
-interface Writable
-  # Writable.write provides the io/Reader standard library operation.
-  write: data ->
-
-# Closable provides the io/Reader standard library API.
-interface Closable
-  # Closable.close provides the io/Reader standard library operation.
-  close: ->
-
-# Flushable provides the io/Reader standard library API.
-interface Flushable
-  # Flushable.flush provides the io/Reader standard library operation.
-  flush: ->
-
 # Reader provides the io/Reader standard library API.
 class Reader implements Readable, Closable
+  # Reader.binary stores instance state.
+  # @type Nil
+  binary: nil
+
+  # Reader.handle stores instance state.
+  # @type Nil
+  handle: nil
+
   # Reader.initialize provides the io/Reader standard library operation.
+  # @param handle Any handle value.
+  # @param binary Boolean binary value.
+  # @return Self the initialized object.
   initialize: handle, binary ->
     self.handle = handle
     self.binary = binary
 
-  # Reader.read provides the io/Reader standard library operation.
-  read: size ->
-    io_stream_read(self.handle, size)
-
-  # Reader.read_line provides the io/Reader standard library operation.
-  read_line: ->
-    io_stream_read_line(self.handle)
+  # Reader.close provides the io/Reader standard library operation.
+  # @return Nil the resulting value.
+  close: ->
+    io_stream_close(self.handle)
 
   # Reader.each_line provides the io/Reader standard library operation.
+  # @param fn Function fn value.
+  # @return Any the resulting value.
   each_line: fn ->
     line = self.read_line()
     while line != nil
@@ -42,9 +32,17 @@ class Reader implements Readable, Closable
     nil
 
   # Reader.eof? provides the io/Reader standard library operation.
+  # @return Boolean whether the condition is true.
   eof?: ->
     io_stream_eof(self.handle)
 
-  # Reader.close provides the io/Reader standard library operation.
-  close: ->
-    io_stream_close(self.handle)
+  # Reader.read provides the io/Reader standard library operation.
+  # @param size Int size value.
+  # @return Any the resulting value.
+  read: size ->
+    io_stream_read(self.handle, size)
+
+  # Reader.read_line provides the io/Reader standard library operation.
+  # @return String the resulting value.
+  read_line: ->
+    io_stream_read_line(self.handle)

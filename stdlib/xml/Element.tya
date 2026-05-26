@@ -1,24 +1,100 @@
 # Element provides the xml/Element standard library API.
 class Element
+  # Element.attrs stores instance state.
+  # @type Nil
+  attrs: nil
+
+  # Element.children stores instance state.
+  # @type Nil
+  children: nil
+
+  # Element.name stores instance state.
+  # @type Nil
+  name: nil
+
   # Element.initialize provides the xml/Element standard library operation.
+  # @param name String name value.
+  # @param attrs Any attrs value.
+  # @param children Any children value.
+  # @return Self the initialized object.
   initialize: name, attrs, children ->
     self.name = name
     self.attrs = attrs
     self.children = children
 
-  # Element.new provides the xml/Element standard library operation.
-  new: name, attrs, children ->
-    return Element(name, attrs, children)
-
   # Element.attr provides the xml/Element standard library operation.
+  # @param name String name value.
+  # @param default Any default value.
+  # @return Any the resulting value.
   attr: name, default ->
-    return self.attrs.get(name, default)
+    self.attrs.get(name, default)
+
+  # Element.child_elements provides the xml/Element standard library operation.
+  # @return Any the resulting value.
+  child_elements: ->
+    out = []
+    i = 0
+    while i < self.children.len()
+      if self.children[i].class == Element
+        out.push(self.children[i])
+      i = i + 1
+    out
+
+  # Element.find provides the xml/Element standard library operation.
+  # @param name String name value.
+  # @return Any the resulting value.
+  find: name ->
+    found = self.find_all(name)
+    if found.len() == 0
+      return nil
+    found[0]
+
+  # Element.find_all provides the xml/Element standard library operation.
+  # @param name String name value.
+  # @return Any the resulting value.
+  find_all: name ->
+    out = []
+    children = self.child_elements()
+    i = 0
+    while i < children.len()
+      if children[i].name == name
+        out.push(children[i])
+      i = i + 1
+    out
+
+  # Element.find_all_recursive provides the xml/Element standard library operation.
+  # @param name String name value.
+  # @return Any the resulting value.
+  find_all_recursive: name ->
+    out = []
+    Xml(nil).collect_recursive(self, name, out)
+    out
+
+  # Element.find_recursive provides the xml/Element standard library operation.
+  # @param name String name value.
+  # @return Any the resulting value.
+  find_recursive: name ->
+    found = self.find_all_recursive(name)
+    if found.len() == 0
+      return nil
+    found[0]
 
   # Element.has_attr? provides the xml/Element standard library operation.
+  # @param name String name value.
+  # @return Boolean whether the condition is true.
   has_attr?: name ->
-    return self.attrs.has?(name)
+    self.attrs.has?(name)
+
+  # Element.new provides the xml/Element standard library operation.
+  # @param name String name value.
+  # @param attrs Any attrs value.
+  # @param children Any children value.
+  # @return Self the resulting value.
+  new: name, attrs, children ->
+    Element(name, attrs, children)
 
   # Element.text provides the xml/Element standard library operation.
+  # @return String the resulting value.
   text: ->
     out = ""
     i = 0
@@ -29,49 +105,9 @@ class Element
       elseif child.class == Element
         out = out + child.text()
       i = i + 1
-    return out
-
-  # Element.child_elements provides the xml/Element standard library operation.
-  child_elements: ->
-    out = []
-    i = 0
-    while i < self.children.len()
-      if self.children[i].class == Element
-        out.push(self.children[i])
-      i = i + 1
-    return out
-
-  # Element.find provides the xml/Element standard library operation.
-  find: name ->
-    found = self.find_all(name)
-    if found.len() == 0
-      return nil
-    return found[0]
-
-  # Element.find_all provides the xml/Element standard library operation.
-  find_all: name ->
-    out = []
-    children = self.child_elements()
-    i = 0
-    while i < children.len()
-      if children[i].name == name
-        out.push(children[i])
-      i = i + 1
-    return out
-
-  # Element.find_recursive provides the xml/Element standard library operation.
-  find_recursive: name ->
-    found = self.find_all_recursive(name)
-    if found.len() == 0
-      return nil
-    return found[0]
-
-  # Element.find_all_recursive provides the xml/Element standard library operation.
-  find_all_recursive: name ->
-    out = []
-    Xml(nil).collect_recursive(self, name, out)
-    return out
+    out
 
   # Element.to_s provides the xml/Element standard library operation.
+  # @return String the resulting value.
   to_s: ->
-    return Xml(nil).stringify(self)
+    Xml(nil).stringify(self)

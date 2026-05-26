@@ -1,29 +1,30 @@
 # Network provides the net/ip/Network standard library API.
 class Network
+  # Network.address stores instance state.
+  # @type Nil
+  address: nil
+
+  # Network.prefix stores instance state.
+  # @type Nil
+  prefix: nil
+
+  # Network.version stores instance state.
+  # @type Nil
+  version: nil
+
   # Network.initialize provides the net/ip/Network standard library operation.
+  # @param address Any address value.
+  # @param prefix Any prefix value.
+  # @return Self the initialized object.
   initialize: address = nil, prefix = 0 ->
     self.address = address
     self.prefix = prefix
     self.version = address.version
 
-  # Network.parse provides the net/ip/Network standard library operation.
-  parse: cidr ->
-    slash = Address(nil, nil, nil, false).last_index(cidr, "/")
-    if slash < 0
-      raise error("ip.Network.parse: missing prefix")
-    addr = Address(nil, nil, nil, false).parse(cidr.slice(0, slash))
-    prefix_text = cidr.slice(slash + 1, cidr.len())
-    if prefix_text == "" or not Address(nil, nil, nil, false).decimal?(prefix_text)
-      raise error("ip.Network.parse: invalid prefix")
-    prefix = prefix_text.to_i()
-    max = 32
-    if addr.version == 6
-      max = 128
-    if prefix < 0 or prefix > max
-      raise error("ip.Network.parse: invalid prefix")
-    return Network(addr, prefix)
-
   # Network.contains? provides the net/ip/Network standard library operation.
+  # @param network Any network value.
+  # @param addr Any addr value.
+  # @return Boolean whether the condition is true.
   contains?: network, addr = nil ->
     if addr == nil
       addr = network
@@ -32,9 +33,19 @@ class Network
       return false
     if addr.version == 4
       return self.contains_parts?(network.address.bytes, addr.bytes, network.prefix, 8)
-    return self.contains_parts?(network.address.groups, addr.groups, network.prefix, 16)
+    self.contains_parts?(
+      network.address.groups,
+      addr.groups,
+      network.prefix,
+      16
+    )
 
   # Network.contains_parts? provides the net/ip/Network standard library operation.
+  # @param base Any base value.
+  # @param value String value value.
+  # @param prefix Any prefix value.
+  # @param width Int width value.
+  # @return Boolean whether the condition is true.
   contains_parts?: base, value, prefix, width ->
     remain = prefix
     i = 0
@@ -47,17 +58,40 @@ class Network
         remain = remain - width
       else
         div = self.pow2(width - remain)
-        if (base[i] / div).to_i() != (value[i] / div).to_i()
+        if base[i] / div.to_i() != value[i] / div.to_i()
           return false
         return true
       i = i + 1
-    return true
+    true
+
+  # Network.parse provides the net/ip/Network standard library operation.
+  # @param cidr Any cidr value.
+  # @return Any the resulting value.
+  parse: cidr ->
+    slash = Address(nil, nil, nil, false).last_index(cidr, "/")
+    if slash < 0
+      raise error("ip.Network.parse: missing prefix")
+    addr = Address(nil, nil, nil, false).parse(cidr.slice(0, slash))
+    prefix_text = cidr.slice(slash + 1, cidr.len())
+    if (
+      prefix_text == "" or not Address(nil, nil, nil, false).decimal?(prefix_text)
+    )
+      raise error("ip.Network.parse: invalid prefix")
+    prefix = prefix_text.to_i()
+    max = 32
+    if addr.version == 6
+      max = 128
+    if prefix < 0 or prefix > max
+      raise error("ip.Network.parse: invalid prefix")
+    Network(addr, prefix)
 
   # Network.pow2 provides the net/ip/Network standard library operation.
+  # @param n Int n value.
+  # @return Any the resulting value.
   pow2: n ->
     out = 1
     i = 0
     while i < n
       out = out * 2
       i = i + 1
-    return out
+    out

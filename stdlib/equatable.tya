@@ -1,4 +1,6 @@
 # Equatable provides the equatable standard library API.
 interface Equatable
-  # Equatable.equal? provides the equatable standard library operation.
+  # equal? provides the equatable API operation.
+  # @param other Any other value.
+  # @return Boolean the resulting value.
   equal?: other ->

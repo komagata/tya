@@ -1,17 +1,178 @@
 # Rect provides the geometry/Rect standard library API.
 class Rect
+  # Rect.height stores instance state.
+  # @type Int
+  height: 0
+
+  # Rect.width stores instance state.
+  # @type Int
+  width: 0
+
+  # Rect.x stores instance state.
+  # @type Int
+  x: 0
+
+  # Rect.y stores instance state.
+  # @type Int
+  y: 0
+
   # Rect.initialize provides the geometry/Rect standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Self the initialized object.
   initialize: x = 0, y = 0, width = 0, height = 0 ->
     self.x = self.number(x, "x")
     self.y = self.number(y, "y")
     self.width = self.dimension(width, "width")
     self.height = self.dimension(height, "height")
 
-  # Rect.new provides the geometry/Rect standard library operation.
-  new: x, y, width, height ->
-    return Rect(x, y, width, height)
+  # Rect.area provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  area: rect = nil ->
+    if rect == nil
+      rect = self
+    self.expect(rect, "rect")
+    rect.width * rect.height
+
+  # Rect.bottom provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  bottom: rect = nil ->
+    if rect == nil
+      rect = self
+    self.expect(rect, "rect")
+    rect.y + rect.height
+
+  # Rect.center provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  center: rect = nil ->
+    if rect == nil
+      rect = self
+    self.expect(rect, "rect")
+    Point(rect.x + rect.width / 2, rect.y + rect.height / 2)
+
+  # Rect.clamp_number provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param lo Any lo value.
+  # @param hi Any hi value.
+  # @return Any the resulting value.
+  clamp_number: value, lo, hi ->
+    if value < lo
+      return lo
+    if value > hi
+      return hi
+    value
+
+  # Rect.clamp_point provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param point Any point value.
+  # @return Any the resulting value.
+  clamp_point: rect, point = nil ->
+    if point == nil
+      point = rect
+      rect = self
+    self.expect(rect, "rect")
+    Point(0, 0).expect(point, "point")
+    Point(
+      self.clamp_number(point.x, self.left(rect), self.right(rect)),
+      self.clamp_number(point.y, self.top(rect), self.bottom(rect))
+    )
+
+  # Rect.contains_point? provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param point Any point value.
+  # @return Boolean whether the condition is true.
+  contains_point?: rect, point = nil ->
+    if point == nil
+      point = rect
+      rect = self
+    self.expect(rect, "rect")
+    Point(0, 0).expect(point, "point")
+    point.x >= self.left(rect) and point.x < self.right(rect) and point.y >= self.top(rect) and point.y < self.bottom(rect)
+
+  # Rect.contains_rect? provides the geometry/Rect standard library operation.
+  # @param outer Any outer value.
+  # @param inner Any inner value.
+  # @return Boolean whether the condition is true.
+  contains_rect?: outer, inner = nil ->
+    if inner == nil
+      inner = outer
+      outer = self
+    self.expect(outer, "outer")
+    self.expect(inner, "inner")
+    self.left(inner) >= self.left(outer) and self.right(inner) <= self.right(outer) and self.top(inner) >= self.top(outer) and self.bottom(inner) <= self.bottom(outer)
+
+  # Rect.dimension provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  dimension: value, name ->
+    self.number(value, name)
+    if value < 0
+      raise error("geometry.Rect: " + name + " must be non-negative")
+    value
+
+  # Rect.empty? provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Boolean whether the condition is true.
+  empty?: rect = nil ->
+    if rect == nil
+      rect = self
+    self.expect(rect, "rect")
+    rect.width == 0 or rect.height == 0
+
+  # Rect.equal? provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    a.class == Rect and b.class == Rect and a.x == b.x and a.y == b.y and a.width == b.width and a.height == b.height
+
+  # Rect.expand provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param amount Any amount value.
+  # @return Any the resulting value.
+  expand: rect, amount = nil ->
+    if amount == nil
+      amount = rect
+      rect = self
+    self.expect(rect, "rect")
+    self.number(amount, "amount")
+    self.inflate(rect, amount, amount)
+
+  # Rect.expect provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect: value, name ->
+    if value.class != Rect
+      raise error("geometry.Rect: " + name + " must be a Rect")
+
+  # Rect.from_center provides the geometry/Rect standard library operation.
+  # @param center Any center value.
+  # @param size Int size value.
+  # @return Self the resulting value.
+  from_center: center, size ->
+    Point(0, 0).expect(center, "center")
+    Size(0, 0).expect(size, "size")
+    Rect(
+      center.x - size.width / 2,
+      center.y - size.height / 2,
+      size.width,
+      size.height
+    )
 
   # Rect.from_points provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Self the resulting value.
   from_points: a, b ->
     Point(0, 0).expect(a, "a")
     Point(0, 0).expect(b, "b")
@@ -19,145 +180,18 @@ class Rect
     geometry_top = self.min(a.y, b.y)
     geometry_right = self.max(a.x, b.x)
     geometry_bottom = self.max(a.y, b.y)
-    return Rect(geometry_left, geometry_top, geometry_right - geometry_left, geometry_bottom - geometry_top)
-
-  # Rect.from_center provides the geometry/Rect standard library operation.
-  from_center: center, size ->
-    Point(0, 0).expect(center, "center")
-    Size(0, 0).expect(size, "size")
-    return Rect(center.x - size.width / 2, center.y - size.height / 2, size.width, size.height)
-
-  # Rect.left provides the geometry/Rect standard library operation.
-  left: rect = nil ->
-    if rect == nil
-      rect = self
-    self.expect(rect, "rect")
-    return rect.x
-
-  # Rect.right provides the geometry/Rect standard library operation.
-  right: rect = nil ->
-    if rect == nil
-      rect = self
-    self.expect(rect, "rect")
-    return rect.x + rect.width
-
-  # Rect.top provides the geometry/Rect standard library operation.
-  top: rect = nil ->
-    if rect == nil
-      rect = self
-    self.expect(rect, "rect")
-    return rect.y
-
-  # Rect.bottom provides the geometry/Rect standard library operation.
-  bottom: rect = nil ->
-    if rect == nil
-      rect = self
-    self.expect(rect, "rect")
-    return rect.y + rect.height
-
-  # Rect.center provides the geometry/Rect standard library operation.
-  center: rect = nil ->
-    if rect == nil
-      rect = self
-    self.expect(rect, "rect")
-    return Point(rect.x + rect.width / 2, rect.y + rect.height / 2)
-
-  # Rect.size provides the geometry/Rect standard library operation.
-  size: rect = nil ->
-    if rect == nil
-      rect = self
-    self.expect(rect, "rect")
-    return Size(rect.width, rect.height)
-
-  # Rect.area provides the geometry/Rect standard library operation.
-  area: rect = nil ->
-    if rect == nil
-      rect = self
-    self.expect(rect, "rect")
-    return rect.width * rect.height
-
-  # Rect.empty? provides the geometry/Rect standard library operation.
-  empty?: rect = nil ->
-    if rect == nil
-      rect = self
-    self.expect(rect, "rect")
-    return rect.width == 0 or rect.height == 0
-
-  # Rect.contains_point? provides the geometry/Rect standard library operation.
-  contains_point?: rect, point = nil ->
-    if point == nil
-      point = rect
-      rect = self
-    self.expect(rect, "rect")
-    Point(0, 0).expect(point, "point")
-    return point.x >= self.left(rect) and point.x < self.right(rect) and point.y >= self.top(rect) and point.y < self.bottom(rect)
-
-  # Rect.contains_rect? provides the geometry/Rect standard library operation.
-  contains_rect?: outer, inner = nil ->
-    if inner == nil
-      inner = outer
-      outer = self
-    self.expect(outer, "outer")
-    self.expect(inner, "inner")
-    return self.left(inner) >= self.left(outer) and self.right(inner) <= self.right(outer) and self.top(inner) >= self.top(outer) and self.bottom(inner) <= self.bottom(outer)
-
-  # Rect.intersects? provides the geometry/Rect standard library operation.
-  intersects?: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
-    return self.left(a) < self.right(b) and self.right(a) > self.left(b) and self.top(a) < self.bottom(b) and self.bottom(a) > self.top(b)
-
-  # Rect.intersection provides the geometry/Rect standard library operation.
-  intersection: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
-    geometry_left = self.max(self.left(a), self.left(b))
-    geometry_top = self.max(self.top(a), self.top(b))
-    geometry_right = self.min(self.right(a), self.right(b))
-    geometry_bottom = self.min(self.bottom(a), self.bottom(b))
-    if geometry_right <= geometry_left or geometry_bottom <= geometry_top
-      return Rect(geometry_left, geometry_top, 0, 0)
-    return Rect(geometry_left, geometry_top, geometry_right - geometry_left, geometry_bottom - geometry_top)
-
-  # Rect.union provides the geometry/Rect standard library operation.
-  union: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
-    geometry_left = self.min(self.left(a), self.left(b))
-    geometry_top = self.min(self.top(a), self.top(b))
-    geometry_right = self.max(self.right(a), self.right(b))
-    geometry_bottom = self.max(self.bottom(a), self.bottom(b))
-    return Rect(geometry_left, geometry_top, geometry_right - geometry_left, geometry_bottom - geometry_top)
-
-  # Rect.expand provides the geometry/Rect standard library operation.
-  expand: rect, amount = nil ->
-    if amount == nil
-      amount = rect
-      rect = self
-    self.expect(rect, "rect")
-    self.number(amount, "amount")
-    return self.inflate(rect, amount, amount)
-
-  # Rect.translate provides the geometry/Rect standard library operation.
-  translate: rect, vector = nil ->
-    if vector == nil
-      vector = rect
-      rect = self
-    self.expect(rect, "rect")
-    if vector.class != Vector2
-      raise error("geometry.Rect.translate: vector must be a Vector2")
-    return Rect(rect.x + vector.x, rect.y + vector.y, rect.width, rect.height)
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )
 
   # Rect.inflate provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param dx Any dx value.
+  # @param dy Any dy value.
+  # @return Any the resulting value.
   inflate: rect, dx, dy = nil ->
     if dy == nil
       dy = dx
@@ -170,58 +204,145 @@ class Rect
     geometry_height = rect.height + dy * 2
     if geometry_width < 0 or geometry_height < 0
       raise error("geometry.Rect.inflate: resulting size is negative")
-    return Rect(rect.x - dx, rect.y - dy, geometry_width, geometry_height)
+    Rect(rect.x - dx, rect.y - dy, geometry_width, geometry_height)
 
-  # Rect.clamp_point provides the geometry/Rect standard library operation.
-  clamp_point: rect, point = nil ->
-    if point == nil
-      point = rect
-      rect = self
-    self.expect(rect, "rect")
-    Point(0, 0).expect(point, "point")
-    return Point(self.clamp_number(point.x, self.left(rect), self.right(rect)), self.clamp_number(point.y, self.top(rect), self.bottom(rect)))
-
-  # Rect.equal? provides the geometry/Rect standard library operation.
-  equal?: a, b = nil ->
+  # Rect.intersection provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  intersection: a, b = nil ->
     if b == nil
       b = a
       a = self
-    return a.class == Rect and b.class == Rect and a.x == b.x and a.y == b.y and a.width == b.width and a.height == b.height
+    self.expect(a, "a")
+    self.expect(b, "b")
+    geometry_left = self.max(self.left(a), self.left(b))
+    geometry_top = self.max(self.top(a), self.top(b))
+    geometry_right = self.min(self.right(a), self.right(b))
+    geometry_bottom = self.min(self.bottom(a), self.bottom(b))
+    if geometry_right <= geometry_left or geometry_bottom <= geometry_top
+      return Rect(geometry_left, geometry_top, 0, 0)
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )
 
-  # Rect.expect provides the geometry/Rect standard library operation.
-  expect: value, name ->
-    if value.class != Rect
-      raise error("geometry.Rect: " + name + " must be a Rect")
+  # Rect.intersects? provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  intersects?: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, "a")
+    self.expect(b, "b")
+    self.left(a) < self.right(b) and self.right(a) > self.left(b) and self.top(a) < self.bottom(b) and self.bottom(a) > self.top(b)
 
-  # Rect.number provides the geometry/Rect standard library operation.
-  number: value, name ->
-    if value.class != Number
-      raise error("geometry.Rect: " + name + " must be a number")
-    return value
-
-  # Rect.dimension provides the geometry/Rect standard library operation.
-  dimension: value, name ->
-    self.number(value, name)
-    if value < 0
-      raise error("geometry.Rect: " + name + " must be non-negative")
-    return value
-
-  # Rect.min provides the geometry/Rect standard library operation.
-  min: a, b ->
-    if a < b
-      return a
-    return b
+  # Rect.left provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  left: rect = nil ->
+    if rect == nil
+      rect = self
+    self.expect(rect, "rect")
+    rect.x
 
   # Rect.max provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
   max: a, b ->
     if a > b
       return a
-    return b
+    b
 
-  # Rect.clamp_number provides the geometry/Rect standard library operation.
-  clamp_number: value, lo, hi ->
-    if value < lo
-      return lo
-    if value > hi
-      return hi
-    return value
+  # Rect.min provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  min: a, b ->
+    if a < b
+      return a
+    b
+
+  # Rect.new provides the geometry/Rect standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Self the resulting value.
+  new: x, y, width, height ->
+    Rect(x, y, width, height)
+
+  # Rect.number provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  number: value, name ->
+    if value.class != Number
+      raise error("geometry.Rect: " + name + " must be a number")
+    value
+
+  # Rect.right provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  right: rect = nil ->
+    if rect == nil
+      rect = self
+    self.expect(rect, "rect")
+    rect.x + rect.width
+
+  # Rect.size provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Int the resulting value.
+  size: rect = nil ->
+    if rect == nil
+      rect = self
+    self.expect(rect, "rect")
+    Size(rect.width, rect.height)
+
+  # Rect.top provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  top: rect = nil ->
+    if rect == nil
+      rect = self
+    self.expect(rect, "rect")
+    rect.y
+
+  # Rect.translate provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param vector Any vector value.
+  # @return Any the resulting value.
+  translate: rect, vector = nil ->
+    if vector == nil
+      vector = rect
+      rect = self
+    self.expect(rect, "rect")
+    if vector.class != Vector2
+      raise error("geometry.Rect.translate: vector must be a Vector2")
+    Rect(rect.x + vector.x, rect.y + vector.y, rect.width, rect.height)
+
+  # Rect.union provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  union: a, b = nil ->
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, "a")
+    self.expect(b, "b")
+    geometry_left = self.min(self.left(a), self.left(b))
+    geometry_top = self.min(self.top(a), self.top(b))
+    geometry_right = self.max(self.right(a), self.right(b))
+    geometry_bottom = self.max(self.bottom(a), self.bottom(b))
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )

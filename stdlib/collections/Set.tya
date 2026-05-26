@@ -1,6 +1,12 @@
 # Set provides the collections/Set standard library API.
 class Set
+  # Set.items stores instance state.
+  # @type Array
+  items: []
+
   # Set.initialize provides the collections/Set standard library operation.
+  # @param values Array values value.
+  # @return Self the initialized object.
   initialize: values = nil ->
     self.items = []
     if values != nil
@@ -16,21 +22,23 @@ class Set
           self.items.push(values[i])
         i = i + 1
 
-  # Set.new provides the collections/Set standard library operation.
-  new: ->
-    return Set(nil)
-
-  # Set.from_array provides the collections/Set standard library operation.
-  from_array: values ->
-    return Set(values)
-
   # Set.add provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
   add: value ->
     if not self.has?(value)
       self.items.push(value)
-    return self
+    self
+
+  # Set.clear provides the collections/Set standard library operation.
+  # @return Nil the resulting value.
+  clear: ->
+    self.items = []
+    self
 
   # Set.delete provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
   delete: value ->
     next = []
     removed = false
@@ -42,56 +50,11 @@ class Set
         next.push(self.items[i])
       i = i + 1
     self.items = next
-    return removed
-
-  # Set.has? provides the collections/Set standard library operation.
-  has?: value ->
-    i = 0
-    while i < self.items.len()
-      if self.items[i] == value
-        return true
-      i = i + 1
-    return false
-
-  # Set.len provides the collections/Set standard library operation.
-  len: ->
-    return self.items.len()
-
-  # Set.empty? provides the collections/Set standard library operation.
-  empty?: ->
-    return self.items.empty?()
-
-  # Set.clear provides the collections/Set standard library operation.
-  clear: ->
-    self.items = []
-    return self
-
-  # Set.to_array provides the collections/Set standard library operation.
-  to_array: ->
-    return self.items.slice(0, self.items.len())
-
-  # Set.union provides the collections/Set standard library operation.
-  union: other ->
-    out = Set(self.to_array())
-    i = 0
-    values = other.to_array()
-    while i < values.len()
-      out.add(values[i])
-      i = i + 1
-    return out
-
-  # Set.intersection provides the collections/Set standard library operation.
-  intersection: other ->
-    out = Set(nil)
-    values = self.to_array()
-    i = 0
-    while i < values.len()
-      if other.has?(values[i])
-        out.add(values[i])
-      i = i + 1
-    return out
+    removed
 
   # Set.difference provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
   difference: other ->
     out = Set(nil)
     values = self.to_array()
@@ -100,9 +63,56 @@ class Set
       if not other.has?(values[i])
         out.add(values[i])
       i = i + 1
-    return out
+    out
+
+  # Set.empty? provides the collections/Set standard library operation.
+  # @return Boolean whether the condition is true.
+  empty?: ->
+    self.items.empty?()
+
+  # Set.from_array provides the collections/Set standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
+  from_array: values ->
+    Set(values)
+
+  # Set.has? provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Boolean whether the condition is true.
+  has?: value ->
+    i = 0
+    while i < self.items.len()
+      if self.items[i] == value
+        return true
+      i = i + 1
+    false
+
+  # Set.intersection provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
+  intersection: other ->
+    out = Set(nil)
+    values = self.to_array()
+    i = 0
+    while i < values.len()
+      if other.has?(values[i])
+        out.add(values[i])
+      i = i + 1
+    out
+
+  # Set.len provides the collections/Set standard library operation.
+  # @return Int the resulting value.
+  len: ->
+    self.items.len()
+
+  # Set.new provides the collections/Set standard library operation.
+  # @return Self the resulting value.
+  new: ->
+    Set(nil)
 
   # Set.subset? provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Boolean whether the condition is true.
   subset?: other ->
     values = self.to_array()
     i = 0
@@ -110,4 +120,21 @@ class Set
       if not other.has?(values[i])
         return false
       i = i + 1
-    return true
+    true
+
+  # Set.to_array provides the collections/Set standard library operation.
+  # @return Array the resulting value.
+  to_array: ->
+    self.items.slice(0, self.items.len())
+
+  # Set.union provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
+  union: other ->
+    out = Set(self.to_array())
+    i = 0
+    values = other.to_array()
+    while i < values.len()
+      out.add(values[i])
+      i = i + 1
+    out

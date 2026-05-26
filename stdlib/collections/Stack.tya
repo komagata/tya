@@ -1,50 +1,67 @@
 # Stack provides the collections/Stack standard library API.
 class Stack
+  # Stack.items stores instance state.
+  # @type Array
+  items: []
+
   # Stack.initialize provides the collections/Stack standard library operation.
+  # @param values Array values value.
+  # @return Self the initialized object.
   initialize: values = nil ->
     if values == nil
       self.items = []
     else
       self.items = values.slice(0, values.len())
 
-  # Stack.new provides the collections/Stack standard library operation.
-  new: ->
-    return Stack(nil)
+  # Stack.clear provides the collections/Stack standard library operation.
+  # @return Nil the resulting value.
+  clear: ->
+    self.items = []
+    self
+
+  # Stack.empty? provides the collections/Stack standard library operation.
+  # @return Boolean whether the condition is true.
+  empty?: ->
+    self.items.empty?()
 
   # Stack.from_array provides the collections/Stack standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
   from_array: values ->
-    return Stack(values)
+    Stack(values)
 
-  # Stack.push provides the collections/Stack standard library operation.
-  push: value ->
-    self.items.push(value)
-    return self
+  # Stack.len provides the collections/Stack standard library operation.
+  # @return Int the resulting value.
+  len: ->
+    self.items.len()
 
-  # Stack.pop provides the collections/Stack standard library operation.
-  pop: ->
-    if self.empty?()
-      raise error("collections.Stack.pop: empty stack")
-    return self.items.pop()
+  # Stack.new provides the collections/Stack standard library operation.
+  # @return Self the resulting value.
+  new: ->
+    Stack(nil)
 
   # Stack.peek provides the collections/Stack standard library operation.
+  # @return Any the resulting value.
   peek: ->
     if self.empty?()
       raise error("collections.Stack.peek: empty stack")
-    return self.items[self.items.len() - 1]
+    self.items[self.items.len() - 1]
 
-  # Stack.len provides the collections/Stack standard library operation.
-  len: ->
-    return self.items.len()
+  # Stack.pop provides the collections/Stack standard library operation.
+  # @return Any the resulting value.
+  pop: ->
+    if self.empty?()
+      raise error("collections.Stack.pop: empty stack")
+    self.items.pop()
 
-  # Stack.empty? provides the collections/Stack standard library operation.
-  empty?: ->
-    return self.items.empty?()
-
-  # Stack.clear provides the collections/Stack standard library operation.
-  clear: ->
-    self.items = []
-    return self
+  # Stack.push provides the collections/Stack standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  push: value ->
+    self.items.push(value)
+    self
 
   # Stack.to_array provides the collections/Stack standard library operation.
+  # @return Array the resulting value.
   to_array: ->
-    return self.items.slice(0, self.items.len())
+    self.items.slice(0, self.items.len())

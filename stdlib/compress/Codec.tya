@@ -1,4 +1,10 @@
 # Codec describes byte/string compression codecs.
 interface Codec
+  # compress provides the Codec API operation.
+  # @param value Any value value.
+  # @return Any the resulting value.
   compress: value ->
+  # decompress provides the Codec API operation.
+  # @param value Any value value.
+  # @return Any the resulting value.
   decompress: value ->

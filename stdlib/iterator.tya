@@ -1,7 +1,8 @@
 # Iterator provides the iterator standard library API.
 interface Iterator
-  # Iterator.has_next provides the iterator standard library operation.
+  # has_next provides the iterator API operation.
+  # @return Boolean the resulting value.
   has_next: ->
-
-  # Iterator.next provides the iterator standard library operation.
+  # next provides the iterator API operation.
+  # @return Any the resulting value.
   next: ->

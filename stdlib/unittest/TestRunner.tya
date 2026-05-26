@@ -1,10 +1,57 @@
 # TestRunner provides the unittest/TestRunner standard library API.
 class TestRunner
   # TestRunner.default provides the unittest/TestRunner standard library operation.
+  # @return Any the resulting value.
   default: ->
     TestRunner()
 
+  # TestRunner.error_message provides the unittest/TestRunner standard library operation.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  error_message: err ->
+    msg = err
+    try
+      msg = err["message"]
+    catch _
+      msg = err
+    msg
+
+  # TestRunner.print_error provides the unittest/TestRunner standard library operation.
+  # @param label Any label value.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  print_error: label, err ->
+    msg = self.error_message(err)
+    println("  ERROR {label}")
+    println("        {msg}")
+
+  # TestRunner.print_fail provides the unittest/TestRunner standard library operation.
+  # @param label Any label value.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  print_fail: label, err ->
+    msg = self.error_message(err)
+    println("  FAIL  {label}")
+    println("        {msg}")
+
+  # TestRunner.print_summary provides the unittest/TestRunner standard library operation.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  print_summary: result ->
+    tests = result["tests"]
+    passes = result["passes"]
+    failures = result["failures"]
+    errors = result["errors"]
+    if errors > 0
+      println(
+        "{tests} tests, {passes} passed, {failures} failed, {errors} errors"
+      )
+    else
+      println("{tests} tests, {passes} passed, {failures} failed")
+
   # TestRunner.run provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @return Any the resulting value.
   run: suite ->
     result = { tests: 0, passes: 0, failures: 0, errors: 0 }
     self.run_suite(suite, result)
@@ -12,26 +59,18 @@ class TestRunner
     result
 
   # TestRunner.run_and_exit provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @return Any the resulting value.
   run_and_exit: suite ->
     result = self.run(suite)
     if result["failures"] > 0 or result["errors"] > 0
       exit(1)
     result
 
-  # TestRunner.run_suite provides the unittest/TestRunner standard library operation.
-  run_suite: suite, result ->
-    for test in suite.tests
-      is_suite = false
-      try
-        is_suite = test.class == TestSuite
-      catch _
-        is_suite = false
-      if is_suite
-        self.run_suite(test, result)
-      else
-        self.run_case(test, result)
-
   # TestRunner.run_case provides the unittest/TestRunner standard library operation.
+  # @param test Any test value.
+  # @param result Any result value.
+  # @return Any the resulting value.
   run_case: test, result ->
     klass = test
     methods = []
@@ -49,6 +88,10 @@ class TestRunner
       self.run_method(instance, method, result)
 
   # TestRunner.run_method provides the unittest/TestRunner standard library operation.
+  # @param instance Any instance value.
+  # @param method String method value.
+  # @param result Any result value.
+  # @return Any the resulting value.
   run_method: instance, method, result ->
     result["tests"] = result["tests"] + 1
     label = "{instance.class.name}.{method}"
@@ -85,41 +128,24 @@ class TestRunner
           self.print_error(label, err)
     if failed
       result["failures"] = result["failures"] + 1
+    elseif errored
+      result["errors"] = result["errors"] + 1
     else
-      if errored
-        result["errors"] = result["errors"] + 1
+      result["passes"] = result["passes"] + 1
+      println("  PASS  {label}")
+
+  # TestRunner.run_suite provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  run_suite: suite, result ->
+    for test in suite.tests
+      is_suite = false
+      try
+        is_suite = test.class == TestSuite
+      catch _
+        is_suite = false
+      if is_suite
+        self.run_suite(test, result)
       else
-        result["passes"] = result["passes"] + 1
-        println("  PASS  {label}")
-
-  # TestRunner.print_fail provides the unittest/TestRunner standard library operation.
-  print_fail: label, err ->
-    msg = self.error_message(err)
-    println("  FAIL  {label}")
-    println("        {msg}")
-
-  # TestRunner.print_error provides the unittest/TestRunner standard library operation.
-  print_error: label, err ->
-    msg = self.error_message(err)
-    println("  ERROR {label}")
-    println("        {msg}")
-
-  # TestRunner.print_summary provides the unittest/TestRunner standard library operation.
-  print_summary: result ->
-    tests = result["tests"]
-    passes = result["passes"]
-    failures = result["failures"]
-    errors = result["errors"]
-    if errors > 0
-      println("{tests} tests, {passes} passed, {failures} failed, {errors} errors")
-    else
-      println("{tests} tests, {passes} passed, {failures} failed")
-
-  # TestRunner.error_message provides the unittest/TestRunner standard library operation.
-  error_message: err ->
-    msg = err
-    try
-      msg = err["message"]
-    catch _
-      msg = err
-    msg
+        self.run_case(test, result)

@@ -1,98 +1,38 @@
 # Xml provides the xml/Xml standard library API.
 class Xml
+  # Xml.value stores instance state.
+  # @type Nil
+  value: nil
+
+  # Xml.dump is a compatibility alias for Xml.stringify.
+  # @param value String value value.
+  # @return String the resulting value.
+  static dump: value ->
+    Xml(nil).dump(value)
+
   # Xml.parse parses XML text into a document node.
+  # @param text String text value.
+  # @return Any the resulting value.
   static parse: text ->
     Xml(nil).parse(text)
 
   # Xml.stringify converts an XML node to text.
+  # @param value String value value.
+  # @return String the resulting value.
   static stringify: value ->
     Xml(nil).stringify(value)
 
-  # Xml.dump is a compatibility alias for Xml.stringify.
-  static dump: value ->
-    Xml(nil).dump(value)
-
   # Xml.initialize stores XML text or a node value.
+  # @param value String value value.
+  # @return Self the initialized object.
   initialize: value = nil ->
     self.value = value
 
-  # Xml.parse provides the xml/Xml standard library operation.
-  parse: text = nil ->
-    if text == nil
-      text = self.value
-    state = { src: text, pos: 0, len: text.byte_len(), version: "1.0", encoding: nil }
-    children = []
-    Xml(nil).skip_ws(state)
-    if Xml(nil).starts_at(state, "<?xml")
-      Xml(nil).parse_decl(state)
-    while true
-      Xml(nil).skip_ws(state)
-      if state["pos"] >= state["len"]
-        return Document(children, state["version"], state["encoding"])
-      children.push(Xml(nil).parse_node(state))
-
-  # Xml.stringify converts an XML node to text.
-  stringify: value = nil ->
-    if value == nil
-      value = self.value
-    if value.class == Document
-      out = ""
-      children = value.children()
-      i = 0
-      while i < children.len()
-        out = out + Xml(nil).stringify(children[i])
-        i = i + 1
-      return out
-    if value.class == Element
-      out = "<" + value.name
-      keys = value.attrs.keys()
-      i = 0
-      while i < keys.len()
-        key = keys[i]
-        out = out + " " + key + "=\"" + Xml(nil).escape_attr(value.attrs[key]) + "\""
-        i = i + 1
-      if value.children.len() == 0
-        return out + "/>"
-      out = out + ">"
-      i = 0
-      while i < value.children.len()
-        out = out + Xml(nil).stringify(value.children[i])
-        i = i + 1
-      return out + "</" + value.name + ">"
-    if value.class == Text
-      return Xml(nil).escape_text(value.text)
-    if value.class == CData
-      return "<![CDATA[" + value.text + "]]>"
-    if value.class == Comment
-      return "<!--" + value.text + "-->"
-    raise error("xml.dump: unsupported node")
-
-  # Xml.dump is a compatibility alias for Xml.stringify.
-  dump: value = nil ->
-    self.stringify(value)
-
-  # Xml.escape_text provides the xml/Xml standard library operation.
-  escape_text: text ->
-    out = ""
-    i = 0
-    while i < text.byte_len()
-      c = text[i]
-      if c == "&"
-        out = out + "&amp;"
-      elseif c == "<"
-        out = out + "&lt;"
-      elseif c == ">"
-        out = out + "&gt;"
-      else
-        out = out + c
-      i = i + 1
-    return out
-
-  # Xml.escape_attr provides the xml/Xml standard library operation.
-  escape_attr: text ->
-    return Xml(nil).escape_text(text).replace("\"", "&quot;").replace("'", "&apos;")
-
   # Xml.collect_recursive provides the xml/Xml standard library operation.
+  # @param element Any element value.
+  # @param name String name value.
+  # @param out Any out value.
+  # @return Any the resulting value.
   collect_recursive: element, name, out ->
     children = element.child_elements()
     i = 0
@@ -103,54 +43,143 @@ class Xml
       Xml(nil).collect_recursive(child, name, out)
       i = i + 1
 
-  # Xml.parse_decl provides the xml/Xml standard library operation.
-  parse_decl: state ->
-    Xml(nil).expect_text(state, "<?xml")
-    attrs = Xml(nil).parse_attrs_until(state, "?>")
-    if attrs.has?("version")
-      state["version"] = attrs["version"]
-    if attrs.has?("encoding")
-      state["encoding"] = attrs["encoding"]
+  # Xml.decode_entities provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  decode_entities: text, state ->
+    out = ""
+    i = 0
+    while i < text.byte_len()
+      if text[i] == "&"
+        semi = Xml(nil).index_of(text, ";", i + 1)
+        if semi < 0
+          Xml(nil).error(state, "invalid entity reference")
+        entity = text.slice(i + 1, semi)
+        out = out + Xml(nil).decode_entity(entity, state)
+        i = semi + 1
+      else
+        out = out + text[i]
+        i = i + 1
+    out
 
-  # Xml.parse_node provides the xml/Xml standard library operation.
-  parse_node: state ->
-    if Xml(nil).starts_at(state, "<!--")
-      return Xml(nil).parse_comment(state)
-    if Xml(nil).starts_at(state, "<![CDATA[")
-      return Xml(nil).parse_cdata(state)
-    if Xml(nil).starts_at(state, "<!DOCTYPE") or Xml(nil).starts_at(state, "<!ENTITY")
-      Xml(nil).error(state, "DTD and external entities are not supported")
-    if Xml(nil).starts_at(state, "<?")
-      Xml(nil).skip_processing_instruction(state)
-      return Xml(nil).parse_node(state)
-    if Xml(nil).peek(state) == "<"
-      return Xml(nil).parse_element(state)
-    return Xml(nil).parse_text(state)
+  # Xml.decode_entity provides the xml/Xml standard library operation.
+  # @param entity Any entity value.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  decode_entity: entity, state ->
+    if entity == "amp"
+      return "&"
+    if entity == "lt"
+      return "<"
+    if entity == "gt"
+      return ">"
+    if entity == "quot"
+      return "\""
+    if entity == "apos"
+      return "'"
+    if entity.starts_with("#x")
+      return chr(Xml(nil).parse_hex(entity.slice(2, entity.len())))
+    if entity.starts_with("#")
+      return chr(entity.slice(1, entity.len()).to_i())
+    Xml(nil).error(state, "invalid entity reference")
 
-  # Xml.parse_element provides the xml/Xml standard library operation.
-  parse_element: state ->
-    Xml(nil).expect(state, "<")
-    name = Xml(nil).parse_name(state)
-    attrs = Xml(nil).parse_attrs_until(state, nil)
-    if Xml(nil).starts_at(state, "/>")
-      state["pos"] = state["pos"] + 2
-      return Element(name, attrs, [])
-    Xml(nil).expect(state, ">")
+  # Xml.dump is a compatibility alias for Xml.stringify.
+  # @param value String value value.
+  # @return String the resulting value.
+  dump: value = nil ->
+    self.stringify(value)
+
+  # Xml.error provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  error: state, message ->
+    raise error("xml.parse: " + message + " at byte " + state["pos"].to_s())
+
+  # Xml.escape_attr provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  escape_attr: text ->
+    Xml(nil).escape_text(text).replace("\"", "&quot;").replace("'", "&apos;")
+
+  # Xml.escape_text provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
+  escape_text: text ->
+    out = ""
+    i = 0
+    while i < text.byte_len()
+      c = text[i]
+      if c == "&"
+        out = out + "&amp;"
+      elseif c == "<"
+        out = out + "&lt;"
+      else
+        if c == ">"
+          out = out + "&gt;"
+        else
+          out = out + c
+      i = i + 1
+    out
+
+  # Xml.expect provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  expect: state, c ->
+    if Xml(nil).peek(state) != c
+      Xml(nil).error(state, "expected " + c)
+    state["pos"] = state["pos"] + 1
+
+  # Xml.expect_text provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param text String text value.
+  # @return String the resulting value.
+  expect_text: state, text ->
+    if not Xml(nil).starts_at(state, text)
+      Xml(nil).error(state, "expected " + text)
+    state["pos"] = state["pos"] + text.byte_len()
+
+  # Xml.index_of provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @param start Int start value.
+  # @return Any the resulting value.
+  index_of: text, needle, start ->
+    i = start
+    while i < text.byte_len()
+      if text[i] == needle
+        return i
+      i = i + 1
+    -1
+
+  # Xml.parse provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  parse: text = nil ->
+    if text == nil
+      text = self.value
+    state =
+      src: text
+      pos: 0
+      len: text.byte_len()
+      version: "1.0"
+      encoding: nil
     children = []
+    Xml(nil).skip_ws(state)
+    if Xml(nil).starts_at(state, "<?xml")
+      Xml(nil).parse_decl(state)
     while true
+      Xml(nil).skip_ws(state)
       if state["pos"] >= state["len"]
-        Xml(nil).error(state, "unterminated element " + name)
-      if Xml(nil).starts_at(state, "</")
-        state["pos"] = state["pos"] + 2
-        end_name = Xml(nil).parse_name(state)
-        if end_name != name
-          Xml(nil).error(state, "mismatched end tag " + end_name)
-        Xml(nil).skip_ws(state)
-        Xml(nil).expect(state, ">")
-        return Element(name, attrs, children)
+        return Document(children, state["version"], state["encoding"])
       children.push(Xml(nil).parse_node(state))
 
   # Xml.parse_attrs_until provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param terminator Any terminator value.
+  # @return Any the resulting value.
   parse_attrs_until: state, terminator ->
     attrs = {}
     while true
@@ -180,139 +209,61 @@ class Xml
       state["pos"] = state["pos"] + 1
       attrs[name] = Xml(nil).decode_entities(raw, state)
 
-  # Xml.parse_text provides the xml/Xml standard library operation.
-  parse_text: state ->
-    raw = ""
-    while state["pos"] < state["len"] and Xml(nil).peek(state) != "<"
-      raw = raw + Xml(nil).peek(state)
-      state["pos"] = state["pos"] + 1
-    return Text(Xml(nil).decode_entities(raw, state))
-
-  # Xml.parse_comment provides the xml/Xml standard library operation.
-  parse_comment: state ->
-    Xml(nil).expect_text(state, "<!--")
-    text = Xml(nil).read_until(state, "-->", "unterminated comment")
-    return Comment(text)
-
   # Xml.parse_cdata provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
   parse_cdata: state ->
     Xml(nil).expect_text(state, "<![CDATA[")
     text = Xml(nil).read_until(state, "]]>", "unterminated CDATA")
-    return CData(text)
+    CData(text)
 
-  # Xml.skip_processing_instruction provides the xml/Xml standard library operation.
-  skip_processing_instruction: state ->
-    Xml(nil).expect_text(state, "<?")
-    Xml(nil).read_until(state, "?>", "unterminated processing instruction")
+  # Xml.parse_comment provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_comment: state ->
+    Xml(nil).expect_text(state, "<!--")
+    text = Xml(nil).read_until(state, "-->", "unterminated comment")
+    Comment(text)
 
-  # Xml.read_until provides the xml/Xml standard library operation.
-  read_until: state, terminator, message ->
-    out = ""
-    while state["pos"] < state["len"]
-      if Xml(nil).starts_at(state, terminator)
-        state["pos"] = state["pos"] + terminator.byte_len()
-        return out
-      out = out + Xml(nil).peek(state)
-      state["pos"] = state["pos"] + 1
-    Xml(nil).error(state, message)
+  # Xml.parse_decl provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_decl: state ->
+    Xml(nil).expect_text(state, "<?xml")
+    attrs = Xml(nil).parse_attrs_until(state, "?>")
+    if attrs.has?("version")
+      state["version"] = attrs["version"]
+    if attrs.has?("encoding")
+      state["encoding"] = attrs["encoding"]
 
-  # Xml.decode_entities provides the xml/Xml standard library operation.
-  decode_entities: text, state ->
-    out = ""
-    i = 0
-    while i < text.byte_len()
-      if text[i] == "&"
-        semi = Xml(nil).index_of(text, ";", i + 1)
-        if semi < 0
-          Xml(nil).error(state, "invalid entity reference")
-        entity = text.slice(i + 1, semi)
-        out = out + Xml(nil).decode_entity(entity, state)
-        i = semi + 1
-      else
-        out = out + text[i]
-        i = i + 1
-    return out
-
-  # Xml.decode_entity provides the xml/Xml standard library operation.
-  decode_entity: entity, state ->
-    if entity == "amp"
-      return "&"
-    if entity == "lt"
-      return "<"
-    if entity == "gt"
-      return ">"
-    if entity == "quot"
-      return "\""
-    if entity == "apos"
-      return "'"
-    if entity.starts_with("#x")
-      return chr(Xml(nil).parse_hex(entity.slice(2, entity.len())))
-    if entity.starts_with("#")
-      return chr(entity.slice(1, entity.len()).to_i())
-    Xml(nil).error(state, "invalid entity reference")
-
-  # Xml.parse_name provides the xml/Xml standard library operation.
-  parse_name: state ->
-    name = ""
-    while state["pos"] < state["len"]
-      c = Xml(nil).peek(state)
-      if c == " " or c == "\t" or c == "\n" or c == chr(13) or c == "/" or c == ">" or c == "="
-        if name == ""
-          Xml(nil).error(state, "expected name")
-        return name
-      name = name + c
-      state["pos"] = state["pos"] + 1
-    Xml(nil).error(state, "expected name")
-
-  # Xml.skip_ws provides the xml/Xml standard library operation.
-  skip_ws: state ->
-    while state["pos"] < state["len"]
-      c = Xml(nil).peek(state)
-      if c == " " or c == "\t" or c == "\n" or c == chr(13)
-        state["pos"] = state["pos"] + 1
-      else
-        return nil
-
-  # Xml.expect provides the xml/Xml standard library operation.
-  expect: state, c ->
-    if Xml(nil).peek(state) != c
-      Xml(nil).error(state, "expected " + c)
-    state["pos"] = state["pos"] + 1
-
-  # Xml.expect_text provides the xml/Xml standard library operation.
-  expect_text: state, text ->
-    if not Xml(nil).starts_at(state, text)
-      Xml(nil).error(state, "expected " + text)
-    state["pos"] = state["pos"] + text.byte_len()
-
-  # Xml.starts_at provides the xml/Xml standard library operation.
-  starts_at: state, text ->
-    src = state["src"]
-    if state["pos"] + text.byte_len() > state["len"]
-      return false
-    i = 0
-    while i < text.byte_len()
-      if src[state["pos"] + i] != text[i]
-        return false
-      i = i + 1
-    return true
-
-  # Xml.peek provides the xml/Xml standard library operation.
-  peek: state ->
-    if state["pos"] >= state["len"]
-      return ""
-    return state["src"][state["pos"]]
-
-  # Xml.index_of provides the xml/Xml standard library operation.
-  index_of: text, needle, start ->
-    i = start
-    while i < text.byte_len()
-      if text[i] == needle
-        return i
-      i = i + 1
-    return -1
+  # Xml.parse_element provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_element: state ->
+    Xml(nil).expect(state, "<")
+    name = Xml(nil).parse_name(state)
+    attrs = Xml(nil).parse_attrs_until(state, nil)
+    if Xml(nil).starts_at(state, "/>")
+      state["pos"] = state["pos"] + 2
+      return Element(name, attrs, [])
+    Xml(nil).expect(state, ">")
+    children = []
+    while true
+      if state["pos"] >= state["len"]
+        Xml(nil).error(state, "unterminated element " + name)
+      if Xml(nil).starts_at(state, "</")
+        state["pos"] = state["pos"] + 2
+        end_name = Xml(nil).parse_name(state)
+        if end_name != name
+          Xml(nil).error(state, "mismatched end tag " + end_name)
+        Xml(nil).skip_ws(state)
+        Xml(nil).expect(state, ">")
+        return Element(name, attrs, children)
+      children.push(Xml(nil).parse_node(state))
 
   # Xml.parse_hex provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
   parse_hex: text ->
     value = 0
     i = 0
@@ -323,14 +274,156 @@ class Xml
         digit = code - 48
       elseif code >= 65 and code <= 70
         digit = code - 55
-      elseif code >= 97 and code <= 102
-        digit = code - 87
       else
-        raise error("xml.parse: invalid numeric character reference")
+        if code >= 97 and code <= 102
+          digit = code - 87
+        else
+          raise error("xml.parse: invalid numeric character reference")
       value = value * 16 + digit
       i = i + 1
-    return value
+    value
 
-  # Xml.error provides the xml/Xml standard library operation.
-  error: state, message ->
-    raise error("xml.parse: " + message + " at byte " + state["pos"].to_s())
+  # Xml.parse_name provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_name: state ->
+    name = ""
+    while state["pos"] < state["len"]
+      c = Xml(nil).peek(state)
+      if (
+        c == " " or c == "\t" or c == "\n" or c == chr(13) or c == "/" or c == ">" or c == "="
+      )
+        if name == ""
+          Xml(nil).error(state, "expected name")
+        return name
+      name = name + c
+      state["pos"] = state["pos"] + 1
+    Xml(nil).error(state, "expected name")
+
+  # Xml.parse_node provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_node: state ->
+    if Xml(nil).starts_at(state, "<!--")
+      return Xml(nil).parse_comment(state)
+    if Xml(nil).starts_at(state, "<![CDATA[")
+      return Xml(nil).parse_cdata(state)
+    if (
+      Xml(nil).starts_at(state, "<!DOCTYPE") or Xml(nil).starts_at(state, "<!ENTITY")
+    )
+      Xml(nil).error(state, "DTD and external entities are not supported")
+    if Xml(nil).starts_at(state, "<?")
+      Xml(nil).skip_processing_instruction(state)
+      return Xml(nil).parse_node(state)
+    if Xml(nil).peek(state) == "<"
+      return Xml(nil).parse_element(state)
+    Xml(nil).parse_text(state)
+
+  # Xml.parse_text provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return String the resulting value.
+  parse_text: state ->
+    raw = ""
+    while state["pos"] < state["len"] and Xml(nil).peek(state) != "<"
+      raw = raw + Xml(nil).peek(state)
+      state["pos"] = state["pos"] + 1
+    Text(Xml(nil).decode_entities(raw, state))
+
+  # Xml.peek provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  peek: state ->
+    if state["pos"] >= state["len"]
+      return ""
+    state["src"][state["pos"]]
+
+  # Xml.read_until provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param terminator Any terminator value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  read_until: state, terminator, message ->
+    out = ""
+    while state["pos"] < state["len"]
+      if Xml(nil).starts_at(state, terminator)
+        state["pos"] = state["pos"] + terminator.byte_len()
+        return out
+      out = out + Xml(nil).peek(state)
+      state["pos"] = state["pos"] + 1
+    Xml(nil).error(state, message)
+
+  # Xml.skip_processing_instruction provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  skip_processing_instruction: state ->
+    Xml(nil).expect_text(state, "<?")
+    Xml(nil).read_until(state, "?>", "unterminated processing instruction")
+
+  # Xml.skip_ws provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  skip_ws: state ->
+    while state["pos"] < state["len"]
+      c = Xml(nil).peek(state)
+      if c == " " or c == "\t" or c == "\n" or c == chr(13)
+        state["pos"] = state["pos"] + 1
+      else
+        return nil
+
+  # Xml.starts_at provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  starts_at: state, text ->
+    src = state["src"]
+    if state["pos"] + text.byte_len() > state["len"]
+      return false
+    i = 0
+    while i < text.byte_len()
+      if src[state["pos"] + i] != text[i]
+        return false
+      i = i + 1
+    true
+
+  # Xml.stringify converts an XML node to text.
+  # @param value String value value.
+  # @return String the resulting value.
+  stringify: value = nil ->
+    if value == nil
+      value = self.value
+    if value.class == Document
+      out = ""
+      children = value.children()
+      i = 0
+      while i < children.len()
+        out = out + Xml(nil).stringify(children[i])
+        i = i + 1
+      return out
+    if value.class == Element
+      out = "<" + value.name
+      keys = value.attrs.keys()
+      i = 0
+      while i < keys.len()
+        key = keys[i]
+        out = out
+          + " "
+          + key
+          + "=\""
+          + Xml(nil).escape_attr(value.attrs[key])
+          + "\""
+        i = i + 1
+      if value.children.len() == 0
+        return out + "/>"
+      out = out + ">"
+      i = 0
+      while i < value.children.len()
+        out = out + Xml(nil).stringify(value.children[i])
+        i = i + 1
+      return out + "</" + value.name + ">"
+    if value.class == Text
+      return Xml(nil).escape_text(value.text)
+    if value.class == CData
+      return "<![CDATA[" + value.text + "]]>"
+    if value.class == Comment
+      return "<!--" + value.text + "-->"
+    raise error("xml.dump: unsupported node")

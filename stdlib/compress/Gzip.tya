@@ -3,20 +3,30 @@ import io as io
 # Gzip provides gzip compression and decompression.
 class Gzip implements Codec
   # Gzip.compress compresses data with gzip.
+  # @param value String value value.
+  # @return Any the resulting value.
   compress: value ->
     compress_gzip(value)
 
   # Gzip.decompress decompresses gzip data.
+  # @param value String value value.
+  # @return Any the resulting value.
   decompress: value ->
     compress_gunzip(value)
 
   # Gzip.compress_file compresses a file with gzip.
+  # @param src String src value.
+  # @param dst Any dst value.
+  # @return Any the resulting value.
   compress_file: src, dst ->
     data = Self.read_all(src)
     Self.write_all(dst, self.compress(data))
     nil
 
   # Gzip.decompress_file decompresses a gzip file.
+  # @param src String src value.
+  # @param dst Any dst value.
+  # @return Any the resulting value.
   decompress_file: src, dst ->
     data = Self.read_all(src)
     Self.write_all(dst, self.decompress(data))

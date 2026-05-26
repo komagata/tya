@@ -1,9 +1,13 @@
 # Parser provides the compiler/parser/Parser standard library API.
 class Parser
   # Parser.parse provides the compiler/parser/Parser standard library operation.
+  # @param source String source value.
+  # @return Any the resulting value.
   parse: source ->
-    return compiler_parser_parse(source)
+    compiler_parser_parse(source)
 
   # Parser.parse_tokens provides the compiler/parser/Parser standard library operation.
+  # @param tokens Array tokens value.
+  # @return Any the resulting value.
   parse_tokens: tokens ->
-    return compiler_parser_parse_tokens(tokens)
+    compiler_parser_parse_tokens(tokens)

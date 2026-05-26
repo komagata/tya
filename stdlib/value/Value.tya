@@ -1,10 +1,18 @@
 # Value provides the value/Value standard library API.
 class Value
+  # Value.item stores instance state.
+  # @type Nil
+  item: nil
+
   # Value.initialize stores a value for predicates.
+  # @param item Any item value.
+  # @return Self the initialized object.
   initialize: item ->
     self.item = item
 
   # Value.nil? provides the value/Value standard library operation.
+  # @param item Any item value.
+  # @return Boolean whether the condition is true.
   nil?: item = nil ->
     if self.item != nil
       item = self.item
