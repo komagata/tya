@@ -24,9 +24,31 @@ type DocItem struct {
 	Kind           string // "function" | "class" | "module" | "interface"
 	Signature      string
 	RawDoc         string // Leading comments joined with "\n" (raw Markdown)
+	TypeHint       string
+	Params         []ParamDoc
+	Return         *ReturnDoc
+	Options        []OptionDoc
 	FilePath       string
 	Line           int
 	ReexportedFrom string
+}
+
+type ParamDoc struct {
+	Name        string `json:"name"`
+	TypeHint    string `json:"type"`
+	Description string `json:"description"`
+}
+
+type ReturnDoc struct {
+	TypeHint    string `json:"type"`
+	Description string `json:"description"`
+}
+
+type OptionDoc struct {
+	Param       string `json:"param"`
+	Key         string `json:"key"`
+	TypeHint    string `json:"type"`
+	Description string `json:"description"`
 }
 
 // Diagnostic reports a documentation-quality problem that does not
@@ -57,7 +79,7 @@ func ExtractFile(path string) ([]DocItem, error) {
 		return nil, err
 	}
 
-	return docItemsForProgram(parsed.prog, parsed.comments, path), nil
+	return parsed.items, nil
 }
 
 // ExtractFiles processes multiple files and returns the merged
@@ -95,6 +117,7 @@ func ExtractReport(paths []string) (Report, error) {
 			continue
 		}
 		report.Items = append(report.Items, file.items...)
+		report.Diagnostics = append(report.Diagnostics, file.diagnostics...)
 		for _, c := range parser.OrphanComments(file.prog, file.comments) {
 			if !c.IsFullLine || c.Indent > 0 {
 				continue
@@ -134,21 +157,24 @@ func kindOrder(kind string) int {
 		return 2
 	case "function":
 		return 3
-	case "static method":
+	case "variable":
 		return 4
-	case "method":
+	case "static method":
 		return 5
+	case "method":
+		return 6
 	default:
 		return 9
 	}
 }
 
 type parsedFile struct {
-	path     string
-	prog     *ast.Program
-	comments []parser.CommentInfo
-	items    []DocItem
-	imports  []importInfo
+	path        string
+	prog        *ast.Program
+	comments    []parser.CommentInfo
+	items       []DocItem
+	diagnostics []Diagnostic
+	imports     []importInfo
 }
 
 type importInfo struct {
@@ -181,7 +207,7 @@ func parseFile(path string) (*parsedFile, error) {
 		return nil, err
 	}
 	file := &parsedFile{path: path, prog: prog, comments: infos}
-	file.items = append(file.items, docItemsForProgram(prog, infos, path)...)
+	file.items, file.diagnostics = docItemsForProgram(prog, infos, path)
 	for _, stmt := range prog.Stmts {
 		if imp, ok := stmt.(*ast.ImportStmt); ok {
 			file.imports = append(file.imports, importInfo{
@@ -194,26 +220,45 @@ func parseFile(path string) (*parsedFile, error) {
 	return file, nil
 }
 
-func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path string) []DocItem {
+func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path string) ([]DocItem, []Diagnostic) {
 	var items []DocItem
+	var diagnostics []Diagnostic
 	for _, stmt := range prog.Stmts {
 		if item, ok := stmtToDocItem(stmt, prog, path); ok {
+			item, diagnostics = finalizeDocItem(item, callableParamsForStmt(stmt), diagnostics)
 			items = append(items, item)
 		}
 		switch d := stmt.(type) {
 		case *ast.ClassDecl:
+			for _, field := range d.Fields {
+				if field.Private {
+					continue
+				}
+				item := DocItem{
+					Name:      d.Name + "." + field.Name,
+					Kind:      "variable",
+					Signature: d.Name + "." + field.Name,
+					RawDoc:    leadingBeforeLine(comments, field.Tok.Line, 2),
+					FilePath:  path,
+					Line:      field.Tok.Line,
+				}
+				item, diagnostics = finalizeDocItem(item, nil, diagnostics)
+				items = append(items, item)
+			}
 			for _, constant := range d.Constants {
 				if constant.Private {
 					continue
 				}
-				items = append(items, DocItem{
+				item := DocItem{
 					Name:      d.Name + "." + constant.Name,
 					Kind:      "constant",
 					Signature: d.Name + "." + constant.Name,
 					RawDoc:    leadingBeforeLine(comments, constant.Tok.Line, 2),
 					FilePath:  path,
 					Line:      constant.Tok.Line,
-				})
+				}
+				item, diagnostics = finalizeDocItem(item, nil, diagnostics)
+				items = append(items, item)
 			}
 			for _, method := range d.Methods {
 				if method.Private {
@@ -223,29 +268,33 @@ func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path s
 				if method.Class {
 					kind = "static method"
 				}
-				items = append(items, DocItem{
+				item := DocItem{
 					Name:      d.Name + "." + method.Name,
 					Kind:      kind,
 					Signature: MethodSignature(d.Name, method),
 					RawDoc:    leadingBeforeLine(comments, method.Tok.Line, 2),
 					FilePath:  path,
 					Line:      method.Tok.Line,
-				})
+				}
+				item, diagnostics = finalizeDocItem(item, method.Func.Params, diagnostics)
+				items = append(items, item)
 			}
 		case *ast.InterfaceDecl:
 			for _, method := range d.Methods {
-				items = append(items, DocItem{
+				item := DocItem{
 					Name:      d.Name + "." + method.Name,
 					Kind:      "method",
 					Signature: InterfaceMethodSignature(d.Name, method),
 					RawDoc:    leadingBeforeLine(comments, method.Tok.Line, 2),
 					FilePath:  path,
 					Line:      method.Tok.Line,
-				})
+				}
+				item, diagnostics = finalizeDocItem(item, method.Params, diagnostics)
+				items = append(items, item)
 			}
 		}
 	}
-	return items
+	return items, diagnostics
 }
 
 func collectReexports(paths []string, parsed map[string]*parsedFile, root map[string]bool, report *Report) []DocItem {
@@ -457,6 +506,138 @@ func stmtToDocItem(stmt ast.Stmt, prog *ast.Program, path string) (DocItem, bool
 		}, true
 	}
 	return DocItem{}, false
+}
+
+func callableParamsForStmt(stmt ast.Stmt) []string {
+	assign, ok := stmt.(*ast.AssignStmt)
+	if !ok || len(assign.Values) != 1 {
+		return nil
+	}
+	fn, ok := assign.Values[0].(*ast.FuncLit)
+	if !ok {
+		return nil
+	}
+	return fn.Params
+}
+
+func finalizeDocItem(item DocItem, params []string, diagnostics []Diagnostic) (DocItem, []Diagnostic) {
+	meta, body, diags := parseMetadataTags(item.RawDoc, params, item)
+	item.RawDoc = body
+	item.TypeHint = meta.TypeHint
+	item.Params = meta.Params
+	item.Return = meta.Return
+	item.Options = meta.Options
+	return item, append(diagnostics, diags...)
+}
+
+type docMetadata struct {
+	TypeHint string
+	Params   []ParamDoc
+	Return   *ReturnDoc
+	Options  []OptionDoc
+}
+
+func parseMetadataTags(raw string, callableParams []string, item DocItem) (docMetadata, string, []Diagnostic) {
+	var meta docMetadata
+	var body []string
+	var diags []Diagnostic
+	paramSet := map[string]bool{}
+	for _, p := range callableParams {
+		paramSet[p] = true
+	}
+	seenParam := map[string]bool{}
+	seenOption := map[string]bool{}
+	seenType := false
+	seenReturn := false
+	for i, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, "@") {
+			body = append(body, line)
+			continue
+		}
+		lineNo := item.Line - len(strings.Split(raw, "\n")) + i
+		if lineNo < 1 {
+			lineNo = item.Line
+		}
+		fields := strings.Fields(trimmed)
+		if len(fields) == 0 {
+			continue
+		}
+		tag := fields[0]
+		switch tag {
+		case "@type":
+			if len(fields) < 2 {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0006", "malformed @type metadata tag"))
+				continue
+			}
+			if seenType {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0007", "duplicate @type metadata tag"))
+				continue
+			}
+			seenType = true
+			meta.TypeHint = strings.Join(fields[1:], " ")
+		case "@param":
+			if len(fields) < 3 {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0006", "malformed @param metadata tag"))
+				continue
+			}
+			name := fields[1]
+			if seenParam[name] {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0007", "duplicate @param metadata tag for "+name))
+				continue
+			}
+			if len(paramSet) > 0 && !paramSet[name] {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0008", "@param "+name+" does not match a parameter in "+item.Signature))
+			}
+			seenParam[name] = true
+			meta.Params = append(meta.Params, ParamDoc{Name: name, TypeHint: fields[2], Description: strings.Join(fields[3:], " ")})
+		case "@return":
+			if len(fields) < 2 {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0006", "malformed @return metadata tag"))
+				continue
+			}
+			if seenReturn {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0007", "duplicate @return metadata tag"))
+				continue
+			}
+			seenReturn = true
+			meta.Return = &ReturnDoc{TypeHint: fields[1], Description: strings.Join(fields[2:], " ")}
+		case "@option":
+			if len(fields) < 3 {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0006", "malformed @option metadata tag"))
+				continue
+			}
+			target := fields[1]
+			dot := strings.Index(target, ".")
+			if dot <= 0 || dot == len(target)-1 {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0006", "malformed @option metadata target "+target))
+				continue
+			}
+			param := target[:dot]
+			key := target[dot+1:]
+			seenKey := param + "." + key
+			if seenOption[seenKey] {
+				diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0007", "duplicate @option metadata tag for "+seenKey))
+				continue
+			}
+			seenOption[seenKey] = true
+			meta.Options = append(meta.Options, OptionDoc{Param: param, Key: key, TypeHint: fields[2], Description: strings.Join(fields[3:], " ")})
+		default:
+			diags = append(diags, docTagDiagnostic(item, lineNo, "TYADOC0005", "unknown doc metadata tag "+tag))
+		}
+	}
+	return meta, strings.TrimSpace(strings.Join(body, "\n")), diags
+}
+
+func docTagDiagnostic(item DocItem, line int, code string, message string) Diagnostic {
+	return Diagnostic{
+		Code:     code,
+		Severity: "warning",
+		Message:  message,
+		FilePath: item.FilePath,
+		Line:     line,
+		Col:      1,
+	}
 }
 
 // stripLeading takes the slice of raw leading-comment text returned

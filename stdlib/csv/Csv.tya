@@ -1,26 +1,44 @@
 # Csv provides the csv/Csv standard library API.
 class Csv
   # Csv.SEPARATOR provides the default CSV field separator.
+  # @type String
   SEPARATOR: ","
 
   # Csv.headers stores the header order used for dictionary rows.
+  # @type Array<String>
   headers: []
 
   # Csv.options stores CSV parsing and stringifying options.
+  # @type Dict
+  # @option options.separator String field separator.
+  # @option options.header Boolean whether the first row is a header.
   options: { separator: Self.SEPARATOR, header: false }
 
   # Csv.rows stores the CSV rows held by this object.
+  # @type Array
   rows: []
 
   # Csv.initialize applies optional CSV options.
+  # @param options Dict? CSV parsing and stringifying options.
+  # @option options.separator String field separator.
+  # @option options.header Boolean whether the first row is a header.
   initialize: options = nil ->
     self.apply_options(options)
 
   # Csv.dump provides the csv/Csv standard library operation.
+  # @param options Dict? CSV stringifying options.
+  # @option options.separator String field separator.
+  # @option options.header Boolean whether to include dictionary headers.
+  # @return String serialized CSV text.
   dump: options = nil ->
     self.stringify(options)
 
   # Csv.parse provides the csv/Csv standard library operation.
+  # @param text String? CSV text to parse; nil returns current rows.
+  # @param options Dict? CSV parsing options.
+  # @option options.separator String field separator.
+  # @option options.header Boolean whether the first row is a header.
+  # @return Array parsed rows.
   parse: text = nil, options = nil ->
     if text == nil
       return self.rows
@@ -52,6 +70,10 @@ class Csv
     out
 
   # Csv.stringify provides the csv/Csv standard library operation.
+  # @param options Dict? CSV stringifying options.
+  # @option options.separator String field separator.
+  # @option options.header Boolean whether to include dictionary headers.
+  # @return String serialized CSV text.
   stringify: options = nil ->
     self.apply_options(options)
     if self.rows.len() == 0

@@ -95,12 +95,47 @@ func (s *Site) renderItemPage(item DocItem) string {
 	fmt.Fprintf(&b, "<h1>%s <code>%s</code></h1>\n", escapeHTML(item.Kind), escapeHTML(item.Name))
 	fmt.Fprintf(&b, "<pre><code>%s</code></pre>\n", escapeHTML(item.Signature))
 	fmt.Fprintf(&b, "<p><small>%s:%d</small></p>\n", escapeHTML(item.FilePath), item.Line)
+	b.WriteString(renderHTMLMetadata(item))
 	if strings.TrimSpace(item.RawDoc) != "" {
 		b.WriteString(RenderHTML(ParseMarkdown(item.RawDoc)))
 	} else {
 		b.WriteString(`<p><em>(no doc comment)</em></p>` + "\n")
 	}
 	b.WriteString(pageFoot)
+	return b.String()
+}
+
+func renderHTMLMetadata(item DocItem) string {
+	if item.TypeHint == "" && len(item.Params) == 0 && len(item.Options) == 0 && item.Return == nil {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString("<dl class=\"metadata\">\n")
+	if item.TypeHint != "" {
+		fmt.Fprintf(&b, "<dt>Type</dt><dd><code>%s</code></dd>\n", escapeHTML(item.TypeHint))
+	}
+	for _, param := range item.Params {
+		fmt.Fprintf(&b, "<dt>Param <code>%s</code></dt><dd><code>%s</code>", escapeHTML(param.Name), escapeHTML(param.TypeHint))
+		if param.Description != "" {
+			fmt.Fprintf(&b, " %s", escapeHTML(param.Description))
+		}
+		b.WriteString("</dd>\n")
+	}
+	for _, option := range item.Options {
+		fmt.Fprintf(&b, "<dt>Option <code>%s.%s</code></dt><dd><code>%s</code>", escapeHTML(option.Param), escapeHTML(option.Key), escapeHTML(option.TypeHint))
+		if option.Description != "" {
+			fmt.Fprintf(&b, " %s", escapeHTML(option.Description))
+		}
+		b.WriteString("</dd>\n")
+	}
+	if item.Return != nil {
+		fmt.Fprintf(&b, "<dt>Return</dt><dd><code>%s</code>", escapeHTML(item.Return.TypeHint))
+		if item.Return.Description != "" {
+			fmt.Fprintf(&b, " %s", escapeHTML(item.Return.Description))
+		}
+		b.WriteString("</dd>\n")
+	}
+	b.WriteString("</dl>\n")
 	return b.String()
 }
 
@@ -114,6 +149,8 @@ func kindTitle(kind string) string {
 		return "Interfaces"
 	case "function":
 		return "Functions"
+	case "variable":
+		return "Variables"
 	case "static method":
 		return "Static Methods"
 	case "method":

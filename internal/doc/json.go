@@ -13,14 +13,18 @@ type jsonReport struct {
 }
 
 type jsonItem struct {
-	Name           string `json:"name"`
-	Kind           string `json:"kind"`
-	Signature      string `json:"signature"`
-	RawDoc         string `json:"raw_doc"`
-	Doc            string `json:"doc"`
-	Path           string `json:"path"`
-	Line           int    `json:"line"`
-	ReexportedFrom string `json:"reexported_from,omitempty"`
+	Name           string      `json:"name"`
+	Kind           string      `json:"kind"`
+	Signature      string      `json:"signature"`
+	RawDoc         string      `json:"raw_doc"`
+	Doc            string      `json:"doc"`
+	TypeHint       string      `json:"type,omitempty"`
+	Params         []ParamDoc  `json:"params,omitempty"`
+	Return         *ReturnDoc  `json:"return,omitempty"`
+	Options        []OptionDoc `json:"options,omitempty"`
+	Path           string      `json:"path"`
+	Line           int         `json:"line"`
+	ReexportedFrom string      `json:"reexported_from,omitempty"`
 }
 
 type jsonDiagnostic struct {
@@ -50,6 +54,10 @@ func FormatJSON(report Report, w io.Writer) error {
 			Signature:      item.Signature,
 			RawDoc:         item.RawDoc,
 			Doc:            strings.TrimSpace(RenderText(ParseMarkdown(item.RawDoc))),
+			TypeHint:       item.TypeHint,
+			Params:         item.Params,
+			Return:         item.Return,
+			Options:        item.Options,
 			Path:           item.FilePath,
 			Line:           item.Line,
 			ReexportedFrom: item.ReexportedFrom,

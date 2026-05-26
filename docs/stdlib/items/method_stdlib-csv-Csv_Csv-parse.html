@@ -12,7 +12,14 @@
 <p><a href="../index.html">&larr; back to index</a></p>
 <h1>method <code>Csv.parse</code></h1>
 <pre><code>Csv.parse(text = nil, options = nil)</code></pre>
-<p><small>stdlib/csv/Csv.tya:24</small></p>
+<p><small>stdlib/csv/Csv.tya:42</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String?</code> CSV text to parse; nil returns current rows.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict?</code> CSV parsing options.</dd>
+<dt>Option <code>options.separator</code></dt><dd><code>String</code> field separator.</dd>
+<dt>Option <code>options.header</code></dt><dd><code>Boolean</code> whether the first row is a header.</dd>
+<dt>Return</dt><dd><code>Array</code> parsed rows.</dd>
+</dl>
 <p>Csv.parse provides the csv/Csv standard library operation.</p>
 </div>
 </div>

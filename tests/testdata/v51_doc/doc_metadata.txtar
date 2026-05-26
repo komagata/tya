@@ -1,0 +1,66 @@
+# Metadata tags are rendered in text, HTML, and JSON modes. Warning
+# diagnostics for metadata do not block output.
+cd $REPO
+exec go build -o $WORK/tya ./cmd/tya
+cd $WORK
+
+mkdir src
+cp csv.tya src/csv.tya
+cp bad.tya src/bad.tya
+
+exec $WORK/tya doc src/csv.tya
+stdout '## variable Csv.rows'
+stdout 'type: Array<Dict>'
+stdout 'param options: Dict\? - optional CSV options.'
+stdout 'option options.separator: String - field separator.'
+stdout 'return: Csv - receiver.'
+! stderr .
+
+exec $WORK/tya doc --html out src/csv.tya
+grep '<dt>Type</dt><dd><code>Array&lt;Dict&gt;</code></dd>' out/items/variable_Csv-rows.html
+grep '<dt>Param <code>options</code></dt><dd><code>Dict\?</code> optional CSV options.</dd>' out/items/method_Csv-initialize.html
+
+exec $WORK/tya doc --json src/csv.tya
+stdout '"kind": "variable"'
+stdout '"type": "Array\\u003cDict\\u003e"'
+stdout '"name": "options"'
+stdout '"key": "separator"'
+stdout '"return": \{'
+
+exec $WORK/tya doc src/bad.tya
+stderr 'TYADOC0005'
+stderr 'TYADOC0007'
+stderr 'TYADOC0008'
+
+-- csv.tya --
+# Csv docs.
+class Csv
+  # Rows docs.
+  # @type Array<Dict>
+  rows: []
+
+  # Options docs.
+  # @type Dict
+  # @option options.separator String field separator.
+  options: { separator: "," }
+
+  # Initialize docs.
+  # @param options Dict? optional CSV options.
+  # @option options.separator String field separator.
+  # @return Csv receiver.
+  initialize: options = nil ->
+    self.rows = []
+
+  # Hidden docs.
+  # @type Array
+  private hidden: []
+
+-- bad.tya --
+class Bad
+  # Bad docs.
+  # @unknown value
+  # @param missing String no such parameter.
+  # @param value String first.
+  # @param value String duplicate.
+  run: value ->
+    value

@@ -49,6 +49,9 @@ func FormatText(items []DocItem, w io.Writer) error {
 		if _, err := fmt.Fprintf(w, "    %s:%d\n", item.FilePath, item.Line); err != nil {
 			return err
 		}
+		if err := writeTextMetadata(item, w); err != nil {
+			return err
+		}
 		body := strings.TrimSpace(RenderText(ParseMarkdown(item.RawDoc)))
 		if body == "" {
 			continue
@@ -60,6 +63,42 @@ func FormatText(items []DocItem, w io.Writer) error {
 			if _, err := fmt.Fprintf(w, "    %s\n", line); err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+func writeTextMetadata(item DocItem, w io.Writer) error {
+	if item.TypeHint != "" {
+		if _, err := fmt.Fprintf(w, "    type: %s\n", item.TypeHint); err != nil {
+			return err
+		}
+	}
+	for _, param := range item.Params {
+		line := fmt.Sprintf("    param %s: %s", param.Name, param.TypeHint)
+		if param.Description != "" {
+			line += " - " + param.Description
+		}
+		if _, err := fmt.Fprintln(w, line); err != nil {
+			return err
+		}
+	}
+	for _, option := range item.Options {
+		line := fmt.Sprintf("    option %s.%s: %s", option.Param, option.Key, option.TypeHint)
+		if option.Description != "" {
+			line += " - " + option.Description
+		}
+		if _, err := fmt.Fprintln(w, line); err != nil {
+			return err
+		}
+	}
+	if item.Return != nil {
+		line := fmt.Sprintf("    return: %s", item.Return.TypeHint)
+		if item.Return.Description != "" {
+			line += " - " + item.Return.Description
+		}
+		if _, err := fmt.Fprintln(w, line); err != nil {
+			return err
 		}
 	}
 	return nil

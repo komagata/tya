@@ -1469,10 +1469,11 @@ invoking Tya. Toolchain behavior may be affected by the documented variables
 `NO_COLOR`, and `HOME` in isolated test/toolchain contexts.
 
 `tya doc` extracts leading source comments attached to public top-level
-functions, classes, modules, and interfaces. A doc comment attaches only to the
-immediately following public item; a blank line breaks attachment and leaves the
-comment orphaned. With no path it scans `src/`. It can render terminal text,
-generate static HTML, or emit a stable JSON report:
+functions, classes, modules, interfaces, public class variables, public class
+constants, public methods, static methods, and interface methods. A doc comment
+attaches only to the immediately following public item; a blank line breaks
+attachment and leaves the comment orphaned. With no path it scans `src/`. It can
+render terminal text, generate static HTML, or emit a stable JSON report:
 
 ```sh
 tya doc
@@ -1481,18 +1482,28 @@ tya doc --json src
 tya doc --html ./out src
 ```
 
+Doc comment metadata uses tag lines inside the leading comment block. `@type
+<type-hint>` documents a variable or constant type hint. `@param <name>
+<type-hint> <description>` documents callable parameters. `@return <type-hint>
+<description>` documents return values. `@option <param>.<key> <type-hint>
+<description>` documents dictionary option keys. Metadata tags are documentation
+only; they do not affect parsing, checking, code generation, runtime behavior,
+or formatter output. Type hints are free-form display strings.
+
 The JSON report contains `version`, `items`, and `diagnostics`. Each item
 includes its name, kind, signature, raw Markdown comment, rendered text,
-source path and line, and `reexported_from` when the item is included through
-an imported package surface. Documentation extraction follows public
-re-exports through imports, reports import cycles without hanging, and keeps
-ordering deterministic.
+metadata fields, source path and line, and `reexported_from` when the item is
+included through an imported package surface. Documentation extraction follows
+public re-exports through imports, reports import cycles without hanging, and
+keeps ordering deterministic.
 
 Documentation diagnostics use stable `TYADOC` codes. Orphan doc comments,
-duplicate public documentation names, unsupported Markdown bodies, and import
-cycles are reported to stderr for text and HTML output and embedded in JSON
-output. Error diagnostics exit with status 1 after output is produced;
-argument, path, I/O, lex, and parse failures exit with status 2.
+duplicate public documentation names, unsupported Markdown bodies, import
+cycles, unknown metadata tags, duplicate metadata tags, malformed metadata tags,
+and `@param` tags that do not match callable parameters are reported to stderr
+for text and HTML output and embedded in JSON output. Error diagnostics exit
+with status 1 after output is produced; warning diagnostics do not block output.
+Argument, path, I/O, lex, and parse failures exit with status 2.
 
 `tya task` lists and runs project-local shell tasks declared under `[tasks]`
 in `tya.toml`. It discovers the project manifest by walking up from the
