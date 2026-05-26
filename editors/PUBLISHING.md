@@ -101,6 +101,9 @@ Assets:
 Submit a pull request to `github-linguist/linguist` adding the language entry
 and grammar wiring required by the current Linguist contribution process.
 
+License status: the repository, VS Code extension, and Tree-sitter grammar are
+MIT licensed.
+
 Current blocker: Linguist requires sufficient in-the-wild usage for new
 languages. GitHub code search for `extension:tya -is:fork` reported 124 results
 on 2026-05-13, below Linguist's threshold for a new language PR. The

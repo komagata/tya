@@ -1,3 +1,3 @@
 This VS Code extension is distributed as part of the Tya repository.
 
-No open-source license has been declared for the repository at this time.
+It is licensed under the MIT License. See the repository root `LICENSE` file.

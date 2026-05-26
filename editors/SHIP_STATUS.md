@@ -30,7 +30,7 @@ coloring ship scope.
 | Requirement | Status |
 |---|---|
 | Publish Emacs mode to MELPA | Pull request `melpa/melpa#10013` is open; maintainer review / merge pending; tracked by `komagata/tya#2` |
-| Register Tree-sitter grammar with GitHub Linguist | GitHub code search for `extension:tya -is:fork` reports 124 results, below Linguist's new-language usage threshold; tracked by `komagata/tya#3`. |
+| Register Tree-sitter grammar with GitHub Linguist | License blocker resolved with MIT; GitHub code search for `extension:tya -is:fork` reports 124 results, below Linguist's new-language usage threshold; tracked by `komagata/tya#3`. |
 
 ## Last Local Verification
 
