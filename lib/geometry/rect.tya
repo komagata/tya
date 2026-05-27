@@ -274,8 +274,7 @@ class Rect
   # @param width Int width value.
   # @param height Int height value.
   # @return Self the resulting value.
-  new: x, y, width, height ->
-    Rect(x, y, width, height)
+  new: x, y, width, height -> Rect(x, y, width, height)
 
   # Rect.number provides the geometry/Rect standard library operation.
   # @param value String value value.

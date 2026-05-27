@@ -69,10 +69,8 @@ class Size
   # @param width Int width value.
   # @param height Int height value.
   # @return Self the resulting value.
-  new: width, height ->
-    Size(width, height)
+  new: width, height -> Size(width, height)
 
   # Size.zero provides the geometry/Size standard library operation.
   # @return Any the resulting value.
-  zero: ->
-    Size(0, 0)
+  zero: -> Size(0, 0)

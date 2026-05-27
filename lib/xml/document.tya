@@ -24,21 +24,18 @@ class Document
 
   # Document.children provides the xml/Document standard library operation.
   # @return Any the resulting value.
-  children: ->
-    self.nodes
+  children: -> self.nodes
 
   # Document.encoding provides the xml/Document standard library operation.
   # @return Any the resulting value.
-  encoding: ->
-    self.doc_encoding
+  encoding: -> self.doc_encoding
 
   # Document.new provides the xml/Document standard library operation.
   # @param children Any children value.
   # @param version Any version value.
   # @param encoding Any encoding value.
   # @return Self the resulting value.
-  new: children, version, encoding ->
-    Document(children, version, encoding)
+  new: children, version, encoding -> Document(children, version, encoding)
 
   # Document.root provides the xml/Document standard library operation.
   # @return Any the resulting value.
@@ -52,10 +49,8 @@ class Document
 
   # Document.to_s provides the xml/Document standard library operation.
   # @return String the resulting value.
-  to_s: ->
-    Xml(nil).stringify(self)
+  to_s: -> Xml(nil).stringify(self)
 
   # Document.version provides the xml/Document standard library operation.
   # @return Any the resulting value.
-  version: ->
-    self.doc_version
+  version: -> self.doc_version

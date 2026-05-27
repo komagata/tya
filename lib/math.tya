@@ -19,33 +19,28 @@ class Math
   # Math.acos provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  acos: x ->
-    math_acos(x)
+  acos: x -> math_acos(x)
 
   # Math.asin provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  asin: x ->
-    math_asin(x)
+  asin: x -> math_asin(x)
 
   # Math.atan provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  atan: x ->
-    math_atan(x)
+  atan: x -> math_atan(x)
 
   # Math.atan2 provides the math/Math standard library operation.
   # @param y Int y value.
   # @param x Int x value.
   # @return Any the resulting value.
-  atan2: y, x ->
-    math_atan2(y, x)
+  atan2: y, x -> math_atan2(y, x)
 
   # Math.ceil provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  ceil: x ->
-    math_ceil(x)
+  ceil: x -> math_ceil(x)
 
   # clamp constrains value to the inclusive lo..hi range.
   # Raises when lo is greater than hi.
@@ -65,38 +60,32 @@ class Math
   # Math.cos provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  cos: x ->
-    math_cos(x)
+  cos: x -> math_cos(x)
 
   # Math.exp provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  exp: x ->
-    math_exp(x)
+  exp: x -> math_exp(x)
 
   # Math.floor provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  floor: x ->
-    math_floor(x)
+  floor: x -> math_floor(x)
 
   # Math.log provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  log: x ->
-    math_log(x)
+  log: x -> math_log(x)
 
   # Math.log10 provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  log10: x ->
-    math_log10(x)
+  log10: x -> math_log10(x)
 
   # Math.log2 provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  log2: x ->
-    math_log2(x)
+  log2: x -> math_log2(x)
 
   # Math.max provides the math/Math standard library operation.
   # @param left Any left value.
@@ -120,35 +109,29 @@ class Math
   # @param x Int x value.
   # @param y Int y value.
   # @return Any the resulting value.
-  pow: x, y ->
-    math_pow(x, y)
+  pow: x, y -> math_pow(x, y)
 
   # Math.round provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  round: x ->
-    math_round(x)
+  round: x -> math_round(x)
 
   # Math.sin provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  sin: x ->
-    math_sin(x)
+  sin: x -> math_sin(x)
 
   # Math.sqrt provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  sqrt: x ->
-    math_sqrt(x)
+  sqrt: x -> math_sqrt(x)
 
   # Math.tan provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  tan: x ->
-    math_tan(x)
+  tan: x -> math_tan(x)
 
   # Math.trunc provides the math/Math standard library operation.
   # @param x Int x value.
   # @return Any the resulting value.
-  trunc: x ->
-    math_trunc(x)
+  trunc: x -> math_trunc(x)

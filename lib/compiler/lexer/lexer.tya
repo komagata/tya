@@ -3,11 +3,9 @@ class Lexer
   # Lexer.lex provides the compiler/lexer/Lexer standard library operation.
   # @param source String source value.
   # @return Any the resulting value.
-  lex: source ->
-    compiler_lexer_lex(source)
+  lex: source -> compiler_lexer_lex(source)
 
   # Lexer.lex_with_comments provides the compiler/lexer/Lexer standard library operation.
   # @param source String source value.
   # @return Any the resulting value.
-  lex_with_comments: source ->
-    compiler_lexer_lex_with_comments(source)
+  lex_with_comments: source -> compiler_lexer_lex_with_comments(source)

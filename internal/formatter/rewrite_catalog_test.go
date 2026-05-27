@@ -237,7 +237,6 @@ func TestRewriteCatalog(t *testing.T) {
 			want: strings.Join([]string{
 				"interface Named",
 				"  name: ->",
-				"",
 				"  fallback: -> \"default\"",
 				"",
 			}, "\n"),
@@ -254,14 +253,13 @@ func TestRewriteCatalog(t *testing.T) {
 			want: strings.Join([]string{
 				"interface Iterator",
 				"  has_next: ->",
-				"",
 				"  next: ->",
 				"",
 			}, "\n"),
 		},
 		{
 			category: "imports",
-			name:     "multiple imports group and sort stdlib before user imports",
+			name:     "multiple imports sort stdlib before user imports",
 			input: strings.Join([]string{
 				"import app",
 				"import file",
@@ -269,9 +267,8 @@ func TestRewriteCatalog(t *testing.T) {
 				"",
 			}, "\n"),
 			want: strings.Join([]string{
-				"import",
-				"  file",
-				"  app",
+				"import file",
+				"import app",
 				"",
 				"main = -> true",
 				"",
@@ -293,9 +290,8 @@ func TestRewriteCatalog(t *testing.T) {
 				"",
 			}, "\n"),
 			want: strings.Join([]string{
-				"import",
-				"  base64/*",
-				"  net/http/client as client",
+				"import base64/*",
+				"import net/http/client as client",
 				"",
 			}, "\n"),
 		},

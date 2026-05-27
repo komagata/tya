@@ -54,8 +54,7 @@ class Color
 
   # Color.black provides the color/Color standard library operation.
   # @return Any the resulting value.
-  black: ->
-    self.rgb(0, 0, 0)
+  black: -> self.rgb(0, 0, 0)
 
   # Color.blend provides the color/Color standard library operation.
   # @param a Int a value.
@@ -77,8 +76,7 @@ class Color
 
   # Color.blue provides the color/Color standard library operation.
   # @return Any the resulting value.
-  blue: ->
-    self.rgb(0, 0, 255)
+  blue: -> self.rgb(0, 0, 255)
 
   # Color.channel provides the color/Color standard library operation.
   # @param value String value value.
@@ -164,8 +162,7 @@ class Color
 
   # Color.cyan provides the color/Color standard library operation.
   # @return Any the resulting value.
-  cyan: ->
-    self.rgb(0, 255, 255)
+  cyan: -> self.rgb(0, 255, 255)
 
   # Color.darken provides the color/Color standard library operation.
   # @param color Any color value.
@@ -219,8 +216,7 @@ class Color
 
   # Color.gray50 provides the color/Color standard library operation.
   # @return Any the resulting value.
-  gray50: ->
-    self.rgb(128, 128, 128)
+  gray50: -> self.rgb(128, 128, 128)
 
   # Color.grayscale provides the color/Color standard library operation.
   # @param color Any color value.
@@ -235,8 +231,7 @@ class Color
 
   # Color.green provides the color/Color standard library operation.
   # @return Any the resulting value.
-  green: ->
-    self.rgb(0, 128, 0)
+  green: -> self.rgb(0, 128, 0)
 
   # Color.hex provides the color/Color standard library operation.
   # @param text String text value.
@@ -291,8 +286,7 @@ class Color
   # @param hi Any hi value.
   # @param lo Any lo value.
   # @return Any the resulting value.
-  hex_pair: hi, lo ->
-    self.hex_digit(hi) * 16 + self.hex_digit(lo)
+  hex_pair: hi, lo -> self.hex_digit(hi) * 16 + self.hex_digit(lo)
 
   # Color.invert provides the color/Color standard library operation.
   # @param color Any color value.
@@ -335,16 +329,14 @@ class Color
 
   # Color.magenta provides the color/Color standard library operation.
   # @return Any the resulting value.
-  magenta: ->
-    self.rgb(255, 0, 255)
+  magenta: -> self.rgb(255, 0, 255)
 
   # Color.mix_channel provides the color/Color standard library operation.
   # @param a Int a value.
   # @param b Int b value.
   # @param t Any t value.
   # @return Any the resulting value.
-  mix_channel: a, b, t ->
-    self.round(a + (b - a) * t)
+  mix_channel: a, b, t -> self.round(a + (b - a) * t)
 
   # Color.nearly_equal? provides the color/Color standard library operation.
   # @param a Int a value.
@@ -366,8 +358,7 @@ class Color
   # @param b Int b value.
   # @param a Int a value.
   # @return Self the resulting value.
-  new: r, g, b, a ->
-    Color(r, g, b, a)
+  new: r, g, b, a -> Color(r, g, b, a)
 
   # Color.over provides the color/Color standard library operation.
   # @param foreground Any foreground value.
@@ -408,16 +399,14 @@ class Color
 
   # Color.red provides the color/Color standard library operation.
   # @return Any the resulting value.
-  red: ->
-    self.rgb(255, 0, 0)
+  red: -> self.rgb(255, 0, 0)
 
   # Color.rgb provides the color/Color standard library operation.
   # @param r Int r value.
   # @param g Int g value.
   # @param b Int b value.
   # @return Any the resulting value.
-  rgb: r, g, b ->
-    Color(r, g, b, 255)
+  rgb: r, g, b -> Color(r, g, b, 255)
 
   # Color.rgba provides the color/Color standard library operation.
   # @param r Int r value.
@@ -425,19 +414,16 @@ class Color
   # @param b Int b value.
   # @param a Int a value.
   # @return Any the resulting value.
-  rgba: r, g, b, a ->
-    Color(r, g, b, a)
+  rgba: r, g, b, a -> Color(r, g, b, a)
 
   # Color.round provides the color/Color standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  round: value ->
-    math_round(value).to_i()
+  round: value -> math_round(value).to_i()
 
   # Color.to_array provides the color/Color standard library operation.
   # @return Array the resulting value.
-  to_array: ->
-    [self.r, self.g, self.b, self.a]
+  to_array: -> [self.r, self.g, self.b, self.a]
 
   # Color.to_hex provides the color/Color standard library operation.
   # @param include_alpha Any include alpha value.
@@ -455,13 +441,11 @@ class Color
 
   # Color.transparent provides the color/Color standard library operation.
   # @return Any the resulting value.
-  transparent: ->
-    Color(0, 0, 0, 0)
+  transparent: -> Color(0, 0, 0, 0)
 
   # Color.white provides the color/Color standard library operation.
   # @return Any the resulting value.
-  white: ->
-    self.rgb(255, 255, 255)
+  white: -> self.rgb(255, 255, 255)
 
   # Color.with_alpha provides the color/Color standard library operation.
   # @param color Any color value.
@@ -475,5 +459,4 @@ class Color
 
   # Color.yellow provides the color/Color standard library operation.
   # @return Any the resulting value.
-  yellow: ->
-    self.rgb(255, 255, 0)
+  yellow: -> self.rgb(255, 255, 0)

@@ -21,24 +21,20 @@ class Deque
 
   # Deque.empty? provides the collections/Deque standard library operation.
   # @return Boolean whether the condition is true.
-  empty?: ->
-    self.items.empty?()
+  empty?: -> self.items.empty?()
 
   # Deque.from_array provides the collections/Deque standard library operation.
   # @param values Array values value.
   # @return Array the resulting value.
-  from_array: values ->
-    Deque(values)
+  from_array: values -> Deque(values)
 
   # Deque.len provides the collections/Deque standard library operation.
   # @return Int the resulting value.
-  len: ->
-    self.items.len()
+  len: -> self.items.len()
 
   # Deque.new provides the collections/Deque standard library operation.
   # @return Self the resulting value.
-  new: ->
-    Deque(nil)
+  new: -> Deque(nil)
 
   # Deque.peek_back provides the collections/Deque standard library operation.
   # @return Any the resulting value.
@@ -91,5 +87,4 @@ class Deque
 
   # Deque.to_array provides the collections/Deque standard library operation.
   # @return Array the resulting value.
-  to_array: ->
-    self.items.slice(0, self.items.len())
+  to_array: -> self.items.slice(0, self.items.len())

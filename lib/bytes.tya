@@ -40,8 +40,7 @@ class Bytes
   # Bytes.len returns the byte length of a string or bytes value.
   # @param value String value value.
   # @return Int the resulting value.
-  static len: value ->
-    Self.array_of(value).len()
+  static len: value -> Self.array_of(value).len()
 
   # Bytes.array_of returns a byte array for a string or bytes value.
   private static array_of: value ->
@@ -71,15 +70,13 @@ class Bytes
   # Bytes.array is a compatibility alias for Bytes.to_array.
   # @param value String value value.
   # @return Array the resulting value.
-  array: value = nil ->
-    self.to_array(value)
+  array: value = nil -> self.to_array(value)
 
   # Bytes.concat provides the bytes/Bytes standard library operation.
   # @param left Any left value.
   # @param right Any right value.
   # @return Any the resulting value.
-  concat: left, right ->
-    bytes_concat(left, right)
+  concat: left, right -> bytes_concat(left, right)
 
   # Bytes.from_array builds bytes from an array of byte values.
   # @param values Array values value.
@@ -100,28 +97,24 @@ class Bytes
   # Bytes.new is a compatibility alias for Bytes.from_array.
   # @param values Array values value.
   # @return Self the resulting value.
-  new: values = nil ->
-    self.from_array(values)
+  new: values = nil -> self.from_array(values)
 
   # Bytes.of is a compatibility alias for Bytes.from_text.
   # @param text String text value.
   # @return Any the resulting value.
-  of: text = nil ->
-    self.from_text(text)
+  of: text = nil -> self.from_text(text)
 
   # Bytes.slice provides the bytes/Bytes standard library operation.
   # @param value String value value.
   # @param start Int start value.
   # @param end Int end value.
   # @return Any the resulting value.
-  slice: value, start, end ->
-    bytes_slice(value, start, end)
+  slice: value, start, end -> bytes_slice(value, start, end)
 
   # Bytes.text is a compatibility alias for Bytes.to_text.
   # @param value String value value.
   # @return String the resulting value.
-  text: value = nil ->
-    self.to_text(value)
+  text: value = nil -> self.to_text(value)
 
   # Bytes.to_array returns bytes as an array of byte values.
   # @param value String value value.

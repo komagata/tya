@@ -3,29 +3,24 @@ class Digest
   # Digest.md5 provides the digest/Digest standard library operation.
   # @param text String text value.
   # @return Any the resulting value.
-  static md5: text ->
-    digest_md5(text)
+  static md5: text -> digest_md5(text)
 
   # Digest.sha1 provides the digest/Digest standard library operation.
   # @param text String text value.
   # @return Any the resulting value.
-  static sha1: text ->
-    digest_sha1(text)
+  static sha1: text -> digest_sha1(text)
 
   # Digest.sha256 provides the digest/Digest standard library operation.
   # @param text String text value.
   # @return Any the resulting value.
-  static sha256: text ->
-    digest_sha256(text)
+  static sha256: text -> digest_sha256(text)
 
   # Digest.sha384 provides the digest/Digest standard library operation.
   # @param text String text value.
   # @return Any the resulting value.
-  static sha384: text ->
-    digest_sha384(text)
+  static sha384: text -> digest_sha384(text)
 
   # Digest.sha512 provides the digest/Digest standard library operation.
   # @param text String text value.
   # @return Any the resulting value.
-  static sha512: text ->
-    digest_sha512(text)
+  static sha512: text -> digest_sha512(text)

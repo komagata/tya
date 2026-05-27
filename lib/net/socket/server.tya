@@ -12,13 +12,11 @@ class Server implements Closable
 
   # Server.accept provides the net/socket/Server standard library operation.
   # @return Any the resulting value.
-  accept: ->
-    Socket(socket_server_accept(self.handle), false)
+  accept: -> Socket(socket_server_accept(self.handle), false)
 
   # Server.close provides the net/socket/Server standard library operation.
   # @return Nil the resulting value.
-  close: ->
-    socket_server_close(self.handle)
+  close: -> socket_server_close(self.handle)
 
   # Server.listen provides the net/socket/Server standard library operation.
   # @param host String host value.
@@ -32,5 +30,4 @@ class Server implements Closable
 
   # Server.local_address provides the net/socket/Server standard library operation.
   # @return Any the resulting value.
-  local_address: ->
-    socket_server_local_address(self.handle)
+  local_address: -> socket_server_local_address(self.handle)

@@ -2,8 +2,7 @@
 class TestRunner
   # TestRunner.default provides the unittest/TestRunner standard library operation.
   # @return Any the resulting value.
-  default: ->
-    TestRunner()
+  default: -> TestRunner()
 
   # TestRunner.error_message provides the unittest/TestRunner standard library operation.
   # @param err Any err value.

@@ -3,11 +3,9 @@ class Checker
   # Checker.check provides the compiler/checker/Checker standard library operation.
   # @param source String source value.
   # @return Any the resulting value.
-  check: source ->
-    compiler_checker_check(source)
+  check: source -> compiler_checker_check(source)
 
   # Checker.check_ast provides the compiler/checker/Checker standard library operation.
   # @param program Any program value.
   # @return Any the resulting value.
-  check_ast: program ->
-    compiler_checker_check_ast(program)
+  check_ast: program -> compiler_checker_check_ast(program)

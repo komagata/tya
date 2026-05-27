@@ -13,8 +13,7 @@ class Toml
   # dump is a compatibility alias for stringify.
   # @param value String value value.
   # @return String the resulting value.
-  dump: value = nil ->
-    self.stringify(value)
+  dump: value = nil -> self.stringify(value)
 
   # Toml.emit_table provides the toml/Toml standard library operation.
   # @param value String value value.

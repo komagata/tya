@@ -7,14 +7,12 @@ class Json
   # Json.dump formats a Tya value as JSON text.
   # @param value String value value.
   # @return String the resulting value.
-  static dump: value ->
-    Json(nil).dump(value)
+  static dump: value -> Json(nil).dump(value)
 
   # Json.parse parses JSON text into Tya values.
   # @param text String text value.
   # @return Any the resulting value.
-  static parse: text ->
-    Json(nil).parse(text)
+  static parse: text -> Json(nil).parse(text)
 
   # Json.initialize stores a value or JSON text.
   # @param value String value value.
@@ -25,8 +23,7 @@ class Json
   # dump is a compatibility alias for stringify.
   # @param value String value value.
   # @return String the resulting value.
-  dump: value = nil ->
-    self.stringify(value)
+  dump: value = nil -> self.stringify(value)
 
   # Json.emit provides the json/Json standard library operation.
   # @param value String value value.

@@ -45,24 +45,20 @@ class PriorityQueue
 
   # PriorityQueue.empty? provides the collections/PriorityQueue standard library operation.
   # @return Boolean whether the condition is true.
-  empty?: ->
-    self.items.empty?()
+  empty?: -> self.items.empty?()
 
   # PriorityQueue.from_array provides the collections/PriorityQueue standard library operation.
   # @param items Array items value.
   # @return Array the resulting value.
-  from_array: items ->
-    PriorityQueue(items)
+  from_array: items -> PriorityQueue(items)
 
   # PriorityQueue.len provides the collections/PriorityQueue standard library operation.
   # @return Int the resulting value.
-  len: ->
-    self.items.len()
+  len: -> self.items.len()
 
   # PriorityQueue.new provides the collections/PriorityQueue standard library operation.
   # @return Self the resulting value.
-  new: ->
-    PriorityQueue(nil)
+  new: -> PriorityQueue(nil)
 
   # PriorityQueue.peek provides the collections/PriorityQueue standard library operation.
   # @return Any the resulting value.

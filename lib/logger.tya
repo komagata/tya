@@ -33,20 +33,17 @@ class Logger
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  debug: message, fields ->
-    self.write("debug", message, fields)
+  debug: message, fields -> self.write("debug", message, fields)
 
   # Logger.default provides the log/Logger standard library operation.
   # @return Any the resulting value.
-  default: ->
-    Logger({})
+  default: -> Logger({})
 
   # Logger.error provides the log/Logger standard library operation.
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  error: message, fields ->
-    self.write("error", message, fields)
+  error: message, fields -> self.write("error", message, fields)
 
   # Logger.escape_json provides the log/Logger standard library operation.
   # @param text String text value.
@@ -74,8 +71,7 @@ class Logger
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  info: message, fields ->
-    self.write("info", message, fields)
+  info: message, fields -> self.write("info", message, fields)
 
   # Logger.json_record provides the log/Logger standard library operation.
   # @param ts Any ts value.
@@ -149,8 +145,7 @@ class Logger
   # Logger.new provides the log/Logger standard library operation.
   # @param options Dict options value.
   # @return Self the resulting value.
-  new: options ->
-    Logger(options)
+  new: options -> Logger(options)
 
   # Logger.option provides the log/Logger standard library operation.
   # @param options Dict options value.
@@ -179,8 +174,7 @@ class Logger
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  warn: message, fields ->
-    self.write("warn", message, fields)
+  warn: message, fields -> self.write("warn", message, fields)
 
   # Logger.with provides the log/Logger standard library operation.
   # @param fields Any fields value.

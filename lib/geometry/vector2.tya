@@ -182,8 +182,7 @@ class Vector2
   # @param x Int x value.
   # @param y Int y value.
   # @return Self the resulting value.
-  new: x, y ->
-    Vector2(x, y)
+  new: x, y -> Vector2(x, y)
 
   # Vector2.normalize provides the geometry/Vector2 standard library operation.
   # @param v Any v value.
@@ -207,8 +206,7 @@ class Vector2
 
   # Vector2.one provides the geometry/Vector2 standard library operation.
   # @return Any the resulting value.
-  one: ->
-    Vector2(1, 1)
+  one: -> Vector2(1, 1)
 
   # Vector2.scale provides the geometry/Vector2 standard library operation.
   # @param v Any v value.
@@ -245,5 +243,4 @@ class Vector2
 
   # Vector2.zero provides the geometry/Vector2 standard library operation.
   # @return Any the resulting value.
-  zero: ->
-    Vector2(0, 0)
+  zero: -> Vector2(0, 0)

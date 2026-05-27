@@ -56,8 +56,7 @@ class Point
   # @param x Int x value.
   # @param y Int y value.
   # @return Self the resulting value.
-  new: x, y ->
-    Point(x, y)
+  new: x, y -> Point(x, y)
 
   # Point.number provides the geometry/Point standard library operation.
   # @param value String value value.

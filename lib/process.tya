@@ -13,13 +13,11 @@ class Process
   # Process.chdir provides the process/Process standard library operation.
   # @param path String path value.
   # @return Any the resulting value.
-  chdir: path ->
-    chdir(path)
+  chdir: path -> chdir(path)
 
   # Process.cwd provides the process/Process standard library operation.
   # @return Any the resulting value.
-  cwd: ->
-    cwd()
+  cwd: -> cwd()
 
   # Process.exec replaces this process where the platform supports exec.
   # @param command Any command value.

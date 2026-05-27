@@ -40,8 +40,7 @@ class SecureRandom
   # SecureRandom.bytes provides the secure_random/SecureRandom standard library operation.
   # @param n Int n value.
   # @return Any the resulting value.
-  bytes: n ->
-    secure_random_bytes(n)
+  bytes: n -> secure_random_bytes(n)
 
   # SecureRandom.hex provides the secure_random/SecureRandom standard library operation.
   # @param n Int n value.
@@ -75,8 +74,7 @@ class SecureRandom
   # @param min Any min value.
   # @param max Any max value.
   # @return Any the resulting value.
-  int: min, max ->
-    secure_random_int(min, max)
+  int: min, max -> secure_random_int(min, max)
 
   # SecureRandom.uuid provides the secure_random/SecureRandom standard library operation.
   # @return Any the resulting value.

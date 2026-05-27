@@ -65,8 +65,7 @@ class Rng
 
   # Rng.float provides the random/Rng standard library operation.
   # @return Any the resulting value.
-  float: ->
-    self.next_int() / 2147483647
+  float: -> self.next_int() / 2147483647
 
   # Rng.int provides the random/Rng standard library operation.
   # @param min Any min value.
@@ -85,8 +84,7 @@ class Rng
   # Rng.new provides the random/Rng standard library operation.
   # @param seed Any seed value.
   # @return Self the resulting value.
-  new: seed ->
-    Rng(seed)
+  new: seed -> Rng(seed)
 
   # Rng.next_int provides the random/Rng standard library operation.
   # @return Any the resulting value.

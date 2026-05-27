@@ -56,10 +56,9 @@ func Unparse(prog *ast.Program) (string, error) {
 	return u.b.String(), nil
 }
 
-// canonicalizeTopLevel reorders top-level statements per §8.4: any
-// run of consecutive ImportStmts is sorted alphabetically with
-// stdlib imports first, then user imports. Non-import statements
-// keep their original order.
+// canonicalizeTopLevel reorders top-level import runs per §8.4:
+// imports are sorted alphabetically with stdlib imports first, then
+// user imports. Non-import statements keep their original order.
 func canonicalizeTopLevel(stmts []ast.Stmt) []ast.Stmt {
 	out := make([]ast.Stmt, 0, len(stmts))
 	i := 0
@@ -79,10 +78,8 @@ func canonicalizeTopLevel(stmts []ast.Stmt) []ast.Stmt {
 			j++
 		}
 		sortImports(imports)
-		if len(imports) == 1 {
-			out = append(out, imports[0])
-		} else if len(imports) > 1 {
-			out = append(out, &ast.ImportBlockStmt{Imports: imports})
+		for _, imp := range imports {
+			out = append(out, imp)
 		}
 		i = j
 	}
@@ -773,12 +770,10 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 	u.line(head)
 	u.indent++
 	defer func() { u.indent-- }()
-	first := true
 	for _, f := range n.Fields {
-		if !first {
-			u.b.WriteByte('\n')
-		}
-		first = false
+		// Keep interface members adjacent. A blank line after an empty
+		// abstract signature can be parsed as an empty default body
+		// boundary and change checker semantics.
 		u.leadingComments(f.Comments)
 		value, err := u.expr(f.Value)
 		if err != nil {
@@ -787,10 +782,8 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 		u.line(f.Name + ": " + value)
 	}
 	for _, m := range n.Methods {
-		if !first {
-			u.b.WriteByte('\n')
-		}
-		first = false
+		// Keep interface members adjacent for the same reason as
+		// fields above.
 		u.leadingComments(m.Comments)
 		head := m.Name + ": " + defArrow(strings.Join(m.Params, ", "))
 		if m.Func == nil {
@@ -1469,7 +1462,11 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 	case *ast.IntLit:
 		return strconv.FormatInt(n.Value, 10), nil
 	case *ast.FloatLit:
-		return strconv.FormatFloat(n.Value, 'f', -1, 64), nil
+		s := strconv.FormatFloat(n.Value, 'f', -1, 64)
+		if !strings.ContainsAny(s, ".eE") {
+			s += ".0"
+		}
+		return s, nil
 	case *ast.StringLit:
 		if n.Lang != "" && n.Form == "triple" && !strings.Contains(n.Value, `"""`) {
 			return n.Lang + `"""` + n.Value + `"""`, nil
@@ -1533,7 +1530,7 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		}
 		return op + inner, nil
 	case *ast.CallExpr:
-		callee, err := u.expr(n.Callee)
+		callee, err := u.postfixTarget(n.Callee)
 		if err != nil {
 			return "", err
 		}
@@ -1554,13 +1551,13 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 				return "Self." + n.Name, nil
 			}
 		}
-		target, err := u.expr(n.Target)
+		target, err := u.postfixTarget(n.Target)
 		if err != nil {
 			return "", err
 		}
 		return target + "." + n.Name, nil
 	case *ast.IndexExpr:
-		target, err := u.expr(n.Target)
+		target, err := u.postfixTarget(n.Target)
 		if err != nil {
 			return "", err
 		}
@@ -1613,4 +1610,17 @@ func (u *unparser) expr(e ast.Expr) (string, error) {
 		return "", fmt.Errorf("formatter.Unparse: block-bodied function expression at expr position not supported in v0.37")
 	}
 	return "", fmt.Errorf("formatter.Unparse: expr %T not supported in v0.37", e)
+}
+
+func (u *unparser) postfixTarget(e ast.Expr) (string, error) {
+	s, err := u.expr(e)
+	if err != nil {
+		return "", err
+	}
+	switch e.(type) {
+	case *ast.BinaryExpr, *ast.UnaryExpr, *ast.TryExpr, *ast.SpawnExpr, *ast.AwaitExpr, *ast.FuncLit:
+		return "(" + s + ")", nil
+	default:
+		return s, nil
+	}
 }

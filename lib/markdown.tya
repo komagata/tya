@@ -102,8 +102,7 @@ class Markdown
   # Markdown.inline provides the markdown/Markdown standard library operation.
   # @param text String text value.
   # @return Any the resulting value.
-  inline: text ->
-    Markdown(nil).inline_with_refs(text, {})
+  inline: text -> Markdown(nil).inline_with_refs(text, {})
 
   # Markdown.inline_with_refs provides the markdown/Markdown standard library operation.
   # @param text String text value.
@@ -491,8 +490,7 @@ class Markdown
   # @param ast Any ast value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  render: ast, options ->
-    self.render_html_ast(ast, options)
+  render: ast, options -> self.render_html_ast(ast, options)
 
   # Markdown.render_block provides the markdown/Markdown standard library operation.
   # @param block Function block value.
@@ -607,8 +605,7 @@ class Markdown
   # Markdown.strip_list_marker provides the markdown/Markdown standard library operation.
   # @param s Any s value.
   # @return Any the resulting value.
-  strip_list_marker: s ->
-    Markdown(nil).trim_left_n(s, 2)
+  strip_list_marker: s -> Markdown(nil).trim_left_n(s, 2)
 
   # Markdown.strip_ordered_marker provides the markdown/Markdown standard library operation.
   # @param s Any s value.

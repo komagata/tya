@@ -110,8 +110,7 @@ class Cli
   # Cli.option_type provides the cli/Cli standard library operation.
   # @param opt Any opt value.
   # @return Any the resulting value.
-  option_type: opt ->
-    Cli(nil).spec_string(opt, "type", "string")
+  option_type: opt -> Cli(nil).spec_string(opt, "type", "string")
 
   # Cli.parse provides the cli/Cli standard library operation.
   # @param args Array args value.

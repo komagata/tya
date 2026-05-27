@@ -26,8 +26,7 @@ class Element
   # @param name String name value.
   # @param default Any default value.
   # @return Any the resulting value.
-  attr: name, default ->
-    self.attrs.get(name, default)
+  attr: name, default -> self.attrs.get(name, default)
 
   # Element.child_elements provides the xml/Element standard library operation.
   # @return Any the resulting value.
@@ -82,16 +81,14 @@ class Element
   # Element.has_attr? provides the xml/Element standard library operation.
   # @param name String name value.
   # @return Boolean whether the condition is true.
-  has_attr?: name ->
-    self.attrs.has?(name)
+  has_attr?: name -> self.attrs.has?(name)
 
   # Element.new provides the xml/Element standard library operation.
   # @param name String name value.
   # @param attrs Any attrs value.
   # @param children Any children value.
   # @return Self the resulting value.
-  new: name, attrs, children ->
-    Element(name, attrs, children)
+  new: name, attrs, children -> Element(name, attrs, children)
 
   # Element.text provides the xml/Element standard library operation.
   # @return String the resulting value.
@@ -109,5 +106,4 @@ class Element
 
   # Element.to_s provides the xml/Element standard library operation.
   # @return String the resulting value.
-  to_s: ->
-    Xml(nil).stringify(self)
+  to_s: -> Xml(nil).stringify(self)

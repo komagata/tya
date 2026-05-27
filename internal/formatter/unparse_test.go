@@ -101,7 +101,6 @@ func TestUnparseSeparatesClassAndInterfaceMembersBeforeComments(t *testing.T) {
 		"interface Iterator",
 		"  # has_next docs.",
 		"  has_next: ->",
-		"",
 		"  # next docs.",
 		"  next: ->",
 		"",
@@ -309,7 +308,7 @@ func TestUnparseImports(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "import\n  file as f\n  string\n"
+	want := "import file as f\nimport string\n"
 	if got != want {
 		t.Errorf("got: %q want %q", got, want)
 	}
@@ -506,7 +505,7 @@ func TestUnparseImportSortAndBlankLines(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "import\n  file\n  string\n  mylib\n  zmod\n\ngreet = name -> name\nx = 1\n"
+	want := "import file\nimport string\nimport mylib\nimport zmod\n\ngreet = name -> name\nx = 1\n"
 	if got != want {
 		t.Errorf("import sort/blank-line layout mismatch\nwant:\n%s\ngot:\n%s", want, got)
 	}
@@ -516,6 +515,43 @@ func TestUnparseImportSortAndBlankLines(t *testing.T) {
 	}
 	if again != got {
 		t.Fatalf("not idempotent:\n%s", again)
+	}
+}
+
+func TestUnparsePreservesPostfixReceiverGrouping(t *testing.T) {
+	src := strings.Join([]string{
+		"new_w = (self.width * scale).to_i()",
+		"sx = ((x * self.width) / width.to_f()).to_i()",
+		"r = (top.r * a + under.r * inv).to_i()",
+		"",
+	}, "\n")
+	want := strings.Join([]string{
+		"new_w = (self.width * scale).to_i()",
+		"sx = (x * self.width / width.to_f()).to_i()",
+		"r = (top.r * a + under.r * inv).to_i()",
+		"",
+	}, "\n")
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("postfix receiver grouping changed\nwant:\n%s\ngot:\n%s", want, got)
+	}
+}
+
+func TestUnparsePreservesFloatLiteralKind(t *testing.T) {
+	src := strings.Join([]string{
+		"a = top.a / 255.0",
+		"b = 1.5",
+		"",
+	}, "\n")
+	got, err := unparseSource(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != src {
+		t.Fatalf("float literal kind changed\nwant:\n%s\ngot:\n%s", src, got)
 	}
 }
 
@@ -711,7 +747,6 @@ func TestUnparseInterfaceMethodComments(t *testing.T) {
 		"  # has_next docs.",
 		"  # @return Boolean whether more values exist.",
 		"  has_next: ->",
-		"",
 		"  # next docs.",
 		"  # @return Any next value.",
 		"  next: ->",

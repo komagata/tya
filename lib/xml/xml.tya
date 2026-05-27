@@ -7,20 +7,17 @@ class Xml
   # Xml.dump is a compatibility alias for Xml.stringify.
   # @param value String value value.
   # @return String the resulting value.
-  static dump: value ->
-    Xml(nil).dump(value)
+  static dump: value -> Xml(nil).dump(value)
 
   # Xml.parse parses XML text into a document node.
   # @param text String text value.
   # @return Any the resulting value.
-  static parse: text ->
-    Xml(nil).parse(text)
+  static parse: text -> Xml(nil).parse(text)
 
   # Xml.stringify converts an XML node to text.
   # @param value String value value.
   # @return String the resulting value.
-  static stringify: value ->
-    Xml(nil).stringify(value)
+  static stringify: value -> Xml(nil).stringify(value)
 
   # Xml.initialize stores XML text or a node value.
   # @param value String value value.
@@ -87,8 +84,7 @@ class Xml
   # Xml.dump is a compatibility alias for Xml.stringify.
   # @param value String value value.
   # @return String the resulting value.
-  dump: value = nil ->
-    self.stringify(value)
+  dump: value = nil -> self.stringify(value)
 
   # Xml.error provides the xml/Xml standard library operation.
   # @param state Any state value.

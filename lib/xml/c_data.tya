@@ -13,5 +13,4 @@ class CData
   # CData.new provides the xml/CData standard library operation.
   # @param text String text value.
   # @return Self the resulting value.
-  new: text ->
-    CData(text)
+  new: text -> CData(text)

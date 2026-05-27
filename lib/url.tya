@@ -1,52 +1,54 @@
 # Url provides the url/Url standard library API.
 class Url
-  # Url.value stores instance state.
-  # @type Nil
-  value: nil
+  # Url.fragment stores instance state.
+  # @type String
+  fragment: ""
 
-  # Url.initialize stores a URL or query value.
-  # @param value String value value.
-  # @return Self the initialized object.
-  initialize: value = nil ->
-    self.value = value
+  # Url.host stores instance state.
+  # @type String
+  host: ""
+
+  # Url.password stores instance state.
+  # @type String
+  password: ""
+
+  # Url.path stores instance state.
+  # @type String
+  path: ""
+
+  # Url.port stores instance state.
+  # @type String
+  port: ""
+
+  # Url.query stores instance state.
+  # @type String
+  query: ""
+
+  # Url.scheme stores instance state.
+  # @type String
+  scheme: ""
+
+  # Url.user stores instance state.
+  # @type String
+  user: ""
+
+  # Url.authority_present stores instance state.
+  # @type Boolean
+  private authority_present: false
+
+  # Url.query_present stores instance state.
+  # @type Boolean
+  private query_present: false
 
   # Url.build provides the url/Url standard library operation.
-  # @param parts Array parts value.
+  # @param parts Dict parts value.
   # @return Any the resulting value.
-  build: parts = nil ->
-    self.format(parts)
-
-  # Url.contains_colon? provides the url/Url standard library operation.
-  # @param text String text value.
-  # @return Boolean whether the condition is true.
-  contains_colon?: text ->
-    i = 0
-    while i < text.byte_len()
-      if text[i] == ":"
-        return true
-      i = i + 1
-    false
-
-  # Url.decimal? provides the url/Url standard library operation.
-  # @param text String text value.
-  # @return Boolean whether the condition is true.
-  decimal?: text ->
-    if text == ""
-      return false
-    i = 0
-    while i < text.byte_len()
-      c = ord(text[i])
-      if c < 48 or c > 57
-        return false
-      i = i + 1
-    true
+  static build: parts -> Url().load_parts(parts).format()
 
   # Url.decode provides the url/Url standard library operation.
   # @param text String text value.
   # @return String the resulting value.
-  decode: text = nil ->
-    if text == nil
-      text = self.value
+  static decode: text ->
     n = text.byte_len()
     out = ""
     i = 0
@@ -55,8 +57,8 @@ class Url
       if c == "%"
         if i + 2 >= n
           raise error("url.decode: truncated percent-escape")
-        hi = Url(nil).decode_hex(text[i + 1])
-        lo = Url(nil).decode_hex(text[i + 2])
+        hi = Self.decode_hex(text[i + 1])
+        lo = Self.decode_hex(text[i + 2])
         out = out + chr(hi * 16 + lo)
         i = i + 3
       else
@@ -64,25 +66,10 @@ class Url
         i = i + 1
     out
 
-  # Url.decode_hex provides the url/Url standard library operation.
-  # @param c Any c value.
-  # @return Any the resulting value.
-  decode_hex: c ->
-    code = ord(c)
-    if code >= 48 and code <= 57
-      return code - 48
-    if code >= 65 and code <= 70
-      return code - 55
-    if code >= 97 and code <= 102
-      return code - 87
-    raise error("url.decode: invalid percent-escape")
-
   # Url.decode_query provides the url/Url standard library operation.
   # @param text String text value.
   # @return Any the resulting value.
-  decode_query: text = nil ->
-    if text == nil
-      text = self.value
+  static decode_query: text ->
     out = []
     if text == ""
       return out
@@ -97,7 +84,7 @@ class Url
             eq_idx = i
           i = i + 1
         if eq_idx < 0
-          k = Url(nil).decode_query_value(raw)
+          k = Self.decode_query_value(raw)
           out.push([k, ""])
         else
           k_raw = ""
@@ -111,51 +98,25 @@ class Url
             v_raw = v_raw + raw[i]
             i = i + 1
           out.push(
-            [Url(nil).decode_query_value(k_raw), Url(nil).decode_query_value(v_raw)]
+            [Self.decode_query_value(k_raw), Self.decode_query_value(v_raw)]
           )
-    out
-
-  # Url.decode_query_value provides the url/Url standard library operation.
-  # @param text String text value.
-  # @return Any the resulting value.
-  decode_query_value: text ->
-    n = text.byte_len()
-    out = ""
-    i = 0
-    while i < n
-      c = text[i]
-      if c == "+"
-        out = out + " "
-        i = i + 1
-      elseif c == "%"
-        if i + 2 >= n
-          raise error("url.decode_query: truncated percent-escape")
-        hi = Url(nil).decode_hex(text[i + 1])
-        lo = Url(nil).decode_hex(text[i + 2])
-        out = out + chr(hi * 16 + lo)
-        i = i + 3
-      else
-        out = out + c
-        i = i + 1
     out
 
   # Url.encode provides the url/Url standard library operation.
   # @param text String text value.
   # @return String the resulting value.
-  encode: text = nil ->
-    if text == nil
-      text = self.value
+  static encode: text ->
     n = text.byte_len()
     out = ""
     i = 0
     while i < n
       c = text[i]
       code = ord(c)
-      if Url(nil).is_unreserved(code)
+      if Self.is_unreserved(code)
         out = out + c
       else
-        hi = Url(nil).hex_digit(code / 16.to_i())
-        lo = Url(nil).hex_digit(code % 16)
+        hi = Self.hex_digit(code / 16.to_i())
+        lo = Self.hex_digit(code % 16)
         out = out + "%" + hi + lo
       i = i + 1
     out
@@ -163,9 +124,7 @@ class Url
   # Url.encode_query provides the url/Url standard library operation.
   # @param pairs Any pairs value.
   # @return Any the resulting value.
-  encode_query: pairs = nil ->
-    if pairs == nil
-      pairs = self.value
+  static encode_query: pairs ->
     parts_a = []
     if pairs.has("kind")
       raise error("url.encode_query: pass a dict or array of [key, value] pairs")
@@ -173,112 +132,38 @@ class Url
     if names.len() > 0
       for k in names
         v = pairs[k]
-        encoded_k = Url(nil).encode(k)
-        encoded_v = Url(nil).encode(v)
+        encoded_k = Self.encode(k)
+        encoded_v = Self.encode(v)
         parts_a.push("{encoded_k}={encoded_v}")
     parts_a.join("&")
 
   # Url.encode_query_pairs provides the url/Url standard library operation.
   # @param pairs Any pairs value.
   # @return Any the resulting value.
-  encode_query_pairs: pairs ->
+  static encode_query_pairs: pairs ->
     parts_a = []
     for pair in pairs
       k = pair[0]
       v = pair[1]
-      encoded_k = Url(nil).encode(k)
-      encoded_v = Url(nil).encode(v)
+      encoded_k = Self.encode(k)
+      encoded_v = Self.encode(v)
       parts_a.push("{encoded_k}={encoded_v}")
     parts_a.join("&")
-
-  # Url.format provides the url/Url standard library operation.
-  # @param parts Array parts value.
-  # @return Any the resulting value.
-  format: parts = nil ->
-    if parts == nil
-      parts = self.value
-    out = ""
-    if parts.has("scheme") and parts["scheme"] != ""
-      out = out + parts["scheme"] + ":"
-    has_host = parts.has("host") and parts["host"] != ""
-    has_user = parts.has("user") and parts["user"] != ""
-    if has_host or has_user
-      out = out + "//"
-      if has_user
-        out = out + parts["user"]
-        if parts.has("password") and parts["password"] != ""
-          out = out + ":" + parts["password"]
-        out = out + "@"
-      if has_host
-        if (
-          Url(nil).contains_colon?(parts["host"]) and not parts["host"].starts_with("[")
-        )
-          out = out + "[" + parts["host"] + "]"
-        else
-          out = out + parts["host"]
-      if parts.has("port") and parts["port"] != ""
-        out = out + ":" + parts["port"]
-    if parts.has("path") and parts["path"] != ""
-      out = out + parts["path"]
-    if parts.has("query") and parts["query"] != ""
-      out = out + "?" + parts["query"]
-    if parts.has("fragment") and parts["fragment"] != ""
-      out = out + "#" + parts["fragment"]
-    out
-
-  # Url.hex_digit provides the url/Url standard library operation.
-  # @param d Any d value.
-  # @return Any the resulting value.
-  hex_digit: d ->
-    if d < 10
-      return chr(48 + d)
-    chr(55 + d)
-
-  # Url.is_unreserved provides the url/Url standard library operation.
-  # @param code Int code value.
-  # @return Boolean the resulting value.
-  is_unreserved: code ->
-    if code >= 65 and code <= 90
-      return true
-    if code >= 97 and code <= 122
-      return true
-    if code >= 48 and code <= 57
-      return true
-    if code == 45 or code == 46 or code == 95 or code == 126
-      return true
-    false
-
-  # Url.merge_path provides the url/Url standard library operation.
-  # @param base_path String base path value.
-  # @param ref_path String ref path value.
-  # @return String the resulting value.
-  merge_path: base_path, ref_path ->
-    idx = -1
-    i = 0
-    while i < base_path.byte_len()
-      if base_path[i] == "/"
-        idx = i
-      i = i + 1
-    if idx < 0
-      return ref_path
-    base_path.slice(0, idx + 1) + ref_path
 
   # Url.normalize provides the url/Url standard library operation.
   # @param text String text value.
   # @return String the resulting value.
-  normalize: text = nil ->
-    if text == nil
-      text = self.value
-    p = Url(nil).parse(text)
-    p["scheme"] = p["scheme"].lower()
-    p["host"] = p["host"].lower()
-    p["path"] = Url(nil).normalize_path(p["path"])
-    Url(nil).format(p)
+  static normalize: text ->
+    u = Url().parse(text)
+    u.scheme = u.scheme.lower()
+    u.host = u.host.lower()
+    u.path = Self.normalize_path(u.path)
+    u.format()
 
   # Url.normalize_path provides the url/Url standard library operation.
   # @param path String path value.
   # @return String the resulting value.
-  normalize_path: path ->
+  static normalize_path: path ->
     absolute = path.starts_with("/")
     trailing = path.ends_with("/") and path != "/"
     parts = path.split("/")
@@ -300,12 +185,263 @@ class Url
       out = out + "/"
     out
 
-  # Url.parse provides the url/Url standard library operation.
+  # Url.query_dict provides the url/Url standard library operation.
+  # @param query Any query value.
+  # @return Dict the resulting value.
+  static query_dict: query ->
+    pairs = query
+    if query.class == String
+      pairs = Self.decode_query(query)
+    out = {}
+    for pair in pairs
+      k = pair[0]
+      v = pair[1]
+      if out.has(k)
+        old = out[k]
+        if old.class == Array
+          old.push(v)
+        else
+          out[k] = [old, v]
+      else
+        out[k] = v
+    out
+
+  # Url.resolve provides the url/Url standard library operation.
+  # @param base Any base value.
+  # @param ref Any ref value.
+  # @return Any the resulting value.
+  static resolve: base, ref ->
+    b = Url().parse(base)
+    r = Url().parse(ref)
+    if r.scheme != ""
+      return Self.normalize(r.format())
+    out =
+      scheme: b.scheme
+      user: ""
+      password: ""
+      host: ""
+      port: ""
+      path: ""
+      query: ""
+      fragment: r.fragment
+    if r.has_authority?()
+      out["user"] = r.user
+      out["password"] = r.password
+      out["host"] = r.host
+      out["port"] = r.port
+      out["path"] = Self.normalize_path(r.path)
+      out["query"] = r.query
+    else
+      out["user"] = b.user
+      out["password"] = b.password
+      out["host"] = b.host
+      out["port"] = b.port
+      if r.path == ""
+        out["path"] = b.path
+        if r.has_query?()
+          out["query"] = r.query
+        else
+          out["query"] = b.query
+      elseif r.path.starts_with("/")
+        out["path"] = Self.normalize_path(r.path)
+        out["query"] = r.query
+      else
+        out["path"] = Self.normalize_path(Self.merge_path(b.path, r.path))
+        out["query"] = r.query
+    Url().load_parts(out).format()
+
+  # Url.contains_colon? provides the url/Url standard library operation.
+  # @param text String text value.
+  # @return Boolean whether the condition is true.
+  private static contains_colon?: text ->
+    i = 0
+    while i < text.byte_len()
+      if text[i] == ":"
+        return true
+      i = i + 1
+    false
+
+  # Url.decimal? provides the url/Url standard library operation.
+  # @param text String text value.
+  # @return Boolean whether the condition is true.
+  private static decimal?: text ->
+    if text == ""
+      return false
+    i = 0
+    while i < text.byte_len()
+      c = ord(text[i])
+      if c < 48 or c > 57
+        return false
+      i = i + 1
+    true
+
+  # Url.decode_hex provides the url/Url standard library operation.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  private static decode_hex: c ->
+    code = ord(c)
+    if code >= 48 and code <= 57
+      return code - 48
+    if code >= 65 and code <= 70
+      return code - 55
+    if code >= 97 and code <= 102
+      return code - 87
+    raise error("url.decode: invalid percent-escape")
+
+  # Url.decode_query_value provides the url/Url standard library operation.
   # @param text String text value.
   # @return Any the resulting value.
-  parse: text = nil ->
-    if text == nil
-      text = self.value
+  private static decode_query_value: text ->
+    n = text.byte_len()
+    out = ""
+    i = 0
+    while i < n
+      c = text[i]
+      if c == "+"
+        out = out + " "
+        i = i + 1
+      elseif c == "%"
+        if i + 2 >= n
+          raise error("url.decode_query: truncated percent-escape")
+        hi = Self.decode_hex(text[i + 1])
+        lo = Self.decode_hex(text[i + 2])
+        out = out + chr(hi * 16 + lo)
+        i = i + 3
+      else
+        out = out + c
+        i = i + 1
+    out
+
+  # Url.hex_digit provides the url/Url standard library operation.
+  # @param d Any d value.
+  # @return Any the resulting value.
+  private static hex_digit: d ->
+    if d < 10
+      return chr(48 + d)
+    chr(55 + d)
+
+  # Url.is_unreserved provides the url/Url standard library operation.
+  # @param code Int code value.
+  # @return Boolean the resulting value.
+  private static is_unreserved: code ->
+    if code >= 65 and code <= 90
+      return true
+    if code >= 97 and code <= 122
+      return true
+    if code >= 48 and code <= 57
+      return true
+    if code == 45 or code == 46 or code == 95 or code == 126
+      return true
+    false
+
+  # Url.merge_path provides the url/Url standard library operation.
+  # @param base_path String base path value.
+  # @param ref_path String ref path value.
+  # @return String the resulting value.
+  private static merge_path: base_path, ref_path ->
+    idx = -1
+    i = 0
+    while i < base_path.byte_len()
+      if base_path[i] == "/"
+        idx = i
+      i = i + 1
+    if idx < 0
+      return ref_path
+    base_path.slice(0, idx + 1) + ref_path
+
+  # Url.validate_percent provides the url/Url standard library operation.
+  # @param text String text value.
+  # @return Boolean the resulting value.
+  private static validate_percent: text ->
+    n = text.byte_len()
+    i = 0
+    while i < n
+      if text[i] == "%"
+        if i + 2 >= n
+          raise error("url.decode: truncated percent-escape")
+        Self.decode_hex(text[i + 1])
+        Self.decode_hex(text[i + 2])
+        i = i + 3
+      else
+        i = i + 1
+    nil
+
+  # Url.initialize prepares an empty URL value.
+  # @return Self the initialized object.
+  initialize: -> self.reset_parts()
+
+  # Url.format provides the url/Url standard library operation.
+  # @return Any the resulting value.
+  format: ->
+    parts = self.to_parts()
+    out = ""
+    if parts.has("scheme") and parts["scheme"] != ""
+      out = out + parts["scheme"] + ":"
+    has_host = parts.has("host") and parts["host"] != ""
+    has_user = parts.has("user") and parts["user"] != ""
+    if has_host or has_user
+      out = out + "//"
+      if has_user
+        out = out + parts["user"]
+        if parts.has("password") and parts["password"] != ""
+          out = out + ":" + parts["password"]
+        out = out + "@"
+      if has_host
+        if (
+          Self.contains_colon?(parts["host"]) and not parts["host"].starts_with("[")
+        )
+          out = out + "[" + parts["host"] + "]"
+        else
+          out = out + parts["host"]
+      if parts.has("port") and parts["port"] != ""
+        out = out + ":" + parts["port"]
+    if parts.has("path") and parts["path"] != ""
+      out = out + parts["path"]
+    if parts.has("query") and parts["query"] != ""
+      out = out + "?" + parts["query"]
+    if parts.has("fragment") and parts["fragment"] != ""
+      out = out + "#" + parts["fragment"]
+    out
+
+  # Url.has_authority? reports whether the parsed URL had an authority marker.
+  # @return Boolean whether the URL has an authority component.
+  has_authority?: -> self.authority_present
+
+  # Url.has_query? reports whether the parsed URL had a query marker.
+  # @return Boolean whether the URL has a query component.
+  has_query?: -> self.query_present
+
+  # Url.load_parts stores URL parts on the instance.
+  # @param parts Dict parts value.
+  # @return Self the current object.
+  load_parts: parts ->
+    self.reset_parts()
+    if parts.has("scheme")
+      self.scheme = parts["scheme"]
+    if parts.has("user")
+      self.user = parts["user"]
+    if parts.has("password")
+      self.password = parts["password"]
+    if parts.has("host")
+      self.host = parts["host"]
+    if parts.has("port")
+      self.port = parts["port"]
+    if parts.has("path")
+      self.path = parts["path"]
+    if parts.has("query")
+      self.query = parts["query"]
+    if parts.has("fragment")
+      self.fragment = parts["fragment"]
+    if parts.has("has_query")
+      self.query_present = parts["has_query"]
+    if parts.has("has_authority")
+      self.authority_present = parts["has_authority"]
+    self
+
+  # Url.parse provides the url/Url standard library operation.
+  # @param text String text value.
+  # @return Self the parsed URL.
+  parse: text ->
     n = text.byte_len()
     out =
       scheme: ""
@@ -411,7 +547,7 @@ class Url
           if hostport[close_idx + 1] != ":"
             raise error("url.parse: invalid host")
           port_part = hostport.slice(close_idx + 2, hp_n)
-          if not Url(nil).decimal?(port_part)
+          if not Self.decimal?(port_part)
             raise error("url.parse: invalid port")
           out["port"] = port_part
       else
@@ -427,7 +563,7 @@ class Url
         else
           host_part = hostport.slice(0, colon_idx)
           port_part = hostport.slice(colon_idx + 1, hp_n)
-          if not Url(nil).decimal?(port_part)
+          if not Self.decimal?(port_part)
             raise error("url.parse: invalid port")
           out["host"] = host_part
           out["port"] = port_part
@@ -440,7 +576,7 @@ class Url
       path_text = path_text + text[k]
       k = k + 1
     out["path"] = path_text
-    Url(nil).validate_percent(path_text)
+    Self.validate_percent(path_text)
     i = path_end
     if i < n and text[i] == "?"
       out["has_query"] = true
@@ -454,7 +590,7 @@ class Url
         query_text = query_text + text[k]
         k = k + 1
       out["query"] = query_text
-      Url(nil).validate_percent(query_text)
+      Self.validate_percent(query_text)
       i = query_end
     if i < n and text[i] == "#"
       i = i + 1
@@ -463,89 +599,37 @@ class Url
         frag_text = frag_text + text[i]
         i = i + 1
       out["fragment"] = frag_text
-      Url(nil).validate_percent(frag_text)
-    out
+      Self.validate_percent(frag_text)
+    self.load_parts(out)
+    self
 
-  # Url.query_dict provides the url/Url standard library operation.
-  # @param query Any query value.
-  # @return Dict the resulting value.
-  query_dict: query ->
-    pairs = query
-    if query.class == String
-      pairs = Url(nil).decode_query(query)
-    out = {}
-    for pair in pairs
-      k = pair[0]
-      v = pair[1]
-      if out.has(k)
-        old = out[k]
-        if old.class == Array
-          old.push(v)
-        else
-          out[k] = [old, v]
-      else
-        out[k] = v
-    out
+  # Url.reset_parts clears parsed URL parts on the instance.
+  # @return Self the current object.
+  reset_parts: ->
+    self.scheme = ""
+    self.user = ""
+    self.password = ""
+    self.host = ""
+    self.port = ""
+    self.path = ""
+    self.query = ""
+    self.fragment = ""
+    self.query_present = false
+    self.authority_present = false
+    self
 
-  # Url.resolve provides the url/Url standard library operation.
-  # @param base Any base value.
-  # @param ref Any ref value.
-  # @return Any the resulting value.
-  resolve: base, ref ->
-    b = Url(nil).parse(base)
-    r = Url(nil).parse(ref)
-    if r["scheme"] != ""
-      return Url(nil).normalize(Url(nil).format(r))
+  # Url.to_parts returns parsed URL parts from the instance.
+  # @return Dict the URL parts.
+  to_parts: ->
     out =
-      scheme: b["scheme"]
-      user: ""
-      password: ""
-      host: ""
-      port: ""
-      path: ""
-      query: ""
-      fragment: r["fragment"]
-    if r["has_authority"]
-      out["user"] = r["user"]
-      out["password"] = r["password"]
-      out["host"] = r["host"]
-      out["port"] = r["port"]
-      out["path"] = Url(nil).normalize_path(r["path"])
-      out["query"] = r["query"]
-    else
-      out["user"] = b["user"]
-      out["password"] = b["password"]
-      out["host"] = b["host"]
-      out["port"] = b["port"]
-      if r["path"] == ""
-        out["path"] = b["path"]
-        if r["has_query"]
-          out["query"] = r["query"]
-        else
-          out["query"] = b["query"]
-      elseif r["path"].starts_with("/")
-        out["path"] = Url(nil).normalize_path(r["path"])
-        out["query"] = r["query"]
-      else
-        out["path"] = Url(nil).normalize_path(
-          Url(nil).merge_path(b["path"], r["path"])
-        )
-        out["query"] = r["query"]
-    Url(nil).format(out)
-
-  # Url.validate_percent provides the url/Url standard library operation.
-  # @param text String text value.
-  # @return Boolean the resulting value.
-  validate_percent: text ->
-    n = text.byte_len()
-    i = 0
-    while i < n
-      if text[i] == "%"
-        if i + 2 >= n
-          raise error("url.decode: truncated percent-escape")
-        Url(nil).decode_hex(text[i + 1])
-        Url(nil).decode_hex(text[i + 2])
-        i = i + 3
-      else
-        i = i + 1
-    nil
+      scheme: self.scheme
+      user: self.user
+      password: self.password
+      host: self.host
+      port: self.port
+      path: self.path
+      query: self.query
+      fragment: self.fragment
+      has_query: self.has_query?()
+      has_authority: self.has_authority?()
+    out

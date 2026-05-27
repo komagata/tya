@@ -18,19 +18,16 @@ class Writer implements Writable, Flushable, Closable
 
   # Writer.close provides the io/Writer standard library operation.
   # @return Nil the resulting value.
-  close: ->
-    io_stream_close(self.handle)
+  close: -> io_stream_close(self.handle)
 
   # Writer.flush provides the io/Writer standard library operation.
   # @return Nil the resulting value.
-  flush: ->
-    io_stream_flush(self.handle)
+  flush: -> io_stream_flush(self.handle)
 
   # Writer.write provides the io/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write: value ->
-    io_stream_write(self.handle, value)
+  write: value -> io_stream_write(self.handle, value)
 
   # Writer.write_line provides the io/Writer standard library operation.
   # @param value String value value.

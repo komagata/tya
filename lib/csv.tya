@@ -22,16 +22,14 @@ class Csv
   # @param options Dict? CSV parsing and stringifying options.
   # @option options.separator String field separator.
   # @option options.header Boolean whether the first row is a header.
-  initialize: options = nil ->
-    self.apply_options(options)
+  initialize: options = nil -> self.apply_options(options)
 
   # Csv.dump provides the csv/Csv standard library operation.
   # @param options Dict? CSV stringifying options.
   # @option options.separator String field separator.
   # @option options.header Boolean whether to include dictionary headers.
   # @return String serialized CSV text.
-  dump: options = nil ->
-    self.stringify(options)
+  dump: options = nil -> self.stringify(options)
 
   # Csv.parse provides the csv/Csv standard library operation.
   # @param text String? CSV text to parse; nil returns current rows.

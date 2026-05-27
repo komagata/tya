@@ -5,5 +5,4 @@ interface Iterable
   iter: ->
   # sequence provides the iterable API operation.
   # @return Sequence the resulting value.
-  sequence: ->
-    IterableSequence(self)
+  sequence: -> IterableSequence(self)

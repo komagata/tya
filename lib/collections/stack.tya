@@ -21,24 +21,20 @@ class Stack
 
   # Stack.empty? provides the collections/Stack standard library operation.
   # @return Boolean whether the condition is true.
-  empty?: ->
-    self.items.empty?()
+  empty?: -> self.items.empty?()
 
   # Stack.from_array provides the collections/Stack standard library operation.
   # @param values Array values value.
   # @return Array the resulting value.
-  from_array: values ->
-    Stack(values)
+  from_array: values -> Stack(values)
 
   # Stack.len provides the collections/Stack standard library operation.
   # @return Int the resulting value.
-  len: ->
-    self.items.len()
+  len: -> self.items.len()
 
   # Stack.new provides the collections/Stack standard library operation.
   # @return Self the resulting value.
-  new: ->
-    Stack(nil)
+  new: -> Stack(nil)
 
   # Stack.peek provides the collections/Stack standard library operation.
   # @return Any the resulting value.
@@ -63,5 +59,4 @@ class Stack
 
   # Stack.to_array provides the collections/Stack standard library operation.
   # @return Array the resulting value.
-  to_array: ->
-    self.items.slice(0, self.items.len())
+  to_array: -> self.items.slice(0, self.items.len())

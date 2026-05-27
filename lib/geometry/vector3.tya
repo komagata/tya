@@ -175,8 +175,7 @@ class Vector3
   # @param y Int y value.
   # @param z Int z value.
   # @return Self the resulting value.
-  new: x, y, z ->
-    Vector3(x, y, z)
+  new: x, y, z -> Vector3(x, y, z)
 
   # Vector3.normalize provides the geometry/Vector3 standard library operation.
   # @param v Any v value.
@@ -200,8 +199,7 @@ class Vector3
 
   # Vector3.one provides the geometry/Vector3 standard library operation.
   # @return Any the resulting value.
-  one: ->
-    Vector3(1, 1, 1)
+  one: -> Vector3(1, 1, 1)
 
   # Vector3.scale provides the geometry/Vector3 standard library operation.
   # @param v Any v value.
@@ -238,5 +236,4 @@ class Vector3
 
   # Vector3.zero provides the geometry/Vector3 standard library operation.
   # @return Any the resulting value.
-  zero: ->
-    Vector3(0, 0, 0)
+  zero: -> Vector3(0, 0, 0)

@@ -13,5 +13,4 @@ class Comment
   # Comment.new provides the xml/Comment standard library operation.
   # @param text String text value.
   # @return Self the resulting value.
-  new: text ->
-    Comment(text)
+  new: text -> Comment(text)

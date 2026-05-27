@@ -43,8 +43,7 @@ class Image
 
   # Image.bytes provides the image/Image standard library operation.
   # @return Any the resulting value.
-  bytes: ->
-    self.to_bytes()
+  bytes: -> self.to_bytes()
 
   # Image.check_channel provides the image/Image standard library operation.
   # @param value String value value.
@@ -182,8 +181,7 @@ class Image
   # Image.decode_frames provides the image/Image standard library operation.
   # @param data Array data value.
   # @return Any the resulting value.
-  decode_frames: data ->
-    [self.decode(data, { frame: 0 })]
+  decode_frames: data -> [self.decode(data, { frame: 0 })]
 
   # Image.encodable_format? provides the image/Image standard library operation.
   # @param format String format value.
@@ -311,8 +309,7 @@ class Image
   # @param height Int height value.
   # @param fill Any fill value.
   # @return Self the resulting value.
-  new: width, height, fill ->
-    Image(width, height, fill)
+  new: width, height, fill -> Image(width, height, fill)
 
   # Image.pixel provides the image/Image standard library operation.
   # @param x Int x value.
@@ -430,8 +427,8 @@ class Image
     while y < height
       x = 0
       while x < width
-        sx = ((x * self.width) / width.to_f()).to_i()
-        sy = ((y * self.height) / height.to_f()).to_i()
+        sx = (x * self.width / width.to_f()).to_i()
+        sy = (y * self.height / height.to_f()).to_i()
         out.set_pixel(x, y, self.pixel(sx, sy))
         x = x + 1
       y = y + 1
@@ -467,8 +464,7 @@ class Image
 
   # Image.to_bytes provides the image/Image standard library operation.
   # @return Any the resulting value.
-  to_bytes: ->
-    bytes(self.pixels)
+  to_bytes: -> bytes(self.pixels)
 
   # Image.write provides the image/Image standard library operation.
   # @param path String path value.

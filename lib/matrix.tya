@@ -161,8 +161,7 @@ class Matrix
   # Matrix.new provides the matrix/Matrix standard library operation.
   # @param data Array data value.
   # @return Self the resulting value.
-  new: data ->
-    Matrix(data)
+  new: data -> Matrix(data)
 
   # Matrix.put provides the matrix/Matrix standard library operation.
   # @param m Any m value.

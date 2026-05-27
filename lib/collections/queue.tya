@@ -34,19 +34,16 @@ class Queue
 
   # Queue.empty? provides the collections/Queue standard library operation.
   # @return Boolean whether the condition is true.
-  empty?: ->
-    self.len() == 0
+  empty?: -> self.len() == 0
 
   # Queue.from_array provides the collections/Queue standard library operation.
   # @param values Array values value.
   # @return Array the resulting value.
-  from_array: values ->
-    Queue(values)
+  from_array: values -> Queue(values)
 
   # Queue.len provides the collections/Queue standard library operation.
   # @return Int the resulting value.
-  len: ->
-    self.items.len() - self.head
+  len: -> self.items.len() - self.head
 
   # Queue.peek provides the collections/Queue standard library operation.
   # @return Any the resulting value.

@@ -2,54 +2,119 @@ import unittest/*
 import url
 
 class StdlibUrlTest extends TestCase
+  test_decode_query_plus: ->
+    pairs = url.Url.decode_query("q=tya+lang&page=2")
+    self.assert_equal([["q", "tya lang"], ["page", "2"]], pairs, "decode_query")
 
-  test_encode_space: ->
-    self.assert_equal("hello%20world", url.Url("hello world").encode(), "space")
-  test_encode_special: ->
-    self.assert_equal("a%2Fb%3Fc%3Dd", url.Url("a/b?c=d").encode(), "special chars")
-  test_decode_space: ->
-    self.assert_equal("hello world", url.Url("hello%20world").decode(), "decode space")
   test_decode_round_trip: ->
     text = "tya v0.23"
-    self.assert_equal(text, url.Url(nil).decode(url.Url(text).encode()), "round trip")
-  test_decode_query_plus: ->
-    pairs = url.Url("q=tya+lang&page=2").decode_query()
-    self.assert_equal([["q", "tya lang"], ["page", "2"]], pairs, "decode_query")
-  test_parse_full_url: ->
-    p = url.Url("https://user:pw@example.com:8080/path?x=1#frag").parse()
-    self.assert_equal("https", p["scheme"], "scheme")
-    self.assert_equal("user", p["user"], "user")
-    self.assert_equal("pw", p["password"], "password")
-    self.assert_equal("example.com", p["host"], "host")
-    self.assert_equal("8080", p["port"], "port")
-    self.assert_equal("/path", p["path"], "path")
-    self.assert_equal("x=1", p["query"], "query")
-    self.assert_equal("frag", p["fragment"], "fragment")
+    self.assert_equal(text, url.Url.decode(url.Url.encode(text)), "round trip")
+
+  test_decode_space: ->
+    self.assert_equal(
+      "hello world",
+      url.Url.decode("hello%20world"),
+      "decode space"
+    )
+
+  test_encode_space: ->
+    self.assert_equal("hello%20world", url.Url.encode("hello world"), "space")
+
+  test_encode_special: ->
+    self.assert_equal(
+      "a%2Fb%3Fc%3Dd",
+      url.Url.encode("a/b?c=d"),
+      "special chars"
+    )
+
   test_format: ->
     expected = "https://example.com/search?q=tya"
-    parts = { scheme: "https", host: "example.com", path: "/search", query: "q=tya" }
-    self.assert_equal(expected, url.Url(parts).format(), "format")
-  test_ipv6_parse_and_build: ->
-    p = url.Url("http://[2001:db8::1]:8080/a").parse()
-    self.assert_equal("2001:db8::1", p["host"], "ipv6 host")
-    self.assert_equal("8080", p["port"], "ipv6 port")
-    self.assert_equal("http://[2001:db8::1]:8080/a", url.Url(p).format(), "ipv6 format")
-  test_resolve_relative: ->
-    self.assert_equal("https://example.com/a/c?x=1#top", url.Url(nil).resolve("https://example.com/a/b/index.html", "../c?x=1#top"), "resolve")
-  test_query_dict_duplicates: ->
-    q = url.Url("a=1&a=2&b=3").decode_query()
-    d = url.Url(nil).query_dict(q)
-    self.assert_equal(["1", "2"], d["a"], "duplicates")
-    self.assert_equal("3", d["b"], "single")
+    parts =
+      scheme: "https"
+      host: "example.com"
+      path: "/search"
+      query: "q=tya"
+    self.assert_equal(expected, url.Url().load_parts(parts).format(), "format")
+
+  test_format_uses_instance_parts: ->
+    u = url.Url()
+    u.scheme = "https"
+    u.host = "example.com"
+    u.path = "/docs"
+    u.query = "q=tya"
+    self.assert_equal(
+      "https://example.com/docs?q=tya",
+      u.format(),
+      "instance format"
+    )
+
   test_invalid_percent_escape: ->
     try
-      url.Url("https://example.com/%zz").parse()
+      url.Url().parse("https://example.com/%zz")
       self.fail("expected invalid percent escape")
     catch err
-      self.assert_equal("url.decode: invalid percent-escape", err["message"], "invalid escape")
+      self.assert_equal(
+        "url.decode: invalid percent-escape",
+        err["message"],
+        "invalid escape"
+      )
+
   test_invalid_port: ->
     try
-      url.Url("https://example.com:abc/").parse()
+      url.Url().parse("https://example.com:abc/")
       self.fail("expected invalid port")
     catch err
-      self.assert_equal("url.parse: invalid port", err["message"], "invalid port")
+      self.assert_equal(
+        "url.parse: invalid port",
+        err["message"],
+        "invalid port"
+      )
+
+  test_ipv6_parse_and_build: ->
+    p = url.Url().parse("http://[2001:db8::1]:8080/a")
+    self.assert_equal("2001:db8::1", p.host, "ipv6 host")
+    self.assert_equal("8080", p.port, "ipv6 port")
+    self.assert_equal("http://[2001:db8::1]:8080/a", p.format(), "ipv6 format")
+
+  test_parse_full_url: ->
+    u = url.Url().parse("https://user:pw@example.com:8080/path?x=1#frag")
+    self.assert_equal("https", u.scheme, "scheme")
+    self.assert_equal("user", u.user, "user")
+    self.assert_equal("pw", u.password, "password")
+    self.assert_equal("example.com", u.host, "host")
+    self.assert_equal("8080", u.port, "port")
+    self.assert_equal("/path", u.path, "path")
+    self.assert_equal("x=1", u.query, "query")
+    self.assert_equal("frag", u.fragment, "fragment")
+    self.assert_equal("https", u.scheme, "instance scheme")
+    self.assert_equal("user", u.user, "instance user")
+    self.assert_equal("pw", u.password, "instance password")
+    self.assert_equal("example.com", u.host, "instance host")
+    self.assert_equal("8080", u.port, "instance port")
+    self.assert_equal("/path", u.path, "instance path")
+    self.assert_equal("x=1", u.query, "instance query")
+    self.assert_equal("frag", u.fragment, "instance fragment")
+
+  test_parse_presence_predicates: ->
+    with_empty_query = url.Url().parse("https://example.com/path?")
+    self.assert(with_empty_query.has_query?(), "empty query marker")
+    self.assert_equal("", with_empty_query.query, "empty query value")
+    without_query = url.Url().parse("https://example.com/path")
+    self.assert_falsy(without_query.has_query?(), "missing query marker")
+    authority_only = url.Url().parse("file://")
+    self.assert(authority_only.has_authority?(), "authority marker")
+    path_only = url.Url().parse("/tmp/file")
+    self.assert_falsy(path_only.has_authority?(), "missing authority marker")
+
+  test_query_dict_duplicates: ->
+    q = url.Url.decode_query("a=1&a=2&b=3")
+    d = url.Url.query_dict(q)
+    self.assert_equal(["1", "2"], d["a"], "duplicates")
+    self.assert_equal("3", d["b"], "single")
+
+  test_resolve_relative: ->
+    self.assert_equal(
+      "https://example.com/a/c?x=1#top",
+      url.Url.resolve("https://example.com/a/b/index.html", "../c?x=1#top"),
+      "resolve"
+    )

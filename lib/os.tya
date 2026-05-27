@@ -2,92 +2,76 @@
 class Os
   # Os.args returns the current process arguments.
   # @return Any the resulting value.
-  static args: ->
-    args()
+  static args: -> args()
 
   # Os.chdir changes the current working directory.
   # @param path String path value.
   # @return Any the resulting value.
-  static chdir: path ->
-    chdir(path)
+  static chdir: path -> chdir(path)
 
   # Os.cwd returns the current working directory.
   # @return Any the resulting value.
-  static cwd: ->
-    cwd()
+  static cwd: -> cwd()
 
   # Os.env returns the value of an environment variable or nil.
   # @param name String name value.
   # @return Any the resulting value.
-  static env: name ->
-    env(name)
+  static env: name -> env(name)
 
   # Os.environ returns the current process environment as a dictionary.
   # @return Any the resulting value.
-  static environ: ->
-    environ()
+  static environ: -> environ()
 
   # Os.exit terminates the current process with code.
   # @param code Int code value.
   # @return Any the resulting value.
-  static exit: code ->
-    exit(code)
+  static exit: code -> exit(code)
 
   # Os.setenv sets an environment variable for this process and children.
   # @param name String name value.
   # @param value String value value.
   # @return Any the resulting value.
-  static setenv: name, value ->
-    setenv(name, value)
+  static setenv: name, value -> setenv(name, value)
 
   # Os.unsetenv removes an environment variable for this process and children.
   # @param name String name value.
   # @return Any the resulting value.
-  static unsetenv: name ->
-    unsetenv(name)
+  static unsetenv: name -> unsetenv(name)
 
   # Os.args provides the os/Os standard library operation.
   # @return Any the resulting value.
-  args: ->
-    args()
+  args: -> args()
 
   # Os.chdir provides the os/Os standard library operation.
   # @param path String path value.
   # @return Any the resulting value.
-  chdir: path ->
-    chdir(path)
+  chdir: path -> chdir(path)
 
   # Os.cwd provides the os/Os standard library operation.
   # @return Any the resulting value.
-  cwd: ->
-    cwd()
+  cwd: -> cwd()
 
   # Os.env provides the os/Os standard library operation.
   # @param name String name value.
   # @return Any the resulting value.
-  env: name ->
-    env(name)
+  env: name -> env(name)
 
   # Os.environ returns the current process environment as a dictionary.
   # @return Any the resulting value.
-  environ: ->
-    environ()
+  environ: -> environ()
 
   # Os.exit provides the os/Os standard library operation.
   # @param code Int code value.
   # @return Any the resulting value.
-  exit: code ->
-    exit(code)
+  exit: code -> exit(code)
 
   # Os.setenv sets an environment variable for this process and children.
   # @param name String name value.
   # @param value String value value.
   # @return Any the resulting value.
-  setenv: name, value ->
-    setenv(name, value)
+  setenv: name, value -> setenv(name, value)
 
   # Os.unsetenv removes an environment variable for this process and children.
   # @param name String name value.
   # @return Any the resulting value.
-  unsetenv: name ->
-    unsetenv(name)
+  unsetenv: name -> unsetenv(name)

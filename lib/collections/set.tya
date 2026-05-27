@@ -67,14 +67,12 @@ class Set
 
   # Set.empty? provides the collections/Set standard library operation.
   # @return Boolean whether the condition is true.
-  empty?: ->
-    self.items.empty?()
+  empty?: -> self.items.empty?()
 
   # Set.from_array provides the collections/Set standard library operation.
   # @param values Array values value.
   # @return Array the resulting value.
-  from_array: values ->
-    Set(values)
+  from_array: values -> Set(values)
 
   # Set.has? provides the collections/Set standard library operation.
   # @param value String value value.
@@ -102,13 +100,11 @@ class Set
 
   # Set.len provides the collections/Set standard library operation.
   # @return Int the resulting value.
-  len: ->
-    self.items.len()
+  len: -> self.items.len()
 
   # Set.new provides the collections/Set standard library operation.
   # @return Self the resulting value.
-  new: ->
-    Set(nil)
+  new: -> Set(nil)
 
   # Set.subset? provides the collections/Set standard library operation.
   # @param other Any other value.
@@ -124,8 +120,7 @@ class Set
 
   # Set.to_array provides the collections/Set standard library operation.
   # @return Array the resulting value.
-  to_array: ->
-    self.items.slice(0, self.items.len())
+  to_array: -> self.items.slice(0, self.items.len())
 
   # Set.union provides the collections/Set standard library operation.
   # @param other Any other value.

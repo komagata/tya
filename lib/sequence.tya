@@ -6,23 +6,19 @@ interface Sequence extends Iterable
   # map provides the sequence API operation.
   # @param fn Function fn value.
   # @return Sequence the resulting value.
-  map: fn ->
-    MapSequence(self, fn)
+  map: fn -> MapSequence(self, fn)
   # filter provides the sequence API operation.
   # @param fn Function fn value.
   # @return Sequence the resulting value.
-  filter: fn ->
-    FilterSequence(self, fn)
+  filter: fn -> FilterSequence(self, fn)
   # take provides the sequence API operation.
   # @param n Int n value.
   # @return Sequence the resulting value.
-  take: n ->
-    TakeSequence(self, n)
+  take: n -> TakeSequence(self, n)
   # drop provides the sequence API operation.
   # @param n Int n value.
   # @return Sequence the resulting value.
-  drop: n ->
-    DropSequence(self, n)
+  drop: n -> DropSequence(self, n)
   # reduce provides the sequence API operation.
   # @param initial Int initial value.
   # @param fn Function fn value.

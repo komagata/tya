@@ -50,15 +50,13 @@ class Random
 
   # Random.float provides the random/Random standard library operation.
   # @return Any the resulting value.
-  float: ->
-    random_float()
+  float: -> random_float()
 
   # Random.int provides the random/Random standard library operation.
   # @param min Any min value.
   # @param max Any max value.
   # @return Any the resulting value.
-  int: min, max ->
-    random_int(min, max)
+  int: min, max -> random_int(min, max)
 
   # Random.sample provides the random/Random standard library operation.
   # @param items Array items value.
@@ -77,8 +75,7 @@ class Random
   # Random.seed provides the random/Random standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  seed: value ->
-    random_seed(value)
+  seed: value -> random_seed(value)
 
   # Random.shuffle provides the random/Random standard library operation.
   # @param items Array items value.

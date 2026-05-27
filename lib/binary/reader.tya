@@ -23,15 +23,13 @@ class Reader
 
   # Reader.eof? provides the binary/Reader standard library operation.
   # @return Boolean whether the condition is true.
-  eof?: ->
-    self.remaining() == 0
+  eof?: -> self.remaining() == 0
 
   # Reader.new provides the binary/Reader standard library operation.
   # @param data Array data value.
   # @param options Dict options value.
   # @return Self the resulting value.
-  new: data, options ->
-    Reader(data, options)
+  new: data, options -> Reader(data, options)
 
   # Reader.option_endian provides the binary/Reader standard library operation.
   # @param options Dict options value.
@@ -50,8 +48,7 @@ class Reader
 
   # Reader.position provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  position: ->
-    self.offset
+  position: -> self.offset
 
   # Reader.pow2 provides the binary/Reader standard library operation.
   # @param n Int n value.
@@ -88,33 +85,27 @@ class Reader
 
   # Reader.read_f32 provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f32: ->
-    self.read_float(4, self.endian)
+  read_f32: -> self.read_float(4, self.endian)
 
   # Reader.read_f32_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f32_be: ->
-    self.read_float(4, "big")
+  read_f32_be: -> self.read_float(4, "big")
 
   # Reader.read_f32_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f32_le: ->
-    self.read_float(4, "little")
+  read_f32_le: -> self.read_float(4, "little")
 
   # Reader.read_f64 provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f64: ->
-    self.read_float(8, self.endian)
+  read_f64: -> self.read_float(8, self.endian)
 
   # Reader.read_f64_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f64_be: ->
-    self.read_float(8, "big")
+  read_f64_be: -> self.read_float(8, "big")
 
   # Reader.read_f64_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f64_le: ->
-    self.read_float(8, "little")
+  read_f64_le: -> self.read_float(8, "little")
 
   # Reader.read_float provides the binary/Reader standard library operation.
   # @param width Int width value.
@@ -130,33 +121,27 @@ class Reader
 
   # Reader.read_i16 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  read_i16: ->
-    self.signed(self.read_u16(), 16)
+  read_i16: -> self.signed(self.read_u16(), 16)
 
   # Reader.read_i16_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_i16_be: ->
-    self.signed(self.read_u16_be(), 16)
+  read_i16_be: -> self.signed(self.read_u16_be(), 16)
 
   # Reader.read_i16_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_i16_le: ->
-    self.signed(self.read_u16_le(), 16)
+  read_i16_le: -> self.signed(self.read_u16_le(), 16)
 
   # Reader.read_i32 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  read_i32: ->
-    self.signed(self.read_u32(), 32)
+  read_i32: -> self.signed(self.read_u32(), 32)
 
   # Reader.read_i32_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_i32_be: ->
-    self.signed(self.read_u32_be(), 32)
+  read_i32_be: -> self.signed(self.read_u32_be(), 32)
 
   # Reader.read_i32_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_i32_le: ->
-    self.signed(self.read_u32_le(), 32)
+  read_i32_le: -> self.signed(self.read_u32_le(), 32)
 
   # Reader.read_i8 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
@@ -168,33 +153,27 @@ class Reader
 
   # Reader.read_u16 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  read_u16: ->
-    self.read_uint(2, self.endian)
+  read_u16: -> self.read_uint(2, self.endian)
 
   # Reader.read_u16_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_u16_be: ->
-    self.read_uint(2, "big")
+  read_u16_be: -> self.read_uint(2, "big")
 
   # Reader.read_u16_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_u16_le: ->
-    self.read_uint(2, "little")
+  read_u16_le: -> self.read_uint(2, "little")
 
   # Reader.read_u32 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  read_u32: ->
-    self.read_uint(4, self.endian)
+  read_u32: -> self.read_uint(4, self.endian)
 
   # Reader.read_u32_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_u32_be: ->
-    self.read_uint(4, "big")
+  read_u32_be: -> self.read_uint(4, "big")
 
   # Reader.read_u32_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_u32_le: ->
-    self.read_uint(4, "little")
+  read_u32_le: -> self.read_uint(4, "little")
 
   # Reader.read_u8 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
@@ -224,8 +203,7 @@ class Reader
 
   # Reader.remaining provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  remaining: ->
-    self.data.len() - self.offset
+  remaining: -> self.data.len() - self.offset
 
   # Reader.require provides the binary/Reader standard library operation.
   # @param count Int count value.

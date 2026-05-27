@@ -131,8 +131,7 @@ class Circle
   # @param y Int y value.
   # @param radius Any radius value.
   # @return Self the resulting value.
-  new: x, y, radius ->
-    Circle(x, y, radius)
+  new: x, y, radius -> Circle(x, y, radius)
 
   # Circle.number provides the geometry/Circle standard library operation.
   # @param value String value value.

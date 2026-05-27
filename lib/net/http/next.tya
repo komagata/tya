@@ -37,5 +37,4 @@ class Next
   # @param index Int index value.
   # @param handler Any handler value.
   # @return Self the resulting value.
-  new: middlewares, index, handler ->
-    Next(middlewares, index, handler)
+  new: middlewares, index, handler -> Next(middlewares, index, handler)

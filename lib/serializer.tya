@@ -144,8 +144,7 @@ class Serializer
   # @param value String value value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  serialize: value = nil, options = nil ->
-    self.to_data(value, options)
+  serialize: value = nil, options = nil -> self.to_data(value, options)
 
   # Serializer.to_data provides the serialization/Serializer standard library operation.
   # @param value String value value.

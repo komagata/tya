@@ -28,15 +28,12 @@ class Io
 
   # Io.stderr provides the io/Io standard library operation.
   # @return Any the resulting value.
-  stderr: ->
-    Writer(io_stderr(), false)
+  stderr: -> Writer(io_stderr(), false)
 
   # Io.stdin provides the io/Io standard library operation.
   # @return Any the resulting value.
-  stdin: ->
-    Reader(io_stdin(), false)
+  stdin: -> Reader(io_stdin(), false)
 
   # Io.stdout provides the io/Io standard library operation.
   # @return Any the resulting value.
-  stdout: ->
-    Writer(io_stdout(), false)
+  stdout: -> Writer(io_stdout(), false)

@@ -278,9 +278,8 @@ func TestCLIFormatAndCheckCollapsesImportBlankLines(t *testing.T) {
 		t.Fatal(readErr)
 	}
 	want := strings.Join([]string{
-		"import",
-		"  os",
-		"  cli",
+		"import os",
+		"import cli",
 		"",
 		"class Cli",
 		"  initialize: ->",

@@ -24,8 +24,7 @@ class Ast
   # Ast.kind provides the compiler/ast/Ast standard library operation.
   # @param node Any node value.
   # @return Any the resulting value.
-  kind: node ->
-    compiler_ast_kind(node)
+  kind: node -> compiler_ast_kind(node)
 
   # Ast.push_child provides the compiler/ast/Ast standard library operation.
   # @param out Any out value.
@@ -54,8 +53,7 @@ class Ast
   # Ast.span provides the compiler/ast/Ast standard library operation.
   # @param node Any node value.
   # @return Any the resulting value.
-  span: node ->
-    compiler_ast_span(node)
+  span: node -> compiler_ast_span(node)
 
   # Ast.walk provides the compiler/ast/Ast standard library operation.
   # @param node Any node value.

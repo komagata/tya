@@ -18,8 +18,7 @@ class Reader implements Readable, Closable
 
   # Reader.close provides the io/Reader standard library operation.
   # @return Nil the resulting value.
-  close: ->
-    io_stream_close(self.handle)
+  close: -> io_stream_close(self.handle)
 
   # Reader.each_line provides the io/Reader standard library operation.
   # @param fn Function fn value.
@@ -33,16 +32,13 @@ class Reader implements Readable, Closable
 
   # Reader.eof? provides the io/Reader standard library operation.
   # @return Boolean whether the condition is true.
-  eof?: ->
-    io_stream_eof(self.handle)
+  eof?: -> io_stream_eof(self.handle)
 
   # Reader.read provides the io/Reader standard library operation.
   # @param size Int size value.
   # @return Any the resulting value.
-  read: size ->
-    io_stream_read(self.handle, size)
+  read: size -> io_stream_read(self.handle, size)
 
   # Reader.read_line provides the io/Reader standard library operation.
   # @return String the resulting value.
-  read_line: ->
-    io_stream_read_line(self.handle)
+  read_line: -> io_stream_read_line(self.handle)

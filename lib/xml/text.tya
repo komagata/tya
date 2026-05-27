@@ -13,5 +13,4 @@ class Text
   # Text.new provides the xml/Text standard library operation.
   # @param text String text value.
   # @return Self the resulting value.
-  new: text ->
-    Text(text)
+  new: text -> Text(text)
