@@ -12,6 +12,6 @@ class DropSequence implements Sequence
   # @param source String source value.
   # @param n Int n value.
   # @return Self the initialized object.
-  initialize: source, n ->
-    self.source = source
-    self.n = n
+  initialize: sequence_source, n_arg ->
+    self.source = sequence_source
+    self.n = n_arg

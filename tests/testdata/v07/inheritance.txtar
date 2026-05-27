@@ -51,21 +51,21 @@ class User
   role: "user"
   static count: 0
 
-  initialize: name ->
-    self.name = name
+  initialize: user_name ->
+    self.name = user_name
     Self.count = Self.count + 1
 
   greeting: ->
     "Hello, {self.name}"
 
-  rename: name ->
-    self.name = name
+  rename: user_name ->
+    self.name = user_name
 
 class Admin extends User
   role: "admin"
 
-  initialize: name ->
-    super(name)
+  initialize: admin_name ->
+    super(admin_name)
 
   greeting: ->
     "{super()} ({self.role})"
@@ -84,8 +84,8 @@ print(Admin.count)
 class User
   name: ""
 
-  initialize: name ->
-    self.name = name
+  initialize: user_name ->
+    self.name = user_name
 
   greeting: ->
     "Hello, {self.name}"
@@ -105,8 +105,8 @@ print(admin.greeting())
 class User
   name: ""
 
-  initialize: name ->
-    self.name = name
+  initialize: user_name ->
+    self.name = user_name
 
   greeting: ->
     "Hello, {self.name}"
@@ -161,17 +161,21 @@ class Admin extends User
 
 -- missing_super.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
 class Admin extends User
-  initialize: name ->
-    self.name = name
+  initialize: admin_name ->
+    self.name = admin_name
 
 -- bad_override_arity.tya --
 class User
-  rename: name ->
-    self.name = name
+  name: ""
+
+  rename: user_name ->
+    self.name = user_name
 
 class Admin extends User
   rename: first_name, last_name ->

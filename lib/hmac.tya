@@ -16,29 +16,29 @@ class Hmac
   # @param algorithm Any algorithm value.
   # @param key String key value.
   # @return Self the initialized object.
-  initialize: algorithm, key ->
-    self.algorithm = algorithm
-    self.key = key
+  initialize: hmac_algorithm, hmac_key ->
+    self.algorithm = hmac_algorithm
+    self.key = hmac_key
 
   # Hmac.base64digest returns the HMAC digest as Base64.
   # @param algorithm Any algorithm value.
   # @param key String key value.
   # @param message String message value.
   # @return Any the resulting value.
-  base64digest: algorithm, key = nil, message = nil ->
+  base64digest: hmac_algorithm, hmac_key = nil, message = nil ->
     if self.algorithm != nil
-      message = algorithm
-      algorithm = self.algorithm
-      key = self.key
-    base64.Base64.encode(Hmac(algorithm, key).digest(message))
+      message = hmac_algorithm
+      hmac_algorithm = self.algorithm
+      hmac_key = self.key
+    base64.Base64.encode(Hmac(hmac_algorithm, hmac_key).digest(message))
 
   # Hmac.block_size returns the digest block size for algorithm.
   # @param algorithm Any algorithm value.
   # @return Any the resulting value.
-  block_size: algorithm ->
-    if algorithm == "sha256"
+  block_size: hmac_algorithm ->
+    if hmac_algorithm == "sha256"
       return 64
-    if algorithm == "sha384" or algorithm == "sha512"
+    if hmac_algorithm == "sha384" or hmac_algorithm == "sha512"
       return 128
     raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
 
@@ -63,22 +63,22 @@ class Hmac
   # @param key String key value.
   # @param message String message value.
   # @return Any the resulting value.
-  digest: algorithm, key = nil, message = nil ->
+  digest: hmac_algorithm, hmac_key = nil, message = nil ->
     if self.algorithm != nil
-      message = algorithm
-      algorithm = self.algorithm
-      key = self.key
-    hex.Hex(nil).decode(Hmac(algorithm, key).hexdigest(message))
+      message = hmac_algorithm
+      hmac_algorithm = self.algorithm
+      hmac_key = self.key
+    hex.Hex(nil).decode(Hmac(hmac_algorithm, hmac_key).hexdigest(message))
 
   # Hmac.digest_size returns the digest byte size for algorithm.
   # @param algorithm Any algorithm value.
   # @return Any the resulting value.
-  digest_size: algorithm ->
-    if algorithm == "sha256"
+  digest_size: hmac_algorithm ->
+    if hmac_algorithm == "sha256"
       return 32
-    if algorithm == "sha384"
+    if hmac_algorithm == "sha384"
       return 48
-    if algorithm == "sha512"
+    if hmac_algorithm == "sha512"
       return 64
     raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
 
@@ -87,8 +87,8 @@ class Hmac
   # @param expected Any expected value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  expected_bytes: algorithm, expected, options ->
-    algorithm
+  expected_bytes: hmac_algorithm, expected, options ->
+    hmac_algorithm
     encoding = nil
     if options != nil
       if options.class != Dict
@@ -113,13 +113,13 @@ class Hmac
   # @param algorithm Any algorithm value.
   # @param value String value value.
   # @return Any the resulting value.
-  hash_hex: algorithm, value ->
-    if algorithm == "sha256"
-      return digest.Digest.sha256(value)
-    if algorithm == "sha384"
-      return digest.Digest.sha384(value)
-    if algorithm == "sha512"
-      return digest.Digest.sha512(value)
+  hash_hex: hmac_algorithm, input ->
+    if hmac_algorithm == "sha256"
+      return digest.Digest.sha256(input)
+    if hmac_algorithm == "sha384"
+      return digest.Digest.sha384(input)
+    if hmac_algorithm == "sha512"
+      return digest.Digest.sha512(input)
     raise error("hmac.algorithm: unsupported algorithm", { kind: "crypto", code: "unsupported_algorithm" })
 
   # Hmac.hexdigest returns the HMAC digest as lowercase hex.
@@ -127,33 +127,33 @@ class Hmac
   # @param key String key value.
   # @param message String message value.
   # @return Any the resulting value.
-  hexdigest: algorithm, key = nil, message = nil ->
+  hexdigest: hmac_algorithm, hmac_key = nil, message = nil ->
     if self.algorithm != nil
-      message = algorithm
-      algorithm = self.algorithm
-      key = self.key
-    size = self.block_size(algorithm)
-    key_bytes = self.input_bytes("key", key)
+      message = hmac_algorithm
+      hmac_algorithm = self.algorithm
+      hmac_key = self.key
+    size = block_size(hmac_algorithm)
+    key_bytes = input_bytes("key", hmac_key)
     if bytes_array(key_bytes).len() > size
-      key_bytes = hex.Hex(nil).decode(self.hash_hex(algorithm, key_bytes))
-    key_block = self.pad(key_bytes, size)
-    inner = self.xor(key_block, 54)
-    outer = self.xor(key_block, 92)
-    msg = self.input_bytes("message", message)
+      key_bytes = hex.Hex(nil).decode(hash_hex(hmac_algorithm, key_bytes))
+    key_block = pad(key_bytes, size)
+    inner = xor(key_block, 54)
+    outer = xor(key_block, 92)
+    msg = input_bytes("message", message)
     inner_hash = hex.Hex(nil).decode(
-      self.hash_hex(algorithm, bytes_concat(inner, msg))
+      hash_hex(hmac_algorithm, bytes_concat(inner, msg))
     )
-    self.hash_hex(algorithm, bytes_concat(outer, inner_hash))
+    hash_hex(hmac_algorithm, bytes_concat(outer, inner_hash))
 
   # Hmac.input_bytes normalizes string or bytes input.
   # @param name String name value.
   # @param value String value value.
   # @return Any the resulting value.
-  input_bytes: name, value ->
-    if value.class == String
-      return bytes_of(value)
-    if value.class.name == "Bytes"
-      return value
+  input_bytes: name, input ->
+    if input.class == String
+      return bytes_of(input)
+    if input.class.name == "Bytes"
+      return input
     raise error("hmac." + name + ": value must be a string or bytes", { kind: "crypto", code: "invalid_input" })
 
   # Hmac.pad right-pads data with zeros to size.
@@ -173,21 +173,21 @@ class Hmac
   # @param expected Any expected value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  verify: algorithm, key = nil, message = nil, expected = nil, options = {} ->
+  verify: hmac_algorithm, hmac_key = nil, message = nil, expected = nil, options = {} ->
     if self.algorithm != nil
       if message != nil
         options = message
       else
         options = expected
-      expected = key
-      message = algorithm
-      algorithm = self.algorithm
-      key = self.key
+      expected = hmac_key
+      message = hmac_algorithm
+      hmac_algorithm = self.algorithm
+      hmac_key = self.key
     if options == nil
       options = {}
-    actual = Hmac(algorithm, key).digest(message)
-    wanted = self.expected_bytes(algorithm, expected, options)
-    self.constant_time_equal(actual, wanted)
+    actual = Hmac(hmac_algorithm, hmac_key).digest(message)
+    wanted = expected_bytes(hmac_algorithm, expected, options)
+    constant_time_equal(actual, wanted)
 
   # Hmac.xor applies a byte-wise xor mask.
   # @param data Array data value.

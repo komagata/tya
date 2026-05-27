@@ -29,14 +29,18 @@ print(response.status())
 
 -- net/http/request.tya --
 class Request
-  initialize: url ->
-    self.url = url
+  url: nil
+
+  initialize: value ->
+    self.url = value
 
   url: ->
     self.url
 
 -- net/http/response.tya --
 class Response
+  status: nil
+
   initialize: ->
     self.status = 200
 
@@ -51,6 +55,8 @@ print(x)
 
 -- bad_pkg/helper.tya --
 class Helper
+  x: nil
+
   initialize: ->
     self.x = 1
 
@@ -59,6 +65,8 @@ print("this is a script file inside a package; should be rejected")
 
 -- hello.tya --
 class Hello
+  x: nil
+
   initialize: ->
     self.x = 1
 
@@ -68,8 +76,10 @@ print(g.greet())
 
 -- two_files/greeter.tya --
 class Greeter
-  initialize: name ->
-    self.name = name
+  name: nil
+
+  initialize: value ->
+    self.name = value
 
   greet: ->
     "Hello, {self.name}"

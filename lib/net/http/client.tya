@@ -7,8 +7,8 @@ class Client
   # Client.initialize stores a target URL.
   # @param target Any target value.
   # @return Self the initialized object.
-  initialize: target ->
-    self.target = target
+  initialize: target_arg ->
+    self.target = target_arg
 
   # Client.chomp provides the net/http/Client standard library operation.
   # @param text String text value.
@@ -24,10 +24,10 @@ class Client
   # Client.get provides the net/http/Client standard library operation.
   # @param target Any target value.
   # @return Any the resulting value.
-  get: target = nil ->
-    if target == nil
-      target = self.target
-    Client(target).request("GET", {})
+  get: target_arg = nil ->
+    if target_arg == nil
+      target_arg = self.target
+    Client(target_arg).request("GET", {})
 
   # Client.hex_to_i provides the net/http/Client standard library operation.
   # @param text String text value.
@@ -78,15 +78,15 @@ class Client
   # Client.parse_url provides the net/http/Client standard library operation.
   # @param target Any target value.
   # @return String the resulting value.
-  parse_url: target ->
+  parse_url: target_arg ->
     prefix = "http://"
     scheme = "http"
-    if target.starts_with("https://")
+    if target_arg.starts_with("https://")
       prefix = "https://"
       scheme = "https"
-    elseif not target.starts_with(prefix)
+    elseif not target_arg.starts_with(prefix)
       raise error("http.request: only http:// and https:// URLs are supported")
-    rest = target.slice(prefix.len(), target.len())
+    rest = target_arg.slice(prefix.len(), target_arg.len())
     slash = Client(nil).index_of(rest, "/", 0)
     query = Client(nil).index_of(rest, "?", 0)
     end_auth = rest.byte_len()
@@ -115,14 +115,14 @@ class Client
     { scheme: scheme, host: host, port: port, path: path, query: query_text, has_query: has_query }
 
   # Client.post provides the net/http/Client standard library operation.
-  # @param target Any target value.
+  # @param target_arg Any target_arg value.
   # @param body String body value.
   # @return Any the resulting value.
-  post: target, body = nil ->
+  post: target_arg, body = nil ->
     if self.target != nil
-      body = target
-      target = self.target
-    Client(target).request("POST", { body: body })
+      body = target_arg
+      target_arg = self.target
+    Client(target_arg).request("POST", { body: body })
 
   # Client.read_chunked provides the net/http/Client standard library operation.
   # @param s Any s value.
@@ -190,13 +190,13 @@ class Client
   # @param target Any target value.
   # @param opts Any opts value.
   # @return Any the resulting value.
-  request: method, target = nil, opts = nil ->
+  request: method, target_arg = nil, opts = nil ->
     if self.target != nil
-      opts = target
-      target = self.target
+      opts = target_arg
+      target_arg = self.target
     if opts == nil
       opts = {}
-    u = Client(nil).parse_url(target)
+    u = Client(nil).parse_url(target_arg)
     if u["scheme"] != "http" and u["scheme"] != "https"
       raise error("http.request: only http:// and https:// URLs are supported")
     host = u["host"]

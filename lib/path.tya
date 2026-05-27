@@ -37,16 +37,16 @@ class Path
   # Path.initialize stores a filesystem path.
   # @param value String value value.
   # @return Self the initialized object.
-  initialize: value = nil ->
-    self.value = value
+  initialize: path_value = nil ->
+    self.value = path_value
 
   # Path.basename provides the path/Path standard library operation.
   # @param value String value value.
   # @return String the resulting value.
-  basename: value = nil ->
-    if value == nil
-      value = self.value
-    parts = value.split("/")
+  basename: path_value = nil ->
+    if path_value == nil
+      path_value = self.value
+    parts = path_value.split("/")
     i = parts.len() - 1
     while i >= 0
       if parts[i] != ""
@@ -57,13 +57,13 @@ class Path
   # Path.clean provides the path/Path standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  clean: value = nil ->
-    if value == nil
-      value = self.value
-    if value == ""
+  clean: path_value = nil ->
+    if path_value == nil
+      path_value = self.value
+    if path_value == ""
       return "."
-    is_abs = value.starts_with("/")
-    parts = value.split("/")
+    is_abs = path_value.starts_with("/")
+    parts = path_value.split("/")
     result = []
     for part in parts
       if part != "" and part != "."
@@ -85,15 +85,15 @@ class Path
   # Path.dirname provides the path/Path standard library operation.
   # @param value String value value.
   # @return String the resulting value.
-  dirname: value = nil ->
-    if value == nil
-      value = self.value
-    parts = value.split("/")
+  dirname: path_value = nil ->
+    if path_value == nil
+      path_value = self.value
+    parts = path_value.split("/")
     last = parts.len() - 1
     while last >= 0 and parts[last] == ""
       last = last - 1
     if last <= 0
-      if value.starts_with("/")
+      if path_value.starts_with("/")
         return "/"
       return "."
     head = []
@@ -109,18 +109,18 @@ class Path
   # Path.expand_user provides the path/Path standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  expand_user: value = nil ->
-    if value == nil
-      value = self.value
-    path_expand_user(value)
+  expand_user: path_value = nil ->
+    if path_value == nil
+      path_value = self.value
+    path_expand_user(path_value)
 
   # Path.extname provides the path/Path standard library operation.
   # @param value String value value.
   # @return String the resulting value.
-  extname: value = nil ->
-    if value == nil
-      value = self.value
-    bparts = value.split("/")
+  extname: path_value = nil ->
+    if path_value == nil
+      path_value = self.value
+    bparts = path_value.split("/")
     bi = bparts.len() - 1
     base = ""
     while bi >= 0 and base == ""

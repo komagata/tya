@@ -75,28 +75,28 @@ class File
   # File.initialize stores a file path.
   # @param path String path value.
   # @return Self the initialized object.
-  initialize: path = nil ->
-    self.path = path
+  initialize: file_path = nil ->
+    self.path = file_path
 
   # File.append provides the file/File standard library operation.
   # @param path String path value.
   # @param text String text value.
   # @return Any the resulting value.
-  append: path, text = nil ->
+  append: file_path, text = nil ->
     if text == nil
-      text = path
-      path = self.path
-    file_append(path, text)
+      text = file_path
+      file_path = self.path
+    file_append(file_path, text)
 
   # chmod changes POSIX-like permissions where supported.
   # @param path String path value.
   # @param mode Any mode value.
   # @return Any the resulting value.
-  chmod: path, mode = nil ->
+  chmod: file_path, mode = nil ->
     if mode == nil
-      mode = path
-      path = self.path
-    file_chmod(path, mode)
+      mode = file_path
+      file_path = self.path
+    file_chmod(file_path, mode)
 
   # copy copies file contents as bytes.
   # @param src String src value.
@@ -116,36 +116,36 @@ class File
   # exists? returns true when path exists.
   # @param path String path value.
   # @return Boolean whether the condition is true.
-  exists?: path = nil ->
-    if path == nil
-      path = self.path
-    file_exists(path)
+  exists?: file_path = nil ->
+    if file_path == nil
+      file_path = self.path
+    file_exists(file_path)
 
   # read returns the UTF-8 text contents of path.
   # Raises when the file cannot be opened or read.
   # @param path String path value.
   # @return Any the resulting value.
-  read: path = nil ->
-    if path == nil
-      path = self.path
-    read_file(path)
+  read: file_path = nil ->
+    if file_path == nil
+      file_path = self.path
+    read_file(file_path)
 
   # read_bytes returns the raw bytes stored at path.
   # Raises when the file cannot be opened or read.
   # @param path String path value.
   # @return Any the resulting value.
-  read_bytes: path = nil ->
-    if path == nil
-      path = self.path
-    file_read_bytes(path)
+  read_bytes: file_path = nil ->
+    if file_path == nil
+      file_path = self.path
+    file_read_bytes(file_path)
 
   # File.remove provides the file/File standard library operation.
   # @param path String path value.
   # @return Any the resulting value.
-  remove: path = nil ->
-    if path == nil
-      path = self.path
-    file_remove(path)
+  remove: file_path = nil ->
+    if file_path == nil
+      file_path = self.path
+    file_remove(file_path)
 
   # File.rename provides the file/File standard library operation.
   # @param old_path String old path value.
@@ -161,10 +161,10 @@ class File
   # Raises when the path cannot be inspected.
   # @param path String path value.
   # @return Any the resulting value.
-  stat: path = nil ->
-    if path == nil
-      path = self.path
-    file_stat(path)
+  stat: file_path = nil ->
+    if file_path == nil
+      file_path = self.path
+    file_stat(file_path)
 
   # temp creates an empty temporary file and returns its path.
   # @param prefix Any prefix value.
@@ -177,19 +177,19 @@ class File
   # @param path String path value.
   # @param text String text value.
   # @return Any the resulting value.
-  write: path, text = nil ->
+  write: file_path, text = nil ->
     if text == nil
-      text = path
-      path = self.path
-    write_file(path, text)
+      text = file_path
+      file_path = self.path
+    write_file(file_path, text)
 
   # write_bytes replaces path with raw bytes.
   # Raises when the file cannot be written.
   # @param path String path value.
   # @param b Int b value.
   # @return Any the resulting value.
-  write_bytes: path, b = nil ->
+  write_bytes: file_path, b = nil ->
     if b == nil
-      b = path
-      path = self.path
-    file_write_bytes(path, b)
+      b = file_path
+      file_path = self.path
+    file_write_bytes(file_path, b)

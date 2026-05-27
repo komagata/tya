@@ -11,7 +11,7 @@ cp bad.tya src/bad.tya
 exec $WORK/tya doc src/csv.tya
 stdout '## instance variable Csv.rows'
 stdout 'type: Array<Dict>'
-stdout 'param options: Dict\? - optional CSV options.'
+stdout 'param options_arg: Dict\? - optional CSV options.'
 stdout 'option options.separator: String - field separator.'
 stdout 'return: Csv - receiver.'
 ! stderr .
@@ -26,13 +26,13 @@ grep '<h2>Instance Variables</h2>' out/items/class_Csv.html
 grep '<h3><code>rows</code></h3>' out/items/class_Csv.html
 grep '<dt>Type</dt><dd><code>Array&lt;Dict&gt;</code></dd>' out/items/class_Csv.html
 grep '<h3><code>initialize</code></h3>' out/items/class_Csv.html
-grep '<dt>Param <code>options</code></dt><dd><code>Dict\?</code> optional CSV options.</dd>' out/items/class_Csv.html
+grep '<dt>Param <code>options_arg</code></dt><dd><code>Dict\?</code> optional CSV options.</dd>' out/items/class_Csv.html
 
 exec $WORK/tya doc --json src/csv.tya
 stdout '"kind": "instance variable"'
 stdout '"kind": "class constant"'
 stdout '"type": "Array\\u003cDict\\u003e"'
-stdout '"name": "options"'
+stdout '"name": "options_arg"'
 stdout '"key": "separator"'
 stdout '"return": \{'
 
@@ -58,10 +58,10 @@ class Csv
   options: { separator: "," }
 
   # Initialize docs.
-  # @param options Dict? optional CSV options.
+  # @param options_arg Dict? optional CSV options.
   # @option options.separator String field separator.
   # @return Csv receiver.
-  initialize: options = nil ->
+  initialize: options_arg = nil ->
     self.rows = []
 
   # Hidden docs.

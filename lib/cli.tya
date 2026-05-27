@@ -7,12 +7,12 @@ class Cli
   # Cli.initialize stores command-line args or a command name.
   # @param value String value value.
   # @return Self the initialized object.
-  initialize: value ->
-    self.value = value
+  initialize: value_arg ->
+    self.value = value_arg
 
   # Cli.apply_defaults provides the cli/Cli standard library operation.
-  # @param state Any state value.
-  # @return Any the resulting value.
+  # @param state Any state value_arg.
+  # @return Any the resulting value_arg.
   apply_defaults: state ->
     options = Cli(nil).spec_options(state["spec"])
     names = options.keys()
@@ -33,25 +33,25 @@ class Cli
   # @param opt Any opt value.
   # @param value String value value.
   # @return Any the resulting value.
-  assign_value: state, name, opt, value ->
+  assign_value: state, name, opt, value_arg ->
     typ = Cli(nil).option_type(opt)
     if typ == "string"
-      state["options"][name] = value
+      state["options"][name] = value_arg
     elseif typ == "int"
       try
-        state["options"][name] = value.to_i()
+        state["options"][name] = value_arg.to_i()
       catch _
         Cli(nil).error(state, "invalid_value", name, "--{name} expects int")
     else
       if typ == "float"
         try
-          state["options"][name] = value.to_f()
+          state["options"][name] = value_arg.to_f()
         catch _
           Cli(nil).error(state, "invalid_value", name, "--{name} expects float")
       elseif typ == "array"
         if not state["options"].has(name)
           state["options"][name] = []
-        state["options"][name].push(value)
+        state["options"][name].push(value_arg)
       else
         Cli(nil).error(
           state,
@@ -61,8 +61,8 @@ class Cli
         )
 
   # Cli.check_required provides the cli/Cli standard library operation.
-  # @param state Any state value.
-  # @return Any the resulting value.
+  # @param state Any state value_arg.
+  # @return Any the resulting value_arg.
   check_required: state ->
     options = Cli(nil).spec_options(state["spec"])
     names = options.keys().sort()
@@ -163,28 +163,28 @@ class Cli
   # @param name String name value.
   # @param value String value value.
   # @return Any the resulting value.
-  parse_bool_value: state, name, value ->
-    if value == "true" or value == "1" or value == "yes"
+  parse_bool_value: state, name, value_arg ->
+    if value_arg == "true" or value_arg == "1" or value_arg == "yes"
       return true
-    if value == "false" or value == "0" or value == "no"
+    if value_arg == "false" or value_arg == "0" or value_arg == "no"
       return false
     Cli(nil).error(state, "invalid_value", name, "--{name} expects bool")
     false
 
   # Cli.parse_long provides the cli/Cli standard library operation.
-  # @param state Any state value.
-  # @param i Int i value.
-  # @return Any the resulting value.
+  # @param state Any state value_arg.
+  # @param i Int i value_arg.
+  # @return Any the resulting value_arg.
   parse_long: state, i ->
     arg = state["args"][i]
     raw = arg.slice(2, arg.len())
     eq = Cli(nil).index_of(raw, "=")
     name = raw
-    value = nil
+    parsed_value = nil
     has_value = false
     if eq >= 0
       name = raw.slice(0, eq)
-      value = raw.slice(eq + 1, raw.len())
+      parsed_value = raw.slice(eq + 1, raw.len())
       has_value = true
     negated = false
     if name.starts_with("no-")
@@ -200,7 +200,7 @@ class Cli
       if negated
         state["options"][name] = false
       elseif has_value
-        state["options"][name] = Cli(nil).parse_bool_value(state, name, value)
+        state["options"][name] = Cli(nil).parse_bool_value(state, name, parsed_value)
       else
         state["options"][name] = true
       return i
@@ -222,8 +222,8 @@ class Cli
         )
         return i
       i = i + 1
-      value = state["args"][i]
-    Cli(nil).assign_value(state, name, opt, value)
+      parsed_value = state["args"][i]
+    Cli(nil).assign_value(state, name, opt, parsed_value)
     i
 
   # Cli.parse_or_exit provides the cli/Cli standard library operation.
@@ -265,15 +265,15 @@ class Cli
           j = j + 1
         else
           if j + 1 < raw.byte_len()
-            value = raw.slice(j + 1, raw.len())
-            Cli(nil).assign_value(state, name, opt, value)
+            value_local = raw.slice(j + 1, raw.len())
+            Cli(nil).assign_value(state, name, opt, value_local)
             return i
           if i + 1 >= state["args"].len()
             Cli(nil).error(
               state,
               "missing_value",
               name,
-              "-{alias} requires a value"
+              "-{alias} requires a value_local"
             )
             return i
           i = i + 1
@@ -282,10 +282,10 @@ class Cli
     i
 
   # Cli.spec_bool provides the cli/Cli standard library operation.
-  # @param spec Any spec value.
-  # @param name String name value.
-  # @param fallback Any fallback value.
-  # @return Any the resulting value.
+  # @param spec Any spec value_local.
+  # @param name String name value_local.
+  # @param fallback Any fallback value_local.
+  # @return Any the resulting value_local.
   spec_bool: spec, name, fallback ->
     if spec.has(name)
       return spec[name]

@@ -12,9 +12,9 @@ class Vector2
   # @param x Int x value.
   # @param y Int y value.
   # @return Self the initialized object.
-  initialize: x = 0, y = 0 ->
-    self.x = self.number(x, "x")
-    self.y = self.number(y, "y")
+  initialize: vector_x = 0, vector_y = 0 ->
+    self.x = number(vector_x, "x")
+    self.y = number(vector_y, "y")
 
   # Vector2.abs provides the geometry/Vector2 standard library operation.
   # @param value String value value.
@@ -32,8 +32,8 @@ class Vector2
     if b == nil
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     Vector2(a.x + b.x, a.y + b.y)
 
   # Vector2.clamp provides the geometry/Vector2 standard library operation.
@@ -42,12 +42,12 @@ class Vector2
   # @param max_v Any max v value.
   # @return Any the resulting value.
   clamp: v, min_v, max_v ->
-    self.expect(v, "v")
-    self.expect(min_v, "min_v")
-    self.expect(max_v, "max_v")
+    expect(v, "v")
+    expect(min_v, "min_v")
+    expect(max_v, "max_v")
     Vector2(
-      self.clamp_number(v.x, min_v.x, max_v.x),
-      self.clamp_number(v.y, min_v.y, max_v.y)
+      clamp_number(v.x, min_v.x, max_v.x),
+      clamp_number(v.y, min_v.y, max_v.y)
     )
 
   # Vector2.clamp_number provides the geometry/Vector2 standard library operation.
@@ -70,7 +70,7 @@ class Vector2
     if b == nil
       b = a
       a = self
-    math_sqrt(self.distance_squared(a, b))
+    math_sqrt(distance_squared(a, b))
 
   # Vector2.distance_squared provides the geometry/Vector2 standard library operation.
   # @param a Int a value.
@@ -80,7 +80,7 @@ class Vector2
     if b == nil
       b = a
       a = self
-    self.length_squared(self.sub(a, b))
+    length_squared(sub(a, b))
 
   # Vector2.div provides the geometry/Vector2 standard library operation.
   # @param v Any v value.
@@ -90,8 +90,8 @@ class Vector2
     if k == nil
       k = v
       v = self
-    self.expect(v, "v")
-    self.number(k, "k")
+    expect(v, "v")
+    number(k, "k")
     if k == 0
       raise error("geometry.Vector2.div: divide by zero")
     Vector2(v.x / k, v.y / k)
@@ -104,8 +104,8 @@ class Vector2
     if b == nil
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     a.x * b.x + a.y * b.y
 
   # Vector2.equal? provides the geometry/Vector2 standard library operation.
@@ -140,7 +140,7 @@ class Vector2
   length: v = nil ->
     if v == nil
       v = self
-    math_sqrt(self.length_squared(v))
+    math_sqrt(length_squared(v))
 
   # Vector2.length_squared provides the geometry/Vector2 standard library operation.
   # @param v Any v value.
@@ -148,8 +148,8 @@ class Vector2
   length_squared: v = nil ->
     if v == nil
       v = self
-    self.expect(v, "v")
-    self.dot(v, v)
+    expect(v, "v")
+    dot(v, v)
 
   # Vector2.lerp provides the geometry/Vector2 standard library operation.
   # @param a Int a value.
@@ -157,9 +157,9 @@ class Vector2
   # @param t Any t value.
   # @return Any the resulting value.
   lerp: a, b, t ->
-    self.expect(a, "a")
-    self.expect(b, "b")
-    self.number(t, "t")
+    expect(a, "a")
+    expect(b, "b")
+    number(t, "t")
     Vector2(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
 
   # Vector2.nearly_equal? provides the geometry/Vector2 standard library operation.
@@ -172,17 +172,17 @@ class Vector2
       epsilon = b
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     if epsilon < 0
       raise error("geometry.Vector2.nearly_equal?: epsilon must be non-negative")
-    self.abs(a.x - b.x) <= epsilon and self.abs(a.y - b.y) <= epsilon
+    abs(a.x - b.x) <= epsilon and abs(a.y - b.y) <= epsilon
 
   # Vector2.new provides the geometry/Vector2 standard library operation.
   # @param x Int x value.
   # @param y Int y value.
   # @return Self the resulting value.
-  new: x, y -> Vector2(x, y)
+  new: x_arg, y_arg -> Vector2(x_arg, y_arg)
 
   # Vector2.normalize provides the geometry/Vector2 standard library operation.
   # @param v Any v value.
@@ -190,10 +190,10 @@ class Vector2
   normalize: v = nil ->
     if v == nil
       v = self
-    geometry_len = self.length(v)
+    geometry_len = length(v)
     if geometry_len == 0
-      return self.zero()
-    self.div(v, geometry_len)
+      return zero()
+    div(v, geometry_len)
 
   # Vector2.number provides the geometry/Vector2 standard library operation.
   # @param value String value value.
@@ -216,8 +216,8 @@ class Vector2
     if k == nil
       k = v
       v = self
-    self.expect(v, "v")
-    self.number(k, "k")
+    expect(v, "v")
+    number(k, "k")
     Vector2(v.x * k, v.y * k)
 
   # Vector2.sub provides the geometry/Vector2 standard library operation.
@@ -228,8 +228,8 @@ class Vector2
     if b == nil
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     Vector2(a.x - b.x, a.y - b.y)
 
   # Vector2.to_array provides the geometry/Vector2 standard library operation.
@@ -238,7 +238,7 @@ class Vector2
   to_array: v = nil ->
     if v == nil
       v = self
-    self.expect(v, "v")
+    expect(v, "v")
     [v.x, v.y]
 
   # Vector2.zero provides the geometry/Vector2 standard library operation.

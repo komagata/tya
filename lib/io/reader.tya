@@ -12,9 +12,9 @@ class Reader implements Readable, Closable
   # @param handle Any handle value.
   # @param binary Boolean binary value.
   # @return Self the initialized object.
-  initialize: handle, binary ->
-    self.handle = handle
-    self.binary = binary
+  initialize: stream_handle, binary_mode ->
+    self.handle = stream_handle
+    self.binary = binary_mode
 
   # Reader.close provides the io/Reader standard library operation.
   # @return Nil the resulting value.

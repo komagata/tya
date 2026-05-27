@@ -22,38 +22,38 @@ class Csv
   # @param options Dict? CSV parsing and stringifying options.
   # @option options.separator String field separator.
   # @option options.header Boolean whether the first row is a header.
-  initialize: options = nil -> self.apply_options(options)
+  initialize: options_arg = nil -> apply_options(options_arg)
 
   # Csv.dump provides the csv/Csv standard library operation.
-  # @param options Dict? CSV stringifying options.
-  # @option options.separator String field separator.
-  # @option options.header Boolean whether to include dictionary headers.
+  # @param options_arg Dict? CSV stringifying options_arg.
+  # @option options_arg.separator String field separator.
+  # @option options_arg.header Boolean whether to include dictionary headers.
   # @return String serialized CSV text.
-  dump: options = nil -> self.stringify(options)
+  dump: options_arg = nil -> stringify(options_arg)
 
   # Csv.parse provides the csv/Csv standard library operation.
   # @param text String? CSV text to parse; nil returns current rows.
-  # @param options Dict? CSV parsing options.
-  # @option options.separator String field separator.
-  # @option options.header Boolean whether the first row is a header.
+  # @param options_arg Dict? CSV parsing options_arg.
+  # @option options_arg.separator String field separator.
+  # @option options_arg.header Boolean whether the first row is a header.
   # @return Array parsed rows.
-  parse: text = nil, options = nil ->
+  parse: text = nil, options_arg = nil ->
     if text == nil
       return self.rows
-    self.apply_options(options)
-    rows = self.parse_rows(text)
+    apply_options(options_arg)
+    rows_local = parse_rows(text)
     if not self.options["header"]
-      self.rows = rows
-      return rows
-    if rows.len() == 0
+      self.rows = rows_local
+      return rows_local
+    if rows_local.len() == 0
       self.rows = []
       return []
-    header = rows[0]
+    header = rows_local[0]
     self.headers = header
     out = []
     i = 1
-    while i < rows.len()
-      r = rows[i]
+    while i < rows_local.len()
+      r = rows_local[i]
       d = {}
       j = 0
       while j < header.len()
@@ -68,16 +68,16 @@ class Csv
     out
 
   # Csv.stringify provides the csv/Csv standard library operation.
-  # @param options Dict? CSV stringifying options.
-  # @option options.separator String field separator.
-  # @option options.header Boolean whether to include dictionary headers.
+  # @param options_arg Dict? CSV stringifying options_arg.
+  # @option options_arg.separator String field separator.
+  # @option options_arg.header Boolean whether to include dictionary headers.
   # @return String serialized CSV text.
-  stringify: options = nil ->
-    self.apply_options(options)
+  stringify: options_arg = nil ->
+    apply_options(options_arg)
     if self.rows.len() == 0
       return ""
     if self.rows[0].class == Array
-      return self.dump_array_rows()
+      return dump_array_rows()
     if self.rows[0].class == Dict
       header = self.headers
       if header.len() == 0
@@ -89,7 +89,7 @@ class Csv
         while j < header.len()
           if j > 0
             out = out + self.options["separator"]
-          out = out + self.escape_field(header[j])
+          out = out + escape_field(header[j])
           j = j + 1
         out = out + "\n"
       i = 0
@@ -105,17 +105,17 @@ class Csv
             if raw.class != String
               raise error("csv.dump: row values must be strings")
             v = raw
-          out = out + self.escape_field(v)
+          out = out + escape_field(v)
           j = j + 1
         out = out + "\n"
         i = i + 1
       return out
     raise error("csv.dump: rows must be array of arrays or array of dicts")
 
-  private apply_options: options ->
-    if options == nil
+  private apply_options: options_arg ->
+    if options_arg == nil
       return nil
-    self.options.update(options)
+    self.options.update(options_arg)
 
   private dump_array_rows: ->
     out = ""
@@ -128,7 +128,7 @@ class Csv
           out = out + self.options["separator"]
         if r[j].class != String
           raise error("csv.dump: row values must be strings")
-        out = out + self.escape_field(r[j])
+        out = out + escape_field(r[j])
         j = j + 1
       out = out + "\n"
       i = i + 1
@@ -144,7 +144,7 @@ class Csv
     "\"" + field.replace("\"", "\"\"") + "\""
 
   private parse_rows: text ->
-    rows = []
+    rows_local = []
     n = text.byte_len()
     i = 0
     cr = chr(13)
@@ -192,5 +192,5 @@ class Csv
         raise error("csv.parse: unterminated quoted field")
       if not ended
         row.push(field)
-      rows.push(row)
-    rows
+      rows_local.push(row)
+    rows_local

@@ -1,7 +1,7 @@
 import unittest/*
+import validation
 import validation/number_validator
 import validation/string_validator
-import validation/*
 
 class StdlibValidationTest extends TestCase
   assert_error_message: body, message, desc ->
@@ -56,6 +56,11 @@ class StdlibValidationTest extends TestCase
     value = NumberValidator(12, "r", "color.channel").integer().between(0, 255).validate!(
     )
     self.assert_equal(12, value, "integer range")
+
+  test_validation_number_facade: ->
+    value = validation.Validation.number(12, "r", "color.channel").integer().between(0, 255).validate!(
+    )
+    self.assert_equal(12, value, "facade integer range")
 
   test_string_validator_errors: ->
     self.assert_error_message(

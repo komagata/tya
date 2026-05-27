@@ -16,20 +16,20 @@ class Reader
   # @param data Array data value.
   # @param options Dict options value.
   # @return Self the initialized object.
-  initialize: data, options ->
-    self.data = data
+  initialize: input_data, options ->
+    self.data = input_data
     self.offset = 0
-    self.endian = self.option_endian(options)
+    self.endian = option_endian(options)
 
   # Reader.eof? provides the binary/Reader standard library operation.
   # @return Boolean whether the condition is true.
-  eof?: -> self.remaining() == 0
+  eof?: -> remaining() == 0
 
   # Reader.new provides the binary/Reader standard library operation.
   # @param data Array data value.
   # @param options Dict options value.
   # @return Self the resulting value.
-  new: data, options -> Reader(data, options)
+  new: data_arg, options -> Reader(data_arg, options)
 
   # Reader.option_endian provides the binary/Reader standard library operation.
   # @param options Dict options value.
@@ -41,10 +41,10 @@ class Reader
       raise error("binary.Reader: options must be a dict")
     if not options.has("endian")
       return "big"
-    endian = options["endian"]
-    if endian != "big" and endian != "little"
+    selected_endian = options["endian"]
+    if selected_endian != "big" and selected_endian != "little"
       raise error("binary.Reader: invalid endian")
-    endian
+    selected_endian
 
   # Reader.position provides the binary/Reader standard library operation.
   # @return Int the resulting value.
@@ -78,107 +78,107 @@ class Reader
   read_bytes: count ->
     if count == nil or count.class != Number or count < 0
       raise error("binary.Reader.read_bytes: invalid count")
-    self.require(count)
+    require(count)
     start = self.offset
     self.offset = self.offset + count
     bytes_slice(self.data, start, self.offset)
 
   # Reader.read_f32 provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f32: -> self.read_float(4, self.endian)
+  read_f32: -> read_float(4, self.endian)
 
   # Reader.read_f32_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f32_be: -> self.read_float(4, "big")
+  read_f32_be: -> read_float(4, "big")
 
   # Reader.read_f32_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f32_le: -> self.read_float(4, "little")
+  read_f32_le: -> read_float(4, "little")
 
   # Reader.read_f64 provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f64: -> self.read_float(8, self.endian)
+  read_f64: -> read_float(8, self.endian)
 
   # Reader.read_f64_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f64_be: -> self.read_float(8, "big")
+  read_f64_be: -> read_float(8, "big")
 
   # Reader.read_f64_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_f64_le: -> self.read_float(8, "little")
+  read_f64_le: -> read_float(8, "little")
 
   # Reader.read_float provides the binary/Reader standard library operation.
   # @param width Int width value.
   # @param endian Any endian value.
   # @return Any the resulting value.
-  read_float: width, endian ->
-    self.require(width)
+  read_float: width, endian_arg ->
+    require(width)
     start = self.offset
     self.offset = self.offset + width
     if width == 4
-      return binary_read_f32(self.data, start, endian)
-    binary_read_f64(self.data, start, endian)
+      return binary_read_f32(self.data, start, endian_arg)
+    binary_read_f64(self.data, start, endian_arg)
 
   # Reader.read_i16 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  read_i16: -> self.signed(self.read_u16(), 16)
+  read_i16: -> signed(read_u16(), 16)
 
   # Reader.read_i16_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_i16_be: -> self.signed(self.read_u16_be(), 16)
+  read_i16_be: -> signed(read_u16_be(), 16)
 
   # Reader.read_i16_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_i16_le: -> self.signed(self.read_u16_le(), 16)
+  read_i16_le: -> signed(read_u16_le(), 16)
 
   # Reader.read_i32 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  read_i32: -> self.signed(self.read_u32(), 32)
+  read_i32: -> signed(read_u32(), 32)
 
   # Reader.read_i32_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_i32_be: -> self.signed(self.read_u32_be(), 32)
+  read_i32_be: -> signed(read_u32_be(), 32)
 
   # Reader.read_i32_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_i32_le: -> self.signed(self.read_u32_le(), 32)
+  read_i32_le: -> signed(read_u32_le(), 32)
 
   # Reader.read_i8 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
   read_i8: ->
-    value = self.read_u8()
+    value = read_u8()
     if value >= 128
       return value - 256
     value
 
   # Reader.read_u16 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  read_u16: -> self.read_uint(2, self.endian)
+  read_u16: -> read_uint(2, self.endian)
 
   # Reader.read_u16_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_u16_be: -> self.read_uint(2, "big")
+  read_u16_be: -> read_uint(2, "big")
 
   # Reader.read_u16_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_u16_le: -> self.read_uint(2, "little")
+  read_u16_le: -> read_uint(2, "little")
 
   # Reader.read_u32 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
-  read_u32: -> self.read_uint(4, self.endian)
+  read_u32: -> read_uint(4, self.endian)
 
   # Reader.read_u32_be provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_u32_be: -> self.read_uint(4, "big")
+  read_u32_be: -> read_uint(4, "big")
 
   # Reader.read_u32_le provides the binary/Reader standard library operation.
   # @return Any the resulting value.
-  read_u32_le: -> self.read_uint(4, "little")
+  read_u32_le: -> read_uint(4, "little")
 
   # Reader.read_u8 provides the binary/Reader standard library operation.
   # @return Int the resulting value.
   read_u8: ->
-    self.require(1)
+    require(1)
     value = self.data[self.offset]
     self.offset = self.offset + 1
     value
@@ -187,16 +187,16 @@ class Reader
   # @param width Int width value.
   # @param endian Any endian value.
   # @return Any the resulting value.
-  read_uint: width, endian ->
-    self.require(width)
+  read_uint: width, endian_arg ->
+    require(width)
     value = 0
     i = 0
     while i < width
       b = self.data[self.offset + i]
-      if endian == "big"
+      if endian_arg == "big"
         value = value * 256 + b
       else
-        value = value + b * self.pow256(i)
+        value = value + b * pow256(i)
       i = i + 1
     self.offset = self.offset + width
     value
@@ -215,12 +215,12 @@ class Reader
   # Reader.seek provides the binary/Reader standard library operation.
   # @param offset Int offset value.
   # @return Any the resulting value.
-  seek: offset ->
+  seek: offset_arg ->
     if (
-      offset == nil or offset.class != Number or offset < 0 or offset > self.data.len()
+      offset_arg == nil or offset_arg.class != Number or offset_arg < 0 or offset_arg > self.data.len()
     )
-      raise error("binary.Reader.seek: invalid offset")
-    self.offset = offset
+      raise error("binary.Reader.seek: invalid offset_arg")
+    self.offset = offset_arg
     self
 
   # Reader.signed provides the binary/Reader standard library operation.
@@ -228,8 +228,8 @@ class Reader
   # @param bits Any bits value.
   # @return Any the resulting value.
   signed: value, bits ->
-    limit = self.pow2(bits - 1)
-    mod = self.pow2(bits)
+    limit = pow2(bits - 1)
+    mod = pow2(bits)
     if value >= limit
       return value - mod
     value
@@ -240,4 +240,4 @@ class Reader
   skip: count ->
     if count == nil or count.class != Number or count < 0
       raise error("binary.Reader.skip: invalid count")
-    self.seek(self.offset + count)
+    seek(self.offset + count)

@@ -202,8 +202,10 @@ user_name = "Ada"
 MAX_RETRIES = 3
 
 class UserProfile
-  initialize = name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 ```
 
 Leading `_` does not make a binding private. For class members, use `private`.
@@ -354,10 +356,12 @@ Classes are runtime values. `initialize` is the constructor hook.
 
 ```tya
 class User
-  initialize = name ->
-    self.name = name
+  name: ""
 
-  label = ->
+  initialize: user_name ->
+    self.name = user_name
+
+  label: ->
     "user:{self.name}"
 
 user = User("Ada")
@@ -368,9 +372,9 @@ Use `private` for private class members.
 
 ```tya
 class Counter
-  private count = 0
+  private count: 0
 
-  increment = ->
+  increment: ->
     self.count = self.count + 1
     self.count
 ```

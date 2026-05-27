@@ -19,9 +19,9 @@ class TestSuite
   # TestSuite.add_all provides the unittest/TestSuite standard library operation.
   # @param tests Any tests value.
   # @return Any the resulting value.
-  add_all: tests ->
-    for test in tests
-      self.add(test)
+  add_all: test_items ->
+    for test in test_items
+      add(test)
     self
 
   # TestSuite.count provides the unittest/TestSuite standard library operation.
@@ -37,7 +37,7 @@ class TestSuite
       if is_suite
         total = total + test.count()
       else
-        total = total + self.test_methods_for(test).len()
+        total = total + test_methods_for(test).len()
     total
 
   # TestSuite.discover provides the unittest/TestSuite standard library operation.
@@ -49,7 +49,7 @@ class TestSuite
       names = c.keys()
       for name in names
         value = c[name]
-        methods = self.test_methods_for(value)
+        methods = test_methods_for(value)
         if methods.len() > 0
           found.add(value)
     found

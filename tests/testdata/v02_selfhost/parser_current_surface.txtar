@@ -126,6 +126,8 @@ interface Timestamped extends Named
     self.created_at = Time.now()
 
 class Account implements Named, Timestamped
+  name_value: nil
+
   initialize: name ->
     self.name_value = name
 
@@ -226,6 +228,8 @@ interface Named
   name: ->
 
 class Account implements Named
+  name_value: nil
+
   initialize: name ->
     self.name_value = name
 

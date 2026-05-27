@@ -20,7 +20,7 @@ class TestRunner
   # @param err Any err value.
   # @return Any the resulting value.
   print_error: label, err ->
-    msg = self.error_message(err)
+    msg = error_message(err)
     println("  ERROR {label}")
     println("        {msg}")
 
@@ -29,7 +29,7 @@ class TestRunner
   # @param err Any err value.
   # @return Any the resulting value.
   print_fail: label, err ->
-    msg = self.error_message(err)
+    msg = error_message(err)
     println("  FAIL  {label}")
     println("        {msg}")
 
@@ -53,15 +53,15 @@ class TestRunner
   # @return Any the resulting value.
   run: suite ->
     result = { tests: 0, passes: 0, failures: 0, errors: 0 }
-    self.run_suite(suite, result)
-    self.print_summary(result)
+    run_suite(suite, result)
+    print_summary(result)
     result
 
   # TestRunner.run_and_exit provides the unittest/TestRunner standard library operation.
   # @param suite Any suite value.
   # @return Any the resulting value.
   run_and_exit: suite ->
-    result = self.run(suite)
+    result = run(suite)
     if result["failures"] > 0 or result["errors"] > 0
       exit(1)
     result
@@ -84,7 +84,7 @@ class TestRunner
         instance = klass()
       catch _
         instance = test
-      self.run_method(instance, method, result)
+      run_method(instance, method, result)
 
   # TestRunner.run_method provides the unittest/TestRunner standard library operation.
   # @param instance Any instance value.
@@ -103,7 +103,7 @@ class TestRunner
       catch err
         setup_ok = false
         errored = true
-        self.print_error(label, err)
+        print_error(label, err)
     if setup_ok
       try
         instance[method]()
@@ -115,16 +115,16 @@ class TestRunner
           kind = ""
         if kind == "unittest_fail"
           failed = true
-          self.print_fail(label, err)
+          print_fail(label, err)
         else
           errored = true
-          self.print_error(label, err)
+          print_error(label, err)
       if instance.class.unittest_has_teardown
         try
           instance["teardown"]()
         catch err
           errored = true
-          self.print_error(label, err)
+          print_error(label, err)
     if failed
       result["failures"] = result["failures"] + 1
     elseif errored
@@ -145,6 +145,6 @@ class TestRunner
       catch _
         is_suite = false
       if is_suite
-        self.run_suite(test, result)
+        run_suite(test, result)
       else
-        self.run_case(test, result)
+        run_case(test, result)

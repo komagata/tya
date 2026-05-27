@@ -586,6 +586,7 @@ type scope struct {
 	inInstanceMethod bool
 	inClassMethod    bool
 	inClassBody      bool
+	interfaceFields  map[string]bool
 	currentMethod    string
 	currentClass     string
 }
@@ -605,6 +606,7 @@ type classInfo struct {
 	abstractClassMethods  map[string]int
 	interfaceMethods      map[string]int
 	interfaceInitializers bool
+	fields                map[string]bool
 	privateFields         map[string]bool
 	privateMethods        map[string]bool
 	classConstants        map[string]bool
@@ -654,6 +656,7 @@ func newScope(parent *scope) *scope {
 		s.inInstanceMethod = parent.inInstanceMethod
 		s.inClassMethod = parent.inClassMethod
 		s.inClassBody = parent.inClassBody
+		s.interfaceFields = parent.interfaceFields
 		s.currentMethod = parent.currentMethod
 		s.currentClass = parent.currentClass
 	} else {
@@ -762,6 +765,9 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 						return err
 					}
 					continue
+				}
+				if scope.inInstanceMethod && scope.currentClass != "" && effectiveInstanceField(name.Name, scope.currentClass, scope) {
+					return fmt.Errorf("%d:%d: binding %s conflicts with instance field %s", name.Tok.Line, name.Tok.Col, name.Name, name.Name)
 				}
 				if isPredicateName(name.Name) || isBangName(name.Name) {
 					if len(n.Targets) != 1 || len(n.Values) != 1 {
@@ -1211,6 +1217,7 @@ func newClassInfo(key string, class *ast.ClassDecl) classInfo {
 		abstractMethods:      map[string]int{},
 		abstractClassMethods: map[string]int{},
 		interfaceMethods:     map[string]int{},
+		fields:               map[string]bool{},
 		privateFields:        map[string]bool{},
 		privateMethods:       map[string]bool{},
 		classConstants:       map[string]bool{},
@@ -1222,6 +1229,7 @@ func newClassInfo(key string, class *ast.ClassDecl) classInfo {
 
 func collectPrivateClassMembers(info *classInfo, class *ast.ClassDecl) {
 	for _, field := range class.Fields {
+		info.fields[field.Name] = true
 		if field.Private {
 			info.privateFields[field.Name] = true
 		}
@@ -1410,6 +1418,9 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 			if err := checkBindingName(param, line, col); err != nil {
 				return err
 			}
+			if scope.inInstanceMethod && scope.currentClass != "" && effectiveInstanceField(param, scope.currentClass, scope) {
+				return fmt.Errorf("%d:%d: parameter %s conflicts with instance field %s", line, col, param, param)
+			}
 			if seen[param] && param != "_" {
 				if line > 0 {
 					return fmt.Errorf("%d:%d: duplicate function parameter %s", line, col, param)
@@ -1559,7 +1570,7 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 		return checkExpr(n.Index, scope)
 	case *ast.CallExpr:
 		if super, ok := n.Callee.(*ast.SuperExpr); ok {
-			if scope.inInstanceMethod && scope.currentClass == "" {
+			if scope.inInstanceMethod && (scope.currentClass == "" || scope.interfaces[scope.currentClass].name != "") {
 				for _, arg := range n.Args {
 					if err := checkExpr(arg, scope); err != nil {
 						return err
@@ -1633,8 +1644,27 @@ func checkExpr(expr ast.Expr, scope *scope) error {
 				return err
 			}
 		}
-		if err := checkExpr(n.Callee, scope); err != nil {
-			return err
+		if id, ok := n.Callee.(*ast.Ident); ok && !scope.defined(id.Name) && scope.currentClass != "" {
+			if scope.inInstanceMethod {
+				if arity, found := effectiveMethodArity(scope.currentClass, id.Name, scope); found {
+					if len(n.Args) != arity {
+						return fmt.Errorf("%d:%d: method %s expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
+					}
+					n.ImplicitSelf = true
+				}
+			} else if scope.inClassMethod {
+				if arity, found := effectiveClassMethodArity(scope.currentClass, id.Name, scope); found {
+					if len(n.Args) != arity {
+						return fmt.Errorf("%d:%d: class method %s expects %d arguments", id.Tok.Line, id.Tok.Col, id.Name, arity)
+					}
+					n.ImplicitClass = true
+				}
+			}
+		}
+		if !n.ImplicitSelf && !n.ImplicitClass {
+			if err := checkExpr(n.Callee, scope); err != nil {
+				return err
+			}
 		}
 		if id, ok := n.Callee.(*ast.Ident); ok && scope.kind(id.Name) == kindClass {
 			if err := checkClassCall(id.Name, id.Name, id.Tok.Line, id.Tok.Col, len(n.Args), scope); err != nil {
@@ -1764,7 +1794,9 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			return fmt.Errorf("%d:%d: inheritance cycle involving %s", class.NameTok.Line, class.NameTok.Col, class.Name)
 		}
 	}
+	registerInterfaceContributions(class, scope, key, module)
 	instanceMembers := map[string]bool{}
+	instanceMethods := map[string]bool{}
 	classMembers := map[string]bool{}
 	hasPublicInit := false
 	hasPrivateInit := false
@@ -1843,7 +1875,7 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			}
 			classMembers[method.Name] = true
 		} else {
-			if instanceMembers[method.Name] {
+			if instanceMethods[method.Name] {
 				return fmt.Errorf("%d:%d: duplicate instance member %s", method.Tok.Line, method.Tok.Col, method.Name)
 			}
 			// v0.46 G1+G5: a constructor is `init` (legacy public),
@@ -1864,7 +1896,7 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			if hasPublicInit && hasPrivateInit {
 				return fmt.Errorf("%d:%d: class cannot declare both init and _init", method.Tok.Line, method.Tok.Col)
 			}
-			instanceMembers[method.Name] = true
+			instanceMethods[method.Name] = true
 		}
 		child := newScope(scope)
 		child.inClassBody = true
@@ -1877,6 +1909,15 @@ func checkClass(class *ast.ClassDecl, scope *scope, module string) error {
 			child.inClassMethod = true
 		} else {
 			child.inInstanceMethod = true
+			for i, param := range method.Func.Params {
+				line, col := method.Tok.Line, method.Tok.Col
+				if i < len(method.Func.ParamToks) {
+					line, col = method.Func.ParamToks[i].Line, method.Func.ParamToks[i].Col
+				}
+				if effectiveInstanceField(param, key, scope) {
+					return fmt.Errorf("%d:%d: parameter %s conflicts with instance field %s", line, col, param, param)
+				}
+			}
 		}
 		if err := checkExpr(method.Func, child); err != nil {
 			return err
@@ -1941,6 +1982,10 @@ func checkInterface(iface *ast.InterfaceDecl, scope *scope, module string) error
 	}
 	key := refKey(&ast.ClassRef{Name: iface.Name, Tok: iface.NameTok}, module, scope)
 	seen := map[string]bool{}
+	interfaceFields := map[string]bool{}
+	for _, field := range iface.Fields {
+		interfaceFields[field.Name] = true
+	}
 	for _, method := range iface.Methods {
 		if !validCallableName(method.Name) || isPrivateName(method.Name) {
 			return fmt.Errorf("%d:%d: invalid interface method %s", method.Tok.Line, method.Tok.Col, method.Name)
@@ -1958,6 +2003,8 @@ func checkInterface(iface *ast.InterfaceDecl, scope *scope, module string) error
 			}
 			child := newScope(scope)
 			child.inInstanceMethod = true
+			child.currentClass = key
+			child.interfaceFields = interfaceFields
 			if err := checkExpr(method.Func, child); err != nil {
 				return err
 			}
@@ -2469,6 +2516,31 @@ func inheritedClassMethodArity(className string, method string, scope *scope) (i
 	return 0, false
 }
 
+func effectiveClassMethodArity(className string, method string, scope *scope) (int, bool) {
+	info, ok := scope.classes[className]
+	if !ok {
+		return 0, false
+	}
+	if arity, ok := info.classMethods[method]; ok {
+		return arity, true
+	}
+	return inheritedClassMethodArity(info.parent, method, scope)
+}
+
+func effectiveInstanceField(name string, className string, scope *scope) bool {
+	for className != "" {
+		info, ok := scope.classes[className]
+		if !ok {
+			return false
+		}
+		if info.fields[name] {
+			return true
+		}
+		className = info.parent
+	}
+	return false
+}
+
 func inheritedAbstractMethodArity(className string, method string, scope *scope) (int, bool) {
 	for className != "" {
 		info, ok := scope.classes[className]
@@ -2666,6 +2738,9 @@ func checkInterfaceImplementations(class *ast.ClassDecl, scope *scope, key strin
 	}
 	info := scope.classes[key]
 	info.interfaceMethods = reqs
+	for name := range interfaceFields {
+		info.fields[name] = true
+	}
 	scope.classes[key] = info
 	if len(reqs) == 0 {
 		return nil
@@ -2689,6 +2764,30 @@ func checkInterfaceImplementations(class *ast.ClassDecl, scope *scope, key strin
 		}
 	}
 	return nil
+}
+
+func registerInterfaceContributions(class *ast.ClassDecl, scope *scope, key string, module string) {
+	info := scope.classes[key]
+	if parent := info.parent; parent != "" {
+		for name := range scope.classes[parent].fields {
+			info.fields[name] = true
+		}
+	}
+	for _, ref := range class.Implements {
+		ifaceKey := refKey(&ref, module, scope)
+		if scope.kind(ifaceKey) != kindInterface {
+			continue
+		}
+		for name, arity := range effectiveInterfaceDefaults(ifaceKey, scope, nil) {
+			if _, ok := info.methods[name]; !ok {
+				info.methods[name] = arity
+			}
+		}
+		for name := range effectiveInterfaceFields(ifaceKey, scope, nil) {
+			info.fields[name] = true
+		}
+	}
+	scope.classes[key] = info
 }
 
 func classDeclaresField(class *ast.ClassDecl, name string) bool {
@@ -2875,6 +2974,15 @@ func displayName(key string) string {
 }
 
 func effectiveMethodArity(className string, method string, scope *scope) (int, bool) {
+	if info, ok := scope.interfaces[className]; ok {
+		if arity, ok := info.methods[method]; ok {
+			return arity, true
+		}
+		if arity, ok := info.defaults[method]; ok {
+			return arity, true
+		}
+		return 0, false
+	}
 	for className != "" {
 		info, ok := scope.classes[className]
 		if !ok {
@@ -3111,6 +3219,27 @@ func checkAssignmentTarget(target ast.Expr, values []ast.Expr, constants map[str
 	case *ast.MemberExpr:
 		if n.Name == "class" || n.Name == "class_name" || ((n.Name == "name" || n.Name == "parent") && kindOf(n.Target, scope) == kindClass) {
 			return fmt.Errorf("%d:%d: cannot assign to read-only introspection member %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+		}
+		if self, ok := n.Target.(*ast.SelfExpr); ok && !self.Class {
+			if !scope.inInstanceMethod {
+				return fmt.Errorf("%d:%d: self is only valid inside a class method or instance method", n.NameTok.Line, n.NameTok.Col)
+			}
+			if scope.currentClass == "" {
+				if scope.interfaceFields != nil && scope.interfaceFields[n.Name] {
+					return nil
+				}
+				return fmt.Errorf("%d:%d: undeclared instance field %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+			}
+			if scope.interfaceFields != nil && scope.interfaceFields[n.Name] {
+				return nil
+			}
+			if !effectiveInstanceField(n.Name, scope.currentClass, scope) {
+				return fmt.Errorf("%d:%d: undeclared instance field %s", n.NameTok.Line, n.NameTok.Col, n.Name)
+			}
+			if err := checkPrivateInstanceAccess(n.Name, n.NameTok.Line, n.NameTok.Col, scope, true); err != nil {
+				return err
+			}
+			return nil
 		}
 		if classConstantName(n, scope) != "" {
 			return fmt.Errorf("%d:%d: cannot reassign constant %s", n.NameTok.Line, n.NameTok.Col, n.Name)

@@ -20,8 +20,10 @@ interface Equatable
   equal?: other ->
 
 class User implements Equatable
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
   equal?: other ->
     self.name == other.name
@@ -34,8 +36,10 @@ interface Equatable
   equal?: other ->
 
 class User implements Equatable
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
 -- non_bool_equal.tya --
 class User

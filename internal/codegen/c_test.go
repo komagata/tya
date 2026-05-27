@@ -26,9 +26,17 @@ func TestEmitCCompilesSimpleProgram(t *testing.T) {
 }
 
 func TestEmitCFieldAssignmentDoesNotOverwriteSameNamedMethod(t *testing.T) {
-	src := "class Response\n  initialize: ->\n    self.status = 200\n    self.bump()\n\n  bump: ->\n    self.status = self.status + 1\n\n  status: ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
+	src := "class Response\n  status: 0\n\n  initialize: ->\n    self.status = 200\n    bump()\n\n  bump: ->\n    self.status = self.status + 1\n\n  status: ->\n    self.status\n\nresponse = Response()\nprint(response.status())\nresponse.bump()\nprint(response.status())\n"
 	out := compileAndRun(t, src)
 	if string(out) != "201\n202\n" {
+		t.Fatalf("got %q", out)
+	}
+}
+
+func TestEmitCImplicitSelfAndSelfMethodCalls(t *testing.T) {
+	src := "class Greeter\n  name_value: nil\n\n  initialize: value ->\n    self.name_value = value\n\n  name: ->\n    self.name_value\n\n  prefix: ->\n    \"hi:\"\n\n  label: ->\n    prefix() + name()\n\n  static class_prefix: ->\n    \"hi:\"\n\n  static static_label: ->\n    class_prefix()\n\ng = Greeter(\"tya\")\nprint(g.label())\nprint(Greeter.static_label())\n"
+	out := compileAndRun(t, src)
+	if string(out) != "hi:tya\nhi:\n" {
 		t.Fatalf("got %q", out)
 	}
 }

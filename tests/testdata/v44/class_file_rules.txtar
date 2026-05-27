@@ -33,6 +33,8 @@ print(WrongName())
 
 -- wrong_pkg/wrong_name.tya --
 class DifferentName
+  x: nil
+
   initialize: ->
     self.x = 1
 
@@ -54,6 +56,8 @@ print(Stray())
 
 -- stray_pkg/stray.tya --
 class Stray
+  x: nil
+
   initialize: ->
     self.x = 1
 
@@ -67,16 +71,20 @@ print(s.run("hello"))
 
 -- ok_pkg/server.tya --
 class Connection
-  initialize: msg ->
-    self.msg = msg
+  msg: nil
+
+  initialize: value ->
+    self.msg = value
 
   body: ->
     self.msg
 
 class Server
+  prefix: nil
+
   initialize: ->
     self.prefix = "wrapped"
 
-  run: msg ->
-    conn = Connection(msg)
+  run: msg_arg ->
+    conn = Connection(msg_arg)
     "{self.prefix}:{conn.body()}"

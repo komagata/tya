@@ -32,9 +32,9 @@ class Socket implements Readable, Writable, Closable
   # @param handle Any handle value.
   # @param binary Boolean binary value.
   # @return Self the initialized object.
-  initialize: handle, binary ->
-    self.handle = handle
-    self.binary = binary
+  initialize: socket_handle, binary_mode ->
+    self.handle = socket_handle
+    self.binary = binary_mode
 
   # Socket.close provides the net/socket/Socket standard library operation.
   # @return Nil the resulting value.
@@ -83,5 +83,5 @@ class Socket implements Readable, Writable, Closable
   # @param value String value value.
   # @return Any the resulting value.
   write_line: value ->
-    self.write(value)
-    self.write("\n")
+    write(value)
+    write("\n")

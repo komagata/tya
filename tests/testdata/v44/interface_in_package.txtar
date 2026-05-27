@@ -19,9 +19,12 @@ interface Summarizable
   summary: ->
 
 class Request implements Summarizable
-  initialize: method, url ->
-    self.method = method
-    self.url = url
+  method: nil
+  url: nil
+
+  initialize: request_method, request_url ->
+    self.method = request_method
+    self.url = request_url
 
   summary: ->
     "{self.method} {self.url}"

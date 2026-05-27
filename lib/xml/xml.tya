@@ -22,14 +22,14 @@ class Xml
   # Xml.initialize stores XML text or a node value.
   # @param value String value value.
   # @return Self the initialized object.
-  initialize: value = nil ->
-    self.value = value
+  initialize: value_arg = nil ->
+    self.value = value_arg
 
   # Xml.collect_recursive provides the xml/Xml standard library operation.
-  # @param element Any element value.
-  # @param name String name value.
-  # @param out Any out value.
-  # @return Any the resulting value.
+  # @param element Any element value_arg.
+  # @param name String name value_arg.
+  # @param out Any out value_arg.
+  # @return Any the resulting value_arg.
   collect_recursive: element, name, out ->
     children = element.child_elements()
     i = 0
@@ -84,12 +84,12 @@ class Xml
   # Xml.dump is a compatibility alias for Xml.stringify.
   # @param value String value value.
   # @return String the resulting value.
-  dump: value = nil -> self.stringify(value)
+  dump: value_arg = nil -> stringify(value_arg)
 
   # Xml.error provides the xml/Xml standard library operation.
-  # @param state Any state value.
-  # @param message String message value.
-  # @return Any the resulting value.
+  # @param state Any state value_arg.
+  # @param message String message value_arg.
+  # @return Any the resulting value_arg.
   error: state, message ->
     raise error("xml.parse: " + message + " at byte " + state["pos"].to_s())
 
@@ -261,7 +261,7 @@ class Xml
   # @param text String text value.
   # @return Any the resulting value.
   parse_hex: text ->
-    value = 0
+    result = 0
     i = 0
     while i < text.byte_len()
       code = ord(text[i])
@@ -275,9 +275,9 @@ class Xml
           digit = code - 87
         else
           raise error("xml.parse: invalid numeric character reference")
-      value = value * 16 + digit
+      result = result * 16 + digit
       i = i + 1
-    value
+    result
 
   # Xml.parse_name provides the xml/Xml standard library operation.
   # @param state Any state value.
@@ -384,20 +384,20 @@ class Xml
   # Xml.stringify converts an XML node to text.
   # @param value String value value.
   # @return String the resulting value.
-  stringify: value = nil ->
-    if value == nil
-      value = self.value
-    if value.class == Document
+  stringify: value_arg = nil ->
+    if value_arg == nil
+      value_arg = self.value
+    if value_arg.class == Document
       out = ""
-      children = value.children()
+      children = value_arg.children()
       i = 0
       while i < children.len()
         out = out + Xml(nil).stringify(children[i])
         i = i + 1
       return out
-    if value.class == Element
-      out = "<" + value.name
-      keys = value.attrs.keys()
+    if value_arg.class == Element
+      out = "<" + value_arg.name
+      keys = value_arg.attrs.keys()
       i = 0
       while i < keys.len()
         key = keys[i]
@@ -405,21 +405,21 @@ class Xml
           + " "
           + key
           + "=\""
-          + Xml(nil).escape_attr(value.attrs[key])
+          + Xml(nil).escape_attr(value_arg.attrs[key])
           + "\""
         i = i + 1
-      if value.children.len() == 0
+      if value_arg.children.len() == 0
         return out + "/>"
       out = out + ">"
       i = 0
-      while i < value.children.len()
-        out = out + Xml(nil).stringify(value.children[i])
+      while i < value_arg.children.len()
+        out = out + Xml(nil).stringify(value_arg.children[i])
         i = i + 1
-      return out + "</" + value.name + ">"
-    if value.class == Text
-      return Xml(nil).escape_text(value.text)
-    if value.class == CData
-      return "<![CDATA[" + value.text + "]]>"
-    if value.class == Comment
-      return "<!--" + value.text + "-->"
+      return out + "</" + value_arg.name + ">"
+    if value_arg.class == Text
+      return Xml(nil).escape_text(value_arg.text)
+    if value_arg.class == CData
+      return "<![CDATA[" + value_arg.text + "]]>"
+    if value_arg.class == Comment
+      return "<!--" + value_arg.text + "-->"
     raise error("xml.dump: unsupported node")

@@ -22,8 +22,8 @@ class User
   static count: 0
   private static seed: 41
 
-  initialize: name ->
-    self.name = name
+  initialize: user_name ->
+    self.name = user_name
     self.id = Self.next_id()
     Self.count = Self.count + 1
 
@@ -33,8 +33,8 @@ class User
   show_id: ->
     self.id
 
-  static build: name ->
-    Self(name)
+  static build: user_name ->
+    Self(user_name)
 
   private static next_id: ->
     Self.seed = Self.seed + 1
@@ -46,8 +46,8 @@ print(u.show_id())
 print(User.count)
 
 class Admin extends User
-  initialize: name ->
-    super(name)
+  initialize: admin_name ->
+    super(admin_name)
 
   greeting: ->
     "built:{self.name}"

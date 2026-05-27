@@ -21,23 +21,23 @@ class Base64
     arr = []
     j = 0
     while j + 4 <= m
-      v1 = Self.decode_value(cleaned[j])
-      v2 = Self.decode_value(cleaned[j + 1])
-      v3 = Self.decode_value(cleaned[j + 2])
-      v4 = Self.decode_value(cleaned[j + 3])
+      v1 = decode_value(cleaned[j])
+      v2 = decode_value(cleaned[j + 1])
+      v3 = decode_value(cleaned[j + 2])
+      v4 = decode_value(cleaned[j + 3])
       arr.push(v1 * 4 + v2 / 16)
       arr.push(v2 % 16 * 16 + v3 / 4)
       arr.push(v3 % 4 * 64 + v4)
       j = j + 4
     rem = m - j
     if rem == 2
-      v1 = Self.decode_value(cleaned[j])
-      v2 = Self.decode_value(cleaned[j + 1])
+      v1 = decode_value(cleaned[j])
+      v2 = decode_value(cleaned[j + 1])
       arr.push(v1 * 4 + v2 / 16)
     elseif rem == 3
-      v1 = Self.decode_value(cleaned[j])
-      v2 = Self.decode_value(cleaned[j + 1])
-      v3 = Self.decode_value(cleaned[j + 2])
+      v1 = decode_value(cleaned[j])
+      v2 = decode_value(cleaned[j + 1])
+      v3 = decode_value(cleaned[j + 2])
       arr.push(v1 * 4 + v2 / 16)
       arr.push(v2 % 16 * 16 + v3 / 4)
     bytes(arr)

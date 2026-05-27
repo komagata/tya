@@ -38,6 +38,8 @@ class Lib
 
 -- standalone_good/good.tya --
 class Good
+  x: nil
+
   initialize: ->
     self.x = 1
 

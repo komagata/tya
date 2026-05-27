@@ -410,8 +410,10 @@ type IndexExpr struct {
 func (*IndexExpr) expr() {}
 
 type CallExpr struct {
-	Callee Expr
-	Args   []Expr
+	Callee        Expr
+	Args          []Expr
+	ImplicitSelf  bool
+	ImplicitClass bool
 }
 
 func (*CallExpr) expr() {}

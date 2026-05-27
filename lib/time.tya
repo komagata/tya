@@ -7,8 +7,8 @@ class Time
   # Time.initialize stores a time value or parseable text.
   # @param value String value value.
   # @return Self the initialized object.
-  initialize: value = nil ->
-    self.value = value
+  initialize: time_value = nil ->
+    self.value = time_value
 
   # Time.duration constructs a duration value.
   # @param seconds Any seconds value.

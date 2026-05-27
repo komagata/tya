@@ -12,9 +12,9 @@ class Point
   # @param x Int x value.
   # @param y Int y value.
   # @return Self the initialized object.
-  initialize: x = 0, y = 0 ->
-    self.x = self.number(x, "x")
-    self.y = self.number(y, "y")
+  initialize: point_x = 0, point_y = 0 ->
+    self.x = number(point_x, "x")
+    self.y = number(point_y, "y")
 
   # Point.distance provides the geometry/Point standard library operation.
   # @param a Int a value.
@@ -24,7 +24,7 @@ class Point
     if b == nil
       b = a
       a = self
-    Vector2(0, 0).distance(self.to_vector(a), self.to_vector(b))
+    Vector2(0, 0).distance(to_vector(a), to_vector(b))
 
   # Point.equal? provides the geometry/Point standard library operation.
   # @param a Int a value.
@@ -56,7 +56,7 @@ class Point
   # @param x Int x value.
   # @param y Int y value.
   # @return Self the resulting value.
-  new: x, y -> Point(x, y)
+  new: x_arg, y_arg -> Point(x_arg, y_arg)
 
   # Point.number provides the geometry/Point standard library operation.
   # @param value String value value.
@@ -73,7 +73,7 @@ class Point
   to_vector: p = nil ->
     if p == nil
       p = self
-    self.expect(p, "p")
+    expect(p, "p")
     Vector2(p.x, p.y)
 
   # Point.translate provides the geometry/Point standard library operation.
@@ -84,7 +84,7 @@ class Point
     if v == nil
       v = p
       p = self
-    self.expect(p, "p")
+    expect(p, "p")
     if v.class != Vector2
       raise error("geometry.Point.translate: v must be a Vector2")
     Point(p.x + v.x, p.y + v.y)

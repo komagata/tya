@@ -20,8 +20,8 @@ class User
   name: ""
   @@count = 0
 
-  init: name ->
-    @name = name
+  init: name_arg ->
+    @name = name_arg
     @@count = @@count + 1
 
   greeting: ->

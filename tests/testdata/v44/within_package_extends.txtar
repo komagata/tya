@@ -16,6 +16,8 @@ print(d.describe())
 
 -- zoo/animal.tya --
 class Animal
+  category: nil
+
   initialize: ->
     self.category = "animal"
 
@@ -24,6 +26,8 @@ class Animal
 
 -- zoo/dog.tya --
 class Dog extends Animal
+  kind: nil
+
   initialize: ->
     super()
     self.kind = "dog"

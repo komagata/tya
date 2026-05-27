@@ -7,8 +7,8 @@ class Template
   # Template.initialize stores template source or path.
   # @param source String source value.
   # @return Self the initialized object.
-  initialize: source = nil ->
-    self.source = source
+  initialize: template_source = nil ->
+    self.source = template_source
 
   # Template.close provides the template/Template standard library operation.
   # @return Nil the resulting value.
@@ -69,18 +69,18 @@ class Template
   # @param source String source value.
   # @param start Int start value.
   # @return Any the resulting value.
-  find_block_split: source, start ->
+  find_block_split: source_arg, start ->
     pos = start
     depth = 0
     else_pos = -1
     else_end = -1
-    n = source.byte_len()
+    n = source_arg.byte_len()
     while pos < n
-      open = Template(nil).find_next_tag(source, pos)
+      open = Template(nil).find_next_tag(source_arg, pos)
       if open < 0
         raise error("template.render: missing end")
-      close = Template(nil).find_close(source, open + 2, Template(nil).close())
-      tag = source.slice(open + 2, close).trim()
+      close = Template(nil).find_close(source_arg, open + 2, Template(nil).close())
+      tag = source_arg.slice(open + 2, close).trim()
       if (
         Template(nil).starts_text(tag, "if ") or Template(nil).starts_text(tag, "for ")
       )
@@ -97,27 +97,27 @@ class Template
     raise error("template.render: missing end")
 
   # Template.find_close provides the template/Template standard library operation.
-  # @param source String source value.
+  # @param source_arg String source_arg value.
   # @param start Int start value.
   # @param marker Any marker value.
   # @return Any the resulting value.
-  find_close: source, start, marker ->
+  find_close: source_arg, start, marker ->
     i = start
-    while i + marker.len() <= source.byte_len()
-      if source.slice(i, i + marker.len()) == marker
+    while i + marker.len() <= source_arg.byte_len()
+      if source_arg.slice(i, i + marker.len()) == marker
         return i
       i = i + 1
     -1
 
   # Template.find_next_tag provides the template/Template standard library operation.
-  # @param source String source value.
+  # @param source_arg String source_arg value.
   # @param start Int start value.
   # @return Any the resulting value.
-  find_next_tag: source, start ->
+  find_next_tag: source_arg, start ->
     i = start
-    while i + 1 < source.byte_len()
+    while i + 1 < source_arg.byte_len()
       if (
-        source[i] == Template(nil).lbrace() and source[i + 1] == Template(nil).lbrace()
+        source_arg[i] == Template(nil).lbrace() and source_arg[i + 1] == Template(nil).lbrace()
       )
         return i
       i = i + 1
@@ -265,17 +265,17 @@ class Template
   # @param data Array data value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  render: source, data = nil, options = nil ->
+  render: source_arg, data = nil, options = nil ->
     if self.source != nil and data != nil and data.class == Dict
       options = data
-      data = source
-      source = self.source
+      data = source_arg
+      source_arg = self.source
     if data == nil
-      data = source
-      source = self.source
+      data = source_arg
+      source_arg = self.source
     if options == nil
       options = {}
-    Template(nil).render_with_options(source, data, options)
+    Template(nil).render_with_options(source_arg, data, options)
 
   # render_file reads a template file and renders it with data and options.
   # Raises when the file cannot be read or the template is invalid.
@@ -325,11 +325,11 @@ class Template
   # @param source String source value.
   # @param data Array data value.
   # @return Any the resulting value.
-  render_html: source, data = nil ->
+  render_html: source_arg, data = nil ->
     if data == nil
-      data = source
-      source = self.source
-    Template(nil).render_with_options(source, data, { escape: "html" })
+      data = source_arg
+      source_arg = self.source
+    Template(nil).render_with_options(source_arg, data, { escape: "html" })
 
   # Template.render_if provides the template/Template standard library operation.
   # @param state Any state value.
@@ -390,8 +390,8 @@ class Template
   # @param finish Any finish value.
   # @param env Any env value.
   # @return Any the resulting value.
-  render_range: source, start, finish, env ->
-    part = source.slice(start, finish)
+  render_range: source_arg, start, finish, env ->
+    part = source_arg.slice(start, finish)
     state = { source: part, pos: 0, len: part.byte_len() }
     Template(nil).render_until(state, env, "")
 
@@ -458,8 +458,8 @@ class Template
   # @param data Array data value.
   # @param options Dict options value.
   # @return Dict the resulting value.
-  render_with_options: source, data, options ->
-    state = { source: source, pos: 0, len: source.byte_len() }
+  render_with_options: source_arg, data, options ->
+    state = { source: source_arg, pos: 0, len: source_arg.byte_len() }
     env = { data: data, locals: {}, options: options }
     Template(nil).render_until(state, env, "")
 

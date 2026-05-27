@@ -56,8 +56,10 @@ stdout '0.71.0\n'
 import accounts
 
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
   label: ->
     "user"
@@ -66,10 +68,12 @@ class User
     "users"
 
 class Admin extends User
-  initialize: name, role ->
-    normalized = name
+  role: ""
+
+  initialize: admin_name, admin_role ->
+    normalized = admin_name
     super(normalized)
-    self.role = role
+    self.role = admin_role
 
   override label: ->
     "admin"
@@ -104,13 +108,16 @@ print(editor.label())
 
 -- super_constructor_defaults.tya --
 class User
-  initialize: name, role = "member" ->
-    self.name = name
-    self.role = role
+  name: ""
+  role: ""
+
+  initialize: user_name, user_role = "member" ->
+    self.name = user_name
+    self.role = user_role
 
 class Admin extends User
-  initialize: name ->
-    super(name)
+  initialize: admin_name ->
+    super(admin_name)
 
   label: ->
     "{self.name}:{self.role}"
@@ -119,16 +126,20 @@ print(Admin("ada").label())
 
 -- accounts.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
   label: ->
     "module:{self.name}"
 
 class Editor extends User
-  initialize: name, role ->
-    super(name)
-    self.role = role
+  role: ""
+
+  initialize: editor_name, editor_role ->
+    super(editor_name)
+    self.role = editor_role
 
   override label: ->
     "module:{self.role}"
@@ -188,24 +199,32 @@ class User extends Model
 
 -- missing_constructor_super.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
 class Admin extends User
-  initialize: name, role ->
-    self.name = name
-    self.role = role
+  role: ""
+
+  initialize: admin_name, admin_role ->
+    self.name = admin_name
+    self.role = admin_role
 
 -- double_constructor_super.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
 class Admin extends User
-  initialize: name, role ->
-    super(name)
-    super(name)
-    self.role = role
+  role: ""
+
+  initialize: admin_name, admin_role ->
+    super(admin_name)
+    super(admin_name)
+    self.role = admin_role
 
 -- super_without_parent_init.tya --
 class User
@@ -213,45 +232,59 @@ class User
     "user"
 
 class Admin extends User
-  initialize: role ->
+  role: ""
+
+  initialize: admin_role ->
     super()
-    self.role = role
+    self.role = admin_role
 
 -- field_before_super.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
 class Admin extends User
-  initialize: name, role ->
-    self.role = role
-    super(name)
+  role: ""
+
+  initialize: admin_name, admin_role ->
+    self.role = admin_role
+    super(admin_name)
 
 -- return_before_super.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
 class Admin extends User
-  initialize: name, role ->
+  initialize: admin_name, admin_role ->
     return nil
-    super(name)
+    super(admin_name)
 
 -- bad_constructor_super_arity.tya --
 class User
+  name: ""
+
   initialize: first, last ->
     self.name = first + " " + last
 
 class Admin extends User
-  initialize: name, role ->
-    super(name)
-    self.role = role
+  role: ""
+
+  initialize: admin_name, admin_role ->
+    super(admin_name)
+    self.role = admin_role
 
 -- private_parent_init_super.tya --
 class Token
-  private initialize: value ->
-    self.value = value
+  value: nil
+
+  private initialize: token_value ->
+    self.value = token_value
 
 class ApiToken extends Token
-  initialize: value ->
-    super(value)
+  initialize: token_value ->
+    super(token_value)

@@ -23,10 +23,14 @@ class Sub extends Base
 
 -- pkg/helper.tya --
 class Helper
+  t: nil
+
   static noop: ->
     "noop"
 
 class Base
+  t: nil
+
   initialize: ->
     self.t = "b"
 

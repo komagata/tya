@@ -33,8 +33,10 @@ print(user.has("a"))
 print(user.get("a"))
 print(user.entries()[0][0])
 class Point
-  initialize: x ->
-    self.x = x
+  x: nil
+
+  initialize: x_arg ->
+    self.x = x_arg
 
 p = Point(1)
 print(p.class.name)

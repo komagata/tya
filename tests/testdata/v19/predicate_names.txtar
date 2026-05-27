@@ -41,8 +41,10 @@ print(user.has?("name"))
 print(value.Value(nil).nil?())
 
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
   named?: ->
     self.name != ""

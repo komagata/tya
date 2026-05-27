@@ -52,16 +52,20 @@ stdout '0.71.0\n'
 
 -- classes.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
 
-  rename: name ->
-    self.name = name
+  initialize: user_name ->
+    self.name = user_name
+
+  rename: user_name ->
+    self.name = user_name
 
   greeting: ->
     "Hello, {self.name}"
 
 class Counter
+  value: 0
+
   initialize: ->
     self.value = 0
 
@@ -89,8 +93,10 @@ print(marker.label())
 
 -- user.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
   greeting: ->
     "Hello, {self.name}"
@@ -103,17 +109,23 @@ print(item.greeting())
 
 -- constructor_defaults.tya --
 class Profile
-  initialize: name = "guest", role = "member" ->
-    self.name = name
-    self.role = role
+  name: ""
+  role: ""
+
+  initialize: profile_name = "guest", profile_role = "member" ->
+    self.name = profile_name
+    self.role = profile_role
 
   label: ->
     "{self.name}:{self.role}"
 
 class User
-  initialize: name, role = "member" ->
-    self.name = name
-    self.role = role
+  name: ""
+  role: ""
+
+  initialize: user_name, user_role = "member" ->
+    self.name = user_name
+    self.role = user_role
 
   label: ->
     "{self.name}:{self.role}"
@@ -124,22 +136,30 @@ print(User("komagata", "admin").label())
 
 -- constructor_defaults_too_few.tya --
 class User
-  initialize: name, role = "member" ->
-    self.name = name
-    self.role = role
+  name: ""
+  role: ""
+
+  initialize: user_name, user_role = "member" ->
+    self.name = user_name
+    self.role = user_role
 
 user = User()
 
 -- constructor_defaults_too_many.tya --
 class User
-  initialize: name, role = "member" ->
-    self.name = name
-    self.role = role
+  name: ""
+  role: ""
+
+  initialize: user_name, user_role = "member" ->
+    self.name = user_name
+    self.role = user_role
 
 user = User("komagata", "admin", "extra")
 
 -- bad_class_name.tya --
 class user
+  name: nil
+
   initialize: ->
     self.name = "bad"
 
@@ -159,8 +179,10 @@ class User
 
 -- constructor_arity.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
 user = User()
 
@@ -176,8 +198,10 @@ print(profile.name)
 
 -- missing_field.tya --
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
 user = User("komagata")
 print(user.missing)

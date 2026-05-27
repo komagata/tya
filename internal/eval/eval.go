@@ -1788,6 +1788,13 @@ func assignMember(o Dict, name string, value Value) {
 }
 
 func evalCall(c *ast.CallExpr, env *Env) (Value, error) {
+	if id, ok := c.Callee.(*ast.Ident); ok && (c.ImplicitSelf || c.ImplicitClass) {
+		target := ast.Expr(&ast.SelfExpr{Tok: id.Tok, Class: c.ImplicitClass})
+		return evalCall(&ast.CallExpr{
+			Callee: &ast.MemberExpr{Target: target, Name: id.Name, NameTok: id.Tok},
+			Args:   c.Args,
+		}, env)
+	}
 	fnVal, err := evalCallee(c.Callee, env)
 	if err != nil {
 		return nil, err

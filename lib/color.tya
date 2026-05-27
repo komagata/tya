@@ -1,4 +1,4 @@
-import validation/*
+import validation
 
 # Color provides the color/Color standard library API.
 class Color
@@ -31,8 +31,11 @@ class Color
   # @param name String name value.
   # @return Any the resulting value.
   static channel: value, name ->
-    NumberValidator(value, name, "color.channel").integer().between(0, 255).validate!(
-    )
+    validation.Validation
+      .number(value, name, "color.channel")
+      .integer()
+      .between(0, 255)
+      .validate!()
 
   # Color.cyan provides the color/Color standard library operation.
   # @return Any the resulting value.
@@ -87,19 +90,19 @@ class Color
   # @param b Int b value.
   # @param a Int a value.
   # @return Self the initialized object.
-  initialize: r = nil, g = nil, b = nil, a = nil ->
-    if r == nil
-      r = 0
-    if g == nil
-      g = 0
-    if b == nil
-      b = 0
-    if a == nil
-      a = 0
-    self.r = Self.channel(r, "r")
-    self.g = Self.channel(g, "g")
-    self.b = Self.channel(b, "b")
-    self.a = Self.channel(a, "a")
+  initialize: r_arg = nil, g_arg = nil, b_arg = nil, a_arg = nil ->
+    if r_arg == nil
+      r_arg = 0
+    if g_arg == nil
+      g_arg = 0
+    if b_arg == nil
+      b_arg = 0
+    if a_arg == nil
+      a_arg = 0
+    self.r = Self.channel(r_arg, "r_arg")
+    self.g = Self.channel(g_arg, "g_arg")
+    self.b = Self.channel(b_arg, "b_arg")
+    self.a = Self.channel(a_arg, "a_arg")
 
   # Color.abs provides the color/Color standard library operation.
   # @param value String value value.
@@ -114,29 +117,29 @@ class Color
   # @param b Int b value.
   # @param t Any t value.
   # @return Any the resulting value.
-  blend: a, b, t = nil ->
+  blend: a_arg, b_arg, t = nil ->
     if t == nil
-      t = b
-      b = a
-      a = self
-    self.ratio(t, "color.blend")
+      t = b_arg
+      b_arg = a_arg
+      a_arg = self
+    ratio(t, "color.blend")
     Self.rgba(
-      self.mix_channel(a.r, b.r, t),
-      self.mix_channel(a.g, b.g, t),
-      self.mix_channel(a.b, b.b, t),
-      self.mix_channel(a.a, b.a, t)
+      mix_channel(a_arg.r, b_arg.r, t),
+      mix_channel(a_arg.g, b_arg.g, t),
+      mix_channel(a_arg.b, b_arg.b, t),
+      mix_channel(a_arg.a, b_arg.a, t)
     )
 
   # Color.contrast_ratio provides the color/Color standard library operation.
-  # @param a Int a value.
-  # @param b Int b value.
+  # @param a_arg Int a_arg value.
+  # @param b_arg Int b_arg value.
   # @return Any the resulting value.
-  contrast_ratio: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    color_la = self.luminance(a)
-    color_lb = self.luminance(b)
+  contrast_ratio: a_arg, b_arg = nil ->
+    if b_arg == nil
+      b_arg = a_arg
+      a_arg = self
+    color_la = luminance(a_arg)
+    color_lb = luminance(b_arg)
     if color_la < color_lb
       color_tmp = color_la
       color_la = color_lb
@@ -169,12 +172,12 @@ class Color
     if color_raw == "transparent"
       return Self.transparent()
     if color_raw.starts_with("#")
-      return self.hex(color_raw)
+      return hex(color_raw)
     if color_raw.starts_with("rgb(") and color_raw.ends_with(")")
-      return self.css_rgb(color_raw, 4, false)
+      return css_rgb(color_raw, 4, false)
     if color_raw.starts_with("rgba(") and color_raw.ends_with(")")
-      return self.css_rgb(color_raw, 5, true)
-    self.hex(color_raw)
+      return css_rgb(color_raw, 5, true)
+    hex(color_raw)
 
   # Color.css_rgb provides the color/Color standard library operation.
   # @param text String text value.
@@ -204,8 +207,8 @@ class Color
     if amount == nil
       amount = color
       color = self
-    self.ratio(amount, "color.darken")
-    self.blend(color, Self.black(), amount)
+    ratio(amount, "color.darken")
+    blend(color, Self.black(), amount)
 
   # Color.digit_char provides the color/Color standard library operation.
   # @param value String value value.
@@ -219,11 +222,11 @@ class Color
   # @param a Int a value.
   # @param b Int b value.
   # @return Boolean whether the condition is true.
-  equal?: a, b = nil ->
-    if b == nil
-      b = a
-      a = self
-    a.r == b.r and a.g == b.g and a.b == b.b and a.a == b.a
+  equal?: a_arg, b_arg = nil ->
+    if b_arg == nil
+      b_arg = a_arg
+      a_arg = self
+    a_arg.r == b_arg.r and a_arg.g == b_arg.g and a_arg.b == b_arg.b and a_arg.a == b_arg.a
 
   # Color.from_array provides the color/Color standard library operation.
   # @param values Array values value.
@@ -252,7 +255,7 @@ class Color
   grayscale: color = nil ->
     if color == nil
       color = self
-    color_value = self.round(
+    color_value = round(
       0.299 * color.r + 0.587 * color.g + 0.114 * color.b
     )
     Self.rgba(color_value, color_value, color_value, color.a)
@@ -268,20 +271,20 @@ class Color
       color_raw = color_raw.slice(1, color_raw.len())
     color_len = color_raw.byte_len()
     if color_len == 3 or color_len == 4
-      color_r = self.hex_pair(color_raw[0], color_raw[0])
-      color_g = self.hex_pair(color_raw[1], color_raw[1])
-      color_b = self.hex_pair(color_raw[2], color_raw[2])
+      color_r = hex_pair(color_raw[0], color_raw[0])
+      color_g = hex_pair(color_raw[1], color_raw[1])
+      color_b = hex_pair(color_raw[2], color_raw[2])
       color_a = 255
       if color_len == 4
-        color_a = self.hex_pair(color_raw[3], color_raw[3])
+        color_a = hex_pair(color_raw[3], color_raw[3])
       return Self.rgba(color_r, color_g, color_b, color_a)
     if color_len == 6 or color_len == 8
-      color_r = self.hex_pair(color_raw[0], color_raw[1])
-      color_g = self.hex_pair(color_raw[2], color_raw[3])
-      color_b = self.hex_pair(color_raw[4], color_raw[5])
+      color_r = hex_pair(color_raw[0], color_raw[1])
+      color_g = hex_pair(color_raw[2], color_raw[3])
+      color_b = hex_pair(color_raw[4], color_raw[5])
       color_a = 255
       if color_len == 8
-        color_a = self.hex_pair(color_raw[6], color_raw[7])
+        color_a = hex_pair(color_raw[6], color_raw[7])
       return Self.rgba(color_r, color_g, color_b, color_a)
     raise error("color.hex: invalid hex color")
 
@@ -291,7 +294,7 @@ class Color
   hex_byte: value ->
     color_hi = value / 16.to_i()
     color_lo = value % 16
-    self.digit_char(color_hi) + self.digit_char(color_lo)
+    digit_char(color_hi) + digit_char(color_lo)
 
   # Color.hex_digit provides the color/Color standard library operation.
   # @param c Any c value.
@@ -310,7 +313,7 @@ class Color
   # @param hi Any hi value.
   # @param lo Any lo value.
   # @return Any the resulting value.
-  hex_pair: hi, lo -> self.hex_digit(hi) * 16 + self.hex_digit(lo)
+  hex_pair: hi, lo -> hex_digit(hi) * 16 + hex_digit(lo)
 
   # Color.invert provides the color/Color standard library operation.
   # @param color Any color value.
@@ -328,8 +331,8 @@ class Color
     if amount == nil
       amount = color
       color = self
-    self.ratio(amount, "color.lighten")
-    self.blend(color, Self.white(), amount)
+    ratio(amount, "color.lighten")
+    blend(color, Self.white(), amount)
 
   # Color.linear provides the color/Color standard library operation.
   # @param value String value value.
@@ -346,9 +349,9 @@ class Color
   luminance: color = nil ->
     if color == nil
       color = self
-    color_r = self.linear(color.r)
-    color_g = self.linear(color.g)
-    color_b = self.linear(color.b)
+    color_r = linear(color.r)
+    color_g = linear(color.g)
+    color_b = linear(color.b)
     0.2126 * color_r + 0.7152 * color_g + 0.0722 * color_b
 
   # Color.mix_channel provides the color/Color standard library operation.
@@ -356,29 +359,29 @@ class Color
   # @param b Int b value.
   # @param t Any t value.
   # @return Any the resulting value.
-  mix_channel: a, b, t -> self.round(a + (b - a) * t)
+  mix_channel: a_arg, b_arg, t -> round(a_arg + (b_arg - a_arg) * t)
 
   # Color.nearly_equal? provides the color/Color standard library operation.
-  # @param a Int a value.
-  # @param b Int b value.
+  # @param a_arg Int a_arg value.
+  # @param b_arg Int b_arg value.
   # @param tolerance Any tolerance value.
   # @return Boolean whether the condition is true.
-  nearly_equal?: a, b, tolerance = nil ->
+  nearly_equal?: a_arg, b_arg, tolerance = nil ->
     if tolerance == nil
-      tolerance = b
-      b = a
-      a = self
+      tolerance = b_arg
+      b_arg = a_arg
+      a_arg = self
     if tolerance < 0
       raise error("color.nearly_equal?: tolerance must be non-negative")
-    self.abs(a.r - b.r) <= tolerance and self.abs(a.g - b.g) <= tolerance and self.abs(a.b - b.b) <= tolerance and self.abs(a.a - b.a) <= tolerance
+    abs(a_arg.r - b_arg.r) <= tolerance and abs(a_arg.g - b_arg.g) <= tolerance and abs(a_arg.b - b_arg.b) <= tolerance and abs(a_arg.a - b_arg.a) <= tolerance
 
   # Color.new provides the color/Color standard library operation.
   # @param r Int r value.
   # @param g Int g value.
-  # @param b Int b value.
-  # @param a Int a value.
+  # @param b_arg Int b_arg value.
+  # @param a_arg Int a_arg value.
   # @return Self the resulting value.
-  new: r, g, b, a -> Color(r, g, b, a)
+  new: r_arg, g_arg, b_arg, a_arg -> Color(r_arg, g_arg, b_arg, a_arg)
 
   # Color.over provides the color/Color standard library operation.
   # @param foreground Any foreground value.
@@ -400,10 +403,10 @@ class Color
     color_b = foreground.b * color_fa
       + background.b * color_ba * (1 - color_fa) / color_out_a
     Self.rgba(
-      self.round(color_r),
-      self.round(color_g),
-      self.round(color_b),
-      self.round(color_out_a * 255)
+      round(color_r),
+      round(color_g),
+      round(color_b),
+      round(color_out_a * 255)
     )
 
   # Color.ratio provides the color/Color standard library operation.
@@ -433,11 +436,11 @@ class Color
     if include_alpha == nil
       include_alpha = false
     color_out = "#"
-      + self.hex_byte(self.r)
-      + self.hex_byte(self.g)
-      + self.hex_byte(self.b)
+      + hex_byte(self.r)
+      + hex_byte(self.g)
+      + hex_byte(self.b)
     if include_alpha or self.a != 255
-      color_out = color_out + self.hex_byte(self.a)
+      color_out = color_out + hex_byte(self.a)
     color_out
 
   # Color.with_alpha provides the color/Color standard library operation.

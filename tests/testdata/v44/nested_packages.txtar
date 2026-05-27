@@ -18,6 +18,8 @@ print(client.fetch("/"))
 
 -- api/v1/client.tya --
 class Client
+  hits: 0
+
   initialize: ->
     self.hits = 0
 
@@ -28,17 +30,22 @@ class Client
 
 -- api/v1/request.tya --
 class Request
-  initialize: method, url ->
-    self.method = method
-    self.url = url
+  method: nil
+  url: nil
+
+  initialize: request_method, request_url ->
+    self.method = request_method
+    self.url = request_url
 
   summary: ->
     "{self.method} {self.url}"
 
 -- api/v1/response.tya --
 class Response
-  initialize: status ->
-    self.status = status
+  status: nil
+
+  initialize: value ->
+    self.status = value
 
   status: ->
     self.status

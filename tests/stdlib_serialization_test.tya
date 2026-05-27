@@ -2,24 +2,32 @@ import unittest/*
 import serializer as serialization
 
 class SavePlayer
-  initialize: name, score ->
-    self.name = name
-    self.score = score
+  name: nil
+  score: nil
+
+  initialize: player_name, player_score ->
+    self.name = player_name
+    self.score = player_score
 
 class HookedPlayer
+  name: nil
+
   static from_serialized: data ->
     return HookedPlayer(data["name"].lower())
 
-  initialize: name ->
-    self.name = name
+  initialize: player_name ->
+    self.name = player_name
 
   to_serialized: ->
     return { name: self.name.upper() }
 
 class SerializablePlayer implements Serializable
-  initialize: name, score ->
-    self.name = name
-    self.score = score
+  name: nil
+  score: nil
+
+  initialize: player_name, player_score ->
+    self.name = player_name
+    self.score = player_score
 
   to_data: ->
     return { name: self.name, score: self.score, kind: "serializable" }

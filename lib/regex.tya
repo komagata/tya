@@ -7,40 +7,40 @@ class Regex
   # Regex.initialize stores a pattern.
   # @param pattern String pattern value.
   # @return Self the initialized object.
-  initialize: pattern ->
-    self.pattern = pattern
+  initialize: regex_pattern ->
+    self.pattern = regex_pattern
 
   # Regex.compile compiles a reusable regex value.
   # @param pattern String pattern value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  compile: pattern = nil, options = {} ->
+  compile: regex_pattern = nil, options = {} ->
     if self.pattern != nil
-      if pattern != nil
-        options = pattern
-      pattern = self.pattern
+      if regex_pattern != nil
+        options = regex_pattern
+      regex_pattern = self.pattern
     if options == nil
       options = {}
-    regex_compile(pattern, options)
+    regex_compile(regex_pattern, options)
 
   # Regex.match? returns whether pattern appears in text.
   # @param pattern String pattern value.
   # @param text String text value.
   # @param options Dict options value.
   # @return Boolean whether the condition is true.
-  match?: pattern, text = nil, options = {} ->
+  match?: regex_pattern, text = nil, options = {} ->
     if self.pattern != nil
-      text = pattern
-      pattern = self.pattern
-    Regex(pattern).compile(options).match?(text)
+      text = regex_pattern
+      regex_pattern = self.pattern
+    Regex(regex_pattern).compile(options).match?(text)
 
   # Regex.search returns the first match dictionary or nil.
   # @param pattern String pattern value.
   # @param text String text value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  search: pattern, text = nil, options = {} ->
+  search: regex_pattern, text = nil, options = {} ->
     if self.pattern != nil
-      text = pattern
-      pattern = self.pattern
-    Regex(pattern).compile(options).find(text)
+      text = regex_pattern
+      regex_pattern = self.pattern
+    Regex(regex_pattern).compile(options).find(text)

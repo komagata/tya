@@ -37,16 +37,16 @@ class StringValidator
   # @param name String name value.
   # @param context String context value.
   # @return Self the initialized object.
-  initialize: value, name = "value", context = "" ->
-    self.value = value
-    self.name = name
-    self.context = context
+  initialize: value_arg, name_arg = "value", context_arg = "" ->
+    self.value = value_arg
+    self.name = name_arg
+    self.context = context_arg
     self.errors = []
     self.ok = false
 
   # StringValidator.between requires an inclusive length range.
-  # @param min Number min value.
-  # @param max Number max value.
+  # @param min Number min value_arg.
+  # @param max Number max value_arg.
   # @return Self the current validator.
   between: min, max ->
     self.min_value = min
@@ -92,19 +92,19 @@ class StringValidator
     self.errors = []
     self.ok = false
     if self.value.class != String
-      self.errors.push(self.error_message("must be a string"))
+      self.errors.push(error_message("must be a string"))
       return self
     if self.require_present and self.value.blank?()
-      self.errors.push(self.error_message("must be present"))
+      self.errors.push(error_message("must be present"))
       return self
     if self.min_value != nil and self.value.len() < self.min_value
       self.errors.push(
-        self.error_message("must be at least " + self.min_value.to_s() + " characters")
+        error_message("must be at least " + self.min_value.to_s() + " characters")
       )
       return self
     if self.max_value != nil and self.value.len() > self.max_value
       self.errors.push(
-        self.error_message("must be at most " + self.max_value.to_s() + " characters")
+        error_message("must be at most " + self.max_value.to_s() + " characters")
       )
       return self
     self.ok = true
@@ -113,7 +113,7 @@ class StringValidator
   # StringValidator.validate! raises the first validation error.
   # @return String the validated value.
   validate!: ->
-    self.validate()
-    if not self.valid?()
+    validate()
+    if not valid?()
       raise error(self.errors[0])
     self.value

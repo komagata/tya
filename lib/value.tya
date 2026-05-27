@@ -5,15 +5,15 @@ class Value
   item: nil
 
   # Value.initialize stores a value for predicates.
-  # @param item Any item value.
+  # @param value_item Any item value.
   # @return Self the initialized object.
-  initialize: item ->
-    self.item = item
+  initialize: value_item ->
+    self.item = value_item
 
   # Value.nil? provides the value/Value standard library operation.
-  # @param item Any item value.
+  # @param fallback_item Any item value.
   # @return Boolean whether the condition is true.
-  nil?: item = nil ->
+  nil?: fallback_item = nil ->
     if self.item != nil
-      item = self.item
-    item == nil
+      fallback_item = self.item
+    fallback_item == nil

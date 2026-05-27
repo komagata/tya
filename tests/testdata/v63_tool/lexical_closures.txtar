@@ -152,8 +152,10 @@ make()
 
 -- captured_member_mutation.tya --
 class Box
-  initialize: value ->
-    self.value = value
+  value: nil
+
+  initialize: value_arg ->
+    self.value = value_arg
 
 make = ->
   box = Box.new(1)
@@ -253,6 +255,8 @@ interface Iterable
   iter: ->
 
 class PairIterator
+  index: nil
+
   initialize: ->
     self.index = 0
 
@@ -338,6 +342,8 @@ interface Iterable
   iter: ->
 
 class PairIterator
+  index: nil
+
   initialize: ->
     self.index = 0
 

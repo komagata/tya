@@ -44,48 +44,48 @@ class Dir
   # Dir.initialize stores a directory path.
   # @param path String path value.
   # @return Self the initialized object.
-  initialize: path = nil ->
-    self.path = path
+  initialize: dir_path = nil ->
+    self.path = dir_path
 
   # Dir.list provides the dir/Dir standard library operation.
   # @param path String path value.
   # @return Any the resulting value.
-  list: path = nil ->
-    if path == nil
-      path = self.path
-    dir_list(path)
+  list: dir_path = nil ->
+    if dir_path == nil
+      dir_path = self.path
+    dir_list(dir_path)
 
   # Dir.mkdir provides the dir/Dir standard library operation.
   # @param path String path value.
   # @return Any the resulting value.
-  mkdir: path = nil ->
-    if path == nil
-      path = self.path
-    dir_mkdir(path)
+  mkdir: dir_path = nil ->
+    if dir_path == nil
+      dir_path = self.path
+    dir_mkdir(dir_path)
 
   # mkdir_all creates a directory and missing parents.
   # @param path String path value.
   # @return Any the resulting value.
-  mkdir_all: path = nil ->
-    if path == nil
-      path = self.path
-    dir_mkdir_all(path)
+  mkdir_all: dir_path = nil ->
+    if dir_path == nil
+      dir_path = self.path
+    dir_mkdir_all(dir_path)
 
   # remove_all removes a file or directory tree recursively.
   # @param path String path value.
   # @return Any the resulting value.
-  remove_all: path = nil ->
-    if path == nil
-      path = self.path
-    dir_remove_all(path)
+  remove_all: dir_path = nil ->
+    if dir_path == nil
+      dir_path = self.path
+    dir_remove_all(dir_path)
 
   # Dir.rmdir provides the dir/Dir standard library operation.
   # @param path String path value.
   # @return Any the resulting value.
-  rmdir: path = nil ->
-    if path == nil
-      path = self.path
-    dir_rmdir(path)
+  rmdir: dir_path = nil ->
+    if dir_path == nil
+      dir_path = self.path
+    dir_rmdir(dir_path)
 
   # temp_dir creates a temporary directory and returns its path.
   # @param prefix Any prefix value.
@@ -97,11 +97,11 @@ class Dir
   # @param fn Function fn value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  walk: path, fn = nil, options = {} ->
+  walk: dir_path, fn = nil, options = {} ->
     if self.path != nil and fn != nil
       options = fn
-      fn = path
-      path = self.path
-    if path == nil
-      path = self.path
-    dir_walk(path, fn, options)
+      fn = dir_path
+      dir_path = self.path
+    if dir_path == nil
+      dir_path = self.path
+    dir_walk(dir_path, fn, options)

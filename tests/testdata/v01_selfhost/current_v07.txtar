@@ -20,20 +20,20 @@ class User
   name: ""
   role: "user"
 
-  init: name ->
-    @name = name
+  init: name_arg ->
+    @name = name_arg
 
   greeting: ->
     "Hello, {@name}"
 
-  rename: name ->
-    @name = name
+  rename: name_arg ->
+    @name = name_arg
 
 class Admin extends User
   role: "admin"
 
-  init: name ->
-    super(name)
+  init: name_arg ->
+    super(name_arg)
 
   greeting: ->
     "{super()} (admin)"

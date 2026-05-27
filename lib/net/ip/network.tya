@@ -16,10 +16,10 @@ class Network
   # @param address Any address value.
   # @param prefix Any prefix value.
   # @return Self the initialized object.
-  initialize: address = nil, prefix = 0 ->
-    self.address = address
-    self.prefix = prefix
-    self.version = address.version
+  initialize: address_arg = nil, prefix_arg = 0 ->
+    self.address = address_arg
+    self.prefix = prefix_arg
+    self.version = address_arg.version
 
   # Network.contains? provides the net/ip/Network standard library operation.
   # @param network Any network value.
@@ -32,8 +32,8 @@ class Network
     if addr.version != network.version
       return false
     if addr.version == 4
-      return self.contains_parts?(network.address.bytes, addr.bytes, network.prefix, 8)
-    self.contains_parts?(
+      return contains_parts?(network.address.bytes, addr.bytes, network.prefix, 8)
+    contains_parts?(
       network.address.groups,
       addr.groups,
       network.prefix,
@@ -46,8 +46,8 @@ class Network
   # @param prefix Any prefix value.
   # @param width Int width value.
   # @return Boolean whether the condition is true.
-  contains_parts?: base, value, prefix, width ->
-    remain = prefix
+  contains_parts?: base, value, prefix_arg, width ->
+    remain = prefix_arg
     i = 0
     while i < base.len()
       if remain <= 0
@@ -57,7 +57,7 @@ class Network
           return false
         remain = remain - width
       else
-        div = self.pow2(width - remain)
+        div = pow2(width - remain)
         if base[i] / div.to_i() != value[i] / div.to_i()
           return false
         return true
@@ -70,20 +70,20 @@ class Network
   parse: cidr ->
     slash = Address(nil, nil, nil, false).last_index(cidr, "/")
     if slash < 0
-      raise error("ip.Network.parse: missing prefix")
+      raise error("ip.Network.parse: missing prefix_local")
     addr = Address(nil, nil, nil, false).parse(cidr.slice(0, slash))
     prefix_text = cidr.slice(slash + 1, cidr.len())
     if (
       prefix_text == "" or not Address(nil, nil, nil, false).decimal?(prefix_text)
     )
-      raise error("ip.Network.parse: invalid prefix")
-    prefix = prefix_text.to_i()
+      raise error("ip.Network.parse: invalid prefix_local")
+    prefix_local = prefix_text.to_i()
     max = 32
     if addr.version == 6
       max = 128
-    if prefix < 0 or prefix > max
-      raise error("ip.Network.parse: invalid prefix")
-    Network(addr, prefix)
+    if prefix_local < 0 or prefix_local > max
+      raise error("ip.Network.parse: invalid prefix_local")
+    Network(addr, prefix_local)
 
   # Network.pow2 provides the net/ip/Network standard library operation.
   # @param n Int n value.

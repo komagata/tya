@@ -55,8 +55,10 @@ print(a)
 print(b)
 
 class Box
-  initialize: value ->
-    self.value = value
+  value: nil
+
+  initialize: value_arg ->
+    self.value = value_arg
 
   same?: other ->
     self.value == other.value
@@ -75,8 +77,10 @@ print(greeter.greet())
 
 -- pkg/greeter.tya --
 class Greeter
-  initialize: name ->
-    self.name = name
+  name: nil
+
+  initialize: name_arg ->
+    self.name = name_arg
 
   greet: ->
     "Hello, {self.name}"

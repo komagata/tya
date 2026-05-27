@@ -17,10 +17,10 @@ class Vector3
   # @param y Int y value.
   # @param z Int z value.
   # @return Self the initialized object.
-  initialize: x = 0, y = 0, z = 0 ->
-    self.x = self.number(x, "x")
-    self.y = self.number(y, "y")
-    self.z = self.number(z, "z")
+  initialize: vector_x = 0, vector_y = 0, vector_z = 0 ->
+    self.x = number(vector_x, "x")
+    self.y = number(vector_y, "y")
+    self.z = number(vector_z, "z")
 
   # Vector3.abs provides the geometry/Vector3 standard library operation.
   # @param value String value value.
@@ -38,8 +38,8 @@ class Vector3
     if b == nil
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     Vector3(a.x + b.x, a.y + b.y, a.z + b.z)
 
   # Vector3.cross provides the geometry/Vector3 standard library operation.
@@ -50,8 +50,8 @@ class Vector3
     if b == nil
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     Vector3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x)
 
   # Vector3.distance provides the geometry/Vector3 standard library operation.
@@ -62,7 +62,7 @@ class Vector3
     if b == nil
       b = a
       a = self
-    math_sqrt(self.distance_squared(a, b))
+    math_sqrt(distance_squared(a, b))
 
   # Vector3.distance_squared provides the geometry/Vector3 standard library operation.
   # @param a Int a value.
@@ -72,7 +72,7 @@ class Vector3
     if b == nil
       b = a
       a = self
-    self.length_squared(self.sub(a, b))
+    length_squared(sub(a, b))
 
   # Vector3.div provides the geometry/Vector3 standard library operation.
   # @param v Any v value.
@@ -82,8 +82,8 @@ class Vector3
     if k == nil
       k = v
       v = self
-    self.expect(v, "v")
-    self.number(k, "k")
+    expect(v, "v")
+    number(k, "k")
     if k == 0
       raise error("geometry.Vector3.div: divide by zero")
     Vector3(v.x / k, v.y / k, v.z / k)
@@ -96,8 +96,8 @@ class Vector3
     if b == nil
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     a.x * b.x + a.y * b.y + a.z * b.z
 
   # Vector3.equal? provides the geometry/Vector3 standard library operation.
@@ -132,7 +132,7 @@ class Vector3
   length: v = nil ->
     if v == nil
       v = self
-    math_sqrt(self.length_squared(v))
+    math_sqrt(length_squared(v))
 
   # Vector3.length_squared provides the geometry/Vector3 standard library operation.
   # @param v Any v value.
@@ -140,8 +140,8 @@ class Vector3
   length_squared: v = nil ->
     if v == nil
       v = self
-    self.expect(v, "v")
-    self.dot(v, v)
+    expect(v, "v")
+    dot(v, v)
 
   # Vector3.lerp provides the geometry/Vector3 standard library operation.
   # @param a Int a value.
@@ -149,9 +149,9 @@ class Vector3
   # @param t Any t value.
   # @return Any the resulting value.
   lerp: a, b, t ->
-    self.expect(a, "a")
-    self.expect(b, "b")
-    self.number(t, "t")
+    expect(a, "a")
+    expect(b, "b")
+    number(t, "t")
     Vector3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t)
 
   # Vector3.nearly_equal? provides the geometry/Vector3 standard library operation.
@@ -164,18 +164,18 @@ class Vector3
       epsilon = b
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     if epsilon < 0
       raise error("geometry.Vector3.nearly_equal?: epsilon must be non-negative")
-    self.abs(a.x - b.x) <= epsilon and self.abs(a.y - b.y) <= epsilon and self.abs(a.z - b.z) <= epsilon
+    abs(a.x - b.x) <= epsilon and abs(a.y - b.y) <= epsilon and abs(a.z - b.z) <= epsilon
 
   # Vector3.new provides the geometry/Vector3 standard library operation.
   # @param x Int x value.
   # @param y Int y value.
   # @param z Int z value.
   # @return Self the resulting value.
-  new: x, y, z -> Vector3(x, y, z)
+  new: x_arg, y_arg, z_arg -> Vector3(x_arg, y_arg, z_arg)
 
   # Vector3.normalize provides the geometry/Vector3 standard library operation.
   # @param v Any v value.
@@ -183,10 +183,10 @@ class Vector3
   normalize: v = nil ->
     if v == nil
       v = self
-    geometry_len = self.length(v)
+    geometry_len = length(v)
     if geometry_len == 0
-      return self.zero()
-    self.div(v, geometry_len)
+      return zero()
+    div(v, geometry_len)
 
   # Vector3.number provides the geometry/Vector3 standard library operation.
   # @param value String value value.
@@ -209,8 +209,8 @@ class Vector3
     if k == nil
       k = v
       v = self
-    self.expect(v, "v")
-    self.number(k, "k")
+    expect(v, "v")
+    number(k, "k")
     Vector3(v.x * k, v.y * k, v.z * k)
 
   # Vector3.sub provides the geometry/Vector3 standard library operation.
@@ -221,8 +221,8 @@ class Vector3
     if b == nil
       b = a
       a = self
-    self.expect(a, "a")
-    self.expect(b, "b")
+    expect(a, "a")
+    expect(b, "b")
     Vector3(a.x - b.x, a.y - b.y, a.z - b.z)
 
   # Vector3.to_array provides the geometry/Vector3 standard library operation.
@@ -231,7 +231,7 @@ class Vector3
   to_array: v = nil ->
     if v == nil
       v = self
-    self.expect(v, "v")
+    expect(v, "v")
     [v.x, v.y, v.z]
 
   # Vector3.zero provides the geometry/Vector3 standard library operation.

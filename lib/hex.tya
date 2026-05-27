@@ -7,8 +7,8 @@ class Hex
   # Hex.initialize stores an optional value for hex encoding or decoding.
   # @param value String value value.
   # @return Self the initialized object.
-  initialize: value = nil ->
-    self.value = value
+  initialize: hex_value = nil ->
+    self.value = hex_value
 
   # Hex.decode provides the hex/Hex standard library operation.
   # @param text String text value.
@@ -22,8 +22,8 @@ class Hex
     arr = []
     i = 0
     while i < n
-      hi = self.decode_digit(text[i])
-      lo = self.decode_digit(text[i + 1])
+      hi = decode_digit(text[i])
+      lo = decode_digit(text[i + 1])
       arr.push(hi * 16 + lo)
       i = i + 2
     bytes(arr)
@@ -44,25 +44,25 @@ class Hex
   # Hex.encode provides the hex/Hex standard library operation.
   # @param value String value value.
   # @return String the resulting value.
-  encode: value = nil ->
-    if value == nil
-      value = self.value
+  encode: hex_value = nil ->
+    if hex_value == nil
+      hex_value = self.value
     out = ""
-    if value.class != String
-      bytes = bytes_array(value)
+    if hex_value.class != String
+      bytes = bytes_array(hex_value)
       n = bytes.len()
       i = 0
       while i < n
         code = bytes[i]
-        out = out + self.hex_digit(code / 16.to_i()) + self.hex_digit(code % 16)
+        out = out + hex_digit(code / 16.to_i()) + hex_digit(code % 16)
         i = i + 1
       return out
-    if value.class == String
-      n = value.byte_len()
+    if hex_value.class == String
+      n = hex_value.byte_len()
       i = 0
       while i < n
-        code = ord(value[i])
-        out = out + self.hex_digit(code / 16.to_i()) + self.hex_digit(code % 16)
+        code = ord(hex_value[i])
+        out = out + hex_digit(code / 16.to_i()) + hex_digit(code % 16)
         i = i + 1
       return out
     raise error("hex.encode: argument must be a string or bytes")

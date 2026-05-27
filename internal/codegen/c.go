@@ -2545,6 +2545,37 @@ func (g *cgen) expr(expr ast.Expr) (string, string, error) {
 			}
 			return fmt.Sprintf("%s(__this, %s)", sym, strings.Join(args[:6], ", ")), "TyaValue", nil
 		}
+		if id, ok := n.Callee.(*ast.Ident); ok && (n.ImplicitSelf || n.ImplicitClass) {
+			receiver := "__this"
+			if n.ImplicitClass {
+				receiver = g.classTarget()
+			}
+			args := make([]string, 0, len(n.Args))
+			for _, arg := range n.Args {
+				ex, _, err := g.expr(arg)
+				if err != nil {
+					return "", "", err
+				}
+				args = append(args, ex)
+			}
+			switch len(args) {
+			case 0:
+				return fmt.Sprintf("tya_call0(tya_member(%s, %s))", receiver, strconv.Quote(id.Name)), "TyaValue", nil
+			case 1:
+				return fmt.Sprintf("tya_call1(tya_member(%s, %s), %s)", receiver, strconv.Quote(id.Name), args[0]), "TyaValue", nil
+			case 2:
+				return fmt.Sprintf("tya_call2(tya_member(%s, %s), %s, %s)", receiver, strconv.Quote(id.Name), args[0], args[1]), "TyaValue", nil
+			case 3:
+				return fmt.Sprintf("tya_call3(tya_member(%s, %s), %s, %s, %s)", receiver, strconv.Quote(id.Name), args[0], args[1], args[2]), "TyaValue", nil
+			case 4:
+				return fmt.Sprintf("tya_call4(tya_member(%s, %s), %s, %s, %s, %s)", receiver, strconv.Quote(id.Name), args[0], args[1], args[2], args[3]), "TyaValue", nil
+			case 5:
+				return fmt.Sprintf("tya_call5(tya_member(%s, %s), %s, %s, %s, %s, %s)", receiver, strconv.Quote(id.Name), args[0], args[1], args[2], args[3], args[4]), "TyaValue", nil
+			case 6:
+				return fmt.Sprintf("tya_call6(tya_member(%s, %s), %s, %s, %s, %s, %s, %s)", receiver, strconv.Quote(id.Name), args[0], args[1], args[2], args[3], args[4], args[5]), "TyaValue", nil
+			}
+			return "tya_nil()", "TyaValue", nil
+		}
 		id, ok := n.Callee.(*ast.Ident)
 		if ok {
 			if removedPrimitiveHelperNames[id.Name] {

@@ -39,6 +39,8 @@ class Solo
 
 -- api/v2/client.tya --
 class Client
+  method: nil
+
   initialize: ->
     self.method = "GET"
 
@@ -48,8 +50,10 @@ class Client
 
 -- api/v2/request.tya --
 class Request
-  initialize: method ->
-    self.method = method
+  method: nil
+
+  initialize: request_method ->
+    self.method = request_method
 
   method: ->
     self.method

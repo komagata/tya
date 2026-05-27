@@ -40,18 +40,19 @@ stdout '0.71.0\n'
 
 -- class_level.tya --
 class User
+  name: ""
   static count: 0
   static label: "user"
 
-  initialize: name ->
-    self.name = name
+  initialize: user_name ->
+    self.name = user_name
     Self.count = Self.count + 1
 
   label: ->
     Self.label
 
-  static build: name ->
-    Self(name)
+  static build: user_name ->
+    Self(user_name)
 
   static label_name: ->
     Self.label
@@ -85,16 +86,17 @@ print(admin.class.parent)
 
 -- account.tya --
 class Account
+  name: ""
   static kind: "account"
 
-  initialize: name ->
-    self.name = name
+  initialize: account_name ->
+    self.name = account_name
 
   kind: ->
     Self.kind
 
-  static build: name ->
-    Self(name)
+  static build: account_name ->
+    Self(account_name)
 
   static kind_name: ->
     Self.kind

@@ -481,8 +481,10 @@ A class declares a runtime class value.
 
 ```tya
 class User
-  initialize: name ->
-    self.name = name
+  name: ""
+
+  initialize: user_name ->
+    self.name = user_name
 
   label: ->
     "user:{self.name}"
@@ -499,7 +501,18 @@ print(user.label())
 default-argument rules as ordinary method calls: callers may omit trailing
 defaulted `initialize` parameters, while required constructor parameters and
 the total parameter count are still enforced. Instance methods receive `self`.
-Instance fields are created by assignment to `self.<name>`.
+Instance fields are declared in the class body and are assigned with
+`self.<name> = value`; assigning an undeclared `self.<name>` is invalid,
+including inside `initialize`. Method parameters and local bindings inside an
+instance method cannot reuse an effective instance field name.
+
+Inside `initialize` and instance methods, an unqualified call such as
+`helper(args)` resolves to `self.helper(args)` when ordinary callable lookup
+does not find `helper` and the current class, a parent class, or an interface
+default provides that instance method. Static methods similarly resolve
+`helper(args)` to `Self.helper(args)` for static methods on the current class
+or parent class. Field reads and writes remain explicit, and bare references
+such as `value = helper` are not receiver method references.
 
 Tya supports:
 
@@ -522,8 +535,8 @@ canonical constant form.
 
 ```tya
 class Admin extends User
-  initialize: name ->
-    super(name)
+  initialize: admin_name ->
+    super(admin_name)
 
   override label: ->
     "admin:{self.name}"
@@ -545,7 +558,7 @@ interface Named
   name: ->
 
   label: ->
-    self.name()
+    name()
 ```
 
 An interface may contain:
@@ -568,8 +581,10 @@ interface Timestamped
     self.created_at = Time().now()
 
 class Account implements Named, Timestamped
-  initialize: name ->
-    self.name_value = name
+  name_value: ""
+
+  initialize: account_name ->
+    self.name_value = account_name
     super()
 
   name: ->

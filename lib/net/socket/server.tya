@@ -7,8 +7,8 @@ class Server implements Closable
   # Server.initialize provides the net/socket/Server standard library operation.
   # @param handle Any handle value.
   # @return Self the initialized object.
-  initialize: handle ->
-    self.handle = handle
+  initialize: server_handle ->
+    self.handle = server_handle
 
   # Server.accept provides the net/socket/Server standard library operation.
   # @return Any the resulting value.

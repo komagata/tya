@@ -7,10 +7,10 @@ class CData
   # CData.initialize provides the xml/CData standard library operation.
   # @param text String text value.
   # @return Self the initialized object.
-  initialize: text ->
-    self.text = text
+  initialize: text_arg ->
+    self.text = text_arg
 
   # CData.new provides the xml/CData standard library operation.
-  # @param text String text value.
+  # @param text_arg String text_arg value.
   # @return Self the resulting value.
-  new: text -> CData(text)
+  new: text_arg -> CData(text_arg)

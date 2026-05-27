@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"tya/internal/checker"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 )
@@ -60,6 +61,54 @@ func TestRunStrictStringPlus(t *testing.T) {
 				t.Fatalf("got %q, want %q", out.String(), tt.want)
 			}
 		})
+	}
+}
+
+func TestRunImplicitSelfAndSelfMethodCalls(t *testing.T) {
+	src := strings.Join([]string{
+		"class Greeter",
+		"  name_value: nil",
+		"",
+		"  initialize: value ->",
+		"    self.name_value = value",
+		"",
+		"  name: ->",
+		"    self.name_value",
+		"",
+		"  prefix: ->",
+		"    \"hi:\"",
+		"",
+		"  label: ->",
+		"    prefix() + name()",
+		"",
+		"  static class_prefix: ->",
+		"    \"hi:\"",
+		"",
+		"  static static_label: ->",
+		"    class_prefix()",
+		"",
+		"g = Greeter(\"tya\")",
+		"print(g.label())",
+		"print(Greeter.static_label())",
+		"",
+	}, "\n")
+	toks, errs := lexer.Lex(src)
+	if len(errs) != 0 {
+		t.Fatalf("lex errors: %v", errs)
+	}
+	prog, _, err := parser.Parse(toks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := checker.Check(prog); err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	if err := Run(prog, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != "hi:tya\nhi:\n" {
+		t.Fatalf("got %q", out.String())
 	}
 }
 

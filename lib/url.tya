@@ -57,8 +57,8 @@ class Url
       if c == "%"
         if i + 2 >= n
           raise error("url.decode: truncated percent-escape")
-        hi = Self.decode_hex(text[i + 1])
-        lo = Self.decode_hex(text[i + 2])
+        hi = decode_hex(text[i + 1])
+        lo = decode_hex(text[i + 2])
         out = out + chr(hi * 16 + lo)
         i = i + 3
       else
@@ -84,7 +84,7 @@ class Url
             eq_idx = i
           i = i + 1
         if eq_idx < 0
-          k = Self.decode_query_value(raw)
+          k = decode_query_value(raw)
           out.push([k, ""])
         else
           k_raw = ""
@@ -98,7 +98,7 @@ class Url
             v_raw = v_raw + raw[i]
             i = i + 1
           out.push(
-            [Self.decode_query_value(k_raw), Self.decode_query_value(v_raw)]
+            [decode_query_value(k_raw), decode_query_value(v_raw)]
           )
     out
 
@@ -112,11 +112,11 @@ class Url
     while i < n
       c = text[i]
       code = ord(c)
-      if Self.is_unreserved(code)
+      if is_unreserved(code)
         out = out + c
       else
-        hi = Self.hex_digit(code / 16.to_i())
-        lo = Self.hex_digit(code % 16)
+        hi = hex_digit(code / 16.to_i())
+        lo = hex_digit(code % 16)
         out = out + "%" + hi + lo
       i = i + 1
     out
@@ -132,8 +132,8 @@ class Url
     if names.len() > 0
       for k in names
         v = pairs[k]
-        encoded_k = Self.encode(k)
-        encoded_v = Self.encode(v)
+        encoded_k = encode(k)
+        encoded_v = encode(v)
         parts_a.push("{encoded_k}={encoded_v}")
     parts_a.join("&")
 
@@ -145,8 +145,8 @@ class Url
     for pair in pairs
       k = pair[0]
       v = pair[1]
-      encoded_k = Self.encode(k)
-      encoded_v = Self.encode(v)
+      encoded_k = encode(k)
+      encoded_v = encode(v)
       parts_a.push("{encoded_k}={encoded_v}")
     parts_a.join("&")
 
@@ -157,7 +157,7 @@ class Url
     u = Url().parse(text)
     u.scheme = u.scheme.lower()
     u.host = u.host.lower()
-    u.path = Self.normalize_path(u.path)
+    u.path = normalize_path(u.path)
     u.format()
 
   # Url.normalize_path provides the url/Url standard library operation.
@@ -191,7 +191,7 @@ class Url
   static query_dict: query ->
     pairs = query
     if query.class == String
-      pairs = Self.decode_query(query)
+      pairs = decode_query(query)
     out = {}
     for pair in pairs
       k = pair[0]
@@ -214,7 +214,7 @@ class Url
     b = Url().parse(base)
     r = Url().parse(ref)
     if r.scheme != ""
-      return Self.normalize(r.format())
+      return normalize(r.format())
     out =
       scheme: b.scheme
       user: ""
@@ -229,7 +229,7 @@ class Url
       out["password"] = r.password
       out["host"] = r.host
       out["port"] = r.port
-      out["path"] = Self.normalize_path(r.path)
+      out["path"] = normalize_path(r.path)
       out["query"] = r.query
     else
       out["user"] = b.user
@@ -243,10 +243,10 @@ class Url
         else
           out["query"] = b.query
       elseif r.path.starts_with("/")
-        out["path"] = Self.normalize_path(r.path)
+        out["path"] = normalize_path(r.path)
         out["query"] = r.query
       else
-        out["path"] = Self.normalize_path(Self.merge_path(b.path, r.path))
+        out["path"] = normalize_path(merge_path(b.path, r.path))
         out["query"] = r.query
     Url().load_parts(out).format()
 
@@ -303,8 +303,8 @@ class Url
       elseif c == "%"
         if i + 2 >= n
           raise error("url.decode_query: truncated percent-escape")
-        hi = Self.decode_hex(text[i + 1])
-        lo = Self.decode_hex(text[i + 2])
+        hi = decode_hex(text[i + 1])
+        lo = decode_hex(text[i + 2])
         out = out + chr(hi * 16 + lo)
         i = i + 3
       else
@@ -359,8 +359,8 @@ class Url
       if text[i] == "%"
         if i + 2 >= n
           raise error("url.decode: truncated percent-escape")
-        Self.decode_hex(text[i + 1])
-        Self.decode_hex(text[i + 2])
+        decode_hex(text[i + 1])
+        decode_hex(text[i + 2])
         i = i + 3
       else
         i = i + 1
@@ -369,7 +369,7 @@ class Url
   # Url.format provides the url/Url standard library operation.
   # @return Any the resulting value.
   format: ->
-    parts = self.to_dict()
+    parts = to_dict()
     out = ""
     if parts.has("scheme") and parts["scheme"] != ""
       out = out + parts["scheme"] + ":"
@@ -411,7 +411,7 @@ class Url
   # @param parts Dict parts value.
   # @return Self the current object.
   load_parts: parts ->
-    self.reset_parts()
+    reset_parts()
     if parts.has("scheme")
       self.scheme = parts["scheme"]
     if parts.has("user")
@@ -596,7 +596,7 @@ class Url
         i = i + 1
       out["fragment"] = frag_text
       Self.validate_percent(frag_text)
-    self.load_parts(out)
+    load_parts(out)
     self
 
   # Url.reset_parts clears parsed URL parts on the instance.
@@ -626,6 +626,6 @@ class Url
       path: self.path
       query: self.query
       fragment: self.fragment
-      has_query: self.has_query?()
-      has_authority: self.has_authority?()
+      has_query: has_query?()
+      has_authority: has_authority?()
     out

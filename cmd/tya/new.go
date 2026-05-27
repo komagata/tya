@@ -269,6 +269,8 @@ func writeLibTemplate(target, name string) error {
 		return err
 	}
 	src := fmt.Sprintf(`class %s
+  name: ""
+
   initialize: ->
     self.name = "%s"
 

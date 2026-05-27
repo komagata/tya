@@ -9,18 +9,18 @@ class Codec
   # Codec.initialize stores image data or a path.
   # @param value String value value.
   # @return Self the initialized object.
-  initialize: value = nil ->
-    self.value = value
+  initialize: codec_value = nil ->
+    self.value = codec_value
 
   # Codec.identify is a compatibility alias for Codec.metadata.
   # @param data Array data value.
   # @return Any the resulting value.
-  identify: data = nil -> self.metadata(data)
+  identify: data = nil -> metadata(data)
 
   # Codec.identify_file is a compatibility alias for Codec.metadata_file.
   # @param path String path value.
   # @return Any the resulting value.
-  identify_file: path = nil -> self.metadata_file(path)
+  identify_file: path = nil -> metadata_file(path)
 
   # Codec.metadata reads image metadata from encoded bytes.
   # @param data Array data value.

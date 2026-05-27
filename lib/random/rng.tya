@@ -21,8 +21,8 @@ class Rng
   bool: probability ->
     if probability == nil
       probability = 0.5
-    self.check_probability(probability)
-    self.float() < probability
+    check_probability(probability)
+    float() < probability
 
   # Rng.check_probability provides the random/Rng standard library operation.
   # @param probability Any probability value.
@@ -50,7 +50,7 @@ class Rng
     n = items.len()
     if n == 0
       raise error("random.Rng.choice: empty array")
-    items[self.int(0, n - 1)]
+    items[int(0, n - 1)]
 
   # Rng.copy_array provides the random/Rng standard library operation.
   # @param items Array items value.
@@ -65,7 +65,7 @@ class Rng
 
   # Rng.float provides the random/Rng standard library operation.
   # @return Any the resulting value.
-  float: -> self.next_int() / 2147483647
+  float: -> next_int() / 2147483647
 
   # Rng.int provides the random/Rng standard library operation.
   # @param min Any min value.
@@ -79,7 +79,7 @@ class Rng
     if max < min
       raise error("random.Rng.int: max < min")
     span = max - min + 1
-    min + self.next_int() % span
+    min + next_int() % span
 
   # Rng.new provides the random/Rng standard library operation.
   # @param seed Any seed value.
@@ -97,8 +97,8 @@ class Rng
   # @param count Int count value.
   # @return Any the resulting value.
   sample: items, count ->
-    self.check_sample_count(items, count)
-    shuffled = self.shuffle_copy(items)
+    check_sample_count(items, count)
+    shuffled = shuffle_copy(items)
     out = []
     i = 0
     while i < count
@@ -124,7 +124,7 @@ class Rng
     n = items.len()
     i = n - 1
     while i > 0
-      j = self.int(0, i)
+      j = int(0, i)
       tmp = items[i]
       items[i] = items[j]
       items[j] = tmp
@@ -135,8 +135,8 @@ class Rng
   # @param items Array items value.
   # @return Any the resulting value.
   shuffle_copy: items ->
-    copy = self.copy_array(items)
-    self.shuffle(copy)
+    copy = copy_array(items)
+    shuffle(copy)
     copy
 
   # Rng.weight_total provides the random/Rng standard library operation.
@@ -165,14 +165,14 @@ class Rng
   weighted_choice: items, weights ->
     if items.len() != weights.len()
       raise error("random.Rng.weighted_choice: items and weights length mismatch")
-    items[self.weighted_index(weights)]
+    items[weighted_index(weights)]
 
   # Rng.weighted_index provides the random/Rng standard library operation.
   # @param weights Any weights value.
   # @return Int the resulting value.
   weighted_index: weights ->
-    total = self.weight_total(weights, "random.Rng.weighted_index")
-    pick = self.float() * total
+    total = weight_total(weights, "random.Rng.weighted_index")
+    pick = float() * total
     sum = 0
     i = 0
     while i < weights.len()

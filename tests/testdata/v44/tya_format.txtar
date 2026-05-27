@@ -11,7 +11,7 @@ cd $REPO
 
 exec go run ./cmd/tya format $WORK/greeter.tya
 stdout 'class Greeter'
-stdout 'initialize: name ->'
+stdout 'initialize: name_arg ->'
 stdout 'greet: ->'
 ! stderr .
 
@@ -22,8 +22,10 @@ stdout 'lib.Lib.greet'
 
 -- greeter.tya --
 class Greeter
-  initialize: name ->
-    self.name = name
+  name: nil
+
+  initialize: name_arg ->
+    self.name = name_arg
 
   greet: ->
     "Hello, {self.name}"

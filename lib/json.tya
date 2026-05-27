@@ -17,32 +17,32 @@ class Json
   # Json.initialize stores a value or JSON text.
   # @param value String value value.
   # @return Self the initialized object.
-  initialize: value = nil ->
-    self.value = value
+  initialize: json_value = nil ->
+    self.value = json_value
 
   # dump is a compatibility alias for stringify.
   # @param value String value value.
   # @return String the resulting value.
-  dump: value = nil -> self.stringify(value)
+  dump: json_value = nil -> stringify(json_value)
 
   # Json.emit provides the json/Json standard library operation.
   # @param value String value value.
   # @param indent Any indent value.
   # @param level Any level value.
   # @return Any the resulting value.
-  emit: value, indent, level ->
-    if value.class == Nil
+  emit: json_value, indent, level ->
+    if json_value.class == Nil
       return "null"
-    if value.class == Boolean
-      if value
+    if json_value.class == Boolean
+      if json_value
         return "true"
       return "false"
-    if value.class == Number
-      return value.to_s()
-    if value.class == String
-      return Json(nil).escape_string(value)
-    if value.class == Array
-      n = value.len()
+    if json_value.class == Number
+      return json_value.to_s()
+    if json_value.class == String
+      return Json(nil).escape_string(json_value)
+    if json_value.class == Array
+      n = json_value.len()
       if n == 0
         return "[]"
       out = "["
@@ -51,12 +51,12 @@ class Json
         if i > 0
           out = out + ","
         out = out + Json(nil).pad(indent, level + 1)
-        out = out + Json(nil).emit(value[i], indent, level + 1)
+        out = out + Json(nil).emit(json_value[i], indent, level + 1)
         i = i + 1
       out = out + Json(nil).pad(indent, level)
       return out + "]"
-    if value.class == Dict
-      names = value.keys()
+    if json_value.class == Dict
+      names = json_value.keys()
       n = names.len()
       if n == 0
         return "{{}}"
@@ -70,7 +70,7 @@ class Json
         out = out + Json(nil).escape_string(key_name) + ":"
         if indent > 0
           out = out + " "
-        out = out + Json(nil).emit(value[key_name], indent, level + 1)
+        out = out + Json(nil).emit(json_value[key_name], indent, level + 1)
         i = i + 1
       out = out + Json(nil).pad(indent, level)
       return out + "}}"
@@ -260,8 +260,8 @@ class Json
       Json(nil).skip_ws(state)
       key = Json(nil).parse_string(state)
       Json(nil).expect(state, ":")
-      value = Json(nil).parse_value(state)
-      out[key] = value
+      parsed_value = Json(nil).parse_value(state)
+      out[key] = parsed_value
       Json(nil).skip_ws(state)
       p = state["pos"]
       if p < state["len"] and state["src"][p] == "}}"
@@ -386,10 +386,10 @@ class Json
   # Raises when a value cannot be represented as JSON.
   # @param value String value value.
   # @return String the resulting value.
-  stringify: value = nil ->
-    if value == nil
-      value = self.value
-    Json(nil).emit(value, 0, 0)
+  stringify: json_value = nil ->
+    if json_value == nil
+      json_value = self.value
+    Json(nil).emit(json_value, 0, 0)
 
   # Json.text_len counts string indexes, independent of byte length.
   # @param text String text value.

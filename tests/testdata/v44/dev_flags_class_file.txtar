@@ -37,16 +37,22 @@ stderr 'never used'
 
 -- foo.tya --
 class Foo
+  x: nil
+
   initialize: ->
     self.x = 1
 
 -- bad_name.tya --
 class WrongName
+  x: nil
+
   initialize: ->
     self.x = 1
 
 -- unused.tya --
 class Unused
+  x: nil
+
   initialize: ->
     self.x = 1
 

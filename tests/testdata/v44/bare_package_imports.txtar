@@ -73,6 +73,8 @@ print(Request())
 
 -- net/http/request.tya --
 class Request
+  text: nil
+
   initialize: label ->
     self.text = label
 
@@ -81,6 +83,8 @@ class Request
 
 -- api/request.tya --
 class Request
+  text: nil
+
   initialize: label ->
     self.text = label
 
@@ -89,6 +93,8 @@ class Request
 
 -- web/request.tya --
 class Request
+  text: nil
+
   initialize: label ->
     self.text = label
 

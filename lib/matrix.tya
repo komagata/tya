@@ -15,13 +15,13 @@ class Matrix
   # Matrix.initialize provides the matrix/Matrix standard library operation.
   # @param data Array data value.
   # @return Self the initialized object.
-  initialize: data = nil ->
-    if data == nil
-      data = [[0]]
-    cols = self.validate_data(data)
-    self.rows = data.len()
-    self.cols = cols
-    self.data = data
+  initialize: data_arg = nil ->
+    if data_arg == nil
+      data_arg = [[0]]
+    cols_local = validate_data(data_arg)
+    self.rows = data_arg.len()
+    self.cols = cols_local
+    self.data = data_arg
 
   # Matrix.add provides the matrix/Matrix standard library operation.
   # @param a Int a value.
@@ -92,7 +92,7 @@ class Matrix
         minor_data.push(row)
         r = r + 1
       sub_m = Matrix(minor_data)
-      cofactor = self.det(sub_m) * d[0][j]
+      cofactor = det(sub_m) * d[0][j]
       if j % 2 == 0
         sum = sum + cofactor
       else
@@ -116,7 +116,7 @@ class Matrix
   # @param n Int n value.
   # @return Any the resulting value.
   identity: n ->
-    data = []
+    data_local = []
     i = 0
     while i < n
       row = []
@@ -127,9 +127,9 @@ class Matrix
         else
           row.push(0)
         j = j + 1
-      data.push(row)
+      data_local.push(row)
       i = i + 1
-    Matrix(data)
+    Matrix(data_local)
 
   # Matrix.mul provides the matrix/Matrix standard library operation.
   # @param a Int a value.
@@ -161,7 +161,7 @@ class Matrix
   # Matrix.new provides the matrix/Matrix standard library operation.
   # @param data Array data value.
   # @return Self the resulting value.
-  new: data -> Matrix(data)
+  new: data_arg -> Matrix(data_arg)
 
   # Matrix.put provides the matrix/Matrix standard library operation.
   # @param m Any m value.
@@ -243,40 +243,40 @@ class Matrix
   # Matrix.validate_data provides the matrix/Matrix standard library operation.
   # @param data Array data value.
   # @return Boolean the resulting value.
-  validate_data: data ->
-    if data.class != Array
-      raise error("matrix.new: data must be an array of arrays")
-    rows = data.len()
-    if rows == 0
+  validate_data: data_arg ->
+    if data_arg.class != Array
+      raise error("matrix.new: data_arg must be an array of arrays")
+    rows_local = data_arg.len()
+    if rows_local == 0
       raise error("matrix.new: empty matrix")
-    if data[0].class != Array
-      raise error("matrix.new: rows must be arrays")
-    cols = data[0].len()
+    if data_arg[0].class != Array
+      raise error("matrix.new: rows_local must be arrays")
+    cols_local = data_arg[0].len()
     i = 0
-    while i < rows
-      if data[i].class != Array or data[i].len() != cols
+    while i < rows_local
+      if data_arg[i].class != Array or data_arg[i].len() != cols_local
         raise error("matrix.new: inconsistent row lengths")
       j = 0
-      while j < cols
-        if data[i][j].class != Number
+      while j < cols_local
+        if data_arg[i][j].class != Number
           raise error("matrix.new: elements must be numbers")
         j = j + 1
       i = i + 1
-    cols
+    cols_local
 
   # Matrix.zero provides the matrix/Matrix standard library operation.
-  # @param rows Array rows value.
-  # @param cols Any cols value.
+  # @param rows_local Array rows_local value.
+  # @param cols_local Any cols_local value.
   # @return Any the resulting value.
-  zero: rows, cols ->
-    data = []
+  zero: rows_arg, cols_arg ->
+    data_local = []
     i = 0
-    while i < rows
+    while i < rows_arg
       row = []
       j = 0
-      while j < cols
+      while j < cols_arg
         row.push(0)
         j = j + 1
-      data.push(row)
+      data_local.push(row)
       i = i + 1
-    Matrix(data)
+    Matrix(data_local)

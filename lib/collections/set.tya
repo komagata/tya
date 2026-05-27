@@ -26,7 +26,7 @@ class Set
   # @param value String value value.
   # @return Any the resulting value.
   add: value ->
-    if not self.has?(value)
+    if not has?(value)
       self.items.push(value)
     self
 
@@ -57,7 +57,7 @@ class Set
   # @return Any the resulting value.
   difference: other ->
     out = Set(nil)
-    values = self.to_array()
+    values = to_array()
     i = 0
     while i < values.len()
       if not other.has?(values[i])
@@ -90,7 +90,7 @@ class Set
   # @return Any the resulting value.
   intersection: other ->
     out = Set(nil)
-    values = self.to_array()
+    values = to_array()
     i = 0
     while i < values.len()
       if other.has?(values[i])
@@ -110,7 +110,7 @@ class Set
   # @param other Any other value.
   # @return Boolean whether the condition is true.
   subset?: other ->
-    values = self.to_array()
+    values = to_array()
     i = 0
     while i < values.len()
       if not other.has?(values[i])
@@ -126,7 +126,7 @@ class Set
   # @param other Any other value.
   # @return Any the resulting value.
   union: other ->
-    out = Set(self.to_array())
+    out = Set(to_array())
     i = 0
     values = other.to_array()
     while i < values.len()

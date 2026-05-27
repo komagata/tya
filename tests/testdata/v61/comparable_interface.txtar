@@ -32,8 +32,10 @@ interface Comparable
     self.gte?(min) and self.lte?(max)
 
 class Box implements Comparable
-  initialize: value ->
-    self.value = value
+  value: nil
+
+  initialize: item ->
+    self.value = item
 
   compare: other ->
     self.value - other.value
@@ -50,8 +52,10 @@ interface Comparable
   compare: other ->
 
 class Box implements Comparable
-  initialize: value ->
-    self.value = value
+  value: nil
+
+  initialize: item ->
+    self.value = item
 
 -- primitives.tya --
 print(1.compare(2))

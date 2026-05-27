@@ -7,5 +7,5 @@ class IterableSequence implements Sequence
   # IterableSequence.initialize provides the iterable_sequence standard library operation.
   # @param source String source value.
   # @return Self the initialized object.
-  initialize: source ->
-    self.source = source
+  initialize: sequence_source ->
+    self.source = sequence_source

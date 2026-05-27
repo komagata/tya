@@ -39,28 +39,28 @@ class Deque
   # Deque.peek_back provides the collections/Deque standard library operation.
   # @return Any the resulting value.
   peek_back: ->
-    if self.empty?()
+    if empty?()
       raise error("collections.Deque.peek_back: empty deque")
     self.items[self.items.len() - 1]
 
   # Deque.peek_front provides the collections/Deque standard library operation.
   # @return Any the resulting value.
   peek_front: ->
-    if self.empty?()
+    if empty?()
       raise error("collections.Deque.peek_front: empty deque")
     self.items[0]
 
   # Deque.pop_back provides the collections/Deque standard library operation.
   # @return Any the resulting value.
   pop_back: ->
-    if self.empty?()
+    if empty?()
       raise error("collections.Deque.pop_back: empty deque")
     self.items.pop()
 
   # Deque.pop_front provides the collections/Deque standard library operation.
   # @return Any the resulting value.
   pop_front: ->
-    if self.empty?()
+    if empty?()
       raise error("collections.Deque.pop_front: empty deque")
     value = self.items[0]
     self.items = self.items.slice(1, self.items.len())

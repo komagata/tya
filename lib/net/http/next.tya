@@ -17,10 +17,10 @@ class Next
   # @param index Int index value.
   # @param handler Any handler value.
   # @return Self the initialized object.
-  initialize: middlewares, index, handler ->
-    self.middlewares = middlewares
-    self.index = index
-    self.handler = handler
+  initialize: middlewares_arg, index_arg, handler_arg ->
+    self.middlewares = middlewares_arg
+    self.index = index_arg
+    self.handler = handler_arg
 
   # Next.call provides the net/http/Next standard library operation.
   # @param req Any req value.
@@ -37,4 +37,4 @@ class Next
   # @param index Int index value.
   # @param handler Any handler value.
   # @return Self the resulting value.
-  new: middlewares, index, handler -> Next(middlewares, index, handler)
+  new: middlewares_arg, index_arg, handler_arg -> Next(middlewares_arg, index_arg, handler_arg)

@@ -37,8 +37,8 @@ class User
   static count: 0
   static prefix: "on"
 
-  initialize: name ->
-    self.name = name
+  initialize: user_name ->
+    self.name = user_name
     Self.count = Self.count + 1
 
   greeting: ->
@@ -50,8 +50,8 @@ class User
   label: ->
     "{Self.prefix}:{self.name}"
 
-  static build: name ->
-    User(name)
+  static build: user_name ->
+    User(user_name)
 
   static count_users: ->
     Self.count
@@ -73,10 +73,11 @@ print(User.count)
 
 -- user.tya --
 class User
+  name: ""
   static count: 0
 
-  initialize: name ->
-    self.name = name
+  initialize: user_name ->
+    self.name = user_name
     Self.count = Self.count + 1
 
   name: ->
@@ -97,6 +98,8 @@ print(user.User.count)
 
 -- shadowing.tya --
 class Response
+  status: 0
+
   initialize: ->
     self.status = 200
     self.bump()
@@ -124,8 +127,7 @@ class User
 -- duplicate_instance_member.tya --
 class User
   name: ""
-  name: ->
-    self.name
+  name: "again"
 
 -- missing_class_member.tya --
 class User

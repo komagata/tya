@@ -7,8 +7,8 @@ class Markdown
   # Markdown.initialize stores source Markdown text.
   # @param source String source value.
   # @return Self the initialized object.
-  initialize: source ->
-    self.source = source
+  initialize: markdown_source ->
+    self.source = markdown_source
 
   # Markdown.escape_attr provides the markdown/Markdown standard library operation.
   # @param text String text value.
@@ -490,7 +490,7 @@ class Markdown
   # @param ast Any ast value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  render: ast, options -> self.render_html_ast(ast, options)
+  render: ast, options -> render_html_ast(ast, options)
 
   # Markdown.render_block provides the markdown/Markdown standard library operation.
   # @param block Function block value.

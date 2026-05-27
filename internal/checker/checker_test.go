@@ -34,6 +34,39 @@ func TestCheckAllowsSelfClassConstantInFieldInitializer(t *testing.T) {
 	}
 }
 
+func TestCheckAllowsImplicitSelfAndSelfMethodCalls(t *testing.T) {
+	src := "interface Named\n  summary: ->\n    self.name()\n\nclass Base\n  static prefix: -> \"base\"\n\n  base_label: -> \"base\"\n\nclass User extends Base implements Named\n  name_value: nil\n\n  initialize: value ->\n    self.name_value = value\n\n  name: ->\n    self.name_value\n\n  label: ->\n    base_label() + \":\" + name() + \":\" + summary()\n\n  static label: ->\n    prefix()\n"
+	if err := Check(parse(t, src)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckRejectsUndeclaredSelfFieldAssignment(t *testing.T) {
+	err := Check(parse(t, "class User\n  initialize: name ->\n    self.name = name\n"))
+	if err == nil {
+		t.Fatal("expected undeclared field error")
+	}
+	if !strings.Contains(err.Error(), "undeclared instance field name") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestCheckRejectsInstanceFieldNameCollisions(t *testing.T) {
+	tests := []string{
+		"class User\n  name: nil\n\n  initialize: name ->\n    self.name = name\n",
+		"class User\n  name: nil\n\n  set_name: value ->\n    name = value\n",
+	}
+	for _, src := range tests {
+		err := Check(parse(t, src))
+		if err == nil {
+			t.Fatalf("expected field collision error for %q", src)
+		}
+		if !strings.Contains(err.Error(), "conflicts with instance field name") {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+}
+
 func TestCheckRejectsKindChangingReassignment(t *testing.T) {
 	prog := parse(t, "retry_count = 3\nretry_count = \"three\"\n")
 	err := Check(prog)
@@ -541,14 +574,14 @@ func TestIsScriptFileName(t *testing.T) {
 }
 
 func TestCheckClassFileAcceptsMatchingClass(t *testing.T) {
-	prog := parse(t, "class Request\n  initialize: url ->\n    self.url = url\n")
+	prog := parse(t, "class Request\n  url: nil\n\n  initialize: value ->\n    self.url = value\n")
 	if err := CheckClassFile(prog, "request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckClassFileAcceptsAcronymSnakeCaseClass(t *testing.T) {
-	prog := parse(t, "class HTTPServer\n  initialize: ->\n    self.path = \"/\"\n")
+	prog := parse(t, "class HTTPServer\n  path: nil\n\n  initialize: ->\n    self.path = \"/\"\n")
 	if err := CheckClassFile(prog, "http_server.tya"); err != nil {
 		t.Fatal(err)
 	}
@@ -562,15 +595,15 @@ func TestCheckClassFileAcceptsMatchingInterface(t *testing.T) {
 }
 
 func TestCheckClassFileAcceptsImportsBeforeClass(t *testing.T) {
-	prog := parse(t, "import string\n\nclass Request\n  initialize: url ->\n    self.url = url\n")
+	prog := parse(t, "import string\n\nclass Request\n  url: nil\n\n  initialize: value ->\n    self.url = value\n")
 	if err := CheckClassFile(prog, "request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckClassFileAcceptsPrivateClasses(t *testing.T) {
-	src := "class Header\n  initialize: name, value ->\n    self.name = name\n    self.value = value\n\n" +
-		"class Request\n  initialize: url ->\n    self.url = url\n"
+	src := "class Header\n  name: nil\n  value: nil\n\n  initialize: header_name, header_value ->\n    self.name = header_name\n    self.value = header_value\n\n" +
+		"class Request\n  url: nil\n\n  initialize: value ->\n    self.url = value\n"
 	prog := parse(t, src)
 	if err := CheckClassFile(prog, "request.tya"); err != nil {
 		t.Fatal(err)
@@ -578,15 +611,15 @@ func TestCheckClassFileAcceptsPrivateClasses(t *testing.T) {
 }
 
 func TestCheckClassFileAcceptsInterfaceCompanion(t *testing.T) {
-	src := "interface Sendable\n  send: ->\n\nclass Request\n  initialize: ->\n    self.url = nil\n"
+	src := "interface Sendable\n  send: ->\n\nclass Request\n  url: nil\n\n  initialize: ->\n    self.url = nil\n"
 	prog := parse(t, src)
 	if err := CheckClassFile(prog, "request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestCheckAllowsSelfFieldCreationInInstanceMethods(t *testing.T) {
-	src := "class Request\n  initialize: url ->\n    self.url = url\n  reset: ->\n    self.url = nil\n"
+func TestCheckAllowsDeclaredSelfFieldAssignmentInInstanceMethods(t *testing.T) {
+	src := "class Request\n  url: nil\n\n  initialize: value ->\n    self.url = value\n  reset: ->\n    self.url = nil\n"
 	prog := parse(t, src)
 	if err := Check(prog); err != nil {
 		t.Fatal(err)

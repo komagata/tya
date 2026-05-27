@@ -17,16 +17,16 @@ class Element
   # @param attrs Any attrs value.
   # @param children Any children value.
   # @return Self the initialized object.
-  initialize: name, attrs, children ->
-    self.name = name
-    self.attrs = attrs
-    self.children = children
+  initialize: name_arg, attrs_arg, children_arg ->
+    self.name = name_arg
+    self.attrs = attrs_arg
+    self.children = children_arg
 
   # Element.attr provides the xml/Element standard library operation.
-  # @param name String name value.
+  # @param name_arg String name_arg value.
   # @param default Any default value.
   # @return Any the resulting value.
-  attr: name, default -> self.attrs.get(name, default)
+  attr: name_arg, default -> self.attrs.get(name_arg, default)
 
   # Element.child_elements provides the xml/Element standard library operation.
   # @return Any the resulting value.
@@ -42,53 +42,53 @@ class Element
   # Element.find provides the xml/Element standard library operation.
   # @param name String name value.
   # @return Any the resulting value.
-  find: name ->
-    found = self.find_all(name)
+  find: name_arg ->
+    found = find_all(name_arg)
     if found.len() == 0
       return nil
     found[0]
 
   # Element.find_all provides the xml/Element standard library operation.
-  # @param name String name value.
+  # @param name_arg String name_arg value.
   # @return Any the resulting value.
-  find_all: name ->
+  find_all: name_arg ->
     out = []
-    children = self.child_elements()
+    children_local = child_elements()
     i = 0
-    while i < children.len()
-      if children[i].name == name
-        out.push(children[i])
+    while i < children_local.len()
+      if children_local[i].name == name_arg
+        out.push(children_local[i])
       i = i + 1
     out
 
   # Element.find_all_recursive provides the xml/Element standard library operation.
-  # @param name String name value.
+  # @param name_arg String name_arg value.
   # @return Any the resulting value.
-  find_all_recursive: name ->
+  find_all_recursive: name_arg ->
     out = []
-    Xml(nil).collect_recursive(self, name, out)
+    Xml(nil).collect_recursive(self, name_arg, out)
     out
 
   # Element.find_recursive provides the xml/Element standard library operation.
-  # @param name String name value.
+  # @param name_arg String name_arg value.
   # @return Any the resulting value.
-  find_recursive: name ->
-    found = self.find_all_recursive(name)
+  find_recursive: name_arg ->
+    found = find_all_recursive(name_arg)
     if found.len() == 0
       return nil
     found[0]
 
   # Element.has_attr? provides the xml/Element standard library operation.
-  # @param name String name value.
+  # @param name_arg String name_arg value.
   # @return Boolean whether the condition is true.
-  has_attr?: name -> self.attrs.has?(name)
+  has_attr?: name_arg -> self.attrs.has?(name_arg)
 
   # Element.new provides the xml/Element standard library operation.
-  # @param name String name value.
+  # @param name_arg String name_arg value.
   # @param attrs Any attrs value.
   # @param children Any children value.
   # @return Self the resulting value.
-  new: name, attrs, children -> Element(name, attrs, children)
+  new: name_arg, attrs_arg, children_arg -> Element(name_arg, attrs_arg, children_arg)
 
   # Element.text provides the xml/Element standard library operation.
   # @return String the resulting value.

@@ -15,8 +15,10 @@ interface Serializable
   to_data: ->
 
 class Player implements Serializable
-  initialize: name ->
-    self.name = name
+  name: nil
+
+  initialize: name_arg ->
+    self.name = name_arg
 
   to_data: ->
     { name: self.name }

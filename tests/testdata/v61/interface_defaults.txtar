@@ -131,6 +131,8 @@ interface Ready
     self.ready = true
 
 class Base
+  base_ready: nil
+
   initialize: ->
     self.base_ready = true
 
@@ -288,6 +290,8 @@ interface Ready
     self.ready = true
 
 class Job implements Ready
+  ready: nil
+
   initialize: ->
     self.ready = false
 

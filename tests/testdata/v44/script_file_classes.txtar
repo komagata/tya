@@ -18,8 +18,10 @@ stdout 'A->B->C\n'
 
 -- inline.tya --
 class Wrapper
-  initialize: msg ->
-    self.msg = msg
+  msg: nil
+
+  initialize: value ->
+    self.msg = value
 
   show: ->
     "inline:{self.msg}"

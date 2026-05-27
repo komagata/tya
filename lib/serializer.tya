@@ -17,35 +17,35 @@ class Serializer
   # Serializer.initialize stores a value or serialized text.
   # @param value String value value.
   # @return Self the initialized object.
-  initialize: value = nil ->
-    self.value = value
+  initialize: value_arg = nil ->
+    self.value = value_arg
 
   # Serializer.array_has? provides the serialization/Serializer standard library operation.
-  # @param values Array values value.
-  # @param value String value value.
+  # @param values Array values value_arg.
+  # @param value_arg String value_arg value_arg.
   # @return Boolean whether the condition is true.
-  array_has?: values, value ->
+  array_has?: values, value_arg ->
     i = 0
     while i < values.len()
-      if values[i] == value
+      if values[i] == value_arg
         return true
       i = i + 1
     false
 
-  # Serializer.deserialize restores a value from serialization data.
-  # @param data Array data value.
-  # @param klass Any klass value.
-  # @param options Dict options value.
-  # @return Any the resulting value.
+  # Serializer.deserialize restores a value_arg from serialization data.
+  # @param data Array data value_arg.
+  # @param klass Any klass value_arg.
+  # @param options Dict options value_arg.
+  # @return Any the resulting value_arg.
   deserialize: data = nil, klass = nil, options = nil ->
-    self.from_data(data, klass, options)
+    from_data(data, klass, options)
 
   # Serializer.enter_seen provides the serialization/Serializer standard library operation.
   # @param value String value value.
   # @param seen Any seen value.
   # @return Any the resulting value.
-  enter_seen: value, seen ->
-    id = serialization_id(value)
+  enter_seen: value_arg, seen ->
+    id = serialization_id(value_arg)
     i = 0
     while i < seen.len()
       if seen[i] == id
@@ -54,10 +54,10 @@ class Serializer
     seen.push(id)
 
   # Serializer.from_data provides the serialization/Serializer standard library operation.
-  # @param data Array data value.
-  # @param klass Any klass value.
-  # @param options Dict options value.
-  # @return Self the resulting value.
+  # @param data Array data value_arg.
+  # @param klass Any klass value_arg.
+  # @param options Dict options value_arg.
+  # @return Self the resulting value_arg.
   from_data: data = nil, klass = nil, options = nil ->
     if data == nil
       data = self.value
@@ -144,60 +144,60 @@ class Serializer
   # @param value String value value.
   # @param options Dict options value.
   # @return Any the resulting value.
-  serialize: value = nil, options = nil -> self.to_data(value, options)
+  serialize: value_arg = nil, options = nil -> to_data(value_arg, options)
 
   # Serializer.to_data provides the serialization/Serializer standard library operation.
-  # @param value String value value.
-  # @param options Dict options value.
-  # @return Any the resulting value.
-  to_data: value = nil, options = nil ->
-    if value == nil
-      value = self.value
+  # @param value_arg String value_arg value_arg.
+  # @param options Dict options value_arg.
+  # @return Any the resulting value_arg.
+  to_data: value_arg = nil, options = nil ->
+    if value_arg == nil
+      value_arg = self.value
     opts = Serializer(nil).options(options)
-    Serializer(nil).to_data_seen(value, opts, [])
+    Serializer(nil).to_data_seen(value_arg, opts, [])
 
   # Serializer.to_data_seen provides the serialization/Serializer standard library operation.
-  # @param value String value value.
-  # @param opts Any opts value.
-  # @param seen Any seen value.
-  # @return Any the resulting value.
-  to_data_seen: value, opts, seen ->
-    kind = serialization_kind(value)
+  # @param value_arg String value_arg value_arg.
+  # @param opts Any opts value_arg.
+  # @param seen Any seen value_arg.
+  # @return Any the resulting value_arg.
+  to_data_seen: value_arg, opts, seen ->
+    kind = serialization_kind(value_arg)
     if kind == "nil" or kind == "bool" or kind == "number" or kind == "string"
-      return value
+      return value_arg
     if kind == "bytes"
       mode = opts.get("bytes", nil)
       if mode == "base64"
-        return base64.Base64.encode(value)
+        return base64.Base64.encode(value_arg)
       if mode == "array"
-        return bytes_array(value)
+        return bytes_array(value_arg)
       raise error("serialization.to_data: bytes require bytes option")
     if kind == "array" or kind == "dict" or kind == "object"
-      Serializer(nil).enter_seen(value, seen)
+      Serializer(nil).enter_seen(value_arg, seen)
       if kind == "array"
         out = []
         i = 0
-        while i < value.len()
-          out.push(Serializer(nil).to_data_seen(value[i], opts, seen))
+        while i < value_arg.len()
+          out.push(Serializer(nil).to_data_seen(value_arg[i], opts, seen))
           i = i + 1
         seen.pop()
         return out
-      data = value
+      data = value_arg
       if kind == "object"
-        if serialization_has_member(value, "to_data")
-          data = value.to_data()
+        if serialization_has_member(value_arg, "to_data")
+          data = value_arg.to_data()
           if serialization_kind(data) == "object"
             raise error("serialization.to_data: to_data returned unsupported object")
           seen.pop()
           return Serializer(nil).to_data_seen(data, opts, seen)
-        if serialization_has_member(value, "to_serialized")
-          data = value.to_serialized()
+        if serialization_has_member(value_arg, "to_serialized")
+          data = value_arg.to_serialized()
           seen.pop()
           return Serializer(nil).to_data_seen(data, opts, seen)
-        data = serialization_public_fields(value)
+        data = serialization_public_fields(value_arg)
       out = {}
       if kind == "object" and opts["include_class"]
-        out[opts["class_key"]] = value.class.name
+        out[opts["class_key"]] = value_arg.class.name
       keys = data.keys()
       fields = opts.get("fields", nil)
       i = 0
@@ -213,22 +213,22 @@ class Serializer
     raise error("serialization.to_data: unsupported " + kind)
 
   # Serializer.to_json provides the serialization/Serializer standard library operation.
-  # @param value String value value.
-  # @param options Dict options value.
-  # @return Any the resulting value.
-  to_json: value = nil, options = nil ->
-    if value == nil
-      value = self.value
-    json.Json(Serializer(nil).to_data(value, options)).stringify()
+  # @param value_arg String value_arg value_arg.
+  # @param options Dict options value_arg.
+  # @return Any the resulting value_arg.
+  to_json: value_arg = nil, options = nil ->
+    if value_arg == nil
+      value_arg = self.value
+    json.Json(Serializer(nil).to_data(value_arg, options)).stringify()
 
   # Serializer.to_toml provides the serialization/Serializer standard library operation.
-  # @param value String value value.
-  # @param options Dict options value.
-  # @return Any the resulting value.
-  to_toml: value = nil, options = nil ->
-    if value == nil
-      value = self.value
-    data = Serializer(nil).to_data(value, options)
+  # @param value_arg String value_arg value_arg.
+  # @param options Dict options value_arg.
+  # @return Any the resulting value_arg.
+  to_toml: value_arg = nil, options = nil ->
+    if value_arg == nil
+      value_arg = self.value
+    data = Serializer(nil).to_data(value_arg, options)
     if serialization_kind(data) != "dict"
-      raise error("serialization.to_toml: top-level value must serialize to a dict")
+      raise error("serialization.to_toml: top-level value_arg must serialize to a dict")
     toml.Toml(data).stringify()

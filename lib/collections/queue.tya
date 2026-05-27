@@ -29,12 +29,12 @@ class Queue
   # @return Any the resulting value.
   compact: ->
     if self.head > 32 and self.head * 2 >= self.items.len()
-      self.items = self.to_array()
+      self.items = to_array()
       self.head = 0
 
   # Queue.empty? provides the collections/Queue standard library operation.
   # @return Boolean whether the condition is true.
-  empty?: -> self.len() == 0
+  empty?: -> len() == 0
 
   # Queue.from_array provides the collections/Queue standard library operation.
   # @param values Array values value.
@@ -48,18 +48,18 @@ class Queue
   # Queue.peek provides the collections/Queue standard library operation.
   # @return Any the resulting value.
   peek: ->
-    if self.empty?()
+    if empty?()
       raise error("collections.Queue.peek: empty queue")
     self.items[self.head]
 
   # Queue.pop provides the collections/Queue standard library operation.
   # @return Any the resulting value.
   pop: ->
-    if self.empty?()
+    if empty?()
       raise error("collections.Queue.pop: empty queue")
     value = self.items[self.head]
     self.head = self.head + 1
-    self.compact()
+    compact()
     value
 
   # Queue.push provides the collections/Queue standard library operation.

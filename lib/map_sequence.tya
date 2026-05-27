@@ -12,6 +12,6 @@ class MapSequence implements Sequence
   # @param source String source value.
   # @param fn Function fn value.
   # @return Self the initialized object.
-  initialize: source, fn ->
-    self.source = source
-    self.fn = fn
+  initialize: sequence_source, fn_arg ->
+    self.source = sequence_source
+    self.fn = fn_arg

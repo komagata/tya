@@ -14,11 +14,11 @@ class Writer
   # @return Self the initialized object.
   initialize: options, _unused ->
     self.parts = []
-    self.endian = self.option_endian(options)
+    self.endian = option_endian(options)
 
   # Writer.bytes provides the binary/Writer standard library operation.
   # @return Any the resulting value.
-  bytes: -> self.to_bytes()
+  bytes: -> to_bytes()
 
   # Writer.new provides the binary/Writer standard library operation.
   # @param options Dict options value.
@@ -35,10 +35,10 @@ class Writer
       raise error("binary.Writer: options must be a dict")
     if not options.has("endian")
       return "big"
-    endian = options["endian"]
-    if endian != "big" and endian != "little"
+    selected_endian = options["endian"]
+    if selected_endian != "big" and selected_endian != "little"
       raise error("binary.Writer: invalid endian")
-    endian
+    selected_endian
 
   # Writer.position provides the binary/Writer standard library operation.
   # @return Int the resulting value.
@@ -84,70 +84,70 @@ class Writer
   # Writer.write_f32 provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_f32: value -> self.write_bytes(binary_write_f32(value, self.endian))
+  write_f32: value -> write_bytes(binary_write_f32(value, self.endian))
 
   # Writer.write_f32_be provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_f32_be: value -> self.write_bytes(binary_write_f32(value, "big"))
+  write_f32_be: value -> write_bytes(binary_write_f32(value, "big"))
 
   # Writer.write_f32_le provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_f32_le: value -> self.write_bytes(binary_write_f32(value, "little"))
+  write_f32_le: value -> write_bytes(binary_write_f32(value, "little"))
 
   # Writer.write_f64 provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_f64: value -> self.write_bytes(binary_write_f64(value, self.endian))
+  write_f64: value -> write_bytes(binary_write_f64(value, self.endian))
 
   # Writer.write_f64_be provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_f64_be: value -> self.write_bytes(binary_write_f64(value, "big"))
+  write_f64_be: value -> write_bytes(binary_write_f64(value, "big"))
 
   # Writer.write_f64_le provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_f64_le: value -> self.write_bytes(binary_write_f64(value, "little"))
+  write_f64_le: value -> write_bytes(binary_write_f64(value, "little"))
 
   # Writer.write_i16 provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_i16: value -> self.write_int(value, 2, -32768, 32767, self.endian)
+  write_i16: value -> write_int(value, 2, -32768, 32767, self.endian)
 
   # Writer.write_i16_be provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_i16_be: value -> self.write_int(value, 2, -32768, 32767, "big")
+  write_i16_be: value -> write_int(value, 2, -32768, 32767, "big")
 
   # Writer.write_i16_le provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_i16_le: value -> self.write_int(value, 2, -32768, 32767, "little")
+  write_i16_le: value -> write_int(value, 2, -32768, 32767, "little")
 
   # Writer.write_i32 provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
   write_i32: value ->
-    self.write_int(value, 4, -2147483648, 2147483647, self.endian)
+    write_int(value, 4, -2147483648, 2147483647, self.endian)
 
   # Writer.write_i32_be provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
   write_i32_be: value ->
-    self.write_int(value, 4, -2147483648, 2147483647, "big")
+    write_int(value, 4, -2147483648, 2147483647, "big")
 
   # Writer.write_i32_le provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
   write_i32_le: value ->
-    self.write_int(value, 4, -2147483648, 2147483647, "little")
+    write_int(value, 4, -2147483648, 2147483647, "little")
 
   # Writer.write_i8 provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_i8: value -> self.write_int(value, 1, -128, 127, self.endian)
+  write_i8: value -> write_int(value, 1, -128, 127, self.endian)
 
   # Writer.write_int provides the binary/Writer standard library operation.
   # @param value String value value.
@@ -156,54 +156,54 @@ class Writer
   # @param max Any max value.
   # @param endian Any endian value.
   # @return Any the resulting value.
-  write_int: value, width, min, max, endian ->
+  write_int: value, width, min, max, endian_arg ->
     if value == nil or value.class != Number or value < min or value > max
       raise error("binary.Writer: integer out of range")
     if value < 0
-      value = value + self.pow2(width * 8)
+      value = value + pow2(width * 8)
     arr = []
     i = 0
     while i < width
       shift = i
-      if endian == "big"
+      if endian_arg == "big"
         shift = width - i - 1
-      divisor = self.pow256(shift)
+      divisor = pow256(shift)
       byte = value / divisor.to_i() % 256
       arr.push(byte)
       i = i + 1
-    self.write_bytes(bytes(arr))
+    write_bytes(bytes(arr))
 
   # Writer.write_u16 provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_u16: value -> self.write_int(value, 2, 0, 65535, self.endian)
+  write_u16: value -> write_int(value, 2, 0, 65535, self.endian)
 
   # Writer.write_u16_be provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_u16_be: value -> self.write_int(value, 2, 0, 65535, "big")
+  write_u16_be: value -> write_int(value, 2, 0, 65535, "big")
 
   # Writer.write_u16_le provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_u16_le: value -> self.write_int(value, 2, 0, 65535, "little")
+  write_u16_le: value -> write_int(value, 2, 0, 65535, "little")
 
   # Writer.write_u32 provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_u32: value -> self.write_int(value, 4, 0, 4294967295, self.endian)
+  write_u32: value -> write_int(value, 4, 0, 4294967295, self.endian)
 
   # Writer.write_u32_be provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_u32_be: value -> self.write_int(value, 4, 0, 4294967295, "big")
+  write_u32_be: value -> write_int(value, 4, 0, 4294967295, "big")
 
   # Writer.write_u32_le provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_u32_le: value -> self.write_int(value, 4, 0, 4294967295, "little")
+  write_u32_le: value -> write_int(value, 4, 0, 4294967295, "little")
 
   # Writer.write_u8 provides the binary/Writer standard library operation.
   # @param value String value value.
   # @return Any the resulting value.
-  write_u8: value -> self.write_int(value, 1, 0, 255, self.endian)
+  write_u8: value -> write_int(value, 1, 0, 255, self.endian)

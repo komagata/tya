@@ -24,16 +24,16 @@ class Logger
   initialize: options ->
     if options == nil
       options = {}
-    self.min_level = self.level_number(self.option(options, "level", "info"))
-    self.format = self.option(options, "format", "text")
-    self.file = self.option(options, "file", "")
-    self.fields = self.option(options, "fields", {})
+    self.min_level = level_number(option(options, "level", "info"))
+    self.format = option(options, "format", "text")
+    self.file = option(options, "file", "")
+    self.fields = option(options, "fields", {})
 
   # Logger.debug provides the log/Logger standard library operation.
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  debug: message, fields -> self.write("debug", message, fields)
+  debug: message, log_fields -> write("debug", message, log_fields)
 
   # Logger.default provides the log/Logger standard library operation.
   # @return Any the resulting value.
@@ -43,7 +43,7 @@ class Logger
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  error: message, fields -> self.write("error", message, fields)
+  error: message, log_fields -> write("error", message, log_fields)
 
   # Logger.escape_json provides the log/Logger standard library operation.
   # @param text String text value.
@@ -71,7 +71,7 @@ class Logger
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  info: message, fields -> self.write("info", message, fields)
+  info: message, log_fields -> write("info", message, log_fields)
 
   # Logger.json_record provides the log/Logger standard library operation.
   # @param ts Any ts value.
@@ -79,18 +79,18 @@ class Logger
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  json_record: ts, level, message, fields ->
+  json_record: ts, level, message, log_fields ->
     out = chr(123)
-    out = out + "\"timestamp\":\"" + self.escape_json(ts) + "\""
-    out = out + ",\"level\":\"" + self.escape_json(level) + "\""
-    out = out + ",\"message\":\"" + self.escape_json(message) + "\""
-    names = fields.keys().sort()
+    out = out + "\"timestamp\":\"" + escape_json(ts) + "\""
+    out = out + ",\"level\":\"" + escape_json(level) + "\""
+    out = out + ",\"message\":\"" + escape_json(message) + "\""
+    names = log_fields.keys().sort()
     for name in names
       out = out
         + ",\""
-        + self.escape_json(name)
+        + escape_json(name)
         + "\":\""
-        + self.escape_json(fields[name].to_s())
+        + escape_json(log_fields[name].to_s())
         + "\""
     out = out + chr(125)
     out
@@ -99,7 +99,7 @@ class Logger
   # @param value String value value.
   # @return Any the resulting value.
   level: value ->
-    self.min_level = self.level_number(value)
+    self.min_level = level_number(value)
     self
 
   # Logger.level_name provides the log/Logger standard library operation.
@@ -163,26 +163,26 @@ class Logger
   # @param message String message value.
   # @param fields Any fields value.
   # @return String the resulting value.
-  text_record: ts, level, message, fields ->
+  text_record: ts, level, message, log_fields ->
     out = ts + " " + level + " " + message
-    names = fields.keys().sort()
+    names = log_fields.keys().sort()
     for name in names
-      out = out + " " + name + "=" + fields[name].to_s()
+      out = out + " " + name + "=" + log_fields[name].to_s()
     out
 
   # Logger.warn provides the log/Logger standard library operation.
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  warn: message, fields -> self.write("warn", message, fields)
+  warn: message, log_fields -> write("warn", message, log_fields)
 
   # Logger.with provides the log/Logger standard library operation.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  with: fields ->
-    merged = self.merge_fields(self.fields, fields)
+  with: log_fields ->
+    merged = merge_fields(self.fields, log_fields)
     Logger(
-      { level: self.level_name(self.min_level), format: self.format, file: self.file, fields: merged }
+      { level: level_name(self.min_level), format: self.format, file: self.file, fields: merged }
     )
 
   # Logger.write provides the log/Logger standard library operation.
@@ -190,18 +190,18 @@ class Logger
   # @param message String message value.
   # @param fields Any fields value.
   # @return Any the resulting value.
-  write: level, message, fields ->
-    if fields == nil
-      fields = {}
-    if self.level_number(level) < self.min_level
+  write: level, message, log_fields ->
+    if log_fields == nil
+      log_fields = {}
+    if level_number(level) < self.min_level
       return nil
-    merged = self.merge_fields(self.fields, fields)
+    merged = merge_fields(self.fields, log_fields)
     ts = time.Time(time.Time().now()).format("iso")
     line = ""
     if self.format == "json"
-      line = self.json_record(ts, level, message, merged)
+      line = json_record(ts, level, message, merged)
     else
-      line = self.text_record(ts, level, message, merged)
+      line = text_record(ts, level, message, merged)
     if self.file != ""
       file_append(self.file, line + "\n")
     else
