@@ -26,7 +26,7 @@ markdown.render
 
 That wording came from the older module surface documented in
 `docs/v0.32/SPEC.md`. The current stdlib implementation lives at
-`stdlib/markdown/Markdown.tya` and already exposes `Markdown.to_html(text)` as a
+`lib/markdown/Markdown.tya` and already exposes `Markdown.to_html(text)` as a
 static class method. Existing tests use:
 
 ```tya
@@ -71,7 +71,7 @@ style, not revive module-level functions.
 ## Scope
 
 - `ROADMAP.md`
-- `stdlib/markdown/Markdown.tya`
+- `lib/markdown/Markdown.tya`
 - `docs/STDLIB.md`
 - next release `docs/vX.Y/SPEC.md` and `docs/vX.Y/RELEASE_NOTES.md`
 - `tests/testdata/` script fixtures for class-style Markdown API behavior

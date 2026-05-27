@@ -1,4 +1,4 @@
-# Installed binary finds share/tya runtime and stdlib outside the source checkout.
+# Installed binary finds share/tya runtime and lib outside the source checkout.
 cd $REPO
 mkdir $WORK/install
 mkdir $WORK/install/bin

@@ -187,7 +187,7 @@ or request concurrency.
 
 ## Scope
 
-- `stdlib/net/http/Server.tya`
+- `lib/net/http/Server.tya`
 - HTTP runtime route dispatch in `runtime/tya_http_server.c` if route metadata
   needs C-side awareness.
 - Checker/codegen builtin plumbing only if the route table shape passed to

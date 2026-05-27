@@ -8,7 +8,7 @@ Class construction should use `initialize` default arguments the same way ordina
 
 GitHub issue #18 reports that a class whose `initialize` method defines default arguments still requires the full constructor arity at check time or runtime.
 
-`stdlib/net/ip/Address.tya` currently defines:
+`lib/net/ip/Address.tya` currently defines:
 
 ```tya
 initialize = version = nil, bytes = nil, groups = nil, mapped = false ->

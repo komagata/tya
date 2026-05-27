@@ -168,7 +168,7 @@ func TestV1StdlibBlockersRemainImplemented(t *testing.T) {
 	want := "1\ntrue\ntrue\n0\ntrue\nok\ntrue\n"
 	run := exec.Command("go", "run", "./cmd/tya", "run", main)
 	run.Dir = ".."
-	run.Env = append(os.Environ(), "TYA_STDLIB_DIR="+filepath.Join(repoRoot(t), "stdlib"))
+	run.Env = append(os.Environ(), "TYA_LIB_DIR="+filepath.Join(repoRoot(t), "lib"))
 	if out, err := run.CombinedOutput(); err != nil || string(out) != want {
 		t.Fatalf("tya run stdlib blockers: %v\nout=%q\nwant=%q", err, out, want)
 	}
@@ -176,7 +176,7 @@ func TestV1StdlibBlockersRemainImplemented(t *testing.T) {
 	bin := filepath.Join(dir, "v1-stdlib")
 	build := exec.Command("go", "run", "./cmd/tya", "build", "--target", "native", main, "-o", bin)
 	build.Dir = ".."
-	build.Env = append(os.Environ(), "TYA_STDLIB_DIR="+filepath.Join(repoRoot(t), "stdlib"))
+	build.Env = append(os.Environ(), "TYA_LIB_DIR="+filepath.Join(repoRoot(t), "lib"))
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("tya build stdlib blockers: %v\n%s", err, out)
 	}

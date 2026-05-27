@@ -399,7 +399,7 @@ Common packages include `json`, `toml`, `csv`, `url`, `time`, `random`,
 Generated API documentation can be produced from source comments:
 
 ```sh
-tya doc --json stdlib
+tya doc --json lib
 ```
 
 ## Tests

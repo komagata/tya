@@ -14,7 +14,7 @@ providing an explicit namespace escape hatch through aliased imports.
 ## Context
 
 Directory packages currently synthesize a namespace dictionary. For a package
-such as `stdlib/unittest/` containing `TestCase.tya` and `TestRunner.tya`,
+such as `lib/unittest/` containing `TestCase.tya` and `TestRunner.tya`,
 external users write:
 
 ```tya

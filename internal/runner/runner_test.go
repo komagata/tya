@@ -327,8 +327,8 @@ func TestResolveImportPriority(t *testing.T) {
 		t.Fatal(err)
 	}
 	pathRoot := filepath.Join(project, "..", "path")
-	stdlib := filepath.Join(project, "..", "stdlib")
-	for _, dir := range []string{filepath.Join(project, "src"), filepath.Join(pathRoot), filepath.Join(stdlib)} {
+	libDir := filepath.Join(project, "..", "lib")
+	for _, dir := range []string{filepath.Join(project, "src"), filepath.Join(pathRoot), filepath.Join(libDir)} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatal(err)
 		}
@@ -337,9 +337,9 @@ func TestResolveImportPriority(t *testing.T) {
 	writeFile(t, filepath.Join(project, "src", "shared.tya"), "text = \"project-src\"\n")
 	writeFile(t, filepath.Join(dep, "src", "shared.tya"), "text = \"locked-dep\"\n")
 	writeFile(t, filepath.Join(pathRoot, "shared.tya"), "text = \"tya-path\"\n")
-	writeFile(t, filepath.Join(stdlib, "shared.tya"), "text = \"stdlib\"\n")
+	writeFile(t, filepath.Join(libDir, "shared.tya"), "text = \"stdlib\"\n")
 	t.Setenv("TYA_PATH", pathRoot)
-	t.Setenv("TYA_STDLIB_DIR", stdlib)
+	t.Setenv("TYA_LIB_DIR", libDir)
 
 	got, err := resolveModulePath(importer, "shared")
 	if err != nil {
@@ -385,8 +385,36 @@ func TestResolveImportPriority(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != absPath(t, filepath.Join(stdlib, "shared.tya")) {
+	if got != absPath(t, filepath.Join(libDir, "shared.tya")) {
 		t.Fatalf("got %q, want stdlib", got)
+	}
+}
+
+func TestStdlibDirsUsesLibEnvBeforeDeprecatedStdlibEnv(t *testing.T) {
+	libDir := filepath.Join(t.TempDir(), "lib")
+	stdlibDir := filepath.Join(t.TempDir(), "stdlib")
+	t.Setenv("TYA_LIB_DIR", libDir)
+	t.Setenv("TYA_STDLIB_DIR", stdlibDir)
+
+	dirs := stdlibDirs()
+	if len(dirs) == 0 || dirs[0] != libDir {
+		t.Fatalf("got dirs %v, want first %q", dirs, libDir)
+	}
+	for _, dir := range dirs {
+		if dir == stdlibDir {
+			t.Fatalf("deprecated stdlib env should not be used when TYA_LIB_DIR is set: %v", dirs)
+		}
+	}
+}
+
+func TestStdlibDirsFallsBackToDeprecatedStdlibEnv(t *testing.T) {
+	stdlibDir := filepath.Join(t.TempDir(), "stdlib")
+	t.Setenv("TYA_LIB_DIR", "")
+	t.Setenv("TYA_STDLIB_DIR", stdlibDir)
+
+	dirs := stdlibDirs()
+	if len(dirs) == 0 || dirs[0] != stdlibDir {
+		t.Fatalf("got dirs %v, want first %q", dirs, stdlibDir)
 	}
 }
 

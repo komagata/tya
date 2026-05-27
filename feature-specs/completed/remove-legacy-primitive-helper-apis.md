@@ -85,7 +85,7 @@ semantics.
 - C codegen support for the same removed helper APIs.
 - Runtime support only where obsolete public entry points can be removed
   without breaking the retained receiver-method implementation.
-- Standard-library code under `stdlib/`.
+- Standard-library code under `lib/`.
 - Selfhost sources under `selfhost/v01/` and `selfhost/v02/`.
 - Examples and current test fixtures under `tests/testdata/`.
 - `docs/SPEC.md`, `docs/ja/spec.md`, and user-facing guide text if it mentions

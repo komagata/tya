@@ -11,7 +11,7 @@ import (
 )
 
 // TestUnparseHandlesCorpus walks every .tya source in the
-// repository's stdlib/, examples/, and selfhost/ trees and asserts
+// repository's lib/, examples/, and selfhost/ trees and asserts
 // that Unparse either:
 //
 //   - returns a string that re-parses successfully, or
@@ -28,7 +28,7 @@ func TestUnparseHandlesCorpus(t *testing.T) {
 		t.Fatal(err)
 	}
 	roots := []string{
-		filepath.Join(repo, "stdlib"),
+		filepath.Join(repo, "lib"),
 		filepath.Join(repo, "examples"),
 		filepath.Join(repo, "selfhost"),
 	}

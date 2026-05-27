@@ -15,10 +15,10 @@ clear performance, interoperability, or data-exchange reason to keep dictionarie
 
 ## Context
 
-The `stdlib/` tree is already physically class-file based: current standard
-library files live under paths such as `stdlib/math/Math.tya`,
-`stdlib/file/File.tya`, `stdlib/json/Json.tya`, and
-`stdlib/net/http/Server.tya`. Earlier specs moved the implementation away from
+The `lib/` tree is already physically class-file based: current standard
+library files live under paths such as `lib/math/Math.tya`,
+`lib/file/File.tya`, `lib/json/Json.tya`, and
+`lib/net/http/Server.tya`. Earlier specs moved the implementation away from
 `module name + free functions`, and primitive `string` / `array` / `dict`
 module facades were removed in v0.59.
 
@@ -161,7 +161,7 @@ is usually the better public shape.
 
 ## Scope
 
-- Audit every file under `stdlib/` for:
+- Audit every file under `lib/` for:
   - PascalCase filename,
   - matching public class name,
   - no lowercase importable script modules,
@@ -183,7 +183,7 @@ is usually the better public shape.
 - Update LSP completion/hover docs or test fixtures if they advertise
   module-level stdlib functions.
 - Add negative or documentation-driven tests that prevent reintroducing
-  lowercase `stdlib/*.tya` modules and module-style stdlib examples in editable
+  lowercase `lib/*.tya` modules and module-style stdlib examples in editable
   docs.
 - Next release `docs/vX.Y/SPEC.md` and `docs/vX.Y/RELEASE_NOTES.md`.
 - Generated docs HTML only when release prep rebuilds it.

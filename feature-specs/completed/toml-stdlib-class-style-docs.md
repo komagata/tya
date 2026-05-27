@@ -15,7 +15,7 @@ detail for `tya.toml` and `tya.lock`.
 ## Context
 
 Tya already has a public TOML stdlib implementation at
-`stdlib/toml/Toml.tya`. Existing tests use the class-style API:
+`lib/toml/Toml.tya`. Existing tests use the class-style API:
 
 ```tya
 import toml
@@ -34,7 +34,7 @@ with the class-file package layout.
 
 ## Behavior
 
-- Keep `stdlib/toml/Toml.tya` as the public bundled stdlib TOML package.
+- Keep `lib/toml/Toml.tya` as the public bundled stdlib TOML package.
 - Document the public API as:
   - `toml.Toml.parse(text)`
   - `toml.Toml.dump(value)`

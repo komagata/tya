@@ -404,7 +404,7 @@ func kindTitle(kind string) string {
 func pageFileName(item DocItem) string {
 	path := strings.TrimSuffix(filepath.ToSlash(item.FilePath), ".tya")
 	base := item.Kind + "_" + item.Name
-	if path == "stdlib" || strings.HasPrefix(path, "stdlib/") || strings.Contains(path, "/stdlib/") {
+	if path == "stdlib" || strings.HasPrefix(path, "lib/") || strings.Contains(path, "/lib/") {
 		base = item.Kind + "_" + path + "_" + item.Name
 	}
 	return sanitizeFileName(base) + ".html"

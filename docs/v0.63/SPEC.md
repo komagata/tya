@@ -776,7 +776,7 @@ Imports are resolved in this order:
 1. the importing file's directory;
 2. manifest-declared dependencies from `tya.lock`;
 3. directories listed in `TYA_PATH`, from left to right;
-4. the bundled `stdlib/` directory.
+4. the bundled `lib/` directory.
 
 The first matching file or package directory wins. Local application imports
 may shadow package dependencies, `TYA_PATH`, and standard-library imports.
@@ -954,7 +954,7 @@ errors according to the API being used.
 
 ## Standard Library
 
-The standard library is shipped with Tya under `stdlib/` and is imported using
+The standard library is shipped with Tya under `lib/` and is imported using
 the same import syntax as user files and packages.
 
 Examples include:

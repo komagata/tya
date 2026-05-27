@@ -1,0 +1,1517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Image</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li class="current"><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Image</code></h1>
+<section id="class-Image" class="doc-item">
+<pre><code>class Image</code></pre>
+<p><small>lib/image/image.tya:5</small></p>
+<p>Image provides the image/Image standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Image provides the image/Image standard library API.
+class Image
+  # Image.format stores instance state.
+  # @type Nil
+  format: nil
+
+  # Image.height stores instance state.
+  # @type Nil
+  height: nil
+
+  # Image.pixels stores instance state.
+  # @type Array
+  pixels: []
+
+  # Image.width stores instance state.
+  # @type Nil
+  width: nil
+
+  # Image.initialize provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param fill Any fill value.
+  # @return Self the initialized object.
+  initialize: width = 1, height = 1, fill = nil -&gt;
+    self.check_dimensions(width, height)
+    if fill == nil
+      fill = color.Color(0, 0, 0, 0)
+    self.check_color(fill)
+    self.width = width
+    self.height = height
+    self.format = nil
+    self.pixels = []
+    i = 0
+    while i &lt; width * height
+      self.pixels.push(fill.r)
+      self.pixels.push(fill.g)
+      self.pixels.push(fill.b)
+      self.pixels.push(fill.a)
+      i = i + 1
+
+  # Image.bytes provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  bytes: -&gt;
+    self.to_bytes()
+
+  # Image.check_channel provides the image/Image standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  check_channel: value -&gt;
+    if (
+      value.class != Number or value &lt; 0 or value &gt; 255 or value != value.to_i()
+    )
+      raise error(&quot;image: channel out of range&quot;)
+
+  # Image.check_color provides the image/Image standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  check_color: value -&gt;
+    if value.class != color.Color
+      raise error(&quot;image: expected color.Color&quot;)
+
+  # Image.check_dimensions provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Any the resulting value.
+  check_dimensions: width, height -&gt;
+    if (
+      width.class != Number or height.class != Number or width != width.to_i() or height != height.to_i()
+    )
+      raise error(&quot;image: dimensions must be integers&quot;)
+    if width &lt;= 0 or height &lt;= 0 or width * height &gt; 10000000
+      raise error(&quot;image: invalid dimensions&quot;)
+
+  # Image.check_encode_options provides the image/Image standard library operation.
+  # @param format String format value.
+  # @param options Dict options value.
+  # @return Dict the resulting value.
+  check_encode_options: format, options -&gt;
+    if options == nil
+      return nil
+    keys = options.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if (
+        key != &quot;format&quot; and key != &quot;compression&quot; and key != &quot;quality&quot; and key != &quot;background&quot;
+      )
+        raise error(&quot;image.encode: unknown option &quot; + key)
+      i = i + 1
+    if format == &quot;jpeg&quot; and options.has?(&quot;quality&quot;)
+      q = options[&quot;quality&quot;]
+      if q.class != Number or q &lt; 1 or q &gt; 100
+        raise error(&quot;image.encode: jpeg quality out of range&quot;)
+
+  # Image.check_xy provides the image/Image standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  check_xy: x, y -&gt;
+    if x.class != Number or y.class != Number or x != x.to_i() or y != y.to_i()
+      raise error(&quot;image: coordinates must be integers&quot;)
+    if x &lt; 0 or y &lt; 0 or x &gt;= self.width or y &gt;= self.height
+      raise error(&quot;image: pixel coordinate out of bounds&quot;)
+
+  # Image.composite provides the image/Image standard library operation.
+  # @param over Any over value.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  composite: over, x, y -&gt;
+    out = self.from_pixels(self.width, self.height, self.format, self.pixels)
+    yy = 0
+    while yy &lt; over.height
+      xx = 0
+      while xx &lt; over.width
+        dx = x + xx
+        dy = y + yy
+        if dx &gt;= 0 and dy &gt;= 0 and dx &lt; out.width and dy &lt; out.height
+          under = out.pixel(dx, dy)
+          top = over.pixel(xx, yy)
+          a = top.a / 255.0
+          inv = 1 - a
+          r = (top.r * a + under.r * inv).to_i()
+          g = (top.g * a + under.g * inv).to_i()
+          b = (top.b * a + under.b * inv).to_i()
+          out.set_pixel(dx, dy, color.Color(r, g, b, 255))
+        xx = xx + 1
+      yy = yy + 1
+    out
+
+  # Image.crop provides the image/Image standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Any the resulting value.
+  crop: x, y, width, height -&gt;
+    self.check_xy(x, y)
+    self.check_dimensions(width, height)
+    if x + width &gt; self.width or y + height &gt; self.height
+      raise error(&quot;image.crop: rectangle out of bounds&quot;)
+    out = Image(width, height, nil)
+    yy = 0
+    while yy &lt; height
+      xx = 0
+      while xx &lt; width
+        out.set_pixel(xx, yy, self.pixel(x + xx, y + yy))
+        xx = xx + 1
+      yy = yy + 1
+    out
+
+  # Image.decode provides the image/Image standard library operation.
+  # @param data Array data value.
+  # @param options Dict options value.
+  # @return String the resulting value.
+  decode: data, options -&gt;
+    if options != nil and options.has?(&quot;frame&quot;) and options[&quot;frame&quot;] != 0
+      raise error(&quot;image.decode: frame out of range&quot;)
+    meta = Codec(nil).metadata(data)
+    text = bytes_text(data)
+    lines = text.split(&quot;\n&quot;)
+    if lines.len() &lt; 2
+      raise error(&quot;image.decode: malformed &quot; + meta[&quot;format&quot;])
+    values = lines[1].split(&quot;,&quot;)
+    expected = meta[&quot;width&quot;] * meta[&quot;height&quot;] * 4
+    if values.len() != expected
+      raise error(&quot;image.decode: malformed &quot; + meta[&quot;format&quot;] + &quot; pixel data&quot;)
+    img = Image(meta[&quot;width&quot;], meta[&quot;height&quot;], nil)
+    img.format = meta[&quot;format&quot;]
+    img.pixels = []
+    i = 0
+    while i &lt; values.len()
+      channel = values[i].to_i()
+      self.check_channel(channel)
+      img.pixels.push(channel)
+      i = i + 1
+    img
+
+  # Image.decode_frames provides the image/Image standard library operation.
+  # @param data Array data value.
+  # @return Any the resulting value.
+  decode_frames: data -&gt;
+    [self.decode(data, { frame: 0 })]
+
+  # Image.encodable_format? provides the image/Image standard library operation.
+  # @param format String format value.
+  # @return Boolean whether the condition is true.
+  encodable_format?: format -&gt;
+    format == &quot;png&quot; or format == &quot;jpeg&quot; or format == &quot;bmp&quot; or format == &quot;ppm&quot;
+
+  # Image.encode provides the image/Image standard library operation.
+  # @param format String format value.
+  # @param options Dict options value.
+  # @return String the resulting value.
+  encode: format, options -&gt;
+    if format == nil
+      format = self.format
+    if not self.encodable_format?(format)
+      raise error(&quot;image.encode: unsupported format &quot; + format.to_s())
+    self.check_encode_options(format, options)
+    alpha = &quot;0&quot;
+    if self.has_alpha?()
+      alpha = &quot;1&quot;
+    header = &quot;TYAIMG:&quot;
+      + format
+      + &quot;:&quot;
+      + self.width.to_s()
+      + &quot;:&quot;
+      + self.height.to_s()
+      + &quot;:&quot;
+      + alpha
+      + &quot;:1\n&quot;
+    body = &quot;&quot;
+    i = 0
+    while i &lt; self.pixels.len()
+      if i &gt; 0
+        body = body + &quot;,&quot;
+      body = body + self.pixels[i].to_s()
+      i = i + 1
+    bytes_of(header + body)
+
+  # Image.flip_horizontal provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  flip_horizontal: -&gt;
+    out = Image(self.width, self.height, nil)
+    y = 0
+    while y &lt; self.height
+      x = 0
+      while x &lt; self.width
+        out.set_pixel(self.width - x - 1, y, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    out
+
+  # Image.flip_vertical provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  flip_vertical: -&gt;
+    out = Image(self.width, self.height, nil)
+    y = 0
+    while y &lt; self.height
+      x = 0
+      while x &lt; self.width
+        out.set_pixel(x, self.height - y - 1, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    out
+
+  # Image.format_from_path provides the image/Image standard library operation.
+  # @param path String path value.
+  # @return String the resulting value.
+  format_from_path: path -&gt;
+    lower = path.lower()
+    if lower.ends_with(&quot;.png&quot;)
+      return &quot;png&quot;
+    if lower.ends_with(&quot;.jpg&quot;) or lower.ends_with(&quot;.jpeg&quot;)
+      return &quot;jpeg&quot;
+    if lower.ends_with(&quot;.gif&quot;)
+      return &quot;gif&quot;
+    if lower.ends_with(&quot;.bmp&quot;)
+      return &quot;bmp&quot;
+    if lower.ends_with(&quot;.ppm&quot;)
+      return &quot;ppm&quot;
+    raise error(&quot;image: unknown image format&quot;)
+
+  # Image.from_pixels provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param format String format value.
+  # @param pixels Any pixels value.
+  # @return Self the resulting value.
+  from_pixels: width, height, format, pixels -&gt;
+    out = Image(width, height, nil)
+    out.format = format
+    out.pixels = []
+    i = 0
+    while i &lt; pixels.len()
+      out.pixels.push(pixels[i])
+      i = i + 1
+    out
+
+  # Image.grayscale provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  grayscale: -&gt;
+    out = Image(self.width, self.height, nil)
+    y = 0
+    while y &lt; self.height
+      x = 0
+      while x &lt; self.width
+        c = self.pixel(x, y)
+        g = (c.r * 30 + c.g * 59 + c.b * 11) / 100.to_i()
+        out.set_pixel(x, y, color.Color(g, g, g, c.a))
+        x = x + 1
+      y = y + 1
+    out
+
+  # Image.has_alpha? provides the image/Image standard library operation.
+  # @return Boolean whether the condition is true.
+  has_alpha?: -&gt;
+    i = 3
+    while i &lt; self.pixels.len()
+      if self.pixels[i] &lt; 255
+        return true
+      i = i + 4
+    false
+
+  # Image.new provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param fill Any fill value.
+  # @return Self the resulting value.
+  new: width, height, fill -&gt;
+    Image(width, height, fill)
+
+  # Image.pixel provides the image/Image standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  pixel: x, y -&gt;
+    self.check_xy(x, y)
+    i = (y * self.width + x) * 4
+    color.Color(
+      self.pixels[i],
+      self.pixels[i + 1],
+      self.pixels[i + 2],
+      self.pixels[i + 3]
+    )
+
+  # Image.read provides the image/Image standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  read: path -&gt;
+    img = self.decode(file.File(path).read_bytes(), nil)
+    img.format = self.format_from_path(path)
+    img
+
+  # Image.resize provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  resize: width, height, options -&gt;
+    self.check_dimensions(width, height)
+    opts = self.resize_options(options)
+    if opts[&quot;fit&quot;] == &quot;contain&quot;
+      return self.resize_contain(width, height, opts)
+    if opts[&quot;fit&quot;] == &quot;cover&quot;
+      return self.resize_cover(width, height, opts)
+    self.resize_stretch(width, height)
+
+  # Image.resize_contain provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param opts Any opts value.
+  # @return Any the resulting value.
+  resize_contain: width, height, opts -&gt;
+    scale_w = width.to_f() / self.width
+    scale_h = height.to_f() / self.height
+    scale = scale_w
+    if scale_h &lt; scale_w
+      scale = scale_h
+    new_w = (self.width * scale).to_i()
+    new_h = (self.height * scale).to_i()
+    if new_w &lt; 1
+      new_w = 1
+    if new_h &lt; 1
+      new_h = 1
+    resized = self.resize_stretch(new_w, new_h)
+    out = Image(width, height, opts[&quot;background&quot;])
+    ox = ((width - new_w) / 2.0).to_i()
+    oy = ((height - new_h) / 2.0).to_i()
+    out.composite(resized, ox, oy)
+
+  # Image.resize_cover provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param opts Any opts value.
+  # @return Any the resulting value.
+  resize_cover: width, height, opts -&gt;
+    if opts[&quot;filter&quot;] == &quot;bilinear&quot;
+      nil
+    scale_w = width.to_f() / self.width
+    scale_h = height.to_f() / self.height
+    scale = scale_w
+    if scale_h &gt; scale_w
+      scale = scale_h
+    new_w = (self.width * scale).to_i()
+    new_h = (self.height * scale).to_i()
+    resized = self.resize_stretch(new_w, new_h)
+    ox = ((new_w - width) / 2.0).to_i()
+    oy = ((new_h - height) / 2.0).to_i()
+    resized.crop(ox, oy, width, height)
+
+  # Image.resize_options provides the image/Image standard library operation.
+  # @param options Dict options value.
+  # @return Dict the resulting value.
+  resize_options: options -&gt;
+    opts =
+      filter: &quot;nearest&quot;
+      fit: &quot;stretch&quot;
+      background: color.Color(0, 0, 0, 0)
+    if options == nil
+      return opts
+    keys = options.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if key != &quot;filter&quot; and key != &quot;fit&quot; and key != &quot;background&quot;
+        raise error(&quot;image.resize: unknown option &quot; + key)
+      opts[key] = options[key]
+      i = i + 1
+    if opts[&quot;filter&quot;] != &quot;nearest&quot; and opts[&quot;filter&quot;] != &quot;bilinear&quot;
+      raise error(&quot;image.resize: unsupported filter&quot;)
+    if (
+      opts[&quot;fit&quot;] != &quot;stretch&quot; and opts[&quot;fit&quot;] != &quot;contain&quot; and opts[&quot;fit&quot;] != &quot;cover&quot;
+    )
+      raise error(&quot;image.resize: unsupported fit&quot;)
+    self.check_color(opts[&quot;background&quot;])
+    opts
+
+  # Image.resize_stretch provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Any the resulting value.
+  resize_stretch: width, height -&gt;
+    out = Image(width, height, nil)
+    y = 0
+    while y &lt; height
+      x = 0
+      while x &lt; width
+        sx = ((x * self.width) / width.to_f()).to_i()
+        sy = ((y * self.height) / height.to_f()).to_i()
+        out.set_pixel(x, y, self.pixel(sx, sy))
+        x = x + 1
+      y = y + 1
+    out
+
+  # Image.rotate90 provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  rotate90: -&gt;
+    out = Image(self.height, self.width, nil)
+    y = 0
+    while y &lt; self.height
+      x = 0
+      while x &lt; self.width
+        out.set_pixel(self.height - y - 1, x, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    out
+
+  # Image.set_pixel provides the image/Image standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  set_pixel: x, y, value -&gt;
+    self.check_xy(x, y)
+    self.check_color(value)
+    i = (y * self.width + x) * 4
+    self.pixels[i] = value.r
+    self.pixels[i + 1] = value.g
+    self.pixels[i + 2] = value.b
+    self.pixels[i + 3] = value.a
+    nil
+
+  # Image.to_bytes provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  to_bytes: -&gt;
+    bytes(self.pixels)
+
+  # Image.write provides the image/Image standard library operation.
+  # @param path String path value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  write: path, options -&gt;
+    file.File(path).write_bytes(
+      self.encode(self.write_format(path, options), options)
+    )
+    nil
+
+  # Image.write_format provides the image/Image standard library operation.
+  # @param path String path value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  write_format: path, options -&gt;
+    if options != nil and options.has?(&quot;format&quot;)
+      return options[&quot;format&quot;]
+    self.format_from_path(path)</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Image-format" class="doc-item member">
+<h3><code>format</code></h3>
+<pre><code>Image.format</code></pre>
+<p><small>lib/image/image.tya:8</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Image.format stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.format stores instance state.
+  # @type Nil
+  format: nil</code></pre>
+</details>
+</section>
+<section id="instance-variable-Image-height" class="doc-item member">
+<h3><code>height</code></h3>
+<pre><code>Image.height</code></pre>
+<p><small>lib/image/image.tya:12</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Image.height stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.height stores instance state.
+  # @type Nil
+  height: nil</code></pre>
+</details>
+</section>
+<section id="instance-variable-Image-pixels" class="doc-item member">
+<h3><code>pixels</code></h3>
+<pre><code>Image.pixels</code></pre>
+<p><small>lib/image/image.tya:16</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Array</code></dd>
+</dl>
+<p>Image.pixels stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.pixels stores instance state.
+  # @type Array
+  pixels: []</code></pre>
+</details>
+</section>
+<section id="instance-variable-Image-width" class="doc-item member">
+<h3><code>width</code></h3>
+<pre><code>Image.width</code></pre>
+<p><small>lib/image/image.tya:20</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Image.width stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.width stores instance state.
+  # @type Nil
+  width: nil</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Image-bytes" class="doc-item member">
+<h3><code>bytes</code></h3>
+<pre><code>Image.bytes()</code></pre>
+<p><small>lib/image/image.tya:46</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.bytes provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.bytes provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  bytes: -&gt;
+    self.to_bytes()</code></pre>
+</details>
+</section>
+<section id="method-Image-check_channel" class="doc-item member">
+<h3><code>check_channel</code></h3>
+<pre><code>Image.check_channel(value)</code></pre>
+<p><small>lib/image/image.tya:52</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.check_channel provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.check_channel provides the image/Image standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  check_channel: value -&gt;
+    if (
+      value.class != Number or value &lt; 0 or value &gt; 255 or value != value.to_i()
+    )
+      raise error(&quot;image: channel out of range&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Image-check_color" class="doc-item member">
+<h3><code>check_color</code></h3>
+<pre><code>Image.check_color(value)</code></pre>
+<p><small>lib/image/image.tya:61</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.check_color provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.check_color provides the image/Image standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  check_color: value -&gt;
+    if value.class != color.Color
+      raise error(&quot;image: expected color.Color&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Image-check_dimensions" class="doc-item member">
+<h3><code>check_dimensions</code></h3>
+<pre><code>Image.check_dimensions(width, height)</code></pre>
+<p><small>lib/image/image.tya:69</small></p>
+<dl class="metadata">
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.check_dimensions provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.check_dimensions provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Any the resulting value.
+  check_dimensions: width, height -&gt;
+    if (
+      width.class != Number or height.class != Number or width != width.to_i() or height != height.to_i()
+    )
+      raise error(&quot;image: dimensions must be integers&quot;)
+    if width &lt;= 0 or height &lt;= 0 or width * height &gt; 10000000
+      raise error(&quot;image: invalid dimensions&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Image-check_encode_options" class="doc-item member">
+<h3><code>check_encode_options</code></h3>
+<pre><code>Image.check_encode_options(format, options)</code></pre>
+<p><small>lib/image/image.tya:81</small></p>
+<dl class="metadata">
+<dt>Param <code>format</code></dt><dd><code>String</code> format value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Dict</code> the resulting value.</dd>
+</dl>
+<p>Image.check_encode_options provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.check_encode_options provides the image/Image standard library operation.
+  # @param format String format value.
+  # @param options Dict options value.
+  # @return Dict the resulting value.
+  check_encode_options: format, options -&gt;
+    if options == nil
+      return nil
+    keys = options.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if (
+        key != &quot;format&quot; and key != &quot;compression&quot; and key != &quot;quality&quot; and key != &quot;background&quot;
+      )
+        raise error(&quot;image.encode: unknown option &quot; + key)
+      i = i + 1
+    if format == &quot;jpeg&quot; and options.has?(&quot;quality&quot;)
+      q = options[&quot;quality&quot;]
+      if q.class != Number or q &lt; 1 or q &gt; 100
+        raise error(&quot;image.encode: jpeg quality out of range&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Image-check_xy" class="doc-item member">
+<h3><code>check_xy</code></h3>
+<pre><code>Image.check_xy(x, y)</code></pre>
+<p><small>lib/image/image.tya:102</small></p>
+<dl class="metadata">
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.check_xy provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.check_xy provides the image/Image standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  check_xy: x, y -&gt;
+    if x.class != Number or y.class != Number or x != x.to_i() or y != y.to_i()
+      raise error(&quot;image: coordinates must be integers&quot;)
+    if x &lt; 0 or y &lt; 0 or x &gt;= self.width or y &gt;= self.height
+      raise error(&quot;image: pixel coordinate out of bounds&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Image-composite" class="doc-item member">
+<h3><code>composite</code></h3>
+<pre><code>Image.composite(over, x, y)</code></pre>
+<p><small>lib/image/image.tya:113</small></p>
+<dl class="metadata">
+<dt>Param <code>over</code></dt><dd><code>Any</code> over value.</dd>
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.composite provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.composite provides the image/Image standard library operation.
+  # @param over Any over value.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  composite: over, x, y -&gt;
+    out = self.from_pixels(self.width, self.height, self.format, self.pixels)
+    yy = 0
+    while yy &lt; over.height
+      xx = 0
+      while xx &lt; over.width
+        dx = x + xx
+        dy = y + yy
+        if dx &gt;= 0 and dy &gt;= 0 and dx &lt; out.width and dy &lt; out.height
+          under = out.pixel(dx, dy)
+          top = over.pixel(xx, yy)
+          a = top.a / 255.0
+          inv = 1 - a
+          r = (top.r * a + under.r * inv).to_i()
+          g = (top.g * a + under.g * inv).to_i()
+          b = (top.b * a + under.b * inv).to_i()
+          out.set_pixel(dx, dy, color.Color(r, g, b, 255))
+        xx = xx + 1
+      yy = yy + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Image-crop" class="doc-item member">
+<h3><code>crop</code></h3>
+<pre><code>Image.crop(x, y, width, height)</code></pre>
+<p><small>lib/image/image.tya:140</small></p>
+<dl class="metadata">
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.crop provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.crop provides the image/Image standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Any the resulting value.
+  crop: x, y, width, height -&gt;
+    self.check_xy(x, y)
+    self.check_dimensions(width, height)
+    if x + width &gt; self.width or y + height &gt; self.height
+      raise error(&quot;image.crop: rectangle out of bounds&quot;)
+    out = Image(width, height, nil)
+    yy = 0
+    while yy &lt; height
+      xx = 0
+      while xx &lt; width
+        out.set_pixel(xx, yy, self.pixel(x + xx, y + yy))
+        xx = xx + 1
+      yy = yy + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Image-decode" class="doc-item member">
+<h3><code>decode</code></h3>
+<pre><code>Image.decode(data, options)</code></pre>
+<p><small>lib/image/image.tya:159</small></p>
+<dl class="metadata">
+<dt>Param <code>data</code></dt><dd><code>Array</code> data value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Image.decode provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.decode provides the image/Image standard library operation.
+  # @param data Array data value.
+  # @param options Dict options value.
+  # @return String the resulting value.
+  decode: data, options -&gt;
+    if options != nil and options.has?(&quot;frame&quot;) and options[&quot;frame&quot;] != 0
+      raise error(&quot;image.decode: frame out of range&quot;)
+    meta = Codec(nil).metadata(data)
+    text = bytes_text(data)
+    lines = text.split(&quot;\n&quot;)
+    if lines.len() &lt; 2
+      raise error(&quot;image.decode: malformed &quot; + meta[&quot;format&quot;])
+    values = lines[1].split(&quot;,&quot;)
+    expected = meta[&quot;width&quot;] * meta[&quot;height&quot;] * 4
+    if values.len() != expected
+      raise error(&quot;image.decode: malformed &quot; + meta[&quot;format&quot;] + &quot; pixel data&quot;)
+    img = Image(meta[&quot;width&quot;], meta[&quot;height&quot;], nil)
+    img.format = meta[&quot;format&quot;]
+    img.pixels = []
+    i = 0
+    while i &lt; values.len()
+      channel = values[i].to_i()
+      self.check_channel(channel)
+      img.pixels.push(channel)
+      i = i + 1
+    img</code></pre>
+</details>
+</section>
+<section id="method-Image-decode_frames" class="doc-item member">
+<h3><code>decode_frames</code></h3>
+<pre><code>Image.decode_frames(data)</code></pre>
+<p><small>lib/image/image.tya:185</small></p>
+<dl class="metadata">
+<dt>Param <code>data</code></dt><dd><code>Array</code> data value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.decode_frames provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.decode_frames provides the image/Image standard library operation.
+  # @param data Array data value.
+  # @return Any the resulting value.
+  decode_frames: data -&gt;
+    [self.decode(data, { frame: 0 })]</code></pre>
+</details>
+</section>
+<section id="method-Image-encodable_format-" class="doc-item member">
+<h3><code>encodable_format?</code></h3>
+<pre><code>Image.encodable_format?(format)</code></pre>
+<p><small>lib/image/image.tya:191</small></p>
+<dl class="metadata">
+<dt>Param <code>format</code></dt><dd><code>String</code> format value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Image.encodable_format? provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.encodable_format? provides the image/Image standard library operation.
+  # @param format String format value.
+  # @return Boolean whether the condition is true.
+  encodable_format?: format -&gt;
+    format == &quot;png&quot; or format == &quot;jpeg&quot; or format == &quot;bmp&quot; or format == &quot;ppm&quot;</code></pre>
+</details>
+</section>
+<section id="method-Image-encode" class="doc-item member">
+<h3><code>encode</code></h3>
+<pre><code>Image.encode(format, options)</code></pre>
+<p><small>lib/image/image.tya:198</small></p>
+<dl class="metadata">
+<dt>Param <code>format</code></dt><dd><code>String</code> format value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Image.encode provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.encode provides the image/Image standard library operation.
+  # @param format String format value.
+  # @param options Dict options value.
+  # @return String the resulting value.
+  encode: format, options -&gt;
+    if format == nil
+      format = self.format
+    if not self.encodable_format?(format)
+      raise error(&quot;image.encode: unsupported format &quot; + format.to_s())
+    self.check_encode_options(format, options)
+    alpha = &quot;0&quot;
+    if self.has_alpha?()
+      alpha = &quot;1&quot;
+    header = &quot;TYAIMG:&quot;
+      + format
+      + &quot;:&quot;
+      + self.width.to_s()
+      + &quot;:&quot;
+      + self.height.to_s()
+      + &quot;:&quot;
+      + alpha
+      + &quot;:1\n&quot;
+    body = &quot;&quot;
+    i = 0
+    while i &lt; self.pixels.len()
+      if i &gt; 0
+        body = body + &quot;,&quot;
+      body = body + self.pixels[i].to_s()
+      i = i + 1
+    bytes_of(header + body)</code></pre>
+</details>
+</section>
+<section id="method-Image-flip_horizontal" class="doc-item member">
+<h3><code>flip_horizontal</code></h3>
+<pre><code>Image.flip_horizontal()</code></pre>
+<p><small>lib/image/image.tya:227</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.flip_horizontal provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.flip_horizontal provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  flip_horizontal: -&gt;
+    out = Image(self.width, self.height, nil)
+    y = 0
+    while y &lt; self.height
+      x = 0
+      while x &lt; self.width
+        out.set_pixel(self.width - x - 1, y, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Image-flip_vertical" class="doc-item member">
+<h3><code>flip_vertical</code></h3>
+<pre><code>Image.flip_vertical()</code></pre>
+<p><small>lib/image/image.tya:240</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.flip_vertical provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.flip_vertical provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  flip_vertical: -&gt;
+    out = Image(self.width, self.height, nil)
+    y = 0
+    while y &lt; self.height
+      x = 0
+      while x &lt; self.width
+        out.set_pixel(x, self.height - y - 1, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Image-format_from_path" class="doc-item member">
+<h3><code>format_from_path</code></h3>
+<pre><code>Image.format_from_path(path)</code></pre>
+<p><small>lib/image/image.tya:254</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Image.format_from_path provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.format_from_path provides the image/Image standard library operation.
+  # @param path String path value.
+  # @return String the resulting value.
+  format_from_path: path -&gt;
+    lower = path.lower()
+    if lower.ends_with(&quot;.png&quot;)
+      return &quot;png&quot;
+    if lower.ends_with(&quot;.jpg&quot;) or lower.ends_with(&quot;.jpeg&quot;)
+      return &quot;jpeg&quot;
+    if lower.ends_with(&quot;.gif&quot;)
+      return &quot;gif&quot;
+    if lower.ends_with(&quot;.bmp&quot;)
+      return &quot;bmp&quot;
+    if lower.ends_with(&quot;.ppm&quot;)
+      return &quot;ppm&quot;
+    raise error(&quot;image: unknown image format&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Image-from_pixels" class="doc-item member">
+<h3><code>from_pixels</code></h3>
+<pre><code>Image.from_pixels(width, height, format, pixels)</code></pre>
+<p><small>lib/image/image.tya:274</small></p>
+<dl class="metadata">
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Param <code>format</code></dt><dd><code>String</code> format value.</dd>
+<dt>Param <code>pixels</code></dt><dd><code>Any</code> pixels value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Image.from_pixels provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.from_pixels provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param format String format value.
+  # @param pixels Any pixels value.
+  # @return Self the resulting value.
+  from_pixels: width, height, format, pixels -&gt;
+    out = Image(width, height, nil)
+    out.format = format
+    out.pixels = []
+    i = 0
+    while i &lt; pixels.len()
+      out.pixels.push(pixels[i])
+      i = i + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Image-grayscale" class="doc-item member">
+<h3><code>grayscale</code></h3>
+<pre><code>Image.grayscale()</code></pre>
+<p><small>lib/image/image.tya:286</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.grayscale provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.grayscale provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  grayscale: -&gt;
+    out = Image(self.width, self.height, nil)
+    y = 0
+    while y &lt; self.height
+      x = 0
+      while x &lt; self.width
+        c = self.pixel(x, y)
+        g = (c.r * 30 + c.g * 59 + c.b * 11) / 100.to_i()
+        out.set_pixel(x, y, color.Color(g, g, g, c.a))
+        x = x + 1
+      y = y + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Image-has_alpha-" class="doc-item member">
+<h3><code>has_alpha?</code></h3>
+<pre><code>Image.has_alpha?()</code></pre>
+<p><small>lib/image/image.tya:301</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Image.has_alpha? provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.has_alpha? provides the image/Image standard library operation.
+  # @return Boolean whether the condition is true.
+  has_alpha?: -&gt;
+    i = 3
+    while i &lt; self.pixels.len()
+      if self.pixels[i] &lt; 255
+        return true
+      i = i + 4
+    false</code></pre>
+</details>
+</section>
+<section id="method-Image-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Image.initialize(width = 1, height = 1, fill = nil)</code></pre>
+<p><small>lib/image/image.tya:27</small></p>
+<dl class="metadata">
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Param <code>fill</code></dt><dd><code>Any</code> fill value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Image.initialize provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.initialize provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param fill Any fill value.
+  # @return Self the initialized object.
+  initialize: width = 1, height = 1, fill = nil -&gt;
+    self.check_dimensions(width, height)
+    if fill == nil
+      fill = color.Color(0, 0, 0, 0)
+    self.check_color(fill)
+    self.width = width
+    self.height = height
+    self.format = nil
+    self.pixels = []
+    i = 0
+    while i &lt; width * height
+      self.pixels.push(fill.r)
+      self.pixels.push(fill.g)
+      self.pixels.push(fill.b)
+      self.pixels.push(fill.a)
+      i = i + 1</code></pre>
+</details>
+</section>
+<section id="method-Image-new" class="doc-item member">
+<h3><code>new</code></h3>
+<pre><code>Image.new(width, height, fill)</code></pre>
+<p><small>lib/image/image.tya:314</small></p>
+<dl class="metadata">
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Param <code>fill</code></dt><dd><code>Any</code> fill value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Image.new provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.new provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param fill Any fill value.
+  # @return Self the resulting value.
+  new: width, height, fill -&gt;
+    Image(width, height, fill)</code></pre>
+</details>
+</section>
+<section id="method-Image-pixel" class="doc-item member">
+<h3><code>pixel</code></h3>
+<pre><code>Image.pixel(x, y)</code></pre>
+<p><small>lib/image/image.tya:321</small></p>
+<dl class="metadata">
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.pixel provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.pixel provides the image/Image standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  pixel: x, y -&gt;
+    self.check_xy(x, y)
+    i = (y * self.width + x) * 4
+    color.Color(
+      self.pixels[i],
+      self.pixels[i + 1],
+      self.pixels[i + 2],
+      self.pixels[i + 3]
+    )</code></pre>
+</details>
+</section>
+<section id="method-Image-read" class="doc-item member">
+<h3><code>read</code></h3>
+<pre><code>Image.read(path)</code></pre>
+<p><small>lib/image/image.tya:334</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.read provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.read provides the image/Image standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  read: path -&gt;
+    img = self.decode(file.File(path).read_bytes(), nil)
+    img.format = self.format_from_path(path)
+    img</code></pre>
+</details>
+</section>
+<section id="method-Image-resize" class="doc-item member">
+<h3><code>resize</code></h3>
+<pre><code>Image.resize(width, height, options)</code></pre>
+<p><small>lib/image/image.tya:344</small></p>
+<dl class="metadata">
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.resize provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.resize provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  resize: width, height, options -&gt;
+    self.check_dimensions(width, height)
+    opts = self.resize_options(options)
+    if opts[&quot;fit&quot;] == &quot;contain&quot;
+      return self.resize_contain(width, height, opts)
+    if opts[&quot;fit&quot;] == &quot;cover&quot;
+      return self.resize_cover(width, height, opts)
+    self.resize_stretch(width, height)</code></pre>
+</details>
+</section>
+<section id="method-Image-resize_contain" class="doc-item member">
+<h3><code>resize_contain</code></h3>
+<pre><code>Image.resize_contain(width, height, opts)</code></pre>
+<p><small>lib/image/image.tya:358</small></p>
+<dl class="metadata">
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Param <code>opts</code></dt><dd><code>Any</code> opts value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.resize_contain provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.resize_contain provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param opts Any opts value.
+  # @return Any the resulting value.
+  resize_contain: width, height, opts -&gt;
+    scale_w = width.to_f() / self.width
+    scale_h = height.to_f() / self.height
+    scale = scale_w
+    if scale_h &lt; scale_w
+      scale = scale_h
+    new_w = (self.width * scale).to_i()
+    new_h = (self.height * scale).to_i()
+    if new_w &lt; 1
+      new_w = 1
+    if new_h &lt; 1
+      new_h = 1
+    resized = self.resize_stretch(new_w, new_h)
+    out = Image(width, height, opts[&quot;background&quot;])
+    ox = ((width - new_w) / 2.0).to_i()
+    oy = ((height - new_h) / 2.0).to_i()
+    out.composite(resized, ox, oy)</code></pre>
+</details>
+</section>
+<section id="method-Image-resize_cover" class="doc-item member">
+<h3><code>resize_cover</code></h3>
+<pre><code>Image.resize_cover(width, height, opts)</code></pre>
+<p><small>lib/image/image.tya:381</small></p>
+<dl class="metadata">
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Param <code>opts</code></dt><dd><code>Any</code> opts value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.resize_cover provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.resize_cover provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @param opts Any opts value.
+  # @return Any the resulting value.
+  resize_cover: width, height, opts -&gt;
+    if opts[&quot;filter&quot;] == &quot;bilinear&quot;
+      nil
+    scale_w = width.to_f() / self.width
+    scale_h = height.to_f() / self.height
+    scale = scale_w
+    if scale_h &gt; scale_w
+      scale = scale_h
+    new_w = (self.width * scale).to_i()
+    new_h = (self.height * scale).to_i()
+    resized = self.resize_stretch(new_w, new_h)
+    ox = ((new_w - width) / 2.0).to_i()
+    oy = ((new_h - height) / 2.0).to_i()
+    resized.crop(ox, oy, width, height)</code></pre>
+</details>
+</section>
+<section id="method-Image-resize_options" class="doc-item member">
+<h3><code>resize_options</code></h3>
+<pre><code>Image.resize_options(options)</code></pre>
+<p><small>lib/image/image.tya:399</small></p>
+<dl class="metadata">
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Dict</code> the resulting value.</dd>
+</dl>
+<p>Image.resize_options provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.resize_options provides the image/Image standard library operation.
+  # @param options Dict options value.
+  # @return Dict the resulting value.
+  resize_options: options -&gt;
+    opts =
+      filter: &quot;nearest&quot;
+      fit: &quot;stretch&quot;
+      background: color.Color(0, 0, 0, 0)
+    if options == nil
+      return opts
+    keys = options.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if key != &quot;filter&quot; and key != &quot;fit&quot; and key != &quot;background&quot;
+        raise error(&quot;image.resize: unknown option &quot; + key)
+      opts[key] = options[key]
+      i = i + 1
+    if opts[&quot;filter&quot;] != &quot;nearest&quot; and opts[&quot;filter&quot;] != &quot;bilinear&quot;
+      raise error(&quot;image.resize: unsupported filter&quot;)
+    if (
+      opts[&quot;fit&quot;] != &quot;stretch&quot; and opts[&quot;fit&quot;] != &quot;contain&quot; and opts[&quot;fit&quot;] != &quot;cover&quot;
+    )
+      raise error(&quot;image.resize: unsupported fit&quot;)
+    self.check_color(opts[&quot;background&quot;])
+    opts</code></pre>
+</details>
+</section>
+<section id="method-Image-resize_stretch" class="doc-item member">
+<h3><code>resize_stretch</code></h3>
+<pre><code>Image.resize_stretch(width, height)</code></pre>
+<p><small>lib/image/image.tya:427</small></p>
+<dl class="metadata">
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.resize_stretch provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.resize_stretch provides the image/Image standard library operation.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Any the resulting value.
+  resize_stretch: width, height -&gt;
+    out = Image(width, height, nil)
+    y = 0
+    while y &lt; height
+      x = 0
+      while x &lt; width
+        sx = ((x * self.width) / width.to_f()).to_i()
+        sy = ((y * self.height) / height.to_f()).to_i()
+        out.set_pixel(x, y, self.pixel(sx, sy))
+        x = x + 1
+      y = y + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Image-rotate90" class="doc-item member">
+<h3><code>rotate90</code></h3>
+<pre><code>Image.rotate90()</code></pre>
+<p><small>lib/image/image.tya:442</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.rotate90 provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.rotate90 provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  rotate90: -&gt;
+    out = Image(self.height, self.width, nil)
+    y = 0
+    while y &lt; self.height
+      x = 0
+      while x &lt; self.width
+        out.set_pixel(self.height - y - 1, x, self.pixel(x, y))
+        x = x + 1
+      y = y + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Image-set_pixel" class="doc-item member">
+<h3><code>set_pixel</code></h3>
+<pre><code>Image.set_pixel(x, y, value)</code></pre>
+<p><small>lib/image/image.tya:458</small></p>
+<dl class="metadata">
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.set_pixel provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.set_pixel provides the image/Image standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  set_pixel: x, y, value -&gt;
+    self.check_xy(x, y)
+    self.check_color(value)
+    i = (y * self.width + x) * 4
+    self.pixels[i] = value.r
+    self.pixels[i + 1] = value.g
+    self.pixels[i + 2] = value.b
+    self.pixels[i + 3] = value.a
+    nil</code></pre>
+</details>
+</section>
+<section id="method-Image-to_bytes" class="doc-item member">
+<h3><code>to_bytes</code></h3>
+<pre><code>Image.to_bytes()</code></pre>
+<p><small>lib/image/image.tya:470</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.to_bytes provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.to_bytes provides the image/Image standard library operation.
+  # @return Any the resulting value.
+  to_bytes: -&gt;
+    bytes(self.pixels)</code></pre>
+</details>
+</section>
+<section id="method-Image-write" class="doc-item member">
+<h3><code>write</code></h3>
+<pre><code>Image.write(path, options)</code></pre>
+<p><small>lib/image/image.tya:477</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.write provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.write provides the image/Image standard library operation.
+  # @param path String path value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  write: path, options -&gt;
+    file.File(path).write_bytes(
+      self.encode(self.write_format(path, options), options)
+    )
+    nil</code></pre>
+</details>
+</section>
+<section id="method-Image-write_format" class="doc-item member">
+<h3><code>write_format</code></h3>
+<pre><code>Image.write_format(path, options)</code></pre>
+<p><small>lib/image/image.tya:487</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Image.write_format provides the image/Image standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Image.write_format provides the image/Image standard library operation.
+  # @param path String path value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  write_format: path, options -&gt;
+    if options != nil and options.has?(&quot;format&quot;)
+      return options[&quot;format&quot;]
+    self.format_from_path(path)</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

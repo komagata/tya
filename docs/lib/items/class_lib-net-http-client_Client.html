@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Client</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li class="current"><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Client</code></h1>
+<section id="class-Client" class="doc-item">
+<pre><code>class Client</code></pre>
+<p><small>lib/net/http/client.tya:2</small></p>
+<p>Client provides the net/http/Client standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Client provides the net/http/Client standard library API.
+class Client
+  # Client.target stores instance state.
+  # @type Nil
+  target: nil
+
+  # Client.initialize stores a target URL.
+  # @param target Any target value.
+  # @return Self the initialized object.
+  initialize: target -&gt;
+    self.target = target
+
+  # Client.chomp provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  chomp: text -&gt;
+    n = text.byte_len()
+    if n &gt; 0 and text[n - 1] == &quot;\n&quot;
+      n = n - 1
+    if n &gt; 0 and text[n - 1] == chr(13)
+      n = n - 1
+    text.slice(0, n)
+
+  # Client.get provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @return Any the resulting value.
+  get: target = nil -&gt;
+    if target == nil
+      target = self.target
+    Client(target).request(&quot;GET&quot;, {})
+
+  # Client.hex_to_i provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  hex_to_i: text -&gt;
+    value = 0
+    i = 0
+    while i &lt; text.byte_len()
+      c = ord(text[i])
+      digit = -1
+      if c &gt;= 48 and c &lt;= 57
+        digit = c - 48
+      elseif c &gt;= 65 and c &lt;= 70
+        digit = c - 55
+      else
+        if c &gt;= 97 and c &lt;= 102
+          digit = c - 87
+        else
+          raise error(&quot;http.response: invalid chunk size&quot;)
+      value = value * 16 + digit
+      i = i + 1
+    value
+
+  # Client.host_header provides the net/http/Client standard library operation.
+  # @param host String host value.
+  # @param port Any port value.
+  # @return Any the resulting value.
+  host_header: host, port -&gt;
+    if port == &quot;&quot; or port == &quot;80&quot; or port == &quot;443&quot;
+      return host
+    host + &quot;:&quot; + port
+
+  # Client.index_of provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @param start Int start value.
+  # @return Any the resulting value.
+  index_of: text, needle, start -&gt;
+    i = start
+    n = text.byte_len()
+    m = needle.byte_len()
+    while i + m &lt;= n
+      if text.slice(i, i + m) == needle
+        return i
+      i = i + 1
+    -1
+
+  # Client.parse_url provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @return String the resulting value.
+  parse_url: target -&gt;
+    prefix = &quot;http://&quot;
+    scheme = &quot;http&quot;
+    if target.starts_with(&quot;https://&quot;)
+      prefix = &quot;https://&quot;
+      scheme = &quot;https&quot;
+    elseif not target.starts_with(prefix)
+      raise error(&quot;http.request: only http:// and https:// URLs are supported&quot;)
+    rest = target.slice(prefix.len(), target.len())
+    slash = Client(nil).index_of(rest, &quot;/&quot;, 0)
+    query = Client(nil).index_of(rest, &quot;?&quot;, 0)
+    end_auth = rest.byte_len()
+    if slash &gt;= 0 and slash &lt; end_auth
+      end_auth = slash
+    if query &gt;= 0 and query &lt; end_auth
+      end_auth = query
+    authority = rest.slice(0, end_auth)
+    remainder = rest.slice(end_auth, rest.len())
+    host = authority
+    port = &quot;&quot;
+    colon = Client(nil).index_of(authority, &quot;:&quot;, 0)
+    if colon &gt;= 0
+      host = authority.slice(0, colon)
+      port = authority.slice(colon + 1, authority.len())
+    path = remainder
+    query_text = &quot;&quot;
+    has_query = false
+    q = Client(nil).index_of(remainder, &quot;?&quot;, 0)
+    if q &gt;= 0
+      has_query = true
+      path = remainder.slice(0, q)
+      query_text = remainder.slice(q + 1, remainder.len())
+    if path == &quot;&quot;
+      path = &quot;/&quot;
+    { scheme: scheme, host: host, port: port, path: path, query: query_text, has_query: has_query }
+
+  # Client.post provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @param body String body value.
+  # @return Any the resulting value.
+  post: target, body = nil -&gt;
+    if self.target != nil
+      body = target
+      target = self.target
+    Client(target).request(&quot;POST&quot;, { body: body })
+
+  # Client.read_chunked provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_chunked: s -&gt;
+    out = &quot;&quot;
+    size_line = socket_read_line(s)
+    while size_line != nil
+      size_text = Client(nil).chomp(size_line).split(&quot;;&quot;)[0].trim()
+      size = Client(nil).hex_to_i(size_text)
+      if size == 0
+        Client(nil).read_trailers(s)
+        return out
+      out = out + socket_read(s, size)
+      socket_read_line(s)
+      size_line = socket_read_line(s)
+    out
+
+  # Client.read_response provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_response: s -&gt;
+    status_line = socket_read_line(s)
+    if status_line == nil
+      raise error(&quot;http.response: empty response&quot;)
+    status_line = Client(nil).chomp(status_line)
+    parts = status_line.split(&quot; &quot;)
+    if parts.len() &lt; 2
+      raise error(&quot;http.response: invalid status line&quot;)
+    status = parts[1].to_i()
+    headers = {}
+    line = socket_read_line(s)
+    while line != nil and Client(nil).chomp(line) != &quot;&quot;
+      clean = Client(nil).chomp(line)
+      idx = Client(nil).index_of(clean, &quot;:&quot;, 0)
+      if idx &gt; 0
+        name = clean.slice(0, idx).lower()
+        value = clean.slice(idx + 1, clean.len()).trim()
+        headers[name] = value
+      line = socket_read_line(s)
+    body = &quot;&quot;
+    transfer = headers.get(&quot;transfer-encoding&quot;, &quot;&quot;)
+    if transfer.lower().contains(&quot;chunked&quot;)
+      body = Client(nil).read_chunked(s)
+    elseif headers.has(&quot;content-length&quot;)
+      body = socket_read(s, headers[&quot;content-length&quot;].to_i())
+    else
+      chunk = socket_read(s, 4096)
+      while chunk != nil and chunk != &quot;&quot;
+        body = body + chunk
+        chunk = socket_read(s, 4096)
+    { status: status, headers: headers, body: body }
+
+  # Client.read_trailers provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_trailers: s -&gt;
+    line = socket_read_line(s)
+    while line != nil and Client(nil).chomp(line) != &quot;&quot;
+      line = socket_read_line(s)
+    nil
+
+  # Client.request provides the net/http/Client standard library operation.
+  # @param method String method value.
+  # @param target Any target value.
+  # @param opts Any opts value.
+  # @return Any the resulting value.
+  request: method, target = nil, opts = nil -&gt;
+    if self.target != nil
+      opts = target
+      target = self.target
+    if opts == nil
+      opts = {}
+    u = Client(nil).parse_url(target)
+    if u[&quot;scheme&quot;] != &quot;http&quot; and u[&quot;scheme&quot;] != &quot;https&quot;
+      raise error(&quot;http.request: only http:// and https:// URLs are supported&quot;)
+    host = u[&quot;host&quot;]
+    if host == &quot;&quot;
+      raise error(&quot;http.request: URL host is required&quot;)
+    port = 80
+    if u[&quot;scheme&quot;] == &quot;https&quot;
+      port = 443
+    if u[&quot;port&quot;] != &quot;&quot;
+      port = u[&quot;port&quot;].to_i()
+    path = u[&quot;path&quot;]
+    if path == &quot;&quot;
+      path = &quot;/&quot;
+    if u[&quot;has_query&quot;]
+      path = path + &quot;?&quot; + u[&quot;query&quot;]
+    headers = {}
+    if opts.has(&quot;headers&quot;) and opts[&quot;headers&quot;] != nil
+      headers = opts[&quot;headers&quot;]
+    body = &quot;&quot;
+    if opts.has(&quot;body&quot;) and opts[&quot;body&quot;] != nil
+      body = opts[&quot;body&quot;].to_s()
+    crlf = chr(13) + &quot;\n&quot;
+    req = method.upper() + &quot; &quot; + path + &quot; HTTP/1.1&quot; + crlf
+    req = req + &quot;Host: &quot; + Client(nil).host_header(host, u[&quot;port&quot;]) + crlf
+    req = req + &quot;Connection: close&quot; + crlf
+    if body != &quot;&quot;
+      req = req + &quot;Content-Length: &quot; + body.byte_len().to_s() + crlf
+    for entry in headers.entries()
+      req = req + entry[0] + &quot;: &quot; + entry[1].to_s() + crlf
+    req = req + crlf + body
+    connect_options = { timeout: opts.get(&quot;timeout&quot;, 10) }
+    if opts.has(&quot;insecure_skip_verify&quot;)
+      connect_options[&quot;insecure_skip_verify&quot;] = opts[&quot;insecure_skip_verify&quot;]
+    if opts.has(&quot;ca_file&quot;)
+      connect_options[&quot;ca_file&quot;] = opts[&quot;ca_file&quot;]
+    s = nil
+    if u[&quot;scheme&quot;] == &quot;https&quot;
+      s = tls_connect(host, port, connect_options)
+    else
+      s = socket_connect(host, port, connect_options)
+    socket_write(s, req)
+    response = Client(nil).read_response(s)
+    socket_close(s)
+    response</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Client-target" class="doc-item member">
+<h3><code>target</code></h3>
+<pre><code>Client.target</code></pre>
+<p><small>lib/net/http/client.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Client.target stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.target stores instance state.
+  # @type Nil
+  target: nil</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Client-chomp" class="doc-item member">
+<h3><code>chomp</code></h3>
+<pre><code>Client.chomp(text)</code></pre>
+<p><small>lib/net/http/client.tya:16</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.chomp provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.chomp provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  chomp: text -&gt;
+    n = text.byte_len()
+    if n &gt; 0 and text[n - 1] == &quot;\n&quot;
+      n = n - 1
+    if n &gt; 0 and text[n - 1] == chr(13)
+      n = n - 1
+    text.slice(0, n)</code></pre>
+</details>
+</section>
+<section id="method-Client-get" class="doc-item member">
+<h3><code>get</code></h3>
+<pre><code>Client.get(target = nil)</code></pre>
+<p><small>lib/net/http/client.tya:27</small></p>
+<dl class="metadata">
+<dt>Param <code>target</code></dt><dd><code>Any</code> target value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.get provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.get provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @return Any the resulting value.
+  get: target = nil -&gt;
+    if target == nil
+      target = self.target
+    Client(target).request(&quot;GET&quot;, {})</code></pre>
+</details>
+</section>
+<section id="method-Client-hex_to_i" class="doc-item member">
+<h3><code>hex_to_i</code></h3>
+<pre><code>Client.hex_to_i(text)</code></pre>
+<p><small>lib/net/http/client.tya:35</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.hex_to_i provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.hex_to_i provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  hex_to_i: text -&gt;
+    value = 0
+    i = 0
+    while i &lt; text.byte_len()
+      c = ord(text[i])
+      digit = -1
+      if c &gt;= 48 and c &lt;= 57
+        digit = c - 48
+      elseif c &gt;= 65 and c &lt;= 70
+        digit = c - 55
+      else
+        if c &gt;= 97 and c &lt;= 102
+          digit = c - 87
+        else
+          raise error(&quot;http.response: invalid chunk size&quot;)
+      value = value * 16 + digit
+      i = i + 1
+    value</code></pre>
+</details>
+</section>
+<section id="method-Client-host_header" class="doc-item member">
+<h3><code>host_header</code></h3>
+<pre><code>Client.host_header(host, port)</code></pre>
+<p><small>lib/net/http/client.tya:58</small></p>
+<dl class="metadata">
+<dt>Param <code>host</code></dt><dd><code>String</code> host value.</dd>
+<dt>Param <code>port</code></dt><dd><code>Any</code> port value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.host_header provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.host_header provides the net/http/Client standard library operation.
+  # @param host String host value.
+  # @param port Any port value.
+  # @return Any the resulting value.
+  host_header: host, port -&gt;
+    if port == &quot;&quot; or port == &quot;80&quot; or port == &quot;443&quot;
+      return host
+    host + &quot;:&quot; + port</code></pre>
+</details>
+</section>
+<section id="method-Client-index_of" class="doc-item member">
+<h3><code>index_of</code></h3>
+<pre><code>Client.index_of(text, needle, start)</code></pre>
+<p><small>lib/net/http/client.tya:68</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Param <code>needle</code></dt><dd><code>Any</code> needle value.</dd>
+<dt>Param <code>start</code></dt><dd><code>Int</code> start value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.index_of provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.index_of provides the net/http/Client standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @param start Int start value.
+  # @return Any the resulting value.
+  index_of: text, needle, start -&gt;
+    i = start
+    n = text.byte_len()
+    m = needle.byte_len()
+    while i + m &lt;= n
+      if text.slice(i, i + m) == needle
+        return i
+      i = i + 1
+    -1</code></pre>
+</details>
+</section>
+<section id="method-Client-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Client.initialize(target)</code></pre>
+<p><small>lib/net/http/client.tya:10</small></p>
+<dl class="metadata">
+<dt>Param <code>target</code></dt><dd><code>Any</code> target value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Client.initialize stores a target URL.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.initialize stores a target URL.
+  # @param target Any target value.
+  # @return Self the initialized object.
+  initialize: target -&gt;
+    self.target = target</code></pre>
+</details>
+</section>
+<section id="method-Client-parse_url" class="doc-item member">
+<h3><code>parse_url</code></h3>
+<pre><code>Client.parse_url(target)</code></pre>
+<p><small>lib/net/http/client.tya:81</small></p>
+<dl class="metadata">
+<dt>Param <code>target</code></dt><dd><code>Any</code> target value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Client.parse_url provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.parse_url provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @return String the resulting value.
+  parse_url: target -&gt;
+    prefix = &quot;http://&quot;
+    scheme = &quot;http&quot;
+    if target.starts_with(&quot;https://&quot;)
+      prefix = &quot;https://&quot;
+      scheme = &quot;https&quot;
+    elseif not target.starts_with(prefix)
+      raise error(&quot;http.request: only http:// and https:// URLs are supported&quot;)
+    rest = target.slice(prefix.len(), target.len())
+    slash = Client(nil).index_of(rest, &quot;/&quot;, 0)
+    query = Client(nil).index_of(rest, &quot;?&quot;, 0)
+    end_auth = rest.byte_len()
+    if slash &gt;= 0 and slash &lt; end_auth
+      end_auth = slash
+    if query &gt;= 0 and query &lt; end_auth
+      end_auth = query
+    authority = rest.slice(0, end_auth)
+    remainder = rest.slice(end_auth, rest.len())
+    host = authority
+    port = &quot;&quot;
+    colon = Client(nil).index_of(authority, &quot;:&quot;, 0)
+    if colon &gt;= 0
+      host = authority.slice(0, colon)
+      port = authority.slice(colon + 1, authority.len())
+    path = remainder
+    query_text = &quot;&quot;
+    has_query = false
+    q = Client(nil).index_of(remainder, &quot;?&quot;, 0)
+    if q &gt;= 0
+      has_query = true
+      path = remainder.slice(0, q)
+      query_text = remainder.slice(q + 1, remainder.len())
+    if path == &quot;&quot;
+      path = &quot;/&quot;
+    { scheme: scheme, host: host, port: port, path: path, query: query_text, has_query: has_query }</code></pre>
+</details>
+</section>
+<section id="method-Client-post" class="doc-item member">
+<h3><code>post</code></h3>
+<pre><code>Client.post(target, body = nil)</code></pre>
+<p><small>lib/net/http/client.tya:121</small></p>
+<dl class="metadata">
+<dt>Param <code>target</code></dt><dd><code>Any</code> target value.</dd>
+<dt>Param <code>body</code></dt><dd><code>String</code> body value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.post provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.post provides the net/http/Client standard library operation.
+  # @param target Any target value.
+  # @param body String body value.
+  # @return Any the resulting value.
+  post: target, body = nil -&gt;
+    if self.target != nil
+      body = target
+      target = self.target
+    Client(target).request(&quot;POST&quot;, { body: body })</code></pre>
+</details>
+</section>
+<section id="method-Client-read_chunked" class="doc-item member">
+<h3><code>read_chunked</code></h3>
+<pre><code>Client.read_chunked(s)</code></pre>
+<p><small>lib/net/http/client.tya:130</small></p>
+<dl class="metadata">
+<dt>Param <code>s</code></dt><dd><code>Any</code> s value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.read_chunked provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.read_chunked provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_chunked: s -&gt;
+    out = &quot;&quot;
+    size_line = socket_read_line(s)
+    while size_line != nil
+      size_text = Client(nil).chomp(size_line).split(&quot;;&quot;)[0].trim()
+      size = Client(nil).hex_to_i(size_text)
+      if size == 0
+        Client(nil).read_trailers(s)
+        return out
+      out = out + socket_read(s, size)
+      socket_read_line(s)
+      size_line = socket_read_line(s)
+    out</code></pre>
+</details>
+</section>
+<section id="method-Client-read_response" class="doc-item member">
+<h3><code>read_response</code></h3>
+<pre><code>Client.read_response(s)</code></pre>
+<p><small>lib/net/http/client.tya:147</small></p>
+<dl class="metadata">
+<dt>Param <code>s</code></dt><dd><code>Any</code> s value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.read_response provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.read_response provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_response: s -&gt;
+    status_line = socket_read_line(s)
+    if status_line == nil
+      raise error(&quot;http.response: empty response&quot;)
+    status_line = Client(nil).chomp(status_line)
+    parts = status_line.split(&quot; &quot;)
+    if parts.len() &lt; 2
+      raise error(&quot;http.response: invalid status line&quot;)
+    status = parts[1].to_i()
+    headers = {}
+    line = socket_read_line(s)
+    while line != nil and Client(nil).chomp(line) != &quot;&quot;
+      clean = Client(nil).chomp(line)
+      idx = Client(nil).index_of(clean, &quot;:&quot;, 0)
+      if idx &gt; 0
+        name = clean.slice(0, idx).lower()
+        value = clean.slice(idx + 1, clean.len()).trim()
+        headers[name] = value
+      line = socket_read_line(s)
+    body = &quot;&quot;
+    transfer = headers.get(&quot;transfer-encoding&quot;, &quot;&quot;)
+    if transfer.lower().contains(&quot;chunked&quot;)
+      body = Client(nil).read_chunked(s)
+    elseif headers.has(&quot;content-length&quot;)
+      body = socket_read(s, headers[&quot;content-length&quot;].to_i())
+    else
+      chunk = socket_read(s, 4096)
+      while chunk != nil and chunk != &quot;&quot;
+        body = body + chunk
+        chunk = socket_read(s, 4096)
+    { status: status, headers: headers, body: body }</code></pre>
+</details>
+</section>
+<section id="method-Client-read_trailers" class="doc-item member">
+<h3><code>read_trailers</code></h3>
+<pre><code>Client.read_trailers(s)</code></pre>
+<p><small>lib/net/http/client.tya:182</small></p>
+<dl class="metadata">
+<dt>Param <code>s</code></dt><dd><code>Any</code> s value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.read_trailers provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.read_trailers provides the net/http/Client standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  read_trailers: s -&gt;
+    line = socket_read_line(s)
+    while line != nil and Client(nil).chomp(line) != &quot;&quot;
+      line = socket_read_line(s)
+    nil</code></pre>
+</details>
+</section>
+<section id="method-Client-request" class="doc-item member">
+<h3><code>request</code></h3>
+<pre><code>Client.request(method, target = nil, opts = nil)</code></pre>
+<p><small>lib/net/http/client.tya:193</small></p>
+<dl class="metadata">
+<dt>Param <code>method</code></dt><dd><code>String</code> method value.</dd>
+<dt>Param <code>target</code></dt><dd><code>Any</code> target value.</dd>
+<dt>Param <code>opts</code></dt><dd><code>Any</code> opts value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Client.request provides the net/http/Client standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Client.request provides the net/http/Client standard library operation.
+  # @param method String method value.
+  # @param target Any target value.
+  # @param opts Any opts value.
+  # @return Any the resulting value.
+  request: method, target = nil, opts = nil -&gt;
+    if self.target != nil
+      opts = target
+      target = self.target
+    if opts == nil
+      opts = {}
+    u = Client(nil).parse_url(target)
+    if u[&quot;scheme&quot;] != &quot;http&quot; and u[&quot;scheme&quot;] != &quot;https&quot;
+      raise error(&quot;http.request: only http:// and https:// URLs are supported&quot;)
+    host = u[&quot;host&quot;]
+    if host == &quot;&quot;
+      raise error(&quot;http.request: URL host is required&quot;)
+    port = 80
+    if u[&quot;scheme&quot;] == &quot;https&quot;
+      port = 443
+    if u[&quot;port&quot;] != &quot;&quot;
+      port = u[&quot;port&quot;].to_i()
+    path = u[&quot;path&quot;]
+    if path == &quot;&quot;
+      path = &quot;/&quot;
+    if u[&quot;has_query&quot;]
+      path = path + &quot;?&quot; + u[&quot;query&quot;]
+    headers = {}
+    if opts.has(&quot;headers&quot;) and opts[&quot;headers&quot;] != nil
+      headers = opts[&quot;headers&quot;]
+    body = &quot;&quot;
+    if opts.has(&quot;body&quot;) and opts[&quot;body&quot;] != nil
+      body = opts[&quot;body&quot;].to_s()
+    crlf = chr(13) + &quot;\n&quot;
+    req = method.upper() + &quot; &quot; + path + &quot; HTTP/1.1&quot; + crlf
+    req = req + &quot;Host: &quot; + Client(nil).host_header(host, u[&quot;port&quot;]) + crlf
+    req = req + &quot;Connection: close&quot; + crlf
+    if body != &quot;&quot;
+      req = req + &quot;Content-Length: &quot; + body.byte_len().to_s() + crlf
+    for entry in headers.entries()
+      req = req + entry[0] + &quot;: &quot; + entry[1].to_s() + crlf
+    req = req + crlf + body
+    connect_options = { timeout: opts.get(&quot;timeout&quot;, 10) }
+    if opts.has(&quot;insecure_skip_verify&quot;)
+      connect_options[&quot;insecure_skip_verify&quot;] = opts[&quot;insecure_skip_verify&quot;]
+    if opts.has(&quot;ca_file&quot;)
+      connect_options[&quot;ca_file&quot;] = opts[&quot;ca_file&quot;]
+    s = nil
+    if u[&quot;scheme&quot;] == &quot;https&quot;
+      s = tls_connect(host, port, connect_options)
+    else
+      s = socket_connect(host, port, connect_options)
+    socket_write(s, req)
+    response = Client(nil).read_response(s)
+    socket_close(s)
+    response</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

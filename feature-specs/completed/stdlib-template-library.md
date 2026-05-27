@@ -93,7 +93,7 @@ Template.render("{{ partial \"row\" user }}", data, {
 
 ## Scope
 
-- `stdlib/template/Template.tya`
+- `lib/template/Template.tya`
 - `docs/STDLIB.md`
 - next release `docs/vX.Y/SPEC.md` and `docs/vX.Y/RELEASE_NOTES.md`
 - script tests under `tests/testdata/`

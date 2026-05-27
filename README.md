@@ -111,7 +111,7 @@ tya lint src                  # report unused locals (TYAL0001) under a path
 tya lint --fix src            # rewrite TYAL0001 line-deletes and TYAL0003 `if true` unwraps in place
 tya lint --format=json src    # machine-readable findings for CI consumers
 tya doc               # print source-comment API documentation
-tya doc --json stdlib # emit generated stdlib API documentation
+tya doc --json lib # emit generated stdlib API documentation
 tya doc --html ./out  # write a multi-page HTML site
 ```
 
@@ -223,7 +223,7 @@ The current implementation on `main` includes:
 - native package metadata through `[native]`, `tya doctor native`, and
   `tya new --template lib --native`
 - package-provided tools through `[tools]` and `tya tool`
-- standard library packages and APIs loaded from `stdlib/`
+- standard library packages and APIs loaded from `lib/`
 - standard builtins listed in the specification
 - compile-to-C execution through `tya run`, `tya build`, and `tya emit-c`
 - source checking through `tya check`

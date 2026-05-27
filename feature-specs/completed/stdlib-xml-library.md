@@ -182,12 +182,12 @@ Required JUnit-facing behavior:
 
 ## Scope
 
-- `stdlib/xml/Xml.tya`
-- `stdlib/xml/Document.tya`
-- `stdlib/xml/Element.tya`
-- `stdlib/xml/Text.tya`
-- `stdlib/xml/Comment.tya`
-- `stdlib/xml/CData.tya`
+- `lib/xml/Xml.tya`
+- `lib/xml/Document.tya`
+- `lib/xml/Element.tya`
+- `lib/xml/Text.tya`
+- `lib/xml/Comment.tya`
+- `lib/xml/CData.tya`
 - `tests/stdlib_xml_test.tya`
 - JUnit fixture tests under `tests/testdata/xml/` or inline test fixtures.
 - `docs/STDLIB.md`

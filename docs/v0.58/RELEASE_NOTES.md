@@ -34,10 +34,10 @@ The language surface is unchanged from v0.57.
 
 ### `import net/http`
 
-The first multi-segment standard module. `stdlib/net/http/Server.tya`
+The first multi-segment standard module. `lib/net/http/Server.tya`
 defines `class Server`; the unaliased binding follows tya's
 last-segment rule, so `http` becomes the namespace.
-`stdlib/net/http/Client.tya` is reserved for a future Epic.
+`lib/net/http/Client.tya` is reserved for a future Epic.
 
 ### Sinatra-style routes
 

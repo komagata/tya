@@ -1001,7 +1001,7 @@ Imports are resolved in this order:
 1. the importing file's directory;
 2. manifest-declared dependencies from `tya.lock`;
 3. directories listed in `TYA_PATH`, from left to right;
-4. the bundled `stdlib/` directory.
+4. the bundled `lib/` directory.
 
 The first matching file or package directory wins. Local application imports
 may shadow package dependencies, `TYA_PATH`, and standard-library imports.
@@ -1250,12 +1250,12 @@ errors according to the API being used.
 
 ## Standard Library
 
-The standard library is shipped with Tya under `stdlib/` and is imported using
+The standard library is shipped with Tya under `lib/` and is imported using
 the same import syntax as user files and packages.
 
 The standard library is part of the language distribution. Its public surface
 is the set of importable PascalCase package classes and interfaces under
-`stdlib/`. Standard-library imports are resolved after local packages, locked
+`lib/`. Standard-library imports are resolved after local packages, locked
 package dependencies, and `TYA_PATH` entries.
 
 Current standard-library surface:

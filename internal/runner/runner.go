@@ -712,15 +712,17 @@ func packageSrcDirsFromRoot(root, leadingName string) ([]string, error) {
 
 func stdlibDirs() []string {
 	dirs := []string{}
-	if dir := os.Getenv("TYA_STDLIB_DIR"); dir != "" {
+	if dir := os.Getenv("TYA_LIB_DIR"); dir != "" {
+		dirs = append(dirs, dir)
+	} else if dir := os.Getenv("TYA_STDLIB_DIR"); dir != "" {
 		dirs = append(dirs, dir)
 	}
-	dirs = append(dirs, filepath.Join("stdlib"))
+	dirs = append(dirs, filepath.Join("lib"))
 	if exe, err := os.Executable(); err == nil {
 		exeDir := filepath.Dir(exe)
 		dirs = append(dirs,
-			filepath.Join(exeDir, "stdlib"),
-			filepath.Clean(filepath.Join(exeDir, "..", "share", "tya", "stdlib")),
+			filepath.Join(exeDir, "lib"),
+			filepath.Clean(filepath.Join(exeDir, "..", "share", "tya", "lib")),
 		)
 	}
 	seen := map[string]bool{}

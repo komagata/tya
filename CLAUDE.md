@@ -18,7 +18,7 @@ Tya is a compile-to-C language. A `.tya` source file flows through:
 
 Two side packages sit alongside the main pipeline: `internal/formatter/` backs `tya fmt`, and `internal/eval/` is a Go-side tree-walking interpreter (used by tests and tooling — it is independent of the C emitter pipeline).
 
-`cmd/tya/` is the user-facing CLI (`run`, `build`, `check`, `fmt`, `emit-c`, `test`, `version`). Module resolution searches the source's directory and `TYA_PATH`; attached standard modules live in `stdlib/`.
+`cmd/tya/` is the user-facing CLI (`run`, `build`, `check`, `fmt`, `emit-c`, `test`, `version`). Module resolution searches the source's directory and `TYA_PATH`; attached standard modules live in `lib/`.
 
 The Tya-written self-host compiler at `selfhost/v01/compiler.tya` is a maintained fixed point: it must compile itself to a stable stage-2/stage-3 output. `TestSelfhostV01Scripts` enforces this and must not be skipped or weakened.
 

@@ -19,7 +19,7 @@ grep 'class Mylib' mylib/src/mylib/mylib.tya
 
 cd mylib
 env PATH=$WORK:$PATH
-env TYA_STDLIB_DIR=$REPO/stdlib
+env TYA_LIB_DIR=$REPO/lib
 env TYA_RUNTIME_DIR=$REPO/runtime
 exec $WORK/tya task test
 stdout '1 tests, 1 passed, 0 failed'

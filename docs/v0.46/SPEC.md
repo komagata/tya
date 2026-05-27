@@ -435,7 +435,7 @@ diagnostics table below pointing at every site that needs editing.
     abstract`, `override`, `final` combinations.
   - `migration_diagnostics.txtar` — every E0407 / E0410 / E0411 /
     E0412 / E0413 case.
-- `examples/`, `stdlib/`, and the v0.46-surface portion of the
+- `examples/`, `lib/`, and the v0.46-surface portion of the
   Go reference impl carry no `@`/`@@` sigils and no `_`-prefixed
   class members after v0.46 lands.
 

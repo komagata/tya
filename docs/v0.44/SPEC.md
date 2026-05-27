@@ -156,7 +156,7 @@ class Request
 Packages may nest arbitrarily deep through directory nesting:
 
 ```text
-stdlib/
+lib/
   net/
     http/
       Request.tya
@@ -185,7 +185,7 @@ res = req.send()
 
 1. The directory containing the entry script file.
 2. Each entry of `TYA_PATH`, in order.
-3. The bundled `stdlib/` directory.
+3. The bundled `lib/` directory.
 
 The first directory found that matches `path` exactly is the resolved
 package.
@@ -215,7 +215,7 @@ the package prefix. The full reference form is
 class whose name matches the directory:
 
 ```text
-stdlib/math/Math.tya       contains class Math
+lib/math/Math.tya       contains class Math
 
 import math
 Math.sin(0.5)              # ERROR: Math is not in scope
@@ -495,13 +495,13 @@ print(response.status())
 ### Utility class
 
 ```text
-stdlib/
+lib/
   math/
     Math.tya
 ```
 
 ```tya
-# stdlib/math/Math.tya
+# lib/math/Math.tya
 class Math
   pi = 3.14159265358979
 
@@ -567,10 +567,10 @@ until either:
 In practice, M6 keeps the following stdlib packages in the legacy
 module-file shape and defers their class migration to M8:
 
-- `stdlib/string.tya`
-- `stdlib/array.tya`
+- `lib/string.tya`
+- `lib/array.tya`
 
-`stdlib/dict.tya` is not currently exercised by v0.1 selfhost tests
+`lib/dict.tya` is not currently exercised by v0.1 selfhost tests
 but is grouped with string/array for consistency: the three core
 collection-style modules migrate together when M8 lands.
 
@@ -592,7 +592,7 @@ The implementation order, captured for cross-reference with `ROADMAP.md`:
 3. Compact entry-file desugaring becomes the runner's default for
    lowercase files; existing top-level execution semantics are preserved.
 4. Private-class semantics land.
-5. `stdlib/` is migrated package by package from `module + functions`
+5. `lib/` is migrated package by package from `module + functions`
    to class-file form. Each package landing keeps tests green.
 6. `examples/` is migrated.
 7. `selfhost/v01/compiler.tya` is migrated, preserving the self-host

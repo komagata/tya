@@ -299,7 +299,7 @@ In v0.26, the import lookup order becomes:
 1. The importing file's directory.
 2. **Manifest-declared dependencies (via `tya.lock`).**
 3. Directories listed in `TYA_PATH`.
-4. The bundled `stdlib/` shipped with Tya.
+4. The bundled `lib/` shipped with Tya.
 
 Step 2 is new in v0.26. The resolver maps a package name to its source
 directory under `.tya/packages/<name>-<version>/` (git source) or directly

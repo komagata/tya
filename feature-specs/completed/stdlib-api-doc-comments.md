@@ -6,7 +6,7 @@ Make the bundled standard library self-documenting by adding source comments to 
 
 ## Context
 
-- Tya's public stdlib lives under `stdlib/` and is imported with the same syntax as user packages.
+- Tya's public stdlib lives under `lib/` and is imported with the same syntax as user packages.
 - Current stdlib source files mostly expose public classes, interfaces, and static methods without leading documentation comments.
 - `tya doc` already extracts leading `#` comment blocks for top-level documented bindings.
 - A separate queued spec, `feature-specs/documentation-generator-extensions.md`, covers `tya doc --json`, re-export following, and documentation diagnostics.
@@ -16,8 +16,8 @@ Make the bundled standard library self-documenting by adding source comments to 
 
 - Add leading `#` doc comments to public stdlib APIs.
 - Public API coverage includes:
-  - public class files under `stdlib/**/PascalCase.tya`
-  - public interfaces under `stdlib/`
+  - public class files under `lib/**/PascalCase.tya`
+  - public interfaces under `lib/`
   - public static methods intended for users
   - public constructors such as `new`, `parse`, `read`, `write`, `connect`, and similar entry points
 - Comments should be concise and useful:
@@ -41,7 +41,7 @@ Make the bundled standard library self-documenting by adding source comments to 
 
 ## Scope
 
-- Add or update comments in stdlib source files under `stdlib/`.
+- Add or update comments in stdlib source files under `lib/`.
 - Add a stdlib API documentation generation command or script using `tya doc` or the enhanced documentation generator.
 - Add generated API docs source/output under `docs/` only if the repository already treats generated docs as committed publication content.
 - Add coverage tests for missing stdlib API comments.

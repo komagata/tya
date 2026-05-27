@@ -19,7 +19,7 @@ and use broadly available formats.
 
 ## Behavior
 
-- Add `stdlib/compress/Compress.tya`.
+- Add `lib/compress/Compress.tya`.
 - Public APIs:
   - `compress.Compress.gzip(value)`
   - `compress.Compress.gunzip(bytes)`
@@ -37,7 +37,7 @@ and use broadly available formats.
 
 ## Scope
 
-- `stdlib/compress/Compress.tya`
+- `lib/compress/Compress.tya`
 - runtime/native support if pure Tya implementation is not practical
 - `docs/STDLIB.md`
 - next release docs

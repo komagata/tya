@@ -3020,12 +3020,14 @@ find_module_path = dir, name ->
         candidate = join_path(entry, file_name)
         if file_exists(candidate)
           return candidate
-  stdlib_dir = env("TYA_STDLIB_DIR")
+  stdlib_dir = env("TYA_LIB_DIR")
+  if stdlib_dir == ""
+    stdlib_dir = env("TYA_STDLIB_DIR")
   if stdlib_dir != ""
     candidate = join_path(stdlib_dir, file_name)
     if file_exists(candidate)
       return candidate
-  candidate = join_path("stdlib", file_name)
+  candidate = join_path("lib", file_name)
   if file_exists(candidate)
     return candidate
   file_name

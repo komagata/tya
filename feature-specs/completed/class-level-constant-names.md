@@ -51,7 +51,7 @@ Current language docs already describe constants as `SCREAMING_SNAKE_CASE` and c
 - Making `static ALPHABET = ...` the canonical spelling.
 - Allowing lowercase names as class constants.
 - Reworking broader class member visibility or inheritance semantics beyond class constant access.
-- Migrating `stdlib/base64/Base64.tya` to use a class constant unless the implementation change naturally needs one focused fixture.
+- Migrating `lib/base64/Base64.tya` to use a class constant unless the implementation change naturally needs one focused fixture.
 
 ## Acceptance Criteria
 

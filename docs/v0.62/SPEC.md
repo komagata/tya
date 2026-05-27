@@ -38,7 +38,7 @@ Control flow includes `if` / `elseif` / `else`, `while`, `for`, `break`,
 return the final expression implicitly unless an explicit `return` is used.
 
 Imports load same-directory files, manifest dependencies from `tya.lock`,
-directories listed in `TYA_PATH`, and the bundled `stdlib/` directory.
+directories listed in `TYA_PATH`, and the bundled `lib/` directory.
 Directory packages expose public classes and interfaces directly unless an
 alias is used:
 

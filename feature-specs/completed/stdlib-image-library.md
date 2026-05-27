@@ -137,7 +137,7 @@ canvas APIs, GPU drawing, and game-rendering bindings remain external packages.
 
 ## Implementation Notes
 
-- Keep the public API in Tya under `stdlib/image/`.
+- Keep the public API in Tya under `lib/image/`.
 - Use runtime/native-backed builtins only for codec-heavy decode/encode work.
 - Prefer dependency-free, vendored C codec implementation files when needed so
   `image` does not require system libraries such as ImageMagick, libpng, libjpeg,
@@ -151,8 +151,8 @@ canvas APIs, GPU drawing, and game-rendering bindings remain external packages.
 
 ## Scope
 
-- `stdlib/image/Image.tya`
-- `stdlib/image/Codec.tya`
+- `lib/image/Image.tya`
+- `lib/image/Codec.tya`
 - Runtime and codegen/checker builtin registration needed for image codecs.
 - C runtime codec helpers or vendored codec sources.
 - Tests for metadata, decode, encode, round-trip, pixel access, and operations.

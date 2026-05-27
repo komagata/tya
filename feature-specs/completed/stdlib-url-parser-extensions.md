@@ -12,7 +12,7 @@ builder for HTTP clients, package tooling, and user programs.
 
 ## Context
 
-Tya already has `stdlib/url/Url.tya` with `encode`, `decode`, `encode_query`,
+Tya already has `lib/url/Url.tya` with `encode`, `decode`, `encode_query`,
 `decode_query`, `parse`, and `build`. Existing tests cover a basic full URL and
 query parsing. The next networking features need stricter behavior around
 relative URLs, IPv6 hosts, normalization, query dictionaries, and error cases.
@@ -46,7 +46,7 @@ relative URLs, IPv6 hosts, normalization, query dictionaries, and error cases.
 
 ## Scope
 
-- `stdlib/url/Url.tya`
+- `lib/url/Url.tya`
 - `tests/stdlib_url_test.tya`
 - `docs/STDLIB.md`
 - next release docs

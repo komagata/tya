@@ -132,7 +132,7 @@ func importEntryString(imp *ast.ImportStmt) string {
 }
 
 // stdlibModules is the set of names recognized as stdlib for
-// import grouping. Kept in sync with stdlib/*.tya.
+// import grouping. Kept in sync with lib/*.tya.
 var stdlibModules = map[string]bool{
 	"array":         true,
 	"base64":        true,

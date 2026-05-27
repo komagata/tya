@@ -6,20 +6,20 @@ Make character and byte traversal reusable through Tya's existing `Iterable` / `
 
 ## Context
 
-`stdlib/sequence.tya` defines `Sequence implements Iterable` with `map`, `filter`, `take`, `drop`, `reduce`, and `to_a`. `docs/SPEC.md` already says arrays, dictionaries, and strings conform to `Iterable` as primitive values. Runtime support includes `tya_iter` and `tya_sequence`, and string iteration already exists in the runtime path. However:
+`lib/sequence.tya` defines `Sequence implements Iterable` with `map`, `filter`, `take`, `drop`, `reduce`, and `to_a`. `docs/SPEC.md` already says arrays, dictionaries, and strings conform to `Iterable` as primitive values. Runtime support includes `tya_iter` and `tya_sequence`, and string iteration already exists in the runtime path. However:
 
 - `Sequence` does not provide common predicate traversal methods such as `any?`, `all?`, `find`, or `each`.
 - Bytes traversal is not documented as an `Iterable` primitive.
-- `stdlib/csv/Csv.tya` still manually loops through string characters in `escape_field`.
+- `lib/csv/Csv.tya` still manually loops through string characters in `escape_field`.
 - Adding ad hoc names such as `contains_any` is not desired; traversal should flow through `Sequence`.
 
 Relevant files:
 
-- `stdlib/sequence.tya`
-- `stdlib/iterable.tya`
-- `stdlib/iterator.tya`
-- `stdlib/bytes/Bytes.tya`
-- `stdlib/csv/Csv.tya`
+- `lib/sequence.tya`
+- `lib/iterable.tya`
+- `lib/iterator.tya`
+- `lib/bytes/Bytes.tya`
+- `lib/csv/Csv.tya`
 - `docs/SPEC.md`
 - `runtime/tya_runtime.c`
 - `runtime/tya_runtime.h`
@@ -66,7 +66,7 @@ total = b"ABC".sequence().reduce(0, sum, byte -> sum + byte)
 
 ## Scope
 
-- Extend `Sequence` interface/default methods in `stdlib/sequence.tya`.
+- Extend `Sequence` interface/default methods in `lib/sequence.tya`.
 - Ensure runtime primitive member dispatch exposes `iter` and `sequence` for `Bytes`.
 - Ensure runtime iterator support handles bytes as numeric byte values.
 - Ensure checker and codegen recognize bytes primitive `iter` / `sequence` methods where primitive method allowlists exist.
@@ -74,7 +74,7 @@ total = b"ABC".sequence().reduce(0, sum, byte -> sum + byte)
   - strings iterate by character strings;
   - bytes iterate by numeric byte values;
   - `Sequence` includes `each`, `any?`, `all?`, and `find`.
-- Refactor `stdlib/csv/Csv.tya` to use sequence traversal in `escape_field`.
+- Refactor `lib/csv/Csv.tya` to use sequence traversal in `escape_field`.
 - Add focused tests for string sequence methods, bytes sequence methods, and CSV escaping.
 
 ## Out of Scope

@@ -62,7 +62,7 @@ Lowercase filename, top-level statements run from the top.
 
 ### Before (v0.43)
 
-`stdlib/path.tya`:
+`lib/path.tya`:
 
 ```tya
 module path
@@ -80,7 +80,7 @@ print(path.join(["tmp", "x.txt"]))
 
 ### After (v0.44)
 
-`stdlib/path/Path.tya`:
+`lib/path/Path.tya`:
 
 ```tya
 class Path
@@ -98,7 +98,7 @@ print(path.Path.join(["tmp", "x.txt"]))
 
 Mechanical recipe:
 
-1. Move `stdlib/<name>.tya` to `stdlib/<name>/<Name>.tya` (capitalize
+1. Move `lib/<name>.tya` to `lib/<name>/<Name>.tya` (capitalize
    the leaf as the class name).
 2. Replace `module <name>` with `class <Name>`.
 3. Prefix every member function with `@@`. Leave constants without
@@ -198,7 +198,7 @@ import foo/Bar           # PascalCase terminal segment
 ```
 
 Resolution order (unchanged from v0.43): the importing file's
-directory, each `TYA_PATH` entry, then `stdlib/`.
+directory, each `TYA_PATH` entry, then `lib/`.
 
 ## Entry execution (`tya run`)
 

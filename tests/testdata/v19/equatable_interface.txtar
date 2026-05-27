@@ -1,7 +1,7 @@
 # Equatable interface and primitive equal? methods.
 cd $REPO
 
-exec go run ./cmd/tya check stdlib/equatable.tya
+exec go run ./cmd/tya check lib/equatable.tya
 
 exec go run ./cmd/tya run $WORK/user_equatable.tya
 stdout 'true\nfalse\n'

@@ -59,7 +59,7 @@ Current formatter logic in `internal/formatter/unparse.go` treats stdlib and use
 
 - Given issue #11's example, `tya format -w` rewrites it to consecutive imports followed by one blank line before `class Cli`.
 - `tya format --check` fails before formatting and passes after formatting for a file with blank lines between consecutive imports.
-- A formatter unit test or CLI test verifies that mixed stdlib/user consecutive imports do not get a blank line between them.
+- A formatter unit test or CLI test verifies that mixed lib/user consecutive imports do not get a blank line between them.
 - Existing intentionally separate non-import top-level sections are not collapsed unexpectedly.
 - Formatter output remains idempotent for the new import layout.
 

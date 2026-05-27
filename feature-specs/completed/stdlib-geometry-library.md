@@ -167,12 +167,12 @@ instance methods later without changing the public model.
 
 ## Scope
 
-- `stdlib/geometry/Vector2.tya`
-- `stdlib/geometry/Vector3.tya`
-- `stdlib/geometry/Point.tya`
-- `stdlib/geometry/Size.tya`
-- `stdlib/geometry/Rect.tya`
-- `stdlib/geometry/Circle.tya`
+- `lib/geometry/Vector2.tya`
+- `lib/geometry/Vector3.tya`
+- `lib/geometry/Point.tya`
+- `lib/geometry/Size.tya`
+- `lib/geometry/Rect.tya`
+- `lib/geometry/Circle.tya`
 - `tests/stdlib_geometry_test.tya`
 - `docs/STDLIB.md`
 - Next release `docs/vX.Y/SPEC.md` and `docs/vX.Y/RELEASE_NOTES.md`

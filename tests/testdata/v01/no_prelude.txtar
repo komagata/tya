@@ -1,4 +1,4 @@
-# v0.1 does not implicitly load stdlib/prelude.tya
+# v0.1 does not implicitly load lib/prelude.tya
 cd $REPO
 exec go run ./cmd/tya run $WORK/app/main.tya
 stdout 'main\n'
@@ -7,5 +7,5 @@ stdout 'main\n'
 -- app/main.tya --
 print("main")
 
--- stdlib/prelude.tya --
+-- lib/prelude.tya --
 print("prelude")

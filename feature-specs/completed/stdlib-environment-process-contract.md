@@ -65,8 +65,8 @@ user-facing API through `os/Os` and `process/Process`.
 
 ## Scope
 
-- `stdlib/os/Os.tya`
-- `stdlib/process/Process.tya`
+- `lib/os/Os.tya`
+- `lib/process/Process.tya`
 - runtime-backed OS/process intrinsics for interpreter and generated C
 - `docs/SPEC.md`
 - `docs/STRICT_SEMANTICS.md`

@@ -131,7 +131,7 @@ class-style direction for stdlib-owned domain values.
 
 ## Scope
 
-- `stdlib/transform2d/Transform2D.tya`
+- `lib/transform2d/Transform2D.tya`
 - `tests/stdlib_transform2d_test.tya`
 - `docs/STDLIB.md`
 - Next release `docs/vX.Y/SPEC.md` and `docs/vX.Y/RELEASE_NOTES.md`

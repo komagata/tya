@@ -29,7 +29,7 @@ for both epics.
 
 - Every lexer error renders through `internal/diag` with a stable
   `TYA-Exxxx` code, banner, snippet, and hint.
-- `stdlib/markdown.tya` ships and exposes `markdown.to_html(text)`.
+- `lib/markdown.tya` ships and exposes `markdown.to_html(text)`.
 - Both `tya run` and `tya build` paths surface lexer diagnostics in
   the new format when emitted.
 - The `selfhost/v01/compiler.tya` fixed point continues to pass.
@@ -157,7 +157,7 @@ reasonable, so user input never crashes the converter.
 
 ### Implementation
 
-`stdlib/markdown.tya` is pure Tya. No native dependency. It runs
+`lib/markdown.tya` is pure Tya. No native dependency. It runs
 under every `tya` build target.
 
 ### Public API ergonomics

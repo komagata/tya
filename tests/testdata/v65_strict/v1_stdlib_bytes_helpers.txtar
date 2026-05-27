@@ -2,7 +2,7 @@
 cd $REPO
 exec go build -o $WORK/tya ./cmd/tya
 env TYA_RUNTIME_DIR=$REPO/runtime
-env TYA_STDLIB_DIR=$REPO/stdlib
+env TYA_LIB_DIR=$REPO/lib
 cd $WORK
 
 exec $WORK/tya run bytes_helpers.tya

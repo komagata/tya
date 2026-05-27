@@ -18,8 +18,8 @@ dev tools, test servers, and as a foundation for future stdlib networking.
 
 ## Behavior
 
-- Add `stdlib/net/socket/Socket.tya`.
-- Add `stdlib/net/socket/Server.tya` if a separate listener class keeps the API
+- Add `lib/net/socket/Socket.tya`.
+- Add `lib/net/socket/Server.tya` if a separate listener class keeps the API
   clearer.
 - TCP client:
   - `socket.Socket.connect(host, port)`
@@ -46,7 +46,7 @@ dev tools, test servers, and as a foundation for future stdlib networking.
 
 ## Scope
 
-- `stdlib/net/socket/`
+- `lib/net/socket/`
 - runtime/native socket support
 - `docs/STDLIB.md`
 - next release docs

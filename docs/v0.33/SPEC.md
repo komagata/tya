@@ -92,7 +92,7 @@ A v0.33 build is acceptable when:
 | v0.34   | Add `leading_comments` / `line_end_comment` / `file_header_comments` to AST nodes. Parser attaches comments per `docs/CANONICAL_SYNTAX.md` §3. Reject `else if`. Reject single-line trailing commas in `[]`/`()`/`{}`. Reject forbidden comment positions (§3.4). |
 | v0.35   | Formatter v1: operator spacing (§7), blank-line rules (§3.5), single-line forms only, empty `else` removal (§8.7), import sorting and grouping (§8.4), empty-collection normalization (§8.6). |
 | v0.36   | Formatter v2: per-construct multi-line wrap (§5), 80-column limit, atomic-token exception, `"""..."""` rewrite (§6.3), idempotency. |
-| v0.37   | Normalize `stdlib/`, `examples/`, `selfhost/`, `tests/testdata/` with the formatter. Verify self-host fixed point. Reject non-canonical forms at parse time once the codebase is fully normalized. |
+| v0.37   | Normalize `lib/`, `examples/`, `selfhost/`, `tests/testdata/` with the formatter. Verify self-host fixed point. Reject non-canonical forms at parse time once the codebase is fully normalized. |
 
 `docs/CANONICAL_SYNTAX.md` remains the single source of truth for the
 target shape. Each minor release's SPEC document references it.

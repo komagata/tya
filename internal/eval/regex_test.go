@@ -105,11 +105,11 @@ func runRegexProgramError(t *testing.T, src string) error {
 func runRegexProgramWithOutput(t *testing.T, src string, out *bytes.Buffer) error {
 	t.Helper()
 	root := filepath.Clean(filepath.Join("..", ".."))
-	stdlib, err := filepath.Abs(filepath.Join(root, "stdlib"))
+	stdlib, err := filepath.Abs(filepath.Join(root, "lib"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("TYA_STDLIB_DIR", stdlib)
+	t.Setenv("TYA_LIB_DIR", stdlib)
 	path := filepath.Join(t.TempDir(), "regex_eval.tya")
 	if err := os.WriteFile(path, []byte(src), 0644); err != nil {
 		t.Fatal(err)

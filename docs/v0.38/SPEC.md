@@ -32,7 +32,7 @@ formatter.
   `parser.ParseWithComments`; `Unparse` emits them.
 - The §11 BinaryExpr precedence rule is honored: operands at lower
   precedence (or right-side-of-same-precedence) get parenthesized.
-- `examples/`, `stdlib/`, and `selfhost/v01/compiler.tya` are
+- `examples/`, `lib/`, and `selfhost/v01/compiler.tya` are
   normalized with the canonical formatter; the self-host fixed
   point holds.
 - The Tya-written self-host compiler in `selfhost/v01/compiler.tya`
@@ -92,7 +92,7 @@ formatter.
 - `internal/formatter/unparse_test.go` covers each wrap rule with
   an idempotency assertion.
 - `internal/formatter/corpus_test.go` walks every `.tya` source in
-  `stdlib/`, `examples/`, and `selfhost/` and asserts that
+  `lib/`, `examples/`, and `selfhost/` and asserts that
   `Unparse` either produces parseable output or returns an
   unsupported error (the CLI fallback path).
 - `tests/testdata/v01_selfhost/...` continues to gate the
@@ -105,7 +105,7 @@ A v0.38 build is acceptable when:
 
 1. `tya fmt path.tya` and `tya format path.tya` produce the
    canonical AST-driven layout by default.
-2. Running `tya fmt -w` over `examples/`, `stdlib/`, and
+2. Running `tya fmt -w` over `examples/`, `lib/`, and
    `selfhost/v01/` is idempotent.
 3. `TestSelfhostV01Scripts` passes.
 4. `go test ./... -count=1` passes.

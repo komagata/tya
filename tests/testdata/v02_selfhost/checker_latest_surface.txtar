@@ -22,22 +22,22 @@ exec $WORK/stage1 --check $WORK/predicate_protocol.tya
 stdout '4: class Box must implement interface method between?'
 ! stderr .
 
-exec $WORK/stage1 --check stdlib/comparable.tya
+exec $WORK/stage1 --check lib/comparable.tya
 ! stderr .
 
-exec $WORK/stage1 --check stdlib/equatable.tya
+exec $WORK/stage1 --check lib/equatable.tya
 ! stderr .
 
-exec $WORK/stage1 --check stdlib/stringable.tya
+exec $WORK/stage1 --check lib/stringable.tya
 ! stderr .
 
-exec $WORK/stage1 --check stdlib/io/reader.tya
+exec $WORK/stage1 --check lib/io/reader.tya
 ! stderr .
 
-exec $WORK/stage1 --check stdlib/serialization/serializer.tya
+exec $WORK/stage1 --check lib/serialization/serializer.tya
 ! stderr .
 
-exec $WORK/stage1 --check stdlib/sequence.tya
+exec $WORK/stage1 --check lib/sequence.tya
 ! stderr .
 
 -- valid_closure_iterable.tya --

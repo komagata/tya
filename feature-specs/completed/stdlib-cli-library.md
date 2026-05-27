@@ -23,7 +23,7 @@ This belongs in stdlib rather than the language. It also supports the planned
 
 ## Behavior
 
-- Add `stdlib/cli/Cli.tya`.
+- Add `lib/cli/Cli.tya`.
 - `cli.Cli.parse(args, spec)` returns a dictionary with:
   - `options`
   - `positionals`
@@ -50,7 +50,7 @@ This belongs in stdlib rather than the language. It also supports the planned
 
 ## Scope
 
-- `stdlib/cli/Cli.tya`
+- `lib/cli/Cli.tya`
 - `docs/STDLIB.md`
 - next release `docs/vX.Y/SPEC.md` and `docs/vX.Y/RELEASE_NOTES.md`
 - stdlib tests and/or script tests

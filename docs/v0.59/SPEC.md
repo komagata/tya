@@ -402,7 +402,7 @@ not methods on a class, by design; the receiver is implicit).
 `args`, `exit`, `panic`, `assert`, `assert_equal`, `equal`,
 `error`, `chr`, `ord` remain as top-level builtins.
 
-`stdlib/string.tya`, `stdlib/array.tya`, `stdlib/dict.tya`
+`lib/string.tya`, `lib/array.tya`, `lib/dict.tya`
 are **deleted**. Any program importing them via
 `import string` / `import array` / `import dict` raises a
 load-time error `TYA-E0811 module string|array|dict was
@@ -627,8 +627,8 @@ ordering:
    startup. Add a small dispatch table per wrapper class.
    Helpers: `tya_class_of(value) -> TyaClass *`, with all
    primitive cases lowered from the `kind` switch.
-6. **stdlib**: delete `stdlib/string.tya`, `stdlib/array.tya`,
-   `stdlib/dict.tya`. The wrapper-class method bodies are
+6. **stdlib**: delete `lib/string.tya`, `lib/array.tya`,
+   `lib/dict.tya`. The wrapper-class method bodies are
    provided directly by the runtime (via the dispatch table)
    — the operations themselves remain the existing C helpers,
    only the surface (method instead of free function) changes.

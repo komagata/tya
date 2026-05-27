@@ -12,7 +12,7 @@ support code.
 ## Context
 
 `docs/SPEC.md` currently lists many standalone built-ins. Several already have
-class-style wrappers in `stdlib/`, for example:
+class-style wrappers in `lib/`, for example:
 
 - `file/File` wraps file read/write/stat/remove/rename/bytes operations.
 - `dir/Dir` wraps directory listing and creation/removal.
@@ -130,7 +130,7 @@ core language/runtime necessities.
 ## Scope
 
 - `docs/SPEC.md`, `docs/ja/spec.md`, and `docs/GUIDE.md`.
-- Standard-library wrappers under `stdlib/`, including adding missing methods
+- Standard-library wrappers under `lib/`, including adding missing methods
   such as `File.append`, `Process.cwd`, and `Process.chdir`.
 - Checker diagnostics for removed public built-ins.
 - Lint/autofix rules where straightforward replacements are mechanical.

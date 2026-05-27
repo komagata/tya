@@ -1,6 +1,6 @@
 # v0.44 TYA_PATH search picks up packages outside the entry's
 # directory. The resolver consults: entry's directory, each
-# TYA_PATH entry (left to right), then stdlib/.
+# TYA_PATH entry (left to right), then lib/.
 cd $REPO
 env TYA_PATH=$WORK/lib
 

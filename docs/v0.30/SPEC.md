@@ -241,7 +241,7 @@ runtime small and avoids passing source paths through the C side.
 
 The emitter skips counters for statements whose file path is:
 
-- under `stdlib/` of the running tya binary,
+- under `lib/` of the running tya binary,
 - under `.tya/packages/` of the project root,
 - the synthesized test-suite source produced by `tya test`,
 - empty (not associated with a real file).

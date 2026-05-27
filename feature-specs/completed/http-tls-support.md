@@ -7,7 +7,7 @@ Add HTTPS/TLS support to Tya's HTTP client and server so programs can make secur
 ## Context
 
 - This is part of ROADMAP **Expand HTTP protocol coverage**.
-- `stdlib/net/http/Client.tya` currently supports only `http://` URLs.
+- `lib/net/http/Client.tya` currently supports only `http://` URLs.
 - `runtime/tya_http_server.c` currently serves plain HTTP over TCP.
 - This is the hardest item in the group because it requires TLS library selection, linking, certificate handling, and cross-platform behavior.
 
@@ -31,8 +31,8 @@ Add HTTPS/TLS support to Tya's HTTP client and server so programs can make secur
 
 - Choose and integrate a TLS backend compatible with the C runtime and project goals.
 - Update runtime networking/TLS code for client and server paths.
-- Update `stdlib/net/http/Client.tya` URL scheme handling.
-- Update `stdlib/net/http/Server.tya` with `run_tls`.
+- Update `lib/net/http/Client.tya` URL scheme handling.
+- Update `lib/net/http/Server.tya` with `run_tls`.
 - Update CLI build/link logic for TLS dependencies.
 - Add integration tests with a local self-signed HTTPS server/client setup.
 - Update `docs/SPEC.md`, `docs/ja/spec.md`, and installation/doctor docs if dependencies are required.

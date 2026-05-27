@@ -30,9 +30,9 @@ along with a tya template engine.
 import net/http
 ```
 
-`stdlib/net/http/Server.tya` defines `class Server`. The
+`lib/net/http/Server.tya` defines `class Server`. The
 unaliased binding follows tya's last-segment rule, so `http`
-becomes the namespace. `stdlib/net/http/Client.tya` is reserved
+becomes the namespace. `lib/net/http/Client.tya` is reserved
 for a future Epic.
 
 ## API
@@ -150,7 +150,7 @@ Exceeding either limit yields `400 Bad Request`.
   via `internal/codegen/c.go::callBuiltin` and listed in
   `internal/checker/checker.go::BuiltinNames` as
   `http_server_run`.
-- `stdlib/net/http/Server.tya` is the public class. It owns an
+- `lib/net/http/Server.tya` is the public class. It owns an
   array `self.routes` and forwards to the builtin in `run`.
 - The C side intentionally leaks per-request string buffers (path,
   params, header names/values) because the runtime's `tya_string`

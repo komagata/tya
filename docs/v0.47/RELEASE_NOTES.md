@@ -45,7 +45,7 @@ _init = name -> …  →  private initialize = name -> …
 init = name -> …  →  initialize = name -> …
 ```
 
-All of `examples/`, `stdlib/`, and `tests/testdata/v*/` were
+All of `examples/`, `lib/`, and `tests/testdata/v*/` were
 migrated to the new surface in this release. The single fixture
 that pinned legacy-only error messages (`v09/private_members`) was
 retired — the underlying `_`-prefix privacy heuristic is gone.

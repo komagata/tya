@@ -1,7 +1,7 @@
 # Build the CLI once so closure behavior is tested through the active C path.
 exec env -u GOROOT go -C $REPO build -o $WORK/tya ./cmd/tya
 env TYA_RUNTIME_DIR=$REPO/runtime
-env TYA_STDLIB_DIR=$REPO/stdlib
+env TYA_LIB_DIR=$REPO/lib
 
 # Grandchild closures can capture values from every enclosing function.
 exec $WORK/tya run nested_capture.tya

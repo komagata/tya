@@ -11,7 +11,7 @@ class Base64
   private ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 ```
 
-This blocks the most natural design for immutable class-owned protocol tables and similar implementation details. The current workaround in `stdlib/base64/Base64.tya` is a method-local `ALPHABET` binding inside `encode`.
+This blocks the most natural design for immutable class-owned protocol tables and similar implementation details. The current workaround in `lib/base64/Base64.tya` is a method-local `ALPHABET` binding inside `encode`.
 
 Related bug: https://github.com/komagata/tya/issues/16
 
@@ -38,7 +38,7 @@ Related bug: https://github.com/komagata/tya/issues/16
 - LSP/documentation support equivalent to other class members where applicable.
 - Specification documentation in `docs/SPEC.md`, `docs/ja/spec.md`, and frozen v1 docs if required by existing documentation policy.
 - Tests covering parser, checker, formatter, codegen/runtime, strict diagnostics, and stdlib usage.
-- Update `stdlib/base64/Base64.tya` to use:
+- Update `lib/base64/Base64.tya` to use:
 
 ```tya
 class Base64

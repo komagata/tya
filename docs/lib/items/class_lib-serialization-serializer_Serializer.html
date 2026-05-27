@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Serializer</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li class="current"><a href="class_lib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Serializer</code></h1>
+<section id="class-Serializer" class="doc-item">
+<pre><code>class Serializer</code></pre>
+<p><small>lib/serialization/serializer.tya:12</small></p>
+<p>Serializer provides the serialization/Serializer standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Serializer provides the serialization/Serializer standard library API.
+class Serializer
+  # Serializer.value stores instance state.
+  # @type Nil
+  value: nil
+
+  # Serializer.initialize stores a value or serialized text.
+  # @param value String value value.
+  # @return Self the initialized object.
+  initialize: value = nil -&gt;
+    self.value = value
+
+  # Serializer.array_has? provides the serialization/Serializer standard library operation.
+  # @param values Array values value.
+  # @param value String value value.
+  # @return Boolean whether the condition is true.
+  array_has?: values, value -&gt;
+    i = 0
+    while i &lt; values.len()
+      if values[i] == value
+        return true
+      i = i + 1
+    false
+
+  # Serializer.deserialize restores a value from serialization data.
+  # @param data Array data value.
+  # @param klass Any klass value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  deserialize: data = nil, klass = nil, options = nil -&gt;
+    self.from_data(data, klass, options)
+
+  # Serializer.enter_seen provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param seen Any seen value.
+  # @return Any the resulting value.
+  enter_seen: value, seen -&gt;
+    id = serialization_id(value)
+    i = 0
+    while i &lt; seen.len()
+      if seen[i] == id
+        raise error(&quot;serialization: cycle detected&quot;)
+      i = i + 1
+    seen.push(id)
+
+  # Serializer.from_data provides the serialization/Serializer standard library operation.
+  # @param data Array data value.
+  # @param klass Any klass value.
+  # @param options Dict options value.
+  # @return Self the resulting value.
+  from_data: data = nil, klass = nil, options = nil -&gt;
+    if data == nil
+      data = self.value
+    opts = Serializer(nil).options(options)
+    if klass == nil
+      return data
+    if serialization_has_member(klass, &quot;from_serialized&quot;)
+      return klass.from_serialized(data)
+    if serialization_kind(data) != &quot;dict&quot;
+      raise error(&quot;serialization.from_data: class data must be a dict&quot;)
+    obj = klass(nil, nil, nil, nil, nil, nil)
+    defaults = opts.get(&quot;defaults&quot;, {})
+    fields = opts.get(&quot;fields&quot;, nil)
+    strict = opts.get(&quot;strict_fields&quot;, false)
+    existing = serialization_public_fields(obj)
+    keys = defaults.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if fields == nil or Serializer(nil).array_has?(fields, key)
+        obj[key] = Serializer(nil).from_data(defaults[key], nil, opts)
+      i = i + 1
+    keys = data.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if key != opts[&quot;class_key&quot;]
+        if fields == nil or Serializer(nil).array_has?(fields, key)
+          if strict and not existing.has?(key) and not defaults.has?(key)
+            raise error(&quot;serialization.from_data: unknown field &quot; + key)
+          obj[key] = Serializer(nil).from_data(data[key], nil, opts)
+      i = i + 1
+    obj
+
+  # Serializer.from_json provides the serialization/Serializer standard library operation.
+  # @param text String text value.
+  # @param klass Any klass value.
+  # @param options Dict options value.
+  # @return Self the resulting value.
+  from_json: text = nil, klass = nil, options = nil -&gt;
+    if text == nil
+      text = self.value
+    Serializer(nil).from_data(json.Json(text).parse(), klass, options)
+
+  # Serializer.from_toml provides the serialization/Serializer standard library operation.
+  # @param text String text value.
+  # @param klass Any klass value.
+  # @param options Dict options value.
+  # @return Self the resulting value.
+  from_toml: text = nil, klass = nil, options = nil -&gt;
+    if text == nil
+      text = self.value
+    Serializer(nil).from_data(toml.Toml(text).parse(), klass, options)
+
+  # Serializer.options provides the serialization/Serializer standard library operation.
+  # @param options Dict options value.
+  # @return Dict the resulting value.
+  options: options -&gt;
+    opts =
+      bytes: nil
+      include_class: false
+      class_key: &quot;$class&quot;
+      fields: nil
+      defaults: {}
+      strict_fields: false
+    if options == nil
+      return opts
+    allowed = opts.keys()
+    keys = options.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if not Serializer(nil).array_has?(allowed, key)
+        raise error(&quot;serialization.options: unknown option &quot; + key)
+      opts[key] = options[key]
+      i = i + 1
+    if (
+      opts[&quot;bytes&quot;] != nil and opts[&quot;bytes&quot;] != &quot;base64&quot; and opts[&quot;bytes&quot;] != &quot;array&quot;
+    )
+      raise error(&quot;serialization.options: bytes must be base64 or array&quot;)
+    opts
+
+  # Serializer.serialize converts a value into serialization data.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  serialize: value = nil, options = nil -&gt;
+    self.to_data(value, options)
+
+  # Serializer.to_data provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  to_data: value = nil, options = nil -&gt;
+    if value == nil
+      value = self.value
+    opts = Serializer(nil).options(options)
+    Serializer(nil).to_data_seen(value, opts, [])
+
+  # Serializer.to_data_seen provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param opts Any opts value.
+  # @param seen Any seen value.
+  # @return Any the resulting value.
+  to_data_seen: value, opts, seen -&gt;
+    kind = serialization_kind(value)
+    if kind == &quot;nil&quot; or kind == &quot;bool&quot; or kind == &quot;number&quot; or kind == &quot;string&quot;
+      return value
+    if kind == &quot;bytes&quot;
+      mode = opts.get(&quot;bytes&quot;, nil)
+      if mode == &quot;base64&quot;
+        return base64.Base64.encode(value)
+      if mode == &quot;array&quot;
+        return bytes_array(value)
+      raise error(&quot;serialization.to_data: bytes require bytes option&quot;)
+    if kind == &quot;array&quot; or kind == &quot;dict&quot; or kind == &quot;object&quot;
+      Serializer(nil).enter_seen(value, seen)
+      if kind == &quot;array&quot;
+        out = []
+        i = 0
+        while i &lt; value.len()
+          out.push(Serializer(nil).to_data_seen(value[i], opts, seen))
+          i = i + 1
+        seen.pop()
+        return out
+      data = value
+      if kind == &quot;object&quot;
+        if serialization_has_member(value, &quot;to_data&quot;)
+          data = value.to_data()
+          if serialization_kind(data) == &quot;object&quot;
+            raise error(&quot;serialization.to_data: to_data returned unsupported object&quot;)
+          seen.pop()
+          return Serializer(nil).to_data_seen(data, opts, seen)
+        if serialization_has_member(value, &quot;to_serialized&quot;)
+          data = value.to_serialized()
+          seen.pop()
+          return Serializer(nil).to_data_seen(data, opts, seen)
+        data = serialization_public_fields(value)
+      out = {}
+      if kind == &quot;object&quot; and opts[&quot;include_class&quot;]
+        out[opts[&quot;class_key&quot;]] = value.class.name
+      keys = data.keys()
+      fields = opts.get(&quot;fields&quot;, nil)
+      i = 0
+      while i &lt; keys.len()
+        key = keys[i]
+        if key.class != String
+          raise error(&quot;serialization.to_data: dictionary keys must be strings&quot;)
+        if fields == nil or Serializer(nil).array_has?(fields, key)
+          out[key] = Serializer(nil).to_data_seen(data[key], opts, seen)
+        i = i + 1
+      seen.pop()
+      return out
+    raise error(&quot;serialization.to_data: unsupported &quot; + kind)
+
+  # Serializer.to_json provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  to_json: value = nil, options = nil -&gt;
+    if value == nil
+      value = self.value
+    json.Json(Serializer(nil).to_data(value, options)).stringify()
+
+  # Serializer.to_toml provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  to_toml: value = nil, options = nil -&gt;
+    if value == nil
+      value = self.value
+    data = Serializer(nil).to_data(value, options)
+    if serialization_kind(data) != &quot;dict&quot;
+      raise error(&quot;serialization.to_toml: top-level value must serialize to a dict&quot;)
+    toml.Toml(data).stringify()</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Serializer-value" class="doc-item member">
+<h3><code>value</code></h3>
+<pre><code>Serializer.value</code></pre>
+<p><small>lib/serialization/serializer.tya:15</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Serializer.value stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.value stores instance state.
+  # @type Nil
+  value: nil</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Serializer-array_has-" class="doc-item member">
+<h3><code>array_has?</code></h3>
+<pre><code>Serializer.array_has?(values, value)</code></pre>
+<p><small>lib/serialization/serializer.tya:27</small></p>
+<dl class="metadata">
+<dt>Param <code>values</code></dt><dd><code>Array</code> values value.</dd>
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Serializer.array_has? provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.array_has? provides the serialization/Serializer standard library operation.
+  # @param values Array values value.
+  # @param value String value value.
+  # @return Boolean whether the condition is true.
+  array_has?: values, value -&gt;
+    i = 0
+    while i &lt; values.len()
+      if values[i] == value
+        return true
+      i = i + 1
+    false</code></pre>
+</details>
+</section>
+<section id="method-Serializer-deserialize" class="doc-item member">
+<h3><code>deserialize</code></h3>
+<pre><code>Serializer.deserialize(data = nil, klass = nil, options = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:40</small></p>
+<dl class="metadata">
+<dt>Param <code>data</code></dt><dd><code>Array</code> data value.</dd>
+<dt>Param <code>klass</code></dt><dd><code>Any</code> klass value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Serializer.deserialize restores a value from serialization data.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.deserialize restores a value from serialization data.
+  # @param data Array data value.
+  # @param klass Any klass value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  deserialize: data = nil, klass = nil, options = nil -&gt;
+    self.from_data(data, klass, options)</code></pre>
+</details>
+</section>
+<section id="method-Serializer-enter_seen" class="doc-item member">
+<h3><code>enter_seen</code></h3>
+<pre><code>Serializer.enter_seen(value, seen)</code></pre>
+<p><small>lib/serialization/serializer.tya:47</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>seen</code></dt><dd><code>Any</code> seen value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Serializer.enter_seen provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.enter_seen provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param seen Any seen value.
+  # @return Any the resulting value.
+  enter_seen: value, seen -&gt;
+    id = serialization_id(value)
+    i = 0
+    while i &lt; seen.len()
+      if seen[i] == id
+        raise error(&quot;serialization: cycle detected&quot;)
+      i = i + 1
+    seen.push(id)</code></pre>
+</details>
+</section>
+<section id="method-Serializer-from_data" class="doc-item member">
+<h3><code>from_data</code></h3>
+<pre><code>Serializer.from_data(data = nil, klass = nil, options = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:61</small></p>
+<dl class="metadata">
+<dt>Param <code>data</code></dt><dd><code>Array</code> data value.</dd>
+<dt>Param <code>klass</code></dt><dd><code>Any</code> klass value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Serializer.from_data provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.from_data provides the serialization/Serializer standard library operation.
+  # @param data Array data value.
+  # @param klass Any klass value.
+  # @param options Dict options value.
+  # @return Self the resulting value.
+  from_data: data = nil, klass = nil, options = nil -&gt;
+    if data == nil
+      data = self.value
+    opts = Serializer(nil).options(options)
+    if klass == nil
+      return data
+    if serialization_has_member(klass, &quot;from_serialized&quot;)
+      return klass.from_serialized(data)
+    if serialization_kind(data) != &quot;dict&quot;
+      raise error(&quot;serialization.from_data: class data must be a dict&quot;)
+    obj = klass(nil, nil, nil, nil, nil, nil)
+    defaults = opts.get(&quot;defaults&quot;, {})
+    fields = opts.get(&quot;fields&quot;, nil)
+    strict = opts.get(&quot;strict_fields&quot;, false)
+    existing = serialization_public_fields(obj)
+    keys = defaults.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if fields == nil or Serializer(nil).array_has?(fields, key)
+        obj[key] = Serializer(nil).from_data(defaults[key], nil, opts)
+      i = i + 1
+    keys = data.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if key != opts[&quot;class_key&quot;]
+        if fields == nil or Serializer(nil).array_has?(fields, key)
+          if strict and not existing.has?(key) and not defaults.has?(key)
+            raise error(&quot;serialization.from_data: unknown field &quot; + key)
+          obj[key] = Serializer(nil).from_data(data[key], nil, opts)
+      i = i + 1
+    obj</code></pre>
+</details>
+</section>
+<section id="method-Serializer-from_json" class="doc-item member">
+<h3><code>from_json</code></h3>
+<pre><code>Serializer.from_json(text = nil, klass = nil, options = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:100</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Param <code>klass</code></dt><dd><code>Any</code> klass value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Serializer.from_json provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.from_json provides the serialization/Serializer standard library operation.
+  # @param text String text value.
+  # @param klass Any klass value.
+  # @param options Dict options value.
+  # @return Self the resulting value.
+  from_json: text = nil, klass = nil, options = nil -&gt;
+    if text == nil
+      text = self.value
+    Serializer(nil).from_data(json.Json(text).parse(), klass, options)</code></pre>
+</details>
+</section>
+<section id="method-Serializer-from_toml" class="doc-item member">
+<h3><code>from_toml</code></h3>
+<pre><code>Serializer.from_toml(text = nil, klass = nil, options = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:110</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Param <code>klass</code></dt><dd><code>Any</code> klass value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Serializer.from_toml provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.from_toml provides the serialization/Serializer standard library operation.
+  # @param text String text value.
+  # @param klass Any klass value.
+  # @param options Dict options value.
+  # @return Self the resulting value.
+  from_toml: text = nil, klass = nil, options = nil -&gt;
+    if text == nil
+      text = self.value
+    Serializer(nil).from_data(toml.Toml(text).parse(), klass, options)</code></pre>
+</details>
+</section>
+<section id="method-Serializer-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Serializer.initialize(value = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:20</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Serializer.initialize stores a value or serialized text.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.initialize stores a value or serialized text.
+  # @param value String value value.
+  # @return Self the initialized object.
+  initialize: value = nil -&gt;
+    self.value = value</code></pre>
+</details>
+</section>
+<section id="method-Serializer-options" class="doc-item member">
+<h3><code>options</code></h3>
+<pre><code>Serializer.options(options)</code></pre>
+<p><small>lib/serialization/serializer.tya:118</small></p>
+<dl class="metadata">
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Dict</code> the resulting value.</dd>
+</dl>
+<p>Serializer.options provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.options provides the serialization/Serializer standard library operation.
+  # @param options Dict options value.
+  # @return Dict the resulting value.
+  options: options -&gt;
+    opts =
+      bytes: nil
+      include_class: false
+      class_key: &quot;$class&quot;
+      fields: nil
+      defaults: {}
+      strict_fields: false
+    if options == nil
+      return opts
+    allowed = opts.keys()
+    keys = options.keys()
+    i = 0
+    while i &lt; keys.len()
+      key = keys[i]
+      if not Serializer(nil).array_has?(allowed, key)
+        raise error(&quot;serialization.options: unknown option &quot; + key)
+      opts[key] = options[key]
+      i = i + 1
+    if (
+      opts[&quot;bytes&quot;] != nil and opts[&quot;bytes&quot;] != &quot;base64&quot; and opts[&quot;bytes&quot;] != &quot;array&quot;
+    )
+      raise error(&quot;serialization.options: bytes must be base64 or array&quot;)
+    opts</code></pre>
+</details>
+</section>
+<section id="method-Serializer-serialize" class="doc-item member">
+<h3><code>serialize</code></h3>
+<pre><code>Serializer.serialize(value = nil, options = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:147</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Serializer.serialize converts a value into serialization data.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.serialize converts a value into serialization data.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  serialize: value = nil, options = nil -&gt;
+    self.to_data(value, options)</code></pre>
+</details>
+</section>
+<section id="method-Serializer-to_data" class="doc-item member">
+<h3><code>to_data</code></h3>
+<pre><code>Serializer.to_data(value = nil, options = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:154</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Serializer.to_data provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.to_data provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  to_data: value = nil, options = nil -&gt;
+    if value == nil
+      value = self.value
+    opts = Serializer(nil).options(options)
+    Serializer(nil).to_data_seen(value, opts, [])</code></pre>
+</details>
+</section>
+<section id="method-Serializer-to_data_seen" class="doc-item member">
+<h3><code>to_data_seen</code></h3>
+<pre><code>Serializer.to_data_seen(value, opts, seen)</code></pre>
+<p><small>lib/serialization/serializer.tya:165</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>opts</code></dt><dd><code>Any</code> opts value.</dd>
+<dt>Param <code>seen</code></dt><dd><code>Any</code> seen value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Serializer.to_data_seen provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.to_data_seen provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param opts Any opts value.
+  # @param seen Any seen value.
+  # @return Any the resulting value.
+  to_data_seen: value, opts, seen -&gt;
+    kind = serialization_kind(value)
+    if kind == &quot;nil&quot; or kind == &quot;bool&quot; or kind == &quot;number&quot; or kind == &quot;string&quot;
+      return value
+    if kind == &quot;bytes&quot;
+      mode = opts.get(&quot;bytes&quot;, nil)
+      if mode == &quot;base64&quot;
+        return base64.Base64.encode(value)
+      if mode == &quot;array&quot;
+        return bytes_array(value)
+      raise error(&quot;serialization.to_data: bytes require bytes option&quot;)
+    if kind == &quot;array&quot; or kind == &quot;dict&quot; or kind == &quot;object&quot;
+      Serializer(nil).enter_seen(value, seen)
+      if kind == &quot;array&quot;
+        out = []
+        i = 0
+        while i &lt; value.len()
+          out.push(Serializer(nil).to_data_seen(value[i], opts, seen))
+          i = i + 1
+        seen.pop()
+        return out
+      data = value
+      if kind == &quot;object&quot;
+        if serialization_has_member(value, &quot;to_data&quot;)
+          data = value.to_data()
+          if serialization_kind(data) == &quot;object&quot;
+            raise error(&quot;serialization.to_data: to_data returned unsupported object&quot;)
+          seen.pop()
+          return Serializer(nil).to_data_seen(data, opts, seen)
+        if serialization_has_member(value, &quot;to_serialized&quot;)
+          data = value.to_serialized()
+          seen.pop()
+          return Serializer(nil).to_data_seen(data, opts, seen)
+        data = serialization_public_fields(value)
+      out = {}
+      if kind == &quot;object&quot; and opts[&quot;include_class&quot;]
+        out[opts[&quot;class_key&quot;]] = value.class.name
+      keys = data.keys()
+      fields = opts.get(&quot;fields&quot;, nil)
+      i = 0
+      while i &lt; keys.len()
+        key = keys[i]
+        if key.class != String
+          raise error(&quot;serialization.to_data: dictionary keys must be strings&quot;)
+        if fields == nil or Serializer(nil).array_has?(fields, key)
+          out[key] = Serializer(nil).to_data_seen(data[key], opts, seen)
+        i = i + 1
+      seen.pop()
+      return out
+    raise error(&quot;serialization.to_data: unsupported &quot; + kind)</code></pre>
+</details>
+</section>
+<section id="method-Serializer-to_json" class="doc-item member">
+<h3><code>to_json</code></h3>
+<pre><code>Serializer.to_json(value = nil, options = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:220</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Serializer.to_json provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.to_json provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  to_json: value = nil, options = nil -&gt;
+    if value == nil
+      value = self.value
+    json.Json(Serializer(nil).to_data(value, options)).stringify()</code></pre>
+</details>
+</section>
+<section id="method-Serializer-to_toml" class="doc-item member">
+<h3><code>to_toml</code></h3>
+<pre><code>Serializer.to_toml(value = nil, options = nil)</code></pre>
+<p><small>lib/serialization/serializer.tya:229</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Serializer.to_toml provides the serialization/Serializer standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Serializer.to_toml provides the serialization/Serializer standard library operation.
+  # @param value String value value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  to_toml: value = nil, options = nil -&gt;
+    if value == nil
+      value = self.value
+    data = Serializer(nil).to_data(value, options)
+    if serialization_kind(data) != &quot;dict&quot;
+      raise error(&quot;serialization.to_toml: top-level value must serialize to a dict&quot;)
+    toml.Toml(data).stringify()</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

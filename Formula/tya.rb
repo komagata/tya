@@ -12,7 +12,7 @@ class Tya < Formula
   def install
     system "go", "build", *std_go_args(output: bin/"tya"), "./cmd/tya"
     (pkgshare/"runtime").install Dir["runtime/*"]
-    (pkgshare/"stdlib").install Dir["stdlib/*"]
+    (pkgshare/"lib").install Dir["lib/*"]
   end
 
   test do

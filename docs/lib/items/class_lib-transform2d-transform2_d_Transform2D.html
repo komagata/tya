@@ -1,0 +1,1534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Transform2D</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li class="current"><a href="class_lib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Transform2D</code></h1>
+<section id="class-Transform2D" class="doc-item">
+<pre><code>class Transform2D</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:5</small></p>
+<p>Transform2D provides the transform2d/Transform2D standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Transform2D provides the transform2d/Transform2D standard library API.
+class Transform2D
+  # Transform2D.a stores instance state.
+  # @type Int
+  a: 0
+
+  # Transform2D.b stores instance state.
+  # @type Int
+  b: 0
+
+  # Transform2D.c stores instance state.
+  # @type Int
+  c: 0
+
+  # Transform2D.d stores instance state.
+  # @type Int
+  d: 0
+
+  # Transform2D.tx stores instance state.
+  # @type Int
+  tx: 0
+
+  # Transform2D.ty stores instance state.
+  # @type Int
+  ty: 0
+
+  # Transform2D.initialize provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param c Any c value.
+  # @param d Any d value.
+  # @param tx Any tx value.
+  # @param ty Any ty value.
+  # @return Self the initialized object.
+  initialize: a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0 -&gt;
+    self.a = self.number(a, &quot;a&quot;)
+    self.b = self.number(b, &quot;b&quot;)
+    self.c = self.number(c, &quot;c&quot;)
+    self.d = self.number(d, &quot;d&quot;)
+    self.tx = self.number(tx, &quot;tx&quot;)
+    self.ty = self.number(ty, &quot;ty&quot;)
+
+  # Transform2D.abs provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  abs: value -&gt;
+    if value &lt; 0
+      return 0 - value
+    value
+
+  # Transform2D.apply_point provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param point Any point value.
+  # @return Any the resulting value.
+  apply_point: transform, point = nil -&gt;
+    if point == nil
+      point = transform
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    self.expect_point(point, &quot;point&quot;)
+    geo.Point(
+      transform.a * point.x + transform.c * point.y + transform.tx,
+      transform.b * point.x + transform.d * point.y + transform.ty
+    )
+
+  # Transform2D.apply_rect provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  apply_rect: transform, rect = nil -&gt;
+    if rect == nil
+      rect = transform
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    self.expect_rect(rect, &quot;rect&quot;)
+    geometry_p1 = self.apply_point(transform, geo.Point(rect.x, rect.y))
+    geometry_p2 = self.apply_point(
+      transform,
+      geo.Point(rect.x + rect.width, rect.y)
+    )
+    geometry_p3 = self.apply_point(
+      transform,
+      geo.Point(rect.x, rect.y + rect.height)
+    )
+    geometry_p4 = self.apply_point(
+      transform,
+      geo.Point(rect.x + rect.width, rect.y + rect.height)
+    )
+    geometry_left = self.min(
+      self.min(geometry_p1.x, geometry_p2.x),
+      self.min(geometry_p3.x, geometry_p4.x)
+    )
+    geometry_top = self.min(
+      self.min(geometry_p1.y, geometry_p2.y),
+      self.min(geometry_p3.y, geometry_p4.y)
+    )
+    geometry_right = self.max(
+      self.max(geometry_p1.x, geometry_p2.x),
+      self.max(geometry_p3.x, geometry_p4.x)
+    )
+    geometry_bottom = self.max(
+      self.max(geometry_p1.y, geometry_p2.y),
+      self.max(geometry_p3.y, geometry_p4.y)
+    )
+    geo.Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )
+
+  # Transform2D.apply_size provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param size Int size value.
+  # @return Any the resulting value.
+  apply_size: transform, size = nil -&gt;
+    if size == nil
+      size = transform
+      transform = self
+    self.expect_size(size, &quot;size&quot;)
+    geometry_rect = self.apply_rect(
+      transform,
+      geo.Rect(0, 0, size.width, size.height)
+    )
+    geo.Size(geometry_rect.width, geometry_rect.height)
+
+  # Transform2D.apply_vector2 provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param vector Any vector value.
+  # @return Any the resulting value.
+  apply_vector2: transform, vector = nil -&gt;
+    if vector == nil
+      vector = transform
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    self.expect_vector2(vector, &quot;vector&quot;)
+    geo.Vector2(
+      transform.a * vector.x + transform.c * vector.y,
+      transform.b * vector.x + transform.d * vector.y
+    )
+
+  # Transform2D.compose provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  compose: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    Transform2D(
+      a.a * b.a + a.c * b.b,
+      a.b * b.a + a.d * b.b,
+      a.a * b.c + a.c * b.d,
+      a.b * b.c + a.d * b.d,
+      a.a * b.tx + a.c * b.ty + a.tx,
+      a.b * b.tx + a.d * b.ty + a.ty
+    )
+
+  # Transform2D.determinant provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Any the resulting value.
+  determinant: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    transform.a * transform.d - transform.b * transform.c
+
+  # Transform2D.equal? provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    a.class == Transform2D and b.class == Transform2D and a.a == b.a and a.b == b.b and a.c == b.c and a.d == b.d and a.tx == b.tx and a.ty == b.ty
+
+  # Transform2D.expect provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect: value, name -&gt;
+    if value.class != Transform2D
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a Transform2D&quot;)
+
+  # Transform2D.expect_point provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect_point: value, name -&gt;
+    if value.class != geo.Point
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a geometry.Point&quot;)
+
+  # Transform2D.expect_rect provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect_rect: value, name -&gt;
+    if value.class != geo.Rect
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a geometry.Rect&quot;)
+
+  # Transform2D.expect_size provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect_size: value, name -&gt;
+    if value.class != geo.Size
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a geometry.Size&quot;)
+
+  # Transform2D.expect_vector2 provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect_vector2: value, name -&gt;
+    if value.class != geo.Vector2
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a geometry.Vector2&quot;)
+
+  # Transform2D.from_array provides the transform2d/Transform2D standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
+  from_array: values -&gt;
+    if values.class != Array or values.len() != 6
+      raise error(&quot;transform2d.from_array: expected six-number array&quot;)
+    Transform2D(
+      values[0],
+      values[1],
+      values[2],
+      values[3],
+      values[4],
+      values[5]
+    )
+
+  # Transform2D.from_matrix provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @return Self the resulting value.
+  from_matrix: value -&gt;
+    if value.class != matrix.Matrix
+      raise error(&quot;transform2d.from_matrix: value must be a matrix.Matrix&quot;)
+    if value.rows != 3 or value.cols != 3
+      raise error(&quot;transform2d.from_matrix: matrix must be 3x3&quot;)
+    if value.data[2][0] != 0 or value.data[2][1] != 0 or value.data[2][2] != 1
+      raise error(&quot;transform2d.from_matrix: matrix must be affine&quot;)
+    Transform2D(
+      value.data[0][0],
+      value.data[1][0],
+      value.data[0][1],
+      value.data[1][1],
+      value.data[0][2],
+      value.data[1][2]
+    )
+
+  # Transform2D.identity provides the transform2d/Transform2D standard library operation.
+  # @return Any the resulting value.
+  identity: -&gt;
+    Transform2D(1, 0, 0, 1, 0, 0)
+
+  # Transform2D.inverse provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Any the resulting value.
+  inverse: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    geometry_det = self.determinant(transform)
+    if self.abs(geometry_det) &lt;= 0.000000001
+      raise error(&quot;transform2d.inverse: transform is not invertible&quot;)
+    geometry_a = transform.d.to_f() / geometry_det
+    geometry_b = 0 - transform.b.to_f() / geometry_det
+    geometry_c = 0 - transform.c.to_f() / geometry_det
+    geometry_d = transform.a.to_f() / geometry_det
+    geometry_tx = transform.c * transform.ty
+      - transform.d * transform.tx.to_f() / geometry_det
+    geometry_ty = transform.b * transform.tx
+      - transform.a * transform.ty.to_f() / geometry_det
+    Transform2D(
+      geometry_a,
+      geometry_b,
+      geometry_c,
+      geometry_d,
+      geometry_tx,
+      geometry_ty
+    )
+
+  # Transform2D.invertible? provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Boolean whether the condition is true.
+  invertible?: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.abs(self.determinant(transform)) &gt; 0.000000001
+
+  # Transform2D.max provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  max: a, b -&gt;
+    if a &gt; b
+      return a
+    b
+
+  # Transform2D.min provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  min: a, b -&gt;
+    if a &lt; b
+      return a
+    b
+
+  # Transform2D.nearly_equal? provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param epsilon Any epsilon value.
+  # @return Boolean whether the condition is true.
+  nearly_equal?: a, b, epsilon = nil -&gt;
+    if epsilon == nil
+      epsilon = b
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    if epsilon &lt; 0
+      raise error(&quot;transform2d.nearly_equal?: epsilon must be non-negative&quot;)
+    self.abs(a.a - b.a) &lt;= epsilon and self.abs(a.b - b.b) &lt;= epsilon and self.abs(a.c - b.c) &lt;= epsilon and self.abs(a.d - b.d) &lt;= epsilon and self.abs(a.tx - b.tx) &lt;= epsilon and self.abs(a.ty - b.ty) &lt;= epsilon
+
+  # Transform2D.new provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param c Any c value.
+  # @param d Any d value.
+  # @param tx Any tx value.
+  # @param ty Any ty value.
+  # @return Self the resulting value.
+  new: a, b, c, d, tx, ty -&gt;
+    Transform2D(a, b, c, d, tx, ty)
+
+  # Transform2D.number provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  number: value, name -&gt;
+    if value.class != Number
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a number&quot;)
+    value
+
+  # Transform2D.rotate provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param radians Any radians value.
+  # @return Any the resulting value.
+  rotate: transform, radians = nil -&gt;
+    if radians == nil
+      radians = transform
+      transform = self
+    self.compose(self.rotation(radians), transform)
+
+  # Transform2D.rotation provides the transform2d/Transform2D standard library operation.
+  # @param radians Any radians value.
+  # @return Any the resulting value.
+  rotation: radians -&gt;
+    self.number(radians, &quot;radians&quot;)
+    geometry_cos = math_cos(radians)
+    geometry_sin = math_sin(radians)
+    Transform2D(
+      geometry_cos,
+      geometry_sin,
+      0 - geometry_sin,
+      geometry_cos,
+      0,
+      0
+    )
+
+  # Transform2D.rotation_around provides the transform2d/Transform2D standard library operation.
+  # @param radians Any radians value.
+  # @param point Any point value.
+  # @return Any the resulting value.
+  rotation_around: radians, point -&gt;
+    self.expect_point(point, &quot;point&quot;)
+    geometry_to_origin = self.translation(0 - point.x, 0 - point.y)
+    geometry_back = self.translation(point.x, point.y)
+    self.compose(
+      geometry_back,
+      self.compose(self.rotation(radians), geometry_to_origin)
+    )
+
+  # Transform2D.scale provides the transform2d/Transform2D standard library operation.
+  # @param sx Any sx value.
+  # @param sy Any sy value.
+  # @return Any the resulting value.
+  scale: sx, sy -&gt;
+    self.number(sx, &quot;sx&quot;)
+    self.number(sy, &quot;sy&quot;)
+    Transform2D(sx, 0, 0, sy, 0, 0)
+
+  # Transform2D.scale_by provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param sx Any sx value.
+  # @param sy Any sy value.
+  # @return Any the resulting value.
+  scale_by: transform, sx, sy = nil -&gt;
+    if sy == nil
+      sy = sx
+      sx = transform
+      transform = self
+    self.compose(self.scale(sx, sy), transform)
+
+  # Transform2D.skew provides the transform2d/Transform2D standard library operation.
+  # @param x_radians Any x radians value.
+  # @param y_radians Any y radians value.
+  # @return Any the resulting value.
+  skew: x_radians, y_radians -&gt;
+    self.number(x_radians, &quot;x_radians&quot;)
+    self.number(y_radians, &quot;y_radians&quot;)
+    Transform2D(1, math_tan(y_radians), math_tan(x_radians), 1, 0, 0)
+
+  # Transform2D.to_array provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Array the resulting value.
+  to_array: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    [transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty]
+
+  # Transform2D.to_matrix provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Any the resulting value.
+  to_matrix: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    matrix.Matrix(
+      [[transform.a, transform.c, transform.tx], [transform.b, transform.d, transform.ty], [0, 0, 1]]
+    )
+
+  # Transform2D.translate provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  translate: transform, x, y = nil -&gt;
+    if y == nil
+      y = x
+      x = transform
+      transform = self
+    self.compose(self.translation(x, y), transform)
+
+  # Transform2D.translation provides the transform2d/Transform2D standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  translation: x, y -&gt;
+    self.number(x, &quot;x&quot;)
+    self.number(y, &quot;y&quot;)
+    Transform2D(1, 0, 0, 1, x, y)
+
+  # Transform2D.uniform_scale provides the transform2d/Transform2D standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  uniform_scale: s -&gt;
+    self.number(s, &quot;s&quot;)
+    self.scale(s, s)</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Transform2D-a" class="doc-item member">
+<h3><code>a</code></h3>
+<pre><code>Transform2D.a</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:8</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Transform2D.a stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.a stores instance state.
+  # @type Int
+  a: 0</code></pre>
+</details>
+</section>
+<section id="instance-variable-Transform2D-b" class="doc-item member">
+<h3><code>b</code></h3>
+<pre><code>Transform2D.b</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:12</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Transform2D.b stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.b stores instance state.
+  # @type Int
+  b: 0</code></pre>
+</details>
+</section>
+<section id="instance-variable-Transform2D-c" class="doc-item member">
+<h3><code>c</code></h3>
+<pre><code>Transform2D.c</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:16</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Transform2D.c stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.c stores instance state.
+  # @type Int
+  c: 0</code></pre>
+</details>
+</section>
+<section id="instance-variable-Transform2D-d" class="doc-item member">
+<h3><code>d</code></h3>
+<pre><code>Transform2D.d</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:20</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Transform2D.d stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.d stores instance state.
+  # @type Int
+  d: 0</code></pre>
+</details>
+</section>
+<section id="instance-variable-Transform2D-tx" class="doc-item member">
+<h3><code>tx</code></h3>
+<pre><code>Transform2D.tx</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:24</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Transform2D.tx stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.tx stores instance state.
+  # @type Int
+  tx: 0</code></pre>
+</details>
+</section>
+<section id="instance-variable-Transform2D-ty" class="doc-item member">
+<h3><code>ty</code></h3>
+<pre><code>Transform2D.ty</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:28</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Transform2D.ty stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.ty stores instance state.
+  # @type Int
+  ty: 0</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Transform2D-abs" class="doc-item member">
+<h3><code>abs</code></h3>
+<pre><code>Transform2D.abs(value)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:49</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.abs provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.abs provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  abs: value -&gt;
+    if value &lt; 0
+      return 0 - value
+    value</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-apply_point" class="doc-item member">
+<h3><code>apply_point</code></h3>
+<pre><code>Transform2D.apply_point(transform, point = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:58</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Param <code>point</code></dt><dd><code>Any</code> point value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.apply_point provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.apply_point provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param point Any point value.
+  # @return Any the resulting value.
+  apply_point: transform, point = nil -&gt;
+    if point == nil
+      point = transform
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    self.expect_point(point, &quot;point&quot;)
+    geo.Point(
+      transform.a * point.x + transform.c * point.y + transform.tx,
+      transform.b * point.x + transform.d * point.y + transform.ty
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-apply_rect" class="doc-item member">
+<h3><code>apply_rect</code></h3>
+<pre><code>Transform2D.apply_rect(transform, rect = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:73</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.apply_rect provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.apply_rect provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  apply_rect: transform, rect = nil -&gt;
+    if rect == nil
+      rect = transform
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    self.expect_rect(rect, &quot;rect&quot;)
+    geometry_p1 = self.apply_point(transform, geo.Point(rect.x, rect.y))
+    geometry_p2 = self.apply_point(
+      transform,
+      geo.Point(rect.x + rect.width, rect.y)
+    )
+    geometry_p3 = self.apply_point(
+      transform,
+      geo.Point(rect.x, rect.y + rect.height)
+    )
+    geometry_p4 = self.apply_point(
+      transform,
+      geo.Point(rect.x + rect.width, rect.y + rect.height)
+    )
+    geometry_left = self.min(
+      self.min(geometry_p1.x, geometry_p2.x),
+      self.min(geometry_p3.x, geometry_p4.x)
+    )
+    geometry_top = self.min(
+      self.min(geometry_p1.y, geometry_p2.y),
+      self.min(geometry_p3.y, geometry_p4.y)
+    )
+    geometry_right = self.max(
+      self.max(geometry_p1.x, geometry_p2.x),
+      self.max(geometry_p3.x, geometry_p4.x)
+    )
+    geometry_bottom = self.max(
+      self.max(geometry_p1.y, geometry_p2.y),
+      self.max(geometry_p3.y, geometry_p4.y)
+    )
+    geo.Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-apply_size" class="doc-item member">
+<h3><code>apply_size</code></h3>
+<pre><code>Transform2D.apply_size(transform, size = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:119</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Param <code>size</code></dt><dd><code>Int</code> size value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.apply_size provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.apply_size provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param size Int size value.
+  # @return Any the resulting value.
+  apply_size: transform, size = nil -&gt;
+    if size == nil
+      size = transform
+      transform = self
+    self.expect_size(size, &quot;size&quot;)
+    geometry_rect = self.apply_rect(
+      transform,
+      geo.Rect(0, 0, size.width, size.height)
+    )
+    geo.Size(geometry_rect.width, geometry_rect.height)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-apply_vector2" class="doc-item member">
+<h3><code>apply_vector2</code></h3>
+<pre><code>Transform2D.apply_vector2(transform, vector = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:134</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Param <code>vector</code></dt><dd><code>Any</code> vector value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.apply_vector2 provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.apply_vector2 provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param vector Any vector value.
+  # @return Any the resulting value.
+  apply_vector2: transform, vector = nil -&gt;
+    if vector == nil
+      vector = transform
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    self.expect_vector2(vector, &quot;vector&quot;)
+    geo.Vector2(
+      transform.a * vector.x + transform.c * vector.y,
+      transform.b * vector.x + transform.d * vector.y
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-compose" class="doc-item member">
+<h3><code>compose</code></h3>
+<pre><code>Transform2D.compose(a, b = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:149</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.compose provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.compose provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  compose: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    Transform2D(
+      a.a * b.a + a.c * b.b,
+      a.b * b.a + a.d * b.b,
+      a.a * b.c + a.c * b.d,
+      a.b * b.c + a.d * b.d,
+      a.a * b.tx + a.c * b.ty + a.tx,
+      a.b * b.tx + a.d * b.ty + a.ty
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-determinant" class="doc-item member">
+<h3><code>determinant</code></h3>
+<pre><code>Transform2D.determinant(transform = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:167</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.determinant provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.determinant provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Any the resulting value.
+  determinant: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    transform.a * transform.d - transform.b * transform.c</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-equal-" class="doc-item member">
+<h3><code>equal?</code></h3>
+<pre><code>Transform2D.equal?(a, b = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:177</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Transform2D.equal? provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.equal? provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    a.class == Transform2D and b.class == Transform2D and a.a == b.a and a.b == b.b and a.c == b.c and a.d == b.d and a.tx == b.tx and a.ty == b.ty</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-expect" class="doc-item member">
+<h3><code>expect</code></h3>
+<pre><code>Transform2D.expect(value, name)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:187</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.expect provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.expect provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect: value, name -&gt;
+    if value.class != Transform2D
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a Transform2D&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-expect_point" class="doc-item member">
+<h3><code>expect_point</code></h3>
+<pre><code>Transform2D.expect_point(value, name)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:195</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.expect_point provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.expect_point provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect_point: value, name -&gt;
+    if value.class != geo.Point
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a geometry.Point&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-expect_rect" class="doc-item member">
+<h3><code>expect_rect</code></h3>
+<pre><code>Transform2D.expect_rect(value, name)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:203</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.expect_rect provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.expect_rect provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect_rect: value, name -&gt;
+    if value.class != geo.Rect
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a geometry.Rect&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-expect_size" class="doc-item member">
+<h3><code>expect_size</code></h3>
+<pre><code>Transform2D.expect_size(value, name)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:211</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.expect_size provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.expect_size provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect_size: value, name -&gt;
+    if value.class != geo.Size
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a geometry.Size&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-expect_vector2" class="doc-item member">
+<h3><code>expect_vector2</code></h3>
+<pre><code>Transform2D.expect_vector2(value, name)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:219</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.expect_vector2 provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.expect_vector2 provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect_vector2: value, name -&gt;
+    if value.class != geo.Vector2
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a geometry.Vector2&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-from_array" class="doc-item member">
+<h3><code>from_array</code></h3>
+<pre><code>Transform2D.from_array(values)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:226</small></p>
+<dl class="metadata">
+<dt>Param <code>values</code></dt><dd><code>Array</code> values value.</dd>
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.from_array provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.from_array provides the transform2d/Transform2D standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
+  from_array: values -&gt;
+    if values.class != Array or values.len() != 6
+      raise error(&quot;transform2d.from_array: expected six-number array&quot;)
+    Transform2D(
+      values[0],
+      values[1],
+      values[2],
+      values[3],
+      values[4],
+      values[5]
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-from_matrix" class="doc-item member">
+<h3><code>from_matrix</code></h3>
+<pre><code>Transform2D.from_matrix(value)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:241</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.from_matrix provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.from_matrix provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @return Self the resulting value.
+  from_matrix: value -&gt;
+    if value.class != matrix.Matrix
+      raise error(&quot;transform2d.from_matrix: value must be a matrix.Matrix&quot;)
+    if value.rows != 3 or value.cols != 3
+      raise error(&quot;transform2d.from_matrix: matrix must be 3x3&quot;)
+    if value.data[2][0] != 0 or value.data[2][1] != 0 or value.data[2][2] != 1
+      raise error(&quot;transform2d.from_matrix: matrix must be affine&quot;)
+    Transform2D(
+      value.data[0][0],
+      value.data[1][0],
+      value.data[0][1],
+      value.data[1][1],
+      value.data[0][2],
+      value.data[1][2]
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-identity" class="doc-item member">
+<h3><code>identity</code></h3>
+<pre><code>Transform2D.identity()</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:259</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.identity provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.identity provides the transform2d/Transform2D standard library operation.
+  # @return Any the resulting value.
+  identity: -&gt;
+    Transform2D(1, 0, 0, 1, 0, 0)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Transform2D.initialize(a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:38</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>c</code></dt><dd><code>Any</code> c value.</dd>
+<dt>Param <code>d</code></dt><dd><code>Any</code> d value.</dd>
+<dt>Param <code>tx</code></dt><dd><code>Any</code> tx value.</dd>
+<dt>Param <code>ty</code></dt><dd><code>Any</code> ty value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Transform2D.initialize provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.initialize provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param c Any c value.
+  # @param d Any d value.
+  # @param tx Any tx value.
+  # @param ty Any ty value.
+  # @return Self the initialized object.
+  initialize: a = 1, b = 0, c = 0, d = 1, tx = 0, ty = 0 -&gt;
+    self.a = self.number(a, &quot;a&quot;)
+    self.b = self.number(b, &quot;b&quot;)
+    self.c = self.number(c, &quot;c&quot;)
+    self.d = self.number(d, &quot;d&quot;)
+    self.tx = self.number(tx, &quot;tx&quot;)
+    self.ty = self.number(ty, &quot;ty&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-inverse" class="doc-item member">
+<h3><code>inverse</code></h3>
+<pre><code>Transform2D.inverse(transform = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:265</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.inverse provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.inverse provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Any the resulting value.
+  inverse: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    geometry_det = self.determinant(transform)
+    if self.abs(geometry_det) &lt;= 0.000000001
+      raise error(&quot;transform2d.inverse: transform is not invertible&quot;)
+    geometry_a = transform.d.to_f() / geometry_det
+    geometry_b = 0 - transform.b.to_f() / geometry_det
+    geometry_c = 0 - transform.c.to_f() / geometry_det
+    geometry_d = transform.a.to_f() / geometry_det
+    geometry_tx = transform.c * transform.ty
+      - transform.d * transform.tx.to_f() / geometry_det
+    geometry_ty = transform.b * transform.tx
+      - transform.a * transform.ty.to_f() / geometry_det
+    Transform2D(
+      geometry_a,
+      geometry_b,
+      geometry_c,
+      geometry_d,
+      geometry_tx,
+      geometry_ty
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-invertible-" class="doc-item member">
+<h3><code>invertible?</code></h3>
+<pre><code>Transform2D.invertible?(transform = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:292</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Transform2D.invertible? provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.invertible? provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Boolean whether the condition is true.
+  invertible?: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.abs(self.determinant(transform)) &gt; 0.000000001</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-max" class="doc-item member">
+<h3><code>max</code></h3>
+<pre><code>Transform2D.max(a, b)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:301</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.max provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.max provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  max: a, b -&gt;
+    if a &gt; b
+      return a
+    b</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-min" class="doc-item member">
+<h3><code>min</code></h3>
+<pre><code>Transform2D.min(a, b)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:310</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.min provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.min provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  min: a, b -&gt;
+    if a &lt; b
+      return a
+    b</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-nearly_equal-" class="doc-item member">
+<h3><code>nearly_equal?</code></h3>
+<pre><code>Transform2D.nearly_equal?(a, b, epsilon = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:320</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>epsilon</code></dt><dd><code>Any</code> epsilon value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Transform2D.nearly_equal? provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.nearly_equal? provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param epsilon Any epsilon value.
+  # @return Boolean whether the condition is true.
+  nearly_equal?: a, b, epsilon = nil -&gt;
+    if epsilon == nil
+      epsilon = b
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    if epsilon &lt; 0
+      raise error(&quot;transform2d.nearly_equal?: epsilon must be non-negative&quot;)
+    self.abs(a.a - b.a) &lt;= epsilon and self.abs(a.b - b.b) &lt;= epsilon and self.abs(a.c - b.c) &lt;= epsilon and self.abs(a.d - b.d) &lt;= epsilon and self.abs(a.tx - b.tx) &lt;= epsilon and self.abs(a.ty - b.ty) &lt;= epsilon</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-new" class="doc-item member">
+<h3><code>new</code></h3>
+<pre><code>Transform2D.new(a, b, c, d, tx, ty)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:339</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>c</code></dt><dd><code>Any</code> c value.</dd>
+<dt>Param <code>d</code></dt><dd><code>Any</code> d value.</dd>
+<dt>Param <code>tx</code></dt><dd><code>Any</code> tx value.</dd>
+<dt>Param <code>ty</code></dt><dd><code>Any</code> ty value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.new provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.new provides the transform2d/Transform2D standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param c Any c value.
+  # @param d Any d value.
+  # @param tx Any tx value.
+  # @param ty Any ty value.
+  # @return Self the resulting value.
+  new: a, b, c, d, tx, ty -&gt;
+    Transform2D(a, b, c, d, tx, ty)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-number" class="doc-item member">
+<h3><code>number</code></h3>
+<pre><code>Transform2D.number(value, name)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:346</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.number provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.number provides the transform2d/Transform2D standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  number: value, name -&gt;
+    if value.class != Number
+      raise error(&quot;transform2d: &quot; + name + &quot; must be a number&quot;)
+    value</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-rotate" class="doc-item member">
+<h3><code>rotate</code></h3>
+<pre><code>Transform2D.rotate(transform, radians = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:355</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Param <code>radians</code></dt><dd><code>Any</code> radians value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.rotate provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.rotate provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param radians Any radians value.
+  # @return Any the resulting value.
+  rotate: transform, radians = nil -&gt;
+    if radians == nil
+      radians = transform
+      transform = self
+    self.compose(self.rotation(radians), transform)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-rotation" class="doc-item member">
+<h3><code>rotation</code></h3>
+<pre><code>Transform2D.rotation(radians)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:364</small></p>
+<dl class="metadata">
+<dt>Param <code>radians</code></dt><dd><code>Any</code> radians value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.rotation provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.rotation provides the transform2d/Transform2D standard library operation.
+  # @param radians Any radians value.
+  # @return Any the resulting value.
+  rotation: radians -&gt;
+    self.number(radians, &quot;radians&quot;)
+    geometry_cos = math_cos(radians)
+    geometry_sin = math_sin(radians)
+    Transform2D(
+      geometry_cos,
+      geometry_sin,
+      0 - geometry_sin,
+      geometry_cos,
+      0,
+      0
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-rotation_around" class="doc-item member">
+<h3><code>rotation_around</code></h3>
+<pre><code>Transform2D.rotation_around(radians, point)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:381</small></p>
+<dl class="metadata">
+<dt>Param <code>radians</code></dt><dd><code>Any</code> radians value.</dd>
+<dt>Param <code>point</code></dt><dd><code>Any</code> point value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.rotation_around provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.rotation_around provides the transform2d/Transform2D standard library operation.
+  # @param radians Any radians value.
+  # @param point Any point value.
+  # @return Any the resulting value.
+  rotation_around: radians, point -&gt;
+    self.expect_point(point, &quot;point&quot;)
+    geometry_to_origin = self.translation(0 - point.x, 0 - point.y)
+    geometry_back = self.translation(point.x, point.y)
+    self.compose(
+      geometry_back,
+      self.compose(self.rotation(radians), geometry_to_origin)
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-scale" class="doc-item member">
+<h3><code>scale</code></h3>
+<pre><code>Transform2D.scale(sx, sy)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:394</small></p>
+<dl class="metadata">
+<dt>Param <code>sx</code></dt><dd><code>Any</code> sx value.</dd>
+<dt>Param <code>sy</code></dt><dd><code>Any</code> sy value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.scale provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.scale provides the transform2d/Transform2D standard library operation.
+  # @param sx Any sx value.
+  # @param sy Any sy value.
+  # @return Any the resulting value.
+  scale: sx, sy -&gt;
+    self.number(sx, &quot;sx&quot;)
+    self.number(sy, &quot;sy&quot;)
+    Transform2D(sx, 0, 0, sy, 0, 0)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-scale_by" class="doc-item member">
+<h3><code>scale_by</code></h3>
+<pre><code>Transform2D.scale_by(transform, sx, sy = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:404</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Param <code>sx</code></dt><dd><code>Any</code> sx value.</dd>
+<dt>Param <code>sy</code></dt><dd><code>Any</code> sy value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.scale_by provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.scale_by provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param sx Any sx value.
+  # @param sy Any sy value.
+  # @return Any the resulting value.
+  scale_by: transform, sx, sy = nil -&gt;
+    if sy == nil
+      sy = sx
+      sx = transform
+      transform = self
+    self.compose(self.scale(sx, sy), transform)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-skew" class="doc-item member">
+<h3><code>skew</code></h3>
+<pre><code>Transform2D.skew(x_radians, y_radians)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:415</small></p>
+<dl class="metadata">
+<dt>Param <code>x_radians</code></dt><dd><code>Any</code> x radians value.</dd>
+<dt>Param <code>y_radians</code></dt><dd><code>Any</code> y radians value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.skew provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.skew provides the transform2d/Transform2D standard library operation.
+  # @param x_radians Any x radians value.
+  # @param y_radians Any y radians value.
+  # @return Any the resulting value.
+  skew: x_radians, y_radians -&gt;
+    self.number(x_radians, &quot;x_radians&quot;)
+    self.number(y_radians, &quot;y_radians&quot;)
+    Transform2D(1, math_tan(y_radians), math_tan(x_radians), 1, 0, 0)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-to_array" class="doc-item member">
+<h3><code>to_array</code></h3>
+<pre><code>Transform2D.to_array(transform = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:423</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.to_array provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.to_array provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Array the resulting value.
+  to_array: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    [transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty]</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-to_matrix" class="doc-item member">
+<h3><code>to_matrix</code></h3>
+<pre><code>Transform2D.to_matrix(transform = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:432</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.to_matrix provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.to_matrix provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @return Any the resulting value.
+  to_matrix: transform = nil -&gt;
+    if transform == nil
+      transform = self
+    self.expect(transform, &quot;transform&quot;)
+    matrix.Matrix(
+      [[transform.a, transform.c, transform.tx], [transform.b, transform.d, transform.ty], [0, 0, 1]]
+    )</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-translate" class="doc-item member">
+<h3><code>translate</code></h3>
+<pre><code>Transform2D.translate(transform, x, y = nil)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:445</small></p>
+<dl class="metadata">
+<dt>Param <code>transform</code></dt><dd><code>Any</code> transform value.</dd>
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.translate provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.translate provides the transform2d/Transform2D standard library operation.
+  # @param transform Any transform value.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  translate: transform, x, y = nil -&gt;
+    if y == nil
+      y = x
+      x = transform
+      transform = self
+    self.compose(self.translation(x, y), transform)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-translation" class="doc-item member">
+<h3><code>translation</code></h3>
+<pre><code>Transform2D.translation(x, y)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:456</small></p>
+<dl class="metadata">
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.translation provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.translation provides the transform2d/Transform2D standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @return Any the resulting value.
+  translation: x, y -&gt;
+    self.number(x, &quot;x&quot;)
+    self.number(y, &quot;y&quot;)
+    Transform2D(1, 0, 0, 1, x, y)</code></pre>
+</details>
+</section>
+<section id="method-Transform2D-uniform_scale" class="doc-item member">
+<h3><code>uniform_scale</code></h3>
+<pre><code>Transform2D.uniform_scale(s)</code></pre>
+<p><small>lib/transform2d/transform2_d.tya:464</small></p>
+<dl class="metadata">
+<dt>Param <code>s</code></dt><dd><code>Any</code> s value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Transform2D.uniform_scale provides the transform2d/Transform2D standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Transform2D.uniform_scale provides the transform2d/Transform2D standard library operation.
+  # @param s Any s value.
+  # @return Any the resulting value.
+  uniform_scale: s -&gt;
+    self.number(s, &quot;s&quot;)
+    self.scale(s, s)</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

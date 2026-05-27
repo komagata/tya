@@ -4,7 +4,7 @@ en:
   guide: Guide
   spec_url: /spec/
   spec: Spec
-  stdlib_url: /stdlib/
+  stdlib_url: /lib/
   stdlib: Stdlib
   versions_url: /versions/
   versions: Versions
@@ -16,7 +16,7 @@ ja:
   guide: ガイド
   spec_url: /ja/spec/
   spec: 仕様
-  stdlib_url: /stdlib/
+  stdlib_url: /lib/
   stdlib: 標準ライブラリ
   versions_url: /versions/
   versions: バージョン

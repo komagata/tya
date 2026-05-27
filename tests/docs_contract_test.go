@@ -534,7 +534,7 @@ func TestSpecReferencesGeneratedStdlibDocs(t *testing.T) {
 	spec := readRepoFile(t, "docs", "SPEC.md")
 	for _, required := range []string{
 		"Generated stdlib API documentation is produced",
-		"`tya doc --json stdlib`",
+		"`tya doc --json lib`",
 		"machine-readable reference",
 		"package paths, signatures, rendered comments, source paths, and source lines",
 	} {

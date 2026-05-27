@@ -1189,7 +1189,7 @@ Imports are resolved in this order:
 1. the importing file's directory;
 2. manifest-declared dependencies from `tya.lock`;
 3. directories listed in `TYA_PATH`, from left to right;
-4. the bundled `stdlib/` directory.
+4. the bundled `lib/` directory.
 
 The first matching file or package directory wins. Local application imports
 may shadow package dependencies, `TYA_PATH`, and standard-library imports.
@@ -1488,7 +1488,8 @@ Environment variables are read by user programs only through explicit calls
 such as `env(name)` or documented standard-library APIs. `.env` files are not
 loaded automatically; users or task-runner commands may load them before
 invoking Tya. Toolchain behavior may be affected by the documented variables
-`TYA_PATH`, `TYA_STDLIB_DIR`, `TYA_RUNTIME_DIR`, `TYA_PROJECT_ROOT`, `TYA_ZIG`,
+`TYA_PATH`, `TYA_LIB_DIR`, `TYA_STDLIB_DIR` (deprecated fallback),
+`TYA_RUNTIME_DIR`, `TYA_PROJECT_ROOT`, `TYA_ZIG`,
 `TYA_ZIG_HOME`, `TYA_ZIG_VERSION`, `TYA_ZIG_SHA256`, `TYA_DISABLE_ZLIB`,
 `TYA_ENABLE_ZLIB`, `TYA_DISABLE_OPENSSL`, `TYA_ENABLE_OPENSSL`, `CC`,
 `NO_COLOR`, and `HOME` in isolated test/toolchain contexts.
@@ -1567,7 +1568,7 @@ overrides.
 
 `tya task <name> --watch` runs the task once and reruns it after watched project
 files change. By default, watch mode observes `.tya` files, `tya.toml`, and
-files under existing `src/`, `tests/`, `stdlib/`, and `examples/` directories,
+files under existing `src/`, `tests/`, `lib/`, and `examples/` directories,
 while ignoring `.git/`, `node_modules/`, `_site/`, common build output
 directories, and hidden cache directories. Table-form `watch` overrides the
 default watch set and `ignore` adds ignored globs. `--watch` is consumed by the
@@ -1660,17 +1661,17 @@ surface is centered on the single `tya` executable.
 
 ## Standard Library
 
-The standard library is shipped with Tya under `stdlib/` and is imported using
+The standard library is shipped with Tya under `lib/` and is imported using
 the same import syntax as user files and packages.
 
 The standard library is part of the language distribution. Its public surface
 is the set of importable PascalCase package classes and interfaces from snake_case class/interface files under
-`stdlib/`. Standard-library imports are resolved after local packages, locked
+`lib/`. Standard-library imports are resolved after local packages, locked
 package dependencies, and `TYA_PATH` entries.
 
 Public standard-library classes, interfaces, and user-facing methods carry
 source doc comments. Generated stdlib API documentation is produced from those
-comments with `tya doc`, for example `tya doc --json stdlib` for a
+comments with `tya doc`, for example `tya doc --json lib` for a
 machine-readable reference that includes package paths, signatures, rendered
 comments, source paths, and source lines.
 

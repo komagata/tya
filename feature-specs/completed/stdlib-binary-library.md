@@ -120,8 +120,8 @@ readers and writers should be class instances, not dictionaries.
 
 ## Scope
 
-- `stdlib/binary/Reader.tya`
-- `stdlib/binary/Writer.tya`
+- `lib/binary/Reader.tya`
+- `lib/binary/Writer.tya`
 - `tests/stdlib_binary_test.tya`
 - Runtime/checker/codegen builtins only where pure Tya cannot portably handle
   IEEE 754 float packing or unpacking.

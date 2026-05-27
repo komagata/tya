@@ -51,7 +51,7 @@ print(count + " items")  # invalid
 - Update `docs/SPEC.md` and `docs/STRICT_SEMANTICS.md`.
 - Add or update focused tests for interpreter behavior, build/runtime behavior,
   and strict semantics testscript coverage.
-- Update existing examples/tests/stdlib/selfhost sources that currently rely on
+- Update existing examples/tests/lib/selfhost sources that currently rely on
   mixed string `+`.
 
 ## Out of Scope

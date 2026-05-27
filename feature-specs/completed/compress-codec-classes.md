@@ -8,7 +8,7 @@ shared minimal interface.
 
 ## Context
 
-`stdlib/compress/Compress.tya` currently stores an optional value and exposes
+`lib/compress/Compress.tya` currently stores an optional value and exposes
 all gzip and zlib operations from one class:
 
 ```tya
@@ -87,9 +87,9 @@ compress.Zlib().decompress_file(src, dst)
 ## Scope
 
 - Standard library:
-  - remove or stop exporting `stdlib/compress/Compress.tya`;
-  - add `stdlib/compress/Gzip.tya`;
-  - add `stdlib/compress/Zlib.tya`;
+  - remove or stop exporting `lib/compress/Compress.tya`;
+  - add `lib/compress/Gzip.tya`;
+  - add `lib/compress/Zlib.tya`;
   - add shared private helper code for file read/write if it can fit existing
     package visibility rules cleanly.
 - Tests:

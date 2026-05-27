@@ -1,7 +1,7 @@
 # Comparable interface defaults and primitive methods.
 cd $REPO
 
-exec go run ./cmd/tya check stdlib/comparable.tya
+exec go run ./cmd/tya check lib/comparable.tya
 
 exec go run ./cmd/tya run $WORK/defaults.tya
 stdout 'true\ntrue\ntrue\ntrue\ntrue\n'

@@ -112,7 +112,7 @@ cycles.
 
 ## Scope
 
-- `stdlib/serialization/Serializer.tya`
+- `lib/serialization/Serializer.tya`
 - Runtime/checker/codegen support only if public-field discovery or instance
   construction cannot be implemented in Tya.
 - `tests/stdlib_serialization_test.tya`

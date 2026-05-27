@@ -193,7 +193,7 @@ surfaces and defeats the canonical-syntax invariant.
 │   ├── runner/                   # source loading, package synth, RunFile
 │   └── eval/                     # tree-walking interpreter (test/tooling)
 ├── runtime/                      # C runtime linked into emitted programs
-├── stdlib/                       # standard library Tya sources
+├── lib/                       # standard library Tya sources
 ├── selfhost/
 │   ├── v01/                      # frozen v0.43-surface Tya compiler
 │   └── v02/                      # in-progress v0.46+ surface (M8)

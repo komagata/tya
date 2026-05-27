@@ -22,7 +22,7 @@ build_package() {
   package="tya-$tag-$goos-$goarch"
   root="$dist_dir/$package"
 
-  mkdir -p "$root/bin" "$root/share/tya/runtime" "$root/share/tya/stdlib"
+  mkdir -p "$root/bin" "$root/share/tya/runtime" "$root/share/tya/lib"
   GOOS="$goos" GOARCH="$goarch" go build -o "$root/bin/tya$ext" ./cmd/tya
   cp runtime/tya_runtime.c runtime/tya_runtime.h "$root/share/tya/runtime/"
   if [ -f runtime/tya_cover.c ]; then
@@ -31,7 +31,7 @@ build_package() {
   if [ -f runtime/tya_http_server.c ]; then
     cp runtime/tya_http_server.c runtime/tya_http_server.h "$root/share/tya/runtime/"
   fi
-  cp -R stdlib/. "$root/share/tya/stdlib/"
+  cp -R lib/. "$root/share/tya/lib/"
   cp README.md "$root/"
 
   cat > "$root/install.sh" <<'EOF'
@@ -42,10 +42,10 @@ prefix="${PREFIX:-$HOME/.local}"
 zig_version="${TYA_ZIG_VERSION:-0.16.0}"
 zig_bin="$prefix/zig/$zig_version/zig"
 
-mkdir -p "$prefix/bin" "$prefix/share/tya/runtime" "$prefix/share/tya/stdlib"
+mkdir -p "$prefix/bin" "$prefix/share/tya/runtime" "$prefix/share/tya/lib"
 cp bin/tya "$prefix/bin/tya"
 cp share/tya/runtime/* "$prefix/share/tya/runtime/"
-cp -R share/tya/stdlib/. "$prefix/share/tya/stdlib/"
+cp -R share/tya/lib/. "$prefix/share/tya/lib/"
 
 install_zig() {
   for cmd in curl tar mktemp; do
@@ -99,10 +99,10 @@ $zigBin = Join-Path $prefix "zig\$zigVersion\zig.exe"
 
 New-Item -ItemType Directory -Force -Path (Join-Path $prefix "bin") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $prefix "share\tya\runtime") | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $prefix "share\tya\stdlib") | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $prefix "share\tya\lib") | Out-Null
 Copy-Item "bin\tya.exe" (Join-Path $prefix "bin\tya.exe") -Force
 Copy-Item "share\tya\runtime\*" (Join-Path $prefix "share\tya\runtime") -Force
-Copy-Item "share\tya\stdlib\*" (Join-Path $prefix "share\tya\stdlib") -Recurse -Force
+Copy-Item "share\tya\lib\*" (Join-Path $prefix "share\tya\lib") -Recurse -Force
 
 function Install-ManagedZig {
   $arch = if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -eq [System.Runtime.InteropServices.Architecture]::Arm64) { "aarch64" } else { "x86_64" }

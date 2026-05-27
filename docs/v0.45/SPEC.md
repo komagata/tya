@@ -147,11 +147,11 @@ Under `tests/testdata/v45/`:
 
 | Package    | Old shape                | New shape                            |
 | ---------- | ------------------------ | ------------------------------------ |
-| `runtime`  | `stdlib/runtime.tya`     | `stdlib/runtime/Runtime.tya`         |
-| `time`     | `stdlib/time.tya`        | `stdlib/time/Time.tya`               |
-| `channel`  | `stdlib/channel.tya`     | `stdlib/channel/Channel.tya`         |
-| `sync`     | `stdlib/sync.tya`        | `stdlib/sync/Sync.tya`               |
-| `task`     | `stdlib/task.tya`        | `stdlib/task/Task.tya`               |
+| `runtime`  | `lib/runtime.tya`     | `lib/runtime/Runtime.tya`         |
+| `time`     | `lib/time.tya`        | `lib/time/Time.tya`               |
+| `channel`  | `lib/channel.tya`     | `lib/channel/Channel.tya`         |
+| `sync`     | `lib/sync.tya`        | `lib/sync/Sync.tya`               |
+| `task`     | `lib/task.tya`        | `lib/task/Task.tya`               |
 
 Member access changes from `pkg.member(args)` to
 `pkg.<Pkg>.member(args)`:
@@ -175,12 +175,12 @@ me = task.Task.current()
 ```
 
 Callers updated in `examples/`, `tests/`, `tests/testdata/`, and
-`docs/STDLIB.md`. The legacy single-file `stdlib/<pkg>.tya` files
+`docs/STDLIB.md`. The legacy single-file `lib/<pkg>.tya` files
 are deleted.
 
 ### Held back (to v0.4x)
 
-`string`, `array`, `dict` remain at `stdlib/<pkg>.tya` (single
+`string`, `array`, `dict` remain at `lib/<pkg>.tya` (single
 file). `selfhost/v01/compiler.tya` still consumes them via
 single-file `import` and must do so until the v02 self-host
 upgrade lands.

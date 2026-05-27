@@ -9,7 +9,7 @@ import (
 
 func TestStdlibAPIDocCoverage(t *testing.T) {
 	var paths []string
-	root := filepath.Join("..", "..", "stdlib")
+	root := filepath.Join("..", "..", "lib")
 	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -75,14 +75,14 @@ func isStdlibMethodLine(line string) bool {
 
 func TestStdlibAPIDocsIncludeRepresentativePackages(t *testing.T) {
 	paths := []string{
-		filepath.Join("..", "..", "stdlib", "math", "math.tya"),
-		filepath.Join("..", "..", "stdlib", "file", "file.tya"),
-		filepath.Join("..", "..", "stdlib", "json", "json.tya"),
-		filepath.Join("..", "..", "stdlib", "toml", "toml.tya"),
-		filepath.Join("..", "..", "stdlib", "net", "http", "server.tya"),
-		filepath.Join("..", "..", "stdlib", "net", "socket", "socket.tya"),
-		filepath.Join("..", "..", "stdlib", "template", "template.tya"),
-		filepath.Join("..", "..", "stdlib", "unittest", "test_case.tya"),
+		filepath.Join("..", "..", "lib", "math", "math.tya"),
+		filepath.Join("..", "..", "lib", "file", "file.tya"),
+		filepath.Join("..", "..", "lib", "json", "json.tya"),
+		filepath.Join("..", "..", "lib", "toml", "toml.tya"),
+		filepath.Join("..", "..", "lib", "net", "http", "server.tya"),
+		filepath.Join("..", "..", "lib", "net", "socket", "socket.tya"),
+		filepath.Join("..", "..", "lib", "template", "template.tya"),
+		filepath.Join("..", "..", "lib", "unittest", "test_case.tya"),
 	}
 	report, err := ExtractReport(paths)
 	if err != nil {
@@ -110,7 +110,7 @@ func TestStdlibAPIDocsIncludeRepresentativePackages(t *testing.T) {
 }
 
 func TestStdlibHTMLDocsGenerateRepresentativePages(t *testing.T) {
-	root := filepath.Join("..", "..", "stdlib")
+	root := filepath.Join("..", "..", "lib")
 	var paths []string
 	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 		if err != nil {

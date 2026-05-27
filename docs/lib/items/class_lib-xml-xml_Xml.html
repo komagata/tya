@@ -1,0 +1,1341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Xml</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li class="current"><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Xml</code></h1>
+<section id="class-Xml" class="doc-item">
+<pre><code>class Xml</code></pre>
+<p><small>lib/xml/xml.tya:2</small></p>
+<p>Xml provides the xml/Xml standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Xml provides the xml/Xml standard library API.
+class Xml
+  # Xml.value stores instance state.
+  # @type Nil
+  value: nil
+
+  # Xml.dump is a compatibility alias for Xml.stringify.
+  # @param value String value value.
+  # @return String the resulting value.
+  static dump: value -&gt;
+    Xml(nil).dump(value)
+
+  # Xml.parse parses XML text into a document node.
+  # @param text String text value.
+  # @return Any the resulting value.
+  static parse: text -&gt;
+    Xml(nil).parse(text)
+
+  # Xml.stringify converts an XML node to text.
+  # @param value String value value.
+  # @return String the resulting value.
+  static stringify: value -&gt;
+    Xml(nil).stringify(value)
+
+  # Xml.initialize stores XML text or a node value.
+  # @param value String value value.
+  # @return Self the initialized object.
+  initialize: value = nil -&gt;
+    self.value = value
+
+  # Xml.collect_recursive provides the xml/Xml standard library operation.
+  # @param element Any element value.
+  # @param name String name value.
+  # @param out Any out value.
+  # @return Any the resulting value.
+  collect_recursive: element, name, out -&gt;
+    children = element.child_elements()
+    i = 0
+    while i &lt; children.len()
+      child = children[i]
+      if child.name == name
+        out.push(child)
+      Xml(nil).collect_recursive(child, name, out)
+      i = i + 1
+
+  # Xml.decode_entities provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  decode_entities: text, state -&gt;
+    out = &quot;&quot;
+    i = 0
+    while i &lt; text.byte_len()
+      if text[i] == &quot;&amp;&quot;
+        semi = Xml(nil).index_of(text, &quot;;&quot;, i + 1)
+        if semi &lt; 0
+          Xml(nil).error(state, &quot;invalid entity reference&quot;)
+        entity = text.slice(i + 1, semi)
+        out = out + Xml(nil).decode_entity(entity, state)
+        i = semi + 1
+      else
+        out = out + text[i]
+        i = i + 1
+    out
+
+  # Xml.decode_entity provides the xml/Xml standard library operation.
+  # @param entity Any entity value.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  decode_entity: entity, state -&gt;
+    if entity == &quot;amp&quot;
+      return &quot;&amp;&quot;
+    if entity == &quot;lt&quot;
+      return &quot;&lt;&quot;
+    if entity == &quot;gt&quot;
+      return &quot;&gt;&quot;
+    if entity == &quot;quot&quot;
+      return &quot;\&quot;&quot;
+    if entity == &quot;apos&quot;
+      return &quot;&#39;&quot;
+    if entity.starts_with(&quot;#x&quot;)
+      return chr(Xml(nil).parse_hex(entity.slice(2, entity.len())))
+    if entity.starts_with(&quot;#&quot;)
+      return chr(entity.slice(1, entity.len()).to_i())
+    Xml(nil).error(state, &quot;invalid entity reference&quot;)
+
+  # Xml.dump is a compatibility alias for Xml.stringify.
+  # @param value String value value.
+  # @return String the resulting value.
+  dump: value = nil -&gt;
+    self.stringify(value)
+
+  # Xml.error provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  error: state, message -&gt;
+    raise error(&quot;xml.parse: &quot; + message + &quot; at byte &quot; + state[&quot;pos&quot;].to_s())
+
+  # Xml.escape_attr provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  escape_attr: text -&gt;
+    Xml(nil).escape_text(text).replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;).replace(&quot;&#39;&quot;, &quot;&amp;apos;&quot;)
+
+  # Xml.escape_text provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
+  escape_text: text -&gt;
+    out = &quot;&quot;
+    i = 0
+    while i &lt; text.byte_len()
+      c = text[i]
+      if c == &quot;&amp;&quot;
+        out = out + &quot;&amp;amp;&quot;
+      elseif c == &quot;&lt;&quot;
+        out = out + &quot;&amp;lt;&quot;
+      else
+        if c == &quot;&gt;&quot;
+          out = out + &quot;&amp;gt;&quot;
+        else
+          out = out + c
+      i = i + 1
+    out
+
+  # Xml.expect provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  expect: state, c -&gt;
+    if Xml(nil).peek(state) != c
+      Xml(nil).error(state, &quot;expected &quot; + c)
+    state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+
+  # Xml.expect_text provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param text String text value.
+  # @return String the resulting value.
+  expect_text: state, text -&gt;
+    if not Xml(nil).starts_at(state, text)
+      Xml(nil).error(state, &quot;expected &quot; + text)
+    state[&quot;pos&quot;] = state[&quot;pos&quot;] + text.byte_len()
+
+  # Xml.index_of provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @param start Int start value.
+  # @return Any the resulting value.
+  index_of: text, needle, start -&gt;
+    i = start
+    while i &lt; text.byte_len()
+      if text[i] == needle
+        return i
+      i = i + 1
+    -1
+
+  # Xml.parse provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  parse: text = nil -&gt;
+    if text == nil
+      text = self.value
+    state =
+      src: text
+      pos: 0
+      len: text.byte_len()
+      version: &quot;1.0&quot;
+      encoding: nil
+    children = []
+    Xml(nil).skip_ws(state)
+    if Xml(nil).starts_at(state, &quot;&lt;?xml&quot;)
+      Xml(nil).parse_decl(state)
+    while true
+      Xml(nil).skip_ws(state)
+      if state[&quot;pos&quot;] &gt;= state[&quot;len&quot;]
+        return Document(children, state[&quot;version&quot;], state[&quot;encoding&quot;])
+      children.push(Xml(nil).parse_node(state))
+
+  # Xml.parse_attrs_until provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param terminator Any terminator value.
+  # @return Any the resulting value.
+  parse_attrs_until: state, terminator -&gt;
+    attrs = {}
+    while true
+      Xml(nil).skip_ws(state)
+      if terminator != nil and Xml(nil).starts_at(state, terminator)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + terminator.byte_len()
+        return attrs
+      c = Xml(nil).peek(state)
+      if c == &quot;&gt;&quot; or Xml(nil).starts_at(state, &quot;/&gt;&quot;)
+        return attrs
+      name = Xml(nil).parse_name(state)
+      if attrs.has?(name)
+        Xml(nil).error(state, &quot;duplicate attribute &quot; + name)
+      Xml(nil).skip_ws(state)
+      Xml(nil).expect(state, &quot;=&quot;)
+      Xml(nil).skip_ws(state)
+      quote = Xml(nil).peek(state)
+      if quote != &quot;\&quot;&quot; and quote != &quot;&#39;&quot;
+        Xml(nil).error(state, &quot;expected attribute quote&quot;)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+      raw = &quot;&quot;
+      while state[&quot;pos&quot;] &lt; state[&quot;len&quot;] and Xml(nil).peek(state) != quote
+        raw = raw + Xml(nil).peek(state)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+      if state[&quot;pos&quot;] &gt;= state[&quot;len&quot;]
+        Xml(nil).error(state, &quot;unterminated attribute&quot;)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+      attrs[name] = Xml(nil).decode_entities(raw, state)
+
+  # Xml.parse_cdata provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_cdata: state -&gt;
+    Xml(nil).expect_text(state, &quot;&lt;![CDATA[&quot;)
+    text = Xml(nil).read_until(state, &quot;]]&gt;&quot;, &quot;unterminated CDATA&quot;)
+    CData(text)
+
+  # Xml.parse_comment provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_comment: state -&gt;
+    Xml(nil).expect_text(state, &quot;&lt;!--&quot;)
+    text = Xml(nil).read_until(state, &quot;--&gt;&quot;, &quot;unterminated comment&quot;)
+    Comment(text)
+
+  # Xml.parse_decl provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_decl: state -&gt;
+    Xml(nil).expect_text(state, &quot;&lt;?xml&quot;)
+    attrs = Xml(nil).parse_attrs_until(state, &quot;?&gt;&quot;)
+    if attrs.has?(&quot;version&quot;)
+      state[&quot;version&quot;] = attrs[&quot;version&quot;]
+    if attrs.has?(&quot;encoding&quot;)
+      state[&quot;encoding&quot;] = attrs[&quot;encoding&quot;]
+
+  # Xml.parse_element provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_element: state -&gt;
+    Xml(nil).expect(state, &quot;&lt;&quot;)
+    name = Xml(nil).parse_name(state)
+    attrs = Xml(nil).parse_attrs_until(state, nil)
+    if Xml(nil).starts_at(state, &quot;/&gt;&quot;)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 2
+      return Element(name, attrs, [])
+    Xml(nil).expect(state, &quot;&gt;&quot;)
+    children = []
+    while true
+      if state[&quot;pos&quot;] &gt;= state[&quot;len&quot;]
+        Xml(nil).error(state, &quot;unterminated element &quot; + name)
+      if Xml(nil).starts_at(state, &quot;&lt;/&quot;)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + 2
+        end_name = Xml(nil).parse_name(state)
+        if end_name != name
+          Xml(nil).error(state, &quot;mismatched end tag &quot; + end_name)
+        Xml(nil).skip_ws(state)
+        Xml(nil).expect(state, &quot;&gt;&quot;)
+        return Element(name, attrs, children)
+      children.push(Xml(nil).parse_node(state))
+
+  # Xml.parse_hex provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  parse_hex: text -&gt;
+    value = 0
+    i = 0
+    while i &lt; text.byte_len()
+      code = ord(text[i])
+      digit = -1
+      if code &gt;= 48 and code &lt;= 57
+        digit = code - 48
+      elseif code &gt;= 65 and code &lt;= 70
+        digit = code - 55
+      else
+        if code &gt;= 97 and code &lt;= 102
+          digit = code - 87
+        else
+          raise error(&quot;xml.parse: invalid numeric character reference&quot;)
+      value = value * 16 + digit
+      i = i + 1
+    value
+
+  # Xml.parse_name provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_name: state -&gt;
+    name = &quot;&quot;
+    while state[&quot;pos&quot;] &lt; state[&quot;len&quot;]
+      c = Xml(nil).peek(state)
+      if (
+        c == &quot; &quot; or c == &quot;\t&quot; or c == &quot;\n&quot; or c == chr(13) or c == &quot;/&quot; or c == &quot;&gt;&quot; or c == &quot;=&quot;
+      )
+        if name == &quot;&quot;
+          Xml(nil).error(state, &quot;expected name&quot;)
+        return name
+      name = name + c
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+    Xml(nil).error(state, &quot;expected name&quot;)
+
+  # Xml.parse_node provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_node: state -&gt;
+    if Xml(nil).starts_at(state, &quot;&lt;!--&quot;)
+      return Xml(nil).parse_comment(state)
+    if Xml(nil).starts_at(state, &quot;&lt;![CDATA[&quot;)
+      return Xml(nil).parse_cdata(state)
+    if (
+      Xml(nil).starts_at(state, &quot;&lt;!DOCTYPE&quot;) or Xml(nil).starts_at(state, &quot;&lt;!ENTITY&quot;)
+    )
+      Xml(nil).error(state, &quot;DTD and external entities are not supported&quot;)
+    if Xml(nil).starts_at(state, &quot;&lt;?&quot;)
+      Xml(nil).skip_processing_instruction(state)
+      return Xml(nil).parse_node(state)
+    if Xml(nil).peek(state) == &quot;&lt;&quot;
+      return Xml(nil).parse_element(state)
+    Xml(nil).parse_text(state)
+
+  # Xml.parse_text provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return String the resulting value.
+  parse_text: state -&gt;
+    raw = &quot;&quot;
+    while state[&quot;pos&quot;] &lt; state[&quot;len&quot;] and Xml(nil).peek(state) != &quot;&lt;&quot;
+      raw = raw + Xml(nil).peek(state)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+    Text(Xml(nil).decode_entities(raw, state))
+
+  # Xml.peek provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  peek: state -&gt;
+    if state[&quot;pos&quot;] &gt;= state[&quot;len&quot;]
+      return &quot;&quot;
+    state[&quot;src&quot;][state[&quot;pos&quot;]]
+
+  # Xml.read_until provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param terminator Any terminator value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  read_until: state, terminator, message -&gt;
+    out = &quot;&quot;
+    while state[&quot;pos&quot;] &lt; state[&quot;len&quot;]
+      if Xml(nil).starts_at(state, terminator)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + terminator.byte_len()
+        return out
+      out = out + Xml(nil).peek(state)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+    Xml(nil).error(state, message)
+
+  # Xml.skip_processing_instruction provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  skip_processing_instruction: state -&gt;
+    Xml(nil).expect_text(state, &quot;&lt;?&quot;)
+    Xml(nil).read_until(state, &quot;?&gt;&quot;, &quot;unterminated processing instruction&quot;)
+
+  # Xml.skip_ws provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  skip_ws: state -&gt;
+    while state[&quot;pos&quot;] &lt; state[&quot;len&quot;]
+      c = Xml(nil).peek(state)
+      if c == &quot; &quot; or c == &quot;\t&quot; or c == &quot;\n&quot; or c == chr(13)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+      else
+        return nil
+
+  # Xml.starts_at provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  starts_at: state, text -&gt;
+    src = state[&quot;src&quot;]
+    if state[&quot;pos&quot;] + text.byte_len() &gt; state[&quot;len&quot;]
+      return false
+    i = 0
+    while i &lt; text.byte_len()
+      if src[state[&quot;pos&quot;] + i] != text[i]
+        return false
+      i = i + 1
+    true
+
+  # Xml.stringify converts an XML node to text.
+  # @param value String value value.
+  # @return String the resulting value.
+  stringify: value = nil -&gt;
+    if value == nil
+      value = self.value
+    if value.class == Document
+      out = &quot;&quot;
+      children = value.children()
+      i = 0
+      while i &lt; children.len()
+        out = out + Xml(nil).stringify(children[i])
+        i = i + 1
+      return out
+    if value.class == Element
+      out = &quot;&lt;&quot; + value.name
+      keys = value.attrs.keys()
+      i = 0
+      while i &lt; keys.len()
+        key = keys[i]
+        out = out
+          + &quot; &quot;
+          + key
+          + &quot;=\&quot;&quot;
+          + Xml(nil).escape_attr(value.attrs[key])
+          + &quot;\&quot;&quot;
+        i = i + 1
+      if value.children.len() == 0
+        return out + &quot;/&gt;&quot;
+      out = out + &quot;&gt;&quot;
+      i = 0
+      while i &lt; value.children.len()
+        out = out + Xml(nil).stringify(value.children[i])
+        i = i + 1
+      return out + &quot;&lt;/&quot; + value.name + &quot;&gt;&quot;
+    if value.class == Text
+      return Xml(nil).escape_text(value.text)
+    if value.class == CData
+      return &quot;&lt;![CDATA[&quot; + value.text + &quot;]]&gt;&quot;
+    if value.class == Comment
+      return &quot;&lt;!--&quot; + value.text + &quot;--&gt;&quot;
+    raise error(&quot;xml.dump: unsupported node&quot;)</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Xml-value" class="doc-item member">
+<h3><code>value</code></h3>
+<pre><code>Xml.value</code></pre>
+<p><small>lib/xml/xml.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Xml.value stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.value stores instance state.
+  # @type Nil
+  value: nil</code></pre>
+</details>
+</section>
+<h2>Static Methods</h2>
+<section id="static-method-Xml-dump" class="doc-item member">
+<h3><code>dump</code></h3>
+<pre><code>static Xml.dump(value)</code></pre>
+<p><small>lib/xml/xml.tya:10</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Xml.dump is a compatibility alias for Xml.stringify.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.dump is a compatibility alias for Xml.stringify.
+  # @param value String value value.
+  # @return String the resulting value.
+  static dump: value -&gt;
+    Xml(nil).dump(value)</code></pre>
+</details>
+</section>
+<section id="static-method-Xml-parse" class="doc-item member">
+<h3><code>parse</code></h3>
+<pre><code>static Xml.parse(text)</code></pre>
+<p><small>lib/xml/xml.tya:16</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse parses XML text into a document node.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse parses XML text into a document node.
+  # @param text String text value.
+  # @return Any the resulting value.
+  static parse: text -&gt;
+    Xml(nil).parse(text)</code></pre>
+</details>
+</section>
+<section id="static-method-Xml-stringify" class="doc-item member">
+<h3><code>stringify</code></h3>
+<pre><code>static Xml.stringify(value)</code></pre>
+<p><small>lib/xml/xml.tya:22</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Xml.stringify converts an XML node to text.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.stringify converts an XML node to text.
+  # @param value String value value.
+  # @return String the resulting value.
+  static stringify: value -&gt;
+    Xml(nil).stringify(value)</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Xml-collect_recursive" class="doc-item member">
+<h3><code>collect_recursive</code></h3>
+<pre><code>Xml.collect_recursive(element, name, out)</code></pre>
+<p><small>lib/xml/xml.tya:36</small></p>
+<dl class="metadata">
+<dt>Param <code>element</code></dt><dd><code>Any</code> element value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Param <code>out</code></dt><dd><code>Any</code> out value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.collect_recursive provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.collect_recursive provides the xml/Xml standard library operation.
+  # @param element Any element value.
+  # @param name String name value.
+  # @param out Any out value.
+  # @return Any the resulting value.
+  collect_recursive: element, name, out -&gt;
+    children = element.child_elements()
+    i = 0
+    while i &lt; children.len()
+      child = children[i]
+      if child.name == name
+        out.push(child)
+      Xml(nil).collect_recursive(child, name, out)
+      i = i + 1</code></pre>
+</details>
+</section>
+<section id="method-Xml-decode_entities" class="doc-item member">
+<h3><code>decode_entities</code></h3>
+<pre><code>Xml.decode_entities(text, state)</code></pre>
+<p><small>lib/xml/xml.tya:50</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.decode_entities provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.decode_entities provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  decode_entities: text, state -&gt;
+    out = &quot;&quot;
+    i = 0
+    while i &lt; text.byte_len()
+      if text[i] == &quot;&amp;&quot;
+        semi = Xml(nil).index_of(text, &quot;;&quot;, i + 1)
+        if semi &lt; 0
+          Xml(nil).error(state, &quot;invalid entity reference&quot;)
+        entity = text.slice(i + 1, semi)
+        out = out + Xml(nil).decode_entity(entity, state)
+        i = semi + 1
+      else
+        out = out + text[i]
+        i = i + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Xml-decode_entity" class="doc-item member">
+<h3><code>decode_entity</code></h3>
+<pre><code>Xml.decode_entity(entity, state)</code></pre>
+<p><small>lib/xml/xml.tya:70</small></p>
+<dl class="metadata">
+<dt>Param <code>entity</code></dt><dd><code>Any</code> entity value.</dd>
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.decode_entity provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.decode_entity provides the xml/Xml standard library operation.
+  # @param entity Any entity value.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  decode_entity: entity, state -&gt;
+    if entity == &quot;amp&quot;
+      return &quot;&amp;&quot;
+    if entity == &quot;lt&quot;
+      return &quot;&lt;&quot;
+    if entity == &quot;gt&quot;
+      return &quot;&gt;&quot;
+    if entity == &quot;quot&quot;
+      return &quot;\&quot;&quot;
+    if entity == &quot;apos&quot;
+      return &quot;&#39;&quot;
+    if entity.starts_with(&quot;#x&quot;)
+      return chr(Xml(nil).parse_hex(entity.slice(2, entity.len())))
+    if entity.starts_with(&quot;#&quot;)
+      return chr(entity.slice(1, entity.len()).to_i())
+    Xml(nil).error(state, &quot;invalid entity reference&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Xml-dump" class="doc-item member">
+<h3><code>dump</code></h3>
+<pre><code>Xml.dump(value = nil)</code></pre>
+<p><small>lib/xml/xml.tya:90</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Xml.dump is a compatibility alias for Xml.stringify.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.dump is a compatibility alias for Xml.stringify.
+  # @param value String value value.
+  # @return String the resulting value.
+  dump: value = nil -&gt;
+    self.stringify(value)</code></pre>
+</details>
+</section>
+<section id="method-Xml-error" class="doc-item member">
+<h3><code>error</code></h3>
+<pre><code>Xml.error(state, message)</code></pre>
+<p><small>lib/xml/xml.tya:97</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>message</code></dt><dd><code>String</code> message value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.error provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.error provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  error: state, message -&gt;
+    raise error(&quot;xml.parse: &quot; + message + &quot; at byte &quot; + state[&quot;pos&quot;].to_s())</code></pre>
+</details>
+</section>
+<section id="method-Xml-escape_attr" class="doc-item member">
+<h3><code>escape_attr</code></h3>
+<pre><code>Xml.escape_attr(text)</code></pre>
+<p><small>lib/xml/xml.tya:103</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.escape_attr provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.escape_attr provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  escape_attr: text -&gt;
+    Xml(nil).escape_text(text).replace(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;).replace(&quot;&#39;&quot;, &quot;&amp;apos;&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Xml-escape_text" class="doc-item member">
+<h3><code>escape_text</code></h3>
+<pre><code>Xml.escape_text(text)</code></pre>
+<p><small>lib/xml/xml.tya:109</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Xml.escape_text provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.escape_text provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
+  escape_text: text -&gt;
+    out = &quot;&quot;
+    i = 0
+    while i &lt; text.byte_len()
+      c = text[i]
+      if c == &quot;&amp;&quot;
+        out = out + &quot;&amp;amp;&quot;
+      elseif c == &quot;&lt;&quot;
+        out = out + &quot;&amp;lt;&quot;
+      else
+        if c == &quot;&gt;&quot;
+          out = out + &quot;&amp;gt;&quot;
+        else
+          out = out + c
+      i = i + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Xml-expect" class="doc-item member">
+<h3><code>expect</code></h3>
+<pre><code>Xml.expect(state, c)</code></pre>
+<p><small>lib/xml/xml.tya:130</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>c</code></dt><dd><code>Any</code> c value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.expect provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.expect provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  expect: state, c -&gt;
+    if Xml(nil).peek(state) != c
+      Xml(nil).error(state, &quot;expected &quot; + c)
+    state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1</code></pre>
+</details>
+</section>
+<section id="method-Xml-expect_text" class="doc-item member">
+<h3><code>expect_text</code></h3>
+<pre><code>Xml.expect_text(state, text)</code></pre>
+<p><small>lib/xml/xml.tya:139</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Xml.expect_text provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.expect_text provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param text String text value.
+  # @return String the resulting value.
+  expect_text: state, text -&gt;
+    if not Xml(nil).starts_at(state, text)
+      Xml(nil).error(state, &quot;expected &quot; + text)
+    state[&quot;pos&quot;] = state[&quot;pos&quot;] + text.byte_len()</code></pre>
+</details>
+</section>
+<section id="method-Xml-index_of" class="doc-item member">
+<h3><code>index_of</code></h3>
+<pre><code>Xml.index_of(text, needle, start)</code></pre>
+<p><small>lib/xml/xml.tya:149</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Param <code>needle</code></dt><dd><code>Any</code> needle value.</dd>
+<dt>Param <code>start</code></dt><dd><code>Int</code> start value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.index_of provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.index_of provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @param start Int start value.
+  # @return Any the resulting value.
+  index_of: text, needle, start -&gt;
+    i = start
+    while i &lt; text.byte_len()
+      if text[i] == needle
+        return i
+      i = i + 1
+    -1</code></pre>
+</details>
+</section>
+<section id="method-Xml-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Xml.initialize(value = nil)</code></pre>
+<p><small>lib/xml/xml.tya:28</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Xml.initialize stores XML text or a node value.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.initialize stores XML text or a node value.
+  # @param value String value value.
+  # @return Self the initialized object.
+  initialize: value = nil -&gt;
+    self.value = value</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse" class="doc-item member">
+<h3><code>parse</code></h3>
+<pre><code>Xml.parse(text = nil)</code></pre>
+<p><small>lib/xml/xml.tya:160</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  parse: text = nil -&gt;
+    if text == nil
+      text = self.value
+    state =
+      src: text
+      pos: 0
+      len: text.byte_len()
+      version: &quot;1.0&quot;
+      encoding: nil
+    children = []
+    Xml(nil).skip_ws(state)
+    if Xml(nil).starts_at(state, &quot;&lt;?xml&quot;)
+      Xml(nil).parse_decl(state)
+    while true
+      Xml(nil).skip_ws(state)
+      if state[&quot;pos&quot;] &gt;= state[&quot;len&quot;]
+        return Document(children, state[&quot;version&quot;], state[&quot;encoding&quot;])
+      children.push(Xml(nil).parse_node(state))</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_attrs_until" class="doc-item member">
+<h3><code>parse_attrs_until</code></h3>
+<pre><code>Xml.parse_attrs_until(state, terminator)</code></pre>
+<p><small>lib/xml/xml.tya:183</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>terminator</code></dt><dd><code>Any</code> terminator value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_attrs_until provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_attrs_until provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param terminator Any terminator value.
+  # @return Any the resulting value.
+  parse_attrs_until: state, terminator -&gt;
+    attrs = {}
+    while true
+      Xml(nil).skip_ws(state)
+      if terminator != nil and Xml(nil).starts_at(state, terminator)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + terminator.byte_len()
+        return attrs
+      c = Xml(nil).peek(state)
+      if c == &quot;&gt;&quot; or Xml(nil).starts_at(state, &quot;/&gt;&quot;)
+        return attrs
+      name = Xml(nil).parse_name(state)
+      if attrs.has?(name)
+        Xml(nil).error(state, &quot;duplicate attribute &quot; + name)
+      Xml(nil).skip_ws(state)
+      Xml(nil).expect(state, &quot;=&quot;)
+      Xml(nil).skip_ws(state)
+      quote = Xml(nil).peek(state)
+      if quote != &quot;\&quot;&quot; and quote != &quot;&#39;&quot;
+        Xml(nil).error(state, &quot;expected attribute quote&quot;)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+      raw = &quot;&quot;
+      while state[&quot;pos&quot;] &lt; state[&quot;len&quot;] and Xml(nil).peek(state) != quote
+        raw = raw + Xml(nil).peek(state)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+      if state[&quot;pos&quot;] &gt;= state[&quot;len&quot;]
+        Xml(nil).error(state, &quot;unterminated attribute&quot;)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+      attrs[name] = Xml(nil).decode_entities(raw, state)</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_cdata" class="doc-item member">
+<h3><code>parse_cdata</code></h3>
+<pre><code>Xml.parse_cdata(state)</code></pre>
+<p><small>lib/xml/xml.tya:215</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_cdata provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_cdata provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_cdata: state -&gt;
+    Xml(nil).expect_text(state, &quot;&lt;![CDATA[&quot;)
+    text = Xml(nil).read_until(state, &quot;]]&gt;&quot;, &quot;unterminated CDATA&quot;)
+    CData(text)</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_comment" class="doc-item member">
+<h3><code>parse_comment</code></h3>
+<pre><code>Xml.parse_comment(state)</code></pre>
+<p><small>lib/xml/xml.tya:223</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_comment provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_comment provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_comment: state -&gt;
+    Xml(nil).expect_text(state, &quot;&lt;!--&quot;)
+    text = Xml(nil).read_until(state, &quot;--&gt;&quot;, &quot;unterminated comment&quot;)
+    Comment(text)</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_decl" class="doc-item member">
+<h3><code>parse_decl</code></h3>
+<pre><code>Xml.parse_decl(state)</code></pre>
+<p><small>lib/xml/xml.tya:231</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_decl provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_decl provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_decl: state -&gt;
+    Xml(nil).expect_text(state, &quot;&lt;?xml&quot;)
+    attrs = Xml(nil).parse_attrs_until(state, &quot;?&gt;&quot;)
+    if attrs.has?(&quot;version&quot;)
+      state[&quot;version&quot;] = attrs[&quot;version&quot;]
+    if attrs.has?(&quot;encoding&quot;)
+      state[&quot;encoding&quot;] = attrs[&quot;encoding&quot;]</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_element" class="doc-item member">
+<h3><code>parse_element</code></h3>
+<pre><code>Xml.parse_element(state)</code></pre>
+<p><small>lib/xml/xml.tya:242</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_element provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_element provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_element: state -&gt;
+    Xml(nil).expect(state, &quot;&lt;&quot;)
+    name = Xml(nil).parse_name(state)
+    attrs = Xml(nil).parse_attrs_until(state, nil)
+    if Xml(nil).starts_at(state, &quot;/&gt;&quot;)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 2
+      return Element(name, attrs, [])
+    Xml(nil).expect(state, &quot;&gt;&quot;)
+    children = []
+    while true
+      if state[&quot;pos&quot;] &gt;= state[&quot;len&quot;]
+        Xml(nil).error(state, &quot;unterminated element &quot; + name)
+      if Xml(nil).starts_at(state, &quot;&lt;/&quot;)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + 2
+        end_name = Xml(nil).parse_name(state)
+        if end_name != name
+          Xml(nil).error(state, &quot;mismatched end tag &quot; + end_name)
+        Xml(nil).skip_ws(state)
+        Xml(nil).expect(state, &quot;&gt;&quot;)
+        return Element(name, attrs, children)
+      children.push(Xml(nil).parse_node(state))</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_hex" class="doc-item member">
+<h3><code>parse_hex</code></h3>
+<pre><code>Xml.parse_hex(text)</code></pre>
+<p><small>lib/xml/xml.tya:267</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_hex provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_hex provides the xml/Xml standard library operation.
+  # @param text String text value.
+  # @return Any the resulting value.
+  parse_hex: text -&gt;
+    value = 0
+    i = 0
+    while i &lt; text.byte_len()
+      code = ord(text[i])
+      digit = -1
+      if code &gt;= 48 and code &lt;= 57
+        digit = code - 48
+      elseif code &gt;= 65 and code &lt;= 70
+        digit = code - 55
+      else
+        if code &gt;= 97 and code &lt;= 102
+          digit = code - 87
+        else
+          raise error(&quot;xml.parse: invalid numeric character reference&quot;)
+      value = value * 16 + digit
+      i = i + 1
+    value</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_name" class="doc-item member">
+<h3><code>parse_name</code></h3>
+<pre><code>Xml.parse_name(state)</code></pre>
+<p><small>lib/xml/xml.tya:289</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_name provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_name provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_name: state -&gt;
+    name = &quot;&quot;
+    while state[&quot;pos&quot;] &lt; state[&quot;len&quot;]
+      c = Xml(nil).peek(state)
+      if (
+        c == &quot; &quot; or c == &quot;\t&quot; or c == &quot;\n&quot; or c == chr(13) or c == &quot;/&quot; or c == &quot;&gt;&quot; or c == &quot;=&quot;
+      )
+        if name == &quot;&quot;
+          Xml(nil).error(state, &quot;expected name&quot;)
+        return name
+      name = name + c
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+    Xml(nil).error(state, &quot;expected name&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_node" class="doc-item member">
+<h3><code>parse_node</code></h3>
+<pre><code>Xml.parse_node(state)</code></pre>
+<p><small>lib/xml/xml.tya:306</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_node provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_node provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  parse_node: state -&gt;
+    if Xml(nil).starts_at(state, &quot;&lt;!--&quot;)
+      return Xml(nil).parse_comment(state)
+    if Xml(nil).starts_at(state, &quot;&lt;![CDATA[&quot;)
+      return Xml(nil).parse_cdata(state)
+    if (
+      Xml(nil).starts_at(state, &quot;&lt;!DOCTYPE&quot;) or Xml(nil).starts_at(state, &quot;&lt;!ENTITY&quot;)
+    )
+      Xml(nil).error(state, &quot;DTD and external entities are not supported&quot;)
+    if Xml(nil).starts_at(state, &quot;&lt;?&quot;)
+      Xml(nil).skip_processing_instruction(state)
+      return Xml(nil).parse_node(state)
+    if Xml(nil).peek(state) == &quot;&lt;&quot;
+      return Xml(nil).parse_element(state)
+    Xml(nil).parse_text(state)</code></pre>
+</details>
+</section>
+<section id="method-Xml-parse_text" class="doc-item member">
+<h3><code>parse_text</code></h3>
+<pre><code>Xml.parse_text(state)</code></pre>
+<p><small>lib/xml/xml.tya:325</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Xml.parse_text provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.parse_text provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return String the resulting value.
+  parse_text: state -&gt;
+    raw = &quot;&quot;
+    while state[&quot;pos&quot;] &lt; state[&quot;len&quot;] and Xml(nil).peek(state) != &quot;&lt;&quot;
+      raw = raw + Xml(nil).peek(state)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+    Text(Xml(nil).decode_entities(raw, state))</code></pre>
+</details>
+</section>
+<section id="method-Xml-peek" class="doc-item member">
+<h3><code>peek</code></h3>
+<pre><code>Xml.peek(state)</code></pre>
+<p><small>lib/xml/xml.tya:335</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.peek provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.peek provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  peek: state -&gt;
+    if state[&quot;pos&quot;] &gt;= state[&quot;len&quot;]
+      return &quot;&quot;
+    state[&quot;src&quot;][state[&quot;pos&quot;]]</code></pre>
+</details>
+</section>
+<section id="method-Xml-read_until" class="doc-item member">
+<h3><code>read_until</code></h3>
+<pre><code>Xml.read_until(state, terminator, message)</code></pre>
+<p><small>lib/xml/xml.tya:345</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>terminator</code></dt><dd><code>Any</code> terminator value.</dd>
+<dt>Param <code>message</code></dt><dd><code>String</code> message value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.read_until provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.read_until provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param terminator Any terminator value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  read_until: state, terminator, message -&gt;
+    out = &quot;&quot;
+    while state[&quot;pos&quot;] &lt; state[&quot;len&quot;]
+      if Xml(nil).starts_at(state, terminator)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + terminator.byte_len()
+        return out
+      out = out + Xml(nil).peek(state)
+      state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+    Xml(nil).error(state, message)</code></pre>
+</details>
+</section>
+<section id="method-Xml-skip_processing_instruction" class="doc-item member">
+<h3><code>skip_processing_instruction</code></h3>
+<pre><code>Xml.skip_processing_instruction(state)</code></pre>
+<p><small>lib/xml/xml.tya:358</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.skip_processing_instruction provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.skip_processing_instruction provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  skip_processing_instruction: state -&gt;
+    Xml(nil).expect_text(state, &quot;&lt;?&quot;)
+    Xml(nil).read_until(state, &quot;?&gt;&quot;, &quot;unterminated processing instruction&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Xml-skip_ws" class="doc-item member">
+<h3><code>skip_ws</code></h3>
+<pre><code>Xml.skip_ws(state)</code></pre>
+<p><small>lib/xml/xml.tya:365</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.skip_ws provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.skip_ws provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  skip_ws: state -&gt;
+    while state[&quot;pos&quot;] &lt; state[&quot;len&quot;]
+      c = Xml(nil).peek(state)
+      if c == &quot; &quot; or c == &quot;\t&quot; or c == &quot;\n&quot; or c == chr(13)
+        state[&quot;pos&quot;] = state[&quot;pos&quot;] + 1
+      else
+        return nil</code></pre>
+</details>
+</section>
+<section id="method-Xml-starts_at" class="doc-item member">
+<h3><code>starts_at</code></h3>
+<pre><code>Xml.starts_at(state, text)</code></pre>
+<p><small>lib/xml/xml.tya:377</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Xml.starts_at provides the xml/Xml standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.starts_at provides the xml/Xml standard library operation.
+  # @param state Any state value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  starts_at: state, text -&gt;
+    src = state[&quot;src&quot;]
+    if state[&quot;pos&quot;] + text.byte_len() &gt; state[&quot;len&quot;]
+      return false
+    i = 0
+    while i &lt; text.byte_len()
+      if src[state[&quot;pos&quot;] + i] != text[i]
+        return false
+      i = i + 1
+    true</code></pre>
+</details>
+</section>
+<section id="method-Xml-stringify" class="doc-item member">
+<h3><code>stringify</code></h3>
+<pre><code>Xml.stringify(value = nil)</code></pre>
+<p><small>lib/xml/xml.tya:391</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Xml.stringify converts an XML node to text.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Xml.stringify converts an XML node to text.
+  # @param value String value value.
+  # @return String the resulting value.
+  stringify: value = nil -&gt;
+    if value == nil
+      value = self.value
+    if value.class == Document
+      out = &quot;&quot;
+      children = value.children()
+      i = 0
+      while i &lt; children.len()
+        out = out + Xml(nil).stringify(children[i])
+        i = i + 1
+      return out
+    if value.class == Element
+      out = &quot;&lt;&quot; + value.name
+      keys = value.attrs.keys()
+      i = 0
+      while i &lt; keys.len()
+        key = keys[i]
+        out = out
+          + &quot; &quot;
+          + key
+          + &quot;=\&quot;&quot;
+          + Xml(nil).escape_attr(value.attrs[key])
+          + &quot;\&quot;&quot;
+        i = i + 1
+      if value.children.len() == 0
+        return out + &quot;/&gt;&quot;
+      out = out + &quot;&gt;&quot;
+      i = 0
+      while i &lt; value.children.len()
+        out = out + Xml(nil).stringify(value.children[i])
+        i = i + 1
+      return out + &quot;&lt;/&quot; + value.name + &quot;&gt;&quot;
+    if value.class == Text
+      return Xml(nil).escape_text(value.text)
+    if value.class == CData
+      return &quot;&lt;![CDATA[&quot; + value.text + &quot;]]&gt;&quot;
+    if value.class == Comment
+      return &quot;&lt;!--&quot; + value.text + &quot;--&gt;&quot;
+    raise error(&quot;xml.dump: unsupported node&quot;)</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class PriorityQueue</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li class="current"><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>PriorityQueue</code></h1>
+<section id="class-PriorityQueue" class="doc-item">
+<pre><code>class PriorityQueue</code></pre>
+<p><small>lib/collections/priority_queue.tya:2</small></p>
+<p>PriorityQueue provides the collections/PriorityQueue standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># PriorityQueue provides the collections/PriorityQueue standard library API.
+class PriorityQueue
+  # PriorityQueue.items stores instance state.
+  # @type Array
+  items: []
+
+  # PriorityQueue.seq stores instance state.
+  # @type Int
+  seq: 0
+
+  # PriorityQueue.initialize provides the collections/PriorityQueue standard library operation.
+  # @param items Array items value.
+  # @return Self the initialized object.
+  initialize: items = nil -&gt;
+    self.items = []
+    self.seq = 0
+    if items != nil
+      i = 0
+      while i &lt; items.len()
+        priority = items[i][0]
+        if priority.class != Number
+          raise error(&quot;collections.PriorityQueue.from_array: priority must be a number&quot;)
+        self.items.push([priority, self.seq, items[i][1]])
+        self.seq = self.seq + 1
+        i = i + 1
+
+  # PriorityQueue.best_index provides the collections/PriorityQueue standard library operation.
+  # @return Int the resulting value.
+  best_index: -&gt;
+    best = 0
+    i = 1
+    while i &lt; self.items.len()
+      a = self.items[i]
+      b = self.items[best]
+      if a[0] &lt; b[0] or a[0] == b[0] and a[1] &lt; b[1]
+        best = i
+      i = i + 1
+    best
+
+  # PriorityQueue.clear provides the collections/PriorityQueue standard library operation.
+  # @return Nil the resulting value.
+  clear: -&gt;
+    self.items = []
+    self
+
+  # PriorityQueue.empty? provides the collections/PriorityQueue standard library operation.
+  # @return Boolean whether the condition is true.
+  empty?: -&gt;
+    self.items.empty?()
+
+  # PriorityQueue.from_array provides the collections/PriorityQueue standard library operation.
+  # @param items Array items value.
+  # @return Array the resulting value.
+  from_array: items -&gt;
+    PriorityQueue(items)
+
+  # PriorityQueue.len provides the collections/PriorityQueue standard library operation.
+  # @return Int the resulting value.
+  len: -&gt;
+    self.items.len()
+
+  # PriorityQueue.new provides the collections/PriorityQueue standard library operation.
+  # @return Self the resulting value.
+  new: -&gt;
+    PriorityQueue(nil)
+
+  # PriorityQueue.peek provides the collections/PriorityQueue standard library operation.
+  # @return Any the resulting value.
+  peek: -&gt;
+    if self.empty?()
+      raise error(&quot;collections.PriorityQueue.peek: empty priority queue&quot;)
+    self.items[self.best_index()][2]
+
+  # PriorityQueue.peek_priority provides the collections/PriorityQueue standard library operation.
+  # @return Any the resulting value.
+  peek_priority: -&gt;
+    if self.empty?()
+      raise error(&quot;collections.PriorityQueue.peek_priority: empty priority queue&quot;)
+    self.items[self.best_index()][0]
+
+  # PriorityQueue.pop provides the collections/PriorityQueue standard library operation.
+  # @return Any the resulting value.
+  pop: -&gt;
+    if self.empty?()
+      raise error(&quot;collections.PriorityQueue.pop: empty priority queue&quot;)
+    index = self.best_index()
+    entry = self.items[index]
+    self.remove_at(index)
+    entry[2]
+
+  # PriorityQueue.push provides the collections/PriorityQueue standard library operation.
+  # @param value String value value.
+  # @param priority Int priority value.
+  # @return Any the resulting value.
+  push: value, priority -&gt;
+    if priority.class != Number
+      raise error(&quot;collections.PriorityQueue.push: priority must be a number&quot;)
+    self.items.push([priority, self.seq, value])
+    self.seq = self.seq + 1
+    self
+
+  # PriorityQueue.remove_at provides the collections/PriorityQueue standard library operation.
+  # @param index Int index value.
+  # @return Any the resulting value.
+  remove_at: index -&gt;
+    next = []
+    i = 0
+    while i &lt; self.items.len()
+      if i != index
+        next.push(self.items[i])
+      i = i + 1
+    self.items = next
+
+  # PriorityQueue.to_array provides the collections/PriorityQueue standard library operation.
+  # @return Array the resulting value.
+  to_array: -&gt;
+    clone = PriorityQueue(nil)
+    i = 0
+    while i &lt; self.items.len()
+      clone.items.push(self.items[i])
+      i = i + 1
+    out = []
+    while not clone.empty?()
+      idx = clone.best_index()
+      entry = clone.items[idx]
+      out.push([entry[0], entry[2]])
+      clone.remove_at(idx)
+    out</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-PriorityQueue-items" class="doc-item member">
+<h3><code>items</code></h3>
+<pre><code>PriorityQueue.items</code></pre>
+<p><small>lib/collections/priority_queue.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Array</code></dd>
+</dl>
+<p>PriorityQueue.items stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.items stores instance state.
+  # @type Array
+  items: []</code></pre>
+</details>
+</section>
+<section id="instance-variable-PriorityQueue-seq" class="doc-item member">
+<h3><code>seq</code></h3>
+<pre><code>PriorityQueue.seq</code></pre>
+<p><small>lib/collections/priority_queue.tya:9</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>PriorityQueue.seq stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.seq stores instance state.
+  # @type Int
+  seq: 0</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-PriorityQueue-best_index" class="doc-item member">
+<h3><code>best_index</code></h3>
+<pre><code>PriorityQueue.best_index()</code></pre>
+<p><small>lib/collections/priority_queue.tya:29</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Int</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.best_index provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.best_index provides the collections/PriorityQueue standard library operation.
+  # @return Int the resulting value.
+  best_index: -&gt;
+    best = 0
+    i = 1
+    while i &lt; self.items.len()
+      a = self.items[i]
+      b = self.items[best]
+      if a[0] &lt; b[0] or a[0] == b[0] and a[1] &lt; b[1]
+        best = i
+      i = i + 1
+    best</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-clear" class="doc-item member">
+<h3><code>clear</code></h3>
+<pre><code>PriorityQueue.clear()</code></pre>
+<p><small>lib/collections/priority_queue.tya:42</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Nil</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.clear provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.clear provides the collections/PriorityQueue standard library operation.
+  # @return Nil the resulting value.
+  clear: -&gt;
+    self.items = []
+    self</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-empty-" class="doc-item member">
+<h3><code>empty?</code></h3>
+<pre><code>PriorityQueue.empty?()</code></pre>
+<p><small>lib/collections/priority_queue.tya:48</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>PriorityQueue.empty? provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.empty? provides the collections/PriorityQueue standard library operation.
+  # @return Boolean whether the condition is true.
+  empty?: -&gt;
+    self.items.empty?()</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-from_array" class="doc-item member">
+<h3><code>from_array</code></h3>
+<pre><code>PriorityQueue.from_array(items)</code></pre>
+<p><small>lib/collections/priority_queue.tya:54</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.from_array provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.from_array provides the collections/PriorityQueue standard library operation.
+  # @param items Array items value.
+  # @return Array the resulting value.
+  from_array: items -&gt;
+    PriorityQueue(items)</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>PriorityQueue.initialize(items = nil)</code></pre>
+<p><small>lib/collections/priority_queue.tya:14</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>PriorityQueue.initialize provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.initialize provides the collections/PriorityQueue standard library operation.
+  # @param items Array items value.
+  # @return Self the initialized object.
+  initialize: items = nil -&gt;
+    self.items = []
+    self.seq = 0
+    if items != nil
+      i = 0
+      while i &lt; items.len()
+        priority = items[i][0]
+        if priority.class != Number
+          raise error(&quot;collections.PriorityQueue.from_array: priority must be a number&quot;)
+        self.items.push([priority, self.seq, items[i][1]])
+        self.seq = self.seq + 1
+        i = i + 1</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-len" class="doc-item member">
+<h3><code>len</code></h3>
+<pre><code>PriorityQueue.len()</code></pre>
+<p><small>lib/collections/priority_queue.tya:59</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Int</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.len provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.len provides the collections/PriorityQueue standard library operation.
+  # @return Int the resulting value.
+  len: -&gt;
+    self.items.len()</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-new" class="doc-item member">
+<h3><code>new</code></h3>
+<pre><code>PriorityQueue.new()</code></pre>
+<p><small>lib/collections/priority_queue.tya:64</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.new provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.new provides the collections/PriorityQueue standard library operation.
+  # @return Self the resulting value.
+  new: -&gt;
+    PriorityQueue(nil)</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-peek" class="doc-item member">
+<h3><code>peek</code></h3>
+<pre><code>PriorityQueue.peek()</code></pre>
+<p><small>lib/collections/priority_queue.tya:69</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.peek provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.peek provides the collections/PriorityQueue standard library operation.
+  # @return Any the resulting value.
+  peek: -&gt;
+    if self.empty?()
+      raise error(&quot;collections.PriorityQueue.peek: empty priority queue&quot;)
+    self.items[self.best_index()][2]</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-peek_priority" class="doc-item member">
+<h3><code>peek_priority</code></h3>
+<pre><code>PriorityQueue.peek_priority()</code></pre>
+<p><small>lib/collections/priority_queue.tya:76</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.peek_priority provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.peek_priority provides the collections/PriorityQueue standard library operation.
+  # @return Any the resulting value.
+  peek_priority: -&gt;
+    if self.empty?()
+      raise error(&quot;collections.PriorityQueue.peek_priority: empty priority queue&quot;)
+    self.items[self.best_index()][0]</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-pop" class="doc-item member">
+<h3><code>pop</code></h3>
+<pre><code>PriorityQueue.pop()</code></pre>
+<p><small>lib/collections/priority_queue.tya:83</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.pop provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.pop provides the collections/PriorityQueue standard library operation.
+  # @return Any the resulting value.
+  pop: -&gt;
+    if self.empty?()
+      raise error(&quot;collections.PriorityQueue.pop: empty priority queue&quot;)
+    index = self.best_index()
+    entry = self.items[index]
+    self.remove_at(index)
+    entry[2]</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-push" class="doc-item member">
+<h3><code>push</code></h3>
+<pre><code>PriorityQueue.push(value, priority)</code></pre>
+<p><small>lib/collections/priority_queue.tya:95</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>priority</code></dt><dd><code>Int</code> priority value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.push provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.push provides the collections/PriorityQueue standard library operation.
+  # @param value String value value.
+  # @param priority Int priority value.
+  # @return Any the resulting value.
+  push: value, priority -&gt;
+    if priority.class != Number
+      raise error(&quot;collections.PriorityQueue.push: priority must be a number&quot;)
+    self.items.push([priority, self.seq, value])
+    self.seq = self.seq + 1
+    self</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-remove_at" class="doc-item member">
+<h3><code>remove_at</code></h3>
+<pre><code>PriorityQueue.remove_at(index)</code></pre>
+<p><small>lib/collections/priority_queue.tya:105</small></p>
+<dl class="metadata">
+<dt>Param <code>index</code></dt><dd><code>Int</code> index value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.remove_at provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.remove_at provides the collections/PriorityQueue standard library operation.
+  # @param index Int index value.
+  # @return Any the resulting value.
+  remove_at: index -&gt;
+    next = []
+    i = 0
+    while i &lt; self.items.len()
+      if i != index
+        next.push(self.items[i])
+      i = i + 1
+    self.items = next</code></pre>
+</details>
+</section>
+<section id="method-PriorityQueue-to_array" class="doc-item member">
+<h3><code>to_array</code></h3>
+<pre><code>PriorityQueue.to_array()</code></pre>
+<p><small>lib/collections/priority_queue.tya:116</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>PriorityQueue.to_array provides the collections/PriorityQueue standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # PriorityQueue.to_array provides the collections/PriorityQueue standard library operation.
+  # @return Array the resulting value.
+  to_array: -&gt;
+    clone = PriorityQueue(nil)
+    i = 0
+    while i &lt; self.items.len()
+      clone.items.push(self.items[i])
+      i = i + 1
+    out = []
+    while not clone.empty?()
+      idx = clone.best_index()
+      entry = clone.items[idx]
+      out.push([entry[0], entry[2]])
+      clone.remove_at(idx)
+    out</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

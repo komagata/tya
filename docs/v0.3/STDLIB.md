@@ -1,7 +1,7 @@
 ---
 layout: doc
 title: Stdlib
-permalink: /v0.3/stdlib/
+permalink: /v0.3/lib/
 ---
 
 # Tya v0.3 Standard Attached Library
@@ -24,7 +24,7 @@ The module search order is:
 
 1. The importing file's directory.
 1. Directories listed in `TYA_PATH`, searched left to right.
-1. The `stdlib/` directory shipped with Tya.
+1. The `lib/` directory shipped with Tya.
 
 ## Initial Scope
 

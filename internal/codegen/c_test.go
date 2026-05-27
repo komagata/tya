@@ -59,7 +59,7 @@ func TestEmitCEnvironmentAndProcessProgram(t *testing.T) {
 }
 
 func TestEmitCFilesystemUtilitiesProgram(t *testing.T) {
-	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "lib")))
 	dir := t.TempDir()
 	root := filepath.Join(dir, "root")
 	src := filepath.Join(root, "src.bin")
@@ -77,7 +77,7 @@ func TestEmitCFilesystemUtilitiesProgram(t *testing.T) {
 }
 
 func TestEmitCHmacProgram(t *testing.T) {
-	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "lib")))
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
 	code := "import hmac/* as hmac\nprint(hmac.Hmac(\"sha256\", \"key\").hexdigest(\"The quick brown fox jumps over the lazy dog\"))\nprint(hmac.Hmac(\"sha256\", \"key\").verify(\"The quick brown fox jumps over the lazy dog\", \"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\"))\n"
@@ -92,7 +92,7 @@ func TestEmitCHmacProgram(t *testing.T) {
 }
 
 func TestEmitCRegexProgram(t *testing.T) {
-	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "lib")))
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
 	code := "import regex/* as regex\nrx = regex.Regex(\"([a-z]+)=([0-9]+)\").compile()\nfound = rx.find(\"a=1 b=22\")\nprint(found[\"text\"])\nprint(found[\"groups\"][1])\nprint(rx.find_all(\"a=1 b=22\").len())\nprint(regex.Regex(\", *\").compile().split(\"a, b, c\").join(\"|\"))\nprint(rx.replace(\"a=1 b=22\", r\"${2}\", 1))\n"
@@ -107,7 +107,7 @@ func TestEmitCRegexProgram(t *testing.T) {
 }
 
 func TestEmitCTimeContractProgram(t *testing.T) {
-	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "lib")))
 	dir := t.TempDir()
 	main := filepath.Join(dir, "main.tya")
 	code := "import time/* as time\nt = time.Time().unix(1704067200)\nprint(t.format(\"rfc3339\"))\nprint(time.Time(\"2024-01-01T00:00:00Z\").parse().format(\"unix\"))\nd = time.Time().duration(1, { milliseconds: 500 })\nprint(d.milliseconds())\nprint(t.add(d).sub(t).nanoseconds() == 1500000000)\ntime.Time().sleep(time.Time().duration(0))\n"
@@ -265,7 +265,7 @@ func TestEmitCCompilesFunctionLiteralsAsValues(t *testing.T) {
 }
 
 func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
-	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "lib")))
 	dir := t.TempDir()
 	path := filepath.Join(dir, "input.txt")
 	if err := os.WriteFile(path, []byte("12\na\n"), 0644); err != nil {
@@ -283,7 +283,7 @@ func TestEmitCCompilesFileAndConversionProgram(t *testing.T) {
 }
 
 func TestEmitCCompilesWriteFileProgram(t *testing.T) {
-	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "stdlib")))
+	t.Setenv("TYA_PATH", filepath.Clean(filepath.Join("..", "..", "lib")))
 	dir := t.TempDir()
 	path := filepath.Join(dir, "output.txt")
 	main := filepath.Join(dir, "main.tya")

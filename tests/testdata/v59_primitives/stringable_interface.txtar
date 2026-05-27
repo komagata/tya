@@ -1,7 +1,7 @@
 # Stringable interface and primitive to_s behavior.
 cd $REPO
 
-exec go run ./cmd/tya check stdlib/stringable.tya
+exec go run ./cmd/tya check lib/stringable.tya
 
 exec go run ./cmd/tya run $WORK/user_stringable.tya
 stdout 'user:Ada\n'

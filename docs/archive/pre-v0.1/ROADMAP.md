@@ -1132,7 +1132,7 @@ TYA_STAGE1_SELFHOST_STRICT_REPEATED=1 sh scripts/stage1_selfhost_sources_check.s
    1. `docs/REFERENCE.md`
    1. `docs/GUIDE.md`
    1. `docs/STDLIB.md`
-   1. `stdlib/prelude.tya`
+   1. `lib/prelude.tya`
    1. `runtime/tya_runtime.c`
    1. `runtime/tya_runtime.h`
 

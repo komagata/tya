@@ -18,8 +18,8 @@ HTTP, URL, and future DNS support.
 
 ## Behavior
 
-- Add `stdlib/net/ip/Address.tya`.
-- Add `stdlib/net/ip/Network.tya` if CIDR networks are clearer as a separate
+- Add `lib/net/ip/Address.tya`.
+- Add `lib/net/ip/Network.tya` if CIDR networks are clearer as a separate
   class.
 - Public APIs:
   - `ip.Address.parse(text)`
@@ -40,7 +40,7 @@ HTTP, URL, and future DNS support.
 
 ## Scope
 
-- `stdlib/net/ip/`
+- `lib/net/ip/`
 - runtime/native support only if pure Tya parsing is not practical
 - `docs/STDLIB.md`
 - next release docs

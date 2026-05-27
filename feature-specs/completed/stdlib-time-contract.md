@@ -55,7 +55,7 @@ compiled runtime.
 
 ## Scope
 
-- `stdlib/time/Time.tya`
+- `lib/time/Time.tya`
 - runtime-backed time and duration values for interpreter and generated C
 - `docs/SPEC.md`
 - `docs/STRICT_SEMANTICS.md`

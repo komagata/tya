@@ -1158,22 +1158,25 @@ func testCommand(root string, coverEnabled bool, profilePath string, cli coverag
 }
 
 func firstStdlibDir() string {
+	if dir := os.Getenv("TYA_LIB_DIR"); dir != "" {
+		return dir
+	}
 	if dir := os.Getenv("TYA_STDLIB_DIR"); dir != "" {
 		return dir
 	}
 	if exe, err := os.Executable(); err == nil {
 		exeDir := filepath.Dir(exe)
 		for _, c := range []string{
-			filepath.Join(exeDir, "stdlib"),
-			filepath.Clean(filepath.Join(exeDir, "..", "share", "tya", "stdlib")),
+			filepath.Join(exeDir, "lib"),
+			filepath.Clean(filepath.Join(exeDir, "..", "share", "tya", "lib")),
 		} {
 			if info, err := os.Stat(c); err == nil && info.IsDir() {
 				return c
 			}
 		}
 	}
-	if info, err := os.Stat("stdlib"); err == nil && info.IsDir() {
-		return "stdlib"
+	if info, err := os.Stat("lib"); err == nil && info.IsDir() {
+		return "lib"
 	}
 	return ""
 }

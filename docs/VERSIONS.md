@@ -300,7 +300,7 @@ historical copy, such as `v0.1.0` and `v0.2.0`.
 ## v0.3
 
 - [Spec](/v0.3/spec/)
-- [Stdlib](/v0.3/stdlib/)
+- [Stdlib](/v0.3/lib/)
 
 ## v0.2
 

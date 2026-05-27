@@ -15,7 +15,7 @@ dedicated test runner, per-test fixture methods, and instance assertion helpers.
 
 The current `unittest` surface is function/module based:
 
-- `stdlib/unittest/Unittest.tya` exposes static assertion helpers and
+- `lib/unittest/Unittest.tya` exposes static assertion helpers and
   `Unittest.run(cases)`.
 - `tya test` synthesizes a program that imports test modules and calls
   `unittest.Unittest.run([module_a, module_b])`.
@@ -118,7 +118,7 @@ class StringBlankTest < TestCase
 
 ## Scope
 
-- `stdlib/unittest/Unittest.tya`
+- `lib/unittest/Unittest.tya`
 - `feature-specs/completed/bare-package-imports.md` landed first in the same
   long-running implementation batch.
 - `cmd/tya/main.go` test-suite synthesis

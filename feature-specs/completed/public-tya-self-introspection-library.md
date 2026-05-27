@@ -30,7 +30,7 @@ compiler.checker
 compiler.format
 ```
 
-In the class-file stdlib layout, these should live under `stdlib/compiler/` as
+In the class-file stdlib layout, these should live under `lib/compiler/` as
 PascalCase class files and be imported with `import compiler/lexer`,
 `import compiler/parser`, etc.
 
@@ -148,11 +148,11 @@ PascalCase class files and be imported with `import compiler/lexer`,
 
 ## Scope
 
-- `stdlib/compiler/lexer/`
-- `stdlib/compiler/parser/`
-- `stdlib/compiler/ast/`
-- `stdlib/compiler/checker/`
-- `stdlib/compiler/format/`
+- `lib/compiler/lexer/`
+- `lib/compiler/parser/`
+- `lib/compiler/ast/`
+- `lib/compiler/checker/`
+- `lib/compiler/format/`
 - Builtin/runtime bridge functions as needed to call existing internal compiler
   functionality from Tya stdlib wrappers.
 - Conversion between internal Go tokens/AST/diagnostics and public Tya
@@ -197,7 +197,7 @@ PascalCase class files and be imported with `import compiler/lexer`,
 
 ## Verification
 
-Focused stdlib/compiler API tests:
+Focused lib/compiler API tests:
 
 ```sh
 go test ./tests -run 'Test.*Compiler|Test.*Introspection|Test.*Format|Test.*Parser|Test.*Lexer' -count=1

@@ -48,7 +48,7 @@ history, not required reading for v1.0.0 users.
 - Standard-library coverage in `docs/SPEC.md` is concise.
   - SPEC lists public stdlib packages and their stability boundaries.
   - Detailed method inventories and signatures should be verified through
-    generated API docs such as `tya doc --json stdlib`.
+    generated API docs such as `tya doc --json lib`.
   - v1.0.0 stdlib blocker APIs remain explicitly called out:
     `regex/Regex`, filesystem utilities, `time/Time`,
     environment/process APIs, and `hmac/Hmac`.
@@ -117,7 +117,7 @@ Documentation tests:
 
 - `TestSpecReferencesGeneratedStdlibDocs`
   - Expected: `docs/SPEC.md` points detailed stdlib API references to generated
-    stdlib docs such as `tya doc --json stdlib`.
+    stdlib docs such as `tya doc --json lib`.
 
 - `TestRoadmapHasNoOpenV1DecisionContradictions`
   - Expected: `ROADMAP.md` does not contain open-decision wording for v1.0.0

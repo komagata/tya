@@ -97,8 +97,8 @@ Security-sensitive code should continue to use `secure_random`.
 
 ## Scope
 
-- `stdlib/random/Random.tya`
-- `stdlib/random/Rng.tya`
+- `lib/random/Random.tya`
+- `lib/random/Rng.tya`
 - Runtime/checker/codegen builtins only if independent RNG state cannot be
   implemented cleanly in Tya.
 - `tests/stdlib_random_test.tya`

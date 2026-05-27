@@ -108,9 +108,9 @@ I/O readiness without consuming one OS thread per blocked task.
 - C codegen for `spawn`, `await`, `scope`, and `select`.
 - Runtime task, scheduler, channel, sync, timer, and libuv integration.
 - Stdlib wrappers under:
-  - `stdlib/channel/`
-  - `stdlib/task/`
-  - `stdlib/sync/`
+  - `lib/channel/`
+  - `lib/task/`
+  - `lib/sync/`
 - Go interpreter parity where the existing tests require it.
 - `docs/STDLIB.md` and release documentation.
 - Tests for language syntax, stdlib API, runtime behavior, diagnostics, and

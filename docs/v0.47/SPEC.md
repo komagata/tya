@@ -300,7 +300,7 @@ reserved (no wiring change in v0.47 unless their condition arises).
 - `tests/testdata/v47/` covers each new diagnostic.
 - `tests/testdata/legacy/` houses any preserved legacy-behavior
   fixtures.
-- `examples/`, `stdlib/`, and the v0.46+ portion of the Go
+- `examples/`, `lib/`, and the v0.46+ portion of the Go
   reference implementation carry no legacy class syntax.
 - `selfhost/v01/` is untouched and continues to compile itself to
   a stable stage-2/stage-3 fixed point.

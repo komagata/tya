@@ -36,7 +36,7 @@ func TestV1StdlibBlockersImplemented(t *testing.T) {
 	if err := os.WriteFile(main, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("TYA_STDLIB_DIR", filepath.Join(repoRoot(t), "stdlib"))
+	t.Setenv("TYA_LIB_DIR", filepath.Join(repoRoot(t), "lib"))
 	out := strings.Builder{}
 	if _, err := runner.RunFile(main, strings.NewReader(""), &out, nil); err != nil {
 		t.Fatal(err)
@@ -59,7 +59,7 @@ func TestPlatformDependentStdlibImportsEverywhere(t *testing.T) {
 	if err := os.WriteFile(main, []byte(src), 0644); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("TYA_STDLIB_DIR", filepath.Join(repoRoot(t), "stdlib"))
+	t.Setenv("TYA_LIB_DIR", filepath.Join(repoRoot(t), "lib"))
 	out := strings.Builder{}
 	if _, err := runner.RunFile(main, strings.NewReader(""), &out, nil); err != nil {
 		t.Fatal(err)

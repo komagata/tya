@@ -79,7 +79,7 @@ func docsStdlib(paths []string) bool {
 		return false
 	}
 	clean := filepath.Clean(paths[0])
-	return clean == "stdlib" || strings.HasSuffix(filepath.ToSlash(clean), "/stdlib")
+	return clean == "lib" || strings.HasSuffix(filepath.ToSlash(clean), "/lib")
 }
 
 // parseDocArgs parses the v0.51 `tya doc` argument shape:

@@ -75,8 +75,8 @@ No `module` declarations remain anywhere under `examples/`.
 
 ### stdlib migration (concurrency tier)
 
-Five packages move from `stdlib/<pkg>.tya` (single-file module) to
-`stdlib/<pkg>/<Pkg>.tya` (directory package, PascalCase public
+Five packages move from `lib/<pkg>.tya` (single-file module) to
+`lib/<pkg>/<Pkg>.tya` (directory package, PascalCase public
 class). Their public surface is now reached via
 `<pkg>.<Pkg>.<member>`:
 
@@ -106,7 +106,7 @@ while not task.Task.cancelled?(me)
 
 Callers in `examples/`, `tests/`, `tests/testdata/`, and
 `docs/STDLIB.md` are updated. The legacy single-file
-`stdlib/{runtime,time,channel,sync,task}.tya` are deleted.
+`lib/{runtime,time,channel,sync,task}.tya` are deleted.
 
 `string`, `array`, `dict` stay on the single-file shape; v01's
 self-host still consumes them as single-file modules. The migration

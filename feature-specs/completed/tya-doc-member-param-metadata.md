@@ -20,7 +20,7 @@ Relevant files:
 - `internal/doc/stdlib_test.go`
 - `tests/testdata/v51_doc/`
 - `docs/SPEC.md`
-- stdlib files such as `stdlib/csv/Csv.tya`
+- stdlib files such as `lib/csv/Csv.tya`
 
 ## Behavior
 
@@ -80,7 +80,7 @@ Expected docs:
 - Add CLI/testscript coverage under `tests/testdata/v51_doc/`.
 - Add unit tests in `internal/doc`.
 - Update `docs/SPEC.md` toolchain documentation for `tya doc` metadata tags.
-- Update representative stdlib docs comments, at minimum `stdlib/csv/Csv.tya`, to exercise variable and parameter metadata.
+- Update representative stdlib docs comments, at minimum `lib/csv/Csv.tya`, to exercise variable and parameter metadata.
 
 ## Out of Scope
 
@@ -93,7 +93,7 @@ Expected docs:
 
 ## Acceptance Criteria
 
-- `tya doc stdlib/csv/Csv.tya` includes `Csv.rows`, `Csv.headers`, and `Csv.options` as documented variable items.
+- `tya doc lib/csv/Csv.tya` includes `Csv.rows`, `Csv.headers`, and `Csv.options` as documented variable items.
 - Public variable docs include normal descriptions and `@type` metadata.
 - Method docs include `@param`, `@option`, and `@return` metadata where provided.
 - `tya doc --html` renders the same metadata.

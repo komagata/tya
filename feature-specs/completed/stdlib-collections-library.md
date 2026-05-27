@@ -127,11 +127,11 @@ be instances.
 
 ## Scope
 
-- `stdlib/collections/Stack.tya`
-- `stdlib/collections/Queue.tya`
-- `stdlib/collections/Deque.tya`
-- `stdlib/collections/Set.tya`
-- `stdlib/collections/PriorityQueue.tya`
+- `lib/collections/Stack.tya`
+- `lib/collections/Queue.tya`
+- `lib/collections/Deque.tya`
+- `lib/collections/Set.tya`
+- `lib/collections/PriorityQueue.tya`
 - `tests/stdlib_collections_test.tya`
 - `docs/STDLIB.md`
 - Next release `docs/vX.Y/SPEC.md` and `docs/vX.Y/RELEASE_NOTES.md`

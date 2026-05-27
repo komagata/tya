@@ -6,9 +6,9 @@
 
 ## Context
 
-- `ROADMAP.md` listed HTTP response template integration as complete under `Finish net/http v2`, but `stdlib/net/http/Server.tya` does not expose template response helpers and the v58 HTTP tests do not cover them.
-- `stdlib/template/Template.tya` already provides `Template.render(source, data, options)`, `Template.render_html(source, data)`, and `Template.render_file(path, data, options)`.
-- `stdlib/net/http/Server.tya` already has response helper precedent with `redirect(path, status)`, route helpers, middleware, custom error handlers, `dispatch`, and static assets.
+- `ROADMAP.md` listed HTTP response template integration as complete under `Finish net/http v2`, but `lib/net/http/Server.tya` does not expose template response helpers and the v58 HTTP tests do not cover them.
+- `lib/template/Template.tya` already provides `Template.render(source, data, options)`, `Template.render_html(source, data)`, and `Template.render_file(path, data, options)`.
+- `lib/net/http/Server.tya` already has response helper precedent with `redirect(path, status)`, route helpers, middleware, custom error handlers, `dispatch`, and static assets.
 
 ## Behavior
 
@@ -58,8 +58,8 @@ app.get("/users/:id", req ->
 
 ## Scope
 
-- Update `stdlib/net/http/Server.tya` to expose `render` and `render_html`.
-- Use the existing `stdlib/template/Template.tya`; do not add a new template syntax or renderer.
+- Update `lib/net/http/Server.tya` to expose `render` and `render_html`.
+- Use the existing `lib/template/Template.tya`; do not add a new template syntax or renderer.
 - Add focused HTTP stdlib tests that cover:
   - file template rendering
   - embedded/source template rendering

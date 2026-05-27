@@ -56,7 +56,7 @@ and v02 self-host fixed point.
 - `--quiet` still prints minimal diagnostics on failure.
 - `--quiet` does not change exit codes.
 - `--verbose` writes operational details to stderr.
-- Verbose details may include resolved imports, selected stdlib/runtime/native
+- Verbose details may include resolved imports, selected lib/runtime/native
   metadata, and C compiler commands.
 - `--verbose` never pollutes stdout program output.
 - Project root is the nearest ancestor directory containing `tya.toml`.

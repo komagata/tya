@@ -59,8 +59,8 @@ handling.
 
 ## Scope
 
-- `stdlib/file/File.tya`
-- `stdlib/dir/Dir.tya`
+- `lib/file/File.tya`
+- `lib/dir/Dir.tya`
 - runtime-backed filesystem intrinsics for interpreter and generated C
 - `docs/SPEC.md`
 - `docs/STRICT_SEMANTICS.md`

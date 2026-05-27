@@ -27,7 +27,7 @@ hand-written v02 compiler style and dictionary/array AST representation.
 - Parser acceptance includes user-defined function literals used as lexical
   closures, `for ... in` iterable forms, interface declarations with predicate
   method names, package-local protocol interfaces, and standard interface files
-  such as `stdlib/stringable.tya`.
+  such as `lib/stringable.tya`.
 - Parser failures remain deterministic for invalid syntax.
 - Existing v02 parser and fixed-point fixtures continue to pass.
 

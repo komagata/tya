@@ -50,19 +50,19 @@ exec $WORK/stage1 --ast $WORK/predicate_bitwise.tya
 stdout '1: assign empty? = func 1 expr binary ==\n2: expr_stmt call ident print 1\n3: assign mask = binary \\|\n4: assign shifted = binary >>\n'
 ! stderr .
 
-exec $WORK/stage1 --ast stdlib/comparable.tya
+exec $WORK/stage1 --ast lib/comparable.tya
 stdout '2: interface Comparable methods 6 fields 0\n'
 ! stderr .
 
-exec $WORK/stage1 --ast stdlib/equatable.tya
+exec $WORK/stage1 --ast lib/equatable.tya
 stdout '2: interface Equatable methods 1 fields 0\n'
 ! stderr .
 
-exec $WORK/stage1 --ast stdlib/stringable.tya
+exec $WORK/stage1 --ast lib/stringable.tya
 stdout '2: interface Stringable methods 1 fields 0\n'
 ! stderr .
 
-exec $WORK/stage1 --ast stdlib/sequence.tya
+exec $WORK/stage1 --ast lib/sequence.tya
 stdout '2: interface Sequence methods 11 fields 0\n'
 ! stderr .
 

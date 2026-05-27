@@ -37,7 +37,7 @@ Polish `tya task` so project tasks can model real development workflows with dep
   - dependencies use their own `env`, not the env of the downstream task
 - Add file watching mode:
   - `tya task <name> --watch` runs the task once, then reruns it when project files change
-  - the default watch set includes `.tya`, `tya.toml`, and files under `src/`, `tests/`, `stdlib/`, and `examples/` when those paths exist under the project root
+  - the default watch set includes `.tya`, `tya.toml`, and files under `src/`, `tests/`, `lib/`, and `examples/` when those paths exist under the project root
   - changes under `.git/`, `node_modules/`, `_site/`, build output directories, and hidden cache directories are ignored
   - rapid consecutive changes are debounced
   - while a task run is active, new changes schedule exactly one rerun after the active run finishes

@@ -19,7 +19,7 @@ copying, and stdin/stdout/stderr handling awkward or memory-heavy.
 
 ## Behavior
 
-- Add `stdlib/io/Reader.tya`, `Writer.tya`, and `Io.tya` if multiple public
+- Add `lib/io/Reader.tya`, `Writer.tya`, and `Io.tya` if multiple public
   classes are useful.
 - `io.Io.stdin()`, `stdout()`, and `stderr()` expose process streams.
 - `io.Io.open(path, mode)` opens a file stream.

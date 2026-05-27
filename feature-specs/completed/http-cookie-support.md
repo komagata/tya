@@ -16,7 +16,7 @@ Add first-class cookie parsing and response helpers to `net/http` so Tya web han
   6. Windows socket support via WinSock2
   7. HTTPS/TLS
 - `runtime/tya_http_server.c` already parses request headers into `req["headers"]` with lowercase header names.
-- `stdlib/net/http/Server.tya` already exposes response helpers such as `redirect(path, status)`.
+- `lib/net/http/Server.tya` already exposes response helpers such as `redirect(path, status)`.
 - Response dictionaries already support a `headers` dictionary, but repeated `Set-Cookie` headers need explicit support because a plain dictionary cannot safely represent multiple headers with the same name.
 
 ## Behavior
@@ -80,7 +80,7 @@ app.get("/me", req ->
 - Update `runtime/tya_http_server.c` and `runtime/tya_http_server.h` so compiled HTTP servers:
   - populate `req["cookies"]`
   - write repeated response headers from `header_values`
-- Update `stdlib/net/http/Server.tya` with cookie helper methods.
+- Update `lib/net/http/Server.tya` with cookie helper methods.
 - Add focused script tests under `tests/testdata/v58_http/` or a newer HTTP test directory covering:
   - parsing a `Cookie` request header into `req["cookies"]`
   - no-cookie requests producing an empty cookie dictionary

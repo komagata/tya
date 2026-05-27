@@ -2,14 +2,14 @@
 
 ## Goal
 
-Publish human-readable standard-library API documentation on the Tya homepage at `/stdlib/`, generated from stdlib source comments through `tya doc`, and commit the generated pages so GitHub Pages can serve them with the existing Jekyll site.
+Publish human-readable standard-library API documentation on the Tya homepage at `/lib/`, generated from stdlib source comments through `tya doc`, and commit the generated pages so GitHub Pages can serve them with the existing Jekyll site.
 
 ## Context
 
 `tya doc` already extracts source-comment API documentation and supports text, JSON, and HTML output. Current docs mention:
 
 ```sh
-tya doc --json stdlib
+tya doc --json lib
 tya doc --html ./out
 ```
 
@@ -25,22 +25,22 @@ The homepage currently links to Guide and Spec, but does not expose a browsable 
 
 ## Behavior
 
-- The website exposes stdlib API documentation at `/stdlib/`.
+- The website exposes stdlib API documentation at `/lib/`.
 - The stdlib API docs are human-readable HTML pages suitable for browsing from the homepage.
-- The docs are generated from public comments in `stdlib/` through the `tya doc` pipeline, not handwritten as a separate API reference.
-- Generated stdlib docs are committed under `docs/stdlib/` so GitHub Pages can publish them without requiring the Pages workflow to run `tya doc`.
+- The docs are generated from public comments in `lib/` through the `tya doc` pipeline, not handwritten as a separate API reference.
+- Generated stdlib docs are committed under `docs/lib/` so GitHub Pages can publish them without requiring the Pages workflow to run `tya doc`.
 - The stdlib docs include public standard-library classes, interfaces, methods, static methods, and constants that `tya doc` can extract.
 - The stdlib docs should preserve stable ordering so repeated generation produces deterministic diffs.
 - The docs should include enough package/class context for users to find import paths such as `json/Json`, `file/File`, `net/http/Server`, and `net/ip/Address`.
-- The homepage and documentation navigation should link to `/stdlib/`.
+- The homepage and documentation navigation should link to `/lib/`.
 - The generated pages should use the same broad visual language as the existing docs site, or be wrapped/adapted so they do not look like an unrelated site.
 - Missing stdlib doc comments should remain a test failure through existing or expanded coverage.
 - Documentation diagnostics from `tya doc` must be visible during generation and should fail the generation command when they are errors.
 
 ## Scope
 
-- `tya doc` HTML output or a small stdlib-doc generation wrapper if needed to target Jekyll-friendly output under `docs/stdlib/`.
-- Generated/committed files under `docs/stdlib/`.
+- `tya doc` HTML output or a small stdlib-doc generation wrapper if needed to target Jekyll-friendly output under `docs/lib/`.
+- Generated/committed files under `docs/lib/`.
 - Homepage link updates in `docs/index.html`.
 - Documentation navigation updates in `docs/_includes/nav.html` and `docs/_data/i18n.yml` if needed.
 - Docs build or verification scripts only if needed to make regeneration repeatable.
@@ -59,10 +59,10 @@ The homepage currently links to Guide and Spec, but does not expose a browsable 
 
 ## Acceptance Criteria
 
-- `docs/stdlib/index.html` or an equivalent Jekyll-served entry page exists and is committed.
-- The public URL `/stdlib/` is the canonical stdlib API docs entry point.
-- The homepage links to `/stdlib/`.
-- The shared docs navigation links to `/stdlib/` for English pages.
+- `docs/lib/index.html` or an equivalent Jekyll-served entry page exists and is committed.
+- The public URL `/lib/` is the canonical stdlib API docs entry point.
+- The homepage links to `/lib/`.
+- The shared docs navigation links to `/lib/` for English pages.
 - The stdlib docs include representative APIs including `Json.parse`, `File.read`, `Math.abs`, `Template.render`, `Server.get`, and `Address.parse`.
 - Generated stdlib API pages include source-derived signatures and rendered doc comments.
 - Running the documented regeneration command twice with no source changes produces no meaningful diff.
@@ -83,6 +83,6 @@ bundle exec jekyll build --source docs --destination _site
 Regeneration smoke check:
 
 ```sh
-tya doc --html docs/stdlib stdlib
-git diff -- docs/stdlib
+tya doc --html docs/lib lib
+git diff -- docs/lib
 ```

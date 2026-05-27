@@ -400,7 +400,7 @@ print(now.format("rfc3339"))
 ソースコメントから API ドキュメントを生成できます。
 
 ```sh
-tya doc --json stdlib
+tya doc --json lib
 ```
 
 ## テスト

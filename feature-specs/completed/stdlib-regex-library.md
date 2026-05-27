@@ -64,7 +64,7 @@ and matching is explicit through methods rather than operators or literals.
 
 ## Scope
 
-- `stdlib/regex/Regex.tya`
+- `lib/regex/Regex.tya`
 - runtime-backed regex intrinsics for interpreter and generated C
 - `docs/SPEC.md`
 - `docs/STRICT_SEMANTICS.md`

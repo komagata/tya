@@ -1,7 +1,7 @@
 # Build the CLI once so commands can run from fixture project roots.
 exec env -u GOROOT go -C $REPO build -o $WORK/tya ./cmd/tya
 env TYA_RUNTIME_DIR=$REPO/runtime
-env TYA_STDLIB_DIR=$REPO/stdlib
+env TYA_LIB_DIR=$REPO/lib
 
 # Missing lockfiles tell users to install first.
 cd app_single

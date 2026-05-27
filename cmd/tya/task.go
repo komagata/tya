@@ -420,7 +420,7 @@ func shouldWatchFile(rel string, patterns []string) bool {
 	if rel == "tya.toml" || strings.HasSuffix(rel, ".tya") {
 		return true
 	}
-	for _, prefix := range []string{"src/", "tests/", "stdlib/", "examples/"} {
+	for _, prefix := range []string{"src/", "tests/", "lib/", "examples/"} {
 		if strings.HasPrefix(rel, prefix) {
 			return true
 		}

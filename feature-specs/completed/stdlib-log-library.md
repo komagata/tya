@@ -19,7 +19,7 @@ level-filtered logs without inventing formatting conventions.
 
 ## Behavior
 
-- Add `stdlib/log/Logger.tya`.
+- Add `lib/log/Logger.tya`.
 - `log.Logger.default()` returns a logger writing text logs to stderr.
 - `log.Logger.new(options)` creates a logger.
 - Supported levels: `debug`, `info`, `warn`, `error`.
@@ -41,7 +41,7 @@ level-filtered logs without inventing formatting conventions.
 
 ## Scope
 
-- `stdlib/log/Logger.tya`
+- `lib/log/Logger.tya`
 - host/runtime support only if stderr/file append primitives are missing
 - `docs/STDLIB.md`
 - next release docs

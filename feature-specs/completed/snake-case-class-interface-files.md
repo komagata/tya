@@ -50,9 +50,9 @@ The user-visible import/API surface does not change. For example, `import base64
 - No runtime API rename such as changing `base64.Base64` to `base64.base64`.
 
 ## Acceptance Criteria
-- `stdlib/base64/base64.tya` declares `class Base64` and is accepted as the public class file.
-- `stdlib/secure_random/secure_random.tya` declares `class SecureRandom` and is accepted.
-- `stdlib/sync/wait_group.tya` declares `class WaitGroup` and is accepted.
+- `lib/base64/base64.tya` declares `class Base64` and is accepted as the public class file.
+- `lib/secure_random/secure_random.tya` declares `class SecureRandom` and is accepted.
+- `lib/sync/wait_group.tya` declares `class WaitGroup` and is accepted.
 - A PascalCase class/interface file such as `Base64.tya` is rejected or ignored according to the new class-file rules, and tests cover the behavior.
 - Directory package imports continue to expose PascalCase public API names from snake_case files.
 - Sibling implicit class/interface visibility works with snake_case filenames.
@@ -64,6 +64,6 @@ The user-visible import/API surface does not change. For example, `import base64
 ```sh
 gofmt -w internal/**/*.go cmd/**/*.go tests/**/*.go
 go test ./... -count=1
-go run ./cmd/tya doc --html docs/stdlib stdlib
+go run ./cmd/tya doc --html docs/lib lib
 mise exec ruby@3.4 -- bundle exec jekyll build --source docs --destination _site
 ```

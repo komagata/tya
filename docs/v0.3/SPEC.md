@@ -27,7 +27,7 @@ specification.
 
 v0.3 adds:
 
-- a `stdlib/` directory distributed with Tya
+- a `lib/` directory distributed with Tya
 - standard attached library imports through existing `import module_name` syntax
 - installed-tool lookup for the attached standard library
 - initial lightweight standard modules such as `string` and `array`
@@ -96,7 +96,7 @@ The v0.3 module search order is:
 
 1. The importing file's directory.
 1. Directories listed in `TYA_PATH`, searched left to right.
-1. The `stdlib/` directory shipped with Tya.
+1. The `lib/` directory shipped with Tya.
 
 `TYA_PATH` uses the host platform's path-list separator.
 
@@ -106,13 +106,13 @@ The module file name still matches the module name.
 string.tya -> module string
 ```
 
-Installed tools must be able to find the shipped `stdlib/` directory even when
+Installed tools must be able to find the shipped `lib/` directory even when
 `tya` is run outside the source checkout. Packaged installs may place it under
 the same shared data root as the C runtime, for example:
 
 ```text
-share/tya/stdlib/string.tya
-share/tya/stdlib/array.tya
+share/tya/lib/string.tya
+share/tya/lib/array.tya
 ```
 
 ## Initial Standard Modules

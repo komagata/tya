@@ -42,7 +42,7 @@ offers hex/base64 convenience helpers.
 
 ## Scope
 
-- `stdlib/hmac/Hmac.tya`
+- `lib/hmac/Hmac.tya`
 - runtime-backed HMAC intrinsics for interpreter and generated C
 - integration with existing `digest`, `hex`, and `base64` behavior as needed
 - `docs/SPEC.md`
