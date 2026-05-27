@@ -11,7 +11,7 @@ import tools
 
 print(Helper.use())
 
--- tools/Helper.tya --
+-- tools/helper.tya --
 class Helper
   static use: ->
     "helper used"

@@ -25,7 +25,7 @@ stderr 'expected module path segment'
 ! exec go run ./cmd/tya run $WORK/empty_segment.tya
 stderr 'expected module path segment'
 
-# A PascalCase terminal segment passes the parser but fails the
+# A non-snake_case terminal segment passes the parser but fails the
 # resolver's snake_case-package-name check.
 ! exec go run ./cmd/tya run $WORK/pascal.tya
 stderr 'invalid module name: foo/Bar'

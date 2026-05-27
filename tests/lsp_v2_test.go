@@ -132,7 +132,7 @@ func TestLSPRenameClassDeclarationRenamesMatchingFile(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	dir := t.TempDir()
-	path := filepath.Join(dir, "Widget.tya")
+	path := filepath.Join(dir, "widget.tya")
 	uri := fileURI(path)
 	src := "class Widget\n  static name: () -> \"widget\"\n"
 	p.notify("textDocument/didOpen", map[string]any{
@@ -158,7 +158,7 @@ func TestLSPRenameClassDeclarationRenamesMatchingFile(t *testing.T) {
 	if len(edit.Changes[uri]) != 1 {
 		t.Fatalf("expected class text edit, got %s", res)
 	}
-	wantNewURI := fileURI(filepath.Join(dir, "RenamedWidget.tya"))
+	wantNewURI := fileURI(filepath.Join(dir, "renamed_widget.tya"))
 	foundRename := false
 	for _, change := range edit.DocumentChanges {
 		if change.Kind == "rename" && change.OldURI == uri && change.NewURI == wantNewURI {
@@ -174,7 +174,7 @@ func TestLSPRenameClassDeclarationRenamesMismatchedFile(t *testing.T) {
 	p := initLSP(t)
 	defer p.close()
 	dir := t.TempDir()
-	path := filepath.Join(dir, "OldWidget.tya")
+	path := filepath.Join(dir, "old_widget.tya")
 	uri := fileURI(path)
 	src := "class Widget\n  static name: () -> \"widget\"\n"
 	p.notify("textDocument/didOpen", map[string]any{
@@ -196,7 +196,7 @@ func TestLSPRenameClassDeclarationRenamesMismatchedFile(t *testing.T) {
 	if err := json.Unmarshal(res, &edit); err != nil {
 		t.Fatalf("decode: %v\n%s", err, res)
 	}
-	wantNewURI := fileURI(filepath.Join(dir, "RenamedWidget.tya"))
+	wantNewURI := fileURI(filepath.Join(dir, "renamed_widget.tya"))
 	for _, change := range edit.DocumentChanges {
 		if change.Kind == "rename" && change.OldURI == uri && change.NewURI == wantNewURI {
 			return
@@ -210,10 +210,10 @@ func TestLSPRenameClassDoesNotRenameImportedPackageClass(t *testing.T) {
 	defer p.close()
 	dir := writeWorkspace(t, map[string]string{
 		"tya.toml":    "name = \"demo\"\nversion = \"0.1.0\"\nlicense = \"MIT\"\n",
-		"src/Cli.tya": "import cli as cli\n\nclass Cli\n  static parse: args ->\n    cli.Cli(args).parse_or_exit(Self.option_spec())\n  static option_spec: () -> {}\n",
+		"src/cli.tya": "import cli as cli\n\nclass Cli\n  static parse: args ->\n    cli.Cli(args).parse_or_exit(Self.option_spec())\n  static option_spec: () -> {}\n",
 	})
-	uri := fileURI(filepath.Join(dir, "src", "Cli.tya"))
-	src, _ := os.ReadFile(filepath.Join(dir, "src", "Cli.tya"))
+	uri := fileURI(filepath.Join(dir, "src", "cli.tya"))
+	src, _ := os.ReadFile(filepath.Join(dir, "src", "cli.tya"))
 	p.notify("textDocument/didOpen", map[string]any{
 		"textDocument": map[string]any{"uri": uri, "languageId": "tya", "version": 1, "text": string(src)},
 	})

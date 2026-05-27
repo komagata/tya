@@ -6,7 +6,7 @@
 cd $REPO
 
 # --tokens on a class file: lexer output for the file content.
-exec go run ./cmd/tya --tokens $WORK/Foo.tya
+exec go run ./cmd/tya --tokens $WORK/foo.tya
 stdout 'IDENT.*class'
 stdout 'IDENT.*Foo'
 ! stderr .
@@ -15,37 +15,37 @@ stdout 'IDENT.*Foo'
 # and a main() that initializes the class global, sufficient to
 # compile and link as a standalone C program (the resulting binary
 # would just initialize Foo and exit).
-exec go run ./cmd/tya --emit-c $WORK/Foo.tya
+exec go run ./cmd/tya --emit-c $WORK/foo.tya
 stdout 'TyaValue Foo;'
 stdout 'tya_fn_Foo_'
 stdout 'int main\('
 ! stderr .
 
-# --emit-c on a structurally bad class file fails with a class
-# file diagnostic, not the entry-only TYA-E0850 message.
-! exec go run ./cmd/tya --emit-c $WORK/BadName.tya
-stderr 'must define class or interface BadName'
+# --emit-c on a snake_case script that declares a differently named class
+# follows normal script-file handling.
+exec go run ./cmd/tya --emit-c $WORK/bad_name.tya
+stdout 'tya_fn_WrongName_'
 
 # --check-unused on a clean class file: passes silently.
-exec go run ./cmd/tya --check-unused $WORK/Foo.tya
+exec go run ./cmd/tya --check-unused $WORK/foo.tya
 ! stderr .
 
 # --check-unused on a class file with an unused method argument
 # reports the unused-argument diagnostic from the strict pass.
-! exec go run ./cmd/tya --check-unused $WORK/Unused.tya
+! exec go run ./cmd/tya --check-unused $WORK/unused.tya
 stderr 'never used'
 
--- Foo.tya --
+-- foo.tya --
 class Foo
   initialize: ->
     self.x = 1
 
--- BadName.tya --
+-- bad_name.tya --
 class WrongName
   initialize: ->
     self.x = 1
 
--- Unused.tya --
+-- unused.tya --
 class Unused
   initialize: ->
     self.x = 1

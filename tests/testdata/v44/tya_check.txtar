@@ -11,16 +11,16 @@ exec go run ./cmd/tya check $WORK/good_entry/main.tya
 
 # Class file checked successfully — reads the file as a v0.44
 # library member without entry semantics.
-exec go run ./cmd/tya check $WORK/standalone_good/Good.tya
+exec go run ./cmd/tya check $WORK/standalone_good/good.tya
 ! stderr .
 
 # Class file checked directly sees sibling public interfaces.
-exec go run ./cmd/tya check $WORK/codec/JsonEncoder.tya
+exec go run ./cmd/tya check $WORK/codec/json_encoder.tya
 ! stderr .
 
-# Class file with a name mismatch fails the structure check.
-! exec go run ./cmd/tya check $WORK/standalone_bad/Hello.tya
-stderr 'must define class or interface Hello'
+# A snake_case script may still declare a differently named class.
+exec go run ./cmd/tya check $WORK/standalone_bad/hello.tya
+! stderr .
 
 # Check failure on an unresolved import.
 ! exec go run ./cmd/tya check $WORK/missing/main.tya
@@ -31,26 +31,26 @@ import lib
 
 print(Lib.greet())
 
--- good_entry/lib/Lib.tya --
+-- good_entry/lib/lib.tya --
 class Lib
   static greet: ->
     "hi"
 
--- standalone_good/Good.tya --
+-- standalone_good/good.tya --
 class Good
   initialize: ->
     self.x = 1
 
--- standalone_bad/Hello.tya --
+-- standalone_bad/hello.tya --
 class WrongName
   static noop: ->
     nil
 
--- codec/Encodable.tya --
+-- codec/encodable.tya --
 interface Encodable
   encode: ->
 
--- codec/JsonEncoder.tya --
+-- codec/json_encoder.tya --
 class JsonEncoder implements Encodable
   encode: ->
     "json"

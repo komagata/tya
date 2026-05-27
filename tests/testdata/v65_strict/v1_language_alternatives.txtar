@@ -73,7 +73,7 @@ import pkg
 greeter = Greeter("Tya")
 print(greeter.greet())
 
--- pkg/Greeter.tya --
+-- pkg/greeter.tya --
 class Greeter
   initialize: name ->
     self.name = name

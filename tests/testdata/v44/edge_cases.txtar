@@ -27,17 +27,17 @@ print(Solo.greet())
 client = Client()
 print(client.summary())
 
--- x/y/z/Tag.tya --
+-- x/y/z/tag.tya --
 class Tag
   static label: ->
     "deep"
 
--- solo/Solo.tya --
+-- solo/solo.tya --
 class Solo
   static greet: ->
     "solo"
 
--- api/v2/Client.tya --
+-- api/v2/client.tya --
 class Client
   initialize: ->
     self.method = "GET"
@@ -46,7 +46,7 @@ class Client
     req = Request(self.method)
     "{req.method()} {req.url()}"
 
--- api/v2/Request.tya --
+-- api/v2/request.tya --
 class Request
   initialize: method ->
     self.method = method
@@ -62,7 +62,7 @@ import mixed_pkg
 
 print(Helper())
 
--- bad/mixed_pkg/Helper.tya --
+-- bad/mixed_pkg/helper.tya --
 class Helper
   static show: ->
     "ok"

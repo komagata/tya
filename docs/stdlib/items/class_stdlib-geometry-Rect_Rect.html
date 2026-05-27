@@ -8,13 +8,1192 @@
 </head>
 <body>
 <div class="doc-shell">
-<div class="doc-content">
-<p><a href="../index.html">&larr; back to index</a></p>
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_stdlib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_stdlib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_stdlib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_stdlib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_stdlib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_stdlib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_stdlib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_stdlib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_stdlib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_stdlib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_stdlib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_stdlib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_stdlib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_stdlib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_stdlib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_stdlib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_stdlib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_stdlib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_stdlib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_stdlib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_stdlib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_stdlib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_stdlib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_stdlib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_stdlib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_stdlib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_stdlib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_stdlib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_stdlib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_stdlib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_stdlib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_stdlib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_stdlib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_stdlib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_stdlib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_stdlib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_stdlib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_stdlib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_stdlib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_stdlib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_stdlib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_stdlib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_stdlib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_stdlib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_stdlib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_stdlib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_stdlib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_stdlib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_stdlib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li class="current"><a href="class_stdlib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_stdlib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_stdlib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_stdlib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_stdlib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_stdlib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_stdlib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_stdlib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_stdlib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_stdlib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_stdlib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_stdlib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_stdlib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_stdlib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_stdlib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_stdlib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_stdlib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_stdlib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_stdlib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_stdlib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_stdlib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_stdlib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_stdlib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_stdlib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_stdlib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_stdlib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_stdlib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_stdlib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_stdlib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_stdlib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_stdlib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_stdlib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_stdlib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_stdlib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_stdlib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_stdlib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_stdlib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
 <h1>class <code>Rect</code></h1>
+<section id="class-Rect" class="doc-item">
 <pre><code>class Rect</code></pre>
-<p><small>stdlib/geometry/Rect.tya:2</small></p>
+<p><small>stdlib/geometry/rect.tya:2</small></p>
 <p>Rect provides the geometry/Rect standard library API.</p>
-</div>
+<details class="source"><summary>Source</summary>
+<pre><code># Rect provides the geometry/Rect standard library API.
+class Rect
+  # Rect.height stores instance state.
+  # @type Int
+  height: 0
+
+  # Rect.width stores instance state.
+  # @type Int
+  width: 0
+
+  # Rect.x stores instance state.
+  # @type Int
+  x: 0
+
+  # Rect.y stores instance state.
+  # @type Int
+  y: 0
+
+  # Rect.initialize provides the geometry/Rect standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Self the initialized object.
+  initialize: x = 0, y = 0, width = 0, height = 0 -&gt;
+    self.x = self.number(x, &quot;x&quot;)
+    self.y = self.number(y, &quot;y&quot;)
+    self.width = self.dimension(width, &quot;width&quot;)
+    self.height = self.dimension(height, &quot;height&quot;)
+
+  # Rect.area provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  area: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.width * rect.height
+
+  # Rect.bottom provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  bottom: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.y + rect.height
+
+  # Rect.center provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  center: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    Point(rect.x + rect.width / 2, rect.y + rect.height / 2)
+
+  # Rect.clamp_number provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param lo Any lo value.
+  # @param hi Any hi value.
+  # @return Any the resulting value.
+  clamp_number: value, lo, hi -&gt;
+    if value &lt; lo
+      return lo
+    if value &gt; hi
+      return hi
+    value
+
+  # Rect.clamp_point provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param point Any point value.
+  # @return Any the resulting value.
+  clamp_point: rect, point = nil -&gt;
+    if point == nil
+      point = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    Point(0, 0).expect(point, &quot;point&quot;)
+    Point(
+      self.clamp_number(point.x, self.left(rect), self.right(rect)),
+      self.clamp_number(point.y, self.top(rect), self.bottom(rect))
+    )
+
+  # Rect.contains_point? provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param point Any point value.
+  # @return Boolean whether the condition is true.
+  contains_point?: rect, point = nil -&gt;
+    if point == nil
+      point = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    Point(0, 0).expect(point, &quot;point&quot;)
+    point.x &gt;= self.left(rect) and point.x &lt; self.right(rect) and point.y &gt;= self.top(rect) and point.y &lt; self.bottom(rect)
+
+  # Rect.contains_rect? provides the geometry/Rect standard library operation.
+  # @param outer Any outer value.
+  # @param inner Any inner value.
+  # @return Boolean whether the condition is true.
+  contains_rect?: outer, inner = nil -&gt;
+    if inner == nil
+      inner = outer
+      outer = self
+    self.expect(outer, &quot;outer&quot;)
+    self.expect(inner, &quot;inner&quot;)
+    self.left(inner) &gt;= self.left(outer) and self.right(inner) &lt;= self.right(outer) and self.top(inner) &gt;= self.top(outer) and self.bottom(inner) &lt;= self.bottom(outer)
+
+  # Rect.dimension provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  dimension: value, name -&gt;
+    self.number(value, name)
+    if value &lt; 0
+      raise error(&quot;geometry.Rect: &quot; + name + &quot; must be non-negative&quot;)
+    value
+
+  # Rect.empty? provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Boolean whether the condition is true.
+  empty?: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.width == 0 or rect.height == 0
+
+  # Rect.equal? provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    a.class == Rect and b.class == Rect and a.x == b.x and a.y == b.y and a.width == b.width and a.height == b.height
+
+  # Rect.expand provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param amount Any amount value.
+  # @return Any the resulting value.
+  expand: rect, amount = nil -&gt;
+    if amount == nil
+      amount = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    self.number(amount, &quot;amount&quot;)
+    self.inflate(rect, amount, amount)
+
+  # Rect.expect provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect: value, name -&gt;
+    if value.class != Rect
+      raise error(&quot;geometry.Rect: &quot; + name + &quot; must be a Rect&quot;)
+
+  # Rect.from_center provides the geometry/Rect standard library operation.
+  # @param center Any center value.
+  # @param size Int size value.
+  # @return Self the resulting value.
+  from_center: center, size -&gt;
+    Point(0, 0).expect(center, &quot;center&quot;)
+    Size(0, 0).expect(size, &quot;size&quot;)
+    Rect(
+      center.x - size.width / 2,
+      center.y - size.height / 2,
+      size.width,
+      size.height
+    )
+
+  # Rect.from_points provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Self the resulting value.
+  from_points: a, b -&gt;
+    Point(0, 0).expect(a, &quot;a&quot;)
+    Point(0, 0).expect(b, &quot;b&quot;)
+    geometry_left = self.min(a.x, b.x)
+    geometry_top = self.min(a.y, b.y)
+    geometry_right = self.max(a.x, b.x)
+    geometry_bottom = self.max(a.y, b.y)
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )
+
+  # Rect.inflate provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param dx Any dx value.
+  # @param dy Any dy value.
+  # @return Any the resulting value.
+  inflate: rect, dx, dy = nil -&gt;
+    if dy == nil
+      dy = dx
+      dx = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    self.number(dx, &quot;dx&quot;)
+    self.number(dy, &quot;dy&quot;)
+    geometry_width = rect.width + dx * 2
+    geometry_height = rect.height + dy * 2
+    if geometry_width &lt; 0 or geometry_height &lt; 0
+      raise error(&quot;geometry.Rect.inflate: resulting size is negative&quot;)
+    Rect(rect.x - dx, rect.y - dy, geometry_width, geometry_height)
+
+  # Rect.intersection provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  intersection: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    geometry_left = self.max(self.left(a), self.left(b))
+    geometry_top = self.max(self.top(a), self.top(b))
+    geometry_right = self.min(self.right(a), self.right(b))
+    geometry_bottom = self.min(self.bottom(a), self.bottom(b))
+    if geometry_right &lt;= geometry_left or geometry_bottom &lt;= geometry_top
+      return Rect(geometry_left, geometry_top, 0, 0)
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )
+
+  # Rect.intersects? provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  intersects?: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    self.left(a) &lt; self.right(b) and self.right(a) &gt; self.left(b) and self.top(a) &lt; self.bottom(b) and self.bottom(a) &gt; self.top(b)
+
+  # Rect.left provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  left: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.x
+
+  # Rect.max provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  max: a, b -&gt;
+    if a &gt; b
+      return a
+    b
+
+  # Rect.min provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  min: a, b -&gt;
+    if a &lt; b
+      return a
+    b
+
+  # Rect.new provides the geometry/Rect standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Self the resulting value.
+  new: x, y, width, height -&gt;
+    Rect(x, y, width, height)
+
+  # Rect.number provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  number: value, name -&gt;
+    if value.class != Number
+      raise error(&quot;geometry.Rect: &quot; + name + &quot; must be a number&quot;)
+    value
+
+  # Rect.right provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  right: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.x + rect.width
+
+  # Rect.size provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Int the resulting value.
+  size: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    Size(rect.width, rect.height)
+
+  # Rect.top provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  top: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.y
+
+  # Rect.translate provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param vector Any vector value.
+  # @return Any the resulting value.
+  translate: rect, vector = nil -&gt;
+    if vector == nil
+      vector = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    if vector.class != Vector2
+      raise error(&quot;geometry.Rect.translate: vector must be a Vector2&quot;)
+    Rect(rect.x + vector.x, rect.y + vector.y, rect.width, rect.height)
+
+  # Rect.union provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  union: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    geometry_left = self.min(self.left(a), self.left(b))
+    geometry_top = self.min(self.top(a), self.top(b))
+    geometry_right = self.max(self.right(a), self.right(b))
+    geometry_bottom = self.max(self.bottom(a), self.bottom(b))
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Rect-height" class="doc-item member">
+<h3><code>height</code></h3>
+<pre><code>Rect.height</code></pre>
+<p><small>stdlib/geometry/rect.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Rect.height stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.height stores instance state.
+  # @type Int
+  height: 0</code></pre>
+</details>
+</section>
+<section id="instance-variable-Rect-width" class="doc-item member">
+<h3><code>width</code></h3>
+<pre><code>Rect.width</code></pre>
+<p><small>stdlib/geometry/rect.tya:9</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Rect.width stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.width stores instance state.
+  # @type Int
+  width: 0</code></pre>
+</details>
+</section>
+<section id="instance-variable-Rect-x" class="doc-item member">
+<h3><code>x</code></h3>
+<pre><code>Rect.x</code></pre>
+<p><small>stdlib/geometry/rect.tya:13</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Rect.x stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.x stores instance state.
+  # @type Int
+  x: 0</code></pre>
+</details>
+</section>
+<section id="instance-variable-Rect-y" class="doc-item member">
+<h3><code>y</code></h3>
+<pre><code>Rect.y</code></pre>
+<p><small>stdlib/geometry/rect.tya:17</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Rect.y stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.y stores instance state.
+  # @type Int
+  y: 0</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Rect-area" class="doc-item member">
+<h3><code>area</code></h3>
+<pre><code>Rect.area(rect = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:34</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.area provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.area provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  area: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.width * rect.height</code></pre>
+</details>
+</section>
+<section id="method-Rect-bottom" class="doc-item member">
+<h3><code>bottom</code></h3>
+<pre><code>Rect.bottom(rect = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:43</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.bottom provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.bottom provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  bottom: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.y + rect.height</code></pre>
+</details>
+</section>
+<section id="method-Rect-center" class="doc-item member">
+<h3><code>center</code></h3>
+<pre><code>Rect.center(rect = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:52</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.center provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.center provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  center: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    Point(rect.x + rect.width / 2, rect.y + rect.height / 2)</code></pre>
+</details>
+</section>
+<section id="method-Rect-clamp_number" class="doc-item member">
+<h3><code>clamp_number</code></h3>
+<pre><code>Rect.clamp_number(value, lo, hi)</code></pre>
+<p><small>stdlib/geometry/rect.tya:63</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>lo</code></dt><dd><code>Any</code> lo value.</dd>
+<dt>Param <code>hi</code></dt><dd><code>Any</code> hi value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.clamp_number provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.clamp_number provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param lo Any lo value.
+  # @param hi Any hi value.
+  # @return Any the resulting value.
+  clamp_number: value, lo, hi -&gt;
+    if value &lt; lo
+      return lo
+    if value &gt; hi
+      return hi
+    value</code></pre>
+</details>
+</section>
+<section id="method-Rect-clamp_point" class="doc-item member">
+<h3><code>clamp_point</code></h3>
+<pre><code>Rect.clamp_point(rect, point = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:74</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Param <code>point</code></dt><dd><code>Any</code> point value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.clamp_point provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.clamp_point provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param point Any point value.
+  # @return Any the resulting value.
+  clamp_point: rect, point = nil -&gt;
+    if point == nil
+      point = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    Point(0, 0).expect(point, &quot;point&quot;)
+    Point(
+      self.clamp_number(point.x, self.left(rect), self.right(rect)),
+      self.clamp_number(point.y, self.top(rect), self.bottom(rect))
+    )</code></pre>
+</details>
+</section>
+<section id="method-Rect-contains_point-" class="doc-item member">
+<h3><code>contains_point?</code></h3>
+<pre><code>Rect.contains_point?(rect, point = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:89</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Param <code>point</code></dt><dd><code>Any</code> point value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Rect.contains_point? provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.contains_point? provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param point Any point value.
+  # @return Boolean whether the condition is true.
+  contains_point?: rect, point = nil -&gt;
+    if point == nil
+      point = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    Point(0, 0).expect(point, &quot;point&quot;)
+    point.x &gt;= self.left(rect) and point.x &lt; self.right(rect) and point.y &gt;= self.top(rect) and point.y &lt; self.bottom(rect)</code></pre>
+</details>
+</section>
+<section id="method-Rect-contains_rect-" class="doc-item member">
+<h3><code>contains_rect?</code></h3>
+<pre><code>Rect.contains_rect?(outer, inner = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:101</small></p>
+<dl class="metadata">
+<dt>Param <code>outer</code></dt><dd><code>Any</code> outer value.</dd>
+<dt>Param <code>inner</code></dt><dd><code>Any</code> inner value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Rect.contains_rect? provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.contains_rect? provides the geometry/Rect standard library operation.
+  # @param outer Any outer value.
+  # @param inner Any inner value.
+  # @return Boolean whether the condition is true.
+  contains_rect?: outer, inner = nil -&gt;
+    if inner == nil
+      inner = outer
+      outer = self
+    self.expect(outer, &quot;outer&quot;)
+    self.expect(inner, &quot;inner&quot;)
+    self.left(inner) &gt;= self.left(outer) and self.right(inner) &lt;= self.right(outer) and self.top(inner) &gt;= self.top(outer) and self.bottom(inner) &lt;= self.bottom(outer)</code></pre>
+</details>
+</section>
+<section id="method-Rect-dimension" class="doc-item member">
+<h3><code>dimension</code></h3>
+<pre><code>Rect.dimension(value, name)</code></pre>
+<p><small>stdlib/geometry/rect.tya:113</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.dimension provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.dimension provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  dimension: value, name -&gt;
+    self.number(value, name)
+    if value &lt; 0
+      raise error(&quot;geometry.Rect: &quot; + name + &quot; must be non-negative&quot;)
+    value</code></pre>
+</details>
+</section>
+<section id="method-Rect-empty-" class="doc-item member">
+<h3><code>empty?</code></h3>
+<pre><code>Rect.empty?(rect = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:122</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Rect.empty? provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.empty? provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Boolean whether the condition is true.
+  empty?: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.width == 0 or rect.height == 0</code></pre>
+</details>
+</section>
+<section id="method-Rect-equal-" class="doc-item member">
+<h3><code>equal?</code></h3>
+<pre><code>Rect.equal?(a, b = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:132</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Rect.equal? provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.equal? provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    a.class == Rect and b.class == Rect and a.x == b.x and a.y == b.y and a.width == b.width and a.height == b.height</code></pre>
+</details>
+</section>
+<section id="method-Rect-expand" class="doc-item member">
+<h3><code>expand</code></h3>
+<pre><code>Rect.expand(rect, amount = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:142</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Param <code>amount</code></dt><dd><code>Any</code> amount value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.expand provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.expand provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param amount Any amount value.
+  # @return Any the resulting value.
+  expand: rect, amount = nil -&gt;
+    if amount == nil
+      amount = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    self.number(amount, &quot;amount&quot;)
+    self.inflate(rect, amount, amount)</code></pre>
+</details>
+</section>
+<section id="method-Rect-expect" class="doc-item member">
+<h3><code>expect</code></h3>
+<pre><code>Rect.expect(value, name)</code></pre>
+<p><small>stdlib/geometry/rect.tya:154</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.expect provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.expect provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  expect: value, name -&gt;
+    if value.class != Rect
+      raise error(&quot;geometry.Rect: &quot; + name + &quot; must be a Rect&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Rect-from_center" class="doc-item member">
+<h3><code>from_center</code></h3>
+<pre><code>Rect.from_center(center, size)</code></pre>
+<p><small>stdlib/geometry/rect.tya:162</small></p>
+<dl class="metadata">
+<dt>Param <code>center</code></dt><dd><code>Any</code> center value.</dd>
+<dt>Param <code>size</code></dt><dd><code>Int</code> size value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Rect.from_center provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.from_center provides the geometry/Rect standard library operation.
+  # @param center Any center value.
+  # @param size Int size value.
+  # @return Self the resulting value.
+  from_center: center, size -&gt;
+    Point(0, 0).expect(center, &quot;center&quot;)
+    Size(0, 0).expect(size, &quot;size&quot;)
+    Rect(
+      center.x - size.width / 2,
+      center.y - size.height / 2,
+      size.width,
+      size.height
+    )</code></pre>
+</details>
+</section>
+<section id="method-Rect-from_points" class="doc-item member">
+<h3><code>from_points</code></h3>
+<pre><code>Rect.from_points(a, b)</code></pre>
+<p><small>stdlib/geometry/rect.tya:176</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Rect.from_points provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.from_points provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Self the resulting value.
+  from_points: a, b -&gt;
+    Point(0, 0).expect(a, &quot;a&quot;)
+    Point(0, 0).expect(b, &quot;b&quot;)
+    geometry_left = self.min(a.x, b.x)
+    geometry_top = self.min(a.y, b.y)
+    geometry_right = self.max(a.x, b.x)
+    geometry_bottom = self.max(a.y, b.y)
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )</code></pre>
+</details>
+</section>
+<section id="method-Rect-inflate" class="doc-item member">
+<h3><code>inflate</code></h3>
+<pre><code>Rect.inflate(rect, dx, dy = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:195</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Param <code>dx</code></dt><dd><code>Any</code> dx value.</dd>
+<dt>Param <code>dy</code></dt><dd><code>Any</code> dy value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.inflate provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.inflate provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param dx Any dx value.
+  # @param dy Any dy value.
+  # @return Any the resulting value.
+  inflate: rect, dx, dy = nil -&gt;
+    if dy == nil
+      dy = dx
+      dx = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    self.number(dx, &quot;dx&quot;)
+    self.number(dy, &quot;dy&quot;)
+    geometry_width = rect.width + dx * 2
+    geometry_height = rect.height + dy * 2
+    if geometry_width &lt; 0 or geometry_height &lt; 0
+      raise error(&quot;geometry.Rect.inflate: resulting size is negative&quot;)
+    Rect(rect.x - dx, rect.y - dy, geometry_width, geometry_height)</code></pre>
+</details>
+</section>
+<section id="method-Rect-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Rect.initialize(x = 0, y = 0, width = 0, height = 0)</code></pre>
+<p><small>stdlib/geometry/rect.tya:25</small></p>
+<dl class="metadata">
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Rect.initialize provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.initialize provides the geometry/Rect standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Self the initialized object.
+  initialize: x = 0, y = 0, width = 0, height = 0 -&gt;
+    self.x = self.number(x, &quot;x&quot;)
+    self.y = self.number(y, &quot;y&quot;)
+    self.width = self.dimension(width, &quot;width&quot;)
+    self.height = self.dimension(height, &quot;height&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Rect-intersection" class="doc-item member">
+<h3><code>intersection</code></h3>
+<pre><code>Rect.intersection(a, b = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:213</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.intersection provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.intersection provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  intersection: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    geometry_left = self.max(self.left(a), self.left(b))
+    geometry_top = self.max(self.top(a), self.top(b))
+    geometry_right = self.min(self.right(a), self.right(b))
+    geometry_bottom = self.min(self.bottom(a), self.bottom(b))
+    if geometry_right &lt;= geometry_left or geometry_bottom &lt;= geometry_top
+      return Rect(geometry_left, geometry_top, 0, 0)
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )</code></pre>
+</details>
+</section>
+<section id="method-Rect-intersects-" class="doc-item member">
+<h3><code>intersects?</code></h3>
+<pre><code>Rect.intersects?(a, b = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:236</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Rect.intersects? provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.intersects? provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  intersects?: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    self.left(a) &lt; self.right(b) and self.right(a) &gt; self.left(b) and self.top(a) &lt; self.bottom(b) and self.bottom(a) &gt; self.top(b)</code></pre>
+</details>
+</section>
+<section id="method-Rect-left" class="doc-item member">
+<h3><code>left</code></h3>
+<pre><code>Rect.left(rect = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:247</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.left provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.left provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  left: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.x</code></pre>
+</details>
+</section>
+<section id="method-Rect-max" class="doc-item member">
+<h3><code>max</code></h3>
+<pre><code>Rect.max(a, b)</code></pre>
+<p><small>stdlib/geometry/rect.tya:257</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.max provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.max provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  max: a, b -&gt;
+    if a &gt; b
+      return a
+    b</code></pre>
+</details>
+</section>
+<section id="method-Rect-min" class="doc-item member">
+<h3><code>min</code></h3>
+<pre><code>Rect.min(a, b)</code></pre>
+<p><small>stdlib/geometry/rect.tya:266</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.min provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.min provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  min: a, b -&gt;
+    if a &lt; b
+      return a
+    b</code></pre>
+</details>
+</section>
+<section id="method-Rect-new" class="doc-item member">
+<h3><code>new</code></h3>
+<pre><code>Rect.new(x, y, width, height)</code></pre>
+<p><small>stdlib/geometry/rect.tya:277</small></p>
+<dl class="metadata">
+<dt>Param <code>x</code></dt><dd><code>Int</code> x value.</dd>
+<dt>Param <code>y</code></dt><dd><code>Int</code> y value.</dd>
+<dt>Param <code>width</code></dt><dd><code>Int</code> width value.</dd>
+<dt>Param <code>height</code></dt><dd><code>Int</code> height value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Rect.new provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.new provides the geometry/Rect standard library operation.
+  # @param x Int x value.
+  # @param y Int y value.
+  # @param width Int width value.
+  # @param height Int height value.
+  # @return Self the resulting value.
+  new: x, y, width, height -&gt;
+    Rect(x, y, width, height)</code></pre>
+</details>
+</section>
+<section id="method-Rect-number" class="doc-item member">
+<h3><code>number</code></h3>
+<pre><code>Rect.number(value, name)</code></pre>
+<p><small>stdlib/geometry/rect.tya:284</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.number provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.number provides the geometry/Rect standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  number: value, name -&gt;
+    if value.class != Number
+      raise error(&quot;geometry.Rect: &quot; + name + &quot; must be a number&quot;)
+    value</code></pre>
+</details>
+</section>
+<section id="method-Rect-right" class="doc-item member">
+<h3><code>right</code></h3>
+<pre><code>Rect.right(rect = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:292</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.right provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.right provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  right: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.x + rect.width</code></pre>
+</details>
+</section>
+<section id="method-Rect-size" class="doc-item member">
+<h3><code>size</code></h3>
+<pre><code>Rect.size(rect = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:301</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Int</code> the resulting value.</dd>
+</dl>
+<p>Rect.size provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.size provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Int the resulting value.
+  size: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    Size(rect.width, rect.height)</code></pre>
+</details>
+</section>
+<section id="method-Rect-top" class="doc-item member">
+<h3><code>top</code></h3>
+<pre><code>Rect.top(rect = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:310</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.top provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.top provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @return Any the resulting value.
+  top: rect = nil -&gt;
+    if rect == nil
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    rect.y</code></pre>
+</details>
+</section>
+<section id="method-Rect-translate" class="doc-item member">
+<h3><code>translate</code></h3>
+<pre><code>Rect.translate(rect, vector = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:320</small></p>
+<dl class="metadata">
+<dt>Param <code>rect</code></dt><dd><code>Any</code> rect value.</dd>
+<dt>Param <code>vector</code></dt><dd><code>Any</code> vector value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.translate provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.translate provides the geometry/Rect standard library operation.
+  # @param rect Any rect value.
+  # @param vector Any vector value.
+  # @return Any the resulting value.
+  translate: rect, vector = nil -&gt;
+    if vector == nil
+      vector = rect
+      rect = self
+    self.expect(rect, &quot;rect&quot;)
+    if vector.class != Vector2
+      raise error(&quot;geometry.Rect.translate: vector must be a Vector2&quot;)
+    Rect(rect.x + vector.x, rect.y + vector.y, rect.width, rect.height)</code></pre>
+</details>
+</section>
+<section id="method-Rect-union" class="doc-item member">
+<h3><code>union</code></h3>
+<pre><code>Rect.union(a, b = nil)</code></pre>
+<p><small>stdlib/geometry/rect.tya:333</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rect.union provides the geometry/Rect standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rect.union provides the geometry/Rect standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  union: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    self.expect(a, &quot;a&quot;)
+    self.expect(b, &quot;b&quot;)
+    geometry_left = self.min(self.left(a), self.left(b))
+    geometry_top = self.min(self.top(a), self.top(b))
+    geometry_right = self.max(self.right(a), self.right(b))
+    geometry_bottom = self.max(self.bottom(a), self.bottom(b))
+    Rect(
+      geometry_left,
+      geometry_top,
+      geometry_right - geometry_left,
+      geometry_bottom - geometry_top
+    )</code></pre>
+</details>
+</section>
+</main>
 </div>
 </body>
 </html>

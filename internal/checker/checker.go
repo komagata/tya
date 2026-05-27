@@ -115,12 +115,36 @@ func checkStructure(prog *ast.Program, modules []string) error {
 	return checkStmts(prog.Stmts, constants, scope)
 }
 
-// IsClassFileName reports whether the given path identifies a v0.44
-// class file based on its leaf name: the leaf without ".tya" is a
-// PascalCase identifier (matches classNameRE).
+// SnakeCaseName maps a PascalCase class or interface name to the
+// canonical snake_case file stem used by class/interface files.
+func SnakeCaseName(name string) string {
+	var out strings.Builder
+	runes := []rune(name)
+	for i, r := range runes {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			prev := runes[i-1]
+			nextLower := i+1 < len(runes) && runes[i+1] >= 'a' && runes[i+1] <= 'z'
+			prevLowerOrDigit := (prev >= 'a' && prev <= 'z') || (prev >= '0' && prev <= '9')
+			prevUpper := prev >= 'A' && prev <= 'Z'
+			if prevLowerOrDigit || (prevUpper && nextLower) {
+				out.WriteByte('_')
+			}
+		}
+		if r >= 'A' && r <= 'Z' {
+			r = r - 'A' + 'a'
+		}
+		out.WriteRune(r)
+	}
+	return out.String()
+}
+
+// IsClassFileName reports whether the given path has the canonical
+// snake_case .tya filename shape used by class/interface files. The
+// file contents determine whether it is actually a class/interface
+// file, because script files also use snake_case names.
 func IsClassFileName(path string) bool {
 	base := strings.TrimSuffix(filepath.Base(path), ".tya")
-	return classNameRE.MatchString(base)
+	return valueNameRE.MatchString(base) && !strings.HasPrefix(base, "_")
 }
 
 // IsScriptFileName reports whether the given path identifies a v0.44
@@ -131,9 +155,9 @@ func IsScriptFileName(path string) bool {
 	return valueNameRE.MatchString(base) && !strings.HasPrefix(base, "_")
 }
 
-// CheckClassFileStructure validates the file-level shape of a v0.44
-// class file: PascalCase filename, exactly one public class or
-// interface whose name matches the filename, additional declarations
+// CheckClassFileStructure validates the file-level shape of a class
+// file: snake_case filename, exactly one public class or interface
+// whose PascalCase name maps to the filename, additional declarations
 // allowed as private siblings, imports preceding class/interface
 // declarations, and no other top-level statements. It does NOT
 // recurse into class bodies, so cross-class references inside method
@@ -143,8 +167,8 @@ func IsScriptFileName(path string) bool {
 func CheckClassFileStructure(prog *ast.Program, path string) error {
 	base := filepath.Base(path)
 	want := strings.TrimSuffix(base, ".tya")
-	if !classNameRE.MatchString(want) {
-		return fmt.Errorf("[TYA-E0404] class file %s must have a PascalCase name", base)
+	if !valueNameRE.MatchString(want) || strings.HasPrefix(want, "_") {
+		return fmt.Errorf("[TYA-E0404] class file %s must have a snake_case name", base)
 	}
 	publicSeen := false
 	inDeclarations := false
@@ -156,7 +180,7 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 			}
 		case *ast.InterfaceDecl:
 			inDeclarations = true
-			if n.Name == want {
+			if SnakeCaseName(n.Name) == want {
 				if publicSeen {
 					return fmt.Errorf("[TYA-E0405] class file %s declares public type %s more than once", base, want)
 				}
@@ -164,7 +188,7 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 			}
 		case *ast.ClassDecl:
 			inDeclarations = true
-			if n.Name == want {
+			if SnakeCaseName(n.Name) == want {
 				if publicSeen {
 					return fmt.Errorf("[TYA-E0405] class file %s declares public type %s more than once", base, want)
 				}
@@ -175,21 +199,18 @@ func CheckClassFileStructure(prog *ast.Program, path string) error {
 		}
 	}
 	if !publicSeen {
-		return fmt.Errorf("[TYA-E0400] class file %s must define class or interface %s", base, want)
+		return fmt.Errorf("[TYA-E0400] class file %s must define a class or interface that maps to %s", base, want)
 	}
 	return nil
 }
 
-// CheckClassFile validates a v0.44 class file at the given path. The
-// file must contain exactly one public class or interface whose name
-// matches the filename without ".tya". Additional declarations are
-// private to the file (visibility is enforced separately in M5). Top-level
-// statements other than import, class, and interface declarations are
-// rejected. Imports must precede any class or interface declaration.
-//
-// CheckClassFile is additive: it does not replace CheckModuleFile.
-// During the v0.44 transition both shapes coexist; the runner picks the
-// right validator based on the file's leaf-name kind.
+// CheckClassFile validates a class/interface file at the given path.
+// The file must contain exactly one public class or interface whose
+// PascalCase name maps to the snake_case filename without ".tya".
+// Additional declarations are private to the file (visibility is
+// enforced separately). Top-level statements other than import, class,
+// and interface declarations are rejected. Imports must precede any
+// class or interface declaration.
 //
 // CheckClassFile runs both file-level structure validation and a
 // body-level scope check on the file in isolation. For files that are
@@ -583,7 +604,7 @@ type classInfo struct {
 	privateClassMethods   map[string]bool
 	privateFieldAssigned  map[string]bool
 	// v0.45 cross-file private enforcement metadata. originFile is
-	// the basename of the source file (e.g. "Util.tya") that declared
+	// the basename of the source file (e.g. "util.tya") that declared
 	// this class; populated from ClassDecl.OriginFile by
 	// predeclareModuleClass. A class is public iff its name plus
 	// ".tya" equals originFile (the v0.44 filename-matches-classname
@@ -2150,14 +2171,14 @@ func bareClassName(key string) string {
 }
 
 // isPublicClassInfo reports whether a class is the public class of
-// its source file: its bare name plus ".tya" matches OriginFile. A
+// its source file: its bare name maps to OriginFile in snake_case. A
 // class without OriginFile is considered public (no cross-file
 // metadata to enforce against).
 func isPublicClassInfo(info classInfo) bool {
 	if info.originFile == "" {
 		return true
 	}
-	return bareClassName(info.name)+".tya" == info.originFile
+	return SnakeCaseName(bareClassName(info.name))+".tya" == info.originFile
 }
 
 // checkCrossFilePrivate enforces the v0.45 cross-file private class

@@ -8,13 +8,561 @@
 </head>
 <body>
 <div class="doc-shell">
-<div class="doc-content">
-<p><a href="../index.html">&larr; back to index</a></p>
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_stdlib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_stdlib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_stdlib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_stdlib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_stdlib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_stdlib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_stdlib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_stdlib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_stdlib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_stdlib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_stdlib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_stdlib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_stdlib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_stdlib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_stdlib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_stdlib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_stdlib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_stdlib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_stdlib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_stdlib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_stdlib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_stdlib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_stdlib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_stdlib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_stdlib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_stdlib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_stdlib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_stdlib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_stdlib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_stdlib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_stdlib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_stdlib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_stdlib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_stdlib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_stdlib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_stdlib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_stdlib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_stdlib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_stdlib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_stdlib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_stdlib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_stdlib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_stdlib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_stdlib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_stdlib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_stdlib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_stdlib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_stdlib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_stdlib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_stdlib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_stdlib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_stdlib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_stdlib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_stdlib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_stdlib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li class="current"><a href="class_stdlib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_stdlib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_stdlib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_stdlib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_stdlib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_stdlib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_stdlib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_stdlib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_stdlib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_stdlib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_stdlib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_stdlib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_stdlib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_stdlib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_stdlib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_stdlib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_stdlib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_stdlib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_stdlib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_stdlib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_stdlib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_stdlib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_stdlib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_stdlib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_stdlib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_stdlib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_stdlib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_stdlib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_stdlib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_stdlib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_stdlib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
 <h1>class <code>Set</code></h1>
+<section id="class-Set" class="doc-item">
 <pre><code>class Set</code></pre>
-<p><small>stdlib/collections/Set.tya:2</small></p>
+<p><small>stdlib/collections/set.tya:2</small></p>
 <p>Set provides the collections/Set standard library API.</p>
-</div>
+<details class="source"><summary>Source</summary>
+<pre><code># Set provides the collections/Set standard library API.
+class Set
+  # Set.items stores instance state.
+  # @type Array
+  items: []
+
+  # Set.initialize provides the collections/Set standard library operation.
+  # @param values Array values value.
+  # @return Self the initialized object.
+  initialize: values = nil -&gt;
+    self.items = []
+    if values != nil
+      i = 0
+      while i &lt; values.len()
+        found = false
+        j = 0
+        while j &lt; self.items.len()
+          if self.items[j] == values[i]
+            found = true
+          j = j + 1
+        if not found
+          self.items.push(values[i])
+        i = i + 1
+
+  # Set.add provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  add: value -&gt;
+    if not self.has?(value)
+      self.items.push(value)
+    self
+
+  # Set.clear provides the collections/Set standard library operation.
+  # @return Nil the resulting value.
+  clear: -&gt;
+    self.items = []
+    self
+
+  # Set.delete provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  delete: value -&gt;
+    next = []
+    removed = false
+    i = 0
+    while i &lt; self.items.len()
+      if not removed and self.items[i] == value
+        removed = true
+      else
+        next.push(self.items[i])
+      i = i + 1
+    self.items = next
+    removed
+
+  # Set.difference provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
+  difference: other -&gt;
+    out = Set(nil)
+    values = self.to_array()
+    i = 0
+    while i &lt; values.len()
+      if not other.has?(values[i])
+        out.add(values[i])
+      i = i + 1
+    out
+
+  # Set.empty? provides the collections/Set standard library operation.
+  # @return Boolean whether the condition is true.
+  empty?: -&gt;
+    self.items.empty?()
+
+  # Set.from_array provides the collections/Set standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
+  from_array: values -&gt;
+    Set(values)
+
+  # Set.has? provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Boolean whether the condition is true.
+  has?: value -&gt;
+    i = 0
+    while i &lt; self.items.len()
+      if self.items[i] == value
+        return true
+      i = i + 1
+    false
+
+  # Set.intersection provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
+  intersection: other -&gt;
+    out = Set(nil)
+    values = self.to_array()
+    i = 0
+    while i &lt; values.len()
+      if other.has?(values[i])
+        out.add(values[i])
+      i = i + 1
+    out
+
+  # Set.len provides the collections/Set standard library operation.
+  # @return Int the resulting value.
+  len: -&gt;
+    self.items.len()
+
+  # Set.new provides the collections/Set standard library operation.
+  # @return Self the resulting value.
+  new: -&gt;
+    Set(nil)
+
+  # Set.subset? provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Boolean whether the condition is true.
+  subset?: other -&gt;
+    values = self.to_array()
+    i = 0
+    while i &lt; values.len()
+      if not other.has?(values[i])
+        return false
+      i = i + 1
+    true
+
+  # Set.to_array provides the collections/Set standard library operation.
+  # @return Array the resulting value.
+  to_array: -&gt;
+    self.items.slice(0, self.items.len())
+
+  # Set.union provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
+  union: other -&gt;
+    out = Set(self.to_array())
+    i = 0
+    values = other.to_array()
+    while i &lt; values.len()
+      out.add(values[i])
+      i = i + 1
+    out</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Set-items" class="doc-item member">
+<h3><code>items</code></h3>
+<pre><code>Set.items</code></pre>
+<p><small>stdlib/collections/set.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Array</code></dd>
+</dl>
+<p>Set.items stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.items stores instance state.
+  # @type Array
+  items: []</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Set-add" class="doc-item member">
+<h3><code>add</code></h3>
+<pre><code>Set.add(value)</code></pre>
+<p><small>stdlib/collections/set.tya:28</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Set.add provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.add provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  add: value -&gt;
+    if not self.has?(value)
+      self.items.push(value)
+    self</code></pre>
+</details>
+</section>
+<section id="method-Set-clear" class="doc-item member">
+<h3><code>clear</code></h3>
+<pre><code>Set.clear()</code></pre>
+<p><small>stdlib/collections/set.tya:35</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Nil</code> the resulting value.</dd>
+</dl>
+<p>Set.clear provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.clear provides the collections/Set standard library operation.
+  # @return Nil the resulting value.
+  clear: -&gt;
+    self.items = []
+    self</code></pre>
+</details>
+</section>
+<section id="method-Set-delete" class="doc-item member">
+<h3><code>delete</code></h3>
+<pre><code>Set.delete(value)</code></pre>
+<p><small>stdlib/collections/set.tya:42</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Set.delete provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.delete provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  delete: value -&gt;
+    next = []
+    removed = false
+    i = 0
+    while i &lt; self.items.len()
+      if not removed and self.items[i] == value
+        removed = true
+      else
+        next.push(self.items[i])
+      i = i + 1
+    self.items = next
+    removed</code></pre>
+</details>
+</section>
+<section id="method-Set-difference" class="doc-item member">
+<h3><code>difference</code></h3>
+<pre><code>Set.difference(other)</code></pre>
+<p><small>stdlib/collections/set.tya:58</small></p>
+<dl class="metadata">
+<dt>Param <code>other</code></dt><dd><code>Any</code> other value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Set.difference provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.difference provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
+  difference: other -&gt;
+    out = Set(nil)
+    values = self.to_array()
+    i = 0
+    while i &lt; values.len()
+      if not other.has?(values[i])
+        out.add(values[i])
+      i = i + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Set-empty-" class="doc-item member">
+<h3><code>empty?</code></h3>
+<pre><code>Set.empty?()</code></pre>
+<p><small>stdlib/collections/set.tya:70</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Set.empty? provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.empty? provides the collections/Set standard library operation.
+  # @return Boolean whether the condition is true.
+  empty?: -&gt;
+    self.items.empty?()</code></pre>
+</details>
+</section>
+<section id="method-Set-from_array" class="doc-item member">
+<h3><code>from_array</code></h3>
+<pre><code>Set.from_array(values)</code></pre>
+<p><small>stdlib/collections/set.tya:76</small></p>
+<dl class="metadata">
+<dt>Param <code>values</code></dt><dd><code>Array</code> values value.</dd>
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>Set.from_array provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.from_array provides the collections/Set standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
+  from_array: values -&gt;
+    Set(values)</code></pre>
+</details>
+</section>
+<section id="method-Set-has-" class="doc-item member">
+<h3><code>has?</code></h3>
+<pre><code>Set.has?(value)</code></pre>
+<p><small>stdlib/collections/set.tya:82</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Set.has? provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.has? provides the collections/Set standard library operation.
+  # @param value String value value.
+  # @return Boolean whether the condition is true.
+  has?: value -&gt;
+    i = 0
+    while i &lt; self.items.len()
+      if self.items[i] == value
+        return true
+      i = i + 1
+    false</code></pre>
+</details>
+</section>
+<section id="method-Set-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Set.initialize(values = nil)</code></pre>
+<p><small>stdlib/collections/set.tya:10</small></p>
+<dl class="metadata">
+<dt>Param <code>values</code></dt><dd><code>Array</code> values value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Set.initialize provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.initialize provides the collections/Set standard library operation.
+  # @param values Array values value.
+  # @return Self the initialized object.
+  initialize: values = nil -&gt;
+    self.items = []
+    if values != nil
+      i = 0
+      while i &lt; values.len()
+        found = false
+        j = 0
+        while j &lt; self.items.len()
+          if self.items[j] == values[i]
+            found = true
+          j = j + 1
+        if not found
+          self.items.push(values[i])
+        i = i + 1</code></pre>
+</details>
+</section>
+<section id="method-Set-intersection" class="doc-item member">
+<h3><code>intersection</code></h3>
+<pre><code>Set.intersection(other)</code></pre>
+<p><small>stdlib/collections/set.tya:93</small></p>
+<dl class="metadata">
+<dt>Param <code>other</code></dt><dd><code>Any</code> other value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Set.intersection provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.intersection provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
+  intersection: other -&gt;
+    out = Set(nil)
+    values = self.to_array()
+    i = 0
+    while i &lt; values.len()
+      if other.has?(values[i])
+        out.add(values[i])
+      i = i + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Set-len" class="doc-item member">
+<h3><code>len</code></h3>
+<pre><code>Set.len()</code></pre>
+<p><small>stdlib/collections/set.tya:105</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Int</code> the resulting value.</dd>
+</dl>
+<p>Set.len provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.len provides the collections/Set standard library operation.
+  # @return Int the resulting value.
+  len: -&gt;
+    self.items.len()</code></pre>
+</details>
+</section>
+<section id="method-Set-new" class="doc-item member">
+<h3><code>new</code></h3>
+<pre><code>Set.new()</code></pre>
+<p><small>stdlib/collections/set.tya:110</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Set.new provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.new provides the collections/Set standard library operation.
+  # @return Self the resulting value.
+  new: -&gt;
+    Set(nil)</code></pre>
+</details>
+</section>
+<section id="method-Set-subset-" class="doc-item member">
+<h3><code>subset?</code></h3>
+<pre><code>Set.subset?(other)</code></pre>
+<p><small>stdlib/collections/set.tya:116</small></p>
+<dl class="metadata">
+<dt>Param <code>other</code></dt><dd><code>Any</code> other value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Set.subset? provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.subset? provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Boolean whether the condition is true.
+  subset?: other -&gt;
+    values = self.to_array()
+    i = 0
+    while i &lt; values.len()
+      if not other.has?(values[i])
+        return false
+      i = i + 1
+    true</code></pre>
+</details>
+</section>
+<section id="method-Set-to_array" class="doc-item member">
+<h3><code>to_array</code></h3>
+<pre><code>Set.to_array()</code></pre>
+<p><small>stdlib/collections/set.tya:127</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>Set.to_array provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.to_array provides the collections/Set standard library operation.
+  # @return Array the resulting value.
+  to_array: -&gt;
+    self.items.slice(0, self.items.len())</code></pre>
+</details>
+</section>
+<section id="method-Set-union" class="doc-item member">
+<h3><code>union</code></h3>
+<pre><code>Set.union(other)</code></pre>
+<p><small>stdlib/collections/set.tya:133</small></p>
+<dl class="metadata">
+<dt>Param <code>other</code></dt><dd><code>Any</code> other value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Set.union provides the collections/Set standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Set.union provides the collections/Set standard library operation.
+  # @param other Any other value.
+  # @return Any the resulting value.
+  union: other -&gt;
+    out = Set(self.to_array())
+    i = 0
+    values = other.to_array()
+    while i &lt; values.len()
+      out.add(values[i])
+      i = i + 1
+    out</code></pre>
+</details>
+</section>
+</main>
 </div>
 </body>
 </html>

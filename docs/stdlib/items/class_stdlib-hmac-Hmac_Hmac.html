@@ -8,13 +8,701 @@
 </head>
 <body>
 <div class="doc-shell">
-<div class="doc-content">
-<p><a href="../index.html">&larr; back to index</a></p>
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_stdlib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_stdlib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_stdlib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_stdlib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_stdlib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_stdlib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_stdlib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_stdlib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_stdlib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_stdlib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_stdlib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_stdlib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_stdlib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_stdlib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_stdlib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_stdlib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_stdlib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_stdlib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_stdlib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_stdlib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_stdlib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_stdlib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_stdlib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_stdlib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_stdlib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_stdlib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li class="current"><a href="class_stdlib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_stdlib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_stdlib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_stdlib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_stdlib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_stdlib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_stdlib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_stdlib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_stdlib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_stdlib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_stdlib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_stdlib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_stdlib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_stdlib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_stdlib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_stdlib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_stdlib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_stdlib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_stdlib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_stdlib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_stdlib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_stdlib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_stdlib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_stdlib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_stdlib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_stdlib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_stdlib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_stdlib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_stdlib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_stdlib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_stdlib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_stdlib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_stdlib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_stdlib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_stdlib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_stdlib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_stdlib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_stdlib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_stdlib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_stdlib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_stdlib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_stdlib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_stdlib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_stdlib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_stdlib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_stdlib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_stdlib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_stdlib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_stdlib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_stdlib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_stdlib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_stdlib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_stdlib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_stdlib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_stdlib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_stdlib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_stdlib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_stdlib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_stdlib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
 <h1>class <code>Hmac</code></h1>
+<section id="class-Hmac" class="doc-item">
 <pre><code>class Hmac</code></pre>
-<p><small>stdlib/hmac/Hmac.tya:6</small></p>
+<p><small>stdlib/hmac/hmac.tya:6</small></p>
 <p>Hmac provides keyed message authentication helpers.</p>
-</div>
+<details class="source"><summary>Source</summary>
+<pre><code># Hmac provides keyed message authentication helpers.
+class Hmac
+  # Hmac.algorithm stores instance state.
+  # @type Nil
+  algorithm: nil
+
+  # Hmac.key stores instance state.
+  # @type Nil
+  key: nil
+
+  # Hmac.initialize stores the algorithm and key.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @return Self the initialized object.
+  initialize: algorithm, key -&gt;
+    self.algorithm = algorithm
+    self.key = key
+
+  # Hmac.base64digest returns the HMAC digest as Base64.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  base64digest: algorithm, key = nil, message = nil -&gt;
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    base64.Base64.encode(Hmac(algorithm, key).digest(message))
+
+  # Hmac.block_size returns the digest block size for algorithm.
+  # @param algorithm Any algorithm value.
+  # @return Any the resulting value.
+  block_size: algorithm -&gt;
+    if algorithm == &quot;sha256&quot;
+      return 64
+    if algorithm == &quot;sha384&quot; or algorithm == &quot;sha512&quot;
+      return 128
+    raise error(&quot;hmac.algorithm: unsupported algorithm&quot;, { kind: &quot;crypto&quot;, code: &quot;unsupported_algorithm&quot; })
+
+  # Hmac.constant_time_equal compares equal-length byte sequences.
+  # @param left Any left value.
+  # @param right Any right value.
+  # @return Any the resulting value.
+  constant_time_equal: left, right -&gt;
+    a = bytes_array(left)
+    b = bytes_array(right)
+    if a.len() != b.len()
+      return false
+    diff = 0
+    i = 0
+    while i &lt; a.len()
+      diff = diff | a[i] ^ b[i]
+      i = i + 1
+    diff == 0
+
+  # Hmac.digest returns the raw HMAC digest bytes.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  digest: algorithm, key = nil, message = nil -&gt;
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    hex.Hex(nil).decode(Hmac(algorithm, key).hexdigest(message))
+
+  # Hmac.digest_size returns the digest byte size for algorithm.
+  # @param algorithm Any algorithm value.
+  # @return Any the resulting value.
+  digest_size: algorithm -&gt;
+    if algorithm == &quot;sha256&quot;
+      return 32
+    if algorithm == &quot;sha384&quot;
+      return 48
+    if algorithm == &quot;sha512&quot;
+      return 64
+    raise error(&quot;hmac.algorithm: unsupported algorithm&quot;, { kind: &quot;crypto&quot;, code: &quot;unsupported_algorithm&quot; })
+
+  # Hmac.expected_bytes decodes a verification digest.
+  # @param algorithm Any algorithm value.
+  # @param expected Any expected value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  expected_bytes: algorithm, expected, options -&gt;
+    algorithm
+    encoding = nil
+    if options != nil
+      if options.class != Dict
+        raise error(&quot;hmac.verify: options must be a dictionary&quot;, { kind: &quot;crypto&quot;, code: &quot;invalid_options&quot; })
+      for entry in options
+        if entry[&quot;key&quot;] != &quot;encoding&quot;
+          raise error(&quot;hmac.verify: unknown option &quot; + entry[&quot;key&quot;], { kind: &quot;crypto&quot;, code: &quot;unknown_option&quot; })
+      encoding = options[&quot;encoding&quot;]
+    if expected.class == String
+      if encoding == nil
+        encoding = &quot;hex&quot;
+      if encoding == &quot;hex&quot;
+        return hex.Hex(expected).decode()
+      if encoding == &quot;base64&quot;
+        return base64.Base64.decode(expected)
+      raise error(&quot;hmac.verify: invalid encoding&quot;, { kind: &quot;crypto&quot;, code: &quot;invalid_encoding&quot; })
+    if encoding == nil or encoding == &quot;raw&quot;
+      return expected
+    raise error(&quot;hmac.verify: bytes expected value requires raw encoding&quot;, { kind: &quot;crypto&quot;, code: &quot;invalid_encoding&quot; })
+
+  # Hmac.hash_hex hashes value with algorithm and returns lowercase hex.
+  # @param algorithm Any algorithm value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  hash_hex: algorithm, value -&gt;
+    if algorithm == &quot;sha256&quot;
+      return digest.Digest.sha256(value)
+    if algorithm == &quot;sha384&quot;
+      return digest.Digest.sha384(value)
+    if algorithm == &quot;sha512&quot;
+      return digest.Digest.sha512(value)
+    raise error(&quot;hmac.algorithm: unsupported algorithm&quot;, { kind: &quot;crypto&quot;, code: &quot;unsupported_algorithm&quot; })
+
+  # Hmac.hexdigest returns the HMAC digest as lowercase hex.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  hexdigest: algorithm, key = nil, message = nil -&gt;
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    size = self.block_size(algorithm)
+    key_bytes = self.input_bytes(&quot;key&quot;, key)
+    if bytes_array(key_bytes).len() &gt; size
+      key_bytes = hex.Hex(nil).decode(self.hash_hex(algorithm, key_bytes))
+    key_block = self.pad(key_bytes, size)
+    inner = self.xor(key_block, 54)
+    outer = self.xor(key_block, 92)
+    msg = self.input_bytes(&quot;message&quot;, message)
+    inner_hash = hex.Hex(nil).decode(
+      self.hash_hex(algorithm, bytes_concat(inner, msg))
+    )
+    self.hash_hex(algorithm, bytes_concat(outer, inner_hash))
+
+  # Hmac.input_bytes normalizes string or bytes input.
+  # @param name String name value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  input_bytes: name, value -&gt;
+    if value.class == String
+      return bytes_of(value)
+    if value.class.name == &quot;Bytes&quot;
+      return value
+    raise error(&quot;hmac.&quot; + name + &quot;: value must be a string or bytes&quot;, { kind: &quot;crypto&quot;, code: &quot;invalid_input&quot; })
+
+  # Hmac.pad right-pads data with zeros to size.
+  # @param data Array data value.
+  # @param size Int size value.
+  # @return Any the resulting value.
+  pad: data, size -&gt;
+    arr = bytes_array(data)
+    while arr.len() &lt; size
+      arr.push(0)
+    bytes(arr)
+
+  # Hmac.verify checks an expected digest.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @param expected Any expected value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  verify: algorithm, key = nil, message = nil, expected = nil, options = {} -&gt;
+    if self.algorithm != nil
+      if message != nil
+        options = message
+      else
+        options = expected
+      expected = key
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    if options == nil
+      options = {}
+    actual = Hmac(algorithm, key).digest(message)
+    wanted = self.expected_bytes(algorithm, expected, options)
+    self.constant_time_equal(actual, wanted)
+
+  # Hmac.xor applies a byte-wise xor mask.
+  # @param data Array data value.
+  # @param byte Int byte value.
+  # @return Any the resulting value.
+  xor: data, byte -&gt;
+    arr = bytes_array(data)
+    out = []
+    i = 0
+    while i &lt; arr.len()
+      out.push(arr[i] ^ byte)
+      i = i + 1
+    bytes(out)</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Hmac-algorithm" class="doc-item member">
+<h3><code>algorithm</code></h3>
+<pre><code>Hmac.algorithm</code></pre>
+<p><small>stdlib/hmac/hmac.tya:9</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Hmac.algorithm stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.algorithm stores instance state.
+  # @type Nil
+  algorithm: nil</code></pre>
+</details>
+</section>
+<section id="instance-variable-Hmac-key" class="doc-item member">
+<h3><code>key</code></h3>
+<pre><code>Hmac.key</code></pre>
+<p><small>stdlib/hmac/hmac.tya:13</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Hmac.key stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.key stores instance state.
+  # @type Nil
+  key: nil</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Hmac-base64digest" class="doc-item member">
+<h3><code>base64digest</code></h3>
+<pre><code>Hmac.base64digest(algorithm, key = nil, message = nil)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:28</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Param <code>key</code></dt><dd><code>String</code> key value.</dd>
+<dt>Param <code>message</code></dt><dd><code>String</code> message value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.base64digest returns the HMAC digest as Base64.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.base64digest returns the HMAC digest as Base64.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  base64digest: algorithm, key = nil, message = nil -&gt;
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    base64.Base64.encode(Hmac(algorithm, key).digest(message))</code></pre>
+</details>
+</section>
+<section id="method-Hmac-block_size" class="doc-item member">
+<h3><code>block_size</code></h3>
+<pre><code>Hmac.block_size(algorithm)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:38</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.block_size returns the digest block size for algorithm.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.block_size returns the digest block size for algorithm.
+  # @param algorithm Any algorithm value.
+  # @return Any the resulting value.
+  block_size: algorithm -&gt;
+    if algorithm == &quot;sha256&quot;
+      return 64
+    if algorithm == &quot;sha384&quot; or algorithm == &quot;sha512&quot;
+      return 128
+    raise error(&quot;hmac.algorithm: unsupported algorithm&quot;, { kind: &quot;crypto&quot;, code: &quot;unsupported_algorithm&quot; })</code></pre>
+</details>
+</section>
+<section id="method-Hmac-constant_time_equal" class="doc-item member">
+<h3><code>constant_time_equal</code></h3>
+<pre><code>Hmac.constant_time_equal(left, right)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:49</small></p>
+<dl class="metadata">
+<dt>Param <code>left</code></dt><dd><code>Any</code> left value.</dd>
+<dt>Param <code>right</code></dt><dd><code>Any</code> right value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.constant_time_equal compares equal-length byte sequences.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.constant_time_equal compares equal-length byte sequences.
+  # @param left Any left value.
+  # @param right Any right value.
+  # @return Any the resulting value.
+  constant_time_equal: left, right -&gt;
+    a = bytes_array(left)
+    b = bytes_array(right)
+    if a.len() != b.len()
+      return false
+    diff = 0
+    i = 0
+    while i &lt; a.len()
+      diff = diff | a[i] ^ b[i]
+      i = i + 1
+    diff == 0</code></pre>
+</details>
+</section>
+<section id="method-Hmac-digest" class="doc-item member">
+<h3><code>digest</code></h3>
+<pre><code>Hmac.digest(algorithm, key = nil, message = nil)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:66</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Param <code>key</code></dt><dd><code>String</code> key value.</dd>
+<dt>Param <code>message</code></dt><dd><code>String</code> message value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.digest returns the raw HMAC digest bytes.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.digest returns the raw HMAC digest bytes.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  digest: algorithm, key = nil, message = nil -&gt;
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    hex.Hex(nil).decode(Hmac(algorithm, key).hexdigest(message))</code></pre>
+</details>
+</section>
+<section id="method-Hmac-digest_size" class="doc-item member">
+<h3><code>digest_size</code></h3>
+<pre><code>Hmac.digest_size(algorithm)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:76</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.digest_size returns the digest byte size for algorithm.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.digest_size returns the digest byte size for algorithm.
+  # @param algorithm Any algorithm value.
+  # @return Any the resulting value.
+  digest_size: algorithm -&gt;
+    if algorithm == &quot;sha256&quot;
+      return 32
+    if algorithm == &quot;sha384&quot;
+      return 48
+    if algorithm == &quot;sha512&quot;
+      return 64
+    raise error(&quot;hmac.algorithm: unsupported algorithm&quot;, { kind: &quot;crypto&quot;, code: &quot;unsupported_algorithm&quot; })</code></pre>
+</details>
+</section>
+<section id="method-Hmac-expected_bytes" class="doc-item member">
+<h3><code>expected_bytes</code></h3>
+<pre><code>Hmac.expected_bytes(algorithm, expected, options)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:90</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Param <code>expected</code></dt><dd><code>Any</code> expected value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.expected_bytes decodes a verification digest.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.expected_bytes decodes a verification digest.
+  # @param algorithm Any algorithm value.
+  # @param expected Any expected value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  expected_bytes: algorithm, expected, options -&gt;
+    algorithm
+    encoding = nil
+    if options != nil
+      if options.class != Dict
+        raise error(&quot;hmac.verify: options must be a dictionary&quot;, { kind: &quot;crypto&quot;, code: &quot;invalid_options&quot; })
+      for entry in options
+        if entry[&quot;key&quot;] != &quot;encoding&quot;
+          raise error(&quot;hmac.verify: unknown option &quot; + entry[&quot;key&quot;], { kind: &quot;crypto&quot;, code: &quot;unknown_option&quot; })
+      encoding = options[&quot;encoding&quot;]
+    if expected.class == String
+      if encoding == nil
+        encoding = &quot;hex&quot;
+      if encoding == &quot;hex&quot;
+        return hex.Hex(expected).decode()
+      if encoding == &quot;base64&quot;
+        return base64.Base64.decode(expected)
+      raise error(&quot;hmac.verify: invalid encoding&quot;, { kind: &quot;crypto&quot;, code: &quot;invalid_encoding&quot; })
+    if encoding == nil or encoding == &quot;raw&quot;
+      return expected
+    raise error(&quot;hmac.verify: bytes expected value requires raw encoding&quot;, { kind: &quot;crypto&quot;, code: &quot;invalid_encoding&quot; })</code></pre>
+</details>
+</section>
+<section id="method-Hmac-hash_hex" class="doc-item member">
+<h3><code>hash_hex</code></h3>
+<pre><code>Hmac.hash_hex(algorithm, value)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:116</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.hash_hex hashes value with algorithm and returns lowercase hex.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.hash_hex hashes value with algorithm and returns lowercase hex.
+  # @param algorithm Any algorithm value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  hash_hex: algorithm, value -&gt;
+    if algorithm == &quot;sha256&quot;
+      return digest.Digest.sha256(value)
+    if algorithm == &quot;sha384&quot;
+      return digest.Digest.sha384(value)
+    if algorithm == &quot;sha512&quot;
+      return digest.Digest.sha512(value)
+    raise error(&quot;hmac.algorithm: unsupported algorithm&quot;, { kind: &quot;crypto&quot;, code: &quot;unsupported_algorithm&quot; })</code></pre>
+</details>
+</section>
+<section id="method-Hmac-hexdigest" class="doc-item member">
+<h3><code>hexdigest</code></h3>
+<pre><code>Hmac.hexdigest(algorithm, key = nil, message = nil)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:130</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Param <code>key</code></dt><dd><code>String</code> key value.</dd>
+<dt>Param <code>message</code></dt><dd><code>String</code> message value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.hexdigest returns the HMAC digest as lowercase hex.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.hexdigest returns the HMAC digest as lowercase hex.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  hexdigest: algorithm, key = nil, message = nil -&gt;
+    if self.algorithm != nil
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    size = self.block_size(algorithm)
+    key_bytes = self.input_bytes(&quot;key&quot;, key)
+    if bytes_array(key_bytes).len() &gt; size
+      key_bytes = hex.Hex(nil).decode(self.hash_hex(algorithm, key_bytes))
+    key_block = self.pad(key_bytes, size)
+    inner = self.xor(key_block, 54)
+    outer = self.xor(key_block, 92)
+    msg = self.input_bytes(&quot;message&quot;, message)
+    inner_hash = hex.Hex(nil).decode(
+      self.hash_hex(algorithm, bytes_concat(inner, msg))
+    )
+    self.hash_hex(algorithm, bytes_concat(outer, inner_hash))</code></pre>
+</details>
+</section>
+<section id="method-Hmac-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Hmac.initialize(algorithm, key)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:19</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Param <code>key</code></dt><dd><code>String</code> key value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Hmac.initialize stores the algorithm and key.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.initialize stores the algorithm and key.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @return Self the initialized object.
+  initialize: algorithm, key -&gt;
+    self.algorithm = algorithm
+    self.key = key</code></pre>
+</details>
+</section>
+<section id="method-Hmac-input_bytes" class="doc-item member">
+<h3><code>input_bytes</code></h3>
+<pre><code>Hmac.input_bytes(name, value)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:152</small></p>
+<dl class="metadata">
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.input_bytes normalizes string or bytes input.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.input_bytes normalizes string or bytes input.
+  # @param name String name value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  input_bytes: name, value -&gt;
+    if value.class == String
+      return bytes_of(value)
+    if value.class.name == &quot;Bytes&quot;
+      return value
+    raise error(&quot;hmac.&quot; + name + &quot;: value must be a string or bytes&quot;, { kind: &quot;crypto&quot;, code: &quot;invalid_input&quot; })</code></pre>
+</details>
+</section>
+<section id="method-Hmac-pad" class="doc-item member">
+<h3><code>pad</code></h3>
+<pre><code>Hmac.pad(data, size)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:163</small></p>
+<dl class="metadata">
+<dt>Param <code>data</code></dt><dd><code>Array</code> data value.</dd>
+<dt>Param <code>size</code></dt><dd><code>Int</code> size value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.pad right-pads data with zeros to size.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.pad right-pads data with zeros to size.
+  # @param data Array data value.
+  # @param size Int size value.
+  # @return Any the resulting value.
+  pad: data, size -&gt;
+    arr = bytes_array(data)
+    while arr.len() &lt; size
+      arr.push(0)
+    bytes(arr)</code></pre>
+</details>
+</section>
+<section id="method-Hmac-verify" class="doc-item member">
+<h3><code>verify</code></h3>
+<pre><code>Hmac.verify(algorithm, key = nil, message = nil, expected = nil, options = {})</code></pre>
+<p><small>stdlib/hmac/hmac.tya:176</small></p>
+<dl class="metadata">
+<dt>Param <code>algorithm</code></dt><dd><code>Any</code> algorithm value.</dd>
+<dt>Param <code>key</code></dt><dd><code>String</code> key value.</dd>
+<dt>Param <code>message</code></dt><dd><code>String</code> message value.</dd>
+<dt>Param <code>expected</code></dt><dd><code>Any</code> expected value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.verify checks an expected digest.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.verify checks an expected digest.
+  # @param algorithm Any algorithm value.
+  # @param key String key value.
+  # @param message String message value.
+  # @param expected Any expected value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  verify: algorithm, key = nil, message = nil, expected = nil, options = {} -&gt;
+    if self.algorithm != nil
+      if message != nil
+        options = message
+      else
+        options = expected
+      expected = key
+      message = algorithm
+      algorithm = self.algorithm
+      key = self.key
+    if options == nil
+      options = {}
+    actual = Hmac(algorithm, key).digest(message)
+    wanted = self.expected_bytes(algorithm, expected, options)
+    self.constant_time_equal(actual, wanted)</code></pre>
+</details>
+</section>
+<section id="method-Hmac-xor" class="doc-item member">
+<h3><code>xor</code></h3>
+<pre><code>Hmac.xor(data, byte)</code></pre>
+<p><small>stdlib/hmac/hmac.tya:196</small></p>
+<dl class="metadata">
+<dt>Param <code>data</code></dt><dd><code>Array</code> data value.</dd>
+<dt>Param <code>byte</code></dt><dd><code>Int</code> byte value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Hmac.xor applies a byte-wise xor mask.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Hmac.xor applies a byte-wise xor mask.
+  # @param data Array data value.
+  # @param byte Int byte value.
+  # @return Any the resulting value.
+  xor: data, byte -&gt;
+    arr = bytes_array(data)
+    out = []
+    i = 0
+    while i &lt; arr.len()
+      out.push(arr[i] ^ byte)
+      i = i + 1
+    bytes(out)</code></pre>
+</details>
+</section>
+</main>
 </div>
 </body>
 </html>

@@ -375,8 +375,7 @@ class Counter
     self.count
 ```
 
-PascalCase files such as `User.tya` are class files. They are library files,
-not script entry points.
+Class files use snake_case filenames such as `user.tya` while declaring PascalCase classes such as `class User`. They are library files, not script entry points.
 
 ## Standard Library
 

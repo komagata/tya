@@ -700,6 +700,7 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 	u.indent++
 	defer func() { u.indent-- }()
 	for _, f := range n.Fields {
+		u.leadingComments(f.Comments)
 		value, err := u.expr(f.Value)
 		if err != nil {
 			return err
@@ -707,6 +708,7 @@ func (u *unparser) interfaceDecl(n *ast.InterfaceDecl) error {
 		u.line(f.Name + ": " + value)
 	}
 	for _, m := range n.Methods {
+		u.leadingComments(m.Comments)
 		head := m.Name + ": " + defArrow(strings.Join(m.Params, ", "))
 		if m.Func == nil {
 			u.line(head)

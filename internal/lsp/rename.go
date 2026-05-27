@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"tya/internal/ast"
+	"tya/internal/checker"
 	"tya/internal/token"
 )
 
@@ -130,7 +131,7 @@ func classFileRename(doc *Document, prog *ast.Program, name, newName string) (st
 	if err != nil {
 		return "", "", false, nil
 	}
-	newPath := filepath.Join(filepath.Dir(path), newName+".tya")
+	newPath := filepath.Join(filepath.Dir(path), checker.SnakeCaseName(newName)+".tya")
 	if _, err := filepath.Abs(newPath); err != nil {
 		return "", "", false, err
 	}

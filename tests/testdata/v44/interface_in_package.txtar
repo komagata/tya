@@ -14,7 +14,7 @@ import api/web
 req = Request("GET", "/")
 print(req.summary())
 
--- api/web/Request.tya --
+-- api/web/request.tya --
 interface Summarizable
   summary: ->
 

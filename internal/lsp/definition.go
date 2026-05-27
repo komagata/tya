@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"tya/internal/ast"
+	"tya/internal/checker"
 	"tya/internal/lexer"
 	"tya/internal/parser"
 )
@@ -197,7 +198,7 @@ func resolvePackageClassFile(ws *Workspace, name string, className string) strin
 	if ws == nil || ws.Root == "" || className == "" {
 		return ""
 	}
-	rel := filepath.Join(filepath.FromSlash(name), className+".tya")
+	rel := filepath.Join(filepath.FromSlash(name), checker.SnakeCaseName(className)+".tya")
 	candidates := []string{
 		filepath.Join(ws.Root, "src", rel),
 		filepath.Join(ws.Root, rel),

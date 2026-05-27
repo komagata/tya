@@ -215,6 +215,7 @@ type InterfaceMethod struct {
 	Params    []string
 	ParamToks []token.Token
 	Func      *FuncLit
+	Comments  StmtComments
 }
 
 type ClassField struct {

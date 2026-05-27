@@ -1,5 +1,5 @@
 # v0.44 directory-as-package import.
-# A directory containing PascalCase class files is an importable package.
+# A directory containing snake_case class/interface files is an importable package.
 # Unaliased `import net/http` exposes public package classes as bare names.
 cd $REPO
 
@@ -10,8 +10,8 @@ stdout 'http://example.com\n200\n'
 ! exec go run ./cmd/tya run $WORK/bad_pkg_main.tya
 stderr 'package bad_pkg contains script file'
 
-! exec go run ./cmd/tya run $WORK/Hello.tya
-stderr 'Hello.tya is a class file'
+! exec go run ./cmd/tya run $WORK/hello.tya
+stderr 'hello.tya is a class file'
 
 # v0.44 same-directory sibling auto-visibility: an entry script sees
 # every PascalCase class file in its directory without an import.
@@ -27,7 +27,7 @@ response = Response()
 print(request.url())
 print(response.status())
 
--- net/http/Request.tya --
+-- net/http/request.tya --
 class Request
   initialize: url ->
     self.url = url
@@ -35,7 +35,7 @@ class Request
   url: ->
     self.url
 
--- net/http/Response.tya --
+-- net/http/response.tya --
 class Response
   initialize: ->
     self.status = 200
@@ -49,7 +49,7 @@ import bad_pkg
 x = Helper()
 print(x)
 
--- bad_pkg/Helper.tya --
+-- bad_pkg/helper.tya --
 class Helper
   initialize: ->
     self.x = 1
@@ -57,7 +57,7 @@ class Helper
 -- bad_pkg/oops.tya --
 print("this is a script file inside a package; should be rejected")
 
--- Hello.tya --
+-- hello.tya --
 class Hello
   initialize: ->
     self.x = 1
@@ -66,7 +66,7 @@ class Hello
 g = Greeter("komagata")
 print(g.greet())
 
--- two_files/Greeter.tya --
+-- two_files/greeter.tya --
 class Greeter
   initialize: name ->
     self.name = name

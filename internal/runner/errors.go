@@ -15,6 +15,7 @@ import (
 // edges that previously returned bare fmt.Errorf strings.
 const (
 	codeInvalidFileName        = "TYA-E0840"
+	codeClassFileRun           = "TYA-E0850"
 	codeEntryRedefinesModule   = "TYA-E0856"
 	codeImportNameConflict     = "TYA-E0857"
 	codeUndefinedVariable      = "TYA-E0858"

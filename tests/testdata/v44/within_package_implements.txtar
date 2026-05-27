@@ -1,6 +1,6 @@
 # v0.44 a class file in a package may `implements` an interface
 # defined in another file of the same package, using the bare
-# interface name. Interface-only PascalCase files are accepted when
+# interface name. Interface-only snake_case files are accepted when
 # the interface name matches the filename.
 cd $REPO
 
@@ -13,11 +13,11 @@ import codec
 
 print(JsonEncoder().encode())
 
--- codec/Encodable.tya --
+-- codec/encodable.tya --
 interface Encodable
   encode: ->
 
--- codec/JsonEncoder.tya --
+-- codec/json_encoder.tya --
 class JsonEncoder implements Encodable
   initialize: ->
     nil

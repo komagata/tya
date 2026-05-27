@@ -85,7 +85,7 @@ func TestExtractReportIncludesMemberMetadata(t *testing.T) {
 		byName[item.Name] = item
 	}
 	rows := byName["Csv.rows"]
-	if rows.Kind != "variable" || rows.TypeHint != "Array<Dict>" || strings.Contains(rows.RawDoc, "@type") {
+	if rows.Kind != "instance variable" || rows.TypeHint != "Array<Dict>" || strings.Contains(rows.RawDoc, "@type") {
 		t.Fatalf("unexpected rows metadata: %#v", rows)
 	}
 	init := byName["Csv.initialize"]

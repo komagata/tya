@@ -334,7 +334,11 @@ doneOptions:
 	}
 	source := string(src)
 	modules := []string(nil)
-	isClassFile := checker.IsClassFileName(path)
+	isClassFile, err := runner.IsClassFile(path)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	if emitC && !checkUnused {
 		if isClassFile {
 			// v0.44: emit C for a class file in isolation. Skip the
@@ -1545,11 +1549,15 @@ func checkFile(path string) error {
 	} else {
 		defer codegen.SetNativeFunctions(nil)()
 	}
-	// v0.44: tya check on a PascalCase class file is allowed
+	// tya check on a class/interface file is allowed
 	// (read-only, no entry semantics). Skip the entry-only
 	// runner.LoadSourceWithModules path and check the class file
 	// together with sibling package members.
-	if checker.IsClassFileName(path) {
+	isClassFile, err := runner.IsClassFile(path)
+	if err != nil {
+		return err
+	}
+	if isClassFile {
 		source, modules, origins, err := runner.LoadClassFileWithSiblingOrigins(path)
 		if err != nil {
 			return err

@@ -507,11 +507,11 @@ func TestIsClassFileName(t *testing.T) {
 		path string
 		want bool
 	}{
-		{"Request.tya", true},
-		{"HttpClient.tya", true},
-		{"foo/bar/Request.tya", true},
-		{"request.tya", false},
-		{"http_client.tya", false},
+		{"request.tya", true},
+		{"http_client.tya", true},
+		{"foo/bar/request.tya", true},
+		{"Request.tya", false},
+		{"HttpClient.tya", false},
 		{"_Hidden.tya", false},
 		{"123.tya", false},
 	}
@@ -542,21 +542,28 @@ func TestIsScriptFileName(t *testing.T) {
 
 func TestCheckClassFileAcceptsMatchingClass(t *testing.T) {
 	prog := parse(t, "class Request\n  initialize: url ->\n    self.url = url\n")
-	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+	if err := CheckClassFile(prog, "request.tya"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckClassFileAcceptsAcronymSnakeCaseClass(t *testing.T) {
+	prog := parse(t, "class HTTPServer\n  initialize: ->\n    self.path = \"/\"\n")
+	if err := CheckClassFile(prog, "http_server.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckClassFileAcceptsMatchingInterface(t *testing.T) {
 	prog := parse(t, "interface Request\n  send: ->\n")
-	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+	if err := CheckClassFile(prog, "request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestCheckClassFileAcceptsImportsBeforeClass(t *testing.T) {
 	prog := parse(t, "import string\n\nclass Request\n  initialize: url ->\n    self.url = url\n")
-	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+	if err := CheckClassFile(prog, "request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -565,7 +572,7 @@ func TestCheckClassFileAcceptsPrivateClasses(t *testing.T) {
 	src := "class Header\n  initialize: name, value ->\n    self.name = name\n    self.value = value\n\n" +
 		"class Request\n  initialize: url ->\n    self.url = url\n"
 	prog := parse(t, src)
-	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+	if err := CheckClassFile(prog, "request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -573,7 +580,7 @@ func TestCheckClassFileAcceptsPrivateClasses(t *testing.T) {
 func TestCheckClassFileAcceptsInterfaceCompanion(t *testing.T) {
 	src := "interface Sendable\n  send: ->\n\nclass Request\n  initialize: ->\n    self.url = nil\n"
 	prog := parse(t, src)
-	if err := CheckClassFile(prog, "Request.tya"); err != nil {
+	if err := CheckClassFile(prog, "request.tya"); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -623,22 +630,22 @@ func TestCheckInterfaceArityIgnoresDefaultParameters(t *testing.T) {
 
 func TestCheckClassFileRejectsMissingPublicClass(t *testing.T) {
 	prog := parse(t, "class Helper\n  initialize: ->\n    self.x = 1\n")
-	err := CheckClassFile(prog, "Request.tya")
+	err := CheckClassFile(prog, "request.tya")
 	if err == nil {
 		t.Fatal("expected missing public class error")
 	}
-	if !strings.Contains(err.Error(), "must define class or interface Request") {
+	if !strings.Contains(err.Error(), "must define a class or interface that maps to request") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
-func TestCheckClassFileRejectsNonPascalCaseFilename(t *testing.T) {
+func TestCheckClassFileRejectsNonSnakeCaseFilename(t *testing.T) {
 	prog := parse(t, "class Request\n  initialize: ->\n    self.x = 1\n")
-	err := CheckClassFile(prog, "request.tya")
+	err := CheckClassFile(prog, "Request.tya")
 	if err == nil {
-		t.Fatal("expected PascalCase filename error")
+		t.Fatal("expected snake_case filename error")
 	}
-	if !strings.Contains(err.Error(), "PascalCase name") {
+	if !strings.Contains(err.Error(), "snake_case name") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -646,7 +653,7 @@ func TestCheckClassFileRejectsNonPascalCaseFilename(t *testing.T) {
 func TestCheckClassFileRejectsTopLevelStatement(t *testing.T) {
 	src := "class Request\n  initialize: ->\n    self.x = 1\n\nx = 1\n"
 	prog := parse(t, src)
-	err := CheckClassFile(prog, "Request.tya")
+	err := CheckClassFile(prog, "request.tya")
 	if err == nil {
 		t.Fatal("expected top-level statement error")
 	}
@@ -658,7 +665,7 @@ func TestCheckClassFileRejectsTopLevelStatement(t *testing.T) {
 func TestCheckClassFileRejectsImportAfterClass(t *testing.T) {
 	src := "class Request\n  initialize: ->\n    self.x = 1\n\nimport string\n"
 	prog := parse(t, src)
-	err := CheckClassFile(prog, "Request.tya")
+	err := CheckClassFile(prog, "request.tya")
 	if err == nil {
 		t.Fatal("expected import-after-class error")
 	}
@@ -673,7 +680,7 @@ func TestCheckClassFileRejectsDuplicatePublicClass(t *testing.T) {
 	// document the behavior.
 	src := "class Request\n  initialize: ->\n    self.x = 1\n\nclass Request\n  initialize: ->\n    self.y = 1\n"
 	prog := parse(t, src)
-	err := CheckClassFile(prog, "Request.tya")
+	err := CheckClassFile(prog, "request.tya")
 	if err == nil {
 		t.Fatal("expected duplicate-class error")
 	}

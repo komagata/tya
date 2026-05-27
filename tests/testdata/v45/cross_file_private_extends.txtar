@@ -11,7 +11,7 @@ import pkg
 
 print(Util.run())
 
--- pkg/Util.tya --
+-- pkg/util.tya --
 class Util
   static run: ->
     s = Sub()
@@ -21,7 +21,7 @@ class Sub extends Base
   initialize: ->
     super()
 
--- pkg/Helper.tya --
+-- pkg/helper.tya --
 class Helper
   static noop: ->
     "noop"

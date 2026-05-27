@@ -7,6 +7,7 @@
   --code: #15201b;
   --accent: #2f7d5b;
   --paper: #fffdf7;
+  --sidebar: #f3f7f3;
 }
 
 * {
@@ -26,13 +27,65 @@ a {
 }
 
 .doc-shell {
-  width: min(920px, calc(100% - 32px));
+  width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
   padding: 18px 0 56px;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.doc-sidebar {
+  width: 260px;
+  position: sticky;
+  top: 18px;
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--sidebar);
+  padding: 16px;
+}
+
+.sidebar-title {
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.doc-sidebar h2 {
+  margin: 18px 0 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.doc-sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-sidebar li {
+  margin: 2px 0;
+}
+
+.doc-sidebar a {
+  display: block;
+  border-radius: 5px;
+  padding: 4px 6px;
+  text-decoration: none;
+}
+
+.doc-sidebar li.current a,
+.doc-sidebar a:hover {
+  background: #e3ece5;
 }
 
 .doc-content {
-  padding-top: 24px;
+  min-width: 0;
+  padding-top: 8px;
 }
 
 .doc-content h1 {
@@ -93,4 +146,60 @@ a {
   padding: 0;
   font-size: 0.92rem;
   line-height: 1.55;
+}
+
+.doc-item {
+  margin: 18px 0 28px;
+}
+
+.doc-item.member {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.source {
+  margin-top: 18px;
+}
+
+.source summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.metadata {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 12px;
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+}
+
+.metadata dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.metadata dd {
+  margin: 0;
+}
+
+.member-count {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+@media (max-width: 760px) {
+  .doc-shell {
+    display: block;
+  }
+
+  .doc-sidebar {
+    position: static;
+    max-height: none;
+    margin-bottom: 18px;
+  }
 }

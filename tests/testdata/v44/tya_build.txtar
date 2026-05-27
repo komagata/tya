@@ -20,7 +20,7 @@ import lib
 
 print(Lib.greet())
 
--- lib/Lib.tya --
+-- lib/lib.tya --
 class Lib
   static greet: ->
     "hi from app"

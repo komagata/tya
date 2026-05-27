@@ -48,7 +48,7 @@ sources = ["native/missing.c"]
 [native.functions]
 broken_value = { symbol = "tya_broken_value", arity = 0 }
 
--- broken_native/src/broken_native/BrokenNative.tya --
+-- broken_native/src/broken_native/broken_native.tya --
 class BrokenNative
   static value: ->
     return broken_value()
@@ -76,7 +76,7 @@ sources = ["native/dep_one.c"]
 [native.functions]
 shared_native = { symbol = "tya_dep_one_value", arity = 0 }
 
--- dep_one/src/dep_one/DepOne.tya --
+-- dep_one/src/dep_one/dep_one.tya --
 class DepOne
   static value: ->
     return shared_native()
@@ -98,7 +98,7 @@ sources = ["native/dep_two.c"]
 [native.functions]
 shared_native = { symbol = "tya_dep_two_value", arity = 0 }
 
--- dep_two/src/dep_two/DepTwo.tya --
+-- dep_two/src/dep_two/dep_two.tya --
 class DepTwo
   static value: ->
     return shared_native()

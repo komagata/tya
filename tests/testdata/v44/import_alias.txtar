@@ -16,7 +16,7 @@ import lib/util as helper
 
 print(helper.Util.greet())
 
--- lib/util/Util.tya --
+-- lib/util/util.tya --
 class Util
   static greet: ->
     "aliased!"

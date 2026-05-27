@@ -75,14 +75,14 @@ func isStdlibMethodLine(line string) bool {
 
 func TestStdlibAPIDocsIncludeRepresentativePackages(t *testing.T) {
 	paths := []string{
-		filepath.Join("..", "..", "stdlib", "math", "Math.tya"),
-		filepath.Join("..", "..", "stdlib", "file", "File.tya"),
-		filepath.Join("..", "..", "stdlib", "json", "Json.tya"),
-		filepath.Join("..", "..", "stdlib", "toml", "Toml.tya"),
-		filepath.Join("..", "..", "stdlib", "net", "http", "Server.tya"),
-		filepath.Join("..", "..", "stdlib", "net", "socket", "Socket.tya"),
-		filepath.Join("..", "..", "stdlib", "template", "Template.tya"),
-		filepath.Join("..", "..", "stdlib", "unittest", "TestCase.tya"),
+		filepath.Join("..", "..", "stdlib", "math", "math.tya"),
+		filepath.Join("..", "..", "stdlib", "file", "file.tya"),
+		filepath.Join("..", "..", "stdlib", "json", "json.tya"),
+		filepath.Join("..", "..", "stdlib", "toml", "toml.tya"),
+		filepath.Join("..", "..", "stdlib", "net", "http", "server.tya"),
+		filepath.Join("..", "..", "stdlib", "net", "socket", "socket.tya"),
+		filepath.Join("..", "..", "stdlib", "template", "template.tya"),
+		filepath.Join("..", "..", "stdlib", "unittest", "test_case.tya"),
 	}
 	report, err := ExtractReport(paths)
 	if err != nil {
@@ -140,9 +140,38 @@ func TestStdlibHTMLDocsGenerateRepresentativePages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"Json.parse", "File.read", "Math.abs", "Template.render", "Server.get", "Address.parse"} {
+	for _, want := range []string{"Json", "File", "Math", "Template", "Server", "Address"} {
 		if !strings.Contains(string(index), want) {
 			t.Fatalf("generated stdlib index missing %s", want)
+		}
+	}
+	for _, tt := range []struct {
+		name string
+		want string
+	}{
+		{"Json", "Json.parse"},
+		{"File", "File.read"},
+		{"Math", "Math.abs"},
+		{"Template", "Template.render"},
+		{"Server", "Server.get"},
+		{"Address", "Address.parse"},
+	} {
+		var page DocItem
+		for _, item := range report.Items {
+			if item.Kind == "class" && item.Name == tt.name {
+				page = item
+				break
+			}
+		}
+		if page.Name == "" {
+			t.Fatalf("missing class page item for %s", tt.name)
+		}
+		body, err := os.ReadFile(filepath.Join(out, "items", pageFileName(page)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(body), tt.want) {
+			t.Fatalf("generated stdlib page %s missing %s", pageFileName(page), tt.want)
 		}
 	}
 }

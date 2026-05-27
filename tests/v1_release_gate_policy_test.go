@@ -121,7 +121,7 @@ func TestPublicV1RejectsLegacySyntaxOutsideLegacyPaths(t *testing.T) {
 			dir := t.TempDir()
 			path := filepath.Join(dir, "legacy.tya")
 			if strings.HasPrefix(tc.src, "class ") {
-				path = filepath.Join(dir, "Counter.tya")
+				path = filepath.Join(dir, "counter.tya")
 			}
 			if err := os.WriteFile(path, []byte(tc.src), 0644); err != nil {
 				t.Fatal(err)

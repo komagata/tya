@@ -157,14 +157,22 @@ func kindOrder(kind string) int {
 		return 2
 	case "function":
 		return 3
-	case "variable":
+	case "class constant":
 		return 4
-	case "static method":
+	case "class variable":
 		return 5
-	case "method":
+	case "instance variable":
 		return 6
-	default:
+	case "static method":
+		return 7
+	case "method":
+		return 8
+	case "variable":
 		return 9
+	case "constant":
+		return 10
+	default:
+		return 19
 	}
 }
 
@@ -236,7 +244,7 @@ func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path s
 				}
 				item := DocItem{
 					Name:      d.Name + "." + field.Name,
-					Kind:      "variable",
+					Kind:      "instance variable",
 					Signature: d.Name + "." + field.Name,
 					RawDoc:    leadingBeforeLine(comments, field.Tok.Line, 2),
 					FilePath:  path,
@@ -251,11 +259,26 @@ func docItemsForProgram(prog *ast.Program, comments []parser.CommentInfo, path s
 				}
 				item := DocItem{
 					Name:      d.Name + "." + constant.Name,
-					Kind:      "constant",
+					Kind:      "class constant",
 					Signature: d.Name + "." + constant.Name,
 					RawDoc:    leadingBeforeLine(comments, constant.Tok.Line, 2),
 					FilePath:  path,
 					Line:      constant.Tok.Line,
+				}
+				item, diagnostics = finalizeDocItem(item, nil, diagnostics)
+				items = append(items, item)
+			}
+			for _, variable := range d.Vars {
+				if variable.Private {
+					continue
+				}
+				item := DocItem{
+					Name:      d.Name + "." + variable.Name,
+					Kind:      "class variable",
+					Signature: "static " + d.Name + "." + variable.Name,
+					RawDoc:    leadingBeforeLine(comments, variable.Tok.Line, 2),
+					FilePath:  path,
+					Line:      variable.Tok.Line,
 				}
 				item, diagnostics = finalizeDocItem(item, nil, diagnostics)
 				items = append(items, item)
@@ -370,7 +393,7 @@ func resolveImportPath(name, importer string, moduleIndex map[string]string) str
 	}
 	candidates := []string{
 		filepath.Join(filepath.Dir(importer), filepath.FromSlash(name)+".tya"),
-		filepath.Join(filepath.Dir(importer), filepath.FromSlash(name), "Package.tya"),
+		filepath.Join(filepath.Dir(importer), filepath.FromSlash(name), "package.tya"),
 		filepath.Join(filepath.Dir(importer), filepath.FromSlash(name), "package.tya"),
 	}
 	for _, candidate := range candidates {

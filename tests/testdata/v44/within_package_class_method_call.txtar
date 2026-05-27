@@ -14,12 +14,12 @@ import api/v3
 
 print(Client.get_info())
 
--- api/v3/Helper.tya --
+-- api/v3/helper.tya --
 class Helper
   static info: ->
     "helper-info"
 
--- api/v3/Client.tya --
+-- api/v3/client.tya --
 class Client
   static get_info: ->
     Helper.info()

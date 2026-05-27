@@ -1,4 +1,4 @@
-# v0.51 `tya doc --html <out>` writes a multi-page static site:
+# v0.51 `tya doc --html <out>` writes a static API site:
 #   index.html, items/<kind>_<name>.html, style.css.
 # This fixture also covers every supported Markdown inline marker:
 # bold, italic, link, inline code, plus heading and code fence.
@@ -16,6 +16,7 @@ exists out/style.css
 
 grep '<title>API</title>' out/index.html
 grep 'items/function_greet.html' out/index.html
+grep 'doc-sidebar' out/index.html
 
 grep '<strong>greet</strong>' out/items/function_greet.html
 grep '<em>name</em>' out/items/function_greet.html
@@ -23,6 +24,8 @@ grep '<a href="https://example.com">docs</a>' out/items/function_greet.html
 grep '<code>name</code>' out/items/function_greet.html
 grep 'language-tya' out/items/function_greet.html
 grep '&lt;script&gt;' out/items/function_greet.html
+grep '<details class="source"><summary>Source</summary>' out/items/function_greet.html
+grep 'greet = name -&gt;' out/items/function_greet.html
 
 -- greet.tya --
 # Returns a greeting for the given **greet**.

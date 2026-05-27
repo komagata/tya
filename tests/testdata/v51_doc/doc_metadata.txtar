@@ -9,7 +9,7 @@ cp csv.tya src/csv.tya
 cp bad.tya src/bad.tya
 
 exec $WORK/tya doc src/csv.tya
-stdout '## variable Csv.rows'
+stdout '## instance variable Csv.rows'
 stdout 'type: Array<Dict>'
 stdout 'param options: Dict\? - optional CSV options.'
 stdout 'option options.separator: String - field separator.'
@@ -17,11 +17,20 @@ stdout 'return: Csv - receiver.'
 ! stderr .
 
 exec $WORK/tya doc --html out src/csv.tya
-grep '<dt>Type</dt><dd><code>Array&lt;Dict&gt;</code></dd>' out/items/variable_Csv-rows.html
-grep '<dt>Param <code>options</code></dt><dd><code>Dict\?</code> optional CSV options.</dd>' out/items/method_Csv-initialize.html
+exists out/items/class_Csv.html
+! exists out/items/variable_Csv-rows.html
+! exists out/items/method_Csv-initialize.html
+grep '<h1>class <code>Csv</code></h1>' out/items/class_Csv.html
+grep '<h2>Class Constants</h2>' out/items/class_Csv.html
+grep '<h2>Instance Variables</h2>' out/items/class_Csv.html
+grep '<h3><code>rows</code></h3>' out/items/class_Csv.html
+grep '<dt>Type</dt><dd><code>Array&lt;Dict&gt;</code></dd>' out/items/class_Csv.html
+grep '<h3><code>initialize</code></h3>' out/items/class_Csv.html
+grep '<dt>Param <code>options</code></dt><dd><code>Dict\?</code> optional CSV options.</dd>' out/items/class_Csv.html
 
 exec $WORK/tya doc --json src/csv.tya
-stdout '"kind": "variable"'
+stdout '"kind": "instance variable"'
+stdout '"kind": "class constant"'
 stdout '"type": "Array\\u003cDict\\u003e"'
 stdout '"name": "options"'
 stdout '"key": "separator"'
@@ -35,6 +44,10 @@ stderr 'TYADOC0008'
 -- csv.tya --
 # Csv docs.
 class Csv
+  # Separator docs.
+  # @type String
+  SEPARATOR: ","
+
   # Rows docs.
   # @type Array<Dict>
   rows: []

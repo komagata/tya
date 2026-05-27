@@ -71,7 +71,7 @@ import net/http
 Request = -> "local"
 print(Request())
 
--- net/http/Request.tya --
+-- net/http/request.tya --
 class Request
   initialize: label ->
     self.text = label
@@ -79,7 +79,7 @@ class Request
   label: ->
     self.text
 
--- api/Request.tya --
+-- api/request.tya --
 class Request
   initialize: label ->
     self.text = label
@@ -87,7 +87,7 @@ class Request
   label: ->
     self.text
 
--- web/Request.tya --
+-- web/request.tya --
 class Request
   initialize: label ->
     self.text = label

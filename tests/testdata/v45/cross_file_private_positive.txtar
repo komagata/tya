@@ -12,7 +12,7 @@ import pkg
 
 print(Util.run())
 
--- pkg/Util.tya --
+-- pkg/util.tya --
 class Util
   static run: ->
     h = Helper.do_work()

@@ -19,7 +19,7 @@ class FeatureTest extends TestCase
   test_greet: ->
     self.assert_equal("hi", Feature.greet(), "greet")
 
--- feature/Feature.tya --
+-- feature/feature.tya --
 class Feature
   static greet: ->
     "hi"

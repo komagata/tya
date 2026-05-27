@@ -31,10 +31,10 @@ exec $WORK/stage1 --check stdlib/equatable.tya
 exec $WORK/stage1 --check stdlib/stringable.tya
 ! stderr .
 
-exec $WORK/stage1 --check stdlib/io/Reader.tya
+exec $WORK/stage1 --check stdlib/io/reader.tya
 ! stderr .
 
-exec $WORK/stage1 --check stdlib/serialization/Serializer.tya
+exec $WORK/stage1 --check stdlib/serialization/serializer.tya
 ! stderr .
 
 exec $WORK/stage1 --check stdlib/sequence.tya

@@ -24,12 +24,12 @@ import b/net as b_net
 
 print("unreachable")
 
--- a/net/Request.tya --
+-- a/net/request.tya --
 class Request
   initialize: ->
     self.label = "a"
 
--- b/net/Request.tya --
+-- b/net/request.tya --
 class Request
   initialize: ->
     self.label = "b"

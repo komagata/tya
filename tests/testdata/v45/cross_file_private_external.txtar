@@ -12,12 +12,12 @@ import pkg
 
 print(Internal.do_work())
 
--- pkg/Util.tya --
+-- pkg/util.tya --
 class Util
   static run: ->
     "ok"
 
--- pkg/Helper.tya --
+-- pkg/helper.tya --
 class Helper
   static noop: ->
     "noop"

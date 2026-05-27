@@ -8,13 +8,692 @@
 </head>
 <body>
 <div class="doc-shell">
-<div class="doc-content">
-<p><a href="../index.html">&larr; back to index</a></p>
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_stdlib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_stdlib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_stdlib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_stdlib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_stdlib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_stdlib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_stdlib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_stdlib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_stdlib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_stdlib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_stdlib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_stdlib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_stdlib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_stdlib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_stdlib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_stdlib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_stdlib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_stdlib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_stdlib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_stdlib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_stdlib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_stdlib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_stdlib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_stdlib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_stdlib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_stdlib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_stdlib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_stdlib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_stdlib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_stdlib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_stdlib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_stdlib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_stdlib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_stdlib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_stdlib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_stdlib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_stdlib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_stdlib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_stdlib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_stdlib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_stdlib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_stdlib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_stdlib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_stdlib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_stdlib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_stdlib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_stdlib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_stdlib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_stdlib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_stdlib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li class="current"><a href="class_stdlib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_stdlib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_stdlib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_stdlib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_stdlib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_stdlib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_stdlib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_stdlib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_stdlib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_stdlib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_stdlib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_stdlib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_stdlib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_stdlib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_stdlib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_stdlib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_stdlib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_stdlib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_stdlib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_stdlib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_stdlib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_stdlib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_stdlib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_stdlib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_stdlib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_stdlib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_stdlib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_stdlib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_stdlib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_stdlib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_stdlib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_stdlib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_stdlib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_stdlib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_stdlib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
 <h1>class <code>Rng</code></h1>
+<section id="class-Rng" class="doc-item">
 <pre><code>class Rng</code></pre>
-<p><small>stdlib/random/Rng.tya:2</small></p>
+<p><small>stdlib/random/rng.tya:2</small></p>
 <p>Rng provides the random/Rng standard library API.</p>
-</div>
+<details class="source"><summary>Source</summary>
+<pre><code># Rng provides the random/Rng standard library API.
+class Rng
+  # Rng.state stores instance state.
+  # @type Int
+  state: 1
+
+  # Rng.initialize provides the random/Rng standard library operation.
+  # @param seed Any seed value.
+  # @return Self the initialized object.
+  initialize: seed -&gt;
+    self.state = 1
+    if seed.class != Number or seed != seed
+      raise error(&quot;random.Rng.seed: seed must be a number&quot;)
+    self.state = seed.to_i() % 2147483647
+    if self.state &lt;= 0
+      self.state = self.state + 2147483646
+
+  # Rng.bool provides the random/Rng standard library operation.
+  # @param probability Any probability value.
+  # @return Any the resulting value.
+  bool: probability -&gt;
+    if probability == nil
+      probability = 0.5
+    self.check_probability(probability)
+    self.float() &lt; probability
+
+  # Rng.check_probability provides the random/Rng standard library operation.
+  # @param probability Any probability value.
+  # @return Any the resulting value.
+  check_probability: probability -&gt;
+    if (
+      probability.class != Number or probability != probability or probability &lt; 0 or probability &gt; 1
+    )
+      raise error(&quot;random.Rng.bool: probability must be between 0.0 and 1.0&quot;)
+
+  # Rng.check_sample_count provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @param count Int count value.
+  # @return Int the resulting value.
+  check_sample_count: items, count -&gt;
+    if count.class != Number or count != count.to_i() or count != count
+      raise error(&quot;random.Rng.sample: count must be an integer&quot;)
+    if count &lt; 0 or count &gt; items.len()
+      raise error(&quot;random.Rng.sample: count out of range&quot;)
+
+  # Rng.choice provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @return Any the resulting value.
+  choice: items -&gt;
+    n = items.len()
+    if n == 0
+      raise error(&quot;random.Rng.choice: empty array&quot;)
+    items[self.int(0, n - 1)]
+
+  # Rng.copy_array provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @return Array the resulting value.
+  copy_array: items -&gt;
+    out = []
+    i = 0
+    while i &lt; items.len()
+      out.push(items[i])
+      i = i + 1
+    out
+
+  # Rng.float provides the random/Rng standard library operation.
+  # @return Any the resulting value.
+  float: -&gt;
+    self.next_int() / 2147483647
+
+  # Rng.int provides the random/Rng standard library operation.
+  # @param min Any min value.
+  # @param max Any max value.
+  # @return Any the resulting value.
+  int: min, max -&gt;
+    if (
+      min.class != Number or max.class != Number or min != min.to_i() or max != max.to_i()
+    )
+      raise error(&quot;random.Rng.int: bounds must be integers&quot;)
+    if max &lt; min
+      raise error(&quot;random.Rng.int: max &lt; min&quot;)
+    span = max - min + 1
+    min + self.next_int() % span
+
+  # Rng.new provides the random/Rng standard library operation.
+  # @param seed Any seed value.
+  # @return Self the resulting value.
+  new: seed -&gt;
+    Rng(seed)
+
+  # Rng.next_int provides the random/Rng standard library operation.
+  # @return Any the resulting value.
+  next_int: -&gt;
+    self.state = self.state * 48271 % 2147483647
+    self.state
+
+  # Rng.sample provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @param count Int count value.
+  # @return Any the resulting value.
+  sample: items, count -&gt;
+    self.check_sample_count(items, count)
+    shuffled = self.shuffle_copy(items)
+    out = []
+    i = 0
+    while i &lt; count
+      out.push(shuffled[i])
+      i = i + 1
+    out
+
+  # Rng.seed provides the random/Rng standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  seed: value -&gt;
+    if value.class != Number or value != value
+      raise error(&quot;random.Rng.seed: seed must be a number&quot;)
+    self.state = value.to_i() % 2147483647
+    if self.state &lt;= 0
+      self.state = self.state + 2147483646
+    self
+
+  # Rng.shuffle provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @return Any the resulting value.
+  shuffle: items -&gt;
+    n = items.len()
+    i = n - 1
+    while i &gt; 0
+      j = self.int(0, i)
+      tmp = items[i]
+      items[i] = items[j]
+      items[j] = tmp
+      i = i - 1
+    nil
+
+  # Rng.shuffle_copy provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @return Any the resulting value.
+  shuffle_copy: items -&gt;
+    copy = self.copy_array(items)
+    self.shuffle(copy)
+    copy
+
+  # Rng.weight_total provides the random/Rng standard library operation.
+  # @param weights Any weights value.
+  # @param label Any label value.
+  # @return Any the resulting value.
+  weight_total: weights, label -&gt;
+    if weights.len() == 0
+      raise error(label + &quot;: empty weights&quot;)
+    total = 0
+    i = 0
+    while i &lt; weights.len()
+      weight = weights[i]
+      if weight.class != Number or weight != weight or weight &lt; 0
+        raise error(label + &quot;: weights must be finite non-negative numbers&quot;)
+      total = total + weight
+      i = i + 1
+    if total &lt;= 0
+      raise error(label + &quot;: at least one weight must be positive&quot;)
+    total
+
+  # Rng.weighted_choice provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @param weights Any weights value.
+  # @return Any the resulting value.
+  weighted_choice: items, weights -&gt;
+    if items.len() != weights.len()
+      raise error(&quot;random.Rng.weighted_choice: items and weights length mismatch&quot;)
+    items[self.weighted_index(weights)]
+
+  # Rng.weighted_index provides the random/Rng standard library operation.
+  # @param weights Any weights value.
+  # @return Int the resulting value.
+  weighted_index: weights -&gt;
+    total = self.weight_total(weights, &quot;random.Rng.weighted_index&quot;)
+    pick = self.float() * total
+    sum = 0
+    i = 0
+    while i &lt; weights.len()
+      sum = sum + weights[i]
+      if pick &lt; sum
+        return i
+      i = i + 1
+    weights.len() - 1</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Rng-state" class="doc-item member">
+<h3><code>state</code></h3>
+<pre><code>Rng.state</code></pre>
+<p><small>stdlib/random/rng.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Int</code></dd>
+</dl>
+<p>Rng.state stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.state stores instance state.
+  # @type Int
+  state: 1</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Rng-bool" class="doc-item member">
+<h3><code>bool</code></h3>
+<pre><code>Rng.bool(probability)</code></pre>
+<p><small>stdlib/random/rng.tya:21</small></p>
+<dl class="metadata">
+<dt>Param <code>probability</code></dt><dd><code>Any</code> probability value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.bool provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.bool provides the random/Rng standard library operation.
+  # @param probability Any probability value.
+  # @return Any the resulting value.
+  bool: probability -&gt;
+    if probability == nil
+      probability = 0.5
+    self.check_probability(probability)
+    self.float() &lt; probability</code></pre>
+</details>
+</section>
+<section id="method-Rng-check_probability" class="doc-item member">
+<h3><code>check_probability</code></h3>
+<pre><code>Rng.check_probability(probability)</code></pre>
+<p><small>stdlib/random/rng.tya:30</small></p>
+<dl class="metadata">
+<dt>Param <code>probability</code></dt><dd><code>Any</code> probability value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.check_probability provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.check_probability provides the random/Rng standard library operation.
+  # @param probability Any probability value.
+  # @return Any the resulting value.
+  check_probability: probability -&gt;
+    if (
+      probability.class != Number or probability != probability or probability &lt; 0 or probability &gt; 1
+    )
+      raise error(&quot;random.Rng.bool: probability must be between 0.0 and 1.0&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Rng-check_sample_count" class="doc-item member">
+<h3><code>check_sample_count</code></h3>
+<pre><code>Rng.check_sample_count(items, count)</code></pre>
+<p><small>stdlib/random/rng.tya:40</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Param <code>count</code></dt><dd><code>Int</code> count value.</dd>
+<dt>Return</dt><dd><code>Int</code> the resulting value.</dd>
+</dl>
+<p>Rng.check_sample_count provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.check_sample_count provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @param count Int count value.
+  # @return Int the resulting value.
+  check_sample_count: items, count -&gt;
+    if count.class != Number or count != count.to_i() or count != count
+      raise error(&quot;random.Rng.sample: count must be an integer&quot;)
+    if count &lt; 0 or count &gt; items.len()
+      raise error(&quot;random.Rng.sample: count out of range&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Rng-choice" class="doc-item member">
+<h3><code>choice</code></h3>
+<pre><code>Rng.choice(items)</code></pre>
+<p><small>stdlib/random/rng.tya:49</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.choice provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.choice provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @return Any the resulting value.
+  choice: items -&gt;
+    n = items.len()
+    if n == 0
+      raise error(&quot;random.Rng.choice: empty array&quot;)
+    items[self.int(0, n - 1)]</code></pre>
+</details>
+</section>
+<section id="method-Rng-copy_array" class="doc-item member">
+<h3><code>copy_array</code></h3>
+<pre><code>Rng.copy_array(items)</code></pre>
+<p><small>stdlib/random/rng.tya:58</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>Rng.copy_array provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.copy_array provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @return Array the resulting value.
+  copy_array: items -&gt;
+    out = []
+    i = 0
+    while i &lt; items.len()
+      out.push(items[i])
+      i = i + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Rng-float" class="doc-item member">
+<h3><code>float</code></h3>
+<pre><code>Rng.float()</code></pre>
+<p><small>stdlib/random/rng.tya:68</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.float provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.float provides the random/Rng standard library operation.
+  # @return Any the resulting value.
+  float: -&gt;
+    self.next_int() / 2147483647</code></pre>
+</details>
+</section>
+<section id="method-Rng-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Rng.initialize(seed)</code></pre>
+<p><small>stdlib/random/rng.tya:10</small></p>
+<dl class="metadata">
+<dt>Param <code>seed</code></dt><dd><code>Any</code> seed value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Rng.initialize provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.initialize provides the random/Rng standard library operation.
+  # @param seed Any seed value.
+  # @return Self the initialized object.
+  initialize: seed -&gt;
+    self.state = 1
+    if seed.class != Number or seed != seed
+      raise error(&quot;random.Rng.seed: seed must be a number&quot;)
+    self.state = seed.to_i() % 2147483647
+    if self.state &lt;= 0
+      self.state = self.state + 2147483646</code></pre>
+</details>
+</section>
+<section id="method-Rng-int" class="doc-item member">
+<h3><code>int</code></h3>
+<pre><code>Rng.int(min, max)</code></pre>
+<p><small>stdlib/random/rng.tya:75</small></p>
+<dl class="metadata">
+<dt>Param <code>min</code></dt><dd><code>Any</code> min value.</dd>
+<dt>Param <code>max</code></dt><dd><code>Any</code> max value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.int provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.int provides the random/Rng standard library operation.
+  # @param min Any min value.
+  # @param max Any max value.
+  # @return Any the resulting value.
+  int: min, max -&gt;
+    if (
+      min.class != Number or max.class != Number or min != min.to_i() or max != max.to_i()
+    )
+      raise error(&quot;random.Rng.int: bounds must be integers&quot;)
+    if max &lt; min
+      raise error(&quot;random.Rng.int: max &lt; min&quot;)
+    span = max - min + 1
+    min + self.next_int() % span</code></pre>
+</details>
+</section>
+<section id="method-Rng-new" class="doc-item member">
+<h3><code>new</code></h3>
+<pre><code>Rng.new(seed)</code></pre>
+<p><small>stdlib/random/rng.tya:88</small></p>
+<dl class="metadata">
+<dt>Param <code>seed</code></dt><dd><code>Any</code> seed value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Rng.new provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.new provides the random/Rng standard library operation.
+  # @param seed Any seed value.
+  # @return Self the resulting value.
+  new: seed -&gt;
+    Rng(seed)</code></pre>
+</details>
+</section>
+<section id="method-Rng-next_int" class="doc-item member">
+<h3><code>next_int</code></h3>
+<pre><code>Rng.next_int()</code></pre>
+<p><small>stdlib/random/rng.tya:93</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.next_int provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.next_int provides the random/Rng standard library operation.
+  # @return Any the resulting value.
+  next_int: -&gt;
+    self.state = self.state * 48271 % 2147483647
+    self.state</code></pre>
+</details>
+</section>
+<section id="method-Rng-sample" class="doc-item member">
+<h3><code>sample</code></h3>
+<pre><code>Rng.sample(items, count)</code></pre>
+<p><small>stdlib/random/rng.tya:101</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Param <code>count</code></dt><dd><code>Int</code> count value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.sample provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.sample provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @param count Int count value.
+  # @return Any the resulting value.
+  sample: items, count -&gt;
+    self.check_sample_count(items, count)
+    shuffled = self.shuffle_copy(items)
+    out = []
+    i = 0
+    while i &lt; count
+      out.push(shuffled[i])
+      i = i + 1
+    out</code></pre>
+</details>
+</section>
+<section id="method-Rng-seed" class="doc-item member">
+<h3><code>seed</code></h3>
+<pre><code>Rng.seed(value)</code></pre>
+<p><small>stdlib/random/rng.tya:114</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.seed provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.seed provides the random/Rng standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  seed: value -&gt;
+    if value.class != Number or value != value
+      raise error(&quot;random.Rng.seed: seed must be a number&quot;)
+    self.state = value.to_i() % 2147483647
+    if self.state &lt;= 0
+      self.state = self.state + 2147483646
+    self</code></pre>
+</details>
+</section>
+<section id="method-Rng-shuffle" class="doc-item member">
+<h3><code>shuffle</code></h3>
+<pre><code>Rng.shuffle(items)</code></pre>
+<p><small>stdlib/random/rng.tya:125</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.shuffle provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.shuffle provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @return Any the resulting value.
+  shuffle: items -&gt;
+    n = items.len()
+    i = n - 1
+    while i &gt; 0
+      j = self.int(0, i)
+      tmp = items[i]
+      items[i] = items[j]
+      items[j] = tmp
+      i = i - 1
+    nil</code></pre>
+</details>
+</section>
+<section id="method-Rng-shuffle_copy" class="doc-item member">
+<h3><code>shuffle_copy</code></h3>
+<pre><code>Rng.shuffle_copy(items)</code></pre>
+<p><small>stdlib/random/rng.tya:139</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.shuffle_copy provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.shuffle_copy provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @return Any the resulting value.
+  shuffle_copy: items -&gt;
+    copy = self.copy_array(items)
+    self.shuffle(copy)
+    copy</code></pre>
+</details>
+</section>
+<section id="method-Rng-weight_total" class="doc-item member">
+<h3><code>weight_total</code></h3>
+<pre><code>Rng.weight_total(weights, label)</code></pre>
+<p><small>stdlib/random/rng.tya:148</small></p>
+<dl class="metadata">
+<dt>Param <code>weights</code></dt><dd><code>Any</code> weights value.</dd>
+<dt>Param <code>label</code></dt><dd><code>Any</code> label value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.weight_total provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.weight_total provides the random/Rng standard library operation.
+  # @param weights Any weights value.
+  # @param label Any label value.
+  # @return Any the resulting value.
+  weight_total: weights, label -&gt;
+    if weights.len() == 0
+      raise error(label + &quot;: empty weights&quot;)
+    total = 0
+    i = 0
+    while i &lt; weights.len()
+      weight = weights[i]
+      if weight.class != Number or weight != weight or weight &lt; 0
+        raise error(label + &quot;: weights must be finite non-negative numbers&quot;)
+      total = total + weight
+      i = i + 1
+    if total &lt;= 0
+      raise error(label + &quot;: at least one weight must be positive&quot;)
+    total</code></pre>
+</details>
+</section>
+<section id="method-Rng-weighted_choice" class="doc-item member">
+<h3><code>weighted_choice</code></h3>
+<pre><code>Rng.weighted_choice(items, weights)</code></pre>
+<p><small>stdlib/random/rng.tya:167</small></p>
+<dl class="metadata">
+<dt>Param <code>items</code></dt><dd><code>Array</code> items value.</dd>
+<dt>Param <code>weights</code></dt><dd><code>Any</code> weights value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Rng.weighted_choice provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.weighted_choice provides the random/Rng standard library operation.
+  # @param items Array items value.
+  # @param weights Any weights value.
+  # @return Any the resulting value.
+  weighted_choice: items, weights -&gt;
+    if items.len() != weights.len()
+      raise error(&quot;random.Rng.weighted_choice: items and weights length mismatch&quot;)
+    items[self.weighted_index(weights)]</code></pre>
+</details>
+</section>
+<section id="method-Rng-weighted_index" class="doc-item member">
+<h3><code>weighted_index</code></h3>
+<pre><code>Rng.weighted_index(weights)</code></pre>
+<p><small>stdlib/random/rng.tya:175</small></p>
+<dl class="metadata">
+<dt>Param <code>weights</code></dt><dd><code>Any</code> weights value.</dd>
+<dt>Return</dt><dd><code>Int</code> the resulting value.</dd>
+</dl>
+<p>Rng.weighted_index provides the random/Rng standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Rng.weighted_index provides the random/Rng standard library operation.
+  # @param weights Any weights value.
+  # @return Int the resulting value.
+  weighted_index: weights -&gt;
+    total = self.weight_total(weights, &quot;random.Rng.weighted_index&quot;)
+    pick = self.float() * total
+    sum = 0
+    i = 0
+    while i &lt; weights.len()
+      sum = sum + weights[i]
+      if pick &lt; sum
+        return i
+      i = i + 1
+    weights.len() - 1</code></pre>
+</details>
+</section>
+</main>
 </div>
 </body>
 </html>

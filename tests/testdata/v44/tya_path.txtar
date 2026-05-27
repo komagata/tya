@@ -27,7 +27,7 @@ import shared
 
 print(Shared.label())
 
--- lib/shared/Shared.tya --
+-- lib/shared/shared.tya --
 class Shared
   static label: ->
     "from-lib"
@@ -37,12 +37,12 @@ import overlay
 
 print(Overlay.tag())
 
--- lib_a/overlay/Overlay.tya --
+-- lib_a/overlay/overlay.tya --
 class Overlay
   static tag: ->
     "a"
 
--- lib_b/overlay/Overlay.tya --
+-- lib_b/overlay/overlay.tya --
 class Overlay
   static tag: ->
     "b"

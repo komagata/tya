@@ -26,7 +26,7 @@ import (
 //	  .gitignore
 //	  README.md
 //
-// lib template: src/<name>/<PascalName>.tya (directory package) plus the
+// lib template: src/<name>/<name>.tya (directory package) plus the
 // corresponding tests/<name>_test.tya. Other files are identical.
 func newCommand(args []string) error {
 	opts, err := parseNewArgs(args)
@@ -207,7 +207,7 @@ test = "TYA_PATH=src tya test tests"
   static version: ->
     return %s_version()
 `, pascal, pkgName)
-	if err := os.WriteFile(filepath.Join(pkgDir, pascal+".tya"), []byte(src), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pkgDir, pkgName+".tya"), []byte(src), 0644); err != nil {
 		return err
 	}
 	header := fmt.Sprintf(`#ifndef TYA_%s_H
@@ -275,7 +275,7 @@ func writeLibTemplate(target, name string) error {
   greet: target ->
     return "Hello, " + target + " from " + self.name
 `, pascal, name)
-	if err := os.WriteFile(filepath.Join(pkgDir, pascal+".tya"), []byte(src), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(pkgDir, pkgName+".tya"), []byte(src), 0644); err != nil {
 		return err
 	}
 	test := fmt.Sprintf(`import %s

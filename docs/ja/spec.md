@@ -180,11 +180,13 @@ while count < 3
 
 `.tya` ファイルの役割は、ファイル名と文脈によって決まる。
 
-小文字の `.tya` ファイルはスクリプトファイルである。`tya run` のエントリファイルにでき、直接インポートすることもできる。インポートされた場合、そのトップレベル名はインポート束縛を通して公開される。
+`snake_case` の `.tya` ファイルは、内容がクラス/インターフェイスファイル規則を満たさない限りスクリプトファイルである。スクリプトファイルは `tya run` のエントリファイルにでき、直接インポートすることもできる。インポートされた場合、そのトップレベル名はインポート束縛を通して公開される。
 
-`PascalCase` の `.tya` ファイルはクラスファイルである。ライブラリ専用であり、エントリファイルにはできない。クラスファイルは、`.tya` を除いたファイル名と一致する名前の公開クラスまたは公開インターフェイスをちょうど 1 つ宣言しなければならない。
+クラス/インターフェイスファイルは `snake_case` のファイル名を使い、ライブラリ専用であり、エントリファイルにはできない。クラス/インターフェイスファイルは、`base64.tya` が `class Base64` を宣言するように、ファイル名に対応する `PascalCase` 名の公開クラスまたは公開インターフェイスをちょうど 1 つ宣言しなければならない。`Base64.tya` のような PascalCase ファイル名はクラスファイルではない。
 
-クラスファイルは、ディレクトリパッケージの一部として明示的に読み込まれる場合も、エントリスクリプトと同じディレクトリにある兄弟として暗黙に読み込まれる場合もある。スクリプトエントリは、同じディレクトリの `PascalCase` クラスファイルをインポートなしで見る。
+クラスファイルは、ディレクトリパッケージの一部として明示的に読み込まれる場合も、エントリスクリプトと同じディレクトリにある兄弟として暗黙に読み込まれる場合もある。スクリプトエントリは、同じディレクトリの `snake_case` クラス/インターフェイスファイルをインポートなしで見る。
+
+このファイル名規約は、従来の PascalCase クラスファイル規約からのマイナーバージョンの言語/パッケージ規約変更である。既存の `Base64.tya` 形式のファイルは、対応する `snake_case.tya` 形式にリネームしなければならない。
 
 ## 正規構文 {#canonical-syntax}
 
@@ -325,7 +327,7 @@ class Admin extends User
     "admin:{self.name}"
 ```
 
-クラスファイルは `PascalCase` の `.tya` ファイルである。ファイル名と一致する名前の公開クラスまたは公開インターフェイスをちょうど 1 つ宣言しなければならない。private な補助クラスとインターフェイスも宣言できる。クラスファイルはライブラリファイルであり、エントリスクリプトとして実行できない。
+クラスファイルは `snake_case` の `.tya` ファイルである。ファイル名に対応する `PascalCase` 名の公開クラスまたは公開インターフェイスをちょうど 1 つ宣言しなければならない。private な補助クラスとインターフェイスも宣言できる。クラスファイルはライブラリファイルであり、エントリスクリプトとして実行できない。
 
 クラスファイル内の追加クラスはそのファイルに private である。同じディレクトリパッケージ内であっても、他のファイルからは見えない。
 
@@ -706,7 +708,7 @@ collection helper は `value.to_s()`, `value.to_i()`, `dict.delete(key)`,
 language feature             Tya に組み込まれた構文または semantics
 built-in function            import なしで利用できる関数
 built-in class               import なしで利用できる class。現在は存在しない
-user package                 PascalCase class file の import 可能な directory
+user package                 snake_case class/interface file の import 可能な directory
 user library                 user package の再利用可能な directory tree
 standard-library package     Tya に同梱され、通常通り import される .tya source
 bundled library              toolchain と一緒に配布される library または support file
@@ -729,11 +731,11 @@ import net/http
 import net/http as http
 ```
 
-インポートパスはスラッシュ区切りの `snake_case` セグメントである。相対ファイルシステムパス、絶対パス、空セグメント、終端が `PascalCase` のセグメントは不正である。
+インポートパスはスラッシュ区切りの `snake_case` セグメントである。相対ファイルシステムパス、絶対パス、空セグメント、`snake_case` ではないセグメントは不正である。
 
 ### ディレクトリパッケージ
 
-ディレクトリパッケージは、インポートパスによって解決される、`PascalCase` クラスファイルを含むディレクトリである。少なくとも 1 つのクラスファイルを含まなければならず、パッケージの leaf に小文字スクリプトファイルを含んではならない。
+ディレクトリパッケージは、インポートパスによって解決される、`snake_case` クラス/インターフェイスファイルを含むディレクトリである。少なくとも 1 つのクラス/インターフェイスファイルを含まなければならず、パッケージの leaf にスクリプトファイルを含んではならない。
 
 alias なしのディレクトリインポートは、公開クラス名とインターフェイス名を直接公開する。
 
@@ -753,7 +755,7 @@ server = http.Server()
 
 同じディレクトリパッケージ内では、兄弟の公開クラスがインポートなしの裸の `PascalCase` 名で見える。
 
-directory package の public API は、その `PascalCase` class file に含まれる public class と interface の集合である。class は class name が filename と一致する場合に public である。class file 内の追加 class はその file に private である。
+directory package の public API は、その `snake_case` class/interface file に含まれる public class と interface の集合である。class または interface は PascalCase name が filename に対応する場合に public である。class file 内の追加 class はその file に private である。
 
 ### ユーザーライブラリ
 
@@ -1120,7 +1122,7 @@ runtime kind errors、不正な操作、失敗した assertions、失敗した I
 
 標準ライブラリは `stdlib/` の下で Tya に同梱され、ユーザーファイルやパッケージと同じ import 構文でインポートされる。
 
-標準ライブラリは言語配布物の一部である。公開 surface は、`stdlib/` 以下の import 可能な PascalCase package class と interface の集合である。標準ライブラリ import は、local package、lock された package dependency、`TYA_PATH` entries の後に解決される。
+標準ライブラリは言語配布物の一部である。公開 surface は、`stdlib/` 以下の `snake_case` class/interface file から import 可能な PascalCase package class と interface の集合である。標準ライブラリ import は、local package、lock された package dependency、`TYA_PATH` entries の後に解決される。
 
 public な標準ライブラリ class、interface、user-facing method は source doc comment を持つ。生成される stdlib API documentation はそれらの comment から `tya doc` で作られる。例えば `tya doc --json stdlib` は package path、signature、rendered comment、source path、source line を含む machine-readable reference を出力する。
 

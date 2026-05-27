@@ -42,7 +42,7 @@ are discoverable without requiring tutorial-length pages for every code.
 | TYA-E0400 | Class file is missing its required public class. |
 | TYA-E0402 | Class file contains unsupported top-level declarations. |
 | TYA-E0403 | Class file imports are not before class/interface declarations. |
-| TYA-E0404 | Class file name is not PascalCase. |
+| TYA-E0404 | Class file name is not snake_case. |
 | TYA-E0405 | Class file declares the same public class more than once. |
 | TYA-E0406 | Private class visibility was violated. |
 | TYA-E0407 | Underscore privacy marker was used. |

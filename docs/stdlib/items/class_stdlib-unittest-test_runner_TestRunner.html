@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class TestRunner</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_stdlib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_stdlib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_stdlib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_stdlib-base64-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_stdlib-bytes-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_stdlib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_stdlib-channel-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_stdlib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_stdlib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_stdlib-cli-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_stdlib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_stdlib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_stdlib-color-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_stdlib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_stdlib-csv-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_stdlib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_stdlib-digest-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_stdlib-dir-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_stdlib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_stdlib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_stdlib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_stdlib-file-file_File.html"><code>File</code></a></li>
+<li><a href="class_stdlib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_stdlib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_stdlib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_stdlib-hex-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_stdlib-hmac-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_stdlib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_stdlib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_stdlib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_stdlib-json-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_stdlib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_stdlib-log-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_stdlib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_stdlib-markdown-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_stdlib-math-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_stdlib-matrix-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_stdlib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_stdlib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_stdlib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_stdlib-os-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_stdlib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_stdlib-path-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_stdlib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_stdlib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_stdlib-process-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_stdlib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_stdlib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_stdlib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_stdlib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_stdlib-regex-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_stdlib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_stdlib-runtime-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_stdlib-secure_random-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_stdlib-serialization-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_stdlib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_stdlib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_stdlib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_stdlib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_stdlib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_stdlib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_stdlib-task-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_stdlib-template-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_stdlib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li class="current"><a href="class_stdlib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_stdlib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_stdlib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_stdlib-time-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_stdlib-toml-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_stdlib-transform2d-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_stdlib-url-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_stdlib-value-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_stdlib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_stdlib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_stdlib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_stdlib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_stdlib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_stdlib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_stdlib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_stdlib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_stdlib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_stdlib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_stdlib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_stdlib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_stdlib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_stdlib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_stdlib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_stdlib-serialization-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_stdlib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_stdlib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_stdlib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>TestRunner</code></h1>
+<section id="class-TestRunner" class="doc-item">
+<pre><code>class TestRunner</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:2</small></p>
+<p>TestRunner provides the unittest/TestRunner standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># TestRunner provides the unittest/TestRunner standard library API.
+class TestRunner
+  # TestRunner.default provides the unittest/TestRunner standard library operation.
+  # @return Any the resulting value.
+  default: -&gt;
+    TestRunner()
+
+  # TestRunner.error_message provides the unittest/TestRunner standard library operation.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  error_message: err -&gt;
+    msg = err
+    try
+      msg = err[&quot;message&quot;]
+    catch _
+      msg = err
+    msg
+
+  # TestRunner.print_error provides the unittest/TestRunner standard library operation.
+  # @param label Any label value.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  print_error: label, err -&gt;
+    msg = self.error_message(err)
+    println(&quot;  ERROR {label}&quot;)
+    println(&quot;        {msg}&quot;)
+
+  # TestRunner.print_fail provides the unittest/TestRunner standard library operation.
+  # @param label Any label value.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  print_fail: label, err -&gt;
+    msg = self.error_message(err)
+    println(&quot;  FAIL  {label}&quot;)
+    println(&quot;        {msg}&quot;)
+
+  # TestRunner.print_summary provides the unittest/TestRunner standard library operation.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  print_summary: result -&gt;
+    tests = result[&quot;tests&quot;]
+    passes = result[&quot;passes&quot;]
+    failures = result[&quot;failures&quot;]
+    errors = result[&quot;errors&quot;]
+    if errors &gt; 0
+      println(
+        &quot;{tests} tests, {passes} passed, {failures} failed, {errors} errors&quot;
+      )
+    else
+      println(&quot;{tests} tests, {passes} passed, {failures} failed&quot;)
+
+  # TestRunner.run provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @return Any the resulting value.
+  run: suite -&gt;
+    result = { tests: 0, passes: 0, failures: 0, errors: 0 }
+    self.run_suite(suite, result)
+    self.print_summary(result)
+    result
+
+  # TestRunner.run_and_exit provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @return Any the resulting value.
+  run_and_exit: suite -&gt;
+    result = self.run(suite)
+    if result[&quot;failures&quot;] &gt; 0 or result[&quot;errors&quot;] &gt; 0
+      exit(1)
+    result
+
+  # TestRunner.run_case provides the unittest/TestRunner standard library operation.
+  # @param test Any test value.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  run_case: test, result -&gt;
+    klass = test
+    methods = []
+    try
+      methods = test.unittest_test_methods
+    catch _
+      klass = test.class
+      methods = klass.unittest_test_methods
+    for method in methods
+      instance = test
+      try
+        instance = klass()
+      catch _
+        instance = test
+      self.run_method(instance, method, result)
+
+  # TestRunner.run_method provides the unittest/TestRunner standard library operation.
+  # @param instance Any instance value.
+  # @param method String method value.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  run_method: instance, method, result -&gt;
+    result[&quot;tests&quot;] = result[&quot;tests&quot;] + 1
+    label = &quot;{instance.class.name}.{method}&quot;
+    setup_ok = true
+    failed = false
+    errored = false
+    if instance.class.unittest_has_setup
+      try
+        instance[&quot;setup&quot;]()
+      catch err
+        setup_ok = false
+        errored = true
+        self.print_error(label, err)
+    if setup_ok
+      try
+        instance[method]()
+      catch err
+        kind = &quot;&quot;
+        try
+          kind = err[&quot;kind&quot;]
+        catch _
+          kind = &quot;&quot;
+        if kind == &quot;unittest_fail&quot;
+          failed = true
+          self.print_fail(label, err)
+        else
+          errored = true
+          self.print_error(label, err)
+      if instance.class.unittest_has_teardown
+        try
+          instance[&quot;teardown&quot;]()
+        catch err
+          errored = true
+          self.print_error(label, err)
+    if failed
+      result[&quot;failures&quot;] = result[&quot;failures&quot;] + 1
+    elseif errored
+      result[&quot;errors&quot;] = result[&quot;errors&quot;] + 1
+    else
+      result[&quot;passes&quot;] = result[&quot;passes&quot;] + 1
+      println(&quot;  PASS  {label}&quot;)
+
+  # TestRunner.run_suite provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  run_suite: suite, result -&gt;
+    for test in suite.tests
+      is_suite = false
+      try
+        is_suite = test.class == TestSuite
+      catch _
+        is_suite = false
+      if is_suite
+        self.run_suite(test, result)
+      else
+        self.run_case(test, result)</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-TestRunner-default" class="doc-item member">
+<h3><code>default</code></h3>
+<pre><code>TestRunner.default()</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:5</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.default provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.default provides the unittest/TestRunner standard library operation.
+  # @return Any the resulting value.
+  default: -&gt;
+    TestRunner()</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-error_message" class="doc-item member">
+<h3><code>error_message</code></h3>
+<pre><code>TestRunner.error_message(err)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:11</small></p>
+<dl class="metadata">
+<dt>Param <code>err</code></dt><dd><code>Any</code> err value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.error_message provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.error_message provides the unittest/TestRunner standard library operation.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  error_message: err -&gt;
+    msg = err
+    try
+      msg = err[&quot;message&quot;]
+    catch _
+      msg = err
+    msg</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-print_error" class="doc-item member">
+<h3><code>print_error</code></h3>
+<pre><code>TestRunner.print_error(label, err)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:23</small></p>
+<dl class="metadata">
+<dt>Param <code>label</code></dt><dd><code>Any</code> label value.</dd>
+<dt>Param <code>err</code></dt><dd><code>Any</code> err value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.print_error provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.print_error provides the unittest/TestRunner standard library operation.
+  # @param label Any label value.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  print_error: label, err -&gt;
+    msg = self.error_message(err)
+    println(&quot;  ERROR {label}&quot;)
+    println(&quot;        {msg}&quot;)</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-print_fail" class="doc-item member">
+<h3><code>print_fail</code></h3>
+<pre><code>TestRunner.print_fail(label, err)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:32</small></p>
+<dl class="metadata">
+<dt>Param <code>label</code></dt><dd><code>Any</code> label value.</dd>
+<dt>Param <code>err</code></dt><dd><code>Any</code> err value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.print_fail provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.print_fail provides the unittest/TestRunner standard library operation.
+  # @param label Any label value.
+  # @param err Any err value.
+  # @return Any the resulting value.
+  print_fail: label, err -&gt;
+    msg = self.error_message(err)
+    println(&quot;  FAIL  {label}&quot;)
+    println(&quot;        {msg}&quot;)</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-print_summary" class="doc-item member">
+<h3><code>print_summary</code></h3>
+<pre><code>TestRunner.print_summary(result)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:40</small></p>
+<dl class="metadata">
+<dt>Param <code>result</code></dt><dd><code>Any</code> result value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.print_summary provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.print_summary provides the unittest/TestRunner standard library operation.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  print_summary: result -&gt;
+    tests = result[&quot;tests&quot;]
+    passes = result[&quot;passes&quot;]
+    failures = result[&quot;failures&quot;]
+    errors = result[&quot;errors&quot;]
+    if errors &gt; 0
+      println(
+        &quot;{tests} tests, {passes} passed, {failures} failed, {errors} errors&quot;
+      )
+    else
+      println(&quot;{tests} tests, {passes} passed, {failures} failed&quot;)</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-run" class="doc-item member">
+<h3><code>run</code></h3>
+<pre><code>TestRunner.run(suite)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:55</small></p>
+<dl class="metadata">
+<dt>Param <code>suite</code></dt><dd><code>Any</code> suite value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.run provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.run provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @return Any the resulting value.
+  run: suite -&gt;
+    result = { tests: 0, passes: 0, failures: 0, errors: 0 }
+    self.run_suite(suite, result)
+    self.print_summary(result)
+    result</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-run_and_exit" class="doc-item member">
+<h3><code>run_and_exit</code></h3>
+<pre><code>TestRunner.run_and_exit(suite)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:64</small></p>
+<dl class="metadata">
+<dt>Param <code>suite</code></dt><dd><code>Any</code> suite value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.run_and_exit provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.run_and_exit provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @return Any the resulting value.
+  run_and_exit: suite -&gt;
+    result = self.run(suite)
+    if result[&quot;failures&quot;] &gt; 0 or result[&quot;errors&quot;] &gt; 0
+      exit(1)
+    result</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-run_case" class="doc-item member">
+<h3><code>run_case</code></h3>
+<pre><code>TestRunner.run_case(test, result)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:74</small></p>
+<dl class="metadata">
+<dt>Param <code>test</code></dt><dd><code>Any</code> test value.</dd>
+<dt>Param <code>result</code></dt><dd><code>Any</code> result value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.run_case provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.run_case provides the unittest/TestRunner standard library operation.
+  # @param test Any test value.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  run_case: test, result -&gt;
+    klass = test
+    methods = []
+    try
+      methods = test.unittest_test_methods
+    catch _
+      klass = test.class
+      methods = klass.unittest_test_methods
+    for method in methods
+      instance = test
+      try
+        instance = klass()
+      catch _
+        instance = test
+      self.run_method(instance, method, result)</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-run_method" class="doc-item member">
+<h3><code>run_method</code></h3>
+<pre><code>TestRunner.run_method(instance, method, result)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:95</small></p>
+<dl class="metadata">
+<dt>Param <code>instance</code></dt><dd><code>Any</code> instance value.</dd>
+<dt>Param <code>method</code></dt><dd><code>String</code> method value.</dd>
+<dt>Param <code>result</code></dt><dd><code>Any</code> result value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.run_method provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.run_method provides the unittest/TestRunner standard library operation.
+  # @param instance Any instance value.
+  # @param method String method value.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  run_method: instance, method, result -&gt;
+    result[&quot;tests&quot;] = result[&quot;tests&quot;] + 1
+    label = &quot;{instance.class.name}.{method}&quot;
+    setup_ok = true
+    failed = false
+    errored = false
+    if instance.class.unittest_has_setup
+      try
+        instance[&quot;setup&quot;]()
+      catch err
+        setup_ok = false
+        errored = true
+        self.print_error(label, err)
+    if setup_ok
+      try
+        instance[method]()
+      catch err
+        kind = &quot;&quot;
+        try
+          kind = err[&quot;kind&quot;]
+        catch _
+          kind = &quot;&quot;
+        if kind == &quot;unittest_fail&quot;
+          failed = true
+          self.print_fail(label, err)
+        else
+          errored = true
+          self.print_error(label, err)
+      if instance.class.unittest_has_teardown
+        try
+          instance[&quot;teardown&quot;]()
+        catch err
+          errored = true
+          self.print_error(label, err)
+    if failed
+      result[&quot;failures&quot;] = result[&quot;failures&quot;] + 1
+    elseif errored
+      result[&quot;errors&quot;] = result[&quot;errors&quot;] + 1
+    else
+      result[&quot;passes&quot;] = result[&quot;passes&quot;] + 1
+      println(&quot;  PASS  {label}&quot;)</code></pre>
+</details>
+</section>
+<section id="method-TestRunner-run_suite" class="doc-item member">
+<h3><code>run_suite</code></h3>
+<pre><code>TestRunner.run_suite(suite, result)</code></pre>
+<p><small>stdlib/unittest/test_runner.tya:141</small></p>
+<dl class="metadata">
+<dt>Param <code>suite</code></dt><dd><code>Any</code> suite value.</dd>
+<dt>Param <code>result</code></dt><dd><code>Any</code> result value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>TestRunner.run_suite provides the unittest/TestRunner standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # TestRunner.run_suite provides the unittest/TestRunner standard library operation.
+  # @param suite Any suite value.
+  # @param result Any result value.
+  # @return Any the resulting value.
+  run_suite: suite, result -&gt;
+    for test in suite.tests
+      is_suite = false
+      try
+        is_suite = test.class == TestSuite
+      catch _
+        is_suite = false
+      if is_suite
+        self.run_suite(test, result)
+      else
+        self.run_case(test, result)</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

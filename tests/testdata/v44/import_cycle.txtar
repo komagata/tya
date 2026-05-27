@@ -12,14 +12,14 @@ import a
 
 print(a.A.go())
 
--- a/A.tya --
+-- a/a.tya --
 import b
 
 class A
   static go: ->
     "via " + b.B.go()
 
--- b/B.tya --
+-- b/b.tya --
 import a
 
 class B

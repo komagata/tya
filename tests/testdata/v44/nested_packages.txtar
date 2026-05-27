@@ -16,7 +16,7 @@ import api/v1
 client = Client()
 print(client.fetch("/"))
 
--- api/v1/Client.tya --
+-- api/v1/client.tya --
 class Client
   initialize: ->
     self.hits = 0
@@ -26,7 +26,7 @@ class Client
     response = Response(200)
     "{request.summary()} -> {response.status()}"
 
--- api/v1/Request.tya --
+-- api/v1/request.tya --
 class Request
   initialize: method, url ->
     self.method = method
@@ -35,7 +35,7 @@ class Request
   summary: ->
     "{self.method} {self.url}"
 
--- api/v1/Response.tya --
+-- api/v1/response.tya --
 class Response
   initialize: status ->
     self.status = status

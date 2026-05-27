@@ -268,17 +268,14 @@ allowed by the file kind. Class files are more restrictive than script files.
 
 A `.tya` file's role is determined by its filename and context.
 
-Lowercase `.tya` files are script files. They may be entry files for `tya run`
-and may also be imported directly. When imported, their top-level names are
-exposed through the import binding.
+`snake_case` `.tya` files are script files unless their contents satisfy the class/interface file rules. Script files may be entry files for `tya run` and may also be imported directly. When imported, their top-level names are exposed through the import binding.
 
-PascalCase `.tya` files are class files. They are library-only and cannot be
-entry files. A class file must declare exactly one public class or interface
-whose name matches the filename without `.tya`.
+Class/interface files use `snake_case` filenames and are library-only; they cannot be entry files. A class/interface file must declare exactly one public class or interface whose PascalCase name maps to the filename without `.tya`, such as `base64.tya` declaring `class Base64` or `http_server.tya` declaring `class HTTPServer`. PascalCase filenames such as `Base64.tya` are not class files.
 
 Class files may be loaded explicitly as part of a directory package or
-implicitly as same-directory siblings of an entry script. A script entry sees
-PascalCase class files in its own directory without import.
+implicitly as same-directory siblings of an entry script. A script entry sees snake_case class/interface files in its own directory without import.
+
+This filename convention is a minor-version language/package convention change from the older PascalCase class-file convention. Existing `Base64.tya`-style files must be renamed to the corresponding `snake_case.tya` form.
 
 ### Accepted Syntax and Formatted Syntax {#accepted-formatted-syntax}
 
@@ -504,8 +501,7 @@ class Admin extends User
     "admin:{self.name}"
 ```
 
-A class file is a PascalCase `.tya` file. It must declare exactly one public
-class or interface whose name matches the filename. It may also declare private
+A class file is a snake_case `.tya` file. It must declare exactly one public class or interface whose PascalCase name maps to the filename. It may also declare private
 helper classes and interfaces. Class files are library files and cannot be run
 as entry scripts.
 
@@ -1060,7 +1056,7 @@ Current Tya documentation uses these terms normatively:
 language feature             syntax or semantics built into Tya
 built-in function            function available without import
 built-in class               class available without import; none currently
-user package                 importable directory of PascalCase class files
+user package                 importable directory of snake_case class/interface files
 user library                 reusable directory tree of user packages
 standard-library package     .tya source shipped with Tya and imported normally
 bundled library              library or support file shipped with the toolchain
@@ -1084,14 +1080,11 @@ import net/http as http
 ```
 
 Import paths are slash-separated `snake_case` segments. Relative filesystem
-paths, absolute paths, empty segments, and PascalCase terminal segments are
-invalid.
+paths, absolute paths, empty segments, and non-snake_case segments are invalid.
 
 ### Directory Packages
 
-A directory package is a directory resolved by import path containing
-PascalCase class files. It must contain at least one class file and must not
-contain lowercase script files at the package leaf.
+A directory package is a directory resolved by import path containing snake_case class/interface files. It must contain at least one class/interface file and must not contain script files at the package leaf.
 
 Unaliased directory imports expose public class and interface names directly.
 They do not create a lowercase namespace binding for the import path or terminal
@@ -1135,8 +1128,7 @@ Within the same directory package, sibling public classes are visible by bare
 PascalCase name without import.
 
 The public API of a directory package is the set of public classes and
-interfaces in its PascalCase class files. A class is public when its class name
-matches its filename. Additional classes in a class file are private to that
+interfaces in its snake_case class/interface files. A class or interface is public when its PascalCase name maps to its filename. Additional classes in a class file are private to that
 file.
 
 ### User Libraries
@@ -1623,7 +1615,7 @@ The standard library is shipped with Tya under `stdlib/` and is imported using
 the same import syntax as user files and packages.
 
 The standard library is part of the language distribution. Its public surface
-is the set of importable PascalCase package classes and interfaces under
+is the set of importable PascalCase package classes and interfaces from snake_case class/interface files under
 `stdlib/`. Standard-library imports are resolved after local packages, locked
 package dependencies, and `TYA_PATH` entries.
 

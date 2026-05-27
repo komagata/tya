@@ -195,13 +195,9 @@ func markInterfaceMemberComments(d *ast.InterfaceDecl, comments []CommentInfo, u
 	for i := range d.Fields {
 		d.Fields[i].Comments.Leading = takeLeadingComments(d.Fields[i].Tok.Line, 2, comments, used)
 	}
-	for _, method := range d.Methods {
-		markLeadingComments(method.Tok.Line, 2, comments, used)
+	for i := range d.Methods {
+		d.Methods[i].Comments.Leading = takeLeadingComments(d.Methods[i].Tok.Line, 2, comments, used)
 	}
-}
-
-func markLeadingComments(startLine int, indent int, comments []CommentInfo, used []bool) {
-	takeLeadingComments(startLine, indent, comments, used)
 }
 
 func takeLeadingComments(startLine int, indent int, comments []CommentInfo, used []bool) []string {

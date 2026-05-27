@@ -14,7 +14,7 @@ import zoo
 d = Dog()
 print(d.describe())
 
--- zoo/Animal.tya --
+-- zoo/animal.tya --
 class Animal
   initialize: ->
     self.category = "animal"
@@ -22,7 +22,7 @@ class Animal
   category: ->
     self.category
 
--- zoo/Dog.tya --
+-- zoo/dog.tya --
 class Dog extends Animal
   initialize: ->
     super()

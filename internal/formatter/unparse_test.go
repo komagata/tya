@@ -619,6 +619,34 @@ func TestUnparseSortsClassMembers(t *testing.T) {
 	}
 }
 
+func TestUnparseInterfaceMethodComments(t *testing.T) {
+	src := strings.Join([]string{
+		"# Iterator docs.",
+		"interface Iterator",
+		"  # has_next docs.",
+		"  # @return Boolean whether more values exist.",
+		"  has_next: ->",
+		"  # next docs.",
+		"  # @return Any next value.",
+		"  next: ->",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != src {
+		t.Fatalf("interface method comments were not preserved\nwant:\n%s\ngot:\n%s", src, got)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("interface method comment formatting is not idempotent\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
 func TestUnparseMatch(t *testing.T) {
 	src := "match x\n  case 1\n    print(\"one\")\n  case _\n    print(\"other\")\n"
 	got, err := unparseSource(t, src)

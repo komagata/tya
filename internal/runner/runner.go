@@ -24,9 +24,8 @@ var fileNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*\.tya$`)
 var moduleNameRE = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
 
 // ValidateFileName enforces the strict file-name rules for entry
-// points: the file must be a `.tya` lowercase script file. PascalCase
-// class files are rejected with the v0.44 [TYA-E0850] diagnostic
-// because class files are library-only.
+// points: the file must be a snake_case `.tya` file. Contents are
+// checked later so class/interface files remain library-only.
 //
 // Use ValidateAnyTyaFileName for read-only commands (tya format,
 // tya check, tya emit-c) that should accept both script and class
@@ -39,16 +38,12 @@ func ValidateFileName(path string) error {
 	if fileNameRE.MatchString(base) {
 		return nil
 	}
-	// v0.44: a PascalCase filename identifies a class file. Class files
-	// are library-only; tya run accepts only script files (lowercase).
-	if checker.IsClassFileName(base) {
-		return fmt.Errorf("[TYA-E0850] %s is a class file; tya run accepts only script files (lowercase filename)", base)
-	}
 	return runnerError(codeInvalidFileName, fmt.Sprintf("invalid Tya file name: %s", base), 0, 0)
 }
 
-// ValidateAnyTyaFileName accepts any well-formed v0.44 .tya file:
-// either a script file (lowercase) or a class file (PascalCase). It
+// ValidateAnyTyaFileName accepts any well-formed .tya file:
+// either a script file or a class/interface file. Both use snake_case
+// filenames; file contents determine the file role. It
 // is intended for read-only developer commands like `tya format`,
 // `tya check`, and `tya emit-c` that operate on individual files
 // without running them as entry points.
@@ -58,9 +53,6 @@ func ValidateAnyTyaFileName(path string) error {
 		return runnerError(codeInvalidFileName, fmt.Sprintf("invalid Tya file name: %s", base), 0, 0)
 	}
 	if fileNameRE.MatchString(base) {
-		return nil
-	}
-	if checker.IsClassFileName(base) {
 		return nil
 	}
 	return runnerError(codeInvalidFileName, fmt.Sprintf("invalid Tya file name: %s", base), 0, 0)
@@ -159,20 +151,34 @@ func LoadSourceWithOrigins(path string) (string, []string, map[string]map[string
 	return LoadUserSourceWithOrigins(path)
 }
 
-// LoadClassFileWithSiblingOrigins loads a PascalCase class/interface file
-// together with the other PascalCase files in the same directory. It is used
-// by read-only commands such as `tya check Foo.tya`, where the checked file is
+// LoadClassFileWithSiblingOrigins loads a snake_case class/interface file
+// together with the other class/interface files in the same directory. It is used
+// by read-only commands such as `tya check foo.tya`, where the checked file is
 // a package member rather than an entry script.
 func LoadClassFileWithSiblingOrigins(path string) (string, []string, map[string]map[string]string, error) {
 	if err := ValidateAnyTyaFileName(path); err != nil {
 		return "", nil, nil, err
 	}
-	if !checker.IsClassFileName(path) {
+	if ok, err := isClassFile(path); err != nil {
+		return "", nil, nil, err
+	} else if !ok {
 		return "", nil, nil, fmt.Errorf("%s is not a class file", filepath.Base(path))
 	}
-	classFiles, err := findEntrySiblings(path)
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		return "", nil, nil, err
+	}
+	prog, err := parseSource(string(raw))
+	if err != nil {
+		return "", nil, nil, err
+	}
+	classFiles := []string{path}
+	if hasClassDecl(prog) {
+		siblings, err := findEntrySiblings(path)
+		if err != nil {
+			return "", nil, nil, err
+		}
+		classFiles = append(classFiles, siblings...)
 	}
 	pkgName := "classfile"
 	source, origins, err := synthesizePackageSource(classFiles, pkgName, false)
@@ -180,6 +186,18 @@ func LoadClassFileWithSiblingOrigins(path string) (string, []string, map[string]
 		return "", nil, nil, err
 	}
 	return source, nil, map[string]map[string]string{pkgName: origins}, nil
+}
+
+func hasClassDecl(prog *ast.Program) bool {
+	if prog == nil {
+		return false
+	}
+	for _, stmt := range prog.Stmts {
+		if _, ok := stmt.(*ast.ClassDecl); ok {
+			return true
+		}
+	}
+	return false
 }
 
 func LoadUserSource(path string) (string, error) {
@@ -191,12 +209,18 @@ func LoadUserSource(path string) (string, error) {
 // the per-package class/interface origin map collected during package
 // synthesis. The outer key is the synthesized package module name; the
 // inner key is the class or interface name; the value is the source
-// file base name (e.g. "Util.tya") that declared it. The checker uses
+// file base name (e.g. "util.tya") that declared it. The checker uses
 // this map to enforce cross-file private class visibility
 // ([TYA-E0406]).
 func LoadUserSourceWithOrigins(path string) (string, []string, map[string]map[string]string, error) {
 	if err := ValidateFileName(path); err != nil {
 		return "", nil, nil, err
+	}
+	if ok, err := isClassFile(path); err != nil {
+		return "", nil, nil, err
+	} else if ok {
+		base := filepath.Base(path)
+		return "", nil, nil, runnerError(codeClassFileRun, fmt.Sprintf("%s is a class file; tya run accepts only script files", base), 0, 0)
 	}
 	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}, classOrigins: map[string]map[string]string{}}
 	src, modules, err := loadSource(path, state, false, false)
@@ -209,6 +233,12 @@ func LoadUserSourceWithOrigins(path string) (string, []string, map[string]map[st
 func LoadUserSourceWithModules(path string) (string, []string, error) {
 	if err := ValidateFileName(path); err != nil {
 		return "", nil, err
+	}
+	if ok, err := isClassFile(path); err != nil {
+		return "", nil, err
+	} else if ok {
+		base := filepath.Base(path)
+		return "", nil, runnerError(codeClassFileRun, fmt.Sprintf("%s is a class file; tya run accepts only script files", base), 0, 0)
 	}
 	state := &loadState{loading: map[string]bool{}, loaded: map[string]bool{}, synthModules: map[string]string{}, classOrigins: map[string]map[string]string{}}
 	src, modules, err := loadSource(path, state, false, false)
@@ -245,7 +275,7 @@ type loadState struct {
 	// classOrigins tracks per-package class/interface origin files.
 	// Outer key is the synthesized package module name; inner key is
 	// the class or interface name; value is the source file path
-	// (relative to the package root, e.g. "Util.tya") that declared
+	// (relative to the package root, e.g. "util.tya") that declared
 	// the class. v0.45 [TYA-E0406] cross-file private enforcement
 	// reads this map after the merged AST is parsed.
 	classOrigins map[string]map[string]string
@@ -324,9 +354,6 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 		for _, e := range entries {
 			if e.IsDir() || filepath.Ext(e.Name()) != ".tya" {
 				continue
-			}
-			if checker.IsScriptFileName(e.Name()) {
-				return "", nil, fmt.Errorf("[TYA-E0852] package %s contains script file %s; packages may not include lowercase .tya files", filepath.Base(path), e.Name())
 			}
 			if !checker.IsClassFileName(e.Name()) {
 				continue
@@ -431,12 +458,12 @@ func loadSource(path string, state *loadState, module bool, packageNamespace boo
 		}
 	}
 
-	// v0.44 same-directory sibling auto-visibility: when loading an
-	// entry script, every PascalCase class file in the entry's
-	// directory is auto-loaded so its public class is in scope without
+	// Same-directory sibling auto-visibility: when loading an
+	// entry script, every snake_case class/interface file in the entry's
+	// directory is auto-loaded so its public type is in scope without
 	// an explicit import. Sibling class files' imports are resolved
 	// alongside the entry's own imports and deduplicated by binding.
-	if !module && info.Mode().IsRegular() {
+	if !module && info.Mode().IsRegular() && !hasAnyClassFileTopLevel(prog) && !hasTopLevelImports(prog) {
 		siblings, err := findEntrySiblings(path)
 		if err != nil {
 			return "", nil, err
@@ -828,8 +855,8 @@ func validateImportPath(name string) error {
 	return nil
 }
 
-// findEntrySiblings returns the absolute paths of every PascalCase
-// class file that shares the entry's directory. It excludes the
+// findEntrySiblings returns the absolute paths of every class/interface
+// file that shares the entry's directory. It excludes the
 // entry itself, hidden files, subdirectories, and non-class .tya
 // files. Used by entry script loading to implement v0.44
 // same-directory sibling auto-visibility.
@@ -844,16 +871,141 @@ func findEntrySiblings(entryPath string) ([]string, error) {
 		if e.IsDir() || filepath.Ext(e.Name()) != ".tya" {
 			continue
 		}
+		candidate := filepath.Join(dir, e.Name())
+		if samePath(candidate, entryPath) {
+			continue
+		}
 		if !checker.IsClassFileName(e.Name()) {
 			continue
 		}
-		abs, err := filepath.Abs(filepath.Join(dir, e.Name()))
+		ok, err := isClassFile(candidate)
+		if err != nil {
+			return nil, nil
+		}
+		if !ok {
+			return nil, nil
+		}
+		abs, err := filepath.Abs(candidate)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, filepath.Clean(abs))
 	}
 	return out, nil
+}
+
+func isClassFile(path string) (bool, error) {
+	if !checker.IsClassFileName(path) {
+		return false, nil
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return false, err
+	}
+	prog, err := parseSource(string(raw))
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", path, err)
+	}
+	if err := checker.CheckClassFileStructure(prog, path); err != nil {
+		return false, nil
+	}
+	return true, nil
+}
+
+// IsClassFile reports whether path is a class/interface file under the
+// snake_case filename convention. Script files may share the same
+// filename shape, so this parses the file and checks its structure.
+func IsClassFile(path string) (bool, error) {
+	return isClassFile(path)
+}
+
+// ClassFileStructureError reports whether path looks like a class/interface
+// file by contents but fails the class-file structure rules. Script files may
+// contain classes, so only files whose top level is limited to imports,
+// classes, and interfaces are treated as class-like.
+func ClassFileStructureError(path string) (bool, error, error) {
+	if !checker.IsClassFileName(path) {
+		return false, nil, nil
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return false, nil, err
+	}
+	prog, err := parseSource(string(raw))
+	if err != nil {
+		return false, nil, fmt.Errorf("%s: %w", path, err)
+	}
+	if !hasOnlyClassFileTopLevel(prog) {
+		return false, nil, nil
+	}
+	if err := checker.CheckClassFileStructure(prog, path); err != nil {
+		return true, err, nil
+	}
+	return false, nil, nil
+}
+
+func hasOnlyClassFileTopLevel(prog *ast.Program) bool {
+	if prog == nil || len(prog.Stmts) == 0 {
+		return false
+	}
+	hasType := false
+	for _, stmt := range prog.Stmts {
+		switch stmt.(type) {
+		case *ast.ImportStmt:
+			// allowed
+		case *ast.ClassDecl, *ast.InterfaceDecl:
+			hasType = true
+		default:
+			return false
+		}
+	}
+	return hasType
+}
+
+func classFileStructureErrorForPackage(path string) (bool, error, error) {
+	if !checker.IsClassFileName(path) {
+		return false, nil, nil
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return false, nil, err
+	}
+	prog, err := parseSource(string(raw))
+	if err != nil {
+		return false, nil, fmt.Errorf("%s: %w", path, err)
+	}
+	if !hasAnyClassFileTopLevel(prog) {
+		return false, nil, nil
+	}
+	if err := checker.CheckClassFileStructure(prog, path); err != nil {
+		return true, err, nil
+	}
+	return false, nil, nil
+}
+
+func hasAnyClassFileTopLevel(prog *ast.Program) bool {
+	if prog == nil {
+		return false
+	}
+	for _, stmt := range prog.Stmts {
+		switch stmt.(type) {
+		case *ast.ClassDecl, *ast.InterfaceDecl:
+			return true
+		}
+	}
+	return false
+}
+
+func hasTopLevelImports(prog *ast.Program) bool {
+	if prog == nil {
+		return false
+	}
+	for _, stmt := range prog.Stmts {
+		if _, ok := stmt.(*ast.ImportStmt); ok {
+			return true
+		}
+	}
+	return false
 }
 
 // stripTopLevelImports removes top-level (column-zero) `import`
@@ -988,7 +1140,7 @@ func synthesizePackageSource(classFiles []string, pkgName string, includeNamespa
 				if _, dup := origins[n.Name]; !dup {
 					origins[n.Name] = relName
 				}
-				if relName == n.Name+".tya" {
+				if relName == checker.SnakeCaseName(n.Name)+".tya" {
 					publicSymbols[n.Name] = true
 				}
 			case *ast.InterfaceDecl:
@@ -1182,22 +1334,18 @@ func publicPackageNames(classFiles []string) ([]string, error) {
 	return names, nil
 }
 
-// resolvePackageDir attempts to resolve an import path to a v0.44
-// package directory (a directory containing one or more PascalCase
+// resolvePackageDir attempts to resolve an import path to a package
+// directory (a directory containing one or more snake_case
 // class files). It searches the same roots as resolveModulePath:
 // importer's directory, manifest packages, TYA_PATH, and stdlib.
 //
 // On success it returns the absolute directory path and a sorted list
-// of the absolute paths of class files (PascalCase .tya files) inside
+// of the absolute paths of class files (snake_case .tya files) inside
 // it. On failure it returns ("", nil, nil) without an error so callers
 // can fall back to file-based module resolution.
 //
-// Directories are rejected when they contain a script file at the
-// leaf (lowercase .tya), to forbid script-file imports.
-//
-// This helper is part of v0.44 STEP M3 foundation; the runner does
-// not consume it yet. It exists so the import flow can be wired in a
-// follow-up STEP without further resolver changes.
+// Directories are rejected when a .tya file is not a class/interface
+// file, to forbid script-file imports.
 func resolvePackageDir(importerPath string, name string) (string, []string, error) {
 	parts := strings.Split(name, "/")
 	leading := parts[0]
@@ -1239,13 +1387,23 @@ func resolvePackageDir(importerPath string, name string) (string, []string, erro
 			if entry.IsDir() || filepath.Ext(entry.Name()) != ".tya" {
 				continue
 			}
-			if checker.IsScriptFileName(entry.Name()) {
-				return "", nil, fmt.Errorf("package %s contains script file %s; packages may not include lowercase .tya files", name, entry.Name())
-			}
 			if !checker.IsClassFileName(entry.Name()) {
 				continue
 			}
-			abs, err := filepath.Abs(filepath.Join(candidate, entry.Name()))
+			classPath := filepath.Join(candidate, entry.Name())
+			ok, err := isClassFile(classPath)
+			if err != nil {
+				return "", nil, err
+			}
+			if !ok {
+				if classLike, structureErr, err := classFileStructureErrorForPackage(classPath); err != nil {
+					return "", nil, err
+				} else if classLike {
+					return "", nil, structureErr
+				}
+				return "", nil, fmt.Errorf("package %s contains script file %s; packages may not include non-class .tya files", name, entry.Name())
+			}
+			abs, err := filepath.Abs(classPath)
 			if err != nil {
 				return "", nil, err
 			}

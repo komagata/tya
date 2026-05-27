@@ -1,7 +1,7 @@
 # v0.45 M5: a sibling class file inside the same package cannot
 # reference a class that is private to another file (member-access
-# variant: Util.tya tries to call Internal.do_work where Internal
-# lives in Helper.tya).
+# variant: util.tya tries to call Internal.do_work where Internal
+# lives in helper.tya).
 cd $REPO
 
 ! exec go run ./cmd/tya run $WORK/main.tya
@@ -13,12 +13,12 @@ import pkg
 
 print(Util.run())
 
--- pkg/Util.tya --
+-- pkg/util.tya --
 class Util
   static run: ->
     Internal.do_work()
 
--- pkg/Helper.tya --
+-- pkg/helper.tya --
 class Helper
   static noop: ->
     "noop"

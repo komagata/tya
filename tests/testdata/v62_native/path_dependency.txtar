@@ -78,7 +78,7 @@ ldflags = []
 [native.functions]
 native_dep_version = { symbol = "tya_native_dep_version", arity = 0 }
 
--- native_dep/src/native_dep/NativeDep.tya --
+-- native_dep/src/native_dep/native_dep.tya --
 class NativeDep
   static version: ->
     return native_dep_version()
@@ -131,7 +131,7 @@ ldflags = []
 [native.functions]
 git_dep_version = { symbol = "tya_git_dep_version", arity = 0 }
 
--- git_dep/src/git_dep/GitDep.tya --
+-- git_dep/src/git_dep/git_dep.tya --
 class GitDep
   static version: ->
     return git_dep_version()

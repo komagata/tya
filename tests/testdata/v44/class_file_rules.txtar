@@ -7,14 +7,14 @@ cd $REPO
 
 # Public class name must match the filename.
 ! exec go run ./cmd/tya run $WORK/wrong_main.tya
-stderr 'must define class or interface WrongName'
+stderr 'must define a class or interface that maps to wrong_name'
 
 # A class file with no public class at all is rejected. The error
 # fires under "may only contain import, class, and interface" if the
 # file has any top-level non-class content; here the file only has
 # an interface, so the missing-class rule fires.
 ! exec go run ./cmd/tya run $WORK/empty_main.tya
-stderr 'must define class or interface EmptyClass'
+stderr 'must define a class or interface that maps to empty_class'
 
 # A class file with a top-level non-class statement is rejected.
 ! exec go run ./cmd/tya run $WORK/stray_main.tya
@@ -31,7 +31,7 @@ import wrong_pkg
 
 print(WrongName())
 
--- wrong_pkg/WrongName.tya --
+-- wrong_pkg/wrong_name.tya --
 class DifferentName
   initialize: ->
     self.x = 1
@@ -41,7 +41,7 @@ import empty_pkg
 
 print(EmptyClass())
 
--- empty_pkg/EmptyClass.tya --
+-- empty_pkg/empty_class.tya --
 # Only an interface declaration; no public class with the matching
 # filename. CheckClassFileStructure flags missing public class.
 interface Empty
@@ -52,7 +52,7 @@ import stray_pkg
 
 print(Stray())
 
--- stray_pkg/Stray.tya --
+-- stray_pkg/stray.tya --
 class Stray
   initialize: ->
     self.x = 1
@@ -65,7 +65,7 @@ import ok_pkg
 s = Server()
 print(s.run("hello"))
 
--- ok_pkg/Server.tya --
+-- ok_pkg/server.tya --
 class Connection
   initialize: msg ->
     self.msg = msg
