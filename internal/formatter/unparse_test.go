@@ -73,6 +73,51 @@ func TestUnparseKeepsCommentedFunctionBodyBlockBodied(t *testing.T) {
 	}
 }
 
+func TestUnparseSeparatesClassAndInterfaceMembersBeforeComments(t *testing.T) {
+	src := strings.Join([]string{
+		"class Foo",
+		"  a: 1",
+		"  # b docs.",
+		"  b: 2",
+		"",
+		"interface Iterator",
+		"  # has_next docs.",
+		"  has_next: ->",
+		"  # next docs.",
+		"  next: ->",
+		"",
+	}, "\n")
+	got, err := unparseSourceWithComments(t, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := strings.Join([]string{
+		"class Foo",
+		"  a: 1",
+		"",
+		"  # b docs.",
+		"  b: 2",
+		"",
+		"interface Iterator",
+		"  # has_next docs.",
+		"  has_next: ->",
+		"",
+		"  # next docs.",
+		"  next: ->",
+		"",
+	}, "\n")
+	if got != want {
+		t.Fatalf("got:\n%swant:\n%s", got, want)
+	}
+	again, err := unparseSourceWithComments(t, got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if again != got {
+		t.Fatalf("not idempotent:\nfirst:\n%s\nsecond:\n%s", got, again)
+	}
+}
+
 func unparseSource(t *testing.T, src string) (string, error) {
 	t.Helper()
 	toks, errs := lexer.Lex(src)
@@ -662,8 +707,20 @@ func TestUnparseInterfaceMethodComments(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != src {
-		t.Fatalf("interface method comments were not preserved\nwant:\n%s\ngot:\n%s", src, got)
+	want := strings.Join([]string{
+		"# Iterator docs.",
+		"interface Iterator",
+		"  # has_next docs.",
+		"  # @return Boolean whether more values exist.",
+		"  has_next: ->",
+		"",
+		"  # next docs.",
+		"  # @return Any next value.",
+		"  next: ->",
+		"",
+	}, "\n")
+	if got != want {
+		t.Fatalf("interface method comments were not preserved\nwant:\n%s\ngot:\n%s", want, got)
 	}
 	again, err := unparseSourceWithComments(t, got)
 	if err != nil {

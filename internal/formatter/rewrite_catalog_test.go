@@ -237,7 +237,25 @@ func TestRewriteCatalog(t *testing.T) {
 			want: strings.Join([]string{
 				"interface Named",
 				"  name: ->",
+				"",
 				"  fallback: -> \"default\"",
+				"",
+			}, "\n"),
+		},
+		{
+			category: "interface",
+			name:     "adjacent requirements have one blank line",
+			input: strings.Join([]string{
+				"interface Iterator",
+				"  has_next: ->",
+				"  next: ->",
+				"",
+			}, "\n"),
+			want: strings.Join([]string{
+				"interface Iterator",
+				"  has_next: ->",
+				"",
+				"  next: ->",
 				"",
 			}, "\n"),
 		},

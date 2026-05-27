@@ -314,6 +314,9 @@ The core formatted rules are:
 - function and method bodies that consist of one expression, or one final
   `return` of a single value, are formatted as `-> expr` when the rendered line
   fits within the column limit and no attached comments require a block body;
+- class and interface bodies have exactly one blank line between adjacent
+  members, before any leading comments attached to the following member, and no
+  extra blank line after the final member;
 - class bodies are ordered by member category, then static/instance,
   public/private, and member name, with `initialize` first among public
   instance methods;
