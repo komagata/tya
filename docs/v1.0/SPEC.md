@@ -1,7 +1,7 @@
 ---
 layout: doc
 title: Spec
-permalink: /spec/
+permalink: /v1.0/spec/
 ---
 
 # Tya Language Specification
