@@ -31,7 +31,7 @@ stderr 'BadLookup.find expects 2 arguments'
 stderr 'Lookup.find expects 1 arguments'
 
 exec go run ./cmd/tya version
-stdout '0.69.0\n'
+stdout '0.70.0\n'
 ! stderr .
 
 -- interfaces.tya --
@@ -91,7 +91,7 @@ class ConcreteFile extends AbstractFile
   read: ->
     "abstract-data"
 
-import io as io
+import io
 
 file = File()
 print(file.read())

@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Time</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li class="current"><a href="class_lib-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Time</code></h1>
+<section id="class-Time" class="doc-item">
+<pre><code>class Time</code></pre>
+<p><small>lib/time.tya:2</small></p>
+<p>Time provides the time/Time standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Time provides the time/Time standard library API.
+class Time
+  # Time.value stores instance state.
+  # @type Nil
+  value: nil
+
+  # Time.initialize stores a time value or parseable text.
+  # @param value String value value.
+  # @return Self the initialized object.
+  initialize: value = nil -&gt;
+    self.value = value
+
+  # Time.duration constructs a duration value.
+  # @param seconds Any seconds value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  duration: seconds = 0, options = {} -&gt;
+    time_duration(seconds, options)
+
+  # Time.format provides the time/Time standard library operation.
+  # @param t Any t value.
+  # @param layout Any layout value.
+  # @return Any the resulting value.
+  format: t, layout = nil -&gt;
+    if layout == nil
+      layout = t
+      t = self.value
+    time_format(t, layout)
+
+  # Time.monotonic returns a monotonic timestamp.
+  # @return Any the resulting value.
+  monotonic: -&gt; time_monotonic()
+
+  # Time.now provides the time/Time standard library operation.
+  # @return Any the resulting value.
+  now: -&gt; time_now()
+
+  # Time.parse provides the time/Time standard library operation.
+  # @param text String text value.
+  # @param layout Any layout value.
+  # @return Any the resulting value.
+  parse: text = nil, layout = &quot;rfc3339&quot; -&gt;
+    if self.value != nil
+      if text != nil
+        if layout == &quot;rfc3339&quot;
+          layout = text
+          text = self.value
+        if layout == nil
+          layout = text
+          text = self.value
+    if text == nil
+      text = self.value
+    time_parse(text, layout)
+
+  # Time.since provides the time/Time standard library operation.
+  # @param t Any t value.
+  # @return Any the resulting value.
+  since: t = nil -&gt;
+    if t == nil
+      t = self.value
+    time_since(t)
+
+  # Time.sleep provides the time/Time standard library operation.
+  # @param duration_or_seconds Any duration or seconds value.
+  # @return Nil the resulting value.
+  sleep: duration_or_seconds -&gt;
+    time_sleep(duration_or_seconds)
+
+  # Time.unix constructs a UTC wall-clock time.
+  # @param seconds Any seconds value.
+  # @param nanos Any nanos value.
+  # @return Any the resulting value.
+  unix: seconds, nanos = 0 -&gt;
+    time_unix(seconds, nanos)</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Time-value" class="doc-item member">
+<h3><code>value</code></h3>
+<pre><code>Time.value</code></pre>
+<p><small>lib/time.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Time.value stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.value stores instance state.
+  # @type Nil
+  value: nil</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Time-duration" class="doc-item member">
+<h3><code>duration</code></h3>
+<pre><code>Time.duration(seconds = 0, options = {})</code></pre>
+<p><small>lib/time.tya:17</small></p>
+<dl class="metadata">
+<dt>Param <code>seconds</code></dt><dd><code>Any</code> seconds value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Time.duration constructs a duration value.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.duration constructs a duration value.
+  # @param seconds Any seconds value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  duration: seconds = 0, options = {} -&gt;
+    time_duration(seconds, options)</code></pre>
+</details>
+</section>
+<section id="method-Time-format" class="doc-item member">
+<h3><code>format</code></h3>
+<pre><code>Time.format(t, layout = nil)</code></pre>
+<p><small>lib/time.tya:24</small></p>
+<dl class="metadata">
+<dt>Param <code>t</code></dt><dd><code>Any</code> t value.</dd>
+<dt>Param <code>layout</code></dt><dd><code>Any</code> layout value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Time.format provides the time/Time standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.format provides the time/Time standard library operation.
+  # @param t Any t value.
+  # @param layout Any layout value.
+  # @return Any the resulting value.
+  format: t, layout = nil -&gt;
+    if layout == nil
+      layout = t
+      t = self.value
+    time_format(t, layout)</code></pre>
+</details>
+</section>
+<section id="method-Time-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Time.initialize(value = nil)</code></pre>
+<p><small>lib/time.tya:10</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Time.initialize stores a time value or parseable text.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.initialize stores a time value or parseable text.
+  # @param value String value value.
+  # @return Self the initialized object.
+  initialize: value = nil -&gt;
+    self.value = value</code></pre>
+</details>
+</section>
+<section id="method-Time-monotonic" class="doc-item member">
+<h3><code>monotonic</code></h3>
+<pre><code>Time.monotonic()</code></pre>
+<p><small>lib/time.tya:32</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Time.monotonic returns a monotonic timestamp.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.monotonic returns a monotonic timestamp.
+  # @return Any the resulting value.
+  monotonic: -&gt; time_monotonic()</code></pre>
+</details>
+</section>
+<section id="method-Time-now" class="doc-item member">
+<h3><code>now</code></h3>
+<pre><code>Time.now()</code></pre>
+<p><small>lib/time.tya:36</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Time.now provides the time/Time standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.now provides the time/Time standard library operation.
+  # @return Any the resulting value.
+  now: -&gt; time_now()</code></pre>
+</details>
+</section>
+<section id="method-Time-parse" class="doc-item member">
+<h3><code>parse</code></h3>
+<pre><code>Time.parse(text = nil, layout = &quot;rfc3339&quot;)</code></pre>
+<p><small>lib/time.tya:42</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Param <code>layout</code></dt><dd><code>Any</code> layout value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Time.parse provides the time/Time standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.parse provides the time/Time standard library operation.
+  # @param text String text value.
+  # @param layout Any layout value.
+  # @return Any the resulting value.
+  parse: text = nil, layout = &quot;rfc3339&quot; -&gt;
+    if self.value != nil
+      if text != nil
+        if layout == &quot;rfc3339&quot;
+          layout = text
+          text = self.value
+        if layout == nil
+          layout = text
+          text = self.value
+    if text == nil
+      text = self.value
+    time_parse(text, layout)</code></pre>
+</details>
+</section>
+<section id="method-Time-since" class="doc-item member">
+<h3><code>since</code></h3>
+<pre><code>Time.since(t = nil)</code></pre>
+<p><small>lib/time.tya:58</small></p>
+<dl class="metadata">
+<dt>Param <code>t</code></dt><dd><code>Any</code> t value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Time.since provides the time/Time standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.since provides the time/Time standard library operation.
+  # @param t Any t value.
+  # @return Any the resulting value.
+  since: t = nil -&gt;
+    if t == nil
+      t = self.value
+    time_since(t)</code></pre>
+</details>
+</section>
+<section id="method-Time-sleep" class="doc-item member">
+<h3><code>sleep</code></h3>
+<pre><code>Time.sleep(duration_or_seconds)</code></pre>
+<p><small>lib/time.tya:66</small></p>
+<dl class="metadata">
+<dt>Param <code>duration_or_seconds</code></dt><dd><code>Any</code> duration or seconds value.</dd>
+<dt>Return</dt><dd><code>Nil</code> the resulting value.</dd>
+</dl>
+<p>Time.sleep provides the time/Time standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.sleep provides the time/Time standard library operation.
+  # @param duration_or_seconds Any duration or seconds value.
+  # @return Nil the resulting value.
+  sleep: duration_or_seconds -&gt;
+    time_sleep(duration_or_seconds)</code></pre>
+</details>
+</section>
+<section id="method-Time-unix" class="doc-item member">
+<h3><code>unix</code></h3>
+<pre><code>Time.unix(seconds, nanos = 0)</code></pre>
+<p><small>lib/time.tya:73</small></p>
+<dl class="metadata">
+<dt>Param <code>seconds</code></dt><dd><code>Any</code> seconds value.</dd>
+<dt>Param <code>nanos</code></dt><dd><code>Any</code> nanos value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Time.unix constructs a UTC wall-clock time.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Time.unix constructs a UTC wall-clock time.
+  # @param seconds Any seconds value.
+  # @param nanos Any nanos value.
+  # @return Any the resulting value.
+  unix: seconds, nanos = 0 -&gt;
+    time_unix(seconds, nanos)</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

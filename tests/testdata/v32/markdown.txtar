@@ -14,7 +14,7 @@ stdout '<hr/>'
 stdout '<pre><code>line &lt;html&gt;'
 
 exec go run ./cmd/tya version
-stdout '0.69.0\n'
+stdout '0.70.0\n'
 
 exec go run ./cmd/tya run $WORK/extended.tya
 stdout '<h1>Setext</h1>'
@@ -31,7 +31,7 @@ stdout '<p>&lt;div&gt;escaped&lt;/div&gt;</p>'
 stdout '<div>escaped</div>'
 
 -- sample.tya --
-import markdown/* as markdown
+import markdown
 
 src = """
 # Hello
@@ -55,7 +55,7 @@ line <html>
 print(markdown.Markdown(src).to_html())
 
 -- extended.tya --
-import markdown/* as markdown
+import markdown
 
 src = """
 Setext

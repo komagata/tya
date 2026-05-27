@@ -54,7 +54,7 @@ import base64
 is no longer a package-wide import. Package-wide import must be:
 
 ```tya
-import base64/*
+import base64
 ```
 
 ```tya

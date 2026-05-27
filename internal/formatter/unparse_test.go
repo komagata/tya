@@ -304,12 +304,12 @@ func TestUnparseLambdaBlock(t *testing.T) {
 }
 
 func TestUnparseImports(t *testing.T) {
-	src := "import string\nimport file/* as f\n"
+	src := "import string\nimport file as f\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "import\n  file/* as f\n  string\n"
+	want := "import\n  file as f\n  string\n"
 	if got != want {
 		t.Errorf("got: %q want %q", got, want)
 	}
@@ -501,12 +501,12 @@ func TestUnparseWrapsLongArray(t *testing.T) {
 }
 
 func TestUnparseImportSortAndBlankLines(t *testing.T) {
-	src := "import zmod\nimport string\nimport file/*\nimport mylib\n\ngreet = name -> name\nx = 1\n"
+	src := "import zmod\nimport string\nimport file\nimport mylib\n\ngreet = name -> name\nx = 1\n"
 	got, err := unparseSource(t, src)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "import\n  file/*\n  string\n  mylib\n  zmod\n\ngreet = name -> name\nx = 1\n"
+	want := "import\n  file\n  string\n  mylib\n  zmod\n\ngreet = name -> name\nx = 1\n"
 	if got != want {
 		t.Errorf("import sort/blank-line layout mismatch\nwant:\n%s\ngot:\n%s", want, got)
 	}

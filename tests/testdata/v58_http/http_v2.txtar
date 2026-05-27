@@ -59,7 +59,7 @@ print(chunked["body"])
 
 -- concurrent_server.tya --
 import net/http/* as http
-import time/* as time
+import time
 
 app = http.Server()
 slow = _req ->

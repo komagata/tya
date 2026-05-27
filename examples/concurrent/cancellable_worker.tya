@@ -1,10 +1,10 @@
 # A cancellable worker pool. Each worker polls task cancel flag
 # at safe points; the coordinator cancels every worker after a
 # short deadline.
-import channel/*
+import channel
 import sync/*
-import task/*
-import time/*
+import task
+import time
 
 results = channel.Channel(64)
 

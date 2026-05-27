@@ -75,13 +75,13 @@ func isStdlibMethodLine(line string) bool {
 
 func TestStdlibAPIDocsIncludeRepresentativePackages(t *testing.T) {
 	paths := []string{
-		filepath.Join("..", "..", "lib", "math", "math.tya"),
-		filepath.Join("..", "..", "lib", "file", "file.tya"),
-		filepath.Join("..", "..", "lib", "json", "json.tya"),
-		filepath.Join("..", "..", "lib", "toml", "toml.tya"),
+		filepath.Join("..", "..", "lib", "math.tya"),
+		filepath.Join("..", "..", "lib", "file.tya"),
+		filepath.Join("..", "..", "lib", "json.tya"),
+		filepath.Join("..", "..", "lib", "toml.tya"),
 		filepath.Join("..", "..", "lib", "net", "http", "server.tya"),
 		filepath.Join("..", "..", "lib", "net", "socket", "socket.tya"),
-		filepath.Join("..", "..", "lib", "template", "template.tya"),
+		filepath.Join("..", "..", "lib", "template.tya"),
 		filepath.Join("..", "..", "lib", "unittest", "test_case.tya"),
 	}
 	report, err := ExtractReport(paths)

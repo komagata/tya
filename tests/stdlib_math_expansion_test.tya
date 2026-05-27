@@ -1,4 +1,4 @@
-import math/* as math
+import math
 import unittest/*
 
 class StdlibMathExpansionTest extends TestCase

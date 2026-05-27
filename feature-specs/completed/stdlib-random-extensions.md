@@ -29,7 +29,7 @@ Security-sensitive code should continue to use `secure_random`.
 - Import shape:
 
   ```tya
-  import random as random
+  import random
 
   rng = random.Rng.new(42)
   item = rng.weighted_choice(["common", "rare"], [90, 10])

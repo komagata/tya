@@ -32,7 +32,7 @@ Assumed repository and package identity:
 
 - repository: `https://github.com/komagata/tya-gtk4`
 - package name: `gtk4`
-- import path: `import gtk4 as gtk4`
+- import path: `import gtk4`
 - first release target: `v0.1.0`
 
 ## Behavior
@@ -103,7 +103,7 @@ Assumed repository and package identity:
 - Public API follows class-style Tya wrappers over GTK4:
 
   ```tya
-  import gtk4 as gtk4
+  import gtk4
 
   app = gtk4.Application.new("org.example.Settings")
   app.on_activate(-> 

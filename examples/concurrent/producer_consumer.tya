@@ -1,7 +1,7 @@
 # Producer / consumer over a buffered channel. The producer pushes
 # numbers, signals end-of-stream by closing, and the consumer drains
 # until receive returns nil.
-import channel/*
+import channel
 
 c = channel.Channel(4)
 

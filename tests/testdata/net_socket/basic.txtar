@@ -52,7 +52,7 @@ conn.close()
 server.close()
 
 -- binary_client.tya --
-import bytes/* as bytes
+import bytes
 import net/socket/* as socket
 
 client = socket.Socket(nil, false).connect("127.0.0.1", 18181, { mode: "binary" })
@@ -76,7 +76,7 @@ server.close()
 
 -- timeout_client.tya --
 import net/socket/* as socket
-import time/* as time
+import time
 
 client = socket.Socket(nil, false).connect("127.0.0.1", 18182, {})
 time.Time().sleep(0.7)

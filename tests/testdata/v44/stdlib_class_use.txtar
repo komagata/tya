@@ -8,7 +8,7 @@ stdout '3.14159\n2\n9\n'
 ! stderr .
 
 -- main.tya --
-import math/*
+import math
 
 print(Math.PI)
 print(Math().abs(0 - 2))

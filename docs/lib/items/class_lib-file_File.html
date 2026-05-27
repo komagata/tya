@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class File</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li class="current"><a href="class_lib-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>File</code></h1>
+<section id="class-File" class="doc-item">
+<pre><code>class File</code></pre>
+<p><small>lib/file.tya:2</small></p>
+<p>File reads, writes, and inspects filesystem paths.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># File reads, writes, and inspects filesystem paths.
+class File
+  # File.path stores instance state.
+  # @type Nil
+  path: nil
+
+  # File.append appends text to path and creates the file when needed.
+  # @param path String path value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  static append: path, text -&gt;
+    file_append(path, text)
+
+  # File.chmod changes POSIX-like permissions where supported.
+  # @param path String path value.
+  # @param mode Any mode value.
+  # @return Any the resulting value.
+  static chmod: path, mode -&gt;
+    file_chmod(path, mode)
+
+  # File.copy copies file contents as bytes.
+  # @param src String src value.
+  # @param dst Any dst value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  static copy: src, dst, options = {} -&gt;
+    file_copy(src, dst, options)
+
+  # File.exists? returns true when path exists.
+  # @param path String path value.
+  # @return Boolean whether the condition is true.
+  static exists?: path -&gt;
+    file_exists(path)
+
+  # File.read returns the UTF-8 text contents of path.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static read: path -&gt;
+    read_file(path)
+
+  # File.read_bytes returns the raw bytes stored at path.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static read_bytes: path -&gt;
+    file_read_bytes(path)
+
+  # File.remove removes path.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static remove: path -&gt;
+    file_remove(path)
+
+  # File.rename renames old_path to new_path.
+  # @param old_path String old path value.
+  # @param new_path String new path value.
+  # @return Any the resulting value.
+  static rename: old_path, new_path -&gt;
+    file_rename(old_path, new_path)
+
+  # File.stat returns metadata for path as a dictionary.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static stat: path -&gt;
+    file_stat(path)
+
+  # File.temp creates an empty temporary file and returns its path.
+  # @param prefix Any prefix value.
+  # @param suffix Any suffix value.
+  # @return Any the resulting value.
+  static temp: prefix = &quot;tya&quot;, suffix = &quot;&quot; -&gt;
+    file_temp(prefix, suffix)
+
+  # File.write replaces path with text and creates the file when needed.
+  # @param path String path value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  static write: path, text -&gt;
+    write_file(path, text)
+
+  # File.write_bytes replaces path with raw bytes.
+  # @param path String path value.
+  # @param bytes Array bytes value.
+  # @return Any the resulting value.
+  static write_bytes: path, bytes -&gt;
+    file_write_bytes(path, bytes)
+
+  # File.initialize stores a file path.
+  # @param path String path value.
+  # @return Self the initialized object.
+  initialize: path = nil -&gt;
+    self.path = path
+
+  # File.append provides the file/File standard library operation.
+  # @param path String path value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  append: path, text = nil -&gt;
+    if text == nil
+      text = path
+      path = self.path
+    file_append(path, text)
+
+  # chmod changes POSIX-like permissions where supported.
+  # @param path String path value.
+  # @param mode Any mode value.
+  # @return Any the resulting value.
+  chmod: path, mode = nil -&gt;
+    if mode == nil
+      mode = path
+      path = self.path
+    file_chmod(path, mode)
+
+  # copy copies file contents as bytes.
+  # @param src String src value.
+  # @param dst Any dst value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  copy: src, dst = nil, options = {} -&gt;
+    if self.path != nil and dst != nil and dst.class == Dict
+      options = dst
+      dst = src
+      src = self.path
+    if dst == nil
+      dst = src
+      src = self.path
+    file_copy(src, dst, options)
+
+  # exists? returns true when path exists.
+  # @param path String path value.
+  # @return Boolean whether the condition is true.
+  exists?: path = nil -&gt;
+    if path == nil
+      path = self.path
+    file_exists(path)
+
+  # read returns the UTF-8 text contents of path.
+  # Raises when the file cannot be opened or read.
+  # @param path String path value.
+  # @return Any the resulting value.
+  read: path = nil -&gt;
+    if path == nil
+      path = self.path
+    read_file(path)
+
+  # read_bytes returns the raw bytes stored at path.
+  # Raises when the file cannot be opened or read.
+  # @param path String path value.
+  # @return Any the resulting value.
+  read_bytes: path = nil -&gt;
+    if path == nil
+      path = self.path
+    file_read_bytes(path)
+
+  # File.remove provides the file/File standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  remove: path = nil -&gt;
+    if path == nil
+      path = self.path
+    file_remove(path)
+
+  # File.rename provides the file/File standard library operation.
+  # @param old_path String old path value.
+  # @param new_path String new path value.
+  # @return Any the resulting value.
+  rename: old_path, new_path = nil -&gt;
+    if new_path == nil
+      new_path = old_path
+      old_path = self.path
+    file_rename(old_path, new_path)
+
+  # stat returns metadata for path as a dictionary.
+  # Raises when the path cannot be inspected.
+  # @param path String path value.
+  # @return Any the resulting value.
+  stat: path = nil -&gt;
+    if path == nil
+      path = self.path
+    file_stat(path)
+
+  # temp creates an empty temporary file and returns its path.
+  # @param prefix Any prefix value.
+  # @param suffix Any suffix value.
+  # @return Any the resulting value.
+  temp: prefix = &quot;tya&quot;, suffix = &quot;&quot; -&gt;
+    file_temp(prefix, suffix)
+
+  # write replaces path with text and creates the file when needed.
+  # Raises when the file cannot be written.
+  # @param path String path value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  write: path, text = nil -&gt;
+    if text == nil
+      text = path
+      path = self.path
+    write_file(path, text)
+
+  # write_bytes replaces path with raw bytes.
+  # Raises when the file cannot be written.
+  # @param path String path value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  write_bytes: path, b = nil -&gt;
+    if b == nil
+      b = path
+      path = self.path
+    file_write_bytes(path, b)</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-File-path" class="doc-item member">
+<h3><code>path</code></h3>
+<pre><code>File.path</code></pre>
+<p><small>lib/file.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>File.path stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.path stores instance state.
+  # @type Nil
+  path: nil</code></pre>
+</details>
+</section>
+<h2>Static Methods</h2>
+<section id="static-method-File-append" class="doc-item member">
+<h3><code>append</code></h3>
+<pre><code>static File.append(path, text)</code></pre>
+<p><small>lib/file.tya:11</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.append appends text to path and creates the file when needed.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.append appends text to path and creates the file when needed.
+  # @param path String path value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  static append: path, text -&gt;
+    file_append(path, text)</code></pre>
+</details>
+</section>
+<section id="static-method-File-chmod" class="doc-item member">
+<h3><code>chmod</code></h3>
+<pre><code>static File.chmod(path, mode)</code></pre>
+<p><small>lib/file.tya:18</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>mode</code></dt><dd><code>Any</code> mode value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.chmod changes POSIX-like permissions where supported.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.chmod changes POSIX-like permissions where supported.
+  # @param path String path value.
+  # @param mode Any mode value.
+  # @return Any the resulting value.
+  static chmod: path, mode -&gt;
+    file_chmod(path, mode)</code></pre>
+</details>
+</section>
+<section id="static-method-File-copy" class="doc-item member">
+<h3><code>copy</code></h3>
+<pre><code>static File.copy(src, dst, options = {})</code></pre>
+<p><small>lib/file.tya:26</small></p>
+<dl class="metadata">
+<dt>Param <code>src</code></dt><dd><code>String</code> src value.</dd>
+<dt>Param <code>dst</code></dt><dd><code>Any</code> dst value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.copy copies file contents as bytes.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.copy copies file contents as bytes.
+  # @param src String src value.
+  # @param dst Any dst value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  static copy: src, dst, options = {} -&gt;
+    file_copy(src, dst, options)</code></pre>
+</details>
+</section>
+<section id="static-method-File-exists-" class="doc-item member">
+<h3><code>exists?</code></h3>
+<pre><code>static File.exists?(path)</code></pre>
+<p><small>lib/file.tya:32</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>File.exists? returns true when path exists.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.exists? returns true when path exists.
+  # @param path String path value.
+  # @return Boolean whether the condition is true.
+  static exists?: path -&gt;
+    file_exists(path)</code></pre>
+</details>
+</section>
+<section id="static-method-File-read" class="doc-item member">
+<h3><code>read</code></h3>
+<pre><code>static File.read(path)</code></pre>
+<p><small>lib/file.tya:38</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.read returns the UTF-8 text contents of path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.read returns the UTF-8 text contents of path.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static read: path -&gt;
+    read_file(path)</code></pre>
+</details>
+</section>
+<section id="static-method-File-read_bytes" class="doc-item member">
+<h3><code>read_bytes</code></h3>
+<pre><code>static File.read_bytes(path)</code></pre>
+<p><small>lib/file.tya:44</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.read_bytes returns the raw bytes stored at path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.read_bytes returns the raw bytes stored at path.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static read_bytes: path -&gt;
+    file_read_bytes(path)</code></pre>
+</details>
+</section>
+<section id="static-method-File-remove" class="doc-item member">
+<h3><code>remove</code></h3>
+<pre><code>static File.remove(path)</code></pre>
+<p><small>lib/file.tya:50</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.remove removes path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.remove removes path.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static remove: path -&gt;
+    file_remove(path)</code></pre>
+</details>
+</section>
+<section id="static-method-File-rename" class="doc-item member">
+<h3><code>rename</code></h3>
+<pre><code>static File.rename(old_path, new_path)</code></pre>
+<p><small>lib/file.tya:57</small></p>
+<dl class="metadata">
+<dt>Param <code>old_path</code></dt><dd><code>String</code> old path value.</dd>
+<dt>Param <code>new_path</code></dt><dd><code>String</code> new path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.rename renames old_path to new_path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.rename renames old_path to new_path.
+  # @param old_path String old path value.
+  # @param new_path String new path value.
+  # @return Any the resulting value.
+  static rename: old_path, new_path -&gt;
+    file_rename(old_path, new_path)</code></pre>
+</details>
+</section>
+<section id="static-method-File-stat" class="doc-item member">
+<h3><code>stat</code></h3>
+<pre><code>static File.stat(path)</code></pre>
+<p><small>lib/file.tya:63</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.stat returns metadata for path as a dictionary.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.stat returns metadata for path as a dictionary.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static stat: path -&gt;
+    file_stat(path)</code></pre>
+</details>
+</section>
+<section id="static-method-File-temp" class="doc-item member">
+<h3><code>temp</code></h3>
+<pre><code>static File.temp(prefix = &quot;tya&quot;, suffix = &quot;&quot;)</code></pre>
+<p><small>lib/file.tya:70</small></p>
+<dl class="metadata">
+<dt>Param <code>prefix</code></dt><dd><code>Any</code> prefix value.</dd>
+<dt>Param <code>suffix</code></dt><dd><code>Any</code> suffix value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.temp creates an empty temporary file and returns its path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.temp creates an empty temporary file and returns its path.
+  # @param prefix Any prefix value.
+  # @param suffix Any suffix value.
+  # @return Any the resulting value.
+  static temp: prefix = &quot;tya&quot;, suffix = &quot;&quot; -&gt;
+    file_temp(prefix, suffix)</code></pre>
+</details>
+</section>
+<section id="static-method-File-write" class="doc-item member">
+<h3><code>write</code></h3>
+<pre><code>static File.write(path, text)</code></pre>
+<p><small>lib/file.tya:77</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.write replaces path with text and creates the file when needed.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.write replaces path with text and creates the file when needed.
+  # @param path String path value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  static write: path, text -&gt;
+    write_file(path, text)</code></pre>
+</details>
+</section>
+<section id="static-method-File-write_bytes" class="doc-item member">
+<h3><code>write_bytes</code></h3>
+<pre><code>static File.write_bytes(path, bytes)</code></pre>
+<p><small>lib/file.tya:84</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>bytes</code></dt><dd><code>Array</code> bytes value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.write_bytes replaces path with raw bytes.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.write_bytes replaces path with raw bytes.
+  # @param path String path value.
+  # @param bytes Array bytes value.
+  # @return Any the resulting value.
+  static write_bytes: path, bytes -&gt;
+    file_write_bytes(path, bytes)</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-File-append" class="doc-item member">
+<h3><code>append</code></h3>
+<pre><code>File.append(path, text = nil)</code></pre>
+<p><small>lib/file.tya:97</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.append provides the file/File standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.append provides the file/File standard library operation.
+  # @param path String path value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  append: path, text = nil -&gt;
+    if text == nil
+      text = path
+      path = self.path
+    file_append(path, text)</code></pre>
+</details>
+</section>
+<section id="method-File-chmod" class="doc-item member">
+<h3><code>chmod</code></h3>
+<pre><code>File.chmod(path, mode = nil)</code></pre>
+<p><small>lib/file.tya:107</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>mode</code></dt><dd><code>Any</code> mode value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>chmod changes POSIX-like permissions where supported.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # chmod changes POSIX-like permissions where supported.
+  # @param path String path value.
+  # @param mode Any mode value.
+  # @return Any the resulting value.
+  chmod: path, mode = nil -&gt;
+    if mode == nil
+      mode = path
+      path = self.path
+    file_chmod(path, mode)</code></pre>
+</details>
+</section>
+<section id="method-File-copy" class="doc-item member">
+<h3><code>copy</code></h3>
+<pre><code>File.copy(src, dst = nil, options = {})</code></pre>
+<p><small>lib/file.tya:118</small></p>
+<dl class="metadata">
+<dt>Param <code>src</code></dt><dd><code>String</code> src value.</dd>
+<dt>Param <code>dst</code></dt><dd><code>Any</code> dst value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>copy copies file contents as bytes.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # copy copies file contents as bytes.
+  # @param src String src value.
+  # @param dst Any dst value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  copy: src, dst = nil, options = {} -&gt;
+    if self.path != nil and dst != nil and dst.class == Dict
+      options = dst
+      dst = src
+      src = self.path
+    if dst == nil
+      dst = src
+      src = self.path
+    file_copy(src, dst, options)</code></pre>
+</details>
+</section>
+<section id="method-File-exists-" class="doc-item member">
+<h3><code>exists?</code></h3>
+<pre><code>File.exists?(path = nil)</code></pre>
+<p><small>lib/file.tya:131</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>exists? returns true when path exists.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # exists? returns true when path exists.
+  # @param path String path value.
+  # @return Boolean whether the condition is true.
+  exists?: path = nil -&gt;
+    if path == nil
+      path = self.path
+    file_exists(path)</code></pre>
+</details>
+</section>
+<section id="method-File-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>File.initialize(path = nil)</code></pre>
+<p><small>lib/file.tya:90</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>File.initialize stores a file path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.initialize stores a file path.
+  # @param path String path value.
+  # @return Self the initialized object.
+  initialize: path = nil -&gt;
+    self.path = path</code></pre>
+</details>
+</section>
+<section id="method-File-read" class="doc-item member">
+<h3><code>read</code></h3>
+<pre><code>File.read(path = nil)</code></pre>
+<p><small>lib/file.tya:140</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>read returns the UTF-8 text contents of path. Raises when the file cannot be opened or read.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # read returns the UTF-8 text contents of path.
+  # Raises when the file cannot be opened or read.
+  # @param path String path value.
+  # @return Any the resulting value.
+  read: path = nil -&gt;
+    if path == nil
+      path = self.path
+    read_file(path)</code></pre>
+</details>
+</section>
+<section id="method-File-read_bytes" class="doc-item member">
+<h3><code>read_bytes</code></h3>
+<pre><code>File.read_bytes(path = nil)</code></pre>
+<p><small>lib/file.tya:149</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>read_bytes returns the raw bytes stored at path. Raises when the file cannot be opened or read.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # read_bytes returns the raw bytes stored at path.
+  # Raises when the file cannot be opened or read.
+  # @param path String path value.
+  # @return Any the resulting value.
+  read_bytes: path = nil -&gt;
+    if path == nil
+      path = self.path
+    file_read_bytes(path)</code></pre>
+</details>
+</section>
+<section id="method-File-remove" class="doc-item member">
+<h3><code>remove</code></h3>
+<pre><code>File.remove(path = nil)</code></pre>
+<p><small>lib/file.tya:157</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.remove provides the file/File standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.remove provides the file/File standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  remove: path = nil -&gt;
+    if path == nil
+      path = self.path
+    file_remove(path)</code></pre>
+</details>
+</section>
+<section id="method-File-rename" class="doc-item member">
+<h3><code>rename</code></h3>
+<pre><code>File.rename(old_path, new_path = nil)</code></pre>
+<p><small>lib/file.tya:166</small></p>
+<dl class="metadata">
+<dt>Param <code>old_path</code></dt><dd><code>String</code> old path value.</dd>
+<dt>Param <code>new_path</code></dt><dd><code>String</code> new path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>File.rename provides the file/File standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # File.rename provides the file/File standard library operation.
+  # @param old_path String old path value.
+  # @param new_path String new path value.
+  # @return Any the resulting value.
+  rename: old_path, new_path = nil -&gt;
+    if new_path == nil
+      new_path = old_path
+      old_path = self.path
+    file_rename(old_path, new_path)</code></pre>
+</details>
+</section>
+<section id="method-File-stat" class="doc-item member">
+<h3><code>stat</code></h3>
+<pre><code>File.stat(path = nil)</code></pre>
+<p><small>lib/file.tya:176</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>stat returns metadata for path as a dictionary. Raises when the path cannot be inspected.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # stat returns metadata for path as a dictionary.
+  # Raises when the path cannot be inspected.
+  # @param path String path value.
+  # @return Any the resulting value.
+  stat: path = nil -&gt;
+    if path == nil
+      path = self.path
+    file_stat(path)</code></pre>
+</details>
+</section>
+<section id="method-File-temp" class="doc-item member">
+<h3><code>temp</code></h3>
+<pre><code>File.temp(prefix = &quot;tya&quot;, suffix = &quot;&quot;)</code></pre>
+<p><small>lib/file.tya:185</small></p>
+<dl class="metadata">
+<dt>Param <code>prefix</code></dt><dd><code>Any</code> prefix value.</dd>
+<dt>Param <code>suffix</code></dt><dd><code>Any</code> suffix value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>temp creates an empty temporary file and returns its path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # temp creates an empty temporary file and returns its path.
+  # @param prefix Any prefix value.
+  # @param suffix Any suffix value.
+  # @return Any the resulting value.
+  temp: prefix = &quot;tya&quot;, suffix = &quot;&quot; -&gt;
+    file_temp(prefix, suffix)</code></pre>
+</details>
+</section>
+<section id="method-File-write" class="doc-item member">
+<h3><code>write</code></h3>
+<pre><code>File.write(path, text = nil)</code></pre>
+<p><small>lib/file.tya:193</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>write replaces path with text and creates the file when needed. Raises when the file cannot be written.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # write replaces path with text and creates the file when needed.
+  # Raises when the file cannot be written.
+  # @param path String path value.
+  # @param text String text value.
+  # @return Any the resulting value.
+  write: path, text = nil -&gt;
+    if text == nil
+      text = path
+      path = self.path
+    write_file(path, text)</code></pre>
+</details>
+</section>
+<section id="method-File-write_bytes" class="doc-item member">
+<h3><code>write_bytes</code></h3>
+<pre><code>File.write_bytes(path, b = nil)</code></pre>
+<p><small>lib/file.tya:204</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>write_bytes replaces path with raw bytes. Raises when the file cannot be written.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # write_bytes replaces path with raw bytes.
+  # Raises when the file cannot be written.
+  # @param path String path value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  write_bytes: path, b = nil -&gt;
+    if b == nil
+      b = path
+      path = self.path
+    file_write_bytes(path, b)</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

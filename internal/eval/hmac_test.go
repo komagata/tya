@@ -12,7 +12,7 @@ import (
 
 func TestRunHmacKnownVectors(t *testing.T) {
 	out := runHmacProgram(t, strings.Join([]string{
-		"import hmac/* as hmac",
+		"import hmac",
 		"message = \"The quick brown fox jumps over the lazy dog\"",
 		"print(hmac.Hmac(\"sha256\", \"key\").hexdigest(message))",
 		"print(hmac.Hmac(\"sha384\", \"key\").hexdigest(message))",
@@ -34,7 +34,7 @@ func TestRunHmacKnownVectors(t *testing.T) {
 
 func TestRunHmacStringAndBytesInputs(t *testing.T) {
 	out := runHmacProgram(t, strings.Join([]string{
-		"import hmac/* as hmac",
+		"import hmac",
 		"text = hmac.Hmac(\"sha256\", \"key\").hexdigest(\"message\")",
 		"raw = hmac.Hmac(\"sha256\", b\"key\").hexdigest(b\"message\")",
 		"print(text == raw)",
@@ -47,7 +47,7 @@ func TestRunHmacStringAndBytesInputs(t *testing.T) {
 
 func TestRunHmacVerifyEncodings(t *testing.T) {
 	out := runHmacProgram(t, strings.Join([]string{
-		"import hmac/* as hmac",
+		"import hmac",
 		"message = \"The quick brown fox jumps over the lazy dog\"",
 		"expected_hex = \"f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8\"",
 		"raw = hmac.Hmac(\"sha256\", \"key\").digest(message)",
@@ -77,7 +77,7 @@ func TestRunHmacStructuredErrors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := runHmacProgramError(t, "import hmac/* as hmac\n"+tt.src+"\n")
+			err := runHmacProgramError(t, "import hmac\n"+tt.src+"\n")
 			if err == nil {
 				t.Fatal("expected error")
 			}

@@ -382,8 +382,8 @@ class Counter
 標準ライブラリのパッケージは、ユーザーファイルと同じように import します。
 
 ```tya
-import json as json
-import time as time
+import json
+import time
 
 json_text = json.Json().dump({ name: "Tya" })
 print(json_text)

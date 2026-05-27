@@ -9,7 +9,7 @@
 Issue #14 reports that the C runtime implementation for `file.File().temp(prefix, suffix)` can return a string backed by unstable local buffer memory:
 
 ```tya
-import file as file
+import file
 
 tmp = file.File().temp("tya-fs", ".tmp")
 print(file.File().exists?(tmp))

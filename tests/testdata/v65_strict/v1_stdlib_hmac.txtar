@@ -24,7 +24,7 @@ stdout 'true'
 stderr 'hmac.algorithm: unsupported algorithm'
 
 -- hmac_valid.tya --
-import hmac/* as hmac
+import hmac
 
 message = "The quick brown fox jumps over the lazy dog"
 print(hmac.Hmac("sha256", "key").hexdigest(message))
@@ -36,6 +36,6 @@ print(hmac.Hmac("sha256", "key").verify(message, "97yD9DBThCSxMpjmqm+xQ+9NWaFJRh
 print(hmac.Hmac("sha256", "key").verify(message, "00"))
 
 -- hmac_invalid.tya --
-import hmac/* as hmac
+import hmac
 
 print(hmac.Hmac("md5", "key").hexdigest("message"))

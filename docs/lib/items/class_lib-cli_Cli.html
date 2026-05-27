@@ -1,0 +1,1097 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Cli</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li class="current"><a href="class_lib-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Cli</code></h1>
+<section id="class-Cli" class="doc-item">
+<pre><code>class Cli</code></pre>
+<p><small>lib/cli.tya:2</small></p>
+<p>Cli provides the cli/Cli standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Cli provides the cli/Cli standard library API.
+class Cli
+  # Cli.value stores instance state.
+  # @type Nil
+  value: nil
+
+  # Cli.initialize stores command-line args or a command name.
+  # @param value String value value.
+  # @return Self the initialized object.
+  initialize: value -&gt;
+    self.value = value
+
+  # Cli.apply_defaults provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  apply_defaults: state -&gt;
+    options = Cli(nil).spec_options(state[&quot;spec&quot;])
+    names = options.keys()
+    for name in names
+      opt = options[name]
+      if opt.has(&quot;default&quot;)
+        state[&quot;options&quot;][name] = opt[&quot;default&quot;]
+      else
+        typ = Cli(nil).option_type(opt)
+        if typ == &quot;bool&quot;
+          state[&quot;options&quot;][name] = false
+        elseif typ == &quot;array&quot;
+          state[&quot;options&quot;][name] = []
+
+  # Cli.assign_value provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param name String name value.
+  # @param opt Any opt value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  assign_value: state, name, opt, value -&gt;
+    typ = Cli(nil).option_type(opt)
+    if typ == &quot;string&quot;
+      state[&quot;options&quot;][name] = value
+    elseif typ == &quot;int&quot;
+      try
+        state[&quot;options&quot;][name] = value.to_i()
+      catch _
+        Cli(nil).error(state, &quot;invalid_value&quot;, name, &quot;--{name} expects int&quot;)
+    else
+      if typ == &quot;float&quot;
+        try
+          state[&quot;options&quot;][name] = value.to_f()
+        catch _
+          Cli(nil).error(state, &quot;invalid_value&quot;, name, &quot;--{name} expects float&quot;)
+      elseif typ == &quot;array&quot;
+        if not state[&quot;options&quot;].has(name)
+          state[&quot;options&quot;][name] = []
+        state[&quot;options&quot;][name].push(value)
+      else
+        Cli(nil).error(
+          state,
+          &quot;invalid_type&quot;,
+          name,
+          &quot;unsupported option type {typ}&quot;
+        )
+
+  # Cli.check_required provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  check_required: state -&gt;
+    options = Cli(nil).spec_options(state[&quot;spec&quot;])
+    names = options.keys().sort()
+    for name in names
+      opt = options[name]
+      if (
+        Cli(nil).spec_bool(opt, &quot;required&quot;, false) and not state[&quot;options&quot;].has(name)
+      )
+        Cli(nil).error(state, &quot;required&quot;, name, &quot;--{name} is required&quot;)
+
+  # Cli.error provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param kind Any kind value.
+  # @param name String name value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  error: state, kind, name, message -&gt;
+    state[&quot;errors&quot;].push({ kind: kind, option: name, message: message })
+
+  # Cli.index_of provides the cli/Cli standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @return Any the resulting value.
+  index_of: text, needle -&gt;
+    i = 0
+    while i &lt; text.byte_len()
+      if text[i] == needle
+        return i
+      i = i + 1
+    -1
+
+  # Cli.name_for_alias provides the cli/Cli standard library operation.
+  # @param spec Any spec value.
+  # @param alias Any alias value.
+  # @return Any the resulting value.
+  name_for_alias: spec, alias -&gt;
+    options = Cli(nil).spec_options(spec)
+    names = options.keys()
+    for name in names
+      opt = options[name]
+      if Cli(nil).spec_string(opt, &quot;alias&quot;, &quot;&quot;) == alias
+        return name
+    &quot;&quot;
+
+  # Cli.option_type provides the cli/Cli standard library operation.
+  # @param opt Any opt value.
+  # @return Any the resulting value.
+  option_type: opt -&gt;
+    Cli(nil).spec_string(opt, &quot;type&quot;, &quot;string&quot;)
+
+  # Cli.parse provides the cli/Cli standard library operation.
+  # @param args Array args value.
+  # @param spec Any spec value.
+  # @return Any the resulting value.
+  parse: args, spec = nil -&gt;
+    if self.value != nil
+      spec = args
+      args = self.value
+    state =
+      args: args
+      spec: spec
+      options: {}
+      positionals: []
+      rest: []
+      errors: []
+      stop_options: false
+    Cli(nil).apply_defaults(state)
+    i = 0
+    while i &lt; args.len()
+      arg = args[i]
+      if state[&quot;stop_options&quot;]
+        state[&quot;rest&quot;].push(arg)
+      elseif arg == &quot;--&quot;
+        state[&quot;stop_options&quot;] = true
+        if Cli(nil).spec_bool(spec, &quot;stop_at_double_dash&quot;, true)
+          j = i + 1
+          while j &lt; args.len()
+            state[&quot;rest&quot;].push(args[j])
+            j = j + 1
+          i = args.len()
+      else
+        if arg.starts_with(&quot;--&quot;) and arg.byte_len() &gt; 2
+          i = Cli(nil).parse_long(state, i)
+        elseif arg.starts_with(&quot;-&quot;) and arg != &quot;-&quot;
+          i = Cli(nil).parse_short(state, i)
+        else
+          state[&quot;positionals&quot;].push(arg)
+      i = i + 1
+    Cli(nil).check_required(state)
+    result =
+      options: state[&quot;options&quot;]
+      positionals: state[&quot;positionals&quot;]
+      rest: state[&quot;rest&quot;]
+      errors: state[&quot;errors&quot;]
+    result
+
+  # Cli.parse_bool_value provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param name String name value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  parse_bool_value: state, name, value -&gt;
+    if value == &quot;true&quot; or value == &quot;1&quot; or value == &quot;yes&quot;
+      return true
+    if value == &quot;false&quot; or value == &quot;0&quot; or value == &quot;no&quot;
+      return false
+    Cli(nil).error(state, &quot;invalid_value&quot;, name, &quot;--{name} expects bool&quot;)
+    false
+
+  # Cli.parse_long provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param i Int i value.
+  # @return Any the resulting value.
+  parse_long: state, i -&gt;
+    arg = state[&quot;args&quot;][i]
+    raw = arg.slice(2, arg.len())
+    eq = Cli(nil).index_of(raw, &quot;=&quot;)
+    name = raw
+    value = nil
+    has_value = false
+    if eq &gt;= 0
+      name = raw.slice(0, eq)
+      value = raw.slice(eq + 1, raw.len())
+      has_value = true
+    negated = false
+    if name.starts_with(&quot;no-&quot;)
+      negated = true
+      name = name.slice(3, name.len())
+    options = Cli(nil).spec_options(state[&quot;spec&quot;])
+    if not options.has(name)
+      Cli(nil).unknown(state, arg)
+      return i
+    opt = options[name]
+    typ = Cli(nil).option_type(opt)
+    if typ == &quot;bool&quot;
+      if negated
+        state[&quot;options&quot;][name] = false
+      elseif has_value
+        state[&quot;options&quot;][name] = Cli(nil).parse_bool_value(state, name, value)
+      else
+        state[&quot;options&quot;][name] = true
+      return i
+    if negated
+      Cli(nil).error(
+        state,
+        &quot;invalid_option&quot;,
+        name,
+        &quot;--no-{name} is only valid for bool options&quot;
+      )
+      return i
+    if not has_value
+      if i + 1 &gt;= state[&quot;args&quot;].len()
+        Cli(nil).error(
+          state,
+          &quot;missing_value&quot;,
+          name,
+          &quot;--{name} requires a value&quot;
+        )
+        return i
+      i = i + 1
+      value = state[&quot;args&quot;][i]
+    Cli(nil).assign_value(state, name, opt, value)
+    i
+
+  # Cli.parse_or_exit provides the cli/Cli standard library operation.
+  # @param args Array args value.
+  # @param spec Any spec value.
+  # @return Any the resulting value.
+  parse_or_exit: args, spec = nil -&gt;
+    if self.value != nil
+      spec = args
+      args = self.value
+    result = Cli(args).parse(spec)
+    if result[&quot;errors&quot;].len() &gt; 0
+      command = Cli(nil).spec_string(spec, &quot;command&quot;, &quot;usage&quot;)
+      println(Cli(nil).usage(command, spec))
+      for err in result[&quot;errors&quot;]
+        println(err[&quot;message&quot;])
+      exit(1)
+    result
+
+  # Cli.parse_short provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param i Int i value.
+  # @return Any the resulting value.
+  parse_short: state, i -&gt;
+    arg = state[&quot;args&quot;][i]
+    raw = arg.slice(1, arg.len())
+    j = 0
+    while j &lt; raw.byte_len()
+      alias = raw[j]
+      name = Cli(nil).name_for_alias(state[&quot;spec&quot;], alias)
+      if name == &quot;&quot;
+        Cli(nil).unknown(state, &quot;-{alias}&quot;)
+        j = j + 1
+      else
+        opt = Cli(nil).spec_options(state[&quot;spec&quot;])[name]
+        typ = Cli(nil).option_type(opt)
+        if typ == &quot;bool&quot;
+          state[&quot;options&quot;][name] = true
+          j = j + 1
+        else
+          if j + 1 &lt; raw.byte_len()
+            value = raw.slice(j + 1, raw.len())
+            Cli(nil).assign_value(state, name, opt, value)
+            return i
+          if i + 1 &gt;= state[&quot;args&quot;].len()
+            Cli(nil).error(
+              state,
+              &quot;missing_value&quot;,
+              name,
+              &quot;-{alias} requires a value&quot;
+            )
+            return i
+          i = i + 1
+          Cli(nil).assign_value(state, name, opt, state[&quot;args&quot;][i])
+          return i
+    i
+
+  # Cli.spec_bool provides the cli/Cli standard library operation.
+  # @param spec Any spec value.
+  # @param name String name value.
+  # @param fallback Any fallback value.
+  # @return Any the resulting value.
+  spec_bool: spec, name, fallback -&gt;
+    if spec.has(name)
+      return spec[name]
+    fallback
+
+  # Cli.spec_options provides the cli/Cli standard library operation.
+  # @param spec Any spec value.
+  # @return Dict the resulting value.
+  spec_options: spec -&gt;
+    if spec.has(&quot;options&quot;)
+      return spec[&quot;options&quot;]
+    {}
+
+  # Cli.spec_string provides the cli/Cli standard library operation.
+  # @param spec Any spec value.
+  # @param name String name value.
+  # @param fallback Any fallback value.
+  # @return String the resulting value.
+  spec_string: spec, name, fallback -&gt;
+    if spec.has(name)
+      return spec[name]
+    fallback
+
+  # Cli.unknown provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param raw Any raw value.
+  # @return Any the resulting value.
+  unknown: state, raw -&gt;
+    if Cli(nil).spec_bool(state[&quot;spec&quot;], &quot;allow_unknown&quot;, false)
+      state[&quot;rest&quot;].push(raw)
+    else
+      Cli(nil).error(state, &quot;unknown_option&quot;, raw, &quot;unknown option {raw}&quot;)
+
+  # Cli.usage provides the cli/Cli standard library operation.
+  # @param command Any command value.
+  # @param spec Any spec value.
+  # @return String the resulting value.
+  usage: command, spec = nil -&gt;
+    if self.value != nil
+      spec = command
+      command = self.value
+    parts = [&quot;Usage: {command}&quot;]
+    options = Cli(nil).spec_options(spec)
+    names = options.keys().sort()
+    if names.len() &gt; 0
+      parts.push(&quot;[options]&quot;)
+    if spec.has(&quot;positionals&quot;)
+      for pos in spec[&quot;positionals&quot;]
+        if pos.class == String
+          parts.push(&quot;&lt;{pos}&gt;&quot;)
+        else
+          name = Cli(nil).spec_string(pos, &quot;name&quot;, &quot;arg&quot;)
+          required = Cli(nil).spec_bool(pos, &quot;required&quot;, true)
+          if required
+            parts.push(&quot;&lt;{name}&gt;&quot;)
+          else
+            parts.push(&quot;[{name}]&quot;)
+    out = parts.join(&quot; &quot;)
+    if names.len() &gt; 0
+      out = out + &quot;\nOptions:&quot;
+      for name in names
+        opt = options[name]
+        line = &quot;  --{name}&quot;
+        alias = Cli(nil).spec_string(opt, &quot;alias&quot;, &quot;&quot;)
+        if alias != &quot;&quot;
+          line = &quot;  -{alias}, --{name}&quot;
+        typ = Cli(nil).option_type(opt)
+        if typ != &quot;bool&quot;
+          line = line + &quot; &lt;{typ}&gt;&quot;
+        markers = []
+        if Cli(nil).spec_bool(opt, &quot;required&quot;, false)
+          markers.push(&quot;required&quot;)
+        if opt.has(&quot;default&quot;)
+          default_value = opt[&quot;default&quot;]
+          markers.push(&quot;default: {default_value}&quot;)
+        if markers.len() &gt; 0
+          line = line + &quot; (&quot; + markers.join(&quot;, &quot;) + &quot;)&quot;
+        if opt.has(&quot;help&quot;)
+          line = line + &quot;  &quot; + opt[&quot;help&quot;]
+        out = out + &quot;\n&quot; + line
+    out</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Cli-value" class="doc-item member">
+<h3><code>value</code></h3>
+<pre><code>Cli.value</code></pre>
+<p><small>lib/cli.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Cli.value stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.value stores instance state.
+  # @type Nil
+  value: nil</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Cli-apply_defaults" class="doc-item member">
+<h3><code>apply_defaults</code></h3>
+<pre><code>Cli.apply_defaults(state)</code></pre>
+<p><small>lib/cli.tya:16</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.apply_defaults provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.apply_defaults provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  apply_defaults: state -&gt;
+    options = Cli(nil).spec_options(state[&quot;spec&quot;])
+    names = options.keys()
+    for name in names
+      opt = options[name]
+      if opt.has(&quot;default&quot;)
+        state[&quot;options&quot;][name] = opt[&quot;default&quot;]
+      else
+        typ = Cli(nil).option_type(opt)
+        if typ == &quot;bool&quot;
+          state[&quot;options&quot;][name] = false
+        elseif typ == &quot;array&quot;
+          state[&quot;options&quot;][name] = []</code></pre>
+</details>
+</section>
+<section id="method-Cli-assign_value" class="doc-item member">
+<h3><code>assign_value</code></h3>
+<pre><code>Cli.assign_value(state, name, opt, value)</code></pre>
+<p><small>lib/cli.tya:36</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Param <code>opt</code></dt><dd><code>Any</code> opt value.</dd>
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.assign_value provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.assign_value provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param name String name value.
+  # @param opt Any opt value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  assign_value: state, name, opt, value -&gt;
+    typ = Cli(nil).option_type(opt)
+    if typ == &quot;string&quot;
+      state[&quot;options&quot;][name] = value
+    elseif typ == &quot;int&quot;
+      try
+        state[&quot;options&quot;][name] = value.to_i()
+      catch _
+        Cli(nil).error(state, &quot;invalid_value&quot;, name, &quot;--{name} expects int&quot;)
+    else
+      if typ == &quot;float&quot;
+        try
+          state[&quot;options&quot;][name] = value.to_f()
+        catch _
+          Cli(nil).error(state, &quot;invalid_value&quot;, name, &quot;--{name} expects float&quot;)
+      elseif typ == &quot;array&quot;
+        if not state[&quot;options&quot;].has(name)
+          state[&quot;options&quot;][name] = []
+        state[&quot;options&quot;][name].push(value)
+      else
+        Cli(nil).error(
+          state,
+          &quot;invalid_type&quot;,
+          name,
+          &quot;unsupported option type {typ}&quot;
+        )</code></pre>
+</details>
+</section>
+<section id="method-Cli-check_required" class="doc-item member">
+<h3><code>check_required</code></h3>
+<pre><code>Cli.check_required(state)</code></pre>
+<p><small>lib/cli.tya:66</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.check_required provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.check_required provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @return Any the resulting value.
+  check_required: state -&gt;
+    options = Cli(nil).spec_options(state[&quot;spec&quot;])
+    names = options.keys().sort()
+    for name in names
+      opt = options[name]
+      if (
+        Cli(nil).spec_bool(opt, &quot;required&quot;, false) and not state[&quot;options&quot;].has(name)
+      )
+        Cli(nil).error(state, &quot;required&quot;, name, &quot;--{name} is required&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Cli-error" class="doc-item member">
+<h3><code>error</code></h3>
+<pre><code>Cli.error(state, kind, name, message)</code></pre>
+<p><small>lib/cli.tya:82</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>kind</code></dt><dd><code>Any</code> kind value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Param <code>message</code></dt><dd><code>String</code> message value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.error provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.error provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param kind Any kind value.
+  # @param name String name value.
+  # @param message String message value.
+  # @return Any the resulting value.
+  error: state, kind, name, message -&gt;
+    state[&quot;errors&quot;].push({ kind: kind, option: name, message: message })</code></pre>
+</details>
+</section>
+<section id="method-Cli-index_of" class="doc-item member">
+<h3><code>index_of</code></h3>
+<pre><code>Cli.index_of(text, needle)</code></pre>
+<p><small>lib/cli.tya:89</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Param <code>needle</code></dt><dd><code>Any</code> needle value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.index_of provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.index_of provides the cli/Cli standard library operation.
+  # @param text String text value.
+  # @param needle Any needle value.
+  # @return Any the resulting value.
+  index_of: text, needle -&gt;
+    i = 0
+    while i &lt; text.byte_len()
+      if text[i] == needle
+        return i
+      i = i + 1
+    -1</code></pre>
+</details>
+</section>
+<section id="method-Cli-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Cli.initialize(value)</code></pre>
+<p><small>lib/cli.tya:10</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Cli.initialize stores command-line args or a command name.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.initialize stores command-line args or a command name.
+  # @param value String value value.
+  # @return Self the initialized object.
+  initialize: value -&gt;
+    self.value = value</code></pre>
+</details>
+</section>
+<section id="method-Cli-name_for_alias" class="doc-item member">
+<h3><code>name_for_alias</code></h3>
+<pre><code>Cli.name_for_alias(spec, alias)</code></pre>
+<p><small>lib/cli.tya:101</small></p>
+<dl class="metadata">
+<dt>Param <code>spec</code></dt><dd><code>Any</code> spec value.</dd>
+<dt>Param <code>alias</code></dt><dd><code>Any</code> alias value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.name_for_alias provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.name_for_alias provides the cli/Cli standard library operation.
+  # @param spec Any spec value.
+  # @param alias Any alias value.
+  # @return Any the resulting value.
+  name_for_alias: spec, alias -&gt;
+    options = Cli(nil).spec_options(spec)
+    names = options.keys()
+    for name in names
+      opt = options[name]
+      if Cli(nil).spec_string(opt, &quot;alias&quot;, &quot;&quot;) == alias
+        return name
+    &quot;&quot;</code></pre>
+</details>
+</section>
+<section id="method-Cli-option_type" class="doc-item member">
+<h3><code>option_type</code></h3>
+<pre><code>Cli.option_type(opt)</code></pre>
+<p><small>lib/cli.tya:113</small></p>
+<dl class="metadata">
+<dt>Param <code>opt</code></dt><dd><code>Any</code> opt value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.option_type provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.option_type provides the cli/Cli standard library operation.
+  # @param opt Any opt value.
+  # @return Any the resulting value.
+  option_type: opt -&gt;
+    Cli(nil).spec_string(opt, &quot;type&quot;, &quot;string&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Cli-parse" class="doc-item member">
+<h3><code>parse</code></h3>
+<pre><code>Cli.parse(args, spec = nil)</code></pre>
+<p><small>lib/cli.tya:120</small></p>
+<dl class="metadata">
+<dt>Param <code>args</code></dt><dd><code>Array</code> args value.</dd>
+<dt>Param <code>spec</code></dt><dd><code>Any</code> spec value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.parse provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.parse provides the cli/Cli standard library operation.
+  # @param args Array args value.
+  # @param spec Any spec value.
+  # @return Any the resulting value.
+  parse: args, spec = nil -&gt;
+    if self.value != nil
+      spec = args
+      args = self.value
+    state =
+      args: args
+      spec: spec
+      options: {}
+      positionals: []
+      rest: []
+      errors: []
+      stop_options: false
+    Cli(nil).apply_defaults(state)
+    i = 0
+    while i &lt; args.len()
+      arg = args[i]
+      if state[&quot;stop_options&quot;]
+        state[&quot;rest&quot;].push(arg)
+      elseif arg == &quot;--&quot;
+        state[&quot;stop_options&quot;] = true
+        if Cli(nil).spec_bool(spec, &quot;stop_at_double_dash&quot;, true)
+          j = i + 1
+          while j &lt; args.len()
+            state[&quot;rest&quot;].push(args[j])
+            j = j + 1
+          i = args.len()
+      else
+        if arg.starts_with(&quot;--&quot;) and arg.byte_len() &gt; 2
+          i = Cli(nil).parse_long(state, i)
+        elseif arg.starts_with(&quot;-&quot;) and arg != &quot;-&quot;
+          i = Cli(nil).parse_short(state, i)
+        else
+          state[&quot;positionals&quot;].push(arg)
+      i = i + 1
+    Cli(nil).check_required(state)
+    result =
+      options: state[&quot;options&quot;]
+      positionals: state[&quot;positionals&quot;]
+      rest: state[&quot;rest&quot;]
+      errors: state[&quot;errors&quot;]
+    result</code></pre>
+</details>
+</section>
+<section id="method-Cli-parse_bool_value" class="doc-item member">
+<h3><code>parse_bool_value</code></h3>
+<pre><code>Cli.parse_bool_value(state, name, value)</code></pre>
+<p><small>lib/cli.tya:167</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.parse_bool_value provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.parse_bool_value provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param name String name value.
+  # @param value String value value.
+  # @return Any the resulting value.
+  parse_bool_value: state, name, value -&gt;
+    if value == &quot;true&quot; or value == &quot;1&quot; or value == &quot;yes&quot;
+      return true
+    if value == &quot;false&quot; or value == &quot;0&quot; or value == &quot;no&quot;
+      return false
+    Cli(nil).error(state, &quot;invalid_value&quot;, name, &quot;--{name} expects bool&quot;)
+    false</code></pre>
+</details>
+</section>
+<section id="method-Cli-parse_long" class="doc-item member">
+<h3><code>parse_long</code></h3>
+<pre><code>Cli.parse_long(state, i)</code></pre>
+<p><small>lib/cli.tya:179</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>i</code></dt><dd><code>Int</code> i value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.parse_long provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.parse_long provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param i Int i value.
+  # @return Any the resulting value.
+  parse_long: state, i -&gt;
+    arg = state[&quot;args&quot;][i]
+    raw = arg.slice(2, arg.len())
+    eq = Cli(nil).index_of(raw, &quot;=&quot;)
+    name = raw
+    value = nil
+    has_value = false
+    if eq &gt;= 0
+      name = raw.slice(0, eq)
+      value = raw.slice(eq + 1, raw.len())
+      has_value = true
+    negated = false
+    if name.starts_with(&quot;no-&quot;)
+      negated = true
+      name = name.slice(3, name.len())
+    options = Cli(nil).spec_options(state[&quot;spec&quot;])
+    if not options.has(name)
+      Cli(nil).unknown(state, arg)
+      return i
+    opt = options[name]
+    typ = Cli(nil).option_type(opt)
+    if typ == &quot;bool&quot;
+      if negated
+        state[&quot;options&quot;][name] = false
+      elseif has_value
+        state[&quot;options&quot;][name] = Cli(nil).parse_bool_value(state, name, value)
+      else
+        state[&quot;options&quot;][name] = true
+      return i
+    if negated
+      Cli(nil).error(
+        state,
+        &quot;invalid_option&quot;,
+        name,
+        &quot;--no-{name} is only valid for bool options&quot;
+      )
+      return i
+    if not has_value
+      if i + 1 &gt;= state[&quot;args&quot;].len()
+        Cli(nil).error(
+          state,
+          &quot;missing_value&quot;,
+          name,
+          &quot;--{name} requires a value&quot;
+        )
+        return i
+      i = i + 1
+      value = state[&quot;args&quot;][i]
+    Cli(nil).assign_value(state, name, opt, value)
+    i</code></pre>
+</details>
+</section>
+<section id="method-Cli-parse_or_exit" class="doc-item member">
+<h3><code>parse_or_exit</code></h3>
+<pre><code>Cli.parse_or_exit(args, spec = nil)</code></pre>
+<p><small>lib/cli.tya:234</small></p>
+<dl class="metadata">
+<dt>Param <code>args</code></dt><dd><code>Array</code> args value.</dd>
+<dt>Param <code>spec</code></dt><dd><code>Any</code> spec value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.parse_or_exit provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.parse_or_exit provides the cli/Cli standard library operation.
+  # @param args Array args value.
+  # @param spec Any spec value.
+  # @return Any the resulting value.
+  parse_or_exit: args, spec = nil -&gt;
+    if self.value != nil
+      spec = args
+      args = self.value
+    result = Cli(args).parse(spec)
+    if result[&quot;errors&quot;].len() &gt; 0
+      command = Cli(nil).spec_string(spec, &quot;command&quot;, &quot;usage&quot;)
+      println(Cli(nil).usage(command, spec))
+      for err in result[&quot;errors&quot;]
+        println(err[&quot;message&quot;])
+      exit(1)
+    result</code></pre>
+</details>
+</section>
+<section id="method-Cli-parse_short" class="doc-item member">
+<h3><code>parse_short</code></h3>
+<pre><code>Cli.parse_short(state, i)</code></pre>
+<p><small>lib/cli.tya:251</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>i</code></dt><dd><code>Int</code> i value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.parse_short provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.parse_short provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param i Int i value.
+  # @return Any the resulting value.
+  parse_short: state, i -&gt;
+    arg = state[&quot;args&quot;][i]
+    raw = arg.slice(1, arg.len())
+    j = 0
+    while j &lt; raw.byte_len()
+      alias = raw[j]
+      name = Cli(nil).name_for_alias(state[&quot;spec&quot;], alias)
+      if name == &quot;&quot;
+        Cli(nil).unknown(state, &quot;-{alias}&quot;)
+        j = j + 1
+      else
+        opt = Cli(nil).spec_options(state[&quot;spec&quot;])[name]
+        typ = Cli(nil).option_type(opt)
+        if typ == &quot;bool&quot;
+          state[&quot;options&quot;][name] = true
+          j = j + 1
+        else
+          if j + 1 &lt; raw.byte_len()
+            value = raw.slice(j + 1, raw.len())
+            Cli(nil).assign_value(state, name, opt, value)
+            return i
+          if i + 1 &gt;= state[&quot;args&quot;].len()
+            Cli(nil).error(
+              state,
+              &quot;missing_value&quot;,
+              name,
+              &quot;-{alias} requires a value&quot;
+            )
+            return i
+          i = i + 1
+          Cli(nil).assign_value(state, name, opt, state[&quot;args&quot;][i])
+          return i
+    i</code></pre>
+</details>
+</section>
+<section id="method-Cli-spec_bool" class="doc-item member">
+<h3><code>spec_bool</code></h3>
+<pre><code>Cli.spec_bool(spec, name, fallback)</code></pre>
+<p><small>lib/cli.tya:290</small></p>
+<dl class="metadata">
+<dt>Param <code>spec</code></dt><dd><code>Any</code> spec value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Param <code>fallback</code></dt><dd><code>Any</code> fallback value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.spec_bool provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.spec_bool provides the cli/Cli standard library operation.
+  # @param spec Any spec value.
+  # @param name String name value.
+  # @param fallback Any fallback value.
+  # @return Any the resulting value.
+  spec_bool: spec, name, fallback -&gt;
+    if spec.has(name)
+      return spec[name]
+    fallback</code></pre>
+</details>
+</section>
+<section id="method-Cli-spec_options" class="doc-item member">
+<h3><code>spec_options</code></h3>
+<pre><code>Cli.spec_options(spec)</code></pre>
+<p><small>lib/cli.tya:298</small></p>
+<dl class="metadata">
+<dt>Param <code>spec</code></dt><dd><code>Any</code> spec value.</dd>
+<dt>Return</dt><dd><code>Dict</code> the resulting value.</dd>
+</dl>
+<p>Cli.spec_options provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.spec_options provides the cli/Cli standard library operation.
+  # @param spec Any spec value.
+  # @return Dict the resulting value.
+  spec_options: spec -&gt;
+    if spec.has(&quot;options&quot;)
+      return spec[&quot;options&quot;]
+    {}</code></pre>
+</details>
+</section>
+<section id="method-Cli-spec_string" class="doc-item member">
+<h3><code>spec_string</code></h3>
+<pre><code>Cli.spec_string(spec, name, fallback)</code></pre>
+<p><small>lib/cli.tya:308</small></p>
+<dl class="metadata">
+<dt>Param <code>spec</code></dt><dd><code>Any</code> spec value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Param <code>fallback</code></dt><dd><code>Any</code> fallback value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Cli.spec_string provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.spec_string provides the cli/Cli standard library operation.
+  # @param spec Any spec value.
+  # @param name String name value.
+  # @param fallback Any fallback value.
+  # @return String the resulting value.
+  spec_string: spec, name, fallback -&gt;
+    if spec.has(name)
+      return spec[name]
+    fallback</code></pre>
+</details>
+</section>
+<section id="method-Cli-unknown" class="doc-item member">
+<h3><code>unknown</code></h3>
+<pre><code>Cli.unknown(state, raw)</code></pre>
+<p><small>lib/cli.tya:317</small></p>
+<dl class="metadata">
+<dt>Param <code>state</code></dt><dd><code>Any</code> state value.</dd>
+<dt>Param <code>raw</code></dt><dd><code>Any</code> raw value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Cli.unknown provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.unknown provides the cli/Cli standard library operation.
+  # @param state Any state value.
+  # @param raw Any raw value.
+  # @return Any the resulting value.
+  unknown: state, raw -&gt;
+    if Cli(nil).spec_bool(state[&quot;spec&quot;], &quot;allow_unknown&quot;, false)
+      state[&quot;rest&quot;].push(raw)
+    else
+      Cli(nil).error(state, &quot;unknown_option&quot;, raw, &quot;unknown option {raw}&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Cli-usage" class="doc-item member">
+<h3><code>usage</code></h3>
+<pre><code>Cli.usage(command, spec = nil)</code></pre>
+<p><small>lib/cli.tya:327</small></p>
+<dl class="metadata">
+<dt>Param <code>command</code></dt><dd><code>Any</code> command value.</dd>
+<dt>Param <code>spec</code></dt><dd><code>Any</code> spec value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Cli.usage provides the cli/Cli standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Cli.usage provides the cli/Cli standard library operation.
+  # @param command Any command value.
+  # @param spec Any spec value.
+  # @return String the resulting value.
+  usage: command, spec = nil -&gt;
+    if self.value != nil
+      spec = command
+      command = self.value
+    parts = [&quot;Usage: {command}&quot;]
+    options = Cli(nil).spec_options(spec)
+    names = options.keys().sort()
+    if names.len() &gt; 0
+      parts.push(&quot;[options]&quot;)
+    if spec.has(&quot;positionals&quot;)
+      for pos in spec[&quot;positionals&quot;]
+        if pos.class == String
+          parts.push(&quot;&lt;{pos}&gt;&quot;)
+        else
+          name = Cli(nil).spec_string(pos, &quot;name&quot;, &quot;arg&quot;)
+          required = Cli(nil).spec_bool(pos, &quot;required&quot;, true)
+          if required
+            parts.push(&quot;&lt;{name}&gt;&quot;)
+          else
+            parts.push(&quot;[{name}]&quot;)
+    out = parts.join(&quot; &quot;)
+    if names.len() &gt; 0
+      out = out + &quot;\nOptions:&quot;
+      for name in names
+        opt = options[name]
+        line = &quot;  --{name}&quot;
+        alias = Cli(nil).spec_string(opt, &quot;alias&quot;, &quot;&quot;)
+        if alias != &quot;&quot;
+          line = &quot;  -{alias}, --{name}&quot;
+        typ = Cli(nil).option_type(opt)
+        if typ != &quot;bool&quot;
+          line = line + &quot; &lt;{typ}&gt;&quot;
+        markers = []
+        if Cli(nil).spec_bool(opt, &quot;required&quot;, false)
+          markers.push(&quot;required&quot;)
+        if opt.has(&quot;default&quot;)
+          default_value = opt[&quot;default&quot;]
+          markers.push(&quot;default: {default_value}&quot;)
+        if markers.len() &gt; 0
+          line = line + &quot; (&quot; + markers.join(&quot;, &quot;) + &quot;)&quot;
+        if opt.has(&quot;help&quot;)
+          line = line + &quot;  &quot; + opt[&quot;help&quot;]
+        out = out + &quot;\n&quot; + line
+    out</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

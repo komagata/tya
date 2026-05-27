@@ -382,8 +382,8 @@ Class files use snake_case filenames such as `user.tya` while declaring PascalCa
 Standard-library packages are imported like user files.
 
 ```tya
-import json as json
-import time as time
+import json
+import time
 
 json_text = json.Json().dump({ name: "Tya" })
 print(json_text)

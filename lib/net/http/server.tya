@@ -1,6 +1,6 @@
-import bytes/* as bytes
-import file/* as file
-import template/* as template
+import bytes
+import file
+import template
 
 # Server is a minimal Sinatra-style HTTP/1.1 server.
 #

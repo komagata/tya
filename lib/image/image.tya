@@ -1,5 +1,5 @@
-import file/* as file
-import color/* as color
+import file
+import color
 
 # Image provides the image/Image standard library API.
 class Image

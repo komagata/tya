@@ -11,7 +11,7 @@ Issue #11 reports that `tya format -w` currently preserves blank lines between c
 ```tya
 import os
 
-import cli as cli
+import cli
 
 class Cli
   initialize = ->
@@ -22,7 +22,7 @@ The desired formatted output is:
 
 ```tya
 import os
-import cli as cli
+import cli
 
 class Cli
   initialize = ->

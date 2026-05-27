@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Dir</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="class_lib-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest_Digest.html"><code>Digest</code></a></li>
+<li class="current"><a href="class_lib-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Dir</code></h1>
+<section id="class-Dir" class="doc-item">
+<pre><code>class Dir</code></pre>
+<p><small>lib/dir.tya:2</small></p>
+<p>Dir provides the dir/Dir standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Dir provides the dir/Dir standard library API.
+class Dir
+  # Dir.path stores instance state.
+  # @type Nil
+  path: nil
+
+  # Dir.list returns entries in path.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static list: path -&gt;
+    dir_list(path)
+
+  # Dir.mkdir creates a directory.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static mkdir: path -&gt;
+    dir_mkdir(path)
+
+  # Dir.mkdir_all creates a directory and missing parents.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static mkdir_all: path -&gt;
+    dir_mkdir_all(path)
+
+  # Dir.remove_all removes a file or directory tree recursively.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static remove_all: path -&gt;
+    dir_remove_all(path)
+
+  # Dir.rmdir removes an empty directory.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static rmdir: path -&gt;
+    dir_rmdir(path)
+
+  # Dir.temp_dir creates a temporary directory and returns its path.
+  # @param prefix Any prefix value.
+  # @return Any the resulting value.
+  static temp_dir: prefix = &quot;tya&quot; -&gt;
+    dir_temp_dir(prefix)
+
+  # Dir.walk visits entries in deterministic order.
+  # @param path String path value.
+  # @param fn Function fn value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  static walk: path, fn, options = {} -&gt;
+    dir_walk(path, fn, options)
+
+  # Dir.initialize stores a directory path.
+  # @param path String path value.
+  # @return Self the initialized object.
+  initialize: path = nil -&gt;
+    self.path = path
+
+  # Dir.list provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  list: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_list(path)
+
+  # Dir.mkdir provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  mkdir: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_mkdir(path)
+
+  # mkdir_all creates a directory and missing parents.
+  # @param path String path value.
+  # @return Any the resulting value.
+  mkdir_all: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_mkdir_all(path)
+
+  # remove_all removes a file or directory tree recursively.
+  # @param path String path value.
+  # @return Any the resulting value.
+  remove_all: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_remove_all(path)
+
+  # Dir.rmdir provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  rmdir: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_rmdir(path)
+
+  # temp_dir creates a temporary directory and returns its path.
+  # @param prefix Any prefix value.
+  # @return Any the resulting value.
+  temp_dir: prefix = &quot;tya&quot; -&gt;
+    dir_temp_dir(prefix)
+
+  # walk visits entries in deterministic order.
+  # @param path String path value.
+  # @param fn Function fn value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  walk: path, fn = nil, options = {} -&gt;
+    if self.path != nil and fn != nil
+      options = fn
+      fn = path
+      path = self.path
+    if path == nil
+      path = self.path
+    dir_walk(path, fn, options)</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Dir-path" class="doc-item member">
+<h3><code>path</code></h3>
+<pre><code>Dir.path</code></pre>
+<p><small>lib/dir.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Dir.path stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.path stores instance state.
+  # @type Nil
+  path: nil</code></pre>
+</details>
+</section>
+<h2>Static Methods</h2>
+<section id="static-method-Dir-list" class="doc-item member">
+<h3><code>list</code></h3>
+<pre><code>static Dir.list(path)</code></pre>
+<p><small>lib/dir.tya:10</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.list returns entries in path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.list returns entries in path.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static list: path -&gt;
+    dir_list(path)</code></pre>
+</details>
+</section>
+<section id="static-method-Dir-mkdir" class="doc-item member">
+<h3><code>mkdir</code></h3>
+<pre><code>static Dir.mkdir(path)</code></pre>
+<p><small>lib/dir.tya:16</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.mkdir creates a directory.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.mkdir creates a directory.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static mkdir: path -&gt;
+    dir_mkdir(path)</code></pre>
+</details>
+</section>
+<section id="static-method-Dir-mkdir_all" class="doc-item member">
+<h3><code>mkdir_all</code></h3>
+<pre><code>static Dir.mkdir_all(path)</code></pre>
+<p><small>lib/dir.tya:22</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.mkdir_all creates a directory and missing parents.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.mkdir_all creates a directory and missing parents.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static mkdir_all: path -&gt;
+    dir_mkdir_all(path)</code></pre>
+</details>
+</section>
+<section id="static-method-Dir-remove_all" class="doc-item member">
+<h3><code>remove_all</code></h3>
+<pre><code>static Dir.remove_all(path)</code></pre>
+<p><small>lib/dir.tya:28</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.remove_all removes a file or directory tree recursively.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.remove_all removes a file or directory tree recursively.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static remove_all: path -&gt;
+    dir_remove_all(path)</code></pre>
+</details>
+</section>
+<section id="static-method-Dir-rmdir" class="doc-item member">
+<h3><code>rmdir</code></h3>
+<pre><code>static Dir.rmdir(path)</code></pre>
+<p><small>lib/dir.tya:34</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.rmdir removes an empty directory.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.rmdir removes an empty directory.
+  # @param path String path value.
+  # @return Any the resulting value.
+  static rmdir: path -&gt;
+    dir_rmdir(path)</code></pre>
+</details>
+</section>
+<section id="static-method-Dir-temp_dir" class="doc-item member">
+<h3><code>temp_dir</code></h3>
+<pre><code>static Dir.temp_dir(prefix = &quot;tya&quot;)</code></pre>
+<p><small>lib/dir.tya:40</small></p>
+<dl class="metadata">
+<dt>Param <code>prefix</code></dt><dd><code>Any</code> prefix value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.temp_dir creates a temporary directory and returns its path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.temp_dir creates a temporary directory and returns its path.
+  # @param prefix Any prefix value.
+  # @return Any the resulting value.
+  static temp_dir: prefix = &quot;tya&quot; -&gt;
+    dir_temp_dir(prefix)</code></pre>
+</details>
+</section>
+<section id="static-method-Dir-walk" class="doc-item member">
+<h3><code>walk</code></h3>
+<pre><code>static Dir.walk(path, fn, options = {})</code></pre>
+<p><small>lib/dir.tya:48</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>fn</code></dt><dd><code>Function</code> fn value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.walk visits entries in deterministic order.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.walk visits entries in deterministic order.
+  # @param path String path value.
+  # @param fn Function fn value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  static walk: path, fn, options = {} -&gt;
+    dir_walk(path, fn, options)</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Dir-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Dir.initialize(path = nil)</code></pre>
+<p><small>lib/dir.tya:54</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Dir.initialize stores a directory path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.initialize stores a directory path.
+  # @param path String path value.
+  # @return Self the initialized object.
+  initialize: path = nil -&gt;
+    self.path = path</code></pre>
+</details>
+</section>
+<section id="method-Dir-list" class="doc-item member">
+<h3><code>list</code></h3>
+<pre><code>Dir.list(path = nil)</code></pre>
+<p><small>lib/dir.tya:60</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.list provides the dir/Dir standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.list provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  list: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_list(path)</code></pre>
+</details>
+</section>
+<section id="method-Dir-mkdir" class="doc-item member">
+<h3><code>mkdir</code></h3>
+<pre><code>Dir.mkdir(path = nil)</code></pre>
+<p><small>lib/dir.tya:68</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.mkdir provides the dir/Dir standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.mkdir provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  mkdir: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_mkdir(path)</code></pre>
+</details>
+</section>
+<section id="method-Dir-mkdir_all" class="doc-item member">
+<h3><code>mkdir_all</code></h3>
+<pre><code>Dir.mkdir_all(path = nil)</code></pre>
+<p><small>lib/dir.tya:76</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>mkdir_all creates a directory and missing parents.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # mkdir_all creates a directory and missing parents.
+  # @param path String path value.
+  # @return Any the resulting value.
+  mkdir_all: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_mkdir_all(path)</code></pre>
+</details>
+</section>
+<section id="method-Dir-remove_all" class="doc-item member">
+<h3><code>remove_all</code></h3>
+<pre><code>Dir.remove_all(path = nil)</code></pre>
+<p><small>lib/dir.tya:84</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>remove_all removes a file or directory tree recursively.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # remove_all removes a file or directory tree recursively.
+  # @param path String path value.
+  # @return Any the resulting value.
+  remove_all: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_remove_all(path)</code></pre>
+</details>
+</section>
+<section id="method-Dir-rmdir" class="doc-item member">
+<h3><code>rmdir</code></h3>
+<pre><code>Dir.rmdir(path = nil)</code></pre>
+<p><small>lib/dir.tya:92</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Dir.rmdir provides the dir/Dir standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Dir.rmdir provides the dir/Dir standard library operation.
+  # @param path String path value.
+  # @return Any the resulting value.
+  rmdir: path = nil -&gt;
+    if path == nil
+      path = self.path
+    dir_rmdir(path)</code></pre>
+</details>
+</section>
+<section id="method-Dir-temp_dir" class="doc-item member">
+<h3><code>temp_dir</code></h3>
+<pre><code>Dir.temp_dir(prefix = &quot;tya&quot;)</code></pre>
+<p><small>lib/dir.tya:100</small></p>
+<dl class="metadata">
+<dt>Param <code>prefix</code></dt><dd><code>Any</code> prefix value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>temp_dir creates a temporary directory and returns its path.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # temp_dir creates a temporary directory and returns its path.
+  # @param prefix Any prefix value.
+  # @return Any the resulting value.
+  temp_dir: prefix = &quot;tya&quot; -&gt;
+    dir_temp_dir(prefix)</code></pre>
+</details>
+</section>
+<section id="method-Dir-walk" class="doc-item member">
+<h3><code>walk</code></h3>
+<pre><code>Dir.walk(path, fn = nil, options = {})</code></pre>
+<p><small>lib/dir.tya:108</small></p>
+<dl class="metadata">
+<dt>Param <code>path</code></dt><dd><code>String</code> path value.</dd>
+<dt>Param <code>fn</code></dt><dd><code>Function</code> fn value.</dd>
+<dt>Param <code>options</code></dt><dd><code>Dict</code> options value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>walk visits entries in deterministic order.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # walk visits entries in deterministic order.
+  # @param path String path value.
+  # @param fn Function fn value.
+  # @param options Dict options value.
+  # @return Any the resulting value.
+  walk: path, fn = nil, options = {} -&gt;
+    if self.path != nil and fn != nil
+      options = fn
+      fn = path
+      path = self.path
+    if path == nil
+      path = self.path
+    dir_walk(path, fn, options)</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

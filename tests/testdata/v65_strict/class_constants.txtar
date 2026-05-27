@@ -25,7 +25,7 @@ stderr 'cannot mutate constant ITEMS'
 stderr 'invalid class variable name VALUE'
 
 -- class_constants.tya --
-import helper as helper
+import helper
 
 class Foo
   VALUE: "public"

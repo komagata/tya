@@ -32,7 +32,7 @@ the class-style direction for stdlib-owned domain values.
 - Import shape:
 
   ```tya
-  import xml as xml
+  import xml
 
   doc = xml.Xml.parse(text)
   root = doc.root()
@@ -211,7 +211,7 @@ Required JUnit-facing behavior:
 
 ## Acceptance Criteria
 
-- `import xml as xml` exposes `Xml`, `Document`, `Element`, `Text`, `Comment`,
+- `import xml` exposes `Xml`, `Document`, `Element`, `Text`, `Comment`,
   and `CData`.
 - `Xml.parse(text)` returns a `Document` instance with a class-instance root
   element.

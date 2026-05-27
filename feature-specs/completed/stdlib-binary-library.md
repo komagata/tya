@@ -28,7 +28,7 @@ readers and writers should be class instances, not dictionaries.
 - Import shape:
 
   ```tya
-  import binary as binary
+  import binary
 
   reader = binary.Reader.new(b"\x34\x12", { endian: "little" })
   value = reader.read_u16()
@@ -142,7 +142,7 @@ readers and writers should be class instances, not dictionaries.
 
 ## Acceptance Criteria
 
-- `import binary as binary` exposes `binary.Reader` and `binary.Writer`.
+- `import binary` exposes `binary.Reader` and `binary.Writer`.
 - `Reader.new` and `Writer.new` return class instances with the expected
   `.class`.
 - Default-endian methods use big endian unless options specify `"little"`.

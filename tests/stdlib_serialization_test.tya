@@ -1,5 +1,5 @@
 import unittest/*
-import serialization/* as serialization
+import serializer as serialization
 
 class SavePlayer
   initialize: name, score ->
@@ -16,7 +16,7 @@ class HookedPlayer
   to_serialized: ->
     return { name: self.name.upper() }
 
-class SerializablePlayer implements serialization.Serializable
+class SerializablePlayer implements Serializable
   initialize: name, score ->
     self.name = name
     self.score = score
@@ -24,14 +24,14 @@ class SerializablePlayer implements serialization.Serializable
   to_data: ->
     return { name: self.name, score: self.score, kind: "serializable" }
 
-class DualHookPlayer implements serialization.Serializable
+class DualHookPlayer implements Serializable
   to_data: ->
     return { hook: "to_data" }
 
   to_serialized: ->
     return { hook: "to_serialized" }
 
-class ObjectData implements serialization.Serializable
+class ObjectData implements Serializable
   to_data: ->
     return SavePlayer("Ada", 7)
 

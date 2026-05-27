@@ -26,7 +26,7 @@ class-style direction for stdlib-owned domain values.
 - Import shape:
 
   ```tya
-  import color as color
+  import color
 
   red = color.Color.rgb(255, 0, 0)
   blue = color.Color.hex("#0066ff")
@@ -149,7 +149,7 @@ class-style direction for stdlib-owned domain values.
 
 ## Acceptance Criteria
 
-- `import color as color` exposes `color.Color`.
+- `import color` exposes `color.Color`.
 - `Color.rgb`, `Color.rgba`, `Color.gray`, `Color.hex`, `Color.css`, and
   `Color.from_array` return `Color` instances.
 - Constructed colors expose `r`, `g`, `b`, and `a` fields and have

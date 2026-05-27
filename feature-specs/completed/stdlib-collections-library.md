@@ -29,7 +29,7 @@ be instances.
 - Import shape:
 
   ```tya
-  import collections as collections
+  import collections
 
   queue = collections.Queue.new()
   queue.push("job")
@@ -151,7 +151,7 @@ be instances.
 
 ## Acceptance Criteria
 
-- `import collections as collections` exposes `Stack`, `Queue`, `Deque`, `Set`,
+- `import collections` exposes `Stack`, `Queue`, `Deque`, `Set`,
   and `PriorityQueue`.
 - All constructors return class instances with the expected `.class`.
 - `Stack` behaves as LIFO and preserves expected `to_array()` order.

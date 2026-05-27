@@ -1,5 +1,5 @@
 import unittest/*
-import file/* as file
+import file
 
 class BinaryIoTest extends TestCase
 

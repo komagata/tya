@@ -6,7 +6,7 @@ stdout 'has all keys: true'
 stdout 'live grew: true'
 
 -- sample.tya --
-import runtime/* as runtime
+import runtime
 
 before = runtime.Runtime().gc_stats()
 

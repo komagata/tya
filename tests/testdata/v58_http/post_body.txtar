@@ -9,7 +9,7 @@ exec sh -c '$WORK/server & pid=$!; sleep 1; curl -s -m 5 --retry 5 --retry-connr
 stdout 'got: hello v58'
 
 -- main.tya --
-import bytes/* as bytes
+import bytes
 import net/http/* as http
 
 handle = req -> { status: 201, body: "got: " + bytes.Bytes(req["body"]).to_text() }

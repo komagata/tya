@@ -30,7 +30,7 @@ class-style direction for stdlib-owned domain values.
 
   ```tya
   import geometry as geo
-  import transform2d as transform2d
+  import transform2_d as transform2d
 
   t = transform2d.Transform2D.translation(10, 20)
   r = transform2d.Transform2D.rotation(Math.pi() / 2)
@@ -151,7 +151,7 @@ class-style direction for stdlib-owned domain values.
 
 ## Acceptance Criteria
 
-- `import transform2d as transform2d` exposes `transform2d.Transform2D`.
+- `import transform2_d as transform2d` exposes `transform2d.Transform2D`.
 - Constructors return `Transform2D` instances.
 - Constructed transforms expose `a`, `b`, `c`, `d`, `tx`, and `ty` fields and
   have `.class == transform2d.Transform2D`.

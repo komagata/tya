@@ -115,7 +115,7 @@ stdin = "tools/stdin.tya"
 fail = "tools/fail.tya"
 
 -- tool_pkg/tools/hello.tya --
-import os/* as os
+import os
 
 println("pkg:tool_pkg")
 println("cwd:" + os.Os().cwd())

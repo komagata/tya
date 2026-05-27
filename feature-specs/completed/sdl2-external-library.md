@@ -27,7 +27,7 @@ Assumed repository and package identity:
 
 - repository: `https://github.com/komagata/tya-sdl2`
 - package name: `sdl2`
-- import path: `import sdl2 as sdl2`
+- import path: `import sdl2`
 - first release target: `v0.1.0`
 
 ## Behavior
@@ -78,8 +78,8 @@ Assumed repository and package identity:
 - Public API follows class-style Tya wrappers over SDL2:
 
   ```tya
-  import color as color
-  import sdl2 as sdl2
+  import color
+  import sdl2
 
   sdl2.Sdl.init()
   window = sdl2.Window.create("Hello Tya", 800, 450)

@@ -1,7 +1,7 @@
 # Worker pool: N workers pull jobs from a shared channel; the
 # coordinator uses sync.WaitGroup to wait for every worker to
 # finish before printing the summary.
-import channel/*
+import channel
 import sync/*
 
 jobs = channel.Channel(16)

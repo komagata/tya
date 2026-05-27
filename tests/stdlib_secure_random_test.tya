@@ -1,5 +1,5 @@
 import unittest/*
-import secure_random/* as secure_random
+import secure_random
 
 class StdlibSecureRandomTest extends TestCase
 

@@ -24,7 +24,7 @@ Assumed repository and package identity:
 
 - repository: `https://github.com/komagata/tya-raylib`
 - package name: `raylib`
-- import path: `import raylib as raylib`
+- import path: `import raylib`
 - first release target: `v0.1.0`
 
 ## Behavior
@@ -73,8 +73,8 @@ Assumed repository and package identity:
 - Public API follows class-style Tya wrappers over raylib:
 
   ```tya
-  import color as color
-  import raylib as raylib
+  import color
+  import raylib
 
   raylib.Window.open(800, 450, "Hello Tya")
   raylib.Time.set_target_fps(60)

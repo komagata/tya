@@ -1,5 +1,5 @@
 import unittest/*
-import url/* as url
+import url
 
 class StdlibUrlTest extends TestCase
 

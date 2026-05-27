@@ -27,7 +27,7 @@ stdout 'monotonic_format'
 stderr 'time.parse: invalid timestamp'
 
 -- time_valid.tya --
-import time/* as time
+import time
 
 t = time.Time().unix(1704067200)
 print(t.format("rfc3339"))
@@ -42,6 +42,6 @@ catch err
   print(err["code"])
 
 -- time_invalid.tya --
-import time/* as time
+import time
 
 time.Time("bad").parse()

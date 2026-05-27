@@ -82,7 +82,7 @@ class Greeter
     "Hello, {self.name}"
 
 -- concurrency.tya --
-import channel/* as channel
+import channel
 
 work = -> "task"
 task = spawn work()

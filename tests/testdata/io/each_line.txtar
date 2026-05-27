@@ -5,7 +5,7 @@ stdout 'alpha\nbeta\n'
 
 -- each_line.tya --
 import io/* as io
-import file/* as file
+import file
 
 out = io.Io().stdout()
 collect = line -> out.write(line)

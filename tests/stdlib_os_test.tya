@@ -1,5 +1,5 @@
 import unittest/*
-import os/* as os
+import os
 
 class StdlibOsTest extends TestCase
 

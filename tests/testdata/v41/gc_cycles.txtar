@@ -8,7 +8,7 @@ stdout 'cleared root, after gc:'
 stdout 'cycle reclaimed: true'
 
 -- sample.tya --
-import runtime/* as runtime
+import runtime
 
 # Build many cyclic dicts: each holds a reference to itself.
 root = []

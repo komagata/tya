@@ -1,6 +1,6 @@
 import unittest/*
 import io/* as io
-import file/* as file
+import file
 
 class StdlibIoTest extends TestCase
 

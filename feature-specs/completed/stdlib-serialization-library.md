@@ -29,7 +29,7 @@ cycles.
 - Import shape:
 
   ```tya
-  import serialization as serialization
+  import serializer as serialization
 
   data = serialization.Serializer.to_data(player)
   text = serialization.Serializer.to_json(player)
@@ -132,7 +132,7 @@ cycles.
 
 ## Acceptance Criteria
 
-- `import serialization as serialization` exposes `serialization.Serializer`.
+- `import serializer as serialization` exposes `serialization.Serializer`.
 - Primitive values, arrays, and string-key dictionaries round-trip through
   `to_data` and JSON helpers.
 - Class instances serialize from public fields.

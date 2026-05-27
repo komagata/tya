@@ -9,7 +9,7 @@ stdout 'collect_count: 1'
 stdout 'shrunk: true'
 
 -- sample.tya --
-import runtime/* as runtime
+import runtime
 
 # Allocate a tree of arrays. Hold the root in a global so it survives GC.
 root = []

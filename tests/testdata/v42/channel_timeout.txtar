@@ -10,7 +10,7 @@ exec go run ./cmd/tya run $WORK/zero_poll.tya
 stdout 'zero nil'
 
 -- sample.tya --
-import channel/* as channel
+import channel
 
 c = channel.Channel(1)
 v = c.receive_timeout(0.1)
@@ -25,7 +25,7 @@ v2 = c2.receive_timeout(0.1)
 print("got " + v2.to_s())
 
 -- zero_poll.tya --
-import channel/* as channel
+import channel
 
 c = channel.Channel(1)
 v = c.receive_timeout(0)

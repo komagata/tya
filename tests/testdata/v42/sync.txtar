@@ -70,7 +70,7 @@ catch e
 
 -- waitgroup.tya --
 import sync/* as sync
-import channel/* as channel
+import channel
 
 wg = sync.WaitGroup()
 wg.add(3)

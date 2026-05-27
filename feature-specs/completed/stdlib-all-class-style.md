@@ -37,10 +37,10 @@ That keeps two apparent styles alive. This feature makes class style the only
 documented and supported stdlib public API:
 
 ```tya
-import math as math
+import math
 print math.Math.abs(-3)
 
-import file as file
+import file
 text = file.File.read("memo.txt")
 ```
 
@@ -131,7 +131,7 @@ is usually the better public shape.
 - Documentation should prefer import aliases when it clarifies the namespace:
 
   ```tya
-  import json as json
+  import json
   data = json.Json.parse(text)
   ```
 

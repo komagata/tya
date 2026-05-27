@@ -1,6 +1,6 @@
 # A long-lived actor that owns its `count` state and answers
 # "inc" / "get" / "stop" messages over a channel.
-import channel/*
+import channel
 
 inbox = channel.Channel(64)
 

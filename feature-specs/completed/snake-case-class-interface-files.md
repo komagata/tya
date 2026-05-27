@@ -18,7 +18,7 @@ Examples:
 - `wait_group.tya` declares `class WaitGroup`
 - acronym-style names use normal snake_case conversion, e.g. `HTTPServer` maps to `http_server.tya`
 
-The user-visible import/API surface does not change. For example, `import base64 as base64` still exposes `base64.Base64`.
+The user-visible import/API surface does not change. For example, `import base64` still exposes `base64.Base64`.
 
 ## Behavior
 - A class/interface file is a `snake_case.tya` file that declares exactly one public class or public interface whose name maps to that filename.
@@ -50,8 +50,8 @@ The user-visible import/API surface does not change. For example, `import base64
 - No runtime API rename such as changing `base64.Base64` to `base64.base64`.
 
 ## Acceptance Criteria
-- `lib/base64/base64.tya` declares `class Base64` and is accepted as the public class file.
-- `lib/secure_random/secure_random.tya` declares `class SecureRandom` and is accepted.
+- `lib/base64.tya` declares `class Base64` and is accepted as the public class file.
+- `lib/secure_random.tya` declares `class SecureRandom` and is accepted.
 - `lib/sync/wait_group.tya` declares `class WaitGroup` and is accepted.
 - A PascalCase class/interface file such as `Base64.tya` is rejected or ignored according to the new class-file rules, and tests cover the behavior.
 - Directory package imports continue to expose PascalCase public API names from snake_case files.

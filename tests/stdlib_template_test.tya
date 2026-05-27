@@ -1,5 +1,5 @@
 import unittest/*
-import template/* as template
+import template
 
 class StdlibTemplateTest extends TestCase
 

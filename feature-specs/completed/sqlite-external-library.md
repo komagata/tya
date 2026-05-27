@@ -23,7 +23,7 @@ Assumed repository and package identity:
 
 - repository: `https://github.com/komagata/tya-sqlite`
 - package name: `sqlite`
-- import path: `import sqlite as sqlite`
+- import path: `import sqlite`
 - first release target: `v0.1.0`
 
 ## Behavior
@@ -69,7 +69,7 @@ Assumed repository and package identity:
 - Public API:
 
   ```tya
-  import sqlite as sqlite
+  import sqlite
 
   db = sqlite.Connection.open("app.db")
   db.exec("create table if not exists users (id integer primary key, name text)")

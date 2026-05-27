@@ -1,7 +1,7 @@
 import unittest/*
-import file/* as file
-import path/* as path
-import os/* as os
+import file
+import path
+import os
 
 class StdlibFilesystemTest extends TestCase
 

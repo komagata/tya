@@ -1,6 +1,6 @@
 import unittest/*
-import dir/* as dir
-import file/* as file
+import dir
+import file
 
 class StdlibDirTest extends TestCase
 

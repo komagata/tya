@@ -12,7 +12,7 @@ import (
 
 func TestRunTimeUnixFormatParse(t *testing.T) {
 	out := runTimeProgram(t, strings.Join([]string{
-		"import time/* as time",
+		"import time",
 		"t = time.Time().unix(1704067200)",
 		"print(t.unix())",
 		"print(t.format(\"rfc3339\"))",
@@ -28,7 +28,7 @@ func TestRunTimeUnixFormatParse(t *testing.T) {
 
 func TestRunTimeDurationArithmetic(t *testing.T) {
 	out := runTimeProgram(t, strings.Join([]string{
-		"import time/* as time",
+		"import time",
 		"a = time.Time().duration(1, { minutes: 1, milliseconds: 500 })",
 		"b = time.Time().duration(2)",
 		"print(a.seconds())",
@@ -45,7 +45,7 @@ func TestRunTimeDurationArithmetic(t *testing.T) {
 
 func TestRunTimeUtcLocalBoundaries(t *testing.T) {
 	out := runTimeProgram(t, strings.Join([]string{
-		"import time/* as time",
+		"import time",
 		"t = time.Time().unix(1704067200)",
 		"local = t.local()",
 		"print(t.utc().format(\"rfc3339\"))",
@@ -60,7 +60,7 @@ func TestRunTimeUtcLocalBoundaries(t *testing.T) {
 
 func TestRunTimeMonotonicElapsed(t *testing.T) {
 	out := runTimeProgram(t, strings.Join([]string{
-		"import time/* as time",
+		"import time",
 		"start = time.Time().monotonic()",
 		"time.Time().sleep(time.Time().duration(0.001))",
 		"elapsed = time.Time().monotonic().sub(start)",
@@ -90,7 +90,7 @@ func TestRunTimeStructuredErrors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out := runTimeProgram(t, "import time/* as time\ntry\n  "+tt.src+"\ncatch err\n  print(err[\"code\"])\n")
+			out := runTimeProgram(t, "import time\ntry\n  "+tt.src+"\ncatch err\n  print(err[\"code\"])\n")
 			if !strings.Contains(out, tt.want) {
 				t.Fatalf("got %q, want %q", out, tt.want)
 			}

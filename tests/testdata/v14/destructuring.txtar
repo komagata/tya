@@ -17,7 +17,7 @@ stderr 'destructuring assignment is not part of Tya v1.0.0'
 stderr 'destructuring assignment is not part of Tya v1.0.0'
 
 exec go run ./cmd/tya version
-stdout '0.69.0\n'
+stdout '0.70.0\n'
 ! stderr .
 
 -- destructuring.tya --

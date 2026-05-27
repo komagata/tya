@@ -26,7 +26,7 @@ Assumed repository and package identity:
 
 - repository: `https://github.com/komagata/tya-slim`
 - package name: `slim`
-- import path: `import slim as slim`
+- import path: `import slim`
 - primary API: `slim.Template`
 
 ## Behavior
@@ -52,7 +52,7 @@ Assumed repository and package identity:
 - Public API:
 
   ```tya
-  import slim as slim
+  import slim
 
   html = slim.Template.render(source, data)
   html = slim.Template.render(source, data, options)

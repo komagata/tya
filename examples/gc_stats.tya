@@ -1,4 +1,4 @@
-import runtime/*
+import runtime
 
 before = runtime.Runtime().gc_stats()
 

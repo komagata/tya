@@ -1,5 +1,5 @@
 import unittest/*
-import cli/* as cli
+import cli
 
 class StdlibCliTest extends TestCase
 

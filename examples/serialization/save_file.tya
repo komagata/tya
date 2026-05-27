@@ -1,4 +1,4 @@
-import serialization/* as serialization
+import serializer as serialization
 
 class Player
   initialize: name, score ->

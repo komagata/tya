@@ -245,9 +245,9 @@ func TestCLIFormatAndCheckAcceptedSyntax(t *testing.T) {
 func TestCLIFormatAndCheckCollapsesImportBlankLines(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "imports.tya")
 	original := strings.Join([]string{
-		"import os/*",
+		"import os",
 		"",
-		"import cli/* as cli",
+		"import cli",
 		"",
 		"class Cli",
 		"  initialize: ->",
@@ -279,8 +279,8 @@ func TestCLIFormatAndCheckCollapsesImportBlankLines(t *testing.T) {
 	}
 	want := strings.Join([]string{
 		"import",
-		"  os/*",
-		"  cli/* as cli",
+		"  os",
+		"  cli",
 		"",
 		"class Cli",
 		"  initialize: ->",
@@ -986,7 +986,7 @@ func TestCLIBuildWasiSupportsArgsAndBasicFiles(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "wasi_file.tya")
 	source := strings.Join([]string{
-		"import file/* as file",
+		"import file",
 		"print(args().len())",
 		"file.File().write(\"tya-wasi-check.txt\", \"ok\")",
 		"print(file.File().read(\"tya-wasi-check.txt\"))",
@@ -1039,7 +1039,7 @@ func TestCLIBuildRejectsBadWasmInputs(t *testing.T) {
 		t.Fatalf("unexpected output: %s", out)
 	}
 	fileImport := filepath.Join(dir, "file_import.tya")
-	if err := os.WriteFile(fileImport, []byte("import file/* as file\nprint(\"x\")\n"), 0644); err != nil {
+	if err := os.WriteFile(fileImport, []byte("import file\nprint(\"x\")\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	cmd = exec.Command("go", "run", "./cmd/tya", "build", "--target", "wasm32-browser", fileImport, "-o", filepath.Join(dir, "bad.wasm"))
@@ -1075,7 +1075,7 @@ func TestCLIVersionCommand(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
-	if string(out) != "0.69.0\n" {
+	if string(out) != "0.70.0\n" {
 		t.Fatalf("unexpected output: %s", out)
 	}
 }

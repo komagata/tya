@@ -32,9 +32,9 @@ stderr 'filesystem.remove_all: dangerous path'
 stderr 'filesystem.copy: destination exists'
 
 -- filesystem_utilities.tya --
-import file/* as file
-import dir/* as dir
-import bytes/* as bytes
+import file
+import dir
+import bytes
 
 root = dir.Dir(nil).temp_dir("tya-fs")
 dir.Dir("{root}/nested").mkdir_all()
@@ -63,12 +63,12 @@ print(file.File.exists?(class_file))
 file.File.remove(class_file)
 
 -- invalid_remove_all.tya --
-import dir/* as dir
+import dir
 
 dir.Dir(".").remove_all()
 
 -- invalid_copy.tya --
-import file/* as file
+import file
 
 file.File("src.txt").write("a")
 file.File("dst.txt").write("b")

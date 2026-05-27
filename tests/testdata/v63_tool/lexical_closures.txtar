@@ -116,7 +116,7 @@ task = spawn worker()
 print(await task)
 
 -- gc_capture.tya --
-import runtime/* as runtime
+import runtime
 
 make = ->
   items = [41]

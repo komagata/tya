@@ -20,7 +20,7 @@ stderr 'undefined variable value'
 stderr 'TYA-E0820'
 
 -- receive.tya --
-import channel/* as channel
+import channel
 
 c1 = channel.Channel(1)
 c2 = channel.Channel(1)
@@ -35,7 +35,7 @@ select
     print("value: " + value)
 
 -- send.tya --
-import channel/* as channel
+import channel
 
 c1 = channel.Channel(1)
 c2 = channel.Channel(1)
@@ -47,7 +47,7 @@ select
     print("sent")
 
 -- default.tya --
-import channel/* as channel
+import channel
 
 c = channel.Channel(1)
 
@@ -58,7 +58,7 @@ select
     print("idle")
 
 -- timeout_zero.tya --
-import channel/* as channel
+import channel
 
 c = channel.Channel(1)
 
@@ -69,7 +69,7 @@ select
     print("timeout")
 
 -- binding_scope.tya --
-import channel/* as channel
+import channel
 
 c = channel.Channel(1)
 c.send("inner")
@@ -81,7 +81,7 @@ select
 print(value)
 
 -- removed_helper.tya --
-import channel/* as channel
+import channel
 
 c = channel.Channel(1)
 channel.Channel.select([[c, "receive"]])

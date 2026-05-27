@@ -28,7 +28,7 @@ canvas APIs, GPU drawing, and game-rendering bindings remain external packages.
 - Import shape:
 
   ```tya
-  import image as image
+  import image
 
   img = image.Image.read("logo.png")
   thumb = img.resize(128, 128, { fit: "contain" })
@@ -177,7 +177,7 @@ canvas APIs, GPU drawing, and game-rendering bindings remain external packages.
 
 ## Acceptance Criteria
 
-- `import image as image` exposes `Image` and `Codec`.
+- `import image` exposes `Image` and `Codec`.
 - `Image` operations that accept or return colors use stdlib `color.Color`
   instances.
 - `Image.read("fixture.png")` decodes PNG dimensions and pixels correctly.

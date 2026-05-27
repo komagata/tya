@@ -28,7 +28,7 @@ stdout '1 b=22'
 stderr 'regex.compile: invalid pattern'
 
 -- regex_valid.tya --
-import regex/* as regex
+import regex
 
 rx = regex.Regex("([a-z]+)([0-9]+)").compile()
 found = rx.find("xx abc123 yy")
@@ -48,6 +48,6 @@ print(utf8["start"])
 print(utf8["end"])
 
 -- regex_invalid.tya --
-import regex/* as regex
+import regex
 
 regex.Regex("[").compile()

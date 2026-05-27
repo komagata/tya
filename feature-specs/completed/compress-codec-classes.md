@@ -101,7 +101,7 @@ compress.Zlib().decompress_file(src, dst)
   - regenerate stdlib API docs if the documented public API changes;
   - update any stdlib docs or generated indexes that list `Compress`.
 - Package behavior:
-  - ensure `import compress as compress` exposes `compress.Gzip`,
+  - ensure `import compress` exposes `compress.Gzip`,
     `compress.Zlib`, and `compress.Codec`;
   - ensure old `compress.Compress` is not documented as public API.
 

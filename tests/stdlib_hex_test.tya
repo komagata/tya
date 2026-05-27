@@ -1,5 +1,5 @@
 import unittest/*
-import hex/* as hex
+import hex
 
 class StdlibHexTest extends TestCase
 

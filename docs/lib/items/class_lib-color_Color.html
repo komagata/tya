@@ -1,0 +1,1607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>class Color</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="doc-shell">
+<aside class="doc-sidebar">
+<div class="sidebar-title"><a href="../index.html">Standard Library API</a></div>
+<h2>Classes</h2>
+<ul>
+<li><a href="class_lib-net-ip-address_Address.html"><code>Address</code></a></li>
+<li><a href="class_lib-compiler-ast-ast_Ast.html"><code>Ast</code></a></li>
+<li><a href="class_lib-sync-atomic_integer_AtomicInteger.html"><code>AtomicInteger</code></a></li>
+<li><a href="class_lib-base64_Base64.html"><code>Base64</code></a></li>
+<li><a href="class_lib-bytes_Bytes.html"><code>Bytes</code></a></li>
+<li><a href="class_lib-xml-c_data_CData.html"><code>CData</code></a></li>
+<li><a href="class_lib-channel_Channel.html"><code>Channel</code></a></li>
+<li><a href="class_lib-compiler-checker-checker_Checker.html"><code>Checker</code></a></li>
+<li><a href="class_lib-geometry-circle_Circle.html"><code>Circle</code></a></li>
+<li><a href="class_lib-cli_Cli.html"><code>Cli</code></a></li>
+<li><a href="class_lib-net-http-client_Client.html"><code>Client</code></a></li>
+<li><a href="class_lib-image-codec_Codec.html"><code>Codec</code></a></li>
+<li class="current"><a href="class_lib-color_Color.html"><code>Color</code></a></li>
+<li><a href="class_lib-xml-comment_Comment.html"><code>Comment</code></a></li>
+<li><a href="class_lib-csv_Csv.html"><code>Csv</code></a></li>
+<li><a href="class_lib-collections-deque_Deque.html"><code>Deque</code></a></li>
+<li><a href="class_lib-digest_Digest.html"><code>Digest</code></a></li>
+<li><a href="class_lib-dir_Dir.html"><code>Dir</code></a></li>
+<li><a href="class_lib-xml-document_Document.html"><code>Document</code></a></li>
+<li><a href="class_lib-drop_sequence_DropSequence.html"><code>DropSequence</code></a></li>
+<li><a href="class_lib-xml-element_Element.html"><code>Element</code></a></li>
+<li><a href="class_lib-file_File.html"><code>File</code></a></li>
+<li><a href="class_lib-filter_sequence_FilterSequence.html"><code>FilterSequence</code></a></li>
+<li><a href="class_lib-compiler-format-format_Format.html"><code>Format</code></a></li>
+<li><a href="class_lib-compress-gzip_Gzip.html"><code>Gzip</code></a></li>
+<li><a href="class_lib-hex_Hex.html"><code>Hex</code></a></li>
+<li><a href="class_lib-hmac_Hmac.html"><code>Hmac</code></a></li>
+<li><a href="class_lib-image-image_Image.html"><code>Image</code></a></li>
+<li><a href="class_lib-io-io_Io.html"><code>Io</code></a></li>
+<li><a href="class_lib-iterable_sequence_IterableSequence.html"><code>IterableSequence</code></a></li>
+<li><a href="class_lib-json_Json.html"><code>Json</code></a></li>
+<li><a href="class_lib-compiler-lexer-lexer_Lexer.html"><code>Lexer</code></a></li>
+<li><a href="class_lib-logger_Logger.html"><code>Logger</code></a></li>
+<li><a href="class_lib-map_sequence_MapSequence.html"><code>MapSequence</code></a></li>
+<li><a href="class_lib-markdown_Markdown.html"><code>Markdown</code></a></li>
+<li><a href="class_lib-math_Math.html"><code>Math</code></a></li>
+<li><a href="class_lib-matrix_Matrix.html"><code>Matrix</code></a></li>
+<li><a href="class_lib-sync-mutex_Mutex.html"><code>Mutex</code></a></li>
+<li><a href="class_lib-net-ip-network_Network.html"><code>Network</code></a></li>
+<li><a href="class_lib-net-http-next_Next.html"><code>Next</code></a></li>
+<li><a href="class_lib-os_Os.html"><code>Os</code></a></li>
+<li><a href="class_lib-compiler-parser-parser_Parser.html"><code>Parser</code></a></li>
+<li><a href="class_lib-path_Path.html"><code>Path</code></a></li>
+<li><a href="class_lib-geometry-point_Point.html"><code>Point</code></a></li>
+<li><a href="class_lib-collections-priority_queue_PriorityQueue.html"><code>PriorityQueue</code></a></li>
+<li><a href="class_lib-process_Process.html"><code>Process</code></a></li>
+<li><a href="class_lib-collections-queue_Queue.html"><code>Queue</code></a></li>
+<li><a href="class_lib-random-random_Random.html"><code>Random</code></a></li>
+<li><a href="class_lib-binary-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-io-reader_Reader.html"><code>Reader</code></a></li>
+<li><a href="class_lib-geometry-rect_Rect.html"><code>Rect</code></a></li>
+<li><a href="class_lib-regex_Regex.html"><code>Regex</code></a></li>
+<li><a href="class_lib-random-rng_Rng.html"><code>Rng</code></a></li>
+<li><a href="class_lib-runtime_Runtime.html"><code>Runtime</code></a></li>
+<li><a href="class_lib-secure_random_SecureRandom.html"><code>SecureRandom</code></a></li>
+<li><a href="class_lib-serializer_Serializer.html"><code>Serializer</code></a></li>
+<li><a href="class_lib-net-http-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-net-socket-server_Server.html"><code>Server</code></a></li>
+<li><a href="class_lib-collections-set_Set.html"><code>Set</code></a></li>
+<li><a href="class_lib-geometry-size_Size.html"><code>Size</code></a></li>
+<li><a href="class_lib-net-socket-socket_Socket.html"><code>Socket</code></a></li>
+<li><a href="class_lib-collections-stack_Stack.html"><code>Stack</code></a></li>
+<li><a href="class_lib-take_sequence_TakeSequence.html"><code>TakeSequence</code></a></li>
+<li><a href="class_lib-task_Task.html"><code>Task</code></a></li>
+<li><a href="class_lib-template_Template.html"><code>Template</code></a></li>
+<li><a href="class_lib-unittest-test_case_TestCase.html"><code>TestCase</code></a></li>
+<li><a href="class_lib-unittest-test_runner_TestRunner.html"><code>TestRunner</code></a></li>
+<li><a href="class_lib-unittest-test_suite_TestSuite.html"><code>TestSuite</code></a></li>
+<li><a href="class_lib-xml-text_Text.html"><code>Text</code></a></li>
+<li><a href="class_lib-time_Time.html"><code>Time</code></a></li>
+<li><a href="class_lib-toml_Toml.html"><code>Toml</code></a></li>
+<li><a href="class_lib-transform2_d_Transform2D.html"><code>Transform2D</code></a></li>
+<li><a href="class_lib-url_Url.html"><code>Url</code></a></li>
+<li><a href="class_lib-value_Value.html"><code>Value</code></a></li>
+<li><a href="class_lib-geometry-vector2_Vector2.html"><code>Vector2</code></a></li>
+<li><a href="class_lib-geometry-vector3_Vector3.html"><code>Vector3</code></a></li>
+<li><a href="class_lib-sync-wait_group_WaitGroup.html"><code>WaitGroup</code></a></li>
+<li><a href="class_lib-binary-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-io-writer_Writer.html"><code>Writer</code></a></li>
+<li><a href="class_lib-xml-xml_Xml.html"><code>Xml</code></a></li>
+<li><a href="class_lib-compress-zlib_Zlib.html"><code>Zlib</code></a></li>
+</ul>
+<h2>Interfaces</h2>
+<ul>
+<li><a href="interface_lib-io-closable_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Closable.html"><code>Closable</code></a></li>
+<li><a href="interface_lib-compress-codec_Codec.html"><code>Codec</code></a></li>
+<li><a href="interface_lib-comparable_Comparable.html"><code>Comparable</code></a></li>
+<li><a href="interface_lib-equatable_Equatable.html"><code>Equatable</code></a></li>
+<li><a href="interface_lib-io-flushable_Flushable.html"><code>Flushable</code></a></li>
+<li><a href="interface_lib-iterable_Iterable.html"><code>Iterable</code></a></li>
+<li><a href="interface_lib-iterator_Iterator.html"><code>Iterator</code></a></li>
+<li><a href="interface_lib-io-readable_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Readable.html"><code>Readable</code></a></li>
+<li><a href="interface_lib-sequence_Sequence.html"><code>Sequence</code></a></li>
+<li><a href="interface_lib-serializer_Serializable.html"><code>Serializable</code></a></li>
+<li><a href="interface_lib-stringable_Stringable.html"><code>Stringable</code></a></li>
+<li><a href="interface_lib-io-writable_Writable.html"><code>Writable</code></a></li>
+<li><a href="interface_lib-net-socket-socket_Writable.html"><code>Writable</code></a></li>
+</ul>
+</aside>
+<main class="doc-content">
+<h1>class <code>Color</code></h1>
+<section id="class-Color" class="doc-item">
+<pre><code>class Color</code></pre>
+<p><small>lib/color.tya:2</small></p>
+<p>Color provides the color/Color standard library API.</p>
+<details class="source"><summary>Source</summary>
+<pre><code># Color provides the color/Color standard library API.
+class Color
+  # Color.a stores instance state.
+  # @type Nil
+  a: nil
+
+  # Color.b stores instance state.
+  # @type Nil
+  b: nil
+
+  # Color.g stores instance state.
+  # @type Nil
+  g: nil
+
+  # Color.r stores instance state.
+  # @type Nil
+  r: nil
+
+  # Color.initialize provides the color/Color standard library operation.
+  # @param r Int r value.
+  # @param g Int g value.
+  # @param b Int b value.
+  # @param a Int a value.
+  # @return Self the initialized object.
+  initialize: r = nil, g = nil, b = nil, a = nil -&gt;
+    if r == nil
+      r = 0
+    if g == nil
+      g = 0
+    if b == nil
+      b = 0
+    if a == nil
+      a = 0
+    if r.class != Number or r &lt; 0 or r &gt; 255 or r != r.to_i()
+      raise error(&quot;color.channel: r out of range&quot;)
+    if g.class != Number or g &lt; 0 or g &gt; 255 or g != g.to_i()
+      raise error(&quot;color.channel: g out of range&quot;)
+    if b.class != Number or b &lt; 0 or b &gt; 255 or b != b.to_i()
+      raise error(&quot;color.channel: b out of range&quot;)
+    if a.class != Number or a &lt; 0 or a &gt; 255 or a != a.to_i()
+      raise error(&quot;color.channel: a out of range&quot;)
+    self.r = r.to_i()
+    self.g = g.to_i()
+    self.b = b.to_i()
+    self.a = a.to_i()
+
+  # Color.abs provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  abs: value -&gt;
+    if value &lt; 0
+      return 0 - value
+    value
+
+  # Color.black provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  black: -&gt;
+    self.rgb(0, 0, 0)
+
+  # Color.blend provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param t Any t value.
+  # @return Any the resulting value.
+  blend: a, b, t = nil -&gt;
+    if t == nil
+      t = b
+      b = a
+      a = self
+    self.ratio(t, &quot;color.blend&quot;)
+    self.rgba(
+      self.mix_channel(a.r, b.r, t),
+      self.mix_channel(a.g, b.g, t),
+      self.mix_channel(a.b, b.b, t),
+      self.mix_channel(a.a, b.a, t)
+    )
+
+  # Color.blue provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  blue: -&gt;
+    self.rgb(0, 0, 255)
+
+  # Color.channel provides the color/Color standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  channel: value, name -&gt;
+    if value.class != Number
+      raise error(&quot;color.channel: &quot; + name + &quot; must be a number&quot;)
+    if value &lt; 0 or value &gt; 255
+      raise error(&quot;color.channel: &quot; + name + &quot; out of range&quot;)
+    if value != value.to_i()
+      raise error(&quot;color.channel: &quot; + name + &quot; must be an integer&quot;)
+    value.to_i()
+
+  # Color.contrast_ratio provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  contrast_ratio: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    color_la = self.luminance(a)
+    color_lb = self.luminance(b)
+    if color_la &lt; color_lb
+      color_tmp = color_la
+      color_la = color_lb
+      color_lb = color_tmp
+    (color_la + 0.05) / (color_lb + 0.05)
+
+  # Color.css provides the color/Color standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
+  css: text -&gt;
+    if text.class != String
+      raise error(&quot;color.css: text must be a string&quot;)
+    color_raw = text.trim().lower()
+    if color_raw == &quot;black&quot;
+      return self.black()
+    if color_raw == &quot;white&quot;
+      return self.white()
+    if color_raw == &quot;red&quot;
+      return self.red()
+    if color_raw == &quot;green&quot;
+      return self.green()
+    if color_raw == &quot;blue&quot;
+      return self.blue()
+    if color_raw == &quot;yellow&quot;
+      return self.yellow()
+    if color_raw == &quot;cyan&quot;
+      return self.cyan()
+    if color_raw == &quot;magenta&quot;
+      return self.magenta()
+    if color_raw == &quot;transparent&quot;
+      return self.transparent()
+    if color_raw.starts_with(&quot;#&quot;)
+      return self.hex(color_raw)
+    if color_raw.starts_with(&quot;rgb(&quot;) and color_raw.ends_with(&quot;)&quot;)
+      return self.css_rgb(color_raw, 4, false)
+    if color_raw.starts_with(&quot;rgba(&quot;) and color_raw.ends_with(&quot;)&quot;)
+      return self.css_rgb(color_raw, 5, true)
+    self.hex(color_raw)
+
+  # Color.css_rgb provides the color/Color standard library operation.
+  # @param text String text value.
+  # @param start Int start value.
+  # @param has_alpha Any has alpha value.
+  # @return Any the resulting value.
+  css_rgb: text, start, has_alpha -&gt;
+    color_body = text.slice(start, text.len() - 1)
+    color_parts = color_body.split(&quot;,&quot;)
+    if has_alpha
+      if color_parts.len() != 4
+        raise error(&quot;color.css: rgba() expects 4 channels&quot;)
+      return self.rgba(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i(), color_parts[3].trim().to_i())
+    if color_parts.len() != 3
+      raise error(&quot;color.css: rgb() expects 3 channels&quot;)
+    self.rgb(
+      color_parts[0].trim().to_i(),
+      color_parts[1].trim().to_i(),
+      color_parts[2].trim().to_i()
+    )
+
+  # Color.cyan provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  cyan: -&gt;
+    self.rgb(0, 255, 255)
+
+  # Color.darken provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @param amount Any amount value.
+  # @return Any the resulting value.
+  darken: color, amount = nil -&gt;
+    if amount == nil
+      amount = color
+      color = self
+    self.ratio(amount, &quot;color.darken&quot;)
+    self.blend(color, self.black(), amount)
+
+  # Color.digit_char provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  digit_char: value -&gt;
+    if value &lt; 10
+      return chr(48 + value)
+    chr(87 + value)
+
+  # Color.equal? provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    a.r == b.r and a.g == b.g and a.b == b.b and a.a == b.a
+
+  # Color.from_array provides the color/Color standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
+  from_array: values -&gt;
+    if values.class != Array
+      raise error(&quot;color.from_array: values must be an array&quot;)
+    if values.len() == 3
+      return self.rgb(values[0], values[1], values[2])
+    if values.len() == 4
+      return self.rgba(values[0], values[1], values[2], values[3])
+    raise error(&quot;color.from_array: expected 3 or 4 channels&quot;)
+
+  # Color.gray provides the color/Color standard library operation.
+  # @param value String value value.
+  # @param alpha Any alpha value.
+  # @return Any the resulting value.
+  gray: value, alpha -&gt;
+    if alpha == nil
+      alpha = 255
+    Color(value, value, value, alpha)
+
+  # Color.gray50 provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  gray50: -&gt;
+    self.rgb(128, 128, 128)
+
+  # Color.grayscale provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @return Any the resulting value.
+  grayscale: color = nil -&gt;
+    if color == nil
+      color = self
+    color_value = self.round(
+      0.299 * color.r + 0.587 * color.g + 0.114 * color.b
+    )
+    self.rgba(color_value, color_value, color_value, color.a)
+
+  # Color.green provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  green: -&gt;
+    self.rgb(0, 128, 0)
+
+  # Color.hex provides the color/Color standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
+  hex: text -&gt;
+    if text.class != String
+      raise error(&quot;color.hex: text must be a string&quot;)
+    color_raw = text
+    if color_raw.starts_with(&quot;#&quot;)
+      color_raw = color_raw.slice(1, color_raw.len())
+    color_len = color_raw.byte_len()
+    if color_len == 3 or color_len == 4
+      color_r = self.hex_pair(color_raw[0], color_raw[0])
+      color_g = self.hex_pair(color_raw[1], color_raw[1])
+      color_b = self.hex_pair(color_raw[2], color_raw[2])
+      color_a = 255
+      if color_len == 4
+        color_a = self.hex_pair(color_raw[3], color_raw[3])
+      return self.rgba(color_r, color_g, color_b, color_a)
+    if color_len == 6 or color_len == 8
+      color_r = self.hex_pair(color_raw[0], color_raw[1])
+      color_g = self.hex_pair(color_raw[2], color_raw[3])
+      color_b = self.hex_pair(color_raw[4], color_raw[5])
+      color_a = 255
+      if color_len == 8
+        color_a = self.hex_pair(color_raw[6], color_raw[7])
+      return self.rgba(color_r, color_g, color_b, color_a)
+    raise error(&quot;color.hex: invalid hex color&quot;)
+
+  # Color.hex_byte provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  hex_byte: value -&gt;
+    color_hi = value / 16.to_i()
+    color_lo = value % 16
+    self.digit_char(color_hi) + self.digit_char(color_lo)
+
+  # Color.hex_digit provides the color/Color standard library operation.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  hex_digit: c -&gt;
+    color_code = ord(c)
+    if color_code &gt;= 48 and color_code &lt;= 57
+      return color_code - 48
+    if color_code &gt;= 65 and color_code &lt;= 70
+      return color_code - 55
+    if color_code &gt;= 97 and color_code &lt;= 102
+      return color_code - 87
+    raise error(&quot;color.hex: invalid hex digit&quot;)
+
+  # Color.hex_pair provides the color/Color standard library operation.
+  # @param hi Any hi value.
+  # @param lo Any lo value.
+  # @return Any the resulting value.
+  hex_pair: hi, lo -&gt;
+    self.hex_digit(hi) * 16 + self.hex_digit(lo)
+
+  # Color.invert provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @return Any the resulting value.
+  invert: color = nil -&gt;
+    if color == nil
+      color = self
+    self.rgba(255 - color.r, 255 - color.g, 255 - color.b, color.a)
+
+  # Color.lighten provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @param amount Any amount value.
+  # @return Any the resulting value.
+  lighten: color, amount = nil -&gt;
+    if amount == nil
+      amount = color
+      color = self
+    self.ratio(amount, &quot;color.lighten&quot;)
+    self.blend(color, self.white(), amount)
+
+  # Color.linear provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  linear: value -&gt;
+    color_component = value / 255
+    if color_component &lt;= 0.03928
+      return color_component / 12.92
+    math_pow((color_component + 0.055) / 1.055, 2.4)
+
+  # Color.luminance provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @return Any the resulting value.
+  luminance: color = nil -&gt;
+    if color == nil
+      color = self
+    color_r = self.linear(color.r)
+    color_g = self.linear(color.g)
+    color_b = self.linear(color.b)
+    0.2126 * color_r + 0.7152 * color_g + 0.0722 * color_b
+
+  # Color.magenta provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  magenta: -&gt;
+    self.rgb(255, 0, 255)
+
+  # Color.mix_channel provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param t Any t value.
+  # @return Any the resulting value.
+  mix_channel: a, b, t -&gt;
+    self.round(a + (b - a) * t)
+
+  # Color.nearly_equal? provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param tolerance Any tolerance value.
+  # @return Boolean whether the condition is true.
+  nearly_equal?: a, b, tolerance = nil -&gt;
+    if tolerance == nil
+      tolerance = b
+      b = a
+      a = self
+    if tolerance &lt; 0
+      raise error(&quot;color.nearly_equal?: tolerance must be non-negative&quot;)
+    self.abs(a.r - b.r) &lt;= tolerance and self.abs(a.g - b.g) &lt;= tolerance and self.abs(a.b - b.b) &lt;= tolerance and self.abs(a.a - b.a) &lt;= tolerance
+
+  # Color.new provides the color/Color standard library operation.
+  # @param r Int r value.
+  # @param g Int g value.
+  # @param b Int b value.
+  # @param a Int a value.
+  # @return Self the resulting value.
+  new: r, g, b, a -&gt;
+    Color(r, g, b, a)
+
+  # Color.over provides the color/Color standard library operation.
+  # @param foreground Any foreground value.
+  # @param background Any background value.
+  # @return Any the resulting value.
+  over: foreground, background = nil -&gt;
+    if background == nil
+      background = foreground
+      foreground = self
+    color_fa = foreground.a / 255
+    color_ba = background.a / 255
+    color_out_a = color_fa + color_ba * (1 - color_fa)
+    if color_out_a == 0
+      return self.transparent()
+    color_r = foreground.r * color_fa
+      + background.r * color_ba * (1 - color_fa) / color_out_a
+    color_g = foreground.g * color_fa
+      + background.g * color_ba * (1 - color_fa) / color_out_a
+    color_b = foreground.b * color_fa
+      + background.b * color_ba * (1 - color_fa) / color_out_a
+    self.rgba(
+      self.round(color_r),
+      self.round(color_g),
+      self.round(color_b),
+      self.round(color_out_a * 255)
+    )
+
+  # Color.ratio provides the color/Color standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  ratio: value, name -&gt;
+    if value.class != Number
+      raise error(name + &quot;: amount must be a number&quot;)
+    if value &lt; 0 or value &gt; 1
+      raise error(name + &quot;: amount out of range&quot;)
+    value
+
+  # Color.red provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  red: -&gt;
+    self.rgb(255, 0, 0)
+
+  # Color.rgb provides the color/Color standard library operation.
+  # @param r Int r value.
+  # @param g Int g value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  rgb: r, g, b -&gt;
+    Color(r, g, b, 255)
+
+  # Color.rgba provides the color/Color standard library operation.
+  # @param r Int r value.
+  # @param g Int g value.
+  # @param b Int b value.
+  # @param a Int a value.
+  # @return Any the resulting value.
+  rgba: r, g, b, a -&gt;
+    Color(r, g, b, a)
+
+  # Color.round provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  round: value -&gt;
+    math_round(value).to_i()
+
+  # Color.to_array provides the color/Color standard library operation.
+  # @return Array the resulting value.
+  to_array: -&gt;
+    [self.r, self.g, self.b, self.a]
+
+  # Color.to_hex provides the color/Color standard library operation.
+  # @param include_alpha Any include alpha value.
+  # @return Any the resulting value.
+  to_hex: include_alpha -&gt;
+    if include_alpha == nil
+      include_alpha = false
+    color_out = &quot;#&quot;
+      + self.hex_byte(self.r)
+      + self.hex_byte(self.g)
+      + self.hex_byte(self.b)
+    if include_alpha or self.a != 255
+      color_out = color_out + self.hex_byte(self.a)
+    color_out
+
+  # Color.transparent provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  transparent: -&gt;
+    Color(0, 0, 0, 0)
+
+  # Color.white provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  white: -&gt;
+    self.rgb(255, 255, 255)
+
+  # Color.with_alpha provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @param alpha Any alpha value.
+  # @return Any the resulting value.
+  with_alpha: color, alpha = nil -&gt;
+    if alpha == nil
+      alpha = color
+      color = self
+    self.rgba(color.r, color.g, color.b, alpha)
+
+  # Color.yellow provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  yellow: -&gt;
+    self.rgb(255, 255, 0)</code></pre>
+</details>
+</section>
+<h2>Instance Variables</h2>
+<section id="instance-variable-Color-a" class="doc-item member">
+<h3><code>a</code></h3>
+<pre><code>Color.a</code></pre>
+<p><small>lib/color.tya:5</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Color.a stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.a stores instance state.
+  # @type Nil
+  a: nil</code></pre>
+</details>
+</section>
+<section id="instance-variable-Color-b" class="doc-item member">
+<h3><code>b</code></h3>
+<pre><code>Color.b</code></pre>
+<p><small>lib/color.tya:9</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Color.b stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.b stores instance state.
+  # @type Nil
+  b: nil</code></pre>
+</details>
+</section>
+<section id="instance-variable-Color-g" class="doc-item member">
+<h3><code>g</code></h3>
+<pre><code>Color.g</code></pre>
+<p><small>lib/color.tya:13</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Color.g stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.g stores instance state.
+  # @type Nil
+  g: nil</code></pre>
+</details>
+</section>
+<section id="instance-variable-Color-r" class="doc-item member">
+<h3><code>r</code></h3>
+<pre><code>Color.r</code></pre>
+<p><small>lib/color.tya:17</small></p>
+<dl class="metadata">
+<dt>Type</dt><dd><code>Nil</code></dd>
+</dl>
+<p>Color.r stores instance state.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.r stores instance state.
+  # @type Nil
+  r: nil</code></pre>
+</details>
+</section>
+<h2>Methods</h2>
+<section id="method-Color-abs" class="doc-item member">
+<h3><code>abs</code></h3>
+<pre><code>Color.abs(value)</code></pre>
+<p><small>lib/color.tya:50</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.abs provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.abs provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  abs: value -&gt;
+    if value &lt; 0
+      return 0 - value
+    value</code></pre>
+</details>
+</section>
+<section id="method-Color-black" class="doc-item member">
+<h3><code>black</code></h3>
+<pre><code>Color.black()</code></pre>
+<p><small>lib/color.tya:57</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.black provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.black provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  black: -&gt;
+    self.rgb(0, 0, 0)</code></pre>
+</details>
+</section>
+<section id="method-Color-blend" class="doc-item member">
+<h3><code>blend</code></h3>
+<pre><code>Color.blend(a, b, t = nil)</code></pre>
+<p><small>lib/color.tya:65</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>t</code></dt><dd><code>Any</code> t value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.blend provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.blend provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param t Any t value.
+  # @return Any the resulting value.
+  blend: a, b, t = nil -&gt;
+    if t == nil
+      t = b
+      b = a
+      a = self
+    self.ratio(t, &quot;color.blend&quot;)
+    self.rgba(
+      self.mix_channel(a.r, b.r, t),
+      self.mix_channel(a.g, b.g, t),
+      self.mix_channel(a.b, b.b, t),
+      self.mix_channel(a.a, b.a, t)
+    )</code></pre>
+</details>
+</section>
+<section id="method-Color-blue" class="doc-item member">
+<h3><code>blue</code></h3>
+<pre><code>Color.blue()</code></pre>
+<p><small>lib/color.tya:80</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.blue provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.blue provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  blue: -&gt;
+    self.rgb(0, 0, 255)</code></pre>
+</details>
+</section>
+<section id="method-Color-channel" class="doc-item member">
+<h3><code>channel</code></h3>
+<pre><code>Color.channel(value, name)</code></pre>
+<p><small>lib/color.tya:87</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.channel provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.channel provides the color/Color standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  channel: value, name -&gt;
+    if value.class != Number
+      raise error(&quot;color.channel: &quot; + name + &quot; must be a number&quot;)
+    if value &lt; 0 or value &gt; 255
+      raise error(&quot;color.channel: &quot; + name + &quot; out of range&quot;)
+    if value != value.to_i()
+      raise error(&quot;color.channel: &quot; + name + &quot; must be an integer&quot;)
+    value.to_i()</code></pre>
+</details>
+</section>
+<section id="method-Color-contrast_ratio" class="doc-item member">
+<h3><code>contrast_ratio</code></h3>
+<pre><code>Color.contrast_ratio(a, b = nil)</code></pre>
+<p><small>lib/color.tya:100</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.contrast_ratio provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.contrast_ratio provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  contrast_ratio: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    color_la = self.luminance(a)
+    color_lb = self.luminance(b)
+    if color_la &lt; color_lb
+      color_tmp = color_la
+      color_la = color_lb
+      color_lb = color_tmp
+    (color_la + 0.05) / (color_lb + 0.05)</code></pre>
+</details>
+</section>
+<section id="method-Color-css" class="doc-item member">
+<h3><code>css</code></h3>
+<pre><code>Color.css(text)</code></pre>
+<p><small>lib/color.tya:115</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Color.css provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.css provides the color/Color standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
+  css: text -&gt;
+    if text.class != String
+      raise error(&quot;color.css: text must be a string&quot;)
+    color_raw = text.trim().lower()
+    if color_raw == &quot;black&quot;
+      return self.black()
+    if color_raw == &quot;white&quot;
+      return self.white()
+    if color_raw == &quot;red&quot;
+      return self.red()
+    if color_raw == &quot;green&quot;
+      return self.green()
+    if color_raw == &quot;blue&quot;
+      return self.blue()
+    if color_raw == &quot;yellow&quot;
+      return self.yellow()
+    if color_raw == &quot;cyan&quot;
+      return self.cyan()
+    if color_raw == &quot;magenta&quot;
+      return self.magenta()
+    if color_raw == &quot;transparent&quot;
+      return self.transparent()
+    if color_raw.starts_with(&quot;#&quot;)
+      return self.hex(color_raw)
+    if color_raw.starts_with(&quot;rgb(&quot;) and color_raw.ends_with(&quot;)&quot;)
+      return self.css_rgb(color_raw, 4, false)
+    if color_raw.starts_with(&quot;rgba(&quot;) and color_raw.ends_with(&quot;)&quot;)
+      return self.css_rgb(color_raw, 5, true)
+    self.hex(color_raw)</code></pre>
+</details>
+</section>
+<section id="method-Color-css_rgb" class="doc-item member">
+<h3><code>css_rgb</code></h3>
+<pre><code>Color.css_rgb(text, start, has_alpha)</code></pre>
+<p><small>lib/color.tya:150</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Param <code>start</code></dt><dd><code>Int</code> start value.</dd>
+<dt>Param <code>has_alpha</code></dt><dd><code>Any</code> has alpha value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.css_rgb provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.css_rgb provides the color/Color standard library operation.
+  # @param text String text value.
+  # @param start Int start value.
+  # @param has_alpha Any has alpha value.
+  # @return Any the resulting value.
+  css_rgb: text, start, has_alpha -&gt;
+    color_body = text.slice(start, text.len() - 1)
+    color_parts = color_body.split(&quot;,&quot;)
+    if has_alpha
+      if color_parts.len() != 4
+        raise error(&quot;color.css: rgba() expects 4 channels&quot;)
+      return self.rgba(color_parts[0].trim().to_i(), color_parts[1].trim().to_i(), color_parts[2].trim().to_i(), color_parts[3].trim().to_i())
+    if color_parts.len() != 3
+      raise error(&quot;color.css: rgb() expects 3 channels&quot;)
+    self.rgb(
+      color_parts[0].trim().to_i(),
+      color_parts[1].trim().to_i(),
+      color_parts[2].trim().to_i()
+    )</code></pre>
+</details>
+</section>
+<section id="method-Color-cyan" class="doc-item member">
+<h3><code>cyan</code></h3>
+<pre><code>Color.cyan()</code></pre>
+<p><small>lib/color.tya:167</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.cyan provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.cyan provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  cyan: -&gt;
+    self.rgb(0, 255, 255)</code></pre>
+</details>
+</section>
+<section id="method-Color-darken" class="doc-item member">
+<h3><code>darken</code></h3>
+<pre><code>Color.darken(color, amount = nil)</code></pre>
+<p><small>lib/color.tya:174</small></p>
+<dl class="metadata">
+<dt>Param <code>color</code></dt><dd><code>Any</code> color value.</dd>
+<dt>Param <code>amount</code></dt><dd><code>Any</code> amount value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.darken provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.darken provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @param amount Any amount value.
+  # @return Any the resulting value.
+  darken: color, amount = nil -&gt;
+    if amount == nil
+      amount = color
+      color = self
+    self.ratio(amount, &quot;color.darken&quot;)
+    self.blend(color, self.black(), amount)</code></pre>
+</details>
+</section>
+<section id="method-Color-digit_char" class="doc-item member">
+<h3><code>digit_char</code></h3>
+<pre><code>Color.digit_char(value)</code></pre>
+<p><small>lib/color.tya:184</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.digit_char provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.digit_char provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  digit_char: value -&gt;
+    if value &lt; 10
+      return chr(48 + value)
+    chr(87 + value)</code></pre>
+</details>
+</section>
+<section id="method-Color-equal-" class="doc-item member">
+<h3><code>equal?</code></h3>
+<pre><code>Color.equal?(a, b = nil)</code></pre>
+<p><small>lib/color.tya:193</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Color.equal? provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.equal? provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @return Boolean whether the condition is true.
+  equal?: a, b = nil -&gt;
+    if b == nil
+      b = a
+      a = self
+    a.r == b.r and a.g == b.g and a.b == b.b and a.a == b.a</code></pre>
+</details>
+</section>
+<section id="method-Color-from_array" class="doc-item member">
+<h3><code>from_array</code></h3>
+<pre><code>Color.from_array(values)</code></pre>
+<p><small>lib/color.tya:202</small></p>
+<dl class="metadata">
+<dt>Param <code>values</code></dt><dd><code>Array</code> values value.</dd>
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>Color.from_array provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.from_array provides the color/Color standard library operation.
+  # @param values Array values value.
+  # @return Array the resulting value.
+  from_array: values -&gt;
+    if values.class != Array
+      raise error(&quot;color.from_array: values must be an array&quot;)
+    if values.len() == 3
+      return self.rgb(values[0], values[1], values[2])
+    if values.len() == 4
+      return self.rgba(values[0], values[1], values[2], values[3])
+    raise error(&quot;color.from_array: expected 3 or 4 channels&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Color-gray" class="doc-item member">
+<h3><code>gray</code></h3>
+<pre><code>Color.gray(value, alpha)</code></pre>
+<p><small>lib/color.tya:215</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>alpha</code></dt><dd><code>Any</code> alpha value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.gray provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.gray provides the color/Color standard library operation.
+  # @param value String value value.
+  # @param alpha Any alpha value.
+  # @return Any the resulting value.
+  gray: value, alpha -&gt;
+    if alpha == nil
+      alpha = 255
+    Color(value, value, value, alpha)</code></pre>
+</details>
+</section>
+<section id="method-Color-gray50" class="doc-item member">
+<h3><code>gray50</code></h3>
+<pre><code>Color.gray50()</code></pre>
+<p><small>lib/color.tya:222</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.gray50 provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.gray50 provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  gray50: -&gt;
+    self.rgb(128, 128, 128)</code></pre>
+</details>
+</section>
+<section id="method-Color-grayscale" class="doc-item member">
+<h3><code>grayscale</code></h3>
+<pre><code>Color.grayscale(color = nil)</code></pre>
+<p><small>lib/color.tya:228</small></p>
+<dl class="metadata">
+<dt>Param <code>color</code></dt><dd><code>Any</code> color value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.grayscale provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.grayscale provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @return Any the resulting value.
+  grayscale: color = nil -&gt;
+    if color == nil
+      color = self
+    color_value = self.round(
+      0.299 * color.r + 0.587 * color.g + 0.114 * color.b
+    )
+    self.rgba(color_value, color_value, color_value, color.a)</code></pre>
+</details>
+</section>
+<section id="method-Color-green" class="doc-item member">
+<h3><code>green</code></h3>
+<pre><code>Color.green()</code></pre>
+<p><small>lib/color.tya:238</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.green provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.green provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  green: -&gt;
+    self.rgb(0, 128, 0)</code></pre>
+</details>
+</section>
+<section id="method-Color-hex" class="doc-item member">
+<h3><code>hex</code></h3>
+<pre><code>Color.hex(text)</code></pre>
+<p><small>lib/color.tya:244</small></p>
+<dl class="metadata">
+<dt>Param <code>text</code></dt><dd><code>String</code> text value.</dd>
+<dt>Return</dt><dd><code>String</code> the resulting value.</dd>
+</dl>
+<p>Color.hex provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.hex provides the color/Color standard library operation.
+  # @param text String text value.
+  # @return String the resulting value.
+  hex: text -&gt;
+    if text.class != String
+      raise error(&quot;color.hex: text must be a string&quot;)
+    color_raw = text
+    if color_raw.starts_with(&quot;#&quot;)
+      color_raw = color_raw.slice(1, color_raw.len())
+    color_len = color_raw.byte_len()
+    if color_len == 3 or color_len == 4
+      color_r = self.hex_pair(color_raw[0], color_raw[0])
+      color_g = self.hex_pair(color_raw[1], color_raw[1])
+      color_b = self.hex_pair(color_raw[2], color_raw[2])
+      color_a = 255
+      if color_len == 4
+        color_a = self.hex_pair(color_raw[3], color_raw[3])
+      return self.rgba(color_r, color_g, color_b, color_a)
+    if color_len == 6 or color_len == 8
+      color_r = self.hex_pair(color_raw[0], color_raw[1])
+      color_g = self.hex_pair(color_raw[2], color_raw[3])
+      color_b = self.hex_pair(color_raw[4], color_raw[5])
+      color_a = 255
+      if color_len == 8
+        color_a = self.hex_pair(color_raw[6], color_raw[7])
+      return self.rgba(color_r, color_g, color_b, color_a)
+    raise error(&quot;color.hex: invalid hex color&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Color-hex_byte" class="doc-item member">
+<h3><code>hex_byte</code></h3>
+<pre><code>Color.hex_byte(value)</code></pre>
+<p><small>lib/color.tya:272</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.hex_byte provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.hex_byte provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  hex_byte: value -&gt;
+    color_hi = value / 16.to_i()
+    color_lo = value % 16
+    self.digit_char(color_hi) + self.digit_char(color_lo)</code></pre>
+</details>
+</section>
+<section id="method-Color-hex_digit" class="doc-item member">
+<h3><code>hex_digit</code></h3>
+<pre><code>Color.hex_digit(c)</code></pre>
+<p><small>lib/color.tya:280</small></p>
+<dl class="metadata">
+<dt>Param <code>c</code></dt><dd><code>Any</code> c value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.hex_digit provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.hex_digit provides the color/Color standard library operation.
+  # @param c Any c value.
+  # @return Any the resulting value.
+  hex_digit: c -&gt;
+    color_code = ord(c)
+    if color_code &gt;= 48 and color_code &lt;= 57
+      return color_code - 48
+    if color_code &gt;= 65 and color_code &lt;= 70
+      return color_code - 55
+    if color_code &gt;= 97 and color_code &lt;= 102
+      return color_code - 87
+    raise error(&quot;color.hex: invalid hex digit&quot;)</code></pre>
+</details>
+</section>
+<section id="method-Color-hex_pair" class="doc-item member">
+<h3><code>hex_pair</code></h3>
+<pre><code>Color.hex_pair(hi, lo)</code></pre>
+<p><small>lib/color.tya:294</small></p>
+<dl class="metadata">
+<dt>Param <code>hi</code></dt><dd><code>Any</code> hi value.</dd>
+<dt>Param <code>lo</code></dt><dd><code>Any</code> lo value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.hex_pair provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.hex_pair provides the color/Color standard library operation.
+  # @param hi Any hi value.
+  # @param lo Any lo value.
+  # @return Any the resulting value.
+  hex_pair: hi, lo -&gt;
+    self.hex_digit(hi) * 16 + self.hex_digit(lo)</code></pre>
+</details>
+</section>
+<section id="method-Color-initialize" class="doc-item member">
+<h3><code>initialize</code></h3>
+<pre><code>Color.initialize(r = nil, g = nil, b = nil, a = nil)</code></pre>
+<p><small>lib/color.tya:25</small></p>
+<dl class="metadata">
+<dt>Param <code>r</code></dt><dd><code>Int</code> r value.</dd>
+<dt>Param <code>g</code></dt><dd><code>Int</code> g value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Return</dt><dd><code>Self</code> the initialized object.</dd>
+</dl>
+<p>Color.initialize provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.initialize provides the color/Color standard library operation.
+  # @param r Int r value.
+  # @param g Int g value.
+  # @param b Int b value.
+  # @param a Int a value.
+  # @return Self the initialized object.
+  initialize: r = nil, g = nil, b = nil, a = nil -&gt;
+    if r == nil
+      r = 0
+    if g == nil
+      g = 0
+    if b == nil
+      b = 0
+    if a == nil
+      a = 0
+    if r.class != Number or r &lt; 0 or r &gt; 255 or r != r.to_i()
+      raise error(&quot;color.channel: r out of range&quot;)
+    if g.class != Number or g &lt; 0 or g &gt; 255 or g != g.to_i()
+      raise error(&quot;color.channel: g out of range&quot;)
+    if b.class != Number or b &lt; 0 or b &gt; 255 or b != b.to_i()
+      raise error(&quot;color.channel: b out of range&quot;)
+    if a.class != Number or a &lt; 0 or a &gt; 255 or a != a.to_i()
+      raise error(&quot;color.channel: a out of range&quot;)
+    self.r = r.to_i()
+    self.g = g.to_i()
+    self.b = b.to_i()
+    self.a = a.to_i()</code></pre>
+</details>
+</section>
+<section id="method-Color-invert" class="doc-item member">
+<h3><code>invert</code></h3>
+<pre><code>Color.invert(color = nil)</code></pre>
+<p><small>lib/color.tya:300</small></p>
+<dl class="metadata">
+<dt>Param <code>color</code></dt><dd><code>Any</code> color value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.invert provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.invert provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @return Any the resulting value.
+  invert: color = nil -&gt;
+    if color == nil
+      color = self
+    self.rgba(255 - color.r, 255 - color.g, 255 - color.b, color.a)</code></pre>
+</details>
+</section>
+<section id="method-Color-lighten" class="doc-item member">
+<h3><code>lighten</code></h3>
+<pre><code>Color.lighten(color, amount = nil)</code></pre>
+<p><small>lib/color.tya:309</small></p>
+<dl class="metadata">
+<dt>Param <code>color</code></dt><dd><code>Any</code> color value.</dd>
+<dt>Param <code>amount</code></dt><dd><code>Any</code> amount value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.lighten provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.lighten provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @param amount Any amount value.
+  # @return Any the resulting value.
+  lighten: color, amount = nil -&gt;
+    if amount == nil
+      amount = color
+      color = self
+    self.ratio(amount, &quot;color.lighten&quot;)
+    self.blend(color, self.white(), amount)</code></pre>
+</details>
+</section>
+<section id="method-Color-linear" class="doc-item member">
+<h3><code>linear</code></h3>
+<pre><code>Color.linear(value)</code></pre>
+<p><small>lib/color.tya:319</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.linear provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.linear provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  linear: value -&gt;
+    color_component = value / 255
+    if color_component &lt;= 0.03928
+      return color_component / 12.92
+    math_pow((color_component + 0.055) / 1.055, 2.4)</code></pre>
+</details>
+</section>
+<section id="method-Color-luminance" class="doc-item member">
+<h3><code>luminance</code></h3>
+<pre><code>Color.luminance(color = nil)</code></pre>
+<p><small>lib/color.tya:328</small></p>
+<dl class="metadata">
+<dt>Param <code>color</code></dt><dd><code>Any</code> color value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.luminance provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.luminance provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @return Any the resulting value.
+  luminance: color = nil -&gt;
+    if color == nil
+      color = self
+    color_r = self.linear(color.r)
+    color_g = self.linear(color.g)
+    color_b = self.linear(color.b)
+    0.2126 * color_r + 0.7152 * color_g + 0.0722 * color_b</code></pre>
+</details>
+</section>
+<section id="method-Color-magenta" class="doc-item member">
+<h3><code>magenta</code></h3>
+<pre><code>Color.magenta()</code></pre>
+<p><small>lib/color.tya:338</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.magenta provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.magenta provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  magenta: -&gt;
+    self.rgb(255, 0, 255)</code></pre>
+</details>
+</section>
+<section id="method-Color-mix_channel" class="doc-item member">
+<h3><code>mix_channel</code></h3>
+<pre><code>Color.mix_channel(a, b, t)</code></pre>
+<p><small>lib/color.tya:346</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>t</code></dt><dd><code>Any</code> t value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.mix_channel provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.mix_channel provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param t Any t value.
+  # @return Any the resulting value.
+  mix_channel: a, b, t -&gt;
+    self.round(a + (b - a) * t)</code></pre>
+</details>
+</section>
+<section id="method-Color-nearly_equal-" class="doc-item member">
+<h3><code>nearly_equal?</code></h3>
+<pre><code>Color.nearly_equal?(a, b, tolerance = nil)</code></pre>
+<p><small>lib/color.tya:354</small></p>
+<dl class="metadata">
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>tolerance</code></dt><dd><code>Any</code> tolerance value.</dd>
+<dt>Return</dt><dd><code>Boolean</code> whether the condition is true.</dd>
+</dl>
+<p>Color.nearly_equal? provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.nearly_equal? provides the color/Color standard library operation.
+  # @param a Int a value.
+  # @param b Int b value.
+  # @param tolerance Any tolerance value.
+  # @return Boolean whether the condition is true.
+  nearly_equal?: a, b, tolerance = nil -&gt;
+    if tolerance == nil
+      tolerance = b
+      b = a
+      a = self
+    if tolerance &lt; 0
+      raise error(&quot;color.nearly_equal?: tolerance must be non-negative&quot;)
+    self.abs(a.r - b.r) &lt;= tolerance and self.abs(a.g - b.g) &lt;= tolerance and self.abs(a.b - b.b) &lt;= tolerance and self.abs(a.a - b.a) &lt;= tolerance</code></pre>
+</details>
+</section>
+<section id="method-Color-new" class="doc-item member">
+<h3><code>new</code></h3>
+<pre><code>Color.new(r, g, b, a)</code></pre>
+<p><small>lib/color.tya:369</small></p>
+<dl class="metadata">
+<dt>Param <code>r</code></dt><dd><code>Int</code> r value.</dd>
+<dt>Param <code>g</code></dt><dd><code>Int</code> g value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Return</dt><dd><code>Self</code> the resulting value.</dd>
+</dl>
+<p>Color.new provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.new provides the color/Color standard library operation.
+  # @param r Int r value.
+  # @param g Int g value.
+  # @param b Int b value.
+  # @param a Int a value.
+  # @return Self the resulting value.
+  new: r, g, b, a -&gt;
+    Color(r, g, b, a)</code></pre>
+</details>
+</section>
+<section id="method-Color-over" class="doc-item member">
+<h3><code>over</code></h3>
+<pre><code>Color.over(foreground, background = nil)</code></pre>
+<p><small>lib/color.tya:376</small></p>
+<dl class="metadata">
+<dt>Param <code>foreground</code></dt><dd><code>Any</code> foreground value.</dd>
+<dt>Param <code>background</code></dt><dd><code>Any</code> background value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.over provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.over provides the color/Color standard library operation.
+  # @param foreground Any foreground value.
+  # @param background Any background value.
+  # @return Any the resulting value.
+  over: foreground, background = nil -&gt;
+    if background == nil
+      background = foreground
+      foreground = self
+    color_fa = foreground.a / 255
+    color_ba = background.a / 255
+    color_out_a = color_fa + color_ba * (1 - color_fa)
+    if color_out_a == 0
+      return self.transparent()
+    color_r = foreground.r * color_fa
+      + background.r * color_ba * (1 - color_fa) / color_out_a
+    color_g = foreground.g * color_fa
+      + background.g * color_ba * (1 - color_fa) / color_out_a
+    color_b = foreground.b * color_fa
+      + background.b * color_ba * (1 - color_fa) / color_out_a
+    self.rgba(
+      self.round(color_r),
+      self.round(color_g),
+      self.round(color_b),
+      self.round(color_out_a * 255)
+    )</code></pre>
+</details>
+</section>
+<section id="method-Color-ratio" class="doc-item member">
+<h3><code>ratio</code></h3>
+<pre><code>Color.ratio(value, name)</code></pre>
+<p><small>lib/color.tya:402</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Param <code>name</code></dt><dd><code>String</code> name value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.ratio provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.ratio provides the color/Color standard library operation.
+  # @param value String value value.
+  # @param name String name value.
+  # @return Any the resulting value.
+  ratio: value, name -&gt;
+    if value.class != Number
+      raise error(name + &quot;: amount must be a number&quot;)
+    if value &lt; 0 or value &gt; 1
+      raise error(name + &quot;: amount out of range&quot;)
+    value</code></pre>
+</details>
+</section>
+<section id="method-Color-red" class="doc-item member">
+<h3><code>red</code></h3>
+<pre><code>Color.red()</code></pre>
+<p><small>lib/color.tya:411</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.red provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.red provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  red: -&gt;
+    self.rgb(255, 0, 0)</code></pre>
+</details>
+</section>
+<section id="method-Color-rgb" class="doc-item member">
+<h3><code>rgb</code></h3>
+<pre><code>Color.rgb(r, g, b)</code></pre>
+<p><small>lib/color.tya:419</small></p>
+<dl class="metadata">
+<dt>Param <code>r</code></dt><dd><code>Int</code> r value.</dd>
+<dt>Param <code>g</code></dt><dd><code>Int</code> g value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.rgb provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.rgb provides the color/Color standard library operation.
+  # @param r Int r value.
+  # @param g Int g value.
+  # @param b Int b value.
+  # @return Any the resulting value.
+  rgb: r, g, b -&gt;
+    Color(r, g, b, 255)</code></pre>
+</details>
+</section>
+<section id="method-Color-rgba" class="doc-item member">
+<h3><code>rgba</code></h3>
+<pre><code>Color.rgba(r, g, b, a)</code></pre>
+<p><small>lib/color.tya:428</small></p>
+<dl class="metadata">
+<dt>Param <code>r</code></dt><dd><code>Int</code> r value.</dd>
+<dt>Param <code>g</code></dt><dd><code>Int</code> g value.</dd>
+<dt>Param <code>b</code></dt><dd><code>Int</code> b value.</dd>
+<dt>Param <code>a</code></dt><dd><code>Int</code> a value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.rgba provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.rgba provides the color/Color standard library operation.
+  # @param r Int r value.
+  # @param g Int g value.
+  # @param b Int b value.
+  # @param a Int a value.
+  # @return Any the resulting value.
+  rgba: r, g, b, a -&gt;
+    Color(r, g, b, a)</code></pre>
+</details>
+</section>
+<section id="method-Color-round" class="doc-item member">
+<h3><code>round</code></h3>
+<pre><code>Color.round(value)</code></pre>
+<p><small>lib/color.tya:434</small></p>
+<dl class="metadata">
+<dt>Param <code>value</code></dt><dd><code>String</code> value value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.round provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.round provides the color/Color standard library operation.
+  # @param value String value value.
+  # @return Any the resulting value.
+  round: value -&gt;
+    math_round(value).to_i()</code></pre>
+</details>
+</section>
+<section id="method-Color-to_array" class="doc-item member">
+<h3><code>to_array</code></h3>
+<pre><code>Color.to_array()</code></pre>
+<p><small>lib/color.tya:439</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Array</code> the resulting value.</dd>
+</dl>
+<p>Color.to_array provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.to_array provides the color/Color standard library operation.
+  # @return Array the resulting value.
+  to_array: -&gt;
+    [self.r, self.g, self.b, self.a]</code></pre>
+</details>
+</section>
+<section id="method-Color-to_hex" class="doc-item member">
+<h3><code>to_hex</code></h3>
+<pre><code>Color.to_hex(include_alpha)</code></pre>
+<p><small>lib/color.tya:445</small></p>
+<dl class="metadata">
+<dt>Param <code>include_alpha</code></dt><dd><code>Any</code> include alpha value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.to_hex provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.to_hex provides the color/Color standard library operation.
+  # @param include_alpha Any include alpha value.
+  # @return Any the resulting value.
+  to_hex: include_alpha -&gt;
+    if include_alpha == nil
+      include_alpha = false
+    color_out = &quot;#&quot;
+      + self.hex_byte(self.r)
+      + self.hex_byte(self.g)
+      + self.hex_byte(self.b)
+    if include_alpha or self.a != 255
+      color_out = color_out + self.hex_byte(self.a)
+    color_out</code></pre>
+</details>
+</section>
+<section id="method-Color-transparent" class="doc-item member">
+<h3><code>transparent</code></h3>
+<pre><code>Color.transparent()</code></pre>
+<p><small>lib/color.tya:458</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.transparent provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.transparent provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  transparent: -&gt;
+    Color(0, 0, 0, 0)</code></pre>
+</details>
+</section>
+<section id="method-Color-white" class="doc-item member">
+<h3><code>white</code></h3>
+<pre><code>Color.white()</code></pre>
+<p><small>lib/color.tya:463</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.white provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.white provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  white: -&gt;
+    self.rgb(255, 255, 255)</code></pre>
+</details>
+</section>
+<section id="method-Color-with_alpha" class="doc-item member">
+<h3><code>with_alpha</code></h3>
+<pre><code>Color.with_alpha(color, alpha = nil)</code></pre>
+<p><small>lib/color.tya:470</small></p>
+<dl class="metadata">
+<dt>Param <code>color</code></dt><dd><code>Any</code> color value.</dd>
+<dt>Param <code>alpha</code></dt><dd><code>Any</code> alpha value.</dd>
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.with_alpha provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.with_alpha provides the color/Color standard library operation.
+  # @param color Any color value.
+  # @param alpha Any alpha value.
+  # @return Any the resulting value.
+  with_alpha: color, alpha = nil -&gt;
+    if alpha == nil
+      alpha = color
+      color = self
+    self.rgba(color.r, color.g, color.b, alpha)</code></pre>
+</details>
+</section>
+<section id="method-Color-yellow" class="doc-item member">
+<h3><code>yellow</code></h3>
+<pre><code>Color.yellow()</code></pre>
+<p><small>lib/color.tya:478</small></p>
+<dl class="metadata">
+<dt>Return</dt><dd><code>Any</code> the resulting value.</dd>
+</dl>
+<p>Color.yellow provides the color/Color standard library operation.</p>
+<details class="source"><summary>Source</summary>
+<pre><code>  # Color.yellow provides the color/Color standard library operation.
+  # @return Any the resulting value.
+  yellow: -&gt;
+    self.rgb(255, 255, 0)</code></pre>
+</details>
+</section>
+</main>
+</div>
+</body>
+</html>

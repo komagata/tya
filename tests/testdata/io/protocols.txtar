@@ -21,7 +21,7 @@ stderr 'class BrokenFlushable must implement interface method flush'
 
 -- protocols.tya --
 import io/* as io
-import file/* as file
+import file
 
 path = "io_protocols.txt"
 file.File(path).write("helloworld")

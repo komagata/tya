@@ -25,7 +25,7 @@ grep 'Content-Length: 6' $WORK/normal.out
 
 -- main.tya --
 import net/http/* as http
-import channel/* as channel
+import channel
 
 app = http.Server()
 

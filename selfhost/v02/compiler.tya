@@ -1786,6 +1786,8 @@ parse_import_statement = tokens, index ->
       next = next + 1
     else
       break
+  if token_text(tokens[next]) == "*"
+    next = next + 1
   alias = ""
   if token_kind(tokens[next]) == "IDENT" and token_text(tokens[next]) == "as"
     alias = token_text(tokens[next + 1])

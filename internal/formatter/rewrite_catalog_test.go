@@ -280,8 +280,8 @@ func TestRewriteCatalog(t *testing.T) {
 		{
 			category: "imports",
 			name:     "single wildcard import stays one line",
-			input:    "import base64/* as b64\n",
-			want:     "import base64/* as b64\n",
+			input:    "import base64 as b64\n",
+			want:     "import base64 as b64\n",
 		},
 		{
 			category: "imports",

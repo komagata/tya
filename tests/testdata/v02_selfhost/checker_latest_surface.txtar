@@ -31,10 +31,13 @@ exec $WORK/stage1 --check lib/equatable.tya
 exec $WORK/stage1 --check lib/stringable.tya
 ! stderr .
 
-exec $WORK/stage1 --check lib/io/reader.tya
+exec $WORK/stage1 --check lib/io/readable.tya
 ! stderr .
 
-exec $WORK/stage1 --check lib/serialization/serializer.tya
+exec $WORK/stage1 --check lib/io/closable.tya
+! stderr .
+
+exec $WORK/stage1 --check lib/io/writable.tya
 ! stderr .
 
 exec $WORK/stage1 --check lib/sequence.tya

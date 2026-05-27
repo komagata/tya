@@ -1,6 +1,6 @@
 import unittest/*
 import compress/* as compress
-import file/* as file
+import file
 
 class StdlibCompressTest extends TestCase
 
