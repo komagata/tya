@@ -23,7 +23,7 @@ scripts/verify_editor_assets.sh
 
 Manual-install release:
 
-- https://github.com/komagata/tya/releases/tag/editors-vscode-v0.65.3
+- https://github.com/komagata/tya/releases/tag/editors-vscode-v0.71.0
 
 Publish:
 
@@ -37,13 +37,15 @@ Or run the GitHub Actions workflow `Publish VS Code extension` with
 
 Published package:
 
-- `komagata.tya` version `0.65.3`
+- `komagata.tya` version `0.71.0` publish accepted by GitHub Actions run
+  `26530047663`; public gallery queries may lag behind Marketplace publish
+  acceptance for several minutes.
 
 Requirements:
 
 - Visual Studio Marketplace publisher: `komagata`
 - `VSCE_PAT` or an interactive `vsce login komagata`
-- Generated package: `editors/vscode/tya-0.65.3.vsix`
+- Generated package: `editors/vscode/tya-0.71.0.vsix`
 
 ## Open VSX
 
