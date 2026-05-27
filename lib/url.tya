@@ -366,14 +366,10 @@ class Url
         i = i + 1
     nil
 
-  # Url.initialize prepares an empty URL value.
-  # @return Self the initialized object.
-  initialize: -> self.reset_parts()
-
   # Url.format provides the url/Url standard library operation.
   # @return Any the resulting value.
   format: ->
-    parts = self.to_parts()
+    parts = self.to_dict()
     out = ""
     if parts.has("scheme") and parts["scheme"] != ""
       out = out + parts["scheme"] + ":"
@@ -618,9 +614,9 @@ class Url
     self.authority_present = false
     self
 
-  # Url.to_parts returns parsed URL parts from the instance.
+  # Url.to_dict returns parsed URL parts from the instance.
   # @return Dict the URL parts.
-  to_parts: ->
+  to_dict: ->
     out =
       scheme: self.scheme
       user: self.user
