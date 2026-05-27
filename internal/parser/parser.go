@@ -1970,9 +1970,9 @@ func (p *Parser) primary() (ast.Expr, error) {
 		}
 		return &ast.InstanceFieldExpr{Name: name.Lexeme, NameTok: name}, nil
 	case token.IDENT:
-		if p.peek().Type == token.QUESTION {
+		if p.peek().Type == token.QUESTION || p.peek().Type == token.BANG {
 			p.next()
-			tok.Lexeme += "?"
+			tok.Lexeme += p.prev().Lexeme
 			return &ast.Ident{Name: tok.Lexeme, Tok: tok}, nil
 		}
 		if tok.Lexeme == "true" {
@@ -2413,7 +2413,7 @@ func (p *Parser) scanAssignTarget(i *int) bool {
 			return false
 		}
 		*i++
-		if *i < len(p.toks) && p.toks[*i].Type == token.QUESTION {
+		if *i < len(p.toks) && (p.toks[*i].Type == token.QUESTION || p.toks[*i].Type == token.BANG) {
 			*i++
 		}
 		return true
@@ -2422,7 +2422,7 @@ func (p *Parser) scanAssignTarget(i *int) bool {
 		return false
 	}
 	*i++
-	if *i < len(p.toks) && p.toks[*i].Type == token.QUESTION {
+	if *i < len(p.toks) && (p.toks[*i].Type == token.QUESTION || p.toks[*i].Type == token.BANG) {
 		*i++
 	}
 	for {
@@ -2434,7 +2434,7 @@ func (p *Parser) scanAssignTarget(i *int) bool {
 			if *i >= len(p.toks) {
 				return false
 			}
-			if p.toks[*i].Type == token.QUESTION {
+			if p.toks[*i].Type == token.QUESTION || p.toks[*i].Type == token.BANG {
 				*i++
 			}
 			continue
@@ -2562,8 +2562,8 @@ func (p *Parser) expectCallableName(msg string) (token.Token, error) {
 		return token.Token{}, p.err(msg)
 	}
 	tok := p.next()
-	if p.match(token.QUESTION) {
-		tok.Lexeme += "?"
+	if p.at(token.QUESTION) || p.at(token.BANG) {
+		tok.Lexeme += p.next().Lexeme
 		return tok, nil
 	}
 	if err := p.rejectReservedName(tok); err != nil {
@@ -2582,8 +2582,8 @@ func (p *Parser) expectCallableIdent(msg string) (token.Token, error) {
 	if err != nil {
 		return token.Token{}, err
 	}
-	if p.match(token.QUESTION) {
-		tok.Lexeme += "?"
+	if p.at(token.QUESTION) || p.at(token.BANG) {
+		tok.Lexeme += p.next().Lexeme
 	}
 	return tok, nil
 }

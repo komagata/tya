@@ -80,7 +80,11 @@ expressed by language constructs such as `private`.
 
 Value names, function names, method names, file names, import path segments,
 and dictionary keys use `snake_case`. Constants use `SCREAMING_SNAKE_CASE`.
-Classes and interfaces use `PascalCase`.
+Classes and interfaces use `PascalCase`. Callable names may add exactly one
+trailing `?` predicate suffix or exactly one trailing `!` bang suffix. These
+suffixes are only valid for function and method declarations and calls; they
+are not valid for variables, constants, fields, import aliases, file names, or
+import path segments.
 
 Single-file imports use the source filename without `.tya` as the import path
 segment. Import paths are slash-separated `snake_case` segments. Leading `_`
@@ -136,7 +140,7 @@ The token vocabulary includes identifiers, literals, indentation tokens,
 operators, and punctuation.
 
 ```text
-= == != < <= > >= : , . ? @ + - * / % ->
+= == != < <= > >= : , . ? ! @ + - * / % ->
 ( ) [ ] { }
 & | ^ ~ << >>
 ```
@@ -148,7 +152,9 @@ statements and define indentation blocks.
 
 Identifiers are ASCII-oriented by convention and by the current naming rules.
 Public variable, function, method, file, and import path names use
-`snake_case`. Class and interface names use `PascalCase`. Constants use
+`snake_case`. Function and method names may end with one `?` or one `!`;
+`?` and `!` suffixes are mutually exclusive and may not appear in the middle
+of a name. Class and interface names use `PascalCase`. Constants use
 `SCREAMING_SNAKE_CASE`.
 
 The following words are reserved in positions where ordinary names are parsed:

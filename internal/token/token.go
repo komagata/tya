@@ -26,6 +26,7 @@ const (
 	COMMA    Type = ","
 	DOT      Type = "."
 	QUESTION Type = "?"
+	BANG     Type = "!"
 	AT       Type = "@"
 	PLUS     Type = "+"
 	MINUS    Type = "-"

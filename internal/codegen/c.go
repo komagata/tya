@@ -3263,6 +3263,7 @@ func (g *cgen) selectStmt(n *ast.SelectStmt) error {
 
 func cName(name string) string {
 	name = strings.ReplaceAll(name, "?", "_p")
+	name = strings.ReplaceAll(name, "!", "_bang")
 	switch name {
 	case "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
 		"else", "enum", "extern", "float", "for", "goto", "if", "index", "inline", "int",

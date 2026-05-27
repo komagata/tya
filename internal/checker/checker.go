@@ -27,13 +27,21 @@ func isPredicateName(name string) bool {
 	return strings.HasSuffix(name, "?")
 }
 
+func isBangName(name string) bool {
+	return strings.HasSuffix(name, "!")
+}
+
 func predicateBaseName(name string) string {
 	return strings.TrimSuffix(name, "?")
 }
 
+func callableBaseName(name string) string {
+	return strings.TrimSuffix(strings.TrimSuffix(name, "?"), "!")
+}
+
 func validCallableName(name string) bool {
-	if isPredicateName(name) {
-		base := predicateBaseName(name)
+	if isPredicateName(name) || isBangName(name) {
+		base := callableBaseName(name)
 		return base != "" && valueNameRE.MatchString(base)
 	}
 	return valueNameRE.MatchString(name)
@@ -755,15 +763,24 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 					}
 					continue
 				}
-				if isPredicateName(name.Name) {
+				if isPredicateName(name.Name) || isBangName(name.Name) {
 					if len(n.Targets) != 1 || len(n.Values) != 1 {
-						return fmt.Errorf("%d:%d: predicate binding %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
+						if isPredicateName(name.Name) {
+							return fmt.Errorf("%d:%d: predicate binding %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
+						}
+						return fmt.Errorf("%d:%d: callable binding %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
 					}
 					if _, ok := n.Values[0].(*ast.FuncLit); !ok {
-						return fmt.Errorf("%d:%d: predicate binding %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
+						if isPredicateName(name.Name) {
+							return fmt.Errorf("%d:%d: predicate binding %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
+						}
+						return fmt.Errorf("%d:%d: callable binding %s must be a function", name.Tok.Line, name.Tok.Col, name.Name)
 					}
 					if !validCallableName(name.Name) {
-						return fmt.Errorf("%d:%d: invalid predicate name %s", name.Tok.Line, name.Tok.Col, name.Name)
+						if isPredicateName(name.Name) {
+							return fmt.Errorf("%d:%d: invalid predicate name %s", name.Tok.Line, name.Tok.Col, name.Name)
+						}
+						return fmt.Errorf("%d:%d: invalid callable name %s", name.Tok.Line, name.Tok.Col, name.Name)
 					}
 				} else if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {
 					return err
@@ -813,12 +830,18 @@ func checkStmts(stmts []ast.Stmt, constants map[string]bool, scope *scope) error
 				}
 			}
 			for _, member := range n.Members {
-				if isPredicateName(member.Name) {
+				if isPredicateName(member.Name) || isBangName(member.Name) {
 					if _, ok := member.Value.(*ast.FuncLit); !ok {
-						return fmt.Errorf("%d:%d: predicate module member %s must be a function", member.Tok.Line, member.Tok.Col, member.Name)
+						if isPredicateName(member.Name) {
+							return fmt.Errorf("%d:%d: predicate module member %s must be a function", member.Tok.Line, member.Tok.Col, member.Name)
+						}
+						return fmt.Errorf("%d:%d: callable module member %s must be a function", member.Tok.Line, member.Tok.Col, member.Name)
 					}
 					if !validCallableName(member.Name) {
-						return fmt.Errorf("%d:%d: invalid predicate name %s", member.Tok.Line, member.Tok.Col, member.Name)
+						if isPredicateName(member.Name) {
+							return fmt.Errorf("%d:%d: invalid predicate name %s", member.Tok.Line, member.Tok.Col, member.Name)
+						}
+						return fmt.Errorf("%d:%d: invalid callable name %s", member.Tok.Line, member.Tok.Col, member.Name)
 					}
 				} else if !valueNameRE.MatchString(member.Name) {
 					return fmt.Errorf("%d:%d: invalid module member %s", member.Tok.Line, member.Tok.Col, member.Name)
@@ -1009,9 +1032,9 @@ func predeclareFunctionBindings(stmts []ast.Stmt, scope *scope) error {
 			if _, ok := n.Values[0].(*ast.FuncLit); !ok {
 				continue
 			}
-			if isPredicateName(name.Name) {
+			if isPredicateName(name.Name) || isBangName(name.Name) {
 				if !validCallableName(name.Name) {
-					return fmt.Errorf("%d:%d: invalid predicate name %s", name.Tok.Line, name.Tok.Col, name.Name)
+					return fmt.Errorf("%d:%d: invalid callable name %s", name.Tok.Line, name.Tok.Col, name.Name)
 				}
 			} else {
 				if err := checkBindingName(name.Name, name.Tok.Line, name.Tok.Col); err != nil {

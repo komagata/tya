@@ -1,0 +1,94 @@
+# Bang callable names.
+cd $REPO
+
+exec go run ./cmd/tya run $WORK/bang_callables.tya
+stdout 'parsed:input\nnormalized:input\nstatic:input\nprivate:input\ndefault:input\nchild:input\nabstract:input\n'
+
+exec go run ./cmd/tya build $WORK/bang_callables.tya -o $WORK/bang_callables
+exec $WORK/bang_callables
+stdout 'parsed:input\nnormalized:input\nstatic:input\nprivate:input\ndefault:input\nchild:input\nabstract:input\n'
+
+exec go run ./cmd/tya format $WORK/bang_callables.tya
+stdout 'parse! = value -> "parsed:" \+ value'
+stdout 'normalize!: value -> "normalized:" \+ value'
+
+! exec go run ./cmd/tya check $WORK/non_callable_binding.tya
+stderr 'callable binding value! must be a function'
+
+! exec go run ./cmd/tya check $WORK/bad_class_field.tya
+stderr 'invalid field name value!'
+
+! exec go run ./cmd/tya check $WORK/repeated_bang.tya
+stderr 'expected'
+
+! exec go run ./cmd/tya check $WORK/bang_middle.tya
+stderr 'no-paren calls are not in Tya'
+
+! exec go run ./cmd/tya check $WORK/combined_suffix.tya
+stderr 'expected'
+
+! exec go run ./cmd/tya check $WORK/prefix_bang.tya
+stderr 'expected expression'
+
+exec go run ./cmd/tya run $WORK/not_equal.tya
+stdout 'true\n'
+
+-- bang_callables.tya --
+parse! = value -> "parsed:" + value
+
+interface Normalizer
+  normalize!: value -> "default:" + value
+
+interface DefaultNormalizer
+  normalize!: value -> "default:" + value
+
+abstract class AbstractRunner
+  abstract run!: value ->
+
+class Runner extends AbstractRunner implements Normalizer
+  static build!: value -> "static:" + value
+
+  normalize!: value -> "normalized:" + value
+
+  reveal!: value -> self.hidden!(value)
+
+  run!: value -> "abstract:" + value
+
+  private hidden!: value -> "private:" + value
+
+class DefaultRunner implements DefaultNormalizer
+  label: "default-runner"
+
+class Child extends Runner
+  override normalize!: value -> "child:" + value
+print(parse!("input"))
+runner = Runner()
+print(runner.normalize!("input"))
+print(Runner.build!("input"))
+print(runner.reveal!("input"))
+print(DefaultRunner().normalize!("input"))
+child = Child()
+print(child.normalize!("input"))
+print(runner.run!("input"))
+
+-- non_callable_binding.tya --
+value! = 1
+
+-- bad_class_field.tya --
+class Broken
+  value!: 1
+
+-- repeated_bang.tya --
+parse!! = value -> value
+
+-- bang_middle.tya --
+parse!_now = value -> value
+
+-- combined_suffix.tya --
+ready?! = -> true
+
+-- prefix_bang.tya --
+!value
+
+-- not_equal.tya --
+print(1 != 2)
